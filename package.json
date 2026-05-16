@@ -1,0 +1,8 @@
+{
+  "name": "spacekonceptrental-capstone",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "validate:n8n": "node scripts/validate-n8n-workflows.cjs"
+  }
+}
