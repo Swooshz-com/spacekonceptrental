@@ -53,7 +53,7 @@
     },
     {
       "parameters": {
-        "content": "# INGESTION LOG\n\n- Records ingestion status for review.\n- Keeps file, namespace, execution, and error details in Sheets.\n\n## Required manual configuration:\n\n- **Append KB Ingestion Log**\n  - `documentId.value`: Set this to the Google Sheets workbook used for ingestion logs.",
+        "content": "# INGESTION LOG\n\n- Records ingestion status for review.\n- Groups Pinecone chunk outputs back into one log row per source file.\n- Keeps file, namespace, execution, and error details in Sheets.\n\n## Required manual configuration:\n\n- **Append KB Ingestion Log**\n  - `documentId.value`: Set this to the Google Sheets workbook used for ingestion logs.",
         "height": 636,
         "width": 420,
         "color": 4
@@ -209,7 +209,24 @@
       "parameters": {
         "dataType": "binary",
         "binaryMode": "specificField",
-        "options": {}
+        "options": {
+          "metadata": {
+            "metadataValues": [
+              {
+                "name": "source_file_id",
+                "value": "={{ $json.source_file_id }}"
+              },
+              {
+                "name": "source_file_name",
+                "value": "={{ $json.source_file_name }}"
+              },
+              {
+                "name": "namespace",
+                "value": "={{ $json.namespace || 'SpaceKonceptRental_kb' }}"
+              }
+            ]
+          }
+        }
       },
       "id": "20000000-0000-4000-8000-000000000005",
       "name": "Load Document Text",
@@ -275,64 +292,13 @@
     },
     {
       "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "prepare-ingestion-log-1",
-              "name": "file_id",
-              "value": "={{ $node[\"Prepare Chunk Metadata\"].json.source_file_id || $json.id || \"unknown_file_id\" }}",
-              "type": "string"
-            },
-            {
-              "id": "prepare-ingestion-log-2",
-              "name": "file_name",
-              "value": "={{ $node[\"Prepare Chunk Metadata\"].json.source_file_name || $json.name || \"unknown_file_name\" }}",
-              "type": "string"
-            },
-            {
-              "id": "prepare-ingestion-log-3",
-              "name": "status",
-              "value": "completed",
-              "type": "string"
-            },
-            {
-              "id": "prepare-ingestion-log-4",
-              "name": "chunks_count",
-              "value": "={{ $json.chunks_count || $json.chunkCount || \"see Pinecone upsert result\" }}",
-              "type": "string"
-            },
-            {
-              "id": "prepare-ingestion-log-5",
-              "name": "namespace",
-              "value": "={{ $node[\"Prepare Chunk Metadata\"].json.namespace || 'SpaceKonceptRental_kb' }}",
-              "type": "string"
-            },
-            {
-              "id": "prepare-ingestion-log-6",
-              "name": "execution_id",
-              "value": "={{ $execution.id }}",
-              "type": "string"
-            },
-            {
-              "id": "prepare-ingestion-log-7",
-              "name": "ingested_at",
-              "value": "={{ $now.toISO() }}",
-              "type": "string"
-            },
-            {
-              "id": "prepare-ingestion-log-8",
-              "name": "error_message",
-              "value": "",
-              "type": "string"
-            }
-          ]
-        },
-        "options": {}
+        "mode": "runOnceForAllItems",
+        "jsCode": "const metadataItems = $items('Prepare Chunk Metadata').map((item) => item.json || {});\nconst chunkItems = $input.all().map((item) => item.json || {});\nconst chunksByFileId = new Map();\n\nfor (const chunk of chunkItems) {\n  const metadata = chunk.metadata || {};\n  const fileId = metadata.source_file_id || chunk.source_file_id || chunk.file_id;\n  if (!fileId) continue;\n  chunksByFileId.set(fileId, (chunksByFileId.get(fileId) || 0) + 1);\n}\n\nreturn metadataItems.map((metadata, index) => {\n  const fileId = metadata.source_file_id || metadata.id || `unknown_file_${index + 1}`;\n  const fileName = metadata.source_file_name || metadata.name || 'unknown_file_name';\n  let chunksCount = chunksByFileId.get(fileId);\n\n  if (!chunksCount && metadataItems.length === 1) {\n    chunksCount = chunkItems.length;\n  }\n\n  return {\n    json: {\n      file_id: fileId,\n      file_name: fileName,\n      status: 'completed',\n      chunks_count: String(chunksCount || 'see Pinecone upsert result'),\n      namespace: metadata.namespace || 'SpaceKonceptRental_kb',\n      execution_id: $execution.id,\n      ingested_at: new Date().toISOString(),\n      error_message: ''\n    }\n  };\n});"
       },
       "id": "20000000-0000-4000-8000-000000000009",
       "name": "Prepare Ingestion Log",
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
       "position": [
         624,
         128
