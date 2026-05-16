@@ -37,7 +37,7 @@
     },
     {
       "parameters": {
-        "content": "# VECTOR INDEXING\n\n- Makes KB updates idempotent before writing fresh vectors.\n- Pinecone insert does not automatically replace old file chunks, so this section deletes stale vectors first.\n- Namespace is set upstream in `Prepare Chunk Metadata` and read by Pinecone as `={{ $json.namespace || 'SpaceKonceptRental_kb' }}`.\n\n## Pinecone cleanup subflow:\n\n- **Resolve Pinecone Index Host**: Gets the live Pinecone host for `pinecone_index_name`.\n- **Prepare Pinecone Delete Request**: Builds a `/vectors/delete` request for the current `source_file_id` or `source_file_name`.\n- **Delete Existing Pinecone File Chunks**: Removes old chunks for that file from the namespace.\n- **Restore Pinecone Ingestion Context**: Restores the original document item so embedding and insert can continue normally.\n\n## Required manual configuration:\n\n- **Prepare Chunk Metadata**\n  - `pinecone_index_name`: Keep this aligned with the Pinecone index used for vector storage.\n- **Insert Chunks into Pinecone**\n  - `pineconeIndex`: Set this to the same Pinecone index used for vector storage.",
+        "content": "# VECTOR INDEXING\n\n- Makes KB updates idempotent before writing fresh vectors.\n- Pinecone insert does not automatically replace old file chunks, so this section deletes stale vectors first.\n- Namespace is set upstream in `Prepare Chunk Metadata` and read by Pinecone as `={{ $json.namespace || 'SpaceKonceptRental_kb' }}`.\n\n## Pinecone cleanup subflow:\n\n- **Resolve Pinecone Index Host**: Gets the live Pinecone host for `pinecone_index_name`.\n- **Prepare Pinecone Delete Request**: Builds a `/vectors/delete` request for the current `source_file_id` or `source_file_name`.\n- **Delete Existing Pinecone File Chunks**: Removes old chunks for that file from the namespace. A first-run `Namespace not found` response is allowed because there are no old vectors yet.\n- **Restore Pinecone Ingestion Context**: Validates the delete result, throws for unexpected Pinecone delete errors, then restores the original document item so embedding and insert can continue normally.\n\n## Required manual configuration:\n\n- **Prepare Chunk Metadata**\n  - `pinecone_index_name`: Keep this aligned with the Pinecone index used for vector storage.\n- **Insert Chunks into Pinecone**\n  - `pineconeIndex`: Set this to the same Pinecone index used for vector storage.",
         "height": 940,
         "width": 1384,
         "color": 3
@@ -450,7 +450,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const hostItems = $input.all();\nconst sourceItems = $items('Prepare Chunk Metadata');\n\nreturn hostItems.map((hostItem, index) => {\n  const sourceItem = sourceItems[index] || {};\n  const sourceJson = sourceItem.json || {};\n  const rawHost = hostItem.json?.host || hostItem.json?.database?.host || '';\n  const host = String(rawHost).replace(/^https?:\\/\\//, '').replace(/\\/$/, '');\n  const namespace = sourceJson.namespace || 'SpaceKonceptRental_kb';\n  const fileId = String(sourceJson.source_file_id || '').trim();\n  const fileName = String(sourceJson.source_file_name || '').trim();\n  const conditions = [];\n\n  if (!host) {\n    throw new Error('Pinecone index host was not returned by Resolve Pinecone Index Host');\n  }\n\n  if (fileId) conditions.push({ source_file_id: { $eq: fileId } });\n  if (fileName) conditions.push({ source_file_name: { $eq: fileName } });\n\n  if (!conditions.length) {\n    throw new Error('Cannot delete stale Pinecone vectors without source_file_id or source_file_name');\n  }\n\n  return {\n    json: {\n      ...sourceJson,\n      pinecone_index_host: host,\n      pinecone_delete_url: `https://${host}/vectors/delete`,\n      pinecone_delete_body: {\n        namespace,\n        filter: conditions.length === 1 ? conditions[0] : { $or: conditions }\n      }\n    },\n    binary: sourceItem.binary\n  };\n});"
+        "jsCode": "const hostItems = $input.all();\nconst sourceItems = $items('Prepare Chunk Metadata');\n\nreturn hostItems.map((hostItem, index) => {\n  const sourceItem = sourceItems[index] || {};\n  const sourceJson = sourceItem.json || {};\n  const hostJson = hostItem.json?.body || hostItem.json || {};\n  const rawHost = hostJson.host || hostJson.database?.host || '';\n  const host = String(rawHost).replace(/^https?:\\/\\//, '').replace(/\\/$/, '');\n  const namespace = sourceJson.namespace || 'SpaceKonceptRental_kb';\n  const fileId = String(sourceJson.source_file_id || '').trim();\n  const fileName = String(sourceJson.source_file_name || '').trim();\n  const conditions = [];\n\n  if (!host) {\n    throw new Error('Pinecone index host was not returned by Resolve Pinecone Index Host');\n  }\n\n  if (fileId) conditions.push({ source_file_id: { $eq: fileId } });\n  if (fileName) conditions.push({ source_file_name: { $eq: fileName } });\n\n  if (!conditions.length) {\n    throw new Error('Cannot delete stale Pinecone vectors without source_file_id or source_file_name');\n  }\n\n  return {\n    json: {\n      ...sourceJson,\n      pinecone_index_host: host,\n      pinecone_delete_url: `https://${host}/vectors/delete`,\n      pinecone_delete_body: {\n        namespace,\n        filter: conditions.length === 1 ? conditions[0] : { $or: conditions }\n      }\n    },\n    binary: sourceItem.binary\n  };\n});"
       },
       "id": "20000000-0000-4000-8000-000000000016",
       "name": "Prepare Pinecone Delete Request",
@@ -486,6 +486,8 @@
         "options": {
           "response": {
             "response": {
+              "fullResponse": true,
+              "neverError": true,
               "responseFormat": "json"
             }
           }
@@ -505,7 +507,7 @@
     },
     {
       "parameters": {
-        "jsCode": "return $items('Prepare Pinecone Delete Request').map((item) => ({\n  json: item.json,\n  binary: item.binary\n}));"
+        "jsCode": "const deleteResults = $input.all();\nconst sourceItems = $items('Prepare Pinecone Delete Request');\n\nfor (let index = 0; index < deleteResults.length; index += 1) {\n  const result = deleteResults[index].json || {};\n  const statusCode = Number(result.statusCode || result.status || 200);\n  const body = result.body ?? result;\n  const bodyText = typeof body === 'string' ? body : JSON.stringify(body);\n  const message = typeof body === 'object' && body !== null ? String(body.message || body.error?.message || '') : bodyText;\n  const isSuccess = statusCode >= 200 && statusCode < 300;\n  const isFirstRunMissingNamespace = statusCode === 404 && /Namespace not found/i.test(message || bodyText);\n\n  if (!isSuccess && !isFirstRunMissingNamespace) {\n    const source = sourceItems[index]?.json || {};\n    const fileRef = source.source_file_name || source.source_file_id || `item ${index + 1}`;\n    throw new Error(`Pinecone delete failed for ${fileRef} (${statusCode}): ${bodyText}`);\n  }\n}\n\nreturn sourceItems.map((item) => ({\n  json: item.json,\n  binary: item.binary\n}));"
       },
       "id": "20000000-0000-4000-8000-000000000018",
       "name": "Restore Pinecone Ingestion Context",

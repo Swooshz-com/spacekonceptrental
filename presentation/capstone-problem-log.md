@@ -84,6 +84,18 @@ Working notes for the final presentation. These are the practical issues found w
   - Fix: updated the Vector Indexing sticky note to explain the host lookup, delete request, stale vector deletion, and context restore steps.
   - Presentation point: production workflows need operator-facing documentation, especially around destructive-looking cleanup steps.
 
+- Pinecone delete failed on first clean namespace.
+  - Impact: the workflow stopped at `Delete Existing Pinecone File Chunks` with `Namespace not found` before fresh chunks could be inserted.
+  - Root cause: Pinecone returns 404 when deleting from a namespace that has not been created by any prior insert.
+  - Fix: allow only the first-run `Namespace not found` delete response to continue, while still failing unexpected Pinecone delete errors.
+  - Presentation point: idempotent cleanup should tolerate empty initial state without hiding real infrastructure failures.
+
+- Pinecone host lookup response shape changed after error handling update.
+  - Impact: the workflow stopped at `Prepare Pinecone Delete Request` because the host was wrapped under `body.host` instead of returned as top-level `host`.
+  - Root cause: full HTTP response handling was accidentally applied to the index-host lookup node instead of only the delete node.
+  - Fix: keep normal JSON output on the host lookup, make the delete request return a full response, and make host parsing tolerate both shapes.
+  - Presentation point: when chaining HTTP nodes, response shape changes must be treated as data-contract changes.
+
 ## Logging and audit issues
 
 - KB ingestion logs were replacing old rows instead of preserving history.
