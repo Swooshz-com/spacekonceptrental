@@ -96,6 +96,12 @@ Working notes for the final presentation. These are the practical issues found w
   - Fix: keep normal JSON output on the host lookup, make the delete request return a full response, and make host parsing tolerate both shapes.
   - Presentation point: when chaining HTTP nodes, response shape changes must be treated as data-contract changes.
 
+- Live n8n kept running an older workflow after the repo fix.
+  - Impact: execution `945` still failed with `Namespace not found` even though the repo workflow had been patched.
+  - Root cause: the fixed workflow JSON had not been imported back into the live n8n instance, so the active node still had `neverError` disabled.
+  - Fix: import the updated workflow before retesting, then confirm the live node parameters match the repo.
+  - Presentation point: repository changes and live automation state must be synced and verified separately.
+
 ## Logging and audit issues
 
 - KB ingestion logs were replacing old rows instead of preserving history.
@@ -103,6 +109,12 @@ Working notes for the final presentation. These are the practical issues found w
   - Root cause: Google Sheets node used `appendOrUpdate` with `file_id` as the match column.
   - Fix: changed the ingestion log back to append-only so every event is recorded as a new row.
   - Presentation point: operational logs should be append-only unless the workflow is intentionally maintaining current state.
+
+- Switching the Google Sheets operation cleared the field mapping.
+  - Impact: the workflow reached the log step, but no ingestion row was appended because the append node had no mapped columns.
+  - Root cause: changing the Sheets node operation in the n8n UI reset `columns.value`.
+  - Fix: restored explicit mappings for `file_id`, `file_name`, `file_url`, `event_type`, `status`, `chunks_count`, `namespace`, `execution_id`, `ingested_at`, and `error_message`.
+  - Presentation point: low-code node settings can silently reset downstream mappings, so final workflow exports need source control review.
 
 - Import helper skipped unchanged workflows.
   - Impact: it looked like an import failure when only one workflow had actually changed.
