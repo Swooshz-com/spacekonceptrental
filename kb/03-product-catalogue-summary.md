@@ -1,9 +1,5 @@
 # SpaceKonceptRental Product Catalogue Summary
 
-Use this file to answer broad product-category and availability questions.
-For exact item availability, final pricing, or final quote totals, collect the
-customer's event details and route the enquiry to the team.
-
 ## Catalogue Positioning
 
 SpaceKonceptRental provides furniture rental for events and exhibitions.
@@ -194,9 +190,9 @@ Pricing categories include:
 - orders above $500 before GST;
 - orders below $500 before GST.
 
-Final delivery quotes should be confirmed by the team. Customer support should
-collect the event date, venue, timing, item list, quantity, delivery access, and
-order value context, then route the enquiry for quotation confirmation.
+Final delivery quotes depend on the event date, venue, timing, item list,
+quantity, delivery access, and order value. Customers should provide these
+details for quotation confirmation.
 
 ## Quotation Terms From Catalogue
 
@@ -204,5 +200,5 @@ The catalogue states that rental services or items are reserved and commenced
 after receipt of a signed quotation and/or pre-payment.
 
 The catalogue also includes cancellation, damage/loss, payment, Singapore law,
-confidentiality, and confirmation terms. These should be confirmed against the
-latest signed quotation before being presented as final binding terms.
+confidentiality, and confirmation terms. The latest signed quotation should
+prevail for final binding terms.

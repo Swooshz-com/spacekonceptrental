@@ -1,11 +1,5 @@
 # SpaceKonceptRental Service FAQ
 
-Use this file as customer-support knowledge for service scope, common
-questions, quote requests, booking, delivery, escalation, and lead capture.
-This file intentionally removes internal `Intent` and `Handoff` labels from the
-source document so the RAG system retrieves business facts instead of scripted
-routing metadata.
-
 ## Service Scope
 
 SpaceKonceptRental helps exhibitors, event organisers, agencies, and corporate
@@ -155,9 +149,9 @@ Rental extensions may be possible if the items are not reserved for another
 booking. Customers should contact the team early to confirm availability and
 additional charges.
 
-Disposal services for event waste or third-party items are not confirmed in the
-source material. If a customer asks about disposal, collect what they need
-removed and route the enquiry to the team for confirmation.
+Disposal services for event waste or third-party items are not currently
+confirmed. Customers should provide details of what needs to be removed so the
+team can review the request.
 
 ## Contact And Viewing
 
@@ -167,15 +161,15 @@ official contact page.
 Selected items may be available for viewing by appointment. Rental item viewing
 should be confirmed with the team first.
 
-## Chatbot Limits
+## Service Limits
 
-Customer support can collect event details and pass them to the team.
+SpaceKonceptRental can collect event details and pass them to the team.
 
-Live stock confirmation depends on the inventory system connected to the
-workflow and should not be promised unless the system provides that data.
+Live stock confirmation depends on current inventory availability and should
+not be promised unless confirmed by the team.
 
 For urgent requests, collect event date, venue, setup time, item list, and
 contact number, then escalate for availability and delivery review.
 
-Customer support can collect details and prepare an enquiry for review. An
-official quotation should be issued or approved by the SpaceKonceptRental team.
+An official quotation should be issued or approved by the SpaceKonceptRental
+team.

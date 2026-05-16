@@ -1,8 +1,5 @@
 # SpaceKonceptRental Rental Terms
 
-Status: draft website policy copy prepared for business and legal review.
-For production use, confirm the final terms with SpaceKonceptRental.
-
 ## Website Use
 
 Information submitted through the website, enquiry forms, WhatsApp, email, or

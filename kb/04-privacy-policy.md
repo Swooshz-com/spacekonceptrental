@@ -1,9 +1,5 @@
 # SpaceKonceptRental Privacy Policy
 
-Status: draft website privacy policy for SpaceKonceptRental / FJ & Joseph Pte
-Ltd. For production use, confirm the final privacy policy and data protection
-contact before publication.
-
 ## Overview
 
 SpaceKonceptRental, a brand operated by FJ & Joseph Pte Ltd, collects, uses,
@@ -191,7 +187,3 @@ access, correction, withdrawal, or complaint requests.
 For privacy-related enquiries, customers should contact SpaceKonceptRental
 through the official contact details listed on the website or email
 `info@fjnjoseph.com`.
-
-Before publishing the policy, SpaceKonceptRental should confirm whether a
-dedicated Data Protection Officer contact or alternate privacy email should be
-listed.
