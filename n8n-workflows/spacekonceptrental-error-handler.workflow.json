@@ -115,6 +115,48 @@
               "name": "execution_mode",
               "value": "={{ $json.execution?.mode || $json.trigger?.mode || 'not_available' }}",
               "type": "string"
+            },
+            {
+              "id": "normalise-error-payload-12",
+              "name": "logged_date",
+              "value": "={{ new Date().toLocaleDateString('en-SG', { timeZone: 'Asia/Singapore' }) }}",
+              "type": "string"
+            },
+            {
+              "id": "normalise-error-payload-13",
+              "name": "logged_time",
+              "value": "={{ new Date().toLocaleTimeString('en-SG', { timeZone: 'Asia/Singapore', hour12: false }) }}",
+              "type": "string"
+            },
+            {
+              "id": "normalise-error-payload-14",
+              "name": "contact_id",
+              "value": "={{ $json.workflow?.id || 'not_available' }}",
+              "type": "string"
+            },
+            {
+              "id": "normalise-error-payload-15",
+              "name": "error_type",
+              "value": "={{ $json.execution?.mode || $json.trigger?.mode || 'workflow_error' }}",
+              "type": "string"
+            },
+            {
+              "id": "normalise-error-payload-16",
+              "name": "last_node_executed",
+              "value": "={{ $json.execution?.lastNodeExecuted || $json.trigger?.error?.node?.name || 'not_available' }}",
+              "type": "string"
+            },
+            {
+              "id": "normalise-error-payload-17",
+              "name": "execution_id",
+              "value": "={{ $json.execution?.id || 'not_available' }}",
+              "type": "string"
+            },
+            {
+              "id": "normalise-error-payload-18",
+              "name": "execution_url",
+              "value": "={{ $json.execution?.url || 'not_available' }}",
+              "type": "string"
             }
           ]
         },
@@ -149,15 +191,15 @@
         "columns": {
           "mappingMode": "defineBelow",
           "value": {
-            "logged_date": "={{ $json.error_time.split(',')[0] || $json.error_time }}",
-            "logged_time": "={{ ($json.error_time.split(',')[1] || '').trim() }}",
-            "contact_id": "={{ $json.workflow_id }}",
-            "error_type": "={{ $json.execution_mode }}",
+            "logged_date": "={{ $json.logged_date }}",
+            "logged_time": "={{ $json.logged_time }}",
+            "contact_id": "={{ $json.contact_id }}",
+            "error_type": "={{ $json.error_type }}",
             "error_message": "={{ $json.error_message }}",
             "error_workflow_name": "={{ $json.workflow_name }}",
-            "last_node_executed": "={{ $json.error_node_name }}",
-            "execution_id": "={{ $json.error_execution_id }}",
-            "execution_url": "={{ $json.error_link }}",
+            "last_node_executed": "={{ $json.last_node_executed }}",
+            "execution_id": "={{ $json.execution_id }}",
+            "execution_url": "={{ $json.execution_url }}",
             "payload_json": "={{ JSON.stringify($json) }}"
           },
           "matchingColumns": [],
@@ -274,8 +316,9 @@
       "parameters": {
         "sendTo": "SpaceKonceptRental@gmail.com",
         "subject": "=[ SpaceKonceptRental n8n Alert ] Workflow failed: {{ $json.workflow_name }}",
-        "message": "=Workflow name: {{ $json.workflow_name }}\nWorkflow ID: {{ $json.workflow_id }}\nFailed node: {{ $json.error_node_name }}\nExecution ID: {{ $json.error_execution_id }}\nError message: {{ $json.error_message }}\nExecution URL: {{ $json.error_link }}\nTimestamp Asia/Singapore: {{ $json.error_time }}\nRecovery note: Review the failure log, confirm whether the run is safe to retry, and update recovery_status in Google Sheets.",
-        "options": {}
+        "message": "=<p><strong>Error Time:</strong> {{ $json.logged_date }} - {{ $json.logged_time }}</p>\n<p><strong>Contact ID:</strong> {{ $json.contact_id }}</p>\n<p><strong>Workflow:</strong> {{ $json.workflow_name }}</p>\n<p><strong>Error Type:</strong> {{ $json.error_type }}</p>\n<p><strong>Error Message:</strong> {{ $json.error_message }}</p>\n<p><strong>Last Node Executed:</strong> {{ $json.last_node_executed }}</p>\n<p><strong>Execution ID:</strong> {{ $json.execution_id }}</p>\n<p><strong>Execution URL:</strong> {{ $json.execution_url }}</p>\n<p><strong>Recovery Note:</strong> Review the failure log, confirm whether the run is safe to retry, and update recovery_status in Google Sheets.</p>",
+        "options": {},
+        "emailType": "html"
       },
       "id": "10000000-0000-4000-8000-000000000005",
       "name": "Send Failure Alert",
@@ -330,5 +373,5 @@
   "meta": {
     "templateCredsSetupCompleted": true
   },
-  "versionId": "a7452e39-e2c0-4867-a58a-e1726b2bb20b"
+  "versionId": "373267ba-374f-4653-984d-32f0556acb2a"
 }

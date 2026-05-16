@@ -263,9 +263,19 @@
             "customer_email": "={{ $node[\"Redact PII for Logs\"].json.customer_email }}",
             "customer_phone": "={{ $node[\"Redact PII for Logs\"].json.customer_phone }}",
             "user_message_redacted": "={{ $node[\"Redact PII for Logs\"].json.user_message_redacted }}",
+            "bot_reply": "pending_ai_response",
+            "intent": "pending",
+            "confidence": "0",
             "status": "processing",
+            "needs_escalation": "false",
+            "lead_captured": "false",
+            "ticket_id": "={{ '' }}",
+            "booking_requested": "false",
+            "source_titles": "={{ '' }}",
+            "source_file_ids": "={{ '' }}",
             "execution_id": "={{ $node[\"Redact PII for Logs\"].json.execution_id }}",
-            "created_at": "={{ $node[\"Redact PII for Logs\"].json.timestamp }}"
+            "created_at": "={{ $node[\"Redact PII for Logs\"].json.timestamp }}",
+            "completed_at": "={{ '' }}"
           },
           "matchingColumns": [
             "message_id"
@@ -581,7 +591,7 @@
       "type": "@n8n/n8n-nodes-langchain.vectorStorePinecone",
       "typeVersion": 1.3,
       "position": [
-        976,
+        1088,
         448
       ],
       "retryOnFail": true,
@@ -1538,7 +1548,7 @@
       "parameters": {
         "sendTo": "SpaceKonceptRental@gmail.com",
         "subject": "=[ SpaceKonceptRental Support Alert ] Customer needs help: {{ $json.intent }}",
-        "message": "=Session: {{ $json.session_id }}\nMessage ID: {{ $json.message_id }}\nCustomer: {{ $json.customer_name }}\nEmail: {{ $json.customer_email }}\nPhone: {{ $json.customer_phone }}\nIntent: {{ $json.intent }}\nConfidence: {{ $json.confidence }}\nRedacted message: {{ $json.user_message_redacted }}\nBot reply: {{ $json.reply }}\nTicket ID: {{ $json.ticket_id }}\nLead ID: {{ $json.lead_id }}\nSources: {{ $json.source_titles }}\nExecution ID: {{ $json.execution_id }}",
+        "message": "=<p><strong>Session ID:</strong> {{ $json.session_id }}</p>\n<p><strong>Message ID:</strong> {{ $json.message_id }}</p>\n<p><strong>Contact ID:</strong> {{ $json.customer_email || $json.customer_phone || $json.customer_name || \"not_available\" }}</p>\n<p><strong>Customer:</strong> {{ $json.customer_name }}</p>\n<p><strong>Email:</strong> {{ $json.customer_email }}</p>\n<p><strong>Phone:</strong> {{ $json.customer_phone }}</p>\n<p><strong>Intent:</strong> {{ $json.intent }}</p>\n<p><strong>Confidence:</strong> {{ $json.confidence }}</p>\n<p><strong>Redacted Message:</strong> {{ $json.user_message_redacted }}</p>\n<p><strong>Bot Reply:</strong> {{ $json.reply }}</p>\n<p><strong>Ticket ID:</strong> {{ $json.ticket_id }}</p>\n<p><strong>Lead ID:</strong> {{ $json.lead_id }}</p>\n<p><strong>Sources:</strong> {{ $json.source_titles }}</p>\n<p><strong>Execution ID:</strong> {{ $json.execution_id }}</p>",
         "options": {}
       },
       "id": "30000000-0000-4000-8000-000000000021",
@@ -1801,7 +1811,7 @@
     },
     {
       "parameters": {
-        "content": "# INTAKE AND DEDUPE\n\n- Receives chat messages and normalises input.\n- Checks the conversation log before processing to avoid duplicate replies.\n\n## Required manual configuration:\n\n- **Lookup Conversation State**\n  - `documentId.value`: Set this to the Google Sheets workbook used for support logs.\n- **Upsert Conversation Processing**\n  - `documentId.value`: Set this to the same Google Sheets workbook used for support logs.",
+        "content": "# INTAKE AND DEDUPE\n\n- Receives chat messages and normalises input.\n- Checks the conversation log before processing to avoid duplicate replies.\n- `Upsert Conversation Processing` writes a temporary processing row before AI/RAG output exists.\n- Later AI/RAG fields use `={{ '' }}` on purpose so Sheets cells stay blank until `Upsert Conversation Completed` overwrites the row.\n\n## Required manual configuration:\n\n- **Lookup Conversation State**\n  - `documentId.value`: Set this to the Google Sheets workbook used for support logs.\n- **Upsert Conversation Processing**\n  - `documentId.value`: Set this to the same Google Sheets workbook used for support logs.",
         "height": 988,
         "width": 1764,
         "color": 5
@@ -1841,8 +1851,19 @@
       "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
       "typeVersion": 1.2,
       "position": [
-        976,
+        1184,
         608
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "30000000-0000-4000-8000-000000000028",
+      "name": "Simple Conversation Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "position": [
+        960,
+        448
       ]
     }
   ],
@@ -2091,6 +2112,17 @@
           }
         ]
       ]
+    },
+    "Simple Conversation Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "SpaceKonceptRental AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "settings": {
@@ -2105,5 +2137,5 @@
   "meta": {
     "templateCredsSetupCompleted": true
   },
-  "versionId": "7b15b998-164b-40cc-af26-d3e27b9d3661"
+  "versionId": "b082a2a3-deda-4261-853b-00d1bbbff4d5"
 }
