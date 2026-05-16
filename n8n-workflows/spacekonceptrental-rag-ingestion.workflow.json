@@ -37,7 +37,7 @@
     },
     {
       "parameters": {
-        "content": "# VECTOR INDEXING\n\n- Creates embeddings for KB chunks.\n- Stores chunk vectors in the Pinecone KB namespace.\n\n## Required manual configuration:\n\n- **Insert Chunks into Pinecone**\n  - `pineconeIndex`: Set this to the Pinecone index used for vector storage.",
+        "content": "# VECTOR INDEXING\n\n- Creates embeddings for KB chunks.\n- Stores chunk vectors in the Pinecone KB namespace.\n- Namespace is set upstream in `Prepare Chunk Metadata` and read by Pinecone as `={{ $json.namespace || 'SpaceKonceptRental_kb' }}`.\n\n## Required manual configuration:\n\n- **Insert Chunks into Pinecone**\n  - `pineconeIndex`: Set this to the Pinecone index used for vector storage.",
         "height": 940,
         "width": 580,
         "color": 3
@@ -258,7 +258,7 @@
         },
         "options": {
           "clearNamespace": false,
-          "pineconeNamespace": "={ $json.namespace }"
+          "pineconeNamespace": "={{ $json.namespace || 'SpaceKonceptRental_kb' }}"
         }
       },
       "id": "20000000-0000-4000-8000-000000000008",
@@ -304,7 +304,7 @@
             {
               "id": "prepare-ingestion-log-5",
               "name": "namespace",
-              "value": "SpaceKonceptRental_kb",
+              "value": "={{ $node[\"Prepare Chunk Metadata\"].json.namespace || 'SpaceKonceptRental_kb' }}",
               "type": "string"
             },
             {

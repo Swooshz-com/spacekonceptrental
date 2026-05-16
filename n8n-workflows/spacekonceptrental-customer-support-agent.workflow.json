@@ -5,7 +5,7 @@
   "nodes": [
     {
       "parameters": {
-        "content": "# RAG ANSWER\n\n- Runs the AI agent with Pinecone retrieval.\n- Parses strict JSON for reply, logging, and routing.\n\n## Required manual configuration:\n\n- **SpaceKonceptRental Knowledge Base**\n  - `pineconeIndex`: Set this to the Pinecone index used for retrieval.",
+        "content": "# RAG ANSWER\n\n- Runs the AI agent with Pinecone retrieval.\n- Retrieves from `kb_namespace`, which defaults to `SpaceKonceptRental_kb` and matches KB ingestion.\n- Keep namespace assignment controlled by workflow config, not free-form customer input.\n- Parses strict JSON for reply, logging, and routing.\n\n## Required manual configuration:\n\n- **SpaceKonceptRental Knowledge Base**\n  - `pineconeIndex`: Set this to the Pinecone index used for retrieval.",
         "height": 988,
         "width": 644,
         "color": 3
@@ -120,6 +120,12 @@
               "id": "normalise-input-9",
               "name": "execution_id",
               "value": "={{ $execution.id }}",
+              "type": "string"
+            },
+            {
+              "id": "normalise-input-10",
+              "name": "kb_namespace",
+              "value": "SpaceKonceptRental_kb",
               "type": "string"
             }
           ]
@@ -542,6 +548,12 @@
               "name": "execution_id",
               "value": "={{ $node[\"Redact PII for Logs\"].json.execution_id }}",
               "type": "string"
+            },
+            {
+              "id": "restore-processing-context-11",
+              "name": "kb_namespace",
+              "value": "={{ $node[\"Redact PII for Logs\"].json.kb_namespace || 'SpaceKonceptRental_kb' }}",
+              "type": "string"
             }
           ]
         },
@@ -577,15 +589,17 @@
       "parameters": {
         "mode": "retrieve-as-tool",
         "toolDescription": "Use this tool to answer questions about SpaceKonceptRental products, furniture rental packages, pricing, rental process, delivery, pickup, policies, appointment booking, ticketing, escalation, and FAQs.",
-        "pineconeIndex": {
-          "__rl": true,
-          "value": "spacekonceptrental-kb-rag",
-          "mode": "list",
-          "cachedResultName": "spacekonceptrental-kb-rag"
-        },
-        "topK": 6,
-        "options": {}
+      "pineconeIndex": {
+        "__rl": true,
+        "value": "spacekonceptrental-kb-rag",
+        "mode": "list",
+        "cachedResultName": "spacekonceptrental-kb-rag"
       },
+      "topK": 6,
+      "options": {
+        "pineconeNamespace": "={{ $json.kb_namespace || 'SpaceKonceptRental_kb' }}"
+      }
+    },
       "id": "30000000-0000-4000-8000-000000000011",
       "name": "SpaceKonceptRental Knowledge Base",
       "type": "@n8n/n8n-nodes-langchain.vectorStorePinecone",
