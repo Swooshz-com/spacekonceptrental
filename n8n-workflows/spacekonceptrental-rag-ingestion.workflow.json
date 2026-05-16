@@ -257,7 +257,8 @@
           "cachedResultName": "SpaceKonceptRental-kb-rag"
         },
         "options": {
-          "clearNamespace": false
+          "clearNamespace": false,
+          "pineconeNamespace": "={ $json.namespace }"
         }
       },
       "id": "20000000-0000-4000-8000-000000000008",
@@ -572,5 +573,5 @@
   "meta": {
     "templateCredsSetupCompleted": true
   },
-  "versionId": "8adab960-bdcf-42b7-aeda-3e35f256645b"
+  "versionId": "279c2b11-88ca-4276-937a-97400761a97d"
 }
