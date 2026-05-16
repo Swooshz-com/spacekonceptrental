@@ -1,7 +1,7 @@
 const fs = require('node:fs');
 
 function usage() {
-  console.error('Usage: node scripts/should-import-n8n-workflow.cjs <prepared-import.json> <live-export.json>');
+  console.error('Usage: node templates/n8n/sync-helpers/should-import-n8n-workflow.cjs <prepared-import.json> <live-export.json>');
   process.exit(2);
 }
 

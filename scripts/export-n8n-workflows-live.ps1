@@ -19,7 +19,27 @@ if (-not $PSScriptRoot) {
   throw "This script must be run from a .ps1 file."
 }
 
-$RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
+function Resolve-RepoRootFromScript {
+  $current = (Resolve-Path $PSScriptRoot).Path
+  while ($true) {
+    if (
+      (Test-Path -LiteralPath (Join-Path $current ".git")) -or
+      (Test-Path -LiteralPath (Join-Path $current ".gitignore")) -or
+      (Test-Path -LiteralPath (Join-Path $current "n8n-workflows"))
+    ) {
+      return $current
+    }
+
+    $parent = Split-Path -Parent $current
+    if ([string]::IsNullOrWhiteSpace($parent) -or $parent -eq $current) {
+      return (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
+    }
+    $current = $parent
+  }
+}
+
+$HelperScriptDir = (Resolve-Path $PSScriptRoot).Path
+$RepoRoot = Resolve-RepoRootFromScript
 Set-Location $RepoRoot
 
 function Write-Section($Title) {
@@ -387,7 +407,7 @@ if ($Mode -eq "RepoTrackedOnly") {
     Write-Step "EXPORT" "$($planned.RepoFile.Name) -> $(Get-DisplayPath $planned.ExportFile)"
   }
 
-  $syncArgs = @("scripts/sync-n8n-live-exports.cjs", $ExportDirPath, $WorkflowDirPath, $BindingsFilePath, "--sync-exported-only")
+  $syncArgs = @((Join-Path $HelperScriptDir "sync-n8n-live-exports.cjs"), $ExportDirPath, $WorkflowDirPath, $BindingsFilePath, "--sync-exported-only")
   if ($PreserveTags) {
     $syncArgs += "--preserve-tags"
   }
@@ -497,7 +517,7 @@ foreach ($planned in $plannedAllLive) {
   Write-Step "EXPORT" "$($planned.Workflow.name) -> $(Get-DisplayPath $planned.ExportFile)"
 }
 
-$syncAllArgs = @("scripts/sync-n8n-live-exports.cjs", $ExportDirPath, $WorkflowDirPath, $BindingsFilePath, "--create-missing-workflows", "--sync-exported-only")
+$syncAllArgs = @((Join-Path $HelperScriptDir "sync-n8n-live-exports.cjs"), $ExportDirPath, $WorkflowDirPath, $BindingsFilePath, "--create-missing-workflows", "--sync-exported-only")
 if ($PreserveTags) {
   $syncAllArgs += "--preserve-tags"
 }

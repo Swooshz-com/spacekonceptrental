@@ -32,7 +32,27 @@ if (-not [string]::IsNullOrWhiteSpace($ProjectId) -and -not [string]::IsNullOrWh
   throw "ProjectId and UserId cannot both be set. Choose one import target."
 }
 
-$RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
+function Resolve-RepoRootFromScript {
+  $current = (Resolve-Path $PSScriptRoot).Path
+  while ($true) {
+    if (
+      (Test-Path -LiteralPath (Join-Path $current ".git")) -or
+      (Test-Path -LiteralPath (Join-Path $current ".gitignore")) -or
+      (Test-Path -LiteralPath (Join-Path $current "n8n-workflows"))
+    ) {
+      return $current
+    }
+
+    $parent = Split-Path -Parent $current
+    if ([string]::IsNullOrWhiteSpace($parent) -or $parent -eq $current) {
+      return (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
+    }
+    $current = $parent
+  }
+}
+
+$HelperScriptDir = (Resolve-Path $PSScriptRoot).Path
+$RepoRoot = Resolve-RepoRootFromScript
 Set-Location $RepoRoot
 
 function Write-Section($Title) {
@@ -317,7 +337,7 @@ function Export-CredentialBindingsOnly($WorkflowFiles, $LiveWorkflows) {
     Write-Step "EXPORT" "$($workflowFile.Name) exported for credential binding refresh."
   }
 
-  $syncResult = Invoke-CapturedCommand "node" @("scripts/sync-n8n-live-exports.cjs", $CredentialExportDirPath, $WorkflowDirPath, $BindingsFilePath, "--credentials-only", "--allow-missing-exports")
+  $syncResult = Invoke-CapturedCommand "node" @((Join-Path $HelperScriptDir "sync-n8n-live-exports.cjs"), $CredentialExportDirPath, $WorkflowDirPath, $BindingsFilePath, "--credentials-only", "--allow-missing-exports")
   if ($syncResult.ExitCode -ne 0) {
     Write-Step "FAIL" "Could not save refreshed credential bindings."
     Write-Host ($syncResult.Output -join "`n")
@@ -457,7 +477,7 @@ function Invoke-WorkflowPreflight($WorkflowFiles, [bool]$BindingsFileExists, $Li
     }
 
     if ($workflowStatus -eq "ExistingById" -or $workflowStatus -eq "ExistingByName" -or $workflowStatus -eq "ExistingArchivedById") {
-      $comparisonResult = Invoke-CapturedCommand "node" @("scripts/should-import-n8n-workflow.cjs", $workflowFile.FullName, $liveCompareFile)
+      $comparisonResult = Invoke-CapturedCommand "node" @((Join-Path $HelperScriptDir "should-import-n8n-workflow.cjs"), $workflowFile.FullName, $liveCompareFile)
       if ($comparisonResult.ExitCode -ne 0) {
         throw "Failed to compare repo workflow with live workflow for $($workflowFile.FullName).`n$($comparisonResult.Output -join "`n")"
       }
@@ -466,7 +486,7 @@ function Invoke-WorkflowPreflight($WorkflowFiles, [bool]$BindingsFileExists, $Li
         $hasBodyChanges = $false
       }
 
-      $credentialDriftResult = Invoke-CapturedCommand "node" @("scripts/compare-n8n-workflow-credentials.cjs", $workflowFile.FullName, $liveCompareFile, $BindingsFilePath)
+      $credentialDriftResult = Invoke-CapturedCommand "node" @((Join-Path $HelperScriptDir "compare-n8n-workflow-credentials.cjs"), $workflowFile.FullName, $liveCompareFile, $BindingsFilePath)
       if ($credentialDriftResult.ExitCode -ne 0) {
         throw "Failed to compare live credentials for $($workflowFile.FullName).`n$($credentialDriftResult.Output -join "`n")"
       }
@@ -515,7 +535,7 @@ function Invoke-WorkflowPreflight($WorkflowFiles, [bool]$BindingsFileExists, $Li
     }
 
     $prepareArgs = @(
-      "scripts/prepare-n8n-live-import.cjs",
+      (Join-Path $HelperScriptDir "prepare-n8n-live-import.cjs"),
       $workflowFile.FullName,
       $BindingsFilePath,
       $preparedFile
@@ -583,7 +603,7 @@ function Write-BlockedSummary($PreflightResult) {
 
   Write-Section "Next Action Steps"
   Write-Host "1. Confirm Docker and the n8n container are reachable."
-  Write-Host "2. Run scripts\export-n8n-workflows-live.ps1 if you want to refresh repo JSON and credential bindings together."
+  Write-Host "2. Run this helper folder's export-n8n-workflows-live.ps1 if you want to refresh repo JSON and credential bindings together."
   Write-Host "3. Use -AllowMissingCredentialBindings only if you intentionally want changed workflows imported without restored credentials."
   Write-Host "4. Deleting archived workflows is not supported by these CLI helper scripts yet."
 }
@@ -634,7 +654,7 @@ if (-not $bindingsFileExists) {
 $workflowFiles = Get-RootWorkflowFiles $WorkflowDirPath
 
 Write-Section "Workflow JSON Validation"
-$validationResult = Invoke-CapturedCommand "node" @("scripts/validate-n8n-workflows.cjs", $WorkflowDirPath)
+$validationResult = Invoke-CapturedCommand "node" @((Join-Path $HelperScriptDir "validate-n8n-workflows.cjs"), $WorkflowDirPath)
 if ($validationResult.ExitCode -ne 0) {
   throw "Workflow JSON validation failed before live import.`n$($validationResult.Output -join "`n")"
 }

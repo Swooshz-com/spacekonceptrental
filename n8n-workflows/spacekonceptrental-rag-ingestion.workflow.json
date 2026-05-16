@@ -5,9 +5,9 @@
   "nodes": [
     {
       "parameters": {
-        "content": "# DRIVE TRIGGERS\n\n- Watches approved KB files created or updated in Google Drive.\n- Sends changed files into the ingestion path.\n\n## Required manual configuration:\n\n- **KB File Created**\n  - `folderToWatch.value`: Set this to the Google Drive folder that stores approved KB files.\n- **KB File Updated**\n  - `folderToWatch.value`: Set this to the same Google Drive folder that stores approved KB files.",
+        "content": "# DRIVE TRIGGERS\n\n- Watches approved KB files created or updated in Google Drive.\n- Tags each run as `created` or `updated` before downloading the file.\n- Removes duplicate file events inside the same trigger batch so new files still continue.\n- Sends changed files into the ingestion path.\n\n## Required manual configuration:\n\n- **KB File Created**\n  - `folderToWatch.value`: Set this to the Google Drive folder that stores approved KB files.\n- **KB File Updated**\n  - `folderToWatch.value`: Set this to the same Google Drive folder that stores approved KB files.",
         "height": 652,
-        "width": 516,
+        "width": 740,
         "color": 5
       },
       "id": "20000000-0000-4000-8000-000000000901",
@@ -15,7 +15,7 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        -816,
+        -1040,
         -256
       ]
     },
@@ -53,7 +53,7 @@
     },
     {
       "parameters": {
-        "content": "# INGESTION LOG\n\n- Records ingestion status for review.\n- Groups Pinecone chunk outputs back into one log row per source file.\n- Keeps file, namespace, execution, and error details in Sheets.\n\n## Required manual configuration:\n\n- **Append KB Ingestion Log**\n  - `documentId.value`: Set this to the Google Sheets workbook used for ingestion logs.",
+        "content": "# INGESTION LOG\n\n- Records ingestion status for review.\n- Groups Pinecone chunk outputs back into one log row per source file.\n- Upserts by `file_id`, so repeated events update the existing row while new files keep appending.\n- Writes file names as plain text and Drive URLs as clickable links in Sheets.\n\n## Required manual configuration:\n\n- **Append KB Ingestion Log**\n  - `documentId.value`: Set this to the Google Sheets workbook used for ingestion logs.\n  - Sheet headers must include `file_url` and `event_type` if those columns are used.",
         "height": 636,
         "width": 420,
         "color": 4
@@ -92,7 +92,7 @@
       "type": "n8n-nodes-base.googleDriveTrigger",
       "typeVersion": 1,
       "position": [
-        -768,
+        -976,
         48
       ]
     },
@@ -121,7 +121,7 @@
       "type": "n8n-nodes-base.googleDriveTrigger",
       "typeVersion": 1,
       "position": [
-        -768,
+        -976,
         208
       ]
     },
@@ -190,6 +190,12 @@
               "name": "namespace",
               "value": "SpaceKonceptRental_kb",
               "type": "string"
+            },
+            {
+              "id": "prepare-chunk-metadata-8",
+              "name": "event_type",
+              "value": "={{ $json.event_type || 'unknown' }}",
+              "type": "string"
             }
           ]
         },
@@ -223,6 +229,14 @@
               {
                 "name": "namespace",
                 "value": "={{ $json.namespace || 'SpaceKonceptRental_kb' }}"
+              },
+              {
+                "name": "google_drive_url",
+                "value": "={{ $json.google_drive_url }}"
+              },
+              {
+                "name": "event_type",
+                "value": "={{ $json.event_type }}"
               }
             ]
           }
@@ -292,8 +306,7 @@
     },
     {
       "parameters": {
-        "mode": "runOnceForAllItems",
-        "jsCode": "const metadataItems = $items('Prepare Chunk Metadata').map((item) => item.json || {});\nconst chunkItems = $input.all().map((item) => item.json || {});\nconst chunksByFileId = new Map();\n\nfor (const chunk of chunkItems) {\n  const metadata = chunk.metadata || {};\n  const fileId = metadata.source_file_id || chunk.source_file_id || chunk.file_id;\n  if (!fileId) continue;\n  chunksByFileId.set(fileId, (chunksByFileId.get(fileId) || 0) + 1);\n}\n\nreturn metadataItems.map((metadata, index) => {\n  const fileId = metadata.source_file_id || metadata.id || `unknown_file_${index + 1}`;\n  const fileName = metadata.source_file_name || metadata.name || 'unknown_file_name';\n  let chunksCount = chunksByFileId.get(fileId);\n\n  if (!chunksCount && metadataItems.length === 1) {\n    chunksCount = chunkItems.length;\n  }\n\n  return {\n    json: {\n      file_id: fileId,\n      file_name: fileName,\n      status: 'completed',\n      chunks_count: String(chunksCount || 'see Pinecone upsert result'),\n      namespace: metadata.namespace || 'SpaceKonceptRental_kb',\n      execution_id: $execution.id,\n      ingested_at: new Date().toISOString(),\n      error_message: ''\n    }\n  };\n});"
+        "jsCode": "const metadataItems = $items('Prepare Chunk Metadata').map((item) => item.json || {});\nconst chunkItems = $input.all().map((item) => item.json || {});\nconst chunksByFileId = new Map();\n\nfunction driveFileUrl(fileId, existingUrl = '') {\n  if (existingUrl) return existingUrl;\n  if (!fileId || String(fileId).startsWith('unknown_file_')) return '';\n  return `https://drive.google.com/file/d/${fileId}/view`;\n}\n\nfunction plainSheetText(value = '') {\n  const text = String(value || '').trim() || 'unknown_file_name';\n  const escaped = text.replace(/\"/g, '\"\"');\n  return '=\"' + escaped + '\"';\n}\n\nfunction singaporeTimestamp(date = new Date()) {\n  const parts = new Intl.DateTimeFormat(\"en-CA\", {\n    timeZone: \"Asia/Singapore\",\n    year: \"numeric\",\n    month: \"2-digit\",\n    day: \"2-digit\",\n    hour: \"2-digit\",\n    minute: \"2-digit\",\n    second: \"2-digit\",\n    hour12: false\n  }).formatToParts(date).reduce((acc, part) => {\n    if (part.type !== \"literal\") acc[part.type] = part.value;\n    return acc;\n  }, {});\n\n  return parts.year + \"-\" + parts.month + \"-\" + parts.day + \" \" + parts.hour + \":\" + parts.minute + \":\" + parts.second + \" SGT\";\n}\n\nfor (const chunk of chunkItems) {\n  const metadata = chunk.metadata || {};\n  const fileId = metadata.source_file_id || chunk.source_file_id || chunk.file_id;\n  if (!fileId) continue;\n  chunksByFileId.set(fileId, (chunksByFileId.get(fileId) || 0) + 1);\n}\n\nconst uniqueMetadataItems = [];\nconst seenMetadataKeys = new Set();\n\nfor (const metadata of metadataItems) {\n  const fileId = String(metadata.source_file_id || metadata.id || '').trim();\n  const fileName = String(metadata.source_file_name || metadata.name || '').trim().toLowerCase();\n  const key = fileId || fileName;\n\n  if (key && seenMetadataKeys.has(key)) continue;\n  if (key) seenMetadataKeys.add(key);\n\n  uniqueMetadataItems.push(metadata);\n}\n\nreturn uniqueMetadataItems.map((metadata, index) => {\n  const fileId = metadata.source_file_id || metadata.id || `unknown_file_${index + 1}`;\n  const rawFileName = metadata.source_file_name || metadata.name || 'unknown_file_name';\n  const fileUrl = driveFileUrl(fileId, metadata.google_drive_url);\n  let chunksCount = chunksByFileId.get(fileId);\n\n  if (!chunksCount && metadataItems.length === 1) {\n    chunksCount = chunkItems.length;\n  }\n\n  return {\n    json: {\n      file_id: fileId,\n      file_name: plainSheetText(rawFileName),\n      file_url: fileUrl,\n      event_type: metadata.event_type || 'unknown',\n      status: 'completed',\n      chunks_count: String(chunksCount || 'see Pinecone upsert result'),\n      namespace: metadata.namespace || 'SpaceKonceptRental_kb',\n      execution_id: $execution.id,\n      ingested_at: singaporeTimestamp(),\n      error_message: ''\n    }\n  };\n});"
       },
       "id": "20000000-0000-4000-8000-000000000009",
       "name": "Prepare Ingestion Log",
@@ -306,7 +319,7 @@
     },
     {
       "parameters": {
-        "operation": "append",
+        "operation": "appendOrUpdate",
         "documentId": {
           "__rl": true,
           "value": "1RhF1XDLluYhkB_d4dmODsSUfwqVGllXMgH4u3a1-6tQ",
@@ -326,6 +339,8 @@
           "value": {
             "file_id": "={{ $json.file_id }}",
             "file_name": "={{ $json.file_name }}",
+            "file_url": "={{ $json.file_url }}",
+            "event_type": "={{ $json.event_type }}",
             "status": "={{ $json.status }}",
             "chunks_count": "={{ $json.chunks_count }}",
             "namespace": "={{ $json.namespace }}",
@@ -333,7 +348,9 @@
             "ingested_at": "={{ $json.ingested_at }}",
             "error_message": "={{ $json.error_message }}"
           },
-          "matchingColumns": [],
+          "matchingColumns": [
+            "file_id"
+          ],
           "schema": [
             {
               "id": "file_id",
@@ -347,6 +364,24 @@
             {
               "id": "file_name",
               "displayName": "file_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "file_url",
+              "displayName": "file_url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "event_type",
+              "displayName": "event_type",
               "required": false,
               "defaultMatch": false,
               "display": true,
@@ -411,7 +446,9 @@
           "attemptToConvertTypes": false,
           "convertFieldsToString": false
         },
-        "options": {}
+        "options": {
+          "cellFormat": "USER_ENTERED"
+        }
       },
       "id": "20000000-0000-4000-8000-000000000010",
       "name": "Append KB Ingestion Log",
@@ -424,6 +461,68 @@
       "retryOnFail": true,
       "maxTries": 3,
       "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "20000000-0000-4000-8000-000000000012-event-type",
+              "name": "event_type",
+              "value": "created",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "20000000-0000-4000-8000-000000000012",
+      "name": "Tag Created KB Event",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -752,
+        48
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "20000000-0000-4000-8000-000000000013-event-type",
+              "name": "event_type",
+              "value": "updated",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "20000000-0000-4000-8000-000000000013",
+      "name": "Tag Updated KB Event",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -752,
+        208
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const seen = new Set();\nconst output = [];\n\nfor (const item of $input.all()) {\n  const json = item.json || {};\n  const fileId = String(json.id || json.fileId || '').trim();\n  const fileName = String(json.name || json.fileName || '').trim().toLowerCase();\n  const key = fileId || fileName;\n\n  if (key && seen.has(key)) continue;\n  if (key) seen.add(key);\n\n  output.push(item);\n}\n\nreturn output;"
+      },
+      "id": "20000000-0000-4000-8000-000000000014",
+      "name": "Filter Duplicate KB Files",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -608,
+        128
+      ]
     }
   ],
   "connections": {
@@ -431,7 +530,7 @@
       "main": [
         [
           {
-            "node": "Download KB File",
+            "node": "Tag Created KB Event",
             "type": "main",
             "index": 0
           }
@@ -442,7 +541,7 @@
       "main": [
         [
           {
-            "node": "Download KB File",
+            "node": "Tag Updated KB Event",
             "type": "main",
             "index": 0
           }
@@ -525,6 +624,39 @@
           }
         ]
       ]
+    },
+    "Tag Created KB Event": {
+      "main": [
+        [
+          {
+            "node": "Filter Duplicate KB Files",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tag Updated KB Event": {
+      "main": [
+        [
+          {
+            "node": "Filter Duplicate KB Files",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Duplicate KB Files": {
+      "main": [
+        [
+          {
+            "node": "Download KB File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "settings": {
@@ -539,5 +671,5 @@
   "meta": {
     "templateCredsSetupCompleted": true
   },
-  "versionId": "140904ff-b1d0-4325-ae60-1d8434b112f2"
+  "versionId": "7b210e47-ca39-464d-b814-5cb2a3b75ea4"
 }

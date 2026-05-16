@@ -3,7 +3,7 @@ const path = require('node:path');
 const { selectBindingsWithMeta } = require('./prepare-n8n-live-import.cjs');
 
 function usage() {
-  console.error('Usage: node scripts/compare-n8n-workflow-credentials.cjs <repo-workflow.json> <live-workflow.json> [bindings.json]');
+  console.error('Usage: node templates/n8n/sync-helpers/compare-n8n-workflow-credentials.cjs <repo-workflow.json> <live-workflow.json> [bindings.json]');
   process.exit(2);
 }
 
