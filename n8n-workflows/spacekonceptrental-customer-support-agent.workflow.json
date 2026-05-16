@@ -579,9 +579,9 @@
         "toolDescription": "Use this tool to answer questions about SpaceKonceptRental products, furniture rental packages, pricing, rental process, delivery, pickup, policies, appointment booking, ticketing, escalation, and FAQs.",
         "pineconeIndex": {
           "__rl": true,
-          "value": "SpaceKonceptRental-kb-rag",
+          "value": "spacekonceptrental-kb-rag",
           "mode": "list",
-          "cachedResultName": "SpaceKonceptRental-kb-rag"
+          "cachedResultName": "spacekonceptrental-kb-rag"
         },
         "topK": 6,
         "options": {}
@@ -2137,5 +2137,5 @@
   "meta": {
     "templateCredsSetupCompleted": true
   },
-  "versionId": "b082a2a3-deda-4261-853b-00d1bbbff4d5"
+  "versionId": "e16afbb0-7776-4723-9397-865f2003b168"
 }

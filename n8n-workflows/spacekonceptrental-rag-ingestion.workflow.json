@@ -252,9 +252,9 @@
         "mode": "insert",
         "pineconeIndex": {
           "__rl": true,
-          "value": "SpaceKonceptRental-kb-rag",
+          "value": "spacekonceptrental-kb-rag",
           "mode": "list",
-          "cachedResultName": "SpaceKonceptRental-kb-rag"
+          "cachedResultName": "spacekonceptrental-kb-rag"
         },
         "options": {
           "clearNamespace": false,
@@ -573,5 +573,5 @@
   "meta": {
     "templateCredsSetupCompleted": true
   },
-  "versionId": "6392555c-cfab-4ad4-a08a-3b798dad503d"
+  "versionId": "140904ff-b1d0-4325-ae60-1d8434b112f2"
 }
