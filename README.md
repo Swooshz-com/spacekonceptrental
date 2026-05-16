@@ -1,20 +1,73 @@
 # SpaceKonceptRental
 
-Capstone project for a RAG Customer Support Agent built with n8n, Pinecone, Google Drive, and Google Sheets.
+Capstone project for a RAG customer support agent built with n8n, Pinecone,
+Google Drive, Google Sheets, Gmail, and OpenAI.
 
-See:
+## Project Scope
 
-`docs/capstone/README_CAPSTONE.md`
+The capstone track is a customer support agent. The workflow is designed to:
 
-## Quick start
+- answer FAQs, rental terms, product, and pricing-related questions from a RAG
+  knowledge base;
+- capture customer leads and rental enquiries;
+- create support tickets for issues that need follow-up;
+- route escalations through Gmail;
+- log conversations, leads, tickets, unanswered questions, ingestion runs, and
+  workflow failures in Google Sheets.
 
-1. Import the inactive workflow templates from `n8n_workflows/` into n8n.
-2. Configure the required non-credential placeholder values in n8n.
-3. Attach credentials in n8n credential selectors.
-4. Ingest approved knowledge-base files into Pinecone namespace `SpaceKonceptRental_kb`.
-5. Run the test plan in `docs/capstone/test-plan.md`.
+This repo uses n8n rather than AgentX, but the implementation still maps to the
+customer-support-agent capstone requirements.
 
-## Validation
+## Current Folders
+
+- `n8n-workflows/` - importable n8n workflow JSON exports.
+- `kb/` - Markdown files to upload into the Google Drive knowledge-base folder.
+- `presentation/` - capstone walkthrough deck.
+- `scripts/` - local workflow validation.
+- `SpaceKonceptRental_website_display_design_wishlist.jpg` - future website
+  design reference, not part of the RAG upload.
+
+## What To Upload For RAG
+
+Upload only these files to the Google Drive folder watched by the ingestion
+workflow:
+
+- `kb/01-service-faq.md`
+- `kb/02-rental-terms.md`
+- `kb/03-product-catalogue-summary.md`
+- `kb/04-privacy-policy.md`
+
+Do not upload `n8n-workflows/`, `scripts/`, `presentation/`, `.tmp/`, or the
+website display wishlist image.
+
+## n8n Import Order
+
+1. Import `SpaceKonceptRental - Global Error Handler`.
+2. Import `SpaceKonceptRental - KB Ingestion to Pinecone`.
+3. Import `SpaceKonceptRental - RAG Customer Support Agent`.
+4. Attach the required credentials in n8n.
+5. Confirm Google Drive, Google Sheets, Gmail, OpenAI, and Pinecone selections.
+6. Set the error workflow on the two main workflows.
+7. Run the KB ingestion workflow.
+8. Test the customer support agent.
+
+Keep imported workflows inactive until credentials, folder selections, sheet
+tabs, and test data are confirmed.
+
+## Required Google Sheets Tabs
+
+Use one logs workbook with these tabs:
+
+- `conversations`
+- `leads`
+- `tickets`
+- `unanswered_questions`
+- `failures`
+- `kb_ingestion`
+
+The workflow exports contain the expected column mappings for these tabs.
+
+## Local Validation
 
 Run:
 
@@ -22,6 +75,31 @@ Run:
 npm run validate:n8n
 ```
 
-## Reference files
+Current warning categories are expected when the local exports intentionally
+include configured emails, Pinecone values, Google Drive folders, and Google
+Sheets selections for import.
 
-Source/reference material lives in `ref/` and is retained for post-capstone expansion. Some original source documents may contain legacy internal naming, but repo-facing naming is now `SpaceKonceptRental`.
+## Manual Test Checklist
+
+After import, credential setup, and KB ingestion, test:
+
+1. A normal FAQ question.
+2. A pricing or quotation question.
+3. A consultation or appointment request.
+4. A damaged-item support ticket request.
+5. A rental lead enquiry.
+6. A question that should not be answered from invented facts.
+7. An angry complaint that should escalate.
+8. A duplicate `message_id`.
+9. A controlled workflow error.
+
+## Presentation Status
+
+Ignoring live testing, the project is presentation-ready once the workflow JSON
+passes local validation, the KB Markdown files are uploaded and ingested, the
+Google Sheets tabs exist, and the deck in `presentation/` is ready for the
+walkthrough.
+
+It is not production-ready until live end-to-end testing, business/legal review,
+credential hardening, monitoring, and final website or WhatsApp deployment
+checks are complete.

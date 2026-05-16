@@ -356,7 +356,16 @@
         },
         "columns": {
           "mappingMode": "defineBelow",
-          "value": {},
+          "value": {
+            "file_id": "={{ $json.file_id }}",
+            "file_name": "={{ $json.file_name }}",
+            "status": "={{ $json.status }}",
+            "chunks_count": "={{ $json.chunks_count }}",
+            "namespace": "={{ $json.namespace }}",
+            "execution_id": "={{ $json.execution_id }}",
+            "ingested_at": "={{ $json.ingested_at }}",
+            "error_message": "={{ $json.error_message }}"
+          },
           "matchingColumns": [],
           "schema": [
             {
@@ -555,10 +564,13 @@
     "executionOrder": "v1",
     "timezone": "Asia/Singapore",
     "errorWorkflow": "SpaceKonceptRental - Global Error Handler",
-    "binaryMode": "separate"
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": true
   },
   "meta": {
     "templateCredsSetupCompleted": true
   },
-  "versionId": "f00ad7fb-7259-4e3f-8768-bcc9e8e0bde4"
+  "versionId": "8adab960-bdcf-42b7-aeda-3e35f256645b"
 }

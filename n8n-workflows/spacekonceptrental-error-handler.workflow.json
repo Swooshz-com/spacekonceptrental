@@ -148,7 +148,18 @@
         },
         "columns": {
           "mappingMode": "defineBelow",
-          "value": {},
+          "value": {
+            "logged_date": "={{ $json.error_time.split(',')[0] || $json.error_time }}",
+            "logged_time": "={{ ($json.error_time.split(',')[1] || '').trim() }}",
+            "contact_id": "={{ $json.workflow_id }}",
+            "error_type": "={{ $json.execution_mode }}",
+            "error_message": "={{ $json.error_message }}",
+            "error_workflow_name": "={{ $json.workflow_name }}",
+            "last_node_executed": "={{ $json.error_node_name }}",
+            "execution_id": "={{ $json.error_execution_id }}",
+            "execution_url": "={{ $json.error_link }}",
+            "payload_json": "={{ JSON.stringify($json) }}"
+          },
           "matchingColumns": [],
           "schema": [
             {
@@ -319,5 +330,5 @@
   "meta": {
     "templateCredsSetupCompleted": true
   },
-  "versionId": "7752da67-a7ac-4b6a-8063-8185a5cfe74b"
+  "versionId": "a7452e39-e2c0-4867-a58a-e1726b2bb20b"
 }
