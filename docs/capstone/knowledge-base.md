@@ -1,12 +1,12 @@
-# spacekonceptrental Knowledge Base
+# SpaceKonceptRental Knowledge Base
 
 This starter knowledge base is intentionally conservative. It uses available reference material where clear, and marks items for confirmation before the chatbot is used with real customers.
 
 ## Company Overview
 
-spacekonceptrental helps exhibitors, event organisers, agencies, and corporate teams furnish temporary spaces such as booths, roadshows, launches, pop-ups, registration areas, and meeting corners.
+SpaceKonceptRental helps exhibitors, event organisers, agencies, and corporate teams furnish temporary spaces such as booths, roadshows, launches, pop-ups, registration areas, and meeting corners.
 
-TODO: Confirm with spacekonceptrental.
+TODO: Confirm with SpaceKonceptRental.
 
 The chatbot must not describe company history, guarantees, partnerships, or live inventory depth unless this section is completed with verified information.
 
@@ -16,7 +16,7 @@ Customers should share the event date, venue, setup and dismantle timing, item l
 
 For faster replies, customers should also share booth number, delivery window, collection window, reference photos, onsite contact person, and a floor plan if available.
 
-TODO: Confirm with spacekonceptrental.
+TODO: Confirm with SpaceKonceptRental.
 
 The chatbot must not confirm live stock, final pricing, payment terms, or booking approval.
 
@@ -43,15 +43,15 @@ Common rental requests include:
 - Fridges and chillers.
 - Artificial plants and floral decor.
 
-TODO: Confirm with spacekonceptrental.
+TODO: Confirm with SpaceKonceptRental.
 
 The chatbot must not confirm stock availability without team review.
 
 ## Rental Packages
 
-TODO: Confirm with spacekonceptrental.
+TODO: Confirm with SpaceKonceptRental.
 
-The chatbot must not claim that a package exists unless spacekonceptrental confirms it.
+The chatbot must not claim that a package exists unless SpaceKonceptRental confirms it.
 
 ## Pricing Policy
 
@@ -59,9 +59,9 @@ Rental pricing depends on item type, quantity, rental duration, delivery locatio
 
 The quotation should state whether delivery, setup, dismantling, collection, staircase carry-up, after-hours delivery, or special venue handling is included.
 
-TODO: Confirm with spacekonceptrental.
+TODO: Confirm with SpaceKonceptRental.
 
-The chatbot must not quote item prices or delivery prices unless spacekonceptrental approves the catalogue/pricing data for chatbot use.
+The chatbot must not quote item prices or delivery prices unless SpaceKonceptRental approves the catalogue/pricing data for chatbot use.
 
 ## Delivery and Pickup
 
@@ -73,7 +73,7 @@ Standard delivery and collection timing in the draft terms is Monday to Saturday
 
 After-hours, Sunday, public holiday, or venue-specific timings may be subject to additional charges and manpower availability.
 
-TODO: Confirm with spacekonceptrental.
+TODO: Confirm with SpaceKonceptRental.
 
 The chatbot must not guarantee delivery, collection, fee amounts, or available slots.
 
@@ -81,7 +81,7 @@ The chatbot must not guarantee delivery, collection, fee amounts, or available s
 
 For event rentals, payment terms should be confirmed in the quotation. Deposit requirements should be confirmed in the rental quotation or agreement.
 
-TODO: Confirm with spacekonceptrental.
+TODO: Confirm with SpaceKonceptRental.
 
 The chatbot must not state accepted payment methods, billing cycles, late fees, or refund rules unless confirmed.
 
@@ -89,7 +89,7 @@ The chatbot must not state accepted payment methods, billing cycles, late fees, 
 
 Rented items should be returned in the same condition. Damage, stains, missing items, or loss may result in additional charges based on the rental agreement.
 
-TODO: Confirm with spacekonceptrental.
+TODO: Confirm with SpaceKonceptRental.
 
 The chatbot must escalate damage, loss, and dispute questions unless the final policy is confirmed.
 
@@ -97,7 +97,7 @@ The chatbot must escalate damage, loss, and dispute questions unless the final p
 
 Changes and cancellations depend on the confirmed rental terms, event date, preparation work, and delivery schedule. Customers should contact the team as early as possible.
 
-TODO: Confirm with spacekonceptrental.
+TODO: Confirm with SpaceKonceptRental.
 
 The chatbot must not state cancellation windows, cancellation fees, or refund eligibility unless confirmed.
 
@@ -105,7 +105,7 @@ The chatbot must not state cancellation windows, cancellation fees, or refund el
 
 Extensions may be possible if the items are not reserved for another booking. Customers should contact the team as early as possible to confirm availability and any additional charges.
 
-TODO: Confirm with spacekonceptrental.
+TODO: Confirm with SpaceKonceptRental.
 
 The chatbot must not promise rental extensions or extension prices.
 
@@ -115,7 +115,7 @@ Selected items may be available for viewing by appointment. For rental items, av
 
 The chatbot may collect preferred date, time, appointment type, contact details, and requirements, but must not confirm the appointment until staff verify availability.
 
-TODO: Confirm with spacekonceptrental.
+TODO: Confirm with SpaceKonceptRental.
 
 ## Support Escalation
 
@@ -123,18 +123,18 @@ The chatbot should escalate urgent delivery, billing, refunds, damage, complaint
 
 For urgent requests, collect event date, venue, setup time, item list, and contact number, then escalate for availability and delivery review.
 
-TODO: Confirm with spacekonceptrental.
+TODO: Confirm with SpaceKonceptRental.
 
 ## Contact Details
 
 Customers should use the website contact form, email, or WhatsApp shown on the official contact page.
 
-TODO: Confirm with spacekonceptrental.
+TODO: Confirm with SpaceKonceptRental.
 
 The chatbot must not provide phone numbers, email addresses, showroom addresses, WhatsApp numbers, or website URLs unless confirmed.
 
 ## Operating Hours
 
-TODO: Confirm with spacekonceptrental.
+TODO: Confirm with SpaceKonceptRental.
 
-The draft terms include standard delivery and collection timing of Monday to Saturday, 10:00am to 6:00pm, excluding public holidays. This is not the same as final public customer support or showroom operating hours unless spacekonceptrental confirms it.
+The draft terms include standard delivery and collection timing of Monday to Saturday, 10:00am to 6:00pm, excluding public holidays. This is not the same as final public customer support or showroom operating hours unless SpaceKonceptRental confirms it.

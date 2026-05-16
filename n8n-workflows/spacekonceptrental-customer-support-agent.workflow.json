@@ -1,86 +1,71 @@
 {
   "id": "15871bf4-6ed1-46e9-ab14-6ee3920c4633",
-  "name": "spacekonceptrental - RAG Customer Support Agent",
+  "name": "SpaceKonceptRental - RAG Customer Support Agent",
   "active": false,
   "nodes": [
     {
       "parameters": {
-        "content": "# INTAKE AND DEDUPE\n\n- Receives chat messages and normalises input.\n- Checks the conversation log before processing to avoid duplicate replies.\n\n## Required manual configuration:\n\n- **Lookup Conversation State**\n  - `documentId.value`: Set this to the Google Sheets workbook used for support logs.\n- **Upsert Conversation Processing**\n  - `documentId.value`: Set this to the same Google Sheets workbook used for support logs.",
-        "height": 220,
-        "width": 420
-      },
-      "id": "30000000-0000-4000-8000-000000000901",
-      "name": "Intake and dedupe group",
-      "type": "n8n-nodes-base.stickyNote",
-      "typeVersion": 1,
-      "position": [
-        -980,
-        -360
-      ]
-    },
-    {
-      "parameters": {
-        "content": "# RAG ANSWER\n\n- Runs the AI agent with Pinecone retrieval.\n- Parses strict JSON for reply, logging, and routing.\n\n## Required manual configuration:\n\n- **spacekonceptrental Knowledge Base**\n  - `pineconeIndex`: Set this to the Pinecone index used for retrieval.",
-        "height": 220,
-        "width": 420
+        "content": "# RAG ANSWER\n\n- Runs the AI agent with Pinecone retrieval.\n- Parses strict JSON for reply, logging, and routing.\n\n## Required manual configuration:\n\n- **SpaceKonceptRental Knowledge Base**\n  - `pineconeIndex`: Set this to the Pinecone index used for retrieval.",
+        "height": 988,
+        "width": 644,
+        "color": 3
       },
       "id": "30000000-0000-4000-8000-000000000902",
       "name": "RAG answer group",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        740,
-        -120
+        752,
+        -208
       ]
     },
     {
       "parameters": {
         "content": "# REPLY AND LOGGING\n\n- Sends the customer reply.\n- Updates the conversation row after the agent response is parsed.\n\n## Required manual configuration:\n\n- **Upsert Conversation Completed**\n  - `documentId.value`: Set this to the Google Sheets workbook used for support logs.",
-        "height": 220,
-        "width": 420
+        "height": 604,
+        "width": 820,
+        "color": 4
       },
       "id": "30000000-0000-4000-8000-000000000903",
       "name": "Reply and logging group",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        1400,
-        -360
+        1408,
+        -720
       ]
     },
     {
       "parameters": {
         "content": "# FOLLOW-UP ROUTING\n\n- Routes leads, bookings, tickets, escalations, and unanswered items.\n- Writes each follow-up record after the main conversation row is completed.\n\n## Required manual configuration:\n\n- **Upsert Lead or Booking**\n  - `documentId.value`: Set this to the Google Sheets workbook used for lead and booking logs.\n- **Upsert Ticket**\n  - `documentId.value`: Set this to the Google Sheets workbook used for ticket logs.\n- **Send Escalation Alert**\n  - `sendTo`: Set this to the support mailbox for escalation alerts.\n- **Upsert Unanswered Question**\n  - `documentId.value`: Set this to the Google Sheets workbook used for unanswered question logs.",
-        "height": 220,
-        "width": 420
+        "height": 1164,
+        "width": 836,
+        "color": 6
       },
       "id": "30000000-0000-4000-8000-000000000904",
       "name": "Follow-up routing group",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        1400,
-        560
+        1408,
+        -112
       ]
     },
     {
       "parameters": {
-        "options": {
-          "responseMode": "responseNode"
-        }
+        "options": {}
       },
       "id": "30000000-0000-4000-8000-000000000002",
       "name": "When Chat Message Received",
       "type": "@n8n/n8n-nodes-langchain.chatTrigger",
       "typeVersion": 1.1,
       "position": [
-        -980,
-        100
+        -976,
+        336
       ]
     },
     {
       "parameters": {
-        "mode": "manual",
         "assignments": {
           "assignments": [
             {
@@ -140,9 +125,7 @@
           ]
         },
         "includeOtherFields": true,
-        "options": {
-          "includeBinary": true
-        }
+        "options": {}
       },
       "id": "30000000-0000-4000-8000-000000000003",
       "name": "Normalise Input",
@@ -150,7 +133,7 @@
       "typeVersion": 3.4,
       "position": [
         -720,
-        100
+        336
       ]
     },
     {
@@ -162,36 +145,35 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -460,
-        100
+        -464,
+        336
       ]
     },
     {
       "parameters": {
-        "operation": "lookup",
         "documentId": {
           "__rl": true,
-          "value": "SPACEKONCEPTRENTAL_LOGS_SHEET_ID",
-          "mode": "id"
+          "value": "1RhF1XDLluYhkB_d4dmODsSUfwqVGllXMgH4u3a1-6tQ",
+          "mode": "list",
+          "cachedResultName": "RAG_logs",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1RhF1XDLluYhkB_d4dmODsSUfwqVGllXMgH4u3a1-6tQ/edit?usp=drivesdk"
         },
         "sheetName": {
           "__rl": true,
-          "value": "conversations",
-          "mode": "name"
+          "value": 1611415797,
+          "mode": "list",
+          "cachedResultName": "conversations",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1RhF1XDLluYhkB_d4dmODsSUfwqVGllXMgH4u3a1-6tQ/edit#gid=1611415797"
         },
-        "lookupColumn": "message_id",
-        "lookupValue": "={{ $json.message_id }}",
-        "options": {
-          "returnAllMatches": false
-        }
+        "options": {}
       },
       "id": "30000000-0000-4000-8000-000000000005",
       "name": "Lookup Conversation State",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
       "position": [
-        -200,
-        100
+        -208,
+        336
       ],
       "retryOnFail": true,
       "maxTries": 2,
@@ -204,7 +186,8 @@
           "options": {
             "caseSensitive": true,
             "leftValue": "",
-            "typeValidation": "strict"
+            "typeValidation": "strict",
+            "version": 1
           },
           "conditions": [
             {
@@ -235,22 +218,22 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
-        60,
-        100
+        64,
+        336
       ]
     },
     {
       "parameters": {
-        "operation": "sendMessage",
-        "message": "I have already received this message, so I will avoid sending a duplicate reply."
+        "message": "I have already received this message, so I will avoid sending a duplicate reply.",
+        "options": {}
       },
       "id": "30000000-0000-4000-8000-000000000007",
       "name": "Duplicate Safe Reply",
       "type": "@n8n/n8n-nodes-langchain.chat",
       "typeVersion": 1,
       "position": [
-        340,
-        -60
+        352,
+        160
       ]
     },
     {
@@ -258,13 +241,17 @@
         "operation": "appendOrUpdate",
         "documentId": {
           "__rl": true,
-          "value": "SPACEKONCEPTRENTAL_LOGS_SHEET_ID",
-          "mode": "id"
+          "value": "1RhF1XDLluYhkB_d4dmODsSUfwqVGllXMgH4u3a1-6tQ",
+          "mode": "list",
+          "cachedResultName": "RAG_logs",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1RhF1XDLluYhkB_d4dmODsSUfwqVGllXMgH4u3a1-6tQ/edit?usp=drivesdk"
         },
         "sheetName": {
           "__rl": true,
-          "value": "conversations",
-          "mode": "name"
+          "value": 1611415797,
+          "mode": "list",
+          "cachedResultName": "conversations",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1RhF1XDLluYhkB_d4dmODsSUfwqVGllXMgH4u3a1-6tQ/edit#gid=1611415797"
         },
         "columns": {
           "mappingMode": "defineBelow",
@@ -276,25 +263,197 @@
             "customer_email": "={{ $node[\"Redact PII for Logs\"].json.customer_email }}",
             "customer_phone": "={{ $node[\"Redact PII for Logs\"].json.customer_phone }}",
             "user_message_redacted": "={{ $node[\"Redact PII for Logs\"].json.user_message_redacted }}",
-            "bot_reply": "",
-            "intent": "",
-            "confidence": "",
             "status": "processing",
-            "needs_escalation": "",
-            "lead_captured": "",
-            "ticket_id": "",
-            "booking_requested": "",
-            "source_titles": "",
-            "source_file_ids": "",
             "execution_id": "={{ $node[\"Redact PII for Logs\"].json.execution_id }}",
-            "created_at": "={{ $node[\"Redact PII for Logs\"].json.timestamp }}",
-            "completed_at": ""
+            "created_at": "={{ $node[\"Redact PII for Logs\"].json.timestamp }}"
           },
-          "attemptToConvertTypes": false,
-          "convertFieldsToString": false,
           "matchingColumns": [
             "message_id"
-          ]
+          ],
+          "schema": [
+            {
+              "id": "message_id",
+              "displayName": "message_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "session_id",
+              "displayName": "session_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "channel",
+              "displayName": "channel",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "customer_name",
+              "displayName": "customer_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "customer_email",
+              "displayName": "customer_email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "customer_phone",
+              "displayName": "customer_phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "user_message_redacted",
+              "displayName": "user_message_redacted",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "bot_reply",
+              "displayName": "bot_reply",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "intent",
+              "displayName": "intent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "confidence",
+              "displayName": "confidence",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "needs_escalation",
+              "displayName": "needs_escalation",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "lead_captured",
+              "displayName": "lead_captured",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ticket_id",
+              "displayName": "ticket_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "booking_requested",
+              "displayName": "booking_requested",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "source_titles",
+              "displayName": "source_titles",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "source_file_ids",
+              "displayName": "source_file_ids",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "execution_id",
+              "displayName": "execution_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "completed_at",
+              "displayName": "completed_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
         },
         "options": {}
       },
@@ -303,8 +462,8 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
       "position": [
-        340,
-        160
+        352,
+        384
       ],
       "retryOnFail": true,
       "maxTries": 3,
@@ -312,7 +471,6 @@
     },
     {
       "parameters": {
-        "mode": "manual",
         "assignments": {
           "assignments": [
             {
@@ -378,9 +536,7 @@
           ]
         },
         "includeOtherFields": true,
-        "options": {
-          "includeBinary": true
-        }
+        "options": {}
       },
       "id": "30000000-0000-4000-8000-000000000024",
       "name": "Restore Processing Context",
@@ -388,24 +544,7 @@
       "typeVersion": 3.4,
       "position": [
         560,
-        160
-      ]
-    },
-    {
-      "parameters": {
-        "promptType": "define",
-        "text": "={{ $json.message }}",
-        "options": {
-          "systemMessage": "You are the spacekonceptrental Customer Support Agent.\n\nYour job:\n- Help customers with furniture rental questions.\n- Answer FAQs, operating hours, pricing, rental process, delivery/pickup, product/package questions, policies, and troubleshooting.\n- Help with appointment booking.\n- Create support tickets.\n- Escalate issues to the human team when required.\n- Capture leads by collecting contact details and rental requirements.\n\nKnowledge rules:\n- Your ONLY factual source is the retrieved spacekonceptrental knowledge base content from the Pinecone tool.\n- Do not use general knowledge or guess.\n- If the answer is not found in retrieved content, say you do not have that detail yet and offer to help escalate.\n- Never invent prices, dates, stock availability, furniture dimensions, rental terms, warranty terms, damage fees, delivery fees, discounts, or policies.\n- When giving facts, keep them concise and clear.\n- If retrieved chunks conflict, do not choose randomly. Tell the customer you need the team to confirm and escalate.\n\nConversation style:\n- Warm, helpful, concise.\n- Use Singapore/British English.\n- Do not be robotic.\n- Use light emojis only when natural.\n- Ask one focused follow-up question at a time.\n\nEscalation rules:\nEscalate when:\n- The answer is not in the KB.\n- The customer is angry or dissatisfied.\n- The issue involves billing, refund, damage, complaint, urgent delivery, cancellation, or special pricing.\n- The customer asks to speak with a person.\n- The customer wants a custom quote and has provided enough details.\n\nLead capture rules:\nFor rental enquiries, collect name, email or phone, company if applicable, rental purpose, preferred rental start date and duration, furniture items or package needed, delivery area, and budget if offered.\n\nTicket rules:\nFor support tickets, collect full name, email or phone, issue category, one-line summary, detailed description, urgency, and preferred callback/contact method.\n\nBooking rules:\nFor appointment booking, collect name, email or phone, preferred date and time, appointment type, and notes/requirements.\n\nOutput rules:\nAlways return ONLY valid JSON with this schema:\n{\n  \"reply\": \"Customer-facing response here.\",\n  \"intent\": \"faq|pricing|booking|ticket|lead|escalation|handoff|unknown\",\n  \"confidence\": 0.0,\n  \"needs_escalation\": false,\n  \"needs_human_followup\": false,\n  \"lead_captured\": false,\n  \"ticket_required\": false,\n  \"booking_requested\": false,\n  \"missing_fields\": [],\n  \"lead\": {\n    \"name\": \"\",\n    \"email\": \"\",\n    \"phone\": \"\",\n    \"company\": \"\",\n    \"rental_purpose\": \"\",\n    \"rental_start_date\": \"\",\n    \"rental_duration\": \"\",\n    \"items_needed\": \"\",\n    \"delivery_area\": \"\",\n    \"budget\": \"\"\n  },\n  \"ticket\": {\n    \"category\": \"\",\n    \"summary\": \"\",\n    \"details\": \"\",\n    \"urgency\": \"\"\n  },\n  \"booking\": {\n    \"appointment_type\": \"\",\n    \"preferred_date\": \"\",\n    \"preferred_time\": \"\",\n    \"notes\": \"\"\n  },\n  \"retrieval_summary\": {\n    \"used_kb\": true,\n    \"source_titles\": [],\n    \"source_file_ids\": []\n  }\n}"
-        }
-      },
-      "id": "30000000-0000-4000-8000-000000000009",
-      "name": "spacekonceptrental AI Agent",
-      "type": "@n8n/n8n-nodes-langchain.agent",
-      "typeVersion": 1.7,
-      "position": [
-        840,
-        160
+        384
       ]
     },
     {
@@ -420,27 +559,30 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.2,
       "position": [
-        780,
-        440
+        784,
+        448
       ]
     },
     {
       "parameters": {
         "mode": "retrieve-as-tool",
-        "toolName": "spacekonceptrental_knowledge_base",
-        "toolDescription": "Use this tool to answer questions about spacekonceptrental products, furniture rental packages, pricing, rental process, delivery, pickup, policies, appointment booking, ticketing, escalation, and FAQs.",
-        "pineconeIndex": "SPACEKONCEPTRENTAL_PINECONE_INDEX",
-        "pineconeNamespace": "spacekonceptrental_kb",
+        "toolDescription": "Use this tool to answer questions about SpaceKonceptRental products, furniture rental packages, pricing, rental process, delivery, pickup, policies, appointment booking, ticketing, escalation, and FAQs.",
+        "pineconeIndex": {
+          "__rl": true,
+          "value": "SpaceKonceptRental-kb-rag",
+          "mode": "list",
+          "cachedResultName": "SpaceKonceptRental-kb-rag"
+        },
         "topK": 6,
         "options": {}
       },
       "id": "30000000-0000-4000-8000-000000000011",
-      "name": "spacekonceptrental Knowledge Base",
+      "name": "SpaceKonceptRental Knowledge Base",
       "type": "@n8n/n8n-nodes-langchain.vectorStorePinecone",
       "typeVersion": 1.3,
       "position": [
-        1040,
-        440
+        976,
+        448
       ],
       "retryOnFail": true,
       "maxTries": 2,
@@ -448,43 +590,29 @@
     },
     {
       "parameters": {
-        "model": "text-embedding-3-small",
-        "options": {}
-      },
-      "id": "30000000-0000-4000-8000-000000000012",
-      "name": "OpenAI Retrieval Embeddings",
-      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
-      "typeVersion": 1.2,
-      "position": [
-        1260,
-        640
-      ]
-    },
-    {
-      "parameters": {
-        "jsCode": "function parseAgentOutput(value) {\n  if (typeof value === 'object' && value !== null) return value;\n  const text = String(value || '').trim();\n  try {\n    return JSON.parse(text);\n  } catch (error) {\n    const start = text.indexOf('{');\n    const end = text.lastIndexOf('}');\n    if (start >= 0 && end > start) return JSON.parse(text.slice(start, end + 1));\n    throw error;\n  }\n}\n\nfunction timestampForId(date = new Date()) {\n  return date.toISOString().replace(/[-:T]/g, '').slice(0, 8) + '-' + date.toISOString().replace(/[-:T]/g, '').slice(8, 14);\n}\n\nreturn items.map((item) => {\n  const original = $('Restore Processing Context').first().json || {};\n  const raw = item.json.output || item.json.text || item.json.response || item.json;\n  let parsed;\n  try {\n    parsed = parseAgentOutput(raw);\n  } catch (error) {\n    parsed = {\n      reply: 'I do not have that detail yet. I can help escalate this to the spacekonceptrental team.',\n      intent: 'unknown',\n      confidence: 0,\n      needs_escalation: true,\n      needs_human_followup: true,\n      lead_captured: false,\n      ticket_required: false,\n      booking_requested: false,\n      missing_fields: [],\n      lead: {},\n      ticket: {},\n      booking: {},\n      retrieval_summary: { source_titles: [], source_file_ids: [] }\n    };\n  }\n\n  const now = new Date();\n  const idTime = timestampForId(now);\n  const ticketRequired = Boolean(parsed.ticket_required);\n  const leadRequired = Boolean(parsed.lead_captured || parsed.booking_requested);\n\n  return {\n    json: {\n      ...original,\n      ...item.json,\n      agent_raw_output: raw,\n      reply: parsed.reply || 'I do not have that detail yet. I can help escalate this to the spacekonceptrental team.',\n      intent: parsed.intent || 'unknown',\n      confidence: Number(parsed.confidence || 0),\n      needs_escalation: Boolean(parsed.needs_escalation),\n      needs_human_followup: Boolean(parsed.needs_human_followup),\n      lead_captured: Boolean(parsed.lead_captured),\n      ticket_required: ticketRequired,\n      booking_requested: Boolean(parsed.booking_requested),\n      missing_fields: parsed.missing_fields || [],\n      lead: parsed.lead || {},\n      ticket: parsed.ticket || {},\n      booking: parsed.booking || {},\n      source_titles: (parsed.retrieval_summary?.source_titles || []).join(', '),\n      source_file_ids: (parsed.retrieval_summary?.source_file_ids || []).join(', '),\n      ticket_id: ticketRequired ? `SKR-TKT-${idTime}` : '',\n      lead_id: leadRequired ? `SKR-LEAD-${idTime}` : '',\n      completed_at: now.toISOString(),\n      unanswered_id: `SKR-UNANSWERED-${idTime}`\n    }\n  };\n});"
+        "jsCode": "function parseAgentOutput(value) {\n  if (typeof value === 'object' && value !== null) return value;\n  const text = String(value || '').trim();\n  try {\n    return JSON.parse(text);\n  } catch (error) {\n    const start = text.indexOf('{');\n    const end = text.lastIndexOf('}');\n    if (start >= 0 && end > start) return JSON.parse(text.slice(start, end + 1));\n    throw error;\n  }\n}\n\nfunction timestampForId(date = new Date()) {\n  return date.toISOString().replace(/[-:T]/g, '').slice(0, 8) + '-' + date.toISOString().replace(/[-:T]/g, '').slice(8, 14);\n}\n\nreturn items.map((item) => {\n  const original = $('Restore Processing Context').first().json || {};\n  const raw = item.json.output || item.json.text || item.json.response || item.json;\n  let parsed;\n  try {\n    parsed = parseAgentOutput(raw);\n  } catch (error) {\n    parsed = {\n      reply: 'I do not have that detail yet. I can help escalate this to the SpaceKonceptRental team.',\n      intent: 'unknown',\n      confidence: 0,\n      needs_escalation: true,\n      needs_human_followup: true,\n      lead_captured: false,\n      ticket_required: false,\n      booking_requested: false,\n      missing_fields: [],\n      lead: {},\n      ticket: {},\n      booking: {},\n      retrieval_summary: { source_titles: [], source_file_ids: [] }\n    };\n  }\n\n  const now = new Date();\n  const idTime = timestampForId(now);\n  const ticketRequired = Boolean(parsed.ticket_required);\n  const leadRequired = Boolean(parsed.lead_captured || parsed.booking_requested);\n\n  return {\n    json: {\n      ...original,\n      ...item.json,\n      agent_raw_output: raw,\n      reply: parsed.reply || 'I do not have that detail yet. I can help escalate this to the SpaceKonceptRental team.',\n      intent: parsed.intent || 'unknown',\n      confidence: Number(parsed.confidence || 0),\n      needs_escalation: Boolean(parsed.needs_escalation),\n      needs_human_followup: Boolean(parsed.needs_human_followup),\n      lead_captured: Boolean(parsed.lead_captured),\n      ticket_required: ticketRequired,\n      booking_requested: Boolean(parsed.booking_requested),\n      missing_fields: parsed.missing_fields || [],\n      lead: parsed.lead || {},\n      ticket: parsed.ticket || {},\n      booking: parsed.booking || {},\n      source_titles: (parsed.retrieval_summary?.source_titles || []).join(', '),\n      source_file_ids: (parsed.retrieval_summary?.source_file_ids || []).join(', '),\n      ticket_id: ticketRequired ? `SKR-TKT-${idTime}` : '',\n      lead_id: leadRequired ? `SKR-LEAD-${idTime}` : '',\n      completed_at: now.toISOString(),\n      unanswered_id: `SKR-UNANSWERED-${idTime}`\n    }\n  };\n});"
       },
       "id": "30000000-0000-4000-8000-000000000013",
       "name": "Parse Strict JSON Response",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1180,
+        1184,
         160
       ]
     },
     {
       "parameters": {
-        "operation": "sendMessage",
-        "message": "={{ $json.reply }}"
+        "message": "={{ $json.reply }}",
+        "options": {}
       },
       "id": "30000000-0000-4000-8000-000000000014",
       "name": "Send Customer Reply",
       "type": "@n8n/n8n-nodes-langchain.chat",
       "typeVersion": 1,
       "position": [
-        1480,
-        -100
+        1488,
+        -480
       ]
     },
     {
@@ -492,13 +620,17 @@
         "operation": "appendOrUpdate",
         "documentId": {
           "__rl": true,
-          "value": "SPACEKONCEPTRENTAL_LOGS_SHEET_ID",
-          "mode": "id"
+          "value": "1RhF1XDLluYhkB_d4dmODsSUfwqVGllXMgH4u3a1-6tQ",
+          "mode": "list",
+          "cachedResultName": "RAG_logs",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1RhF1XDLluYhkB_d4dmODsSUfwqVGllXMgH4u3a1-6tQ/edit?usp=drivesdk"
         },
         "sheetName": {
           "__rl": true,
-          "value": "conversations",
-          "mode": "name"
+          "value": 1611415797,
+          "mode": "list",
+          "cachedResultName": "conversations",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1RhF1XDLluYhkB_d4dmODsSUfwqVGllXMgH4u3a1-6tQ/edit#gid=1611415797"
         },
         "columns": {
           "mappingMode": "defineBelow",
@@ -524,11 +656,193 @@
             "created_at": "={{ $json.timestamp }}",
             "completed_at": "={{ $json.completed_at }}"
           },
-          "attemptToConvertTypes": false,
-          "convertFieldsToString": false,
           "matchingColumns": [
             "message_id"
-          ]
+          ],
+          "schema": [
+            {
+              "id": "message_id",
+              "displayName": "message_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "session_id",
+              "displayName": "session_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "channel",
+              "displayName": "channel",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "customer_name",
+              "displayName": "customer_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "customer_email",
+              "displayName": "customer_email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "customer_phone",
+              "displayName": "customer_phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "user_message_redacted",
+              "displayName": "user_message_redacted",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "bot_reply",
+              "displayName": "bot_reply",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "intent",
+              "displayName": "intent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "confidence",
+              "displayName": "confidence",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "needs_escalation",
+              "displayName": "needs_escalation",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "lead_captured",
+              "displayName": "lead_captured",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ticket_id",
+              "displayName": "ticket_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "booking_requested",
+              "displayName": "booking_requested",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "source_titles",
+              "displayName": "source_titles",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "source_file_ids",
+              "displayName": "source_file_ids",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "execution_id",
+              "displayName": "execution_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "completed_at",
+              "displayName": "completed_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
         },
         "options": {}
       },
@@ -537,8 +851,8 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
       "position": [
-        1480,
-        80
+        1488,
+        -304
       ],
       "retryOnFail": true,
       "maxTries": 3,
@@ -550,7 +864,8 @@
           "options": {
             "caseSensitive": true,
             "leftValue": "",
-            "typeValidation": "strict"
+            "typeValidation": "strict",
+            "version": 1
           },
           "conditions": [
             {
@@ -581,13 +896,12 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        1480,
-        260
+        1488,
+        272
       ]
     },
     {
       "parameters": {
-        "mode": "manual",
         "assignments": {
           "assignments": [
             {
@@ -688,10 +1002,7 @@
             }
           ]
         },
-        "includeOtherFields": false,
-        "options": {
-          "includeBinary": true
-        }
+        "options": {}
       },
       "id": "30000000-0000-4000-8000-000000000016",
       "name": "Set Lead or Booking Row",
@@ -699,7 +1010,7 @@
       "typeVersion": 3.4,
       "position": [
         1760,
-        260
+        272
       ]
     },
     {
@@ -707,39 +1018,170 @@
         "operation": "appendOrUpdate",
         "documentId": {
           "__rl": true,
-          "value": "SPACEKONCEPTRENTAL_LOGS_SHEET_ID",
-          "mode": "id"
+          "value": "1RhF1XDLluYhkB_d4dmODsSUfwqVGllXMgH4u3a1-6tQ",
+          "mode": "list",
+          "cachedResultName": "RAG_logs",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1RhF1XDLluYhkB_d4dmODsSUfwqVGllXMgH4u3a1-6tQ/edit?usp=drivesdk"
         },
         "sheetName": {
           "__rl": true,
-          "value": "leads",
-          "mode": "name"
+          "value": 1752300547,
+          "mode": "list",
+          "cachedResultName": "leads",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1RhF1XDLluYhkB_d4dmODsSUfwqVGllXMgH4u3a1-6tQ/edit#gid=1752300547"
         },
         "columns": {
           "mappingMode": "defineBelow",
-          "value": {
-            "lead_id": "={{ $json.lead_id }}",
-            "session_id": "={{ $json.session_id }}",
-            "name": "={{ $json.name }}",
-            "email": "={{ $json.email }}",
-            "phone": "={{ $json.phone }}",
-            "company": "={{ $json.company }}",
-            "rental_purpose": "={{ $json.rental_purpose }}",
-            "rental_start_date": "={{ $json.rental_start_date }}",
-            "rental_duration": "={{ $json.rental_duration }}",
-            "items_needed": "={{ $json.items_needed }}",
-            "delivery_area": "={{ $json.delivery_area }}",
-            "budget": "={{ $json.budget }}",
-            "status": "={{ $json.status }}",
-            "source_channel": "={{ $json.source_channel }}",
-            "created_at": "={{ $json.created_at }}",
-            "execution_id": "={{ $json.execution_id }}"
-          },
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "lead_id",
+              "displayName": "lead_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "session_id",
+              "displayName": "session_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "phone",
+              "displayName": "phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "company",
+              "displayName": "company",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rental_purpose",
+              "displayName": "rental_purpose",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rental_start_date",
+              "displayName": "rental_start_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rental_duration",
+              "displayName": "rental_duration",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "items_needed",
+              "displayName": "items_needed",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "delivery_area",
+              "displayName": "delivery_area",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "budget",
+              "displayName": "budget",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "source_channel",
+              "displayName": "source_channel",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "execution_id",
+              "displayName": "execution_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
           "attemptToConvertTypes": false,
-          "convertFieldsToString": false,
-          "matchingColumns": [
-            "lead_id"
-          ]
+          "convertFieldsToString": false
         },
         "options": {}
       },
@@ -748,8 +1190,8 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
       "position": [
-        2040,
-        260
+        2048,
+        272
       ],
       "retryOnFail": true,
       "maxTries": 3,
@@ -761,7 +1203,8 @@
           "options": {
             "caseSensitive": true,
             "leftValue": "",
-            "typeValidation": "strict"
+            "typeValidation": "strict",
+            "version": 1
           },
           "conditions": [
             {
@@ -783,13 +1226,12 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        1480,
-        460
+        1488,
+        464
       ]
     },
     {
       "parameters": {
-        "mode": "manual",
         "assignments": {
           "assignments": [
             {
@@ -866,10 +1308,7 @@
             }
           ]
         },
-        "includeOtherFields": false,
-        "options": {
-          "includeBinary": true
-        }
+        "options": {}
       },
       "id": "30000000-0000-4000-8000-000000000018",
       "name": "Set Ticket Row",
@@ -877,7 +1316,7 @@
       "typeVersion": 3.4,
       "position": [
         1760,
-        460
+        464
       ]
     },
     {
@@ -885,13 +1324,17 @@
         "operation": "appendOrUpdate",
         "documentId": {
           "__rl": true,
-          "value": "SPACEKONCEPTRENTAL_LOGS_SHEET_ID",
-          "mode": "id"
+          "value": "1RhF1XDLluYhkB_d4dmODsSUfwqVGllXMgH4u3a1-6tQ",
+          "mode": "list",
+          "cachedResultName": "RAG_logs",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1RhF1XDLluYhkB_d4dmODsSUfwqVGllXMgH4u3a1-6tQ/edit?usp=drivesdk"
         },
         "sheetName": {
           "__rl": true,
-          "value": "tickets",
-          "mode": "name"
+          "value": 1230651452,
+          "mode": "list",
+          "cachedResultName": "tickets",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1RhF1XDLluYhkB_d4dmODsSUfwqVGllXMgH4u3a1-6tQ/edit#gid=1230651452"
         },
         "columns": {
           "mappingMode": "defineBelow",
@@ -909,11 +1352,121 @@
             "created_at": "={{ $json.created_at }}",
             "execution_id": "={{ $json.execution_id }}"
           },
-          "attemptToConvertTypes": false,
-          "convertFieldsToString": false,
           "matchingColumns": [
             "ticket_id"
-          ]
+          ],
+          "schema": [
+            {
+              "id": "ticket_id",
+              "displayName": "ticket_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "session_id",
+              "displayName": "session_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "phone",
+              "displayName": "phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "category",
+              "displayName": "category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "summary",
+              "displayName": "summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "details",
+              "displayName": "details",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "urgency",
+              "displayName": "urgency",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "execution_id",
+              "displayName": "execution_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
         },
         "options": {}
       },
@@ -922,8 +1475,8 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
       "position": [
-        2040,
-        460
+        2048,
+        464
       ],
       "retryOnFail": true,
       "maxTries": 3,
@@ -935,7 +1488,8 @@
           "options": {
             "caseSensitive": true,
             "leftValue": "",
-            "typeValidation": "strict"
+            "typeValidation": "strict",
+            "version": 1
           },
           "conditions": [
             {
@@ -957,15 +1511,16 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        1480,
-        660
+        1488,
+        672
       ]
     },
     {
       "parameters": {
-        "sendTo": "SPACEKONCEPTRENTAL_SUPPORT_EMAIL",
-        "subject": "=[spacekonceptrental Support Alert] Customer needs help: {{ $json.intent }}",
-        "message": "=Session: {{ $json.session_id }}\nMessage ID: {{ $json.message_id }}\nCustomer: {{ $json.customer_name }}\nEmail: {{ $json.customer_email }}\nPhone: {{ $json.customer_phone }}\nIntent: {{ $json.intent }}\nConfidence: {{ $json.confidence }}\nRedacted message: {{ $json.user_message_redacted }}\nBot reply: {{ $json.reply }}\nTicket ID: {{ $json.ticket_id }}\nLead ID: {{ $json.lead_id }}\nSources: {{ $json.source_titles }}\nExecution ID: {{ $json.execution_id }}"
+        "sendTo": "SpaceKonceptRental@gmail.com",
+        "subject": "=[ SpaceKonceptRental Support Alert ] Customer needs help: {{ $json.intent }}",
+        "message": "=Session: {{ $json.session_id }}\nMessage ID: {{ $json.message_id }}\nCustomer: {{ $json.customer_name }}\nEmail: {{ $json.customer_email }}\nPhone: {{ $json.customer_phone }}\nIntent: {{ $json.intent }}\nConfidence: {{ $json.confidence }}\nRedacted message: {{ $json.user_message_redacted }}\nBot reply: {{ $json.reply }}\nTicket ID: {{ $json.ticket_id }}\nLead ID: {{ $json.lead_id }}\nSources: {{ $json.source_titles }}\nExecution ID: {{ $json.execution_id }}",
+        "options": {}
       },
       "id": "30000000-0000-4000-8000-000000000021",
       "name": "Send Escalation Alert",
@@ -973,7 +1528,7 @@
       "typeVersion": 2.1,
       "position": [
         1760,
-        660
+        672
       ],
       "retryOnFail": true,
       "maxTries": 3,
@@ -985,7 +1540,8 @@
           "options": {
             "caseSensitive": true,
             "leftValue": "",
-            "typeValidation": "strict"
+            "typeValidation": "strict",
+            "version": 1
           },
           "conditions": [
             {
@@ -1016,13 +1572,12 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        1480,
-        860
+        1488,
+        864
       ]
     },
     {
       "parameters": {
-        "mode": "manual",
         "assignments": {
           "assignments": [
             {
@@ -1081,10 +1636,7 @@
             }
           ]
         },
-        "includeOtherFields": false,
-        "options": {
-          "includeBinary": true
-        }
+        "options": {}
       },
       "id": "30000000-0000-4000-8000-000000000022",
       "name": "Set Unanswered Row",
@@ -1092,7 +1644,7 @@
       "typeVersion": 3.4,
       "position": [
         1760,
-        860
+        864
       ]
     },
     {
@@ -1100,13 +1652,17 @@
         "operation": "appendOrUpdate",
         "documentId": {
           "__rl": true,
-          "value": "SPACEKONCEPTRENTAL_LOGS_SHEET_ID",
-          "mode": "id"
+          "value": "1RhF1XDLluYhkB_d4dmODsSUfwqVGllXMgH4u3a1-6tQ",
+          "mode": "list",
+          "cachedResultName": "RAG_logs",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1RhF1XDLluYhkB_d4dmODsSUfwqVGllXMgH4u3a1-6tQ/edit?usp=drivesdk"
         },
         "sheetName": {
           "__rl": true,
-          "value": "unanswered_questions",
-          "mode": "name"
+          "value": 878250399,
+          "mode": "list",
+          "cachedResultName": "unanswered_questions",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1RhF1XDLluYhkB_d4dmODsSUfwqVGllXMgH4u3a1-6tQ/edit#gid=878250399"
         },
         "columns": {
           "mappingMode": "defineBelow",
@@ -1121,11 +1677,94 @@
             "created_at": "={{ $json.created_at }}",
             "execution_id": "={{ $json.execution_id }}"
           },
-          "attemptToConvertTypes": false,
-          "convertFieldsToString": false,
           "matchingColumns": [
             "id"
-          ]
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "session_id",
+              "displayName": "session_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "user_message_redacted",
+              "displayName": "user_message_redacted",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "reason",
+              "displayName": "reason",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "intent",
+              "displayName": "intent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "confidence",
+              "displayName": "confidence",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "source_titles",
+              "displayName": "source_titles",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "execution_id",
+              "displayName": "execution_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
         },
         "options": {}
       },
@@ -1134,12 +1773,58 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
       "position": [
-        2040,
-        860
+        2048,
+        864
       ],
       "retryOnFail": true,
       "maxTries": 3,
       "waitBetweenTries": 3000
+    },
+    {
+      "parameters": {
+        "content": "# INTAKE AND DEDUPE\n\n- Receives chat messages and normalises input.\n- Checks the conversation log before processing to avoid duplicate replies.\n\n## Required manual configuration:\n\n- **Lookup Conversation State**\n  - `documentId.value`: Set this to the Google Sheets workbook used for support logs.\n- **Upsert Conversation Processing**\n  - `documentId.value`: Set this to the same Google Sheets workbook used for support logs.",
+        "height": 988,
+        "width": 1764,
+        "color": 5
+      },
+      "id": "30000000-0000-4000-8000-000000000901",
+      "name": "Intake and dedupe group",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1024,
+        -208
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.message }}",
+        "options": {
+          "systemMessage": "You are the SpaceKonceptRental Customer Support Agent.\n\nYour job:\n- Help customers with furniture rental questions.\n- Answer FAQs, operating hours, pricing, rental process, delivery/pickup, product/package questions, policies, and troubleshooting.\n- Help with appointment booking.\n- Create support tickets.\n- Escalate issues to the human team when required.\n- Capture leads by collecting contact details and rental requirements.\n\nKnowledge rules:\n- Your ONLY factual source is the retrieved SpaceKonceptRental knowledge base content from the Pinecone tool.\n- Do not use general knowledge or guess.\n- If the answer is not found in retrieved content, say you do not have that detail yet and offer to help escalate.\n- Never invent prices, dates, stock availability, furniture dimensions, rental terms, warranty terms, damage fees, delivery fees, discounts, or policies.\n- When giving facts, keep them concise and clear.\n- If retrieved chunks conflict, do not choose randomly. Tell the customer you need the team to confirm and escalate.\n\nConversation style:\n- Warm, helpful, concise.\n- Use Singapore/British English.\n- Do not be robotic.\n- Use light emojis only when natural.\n- Ask one focused follow-up question at a time.\n\nEscalation rules:\nEscalate when:\n- The answer is not in the KB.\n- The customer is angry or dissatisfied.\n- The issue involves billing, refund, damage, complaint, urgent delivery, cancellation, or special pricing.\n- The customer asks to speak with a person.\n- The customer wants a custom quote and has provided enough details.\n\nLead capture rules:\nFor rental enquiries, collect name, email or phone, company if applicable, rental purpose, preferred rental start date and duration, furniture items or package needed, delivery area, and budget if offered.\n\nTicket rules:\nFor support tickets, collect full name, email or phone, issue category, one-line summary, detailed description, urgency, and preferred callback/contact method.\n\nBooking rules:\nFor appointment booking, collect name, email or phone, preferred date and time, appointment type, and notes/requirements.\n\nOutput rules:\nAlways return ONLY valid JSON with this schema:\n{\n  \"reply\": \"Customer-facing response here.\",\n  \"intent\": \"faq|pricing|booking|ticket|lead|escalation|handoff|unknown\",\n  \"confidence\": 0.0,\n  \"needs_escalation\": false,\n  \"needs_human_followup\": false,\n  \"lead_captured\": false,\n  \"ticket_required\": false,\n  \"booking_requested\": false,\n  \"missing_fields\": [],\n  \"lead\": {\n    \"name\": \"\",\n    \"email\": \"\",\n    \"phone\": \"\",\n    \"company\": \"\",\n    \"rental_purpose\": \"\",\n    \"rental_start_date\": \"\",\n    \"rental_duration\": \"\",\n    \"items_needed\": \"\",\n    \"delivery_area\": \"\",\n    \"budget\": \"\"\n  },\n  \"ticket\": {\n    \"category\": \"\",\n    \"summary\": \"\",\n    \"details\": \"\",\n    \"urgency\": \"\"\n  },\n  \"booking\": {\n    \"appointment_type\": \"\",\n    \"preferred_date\": \"\",\n    \"preferred_time\": \"\",\n    \"notes\": \"\"\n  },\n  \"retrieval_summary\": {\n    \"used_kb\": true,\n    \"source_titles\": [],\n    \"source_file_ids\": []\n  }\n}"
+        }
+      },
+      "id": "30000000-0000-4000-8000-000000000009",
+      "name": "SpaceKonceptRental AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        848,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "30000000-0000-4000-8000-000000000012",
+      "name": "OpenAI Retrieval Embeddings",
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        976,
+        608
+      ]
     }
   ],
   "connections": {
@@ -1220,7 +1905,7 @@
       "main": [
         [
           {
-            "node": "spacekonceptrental AI Agent",
+            "node": "SpaceKonceptRental AI Agent",
             "type": "main",
             "index": 0
           }
@@ -1231,41 +1916,19 @@
       "ai_languageModel": [
         [
           {
-            "node": "spacekonceptrental AI Agent",
+            "node": "SpaceKonceptRental AI Agent",
             "type": "ai_languageModel",
             "index": 0
           }
         ]
       ]
     },
-    "spacekonceptrental Knowledge Base": {
+    "SpaceKonceptRental Knowledge Base": {
       "ai_tool": [
         [
           {
-            "node": "spacekonceptrental AI Agent",
+            "node": "SpaceKonceptRental AI Agent",
             "type": "ai_tool",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "OpenAI Retrieval Embeddings": {
-      "ai_embedding": [
-        [
-          {
-            "node": "spacekonceptrental Knowledge Base",
-            "type": "ai_embedding",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "spacekonceptrental AI Agent": {
-      "main": [
-        [
-          {
-            "node": "Parse Strict JSON Response",
-            "type": "main",
             "index": 0
           }
         ]
@@ -1387,12 +2050,38 @@
           }
         ]
       ]
+    },
+    "SpaceKonceptRental AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Parse Strict JSON Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Retrieval Embeddings": {
+      "ai_embedding": [
+        [
+          {
+            "node": "SpaceKonceptRental Knowledge Base",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "settings": {
     "executionOrder": "v1",
     "timezone": "Asia/Singapore",
-    "errorWorkflow": "spacekonceptrental - Global Error Handler"
+    "errorWorkflow": "SpaceKonceptRental - Global Error Handler",
+    "binaryMode": "separate"
   },
-  "versionId": "ce99c578-5bc5-4cd8-8816-38be7501b2da"
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "versionId": "c3f2eccd-4026-46af-b84a-759a868a00ab"
 }

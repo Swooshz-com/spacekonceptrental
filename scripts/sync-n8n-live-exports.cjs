@@ -47,6 +47,7 @@ function stripLiveOnlyFields(workflow, options = {}) {
 
   for (const node of clean.nodes || []) {
     delete node.credentials;
+    delete node.webhookId;
   }
 
   return clean;

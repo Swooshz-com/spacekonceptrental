@@ -1,4 +1,4 @@
-# spacekonceptrental Test Plan
+# SpaceKonceptRental Test Plan
 
 Use this plan after workflows are imported, credentials are configured, and verified KB files are ingested.
 
@@ -108,4 +108,4 @@ Use this plan after workflows are imported, credentials are configured, and veri
 - Expected intent: Not applicable.
 - Expected chatbot reply behaviour: Not applicable.
 - Expected Google Sheets log: kb_ingestion row with file ID, file name, status, namespace, execution ID, ingested_at, and error_message.
-- Expected action: Both created-file and updated-file triggers insert chunks into Pinecone namespace `spacekonceptrental_kb`.
+- Expected action: Both created-file and updated-file triggers insert chunks into Pinecone namespace `SpaceKonceptRental_kb`.

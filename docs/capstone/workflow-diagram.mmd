@@ -5,7 +5,7 @@ flowchart TD
     download --> loader["Text Loader"]
     loader --> splitter["Recursive Character Text Splitter"]
     splitter --> embeddings["OpenAI Embeddings"]
-    embeddings --> pinecone["Pinecone namespace: spacekonceptrental_kb"]
+    embeddings --> pinecone["Pinecone namespace: SpaceKonceptRental_kb"]
     pinecone --> kbLog["Google Sheets: kb_ingestion"]
   end
 

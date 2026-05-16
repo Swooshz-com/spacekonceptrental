@@ -1,4 +1,4 @@
-# spacekonceptrental Submission Pack
+# SpaceKonceptRental Submission Pack
 
 ## Final Capstone Deliverables
 
@@ -7,9 +7,9 @@
 - Workflow diagram: `docs/capstone/workflow-diagram.mmd`
 - Agent instructions and prompt: `docs/capstone/agent-instructions.md`
 - n8n workflow JSON files:
-  - `n8n_workflows/spacekonceptrental-error-handler.workflow.json`
-  - `n8n_workflows/spacekonceptrental-rag-ingestion.workflow.json`
-  - `n8n_workflows/spacekonceptrental-customer-support-agent.workflow.json`
+  - `n8n_workflows/SpaceKonceptRental-error-handler.workflow.json`
+  - `n8n_workflows/SpaceKonceptRental-rag-ingestion.workflow.json`
+  - `n8n_workflows/SpaceKonceptRental-customer-support-agent.workflow.json`
 - Google Sheets schema: documented in `docs/capstone/README_CAPSTONE.md`
 - Testing evidence checklist: `docs/capstone/test-plan.md`
 - Deployment notes: documented in `docs/capstone/README_CAPSTONE.md`
@@ -20,7 +20,7 @@
 - [ ] n8n import screenshots captured.
 - [ ] Google Drive KB folder configured.
 - [ ] Ingestion workflow test run completed.
-- [ ] Pinecone namespace `spacekonceptrental_kb` contains vectors.
+- [ ] Pinecone namespace `SpaceKonceptRental_kb` contains vectors.
 - [ ] Chat FAQ test completed.
 - [ ] Pricing-missing test completed.
 - [ ] Booking test completed.
@@ -35,9 +35,9 @@
 
 ## Screenshots Checklist
 
-- [ ] n8n workflow canvas: spacekonceptrental - Global Error Handler.
-- [ ] n8n workflow canvas: spacekonceptrental - KB Ingestion to Pinecone.
-- [ ] n8n workflow canvas: spacekonceptrental - RAG Customer Support Agent.
+- [ ] n8n workflow canvas: SpaceKonceptRental - Global Error Handler.
+- [ ] n8n workflow canvas: SpaceKonceptRental - KB Ingestion to Pinecone.
+- [ ] n8n workflow canvas: SpaceKonceptRental - RAG Customer Support Agent.
 - [ ] Google Sheets conversations tab.
 - [ ] Google Sheets leads tab.
 - [ ] Google Sheets tickets tab.
@@ -52,7 +52,7 @@
 
 These files are local inactive workflow templates and documentation. They minimise custom Code nodes in favour of native/default n8n nodes. They have not been imported, activated, or tested against a live n8n instance in this repository session.
 
-Reference files in `ref/` are retained as source/reference material for post-capstone expansion. Some original source documents may contain legacy internal naming, but repo-facing naming is now `spacekonceptrental`.
+Reference files in `ref/` are retained as source/reference material for post-capstone expansion. Some original source documents may contain legacy internal naming, but repo-facing naming is now `SpaceKonceptRental`.
 
 Before production use:
 
@@ -74,7 +74,7 @@ Before production use:
   - `pineconeIndex`: Configure the Pinecone index used for vector storage.
 - **`Append KB Ingestion Log`**
   - `documentId`: Configure the Google Sheets document used for ingestion logs.
-- **`spacekonceptrental Knowledge Base`**
+- **`SpaceKonceptRental Knowledge Base`**
   - `pineconeIndex`: Configure the Pinecone index used for retrieval.
 - **`Lookup Conversation State`**
   - `documentId`: Configure the Google Sheets document used for support logs.

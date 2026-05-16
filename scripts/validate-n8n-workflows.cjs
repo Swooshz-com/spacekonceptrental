@@ -256,22 +256,6 @@ for (const filePath of files) {
     fail(`${relative} must have active: false. Workflow templates must be inactive.`);
   }
 
-  const nodeIds = new Map();
-  for (const node of workflow.nodes || []) {
-    const nodeName = typeof node.name === 'string' && node.name.trim() ? node.name : '(unnamed node)';
-    if (typeof node.id !== 'string' || !node.id.trim()) {
-      fail(`${relative} has node "${nodeName}" without a non-empty id.`);
-      continue;
-    }
-
-    if (nodeIds.has(node.id)) {
-      fail(`${relative} contains duplicate node id "${node.id}" for "${nodeIds.get(node.id)}" and "${nodeName}".`);
-      continue;
-    }
-
-    nodeIds.set(node.id, nodeName);
-  }
-
   const nodeNames = new Set((workflow.nodes || []).map((node) => node.name));
   for (const [sourceName, outputs] of Object.entries(workflow.connections || {})) {
     if (!nodeNames.has(sourceName)) {

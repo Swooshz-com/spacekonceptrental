@@ -1,21 +1,21 @@
-# spacekonceptrental RAG Customer Support Agent
+# SpaceKonceptRental RAG Customer Support Agent
 
 ## Project Overview
 
-This capstone replaces the original AgentX requirement with an n8n implementation for the Customer Support Agent track. The solution is a Retrieval-Augmented Generation customer support agent for `spacekonceptrental`.
+This capstone replaces the original AgentX requirement with an n8n implementation for the Customer Support Agent track. The solution is a Retrieval-Augmented Generation customer support agent for `SpaceKonceptRental`.
 
 The repo does not commit `IMPORT.json` or the SCTP capstone PDF. Workflows and documentation were adapted from the provided import workflow structure and Customer Support Agent capstone brief. Reference business documents are retained in `ref/` for future expansion.
 
 All unverified business facts are marked as:
 
-TODO: Confirm with spacekonceptrental.
+TODO: Confirm with SpaceKonceptRental.
 
 ## Architecture Overview
 
 1. Google Drive stores approved knowledge-base files.
 2. The ingestion workflow watches created and updated files.
 3. OpenAI embeddings convert chunks into vectors.
-4. Pinecone stores vectors in namespace `spacekonceptrental_kb`.
+4. Pinecone stores vectors in namespace `SpaceKonceptRental_kb`.
 5. The customer support workflow receives chat messages.
 6. A dedupe lookup preserves the original chat input and prevents duplicate processing.
 7. The AI Agent retrieves relevant KB chunks through Pinecone and returns strict JSON.
@@ -25,12 +25,12 @@ TODO: Confirm with spacekonceptrental.
 
 ## Workflow List
 
-- `n8n_workflows/spacekonceptrental-error-handler.workflow.json`
-  - Workflow name: `spacekonceptrental - Global Error Handler`
-- `n8n_workflows/spacekonceptrental-rag-ingestion.workflow.json`
-  - Workflow name: `spacekonceptrental - KB Ingestion to Pinecone`
-- `n8n_workflows/spacekonceptrental-customer-support-agent.workflow.json`
-  - Workflow name: `spacekonceptrental - RAG Customer Support Agent`
+- `n8n_workflows/SpaceKonceptRental-error-handler.workflow.json`
+  - Workflow name: `SpaceKonceptRental - Global Error Handler`
+- `n8n_workflows/SpaceKonceptRental-rag-ingestion.workflow.json`
+  - Workflow name: `SpaceKonceptRental - KB Ingestion to Pinecone`
+- `n8n_workflows/SpaceKonceptRental-customer-support-agent.workflow.json`
+  - Workflow name: `SpaceKonceptRental - RAG Customer Support Agent`
 
 All workflow templates are inactive by default.
 
@@ -44,7 +44,7 @@ All workflow templates are inactive by default.
   - `pineconeIndex`: Configure the Pinecone index used for vector storage.
 - **`Append KB Ingestion Log`**
   - `documentId`: Configure the Google Sheets document used for ingestion logs.
-- **`spacekonceptrental Knowledge Base`**
+- **`SpaceKonceptRental Knowledge Base`**
   - `pineconeIndex`: Configure the Pinecone index used for retrieval.
 - **`Lookup Conversation State`**
   - `documentId`: Configure the Google Sheets document used for support logs.
@@ -76,7 +76,7 @@ Configure these non-credential values in n8n before activation:
 
 Use namespace:
 
-`spacekonceptrental_kb`
+`SpaceKonceptRental_kb`
 
 ## Google Sheets Schema
 
@@ -185,9 +185,9 @@ Use one Google Sheets document for all logs.
 
 ## Import Order
 
-1. Import `spacekonceptrental - Global Error Handler`.
-2. Import `spacekonceptrental - KB Ingestion to Pinecone`.
-3. Import `spacekonceptrental - RAG Customer Support Agent`.
+1. Import `SpaceKonceptRental - Global Error Handler`.
+2. Import `SpaceKonceptRental - KB Ingestion to Pinecone`.
+3. Import `SpaceKonceptRental - RAG Customer Support Agent`.
 4. Configure non-credential placeholders and attach credentials in n8n.
 5. Set the error workflow in each main workflow's settings.
 6. Test ingestion.
@@ -197,9 +197,9 @@ Use one Google Sheets document for all logs.
 ## Demo Script
 
 1. Put KB docs into the Google Drive KB folder.
-2. Run `spacekonceptrental - KB Ingestion to Pinecone`.
-3. Confirm chunks are inserted into Pinecone namespace `spacekonceptrental_kb`.
-4. Open `spacekonceptrental - RAG Customer Support Agent`.
+2. Run `SpaceKonceptRental - KB Ingestion to Pinecone`.
+3. Confirm chunks are inserted into Pinecone namespace `SpaceKonceptRental_kb`.
+4. Open `SpaceKonceptRental - RAG Customer Support Agent`.
 5. Ask: "How does furniture rental work?"
 6. Ask: "What are your prices?"
 7. Ask: "Can I book a consultation next week?"
@@ -210,13 +210,13 @@ Use one Google Sheets document for all logs.
 
 ## Source Material Inspected
 
-- `ref/spacekonceptrental_q_and_a.docx`
-- `ref/spacekonceptrental_events_exhibition_rental_website_terms.docx`
-- `ref/spacekonceptrental_privacy_policy.docx`
-- `ref/spacekonceptrental_furniture_rental_catalogue.pptx`
-- `ref/spacekonceptrental_website_display_design_wishlist.jpg`
+- `ref/SpaceKonceptRental_q_and_a.docx`
+- `ref/SpaceKonceptRental_events_exhibition_rental_website_terms.docx`
+- `ref/SpaceKonceptRental_privacy_policy.docx`
+- `ref/SpaceKonceptRental_furniture_rental_catalogue.pptx`
+- `ref/SpaceKonceptRental_website_display_design_wishlist.jpg`
 
-Files in `ref/` are retained as source/reference material for post-capstone expansion. Some original source documents may contain legacy internal naming, but repo-facing naming is now `spacekonceptrental`.
+Files in `ref/` are retained as source/reference material for post-capstone expansion. Some original source documents may contain legacy internal naming, but repo-facing naming is now `SpaceKonceptRental`.
 
 ## Known Limitations
 

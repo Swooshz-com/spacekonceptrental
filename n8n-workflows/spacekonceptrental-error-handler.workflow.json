@@ -1,6 +1,6 @@
 {
   "id": "d7af97c3-9c86-47d2-a5de-548592fd9cce",
-  "name": "spacekonceptrental - Global Error Handler",
+  "name": "SpaceKonceptRental - Global Error Handler",
   "active": false,
   "nodes": [
     {
@@ -134,14 +134,17 @@
         "operation": "append",
         "documentId": {
           "__rl": true,
-          "value": "SPACEKONCEPTRENTAL_LOGS_SHEET_ID",
-          "mode": "id"
+          "value": "1cu-DzYsQAAWkN5Y7HONVhmEAOeyeoo-1ULxz4TXdEL8",
+          "mode": "list",
+          "cachedResultName": "error_logs",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1cu-DzYsQAAWkN5Y7HONVhmEAOeyeoo-1ULxz4TXdEL8/edit?usp=drivesdk"
         },
         "sheetName": {
           "__rl": true,
           "value": "gid=0",
           "mode": "list",
-          "cachedResultName": "error_logs"
+          "cachedResultName": "error_logs",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1cu-DzYsQAAWkN5Y7HONVhmEAOeyeoo-1ULxz4TXdEL8/edit#gid=0"
         },
         "columns": {
           "mappingMode": "defineBelow",
@@ -258,8 +261,8 @@
     },
     {
       "parameters": {
-        "sendTo": "SPACEKONCEPTRENTAL_SUPPORT_EMAIL",
-        "subject": "=[spacekonceptrental n8n Alert] Workflow failed: {{ $json.workflow_name }}",
+        "sendTo": "SpaceKonceptRental@gmail.com",
+        "subject": "=[ SpaceKonceptRental n8n Alert ] Workflow failed: {{ $json.workflow_name }}",
         "message": "=Workflow name: {{ $json.workflow_name }}\nWorkflow ID: {{ $json.workflow_id }}\nFailed node: {{ $json.error_node_name }}\nExecution ID: {{ $json.error_execution_id }}\nError message: {{ $json.error_message }}\nExecution URL: {{ $json.error_link }}\nTimestamp Asia/Singapore: {{ $json.error_time }}\nRecovery note: Review the failure log, confirm whether the run is safe to retry, and update recovery_status in Google Sheets.",
         "options": {}
       },
@@ -316,5 +319,5 @@
   "meta": {
     "templateCredsSetupCompleted": true
   },
-  "versionId": "972f93dd-7dd6-4ab5-a59b-faf4c01756b3"
+  "versionId": "7752da67-a7ac-4b6a-8063-8185a5cfe74b"
 }

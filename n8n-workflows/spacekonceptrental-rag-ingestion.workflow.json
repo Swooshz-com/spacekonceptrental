@@ -1,6 +1,6 @@
 {
   "id": "5fa8a515-41f8-450d-9a16-13e62113ed1f",
-  "name": "spacekonceptrental - KB Ingestion to Pinecone",
+  "name": "SpaceKonceptRental - KB Ingestion to Pinecone",
   "active": false,
   "nodes": [
     {
@@ -79,8 +79,10 @@
         "triggerOn": "specificFolder",
         "folderToWatch": {
           "__rl": true,
-          "value": "SPACEKONCEPTRENTAL_GOOGLE_DRIVE_KB_FOLDER_ID",
-          "mode": "id"
+          "value": "1Q7HbxRiq6YLtr4DClJR6qSVqhNQ_PyCv",
+          "mode": "list",
+          "cachedResultName": "RAG",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1Q7HbxRiq6YLtr4DClJR6qSVqhNQ_PyCv"
         },
         "event": "fileCreated",
         "options": {}
@@ -106,8 +108,10 @@
         "triggerOn": "specificFolder",
         "folderToWatch": {
           "__rl": true,
-          "value": "SPACEKONCEPTRENTAL_GOOGLE_DRIVE_KB_FOLDER_ID",
-          "mode": "id"
+          "value": "1Q7HbxRiq6YLtr4DClJR6qSVqhNQ_PyCv",
+          "mode": "list",
+          "cachedResultName": "RAG",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1Q7HbxRiq6YLtr4DClJR6qSVqhNQ_PyCv"
         },
         "event": "fileUpdated",
         "options": {}
@@ -184,7 +188,7 @@
             {
               "id": "prepare-chunk-metadata-7",
               "name": "namespace",
-              "value": "spacekonceptrental_kb",
+              "value": "SpaceKonceptRental_kb",
               "type": "string"
             }
           ]
@@ -212,8 +216,8 @@
       "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
       "typeVersion": 1,
       "position": [
-        32,
-        368
+        272,
+        304
       ]
     },
     {
@@ -226,8 +230,8 @@
       "type": "@n8n/n8n-nodes-langchain.textSplitterRecursiveCharacterTextSplitter",
       "typeVersion": 1,
       "position": [
-        32,
-        560
+        272,
+        464
       ]
     },
     {
@@ -239,14 +243,19 @@
       "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
       "typeVersion": 1.2,
       "position": [
-        288,
-        432
+        112,
+        304
       ]
     },
     {
       "parameters": {
         "mode": "insert",
-        "pineconeIndex": "SPACEKONCEPTRENTAL_PINECONE_INDEX",
+        "pineconeIndex": {
+          "__rl": true,
+          "value": "SpaceKonceptRental-kb-rag",
+          "mode": "list",
+          "cachedResultName": "SpaceKonceptRental-kb-rag"
+        },
         "options": {
           "clearNamespace": false
         }
@@ -256,7 +265,7 @@
       "type": "@n8n/n8n-nodes-langchain.vectorStorePinecone",
       "typeVersion": 1.3,
       "position": [
-        288,
+        160,
         128
       ],
       "retryOnFail": true,
@@ -294,7 +303,7 @@
             {
               "id": "prepare-ingestion-log-5",
               "name": "namespace",
-              "value": "spacekonceptrental_kb",
+              "value": "SpaceKonceptRental_kb",
               "type": "string"
             },
             {
@@ -333,26 +342,98 @@
         "operation": "append",
         "documentId": {
           "__rl": true,
-          "value": "SPACEKONCEPTRENTAL_LOGS_SHEET_ID",
-          "mode": "id"
+          "value": "1RhF1XDLluYhkB_d4dmODsSUfwqVGllXMgH4u3a1-6tQ",
+          "mode": "list",
+          "cachedResultName": "RAG_logs",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1RhF1XDLluYhkB_d4dmODsSUfwqVGllXMgH4u3a1-6tQ/edit?usp=drivesdk"
         },
         "sheetName": {
           "__rl": true,
-          "value": "kb_ingestion",
-          "mode": "name"
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "kb_ingestion",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1RhF1XDLluYhkB_d4dmODsSUfwqVGllXMgH4u3a1-6tQ/edit#gid=0"
         },
         "columns": {
           "mappingMode": "defineBelow",
-          "value": {
-            "file_id": "={{ $json.file_id }}",
-            "file_name": "={{ $json.file_name }}",
-            "status": "={{ $json.status }}",
-            "chunks_count": "={{ $json.chunks_count }}",
-            "namespace": "={{ $json.namespace }}",
-            "execution_id": "={{ $json.execution_id }}",
-            "ingested_at": "={{ $json.ingested_at }}",
-            "error_message": "={{ $json.error_message }}"
-          }
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "file_id",
+              "displayName": "file_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "file_name",
+              "displayName": "file_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "chunks_count",
+              "displayName": "chunks_count",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "namespace",
+              "displayName": "namespace",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "execution_id",
+              "displayName": "execution_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ingested_at",
+              "displayName": "ingested_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "error_message",
+              "displayName": "error_message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
         },
         "options": {}
       },
@@ -473,8 +554,11 @@
   "settings": {
     "executionOrder": "v1",
     "timezone": "Asia/Singapore",
-    "errorWorkflow": "spacekonceptrental - Global Error Handler",
+    "errorWorkflow": "SpaceKonceptRental - Global Error Handler",
     "binaryMode": "separate"
   },
-  "versionId": "2916ff01-eb08-41e5-9295-427b147e73ab"
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "versionId": "f00ad7fb-7259-4e3f-8768-bcc9e8e0bde4"
 }

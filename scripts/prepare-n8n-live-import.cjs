@@ -2,12 +2,17 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 function usage() {
-  console.error('Usage: node scripts/prepare-n8n-live-import.cjs <repo-workflow.json> [bindings.json] [output.json]');
+  console.error('Usage: node scripts/prepare-n8n-live-import.cjs <repo-workflow.json> [bindings.json] [output.json] [live-workflow.json]');
   process.exit(1);
 }
 
 function readJson(filePath) {
   return JSON.parse(fs.readFileSync(filePath, 'utf8').replace(/^\uFEFF/, ''));
+}
+
+function readWorkflow(filePath) {
+  const raw = readJson(filePath);
+  return Array.isArray(raw) ? raw[0] : raw.workflow || raw;
 }
 
 function readOptionalBindings(filePath) {
@@ -264,10 +269,60 @@ function restoreCredentials(workflow, workflowBindings, migrationMap) {
   return { restored, missed };
 }
 
+function nodeKey(node) {
+  return `${node.name || ''}\u0000${node.type || ''}`;
+}
+
+function buildUniqueNodeIndex(nodes) {
+  const byId = new Map();
+  const byNameType = new Map();
+
+  for (const node of nodes || []) {
+    if (node.id) byId.set(node.id, node);
+
+    const key = nodeKey(node);
+    const entries = byNameType.get(key) || [];
+    entries.push(node);
+    byNameType.set(key, entries);
+  }
+
+  return { byId, byNameType };
+}
+
+function restoreLiveWebhookIds(workflow, liveWorkflow) {
+  if (!liveWorkflow || !Array.isArray(liveWorkflow.nodes)) {
+    return 0;
+  }
+
+  const { byId, byNameType } = buildUniqueNodeIndex(liveWorkflow.nodes);
+  let restored = 0;
+
+  for (const node of workflow.nodes || []) {
+    let liveNode = node.id ? byId.get(node.id) : null;
+
+    if (!liveNode) {
+      const matches = byNameType.get(nodeKey(node)) || [];
+      if (matches.length === 1) {
+        liveNode = matches[0];
+      } else if (matches.length > 1) {
+        console.warn(`Skipped webhookId restore for node "${node.name || node.id || '(unknown)'}": live node name/type match is ambiguous.`);
+      }
+    }
+
+    if (liveNode && liveNode.webhookId) {
+      node.webhookId = liveNode.webhookId;
+      restored += 1;
+    }
+  }
+
+  return restored;
+}
+
 function main() {
   const workflowPath = process.argv[2];
   const bindingsPath = process.argv[3] || path.join('.n8n-local', 'n8n-credential-bindings.json');
   const outputPath = process.argv[4] || path.join('.tmp', `${workflowFileName(workflowPath || 'workflow')}.live-import.json`);
+  const liveWorkflowPath = process.argv[5];
 
   if (!workflowPath) usage();
 
@@ -276,11 +331,13 @@ function main() {
   const workflowBindings = selectBindings(bindings, workflow, workflowPath);
   const migrationMap = readMigrationMap();
   const { restored, missed } = restoreCredentials(workflow, workflowBindings, migrationMap);
+  const liveWorkflow = liveWorkflowPath && fs.existsSync(liveWorkflowPath) ? readWorkflow(liveWorkflowPath) : null;
+  const restoredWebhookIds = restoreLiveWebhookIds(workflow, liveWorkflow);
 
   fs.mkdirSync(path.dirname(outputPath), { recursive: true });
   fs.writeFileSync(outputPath, JSON.stringify(workflow, null, 2) + '\n');
 
-  console.log(`Prepared ${outputPath} with ${restored} credential binding(s) restored.`);
+  console.log(`Prepared ${outputPath} with ${restored} credential binding(s) and ${restoredWebhookIds} live webhookId(s) restored.`);
   if (missed.length) {
     console.warn(`Skipped ${missed.length} binding(s) with no matching node: ${missed.join(', ')}`);
   }
@@ -294,5 +351,6 @@ module.exports = {
   selectBindings,
   selectBindingsWithMeta,
   restoreCredentials,
+  restoreLiveWebhookIds,
   prepareLiveImport: main,
 };

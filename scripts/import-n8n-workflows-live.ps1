@@ -514,7 +514,18 @@ function Invoke-WorkflowPreflight($WorkflowFiles, [bool]$BindingsFileExists, $Li
       }
     }
 
-    $prepareResult = Invoke-CapturedCommand "node" @("scripts/prepare-n8n-live-import.cjs", $workflowFile.FullName, $BindingsFilePath, $preparedFile)
+    $prepareArgs = @(
+      "scripts/prepare-n8n-live-import.cjs",
+      $workflowFile.FullName,
+      $BindingsFilePath,
+      $preparedFile
+    )
+
+    if (Test-Path -Path $liveCompareFile -PathType Leaf) {
+      $prepareArgs += $liveCompareFile
+    }
+
+    $prepareResult = Invoke-CapturedCommand "node" $prepareArgs
     if ($prepareResult.ExitCode -ne 0) {
       throw "Failed to prepare live import file for $($workflowFile.FullName).`n$($prepareResult.Output -join "`n")"
     }
@@ -597,7 +608,6 @@ function Write-WorkflowActionSummary($PlannedImports, $StatusLabel) {
     Write-Host ""
   }
 }
-
 
 $WorkflowDirPath = Resolve-WorkflowDirPath
 $BindingsFilePath = Join-Path $RepoRoot $BindingsFile
