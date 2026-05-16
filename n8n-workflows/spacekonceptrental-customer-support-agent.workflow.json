@@ -589,17 +589,17 @@
       "parameters": {
         "mode": "retrieve-as-tool",
         "toolDescription": "Use this tool to answer questions about SpaceKonceptRental products, furniture rental packages, pricing, rental process, delivery, pickup, policies, appointment booking, ticketing, escalation, and FAQs.",
-      "pineconeIndex": {
-        "__rl": true,
-        "value": "spacekonceptrental-kb-rag",
-        "mode": "list",
-        "cachedResultName": "spacekonceptrental-kb-rag"
+        "pineconeIndex": {
+          "__rl": true,
+          "value": "spacekonceptrental-kb-rag",
+          "mode": "list",
+          "cachedResultName": "spacekonceptrental-kb-rag"
+        },
+        "topK": 6,
+        "options": {
+          "pineconeNamespace": "={{ $json.kb_namespace || 'SpaceKonceptRental_kb' }}"
+        }
       },
-      "topK": 6,
-      "options": {
-        "pineconeNamespace": "={{ $json.kb_namespace || 'SpaceKonceptRental_kb' }}"
-      }
-    },
       "id": "30000000-0000-4000-8000-000000000011",
       "name": "SpaceKonceptRental Knowledge Base",
       "type": "@n8n/n8n-nodes-langchain.vectorStorePinecone",
@@ -2151,5 +2151,5 @@
   "meta": {
     "templateCredsSetupCompleted": true
   },
-  "versionId": "e16afbb0-7776-4723-9397-865f2003b168"
+  "versionId": "a1a092a7-e6d1-4f3a-addd-8ad24695bc78"
 }

@@ -7,7 +7,7 @@
       "parameters": {
         "content": "# DRIVE TRIGGERS\n\n- Watches approved KB files created or updated in Google Drive.\n- Tags each run as `created` or `updated` before downloading the file.\n- Removes duplicate file events inside the same trigger batch so new files still continue.\n- Sends changed files into the ingestion path.\n\n## Required manual configuration:\n\n- **KB File Created**\n  - `folderToWatch.value`: Set this to the Google Drive folder that stores approved KB files.\n- **KB File Updated**\n  - `folderToWatch.value`: Set this to the same Google Drive folder that stores approved KB files.",
         "height": 652,
-        "width": 740,
+        "width": 980,
         "color": 5
       },
       "id": "20000000-0000-4000-8000-000000000901",
@@ -15,7 +15,7 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        -1040,
+        -1328,
         -256
       ]
     },
@@ -23,7 +23,7 @@
       "parameters": {
         "content": "# CHUNK PREPARATION\n\n- Adds source metadata from the Google Drive file.\n- Loads and splits document content for retrieval.",
         "height": 652,
-        "width": 292,
+        "width": 276,
         "color": 2
       },
       "id": "20000000-0000-4000-8000-000000000902",
@@ -31,15 +31,15 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        -304,
+        -352,
         -256
       ]
     },
     {
       "parameters": {
-        "content": "# VECTOR INDEXING\n\n- Creates embeddings for KB chunks.\n- Stores chunk vectors in the Pinecone KB namespace.\n- Namespace is set upstream in `Prepare Chunk Metadata` and read by Pinecone as `={{ $json.namespace || 'SpaceKonceptRental_kb' }}`.\n\n## Required manual configuration:\n\n- **Insert Chunks into Pinecone**\n  - `pineconeIndex`: Set this to the Pinecone index used for vector storage.",
+        "content": "# VECTOR INDEXING\n\n- Makes KB updates idempotent before writing fresh vectors.\n- Pinecone insert does not automatically replace old file chunks, so this section deletes stale vectors first.\n- Namespace is set upstream in `Prepare Chunk Metadata` and read by Pinecone as `={{ $json.namespace || 'SpaceKonceptRental_kb' }}`.\n\n## Pinecone cleanup subflow:\n\n- **Resolve Pinecone Index Host**: Gets the live Pinecone host for `pinecone_index_name`.\n- **Prepare Pinecone Delete Request**: Builds a `/vectors/delete` request for the current `source_file_id` or `source_file_name`.\n- **Delete Existing Pinecone File Chunks**: Removes old chunks for that file from the namespace.\n- **Restore Pinecone Ingestion Context**: Restores the original document item so embedding and insert can continue normally.\n\n## Required manual configuration:\n\n- **Prepare Chunk Metadata**\n  - `pinecone_index_name`: Keep this aligned with the Pinecone index used for vector storage.\n- **Insert Chunks into Pinecone**\n  - `pineconeIndex`: Set this to the same Pinecone index used for vector storage.",
         "height": 940,
-        "width": 580,
+        "width": 1384,
         "color": 3
       },
       "id": "20000000-0000-4000-8000-000000000903",
@@ -47,13 +47,13 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        -16,
-        -256
+        -80,
+        -320
       ]
     },
     {
       "parameters": {
-        "content": "# INGESTION LOG\n\n- Records ingestion status for review.\n- Groups Pinecone chunk outputs back into one log row per source file.\n- Upserts by `file_id`, so repeated events update the existing row while new files keep appending.\n- Writes file names as plain text and Drive URLs as clickable links in Sheets.\n\n## Required manual configuration:\n\n- **Append KB Ingestion Log**\n  - `documentId.value`: Set this to the Google Sheets workbook used for ingestion logs.\n  - Sheet headers must include `file_url` and `event_type` if those columns are used.",
+        "content": "# INGESTION LOG\n\n- Records ingestion status for review.\n- Groups Pinecone chunk outputs back into one log row per source file.\n- Appends every ingestion event as a new audit row; repeated file events must not overwrite earlier rows.\n- Writes file names as plain text and Drive URLs as clickable links in Sheets.\n\n## Required manual configuration:\n\n- **Append KB Ingestion Log**\n  - `documentId.value`: Set this to the Google Sheets workbook used for ingestion logs.\n  - Sheet headers must include `file_url` and `event_type` if those columns are used.",
         "height": 636,
         "width": 420,
         "color": 4
@@ -63,7 +63,7 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        560,
+        1312,
         -256
       ]
     },
@@ -92,7 +92,7 @@
       "type": "n8n-nodes-base.googleDriveTrigger",
       "typeVersion": 1,
       "position": [
-        -976,
+        -1216,
         48
       ]
     },
@@ -121,7 +121,7 @@
       "type": "n8n-nodes-base.googleDriveTrigger",
       "typeVersion": 1,
       "position": [
-        -976,
+        -1216,
         208
       ]
     },
@@ -138,7 +138,7 @@
       "type": "n8n-nodes-base.googleDrive",
       "typeVersion": 3,
       "position": [
-        -496,
+        -528,
         128
       ],
       "retryOnFail": true,
@@ -196,6 +196,12 @@
               "name": "event_type",
               "value": "={{ $json.event_type || 'unknown' }}",
               "type": "string"
+            },
+            {
+              "id": "prepare-chunk-metadata-9",
+              "name": "pinecone_index_name",
+              "value": "spacekonceptrental-kb-rag",
+              "type": "string"
             }
           ]
         },
@@ -207,7 +213,7 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -240,
+        -272,
         128
       ]
     },
@@ -247,7 +253,7 @@
       "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
       "typeVersion": 1,
       "position": [
-        272,
+        992,
         304
       ]
     },
@@ -261,7 +267,7 @@
       "type": "@n8n/n8n-nodes-langchain.textSplitterRecursiveCharacterTextSplitter",
       "typeVersion": 1,
       "position": [
-        272,
+        992,
         464
       ]
     },
@@ -274,7 +280,7 @@
       "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
       "typeVersion": 1.2,
       "position": [
-        112,
+        832,
         304
       ]
     },
@@ -297,7 +303,7 @@
       "type": "@n8n/n8n-nodes-langchain.vectorStorePinecone",
       "typeVersion": 1.3,
       "position": [
-        160,
+        880,
         128
       ],
       "retryOnFail": true,
@@ -313,13 +319,12 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        624,
+        1344,
         128
       ]
     },
     {
       "parameters": {
-        "operation": "appendOrUpdate",
         "documentId": {
           "__rl": true,
           "value": "1RhF1XDLluYhkB_d4dmODsSUfwqVGllXMgH4u3a1-6tQ",
@@ -334,128 +339,14 @@
           "cachedResultName": "kb_ingestion",
           "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1RhF1XDLluYhkB_d4dmODsSUfwqVGllXMgH4u3a1-6tQ/edit#gid=0"
         },
-        "columns": {
-          "mappingMode": "defineBelow",
-          "value": {
-            "file_id": "={{ $json.file_id }}",
-            "file_name": "={{ $json.file_name }}",
-            "file_url": "={{ $json.file_url }}",
-            "event_type": "={{ $json.event_type }}",
-            "status": "={{ $json.status }}",
-            "chunks_count": "={{ $json.chunks_count }}",
-            "namespace": "={{ $json.namespace }}",
-            "execution_id": "={{ $json.execution_id }}",
-            "ingested_at": "={{ $json.ingested_at }}",
-            "error_message": "={{ $json.error_message }}"
-          },
-          "matchingColumns": [
-            "file_id"
-          ],
-          "schema": [
-            {
-              "id": "file_id",
-              "displayName": "file_id",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "file_name",
-              "displayName": "file_name",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "file_url",
-              "displayName": "file_url",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "event_type",
-              "displayName": "event_type",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "status",
-              "displayName": "status",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "chunks_count",
-              "displayName": "chunks_count",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "namespace",
-              "displayName": "namespace",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "execution_id",
-              "displayName": "execution_id",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "ingested_at",
-              "displayName": "ingested_at",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "error_message",
-              "displayName": "error_message",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            }
-          ],
-          "attemptToConvertTypes": false,
-          "convertFieldsToString": false
-        },
-        "options": {
-          "cellFormat": "USER_ENTERED"
-        }
+        "options": {}
       },
       "id": "20000000-0000-4000-8000-000000000010",
       "name": "Append KB Ingestion Log",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4,
       "position": [
-        832,
+        1552,
         128
       ],
       "retryOnFail": true,
@@ -482,7 +373,7 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -752,
+        -992,
         48
       ]
     },
@@ -506,13 +397,12 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -752,
+        -992,
         208
       ]
     },
     {
       "parameters": {
-        "mode": "runOnceForAllItems",
         "jsCode": "const seen = new Set();\nconst output = [];\n\nfor (const item of $input.all()) {\n  const json = item.json || {};\n  const fileId = String(json.id || json.fileId || '').trim();\n  const fileName = String(json.name || json.fileName || '').trim().toLowerCase();\n  const key = fileId || fileName;\n\n  if (key && seen.has(key)) continue;\n  if (key) seen.add(key);\n\n  output.push(item);\n}\n\nreturn output;"
       },
       "id": "20000000-0000-4000-8000-000000000014",
@@ -520,7 +410,109 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -608,
+        -752,
+        128
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ 'https://api.pinecone.io/indexes/' + encodeURIComponent($json.pinecone_index_name || 'spacekonceptrental-kb-rag') }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "pineconeApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Pinecone-API-Version",
+              "value": "2025-04"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "20000000-0000-4000-8000-000000000015",
+      "name": "Resolve Pinecone Index Host",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -16,
+        128
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 3000
+    },
+    {
+      "parameters": {
+        "jsCode": "const hostItems = $input.all();\nconst sourceItems = $items('Prepare Chunk Metadata');\n\nreturn hostItems.map((hostItem, index) => {\n  const sourceItem = sourceItems[index] || {};\n  const sourceJson = sourceItem.json || {};\n  const rawHost = hostItem.json?.host || hostItem.json?.database?.host || '';\n  const host = String(rawHost).replace(/^https?:\\/\\//, '').replace(/\\/$/, '');\n  const namespace = sourceJson.namespace || 'SpaceKonceptRental_kb';\n  const fileId = String(sourceJson.source_file_id || '').trim();\n  const fileName = String(sourceJson.source_file_name || '').trim();\n  const conditions = [];\n\n  if (!host) {\n    throw new Error('Pinecone index host was not returned by Resolve Pinecone Index Host');\n  }\n\n  if (fileId) conditions.push({ source_file_id: { $eq: fileId } });\n  if (fileName) conditions.push({ source_file_name: { $eq: fileName } });\n\n  if (!conditions.length) {\n    throw new Error('Cannot delete stale Pinecone vectors without source_file_id or source_file_name');\n  }\n\n  return {\n    json: {\n      ...sourceJson,\n      pinecone_index_host: host,\n      pinecone_delete_url: `https://${host}/vectors/delete`,\n      pinecone_delete_body: {\n        namespace,\n        filter: conditions.length === 1 ? conditions[0] : { $or: conditions }\n      }\n    },\n    binary: sourceItem.binary\n  };\n});"
+      },
+      "id": "20000000-0000-4000-8000-000000000016",
+      "name": "Prepare Pinecone Delete Request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        208,
+        128
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.pinecone_delete_url }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "pineconeApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "X-Pinecone-API-Version",
+              "value": "2025-04"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.pinecone_delete_body }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "20000000-0000-4000-8000-000000000017",
+      "name": "Delete Existing Pinecone File Chunks",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        432,
+        128
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 3000
+    },
+    {
+      "parameters": {
+        "jsCode": "return $items('Prepare Pinecone Delete Request').map((item) => ({\n  json: item.json,\n  binary: item.binary\n}));"
+      },
+      "id": "20000000-0000-4000-8000-000000000018",
+      "name": "Restore Pinecone Ingestion Context",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        656,
         128
       ]
     }
@@ -563,7 +555,7 @@
       "main": [
         [
           {
-            "node": "Insert Chunks into Pinecone",
+            "node": "Resolve Pinecone Index Host",
             "type": "main",
             "index": 0
           }
@@ -657,6 +649,50 @@
           }
         ]
       ]
+    },
+    "Resolve Pinecone Index Host": {
+      "main": [
+        [
+          {
+            "node": "Prepare Pinecone Delete Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Pinecone Delete Request": {
+      "main": [
+        [
+          {
+            "node": "Delete Existing Pinecone File Chunks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete Existing Pinecone File Chunks": {
+      "main": [
+        [
+          {
+            "node": "Restore Pinecone Ingestion Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Restore Pinecone Ingestion Context": {
+      "main": [
+        [
+          {
+            "node": "Insert Chunks into Pinecone",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "settings": {
@@ -671,5 +707,5 @@
   "meta": {
     "templateCredsSetupCompleted": true
   },
-  "versionId": "7b210e47-ca39-464d-b814-5cb2a3b75ea4"
+  "versionId": "e37227fd-7e4b-437f-a44f-723b80eaad63"
 }
