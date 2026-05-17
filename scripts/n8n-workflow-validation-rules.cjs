@@ -433,6 +433,12 @@ function checkCustomerSupportAgentLoggingContract(workflow, relative) {
     'parsed.lead?.name',
     'parsed.ticket?.name',
     'escalation_reference_id',
+    'const leadCaptured = !ticketRequired',
+    'const bookingRequested = !ticketRequired',
+    'const leadRequired = leadCaptured || bookingRequested',
+    'const ticketReady = ticketRequired',
+    'ticket_ready: ticketReady',
+    'ticket_id: ticketId',
   ]) {
     if (!parserCode.includes(requiredSnippet)) {
       fail(`${relative} Parse Strict JSON Response must include ${requiredSnippet} for logging normalization.`);
@@ -452,6 +458,24 @@ function checkCustomerSupportAgentLoggingContract(workflow, relative) {
   const activeProcessingCode = String(activeProcessingNode?.parameters?.jsCode || '');
   if (!activeProcessingCode.includes('parseSgtTimestamp') || !activeProcessingCode.includes('Date.UTC')) {
     fail(`${relative} Select Active Processing Row must parse display SGT timestamps before applying the processing lock window.`);
+  }
+
+  const agentNode = findWorkflowNode(workflow, 'SpaceKonceptRental AI Agent');
+  const systemMessage = String(agentNode?.parameters?.options?.systemMessage || '');
+  if (!systemMessage.includes('ticket-only complaint or support cases') || !systemMessage.includes('do not set lead_captured to true')) {
+    fail(`${relative} SpaceKonceptRental AI Agent must keep ticket-only complaints out of lead capture.`);
+  }
+
+  const leadBranch = findWorkflowNode(workflow, 'Lead or Booking Required?');
+  const leadBranchConditions = JSON.stringify(leadBranch?.parameters?.conditions || {});
+  if (!leadBranchConditions.includes('ticket_required') || !leadBranchConditions.includes('lead_captured') || !leadBranchConditions.includes('booking_requested')) {
+    fail(`${relative} Lead or Booking Required? must exclude ticket-only requests before routing to the leads sheet.`);
+  }
+
+  const ticketBranch = findWorkflowNode(workflow, 'Ticket Required?');
+  const ticketBranchConditions = JSON.stringify(ticketBranch?.parameters?.conditions || {});
+  if (!ticketBranchConditions.includes('ticket_ready')) {
+    fail(`${relative} Ticket Required? must wait for actionable ticket details before routing to the tickets sheet.`);
   }
 
   const outputParserNode = findWorkflowNode(workflow, 'Agent Structured Output Parser');
