@@ -62,7 +62,7 @@
       "type": "@n8n/n8n-nodes-langchain.chatTrigger",
       "typeVersion": 1.4,
       "position": [
-        -976,
+        -1184,
         336
       ]
     },
@@ -140,7 +140,7 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -720,
+        -928,
         336
       ]
     },
@@ -153,7 +153,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -464,
+        -672,
         336
       ]
     },
@@ -185,7 +185,6 @@
             }
           ]
         },
-        "combineFilters": "AND",
         "options": {
           "returnFirstMatch": false
         }
@@ -195,7 +194,7 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
       "position": [
-        -208,
+        -416,
         336
       ],
       "retryOnFail": true,
@@ -1847,7 +1846,7 @@
       "parameters": {
         "content": "# INTAKE AND PROCESSING GUARD\n\n- Receives chat messages and normalises input.\n- Writes a temporary processing row before AI/RAG output exists.\n- Looks up open processing rows for the same chat session and selects the freshest row still inside the guard window.\n- If another message arrives while that row is fresh, asks the user to wait instead of starting another run.\n- Completed or failed rows do not block later repeated questions.\n- `message_id` remains the unique audit row id.\n- `dedupe_key` is kept only as a diagnostic/audit hash, not as the customer-facing block condition.\n- Later AI/RAG fields use `={{ '' }}` on purpose so Sheets cells stay blank until the row is overwritten by the completed or failed path.\n\n## Required manual configuration:\n\n- **Lookup Conversation State**\n  - `documentId.value`: Set this to the Google Sheets workbook used for support logs.\n  - Conversations sheet headers must include exact `session_id`, `status`, and `dedupe_key` headers with no trailing spaces.\n- **Upsert Conversation Processing**\n  - `documentId.value`: Set this to the same Google Sheets workbook used for support logs.",
         "height": 988,
-        "width": 1764,
+        "width": 1972,
         "color": 5
       },
       "id": "30000000-0000-4000-8000-000000000901",
@@ -1855,7 +1854,7 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        -1024,
+        -1232,
         -208
       ]
     },
@@ -2391,8 +2390,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        64,
-        544
+        -176,
+        336
       ]
     }
   ],
@@ -2726,5 +2725,5 @@
   "meta": {
     "templateCredsSetupCompleted": true
   },
-  "versionId": "fc46ba32-9574-472c-852f-ce08f2f22c02"
+  "versionId": "add9c4fd-a975-4a20-bf5a-e1f91c8940d4"
 }
