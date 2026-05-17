@@ -185,6 +185,7 @@
             }
           ]
         },
+        "combineFilters": "AND",
         "options": {
           "returnFirstMatch": false
         }
@@ -2725,5 +2726,5 @@
   "meta": {
     "templateCredsSetupCompleted": true
   },
-  "versionId": "add9c4fd-a975-4a20-bf5a-e1f91c8940d4"
+  "versionId": "d90af38d-8286-4cd2-82b5-732948c28bfd"
 }
