@@ -61,6 +61,9 @@ function Invoke-CapturedCommand($Command, [string[]]$Arguments) {
   $process.StartInfo.RedirectStandardError = $true
   $process.StartInfo.UseShellExecute = $false
   $process.StartInfo.CreateNoWindow = $true
+  if (-not [string]::IsNullOrWhiteSpace($RepoRoot)) {
+    $process.StartInfo.WorkingDirectory = $RepoRoot
+  }
   $process.StartInfo.StandardOutputEncoding = [System.Text.Encoding]::UTF8
   $process.StartInfo.StandardErrorEncoding = [System.Text.Encoding]::UTF8
 
@@ -95,6 +98,97 @@ function Get-DisplayPath($Path) {
   }
 
   return $resolvedPath
+}
+
+function Resolve-ProjectWorkflowHookScripts {
+  $scripts = New-Object System.Collections.Generic.List[string]
+
+  # Generic export extension point:
+  # keep this script project-agnostic. If a target repo needs import/export
+  # cleanup, repair, or normalisation, add scripts\n8n-workflow-hooks.* in that
+  # repo instead of hardcoding workflow-specific rules here.
+  if (-not [string]::IsNullOrWhiteSpace($env:N8N_WORKFLOW_HOOK_SCRIPT)) {
+    foreach ($hookPath in @($env:N8N_WORKFLOW_HOOK_SCRIPT -split ';')) {
+      if ([string]::IsNullOrWhiteSpace($hookPath)) {
+        continue
+      }
+      if ([System.IO.Path]::IsPathRooted($hookPath)) {
+        $scripts.Add([System.IO.Path]::GetFullPath($hookPath))
+      } else {
+        $scripts.Add([System.IO.Path]::GetFullPath((Join-Path $RepoRoot $hookPath)))
+      }
+    }
+  }
+
+  foreach ($relativePath in @(
+    "scripts\n8n-workflow-hooks.cjs",
+    "scripts\n8n-workflow-hooks.js",
+    "scripts\n8n-workflow-hooks.ps1",
+    ".n8n-local\n8n-workflow-hooks.cjs",
+    ".n8n-local\n8n-workflow-hooks.js",
+    ".n8n-local\n8n-workflow-hooks.ps1",
+    ".n8n-workflow-hooks.cjs",
+    ".n8n-workflow-hooks.js",
+    ".n8n-workflow-hooks.ps1"
+  )) {
+    $scripts.Add([System.IO.Path]::GetFullPath((Join-Path $RepoRoot $relativePath)))
+  }
+
+  $seen = @{}
+  $existingScripts = @()
+  foreach ($script in $scripts) {
+    if ($seen.ContainsKey($script)) {
+      continue
+    }
+    $seen[$script] = $true
+    if (Test-Path -LiteralPath $script -PathType Leaf) {
+      $existingScripts += $script
+    }
+  }
+
+  return $existingScripts
+}
+
+function Invoke-ProjectWorkflowHook($HookName, [hashtable]$Context) {
+  $hookScripts = @(Resolve-ProjectWorkflowHookScripts)
+  if ($hookScripts.Count -eq 0) {
+    return
+  }
+
+  $hookArgs = @($HookName, "--repo-root", $RepoRoot)
+  foreach ($key in @($Context.Keys | Sort-Object)) {
+    $value = $Context[$key]
+    if ($null -eq $value -or [string]::IsNullOrWhiteSpace([string]$value)) {
+      continue
+    }
+    $hookArgs += "--$key"
+    $hookArgs += [string]$value
+  }
+
+  foreach ($hookScript in $hookScripts) {
+    $extension = [System.IO.Path]::GetExtension($hookScript).ToLowerInvariant()
+    if ($extension -eq ".cjs" -or $extension -eq ".js") {
+      $command = "node"
+      $arguments = @($hookScript) + $hookArgs
+    } elseif ($extension -eq ".ps1") {
+      $command = "powershell"
+      $arguments = @("-NoProfile", "-ExecutionPolicy", "Bypass", "-File", $hookScript) + $hookArgs
+    } elseif ($extension -eq ".cmd" -or $extension -eq ".bat") {
+      $command = $hookScript
+      $arguments = $hookArgs
+    } else {
+      throw "Unsupported n8n workflow hook extension '$extension' for $hookScript. Use .cjs, .js, .ps1, .cmd, or .bat."
+    }
+
+    Write-Step "HOOK" "$HookName -> $(Get-DisplayPath $hookScript)"
+    $hookResult = Invoke-CapturedCommand $command $arguments
+    if ($hookResult.Output.Count -gt 0) {
+      Write-Host ($hookResult.Output -join "`n")
+    }
+    if ($hookResult.ExitCode -ne 0) {
+      throw "Project n8n workflow hook '$HookName' failed: $hookScript"
+    }
+  }
 }
 
 function Initialize-RunDirectory($Path) {
@@ -407,6 +501,15 @@ if ($Mode -eq "RepoTrackedOnly") {
     Write-Step "EXPORT" "$($planned.RepoFile.Name) -> $(Get-DisplayPath $planned.ExportFile)"
   }
 
+  Invoke-ProjectWorkflowHook "before-export-sync" @{
+    "bindings-file" = $BindingsFilePath
+    "container" = $Container
+    "dry-run" = [string]([bool]$DryRun)
+    "export-dir" = $ExportDirPath
+    "mode" = $Mode
+    "workflow-dir" = $WorkflowDirPath
+  }
+
   $syncArgs = @((Join-Path $HelperScriptDir "sync-n8n-live-exports.cjs"), $ExportDirPath, $WorkflowDirPath, $BindingsFilePath, "--sync-exported-only")
   if ($PreserveTags) {
     $syncArgs += "--preserve-tags"
@@ -417,6 +520,15 @@ if ($Mode -eq "RepoTrackedOnly") {
     throw "Failed to sync live exports into $(Get-DisplayPath $WorkflowDirPath)."
   }
   Write-Host ($syncResult.Output -join "`n")
+
+  Invoke-ProjectWorkflowHook "after-export-sync" @{
+    "bindings-file" = $BindingsFilePath
+    "container" = $Container
+    "dry-run" = [string]([bool]$DryRun)
+    "export-dir" = $ExportDirPath
+    "mode" = $Mode
+    "workflow-dir" = $WorkflowDirPath
+  }
 
   Write-Section "Summary"
   Write-Host ("Exported : {0}" -f $plannedExports.Count)
@@ -517,6 +629,15 @@ foreach ($planned in $plannedAllLive) {
   Write-Step "EXPORT" "$($planned.Workflow.name) -> $(Get-DisplayPath $planned.ExportFile)"
 }
 
+Invoke-ProjectWorkflowHook "before-export-sync" @{
+  "bindings-file" = $BindingsFilePath
+  "container" = $Container
+  "dry-run" = [string]([bool]$DryRun)
+  "export-dir" = $ExportDirPath
+  "mode" = $Mode
+  "workflow-dir" = $WorkflowDirPath
+}
+
 $syncAllArgs = @((Join-Path $HelperScriptDir "sync-n8n-live-exports.cjs"), $ExportDirPath, $WorkflowDirPath, $BindingsFilePath, "--create-missing-workflows", "--sync-exported-only")
 if ($PreserveTags) {
   $syncAllArgs += "--preserve-tags"
@@ -527,6 +648,15 @@ if ($syncAllResult.ExitCode -ne 0) {
   throw "Failed to sync all live exports into $(Get-DisplayPath $WorkflowDirPath)."
 }
 Write-Host ($syncAllResult.Output -join "`n")
+
+Invoke-ProjectWorkflowHook "after-export-sync" @{
+  "bindings-file" = $BindingsFilePath
+  "container" = $Container
+  "dry-run" = [string]([bool]$DryRun)
+  "export-dir" = $ExportDirPath
+  "mode" = $Mode
+  "workflow-dir" = $WorkflowDirPath
+}
 
 Write-Section "Summary"
 Write-Host ("Exported          : {0}" -f $plannedAllLive.Count)

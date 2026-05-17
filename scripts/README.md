@@ -12,6 +12,8 @@ Live import/export helper entry points are not run from this toolkit repo during
 - `import-n8n-workflows-live.ps1`
 - `n8n-workflow-sync-menu.ps1`
 - `validate-n8n-workflows.cjs`
+- `n8n-workflow-hooks.cjs`
+- `n8n-workflow-validation-rules.cjs`
 - `sync-n8n-live-exports.cjs`
 - `prepare-n8n-live-import.cjs`
 - `compare-n8n-workflow-credentials.cjs`
@@ -24,6 +26,8 @@ Live import/export helper entry points are not run from this toolkit repo during
 In a reviewed consumer repo, these helpers may write:
 
 - `n8n-workflows/*.json`
+- `.tmp/n8n-live-exports/*.json`
+- `.tmp/n8n-live-import/*.json`
 - `.tmp/**`
 - `.n8n-local/**`
 
@@ -36,3 +40,19 @@ In a reviewed consumer repo, these helpers may write:
 - Do not commit `.tmp/**`, `.n8n-local/**`, live import/export JSON, credentials, credential bindings, private keys, or `.env` files.
 - Review workflow diffs before committing `n8n-workflows/*.json` in a consumer repo.
 - Treat these executable files as helper templates, not trusted runtime code.
+
+## Project Workflow Hooks
+
+The live import/export scripts run optional project hooks when present. This repo uses `scripts/n8n-workflow-hooks.cjs` to normalise known n8n UI/export drift before validation or import.
+
+Current normalisations:
+
+- `Lookup Conversation State.parameters.combineFilters` is restored to `AND`.
+- `Append KB Ingestion Log` keeps the `chunks_count` Google Sheets schema type as `number`.
+- Conversation log `dedupe_key` column/schema names are trimmed back to the exact `dedupe_key` header.
+
+## Project Validation Rules
+
+The generic validator runs optional project validation rules when present. This repo uses `scripts/n8n-workflow-validation-rules.cjs` for SpaceKonceptRental-specific workflow contracts such as node versions, conversation guard wiring, fallback routing, and sheet-column types.
+
+Keep repo-specific validator logic in `n8n-workflow-validation-rules.cjs`, not in `validate-n8n-workflows.cjs`, so the reusable helper files can be copied from the generic template without losing this repo's checks.
