@@ -23,7 +23,7 @@
       "parameters": {
         "content": "# REPLY AND LOGGING\n\n- Sends the customer reply.\n- Updates the conversation row after the agent response is parsed.\n- If AI/RAG fails after the processing row is written, the fallback path sends a handoff reply and updates the same conversation row with `status` set to `failed`.\n\n## Required manual configuration:\n\n- **Upsert Conversation Completed**\n  - `documentId.value`: Set this to the Google Sheets workbook used for support logs.\n- **Upsert Conversation Failed**\n  - `documentId.value`: Set this to the same Google Sheets workbook used for support logs.",
         "height": 988,
-        "width": 820,
+        "width": 1076,
         "color": 4
       },
       "id": "662eb229-fd3e-4e70-b08f-aacefe8bbb9a",
@@ -39,7 +39,7 @@
       "parameters": {
         "content": "# FOLLOW-UP ROUTING\n\n- Routes leads, bookings, tickets, escalations, and unanswered items.\n- Writes each follow-up record after the main conversation row is completed.\n- Fallback failures are routed to escalation and unanswered-question handling so operator follow-up is visible.\n\n## Required manual configuration:\n\n- **Upsert Lead or Booking**\n  - `documentId.value`: Set this to the Google Sheets workbook used for lead and booking logs.\n- **Upsert Ticket**\n  - `documentId.value`: Set this to the Google Sheets workbook used for ticket logs.\n- **Send Escalation Alert**\n  - `sendTo`: Set this to the support mailbox for escalation alerts.\n- **Upsert Unanswered Question**\n  - `documentId.value`: Set this to the Google Sheets workbook used for unanswered question logs.",
         "height": 1164,
-        "width": 836,
+        "width": 1092,
         "color": 6
       },
       "id": "30e0031f-78d4-436a-8921-46639b4986f4",
@@ -73,7 +73,7 @@
             {
               "id": "normalise-input-1",
               "name": "message_id",
-              "value": "={{ $json.message_id || $json.messageId || (($json.sessionId || $json.session_id || $json.chatId || 'session-' + $execution.id) + '-' + $now.toISO()) }}",
+              "value": "={{ $json.message_id || $json.messageId || ('SKR-MSG-' + $now.setZone('Asia/Singapore').toFormat('yyyyLLdd-HHmmss') + '-' + String($execution.id).slice(-6)) }}",
               "type": "string"
             },
             {
@@ -115,7 +115,7 @@
             {
               "id": "normalise-input-8",
               "name": "timestamp",
-              "value": "={{ $now.toISO() }}",
+              "value": "={{ $now.setZone('Asia/Singapore').toFormat('yyyy-MM-dd HH:mm:ss') + ' SGT' }}",
               "type": "string"
             },
             {
@@ -146,7 +146,7 @@
     },
     {
       "parameters": {
-        "jsCode": "function redact(text = '') {\n  return String(text).trim()\n    .replace(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}/gi, '[redacted-email]')\n    .replace(/\\b(?:\\+65\\s?)?[689]\\d{3}\\s?\\d{4}\\b/g, '[redacted-phone]')\n    .replace(/\\b[STFGM]\\d{7}[A-Z]\\b/gi, '[redacted-nric-fin]')\n    .replace(/\\b\\d{9,}\\b/g, '[redacted-id]');\n}\n\nfunction normaliseForDedupe(text = '') {\n  return redact(text).toLowerCase().replace(/\\s+/g, ' ').trim();\n}\n\nfunction hashText(text = '') {\n  let hash = 2166136261;\n  for (const char of text) {\n    hash ^= char.charCodeAt(0);\n    hash = Math.imul(hash, 16777619);\n  }\n  return (hash >>> 0).toString(36);\n}\n\nfunction dedupeKey(item, bucketOffset = 0) {\n  const bucketSizeMs = 2 * 60 * 1000;\n  const bucket = Math.floor(Date.now() / bucketSizeMs) + bucketOffset;\n  const channel = item.channel || 'n8n_chat';\n  const sessionId = item.session_id || item.sessionId || item.chatId || 'unknown_session';\n  const messageHash = hashText(normaliseForDedupe(item.message));\n  return [channel, sessionId, messageHash, bucket].join('|');\n}\n\nreturn items.map((item) => ({\n  json: {\n    ...item.json,\n    user_message_redacted: redact(item.json.message),\n    dedupe_key: dedupeKey(item.json),\n    dedupe_key_previous: dedupeKey(item.json, -1)\n  }\n}));"
+        "jsCode": "function redact(text = '') {\n  // Keep customer email and phone visible in support logs; they are operational\n  // contact details. Still redact high-risk identifiers that should not sit in\n  // general workflow logs.\n  return String(text).trim()\n    .replace(/\\b[STFGM]\\d{7}[A-Z]\\b/gi, '[redacted-nric-fin]')\n    .replace(/\\b\\d{9,}\\b/g, '[redacted-id]');\n}\n\nfunction normaliseForDedupe(text = '') {\n  return redact(text).toLowerCase().replace(/\\s+/g, ' ').trim();\n}\n\nfunction hashText(text = '') {\n  let hash = 2166136261;\n  for (const char of text) {\n    hash ^= char.charCodeAt(0);\n    hash = Math.imul(hash, 16777619);\n  }\n  return (hash >>> 0).toString(36);\n}\n\nfunction shortSession(value = '') {\n  return String(value || 'session').replace(/[^a-z0-9]/gi, '').slice(0, 8) || 'session';\n}\n\nfunction dedupeKey(item, bucketOffset = 0) {\n  const bucketSizeMs = 2 * 60 * 1000;\n  const bucket = Math.floor(Date.now() / bucketSizeMs) + bucketOffset;\n  const sessionId = item.session_id || item.sessionId || item.chatId || 'unknown_session';\n  const messageHash = hashText(normaliseForDedupe(item.message)).toUpperCase();\n  return 'SKR-DEDUP-' + shortSession(sessionId) + '-' + messageHash + '-' + bucket;\n}\n\nreturn items.map((item) => ({\n  json: {\n    ...item.json,\n    user_message_redacted: redact(item.json.message),\n    dedupe_key: dedupeKey(item.json),\n    dedupe_key_previous: dedupeKey(item.json, -1)\n  }\n}));"
       },
       "id": "ee4a900b-fc01-489b-a526-f9c98760206e",
       "name": "Redact PII for Logs",
@@ -185,10 +185,10 @@
             }
           ]
         },
-        "combineFilters": "AND",
         "options": {
           "returnFirstMatch": false
-        }
+        },
+        "combineFilters": "AND"
       },
       "id": "b6b9cdd8-08fb-4e04-937f-54c5e8c31c0c",
       "name": "Lookup Conversation State",
@@ -490,7 +490,9 @@
           "attemptToConvertTypes": false,
           "convertFieldsToString": false
         },
-        "options": {}
+        "options": {
+          "cellFormat": "RAW"
+        }
       },
       "id": "24102aa4-1e6d-4db7-9ad7-68c577906e34",
       "name": "Upsert Conversation Processing",
@@ -623,7 +625,7 @@
     },
     {
       "parameters": {
-        "jsCode": "function parseAgentOutput(value) {\n  if (typeof value === 'object' && value !== null) return value;\n  const text = String(value || '').trim();\n  try {\n    return JSON.parse(text);\n  } catch (error) {\n    const start = text.indexOf('{');\n    const end = text.lastIndexOf('}');\n    if (start >= 0 && end > start) return JSON.parse(text.slice(start, end + 1));\n    throw error;\n  }\n}\n\nfunction timestampForId(date = new Date()) {\n  return date.toISOString().replace(/[-:T]/g, '').slice(0, 8) + '-' + date.toISOString().replace(/[-:T]/g, '').slice(8, 14);\n}\n\nreturn items.map((item) => {\n  const original = $('Restore Processing Context').first().json || {};\n  const raw = item.json.output || item.json.text || item.json.response || item.json;\n  let parsed;\n  try {\n    parsed = parseAgentOutput(raw);\n  } catch (error) {\n    parsed = {\n      reply: 'I do not have that detail yet. I can help escalate this to the SpaceKonceptRental team.',\n      intent: 'unknown',\n      confidence: 0,\n      needs_escalation: true,\n      needs_human_followup: true,\n      lead_captured: false,\n      ticket_required: false,\n      booking_requested: false,\n      missing_fields: [],\n      lead: {},\n      ticket: {},\n      booking: {},\n      retrieval_summary: { source_titles: [], source_file_ids: [] }\n    };\n  }\n\n  const now = new Date();\n  const idTime = timestampForId(now);\n  const ticketRequired = Boolean(parsed.ticket_required);\n  const leadRequired = Boolean(parsed.lead_captured || parsed.booking_requested);\n\n  return {\n    json: {\n      ...original,\n      ...item.json,\n      agent_raw_output: raw,\n      reply: parsed.reply || 'I do not have that detail yet. I can help escalate this to the SpaceKonceptRental team.',\n      intent: parsed.intent || 'unknown',\n      confidence: Number(parsed.confidence || 0),\n      needs_escalation: Boolean(parsed.needs_escalation),\n      needs_human_followup: Boolean(parsed.needs_human_followup),\n      lead_captured: Boolean(parsed.lead_captured),\n      ticket_required: ticketRequired,\n      booking_requested: Boolean(parsed.booking_requested),\n      missing_fields: parsed.missing_fields || [],\n      lead: parsed.lead || {},\n      ticket: parsed.ticket || {},\n      booking: parsed.booking || {},\n      source_titles: (parsed.retrieval_summary?.source_titles || []).join(', '),\n      source_file_ids: (parsed.retrieval_summary?.source_file_ids || []).join(', '),\n      ticket_id: ticketRequired ? `SKR-TKT-${idTime}` : '',\n      lead_id: leadRequired ? `SKR-LEAD-${idTime}` : '',\n      completed_at: now.toISOString(),\n      unanswered_id: `SKR-UNANSWERED-${idTime}`\n    }\n  };\n});"
+        "jsCode": "function parseAgentOutput(value) {\n  if (typeof value === 'object' && value !== null) return value;\n  const text = String(value || '').trim();\n  try {\n    return JSON.parse(text);\n  } catch (error) {\n    const start = text.indexOf('{');\n    const end = text.lastIndexOf('}');\n    if (start >= 0 && end > start) return JSON.parse(text.slice(start, end + 1));\n    throw error;\n  }\n}\n\nfunction sgtParts(date = new Date()) {\n  const shifted = new Date(date.getTime() + 8 * 60 * 60 * 1000);\n  const pad = (value, length = 2) => String(value).padStart(length, '0');\n  return {\n    year: shifted.getUTCFullYear(),\n    month: pad(shifted.getUTCMonth() + 1),\n    day: pad(shifted.getUTCDate()),\n    hour: pad(shifted.getUTCHours()),\n    minute: pad(shifted.getUTCMinutes()),\n    second: pad(shifted.getUTCSeconds()),\n    ms: pad(shifted.getUTCMilliseconds(), 3),\n  };\n}\n\nfunction sgtTimestamp(date = new Date()) {\n  const parts = sgtParts(date);\n  return parts.year + '-' + parts.month + '-' + parts.day + ' ' + parts.hour + ':' + parts.minute + ':' + parts.second + ' SGT';\n}\n\nfunction timestampForId(date = new Date()) {\n  const parts = sgtParts(date);\n  return '' + parts.year + parts.month + parts.day + '-' + parts.hour + parts.minute + parts.second;\n}\n\nfunction hashText(text = '') {\n  let hash = 2166136261;\n  for (const char of String(text)) {\n    hash ^= char.charCodeAt(0);\n    hash = Math.imul(hash, 16777619);\n  }\n  return (hash >>> 0).toString(36).toUpperCase();\n}\n\nfunction meaningful(value) {\n  const text = String(value || '').trim();\n  if (!text) return '';\n  if (/^(n\\/a|na|none|null|unknown|not_available)$/i.test(text)) return '';\n  return text;\n}\n\nfunction firstMeaningful(...values) {\n  for (const value of values) {\n    const text = meaningful(value);\n    if (text) return text;\n  }\n  return '';\n}\n\nfunction driveFileUrl(value = '') {\n  const text = String(value || '').trim();\n  if (!text) return '';\n  if (/^https?:\\/\\//i.test(text)) return text;\n  return 'https://drive.google.com/file/d/' + text + '/view';\n}\n\nfunction sourceUrls(values = []) {\n  return values.map(driveFileUrl).filter(Boolean);\n}\n\nreturn items.map((item) => {\n  const original = $('Restore Processing Context').first().json || {};\n  const raw = item.json.output || item.json.text || item.json.response || item.json;\n  let parsed;\n  try {\n    parsed = parseAgentOutput(raw);\n  } catch (error) {\n    parsed = {\n      reply: 'I do not have that detail yet. I can help escalate this to the SpaceKonceptRental team.',\n      intent: 'unknown',\n      confidence: 0,\n      needs_escalation: true,\n      needs_human_followup: true,\n      lead_captured: false,\n      ticket_required: false,\n      booking_requested: false,\n      missing_fields: [],\n      lead: {},\n      ticket: {},\n      booking: {},\n      retrieval_summary: { source_titles: [], source_file_ids: [] }\n    };\n  }\n\n  const now = new Date();\n  const idTime = timestampForId(now);\n  const referenceSuffix = hashText([original.session_id, original.message_id, original.message].join('|')).slice(0, 6);\n  const ticketRequired = Boolean(parsed.ticket_required);\n  const leadRequired = Boolean(parsed.lead_captured || parsed.booking_requested);\n  const customerName = firstMeaningful(parsed.lead?.name, parsed.ticket?.name, original.customer_name);\n  const customerEmail = firstMeaningful(parsed.lead?.email, parsed.ticket?.email, original.customer_email);\n  const customerPhone = firstMeaningful(parsed.lead?.phone, parsed.ticket?.phone, original.customer_phone);\n  const lead = parsed.lead || {};\n  const ticket = parsed.ticket || {};\n\n  return {\n    json: {\n      ...original,\n      ...item.json,\n      agent_raw_output: raw,\n      reply: parsed.reply || 'I do not have that detail yet. I can help escalate this to the SpaceKonceptRental team.',\n      intent: parsed.intent || 'unknown',\n      confidence: Number(parsed.confidence || 0),\n      needs_escalation: Boolean(parsed.needs_escalation),\n      needs_human_followup: Boolean(parsed.needs_human_followup),\n      lead_captured: Boolean(parsed.lead_captured),\n      ticket_required: ticketRequired,\n      booking_requested: Boolean(parsed.booking_requested),\n      missing_fields: parsed.missing_fields || [],\n      customer_name: customerName,\n      customer_email: customerEmail,\n      customer_phone: customerPhone,\n      lead: {\n        ...lead,\n        name: firstMeaningful(lead.name, ticket.name, customerName),\n        email: firstMeaningful(lead.email, ticket.email, customerEmail),\n        phone: firstMeaningful(lead.phone, ticket.phone, customerPhone),\n      },\n      ticket: {\n        ...ticket,\n        name: firstMeaningful(ticket.name, lead.name, customerName),\n        email: firstMeaningful(ticket.email, lead.email, customerEmail),\n        phone: firstMeaningful(ticket.phone, lead.phone, customerPhone),\n      },\n      booking: parsed.booking || {},\n      source_titles: (parsed.retrieval_summary?.source_titles || []).join(', '),\n      source_file_ids: sourceUrls(parsed.retrieval_summary?.source_file_ids || []).join(', '),\n      ticket_id: ticketRequired ? 'SKR-TKT-' + idTime + '-' + referenceSuffix : '',\n      lead_id: leadRequired ? 'SKR-LEAD-' + idTime + '-' + referenceSuffix : '',\n      escalation_reference_id: parsed.needs_escalation ? (ticketRequired ? 'SKR-TKT-' + idTime + '-' + referenceSuffix : (leadRequired ? 'SKR-LEAD-' + idTime + '-' + referenceSuffix : original.message_id)) : '',\n      completed_at: sgtTimestamp(now),\n      unanswered_id: 'SKR-UNANSWERED-' + idTime + '-' + referenceSuffix\n    }\n  };\n});"
       },
       "id": "bf0f562c-029d-4412-a839-e41f57e8bb52",
       "name": "Parse Strict JSON Response",
@@ -888,7 +890,9 @@
           "attemptToConvertTypes": false,
           "convertFieldsToString": false
         },
-        "options": {}
+        "options": {
+          "cellFormat": "RAW"
+        }
       },
       "id": "97ab4482-b9cf-4955-964a-75a40f4ae584",
       "name": "Upsert Conversation Completed",
@@ -1246,7 +1250,9 @@
           "attemptToConvertTypes": false,
           "convertFieldsToString": false
         },
-        "options": {}
+        "options": {
+          "cellFormat": "RAW"
+        }
       },
       "id": "7e0601aa-8422-4c40-9188-e316c7aa8a4d",
       "name": "Upsert Lead or Booking",
@@ -1312,19 +1318,19 @@
             {
               "id": "set-ticket-row-3",
               "name": "name",
-              "value": "={{ $json.lead?.name || $json.customer_name || \"\" }}",
+              "value": "={{ $json.ticket?.name || $json.lead?.name || $json.customer_name || \"\" }}",
               "type": "string"
             },
             {
               "id": "set-ticket-row-4",
               "name": "email",
-              "value": "={{ $json.lead?.email || $json.customer_email || \"\" }}",
+              "value": "={{ $json.ticket?.email || $json.lead?.email || $json.customer_email || \"\" }}",
               "type": "string"
             },
             {
               "id": "set-ticket-row-5",
               "name": "phone",
-              "value": "={{ $json.lead?.phone || $json.customer_phone || \"\" }}",
+              "value": "={{ $json.ticket?.phone || $json.lead?.phone || $json.customer_phone || \"\" }}",
               "type": "string"
             },
             {
@@ -1531,7 +1537,9 @@
           "attemptToConvertTypes": false,
           "convertFieldsToString": false
         },
-        "options": {}
+        "options": {
+          "cellFormat": "RAW"
+        }
       },
       "id": "1da2fb0c-6806-4586-9047-460fa3c9db35",
       "name": "Upsert Ticket",
@@ -1581,8 +1589,8 @@
     {
       "parameters": {
         "sendTo": "SpaceKonceptRental@gmail.com",
-        "subject": "=[ SpaceKonceptRental Support Alert ] Customer needs help: {{ $json.intent }}",
-        "message": "=<p><strong>Session ID:</strong> {{ $json.session_id }}</p>\n<p><strong>Message ID:</strong> {{ $json.message_id }}</p>\n<p><strong>Contact ID:</strong> {{ $json.customer_email || $json.customer_phone || $json.customer_name || \"not_available\" }}</p>\n<p><strong>Customer:</strong> {{ $json.customer_name }}</p>\n<p><strong>Email:</strong> {{ $json.customer_email }}</p>\n<p><strong>Phone:</strong> {{ $json.customer_phone }}</p>\n<p><strong>Intent:</strong> {{ $json.intent }}</p>\n<p><strong>Confidence:</strong> {{ $json.confidence }}</p>\n<p><strong>Redacted Message:</strong> {{ $json.user_message_redacted }}</p>\n<p><strong>Bot Reply:</strong> {{ $json.reply }}</p>\n<p><strong>Ticket ID:</strong> {{ $json.ticket_id }}</p>\n<p><strong>Lead ID:</strong> {{ $json.lead_id }}</p>\n<p><strong>Sources:</strong> {{ $json.source_titles }}</p>\n<p><strong>Execution ID:</strong> {{ $json.execution_id }}</p>",
+        "subject": "=[ SpaceKonceptRental Support Alert ] {{ $json.intent }} - {{ $json.escalation_reference_id || $json.ticket_id || $json.lead_id || $json.message_id }}",
+        "message": "=<p><strong>Reference ID:</strong> {{ $json.escalation_reference_id || $json.ticket_id || $json.lead_id || $json.message_id }}</p>\n<p><strong>Session ID:</strong> {{ $json.session_id }}</p>\n<p><strong>Message ID:</strong> {{ $json.message_id }}</p>\n<p><strong>Customer:</strong> {{ $json.customer_name || \"not_available\" }}</p>\n<p><strong>Email:</strong> {{ $json.customer_email || \"not_available\" }}</p>\n<p><strong>Phone:</strong> {{ $json.customer_phone || \"not_available\" }}</p>\n<p><strong>Intent:</strong> {{ $json.intent }}</p>\n<p><strong>Confidence:</strong> {{ $json.confidence }}</p>\n<p><strong>Customer Message:</strong> {{ $json.user_message_redacted }}</p>\n<p><strong>Bot Reply:</strong> {{ $json.reply }}</p>\n<p><strong>Ticket ID:</strong> {{ $json.ticket_id || \"not_applicable\" }}</p>\n<p><strong>Lead ID:</strong> {{ $json.lead_id || \"not_applicable\" }}</p>\n<p><strong>Sources:</strong> {{ $json.source_titles }}</p>\n<p><strong>Source URLs:</strong> {{ $json.source_file_ids }}</p>\n<p><strong>Execution ID:</strong> {{ $json.execution_id }}</p>",
         "options": {}
       },
       "id": "a6c1e72b-debc-47ed-a47f-b26482baba67",
@@ -1590,7 +1598,7 @@
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2.2,
       "position": [
-        368,
+        912,
         1776
       ],
       "retryOnFail": true,
@@ -1829,7 +1837,9 @@
           "attemptToConvertTypes": false,
           "convertFieldsToString": false
         },
-        "options": {}
+        "options": {
+          "cellFormat": "RAW"
+        }
       },
       "id": "64bcb6aa-0af1-46c8-8b4b-6315348e5c8c",
       "name": "Upsert Unanswered Question",
@@ -1866,7 +1876,7 @@
         "hasOutputParser": true,
         "needsFallback": true,
         "options": {
-          "systemMessage": "=You are the SpaceKonceptRental Customer Support Agent.\n\nYour job:\n- Help customers with furniture rental questions.\n- Answer FAQs, operating hours, pricing, rental process, delivery/pickup, product/package questions, policies, and troubleshooting.\n- Help with appointment booking.\n- Create support tickets.\n- Escalate issues to the human team when required.\n- Capture leads by collecting contact details and rental requirements.\n\nKnowledge rules:\n- Your ONLY factual source is the retrieved SpaceKonceptRental knowledge base content from the Pinecone tool.\n- Do not use general knowledge or guess.\n- If the answer is not found in retrieved content, say you do not have that detail yet and offer to help escalate.\n- Never invent prices, dates, stock availability, furniture dimensions, rental terms, warranty terms, damage fees, delivery fees, discounts, or policies.\n- When giving facts, keep them concise and clear.\n- If retrieved chunks conflict, do not choose randomly. Tell the customer you need the team to confirm and escalate.\n\nConversation style:\n- Warm, helpful, concise.\n- Use Singapore/British English.\n- Do not be robotic.\n- Use light emojis only when natural.\n- Ask one focused follow-up question at a time.\n- Do not tell customers to reach out via the website, email, or WhatsApp when they are already chatting here. Ask for the missing details directly instead.\n\nEscalation rules:\nEscalate when:\n- The answer is not in the KB.\n- The customer is angry or dissatisfied.\n- The issue involves billing, refund, damage, complaint, urgent delivery, cancellation, or special pricing.\n- The customer asks to speak with a person.\n- The customer wants a custom quote and has provided enough details.\n\nLead capture rules:\nFor rental enquiries, collect name, email or phone, company if applicable, rental purpose, preferred rental start date and duration, furniture items or package needed, delivery area, and budget if offered.\n\nTicket rules:\nFor support tickets, collect full name, email or phone, issue category, one-line summary, detailed description, urgency, and preferred callback/contact method.\n\nBooking rules:\nFor appointment booking, collect name, email or phone, preferred date and time, appointment type, and notes/requirements.\n\nOutput rules:\n- Use the connected structured output parser.\n- The reply field must contain only natural customer-facing text, never JSON or internal metadata.\n- Keep routing fields truthful and consistent with the reply.",
+          "systemMessage": "=You are the SpaceKonceptRental Customer Support Agent.\n\nYour job:\n- Help customers with furniture rental questions.\n- Answer FAQs, operating hours, pricing, rental process, delivery/pickup, product/package questions, policies, and troubleshooting.\n- Help with appointment booking.\n- Create support tickets.\n- Escalate issues to the human team when required.\n- Capture leads by collecting contact details and rental requirements.\n\nKnowledge rules:\n- Your ONLY factual source is the retrieved SpaceKonceptRental knowledge base content from the Pinecone tool.\n- Do not use general knowledge or guess.\n- If the answer is not found in retrieved content, say you do not have that detail yet and offer to help escalate.\n- Never invent prices, dates, stock availability, furniture dimensions, rental terms, warranty terms, damage fees, delivery fees, discounts, or policies.\n- When giving facts, keep them concise and clear.\n- If retrieved chunks conflict, do not choose randomly. Tell the customer you need the team to confirm and escalate.\n\nConversation style:\n- Warm, helpful, concise.\n- Use Singapore/British English.\n- Do not be robotic.\n- Use light emojis only when natural.\n- Ask one focused follow-up question at a time.\n- Do not tell customers to reach out via the website, email, or WhatsApp when they are already chatting here. Ask for the missing details directly instead.\n\nEscalation rules:\nEscalate when:\n- The answer is not in the KB.\n- The customer is angry or dissatisfied.\n- The issue involves billing, refund, damage, complaint, urgent delivery, cancellation, or special pricing.\n- The customer asks to speak with a person.\n- The customer wants a custom quote and has provided enough details.\n\nLead capture rules:\nFor rental enquiries, collect name, email or phone, company if applicable, rental purpose, preferred rental start date and duration, furniture items or package needed, delivery area, and budget if offered.\n\nTicket rules:\nFor support tickets, collect full name, email or phone, issue category, one-line summary, detailed description, urgency, and preferred callback/contact method. Put ticket contact details in ticket.name, ticket.email, and ticket.phone. Also keep customer contact details in lead.name, lead.email, and lead.phone when they are provided, even if the request is a ticket or escalation.\n\nBooking rules:\nFor appointment booking, collect name, email or phone, preferred date and time, appointment type, and notes/requirements.\n\nOutput rules:\n- Use the connected structured output parser.\n- The reply field must contain only natural customer-facing text, never JSON or internal metadata.\n- Keep routing fields truthful and consistent with the reply.",
           "enableStreaming": false
         }
       },
@@ -1883,7 +1893,7 @@
     {
       "parameters": {
         "schemaType": "manual",
-        "inputSchema": "{\n  \"type\": \"object\",\n  \"additionalProperties\": false,\n  \"required\": [\n    \"reply\",\n    \"intent\",\n    \"confidence\",\n    \"needs_escalation\",\n    \"needs_human_followup\",\n    \"lead_captured\",\n    \"ticket_required\",\n    \"booking_requested\",\n    \"missing_fields\",\n    \"lead\",\n    \"ticket\",\n    \"booking\",\n    \"retrieval_summary\"\n  ],\n  \"properties\": {\n    \"reply\": {\n      \"type\": \"string\"\n    },\n    \"intent\": {\n      \"type\": \"string\",\n      \"enum\": [\n        \"faq\",\n        \"pricing\",\n        \"booking\",\n        \"ticket\",\n        \"lead\",\n        \"escalation\",\n        \"handoff\",\n        \"unknown\"\n      ]\n    },\n    \"confidence\": {\n      \"type\": \"number\",\n      \"minimum\": 0,\n      \"maximum\": 1\n    },\n    \"needs_escalation\": {\n      \"type\": \"boolean\"\n    },\n    \"needs_human_followup\": {\n      \"type\": \"boolean\"\n    },\n    \"lead_captured\": {\n      \"type\": \"boolean\"\n    },\n    \"ticket_required\": {\n      \"type\": \"boolean\"\n    },\n    \"booking_requested\": {\n      \"type\": \"boolean\"\n    },\n    \"missing_fields\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"string\"\n      }\n    },\n    \"lead\": {\n      \"type\": \"object\",\n      \"additionalProperties\": false,\n      \"required\": [\n        \"name\",\n        \"email\",\n        \"phone\",\n        \"company\",\n        \"rental_purpose\",\n        \"rental_start_date\",\n        \"rental_duration\",\n        \"items_needed\",\n        \"delivery_area\",\n        \"budget\"\n      ],\n      \"properties\": {\n        \"name\": {\n          \"type\": \"string\"\n        },\n        \"email\": {\n          \"type\": \"string\"\n        },\n        \"phone\": {\n          \"type\": \"string\"\n        },\n        \"company\": {\n          \"type\": \"string\"\n        },\n        \"rental_purpose\": {\n          \"type\": \"string\"\n        },\n        \"rental_start_date\": {\n          \"type\": \"string\"\n        },\n        \"rental_duration\": {\n          \"type\": \"string\"\n        },\n        \"items_needed\": {\n          \"type\": \"string\"\n        },\n        \"delivery_area\": {\n          \"type\": \"string\"\n        },\n        \"budget\": {\n          \"type\": \"string\"\n        }\n      }\n    },\n    \"ticket\": {\n      \"type\": \"object\",\n      \"additionalProperties\": false,\n      \"required\": [\n        \"category\",\n        \"summary\",\n        \"details\",\n        \"urgency\"\n      ],\n      \"properties\": {\n        \"category\": {\n          \"type\": \"string\"\n        },\n        \"summary\": {\n          \"type\": \"string\"\n        },\n        \"details\": {\n          \"type\": \"string\"\n        },\n        \"urgency\": {\n          \"type\": \"string\"\n        }\n      }\n    },\n    \"booking\": {\n      \"type\": \"object\",\n      \"additionalProperties\": false,\n      \"required\": [\n        \"appointment_type\",\n        \"preferred_date\",\n        \"preferred_time\",\n        \"notes\"\n      ],\n      \"properties\": {\n        \"appointment_type\": {\n          \"type\": \"string\"\n        },\n        \"preferred_date\": {\n          \"type\": \"string\"\n        },\n        \"preferred_time\": {\n          \"type\": \"string\"\n        },\n        \"notes\": {\n          \"type\": \"string\"\n        }\n      }\n    },\n    \"retrieval_summary\": {\n      \"type\": \"object\",\n      \"additionalProperties\": false,\n      \"required\": [\n        \"used_kb\",\n        \"source_titles\",\n        \"source_file_ids\"\n      ],\n      \"properties\": {\n        \"used_kb\": {\n          \"type\": \"boolean\"\n        },\n        \"source_titles\": {\n          \"type\": \"array\",\n          \"items\": {\n            \"type\": \"string\"\n          }\n        },\n        \"source_file_ids\": {\n          \"type\": \"array\",\n          \"items\": {\n            \"type\": \"string\"\n          }\n        }\n      }\n    }\n  }\n}"
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"additionalProperties\": false,\n  \"required\": [\n    \"reply\",\n    \"intent\",\n    \"confidence\",\n    \"needs_escalation\",\n    \"needs_human_followup\",\n    \"lead_captured\",\n    \"ticket_required\",\n    \"booking_requested\",\n    \"missing_fields\",\n    \"lead\",\n    \"ticket\",\n    \"booking\",\n    \"retrieval_summary\"\n  ],\n  \"properties\": {\n    \"reply\": {\n      \"type\": \"string\"\n    },\n    \"intent\": {\n      \"type\": \"string\",\n      \"enum\": [\n        \"faq\",\n        \"pricing\",\n        \"booking\",\n        \"ticket\",\n        \"lead\",\n        \"escalation\",\n        \"handoff\",\n        \"unknown\"\n      ]\n    },\n    \"confidence\": {\n      \"type\": \"number\",\n      \"minimum\": 0,\n      \"maximum\": 1\n    },\n    \"needs_escalation\": {\n      \"type\": \"boolean\"\n    },\n    \"needs_human_followup\": {\n      \"type\": \"boolean\"\n    },\n    \"lead_captured\": {\n      \"type\": \"boolean\"\n    },\n    \"ticket_required\": {\n      \"type\": \"boolean\"\n    },\n    \"booking_requested\": {\n      \"type\": \"boolean\"\n    },\n    \"missing_fields\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"string\"\n      }\n    },\n    \"lead\": {\n      \"type\": \"object\",\n      \"additionalProperties\": false,\n      \"required\": [\n        \"name\",\n        \"email\",\n        \"phone\",\n        \"company\",\n        \"rental_purpose\",\n        \"rental_start_date\",\n        \"rental_duration\",\n        \"items_needed\",\n        \"delivery_area\",\n        \"budget\"\n      ],\n      \"properties\": {\n        \"name\": {\n          \"type\": \"string\"\n        },\n        \"email\": {\n          \"type\": \"string\"\n        },\n        \"phone\": {\n          \"type\": \"string\"\n        },\n        \"company\": {\n          \"type\": \"string\"\n        },\n        \"rental_purpose\": {\n          \"type\": \"string\"\n        },\n        \"rental_start_date\": {\n          \"type\": \"string\"\n        },\n        \"rental_duration\": {\n          \"type\": \"string\"\n        },\n        \"items_needed\": {\n          \"type\": \"string\"\n        },\n        \"delivery_area\": {\n          \"type\": \"string\"\n        },\n        \"budget\": {\n          \"type\": \"string\"\n        }\n      }\n    },\n    \"ticket\": {\n      \"type\": \"object\",\n      \"additionalProperties\": false,\n      \"required\": [\n        \"name\",\n        \"email\",\n        \"phone\",\n        \"category\",\n        \"summary\",\n        \"details\",\n        \"urgency\"\n      ],\n      \"properties\": {\n        \"category\": {\n          \"type\": \"string\"\n        },\n        \"summary\": {\n          \"type\": \"string\"\n        },\n        \"details\": {\n          \"type\": \"string\"\n        },\n        \"urgency\": {\n          \"type\": \"string\"\n        },\n        \"name\": {\n          \"type\": \"string\"\n        },\n        \"email\": {\n          \"type\": \"string\"\n        },\n        \"phone\": {\n          \"type\": \"string\"\n        }\n      }\n    },\n    \"booking\": {\n      \"type\": \"object\",\n      \"additionalProperties\": false,\n      \"required\": [\n        \"appointment_type\",\n        \"preferred_date\",\n        \"preferred_time\",\n        \"notes\"\n      ],\n      \"properties\": {\n        \"appointment_type\": {\n          \"type\": \"string\"\n        },\n        \"preferred_date\": {\n          \"type\": \"string\"\n        },\n        \"preferred_time\": {\n          \"type\": \"string\"\n        },\n        \"notes\": {\n          \"type\": \"string\"\n        }\n      }\n    },\n    \"retrieval_summary\": {\n      \"type\": \"object\",\n      \"additionalProperties\": false,\n      \"required\": [\n        \"used_kb\",\n        \"source_titles\",\n        \"source_file_ids\"\n      ],\n      \"properties\": {\n        \"used_kb\": {\n          \"type\": \"boolean\"\n        },\n        \"source_titles\": {\n          \"type\": \"array\",\n          \"items\": {\n            \"type\": \"string\"\n          }\n        },\n        \"source_file_ids\": {\n          \"type\": \"array\",\n          \"items\": {\n            \"type\": \"string\"\n          }\n        }\n      }\n    }\n  }\n}"
       },
       "id": "48670902-6b7b-463c-b0d6-66da17948bd1",
       "name": "Agent Structured Output Parser",
@@ -2063,7 +2073,7 @@
             {
               "id": "agent-failure-fallback-completed-at",
               "name": "completed_at",
-              "value": "={{ $now.toISO() }}",
+              "value": "={{ $now.setZone(\"Asia/Singapore\").toFormat(\"yyyy-MM-dd HH:mm:ss\") + \" SGT\" }}",
               "type": "string"
             },
             {
@@ -2346,7 +2356,9 @@
           "attemptToConvertTypes": false,
           "convertFieldsToString": false
         },
-        "options": {}
+        "options": {
+          "cellFormat": "RAW"
+        }
       },
       "id": "b8ca1491-c14f-40de-ad28-b14e62d96f3c",
       "name": "Upsert Conversation Failed",
@@ -2400,7 +2412,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const maxProcessingAgeMs = 2 * 60 * 1000;\nconst now = Date.now();\n\nfunction startedAt(row) {\n  const parsed = Date.parse(row.created_at || row.timestamp || 0);\n  return Number.isFinite(parsed) ? parsed : 0;\n}\n\nconst active = items\n  .map((item) => item.json || {})\n  .filter((row) => row.status === 'processing')\n  .map((row) => ({ row, startedAt: startedAt(row) }))\n  .filter(({ startedAt }) => startedAt > 0 && now >= startedAt && now - startedAt < maxProcessingAgeMs)\n  .sort((a, b) => b.startedAt - a.startedAt)[0];\n\nif (!active) {\n  return [{ json: { active_processing: 'false' } }];\n}\n\nreturn [{ json: { ...active.row, active_processing: 'true' } }];"
+        "jsCode": "const maxProcessingAgeMs = 2 * 60 * 1000;\nconst now = Date.now();\n\nfunction parseSgtTimestamp(value) {\n  const match = String(value || '').trim().match(/^(\\d{4})-(\\d{2})-(\\d{2}) (\\d{2}):(\\d{2}):(\\d{2}) SGT$/);\n  if (!match) return NaN;\n  const [, year, month, day, hour, minute, second] = match.map(Number);\n  return Date.UTC(year, month - 1, day, hour - 8, minute, second);\n}\n\nfunction startedAt(row) {\n  const value = row.created_at || row.timestamp || 0;\n  const sgtParsed = parseSgtTimestamp(value);\n  if (Number.isFinite(sgtParsed)) return sgtParsed;\n  const parsed = Date.parse(value);\n  return Number.isFinite(parsed) ? parsed : 0;\n}\n\nconst active = items\n  .map((item) => item.json || {})\n  .filter((row) => row.status === 'processing')\n  .map((row) => ({ row, startedAt: startedAt(row) }))\n  .filter(({ startedAt }) => startedAt > 0 && now >= startedAt && now - startedAt < maxProcessingAgeMs)\n  .sort((a, b) => b.startedAt - a.startedAt)[0];\n\nif (!active) {\n  return [{ json: { active_processing: 'false' } }];\n}\n\nreturn [{ json: { ...active.row, active_processing: 'true' } }];"
       },
       "id": "a914a6ba-a057-4d93-a7d0-139acde13992",
       "name": "Select Active Processing Row",
@@ -2410,6 +2422,54 @@
         -1568,
         1440
       ]
+    },
+    {
+      "parameters": {
+        "sendTo": "SpaceKonceptRental@gmail.com",
+        "subject": "=[ SpaceKonceptRental Lead ] {{ $json.lead_id }} - {{ $json.name || \"New enquiry\" }}",
+        "message": "=<p><strong>Lead ID:</strong> {{ $json.lead_id }}</p>\n<p><strong>Session ID:</strong> {{ $json.session_id }}</p>\n<p><strong>Name:</strong> {{ $json.name || \"not_available\" }}</p>\n<p><strong>Email:</strong> {{ $json.email || \"not_available\" }}</p>\n<p><strong>Phone:</strong> {{ $json.phone || \"not_available\" }}</p>\n<p><strong>Company:</strong> {{ $json.company || \"not_available\" }}</p>\n<p><strong>Purpose:</strong> {{ $json.rental_purpose || \"not_available\" }}</p>\n<p><strong>Start Date:</strong> {{ $json.rental_start_date || \"not_available\" }}</p>\n<p><strong>Duration:</strong> {{ $json.rental_duration || \"not_available\" }}</p>\n<p><strong>Items:</strong> {{ $json.items_needed || \"not_available\" }}</p>\n<p><strong>Delivery Area:</strong> {{ $json.delivery_area || \"not_available\" }}</p>\n<p><strong>Budget:</strong> {{ $json.budget || \"not_available\" }}</p>\n<p><strong>Status:</strong> {{ $json.status }}</p>\n<p><strong>Created At:</strong> {{ $json.created_at }}</p>\n<p><strong>Execution ID:</strong> {{ $json.execution_id }}</p>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        912,
+        1376
+      ],
+      "id": "875941de-39f0-4bab-8aaa-5c3ca18fedef",
+      "name": "Send Lead Notification"
+    },
+    {
+      "parameters": {
+        "sendTo": "SpaceKonceptRental@gmail.com",
+        "subject": "=[ SpaceKonceptRental Ticket ] {{ $json.ticket_id }} - {{ $json.summary || \"Support request\" }}",
+        "message": "=<p><strong>Ticket ID:</strong> {{ $json.ticket_id }}</p>\n<p><strong>Session ID:</strong> {{ $json.session_id }}</p>\n<p><strong>Name:</strong> {{ $json.name || \"not_available\" }}</p>\n<p><strong>Email:</strong> {{ $json.email || \"not_available\" }}</p>\n<p><strong>Phone:</strong> {{ $json.phone || \"not_available\" }}</p>\n<p><strong>Category:</strong> {{ $json.category }}</p>\n<p><strong>Summary:</strong> {{ $json.summary }}</p>\n<p><strong>Details:</strong> {{ $json.details }}</p>\n<p><strong>Urgency:</strong> {{ $json.urgency }}</p>\n<p><strong>Status:</strong> {{ $json.status }}</p>\n<p><strong>Created At:</strong> {{ $json.created_at }}</p>\n<p><strong>Execution ID:</strong> {{ $json.execution_id }}</p>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        912,
+        1568
+      ],
+      "id": "893df85e-69e9-4e66-94ef-7d04e9e0ff31",
+      "name": "Send Ticket Notification"
+    },
+    {
+      "parameters": {
+        "sendTo": "SpaceKonceptRental@gmail.com",
+        "subject": "=[ SpaceKonceptRental Unanswered ] {{ $json.id }} - {{ $json.intent }}",
+        "message": "=<p><strong>Unanswered ID:</strong> {{ $json.id }}</p>\n<p><strong>Session ID:</strong> {{ $json.session_id }}</p>\n<p><strong>Reason:</strong> {{ $json.reason }}</p>\n<p><strong>Intent:</strong> {{ $json.intent }}</p>\n<p><strong>Confidence:</strong> {{ $json.confidence }}</p>\n<p><strong>Customer Message:</strong> {{ $json.user_message_redacted }}</p>\n<p><strong>Sources:</strong> {{ $json.source_titles }}</p>\n<p><strong>Created At:</strong> {{ $json.created_at }}</p>\n<p><strong>Execution ID:</strong> {{ $json.execution_id }}</p>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        912,
+        1968
+      ],
+      "id": "4664336a-6cb1-4030-a4b5-7254f60701b5",
+      "name": "Send Unanswered Notification"
     }
   ],
   "connections": {
@@ -2730,6 +2790,39 @@
           }
         ]
       ]
+    },
+    "Upsert Lead or Booking": {
+      "main": [
+        [
+          {
+            "node": "Send Lead Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upsert Ticket": {
+      "main": [
+        [
+          {
+            "node": "Send Ticket Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upsert Unanswered Question": {
+      "main": [
+        [
+          {
+            "node": "Send Unanswered Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "settings": {
@@ -2744,5 +2837,5 @@
   "meta": {
     "templateCredsSetupCompleted": true
   },
-  "versionId": "2832c397-02ef-4ae1-aa78-eb4ca4acc2b1"
+  "versionId": "bb0bd0a2-3aa4-49d7-b075-f3355631c2f7"
 }

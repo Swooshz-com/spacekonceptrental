@@ -180,13 +180,13 @@
             {
               "id": "prepare-chunk-metadata-5",
               "name": "modified_time",
-              "value": "={{ $json.modifiedTime || $now.toISO() }}",
+              "value": "={{ $json.modifiedTime ? new Date($json.modifiedTime).toLocaleString('sv-SE', { timeZone: 'Asia/Singapore', hour12: false }) + ' SGT' : ($now.setZone('Asia/Singapore').toFormat('yyyy-MM-dd HH:mm:ss') + ' SGT') }}",
               "type": "string"
             },
             {
               "id": "prepare-chunk-metadata-6",
               "name": "ingested_at",
-              "value": "={{ $now.toISO() }}",
+              "value": "={{ $now.setZone('Asia/Singapore').toFormat('yyyy-MM-dd HH:mm:ss') + ' SGT' }}",
               "type": "string"
             },
             {
@@ -872,5 +872,5 @@
   "meta": {
     "templateCredsSetupCompleted": true
   },
-  "versionId": "ed78c83e-8eee-4fe1-93f7-3338ce13533c"
+  "versionId": "08e6b3db-8354-45dc-bd42-773a65350a04"
 }

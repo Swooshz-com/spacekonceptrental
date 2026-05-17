@@ -186,6 +186,20 @@ function findWorkflowNode(workflow, nodeName) {
   return (workflow.nodes || []).find((node) => node.name === nodeName);
 }
 
+function findAssignment(node, assignmentName) {
+  return node?.parameters?.assignments?.assignments?.find((entry) => entry?.name === assignmentName);
+}
+
+function usesSgtDisplayTimestamp(value) {
+  const text = String(value || '');
+  return (
+    text.includes('yyyy-MM-dd HH:mm:ss') &&
+    text.includes('SGT') &&
+    !text.includes('toISO()') &&
+    !text.includes('+08:00')
+  );
+}
+
 function checkCustomerSupportAgentFallback(workflow, relative) {
   if (workflow.name !== 'SpaceKonceptRental - RAG Customer Support Agent') {
     return;
@@ -385,6 +399,136 @@ function checkCustomerSupportAgentDedupeAndResponseMode(workflow, relative) {
   }
 }
 
+function checkCustomerSupportAgentLoggingContract(workflow, relative) {
+  if (workflow.name !== 'SpaceKonceptRental - RAG Customer Support Agent') {
+    return;
+  }
+
+  const normaliseNode = findWorkflowNode(workflow, 'Normalise Input');
+  const messageIdAssignment = findAssignment(normaliseNode, 'message_id');
+  const timestampAssignment = findAssignment(normaliseNode, 'timestamp');
+  if (!String(messageIdAssignment?.value || '').includes('SKR-MSG-')) {
+    fail(`${relative} Normalise Input must create readable SKR-MSG message IDs when chat input has no message id.`);
+  }
+  if (!String(timestampAssignment?.value || '').includes("setZone('Asia/Singapore')") || !usesSgtDisplayTimestamp(timestampAssignment?.value)) {
+    fail(`${relative} Normalise Input timestamp must use display SGT format like 2026-05-17 15:17:46 SGT.`);
+  }
+
+  const redactNode = findWorkflowNode(workflow, 'Redact PII for Logs');
+  const redactCode = String(redactNode?.parameters?.jsCode || '');
+  if (redactCode.includes('[redacted-email]') || redactCode.includes('[redacted-phone]')) {
+    fail(`${relative} Redact PII for Logs must preserve operational customer email and phone values in support logs.`);
+  }
+  if (!redactCode.includes('[redacted-nric-fin]')) {
+    fail(`${relative} Redact PII for Logs must still redact high-risk NRIC/FIN values.`);
+  }
+
+  const parserNode = findWorkflowNode(workflow, 'Parse Strict JSON Response');
+  const parserCode = String(parserNode?.parameters?.jsCode || '');
+  for (const requiredSnippet of [
+    'sgtTimestamp',
+    "' SGT'",
+    'driveFileUrl',
+    'sourceUrls',
+    'parsed.lead?.name',
+    'parsed.ticket?.name',
+    'escalation_reference_id',
+  ]) {
+    if (!parserCode.includes(requiredSnippet)) {
+      fail(`${relative} Parse Strict JSON Response must include ${requiredSnippet} for logging normalization.`);
+    }
+  }
+  if (parserCode.includes('sgtIso') || parserCode.includes('+08:00') || !parserCode.includes('completed_at: sgtTimestamp(now)')) {
+    fail(`${relative} Parse Strict JSON Response completed_at must use display SGT format, not ISO +08:00.`);
+  }
+
+  const failureNode = findWorkflowNode(workflow, 'Build Agent Failure Fallback');
+  const failureCompletedAt = findAssignment(failureNode, 'completed_at');
+  if (!usesSgtDisplayTimestamp(failureCompletedAt?.value)) {
+    fail(`${relative} Build Agent Failure Fallback completed_at must use display SGT format like 2026-05-17 15:17:46 SGT.`);
+  }
+
+  const activeProcessingNode = findWorkflowNode(workflow, 'Select Active Processing Row');
+  const activeProcessingCode = String(activeProcessingNode?.parameters?.jsCode || '');
+  if (!activeProcessingCode.includes('parseSgtTimestamp') || !activeProcessingCode.includes('Date.UTC')) {
+    fail(`${relative} Select Active Processing Row must parse display SGT timestamps before applying the processing lock window.`);
+  }
+
+  const outputParserNode = findWorkflowNode(workflow, 'Agent Structured Output Parser');
+  let schema = null;
+  try {
+    schema = JSON.parse(String(outputParserNode?.parameters?.inputSchema || '{}'));
+  } catch (error) {
+    fail(`${relative} Agent Structured Output Parser schema must be valid JSON: ${error.message}`);
+  }
+  const ticketRequired = schema?.properties?.ticket?.required || [];
+  for (const field of ['name', 'email', 'phone']) {
+    if (!ticketRequired.includes(field) || schema?.properties?.ticket?.properties?.[field]?.type !== 'string') {
+      fail(`${relative} Agent Structured Output Parser ticket schema must expose ticket.${field}.`);
+    }
+  }
+
+  const rawSheetsNodes = [
+    'Upsert Conversation Processing',
+    'Upsert Conversation Completed',
+    'Upsert Conversation Failed',
+    'Upsert Lead or Booking',
+    'Upsert Ticket',
+    'Upsert Unanswered Question',
+  ];
+  for (const nodeName of rawSheetsNodes) {
+    const node = findWorkflowNode(workflow, nodeName);
+    if (node?.parameters?.options?.cellFormat !== 'RAW') {
+      fail(`${relative} ${nodeName} must write Google Sheets values with RAW cellFormat so phone numbers beginning with + stay plain text.`);
+    }
+  }
+
+  const notificationEdges = [
+    ['Upsert Lead or Booking', 'Send Lead Notification'],
+    ['Upsert Ticket', 'Send Ticket Notification'],
+    ['Upsert Unanswered Question', 'Send Unanswered Notification'],
+  ];
+  for (const [sourceName, targetName] of notificationEdges) {
+    const targetNode = findWorkflowNode(workflow, targetName);
+    if (!targetNode) {
+      fail(`${relative} is missing downstream notification node "${targetName}".`);
+      continue;
+    }
+    if (targetNode.type !== 'n8n-nodes-base.gmail') {
+      fail(`${relative} downstream notification node "${targetName}" must use Gmail.`);
+    }
+    if (!hasConnection(workflow, sourceName, 0, targetName)) {
+      fail(`${relative} ${sourceName} must feed downstream notification node "${targetName}".`);
+    }
+  }
+
+  const escalationNode = findWorkflowNode(workflow, 'Send Escalation Alert');
+  const escalationMessage = String(escalationNode?.parameters?.message || '');
+  if (!escalationMessage.includes('Reference ID') || !escalationMessage.includes('source_file_ids')) {
+    fail(`${relative} Send Escalation Alert must include a useful reference id and source URL field.`);
+  }
+}
+
+function checkRagIngestionLoggingContract(workflow, relative) {
+  if (workflow.name !== 'SpaceKonceptRental - KB Ingestion to Pinecone') {
+    return;
+  }
+
+  const prepareMetadataNode = findWorkflowNode(workflow, 'Prepare Chunk Metadata');
+  for (const field of ['modified_time', 'ingested_at']) {
+    const assignment = findAssignment(prepareMetadataNode, field);
+    if (!usesSgtDisplayTimestamp(assignment?.value)) {
+      fail(`${relative} Prepare Chunk Metadata ${field} must use display SGT format like 2026-05-17 15:17:46 SGT.`);
+    }
+  }
+
+  const prepareLogNode = findWorkflowNode(workflow, 'Prepare Ingestion Log');
+  const prepareLogCode = String(prepareLogNode?.parameters?.jsCode || '');
+  if (!prepareLogCode.includes('singaporeTimestamp') || !prepareLogCode.includes(' SGT')) {
+    fail(`${relative} Prepare Ingestion Log must write ingested_at in display SGT format.`);
+  }
+}
+
 function validateWorkflow(context) {
   const { workflow, relative, fail: reportFailure } = context;
   activeFail = reportFailure;
@@ -395,6 +539,8 @@ function validateWorkflow(context) {
     checkCurrentNodeTypeVersions(workflow, relative);
     checkCustomerSupportAgentFallback(workflow, relative);
     checkCustomerSupportAgentDedupeAndResponseMode(workflow, relative);
+    checkCustomerSupportAgentLoggingContract(workflow, relative);
+    checkRagIngestionLoggingContract(workflow, relative);
   } finally {
     activeFail = null;
   }
