@@ -323,7 +323,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1344,
+        1456,
         128
       ]
     },
@@ -411,7 +411,7 @@
               "required": false,
               "defaultMatch": false,
               "display": true,
-              "type": "number",
+              "type": "string",
               "canBeUsedToMatch": true
             },
             {
@@ -463,7 +463,7 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
       "position": [
-        1552,
+        1664,
         128
       ],
       "retryOnFail": true,
@@ -666,7 +666,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        1808,
+        1872,
         128
       ]
     }
@@ -872,5 +872,5 @@
   "meta": {
     "templateCredsSetupCompleted": true
   },
-  "versionId": "185888c9-5c1c-4cb8-9e14-d95f2f858241"
+  "versionId": "3702bdf0-2d1e-49be-a5af-97f51dc0f00b"
 }
