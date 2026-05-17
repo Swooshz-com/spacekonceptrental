@@ -149,6 +149,22 @@ function Resolve-ProjectWorkflowHookScripts {
   return $existingScripts
 }
 
+function Resolve-PowerShellHookCommand {
+  $currentProcessPath = [System.Diagnostics.Process]::GetCurrentProcess().Path
+  if (-not [string]::IsNullOrWhiteSpace($currentProcessPath) -and (Test-Path -LiteralPath $currentProcessPath -PathType Leaf)) {
+    return $currentProcessPath
+  }
+
+  foreach ($candidate in @("pwsh", "powershell")) {
+    $commandInfo = Get-Command $candidate -CommandType Application -ErrorAction SilentlyContinue | Select-Object -First 1
+    if ($commandInfo -and -not [string]::IsNullOrWhiteSpace($commandInfo.Source)) {
+      return $commandInfo.Source
+    }
+  }
+
+  throw "Could not find a PowerShell host to run .ps1 n8n workflow hook scripts. Install pwsh or powershell."
+}
+
 function Invoke-ProjectWorkflowHook($HookName, [hashtable]$Context) {
   $hookScripts = @(Resolve-ProjectWorkflowHookScripts)
   if ($hookScripts.Count -eq 0) {
@@ -171,7 +187,7 @@ function Invoke-ProjectWorkflowHook($HookName, [hashtable]$Context) {
       $command = "node"
       $arguments = @($hookScript) + $hookArgs
     } elseif ($extension -eq ".ps1") {
-      $command = "powershell"
+      $command = Resolve-PowerShellHookCommand
       $arguments = @("-NoProfile", "-ExecutionPolicy", "Bypass", "-File", $hookScript) + $hookArgs
     } elseif ($extension -eq ".cmd" -or $extension -eq ".bat") {
       $command = $hookScript
