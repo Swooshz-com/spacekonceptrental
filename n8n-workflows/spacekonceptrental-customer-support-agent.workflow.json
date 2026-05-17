@@ -289,7 +289,7 @@
             "execution_id": "={{ $node[\"Redact PII for Logs\"].json.execution_id }}",
             "created_at": "={{ $node[\"Redact PII for Logs\"].json.timestamp }}",
             "completed_at": "={{ '' }}",
-            "dedupe_key ": "={{ $node[\"Redact PII for Logs\"].json.dedupe_key }}"
+            "dedupe_key": "={{ $node[\"Redact PII for Logs\"].json.dedupe_key }}"
           },
           "matchingColumns": [
             "message_id"
@@ -305,8 +305,8 @@
               "canBeUsedToMatch": true
             },
             {
-              "id": "dedupe_key ",
-              "displayName": "dedupe_key ",
+              "id": "dedupe_key",
+              "displayName": "dedupe_key",
               "required": false,
               "defaultMatch": false,
               "display": true,
@@ -687,7 +687,7 @@
             "execution_id": "={{ $json.execution_id }}",
             "created_at": "={{ $json.timestamp }}",
             "completed_at": "={{ $json.completed_at }}",
-            "dedupe_key ": "={{ $json.dedupe_key }}"
+            "dedupe_key": "={{ $json.dedupe_key }}"
           },
           "matchingColumns": [
             "message_id"
@@ -703,8 +703,8 @@
               "canBeUsedToMatch": true
             },
             {
-              "id": "dedupe_key ",
-              "displayName": "dedupe_key ",
+              "id": "dedupe_key",
+              "displayName": "dedupe_key",
               "required": false,
               "defaultMatch": false,
               "display": true,
@@ -2145,7 +2145,7 @@
             "execution_id": "={{ $json.execution_id }}",
             "created_at": "={{ $json.timestamp }}",
             "completed_at": "={{ $json.completed_at }}",
-            "dedupe_key ": "={{ $json.dedupe_key }}"
+            "dedupe_key": "={{ $json.dedupe_key }}"
           },
           "matchingColumns": [
             "message_id"
@@ -2161,8 +2161,8 @@
               "canBeUsedToMatch": true
             },
             {
-              "id": "dedupe_key ",
-              "displayName": "dedupe_key ",
+              "id": "dedupe_key",
+              "displayName": "dedupe_key",
               "required": false,
               "defaultMatch": false,
               "display": true,
@@ -2752,5 +2752,5 @@
   "meta": {
     "templateCredsSetupCompleted": true
   },
-  "versionId": "9e3cfa39-5952-45ed-aaff-bef6049b509b"
+  "versionId": "d0ba5654-c524-40cb-9b1d-7ae5ab2c1422"
 }
