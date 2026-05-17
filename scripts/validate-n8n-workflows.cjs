@@ -428,40 +428,86 @@ function checkCustomerSupportAgentDedupeAndResponseMode(workflow, relative) {
   }
 
   if ((lookupNode.parameters?.operation || 'read') !== 'read') {
-    fail(`${relative} Lookup Conversation State must read the conversation log before dedupe.`);
+    fail(`${relative} Lookup Conversation State must read the conversation log before the processing guard.`);
   }
 
-  const filters = lookupNode.parameters?.filtersUI?.values;
-  const hasCurrentDedupeFilter = Array.isArray(filters) && filters.some((filter) =>
-    filter?.lookupColumn === 'dedupe_key' &&
-    String(filter?.lookupValue || '').includes('dedupe_key') &&
-    !String(filter?.lookupValue || '').includes('dedupe_key_previous')
+  const filters = Array.isArray(lookupNode.parameters?.filtersUI?.values)
+    ? lookupNode.parameters.filtersUI.values
+    : [];
+  const hasSessionFilter = filters.some((filter) =>
+    filter?.lookupColumn === 'session_id' &&
+    String(filter?.lookupValue || '').includes('session_id')
   );
-  const hasPreviousDedupeFilter = Array.isArray(filters) && filters.some((filter) =>
-    filter?.lookupColumn === 'dedupe_key' &&
-    String(filter?.lookupValue || '').includes('dedupe_key_previous')
+  const hasProcessingStatusFilter = filters.some((filter) =>
+    filter?.lookupColumn === 'status' &&
+    String(filter?.lookupValue || '') === 'processing'
   );
 
-  if (!hasCurrentDedupeFilter || !hasPreviousDedupeFilter) {
-    fail(`${relative} Lookup Conversation State must filter by current and previous dedupe_key values before dedupe.`);
+  if (!hasSessionFilter || !hasProcessingStatusFilter) {
+    fail(`${relative} Lookup Conversation State must filter by session_id and status=processing before the wait reply guard.`);
   }
 
-  if (lookupNode.parameters?.combineFilters !== 'OR') {
-    fail(`${relative} Lookup Conversation State must combine dedupe_key filters with OR.`);
+  if (lookupNode.parameters?.combineFilters !== 'AND') {
+    fail(`${relative} Lookup Conversation State must combine session_id and processing status filters with AND.`);
   }
 
-  if (lookupNode.parameters?.options?.returnFirstMatch !== true) {
-    fail(`${relative} Lookup Conversation State must return only the first matching conversation row.`);
+  if (lookupNode.parameters?.options?.returnFirstMatch === true) {
+    fail(`${relative} Lookup Conversation State must return all same-session processing rows so the freshest active row can be selected.`);
   }
 
   if (lookupNode.alwaysOutputData !== true) {
     fail(`${relative} Lookup Conversation State must keep alwaysOutputData true so new messages can continue when no row is found.`);
   }
 
+  const selectorNode = findWorkflowNode(workflow, 'Select Active Processing Row');
+  const selectorCode = String(selectorNode?.parameters?.jsCode || '');
+  if (!selectorNode) {
+    fail(`${relative} is missing Select Active Processing Row.`);
+  } else if (
+    !selectorCode.includes('maxProcessingAgeMs') ||
+    !selectorCode.includes('2 * 60 * 1000') ||
+    !selectorCode.includes('active_processing') ||
+    !selectorCode.includes('sort((a, b) => b.startedAt - a.startedAt)')
+  ) {
+    fail(`${relative} Select Active Processing Row must choose the freshest processing row inside the guard window.`);
+  }
+
+  const lookupTargets = workflow.connections?.['Lookup Conversation State']?.main?.[0] || [];
+  const selectorTargets = workflow.connections?.['Select Active Processing Row']?.main?.[0] || [];
+  if (!lookupTargets.some((target) => target?.node === 'Select Active Processing Row')) {
+    fail(`${relative} Lookup Conversation State must feed Select Active Processing Row.`);
+  }
+  if (!selectorTargets.some((target) => target?.node === 'Already Processing or Completed?')) {
+    fail(`${relative} Select Active Processing Row must feed Already Processing or Completed?.`);
+  }
+
+  const gateNode = findWorkflowNode(workflow, 'Already Processing or Completed?');
+  const gateConditions = gateNode?.parameters?.conditions || {};
+  const gateConditionsText = JSON.stringify(gateConditions);
+  if (!gateNode) {
+    fail(`${relative} is missing Already Processing or Completed?.`);
+  } else {
+    const gatesOnActiveProcessing = gateConditionsText.includes('active_processing') &&
+      gateConditionsText.includes('"true"') &&
+      gateConditionsText.includes('"operation":"equals"');
+
+    if (!gatesOnActiveProcessing || gateConditions?.combinator !== 'and') {
+      fail(`${relative} Already Processing or Completed? must only block when Select Active Processing Row sets active_processing=true.`);
+    }
+  }
+
+  const duplicateReplyNode = findWorkflowNode(workflow, 'Duplicate Safe Reply');
+  const duplicateReplyMessage = String(duplicateReplyNode?.parameters?.message || '').toLowerCase();
+  if (!duplicateReplyNode) {
+    fail(`${relative} is missing Duplicate Safe Reply.`);
+  } else if (!duplicateReplyMessage.includes('still working') || !duplicateReplyMessage.includes('previous message')) {
+    fail(`${relative} Duplicate Safe Reply must ask the user to wait while the previous message is still processing.`);
+  }
+
   const redactNode = findWorkflowNode(workflow, 'Redact PII for Logs');
   const redactCode = String(redactNode?.parameters?.jsCode || '');
-  if (!redactCode.includes('dedupe_key') || !redactCode.includes('dedupe_key_previous') || !redactCode.includes('hashText')) {
-    fail(`${relative} Redact PII for Logs must build hashed current and previous dedupe keys.`);
+  if (!redactCode.includes('dedupe_key') || !redactCode.includes('hashText')) {
+    fail(`${relative} Redact PII for Logs must build a hashed dedupe_key for audit logging.`);
   }
 
   const conversationLogNodes = [
@@ -475,6 +521,20 @@ function checkCustomerSupportAgentDedupeAndResponseMode(workflow, relative) {
     const values = node?.parameters?.columns?.value || {};
     const schema = Array.isArray(node?.parameters?.columns?.schema) ? node.parameters.columns.schema : [];
     const dedupeSchema = schema.find((entry) => entry?.id === 'dedupe_key');
+
+    for (const key of Object.keys(values)) {
+      if (key.trim() === 'dedupe_key' && key !== 'dedupe_key') {
+        fail(`${relative} ${nodeName} must write to "dedupe_key" without trailing spaces.`);
+      }
+    }
+    for (const entry of schema) {
+      if (
+        (typeof entry?.id === 'string' && entry.id.trim() === 'dedupe_key' && entry.id !== 'dedupe_key') ||
+        (typeof entry?.displayName === 'string' && entry.displayName.trim() === 'dedupe_key' && entry.displayName !== 'dedupe_key')
+      ) {
+        fail(`${relative} ${nodeName} schema must use "dedupe_key" without trailing spaces.`);
+      }
+    }
 
     if (!String(values.dedupe_key || '').includes('dedupe_key')) {
       fail(`${relative} ${nodeName} must write dedupe_key to the conversations sheet.`);

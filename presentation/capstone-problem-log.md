@@ -117,6 +117,12 @@ Working notes for the final presentation. These are the practical issues found w
   - Fix: restored explicit mappings for `file_id`, `file_name`, `file_url`, `event_type`, `status`, `chunks_count`, `namespace`, `execution_id`, `ingested_at`, and `error_message`.
   - Presentation point: low-code node settings can silently reset downstream mappings, so final workflow exports need source control review.
 
+- Chat duplicate guard kept blocking repeated questions after a few minutes.
+  - Impact: a customer could ask the same question again during testing and receive the duplicate-safe reply.
+  - Root cause: the guard treated matching dedupe keys as duplicates instead of checking whether the same chat session still had an open `processing` row. The conversations sheet header also picked up a trailing space as `dedupe_key ` during manual setup.
+  - Fix: replaced content-based duplicate blocking with a same-session processing guard. If a fresh `processing` row is still open, the chat asks the user to wait; completed or failed rows do not block later repeated questions. Workflow mappings are pinned to the exact `dedupe_key` header for audit logging.
+  - Presentation point: retry protection should manage in-flight work without blocking normal conversation.
+
 - Import helper skipped unchanged workflows.
   - Impact: it looked like an import failure when only one workflow had actually changed.
   - Root cause: the import script compares workflow content and skips files with no effective changes.

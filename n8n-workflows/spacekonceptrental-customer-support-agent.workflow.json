@@ -176,18 +176,18 @@
         "filtersUI": {
           "values": [
             {
-              "lookupColumn": "dedupe_key ",
-              "lookupValue": "={{ $json.dedupe_key }}"
+              "lookupColumn": "session_id",
+              "lookupValue": "={{ $json.session_id }}"
             },
             {
-              "lookupColumn": "dedupe_key ",
-              "lookupValue": "={{ $json.dedupe_key_previous }}"
+              "lookupColumn": "status",
+              "lookupValue": "processing"
             }
           ]
         },
-        "combineFilters": "OR",
+        "combineFilters": "AND",
         "options": {
-          "returnFirstMatch": true
+          "returnFirstMatch": false
         }
       },
       "id": "30000000-0000-4000-8000-000000000005",
@@ -214,25 +214,16 @@
           },
           "conditions": [
             {
-              "id": "dedupe-status",
-              "leftValue": "={{ $json.status }}",
-              "rightValue": "processing",
-              "operator": {
-                "type": "string",
-                "operation": "equals"
-              }
-            },
-            {
-              "id": "dedupe-complete",
-              "leftValue": "={{ $json.status }}",
-              "rightValue": "completed",
+              "id": "active-processing-row",
+              "leftValue": "={{ $json.active_processing }}",
+              "rightValue": "true",
               "operator": {
                 "type": "string",
                 "operation": "equals"
               }
             }
           ],
-          "combinator": "or"
+          "combinator": "and"
         },
         "options": {}
       },
@@ -247,7 +238,7 @@
     },
     {
       "parameters": {
-        "message": "I have already received this message, so I will avoid sending a duplicate reply.",
+        "message": "I am still working on your previous message. Please give me a moment, then send again if needed.",
         "options": {}
       },
       "id": "30000000-0000-4000-8000-000000000007",
@@ -299,7 +290,7 @@
             "execution_id": "={{ $node[\"Redact PII for Logs\"].json.execution_id }}",
             "created_at": "={{ $node[\"Redact PII for Logs\"].json.timestamp }}",
             "completed_at": "={{ '' }}",
-            "dedupe_key ": "={{ $node[\"Redact PII for Logs\"].json.dedupe_key }}"
+            "dedupe_key": "={{ $node[\"Redact PII for Logs\"].json.dedupe_key }}"
           },
           "matchingColumns": [
             "message_id"
@@ -315,8 +306,8 @@
               "canBeUsedToMatch": true
             },
             {
-              "id": "dedupe_key ",
-              "displayName": "dedupe_key ",
+              "id": "dedupe_key",
+              "displayName": "dedupe_key",
               "required": false,
               "defaultMatch": false,
               "display": true,
@@ -697,7 +688,7 @@
             "execution_id": "={{ $json.execution_id }}",
             "created_at": "={{ $json.timestamp }}",
             "completed_at": "={{ $json.completed_at }}",
-            "dedupe_key ": "={{ $json.dedupe_key }}"
+            "dedupe_key": "={{ $json.dedupe_key }}"
           },
           "matchingColumns": [
             "message_id"
@@ -713,8 +704,8 @@
               "canBeUsedToMatch": true
             },
             {
-              "id": "dedupe_key ",
-              "displayName": "dedupe_key ",
+              "id": "dedupe_key",
+              "displayName": "dedupe_key",
               "required": false,
               "defaultMatch": false,
               "display": true,
@@ -1854,7 +1845,7 @@
     },
     {
       "parameters": {
-        "content": "# INTAKE AND DEDUPE\n\n- Receives chat messages and normalises input.\n- Builds a hashed `dedupe_key` from channel, session, redacted normalised message, and a short time bucket.\n- Checks current and previous dedupe buckets before processing to avoid double-submit duplicate replies.\n- `message_id` remains the unique audit row id.\n- `Upsert Conversation Processing` writes a temporary processing row before AI/RAG output exists.\n- Later AI/RAG fields use `={{ '' }}` on purpose so Sheets cells stay blank until the row is overwritten by the completed or failed path.\n\n## Required manual configuration:\n\n- **Lookup Conversation State**\n  - `documentId.value`: Set this to the Google Sheets workbook used for support logs.\n  - Conversations sheet headers must include `dedupe_key`.\n- **Upsert Conversation Processing**\n  - `documentId.value`: Set this to the same Google Sheets workbook used for support logs.",
+        "content": "# INTAKE AND PROCESSING GUARD\n\n- Receives chat messages and normalises input.\n- Writes a temporary processing row before AI/RAG output exists.\n- Looks up open processing rows for the same chat session and selects the freshest row still inside the guard window.\n- If another message arrives while that row is fresh, asks the user to wait instead of starting another run.\n- Completed or failed rows do not block later repeated questions.\n- `message_id` remains the unique audit row id.\n- `dedupe_key` is kept only as a diagnostic/audit hash, not as the customer-facing block condition.\n- Later AI/RAG fields use `={{ '' }}` on purpose so Sheets cells stay blank until the row is overwritten by the completed or failed path.\n\n## Required manual configuration:\n\n- **Lookup Conversation State**\n  - `documentId.value`: Set this to the Google Sheets workbook used for support logs.\n  - Conversations sheet headers must include exact `session_id`, `status`, and `dedupe_key` headers with no trailing spaces.\n- **Upsert Conversation Processing**\n  - `documentId.value`: Set this to the same Google Sheets workbook used for support logs.",
         "height": 988,
         "width": 1764,
         "color": 5
@@ -1907,8 +1898,8 @@
       "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
       "typeVersion": 1.4,
       "position": [
-        976,
-        304
+        1040,
+        576
       ]
     },
     {
@@ -2139,7 +2130,7 @@
             "execution_id": "={{ $json.execution_id }}",
             "created_at": "={{ $json.timestamp }}",
             "completed_at": "={{ $json.completed_at }}",
-            "dedupe_key ": "={{ $json.dedupe_key }}"
+            "dedupe_key": "={{ $json.dedupe_key }}"
           },
           "matchingColumns": [
             "message_id"
@@ -2155,8 +2146,8 @@
               "canBeUsedToMatch": true
             },
             {
-              "id": "dedupe_key ",
-              "displayName": "dedupe_key ",
+              "id": "dedupe_key",
+              "displayName": "dedupe_key",
               "required": false,
               "defaultMatch": false,
               "display": true,
@@ -2363,7 +2354,7 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
       "typeVersion": 1.1,
       "position": [
-        816,
+        800,
         304
       ],
       "id": "a5a50856-c70f-4bce-8ac7-5d05179e3470",
@@ -2385,11 +2376,24 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.3,
       "position": [
-        816,
-        464
+        896,
+        448
       ],
       "id": "e6739301-67bc-4a75-80f9-fcbe07374631",
       "name": "OpenAI Chat Model"
+    },
+    {
+      "parameters": {
+        "jsCode": "const maxProcessingAgeMs = 2 * 60 * 1000;\nconst now = Date.now();\n\nfunction startedAt(row) {\n  const parsed = Date.parse(row.created_at || row.timestamp || 0);\n  return Number.isFinite(parsed) ? parsed : 0;\n}\n\nconst active = items\n  .map((item) => item.json || {})\n  .filter((row) => row.status === 'processing')\n  .map((row) => ({ row, startedAt: startedAt(row) }))\n  .filter(({ startedAt }) => startedAt > 0 && now >= startedAt && now - startedAt < maxProcessingAgeMs)\n  .sort((a, b) => b.startedAt - a.startedAt)[0];\n\nif (!active) {\n  return [{ json: { active_processing: 'false' } }];\n}\n\nreturn [{ json: { ...active.row, active_processing: 'true' } }];"
+      },
+      "id": "30000000-0000-4000-8000-000000000036",
+      "name": "Select Active Processing Row",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        64,
+        544
+      ]
     }
   ],
   "connections": {
@@ -2430,7 +2434,7 @@
       "main": [
         [
           {
-            "node": "Already Processing or Completed?",
+            "node": "Select Active Processing Row",
             "type": "main",
             "index": 0
           }
@@ -2697,6 +2701,17 @@
           }
         ]
       ]
+    },
+    "Select Active Processing Row": {
+      "main": [
+        [
+          {
+            "node": "Already Processing or Completed?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "settings": {
@@ -2711,5 +2726,5 @@
   "meta": {
     "templateCredsSetupCompleted": true
   },
-  "versionId": "70a23084-8812-4f92-8e70-e3b8d9d815be"
+  "versionId": "fc46ba32-9574-472c-852f-ce08f2f22c02"
 }
