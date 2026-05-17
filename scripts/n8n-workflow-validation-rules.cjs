@@ -281,7 +281,7 @@ function checkCustomerSupportAgentDedupeAndResponseMode(workflow, relative) {
   }
 
   if ((lookupNode.parameters?.operation || 'read') !== 'read') {
-    fail(`${relative} Lookup Conversation State must read the conversation log before the processing guard.`);
+    fail(`${relative} Lookup Conversation State must read the conversation log before debounce selection.`);
   }
 
   const filters = Array.isArray(lookupNode.parameters?.filtersUI?.values)
@@ -291,70 +291,101 @@ function checkCustomerSupportAgentDedupeAndResponseMode(workflow, relative) {
     filter?.lookupColumn === 'session_id' &&
     String(filter?.lookupValue || '').includes('session_id')
   );
-  const hasProcessingStatusFilter = filters.some((filter) =>
-    filter?.lookupColumn === 'status' &&
-    String(filter?.lookupValue || '') === 'processing'
-  );
 
-  if (!hasSessionFilter || !hasProcessingStatusFilter) {
-    fail(`${relative} Lookup Conversation State must filter by session_id and status=processing before the wait reply guard.`);
+  if (!hasSessionFilter) {
+    fail(`${relative} Lookup Conversation State must filter by session_id before debounce selection.`);
   }
 
-  if (lookupNode.parameters?.combineFilters !== 'AND') {
-    fail(`${relative} Lookup Conversation State must combine session_id and processing status filters with AND.`);
+  if (filters.some((filter) => filter?.lookupColumn === 'status')) {
+    fail(`${relative} Lookup Conversation State must not filter by status; debounce selection needs same-session queued and merged rows.`);
   }
 
   if (lookupNode.parameters?.options?.returnFirstMatch === true) {
-    fail(`${relative} Lookup Conversation State must return all same-session processing rows so the freshest active row can be selected.`);
+    fail(`${relative} Lookup Conversation State must return all same-session rows so the debounce batch can be selected.`);
   }
 
   if (lookupNode.alwaysOutputData !== true) {
     fail(`${relative} Lookup Conversation State must keep alwaysOutputData true so new messages can continue when no row is found.`);
   }
 
-  const selectorNode = findWorkflowNode(workflow, 'Select Active Processing Row');
+  const debounceWaitNode = findWorkflowNode(workflow, 'Debounce Chat Batch');
+  if (!debounceWaitNode) {
+    fail(`${relative} is missing Debounce Chat Batch.`);
+  } else if (
+    debounceWaitNode.type !== 'n8n-nodes-base.wait' ||
+    Number(debounceWaitNode.parameters?.amount || 0) < 3 ||
+    String(debounceWaitNode.parameters?.unit || '') !== 'seconds'
+  ) {
+    fail(`${relative} Debounce Chat Batch must wait a few seconds before reading same-session rows.`);
+  }
+
+  const selectorNode = findWorkflowNode(workflow, 'Select Debounced Chat Batch');
   const selectorCode = String(selectorNode?.parameters?.jsCode || '');
   if (!selectorNode) {
-    fail(`${relative} is missing Select Active Processing Row.`);
+    fail(`${relative} is missing Select Debounced Chat Batch.`);
   } else if (
-    !selectorCode.includes('maxProcessingAgeMs') ||
-    !selectorCode.includes('2 * 60 * 1000') ||
-    !selectorCode.includes('active_processing') ||
-    !selectorCode.includes('sort((a, b) => b.startedAt - a.startedAt)')
+    !selectorCode.includes('debounceWindowMs') ||
+    !selectorCode.includes('queued') ||
+    !selectorCode.includes('merged') ||
+    !selectorCode.includes('debounce_superseded') ||
+    !selectorCode.includes('merged_message_ids') ||
+    !selectorCode.includes('Treat them as one customer turn')
   ) {
-    fail(`${relative} Select Active Processing Row must choose the freshest processing row inside the guard window.`);
+    fail(`${relative} Select Debounced Chat Batch must choose the newest rapid-fire message and merge same-session queued rows.`);
   }
 
+  const queueTargets = workflow.connections?.['Upsert Conversation Processing']?.main?.[0] || [];
+  const waitTargets = workflow.connections?.['Debounce Chat Batch']?.main?.[0] || [];
   const lookupTargets = workflow.connections?.['Lookup Conversation State']?.main?.[0] || [];
-  const selectorTargets = workflow.connections?.['Select Active Processing Row']?.main?.[0] || [];
-  if (!lookupTargets.some((target) => target?.node === 'Select Active Processing Row')) {
-    fail(`${relative} Lookup Conversation State must feed Select Active Processing Row.`);
+  const selectorTargets = workflow.connections?.['Select Debounced Chat Batch']?.main?.[0] || [];
+  if (!queueTargets.some((target) => target?.node === 'Debounce Chat Batch')) {
+    fail(`${relative} Upsert Conversation Processing must feed Debounce Chat Batch.`);
   }
-  if (!selectorTargets.some((target) => target?.node === 'Already Processing or Completed?')) {
-    fail(`${relative} Select Active Processing Row must feed Already Processing or Completed?.`);
+  if (!waitTargets.some((target) => target?.node === 'Lookup Conversation State')) {
+    fail(`${relative} Debounce Chat Batch must feed Lookup Conversation State.`);
+  }
+  if (!lookupTargets.some((target) => target?.node === 'Select Debounced Chat Batch')) {
+    fail(`${relative} Lookup Conversation State must feed Select Debounced Chat Batch.`);
+  }
+  if (!selectorTargets.some((target) => target?.node === 'Superseded by Newer Message?')) {
+    fail(`${relative} Select Debounced Chat Batch must feed Superseded by Newer Message?.`);
   }
 
-  const gateNode = findWorkflowNode(workflow, 'Already Processing or Completed?');
+  const gateNode = findWorkflowNode(workflow, 'Superseded by Newer Message?');
   const gateConditions = gateNode?.parameters?.conditions || {};
   const gateConditionsText = JSON.stringify(gateConditions);
   if (!gateNode) {
-    fail(`${relative} is missing Already Processing or Completed?.`);
+    fail(`${relative} is missing Superseded by Newer Message?.`);
   } else {
-    const gatesOnActiveProcessing = gateConditionsText.includes('active_processing') &&
+    const gatesOnSuperseded = gateConditionsText.includes('debounce_superseded') &&
       gateConditionsText.includes('"true"') &&
       gateConditionsText.includes('"operation":"equals"');
 
-    if (!gatesOnActiveProcessing || gateConditions?.combinator !== 'and') {
-      fail(`${relative} Already Processing or Completed? must only block when Select Active Processing Row sets active_processing=true.`);
+    if (!gatesOnSuperseded || gateConditions?.combinator !== 'and') {
+      fail(`${relative} Superseded by Newer Message? must only branch when Select Debounced Chat Batch sets debounce_superseded=true.`);
     }
   }
 
-  const duplicateReplyNode = findWorkflowNode(workflow, 'Duplicate Safe Reply');
+  const mergedLogNode = findWorkflowNode(workflow, 'Mark Conversation Merged');
+  if (!mergedLogNode) {
+    fail(`${relative} is missing Mark Conversation Merged.`);
+  } else if (mergedLogNode.parameters?.columns?.value?.status !== 'merged') {
+    fail(`${relative} Mark Conversation Merged must write status "merged" for older rapid-fire messages.`);
+  }
+
+  const processingLogNode = findWorkflowNode(workflow, 'Mark Conversation Processing');
+  if (!processingLogNode) {
+    fail(`${relative} is missing Mark Conversation Processing.`);
+  } else if (processingLogNode.parameters?.columns?.value?.status !== 'processing') {
+    fail(`${relative} Mark Conversation Processing must set the newest debounced row to status "processing" before AI/RAG runs.`);
+  }
+
+  const duplicateReplyNode = findWorkflowNode(workflow, 'Send Debounce Merge Reply');
   const duplicateReplyMessage = String(duplicateReplyNode?.parameters?.message || '').toLowerCase();
   if (!duplicateReplyNode) {
-    fail(`${relative} is missing Duplicate Safe Reply.`);
-  } else if (!duplicateReplyMessage.includes('still working') || !duplicateReplyMessage.includes('previous message')) {
-    fail(`${relative} Duplicate Safe Reply must ask the user to wait while the previous message is still processing.`);
+    fail(`${relative} is missing Send Debounce Merge Reply.`);
+  } else if (!duplicateReplyMessage.includes('include') || !duplicateReplyMessage.includes('latest message')) {
+    fail(`${relative} Send Debounce Merge Reply must acknowledge that the older rapid-fire message will be included with the latest message.`);
   }
 
   const redactNode = findWorkflowNode(workflow, 'Redact PII for Logs');
@@ -365,6 +396,8 @@ function checkCustomerSupportAgentDedupeAndResponseMode(workflow, relative) {
 
   const conversationLogNodes = [
     'Upsert Conversation Processing',
+    'Mark Conversation Processing',
+    'Mark Conversation Merged',
     'Upsert Conversation Completed',
     'Upsert Conversation Failed',
   ];
@@ -454,10 +487,10 @@ function checkCustomerSupportAgentLoggingContract(workflow, relative) {
     fail(`${relative} Build Agent Failure Fallback completed_at must use display SGT format like 2026-05-17 15:17:46 SGT.`);
   }
 
-  const activeProcessingNode = findWorkflowNode(workflow, 'Select Active Processing Row');
+  const activeProcessingNode = findWorkflowNode(workflow, 'Select Debounced Chat Batch');
   const activeProcessingCode = String(activeProcessingNode?.parameters?.jsCode || '');
   if (!activeProcessingCode.includes('parseSgtTimestamp') || !activeProcessingCode.includes('Date.UTC')) {
-    fail(`${relative} Select Active Processing Row must parse display SGT timestamps before applying the processing lock window.`);
+    fail(`${relative} Select Debounced Chat Batch must parse display SGT timestamps before applying the debounce window.`);
   }
 
   const agentNode = findWorkflowNode(workflow, 'SpaceKonceptRental AI Agent');
@@ -494,6 +527,8 @@ function checkCustomerSupportAgentLoggingContract(workflow, relative) {
 
   const rawSheetsNodes = [
     'Upsert Conversation Processing',
+    'Mark Conversation Processing',
+    'Mark Conversation Merged',
     'Upsert Conversation Completed',
     'Upsert Conversation Failed',
     'Upsert Lead or Booking',

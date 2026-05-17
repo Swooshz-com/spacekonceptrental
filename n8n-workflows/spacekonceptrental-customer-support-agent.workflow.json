@@ -178,10 +178,6 @@
             {
               "lookupColumn": "session_id",
               "lookupValue": "={{ $json.session_id }}"
-            },
-            {
-              "lookupColumn": "status",
-              "lookupValue": "processing"
             }
           ]
         },
@@ -195,7 +191,7 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
       "position": [
-        -1808,
+        -1328,
         1440
       ],
       "retryOnFail": true,
@@ -214,8 +210,8 @@
           },
           "conditions": [
             {
-              "id": "active-processing-row",
-              "leftValue": "={{ $json.active_processing }}",
+              "id": "debounce-superseded-row",
+              "leftValue": "={{ $json.debounce_superseded }}",
               "rightValue": "true",
               "operator": {
                 "type": "string",
@@ -228,25 +224,25 @@
         "options": {}
       },
       "id": "ede4ca63-5810-4f82-948d-cda8e3336a8a",
-      "name": "Already Processing or Completed?",
+      "name": "Superseded by Newer Message?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -1328,
+        -848,
         1440
       ]
     },
     {
       "parameters": {
-        "message": "I am still working on your previous message. Please give me a moment, then send again if needed.",
+        "message": "Got it. I will include this with your latest message.",
         "options": {}
       },
       "id": "b1fe9733-8caf-43fd-a788-26bcf6ed8e14",
-      "name": "Duplicate Safe Reply",
+      "name": "Send Debounce Merge Reply",
       "type": "@n8n/n8n-nodes-langchain.chat",
       "typeVersion": 1.3,
       "position": [
-        -1040,
+        -368,
         1264
       ]
     },
@@ -277,10 +273,10 @@
             "customer_email": "={{ $node[\"Redact PII for Logs\"].json.customer_email }}",
             "customer_phone": "={{ $node[\"Redact PII for Logs\"].json.customer_phone }}",
             "user_message_redacted": "={{ $node[\"Redact PII for Logs\"].json.user_message_redacted }}",
-            "bot_reply": "pending_ai_response",
-            "intent": "pending",
+            "bot_reply": "queued_for_ai_response",
+            "intent": "queued",
             "confidence": "0",
-            "status": "processing",
+            "status": "queued",
             "needs_escalation": "false",
             "lead_captured": "false",
             "ticket_id": "={{ '' }}",
@@ -499,8 +495,8 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
       "position": [
-        -1040,
-        1488
+        -1808,
+        1440
       ],
       "retryOnFail": true,
       "maxTries": 3,
@@ -513,73 +509,73 @@
             {
               "id": "restore-processing-context-1",
               "name": "message_id",
-              "value": "={{ $node[\"Redact PII for Logs\"].json.message_id }}",
+              "value": "={{ $node[\"Select Debounced Chat Batch\"].json.message_id }}",
               "type": "string"
             },
             {
               "id": "restore-processing-context-dedupe-key",
               "name": "dedupe_key",
-              "value": "={{ $node[\"Redact PII for Logs\"].json.dedupe_key }}",
+              "value": "={{ $node[\"Select Debounced Chat Batch\"].json.dedupe_key }}",
               "type": "string"
             },
             {
               "id": "restore-processing-context-2",
               "name": "session_id",
-              "value": "={{ $node[\"Redact PII for Logs\"].json.session_id }}",
+              "value": "={{ $node[\"Select Debounced Chat Batch\"].json.session_id }}",
               "type": "string"
             },
             {
               "id": "restore-processing-context-3",
               "name": "channel",
-              "value": "={{ $node[\"Redact PII for Logs\"].json.channel }}",
+              "value": "={{ $node[\"Select Debounced Chat Batch\"].json.channel }}",
               "type": "string"
             },
             {
               "id": "restore-processing-context-4",
               "name": "customer_name",
-              "value": "={{ $node[\"Redact PII for Logs\"].json.customer_name }}",
+              "value": "={{ $node[\"Select Debounced Chat Batch\"].json.customer_name }}",
               "type": "string"
             },
             {
               "id": "restore-processing-context-5",
               "name": "customer_email",
-              "value": "={{ $node[\"Redact PII for Logs\"].json.customer_email }}",
+              "value": "={{ $node[\"Select Debounced Chat Batch\"].json.customer_email }}",
               "type": "string"
             },
             {
               "id": "restore-processing-context-6",
               "name": "customer_phone",
-              "value": "={{ $node[\"Redact PII for Logs\"].json.customer_phone }}",
+              "value": "={{ $node[\"Select Debounced Chat Batch\"].json.customer_phone }}",
               "type": "string"
             },
             {
               "id": "restore-processing-context-7",
               "name": "message",
-              "value": "={{ $node[\"Redact PII for Logs\"].json.message }}",
+              "value": "={{ $node[\"Select Debounced Chat Batch\"].json.message }}",
               "type": "string"
             },
             {
               "id": "restore-processing-context-8",
               "name": "user_message_redacted",
-              "value": "={{ $node[\"Redact PII for Logs\"].json.user_message_redacted }}",
+              "value": "={{ $node[\"Select Debounced Chat Batch\"].json.user_message_redacted }}",
               "type": "string"
             },
             {
               "id": "restore-processing-context-9",
               "name": "timestamp",
-              "value": "={{ $node[\"Redact PII for Logs\"].json.timestamp }}",
+              "value": "={{ $node[\"Select Debounced Chat Batch\"].json.timestamp }}",
               "type": "string"
             },
             {
               "id": "restore-processing-context-10",
               "name": "execution_id",
-              "value": "={{ $node[\"Redact PII for Logs\"].json.execution_id }}",
+              "value": "={{ $node[\"Select Debounced Chat Batch\"].json.execution_id }}",
               "type": "string"
             },
             {
               "id": "restore-processing-context-11",
               "name": "kb_namespace",
-              "value": "={{ $node[\"Redact PII for Logs\"].json.kb_namespace || 'SpaceKonceptRental_kb' }}",
+              "value": "={{ $node[\"Select Debounced Chat Batch\"].json.kb_namespace || 'SpaceKonceptRental_kb' }}",
               "type": "string"
             }
           ]
@@ -592,7 +588,7 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -832,
+        -368,
         1488
       ]
     },
@@ -1846,7 +1842,7 @@
     },
     {
       "parameters": {
-        "content": "# INTAKE AND PROCESSING GUARD\n\n- Receives chat messages and normalises input.\n- Writes a temporary processing row before AI/RAG output exists.\n- Looks up open processing rows for the same chat session and selects the freshest row still inside the guard window.\n- If another message arrives while that row is fresh, asks the user to wait instead of starting another run.\n- Completed or failed rows do not block later repeated questions.\n- `message_id` remains the unique audit row id.\n- `dedupe_key` is kept only as a diagnostic/audit hash, not as the customer-facing block condition.\n- Later AI/RAG fields use `={{ '' }}` on purpose so Sheets cells stay blank until the row is overwritten by the completed or failed path.\n\n## Required manual configuration:\n\n- **Lookup Conversation State**\n  - `documentId.value`: Set this to the Google Sheets workbook used for support logs.\n  - Conversations sheet headers must include exact `session_id`, `status`, and `dedupe_key` headers with no trailing spaces.\n- **Upsert Conversation Processing**\n  - `documentId.value`: Set this to the same Google Sheets workbook used for support logs.",
+        "content": "# INTAKE AND DEBOUNCE\n\n- Receives chat messages and normalises input.\n- Writes each incoming chat message as a queued conversation row before AI/RAG runs.\n- Waits briefly, then reads same-session queued and merged rows.\n- Only the newest rapid-fire message runs AI; older rapid-fire executions are marked merged and receive a short acknowledgement.\n- The newest execution sends the AI one merged customer turn so messages like \"hi\" then \"I need 20 stools\" are handled together.\n- Completed or failed rows do not block later repeated questions.\n- Simple Conversation Memory is kept for normal multi-turn context, not as the audit log or dedupe system.\n- `message_id` remains the unique audit row id.\n- `dedupe_key` is kept only as a diagnostic/audit hash, not as the customer-facing block condition.\n- Later AI/RAG fields use `={{ '' }}` on purpose so Sheets cells stay blank until the row is overwritten by the completed, failed, or merged path.\n\n## Required manual configuration:\n\n- **Lookup Conversation State**\n  - `documentId.value`: Set this to the Google Sheets workbook used for support logs.\n  - Conversations sheet headers must include exact `session_id`, `status`, and `dedupe_key` headers with no trailing spaces.\n- **Upsert Conversation Processing**\n  - `documentId.value`: Set this to the same Google Sheets workbook used for support logs.\n- **Mark Conversation Processing**\n  - `documentId.value`: Set this to the same Google Sheets workbook used for support logs.\n- **Mark Conversation Merged**\n  - `documentId.value`: Set this to the same Google Sheets workbook used for support logs.",
         "height": 1180,
         "width": 1972,
         "color": 5
@@ -2403,14 +2399,14 @@
     },
     {
       "parameters": {
-        "jsCode": "const maxProcessingAgeMs = 2 * 60 * 1000;\nconst now = Date.now();\n\nfunction parseSgtTimestamp(value) {\n  const match = String(value || '').trim().match(/^(\\d{4})-(\\d{2})-(\\d{2}) (\\d{2}):(\\d{2}):(\\d{2}) SGT$/);\n  if (!match) return NaN;\n  const [, year, month, day, hour, minute, second] = match.map(Number);\n  return Date.UTC(year, month - 1, day, hour - 8, minute, second);\n}\n\nfunction startedAt(row) {\n  const value = row.created_at || row.timestamp || 0;\n  const sgtParsed = parseSgtTimestamp(value);\n  if (Number.isFinite(sgtParsed)) return sgtParsed;\n  const parsed = Date.parse(value);\n  return Number.isFinite(parsed) ? parsed : 0;\n}\n\nconst active = items\n  .map((item) => item.json || {})\n  .filter((row) => row.status === 'processing')\n  .map((row) => ({ row, startedAt: startedAt(row) }))\n  .filter(({ startedAt }) => startedAt > 0 && now >= startedAt && now - startedAt < maxProcessingAgeMs)\n  .sort((a, b) => b.startedAt - a.startedAt)[0];\n\nif (!active) {\n  return [{ json: { active_processing: 'false' } }];\n}\n\nreturn [{ json: { ...active.row, active_processing: 'true' } }];"
+        "jsCode": "const debounceWindowMs = 20 * 1000;\nconst now = Date.now();\nconst current = $('Redact PII for Logs').first().json || {};\n\nfunction parseSgtTimestamp(value) {\n  const match = String(value || '').trim().match(/^(\\d{4})-(\\d{2})-(\\d{2}) (\\d{2}):(\\d{2}):(\\d{2}) SGT$/);\n  if (!match) return NaN;\n  const [, year, month, day, hour, minute, second] = match.map(Number);\n  return Date.UTC(year, month - 1, day, hour - 8, minute, second);\n}\n\nfunction rowTime(row) {\n  const value = row.created_at || row.timestamp || current.timestamp || '';\n  const sgtParsed = parseSgtTimestamp(value);\n  if (Number.isFinite(sgtParsed)) return sgtParsed;\n  const parsed = Date.parse(value);\n  return Number.isFinite(parsed) ? parsed : 0;\n}\n\nfunction meaningful(value) {\n  const text = String(value || '').trim();\n  if (!text) return '';\n  if (/^(n\\/a|na|none|null|unknown|not_available|pending|pending_ai_response|queued_for_ai_response)$/i.test(text)) return '';\n  return text;\n}\n\nfunction messageText(row) {\n  return meaningful(row.message) || meaningful(row.user_message_redacted);\n}\n\nfunction uniqueByMessageId(rows) {\n  const seen = new Set();\n  const result = [];\n  for (const row of rows) {\n    const key = String(row.message_id || '').trim();\n    if (!key || seen.has(key)) continue;\n    seen.add(key);\n    result.push(row);\n  }\n  return result;\n}\n\nconst currentTime = rowTime(current) || now;\nconst sheetRows = items.map((item) => item.json || {});\nconst currentRow = { ...current, status: 'queued' };\nconst rows = uniqueByMessageId([...sheetRows, currentRow])\n  .filter((row) => String(row.session_id || '') === String(current.session_id || ''))\n  .map((row) => ({ ...row, _row_time: rowTime(row) || currentTime }))\n  .filter((row) => Math.abs(row._row_time - currentTime) <= debounceWindowMs)\n  .filter((row) => ['queued', 'merged'].includes(String(row.status || '').toLowerCase()))\n  .sort((a, b) => a._row_time - b._row_time);\n\nconst latest = rows[rows.length - 1] || currentRow;\nif (String(latest.message_id || '') !== String(current.message_id || '')) {\n  return [{\n    json: {\n      ...current,\n      debounce_superseded: 'true',\n      debounce_latest_message_id: latest.message_id || '',\n      debounce_batch_count: rows.length,\n    },\n  }];\n}\n\nconst batchRows = rows.length ? rows : [currentRow];\nconst mergedTexts = batchRows\n  .map((row, index) => {\n    const text = messageText(row);\n    return text ? String(index + 1) + '. ' + text : '';\n  })\n  .filter(Boolean);\n\nconst mergedMessage = mergedTexts.length > 1\n  ? 'The customer sent these rapid messages in order. Treat them as one customer turn:\\n\\n' + mergedTexts.join('\\n')\n  : (meaningful(current.message) || meaningful(current.user_message_redacted));\n\nreturn [{\n  json: {\n    ...current,\n    message: mergedMessage,\n    user_message_redacted: mergedTexts.length > 1 ? mergedTexts.join('\\n') : current.user_message_redacted,\n    debounce_superseded: 'false',\n    debounce_batch_count: batchRows.length,\n    merged_message_ids: batchRows.map((row) => row.message_id).filter(Boolean).join(', '),\n  },\n}];"
       },
       "id": "a914a6ba-a057-4d93-a7d0-139acde13992",
-      "name": "Select Active Processing Row",
+      "name": "Select Debounced Chat Batch",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -1568,
+        -1088,
         1440
       ]
     },
@@ -2515,6 +2511,532 @@
         880,
         1312
       ]
+    },
+    {
+      "parameters": {
+        "amount": 5,
+        "unit": "seconds"
+      },
+      "id": "90642e08-0f2e-4e34-8f3a-938787af588a",
+      "name": "Debounce Chat Batch",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -1568,
+        1440
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1RhF1XDLluYhkB_d4dmODsSUfwqVGllXMgH4u3a1-6tQ",
+          "mode": "list",
+          "cachedResultName": "RAG_logs",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1RhF1XDLluYhkB_d4dmODsSUfwqVGllXMgH4u3a1-6tQ/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1611415797,
+          "mode": "list",
+          "cachedResultName": "conversations",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1RhF1XDLluYhkB_d4dmODsSUfwqVGllXMgH4u3a1-6tQ/edit#gid=1611415797"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "message_id": "={{ $json.message_id }}",
+            "session_id": "={{ $json.session_id }}",
+            "channel": "={{ $json.channel }}",
+            "customer_name": "={{ $json.customer_name }}",
+            "customer_email": "={{ $json.customer_email }}",
+            "customer_phone": "={{ $json.customer_phone }}",
+            "user_message_redacted": "={{ $json.user_message_redacted }}",
+            "bot_reply": "pending_ai_response",
+            "intent": "pending",
+            "confidence": "0",
+            "status": "processing",
+            "needs_escalation": "false",
+            "lead_captured": "false",
+            "ticket_id": "={{ '' }}",
+            "booking_requested": "false",
+            "source_titles": "={{ '' }}",
+            "source_file_ids": "={{ '' }}",
+            "execution_id": "={{ $json.execution_id }}",
+            "created_at": "={{ $json.timestamp }}",
+            "completed_at": "={{ '' }}",
+            "dedupe_key": "={{ $json.dedupe_key }}"
+          },
+          "matchingColumns": [
+            "message_id"
+          ],
+          "schema": [
+            {
+              "id": "message_id",
+              "displayName": "message_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "dedupe_key",
+              "displayName": "dedupe_key",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "session_id",
+              "displayName": "session_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "channel",
+              "displayName": "channel",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "customer_name",
+              "displayName": "customer_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "customer_email",
+              "displayName": "customer_email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "customer_phone",
+              "displayName": "customer_phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "user_message_redacted",
+              "displayName": "user_message_redacted",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "bot_reply",
+              "displayName": "bot_reply",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "intent",
+              "displayName": "intent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "confidence",
+              "displayName": "confidence",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "needs_escalation",
+              "displayName": "needs_escalation",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "lead_captured",
+              "displayName": "lead_captured",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ticket_id",
+              "displayName": "ticket_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "booking_requested",
+              "displayName": "booking_requested",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "source_titles",
+              "displayName": "source_titles",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "source_file_ids",
+              "displayName": "source_file_ids",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "execution_id",
+              "displayName": "execution_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "completed_at",
+              "displayName": "completed_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {
+          "cellFormat": "RAW"
+        }
+      },
+      "id": "5f448a23-366d-41be-8bc6-4d3992517e25",
+      "name": "Mark Conversation Processing",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -608,
+        1488
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 3000
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1RhF1XDLluYhkB_d4dmODsSUfwqVGllXMgH4u3a1-6tQ",
+          "mode": "list",
+          "cachedResultName": "RAG_logs",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1RhF1XDLluYhkB_d4dmODsSUfwqVGllXMgH4u3a1-6tQ/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1611415797,
+          "mode": "list",
+          "cachedResultName": "conversations",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1RhF1XDLluYhkB_d4dmODsSUfwqVGllXMgH4u3a1-6tQ/edit#gid=1611415797"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "message_id": "={{ $json.message_id }}",
+            "session_id": "={{ $json.session_id }}",
+            "channel": "={{ $json.channel }}",
+            "customer_name": "={{ $json.customer_name }}",
+            "customer_email": "={{ $json.customer_email }}",
+            "customer_phone": "={{ $json.customer_phone }}",
+            "user_message_redacted": "={{ $json.user_message_redacted }}",
+            "bot_reply": "merged_into_latest_message",
+            "intent": "rapid_message_merged",
+            "confidence": "0",
+            "status": "merged",
+            "needs_escalation": "false",
+            "lead_captured": "false",
+            "ticket_id": "={{ '' }}",
+            "booking_requested": "false",
+            "source_titles": "={{ '' }}",
+            "source_file_ids": "={{ '' }}",
+            "execution_id": "={{ $json.execution_id }}",
+            "created_at": "={{ $json.timestamp }}",
+            "completed_at": "={{ $now.setZone('Asia/Singapore').toFormat('yyyy-MM-dd HH:mm:ss') + ' SGT' }}",
+            "dedupe_key": "={{ $json.dedupe_key }}"
+          },
+          "matchingColumns": [
+            "message_id"
+          ],
+          "schema": [
+            {
+              "id": "message_id",
+              "displayName": "message_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "dedupe_key",
+              "displayName": "dedupe_key",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "session_id",
+              "displayName": "session_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "channel",
+              "displayName": "channel",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "customer_name",
+              "displayName": "customer_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "customer_email",
+              "displayName": "customer_email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "customer_phone",
+              "displayName": "customer_phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "user_message_redacted",
+              "displayName": "user_message_redacted",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "bot_reply",
+              "displayName": "bot_reply",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "intent",
+              "displayName": "intent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "confidence",
+              "displayName": "confidence",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "needs_escalation",
+              "displayName": "needs_escalation",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "lead_captured",
+              "displayName": "lead_captured",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ticket_id",
+              "displayName": "ticket_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "booking_requested",
+              "displayName": "booking_requested",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "source_titles",
+              "displayName": "source_titles",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "source_file_ids",
+              "displayName": "source_file_ids",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "execution_id",
+              "displayName": "execution_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "completed_at",
+              "displayName": "completed_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {
+          "cellFormat": "RAW"
+        }
+      },
+      "id": "86c22167-5e22-4f77-a714-d45a15560771",
+      "name": "Mark Conversation Merged",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -608,
+        1264
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 3000
     }
   ],
   "connections": {
@@ -2544,7 +3066,7 @@
       "main": [
         [
           {
-            "node": "Lookup Conversation State",
+            "node": "Upsert Conversation Processing",
             "type": "main",
             "index": 0
           }
@@ -2555,25 +3077,7 @@
       "main": [
         [
           {
-            "node": "Select Active Processing Row",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Already Processing or Completed?": {
-      "main": [
-        [
-          {
-            "node": "Duplicate Safe Reply",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Upsert Conversation Processing",
+            "node": "Select Debounced Chat Batch",
             "type": "main",
             "index": 0
           }
@@ -2584,7 +3088,7 @@
       "main": [
         [
           {
-            "node": "Restore Processing Context",
+            "node": "Debounce Chat Batch",
             "type": "main",
             "index": 0
           }
@@ -2794,17 +3298,6 @@
         ]
       ]
     },
-    "Select Active Processing Row": {
-      "main": [
-        [
-          {
-            "node": "Already Processing or Completed?",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Agent Structured Output Parser": {
       "ai_outputParser": [
         [
@@ -2896,6 +3389,68 @@
           }
         ]
       ]
+    },
+    "Select Debounced Chat Batch": {
+      "main": [
+        [
+          {
+            "node": "Superseded by Newer Message?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Superseded by Newer Message?": {
+      "main": [
+        [
+          {
+            "node": "Mark Conversation Merged",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Mark Conversation Processing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Debounce Chat Batch": {
+      "main": [
+        [
+          {
+            "node": "Lookup Conversation State",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark Conversation Merged": {
+      "main": [
+        [
+          {
+            "node": "Send Debounce Merge Reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark Conversation Processing": {
+      "main": [
+        [
+          {
+            "node": "Restore Processing Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "settings": {
@@ -2910,5 +3465,5 @@
   "meta": {
     "templateCredsSetupCompleted": true
   },
-  "versionId": "35d981eb-9bc4-42ca-9a1b-82aa7d9bb6a9"
+  "versionId": "726f8b30-10ba-4c5b-a30b-23ced6a6651c"
 }

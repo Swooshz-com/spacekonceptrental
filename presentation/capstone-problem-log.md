@@ -120,8 +120,14 @@ Working notes for the final presentation. These are the practical issues found w
 - Chat duplicate guard kept blocking repeated questions after a few minutes.
   - Impact: a customer could ask the same question again during testing and receive the duplicate-safe reply.
   - Root cause: the guard treated matching dedupe keys as duplicates instead of checking whether the same chat session still had an open `processing` row. The conversations sheet header also picked up a trailing space as `dedupe_key ` during manual setup.
-  - Fix: replaced content-based duplicate blocking with a same-session processing guard. If a fresh `processing` row is still open, the chat asks the user to wait; completed or failed rows do not block later repeated questions. Workflow mappings are pinned to the exact `dedupe_key` header for audit logging.
+  - Fix: replaced content-based duplicate blocking with a short same-session debounce. Incoming messages are logged as `queued`, the workflow waits briefly, older rapid-fire messages are marked `merged`, and only the newest execution sends AI one merged customer turn. Workflow mappings are pinned to the exact `dedupe_key` header for audit logging.
   - Presentation point: retry protection should manage in-flight work without blocking normal conversation.
+
+- Rapid multi-message chats could trigger premature replies.
+  - Impact: if a customer typed `hi` and immediately followed with the real request, the bot could answer only the first fragment.
+  - Root cause: each chat message started its own workflow execution, and the previous processing guard responded before later same-session messages could be considered.
+  - Fix: added a 5-second debounce window, same-session row lookup, newest-message ownership, merged prompt text for AI/RAG, and `merged` status rows for older rapid-fire executions.
+  - Presentation point: chatbot workflows need a small input buffer because humans often send one thought as several messages.
 
 - Import helper skipped unchanged workflows.
   - Impact: it looked like an import failure when only one workflow had actually changed.
@@ -151,9 +157,9 @@ Working notes for the final presentation. These are the practical issues found w
 ## AI agent design notes
 
 - Question raised: whether the AI agent needs memory.
-  - Current capstone decision: short-term workflow state is stored in Google Sheets logs, while RAG knowledge comes from Pinecone.
+  - Current capstone decision: keep Simple Conversation Memory for natural short-term chat context, but do not use it as the audit log, queue, dedupe system, or source of truth for routing.
   - Future website deployment decision: add proper conversation/session memory if users return across multiple sessions and expect continuity.
-  - Presentation point: capstone scope uses logged state and RAG, while production deployment can extend into user/session memory.
+  - Presentation point: capstone scope separates conversational convenience from operational records.
 
 ## Current production-readiness direction
 
