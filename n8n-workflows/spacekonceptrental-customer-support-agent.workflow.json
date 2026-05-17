@@ -53,12 +53,14 @@
     },
     {
       "parameters": {
-        "options": {}
+        "options": {
+          "responseMode": "responseNodes"
+        }
       },
       "id": "30000000-0000-4000-8000-000000000002",
       "name": "When Chat Message Received",
       "type": "@n8n/n8n-nodes-langchain.chatTrigger",
-      "typeVersion": 1.1,
+      "typeVersion": 1.4,
       "position": [
         -976,
         336
@@ -144,7 +146,7 @@
     },
     {
       "parameters": {
-        "jsCode": "function redact(text = '') {\n  return String(text).trim()\n    .replace(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}/gi, '[redacted-email]')\n    .replace(/\\b(?:\\+65\\s?)?[689]\\d{3}\\s?\\d{4}\\b/g, '[redacted-phone]')\n    .replace(/\\b[STFGM]\\d{7}[A-Z]\\b/gi, '[redacted-nric-fin]')\n    .replace(/\\b\\d{9,}\\b/g, '[redacted-id]');\n}\nreturn items.map((item) => ({\n  json: {\n    ...item.json,\n    user_message_redacted: redact(item.json.message)\n  }\n}));"
+        "jsCode": "function redact(text = '') {\n  return String(text).trim()\n    .replace(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}/gi, '[redacted-email]')\n    .replace(/\\b(?:\\+65\\s?)?[689]\\d{3}\\s?\\d{4}\\b/g, '[redacted-phone]')\n    .replace(/\\b[STFGM]\\d{7}[A-Z]\\b/gi, '[redacted-nric-fin]')\n    .replace(/\\b\\d{9,}\\b/g, '[redacted-id]');\n}\n\nfunction normaliseForDedupe(text = '') {\n  return redact(text).toLowerCase().replace(/\\s+/g, ' ').trim();\n}\n\nfunction hashText(text = '') {\n  let hash = 2166136261;\n  for (const char of text) {\n    hash ^= char.charCodeAt(0);\n    hash = Math.imul(hash, 16777619);\n  }\n  return (hash >>> 0).toString(36);\n}\n\nfunction dedupeKey(item, bucketOffset = 0) {\n  const bucketSizeMs = 2 * 60 * 1000;\n  const bucket = Math.floor(Date.now() / bucketSizeMs) + bucketOffset;\n  const channel = item.channel || 'n8n_chat';\n  const sessionId = item.session_id || item.sessionId || item.chatId || 'unknown_session';\n  const messageHash = hashText(normaliseForDedupe(item.message));\n  return [channel, sessionId, messageHash, bucket].join('|');\n}\n\nreturn items.map((item) => ({\n  json: {\n    ...item.json,\n    user_message_redacted: redact(item.json.message),\n    dedupe_key: dedupeKey(item.json),\n    dedupe_key_previous: dedupeKey(item.json, -1)\n  }\n}));"
       },
       "id": "30000000-0000-4000-8000-000000000004",
       "name": "Redact PII for Logs",
@@ -174,14 +176,21 @@
         "filtersUI": {
           "values": [
             {
-              "lookupColumn": "message_id",
-              "lookupValue": "={{ $json.message_id }}"
+              "lookupColumn": "dedupe_key",
+              "lookupValue": "={{ $json.dedupe_key }}"
+            },
+            {
+              "lookupColumn": "dedupe_key",
+              "lookupValue": "={{ $json.dedupe_key_previous }}"
             }
           ]
         },
         "options": {
           "returnFirstMatch": true
-        }
+        },
+        "resource": "sheet",
+        "operation": "read",
+        "combineFilters": "OR"
       },
       "id": "30000000-0000-4000-8000-000000000005",
       "name": "Lookup Conversation State",
@@ -232,7 +241,7 @@
       "id": "30000000-0000-4000-8000-000000000006",
       "name": "Already Processing or Completed?",
       "type": "n8n-nodes-base.if",
-      "typeVersion": 2,
+      "typeVersion": 2.3,
       "position": [
         64,
         336
@@ -246,7 +255,7 @@
       "id": "30000000-0000-4000-8000-000000000007",
       "name": "Duplicate Safe Reply",
       "type": "@n8n/n8n-nodes-langchain.chat",
-      "typeVersion": 1,
+      "typeVersion": 1.3,
       "position": [
         352,
         160
@@ -273,6 +282,7 @@
           "mappingMode": "defineBelow",
           "value": {
             "message_id": "={{ $node[\"Redact PII for Logs\"].json.message_id }}",
+            "dedupe_key": "={{ $node[\"Redact PII for Logs\"].json.dedupe_key }}",
             "session_id": "={{ $node[\"Redact PII for Logs\"].json.session_id }}",
             "channel": "={{ $node[\"Redact PII for Logs\"].json.channel }}",
             "customer_name": "={{ $node[\"Redact PII for Logs\"].json.customer_name }}",
@@ -300,6 +310,15 @@
             {
               "id": "message_id",
               "displayName": "message_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "dedupe_key",
+              "displayName": "dedupe_key",
               "required": false,
               "defaultMatch": false,
               "display": true,
@@ -506,6 +525,12 @@
               "type": "string"
             },
             {
+              "id": "restore-processing-context-dedupe-key",
+              "name": "dedupe_key",
+              "value": "={{ $node[\"Redact PII for Logs\"].json.dedupe_key }}",
+              "type": "string"
+            },
+            {
               "id": "restore-processing-context-2",
               "name": "session_id",
               "value": "={{ $node[\"Redact PII for Logs\"].json.session_id }}",
@@ -627,7 +652,7 @@
       "id": "30000000-0000-4000-8000-000000000014",
       "name": "Send Customer Reply",
       "type": "@n8n/n8n-nodes-langchain.chat",
-      "typeVersion": 1,
+      "typeVersion": 1.3,
       "position": [
         1456,
         -800
@@ -654,6 +679,7 @@
           "mappingMode": "defineBelow",
           "value": {
             "message_id": "={{ $json.message_id }}",
+            "dedupe_key": "={{ $json.dedupe_key }}",
             "session_id": "={{ $json.session_id }}",
             "channel": "={{ $json.channel }}",
             "customer_name": "={{ $json.customer_name }}",
@@ -681,6 +707,15 @@
             {
               "id": "message_id",
               "displayName": "message_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "dedupe_key",
+              "displayName": "dedupe_key",
               "required": false,
               "defaultMatch": false,
               "display": true,
@@ -869,8 +904,8 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
       "position": [
-        1488,
-        -448
+        1472,
+        -288
       ],
       "retryOnFail": true,
       "maxTries": 3,
@@ -1562,7 +1597,7 @@
       "id": "30000000-0000-4000-8000-000000000021",
       "name": "Send Escalation Alert",
       "type": "n8n-nodes-base.gmail",
-      "typeVersion": 2.1,
+      "typeVersion": 2.2,
       "position": [
         1760,
         672
@@ -1819,7 +1854,7 @@
     },
     {
       "parameters": {
-        "content": "# INTAKE AND DEDUPE\n\n- Receives chat messages and normalises input.\n- Checks only the current `message_id` in the conversation log before processing to avoid duplicate replies.\n- `Upsert Conversation Processing` writes a temporary processing row before AI/RAG output exists.\n- Later AI/RAG fields use `={{ '' }}` on purpose so Sheets cells stay blank until the row is overwritten by the completed or failed path.\n\n## Required manual configuration:\n\n- **Lookup Conversation State**\n  - `documentId.value`: Set this to the Google Sheets workbook used for support logs.\n- **Upsert Conversation Processing**\n  - `documentId.value`: Set this to the same Google Sheets workbook used for support logs.",
+        "content": "# INTAKE AND DEDUPE\n\n- Receives chat messages and normalises input.\n- Builds a hashed `dedupe_key` from channel, session, redacted normalised message, and a short time bucket.\n- Checks current and previous dedupe buckets before processing to avoid double-submit duplicate replies.\n- `message_id` remains the unique audit row id.\n- `Upsert Conversation Processing` writes a temporary processing row before AI/RAG output exists.\n- Later AI/RAG fields use `={{ '' }}` on purpose so Sheets cells stay blank until the row is overwritten by the completed or failed path.\n\n## Required manual configuration:\n\n- **Lookup Conversation State**\n  - `documentId.value`: Set this to the Google Sheets workbook used for support logs.\n  - Conversations sheet headers must include `dedupe_key`.\n- **Upsert Conversation Processing**\n  - `documentId.value`: Set this to the same Google Sheets workbook used for support logs.",
         "height": 988,
         "width": 1764,
         "color": 5
@@ -1844,7 +1879,7 @@
       "id": "30000000-0000-4000-8000-000000000009",
       "name": "SpaceKonceptRental AI Agent",
       "type": "@n8n/n8n-nodes-langchain.agent",
-      "typeVersion": 1.7,
+      "typeVersion": 3.1,
       "position": [
         848,
         112
@@ -1883,6 +1918,12 @@
               "id": "agent-failure-fallback-message-id",
               "name": "message_id",
               "value": "={{ $(\"Restore Processing Context\").first().json.message_id }}",
+              "type": "string"
+            },
+            {
+              "id": "agent-failure-fallback-dedupe-key",
+              "name": "dedupe_key",
+              "value": "={{ $(\"Restore Processing Context\").first().json.dedupe_key }}",
               "type": "string"
             },
             {
@@ -2051,10 +2092,10 @@
       "id": "30000000-0000-4000-8000-000000000030",
       "name": "Send Fallback Reply",
       "type": "@n8n/n8n-nodes-langchain.chat",
-      "typeVersion": 1,
+      "typeVersion": 1.3,
       "position": [
-        1504,
-        -256
+        1456,
+        -448
       ]
     },
     {
@@ -2078,6 +2119,7 @@
           "mappingMode": "defineBelow",
           "value": {
             "message_id": "={{ $json.message_id }}",
+            "dedupe_key": "={{ $json.dedupe_key }}",
             "session_id": "={{ $json.session_id }}",
             "channel": "={{ $json.channel }}",
             "customer_name": "={{ $json.customer_name }}",
@@ -2105,6 +2147,15 @@
             {
               "id": "message_id",
               "displayName": "message_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "dedupe_key",
+              "displayName": "dedupe_key",
               "required": false,
               "defaultMatch": false,
               "display": true,
@@ -2620,5 +2671,5 @@
   "meta": {
     "templateCredsSetupCompleted": true
   },
-  "versionId": "e8a60644-f316-4f43-85e8-2adcf14c6d41"
+  "versionId": "a48a0f31-ba18-4f80-8caa-33d267dae9ad"
 }

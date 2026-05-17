@@ -119,7 +119,7 @@ Working notes for the final presentation. These are the practical issues found w
 - Import helper skipped unchanged workflows.
   - Impact: it looked like an import failure when only one workflow had actually changed.
   - Root cause: the import script compares workflow content and skips files with no effective changes.
-  - Fix: confirmed this was expected behaviour.
+  - Fix: confirmed this was expected behaviour, then added a force-import option for cases where local n8n should be refreshed even when the comparison sees no meaningful diff.
   - Presentation point: deployment scripts should clearly report skipped vs imported workflows.
 
 ## Error handling and notifications
@@ -137,8 +137,8 @@ Working notes for the final presentation. These are the practical issues found w
 
 - Fresh chat messages incorrectly went to the duplicate-safe reply path.
   - Impact: a normal customer message could be treated as an already-processing or completed duplicate, and the Chat response node then failed with `Response Mode` not set to `Using Response Nodes`.
-  - Root cause: `Lookup Conversation State` was reading the conversations sheet without filtering by the current `message_id`, and the Chat Trigger had lost its `responseNodes` option after workflow edits.
-  - Fix: filter the dedupe lookup by the current `message_id`, return only the first matching row, set the Chat Trigger response mode to `responseNodes`, and add validator checks for both settings.
+  - Root cause: `Lookup Conversation State` was reading the conversations sheet without a stable duplicate key, while `message_id` was timestamp-based and therefore not reliable for double-submit detection. The old Chat Trigger node version also did not preserve the `responseNodes` option needed by Chat response nodes.
+  - Fix: build a hashed `dedupe_key` from channel, session, redacted normalised message, and a short time bucket; check current and previous buckets before processing; keep `message_id` as the unique audit row id; upgrade the Chat Trigger node version; set response mode to `responseNodes`; and add validator checks for these settings.
   - Presentation point: duplicate protection must be scoped to a stable message key, and response-node workflows need trigger-level response mode guarded in source control.
 
 ## AI agent design notes

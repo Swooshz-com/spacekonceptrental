@@ -128,7 +128,11 @@
     {
       "parameters": {
         "operation": "download",
-        "fileId": "={{ $json.id || $json.fileId }}",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.id || $json.fileId }}",
+          "mode": "id"
+        },
         "options": {
           "binaryPropertyName": "data"
         }
@@ -251,7 +255,7 @@
       "id": "20000000-0000-4000-8000-000000000005",
       "name": "Load Document Text",
       "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
-      "typeVersion": 1,
+      "typeVersion": 1.1,
       "position": [
         992,
         304
@@ -455,7 +459,7 @@
       "id": "20000000-0000-4000-8000-000000000010",
       "name": "Append KB Ingestion Log",
       "type": "n8n-nodes-base.googleSheets",
-      "typeVersion": 4,
+      "typeVersion": 4.7,
       "position": [
         1552,
         128
@@ -820,5 +824,5 @@
   "meta": {
     "templateCredsSetupCompleted": true
   },
-  "versionId": "54c1c3c1-0fc6-4dd3-8810-994c48f7f0f9"
+  "versionId": "088a64a5-21a8-4949-a7f1-29b4c1aea7ea"
 }

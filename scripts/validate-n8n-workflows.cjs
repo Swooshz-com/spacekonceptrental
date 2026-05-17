@@ -113,6 +113,27 @@ const emailRegex = /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi;
 const urlRegex = /https?:\/\/[^\s"'<>)]+/gi;
 const googleIdRegex = /\b[0-9A-Za-z_-]{33,}\b/g;
 const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const currentNodeTypeVersions = {
+  '@n8n/n8n-nodes-langchain.agent': '3.1',
+  '@n8n/n8n-nodes-langchain.chat': '1.3',
+  '@n8n/n8n-nodes-langchain.chatTrigger': '1.4',
+  '@n8n/n8n-nodes-langchain.documentDefaultDataLoader': '1.1',
+  '@n8n/n8n-nodes-langchain.embeddingsOpenAi': '1.2',
+  '@n8n/n8n-nodes-langchain.lmChatGoogleGemini': '1.1',
+  '@n8n/n8n-nodes-langchain.memoryBufferWindow': '1.4',
+  '@n8n/n8n-nodes-langchain.textSplitterRecursiveCharacterTextSplitter': '1',
+  '@n8n/n8n-nodes-langchain.vectorStorePinecone': '1.3',
+  'n8n-nodes-base.code': '2',
+  'n8n-nodes-base.errorTrigger': '1',
+  'n8n-nodes-base.gmail': '2.2',
+  'n8n-nodes-base.googleDrive': '3',
+  'n8n-nodes-base.googleDriveTrigger': '1',
+  'n8n-nodes-base.googleSheets': '4.7',
+  'n8n-nodes-base.httpRequest': '4.4',
+  'n8n-nodes-base.if': '2.3',
+  'n8n-nodes-base.set': '3.4',
+  'n8n-nodes-base.stickyNote': '1',
+};
 
 function compilePlaceholderPatterns(policy) {
   return policy.allowedPlaceholders.map((pattern) => new RegExp(pattern));
@@ -216,6 +237,38 @@ function checkCountFieldsStayNumeric(workflow, relative) {
   }
 }
 
+function compareVersion(a, b) {
+  const aParts = String(a).split('.').map((part) => Number.parseInt(part, 10));
+  const bParts = String(b).split('.').map((part) => Number.parseInt(part, 10));
+  const length = Math.max(aParts.length, bParts.length);
+
+  for (let index = 0; index < length; index += 1) {
+    const aPart = Number.isFinite(aParts[index]) ? aParts[index] : 0;
+    const bPart = Number.isFinite(bParts[index]) ? bParts[index] : 0;
+    if (aPart !== bPart) return aPart - bPart;
+  }
+
+  return 0;
+}
+
+function checkCurrentNodeTypeVersions(workflow, relative) {
+  for (const node of workflow.nodes || []) {
+    const currentVersion = currentNodeTypeVersions[node.type];
+    if (!currentVersion) {
+      continue;
+    }
+
+    if (node.typeVersion === undefined || node.typeVersion === null) {
+      fail(`${relative} node "${node.name}" is missing typeVersion; expected ${currentVersion} for ${node.type}.`);
+      continue;
+    }
+
+    if (compareVersion(node.typeVersion, currentVersion) < 0) {
+      fail(`${relative} node "${node.name}" uses ${node.type} typeVersion ${node.typeVersion}; update to ${currentVersion}.`);
+    }
+  }
+}
+
 function hasConnection(workflow, sourceName, outputIndex, targetName) {
   const output = workflow.connections?.[sourceName]?.main?.[outputIndex];
   return Array.isArray(output) && output.some((connection) => connection.node === targetName);
@@ -289,6 +342,10 @@ function checkCustomerSupportAgentDedupeAndResponseMode(workflow, relative) {
     fail(`${relative} is missing When Chat Message Received.`);
   } else if (triggerNode.parameters?.options?.responseMode !== 'responseNodes') {
     fail(`${relative} Chat Trigger must set options.responseMode to "responseNodes" because the workflow uses Chat response nodes.`);
+  } else if (Number(triggerNode.typeVersion || 0) < 1.3) {
+    fail(`${relative} Chat Trigger must use typeVersion 1.3 or newer so the responseNodes mode is supported and preserved by n8n.`);
+  } else if (triggerNode.parameters?.mode === 'webhook') {
+    fail(`${relative} Chat Trigger must use Hosted Chat mode when Chat response nodes are present.`);
   }
 
   const lookupNode = findWorkflowNode(workflow, 'Lookup Conversation State');
@@ -306,13 +363,22 @@ function checkCustomerSupportAgentDedupeAndResponseMode(workflow, relative) {
   }
 
   const filters = lookupNode.parameters?.filtersUI?.values;
-  const hasMessageIdFilter = Array.isArray(filters) && filters.some((filter) =>
-    filter?.lookupColumn === 'message_id' &&
-    String(filter?.lookupValue || '').includes('message_id')
+  const hasCurrentDedupeFilter = Array.isArray(filters) && filters.some((filter) =>
+    filter?.lookupColumn === 'dedupe_key' &&
+    String(filter?.lookupValue || '').includes('dedupe_key') &&
+    !String(filter?.lookupValue || '').includes('dedupe_key_previous')
+  );
+  const hasPreviousDedupeFilter = Array.isArray(filters) && filters.some((filter) =>
+    filter?.lookupColumn === 'dedupe_key' &&
+    String(filter?.lookupValue || '').includes('dedupe_key_previous')
   );
 
-  if (!hasMessageIdFilter) {
-    fail(`${relative} Lookup Conversation State must filter by the current message_id before dedupe.`);
+  if (!hasCurrentDedupeFilter || !hasPreviousDedupeFilter) {
+    fail(`${relative} Lookup Conversation State must filter by current and previous dedupe_key values before dedupe.`);
+  }
+
+  if (lookupNode.parameters?.combineFilters !== 'OR') {
+    fail(`${relative} Lookup Conversation State must combine dedupe_key filters with OR.`);
   }
 
   if (lookupNode.parameters?.options?.returnFirstMatch !== true) {
@@ -321,6 +387,33 @@ function checkCustomerSupportAgentDedupeAndResponseMode(workflow, relative) {
 
   if (lookupNode.alwaysOutputData !== true) {
     fail(`${relative} Lookup Conversation State must keep alwaysOutputData true so new messages can continue when no row is found.`);
+  }
+
+  const redactNode = findWorkflowNode(workflow, 'Redact PII for Logs');
+  const redactCode = String(redactNode?.parameters?.jsCode || '');
+  if (!redactCode.includes('dedupe_key') || !redactCode.includes('dedupe_key_previous') || !redactCode.includes('hashText')) {
+    fail(`${relative} Redact PII for Logs must build hashed current and previous dedupe keys.`);
+  }
+
+  const conversationLogNodes = [
+    'Upsert Conversation Processing',
+    'Upsert Conversation Completed',
+    'Upsert Conversation Failed',
+  ];
+
+  for (const nodeName of conversationLogNodes) {
+    const node = findWorkflowNode(workflow, nodeName);
+    const values = node?.parameters?.columns?.value || {};
+    const schema = Array.isArray(node?.parameters?.columns?.schema) ? node.parameters.columns.schema : [];
+    const dedupeSchema = schema.find((entry) => entry?.id === 'dedupe_key');
+
+    if (!String(values.dedupe_key || '').includes('dedupe_key')) {
+      fail(`${relative} ${nodeName} must write dedupe_key to the conversations sheet.`);
+    }
+
+    if (!dedupeSchema || dedupeSchema.type !== 'string') {
+      fail(`${relative} ${nodeName} must include a string schema entry for dedupe_key.`);
+    }
   }
 }
 
@@ -490,6 +583,7 @@ for (const filePath of files) {
   }
 
   checkCountFieldsStayNumeric(workflow, relative);
+  checkCurrentNodeTypeVersions(workflow, relative);
   checkCustomerSupportAgentFallback(workflow, relative);
   checkCustomerSupportAgentDedupeAndResponseMode(workflow, relative);
 

@@ -12,6 +12,7 @@ param(
   [switch]$AllowMissingCredentialBindings,
   [switch]$SkipCredentialBindingRefresh,
   [switch]$RestartContainerAfterImport,
+  [switch]$ForceImport,
   [switch]$DryRun
 )
 
@@ -505,7 +506,11 @@ function Invoke-WorkflowPreflight($WorkflowFiles, [bool]$BindingsFileExists, $Li
         Write-Step "CRED" "$($workflowFile.Name) has credential binding changes; it will be imported."
       }
 
-      if (-not $hasBodyChanges -and $credentialDriftStatus -ne "DIFF") {
+      if (-not $hasBodyChanges -and $credentialDriftStatus -ne "DIFF" -and $ForceImport) {
+        Write-Step "FORCE" "$($workflowFile.Name) has no meaningful workflow or credential changes, but ForceImport is set."
+      }
+
+      if (-not $hasBodyChanges -and $credentialDriftStatus -ne "DIFF" -and -not $ForceImport) {
         Write-Step "SKIP" "$($workflowFile.Name) has no meaningful workflow or credential changes."
         $skippedCount += 1
         $shouldImport = $false
@@ -645,6 +650,7 @@ Write-Host ("Archived by name : {0}" -f $ArchivedByNameMode)
 Write-Host ("ProjectId        : {0}" -f ($(if ([string]::IsNullOrWhiteSpace($ProjectId)) { "(not set)" } else { $ProjectId })))
 Write-Host ("UserId           : {0}" -f ($(if ([string]::IsNullOrWhiteSpace($UserId)) { "(not set)" } else { $UserId })))
 Write-Host ("Restart warning  : {0}" -f ($(if ($RestartContainerAfterImport) { "Restart container after successful import when needed" } else { "Warn only" })))
+Write-Host ("Force import     : {0}" -f ($(if ($ForceImport) { "Yes" } else { "No" })))
 
 $bindingsFileExists = Test-Path -Path $BindingsFilePath -PathType Leaf
 if (-not $bindingsFileExists) {

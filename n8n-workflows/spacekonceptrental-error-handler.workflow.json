@@ -303,7 +303,7 @@
       "id": "10000000-0000-4000-8000-000000000004",
       "name": "Append Failure Log",
       "type": "n8n-nodes-base.googleSheets",
-      "typeVersion": 4,
+      "typeVersion": 4.7,
       "position": [
         -80,
         64
@@ -322,7 +322,7 @@
       "id": "10000000-0000-4000-8000-000000000005",
       "name": "Send Failure Alert",
       "type": "n8n-nodes-base.gmail",
-      "typeVersion": 2.1,
+      "typeVersion": 2.2,
       "position": [
         -80,
         272
@@ -372,5 +372,5 @@
   "meta": {
     "templateCredsSetupCompleted": true
   },
-  "versionId": "4f1e0b82-671c-4804-8081-97f6c7d9efe6"
+  "versionId": "0cb32a86-9af4-46b7-a7ad-1aaace6195cc"
 }
