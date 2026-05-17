@@ -411,7 +411,7 @@
               "required": false,
               "defaultMatch": false,
               "display": true,
-              "type": "number",
+              "type": "string",
               "canBeUsedToMatch": true
             },
             {
@@ -872,5 +872,5 @@
   "meta": {
     "templateCredsSetupCompleted": true
   },
-  "versionId": "c209d4ee-db5d-466f-897d-f0395cbf6855"
+  "versionId": "2439b76c-f47c-4018-9850-e2a8e3ad31d8"
 }

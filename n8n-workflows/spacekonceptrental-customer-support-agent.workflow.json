@@ -187,8 +187,7 @@
         },
         "options": {
           "returnFirstMatch": false
-        },
-        "combineFilters": "AND"
+        }
       },
       "id": "30000000-0000-4000-8000-000000000005",
       "name": "Lookup Conversation State",
@@ -290,7 +289,7 @@
             "execution_id": "={{ $node[\"Redact PII for Logs\"].json.execution_id }}",
             "created_at": "={{ $node[\"Redact PII for Logs\"].json.timestamp }}",
             "completed_at": "={{ '' }}",
-            "dedupe_key": "={{ $node[\"Redact PII for Logs\"].json.dedupe_key }}"
+            "dedupe_key ": "={{ $node[\"Redact PII for Logs\"].json.dedupe_key }}"
           },
           "matchingColumns": [
             "message_id"
@@ -306,8 +305,8 @@
               "canBeUsedToMatch": true
             },
             {
-              "id": "dedupe_key",
-              "displayName": "dedupe_key",
+              "id": "dedupe_key ",
+              "displayName": "dedupe_key ",
               "required": false,
               "defaultMatch": false,
               "display": true,
@@ -688,7 +687,7 @@
             "execution_id": "={{ $json.execution_id }}",
             "created_at": "={{ $json.timestamp }}",
             "completed_at": "={{ $json.completed_at }}",
-            "dedupe_key": "={{ $json.dedupe_key }}"
+            "dedupe_key ": "={{ $json.dedupe_key }}"
           },
           "matchingColumns": [
             "message_id"
@@ -704,8 +703,8 @@
               "canBeUsedToMatch": true
             },
             {
-              "id": "dedupe_key",
-              "displayName": "dedupe_key",
+              "id": "dedupe_key ",
+              "displayName": "dedupe_key ",
               "required": false,
               "defaultMatch": false,
               "display": true,
@@ -1863,12 +1862,12 @@
       "parameters": {
         "promptType": "define",
         "text": "={{ $json.message }}",
+        "hasOutputParser": true,
         "needsFallback": true,
         "options": {
           "systemMessage": "=You are the SpaceKonceptRental Customer Support Agent.\n\nYour job:\n- Help customers with furniture rental questions.\n- Answer FAQs, operating hours, pricing, rental process, delivery/pickup, product/package questions, policies, and troubleshooting.\n- Help with appointment booking.\n- Create support tickets.\n- Escalate issues to the human team when required.\n- Capture leads by collecting contact details and rental requirements.\n\nKnowledge rules:\n- Your ONLY factual source is the retrieved SpaceKonceptRental knowledge base content from the Pinecone tool.\n- Do not use general knowledge or guess.\n- If the answer is not found in retrieved content, say you do not have that detail yet and offer to help escalate.\n- Never invent prices, dates, stock availability, furniture dimensions, rental terms, warranty terms, damage fees, delivery fees, discounts, or policies.\n- When giving facts, keep them concise and clear.\n- If retrieved chunks conflict, do not choose randomly. Tell the customer you need the team to confirm and escalate.\n\nConversation style:\n- Warm, helpful, concise.\n- Use Singapore/British English.\n- Do not be robotic.\n- Use light emojis only when natural.\n- Ask one focused follow-up question at a time.\n- Do not tell customers to reach out via the website, email, or WhatsApp when they are already chatting here. Ask for the missing details directly instead.\n\nEscalation rules:\nEscalate when:\n- The answer is not in the KB.\n- The customer is angry or dissatisfied.\n- The issue involves billing, refund, damage, complaint, urgent delivery, cancellation, or special pricing.\n- The customer asks to speak with a person.\n- The customer wants a custom quote and has provided enough details.\n\nLead capture rules:\nFor rental enquiries, collect name, email or phone, company if applicable, rental purpose, preferred rental start date and duration, furniture items or package needed, delivery area, and budget if offered.\n\nTicket rules:\nFor support tickets, collect full name, email or phone, issue category, one-line summary, detailed description, urgency, and preferred callback/contact method.\n\nBooking rules:\nFor appointment booking, collect name, email or phone, preferred date and time, appointment type, and notes/requirements.\n\nOutput rules:\n- Use the connected structured output parser.\n- The reply field must contain only natural customer-facing text, never JSON or internal metadata.\n- Keep routing fields truthful and consistent with the reply.",
           "enableStreaming": false
-        },
-        "hasOutputParser": true
+        }
       },
       "id": "30000000-0000-4000-8000-000000000009",
       "name": "SpaceKonceptRental AI Agent",
@@ -1883,8 +1882,7 @@
     {
       "parameters": {
         "schemaType": "manual",
-        "inputSchema": "{\n  \"type\": \"object\",\n  \"additionalProperties\": false,\n  \"required\": [\n    \"reply\",\n    \"intent\",\n    \"confidence\",\n    \"needs_escalation\",\n    \"needs_human_followup\",\n    \"lead_captured\",\n    \"ticket_required\",\n    \"booking_requested\",\n    \"missing_fields\",\n    \"lead\",\n    \"ticket\",\n    \"booking\",\n    \"retrieval_summary\"\n  ],\n  \"properties\": {\n    \"reply\": {\n      \"type\": \"string\"\n    },\n    \"intent\": {\n      \"type\": \"string\",\n      \"enum\": [\n        \"faq\",\n        \"pricing\",\n        \"booking\",\n        \"ticket\",\n        \"lead\",\n        \"escalation\",\n        \"handoff\",\n        \"unknown\"\n      ]\n    },\n    \"confidence\": {\n      \"type\": \"number\",\n      \"minimum\": 0,\n      \"maximum\": 1\n    },\n    \"needs_escalation\": {\n      \"type\": \"boolean\"\n    },\n    \"needs_human_followup\": {\n      \"type\": \"boolean\"\n    },\n    \"lead_captured\": {\n      \"type\": \"boolean\"\n    },\n    \"ticket_required\": {\n      \"type\": \"boolean\"\n    },\n    \"booking_requested\": {\n      \"type\": \"boolean\"\n    },\n    \"missing_fields\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"string\"\n      }\n    },\n    \"lead\": {\n      \"type\": \"object\",\n      \"additionalProperties\": false,\n      \"required\": [\n        \"name\",\n        \"email\",\n        \"phone\",\n        \"company\",\n        \"rental_purpose\",\n        \"rental_start_date\",\n        \"rental_duration\",\n        \"items_needed\",\n        \"delivery_area\",\n        \"budget\"\n      ],\n      \"properties\": {\n        \"name\": {\n          \"type\": \"string\"\n        },\n        \"email\": {\n          \"type\": \"string\"\n        },\n        \"phone\": {\n          \"type\": \"string\"\n        },\n        \"company\": {\n          \"type\": \"string\"\n        },\n        \"rental_purpose\": {\n          \"type\": \"string\"\n        },\n        \"rental_start_date\": {\n          \"type\": \"string\"\n        },\n        \"rental_duration\": {\n          \"type\": \"string\"\n        },\n        \"items_needed\": {\n          \"type\": \"string\"\n        },\n        \"delivery_area\": {\n          \"type\": \"string\"\n        },\n        \"budget\": {\n          \"type\": \"string\"\n        }\n      }\n    },\n    \"ticket\": {\n      \"type\": \"object\",\n      \"additionalProperties\": false,\n      \"required\": [\n        \"category\",\n        \"summary\",\n        \"details\",\n        \"urgency\"\n      ],\n      \"properties\": {\n        \"category\": {\n          \"type\": \"string\"\n        },\n        \"summary\": {\n          \"type\": \"string\"\n        },\n        \"details\": {\n          \"type\": \"string\"\n        },\n        \"urgency\": {\n          \"type\": \"string\"\n        }\n      }\n    },\n    \"booking\": {\n      \"type\": \"object\",\n      \"additionalProperties\": false,\n      \"required\": [\n        \"appointment_type\",\n        \"preferred_date\",\n        \"preferred_time\",\n        \"notes\"\n      ],\n      \"properties\": {\n        \"appointment_type\": {\n          \"type\": \"string\"\n        },\n        \"preferred_date\": {\n          \"type\": \"string\"\n        },\n        \"preferred_time\": {\n          \"type\": \"string\"\n        },\n        \"notes\": {\n          \"type\": \"string\"\n        }\n      }\n    },\n    \"retrieval_summary\": {\n      \"type\": \"object\",\n      \"additionalProperties\": false,\n      \"required\": [\n        \"used_kb\",\n        \"source_titles\",\n        \"source_file_ids\"\n      ],\n      \"properties\": {\n        \"used_kb\": {\n          \"type\": \"boolean\"\n        },\n        \"source_titles\": {\n          \"type\": \"array\",\n          \"items\": {\n            \"type\": \"string\"\n          }\n        },\n        \"source_file_ids\": {\n          \"type\": \"array\",\n          \"items\": {\n            \"type\": \"string\"\n          }\n        }\n      }\n    }\n  }\n}",
-        "autoFix": false
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"additionalProperties\": false,\n  \"required\": [\n    \"reply\",\n    \"intent\",\n    \"confidence\",\n    \"needs_escalation\",\n    \"needs_human_followup\",\n    \"lead_captured\",\n    \"ticket_required\",\n    \"booking_requested\",\n    \"missing_fields\",\n    \"lead\",\n    \"ticket\",\n    \"booking\",\n    \"retrieval_summary\"\n  ],\n  \"properties\": {\n    \"reply\": {\n      \"type\": \"string\"\n    },\n    \"intent\": {\n      \"type\": \"string\",\n      \"enum\": [\n        \"faq\",\n        \"pricing\",\n        \"booking\",\n        \"ticket\",\n        \"lead\",\n        \"escalation\",\n        \"handoff\",\n        \"unknown\"\n      ]\n    },\n    \"confidence\": {\n      \"type\": \"number\",\n      \"minimum\": 0,\n      \"maximum\": 1\n    },\n    \"needs_escalation\": {\n      \"type\": \"boolean\"\n    },\n    \"needs_human_followup\": {\n      \"type\": \"boolean\"\n    },\n    \"lead_captured\": {\n      \"type\": \"boolean\"\n    },\n    \"ticket_required\": {\n      \"type\": \"boolean\"\n    },\n    \"booking_requested\": {\n      \"type\": \"boolean\"\n    },\n    \"missing_fields\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"string\"\n      }\n    },\n    \"lead\": {\n      \"type\": \"object\",\n      \"additionalProperties\": false,\n      \"required\": [\n        \"name\",\n        \"email\",\n        \"phone\",\n        \"company\",\n        \"rental_purpose\",\n        \"rental_start_date\",\n        \"rental_duration\",\n        \"items_needed\",\n        \"delivery_area\",\n        \"budget\"\n      ],\n      \"properties\": {\n        \"name\": {\n          \"type\": \"string\"\n        },\n        \"email\": {\n          \"type\": \"string\"\n        },\n        \"phone\": {\n          \"type\": \"string\"\n        },\n        \"company\": {\n          \"type\": \"string\"\n        },\n        \"rental_purpose\": {\n          \"type\": \"string\"\n        },\n        \"rental_start_date\": {\n          \"type\": \"string\"\n        },\n        \"rental_duration\": {\n          \"type\": \"string\"\n        },\n        \"items_needed\": {\n          \"type\": \"string\"\n        },\n        \"delivery_area\": {\n          \"type\": \"string\"\n        },\n        \"budget\": {\n          \"type\": \"string\"\n        }\n      }\n    },\n    \"ticket\": {\n      \"type\": \"object\",\n      \"additionalProperties\": false,\n      \"required\": [\n        \"category\",\n        \"summary\",\n        \"details\",\n        \"urgency\"\n      ],\n      \"properties\": {\n        \"category\": {\n          \"type\": \"string\"\n        },\n        \"summary\": {\n          \"type\": \"string\"\n        },\n        \"details\": {\n          \"type\": \"string\"\n        },\n        \"urgency\": {\n          \"type\": \"string\"\n        }\n      }\n    },\n    \"booking\": {\n      \"type\": \"object\",\n      \"additionalProperties\": false,\n      \"required\": [\n        \"appointment_type\",\n        \"preferred_date\",\n        \"preferred_time\",\n        \"notes\"\n      ],\n      \"properties\": {\n        \"appointment_type\": {\n          \"type\": \"string\"\n        },\n        \"preferred_date\": {\n          \"type\": \"string\"\n        },\n        \"preferred_time\": {\n          \"type\": \"string\"\n        },\n        \"notes\": {\n          \"type\": \"string\"\n        }\n      }\n    },\n    \"retrieval_summary\": {\n      \"type\": \"object\",\n      \"additionalProperties\": false,\n      \"required\": [\n        \"used_kb\",\n        \"source_titles\",\n        \"source_file_ids\"\n      ],\n      \"properties\": {\n        \"used_kb\": {\n          \"type\": \"boolean\"\n        },\n        \"source_titles\": {\n          \"type\": \"array\",\n          \"items\": {\n            \"type\": \"string\"\n          }\n        },\n        \"source_file_ids\": {\n          \"type\": \"array\",\n          \"items\": {\n            \"type\": \"string\"\n          }\n        }\n      }\n    }\n  }\n}"
       },
       "id": "30000000-0000-4000-8000-000000000037",
       "name": "Agent Structured Output Parser",
@@ -2147,7 +2145,7 @@
             "execution_id": "={{ $json.execution_id }}",
             "created_at": "={{ $json.timestamp }}",
             "completed_at": "={{ $json.completed_at }}",
-            "dedupe_key": "={{ $json.dedupe_key }}"
+            "dedupe_key ": "={{ $json.dedupe_key }}"
           },
           "matchingColumns": [
             "message_id"
@@ -2163,8 +2161,8 @@
               "canBeUsedToMatch": true
             },
             {
-              "id": "dedupe_key",
-              "displayName": "dedupe_key",
+              "id": "dedupe_key ",
+              "displayName": "dedupe_key ",
               "required": false,
               "defaultMatch": false,
               "display": true,
@@ -2754,5 +2752,5 @@
   "meta": {
     "templateCredsSetupCompleted": true
   },
-  "versionId": "0ba1432e-7f8c-4130-ac3a-f6ddb95e27d8"
+  "versionId": "9e3cfa39-5952-45ed-aaff-bef6049b509b"
 }
