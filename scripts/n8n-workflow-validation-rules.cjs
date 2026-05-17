@@ -526,10 +526,40 @@ function checkCustomerSupportAgentLoggingContract(workflow, relative) {
     }
   }
 
+  const transcriptLookupNode = findWorkflowNode(workflow, 'Lookup Conversation Transcript');
+  if (!transcriptLookupNode || transcriptLookupNode.type !== 'n8n-nodes-base.googleSheets') {
+    fail(`${relative} must look up the session transcript before notification routing.`);
+  }
+  if (!hasConnection(workflow, 'Upsert Conversation Completed', 0, 'Lookup Conversation Transcript')) {
+    fail(`${relative} Upsert Conversation Completed must feed Lookup Conversation Transcript.`);
+  }
+  if (!hasConnection(workflow, 'Lookup Conversation Transcript', 0, 'Build Notification Context')) {
+    fail(`${relative} Lookup Conversation Transcript must feed Build Notification Context.`);
+  }
+
+  const notificationContextNode = findWorkflowNode(workflow, 'Build Notification Context');
+  const notificationContextCode = String(notificationContextNode?.parameters?.jsCode || '');
+  if (!notificationContextCode.includes('conversation_transcript_html') || !notificationContextCode.includes('notification_summary_html')) {
+    fail(`${relative} Build Notification Context must prepare formatted email summary and transcript fields.`);
+  }
+  for (const targetName of ['Lead or Booking Required?', 'Ticket Required?', 'Needs Escalation?', 'Unanswered or Low Confidence?']) {
+    if (!hasConnection(workflow, 'Build Notification Context', 0, targetName)) {
+      fail(`${relative} Build Notification Context must feed ${targetName} so notification emails include transcript context.`);
+    }
+  }
+
   const escalationNode = findWorkflowNode(workflow, 'Send Escalation Alert');
   const escalationMessage = String(escalationNode?.parameters?.message || '');
-  if (!escalationMessage.includes('Reference ID') || !escalationMessage.includes('source_file_ids')) {
-    fail(`${relative} Send Escalation Alert must include a useful reference id and source URL field.`);
+  if (!escalationMessage.includes('notification_summary_html') || !escalationMessage.includes('conversation_transcript_html') || !escalationMessage.includes('source_file_ids')) {
+    fail(`${relative} Send Escalation Alert must include summary, source URLs, and session transcript context.`);
+  }
+
+  for (const nodeName of ['Send Lead Notification', 'Send Ticket Notification', 'Send Unanswered Notification']) {
+    const emailNode = findWorkflowNode(workflow, nodeName);
+    const message = String(emailNode?.parameters?.message || '');
+    if (!message.includes('Build Notification Context') || !message.includes('conversation_transcript_html')) {
+      fail(`${relative} ${nodeName} must include the formatted session transcript from Build Notification Context.`);
+    }
   }
 }
 
