@@ -24,7 +24,6 @@ function Resolve-RepoRootFromScript {
   while ($true) {
     if (
       (Test-Path -LiteralPath (Join-Path $current ".git")) -or
-      (Test-Path -LiteralPath (Join-Path $current ".gitignore")) -or
       (Test-Path -LiteralPath (Join-Path $current "n8n-workflows"))
     ) {
       return $current
@@ -101,48 +100,61 @@ function Get-DisplayPath($Path) {
 }
 
 function Resolve-ProjectWorkflowHookScripts {
-  $scripts = New-Object System.Collections.Generic.List[string]
+  $candidates = New-Object System.Collections.Generic.List[object]
+
+  function Add-HookScriptCandidate([string]$HookPath, [bool]$Required) {
+    if ([string]::IsNullOrWhiteSpace($HookPath)) {
+      return
+    }
+
+    if ([System.IO.Path]::IsPathRooted($HookPath)) {
+      $fullPath = [System.IO.Path]::GetFullPath($HookPath)
+    } else {
+      $fullPath = [System.IO.Path]::GetFullPath((Join-Path $RepoRoot $HookPath))
+    }
+
+    $candidates.Add([PSCustomObject]@{
+      Path = $fullPath
+      Required = $Required
+    })
+  }
 
   # Generic export extension point:
   # keep this script project-agnostic. If a target repo needs import/export
-  # cleanup, repair, or normalisation, add scripts\n8n-workflow-hooks.* in that
+  # cleanup, repair, or normalisation, add scripts/n8n-workflow-hooks.* in that
   # repo instead of hardcoding workflow-specific rules here.
   if (-not [string]::IsNullOrWhiteSpace($env:N8N_WORKFLOW_HOOK_SCRIPT)) {
     foreach ($hookPath in @($env:N8N_WORKFLOW_HOOK_SCRIPT -split ';')) {
-      if ([string]::IsNullOrWhiteSpace($hookPath)) {
-        continue
-      }
-      if ([System.IO.Path]::IsPathRooted($hookPath)) {
-        $scripts.Add([System.IO.Path]::GetFullPath($hookPath))
-      } else {
-        $scripts.Add([System.IO.Path]::GetFullPath((Join-Path $RepoRoot $hookPath)))
-      }
+      Add-HookScriptCandidate $hookPath $true
     }
   }
 
   foreach ($relativePath in @(
-    "scripts\n8n-workflow-hooks.cjs",
-    "scripts\n8n-workflow-hooks.js",
-    "scripts\n8n-workflow-hooks.ps1",
-    ".n8n-local\n8n-workflow-hooks.cjs",
-    ".n8n-local\n8n-workflow-hooks.js",
-    ".n8n-local\n8n-workflow-hooks.ps1",
+    "scripts/n8n-workflow-hooks.cjs",
+    "scripts/n8n-workflow-hooks.js",
+    "scripts/n8n-workflow-hooks.ps1",
+    ".n8n-local/n8n-workflow-hooks.cjs",
+    ".n8n-local/n8n-workflow-hooks.js",
+    ".n8n-local/n8n-workflow-hooks.ps1",
     ".n8n-workflow-hooks.cjs",
     ".n8n-workflow-hooks.js",
     ".n8n-workflow-hooks.ps1"
   )) {
-    $scripts.Add([System.IO.Path]::GetFullPath((Join-Path $RepoRoot $relativePath)))
+    Add-HookScriptCandidate $relativePath $false
   }
 
   $seen = @{}
   $existingScripts = @()
-  foreach ($script in $scripts) {
+  foreach ($candidate in $candidates) {
+    $script = $candidate.Path
     if ($seen.ContainsKey($script)) {
       continue
     }
     $seen[$script] = $true
     if (Test-Path -LiteralPath $script -PathType Leaf) {
       $existingScripts += $script
+    } elseif ($candidate.Required) {
+      throw "Configured n8n workflow hook script not found: $(Get-DisplayPath $script)"
     }
   }
 
