@@ -237,6 +237,75 @@ function checkCountFieldsStayNumeric(workflow, relative) {
   }
 }
 
+function checkIngestionFileNamePlainText(workflow, relative) {
+  if (workflow.name !== 'SpaceKonceptRental - KB Ingestion to Pinecone') {
+    return;
+  }
+
+  const prepareLogNode = findWorkflowNode(workflow, 'Prepare Ingestion Log');
+  const prepareLogCode = String(prepareLogNode?.parameters?.jsCode || '');
+  if (!prepareLogCode.includes("return String(value || '').trim() || 'unknown_file_name';")) {
+    fail(`${relative} Prepare Ingestion Log must return raw file_name text before Google Sheets writes.`);
+  }
+  if (prepareLogCode.includes('return \'="\'') || prepareLogCode.includes('return "=\\"')) {
+    fail(`${relative} Prepare Ingestion Log must not write file_name as a formula string; formulas can become clickable sheet links.`);
+  }
+  if (prepareLogCode.includes('return "\'" + text;')) {
+    fail(`${relative} Prepare Ingestion Log must not prefix file_name with a leading apostrophe; RAW writes should receive the display value directly.`);
+  }
+
+  const appendLogNode = findWorkflowNode(workflow, 'Append KB Ingestion Log');
+  if (appendLogNode?.parameters?.options?.cellFormat !== 'RAW') {
+    fail(`${relative} Append KB Ingestion Log must set options.cellFormat to RAW so file_name values stay plain text.`);
+  }
+
+  const formatNode = findWorkflowNode(workflow, 'Disable File Name Hyperlinks');
+  if (!formatNode) {
+    fail(`${relative} must format the file_name column with Disable File Name Hyperlinks.`);
+    return;
+  }
+
+  if (!hasConnection(workflow, 'Append KB Ingestion Log', 0, 'Disable File Name Hyperlinks')) {
+    fail(`${relative} must run Disable File Name Hyperlinks after Append KB Ingestion Log.`);
+  }
+  if (formatNode.type !== 'n8n-nodes-base.httpRequest') {
+    fail(`${relative} Disable File Name Hyperlinks must be an HTTP Request node.`);
+  }
+  if (formatNode.parameters?.authentication !== 'predefinedCredentialType' || formatNode.parameters?.nodeCredentialType !== 'googleSheetsOAuth2Api') {
+    fail(`${relative} Disable File Name Hyperlinks must use the Google Sheets OAuth credential type.`);
+  }
+
+  const spreadsheetId = appendLogNode?.parameters?.documentId?.value;
+  const expectedUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}:batchUpdate`;
+  if (formatNode.parameters?.url !== expectedUrl) {
+    fail(`${relative} Disable File Name Hyperlinks url must match the Append KB Ingestion Log spreadsheet ID.`);
+  }
+
+  let formatBody = null;
+  try {
+    formatBody = JSON.parse(String(formatNode.parameters?.jsonBody || ''));
+  } catch (error) {
+    fail(`${relative} Disable File Name Hyperlinks jsonBody is not valid JSON: ${error.message}`);
+  }
+
+  const repeatCell = formatBody?.requests?.[0]?.repeatCell;
+  const range = repeatCell?.range || {};
+  const userEnteredFormat = repeatCell?.cell?.userEnteredFormat || {};
+  const fields = String(repeatCell?.fields || '');
+  if (range.sheetId !== 0 || range.startRowIndex !== 1 || range.startColumnIndex !== 1 || range.endColumnIndex !== 2) {
+    fail(`${relative} Disable File Name Hyperlinks must target kb_ingestion file_name cells only.`);
+  }
+  if (userEnteredFormat.hyperlinkDisplayType !== 'PLAIN_TEXT') {
+    fail(`${relative} Disable File Name Hyperlinks must set hyperlinkDisplayType to PLAIN_TEXT.`);
+  }
+  if (userEnteredFormat.numberFormat?.type !== 'TEXT') {
+    fail(`${relative} Disable File Name Hyperlinks must set file_name numberFormat to TEXT.`);
+  }
+  if (!fields.includes('userEnteredFormat.hyperlinkDisplayType') || !fields.includes('userEnteredFormat.numberFormat')) {
+    fail(`${relative} Disable File Name Hyperlinks must update hyperlinkDisplayType and numberFormat fields.`);
+  }
+}
+
 function compareVersion(a, b) {
   const aParts = String(a).split('.').map((part) => Number.parseInt(part, 10));
   const bParts = String(b).split('.').map((part) => Number.parseInt(part, 10));
@@ -583,6 +652,7 @@ for (const filePath of files) {
   }
 
   checkCountFieldsStayNumeric(workflow, relative);
+  checkIngestionFileNamePlainText(workflow, relative);
   checkCurrentNodeTypeVersions(workflow, relative);
   checkCustomerSupportAgentFallback(workflow, relative);
   checkCustomerSupportAgentDedupeAndResponseMode(workflow, relative);

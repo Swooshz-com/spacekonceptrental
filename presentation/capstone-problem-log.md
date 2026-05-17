@@ -36,7 +36,8 @@ Working notes for the final presentation. These are the practical issues found w
 
 - File names in Google Sheets still appeared as links.
   - Impact: file name column was visually confusing and pointed to wrong generated links.
-  - Fix: wrote file names as plain text formulas so only `file_url` is clickable.
+  - Root cause: n8n Google Sheets v4.7 writes defaulted to `USER_ENTERED`, and Google Sheets could still render `.md` text as a hyperlink even after RAW value writes.
+  - Fix: mapped the append node to use RAW cell writes, then added a Sheets API formatting step that sets the `file_name` column hyperlink display to plain text. `file_url` remains the only clickable URL column.
   - Presentation point: output formatting matters for operator review.
 
 - Created vs updated file events were not visible in the log.
