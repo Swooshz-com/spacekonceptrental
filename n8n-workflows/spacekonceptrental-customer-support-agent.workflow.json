@@ -10,13 +10,13 @@
         "width": 644,
         "color": 3
       },
-      "id": "30000000-0000-4000-8000-000000000902",
+      "id": "a08f61af-f3c1-4a9e-8340-476e660ba535",
       "name": "RAG answer group",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        752,
-        -320
+        -640,
+        784
       ]
     },
     {
@@ -26,13 +26,13 @@
         "width": 820,
         "color": 4
       },
-      "id": "30000000-0000-4000-8000-000000000903",
+      "id": "662eb229-fd3e-4e70-b08f-aacefe8bbb9a",
       "name": "Reply and logging group",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        1392,
-        -1104
+        0,
+        0
       ]
     },
     {
@@ -42,13 +42,13 @@
         "width": 836,
         "color": 6
       },
-      "id": "30000000-0000-4000-8000-000000000904",
+      "id": "30e0031f-78d4-436a-8921-46639b4986f4",
       "name": "Follow-up routing group",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        1392,
-        -112
+        0,
+        992
       ]
     },
     {
@@ -57,13 +57,13 @@
           "responseMode": "responseNodes"
         }
       },
-      "id": "30000000-0000-4000-8000-000000000002",
+      "id": "0a17aea3-07fb-43f0-8bb5-dfa7e7f9b104",
       "name": "When Chat Message Received",
       "type": "@n8n/n8n-nodes-langchain.chatTrigger",
       "typeVersion": 1.4,
       "position": [
-        -1184,
-        336
+        -2576,
+        1440
       ]
     },
     {
@@ -135,26 +135,26 @@
         "includeOtherFields": true,
         "options": {}
       },
-      "id": "30000000-0000-4000-8000-000000000003",
+      "id": "2043cdba-2141-4adf-86fe-1818531dfac8",
       "name": "Normalise Input",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -928,
-        336
+        -2320,
+        1440
       ]
     },
     {
       "parameters": {
         "jsCode": "function redact(text = '') {\n  return String(text).trim()\n    .replace(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}/gi, '[redacted-email]')\n    .replace(/\\b(?:\\+65\\s?)?[689]\\d{3}\\s?\\d{4}\\b/g, '[redacted-phone]')\n    .replace(/\\b[STFGM]\\d{7}[A-Z]\\b/gi, '[redacted-nric-fin]')\n    .replace(/\\b\\d{9,}\\b/g, '[redacted-id]');\n}\n\nfunction normaliseForDedupe(text = '') {\n  return redact(text).toLowerCase().replace(/\\s+/g, ' ').trim();\n}\n\nfunction hashText(text = '') {\n  let hash = 2166136261;\n  for (const char of text) {\n    hash ^= char.charCodeAt(0);\n    hash = Math.imul(hash, 16777619);\n  }\n  return (hash >>> 0).toString(36);\n}\n\nfunction dedupeKey(item, bucketOffset = 0) {\n  const bucketSizeMs = 2 * 60 * 1000;\n  const bucket = Math.floor(Date.now() / bucketSizeMs) + bucketOffset;\n  const channel = item.channel || 'n8n_chat';\n  const sessionId = item.session_id || item.sessionId || item.chatId || 'unknown_session';\n  const messageHash = hashText(normaliseForDedupe(item.message));\n  return [channel, sessionId, messageHash, bucket].join('|');\n}\n\nreturn items.map((item) => ({\n  json: {\n    ...item.json,\n    user_message_redacted: redact(item.json.message),\n    dedupe_key: dedupeKey(item.json),\n    dedupe_key_previous: dedupeKey(item.json, -1)\n  }\n}));"
       },
-      "id": "30000000-0000-4000-8000-000000000004",
+      "id": "ee4a900b-fc01-489b-a526-f9c98760206e",
       "name": "Redact PII for Logs",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -672,
-        336
+        -2064,
+        1440
       ]
     },
     {
@@ -189,13 +189,13 @@
           "returnFirstMatch": false
         }
       },
-      "id": "30000000-0000-4000-8000-000000000005",
+      "id": "b6b9cdd8-08fb-4e04-937f-54c5e8c31c0c",
       "name": "Lookup Conversation State",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
       "position": [
-        -416,
-        336
+        -1808,
+        1440
       ],
       "retryOnFail": true,
       "maxTries": 2,
@@ -226,13 +226,13 @@
         },
         "options": {}
       },
-      "id": "30000000-0000-4000-8000-000000000006",
+      "id": "ede4ca63-5810-4f82-948d-cda8e3336a8a",
       "name": "Already Processing or Completed?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        64,
-        336
+        -1328,
+        1440
       ]
     },
     {
@@ -240,13 +240,13 @@
         "message": "I am still working on your previous message. Please give me a moment, then send again if needed.",
         "options": {}
       },
-      "id": "30000000-0000-4000-8000-000000000007",
+      "id": "b1fe9733-8caf-43fd-a788-26bcf6ed8e14",
       "name": "Duplicate Safe Reply",
       "type": "@n8n/n8n-nodes-langchain.chat",
       "typeVersion": 1.3,
       "position": [
-        352,
-        160
+        -1040,
+        1264
       ]
     },
     {
@@ -491,13 +491,13 @@
         },
         "options": {}
       },
-      "id": "30000000-0000-4000-8000-000000000008",
+      "id": "24102aa4-1e6d-4db7-9ad7-68c577906e34",
       "name": "Upsert Conversation Processing",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
       "position": [
-        352,
-        384
+        -1040,
+        1488
       ],
       "retryOnFail": true,
       "maxTries": 3,
@@ -584,13 +584,13 @@
         "includeOtherFields": true,
         "options": {}
       },
-      "id": "30000000-0000-4000-8000-000000000024",
+      "id": "38012ac6-4055-436a-aaa9-ec09e94c4e25",
       "name": "Restore Processing Context",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        560,
-        384
+        -832,
+        1488
       ]
     },
     {
@@ -608,13 +608,13 @@
           "pineconeNamespace": "={{ $json.kb_namespace || 'SpaceKonceptRental_kb' }}"
         }
       },
-      "id": "30000000-0000-4000-8000-000000000011",
+      "id": "39522006-3b3c-49c9-8d47-cd14fbe34996",
       "name": "SpaceKonceptRental Knowledge Base",
       "type": "@n8n/n8n-nodes-langchain.vectorStorePinecone",
       "typeVersion": 1.3,
       "position": [
-        1136,
-        432
+        -256,
+        1536
       ],
       "retryOnFail": true,
       "maxTries": 2,
@@ -624,13 +624,13 @@
       "parameters": {
         "jsCode": "function parseAgentOutput(value) {\n  if (typeof value === 'object' && value !== null) return value;\n  const text = String(value || '').trim();\n  try {\n    return JSON.parse(text);\n  } catch (error) {\n    const start = text.indexOf('{');\n    const end = text.lastIndexOf('}');\n    if (start >= 0 && end > start) return JSON.parse(text.slice(start, end + 1));\n    throw error;\n  }\n}\n\nfunction timestampForId(date = new Date()) {\n  return date.toISOString().replace(/[-:T]/g, '').slice(0, 8) + '-' + date.toISOString().replace(/[-:T]/g, '').slice(8, 14);\n}\n\nreturn items.map((item) => {\n  const original = $('Restore Processing Context').first().json || {};\n  const raw = item.json.output || item.json.text || item.json.response || item.json;\n  let parsed;\n  try {\n    parsed = parseAgentOutput(raw);\n  } catch (error) {\n    parsed = {\n      reply: 'I do not have that detail yet. I can help escalate this to the SpaceKonceptRental team.',\n      intent: 'unknown',\n      confidence: 0,\n      needs_escalation: true,\n      needs_human_followup: true,\n      lead_captured: false,\n      ticket_required: false,\n      booking_requested: false,\n      missing_fields: [],\n      lead: {},\n      ticket: {},\n      booking: {},\n      retrieval_summary: { source_titles: [], source_file_ids: [] }\n    };\n  }\n\n  const now = new Date();\n  const idTime = timestampForId(now);\n  const ticketRequired = Boolean(parsed.ticket_required);\n  const leadRequired = Boolean(parsed.lead_captured || parsed.booking_requested);\n\n  return {\n    json: {\n      ...original,\n      ...item.json,\n      agent_raw_output: raw,\n      reply: parsed.reply || 'I do not have that detail yet. I can help escalate this to the SpaceKonceptRental team.',\n      intent: parsed.intent || 'unknown',\n      confidence: Number(parsed.confidence || 0),\n      needs_escalation: Boolean(parsed.needs_escalation),\n      needs_human_followup: Boolean(parsed.needs_human_followup),\n      lead_captured: Boolean(parsed.lead_captured),\n      ticket_required: ticketRequired,\n      booking_requested: Boolean(parsed.booking_requested),\n      missing_fields: parsed.missing_fields || [],\n      lead: parsed.lead || {},\n      ticket: parsed.ticket || {},\n      booking: parsed.booking || {},\n      source_titles: (parsed.retrieval_summary?.source_titles || []).join(', '),\n      source_file_ids: (parsed.retrieval_summary?.source_file_ids || []).join(', '),\n      ticket_id: ticketRequired ? `SKR-TKT-${idTime}` : '',\n      lead_id: leadRequired ? `SKR-LEAD-${idTime}` : '',\n      completed_at: now.toISOString(),\n      unanswered_id: `SKR-UNANSWERED-${idTime}`\n    }\n  };\n});"
       },
-      "id": "30000000-0000-4000-8000-000000000013",
+      "id": "bf0f562c-029d-4412-a839-e41f57e8bb52",
       "name": "Parse Strict JSON Response",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1216,
-        16
+        -176,
+        1120
       ]
     },
     {
@@ -638,13 +638,13 @@
         "message": "={{ $json.reply }}",
         "options": {}
       },
-      "id": "30000000-0000-4000-8000-000000000014",
+      "id": "d128d046-32b2-4712-84e0-cd549651a45b",
       "name": "Send Customer Reply",
       "type": "@n8n/n8n-nodes-langchain.chat",
       "typeVersion": 1.3,
       "position": [
-        1456,
-        -800
+        64,
+        304
       ]
     },
     {
@@ -889,13 +889,13 @@
         },
         "options": {}
       },
-      "id": "30000000-0000-4000-8000-000000000015",
+      "id": "97ab4482-b9cf-4955-964a-75a40f4ae584",
       "name": "Upsert Conversation Completed",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
       "position": [
-        1488,
-        -640
+        96,
+        464
       ],
       "retryOnFail": true,
       "maxTries": 3,
@@ -934,13 +934,13 @@
         },
         "options": {}
       },
-      "id": "30000000-0000-4000-8000-000000000025",
+      "id": "2713cee9-a111-4a5c-8c30-6f3a2ca11168",
       "name": "Lead or Booking Required?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        1488,
-        272
+        96,
+        1376
       ]
     },
     {
@@ -1047,13 +1047,13 @@
         },
         "options": {}
       },
-      "id": "30000000-0000-4000-8000-000000000016",
+      "id": "c8d9482e-c91a-427b-83ff-69ca86517c26",
       "name": "Set Lead or Booking Row",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        1760,
-        272
+        368,
+        1376
       ]
     },
     {
@@ -1247,13 +1247,13 @@
         },
         "options": {}
       },
-      "id": "30000000-0000-4000-8000-000000000017",
+      "id": "7e0601aa-8422-4c40-9188-e316c7aa8a4d",
       "name": "Upsert Lead or Booking",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
       "position": [
-        2048,
-        272
+        656,
+        1376
       ],
       "retryOnFail": true,
       "maxTries": 3,
@@ -1283,13 +1283,13 @@
         },
         "options": {}
       },
-      "id": "30000000-0000-4000-8000-000000000026",
+      "id": "a5207a49-6b5d-49e0-a696-d1ecc5b5b60b",
       "name": "Ticket Required?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        1488,
-        464
+        96,
+        1568
       ]
     },
     {
@@ -1372,13 +1372,13 @@
         },
         "options": {}
       },
-      "id": "30000000-0000-4000-8000-000000000018",
+      "id": "3a56e125-ca3f-4983-9c2c-c5a18a01b462",
       "name": "Set Ticket Row",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        1760,
-        464
+        368,
+        1568
       ]
     },
     {
@@ -1532,13 +1532,13 @@
         },
         "options": {}
       },
-      "id": "30000000-0000-4000-8000-000000000019",
+      "id": "1da2fb0c-6806-4586-9047-460fa3c9db35",
       "name": "Upsert Ticket",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
       "position": [
-        2048,
-        464
+        656,
+        1568
       ],
       "retryOnFail": true,
       "maxTries": 3,
@@ -1568,13 +1568,13 @@
         },
         "options": {}
       },
-      "id": "30000000-0000-4000-8000-000000000020",
+      "id": "9df80ae6-cccf-41d1-967f-b58e352969fb",
       "name": "Needs Escalation?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        1488,
-        672
+        96,
+        1776
       ]
     },
     {
@@ -1584,13 +1584,13 @@
         "message": "=<p><strong>Session ID:</strong> {{ $json.session_id }}</p>\n<p><strong>Message ID:</strong> {{ $json.message_id }}</p>\n<p><strong>Contact ID:</strong> {{ $json.customer_email || $json.customer_phone || $json.customer_name || \"not_available\" }}</p>\n<p><strong>Customer:</strong> {{ $json.customer_name }}</p>\n<p><strong>Email:</strong> {{ $json.customer_email }}</p>\n<p><strong>Phone:</strong> {{ $json.customer_phone }}</p>\n<p><strong>Intent:</strong> {{ $json.intent }}</p>\n<p><strong>Confidence:</strong> {{ $json.confidence }}</p>\n<p><strong>Redacted Message:</strong> {{ $json.user_message_redacted }}</p>\n<p><strong>Bot Reply:</strong> {{ $json.reply }}</p>\n<p><strong>Ticket ID:</strong> {{ $json.ticket_id }}</p>\n<p><strong>Lead ID:</strong> {{ $json.lead_id }}</p>\n<p><strong>Sources:</strong> {{ $json.source_titles }}</p>\n<p><strong>Execution ID:</strong> {{ $json.execution_id }}</p>",
         "options": {}
       },
-      "id": "30000000-0000-4000-8000-000000000021",
+      "id": "a6c1e72b-debc-47ed-a47f-b26482baba67",
       "name": "Send Escalation Alert",
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2.2,
       "position": [
-        1760,
-        672
+        368,
+        1776
       ],
       "retryOnFail": true,
       "maxTries": 3,
@@ -1629,13 +1629,13 @@
         },
         "options": {}
       },
-      "id": "30000000-0000-4000-8000-000000000027",
+      "id": "74b8c4f5-bfab-413a-bed1-390f2cc3ff5d",
       "name": "Unanswered or Low Confidence?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        1488,
-        864
+        96,
+        1968
       ]
     },
     {
@@ -1700,13 +1700,13 @@
         },
         "options": {}
       },
-      "id": "30000000-0000-4000-8000-000000000022",
+      "id": "fb11f040-b567-4018-b252-779da5fa9459",
       "name": "Set Unanswered Row",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        1760,
-        864
+        368,
+        1968
       ]
     },
     {
@@ -1830,13 +1830,13 @@
         },
         "options": {}
       },
-      "id": "30000000-0000-4000-8000-000000000023",
+      "id": "64bcb6aa-0af1-46c8-8b4b-6315348e5c8c",
       "name": "Upsert Unanswered Question",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
       "position": [
-        2048,
-        864
+        656,
+        1968
       ],
       "retryOnFail": true,
       "maxTries": 3,
@@ -1849,13 +1849,13 @@
         "width": 1972,
         "color": 5
       },
-      "id": "30000000-0000-4000-8000-000000000901",
+      "id": "ecb12d5b-598d-4682-abb8-1676165c625d",
       "name": "Intake and dedupe group",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        -1232,
-        -208
+        -2624,
+        896
       ]
     },
     {
@@ -1869,13 +1869,13 @@
           "enableStreaming": false
         }
       },
-      "id": "30000000-0000-4000-8000-000000000009",
+      "id": "77a3d5aa-711a-4cb3-aece-e56e67f7cee4",
       "name": "SpaceKonceptRental AI Agent",
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
       "position": [
-        848,
-        112
+        -544,
+        1216
       ],
       "onError": "continueErrorOutput"
     },
@@ -1884,37 +1884,37 @@
         "schemaType": "manual",
         "inputSchema": "{\n  \"type\": \"object\",\n  \"additionalProperties\": false,\n  \"required\": [\n    \"reply\",\n    \"intent\",\n    \"confidence\",\n    \"needs_escalation\",\n    \"needs_human_followup\",\n    \"lead_captured\",\n    \"ticket_required\",\n    \"booking_requested\",\n    \"missing_fields\",\n    \"lead\",\n    \"ticket\",\n    \"booking\",\n    \"retrieval_summary\"\n  ],\n  \"properties\": {\n    \"reply\": {\n      \"type\": \"string\"\n    },\n    \"intent\": {\n      \"type\": \"string\",\n      \"enum\": [\n        \"faq\",\n        \"pricing\",\n        \"booking\",\n        \"ticket\",\n        \"lead\",\n        \"escalation\",\n        \"handoff\",\n        \"unknown\"\n      ]\n    },\n    \"confidence\": {\n      \"type\": \"number\",\n      \"minimum\": 0,\n      \"maximum\": 1\n    },\n    \"needs_escalation\": {\n      \"type\": \"boolean\"\n    },\n    \"needs_human_followup\": {\n      \"type\": \"boolean\"\n    },\n    \"lead_captured\": {\n      \"type\": \"boolean\"\n    },\n    \"ticket_required\": {\n      \"type\": \"boolean\"\n    },\n    \"booking_requested\": {\n      \"type\": \"boolean\"\n    },\n    \"missing_fields\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"string\"\n      }\n    },\n    \"lead\": {\n      \"type\": \"object\",\n      \"additionalProperties\": false,\n      \"required\": [\n        \"name\",\n        \"email\",\n        \"phone\",\n        \"company\",\n        \"rental_purpose\",\n        \"rental_start_date\",\n        \"rental_duration\",\n        \"items_needed\",\n        \"delivery_area\",\n        \"budget\"\n      ],\n      \"properties\": {\n        \"name\": {\n          \"type\": \"string\"\n        },\n        \"email\": {\n          \"type\": \"string\"\n        },\n        \"phone\": {\n          \"type\": \"string\"\n        },\n        \"company\": {\n          \"type\": \"string\"\n        },\n        \"rental_purpose\": {\n          \"type\": \"string\"\n        },\n        \"rental_start_date\": {\n          \"type\": \"string\"\n        },\n        \"rental_duration\": {\n          \"type\": \"string\"\n        },\n        \"items_needed\": {\n          \"type\": \"string\"\n        },\n        \"delivery_area\": {\n          \"type\": \"string\"\n        },\n        \"budget\": {\n          \"type\": \"string\"\n        }\n      }\n    },\n    \"ticket\": {\n      \"type\": \"object\",\n      \"additionalProperties\": false,\n      \"required\": [\n        \"category\",\n        \"summary\",\n        \"details\",\n        \"urgency\"\n      ],\n      \"properties\": {\n        \"category\": {\n          \"type\": \"string\"\n        },\n        \"summary\": {\n          \"type\": \"string\"\n        },\n        \"details\": {\n          \"type\": \"string\"\n        },\n        \"urgency\": {\n          \"type\": \"string\"\n        }\n      }\n    },\n    \"booking\": {\n      \"type\": \"object\",\n      \"additionalProperties\": false,\n      \"required\": [\n        \"appointment_type\",\n        \"preferred_date\",\n        \"preferred_time\",\n        \"notes\"\n      ],\n      \"properties\": {\n        \"appointment_type\": {\n          \"type\": \"string\"\n        },\n        \"preferred_date\": {\n          \"type\": \"string\"\n        },\n        \"preferred_time\": {\n          \"type\": \"string\"\n        },\n        \"notes\": {\n          \"type\": \"string\"\n        }\n      }\n    },\n    \"retrieval_summary\": {\n      \"type\": \"object\",\n      \"additionalProperties\": false,\n      \"required\": [\n        \"used_kb\",\n        \"source_titles\",\n        \"source_file_ids\"\n      ],\n      \"properties\": {\n        \"used_kb\": {\n          \"type\": \"boolean\"\n        },\n        \"source_titles\": {\n          \"type\": \"array\",\n          \"items\": {\n            \"type\": \"string\"\n          }\n        },\n        \"source_file_ids\": {\n          \"type\": \"array\",\n          \"items\": {\n            \"type\": \"string\"\n          }\n        }\n      }\n    }\n  }\n}"
       },
-      "id": "30000000-0000-4000-8000-000000000037",
+      "id": "48670902-6b7b-463c-b0d6-66da17948bd1",
       "name": "Agent Structured Output Parser",
       "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
       "typeVersion": 1.3,
       "position": [
-        1040,
-        304
+        -352,
+        1408
       ]
     },
     {
       "parameters": {
         "options": {}
       },
-      "id": "30000000-0000-4000-8000-000000000012",
+      "id": "dd4cc15a-0fbc-40c6-90e2-f7d4e8d2e178",
       "name": "OpenAI Retrieval Embeddings",
       "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
       "typeVersion": 1.2,
       "position": [
-        1216,
-        592
+        -176,
+        1696
       ]
     },
     {
       "parameters": {},
-      "id": "30000000-0000-4000-8000-000000000028",
+      "id": "0e5648d5-234f-47d3-9629-b284ce15c999",
       "name": "Simple Conversation Memory",
       "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
       "typeVersion": 1.4,
       "position": [
-        1040,
-        576
+        -352,
+        1680
       ]
     },
     {
@@ -2082,13 +2082,13 @@
         "includeOtherFields": true,
         "options": {}
       },
-      "id": "30000000-0000-4000-8000-000000000029",
+      "id": "3b974bce-0c6c-43d0-ae31-9b8f3520ae02",
       "name": "Build Agent Failure Fallback",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        1216,
-        208
+        -176,
+        1312
       ]
     },
     {
@@ -2096,13 +2096,13 @@
         "message": "={{ $json.reply }}",
         "options": {}
       },
-      "id": "30000000-0000-4000-8000-000000000030",
+      "id": "ddeca625-6dda-4967-8dce-e2348084d75f",
       "name": "Send Fallback Reply",
       "type": "@n8n/n8n-nodes-langchain.chat",
       "typeVersion": 1.3,
       "position": [
-        1456,
-        -448
+        64,
+        656
       ]
     },
     {
@@ -2347,13 +2347,13 @@
         },
         "options": {}
       },
-      "id": "30000000-0000-4000-8000-000000000031",
+      "id": "b8ca1491-c14f-40de-ad28-b14e62d96f3c",
       "name": "Upsert Conversation Failed",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
       "position": [
-        1488,
-        -288
+        96,
+        816
       ],
       "retryOnFail": true,
       "maxTries": 3,
@@ -2369,10 +2369,10 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
       "typeVersion": 1.1,
       "position": [
-        800,
-        304
+        -592,
+        1408
       ],
-      "id": "a5a50856-c70f-4bce-8ac7-5d05179e3470",
+      "id": "34ed9bd6-3a3c-4732-bc5b-41f6f62b4e1c",
       "name": "Google Gemini Chat Model"
     },
     {
@@ -2391,23 +2391,23 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.3,
       "position": [
-        896,
-        448
+        -496,
+        1552
       ],
-      "id": "e6739301-67bc-4a75-80f9-fcbe07374631",
+      "id": "3f9cea2d-a345-429e-ab67-06f85ea7806a",
       "name": "OpenAI Chat Model"
     },
     {
       "parameters": {
         "jsCode": "const maxProcessingAgeMs = 2 * 60 * 1000;\nconst now = Date.now();\n\nfunction startedAt(row) {\n  const parsed = Date.parse(row.created_at || row.timestamp || 0);\n  return Number.isFinite(parsed) ? parsed : 0;\n}\n\nconst active = items\n  .map((item) => item.json || {})\n  .filter((row) => row.status === 'processing')\n  .map((row) => ({ row, startedAt: startedAt(row) }))\n  .filter(({ startedAt }) => startedAt > 0 && now >= startedAt && now - startedAt < maxProcessingAgeMs)\n  .sort((a, b) => b.startedAt - a.startedAt)[0];\n\nif (!active) {\n  return [{ json: { active_processing: 'false' } }];\n}\n\nreturn [{ json: { ...active.row, active_processing: 'true' } }];"
       },
-      "id": "30000000-0000-4000-8000-000000000036",
+      "id": "a914a6ba-a057-4d93-a7d0-139acde13992",
       "name": "Select Active Processing Row",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -176,
-        336
+        -1568,
+        1440
       ]
     }
   ],
@@ -2551,8 +2551,7 @@
             "type": "main",
             "index": 0
           }
-        ],
-        []
+        ]
       ]
     },
     "Set Lead or Booking Row": {
@@ -2574,8 +2573,7 @@
             "type": "main",
             "index": 0
           }
-        ],
-        []
+        ]
       ]
     },
     "Set Ticket Row": {
@@ -2597,8 +2595,7 @@
             "type": "main",
             "index": 0
           }
-        ],
-        []
+        ]
       ]
     },
     "Unanswered or Low Confidence?": {
@@ -2609,8 +2606,7 @@
             "type": "main",
             "index": 0
           }
-        ],
-        []
+        ]
       ]
     },
     "Set Unanswered Row": {
@@ -2701,11 +2697,6 @@
         ]
       ]
     },
-    "Upsert Conversation Failed": {
-      "main": [
-        []
-      ]
-    },
     "OpenAI Chat Model": {
       "ai_languageModel": [
         [
@@ -2752,5 +2743,5 @@
   "meta": {
     "templateCredsSetupCompleted": true
   },
-  "versionId": "d0ba5654-c524-40cb-9b1d-7ae5ab2c1422"
+  "versionId": "7f66b2c3-db11-4b0d-a16e-591522f421a8"
 }
