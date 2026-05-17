@@ -176,6 +176,46 @@ function createPolicyHelpers(policy) {
   };
 }
 
+function checkCountFieldsStayNumeric(workflow, relative) {
+  const stringifiedCountPattern = /\b[A-Za-z0-9_]*_count\s*:\s*String\s*\(/;
+
+  for (const node of workflow.nodes || []) {
+    if (node.type === 'n8n-nodes-base.code') {
+      const jsCode = node.parameters?.jsCode;
+      if (typeof jsCode === 'string' && stringifiedCountPattern.test(jsCode)) {
+        fail(`${relative} stringifies a *_count field in Code node "${node.name}". Count fields should stay numeric before Sheets writes them.`);
+      }
+    }
+
+    if (node.type !== 'n8n-nodes-base.googleSheets') {
+      continue;
+    }
+
+    const columns = node.parameters?.columns;
+    const values = columns?.value;
+    if (!values || typeof values !== 'object' || Array.isArray(values)) {
+      continue;
+    }
+
+    const schema = Array.isArray(columns.schema) ? columns.schema : [];
+    for (const columnId of Object.keys(values)) {
+      if (!/_count$/i.test(columnId)) {
+        continue;
+      }
+
+      const field = schema.find((entry) => entry && entry.id === columnId);
+      if (!field) {
+        fail(`${relative} maps count column "${columnId}" in Google Sheets node "${node.name}" but has no schema entry for it.`);
+        continue;
+      }
+
+      if (field.type !== 'number') {
+        fail(`${relative} maps count column "${columnId}" in Google Sheets node "${node.name}" as ${JSON.stringify(field.type)}; use "number".`);
+      }
+    }
+  }
+}
+
 const root = process.cwd();
 const parsedArgs = parseArgs(process.argv.slice(2));
 const messages = [];
@@ -340,6 +380,8 @@ for (const filePath of files) {
       }
     });
   }
+
+  checkCountFieldsStayNumeric(workflow, relative);
 
   console.log(`Checked ${relative}: ${workflow.nodes?.length ?? 0} node(s).`);
 }
