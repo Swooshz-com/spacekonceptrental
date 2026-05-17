@@ -62,7 +62,7 @@
       "type": "@n8n/n8n-nodes-langchain.chatTrigger",
       "typeVersion": 1.4,
       "position": [
-        -2576,
+        -2928,
         1440
       ]
     },
@@ -140,7 +140,7 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -2320,
+        -2672,
         1440
       ]
     },
@@ -153,7 +153,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -2064,
+        -2416,
         1440
       ]
     },
@@ -191,7 +191,7 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
       "position": [
-        -1328,
+        -1680,
         1440
       ],
       "retryOnFail": true,
@@ -206,7 +206,7 @@
             "caseSensitive": true,
             "leftValue": "",
             "typeValidation": "strict",
-            "version": 1
+            "version": 3
           },
           "conditions": [
             {
@@ -228,7 +228,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -848,
+        -1200,
         1440
       ]
     },
@@ -242,8 +242,8 @@
       "type": "@n8n/n8n-nodes-langchain.chat",
       "typeVersion": 1.3,
       "position": [
-        -368,
-        1264
+        -816,
+        1328
       ]
     },
     {
@@ -495,7 +495,7 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
       "position": [
-        -1808,
+        -2160,
         1440
       ],
       "retryOnFail": true,
@@ -588,8 +588,8 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -368,
-        1488
+        -816,
+        1536
       ]
     },
     {
@@ -1844,7 +1844,7 @@
       "parameters": {
         "content": "# INTAKE AND DEBOUNCE\n\n- Receives chat messages and normalises input.\n- Writes each incoming chat message as a queued conversation row before AI/RAG runs.\n- Waits briefly, then reads same-session queued and merged rows.\n- Only the newest rapid-fire message runs AI; older rapid-fire executions are marked merged and receive a short acknowledgement.\n- The newest execution sends the AI one merged customer turn so messages like \"hi\" then \"I need 20 stools\" are handled together.\n- Completed or failed rows do not block later repeated questions.\n- Simple Conversation Memory is kept for normal multi-turn context, not as the audit log or dedupe system.\n- `message_id` remains the unique audit row id.\n- `dedupe_key` is kept only as a diagnostic/audit hash, not as the customer-facing block condition.\n- Later AI/RAG fields use `={{ '' }}` on purpose so Sheets cells stay blank until the row is overwritten by the completed, failed, or merged path.\n\n## Required manual configuration:\n\n- **Lookup Conversation State**\n  - `documentId.value`: Set this to the Google Sheets workbook used for support logs.\n  - Conversations sheet headers must include exact `session_id`, `status`, and `dedupe_key` headers with no trailing spaces.\n- **Upsert Conversation Processing**\n  - `documentId.value`: Set this to the same Google Sheets workbook used for support logs.\n- **Mark Conversation Processing**\n  - `documentId.value`: Set this to the same Google Sheets workbook used for support logs.\n- **Mark Conversation Merged**\n  - `documentId.value`: Set this to the same Google Sheets workbook used for support logs.",
         "height": 1180,
-        "width": 1972,
+        "width": 2404,
         "color": 5
       },
       "id": "ecb12d5b-598d-4682-abb8-1676165c625d",
@@ -1852,7 +1852,7 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        -2624,
+        -2976,
         784
       ]
     },
@@ -2369,8 +2369,8 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
       "typeVersion": 1.1,
       "position": [
-        -592,
-        1408
+        -576,
+        1392
       ],
       "id": "34ed9bd6-3a3c-4732-bc5b-41f6f62b4e1c",
       "name": "Google Gemini Chat Model"
@@ -2406,7 +2406,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -1088,
+        -1440,
         1440
       ]
     },
@@ -2514,6 +2514,7 @@
     },
     {
       "parameters": {
+        "resume": "timeInterval",
         "amount": 5,
         "unit": "seconds"
       },
@@ -2522,7 +2523,7 @@
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
-        -1568,
+        -1920,
         1440
       ]
     },
@@ -2775,8 +2776,8 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
       "position": [
-        -608,
-        1488
+        -1008,
+        1536
       ],
       "retryOnFail": true,
       "maxTries": 3,
@@ -3031,8 +3032,8 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
       "position": [
-        -608,
-        1264
+        -1008,
+        1328
       ],
       "retryOnFail": true,
       "maxTries": 3,
@@ -3465,5 +3466,5 @@
   "meta": {
     "templateCredsSetupCompleted": true
   },
-  "versionId": "726f8b30-10ba-4c5b-a30b-23ced6a6651c"
+  "versionId": "bd6e0477-55f2-4dc1-94f1-236aa8eac815"
 }
