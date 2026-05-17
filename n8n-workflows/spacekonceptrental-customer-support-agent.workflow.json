@@ -185,6 +185,7 @@
             }
           ]
         },
+        "combineFilters": "AND",
         "options": {
           "returnFirstMatch": false
         }

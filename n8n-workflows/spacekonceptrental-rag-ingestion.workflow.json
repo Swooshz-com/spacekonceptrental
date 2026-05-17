@@ -411,7 +411,7 @@
               "required": false,
               "defaultMatch": false,
               "display": true,
-              "type": "string",
+              "type": "number",
               "canBeUsedToMatch": true
             },
             {
