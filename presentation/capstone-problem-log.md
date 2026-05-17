@@ -129,6 +129,18 @@ Working notes for the final presentation. These are the practical issues found w
   - Fix: formatted error email body with structured HTML fields such as time, contact ID, error type, message, last node, execution ID, and execution URL.
   - Presentation point: ops alerts should be structured so failures can be triaged quickly.
 
+- Manual chat testing could leave conversation rows stuck at `processing`.
+  - Impact: when the customer support agent failed after writing the initial processing row, the customer did not get a graceful fallback and the conversation log looked permanently unfinished.
+  - Root cause: the global Error Trigger workflow is useful for workflow-level ops alerts, but it is not a customer-facing fallback path and may not fire during manual chat testing or unpublished workflow runs.
+  - Fix: added a workflow-local AI/RAG error output path that builds a fallback response, sends the customer a handoff message, updates the conversation row with `status` set to `failed`, and routes the item to escalation and unanswered-question handling.
+  - Presentation point: customer-facing automations need local graceful degradation; global error workflows are a safety net, not the full recovery experience.
+
+- Fresh chat messages incorrectly went to the duplicate-safe reply path.
+  - Impact: a normal customer message could be treated as an already-processing or completed duplicate, and the Chat response node then failed with `Response Mode` not set to `Using Response Nodes`.
+  - Root cause: `Lookup Conversation State` was reading the conversations sheet without filtering by the current `message_id`, and the Chat Trigger had lost its `responseNodes` option after workflow edits.
+  - Fix: filter the dedupe lookup by the current `message_id`, return only the first matching row, set the Chat Trigger response mode to `responseNodes`, and add validator checks for both settings.
+  - Presentation point: duplicate protection must be scoped to a stable message key, and response-node workflows need trigger-level response mode guarded in source control.
+
 ## AI agent design notes
 
 - Question raised: whether the AI agent needs memory.

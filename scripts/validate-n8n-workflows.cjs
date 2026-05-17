@@ -216,6 +216,114 @@ function checkCountFieldsStayNumeric(workflow, relative) {
   }
 }
 
+function hasConnection(workflow, sourceName, outputIndex, targetName) {
+  const output = workflow.connections?.[sourceName]?.main?.[outputIndex];
+  return Array.isArray(output) && output.some((connection) => connection.node === targetName);
+}
+
+function findWorkflowNode(workflow, nodeName) {
+  return (workflow.nodes || []).find((node) => node.name === nodeName);
+}
+
+function checkCustomerSupportAgentFallback(workflow, relative) {
+  if (workflow.name !== 'SpaceKonceptRental - RAG Customer Support Agent') {
+    return;
+  }
+
+  const agentNode = findWorkflowNode(workflow, 'SpaceKonceptRental AI Agent');
+  if (!agentNode) {
+    fail(`${relative} is missing SpaceKonceptRental AI Agent.`);
+    return;
+  }
+
+  if (agentNode.onError !== 'continueErrorOutput') {
+    fail(`${relative} must route AI/RAG failures using onError: continueErrorOutput on "SpaceKonceptRental AI Agent".`);
+  }
+
+  const requiredNodes = [
+    ['Build Agent Failure Fallback', 'n8n-nodes-base.set'],
+    ['Upsert Conversation Failed', 'n8n-nodes-base.googleSheets'],
+    ['Send Fallback Reply', '@n8n/n8n-nodes-langchain.chat'],
+  ];
+
+  for (const [nodeName, expectedType] of requiredNodes) {
+    const node = findWorkflowNode(workflow, nodeName);
+    if (!node) {
+      fail(`${relative} is missing fallback node "${nodeName}".`);
+      continue;
+    }
+    if (node.type !== expectedType) {
+      fail(`${relative} fallback node "${nodeName}" has type ${JSON.stringify(node.type)}; expected ${expectedType}.`);
+    }
+  }
+
+  if (!hasConnection(workflow, 'SpaceKonceptRental AI Agent', 1, 'Build Agent Failure Fallback')) {
+    fail(`${relative} must connect the AI Agent error output to "Build Agent Failure Fallback".`);
+  }
+
+  if (!hasConnection(workflow, 'Build Agent Failure Fallback', 0, 'Upsert Conversation Failed')) {
+    fail(`${relative} must update the conversation row on the agent fallback path.`);
+  }
+
+  if (!hasConnection(workflow, 'Build Agent Failure Fallback', 0, 'Send Fallback Reply')) {
+    fail(`${relative} must send a customer fallback reply on the agent fallback path.`);
+  }
+
+  const fallbackLogNode = findWorkflowNode(workflow, 'Upsert Conversation Failed');
+  const fallbackValues = fallbackLogNode?.parameters?.columns?.value || {};
+  if (fallbackValues.status !== 'failed') {
+    fail(`${relative} fallback conversation log must write status "failed".`);
+  }
+  if (!String(fallbackValues.needs_escalation || '').includes('needs_escalation')) {
+    fail(`${relative} fallback conversation log must preserve needs_escalation from the fallback row.`);
+  }
+}
+
+function checkCustomerSupportAgentDedupeAndResponseMode(workflow, relative) {
+  if (workflow.name !== 'SpaceKonceptRental - RAG Customer Support Agent') {
+    return;
+  }
+
+  const triggerNode = findWorkflowNode(workflow, 'When Chat Message Received');
+  if (!triggerNode) {
+    fail(`${relative} is missing When Chat Message Received.`);
+  } else if (triggerNode.parameters?.options?.responseMode !== 'responseNodes') {
+    fail(`${relative} Chat Trigger must set options.responseMode to "responseNodes" because the workflow uses Chat response nodes.`);
+  }
+
+  const lookupNode = findWorkflowNode(workflow, 'Lookup Conversation State');
+  if (!lookupNode) {
+    fail(`${relative} is missing Lookup Conversation State.`);
+    return;
+  }
+
+  if (lookupNode.type !== 'n8n-nodes-base.googleSheets') {
+    fail(`${relative} Lookup Conversation State must use the Google Sheets node.`);
+  }
+
+  if ((lookupNode.parameters?.operation || 'read') !== 'read') {
+    fail(`${relative} Lookup Conversation State must read the conversation log before dedupe.`);
+  }
+
+  const filters = lookupNode.parameters?.filtersUI?.values;
+  const hasMessageIdFilter = Array.isArray(filters) && filters.some((filter) =>
+    filter?.lookupColumn === 'message_id' &&
+    String(filter?.lookupValue || '').includes('message_id')
+  );
+
+  if (!hasMessageIdFilter) {
+    fail(`${relative} Lookup Conversation State must filter by the current message_id before dedupe.`);
+  }
+
+  if (lookupNode.parameters?.options?.returnFirstMatch !== true) {
+    fail(`${relative} Lookup Conversation State must return only the first matching conversation row.`);
+  }
+
+  if (lookupNode.alwaysOutputData !== true) {
+    fail(`${relative} Lookup Conversation State must keep alwaysOutputData true so new messages can continue when no row is found.`);
+  }
+}
+
 const root = process.cwd();
 const parsedArgs = parseArgs(process.argv.slice(2));
 const messages = [];
@@ -382,6 +490,8 @@ for (const filePath of files) {
   }
 
   checkCountFieldsStayNumeric(workflow, relative);
+  checkCustomerSupportAgentFallback(workflow, relative);
+  checkCustomerSupportAgentDedupeAndResponseMode(workflow, relative);
 
   console.log(`Checked ${relative}: ${workflow.nodes?.length ?? 0} node(s).`);
 }
