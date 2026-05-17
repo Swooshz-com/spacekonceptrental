@@ -2,7 +2,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 function usage() {
-  console.error('Usage: node templates/n8n/sync-helpers/prepare-n8n-live-import.cjs <repo-workflow.json> [bindings.json] [output.json] [live-workflow.json]');
+  console.error('Usage: node scripts/prepare-n8n-live-import.cjs <repo-workflow.json> [bindings.json] [output.json] [live-workflow.json]');
   process.exit(1);
 }
 

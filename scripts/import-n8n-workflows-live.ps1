@@ -471,7 +471,6 @@ function Invoke-WorkflowPreflight($WorkflowFiles, [bool]$BindingsFileExists, $Li
     $wasArchivedInLive = $false
     $willUpdateArchivedWorkflow = $false
     $plannedAction = "Import"
-    $plannedReason = "Workflow body differs from live n8n."
     $targetLiveId = $workflowId
     $actionNote = ""
     $hasWorkflowId = -not [string]::IsNullOrWhiteSpace($workflowId)
@@ -506,13 +505,11 @@ function Invoke-WorkflowPreflight($WorkflowFiles, [bool]$BindingsFileExists, $Li
           $wasArchivedInLive = $true
           $willUpdateArchivedWorkflow = $true
           $plannedAction = "Update archived by repo id"
-          $plannedReason = "Repo workflow id matches an archived live workflow."
           $actionNote = "Exact repo id exists live but is archived. Unarchive this workflow in n8n if you want to use it."
           Write-Step "ARCHIVE" "$($workflowFile.Name) ($workflowId) is archived in live n8n; import will update that archived workflow because the ID match is explicit."
         } else {
           $workflowStatus = "ExistingById"
           $plannedAction = "Update by repo id"
-          $plannedReason = "Workflow body differs from live n8n."
         }
       }
     }
@@ -538,19 +535,16 @@ function Invoke-WorkflowPreflight($WorkflowFiles, [bool]$BindingsFileExists, $Li
         Write-WorkflowJson $liveWorkflowByName.Workflow $liveCompareFile
         if ($willUpdateArchivedWorkflow) {
           $plannedAction = "Update archived by name"
-          $plannedReason = "Workflow name matches an archived live workflow."
           $actionNote = "ArchivedByNameMode UpdateArchived selected. Unarchive this workflow in n8n if you want to use it."
           Write-Step "MATCH" "$($workflowFile.Name) matched archived live workflow '$workflowName' by name as $liveWorkflowIdForImport."
         } else {
           $plannedAction = "Update by name"
-          $plannedReason = "Workflow body differs from live n8n."
           Write-Step "MATCH" "$($workflowFile.Name) matched live workflow '$workflowName' by name as $liveWorkflowIdForImport."
         }
       } else {
         $workflowStatus = "MissingLive"
         $missingLiveWorkflowCount += 1
         $plannedAction = "Create new"
-        $plannedReason = "No matching live workflow was found."
         if ($liveWorkflowByName.Status -eq "ArchivedCreateNew" -or -not $hasWorkflowId) {
           $generatedWorkflowIdForImport = New-WorkflowId
           $targetLiveId = $generatedWorkflowIdForImport
@@ -602,19 +596,11 @@ function Invoke-WorkflowPreflight($WorkflowFiles, [bool]$BindingsFileExists, $Li
         Write-Step "WARN" "$($workflowFile.Name) has $liveCredentialCountForWarning live credential-bound node(s), but credential drift is UNKNOWN because local binding metadata is missing, unavailable, or ambiguous."
       }
 
-      if ($hasBodyChanges -and $credentialDriftStatus -eq "DIFF") {
-        $plannedReason = "Workflow body differs from live n8n; credential bindings also differ."
-      } elseif ($hasBodyChanges) {
-        $plannedReason = "Workflow body differs from live n8n."
-      }
-
       if (-not $hasBodyChanges -and $credentialDriftStatus -eq "DIFF") {
-        $plannedReason = "Credential bindings differ from live n8n."
         Write-Step "CRED" "$($workflowFile.Name) has credential binding changes; it will be imported."
       }
 
       if (-not $hasBodyChanges -and $credentialDriftStatus -ne "DIFF" -and $ForceImport) {
-        $plannedReason = "ForceImport was requested."
         Write-Step "FORCE" "$($workflowFile.Name) has no meaningful workflow or credential changes, but ForceImport is set."
       }
 
@@ -677,7 +663,7 @@ function Invoke-WorkflowPreflight($WorkflowFiles, [bool]$BindingsFileExists, $Li
       Write-Step "ID" "$($workflowFile.Name) will update archived live workflow id $workflowId. Unarchive that workflow in n8n if you want it active/usable."
     }
 
-    Write-Step "READY" "$($workflowFile.Name) prepared import payload. Reason: $plannedReason"
+    Write-Step "READY" "$($workflowFile.Name) prepared import payload."
     $plannedImports += [PSCustomObject]@{
       File = $workflowFile.Name
       PreparedFile = $preparedFile
@@ -686,7 +672,6 @@ function Invoke-WorkflowPreflight($WorkflowFiles, [bool]$BindingsFileExists, $Li
       UpdatesArchivedWorkflow = $willUpdateArchivedWorkflow
       RequiresRestartWarning = $requiresRestartWarning
       Action = $plannedAction
-      Reason = $plannedReason
       TargetId = $targetLiveId
       Note = $actionNote
     }
@@ -732,7 +717,6 @@ function Write-WorkflowActionSummary($PlannedImports, $StatusLabel) {
   foreach ($item in $PlannedImports) {
     Write-Step $StatusLabel $item.File
     Write-Host ("  Action          : {0}" -f $item.Action)
-    Write-Host ("  Reason          : {0}" -f $item.Reason)
     Write-Host ("  Target          : {0}" -f $item.TargetId)
     Write-Host ("  Restart warning : {0}" -f $item.RequiresRestartWarning)
 
@@ -767,8 +751,6 @@ if (-not $bindingsFileExists) {
   Write-Step "WARN" "Credential bindings file is missing. Existing live credentials cannot be restored unless live workflows are exportable first."
 }
 
-$workflowFiles = Get-RootWorkflowFiles $WorkflowDirPath
-
 Invoke-ProjectWorkflowHook "before-import-validation" @{
   "archived-by-name-mode" = $ArchivedByNameMode
   "bindings-file" = $BindingsFilePath
@@ -792,8 +774,7 @@ Invoke-LivePreflight
 $liveWorkflows = Get-LiveWorkflows
 Write-Step "LIVE" "Read $($liveWorkflows.Count) workflow(s) from live n8n."
 
-Initialize-RunDirectory $PreparedDirPath
-Write-Step "CLEAN" "Cleared prepared import directory $(Get-DisplayPath $PreparedDirPath)."
+New-Item -ItemType Directory -Force -Path $PreparedDirPath | Out-Null
 
 $preflight = Invoke-WorkflowPreflight $workflowFiles $bindingsFileExists $liveWorkflows
 

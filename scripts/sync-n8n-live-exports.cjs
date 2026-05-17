@@ -2,7 +2,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 function usage() {
-  console.error('Usage: node templates/n8n/sync-helpers/sync-n8n-live-exports.cjs <exports-dir> <workflow-dir> [bindings.json] [--credentials-only] [--allow-missing-exports] [--preserve-tags] [--create-missing-workflows] [--sync-exported-only]');
+  console.error('Usage: node scripts/sync-n8n-live-exports.cjs <exports-dir> <workflow-dir> [bindings.json] [--credentials-only] [--allow-missing-exports] [--preserve-tags] [--create-missing-workflows] [--sync-exported-only]');
   process.exit(1);
 }
 
