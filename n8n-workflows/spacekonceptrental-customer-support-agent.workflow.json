@@ -213,8 +213,8 @@
         1440
       ],
       "retryOnFail": true,
-      "maxTries": 2,
-      "waitBetweenTries": 3000,
+      "maxTries": 6,
+      "waitBetweenTries": 15000,
       "alwaysOutputData": true
     },
     {
@@ -2628,8 +2628,8 @@
         1312
       ],
       "retryOnFail": true,
-      "maxTries": 2,
-      "waitBetweenTries": 3000,
+      "maxTries": 6,
+      "waitBetweenTries": 15000,
       "alwaysOutputData": true
     },
     {

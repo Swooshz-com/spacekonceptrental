@@ -166,6 +166,12 @@ Working notes for the final presentation. These are the practical issues found w
   - Fix: added a workflow-local AI/RAG error output path that builds a fallback response, sends the customer a handoff message, updates the conversation row with `status` set to `failed`, and routes the item to escalation and unanswered-question handling.
   - Presentation point: customer-facing automations need local graceful degradation; global error workflows are a safety net, not the full recovery experience.
 
+- Burst final testing could exceed the Google Sheets read quota.
+  - Impact: rapid route testing could fail at `Lookup Conversation State` before the AI agent or local fallback path ran.
+  - Root cause: the workflow reads the conversations sheet for debounce/session context on every chat message, and Google Sheets applies a per-user read-request-per-minute limit.
+  - Fix: increased retry backoff on the two conversations-sheet read nodes and added a validator guard so export/import sync does not shrink the retry window.
+  - Presentation point: Google Sheets is acceptable for a capstone log store, but it behaves like a quota-limited integration, not a real chat database.
+
 - Fresh chat messages incorrectly went to the duplicate-safe reply path.
   - Impact: a normal customer message could be treated as an already-processing or completed duplicate, and the Chat response node then failed with `Response Mode` not set to `Using Response Nodes`.
   - Root cause: `Lookup Conversation State` was reading the conversations sheet without a stable duplicate key, while `message_id` was timestamp-based and therefore not reliable for double-submit detection. The old Chat Trigger node version also did not preserve the `responseNodes` option needed by Chat response nodes.

@@ -454,6 +454,19 @@ function checkCustomerSupportAgentLoggingContract(workflow, relative) {
     return;
   }
 
+  for (const nodeName of ['Lookup Conversation State', 'Lookup Conversation Transcript']) {
+    const node = findWorkflowNode(workflow, nodeName);
+    if (
+      node?.type !== 'n8n-nodes-base.googleSheets' ||
+      node.retryOnFail !== true ||
+      Number(node.maxTries || 0) < 5 ||
+      Number(node.waitBetweenTries || 0) < 10000 ||
+      node.alwaysOutputData !== true
+    ) {
+      fail(`${relative} ${nodeName} must tolerate short Google Sheets read-quota bursts with retryOnFail, at least 5 tries, at least 10s between tries, and alwaysOutputData.`);
+    }
+  }
+
   const normaliseNode = findWorkflowNode(workflow, 'Normalise Input');
   const messageIdAssignment = findAssignment(normaliseNode, 'message_id');
   const timestampAssignment = findAssignment(normaliseNode, 'timestamp');
