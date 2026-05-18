@@ -24,6 +24,7 @@ customer-support-agent capstone requirements.
 - `kb/` - Markdown files to upload into the Google Drive knowledge-base folder.
 - `presentation/` - capstone walkthrough deck.
 - `scripts/` - local workflow validation.
+- `website/` - simple static website demo that embeds the live support chat.
 - `SpaceKonceptRental_website_display_design_wishlist.jpg` - future website
   design reference, not part of the RAG upload.
 
@@ -92,6 +93,16 @@ After import, credential setup, and KB ingestion, test:
 7. An angry complaint that should escalate.
 8. A duplicate `message_id`.
 9. A controlled workflow error.
+
+## Website Demo
+
+Open `website/index.html` in a browser for a simple capstone website demo. The
+page embeds the current live n8n hosted chat URL and includes a fallback link
+that opens the chat in a new tab.
+
+For final submission, deploy this static folder or the repo root to a simple
+host such as Netlify or GitHub Pages, then replace the ngrok chat URL if the
+public n8n webhook URL changes.
 
 ## Presentation Status
 
