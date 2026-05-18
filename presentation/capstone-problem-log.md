@@ -135,10 +135,10 @@ Working notes for the final presentation. These are the practical issues found w
   - Fix: include `processing` rows when selecting the latest debounce owner and sort same-second rows by execution ID.
   - Presentation point: Sheets can support a capstone queue, but concurrent executions still need explicit ordering rules.
 
-- Lead rows were hard to trace back to the chat that created them.
-  - Impact: sales could see a lead row, but had to manually search by opaque `session_id` to understand the customer conversation.
-  - Root cause: the workflow stored operational IDs, but did not persist a human-friendly conversation reference or transcript on the lead row.
-  - Fix: add `conversation_ref` to conversation rows and lead rows, and persist a plain-text `conversation_transcript` on each lead row.
+- Follow-up rows were hard to trace back to the chat that created them.
+  - Impact: sales or support could see a lead, ticket, or unanswered row, but had to manually search by opaque `session_id` to understand the customer conversation.
+  - Root cause: the workflow stored operational IDs, but did not persist a human-friendly conversation reference or transcript on follow-up rows.
+  - Fix: add `conversation_ref` to conversation rows, leads, tickets, and unanswered rows, and persist a plain-text `conversation_transcript` on each follow-up row.
   - Presentation point: even a Google Sheets capstone needs simple relational handles so humans can audit what happened.
 
 - Debounce-merged messages were replying with an internal acknowledgement.

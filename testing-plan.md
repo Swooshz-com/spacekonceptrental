@@ -104,10 +104,12 @@ For clean support-agent testing, clear only data rows in:
 
 Keep `kb_ingestion` unless rerunning ingestion. Keep all headers.
 
-Extra headers required by the lead tracing layer:
+Extra headers required by the follow-up tracing layer:
 
 - `conversations`: `conversation_ref`
 - `leads`: `conversation_ref`, `conversation_transcript`
+- `tickets`: `conversation_ref`, `conversation_transcript`
+- `unanswered_questions`: `conversation_ref`, `conversation_transcript`
 
 Expected conversation statuses after debounce change:
 
@@ -233,6 +235,7 @@ The delivery arrived late and 4 stools were missing. My name is Alex Tan, email 
 Expected:
 
 - Ticket row is created.
+- Ticket row includes `conversation_ref` and `conversation_transcript`.
 - Lead row is not created unless the customer also asks for a new rental quote.
 - Ticket has name, email, phone, category, summary, details, urgency, status, and
   ticket ID.
@@ -253,6 +256,7 @@ Expected:
 - Bot says it does not have that detail yet and offers escalation/follow-up.
 - `unanswered_questions` row is written when confidence is low or answer is not
   in KB.
+- Unanswered row includes `conversation_ref` and `conversation_transcript`.
 - Unanswered notification email is readable and includes transcript context.
 
 ### Test 7 - Source And Link Check

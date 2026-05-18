@@ -557,15 +557,22 @@ function checkCustomerSupportAgentLoggingContract(workflow, relative) {
     }
   }
 
-  const leadRowNode = findWorkflowNode(workflow, 'Set Lead or Booking Row');
-  if (!findAssignment(leadRowNode, 'conversation_ref') || !findAssignment(leadRowNode, 'conversation_transcript')) {
-    fail(`${relative} Set Lead or Booking Row must include conversation_ref and conversation_transcript for human-friendly lead tracing.`);
-  }
+  const followUpRows = [
+    ['Set Lead or Booking Row', 'Upsert Lead or Booking'],
+    ['Set Ticket Row', 'Upsert Ticket'],
+    ['Set Unanswered Row', 'Upsert Unanswered Question'],
+  ];
+  for (const [setNodeName, upsertNodeName] of followUpRows) {
+    const setNode = findWorkflowNode(workflow, setNodeName);
+    if (!findAssignment(setNode, 'conversation_ref') || !findAssignment(setNode, 'conversation_transcript')) {
+      fail(`${relative} ${setNodeName} must include conversation_ref and conversation_transcript for human-friendly follow-up tracing.`);
+    }
 
-  const leadUpsertNode = findWorkflowNode(workflow, 'Upsert Lead or Booking');
-  const leadUpsertValues = leadUpsertNode?.parameters?.columns?.value || {};
-  if (!leadUpsertValues.conversation_ref || !leadUpsertValues.conversation_transcript) {
-    fail(`${relative} Upsert Lead or Booking must persist conversation_ref and conversation_transcript.`);
+    const upsertNode = findWorkflowNode(workflow, upsertNodeName);
+    const upsertValues = upsertNode?.parameters?.columns?.value || {};
+    if (!upsertValues.conversation_ref || !upsertValues.conversation_transcript) {
+      fail(`${relative} ${upsertNodeName} must persist conversation_ref and conversation_transcript.`);
+    }
   }
 
   const notificationEdges = [

@@ -37,8 +37,8 @@
     },
     {
       "parameters": {
-        "content": "# FOLLOW-UP ROUTING\n\n- Routes leads, bookings, tickets, escalations, and unanswered items.\n- Writes each follow-up record after the main conversation row is completed.\n- Fallback failures are routed to escalation and unanswered-question handling so operator follow-up is visible.\n\n## Required manual configuration:\n\n- **Upsert Lead or Booking**\n  - `documentId.value`: Set this to the Google Sheets workbook used for lead and booking logs.\n  - Leads sheet headers must include exact `conversation_ref` and `conversation_transcript` headers.\n- **Upsert Ticket**\n  - `documentId.value`: Set this to the Google Sheets workbook used for ticket logs.\n- **Send Escalation Alert**\n  - `sendTo`: Set this to the support mailbox for escalation alerts.\n- **Upsert Unanswered Question**\n  - `documentId.value`: Set this to the Google Sheets workbook used for unanswered question logs.",
-        "height": 1164,
+        "content": "# FOLLOW-UP ROUTING\n\n- Routes leads, bookings, tickets, escalations, and unanswered items.\n- Writes each follow-up record after the main conversation row is completed.\n- Fallback failures are routed to escalation and unanswered-question handling so operator follow-up is visible.\n\n## Required manual configuration:\n\n- **Upsert Lead or Booking**\n  - `documentId.value`: Set this to the Google Sheets workbook used for lead and booking logs.\n  - Leads sheet headers must include exact `conversation_ref` and `conversation_transcript` headers.\n- **Upsert Ticket**\n  - `documentId.value`: Set this to the Google Sheets workbook used for ticket logs.\n  - Tickets sheet headers must include exact `conversation_ref` and `conversation_transcript` headers.\n- **Send Escalation Alert**\n  - `sendTo`: Set this to the support mailbox for escalation alerts.\n- **Upsert Unanswered Question**\n  - `documentId.value`: Set this to the Google Sheets workbook used for unanswered question logs.\n  - Unanswered questions sheet headers must include exact `conversation_ref` and `conversation_transcript` headers.",
+        "height": 1196,
         "width": 1092,
         "color": 6
       },
@@ -48,7 +48,7 @@
       "typeVersion": 1,
       "position": [
         1280,
-        800
+        768
       ]
     },
     {
@@ -1355,6 +1355,12 @@
               "type": "string"
             },
             {
+              "id": "set-ticket-row-conversation-ref",
+              "name": "conversation_ref",
+              "value": "={{ $json.conversation_ref || $json.ticket_id || $json.session_id }}",
+              "type": "string"
+            },
+            {
               "id": "set-ticket-row-2",
               "name": "session_id",
               "value": "={{ $json.session_id }}",
@@ -1394,6 +1400,12 @@
               "id": "set-ticket-row-8",
               "name": "details",
               "value": "={{ $json.ticket?.details || $json.user_message_redacted || \"\" }}",
+              "type": "string"
+            },
+            {
+              "id": "set-ticket-row-conversation-transcript",
+              "name": "conversation_transcript",
+              "value": "={{ $json.conversation_transcript_text || $json.user_message_redacted || \"\" }}",
               "type": "string"
             },
             {
@@ -1454,6 +1466,7 @@
           "mappingMode": "defineBelow",
           "value": {
             "ticket_id": "={{ $json.ticket_id }}",
+            "conversation_ref": "={{ $json.conversation_ref }}",
             "session_id": "={{ $json.session_id }}",
             "name": "={{ $json.name }}",
             "email": "={{ $json.email }}",
@@ -1461,6 +1474,7 @@
             "category": "={{ $json.category }}",
             "summary": "={{ $json.summary }}",
             "details": "={{ $json.details }}",
+            "conversation_transcript": "={{ $json.conversation_transcript }}",
             "urgency": "={{ $json.urgency }}",
             "status": "={{ $json.status }}",
             "created_at": "={{ $json.created_at }}",
@@ -1473,6 +1487,15 @@
             {
               "id": "ticket_id",
               "displayName": "ticket_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "conversation_ref",
+              "displayName": "conversation_ref",
               "required": false,
               "defaultMatch": false,
               "display": true,
@@ -1536,6 +1559,15 @@
             {
               "id": "details",
               "displayName": "details",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "conversation_transcript",
+              "displayName": "conversation_transcript",
               "required": false,
               "defaultMatch": false,
               "display": true,
@@ -1703,6 +1735,12 @@
               "type": "string"
             },
             {
+              "id": "set-unanswered-row-conversation-ref",
+              "name": "conversation_ref",
+              "value": "={{ $json.conversation_ref || $json.unanswered_id || $json.session_id }}",
+              "type": "string"
+            },
+            {
               "id": "set-unanswered-row-2",
               "name": "session_id",
               "value": "={{ $json.session_id }}",
@@ -1736,6 +1774,12 @@
               "id": "set-unanswered-row-7",
               "name": "source_titles",
               "value": "={{ $json.source_titles }}",
+              "type": "string"
+            },
+            {
+              "id": "set-unanswered-row-conversation-transcript",
+              "name": "conversation_transcript",
+              "value": "={{ $json.conversation_transcript_text || $json.user_message_redacted || \"\" }}",
               "type": "string"
             },
             {
@@ -1784,12 +1828,14 @@
           "mappingMode": "defineBelow",
           "value": {
             "id": "={{ $json.id }}",
+            "conversation_ref": "={{ $json.conversation_ref }}",
             "session_id": "={{ $json.session_id }}",
             "user_message_redacted": "={{ $json.user_message_redacted }}",
             "reason": "={{ $json.reason }}",
             "intent": "={{ $json.intent }}",
             "confidence": "={{ $json.confidence }}",
             "source_titles": "={{ $json.source_titles }}",
+            "conversation_transcript": "={{ $json.conversation_transcript }}",
             "created_at": "={{ $json.created_at }}",
             "execution_id": "={{ $json.execution_id }}"
           },
@@ -1800,6 +1846,15 @@
             {
               "id": "id",
               "displayName": "id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "conversation_ref",
+              "displayName": "conversation_ref",
               "required": false,
               "defaultMatch": false,
               "display": true,
@@ -1854,6 +1909,15 @@
             {
               "id": "source_titles",
               "displayName": "source_titles",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "conversation_transcript",
+              "displayName": "conversation_transcript",
               "required": false,
               "defaultMatch": false,
               "display": true,
@@ -2497,7 +2561,7 @@
       "parameters": {
         "sendTo": "SpaceKonceptRental@gmail.com",
         "subject": "=[SKR Ticket] {{ $json.urgency || \"medium\" }} - {{ $json.summary || $json.ticket_id }}",
-        "message": "=<h2>New support ticket</h2><table cellpadding=\"6\" cellspacing=\"0\" style=\"border-collapse:collapse;width:100%;max-width:760px;\"><tr><td style=\"width:150px;color:#52606d;\"><strong>Ticket ID</strong></td><td>{{ $json.ticket_id }}</td></tr><tr><td style=\"color:#52606d;\"><strong>Contact</strong></td><td>{{ $json.name || \"not_available\" }} | {{ $json.email || \"not_available\" }} | {{ $json.phone || \"not_available\" }}</td></tr><tr><td style=\"color:#52606d;\"><strong>Category</strong></td><td>{{ $json.category }}</td></tr><tr><td style=\"color:#52606d;\"><strong>Urgency</strong></td><td>{{ $json.urgency }}</td></tr><tr><td style=\"color:#52606d;\"><strong>Summary</strong></td><td>{{ $json.summary }}</td></tr><tr><td style=\"color:#52606d;\"><strong>Details</strong></td><td>{{ $json.details }}</td></tr></table><h3>Conversation transcript ({{ $(\"Build Notification Context\").first().json.conversation_message_count || 1 }} message(s))</h3>{{ $(\"Build Notification Context\").first().json.conversation_transcript_html || \"<p>No transcript available.</p>\" }}<hr><p style=\"font-size:12px;color:#697386;\">This email was generated from the n8n customer support workflow. Review the transcript before replying to the customer.</p>",
+        "message": "=<h2>New support ticket</h2><table cellpadding=\"6\" cellspacing=\"0\" style=\"border-collapse:collapse;width:100%;max-width:760px;\"><tr><td style=\"width:150px;color:#52606d;\"><strong>Ticket ID</strong></td><td>{{ $json.ticket_id }}</td></tr><tr><td style=\"color:#52606d;\"><strong>Conversation</strong></td><td>{{ $json.conversation_ref || $(\"Build Notification Context\").first().json.conversation_ref || \"not_available\" }}</td></tr><tr><td style=\"color:#52606d;\"><strong>Contact</strong></td><td>{{ $json.name || \"not_available\" }} | {{ $json.email || \"not_available\" }} | {{ $json.phone || \"not_available\" }}</td></tr><tr><td style=\"color:#52606d;\"><strong>Category</strong></td><td>{{ $json.category }}</td></tr><tr><td style=\"color:#52606d;\"><strong>Urgency</strong></td><td>{{ $json.urgency }}</td></tr><tr><td style=\"color:#52606d;\"><strong>Summary</strong></td><td>{{ $json.summary }}</td></tr><tr><td style=\"color:#52606d;\"><strong>Details</strong></td><td>{{ $json.details }}</td></tr></table><h3>Conversation transcript ({{ $(\"Build Notification Context\").first().json.conversation_message_count || 1 }} message(s))</h3>{{ $(\"Build Notification Context\").first().json.conversation_transcript_html || \"<p>No transcript available.</p>\" }}<hr><p style=\"font-size:12px;color:#697386;\">This email was generated from the n8n customer support workflow. Review the transcript before replying to the customer.</p>",
         "options": {}
       },
       "type": "n8n-nodes-base.gmail",
@@ -2513,7 +2577,7 @@
       "parameters": {
         "sendTo": "SpaceKonceptRental@gmail.com",
         "subject": "=[SKR Unanswered] {{ $json.intent }} - {{ $json.id }}",
-        "message": "=<h2>Unanswered or low-confidence reply</h2>{{ $json.notification_summary_html }}<h3>Reason</h3><p>{{ $json.reason || \"Low confidence or unknown intent\" }}</p><h3>Current message</h3><p>{{ $json.user_message_redacted || \"not_available\" }}</p><h3>Sources</h3><p>{{ $json.source_titles || \"not_available\" }}</p><h3>Conversation transcript ({{ $(\"Build Notification Context\").first().json.conversation_message_count || 1 }} message(s))</h3>{{ $(\"Build Notification Context\").first().json.conversation_transcript_html || \"<p>No transcript available.</p>\" }}<hr><p style=\"font-size:12px;color:#697386;\">This email was generated from the n8n customer support workflow. Review the transcript before replying to the customer.</p>",
+        "message": "=<h2>Unanswered or low-confidence reply</h2>{{ $json.notification_summary_html }}<h3>Conversation</h3><p>{{ $json.conversation_ref || $(\"Build Notification Context\").first().json.conversation_ref || \"not_available\" }}</p><h3>Reason</h3><p>{{ $json.reason || \"Low confidence or unknown intent\" }}</p><h3>Current message</h3><p>{{ $json.user_message_redacted || \"not_available\" }}</p><h3>Sources</h3><p>{{ $json.source_titles || \"not_available\" }}</p><h3>Conversation transcript ({{ $(\"Build Notification Context\").first().json.conversation_message_count || 1 }} message(s))</h3>{{ $(\"Build Notification Context\").first().json.conversation_transcript_html || \"<p>No transcript available.</p>\" }}<hr><p style=\"font-size:12px;color:#697386;\">This email was generated from the n8n customer support workflow. Review the transcript before replying to the customer.</p>",
         "options": {}
       },
       "type": "n8n-nodes-base.gmail",
@@ -3545,5 +3609,5 @@
   "meta": {
     "templateCredsSetupCompleted": true
   },
-  "versionId": "fa70b4f4-7b8e-4305-bec0-fbf5598ecbf4"
+  "versionId": "24f97f97-0d3d-400d-8858-43404172b3c0"
 }
