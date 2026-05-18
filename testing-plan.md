@@ -104,6 +104,11 @@ For clean support-agent testing, clear only data rows in:
 
 Keep `kb_ingestion` unless rerunning ingestion. Keep all headers.
 
+Extra headers required by the lead tracing layer:
+
+- `conversations`: `conversation_ref`
+- `leads`: `conversation_ref`, `conversation_transcript`
+
 Expected conversation statuses after debounce change:
 
 - `queued`
@@ -168,9 +173,11 @@ My name is Jamie Lee from Orchard Events, email jamie.multiturn@example.com and 
 Expected:
 
 - Older rapid-fire rows are marked `merged`.
+- Older rapid-fire rows do not produce their own visible bot reply.
 - Newest row becomes `completed`.
 - The AI reply understands the full combined request.
 - At most one lead row is created for Jamie Lee.
+- The lead row includes `conversation_ref` and `conversation_transcript`.
 - Lead phone stays as literal text, not `#ERROR!`.
 - Phone keeps the leading `+65`.
 - Lead details include item count, venue, date, duration, name, email, and phone.
@@ -196,6 +203,7 @@ Expected:
 - Simple Conversation Memory helps the bot understand the follow-up.
 - Lead row is created only once after enough details are available.
 - Conversation rows share the same `session_id`.
+- Lead row has the same `conversation_ref` as the conversation rows.
 - Sorting by `session_id`, then `created_at`, reconstructs the chat.
 
 ### Test 4 - Incomplete Complaint

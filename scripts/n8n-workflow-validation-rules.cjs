@@ -327,11 +327,13 @@ function checkCustomerSupportAgentDedupeAndResponseMode(workflow, relative) {
     !selectorCode.includes('debounceWindowMs') ||
     !selectorCode.includes('queued') ||
     !selectorCode.includes('merged') ||
+    !selectorCode.includes('processing') ||
     !selectorCode.includes('debounce_superseded') ||
     !selectorCode.includes('merged_message_ids') ||
+    !selectorCode.includes('executionOrder') ||
     !selectorCode.includes('Treat them as one customer turn')
   ) {
-    fail(`${relative} Select Debounced Chat Batch must choose the newest rapid-fire message and merge same-session queued rows.`);
+    fail(`${relative} Select Debounced Chat Batch must choose the newest rapid-fire message and merge same-session queued, merged, or processing rows.`);
   }
 
   const queueTargets = workflow.connections?.['Upsert Conversation Processing']?.main?.[0] || [];
@@ -371,6 +373,12 @@ function checkCustomerSupportAgentDedupeAndResponseMode(workflow, relative) {
     fail(`${relative} is missing Mark Conversation Merged.`);
   } else if (mergedLogNode.parameters?.columns?.value?.status !== 'merged') {
     fail(`${relative} Mark Conversation Merged must write status "merged" for older rapid-fire messages.`);
+  } else if (String(mergedLogNode.parameters?.columns?.value?.bot_reply || '').includes('merged_into_latest_message')) {
+    fail(`${relative} Mark Conversation Merged must not write an internal merge note as a bot reply.`);
+  }
+
+  if (hasConnection(workflow, 'Mark Conversation Merged', 0, 'Send Debounce Merge Reply')) {
+    fail(`${relative} merged rapid-fire messages must not send a separate customer-facing debounce reply.`);
   }
 
   const processingLogNode = findWorkflowNode(workflow, 'Mark Conversation Processing');
@@ -542,6 +550,24 @@ function checkCustomerSupportAgentLoggingContract(workflow, relative) {
     }
   }
 
+  for (const nodeName of ['Upsert Conversation Processing', 'Mark Conversation Processing', 'Mark Conversation Merged', 'Upsert Conversation Completed', 'Upsert Conversation Failed']) {
+    const node = findWorkflowNode(workflow, nodeName);
+    if (!node?.parameters?.columns?.value?.conversation_ref) {
+      fail(`${relative} ${nodeName} must write conversation_ref so lead rows can be traced back to the session.`);
+    }
+  }
+
+  const leadRowNode = findWorkflowNode(workflow, 'Set Lead or Booking Row');
+  if (!findAssignment(leadRowNode, 'conversation_ref') || !findAssignment(leadRowNode, 'conversation_transcript')) {
+    fail(`${relative} Set Lead or Booking Row must include conversation_ref and conversation_transcript for human-friendly lead tracing.`);
+  }
+
+  const leadUpsertNode = findWorkflowNode(workflow, 'Upsert Lead or Booking');
+  const leadUpsertValues = leadUpsertNode?.parameters?.columns?.value || {};
+  if (!leadUpsertValues.conversation_ref || !leadUpsertValues.conversation_transcript) {
+    fail(`${relative} Upsert Lead or Booking must persist conversation_ref and conversation_transcript.`);
+  }
+
   const notificationEdges = [
     ['Upsert Lead or Booking', 'Send Lead Notification'],
     ['Upsert Ticket', 'Send Ticket Notification'],
@@ -574,7 +600,7 @@ function checkCustomerSupportAgentLoggingContract(workflow, relative) {
 
   const notificationContextNode = findWorkflowNode(workflow, 'Build Notification Context');
   const notificationContextCode = String(notificationContextNode?.parameters?.jsCode || '');
-  if (!notificationContextCode.includes('conversation_transcript_html') || !notificationContextCode.includes('notification_summary_html')) {
+  if (!notificationContextCode.includes('conversation_ref') || !notificationContextCode.includes('conversation_transcript_text') || !notificationContextCode.includes('conversation_transcript_html') || !notificationContextCode.includes('notification_summary_html')) {
     fail(`${relative} Build Notification Context must prepare formatted email summary and transcript fields.`);
   }
   for (const targetName of ['Lead or Booking Required?', 'Ticket Required?', 'Needs Escalation?', 'Unanswered or Low Confidence?']) {

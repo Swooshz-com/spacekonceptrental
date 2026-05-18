@@ -129,6 +129,24 @@ Working notes for the final presentation. These are the practical issues found w
   - Fix: added a 5-second debounce window, same-session row lookup, newest-message ownership, merged prompt text for AI/RAG, and `merged` status rows for older rapid-fire executions.
   - Presentation point: chatbot workflows need a small input buffer because humans often send one thought as several messages.
 
+- Same-second rapid messages could still produce two real replies.
+  - Impact: in a five-message rapid test, two executions replied as if each was the newest message.
+  - Root cause: the debounce selector ignored same-session rows already marked `processing`, and same-second Google Sheets timestamps needed an execution ID tie-breaker.
+  - Fix: include `processing` rows when selecting the latest debounce owner and sort same-second rows by execution ID.
+  - Presentation point: Sheets can support a capstone queue, but concurrent executions still need explicit ordering rules.
+
+- Lead rows were hard to trace back to the chat that created them.
+  - Impact: sales could see a lead row, but had to manually search by opaque `session_id` to understand the customer conversation.
+  - Root cause: the workflow stored operational IDs, but did not persist a human-friendly conversation reference or transcript on the lead row.
+  - Fix: add `conversation_ref` to conversation rows and lead rows, and persist a plain-text `conversation_transcript` on each lead row.
+  - Presentation point: even a Google Sheets capstone needs simple relational handles so humans can audit what happened.
+
+- Debounce-merged messages were replying with an internal acknowledgement.
+  - Impact: rapid customer messages could create unnatural extra bot bubbles before the real answer.
+  - Root cause: the superseded branch marked older rows as `merged` and then sent a customer-facing merge reply.
+  - Fix: keep the `merged` audit row, but stop sending a separate chat response for superseded rapid-fire executions.
+  - Presentation point: queue mechanics should be visible to operators, not customers.
+
 - Import helper skipped unchanged workflows.
   - Impact: it looked like an import failure when only one workflow had actually changed.
   - Root cause: the import script compares workflow content and skips files with no effective changes.

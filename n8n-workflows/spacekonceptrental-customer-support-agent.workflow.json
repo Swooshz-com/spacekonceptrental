@@ -37,7 +37,7 @@
     },
     {
       "parameters": {
-        "content": "# FOLLOW-UP ROUTING\n\n- Routes leads, bookings, tickets, escalations, and unanswered items.\n- Writes each follow-up record after the main conversation row is completed.\n- Fallback failures are routed to escalation and unanswered-question handling so operator follow-up is visible.\n\n## Required manual configuration:\n\n- **Upsert Lead or Booking**\n  - `documentId.value`: Set this to the Google Sheets workbook used for lead and booking logs.\n- **Upsert Ticket**\n  - `documentId.value`: Set this to the Google Sheets workbook used for ticket logs.\n- **Send Escalation Alert**\n  - `sendTo`: Set this to the support mailbox for escalation alerts.\n- **Upsert Unanswered Question**\n  - `documentId.value`: Set this to the Google Sheets workbook used for unanswered question logs.",
+        "content": "# FOLLOW-UP ROUTING\n\n- Routes leads, bookings, tickets, escalations, and unanswered items.\n- Writes each follow-up record after the main conversation row is completed.\n- Fallback failures are routed to escalation and unanswered-question handling so operator follow-up is visible.\n\n## Required manual configuration:\n\n- **Upsert Lead or Booking**\n  - `documentId.value`: Set this to the Google Sheets workbook used for lead and booking logs.\n  - Leads sheet headers must include exact `conversation_ref` and `conversation_transcript` headers.\n- **Upsert Ticket**\n  - `documentId.value`: Set this to the Google Sheets workbook used for ticket logs.\n- **Send Escalation Alert**\n  - `sendTo`: Set this to the support mailbox for escalation alerts.\n- **Upsert Unanswered Question**\n  - `documentId.value`: Set this to the Google Sheets workbook used for unanswered question logs.",
         "height": 1164,
         "width": 1092,
         "color": 6
@@ -148,7 +148,7 @@
     },
     {
       "parameters": {
-        "jsCode": "function redact(text = '') {\n  // Keep customer email and phone visible in support logs; they are operational\n  // contact details. Still redact high-risk identifiers that should not sit in\n  // general workflow logs.\n  return String(text).trim()\n    .replace(/\\b[STFGM]\\d{7}[A-Z]\\b/gi, '[redacted-nric-fin]')\n    .replace(/\\b\\d{9,}\\b/g, '[redacted-id]');\n}\n\nfunction normaliseForDedupe(text = '') {\n  return redact(text).toLowerCase().replace(/\\s+/g, ' ').trim();\n}\n\nfunction hashText(text = '') {\n  let hash = 2166136261;\n  for (const char of text) {\n    hash ^= char.charCodeAt(0);\n    hash = Math.imul(hash, 16777619);\n  }\n  return (hash >>> 0).toString(36);\n}\n\nfunction shortSession(value = '') {\n  return String(value || 'session').replace(/[^a-z0-9]/gi, '').slice(0, 8) || 'session';\n}\n\nfunction dedupeKey(item, bucketOffset = 0) {\n  const bucketSizeMs = 2 * 60 * 1000;\n  const bucket = Math.floor(Date.now() / bucketSizeMs) + bucketOffset;\n  const sessionId = item.session_id || item.sessionId || item.chatId || 'unknown_session';\n  const messageHash = hashText(normaliseForDedupe(item.message)).toUpperCase();\n  return 'SKR-DEDUP-' + shortSession(sessionId) + '-' + messageHash + '-' + bucket;\n}\n\nreturn items.map((item) => ({\n  json: {\n    ...item.json,\n    user_message_redacted: redact(item.json.message),\n    dedupe_key: dedupeKey(item.json),\n    dedupe_key_previous: dedupeKey(item.json, -1)\n  }\n}));"
+        "jsCode": "function redact(text = '') {\n  // Keep customer email and phone visible in support logs; they are operational\n  // contact details. Still redact high-risk identifiers that should not sit in\n  // general workflow logs.\n  return String(text).trim()\n    .replace(/\\b[STFGM]\\d{7}[A-Z]\\b/gi, '[redacted-nric-fin]')\n    .replace(/\\b\\d{9,}\\b/g, '[redacted-id]');\n}\n\nfunction normaliseForDedupe(text = '') {\n  return redact(text).toLowerCase().replace(/\\s+/g, ' ').trim();\n}\n\nfunction hashText(text = '') {\n  let hash = 2166136261;\n  for (const char of text) {\n    hash ^= char.charCodeAt(0);\n    hash = Math.imul(hash, 16777619);\n  }\n  return (hash >>> 0).toString(36);\n}\n\nfunction shortSession(value = '') {\n  return String(value || 'session').replace(/[^a-z0-9]/gi, '').slice(0, 8) || 'session';\n}\n\nfunction sgtDateKey(date = new Date()) {\n  const shifted = new Date(date.getTime() + 8 * 60 * 60 * 1000);\n  const pad = (value) => String(value).padStart(2, '0');\n  return '' + shifted.getUTCFullYear() + pad(shifted.getUTCMonth() + 1) + pad(shifted.getUTCDate());\n}\n\nfunction conversationRef(item) {\n  const sessionId = item.session_id || item.sessionId || item.chatId || 'unknown_session';\n  const suffix = hashText(String(sessionId)).toUpperCase().slice(0, 6);\n  return item.conversation_ref || 'SKR-CONV-' + sgtDateKey() + '-' + suffix;\n}\n\nfunction dedupeKey(item, bucketOffset = 0) {\n  const bucketSizeMs = 2 * 60 * 1000;\n  const bucket = Math.floor(Date.now() / bucketSizeMs) + bucketOffset;\n  const sessionId = item.session_id || item.sessionId || item.chatId || 'unknown_session';\n  const messageHash = hashText(normaliseForDedupe(item.message)).toUpperCase();\n  return 'SKR-DEDUP-' + shortSession(sessionId) + '-' + messageHash + '-' + bucket;\n}\n\nreturn items.map((item) => ({\n  json: {\n    ...item.json,\n    user_message_redacted: redact(item.json.message),\n    conversation_ref: conversationRef(item.json),\n    dedupe_key: dedupeKey(item.json),\n    dedupe_key_previous: dedupeKey(item.json, -1)\n  }\n}));"
       },
       "id": "ee4a900b-fc01-489b-a526-f9c98760206e",
       "name": "Redact PII for Logs",
@@ -270,6 +270,7 @@
           "value": {
             "message_id": "={{ $node[\"Redact PII for Logs\"].json.message_id }}",
             "session_id": "={{ $node[\"Redact PII for Logs\"].json.session_id }}",
+            "conversation_ref": "={{ $node[\"Redact PII for Logs\"].json.conversation_ref }}",
             "channel": "={{ $node[\"Redact PII for Logs\"].json.channel }}",
             "customer_name": "={{ $node[\"Redact PII for Logs\"].json.customer_name }}",
             "customer_email": "={{ $node[\"Redact PII for Logs\"].json.customer_email }}",
@@ -304,18 +305,17 @@
               "canBeUsedToMatch": true
             },
             {
-              "id": "dedupe_key",
-              "displayName": "dedupe_key",
+              "id": "session_id",
+              "displayName": "session_id",
               "required": false,
               "defaultMatch": false,
               "display": true,
               "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": false
+              "canBeUsedToMatch": true
             },
             {
-              "id": "session_id",
-              "displayName": "session_id",
+              "id": "conversation_ref",
+              "displayName": "conversation_ref",
               "required": false,
               "defaultMatch": false,
               "display": true,
@@ -483,6 +483,15 @@
               "display": true,
               "type": "string",
               "canBeUsedToMatch": true
+            },
+            {
+              "id": "dedupe_key",
+              "displayName": "dedupe_key",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
             }
           ],
           "attemptToConvertTypes": false,
@@ -524,6 +533,12 @@
               "id": "restore-processing-context-2",
               "name": "session_id",
               "value": "={{ $node[\"Select Debounced Chat Batch\"].json.session_id }}",
+              "type": "string"
+            },
+            {
+              "id": "restore-processing-context-conversation-ref",
+              "name": "conversation_ref",
+              "value": "={{ $node[\"Select Debounced Chat Batch\"].json.conversation_ref }}",
               "type": "string"
             },
             {
@@ -623,7 +638,7 @@
     },
     {
       "parameters": {
-        "jsCode": "function parseAgentOutput(value) {\n  if (typeof value === 'object' && value !== null) return value;\n  const text = String(value || '').trim();\n  try {\n    return JSON.parse(text);\n  } catch (error) {\n    const start = text.indexOf('{');\n    const end = text.lastIndexOf('}');\n    if (start >= 0 && end > start) return JSON.parse(text.slice(start, end + 1));\n    throw error;\n  }\n}\n\nfunction sgtParts(date = new Date()) {\n  const shifted = new Date(date.getTime() + 8 * 60 * 60 * 1000);\n  const pad = (value, length = 2) => String(value).padStart(length, '0');\n  return {\n    year: shifted.getUTCFullYear(),\n    month: pad(shifted.getUTCMonth() + 1),\n    day: pad(shifted.getUTCDate()),\n    hour: pad(shifted.getUTCHours()),\n    minute: pad(shifted.getUTCMinutes()),\n    second: pad(shifted.getUTCSeconds()),\n    ms: pad(shifted.getUTCMilliseconds(), 3),\n  };\n}\n\nfunction sgtTimestamp(date = new Date()) {\n  const parts = sgtParts(date);\n  return parts.year + '-' + parts.month + '-' + parts.day + ' ' + parts.hour + ':' + parts.minute + ':' + parts.second + ' SGT';\n}\n\nfunction timestampForId(date = new Date()) {\n  const parts = sgtParts(date);\n  return '' + parts.year + parts.month + parts.day + '-' + parts.hour + parts.minute + parts.second;\n}\n\nfunction hashText(text = '') {\n  let hash = 2166136261;\n  for (const char of String(text)) {\n    hash ^= char.charCodeAt(0);\n    hash = Math.imul(hash, 16777619);\n  }\n  return (hash >>> 0).toString(36).toUpperCase();\n}\n\nfunction meaningful(value) {\n  const text = String(value || '').trim();\n  if (!text) return '';\n  if (/^(n\\/a|na|none|null|unknown|not_available)$/i.test(text)) return '';\n  return text;\n}\n\nfunction firstMeaningful(...values) {\n  for (const value of values) {\n    const text = meaningful(value);\n    if (text) return text;\n  }\n  return '';\n}\n\nfunction driveFileUrl(value = '') {\n  const text = String(value || '').trim();\n  if (!text) return '';\n  if (/^https?:\\/\\//i.test(text)) return text;\n  return 'https://drive.google.com/file/d/' + text + '/view';\n}\n\nfunction sourceUrls(values = []) {\n  return values.map(driveFileUrl).filter(Boolean);\n}\n\nreturn items.map((item) => {\n  const original = $('Restore Processing Context').first().json || {};\n  const raw = item.json.output || item.json.text || item.json.response || item.json;\n  let parsed;\n  try {\n    parsed = parseAgentOutput(raw);\n  } catch (error) {\n    parsed = {\n      reply: 'I do not have that detail yet. I can help escalate this to the SpaceKonceptRental team.',\n      intent: 'unknown',\n      confidence: 0,\n      needs_escalation: true,\n      needs_human_followup: true,\n      lead_captured: false,\n      ticket_required: false,\n      booking_requested: false,\n      missing_fields: [],\n      lead: {},\n      ticket: {},\n      booking: {},\n      retrieval_summary: { source_titles: [], source_file_ids: [] }\n    };\n  }\n\n  const now = new Date();\n  const idTime = timestampForId(now);\n  const referenceSuffix = hashText([original.session_id, original.message_id, original.message].join('|')).slice(0, 6);\n  const ticketRequired = Boolean(parsed.ticket_required);\n  const lead = parsed.lead || {};\n  const ticket = parsed.ticket || {};\n  const customerName = firstMeaningful(parsed.lead?.name, parsed.ticket?.name, original.customer_name);\n  const customerEmail = firstMeaningful(parsed.lead?.email, parsed.ticket?.email, original.customer_email);\n  const customerPhone = firstMeaningful(parsed.lead?.phone, parsed.ticket?.phone, original.customer_phone);\n  const ticketName = firstMeaningful(ticket.name, lead.name, customerName);\n  const ticketEmail = firstMeaningful(ticket.email, lead.email, customerEmail);\n  const ticketPhone = firstMeaningful(ticket.phone, lead.phone, customerPhone);\n  const ticketIssue = firstMeaningful(ticket.summary, ticket.details);\n  const ticketReady = ticketRequired && Boolean(ticketName) && Boolean(ticketEmail || ticketPhone) && Boolean(ticketIssue);\n  const leadCaptured = !ticketRequired && Boolean(parsed.lead_captured);\n  const bookingRequested = !ticketRequired && Boolean(parsed.booking_requested);\n  const leadRequired = leadCaptured || bookingRequested;\n  const ticketId = ticketReady ? 'SKR-TKT-' + idTime + '-' + referenceSuffix : '';\n  const leadId = leadRequired ? 'SKR-LEAD-' + idTime + '-' + referenceSuffix : '';\n  const escalationReferenceId = parsed.needs_escalation ? (ticketId || leadId || original.message_id) : '';\n\n  return {\n    json: {\n      ...original,\n      ...item.json,\n      agent_raw_output: raw,\n      reply: parsed.reply || 'I do not have that detail yet. I can help escalate this to the SpaceKonceptRental team.',\n      intent: parsed.intent || 'unknown',\n      confidence: Number(parsed.confidence || 0),\n      needs_escalation: Boolean(parsed.needs_escalation),\n      needs_human_followup: Boolean(parsed.needs_human_followup),\n      lead_captured: leadCaptured,\n      ticket_required: ticketRequired,\n      ticket_ready: ticketReady,\n      booking_requested: bookingRequested,\n      missing_fields: parsed.missing_fields || [],\n      customer_name: customerName,\n      customer_email: customerEmail,\n      customer_phone: customerPhone,\n      lead: {\n        ...lead,\n        name: firstMeaningful(lead.name, ticket.name, customerName),\n        email: firstMeaningful(lead.email, ticket.email, customerEmail),\n        phone: firstMeaningful(lead.phone, ticket.phone, customerPhone),\n      },\n      ticket: {\n        ...ticket,\n        name: ticketName,\n        email: ticketEmail,\n        phone: ticketPhone,\n      },\n      booking: parsed.booking || {},\n      source_titles: (parsed.retrieval_summary?.source_titles || []).join(', '),\n      source_file_ids: sourceUrls(parsed.retrieval_summary?.source_file_ids || []).join(', '),\n      ticket_id: ticketId,\n      lead_id: leadId,\n      escalation_reference_id: escalationReferenceId,\n      completed_at: sgtTimestamp(now),\n      unanswered_id: 'SKR-UNANSWERED-' + idTime + '-' + referenceSuffix\n    }\n  };\n});"
+        "jsCode": "function parseAgentOutput(value) {\n  if (typeof value === 'object' && value !== null) return value;\n  const text = String(value || '').trim();\n  try {\n    return JSON.parse(text);\n  } catch (error) {\n    const start = text.indexOf('{');\n    const end = text.lastIndexOf('}');\n    if (start >= 0 && end > start) return JSON.parse(text.slice(start, end + 1));\n    throw error;\n  }\n}\n\nfunction sgtParts(date = new Date()) {\n  const shifted = new Date(date.getTime() + 8 * 60 * 60 * 1000);\n  const pad = (value, length = 2) => String(value).padStart(length, '0');\n  return {\n    year: shifted.getUTCFullYear(),\n    month: pad(shifted.getUTCMonth() + 1),\n    day: pad(shifted.getUTCDate()),\n    hour: pad(shifted.getUTCHours()),\n    minute: pad(shifted.getUTCMinutes()),\n    second: pad(shifted.getUTCSeconds()),\n    ms: pad(shifted.getUTCMilliseconds(), 3),\n  };\n}\n\nfunction sgtTimestamp(date = new Date()) {\n  const parts = sgtParts(date);\n  return parts.year + '-' + parts.month + '-' + parts.day + ' ' + parts.hour + ':' + parts.minute + ':' + parts.second + ' SGT';\n}\n\nfunction timestampForId(date = new Date()) {\n  const parts = sgtParts(date);\n  return '' + parts.year + parts.month + parts.day + '-' + parts.hour + parts.minute + parts.second;\n}\n\nfunction hashText(text = '') {\n  let hash = 2166136261;\n  for (const char of String(text)) {\n    hash ^= char.charCodeAt(0);\n    hash = Math.imul(hash, 16777619);\n  }\n  return (hash >>> 0).toString(36).toUpperCase();\n}\n\nfunction meaningful(value) {\n  const text = String(value || '').trim();\n  if (!text) return '';\n  if (/^(n\\/a|na|none|null|unknown|not_available)$/i.test(text)) return '';\n  return text;\n}\n\nfunction firstMeaningful(...values) {\n  for (const value of values) {\n    const text = meaningful(value);\n    if (text) return text;\n  }\n  return '';\n}\n\nfunction driveFileUrl(value = '') {\n  const text = String(value || '').trim();\n  if (!text) return '';\n  if (/^https?:\\/\\//i.test(text)) return text;\n  return 'https://drive.google.com/file/d/' + text + '/view';\n}\n\nfunction sourceUrls(values = []) {\n  return values.map(driveFileUrl).filter(Boolean);\n}\n\nreturn items.map((item) => {\n  const original = $('Restore Processing Context').first().json || {};\n  const raw = item.json.output || item.json.text || item.json.response || item.json;\n  let parsed;\n  try {\n    parsed = parseAgentOutput(raw);\n  } catch (error) {\n    parsed = {\n      reply: 'I do not have that detail yet. I can help escalate this to the SpaceKonceptRental team.',\n      intent: 'unknown',\n      confidence: 0,\n      needs_escalation: true,\n      needs_human_followup: true,\n      lead_captured: false,\n      ticket_required: false,\n      booking_requested: false,\n      missing_fields: [],\n      lead: {},\n      ticket: {},\n      booking: {},\n      retrieval_summary: { source_titles: [], source_file_ids: [] }\n    };\n  }\n\n  const now = new Date();\n  const idTime = timestampForId(now);\n  const referenceSuffix = hashText([original.session_id, original.message_id, original.message].join('|')).slice(0, 6);\n  const conversationRef = firstMeaningful(original.conversation_ref) || 'SKR-CONV-' + String(idTime).split('-')[0] + '-' + hashText(original.session_id || original.message_id).slice(0, 6);\n  const ticketRequired = Boolean(parsed.ticket_required);\n  const lead = parsed.lead || {};\n  const ticket = parsed.ticket || {};\n  const customerName = firstMeaningful(parsed.lead?.name, parsed.ticket?.name, original.customer_name);\n  const customerEmail = firstMeaningful(parsed.lead?.email, parsed.ticket?.email, original.customer_email);\n  const customerPhone = firstMeaningful(parsed.lead?.phone, parsed.ticket?.phone, original.customer_phone);\n  const ticketName = firstMeaningful(ticket.name, lead.name, customerName);\n  const ticketEmail = firstMeaningful(ticket.email, lead.email, customerEmail);\n  const ticketPhone = firstMeaningful(ticket.phone, lead.phone, customerPhone);\n  const ticketIssue = firstMeaningful(ticket.summary, ticket.details);\n  const ticketReady = ticketRequired && Boolean(ticketName) && Boolean(ticketEmail || ticketPhone) && Boolean(ticketIssue);\n  const leadCaptured = !ticketRequired && Boolean(parsed.lead_captured);\n  const bookingRequested = !ticketRequired && Boolean(parsed.booking_requested);\n  const leadRequired = leadCaptured || bookingRequested;\n  const ticketId = ticketReady ? 'SKR-TKT-' + idTime + '-' + referenceSuffix : '';\n  const leadId = leadRequired ? 'SKR-LEAD-' + idTime + '-' + referenceSuffix : '';\n  const escalationReferenceId = parsed.needs_escalation ? (ticketId || leadId || original.message_id) : '';\n\n  return {\n    json: {\n      ...original,\n      ...item.json,\n      conversation_ref: conversationRef,\n      agent_raw_output: raw,\n      reply: parsed.reply || 'I do not have that detail yet. I can help escalate this to the SpaceKonceptRental team.',\n      intent: parsed.intent || 'unknown',\n      confidence: Number(parsed.confidence || 0),\n      needs_escalation: Boolean(parsed.needs_escalation),\n      needs_human_followup: Boolean(parsed.needs_human_followup),\n      lead_captured: leadCaptured,\n      ticket_required: ticketRequired,\n      ticket_ready: ticketReady,\n      booking_requested: bookingRequested,\n      missing_fields: parsed.missing_fields || [],\n      customer_name: customerName,\n      customer_email: customerEmail,\n      customer_phone: customerPhone,\n      lead: {\n        ...lead,\n        name: firstMeaningful(lead.name, ticket.name, customerName),\n        email: firstMeaningful(lead.email, ticket.email, customerEmail),\n        phone: firstMeaningful(lead.phone, ticket.phone, customerPhone),\n      },\n      ticket: {\n        ...ticket,\n        name: ticketName,\n        email: ticketEmail,\n        phone: ticketPhone,\n      },\n      booking: parsed.booking || {},\n      source_titles: (parsed.retrieval_summary?.source_titles || []).join(', '),\n      source_file_ids: sourceUrls(parsed.retrieval_summary?.source_file_ids || []).join(', '),\n      ticket_id: ticketId,\n      lead_id: leadId,\n      escalation_reference_id: escalationReferenceId,\n      completed_at: sgtTimestamp(now),\n      unanswered_id: 'SKR-UNANSWERED-' + idTime + '-' + referenceSuffix\n    }\n  };\n});"
       },
       "id": "bf0f562c-029d-4412-a839-e41f57e8bb52",
       "name": "Parse Strict JSON Response",
@@ -670,6 +685,7 @@
           "value": {
             "message_id": "={{ $json.message_id }}",
             "session_id": "={{ $json.session_id }}",
+            "conversation_ref": "={{ $json.conversation_ref }}",
             "channel": "={{ $json.channel }}",
             "customer_name": "={{ $json.customer_name }}",
             "customer_email": "={{ $json.customer_email }}",
@@ -704,18 +720,17 @@
               "canBeUsedToMatch": true
             },
             {
-              "id": "dedupe_key",
-              "displayName": "dedupe_key",
+              "id": "session_id",
+              "displayName": "session_id",
               "required": false,
               "defaultMatch": false,
               "display": true,
               "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": false
+              "canBeUsedToMatch": true
             },
             {
-              "id": "session_id",
-              "displayName": "session_id",
+              "id": "conversation_ref",
+              "displayName": "conversation_ref",
               "required": false,
               "defaultMatch": false,
               "display": true,
@@ -883,6 +898,15 @@
               "display": true,
               "type": "string",
               "canBeUsedToMatch": true
+            },
+            {
+              "id": "dedupe_key",
+              "displayName": "dedupe_key",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
             }
           ],
           "attemptToConvertTypes": false,
@@ -945,6 +969,12 @@
               "id": "set-lead-or-booking-row-1",
               "name": "lead_id",
               "value": "={{ $json.lead_id }}",
+              "type": "string"
+            },
+            {
+              "id": "set-lead-or-booking-row-conversation-ref",
+              "name": "conversation_ref",
+              "value": "={{ $json.conversation_ref || $json.lead_id || $json.session_id }}",
               "type": "string"
             },
             {
@@ -1026,6 +1056,12 @@
               "type": "string"
             },
             {
+              "id": "set-lead-or-booking-row-conversation-transcript",
+              "name": "conversation_transcript",
+              "value": "={{ $json.conversation_transcript_text || $json.user_message_redacted || \"\" }}",
+              "type": "string"
+            },
+            {
               "id": "set-lead-or-booking-row-15",
               "name": "created_at",
               "value": "={{ $json.completed_at }}",
@@ -1071,6 +1107,7 @@
           "mappingMode": "defineBelow",
           "value": {
             "lead_id": "={{ $json.lead_id }}",
+            "conversation_ref": "={{ $json.conversation_ref }}",
             "session_id": "={{ $json.session_id }}",
             "name": "={{ $json.name }}",
             "email": "={{ $json.email }}",
@@ -1084,6 +1121,7 @@
             "budget": "={{ $json.budget }}",
             "status": "={{ $json.status }}",
             "source_channel": "={{ $json.source_channel }}",
+            "conversation_transcript": "={{ $json.conversation_transcript }}",
             "created_at": "={{ $json.created_at }}",
             "execution_id": "={{ $json.execution_id }}"
           },
@@ -1094,6 +1132,15 @@
             {
               "id": "lead_id",
               "displayName": "lead_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "conversation_ref",
+              "displayName": "conversation_ref",
               "required": false,
               "defaultMatch": false,
               "display": true,
@@ -1211,6 +1258,15 @@
             {
               "id": "source_channel",
               "displayName": "source_channel",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "conversation_transcript",
+              "displayName": "conversation_transcript",
               "required": false,
               "defaultMatch": false,
               "display": true,
@@ -1745,7 +1801,7 @@
               "id": "id",
               "displayName": "id",
               "required": false,
-              "defaultMatch": true,
+              "defaultMatch": false,
               "display": true,
               "type": "string",
               "canBeUsedToMatch": true
@@ -1844,7 +1900,7 @@
     },
     {
       "parameters": {
-        "content": "# INTAKE AND DEBOUNCE\n\n- Receives chat messages and normalises input.\n- Writes each incoming chat message as a queued conversation row before AI/RAG runs.\n- Waits briefly, then reads same-session queued and merged rows.\n- Only the newest rapid-fire message runs AI; older rapid-fire executions are marked merged and receive a short acknowledgement.\n- The newest execution sends the AI one merged customer turn so messages like \"hi\" then \"I need 20 stools\" are handled together.\n- Completed or failed rows do not block later repeated questions.\n- Simple Conversation Memory is kept for normal multi-turn context, not as the audit log or dedupe system.\n- `message_id` remains the unique audit row id.\n- `dedupe_key` is kept only as a diagnostic/audit hash, not as the customer-facing block condition.\n- Later AI/RAG fields use `={{ '' }}` on purpose so Sheets cells stay blank until the row is overwritten by the completed, failed, or merged path.\n\n## Required manual configuration:\n\n- **Lookup Conversation State**\n  - `documentId.value`: Set this to the Google Sheets workbook used for support logs.\n  - Conversations sheet headers must include exact `session_id`, `status`, and `dedupe_key` headers with no trailing spaces.\n- **Upsert Conversation Processing**\n  - `documentId.value`: Set this to the same Google Sheets workbook used for support logs.\n- **Mark Conversation Processing**\n  - `documentId.value`: Set this to the same Google Sheets workbook used for support logs.\n- **Mark Conversation Merged**\n  - `documentId.value`: Set this to the same Google Sheets workbook used for support logs.",
+        "content": "# INTAKE AND DEBOUNCE\n\n- Receives chat messages and normalises input.\n- Writes each incoming chat message as a queued conversation row before AI/RAG runs.\n- Waits briefly, then reads same-session queued and merged rows.\n- Only the newest rapid-fire message runs AI; older rapid-fire executions are marked merged and do not send a separate customer reply.\n- The newest execution sends the AI one merged customer turn so messages like \"hi\" then \"I need 20 stools\" are handled together.\n- Completed or failed rows do not block later repeated questions.\n- Simple Conversation Memory is kept for normal multi-turn context, not as the audit log or dedupe system.\n- `message_id` remains the unique audit row id.\n- `dedupe_key` is kept only as a diagnostic/audit hash, not as the customer-facing block condition.\n- Later AI/RAG fields use `={{ '' }}` on purpose so Sheets cells stay blank until the row is overwritten by the completed, failed, or merged path.\n\n## Required manual configuration:\n\n- **Lookup Conversation State**\n  - `documentId.value`: Set this to the Google Sheets workbook used for support logs.\n  - Conversations sheet headers must include exact `session_id`, `conversation_ref`, `status`, and `dedupe_key` headers with no trailing spaces.\n- **Upsert Conversation Processing**\n  - `documentId.value`: Set this to the same Google Sheets workbook used for support logs.\n- **Mark Conversation Processing**\n  - `documentId.value`: Set this to the same Google Sheets workbook used for support logs.\n- **Mark Conversation Merged**\n  - `documentId.value`: Set this to the same Google Sheets workbook used for support logs.",
         "height": 1180,
         "width": 2404,
         "color": 5
@@ -2127,6 +2183,7 @@
           "value": {
             "message_id": "={{ $json.message_id }}",
             "session_id": "={{ $json.session_id }}",
+            "conversation_ref": "={{ $json.conversation_ref }}",
             "channel": "={{ $json.channel }}",
             "customer_name": "={{ $json.customer_name }}",
             "customer_email": "={{ $json.customer_email }}",
@@ -2161,18 +2218,17 @@
               "canBeUsedToMatch": true
             },
             {
-              "id": "dedupe_key",
-              "displayName": "dedupe_key",
+              "id": "session_id",
+              "displayName": "session_id",
               "required": false,
               "defaultMatch": false,
               "display": true,
               "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": false
+              "canBeUsedToMatch": true
             },
             {
-              "id": "session_id",
-              "displayName": "session_id",
+              "id": "conversation_ref",
+              "displayName": "conversation_ref",
               "required": false,
               "defaultMatch": false,
               "display": true,
@@ -2340,6 +2396,15 @@
               "display": true,
               "type": "string",
               "canBeUsedToMatch": true
+            },
+            {
+              "id": "dedupe_key",
+              "displayName": "dedupe_key",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
             }
           ],
           "attemptToConvertTypes": false,
@@ -2401,7 +2466,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const debounceWindowMs = 20 * 1000;\nconst now = Date.now();\nconst current = $('Redact PII for Logs').first().json || {};\n\nfunction parseSgtTimestamp(value) {\n  const match = String(value || '').trim().match(/^(\\d{4})-(\\d{2})-(\\d{2}) (\\d{2}):(\\d{2}):(\\d{2}) SGT$/);\n  if (!match) return NaN;\n  const [, year, month, day, hour, minute, second] = match.map(Number);\n  return Date.UTC(year, month - 1, day, hour - 8, minute, second);\n}\n\nfunction rowTime(row) {\n  const value = row.created_at || row.timestamp || current.timestamp || '';\n  const sgtParsed = parseSgtTimestamp(value);\n  if (Number.isFinite(sgtParsed)) return sgtParsed;\n  const parsed = Date.parse(value);\n  return Number.isFinite(parsed) ? parsed : 0;\n}\n\nfunction meaningful(value) {\n  const text = String(value || '').trim();\n  if (!text) return '';\n  if (/^(n\\/a|na|none|null|unknown|not_available|pending|pending_ai_response|queued_for_ai_response)$/i.test(text)) return '';\n  return text;\n}\n\nfunction messageText(row) {\n  return meaningful(row.message) || meaningful(row.user_message_redacted);\n}\n\nfunction uniqueByMessageId(rows) {\n  const seen = new Set();\n  const result = [];\n  for (const row of rows) {\n    const key = String(row.message_id || '').trim();\n    if (!key || seen.has(key)) continue;\n    seen.add(key);\n    result.push(row);\n  }\n  return result;\n}\n\nconst currentTime = rowTime(current) || now;\nconst sheetRows = items.map((item) => item.json || {});\nconst currentRow = { ...current, status: 'queued' };\nconst rows = uniqueByMessageId([...sheetRows, currentRow])\n  .filter((row) => String(row.session_id || '') === String(current.session_id || ''))\n  .map((row) => ({ ...row, _row_time: rowTime(row) || currentTime }))\n  .filter((row) => Math.abs(row._row_time - currentTime) <= debounceWindowMs)\n  .filter((row) => ['queued', 'merged'].includes(String(row.status || '').toLowerCase()))\n  .sort((a, b) => a._row_time - b._row_time);\n\nconst latest = rows[rows.length - 1] || currentRow;\nif (String(latest.message_id || '') !== String(current.message_id || '')) {\n  return [{\n    json: {\n      ...current,\n      debounce_superseded: 'true',\n      debounce_latest_message_id: latest.message_id || '',\n      debounce_batch_count: rows.length,\n    },\n  }];\n}\n\nconst batchRows = rows.length ? rows : [currentRow];\nconst mergedTexts = batchRows\n  .map((row, index) => {\n    const text = messageText(row);\n    return text ? String(index + 1) + '. ' + text : '';\n  })\n  .filter(Boolean);\n\nconst mergedMessage = mergedTexts.length > 1\n  ? 'The customer sent these rapid messages in order. Treat them as one customer turn:\\n\\n' + mergedTexts.join('\\n')\n  : (meaningful(current.message) || meaningful(current.user_message_redacted));\n\nreturn [{\n  json: {\n    ...current,\n    message: mergedMessage,\n    user_message_redacted: mergedTexts.length > 1 ? mergedTexts.join('\\n') : current.user_message_redacted,\n    debounce_superseded: 'false',\n    debounce_batch_count: batchRows.length,\n    merged_message_ids: batchRows.map((row) => row.message_id).filter(Boolean).join(', '),\n  },\n}];"
+        "jsCode": "const debounceWindowMs = 20 * 1000;\nconst now = Date.now();\nconst current = $('Redact PII for Logs').first().json || {};\n\nfunction parseSgtTimestamp(value) {\n  const match = String(value || '').trim().match(/^(\\d{4})-(\\d{2})-(\\d{2}) (\\d{2}):(\\d{2}):(\\d{2}) SGT$/);\n  if (!match) return NaN;\n  const [, year, month, day, hour, minute, second] = match.map(Number);\n  return Date.UTC(year, month - 1, day, hour - 8, minute, second);\n}\n\nfunction rowTime(row) {\n  const value = row.created_at || row.timestamp || current.timestamp || '';\n  const sgtParsed = parseSgtTimestamp(value);\n  if (Number.isFinite(sgtParsed)) return sgtParsed;\n  const parsed = Date.parse(value);\n  return Number.isFinite(parsed) ? parsed : 0;\n}\n\nfunction meaningful(value) {\n  const text = String(value || '').trim();\n  if (!text) return '';\n  if (/^(n\\/a|na|none|null|unknown|not_available|pending|pending_ai_response|queued_for_ai_response)$/i.test(text)) return '';\n  return text;\n}\n\nfunction messageText(row) {\n  return meaningful(row.message) || meaningful(row.user_message_redacted);\n}\n\nfunction uniqueByMessageId(rows) {\n  const byId = new Map();\n  for (const row of rows) {\n    const key = String(row.message_id || '').trim();\n    if (!key) continue;\n    byId.set(key, row);\n  }\n  return [...byId.values()];\n}\n\nfunction executionOrder(row) {\n  const parsed = Number(String(row.execution_id || '').replace(/[^0-9]/g, ''));\n  return Number.isFinite(parsed) ? parsed : 0;\n}\n\nconst currentTime = rowTime(current) || now;\nconst sheetRows = items.map((item) => item.json || {});\nconst currentRow = { ...current, status: 'queued' };\nconst rows = uniqueByMessageId([...sheetRows, currentRow])\n  .filter((row) => String(row.session_id || '') === String(current.session_id || ''))\n  .map((row) => ({ ...row, _row_time: rowTime(row) || currentTime }))\n  .filter((row) => Math.abs(row._row_time - currentTime) <= debounceWindowMs)\n  .filter((row) => ['queued', 'merged', 'processing'].includes(String(row.status || '').toLowerCase()))\n  .sort((a, b) =>\n    (a._row_time - b._row_time) ||\n    (executionOrder(a) - executionOrder(b)) ||\n    String(a.message_id || '').localeCompare(String(b.message_id || ''))\n  );\n\nconst latest = rows[rows.length - 1] || currentRow;\nif (String(latest.message_id || '') !== String(current.message_id || '')) {\n  return [{\n    json: {\n      ...current,\n      debounce_superseded: 'true',\n      debounce_latest_message_id: latest.message_id || '',\n      debounce_batch_count: rows.length,\n    },\n  }];\n}\n\nconst batchRows = rows.length ? rows : [currentRow];\nconst mergedTexts = batchRows\n  .map((row, index) => {\n    const text = messageText(row);\n    return text ? String(index + 1) + '. ' + text : '';\n  })\n  .filter(Boolean);\n\nconst mergedMessage = mergedTexts.length > 1\n  ? 'The customer sent these rapid messages in order. Treat them as one customer turn:\\n\\n' + mergedTexts.join('\\n')\n  : (meaningful(current.message) || meaningful(current.user_message_redacted));\n\nreturn [{\n  json: {\n    ...current,\n    message: mergedMessage,\n    user_message_redacted: mergedTexts.length > 1 ? mergedTexts.join('\\n') : current.user_message_redacted,\n    debounce_superseded: 'false',\n    debounce_batch_count: batchRows.length,\n    merged_message_ids: batchRows.map((row) => row.message_id).filter(Boolean).join(', '),\n  },\n}];"
       },
       "id": "a914a6ba-a057-4d93-a7d0-139acde13992",
       "name": "Select Debounced Chat Batch",
@@ -2416,7 +2481,7 @@
       "parameters": {
         "sendTo": "SpaceKonceptRental@gmail.com",
         "subject": "=[SKR Lead] {{ $json.name || \"New enquiry\" }} - {{ $json.items_needed || $json.rental_purpose || $json.lead_id }}",
-        "message": "=<h2>New rental lead</h2><table cellpadding=\"6\" cellspacing=\"0\" style=\"border-collapse:collapse;width:100%;max-width:760px;\"><tr><td style=\"width:150px;color:#52606d;\"><strong>Lead ID</strong></td><td>{{ $json.lead_id }}</td></tr><tr><td style=\"color:#52606d;\"><strong>Contact</strong></td><td>{{ $json.name || \"not_available\" }} | {{ $json.email || \"not_available\" }} | {{ $json.phone || \"not_available\" }}</td></tr><tr><td style=\"color:#52606d;\"><strong>Company</strong></td><td>{{ $json.company || \"not_available\" }}</td></tr><tr><td style=\"color:#52606d;\"><strong>Items</strong></td><td>{{ $json.items_needed || \"not_available\" }}</td></tr><tr><td style=\"color:#52606d;\"><strong>Event</strong></td><td>{{ $json.rental_purpose || \"not_available\" }}</td></tr><tr><td style=\"color:#52606d;\"><strong>Date / Duration</strong></td><td>{{ $json.rental_start_date || \"not_available\" }} / {{ $json.rental_duration || \"not_available\" }}</td></tr><tr><td style=\"color:#52606d;\"><strong>Venue</strong></td><td>{{ $json.delivery_area || \"not_available\" }}</td></tr><tr><td style=\"color:#52606d;\"><strong>Budget</strong></td><td>{{ $json.budget || \"not_available\" }}</td></tr></table><h3>Conversation transcript ({{ $(\"Build Notification Context\").first().json.conversation_message_count || 1 }} message(s))</h3>{{ $(\"Build Notification Context\").first().json.conversation_transcript_html || \"<p>No transcript available.</p>\" }}<hr><p style=\"font-size:12px;color:#697386;\">This email was generated from the n8n customer support workflow. Review the transcript before replying to the customer.</p>",
+        "message": "=<h2>New rental lead</h2><table cellpadding=\"6\" cellspacing=\"0\" style=\"border-collapse:collapse;width:100%;max-width:760px;\"><tr><td style=\"width:150px;color:#52606d;\"><strong>Lead ID</strong></td><td>{{ $json.lead_id }}</td></tr><tr><td style=\"color:#52606d;\"><strong>Conversation</strong></td><td>{{ $json.conversation_ref || $(\"Build Notification Context\").first().json.conversation_ref || \"not_available\" }}</td></tr><tr><td style=\"color:#52606d;\"><strong>Contact</strong></td><td>{{ $json.name || \"not_available\" }} | {{ $json.email || \"not_available\" }} | {{ $json.phone || \"not_available\" }}</td></tr><tr><td style=\"color:#52606d;\"><strong>Company</strong></td><td>{{ $json.company || \"not_available\" }}</td></tr><tr><td style=\"color:#52606d;\"><strong>Items</strong></td><td>{{ $json.items_needed || \"not_available\" }}</td></tr><tr><td style=\"color:#52606d;\"><strong>Event</strong></td><td>{{ $json.rental_purpose || \"not_available\" }}</td></tr><tr><td style=\"color:#52606d;\"><strong>Date / Duration</strong></td><td>{{ $json.rental_start_date || \"not_available\" }} / {{ $json.rental_duration || \"not_available\" }}</td></tr><tr><td style=\"color:#52606d;\"><strong>Venue</strong></td><td>{{ $json.delivery_area || \"not_available\" }}</td></tr><tr><td style=\"color:#52606d;\"><strong>Budget</strong></td><td>{{ $json.budget || \"not_available\" }}</td></tr></table><h3>Conversation transcript ({{ $(\"Build Notification Context\").first().json.conversation_message_count || 1 }} message(s))</h3>{{ $(\"Build Notification Context\").first().json.conversation_transcript_html || \"<p>No transcript available.</p>\" }}<hr><p style=\"font-size:12px;color:#697386;\">This email was generated from the n8n customer support workflow. Review the transcript before replying to the customer.</p>",
         "options": {}
       },
       "type": "n8n-nodes-base.gmail",
@@ -2503,7 +2568,7 @@
     },
     {
       "parameters": {
-        "jsCode": "function escapeHtml(value = '') {\n  return String(value || '')\n    .replace(/&/g, '&amp;')\n    .replace(/</g, '&lt;')\n    .replace(/>/g, '&gt;')\n    .replace(/\"/g, '&quot;')\n    .replace(/'/g, '&#39;');\n}\n\nfunction meaningful(value) {\n  const text = String(value || '').trim();\n  if (!text) return '';\n  if (/^(n\\/a|na|none|null|unknown|not_available|not provided|pending)$/i.test(text)) return '';\n  return text;\n}\n\nfunction firstMeaningful(...values) {\n  for (const value of values) {\n    const text = meaningful(value);\n    if (text) return text;\n  }\n  return '';\n}\n\nfunction boolText(value) {\n  return String(value).toLowerCase() === 'true' ? 'Yes' : 'No';\n}\n\nfunction rowTime(row) {\n  return meaningful(row.created_at) || meaningful(row.completed_at) || '';\n}\n\nconst original = $('Parse Strict JSON Response').first().json || {};\nconst rows = items\n  .map((item) => item.json || {})\n  .filter((row) => String(row.session_id || '') === String(original.session_id || ''))\n  .sort((a, b) => String(rowTime(a)).localeCompare(String(rowTime(b))));\n\nconst transcriptRows = rows.length ? rows : [original];\nconst transcriptHtml = transcriptRows.map((row, index) => {\n  const when = rowTime(row) || 'time_not_available';\n  const customerMessage = meaningful(row.user_message_redacted) || meaningful(row.message) || '';\n  const botReply = meaningful(row.bot_reply) || meaningful(row.reply) || '';\n  const intent = meaningful(row.intent);\n\n  return [\n    '<div style=\"border-left:3px solid #d9e2ec;padding:8px 0 8px 12px;margin:10px 0;\">',\n    '<p style=\"margin:0 0 4px 0;color:#52606d;\"><strong>#' + (index + 1) + '</strong> · ' + escapeHtml(when) + (intent ? ' · ' + escapeHtml(intent) : '') + '</p>',\n    customerMessage ? '<p style=\"margin:0 0 6px 0;\"><strong>Customer:</strong> ' + escapeHtml(customerMessage) + '</p>' : '',\n    botReply ? '<p style=\"margin:0;\"><strong>Bot:</strong> ' + escapeHtml(botReply) + '</p>' : '',\n    '</div>',\n  ].join('');\n}).join('');\n\nconst customerName = firstMeaningful(original.customer_name, original.lead?.name, original.ticket?.name);\nconst customerEmail = firstMeaningful(original.customer_email, original.lead?.email, original.ticket?.email);\nconst customerPhone = firstMeaningful(original.customer_phone, original.lead?.phone, original.ticket?.phone);\n\nreturn [{\n  json: {\n    ...original,\n    customer_name: customerName,\n    customer_email: customerEmail,\n    customer_phone: customerPhone,\n    notification_contact_line: [customerName, customerEmail, customerPhone].filter(Boolean).join(' | ') || 'Contact not provided',\n    notification_subject_label: firstMeaningful(original.ticket?.summary, original.lead?.items_needed, original.intent, 'Support update'),\n    notification_summary_html: [\n      '<table cellpadding=\"6\" cellspacing=\"0\" style=\"border-collapse:collapse;width:100%;max-width:760px;\">',\n      '<tr><td style=\"width:150px;color:#52606d;\"><strong>Reference</strong></td><td>' + escapeHtml(original.escalation_reference_id || original.ticket_id || original.lead_id || original.message_id || '') + '</td></tr>',\n      '<tr><td style=\"color:#52606d;\"><strong>Session</strong></td><td>' + escapeHtml(original.session_id || '') + '</td></tr>',\n      '<tr><td style=\"color:#52606d;\"><strong>Contact</strong></td><td>' + escapeHtml([customerName, customerEmail, customerPhone].filter(Boolean).join(' | ') || 'not_available') + '</td></tr>',\n      '<tr><td style=\"color:#52606d;\"><strong>Intent</strong></td><td>' + escapeHtml(original.intent || '') + '</td></tr>',\n      '<tr><td style=\"color:#52606d;\"><strong>Escalation</strong></td><td>' + escapeHtml(boolText(original.needs_escalation)) + '</td></tr>',\n      '<tr><td style=\"color:#52606d;\"><strong>Completed</strong></td><td>' + escapeHtml(original.completed_at || '') + '</td></tr>',\n      '</table>',\n    ].join(''),\n    conversation_message_count: transcriptRows.length,\n    conversation_transcript_html: transcriptHtml || '<p>No previous conversation rows found for this session.</p>',\n  },\n}];"
+        "jsCode": "function escapeHtml(value = '') {\n  return String(value || '')\n    .replace(/&/g, '&amp;')\n    .replace(/</g, '&lt;')\n    .replace(/>/g, '&gt;')\n    .replace(/\"/g, '&quot;')\n    .replace(/'/g, '&#39;');\n}\n\nfunction meaningful(value) {\n  const text = String(value || '').trim();\n  if (!text) return '';\n  if (/^(n\\/a|na|none|null|unknown|not_available|not provided|pending)$/i.test(text)) return '';\n  return text;\n}\n\nfunction firstMeaningful(...values) {\n  for (const value of values) {\n    const text = meaningful(value);\n    if (text) return text;\n  }\n  return '';\n}\n\nfunction boolText(value) {\n  return String(value).toLowerCase() === 'true' ? 'Yes' : 'No';\n}\n\nfunction rowTime(row) {\n  return meaningful(row.created_at) || meaningful(row.completed_at) || '';\n}\n\nconst original = $('Parse Strict JSON Response').first().json || {};\nconst rows = items\n  .map((item) => item.json || {})\n  .filter((row) => String(row.session_id || '') === String(original.session_id || ''))\n  .sort((a, b) => String(rowTime(a)).localeCompare(String(rowTime(b))));\n\nconst transcriptRows = rows.length ? rows : [original];\nconst transcriptHtml = transcriptRows.map((row, index) => {\n  const when = rowTime(row) || 'time_not_available';\n  const customerMessage = meaningful(row.user_message_redacted) || meaningful(row.message) || '';\n  const botReply = meaningful(row.bot_reply) || meaningful(row.reply) || '';\n  const intent = meaningful(row.intent);\n\n  return [\n    '<div style=\"border-left:3px solid #d9e2ec;padding:8px 0 8px 12px;margin:10px 0;\">',\n    '<p style=\"margin:0 0 4px 0;color:#52606d;\"><strong>#' + (index + 1) + '</strong> · ' + escapeHtml(when) + (intent ? ' · ' + escapeHtml(intent) : '') + '</p>',\n    customerMessage ? '<p style=\"margin:0 0 6px 0;\"><strong>Customer:</strong> ' + escapeHtml(customerMessage) + '</p>' : '',\n    botReply ? '<p style=\"margin:0;\"><strong>Bot:</strong> ' + escapeHtml(botReply) + '</p>' : '',\n    '</div>',\n  ].join('');\n}).join('');\n\nconst transcriptText = transcriptRows.map((row, index) => {\n  const when = rowTime(row) || 'time_not_available';\n  const customerMessage = meaningful(row.user_message_redacted) || meaningful(row.message) || '';\n  const botReply = meaningful(row.bot_reply) || meaningful(row.reply) || '';\n  const intent = meaningful(row.intent);\n  return [\n    '#' + (index + 1) + ' - ' + when + (intent ? ' - ' + intent : ''),\n    customerMessage ? 'Customer: ' + customerMessage : '',\n    botReply ? 'Bot: ' + botReply : '',\n  ].filter(Boolean).join('\\n');\n}).join('\\n\\n');\n\nconst conversationRef = firstMeaningful(original.conversation_ref, original.ticket_id, original.lead_id, original.message_id);\nconst caseReference = firstMeaningful(original.ticket_id, original.lead_id, original.message_id);\n\nconst customerName = firstMeaningful(original.customer_name, original.lead?.name, original.ticket?.name);\nconst customerEmail = firstMeaningful(original.customer_email, original.lead?.email, original.ticket?.email);\nconst customerPhone = firstMeaningful(original.customer_phone, original.lead?.phone, original.ticket?.phone);\n\nreturn [{\n  json: {\n    ...original,\n    customer_name: customerName,\n    customer_email: customerEmail,\n    customer_phone: customerPhone,\n    conversation_ref: conversationRef,\n    conversation_transcript_text: transcriptText || 'No previous conversation rows found for this session.',\n    notification_contact_line: [customerName, customerEmail, customerPhone].filter(Boolean).join(' | ') || 'Contact not provided',\n    notification_subject_label: firstMeaningful(original.ticket?.summary, original.lead?.items_needed, original.intent, 'Support update'),\n    notification_summary_html: [\n      '<table cellpadding=\"6\" cellspacing=\"0\" style=\"border-collapse:collapse;width:100%;max-width:760px;\">',\n      '<tr><td style=\"width:150px;color:#52606d;\"><strong>Conversation</strong></td><td>' + escapeHtml(conversationRef) + '</td></tr>',\n      '<tr><td style=\"color:#52606d;\"><strong>Case</strong></td><td>' + escapeHtml(caseReference) + '</td></tr>',\n      '<tr><td style=\"color:#52606d;\"><strong>Session</strong></td><td>' + escapeHtml(original.session_id || '') + '</td></tr>',\n      '<tr><td style=\"color:#52606d;\"><strong>Contact</strong></td><td>' + escapeHtml([customerName, customerEmail, customerPhone].filter(Boolean).join(' | ') || 'not_available') + '</td></tr>',\n      '<tr><td style=\"color:#52606d;\"><strong>Intent</strong></td><td>' + escapeHtml(original.intent || '') + '</td></tr>',\n      '<tr><td style=\"color:#52606d;\"><strong>Escalation</strong></td><td>' + escapeHtml(boolText(original.needs_escalation)) + '</td></tr>',\n      '<tr><td style=\"color:#52606d;\"><strong>Completed</strong></td><td>' + escapeHtml(original.completed_at || '') + '</td></tr>',\n      '</table>',\n    ].join(''),\n    conversation_message_count: transcriptRows.length,\n    conversation_transcript_html: transcriptHtml || '<p>No previous conversation rows found for this session.</p>',\n  },\n}];"
       },
       "id": "e41e37bc-4ba6-ce30-cf70-96469b6c80c9",
       "name": "Build Notification Context",
@@ -2551,6 +2616,7 @@
           "value": {
             "message_id": "={{ $json.message_id }}",
             "session_id": "={{ $json.session_id }}",
+            "conversation_ref": "={{ $json.conversation_ref }}",
             "channel": "={{ $json.channel }}",
             "customer_name": "={{ $json.customer_name }}",
             "customer_email": "={{ $json.customer_email }}",
@@ -2585,18 +2651,17 @@
               "canBeUsedToMatch": true
             },
             {
-              "id": "dedupe_key",
-              "displayName": "dedupe_key",
+              "id": "session_id",
+              "displayName": "session_id",
               "required": false,
               "defaultMatch": false,
               "display": true,
               "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": false
+              "canBeUsedToMatch": true
             },
             {
-              "id": "session_id",
-              "displayName": "session_id",
+              "id": "conversation_ref",
+              "displayName": "conversation_ref",
               "required": false,
               "defaultMatch": false,
               "display": true,
@@ -2759,6 +2824,15 @@
             {
               "id": "completed_at",
               "displayName": "completed_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "dedupe_key",
+              "displayName": "dedupe_key",
               "required": false,
               "defaultMatch": false,
               "display": true,
@@ -2807,12 +2881,13 @@
           "value": {
             "message_id": "={{ $json.message_id }}",
             "session_id": "={{ $json.session_id }}",
+            "conversation_ref": "={{ $json.conversation_ref }}",
             "channel": "={{ $json.channel }}",
             "customer_name": "={{ $json.customer_name }}",
             "customer_email": "={{ $json.customer_email }}",
             "customer_phone": "={{ $json.customer_phone }}",
             "user_message_redacted": "={{ $json.user_message_redacted }}",
-            "bot_reply": "merged_into_latest_message",
+            "bot_reply": "={{ '' }}",
             "intent": "rapid_message_merged",
             "confidence": "0",
             "status": "merged",
@@ -2841,18 +2916,17 @@
               "canBeUsedToMatch": true
             },
             {
-              "id": "dedupe_key",
-              "displayName": "dedupe_key",
+              "id": "session_id",
+              "displayName": "session_id",
               "required": false,
               "defaultMatch": false,
               "display": true,
               "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": false
+              "canBeUsedToMatch": true
             },
             {
-              "id": "session_id",
-              "displayName": "session_id",
+              "id": "conversation_ref",
+              "displayName": "conversation_ref",
               "required": false,
               "defaultMatch": false,
               "display": true,
@@ -3015,6 +3089,15 @@
             {
               "id": "completed_at",
               "displayName": "completed_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "dedupe_key",
+              "displayName": "dedupe_key",
               "required": false,
               "defaultMatch": false,
               "display": true,
@@ -3435,13 +3518,7 @@
     },
     "Mark Conversation Merged": {
       "main": [
-        [
-          {
-            "node": "Send Debounce Merge Reply",
-            "type": "main",
-            "index": 0
-          }
-        ]
+        []
       ]
     },
     "Mark Conversation Processing": {
