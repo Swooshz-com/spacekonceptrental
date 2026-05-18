@@ -53,6 +53,8 @@
     },
     {
       "parameters": {
+        "public": true,
+        "initialMessages": "What you want?",
         "options": {
           "responseMode": "responseNodes"
         }
@@ -3466,5 +3468,5 @@
   "meta": {
     "templateCredsSetupCompleted": true
   },
-  "versionId": "bd6e0477-55f2-4dc1-94f1-236aa8eac815"
+  "versionId": "fa70b4f4-7b8e-4305-bec0-fbf5598ecbf4"
 }

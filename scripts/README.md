@@ -48,6 +48,7 @@ The live import/export scripts run optional project hooks when present. This rep
 Current normalisations:
 
 - `Lookup Conversation State.parameters.combineFilters` is restored to `AND`.
+- `Debounce Chat Batch` is restored to a 5-second Wait node so live exports cannot remove the rapid-message debounce window.
 - `Append KB Ingestion Log` keeps the `chunks_count` Google Sheets schema type as `number`.
 - Conversation log `dedupe_key` column/schema names are trimmed back to the exact `dedupe_key` header.
 

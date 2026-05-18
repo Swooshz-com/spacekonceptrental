@@ -120,6 +120,35 @@ function normaliseConversationDedupeColumns(workflow) {
   return changed;
 }
 
+function normaliseDebounceWaitNode(workflow) {
+  const debounceNode = findNode(workflow, 'Debounce Chat Batch');
+  if (!debounceNode) {
+    return false;
+  }
+
+  let changed = false;
+  if (debounceNode.type !== 'n8n-nodes-base.wait') {
+    debounceNode.type = 'n8n-nodes-base.wait';
+    changed = true;
+  }
+
+  debounceNode.parameters = debounceNode.parameters || {};
+  const requiredParameters = {
+    resume: 'timeInterval',
+    amount: 5,
+    unit: 'seconds',
+  };
+
+  for (const [key, value] of Object.entries(requiredParameters)) {
+    if (debounceNode.parameters[key] !== value) {
+      debounceNode.parameters[key] = value;
+      changed = true;
+    }
+  }
+
+  return changed;
+}
+
 function normaliseSupportAgentWorkflow(workflow) {
   let changed = false;
   const lookupNode = findNode(workflow, 'Lookup Conversation State');
@@ -135,6 +164,7 @@ function normaliseSupportAgentWorkflow(workflow) {
   }
 
   changed = normaliseConversationDedupeColumns(workflow) || changed;
+  changed = normaliseDebounceWaitNode(workflow) || changed;
 
   return changed;
 }
