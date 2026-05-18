@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SpaceKonceptRental AI Support</title>
+    <meta
+      name="description"
+      content="SpaceKonceptRental capstone demo website with live AI customer support chat."
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/@n8n/chat/dist/style.css"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        color-scheme: light;
+        --ink: #1c2430;
+        --muted: #5a6675;
+        --line: #d9dee6;
+        --paper: #f6f8fb;
+        --brand: #d72f45;
+        --brand-dark: #9f2234;
+        --teal: #1ea995;
+        --white: #ffffff;
+        --chat--color-primary: #d72f45;
+        --chat--color-primary-shade-50: #c12b3e;
+        --chat--color-primary-shade-100: #9f2234;
+        --chat--color-secondary: #1ea995;
+        --chat--color-secondary-shade-50: #178c7c;
+        --chat--border-radius: 8px;
+        --chat--window--width: 100%;
+        --chat--window--height: 100%;
+        --chat--header--background: #10142d;
+        --chat--header--color: #ffffff;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", sans-serif;
+        color: var(--ink);
+        background: var(--paper);
+      }
+
+      a {
+        color: inherit;
+      }
+
+      .site-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 24px;
+        padding: 18px clamp(20px, 4vw, 56px);
+        border-bottom: 1px solid var(--line);
+        background: var(--white);
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-weight: 800;
+        letter-spacing: 0;
+      }
+
+      .brand-mark {
+        display: grid;
+        width: 36px;
+        height: 36px;
+        place-items: center;
+        border-radius: 6px;
+        color: var(--white);
+        background: var(--brand);
+        font-weight: 900;
+      }
+
+      .status {
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      .hero {
+        display: grid;
+        grid-template-columns: minmax(0, 0.9fr) minmax(360px, 1.1fr);
+        min-height: calc(100vh - 74px);
+      }
+
+      .intro {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: clamp(32px, 6vw, 72px);
+      }
+
+      .eyebrow {
+        margin: 0 0 18px;
+        color: var(--brand-dark);
+        font-size: 13px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      h1 {
+        max-width: 760px;
+        margin: 0;
+        font-size: clamp(36px, 6vw, 72px);
+        line-height: 0.98;
+        letter-spacing: 0;
+      }
+
+      .lead {
+        max-width: 620px;
+        margin: 24px 0 0;
+        color: var(--muted);
+        font-size: clamp(17px, 2vw, 21px);
+        line-height: 1.55;
+      }
+
+      .proof {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+        max-width: 620px;
+        margin-top: 34px;
+      }
+
+      .metric {
+        border-left: 3px solid var(--teal);
+        padding: 6px 0 6px 12px;
+      }
+
+      .metric strong {
+        display: block;
+        font-size: 20px;
+      }
+
+      .metric span {
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .chat-panel {
+        display: flex;
+        min-height: 720px;
+        align-items: stretch;
+        justify-content: center;
+        padding: clamp(20px, 4vw, 44px);
+        background:
+          linear-gradient(135deg, rgba(215, 47, 69, 0.12), transparent 38%),
+          #edf1f6;
+      }
+
+      .chat-embed {
+        width: min(100%, 620px);
+        height: min(760px, calc(100vh - 120px));
+        min-height: 640px;
+        overflow: hidden;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--white);
+        box-shadow: 0 18px 46px rgba(28, 36, 48, 0.14);
+      }
+
+      #n8n-chat {
+        width: 100%;
+        height: 100%;
+      }
+
+      @media (max-width: 920px) {
+        .hero {
+          grid-template-columns: 1fr;
+        }
+
+        .chat-panel {
+          min-height: auto;
+          padding-top: 0;
+        }
+
+        .chat-embed,
+        #n8n-chat {
+          height: 680px;
+          min-height: 680px;
+        }
+      }
+
+      @media (max-width: 640px) {
+        .site-header {
+          align-items: flex-start;
+          flex-direction: column;
+        }
+
+        .intro {
+          padding: 30px 20px;
+        }
+
+        .proof {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="brand" aria-label="SpaceKonceptRental">
+        <span class="brand-mark">SKR</span>
+        <span>SpaceKonceptRental</span>
+      </div>
+      <div class="status">Live AI customer support demo</div>
+    </header>
+
+    <main>
+      <section class="hero" aria-label="AI support chatbot">
+        <div class="intro">
+          <p class="eyebrow">Capstone website deployment</p>
+          <h1>Rental support, quotes, and issue follow-up in one chat.</h1>
+          <p class="lead">
+            Ask about rental terms, product options, event enquiries, or a
+            support issue. The assistant uses the SpaceKonceptRental knowledge
+            base and routes leads, tickets, unanswered questions, and
+            escalations through the live n8n workflow.
+          </p>
+          <div class="proof" aria-label="Workflow coverage">
+            <div class="metric">
+              <strong>RAG</strong>
+              <span>FAQ and policy answers</span>
+            </div>
+            <div class="metric">
+              <strong>CRM</strong>
+              <span>Leads and tickets</span>
+            </div>
+            <div class="metric">
+              <strong>Ops</strong>
+              <span>Alerts and error handling</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="chat-panel" id="support-chat">
+          <div class="chat-embed">
+            <div id="n8n-chat" aria-label="SpaceKonceptRental AI support chat"></div>
+          </div>
+        </div>
+      </section>
+    </main>
+    <script type="module">
+      import { createChat } from "https://cdn.jsdelivr.net/npm/@n8n/chat/dist/chat.bundle.es.js";
+
+      createChat({
+        webhookUrl:
+          "http://localhost:5678/webhook/8f412a10-99f3-4cba-8f9f-b7ee7aa5730b/chat",
+        target: "#n8n-chat",
+        mode: "fullscreen",
+        loadPreviousSession: true,
+        enableStreaming: false,
+        showWelcomeScreen: false,
+        showInput: true,
+        initialMessages: [
+          "Hi there! 👋",
+          "Ask me about rental terms, event enquiries, tickets, or follow-up support.",
+        ],
+        i18n: {
+          en: {
+            title: "SpaceKonceptRental",
+            subtitle: "AI support for rental enquiries and issues.",
+            footer: "",
+            getStarted: "Start a new chat",
+            inputPlaceholder: "Type your question...",
+          },
+        },
+      });
+    </script>
+  </body>
+</html>

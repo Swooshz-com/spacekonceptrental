@@ -1,0 +1,58 @@
+# Dependencies
+node_modules/
+
+# Environment and local secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*.cer
+*.der
+*.jks
+*.keystore
+.secrets
+.secrets.*
+secrets.*
+secret.*
+credentials.*
+credential.*
+tokens.*
+token.*
+*.secret
+*.secret.*
+*.secrets
+*.secrets.*
+*.credentials
+*.credentials.*
+*.credential
+*.credential.*
+*.token
+*.token.*
+*.tokens
+*.tokens.*
+
+# Local n8n state, credential bindings, and live exports
+.n8n-local/
+.n8n-workflow-backups/
+n8n-credential-bindings*.json
+*credential-bindings*.json
+*credential-exports*/
+*credentials-export*.json
+*live-credential*.json
+
+# Generated import/export scratch space
+.tmp/
+tmp/
+temp/
+*.log
+logs/
+
+# OS/editor noise
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

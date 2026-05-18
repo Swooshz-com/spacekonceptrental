@@ -1,0 +1,402 @@
+{
+  "id": "d7af97c3-9c86-47d2-a5de-548592fd9cce",
+  "name": "SpaceKonceptRental - Global Error Handler",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {
+        "content": "# FAILURE INTAKE\n\n- Captures workflow failures from n8n Error Trigger.\n- Accepts internal failure calls from customer chat workflows.\n- Normalises error details for logging and alerting.",
+        "height": 876,
+        "width": 436,
+        "color": 5
+      },
+      "id": "10000000-0000-4000-8000-000000000901",
+      "name": "Failure intake group",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -656,
+        -400
+      ]
+    },
+    {
+      "parameters": {
+        "content": "# PARALLEL HANDLING\n\n- Logs workflow failures and alerts support independently.\n- Keeps the email alert path separate from Sheets logging.\n\n## Required manual configuration:\n\n- **Append Failure Log**\n  - `documentId.value`: Set this to the Google Sheets workbook used for failure logs.\n- **Send Failure Alert**\n  - `sendTo`: Set this to the support mailbox for failure alerts.",
+        "height": 876,
+        "width": 356,
+        "color": 3
+      },
+      "id": "10000000-0000-4000-8000-000000000902",
+      "name": "Parallel handling group",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -208,
+        -400
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "10000000-0000-4000-8000-000000000002",
+      "name": "Workflow Failure",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        -624,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "10000000-0000-4000-8000-000000000006",
+      "name": "Internal Failure Intake",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -624,
+        -64
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "normalise-error-payload-1",
+              "name": "error_execution_id",
+              "value": "={{ $json.error_execution_id || $json.execution_id || $json.execution?.id || \"not_available\" }}",
+              "type": "string"
+            },
+            {
+              "id": "normalise-error-payload-2",
+              "name": "workflow_name",
+              "value": "={{ $json.workflow_name || $json.workflow?.name || \"Unknown workflow\" }}",
+              "type": "string"
+            },
+            {
+              "id": "normalise-error-payload-3",
+              "name": "workflow_id",
+              "value": "={{ $json.workflow_id || $json.workflow?.id || \"not_available\" }}",
+              "type": "string"
+            },
+            {
+              "id": "normalise-error-payload-4",
+              "name": "error_node_name",
+              "value": "={{ $json.error_node_name || $json.last_node_executed || $json.execution?.lastNodeExecuted || $json.trigger?.error?.node?.name || \"not_available\" }}",
+              "type": "string"
+            },
+            {
+              "id": "normalise-error-payload-5",
+              "name": "error_message",
+              "value": "={{ $json.error_message || $json.agent_error_message || $json.execution?.error?.message || $json.trigger?.error?.message || $json.trigger?.error?.cause?.message || \"Unknown workflow error\" }}",
+              "type": "string"
+            },
+            {
+              "id": "normalise-error-payload-6",
+              "name": "error_stack",
+              "value": "={{ $json.error_stack || $json.execution?.error?.stack || $json.trigger?.error?.stack || $json.trigger?.error?.cause?.stack || \"\" }}",
+              "type": "string"
+            },
+            {
+              "id": "normalise-error-payload-7",
+              "name": "error_link",
+              "value": "={{ $json.error_link || $json.execution_url || $json.execution?.url || \"not_available\" }}",
+              "type": "string"
+            },
+            {
+              "id": "normalise-error-payload-8",
+              "name": "error_time",
+              "value": "={{ new Date().toLocaleString('en-SG', { timeZone: 'Asia/Singapore', hour12: false }) }}",
+              "type": "string"
+            },
+            {
+              "id": "normalise-error-payload-9",
+              "name": "new_error_execution_id",
+              "value": "={{ $execution.id }}",
+              "type": "string"
+            },
+            {
+              "id": "normalise-error-payload-10",
+              "name": "recovery_status",
+              "value": "new",
+              "type": "string"
+            },
+            {
+              "id": "normalise-error-payload-11",
+              "name": "execution_mode",
+              "value": "={{ $json.execution?.mode || $json.trigger?.mode || 'not_available' }}",
+              "type": "string"
+            },
+            {
+              "id": "normalise-error-payload-12",
+              "name": "logged_date",
+              "value": "={{ new Date().toLocaleDateString('en-SG', { timeZone: 'Asia/Singapore' }) }}",
+              "type": "string"
+            },
+            {
+              "id": "normalise-error-payload-13",
+              "name": "logged_time",
+              "value": "={{ new Date().toLocaleTimeString('en-SG', { timeZone: 'Asia/Singapore', hour12: false }) }}",
+              "type": "string"
+            },
+            {
+              "id": "normalise-error-payload-14",
+              "name": "contact_id",
+              "value": "={{ $json.contact_id || $json.conversation_ref || $json.message_id || \"not_available\" }}",
+              "type": "string"
+            },
+            {
+              "id": "normalise-error-payload-15",
+              "name": "error_type",
+              "value": "={{ $json.error_type || $json.execution?.mode || $json.trigger?.mode || \"workflow_error\" }}",
+              "type": "string"
+            },
+            {
+              "id": "normalise-error-payload-16",
+              "name": "last_node_executed",
+              "value": "={{ $json.last_node_executed || $json.error_node_name || $json.execution?.lastNodeExecuted || $json.trigger?.error?.node?.name || \"not_available\" }}",
+              "type": "string"
+            },
+            {
+              "id": "normalise-error-payload-17",
+              "name": "execution_id",
+              "value": "={{ $json.error_execution_id || $json.execution_id || $json.execution?.id || \"not_available\" }}",
+              "type": "string"
+            },
+            {
+              "id": "normalise-error-payload-18",
+              "name": "execution_url",
+              "value": "={{ $json.execution_url || $json.error_link || $json.execution?.url || \"not_available\" }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "10000000-0000-4000-8000-000000000003",
+      "name": "Normalise Error Payload",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -368,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1cu-DzYsQAAWkN5Y7HONVhmEAOeyeoo-1ULxz4TXdEL8",
+          "mode": "list",
+          "cachedResultName": "error_logs",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1cu-DzYsQAAWkN5Y7HONVhmEAOeyeoo-1ULxz4TXdEL8/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "error_logs",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1cu-DzYsQAAWkN5Y7HONVhmEAOeyeoo-1ULxz4TXdEL8/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "logged_date": "={{ $json.logged_date }}",
+            "logged_time": "={{ $json.logged_time }}",
+            "contact_id": "={{ $json.contact_id }}",
+            "error_type": "={{ $json.error_type }}",
+            "error_message": "={{ $json.error_message }}",
+            "error_workflow_name": "={{ $json.workflow_name }}",
+            "last_node_executed": "={{ $json.last_node_executed }}",
+            "execution_id": "={{ $json.execution_id }}",
+            "execution_url": "={{ $json.execution_url }}",
+            "payload_json": "={{ JSON.stringify($json) }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "logged_date",
+              "displayName": "logged_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "logged_time",
+              "displayName": "logged_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "contact_id",
+              "displayName": "contact_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "error_type",
+              "displayName": "error_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "error_message",
+              "displayName": "error_message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "error_workflow_name",
+              "displayName": "error_workflow_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "last_node_executed",
+              "displayName": "last_node_executed",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "execution_id",
+              "displayName": "execution_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "execution_url",
+              "displayName": "execution_url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "payload_json",
+              "displayName": "payload_json",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "10000000-0000-4000-8000-000000000004",
+      "name": "Append Failure Log",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -80,
+        64
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "sendTo": "SpaceKonceptRental@gmail.com",
+        "subject": "=[SKR Error] {{ $json.workflow_name || \"Workflow\" }} - {{ $json.error_type || \"workflow_failed\" }}",
+        "message": "=<h2>Workflow failure</h2><table cellpadding=\"6\" cellspacing=\"0\" style=\"border-collapse:collapse;width:100%;max-width:760px;\"><tr><td style=\"width:150px;color:#52606d;\"><strong>Error Time</strong></td><td>{{ $json.logged_date }} - {{ $json.logged_time }}</td></tr><tr><td style=\"color:#52606d;\"><strong>Contact ID</strong></td><td>{{ $json.contact_id }}</td></tr><tr><td style=\"color:#52606d;\"><strong>Workflow</strong></td><td>{{ $json.workflow_name }}</td></tr><tr><td style=\"color:#52606d;\"><strong>Error Type</strong></td><td>{{ $json.error_type }}</td></tr><tr><td style=\"color:#52606d;\"><strong>Error Message</strong></td><td>{{ $json.error_message }}</td></tr><tr><td style=\"color:#52606d;\"><strong>Last Node</strong></td><td>{{ $json.last_node_executed }}</td></tr><tr><td style=\"color:#52606d;\"><strong>Execution ID</strong></td><td>{{ $json.execution_id }}</td></tr><tr><td style=\"color:#52606d;\"><strong>Execution URL</strong></td><td>{{ $json.execution_url }}</td></tr></table><hr><p style=\"font-size:12px;color:#697386;\">Review the failure log, confirm whether the run is safe to retry, and update recovery_status in Google Sheets.</p>",
+        "options": {}
+      },
+      "id": "10000000-0000-4000-8000-000000000005",
+      "name": "Send Failure Alert",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        -80,
+        272
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "connections": {
+    "Workflow Failure": {
+      "main": [
+        [
+          {
+            "node": "Normalise Error Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalise Error Payload": {
+      "main": [
+        [
+          {
+            "node": "Append Failure Log",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send Failure Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Internal Failure Intake": {
+      "main": [
+        [
+          {
+            "node": "Normalise Error Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Asia/Singapore",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": true
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "versionId": "72a4dd35-7079-4e05-a54a-d397018f40e7"
+}
