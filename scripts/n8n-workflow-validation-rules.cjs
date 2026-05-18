@@ -182,6 +182,11 @@ function hasConnection(workflow, sourceName, outputIndex, targetName) {
   return Array.isArray(output) && output.some((connection) => connection.node === targetName);
 }
 
+function connectionTargets(workflow, sourceName, outputIndex) {
+  const output = workflow.connections?.[sourceName]?.main?.[outputIndex];
+  return Array.isArray(output) ? output.map((connection) => connection.node) : [];
+}
+
 function findWorkflowNode(workflow, nodeName) {
   return (workflow.nodes || []).find((node) => node.name === nodeName);
 }
@@ -240,8 +245,17 @@ function checkCustomerSupportAgentFallback(workflow, relative) {
     fail(`${relative} must update the conversation row on the agent fallback path.`);
   }
 
-  if (!hasConnection(workflow, 'Build Agent Failure Fallback', 0, 'Send Fallback Reply')) {
-    fail(`${relative} must send a customer fallback reply on the agent fallback path.`);
+  if (!hasConnection(workflow, 'Upsert Conversation Failed', 0, 'Send Fallback Reply')) {
+    fail(`${relative} must send a customer fallback reply after logging the failed conversation row.`);
+  }
+  const fallbackReplyNode = findWorkflowNode(workflow, 'Send Fallback Reply');
+  const fallbackLogNodeForLayout = findWorkflowNode(workflow, 'Upsert Conversation Failed');
+  if (
+    Array.isArray(fallbackReplyNode?.position) &&
+    Array.isArray(fallbackLogNodeForLayout?.position) &&
+    Number(fallbackReplyNode.position[0]) <= Number(fallbackLogNodeForLayout.position[0])
+  ) {
+    fail(`${relative} Send Fallback Reply must stay visually to the right of failed logging because chat reply nodes park the execution.`);
   }
 
   const fallbackLogNode = findWorkflowNode(workflow, 'Upsert Conversation Failed');
@@ -377,6 +391,9 @@ function checkCustomerSupportAgentDedupeAndResponseMode(workflow, relative) {
     fail(`${relative} Mark Conversation Merged must not write an internal merge note as a bot reply.`);
   }
 
+  if (findWorkflowNode(workflow, 'Send Debounce Merge Reply')) {
+    fail(`${relative} must remove Send Debounce Merge Reply; merged rapid-fire messages should only be logged as merged, not answered separately.`);
+  }
   if (hasConnection(workflow, 'Mark Conversation Merged', 0, 'Send Debounce Merge Reply')) {
     fail(`${relative} merged rapid-fire messages must not send a separate customer-facing debounce reply.`);
   }
@@ -386,14 +403,6 @@ function checkCustomerSupportAgentDedupeAndResponseMode(workflow, relative) {
     fail(`${relative} is missing Mark Conversation Processing.`);
   } else if (processingLogNode.parameters?.columns?.value?.status !== 'processing') {
     fail(`${relative} Mark Conversation Processing must set the newest debounced row to status "processing" before AI/RAG runs.`);
-  }
-
-  const duplicateReplyNode = findWorkflowNode(workflow, 'Send Debounce Merge Reply');
-  const duplicateReplyMessage = String(duplicateReplyNode?.parameters?.message || '').toLowerCase();
-  if (!duplicateReplyNode) {
-    fail(`${relative} is missing Send Debounce Merge Reply.`);
-  } else if (!duplicateReplyMessage.includes('include') || !duplicateReplyMessage.includes('latest message')) {
-    fail(`${relative} Send Debounce Merge Reply must acknowledge that the older rapid-fire message will be included with the latest message.`);
   }
 
   const redactNode = findWorkflowNode(workflow, 'Redact PII for Logs');
@@ -519,6 +528,15 @@ function checkCustomerSupportAgentLoggingContract(workflow, relative) {
     fail(`${relative} Ticket Required? must wait for actionable ticket details before routing to the tickets sheet.`);
   }
 
+  const escalationBranch = findWorkflowNode(workflow, 'Needs Escalation?');
+  const escalationBranchConditions = JSON.stringify(escalationBranch?.parameters?.conditions || {});
+  for (const field of ['needs_escalation', 'lead_captured', 'booking_requested', 'ticket_required', 'confidence', 'unknown']) {
+    if (!escalationBranchConditions.includes(field)) {
+      fail(`${relative} Needs Escalation? must avoid duplicate alerts for lead, booking, ticket, and unanswered follow-up emails.`);
+      break;
+    }
+  }
+
   const outputParserNode = findWorkflowNode(workflow, 'Agent Structured Output Parser');
   let schema = null;
   try {
@@ -610,10 +628,29 @@ function checkCustomerSupportAgentLoggingContract(workflow, relative) {
   if (!notificationContextCode.includes('conversation_ref') || !notificationContextCode.includes('conversation_transcript_text') || !notificationContextCode.includes('conversation_transcript_html') || !notificationContextCode.includes('notification_summary_html')) {
     fail(`${relative} Build Notification Context must prepare formatted email summary and transcript fields.`);
   }
+  const finalResponseNote = findWorkflowNode(workflow, 'Final chat response group');
+  const finalResponseNoteContent = String(finalResponseNote?.parameters?.content || '');
+  if (
+    finalResponseNote?.type !== 'n8n-nodes-base.stickyNote' ||
+    !finalResponseNoteContent.includes('FINAL CHAT RESPONSE') ||
+    !finalResponseNoteContent.includes('park the execution')
+  ) {
+    fail(`${relative} must keep a Final chat response sticky note explaining why chat reply nodes stay visually after routing.`);
+  }
   for (const targetName of ['Lead or Booking Required?', 'Ticket Required?', 'Needs Escalation?', 'Unanswered or Low Confidence?']) {
     if (!hasConnection(workflow, 'Build Notification Context', 0, targetName)) {
       fail(`${relative} Build Notification Context must feed ${targetName} so notification emails include transcript context.`);
     }
+  }
+  if (hasConnection(workflow, 'Parse Strict JSON Response', 0, 'Send Customer Reply')) {
+    fail(`${relative} Send Customer Reply must not run directly after Parse Strict JSON Response because chat reply nodes park executions in waiting before logging branches finish.`);
+  }
+  if (!hasConnection(workflow, 'Build Notification Context', 0, 'Send Customer Reply')) {
+    fail(`${relative} Build Notification Context must feed Send Customer Reply after completion logging and follow-up routing are prepared.`);
+  }
+  const notificationTargets = connectionTargets(workflow, 'Build Notification Context', 0);
+  if (notificationTargets.includes('Send Customer Reply') && notificationTargets[0] !== 'Send Customer Reply') {
+    fail(`${relative} Send Customer Reply must be the first exported Build Notification Context branch so n8n executes Sheet logging and notification routing before the chat execution waits.`);
   }
 
   const escalationNode = findWorkflowNode(workflow, 'Send Escalation Alert');

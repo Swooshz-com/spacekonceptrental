@@ -315,8 +315,8 @@
     {
       "parameters": {
         "sendTo": "SpaceKonceptRental@gmail.com",
-        "subject": "=[ SpaceKonceptRental n8n Alert ] Workflow failed: {{ $json.workflow_name }}",
-        "message": "=<p><strong>Error Time:</strong> {{ $json.logged_date }} - {{ $json.logged_time }}</p>\n<p><strong>Contact ID:</strong> {{ $json.contact_id }}</p>\n<p><strong>Workflow:</strong> {{ $json.workflow_name }}</p>\n<p><strong>Error Type:</strong> {{ $json.error_type }}</p>\n<p><strong>Error Message:</strong> {{ $json.error_message }}</p>\n<p><strong>Last Node Executed:</strong> {{ $json.last_node_executed }}</p>\n<p><strong>Execution ID:</strong> {{ $json.execution_id }}</p>\n<p><strong>Execution URL:</strong> {{ $json.execution_url }}</p>\n<p><strong>Recovery Note:</strong> Review the failure log, confirm whether the run is safe to retry, and update recovery_status in Google Sheets.</p>",
+        "subject": "=[SKR Error] {{ $json.workflow_name || \"Workflow\" }} - {{ $json.error_type || \"workflow_failed\" }}",
+        "message": "=<h2>Workflow failure</h2><table cellpadding=\"6\" cellspacing=\"0\" style=\"border-collapse:collapse;width:100%;max-width:760px;\"><tr><td style=\"width:150px;color:#52606d;\"><strong>Error Time</strong></td><td>{{ $json.logged_date }} - {{ $json.logged_time }}</td></tr><tr><td style=\"color:#52606d;\"><strong>Contact ID</strong></td><td>{{ $json.contact_id }}</td></tr><tr><td style=\"color:#52606d;\"><strong>Workflow</strong></td><td>{{ $json.workflow_name }}</td></tr><tr><td style=\"color:#52606d;\"><strong>Error Type</strong></td><td>{{ $json.error_type }}</td></tr><tr><td style=\"color:#52606d;\"><strong>Error Message</strong></td><td>{{ $json.error_message }}</td></tr><tr><td style=\"color:#52606d;\"><strong>Last Node</strong></td><td>{{ $json.last_node_executed }}</td></tr><tr><td style=\"color:#52606d;\"><strong>Execution ID</strong></td><td>{{ $json.execution_id }}</td></tr><tr><td style=\"color:#52606d;\"><strong>Execution URL</strong></td><td>{{ $json.execution_url }}</td></tr></table><hr><p style=\"font-size:12px;color:#697386;\">Review the failure log, confirm whether the run is safe to retry, and update recovery_status in Google Sheets.</p>",
         "options": {}
       },
       "id": "10000000-0000-4000-8000-000000000005",
@@ -372,5 +372,5 @@
   "meta": {
     "templateCredsSetupCompleted": true
   },
-  "versionId": "f2f5e593-6e18-4993-969c-e12512966145"
+  "versionId": "03e4f44d-262b-4714-9ccf-70642944fdca"
 }
