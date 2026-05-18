@@ -20,6 +20,12 @@ Working notes for the final presentation. These are the practical issues found w
   - Fix: kept namespace set upstream in `Prepare Chunk Metadata`, with fallback to `SpaceKonceptRental_kb`.
   - Presentation point: production workflows should centralise runtime config and use safe fallbacks.
 
+- Repurposing a workflow node left a stale local credential binding.
+  - Impact: live import was blocked even though workflow validation passed.
+  - Root cause: the node ID that used to belong to `Upsert Conversation Failed` was reused for `Notify Main Error Handler`, but `.n8n-local/n8n-credential-bindings.json` still tried to restore Google Sheets credentials onto the new Execute Sub-workflow node.
+  - Fix: removed the stale local binding entry for that repurposed node, then reran import successfully.
+  - Presentation point: safe credential-restore scripts are useful because they stop old credentials from being attached to a changed node type.
+
 ## Ingestion workflow issues
 
 - `Prepare Ingestion Log` hit an item index error after Pinecone returned chunk-level output.
@@ -163,8 +169,20 @@ Working notes for the final presentation. These are the practical issues found w
 - Manual chat testing could leave conversation rows stuck at `processing`.
   - Impact: when the customer support agent failed after writing the initial processing row, the customer did not get a graceful fallback and the conversation log looked permanently unfinished.
   - Root cause: the global Error Trigger workflow is useful for workflow-level ops alerts, but it is not a customer-facing fallback path and may not fire during manual chat testing or unpublished workflow runs.
-  - Fix: added a workflow-local AI/RAG error output path that builds a fallback response, sends the customer a handoff message, updates the conversation row with `status` set to `failed`, and routes the item to escalation and unanswered-question handling.
+  - Fix: added a workflow-local AI/RAG error output path that builds an internal error context, calls the global error handler without waiting, and sends the customer a handoff message directly so Sheets logging cannot block the customer-facing fallback.
   - Presentation point: customer-facing automations need local graceful degradation; global error workflows are a safety net, not the full recovery experience.
+
+- Failed chat fallback was still coupled to Google Sheets.
+  - Impact: if Google Sheets was the failing dependency, the fallback path could also fail before the customer received an error reply.
+  - Root cause: the fallback branch attempted to update the same conversations sheet before sending the chat response.
+  - Fix: route AI/RAG failures to the global error handler with an Execute Sub-workflow call using `waitForSubWorkflow=false`, while the chat response node receives the fallback payload directly. The global error handler logs to Sheets and sends email independently; n8n execution history remains the final fallback if Sheets is unavailable.
+  - Presentation point: user-facing recovery should not depend on the same service that may be causing the incident.
+
+- Error handling needed a clearer split between customer recovery and ops reporting.
+  - Impact: trying to make one path both reply to customers and write logs made the fallback fragile and harder to reason about.
+  - Root cause: the global Error Trigger can alert operators, but it cannot reply to the original live chat execution. The chat workflow has to own the customer response while ops reporting can be delegated.
+  - Fix: created an internal error context in the chat workflow, added `Internal Failure Intake` to the global error handler with Execute Workflow Trigger passthrough, and used `Notify Main Error Handler` as a fire-and-forget Execute Sub-workflow call before the fallback chat reply.
+  - Presentation point: production chat workflows should separate the customer-facing recovery path from best-effort operator logging.
 
 - Burst final testing could exceed the Google Sheets read quota.
   - Impact: rapid route testing could fail at `Lookup Conversation State` before the AI agent or local fallback path ran.
@@ -192,6 +210,8 @@ Working notes for the final presentation. These are the practical issues found w
 - Keep Drive trigger batching assumptions loose because created and updated events can split across executions.
 - Keep static production values documented in sticky notes.
 - Keep credentials in n8n credentials and local binding files, not hardcoded secrets in workflow JSON.
+- Keep customer-facing fallback replies independent from Google Sheets writes.
+- Use the global error handler for best-effort Sheets logging and email alerts; keep n8n execution history as the last-resort failure record.
 - Before final demo, run one clean end-to-end ingestion and verify:
   - each KB file produces a log row;
   - each log row has `file_id`, plain `file_name`, Drive `file_url`, `event_type`, `chunks_count`, namespace, execution ID, and SGT timestamp;

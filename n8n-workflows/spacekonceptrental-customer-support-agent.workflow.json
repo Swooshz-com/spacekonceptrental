@@ -5,7 +5,7 @@
   "nodes": [
     {
       "parameters": {
-        "content": "# RAG ANSWER\n\n- Runs the AI agent with Pinecone retrieval.\n- Retrieves from `kb_namespace`, which defaults to `SpaceKonceptRental_kb` and matches KB ingestion.\n- Keep namespace assignment controlled by workflow config, not free-form customer input.\n- Parses strict JSON for reply, logging, and routing.\n- AI/RAG errors use the agent error output and go to `Build Agent Failure Fallback`.\n\n## Required manual configuration:\n\n- **SpaceKonceptRental Knowledge Base**\n  - `pineconeIndex`: Set this to the Pinecone index used for retrieval.",
+        "content": "# RAG ANSWER\n\n- Runs the AI agent with Pinecone retrieval.\n- Retrieves from `kb_namespace`, which defaults to `SpaceKonceptRental_kb` and matches KB ingestion.\n- Keep namespace assignment controlled by workflow config, not free-form customer input.\n- Parses strict JSON for reply, logging, and routing.\n- AI/RAG errors use the agent error output and go to `Build Internal Error Context`.\n\n## Required manual configuration:\n\n- **SpaceKonceptRental Knowledge Base**\n  - `pineconeIndex`: Set this to the Pinecone index used for retrieval.",
         "height": 1180,
         "width": 868,
         "color": 3
@@ -21,7 +21,7 @@
     },
     {
       "parameters": {
-        "content": "# REPLY AND LOGGING\n\n- Sends the customer reply.\n- Updates the conversation row after the agent response is parsed.\n- If AI/RAG fails after the processing row is written, the fallback path sends a handoff reply and updates the same conversation row with `status` set to `failed`.\n\n## Required manual configuration:\n\n- **Upsert Conversation Completed**\n  - `documentId.value`: Set this to the Google Sheets workbook used for support logs.\n- **Upsert Conversation Failed**\n  - `documentId.value`: Set this to the same Google Sheets workbook used for support logs.",
+        "content": "# REPLY AND LOGGING\n\n- Sends the customer reply.\n- Updates the conversation row after the agent response is parsed.\n- If AI/RAG fails after the processing row is written, the fallback path calls the global error handler without waiting, then sends a handoff reply directly so Sheets cannot block the customer response.\n\n## Required manual configuration:\n\n- **Upsert Conversation Completed**\n  - `documentId.value`: Set this to the Google Sheets workbook used for support logs.\n- **Notify Main Error Handler**\n  - `workflowId`: Set this to the global error handler workflow.",
         "height": 1180,
         "width": 1044,
         "color": 4
@@ -2198,6 +2198,54 @@
               "name": "agent_error_message",
               "value": "={{ $json.error?.message || $json.message || \"AI/RAG step failed before a reply could be generated.\" }}",
               "type": "string"
+            },
+            {
+              "id": "internal-error-error-type",
+              "name": "error_type",
+              "value": "customer_chat_failure",
+              "type": "string"
+            },
+            {
+              "id": "internal-error-workflow-name",
+              "name": "workflow_name",
+              "value": "SpaceKonceptRental - RAG Customer Support Agent",
+              "type": "string"
+            },
+            {
+              "id": "internal-error-workflow-id",
+              "name": "workflow_id",
+              "value": "15871bf4-6ed1-46e9-ab14-6ee3920c4633",
+              "type": "string"
+            },
+            {
+              "id": "internal-error-error-message",
+              "name": "error_message",
+              "value": "={{ $json.error?.message || $json.message || $json.description || \"AI/RAG step failed before a reply could be generated.\" }}",
+              "type": "string"
+            },
+            {
+              "id": "internal-error-last-node-executed",
+              "name": "last_node_executed",
+              "value": "SpaceKonceptRental AI Agent",
+              "type": "string"
+            },
+            {
+              "id": "internal-error-execution-url",
+              "name": "execution_url",
+              "value": "not_available",
+              "type": "string"
+            },
+            {
+              "id": "internal-error-contact-id",
+              "name": "contact_id",
+              "value": "={{ $(\"Restore Processing Context\").first().json.conversation_ref || $(\"Restore Processing Context\").first().json.message_id || \"not_available\" }}",
+              "type": "string"
+            },
+            {
+              "id": "internal-error-failure-payload-json",
+              "name": "failure_payload_json",
+              "value": "={{ JSON.stringify($json) }}",
+              "type": "string"
             }
           ]
         },
@@ -2205,7 +2253,7 @@
         "options": {}
       },
       "id": "3b974bce-0c6c-43d0-ae31-9b8f3520ae02",
-      "name": "Build Agent Failure Fallback",
+      "name": "Build Internal Error Context",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
@@ -2229,268 +2277,34 @@
     },
     {
       "parameters": {
-        "operation": "appendOrUpdate",
-        "documentId": {
+        "workflowId": {
           "__rl": true,
-          "value": "1RhF1XDLluYhkB_d4dmODsSUfwqVGllXMgH4u3a1-6tQ",
+          "value": "d7af97c3-9c86-47d2-a5de-548592fd9cce",
           "mode": "list",
-          "cachedResultName": "RAG_logs",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1RhF1XDLluYhkB_d4dmODsSUfwqVGllXMgH4u3a1-6tQ/edit?usp=drivesdk"
+          "cachedResultUrl": "/workflow/d7af97c3-9c86-47d2-a5de-548592fd9cce",
+          "cachedResultName": "SpaceKonceptRental - Global Error Handler"
         },
-        "sheetName": {
-          "__rl": true,
-          "value": 1611415797,
-          "mode": "list",
-          "cachedResultName": "conversations",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1RhF1XDLluYhkB_d4dmODsSUfwqVGllXMgH4u3a1-6tQ/edit#gid=1611415797"
-        },
-        "columns": {
+        "workflowInputs": {
           "mappingMode": "defineBelow",
-          "value": {
-            "conversation_ref": "={{ $json.conversation_ref }}",
-            "channel": "={{ $json.channel }}",
-            "customer_name": "={{ $json.customer_name }}",
-            "customer_email": "={{ $json.customer_email }}",
-            "customer_phone": "={{ $json.customer_phone }}",
-            "user_message_redacted": "={{ $json.user_message_redacted }}",
-            "bot_reply": "={{ $json.reply }}",
-            "intent": "={{ $json.intent }}",
-            "confidence": "={{ $json.confidence }}",
-            "status": "failed",
-            "needs_escalation": "={{ $json.needs_escalation }}",
-            "lead_captured": "={{ $json.lead_captured }}",
-            "ticket_id": "={{ $json.ticket_id }}",
-            "booking_requested": "={{ $json.booking_requested }}",
-            "source_titles": "={{ $json.source_titles }}",
-            "source_file_ids": "={{ $json.source_file_ids }}",
-            "execution_id": "={{ $json.execution_id }}",
-            "created_at": "={{ $json.timestamp }}",
-            "completed_at": "={{ $json.completed_at }}",
-            "dedupe_key": "={{ $json.dedupe_key }}",
-            "message_id": "={{ $json.message_id }}",
-            "session_id": "={{ $json.session_id }}"
-          },
-          "matchingColumns": [
-            "message_id"
-          ],
-          "schema": [
-            {
-              "id": "conversation_ref",
-              "displayName": "conversation_ref",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "channel",
-              "displayName": "channel",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "customer_name",
-              "displayName": "customer_name",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "customer_email",
-              "displayName": "customer_email",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "customer_phone",
-              "displayName": "customer_phone",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "user_message_redacted",
-              "displayName": "user_message_redacted",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "bot_reply",
-              "displayName": "bot_reply",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "intent",
-              "displayName": "intent",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "confidence",
-              "displayName": "confidence",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "status",
-              "displayName": "status",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "needs_escalation",
-              "displayName": "needs_escalation",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "lead_captured",
-              "displayName": "lead_captured",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "ticket_id",
-              "displayName": "ticket_id",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "booking_requested",
-              "displayName": "booking_requested",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "source_titles",
-              "displayName": "source_titles",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "source_file_ids",
-              "displayName": "source_file_ids",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "execution_id",
-              "displayName": "execution_id",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "created_at",
-              "displayName": "created_at",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "completed_at",
-              "displayName": "completed_at",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "dedupe_key",
-              "displayName": "dedupe_key",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "message_id",
-              "displayName": "message_id",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "session_id",
-              "displayName": "session_id",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            }
-          ],
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
           "attemptToConvertTypes": false,
-          "convertFieldsToString": false
+          "convertFieldsToString": true
         },
         "options": {
-          "cellFormat": "RAW"
+          "waitForSubWorkflow": false
         }
       },
       "id": "b8ca1491-c14f-40de-ad28-b14e62d96f3c",
-      "name": "Upsert Conversation Failed",
-      "type": "n8n-nodes-base.googleSheets",
-      "typeVersion": 4.7,
+      "name": "Notify Main Error Handler",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
       "position": [
-        368,
+        352,
         1504
       ],
-      "retryOnFail": true,
-      "maxTries": 3,
-      "waitBetweenTries": 3000
+      "onError": "continueRegularOutput"
     },
     {
       "parameters": {
@@ -3368,7 +3182,7 @@
         ],
         [
           {
-            "node": "Build Agent Failure Fallback",
+            "node": "Build Internal Error Context",
             "type": "main",
             "index": 0
           }
@@ -3392,17 +3206,6 @@
           {
             "node": "SpaceKonceptRental AI Agent",
             "type": "ai_memory",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Build Agent Failure Fallback": {
-      "main": [
-        [
-          {
-            "node": "Upsert Conversation Failed",
-            "type": "main",
             "index": 0
           }
         ]
@@ -3583,21 +3386,16 @@
         ]
       ]
     },
-    "Upsert Conversation Failed": {
+    "Build Internal Error Context": {
       "main": [
         [
           {
+            "node": "Notify Main Error Handler",
+            "type": "main",
+            "index": 0
+          },
+          {
             "node": "Send Fallback Reply",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Unanswered or Low Confidence?",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Needs Escalation?",
             "type": "main",
             "index": 0
           }
@@ -3617,5 +3415,5 @@
   "meta": {
     "templateCredsSetupCompleted": true
   },
-  "versionId": "ede6e713-7b94-43f3-821e-9da744e9ad9c"
+  "versionId": "b8f0b330-53a1-4f0a-a9b1-9ad106a06cf1"
 }

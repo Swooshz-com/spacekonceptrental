@@ -17,6 +17,8 @@ const currentNodeTypeVersions = {
   '@n8n/n8n-nodes-langchain.vectorStorePinecone': '1.3',
   'n8n-nodes-base.code': '2',
   'n8n-nodes-base.errorTrigger': '1',
+  'n8n-nodes-base.executeWorkflow': '1.3',
+  'n8n-nodes-base.executeWorkflowTrigger': '1.1',
   'n8n-nodes-base.gmail': '2.2',
   'n8n-nodes-base.googleDrive': '3',
   'n8n-nodes-base.googleDriveTrigger': '1',
@@ -221,8 +223,8 @@ function checkCustomerSupportAgentFallback(workflow, relative) {
   }
 
   const requiredNodes = [
-    ['Build Agent Failure Fallback', 'n8n-nodes-base.set'],
-    ['Upsert Conversation Failed', 'n8n-nodes-base.googleSheets'],
+    ['Build Internal Error Context', 'n8n-nodes-base.set'],
+    ['Notify Main Error Handler', 'n8n-nodes-base.executeWorkflow'],
     ['Send Fallback Reply', '@n8n/n8n-nodes-langchain.chat'],
   ];
 
@@ -237,34 +239,37 @@ function checkCustomerSupportAgentFallback(workflow, relative) {
     }
   }
 
-  if (!hasConnection(workflow, 'SpaceKonceptRental AI Agent', 1, 'Build Agent Failure Fallback')) {
-    fail(`${relative} must connect the AI Agent error output to "Build Agent Failure Fallback".`);
+  if (!hasConnection(workflow, 'SpaceKonceptRental AI Agent', 1, 'Build Internal Error Context')) {
+    fail(`${relative} must connect the AI Agent error output to "Build Internal Error Context".`);
   }
 
-  if (!hasConnection(workflow, 'Build Agent Failure Fallback', 0, 'Upsert Conversation Failed')) {
-    fail(`${relative} must update the conversation row on the agent fallback path.`);
+  if (!hasConnection(workflow, 'Build Internal Error Context', 0, 'Notify Main Error Handler')) {
+    fail(`${relative} must call the global error handler on the agent fallback path.`);
   }
 
-  if (!hasConnection(workflow, 'Upsert Conversation Failed', 0, 'Send Fallback Reply')) {
-    fail(`${relative} must send a customer fallback reply after logging the failed conversation row.`);
+  if (!hasConnection(workflow, 'Build Internal Error Context', 0, 'Send Fallback Reply')) {
+    fail(`${relative} must send a customer fallback reply directly from the internal error context so Sheets cannot block the reply.`);
   }
   const fallbackReplyNode = findWorkflowNode(workflow, 'Send Fallback Reply');
-  const fallbackLogNodeForLayout = findWorkflowNode(workflow, 'Upsert Conversation Failed');
+  const fallbackNotifyNodeForLayout = findWorkflowNode(workflow, 'Notify Main Error Handler');
   if (
     Array.isArray(fallbackReplyNode?.position) &&
-    Array.isArray(fallbackLogNodeForLayout?.position) &&
-    Number(fallbackReplyNode.position[0]) <= Number(fallbackLogNodeForLayout.position[0])
+    Array.isArray(fallbackNotifyNodeForLayout?.position) &&
+    Number(fallbackReplyNode.position[0]) <= Number(fallbackNotifyNodeForLayout.position[0])
   ) {
-    fail(`${relative} Send Fallback Reply must stay visually to the right of failed logging because chat reply nodes park the execution.`);
+    fail(`${relative} Send Fallback Reply must stay visually to the right of Notify Main Error Handler because chat reply nodes park the execution.`);
   }
 
-  const fallbackLogNode = findWorkflowNode(workflow, 'Upsert Conversation Failed');
-  const fallbackValues = fallbackLogNode?.parameters?.columns?.value || {};
-  if (fallbackValues.status !== 'failed') {
-    fail(`${relative} fallback conversation log must write status "failed".`);
+  const notifyNode = findWorkflowNode(workflow, 'Notify Main Error Handler');
+  if (notifyNode?.parameters?.options?.waitForSubWorkflow !== false) {
+    fail(`${relative} Notify Main Error Handler must set options.waitForSubWorkflow to false so the customer fallback reply is not blocked by ops logging.`);
   }
-  if (!String(fallbackValues.needs_escalation || '').includes('needs_escalation')) {
-    fail(`${relative} fallback conversation log must preserve needs_escalation from the fallback row.`);
+  if (notifyNode?.onError !== 'continueRegularOutput') {
+    fail(`${relative} Notify Main Error Handler must use onError: continueRegularOutput so a handler failure does not block the customer fallback reply.`);
+  }
+  const fallbackTargets = connectionTargets(workflow, 'Build Internal Error Context', 0);
+  if (fallbackTargets.includes('Notify Main Error Handler') && fallbackTargets.includes('Send Fallback Reply') && fallbackTargets[0] !== 'Notify Main Error Handler') {
+    fail(`${relative} Notify Main Error Handler must stay before Send Fallback Reply in the exported fallback branch order.`);
   }
 }
 
@@ -416,7 +421,6 @@ function checkCustomerSupportAgentDedupeAndResponseMode(workflow, relative) {
     'Mark Conversation Processing',
     'Mark Conversation Merged',
     'Upsert Conversation Completed',
-    'Upsert Conversation Failed',
   ];
 
   for (const nodeName of conversationLogNodes) {
@@ -511,10 +515,10 @@ function checkCustomerSupportAgentLoggingContract(workflow, relative) {
     fail(`${relative} Parse Strict JSON Response completed_at must use display SGT format, not ISO +08:00.`);
   }
 
-  const failureNode = findWorkflowNode(workflow, 'Build Agent Failure Fallback');
+  const failureNode = findWorkflowNode(workflow, 'Build Internal Error Context');
   const failureCompletedAt = findAssignment(failureNode, 'completed_at');
   if (!usesSgtDisplayTimestamp(failureCompletedAt?.value)) {
-    fail(`${relative} Build Agent Failure Fallback completed_at must use display SGT format like 2026-05-17 15:17:46 SGT.`);
+    fail(`${relative} Build Internal Error Context completed_at must use display SGT format like 2026-05-17 15:17:46 SGT.`);
   }
 
   const activeProcessingNode = findWorkflowNode(workflow, 'Select Debounced Chat Batch');
@@ -569,7 +573,6 @@ function checkCustomerSupportAgentLoggingContract(workflow, relative) {
     'Mark Conversation Processing',
     'Mark Conversation Merged',
     'Upsert Conversation Completed',
-    'Upsert Conversation Failed',
     'Upsert Lead or Booking',
     'Upsert Ticket',
     'Upsert Unanswered Question',
@@ -581,7 +584,7 @@ function checkCustomerSupportAgentLoggingContract(workflow, relative) {
     }
   }
 
-  for (const nodeName of ['Upsert Conversation Processing', 'Mark Conversation Processing', 'Mark Conversation Merged', 'Upsert Conversation Completed', 'Upsert Conversation Failed']) {
+  for (const nodeName of ['Upsert Conversation Processing', 'Mark Conversation Processing', 'Mark Conversation Merged', 'Upsert Conversation Completed']) {
     const node = findWorkflowNode(workflow, nodeName);
     if (!node?.parameters?.columns?.value?.conversation_ref) {
       fail(`${relative} ${nodeName} must write conversation_ref so lead rows can be traced back to the session.`);
@@ -681,6 +684,52 @@ function checkCustomerSupportAgentLoggingContract(workflow, relative) {
   }
 }
 
+function checkGlobalErrorHandlerContract(workflow, relative) {
+  if (workflow.name !== 'SpaceKonceptRental - Global Error Handler') {
+    return;
+  }
+
+  const workflowFailureNode = findWorkflowNode(workflow, 'Workflow Failure');
+  if (workflowFailureNode?.type !== 'n8n-nodes-base.errorTrigger') {
+    fail(`${relative} is missing Workflow Failure Error Trigger.`);
+  }
+
+  const internalFailureNode = findWorkflowNode(workflow, 'Internal Failure Intake');
+  if (internalFailureNode?.type !== 'n8n-nodes-base.executeWorkflowTrigger') {
+    fail(`${relative} is missing Internal Failure Intake Execute Workflow Trigger.`);
+  } else if (internalFailureNode.parameters?.inputSource !== 'passthrough') {
+    fail(`${relative} Internal Failure Intake must accept all data passed by customer workflows.`);
+  }
+
+  if (!hasConnection(workflow, 'Workflow Failure', 0, 'Normalise Error Payload')) {
+    fail(`${relative} Workflow Failure must feed Normalise Error Payload.`);
+  }
+  if (!hasConnection(workflow, 'Internal Failure Intake', 0, 'Normalise Error Payload')) {
+    fail(`${relative} Internal Failure Intake must feed Normalise Error Payload.`);
+  }
+
+  const normaliseNode = findWorkflowNode(workflow, 'Normalise Error Payload');
+  for (const [field, requiredSnippet] of [
+    ['workflow_name', '$json.workflow_name'],
+    ['error_message', '$json.error_message'],
+    ['contact_id', '$json.contact_id'],
+    ['error_type', '$json.error_type'],
+    ['execution_url', '$json.execution_url'],
+  ]) {
+    const value = String(findAssignment(normaliseNode, field)?.value || '');
+    if (!value.includes(requiredSnippet)) {
+      fail(`${relative} Normalise Error Payload ${field} must prefer the internal error handler payload when present.`);
+    }
+  }
+
+  for (const nodeName of ['Append Failure Log', 'Send Failure Alert']) {
+    const node = findWorkflowNode(workflow, nodeName);
+    if (node?.onError !== 'continueRegularOutput') {
+      fail(`${relative} ${nodeName} must use onError: continueRegularOutput so one ops channel does not block the other.`);
+    }
+  }
+}
+
 function checkRagIngestionLoggingContract(workflow, relative) {
   if (workflow.name !== 'SpaceKonceptRental - KB Ingestion to Pinecone') {
     return;
@@ -712,6 +761,7 @@ function validateWorkflow(context) {
     checkCustomerSupportAgentFallback(workflow, relative);
     checkCustomerSupportAgentDedupeAndResponseMode(workflow, relative);
     checkCustomerSupportAgentLoggingContract(workflow, relative);
+    checkGlobalErrorHandlerContract(workflow, relative);
     checkRagIngestionLoggingContract(workflow, relative);
   } finally {
     activeFail = null;

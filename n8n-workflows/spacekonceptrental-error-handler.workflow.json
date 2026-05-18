@@ -5,7 +5,7 @@
   "nodes": [
     {
       "parameters": {
-        "content": "# FAILURE INTAKE\n\n- Captures workflow failures from n8n.\n- Normalises error details for logging and alerting.",
+        "content": "# FAILURE INTAKE\n\n- Captures workflow failures from n8n Error Trigger.\n- Accepts internal failure calls from customer chat workflows.\n- Normalises error details for logging and alerting.",
         "height": 876,
         "width": 436,
         "color": 5
@@ -48,48 +48,61 @@
     },
     {
       "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "10000000-0000-4000-8000-000000000006",
+      "name": "Internal Failure Intake",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -624,
+        -64
+      ]
+    },
+    {
+      "parameters": {
         "assignments": {
           "assignments": [
             {
               "id": "normalise-error-payload-1",
               "name": "error_execution_id",
-              "value": "={{ $json.execution?.id || 'not_available' }}",
+              "value": "={{ $json.error_execution_id || $json.execution_id || $json.execution?.id || \"not_available\" }}",
               "type": "string"
             },
             {
               "id": "normalise-error-payload-2",
               "name": "workflow_name",
-              "value": "={{ $json.workflow?.name || 'Unknown workflow' }}",
+              "value": "={{ $json.workflow_name || $json.workflow?.name || \"Unknown workflow\" }}",
               "type": "string"
             },
             {
               "id": "normalise-error-payload-3",
               "name": "workflow_id",
-              "value": "={{ $json.workflow?.id || 'not_available' }}",
+              "value": "={{ $json.workflow_id || $json.workflow?.id || \"not_available\" }}",
               "type": "string"
             },
             {
               "id": "normalise-error-payload-4",
               "name": "error_node_name",
-              "value": "={{ $json.execution?.lastNodeExecuted || $json.trigger?.error?.node?.name || 'not_available' }}",
+              "value": "={{ $json.error_node_name || $json.last_node_executed || $json.execution?.lastNodeExecuted || $json.trigger?.error?.node?.name || \"not_available\" }}",
               "type": "string"
             },
             {
               "id": "normalise-error-payload-5",
               "name": "error_message",
-              "value": "={{ $json.execution?.error?.message || $json.trigger?.error?.message || $json.trigger?.error?.cause?.message || 'Unknown workflow error' }}",
+              "value": "={{ $json.error_message || $json.agent_error_message || $json.execution?.error?.message || $json.trigger?.error?.message || $json.trigger?.error?.cause?.message || \"Unknown workflow error\" }}",
               "type": "string"
             },
             {
               "id": "normalise-error-payload-6",
               "name": "error_stack",
-              "value": "={{ $json.execution?.error?.stack || $json.trigger?.error?.stack || $json.trigger?.error?.cause?.stack || '' }}",
+              "value": "={{ $json.error_stack || $json.execution?.error?.stack || $json.trigger?.error?.stack || $json.trigger?.error?.cause?.stack || \"\" }}",
               "type": "string"
             },
             {
               "id": "normalise-error-payload-7",
               "name": "error_link",
-              "value": "={{ $json.execution?.url || 'not_available' }}",
+              "value": "={{ $json.error_link || $json.execution_url || $json.execution?.url || \"not_available\" }}",
               "type": "string"
             },
             {
@@ -131,31 +144,31 @@
             {
               "id": "normalise-error-payload-14",
               "name": "contact_id",
-              "value": "={{ 'no_contact_id_set_yet' || 'not_available' }}",
+              "value": "={{ $json.contact_id || $json.conversation_ref || $json.message_id || \"not_available\" }}",
               "type": "string"
             },
             {
               "id": "normalise-error-payload-15",
               "name": "error_type",
-              "value": "={{ $json.execution?.mode || $json.trigger?.mode || 'workflow_error' }}",
+              "value": "={{ $json.error_type || $json.execution?.mode || $json.trigger?.mode || \"workflow_error\" }}",
               "type": "string"
             },
             {
               "id": "normalise-error-payload-16",
               "name": "last_node_executed",
-              "value": "={{ $json.execution?.lastNodeExecuted || $json.trigger?.error?.node?.name || 'not_available' }}",
+              "value": "={{ $json.last_node_executed || $json.error_node_name || $json.execution?.lastNodeExecuted || $json.trigger?.error?.node?.name || \"not_available\" }}",
               "type": "string"
             },
             {
               "id": "normalise-error-payload-17",
               "name": "execution_id",
-              "value": "={{ $json.execution?.id || 'not_available' }}",
+              "value": "={{ $json.error_execution_id || $json.execution_id || $json.execution?.id || \"not_available\" }}",
               "type": "string"
             },
             {
               "id": "normalise-error-payload-18",
               "name": "execution_url",
-              "value": "={{ $json.execution?.url || 'not_available' }}",
+              "value": "={{ $json.execution_url || $json.error_link || $json.execution?.url || \"not_available\" }}",
               "type": "string"
             }
           ]
@@ -361,6 +374,17 @@
           }
         ]
       ]
+    },
+    "Internal Failure Intake": {
+      "main": [
+        [
+          {
+            "node": "Normalise Error Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "settings": {
@@ -374,5 +398,5 @@
   "meta": {
     "templateCredsSetupCompleted": true
   },
-  "versionId": "908cf7cf-1aff-468d-9f01-93fa4b4d6708"
+  "versionId": "72a4dd35-7079-4e05-a54a-d397018f40e7"
 }

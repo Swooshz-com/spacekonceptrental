@@ -96,7 +96,6 @@ function normaliseConversationDedupeColumns(workflow) {
   const nodeNames = [
     'Upsert Conversation Processing',
     'Upsert Conversation Completed',
-    'Upsert Conversation Failed',
   ];
 
   let changed = false;
