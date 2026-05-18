@@ -310,7 +310,8 @@
       ],
       "retryOnFail": true,
       "maxTries": 3,
-      "waitBetweenTries": 5000
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput"
     },
     {
       "parameters": {
@@ -329,7 +330,8 @@
       ],
       "retryOnFail": true,
       "maxTries": 3,
-      "waitBetweenTries": 5000
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput"
     }
   ],
   "connections": {
@@ -372,5 +374,5 @@
   "meta": {
     "templateCredsSetupCompleted": true
   },
-  "versionId": "03e4f44d-262b-4714-9ccf-70642944fdca"
+  "versionId": "908cf7cf-1aff-468d-9f01-93fa4b4d6708"
 }
