@@ -174,6 +174,15 @@
         height: 100%;
       }
 
+      .chat-config-missing {
+        display: grid;
+        min-height: 100%;
+        place-items: center;
+        padding: 32px;
+        color: var(--muted);
+        text-align: center;
+      }
+
       @media (max-width: 920px) {
         .hero {
           grid-template-columns: 1fr;
@@ -253,29 +262,48 @@
     <script type="module">
       import { createChat } from "https://cdn.jsdelivr.net/npm/@n8n/chat/dist/chat.bundle.es.js";
 
-      createChat({
-        webhookUrl:
-          "http://localhost:5678/webhook/8f412a10-99f3-4cba-8f9f-b7ee7aa5730b/chat",
-        target: "#n8n-chat",
-        mode: "fullscreen",
-        loadPreviousSession: true,
-        enableStreaming: false,
-        showWelcomeScreen: false,
-        showInput: true,
-        initialMessages: [
-          "Hi there! 👋",
-          "Ask me about rental terms, event enquiries, tickets, or follow-up support.",
-        ],
-        i18n: {
-          en: {
-            title: "SpaceKonceptRental",
-            subtitle: "AI support for rental enquiries and issues.",
-            footer: "",
-            getStarted: "Start a new chat",
-            inputPlaceholder: "Type your question...",
+      async function getChatConfig() {
+        try {
+          const config = await import("./chat-config.local.js");
+          return config.default || config;
+        } catch {
+          return {};
+        }
+      }
+
+      const chatConfig = await getChatConfig();
+      const webhookUrl = chatConfig.webhookUrl || window.SKR_N8N_CHAT_WEBHOOK_URL;
+
+      if (!webhookUrl) {
+        document.querySelector("#n8n-chat").innerHTML =
+          '<div class="chat-config-missing">Chat webhook is not configured for this environment.</div>';
+        console.warn(
+          "Set website/chat-config.local.js with { webhookUrl } to enable the chat widget.",
+        );
+      } else {
+        createChat({
+          webhookUrl,
+          target: "#n8n-chat",
+          mode: "fullscreen",
+          loadPreviousSession: true,
+          enableStreaming: false,
+          showWelcomeScreen: false,
+          showInput: true,
+          initialMessages: [
+            "Hi there! 👋",
+            "Ask me about rental terms, event enquiries, tickets, or follow-up support.",
+          ],
+          i18n: {
+            en: {
+              title: "SpaceKonceptRental",
+              subtitle: "AI support for rental enquiries and issues.",
+              footer: "",
+              getStarted: "Start a new chat",
+              inputPlaceholder: "Type your question...",
+            },
           },
-        },
-      });
+        });
+      }
     </script>
   </body>
 </html>
