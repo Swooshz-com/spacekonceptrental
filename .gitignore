@@ -5,6 +5,7 @@ node_modules/
 .env
 .env.*
 !.env.example
+website/chat-config.js
 website/chat-config.local.js
 *.pem
 *.key

@@ -97,12 +97,14 @@ After import, credential setup, and KB ingestion, test:
 ## Website Demo
 
 Open `website/index.html` in a browser for a simple capstone website demo. The
-page embeds the current live n8n hosted chat URL and includes a fallback link
-that opens the chat in a new tab.
+chat widget reads its webhook URL from ignored local config files. Copy
+`website/chat-config.example.js` to `website/chat-config.local.js` for local
+testing, or to `website/chat-config.js` for a deploy-time config file, then
+replace the URL there.
 
 For final submission, deploy this static folder or the repo root to a simple
-host such as Netlify or GitHub Pages, then replace the ngrok chat URL if the
-public n8n webhook URL changes.
+host such as Netlify or GitHub Pages. Do not commit temporary tunnel URLs such
+as ngrok URLs.
 
 ## Presentation Status
 

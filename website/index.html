@@ -262,23 +262,23 @@
     <script type="module">
       import { createChat } from "https://cdn.jsdelivr.net/npm/@n8n/chat/dist/chat.bundle.es.js";
 
-      async function getChatConfig() {
+      async function applyChatConfig(path) {
         try {
-          const config = await import("./chat-config.local.js");
-          return config.default || config;
+          await import(path);
         } catch {
-          return {};
+          // Optional environment config is ignored when the file is absent.
         }
       }
 
-      const chatConfig = await getChatConfig();
-      const webhookUrl = chatConfig.webhookUrl || window.SKR_N8N_CHAT_WEBHOOK_URL;
+      await applyChatConfig("./chat-config.js");
+      await applyChatConfig("./chat-config.local.js");
+      const webhookUrl = window.SKR_N8N_CHAT_WEBHOOK_URL;
 
       if (!webhookUrl) {
         document.querySelector("#n8n-chat").innerHTML =
           '<div class="chat-config-missing">Chat webhook is not configured for this environment.</div>';
         console.warn(
-          "Set website/chat-config.local.js with { webhookUrl } to enable the chat widget.",
+          "Set website/chat-config.js or website/chat-config.local.js with window.SKR_N8N_CHAT_WEBHOOK_URL to enable the chat widget.",
         );
       } else {
         createChat({
