@@ -223,46 +223,6 @@
     },
     {
       "parameters": {
-        "dataType": "binary",
-        "binaryMode": "specificField",
-        "options": {
-          "metadata": {
-            "metadataValues": [
-              {
-                "name": "source_file_id",
-                "value": "={{ $json.source_file_id }}"
-              },
-              {
-                "name": "source_file_name",
-                "value": "={{ $json.source_file_name }}"
-              },
-              {
-                "name": "namespace",
-                "value": "={{ $json.namespace || 'SpaceKonceptRental_kb' }}"
-              },
-              {
-                "name": "google_drive_url",
-                "value": "={{ $json.google_drive_url }}"
-              },
-              {
-                "name": "event_type",
-                "value": "={{ $json.event_type }}"
-              }
-            ]
-          }
-        }
-      },
-      "id": "20000000-0000-4000-8000-000000000005",
-      "name": "Load Document Text",
-      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
-      "typeVersion": 1.1,
-      "position": [
-        992,
-        304
-      ]
-    },
-    {
-      "parameters": {
         "chunkOverlap": 150,
         "options": {}
       },
@@ -271,8 +231,8 @@
       "type": "@n8n/n8n-nodes-langchain.textSplitterRecursiveCharacterTextSplitter",
       "typeVersion": 1,
       "position": [
-        992,
-        464
+        976,
+        480
       ]
     },
     {
@@ -669,6 +629,47 @@
         1872,
         128
       ]
+    },
+    {
+      "parameters": {
+        "dataType": "binary",
+        "binaryMode": "specificField",
+        "textSplittingMode": "custom",
+        "options": {
+          "metadata": {
+            "metadataValues": [
+              {
+                "name": "source_file_id",
+                "value": "={{ $json.source_file_id }}"
+              },
+              {
+                "name": "source_file_name",
+                "value": "={{ $json.source_file_name }}"
+              },
+              {
+                "name": "namespace",
+                "value": "={{ $json.namespace || 'SpaceKonceptRental_kb' }}"
+              },
+              {
+                "name": "google_drive_url",
+                "value": "={{ $json.google_drive_url }}"
+              },
+              {
+                "name": "event_type",
+                "value": "={{ $json.event_type }}"
+              }
+            ]
+          }
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1.1,
+      "position": [
+        976,
+        304
+      ],
+      "id": "a23a7c0b-2920-499b-afa6-4e09b6d782ab",
+      "name": "Default Data Loader"
     }
   ],
   "connections": {
@@ -716,22 +717,11 @@
         ]
       ]
     },
-    "Load Document Text": {
-      "ai_document": [
-        [
-          {
-            "node": "Insert Chunks into Pinecone",
-            "type": "ai_document",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Recursive Text Splitter": {
       "ai_textSplitter": [
         [
           {
-            "node": "Load Document Text",
+            "node": "Default Data Loader",
             "type": "ai_textSplitter",
             "index": 0
           }
@@ -858,6 +848,17 @@
           }
         ]
       ]
+    },
+    "Default Data Loader": {
+      "ai_document": [
+        [
+          {
+            "node": "Insert Chunks into Pinecone",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "settings": {
@@ -872,5 +873,5 @@
   "meta": {
     "templateCredsSetupCompleted": true
   },
-  "versionId": "08e6b3db-8354-45dc-bd42-773a65350a04"
+  "versionId": "ca1ba705-ad32-4317-bd69-95bcda55d5a5"
 }
