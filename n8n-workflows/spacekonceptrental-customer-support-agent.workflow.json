@@ -69,7 +69,7 @@
     },
     {
       "parameters": {
-        "public": true,
+        "public": false,
         "initialMessages": "What you want?",
         "options": {
           "responseMode": "responseNodes"
