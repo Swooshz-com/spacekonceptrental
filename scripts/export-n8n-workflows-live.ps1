@@ -15,23 +15,63 @@ param(
 
 $ErrorActionPreference = "Stop"
 
+trap {
+  Write-Host ""
+  Write-Host "== " -NoNewline -ForegroundColor DarkGray
+  Write-Host "Export failed" -NoNewline -ForegroundColor Red
+  Write-Host " ==" -ForegroundColor DarkGray
+  Write-Host ($_.Exception.Message) -ForegroundColor Red
+  exit 1
+}
+
 if (-not $PSScriptRoot) {
   throw "This script must be run from a .ps1 file."
 }
 
+function Test-RepoRootPathIsUnsafe($Path) {
+  if ([string]::IsNullOrWhiteSpace($Path)) {
+    return $true
+  }
+
+  $fullPath = [System.IO.Path]::GetFullPath($Path).TrimEnd([System.IO.Path]::DirectorySeparatorChar, [System.IO.Path]::AltDirectorySeparatorChar)
+  $pathRoot = [System.IO.Path]::GetPathRoot($fullPath)
+  if ([string]::IsNullOrWhiteSpace($pathRoot)) {
+    return $true
+  }
+
+  $trimmedRoot = $pathRoot.TrimEnd([System.IO.Path]::DirectorySeparatorChar, [System.IO.Path]::AltDirectorySeparatorChar)
+  return $fullPath -eq $trimmedRoot
+}
+
+function Test-N8nRepoRootCandidate($Path) {
+  if (Test-RepoRootPathIsUnsafe $Path) {
+    return $false
+  }
+
+  $hasGit = Test-Path -LiteralPath (Join-Path $Path ".git")
+  $hasWorkflowDir = Test-Path -LiteralPath (Join-Path $Path "n8n-workflows") -PathType Container
+  $hasToolkitMarkers = (
+    (Test-Path -LiteralPath (Join-Path $Path "repo/scripts/sync-toolkit-projects.cjs") -PathType Leaf) -and
+    (Test-Path -LiteralPath (Join-Path $Path "_projects/n8n/workflow-toolkit/toolkit.project.json") -PathType Leaf)
+  )
+
+  return ($hasGit -and $hasWorkflowDir) -or ($hasGit -and $hasToolkitMarkers)
+}
+
 function Resolve-RepoRootFromScript {
-  $current = (Resolve-Path $PSScriptRoot).Path
+  $current = (Resolve-Path -LiteralPath $PSScriptRoot).Path
   while ($true) {
-    if (
-      (Test-Path -LiteralPath (Join-Path $current ".git")) -or
-      (Test-Path -LiteralPath (Join-Path $current "n8n-workflows"))
-    ) {
+    if (Test-RepoRootPathIsUnsafe $current) {
+      throw "Refusing filesystem root as repo root: $current. Could not resolve safe repo root from $PSScriptRoot."
+    }
+
+    if (Test-N8nRepoRootCandidate $current) {
       return $current
     }
 
     $parent = Split-Path -Parent $current
     if ([string]::IsNullOrWhiteSpace($parent) -or $parent -eq $current) {
-      return (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
+      throw "Could not resolve safe repo root from $PSScriptRoot. Run this helper from inside a Git repo with n8n-workflows/ at the root, or inside the ai-agent-toolkit repo."
     }
     $current = $parent
   }
@@ -43,11 +83,73 @@ Set-Location $RepoRoot
 
 function Write-Section($Title) {
   Write-Host ""
-  Write-Host "== $Title =="
+  Write-Host "== " -NoNewline -ForegroundColor DarkGray
+  Write-Host $Title -NoNewline -ForegroundColor Cyan
+  Write-Host " ==" -ForegroundColor DarkGray
+}
+
+function Get-StatusColor($Status) {
+  switch (([string]$Status).Trim().ToUpperInvariant()) {
+    { $_ -in @("OK", "VALID", "READY", "DONE", "FOUND", "MATCH", "CREATE", "EXPORT", "IMPORT", "RESTART", "CLEAR", "WRITE", "SAVE") } { return "Green" }
+    { $_ -in @("WARN", "ARCHIVE", "DUP", "MISSING", "RETRY") } { return "Yellow" }
+    { $_ -in @("FAIL", "BLOCK", "CANCEL") } { return "Red" }
+    "SKIP" { return "DarkGray" }
+    { $_ -in @("LIVE", "CHECK", "PLAN", "INFO", "START", "HOOK", "ID", "CRED", "FORCE", "NOTE") } { return "Cyan" }
+    default { return "Gray" }
+  }
+}
+
+function Write-StatusTag($Status) {
+  $statusText = ([string]$Status).PadRight(7)
+  Write-Host "[" -NoNewline -ForegroundColor DarkGray
+  Write-Host $statusText -NoNewline -ForegroundColor (Get-StatusColor $statusText)
+  Write-Host "]" -NoNewline -ForegroundColor DarkGray
 }
 
 function Write-Step($Status, $Message) {
-  Write-Host ("[{0}] {1}" -f $Status.PadRight(7), $Message)
+  Write-StatusTag $Status
+  Write-Host " $Message"
+}
+
+function Write-CommandOutput($Lines, [string]$DefaultStatus = "INFO") {
+  foreach ($line in @($Lines)) {
+    if ([string]::IsNullOrWhiteSpace([string]$line)) {
+      continue
+    }
+
+    $text = [string]$line
+    if ($text -match '^==\s*(.+?)\s*==$') {
+      Write-Section $Matches[1]
+      continue
+    }
+
+    if ($text -match '^\[([^\]]+)\]\s*(.*)$') {
+      Write-Step $Matches[1].Trim() $Matches[2]
+      continue
+    }
+
+    if ($text -match '^Checked\s+') {
+      Write-Step "VALID" $text
+      continue
+    }
+
+    if ($text -match '^WARN:\s*(.*)$') {
+      Write-Step "WARN" $Matches[1]
+      continue
+    }
+
+    if ($text -match '^FAIL:\s*(.*)$') {
+      Write-Step "FAIL" $Matches[1]
+      continue
+    }
+
+    if ($text -match '^Summary:') {
+      Write-Step $DefaultStatus $text
+      continue
+    }
+
+    Write-Host $text
+  }
 }
 
 function Invoke-CapturedCommand($Command, [string[]]$Arguments) {
@@ -546,10 +648,10 @@ if ($Mode -eq "RepoTrackedOnly") {
   }
   $syncResult = Invoke-CapturedCommand "node" $syncArgs
   if ($syncResult.ExitCode -ne 0) {
-    Write-Host ($syncResult.Output -join "`n")
+    Write-CommandOutput $syncResult.Output
     throw "Failed to sync live exports into $(Get-DisplayPath $WorkflowDirPath)."
   }
-  Write-Host ($syncResult.Output -join "`n")
+  Write-CommandOutput $syncResult.Output
 
   Invoke-ProjectWorkflowHook "after-export-sync" @{
     "bindings-file" = $BindingsFilePath

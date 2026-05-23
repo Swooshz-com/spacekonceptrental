@@ -20,8 +20,10 @@ $ErrorActionPreference = "Stop"
 
 trap {
   Write-Host ""
-  Write-Host "== Import failed =="
-  Write-Host ($_.Exception.Message)
+  Write-Host "== " -NoNewline -ForegroundColor DarkGray
+  Write-Host "Import failed" -NoNewline -ForegroundColor Red
+  Write-Host " ==" -ForegroundColor DarkGray
+  Write-Host ($_.Exception.Message) -ForegroundColor Red
   exit 1
 }
 
@@ -33,19 +35,50 @@ if (-not [string]::IsNullOrWhiteSpace($ProjectId) -and -not [string]::IsNullOrWh
   throw "ProjectId and UserId cannot both be set. Choose one import target."
 }
 
+function Test-RepoRootPathIsUnsafe($Path) {
+  if ([string]::IsNullOrWhiteSpace($Path)) {
+    return $true
+  }
+
+  $fullPath = [System.IO.Path]::GetFullPath($Path).TrimEnd([System.IO.Path]::DirectorySeparatorChar, [System.IO.Path]::AltDirectorySeparatorChar)
+  $pathRoot = [System.IO.Path]::GetPathRoot($fullPath)
+  if ([string]::IsNullOrWhiteSpace($pathRoot)) {
+    return $true
+  }
+
+  $trimmedRoot = $pathRoot.TrimEnd([System.IO.Path]::DirectorySeparatorChar, [System.IO.Path]::AltDirectorySeparatorChar)
+  return $fullPath -eq $trimmedRoot
+}
+
+function Test-N8nRepoRootCandidate($Path) {
+  if (Test-RepoRootPathIsUnsafe $Path) {
+    return $false
+  }
+
+  $hasGit = Test-Path -LiteralPath (Join-Path $Path ".git")
+  $hasWorkflowDir = Test-Path -LiteralPath (Join-Path $Path "n8n-workflows") -PathType Container
+  $hasToolkitMarkers = (
+    (Test-Path -LiteralPath (Join-Path $Path "repo/scripts/sync-toolkit-projects.cjs") -PathType Leaf) -and
+    (Test-Path -LiteralPath (Join-Path $Path "_projects/n8n/workflow-toolkit/toolkit.project.json") -PathType Leaf)
+  )
+
+  return ($hasGit -and $hasWorkflowDir) -or ($hasGit -and $hasToolkitMarkers)
+}
+
 function Resolve-RepoRootFromScript {
-  $current = (Resolve-Path $PSScriptRoot).Path
+  $current = (Resolve-Path -LiteralPath $PSScriptRoot).Path
   while ($true) {
-    if (
-      (Test-Path -LiteralPath (Join-Path $current ".git")) -or
-      (Test-Path -LiteralPath (Join-Path $current "n8n-workflows"))
-    ) {
+    if (Test-RepoRootPathIsUnsafe $current) {
+      throw "Refusing filesystem root as repo root: $current. Could not resolve safe repo root from $PSScriptRoot."
+    }
+
+    if (Test-N8nRepoRootCandidate $current) {
       return $current
     }
 
     $parent = Split-Path -Parent $current
     if ([string]::IsNullOrWhiteSpace($parent) -or $parent -eq $current) {
-      return (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
+      throw "Could not resolve safe repo root from $PSScriptRoot. Run this helper from inside a Git repo with n8n-workflows/ at the root, or inside the ai-agent-toolkit repo."
     }
     $current = $parent
   }
@@ -57,11 +90,73 @@ Set-Location $RepoRoot
 
 function Write-Section($Title) {
   Write-Host ""
-  Write-Host "== $Title =="
+  Write-Host "== " -NoNewline -ForegroundColor DarkGray
+  Write-Host $Title -NoNewline -ForegroundColor Cyan
+  Write-Host " ==" -ForegroundColor DarkGray
+}
+
+function Get-StatusColor($Status) {
+  switch (([string]$Status).Trim().ToUpperInvariant()) {
+    { $_ -in @("OK", "VALID", "READY", "DONE", "FOUND", "MATCH", "CREATE", "EXPORT", "IMPORT", "RESTART", "CLEAR", "WRITE", "SAVE") } { return "Green" }
+    { $_ -in @("WARN", "ARCHIVE", "DUP", "MISSING", "RETRY") } { return "Yellow" }
+    { $_ -in @("FAIL", "BLOCK", "CANCEL") } { return "Red" }
+    "SKIP" { return "DarkGray" }
+    { $_ -in @("LIVE", "CHECK", "PLAN", "INFO", "START", "HOOK", "ID", "CRED", "FORCE", "NOTE") } { return "Cyan" }
+    default { return "Gray" }
+  }
+}
+
+function Write-StatusTag($Status) {
+  $statusText = ([string]$Status).PadRight(7)
+  Write-Host "[" -NoNewline -ForegroundColor DarkGray
+  Write-Host $statusText -NoNewline -ForegroundColor (Get-StatusColor $statusText)
+  Write-Host "]" -NoNewline -ForegroundColor DarkGray
 }
 
 function Write-Step($Status, $Message) {
-  Write-Host ("[{0}] {1}" -f $Status.PadRight(7), $Message)
+  Write-StatusTag $Status
+  Write-Host " $Message"
+}
+
+function Write-CommandOutput($Lines, [string]$DefaultStatus = "INFO") {
+  foreach ($line in @($Lines)) {
+    if ([string]::IsNullOrWhiteSpace([string]$line)) {
+      continue
+    }
+
+    $text = [string]$line
+    if ($text -match '^==\s*(.+?)\s*==$') {
+      Write-Section $Matches[1]
+      continue
+    }
+
+    if ($text -match '^\[([^\]]+)\]\s*(.*)$') {
+      Write-Step $Matches[1].Trim() $Matches[2]
+      continue
+    }
+
+    if ($text -match '^Checked\s+') {
+      Write-Step "VALID" $text
+      continue
+    }
+
+    if ($text -match '^WARN:\s*(.*)$') {
+      Write-Step "WARN" $Matches[1]
+      continue
+    }
+
+    if ($text -match '^FAIL:\s*(.*)$') {
+      Write-Step "FAIL" $Matches[1]
+      continue
+    }
+
+    if ($text -match '^Summary:') {
+      Write-Step $DefaultStatus $text
+      continue
+    }
+
+    Write-Host $text
+  }
 }
 
 function Invoke-CapturedCommand($Command, [string[]]$Arguments) {
@@ -465,7 +560,7 @@ function Export-CredentialBindingsOnly($WorkflowFiles, $LiveWorkflows) {
   $syncResult = Invoke-CapturedCommand "node" @((Join-Path $HelperScriptDir "sync-n8n-live-exports.cjs"), $CredentialExportDirPath, $WorkflowDirPath, $BindingsFilePath, "--credentials-only", "--allow-missing-exports")
   if ($syncResult.ExitCode -ne 0) {
     Write-Step "FAIL" "Could not save refreshed credential bindings."
-    Write-Host ($syncResult.Output -join "`n")
+    Write-CommandOutput $syncResult.Output
     return $false
   }
 
@@ -595,9 +690,9 @@ function Invoke-WorkflowPreflight($WorkflowFiles, [bool]$BindingsFileExists, $Li
       if ($liveWorkflowForCredentialCheck.active -eq $true -or (Test-WorkflowHasScheduleTrigger $repoWorkflow) -or (Test-WorkflowHasScheduleTrigger $liveWorkflowForCredentialCheck)) {
         $requiresRestartWarning = $true
         $restartWarningCount += 1
-        Write-Host "[WARN] This import updates a previously active or scheduled workflow."
-        Write-Host "[WARN] On non multi-main n8n instances, cron triggers may keep running until n8n is restarted."
-        Write-Host "[WARN] Restart the n8n container after import before trusting activation state."
+        Write-Step "WARN" "This import updates a previously active or scheduled workflow."
+        Write-Step "WARN" "On non multi-main n8n instances, cron triggers may keep running until n8n is restarted."
+        Write-Step "WARN" "Restart the n8n container after import before trusting activation state."
       }
     }
 
@@ -800,13 +895,13 @@ $validationResult = Invoke-CapturedCommand "node" @((Join-Path $HelperScriptDir 
 if ($validationResult.ExitCode -ne 0) {
   throw "Workflow JSON validation failed before live import.`n$($validationResult.Output -join "`n")"
 }
-Write-Step "VALID" ($validationResult.StdOut -join "`n")
+Write-CommandOutput $validationResult.StdOut "VALID"
 
 Invoke-LivePreflight
 $liveWorkflows = Get-LiveWorkflows
 Write-Step "LIVE" "Read $($liveWorkflows.Count) workflow(s) from live n8n."
 
-New-Item -ItemType Directory -Force -Path $PreparedDirPath | Out-Null
+Initialize-RunDirectory $PreparedDirPath
 
 $preflight = Invoke-WorkflowPreflight $workflowFiles $bindingsFileExists $liveWorkflows
 
@@ -855,6 +950,21 @@ if ($DryRun) {
   exit 0
 }
 
+if ($preflight.PlannedImports.Count -eq 0) {
+  Write-Section "Summary"
+  Write-Host "Imported          : 0"
+  Write-Host ("Skipped           : {0}" -f $preflight.SkippedCount)
+  Write-Host ("Name matched      : {0}" -f $preflight.NameMatchedWorkflowCount)
+  Write-Host ("New live          : {0}" -f $preflight.MissingLiveWorkflowCount)
+  Write-Host ("Restart warnings  : {0}" -f $preflight.RestartWarningCount)
+  Write-Host "Live n8n was not changed."
+
+  Write-Section "Next Action Steps"
+  Write-Host "1. No import is needed right now."
+  Write-Host "Deleting archived workflows is not supported by these CLI helper scripts yet."
+  exit 0
+}
+
 Invoke-ProjectWorkflowHook "before-live-import" @{
   "archived-by-name-mode" = $ArchivedByNameMode
   "bindings-file" = $BindingsFilePath
@@ -866,11 +976,11 @@ Invoke-ProjectWorkflowHook "before-live-import" @{
 }
 
 Write-Section "Prepared Workflow Re-Validation"
-$preparedValidationResult = Invoke-CapturedCommand "node" @((Join-Path $HelperScriptDir "validate-n8n-workflows.cjs"), $PreparedDirPath)
+$preparedValidationResult = Invoke-CapturedCommand "node" @((Join-Path $HelperScriptDir "validate-n8n-workflows.cjs"), "--mode", "prepared-import", $PreparedDirPath)
 if ($preparedValidationResult.ExitCode -ne 0) {
   throw "Prepared workflow JSON validation failed after before-live-import hook.`n$($preparedValidationResult.Output -join "`n")"
 }
-Write-Step "VALID" ($preparedValidationResult.StdOut -join "`n")
+Write-CommandOutput $preparedValidationResult.StdOut "VALID"
 
 Write-Section "Import"
 
