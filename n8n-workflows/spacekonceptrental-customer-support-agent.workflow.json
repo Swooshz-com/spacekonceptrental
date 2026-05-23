@@ -1966,7 +1966,7 @@
     },
     {
       "parameters": {
-        "content": "# INTAKE AND DEBOUNCE\n\n- Receives chat messages and normalises input.\n- Writes each incoming chat message as a queued conversation row before AI/RAG runs.\n- Waits briefly, then reads same-session queued and merged rows.\n- Only the newest rapid-fire message runs AI; older rapid-fire executions are marked merged and do not send a separate customer reply.\n- The newest execution sends the AI one merged customer turn so messages like \"hi\" then \"I need 20 stools\" are handled together.\n- Completed or failed rows do not block later repeated questions.\n- Simple Conversation Memory is kept for normal multi-turn context, not as the audit log or dedupe system.\n- `message_id` remains the unique audit row id.\n- `dedupe_key` is kept only as a diagnostic/audit hash, not as the customer-facing block condition.\n- Later AI/RAG fields use `={{ '' }}` on purpose so Sheets cells stay blank until the row is overwritten by the completed, failed, or merged path.\n\n## Required manual configuration:\n\n- **Lookup Conversation State**\n  - `documentId.value`: Set this to the Google Sheets workbook used for support logs.\n  - Conversations sheet headers must include exact `session_id`, `conversation_ref`, `status`, and `dedupe_key` headers with no trailing spaces.\n- **Upsert Conversation Processing**\n  - `documentId.value`: Set this to the same Google Sheets workbook used for support logs.\n- **Mark Conversation Processing**\n  - `documentId.value`: Set this to the same Google Sheets workbook used for support logs.\n- **Mark Conversation Merged**\n  - `documentId.value`: Set this to the same Google Sheets workbook used for support logs.",
+        "content": "# INTAKE AND DEBOUNCE\n\n- Receives chat messages and normalises input.\n- Writes each incoming chat message as a queued conversation row before AI/RAG runs.\n- Waits briefly, then reads same-session queued and merged rows.\n- Only the newest rapid-fire message runs AI; older rapid-fire executions are marked merged and do not send a separate customer reply.\n- The newest execution sends the AI one merged customer turn so messages like \"hi\" then \"I need 20 stools\" are handled together.\n- Completed or failed rows do not block later repeated questions.\n- Conversation history is intentionally not persisted in workflow memory to avoid cross-session context leakage on the public chat endpoint.\n- `message_id` remains the unique audit row id.\n- `dedupe_key` is kept only as a diagnostic/audit hash, not as the customer-facing block condition.\n- Later AI/RAG fields use `={{ '' }}` on purpose so Sheets cells stay blank until the row is overwritten by the completed, failed, or merged path.\n\n## Required manual configuration:\n\n- **Lookup Conversation State**\n  - `documentId.value`: Set this to the Google Sheets workbook used for support logs.\n  - Conversations sheet headers must include exact `session_id`, `conversation_ref`, `status`, and `dedupe_key` headers with no trailing spaces.\n- **Upsert Conversation Processing**\n  - `documentId.value`: Set this to the same Google Sheets workbook used for support logs.\n- **Mark Conversation Processing**\n  - `documentId.value`: Set this to the same Google Sheets workbook used for support logs.\n- **Mark Conversation Merged**\n  - `documentId.value`: Set this to the same Google Sheets workbook used for support logs.",
         "height": 1180,
         "width": 2404,
         "color": 5
@@ -2029,7 +2029,10 @@
       ]
     },
     {
-      "parameters": {},
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.session_id }}"
+      },
       "id": "0e5648d5-234f-47d3-9629-b284ce15c999",
       "name": "Simple Conversation Memory",
       "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
@@ -3195,17 +3198,6 @@
           {
             "node": "SpaceKonceptRental Knowledge Base",
             "type": "ai_embedding",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Simple Conversation Memory": {
-      "ai_memory": [
-        [
-          {
-            "node": "SpaceKonceptRental AI Agent",
-            "type": "ai_memory",
             "index": 0
           }
         ]
