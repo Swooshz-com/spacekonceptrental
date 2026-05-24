@@ -332,10 +332,11 @@ function checkCustomerSupportAgentDedupeAndResponseMode(workflow, relative) {
     fail(`${relative} is missing Debounce Chat Batch.`);
   } else if (
     debounceWaitNode.type !== 'n8n-nodes-base.wait' ||
-    Number(debounceWaitNode.parameters?.amount || 0) < 3 ||
+    debounceWaitNode.parameters?.resume !== 'timeInterval' ||
+    Number(debounceWaitNode.parameters?.amount || 0) < 5 ||
     String(debounceWaitNode.parameters?.unit || '') !== 'seconds'
   ) {
-    fail(`${relative} Debounce Chat Batch must wait a few seconds before reading same-session rows.`);
+    fail(`${relative} Debounce Chat Batch must wait at least 5 seconds before reading same-session rows.`);
   }
 
   const selectorNode = findWorkflowNode(workflow, 'Select Debounced Chat Batch');

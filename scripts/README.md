@@ -54,6 +54,6 @@ Current normalisations:
 
 ## Project Validation Rules
 
-The generic validator runs optional project validation rules when present. This repo uses `scripts/n8n-workflow-validation-rules.cjs` for SpaceKonceptRental-specific workflow contracts such as node versions, conversation guard wiring, fallback routing, and sheet-column types.
+The generic validator runs optional project validation rules when present. `npm run validate:n8n` loads those rules by default. This repo uses `scripts/n8n-workflow-validation-rules.cjs` for SpaceKonceptRental-specific workflow contracts such as node versions, conversation guard wiring, fallback routing, and sheet-column types.
 
 Keep repo-specific validator logic in `n8n-workflow-validation-rules.cjs`, not in `validate-n8n-workflows.cjs`, so the reusable helper files can be copied from the generic template without losing this repo's checks.

@@ -3,6 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "test:n8n-validation": "node --test scripts/validate-n8n-workflows.test.cjs",
     "validate:n8n": "node scripts/validate-n8n-workflows.cjs"
   }
 }
