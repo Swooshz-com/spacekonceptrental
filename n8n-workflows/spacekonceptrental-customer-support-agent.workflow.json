@@ -164,7 +164,7 @@
     },
     {
       "parameters": {
-        "jsCode": "function redact(text = '') {\n  // Keep customer email and phone visible in support logs; they are operational\n  // contact details. Still redact high-risk identifiers that should not sit in\n  // general workflow logs.\n  return String(text).trim()\n    .replace(/\\b[STFGM]\\d{7}[A-Z]\\b/gi, '[redacted-nric-fin]')\n    .replace(/\\b\\d{9,}\\b/g, '[redacted-id]');\n}\n\nfunction normaliseForDedupe(text = '') {\n  return redact(text).toLowerCase().replace(/\\s+/g, ' ').trim();\n}\n\nfunction hashText(text = '') {\n  let hash = 2166136261;\n  for (const char of text) {\n    hash ^= char.charCodeAt(0);\n    hash = Math.imul(hash, 16777619);\n  }\n  return (hash >>> 0).toString(36);\n}\n\nfunction shortSession(value = '') {\n  return String(value || 'session').replace(/[^a-z0-9]/gi, '').slice(0, 8) || 'session';\n}\n\nfunction sgtDateKey(date = new Date()) {\n  const shifted = new Date(date.getTime() + 8 * 60 * 60 * 1000);\n  const pad = (value) => String(value).padStart(2, '0');\n  return '' + shifted.getUTCFullYear() + pad(shifted.getUTCMonth() + 1) + pad(shifted.getUTCDate());\n}\n\nfunction conversationRef(item) {\n  const sessionId = item.session_id || item.sessionId || item.chatId || 'unknown_session';\n  const suffix = hashText(String(sessionId)).toUpperCase().slice(0, 6);\n  return item.conversation_ref || 'SKR-CONV-' + sgtDateKey() + '-' + suffix;\n}\n\nfunction dedupeKey(item, bucketOffset = 0) {\n  const bucketSizeMs = 2 * 60 * 1000;\n  const bucket = Math.floor(Date.now() / bucketSizeMs) + bucketOffset;\n  const sessionId = item.session_id || item.sessionId || item.chatId || 'unknown_session';\n  const messageHash = hashText(normaliseForDedupe(item.message)).toUpperCase();\n  return 'SKR-DEDUP-' + shortSession(sessionId) + '-' + messageHash + '-' + bucket;\n}\n\nreturn items.map((item) => ({\n  json: {\n    ...item.json,\n    user_message_redacted: redact(item.json.message),\n    conversation_ref: conversationRef(item.json),\n    dedupe_key: dedupeKey(item.json),\n    dedupe_key_previous: dedupeKey(item.json, -1)\n  }\n}));"
+        "jsCode": "function redact(text = '') {\n  // Keep customer email and phone visible in support logs; they are operational\n  // contact details. Still redact high-risk identifiers that should not sit in\n  // general workflow logs.\n  return String(text).trim()\n    .replace(/\\b[STFGM]\\d{7}[A-Z]\\b/gi, '[redacted-nric-fin]')\n    .replace(/\\b\\d{9,}\\b/g, '[redacted-id]');\n}\n\nfunction safeSheetValue(value = '') {\n  const text = String(value ?? '');\n  if (!text) return '';\n  if (/^\\+\\s*[\\d()\\-\\s]{3,}$/.test(text)) return text;\n  return /^[=+\\-@]/.test(text) ? \"'\" + text : text;\n}\n\nfunction normaliseForDedupe(text = '') {\n  return redact(text).toLowerCase().replace(/\\s+/g, ' ').trim();\n}\n\nfunction hashText(text = '') {\n  let hash = 2166136261;\n  for (const char of text) {\n    hash ^= char.charCodeAt(0);\n    hash = Math.imul(hash, 16777619);\n  }\n  return (hash >>> 0).toString(36);\n}\n\nfunction shortSession(value = '') {\n  return String(value || 'session').replace(/[^a-z0-9]/gi, '').slice(0, 8) || 'session';\n}\n\nfunction sgtDateKey(date = new Date()) {\n  const shifted = new Date(date.getTime() + 8 * 60 * 60 * 1000);\n  const pad = (value) => String(value).padStart(2, '0');\n  return '' + shifted.getUTCFullYear() + pad(shifted.getUTCMonth() + 1) + pad(shifted.getUTCDate());\n}\n\nfunction conversationRef(item) {\n  const sessionId = item.session_id || item.sessionId || item.chatId || 'unknown_session';\n  const suffix = hashText(String(sessionId)).toUpperCase().slice(0, 6);\n  return item.conversation_ref || 'SKR-CONV-' + sgtDateKey() + '-' + suffix;\n}\n\nfunction dedupeKey(item, bucketOffset = 0) {\n  const bucketSizeMs = 2 * 60 * 1000;\n  const bucket = Math.floor(Date.now() / bucketSizeMs) + bucketOffset;\n  const sessionId = item.session_id || item.sessionId || item.chatId || 'unknown_session';\n  const messageHash = hashText(normaliseForDedupe(item.message)).toUpperCase();\n  return 'SKR-DEDUP-' + shortSession(sessionId) + '-' + messageHash + '-' + bucket;\n}\n\nreturn items.map((item) => {\n  const userMessageRedacted = redact(item.json.message);\n  const conversationReference = conversationRef(item.json);\n  const dedupe = dedupeKey(item.json);\n  const previousDedupe = dedupeKey(item.json, -1);\n\n  return {\n    json: {\n      ...item.json,\n      user_message_redacted: userMessageRedacted,\n      conversation_ref: conversationReference,\n      dedupe_key: dedupe,\n      dedupe_key_previous: previousDedupe,\n      sheet_conversation_ref: safeSheetValue(conversationReference),\n      sheet_channel: safeSheetValue(item.json.channel),\n      sheet_customer_name: safeSheetValue(item.json.customer_name),\n      sheet_customer_email: safeSheetValue(item.json.customer_email),\n      sheet_customer_phone: safeSheetValue(item.json.customer_phone),\n      sheet_user_message_redacted: safeSheetValue(userMessageRedacted),\n      sheet_execution_id: safeSheetValue(item.json.execution_id),\n      sheet_message_id: safeSheetValue(item.json.message_id),\n      sheet_session_id: safeSheetValue(item.json.session_id),\n      sheet_dedupe_key: safeSheetValue(dedupe),\n      sheet_timestamp: safeSheetValue(item.json.timestamp),\n    },\n  };\n});"
       },
       "id": "ee4a900b-fc01-489b-a526-f9c98760206e",
       "name": "Redact PII for Logs",
@@ -269,12 +269,12 @@
         "columns": {
           "mappingMode": "defineBelow",
           "value": {
-            "conversation_ref": "={{ $node[\"Redact PII for Logs\"].json.conversation_ref }}",
-            "channel": "={{ $node[\"Redact PII for Logs\"].json.channel }}",
-            "customer_name": "={{ $node[\"Redact PII for Logs\"].json.customer_name }}",
-            "customer_email": "={{ $node[\"Redact PII for Logs\"].json.customer_email }}",
-            "customer_phone": "={{ $node[\"Redact PII for Logs\"].json.customer_phone }}",
-            "user_message_redacted": "={{ $node[\"Redact PII for Logs\"].json.user_message_redacted }}",
+            "conversation_ref": "={{ $node[\"Redact PII for Logs\"].json.sheet_conversation_ref }}",
+            "channel": "={{ $node[\"Redact PII for Logs\"].json.sheet_channel }}",
+            "customer_name": "={{ $node[\"Redact PII for Logs\"].json.sheet_customer_name }}",
+            "customer_email": "={{ $node[\"Redact PII for Logs\"].json.sheet_customer_email }}",
+            "customer_phone": "={{ $node[\"Redact PII for Logs\"].json.sheet_customer_phone }}",
+            "user_message_redacted": "={{ $node[\"Redact PII for Logs\"].json.sheet_user_message_redacted }}",
             "bot_reply": "queued_for_ai_response",
             "intent": "queued",
             "confidence": "0",
@@ -285,12 +285,12 @@
             "booking_requested": "false",
             "source_titles": "={{ '' }}",
             "source_file_ids": "={{ '' }}",
-            "execution_id": "={{ $node[\"Redact PII for Logs\"].json.execution_id }}",
-            "created_at": "={{ $node[\"Redact PII for Logs\"].json.timestamp }}",
+            "execution_id": "={{ $node[\"Redact PII for Logs\"].json.sheet_execution_id }}",
+            "created_at": "={{ $node[\"Redact PII for Logs\"].json.sheet_timestamp }}",
             "completed_at": "={{ '' }}",
-            "dedupe_key": "={{ $node[\"Redact PII for Logs\"].json.dedupe_key }}",
-            "message_id": "={{ $node[\"Redact PII for Logs\"].json.message_id }}",
-            "session_id": "={{ $node[\"Redact PII for Logs\"].json.session_id }}"
+            "dedupe_key": "={{ $node[\"Redact PII for Logs\"].json.sheet_dedupe_key }}",
+            "message_id": "={{ $node[\"Redact PII for Logs\"].json.sheet_message_id }}",
+            "session_id": "={{ $node[\"Redact PII for Logs\"].json.sheet_session_id }}"
           },
           "matchingColumns": [
             "message_id"
@@ -639,7 +639,7 @@
     },
     {
       "parameters": {
-        "jsCode": "function parseAgentOutput(value) {\n  if (typeof value === 'object' && value !== null) return value;\n  const text = String(value || '').trim();\n  try {\n    return JSON.parse(text);\n  } catch (error) {\n    const start = text.indexOf('{');\n    const end = text.lastIndexOf('}');\n    if (start >= 0 && end > start) return JSON.parse(text.slice(start, end + 1));\n    throw error;\n  }\n}\n\nfunction sgtParts(date = new Date()) {\n  const shifted = new Date(date.getTime() + 8 * 60 * 60 * 1000);\n  const pad = (value, length = 2) => String(value).padStart(length, '0');\n  return {\n    year: shifted.getUTCFullYear(),\n    month: pad(shifted.getUTCMonth() + 1),\n    day: pad(shifted.getUTCDate()),\n    hour: pad(shifted.getUTCHours()),\n    minute: pad(shifted.getUTCMinutes()),\n    second: pad(shifted.getUTCSeconds()),\n    ms: pad(shifted.getUTCMilliseconds(), 3),\n  };\n}\n\nfunction sgtTimestamp(date = new Date()) {\n  const parts = sgtParts(date);\n  return parts.year + '-' + parts.month + '-' + parts.day + ' ' + parts.hour + ':' + parts.minute + ':' + parts.second + ' SGT';\n}\n\nfunction timestampForId(date = new Date()) {\n  const parts = sgtParts(date);\n  return '' + parts.year + parts.month + parts.day + '-' + parts.hour + parts.minute + parts.second;\n}\n\nfunction hashText(text = '') {\n  let hash = 2166136261;\n  for (const char of String(text)) {\n    hash ^= char.charCodeAt(0);\n    hash = Math.imul(hash, 16777619);\n  }\n  return (hash >>> 0).toString(36).toUpperCase();\n}\n\nfunction meaningful(value) {\n  const text = String(value || '').trim();\n  if (!text) return '';\n  if (/^(n\\/a|na|none|null|unknown|not_available)$/i.test(text)) return '';\n  return text;\n}\n\nfunction firstMeaningful(...values) {\n  for (const value of values) {\n    const text = meaningful(value);\n    if (text) return text;\n  }\n  return '';\n}\n\nfunction driveFileUrl(value = '') {\n  const text = String(value || '').trim();\n  if (!text) return '';\n  if (/^https?:\\/\\//i.test(text)) return text;\n  return 'https://drive.google.com/file/d/' + text + '/view';\n}\n\nfunction sourceUrls(values = []) {\n  return values.map(driveFileUrl).filter(Boolean);\n}\n\nreturn items.map((item) => {\n  const original = $('Restore Processing Context').first().json || {};\n  const raw = item.json.output || item.json.text || item.json.response || item.json;\n  let parsed;\n  try {\n    parsed = parseAgentOutput(raw);\n  } catch (error) {\n    parsed = {\n      reply: 'I do not have that detail yet. I can help escalate this to the SpaceKonceptRental team.',\n      intent: 'unknown',\n      confidence: 0,\n      needs_escalation: true,\n      needs_human_followup: true,\n      lead_captured: false,\n      ticket_required: false,\n      booking_requested: false,\n      missing_fields: [],\n      lead: {},\n      ticket: {},\n      booking: {},\n      retrieval_summary: { source_titles: [], source_file_ids: [] }\n    };\n  }\n\n  const now = new Date();\n  const idTime = timestampForId(now);\n  const referenceSuffix = hashText([original.session_id, original.message_id, original.message].join('|')).slice(0, 6);\n  const conversationRef = firstMeaningful(original.conversation_ref) || 'SKR-CONV-' + String(idTime).split('-')[0] + '-' + hashText(original.session_id || original.message_id).slice(0, 6);\n  const ticketRequired = Boolean(parsed.ticket_required);\n  const lead = parsed.lead || {};\n  const ticket = parsed.ticket || {};\n  const customerName = firstMeaningful(parsed.lead?.name, parsed.ticket?.name, original.customer_name);\n  const customerEmail = firstMeaningful(parsed.lead?.email, parsed.ticket?.email, original.customer_email);\n  const customerPhone = firstMeaningful(parsed.lead?.phone, parsed.ticket?.phone, original.customer_phone);\n  const ticketName = firstMeaningful(ticket.name, lead.name, customerName);\n  const ticketEmail = firstMeaningful(ticket.email, lead.email, customerEmail);\n  const ticketPhone = firstMeaningful(ticket.phone, lead.phone, customerPhone);\n  const ticketIssue = firstMeaningful(ticket.summary, ticket.details);\n  const ticketReady = ticketRequired && Boolean(ticketName) && Boolean(ticketEmail || ticketPhone) && Boolean(ticketIssue);\n  const leadCaptured = !ticketRequired && Boolean(parsed.lead_captured);\n  const bookingRequested = !ticketRequired && Boolean(parsed.booking_requested);\n  const leadRequired = leadCaptured || bookingRequested;\n  const ticketId = ticketReady ? 'SKR-TKT-' + idTime + '-' + referenceSuffix : '';\n  const leadId = leadRequired ? 'SKR-LEAD-' + idTime + '-' + referenceSuffix : '';\n  const escalationReferenceId = parsed.needs_escalation ? (ticketId || leadId || original.message_id) : '';\n\n  return {\n    json: {\n      ...original,\n      ...item.json,\n      conversation_ref: conversationRef,\n      agent_raw_output: raw,\n      reply: parsed.reply || 'I do not have that detail yet. I can help escalate this to the SpaceKonceptRental team.',\n      intent: parsed.intent || 'unknown',\n      confidence: Number(parsed.confidence || 0),\n      needs_escalation: Boolean(parsed.needs_escalation),\n      needs_human_followup: Boolean(parsed.needs_human_followup),\n      lead_captured: leadCaptured,\n      ticket_required: ticketRequired,\n      ticket_ready: ticketReady,\n      booking_requested: bookingRequested,\n      missing_fields: parsed.missing_fields || [],\n      customer_name: customerName,\n      customer_email: customerEmail,\n      customer_phone: customerPhone,\n      lead: {\n        ...lead,\n        name: firstMeaningful(lead.name, ticket.name, customerName),\n        email: firstMeaningful(lead.email, ticket.email, customerEmail),\n        phone: firstMeaningful(lead.phone, ticket.phone, customerPhone),\n      },\n      ticket: {\n        ...ticket,\n        name: ticketName,\n        email: ticketEmail,\n        phone: ticketPhone,\n      },\n      booking: parsed.booking || {},\n      source_titles: (parsed.retrieval_summary?.source_titles || []).join(', '),\n      source_file_ids: sourceUrls(parsed.retrieval_summary?.source_file_ids || []).join(', '),\n      ticket_id: ticketId,\n      lead_id: leadId,\n      escalation_reference_id: escalationReferenceId,\n      completed_at: sgtTimestamp(now),\n      unanswered_id: 'SKR-UNANSWERED-' + idTime + '-' + referenceSuffix\n    }\n  };\n});"
+        "jsCode": "function parseAgentOutput(value) {\n  if (typeof value === 'object' && value !== null) return value;\n  const text = String(value || '').trim();\n  try {\n    return JSON.parse(text);\n  } catch (error) {\n    const start = text.indexOf('{');\n    const end = text.lastIndexOf('}');\n    if (start >= 0 && end > start) return JSON.parse(text.slice(start, end + 1));\n    throw error;\n  }\n}\n\nfunction safeSheetValue(value = '') {\n  const text = String(value ?? '');\n  if (!text) return '';\n  if (/^\\+\\s*[\\d()\\-\\s]{3,}$/.test(text)) return text;\n  return /^[=+\\-@]/.test(text) ? \"'\" + text : text;\n}\n\nfunction sgtParts(date = new Date()) {\n  const shifted = new Date(date.getTime() + 8 * 60 * 60 * 1000);\n  const pad = (value, length = 2) => String(value).padStart(length, '0');\n  return {\n    year: shifted.getUTCFullYear(),\n    month: pad(shifted.getUTCMonth() + 1),\n    day: pad(shifted.getUTCDate()),\n    hour: pad(shifted.getUTCHours()),\n    minute: pad(shifted.getUTCMinutes()),\n    second: pad(shifted.getUTCSeconds()),\n    ms: pad(shifted.getUTCMilliseconds(), 3),\n  };\n}\n\nfunction sgtTimestamp(date = new Date()) {\n  const parts = sgtParts(date);\n  return parts.year + '-' + parts.month + '-' + parts.day + ' ' + parts.hour + ':' + parts.minute + ':' + parts.second + ' SGT';\n}\n\nfunction timestampForId(date = new Date()) {\n  const parts = sgtParts(date);\n  return '' + parts.year + parts.month + parts.day + '-' + parts.hour + parts.minute + parts.second;\n}\n\nfunction hashText(text = '') {\n  let hash = 2166136261;\n  for (const char of String(text)) {\n    hash ^= char.charCodeAt(0);\n    hash = Math.imul(hash, 16777619);\n  }\n  return (hash >>> 0).toString(36).toUpperCase();\n}\n\nfunction meaningful(value) {\n  const text = String(value || '').trim();\n  if (!text) return '';\n  if (/^(n\\/a|na|none|null|unknown|not_available)$/i.test(text)) return '';\n  return text;\n}\n\nfunction firstMeaningful(...values) {\n  for (const value of values) {\n    const text = meaningful(value);\n    if (text) return text;\n  }\n  return '';\n}\n\nfunction driveFileUrl(value = '') {\n  const text = String(value || '').trim();\n  if (!text) return '';\n  if (/^https?:\\/\\//i.test(text)) return text;\n  return 'https://drive.google.com/file/d/' + text + '/view';\n}\n\nfunction sourceUrls(values = []) {\n  return values.map(driveFileUrl).filter(Boolean);\n}\n\nreturn items.map((item) => {\n  const original = $('Restore Processing Context').first().json || {};\n  const raw = item.json.output || item.json.text || item.json.response || item.json;\n  let parsed;\n  try {\n    parsed = parseAgentOutput(raw);\n  } catch (error) {\n    parsed = {\n      reply: 'I do not have that detail yet. I can help escalate this to the SpaceKonceptRental team.',\n      intent: 'unknown',\n      confidence: 0,\n      needs_escalation: true,\n      needs_human_followup: true,\n      lead_captured: false,\n      ticket_required: false,\n      booking_requested: false,\n      missing_fields: [],\n      lead: {},\n      ticket: {},\n      booking: {},\n      retrieval_summary: { source_titles: [], source_file_ids: [] }\n    };\n  }\n\n  const now = new Date();\n  const idTime = timestampForId(now);\n  const referenceSuffix = hashText([original.session_id, original.message_id, original.message].join('|')).slice(0, 6);\n  const conversationRef = firstMeaningful(original.conversation_ref) || 'SKR-CONV-' + String(idTime).split('-')[0] + '-' + hashText(original.session_id || original.message_id).slice(0, 6);\n  const ticketRequired = Boolean(parsed.ticket_required);\n  const lead = parsed.lead || {};\n  const ticket = parsed.ticket || {};\n  const customerName = firstMeaningful(parsed.lead?.name, parsed.ticket?.name, original.customer_name);\n  const customerEmail = firstMeaningful(parsed.lead?.email, parsed.ticket?.email, original.customer_email);\n  const customerPhone = firstMeaningful(parsed.lead?.phone, parsed.ticket?.phone, original.customer_phone);\n  const ticketName = firstMeaningful(ticket.name, lead.name, customerName);\n  const ticketEmail = firstMeaningful(ticket.email, lead.email, customerEmail);\n  const ticketPhone = firstMeaningful(ticket.phone, lead.phone, customerPhone);\n  const ticketIssue = firstMeaningful(ticket.summary, ticket.details);\n  const ticketReady = ticketRequired && Boolean(ticketName) && Boolean(ticketEmail || ticketPhone) && Boolean(ticketIssue);\n  const leadCaptured = !ticketRequired && Boolean(parsed.lead_captured);\n  const bookingRequested = !ticketRequired && Boolean(parsed.booking_requested);\n  const leadRequired = leadCaptured || bookingRequested;\n  const ticketId = ticketReady ? 'SKR-TKT-' + idTime + '-' + referenceSuffix : '';\n  const leadId = leadRequired ? 'SKR-LEAD-' + idTime + '-' + referenceSuffix : '';\n  const escalationReferenceId = parsed.needs_escalation ? (ticketId || leadId || original.message_id) : '';\n  const missingFields = Array.isArray(parsed.missing_fields)\n    ? parsed.missing_fields.map(meaningful).filter(Boolean)\n    : [];\n  const missingFieldsText = missingFields.join(', ') || 'none';\n  const supportSignal = [\n    parsed.intent,\n    ticket.category,\n    ticket.urgency,\n    ticket.summary,\n    ticket.details,\n    parsed.reply,\n    original.message,\n  ].map((value) => String(value || '').toLowerCase()).join(' ');\n  const urgentOrSupportIntent = /urgent|complaint|support|issue|problem|broken|fault|refund|late|handoff|escalat|ticket/.test(supportSignal);\n  const incompleteTicketFollowup = ticketRequired && !ticketReady && (\n    Boolean(parsed.needs_escalation) ||\n    Boolean(parsed.needs_human_followup) ||\n    urgentOrSupportIntent ||\n    Number(parsed.confidence || 0) < 0.55 ||\n    String(parsed.intent || '').toLowerCase() === 'unknown'\n  );\n  const sourceTitles = (parsed.retrieval_summary?.source_titles || []).join(', ');\n  const sourceFileIds = sourceUrls(parsed.retrieval_summary?.source_file_ids || []).join(', ');\n  const completedAt = sgtTimestamp(now);\n\n  return {\n    json: {\n      ...original,\n      ...item.json,\n      conversation_ref: conversationRef,\n      agent_raw_output: raw,\n      reply: parsed.reply || 'I do not have that detail yet. I can help escalate this to the SpaceKonceptRental team.',\n      intent: parsed.intent || 'unknown',\n      confidence: Number(parsed.confidence || 0),\n      needs_escalation: Boolean(parsed.needs_escalation),\n      needs_human_followup: Boolean(parsed.needs_human_followup),\n      lead_captured: leadCaptured,\n      ticket_required: ticketRequired,\n      ticket_ready: ticketReady,\n      incomplete_ticket_followup: incompleteTicketFollowup,\n      booking_requested: bookingRequested,\n      missing_fields: missingFields,\n      missing_fields_text: missingFieldsText,\n      customer_name: customerName,\n      customer_email: customerEmail,\n      customer_phone: customerPhone,\n      lead: {\n        ...lead,\n        name: firstMeaningful(lead.name, ticket.name, customerName),\n        email: firstMeaningful(lead.email, ticket.email, customerEmail),\n        phone: firstMeaningful(lead.phone, ticket.phone, customerPhone),\n      },\n      ticket: {\n        ...ticket,\n        name: ticketName,\n        email: ticketEmail,\n        phone: ticketPhone,\n      },\n      booking: parsed.booking || {},\n      source_titles: sourceTitles,\n      source_file_ids: sourceFileIds,\n      ticket_id: ticketId,\n      lead_id: leadId,\n      escalation_reference_id: escalationReferenceId,\n      completed_at: completedAt,\n      unanswered_id: 'SKR-UNANSWERED-' + idTime + '-' + referenceSuffix,\n      sheet_conversation_ref: safeSheetValue(conversationRef),\n      sheet_channel: safeSheetValue(original.channel),\n      sheet_customer_name: safeSheetValue(customerName),\n      sheet_customer_email: safeSheetValue(customerEmail),\n      sheet_customer_phone: safeSheetValue(customerPhone),\n      sheet_user_message_redacted: safeSheetValue(original.user_message_redacted),\n      sheet_reply: safeSheetValue(parsed.reply || 'I do not have that detail yet. I can help escalate this to the SpaceKonceptRental team.'),\n      sheet_intent: safeSheetValue(parsed.intent || 'unknown'),\n      sheet_ticket_id: safeSheetValue(ticketId),\n      sheet_source_titles: safeSheetValue(sourceTitles),\n      sheet_source_file_ids: safeSheetValue(sourceFileIds),\n      sheet_execution_id: safeSheetValue(original.execution_id),\n      sheet_timestamp: safeSheetValue(original.timestamp),\n      sheet_completed_at: safeSheetValue(completedAt),\n      sheet_dedupe_key: safeSheetValue(original.dedupe_key),\n      sheet_message_id: safeSheetValue(original.message_id),\n      sheet_session_id: safeSheetValue(original.session_id),\n    }\n  };\n});"
       },
       "id": "bf0f562c-029d-4412-a839-e41f57e8bb52",
       "name": "Parse Strict JSON Response",
@@ -684,28 +684,28 @@
         "columns": {
           "mappingMode": "defineBelow",
           "value": {
-            "conversation_ref": "={{ $json.conversation_ref }}",
-            "channel": "={{ $json.channel }}",
-            "customer_name": "={{ $json.customer_name }}",
-            "customer_email": "={{ $json.customer_email }}",
-            "customer_phone": "={{ $json.customer_phone }}",
-            "user_message_redacted": "={{ $json.user_message_redacted }}",
-            "bot_reply": "={{ $json.reply }}",
-            "intent": "={{ $json.intent }}",
+            "conversation_ref": "={{ $json.sheet_conversation_ref }}",
+            "channel": "={{ $json.sheet_channel }}",
+            "customer_name": "={{ $json.sheet_customer_name }}",
+            "customer_email": "={{ $json.sheet_customer_email }}",
+            "customer_phone": "={{ $json.sheet_customer_phone }}",
+            "user_message_redacted": "={{ $json.sheet_user_message_redacted }}",
+            "bot_reply": "={{ $json.sheet_reply }}",
+            "intent": "={{ $json.sheet_intent }}",
             "confidence": "={{ $json.confidence }}",
             "status": "completed",
             "needs_escalation": "={{ $json.needs_escalation }}",
             "lead_captured": "={{ $json.lead_captured }}",
-            "ticket_id": "={{ $json.ticket_id }}",
+            "ticket_id": "={{ $json.sheet_ticket_id }}",
             "booking_requested": "={{ $json.booking_requested }}",
-            "source_titles": "={{ $json.source_titles }}",
-            "source_file_ids": "={{ $json.source_file_ids }}",
-            "execution_id": "={{ $json.execution_id }}",
-            "created_at": "={{ $json.timestamp }}",
-            "completed_at": "={{ $json.completed_at }}",
-            "dedupe_key": "={{ $json.dedupe_key }}",
-            "message_id": "={{ $json.message_id }}",
-            "session_id": "={{ $json.session_id }}"
+            "source_titles": "={{ $json.sheet_source_titles }}",
+            "source_file_ids": "={{ $json.sheet_source_file_ids }}",
+            "execution_id": "={{ $json.sheet_execution_id }}",
+            "created_at": "={{ $json.sheet_timestamp }}",
+            "completed_at": "={{ $json.sheet_completed_at }}",
+            "dedupe_key": "={{ $json.sheet_dedupe_key }}",
+            "message_id": "={{ $json.sheet_message_id }}",
+            "session_id": "={{ $json.sheet_session_id }}"
           },
           "matchingColumns": [
             "message_id"
@@ -1073,6 +1073,114 @@
               "name": "execution_id",
               "value": "={{ $json.execution_id }}",
               "type": "string"
+            },
+            {
+              "id": "set-lead-or-booking-row-sheet_lead_id",
+              "name": "sheet_lead_id",
+              "value": "={{ $json.sheet_lead_id }}",
+              "type": "string"
+            },
+            {
+              "id": "set-lead-or-booking-row-sheet_conversation_ref",
+              "name": "sheet_conversation_ref",
+              "value": "={{ $json.sheet_conversation_ref }}",
+              "type": "string"
+            },
+            {
+              "id": "set-lead-or-booking-row-sheet_session_id",
+              "name": "sheet_session_id",
+              "value": "={{ $json.sheet_session_id }}",
+              "type": "string"
+            },
+            {
+              "id": "set-lead-or-booking-row-sheet_name",
+              "name": "sheet_name",
+              "value": "={{ $json.sheet_lead_name }}",
+              "type": "string"
+            },
+            {
+              "id": "set-lead-or-booking-row-sheet_email",
+              "name": "sheet_email",
+              "value": "={{ $json.sheet_lead_email }}",
+              "type": "string"
+            },
+            {
+              "id": "set-lead-or-booking-row-sheet_phone",
+              "name": "sheet_phone",
+              "value": "={{ $json.sheet_lead_phone }}",
+              "type": "string"
+            },
+            {
+              "id": "set-lead-or-booking-row-sheet_company",
+              "name": "sheet_company",
+              "value": "={{ $json.sheet_lead_company }}",
+              "type": "string"
+            },
+            {
+              "id": "set-lead-or-booking-row-sheet_rental_purpose",
+              "name": "sheet_rental_purpose",
+              "value": "={{ $json.sheet_lead_rental_purpose }}",
+              "type": "string"
+            },
+            {
+              "id": "set-lead-or-booking-row-sheet_rental_start_date",
+              "name": "sheet_rental_start_date",
+              "value": "={{ $json.sheet_lead_rental_start_date }}",
+              "type": "string"
+            },
+            {
+              "id": "set-lead-or-booking-row-sheet_rental_duration",
+              "name": "sheet_rental_duration",
+              "value": "={{ $json.sheet_lead_rental_duration }}",
+              "type": "string"
+            },
+            {
+              "id": "set-lead-or-booking-row-sheet_items_needed",
+              "name": "sheet_items_needed",
+              "value": "={{ $json.sheet_lead_items_needed }}",
+              "type": "string"
+            },
+            {
+              "id": "set-lead-or-booking-row-sheet_delivery_area",
+              "name": "sheet_delivery_area",
+              "value": "={{ $json.sheet_lead_delivery_area }}",
+              "type": "string"
+            },
+            {
+              "id": "set-lead-or-booking-row-sheet_budget",
+              "name": "sheet_budget",
+              "value": "={{ $json.sheet_lead_budget }}",
+              "type": "string"
+            },
+            {
+              "id": "set-lead-or-booking-row-sheet_status",
+              "name": "sheet_status",
+              "value": "={{ $json.sheet_lead_status }}",
+              "type": "string"
+            },
+            {
+              "id": "set-lead-or-booking-row-sheet_source_channel",
+              "name": "sheet_source_channel",
+              "value": "={{ $json.sheet_source_channel }}",
+              "type": "string"
+            },
+            {
+              "id": "set-lead-or-booking-row-sheet_conversation_transcript",
+              "name": "sheet_conversation_transcript",
+              "value": "={{ $json.sheet_conversation_transcript }}",
+              "type": "string"
+            },
+            {
+              "id": "set-lead-or-booking-row-sheet_created_at",
+              "name": "sheet_created_at",
+              "value": "={{ $json.sheet_completed_at }}",
+              "type": "string"
+            },
+            {
+              "id": "set-lead-or-booking-row-sheet_execution_id",
+              "name": "sheet_execution_id",
+              "value": "={{ $json.sheet_execution_id }}",
+              "type": "string"
             }
           ]
         },
@@ -1107,24 +1215,24 @@
         "columns": {
           "mappingMode": "defineBelow",
           "value": {
-            "conversation_ref": "={{ $json.conversation_ref }}",
-            "name": "={{ $json.name }}",
-            "email": "={{ $json.email }}",
-            "phone": "={{ $json.phone }}",
-            "company": "={{ $json.company }}",
-            "rental_purpose": "={{ $json.rental_purpose }}",
-            "rental_start_date": "={{ $json.rental_start_date }}",
-            "rental_duration": "={{ $json.rental_duration }}",
-            "items_needed": "={{ $json.items_needed }}",
-            "delivery_area": "={{ $json.delivery_area }}",
-            "budget": "={{ $json.budget }}",
-            "status": "={{ $json.status }}",
-            "source_channel": "={{ $json.source_channel }}",
-            "conversation_transcript": "={{ $json.conversation_transcript }}",
-            "created_at": "={{ $json.created_at }}",
-            "execution_id": "={{ $json.execution_id }}",
-            "lead_id": "={{ $json.lead_id }}",
-            "session_id": "={{ $json.session_id }}"
+            "conversation_ref": "={{ $json.sheet_conversation_ref }}",
+            "name": "={{ $json.sheet_name }}",
+            "email": "={{ $json.sheet_email }}",
+            "phone": "={{ $json.sheet_phone }}",
+            "company": "={{ $json.sheet_company }}",
+            "rental_purpose": "={{ $json.sheet_rental_purpose }}",
+            "rental_start_date": "={{ $json.sheet_rental_start_date }}",
+            "rental_duration": "={{ $json.sheet_rental_duration }}",
+            "items_needed": "={{ $json.sheet_items_needed }}",
+            "delivery_area": "={{ $json.sheet_delivery_area }}",
+            "budget": "={{ $json.sheet_budget }}",
+            "status": "={{ $json.sheet_status }}",
+            "source_channel": "={{ $json.sheet_source_channel }}",
+            "conversation_transcript": "={{ $json.sheet_conversation_transcript }}",
+            "created_at": "={{ $json.sheet_created_at }}",
+            "execution_id": "={{ $json.sheet_execution_id }}",
+            "lead_id": "={{ $json.sheet_lead_id }}",
+            "session_id": "={{ $json.sheet_session_id }}"
           },
           "matchingColumns": [
             "lead_id"
@@ -1432,6 +1540,90 @@
               "name": "execution_id",
               "value": "={{ $json.execution_id }}",
               "type": "string"
+            },
+            {
+              "id": "set-ticket-row-sheet_ticket_id",
+              "name": "sheet_ticket_id",
+              "value": "={{ $json.sheet_ticket_id }}",
+              "type": "string"
+            },
+            {
+              "id": "set-ticket-row-sheet_conversation_ref",
+              "name": "sheet_conversation_ref",
+              "value": "={{ $json.sheet_conversation_ref }}",
+              "type": "string"
+            },
+            {
+              "id": "set-ticket-row-sheet_session_id",
+              "name": "sheet_session_id",
+              "value": "={{ $json.sheet_session_id }}",
+              "type": "string"
+            },
+            {
+              "id": "set-ticket-row-sheet_name",
+              "name": "sheet_name",
+              "value": "={{ $json.sheet_ticket_name }}",
+              "type": "string"
+            },
+            {
+              "id": "set-ticket-row-sheet_email",
+              "name": "sheet_email",
+              "value": "={{ $json.sheet_ticket_email }}",
+              "type": "string"
+            },
+            {
+              "id": "set-ticket-row-sheet_phone",
+              "name": "sheet_phone",
+              "value": "={{ $json.sheet_ticket_phone }}",
+              "type": "string"
+            },
+            {
+              "id": "set-ticket-row-sheet_category",
+              "name": "sheet_category",
+              "value": "={{ $json.sheet_ticket_category }}",
+              "type": "string"
+            },
+            {
+              "id": "set-ticket-row-sheet_summary",
+              "name": "sheet_summary",
+              "value": "={{ $json.sheet_ticket_summary }}",
+              "type": "string"
+            },
+            {
+              "id": "set-ticket-row-sheet_details",
+              "name": "sheet_details",
+              "value": "={{ $json.sheet_ticket_details }}",
+              "type": "string"
+            },
+            {
+              "id": "set-ticket-row-sheet_conversation_transcript",
+              "name": "sheet_conversation_transcript",
+              "value": "={{ $json.sheet_conversation_transcript }}",
+              "type": "string"
+            },
+            {
+              "id": "set-ticket-row-sheet_urgency",
+              "name": "sheet_urgency",
+              "value": "={{ $json.sheet_ticket_urgency }}",
+              "type": "string"
+            },
+            {
+              "id": "set-ticket-row-sheet_status",
+              "name": "sheet_status",
+              "value": "={{ $json.sheet_ticket_status }}",
+              "type": "string"
+            },
+            {
+              "id": "set-ticket-row-sheet_created_at",
+              "name": "sheet_created_at",
+              "value": "={{ $json.sheet_completed_at }}",
+              "type": "string"
+            },
+            {
+              "id": "set-ticket-row-sheet_execution_id",
+              "name": "sheet_execution_id",
+              "value": "={{ $json.sheet_execution_id }}",
+              "type": "string"
             }
           ]
         },
@@ -1466,20 +1658,20 @@
         "columns": {
           "mappingMode": "defineBelow",
           "value": {
-            "conversation_ref": "={{ $json.conversation_ref }}",
-            "name": "={{ $json.name }}",
-            "email": "={{ $json.email }}",
-            "phone": "={{ $json.phone }}",
-            "category": "={{ $json.category }}",
-            "summary": "={{ $json.summary }}",
-            "details": "={{ $json.details }}",
-            "conversation_transcript": "={{ $json.conversation_transcript }}",
-            "urgency": "={{ $json.urgency }}",
-            "status": "={{ $json.status }}",
-            "created_at": "={{ $json.created_at }}",
-            "execution_id": "={{ $json.execution_id }}",
-            "ticket_id": "={{ $json.ticket_id }}",
-            "session_id": "={{ $json.session_id }}"
+            "conversation_ref": "={{ $json.sheet_conversation_ref }}",
+            "name": "={{ $json.sheet_name }}",
+            "email": "={{ $json.sheet_email }}",
+            "phone": "={{ $json.sheet_phone }}",
+            "category": "={{ $json.sheet_category }}",
+            "summary": "={{ $json.sheet_summary }}",
+            "details": "={{ $json.sheet_details }}",
+            "conversation_transcript": "={{ $json.sheet_conversation_transcript }}",
+            "urgency": "={{ $json.sheet_urgency }}",
+            "status": "={{ $json.sheet_status }}",
+            "created_at": "={{ $json.sheet_created_at }}",
+            "execution_id": "={{ $json.sheet_execution_id }}",
+            "ticket_id": "={{ $json.sheet_ticket_id }}",
+            "session_id": "={{ $json.sheet_session_id }}"
           },
           "matchingColumns": [
             "ticket_id"
@@ -1643,7 +1835,7 @@
           "conditions": [
             {
               "id": "needs-escalation--1",
-              "leftValue": "={{ String(String($json.needs_escalation).toLowerCase() === 'true' && String($json.lead_captured).toLowerCase() !== 'true' && String($json.booking_requested).toLowerCase() !== 'true' && String($json.ticket_required).toLowerCase() !== 'true' && String($json.intent || '').toLowerCase() !== 'unknown' && Number($json.confidence || 0) >= 0.55) }}",
+              "leftValue": "={{ String((String($json.needs_escalation).toLowerCase() === 'true' || String($json.incomplete_ticket_followup).toLowerCase() === 'true') && String($json.lead_captured).toLowerCase() !== 'true' && String($json.booking_requested).toLowerCase() !== 'true' && String($json.ticket_ready).toLowerCase() !== 'true' && String($json.intent || '').toLowerCase() !== 'unknown' && Number($json.confidence || 0) >= 0.55) }}",
               "rightValue": "true",
               "operator": {
                 "type": "string",
@@ -1667,8 +1859,8 @@
     {
       "parameters": {
         "sendTo": "SpaceKonceptRental@gmail.com",
-        "subject": "=[SKR Alert] {{ $json.intent }} - {{ $json.escalation_reference_id || $json.ticket_id || $json.lead_id || $json.message_id }}",
-        "message": "=<h2>Support alert</h2>{{ $json.notification_summary_html }}<h3>Current message</h3><p>{{ $json.user_message_redacted || \"not_available\" }}</p><h3>Bot reply</h3><p>{{ $json.reply || \"not_available\" }}</p><h3>Useful IDs</h3><p><strong>Ticket:</strong> {{ $json.ticket_id || \"not_applicable\" }}<br><strong>Lead:</strong> {{ $json.lead_id || \"not_applicable\" }}<br><strong>Execution:</strong> {{ $json.execution_id }}</p><h3>Sources</h3><p>{{ $json.source_titles || \"not_available\" }}<br>{{ $json.source_file_ids || \"\" }}</p><h3>Conversation transcript ({{ $json.conversation_message_count }} message(s))</h3>{{ $json.conversation_transcript_html }}<hr><p style=\"font-size:12px;color:#697386;\">This email was generated from the n8n customer support workflow. Review the transcript before replying to the customer.</p>",
+        "subject": "=[SKR Alert] {{ $json.subject_escalation_intent }} - {{ $json.subject_escalation_reference }}",
+        "message": "=<h2>Support alert</h2>{{ $json.safe_notification_summary_html }}<h3>Current message</h3><p>{{ $json.safe_user_message_redacted || \"not_available\" }}</p><h3>Bot reply</h3><p>{{ $json.safe_reply || \"not_available\" }}</p><h3>Missing fields</h3><p>{{ $json.safe_missing_fields || \"none\" }}</p><h3>Useful IDs</h3><p><strong>Ticket:</strong> {{ $json.safe_ticket_id || \"not_applicable\" }}<br><strong>Lead:</strong> {{ $json.safe_lead_id || \"not_applicable\" }}<br><strong>Execution:</strong> {{ $json.safe_execution_id }}</p><h3>Sources</h3><p>{{ $json.safe_source_titles || \"not_available\" }}<br>{{ $json.safe_source_file_ids || \"\" }}</p><h3>Conversation transcript ({{ $json.conversation_message_count }} message(s); showing {{ $json.conversation_transcript_rows_rendered || $json.conversation_message_count }})</h3>{{ $json.safe_conversation_transcript_html }}<hr><p style=\"font-size:12px;color:#697386;\">This email was generated from the n8n customer support workflow. Review the transcript before replying to the customer.</p>",
         "options": {}
       },
       "id": "a6c1e72b-debc-47ed-a47f-b26482baba67",
@@ -1794,6 +1986,66 @@
               "name": "execution_id",
               "value": "={{ $json.execution_id }}",
               "type": "string"
+            },
+            {
+              "id": "set-unanswered-row-sheet_id",
+              "name": "sheet_id",
+              "value": "={{ $json.sheet_unanswered_id }}",
+              "type": "string"
+            },
+            {
+              "id": "set-unanswered-row-sheet_conversation_ref",
+              "name": "sheet_conversation_ref",
+              "value": "={{ $json.sheet_conversation_ref }}",
+              "type": "string"
+            },
+            {
+              "id": "set-unanswered-row-sheet_session_id",
+              "name": "sheet_session_id",
+              "value": "={{ $json.sheet_session_id }}",
+              "type": "string"
+            },
+            {
+              "id": "set-unanswered-row-sheet_user_message_redacted",
+              "name": "sheet_user_message_redacted",
+              "value": "={{ $json.sheet_user_message_redacted }}",
+              "type": "string"
+            },
+            {
+              "id": "set-unanswered-row-sheet_reason",
+              "name": "sheet_reason",
+              "value": "={{ $json.sheet_unanswered_reason }}",
+              "type": "string"
+            },
+            {
+              "id": "set-unanswered-row-sheet_intent",
+              "name": "sheet_intent",
+              "value": "={{ $json.sheet_intent }}",
+              "type": "string"
+            },
+            {
+              "id": "set-unanswered-row-sheet_source_titles",
+              "name": "sheet_source_titles",
+              "value": "={{ $json.sheet_source_titles }}",
+              "type": "string"
+            },
+            {
+              "id": "set-unanswered-row-sheet_conversation_transcript",
+              "name": "sheet_conversation_transcript",
+              "value": "={{ $json.sheet_conversation_transcript }}",
+              "type": "string"
+            },
+            {
+              "id": "set-unanswered-row-sheet_created_at",
+              "name": "sheet_created_at",
+              "value": "={{ $json.sheet_completed_at }}",
+              "type": "string"
+            },
+            {
+              "id": "set-unanswered-row-sheet_execution_id",
+              "name": "sheet_execution_id",
+              "value": "={{ $json.sheet_execution_id }}",
+              "type": "string"
             }
           ]
         },
@@ -1828,17 +2080,17 @@
         "columns": {
           "mappingMode": "defineBelow",
           "value": {
-            "conversation_ref": "={{ $json.conversation_ref }}",
-            "user_message_redacted": "={{ $json.user_message_redacted }}",
-            "reason": "={{ $json.reason }}",
-            "intent": "={{ $json.intent }}",
+            "conversation_ref": "={{ $json.sheet_conversation_ref }}",
+            "user_message_redacted": "={{ $json.sheet_user_message_redacted }}",
+            "reason": "={{ $json.sheet_reason }}",
+            "intent": "={{ $json.sheet_intent }}",
             "confidence": "={{ $json.confidence }}",
-            "source_titles": "={{ $json.source_titles }}",
-            "conversation_transcript": "={{ $json.conversation_transcript }}",
-            "created_at": "={{ $json.created_at }}",
-            "execution_id": "={{ $json.execution_id }}",
-            "id": "={{ $json.id }}",
-            "session_id": "={{ $json.session_id }}"
+            "source_titles": "={{ $json.sheet_source_titles }}",
+            "conversation_transcript": "={{ $json.sheet_conversation_transcript }}",
+            "created_at": "={{ $json.sheet_created_at }}",
+            "execution_id": "={{ $json.sheet_execution_id }}",
+            "id": "={{ $json.sheet_id }}",
+            "session_id": "={{ $json.sheet_session_id }}"
           },
           "matchingColumns": [
             "id"
@@ -2345,7 +2597,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const debounceWindowMs = 20 * 1000;\nconst now = Date.now();\nconst current = $('Redact PII for Logs').first().json || {};\n\nfunction parseSgtTimestamp(value) {\n  const match = String(value || '').trim().match(/^(\\d{4})-(\\d{2})-(\\d{2}) (\\d{2}):(\\d{2}):(\\d{2}) SGT$/);\n  if (!match) return NaN;\n  const [, year, month, day, hour, minute, second] = match.map(Number);\n  return Date.UTC(year, month - 1, day, hour - 8, minute, second);\n}\n\nfunction rowTime(row) {\n  const value = row.created_at || row.timestamp || current.timestamp || '';\n  const sgtParsed = parseSgtTimestamp(value);\n  if (Number.isFinite(sgtParsed)) return sgtParsed;\n  const parsed = Date.parse(value);\n  return Number.isFinite(parsed) ? parsed : 0;\n}\n\nfunction meaningful(value) {\n  const text = String(value || '').trim();\n  if (!text) return '';\n  if (/^(n\\/a|na|none|null|unknown|not_available|pending|pending_ai_response|queued_for_ai_response)$/i.test(text)) return '';\n  return text;\n}\n\nfunction messageText(row) {\n  return meaningful(row.message) || meaningful(row.user_message_redacted);\n}\n\nfunction uniqueByMessageId(rows) {\n  const byId = new Map();\n  for (const row of rows) {\n    const key = String(row.message_id || '').trim();\n    if (!key) continue;\n    byId.set(key, row);\n  }\n  return [...byId.values()];\n}\n\nfunction executionOrder(row) {\n  const parsed = Number(String(row.execution_id || '').replace(/[^0-9]/g, ''));\n  return Number.isFinite(parsed) ? parsed : 0;\n}\n\nconst currentTime = rowTime(current) || now;\nconst sheetRows = items.map((item) => item.json || {});\nconst currentRow = { ...current, status: 'queued' };\nconst rows = uniqueByMessageId([...sheetRows, currentRow])\n  .filter((row) => String(row.session_id || '') === String(current.session_id || ''))\n  .map((row) => ({ ...row, _row_time: rowTime(row) || currentTime }))\n  .filter((row) => Math.abs(row._row_time - currentTime) <= debounceWindowMs)\n  .filter((row) => ['queued', 'merged', 'processing'].includes(String(row.status || '').toLowerCase()))\n  .sort((a, b) =>\n    (a._row_time - b._row_time) ||\n    (executionOrder(a) - executionOrder(b)) ||\n    String(a.message_id || '').localeCompare(String(b.message_id || ''))\n  );\n\nconst latest = rows[rows.length - 1] || currentRow;\nif (String(latest.message_id || '') !== String(current.message_id || '')) {\n  return [{\n    json: {\n      ...current,\n      debounce_superseded: 'true',\n      debounce_latest_message_id: latest.message_id || '',\n      debounce_batch_count: rows.length,\n    },\n  }];\n}\n\nconst batchRows = rows.length ? rows : [currentRow];\nconst mergedTexts = batchRows\n  .map((row, index) => {\n    const text = messageText(row);\n    return text ? String(index + 1) + '. ' + text : '';\n  })\n  .filter(Boolean);\n\nconst mergedMessage = mergedTexts.length > 1\n  ? 'The customer sent these rapid messages in order. Treat them as one customer turn:\\n\\n' + mergedTexts.join('\\n')\n  : (meaningful(current.message) || meaningful(current.user_message_redacted));\n\nreturn [{\n  json: {\n    ...current,\n    message: mergedMessage,\n    user_message_redacted: mergedTexts.length > 1 ? mergedTexts.join('\\n') : current.user_message_redacted,\n    debounce_superseded: 'false',\n    debounce_batch_count: batchRows.length,\n    merged_message_ids: batchRows.map((row) => row.message_id).filter(Boolean).join(', '),\n  },\n}];"
+        "jsCode": "const debounceWindowMs = 20 * 1000;\nconst now = Date.now();\nconst current = $('Redact PII for Logs').first().json || {};\n\nfunction safeSheetValue(value = '') {\n  const text = String(value ?? '');\n  if (!text) return '';\n  if (/^\\+\\s*[\\d()\\-\\s]{3,}$/.test(text)) return text;\n  return /^[=+\\-@]/.test(text) ? \"'\" + text : text;\n}\n\nfunction parseSgtTimestamp(value) {\n  const match = String(value || '').trim().match(/^(\\d{4})-(\\d{2})-(\\d{2}) (\\d{2}):(\\d{2}):(\\d{2}) SGT$/);\n  if (!match) return NaN;\n  const [, year, month, day, hour, minute, second] = match.map(Number);\n  return Date.UTC(year, month - 1, day, hour - 8, minute, second);\n}\n\nfunction rowTime(row) {\n  const value = row.created_at || row.timestamp || current.timestamp || '';\n  const sgtParsed = parseSgtTimestamp(value);\n  if (Number.isFinite(sgtParsed)) return sgtParsed;\n  const parsed = Date.parse(value);\n  return Number.isFinite(parsed) ? parsed : 0;\n}\n\nfunction meaningful(value) {\n  const text = String(value || '').trim();\n  if (!text) return '';\n  if (/^(n\\/a|na|none|null|unknown|not_available|pending|pending_ai_response|queued_for_ai_response)$/i.test(text)) return '';\n  return text;\n}\n\nfunction messageText(row) {\n  return meaningful(row.message) || meaningful(row.user_message_redacted);\n}\n\nfunction uniqueByMessageId(rows) {\n  const byId = new Map();\n  for (const row of rows) {\n    const key = String(row.message_id || '').trim();\n    if (!key) continue;\n    byId.set(key, row);\n  }\n  return [...byId.values()];\n}\n\nfunction executionOrder(row) {\n  const parsed = Number(String(row.execution_id || '').replace(/[^0-9]/g, ''));\n  return Number.isFinite(parsed) ? parsed : 0;\n}\n\nfunction withSheetFields(row) {\n  return {\n    ...row,\n    sheet_conversation_ref: safeSheetValue(row.conversation_ref),\n    sheet_channel: safeSheetValue(row.channel),\n    sheet_customer_name: safeSheetValue(row.customer_name),\n    sheet_customer_email: safeSheetValue(row.customer_email),\n    sheet_customer_phone: safeSheetValue(row.customer_phone),\n    sheet_user_message_redacted: safeSheetValue(row.user_message_redacted),\n    sheet_execution_id: safeSheetValue(row.execution_id),\n    sheet_message_id: safeSheetValue(row.message_id),\n    sheet_session_id: safeSheetValue(row.session_id),\n    sheet_dedupe_key: safeSheetValue(row.dedupe_key),\n    sheet_timestamp: safeSheetValue(row.timestamp),\n  };\n}\n\nconst currentTime = rowTime(current) || now;\nconst sheetRows = items.map((item) => item.json || {});\nconst currentRow = { ...current, status: 'queued' };\nconst rows = uniqueByMessageId([...sheetRows, currentRow])\n  .filter((row) => String(row.session_id || '') === String(current.session_id || ''))\n  .map((row) => ({ ...row, _row_time: rowTime(row) || currentTime }))\n  .filter((row) => Math.abs(row._row_time - currentTime) <= debounceWindowMs)\n  .filter((row) => ['queued', 'merged', 'processing'].includes(String(row.status || '').toLowerCase()))\n  .sort((a, b) =>\n    (a._row_time - b._row_time) ||\n    (executionOrder(a) - executionOrder(b)) ||\n    String(a.message_id || '').localeCompare(String(b.message_id || ''))\n  );\n\nconst latest = rows[rows.length - 1] || currentRow;\nif (String(latest.message_id || '') !== String(current.message_id || '')) {\n  return [{\n    json: withSheetFields({\n      ...current,\n      debounce_superseded: 'true',\n      debounce_latest_message_id: latest.message_id || '',\n      debounce_batch_count: rows.length,\n    }),\n  }];\n}\n\nconst batchRows = rows.length ? rows : [currentRow];\nconst mergedTexts = batchRows\n  .map((row, index) => {\n    const text = messageText(row);\n    return text ? String(index + 1) + '. ' + text : '';\n  })\n  .filter(Boolean);\n\nconst mergedMessage = mergedTexts.length > 1\n  ? 'The customer sent these rapid messages in order. Treat them as one customer turn:\\n\\n' + mergedTexts.join('\\n')\n  : (meaningful(current.message) || meaningful(current.user_message_redacted));\nconst mergedUserMessage = mergedTexts.length > 1 ? mergedTexts.join('\\n') : current.user_message_redacted;\n\nreturn [{\n  json: withSheetFields({\n    ...current,\n    message: mergedMessage,\n    user_message_redacted: mergedUserMessage,\n    debounce_superseded: 'false',\n    debounce_batch_count: batchRows.length,\n    merged_message_ids: batchRows.map((row) => row.message_id).filter(Boolean).join(', '),\n  }),\n}];"
       },
       "id": "a914a6ba-a057-4d93-a7d0-139acde13992",
       "name": "Select Debounced Chat Batch",
@@ -2359,8 +2611,8 @@
     {
       "parameters": {
         "sendTo": "SpaceKonceptRental@gmail.com",
-        "subject": "=[SKR Lead] {{ $json.name || \"New enquiry\" }} - {{ $json.items_needed || $json.rental_purpose || $json.lead_id }}",
-        "message": "=<h2>New rental lead</h2><table cellpadding=\"6\" cellspacing=\"0\" style=\"border-collapse:collapse;width:100%;max-width:760px;\"><tr><td style=\"width:150px;color:#52606d;\"><strong>Lead ID</strong></td><td>{{ $json.lead_id }}</td></tr><tr><td style=\"color:#52606d;\"><strong>Conversation</strong></td><td>{{ $json.conversation_ref || $(\"Build Notification Context\").first().json.conversation_ref || \"not_available\" }}</td></tr><tr><td style=\"color:#52606d;\"><strong>Contact</strong></td><td>{{ $json.name || \"not_available\" }} | {{ $json.email || \"not_available\" }} | {{ $json.phone || \"not_available\" }}</td></tr><tr><td style=\"color:#52606d;\"><strong>Company</strong></td><td>{{ $json.company || \"not_available\" }}</td></tr><tr><td style=\"color:#52606d;\"><strong>Items</strong></td><td>{{ $json.items_needed || \"not_available\" }}</td></tr><tr><td style=\"color:#52606d;\"><strong>Event</strong></td><td>{{ $json.rental_purpose || \"not_available\" }}</td></tr><tr><td style=\"color:#52606d;\"><strong>Date / Duration</strong></td><td>{{ $json.rental_start_date || \"not_available\" }} / {{ $json.rental_duration || \"not_available\" }}</td></tr><tr><td style=\"color:#52606d;\"><strong>Venue</strong></td><td>{{ $json.delivery_area || \"not_available\" }}</td></tr><tr><td style=\"color:#52606d;\"><strong>Budget</strong></td><td>{{ $json.budget || \"not_available\" }}</td></tr></table><h3>Conversation transcript ({{ $(\"Build Notification Context\").first().json.conversation_message_count || 1 }} message(s))</h3>{{ $(\"Build Notification Context\").first().json.conversation_transcript_html || \"<p>No transcript available.</p>\" }}<hr><p style=\"font-size:12px;color:#697386;\">This email was generated from the n8n customer support workflow. Review the transcript before replying to the customer.</p>",
+        "subject": "=[SKR Lead] {{ $(\"Build Notification Context\").first().json.subject_lead_name }} - {{ $(\"Build Notification Context\").first().json.subject_lead_items }} - {{ $(\"Build Notification Context\").first().json.subject_lead_reference }}",
+        "message": "=<h2>New rental lead</h2><table cellpadding=\"6\" cellspacing=\"0\" style=\"border-collapse:collapse;width:100%;max-width:760px;\"><tr><td style=\"width:150px;color:#52606d;\"><strong>Lead ID</strong></td><td>{{ $(\"Build Notification Context\").first().json.safe_lead_id }}</td></tr><tr><td style=\"color:#52606d;\"><strong>Conversation</strong></td><td>{{ $(\"Build Notification Context\").first().json.safe_conversation_ref }}</td></tr><tr><td style=\"color:#52606d;\"><strong>Contact</strong></td><td>{{ $(\"Build Notification Context\").first().json.safe_lead_name }} | {{ $(\"Build Notification Context\").first().json.safe_lead_email }} | {{ $(\"Build Notification Context\").first().json.safe_lead_phone }}</td></tr><tr><td style=\"color:#52606d;\"><strong>Company</strong></td><td>{{ $(\"Build Notification Context\").first().json.safe_lead_company }}</td></tr><tr><td style=\"color:#52606d;\"><strong>Items</strong></td><td>{{ $(\"Build Notification Context\").first().json.safe_lead_items_needed }}</td></tr><tr><td style=\"color:#52606d;\"><strong>Event</strong></td><td>{{ $(\"Build Notification Context\").first().json.safe_lead_rental_purpose }}</td></tr><tr><td style=\"color:#52606d;\"><strong>Date / Duration</strong></td><td>{{ $(\"Build Notification Context\").first().json.safe_lead_rental_start_date }} / {{ $(\"Build Notification Context\").first().json.safe_lead_rental_duration }}</td></tr><tr><td style=\"color:#52606d;\"><strong>Venue</strong></td><td>{{ $(\"Build Notification Context\").first().json.safe_lead_delivery_area }}</td></tr><tr><td style=\"color:#52606d;\"><strong>Budget</strong></td><td>{{ $(\"Build Notification Context\").first().json.safe_lead_budget }}</td></tr></table><h3>Conversation transcript ({{ $(\"Build Notification Context\").first().json.conversation_message_count || 1 }} message(s); showing {{ $(\"Build Notification Context\").first().json.conversation_transcript_rows_rendered || 1 }})</h3>{{ $(\"Build Notification Context\").first().json.safe_conversation_transcript_html || \"<p>No transcript available.</p>\" }}<hr><p style=\"font-size:12px;color:#697386;\">This email was generated from the n8n customer support workflow. Review the transcript before replying to the customer.</p>",
         "options": {}
       },
       "type": "n8n-nodes-base.gmail",
@@ -2375,8 +2627,8 @@
     {
       "parameters": {
         "sendTo": "SpaceKonceptRental@gmail.com",
-        "subject": "=[SKR Ticket] {{ $json.urgency || \"medium\" }} - {{ $json.summary || $json.ticket_id }}",
-        "message": "=<h2>New support ticket</h2><table cellpadding=\"6\" cellspacing=\"0\" style=\"border-collapse:collapse;width:100%;max-width:760px;\"><tr><td style=\"width:150px;color:#52606d;\"><strong>Ticket ID</strong></td><td>{{ $json.ticket_id }}</td></tr><tr><td style=\"color:#52606d;\"><strong>Conversation</strong></td><td>{{ $json.conversation_ref || $(\"Build Notification Context\").first().json.conversation_ref || \"not_available\" }}</td></tr><tr><td style=\"color:#52606d;\"><strong>Contact</strong></td><td>{{ $json.name || \"not_available\" }} | {{ $json.email || \"not_available\" }} | {{ $json.phone || \"not_available\" }}</td></tr><tr><td style=\"color:#52606d;\"><strong>Category</strong></td><td>{{ $json.category }}</td></tr><tr><td style=\"color:#52606d;\"><strong>Urgency</strong></td><td>{{ $json.urgency }}</td></tr><tr><td style=\"color:#52606d;\"><strong>Summary</strong></td><td>{{ $json.summary }}</td></tr><tr><td style=\"color:#52606d;\"><strong>Details</strong></td><td>{{ $json.details }}</td></tr></table><h3>Conversation transcript ({{ $(\"Build Notification Context\").first().json.conversation_message_count || 1 }} message(s))</h3>{{ $(\"Build Notification Context\").first().json.conversation_transcript_html || \"<p>No transcript available.</p>\" }}<hr><p style=\"font-size:12px;color:#697386;\">This email was generated from the n8n customer support workflow. Review the transcript before replying to the customer.</p>",
+        "subject": "=[SKR Ticket] {{ $(\"Build Notification Context\").first().json.subject_ticket_urgency }} - {{ $(\"Build Notification Context\").first().json.subject_ticket_summary }} - {{ $(\"Build Notification Context\").first().json.subject_ticket_reference }}",
+        "message": "=<h2>New support ticket</h2><table cellpadding=\"6\" cellspacing=\"0\" style=\"border-collapse:collapse;width:100%;max-width:760px;\"><tr><td style=\"width:150px;color:#52606d;\"><strong>Ticket ID</strong></td><td>{{ $(\"Build Notification Context\").first().json.safe_ticket_id }}</td></tr><tr><td style=\"color:#52606d;\"><strong>Conversation</strong></td><td>{{ $(\"Build Notification Context\").first().json.safe_conversation_ref }}</td></tr><tr><td style=\"color:#52606d;\"><strong>Contact</strong></td><td>{{ $(\"Build Notification Context\").first().json.safe_ticket_name }} | {{ $(\"Build Notification Context\").first().json.safe_ticket_email }} | {{ $(\"Build Notification Context\").first().json.safe_ticket_phone }}</td></tr><tr><td style=\"color:#52606d;\"><strong>Category</strong></td><td>{{ $(\"Build Notification Context\").first().json.safe_ticket_category }}</td></tr><tr><td style=\"color:#52606d;\"><strong>Urgency</strong></td><td>{{ $(\"Build Notification Context\").first().json.safe_ticket_urgency }}</td></tr><tr><td style=\"color:#52606d;\"><strong>Summary</strong></td><td>{{ $(\"Build Notification Context\").first().json.safe_ticket_summary }}</td></tr><tr><td style=\"color:#52606d;\"><strong>Details</strong></td><td>{{ $(\"Build Notification Context\").first().json.safe_ticket_details }}</td></tr></table><h3>Conversation transcript ({{ $(\"Build Notification Context\").first().json.conversation_message_count || 1 }} message(s); showing {{ $(\"Build Notification Context\").first().json.conversation_transcript_rows_rendered || 1 }})</h3>{{ $(\"Build Notification Context\").first().json.safe_conversation_transcript_html || \"<p>No transcript available.</p>\" }}<hr><p style=\"font-size:12px;color:#697386;\">This email was generated from the n8n customer support workflow. Review the transcript before replying to the customer.</p>",
         "options": {}
       },
       "type": "n8n-nodes-base.gmail",
@@ -2391,8 +2643,8 @@
     {
       "parameters": {
         "sendTo": "SpaceKonceptRental@gmail.com",
-        "subject": "=[SKR Unanswered] {{ $json.intent }} - {{ $json.id }}",
-        "message": "=<h2>Unanswered or low-confidence reply</h2>{{ $json.notification_summary_html }}<h3>Conversation</h3><p>{{ $json.conversation_ref || $(\"Build Notification Context\").first().json.conversation_ref || \"not_available\" }}</p><h3>Reason</h3><p>{{ $json.reason || \"Low confidence or unknown intent\" }}</p><h3>Current message</h3><p>{{ $json.user_message_redacted || \"not_available\" }}</p><h3>Sources</h3><p>{{ $json.source_titles || \"not_available\" }}</p><h3>Conversation transcript ({{ $(\"Build Notification Context\").first().json.conversation_message_count || 1 }} message(s))</h3>{{ $(\"Build Notification Context\").first().json.conversation_transcript_html || \"<p>No transcript available.</p>\" }}<hr><p style=\"font-size:12px;color:#697386;\">This email was generated from the n8n customer support workflow. Review the transcript before replying to the customer.</p>",
+        "subject": "=[SKR Unanswered] {{ $json.subject_unanswered_intent }} - {{ $json.subject_unanswered_reference }}",
+        "message": "=<h2>Unanswered or low-confidence reply</h2>{{ $json.safe_notification_summary_html }}<h3>Conversation</h3><p>{{ $json.safe_conversation_ref }}</p><h3>Reason</h3><p>{{ $json.safe_unanswered_reason || \"Low confidence or unknown intent\" }}</p><h3>Current message</h3><p>{{ $json.safe_user_message_redacted || \"not_available\" }}</p><h3>Sources</h3><p>{{ $json.safe_source_titles || \"not_available\" }}</p><h3>Conversation transcript ({{ $(\"Build Notification Context\").first().json.conversation_message_count || 1 }} message(s); showing {{ $(\"Build Notification Context\").first().json.conversation_transcript_rows_rendered || 1 }})</h3>{{ $(\"Build Notification Context\").first().json.safe_conversation_transcript_html || \"<p>No transcript available.</p>\" }}<hr><p style=\"font-size:12px;color:#697386;\">This email was generated from the n8n customer support workflow. Review the transcript before replying to the customer.</p>",
         "options": {}
       },
       "type": "n8n-nodes-base.gmail",
@@ -2447,7 +2699,7 @@
     },
     {
       "parameters": {
-        "jsCode": "function escapeHtml(value = '') {\n  return String(value || '')\n    .replace(/&/g, '&amp;')\n    .replace(/</g, '&lt;')\n    .replace(/>/g, '&gt;')\n    .replace(/\"/g, '&quot;')\n    .replace(/'/g, '&#39;');\n}\n\nfunction meaningful(value) {\n  const text = String(value || '').trim();\n  if (!text) return '';\n  if (/^(n\\/a|na|none|null|unknown|not_available|not provided|pending)$/i.test(text)) return '';\n  return text;\n}\n\nfunction firstMeaningful(...values) {\n  for (const value of values) {\n    const text = meaningful(value);\n    if (text) return text;\n  }\n  return '';\n}\n\nfunction boolText(value) {\n  return String(value).toLowerCase() === 'true' ? 'Yes' : 'No';\n}\n\nfunction rowTime(row) {\n  return meaningful(row.created_at) || meaningful(row.completed_at) || '';\n}\n\nconst original = $('Parse Strict JSON Response').first().json || {};\nconst rows = items\n  .map((item) => item.json || {})\n  .filter((row) => String(row.session_id || '') === String(original.session_id || ''))\n  .sort((a, b) => String(rowTime(a)).localeCompare(String(rowTime(b))));\n\nconst transcriptRows = rows.length ? rows : [original];\nconst transcriptHtml = transcriptRows.map((row, index) => {\n  const when = rowTime(row) || 'time_not_available';\n  const customerMessage = meaningful(row.user_message_redacted) || meaningful(row.message) || '';\n  const botReply = meaningful(row.bot_reply) || meaningful(row.reply) || '';\n  const intent = meaningful(row.intent);\n\n  return [\n    '<div style=\"border-left:3px solid #d9e2ec;padding:8px 0 8px 12px;margin:10px 0;\">',\n    '<p style=\"margin:0 0 4px 0;color:#52606d;\"><strong>#' + (index + 1) + '</strong> · ' + escapeHtml(when) + (intent ? ' · ' + escapeHtml(intent) : '') + '</p>',\n    customerMessage ? '<p style=\"margin:0 0 6px 0;\"><strong>Customer:</strong> ' + escapeHtml(customerMessage) + '</p>' : '',\n    botReply ? '<p style=\"margin:0;\"><strong>Bot:</strong> ' + escapeHtml(botReply) + '</p>' : '',\n    '</div>',\n  ].join('');\n}).join('');\n\nconst transcriptText = transcriptRows.map((row, index) => {\n  const when = rowTime(row) || 'time_not_available';\n  const customerMessage = meaningful(row.user_message_redacted) || meaningful(row.message) || '';\n  const botReply = meaningful(row.bot_reply) || meaningful(row.reply) || '';\n  const intent = meaningful(row.intent);\n  return [\n    '#' + (index + 1) + ' - ' + when + (intent ? ' - ' + intent : ''),\n    customerMessage ? 'Customer: ' + customerMessage : '',\n    botReply ? 'Bot: ' + botReply : '',\n  ].filter(Boolean).join('\\n');\n}).join('\\n\\n');\n\nconst conversationRef = firstMeaningful(original.conversation_ref, original.ticket_id, original.lead_id, original.message_id);\nconst caseReference = firstMeaningful(original.ticket_id, original.lead_id, original.message_id);\n\nconst customerName = firstMeaningful(original.customer_name, original.lead?.name, original.ticket?.name);\nconst customerEmail = firstMeaningful(original.customer_email, original.lead?.email, original.ticket?.email);\nconst customerPhone = firstMeaningful(original.customer_phone, original.lead?.phone, original.ticket?.phone);\n\nreturn [{\n  json: {\n    ...original,\n    customer_name: customerName,\n    customer_email: customerEmail,\n    customer_phone: customerPhone,\n    conversation_ref: conversationRef,\n    conversation_transcript_text: transcriptText || 'No previous conversation rows found for this session.',\n    notification_contact_line: [customerName, customerEmail, customerPhone].filter(Boolean).join(' | ') || 'Contact not provided',\n    notification_subject_label: firstMeaningful(original.ticket?.summary, original.lead?.items_needed, original.intent, 'Support update'),\n    notification_summary_html: [\n      '<table cellpadding=\"6\" cellspacing=\"0\" style=\"border-collapse:collapse;width:100%;max-width:760px;\">',\n      '<tr><td style=\"width:150px;color:#52606d;\"><strong>Conversation</strong></td><td>' + escapeHtml(conversationRef) + '</td></tr>',\n      '<tr><td style=\"color:#52606d;\"><strong>Case</strong></td><td>' + escapeHtml(caseReference) + '</td></tr>',\n      '<tr><td style=\"color:#52606d;\"><strong>Session</strong></td><td>' + escapeHtml(original.session_id || '') + '</td></tr>',\n      '<tr><td style=\"color:#52606d;\"><strong>Contact</strong></td><td>' + escapeHtml([customerName, customerEmail, customerPhone].filter(Boolean).join(' | ') || 'not_available') + '</td></tr>',\n      '<tr><td style=\"color:#52606d;\"><strong>Intent</strong></td><td>' + escapeHtml(original.intent || '') + '</td></tr>',\n      '<tr><td style=\"color:#52606d;\"><strong>Escalation</strong></td><td>' + escapeHtml(boolText(original.needs_escalation)) + '</td></tr>',\n      '<tr><td style=\"color:#52606d;\"><strong>Completed</strong></td><td>' + escapeHtml(original.completed_at || '') + '</td></tr>',\n      '</table>',\n    ].join(''),\n    conversation_message_count: transcriptRows.length,\n    conversation_transcript_html: transcriptHtml || '<p>No previous conversation rows found for this session.</p>',\n  },\n}];"
+        "jsCode": "const MAX_TRANSCRIPT_ROWS = 12;\nconst MAX_TRANSCRIPT_CHARS = 6000;\nconst TRUNCATED_MARKER = '[Transcript truncated]';\n\nfunction escapeHtml(value = '') {\n  return String(value || '')\n    .replace(/&/g, '&amp;')\n    .replace(/</g, '&lt;')\n    .replace(/>/g, '&gt;')\n    .replace(/\"/g, '&quot;')\n    .replace(/'/g, '&#39;');\n}\n\nfunction safeSheetValue(value = '') {\n  const text = String(value ?? '');\n  if (!text) return '';\n  if (/^\\+\\s*[\\d()\\-\\s]{3,}$/.test(text)) return text;\n  return /^[=+\\-@]/.test(text) ? \"'\" + text : text;\n}\n\nfunction meaningful(value) {\n  const text = String(value || '').trim();\n  if (!text) return '';\n  if (/^(n\\/a|na|none|null|unknown|not_available|not provided|pending)$/i.test(text)) return '';\n  return text;\n}\n\nfunction firstMeaningful(...values) {\n  for (const value of values) {\n    const text = meaningful(value);\n    if (text) return text;\n  }\n  return '';\n}\n\nfunction safeText(value, fallback = 'not_available') {\n  return escapeHtml(firstMeaningful(value, fallback));\n}\n\nfunction safeSubjectText(value, fallback = 'not_available', maxLength = 100) {\n  const text = firstMeaningful(value, fallback)\n    .replace(/[\\u0000-\\u001f\\u007f]+/g, ' ')\n    .replace(/\\s+/g, ' ')\n    .trim();\n  const safe = text || fallback;\n  return safe.length > maxLength ? safe.slice(0, maxLength - 3).trimEnd() + '...' : safe;\n}\n\nfunction boolText(value) {\n  return String(value).toLowerCase() === 'true' ? 'Yes' : 'No';\n}\n\nfunction rowTime(row) {\n  return meaningful(row.created_at) || meaningful(row.completed_at) || meaningful(row.timestamp) || '';\n}\n\nfunction rowTranscriptText(row, displayIndex) {\n  const when = rowTime(row) || 'time_not_available';\n  const customerMessage = meaningful(row.user_message_redacted) || meaningful(row.message) || '';\n  const botReply = meaningful(row.bot_reply) || meaningful(row.reply) || '';\n  const intent = meaningful(row.intent);\n\n  return [\n    '#' + displayIndex + ' - ' + when + (intent ? ' - ' + intent : ''),\n    customerMessage ? 'Customer: ' + customerMessage : '',\n    botReply ? 'Bot: ' + botReply : '',\n  ].filter(Boolean).join('\\n');\n}\n\nfunction transcriptEntry(row, displayIndex, text) {\n  const when = rowTime(row) || 'time_not_available';\n  const customerMessage = meaningful(row.user_message_redacted) || meaningful(row.message) || '';\n  const botReply = meaningful(row.bot_reply) || meaningful(row.reply) || '';\n  const intent = meaningful(row.intent);\n  return {\n    displayIndex,\n    text,\n    html: [\n      '<div style=\"border-left:3px solid #d9e2ec;padding:8px 0 8px 12px;margin:10px 0;\">',\n      '<p style=\"margin:0 0 4px 0;color:#52606d;\"><strong>#' + displayIndex + '</strong> - ' + escapeHtml(when) + (intent ? ' - ' + escapeHtml(intent) : '') + '</p>',\n      customerMessage ? '<p style=\"margin:0 0 6px 0;\"><strong>Customer:</strong> ' + escapeHtml(customerMessage) + '</p>' : '',\n      botReply ? '<p style=\"margin:0;\"><strong>Bot:</strong> ' + escapeHtml(botReply) + '</p>' : '',\n      '</div>',\n    ].join(''),\n  };\n}\n\nconst original = $('Parse Strict JSON Response').first().json || {};\nconst rows = items\n  .map((item) => item.json || {})\n  .filter((row) => String(row.session_id || '') === String(original.session_id || ''))\n  .sort((a, b) => String(rowTime(a)).localeCompare(String(rowTime(b))));\n\nconst transcriptSourceRows = rows.length ? rows : [original];\nconst newestRows = transcriptSourceRows.slice(-MAX_TRANSCRIPT_ROWS);\nconst displayOffset = transcriptSourceRows.length - newestRows.length;\nlet remainingChars = MAX_TRANSCRIPT_CHARS;\nlet charTruncated = false;\nconst selectedEntries = [];\n\nfor (let index = newestRows.length - 1; index >= 0; index -= 1) {\n  const row = newestRows[index];\n  const displayIndex = displayOffset + index + 1;\n  let text = rowTranscriptText(row, displayIndex);\n  const separatorCost = selectedEntries.length ? 2 : 0;\n  if (text.length + separatorCost > remainingChars) {\n    charTruncated = true;\n    const allowed = Math.max(0, remainingChars - separatorCost);\n    if (allowed > 80 || selectedEntries.length === 0) {\n      text = text.slice(0, Math.max(0, allowed)).trimEnd();\n      selectedEntries.unshift(transcriptEntry(row, displayIndex, text));\n    }\n    break;\n  }\n  remainingChars -= text.length + separatorCost;\n  selectedEntries.unshift(transcriptEntry(row, displayIndex, text));\n}\n\nconst rowTruncated = transcriptSourceRows.length > newestRows.length;\nconst transcriptTruncated = rowTruncated || charTruncated || selectedEntries.length < transcriptSourceRows.length;\nconst transcriptText = selectedEntries.map((entry) => entry.text).join('\\n\\n') || 'No previous conversation rows found for this session.';\nconst transcriptHtml = selectedEntries.map((entry) => entry.html).join('') || '<p>No previous conversation rows found for this session.</p>';\nconst truncationText = transcriptTruncated ? '\\n\\n' + TRUNCATED_MARKER : '';\nconst truncationHtml = transcriptTruncated ? '<p><em>' + escapeHtml(TRUNCATED_MARKER) + '</em></p>' : '';\n\nconst conversationRef = firstMeaningful(original.conversation_ref, original.ticket_id, original.lead_id, original.message_id);\nconst caseReference = firstMeaningful(original.ticket_id, original.lead_id, original.unanswered_id, original.message_id);\nconst lead = original.lead || {};\nconst ticket = original.ticket || {};\nconst booking = original.booking || {};\n\nconst customerName = firstMeaningful(original.customer_name, lead.name, ticket.name);\nconst customerEmail = firstMeaningful(original.customer_email, lead.email, ticket.email);\nconst customerPhone = firstMeaningful(original.customer_phone, lead.phone, ticket.phone);\nconst notificationContactLine = [customerName, customerEmail, customerPhone].filter(Boolean).join(' | ') || 'Contact not provided';\nconst notificationSubjectLabel = firstMeaningful(ticket.summary, lead.items_needed, original.intent, 'Support update');\nconst missingFieldsText = firstMeaningful(original.missing_fields_text, Array.isArray(original.missing_fields) ? original.missing_fields.join(', ') : '', 'none');\nconst safeConversationTranscriptHtml = transcriptHtml + truncationHtml;\nconst notificationSummaryHtml = [\n  '<table cellpadding=\"6\" cellspacing=\"0\" style=\"border-collapse:collapse;width:100%;max-width:760px;\">',\n  '<tr><td style=\"width:150px;color:#52606d;\"><strong>Conversation</strong></td><td>' + escapeHtml(conversationRef) + '</td></tr>',\n  '<tr><td style=\"color:#52606d;\"><strong>Case</strong></td><td>' + escapeHtml(caseReference) + '</td></tr>',\n  '<tr><td style=\"color:#52606d;\"><strong>Session</strong></td><td>' + escapeHtml(original.session_id || '') + '</td></tr>',\n  '<tr><td style=\"color:#52606d;\"><strong>Contact</strong></td><td>' + escapeHtml(notificationContactLine) + '</td></tr>',\n  '<tr><td style=\"color:#52606d;\"><strong>Intent</strong></td><td>' + escapeHtml(original.intent || '') + '</td></tr>',\n  '<tr><td style=\"color:#52606d;\"><strong>Escalation</strong></td><td>' + escapeHtml(boolText(original.needs_escalation || original.incomplete_ticket_followup)) + '</td></tr>',\n  '<tr><td style=\"color:#52606d;\"><strong>Missing fields</strong></td><td>' + escapeHtml(missingFieldsText) + '</td></tr>',\n  '<tr><td style=\"color:#52606d;\"><strong>Completed</strong></td><td>' + escapeHtml(original.completed_at || '') + '</td></tr>',\n  '</table>',\n].join('');\n\nreturn [{\n  json: {\n    ...original,\n    customer_name: customerName,\n    customer_email: customerEmail,\n    customer_phone: customerPhone,\n    conversation_ref: conversationRef,\n    conversation_transcript_text: transcriptText + truncationText,\n    conversation_transcript_html: safeConversationTranscriptHtml,\n    notification_contact_line: notificationContactLine,\n    notification_subject_label: notificationSubjectLabel,\n    notification_summary_html: notificationSummaryHtml,\n    conversation_message_count: transcriptSourceRows.length,\n    conversation_transcript_rows_rendered: selectedEntries.length,\n    transcript_truncated: transcriptTruncated,\n    subject_escalation_intent: safeSubjectText(original.intent, 'Support alert'),\n    subject_escalation_reference: safeSubjectText(firstMeaningful(original.escalation_reference_id, caseReference, conversationRef), 'not_available'),\n    subject_lead_name: safeSubjectText(firstMeaningful(lead.name, customerName, 'New enquiry'), 'New enquiry'),\n    subject_lead_items: safeSubjectText(firstMeaningful(lead.items_needed, lead.rental_purpose, original.lead_id, 'Rental enquiry'), 'Rental enquiry'),\n    subject_lead_reference: safeSubjectText(firstMeaningful(original.lead_id, conversationRef), 'not_available'),\n    subject_ticket_urgency: safeSubjectText(firstMeaningful(ticket.urgency, 'medium'), 'medium'),\n    subject_ticket_summary: safeSubjectText(firstMeaningful(ticket.summary, original.ticket_id, 'Support ticket'), 'Support ticket'),\n    subject_ticket_reference: safeSubjectText(firstMeaningful(original.ticket_id, conversationRef), 'not_available'),\n    subject_unanswered_intent: safeSubjectText(original.intent, 'Unanswered'),\n    subject_unanswered_reference: safeSubjectText(firstMeaningful(original.unanswered_id, conversationRef), 'not_available'),\n    safe_conversation_ref: safeText(conversationRef),\n    safe_case_reference: safeText(caseReference),\n    safe_session_id: safeText(original.session_id),\n    safe_customer_name: safeText(customerName),\n    safe_customer_email: safeText(customerEmail),\n    safe_customer_phone: safeText(customerPhone),\n    safe_notification_contact_line: safeText(notificationContactLine),\n    safe_notification_subject_label: safeText(notificationSubjectLabel),\n    safe_intent: safeText(original.intent),\n    safe_completed_at: safeText(original.completed_at),\n    safe_user_message_redacted: safeText(original.user_message_redacted),\n    safe_reply: safeText(original.reply),\n    safe_source_titles: safeText(original.source_titles),\n    safe_source_file_ids: safeText(original.source_file_ids, ''),\n    safe_missing_fields: safeText(missingFieldsText, 'none'),\n    safe_ticket_id: safeText(original.ticket_id, 'not_applicable'),\n    safe_lead_id: safeText(original.lead_id, 'not_applicable'),\n    safe_execution_id: safeText(original.execution_id),\n    safe_unanswered_id: safeText(original.unanswered_id),\n    safe_unanswered_reason: safeText(Number(original.confidence || 0) < 0.55 ? 'low_confidence' : 'unknown_intent'),\n    safe_notification_summary_html: notificationSummaryHtml,\n    safe_conversation_transcript_html: safeConversationTranscriptHtml,\n    safe_lead_name: safeText(firstMeaningful(lead.name, customerName)),\n    safe_lead_email: safeText(firstMeaningful(lead.email, customerEmail)),\n    safe_lead_phone: safeText(firstMeaningful(lead.phone, customerPhone)),\n    safe_lead_company: safeText(lead.company),\n    safe_lead_rental_purpose: safeText(lead.rental_purpose),\n    safe_lead_rental_start_date: safeText(firstMeaningful(lead.rental_start_date, booking.preferred_date)),\n    safe_lead_rental_duration: safeText(lead.rental_duration),\n    safe_lead_items_needed: safeText(lead.items_needed),\n    safe_lead_delivery_area: safeText(lead.delivery_area),\n    safe_lead_budget: safeText(lead.budget),\n    safe_ticket_name: safeText(firstMeaningful(ticket.name, lead.name, customerName)),\n    safe_ticket_email: safeText(firstMeaningful(ticket.email, lead.email, customerEmail)),\n    safe_ticket_phone: safeText(firstMeaningful(ticket.phone, lead.phone, customerPhone)),\n    safe_ticket_category: safeText(ticket.category),\n    safe_ticket_urgency: safeText(ticket.urgency, 'medium'),\n    safe_ticket_summary: safeText(ticket.summary),\n    safe_ticket_details: safeText(ticket.details),\n    sheet_conversation_ref: safeSheetValue(conversationRef),\n    sheet_session_id: safeSheetValue(original.session_id),\n    sheet_user_message_redacted: safeSheetValue(original.user_message_redacted),\n    sheet_reply: safeSheetValue(original.reply),\n    sheet_intent: safeSheetValue(original.intent),\n    sheet_source_titles: safeSheetValue(original.source_titles),\n    sheet_source_file_ids: safeSheetValue(original.source_file_ids),\n    sheet_conversation_transcript: safeSheetValue(transcriptText + truncationText),\n    sheet_execution_id: safeSheetValue(original.execution_id),\n    sheet_completed_at: safeSheetValue(original.completed_at),\n    sheet_lead_id: safeSheetValue(original.lead_id),\n    sheet_lead_name: safeSheetValue(firstMeaningful(lead.name, customerName)),\n    sheet_lead_email: safeSheetValue(firstMeaningful(lead.email, customerEmail)),\n    sheet_lead_phone: safeSheetValue(firstMeaningful(lead.phone, customerPhone)),\n    sheet_lead_company: safeSheetValue(lead.company),\n    sheet_lead_rental_purpose: safeSheetValue(lead.rental_purpose),\n    sheet_lead_rental_start_date: safeSheetValue(firstMeaningful(lead.rental_start_date, booking.preferred_date)),\n    sheet_lead_rental_duration: safeSheetValue(lead.rental_duration),\n    sheet_lead_items_needed: safeSheetValue(lead.items_needed),\n    sheet_lead_delivery_area: safeSheetValue(lead.delivery_area),\n    sheet_lead_budget: safeSheetValue(lead.budget),\n    sheet_lead_status: safeSheetValue(original.booking_requested ? 'booking_requested' : 'new'),\n    sheet_source_channel: safeSheetValue(original.channel),\n    sheet_ticket_id: safeSheetValue(original.ticket_id),\n    sheet_ticket_name: safeSheetValue(firstMeaningful(ticket.name, lead.name, customerName)),\n    sheet_ticket_email: safeSheetValue(firstMeaningful(ticket.email, lead.email, customerEmail)),\n    sheet_ticket_phone: safeSheetValue(firstMeaningful(ticket.phone, lead.phone, customerPhone)),\n    sheet_ticket_category: safeSheetValue(ticket.category),\n    sheet_ticket_summary: safeSheetValue(ticket.summary),\n    sheet_ticket_details: safeSheetValue(ticket.details),\n    sheet_ticket_urgency: safeSheetValue(firstMeaningful(ticket.urgency, 'medium')),\n    sheet_ticket_status: safeSheetValue('new'),\n    sheet_unanswered_id: safeSheetValue(original.unanswered_id),\n    sheet_unanswered_reason: safeSheetValue(Number(original.confidence || 0) < 0.55 ? 'low_confidence' : 'unknown_intent'),\n  },\n}];"
       },
       "id": "e41e37bc-4ba6-ce30-cf70-96469b6c80c9",
       "name": "Build Notification Context",
@@ -2493,12 +2745,12 @@
         "columns": {
           "mappingMode": "defineBelow",
           "value": {
-            "conversation_ref": "={{ $json.conversation_ref }}",
-            "channel": "={{ $json.channel }}",
-            "customer_name": "={{ $json.customer_name }}",
-            "customer_email": "={{ $json.customer_email }}",
-            "customer_phone": "={{ $json.customer_phone }}",
-            "user_message_redacted": "={{ $json.user_message_redacted }}",
+            "conversation_ref": "={{ $json.sheet_conversation_ref }}",
+            "channel": "={{ $json.sheet_channel }}",
+            "customer_name": "={{ $json.sheet_customer_name }}",
+            "customer_email": "={{ $json.sheet_customer_email }}",
+            "customer_phone": "={{ $json.sheet_customer_phone }}",
+            "user_message_redacted": "={{ $json.sheet_user_message_redacted }}",
             "bot_reply": "pending_ai_response",
             "intent": "pending",
             "confidence": "0",
@@ -2509,12 +2761,12 @@
             "booking_requested": "false",
             "source_titles": "={{ '' }}",
             "source_file_ids": "={{ '' }}",
-            "execution_id": "={{ $json.execution_id }}",
-            "created_at": "={{ $json.timestamp }}",
+            "execution_id": "={{ $json.sheet_execution_id }}",
+            "created_at": "={{ $json.sheet_timestamp }}",
             "completed_at": "={{ '' }}",
-            "dedupe_key": "={{ $json.dedupe_key }}",
-            "message_id": "={{ $json.message_id }}",
-            "session_id": "={{ $json.session_id }}"
+            "dedupe_key": "={{ $json.sheet_dedupe_key }}",
+            "message_id": "={{ $json.sheet_message_id }}",
+            "session_id": "={{ $json.sheet_session_id }}"
           },
           "matchingColumns": [
             "message_id"
@@ -2758,12 +3010,12 @@
         "columns": {
           "mappingMode": "defineBelow",
           "value": {
-            "conversation_ref": "={{ $json.conversation_ref }}",
-            "channel": "={{ $json.channel }}",
-            "customer_name": "={{ $json.customer_name }}",
-            "customer_email": "={{ $json.customer_email }}",
-            "customer_phone": "={{ $json.customer_phone }}",
-            "user_message_redacted": "={{ $json.user_message_redacted }}",
+            "conversation_ref": "={{ $json.sheet_conversation_ref }}",
+            "channel": "={{ $json.sheet_channel }}",
+            "customer_name": "={{ $json.sheet_customer_name }}",
+            "customer_email": "={{ $json.sheet_customer_email }}",
+            "customer_phone": "={{ $json.sheet_customer_phone }}",
+            "user_message_redacted": "={{ $json.sheet_user_message_redacted }}",
             "bot_reply": "={{ '' }}",
             "intent": "rapid_message_merged",
             "confidence": "0",
@@ -2774,12 +3026,12 @@
             "booking_requested": "false",
             "source_titles": "={{ '' }}",
             "source_file_ids": "={{ '' }}",
-            "execution_id": "={{ $json.execution_id }}",
-            "created_at": "={{ $json.timestamp }}",
+            "execution_id": "={{ $json.sheet_execution_id }}",
+            "created_at": "={{ $json.sheet_timestamp }}",
             "completed_at": "={{ $now.setZone('Asia/Singapore').toFormat('yyyy-MM-dd HH:mm:ss') + ' SGT' }}",
-            "dedupe_key": "={{ $json.dedupe_key }}",
-            "message_id": "={{ $json.message_id }}",
-            "session_id": "={{ $json.session_id }}"
+            "dedupe_key": "={{ $json.sheet_dedupe_key }}",
+            "message_id": "={{ $json.sheet_message_id }}",
+            "session_id": "={{ $json.sheet_session_id }}"
           },
           "matchingColumns": [
             "message_id"

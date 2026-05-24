@@ -197,6 +197,83 @@ function findAssignment(node, assignmentName) {
   return node?.parameters?.assignments?.assignments?.find((entry) => entry?.name === assignmentName);
 }
 
+function requireCodeSnippets(relative, nodeName, code, snippets, message) {
+  for (const snippet of snippets) {
+    if (!code.includes(snippet)) {
+      fail(`${relative} ${nodeName} ${message}`);
+      return;
+    }
+  }
+}
+
+function usesSheetSafeField(value) {
+  return /\bsheet_[a-z0-9_]+\b/.test(String(value || ''));
+}
+
+function requireSheetSafeColumns(workflow, relative, nodeName, columnNames) {
+  const node = findWorkflowNode(workflow, nodeName);
+  const values = node?.parameters?.columns?.value || {};
+  for (const columnName of columnNames) {
+    if (!usesSheetSafeField(values[columnName])) {
+      fail(`${relative} ${nodeName} must write formula-hardened sheet fields.`);
+      return;
+    }
+  }
+}
+
+function containsRawJsonField(message, fieldName) {
+  const text = String(message || '');
+  return text.includes(`$json.${fieldName}`) || text.includes(`.json.${fieldName}`);
+}
+
+function requireEscapedGmailHtml(workflow, relative, nodeName, unsafeFieldNames, requiredSafeFields = []) {
+  const node = findWorkflowNode(workflow, nodeName);
+  const message = String(node?.parameters?.message || '');
+  for (const fieldName of unsafeFieldNames) {
+    if (containsRawJsonField(message, fieldName)) {
+      fail(`${relative} ${nodeName} must use escaped notification fields for Gmail HTML.`);
+      return;
+    }
+  }
+  for (const fieldName of requiredSafeFields) {
+    if (!message.includes(fieldName)) {
+      fail(`${relative} ${nodeName} must use escaped notification fields for Gmail HTML.`);
+      return;
+    }
+  }
+}
+
+function requireSubjectSafeFields(workflow, relative, nodeName, unsafeFieldNames, requiredSubjectFields = []) {
+  const node = findWorkflowNode(workflow, nodeName);
+  const subject = String(node?.parameters?.subject || '');
+  for (const fieldName of unsafeFieldNames) {
+    if (containsRawJsonField(subject, fieldName)) {
+      fail(`${relative} ${nodeName} subject must use bounded subject-safe fields.`);
+      return;
+    }
+  }
+  for (const fieldName of requiredSubjectFields) {
+    if (!subject.includes(fieldName)) {
+      fail(`${relative} ${nodeName} subject must use bounded subject-safe fields.`);
+      return;
+    }
+  }
+}
+
+function requireTrustedBeforePassthrough(relative, node, fieldName, trustedSnippets, passthroughSnippets) {
+  const value = String(findAssignment(node, fieldName)?.value || '');
+  const trustedIndexes = trustedSnippets
+    .map((snippet) => value.indexOf(snippet))
+    .filter((index) => index >= 0);
+  const passthroughIndexes = passthroughSnippets
+    .map((snippet) => value.indexOf(snippet))
+    .filter((index) => index >= 0);
+
+  if (!trustedIndexes.length || !passthroughIndexes.length || Math.min(...trustedIndexes) > Math.min(...passthroughIndexes)) {
+    fail(`${relative} Normalise Error Payload ${fieldName} must prefer trusted error handler fields before passthrough context.`);
+  }
+}
+
 function usesSgtDisplayTimestamp(value) {
   const text = String(value || '');
   return (
@@ -512,9 +589,18 @@ function checkCustomerSupportAgentLoggingContract(workflow, relative) {
       fail(`${relative} Parse Strict JSON Response must include ${requiredSnippet} for logging normalization.`);
     }
   }
-  if (parserCode.includes('sgtIso') || parserCode.includes('+08:00') || !parserCode.includes('completed_at: sgtTimestamp(now)')) {
+  const usesDisplayCompletedAt =
+    parserCode.includes('completed_at: sgtTimestamp(now)') ||
+    (parserCode.includes('const completedAt = sgtTimestamp(now)') && parserCode.includes('completed_at: completedAt'));
+  if (parserCode.includes('sgtIso') || parserCode.includes('+08:00') || !usesDisplayCompletedAt) {
     fail(`${relative} Parse Strict JSON Response completed_at must use display SGT format, not ISO +08:00.`);
   }
+  requireCodeSnippets(relative, 'Parse Strict JSON Response', parserCode, [
+    'safeSheetValue',
+    'missing_fields_text',
+    'incomplete_ticket_followup',
+    'ticketRequired && !ticketReady',
+  ], 'must formula-harden sheet fields and expose incomplete-ticket follow-up state.');
 
   const failureNode = findWorkflowNode(workflow, 'Build Internal Error Context');
   const failureCompletedAt = findAssignment(failureNode, 'completed_at');
@@ -548,11 +634,14 @@ function checkCustomerSupportAgentLoggingContract(workflow, relative) {
 
   const escalationBranch = findWorkflowNode(workflow, 'Needs Escalation?');
   const escalationBranchConditions = JSON.stringify(escalationBranch?.parameters?.conditions || {});
-  for (const field of ['needs_escalation', 'lead_captured', 'booking_requested', 'ticket_required', 'confidence', 'unknown']) {
+  for (const field of ['needs_escalation', 'incomplete_ticket_followup', 'lead_captured', 'booking_requested', 'ticket_ready', 'confidence', 'unknown']) {
     if (!escalationBranchConditions.includes(field)) {
       fail(`${relative} Needs Escalation? must avoid duplicate alerts for lead, booking, ticket, and unanswered follow-up emails.`);
       break;
     }
+  }
+  if (escalationBranchConditions.includes('ticket_required).toLowerCase() !==') || !escalationBranchConditions.includes('incomplete_ticket_followup')) {
+    fail(`${relative} Needs Escalation? must allow incomplete escalated support tickets to reach human notifications.`);
   }
 
   const outputParserNode = findWorkflowNode(workflow, 'Agent Structured Output Parser');
@@ -584,6 +673,122 @@ function checkCustomerSupportAgentLoggingContract(workflow, relative) {
       fail(`${relative} ${nodeName} must write Google Sheets values with RAW cellFormat so phone numbers beginning with + stay plain text.`);
     }
   }
+  requireCodeSnippets(relative, 'Redact PII for Logs', redactCode, [
+    'safeSheetValue',
+    'sheet_user_message_redacted',
+    'sheet_session_id',
+  ], 'must prepare formula-hardened fields for queued conversation logs.');
+  requireCodeSnippets(relative, 'Select Debounced Chat Batch', activeProcessingCode, [
+    'safeSheetValue',
+    'sheet_user_message_redacted',
+    'withSheetFields',
+  ], 'must keep formula-hardened fields when rapid messages are merged.');
+  requireSheetSafeColumns(workflow, relative, 'Upsert Conversation Processing', [
+    'conversation_ref',
+    'channel',
+    'customer_name',
+    'customer_email',
+    'customer_phone',
+    'user_message_redacted',
+    'execution_id',
+    'created_at',
+    'dedupe_key',
+    'message_id',
+    'session_id',
+  ]);
+  requireSheetSafeColumns(workflow, relative, 'Mark Conversation Processing', [
+    'conversation_ref',
+    'channel',
+    'customer_name',
+    'customer_email',
+    'customer_phone',
+    'user_message_redacted',
+    'execution_id',
+    'created_at',
+    'dedupe_key',
+    'message_id',
+    'session_id',
+  ]);
+  requireSheetSafeColumns(workflow, relative, 'Mark Conversation Merged', [
+    'conversation_ref',
+    'channel',
+    'customer_name',
+    'customer_email',
+    'customer_phone',
+    'user_message_redacted',
+    'execution_id',
+    'created_at',
+    'dedupe_key',
+    'message_id',
+    'session_id',
+  ]);
+  requireSheetSafeColumns(workflow, relative, 'Upsert Conversation Completed', [
+    'conversation_ref',
+    'channel',
+    'customer_name',
+    'customer_email',
+    'customer_phone',
+    'user_message_redacted',
+    'bot_reply',
+    'intent',
+    'ticket_id',
+    'source_titles',
+    'source_file_ids',
+    'execution_id',
+    'created_at',
+    'completed_at',
+    'dedupe_key',
+    'message_id',
+    'session_id',
+  ]);
+  requireSheetSafeColumns(workflow, relative, 'Upsert Lead or Booking', [
+    'conversation_ref',
+    'name',
+    'email',
+    'phone',
+    'company',
+    'rental_purpose',
+    'rental_start_date',
+    'rental_duration',
+    'items_needed',
+    'delivery_area',
+    'budget',
+    'status',
+    'source_channel',
+    'conversation_transcript',
+    'created_at',
+    'execution_id',
+    'lead_id',
+    'session_id',
+  ]);
+  requireSheetSafeColumns(workflow, relative, 'Upsert Ticket', [
+    'conversation_ref',
+    'name',
+    'email',
+    'phone',
+    'category',
+    'summary',
+    'details',
+    'conversation_transcript',
+    'urgency',
+    'status',
+    'created_at',
+    'execution_id',
+    'ticket_id',
+    'session_id',
+  ]);
+  requireSheetSafeColumns(workflow, relative, 'Upsert Unanswered Question', [
+    'conversation_ref',
+    'user_message_redacted',
+    'reason',
+    'intent',
+    'source_titles',
+    'conversation_transcript',
+    'created_at',
+    'execution_id',
+    'id',
+    'session_id',
+  ]);
 
   for (const nodeName of ['Upsert Conversation Processing', 'Mark Conversation Processing', 'Mark Conversation Merged', 'Upsert Conversation Completed']) {
     const node = findWorkflowNode(workflow, nodeName);
@@ -645,6 +850,20 @@ function checkCustomerSupportAgentLoggingContract(workflow, relative) {
   if (!notificationContextCode.includes('conversation_ref') || !notificationContextCode.includes('conversation_transcript_text') || !notificationContextCode.includes('conversation_transcript_html') || !notificationContextCode.includes('notification_summary_html')) {
     fail(`${relative} Build Notification Context must prepare formatted email summary and transcript fields.`);
   }
+  requireCodeSnippets(relative, 'Build Notification Context', notificationContextCode, [
+    'MAX_TRANSCRIPT_ROWS',
+    'MAX_TRANSCRIPT_CHARS',
+    '[Transcript truncated]',
+    'safe_conversation_transcript_html',
+    'safe_notification_summary_html',
+    'safeSubjectText',
+    'subject_escalation_intent',
+    'subject_lead_name',
+    'subject_ticket_summary',
+    'subject_unanswered_reference',
+    'safeSheetValue',
+    'escapeHtml',
+  ], 'must bound transcript rows and characters and prepare safe notification fields.');
   const finalResponseNote = findWorkflowNode(workflow, 'Final chat response group');
   const finalResponseNoteContent = String(finalResponseNote?.parameters?.content || '');
   if (
@@ -672,17 +891,80 @@ function checkCustomerSupportAgentLoggingContract(workflow, relative) {
 
   const escalationNode = findWorkflowNode(workflow, 'Send Escalation Alert');
   const escalationMessage = String(escalationNode?.parameters?.message || '');
-  if (!escalationMessage.includes('notification_summary_html') || !escalationMessage.includes('conversation_transcript_html') || !escalationMessage.includes('source_file_ids')) {
+  if (!escalationMessage.includes('safe_notification_summary_html') || !escalationMessage.includes('safe_conversation_transcript_html') || !escalationMessage.includes('safe_source_file_ids')) {
     fail(`${relative} Send Escalation Alert must include summary, source URLs, and session transcript context.`);
   }
+  requireEscapedGmailHtml(workflow, relative, 'Send Escalation Alert', [
+    'conversation_ref',
+    'user_message_redacted',
+    'reply',
+    'source_titles',
+    'source_file_ids',
+    'missing_fields_text',
+  ], [
+    'safe_notification_summary_html',
+    'safe_user_message_redacted',
+    'safe_reply',
+    'safe_missing_fields',
+    'safe_conversation_transcript_html',
+  ]);
+  requireSubjectSafeFields(workflow, relative, 'Send Escalation Alert', [
+    'intent',
+    'escalation_reference_id',
+    'ticket_id',
+    'lead_id',
+    'message_id',
+  ], ['subject_escalation_intent', 'subject_escalation_reference']);
 
   for (const nodeName of ['Send Lead Notification', 'Send Ticket Notification', 'Send Unanswered Notification']) {
     const emailNode = findWorkflowNode(workflow, nodeName);
     const message = String(emailNode?.parameters?.message || '');
-    if (!message.includes('Build Notification Context') || !message.includes('conversation_transcript_html')) {
+    if (!message.includes('Build Notification Context') || !message.includes('safe_conversation_transcript_html')) {
       fail(`${relative} ${nodeName} must include the formatted session transcript from Build Notification Context.`);
     }
   }
+  requireEscapedGmailHtml(workflow, relative, 'Send Lead Notification', [
+    'conversation_ref',
+    'name',
+    'email',
+    'phone',
+    'company',
+    'items_needed',
+    'rental_purpose',
+    'delivery_area',
+    'budget',
+  ], ['safe_conversation_ref', 'safe_lead_name', 'safe_conversation_transcript_html']);
+  requireSubjectSafeFields(workflow, relative, 'Send Lead Notification', [
+    'name',
+    'items_needed',
+    'rental_purpose',
+    'lead_id',
+  ], ['subject_lead_name', 'subject_lead_items', 'subject_lead_reference']);
+  requireEscapedGmailHtml(workflow, relative, 'Send Ticket Notification', [
+    'conversation_ref',
+    'name',
+    'email',
+    'phone',
+    'category',
+    'urgency',
+    'summary',
+    'details',
+  ], ['safe_conversation_ref', 'safe_ticket_summary', 'safe_conversation_transcript_html']);
+  requireSubjectSafeFields(workflow, relative, 'Send Ticket Notification', [
+    'urgency',
+    'summary',
+    'ticket_id',
+  ], ['subject_ticket_urgency', 'subject_ticket_summary', 'subject_ticket_reference']);
+  requireEscapedGmailHtml(workflow, relative, 'Send Unanswered Notification', [
+    'conversation_ref',
+    'reason',
+    'user_message_redacted',
+    'source_titles',
+  ], ['safe_notification_summary_html', 'safe_conversation_ref', 'safe_user_message_redacted', 'safe_conversation_transcript_html']);
+  requireSubjectSafeFields(workflow, relative, 'Send Unanswered Notification', [
+    'intent',
+    'id',
+  ], ['subject_unanswered_intent', 'subject_unanswered_reference']);
 }
 
 function checkGlobalErrorHandlerContract(workflow, relative) {
@@ -710,17 +992,41 @@ function checkGlobalErrorHandlerContract(workflow, relative) {
   }
 
   const normaliseNode = findWorkflowNode(workflow, 'Normalise Error Payload');
-  for (const [field, requiredSnippet] of [
-    ['workflow_name', '$json.workflow_name'],
-    ['error_message', '$json.error_message'],
-    ['contact_id', '$json.contact_id'],
-    ['error_type', '$json.error_type'],
-    ['execution_url', '$json.execution_url'],
+  for (const [field, trustedSnippets, passthroughSnippets] of [
+    ['workflow_name', ['$json.workflow?.name', '$json.trigger?.workflow?.name'], ['$json.workflow_name']],
+    ['error_message', ['$json.execution?.error?.message', '$json.trigger?.error?.message'], ['$json.agent_error_message', '$json.error_message']],
+    ['contact_id', ['$json.execution?.id', '$json.trigger?.execution?.id'], ['$json.contact_id', '$json.conversation_ref', '$json.message_id']],
+    ['error_type', ['$json.execution?.mode', '$json.trigger?.mode'], ['$json.error_type']],
+    ['execution_url', ['$json.execution?.url'], ['$json.execution_url', '$json.error_link']],
   ]) {
-    const value = String(findAssignment(normaliseNode, field)?.value || '');
-    if (!value.includes(requiredSnippet)) {
-      fail(`${relative} Normalise Error Payload ${field} must prefer the internal error handler payload when present.`);
-    }
+    requireTrustedBeforePassthrough(relative, normaliseNode, field, trustedSnippets, passthroughSnippets);
+  }
+
+  if (!hasConnection(workflow, 'Normalise Error Payload', 0, 'Build Safe Error Alert Context')) {
+    fail(`${relative} Normalise Error Payload must feed Build Safe Error Alert Context before logging or emailing.`);
+  }
+  if (!hasConnection(workflow, 'Build Safe Error Alert Context', 0, 'Append Failure Log')) {
+    fail(`${relative} Build Safe Error Alert Context must feed Append Failure Log.`);
+  }
+  if (!hasConnection(workflow, 'Build Safe Error Alert Context', 0, 'Send Failure Alert')) {
+    fail(`${relative} Build Safe Error Alert Context must feed Send Failure Alert.`);
+  }
+
+  const safeContextNode = findWorkflowNode(workflow, 'Build Safe Error Alert Context');
+  if (safeContextNode?.type !== 'n8n-nodes-base.code') {
+    fail(`${relative} Build Safe Error Alert Context must be a Code node.`);
+  } else {
+    const safeContextCode = String(safeContextNode.parameters?.jsCode || '');
+    requireCodeSnippets(relative, 'Build Safe Error Alert Context', safeContextCode, [
+      'escapeHtml',
+      'safeSheetValue',
+      'safeSubjectText',
+      'subject_workflow_name',
+      'subject_error_type',
+      'safe_error_message',
+      'sheet_error_message',
+      'sheet_payload_json',
+    ], 'must escape Gmail fields and formula-harden Sheets fields.');
   }
 
   for (const nodeName of ['Append Failure Log', 'Send Failure Alert']) {
@@ -729,6 +1035,43 @@ function checkGlobalErrorHandlerContract(workflow, relative) {
       fail(`${relative} ${nodeName} must use onError: continueRegularOutput so one ops channel does not block the other.`);
     }
   }
+  const appendLogNode = findWorkflowNode(workflow, 'Append Failure Log');
+  if (appendLogNode?.parameters?.options?.cellFormat !== 'RAW') {
+    fail(`${relative} Append Failure Log must write Google Sheets values with RAW cellFormat so formula-hardened strings stay literal.`);
+  }
+  requireSheetSafeColumns(workflow, relative, 'Append Failure Log', [
+    'logged_date',
+    'logged_time',
+    'contact_id',
+    'error_type',
+    'error_message',
+    'error_workflow_name',
+    'last_node_executed',
+    'execution_id',
+    'execution_url',
+    'payload_json',
+  ]);
+  requireEscapedGmailHtml(workflow, relative, 'Send Failure Alert', [
+    'logged_date',
+    'logged_time',
+    'contact_id',
+    'workflow_name',
+    'error_type',
+    'error_message',
+    'last_node_executed',
+    'execution_id',
+    'execution_url',
+  ], [
+    'safe_error_time',
+    'safe_contact_id',
+    'safe_workflow_name',
+    'safe_error_message',
+    'safe_execution_url',
+  ]);
+  requireSubjectSafeFields(workflow, relative, 'Send Failure Alert', [
+    'workflow_name',
+    'error_type',
+  ], ['subject_workflow_name', 'subject_error_type']);
 }
 
 function checkRagIngestionLoggingContract(workflow, relative) {

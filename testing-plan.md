@@ -137,6 +137,11 @@ Open the customer support workflow in n8n and verify:
 - `Agent Structured Output Parser` is connected.
 - Google Sheets, Gmail, OpenAI/Gemini, Pinecone, and Drive credentials are
   selected.
+- Gmail notification bodies use escaped `safe_*` fields from notification context
+  nodes, not raw chat, transcript, or error fields.
+- Conversation transcripts in notification emails are bounded to the newest 12
+  rows and about 6000 characters, with `[Transcript truncated]` shown when
+  context is shortened.
 
 ## Test Matrix
 
@@ -183,8 +188,8 @@ Expected:
 - Lead phone stays as literal text, not `#ERROR!`.
 - Phone keeps the leading `+65`.
 - Lead details include item count, venue, date, duration, name, email, and phone.
-- Email notification, if sent, has a readable subject/body and includes the full
-  conversation transcript.
+- Email notification, if sent, has a readable subject/body and includes bounded
+  conversation transcript context.
 
 ### Test 3 - Normal Multi-Turn Lead
 
@@ -222,7 +227,9 @@ Expected:
 - No lead row.
 - No ticket row yet.
 - Conversation row is completed.
-- If escalation/unanswered routing fires, it should not create an empty ticket.
+- Important incomplete support cases still reach an escalation or unanswered
+  notification path.
+- Escalation/unanswered routing must not create an empty ticket.
 
 ### Test 5 - Actionable Complaint Ticket
 
@@ -239,8 +246,8 @@ Expected:
 - Lead row is not created unless the customer also asks for a new rental quote.
 - Ticket has name, email, phone, category, summary, details, urgency, status, and
   ticket ID.
-- Ticket email notification is readable and includes the full conversation
-  transcript.
+- Ticket email notification is readable and includes bounded conversation
+  transcript context.
 
 ### Test 6 - Unknown Or Unsupported Question
 
