@@ -130,9 +130,11 @@ Open the customer support workflow in n8n and verify:
   - `resume`: `timeInterval`
   - `amount`: `5`
   - `unit`: `seconds`
-- `Simple Conversation Memory` has no Wait settings. It should remain the AI
-  memory node, not the debounce mechanism.
+- Public chat remains stateless: `SpaceKonceptRental AI Agent` has no AI memory
+  connection. `session_id` is still used for logging, debounce, dedupe, and
+  operator transcript context.
 - Chat Trigger response mode uses response nodes.
+- Chat Trigger remains public for the temporary demo flow.
 - `SpaceKonceptRental AI Agent` has streaming off.
 - `Agent Structured Output Parser` is connected.
 - Google Sheets, Gmail, OpenAI/Gemini, Pinecone, and Drive credentials are
@@ -207,8 +209,10 @@ I need 30 stools and 10 cocktail tables at Suntec on 25 June 2026 for 2 days. My
 
 Expected:
 
-- Simple Conversation Memory helps the bot understand the follow-up.
-- Lead row is created only once after enough details are available.
+- Public chat does not rely on persisted AI memory, so the follow-up message
+  includes enough details for the bot to handle it statelessly.
+- Lead row is created only once after enough details are available in the
+  current customer turn.
 - Conversation rows share the same `session_id`.
 - Lead row has the same `conversation_ref` as the conversation rows.
 - Sorting by `session_id`, then `created_at`, reconstructs the chat.

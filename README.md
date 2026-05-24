@@ -102,6 +102,14 @@ chat widget reads its webhook URL from ignored local config files. Copy
 testing, or to `website/chat-config.js` for a deploy-time config file, then
 replace the URL there.
 
+The current public Chat Trigger is temporary and demo-oriented. Keep it public
+for the demo flow, but keep public chat stateless: the workflow may use
+`session_id` for logging, debounce, dedupe, and operator transcript context, but
+must not connect the public AI Agent to persisted AI memory keyed by client
+session values. Current compensating controls include debounce, dedupe, safe
+Sheets writes, escaped emails, bounded transcripts, and stateless public chat.
+Full mitigation belongs in the future authenticated/backend-mediated UI.
+
 For final submission, deploy this static folder or the repo root to a simple
 host such as Netlify or GitHub Pages. Do not commit temporary tunnel URLs such
 as ngrok URLs.

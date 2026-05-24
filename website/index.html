@@ -9,7 +9,7 @@
       content="SpaceKonceptRental capstone demo website with live AI customer support chat."
     />
     <link
-      href="https://cdn.jsdelivr.net/npm/@n8n/chat/dist/style.css"
+      href="https://cdn.jsdelivr.net/npm/@n8n/chat@1.21.0/dist/style.css"
       rel="stylesheet"
     />
     <style>
@@ -260,7 +260,7 @@
       </section>
     </main>
     <script type="module">
-      import { createChat } from "https://cdn.jsdelivr.net/npm/@n8n/chat/dist/chat.bundle.es.js";
+      import { createChat } from "https://cdn.jsdelivr.net/npm/@n8n/chat@1.21.0/dist/chat.bundle.es.js";
 
       async function applyChatConfig(path) {
         try {
@@ -285,7 +285,7 @@
           webhookUrl,
           target: "#n8n-chat",
           mode: "fullscreen",
-          loadPreviousSession: true,
+          loadPreviousSession: false,
           enableStreaming: false,
           showWelcomeScreen: false,
           showInput: true,
