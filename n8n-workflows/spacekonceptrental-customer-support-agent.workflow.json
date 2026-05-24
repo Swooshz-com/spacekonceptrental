@@ -201,8 +201,7 @@
         },
         "options": {
           "returnFirstMatch": false
-        },
-        "combineFilters": "AND"
+        }
       },
       "id": "b6b9cdd8-08fb-4e04-937f-54c5e8c31c0c",
       "name": "Lookup Conversation State",
@@ -2460,11 +2459,7 @@
       ]
     },
     {
-      "parameters": {
-        "resume": "timeInterval",
-        "amount": 5,
-        "unit": "seconds"
-      },
+      "parameters": {},
       "id": "90642e08-0f2e-4e34-8f3a-938787af588a",
       "name": "Debounce Chat Batch",
       "type": "n8n-nodes-base.wait",
@@ -3415,5 +3410,5 @@
   "meta": {
     "templateCredsSetupCompleted": true
   },
-  "versionId": "b15f69c6-dcbf-4007-b91e-ea5fa7c63f39"
+  "versionId": "58635a53-7cd3-4155-b8f8-795ac768882f"
 }
