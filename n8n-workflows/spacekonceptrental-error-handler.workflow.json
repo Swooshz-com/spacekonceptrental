@@ -66,43 +66,43 @@
             {
               "id": "normalise-error-payload-1",
               "name": "error_execution_id",
-              "value": "={{ $json.error_execution_id || $json.execution_id || $json.execution?.id || \"not_available\" }}",
+              "value": "={{ $json.execution?.id || $json.trigger?.execution?.id || $json.error_execution_id || $json.execution_id || \"not_available\" }}",
               "type": "string"
             },
             {
               "id": "normalise-error-payload-2",
               "name": "workflow_name",
-              "value": "={{ $json.workflow_name || $json.workflow?.name || \"Unknown workflow\" }}",
+              "value": "={{ $json.workflow?.name || $json.trigger?.workflow?.name || $json.workflow_name || \"Unknown workflow\" }}",
               "type": "string"
             },
             {
               "id": "normalise-error-payload-3",
               "name": "workflow_id",
-              "value": "={{ $json.workflow_id || $json.workflow?.id || \"not_available\" }}",
+              "value": "={{ $json.workflow?.id || $json.trigger?.workflow?.id || $json.workflow_id || \"not_available\" }}",
               "type": "string"
             },
             {
               "id": "normalise-error-payload-4",
               "name": "error_node_name",
-              "value": "={{ $json.error_node_name || $json.last_node_executed || $json.execution?.lastNodeExecuted || $json.trigger?.error?.node?.name || \"not_available\" }}",
+              "value": "={{ $json.execution?.lastNodeExecuted || $json.trigger?.error?.node?.name || $json.last_node_executed || $json.error_node_name || \"not_available\" }}",
               "type": "string"
             },
             {
               "id": "normalise-error-payload-5",
               "name": "error_message",
-              "value": "={{ $json.error_message || $json.agent_error_message || $json.execution?.error?.message || $json.trigger?.error?.message || $json.trigger?.error?.cause?.message || \"Unknown workflow error\" }}",
+              "value": "={{ $json.execution?.error?.message || $json.trigger?.error?.message || $json.trigger?.error?.cause?.message || $json.agent_error_message || $json.error_message || \"Unknown workflow error\" }}",
               "type": "string"
             },
             {
               "id": "normalise-error-payload-6",
               "name": "error_stack",
-              "value": "={{ $json.error_stack || $json.execution?.error?.stack || $json.trigger?.error?.stack || $json.trigger?.error?.cause?.stack || \"\" }}",
+              "value": "={{ $json.execution?.error?.stack || $json.trigger?.error?.stack || $json.trigger?.error?.cause?.stack || $json.error_stack || \"\" }}",
               "type": "string"
             },
             {
               "id": "normalise-error-payload-7",
               "name": "error_link",
-              "value": "={{ $json.error_link || $json.execution_url || $json.execution?.url || \"not_available\" }}",
+              "value": "={{ $json.execution?.url || $json.error_link || $json.execution_url || \"not_available\" }}",
               "type": "string"
             },
             {
@@ -144,31 +144,31 @@
             {
               "id": "normalise-error-payload-14",
               "name": "contact_id",
-              "value": "={{ $json.contact_id || $json.conversation_ref || $json.message_id || \"not_available\" }}",
+              "value": "={{ $json.execution?.id || $json.trigger?.execution?.id || $json.contact_id || $json.conversation_ref || $json.message_id || \"not_available\" }}",
               "type": "string"
             },
             {
               "id": "normalise-error-payload-15",
               "name": "error_type",
-              "value": "={{ $json.error_type || $json.execution?.mode || $json.trigger?.mode || \"workflow_error\" }}",
+              "value": "={{ $json.execution?.mode || $json.trigger?.mode || $json.error_type || \"workflow_error\" }}",
               "type": "string"
             },
             {
               "id": "normalise-error-payload-16",
               "name": "last_node_executed",
-              "value": "={{ $json.last_node_executed || $json.error_node_name || $json.execution?.lastNodeExecuted || $json.trigger?.error?.node?.name || \"not_available\" }}",
+              "value": "={{ $json.execution?.lastNodeExecuted || $json.trigger?.error?.node?.name || $json.last_node_executed || $json.error_node_name || \"not_available\" }}",
               "type": "string"
             },
             {
               "id": "normalise-error-payload-17",
               "name": "execution_id",
-              "value": "={{ $json.error_execution_id || $json.execution_id || $json.execution?.id || \"not_available\" }}",
+              "value": "={{ $json.execution?.id || $json.trigger?.execution?.id || $json.error_execution_id || $json.execution_id || \"not_available\" }}",
               "type": "string"
             },
             {
               "id": "normalise-error-payload-18",
               "name": "execution_url",
-              "value": "={{ $json.execution_url || $json.error_link || $json.execution?.url || \"not_available\" }}",
+              "value": "={{ $json.execution?.url || $json.execution_url || $json.error_link || \"not_available\" }}",
               "type": "string"
             }
           ]
@@ -181,6 +181,19 @@
       "typeVersion": 3.4,
       "position": [
         -368,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "function escapeHtml(value = '') {\n  return String(value || '')\n    .replace(/&/g, '&amp;')\n    .replace(/</g, '&lt;')\n    .replace(/>/g, '&gt;')\n    .replace(/\"/g, '&quot;')\n    .replace(/'/g, '&#39;');\n}\n\nfunction safeSheetValue(value = '') {\n  const text = String(value ?? '');\n  if (!text) return '';\n  if (/^\\+\\s*[\\d()\\-\\s]{3,}$/.test(text)) return text;\n  return /^[=+\\-@]/.test(text) ? \"'\" + text : text;\n}\n\nfunction safeText(value, fallback = 'not_available') {\n  const text = String(value || '').trim() || fallback;\n  return escapeHtml(text);\n}\n\nfunction safeSubjectText(value, fallback = 'not_available', maxLength = 100) {\n  const text = String(value || fallback)\n    .replace(/[\\u0000-\\u001f\\u007f]+/g, ' ')\n    .replace(/\\s+/g, ' ')\n    .trim();\n  const safe = text || fallback;\n  return safe.length > maxLength ? safe.slice(0, maxLength - 3).trimEnd() + '...' : safe;\n}\n\nreturn items.map((item) => {\n  const payloadJson = JSON.stringify(item.json);\n\n  return {\n    json: {\n      ...item.json,\n      subject_workflow_name: safeSubjectText(item.json.workflow_name, 'Workflow'),\n      subject_error_type: safeSubjectText(item.json.error_type, 'workflow_failed'),\n      safe_error_time: safeText([item.json.logged_date, item.json.logged_time].filter(Boolean).join(' - ')),\n      safe_contact_id: safeText(item.json.contact_id),\n      safe_workflow_name: safeText(item.json.workflow_name),\n      safe_error_type: safeText(item.json.error_type),\n      safe_error_message: safeText(item.json.error_message),\n      safe_last_node_executed: safeText(item.json.last_node_executed),\n      safe_execution_id: safeText(item.json.execution_id),\n      safe_execution_url: safeText(item.json.execution_url),\n      sheet_logged_date: safeSheetValue(item.json.logged_date),\n      sheet_logged_time: safeSheetValue(item.json.logged_time),\n      sheet_contact_id: safeSheetValue(item.json.contact_id),\n      sheet_error_type: safeSheetValue(item.json.error_type),\n      sheet_error_message: safeSheetValue(item.json.error_message),\n      sheet_workflow_name: safeSheetValue(item.json.workflow_name),\n      sheet_last_node_executed: safeSheetValue(item.json.last_node_executed),\n      sheet_execution_id: safeSheetValue(item.json.execution_id),\n      sheet_execution_url: safeSheetValue(item.json.execution_url),\n      sheet_payload_json: safeSheetValue(payloadJson),\n    },\n  };\n});"
+      },
+      "id": "cfa02a91-a426-4791-8ab7-cda2f9475ccd",
+      "name": "Build Safe Error Alert Context",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -224,
         160
       ]
     },
@@ -204,16 +217,16 @@
         "columns": {
           "mappingMode": "defineBelow",
           "value": {
-            "logged_date": "={{ $json.logged_date }}",
-            "logged_time": "={{ $json.logged_time }}",
-            "contact_id": "={{ $json.contact_id }}",
-            "error_type": "={{ $json.error_type }}",
-            "error_message": "={{ $json.error_message }}",
-            "error_workflow_name": "={{ $json.workflow_name }}",
-            "last_node_executed": "={{ $json.last_node_executed }}",
-            "execution_id": "={{ $json.execution_id }}",
-            "execution_url": "={{ $json.execution_url }}",
-            "payload_json": "={{ JSON.stringify($json) }}"
+            "logged_date": "={{ $json.sheet_logged_date }}",
+            "logged_time": "={{ $json.sheet_logged_time }}",
+            "contact_id": "={{ $json.sheet_contact_id }}",
+            "error_type": "={{ $json.sheet_error_type }}",
+            "error_message": "={{ $json.sheet_error_message }}",
+            "error_workflow_name": "={{ $json.sheet_workflow_name }}",
+            "last_node_executed": "={{ $json.sheet_last_node_executed }}",
+            "execution_id": "={{ $json.sheet_execution_id }}",
+            "execution_url": "={{ $json.sheet_execution_url }}",
+            "payload_json": "={{ $json.sheet_payload_json }}"
           },
           "matchingColumns": [],
           "schema": [
@@ -311,7 +324,9 @@
           "attemptToConvertTypes": false,
           "convertFieldsToString": false
         },
-        "options": {}
+        "options": {
+          "cellFormat": "RAW"
+        }
       },
       "id": "10000000-0000-4000-8000-000000000004",
       "name": "Append Failure Log",
@@ -329,8 +344,8 @@
     {
       "parameters": {
         "sendTo": "SpaceKonceptRental@gmail.com",
-        "subject": "=[SKR Error] {{ $json.workflow_name || \"Workflow\" }} - {{ $json.error_type || \"workflow_failed\" }}",
-        "message": "=<h2>Workflow failure</h2><table cellpadding=\"6\" cellspacing=\"0\" style=\"border-collapse:collapse;width:100%;max-width:760px;\"><tr><td style=\"width:150px;color:#52606d;\"><strong>Error Time</strong></td><td>{{ $json.logged_date }} - {{ $json.logged_time }}</td></tr><tr><td style=\"color:#52606d;\"><strong>Contact ID</strong></td><td>{{ $json.contact_id }}</td></tr><tr><td style=\"color:#52606d;\"><strong>Workflow</strong></td><td>{{ $json.workflow_name }}</td></tr><tr><td style=\"color:#52606d;\"><strong>Error Type</strong></td><td>{{ $json.error_type }}</td></tr><tr><td style=\"color:#52606d;\"><strong>Error Message</strong></td><td>{{ $json.error_message }}</td></tr><tr><td style=\"color:#52606d;\"><strong>Last Node</strong></td><td>{{ $json.last_node_executed }}</td></tr><tr><td style=\"color:#52606d;\"><strong>Execution ID</strong></td><td>{{ $json.execution_id }}</td></tr><tr><td style=\"color:#52606d;\"><strong>Execution URL</strong></td><td>{{ $json.execution_url }}</td></tr></table><hr><p style=\"font-size:12px;color:#697386;\">Review the failure log, confirm whether the run is safe to retry, and update recovery_status in Google Sheets.</p>",
+        "subject": "=[SKR Error] {{ $json.subject_workflow_name }} - {{ $json.subject_error_type }}",
+        "message": "=<h2>Workflow failure</h2><table cellpadding=\"6\" cellspacing=\"0\" style=\"border-collapse:collapse;width:100%;max-width:760px;\"><tr><td style=\"width:150px;color:#52606d;\"><strong>Error Time</strong></td><td>{{ $json.safe_error_time }}</td></tr><tr><td style=\"color:#52606d;\"><strong>Contact ID</strong></td><td>{{ $json.safe_contact_id }}</td></tr><tr><td style=\"color:#52606d;\"><strong>Workflow</strong></td><td>{{ $json.safe_workflow_name }}</td></tr><tr><td style=\"color:#52606d;\"><strong>Error Type</strong></td><td>{{ $json.safe_error_type }}</td></tr><tr><td style=\"color:#52606d;\"><strong>Error Message</strong></td><td>{{ $json.safe_error_message }}</td></tr><tr><td style=\"color:#52606d;\"><strong>Last Node</strong></td><td>{{ $json.safe_last_node_executed }}</td></tr><tr><td style=\"color:#52606d;\"><strong>Execution ID</strong></td><td>{{ $json.safe_execution_id }}</td></tr><tr><td style=\"color:#52606d;\"><strong>Execution URL</strong></td><td>{{ $json.safe_execution_url }}</td></tr></table><hr><p style=\"font-size:12px;color:#697386;\">Review the failure log, confirm whether the run is safe to retry, and update recovery_status in Google Sheets. Passthrough context, when present, is logged separately in the hardened payload_json field.</p>",
         "options": {}
       },
       "id": "10000000-0000-4000-8000-000000000005",
@@ -363,12 +378,7 @@
       "main": [
         [
           {
-            "node": "Append Failure Log",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Send Failure Alert",
+            "node": "Build Safe Error Alert Context",
             "type": "main",
             "index": 0
           }
@@ -380,6 +390,22 @@
         [
           {
             "node": "Normalise Error Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Safe Error Alert Context": {
+      "main": [
+        [
+          {
+            "node": "Append Failure Log",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send Failure Alert",
             "type": "main",
             "index": 0
           }
