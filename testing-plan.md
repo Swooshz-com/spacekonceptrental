@@ -323,8 +323,11 @@ Expected:
 - `chunks_count` is numeric.
 - `event_type` is `created` or `updated`.
 - `ingested_at` uses `YYYY-MM-DD HH:mm:ss SGT`.
+- `modified_time` is populated from the Drive file metadata.
+- `ingestion_key` combines the stable Drive file ID, modified time, and
+  `SpaceKonceptRental_kb` namespace for replay dedupe.
 - Re-ingesting a file should not endlessly grow stale Pinecone chunks for that
-  file.
+  file, and an unchanged replay should not append another `kb_ingestion` row.
 
 ## Pass Criteria
 

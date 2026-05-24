@@ -16,6 +16,11 @@ const errorHandlerWorkflowPath = path.join(
   'n8n-workflows',
   'spacekonceptrental-error-handler.workflow.json',
 );
+const ragIngestionWorkflowPath = path.join(
+  repoRoot,
+  'n8n-workflows',
+  'spacekonceptrental-rag-ingestion.workflow.json',
+);
 const validatorPath = path.join(repoRoot, 'scripts', 'validate-n8n-workflows.cjs');
 
 function makeTempRoot() {
@@ -32,10 +37,33 @@ function readErrorHandlerWorkflow() {
   return JSON.parse(fs.readFileSync(errorHandlerWorkflowPath, 'utf8').replace(/^\uFEFF/, ''));
 }
 
+function readRagIngestionWorkflow() {
+  return JSON.parse(fs.readFileSync(ragIngestionWorkflowPath, 'utf8').replace(/^\uFEFF/, ''));
+}
+
 function findNode(workflow, nodeName) {
   const node = workflow.nodes.find((candidate) => candidate.name === nodeName);
   assert.ok(node, `fixture must include ${nodeName}`);
   return node;
+}
+
+function removeNode(workflow, nodeName) {
+  workflow.nodes = workflow.nodes.filter((candidate) => candidate.name !== nodeName);
+  delete workflow.connections[nodeName];
+
+  for (const connection of Object.values(workflow.connections)) {
+    for (const outputs of Object.values(connection)) {
+      if (!Array.isArray(outputs)) continue;
+      for (const output of outputs) {
+        if (!Array.isArray(output)) continue;
+        for (let index = output.length - 1; index >= 0; index -= 1) {
+          if (output[index]?.node === nodeName) {
+            output.splice(index, 1);
+          }
+        }
+      }
+    }
+  }
 }
 
 function setDebounceWaitParameters(workflow, parameters) {
@@ -240,6 +268,92 @@ test('normal validation rejects raw error-handler Gmail subject interpolation', 
     assert.match(
       result.stderr + result.stdout,
       /Send Failure Alert subject must use bounded subject-safe fields/,
+    );
+  } finally {
+    fs.rmSync(tempRoot, { recursive: true, force: true });
+  }
+});
+
+test('normal validation rejects unsafe Pinecone delete filters that combine file ID and filename fallback', () => {
+  const tempRoot = makeTempRoot();
+  try {
+    const workflowDir = path.join(tempRoot, 'n8n-workflows');
+    const workflow = readRagIngestionWorkflow();
+    findNode(workflow, 'Prepare Pinecone Delete Request').parameters.jsCode =
+      "return [{ json: { pinecone_delete_body: { namespace: 'SpaceKonceptRental_kb', filter: { $or: [{ source_file_id: { $eq: $json.source_file_id } }, { source_file_name: { $eq: $json.source_file_name } }] } } } }];";
+    writeWorkflow(workflowDir, 'spacekonceptrental-rag-ingestion.workflow.json', workflow);
+
+    const result = runValidator([workflowDir]);
+
+    assert.notEqual(result.status, 0, result.stdout + result.stderr);
+    assert.match(
+      result.stderr + result.stdout,
+      /Prepare Pinecone Delete Request must prefer source_file_id and must not combine source_file_name fallback with source_file_id using \$or/,
+    );
+  } finally {
+    fs.rmSync(tempRoot, { recursive: true, force: true });
+  }
+});
+
+test('normal validation rejects missing explicit Pinecone KB namespace', () => {
+  const tempRoot = makeTempRoot();
+  try {
+    const workflowDir = path.join(tempRoot, 'n8n-workflows');
+    const workflow = readRagIngestionWorkflow();
+    findNode(workflow, 'Prepare Chunk Metadata').parameters.assignments.assignments.find((entry) => entry.name === 'namespace').value = '';
+    findNode(workflow, 'Insert Chunks into Pinecone').parameters.options.pineconeNamespace = '';
+    writeWorkflow(workflowDir, 'spacekonceptrental-rag-ingestion.workflow.json', workflow);
+
+    const result = runValidator([workflowDir]);
+
+    assert.notEqual(result.status, 0, result.stdout + result.stderr);
+    assert.match(
+      result.stderr + result.stdout,
+      /RAG ingestion Pinecone operations must explicitly use namespace SpaceKonceptRental_kb/,
+    );
+  } finally {
+    fs.rmSync(tempRoot, { recursive: true, force: true });
+  }
+});
+
+test('normal validation rejects missing RAG ingestion dedupe lookup', () => {
+  const tempRoot = makeTempRoot();
+  try {
+    const workflowDir = path.join(tempRoot, 'n8n-workflows');
+    const workflow = readRagIngestionWorkflow();
+    removeNode(workflow, 'Lookup KB Ingestion Log');
+    removeNode(workflow, 'Select Changed KB File');
+    workflow.connections['Prepare Chunk Metadata'] = {
+      main: [[{ node: 'Resolve Pinecone Index Host', type: 'main', index: 0 }]],
+    };
+    writeWorkflow(workflowDir, 'spacekonceptrental-rag-ingestion.workflow.json', workflow);
+
+    const result = runValidator([workflowDir]);
+
+    assert.notEqual(result.status, 0, result.stdout + result.stderr);
+    assert.match(
+      result.stderr + result.stdout,
+      /RAG ingestion must lookup kb_ingestion by stable file keys before Pinecone cleanup/,
+    );
+  } finally {
+    fs.rmSync(tempRoot, { recursive: true, force: true });
+  }
+});
+
+test('normal validation rejects Pinecone delete nodes that bypass retry with neverError', () => {
+  const tempRoot = makeTempRoot();
+  try {
+    const workflowDir = path.join(tempRoot, 'n8n-workflows');
+    const workflow = readRagIngestionWorkflow();
+    findNode(workflow, 'Delete Existing Pinecone File Chunks').parameters.options.response.response.neverError = true;
+    writeWorkflow(workflowDir, 'spacekonceptrental-rag-ingestion.workflow.json', workflow);
+
+    const result = runValidator([workflowDir]);
+
+    assert.notEqual(result.status, 0, result.stdout + result.stderr);
+    assert.match(
+      result.stderr + result.stdout,
+      /Delete Existing Pinecone File Chunks must not set neverError true because it bypasses retryOnFail for 429 and 5xx responses/,
     );
   } finally {
     fs.rmSync(tempRoot, { recursive: true, force: true });

@@ -37,7 +37,7 @@
     },
     {
       "parameters": {
-        "content": "# VECTOR INDEXING\n\n- Makes KB updates idempotent before writing fresh vectors.\n- Pinecone insert does not automatically replace old file chunks, so this section deletes stale vectors first.\n- Namespace is set upstream in `Prepare Chunk Metadata` and read by Pinecone as `={{ $json.namespace || 'SpaceKonceptRental_kb' }}`.\n\n## Pinecone cleanup subflow:\n\n- **Resolve Pinecone Index Host**: Gets the live Pinecone host for `pinecone_index_name`.\n- **Prepare Pinecone Delete Request**: Builds a `/vectors/delete` request for the current `source_file_id` or `source_file_name`.\n- **Delete Existing Pinecone File Chunks**: Removes old chunks for that file from the namespace. A first-run `Namespace not found` response is allowed because there are no old vectors yet.\n- **Restore Pinecone Ingestion Context**: Validates the delete result, throws for unexpected Pinecone delete errors, then restores the original document item so embedding and insert can continue normally.\n\n## Required manual configuration:\n\n- **Prepare Chunk Metadata**\n  - `pinecone_index_name`: Keep this aligned with the Pinecone index used for vector storage.\n- **Insert Chunks into Pinecone**\n  - `pineconeIndex`: Set this to the same Pinecone index used for vector storage.",
+        "content": "# VECTOR INDEXING\n\n- Makes KB updates idempotent before writing fresh vectors.\n- Pinecone insert does not automatically replace old file chunks, so this section deletes stale vectors first.\n- Namespace is set upstream in `Prepare Chunk Metadata` and all KB Pinecone operations use `SpaceKonceptRental_kb`.\n\n## Pinecone cleanup subflow:\n\n- **Lookup KB Ingestion Log**: Checks for a completed row with the same file ID, ingestion key, and namespace so unchanged files stop before cleanup.\n- **Resolve Pinecone Index Host**: Gets the live Pinecone host for `pinecone_index_name`.\n- **Prepare Pinecone Delete Request**: Builds a `/vectors/delete` request for the current stable `source_file_id`. Filename fallback requires `filename_fallback_reviewed=true` after manual uniqueness review.\n- **Delete Existing Pinecone File Chunks**: Removes old chunks for that file from the namespace, retrying transient Pinecone failures before response classification.\n- **Restore Pinecone Ingestion Context**: Allows first-run `Namespace not found`, throws for unexpected Pinecone delete errors, then restores the original document item so embedding and insert can continue normally.\n\n## Required manual configuration:\n\n- **Prepare Chunk Metadata**\n  - `pinecone_index_name`: Keep this aligned with the Pinecone index used for vector storage.\n- **Insert Chunks into Pinecone**\n  - `pineconeIndex`: Set this to the same Pinecone index used for vector storage.",
         "height": 940,
         "width": 1384,
         "color": 3
@@ -53,7 +53,7 @@
     },
     {
       "parameters": {
-        "content": "# INGESTION LOG\n\n- Records ingestion status for review.\n- Groups Pinecone chunk outputs back into one log row per source file.\n- Appends every ingestion event as a new audit row; repeated file events must not overwrite earlier rows.\n- Keeps explicit column mappings in `Append KB Ingestion Log`; changing the Sheets operation in the UI can clear them.\n- Uses RAW sheet writes so file names stay literal while chunk counts remain numeric.\n- Sets the `file_name` column hyperlink display to plain text after logging; `file_url` remains the clickable Drive URL.\n\n## Required manual configuration:\n\n- **Append KB Ingestion Log**\n  - `documentId.value`: Set this to the Google Sheets workbook used for ingestion logs.\n  - Sheet headers must include `file_url` and `event_type` if those columns are used.\n- **Disable File Name Hyperlinks**\n  - `url`: Keep the spreadsheet ID aligned with `Append KB Ingestion Log.documentId.value`.\n  - `range.sheetId` and column indexes: Keep these aligned with the `kb_ingestion` sheet and the `file_name` column.",
+        "content": "# INGESTION LOG\n\n- Records ingestion status for review.\n- Groups Pinecone chunk outputs back into one log row per source file.\n- Appends changed ingestion events as audit rows; unchanged repeated events stop before Pinecone cleanup and do not append another row.\n- Keeps explicit column mappings in `Append KB Ingestion Log`; changing the Sheets operation in the UI can clear them.\n- Uses RAW sheet writes so file names stay literal while chunk counts remain numeric.\n- Sets the `file_name` column hyperlink display to plain text after logging; `file_url` remains the clickable Drive URL.\n\n## Required manual configuration:\n\n- **Append KB Ingestion Log**\n  - `documentId.value`: Set this to the Google Sheets workbook used for ingestion logs.\n  - Sheet headers must include `file_url`, `event_type`, `modified_time`, and `ingestion_key` if those columns are used.\n- **Disable File Name Hyperlinks**\n  - `url`: Keep the spreadsheet ID aligned with `Append KB Ingestion Log.documentId.value`.\n  - `range.sheetId` and column indexes: Keep these aligned with the `kb_ingestion` sheet and the `file_name` column.",
         "height": 940,
         "width": 820,
         "color": 4
@@ -202,6 +202,12 @@
               "type": "string"
             },
             {
+              "id": "prepare-chunk-metadata-10",
+              "name": "ingestion_key",
+              "value": "={{ [($json.id || $json.fileId || 'unknown_file_id'), ($json.modifiedTime || 'unknown_modified_time'), 'SpaceKonceptRental_kb'].join('::') }}",
+              "type": "string"
+            },
+            {
               "id": "prepare-chunk-metadata-9",
               "name": "pinecone_index_name",
               "value": "spacekonceptrental-kb-rag",
@@ -276,7 +282,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const metadataItems = $items('Prepare Chunk Metadata').map((item) => item.json || {});\nconst chunkItems = $input.all().map((item) => item.json || {});\nconst chunksByFileId = new Map();\n\nfunction driveFileUrl(fileId, existingUrl = '') {\n  if (existingUrl) return existingUrl;\n  if (!fileId || String(fileId).startsWith('unknown_file_')) return '';\n  return `https://drive.google.com/file/d/${fileId}/view`;\n}\n\nfunction plainSheetText(value = '') {\n  return String(value || '').trim() || 'unknown_file_name';\n}\n\nfunction singaporeTimestamp(date = new Date()) {\n  const parts = new Intl.DateTimeFormat(\"en-CA\", {\n    timeZone: \"Asia/Singapore\",\n    year: \"numeric\",\n    month: \"2-digit\",\n    day: \"2-digit\",\n    hour: \"2-digit\",\n    minute: \"2-digit\",\n    second: \"2-digit\",\n    hour12: false\n  }).formatToParts(date).reduce((acc, part) => {\n    if (part.type !== \"literal\") acc[part.type] = part.value;\n    return acc;\n  }, {});\n\n  return parts.year + \"-\" + parts.month + \"-\" + parts.day + \" \" + parts.hour + \":\" + parts.minute + \":\" + parts.second + \" SGT\";\n}\n\nfor (const chunk of chunkItems) {\n  const metadata = chunk.metadata || {};\n  const fileId = metadata.source_file_id || chunk.source_file_id || chunk.file_id;\n  if (!fileId) continue;\n  chunksByFileId.set(fileId, (chunksByFileId.get(fileId) || 0) + 1);\n}\n\nconst uniqueMetadataItems = [];\nconst seenMetadataKeys = new Set();\n\nfor (const metadata of metadataItems) {\n  const fileId = String(metadata.source_file_id || metadata.id || '').trim();\n  const fileName = String(metadata.source_file_name || metadata.name || '').trim().toLowerCase();\n  const key = fileId || fileName;\n\n  if (key && seenMetadataKeys.has(key)) continue;\n  if (key) seenMetadataKeys.add(key);\n\n  uniqueMetadataItems.push(metadata);\n}\n\nreturn uniqueMetadataItems.map((metadata, index) => {\n  const fileId = metadata.source_file_id || metadata.id || `unknown_file_${index + 1}`;\n  const rawFileName = metadata.source_file_name || metadata.name || 'unknown_file_name';\n  const fileUrl = driveFileUrl(fileId, metadata.google_drive_url);\n  let chunksCount = chunksByFileId.get(fileId);\n\n  if (chunksCount === undefined && metadataItems.length === 1) {\n    chunksCount = chunkItems.length;\n  }\n\n  return {\n    json: {\n      file_id: fileId,\n      file_name: plainSheetText(rawFileName),\n      file_url: fileUrl,\n      event_type: metadata.event_type || 'unknown',\n      status: 'completed',\n      chunks_count: chunksCount ?? '',\n      namespace: metadata.namespace || 'SpaceKonceptRental_kb',\n      execution_id: $execution.id,\n      ingested_at: singaporeTimestamp(),\n      error_message: ''\n    }\n  };\n});"
+        "jsCode": "const metadataItems = $items('Select Changed KB File').map((item) => item.json || {});\nconst chunkItems = $input.all().map((item) => item.json || {});\nconst chunksByFileId = new Map();\n\nfunction driveFileUrl(fileId, existingUrl = '') {\n  if (existingUrl) return existingUrl;\n  if (!fileId || String(fileId).startsWith('unknown_file_')) return '';\n  return `https://drive.google.com/file/d/${fileId}/view`;\n}\n\nfunction plainSheetText(value = '') {\n  return String(value || '').trim() || 'unknown_file_name';\n}\n\nfunction singaporeTimestamp(date = new Date()) {\n  const parts = new Intl.DateTimeFormat(\"en-CA\", {\n    timeZone: \"Asia/Singapore\",\n    year: \"numeric\",\n    month: \"2-digit\",\n    day: \"2-digit\",\n    hour: \"2-digit\",\n    minute: \"2-digit\",\n    second: \"2-digit\",\n    hour12: false\n  }).formatToParts(date).reduce((acc, part) => {\n    if (part.type !== \"literal\") acc[part.type] = part.value;\n    return acc;\n  }, {});\n\n  return parts.year + \"-\" + parts.month + \"-\" + parts.day + \" \" + parts.hour + \":\" + parts.minute + \":\" + parts.second + \" SGT\";\n}\n\nfor (const chunk of chunkItems) {\n  const metadata = chunk.metadata || {};\n  const fileId = metadata.source_file_id || chunk.source_file_id || chunk.file_id;\n  if (!fileId) continue;\n  chunksByFileId.set(fileId, (chunksByFileId.get(fileId) || 0) + 1);\n}\n\nconst uniqueMetadataItems = [];\nconst seenMetadataKeys = new Set();\n\nfor (const metadata of metadataItems) {\n  const fileId = String(metadata.source_file_id || metadata.id || '').trim();\n  const fileName = String(metadata.source_file_name || metadata.name || '').trim().toLowerCase();\n  const key = fileId || fileName;\n\n  if (key && seenMetadataKeys.has(key)) continue;\n  if (key) seenMetadataKeys.add(key);\n\n  uniqueMetadataItems.push(metadata);\n}\n\nreturn uniqueMetadataItems.map((metadata, index) => {\n  const fileId = metadata.source_file_id || metadata.id || `unknown_file_${index + 1}`;\n  const rawFileName = metadata.source_file_name || metadata.name || 'unknown_file_name';\n  const fileUrl = driveFileUrl(fileId, metadata.google_drive_url);\n  let chunksCount = chunksByFileId.get(fileId);\n\n  if (chunksCount === undefined && metadataItems.length === 1) {\n    chunksCount = chunkItems.length;\n  }\n\n  return {\n    json: {\n      file_id: fileId,\n      file_name: plainSheetText(rawFileName),\n      file_url: fileUrl,\n      event_type: metadata.event_type || 'unknown',\n      status: 'completed',\n      chunks_count: chunksCount ?? '',\n      namespace: metadata.namespace || 'SpaceKonceptRental_kb',\n      modified_time: metadata.modified_time || '',\n      ingestion_key: metadata.ingestion_key || '',\n      execution_id: $execution.id,\n      ingested_at: singaporeTimestamp(),\n      error_message: ''\n    }\n  };\n});"
       },
       "id": "20000000-0000-4000-8000-000000000009",
       "name": "Prepare Ingestion Log",
@@ -316,7 +322,9 @@
             "namespace": "={{ $json.namespace }}",
             "execution_id": "={{ $json.execution_id }}",
             "ingested_at": "={{ $json.ingested_at }}",
-            "error_message": "={{ $json.error_message }}"
+            "error_message": "={{ $json.error_message }}",
+            "modified_time": "={{ $json.modified_time }}",
+            "ingestion_key": "={{ $json.ingestion_key }}"
           },
           "matchingColumns": [],
           "schema": [
@@ -377,6 +385,24 @@
             {
               "id": "namespace",
               "displayName": "namespace",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ingestion_key",
+              "displayName": "ingestion_key",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "modified_time",
+              "displayName": "modified_time",
               "required": false,
               "defaultMatch": false,
               "display": true,
@@ -527,7 +553,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const hostItems = $input.all();\nconst sourceItems = $items('Prepare Chunk Metadata');\n\nreturn hostItems.map((hostItem, index) => {\n  const sourceItem = sourceItems[index] || {};\n  const sourceJson = sourceItem.json || {};\n  const hostJson = hostItem.json?.body || hostItem.json || {};\n  const rawHost = hostJson.host || hostJson.database?.host || '';\n  const host = String(rawHost).replace(/^https?:\\/\\//, '').replace(/\\/$/, '');\n  const namespace = sourceJson.namespace || 'SpaceKonceptRental_kb';\n  const fileId = String(sourceJson.source_file_id || '').trim();\n  const fileName = String(sourceJson.source_file_name || '').trim();\n  const conditions = [];\n\n  if (!host) {\n    throw new Error('Pinecone index host was not returned by Resolve Pinecone Index Host');\n  }\n\n  if (fileId) conditions.push({ source_file_id: { $eq: fileId } });\n  if (fileName) conditions.push({ source_file_name: { $eq: fileName } });\n\n  if (!conditions.length) {\n    throw new Error('Cannot delete stale Pinecone vectors without source_file_id or source_file_name');\n  }\n\n  return {\n    json: {\n      ...sourceJson,\n      pinecone_index_host: host,\n      pinecone_delete_url: `https://${host}/vectors/delete`,\n      pinecone_delete_body: {\n        namespace,\n        filter: conditions.length === 1 ? conditions[0] : { $or: conditions }\n      }\n    },\n    binary: sourceItem.binary\n  };\n});"
+        "jsCode": "const PINECONE_KB_NAMESPACE = 'SpaceKonceptRental_kb';\nconst hostItems = $input.all();\nconst sourceItems = $items('Select Changed KB File');\n\nreturn hostItems.map((hostItem, index) => {\n  const sourceItem = sourceItems[index] || {};\n  const sourceJson = sourceItem.json || {};\n  const hostJson = hostItem.json?.body || hostItem.json || {};\n  const rawHost = hostJson.host || hostJson.database?.host || '';\n  const host = String(rawHost).replace(/^https?:\\/\\//, '').replace(/\\/$/, '');\n  const namespace = sourceJson.namespace || PINECONE_KB_NAMESPACE;\n  const rawFileId = String(sourceJson.source_file_id || '').trim();\n  const fileId = rawFileId && !rawFileId.startsWith('unknown_file_') ? rawFileId : '';\n  const fileName = String(sourceJson.source_file_name || '').trim();\n  const filenameFallbackReviewed = sourceJson.filename_fallback_reviewed === true || String(sourceJson.filename_fallback_reviewed || '').toLowerCase() === 'true';\n  let filter;\n\n  if (!host) {\n    throw new Error('Pinecone index host was not returned by Resolve Pinecone Index Host');\n  }\n\n  if (namespace !== PINECONE_KB_NAMESPACE) {\n    throw new Error(`Unexpected Pinecone namespace \"${namespace}\" for KB delete request`);\n  }\n\n  if (fileId) {\n    filter = { source_file_id: { $eq: fileId } };\n  } else if (fileName && filenameFallbackReviewed) {\n    filter = { source_file_name: { $eq: fileName } };\n  } else {\n    throw new Error('Cannot delete stale Pinecone vectors without stable source_file_id. Filename fallback requires filename_fallback_reviewed=true after manual uniqueness review.');\n  }\n\n  return {\n    json: {\n      ...sourceJson,\n      pinecone_index_host: host,\n      pinecone_delete_url: `https://${host}/vectors/delete`,\n      pinecone_delete_body: {\n        namespace: PINECONE_KB_NAMESPACE,\n        filter\n      }\n    },\n    binary: sourceItem.binary\n  };\n});"
       },
       "id": "20000000-0000-4000-8000-000000000016",
       "name": "Prepare Pinecone Delete Request",
@@ -564,7 +590,6 @@
           "response": {
             "response": {
               "fullResponse": true,
-              "neverError": true,
               "responseFormat": "json"
             }
           }
@@ -580,11 +605,12 @@
       ],
       "retryOnFail": true,
       "maxTries": 3,
-      "waitBetweenTries": 3000
+      "waitBetweenTries": 3000,
+      "onError": "continueRegularOutput"
     },
     {
       "parameters": {
-        "jsCode": "const deleteResults = $input.all();\nconst sourceItems = $items('Prepare Pinecone Delete Request');\n\nfor (let index = 0; index < deleteResults.length; index += 1) {\n  const result = deleteResults[index].json || {};\n  const statusCode = Number(result.statusCode || result.status || 200);\n  const body = result.body ?? result;\n  const bodyText = typeof body === 'string' ? body : JSON.stringify(body);\n  const message = typeof body === 'object' && body !== null ? String(body.message || body.error?.message || '') : bodyText;\n  const isSuccess = statusCode >= 200 && statusCode < 300;\n  const isFirstRunMissingNamespace = statusCode === 404 && /Namespace not found/i.test(message || bodyText);\n\n  if (!isSuccess && !isFirstRunMissingNamespace) {\n    const source = sourceItems[index]?.json || {};\n    const fileRef = source.source_file_name || source.source_file_id || `item ${index + 1}`;\n    throw new Error(`Pinecone delete failed for ${fileRef} (${statusCode}): ${bodyText}`);\n  }\n}\n\nreturn sourceItems.map((item) => ({\n  json: item.json,\n  binary: item.binary\n}));"
+        "jsCode": "const deleteResults = $input.all();\nconst sourceItems = $items('Prepare Pinecone Delete Request');\n\nfunction responseStatus(result) {\n  const error = result.error || {};\n  const statusCode = Number(result.statusCode || result.status || error.statusCode || error.status || error.httpCode || 0);\n  if (statusCode) return statusCode;\n  return result.error ? 500 : 200;\n}\n\nfunction responseBody(result) {\n  if (result.body !== undefined) return result.body;\n  if (result.error?.response?.body !== undefined) return result.error.response.body;\n  if (result.error?.message) return { message: result.error.message };\n  return result;\n}\n\nfor (let index = 0; index < deleteResults.length; index += 1) {\n  const result = deleteResults[index].json || {};\n  const statusCode = responseStatus(result);\n  const body = responseBody(result);\n  const bodyText = typeof body === 'string' ? body : JSON.stringify(body);\n  const message = typeof body === 'object' && body !== null ? String(body.message || body.error?.message || '') : bodyText;\n  const isSuccess = statusCode >= 200 && statusCode < 300;\n  const isFirstRunMissingNamespace = statusCode === 404 && /Namespace not found/i.test(message || bodyText);\n\n  if (!isSuccess && !isFirstRunMissingNamespace) {\n    const source = sourceItems[index]?.json || {};\n    const fileRef = source.source_file_id || source.source_file_name || `item ${index + 1}`;\n    throw new Error(`Pinecone delete failed for ${fileRef} (${statusCode}): ${bodyText}`);\n  }\n}\n\nreturn sourceItems.map((item) => ({\n  json: item.json,\n  binary: item.binary\n}));"
       },
       "id": "20000000-0000-4000-8000-000000000018",
       "name": "Restore Pinecone Ingestion Context",
@@ -670,6 +696,71 @@
       ],
       "id": "a23a7c0b-2920-499b-afa6-4e09b6d782ab",
       "name": "Default Data Loader"
+    },
+    {
+      "parameters": {
+        "operation": "read",
+        "documentId": {
+          "__rl": true,
+          "value": "1RhF1XDLluYhkB_d4dmODsSUfwqVGllXMgH4u3a1-6tQ",
+          "mode": "list",
+          "cachedResultName": "RAG_logs",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1RhF1XDLluYhkB_d4dmODsSUfwqVGllXMgH4u3a1-6tQ/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "kb_ingestion",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1RhF1XDLluYhkB_d4dmODsSUfwqVGllXMgH4u3a1-6tQ/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "file_id",
+              "lookupValue": "={{ $json.source_file_id }}"
+            },
+            {
+              "lookupColumn": "ingestion_key",
+              "lookupValue": "={{ $json.ingestion_key }}"
+            },
+            {
+              "lookupColumn": "namespace",
+              "lookupValue": "={{ $json.namespace || 'SpaceKonceptRental_kb' }}"
+            }
+          ]
+        },
+        "combineFilters": "AND",
+        "options": {
+          "returnFirstMatch": false,
+          "returnAllMatches": "returnAllMatches"
+        }
+      },
+      "id": "20000000-0000-4000-8000-000000000021",
+      "name": "Lookup KB Ingestion Log",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -16,
+        352
+      ],
+      "retryOnFail": true,
+      "maxTries": 6,
+      "waitBetweenTries": 15000,
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const PINECONE_KB_NAMESPACE = 'SpaceKonceptRental_kb';\nconst sourceItems = $items('Prepare Chunk Metadata');\nconst lookupRows = $input.all().map((item) => item.json || {});\n\nfunction clean(value) {\n  return String(value ?? '').trim();\n}\n\nfunction stableFileId(source) {\n  const fileId = clean(source.source_file_id);\n  return fileId && !fileId.startsWith('unknown_file_') ? fileId : '';\n}\n\nfunction matchesCompletedIngestion(row, source) {\n  const rowFileId = clean(row.file_id || row.source_file_id);\n  const rowNamespace = clean(row.namespace) || PINECONE_KB_NAMESPACE;\n  const rowIngestionKey = clean(row.ingestion_key);\n  const rowModifiedTime = clean(row.modified_time);\n  const sourceFileId = stableFileId(source);\n  const sourceIngestionKey = clean(source.ingestion_key);\n  const sourceModifiedTime = clean(source.modified_time);\n  const status = clean(row.status).toLowerCase();\n\n  if (!sourceFileId || rowFileId !== sourceFileId) return false;\n  if (rowNamespace !== PINECONE_KB_NAMESPACE) return false;\n  if (status !== 'completed') return false;\n\n  return (rowIngestionKey && rowIngestionKey === sourceIngestionKey) ||\n    (rowModifiedTime && sourceModifiedTime && rowModifiedTime === sourceModifiedTime);\n}\n\nconst changedItems = [];\n\nfor (const sourceItem of sourceItems) {\n  const source = sourceItem.json || {};\n  const fileId = stableFileId(source);\n  const ingestionKey = clean(source.ingestion_key);\n\n  if (!fileId || !ingestionKey) {\n    changedItems.push({\n      json: {\n        ...source,\n        dedupe_lookup_status: 'missing_stable_key',\n      },\n      binary: sourceItem.binary,\n    });\n    continue;\n  }\n\n  if (lookupRows.some((row) => matchesCompletedIngestion(row, source))) {\n    continue;\n  }\n\n  changedItems.push({\n    json: {\n      ...source,\n      dedupe_lookup_status: 'changed_or_new',\n    },\n    binary: sourceItem.binary,\n  });\n}\n\nreturn changedItems;"
+      },
+      "id": "20000000-0000-4000-8000-000000000022",
+      "name": "Select Changed KB File",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        208,
+        352
+      ]
     }
   ],
   "connections": {
@@ -710,7 +801,7 @@
       "main": [
         [
           {
-            "node": "Resolve Pinecone Index Host",
+            "node": "Lookup KB Ingestion Log",
             "type": "main",
             "index": 0
           }
@@ -855,6 +946,28 @@
           {
             "node": "Insert Chunks into Pinecone",
             "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lookup KB Ingestion Log": {
+      "main": [
+        [
+          {
+            "node": "Select Changed KB File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Select Changed KB File": {
+      "main": [
+        [
+          {
+            "node": "Resolve Pinecone Index Host",
+            "type": "main",
             "index": 0
           }
         ]
