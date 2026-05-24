@@ -22,6 +22,7 @@ customer-support-agent capstone requirements.
 
 - `n8n-workflows/` - importable n8n workflow JSON exports.
 - `kb/` - Markdown files to upload into the Google Drive knowledge-base folder.
+- `docs/` - operator runbooks and post-security smoke-test notes.
 - `presentation/` - capstone walkthrough deck.
 - `scripts/` - local workflow validation.
 - `website/` - simple static website demo that embeds the live support chat.
@@ -74,11 +75,15 @@ Run:
 
 ```bash
 npm run validate:n8n
+npm run test:n8n-validation
 ```
 
 Current warning categories are expected when the local exports intentionally
 include configured emails, Pinecone values, Google Drive folders, and Google
 Sheets selections for import.
+
+Before final runtime smoke testing, use the manual security closure runbook in
+`docs/security-smoke-test-runbook.md`.
 
 ## Manual Test Checklist
 
@@ -109,6 +114,9 @@ must not connect the public AI Agent to persisted AI memory keyed by client
 session values. Current compensating controls include debounce, dedupe, safe
 Sheets writes, escaped emails, bounded transcripts, and stateless public chat.
 Full mitigation belongs in the future authenticated/backend-mediated UI.
+
+The website pins `@n8n/chat` and sets `loadPreviousSession: false`. Keep real
+webhook URLs in ignored local or deploy-time config only.
 
 For final submission, deploy this static folder or the repo root to a simple
 host such as Netlify or GitHub Pages. Do not commit temporary tunnel URLs such
