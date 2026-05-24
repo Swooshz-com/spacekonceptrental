@@ -30,6 +30,7 @@ const currentNodeTypeVersions = {
 };
 
 let activeFail = null;
+const PINECONE_KB_NAMESPACE = 'SpaceKonceptRental_kb';
 
 function fail(message) {
   if (typeof activeFail !== 'function') {
@@ -1094,6 +1095,136 @@ function checkRagIngestionLoggingContract(workflow, relative) {
   }
 }
 
+function checkRagIngestionDataPlaneSafety(workflow, relative) {
+  if (workflow.name !== 'SpaceKonceptRental - KB Ingestion to Pinecone') {
+    return;
+  }
+
+  const prepareMetadataNode = findWorkflowNode(workflow, 'Prepare Chunk Metadata');
+  const namespaceAssignment = findAssignment(prepareMetadataNode, 'namespace');
+  const ingestionKeyAssignment = findAssignment(prepareMetadataNode, 'ingestion_key');
+  if (namespaceAssignment?.value !== PINECONE_KB_NAMESPACE) {
+    fail(`${relative} RAG ingestion Pinecone operations must explicitly use namespace ${PINECONE_KB_NAMESPACE}.`);
+  }
+  if (!String(ingestionKeyAssignment?.value || '').includes('source_file_id') && !String(ingestionKeyAssignment?.value || '').includes('fileId')) {
+    fail(`${relative} Prepare Chunk Metadata must build ingestion_key from stable source file keys.`);
+  }
+  if (!String(ingestionKeyAssignment?.value || '').includes('modifiedTime')) {
+    fail(`${relative} Prepare Chunk Metadata must include modifiedTime in ingestion_key so unchanged files can be skipped.`);
+  }
+  if (!String(ingestionKeyAssignment?.value || '').includes(PINECONE_KB_NAMESPACE)) {
+    fail(`${relative} Prepare Chunk Metadata ingestion_key must include namespace ${PINECONE_KB_NAMESPACE}.`);
+  }
+
+  const insertNode = findWorkflowNode(workflow, 'Insert Chunks into Pinecone');
+  if (insertNode?.type !== '@n8n/n8n-nodes-langchain.vectorStorePinecone' || insertNode.parameters?.mode !== 'insert') {
+    fail(`${relative} Insert Chunks into Pinecone must remain a Pinecone insert node.`);
+  }
+  const insertNamespace = String(insertNode?.parameters?.options?.pineconeNamespace || '');
+  if (!insertNamespace.includes(PINECONE_KB_NAMESPACE)) {
+    fail(`${relative} RAG ingestion Pinecone operations must explicitly use namespace ${PINECONE_KB_NAMESPACE}.`);
+  }
+
+  const deletePrepNode = findWorkflowNode(workflow, 'Prepare Pinecone Delete Request');
+  const deletePrepCode = String(deletePrepNode?.parameters?.jsCode || '');
+  if (!deletePrepCode.includes(`const PINECONE_KB_NAMESPACE = '${PINECONE_KB_NAMESPACE}'`) ||
+    !deletePrepCode.includes('namespace: PINECONE_KB_NAMESPACE')) {
+    fail(`${relative} RAG ingestion Pinecone operations must explicitly use namespace ${PINECONE_KB_NAMESPACE}.`);
+  }
+  if (deletePrepCode.includes('$or') && deletePrepCode.includes('source_file_id') && deletePrepCode.includes('source_file_name')) {
+    fail(`${relative} Prepare Pinecone Delete Request must prefer source_file_id and must not combine source_file_name fallback with source_file_id using $or.`);
+  }
+  requireCodeSnippets(relative, 'Prepare Pinecone Delete Request', deletePrepCode, [
+    'filter = { source_file_id: { $eq: fileId } };',
+    'filenameFallbackReviewed',
+    'filter = { source_file_name: { $eq: fileName } };',
+    'Filename fallback requires filename_fallback_reviewed=true',
+  ], 'must prefer source_file_id and allow filename fallback only after manual uniqueness review.');
+
+  const deleteNode = findWorkflowNode(workflow, 'Delete Existing Pinecone File Chunks');
+  const neverError = deleteNode?.parameters?.options?.response?.response?.neverError;
+  if (neverError === true) {
+    fail(`${relative} Delete Existing Pinecone File Chunks must not set neverError true because it bypasses retryOnFail for 429 and 5xx responses.`);
+  }
+  if (deleteNode?.retryOnFail !== true || Number(deleteNode?.maxTries || 0) < 3) {
+    fail(`${relative} Delete Existing Pinecone File Chunks must keep retryOnFail with at least 3 tries.`);
+  }
+  if (deleteNode?.onError !== 'continueRegularOutput') {
+    fail(`${relative} Delete Existing Pinecone File Chunks must continue to Restore Pinecone Ingestion Context after retries so allowed 404 Namespace not found responses can be handled explicitly.`);
+  }
+
+  const restoreNode = findWorkflowNode(workflow, 'Restore Pinecone Ingestion Context');
+  const restoreCode = String(restoreNode?.parameters?.jsCode || '');
+  requireCodeSnippets(relative, 'Restore Pinecone Ingestion Context', restoreCode, [
+    'result.error',
+    'Namespace not found',
+    'statusCode >= 200 && statusCode < 300',
+    'throw new Error(`Pinecone delete failed',
+  ], 'must classify Pinecone delete responses after retry-safe HTTP handling.');
+
+  const lookupNode = findWorkflowNode(workflow, 'Lookup KB Ingestion Log');
+  if (!lookupNode ||
+    lookupNode.type !== 'n8n-nodes-base.googleSheets' ||
+    (lookupNode.parameters?.operation || 'read') !== 'read') {
+    fail(`${relative} RAG ingestion must lookup kb_ingestion by stable file keys before Pinecone cleanup.`);
+    return;
+  }
+
+  const lookupFilters = Array.isArray(lookupNode.parameters?.filtersUI?.values)
+    ? lookupNode.parameters.filtersUI.values
+    : [];
+  const hasFileIdFilter = lookupFilters.some((filter) =>
+    filter?.lookupColumn === 'file_id' &&
+    String(filter?.lookupValue || '').includes('source_file_id')
+  );
+  const hasIngestionKeyFilter = lookupFilters.some((filter) =>
+    filter?.lookupColumn === 'ingestion_key' &&
+    String(filter?.lookupValue || '').includes('ingestion_key')
+  );
+  const hasNamespaceFilter = lookupFilters.some((filter) =>
+    filter?.lookupColumn === 'namespace' &&
+    String(filter?.lookupValue || '').includes(PINECONE_KB_NAMESPACE)
+  );
+  if (!hasFileIdFilter || !hasIngestionKeyFilter || !hasNamespaceFilter || lookupNode.parameters?.combineFilters === 'OR') {
+    fail(`${relative} RAG ingestion must lookup kb_ingestion by stable file keys before Pinecone cleanup.`);
+  }
+  if (lookupNode.alwaysOutputData !== true) {
+    fail(`${relative} Lookup KB Ingestion Log must keep alwaysOutputData true so new files continue when no dedupe row exists.`);
+  }
+
+  const selectorNode = findWorkflowNode(workflow, 'Select Changed KB File');
+  const selectorCode = String(selectorNode?.parameters?.jsCode || '');
+  requireCodeSnippets(relative, 'Select Changed KB File', selectorCode, [
+    "$items('Prepare Chunk Metadata')",
+    'ingestion_key',
+    'source_file_id',
+    'modified_time',
+    'status',
+    'return changedItems;',
+  ], 'must drop unchanged files before Pinecone cleanup and vector insertion.');
+
+  if (!hasConnection(workflow, 'Prepare Chunk Metadata', 0, 'Lookup KB Ingestion Log') ||
+    !hasConnection(workflow, 'Lookup KB Ingestion Log', 0, 'Select Changed KB File') ||
+    !hasConnection(workflow, 'Select Changed KB File', 0, 'Resolve Pinecone Index Host')) {
+    fail(`${relative} RAG ingestion must lookup kb_ingestion by stable file keys before Pinecone cleanup.`);
+  }
+  if (hasConnection(workflow, 'Prepare Chunk Metadata', 0, 'Resolve Pinecone Index Host')) {
+    fail(`${relative} RAG ingestion must not bypass the dedupe lookup before Pinecone cleanup.`);
+  }
+
+  const appendLogNode = findWorkflowNode(workflow, 'Append KB Ingestion Log');
+  const appendValues = appendLogNode?.parameters?.columns?.value || {};
+  const prepareLogNode = findWorkflowNode(workflow, 'Prepare Ingestion Log');
+  const prepareLogCode = String(prepareLogNode?.parameters?.jsCode || '');
+  if (!prepareLogCode.includes("$items('Select Changed KB File')")) {
+    fail(`${relative} Prepare Ingestion Log must read deduped Select Changed KB File metadata so unchanged replays do not append log rows.`);
+  }
+  if (!String(appendValues.modified_time || '').includes('modified_time') ||
+    !String(appendValues.ingestion_key || '').includes('ingestion_key')) {
+    fail(`${relative} Append KB Ingestion Log must persist modified_time and ingestion_key for RAG dedupe lookup.`);
+  }
+}
+
 function validateWorkflow(context) {
   const { workflow, relative, fail: reportFailure } = context;
   activeFail = reportFailure;
@@ -1107,6 +1238,7 @@ function validateWorkflow(context) {
     checkCustomerSupportAgentLoggingContract(workflow, relative);
     checkGlobalErrorHandlerContract(workflow, relative);
     checkRagIngestionLoggingContract(workflow, relative);
+    checkRagIngestionDataPlaneSafety(workflow, relative);
   } finally {
     activeFail = null;
   }
