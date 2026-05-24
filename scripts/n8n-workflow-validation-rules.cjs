@@ -194,6 +194,18 @@ function findWorkflowNode(workflow, nodeName) {
   return (workflow.nodes || []).find((node) => node.name === nodeName);
 }
 
+function nodeReceivesConnectionType(workflow, targetName, connectionType) {
+  for (const connection of Object.values(workflow.connections || {})) {
+    const groups = connection?.[connectionType];
+    if (!Array.isArray(groups)) continue;
+    for (const group of groups) {
+      if (!Array.isArray(group)) continue;
+      if (group.some((edge) => edge?.node === targetName)) return true;
+    }
+  }
+  return false;
+}
+
 function findAssignment(node, assignmentName) {
   return node?.parameters?.assignments?.assignments?.find((entry) => entry?.name === assignmentName);
 }
@@ -348,6 +360,27 @@ function checkCustomerSupportAgentFallback(workflow, relative) {
   const fallbackTargets = connectionTargets(workflow, 'Build Internal Error Context', 0);
   if (fallbackTargets.includes('Notify Main Error Handler') && fallbackTargets.includes('Send Fallback Reply') && fallbackTargets[0] !== 'Notify Main Error Handler') {
     fail(`${relative} Notify Main Error Handler must stay before Send Fallback Reply in the exported fallback branch order.`);
+  }
+}
+
+function checkPublicChatIsStateless(workflow, relative) {
+  const hasPublicChatTrigger = (workflow.nodes || []).some((node) =>
+    node.type === '@n8n/n8n-nodes-langchain.chatTrigger' &&
+    node.parameters?.public === true
+  );
+  if (!hasPublicChatTrigger) {
+    return;
+  }
+
+  const memoryBackedAgents = (workflow.nodes || [])
+    .filter((node) =>
+      node.type === '@n8n/n8n-nodes-langchain.agent' &&
+      nodeReceivesConnectionType(workflow, node.name, 'ai_memory')
+    )
+    .map((node) => node.name);
+
+  if (memoryBackedAgents.length > 0) {
+    fail(`${relative} public Chat Trigger workflows must not connect AI Agent nodes to AI memory; remove persisted AI memory from ${memoryBackedAgents.join(', ')}.`);
   }
 }
 
@@ -1234,6 +1267,7 @@ function validateWorkflow(context) {
     checkIngestionFileNamePlainText(workflow, relative);
     checkCurrentNodeTypeVersions(workflow, relative);
     checkCustomerSupportAgentFallback(workflow, relative);
+    checkPublicChatIsStateless(workflow, relative);
     checkCustomerSupportAgentDedupeAndResponseMode(workflow, relative);
     checkCustomerSupportAgentLoggingContract(workflow, relative);
     checkGlobalErrorHandlerContract(workflow, relative);

@@ -199,9 +199,9 @@ Working notes for the final presentation. These are the practical issues found w
 ## AI agent design notes
 
 - Question raised: whether the AI agent needs memory.
-  - Current capstone decision: keep Simple Conversation Memory for natural short-term chat context, but do not use it as the audit log, queue, dedupe system, or source of truth for routing.
-  - Future website deployment decision: add proper conversation/session memory if users return across multiple sessions and expect continuity.
-  - Presentation point: capstone scope separates conversational convenience from operational records.
+  - Current capstone decision: keep the public demo chat stateless because browser-controlled session ids are not an authentication boundary.
+  - Future website deployment decision: add proper authenticated/backend-mediated conversation memory if users return across multiple sessions and expect continuity.
+  - Presentation point: capstone scope separates conversational convenience from operational records and avoids persisted public AI memory until auth exists.
 
 ## Current production-readiness direction
 

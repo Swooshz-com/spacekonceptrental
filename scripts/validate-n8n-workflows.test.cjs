@@ -23,11 +23,13 @@ const ragIngestionWorkflowPath = path.join(
 );
 const validatorPath = path.join(repoRoot, 'scripts', 'validate-n8n-workflows.cjs');
 const exportHelperPath = path.join(repoRoot, 'scripts', 'export-n8n-workflows-live.ps1');
+const websiteIndexPath = path.join(repoRoot, 'website', 'index.html');
+const pinnedN8nChatVersion = '1.21.0';
 
 function makeTempRoot() {
-  const baseDir = path.join(repoRoot, '.tmp');
+  const baseDir = os.tmpdir();
   fs.mkdirSync(baseDir, { recursive: true });
-  return fs.mkdtempSync(path.join(baseDir, 'n8n-validation-test-'));
+  return fs.mkdtempSync(path.join(baseDir, 'spacekonceptrental-n8n-validation-test-'));
 }
 
 function readCustomerSupportWorkflow() {
@@ -87,6 +89,15 @@ function runValidator(args, options = {}) {
       ...options.env,
     },
   });
+}
+
+function gitLsFiles(args) {
+  const result = spawnSync('git', ['ls-files', ...args], {
+    cwd: repoRoot,
+    encoding: 'utf8',
+  });
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+  return result.stdout.split(/\r?\n/).filter(Boolean);
 }
 
 function readText(filePath) {
@@ -402,6 +413,75 @@ test('prepared-import validation keeps repo-specific rules enabled for prepared 
   } finally {
     fs.rmSync(tempRoot, { recursive: true, force: true });
   }
+});
+
+test('normal validation rejects public chat workflows with AI memory connections', () => {
+  const tempRoot = makeTempRoot();
+  try {
+    const workflowDir = path.join(tempRoot, 'n8n-workflows');
+    const workflow = readCustomerSupportWorkflow();
+    if (!workflow.nodes.some((node) => node.name === 'Simple Conversation Memory')) {
+      workflow.nodes.push({
+        parameters: {},
+        id: 'test-simple-conversation-memory',
+        name: 'Simple Conversation Memory',
+        type: '@n8n/n8n-nodes-langchain.memoryBufferWindow',
+        typeVersion: 1.4,
+        position: [-352, 1680],
+      });
+    }
+    workflow.connections['Simple Conversation Memory'] = {
+      ai_memory: [[{ node: 'SpaceKonceptRental AI Agent', type: 'ai_memory', index: 0 }]],
+    };
+    writeWorkflow(workflowDir, 'spacekonceptrental-customer-support-agent.workflow.json', workflow);
+
+    const result = runValidator([workflowDir]);
+
+    assert.notEqual(result.status, 0, result.stdout + result.stderr);
+    assert.match(
+      result.stderr + result.stdout,
+      /public Chat Trigger workflows must not connect AI Agent nodes to AI memory/,
+    );
+  } finally {
+    fs.rmSync(tempRoot, { recursive: true, force: true });
+  }
+});
+
+test('website chat widget stays stateless and pins n8n chat CDN assets', () => {
+  const html = readText(websiteIndexPath);
+
+  assert.match(html, /loadPreviousSession:\s*false/);
+  assert.doesNotMatch(html, /loadPreviousSession:\s*true/);
+  assert.match(
+    html,
+    new RegExp(`https://cdn\\.jsdelivr\\.net/npm/@n8n/chat@${pinnedN8nChatVersion.replace(/\./g, '\\.')}/dist/style\\.css`),
+  );
+  assert.match(
+    html,
+    new RegExp(`https://cdn\\.jsdelivr\\.net/npm/@n8n/chat@${pinnedN8nChatVersion.replace(/\./g, '\\.')}/dist/chat\\.bundle\\.es\\.js`),
+  );
+  assert.doesNotMatch(html, /https:\/\/cdn\.jsdelivr\.net\/npm\/@n8n\/chat\/dist\//);
+  assert.doesNotMatch(html, /@n8n\/chat@[0-9]+\.[0-9]+\.[0-9]+[-+][^/"]+/);
+});
+
+test('tracked frontend config and docs do not commit real chat webhook URLs', () => {
+  const trackedFiles = gitLsFiles(['README.md', 'testing-plan.md', 'website']);
+  const realChatWebhookUrls = [];
+
+  for (const file of trackedFiles) {
+    if (!/\.(?:html|js|md)$/i.test(file)) continue;
+    const text = readText(path.join(repoRoot, file));
+    const urls = text.match(/https?:\/\/[^\s"'`<>)]+/g) || [];
+    for (const url of urls) {
+      const isChatWebhook = /\/webhook(?:-test)?\//i.test(url);
+      const isPlaceholder = url === 'https://your-n8n-host.example/webhook/YOUR_CHAT_TRIGGER_ID/chat';
+      if (isChatWebhook && !isPlaceholder) {
+        realChatWebhookUrls.push(`${file}: ${url}`);
+      }
+    }
+  }
+
+  assert.deepEqual(realChatWebhookUrls, []);
 });
 
 test('normal validation rejects raw customer Gmail HTML interpolation', () => {
