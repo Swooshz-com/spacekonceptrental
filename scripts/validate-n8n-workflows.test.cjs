@@ -465,12 +465,14 @@ test('website chat widget stays stateless and pins n8n chat CDN assets', () => {
 });
 
 test('tracked frontend config and docs do not commit real chat webhook URLs', () => {
-  const trackedFiles = gitLsFiles(['README.md', 'testing-plan.md', 'website']);
+  const trackedFiles = gitLsFiles(['--', 'README.md', 'testing-plan.md', 'docs', 'website']);
   const realChatWebhookUrls = [];
 
   for (const file of trackedFiles) {
     if (!/\.(?:html|js|md)$/i.test(file)) continue;
-    const text = readText(path.join(repoRoot, file));
+    const absolutePath = path.join(repoRoot, file);
+    if (!fs.existsSync(absolutePath)) continue;
+    const text = readText(absolutePath);
     const urls = text.match(/https?:\/\/[^\s"'`<>)]+/g) || [];
     for (const url of urls) {
       const isChatWebhook = /\/webhook(?:-test)?\//i.test(url);

@@ -4,12 +4,14 @@ Use this plan to validate the SpaceKonceptRental capstone workflows from a clean
 Codex session on another PC.
 
 Date context: this plan was written on 2026-05-18 SGT for testing on
-2026-05-19 SGT.
+2026-05-19 SGT. For final post-security runtime smoke testing, also use
+`docs/security-smoke-test-runbook.md`.
 
 ## Goals
 
 - Confirm the repo workflow JSON still validates.
-- Confirm live n8n import/export keeps the repo and local n8n in sync.
+- Confirm owner-run live n8n import/export prep keeps the repo and local n8n in
+  sync when the owner chooses to run it.
 - Confirm KB/RAG answers are natural customer replies, not JSON.
 - Confirm rapid chat messages are debounced and merged instead of answered too
   early.
@@ -23,11 +25,15 @@ Date context: this plan was written on 2026-05-18 SGT for testing on
 - Do not delete or clear Google Sheets rows unless the user explicitly confirms.
 - Keep sheet headers. If clearing test data, clear data rows only.
 - Do not commit `.n8n-local/` or `.tmp/`.
+- Do not commit live exports/imports, credential bindings, webhook IDs, runtime
+  payloads, private keys, `.env` files, or local security CSVs.
 - Do not expose secrets, tokens, cookies, OAuth values, or API keys in chat or
   repo files.
 - Before activating, deactivating, publishing, importing, exporting, or testing
   live n8n, state the target and confirm it is the user's local/staging n8n
   instance.
+- Live n8n, Docker, import/export, and credential actions are owner-only manual
+  steps. Do not run them from automated cleanup or validation.
 
 ## Repo Baseline
 
@@ -41,7 +47,7 @@ npm.cmd run validate:n8n
 
 Expected:
 
-- Branch should normally be `dev`.
+- Branch should be the intended test branch.
 - `npm.cmd run validate:n8n` should finish with `errors 0`.
 - Warnings about configured emails, Google Sheets URLs, Drive IDs, Pinecone URLs,
   and production-looking URLs are expected for this capstone repo.
@@ -49,14 +55,19 @@ Expected:
 If validation fails, stop and fix the repo workflow JSON or validator before live
 testing.
 
-## Live Import And Export Check
+## Owner-Only Live Import And Export Check
 
 Target: local n8n Docker container named `n8n`.
+
+Do not run these commands automatically. The owner may run them manually only
+after confirming the target is the intended local or staging n8n instance.
 
 Run:
 
 ```powershell
+.\scripts\import-n8n-workflows-live.ps1 -DryRun
 .\scripts\import-n8n-workflows-live.ps1
+.\scripts\export-n8n-workflows-live.ps1 -DryRun
 .\scripts\export-n8n-workflows-live.ps1
 npm.cmd run validate:n8n
 git status --short
@@ -74,12 +85,8 @@ Important live-state note:
 
 - Import/export may leave workflows inactive. Before testing chat, open n8n and
   intentionally activate or execute the customer support workflow.
-- If import warns about previously active or scheduled workflows, restart the
-  local container before trusting activation state:
-
-```powershell
-docker restart n8n
-```
+- If import warns about previously active or scheduled workflows, the owner
+  should restart the intended local n8n runtime before trusting activation state.
 
 ## Required Sheets
 
@@ -134,7 +141,8 @@ Open the customer support workflow in n8n and verify:
   connection. `session_id` is still used for logging, debounce, dedupe, and
   operator transcript context.
 - Chat Trigger response mode uses response nodes.
-- Chat Trigger remains public for the temporary demo flow.
+- Chat Trigger remains public for the temporary demo flow. This is an accepted
+  temporary demo risk until a future authenticated or backend-mediated UI exists.
 - `SpaceKonceptRental AI Agent` has streaming off.
 - `Agent Structured Output Parser` is connected.
 - Google Sheets, Gmail, OpenAI/Gemini, Pinecone, and Drive credentials are
@@ -144,6 +152,9 @@ Open the customer support workflow in n8n and verify:
 - Conversation transcripts in notification emails are bounded to the newest 12
   rows and about 6000 characters, with `[Transcript truncated]` shown when
   context is shortened.
+- `website/index.html` pins `@n8n/chat` and sets `loadPreviousSession: false`.
+- Real chat webhook URLs are provided only through ignored local or deploy-time
+  config, not committed files.
 
 ## Test Matrix
 
@@ -337,7 +348,8 @@ Expected:
 
 Testing passes when:
 
-- Repo validation passes after import/export.
+- Repo validation passes, and still passes after owner-run import/export if that
+  check is performed.
 - Chat replies are natural text, never JSON.
 - Rapid messages are merged into one effective AI turn.
 - No normal test leaves rows stuck at `queued` or `processing`.
@@ -366,5 +378,5 @@ npm.cmd run validate:n8n
 git status --short
 ```
 
-Do not patch live-only changes without exporting them back into the repo and
-validating.
+Do not patch live-only changes without owner-approved export back into the repo
+and validation.
