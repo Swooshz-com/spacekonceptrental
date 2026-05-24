@@ -22,6 +22,7 @@ const ragIngestionWorkflowPath = path.join(
   'spacekonceptrental-rag-ingestion.workflow.json',
 );
 const validatorPath = path.join(repoRoot, 'scripts', 'validate-n8n-workflows.cjs');
+const exportHelperPath = path.join(repoRoot, 'scripts', 'export-n8n-workflows-live.ps1');
 
 function makeTempRoot() {
   const baseDir = path.join(repoRoot, '.tmp');
@@ -87,6 +88,273 @@ function runValidator(args, options = {}) {
     },
   });
 }
+
+function readText(filePath) {
+  return fs.readFileSync(filePath, 'utf8').replace(/\r\n/g, '\n');
+}
+
+function findPowerShell() {
+  for (const command of process.platform === 'win32' ? ['powershell', 'pwsh'] : ['pwsh', 'powershell']) {
+    const result = spawnSync(command, ['-NoProfile', '-Command', '$PSVersionTable.PSVersion.ToString()'], { encoding: 'utf8' });
+    if (result.status === 0) return command;
+  }
+  return null;
+}
+
+function psSingleQuoted(value) {
+  return `'${String(value).replace(/'/g, "''")}'`;
+}
+
+function writeRunDirectoryHarness(root) {
+  const safeDir = path.join(root, '.tmp', 'n8n-live-exports');
+  const safeForwardDir = `${root.replace(/\\/g, '/')}/.tmp/n8n-live-exports-forward`;
+  const tmpRoot = path.join(root, '.tmp');
+  const repoOutsideTmp = path.join(root, 'n8n-workflows');
+  const outsideRoot = path.join(root, '..', `${path.basename(root)}-outside`);
+  const outsideTmp = path.join(outsideRoot, 'n8n-live-exports');
+  const traversalOutsideTmp = path.join(root, '.tmp', 'n8n-live-exports', '..', '..', 'outside-tmp');
+  const filesystemRoot = path.parse(root).root;
+
+  fs.mkdirSync(safeDir, { recursive: true });
+  fs.writeFileSync(path.join(safeDir, 'old.txt'), 'old staging payload', 'utf8');
+  fs.mkdirSync(tmpRoot, { recursive: true });
+  fs.mkdirSync(repoOutsideTmp, { recursive: true });
+  fs.mkdirSync(outsideTmp, { recursive: true });
+
+  const harnessPath = path.join(root, 'run-directory-harness.ps1');
+  fs.writeFileSync(harnessPath, `
+$ErrorActionPreference = "Stop"
+$RepoRoot = ${psSingleQuoted(root)}
+$sourceFile = ${psSingleQuoted(exportHelperPath)}
+$tokens = $null
+$errors = $null
+$ast = [System.Management.Automation.Language.Parser]::ParseFile($sourceFile, [ref]$tokens, [ref]$errors)
+if ($errors.Count -gt 0) {
+  throw "Could not parse source helper: $($errors[0].Message)"
+}
+$functionNames = @(
+  "Get-PathStringComparison",
+  "Get-NormalizedFullPath",
+  "Test-PathIsStrictChild",
+  "Test-PathItemIsUnsafeLink",
+  "Assert-RunDirectoryPathHasNoUnsafeLinks",
+  "Initialize-RunDirectory"
+)
+$functions = $ast.FindAll({
+  param($node)
+  $node -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $functionNames -contains $node.Name
+}, $true)
+foreach ($function in $functions) {
+  Invoke-Expression $function.Extent.Text
+}
+if (-not (Get-Command Initialize-RunDirectory -ErrorAction SilentlyContinue)) {
+  throw "Initialize-RunDirectory not loaded"
+}
+
+function Assert-Rejected($Label, $RunDirectory) {
+  try {
+    Initialize-RunDirectory $RunDirectory
+    throw "accepted unsafe path: $Label"
+  } catch {
+    if ($_.Exception.Message -like "accepted unsafe path:*") {
+      throw
+    }
+    Write-Output "REJECTED=$Label"
+  }
+}
+
+Initialize-RunDirectory ${psSingleQuoted(safeDir)}
+if (-not (Test-Path -LiteralPath ${psSingleQuoted(safeDir)} -PathType Container)) {
+  throw "safe child was not recreated"
+}
+if (Test-Path -LiteralPath ${psSingleQuoted(path.join(safeDir, 'old.txt'))}) {
+  throw "safe child was not cleared"
+}
+Write-Output "ACCEPTED=safe child"
+
+Initialize-RunDirectory ${psSingleQuoted(safeForwardDir)}
+if (-not (Test-Path -LiteralPath ${psSingleQuoted(safeForwardDir)} -PathType Container)) {
+  throw "forward-separator safe child was not created"
+}
+Write-Output "ACCEPTED=forward separator child"
+
+Assert-Rejected ".tmp itself" ${psSingleQuoted(tmpRoot)}
+Assert-Rejected "repo root" ${psSingleQuoted(root)}
+Assert-Rejected "filesystem root" ${psSingleQuoted(filesystemRoot)}
+Assert-Rejected "repo child outside .tmp" ${psSingleQuoted(repoOutsideTmp)}
+Assert-Rejected "outside repo" ${psSingleQuoted(outsideTmp)}
+Assert-Rejected "traversal outside .tmp" ${psSingleQuoted(traversalOutsideTmp)}
+`, 'utf8');
+
+  return { harnessPath, cleanupPaths: [outsideRoot] };
+}
+
+function tryCreateDirectoryLink(targetPath, linkPath) {
+  const linkType = process.platform === 'win32' ? 'junction' : 'dir';
+  try {
+    fs.symlinkSync(targetPath, linkPath, linkType);
+    return null;
+  } catch (error) {
+    return `${error.code || error.name}: ${error.message}`;
+  }
+}
+
+function writeRunDirectoryLinkHarness(root) {
+  const tmpRoot = path.join(root, '.tmp');
+  const outsideRoot = path.join(root, 'outside-targets');
+  const directTarget = path.join(outsideRoot, 'direct-target');
+  const nestedTarget = path.join(outsideRoot, 'nested-target');
+  const nestedTargetChild = path.join(nestedTarget, 'n8n-live-exports');
+  const directLink = path.join(tmpRoot, 'n8n-live-exports');
+  const nestedLink = path.join(tmpRoot, 'link');
+  const nestedLinkedRunDirectory = path.join(nestedLink, 'n8n-live-exports');
+  const directSentinel = path.join(directTarget, 'outside-target.txt');
+  const nestedSentinel = path.join(nestedTargetChild, 'outside-target.txt');
+
+  fs.mkdirSync(tmpRoot, { recursive: true });
+  fs.mkdirSync(directTarget, { recursive: true });
+  fs.mkdirSync(nestedTargetChild, { recursive: true });
+  fs.writeFileSync(directSentinel, 'direct outside target must remain', 'utf8');
+  fs.writeFileSync(nestedSentinel, 'nested outside target must remain', 'utf8');
+
+  const directLinkError = tryCreateDirectoryLink(directTarget, directLink);
+  if (directLinkError) return { skipped: `could not create direct directory link: ${directLinkError}` };
+
+  const nestedLinkError = tryCreateDirectoryLink(nestedTarget, nestedLink);
+  if (nestedLinkError) return { skipped: `could not create nested directory link: ${nestedLinkError}` };
+
+  const harnessPath = path.join(root, 'run-directory-link-harness.ps1');
+  fs.writeFileSync(harnessPath, `
+$ErrorActionPreference = "Stop"
+$RepoRoot = ${psSingleQuoted(root)}
+$sourceFile = ${psSingleQuoted(exportHelperPath)}
+$tokens = $null
+$errors = $null
+$ast = [System.Management.Automation.Language.Parser]::ParseFile($sourceFile, [ref]$tokens, [ref]$errors)
+if ($errors.Count -gt 0) {
+  throw "Could not parse source helper: $($errors[0].Message)"
+}
+$functionNames = @(
+  "Get-PathStringComparison",
+  "Get-NormalizedFullPath",
+  "Test-PathIsStrictChild",
+  "Test-PathItemIsUnsafeLink",
+  "Assert-RunDirectoryPathHasNoUnsafeLinks",
+  "Initialize-RunDirectory"
+)
+$functions = $ast.FindAll({
+  param($node)
+  $node -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $functionNames -contains $node.Name
+}, $true)
+foreach ($function in $functions) {
+  Invoke-Expression $function.Extent.Text
+}
+
+function Assert-Rejected($Label, $RunDirectory) {
+  try {
+    Initialize-RunDirectory $RunDirectory
+    throw "accepted unsafe path: $Label"
+  } catch {
+    if ($_.Exception.Message -like "accepted unsafe path:*") {
+      throw
+    }
+    Write-Output "REJECTED=$Label"
+  }
+}
+
+Assert-Rejected "run directory link" ${psSingleQuoted(directLink)}
+Assert-Rejected "nested link component" ${psSingleQuoted(nestedLinkedRunDirectory)}
+
+if (-not (Test-Path -LiteralPath ${psSingleQuoted(directSentinel)} -PathType Leaf)) {
+  throw "direct outside target was removed"
+}
+if (-not (Test-Path -LiteralPath ${psSingleQuoted(nestedSentinel)} -PathType Leaf)) {
+  throw "nested outside target was removed"
+}
+Write-Output "PRESERVED=direct outside target"
+Write-Output "PRESERVED=nested outside target"
+`, 'utf8');
+
+  return { harnessPath };
+}
+
+test('export helper keeps toolkit run-directory hardening', () => {
+  const text = readText(exportHelperPath);
+  const initStart = text.indexOf('function Initialize-RunDirectory');
+  const initEnd = text.indexOf('\nfunction Resolve-WorkflowDirPath', initStart);
+  assert.notEqual(initStart, -1);
+  assert.notEqual(initEnd, -1);
+  const initializeBlock = text.slice(initStart, initEnd);
+
+  assert.match(text, /\[string\]\$ExportDir = "\.tmp\/n8n-live-exports"/);
+  assert.match(text, /function Get-PathStringComparison/);
+  assert.match(text, /function Get-NormalizedFullPath\(\$Path\)/);
+  assert.match(text, /function Test-PathIsStrictChild\(\$Path, \$ParentPath\)/);
+  assert.match(text, /function Test-PathItemIsUnsafeLink\(\$Item\)/);
+  assert.match(text, /function Assert-RunDirectoryPathHasNoUnsafeLinks\(\$Path, \$TmpRoot\)/);
+  assert.match(text, /DirectorySeparatorChar/);
+  assert.match(text, /ReparsePoint/);
+  assert.match(initializeBlock, /Test-PathIsStrictChild \$resolvedPath \$tmpRoot/);
+  assert.match(initializeBlock, /Assert-RunDirectoryPathHasNoUnsafeLinks \$resolvedPath \$tmpRoot/);
+  assert.doesNotMatch(initializeBlock, /\$tmpPrefix\s*=\s*\$tmpRoot\s*\+\s*'\\'/);
+  assert.doesNotMatch(initializeBlock, /TrimEnd\('\\'\)/);
+});
+
+test('export helper run-directory guard accepts only strict .tmp children', { skip: !findPowerShell() }, () => {
+  const shell = findPowerShell();
+  const tempRoot = makeTempRoot();
+  const cleanupPaths = [];
+  try {
+    const harness = writeRunDirectoryHarness(tempRoot);
+    cleanupPaths.push(...harness.cleanupPaths);
+    const result = spawnSync(shell, ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', harness.harnessPath], {
+      cwd: tempRoot,
+      encoding: 'utf8',
+    });
+    const output = `${result.stdout}\n${result.stderr}`;
+
+    assert.equal(result.status, 0, output);
+    assert.match(output, /ACCEPTED=safe child/);
+    assert.match(output, /ACCEPTED=forward separator child/);
+    assert.match(output, /REJECTED=\.tmp itself/);
+    assert.match(output, /REJECTED=repo root/);
+    assert.match(output, /REJECTED=filesystem root/);
+    assert.match(output, /REJECTED=repo child outside \.tmp/);
+    assert.match(output, /REJECTED=outside repo/);
+    assert.match(output, /REJECTED=traversal outside \.tmp/);
+  } finally {
+    for (const cleanupPath of cleanupPaths) {
+      fs.rmSync(cleanupPath, { recursive: true, force: true });
+    }
+    fs.rmSync(tempRoot, { recursive: true, force: true });
+  }
+});
+
+test('export helper run-directory guard rejects link escapes under .tmp', { skip: !findPowerShell() }, (t) => {
+  const shell = findPowerShell();
+  const tempRoot = makeTempRoot();
+  try {
+    const harness = writeRunDirectoryLinkHarness(tempRoot);
+    if (harness.skipped) {
+      t.skip(harness.skipped);
+      return;
+    }
+
+    const result = spawnSync(shell, ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', harness.harnessPath], {
+      cwd: tempRoot,
+      encoding: 'utf8',
+    });
+    const output = `${result.stdout}\n${result.stderr}`;
+
+    assert.equal(result.status, 0, output);
+    assert.match(output, /REJECTED=run directory link/);
+    assert.match(output, /REJECTED=nested link component/);
+    assert.match(output, /PRESERVED=direct outside target/);
+    assert.match(output, /PRESERVED=nested outside target/);
+  } finally {
+    fs.rmSync(tempRoot, { recursive: true, force: true });
+  }
+});
 
 test('normal validation loads repo-specific rules and rejects missing debounce wait parameters', () => {
   const tempRoot = makeTempRoot();
