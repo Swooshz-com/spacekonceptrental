@@ -66,8 +66,24 @@ Use one logs workbook with these tabs:
 - `unanswered_questions`
 - `failures`
 - `kb_ingestion`
+- `kb_current_state`
 
 The workflow exports contain the expected column mappings for these tabs.
+
+`kb_ingestion` is append-only audit history. It records each changed ingestion
+event, including `modified_time`, `content_sha256`, `ingestion_key`, and numeric
+`chunks_count`.
+
+`kb_current_state` is the dedupe authority. It must have one row per
+`file_id + namespace` and include `file_id`, `file_name`, `namespace`,
+`current_content_sha256`, `current_ingestion_key`,
+`last_successful_execution_id`, `last_indexed_at`, and `status`.
+
+RAG ingestion skips Pinecone delete/upsert only when the current-state row for
+that `file_id + namespace` has `status = completed` and
+`current_ingestion_key` matches the newly computed
+`file_id::content_sha256::SpaceKonceptRental_kb` key. Historical
+`kb_ingestion` rows are never enough to skip by themselves.
 
 ## Local Validation
 

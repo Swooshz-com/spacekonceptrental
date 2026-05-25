@@ -89,12 +89,28 @@ for local import safety, so they must remain uncommitted.
 
 | Smoke Test | Expected Result |
 | --- | --- |
-| New KB file ingestion | New chunks are upserted and one `kb_ingestion` row is appended |
-| Unchanged re-ingestion | Delete/upsert is skipped when downloaded file content has the same `content_sha256`, even if Drive metadata changed |
-| Metadata-only Drive update | No Pinecone delete/upsert happens when only Drive metadata or server-side timestamps change |
-| Updated file content | Existing vectors are deleted by `source_file_id`, then fresh chunks are upserted |
+| New KB file ingestion | New chunks are upserted, one `kb_ingestion` audit row is appended, and `kb_current_state` is upserted for `file_id + namespace` |
+| Unchanged re-ingestion | Delete/upsert is skipped only when `kb_current_state.status = completed` and `current_ingestion_key` matches the current `file_id::content_sha256::SpaceKonceptRental_kb` key |
+| Metadata-only Drive update | No Pinecone delete/upsert happens when content hash is unchanged and current state still matches |
+| Updated file content | Existing vectors are deleted by `source_file_id`, fresh chunks are upserted, `kb_ingestion` gets a new audit row, and `kb_current_state` is updated |
+| Historical log safety | A matching old `kb_ingestion` row alone never causes a skip |
 | Namespace | Pinecone namespace remains exactly `SpaceKonceptRental_kb` |
 | Delete retry/error handling | Retryable delete errors do not bypass retry; first-run empty namespace handling does not hide unexpected failures |
+
+Manual A -> B -> A current-state smoke test:
+
+1. Upload clean test content A for one synthetic KB file.
+2. Confirm Pinecone chunks are inserted, `kb_ingestion` has an A audit row, and
+   `kb_current_state.current_ingestion_key` ends with A's `content_sha256`.
+3. Replace the same Drive file with different synthetic content B.
+4. Confirm the workflow deletes existing vectors by `source_file_id`, inserts B,
+   appends a B audit row, and updates `kb_current_state` to B's key.
+5. Revert the same Drive file back to content A.
+6. Confirm the workflow does not skip because of the old A audit row. It must see
+   current state B, delete B vectors by `source_file_id`, insert A again, append
+   a new A audit row, and update `kb_current_state` back to A's key.
+7. Ask the chat a question that would reveal B-only content and confirm B is no
+   longer retrieved.
 
 ## Website
 

@@ -97,6 +97,7 @@ Main logs workbook:
 - `tickets`
 - `unanswered_questions`
 - `kb_ingestion`
+- `kb_current_state`
 
 Error logs workbook:
 
@@ -109,7 +110,8 @@ For clean support-agent testing, clear only data rows in:
 - `tickets`
 - `unanswered_questions`
 
-Keep `kb_ingestion` unless rerunning ingestion. Keep all headers.
+Keep `kb_ingestion` and `kb_current_state` unless rerunning ingestion. Keep all
+headers.
 
 Extra headers required by the follow-up tracing layer:
 
@@ -328,11 +330,12 @@ If testing KB ingestion:
    - `kb/03-product-catalogue-summary.md`
    - `kb/04-privacy-policy.md`
 2. Trigger the ingestion workflow by uploading or updating a KB file.
-3. Check `kb_ingestion`.
+3. Check `kb_ingestion` and `kb_current_state`.
 
 Expected:
 
 - One log row per source file event.
+- `kb_ingestion` remains append-only audit history.
 - `file_name` is plain text.
 - `file_url` is the clickable Drive URL.
 - `chunks_count` is numeric.
@@ -342,11 +345,27 @@ Expected:
 - `content_sha256` is populated from the downloaded file content.
 - `ingestion_key` combines the stable Drive file ID, `content_sha256`, and
   `SpaceKonceptRental_kb` namespace for replay dedupe.
-- Drive metadata-only changes should not trigger Pinecone delete/upsert.
+- `kb_current_state` has one row per `file_id + namespace`.
+- `kb_current_state.current_ingestion_key` matches the latest successfully
+  indexed `ingestion_key`.
+- Drive metadata-only changes should not trigger Pinecone delete/upsert when
+  current state still matches the content-hash key.
 - Actual file content changes should delete existing vectors by `source_file_id`
-  and insert fresh chunks.
+  and insert fresh chunks before updating `kb_current_state`.
 - Re-ingesting a file should not endlessly grow stale Pinecone chunks for that
   file, and an unchanged replay should not append another `kb_ingestion` row.
+- Historical `kb_ingestion` rows must not be used as the dedupe source of truth.
+
+A -> B -> A revert check:
+
+1. Upload synthetic clean content A and let ingestion complete.
+2. Update the same file to synthetic content B and confirm Pinecone delete/upsert
+   runs and `kb_current_state` now points to B's key.
+3. Revert the same file to content A.
+4. Confirm the workflow does not skip because of A's old audit row. It should
+   delete B vectors by `source_file_id`, insert A chunks, append a new audit row,
+   and update `kb_current_state` back to A.
+5. Ask chat for B-only content and confirm it is no longer retrieved.
 
 ## Pass Criteria
 
