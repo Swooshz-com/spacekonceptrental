@@ -732,12 +732,12 @@ test('normal validation rejects modified_time fallback in RAG dedupe selector', 
   }
 });
 
-test('normal validation rejects missing RAG ingestion dedupe lookup', () => {
+test('normal validation rejects missing RAG current-state dedupe lookup', () => {
   const tempRoot = makeTempRoot();
   try {
     const workflowDir = path.join(tempRoot, 'n8n-workflows');
     const workflow = readRagIngestionWorkflow();
-    removeNode(workflow, 'Lookup KB Ingestion Log');
+    removeNode(workflow, 'Lookup KB Current State');
     removeNode(workflow, 'Select Changed KB File');
     workflow.connections['Prepare Chunk Metadata'] = {
       main: [[{ node: 'Resolve Pinecone Index Host', type: 'main', index: 0 }]],
@@ -749,7 +749,140 @@ test('normal validation rejects missing RAG ingestion dedupe lookup', () => {
     assert.notEqual(result.status, 0, result.stdout + result.stderr);
     assert.match(
       result.stderr + result.stdout,
-      /RAG ingestion must lookup kb_ingestion by stable file keys before Pinecone cleanup/,
+      /RAG ingestion must lookup kb_current_state by file_id and namespace before Pinecone cleanup/,
+    );
+  } finally {
+    fs.rmSync(tempRoot, { recursive: true, force: true });
+  }
+});
+
+test('normal validation rejects historical kb_ingestion dedupe lookup', () => {
+  const tempRoot = makeTempRoot();
+  try {
+    const workflowDir = path.join(tempRoot, 'n8n-workflows');
+    const workflow = readRagIngestionWorkflow();
+    const lookup = findNode(workflow, 'Lookup KB Current State');
+    lookup.name = 'Lookup KB Ingestion Log';
+    lookup.parameters.sheetName = {
+      __rl: true,
+      value: 'gid=0',
+      mode: 'list',
+      cachedResultName: 'kb_ingestion',
+    };
+    lookup.parameters.filtersUI.values.push({
+      lookupColumn: 'ingestion_key',
+      lookupValue: '={{ $json.ingestion_key }}',
+    });
+    workflow.connections['Prepare Chunk Metadata'] = {
+      main: [[{ node: 'Lookup KB Ingestion Log', type: 'main', index: 0 }]],
+    };
+    workflow.connections['Lookup KB Ingestion Log'] = {
+      main: [[{ node: 'Select Changed KB File', type: 'main', index: 0 }]],
+    };
+    delete workflow.connections['Lookup KB Current State'];
+    writeWorkflow(workflowDir, 'spacekonceptrental-rag-ingestion.workflow.json', workflow);
+
+    const result = runValidator([workflowDir]);
+
+    assert.notEqual(result.status, 0, result.stdout + result.stderr);
+    assert.match(
+      result.stderr + result.stdout,
+      /RAG ingestion must not dedupe from append-only kb_ingestion history/,
+    );
+  } finally {
+    fs.rmSync(tempRoot, { recursive: true, force: true });
+  }
+});
+
+test('normal validation rejects current-state lookup without file_id and namespace', () => {
+  const tempRoot = makeTempRoot();
+  try {
+    const workflowDir = path.join(tempRoot, 'n8n-workflows');
+    const workflow = readRagIngestionWorkflow();
+    findNode(workflow, 'Lookup KB Current State').parameters.filtersUI.values = [
+      { lookupColumn: 'file_id', lookupValue: '={{ $json.source_file_id }}' },
+    ];
+    writeWorkflow(workflowDir, 'spacekonceptrental-rag-ingestion.workflow.json', workflow);
+
+    const result = runValidator([workflowDir]);
+
+    assert.notEqual(result.status, 0, result.stdout + result.stderr);
+    assert.match(
+      result.stderr + result.stdout,
+      /RAG ingestion must lookup kb_current_state by file_id and namespace before Pinecone cleanup/,
+    );
+  } finally {
+    fs.rmSync(tempRoot, { recursive: true, force: true });
+  }
+});
+
+test('normal validation rejects selector that skips from historical ingestion rows', () => {
+  const tempRoot = makeTempRoot();
+  try {
+    const workflowDir = path.join(tempRoot, 'n8n-workflows');
+    const workflow = readRagIngestionWorkflow();
+    findNode(workflow, 'Select Changed KB File').parameters.jsCode +=
+      "\nconst unsafeHistoricalSkip = lookupRows.some((row) => row.ingestion_key === source.ingestion_key);";
+    writeWorkflow(workflowDir, 'spacekonceptrental-rag-ingestion.workflow.json', workflow);
+
+    const result = runValidator([workflowDir]);
+
+    assert.notEqual(result.status, 0, result.stdout + result.stderr);
+    assert.match(
+      result.stderr + result.stdout,
+      /Select Changed KB File must not skip from historical kb_ingestion matches/,
+    );
+  } finally {
+    fs.rmSync(tempRoot, { recursive: true, force: true });
+  }
+});
+
+test('normal validation rejects missing current-state update after RAG insert', () => {
+  const tempRoot = makeTempRoot();
+  try {
+    const workflowDir = path.join(tempRoot, 'n8n-workflows');
+    const workflow = readRagIngestionWorkflow();
+    removeNode(workflow, 'Upsert KB Current State');
+    writeWorkflow(workflowDir, 'spacekonceptrental-rag-ingestion.workflow.json', workflow);
+
+    const result = runValidator([workflowDir]);
+
+    assert.notEqual(result.status, 0, result.stdout + result.stderr);
+    assert.match(
+      result.stderr + result.stdout,
+      /Upsert KB Current State must appendOrUpdate kb_current_state by file_id and namespace/,
+    );
+  } finally {
+    fs.rmSync(tempRoot, { recursive: true, force: true });
+  }
+});
+
+test('normal validation rejects incomplete RAG audit fields and string chunk counts', () => {
+  const tempRoot = makeTempRoot();
+  try {
+    const workflowDir = path.join(tempRoot, 'n8n-workflows');
+    const workflow = readRagIngestionWorkflow();
+    const appendLog = findNode(workflow, 'Append KB Ingestion Log');
+    delete appendLog.parameters.columns.value.content_sha256;
+    delete appendLog.parameters.columns.value.modified_time;
+    delete appendLog.parameters.columns.value.ingestion_key;
+    appendLog.parameters.columns.schema.find((entry) => entry.id === 'chunks_count').type = 'string';
+    writeWorkflow(workflowDir, 'spacekonceptrental-rag-ingestion.workflow.json', workflow);
+
+    const result = runValidator([workflowDir]);
+
+    assert.notEqual(result.status, 0, result.stdout + result.stderr);
+    assert.match(
+      result.stderr + result.stdout,
+      /maps count column "chunks_count".*use "number"/,
+    );
+    assert.match(
+      result.stderr + result.stdout,
+      /Append KB Ingestion Log must persist content_sha256/,
+    );
+    assert.match(
+      result.stderr + result.stdout,
+      /Append KB Ingestion Log must persist modified_time and ingestion_key/,
     );
   } finally {
     fs.rmSync(tempRoot, { recursive: true, force: true });

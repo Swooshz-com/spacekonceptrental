@@ -1219,12 +1219,25 @@ function checkRagIngestionDataPlaneSafety(workflow, relative) {
     'throw new Error(`Pinecone delete failed',
   ], 'must classify Pinecone delete responses after retry-safe HTTP handling.');
 
-  const lookupNode = findWorkflowNode(workflow, 'Lookup KB Ingestion Log');
+  const historicalLookupNode = findWorkflowNode(workflow, 'Lookup KB Ingestion Log');
+  if (historicalLookupNode) {
+    fail(`${relative} RAG ingestion must not dedupe from append-only kb_ingestion history; use kb_current_state current-state rows instead.`);
+  }
+
+  const lookupNode = findWorkflowNode(workflow, 'Lookup KB Current State');
   if (!lookupNode ||
     lookupNode.type !== 'n8n-nodes-base.googleSheets' ||
     (lookupNode.parameters?.operation || 'read') !== 'read') {
-    fail(`${relative} RAG ingestion must lookup kb_ingestion by stable file keys before Pinecone cleanup.`);
+    fail(`${relative} RAG ingestion must lookup kb_current_state by file_id and namespace before Pinecone cleanup.`);
     return;
+  }
+
+  const lookupSheetName = [
+    lookupNode.parameters?.sheetName?.value,
+    lookupNode.parameters?.sheetName?.cachedResultName,
+  ].map((value) => String(value || '')).join(' ');
+  if (!lookupSheetName.includes('kb_current_state')) {
+    fail(`${relative} Lookup KB Current State must read the kb_current_state sheet/table, not append-only kb_ingestion history.`);
   }
 
   const lookupFilters = Array.isArray(lookupNode.parameters?.filtersUI?.values)
@@ -1234,19 +1247,18 @@ function checkRagIngestionDataPlaneSafety(workflow, relative) {
     filter?.lookupColumn === 'file_id' &&
     String(filter?.lookupValue || '').includes('source_file_id')
   );
-  const hasIngestionKeyFilter = lookupFilters.some((filter) =>
-    filter?.lookupColumn === 'ingestion_key' &&
-    String(filter?.lookupValue || '').includes('ingestion_key')
-  );
   const hasNamespaceFilter = lookupFilters.some((filter) =>
     filter?.lookupColumn === 'namespace' &&
     String(filter?.lookupValue || '').includes(PINECONE_KB_NAMESPACE)
   );
-  if (!hasFileIdFilter || !hasIngestionKeyFilter || !hasNamespaceFilter || lookupNode.parameters?.combineFilters === 'OR') {
-    fail(`${relative} RAG ingestion must lookup kb_ingestion by stable file keys before Pinecone cleanup.`);
+  const hasHistoricalIngestionKeyFilter = lookupFilters.some((filter) =>
+    filter?.lookupColumn === 'ingestion_key'
+  );
+  if (!hasFileIdFilter || !hasNamespaceFilter || hasHistoricalIngestionKeyFilter || lookupNode.parameters?.combineFilters === 'OR') {
+    fail(`${relative} RAG ingestion must lookup kb_current_state by file_id and namespace before Pinecone cleanup.`);
   }
   if (lookupNode.alwaysOutputData !== true) {
-    fail(`${relative} Lookup KB Ingestion Log must keep alwaysOutputData true so new files continue when no dedupe row exists.`);
+    fail(`${relative} Lookup KB Current State must keep alwaysOutputData true so new files continue when no current-state row exists.`);
   }
 
   const selectorNode = findWorkflowNode(workflow, 'Select Changed KB File');
@@ -1257,26 +1269,68 @@ function checkRagIngestionDataPlaneSafety(workflow, relative) {
     selectorCode.includes('source.modified_time')) {
     fail(`${relative} Select Changed KB File must not use modified_time for dedupe; ingestion_key must be content-hash based.`);
   }
+  if (selectorCode.includes('matchesCompletedIngestion') ||
+    selectorCode.includes('lookupRows.some') ||
+    selectorCode.includes('kb_ingestion')) {
+    fail(`${relative} Select Changed KB File must not skip from historical kb_ingestion matches; compare only the current kb_current_state row.`);
+  }
   requireCodeSnippets(relative, 'Select Changed KB File', selectorCode, [
     "$items('Prepare Chunk Metadata')",
+    'currentStateRows',
+    'matchesCurrentState',
+    'current_ingestion_key',
     'ingestion_key',
     'source_file_id',
-    'status',
+    "status === 'completed'",
+    'rows.length > 1',
     'return changedItems;',
-  ], 'must drop unchanged files before Pinecone cleanup and vector insertion.');
+  ], 'must drop unchanged files only when the single current-state row proves the current indexed ingestion key matches.');
 
   if (!hasConnection(workflow, 'Download KB File', 0, 'Compute Content Hash') ||
     !hasConnection(workflow, 'Compute Content Hash', 0, 'Prepare Chunk Metadata') ||
-    !hasConnection(workflow, 'Prepare Chunk Metadata', 0, 'Lookup KB Ingestion Log') ||
-    !hasConnection(workflow, 'Lookup KB Ingestion Log', 0, 'Select Changed KB File') ||
+    !hasConnection(workflow, 'Prepare Chunk Metadata', 0, 'Lookup KB Current State') ||
+    !hasConnection(workflow, 'Lookup KB Current State', 0, 'Select Changed KB File') ||
     !hasConnection(workflow, 'Select Changed KB File', 0, 'Resolve Pinecone Index Host')) {
-    fail(`${relative} RAG ingestion must lookup kb_ingestion by stable file keys before Pinecone cleanup.`);
+    fail(`${relative} RAG ingestion must lookup kb_current_state by file_id and namespace before Pinecone cleanup.`);
   }
   if (hasConnection(workflow, 'Download KB File', 0, 'Prepare Chunk Metadata')) {
     fail(`${relative} RAG ingestion must compute content_sha256 between Download KB File and Prepare Chunk Metadata.`);
   }
   if (hasConnection(workflow, 'Prepare Chunk Metadata', 0, 'Resolve Pinecone Index Host')) {
     fail(`${relative} RAG ingestion must not bypass the dedupe lookup before Pinecone cleanup.`);
+  }
+
+  const currentStateNode = findWorkflowNode(workflow, 'Upsert KB Current State');
+  const currentStateValues = currentStateNode?.parameters?.columns?.value || {};
+  const currentStateMatchingColumns = currentStateNode?.parameters?.columns?.matchingColumns || [];
+  const currentStateSheetName = [
+    currentStateNode?.parameters?.sheetName?.value,
+    currentStateNode?.parameters?.sheetName?.cachedResultName,
+  ].map((value) => String(value || '')).join(' ');
+  if (!currentStateNode ||
+    currentStateNode.type !== 'n8n-nodes-base.googleSheets' ||
+    currentStateNode.parameters?.operation !== 'appendOrUpdate' ||
+    !currentStateSheetName.includes('kb_current_state') ||
+    !currentStateMatchingColumns.includes('file_id') ||
+    !currentStateMatchingColumns.includes('namespace')) {
+    fail(`${relative} Upsert KB Current State must appendOrUpdate kb_current_state by file_id and namespace after successful Pinecone insert.`);
+  }
+  for (const [field, source] of Object.entries({
+    file_id: 'file_id',
+    file_name: 'file_name',
+    namespace: 'namespace',
+    current_content_sha256: 'content_sha256',
+    current_ingestion_key: 'ingestion_key',
+    last_successful_execution_id: 'execution_id',
+    last_indexed_at: 'ingested_at',
+    status: 'status',
+  })) {
+    if (!String(currentStateValues[field] || '').includes(source)) {
+      fail(`${relative} Upsert KB Current State must persist ${field} from ${source}.`);
+    }
+  }
+  if (!hasConnection(workflow, 'Append KB Ingestion Log', 0, 'Upsert KB Current State')) {
+    fail(`${relative} Upsert KB Current State must run after successful Pinecone insert and audit append.`);
   }
 
   const appendLogNode = findWorkflowNode(workflow, 'Append KB Ingestion Log');
@@ -1292,7 +1346,7 @@ function checkRagIngestionDataPlaneSafety(workflow, relative) {
   }
   if (!String(appendValues.modified_time || '').includes('modified_time') ||
     !String(appendValues.ingestion_key || '').includes('ingestion_key')) {
-    fail(`${relative} Append KB Ingestion Log must persist modified_time and ingestion_key for RAG dedupe lookup.`);
+    fail(`${relative} Append KB Ingestion Log must persist modified_time and ingestion_key for RAG audit history.`);
   }
 }
 

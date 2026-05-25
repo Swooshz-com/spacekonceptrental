@@ -25,7 +25,7 @@ customer-support-agent capstone requirements.
 - `docs/` - operator runbooks and post-security smoke-test notes.
 - `presentation/` - capstone walkthrough deck.
 - `scripts/` - local workflow validation.
-- `website/` - simple static website demo that embeds the live support chat.
+- `website/` - frontend design assets and chat config placeholders.
 - `SpaceKonceptRental_website_display_design_wishlist.jpg` - future website
   design reference, not part of the RAG upload.
 
@@ -66,8 +66,26 @@ Use one logs workbook with these tabs:
 - `unanswered_questions`
 - `failures`
 - `kb_ingestion`
+- `kb_current_state`
 
 The workflow exports contain the expected column mappings for these tabs.
+
+`kb_ingestion` is append-only audit history. It records each changed ingestion
+event, including `modified_time`, `content_sha256`, `ingestion_key`, and numeric
+`chunks_count`.
+
+Manual deployment note for PR #12: before importing or updating the live
+workflow, create or verify the `kb_current_state` sheet/tab. It is the dedupe
+authority and must have one row per `file_id + namespace` with these headers:
+`file_id`, `file_name`, `namespace`, `current_content_sha256`,
+`current_ingestion_key`, `last_successful_execution_id`, `last_indexed_at`,
+`status`, `chunks_count`, `modified_time`, and `file_url`.
+
+RAG ingestion skips Pinecone delete/upsert only when the current-state row for
+that `file_id + namespace` has `status = completed` and
+`current_ingestion_key` matches the newly computed
+`file_id::content_sha256::SpaceKonceptRental_kb` key. Historical
+`kb_ingestion` rows are never enough to skip by themselves.
 
 ## Local Validation
 
@@ -99,13 +117,11 @@ After import, credential setup, and KB ingestion, test:
 8. A duplicate `message_id`.
 9. A controlled workflow error.
 
-## Website Demo
+## Public Chat Demo
 
-Open `website/index.html` in a browser for a simple capstone website demo. The
-chat widget reads its webhook URL from ignored local config files. Copy
-`website/chat-config.example.js` to `website/chat-config.local.js` for local
-testing, or to `website/chat-config.js` for a deploy-time config file, then
-replace the URL there.
+The retired static website demo HTML is no longer tracked. Keep any replacement
+public chat UI stateless and keep real webhook URLs in ignored local or
+deploy-time config only.
 
 The current public Chat Trigger is temporary and demo-oriented. Keep it public
 for the demo flow, but keep public chat stateless: the workflow may use
@@ -115,12 +131,8 @@ session values. Current compensating controls include debounce, dedupe, safe
 Sheets writes, escaped emails, bounded transcripts, and stateless public chat.
 Full mitigation belongs in the future authenticated/backend-mediated UI.
 
-The website pins `@n8n/chat` and sets `loadPreviousSession: false`. Keep real
-webhook URLs in ignored local or deploy-time config only.
-
-For final submission, deploy this static folder or the repo root to a simple
-host such as Netlify or GitHub Pages. Do not commit temporary tunnel URLs such
-as ngrok URLs.
+For final submission, deploy the replacement frontend to a simple host such as
+Netlify or GitHub Pages. Do not commit temporary tunnel URLs such as ngrok URLs.
 
 ## Presentation Status
 
