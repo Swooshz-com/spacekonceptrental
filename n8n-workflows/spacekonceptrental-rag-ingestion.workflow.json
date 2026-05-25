@@ -38,7 +38,7 @@
     {
       "parameters": {
         "content": "# VECTOR INDEXING\n\n- Makes KB updates idempotent against current indexed state, not append-only history.\n- Pinecone insert does not automatically replace old file chunks, so changed files delete stale vectors first.\n- Namespace is set upstream in `Prepare Chunk Metadata` and all KB Pinecone operations use `SpaceKonceptRental_kb`.\n\n## Pinecone cleanup subflow:\n\n- **Lookup KB Current State**: Reads `kb_current_state` for the current `file_id` and namespace. Only a single completed row with the same `current_ingestion_key` can skip cleanup.\n- **Select Changed KB File**: Treats missing, changed, or ambiguous current-state rows as changed so Pinecone is deleted and reinserted.\n- **Resolve Pinecone Index Host**: Gets the live Pinecone host for `pinecone_index_name`.\n- **Prepare Pinecone Delete Request**: Builds a `/vectors/delete` request for the current stable `source_file_id`. Filename fallback requires `filename_fallback_reviewed=true` after manual uniqueness review.\n- **Delete Existing Pinecone File Chunks**: Removes old chunks for that file from the namespace, retrying transient Pinecone failures before response classification.\n- **Restore Pinecone Ingestion Context**: Allows first-run `Namespace not found`, throws for unexpected Pinecone delete errors, then restores the original document item so embedding and insert can continue normally.\n\n## Required manual configuration:\n\n- **Prepare Chunk Metadata**\n  - `pinecone_index_name`: Keep this aligned with the Pinecone index used for vector storage.\n- **Lookup KB Current State**\n  - `sheetName`: Set this to the `kb_current_state` tab with one row per `file_id` and namespace.\n- **Insert Chunks into Pinecone**\n  - `pineconeIndex`: Set this to the same Pinecone index used for vector storage.",
-        "height": 940,
+        "height": 1020,
         "width": 1656,
         "color": 3
       },
@@ -48,13 +48,13 @@
       "typeVersion": 1,
       "position": [
         176,
-        -320
+        -400
       ]
     },
     {
       "parameters": {
         "content": "# INGESTION LOG\n\n- Records append-only ingestion history in `kb_ingestion` for review.\n- Updates `kb_current_state` after successful Pinecone insert so dedupe reflects current indexed content.\n- Groups Pinecone chunk outputs back into one log row per source file.\n- Appends changed ingestion events as audit rows; unchanged repeated events stop before Pinecone cleanup and do not append another row.\n- Keeps explicit column mappings in `Append KB Ingestion Log` and `Upsert KB Current State`; changing Sheets operations in the UI can clear them.\n- Uses RAW sheet writes so file names stay literal while chunk counts remain numeric.\n- Sets the `file_name` column hyperlink display to plain text after logging; `file_url` remains the clickable Drive URL.\n\n## Required manual configuration:\n\n- **Append KB Ingestion Log**\n  - `documentId.value`: Set this to the Google Sheets workbook used for ingestion logs.\n  - Sheet headers must include `file_url`, `event_type`, `modified_time`, `content_sha256`, and `ingestion_key`.\n- **Upsert KB Current State**\n  - `sheetName`: Set this to the `kb_current_state` tab.\n  - Sheet headers must include `file_id`, `file_name`, `namespace`, `current_content_sha256`, `current_ingestion_key`, `last_successful_execution_id`, `last_indexed_at`, and `status`.\n- **Disable File Name Hyperlinks**\n  - `url`: Keep the spreadsheet ID aligned with `Append KB Ingestion Log.documentId.value`.\n  - `range.sheetId` and column indexes: Keep these aligned with the `kb_ingestion` sheet and the `file_name` column.",
-        "height": 940,
+        "height": 1212,
         "width": 820,
         "color": 4
       },
@@ -63,8 +63,8 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        1856,
-        -336
+        1840,
+        -608
       ]
     },
     {
@@ -760,8 +760,7 @@
         },
         "options": {
           "returnFirstMatch": false
-        },
-        "combineFilters": "AND"
+        }
       },
       "id": "20000000-0000-4000-8000-000000000021",
       "name": "Lookup KB Current State",
@@ -801,29 +800,28 @@
         },
         "sheetName": {
           "__rl": true,
-          "value": "kb_current_state",
-          "mode": "name",
+          "value": 756135047,
+          "mode": "list",
           "cachedResultName": "kb_current_state",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1RhF1XDLluYhkB_d4dmODsSUfwqVGllXMgH4u3a1-6tQ/edit?usp=drivesdk"
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1RhF1XDLluYhkB_d4dmODsSUfwqVGllXMgH4u3a1-6tQ/edit#gid=756135047"
         },
         "columns": {
           "mappingMode": "defineBelow",
           "value": {
-            "file_id": "={{ $json.file_id }}",
-            "file_name": "={{ $json.file_name }}",
-            "namespace": "={{ $json.namespace }}",
-            "current_content_sha256": "={{ $json.content_sha256 }}",
-            "current_ingestion_key": "={{ $json.ingestion_key }}",
-            "last_successful_execution_id": "={{ $json.execution_id }}",
-            "last_indexed_at": "={{ $json.ingested_at }}",
-            "status": "={{ $json.status }}",
-            "chunks_count": "={{ $json.chunks_count }}",
+            "file_url": "={{ $json.file_url }}",
             "modified_time": "={{ $json.modified_time }}",
-            "file_url": "={{ $json.file_url }}"
+            "chunks_count": "={{ $json.chunks_count }}",
+            "status": "={{ $json.status }}",
+            "last_indexed_at": "={{ $json.last_indexed_at }}",
+            "last_successful_execution_id": "={{ $json.last_successful_execution_id }}",
+            "current_ingestion_key": "={{ $json.current_ingestion_key }}",
+            "current_content_sha256": "={{ $json.current_content_sha256 }}",
+            "namespace": "={{ $json.namespace }}",
+            "file_name": "={{ $json.file_name }}",
+            "file_id": "={{ $json.file_id }}"
           },
           "matchingColumns": [
-            "file_id",
-            "namespace"
+            "file_id"
           ],
           "schema": [
             {
@@ -833,7 +831,8 @@
               "defaultMatch": false,
               "display": true,
               "type": "string",
-              "canBeUsedToMatch": true
+              "canBeUsedToMatch": true,
+              "removed": false
             },
             {
               "id": "file_name",
@@ -904,7 +903,7 @@
               "required": false,
               "defaultMatch": false,
               "display": true,
-              "type": "number",
+              "type": "string",
               "canBeUsedToMatch": true
             },
             {
@@ -929,9 +928,7 @@
           "attemptToConvertTypes": false,
           "convertFieldsToString": false
         },
-        "options": {
-          "cellFormat": "RAW"
-        }
+        "options": {}
       },
       "id": "a48106e1-403d-4f19-91da-current-state",
       "name": "Upsert KB Current State",
@@ -1182,5 +1179,5 @@
   "meta": {
     "templateCredsSetupCompleted": true
   },
-  "versionId": "86351d6a-1444-441e-9b93-d642090f3f96"
+  "versionId": "24b39059-0da6-4d9a-ac27-1e4b83dd40ba"
 }
