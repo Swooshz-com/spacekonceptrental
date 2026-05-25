@@ -97,6 +97,21 @@ for local import safety, so they must remain uncommitted.
 | Namespace | Pinecone namespace remains exactly `SpaceKonceptRental_kb` |
 | Delete retry/error handling | Retryable delete errors do not bypass retry; first-run empty namespace handling does not hide unexpected failures |
 
+Manual deployment note for PR #12: before importing or updating the live
+workflow, create or verify the `kb_current_state` sheet/tab with these headers:
+
+- `file_id`
+- `file_name`
+- `namespace`
+- `current_content_sha256`
+- `current_ingestion_key`
+- `last_successful_execution_id`
+- `last_indexed_at`
+- `status`
+- `chunks_count`
+- `modified_time`
+- `file_url`
+
 Manual A -> B -> A current-state smoke test:
 
 1. Upload clean test content A for one synthetic KB file.
@@ -112,12 +127,13 @@ Manual A -> B -> A current-state smoke test:
 7. Ask the chat a question that would reveal B-only content and confirm B is no
    longer retrieved.
 
-## Website
+## Public Chat UI
 
 | Smoke Test | Expected Result |
 | --- | --- |
-| Chat package | `@n8n/chat` remains pinned in `website/index.html` |
-| Session loading | `loadPreviousSession: false` remains set |
+| Retired static demo | The old repo-tracked static demo HTML is not reintroduced |
+| Replacement UI package | Any replacement `@n8n/chat` frontend pins the package version |
+| Session loading | Any replacement public chat UI sets `loadPreviousSession: false` |
 | Webhook config | No real webhook URL is committed; only placeholders are tracked |
 | Config source | Real chat config comes from ignored local or deploy-time config |
 | Demo chat | Chat works after local config is supplied and remains stateless across reloads |

@@ -113,6 +113,12 @@ For clean support-agent testing, clear only data rows in:
 Keep `kb_ingestion` and `kb_current_state` unless rerunning ingestion. Keep all
 headers.
 
+Before importing or updating the live RAG ingestion workflow, create or verify
+the `kb_current_state` sheet/tab with these headers: `file_id`, `file_name`,
+`namespace`, `current_content_sha256`, `current_ingestion_key`,
+`last_successful_execution_id`, `last_indexed_at`, `status`, `chunks_count`,
+`modified_time`, and `file_url`.
+
 Extra headers required by the follow-up tracing layer:
 
 - `conversations`: `conversation_ref`
@@ -154,9 +160,10 @@ Open the customer support workflow in n8n and verify:
 - Conversation transcripts in notification emails are bounded to the newest 12
   rows and about 6000 characters, with `[Transcript truncated]` shown when
   context is shortened.
-- `website/index.html` pins `@n8n/chat` and sets `loadPreviousSession: false`.
-- Real chat webhook URLs are provided only through ignored local or deploy-time
-  config, not committed files.
+- The retired static website demo HTML is not tracked or reintroduced.
+- Any replacement public chat UI pins `@n8n/chat`, sets
+  `loadPreviousSession: false`, and provides real chat webhook URLs only
+  through ignored local or deploy-time config.
 
 ## Test Matrix
 
