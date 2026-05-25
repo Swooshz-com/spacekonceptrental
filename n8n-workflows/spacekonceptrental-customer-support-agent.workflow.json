@@ -212,8 +212,8 @@
         1440
       ],
       "retryOnFail": true,
-      "maxTries": 6,
-      "waitBetweenTries": 15000,
+      "maxTries": 5,
+      "waitBetweenTries": 10000,
       "alwaysOutputData": true
     },
     {
@@ -2682,8 +2682,8 @@
         1312
       ],
       "retryOnFail": true,
-      "maxTries": 6,
-      "waitBetweenTries": 15000,
+      "maxTries": 5,
+      "waitBetweenTries": 10000,
       "alwaysOutputData": true
     },
     {
@@ -3644,5 +3644,5 @@
   "meta": {
     "templateCredsSetupCompleted": true
   },
-  "versionId": "58635a53-7cd3-4155-b8f8-795ac768882f"
+  "versionId": "20c11040-4bbd-4833-8119-0fa4fd152b1a"
 }

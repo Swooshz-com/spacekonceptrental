@@ -666,6 +666,91 @@ test('normal validation rejects missing explicit Pinecone KB namespace', () => {
   }
 });
 
+test('normal validation rejects modifiedTime-based RAG ingestion keys', () => {
+  const tempRoot = makeTempRoot();
+  try {
+    const workflowDir = path.join(tempRoot, 'n8n-workflows');
+    const workflow = readRagIngestionWorkflow();
+    findNode(workflow, 'Prepare Chunk Metadata').parameters.assignments.assignments.find((entry) => entry.name === 'ingestion_key').value =
+      "={{ [($json.source_file_id || $json.fileId), ($json.modifiedTime || 'unknown_modified_time'), 'SpaceKonceptRental_kb'].join('::') }}";
+    writeWorkflow(workflowDir, 'spacekonceptrental-rag-ingestion.workflow.json', workflow);
+
+    const result = runValidator([workflowDir]);
+
+    assert.notEqual(result.status, 0, result.stdout + result.stderr);
+    assert.match(
+      result.stderr + result.stdout,
+      /Prepare Chunk Metadata ingestion_key must not use Google Drive modifiedTime/,
+    );
+  } finally {
+    fs.rmSync(tempRoot, { recursive: true, force: true });
+  }
+});
+
+test('normal validation rejects missing downloaded content hash before RAG metadata', () => {
+  const tempRoot = makeTempRoot();
+  try {
+    const workflowDir = path.join(tempRoot, 'n8n-workflows');
+    const workflow = readRagIngestionWorkflow();
+    removeNode(workflow, 'Compute Content Hash');
+    workflow.connections['Download KB File'] = {
+      main: [[{ node: 'Prepare Chunk Metadata', type: 'main', index: 0 }]],
+    };
+    writeWorkflow(workflowDir, 'spacekonceptrental-rag-ingestion.workflow.json', workflow);
+
+    const result = runValidator([workflowDir]);
+
+    assert.notEqual(result.status, 0, result.stdout + result.stderr);
+    assert.match(
+      result.stderr + result.stdout,
+      /Compute Content Hash must hash downloaded binary content before metadata preparation|RAG ingestion must compute content_sha256 between Download KB File and Prepare Chunk Metadata/,
+    );
+  } finally {
+    fs.rmSync(tempRoot, { recursive: true, force: true });
+  }
+});
+
+test('normal validation rejects crypto module usage in RAG content hash code', () => {
+  const tempRoot = makeTempRoot();
+  try {
+    const workflowDir = path.join(tempRoot, 'n8n-workflows');
+    const workflow = readRagIngestionWorkflow();
+    findNode(workflow, 'Compute Content Hash').parameters.jsCode =
+      "const { createHash } = require('crypto');\nreturn $input.all().map((item) => ({ json: { ...item.json, content_sha256: createHash('sha256').update('x').digest('hex') }, binary: item.binary }));";
+    writeWorkflow(workflowDir, 'spacekonceptrental-rag-ingestion.workflow.json', workflow);
+
+    const result = runValidator([workflowDir]);
+
+    assert.notEqual(result.status, 0, result.stdout + result.stderr);
+    assert.match(
+      result.stderr + result.stdout,
+      /Compute Content Hash must not use the crypto module/,
+    );
+  } finally {
+    fs.rmSync(tempRoot, { recursive: true, force: true });
+  }
+});
+
+test('normal validation rejects modified_time fallback in RAG dedupe selector', () => {
+  const tempRoot = makeTempRoot();
+  try {
+    const workflowDir = path.join(tempRoot, 'n8n-workflows');
+    const workflow = readRagIngestionWorkflow();
+    findNode(workflow, 'Select Changed KB File').parameters.jsCode += '\nconst rowModifiedTime = row.modified_time;\nconst sourceModifiedTime = source.modified_time;';
+    writeWorkflow(workflowDir, 'spacekonceptrental-rag-ingestion.workflow.json', workflow);
+
+    const result = runValidator([workflowDir]);
+
+    assert.notEqual(result.status, 0, result.stdout + result.stderr);
+    assert.match(
+      result.stderr + result.stdout,
+      /Select Changed KB File must not use modified_time for dedupe/,
+    );
+  } finally {
+    fs.rmSync(tempRoot, { recursive: true, force: true });
+  }
+});
+
 test('normal validation rejects missing RAG ingestion dedupe lookup', () => {
   const tempRoot = makeTempRoot();
   try {

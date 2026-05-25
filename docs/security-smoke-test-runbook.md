@@ -90,8 +90,9 @@ for local import safety, so they must remain uncommitted.
 | Smoke Test | Expected Result |
 | --- | --- |
 | New KB file ingestion | New chunks are upserted and one `kb_ingestion` row is appended |
-| Unchanged re-ingestion | Delete/upsert is skipped for unchanged file state |
-| Updated file | Existing vectors are deleted by `source_file_id`, then fresh chunks are upserted |
+| Unchanged re-ingestion | Delete/upsert is skipped when downloaded file content has the same `content_sha256`, even if Drive metadata changed |
+| Metadata-only Drive update | No Pinecone delete/upsert happens when only Drive metadata or server-side timestamps change |
+| Updated file content | Existing vectors are deleted by `source_file_id`, then fresh chunks are upserted |
 | Namespace | Pinecone namespace remains exactly `SpaceKonceptRental_kb` |
 | Delete retry/error handling | Retryable delete errors do not bypass retry; first-run empty namespace handling does not hide unexpected failures |
 

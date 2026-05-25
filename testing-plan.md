@@ -339,8 +339,12 @@ Expected:
 - `event_type` is `created` or `updated`.
 - `ingested_at` uses `YYYY-MM-DD HH:mm:ss SGT`.
 - `modified_time` is populated from the Drive file metadata.
-- `ingestion_key` combines the stable Drive file ID, modified time, and
+- `content_sha256` is populated from the downloaded file content.
+- `ingestion_key` combines the stable Drive file ID, `content_sha256`, and
   `SpaceKonceptRental_kb` namespace for replay dedupe.
+- Drive metadata-only changes should not trigger Pinecone delete/upsert.
+- Actual file content changes should delete existing vectors by `source_file_id`
+  and insert fresh chunks.
 - Re-ingesting a file should not endlessly grow stale Pinecone chunks for that
   file, and an unchanged replay should not append another `kb_ingestion` row.
 

@@ -1135,19 +1135,42 @@ function checkRagIngestionDataPlaneSafety(workflow, relative) {
 
   const prepareMetadataNode = findWorkflowNode(workflow, 'Prepare Chunk Metadata');
   const namespaceAssignment = findAssignment(prepareMetadataNode, 'namespace');
+  const contentHashAssignment = findAssignment(prepareMetadataNode, 'content_sha256');
   const ingestionKeyAssignment = findAssignment(prepareMetadataNode, 'ingestion_key');
   if (namespaceAssignment?.value !== PINECONE_KB_NAMESPACE) {
     fail(`${relative} RAG ingestion Pinecone operations must explicitly use namespace ${PINECONE_KB_NAMESPACE}.`);
   }
+  if (!String(contentHashAssignment?.value || '').includes('content_sha256')) {
+    fail(`${relative} Prepare Chunk Metadata must preserve content_sha256 from downloaded file content.`);
+  }
   if (!String(ingestionKeyAssignment?.value || '').includes('source_file_id') && !String(ingestionKeyAssignment?.value || '').includes('fileId')) {
     fail(`${relative} Prepare Chunk Metadata must build ingestion_key from stable source file keys.`);
   }
-  if (!String(ingestionKeyAssignment?.value || '').includes('modifiedTime')) {
-    fail(`${relative} Prepare Chunk Metadata must include modifiedTime in ingestion_key so unchanged files can be skipped.`);
+  if (String(ingestionKeyAssignment?.value || '').includes('modifiedTime') ||
+    String(ingestionKeyAssignment?.value || '').includes('modified_time')) {
+    fail(`${relative} Prepare Chunk Metadata ingestion_key must not use Google Drive modifiedTime; use content_sha256 for content-based idempotency.`);
+  }
+  if (!String(ingestionKeyAssignment?.value || '').includes('content_sha256')) {
+    fail(`${relative} Prepare Chunk Metadata ingestion_key must include content_sha256 for content-based idempotency.`);
   }
   if (!String(ingestionKeyAssignment?.value || '').includes(PINECONE_KB_NAMESPACE)) {
     fail(`${relative} Prepare Chunk Metadata ingestion_key must include namespace ${PINECONE_KB_NAMESPACE}.`);
   }
+
+  const contentHashNode = findWorkflowNode(workflow, 'Compute Content Hash');
+  const contentHashCode = String(contentHashNode?.parameters?.jsCode || '');
+  if (contentHashCode.includes("require('crypto')") ||
+    contentHashCode.includes('require("crypto")') ||
+    contentHashCode.includes("from 'crypto'") ||
+    contentHashCode.includes('from "crypto"')) {
+    fail(`${relative} Compute Content Hash must not use the crypto module because n8n Code nodes disallow it.`);
+  }
+  requireCodeSnippets(relative, 'Compute Content Hash', contentHashCode, [
+    'getBinaryDataBuffer',
+    'sha256Hex',
+    'content_sha256',
+    'binary: item.binary',
+  ], 'must hash downloaded binary content before metadata preparation.');
 
   const insertNode = findWorkflowNode(workflow, 'Insert Chunks into Pinecone');
   if (insertNode?.type !== '@n8n/n8n-nodes-langchain.vectorStorePinecone' || insertNode.parameters?.mode !== 'insert') {
@@ -1190,6 +1213,7 @@ function checkRagIngestionDataPlaneSafety(workflow, relative) {
   const restoreCode = String(restoreNode?.parameters?.jsCode || '');
   requireCodeSnippets(relative, 'Restore Pinecone Ingestion Context', restoreCode, [
     'result.error',
+    'error.description',
     'Namespace not found',
     'statusCode >= 200 && statusCode < 300',
     'throw new Error(`Pinecone delete failed',
@@ -1227,19 +1251,29 @@ function checkRagIngestionDataPlaneSafety(workflow, relative) {
 
   const selectorNode = findWorkflowNode(workflow, 'Select Changed KB File');
   const selectorCode = String(selectorNode?.parameters?.jsCode || '');
+  if (selectorCode.includes('rowModifiedTime') ||
+    selectorCode.includes('sourceModifiedTime') ||
+    selectorCode.includes('row.modified_time') ||
+    selectorCode.includes('source.modified_time')) {
+    fail(`${relative} Select Changed KB File must not use modified_time for dedupe; ingestion_key must be content-hash based.`);
+  }
   requireCodeSnippets(relative, 'Select Changed KB File', selectorCode, [
     "$items('Prepare Chunk Metadata')",
     'ingestion_key',
     'source_file_id',
-    'modified_time',
     'status',
     'return changedItems;',
   ], 'must drop unchanged files before Pinecone cleanup and vector insertion.');
 
-  if (!hasConnection(workflow, 'Prepare Chunk Metadata', 0, 'Lookup KB Ingestion Log') ||
+  if (!hasConnection(workflow, 'Download KB File', 0, 'Compute Content Hash') ||
+    !hasConnection(workflow, 'Compute Content Hash', 0, 'Prepare Chunk Metadata') ||
+    !hasConnection(workflow, 'Prepare Chunk Metadata', 0, 'Lookup KB Ingestion Log') ||
     !hasConnection(workflow, 'Lookup KB Ingestion Log', 0, 'Select Changed KB File') ||
     !hasConnection(workflow, 'Select Changed KB File', 0, 'Resolve Pinecone Index Host')) {
     fail(`${relative} RAG ingestion must lookup kb_ingestion by stable file keys before Pinecone cleanup.`);
+  }
+  if (hasConnection(workflow, 'Download KB File', 0, 'Prepare Chunk Metadata')) {
+    fail(`${relative} RAG ingestion must compute content_sha256 between Download KB File and Prepare Chunk Metadata.`);
   }
   if (hasConnection(workflow, 'Prepare Chunk Metadata', 0, 'Resolve Pinecone Index Host')) {
     fail(`${relative} RAG ingestion must not bypass the dedupe lookup before Pinecone cleanup.`);
@@ -1251,6 +1285,10 @@ function checkRagIngestionDataPlaneSafety(workflow, relative) {
   const prepareLogCode = String(prepareLogNode?.parameters?.jsCode || '');
   if (!prepareLogCode.includes("$items('Select Changed KB File')")) {
     fail(`${relative} Prepare Ingestion Log must read deduped Select Changed KB File metadata so unchanged replays do not append log rows.`);
+  }
+  if (!prepareLogCode.includes('content_sha256') ||
+    !String(appendValues.content_sha256 || '').includes('content_sha256')) {
+    fail(`${relative} Append KB Ingestion Log must persist content_sha256 for content-based RAG dedupe auditing.`);
   }
   if (!String(appendValues.modified_time || '').includes('modified_time') ||
     !String(appendValues.ingestion_key || '').includes('ingestion_key')) {

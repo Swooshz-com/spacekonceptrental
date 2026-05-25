@@ -6,7 +6,7 @@
     {
       "parameters": {
         "content": "# FAILURE INTAKE\n\n- Captures workflow failures from n8n Error Trigger.\n- Accepts internal failure calls from customer chat workflows.\n- Normalises error details for logging and alerting.",
-        "height": 876,
+        "height": 684,
         "width": 436,
         "color": 5
       },
@@ -15,15 +15,15 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        -656,
-        -400
+        -688,
+        -592
       ]
     },
     {
       "parameters": {
         "content": "# PARALLEL HANDLING\n\n- Logs workflow failures and alerts support independently.\n- Keeps the email alert path separate from Sheets logging.\n\n## Required manual configuration:\n\n- **Append Failure Log**\n  - `documentId.value`: Set this to the Google Sheets workbook used for failure logs.\n- **Send Failure Alert**\n  - `sendTo`: Set this to the support mailbox for failure alerts.",
-        "height": 876,
-        "width": 356,
+        "height": 684,
+        "width": 516,
         "color": 3
       },
       "id": "10000000-0000-4000-8000-000000000902",
@@ -31,8 +31,8 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        -208,
-        -400
+        -240,
+        -592
       ]
     },
     {
@@ -42,8 +42,8 @@
       "type": "n8n-nodes-base.errorTrigger",
       "typeVersion": 1,
       "position": [
-        -624,
-        160
+        -608,
+        -80
       ]
     },
     {
@@ -55,8 +55,8 @@
       "type": "n8n-nodes-base.executeWorkflowTrigger",
       "typeVersion": 1.1,
       "position": [
-        -624,
-        -64
+        -608,
+        -272
       ]
     },
     {
@@ -180,8 +180,8 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -368,
-        160
+        -384,
+        -176
       ]
     },
     {
@@ -193,8 +193,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -224,
-        160
+        -160,
+        -176
       ]
     },
     {
@@ -333,8 +333,8 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
       "position": [
-        -80,
-        64
+        64,
+        -272
       ],
       "retryOnFail": true,
       "maxTries": 3,
@@ -353,8 +353,8 @@
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2.2,
       "position": [
-        -80,
-        272
+        64,
+        -80
       ],
       "retryOnFail": true,
       "maxTries": 3,
@@ -424,5 +424,5 @@
   "meta": {
     "templateCredsSetupCompleted": true
   },
-  "versionId": "72a4dd35-7079-4e05-a54a-d397018f40e7"
+  "versionId": "53fa5c37-2230-4675-a79b-2eb281eb9936"
 }
