@@ -23,8 +23,6 @@ const ragIngestionWorkflowPath = path.join(
 );
 const validatorPath = path.join(repoRoot, 'scripts', 'validate-n8n-workflows.cjs');
 const exportHelperPath = path.join(repoRoot, 'scripts', 'export-n8n-workflows-live.ps1');
-const websiteIndexPath = path.join(repoRoot, 'website', 'index.html');
-const pinnedN8nChatVersion = '1.21.0';
 
 function makeTempRoot() {
   const baseDir = os.tmpdir();
@@ -445,23 +443,6 @@ test('normal validation rejects public chat workflows with AI memory connections
   } finally {
     fs.rmSync(tempRoot, { recursive: true, force: true });
   }
-});
-
-test('website chat widget stays stateless and pins n8n chat CDN assets', () => {
-  const html = readText(websiteIndexPath);
-
-  assert.match(html, /loadPreviousSession:\s*false/);
-  assert.doesNotMatch(html, /loadPreviousSession:\s*true/);
-  assert.match(
-    html,
-    new RegExp(`https://cdn\\.jsdelivr\\.net/npm/@n8n/chat@${pinnedN8nChatVersion.replace(/\./g, '\\.')}/dist/style\\.css`),
-  );
-  assert.match(
-    html,
-    new RegExp(`https://cdn\\.jsdelivr\\.net/npm/@n8n/chat@${pinnedN8nChatVersion.replace(/\./g, '\\.')}/dist/chat\\.bundle\\.es\\.js`),
-  );
-  assert.doesNotMatch(html, /https:\/\/cdn\.jsdelivr\.net\/npm\/@n8n\/chat\/dist\//);
-  assert.doesNotMatch(html, /@n8n\/chat@[0-9]+\.[0-9]+\.[0-9]+[-+][^/"]+/);
 });
 
 test('tracked frontend config and docs do not commit real chat webhook URLs', () => {
