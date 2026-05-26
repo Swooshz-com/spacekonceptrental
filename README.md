@@ -18,6 +18,16 @@ The capstone track is a customer support agent. The workflow is designed to:
 This repo uses n8n rather than AgentX, but the implementation still maps to the
 customer-support-agent capstone requirements.
 
+## Future Website Architecture
+
+The future website direction is documented in `docs/ARCHITECTURE.md`,
+`docs/PHASE-ROADMAP.md`, and `docs/checklists/PHASE-1-MVP.md`.
+
+In that direction, `website/` becomes a Vercel-hosted Next.js app, Supabase
+becomes the system of record, and public chat uses custom UI with first-party
+`POST /api/chat`. n8n remains a temporary server-side provider/integration only.
+The browser must not call n8n directly in the long-term app.
+
 ## Current Folders
 
 - `n8n-workflows/` - importable n8n workflow JSON exports.
@@ -131,8 +141,9 @@ session values. Current compensating controls include debounce, dedupe, safe
 Sheets writes, escaped emails, bounded transcripts, and stateless public chat.
 Full mitigation belongs in the future authenticated/backend-mediated UI.
 
-For final submission, deploy the replacement frontend to a simple host such as
-Netlify or GitHub Pages. Do not commit temporary tunnel URLs such as ngrok URLs.
+For the future website direction, deploy the replacement frontend as the
+Vercel-hosted Next.js app documented in `docs/ARCHITECTURE.md`. Do not commit
+temporary tunnel URLs such as ngrok URLs.
 
 ## Presentation Status
 
