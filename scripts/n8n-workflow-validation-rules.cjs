@@ -39,6 +39,11 @@ function fail(message) {
   activeFail(message);
 }
 
+function expressionReferencesJsonField(expression, field) {
+  const escapedField = field.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return new RegExp(`\\$json\\.${escapedField}(?![A-Za-z0-9_])`).test(String(expression || ''));
+}
+
 function checkCountFieldsStayNumeric(workflow, relative) {
   const stringifiedCountPattern = /\b[A-Za-z0-9_]*_count\s*:\s*String\s*\(/;
 
@@ -1325,9 +1330,12 @@ function checkRagIngestionDataPlaneSafety(workflow, relative) {
     last_indexed_at: 'ingested_at',
     status: 'status',
   })) {
-    if (!String(currentStateValues[field] || '').includes(source)) {
+    if (!expressionReferencesJsonField(currentStateValues[field], source)) {
       fail(`${relative} Upsert KB Current State must persist ${field} from ${source}.`);
     }
+  }
+  if (currentStateNode?.parameters?.options?.cellFormat !== 'RAW') {
+    fail(`${relative} Upsert KB Current State must set options.cellFormat to RAW so Drive file names stay literal in kb_current_state.`);
   }
   if (!hasConnection(workflow, 'Append KB Ingestion Log', 0, 'Upsert KB Current State')) {
     fail(`${relative} Upsert KB Current State must run after successful Pinecone insert and audit append.`);

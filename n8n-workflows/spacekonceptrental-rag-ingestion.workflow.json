@@ -812,16 +812,17 @@
             "modified_time": "={{ $json.modified_time }}",
             "chunks_count": "={{ $json.chunks_count }}",
             "status": "={{ $json.status }}",
-            "last_indexed_at": "={{ $json.last_indexed_at }}",
-            "last_successful_execution_id": "={{ $json.last_successful_execution_id }}",
-            "current_ingestion_key": "={{ $json.current_ingestion_key }}",
-            "current_content_sha256": "={{ $json.current_content_sha256 }}",
+            "last_indexed_at": "={{ $json.ingested_at }}",
+            "last_successful_execution_id": "={{ $json.execution_id }}",
+            "current_ingestion_key": "={{ $json.ingestion_key }}",
+            "current_content_sha256": "={{ $json.content_sha256 }}",
             "namespace": "={{ $json.namespace }}",
             "file_name": "={{ $json.file_name }}",
             "file_id": "={{ $json.file_id }}"
           },
           "matchingColumns": [
-            "file_id"
+            "file_id",
+            "namespace"
           ],
           "schema": [
             {
@@ -903,7 +904,7 @@
               "required": false,
               "defaultMatch": false,
               "display": true,
-              "type": "string",
+              "type": "number",
               "canBeUsedToMatch": true
             },
             {
@@ -928,7 +929,9 @@
           "attemptToConvertTypes": false,
           "convertFieldsToString": false
         },
-        "options": {}
+        "options": {
+          "cellFormat": "RAW"
+        }
       },
       "id": "a48106e1-403d-4f19-91da-current-state",
       "name": "Upsert KB Current State",
