@@ -4,15 +4,48 @@ import { getChatProvider } from "../../../lib/chat/placeholder-provider";
 import {
   ChatProviderError,
   type ChatProvider,
+  type ChatProviderResponse,
   type ChatProviderRequest
 } from "../../../lib/chat/provider";
 
 const FALLBACK_MESSAGE =
   "The assistant is temporarily unavailable. Please leave your contact details and the team will follow up.";
+const MAX_REQUEST_BODY_BYTES = 64 * 1024;
+const MAX_ID_LENGTH = 128;
+const MAX_MESSAGE_CONTENT_LENGTH = 4_000;
+const MAX_CONTEXT_BYTES = 8 * 1024;
+const MAX_LOCALE_LENGTH = 35;
+const MAX_TIMEZONE_LENGTH = 64;
+const RATE_LIMIT_MAX_REQUESTS = 5;
+const RATE_LIMIT_WINDOW_MS = 60_000;
+const IDEMPOTENCY_TTL_MS = 10 * 60_000;
+const MAX_RATE_LIMIT_BUCKETS = 1_000;
+const MAX_IDEMPOTENCY_ENTRIES = 1_000;
 
 type ValidationResult =
   | { ok: true; value: ChatProviderRequest }
   | { ok: false; message: string };
+type BodyReadResult =
+  | { ok: true; payload: unknown }
+  | { ok: false; response: Response };
+type RateLimitResult = {
+  allowed: boolean;
+  remaining: number;
+  resetAt: string;
+  resetAtTime: number;
+};
+type RateLimitBucket = {
+  count: number;
+  resetAt: number;
+};
+type IdempotencyEntry = {
+  expiresAt: number;
+  promise?: Promise<ChatProviderResponse>;
+  response?: ChatProviderResponse;
+};
+
+const rateLimitBuckets = new Map<string, RateLimitBucket>();
+const idempotencyEntries = new Map<string, IdempotencyEntry>();
 
 function createRequestId() {
   return crypto.randomUUID();
@@ -30,13 +63,38 @@ function getString(
   return typeof value === "string" ? value.trim() : undefined;
 }
 
+function getJsonByteLength(value: unknown): number {
+  return new TextEncoder().encode(JSON.stringify(value)).byteLength;
+}
+
+function validateMaxLength(
+  value: string | undefined,
+  fieldName: string,
+  maxLength: number
+): string | undefined {
+  if (value && value.length > maxLength) {
+    return `${fieldName} must be ${maxLength} characters or fewer.`;
+  }
+
+  return undefined;
+}
+
 function validatePayload(payload: unknown, requestId: string): ValidationResult {
   if (!isRecord(payload)) {
     return { ok: false, message: "Request body must be a JSON object." };
   }
 
+  const conversationId = getString(payload, "conversationId");
   const clientSessionId = getString(payload, "clientSessionId");
   const clientMessageId = getString(payload, "clientMessageId");
+  const idLengthError =
+    validateMaxLength(conversationId, "conversationId", MAX_ID_LENGTH) ??
+    validateMaxLength(clientSessionId, "clientSessionId", MAX_ID_LENGTH) ??
+    validateMaxLength(clientMessageId, "clientMessageId", MAX_ID_LENGTH);
+
+  if (idLengthError) {
+    return { ok: false, message: idLengthError };
+  }
 
   if (!clientSessionId) {
     return { ok: false, message: "clientSessionId is required." };
@@ -61,6 +119,25 @@ function validatePayload(payload: unknown, requestId: string): ValidationResult 
     return { ok: false, message: "message.content is required." };
   }
 
+  const contentLengthError = validateMaxLength(
+    content,
+    "message.content",
+    MAX_MESSAGE_CONTENT_LENGTH
+  );
+
+  if (contentLengthError) {
+    return { ok: false, message: contentLengthError };
+  }
+
+  const context = isRecord(payload.context) ? payload.context : undefined;
+
+  if (context && getJsonByteLength(context) > MAX_CONTEXT_BYTES) {
+    return {
+      ok: false,
+      message: `context must be ${MAX_CONTEXT_BYTES} bytes or fewer.`
+    };
+  }
+
   const capabilities = isRecord(payload.capabilities)
     ? payload.capabilities
     : {};
@@ -72,25 +149,102 @@ function validatePayload(payload: unknown, requestId: string): ValidationResult 
     };
   }
 
+  const locale = getString(payload, "locale") ?? "en-SG";
+  const timezone = getString(payload, "timezone") ?? "Asia/Singapore";
+  const localeLengthError =
+    validateMaxLength(locale, "locale", MAX_LOCALE_LENGTH) ??
+    validateMaxLength(timezone, "timezone", MAX_TIMEZONE_LENGTH);
+
+  if (localeLengthError) {
+    return { ok: false, message: localeLengthError };
+  }
+
   return {
     ok: true,
     value: {
       requestId,
-      conversationId: getString(payload, "conversationId"),
+      conversationId,
       clientSessionId,
       clientMessageId,
       message: {
         role: "user",
         content
       },
-      context: isRecord(payload.context) ? payload.context : undefined,
+      context,
       capabilities: {
         stream: false
       },
-      locale: getString(payload, "locale") ?? "en-SG",
-      timezone: getString(payload, "timezone") ?? "Asia/Singapore"
+      locale,
+      timezone
     }
   };
+}
+
+async function parseBoundedJsonBody(
+  request: Request,
+  requestId: string
+): Promise<BodyReadResult> {
+  const contentLengthHeader = request.headers.get("content-length");
+
+  if (contentLengthHeader) {
+    const contentLength = Number(contentLengthHeader);
+
+    if (!Number.isInteger(contentLength) || contentLength < 0) {
+      return {
+        ok: false,
+        response: validationError(
+          "Content-Length must be a non-negative integer.",
+          requestId
+        )
+      };
+    }
+
+    if (contentLength > MAX_REQUEST_BODY_BYTES) {
+      return {
+        ok: false,
+        response: requestTooLargeError(requestId)
+      };
+    }
+  }
+
+  const reader = request.body?.getReader();
+  const decoder = new TextDecoder();
+  let bytesRead = 0;
+  let body = "";
+
+  if (reader) {
+    while (true) {
+      const { done, value } = await reader.read();
+
+      if (done) {
+        break;
+      }
+
+      bytesRead += value.byteLength;
+
+      if (bytesRead > MAX_REQUEST_BODY_BYTES) {
+        await reader.cancel();
+
+        return {
+          ok: false,
+          response: requestTooLargeError(requestId)
+        };
+      }
+
+      body += decoder.decode(value, { stream: true });
+    }
+
+    body += decoder.decode();
+  }
+
+  try {
+    return { ok: true, payload: JSON.parse(body) };
+  } catch {
+    return {
+      ok: false,
+      response: validationError("Request body must be valid JSON.", requestId)
+    };
+  }
 }
 
 function validationError(message: string, requestId: string) {
@@ -103,6 +257,44 @@ function validationError(message: string, requestId: string) {
       requestId
     },
     { status: 400 }
+  );
+}
+
+function requestTooLargeError(requestId: string) {
+  return Response.json(
+    {
+      error: {
+        code: "REQUEST_TOO_LARGE",
+        message: `Request body must be ${MAX_REQUEST_BODY_BYTES} bytes or fewer.`
+      },
+      requestId
+    },
+    { status: 413 }
+  );
+}
+
+function rateLimitError(rateLimit: RateLimitResult, requestId: string) {
+  return Response.json(
+    {
+      error: {
+        code: "RATE_LIMITED",
+        message: "Too many chat requests. Please try again soon."
+      },
+      requestId,
+      rateLimit: {
+        remaining: rateLimit.remaining,
+        resetAt: rateLimit.resetAt
+      }
+    },
+    {
+      status: 429,
+      headers: {
+        "retry-after": Math.max(
+          1,
+          Math.ceil((rateLimit.resetAtTime - Date.now()) / 1_000)
+        ).toString()
+      }
+    }
   );
 }
 
@@ -123,32 +315,214 @@ function providerError(error: unknown, requestId: string) {
   );
 }
 
+function getClientIp(request: Request) {
+  const forwardedFor = request.headers.get("x-forwarded-for");
+
+  if (forwardedFor) {
+    const [clientIp] = forwardedFor.split(",");
+    const trimmed = clientIp?.trim();
+
+    if (trimmed) {
+      return trimmed;
+    }
+  }
+
+  return (
+    request.headers.get("cf-connecting-ip") ??
+    request.headers.get("x-real-ip") ??
+    request.headers.get("fly-client-ip") ??
+    "unknown"
+  );
+}
+
+function pruneRateLimitBuckets(now: number) {
+  if (rateLimitBuckets.size <= MAX_RATE_LIMIT_BUCKETS) {
+    return;
+  }
+
+  for (const [key, bucket] of rateLimitBuckets) {
+    if (bucket.resetAt <= now) {
+      rateLimitBuckets.delete(key);
+    }
+  }
+
+  while (rateLimitBuckets.size > MAX_RATE_LIMIT_BUCKETS) {
+    const oldestKey = rateLimitBuckets.keys().next().value;
+
+    if (!oldestKey) {
+      break;
+    }
+
+    rateLimitBuckets.delete(oldestKey);
+  }
+}
+
+function getRateLimitBucket(key: string, now: number): RateLimitBucket {
+  let bucket = rateLimitBuckets.get(key);
+
+  if (!bucket || bucket.resetAt <= now) {
+    bucket = {
+      count: 0,
+      resetAt: now + RATE_LIMIT_WINDOW_MS
+    };
+    rateLimitBuckets.set(key, bucket);
+  }
+
+  return bucket;
+}
+
+function toRateLimitResult(
+  bucket: RateLimitBucket,
+  allowed: boolean
+): RateLimitResult {
+  return {
+    allowed,
+    remaining: allowed
+      ? Math.max(0, RATE_LIMIT_MAX_REQUESTS - bucket.count)
+      : 0,
+    resetAt: new Date(bucket.resetAt).toISOString(),
+    resetAtTime: bucket.resetAt
+  };
+}
+
+function consumeRateLimit(
+  request: Request,
+  providerRequest: ChatProviderRequest
+): RateLimitResult {
+  const now = Date.now();
+  const ipBucket = getRateLimitBucket(`chat:ip:${getClientIp(request)}`, now);
+  const sessionBucket = getRateLimitBucket(
+    `chat:session:${providerRequest.clientSessionId}`,
+    now
+  );
+
+  pruneRateLimitBuckets(now);
+
+  if (ipBucket.count >= RATE_LIMIT_MAX_REQUESTS) {
+    return toRateLimitResult(ipBucket, false);
+  }
+
+  if (sessionBucket.count >= RATE_LIMIT_MAX_REQUESTS) {
+    return toRateLimitResult(sessionBucket, false);
+  }
+
+  ipBucket.count += 1;
+  sessionBucket.count += 1;
+
+  return toRateLimitResult(
+    ipBucket.count >= sessionBucket.count ? ipBucket : sessionBucket,
+    true
+  );
+}
+
+function getIdempotencyKey(request: ChatProviderRequest) {
+  return [
+    request.clientSessionId,
+    request.conversationId ?? "new",
+    request.clientMessageId
+  ].join(":");
+}
+
+function pruneIdempotencyEntries(now: number) {
+  if (idempotencyEntries.size <= MAX_IDEMPOTENCY_ENTRIES) {
+    return;
+  }
+
+  for (const [key, entry] of idempotencyEntries) {
+    if (entry.expiresAt <= now) {
+      idempotencyEntries.delete(key);
+    }
+  }
+
+  while (idempotencyEntries.size > MAX_IDEMPOTENCY_ENTRIES) {
+    const oldestKey = idempotencyEntries.keys().next().value;
+
+    if (!oldestKey) {
+      break;
+    }
+
+    idempotencyEntries.delete(oldestKey);
+  }
+}
+
+async function sendMessageOnce(
+  provider: ChatProvider,
+  providerRequest: ChatProviderRequest
+): Promise<ChatProviderResponse> {
+  const now = Date.now();
+  const key = getIdempotencyKey(providerRequest);
+  const cached = idempotencyEntries.get(key);
+
+  pruneIdempotencyEntries(now);
+
+  if (cached && cached.expiresAt > now) {
+    if (cached.response) {
+      return cached.response;
+    }
+
+    if (cached.promise) {
+      return cached.promise;
+    }
+  }
+
+  const promise = provider.sendMessage(providerRequest);
+
+  idempotencyEntries.set(key, {
+    expiresAt: now + IDEMPOTENCY_TTL_MS,
+    promise
+  });
+
+  try {
+    const response = await promise;
+
+    idempotencyEntries.set(key, {
+      expiresAt: Date.now() + IDEMPOTENCY_TTL_MS,
+      response
+    });
+
+    return response;
+  } catch (error) {
+    const current = idempotencyEntries.get(key);
+
+    if (current?.promise === promise) {
+      idempotencyEntries.delete(key);
+    }
+
+    throw error;
+  }
+}
+
 export async function handleChatPost(
   request: Request,
   provider: ChatProvider
 ): Promise<Response> {
   const requestId = createRequestId();
-  let payload: unknown;
+  const bodyRead = await parseBoundedJsonBody(request, requestId);
 
-  try {
-    payload = await request.json();
-  } catch {
-    return validationError("Request body must be valid JSON.", requestId);
+  if (!bodyRead.ok) {
+    return bodyRead.response;
   }
 
+  const payload = bodyRead.payload;
   const validation = validatePayload(payload, requestId);
   if (!validation.ok) {
     return validationError(validation.message, requestId);
   }
 
+  const rateLimit = consumeRateLimit(request, validation.value);
+
+  if (!rateLimit.allowed) {
+    return rateLimitError(rateLimit, requestId);
+  }
+
   try {
-    const providerResponse = await provider.sendMessage(validation.value);
+    const providerResponse = await sendMessageOnce(provider, validation.value);
 
     return Response.json({
       ...providerResponse,
       rateLimit: {
-        remaining: 5,
-        resetAt: new Date(Date.now() + 60_000).toISOString()
+        remaining: rateLimit.remaining,
+        resetAt: rateLimit.resetAt
       }
     });
   } catch (error) {
