@@ -333,52 +333,96 @@ function assertCsv(actual, expected, label) {
 }
 
 function assertNoRuntimeSupabaseUse() {
-  const roots = [
+  const browserAndRouteRoots = [
     path.join(repoRoot, 'website', 'app'),
     path.join(repoRoot, 'website', 'components'),
-    path.join(repoRoot, 'website', 'lib'),
-    path.join(repoRoot, 'website', 'test'),
   ];
+  const libRoot = path.join(repoRoot, 'website', 'lib');
+  const approvedServerSupabaseFiles = new Set([
+    'website/lib/supabase/env.ts',
+    'website/lib/supabase/server.ts',
+  ]);
   const extensions = new Set(['.js', '.jsx', '.mjs', '.cjs', '.ts', '.tsx']);
-  const blockedPatterns = [
+  const browserBlockedPatterns = [
     /@supabase\//i,
     /\bcreateClient\s*\(/i,
     /\bNEXT_PUBLIC_SUPABASE_/i,
     /\bSUPABASE_SERVICE_ROLE/i,
+    /\bSUPABASE_ANON_KEY\b/i,
     /\bSUPABASE_URL\b/i,
+    /lib\/supabase/i,
+  ];
+  const serverBlockedPatterns = [
+    /\bNEXT_PUBLIC_SUPABASE_/i,
+    /\bSUPABASE_SERVICE_ROLE/i,
   ];
   const violations = [];
 
-  function visit(filePath) {
-    const stat = fs.statSync(filePath);
+  function repoRelative(filePath) {
+    return path.relative(repoRoot, filePath).replace(/\\/g, '/');
+  }
 
-    if (stat.isDirectory()) {
-      for (const child of fs.readdirSync(filePath)) {
-        visit(path.join(filePath, child));
-      }
-      return;
-    }
+  function isTestSource(filePath) {
+    return /\.(?:test|spec)\.[cm]?[tj]sx?$/.test(filePath);
+  }
 
-    if (!extensions.has(path.extname(filePath))) {
-      return;
-    }
-
-    const content = fs.readFileSync(filePath, 'utf8');
-    for (const pattern of blockedPatterns) {
+  function assertNoMatches(filePath, content, patterns) {
+    for (const pattern of patterns) {
       if (pattern.test(content)) {
-        violations.push(path.relative(repoRoot, filePath));
+        violations.push(repoRelative(filePath));
         break;
       }
     }
   }
 
-  for (const root of roots) {
+  function visit(filePath, onSourceFile) {
+    const stat = fs.statSync(filePath);
+
+    if (stat.isDirectory()) {
+      for (const child of fs.readdirSync(filePath)) {
+        visit(path.join(filePath, child), onSourceFile);
+      }
+      return;
+    }
+
+    if (!extensions.has(path.extname(filePath)) || isTestSource(filePath)) {
+      return;
+    }
+
+    onSourceFile(filePath, fs.readFileSync(filePath, 'utf8'));
+  }
+
+  for (const root of browserAndRouteRoots) {
     if (fs.existsSync(root)) {
-      visit(root);
+      visit(root, (filePath, content) => {
+        assertNoMatches(filePath, content, browserBlockedPatterns);
+      });
     }
   }
 
-  assert.deepEqual(violations, [], 'Runtime website code must not use Supabase yet.');
+  if (fs.existsSync(libRoot)) {
+    visit(libRoot, (filePath, content) => {
+      const relativePath = repoRelative(filePath);
+
+      if (approvedServerSupabaseFiles.has(relativePath)) {
+        assert.match(
+          content,
+          /import\s+["']server-only["'];/,
+          `${relativePath} must be marked server-only.`,
+        );
+        assertNoMatches(filePath, content, serverBlockedPatterns);
+        return;
+      }
+
+      assertNoMatches(filePath, content, browserBlockedPatterns);
+    });
+  }
+
+  assert.deepEqual(
+    violations,
+    [],
+    'Runtime website Supabase code must stay server-only and private-env-only.',
+  );
 }
 
 check('RLS is enabled on all MVP tables', () => {
@@ -584,7 +628,7 @@ check('service-only tables expose no broad anonymous or authenticated client acc
   );
 });
 
-check('runtime website code still does not rely on Supabase', () => {
+check('runtime website Supabase code stays server-only', () => {
   assertNoRuntimeSupabaseUse();
 });
 

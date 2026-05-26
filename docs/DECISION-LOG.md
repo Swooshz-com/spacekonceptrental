@@ -103,3 +103,15 @@ Supabase-compatible auth role surface.
 Reason: the project needs executable proof for the committed RLS policies
 before runtime Supabase use, without linking to Supabase Cloud, adding
 credentials, deploying, or introducing app-side Supabase wiring.
+
+## 2026-05-27: Server-only Supabase Runtime Wiring
+
+Decision: Phase 1G-A adds a server-only Supabase JS wrapper under
+`website/lib/supabase/` that reads only `SUPABASE_URL` and
+`SUPABASE_ANON_KEY`, returns an explicit disabled result when missing, and is
+covered by static tests that keep `@supabase/*` out of browser-facing code.
+
+Reason: future server routes need a narrow Supabase foundation, but this phase
+must not introduce browser clients, service-role keys, Supabase Cloud
+connection, catalogue reads, persistence flows, deployment, or n8n workflow
+changes.

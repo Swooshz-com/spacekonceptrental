@@ -6,8 +6,11 @@ policies, Supabase client wiring, seed files, or deployment configuration.
 Phase 1E performed step 1 of the migration sequence: documentation. Phase 1F-B
 started step 2 with a base table migration. Phase 1F-C-A adds initial RLS
 policy SQL with static coverage. Phase 1F-C-B adds local-only behavioural RLS
-tests with fake fixtures inside the test harness. Seed data, Supabase runtime
-wiring, and persistence features remain deferred.
+tests with fake fixtures inside the test harness. PR #27 added fake/sample
+catalogue seed fixtures and Docker-only local validation. Phase 1G-A adds only
+server-side Supabase runtime wiring with private environment guards and static
+browser-boundary tests. Public catalogue reads, persistence features,
+deployment, and Supabase Cloud connection remain deferred.
 
 ## Naming Decision
 
@@ -278,11 +281,14 @@ Future Supabase work should land in this order:
 Phase 1E performed step 1. Phase 1F-B started step 2 with base table
 definitions. Phase 1F-C-A adds RLS policy SQL with static coverage. Phase
 1F-C-B adds local-only behavioural RLS tests for the committed migrations.
+Phase 1G-A completes step 6 with server-only runtime wiring only.
 
-## Deferred After Phase 1F-C-B
+## Deferred After Phase 1G-A
 
 - Supabase project connection.
-- Supabase client packages or runtime wiring.
+- Browser Supabase client code.
+- Public catalogue database reads.
+- Production seed data.
 - Real product, quote, conversation, or message persistence.
 - Admin product workflows.
 - Customer/private file import.

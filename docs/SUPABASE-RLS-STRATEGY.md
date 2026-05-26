@@ -2,11 +2,13 @@
 
 Phase 1F-C-A adds initial RLS enablement and policy SQL with static coverage.
 Phase 1F-C-B adds a local-only database execution harness with behavioural
-tenant-isolation tests. It does not add Supabase client wiring, runtime
-catalogue reads, persistence, seed data, or deployment configuration.
+tenant-isolation tests. Phase 1G-A adds only server-side Supabase client wiring
+with private environment guards and static browser-boundary tests. It does not
+add runtime catalogue reads, persistence, production seed data, Supabase Cloud
+connection, or deployment configuration.
 
-No runtime path should rely on Supabase until server-only app wiring and the
-specific runtime flows are separately approved and tested.
+No runtime route should read or write Supabase data until each specific flow is
+separately approved and tested.
 
 ## Boundary Model
 
@@ -127,15 +129,16 @@ Phase 1F-C-A adds static tests proving the intended migration structure. Phase
   connection metadata.
 - Service-only tables are not broadly readable from browser-role clients, and
   representative browser-role writes are rejected.
-- Runtime website code still does not rely on Supabase.
+- Runtime website feature paths still do not rely on Supabase data, and the
+  approved server-side client wrapper stays out of browser-facing code.
 
 Future runtime work must add targeted tests for any newly approved write path,
 including anonymous quote creation, chat persistence, and server-side
 service-role operations.
 
-## Deferred After Phase 1F-C-B
+## Deferred After Phase 1G-A
 
-- Supabase client packages.
+- Browser Supabase client code.
 - Auth UI.
 - Admin routes.
 - Direct browser Supabase reads or writes.
