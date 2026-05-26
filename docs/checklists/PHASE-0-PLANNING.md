@@ -1,32 +1,38 @@
 # Phase 0 Checklist: Planning, Docs, And Context
 
-Phase 0 is docs and planning only. It does not approve app development.
+Phase 0 was docs and planning only. It did not approve app development.
+The repo has since moved into Phase 1; this checklist records whether Phase 0
+planning outcomes were completed and whether its non-actions were upheld during
+that phase.
 
 ## Required Outcomes
 
-- [ ] Architecture docs complete.
-- [ ] ADR complete.
-- [ ] Safety boundaries complete.
-- [ ] Decision log started.
-- [ ] Website implementation plan amended.
-- [ ] Dirty worktree / clean branch rule recorded.
-- [ ] Local config rule recorded.
-- [ ] All phase checklists created.
-- [ ] Root `AGENTS.md` created or updated.
-- [ ] README points to the new architecture docs if useful.
+- [x] Architecture docs complete.
+- [x] ADR complete.
+- [x] Safety boundaries complete.
+- [x] Decision log started.
+- [x] Website implementation plan superseded by architecture docs.
+- [x] Dirty worktree / clean branch rule recorded.
+- [x] Local config rule recorded.
+- [x] All phase checklists created.
+- [x] Root `AGENTS.md` created or updated.
+- [x] README points to the new architecture docs.
 
-## Explicit Non-actions
+## Historical Phase 0 Non-actions
 
-- [ ] No app development yet.
-- [ ] No Next.js scaffold yet.
-- [ ] No Supabase migrations yet.
-- [ ] No workflow JSON changes.
-- [ ] No live n8n actions.
-- [ ] No Docker actions.
-- [ ] No workflow import/export.
-- [ ] No workflow activation/execution.
-- [ ] No credential actions.
-- [ ] No deployment or production actions.
+These were Phase 0 constraints, not current Phase 1 status. Later approved
+Phase 1 work added the Next.js scaffold and Supabase migration planning.
+
+- [x] No app development during Phase 0.
+- [x] No Next.js scaffold during Phase 0.
+- [x] No Supabase migrations during Phase 0.
+- [x] No workflow JSON changes during Phase 0.
+- [x] No live n8n actions during Phase 0.
+- [x] No Docker actions during Phase 0.
+- [x] No workflow import/export during Phase 0.
+- [x] No workflow activation/execution during Phase 0.
+- [x] No credential actions during Phase 0.
+- [x] No deployment or production actions during Phase 0.
 
 ## Validation
 
