@@ -24,6 +24,11 @@ const expectedBaseSchemaTables = [
   'audit_logs',
   'integration_connections',
 ];
+const expectedRlsTables = expectedBaseSchemaTables;
+const serviceOnlyRlsTables = [
+  'usage_events',
+  'audit_logs',
+];
 
 function makeTempRoot() {
   const baseDir = os.tmpdir();
@@ -69,6 +74,24 @@ function readRealBaseSchemaMigration() {
     files.length,
     1,
     `Expected exactly one create_base_schema migration, found: ${files.join(', ')}`,
+  );
+
+  const fileName = files[0];
+  return {
+    fileName,
+    content: fs.readFileSync(path.join(realMigrationsDir, fileName), 'utf8'),
+  };
+}
+
+function readRealRlsPolicyMigration() {
+  const files = fs
+    .readdirSync(realMigrationsDir)
+    .filter((fileName) => /^\d{14}_enable_rls_policies\.sql$/.test(fileName));
+
+  assert.equal(
+    files.length,
+    1,
+    `Expected exactly one enable_rls_policies migration, found: ${files.join(', ')}`,
   );
 
   const fileName = files[0];
@@ -255,11 +278,17 @@ test('real base schema migration filename follows the repo convention', () => {
   assert.match(fileName, /^\d{14}_create_base_schema\.sql$/);
 });
 
-test('real base schema migration passes static validation', () => {
+test('real RLS policy migration filename follows the repo convention', () => {
+  const { fileName } = readRealRlsPolicyMigration();
+
+  assert.match(fileName, /^\d{14}_enable_rls_policies\.sql$/);
+});
+
+test('real migration directory passes static validation', () => {
   const result = runValidator(realMigrationsDir);
 
   assert.equal(result.status, 0, result.stdout + result.stderr);
-  assert.match(result.stdout, /checked 1 migration SQL file\(s\)/);
+  assert.match(result.stdout, /checked 2 migration SQL file\(s\)/);
 });
 
 test('real base schema migration creates the planned MVP tables', () => {
@@ -316,4 +345,96 @@ test('real base schema migration does not add RLS policy SQL or seed data', () =
     /\balter\s+table\b[\s\S]*?\benable\s+row\s+level\s+security\b/i,
   );
   assert.doesNotMatch(content, /\binsert\s+into\b/i);
+});
+
+test('real RLS policy migration enables RLS for each MVP table', () => {
+  const { content } = readRealRlsPolicyMigration();
+  const sql = normalizeSql(content);
+
+  for (const tableName of expectedRlsTables) {
+    assert.ok(
+      sql.includes(`alter table public.${tableName} enable row level security;`),
+      `Missing RLS enablement for ${tableName}`,
+    );
+  }
+});
+
+test('real RLS policy migration includes public catalogue read policies only for published data', () => {
+  const { content } = readRealRlsPolicyMigration();
+  const sql = normalizeSql(content);
+
+  assert.match(sql, /create policy categories_public_read_published on public\.categories for select to anon, authenticated using \(is_published = true\);/);
+  assert.match(sql, /create policy products_public_read_published on public\.products for select to anon, authenticated using \(status = 'published'\);/);
+  assert.match(sql, /create policy product_images_public_read_published_products on public\.product_images for select to anon, authenticated using \(.*exists \( select 1 from public\.products p where p\.id = product_images\.product_id and p\.workspace_id = product_images\.workspace_id and p\.status = 'published' \).* \);/);
+});
+
+test('real RLS policy migration scopes admin reads through workspace membership', () => {
+  const { content } = readRealRlsPolicyMigration();
+  const sql = normalizeSql(content);
+
+  assert.match(sql, /create or replace function public\.is_workspace_member\(target_workspace_id uuid\)/);
+  assert.match(sql, /au\.auth_user_id = auth\.uid\(\)/);
+  assert.match(sql, /m\.status = 'active'/);
+
+  assert.match(
+    sql,
+    /create policy workspaces_member_read on public\.workspaces for select to authenticated using \(public\.is_workspace_member\(id\)\);/,
+  );
+
+  const workspaceScopedAdminPolicyTables = [
+    'memberships',
+    'categories',
+    'products',
+    'product_images',
+    'quote_requests',
+    'quote_request_items',
+    'conversations',
+    'messages',
+    'integration_connections',
+  ];
+
+  for (const tableName of workspaceScopedAdminPolicyTables) {
+    assert.match(
+      sql,
+      new RegExp(`create policy ${tableName}_member_read on public\\.${tableName} for select to authenticated using \\(public\\.is_workspace_member\\(workspace_id\\)\\);`),
+      `Missing membership-scoped read policy for ${tableName}`,
+    );
+  }
+});
+
+test('real RLS policy migration keeps service-only tables without broad anonymous policies', () => {
+  const { content } = readRealRlsPolicyMigration();
+  const sql = normalizeSql(content);
+
+  for (const tableName of serviceOnlyRlsTables) {
+    assert.doesNotMatch(
+      sql,
+      new RegExp(`create policy .* on public\\.${tableName} .* to anon`),
+      `${tableName} should not have anonymous policies`,
+    );
+    assert.doesNotMatch(
+      sql,
+      new RegExp(`create policy .* on public\\.${tableName} .* using \\(true\\)`),
+      `${tableName} should not have broad true policies`,
+    );
+    assert.doesNotMatch(
+      sql,
+      new RegExp(`create policy .* on public\\.${tableName} .* with check \\(true\\)`),
+      `${tableName} should not have broad true write policies`,
+    );
+  }
+});
+
+test('real RLS policy migration does not add seed data, destructive SQL, or secret references', () => {
+  const { content } = readRealRlsPolicyMigration();
+
+  assert.doesNotMatch(content, /\binsert\s+into\b/i);
+  assert.doesNotMatch(content, /\bdrop\s+schema\b/i);
+  assert.doesNotMatch(content, /\bdrop\s+table\b/i);
+  assert.doesNotMatch(content, /\btruncate\b/i);
+  assert.doesNotMatch(content, /\bdelete\s+from\b/i);
+  assert.doesNotMatch(content, /\bdrop\s+policy\b/i);
+  assert.doesNotMatch(content, /\.env/i);
+  assert.doesNotMatch(content, /SUPABASE_SERVICE_ROLE_KEY/i);
+  assert.doesNotMatch(content, /NEXT_PUBLIC_/i);
 });

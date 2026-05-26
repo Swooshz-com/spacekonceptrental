@@ -4,7 +4,8 @@ This is a planning document only. It does not define SQL migrations, RLS
 policies, Supabase client wiring, seed files, or deployment configuration.
 
 Phase 1E performed step 1 of the migration sequence: documentation. Phase 1F-B
-starts step 2 with a base table migration only. RLS policies, seed data,
+started step 2 with a base table migration. Phase 1F-C-A adds initial RLS
+policy SQL with static coverage only. Behavioural RLS tests, seed data,
 Supabase runtime wiring, and persistence features remain deferred.
 
 ## Naming Decision
@@ -16,7 +17,7 @@ isolation when describing the security model, but the planned table name is
 ## Access Levels
 
 - Public-readable: data that may be visible to anonymous site visitors after
-  RLS policies and tests exist.
+  RLS policies and behavioural tests exist.
 - Admin-only: data visible only to authenticated admin users scoped through
   workspace membership.
 - Service-only: data written or read only by server-side code using privileged
@@ -273,13 +274,12 @@ Future Supabase work should land in this order:
 8. Quote persistence.
 9. Conversation and message persistence.
 
-Phase 1E performed step 1 only. Phase 1F-B starts step 2 with base table
-definitions only.
+Phase 1E performed step 1. Phase 1F-B started step 2 with base table
+definitions. Phase 1F-C-A adds RLS policy SQL only.
 
-## Deferred After Phase 1F-B
+## Deferred After Phase 1F-C-A
 
-- RLS policy implementation.
-- RLS and tenant-isolation tests.
+- Behavioural RLS and tenant-isolation tests.
 - Supabase project connection.
 - Supabase client packages or runtime wiring.
 - Real product, quote, conversation, or message persistence.

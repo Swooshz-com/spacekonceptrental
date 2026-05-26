@@ -1,9 +1,10 @@
 # Supabase Migration Conventions
 
 This document defines conventions for Supabase migration PRs. Phase 1F-A added
-the scaffold and static validation harness. Phase 1F-B adds the first base
-schema migration. RLS SQL, seed SQL, Supabase CLI configuration, and live
-Supabase connections remain deferred.
+the scaffold and static validation harness. Phase 1F-B added the first base
+schema migration. Phase 1F-C-A adds initial RLS policy SQL with static
+coverage only. Seed SQL, Supabase CLI configuration, live Supabase
+connections, and runtime app wiring remain deferred.
 
 ## Directory
 
@@ -96,8 +97,9 @@ should scope admin access through active membership.
 
 ## RLS Requirements
 
-RLS policies must not be added without tests. Tests should prove both allowed
-and denied access paths, including cross-workspace denial.
+RLS policy migrations must include static coverage. Runtime app use must wait
+for behavioural database tests that prove both allowed and denied access paths,
+including cross-workspace denial.
 
 Policy PRs should cover:
 
