@@ -857,6 +857,93 @@ test('normal validation rejects missing current-state update after RAG insert', 
   }
 });
 
+test('normal validation rejects current-state upsert that drops dedupe fields or RAW writes', () => {
+  const tempRoot = makeTempRoot();
+  try {
+    const workflowDir = path.join(tempRoot, 'n8n-workflows');
+    const workflow = readRagIngestionWorkflow();
+    const currentState = findNode(workflow, 'Upsert KB Current State');
+    const values = currentState.parameters.columns.value;
+
+    currentState.parameters.columns.matchingColumns = ['file_id', 'namespace'];
+    values.current_content_sha256 = '={{ $json.current_content_sha256 }}';
+    values.current_ingestion_key = '={{ $json.current_ingestion_key }}';
+    values.last_successful_execution_id = '={{ $json.last_successful_execution_id }}';
+    values.last_indexed_at = '={{ $json.last_indexed_at }}';
+    currentState.parameters.options = {};
+
+    const chunksCountField = currentState.parameters.columns.schema.find((entry) => entry.id === 'chunks_count');
+    chunksCountField.type = 'number';
+
+    writeWorkflow(workflowDir, 'spacekonceptrental-rag-ingestion.workflow.json', workflow);
+
+    const result = runValidator([workflowDir]);
+
+    assert.notEqual(result.status, 0, result.stdout + result.stderr);
+    assert.match(
+      result.stderr + result.stdout,
+      /Upsert KB Current State must persist current_content_sha256 from content_sha256/,
+    );
+    assert.match(
+      result.stderr + result.stdout,
+      /Upsert KB Current State must persist current_ingestion_key from ingestion_key/,
+    );
+    assert.match(
+      result.stderr + result.stdout,
+      /Upsert KB Current State must persist last_successful_execution_id from execution_id/,
+    );
+    assert.match(
+      result.stderr + result.stdout,
+      /Upsert KB Current State must persist last_indexed_at from ingested_at/,
+    );
+    assert.match(
+      result.stderr + result.stdout,
+      /Upsert KB Current State must set options.cellFormat to RAW/,
+    );
+  } finally {
+    fs.rmSync(tempRoot, { recursive: true, force: true });
+  }
+});
+
+test('normal validation rejects current-state upsert that depends on append output', () => {
+  const tempRoot = makeTempRoot();
+  try {
+    const workflowDir = path.join(tempRoot, 'n8n-workflows');
+    const workflow = readRagIngestionWorkflow();
+    const currentState = findNode(workflow, 'Upsert KB Current State');
+    const values = currentState.parameters.columns.value;
+
+    currentState.parameters.columns.matchingColumns = ['file_id', 'namespace'];
+    values.file_id = '={{ $json.file_id }}';
+    values.file_name = '={{ $json.file_name }}';
+    values.namespace = '={{ $json.namespace }}';
+    values.current_content_sha256 = '={{ $json.content_sha256 }}';
+    values.current_ingestion_key = '={{ $json.ingestion_key }}';
+    values.last_successful_execution_id = '={{ $json.execution_id }}';
+    values.last_indexed_at = '={{ $json.ingested_at }}';
+    values.status = '={{ $json.status }}';
+    values.chunks_count = '={{ $json.chunks_count }}';
+    values.modified_time = '={{ $json.modified_time }}';
+    values.file_url = '={{ $json.file_url }}';
+    currentState.parameters.options = { cellFormat: 'RAW' };
+
+    const chunksCountField = currentState.parameters.columns.schema.find((entry) => entry.id === 'chunks_count');
+    chunksCountField.type = 'number';
+
+    writeWorkflow(workflowDir, 'spacekonceptrental-rag-ingestion.workflow.json', workflow);
+
+    const result = runValidator([workflowDir]);
+
+    assert.notEqual(result.status, 0, result.stdout + result.stderr);
+    assert.match(
+      result.stderr + result.stdout,
+      /Upsert KB Current State must persist current_ingestion_key from ingestion_key via Prepare Ingestion Log/,
+    );
+  } finally {
+    fs.rmSync(tempRoot, { recursive: true, force: true });
+  }
+});
+
 test('normal validation rejects incomplete RAG audit fields and string chunk counts', () => {
   const tempRoot = makeTempRoot();
   try {

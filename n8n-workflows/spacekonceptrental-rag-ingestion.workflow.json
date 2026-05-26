@@ -808,20 +808,21 @@
         "columns": {
           "mappingMode": "defineBelow",
           "value": {
-            "file_url": "={{ $json.file_url }}",
-            "modified_time": "={{ $json.modified_time }}",
-            "chunks_count": "={{ $json.chunks_count }}",
-            "status": "={{ $json.status }}",
-            "last_indexed_at": "={{ $json.last_indexed_at }}",
-            "last_successful_execution_id": "={{ $json.last_successful_execution_id }}",
-            "current_ingestion_key": "={{ $json.current_ingestion_key }}",
-            "current_content_sha256": "={{ $json.current_content_sha256 }}",
-            "namespace": "={{ $json.namespace }}",
-            "file_name": "={{ $json.file_name }}",
-            "file_id": "={{ $json.file_id }}"
+            "file_url": "={{ $node[\"Prepare Ingestion Log\"].json.file_url }}",
+            "modified_time": "={{ $node[\"Prepare Ingestion Log\"].json.modified_time }}",
+            "chunks_count": "={{ $node[\"Prepare Ingestion Log\"].json.chunks_count }}",
+            "status": "={{ $node[\"Prepare Ingestion Log\"].json.status }}",
+            "last_indexed_at": "={{ $node[\"Prepare Ingestion Log\"].json.ingested_at }}",
+            "last_successful_execution_id": "={{ $node[\"Prepare Ingestion Log\"].json.execution_id }}",
+            "current_ingestion_key": "={{ $node[\"Prepare Ingestion Log\"].json.ingestion_key }}",
+            "current_content_sha256": "={{ $node[\"Prepare Ingestion Log\"].json.content_sha256 }}",
+            "namespace": "={{ $node[\"Prepare Ingestion Log\"].json.namespace }}",
+            "file_name": "={{ $node[\"Prepare Ingestion Log\"].json.file_name }}",
+            "file_id": "={{ $node[\"Prepare Ingestion Log\"].json.file_id }}"
           },
           "matchingColumns": [
-            "file_id"
+            "file_id",
+            "namespace"
           ],
           "schema": [
             {
@@ -903,7 +904,7 @@
               "required": false,
               "defaultMatch": false,
               "display": true,
-              "type": "string",
+              "type": "number",
               "canBeUsedToMatch": true
             },
             {
@@ -928,7 +929,9 @@
           "attemptToConvertTypes": false,
           "convertFieldsToString": false
         },
-        "options": {}
+        "options": {
+          "cellFormat": "RAW"
+        }
       },
       "id": "a48106e1-403d-4f19-91da-current-state",
       "name": "Upsert KB Current State",
