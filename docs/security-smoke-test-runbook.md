@@ -70,6 +70,7 @@ for local import safety, so they must remain uncommitted.
 | Ticket capture | Ticket row for actionable complaint; no lead unless the customer also asks for a new rental quote |
 | Incomplete ticket | Bot asks for missing details; escalation or unanswered notification can fire; no empty ticket row |
 | Low-confidence question | No invented facts; unanswered route logs and alerts for follow-up |
+| Unsupported/off-catalog inventory | Ask `Do you rent transparent levitating chairs with built-in holograms for orbital events?`; reply is safe and non-fabricated; unanswered route logs and alerts; no lead or ticket row unless the customer explicitly asks for human follow-up or gives valid support/quote context |
 | Rapid-message debounce | Older same-session rows become `merged`; one effective answer is sent from the newest row |
 | Public chat statelessness | Fresh browser sessions do not load previous chat history or AI memory |
 | Gmail readability | Lead, ticket, escalation, unanswered, and failure alerts are readable escaped HTML, not raw JSON |

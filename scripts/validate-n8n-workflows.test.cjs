@@ -48,6 +48,23 @@ function findNode(workflow, nodeName) {
   return node;
 }
 
+function runParseStrictJsonResponse(workflow, original, agentOutput) {
+  const node = findNode(workflow, 'Parse Strict JSON Response');
+  const code = String(node.parameters.jsCode || '');
+  const selectNode = (nodeName) => {
+    assert.equal(nodeName, 'Restore Processing Context');
+    return {
+      first() {
+        return { json: original };
+      },
+    };
+  };
+
+  return new Function('items', '$', code)([
+    { json: { output: JSON.stringify(agentOutput) } },
+  ], selectNode)[0].json;
+}
+
 function removeNode(workflow, nodeName) {
   workflow.nodes = workflow.nodes.filter((candidate) => candidate.name !== nodeName);
   delete workflow.connections[nodeName];
@@ -534,6 +551,91 @@ test('normal validation rejects unbounded transcripts and incomplete ticket supp
   } finally {
     fs.rmSync(tempRoot, { recursive: true, force: true });
   }
+});
+
+test('normal validation rejects unanswered routing without deterministic unanswered flag', () => {
+  const tempRoot = makeTempRoot();
+  try {
+    const workflowDir = path.join(tempRoot, 'n8n-workflows');
+    const workflow = readCustomerSupportWorkflow();
+    findNode(workflow, 'Unanswered or Low Confidence?').parameters.conditions.conditions =
+      findNode(workflow, 'Unanswered or Low Confidence?').parameters.conditions.conditions.filter((condition) =>
+        !String(condition.leftValue || '').includes('unanswered_required')
+      );
+    writeWorkflow(workflowDir, 'spacekonceptrental-customer-support-agent.workflow.json', workflow);
+
+    const result = runValidator([workflowDir]);
+
+    assert.notEqual(result.status, 0, result.stdout + result.stderr);
+    assert.match(
+      result.stderr + result.stdout,
+      /Unanswered or Low Confidence\? must check unanswered_required/,
+    );
+  } finally {
+    fs.rmSync(tempRoot, { recursive: true, force: true });
+  }
+});
+
+test('normal validation rejects parser without deterministic unanswered derivation', () => {
+  const tempRoot = makeTempRoot();
+  try {
+    const workflowDir = path.join(tempRoot, 'n8n-workflows');
+    const workflow = readCustomerSupportWorkflow();
+    findNode(workflow, 'Parse Strict JSON Response').parameters.jsCode =
+      findNode(workflow, 'Parse Strict JSON Response').parameters.jsCode
+        .replace(/deriveUnansweredReason/g, 'removedDerivation')
+        .replace(/unanswered_required/g, 'removedRequiredFlag')
+        .replace(/unanswered_reason/g, 'removedReasonField')
+        .replace(/unansweredReason/g, 'removedReason');
+    writeWorkflow(workflowDir, 'spacekonceptrental-customer-support-agent.workflow.json', workflow);
+
+    const result = runValidator([workflowDir]);
+
+    assert.notEqual(result.status, 0, result.stdout + result.stderr);
+    assert.match(
+      result.stderr + result.stdout,
+      /Parse Strict JSON Response must derive unanswered_required and unanswered_reason/,
+    );
+  } finally {
+    fs.rmSync(tempRoot, { recursive: true, force: true });
+  }
+});
+
+test('parse response forces unanswered routing for unsupported off-catalog FAQ confidence 1', () => {
+  const workflow = readCustomerSupportWorkflow();
+  const parsed = runParseStrictJsonResponse(workflow, {
+    session_id: 'smoke-session',
+    message_id: 'smoke-message',
+    message: 'Do you rent transparent levitating chairs with built-in holograms for orbital events?',
+    user_message_redacted: 'Do you rent transparent levitating chairs with built-in holograms for orbital events?',
+    channel: 'chat',
+    timestamp: '2026-05-26 12:00:00 SGT',
+  }, {
+    reply: 'I do not have that detail in the current SpaceKonceptRental information, so I cannot confirm that item is available.',
+    intent: 'faq',
+    confidence: 1,
+    needs_escalation: false,
+    needs_human_followup: false,
+    lead_captured: false,
+    ticket_required: false,
+    booking_requested: false,
+    missing_fields: [],
+    lead: {},
+    ticket: {},
+    booking: {},
+    retrieval_summary: {
+      used_kb: false,
+      source_titles: [],
+      source_file_ids: [],
+    },
+  });
+  const unansweredConditions = JSON.stringify(findNode(workflow, 'Unanswered or Low Confidence?').parameters.conditions || {});
+
+  assert.equal(parsed.intent, 'faq');
+  assert.equal(parsed.confidence, 1);
+  assert.equal(parsed.unanswered_required, true);
+  assert.equal(parsed.unanswered_reason, 'unsupported_inventory');
+  assert.match(unansweredConditions, /unanswered_required/);
 });
 
 test('normal validation rejects raw Sheets writes for customer follow-up records', () => {

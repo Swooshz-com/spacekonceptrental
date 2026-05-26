@@ -640,6 +640,16 @@ function checkCustomerSupportAgentLoggingContract(workflow, relative) {
     'incomplete_ticket_followup',
     'ticketRequired && !ticketReady',
   ], 'must formula-harden sheet fields and expose incomplete-ticket follow-up state.');
+  requireCodeSnippets(relative, 'Parse Strict JSON Response', parserCode, [
+    'deriveUnansweredReason',
+    'unanswered_required',
+    'unanswered_reason',
+    'handledByOwnerRoute',
+    'unsupported_inventory',
+    'out_of_scope',
+    'no_kb_answer',
+    'retrievalSummary.used_kb === false',
+  ], 'must derive unanswered_required and unanswered_reason after structured output parsing.');
 
   const failureNode = findWorkflowNode(workflow, 'Build Internal Error Context');
   const failureCompletedAt = findAssignment(failureNode, 'completed_at');
@@ -673,7 +683,7 @@ function checkCustomerSupportAgentLoggingContract(workflow, relative) {
 
   const escalationBranch = findWorkflowNode(workflow, 'Needs Escalation?');
   const escalationBranchConditions = JSON.stringify(escalationBranch?.parameters?.conditions || {});
-  for (const field of ['needs_escalation', 'incomplete_ticket_followup', 'lead_captured', 'booking_requested', 'ticket_ready', 'confidence', 'unknown']) {
+  for (const field of ['needs_escalation', 'incomplete_ticket_followup', 'lead_captured', 'booking_requested', 'ticket_ready', 'confidence', 'unknown', 'unanswered_required']) {
     if (!escalationBranchConditions.includes(field)) {
       fail(`${relative} Needs Escalation? must avoid duplicate alerts for lead, booking, ticket, and unanswered follow-up emails.`);
       break;
@@ -681,6 +691,12 @@ function checkCustomerSupportAgentLoggingContract(workflow, relative) {
   }
   if (escalationBranchConditions.includes('ticket_required).toLowerCase() !==') || !escalationBranchConditions.includes('incomplete_ticket_followup')) {
     fail(`${relative} Needs Escalation? must allow incomplete escalated support tickets to reach human notifications.`);
+  }
+
+  const unansweredBranch = findWorkflowNode(workflow, 'Unanswered or Low Confidence?');
+  const unansweredBranchConditions = JSON.stringify(unansweredBranch?.parameters?.conditions || {});
+  if (!unansweredBranchConditions.includes('unanswered_required')) {
+    fail(`${relative} Unanswered or Low Confidence? must check unanswered_required before relying on confidence or unknown intent.`);
   }
 
   const outputParserNode = findWorkflowNode(workflow, 'Agent Structured Output Parser');
@@ -853,6 +869,10 @@ function checkCustomerSupportAgentLoggingContract(workflow, relative) {
       fail(`${relative} ${upsertNodeName} must persist conversation_ref and conversation_transcript.`);
     }
   }
+  const unansweredReasonAssignment = findAssignment(findWorkflowNode(workflow, 'Set Unanswered Row'), 'reason');
+  if (!String(unansweredReasonAssignment?.value || '').includes('unanswered_reason')) {
+    fail(`${relative} Set Unanswered Row must persist the deterministic unanswered_reason when present.`);
+  }
 
   const notificationEdges = [
     ['Upsert Lead or Booking', 'Send Lead Notification'],
@@ -900,6 +920,9 @@ function checkCustomerSupportAgentLoggingContract(workflow, relative) {
     'subject_lead_name',
     'subject_ticket_summary',
     'subject_unanswered_reference',
+    'safe_unanswered_reason',
+    'sheet_unanswered_reason',
+    'original.unanswered_reason',
     'safeSheetValue',
     'escapeHtml',
   ], 'must bound transcript rows and characters and prepare safe notification fields.');
