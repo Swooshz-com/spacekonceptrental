@@ -35,7 +35,7 @@ The future `website/` Next.js app owns:
 - Admin UI later.
 - Route handlers and server actions.
 - `POST /api/chat`.
-- Chat provider selection.
+- Server-only chat provider selection.
 - Request validation.
 - Rate limiting.
 - Safe error normalization.
@@ -78,11 +78,16 @@ n8n remains temporary server-side integration only:
 - Workflow automation.
 
 n8n is not the browser-facing app boundary. The old static `@n8n/chat` demo may
-remain only as temporary legacy reference until replaced.
+remain only as temporary legacy reference outside the production Next.js path.
+Browser-facing app code must not import `@n8n/chat`, read n8n webhook env vars,
+or reference n8n webhook URLs.
 
-Phase 1B adds server-only `N8nChatProvider` plumbing behind `POST /api/chat`.
-Its tests use mocked fetch responses only. Real webhook configuration,
-deployment, and live n8n testing remain deferred.
+Phase 1B added server-only `N8nChatProvider` plumbing behind `POST /api/chat`.
+Phase 1C selects the provider with server-only `CHAT_PROVIDER`. Unset, empty,
+and `n8n` select `N8nChatProvider`; unknown values fail with the same safe
+provider-unavailable response as other provider failures. Tests use mocked
+fetch responses only. Real webhook configuration, deployment, and live n8n
+testing remain deferred.
 
 ## Future Internal SaaS Chatbot Responsibilities
 
@@ -110,6 +115,10 @@ Every provider request must support:
 - No n8n errors or internals exposed to browser.
 
 Provider implementations are server-only.
+
+Provider selection is also server-only. Phase 1 supports only
+`CHAT_PROVIDER=n8n`; do not add `NEXT_PUBLIC_CHAT_PROVIDER`,
+`NEXT_PUBLIC_N8N_*`, or any browser-visible n8n provider configuration.
 
 ## Chat API Contract
 

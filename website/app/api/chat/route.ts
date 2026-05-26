@@ -712,5 +712,9 @@ export async function handleChatPost(
 }
 
 export async function POST(request: Request) {
-  return handleChatPost(request, getChatProvider());
+  try {
+    return await handleChatPost(request, getChatProvider());
+  } catch (error) {
+    return providerError(error, createRequestId());
+  }
 }
