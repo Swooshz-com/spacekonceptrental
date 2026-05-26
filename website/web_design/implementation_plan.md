@@ -4,6 +4,41 @@
 
 ---
 
+## Superseded Architecture Note
+
+This document still contains useful visual direction, page structure, design
+system notes, and mockup references. Its original implementation assumptions
+are superseded.
+
+Current source-of-truth docs:
+
+- `docs/ARCHITECTURE.md`
+- `docs/PHASE-ROADMAP.md`
+- `docs/checklists/PHASE-1-MVP.md`
+- `docs/SAFETY-BOUNDARIES.md`
+- `docs/ADR/0001-nextjs-supabase-chat-provider.md`
+
+Approved implementation direction:
+
+- `website/` becomes the future Next.js app root deployed by Vercel.
+- Supabase becomes the system of record for products, quote requests,
+  conversations, messages, auth, storage, RLS, and tenant-ready boundaries.
+- Browser chat must use custom chat UI plus first-party `POST /api/chat`.
+- The browser must not call n8n directly in the long-term app.
+- n8n is a temporary server-side `N8nChatProvider` and automation integration.
+- `InternalSaasChatProvider`, RAG/vector work, full admin, and SaaS platform
+  work are later phases and are not approved for immediate implementation.
+- The old static `@n8n/chat` demo is legacy/reference only until replaced.
+- Do not ship the old widget and new custom chat as competing production paths.
+- `website/chat-config.js` is gitignored and may contain a local real webhook
+  URL. Do not read, print, copy, migrate, commit, expose, or use it as source
+  for the new app. The new app reads n8n webhook URLs only from server-side env
+  such as `N8N_CHAT_WEBHOOK_URL`.
+
+Phase 1 is deliberately small. It is not "build the full SaaS platform now."
+
+---
+
 ## Concept Mockups
 
 ### 1. Homepage
@@ -37,7 +72,7 @@
 | **Primary user problem** | Finding, comparing, and requesting quotes for event furniture quickly |
 | **Primary user action** | Browse catalogue → add items to quote → submit enquiry |
 | **Business goal** | Generate qualified leads and quote requests through self-service browsing + AI chatbot |
-| **Key constraints** | Static site (no server-side), n8n webhook for chat/forms, no e-commerce checkout |
+| **Key constraints** | Superseded: future app is Next.js on Vercel with Supabase and first-party `/api/chat`; n8n is server-side temporary integration only |
 
 ## User Segments
 
@@ -280,10 +315,15 @@ graph TD
 | **Context-aware** | "Ask about this item" from product pages pre-fills context |
 
 **Security notes:**
-- Webhook URL stored in gitignored config file, never in HTML
-- No PII stored in `localStorage` beyond session ID
-- Chat input sanitized before display (XSS prevention)
-- No raw n8n internal IDs or error traces shown to users
+- Long-term chat UI calls first-party `POST /api/chat`, never n8n directly.
+- New app reads n8n webhook URL only from server-side env such as
+  `N8N_CHAT_WEBHOOK_URL`.
+- `website/chat-config.js` is legacy local config and must not be used as source
+  for the Next.js app.
+- No PII stored in `localStorage` beyond an anonymous session ID.
+- Chat input sanitized before display (XSS prevention).
+- No provider trace IDs, webhook URLs, n8n internal IDs, n8n errors, or stack
+  traces shown to users.
 
 ---
 
@@ -297,10 +337,10 @@ graph TD
 **Form fields:** Name*, Email*, Phone*, Event Date, Event Type (dropdown), Venue, Message*
 
 **Security notes:**
-- Form submits to n8n webhook via `fetch()`, not traditional `<form action>`
-- Client-side validation + honeypot field for spam
-- Success/error states with clear messaging
-- "Or chat with our AI assistant" link below form
+- Forms submit through first-party APIs or server actions, not directly to n8n.
+- Client-side validation + honeypot field for spam.
+- Success/error states with clear messaging.
+- "Or chat with our AI assistant" link below form.
 
 ---
 
@@ -379,6 +419,23 @@ Pricing table by vehicle type, time window, order value. Self-collection info.
 | Hosting | GitHub Pages or Netlify |
 | SEO | Schema.org LocalBusiness + Product markup |
 
+### Superseded Technology Stack
+
+The table above is retained as historical design context only. The approved
+implementation stack is:
+
+| Layer | Current Direction |
+|---|---|
+| Frontend | Next.js app under `website/`, deployed on Vercel |
+| UI | React components using this design system and prepared assets |
+| Chat UI | Custom `ChatWidget`, not long-term `@n8n/chat` |
+| Chat API | First-party `POST /api/chat` |
+| Chat provider | Server-only `ChatProvider` with `N8nChatProvider` in Phase 1 |
+| Future chat provider | `InternalSaasChatProvider` in a later approved phase |
+| Data | Supabase system of record for products, quotes, conversations, messages, auth, storage, and RLS |
+| n8n | Temporary server-side provider/integration only |
+| SEO | Next.js metadata and structured data |
+
 ## File Structure
 
 ```
@@ -420,6 +477,36 @@ website/
   chat-config.example.js
 ```
 
+### Future Next.js File Structure
+
+The static file structure above is retained as historical context only. Do not
+scaffold this during Phase 0. Phase 1 should introduce a small Next.js structure
+under `website/`, following `docs/checklists/PHASE-1-MVP.md`:
+
+```text
+website/
+  app/
+    page.tsx
+    catalogue/
+    product/
+    events/
+    quote/
+    api/
+      chat/
+        route.ts
+  components/
+    chat/
+      ChatWidget.tsx
+  lib/
+    chat/
+      providers/
+    supabase/
+  public/
+    assets/
+      images/
+  web_design/
+```
+
 ---
 
 ## Accessibility Checklist
@@ -438,6 +525,9 @@ website/
 ## Security & Privacy Checklist
 
 - [x] No secrets or webhook URLs in committed HTML/JS
+- [x] Browser chat calls first-party `/api/chat`, not n8n
+- [x] New app reads n8n webhook only from server-side env
+- [x] `website/chat-config.js` is not used as source for the new app
 - [x] Chat input sanitized before DOM insertion
 - [x] No PII in `localStorage` beyond session ID
 - [x] Honeypot spam protection on contact form
@@ -448,7 +538,45 @@ website/
 
 ---
 
-## Phased Implementation
+## Current Phased Implementation
+
+Use `docs/PHASE-ROADMAP.md` and `docs/checklists/` as the source of truth.
+
+### Phase 0 - Planning, Docs, And Context Only
+
+- Architecture docs, ADR, safety docs, decision log, roadmap, and checklists.
+- No app development.
+- No Next.js scaffold.
+- No Supabase migrations.
+- No workflow JSON changes.
+- No live n8n, Docker, import/export, credentials, deployment, or production
+  actions.
+
+### Phase 1 - Small MVP
+
+- Next.js scaffold under `website/`.
+- Vercel-ready app structure.
+- Public homepage/catalogue/product/event/quote shell using prepared assets.
+- Custom `ChatWidget`.
+- First-party `POST /api/chat` route.
+- Server-only `ChatProvider` interface.
+- Server-only `N8nChatProvider`.
+- Server-side env only: `N8N_CHAT_WEBHOOK_URL` and `CHAT_PROVIDER=n8n`.
+- Safe timeout, retry, idempotency, request ID, and error normalization.
+- Basic Supabase core schema only.
+- Tests proving frontend calls `/api/chat` only and exposes no n8n webhook URL.
+- Non-streaming MVP chat.
+
+Phase 1 is not the full SaaS platform, full RAG system, full admin inbox, vector
+stack, billing system, or streaming implementation.
+
+### Phase 2+ - Future Guardrails Only
+
+Later phases cover admin operations, internal chatbot provider, RAG/knowledge
+work, SaaS hardening, and billing/public launch. They are not approved for
+immediate implementation.
+
+## Superseded Original Phased Implementation
 
 ### Phase 1 — Core Website
 - Homepage (all sections)
@@ -491,16 +619,19 @@ website/
 ## Verification Plan
 
 ### Automated
-- HTML validation (W3C)
-- Lighthouse audit targets: Performance 90+, SEO 95+, Accessibility 95+
-- CSS validation
-- Link checker
-- Chrome DevTools responsive testing
+- `git diff --check` and `git status --short` for Phase 0 docs work
+- `/api/chat` validation tests in Phase 1
+- `clientMessageId` idempotency tests in Phase 1
+- Mocked n8n provider timeout/fallback tests in Phase 1
+- Frontend test proving chat UI posts only to `/api/chat`
+- Test proving no n8n webhook URL appears client-side
+- Supabase RLS/tenant-isolation tests when schema is introduced
 
 ### Manual
 - Cross-browser: Chrome, Firefox, Safari, Edge
 - Mobile: iOS Safari, Android Chrome
-- Chat widget with live n8n webhook
+- Custom chat widget with first-party `/api/chat`
+- Confirm no old `@n8n/chat` widget is shipped as a competing production path
 - Quote request end-to-end
 - Keyboard navigation full flow
 - Screen reader spot checks
