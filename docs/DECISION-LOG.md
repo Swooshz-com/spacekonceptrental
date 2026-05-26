@@ -81,3 +81,15 @@ safe provider-unavailable `/api/chat` response.
 
 Reason: provider selection must not create browser-visible n8n configuration or
 revive the old static n8n chat path as a production route.
+
+## 2026-05-27: Fail-closed Chat Rate-limit Fallback
+
+Decision: public chat rate limiting uses `clientSessionId` for per-session
+limits, a trusted client IP bucket only when `CHAT_TRUSTED_CLIENT_IP_HEADER`
+names a proxy/CDN-overwritten header, and a server-side fallback bucket when no
+trusted client IP source is available.
+
+Reason: user-supplied forwarding headers are spoofable, but relying only on
+attacker-controlled `clientSessionId` lets callers bypass the public chat cap
+by rotating sessions. The fallback bucket fails closed until deployment
+configures a trusted client IP header.

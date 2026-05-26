@@ -78,6 +78,10 @@ function readRealBaseSchemaMigration() {
   };
 }
 
+function normalizeSql(sql) {
+  return sql.replace(/\s+/g, ' ').trim().toLowerCase();
+}
+
 test('empty migration directory with no real SQL passes', () => {
   const root = makeTempRoot();
   const migrationsDir = writeReadmeOnlyMigrations(root);
@@ -266,6 +270,40 @@ test('real base schema migration creates the planned MVP tables', () => {
       content,
       new RegExp(`create\\s+table\\s+if\\s+not\\s+exists\\s+public\\.${tableName}\\b`, 'i'),
     );
+  }
+});
+
+test('real base schema migration adds workspace-safe parent keys for scoped relationships', () => {
+  const { content } = readRealBaseSchemaMigration();
+  const sql = normalizeSql(content);
+
+  const parentKeySnippets = [
+    'constraint categories_id_workspace_id_key unique (id, workspace_id)',
+    'constraint products_id_workspace_id_key unique (id, workspace_id)',
+    'constraint quote_requests_id_workspace_id_key unique (id, workspace_id)',
+    'constraint conversations_id_workspace_id_key unique (id, workspace_id)',
+  ];
+
+  for (const snippet of parentKeySnippets) {
+    assert.ok(sql.includes(snippet), `Missing workspace-safe parent key: ${snippet}`);
+  }
+});
+
+test('real base schema migration uses composite workspace foreign keys for scoped child rows', () => {
+  const { content } = readRealBaseSchemaMigration();
+  const sql = normalizeSql(content);
+
+  const relationshipSnippets = [
+    'constraint products_category_workspace_id_fkey foreign key (category_id, workspace_id) references public.categories (id, workspace_id) on delete restrict',
+    'constraint product_images_product_workspace_id_fkey foreign key (product_id, workspace_id) references public.products (id, workspace_id) on delete cascade',
+    'constraint quote_request_items_quote_request_workspace_id_fkey foreign key (quote_request_id, workspace_id) references public.quote_requests (id, workspace_id) on delete cascade',
+    'constraint quote_request_items_product_workspace_id_fkey foreign key (product_id, workspace_id) references public.products (id, workspace_id) on delete restrict',
+    'constraint conversations_quote_request_workspace_id_fkey foreign key (quote_request_id, workspace_id) references public.quote_requests (id, workspace_id) on delete restrict',
+    'constraint messages_conversation_workspace_id_fkey foreign key (conversation_id, workspace_id) references public.conversations (id, workspace_id) on delete cascade',
+  ];
+
+  for (const snippet of relationshipSnippets) {
+    assert.ok(sql.includes(snippet), `Missing workspace-safe relationship: ${snippet}`);
   }
 });
 

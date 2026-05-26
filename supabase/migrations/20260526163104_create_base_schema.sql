@@ -79,6 +79,8 @@ create table if not exists public.categories (
     check (slug ~ '^[a-z0-9][a-z0-9-]*$'),
   constraint categories_sort_order_check
     check (sort_order >= 0),
+  constraint categories_id_workspace_id_key
+    unique (id, workspace_id),
   constraint categories_workspace_slug_key
     unique (workspace_id, slug)
 );
@@ -100,16 +102,18 @@ create table if not exists public.products (
     foreign key (workspace_id)
     references public.workspaces (id)
     on delete cascade,
-  constraint products_category_id_fkey
-    foreign key (category_id)
-    references public.categories (id)
-    on delete set null,
+  constraint products_category_workspace_id_fkey
+    foreign key (category_id, workspace_id)
+    references public.categories (id, workspace_id)
+    on delete restrict,
   constraint products_slug_format_check
     check (slug ~ '^[a-z0-9][a-z0-9-]*$'),
   constraint products_status_check
     check (status in ('draft', 'published', 'archived')),
   constraint products_sort_order_check
     check (sort_order >= 0),
+  constraint products_id_workspace_id_key
+    unique (id, workspace_id),
   constraint products_workspace_slug_key
     unique (workspace_id, slug)
 );
@@ -129,9 +133,9 @@ create table if not exists public.product_images (
     foreign key (workspace_id)
     references public.workspaces (id)
     on delete cascade,
-  constraint product_images_product_id_fkey
-    foreign key (product_id)
-    references public.products (id)
+  constraint product_images_product_workspace_id_fkey
+    foreign key (product_id, workspace_id)
+    references public.products (id, workspace_id)
     on delete cascade,
   constraint product_images_storage_bucket_not_blank_check
     check (btrim(storage_bucket) <> ''),
@@ -166,6 +170,8 @@ create table if not exists public.quote_requests (
     check (status in ('new', 'reviewing', 'quoted', 'closed', 'archived')),
   constraint quote_requests_source_check
     check (source in ('website', 'chat', 'admin')),
+  constraint quote_requests_id_workspace_id_key
+    unique (id, workspace_id),
   constraint quote_requests_workspace_public_reference_key
     unique (workspace_id, public_reference)
 );
@@ -184,14 +190,14 @@ create table if not exists public.quote_request_items (
     foreign key (workspace_id)
     references public.workspaces (id)
     on delete cascade,
-  constraint quote_request_items_quote_request_id_fkey
-    foreign key (quote_request_id)
-    references public.quote_requests (id)
+  constraint quote_request_items_quote_request_workspace_id_fkey
+    foreign key (quote_request_id, workspace_id)
+    references public.quote_requests (id, workspace_id)
     on delete cascade,
-  constraint quote_request_items_product_id_fkey
-    foreign key (product_id)
-    references public.products (id)
-    on delete set null,
+  constraint quote_request_items_product_workspace_id_fkey
+    foreign key (product_id, workspace_id)
+    references public.products (id, workspace_id)
+    on delete restrict,
   constraint quote_request_items_product_name_not_blank_check
     check (btrim(product_name_snapshot) <> ''),
   constraint quote_request_items_quantity_check
@@ -211,14 +217,16 @@ create table if not exists public.conversations (
     foreign key (workspace_id)
     references public.workspaces (id)
     on delete cascade,
-  constraint conversations_quote_request_id_fkey
-    foreign key (quote_request_id)
-    references public.quote_requests (id)
-    on delete set null,
+  constraint conversations_quote_request_workspace_id_fkey
+    foreign key (quote_request_id, workspace_id)
+    references public.quote_requests (id, workspace_id)
+    on delete restrict,
   constraint conversations_public_reference_not_blank_check
     check (btrim(public_reference) <> ''),
   constraint conversations_status_check
     check (status in ('open', 'closed', 'archived')),
+  constraint conversations_id_workspace_id_key
+    unique (id, workspace_id),
   constraint conversations_workspace_public_reference_key
     unique (workspace_id, public_reference)
 );
@@ -237,9 +245,9 @@ create table if not exists public.messages (
     foreign key (workspace_id)
     references public.workspaces (id)
     on delete cascade,
-  constraint messages_conversation_id_fkey
-    foreign key (conversation_id)
-    references public.conversations (id)
+  constraint messages_conversation_workspace_id_fkey
+    foreign key (conversation_id, workspace_id)
+    references public.conversations (id, workspace_id)
     on delete cascade,
   constraint messages_role_check
     check (role in ('user', 'assistant', 'system')),
@@ -321,11 +329,13 @@ create index if not exists categories_workspace_published_sort_idx
 
 create index if not exists products_workspace_status_sort_idx
   on public.products (workspace_id, status, sort_order);
-create index if not exists products_category_id_idx
-  on public.products (category_id);
+create index if not exists products_category_workspace_id_idx
+  on public.products (category_id, workspace_id);
 
 create index if not exists product_images_workspace_id_idx
   on public.product_images (workspace_id);
+create index if not exists product_images_product_workspace_id_idx
+  on public.product_images (product_id, workspace_id);
 create index if not exists product_images_product_sort_idx
   on public.product_images (product_id, sort_order);
 create unique index if not exists product_images_one_primary_per_product_idx
@@ -337,18 +347,20 @@ create index if not exists quote_requests_workspace_status_created_idx
 
 create index if not exists quote_request_items_workspace_id_idx
   on public.quote_request_items (workspace_id);
-create index if not exists quote_request_items_quote_request_id_idx
-  on public.quote_request_items (quote_request_id);
-create index if not exists quote_request_items_product_id_idx
-  on public.quote_request_items (product_id);
+create index if not exists quote_request_items_quote_request_workspace_id_idx
+  on public.quote_request_items (quote_request_id, workspace_id);
+create index if not exists quote_request_items_product_workspace_id_idx
+  on public.quote_request_items (product_id, workspace_id);
 
 create index if not exists conversations_workspace_status_created_idx
   on public.conversations (workspace_id, status, created_at desc);
-create index if not exists conversations_quote_request_id_idx
-  on public.conversations (quote_request_id);
+create index if not exists conversations_quote_request_workspace_id_idx
+  on public.conversations (quote_request_id, workspace_id);
 
 create index if not exists messages_workspace_created_idx
   on public.messages (workspace_id, created_at desc);
+create index if not exists messages_conversation_workspace_id_idx
+  on public.messages (conversation_id, workspace_id);
 create index if not exists messages_conversation_created_idx
   on public.messages (conversation_id, created_at);
 

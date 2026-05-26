@@ -50,11 +50,14 @@ persistence, and Supabase-backed catalogue data are deferred.
 The browser must receive only safe normalized responses. It must not receive
 provider trace IDs, webhook URLs, n8n errors, n8n node names, or stack traces.
 
-Chat rate limiting uses `clientSessionId` for every request and uses a client
-IP bucket only when `CHAT_TRUSTED_CLIENT_IP_HEADER` names a forwarding header
-that the deployment proxy overwrites. When that trusted header is not
-configured or absent, the API must not trust spoofable forwarding headers and
-must not place all callers into one shared fallback IP bucket.
+Chat rate limiting uses `clientSessionId` for every request and uses a trusted
+client IP bucket only when `CHAT_TRUSTED_CLIENT_IP_HEADER` names a forwarding
+header that the deployment proxy or CDN overwrites. The API must not trust
+user-supplied forwarding headers by default. When no trusted client IP source
+is configured or present, the route uses a server-side fallback bucket as a
+fail-closed public chat cap so rotating `clientSessionId` cannot bypass rate
+limits. Deployments should configure a trusted client IP header to avoid
+over-broad fallback throttling.
 
 ## Supabase Responsibilities
 

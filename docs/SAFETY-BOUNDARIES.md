@@ -49,8 +49,14 @@ variables such as `N8N_CHAT_WEBHOOK_URL`.
 - Do not trust user-supplied forwarding headers by default.
 - Configure `CHAT_TRUSTED_CLIENT_IP_HEADER` only to a deployment header that a
   trusted proxy or CDN overwrites.
-- If no trusted client IP header is configured or present, use session-only
-  chat rate limiting instead of spoofable headers or a shared fallback IP key.
+- Use `clientSessionId` for per-session limiting.
+- Use a trusted client IP bucket only when `CHAT_TRUSTED_CLIENT_IP_HEADER`
+  names a proxy/CDN-overwritten header and that header is present.
+- If no trusted client IP source is configured or present, use a server-side
+  fallback bucket as a fail-closed public chat cap so rotating
+  `clientSessionId` cannot bypass rate limits.
+- Configure a trusted client IP header in deployment to avoid over-broad
+  fallback throttling.
 
 ## Worktree Hygiene
 
