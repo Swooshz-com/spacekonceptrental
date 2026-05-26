@@ -183,6 +183,7 @@ function waitForDatabase() {
   throw new Error(`Local test database did not become ready. ${lastError}`);
 }
 
+// Test-only Supabase auth shim. Production migrations must not define auth.uid().
 function setupSupabaseCompatibility() {
   psql(`
     do $setup$
