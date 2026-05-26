@@ -64,7 +64,7 @@ required first.
 - [x] Add RLS policies.
 - [x] Add static RLS policy migration coverage.
 - [x] Add local-only behavioural RLS and tenant-isolation tests.
-- [ ] Add seed data.
+- [x] Add fake/sample catalogue seed fixtures only.
 - [x] Add server-side Supabase runtime wiring.
 - [ ] Add public catalogue database reads.
 - [ ] Add product persistence.
@@ -94,6 +94,7 @@ required first.
 - [x] Rate-limit tests for trusted client IP buckets, per-session limiting, and
       fail-closed fallback bucket.
 - [x] Supabase RLS/tenant-isolation tests before runtime use.
+- [x] Supabase fake/sample seed fixture validation.
 - [x] Server-only Supabase runtime boundary tests.
 - [x] Keep `npm run validate:n8n` while n8n workflows remain in repo.
 - [x] Keep `npm run test:n8n-validation` while n8n workflows remain in repo.

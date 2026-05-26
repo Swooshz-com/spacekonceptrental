@@ -281,6 +281,7 @@ Future Supabase work should land in this order:
 Phase 1E performed step 1. Phase 1F-B started step 2 with base table
 definitions. Phase 1F-C-A adds RLS policy SQL with static coverage. Phase
 1F-C-B adds local-only behavioural RLS tests for the committed migrations.
+Phase 1F-D adds fake/sample catalogue seed fixtures only.
 Phase 1G-A completes step 6 with server-only runtime wiring only.
 
 ## Deferred After Phase 1G-A

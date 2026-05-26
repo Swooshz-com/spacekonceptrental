@@ -31,16 +31,19 @@ The database should not store binary image content.
 
 ## Initial MVP Seed Direction
 
-A future approved seed may add a small curated product set with fake/sample
-data only. The first seed should be intentionally small enough to support:
+Phase 1F-D adds a small reviewed fake/sample catalogue seed fixture under
+`supabase/seeds/sample_catalogue.sql`. It is intentionally small enough to
+support:
 
 - Homepage category previews.
 - Catalogue list and detail route validation.
 - Quote planning examples.
 - Chat context experiments after persistence is approved.
 
-Seed content should avoid live customer data, private files, real quotes, real
+Seed content avoids live customer data, private files, real quotes, real
 inventory commitments, private supplier data, and copied production assets.
+Product image rows are metadata only and use sample bucket/path values; no
+media upload or Supabase Storage bucket is added.
 
 ## Git Repository Rules
 
@@ -61,7 +64,6 @@ Deferred until separately approved:
 - Product create/edit/delete admin UI.
 - Media upload UI.
 - Supabase Storage buckets or policies.
-- Product seed fixtures.
 - Catalogue database reads.
 - Quote persistence.
 - Inventory, pricing, availability, variants, bundles, and billing.
