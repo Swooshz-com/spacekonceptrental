@@ -10,8 +10,8 @@ platform.
 - [x] Make the app Vercel-ready.
 - [x] Build public homepage shell using prepared assets.
 - [x] Build catalogue shell using prepared assets.
-- [ ] Build product shell using prepared assets.
-- [ ] Build event shell using prepared assets.
+- [x] Build product shell using prepared assets.
+- [x] Build event shell using prepared assets.
 - [x] Build quote shell using prepared assets.
 - [x] Build custom `ChatWidget`.
 - [x] Add `POST /api/chat` route contract.

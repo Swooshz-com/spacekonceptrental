@@ -18,6 +18,7 @@ function SiteHeader() {
       <nav aria-label="Primary navigation" className="site-nav">
         <Link href="/">Home</Link>
         <Link href="/catalogue">Catalogue</Link>
+        <Link href="/events">Events</Link>
         <Link className="site-nav__quote" href="/quote">
           Quote
         </Link>
