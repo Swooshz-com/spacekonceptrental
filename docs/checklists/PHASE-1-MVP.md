@@ -22,14 +22,14 @@ platform.
 - [ ] Read `CHAT_PROVIDER=n8n` only from server-side env.
 - [x] Add safe timeout and error normalization.
 - [ ] Add retry policy if approved for live provider use.
-- [ ] Add idempotency via `clientMessageId`.
-- [ ] Add request ID for every chat request.
+- [x] Add idempotency via `clientMessageId`.
+- [x] Add request ID for every chat request.
 - [x] Document trusted client IP header behavior for chat rate limiting.
 - [x] Ensure no provider internals are exposed to the browser.
 - [x] Ensure frontend calls `/api/chat` only.
 - [x] Ensure browser output contains no n8n webhook URLs.
 - [ ] Ensure old static widget does not become a competing production path.
-- [ ] Keep MVP chat non-streaming.
+- [x] Keep MVP chat non-streaming.
 
 ## Basic Supabase Schema Only
 

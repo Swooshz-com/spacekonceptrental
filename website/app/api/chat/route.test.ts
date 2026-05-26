@@ -174,17 +174,19 @@ describe("POST /api/chat", () => {
     }
 
     for (let index = 0; index < 1_050; index += 1) {
-      await handleChatPost(
+      const response = await handleChatPost(
         postJson(
           {
             ...validPayload,
             clientSessionId: `session-churn-${index}`,
             clientMessageId: `session-churn-message-${index}`
           },
-          { "cf-connecting-ip": "203.0.113.231" }
+          { "x-forwarded-for": `198.51.100.${index % 255}` }
         ),
         provider
       );
+
+      expect(response.status).toBe(200);
     }
 
     const blocked = await handleChatPost(
