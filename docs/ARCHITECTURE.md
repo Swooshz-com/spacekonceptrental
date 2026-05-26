@@ -42,6 +42,11 @@ The future `website/` Next.js app owns:
 - Server-side Supabase access.
 - Server-only n8n webhook access.
 
+Current Phase 1 public route shells are `/`, `/catalogue`,
+`/catalogue/lounge-sofa-package`, `/events`, and `/quote`. They use static
+placeholder content and prepared assets only; real product persistence, event
+persistence, and Supabase-backed catalogue data are deferred.
+
 The browser must receive only safe normalized responses. It must not receive
 provider trace IDs, webhook URLs, n8n errors, n8n node names, or stack traces.
 

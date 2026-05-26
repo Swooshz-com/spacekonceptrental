@@ -207,6 +207,7 @@ select {
 }
 
 .catalogue-card h3,
+.catalogue-card h2,
 .route-card h2,
 .quote-panel h2 {
   margin: 0 0 10px;
@@ -220,11 +221,55 @@ select {
   margin: 0;
 }
 
+.card-link {
+  color: var(--accent-dark);
+  display: inline-flex;
+  font-weight: 800;
+  margin-top: 16px;
+}
+
 .page-title {
   display: grid;
   gap: 18px;
   padding-bottom: 28px;
   padding-top: clamp(54px, 8vw, 90px);
+}
+
+.eyebrow {
+  color: var(--accent);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.detail-layout {
+  align-items: start;
+  display: grid;
+  gap: 24px;
+  grid-template-columns: minmax(0, 1.05fr) minmax(280px, 0.95fr);
+}
+
+.detail-visual {
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.detail-visual img {
+  display: block;
+  height: auto;
+  width: 100%;
+}
+
+.detail-list {
+  color: var(--muted);
+  display: grid;
+  gap: 12px;
+  line-height: 1.6;
+  margin: 18px 0 0;
+  padding-left: 20px;
 }
 
 .quote-form {
@@ -374,6 +419,7 @@ select {
 
   .hero,
   .catalogue-grid,
+  .detail-layout,
   .route-grid {
     grid-template-columns: 1fr;
   }

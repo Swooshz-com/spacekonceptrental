@@ -13,7 +13,8 @@ const catalogueItems = [
   {
     title: "Lounge sofas",
     description: "Soft seating for receptions, VIP areas, and brand activations.",
-    image: sofaImage
+    image: sofaImage,
+    href: "/catalogue/lounge-sofa-package"
   },
   {
     title: "Corporate event sets",
@@ -42,6 +43,11 @@ export default function CataloguePage() {
             <div className="catalogue-card__body">
               <h2>{item.title}</h2>
               <p>{item.description}</p>
+              {item.href ? (
+                <Link className="card-link" href={item.href}>
+                  View product shell
+                </Link>
+              ) : null}
             </div>
           </article>
         ))}
