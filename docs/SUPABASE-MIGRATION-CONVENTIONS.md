@@ -1,20 +1,20 @@
 # Supabase Migration Conventions
 
-This document defines conventions for future Supabase migration PRs. Phase
-1F-A adds only the scaffold and static validation harness; it does not add real
-schema SQL, RLS SQL, seed SQL, Supabase CLI configuration, or a Supabase
-connection.
+This document defines conventions for Supabase migration PRs. Phase 1F-A added
+the scaffold and static validation harness. Phase 1F-B adds the first base
+schema migration. RLS SQL, seed SQL, Supabase CLI configuration, and live
+Supabase connections remain deferred.
 
 ## Directory
 
-Future migration files belong in:
+Migration files belong in:
 
 ```text
 supabase/migrations/
 ```
 
-The directory currently contains only a README. Real `.sql` migration files are
-deferred until separately approved.
+The first approved SQL migration is the Phase 1F-B base schema. Future `.sql`
+migrations should remain small and separately reviewed.
 
 ## File Naming
 

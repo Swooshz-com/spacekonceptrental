@@ -7,6 +7,23 @@ const test = require('node:test');
 
 const repoRoot = path.resolve(__dirname, '..');
 const validatorPath = path.join(repoRoot, 'scripts', 'validate-supabase-migrations.cjs');
+const realMigrationsDir = path.join(repoRoot, 'supabase', 'migrations');
+
+const expectedBaseSchemaTables = [
+  'workspaces',
+  'admin_users',
+  'memberships',
+  'categories',
+  'products',
+  'product_images',
+  'quote_requests',
+  'quote_request_items',
+  'conversations',
+  'messages',
+  'usage_events',
+  'audit_logs',
+  'integration_connections',
+];
 
 function makeTempRoot() {
   const baseDir = os.tmpdir();
@@ -41,6 +58,24 @@ function runValidator(migrationsDir, options = {}) {
       ...options.env,
     },
   });
+}
+
+function readRealBaseSchemaMigration() {
+  const files = fs
+    .readdirSync(realMigrationsDir)
+    .filter((fileName) => /^\d{14}_create_base_schema\.sql$/.test(fileName));
+
+  assert.equal(
+    files.length,
+    1,
+    `Expected exactly one create_base_schema migration, found: ${files.join(', ')}`,
+  );
+
+  const fileName = files[0];
+  return {
+    fileName,
+    content: fs.readFileSync(path.join(realMigrationsDir, fileName), 'utf8'),
+  };
 }
 
 test('empty migration directory with no real SQL passes', () => {
@@ -123,6 +158,36 @@ test('NEXT_PUBLIC secret-looking variable fails', () => {
   assert.match(result.stderr, /NEXT_PUBLIC/i);
 });
 
+test('service-role warning comment without an actual key passes', () => {
+  const root = makeTempRoot();
+  const migrationsDir = writeMigration(
+    root,
+    '20260526143000_service_role_warning.sql',
+    `
+      -- Service-role keys must never reach browser code.
+      create table if not exists workspaces (id uuid primary key);
+    `,
+  );
+
+  const result = runValidator(migrationsDir);
+
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+});
+
+test('service-role key variable in migration content fails', () => {
+  const root = makeTempRoot();
+  const migrationsDir = writeMigration(
+    root,
+    '20260526143000_bad_service_role_key.sql',
+    "select 'SUPABASE_SERVICE_ROLE_KEY';",
+  );
+
+  const result = runValidator(migrationsDir);
+
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /service-role/i);
+});
+
 test('destructive SQL pattern fails', () => {
   const root = makeTempRoot();
   const migrationsDir = writeMigration(
@@ -154,4 +219,39 @@ test('validator does not require or use a live Supabase connection', () => {
 
   assert.equal(result.status, 0, result.stdout + result.stderr);
   assert.doesNotMatch(result.stdout + result.stderr, /connecting|connected/i);
+});
+
+test('real base schema migration filename follows the repo convention', () => {
+  const { fileName } = readRealBaseSchemaMigration();
+
+  assert.match(fileName, /^\d{14}_create_base_schema\.sql$/);
+});
+
+test('real base schema migration passes static validation', () => {
+  const result = runValidator(realMigrationsDir);
+
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+  assert.match(result.stdout, /checked 1 migration SQL file\(s\)/);
+});
+
+test('real base schema migration creates the planned MVP tables', () => {
+  const { content } = readRealBaseSchemaMigration();
+
+  for (const tableName of expectedBaseSchemaTables) {
+    assert.match(
+      content,
+      new RegExp(`create\\s+table\\s+if\\s+not\\s+exists\\s+public\\.${tableName}\\b`, 'i'),
+    );
+  }
+});
+
+test('real base schema migration does not add RLS policy SQL or seed data', () => {
+  const { content } = readRealBaseSchemaMigration();
+
+  assert.doesNotMatch(content, /\bcreate\s+policy\b/i);
+  assert.doesNotMatch(
+    content,
+    /\balter\s+table\b[\s\S]*?\benable\s+row\s+level\s+security\b/i,
+  );
+  assert.doesNotMatch(content, /\binsert\s+into\b/i);
 });

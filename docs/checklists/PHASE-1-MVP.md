@@ -40,19 +40,19 @@ Introduce only the tables needed for the MVP:
 - [x] Document safe future migration sequencing.
 - [x] Document Supabase migration conventions.
 - [x] Add static Supabase migration validation.
-- [ ] `workspaces`.
-- [ ] `admin_users`.
-- [ ] `memberships`.
-- [ ] `categories`.
-- [ ] `products`.
-- [ ] `product_images`.
-- [ ] `quote_requests`.
-- [ ] `quote_request_items`.
-- [ ] `conversations`.
-- [ ] `messages`.
-- [ ] `usage_events`.
-- [ ] `audit_logs`.
-- [ ] Optional `integration_connections` for non-secret integration metadata
+- [x] `workspaces`.
+- [x] `admin_users`.
+- [x] `memberships`.
+- [x] `categories`.
+- [x] `products`.
+- [x] `product_images`.
+- [x] `quote_requests`.
+- [x] `quote_request_items`.
+- [x] `conversations`.
+- [x] `messages`.
+- [x] `usage_events`.
+- [x] `audit_logs`.
+- [x] Optional `integration_connections` for non-secret integration metadata
       only.
 
 ## Product And Media Seed Strategy

@@ -1,10 +1,11 @@
 # Supabase Migrations
 
-This directory is reserved for future reviewed Supabase migration files.
+This directory contains reviewed Supabase migration files.
 
-Phase 1F-A adds the migration directory and static validation harness only. No
-live Supabase project is connected by this PR, and this directory intentionally
-contains no real migration SQL yet.
+Phase 1F-A added the migration directory and static validation harness. Phase
+1F-B adds the first base schema migration. No live Supabase project is
+connected by these PRs, and migrations must not be applied from review without
+separate approval for a named target and action.
 
 ## Requirements For Future Migrations
 
