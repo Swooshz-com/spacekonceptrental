@@ -72,6 +72,16 @@ Supabase is the system of record for:
 
 Supabase service-role keys must never be exposed to the browser.
 
+Phase 1E records the planned Supabase schema, RLS strategy, product/media seed
+strategy, and migration sequencing in:
+
+- `docs/SUPABASE-MVP-SCHEMA.md`.
+- `docs/SUPABASE-RLS-STRATEGY.md`.
+- `docs/PRODUCT-MEDIA-SEED-STRATEGY.md`.
+
+Those docs are planning only. They do not add migrations, Supabase runtime
+connections, client packages, seed files, or persistence.
+
 ## n8n Responsibilities
 
 n8n remains temporary server-side integration only:

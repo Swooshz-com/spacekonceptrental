@@ -35,6 +35,9 @@ platform.
 
 Introduce only the tables needed for the MVP:
 
+- [x] Document Supabase MVP schema plan.
+- [x] Document RLS and tenant-isolation strategy.
+- [x] Document safe future migration sequencing.
 - [ ] `tenants` or `workspaces`.
 - [ ] `admin_users`.
 - [ ] `memberships`.
@@ -52,10 +55,11 @@ Introduce only the tables needed for the MVP:
 
 ## Product And Media Seed Strategy
 
-- [ ] Use current prepared assets for the initial public-page visual shell.
-- [ ] Do not treat Git-tracked images as the long-term admin media store.
-- [ ] Plan Supabase Storage as the long-term product/media store.
-- [ ] Do not introduce broad product admin workflows in Phase 1.
+- [x] Document product/media seed strategy.
+- [x] Use current prepared assets for the initial public-page visual shell.
+- [x] Do not treat Git-tracked images as the long-term admin media store.
+- [x] Plan Supabase Storage as the long-term product/media store.
+- [x] Do not introduce broad product admin workflows in Phase 1.
 
 ## Tests
 
