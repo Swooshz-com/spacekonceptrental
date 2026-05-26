@@ -16,15 +16,18 @@ platform.
 - [ ] Build custom `ChatWidget`.
 - [ ] Add `POST /api/chat` route contract.
 - [ ] Add server-only `ChatProvider` interface.
-- [ ] Add server-only `N8nChatProvider`.
-- [ ] Read `N8N_CHAT_WEBHOOK_URL` only from server-side env.
+- [x] Add server-only `N8nChatProvider`.
+- [x] Read `N8N_CHAT_WEBHOOK_URL` only from server-side env.
+- [x] Read `N8N_CHAT_WEBHOOK_TIMEOUT_MS` only from server-side env.
 - [ ] Read `CHAT_PROVIDER=n8n` only from server-side env.
-- [ ] Add safe timeout, retry, and error normalization.
+- [x] Add safe timeout and error normalization.
+- [ ] Add retry policy if approved for live provider use.
 - [ ] Add idempotency via `clientMessageId`.
 - [ ] Add request ID for every chat request.
-- [ ] Ensure no provider internals are exposed to the browser.
-- [ ] Ensure frontend calls `/api/chat` only.
-- [ ] Ensure browser output contains no n8n webhook URLs.
+- [x] Document trusted client IP header behavior for chat rate limiting.
+- [x] Ensure no provider internals are exposed to the browser.
+- [x] Ensure frontend calls `/api/chat` only.
+- [x] Ensure browser output contains no n8n webhook URLs.
 - [ ] Ensure old static widget does not become a competing production path.
 - [ ] Keep MVP chat non-streaming.
 
@@ -56,13 +59,14 @@ Introduce only the tables needed for the MVP:
 
 ## Tests
 
-- [ ] `/api/chat` validation tests.
-- [ ] `clientMessageId` idempotency tests.
-- [ ] Mocked n8n provider timeout/fallback tests.
-- [ ] Provider safe error mapping tests.
-- [ ] Frontend test proving chat UI posts only to `/api/chat`.
-- [ ] Test proving no n8n webhook URL appears client-side.
-- [ ] Rate-limit tests.
+- [x] `/api/chat` validation tests.
+- [x] `clientMessageId` idempotency tests.
+- [x] Mocked n8n provider timeout/fallback tests.
+- [x] Provider safe error mapping tests.
+- [x] Frontend test proving chat UI posts only to `/api/chat`.
+- [x] Test proving no n8n webhook URL appears client-side.
+- [x] Rate-limit tests.
+- [x] Rate-limit tests for missing trusted IP config and session-bucket churn.
 - [ ] Supabase RLS/tenant-isolation tests when schema is introduced.
 - [ ] Keep `npm run validate:n8n` while n8n workflows remain in repo.
 - [ ] Keep `npm run test:n8n-validation` while n8n workflows remain in repo.

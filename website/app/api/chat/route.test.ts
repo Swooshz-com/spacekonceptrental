@@ -1,9 +1,10 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ChatProviderError, type ChatProvider } from "../../../lib/chat/provider";
-import { handleChatPost } from "./route";
+import { handleChatPost, POST } from "./route";
 
 const originalTrustedClientIpHeader =
   process.env.CHAT_TRUSTED_CLIENT_IP_HEADER;
+const originalN8nWebhookUrl = process.env.N8N_CHAT_WEBHOOK_URL;
 
 const validPayload = {
   clientSessionId: "browser-session-1",
@@ -28,6 +29,15 @@ function restoreTrustedClientIpHeader() {
   process.env.CHAT_TRUSTED_CLIENT_IP_HEADER = originalTrustedClientIpHeader;
 }
 
+function restoreN8nWebhookUrl() {
+  if (originalN8nWebhookUrl === undefined) {
+    delete process.env.N8N_CHAT_WEBHOOK_URL;
+    return;
+  }
+
+  process.env.N8N_CHAT_WEBHOOK_URL = originalN8nWebhookUrl;
+}
+
 function postJson(
   payload: unknown,
   headers: Record<string, string> = {}
@@ -50,7 +60,148 @@ function postRaw(body: string, headers: Record<string, string> = {}) {
 describe("POST /api/chat", () => {
   afterEach(() => {
     restoreTrustedClientIpHeader();
+    restoreN8nWebhookUrl();
     vi.restoreAllMocks();
+  });
+
+  it("continues to serve POST requests through the configured provider boundary", async () => {
+    delete process.env.N8N_CHAT_WEBHOOK_URL;
+
+    const response = await POST(
+      postJson({
+        ...validPayload,
+        clientSessionId: "factory-boundary-session",
+        clientMessageId: "factory-boundary-message"
+      })
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body).toMatchObject({
+      status: "completed",
+      reply: {
+        role: "assistant",
+        content:
+          "Thanks. Could you share the event date, venue, rental duration, and the items or quantities you need?"
+      }
+    });
+  });
+
+  it("does not rate limit unrelated sessions through a shared fallback IP bucket", async () => {
+    delete process.env.CHAT_TRUSTED_CLIENT_IP_HEADER;
+
+    const provider: ChatProvider = {
+      sendMessage: vi.fn(async () => ({
+        conversationId: "conversation-no-shared-fallback",
+        assistantMessageId: crypto.randomUUID(),
+        status: "completed" as const,
+        reply: {
+          role: "assistant" as const,
+          content: "What date is your event?",
+          quickReplies: [],
+          actions: []
+        }
+      }))
+    };
+
+    for (let index = 0; index < 5; index += 1) {
+      const response = await handleChatPost(
+        postJson(
+          {
+            ...validPayload,
+            clientSessionId: `fallback-attacker-session-${index}`,
+            clientMessageId: `fallback-attacker-message-${index}`
+          },
+          { "x-forwarded-for": `198.51.100.${index}` }
+        ),
+        provider
+      );
+
+      expect(response.status).toBe(200);
+    }
+
+    const victim = await handleChatPost(
+      postJson(
+        {
+          ...validPayload,
+          clientSessionId: "fallback-victim-session",
+          clientMessageId: "fallback-victim-message"
+        },
+        {
+          "cf-connecting-ip": "203.0.113.220",
+          "x-forwarded-for": "203.0.113.221"
+        }
+      ),
+      provider
+    );
+
+    expect(victim.status).toBe(200);
+    expect(provider.sendMessage).toHaveBeenCalledTimes(6);
+  });
+
+  it("keeps trusted IP buckets from being evicted by attacker-controlled session churn", async () => {
+    process.env.CHAT_TRUSTED_CLIENT_IP_HEADER = "cf-connecting-ip";
+
+    const provider: ChatProvider = {
+      sendMessage: vi.fn(async () => ({
+        conversationId: "conversation-session-churn",
+        assistantMessageId: crypto.randomUUID(),
+        status: "completed" as const,
+        reply: {
+          role: "assistant" as const,
+          content: "What date is your event?",
+          quickReplies: [],
+          actions: []
+        }
+      }))
+    };
+    const victimHeaders = { "cf-connecting-ip": "203.0.113.230" };
+
+    for (let index = 0; index < 5; index += 1) {
+      const response = await handleChatPost(
+        postJson(
+          {
+            ...validPayload,
+            clientSessionId: `trusted-ip-victim-session-${index}`,
+            clientMessageId: `trusted-ip-victim-message-${index}`
+          },
+          victimHeaders
+        ),
+        provider
+      );
+
+      expect(response.status).toBe(200);
+    }
+
+    for (let index = 0; index < 1_050; index += 1) {
+      await handleChatPost(
+        postJson(
+          {
+            ...validPayload,
+            clientSessionId: `session-churn-${index}`,
+            clientMessageId: `session-churn-message-${index}`
+          },
+          { "cf-connecting-ip": "203.0.113.231" }
+        ),
+        provider
+      );
+    }
+
+    const blocked = await handleChatPost(
+      postJson(
+        {
+          ...validPayload,
+          clientSessionId: "trusted-ip-victim-over-limit-session",
+          clientMessageId: "trusted-ip-victim-over-limit-message"
+        },
+        victimHeaders
+      ),
+      provider
+    );
+    const body = await blocked.json();
+
+    expect(blocked.status).toBe(429);
+    expect(body.error.code).toBe("RATE_LIMITED");
   });
 
   it("validates required chat fields before calling a provider", async () => {

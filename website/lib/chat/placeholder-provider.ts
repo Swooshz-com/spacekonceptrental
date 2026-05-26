@@ -28,7 +28,3 @@ export class PlaceholderChatProvider implements ChatProvider {
     };
   }
 }
-
-export function getChatProvider(): ChatProvider {
-  return new PlaceholderChatProvider();
-}

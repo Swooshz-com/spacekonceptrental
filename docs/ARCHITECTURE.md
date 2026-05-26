@@ -45,6 +45,12 @@ The future `website/` Next.js app owns:
 The browser must receive only safe normalized responses. It must not receive
 provider trace IDs, webhook URLs, n8n errors, n8n node names, or stack traces.
 
+Chat rate limiting uses `clientSessionId` for every request and uses a client
+IP bucket only when `CHAT_TRUSTED_CLIENT_IP_HEADER` names a forwarding header
+that the deployment proxy overwrites. When that trusted header is not
+configured or absent, the API must not trust spoofable forwarding headers and
+must not place all callers into one shared fallback IP bucket.
+
 ## Supabase Responsibilities
 
 Supabase is the system of record for:
@@ -73,6 +79,10 @@ n8n remains temporary server-side integration only:
 
 n8n is not the browser-facing app boundary. The old static `@n8n/chat` demo may
 remain only as temporary legacy reference until replaced.
+
+Phase 1B adds server-only `N8nChatProvider` plumbing behind `POST /api/chat`.
+Its tests use mocked fetch responses only. Real webhook configuration,
+deployment, and live n8n testing remain deferred.
 
 ## Future Internal SaaS Chatbot Responsibilities
 
