@@ -39,9 +39,9 @@ function fail(message) {
   activeFail(message);
 }
 
-function expressionReferencesJsonField(expression, field) {
+function expressionReferencesPrepareIngestionLogField(expression, field) {
   const escapedField = field.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  return new RegExp(`\\$json\\.${escapedField}(?![A-Za-z0-9_])`).test(String(expression || ''));
+  return new RegExp(`\\$node\\[["']Prepare Ingestion Log["']\\]\\.json\\.${escapedField}(?![A-Za-z0-9_])`).test(String(expression || ''));
 }
 
 function checkCountFieldsStayNumeric(workflow, relative) {
@@ -1329,9 +1329,12 @@ function checkRagIngestionDataPlaneSafety(workflow, relative) {
     last_successful_execution_id: 'execution_id',
     last_indexed_at: 'ingested_at',
     status: 'status',
+    chunks_count: 'chunks_count',
+    modified_time: 'modified_time',
+    file_url: 'file_url',
   })) {
-    if (!expressionReferencesJsonField(currentStateValues[field], source)) {
-      fail(`${relative} Upsert KB Current State must persist ${field} from ${source}.`);
+    if (!expressionReferencesPrepareIngestionLogField(currentStateValues[field], source)) {
+      fail(`${relative} Upsert KB Current State must persist ${field} from ${source} via Prepare Ingestion Log.`);
     }
   }
   if (currentStateNode?.parameters?.options?.cellFormat !== 'RAW') {
