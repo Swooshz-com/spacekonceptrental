@@ -82,8 +82,13 @@ strategy, and migration sequencing in:
 - `docs/SUPABASE-RLS-STRATEGY.md`.
 - `docs/PRODUCT-MEDIA-SEED-STRATEGY.md`.
 
-Those docs are planning only. They do not add migrations, Supabase runtime
-connections, client packages, seed files, or persistence.
+Phase 1G-A adds only the server-side Supabase runtime foundation under
+`website/lib/supabase/`. It reads `SUPABASE_URL` and `SUPABASE_ANON_KEY` only
+from server-side environment variables, returns an explicit disabled result
+when those variables are missing, and keeps `@supabase/*` out of browser-facing
+app code. It does not connect to Supabase Cloud, add a browser Supabase client,
+use service-role keys, read catalogue data from the database, persist products,
+quotes, conversations, or messages, or add deployment configuration.
 
 ## n8n Responsibilities
 
