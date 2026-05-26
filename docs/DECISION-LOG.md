@@ -72,3 +72,12 @@ Decision: `website/chat-config.js` must never be read, printed, copied,
 migrated, committed, or used as source for the new app.
 
 Reason: it is gitignored and may contain a local real webhook URL.
+
+## 2026-05-26: Server-only Provider Selection
+
+Decision: Phase 1 chat provider selection reads server-only `CHAT_PROVIDER`.
+Unset, empty, and `n8n` use `N8nChatProvider`; unknown values fail through the
+safe provider-unavailable `/api/chat` response.
+
+Reason: provider selection must not create browser-visible n8n configuration or
+revive the old static n8n chat path as a production route.

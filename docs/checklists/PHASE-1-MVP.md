@@ -6,20 +6,20 @@ platform.
 ## Scope
 
 - [ ] Start from a clean branch or explicitly separate unrelated local changes.
-- [ ] Scaffold Next.js under `website/`.
-- [ ] Make the app Vercel-ready.
-- [ ] Build public homepage shell using prepared assets.
-- [ ] Build catalogue shell using prepared assets.
+- [x] Scaffold Next.js under `website/`.
+- [x] Make the app Vercel-ready.
+- [x] Build public homepage shell using prepared assets.
+- [x] Build catalogue shell using prepared assets.
 - [ ] Build product shell using prepared assets.
 - [ ] Build event shell using prepared assets.
-- [ ] Build quote shell using prepared assets.
-- [ ] Build custom `ChatWidget`.
-- [ ] Add `POST /api/chat` route contract.
-- [ ] Add server-only `ChatProvider` interface.
+- [x] Build quote shell using prepared assets.
+- [x] Build custom `ChatWidget`.
+- [x] Add `POST /api/chat` route contract.
+- [x] Add server-only `ChatProvider` interface.
 - [x] Add server-only `N8nChatProvider`.
 - [x] Read `N8N_CHAT_WEBHOOK_URL` only from server-side env.
 - [x] Read `N8N_CHAT_WEBHOOK_TIMEOUT_MS` only from server-side env.
-- [ ] Read `CHAT_PROVIDER=n8n` only from server-side env.
+- [x] Read `CHAT_PROVIDER=n8n` only from server-side env.
 - [x] Add safe timeout and error normalization.
 - [ ] Add retry policy if approved for live provider use.
 - [x] Add idempotency via `clientMessageId`.
@@ -28,7 +28,7 @@ platform.
 - [x] Ensure no provider internals are exposed to the browser.
 - [x] Ensure frontend calls `/api/chat` only.
 - [x] Ensure browser output contains no n8n webhook URLs.
-- [ ] Ensure old static widget does not become a competing production path.
+- [x] Ensure old static widget does not become a competing production path.
 - [x] Keep MVP chat non-streaming.
 
 ## Basic Supabase Schema Only
@@ -65,11 +65,13 @@ Introduce only the tables needed for the MVP:
 - [x] Provider safe error mapping tests.
 - [x] Frontend test proving chat UI posts only to `/api/chat`.
 - [x] Test proving no n8n webhook URL appears client-side.
+- [x] Provider selection tests for server-only `CHAT_PROVIDER`.
+- [x] Browser-facing guard test against `@n8n/chat` and direct n8n webhook paths.
 - [x] Rate-limit tests.
 - [x] Rate-limit tests for missing trusted IP config and session-bucket churn.
 - [ ] Supabase RLS/tenant-isolation tests when schema is introduced.
-- [ ] Keep `npm run validate:n8n` while n8n workflows remain in repo.
-- [ ] Keep `npm run test:n8n-validation` while n8n workflows remain in repo.
+- [x] Keep `npm run validate:n8n` while n8n workflows remain in repo.
+- [x] Keep `npm run test:n8n-validation` while n8n workflows remain in repo.
 
 ## Explicit Non-goals
 
