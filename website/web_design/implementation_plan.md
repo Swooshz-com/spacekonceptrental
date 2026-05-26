@@ -381,19 +381,19 @@ Pricing table by vehicle type, time window, order value. Self-collection info.
 |---|---|---|
 | Hero carousel | ✅ Owl Carousel, 6 slides | ✅ Custom carousel, parallax, trust strip |
 | Mega-menu navigation | ✅ Bootstrap dropdowns | ✅ CSS mega-menu, category icons |
-| Product catalogue + filters | ✅ WooCommerce | ✅ JSON-driven, instant search, sidebar filters |
-| Product search | ✅ Advanced Woo Search | ✅ Client-side fuzzy search |
+| Product catalogue + filters | ✅ WooCommerce | Future Supabase-backed catalogue/product data with search and filters |
+| Product search | ✅ Advanced Woo Search | Future Next.js search over Supabase-backed product data |
 | Hire By Events | ✅ 12 event types | ✅ 6+ event type cards |
 | Portfolio | ✅ Gallery | ✅ Masonry + lightbox + filters |
 | Downloads (PDF) | ✅ | ✅ Catalogue PDF download |
 | Cart / Checkout | ✅ WooCommerce | ⚡ Quote cart → enquiry form (simpler, no payment) |
-| Live chat | ✅ Tawk.to (generic) | ⚡ **AI chatbot** (n8n RAG, our differentiator) |
+| Live chat | ✅ Tawk.to (generic) | Custom `ChatWidget` -> first-party `/api/chat` -> server-only `N8nChatProvider` temporarily |
 | Announcement bar | ✅ | ✅ |
 | Newsletter | ✅ Mailchimp | ✅ |
 | Reviews / testimonials | ✅ 4.9 rating | ✅ Testimonial carousel |
-| Contact form | ✅ | ✅ + chatbot link |
+| Contact form | ✅ | First-party form/API path with chatbot link; no direct browser-to-n8n submission |
 | WhatsApp | ✅ | ✅ |
-| FAQ | ✅ | ✅ + chatbot-powered |
+| FAQ | ✅ | Static/help content now; future chatbot support through `/api/chat` provider boundary |
 | SEO / Schema | ✅ Rank Math | ✅ Manual structured data |
 | Mobile responsive | ✅ | ✅ Mobile-first |
 | User accounts | ✅ WooCommerce | ❌ Not needed (quote flow) |
@@ -403,7 +403,11 @@ Pricing table by vehicle type, time window, order value. Self-collection info.
 
 ---
 
-## Technology Stack
+## Superseded Original Technology Stack
+
+The following table is retained as historical design context only. It describes
+the old static/direct-n8n plan and must not be treated as the implementation
+target for the future app.
 
 | Layer | Technology |
 |---|---|
@@ -419,10 +423,9 @@ Pricing table by vehicle type, time window, order value. Self-collection info.
 | Hosting | GitHub Pages or Netlify |
 | SEO | Schema.org LocalBusiness + Product markup |
 
-### Superseded Technology Stack
+### Current Technology Stack
 
-The table above is retained as historical design context only. The approved
-implementation stack is:
+The approved implementation stack is:
 
 | Layer | Current Direction |
 |---|---|
@@ -436,7 +439,10 @@ implementation stack is:
 | n8n | Temporary server-side provider/integration only |
 | SEO | Next.js metadata and structured data |
 
-## File Structure
+## Superseded Original File Structure
+
+The following static file structure is retained as historical design context
+only. It must not be treated as the implementation target for the future app.
 
 ```
 website/
@@ -477,7 +483,7 @@ website/
   chat-config.example.js
 ```
 
-### Future Next.js File Structure
+## Future Next.js File Structure
 
 The static file structure above is retained as historical context only. Do not
 scaffold this during Phase 0. Phase 1 should introduce a small Next.js structure
