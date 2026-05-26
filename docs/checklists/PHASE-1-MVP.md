@@ -24,7 +24,8 @@ platform.
 - [ ] Add retry policy if approved for live provider use.
 - [x] Add idempotency via `clientMessageId`.
 - [x] Add request ID for every chat request.
-- [x] Document trusted client IP header behavior for chat rate limiting.
+- [x] Document chat rate limiting with trusted client IP headers,
+      per-session limiting, and fail-closed fallback bucket.
 - [x] Ensure no provider internals are exposed to the browser.
 - [x] Ensure frontend calls `/api/chat` only.
 - [x] Ensure browser output contains no n8n webhook URLs.
@@ -35,25 +36,39 @@ platform.
 
 Introduce only the tables needed for the MVP:
 
+These table checks mean the base migration defines the table with
+workspace-safe relationships where needed. They do not approve runtime use;
+RLS policies, RLS/tenant tests, and server-only Supabase wiring are still
+required first.
+
 - [x] Document Supabase MVP schema plan.
 - [x] Document RLS and tenant-isolation strategy.
 - [x] Document safe future migration sequencing.
 - [x] Document Supabase migration conventions.
 - [x] Add static Supabase migration validation.
-- [ ] `workspaces`.
-- [ ] `admin_users`.
-- [ ] `memberships`.
-- [ ] `categories`.
-- [ ] `products`.
-- [ ] `product_images`.
-- [ ] `quote_requests`.
-- [ ] `quote_request_items`.
-- [ ] `conversations`.
-- [ ] `messages`.
-- [ ] `usage_events`.
-- [ ] `audit_logs`.
-- [ ] Optional `integration_connections` for non-secret integration metadata
+- [x] Add static tests for the real base schema migration.
+- [x] `workspaces`.
+- [x] `admin_users`.
+- [x] `memberships`.
+- [x] `categories`.
+- [x] `products`.
+- [x] `product_images`.
+- [x] `quote_requests`.
+- [x] `quote_request_items`.
+- [x] `conversations`.
+- [x] `messages`.
+- [x] `usage_events`.
+- [x] `audit_logs`.
+- [x] Optional `integration_connections` for non-secret integration metadata
       only.
+- [ ] Add RLS policies.
+- [ ] Add seed data.
+- [ ] Add server-side Supabase runtime wiring.
+- [ ] Add public catalogue database reads.
+- [ ] Add product persistence.
+- [ ] Add quote persistence.
+- [ ] Add conversation/message persistence.
+- [ ] Add deployment.
 
 ## Product And Media Seed Strategy
 
@@ -74,8 +89,9 @@ Introduce only the tables needed for the MVP:
 - [x] Provider selection tests for server-only `CHAT_PROVIDER`.
 - [x] Browser-facing guard test against `@n8n/chat` and direct n8n webhook paths.
 - [x] Rate-limit tests.
-- [x] Rate-limit tests for missing trusted IP config and session-bucket churn.
-- [ ] Supabase RLS/tenant-isolation tests when schema is introduced.
+- [x] Rate-limit tests for trusted client IP buckets, per-session limiting, and
+      fail-closed fallback bucket.
+- [ ] Supabase RLS/tenant-isolation tests before runtime use.
 - [x] Keep `npm run validate:n8n` while n8n workflows remain in repo.
 - [x] Keep `npm run test:n8n-validation` while n8n workflows remain in repo.
 

@@ -3,9 +3,9 @@
 This is a planning document only. It does not define SQL migrations, RLS
 policies, Supabase client wiring, seed files, or deployment configuration.
 
-Phase 1E performs step 1 of the future migration sequence: documentation. The
-tables below are the intended MVP data model when Supabase schema work is
-separately approved.
+Phase 1E performed step 1 of the migration sequence: documentation. Phase 1F-B
+starts step 2 with a base table migration only. RLS policies, seed data,
+Supabase runtime wiring, and persistence features remain deferred.
 
 ## Naming Decision
 
@@ -273,12 +273,13 @@ Future Supabase work should land in this order:
 8. Quote persistence.
 9. Conversation and message persistence.
 
-This Phase 1E PR performs step 1 only.
+Phase 1E performed step 1 only. Phase 1F-B starts step 2 with base table
+definitions only.
 
-## Deferred In Phase 1E
+## Deferred After Phase 1F-B
 
-- SQL migration files.
 - RLS policy implementation.
+- RLS and tenant-isolation tests.
 - Supabase project connection.
 - Supabase client packages or runtime wiring.
 - Real product, quote, conversation, or message persistence.

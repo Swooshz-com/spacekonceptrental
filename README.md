@@ -22,7 +22,9 @@ customer-support-agent capstone requirements.
 
 - `n8n-workflows/` - importable n8n workflow JSON exports.
 - `kb/` - Markdown files to upload into the Google Drive knowledge-base folder.
-- `docs/` - operator runbooks and post-security smoke-test notes.
+- `docs/` - operator runbooks, architecture docs, safety boundaries, phase
+  roadmap, and checklists. Start with `docs/ARCHITECTURE.md` and
+  `docs/PHASE-ROADMAP.md` for the approved website direction.
 - `presentation/` - capstone walkthrough deck.
 - `scripts/` - local workflow validation.
 - `website/` - Phase 1A Next.js frontend app root, with preserved design

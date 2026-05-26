@@ -22,6 +22,7 @@ const IDEMPOTENCY_TTL_MS = 10 * 60_000;
 const MAX_IP_RATE_LIMIT_BUCKETS = 1_000;
 const MAX_SESSION_RATE_LIMIT_BUCKETS = 1_000;
 const MAX_IDEMPOTENCY_ENTRIES = 1_000;
+const FALLBACK_RATE_LIMIT_BUCKET_KEY = "untrusted-client-ip";
 // Configure only with a deployment header overwritten by a trusted proxy/CDN.
 // User-supplied forwarding headers must not be trusted by default.
 const TRUSTED_CLIENT_IP_HEADERS = new Set([
@@ -470,6 +471,9 @@ function consumeRateLimit(
 ): RateLimitResult {
   const now = Date.now();
   const clientIp = getClientIp(request);
+  const clientBucketKey = clientIp
+    ? `ip:${clientIp}`
+    : FALLBACK_RATE_LIMIT_BUCKET_KEY;
 
   pruneRateLimitBuckets(ipRateLimitBuckets, MAX_IP_RATE_LIMIT_BUCKETS, now);
   pruneRateLimitBuckets(
@@ -478,13 +482,11 @@ function consumeRateLimit(
     now
   );
 
-  const ipBucket = clientIp
-    ? getRateLimitBucket(ipRateLimitBuckets, clientIp, now)
-    : undefined;
+  const ipBucket = getRateLimitBucket(ipRateLimitBuckets, clientBucketKey, now);
 
   pruneRateLimitBuckets(ipRateLimitBuckets, MAX_IP_RATE_LIMIT_BUCKETS, now);
 
-  if (ipBucket && ipBucket.count >= RATE_LIMIT_MAX_REQUESTS) {
+  if (ipBucket.count >= RATE_LIMIT_MAX_REQUESTS) {
     return toRateLimitResult(ipBucket, false);
   }
 
@@ -504,18 +506,19 @@ function consumeRateLimit(
     return toRateLimitResult(sessionBucket, false);
   }
 
-  if (ipBucket) {
-    ipBucket.count += 1;
-  }
-
+  ipBucket.count += 1;
   sessionBucket.count += 1;
 
   return toRateLimitResult(
-    ipBucket && ipBucket.count >= sessionBucket.count
-      ? ipBucket
-      : sessionBucket,
+    ipBucket.count >= sessionBucket.count ? ipBucket : sessionBucket,
     true
   );
+}
+
+export function resetChatRouteStateForTests() {
+  ipRateLimitBuckets.clear();
+  sessionRateLimitBuckets.clear();
+  idempotencyEntries.clear();
 }
 
 function getIdempotencyKey(request: ChatProviderRequest) {

@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ChatProviderError, type ChatProvider } from "../../../lib/chat/provider";
-import { handleChatPost, POST } from "./route";
+import { handleChatPost, POST, resetChatRouteStateForTests } from "./route";
 
 const originalTrustedClientIpHeader =
   process.env.CHAT_TRUSTED_CLIENT_IP_HEADER;
@@ -59,6 +59,7 @@ function postRaw(body: string, headers: Record<string, string> = {}) {
 
 describe("POST /api/chat", () => {
   afterEach(() => {
+    resetChatRouteStateForTests();
     restoreTrustedClientIpHeader();
     restoreN8nWebhookUrl();
     vi.restoreAllMocks();
@@ -87,7 +88,7 @@ describe("POST /api/chat", () => {
     });
   });
 
-  it("does not rate limit unrelated sessions through a shared fallback IP bucket", async () => {
+  it("uses a fallback rate-limit bucket when no trusted client IP source is available", async () => {
     delete process.env.CHAT_TRUSTED_CLIENT_IP_HEADER;
 
     const provider: ChatProvider = {
@@ -120,12 +121,12 @@ describe("POST /api/chat", () => {
       expect(response.status).toBe(200);
     }
 
-    const victim = await handleChatPost(
+    const blocked = await handleChatPost(
       postJson(
         {
           ...validPayload,
-          clientSessionId: "fallback-victim-session",
-          clientMessageId: "fallback-victim-message"
+          clientSessionId: "fallback-rotated-session-blocked",
+          clientMessageId: "fallback-rotated-message-blocked"
         },
         {
           "cf-connecting-ip": "203.0.113.220",
@@ -134,12 +135,14 @@ describe("POST /api/chat", () => {
       ),
       provider
     );
+    const body = await blocked.json();
 
-    expect(victim.status).toBe(200);
-    expect(provider.sendMessage).toHaveBeenCalledTimes(6);
+    expect(blocked.status).toBe(429);
+    expect(body.error.code).toBe("RATE_LIMITED");
+    expect(provider.sendMessage).toHaveBeenCalledTimes(5);
   });
 
-  it("keeps trusted IP buckets from being evicted by attacker-controlled session churn", async () => {
+  it("throttles untrusted session churn without evicting trusted IP buckets", async () => {
     process.env.CHAT_TRUSTED_CLIENT_IP_HEADER = "cf-connecting-ip";
 
     const provider: ChatProvider = {
@@ -186,7 +189,7 @@ describe("POST /api/chat", () => {
         provider
       );
 
-      expect(response.status).toBe(200);
+      expect(response.status).toBe(index < 5 ? 200 : 429);
     }
 
     const blocked = await handleChatPost(

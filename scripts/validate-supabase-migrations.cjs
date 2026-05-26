@@ -58,6 +58,30 @@ const contentRules = [
     label: 'destructive SQL statement',
     regex: /\bdrop\s+schema\s+public\s+cascade\b/i,
   },
+  {
+    label: 'destructive SQL statement',
+    regex: /\bdrop\s+table\b/i,
+  },
+  {
+    label: 'destructive SQL statement',
+    regex: /\btruncate(?:\s+table)?\b/i,
+  },
+  {
+    label: 'destructive SQL statement',
+    regex: /\bdelete\s+from\b/i,
+  },
+  {
+    label: 'destructive SQL statement',
+    regex: /\balter\s+table\b[\s\S]*?\bdrop\s+column\b/i,
+  },
+  {
+    label: 'destructive SQL statement',
+    regex: /\bdrop\s+policy\b/i,
+  },
+  {
+    label: 'destructive SQL statement',
+    regex: /\balter\s+table\b[\s\S]*?\bdisable\s+row\s+level\s+security\b/i,
+  },
 ];
 
 function parseArgs(argv) {
