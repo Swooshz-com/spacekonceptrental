@@ -9,7 +9,8 @@ policy SQL with static coverage. Phase 1F-C-B adds local-only behavioural RLS
 tests with fake fixtures inside the test harness. PR #27 added fake/sample
 catalogue seed fixtures and Docker-only local validation. Phase 1G-A adds only
 server-side Supabase runtime wiring with private environment guards and static
-browser-boundary tests. Public catalogue reads, persistence features,
+browser-boundary tests. Phase 1G-B adds server-only public catalogue reads for
+published catalogue data with safe missing-env fallback. Persistence features,
 deployment, and Supabase Cloud connection remain deferred.
 
 ## Naming Decision
@@ -283,12 +284,12 @@ definitions. Phase 1F-C-A adds RLS policy SQL with static coverage. Phase
 1F-C-B adds local-only behavioural RLS tests for the committed migrations.
 Phase 1F-D adds fake/sample catalogue seed fixtures only.
 Phase 1G-A completes step 6 with server-only runtime wiring only.
+Phase 1G-B completes step 7 with read-only published catalogue queries only.
 
-## Deferred After Phase 1G-A
+## Deferred After Phase 1G-B
 
 - Supabase project connection.
 - Browser Supabase client code.
-- Public catalogue database reads.
 - Production seed data.
 - Real product, quote, conversation, or message persistence.
 - Admin product workflows.

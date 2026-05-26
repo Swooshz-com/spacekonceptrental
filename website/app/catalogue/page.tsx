@@ -3,27 +3,36 @@ import Link from "next/link";
 import chairImage from "../../assets/images/product_chair.png";
 import sofaImage from "../../assets/images/product_sofa.png";
 import corporateImage from "../../assets/images/event_corporate.png";
+import { getPublicCatalogue } from "../../lib/catalogue/catalogue-repository";
+import type { PublicCatalogueProduct, PublicCatalogue } from "../../lib/catalogue/types";
 
-const catalogueItems = [
-  {
-    title: "Dining and seminar chairs",
-    description: "Clean seating options for conferences, dinners, and launches.",
-    image: chairImage
-  },
-  {
-    title: "Lounge sofas",
-    description: "Soft seating for receptions, VIP areas, and brand activations.",
-    image: sofaImage,
-    href: "/catalogue/lounge-sofa-package"
-  },
-  {
-    title: "Corporate event sets",
-    description: "Prepared event looks that can be translated into quote items.",
-    image: corporateImage
+export const dynamic = "force-dynamic";
+
+function getProductImage(product: PublicCatalogueProduct) {
+  const slug = product.slug.toLowerCase();
+  const categoryName = product.categoryName?.toLowerCase() ?? "";
+
+  if (slug.includes("chair") || categoryName.includes("seating")) {
+    return chairImage;
   }
-];
 
-export default function CataloguePage() {
+  if (
+    slug.includes("table") ||
+    slug.includes("corporate") ||
+    slug.includes("garden") ||
+    categoryName.includes("event")
+  ) {
+    return corporateImage;
+  }
+
+  return sofaImage;
+}
+
+export function CataloguePageContent({
+  catalogue
+}: {
+  catalogue: PublicCatalogue;
+}) {
   return (
     <section className="section">
       <div className="page-title">
@@ -35,19 +44,21 @@ export default function CataloguePage() {
       </div>
 
       <div className="catalogue-grid">
-        {catalogueItems.map((item) => (
-          <article className="catalogue-card" key={item.title}>
+        {catalogue.products.map((product) => (
+          <article className="catalogue-card" key={product.slug}>
             <div className="catalogue-card__image">
-              <Image alt="" src={item.image} />
+              <Image
+                alt={product.primaryImage?.altText ?? ""}
+                src={getProductImage(product)}
+              />
             </div>
             <div className="catalogue-card__body">
-              <h2>{item.title}</h2>
-              <p>{item.description}</p>
-              {item.href ? (
-                <Link className="card-link" href={item.href}>
-                  View product shell
-                </Link>
-              ) : null}
+              <h2>{product.name}</h2>
+              <p>{product.shortDescription ?? product.description}</p>
+              {product.categoryName ? <p>{product.categoryName}</p> : null}
+              <Link className="card-link" href={`/catalogue/${product.slug}`}>
+                View product shell
+              </Link>
             </div>
           </article>
         ))}
@@ -60,4 +71,10 @@ export default function CataloguePage() {
       </div>
     </section>
   );
+}
+
+export default async function CataloguePage() {
+  const catalogue = await getPublicCatalogue();
+
+  return <CataloguePageContent catalogue={catalogue} />;
 }
