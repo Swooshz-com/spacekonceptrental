@@ -105,6 +105,15 @@ Sheets selections for import.
 Before final runtime smoke testing, use the manual security closure runbook in
 `docs/security-smoke-test-runbook.md`.
 
+## CI Validation
+
+GitHub Actions runs CI on pull requests and pushes to `main`. CI validates the
+static n8n workflow exports and validation tests, then validates the Next.js
+website with `npm ci`, tests, typecheck, and build.
+
+This is CI only. It does not deploy, configure Vercel, use secrets, or add CD;
+deployment remains deferred until separately approved.
+
 ## Website App
 
 The website frontend is now a Vercel-ready Next.js scaffold under `website/`.

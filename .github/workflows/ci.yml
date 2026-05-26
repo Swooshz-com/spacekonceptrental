@@ -1,0 +1,132 @@
+name: CI Validation
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  repo-n8n-validation:
+    name: Repo / n8n validation
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Validate n8n workflow exports
+        run: npm run validate:n8n
+
+      - name: Test n8n validation rules
+        run: npm run test:n8n-validation
+
+  website-validation:
+    name: Website validation
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: website/package-lock.json
+
+      - name: Install website dependencies
+        working-directory: website
+        run: npm ci
+
+      - name: Run website tests
+        working-directory: website
+        run: npm run test
+
+      - name: Run website typecheck
+        working-directory: website
+        run: npm run typecheck
+
+      - name: Build website
+        working-directory: website
+        run: npm run build
+
+  tracked-file-safety:
+    name: Tracked file safety
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Check forbidden tracked local/runtime files
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          found=0
+
+          forbidden_paths=(
+            "website/chat-config.js"
+            "website/chat-config.local.js"
+            ".env"
+            ".env.local"
+            ".env.development"
+            ".env.production"
+            ".env.test"
+            "website/.env"
+            "website/.env.local"
+            "website/.env.development"
+            "website/.env.production"
+            "website/.env.test"
+          )
+
+          for path in "${forbidden_paths[@]}"; do
+            if git ls-files --error-unmatch "$path" >/dev/null 2>&1; then
+              echo "Forbidden tracked file detected: $path"
+              found=1
+            fi
+          done
+
+          runtime_dirs="$(git ls-files ".n8n-local" ".tmp" "website/.tmp")"
+          if [ -n "$runtime_dirs" ]; then
+            echo "Forbidden tracked runtime directory content detected."
+            found=1
+          fi
+
+          forbidden_patterns=(
+            "n8n-credential-bindings*.json"
+            "*credential-bindings*.json"
+            "*credentials-export*.json"
+            "*live-credential*.json"
+            "credentials.*"
+            "credential.*"
+            "secrets.*"
+            "secret.*"
+            "tokens.*"
+            "token.*"
+            "*.credentials"
+            "*.credential"
+            "*.secrets"
+            "*.secret"
+            "*.tokens"
+            "*.token"
+          )
+
+          for pattern in "${forbidden_patterns[@]}"; do
+            if [ -n "$(git ls-files "$pattern")" ]; then
+              echo "Forbidden tracked credential/secret file pattern detected: $pattern"
+              found=1
+            fi
+          done
+
+          exit "$found"
