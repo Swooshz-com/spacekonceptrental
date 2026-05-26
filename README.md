@@ -99,6 +99,7 @@ Run:
 npm run validate:supabase-migrations
 npm run test:supabase-migrations
 npm run test:supabase-rls
+npm run test:supabase-seed
 npm run validate:n8n
 npm run test:n8n-validation
 ```
@@ -116,6 +117,14 @@ commands such as `supabase login`, `supabase link`, `supabase db push`, or
 `supabase migration up`.
 
 See `docs/SUPABASE-LOCAL-RLS-TESTS.md` for the local RLS test runbook.
+
+`npm run test:supabase-seed` is also local-only and Docker-only. It starts a
+throwaway Docker database, applies the committed migrations, applies the
+fake/sample catalogue seed fixture from `supabase/seeds/sample_catalogue.sql`,
+checks seed safety and RLS visibility, and stops/removes the container. It does
+not connect to Supabase Cloud or require the Supabase CLI.
+
+See `docs/SUPABASE-SEED-FIXTURES.md` for the seed fixture runbook.
 
 Before final runtime smoke testing, use the manual security closure runbook in
 `docs/security-smoke-test-runbook.md`.

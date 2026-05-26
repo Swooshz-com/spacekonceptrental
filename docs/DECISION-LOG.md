@@ -103,3 +103,14 @@ Supabase-compatible auth role surface.
 Reason: the project needs executable proof for the committed RLS policies
 before runtime Supabase use, without linking to Supabase Cloud, adding
 credentials, deploying, or introducing app-side Supabase wiring.
+
+## 2026-05-27: Fake Catalogue Seed Fixtures
+
+Decision: Phase 1F-D seed data is limited to reviewed fake/sample catalogue
+fixtures under `supabase/seeds/`, validated with a Docker-only local database
+harness.
+
+Reason: the project needs deterministic sample catalogue rows for future local
+checks while keeping production seeding, Supabase Cloud connection, runtime
+Supabase wiring, catalogue DB reads, quote persistence, conversation/message
+persistence, and deployment deferred.
