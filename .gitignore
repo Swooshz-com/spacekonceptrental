@@ -1,6 +1,11 @@
 # Dependencies
 node_modules/
 
+# Next.js / TypeScript build output
+.next/
+website/.next/
+*.tsbuildinfo
+
 # Environment and local secrets
 .env
 .env.*

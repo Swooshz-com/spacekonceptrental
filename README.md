@@ -25,7 +25,9 @@ customer-support-agent capstone requirements.
 - `docs/` - operator runbooks and post-security smoke-test notes.
 - `presentation/` - capstone walkthrough deck.
 - `scripts/` - local workflow validation.
-- `website/` - frontend design assets and chat config placeholders.
+- `website/` - Phase 1A Next.js frontend app root, with preserved design
+  assets under `website/web_design/` and prepared assets used by the current
+  public shell.
 - `SpaceKonceptRental_website_display_design_wishlist.jpg` - future website
   design reference, not part of the RAG upload.
 
@@ -103,6 +105,28 @@ Sheets selections for import.
 Before final runtime smoke testing, use the manual security closure runbook in
 `docs/security-smoke-test-runbook.md`.
 
+## Website App
+
+The website frontend is now a Vercel-ready Next.js scaffold under `website/`.
+The current public surface includes the homepage, catalogue, quote shell, and
+first-party `POST /api/chat` route.
+
+The chat UI is custom and calls `/api/chat` only. The provider is currently a
+safe placeholder boundary; no live n8n provider wiring is included yet. Any
+future n8n access must stay server-only through environment variables such as
+`N8N_CHAT_WEBHOOK_URL`, not browser-side config.
+
+Local frontend commands:
+
+```bash
+cd website
+npm install
+npm run test
+npm run typecheck
+npm run build
+npm run dev
+```
+
 ## Manual Test Checklist
 
 After import, credential setup, and KB ingestion, test:
@@ -131,8 +155,9 @@ session values. Current compensating controls include debounce, dedupe, safe
 Sheets writes, escaped emails, bounded transcripts, and stateless public chat.
 Full mitigation belongs in the future authenticated/backend-mediated UI.
 
-For final submission, deploy the replacement frontend to a simple host such as
-Netlify or GitHub Pages. Do not commit temporary tunnel URLs such as ngrok URLs.
+Future frontend deployment target is Vercel. Do not deploy from this PR unless
+separately approved, and do not commit temporary tunnel URLs, webhook URLs, or
+secrets.
 
 ## Presentation Status
 

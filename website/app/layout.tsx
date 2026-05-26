@@ -1,0 +1,49 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+import ChatWidget from "../components/ChatWidget";
+import "./globals.css";
+
+export const metadata: Metadata = {
+  title: "SpaceKonceptRental",
+  description: "Event furniture rental catalogue and quote shell."
+};
+
+function SiteHeader() {
+  return (
+    <header className="site-header">
+      <Link className="brand" href="/">
+        <span className="brand__name">SpaceKonceptRental</span>
+        <span className="brand__tagline">Event furniture, Singapore</span>
+      </Link>
+      <nav aria-label="Primary navigation" className="site-nav">
+        <Link href="/">Home</Link>
+        <Link href="/catalogue">Catalogue</Link>
+        <Link className="site-nav__quote" href="/quote">
+          Quote
+        </Link>
+      </nav>
+    </header>
+  );
+}
+
+export default function RootLayout({
+  children
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  return (
+    <html lang="en-SG">
+      <body>
+        <div className="site-shell">
+          <SiteHeader />
+          <main className="site-main">{children}</main>
+          <ChatWidget />
+          <footer className="site-footer">
+            <p>SpaceKonceptRental</p>
+            <p>Singapore event furniture rental</p>
+          </footer>
+        </div>
+      </body>
+    </html>
+  );
+}
