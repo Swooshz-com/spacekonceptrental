@@ -1,10 +1,11 @@
 # Supabase RLS And Tenant-Isolation Strategy
 
-This is a planning document only. It does not implement RLS policies, tests,
-SQL migrations, Supabase client wiring, or deployment configuration.
+Phase 1F-C-A adds initial RLS enablement and policy SQL with static coverage
+only. It does not add a database execution harness, behavioural
+tenant-isolation tests, Supabase client wiring, or deployment configuration.
 
-No RLS policy should be implemented without tests that prove allowed and
-denied paths for tenant isolation.
+No runtime path should rely on the RLS policies until a future approved
+database execution harness proves allowed and denied tenant-isolation paths.
 
 ## Boundary Model
 
@@ -111,9 +112,10 @@ Role names should start simple, such as `owner`, `admin`, and `viewer`, and
 should not expand into granular permissions until the admin workflows require
 it.
 
-## Test Requirements Before Implementation
+## Test Requirements Before Runtime Use
 
-When RLS is implemented, tests must cover at least:
+Phase 1F-C-A adds static tests proving the intended migration structure. Before
+runtime app use, behavioural database tests must cover at least:
 
 - A user can read and write allowed rows in their workspace.
 - A user cannot read or write rows from another workspace.
@@ -123,10 +125,10 @@ When RLS is implemented, tests must cover at least:
 - Service-only tables are not readable or writable from browser-role clients.
 - Service-role-only operations are exercised only from server-side code.
 
-## Deferred In Phase 1E
+## Deferred After Phase 1F-C-A
 
-- SQL policies.
-- Database functions.
+- Behavioural RLS and tenant-isolation tests.
+- Database execution harness for policy tests.
 - Supabase client packages.
 - Auth UI.
 - Admin routes.

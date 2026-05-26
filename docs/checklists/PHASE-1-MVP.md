@@ -61,7 +61,8 @@ required first.
 - [x] `audit_logs`.
 - [x] Optional `integration_connections` for non-secret integration metadata
       only.
-- [ ] Add RLS policies.
+- [x] Add RLS policies.
+- [x] Add static RLS policy migration coverage.
 - [ ] Add seed data.
 - [ ] Add server-side Supabase runtime wiring.
 - [ ] Add public catalogue database reads.
