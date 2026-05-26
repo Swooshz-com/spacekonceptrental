@@ -202,6 +202,30 @@ test('destructive SQL pattern fails', () => {
   assert.match(result.stderr, /destructive/i);
 });
 
+test('common destructive SQL statements fail static validation', () => {
+  const cases = [
+    ['20260526143000_drop_products.sql', 'drop table public.products;'],
+    ['20260526143000_truncate_quotes.sql', 'truncate table public.quote_requests;'],
+    ['20260526143000_delete_messages.sql', 'delete from public.messages;'],
+    ['20260526143000_drop_product_column.sql', 'alter table public.products drop column description;'],
+    ['20260526143000_drop_rls_policy.sql', 'drop policy product_read on public.products;'],
+    [
+      '20260526143000_disable_rls.sql',
+      'alter table public.products disable row level security;',
+    ],
+  ];
+
+  for (const [fileName, sql] of cases) {
+    const root = makeTempRoot();
+    const migrationsDir = writeMigration(root, fileName, sql);
+
+    const result = runValidator(migrationsDir);
+
+    assert.notEqual(result.status, 0, `${fileName} unexpectedly passed`);
+    assert.match(result.stderr, /destructive/i);
+  }
+});
+
 test('validator does not require or use a live Supabase connection', () => {
   const root = makeTempRoot();
   const migrationsDir = writeMigration(
