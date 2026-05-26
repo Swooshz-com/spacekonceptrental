@@ -3,6 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "test:supabase-rls": "node scripts/test-supabase-rls.cjs",
     "test:supabase-migrations": "node --test scripts/validate-supabase-migrations.test.cjs",
     "validate:supabase-migrations": "node scripts/validate-supabase-migrations.cjs",
     "test:n8n-validation": "node --test scripts/validate-n8n-workflows.test.cjs",

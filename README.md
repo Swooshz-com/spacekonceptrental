@@ -96,6 +96,9 @@ that `file_id + namespace` has `status = completed` and
 Run:
 
 ```bash
+npm run validate:supabase-migrations
+npm run test:supabase-migrations
+npm run test:supabase-rls
 npm run validate:n8n
 npm run test:n8n-validation
 ```
@@ -103,6 +106,16 @@ npm run test:n8n-validation
 Current warning categories are expected when the local exports intentionally
 include configured emails, Pinecone values, Google Drive folders, and Google
 Sheets selections for import.
+
+`npm run test:supabase-rls` is local-only, Docker-only, and requires Docker
+Desktop. It starts a throwaway Docker database, applies the committed Supabase
+migrations, creates fake fixtures inside that temporary database, checks RLS
+behaviour, and stops/removes the container. It does not run `npx supabase`,
+install the Supabase CLI, add a host Supabase dependency, or run Supabase Cloud
+commands such as `supabase login`, `supabase link`, `supabase db push`, or
+`supabase migration up`.
+
+See `docs/SUPABASE-LOCAL-RLS-TESTS.md` for the local RLS test runbook.
 
 Before final runtime smoke testing, use the manual security closure runbook in
 `docs/security-smoke-test-runbook.md`.

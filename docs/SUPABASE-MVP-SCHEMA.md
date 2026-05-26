@@ -5,8 +5,9 @@ policies, Supabase client wiring, seed files, or deployment configuration.
 
 Phase 1E performed step 1 of the migration sequence: documentation. Phase 1F-B
 started step 2 with a base table migration. Phase 1F-C-A adds initial RLS
-policy SQL with static coverage only. Behavioural RLS tests, seed data,
-Supabase runtime wiring, and persistence features remain deferred.
+policy SQL with static coverage. Phase 1F-C-B adds local-only behavioural RLS
+tests with fake fixtures inside the test harness. Seed data, Supabase runtime
+wiring, and persistence features remain deferred.
 
 ## Naming Decision
 
@@ -275,11 +276,11 @@ Future Supabase work should land in this order:
 9. Conversation and message persistence.
 
 Phase 1E performed step 1. Phase 1F-B started step 2 with base table
-definitions. Phase 1F-C-A adds RLS policy SQL only.
+definitions. Phase 1F-C-A adds RLS policy SQL with static coverage. Phase
+1F-C-B adds local-only behavioural RLS tests for the committed migrations.
 
-## Deferred After Phase 1F-C-A
+## Deferred After Phase 1F-C-B
 
-- Behavioural RLS and tenant-isolation tests.
 - Supabase project connection.
 - Supabase client packages or runtime wiring.
 - Real product, quote, conversation, or message persistence.

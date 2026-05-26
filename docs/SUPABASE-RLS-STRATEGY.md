@@ -1,11 +1,12 @@
 # Supabase RLS And Tenant-Isolation Strategy
 
-Phase 1F-C-A adds initial RLS enablement and policy SQL with static coverage
-only. It does not add a database execution harness, behavioural
-tenant-isolation tests, Supabase client wiring, or deployment configuration.
+Phase 1F-C-A adds initial RLS enablement and policy SQL with static coverage.
+Phase 1F-C-B adds a local-only database execution harness with behavioural
+tenant-isolation tests. It does not add Supabase client wiring, runtime
+catalogue reads, persistence, seed data, or deployment configuration.
 
-No runtime path should rely on the RLS policies until a future approved
-database execution harness proves allowed and denied tenant-isolation paths.
+No runtime path should rely on Supabase until server-only app wiring and the
+specific runtime flows are separately approved and tested.
 
 ## Boundary Model
 
@@ -112,23 +113,28 @@ Role names should start simple, such as `owner`, `admin`, and `viewer`, and
 should not expand into granular permissions until the admin workflows require
 it.
 
-## Test Requirements Before Runtime Use
+## Test Coverage
 
-Phase 1F-C-A adds static tests proving the intended migration structure. Before
-runtime app use, behavioural database tests must cover at least:
+Phase 1F-C-A adds static tests proving the intended migration structure. Phase
+1F-C-B adds local behavioural database tests proving:
 
-- A user can read and write allowed rows in their workspace.
-- A user cannot read or write rows from another workspace.
+- A user can read allowed admin-only rows in their workspace.
+- A user cannot read admin-only rows from another workspace.
 - A user without membership cannot access admin-only data.
 - Public anonymous reads return only published catalogue rows.
-- Anonymous quote/chat writes cannot choose arbitrary workspaces.
-- Service-only tables are not readable or writable from browser-role clients.
-- Service-role-only operations are exercised only from server-side code.
+- Anonymous reads cannot see draft catalogue rows, membership data, quote data,
+  conversation data, messages, usage events, audit logs, or integration
+  connection metadata.
+- Service-only tables are not broadly readable from browser-role clients, and
+  representative browser-role writes are rejected.
+- Runtime website code still does not rely on Supabase.
 
-## Deferred After Phase 1F-C-A
+Future runtime work must add targeted tests for any newly approved write path,
+including anonymous quote creation, chat persistence, and server-side
+service-role operations.
 
-- Behavioural RLS and tenant-isolation tests.
-- Database execution harness for policy tests.
+## Deferred After Phase 1F-C-B
+
 - Supabase client packages.
 - Auth UI.
 - Admin routes.

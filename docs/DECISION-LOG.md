@@ -93,3 +93,13 @@ Reason: user-supplied forwarding headers are spoofable, but relying only on
 attacker-controlled `clientSessionId` lets callers bypass the public chat cap
 by rotating sessions. The fallback bucket fails closed until deployment
 configures a trusted client IP header.
+
+## 2026-05-27: Local-only Supabase RLS Behaviour Tests
+
+Decision: behavioural RLS and tenant-isolation coverage runs against a
+throwaway local Docker database with fake fixtures and a minimal
+Supabase-compatible auth role surface.
+
+Reason: the project needs executable proof for the committed RLS policies
+before runtime Supabase use, without linking to Supabase Cloud, adding
+credentials, deploying, or introducing app-side Supabase wiring.
