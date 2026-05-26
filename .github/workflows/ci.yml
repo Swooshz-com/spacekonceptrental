@@ -10,8 +10,8 @@ permissions:
   contents: read
 
 jobs:
-  repo-n8n-validation:
-    name: Repo / n8n validation
+  repo-validation:
+    name: Repo validation
     runs-on: ubuntu-latest
 
     steps:
@@ -22,6 +22,12 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 24
+
+      - name: Validate Supabase migration scaffold
+        run: npm run validate:supabase-migrations
+
+      - name: Test Supabase migration validator
+        run: npm run test:supabase-migrations
 
       - name: Validate n8n workflow exports
         run: npm run validate:n8n
