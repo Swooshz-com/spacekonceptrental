@@ -278,17 +278,21 @@ Expected:
 Message:
 
 ```text
-Do you rent transparent levitating chairs with built-in holograms?
+Do you rent transparent levitating chairs with built-in holograms for orbital events?
 ```
 
 Expected:
 
 - Bot does not invent facts.
 - Bot says it does not have that detail yet and offers escalation/follow-up.
-- `unanswered_questions` row is written when confidence is low or answer is not
-  in KB.
+- Unanswered route/log/alert triggers for unsupported, off-catalog, out-of-scope,
+  or no-KB answers, even if the structured intent is `faq` with high confidence.
+- `unanswered_questions` row is written with a useful reason such as
+  `unsupported_inventory`, `out_of_scope`, or `no_kb_answer`.
 - Unanswered row includes `conversation_ref` and `conversation_transcript`.
 - Unanswered notification email is readable and includes transcript context.
+- No lead or ticket row is created unless the customer explicitly asks for human
+  follow-up or provides valid support/quote context.
 
 ### Test 7 - Source And Link Check
 
