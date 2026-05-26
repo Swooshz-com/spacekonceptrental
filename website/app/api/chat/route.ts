@@ -1,6 +1,6 @@
 import "server-only";
 
-import { getChatProvider } from "../../../lib/chat/placeholder-provider";
+import { getChatProvider } from "../../../lib/chat/provider-factory";
 import {
   ChatProviderError,
   type ChatProvider,
@@ -19,9 +19,9 @@ const MAX_TIMEZONE_LENGTH = 64;
 const RATE_LIMIT_MAX_REQUESTS = 5;
 const RATE_LIMIT_WINDOW_MS = 60_000;
 const IDEMPOTENCY_TTL_MS = 10 * 60_000;
-const MAX_RATE_LIMIT_BUCKETS = 1_000;
+const MAX_IP_RATE_LIMIT_BUCKETS = 1_000;
+const MAX_SESSION_RATE_LIMIT_BUCKETS = 1_000;
 const MAX_IDEMPOTENCY_ENTRIES = 1_000;
-const UNTRUSTED_CLIENT_IP_KEY = "untrusted-proxy";
 // Configure only with a deployment header overwritten by a trusted proxy/CDN.
 // User-supplied forwarding headers must not be trusted by default.
 const TRUSTED_CLIENT_IP_HEADERS = new Set([
@@ -64,7 +64,8 @@ type IdempotencyLookup =
   | { status: "conflict" }
   | { status: "miss"; key: string; fingerprint: string };
 
-const rateLimitBuckets = new Map<string, RateLimitBucket>();
+const ipRateLimitBuckets = new Map<string, RateLimitBucket>();
+const sessionRateLimitBuckets = new Map<string, RateLimitBucket>();
 const idempotencyEntries = new Map<string, IdempotencyEntry>();
 
 function createRequestId() {
@@ -399,45 +400,51 @@ function getClientIp(request: Request) {
   const trustedHeader = getTrustedClientIpHeader();
 
   if (!trustedHeader) {
-    return UNTRUSTED_CLIENT_IP_KEY;
+    return undefined;
   }
 
-  return (
-    getClientIpFromHeader(request, trustedHeader) ?? UNTRUSTED_CLIENT_IP_KEY
-  );
+  return getClientIpFromHeader(request, trustedHeader);
 }
 
-function pruneRateLimitBuckets(now: number) {
-  if (rateLimitBuckets.size <= MAX_RATE_LIMIT_BUCKETS) {
+function pruneRateLimitBuckets(
+  buckets: Map<string, RateLimitBucket>,
+  maxBuckets: number,
+  now: number
+) {
+  if (buckets.size <= maxBuckets) {
     return;
   }
 
-  for (const [key, bucket] of rateLimitBuckets) {
+  for (const [key, bucket] of buckets) {
     if (bucket.resetAt <= now) {
-      rateLimitBuckets.delete(key);
+      buckets.delete(key);
     }
   }
 
-  while (rateLimitBuckets.size > MAX_RATE_LIMIT_BUCKETS) {
-    const oldestKey = rateLimitBuckets.keys().next().value;
+  while (buckets.size > maxBuckets) {
+    const oldestKey = buckets.keys().next().value;
 
     if (!oldestKey) {
       break;
     }
 
-    rateLimitBuckets.delete(oldestKey);
+    buckets.delete(oldestKey);
   }
 }
 
-function getRateLimitBucket(key: string, now: number): RateLimitBucket {
-  let bucket = rateLimitBuckets.get(key);
+function getRateLimitBucket(
+  buckets: Map<string, RateLimitBucket>,
+  key: string,
+  now: number
+): RateLimitBucket {
+  let bucket = buckets.get(key);
 
   if (!bucket || bucket.resetAt <= now) {
     bucket = {
       count: 0,
       resetAt: now + RATE_LIMIT_WINDOW_MS
     };
-    rateLimitBuckets.set(key, bucket);
+    buckets.set(key, bucket);
   }
 
   return bucket;
@@ -462,27 +469,51 @@ function consumeRateLimit(
   providerRequest: ChatProviderRequest
 ): RateLimitResult {
   const now = Date.now();
-  const ipBucket = getRateLimitBucket(`chat:ip:${getClientIp(request)}`, now);
-  const sessionBucket = getRateLimitBucket(
-    `chat:session:${providerRequest.clientSessionId}`,
+  const clientIp = getClientIp(request);
+
+  pruneRateLimitBuckets(ipRateLimitBuckets, MAX_IP_RATE_LIMIT_BUCKETS, now);
+  pruneRateLimitBuckets(
+    sessionRateLimitBuckets,
+    MAX_SESSION_RATE_LIMIT_BUCKETS,
     now
   );
 
-  pruneRateLimitBuckets(now);
+  const ipBucket = clientIp
+    ? getRateLimitBucket(ipRateLimitBuckets, clientIp, now)
+    : undefined;
 
-  if (ipBucket.count >= RATE_LIMIT_MAX_REQUESTS) {
+  pruneRateLimitBuckets(ipRateLimitBuckets, MAX_IP_RATE_LIMIT_BUCKETS, now);
+
+  if (ipBucket && ipBucket.count >= RATE_LIMIT_MAX_REQUESTS) {
     return toRateLimitResult(ipBucket, false);
   }
+
+  const sessionBucket = getRateLimitBucket(
+    sessionRateLimitBuckets,
+    providerRequest.clientSessionId,
+    now
+  );
+
+  pruneRateLimitBuckets(
+    sessionRateLimitBuckets,
+    MAX_SESSION_RATE_LIMIT_BUCKETS,
+    now
+  );
 
   if (sessionBucket.count >= RATE_LIMIT_MAX_REQUESTS) {
     return toRateLimitResult(sessionBucket, false);
   }
 
-  ipBucket.count += 1;
+  if (ipBucket) {
+    ipBucket.count += 1;
+  }
+
   sessionBucket.count += 1;
 
   return toRateLimitResult(
-    ipBucket.count >= sessionBucket.count ? ipBucket : sessionBucket,
+    ipBucket && ipBucket.count >= sessionBucket.count
+      ? ipBucket
+      : sessionBucket,
     true
   );
 }

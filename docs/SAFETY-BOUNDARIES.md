@@ -44,6 +44,14 @@ variables such as `N8N_CHAT_WEBHOOK_URL`.
   traces, or internal provider details to the browser.
 - Browser chat must call first-party `/api/chat`, not n8n.
 
+## Chat Rate-Limit Identity Rules
+
+- Do not trust user-supplied forwarding headers by default.
+- Configure `CHAT_TRUSTED_CLIENT_IP_HEADER` only to a deployment header that a
+  trusted proxy or CDN overwrites.
+- If no trusted client IP header is configured or present, use session-only
+  chat rate limiting instead of spoofable headers or a shared fallback IP key.
+
 ## Worktree Hygiene
 
 The repo was already dirty during planning. Do not mix unrelated dirty worktree

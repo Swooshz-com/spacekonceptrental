@@ -1,4 +1,6 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import ChatWidget from "./ChatWidget";
 
@@ -54,5 +56,15 @@ describe("ChatWidget", () => {
 
     expect(container).not.toHaveTextContent("example.invalid");
     expect(container.innerHTML).not.toContain("N8N_CHAT_WEBHOOK_URL");
+  });
+
+  it("does not import the server-only n8n provider in browser-facing code", () => {
+    const source = readFileSync(
+      resolve(process.cwd(), "components/ChatWidget.tsx"),
+      "utf8"
+    );
+
+    expect(source).not.toContain("n8n-provider");
+    expect(source).not.toContain("N8N_CHAT_WEBHOOK_URL");
   });
 });
