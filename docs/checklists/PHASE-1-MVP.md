@@ -38,7 +38,9 @@ Introduce only the tables needed for the MVP:
 - [x] Document Supabase MVP schema plan.
 - [x] Document RLS and tenant-isolation strategy.
 - [x] Document safe future migration sequencing.
-- [ ] `tenants` or `workspaces`.
+- [x] Document Supabase migration conventions.
+- [x] Add static Supabase migration validation.
+- [ ] `workspaces`.
 - [ ] `admin_users`.
 - [ ] `memberships`.
 - [ ] `categories`.
