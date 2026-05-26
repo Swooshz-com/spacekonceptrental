@@ -21,6 +21,16 @@ const RATE_LIMIT_WINDOW_MS = 60_000;
 const IDEMPOTENCY_TTL_MS = 10 * 60_000;
 const MAX_RATE_LIMIT_BUCKETS = 1_000;
 const MAX_IDEMPOTENCY_ENTRIES = 1_000;
+const UNTRUSTED_CLIENT_IP_KEY = "untrusted-proxy";
+// Configure only with a deployment header overwritten by a trusted proxy/CDN.
+// User-supplied forwarding headers must not be trusted by default.
+const TRUSTED_CLIENT_IP_HEADERS = new Set([
+  "cf-connecting-ip",
+  "fly-client-ip",
+  "x-real-ip",
+  "x-vercel-forwarded-for",
+  "x-forwarded-for"
+]);
 
 type ValidationResult =
   | { ok: true; value: ChatProviderRequest }
@@ -38,11 +48,21 @@ type RateLimitBucket = {
   count: number;
   resetAt: number;
 };
+type RateLimitMetadata = {
+  remaining: number;
+  resetAt: string;
+};
 type IdempotencyEntry = {
   expiresAt: number;
+  fingerprint: string;
+  rateLimit: RateLimitMetadata;
   promise?: Promise<ChatProviderResponse>;
   response?: ChatProviderResponse;
 };
+type IdempotencyLookup =
+  | { status: "hit"; entry: IdempotencyEntry }
+  | { status: "conflict" }
+  | { status: "miss"; key: string; fingerprint: string };
 
 const rateLimitBuckets = new Map<string, RateLimitBucket>();
 const idempotencyEntries = new Map<string, IdempotencyEntry>();
@@ -298,6 +318,24 @@ function rateLimitError(rateLimit: RateLimitResult, requestId: string) {
   );
 }
 
+function idempotencyConflictError(
+  rateLimit: RateLimitResult,
+  requestId: string
+) {
+  return Response.json(
+    {
+      error: {
+        code: "IDEMPOTENCY_CONFLICT",
+        message:
+          "clientMessageId was already used for a different chat request."
+      },
+      requestId,
+      rateLimit: toRateLimitMetadata(rateLimit)
+    },
+    { status: 409 }
+  );
+}
+
 function providerError(error: unknown, requestId: string) {
   const code =
     error instanceof ChatProviderError ? error.code : "CHAT_ERROR";
@@ -315,23 +353,57 @@ function providerError(error: unknown, requestId: string) {
   );
 }
 
+function toRateLimitMetadata(rateLimit: RateLimitResult): RateLimitMetadata {
+  return {
+    remaining: rateLimit.remaining,
+    resetAt: rateLimit.resetAt
+  };
+}
+
+function chatResponse(
+  providerResponse: ChatProviderResponse,
+  rateLimit: RateLimitMetadata
+) {
+  return Response.json({
+    ...providerResponse,
+    rateLimit
+  });
+}
+
+function getTrustedClientIpHeader() {
+  const headerName = process.env.CHAT_TRUSTED_CLIENT_IP_HEADER
+    ?.trim()
+    .toLowerCase();
+
+  if (!headerName || !TRUSTED_CLIENT_IP_HEADERS.has(headerName)) {
+    return undefined;
+  }
+
+  return headerName;
+}
+
+function getClientIpFromHeader(request: Request, headerName: string) {
+  const headerValue = request.headers.get(headerName);
+
+  if (!headerValue) {
+    return undefined;
+  }
+
+  const [clientIp] = headerValue.split(",");
+  const trimmed = clientIp?.trim();
+
+  return trimmed || undefined;
+}
+
 function getClientIp(request: Request) {
-  const forwardedFor = request.headers.get("x-forwarded-for");
+  const trustedHeader = getTrustedClientIpHeader();
 
-  if (forwardedFor) {
-    const [clientIp] = forwardedFor.split(",");
-    const trimmed = clientIp?.trim();
-
-    if (trimmed) {
-      return trimmed;
-    }
+  if (!trustedHeader) {
+    return UNTRUSTED_CLIENT_IP_KEY;
   }
 
   return (
-    request.headers.get("cf-connecting-ip") ??
-    request.headers.get("x-real-ip") ??
-    request.headers.get("fly-client-ip") ??
-    "unknown"
+    getClientIpFromHeader(request, trustedHeader) ?? UNTRUSTED_CLIENT_IP_KEY
   );
 }
 
@@ -423,6 +495,47 @@ function getIdempotencyKey(request: ChatProviderRequest) {
   ].join(":");
 }
 
+function stableStringify(value: unknown): string {
+  if (Array.isArray(value)) {
+    return `[${value.map((item) => stableStringify(item)).join(",")}]`;
+  }
+
+  if (isRecord(value)) {
+    return `{${Object.keys(value)
+      .sort()
+      .map((key) => `${JSON.stringify(key)}:${stableStringify(value[key])}`)
+      .join(",")}}`;
+  }
+
+  return JSON.stringify(value);
+}
+
+function getFingerprintPayload(request: ChatProviderRequest) {
+  return {
+    conversationId: request.conversationId ?? null,
+    clientSessionId: request.clientSessionId,
+    clientMessageId: request.clientMessageId,
+    message: {
+      role: request.message.role,
+      content: request.message.content
+    },
+    context: request.context ?? null,
+    locale: request.locale,
+    timezone: request.timezone
+  };
+}
+
+async function createRequestFingerprint(request: ChatProviderRequest) {
+  const data = new TextEncoder().encode(
+    stableStringify(getFingerprintPayload(request))
+  );
+  const digest = await crypto.subtle.digest("SHA-256", data);
+
+  return Array.from(new Uint8Array(digest))
+    .map((byte) => byte.toString(16).padStart(2, "0"))
+    .join("");
+}
+
 function pruneIdempotencyEntries(now: number) {
   if (idempotencyEntries.size <= MAX_IDEMPOTENCY_ENTRIES) {
     return;
@@ -445,47 +558,64 @@ function pruneIdempotencyEntries(now: number) {
   }
 }
 
-async function sendMessageOnce(
-  provider: ChatProvider,
+async function getIdempotencyLookup(
   providerRequest: ChatProviderRequest
-): Promise<ChatProviderResponse> {
+): Promise<IdempotencyLookup> {
   const now = Date.now();
   const key = getIdempotencyKey(providerRequest);
+  const fingerprint = await createRequestFingerprint(providerRequest);
   const cached = idempotencyEntries.get(key);
 
   pruneIdempotencyEntries(now);
 
-  if (cached && cached.expiresAt > now) {
-    if (cached.response) {
-      return cached.response;
-    }
-
-    if (cached.promise) {
-      return cached.promise;
-    }
+  if (!cached) {
+    return { status: "miss", key, fingerprint };
   }
 
+  if (cached.expiresAt <= now) {
+    idempotencyEntries.delete(key);
+    return { status: "miss", key, fingerprint };
+  }
+
+  if (cached.fingerprint !== fingerprint) {
+    return { status: "conflict" };
+  }
+
+  return { status: "hit", entry: cached };
+}
+
+async function sendMessageOnce(
+  provider: ChatProvider,
+  providerRequest: ChatProviderRequest,
+  idempotency: Extract<IdempotencyLookup, { status: "miss" }>,
+  rateLimit: RateLimitMetadata
+): Promise<ChatProviderResponse> {
+  const now = Date.now();
   const promise = provider.sendMessage(providerRequest);
 
-  idempotencyEntries.set(key, {
+  idempotencyEntries.set(idempotency.key, {
     expiresAt: now + IDEMPOTENCY_TTL_MS,
+    fingerprint: idempotency.fingerprint,
+    rateLimit,
     promise
   });
 
   try {
     const response = await promise;
 
-    idempotencyEntries.set(key, {
+    idempotencyEntries.set(idempotency.key, {
       expiresAt: Date.now() + IDEMPOTENCY_TTL_MS,
+      fingerprint: idempotency.fingerprint,
+      rateLimit,
       response
     });
 
     return response;
   } catch (error) {
-    const current = idempotencyEntries.get(key);
+    const current = idempotencyEntries.get(idempotency.key);
 
     if (current?.promise === promise) {
-      idempotencyEntries.delete(key);
+      idempotencyEntries.delete(idempotency.key);
     }
 
     throw error;
@@ -509,22 +639,42 @@ export async function handleChatPost(
     return validationError(validation.message, requestId);
   }
 
+  const idempotency = await getIdempotencyLookup(validation.value);
+
+  if (idempotency.status === "hit") {
+    const providerResponse =
+      idempotency.entry.response ?? (await idempotency.entry.promise);
+
+    if (!providerResponse) {
+      return providerError(
+        new Error("Missing idempotent chat response."),
+        requestId
+      );
+    }
+
+    return chatResponse(providerResponse, idempotency.entry.rateLimit);
+  }
+
   const rateLimit = consumeRateLimit(request, validation.value);
 
   if (!rateLimit.allowed) {
     return rateLimitError(rateLimit, requestId);
   }
 
-  try {
-    const providerResponse = await sendMessageOnce(provider, validation.value);
+  if (idempotency.status === "conflict") {
+    return idempotencyConflictError(rateLimit, requestId);
+  }
 
-    return Response.json({
-      ...providerResponse,
-      rateLimit: {
-        remaining: rateLimit.remaining,
-        resetAt: rateLimit.resetAt
-      }
-    });
+  try {
+    const rateLimitMetadata = toRateLimitMetadata(rateLimit);
+    const providerResponse = await sendMessageOnce(
+      provider,
+      validation.value,
+      idempotency,
+      rateLimitMetadata
+    );
+
+    return chatResponse(providerResponse, rateLimitMetadata);
   } catch (error) {
     return providerError(error, requestId);
   }

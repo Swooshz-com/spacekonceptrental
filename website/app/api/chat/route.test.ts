@@ -1,6 +1,9 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { ChatProviderError, type ChatProvider } from "../../../lib/chat/provider";
 import { handleChatPost } from "./route";
+
+const originalTrustedClientIpHeader =
+  process.env.CHAT_TRUSTED_CLIENT_IP_HEADER;
 
 const validPayload = {
   clientSessionId: "browser-session-1",
@@ -15,6 +18,15 @@ const validPayload = {
   locale: "en-SG",
   timezone: "Asia/Singapore"
 };
+
+function restoreTrustedClientIpHeader() {
+  if (originalTrustedClientIpHeader === undefined) {
+    delete process.env.CHAT_TRUSTED_CLIENT_IP_HEADER;
+    return;
+  }
+
+  process.env.CHAT_TRUSTED_CLIENT_IP_HEADER = originalTrustedClientIpHeader;
+}
 
 function postJson(
   payload: unknown,
@@ -36,6 +48,11 @@ function postRaw(body: string, headers: Record<string, string> = {}) {
 }
 
 describe("POST /api/chat", () => {
+  afterEach(() => {
+    restoreTrustedClientIpHeader();
+    vi.restoreAllMocks();
+  });
+
   it("validates required chat fields before calling a provider", async () => {
     const provider: ChatProvider = {
       sendMessage: async () => {
@@ -187,7 +204,187 @@ describe("POST /api/chat", () => {
     expect(provider.sendMessage).toHaveBeenCalledTimes(1);
   });
 
+  it("rejects changed payloads that reuse the same client message id", async () => {
+    const provider: ChatProvider = {
+      sendMessage: vi.fn(async () => ({
+        conversationId: "conversation-conflict",
+        assistantMessageId: crypto.randomUUID(),
+        status: "completed" as const,
+        reply: {
+          role: "assistant" as const,
+          content: "What date is your event?",
+          quickReplies: [],
+          actions: []
+        }
+      }))
+    };
+    const payload = {
+      ...validPayload,
+      clientSessionId: "idempotency-conflict-session",
+      clientMessageId: "idempotency-conflict-message",
+      context: {
+        pagePath: "/catalogue/chairs"
+      }
+    };
+
+    const first = await handleChatPost(postJson(payload), provider);
+    const conflict = await handleChatPost(
+      postJson({
+        ...payload,
+        message: {
+          role: "user",
+          content: "Actually I need 40 stools"
+        }
+      }),
+      provider
+    );
+    const body = await conflict.json();
+
+    expect(first.status).toBe(200);
+    expect(conflict.status).toBe(409);
+    expect(body.error.code).toBe("IDEMPOTENCY_CONFLICT");
+    expect(provider.sendMessage).toHaveBeenCalledTimes(1);
+  });
+
+  it("charges conflicting idempotency requests against rate limits", async () => {
+    process.env.CHAT_TRUSTED_CLIENT_IP_HEADER = "cf-connecting-ip";
+
+    const provider: ChatProvider = {
+      sendMessage: vi.fn(async () => ({
+        conversationId: "conversation-conflict-rate-limit",
+        assistantMessageId: crypto.randomUUID(),
+        status: "completed" as const,
+        reply: {
+          role: "assistant" as const,
+          content: "What date is your event?",
+          quickReplies: [],
+          actions: []
+        }
+      }))
+    };
+    const payload = {
+      ...validPayload,
+      clientSessionId: "idempotency-conflict-rate-limit-session",
+      clientMessageId: "idempotency-conflict-rate-limit-message"
+    };
+    const headers = { "cf-connecting-ip": "198.51.100.30" };
+
+    const first = await handleChatPost(postJson(payload, headers), provider);
+    expect(first.status).toBe(200);
+
+    for (let index = 0; index < 4; index += 1) {
+      const conflict = await handleChatPost(
+        postJson(
+          {
+            ...payload,
+            message: {
+              role: "user",
+              content: `Changed message ${index}`
+            }
+          },
+          headers
+        ),
+        provider
+      );
+
+      expect(conflict.status).toBe(409);
+    }
+
+    const blocked = await handleChatPost(
+      postJson(
+        {
+          ...payload,
+          message: {
+            role: "user",
+            content: "Changed message after quota"
+          }
+        },
+        headers
+      ),
+      provider
+    );
+    const body = await blocked.json();
+
+    expect(blocked.status).toBe(429);
+    expect(body.error.code).toBe("RATE_LIMITED");
+    expect(provider.sendMessage).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not charge exact idempotent retries against rate limits", async () => {
+    process.env.CHAT_TRUSTED_CLIENT_IP_HEADER = "cf-connecting-ip";
+
+    const provider: ChatProvider = {
+      sendMessage: vi.fn(async () => ({
+        conversationId: "conversation-idempotent-retry",
+        assistantMessageId: crypto.randomUUID(),
+        status: "completed" as const,
+        reply: {
+          role: "assistant" as const,
+          content: "What date is your event?",
+          quickReplies: [],
+          actions: []
+        }
+      }))
+    };
+    const clientSessionId = "idempotent-retry-session";
+    const headers = { "cf-connecting-ip": "198.51.100.40" };
+    const retryPayload = {
+      ...validPayload,
+      clientSessionId,
+      clientMessageId: "idempotent-retry-message"
+    };
+
+    const first = await handleChatPost(postJson(retryPayload, headers), provider);
+    expect(first.status).toBe(200);
+
+    for (let index = 0; index < 7; index += 1) {
+      const retry = await handleChatPost(postJson(retryPayload, headers), provider);
+      expect(retry.status).toBe(200);
+    }
+
+    for (let index = 0; index < 4; index += 1) {
+      const response = await handleChatPost(
+        postJson(
+          {
+            ...validPayload,
+            clientSessionId,
+            clientMessageId: `idempotent-retry-new-message-${index}`,
+            message: {
+              role: "user",
+              content: `New request ${index}`
+            }
+          },
+          headers
+        ),
+        provider
+      );
+
+      expect(response.status).toBe(200);
+    }
+
+    const blocked = await handleChatPost(
+      postJson(
+        {
+          ...validPayload,
+          clientSessionId,
+          clientMessageId: "idempotent-retry-blocked-message",
+          message: {
+            role: "user",
+            content: "One too many new requests"
+          }
+        },
+        headers
+      ),
+      provider
+    );
+
+    expect(blocked.status).toBe(429);
+    expect(provider.sendMessage).toHaveBeenCalledTimes(5);
+  });
+
   it("enforces per-IP rate limits before calling a provider", async () => {
+    process.env.CHAT_TRUSTED_CLIENT_IP_HEADER = "cf-connecting-ip";
+
     const provider: ChatProvider = {
       sendMessage: vi.fn(async () => ({
         conversationId: "conversation-rate-limit",
@@ -210,7 +407,7 @@ describe("POST /api/chat", () => {
             clientSessionId: `rate-limit-session-${index}`,
             clientMessageId: `rate-limit-message-${index}`
           },
-          { "x-forwarded-for": "203.0.113.10" }
+          { "cf-connecting-ip": "203.0.113.10" }
         ),
         provider
       );
@@ -225,7 +422,7 @@ describe("POST /api/chat", () => {
           clientSessionId: "rate-limit-session-blocked",
           clientMessageId: "rate-limit-message-blocked"
         },
-        { "x-forwarded-for": "203.0.113.10" }
+        { "cf-connecting-ip": "203.0.113.10" }
       ),
       provider
     );
@@ -234,6 +431,63 @@ describe("POST /api/chat", () => {
     expect(blocked.status).toBe(429);
     expect(body.error.code).toBe("RATE_LIMITED");
     expect(body.rateLimit.remaining).toBe(0);
+    expect(provider.sendMessage).toHaveBeenCalledTimes(5);
+  });
+
+  it("uses the configured trusted client IP header instead of spoofed forwarded headers", async () => {
+    process.env.CHAT_TRUSTED_CLIENT_IP_HEADER = "cf-connecting-ip";
+
+    const provider: ChatProvider = {
+      sendMessage: vi.fn(async () => ({
+        conversationId: "conversation-trusted-ip",
+        assistantMessageId: crypto.randomUUID(),
+        status: "completed" as const,
+        reply: {
+          role: "assistant" as const,
+          content: "What date is your event?",
+          quickReplies: [],
+          actions: []
+        }
+      }))
+    };
+
+    for (let index = 0; index < 5; index += 1) {
+      const response = await handleChatPost(
+        postJson(
+          {
+            ...validPayload,
+            clientSessionId: `trusted-ip-session-${index}`,
+            clientMessageId: `trusted-ip-message-${index}`
+          },
+          {
+            "cf-connecting-ip": "203.0.113.77",
+            "x-forwarded-for": `198.51.100.${index}`
+          }
+        ),
+        provider
+      );
+
+      expect(response.status).toBe(200);
+    }
+
+    const blocked = await handleChatPost(
+      postJson(
+        {
+          ...validPayload,
+          clientSessionId: "trusted-ip-session-blocked",
+          clientMessageId: "trusted-ip-message-blocked"
+        },
+        {
+          "cf-connecting-ip": "203.0.113.77",
+          "x-forwarded-for": "198.51.100.200"
+        }
+      ),
+      provider
+    );
+    const body = await blocked.json();
+
+    expect(blocked.status).toBe(429);
+    expect(body.error.code).toBe("RATE_LIMITED");
     expect(provider.sendMessage).toHaveBeenCalledTimes(5);
   });
 });
