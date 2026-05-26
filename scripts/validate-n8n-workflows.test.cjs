@@ -638,6 +638,43 @@ test('parse response forces unanswered routing for unsupported off-catalog FAQ c
   assert.match(unansweredConditions, /unanswered_required/);
 });
 
+test('parse response keeps KB-backed FAQ confidence 1 out of unanswered routing', () => {
+  const workflow = readCustomerSupportWorkflow();
+  const parsed = runParseStrictJsonResponse(workflow, {
+    session_id: 'faq-session',
+    message_id: 'faq-message',
+    message: 'What chairs are available for corporate events?',
+    user_message_redacted: 'What chairs are available for corporate events?',
+    channel: 'chat',
+    timestamp: '2026-05-26 12:05:00 SGT',
+  }, {
+    reply: 'SpaceKonceptRental offers chiavari chairs, banquet chairs, and bar stools for corporate events, based on the current rental catalog.',
+    intent: 'faq',
+    confidence: 1,
+    needs_escalation: false,
+    needs_human_followup: false,
+    lead_captured: false,
+    ticket_required: false,
+    booking_requested: false,
+    missing_fields: [],
+    lead: {},
+    ticket: {},
+    booking: {},
+    retrieval_summary: {
+      used_kb: true,
+      source_titles: ['SpaceKonceptRental Rental Catalog'],
+      source_file_ids: ['kb-catalog-file-id'],
+    },
+  });
+
+  assert.equal(parsed.intent, 'faq');
+  assert.equal(parsed.confidence, 1);
+  assert.equal(parsed.unanswered_required, false);
+  assert.equal(parsed.unanswered_reason, '');
+  assert.equal(parsed.source_titles, 'SpaceKonceptRental Rental Catalog');
+  assert.match(parsed.source_file_ids, /kb-catalog-file-id/);
+});
+
 test('normal validation rejects raw Sheets writes for customer follow-up records', () => {
   const tempRoot = makeTempRoot();
   try {
