@@ -278,3 +278,19 @@ that future work should start from an explicit decision gate. Product writes,
 conversation/message persistence, Supabase Storage, deployment, Supabase Cloud
 connection, admin/auth UI, service-role runtime paths, browser Supabase, and
 internal RAG remain deferred until separately approved.
+
+## 2026-05-27: Deployment Smoke-Test Runbook Before Deployment
+
+Decision: Phase 2A-A adds a deployment smoke-test runbook, unchecked operator
+checklist, and deployment evidence template before any real deployment work is
+approved.
+
+Reason: the first Phase 2 deployment track needs an operator-facing way to
+review server-only env placement, forbidden public variables, active catalogue
+workspace config, quote workspace config, server-only n8n webhook handling,
+trusted proxy headers, smoke-test evidence, rollback, and monitoring before
+Vercel or Supabase Cloud work begins. This phase does not deploy, connect to
+Supabase Cloud, add Vercel config, add real env values, add service-role
+runtime paths, add browser Supabase, add runtime features, change catalogue
+RLS/runtime behaviour, change quote throttling, add product/category/product
+image writes, add conversation/message writes, or change n8n workflows.

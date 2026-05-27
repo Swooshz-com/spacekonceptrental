@@ -74,6 +74,10 @@ Custom Chat UI -> POST /api/chat -> ChatProvider
   the local foundation and the readiness plan keeps deployment, product writes,
   conversation/message persistence, Storage, admin/auth UI, and internal RAG
   work behind separate Phase 2 decisions.
+- Phase 2A-A deployment smoke-test preparation is docs-only. It provides an
+  operator runbook, unchecked readiness checklist, and evidence template for a
+  future reviewed deployment PR, while deployment, Supabase Cloud connection,
+  Vercel config, and runtime feature work remain blocked.
 
 ## Planning Notes
 
