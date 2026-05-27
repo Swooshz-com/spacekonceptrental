@@ -27,8 +27,9 @@ Goal: build the smallest production-shaped Next.js foundation under `website/`
 with custom chat UI, first-party `/api/chat`, server-only `N8nChatProvider`,
 server-only quote capture with route-level abuse throttling, chat persistence
 design/scaffolding, product/admin persistence design/scaffolding, trusted
-active-workspace catalogue RLS hardening proof, and a basic Supabase core
-schema.
+active-workspace catalogue RLS hardening proof, deployment environment
+readiness, Phase 1 closeout audit, Phase 2 readiness plan, and a basic
+Supabase core schema.
 
 Checklist: `docs/checklists/PHASE-1-MVP.md`
 
@@ -40,6 +41,8 @@ stack, billing system, or streaming implementation.
 Goal: expand operational admin tools after the MVP foundation exists.
 
 Checklist: `docs/checklists/PHASE-2-ADMIN-OPS.md`
+
+Readiness plan: `docs/PHASE-2-READINESS-PLAN.md`
 
 This phase is not approved for implementation yet.
 

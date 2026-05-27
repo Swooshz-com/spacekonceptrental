@@ -50,6 +50,8 @@ variables such as `N8N_CHAT_WEBHOOK_URL`.
 ## Deployment Environment Rules
 
 - Phase 1O-A is readiness only; it is not approval to deploy.
+- Phase 1P-A closeout/readiness planning is not approval to start Phase 2
+  runtime work.
 - Required deployment env for Supabase, catalogue, quote, chat, and trusted
   proxy header settings must be server-only.
 - Do not add real env values, deployment secrets, production config, Vercel

@@ -38,6 +38,7 @@ platform.
 - [x] Document product/admin persistence design.
 - [x] Add disabled server-only product/admin persistence scaffold.
 - [x] Add deployment/environment readiness contract without deployment.
+- [x] Add Phase 1 closeout audit and Phase 2 readiness plan.
 
 ## Basic Supabase Schema Only
 
@@ -129,6 +130,7 @@ required first.
       documentation and local-only SQL example.
 - [x] Static guard tests for deployment/server env readiness and forbidden
       public env variables.
+- [x] Static guard tests for Phase 1 closeout and Phase 2 readiness.
 - [x] Server-only chat persistence scaffold guard tests.
 - [x] Tests proving no chat Supabase writes are added in Phase 1I-A.
 - [x] Server-only product/admin persistence scaffold guard tests.
