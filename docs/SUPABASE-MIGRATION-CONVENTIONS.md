@@ -107,7 +107,9 @@ Policy PRs should cover:
 - Denial for rows in other workspaces.
 - Anonymous catalogue reads limited to published catalogue data. Any future
   direct anonymous catalogue RLS hardening must include a trusted active
-  workspace read strategy and cross-workspace denial tests.
+  workspace read strategy, runtime proof that configured DB-backed catalogue
+  reads still return rows, and cross-workspace denial tests for direct
+  anonymous reads.
 - Service-only tables remaining unavailable to browser-role clients.
 
 ## Seed Data

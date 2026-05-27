@@ -27,6 +27,11 @@ server-only scaffolding. It does not read from Supabase, write to Supabase, add
 migrations, enable product/category/product image persistence, connect to
 Supabase Cloud, add admin/auth UI, add Supabase Storage wiring, add product
 image upload flows, or add browser Supabase code.
+Phase 1K-A adds quote endpoint abuse throttling without schema or RLS changes.
+Phase 1L-A adds the trusted active-workspace catalogue RLS hardening strategy
+and proof scaffold only. It keeps current DB-backed catalogue reads unchanged
+and direct anonymous catalogue RLS hardening remains deferred until a
+non-breaking trusted active-workspace read strategy is implemented and tested.
 
 ## Naming Decision
 
@@ -333,8 +338,12 @@ step 9 remains deferred until a later approved persistence PR.
 Phase 1J-A documents the future product/admin persistence boundary and adds a
 disabled server-only code boundary only; real product persistence remains
 deferred until a later approved persistence PR.
+Phase 1L-A documents the future trusted active-workspace catalogue RLS
+hardening path and adds static proof guards only; it does not change
+migrations, public catalogue runtime behaviour, or direct anonymous catalogue
+RLS policies.
 
-## Deferred After Phase 1J-A
+## Deferred After Phase 1L-A
 
 - Supabase project connection.
 - Browser Supabase client code.

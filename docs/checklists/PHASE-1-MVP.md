@@ -73,10 +73,14 @@ required first.
 - [x] Add fake/sample catalogue seed fixtures only.
 - [x] Add server-side Supabase runtime wiring.
 - [x] Add public catalogue database reads.
+- [x] Add trusted active-workspace catalogue RLS hardening strategy and proof
+      scaffold.
 - [x] Add quote persistence.
 - [x] Add chat persistence design and server-only disabled scaffolding.
 - [x] Add product/admin persistence design and server-only disabled
       scaffolding.
+- [ ] Harden direct anonymous catalogue RLS without breaking DB-backed
+      catalogue reads.
 - [ ] Add product persistence.
 - [ ] Add category/product/product image mutation routes.
 - [ ] Add product image uploads.
@@ -113,6 +117,8 @@ required first.
 - [x] Supabase fake/sample seed fixture validation.
 - [x] Server-only Supabase runtime boundary tests.
 - [x] Server-only published catalogue read tests.
+- [x] Trusted active-workspace catalogue RLS hardening strategy/proof guard
+      tests.
 - [x] Server-only chat persistence scaffold guard tests.
 - [x] Tests proving no chat Supabase writes are added in Phase 1I-A.
 - [x] Server-only product/admin persistence scaffold guard tests.
@@ -143,7 +149,7 @@ required first.
 - [ ] No browser Supabase client.
 - [ ] No Supabase Storage wiring.
 - [ ] No external anti-abuse service.
-- [ ] No direct anonymous catalogue RLS hardening in Phase 1K-A.
+- [ ] No direct anonymous catalogue RLS hardening in Phase 1L-A.
 - [ ] No large tool invocation dashboards.
 - [ ] No large audit dashboards.
 - [ ] No large usage dashboards.
