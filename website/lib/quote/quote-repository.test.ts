@@ -100,7 +100,8 @@ describe("quote repository", () => {
     expect(result).toEqual({
       ok: true,
       quoteRequestId: "70000000-0000-4000-8000-000000000001",
-      publicReference: "QR-20260527-ABC12345"
+      publicReference: "QR-20260527-ABC12345",
+      itemPersistenceStatus: "complete"
     });
     expect(inserts.map((insert) => insert.table)).toEqual([
       "quote_requests",
@@ -146,6 +147,35 @@ describe("quote repository", () => {
       ok: false,
       code: "QUOTE_PERSISTENCE_FAILED"
     });
+    expect(JSON.stringify(result)).not.toContain("Maya");
+    expect(JSON.stringify(result)).not.toContain("example.test");
+  });
+
+  it("treats the quote as received when item persistence fails after the quote row is captured", async () => {
+    const { inserts, supabase } = createMockSupabase({
+      quote_request_items: {
+        data: null,
+        error: new Error("item insert failed for Maya Tan maya@example.test")
+      }
+    });
+
+    const result = await createQuoteRequest(quoteSubmission, {
+      workspaceId: "11111111-1111-4111-8111-111111111111",
+      supabase,
+      createId: () => "70000000-0000-4000-8000-000000000001",
+      createPublicReference: () => "QR-20260527-ABC12345"
+    });
+
+    expect(result).toEqual({
+      ok: true,
+      quoteRequestId: "70000000-0000-4000-8000-000000000001",
+      publicReference: "QR-20260527-ABC12345",
+      itemPersistenceStatus: "failed"
+    });
+    expect(inserts.map((insert) => insert.table)).toEqual([
+      "quote_requests",
+      "quote_request_items"
+    ]);
     expect(JSON.stringify(result)).not.toContain("Maya");
     expect(JSON.stringify(result)).not.toContain("example.test");
   });

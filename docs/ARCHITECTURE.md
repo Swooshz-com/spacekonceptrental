@@ -97,8 +97,9 @@ configuration, missing server-only `CATALOGUE_WORKSPACE_ID` configuration, or
 read errors fall back to the existing public catalogue shell data so local builds
 and tests do not require Supabase Cloud. Runtime catalogue queries must include
 the trusted workspace ID as a `workspace_id` filter for both list and detail
-reads. Broad direct anonymous catalogue table reads remain disabled until
-trusted active workspace scoping exists. It does not add browser Supabase code,
+reads. Direct anonymous catalogue RLS hardening is deferred until a future
+trusted active-workspace read strategy can keep DB-backed catalogue reads
+working without service-role keys. It does not add browser Supabase code,
 service-role keys, writes, product management, quote persistence,
 conversation/message persistence, Supabase Storage delivery, or deployment
 configuration.
@@ -108,9 +109,11 @@ quote form data to `POST /api/quote`; the route validates bounded JSON and uses
 a server-only quote repository to insert `quote_requests` and optional freeform
 `quote_request_items` through the existing anon-key Supabase runtime. Missing
 Supabase or server-only `QUOTE_WORKSPACE_ID` configuration fails safely. This
-phase does not add browser Supabase code, service-role keys, product/admin writes,
-conversation/message persistence, n8n workflow changes, Supabase Storage, or
-deployment configuration.
+phase treats the request as received once the quote request row is captured; a
+later item insert failure is handled without reporting a failed quote to the
+browser. It does not add browser Supabase code, service-role keys,
+product/admin writes, conversation/message persistence, n8n workflow changes,
+Supabase Storage, or deployment configuration.
 
 ## n8n Responsibilities
 

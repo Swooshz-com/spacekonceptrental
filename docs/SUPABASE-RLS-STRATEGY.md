@@ -9,18 +9,18 @@ configuration. Phase 1G-B adds server-only public catalogue read code for
 published categories, published products, and image metadata attached to
 published products. Runtime catalogue reads require trusted server-only
 `CATALOGUE_WORKSPACE_ID` configuration and apply it as a `workspace_id` filter
-for list and detail queries. A Phase 1H-A hardening migration disables broad
-direct anonymous catalogue table reads until public catalogue access can be
-scoped to a trusted active workspace. Phase 1H-A also adds only first-party
-quote request persistence through `POST /api/quote`, backed by narrow
-anonymous insert policies for website quote rows and quote item rows.
+for list and detail queries. Direct anonymous catalogue RLS hardening remains
+deferred until a future trusted active-workspace read strategy can keep
+DB-backed catalogue reads working without service-role keys. Phase 1H-A also
+adds only first-party quote request persistence through `POST /api/quote`,
+backed by narrow anonymous insert policies for website quote rows and quote
+item rows.
 
 No runtime route should write Supabase data until each specific flow is
 separately approved and tested. Public catalogue read code is limited to the
 Phase 1G-B server-only repository, requires trusted workspace configuration,
-and direct anonymous table reads remain disabled until trusted workspace
-scoping exists. Quote writes are limited to the Phase 1H-A server-only
-repository and the approved quote tables.
+and applies application-level workspace filters. Quote writes are limited to
+the Phase 1H-A server-only repository and the approved quote tables.
 
 ## Boundary Model
 
@@ -118,11 +118,12 @@ server routes only:
   migrations, policies, and tests are approved.
 
 The browser should not write directly to Supabase for anonymous quote or chat
-flows in the MVP. Direct anonymous catalogue table reads are disabled in the
-policy layer until a future migration can prove trusted active workspace
-scoping. If direct anonymous reads are added for public catalogue data, they
-must be limited to published rows for the active workspace and covered by
-cross-workspace denial tests.
+flows in the MVP. Direct anonymous catalogue reads still rely on published-row
+RLS so the anon-key server runtime can read catalogue data. A future RLS
+hardening phase must add a trusted active-workspace strategy that keeps
+DB-backed catalogue reads working without service-role keys, limits reads to
+published rows for the active workspace, and includes cross-workspace denial
+tests.
 
 ## Future Admin Scoping
 
@@ -145,10 +146,10 @@ Phase 1F-C-A adds static tests proving the intended migration structure. Phase
 - A user can read allowed admin-only rows in their workspace.
 - A user cannot read admin-only rows from another workspace.
 - A user without membership cannot access admin-only data.
-- Public anonymous reads cannot read catalogue tables directly until trusted
-  active workspace scoping exists.
-- Authenticated active members can read catalogue rows only in their workspace.
-- Anonymous reads cannot see catalogue rows, membership data, quote data,
+- Public anonymous reads return only published catalogue rows.
+- Runtime website catalogue reads additionally apply server-only workspace
+  filters through `CATALOGUE_WORKSPACE_ID`.
+- Anonymous reads cannot see draft catalogue rows, membership data, quote data,
   conversation data, messages, usage events, audit logs, or integration
   connection metadata.
 - Anonymous quote creation can insert website quote rows and item rows without
@@ -168,6 +169,6 @@ operations.
 - Auth UI.
 - Admin routes.
 - Direct browser Supabase reads or writes.
-- Direct anonymous catalogue table reads without trusted active workspace
-  scoping.
+- Direct anonymous catalogue RLS hardening before a trusted active-workspace
+  read strategy exists.
 - Persistence for products, conversations, or messages.

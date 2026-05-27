@@ -127,8 +127,10 @@ export async function createQuoteRequest(
 
     if (itemInsert.error) {
       return {
-        ok: false,
-        code: "QUOTE_PERSISTENCE_FAILED"
+        ok: true,
+        quoteRequestId,
+        publicReference,
+        itemPersistenceStatus: "failed"
       };
     }
   }
@@ -136,6 +138,7 @@ export async function createQuoteRequest(
   return {
     ok: true,
     quoteRequestId,
-    publicReference
+    publicReference,
+    itemPersistenceStatus: "complete"
   };
 }

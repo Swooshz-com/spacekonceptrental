@@ -140,14 +140,18 @@ boundary without mixing workspace-owned catalogue rows or adding browser
 Supabase code, service-role keys, writes, quote/chat/admin persistence,
 Supabase Storage delivery, deployment, or live Supabase Cloud validation.
 
-## 2026-05-27: Disable Broad Anonymous Catalogue Table Reads
+## 2026-05-27: Defer Direct Anonymous Catalogue RLS Hardening
 
-Decision: direct anonymous RLS access to `categories`, `products`, and
-`product_images` is disabled until public catalogue reads can be scoped to a
-trusted active workspace and covered by cross-workspace denial tests.
+Decision: direct anonymous RLS access to published `categories`, `products`,
+and `product_images` remains available for the server-side anon-key catalogue
+runtime in Phase 1H-A. Runtime catalogue queries must still use trusted
+server-only `CATALOGUE_WORKSPACE_ID` filters. Direct anonymous RLS hardening is
+deferred until a trusted active-workspace read strategy exists.
 
-Reason: published-state-only policies would allow anyone with the anon role to
-enumerate published catalogue rows and image metadata across workspaces.
+Reason: disabling direct anonymous catalogue reads while the runtime still uses
+the anon key would make configured DB-backed catalogue reads return empty rows.
+A future hardening phase needs a strategy that avoids broad direct reads
+without service-role keys or browser Supabase code.
 
 ## 2026-05-27: First-party Quote Request Persistence
 
@@ -158,3 +162,7 @@ bounded quote request validation, and narrow Supabase insert policies for
 Reason: quote persistence gives immediate MVP lead-capture value while keeping
 product/admin persistence, conversation/message persistence, browser Supabase
 clients, service-role keys, deployment, and n8n workflow changes out of scope.
+The quote request row is the durable lead-capture boundary for this phase; if
+freeform item insertion fails after the quote row is captured, the public
+request is still treated as received and atomic quote/item writes remain
+deferred.

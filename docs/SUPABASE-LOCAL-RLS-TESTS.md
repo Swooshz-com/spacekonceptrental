@@ -69,11 +69,10 @@ The local RLS test command proves:
 - That admin cannot read admin-only rows from another workspace.
 - An authenticated user without membership cannot read admin-only workspace
   rows.
-- Anonymous reads cannot read catalogue tables directly until trusted active
-  workspace scoping exists.
-- Authenticated active members can read catalogue rows only in their workspace.
-- Anonymous reads do not return catalogue rows, membership data, quote request
-  data, conversation data, message data, usage events, audit logs, or
+- Anonymous reads return only published categories, published products, and
+  images whose parent product is published.
+- Anonymous reads do not return draft catalogue rows, membership data, quote
+  request data, conversation data, message data, usage events, audit logs, or
   integration connection metadata.
 - Service-only tables do not expose broad anonymous or authenticated client
   read access, and representative client writes are rejected.
@@ -88,6 +87,6 @@ The local RLS test command proves:
 - The test database is disposable and is stopped after the command unless
   `SUPABASE_RLS_KEEP_DB=1` is set for local debugging.
 - No Docker volume is required; test state stays in the disposable container.
-- Do not use this harness as approval to add direct anonymous catalogue reads,
-  persistence flows, production seed data, deployment, or Supabase Cloud
+- Do not use this harness as approval to harden direct anonymous catalogue RLS,
+  add persistence flows, production seed data, deployment, or Supabase Cloud
   connection.

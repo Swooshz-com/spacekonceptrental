@@ -11,10 +11,11 @@ catalogue seed fixtures and Docker-only local validation. Phase 1G-A adds only
 server-side Supabase runtime wiring with private environment guards and static
 browser-boundary tests. Phase 1G-B adds server-only public catalogue read code
 for published catalogue data with safe missing-env fallback, and those queries
-must be scoped by server-only `CATALOGUE_WORKSPACE_ID`. Phase 1H-A hardens the
-policy layer so broad direct anonymous catalogue table reads are disabled until
-trusted active workspace scoping exists, and adds only first-party quote request
-persistence from `POST /api/quote` into `quote_requests` and optional freeform
+must be scoped by server-only `CATALOGUE_WORKSPACE_ID`. Direct anonymous
+catalogue RLS hardening remains deferred until a trusted active-workspace read
+strategy can keep DB-backed catalogue reads working without service-role keys.
+Phase 1H-A adds only first-party quote request persistence from
+`POST /api/quote` into `quote_requests` and optional freeform
 `quote_request_items`. Product persistence, conversation/message persistence,
 deployment, and Supabase Cloud connection remain deferred.
 
@@ -100,9 +101,9 @@ Key fields: `id`, `workspace_id`, `slug`, `name`, `description`, `sort_order`,
 
 Ownership / tenant boundary: every category belongs to one workspace.
 
-Access: eventually public-readable only when published and scoped to a trusted
-active workspace; direct anonymous table reads are currently disabled.
-Admin-only for drafts and edits.
+Access: public-readable only when published; runtime public catalogue code
+must additionally scope reads to a trusted active workspace. Admin-only for
+drafts and edits.
 
 Relationships: parent for `products.category_id`.
 
@@ -119,9 +120,9 @@ Key fields: `id`, `workspace_id`, `category_id`, `slug`, `name`,
 
 Ownership / tenant boundary: every product belongs to one workspace.
 
-Access: eventually public-readable only when published and scoped to a trusted
-active workspace; direct anonymous table reads are currently disabled.
-Admin-only for drafts and edits.
+Access: public-readable only when published; runtime public catalogue code
+must additionally scope reads to a trusted active workspace. Admin-only for
+drafts and edits.
 
 Relationships: belongs to `categories`; parent for `product_images` and future
 quote item references.
@@ -141,10 +142,10 @@ Key fields: `id`, `workspace_id`, `product_id`, `storage_bucket`,
 Ownership / tenant boundary: every image belongs to one workspace and one
 product.
 
-Access: eventually public-readable only when the parent product is published,
-the media path is safe for public delivery, and access is scoped to a trusted
-active workspace; direct anonymous table reads are currently disabled.
-Admin-only for draft media management.
+Access: public-readable only when the parent product is published and the
+media path is safe for public delivery; runtime public catalogue code must
+additionally scope reads to a trusted active workspace. Admin-only for draft
+media management.
 
 Relationships: belongs to `products`.
 
@@ -188,8 +189,9 @@ or deletes are approved. Admin review remains deferred.
 
 Relationships: belongs to `quote_requests`; may reference `products`.
 
-Deferred: product-linked item validation, pricing snapshots, availability
-holds, substitutions, discounts, and approval workflows.
+Deferred: atomic quote request plus item transaction handling, product-linked
+item validation, pricing snapshots, availability holds, substitutions,
+discounts, and approval workflows.
 
 ### `conversations`
 
@@ -300,8 +302,8 @@ Phase 1F-D adds fake/sample catalogue seed fixtures only.
 Phase 1G-A completes step 6 with server-only runtime wiring only.
 Phase 1G-B completes step 7 with read-only published catalogue query code only,
 scoped by trusted server-only `CATALOGUE_WORKSPACE_ID`. Direct anonymous
-catalogue table access remains disabled until trusted active workspace scoping
-is approved and tested.
+catalogue RLS hardening remains deferred until trusted active workspace
+scoping is approved and tested with a working anon-key read strategy.
 Phase 1H-A completes step 8 with first-party quote request persistence only.
 
 ## Deferred After Phase 1H-A
