@@ -101,6 +101,15 @@ function readRealRlsPolicyMigration() {
   };
 }
 
+function readAllRealMigrationSql() {
+  return fs
+    .readdirSync(realMigrationsDir)
+    .filter((fileName) => fileName.endsWith('.sql'))
+    .sort()
+    .map((fileName) => fs.readFileSync(path.join(realMigrationsDir, fileName), 'utf8'))
+    .join('\n');
+}
+
 function normalizeSql(sql) {
   return sql.replace(/\s+/g, ' ').trim().toLowerCase();
 }
@@ -288,7 +297,7 @@ test('real migration directory passes static validation', () => {
   const result = runValidator(realMigrationsDir);
 
   assert.equal(result.status, 0, result.stdout + result.stderr);
-  assert.match(result.stdout, /checked 2 migration SQL file\(s\)/);
+  assert.match(result.stdout, /checked 3 migration SQL file\(s\)/);
 });
 
 test('real base schema migration creates the planned MVP tables', () => {
@@ -366,6 +375,41 @@ test('real RLS policy migration includes public catalogue read policies only for
   assert.match(sql, /create policy categories_public_read_published on public\.categories for select to anon, authenticated using \(is_published = true\);/);
   assert.match(sql, /create policy products_public_read_published on public\.products for select to anon, authenticated using \(status = 'published'\);/);
   assert.match(sql, /create policy product_images_public_read_published_products on public\.product_images for select to anon, authenticated using \(.*exists \( select 1 from public\.products p where p\.id = product_images\.product_id and p\.workspace_id = product_images\.workspace_id and p\.status = 'published' \).* \);/);
+});
+
+test('real migrations add narrow anonymous website quote insert policies only', () => {
+  const sql = normalizeSql(readAllRealMigrationSql());
+
+  assert.match(
+    sql,
+    /grant insert \(\s*id, workspace_id, public_reference, customer_name, customer_email, customer_phone, event_date, venue, status, source\s*\) on public\.quote_requests to anon;/,
+  );
+  assert.match(
+    sql,
+    /grant insert \(\s*workspace_id, quote_request_id, product_name_snapshot, quantity, notes\s*\) on public\.quote_request_items to anon;/,
+  );
+  assert.match(
+    sql,
+    /create policy quote_requests_public_insert_website on public\.quote_requests for insert to anon with check \(source = 'website' and status = 'new'\);/,
+  );
+  assert.match(
+    sql,
+    /create or replace function public\.is_public_website_quote_request\(\s*target_quote_request_id uuid, target_workspace_id uuid\s*\)/,
+  );
+  assert.match(
+    sql,
+    /create policy quote_request_items_public_insert_website_quote on public\.quote_request_items for insert to anon with check \(\s*public\.is_public_website_quote_request\(quote_request_id, workspace_id\)\s*\);/,
+  );
+  assert.doesNotMatch(
+    sql,
+    /create policy .* on public\.quote_requests for select to anon/,
+  );
+  assert.doesNotMatch(
+    sql,
+    /create policy .* on public\.quote_request_items for select to anon/,
+  );
+  assert.doesNotMatch(sql, /for update to anon/);
+  assert.doesNotMatch(sql, /for delete to anon/);
 });
 
 test('real RLS policy migration scopes admin reads through workspace membership', () => {

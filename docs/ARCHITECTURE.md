@@ -99,6 +99,15 @@ Supabase code, service-role keys, writes, product management, quote
 persistence, conversation/message persistence, Supabase Storage delivery, or
 deployment configuration.
 
+Phase 1H-A adds only first-party quote request persistence. The browser posts
+quote form data to `POST /api/quote`; the route validates bounded JSON and uses
+a server-only quote repository to insert `quote_requests` and optional freeform
+`quote_request_items` through the existing anon-key Supabase runtime. Missing
+Supabase or server-only `QUOTE_WORKSPACE_ID` configuration fails safely. This
+phase does not add browser Supabase code, service-role keys, product/admin writes,
+conversation/message persistence, n8n workflow changes, Supabase Storage, or
+deployment configuration.
+
 ## n8n Responsibilities
 
 n8n remains temporary server-side integration only:

@@ -7,11 +7,15 @@ with private environment guards and static browser-boundary tests. It does not
 add persistence, production seed data, Supabase Cloud connection, or deployment
 configuration. Phase 1G-B adds server-only public catalogue reads for published
 categories, published products, and image metadata attached to published
-products.
+products. Phase 1H-A adds only first-party quote request persistence through
+`POST /api/quote`, backed by narrow anonymous insert policies for website quote
+rows and quote item rows.
 
 No runtime route should write Supabase data until each specific flow is
 separately approved and tested. Public catalogue reads are limited to the
-Phase 1G-B server-only repository and published catalogue tables.
+Phase 1G-B server-only repository and published catalogue tables. Quote writes
+are limited to the Phase 1H-A server-only repository and the approved quote
+tables.
 
 ## Boundary Model
 
@@ -78,7 +82,6 @@ not through client-provided role claims alone.
 These tables or operations should be service-role-only in the MVP unless a
 separate tested policy proves a narrower safe path:
 
-- Anonymous quote creation.
 - Anonymous chat conversation/message persistence.
 - `usage_events` writes and reads.
 - `audit_logs` writes.
@@ -89,6 +92,11 @@ separate tested policy proves a narrower safe path:
 Service-role keys must never reach the browser. They bypass RLS and would turn
 any browser compromise or accidental bundle leak into full database access.
 
+Phase 1H-A is the approved narrow exception for quote creation: the first-party
+server route uses the anon-key Supabase runtime with insert-only policies for
+`quote_requests` and `quote_request_items`. It does not add anonymous reads,
+updates, deletes, service-role keys, product writes, or chat persistence.
+
 ## Anonymous Quote And Chat Flows
 
 Before full auth exists, anonymous public flows should go through first-party
@@ -98,8 +106,8 @@ server routes only:
 - The server resolves the workspace from trusted route, host, or deployment
   configuration.
 - The server validates and normalizes untrusted customer input.
-- The server writes with service-side credentials only after migrations,
-  policies, and tests are approved.
+- The server writes only through the approved server-side credential path after
+  migrations, policies, and tests are approved.
 
 The browser should not write directly to Supabase for anonymous quote or chat
 flows in the MVP. If direct anonymous reads are added for public catalogue
@@ -130,19 +138,21 @@ Phase 1F-C-A adds static tests proving the intended migration structure. Phase
 - Anonymous reads cannot see draft catalogue rows, membership data, quote data,
   conversation data, messages, usage events, audit logs, or integration
   connection metadata.
+- Anonymous quote creation can insert website quote rows and item rows without
+  gaining anonymous quote reads.
 - Service-only tables are not broadly readable from browser-role clients, and
   representative browser-role writes are rejected.
 - Runtime website Supabase reads stay server-only, published-only, and out of
   browser-facing code.
 
 Future runtime work must add targeted tests for any newly approved write path,
-including anonymous quote creation, chat persistence, and server-side
-service-role operations.
+including product persistence, chat persistence, and server-side service-role
+operations.
 
-## Deferred After Phase 1G-B
+## Deferred After Phase 1H-A
 
 - Browser Supabase client code.
 - Auth UI.
 - Admin routes.
 - Direct browser Supabase reads or writes.
-- Persistence for products, quotes, conversations, or messages.
+- Persistence for products, conversations, or messages.

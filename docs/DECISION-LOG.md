@@ -138,3 +138,13 @@ Reason: public catalogue pages can now use the approved Supabase runtime
 boundary without adding browser Supabase code, service-role keys, writes,
 quote/chat/admin persistence, Supabase Storage delivery, deployment, or live
 Supabase Cloud validation.
+
+## 2026-05-27: First-party Quote Request Persistence
+
+Decision: Phase 1H-A adds `POST /api/quote`, a server-only quote repository,
+bounded quote request validation, and narrow Supabase insert policies for
+`quote_requests` and freeform `quote_request_items`.
+
+Reason: quote persistence gives immediate MVP lead-capture value while keeping
+product/admin persistence, conversation/message persistence, browser Supabase
+clients, service-role keys, deployment, and n8n workflow changes out of scope.

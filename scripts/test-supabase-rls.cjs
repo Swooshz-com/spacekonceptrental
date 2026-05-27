@@ -345,6 +345,9 @@ function assertNoRuntimeSupabaseUse() {
   const approvedCatalogueReadFiles = new Set([
     'website/lib/catalogue/catalogue-repository.ts',
   ]);
+  const approvedQuoteWriteFiles = new Set([
+    'website/lib/quote/quote-repository.ts',
+  ]);
   const extensions = new Set(['.js', '.jsx', '.mjs', '.cjs', '.ts', '.tsx']);
   const browserBlockedPatterns = [
     /@supabase\//i,
@@ -371,6 +374,18 @@ function assertNoRuntimeSupabaseUse() {
     /\busage_events\b/i,
     /\baudit_logs\b/i,
     /\bintegration_connections\b/i,
+  ];
+  const blockedQuoteWriteTablePatterns = [
+    /from\(["']products["']\)/i,
+    /from\(["']categories["']\)/i,
+    /from\(["']product_images["']\)/i,
+    /from\(["']conversations["']\)/i,
+    /from\(["']messages["']\)/i,
+    /from\(["']admin_users["']\)/i,
+    /from\(["']memberships["']\)/i,
+    /from\(["']usage_events["']\)/i,
+    /from\(["']audit_logs["']\)/i,
+    /from\(["']integration_connections["']\)/i,
   ];
   const violations = [];
 
@@ -458,6 +473,32 @@ function assertNoRuntimeSupabaseUse() {
         );
         assertNoMatches(filePath, content, serverBlockedPatterns);
         assertNoMatches(filePath, content, blockedCatalogueTablePatterns);
+        return;
+      }
+
+      if (approvedQuoteWriteFiles.has(relativePath)) {
+        assert.match(
+          content,
+          /import\s+["']server-only["'];/,
+          `${relativePath} must be marked server-only.`,
+        );
+        assert.match(
+          content,
+          /createServerSupabaseClient/,
+          `${relativePath} must use the approved server Supabase wrapper.`,
+        );
+        assert.match(
+          content,
+          /from\(["']quote_requests["']\)/,
+          `${relativePath} must insert quote_requests explicitly.`,
+        );
+        assert.match(
+          content,
+          /from\(["']quote_request_items["']\)/,
+          `${relativePath} must insert quote_request_items explicitly.`,
+        );
+        assertNoMatches(filePath, content, serverBlockedPatterns);
+        assertNoMatches(filePath, content, blockedQuoteWriteTablePatterns);
         return;
       }
 
@@ -646,6 +687,91 @@ check('anonymous public reads do not return private workspace data', () => {
       `anon should not read ${table}`,
     );
   }
+});
+
+check('anonymous public can create website quote rows without reading them back', () => {
+  const quoteId = '70000000-0000-4000-8000-000000000101';
+  const output = queryAs(
+    'anon',
+    null,
+    `
+      insert into public.quote_requests (
+        id,
+        workspace_id,
+        public_reference,
+        customer_name,
+        customer_email,
+        customer_phone,
+        event_date,
+        venue,
+        status,
+        source
+      )
+      values (
+        '${quoteId}',
+        '${ids.workspaceA}',
+        'quote-public-create',
+        'Fake Public Customer',
+        'public-customer@example.test',
+        '+65 8123 4567',
+        '2026-06-12',
+        'Fake Venue',
+        'new',
+        'website'
+      );
+
+      insert into public.quote_request_items (
+        workspace_id,
+        quote_request_id,
+        product_name_snapshot,
+        quantity,
+        notes
+      )
+      values (
+        '${ids.workspaceA}',
+        '${quoteId}',
+        'Fake requested lounge set',
+        2,
+        'Fake public quote item note'
+      );
+
+      select count(*)::text from public.quote_requests where id = '${quoteId}';
+      select count(*)::text from public.quote_request_items where quote_request_id = '${quoteId}';
+    `,
+  );
+
+  assert.deepEqual(
+    output.split('\n').filter(Boolean),
+    ['0', '0'],
+    'anon quote inserts should not grant anonymous quote reads.',
+  );
+});
+
+check('anonymous public quote creation rejects non-website workflow states', () => {
+  statementFailsAs(
+    'anon',
+    null,
+    `
+      insert into public.quote_requests (
+        id,
+        workspace_id,
+        public_reference,
+        customer_name,
+        customer_email,
+        status,
+        source
+      )
+      values (
+        '70000000-0000-4000-8000-000000000102',
+        '${ids.workspaceA}',
+        'quote-public-rejected-status',
+        'Fake Public Customer',
+        'public-customer@example.test',
+        'reviewing',
+        'website'
+      )
+    `,
+  );
 });
 
 check('service-only tables expose no broad anonymous or authenticated client access', () => {
