@@ -78,6 +78,12 @@ Custom Chat UI -> POST /api/chat -> ChatProvider
   operator runbook, unchecked readiness checklist, and evidence template for a
   future reviewed deployment PR, while deployment, Supabase Cloud connection,
   Vercel config, and runtime feature work remain blocked.
+- Phase 2B-A admin/auth and workspace membership authorization design is
+  docs-only. It defines the future admin identity, membership, role,
+  route/action, audit, and RLS gates that must be implemented before
+  product/category/product image writes. Real auth, admin UI, product writes,
+  browser Supabase, service-role runtime paths, deployment, and Supabase Cloud
+  connection remain blocked.
 
 ## Planning Notes
 

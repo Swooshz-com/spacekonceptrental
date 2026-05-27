@@ -48,9 +48,17 @@ Readiness plan: `docs/PHASE-2-READINESS-PLAN.md`
 Deployment readiness checklist:
 `docs/checklists/PHASE-2A-DEPLOYMENT-READINESS.md`
 
+Admin/auth readiness checklist:
+`docs/checklists/PHASE-2B-ADMIN-AUTH.md`
+
 Phase 2A-A adds deployment smoke-test runbook and operator evidence templates
 only. It is not approval to deploy, connect Supabase Cloud, add Vercel config,
 or add runtime features.
+
+Phase 2B-A adds admin/auth and workspace membership authorization design only.
+It is not approval to implement real auth, add admin UI, add product, category,
+or product image writes, add browser Supabase, add service-role runtime paths,
+or deploy.
 
 This phase is not approved for implementation yet.
 

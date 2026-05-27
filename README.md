@@ -157,6 +157,14 @@ Phase 2A-A adds only deployment smoke-test preparation:
 a future reviewed deployment PR; they do not deploy, connect Supabase Cloud,
 add Vercel config, or add runtime features.
 
+Phase 2B-A adds only admin/auth and workspace membership authorization design:
+`docs/ADMIN-AUTH-MEMBERSHIP-DESIGN.md` and
+`docs/checklists/PHASE-2B-ADMIN-AUTH.md`. These files define the identity,
+membership, role, route/action, audit, and RLS gates that must exist before
+product/category/product image writes. They do not implement auth, admin UI,
+product writes, browser Supabase, service-role runtime paths, deployment, or
+Supabase Cloud connection.
+
 ## Website App
 
 The website frontend is now a Vercel-ready Next.js scaffold under `website/`.

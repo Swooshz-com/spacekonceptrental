@@ -150,6 +150,14 @@ flows, service-role write paths, Supabase Cloud connection, browser Supabase
 code, deployment configuration, or n8n workflow changes. See
 `docs/PRODUCT-ADMIN-PERSISTENCE-DESIGN.md`.
 
+Phase 2B-A adds the admin/auth and workspace membership authorization design
+only. It defines the future authenticated admin identity, active membership,
+role, server-side workspace resolution, route/action, audit, and RLS gates
+required before product/category/product image writes. It does not implement
+real auth, admin UI, product writes, browser Supabase, service-role runtime
+paths, deployment, or Supabase Cloud connection. See
+`docs/ADMIN-AUTH-MEMBERSHIP-DESIGN.md`.
+
 Phase 1K-A adds only route-level quote endpoint abuse throttling. The existing
 quote persistence boundary remains unchanged: accepted requests still use the
 server-only quote repository and approved quote insert path, while throttled
