@@ -1,12 +1,18 @@
 # Admin Auth Membership Design
 
 Phase 2B-A is design and guard coverage only.
+Phase 2B-B adds a pure server-only policy module only.
 
 This PR does not implement auth.
+This PR does not implement real auth.
 This PR does not add admin UI.
 This PR does not add product writes.
+This PR does not add Supabase Auth runtime wiring.
+This PR does not add login/logout routes.
+This PR does not add protected admin pages.
 
 Product/category/product image writes remain blocked until admin/auth boundaries are implemented and tested.
+Product writes remain blocked until real auth/membership resolution, RLS, audit, and route/action boundaries are implemented and tested.
 Browser Supabase remains forbidden.
 Service-role runtime paths remain forbidden unless separately approved.
 Workspace ID must never be accepted from browser input for trusted admin write scope.
@@ -40,6 +46,12 @@ This document covers:
 
 It applies to future trusted admin operations for `categories`, `products`, and
 `product_images`.
+
+Phase 2B-B adds `website/lib/admin/authorization/admin-authorization-policy.ts`
+as a pure server-only policy module. It exports types and pure decision
+functions only. It does not read cookies, read environment variables, call
+Supabase, import Supabase, perform database reads or writes, or wire itself
+into routes, pages, or server actions.
 
 ## Non-goals
 
@@ -176,6 +188,12 @@ Before writes are allowed, a later PR must add and test:
 
 The existing disabled product/admin persistence scaffold must remain disabled
 until this gate is implemented and tested.
+
+The Phase 2B-B policy module can return an allowed policy decision for future
+admin and owner operations only when a future server-side resolver has already
+supplied authenticated identity, active admin profile, active same-workspace
+membership, role, requested operation, and optional same-workspace target
+record validation. It does not itself approve or perform product writes.
 
 ## Audit log expectations
 

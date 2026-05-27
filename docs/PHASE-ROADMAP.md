@@ -60,6 +60,11 @@ It is not approval to implement real auth, add admin UI, add product, category,
 or product image writes, add browser Supabase, add service-role runtime paths,
 or deploy.
 
+Phase 2B-B adds a pure server-only admin authorization policy module and tests
+only. It is not approval to add Supabase Auth runtime wiring, login/logout
+routes, protected admin pages, admin UI, product writes, service-role runtime
+paths, browser Supabase, deployment, or Supabase Cloud connection.
+
 This phase is not approved for implementation yet.
 
 ## Phase 3: Internal Chatbot Provider
