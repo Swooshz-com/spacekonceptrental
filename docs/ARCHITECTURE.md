@@ -103,15 +103,14 @@ Phase 1G-B adds only server-side public catalogue reads under
 `website/lib/catalogue/` for published `categories`, published `products`, and
 `product_images` metadata attached to published products. Missing Supabase env
 configuration, missing server-only `CATALOGUE_WORKSPACE_ID` configuration, or
-read errors fall back to the existing public catalogue shell data so local builds
-and tests do not require Supabase Cloud. Runtime catalogue queries must include
-the trusted workspace ID as a `workspace_id` filter for both list and detail
-reads. Direct anonymous catalogue RLS hardening is deferred until a future
-trusted active-workspace read strategy can keep DB-backed catalogue reads
-working without service-role keys. It does not add browser Supabase code,
-service-role keys, writes, product management, quote persistence,
-conversation/message persistence, Supabase Storage delivery, or deployment
-configuration.
+read errors fall back to the existing public catalogue shell data so local
+builds and tests do not require Supabase Cloud. Phase 1M-A moves those reads
+behind the trusted active-workspace `get_public_catalogue` RPC. Runtime reads
+still require trusted server-only `CATALOGUE_WORKSPACE_ID`, but direct
+anonymous base-table catalogue reads are denied. It does not add browser
+Supabase code, service-role keys, writes, product management, quote
+persistence, conversation/message persistence, Supabase Storage delivery, or
+deployment configuration.
 
 Phase 1H-A adds only first-party quote request persistence. The browser posts
 quote form data to `POST /api/quote`; the route validates bounded JSON and uses
@@ -161,13 +160,26 @@ conversation/message persistence, Supabase Storage, public catalogue behavior
 changes, direct anonymous catalogue RLS hardening, or n8n workflow changes.
 
 Phase 1L-A adds the trusted active-workspace catalogue RLS hardening strategy
-and proof scaffold only. Current public catalogue runtime reads remain
-server-only, use the anon Supabase key, and must filter by trusted server-side
-`CATALOGUE_WORKSPACE_ID`. Direct anonymous catalogue RLS hardening remains
+and proof scaffold only. At that point, public catalogue runtime reads remained
+server-only, used the anon Supabase key, and filtered by trusted server-side
+`CATALOGUE_WORKSPACE_ID`. Direct anonymous catalogue RLS hardening stayed
 deferred because removing anonymous catalogue `select` policies before a
-non-breaking trusted read surface exists would make configured DB-backed
+non-breaking trusted read surface existed would have made configured DB-backed
 catalogue reads return empty rows. See
 `docs/SUPABASE-CATALOGUE-RLS-HARDENING.md`.
+
+Phase 1M-A implements the non-breaking trusted active-workspace catalogue read
+surface. The migration adds the private
+`catalogue_public_workspace_config` singleton and the fixed-search-path
+`get_public_catalogue(expected_workspace_id, product_slug)` RPC. The server-only
+catalogue repository calls that RPC after resolving trusted
+`CATALOGUE_WORKSPACE_ID`; the database returns rows only when that value matches
+the active workspace config. Direct anonymous base-table reads for
+`categories`, `products`, and `product_images` are tightened with
+`alter policy ... using (false)`, while authenticated member policies remain
+membership-scoped. This phase does not add Supabase Cloud connection, Supabase
+CLI usage, deployment, browser Supabase, service-role keys, catalogue writes,
+quote throttling changes, or n8n workflow changes.
 
 ## n8n Responsibilities
 

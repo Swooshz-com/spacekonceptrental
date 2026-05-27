@@ -109,7 +109,10 @@ Policy PRs should cover:
   direct anonymous catalogue RLS hardening must include a trusted active
   workspace read strategy, runtime proof that configured DB-backed catalogue
   reads still return rows, and cross-workspace denial tests for direct
-  anonymous reads.
+  anonymous reads. Phase 1M-A implements this with
+  `catalogue_public_workspace_config`, `get_public_catalogue`, and
+  non-destructive `alter policy ... using (false)` hardening for direct
+  anonymous base-table catalogue reads.
 - Service-only tables remaining unavailable to browser-role clients.
 
 ## Seed Data

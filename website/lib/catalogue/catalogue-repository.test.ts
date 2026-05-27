@@ -6,110 +6,24 @@ import {
   getPublicProductBySlug
 } from "./catalogue-repository";
 
-type QueryFilter = {
-  column: string;
-  value: unknown;
-};
-
-type QueryOrder = {
-  column: string;
-  options?: unknown;
-};
-
-type QueryCall = {
-  table: string;
-  select?: string;
-  filters: QueryFilter[];
-  orders: QueryOrder[];
-  maybeSingle: boolean;
+type RpcCall = {
+  functionName: string;
+  args: Record<string, unknown>;
 };
 
 const workspaceA = "11111111-1111-4111-8111-111111111111";
-const workspaceB = "22222222-2222-4222-8222-222222222222";
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
-}
-
-function applyFilters(data: unknown, filters: QueryFilter[]) {
-  if (!Array.isArray(data)) {
-    return data;
-  }
-
-  return data.filter((row) =>
-    isRecord(row)
-      ? filters.every((filter) => row[filter.column] === filter.value)
-      : false
-  );
-}
-
-function applyMaybeSingle(data: unknown, filters: QueryFilter[]) {
-  const filtered = applyFilters(data, filters);
-
-  return Array.isArray(filtered) ? filtered[0] ?? null : filtered;
-}
 
 function createMockSupabase(
   responses: Record<string, { data: unknown; error: null }>
 ) {
-  const calls: QueryCall[] = [];
+  const calls: RpcCall[] = [];
   const client = {
-    from(table: string) {
-      const call: QueryCall = {
-        table,
-        filters: [],
-        orders: [],
-        maybeSingle: false
-      };
-      calls.push(call);
+    rpc(functionName: string, args: Record<string, unknown>) {
+      calls.push({ functionName, args });
 
-      const builder = {
-        select(columns: string) {
-          call.select = columns;
-          return builder;
-        },
-        eq(column: string, value: unknown) {
-          call.filters.push({ column, value });
-          return builder;
-        },
-        order(column: string, options?: unknown) {
-          call.orders.push({ column, options });
-          return builder;
-        },
-        maybeSingle() {
-          call.maybeSingle = true;
-          const response =
-            responses[`${table}:single`] ??
-            responses[table] ??
-            { data: null, error: null };
-
-          return Promise.resolve({
-            ...response,
-            data: applyMaybeSingle(response.data, call.filters)
-          });
-        },
-        then<TResult1 = { data: unknown; error: null }, TResult2 = never>(
-          onfulfilled?:
-            | ((
-                value: { data: unknown; error: null }
-              ) => TResult1 | PromiseLike<TResult1>)
-            | undefined
-            | null,
-          onrejected?:
-            | ((reason: unknown) => TResult2 | PromiseLike<TResult2>)
-            | undefined
-            | null
-        ) {
-          const response = responses[table] ?? { data: [], error: null };
-
-          return Promise.resolve({
-            ...response,
-            data: applyFilters(response.data, call.filters)
-          }).then(onfulfilled, onrejected);
-        }
-      };
-
-      return builder;
+      return Promise.resolve(
+        responses[functionName] ?? { data: null, error: null }
+      );
     }
   };
 
@@ -151,36 +65,33 @@ describe("public catalogue repository", () => {
 
   it("falls back safely without querying when the catalogue workspace is missing", async () => {
     const { calls, supabase } = createMockSupabase({
-      categories: {
-        data: [
-          {
-            id: "category-published",
-            workspace_id: workspaceA,
-            slug: "lounge-seating",
-            name: "Lounge Seating",
-            description: "Published seating.",
-            sort_order: 10,
-            is_published: true
-          }
-        ],
-        error: null
-      },
-      products: {
-        data: [
-          {
-            id: "product-published",
-            workspace_id: workspaceA,
-            category_id: "category-published",
-            slug: "modular-lounge-set",
-            name: "Modular Lounge Set",
-            short_description: "Published lounge set.",
-            description: "Published details.",
-            rental_unit: "set",
-            status: "published",
-            sort_order: 10,
-            product_images: []
-          }
-        ],
+      get_public_catalogue: {
+        data: {
+          categories: [
+            {
+              id: "category-published",
+              slug: "lounge-seating",
+              name: "Lounge Seating",
+              description: "Published seating.",
+              sort_order: 10,
+              is_published: true
+            }
+          ],
+          products: [
+            {
+              id: "product-published",
+              category_id: "category-published",
+              slug: "modular-lounge-set",
+              name: "Modular Lounge Set",
+              short_description: "Published lounge set.",
+              description: "Published details.",
+              rental_unit: "set",
+              status: "published",
+              sort_order: 10,
+              product_images: []
+            }
+          ]
+        },
         error: null
       }
     });
@@ -195,109 +106,73 @@ describe("public catalogue repository", () => {
     expect(calls).toEqual([]);
   });
 
-  it("requests only approved catalogue tables with trusted workspace and published filters", async () => {
+  it("returns DB-backed rows through the trusted active-workspace read surface", async () => {
     const { calls, supabase } = createMockSupabase({
-      categories: {
-        data: [
-          {
-            id: "category-published",
-            workspace_id: workspaceA,
-            slug: "lounge-seating",
-            name: "Lounge Seating",
-            description: "Published seating.",
-            sort_order: 10,
-            is_published: true
-          },
-          {
-            id: "category-draft",
-            workspace_id: workspaceA,
-            slug: "draft-concepts",
-            name: "Draft Concepts",
-            description: "Hidden category.",
-            sort_order: 90,
-            is_published: false
-          },
-          {
-            id: "category-other-workspace",
-            workspace_id: workspaceB,
-            slug: "other-workspace",
-            name: "Other Workspace",
-            description: "Published elsewhere.",
-            sort_order: 20,
-            is_published: true
-          }
-        ],
-        error: null
-      },
-      products: {
-        data: [
-          {
-            id: "product-published",
-            workspace_id: workspaceA,
-            category_id: "category-published",
-            slug: "modular-lounge-set",
-            name: "Modular Lounge Set",
-            short_description: "Published lounge set.",
-            description: "Published details.",
-            rental_unit: "set",
-            status: "published",
-            sort_order: 10,
-            product_images: [
-              {
-                id: "image-published",
-                storage_bucket: "sample-catalogue-public",
-                storage_path: "sample-fixtures/modular-lounge-set-main.jpg",
-                alt_text: "Sample image metadata.",
-                sort_order: 10,
-                is_primary: true
-              }
-            ]
-          },
-          {
-            id: "product-draft",
-            workspace_id: workspaceA,
-            category_id: "category-draft",
-            slug: "concept-backdrop-frame",
-            name: "Concept Backdrop Frame",
-            short_description: "Hidden draft.",
-            description: "Hidden draft details.",
-            rental_unit: "item",
-            status: "draft",
-            sort_order: 90,
-            product_images: [
-              {
-                id: "image-draft",
-                storage_bucket: "sample-catalogue-public",
-                storage_path: "sample-fixtures/draft/concept.jpg",
-                alt_text: "Draft image metadata.",
-                sort_order: 90,
-                is_primary: true
-              }
-            ]
-          },
-          {
-            id: "product-other-workspace",
-            workspace_id: workspaceB,
-            category_id: "category-other-workspace",
-            slug: "other-workspace-lounge",
-            name: "Other Workspace Lounge",
-            short_description: "Published elsewhere.",
-            description: "Other workspace details.",
-            rental_unit: "set",
-            status: "published",
-            sort_order: 20,
-            product_images: [
-              {
-                id: "image-other-workspace",
-                storage_bucket: "sample-catalogue-public",
-                storage_path: "sample-fixtures/other-workspace.jpg",
-                alt_text: "Other workspace image metadata.",
-                sort_order: 20,
-                is_primary: true
-              }
-            ]
-          }
-        ],
+      get_public_catalogue: {
+        data: {
+          categories: [
+            {
+              id: "category-published",
+              slug: "lounge-seating",
+              name: "Lounge Seating",
+              description: "Published seating.",
+              sort_order: 10,
+              is_published: true
+            },
+            {
+              id: "category-draft",
+              slug: "draft-concepts",
+              name: "Draft Concepts",
+              description: "Hidden category.",
+              sort_order: 90,
+              is_published: false
+            }
+          ],
+          products: [
+            {
+              id: "product-published",
+              category_id: "category-published",
+              slug: "modular-lounge-set",
+              name: "Modular Lounge Set",
+              short_description: "Published lounge set.",
+              description: "Published details.",
+              rental_unit: "set",
+              status: "published",
+              sort_order: 10,
+              product_images: [
+                {
+                  id: "image-published",
+                  storage_bucket: "sample-catalogue-public",
+                  storage_path: "sample-fixtures/modular-lounge-set-main.jpg",
+                  alt_text: "Sample image metadata.",
+                  sort_order: 10,
+                  is_primary: true
+                }
+              ]
+            },
+            {
+              id: "product-draft",
+              category_id: "category-draft",
+              slug: "concept-backdrop-frame",
+              name: "Concept Backdrop Frame",
+              short_description: "Hidden draft.",
+              description: "Hidden draft details.",
+              rental_unit: "item",
+              status: "draft",
+              sort_order: 90,
+              product_images: [
+                {
+                  id: "image-draft",
+                  storage_bucket: "sample-catalogue-public",
+                  storage_path: "sample-fixtures/draft/concept.jpg",
+                  alt_text: "Draft image metadata.",
+                  sort_order: 90,
+                  is_primary: true
+                }
+              ]
+            }
+          ]
+        },
         error: null
       }
     });
@@ -308,64 +183,81 @@ describe("public catalogue repository", () => {
     });
     const serializedCatalogue = JSON.stringify(catalogue);
 
-    expect(calls.map((call) => call.table)).toEqual([
-      "categories",
-      "products"
+    expect(calls).toEqual([
+      {
+        functionName: "get_public_catalogue",
+        args: {
+          expected_workspace_id: workspaceA,
+          product_slug: null
+        }
+      }
     ]);
-    expect(calls[0]).toMatchObject({
-      table: "categories",
-      filters: [
-        { column: "workspace_id", value: workspaceA },
-        { column: "is_published", value: true }
-      ]
-    });
-    expect(calls[1]).toMatchObject({
-      table: "products",
-      filters: [
-        { column: "workspace_id", value: workspaceA },
-        { column: "status", value: "published" }
-      ]
-    });
-    expect(calls[1].select).toContain("product_images");
+    expect(catalogue.source).toBe("supabase");
     expect(serializedCatalogue).toContain("Modular Lounge Set");
     expect(serializedCatalogue).not.toContain("Draft Concepts");
     expect(serializedCatalogue).not.toContain("Concept Backdrop Frame");
     expect(serializedCatalogue).not.toContain("sample-fixtures/draft");
-    expect(serializedCatalogue).not.toContain("Other Workspace");
-    expect(serializedCatalogue).not.toContain("other-workspace.jpg");
   });
 
-  it("requests product details by slug with trusted workspace and published product filters", async () => {
+  it("returns fallback data when the trusted active-workspace surface is unavailable", async () => {
     const { calls, supabase } = createMockSupabase({
-      products: {
-        data: [
-          {
-            id: "product-other-workspace",
-            workspace_id: workspaceB,
-            category_id: "category-other-workspace",
-            slug: "modular-lounge-set",
-            name: "Other Workspace Lounge",
-            short_description: "Published elsewhere.",
-            description: "Other workspace details.",
-            rental_unit: "set",
-            status: "published",
-            sort_order: 20,
-            product_images: []
-          },
-          {
-            id: "product-published",
-            workspace_id: workspaceA,
-            category_id: "category-published",
-            slug: "modular-lounge-set",
-            name: "Modular Lounge Set",
-            short_description: "Published lounge set.",
-            description: "Published details.",
-            rental_unit: "set",
-            status: "published",
-            sort_order: 10,
-            product_images: []
-          }
-        ],
+      get_public_catalogue: {
+        data: null,
+        error: null
+      }
+    });
+
+    const catalogue = await getPublicCatalogue({
+      supabase,
+      env: { CATALOGUE_WORKSPACE_ID: workspaceA }
+    });
+
+    expect(calls).toEqual([
+      {
+        functionName: "get_public_catalogue",
+        args: {
+          expected_workspace_id: workspaceA,
+          product_slug: null
+        }
+      }
+    ]);
+    expect(catalogue.source).toBe("fallback");
+    expect(catalogue.products).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ slug: "lounge-sofa-package" })
+      ])
+    );
+  });
+
+  it("requests product details by slug through the trusted active-workspace read surface", async () => {
+    const { calls, supabase } = createMockSupabase({
+      get_public_catalogue: {
+        data: {
+          categories: [
+            {
+              id: "category-published",
+              slug: "lounge-seating",
+              name: "Lounge Seating",
+              description: "Published seating.",
+              sort_order: 10,
+              is_published: true
+            }
+          ],
+          products: [
+            {
+              id: "product-published",
+              category_id: "category-published",
+              slug: "modular-lounge-set",
+              name: "Modular Lounge Set",
+              short_description: "Published lounge set.",
+              description: "Published details.",
+              rental_unit: "set",
+              status: "published",
+              sort_order: 10,
+              product_images: []
+            }
+          ]
+        },
         error: null
       }
     });
@@ -378,19 +270,18 @@ describe("public catalogue repository", () => {
     expect(product).toMatchObject({
       source: "supabase",
       slug: "modular-lounge-set",
-      name: "Modular Lounge Set"
+      name: "Modular Lounge Set",
+      categoryName: "Lounge Seating"
     });
-    expect(calls).toHaveLength(1);
-    expect(calls[0]).toMatchObject({
-      table: "products",
-      filters: [
-        { column: "workspace_id", value: workspaceA },
-        { column: "slug", value: "modular-lounge-set" },
-        { column: "status", value: "published" }
-      ],
-      maybeSingle: true
-    });
-    expect(calls[0].select).toContain("product_images");
+    expect(calls).toEqual([
+      {
+        functionName: "get_public_catalogue",
+        args: {
+          expected_workspace_id: workspaceA,
+          product_slug: "modular-lounge-set"
+        }
+      }
+    ]);
   });
 
   it("keeps production catalogue data access server-only and catalogue-scoped", () => {
@@ -412,13 +303,10 @@ describe("public catalogue repository", () => {
 
     expect(source).toContain('import "server-only";');
     expect(source).toContain("createServerSupabaseClient");
-    expect(source).toContain('from("categories")');
-    expect(source).toContain('from("products")');
-    expect(source).toContain("product_images");
+    expect(source).toContain('rpc("get_public_catalogue"');
     expect(source).toContain("CATALOGUE_WORKSPACE_ID");
-    expect(source).toContain('eq("workspace_id", workspaceId)');
-    expect(source).toContain('eq("is_published", true)');
-    expect(source).toContain('eq("status", "published")');
+    expect(source).not.toContain('from("categories")');
+    expect(source).not.toContain('from("products")');
     expect(source).not.toContain("NEXT_PUBLIC_SUPABASE");
     expect(source).not.toContain("SUPABASE_SERVICE_ROLE");
 

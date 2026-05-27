@@ -297,7 +297,7 @@ test('real migration directory passes static validation', () => {
   const result = runValidator(realMigrationsDir);
 
   assert.equal(result.status, 0, result.stdout + result.stderr);
-  assert.match(result.stdout, /checked 3 migration SQL file\(s\)/);
+  assert.match(result.stdout, /checked 4 migration SQL file\(s\)/);
 });
 
 test('real base schema migration creates the planned MVP tables', () => {
@@ -375,6 +375,43 @@ test('real RLS policy migration includes public catalogue read policies only for
   assert.match(sql, /create policy categories_public_read_published on public\.categories for select to anon, authenticated using \(is_published = true\);/);
   assert.match(sql, /create policy products_public_read_published on public\.products for select to anon, authenticated using \(status = 'published'\);/);
   assert.match(sql, /create policy product_images_public_read_published_products on public\.product_images for select to anon, authenticated using \(.*exists \( select 1 from public\.products p where p\.id = product_images\.product_id and p\.workspace_id = product_images\.workspace_id and p\.status = 'published' \).* \);/);
+});
+
+test('real migrations add trusted active-workspace catalogue read surface', () => {
+  const sql = normalizeSql(readAllRealMigrationSql());
+
+  assert.match(
+    sql,
+    /create table if not exists public\.catalogue_public_workspace_config \(/,
+  );
+  assert.match(
+    sql,
+    /alter table public\.catalogue_public_workspace_config enable row level security;/,
+  );
+  assert.match(
+    sql,
+    /create or replace function public\.get_public_catalogue\(\s*expected_workspace_id uuid,\s*product_slug text default null\s*\)/,
+  );
+  assert.match(sql, /security definer/);
+  assert.match(sql, /set search_path = public/);
+  assert.match(
+    sql,
+    /grant execute on function public\.get_public_catalogue\(uuid, text\) to anon, authenticated;/,
+  );
+  assert.match(
+    sql,
+    /alter policy categories_public_read_published on public\.categories to anon, authenticated using \(false\);/,
+  );
+  assert.match(
+    sql,
+    /alter policy products_public_read_published on public\.products to anon, authenticated using \(false\);/,
+  );
+  assert.match(
+    sql,
+    /alter policy product_images_public_read_published_products on public\.product_images to anon, authenticated using \(false\);/,
+  );
+  assert.doesNotMatch(sql, /execute\s+.*service_role/i);
+  assert.doesNotMatch(sql, /current_setting\('app\.catalogue_workspace_id/);
 });
 
 test('real migrations add narrow anonymous website quote insert policies only', () => {
