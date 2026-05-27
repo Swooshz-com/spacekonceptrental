@@ -9,9 +9,10 @@ configuration. Phase 1G-B adds server-only public catalogue read code for
 published categories, published products, and image metadata attached to
 published products. Runtime catalogue reads require trusted server-only
 `CATALOGUE_WORKSPACE_ID` configuration and apply it as a `workspace_id` filter
-for list and detail queries. Direct anonymous catalogue RLS hardening remains
-deferred until a future trusted active-workspace read strategy can keep
-DB-backed catalogue reads working without service-role keys. Phase 1H-A also
+for list and detail queries. At that point, direct anonymous catalogue RLS
+hardening remained deferred until a trusted active-workspace read strategy
+could keep DB-backed catalogue reads working without service-role keys. Phase
+1H-A also
 adds only first-party quote request persistence through `POST /api/quote`,
 backed by narrow anonymous insert policies for website quote rows and quote
 item rows.
@@ -32,12 +33,17 @@ The server-only runtime now reads through `get_public_catalogue` after checking
 trusted `CATALOGUE_WORKSPACE_ID`; browser Supabase code, Supabase Cloud,
 deployment configuration, catalogue writes, quote throttling changes, and n8n
 workflow changes remain out of scope.
+Phase 1N-A adds only the active catalogue workspace bootstrap plan and a
+docs-only local SQL example for future operator review. It does not change RLS
+policies or runtime catalogue behaviour, connect to Supabase Cloud, add
+production seed data, add service-role runtime writes, add browser Supabase
+code, add catalogue writes, change quote throttling, or change n8n workflows.
 
 No runtime route should write Supabase data until each specific flow is
 separately approved and tested. Public catalogue read code is limited to the
-Phase 1G-B server-only repository, requires trusted workspace configuration,
-and applies application-level workspace filters. Quote writes are limited to
-the Phase 1H-A server-only repository and the approved quote tables.
+server-only repository, requires trusted workspace configuration, and reads
+through the Phase 1M-A active-workspace RPC. Quote writes are limited to the
+Phase 1H-A server-only repository and the approved quote tables.
 Conversation and message writes remain unapproved.
 Product, category, and product image writes remain unapproved.
 
@@ -152,8 +158,8 @@ server routes only:
 - The server resolves the workspace from trusted route, host, or deployment
   configuration.
 - Public catalogue reads currently use server-only `CATALOGUE_WORKSPACE_ID` as
-  the trusted deployment configuration and must filter every catalogue query by
-  that workspace ID.
+  the trusted deployment configuration and `get_public_catalogue` validates it
+  against database-owned active workspace config.
 - The server validates and normalizes untrusted customer input.
 - The server writes only through the approved server-side credential path after
   migrations, policies, and tests are approved.
@@ -184,6 +190,12 @@ product_slug)`, a constrained, fixed-search-path, dynamic-SQL-free
 `security definer` function. It returns only the public catalogue columns for
 the database-owned active workspace and is covered by direct anonymous abuse
 tests. See `docs/SUPABASE-CATALOGUE-RLS-HARDENING.md`.
+
+The Phase 1N-A bootstrap plan documents how future approved operators should
+set `catalogue_public_workspace_config` as database-owned configuration. The
+docs-only example stays under `docs/examples/supabase/`, outside
+`supabase/migrations/` and `supabase/seeds/`, and must not be imported or
+executed by runtime code.
 
 For future chat writes, `clientSessionId` must remain an untrusted correlation
 hint rather than identity. `clientMessageId` may support idempotency and
@@ -240,8 +252,13 @@ rows are denied, draft rows remain denied, the trusted active-workspace RPC
 returns configured workspace rows, product images are limited to published
 products in the active workspace, anonymous catalogue writes remain rejected,
 and private tables remain unreadable by anonymous callers.
+Phase 1N-A adds static guards for the bootstrap documentation and SQL example:
+the example is docs-only, placeholder-only, outside migrations and seeds, not
+imported by runtime code, and does not add service-role keys, browser Supabase
+variables, product/category/product image writes, quote throttling changes, or
+n8n workflow changes.
 
-## Deferred After Phase 1M-A
+## Deferred After Phase 1N-A
 
 - Browser Supabase client code.
 - Auth UI.
