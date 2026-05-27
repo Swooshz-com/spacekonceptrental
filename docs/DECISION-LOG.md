@@ -139,6 +139,15 @@ boundary without adding browser Supabase code, service-role keys, writes,
 quote/chat/admin persistence, Supabase Storage delivery, deployment, or live
 Supabase Cloud validation.
 
+## 2026-05-27: Disable Broad Anonymous Catalogue Table Reads
+
+Decision: direct anonymous RLS access to `categories`, `products`, and
+`product_images` is disabled until public catalogue reads can be scoped to a
+trusted active workspace and covered by cross-workspace denial tests.
+
+Reason: published-state-only policies would allow anyone with the anon role to
+enumerate published catalogue rows and image metadata across workspaces.
+
 ## 2026-05-27: First-party Quote Request Persistence
 
 Decision: Phase 1H-A adds `POST /api/quote`, a server-only quote repository,

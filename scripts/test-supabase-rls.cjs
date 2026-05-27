@@ -595,6 +595,9 @@ check('authenticated active member cannot read another workspace admin rows', ()
   const workspaceBFilters = [
     ['workspaces', `id = '${ids.workspaceB}'`],
     ['memberships', `workspace_id = '${ids.workspaceB}'`],
+    ['categories', `workspace_id = '${ids.workspaceB}'`],
+    ['products', `workspace_id = '${ids.workspaceB}'`],
+    ['product_images', `workspace_id = '${ids.workspaceB}'`],
     ['quote_requests', `workspace_id = '${ids.workspaceB}'`],
     ['quote_request_items', `workspace_id = '${ids.workspaceB}'`],
     ['conversations', `workspace_id = '${ids.workspaceB}'`],
@@ -619,6 +622,9 @@ check('authenticated user without membership cannot read admin-only workspace ro
   const adminOnlyTables = [
     'workspaces',
     'memberships',
+    'categories',
+    'products',
+    'product_images',
     'quote_requests',
     'quote_request_items',
     'conversations',
@@ -635,15 +641,15 @@ check('authenticated user without membership cannot read admin-only workspace ro
   }
 });
 
-check('anonymous public reads only published catalogue rows', () => {
+check('anonymous public cannot read catalogue tables without trusted workspace scoping', () => {
   assertCsv(
     scalarAs(
       'anon',
       null,
       "select coalesce(string_agg(slug, ',' order by slug), '') from public.categories",
     ),
-    'published-a,published-b',
-    'anon should read only published categories',
+    '',
+    'anon should not read categories directly',
   );
 
   assertCsv(
@@ -652,8 +658,8 @@ check('anonymous public reads only published catalogue rows', () => {
       null,
       "select coalesce(string_agg(slug, ',' order by slug), '') from public.products",
     ),
-    'published-product-a,published-product-b',
-    'anon should read only published products',
+    '',
+    'anon should not read products directly',
   );
 
   assertCsv(
@@ -662,8 +668,40 @@ check('anonymous public reads only published catalogue rows', () => {
       null,
       "select coalesce(string_agg(storage_path, ',' order by storage_path), '') from public.product_images",
     ),
-    'published-a.jpg,published-b.jpg',
-    'anon should read only images for published products',
+    '',
+    'anon should not read product image metadata directly',
+  );
+});
+
+check('authenticated active member reads only their workspace catalogue data', () => {
+  assertCsv(
+    scalarAs(
+      'authenticated',
+      ids.authMemberA,
+      "select coalesce(string_agg(slug, ',' order by slug), '') from public.categories",
+    ),
+    'draft-a,published-a',
+    'member A should read only workspace A categories',
+  );
+
+  assertCsv(
+    scalarAs(
+      'authenticated',
+      ids.authMemberA,
+      "select coalesce(string_agg(slug, ',' order by slug), '') from public.products",
+    ),
+    'draft-product-a,published-product-a',
+    'member A should read only workspace A products',
+  );
+
+  assertCsv(
+    scalarAs(
+      'authenticated',
+      ids.authMemberA,
+      "select coalesce(string_agg(storage_path, ',' order by storage_path), '') from public.product_images",
+    ),
+    'draft-a.jpg,published-a.jpg',
+    'member A should read only workspace A product image metadata',
   );
 });
 

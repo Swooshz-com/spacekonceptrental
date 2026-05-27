@@ -105,7 +105,9 @@ Policy PRs should cover:
 
 - Member access to own workspace rows.
 - Denial for rows in other workspaces.
-- Anonymous public reads limited to published catalogue data.
+- Direct anonymous catalogue reads unavailable until trusted active workspace
+  scoping exists. If later added, they must be limited to published catalogue
+  data for the active workspace.
 - Service-only tables remaining unavailable to browser-role clients.
 
 ## Seed Data

@@ -5,17 +5,19 @@ Phase 1F-C-B adds a local-only database execution harness with behavioural
 tenant-isolation tests. Phase 1G-A adds only server-side Supabase client wiring
 with private environment guards and static browser-boundary tests. It does not
 add persistence, production seed data, Supabase Cloud connection, or deployment
-configuration. Phase 1G-B adds server-only public catalogue reads for published
-categories, published products, and image metadata attached to published
-products. Phase 1H-A adds only first-party quote request persistence through
-`POST /api/quote`, backed by narrow anonymous insert policies for website quote
-rows and quote item rows.
+configuration. Phase 1G-B adds server-only public catalogue read code for
+published categories, published products, and image metadata attached to
+published products. A Phase 1H-A hardening migration disables broad direct
+anonymous catalogue table reads until public catalogue access can be scoped to
+a trusted active workspace. Phase 1H-A also adds only first-party quote request
+persistence through `POST /api/quote`, backed by narrow anonymous insert
+policies for website quote rows and quote item rows.
 
 No runtime route should write Supabase data until each specific flow is
-separately approved and tested. Public catalogue reads are limited to the
-Phase 1G-B server-only repository and published catalogue tables. Quote writes
-are limited to the Phase 1H-A server-only repository and the approved quote
-tables.
+separately approved and tested. Public catalogue read code is limited to the
+Phase 1G-B server-only repository, and direct anonymous table reads remain
+disabled until trusted workspace scoping exists. Quote writes are limited to
+the Phase 1H-A server-only repository and the approved quote tables.
 
 ## Boundary Model
 
@@ -46,8 +48,8 @@ Tables without `workspace_id`:
 
 ## Public-Readable Candidates
 
-These tables may become public-readable later, but only after published-state
-filters and RLS tests exist:
+These tables may become public-readable later, but only after trusted active
+workspace resolution, published-state filters, and RLS tests exist:
 
 - `workspaces`: only safe public lookup fields such as slug or public domain.
 - `categories`: published categories for the active public workspace.
@@ -110,8 +112,11 @@ server routes only:
   migrations, policies, and tests are approved.
 
 The browser should not write directly to Supabase for anonymous quote or chat
-flows in the MVP. If direct anonymous reads are added for public catalogue
-data, they must be limited to published rows and covered by RLS tests.
+flows in the MVP. Direct anonymous catalogue table reads are disabled in the
+policy layer until a future migration can prove trusted active workspace
+scoping. If direct anonymous reads are added for public catalogue data, they
+must be limited to published rows for the active workspace and covered by
+cross-workspace denial tests.
 
 ## Future Admin Scoping
 
@@ -134,8 +139,10 @@ Phase 1F-C-A adds static tests proving the intended migration structure. Phase
 - A user can read allowed admin-only rows in their workspace.
 - A user cannot read admin-only rows from another workspace.
 - A user without membership cannot access admin-only data.
-- Public anonymous reads return only published catalogue rows.
-- Anonymous reads cannot see draft catalogue rows, membership data, quote data,
+- Public anonymous reads cannot read catalogue tables directly until trusted
+  active workspace scoping exists.
+- Authenticated active members can read catalogue rows only in their workspace.
+- Anonymous reads cannot see catalogue rows, membership data, quote data,
   conversation data, messages, usage events, audit logs, or integration
   connection metadata.
 - Anonymous quote creation can insert website quote rows and item rows without
@@ -155,4 +162,6 @@ operations.
 - Auth UI.
 - Admin routes.
 - Direct browser Supabase reads or writes.
+- Direct anonymous catalogue table reads without trusted active workspace
+  scoping.
 - Persistence for products, conversations, or messages.

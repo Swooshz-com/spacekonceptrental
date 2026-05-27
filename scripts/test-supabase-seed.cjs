@@ -474,13 +474,13 @@ check('seed data respects workspace-safe foreign keys', () => {
   );
 });
 
-check('anonymous users see only published catalogue seed rows', () => {
+check('anonymous users cannot read catalogue seed rows directly', () => {
   assert.equal(
     scalarAs(
       'anon',
       "select coalesce(string_agg(slug, ',' order by slug), '') from public.categories",
     ),
-    'banquet-tables,lounge-seating,outdoor-sets',
+    '',
   );
 
   assert.equal(
@@ -488,7 +488,7 @@ check('anonymous users see only published catalogue seed rows', () => {
       'anon',
       "select coalesce(string_agg(slug, ',' order by slug), '') from public.products",
     ),
-    'banquet-table-pair,garden-bistro-set,modular-lounge-set',
+    '',
   );
 
   assert.equal(
@@ -496,11 +496,7 @@ check('anonymous users see only published catalogue seed rows', () => {
       'anon',
       "select coalesce(string_agg(storage_path, ',' order by storage_path), '') from public.product_images",
     ),
-    [
-      'sample-fixtures/banquet-table-pair-main.jpg',
-      'sample-fixtures/garden-bistro-set-main.jpg',
-      'sample-fixtures/modular-lounge-set-main.jpg',
-    ].join(','),
+    '',
   );
 });
 

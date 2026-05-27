@@ -48,8 +48,8 @@ The seed validation proves:
 - Non-catalogue tables remain empty, including admin users, memberships, quote
   requests, quote request items, conversations, messages, usage events, audit
   logs, and integration connections.
-- Anonymous reads can see only published categories, products, and image
-  metadata whose parent product is published.
+- Anonymous direct reads cannot see catalogue rows until trusted active
+  workspace scoping exists.
 - Draft/unpublished categories, products, and image metadata remain hidden from
   anonymous reads.
 - Image seed rows are metadata-only sample paths.
@@ -62,6 +62,7 @@ customer data, real quote data, real conversation data, private event data,
 private business files, private media, production exports, credentials, or
 secrets.
 
-This phase still does not add runtime app Supabase use, public catalogue DB
-reads, product persistence in the app, quote persistence, conversation/message
-persistence, deployment configuration, or production seed data.
+This phase still does not add runtime app Supabase use, direct anonymous
+catalogue DB reads, product persistence in the app, quote persistence,
+conversation/message persistence, deployment configuration, or production seed
+data.
