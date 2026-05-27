@@ -2,6 +2,13 @@
 
 This phase is not approved for implementation yet.
 
+Phase 2B-A admin/auth membership design checklist:
+`docs/checklists/PHASE-2B-ADMIN-AUTH.md`
+
+The Phase 2B-A checklist is design/readiness only. It is not approval to add
+real auth, admin UI, product writes, browser Supabase, service-role runtime
+paths, deployment, or Supabase Cloud connection.
+
 ## Directional Scope
 
 - [ ] Expand admin product CRUD.

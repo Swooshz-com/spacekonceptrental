@@ -133,6 +133,10 @@ variables such as `N8N_CHAT_WEBHOOK_URL`.
 
 ## Product/Admin Persistence Rules
 
+- Phase 2B-A admin/auth and workspace membership authorization design is
+  guardrail documentation only; it is not approval to implement real auth,
+  admin UI, product/category/product image writes, browser Supabase,
+  service-role runtime paths, deployment, or Supabase Cloud connection.
 - Product, category, and product image writes are trusted-admin operations
   only.
 - Do not add browser-side Supabase writes for product management.
@@ -141,6 +145,11 @@ variables such as `N8N_CHAT_WEBHOOK_URL`.
 - Do not add service-role product write paths without separate approval.
 - Resolve product-management workspace access from trusted server-side auth and
   membership context, not browser input.
+- Do not accept browser-provided workspace IDs as trusted admin write scope.
+- Future admin writes must resolve workspace access server-side from
+  authenticated identity plus active membership and role checks.
+- Future product writes must have audit expectations and RLS tests before they
+  are enabled.
 - Keep public catalogue reads read-only, published-only, and scoped by trusted
   server-side workspace configuration.
 - Keep product image/media persistence deferred until Supabase Storage strategy,

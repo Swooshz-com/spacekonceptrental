@@ -123,8 +123,11 @@ What should still be forbidden:
 
 Suggested first PR:
 
-- Document the admin/auth and membership authorization design, then add a
-  disabled server-only admin boundary if needed.
+- Phase 2B-A documents the admin/auth and membership authorization design with
+  guard tests only. The next PR in this track should still avoid product
+  writes and should implement only the reviewed server-only auth/membership
+  boundary with anonymous, non-member, cross-workspace, and allowed-member
+  tests.
 
 ### C. Conversation/message persistence path
 

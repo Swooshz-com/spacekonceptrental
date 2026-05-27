@@ -294,3 +294,18 @@ Supabase Cloud, add Vercel config, add real env values, add service-role
 runtime paths, add browser Supabase, add runtime features, change catalogue
 RLS/runtime behaviour, change quote throttling, add product/category/product
 image writes, add conversation/message writes, or change n8n workflows.
+
+## 2026-05-27: Admin/Auth Membership Design Before Product Writes
+
+Decision: Phase 2B-A adds the admin/auth and workspace membership
+authorization design plus an unchecked implementation checklist before any
+product-management writes are approved.
+
+Reason: category, product, and product image mutations need a reviewed
+authenticated admin identity, active workspace membership, role model,
+server-side workspace resolution, route/action boundary, audit expectations,
+and RLS test plan before runtime writes exist. This phase does not implement
+auth, add admin UI, add product/category/product image writes, add public
+mutation routes, add browser Supabase, add service-role runtime paths, deploy,
+connect to Supabase Cloud, change catalogue RLS/runtime behaviour, change quote
+throttling, add conversation/message writes, or change n8n workflows.
