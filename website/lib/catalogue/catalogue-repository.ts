@@ -42,7 +42,11 @@ type PublicCatalogueSupabaseResult =
     };
 
 type PublicCatalogueRepositoryOptions = {
+  workspaceId?: string;
   supabase?: PublicCatalogueSupabaseResult;
+  env?: {
+    CATALOGUE_WORKSPACE_ID?: string;
+  };
 };
 
 type CategoryRow = {
@@ -90,6 +94,9 @@ const productSelect = [
   "sort_order",
   "product_images(id, storage_bucket, storage_path, alt_text, sort_order, is_primary)"
 ].join(", ");
+
+const workspaceIdPattern =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 const fallbackCategories: PublicCatalogueCategory[] = [
   {
@@ -272,6 +279,16 @@ function getSupabase(options: PublicCatalogueRepositoryOptions = {}) {
   );
 }
 
+function readCatalogueWorkspaceId(options: PublicCatalogueRepositoryOptions) {
+  const workspaceId =
+    options.workspaceId ??
+    options.env?.CATALOGUE_WORKSPACE_ID ??
+    process.env.CATALOGUE_WORKSPACE_ID;
+  const trimmed = workspaceId?.trim();
+
+  return trimmed && workspaceIdPattern.test(trimmed) ? trimmed : undefined;
+}
+
 export function getFallbackCatalogue(): PublicCatalogue {
   return fallbackCatalogue;
 }
@@ -289,16 +306,24 @@ export async function getPublicCatalogue(
     return fallbackCatalogue;
   }
 
+  const workspaceId = readCatalogueWorkspaceId(options);
+
+  if (!workspaceId) {
+    return fallbackCatalogue;
+  }
+
   const client = supabase.client;
   const categoriesQuery = client
     .from("categories")
     .select(categorySelect)
+    .eq("workspace_id", workspaceId)
     .eq("is_published", true)
     .order("sort_order", { ascending: true })
     .order("name", { ascending: true });
   const productsQuery = client
     .from("products")
     .select(productSelect)
+    .eq("workspace_id", workspaceId)
     .eq("status", "published")
     .order("sort_order", { ascending: true })
     .order("name", { ascending: true });
@@ -341,10 +366,17 @@ export async function getPublicProductBySlug(
     return fallbackProduct;
   }
 
+  const workspaceId = readCatalogueWorkspaceId(options);
+
+  if (!workspaceId) {
+    return fallbackProduct;
+  }
+
   const client = supabase.client;
   const productResult = await client
     .from("products")
     .select(productSelect)
+    .eq("workspace_id", workspaceId)
     .eq("slug", slug)
     .eq("status", "published")
     .maybeSingle();

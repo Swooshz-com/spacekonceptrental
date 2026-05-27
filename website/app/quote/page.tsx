@@ -1,3 +1,5 @@
+import QuoteRequestForm from "../../components/QuoteRequestForm";
+
 export default function QuotePage() {
   return (
     <section className="section">
@@ -12,27 +14,7 @@ export default function QuotePage() {
       <div className="route-grid">
         <article className="quote-panel">
           <h2>Event basics</h2>
-          <form className="quote-form">
-            <label>
-              Event date
-              <input name="eventDate" placeholder="DD/MM/YYYY" type="text" />
-            </label>
-            <label>
-              Venue
-              <input name="venue" placeholder="Singapore venue" type="text" />
-            </label>
-            <label>
-              Items needed
-              <textarea
-                name="items"
-                placeholder="Example: 20 stools, 4 cocktail tables"
-                rows={4}
-              />
-            </label>
-            <button className="button" disabled type="button">
-              Send quote request
-            </button>
-          </form>
+          <QuoteRequestForm />
         </article>
 
         <article className="route-card">

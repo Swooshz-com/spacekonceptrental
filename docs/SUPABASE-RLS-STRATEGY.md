@@ -5,13 +5,22 @@ Phase 1F-C-B adds a local-only database execution harness with behavioural
 tenant-isolation tests. Phase 1G-A adds only server-side Supabase client wiring
 with private environment guards and static browser-boundary tests. It does not
 add persistence, production seed data, Supabase Cloud connection, or deployment
-configuration. Phase 1G-B adds server-only public catalogue reads for published
-categories, published products, and image metadata attached to published
-products.
+configuration. Phase 1G-B adds server-only public catalogue read code for
+published categories, published products, and image metadata attached to
+published products. Runtime catalogue reads require trusted server-only
+`CATALOGUE_WORKSPACE_ID` configuration and apply it as a `workspace_id` filter
+for list and detail queries. Direct anonymous catalogue RLS hardening remains
+deferred until a future trusted active-workspace read strategy can keep
+DB-backed catalogue reads working without service-role keys. Phase 1H-A also
+adds only first-party quote request persistence through `POST /api/quote`,
+backed by narrow anonymous insert policies for website quote rows and quote
+item rows.
 
 No runtime route should write Supabase data until each specific flow is
-separately approved and tested. Public catalogue reads are limited to the
-Phase 1G-B server-only repository and published catalogue tables.
+separately approved and tested. Public catalogue read code is limited to the
+Phase 1G-B server-only repository, requires trusted workspace configuration,
+and applies application-level workspace filters. Quote writes are limited to
+the Phase 1H-A server-only repository and the approved quote tables.
 
 ## Boundary Model
 
@@ -42,8 +51,8 @@ Tables without `workspace_id`:
 
 ## Public-Readable Candidates
 
-These tables may become public-readable later, but only after published-state
-filters and RLS tests exist:
+These tables may become public-readable later, but only after trusted active
+workspace resolution, published-state filters, and RLS tests exist:
 
 - `workspaces`: only safe public lookup fields such as slug or public domain.
 - `categories`: published categories for the active public workspace.
@@ -78,7 +87,6 @@ not through client-provided role claims alone.
 These tables or operations should be service-role-only in the MVP unless a
 separate tested policy proves a narrower safe path:
 
-- Anonymous quote creation.
 - Anonymous chat conversation/message persistence.
 - `usage_events` writes and reads.
 - `audit_logs` writes.
@@ -89,6 +97,11 @@ separate tested policy proves a narrower safe path:
 Service-role keys must never reach the browser. They bypass RLS and would turn
 any browser compromise or accidental bundle leak into full database access.
 
+Phase 1H-A is the approved narrow exception for quote creation: the first-party
+server route uses the anon-key Supabase runtime with insert-only policies for
+`quote_requests` and `quote_request_items`. It does not add anonymous reads,
+updates, deletes, service-role keys, product writes, or chat persistence.
+
 ## Anonymous Quote And Chat Flows
 
 Before full auth exists, anonymous public flows should go through first-party
@@ -97,13 +110,20 @@ server routes only:
 - The browser sends quote or chat input to the Next.js app.
 - The server resolves the workspace from trusted route, host, or deployment
   configuration.
+- Public catalogue reads currently use server-only `CATALOGUE_WORKSPACE_ID` as
+  the trusted deployment configuration and must filter every catalogue query by
+  that workspace ID.
 - The server validates and normalizes untrusted customer input.
-- The server writes with service-side credentials only after migrations,
-  policies, and tests are approved.
+- The server writes only through the approved server-side credential path after
+  migrations, policies, and tests are approved.
 
 The browser should not write directly to Supabase for anonymous quote or chat
-flows in the MVP. If direct anonymous reads are added for public catalogue
-data, they must be limited to published rows and covered by RLS tests.
+flows in the MVP. Direct anonymous catalogue reads still rely on published-row
+RLS so the anon-key server runtime can read catalogue data. A future RLS
+hardening phase must add a trusted active-workspace strategy that keeps
+DB-backed catalogue reads working without service-role keys, limits reads to
+published rows for the active workspace, and includes cross-workspace denial
+tests.
 
 ## Future Admin Scoping
 
@@ -127,22 +147,28 @@ Phase 1F-C-A adds static tests proving the intended migration structure. Phase
 - A user cannot read admin-only rows from another workspace.
 - A user without membership cannot access admin-only data.
 - Public anonymous reads return only published catalogue rows.
+- Runtime website catalogue reads additionally apply server-only workspace
+  filters through `CATALOGUE_WORKSPACE_ID`.
 - Anonymous reads cannot see draft catalogue rows, membership data, quote data,
   conversation data, messages, usage events, audit logs, or integration
   connection metadata.
+- Anonymous quote creation can insert website quote rows and item rows without
+  gaining anonymous quote reads.
 - Service-only tables are not broadly readable from browser-role clients, and
   representative browser-role writes are rejected.
-- Runtime website Supabase reads stay server-only, published-only, and out of
-  browser-facing code.
+- Runtime website Supabase reads stay server-only, published-only,
+  workspace-scoped, and out of browser-facing code.
 
 Future runtime work must add targeted tests for any newly approved write path,
-including anonymous quote creation, chat persistence, and server-side
-service-role operations.
+including product persistence, chat persistence, and server-side service-role
+operations.
 
-## Deferred After Phase 1G-B
+## Deferred After Phase 1H-A
 
 - Browser Supabase client code.
 - Auth UI.
 - Admin routes.
 - Direct browser Supabase reads or writes.
-- Persistence for products, quotes, conversations, or messages.
+- Direct anonymous catalogue RLS hardening before a trusted active-workspace
+  read strategy exists.
+- Persistence for products, conversations, or messages.

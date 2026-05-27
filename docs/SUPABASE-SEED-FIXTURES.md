@@ -62,6 +62,7 @@ customer data, real quote data, real conversation data, private event data,
 private business files, private media, production exports, credentials, or
 secrets.
 
-This phase still does not add runtime app Supabase use, public catalogue DB
-reads, product persistence in the app, quote persistence, conversation/message
-persistence, deployment configuration, or production seed data.
+This phase still does not add runtime app Supabase use, hardened anonymous
+catalogue RLS, product persistence in the app, quote persistence,
+conversation/message persistence, deployment configuration, or production seed
+data.

@@ -5,8 +5,9 @@ behavioural RLS and tenant-isolation checks. It does not connect to a live
 Supabase project, does not link the repo to Supabase Cloud, does not require
 the Supabase CLI on the host machine, and did not add runtime Supabase app
 wiring. Phase 1G-A later adds only server-side Supabase runtime wiring under
-`website/lib/supabase/`; this harness still must not approve catalogue reads,
-persistence flows, Supabase Cloud connection, or deployment.
+`website/lib/supabase/`; this harness still must not approve direct anonymous
+catalogue table reads, persistence flows, Supabase Cloud connection, or
+deployment.
 
 ## Requirements
 
@@ -55,8 +56,8 @@ This difference keeps the command disposable and avoids host Supabase CLI
 requirements, while still executing the committed migrations and RLS policies
 inside Postgres with `anon` and `authenticated` role simulation. It is not a
 replacement for future runtime integration tests against a fuller local stack
-when Supabase app wiring, Auth UI, direct catalogue reads, or persistence flows
-are approved.
+when Supabase app wiring, Auth UI, direct trusted-workspace catalogue reads, or
+persistence flows are approved.
 
 ## Coverage
 
@@ -75,7 +76,8 @@ The local RLS test command proves:
   integration connection metadata.
 - Service-only tables do not expose broad anonymous or authenticated client
   read access, and representative client writes are rejected.
-- Runtime website Supabase code stays server-only and private-env-only.
+- Runtime website Supabase code stays server-only, private-env-only, and
+  workspace-scoped for catalogue reads.
 
 ## Safety Notes
 
@@ -85,5 +87,6 @@ The local RLS test command proves:
 - The test database is disposable and is stopped after the command unless
   `SUPABASE_RLS_KEEP_DB=1` is set for local debugging.
 - No Docker volume is required; test state stays in the disposable container.
-- Do not use this harness as approval to add catalogue reads, persistence
-  flows, production seed data, deployment, or Supabase Cloud connection.
+- Do not use this harness as approval to harden direct anonymous catalogue RLS,
+  add persistence flows, production seed data, deployment, or Supabase Cloud
+  connection.

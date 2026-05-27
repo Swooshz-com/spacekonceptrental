@@ -67,8 +67,8 @@ required first.
 - [x] Add fake/sample catalogue seed fixtures only.
 - [x] Add server-side Supabase runtime wiring.
 - [x] Add public catalogue database reads.
+- [x] Add quote persistence.
 - [ ] Add product persistence.
-- [ ] Add quote persistence.
 - [ ] Add conversation/message persistence.
 - [ ] Add deployment.
 

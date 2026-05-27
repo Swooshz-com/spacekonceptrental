@@ -220,6 +220,9 @@ function assertNoRuntimeSupabaseUse() {
   const approvedCatalogueReadFiles = new Set([
     'website/lib/catalogue/catalogue-repository.ts',
   ]);
+  const approvedQuoteWriteFiles = new Set([
+    'website/lib/quote/quote-repository.ts',
+  ]);
   const extensions = new Set(['.js', '.jsx', '.mjs', '.cjs', '.ts', '.tsx']);
   const browserBlockedPatterns = [
     /@supabase\//i,
@@ -246,6 +249,18 @@ function assertNoRuntimeSupabaseUse() {
     /\busage_events\b/i,
     /\baudit_logs\b/i,
     /\bintegration_connections\b/i,
+  ];
+  const blockedQuoteWriteTablePatterns = [
+    /from\(["']products["']\)/i,
+    /from\(["']categories["']\)/i,
+    /from\(["']product_images["']\)/i,
+    /from\(["']conversations["']\)/i,
+    /from\(["']messages["']\)/i,
+    /from\(["']admin_users["']\)/i,
+    /from\(["']memberships["']\)/i,
+    /from\(["']usage_events["']\)/i,
+    /from\(["']audit_logs["']\)/i,
+    /from\(["']integration_connections["']\)/i,
   ];
   const violations = [];
 
@@ -333,6 +348,32 @@ function assertNoRuntimeSupabaseUse() {
         );
         assertNoMatches(filePath, content, serverBlockedPatterns);
         assertNoMatches(filePath, content, blockedCatalogueTablePatterns);
+        return;
+      }
+
+      if (approvedQuoteWriteFiles.has(relativePath)) {
+        assert.match(
+          content,
+          /import\s+["']server-only["'];/,
+          `${relativePath} must be marked server-only.`,
+        );
+        assert.match(
+          content,
+          /createServerSupabaseClient/,
+          `${relativePath} must use the approved server Supabase wrapper.`,
+        );
+        assert.match(
+          content,
+          /from\(["']quote_requests["']\)/,
+          `${relativePath} must insert quote_requests explicitly.`,
+        );
+        assert.match(
+          content,
+          /from\(["']quote_request_items["']\)/,
+          `${relativePath} must insert quote_request_items explicitly.`,
+        );
+        assertNoMatches(filePath, content, serverBlockedPatterns);
+        assertNoMatches(filePath, content, blockedQuoteWriteTablePatterns);
         return;
       }
 
