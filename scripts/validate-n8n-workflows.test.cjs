@@ -463,7 +463,7 @@ test('normal validation rejects public chat workflows with AI memory connections
 });
 
 test('tracked frontend config and docs do not commit real chat webhook URLs', () => {
-  const trackedFiles = gitLsFiles(['--', 'README.md', 'testing-plan.md', 'docs', 'website']);
+  const trackedFiles = gitLsFiles(['--', 'README.md', 'docs', 'website']);
   const realChatWebhookUrls = [];
 
   for (const file of trackedFiles) {

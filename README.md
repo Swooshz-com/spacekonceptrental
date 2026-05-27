@@ -27,15 +27,13 @@ customer-support-agent capstone requirements.
   `docs/PHASE-STATUS.md` for the quick current status, then
   `docs/PHASE-ROADMAP.md` for the approved website direction. Use
   `docs/checklists/README.md` for checklist ownership and maintenance rules,
-  and `docs/CHAT-PERSISTENCE-DESIGN.md` for the deferred chat persistence
-  boundary.
+  `docs/CHAT-PERSISTENCE-DESIGN.md` for the deferred chat persistence
+  boundary, and `docs/N8N-TESTING-PLAN.md` for owner-only n8n testing.
 - `presentation/` - capstone walkthrough deck.
 - `scripts/` - local workflow validation.
 - `website/` - Phase 1A Next.js frontend app root, with preserved design
   assets under `website/web_design/` and prepared assets used by the current
   public shell.
-- `SpaceKonceptRental_website_display_design_wishlist.jpg` - future website
-  design reference, not part of the RAG upload.
 
 ## What To Upload For RAG
 
@@ -47,8 +45,8 @@ workflow:
 - `kb/03-product-catalogue-summary.md`
 - `kb/04-privacy-policy.md`
 
-Do not upload `n8n-workflows/`, `scripts/`, `presentation/`, `.tmp/`, or the
-website display wishlist image.
+Do not upload `n8n-workflows/`, `scripts/`, `presentation/`, `.tmp/`, or
+website design assets.
 
 ## n8n Import Order
 
