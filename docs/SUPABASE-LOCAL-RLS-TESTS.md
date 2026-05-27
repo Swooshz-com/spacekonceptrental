@@ -23,6 +23,11 @@ live only in `scripts/test-supabase-rls.cjs` test setup, not in production
 migrations. The command applies the committed SQL migrations from
 `supabase/migrations/`, inserts fake test fixtures inside the temporary
 database only, runs role-scoped assertions, and stops/removes the container.
+Phase 1L-A does not change those migrations. It adds the strategy and static
+proof scaffold for future direct anonymous catalogue RLS hardening; the
+behavioural harness must be extended in that future hardening PR with
+cross-workspace denial tests while proving configured server-side catalogue
+reads still return DB-backed rows.
 
 ## Run
 
@@ -78,6 +83,9 @@ The local RLS test command proves:
   read access, and representative client writes are rejected.
 - Runtime website Supabase code stays server-only, private-env-only, and
   workspace-scoped for catalogue reads.
+- Future direct anonymous catalogue RLS hardening must add a denial test for
+  cross-workspace published catalogue rows and a runtime proof that trusted
+  server-side workspace configuration still returns DB-backed catalogue rows.
 
 ## Safety Notes
 
@@ -87,6 +95,7 @@ The local RLS test command proves:
 - The test database is disposable and is stopped after the command unless
   `SUPABASE_RLS_KEEP_DB=1` is set for local debugging.
 - No Docker volume is required; test state stays in the disposable container.
-- Do not use this harness as approval to harden direct anonymous catalogue RLS,
-  add persistence flows, production seed data, deployment, or Supabase Cloud
-  connection.
+- Do not use this harness as approval to harden direct anonymous catalogue RLS
+  before the trusted active-workspace runtime strategy is implemented and
+  tested. It also does not approve persistence flows, production seed data,
+  deployment, or Supabase Cloud connection.

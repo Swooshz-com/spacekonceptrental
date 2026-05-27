@@ -47,6 +47,20 @@ variables such as `N8N_CHAT_WEBHOOK_URL`.
 - Do not add browser-visible `NEXT_PUBLIC_SUPABASE_*` or `NEXT_PUBLIC_` n8n
   variables for the chat path.
 
+## Catalogue RLS Hardening Rules
+
+- Public catalogue reads must stay server-only unless a separate browser
+  Supabase client phase is approved.
+- Runtime catalogue reads must stay scoped by trusted server-side
+  `CATALOGUE_WORKSPACE_ID` or a future trusted host/workspace mapping.
+- Do not tighten direct anonymous catalogue RLS until DB-backed catalogue reads
+  keep working for the configured workspace without service-role keys.
+- Future direct anonymous catalogue RLS hardening must include
+  cross-workspace denial tests for published catalogue rows.
+- Do not use browser-provided workspace IDs as catalogue authorization context.
+- Do not add service-role catalogue reads, `NEXT_PUBLIC_SUPABASE_*` variables,
+  or public product/category/product image mutation routes.
+
 ## Chat Persistence Privacy Rules
 
 - Treat `conversations` and `messages` as privacy-sensitive.

@@ -22,6 +22,10 @@ Phase 1J-A adds only product/admin persistence design and disabled server-only
 scaffolding. It does not add Supabase product reads or writes, mutations,
 migrations, service-role keys, browser Supabase code, Supabase Storage, admin
 UI, product image uploads, or Supabase Cloud connection.
+Phase 1L-A adds only the trusted active-workspace catalogue RLS hardening
+strategy and proof scaffold. It does not change catalogue RLS policies,
+runtime catalogue behaviour, migrations, service-role keys, browser Supabase
+code, Supabase Cloud connection, deployment configuration, or n8n workflows.
 
 No runtime route should write Supabase data until each specific flow is
 separately approved and tested. Public catalogue read code is limited to the
@@ -155,6 +159,28 @@ DB-backed catalogue reads working without service-role keys, limits reads to
 published rows for the active workspace, and includes cross-workspace denial
 tests.
 
+## Trusted Active-Workspace Catalogue Reads
+
+Direct anonymous catalogue RLS hardening is not safe until the runtime can keep
+returning DB-backed rows without broad anonymous base-table reads. The future
+read path must preserve the current first-party boundary:
+
+- The browser calls the Next.js app, not Supabase directly.
+- The server resolves the active workspace from trusted server-side
+  configuration, currently `CATALOGUE_WORKSPACE_ID`, or a future trusted
+  host/workspace mapping.
+- The database read surface must not trust a browser-provided workspace ID.
+- Direct anonymous base-table reads must be denied across workspaces after the
+  replacement read path is proven.
+- No service-role key may be used for public catalogue reads.
+
+The strategy to evaluate is a narrow server-only catalogue read boundary backed
+by database-owned active-workspace state, such as a reviewed RPC or
+view/function surface that returns only the public catalogue columns for the
+active workspace. If privileged database code is used, it must be constrained,
+fixed-search-path, free of dynamic SQL, and covered by direct anonymous abuse
+tests. See `docs/SUPABASE-CATALOGUE-RLS-HARDENING.md`.
+
 For future chat writes, `clientSessionId` must remain an untrusted correlation
 hint rather than identity. `clientMessageId` may support idempotency and
 deduplication only; it must not authenticate the browser or authorize access to
@@ -203,7 +229,14 @@ Future runtime work must add targeted tests for any newly approved write path,
 including product persistence, chat persistence, and server-side service-role
 operations.
 
-## Deferred After Phase 1J-A
+Phase 1L-A adds static proof guards that document the future catalogue
+hardening requirements and assert the current migrations remain in deferred
+published-row anonymous-read mode. A future hardening PR must add behavioural
+cross-workspace denial tests proving direct anonymous reads cannot return
+published catalogue rows from another workspace while configured server-side
+catalogue reads still return DB-backed rows.
+
+## Deferred After Phase 1L-A
 
 - Browser Supabase client code.
 - Auth UI.

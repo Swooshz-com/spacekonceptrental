@@ -160,6 +160,15 @@ services, deployment configuration, admin/auth UI, product persistence,
 conversation/message persistence, Supabase Storage, public catalogue behavior
 changes, direct anonymous catalogue RLS hardening, or n8n workflow changes.
 
+Phase 1L-A adds the trusted active-workspace catalogue RLS hardening strategy
+and proof scaffold only. Current public catalogue runtime reads remain
+server-only, use the anon Supabase key, and must filter by trusted server-side
+`CATALOGUE_WORKSPACE_ID`. Direct anonymous catalogue RLS hardening remains
+deferred because removing anonymous catalogue `select` policies before a
+non-breaking trusted read surface exists would make configured DB-backed
+catalogue reads return empty rows. See
+`docs/SUPABASE-CATALOGUE-RLS-HARDENING.md`.
+
 ## n8n Responsibilities
 
 n8n remains temporary server-side integration only:

@@ -211,3 +211,18 @@ generic `429` responses with `retry-after`. This phase does not change quote
 table schema, quote persistence semantics, Supabase RLS policies, direct
 anonymous catalogue RLS, browser Supabase code, service-role keys, deployment,
 external anti-abuse services, or n8n workflows.
+
+## 2026-05-27: Catalogue RLS Hardening Strategy First
+
+Decision: Phase 1L-A documents the trusted active-workspace catalogue RLS
+hardening strategy and adds static proof guards, but does not tighten direct
+anonymous catalogue RLS yet.
+
+Reason: current DB-backed catalogue reads still use the anon Supabase key from
+a server-only runtime and must keep returning rows for trusted
+`CATALOGUE_WORKSPACE_ID`. Removing anonymous catalogue `select` policies before
+a trusted active-workspace read surface is proven would break configured
+catalogue pages. The future hardening path must deny cross-workspace direct
+anonymous catalogue reads without adding service-role keys, browser Supabase
+clients, client-provided workspace IDs, deployment changes, Supabase Cloud
+connection, or n8n workflow changes.
