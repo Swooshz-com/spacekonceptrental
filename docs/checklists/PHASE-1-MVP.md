@@ -26,6 +26,8 @@ platform.
 - [x] Add request ID for every chat request.
 - [x] Document chat rate limiting with trusted client IP headers,
       per-session limiting, and fail-closed fallback bucket.
+- [x] Add quote endpoint abuse throttling with trusted client IP headers,
+      normalized-email throttling, and fail-closed fallback bucket.
 - [x] Ensure no provider internals are exposed to the browser.
 - [x] Ensure frontend calls `/api/chat` only.
 - [x] Ensure browser output contains no n8n webhook URLs.
@@ -105,6 +107,8 @@ required first.
 - [x] Rate-limit tests.
 - [x] Rate-limit tests for trusted client IP buckets, per-session limiting, and
       fail-closed fallback bucket.
+- [x] Quote endpoint abuse-throttling tests for trusted client IP buckets,
+      normalized-email buckets, safe `429`, and fail-closed fallback bucket.
 - [x] Supabase RLS/tenant-isolation tests before runtime use.
 - [x] Supabase fake/sample seed fixture validation.
 - [x] Server-only Supabase runtime boundary tests.
@@ -138,6 +142,8 @@ required first.
 - [ ] No Supabase Cloud connection.
 - [ ] No browser Supabase client.
 - [ ] No Supabase Storage wiring.
+- [ ] No external anti-abuse service.
+- [ ] No direct anonymous catalogue RLS hardening in Phase 1K-A.
 - [ ] No large tool invocation dashboards.
 - [ ] No large audit dashboards.
 - [ ] No large usage dashboards.

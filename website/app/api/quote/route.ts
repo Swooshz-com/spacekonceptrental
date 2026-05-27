@@ -16,12 +16,38 @@ type BodyReadResult =
   | { ok: false; response: Response };
 
 const MAX_REQUEST_BODY_BYTES = 16 * 1024;
+const RATE_LIMIT_MAX_REQUESTS = 5;
+const RATE_LIMIT_WINDOW_MS = 10 * 60_000;
+const MAX_CLIENT_RATE_LIMIT_BUCKETS = 1_000;
+const MAX_CONTACT_RATE_LIMIT_BUCKETS = 1_000;
+const FALLBACK_RATE_LIMIT_BUCKET_KEY = "untrusted-client-ip";
 const FALLBACK_MESSAGE =
   "Quote requests are temporarily unavailable. Please try again later.";
+// Configure only with a deployment header overwritten by a trusted proxy/CDN.
+// User-supplied forwarding headers must not be trusted by default.
+const TRUSTED_CLIENT_IP_HEADERS = new Set([
+  "cf-connecting-ip",
+  "fly-client-ip",
+  "x-real-ip",
+  "x-vercel-forwarded-for",
+  "x-forwarded-for"
+]);
 
 function createRequestId() {
   return crypto.randomUUID();
 }
+
+type RateLimitBucket = {
+  count: number;
+  resetAt: number;
+};
+type RateLimitResult = {
+  allowed: boolean;
+  resetAtTime: number;
+};
+
+const clientRateLimitBuckets = new Map<string, RateLimitBucket>();
+const contactRateLimitBuckets = new Map<string, RateLimitBucket>();
 
 function isJsonRequest(request: Request) {
   const contentType = request.headers.get("content-type");
@@ -83,6 +109,27 @@ function persistenceError(requestId: string) {
       requestId
     },
     { status: 503 }
+  );
+}
+
+function rateLimitError(rateLimit: RateLimitResult, requestId: string) {
+  return Response.json(
+    {
+      error: {
+        code: "RATE_LIMITED",
+        message: "Too many quote requests. Please try again soon."
+      },
+      requestId
+    },
+    {
+      status: 429,
+      headers: {
+        "retry-after": Math.max(
+          1,
+          Math.ceil((rateLimit.resetAtTime - Date.now()) / 1_000)
+        ).toString()
+      }
+    }
   );
 }
 
@@ -160,6 +207,170 @@ async function parseBoundedJsonBody(
   }
 }
 
+function getTrustedClientIpHeader() {
+  const headerName = process.env.QUOTE_TRUSTED_CLIENT_IP_HEADER
+    ?.trim()
+    .toLowerCase();
+
+  if (!headerName || !TRUSTED_CLIENT_IP_HEADERS.has(headerName)) {
+    return undefined;
+  }
+
+  return headerName;
+}
+
+function getClientIpFromHeader(request: Request, headerName: string) {
+  const headerValue = request.headers.get(headerName);
+
+  if (!headerValue) {
+    return undefined;
+  }
+
+  const [clientIp] = headerValue.split(",");
+  const trimmed = clientIp?.trim();
+
+  return trimmed || undefined;
+}
+
+function getClientIp(request: Request) {
+  const trustedHeader = getTrustedClientIpHeader();
+
+  if (!trustedHeader) {
+    return undefined;
+  }
+
+  return getClientIpFromHeader(request, trustedHeader);
+}
+
+function pruneRateLimitBuckets(
+  buckets: Map<string, RateLimitBucket>,
+  maxBuckets: number,
+  now: number
+) {
+  if (buckets.size <= maxBuckets) {
+    return;
+  }
+
+  for (const [key, bucket] of buckets) {
+    if (bucket.resetAt <= now) {
+      buckets.delete(key);
+    }
+  }
+
+  while (buckets.size > maxBuckets) {
+    const oldestKey = buckets.keys().next().value;
+
+    if (!oldestKey) {
+      break;
+    }
+
+    buckets.delete(oldestKey);
+  }
+}
+
+function getRateLimitBucket(
+  buckets: Map<string, RateLimitBucket>,
+  key: string,
+  now: number
+): RateLimitBucket {
+  let bucket = buckets.get(key);
+
+  if (!bucket || bucket.resetAt <= now) {
+    bucket = {
+      count: 0,
+      resetAt: now + RATE_LIMIT_WINDOW_MS
+    };
+    buckets.set(key, bucket);
+  }
+
+  return bucket;
+}
+
+function getClientBucketKey(request: Request) {
+  const clientIp = getClientIp(request);
+
+  return clientIp ? `ip:${clientIp}` : FALLBACK_RATE_LIMIT_BUCKET_KEY;
+}
+
+function getContactBucketKey(quote: QuoteSubmission) {
+  return quote.customerEmail
+    ? `email:${quote.customerEmail.toLowerCase()}`
+    : undefined;
+}
+
+function consumeQuoteRateLimit(
+  request: Request,
+  quote: QuoteSubmission
+): RateLimitResult {
+  const now = Date.now();
+  const clientBucketKey = getClientBucketKey(request);
+  const contactBucketKey = getContactBucketKey(quote);
+
+  pruneRateLimitBuckets(
+    clientRateLimitBuckets,
+    MAX_CLIENT_RATE_LIMIT_BUCKETS,
+    now
+  );
+  pruneRateLimitBuckets(
+    contactRateLimitBuckets,
+    MAX_CONTACT_RATE_LIMIT_BUCKETS,
+    now
+  );
+
+  const clientBucket = getRateLimitBucket(
+    clientRateLimitBuckets,
+    clientBucketKey,
+    now
+  );
+  const contactBucket = contactBucketKey
+    ? getRateLimitBucket(contactRateLimitBuckets, contactBucketKey, now)
+    : undefined;
+
+  pruneRateLimitBuckets(
+    clientRateLimitBuckets,
+    MAX_CLIENT_RATE_LIMIT_BUCKETS,
+    now
+  );
+  pruneRateLimitBuckets(
+    contactRateLimitBuckets,
+    MAX_CONTACT_RATE_LIMIT_BUCKETS,
+    now
+  );
+
+  if (clientBucket.count >= RATE_LIMIT_MAX_REQUESTS) {
+    return {
+      allowed: false,
+      resetAtTime: clientBucket.resetAt
+    };
+  }
+
+  if (contactBucket && contactBucket.count >= RATE_LIMIT_MAX_REQUESTS) {
+    return {
+      allowed: false,
+      resetAtTime: contactBucket.resetAt
+    };
+  }
+
+  clientBucket.count += 1;
+
+  if (contactBucket) {
+    contactBucket.count += 1;
+  }
+
+  return {
+    allowed: true,
+    resetAtTime: Math.min(
+      clientBucket.resetAt,
+      contactBucket?.resetAt ?? clientBucket.resetAt
+    )
+  };
+}
+
+export function resetQuoteRouteStateForTests() {
+  clientRateLimitBuckets.clear();
+  contactRateLimitBuckets.clear();
+}
+
 export async function handleQuotePost(
   request: Request,
   repository: QuoteRepository = createQuoteRequest
@@ -175,6 +386,12 @@ export async function handleQuotePost(
 
   if (!validation.ok) {
     return validationError(validation.message, requestId);
+  }
+
+  const rateLimit = consumeQuoteRateLimit(request, validation.value);
+
+  if (!rateLimit.allowed) {
+    return rateLimitError(rateLimit, requestId);
   }
 
   try {

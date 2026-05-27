@@ -74,6 +74,27 @@ variables such as `N8N_CHAT_WEBHOOK_URL`.
 - Configure a trusted client IP header in deployment to avoid over-broad
   fallback throttling.
 
+## Quote Abuse-Throttling Rules
+
+- Public quote creation must keep bounded JSON parsing and schema validation
+  before persistence.
+- Apply quote abuse throttling before quote persistence writes.
+- Do not trust user-supplied forwarding headers by default.
+- Configure `QUOTE_TRUSTED_CLIENT_IP_HEADER` only to a deployment header that a
+  trusted proxy or CDN overwrites.
+- Use a trusted client IP bucket only when the configured trusted header is
+  present.
+- If no trusted client IP source is configured or present, use a server-side
+  fallback bucket as a fail-closed public quote cap.
+- Use validated normalized contact fields, such as lowercase email, only for
+  additional best-effort throttling; do not treat them as identity or
+  authorization.
+- Return safe generic `429` responses with `retry-after`; do not expose bucket
+  keys, IPs, trusted header names, Supabase errors, stack traces, or internal
+  implementation details.
+- In-process throttling is best-effort only. It is not a production-grade
+  distributed rate limit and does not replace future CDN/WAF/platform controls.
+
 ## Product/Admin Persistence Rules
 
 - Product, category, and product image writes are trusted-admin operations
