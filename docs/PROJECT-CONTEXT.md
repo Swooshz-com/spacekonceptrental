@@ -97,6 +97,12 @@ Custom Chat UI -> POST /api/chat -> ChatProvider
   wiring, login/logout routes, protected admin pages, admin UI, product writes,
   browser Supabase, service-role runtime paths, deployment, and Supabase Cloud
   connection remain blocked.
+- Phase 2B-D adds server-only admin auth/membership adapter contracts and
+  dependency-injected resolver logic tested with fake adapters only. It does
+  not read cookies, read headers, implement real auth, add Supabase Auth
+  wiring, add routes, add server actions, add admin UI, add product writes, add
+  browser Supabase, add service-role runtime paths, deploy, or connect
+  Supabase Cloud.
 
 ## Planning Notes
 

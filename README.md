@@ -179,6 +179,13 @@ Supabase Auth wiring, login/logout routes, protected admin pages, admin UI,
 runtime routes/pages/server actions, product writes, browser Supabase,
 service-role runtime paths, deployment, or Supabase Cloud connection.
 
+Phase 2B-D adds only server-only admin auth/membership adapter contracts and
+dependency-injected resolver tests with fake adapters. It does not implement
+real auth, add Supabase Auth wiring, read cookies, read headers, add
+login/logout routes, add admin UI, wire runtime routes/pages/server actions,
+add product writes, add browser Supabase, add service-role runtime paths,
+deploy, or connect to Supabase Cloud.
+
 ## Website App
 
 The website frontend is now a Vercel-ready Next.js scaffold under `website/`.

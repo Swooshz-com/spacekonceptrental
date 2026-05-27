@@ -3,9 +3,11 @@ import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
 import { authorizeAdminOperation } from "../lib/admin/authorization/admin-authorization-policy";
+import type { AdminAuthorizationAdapterSet } from "../lib/admin/authorization/admin-authorization-resolver";
 import {
   buildAdminAuthorizationInput,
   resolveAdminAuthorizationForRequest,
+  resolveAdminAuthorizationWithAdapters,
   type AdminAuthResolutionInput,
   type TrustedAdminAuthorizationContext
 } from "../lib/admin/authorization/admin-authorization-resolver";
@@ -37,6 +39,59 @@ const trustedContext: TrustedAdminAuthorizationContext = {
   },
   requestedOperation: "product.write"
 };
+
+function createAdapters(
+  overrides: Partial<{
+    serverResolvedWorkspaceId: string | null;
+    requestedWorkspaceId: string | null;
+    requestedRecordWorkspaceId: string | null;
+  }> = {}
+): AdminAuthorizationAdapterSet & { calls: string[] } {
+  const calls: string[] = [];
+
+  return {
+    calls,
+    auth: {
+      async resolveIdentity() {
+        calls.push("identity");
+        return {
+          authenticated: true,
+          authUserId: "auth-user-1"
+        };
+      }
+    },
+    profile: {
+      async resolveAdminProfile(authUserId) {
+        calls.push(`profile:${authUserId}`);
+        return {
+          id: "admin-user-1",
+          status: "active"
+        };
+      }
+    },
+    workspace: {
+      async resolveWorkspaceForRequest(input) {
+        calls.push(
+          `workspace:${input.requestedWorkspaceIdForValidationOnly ?? "none"}`
+        );
+        return {
+          serverResolvedWorkspaceId:
+            overrides.serverResolvedWorkspaceId ?? activeWorkspaceId
+        };
+      }
+    },
+    membership: {
+      async resolveMembership(adminUserId, serverResolvedWorkspaceId) {
+        calls.push(`membership:${adminUserId}:${serverResolvedWorkspaceId}`);
+        return {
+          workspaceId: activeWorkspaceId,
+          status: "active",
+          role: "admin"
+        };
+      }
+    }
+  };
+}
 
 describe("admin authorization resolver contract", () => {
   it("returns an explicit disabled result without allowing operations", () => {
@@ -146,6 +201,64 @@ describe("admin authorization resolver contract", () => {
     expect(authorizeAdminOperation(input)).toEqual({
       allowed: false,
       reason: "role_not_allowed",
+      statusCode: 403
+    });
+  });
+
+  it("uses injected adapters only for adapter-driven resolution", async () => {
+    const adapters = createAdapters();
+
+    await expect(
+      resolveAdminAuthorizationWithAdapters(disabledRequest, adapters)
+    ).resolves.toEqual({
+      allowed: true,
+      reason: "allowed",
+      statusCode: 200,
+      workspaceId: activeWorkspaceId
+    });
+    expect(adapters.calls).toEqual([
+      "identity",
+      "profile:auth-user-1",
+      `workspace:${activeWorkspaceId}`,
+      `membership:admin-user-1:${activeWorkspaceId}`
+    ]);
+  });
+
+  it("does not treat requested workspace as trusted authority", async () => {
+    const adapters = createAdapters({
+      serverResolvedWorkspaceId: activeWorkspaceId
+    });
+
+    await expect(
+      resolveAdminAuthorizationWithAdapters(
+        {
+          ...disabledRequest,
+          requestedWorkspaceIdForValidationOnly: otherWorkspaceId
+        },
+        adapters
+      )
+    ).resolves.toEqual({
+      allowed: true,
+      reason: "allowed",
+      statusCode: 200,
+      workspaceId: activeWorkspaceId
+    });
+  });
+
+  it("preserves requested record workspace only for policy validation", async () => {
+    const adapters = createAdapters();
+
+    await expect(
+      resolveAdminAuthorizationWithAdapters(
+        {
+          ...disabledRequest,
+          requestedRecordWorkspaceId: otherWorkspaceId
+        },
+        adapters
+      )
+    ).resolves.toEqual({
+      allowed: false,
+      reason: "workspace_mismatch",
       statusCode: 403
     });
   });

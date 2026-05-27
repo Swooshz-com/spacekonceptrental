@@ -3,12 +3,17 @@
 Phase 2B-A is design and guard coverage only.
 Phase 2B-B adds a pure server-only policy module only.
 Phase 2B-C adds a server-only resolver contract and disabled scaffold only.
+Phase 2B-D adds server-only adapter contracts and dependency-injected resolver
+logic only.
 
+This PR adds server-only adapter contracts and dependency-injected resolver logic only.
 This PR does not implement auth.
 This PR does not implement real auth.
 This PR does not add admin UI.
 This PR does not add product writes.
 This PR does not add Supabase Auth runtime wiring.
+This PR does not read cookies.
+This PR does not read headers.
 This PR does not add login/logout routes.
 This PR does not add protected admin pages.
 This PR adds a server-only resolver contract and disabled scaffold only.
@@ -64,12 +69,23 @@ implement real auth, call Supabase, read cookies, read headers, read
 environment variables, perform database reads or writes, or wire itself into
 routes, pages, or server actions.
 
+Phase 2B-D adds
+`website/lib/admin/authorization/admin-authorization-adapters.ts` as a
+server-only adapter contract and extends the resolver with
+dependency-injected resolution for fake/test adapters. The adapter boundary
+names future identity, admin profile, membership, and workspace resolver
+dependencies. It does not implement real auth, call Supabase, read cookies,
+read headers, read environment variables, perform database reads or writes, or
+wire itself into routes, pages, or server actions.
+
 ## Non-goals
 
 This PR does not:
 
 - Implement real auth.
 - Add Supabase Auth runtime wiring.
+- Read cookies.
+- Read headers.
 - Add login or logout routes.
 - Add protected admin pages.
 - Add admin UI.
@@ -212,6 +228,14 @@ Its helper builds policy input only from explicitly supplied trusted
 server-resolved identity, admin profile, workspace, membership, and requested
 operation context. Browser/request workspace IDs remain validation-only
 metadata and must never become trusted workspace authority.
+
+The Phase 2B-D adapter boundary allows tests to supply fake identity, profile,
+workspace, and membership adapters to the resolver. The resolver delegates the
+final decision to `authorizeAdminOperation` after building policy input from
+the injected adapter results. Request or browser workspace IDs remain
+validation-only metadata; the trusted workspace must come from the injected
+server-side workspace resolver. The default resolver remains disabled and no
+runtime route, page, or server action imports this adapter-driven path.
 
 ## Audit log expectations
 
