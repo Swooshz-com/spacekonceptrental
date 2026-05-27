@@ -65,6 +65,13 @@ only. It is not approval to add Supabase Auth runtime wiring, login/logout
 routes, protected admin pages, admin UI, product writes, service-role runtime
 paths, browser Supabase, deployment, or Supabase Cloud connection.
 
+Phase 2B-C adds a server-only admin auth/membership resolver contract and
+disabled scaffold only. It is not approval to implement real auth, add Supabase
+Auth runtime wiring, add login/logout routes, add protected admin pages, add
+admin UI, wire runtime routes/pages/server actions, add product writes, add
+service-role runtime paths, add browser Supabase, deploy, or connect Supabase
+Cloud.
+
 This phase is not approved for implementation yet.
 
 ## Phase 3: Internal Chatbot Provider

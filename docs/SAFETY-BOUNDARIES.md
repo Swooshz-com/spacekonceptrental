@@ -142,6 +142,11 @@ variables such as `N8N_CHAT_WEBHOOK_URL`.
   login/logout routes, protected admin pages, admin UI, product writes,
   browser Supabase, service-role runtime paths, deployment, or Supabase Cloud
   connection.
+- Phase 2B-C admin auth/membership resolver code is a server-only disabled
+  scaffold only; it is not approval to implement real auth, add Supabase Auth
+  runtime wiring, add login/logout routes, add protected admin pages, add admin
+  UI, wire runtime routes/pages/server actions, add product writes, add browser
+  Supabase, add service-role runtime paths, deploy, or connect Supabase Cloud.
 - Product, category, and product image writes are trusted-admin operations
   only.
 - Do not add browser-side Supabase writes for product management.

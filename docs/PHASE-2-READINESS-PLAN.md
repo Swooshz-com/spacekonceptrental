@@ -126,10 +126,11 @@ Suggested first PR:
 - Phase 2B-A documents the admin/auth and membership authorization design with
   guard tests only. Phase 2B-B adds a pure server-only authorization policy
   module and tests from explicit inputs, without real auth, routes, server
-  actions, or product writes. The next PR in this track should still avoid
-  product writes and should implement only the reviewed server-side
-  auth/membership resolution boundary with anonymous, non-member,
-  cross-workspace, and allowed-member tests.
+  actions, or product writes. Phase 2B-C adds the server-only auth/membership
+  resolver contract and disabled scaffold, still without runtime wiring. The
+  next PR in this track should still avoid product writes and should implement
+  only the reviewed server-side auth/membership resolution boundary with
+  anonymous, non-member, cross-workspace, and allowed-member tests.
 
 ### C. Conversation/message persistence path
 
