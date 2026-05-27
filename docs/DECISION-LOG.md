@@ -226,3 +226,18 @@ catalogue pages. The future hardening path must deny cross-workspace direct
 anonymous catalogue reads without adding service-role keys, browser Supabase
 clients, client-provided workspace IDs, deployment changes, Supabase Cloud
 connection, or n8n workflow changes.
+
+## 2026-05-27: Trusted Active-Workspace Catalogue Read Surface
+
+Decision: Phase 1M-A adds `catalogue_public_workspace_config` and the
+server-only `get_public_catalogue(expected_workspace_id, product_slug)` RPC,
+then tightens direct anonymous base-table catalogue select policies with
+`alter policy ... using (false)`.
+
+Reason: DB-backed public catalogue pages need to keep working through the
+anon-key server runtime for trusted `CATALOGUE_WORKSPACE_ID`, but direct
+anonymous callers must not be able to query published catalogue base tables
+across workspaces. The RPC validates the server-configured expected workspace
+against database-owned active workspace state, uses no service-role key, keeps
+Supabase out of browser-facing code, and is covered by local behavioural RLS
+tests.

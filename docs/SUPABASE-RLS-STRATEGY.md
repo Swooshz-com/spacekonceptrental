@@ -26,6 +26,12 @@ Phase 1L-A adds only the trusted active-workspace catalogue RLS hardening
 strategy and proof scaffold. It does not change catalogue RLS policies,
 runtime catalogue behaviour, migrations, service-role keys, browser Supabase
 code, Supabase Cloud connection, deployment configuration, or n8n workflows.
+Phase 1M-A implements the trusted active-workspace public catalogue RPC and
+tightens direct anonymous base-table catalogue reads without service-role keys.
+The server-only runtime now reads through `get_public_catalogue` after checking
+trusted `CATALOGUE_WORKSPACE_ID`; browser Supabase code, Supabase Cloud,
+deployment configuration, catalogue writes, quote throttling changes, and n8n
+workflow changes remain out of scope.
 
 No runtime route should write Supabase data until each specific flow is
 separately approved and tested. Public catalogue read code is limited to the
@@ -64,14 +70,15 @@ Tables without `workspace_id`:
 
 ## Public-Readable Candidates
 
-These tables may become public-readable later, but only after trusted active
-workspace resolution, published-state filters, and RLS tests exist:
+These tables are not directly public-readable through anonymous base-table
+selects. Public catalogue access goes through the trusted active-workspace
+read surface after server-side workspace resolution:
 
-- `workspaces`: only safe public lookup fields such as slug or public domain.
-- `categories`: published categories for the active public workspace.
-- `products`: published products for the active public workspace.
-- `product_images`: public media metadata only when the parent product is
-  published.
+- `catalogue_public_workspace_config`: database-owned active workspace config;
+  not directly readable by anonymous callers.
+- `get_public_catalogue(expected_workspace_id, product_slug)`: returns
+  published categories, published products, and public image metadata only for
+  the configured active workspace.
 
 Public-read policies must not expose draft rows, internal metadata, deleted
 records, private storage paths, audit data, quote data, conversation data, or
@@ -152,33 +159,30 @@ server routes only:
   migrations, policies, and tests are approved.
 
 The browser should not write directly to Supabase for anonymous quote or chat
-flows in the MVP. Direct anonymous catalogue reads still rely on published-row
-RLS so the anon-key server runtime can read catalogue data. A future RLS
-hardening phase must add a trusted active-workspace strategy that keeps
-DB-backed catalogue reads working without service-role keys, limits reads to
-published rows for the active workspace, and includes cross-workspace denial
-tests.
+flows in the MVP. Direct anonymous catalogue base-table reads no longer return
+catalogue rows. The server-only anon-key runtime reads catalogue data through
+the trusted active-workspace `get_public_catalogue` RPC and still requires
+trusted `CATALOGUE_WORKSPACE_ID`.
 
 ## Trusted Active-Workspace Catalogue Reads
 
-Direct anonymous catalogue RLS hardening is not safe until the runtime can keep
-returning DB-backed rows without broad anonymous base-table reads. The future
-read path must preserve the current first-party boundary:
+Phase 1M-A preserves the first-party boundary while denying broad anonymous
+base-table catalogue reads:
 
 - The browser calls the Next.js app, not Supabase directly.
 - The server resolves the active workspace from trusted server-side
-  configuration, currently `CATALOGUE_WORKSPACE_ID`, or a future trusted
-  host/workspace mapping.
-- The database read surface must not trust a browser-provided workspace ID.
-- Direct anonymous base-table reads must be denied across workspaces after the
-  replacement read path is proven.
+  configuration, currently `CATALOGUE_WORKSPACE_ID`.
+- The database validates that expected workspace against
+  `catalogue_public_workspace_config`.
+- The database read surface does not trust a browser-provided workspace ID.
+- Direct anonymous base-table reads are denied for `categories`, `products`,
+  and `product_images`.
 - No service-role key may be used for public catalogue reads.
 
-The strategy to evaluate is a narrow server-only catalogue read boundary backed
-by database-owned active-workspace state, such as a reviewed RPC or
-view/function surface that returns only the public catalogue columns for the
-active workspace. If privileged database code is used, it must be constrained,
-fixed-search-path, free of dynamic SQL, and covered by direct anonymous abuse
+The implemented surface is `get_public_catalogue(expected_workspace_id,
+product_slug)`, a constrained, fixed-search-path, dynamic-SQL-free
+`security definer` function. It returns only the public catalogue columns for
+the database-owned active workspace and is covered by direct anonymous abuse
 tests. See `docs/SUPABASE-CATALOGUE-RLS-HARDENING.md`.
 
 For future chat writes, `clientSessionId` must remain an untrusted correlation
@@ -229,21 +233,21 @@ Future runtime work must add targeted tests for any newly approved write path,
 including product persistence, chat persistence, and server-side service-role
 operations.
 
-Phase 1L-A adds static proof guards that document the future catalogue
-hardening requirements and assert the current migrations remain in deferred
-published-row anonymous-read mode. A future hardening PR must add behavioural
-cross-workspace denial tests proving direct anonymous reads cannot return
-published catalogue rows from another workspace while configured server-side
-catalogue reads still return DB-backed rows.
+Phase 1L-A adds static proof guards that document the catalogue hardening
+requirements. Phase 1M-A adds the behavioural proof: direct anonymous
+base-table reads return no catalogue rows, cross-workspace published catalogue
+rows are denied, draft rows remain denied, the trusted active-workspace RPC
+returns configured workspace rows, product images are limited to published
+products in the active workspace, anonymous catalogue writes remain rejected,
+and private tables remain unreadable by anonymous callers.
 
-## Deferred After Phase 1L-A
+## Deferred After Phase 1M-A
 
 - Browser Supabase client code.
 - Auth UI.
 - Admin routes.
 - Direct browser Supabase reads or writes.
-- Direct anonymous catalogue RLS hardening before a trusted active-workspace
-  read strategy exists.
+- Supabase Cloud configuration of the active catalogue workspace.
 - Persistence for categories, products, product images, conversations, or
   messages.
 - Product mutation routes.

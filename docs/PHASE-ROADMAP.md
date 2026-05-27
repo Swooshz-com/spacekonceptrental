@@ -27,8 +27,8 @@ Goal: build the smallest production-shaped Next.js foundation under `website/`
 with custom chat UI, first-party `/api/chat`, server-only `N8nChatProvider`,
 server-only quote capture with route-level abuse throttling, chat persistence
 design/scaffolding, product/admin persistence design/scaffolding, trusted
-active-workspace catalogue RLS hardening strategy/proof, and a basic Supabase
-core schema.
+active-workspace catalogue RLS hardening proof, and a basic Supabase core
+schema.
 
 Checklist: `docs/checklists/PHASE-1-MVP.md`
 

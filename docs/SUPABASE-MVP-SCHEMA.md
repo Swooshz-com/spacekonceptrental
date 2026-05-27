@@ -29,9 +29,17 @@ Supabase Cloud, add admin/auth UI, add Supabase Storage wiring, add product
 image upload flows, or add browser Supabase code.
 Phase 1K-A adds quote endpoint abuse throttling without schema or RLS changes.
 Phase 1L-A adds the trusted active-workspace catalogue RLS hardening strategy
-and proof scaffold only. It keeps current DB-backed catalogue reads unchanged
-and direct anonymous catalogue RLS hardening remains deferred until a
-non-breaking trusted active-workspace read strategy is implemented and tested.
+and proof scaffold only. At that point it kept DB-backed catalogue reads
+unchanged and left direct anonymous catalogue RLS hardening deferred until a
+non-breaking trusted active-workspace read strategy could be implemented and
+tested.
+Phase 1M-A adds that trusted active-workspace read strategy with
+`catalogue_public_workspace_config` and `get_public_catalogue`, then tightens
+direct anonymous base-table catalogue reads. DB-backed catalogue reads continue
+through the server-only repository when Supabase env, `CATALOGUE_WORKSPACE_ID`,
+and database-owned active workspace config are present. Browser Supabase code,
+service-role keys, Supabase Cloud connection, deployment, catalogue writes,
+quote throttling changes, and n8n workflow changes remain out of scope.
 
 ## Naming Decision
 
@@ -172,6 +180,27 @@ Relationships: belongs to `products`.
 
 Deferred: upload UI, image transforms, CDN invalidation, private media,
 moderation, and asset lifecycle automation.
+
+### `catalogue_public_workspace_config`
+
+Purpose: database-owned singleton configuration for the active public catalogue
+workspace used by the trusted read surface.
+
+Key fields: `id`, `active_workspace_id`, `is_enabled`, `updated_at`.
+
+Ownership / tenant boundary: global database-owned configuration that points to
+one active `workspaces` row. It contains no secrets, customer data, product
+details, or browser-provided authorization context.
+
+Access: not directly readable by anonymous callers. The server-only catalogue
+runtime passes trusted `CATALOGUE_WORKSPACE_ID` to `get_public_catalogue`; the
+function returns data only when that value matches this database-owned active
+workspace config.
+
+Relationships: references `workspaces.id`.
+
+Deferred: approved Supabase Cloud configuration workflow, admin management UI,
+multi-host workspace mapping, and deployment-time active workspace operations.
 
 ### `quote_requests`
 
@@ -342,8 +371,10 @@ Phase 1L-A documents the future trusted active-workspace catalogue RLS
 hardening path and adds static proof guards only; it does not change
 migrations, public catalogue runtime behaviour, or direct anonymous catalogue
 RLS policies.
+Phase 1M-A implements the trusted active-workspace read surface and tightens
+direct anonymous catalogue base-table reads after local behavioural proof.
 
-## Deferred After Phase 1L-A
+## Deferred After Phase 1M-A
 
 - Supabase project connection.
 - Browser Supabase client code.

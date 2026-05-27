@@ -1,5 +1,5 @@
 import { execFileSync } from "node:child_process";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { extname, resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
@@ -37,17 +37,18 @@ function readTrackedProductionSources(paths: string[]) {
 }
 
 function readAllMigrationSql() {
-  return readTrackedFiles(["supabase/migrations"])
+  return readdirSync(resolve(repoRoot, "supabase/migrations"))
     .filter((filePath) => filePath.endsWith(".sql"))
-    .map(readRepoFile)
+    .sort()
+    .map((filePath) => readRepoFile(`supabase/migrations/${filePath}`))
     .join("\n")
     .replace(/\s+/g, " ")
     .trim()
     .toLowerCase();
 }
 
-describe("Phase 1L-A catalogue RLS hardening scaffold", () => {
-  it("documents the trusted active-workspace hardening strategy before SQL changes", () => {
+describe("Phase 1M-A catalogue RLS hardening proof", () => {
+  it("documents the trusted active-workspace hardening strategy after SQL changes", () => {
     const strategyPath = "docs/SUPABASE-CATALOGUE-RLS-HARDENING.md";
 
     expect(existsSync(resolve(repoRoot, strategyPath))).toBe(true);
@@ -60,37 +61,44 @@ describe("Phase 1L-A catalogue RLS hardening scaffold", () => {
     expect(strategy).toMatch(/DB-backed\s+catalogue\s+reads/);
     expect(strategy).toContain("No browser Supabase client");
     expect(strategy).toContain("No service-role key");
-    expect(strategy).toMatch(
-      /direct anonymous\s+catalogue RLS hardening remains deferred/
-    );
+    expect(strategy).toContain("get_public_catalogue");
+    expect(strategy).toContain("catalogue_public_workspace_config");
+    expect(strategy).toMatch(/direct anonymous\s+base-table reads are denied/);
   });
 
-  it("keeps current migrations in deferred published-row anonymous-read mode", () => {
+  it("hardens direct anonymous base-table catalogue reads behind a trusted RPC", () => {
     const sql = readAllMigrationSql();
 
     expect(sql).toContain("categories_public_read_published");
     expect(sql).toContain("products_public_read_published");
     expect(sql).toContain("product_images_public_read_published_products");
+    expect(sql).toContain("catalogue_public_workspace_config");
+    expect(sql).toContain("create or replace function public.get_public_catalogue");
+    expect(sql).toContain("security definer");
+    expect(sql).toContain("set search_path = public");
+    expect(sql).toContain("grant execute on function public.get_public_catalogue(uuid, text) to anon, authenticated");
     expect(sql).toMatch(
-      /create policy categories_public_read_published on public\.categories for select to anon, authenticated using \(is_published = true\);/
+      /alter policy categories_public_read_published on public\.categories to anon, authenticated using \(false\);/
     );
     expect(sql).toMatch(
-      /create policy products_public_read_published on public\.products for select to anon, authenticated using \(status = 'published'\);/
+      /alter policy products_public_read_published on public\.products to anon, authenticated using \(false\);/
     );
-    expect(sql).not.toContain("catalogue_active_workspace");
-    expect(sql).not.toContain("trusted_active_workspace");
+    expect(sql).toMatch(
+      /alter policy product_images_public_read_published_products on public\.product_images to anon, authenticated using \(false\);/
+    );
     expect(sql).not.toContain("current_setting('app.catalogue_workspace_id");
   });
 
-  it("keeps the catalogue runtime server-only and trusted workspace scoped", () => {
+  it("keeps the catalogue runtime server-only and trusted RPC scoped", () => {
     const source = readRepoFile("website/lib/catalogue/catalogue-repository.ts");
 
     expect(source).toContain('import "server-only";');
     expect(source).toContain("createServerSupabaseClient");
     expect(source).toContain("CATALOGUE_WORKSPACE_ID");
-    expect(source).toContain('eq("workspace_id", workspaceId)');
-    expect(source).toContain('eq("is_published", true)');
-    expect(source).toContain('eq("status", "published")');
+    expect(source).toContain('rpc("get_public_catalogue"');
+    expect(source).toContain("expected_workspace_id");
+    expect(source).not.toContain('from("categories")');
+    expect(source).not.toContain('from("products")');
     expect(source).not.toContain(".insert(");
     expect(source).not.toContain(".update(");
     expect(source).not.toContain(".upsert(");

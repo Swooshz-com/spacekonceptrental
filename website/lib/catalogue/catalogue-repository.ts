@@ -15,18 +15,10 @@ type SupabaseQueryResult = {
 };
 
 type PublicCatalogueSupabaseClient = {
-  from: (table: string) => {
-    select: (columns: string) => PublicCatalogueQueryBuilder;
-  };
-};
-
-type PublicCatalogueQueryBuilder = PromiseLike<SupabaseQueryResult> & {
-  eq: (column: string, value: unknown) => PublicCatalogueQueryBuilder;
-  order: (
-    column: string,
-    options?: { ascending?: boolean }
-  ) => PublicCatalogueQueryBuilder;
-  maybeSingle: () => Promise<SupabaseQueryResult>;
+  rpc: (
+    functionName: string,
+    args: Record<string, unknown>
+  ) => PromiseLike<SupabaseQueryResult>;
 };
 
 type PublicCatalogueSupabaseResult =
@@ -70,6 +62,7 @@ type ImageRow = {
 type ProductRow = {
   id?: unknown;
   category_id?: unknown;
+  category_name?: unknown;
   slug?: unknown;
   name?: unknown;
   short_description?: unknown;
@@ -80,20 +73,10 @@ type ProductRow = {
   product_images?: unknown;
 };
 
-const categorySelect =
-  "id, slug, name, description, sort_order, is_published";
-const productSelect = [
-  "id",
-  "category_id",
-  "slug",
-  "name",
-  "short_description",
-  "description",
-  "rental_unit",
-  "status",
-  "sort_order",
-  "product_images(id, storage_bucket, storage_path, alt_text, sort_order, is_primary)"
-].join(", ");
+type CatalogueRpcPayload = {
+  categories?: unknown;
+  products?: unknown;
+};
 
 const workspaceIdPattern =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -191,6 +174,10 @@ function toRows(value: unknown) {
   return Array.isArray(value) ? value.filter(isRecord) : [];
 }
 
+function toCataloguePayload(value: unknown): CatalogueRpcPayload | undefined {
+  return isRecord(value) ? value : undefined;
+}
+
 function toImage(row: ImageRow): PublicCatalogueImage | undefined {
   const id = getString(row.id);
   const storageBucket = getString(row.storage_bucket);
@@ -256,6 +243,7 @@ function toProduct(
     images.find((image) => image.isPrimary) ?? images[0] ?? undefined;
   const categoryId = getString(row.category_id);
   const category = categoryId ? categoryById.get(categoryId) : undefined;
+  const categoryName = getString(row.category_name) ?? category?.name;
 
   return {
     id,
@@ -266,7 +254,7 @@ function toProduct(
     rentalUnit: getString(row.rental_unit) ?? "item",
     sortOrder: getNumber(row.sort_order),
     categoryId,
-    categoryName: category?.name,
+    categoryName,
     primaryImage,
     source: "supabase"
   };
@@ -287,6 +275,43 @@ function readCatalogueWorkspaceId(options: PublicCatalogueRepositoryOptions) {
   const trimmed = workspaceId?.trim();
 
   return trimmed && workspaceIdPattern.test(trimmed) ? trimmed : undefined;
+}
+
+async function readCatalogueRpcPayload(
+  client: PublicCatalogueSupabaseClient,
+  workspaceId: string,
+  productSlug: string | null
+) {
+  const result = await client.rpc("get_public_catalogue", {
+    expected_workspace_id: workspaceId,
+    product_slug: productSlug
+  });
+
+  if (result.error) {
+    return undefined;
+  }
+
+  return toCataloguePayload(result.data);
+}
+
+function mapCataloguePayload(payload: CatalogueRpcPayload): PublicCatalogue {
+  const categories = toRows(payload.categories)
+    .map((row) => toCategory(row))
+    .filter((category): category is PublicCatalogueCategory =>
+      Boolean(category)
+    );
+  const categoryById = new Map(
+    categories.map((category) => [category.id, category])
+  );
+  const products = toRows(payload.products)
+    .map((row) => toProduct(row, categoryById))
+    .filter((product): product is PublicCatalogueProduct => Boolean(product));
+
+  return {
+    source: "supabase",
+    categories,
+    products
+  };
 }
 
 export function getFallbackCatalogue(): PublicCatalogue {
@@ -312,47 +337,13 @@ export async function getPublicCatalogue(
     return fallbackCatalogue;
   }
 
-  const client = supabase.client;
-  const categoriesQuery = client
-    .from("categories")
-    .select(categorySelect)
-    .eq("workspace_id", workspaceId)
-    .eq("is_published", true)
-    .order("sort_order", { ascending: true })
-    .order("name", { ascending: true });
-  const productsQuery = client
-    .from("products")
-    .select(productSelect)
-    .eq("workspace_id", workspaceId)
-    .eq("status", "published")
-    .order("sort_order", { ascending: true })
-    .order("name", { ascending: true });
-  const [categoriesResult, productsResult] = await Promise.all([
-    categoriesQuery,
-    productsQuery
-  ]);
-
-  if (categoriesResult.error || productsResult.error) {
-    return fallbackCatalogue;
-  }
-
-  const categories = toRows(categoriesResult.data)
-    .map((row) => toCategory(row))
-    .filter((category): category is PublicCatalogueCategory =>
-      Boolean(category)
-    );
-  const categoryById = new Map(
-    categories.map((category) => [category.id, category])
+  const payload = await readCatalogueRpcPayload(
+    supabase.client,
+    workspaceId,
+    null
   );
-  const products = toRows(productsResult.data)
-    .map((row) => toProduct(row, categoryById))
-    .filter((product): product is PublicCatalogueProduct => Boolean(product));
 
-  return {
-    source: "supabase",
-    categories,
-    products
-  };
+  return payload ? mapCataloguePayload(payload) : fallbackCatalogue;
 }
 
 export async function getPublicProductBySlug(
@@ -372,18 +363,16 @@ export async function getPublicProductBySlug(
     return fallbackProduct;
   }
 
-  const client = supabase.client;
-  const productResult = await client
-    .from("products")
-    .select(productSelect)
-    .eq("workspace_id", workspaceId)
-    .eq("slug", slug)
-    .eq("status", "published")
-    .maybeSingle();
+  const payload = await readCatalogueRpcPayload(supabase.client, workspaceId, slug);
 
-  if (productResult.error || !isRecord(productResult.data)) {
+  if (!payload) {
     return fallbackProduct;
   }
 
-  return toProduct(productResult.data, new Map()) ?? fallbackProduct;
+  const catalogue = mapCataloguePayload(payload);
+
+  return (
+    catalogue.products.find((product) => product.slug === slug) ??
+    fallbackProduct
+  );
 }

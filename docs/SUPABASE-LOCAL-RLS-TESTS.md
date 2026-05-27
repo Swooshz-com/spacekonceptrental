@@ -5,9 +5,9 @@ behavioural RLS and tenant-isolation checks. It does not connect to a live
 Supabase project, does not link the repo to Supabase Cloud, does not require
 the Supabase CLI on the host machine, and did not add runtime Supabase app
 wiring. Phase 1G-A later adds only server-side Supabase runtime wiring under
-`website/lib/supabase/`; this harness still must not approve direct anonymous
-catalogue table reads, persistence flows, Supabase Cloud connection, or
-deployment.
+`website/lib/supabase/`; this harness still must not approve broad direct
+anonymous catalogue table reads, persistence flows, Supabase Cloud connection,
+or deployment.
 
 ## Requirements
 
@@ -23,11 +23,12 @@ live only in `scripts/test-supabase-rls.cjs` test setup, not in production
 migrations. The command applies the committed SQL migrations from
 `supabase/migrations/`, inserts fake test fixtures inside the temporary
 database only, runs role-scoped assertions, and stops/removes the container.
-Phase 1L-A does not change those migrations. It adds the strategy and static
-proof scaffold for future direct anonymous catalogue RLS hardening; the
-behavioural harness must be extended in that future hardening PR with
-cross-workspace denial tests while proving configured server-side catalogue
-reads still return DB-backed rows.
+Phase 1M-A extends the harness for direct anonymous catalogue RLS hardening.
+The test database seeds two fake workspaces, marks workspace A as the
+database-owned active public catalogue workspace, and proves that direct
+anonymous base-table catalogue reads are denied while the trusted
+`get_public_catalogue` read surface still returns DB-backed rows for the active
+workspace.
 
 ## Run
 
@@ -75,17 +76,27 @@ The local RLS test command proves:
 - An authenticated user without membership cannot read admin-only workspace
   rows.
 - Anonymous reads return only published categories, published products, and
-  images whose parent product is published.
+  images whose parent product is published through the trusted
+  active-workspace `get_public_catalogue` RPC.
+- Direct anonymous base-table reads return no `categories`, `products`, or
+  `product_images`.
+- Direct anonymous base-table reads cannot return published catalogue rows from
+  another workspace.
+- Direct anonymous base-table reads still cannot return draft catalogue rows.
+- The trusted active-workspace RPC returns configured workspace rows and does
+  not return inactive or other workspace rows.
+- Anonymous product/category/product image writes remain rejected.
 - Anonymous reads do not return draft catalogue rows, membership data, quote
   request data, conversation data, message data, usage events, audit logs, or
-  integration connection metadata.
+  integration connection metadata. The active catalogue workspace config table
+  is also private to anonymous callers.
 - Service-only tables do not expose broad anonymous or authenticated client
   read access, and representative client writes are rejected.
 - Runtime website Supabase code stays server-only, private-env-only, and
   workspace-scoped for catalogue reads.
-- Future direct anonymous catalogue RLS hardening must add a denial test for
-  cross-workspace published catalogue rows and a runtime proof that trusted
-  server-side workspace configuration still returns DB-backed catalogue rows.
+- Phase 1M-A includes the direct anonymous cross-workspace denial tests and the
+  runtime proof that trusted server-side workspace configuration still returns
+  DB-backed catalogue rows through the RPC.
 
 ## Safety Notes
 
@@ -95,7 +106,6 @@ The local RLS test command proves:
 - The test database is disposable and is stopped after the command unless
   `SUPABASE_RLS_KEEP_DB=1` is set for local debugging.
 - No Docker volume is required; test state stays in the disposable container.
-- Do not use this harness as approval to harden direct anonymous catalogue RLS
-  before the trusted active-workspace runtime strategy is implemented and
-  tested. It also does not approve persistence flows, production seed data,
-  deployment, or Supabase Cloud connection.
+- This harness proves only local disposable database behaviour. It does not
+  approve persistence flows, production seed data, deployment, Supabase Cloud
+  connection, or active workspace configuration changes in a live project.

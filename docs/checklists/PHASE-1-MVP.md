@@ -79,7 +79,7 @@ required first.
 - [x] Add chat persistence design and server-only disabled scaffolding.
 - [x] Add product/admin persistence design and server-only disabled
       scaffolding.
-- [ ] Harden direct anonymous catalogue RLS without breaking DB-backed
+- [x] Harden direct anonymous catalogue RLS without breaking DB-backed
       catalogue reads.
 - [ ] Add product persistence.
 - [ ] Add category/product/product image mutation routes.
@@ -119,6 +119,8 @@ required first.
 - [x] Server-only published catalogue read tests.
 - [x] Trusted active-workspace catalogue RLS hardening strategy/proof guard
       tests.
+- [x] Behavioural direct anonymous catalogue RLS hardening tests proving
+      cross-workspace denial and configured active-workspace DB-backed reads.
 - [x] Server-only chat persistence scaffold guard tests.
 - [x] Tests proving no chat Supabase writes are added in Phase 1I-A.
 - [x] Server-only product/admin persistence scaffold guard tests.

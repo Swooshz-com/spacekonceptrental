@@ -18,6 +18,7 @@ const dockerConfigDir = fs.mkdtempSync(
 const expectedTables = [
   'admin_users',
   'audit_logs',
+  'catalogue_public_workspace_config',
   'categories',
   'conversations',
   'integration_connections',
@@ -227,6 +228,12 @@ function seedFixtures() {
     values
       ('${ids.workspaceA}', 'workspace-a', 'Workspace A'),
       ('${ids.workspaceB}', 'workspace-b', 'Workspace B');
+
+    insert into public.catalogue_public_workspace_config (
+      active_workspace_id,
+      is_enabled
+    )
+    values ('${ids.workspaceA}', true);
 
     insert into public.admin_users (id, auth_user_id, email, display_name)
     values
@@ -453,23 +460,8 @@ function assertNoRuntimeSupabaseUse() {
         );
         assert.match(
           content,
-          /from\(["']categories["']\)/,
-          `${relativePath} must read categories explicitly.`,
-        );
-        assert.match(
-          content,
-          /from\(["']products["']\)/,
-          `${relativePath} must read products explicitly.`,
-        );
-        assert.match(
-          content,
-          /eq\(["']is_published["'],\s*true\)/,
-          `${relativePath} must filter categories to published rows.`,
-        );
-        assert.match(
-          content,
-          /eq\(["']status["'],\s*["']published["']\)/,
-          `${relativePath} must filter products to published rows.`,
+          /rpc\(["']get_public_catalogue["']/,
+          `${relativePath} must use the trusted public catalogue RPC.`,
         );
         assertNoMatches(filePath, content, serverBlockedPatterns);
         assertNoMatches(filePath, content, blockedCatalogueTablePatterns);
@@ -635,15 +627,15 @@ check('authenticated user without membership cannot read admin-only workspace ro
   }
 });
 
-check('anonymous public reads only published catalogue rows', () => {
+check('anonymous direct base-table reads cannot return catalogue rows', () => {
   assertCsv(
     scalarAs(
       'anon',
       null,
       "select coalesce(string_agg(slug, ',' order by slug), '') from public.categories",
     ),
-    'published-a,published-b',
-    'anon should read only published categories',
+    '',
+    'anon should not read categories directly',
   );
 
   assertCsv(
@@ -652,8 +644,8 @@ check('anonymous public reads only published catalogue rows', () => {
       null,
       "select coalesce(string_agg(slug, ',' order by slug), '') from public.products",
     ),
-    'published-product-a,published-product-b',
-    'anon should read only published products',
+    '',
+    'anon should not read products directly',
   );
 
   assertCsv(
@@ -662,14 +654,142 @@ check('anonymous public reads only published catalogue rows', () => {
       null,
       "select coalesce(string_agg(storage_path, ',' order by storage_path), '') from public.product_images",
     ),
-    'published-a.jpg,published-b.jpg',
-    'anon should read only images for published products',
+    '',
+    'anon should not read product images directly',
+  );
+});
+
+check('anonymous direct base-table reads cannot return cross-workspace published catalogue rows', () => {
+  const crossWorkspaceChecks = [
+    ['categories', `workspace_id = '${ids.workspaceB}'`],
+    ['products', `workspace_id = '${ids.workspaceB}'`],
+    ['product_images', `workspace_id = '${ids.workspaceB}'`],
+  ];
+
+  for (const [table, whereClause] of crossWorkspaceChecks) {
+    assert.equal(
+      scalarAs('anon', null, `select count(*)::text from public.${table} where ${whereClause}`),
+      '0',
+      `anon should not directly read workspace B ${table}`,
+    );
+  }
+});
+
+check('anonymous direct base-table reads still cannot return draft catalogue rows', () => {
+  assert.equal(
+    scalarAs('anon', null, "select count(*)::text from public.categories where is_published = false"),
+    '0',
+    'anon should not directly read draft categories',
+  );
+  assert.equal(
+    scalarAs('anon', null, "select count(*)::text from public.products where status <> 'published'"),
+    '0',
+    'anon should not directly read draft products',
+  );
+  assert.equal(
+    scalarAs(
+      'anon',
+      null,
+      `select count(*)::text
+       from public.product_images
+       where product_id in ('${ids.productDraftA}', '${ids.productDraftB}')`,
+    ),
+    '0',
+    'anon should not directly read images for draft products',
+  );
+});
+
+check('trusted active-workspace catalogue RPC returns active workspace rows only', () => {
+  assertCsv(
+    scalarAs(
+      'anon',
+      null,
+      `
+        with catalogue as (
+          select public.get_public_catalogue('${ids.workspaceA}', null) as data
+        )
+        select coalesce(string_agg(category.value->>'slug', ',' order by category.value->>'slug'), '')
+        from catalogue,
+          lateral jsonb_array_elements(catalogue.data->'categories') as category(value)
+      `,
+    ),
+    'published-a',
+    'trusted catalogue RPC should return active workspace published categories',
+  );
+
+  assertCsv(
+    scalarAs(
+      'anon',
+      null,
+      `
+        with catalogue as (
+          select public.get_public_catalogue('${ids.workspaceA}', null) as data
+        )
+        select coalesce(string_agg(product.value->>'slug', ',' order by product.value->>'slug'), '')
+        from catalogue,
+          lateral jsonb_array_elements(catalogue.data->'products') as product(value)
+      `,
+    ),
+    'published-product-a',
+    'trusted catalogue RPC should return active workspace published products',
+  );
+
+  assertCsv(
+    scalarAs(
+      'anon',
+      null,
+      `
+        with catalogue as (
+          select public.get_public_catalogue('${ids.workspaceA}', null) as data
+        ),
+        products as (
+          select product.value as product
+          from catalogue,
+            lateral jsonb_array_elements(catalogue.data->'products') as product(value)
+        )
+        select coalesce(string_agg(image.value->>'storage_path', ',' order by image.value->>'storage_path'), '')
+        from products,
+          lateral jsonb_array_elements(products.product->'product_images') as image(value)
+      `,
+    ),
+    'published-a.jpg',
+    'trusted catalogue RPC should return active workspace images for published products only',
+  );
+});
+
+check('trusted active-workspace catalogue RPC does not return inactive workspace rows', () => {
+  assertCsv(
+    scalarAs(
+      'anon',
+      null,
+      `select coalesce(public.get_public_catalogue('${ids.workspaceB}', null)::text, '')`,
+    ),
+    '',
+    'trusted catalogue RPC should not return rows when the expected workspace is not active',
+  );
+
+  assertCsv(
+    scalarAs(
+      'anon',
+      null,
+      `
+        with catalogue as (
+          select public.get_public_catalogue('${ids.workspaceA}', 'published-product-b') as data
+        )
+        select coalesce(string_agg(product.value->>'slug', ',' order by product.value->>'slug'), '')
+        from catalogue,
+          lateral jsonb_array_elements(catalogue.data->'products') as product(value)
+      `,
+    ),
+    '',
+    'trusted catalogue RPC should not return another workspace product by slug',
   );
 });
 
 check('anonymous public reads do not return private workspace data', () => {
   const privateTables = [
     'admin_users',
+    'catalogue_public_workspace_config',
     'memberships',
     'quote_requests',
     'quote_request_items',
@@ -769,6 +889,43 @@ check('anonymous public quote creation rejects non-website workflow states', () 
         'public-customer@example.test',
         'reviewing',
         'website'
+      )
+    `,
+  );
+});
+
+check('anonymous public cannot write catalogue tables', () => {
+  statementFailsAs(
+    'anon',
+    null,
+    `
+      insert into public.categories (workspace_id, slug, name, is_published)
+      values ('${ids.workspaceA}', 'anon-category-write', 'Anon Category Write', true)
+    `,
+  );
+  statementFailsAs(
+    'anon',
+    null,
+    `
+      insert into public.products (workspace_id, slug, name, status)
+      values ('${ids.workspaceA}', 'anon-product-write', 'Anon Product Write', 'published')
+    `,
+  );
+  statementFailsAs(
+    'anon',
+    null,
+    `
+      insert into public.product_images (
+        workspace_id,
+        product_id,
+        storage_bucket,
+        storage_path
+      )
+      values (
+        '${ids.workspaceA}',
+        '${ids.productPublishedA}',
+        'test-public',
+        'anon-product-image-write.jpg'
       )
     `,
   );
