@@ -1,7 +1,6 @@
 # Phase Status
 
-This is the quick status page for the SKR repo. Detailed checklists remain in
-`docs/checklists/`.
+This is the quick status page for the SKR repo. Use `docs/PHASE-2-READINESS-PLAN.md` for Phase 2 sequencing and `docs/checklists/` for checkbox trackers.
 
 ## Current phase
 

@@ -3,6 +3,13 @@
 This directory keeps phase status honest. Checklists are status surfaces, not
 permission slips for implementation.
 
+## Folder split
+
+- Narrative plans, roadmaps, status summaries, and decision docs stay in `docs/`.
+- Checkbox/status trackers stay in `docs/checklists/`.
+- `docs/PHASE-2-READINESS-PLAN.md` is intentionally outside `docs/checklists/` because it is a sequencing/strategy plan, not a checklist.
+- `docs/checklists/PHASE-2A-DEPLOYMENT-READINESS.md` is inside checklists because it is a checkbox readiness tracker.
+
 ## Checklist ownership
 
 - `PHASE-0-PLANNING.md` is the historical planning checklist.

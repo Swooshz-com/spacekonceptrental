@@ -95,6 +95,18 @@ describe("Phase 2B-F checklist hygiene and phase status reconciliation", () => {
       "`PHASE-2B-AUTH-IMPLEMENTATION.md` is the future auth implementation checklist."
     );
     expect(readme).toContain(
+      "Narrative plans, roadmaps, status summaries, and decision docs stay in `docs/`."
+    );
+    expect(readme).toContain(
+      "Checkbox/status trackers stay in `docs/checklists/`."
+    );
+    expect(readme).toContain(
+      "`docs/PHASE-2-READINESS-PLAN.md` is intentionally outside `docs/checklists/` because it is a sequencing/strategy plan, not a checklist."
+    );
+    expect(readme).toContain(
+      "`docs/checklists/PHASE-2A-DEPLOYMENT-READINESS.md` is inside checklists because it is a checkbox readiness tracker."
+    );
+    expect(readme).toContain(
       "Every phase PR that changes status must update exactly the relevant checklist(s)."
     );
     expect(readme).toContain(
@@ -128,6 +140,9 @@ describe("Phase 2B-F checklist hygiene and phase status reconciliation", () => {
     );
     expect(status).toContain("Still blocked");
     expect(status).toContain("Next recommended PR");
+    expect(status).toContain(
+      "Use `docs/PHASE-2-READINESS-PLAN.md` for Phase 2 sequencing and `docs/checklists/` for checkbox trackers."
+    );
     expect(status).toContain(
       "The current SKR website may keep using the existing n8n/Pinecone chatbot workflow as a temporary production bridge."
     );
