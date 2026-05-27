@@ -325,3 +325,20 @@ UI, add product/category/product image writes, add service-role runtime paths,
 add browser Supabase, deploy, connect to Supabase Cloud, change catalogue
 RLS/runtime behaviour, change quote throttling, add conversation/message
 writes, or change n8n workflows.
+
+## 2026-05-27: Disabled Admin Auth Membership Resolver Contract
+
+Decision: Phase 2B-C adds a server-only admin auth/membership resolver contract
+and disabled scaffold that defines how future server-side auth and membership
+resolution should produce inputs for the existing admin authorization policy.
+
+Reason: future runtime admin routes or server actions need a clear boundary between
+auth identity resolution, admin profile lookup, workspace membership
+resolution, policy input construction, and policy decision output before real
+auth is implemented. This phase returns `auth_resolver_disabled` by default and
+does not implement real auth, add Supabase Auth runtime wiring, add
+login/logout routes, add protected admin pages, add admin UI, add runtime
+routes/pages/server actions, add product/category/product image writes, add
+service-role runtime paths, add browser Supabase, deploy, connect to Supabase
+Cloud, change catalogue RLS/runtime behaviour, change quote throttling, add
+conversation/message writes, or change n8n workflows.

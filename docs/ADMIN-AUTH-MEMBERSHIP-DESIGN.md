@@ -2,6 +2,7 @@
 
 Phase 2B-A is design and guard coverage only.
 Phase 2B-B adds a pure server-only policy module only.
+Phase 2B-C adds a server-only resolver contract and disabled scaffold only.
 
 This PR does not implement auth.
 This PR does not implement real auth.
@@ -10,6 +11,8 @@ This PR does not add product writes.
 This PR does not add Supabase Auth runtime wiring.
 This PR does not add login/logout routes.
 This PR does not add protected admin pages.
+This PR adds a server-only resolver contract and disabled scaffold only.
+This PR does not wire the resolver into runtime routes/pages/server actions.
 
 Product/category/product image writes remain blocked until admin/auth boundaries are implemented and tested.
 Product writes remain blocked until real auth/membership resolution, RLS, audit, and route/action boundaries are implemented and tested.
@@ -53,6 +56,14 @@ functions only. It does not read cookies, read environment variables, call
 Supabase, import Supabase, perform database reads or writes, or wire itself
 into routes, pages, or server actions.
 
+Phase 2B-C adds `website/lib/admin/authorization/admin-authorization-resolver.ts`
+as a server-only resolver contract and disabled scaffold. It defines how future
+server-side auth and membership resolution should produce
+`AdminAuthorizationInput` for `authorizeAdminOperation`, but it does not
+implement real auth, call Supabase, read cookies, read headers, read
+environment variables, perform database reads or writes, or wire itself into
+routes, pages, or server actions.
+
 ## Non-goals
 
 This PR does not:
@@ -67,6 +78,7 @@ This PR does not:
 - Add browser Supabase.
 - Add service-role runtime reads or writes.
 - Add Supabase Storage wiring.
+- Wire the admin resolver into runtime routes, pages, or server actions.
 - Connect to Supabase Cloud.
 - Add deployment configuration.
 - Add production seed data.
@@ -194,6 +206,12 @@ admin and owner operations only when a future server-side resolver has already
 supplied authenticated identity, active admin profile, active same-workspace
 membership, role, requested operation, and optional same-workspace target
 record validation. It does not itself approve or perform product writes.
+
+The Phase 2B-C resolver scaffold returns `auth_resolver_disabled` by default.
+Its helper builds policy input only from explicitly supplied trusted
+server-resolved identity, admin profile, workspace, membership, and requested
+operation context. Browser/request workspace IDs remain validation-only
+metadata and must never become trusted workspace authority.
 
 ## Audit log expectations
 

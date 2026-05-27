@@ -166,6 +166,15 @@ Supabase, read cookies, read env, implement real auth, add routes, add server
 actions, add admin UI, add product writes, add service-role runtime paths, add
 browser Supabase, deploy, or connect to Supabase Cloud.
 
+Phase 2B-C adds only a server-only admin auth/membership resolver contract and
+disabled scaffold under `website/lib/admin/authorization/`. It defines how
+future server-side auth and membership resolution should build policy inputs,
+but it returns a disabled result by default and is not wired into runtime
+routes, pages, or server actions. It does not call Supabase, read cookies, read
+headers, read env, implement real auth, add Supabase Auth runtime wiring, add
+admin UI, add product writes, add service-role runtime paths, add browser
+Supabase, deploy, or connect to Supabase Cloud.
+
 Phase 1K-A adds only route-level quote endpoint abuse throttling. The existing
 quote persistence boundary remains unchanged: accepted requests still use the
 server-only quote repository and approved quote insert path, while throttled

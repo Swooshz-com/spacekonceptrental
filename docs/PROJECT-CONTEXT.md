@@ -90,6 +90,13 @@ Custom Chat UI -> POST /api/chat -> ChatProvider
   auth, Supabase Auth wiring, admin UI, routes, server actions, product writes,
   browser Supabase, service-role runtime paths, deployment, or Supabase Cloud
   connection.
+- Phase 2B-C adds a server-only admin auth/membership resolver contract and
+  disabled scaffold only. It defines how future server-side auth and membership
+  resolution should build policy inputs, but it remains disabled and is not
+  wired into runtime routes, pages, or server actions. Real auth, Supabase Auth
+  wiring, login/logout routes, protected admin pages, admin UI, product writes,
+  browser Supabase, service-role runtime paths, deployment, and Supabase Cloud
+  connection remain blocked.
 
 ## Planning Notes
 

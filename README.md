@@ -172,6 +172,13 @@ does not implement real auth, Supabase Auth wiring, admin UI, routes, server
 actions, product writes, browser Supabase, service-role runtime paths,
 deployment, or Supabase Cloud connection.
 
+Phase 2B-C adds only a server-only admin auth/membership resolver contract and
+disabled scaffold. It defines how future server-side auth and membership
+resolution should build policy inputs, but it does not implement real auth,
+Supabase Auth wiring, login/logout routes, protected admin pages, admin UI,
+runtime routes/pages/server actions, product writes, browser Supabase,
+service-role runtime paths, deployment, or Supabase Cloud connection.
+
 ## Website App
 
 The website frontend is now a Vercel-ready Next.js scaffold under `website/`.
