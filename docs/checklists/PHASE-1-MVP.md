@@ -37,6 +37,7 @@ platform.
 - [x] Add disabled server-only chat persistence scaffold.
 - [x] Document product/admin persistence design.
 - [x] Add disabled server-only product/admin persistence scaffold.
+- [x] Add deployment/environment readiness contract without deployment.
 
 ## Basic Supabase Schema Only
 
@@ -82,6 +83,8 @@ required first.
 - [x] Harden direct anonymous catalogue RLS without breaking DB-backed
       catalogue reads.
 - [x] Add active catalogue workspace bootstrap plan and local-only scaffold.
+- [x] Add server-only deployment env readiness contract and docs-only env
+      manifest.
 - [ ] Add product persistence.
 - [ ] Add category/product/product image mutation routes.
 - [ ] Add product image uploads.
@@ -124,6 +127,8 @@ required first.
       cross-workspace denial and configured active-workspace DB-backed reads.
 - [x] Static guard tests for the active catalogue workspace bootstrap
       documentation and local-only SQL example.
+- [x] Static guard tests for deployment/server env readiness and forbidden
+      public env variables.
 - [x] Server-only chat persistence scaffold guard tests.
 - [x] Tests proving no chat Supabase writes are added in Phase 1I-A.
 - [x] Server-only product/admin persistence scaffold guard tests.
@@ -153,6 +158,7 @@ required first.
 - [ ] No chat history review/search/export.
 - [ ] No streaming/SSE.
 - [ ] No Supabase Cloud connection.
+- [ ] No Vercel deployment configuration.
 - [ ] No browser Supabase client.
 - [ ] No Supabase Storage wiring.
 - [ ] No external anti-abuse service.

@@ -38,6 +38,11 @@ docs-only local SQL example for future operator review. It does not change RLS
 policies or runtime catalogue behaviour, connect to Supabase Cloud, add
 production seed data, add service-role runtime writes, add browser Supabase
 code, add catalogue writes, change quote throttling, or change n8n workflows.
+Phase 1O-A adds only the deployment/environment readiness contract for future
+server-only env placement and forbidden public variables. It does not change
+RLS policies, runtime catalogue behaviour, Supabase Cloud state, deployment
+configuration, service-role runtime paths, browser Supabase code, catalogue
+writes, quote throttling, or n8n workflows.
 
 No runtime route should write Supabase data until each specific flow is
 separately approved and tested. Public catalogue read code is limited to the
@@ -257,8 +262,14 @@ the example is docs-only, placeholder-only, outside migrations and seeds, not
 imported by runtime code, and does not add service-role keys, browser Supabase
 variables, product/category/product image writes, quote throttling changes, or
 n8n workflow changes.
+Phase 1O-A adds static guards for the deployment environment readiness docs and
+machine-readable server env contract. The guards prove sensitive variables are
+server-only, forbidden public env patterns remain forbidden, browser-facing code
+does not import Supabase or reference server env, no deployment config or
+production seed data is added, and PR #35/PR #36 catalogue boundaries remain
+unchanged.
 
-## Deferred After Phase 1N-A
+## Deferred After Phase 1O-A
 
 - Browser Supabase client code.
 - Auth UI.

@@ -254,3 +254,15 @@ real environments enable DB-backed public catalogue reads, while keeping
 Supabase Cloud connection, deployment, production seed data, service-role
 runtime writes, browser Supabase code, catalogue writes, quote throttling
 changes, and n8n workflow changes deferred.
+
+## 2026-05-27: Deployment Environment Readiness Before Deployment
+
+Decision: Phase 1O-A documents the future server-only environment contract and
+forbidden public variables before any Vercel deployment or Supabase Cloud
+connection is approved.
+
+Reason: the project now has server-only Supabase, catalogue, quote, chat, and
+trusted proxy header paths that will need deployment configuration later. The
+required env names, safe missing-env behaviour, and preflight checks should be
+explicit before real secrets, deployment config, browser Supabase, service-role
+runtime paths, production seed data, or live external systems are introduced.

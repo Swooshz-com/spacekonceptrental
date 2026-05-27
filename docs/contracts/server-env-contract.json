@@ -1,0 +1,108 @@
+{
+  "phase": "Phase 1O-A",
+  "status": "readiness-only",
+  "description": "Docs-only server environment contract for a future approved Vercel and Supabase deployment. No values are stored here.",
+  "variables": [
+    {
+      "name": "SUPABASE_URL",
+      "visibility": "server-only",
+      "feature": "Supabase runtime",
+      "requiredFor": "Server-side Supabase reads and approved writes",
+      "browserAllowed": false,
+      "status": "future-deployment-required",
+      "notes": "Read only by website server-side Supabase helpers."
+    },
+    {
+      "name": "SUPABASE_ANON_KEY",
+      "visibility": "server-only",
+      "feature": "Supabase runtime",
+      "requiredFor": "RLS-scoped server-side Supabase access",
+      "browserAllowed": false,
+      "status": "future-deployment-required",
+      "notes": "Used only from server-side code with RLS; not exposed as public config."
+    },
+    {
+      "name": "CATALOGUE_WORKSPACE_ID",
+      "visibility": "server-only",
+      "feature": "Public catalogue",
+      "requiredFor": "DB-backed catalogue list and detail reads",
+      "browserAllowed": false,
+      "status": "future-deployment-required",
+      "notes": "Must match the database-owned active catalogue workspace config row."
+    },
+    {
+      "name": "QUOTE_WORKSPACE_ID",
+      "visibility": "server-only",
+      "feature": "Quote persistence",
+      "requiredFor": "Approved first-party quote request persistence",
+      "browserAllowed": false,
+      "status": "future-deployment-required",
+      "notes": "Trusted server-side workspace gate for public quote submissions."
+    },
+    {
+      "name": "CHAT_PROVIDER",
+      "visibility": "server-only",
+      "feature": "Chat provider",
+      "requiredFor": "Server-side provider selection",
+      "browserAllowed": false,
+      "status": "optional-dev",
+      "notes": "Defaults safely in local development; deployment should set the reviewed provider."
+    },
+    {
+      "name": "N8N_CHAT_WEBHOOK_URL",
+      "visibility": "server-only",
+      "feature": "Chat provider",
+      "requiredFor": "Temporary server-side n8n provider calls",
+      "browserAllowed": false,
+      "status": "future-deployment-required",
+      "notes": "Must remain server-only and must never be copied from local chat config files."
+    },
+    {
+      "name": "N8N_CHAT_WEBHOOK_TIMEOUT_MS",
+      "visibility": "server-only",
+      "feature": "Chat provider",
+      "requiredFor": "Temporary server-side n8n provider timeout control",
+      "browserAllowed": false,
+      "status": "optional-dev",
+      "notes": "Optional server-side tuning value with safe runtime defaults."
+    },
+    {
+      "name": "CHAT_TRUSTED_CLIENT_IP_HEADER",
+      "visibility": "server-only",
+      "feature": "Chat abuse throttling",
+      "requiredFor": "Trusted proxy or CDN client IP bucket selection",
+      "browserAllowed": false,
+      "status": "future-deployment-required",
+      "notes": "Set only to a header overwritten by the trusted deployment edge."
+    },
+    {
+      "name": "QUOTE_TRUSTED_CLIENT_IP_HEADER",
+      "visibility": "server-only",
+      "feature": "Quote abuse throttling",
+      "requiredFor": "Trusted proxy or CDN client IP bucket selection",
+      "browserAllowed": false,
+      "status": "future-deployment-required",
+      "notes": "Set only to a header overwritten by the trusted deployment edge."
+    }
+  ],
+  "forbidden": [
+    {
+      "namePattern": "NEXT_PUBLIC_SUPABASE_*",
+      "browserAllowed": false,
+      "status": "forbidden",
+      "reason": "Browser Supabase remains deferred and must not be configured."
+    },
+    {
+      "namePattern": "NEXT_PUBLIC_N8N*",
+      "browserAllowed": false,
+      "status": "forbidden",
+      "reason": "n8n must remain behind the first-party server API boundary."
+    },
+    {
+      "namePattern": "SUPABASE_SERVICE_ROLE_KEY",
+      "browserAllowed": false,
+      "status": "forbidden",
+      "reason": "Service-role runtime paths remain deferred and must not be added."
+    }
+  ]
+}

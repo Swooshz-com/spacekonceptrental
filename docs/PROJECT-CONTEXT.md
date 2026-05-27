@@ -66,6 +66,10 @@ Custom Chat UI -> POST /api/chat -> ChatProvider
   product image writes are trusted-admin operations only, and actual
   persistence remains deferred until auth/admin and media boundaries are
   approved.
+- Deployment/environment readiness is documented before deployment. The future
+  Vercel + Supabase path must use server-only env placement, no browser
+  Supabase variables, no browser-visible n8n variables, and no service-role
+  runtime path until separately approved.
 
 ## Planning Notes
 

@@ -190,6 +190,16 @@ RLS or runtime behaviour from Phase 1M-A, add production seed data, connect to
 Supabase Cloud, use service-role runtime writes, add browser Supabase code,
 change quote throttling, add catalogue writes, or change n8n workflows.
 
+Phase 1O-A adds only the deployment/environment readiness contract. It documents
+the future Vercel + Supabase server-only environment variables, forbidden public
+variables, safe missing-env behaviours, and future deployment preflight checks
+in `docs/DEPLOYMENT-ENVIRONMENT-READINESS.md` and
+`docs/contracts/server-env-contract.json`. This phase does not deploy, connect
+to Supabase Cloud, add Vercel project configuration, add real env values, add
+browser Supabase config, add service-role runtime paths, change catalogue
+RLS/runtime behaviour, change quote throttling, add catalogue writes, or change
+n8n workflows.
+
 ## n8n Responsibilities
 
 n8n remains temporary server-side integration only:
