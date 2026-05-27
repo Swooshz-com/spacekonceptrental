@@ -70,6 +70,10 @@ Custom Chat UI -> POST /api/chat -> ChatProvider
   Vercel + Supabase path must use server-only env placement, no browser
   Supabase variables, no browser-visible n8n variables, and no service-role
   runtime path until separately approved.
+- Phase 1 closeout and Phase 2 readiness are documented. The closeout confirms
+  the local foundation and the readiness plan keeps deployment, product writes,
+  conversation/message persistence, Storage, admin/auth UI, and internal RAG
+  work behind separate Phase 2 decisions.
 
 ## Planning Notes
 

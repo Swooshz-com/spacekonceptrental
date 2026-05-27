@@ -266,3 +266,15 @@ trusted proxy header paths that will need deployment configuration later. The
 required env names, safe missing-env behaviour, and preflight checks should be
 explicit before real secrets, deployment config, browser Supabase, service-role
 runtime paths, production seed data, or live external systems are introduced.
+
+## 2026-05-27: Phase 1 Closeout Before Phase 2 Runtime Work
+
+Decision: Phase 1P-A adds a closeout audit and Phase 2 readiness plan without
+adding runtime features.
+
+Reason: the repo now has enough local foundation, server-only boundaries,
+Supabase schema/RLS proof, catalogue/quote runtime paths, and safety guards
+that future work should start from an explicit decision gate. Product writes,
+conversation/message persistence, Supabase Storage, deployment, Supabase Cloud
+connection, admin/auth UI, service-role runtime paths, browser Supabase, and
+internal RAG remain deferred until separately approved.

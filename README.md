@@ -145,6 +145,11 @@ Phase 1O-A adds the deployment/environment readiness contract in
 future server-only environment requirements and forbidden public variables
 before any real deployment or Supabase Cloud connection is approved.
 
+Phase 1P-A adds the closeout audit in `docs/PHASE-1-CLOSEOUT-AUDIT.md` and the
+Phase 2 readiness plan in `docs/PHASE-2-READINESS-PLAN.md`. These files do not
+approve deployment or new runtime features; they define what Phase 1 completed
+and which Phase 2 decision gates remain closed.
+
 ## Website App
 
 The website frontend is now a Vercel-ready Next.js scaffold under `website/`.
