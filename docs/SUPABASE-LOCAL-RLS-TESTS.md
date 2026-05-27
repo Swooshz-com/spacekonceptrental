@@ -77,7 +77,8 @@ The local RLS test command proves:
   integration connection metadata.
 - Service-only tables do not expose broad anonymous or authenticated client
   read access, and representative client writes are rejected.
-- Runtime website Supabase code stays server-only and private-env-only.
+- Runtime website Supabase code stays server-only, private-env-only, and
+  workspace-scoped for catalogue reads.
 
 ## Safety Notes
 

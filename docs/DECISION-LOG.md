@@ -132,12 +132,13 @@ changes.
 Decision: Phase 1G-B adds a server-only public catalogue repository under
 `website/lib/catalogue/` and wires public catalogue pages to read published
 `categories`, published `products`, and image metadata for published products
-when Supabase server env is configured.
+when Supabase server env and trusted server-only `CATALOGUE_WORKSPACE_ID` are
+configured.
 
 Reason: public catalogue pages can now use the approved Supabase runtime
-boundary without adding browser Supabase code, service-role keys, writes,
-quote/chat/admin persistence, Supabase Storage delivery, deployment, or live
-Supabase Cloud validation.
+boundary without mixing workspace-owned catalogue rows or adding browser
+Supabase code, service-role keys, writes, quote/chat/admin persistence,
+Supabase Storage delivery, deployment, or live Supabase Cloud validation.
 
 ## 2026-05-27: Disable Broad Anonymous Catalogue Table Reads
 

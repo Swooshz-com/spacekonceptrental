@@ -10,13 +10,13 @@ tests with fake fixtures inside the test harness. PR #27 added fake/sample
 catalogue seed fixtures and Docker-only local validation. Phase 1G-A adds only
 server-side Supabase runtime wiring with private environment guards and static
 browser-boundary tests. Phase 1G-B adds server-only public catalogue read code
-for published catalogue data with safe missing-env fallback. Phase 1H-A
-hardens the policy layer so broad direct anonymous catalogue table reads are
-disabled until trusted active workspace scoping exists, and adds only
-first-party quote request persistence from `POST /api/quote` into
-`quote_requests` and optional freeform `quote_request_items`. Product
-persistence, conversation/message persistence, deployment, and Supabase Cloud
-connection remain deferred.
+for published catalogue data with safe missing-env fallback, and those queries
+must be scoped by server-only `CATALOGUE_WORKSPACE_ID`. Phase 1H-A hardens the
+policy layer so broad direct anonymous catalogue table reads are disabled until
+trusted active workspace scoping exists, and adds only first-party quote request
+persistence from `POST /api/quote` into `quote_requests` and optional freeform
+`quote_request_items`. Product persistence, conversation/message persistence,
+deployment, and Supabase Cloud connection remain deferred.
 
 ## Naming Decision
 
@@ -298,9 +298,10 @@ definitions. Phase 1F-C-A adds RLS policy SQL with static coverage. Phase
 1F-C-B adds local-only behavioural RLS tests for the committed migrations.
 Phase 1F-D adds fake/sample catalogue seed fixtures only.
 Phase 1G-A completes step 6 with server-only runtime wiring only.
-Phase 1G-B completes step 7 with read-only published catalogue query code only.
-Direct anonymous catalogue table access remains disabled until trusted active
-workspace scoping is approved and tested.
+Phase 1G-B completes step 7 with read-only published catalogue query code only,
+scoped by trusted server-only `CATALOGUE_WORKSPACE_ID`. Direct anonymous
+catalogue table access remains disabled until trusted active workspace scoping
+is approved and tested.
 Phase 1H-A completes step 8 with first-party quote request persistence only.
 
 ## Deferred After Phase 1H-A

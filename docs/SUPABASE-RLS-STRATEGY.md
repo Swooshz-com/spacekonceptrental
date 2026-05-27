@@ -7,17 +7,20 @@ with private environment guards and static browser-boundary tests. It does not
 add persistence, production seed data, Supabase Cloud connection, or deployment
 configuration. Phase 1G-B adds server-only public catalogue read code for
 published categories, published products, and image metadata attached to
-published products. A Phase 1H-A hardening migration disables broad direct
-anonymous catalogue table reads until public catalogue access can be scoped to
-a trusted active workspace. Phase 1H-A also adds only first-party quote request
-persistence through `POST /api/quote`, backed by narrow anonymous insert
-policies for website quote rows and quote item rows.
+published products. Runtime catalogue reads require trusted server-only
+`CATALOGUE_WORKSPACE_ID` configuration and apply it as a `workspace_id` filter
+for list and detail queries. A Phase 1H-A hardening migration disables broad
+direct anonymous catalogue table reads until public catalogue access can be
+scoped to a trusted active workspace. Phase 1H-A also adds only first-party
+quote request persistence through `POST /api/quote`, backed by narrow
+anonymous insert policies for website quote rows and quote item rows.
 
 No runtime route should write Supabase data until each specific flow is
 separately approved and tested. Public catalogue read code is limited to the
-Phase 1G-B server-only repository, and direct anonymous table reads remain
-disabled until trusted workspace scoping exists. Quote writes are limited to
-the Phase 1H-A server-only repository and the approved quote tables.
+Phase 1G-B server-only repository, requires trusted workspace configuration,
+and direct anonymous table reads remain disabled until trusted workspace
+scoping exists. Quote writes are limited to the Phase 1H-A server-only
+repository and the approved quote tables.
 
 ## Boundary Model
 
@@ -107,6 +110,9 @@ server routes only:
 - The browser sends quote or chat input to the Next.js app.
 - The server resolves the workspace from trusted route, host, or deployment
   configuration.
+- Public catalogue reads currently use server-only `CATALOGUE_WORKSPACE_ID` as
+  the trusted deployment configuration and must filter every catalogue query by
+  that workspace ID.
 - The server validates and normalizes untrusted customer input.
 - The server writes only through the approved server-side credential path after
   migrations, policies, and tests are approved.
@@ -149,8 +155,8 @@ Phase 1F-C-A adds static tests proving the intended migration structure. Phase
   gaining anonymous quote reads.
 - Service-only tables are not broadly readable from browser-role clients, and
   representative browser-role writes are rejected.
-- Runtime website Supabase reads stay server-only, published-only, and out of
-  browser-facing code.
+- Runtime website Supabase reads stay server-only, published-only,
+  workspace-scoped, and out of browser-facing code.
 
 Future runtime work must add targeted tests for any newly approved write path,
 including product persistence, chat persistence, and server-side service-role

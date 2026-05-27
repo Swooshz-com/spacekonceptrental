@@ -93,12 +93,15 @@ quotes, conversations, or messages, or add deployment configuration.
 Phase 1G-B adds only server-side public catalogue reads under
 `website/lib/catalogue/` for published `categories`, published `products`, and
 `product_images` metadata attached to published products. Missing Supabase env
-or read errors fall back to the existing public catalogue shell data so local
-builds and tests do not require Supabase Cloud. Broad direct anonymous catalogue
-table reads remain disabled until trusted active workspace scoping exists. It
-does not add browser Supabase code, service-role keys, writes, product
-management, quote persistence, conversation/message persistence, Supabase
-Storage delivery, or deployment configuration.
+configuration, missing server-only `CATALOGUE_WORKSPACE_ID` configuration, or
+read errors fall back to the existing public catalogue shell data so local builds
+and tests do not require Supabase Cloud. Runtime catalogue queries must include
+the trusted workspace ID as a `workspace_id` filter for both list and detail
+reads. Broad direct anonymous catalogue table reads remain disabled until
+trusted active workspace scoping exists. It does not add browser Supabase code,
+service-role keys, writes, product management, quote persistence,
+conversation/message persistence, Supabase Storage delivery, or deployment
+configuration.
 
 Phase 1H-A adds only first-party quote request persistence. The browser posts
 quote form data to `POST /api/quote`; the route validates bounded JSON and uses
