@@ -79,6 +79,13 @@ headers, add login/logout routes, add protected admin pages, add admin UI, wire
 runtime routes/pages/server actions, add product writes, add service-role
 runtime paths, add browser Supabase, deploy, or connect Supabase Cloud.
 
+Phase 2B-E adds admin auth provider/session/security design and an unchecked
+auth implementation checklist only. It is not approval to implement real auth,
+add Supabase Auth runtime wiring, read cookies, read headers, add login/logout
+routes, add protected admin pages, add admin UI, wire runtime routes/pages/server
+actions, add product writes, add service-role runtime paths, add browser
+Supabase, deploy, or connect Supabase Cloud.
+
 This phase is not approved for implementation yet.
 
 ## Phase 3: Internal Chatbot Provider

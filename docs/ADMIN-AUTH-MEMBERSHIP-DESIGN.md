@@ -5,7 +5,9 @@ Phase 2B-B adds a pure server-only policy module only.
 Phase 2B-C adds a server-only resolver contract and disabled scaffold only.
 Phase 2B-D adds server-only adapter contracts and dependency-injected resolver
 logic only.
+Phase 2B-E adds auth provider/session/security design only.
 
+This PR adds auth provider/session/security design only.
 This PR adds server-only adapter contracts and dependency-injected resolver logic only.
 This PR does not implement auth.
 This PR does not implement real auth.
@@ -79,6 +81,15 @@ names future identity, admin profile, membership, and workspace resolver
 dependencies. It does not implement real auth, call Supabase, read cookies,
 read headers, read environment variables, perform database reads or writes, or
 wire itself into routes, pages, or server actions.
+
+Phase 2B-E adds `docs/ADMIN-AUTH-PROVIDER-SESSION-DESIGN.md` and
+`docs/checklists/PHASE-2B-AUTH-IMPLEMENTATION.md`. It documents the preferred
+future Supabase Auth provider, server-only auth boundary, session/cookie
+expectations, CSRF expectations, login/logout expectations, protected admin
+page expectations, and implementation gates before any real auth runtime is
+added. It does not implement real auth, call Supabase Auth APIs, read cookies,
+read headers, add routes, add pages, add server actions, add admin UI, add
+product writes, or wire resolver/adapters into runtime.
 
 ## Non-goals
 
@@ -244,6 +255,14 @@ validation-only metadata; the trusted workspace must come from the injected
 server-side workspace resolver, and the trusted membership must be owned by the
 server-resolved admin profile. The default resolver remains disabled and no
 runtime route, page, or server action imports this adapter-driven path.
+
+The Phase 2B-E provider/session design recommends Supabase Auth as the future
+admin auth provider, but does not approve runtime wiring. Future auth must
+remain server-side. Future session cookies must be HttpOnly, Secure in
+production, and have reviewed SameSite behaviour. Future state-changing admin
+routes/server actions need CSRF strategy before implementation. Login/logout
+routes must be added separately and must not expose tokens, secrets, stack
+traces, or Supabase internals.
 
 ## Audit log expectations
 

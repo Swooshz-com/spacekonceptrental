@@ -136,10 +136,13 @@ Suggested first PR:
   resolver contract and disabled scaffold, still without runtime wiring.
   Phase 2B-D adds server-only adapter contracts and dependency-injected
   resolver tests with fake adapters only, without cookies, headers, real auth,
-  routes, server actions, or product writes. The next PR in this track should
-  still avoid product writes and should implement only the reviewed
+  routes, server actions, or product writes. Phase 2B-E documents the preferred
+  future Supabase Auth provider, server-only session/cookie expectations, CSRF
+  expectations, login/logout route gates, protected admin page gates, and auth
+  implementation checklist without runtime wiring. The next PR in this track
+  should still avoid product writes and should implement only the reviewed
   server-side auth/membership resolution boundary with anonymous, non-member,
-  cross-workspace, and allowed-member tests.
+  wrong-actor membership, cross-workspace, and allowed-member tests.
 
 ### C. Conversation/message persistence path
 
