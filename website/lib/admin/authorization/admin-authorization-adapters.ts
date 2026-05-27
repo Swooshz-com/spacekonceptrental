@@ -13,6 +13,7 @@ export type ResolvedAdminProfile = {
 };
 
 export type ResolvedAdminMembership = {
+  adminUserId: string;
   workspaceId: string;
   status: "active" | "inactive";
   role: AdminRole;

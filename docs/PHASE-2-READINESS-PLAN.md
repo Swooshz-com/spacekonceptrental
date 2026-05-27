@@ -94,6 +94,8 @@ Required prerequisites:
 - Admin/auth architecture decision.
 - Membership and role model approval.
 - Workspace resolution rules for trusted admin requests.
+- Actor-to-membership binding rules proving the role belongs to the active
+  admin profile.
 - Mutation API or server-action design.
 - Audit log expectations for product changes.
 
@@ -102,6 +104,8 @@ Main risks:
 - Workspace confusion across tenants.
 - Public mutation routes.
 - Missing role checks.
+- Accepting a role from a membership that does not belong to the active admin
+  user.
 - Unreviewed publishing flows.
 - Service-role shortcuts that bypass RLS without a policy decision.
 
@@ -109,6 +113,8 @@ Required tests/guards:
 
 - Auth and membership unit tests.
 - RLS behavioural tests for admin member access.
+- Unit tests proving same-workspace memberships owned by another admin are
+  denied.
 - Static guards proving no public product mutation routes.
 - Tests proving anon cannot write categories, products, or product images.
 - Audit-log expectations for mutations once writes are approved.

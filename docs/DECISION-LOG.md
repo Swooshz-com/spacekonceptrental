@@ -352,7 +352,9 @@ explicit fake/test adapters only.
 Reason: future runtime admin boundaries need named contracts for authenticated
 identity lookup, admin profile lookup, workspace resolution, and membership
 lookup before real auth or database resolution is implemented. This phase does
-not implement real auth, add Supabase Auth runtime wiring, read cookies, read
+bind the policy membership input to the active admin profile so a same-workspace
+membership owned by another admin cannot authorize the actor. It does not
+implement real auth, add Supabase Auth runtime wiring, read cookies, read
 headers, add login/logout routes, add protected admin pages, add admin UI, add
 runtime routes/pages/server actions, add product/category/product image writes,
 add service-role runtime paths, add browser Supabase, deploy, connect to

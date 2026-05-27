@@ -82,6 +82,7 @@ function createResolvedAdapters(
     },
     workspaceId: activeWorkspaceId,
     membership: {
+      adminUserId: "admin-user-1",
       workspaceId: activeWorkspaceId,
       status: "active",
       role: "admin"
@@ -180,6 +181,7 @@ describe("admin authorization adapter boundary", () => {
     await expect(
       resolveWith({
         membership: {
+          adminUserId: "admin-user-1",
           workspaceId: activeWorkspaceId,
           status: "inactive",
           role: "admin"
@@ -196,6 +198,7 @@ describe("admin authorization adapter boundary", () => {
     await expect(
       resolveWith({
         membership: {
+          adminUserId: "admin-user-1",
           workspaceId: otherWorkspaceId,
           status: "active",
           role: "admin"
@@ -208,10 +211,28 @@ describe("admin authorization adapter boundary", () => {
     });
   });
 
+  it("denies memberships owned by another admin from fake adapters", async () => {
+    await expect(
+      resolveWith({
+        membership: {
+          adminUserId: "admin-user-2",
+          workspaceId: activeWorkspaceId,
+          status: "active",
+          role: "owner"
+        }
+      })
+    ).resolves.toEqual({
+      allowed: false,
+      reason: "membership_actor_mismatch",
+      statusCode: 403
+    });
+  });
+
   it("denies viewers for product writes from fake adapters", async () => {
     await expect(
       resolveWith({
         membership: {
+          adminUserId: "admin-user-1",
           workspaceId: activeWorkspaceId,
           status: "active",
           role: "viewer"
@@ -242,6 +263,7 @@ describe("admin authorization adapter boundary", () => {
         },
         createResolvedAdapters({
           membership: {
+            adminUserId: "admin-user-1",
             workspaceId: activeWorkspaceId,
             status: "active",
             role: "owner"
@@ -283,6 +305,7 @@ describe("admin authorization adapter boundary", () => {
       resolveWith({ membership: null }),
       resolveWith({
         membership: {
+          adminUserId: "admin-user-1",
           workspaceId: otherWorkspaceId,
           status: "active",
           role: "admin"

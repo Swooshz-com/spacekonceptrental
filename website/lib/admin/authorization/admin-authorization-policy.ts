@@ -15,6 +15,7 @@ export type AdminUserState = {
 };
 
 export type AdminMembershipState = {
+  adminUserId: string;
   workspaceId: string;
   status: "active" | "inactive";
   role: AdminRole;
@@ -36,6 +37,7 @@ export type AdminAuthorizationDenyReason =
   | "workspace_missing"
   | "membership_missing"
   | "membership_inactive"
+  | "membership_actor_mismatch"
   | "workspace_mismatch"
   | "role_not_allowed"
   | "operation_not_supported";
@@ -128,6 +130,10 @@ export function authorizeAdminOperation(
 
   if (input.membership.status !== "active") {
     return deny("membership_inactive");
+  }
+
+  if (input.membership.adminUserId !== input.adminUser.id) {
+    return deny("membership_actor_mismatch");
   }
 
   if (input.membership.workspaceId !== workspaceId) {

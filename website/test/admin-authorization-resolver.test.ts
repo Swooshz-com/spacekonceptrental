@@ -33,6 +33,7 @@ const trustedContext: TrustedAdminAuthorizationContext = {
   },
   serverResolvedWorkspaceId: activeWorkspaceId,
   membership: {
+    adminUserId: "admin-user-1",
     workspaceId: activeWorkspaceId,
     status: "active",
     role: "admin"
@@ -84,6 +85,7 @@ function createAdapters(
       async resolveMembership(adminUserId, serverResolvedWorkspaceId) {
         calls.push(`membership:${adminUserId}:${serverResolvedWorkspaceId}`);
         return {
+          adminUserId,
           workspaceId: activeWorkspaceId,
           status: "active",
           role: "admin"
@@ -129,6 +131,7 @@ describe("admin authorization resolver contract", () => {
       },
       serverResolvedWorkspaceId: activeWorkspaceId,
       membership: {
+        adminUserId: "admin-user-1",
         workspaceId: activeWorkspaceId,
         status: "active",
         role: "admin"
@@ -192,6 +195,7 @@ describe("admin authorization resolver contract", () => {
     const input = buildAdminAuthorizationInput({
       ...trustedContext,
       membership: {
+        adminUserId: "admin-user-1",
         workspaceId: activeWorkspaceId,
         status: "active",
         role: "viewer"
@@ -259,6 +263,25 @@ describe("admin authorization resolver contract", () => {
     ).resolves.toEqual({
       allowed: false,
       reason: "workspace_mismatch",
+      statusCode: 403
+    });
+  });
+
+  it("feeds the policy for actor-membership mismatch denial", async () => {
+    const adapters = createAdapters();
+
+    adapters.membership.resolveMembership = async () => ({
+      adminUserId: "admin-user-2",
+      workspaceId: activeWorkspaceId,
+      status: "active",
+      role: "owner"
+    });
+
+    await expect(
+      resolveAdminAuthorizationWithAdapters(disabledRequest, adapters)
+    ).resolves.toEqual({
+      allowed: false,
+      reason: "membership_actor_mismatch",
       statusCode: 403
     });
   });

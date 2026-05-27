@@ -162,6 +162,8 @@ variables such as `N8N_CHAT_WEBHOOK_URL`.
 - Do not add service-role product write paths without separate approval.
 - Resolve product-management workspace access from trusted server-side auth and
   membership context, not browser input.
+- Require trusted admin membership context to be owned by the active
+  server-resolved admin profile before using its role.
 - Do not accept browser-provided workspace IDs as trusted admin write scope.
 - Future admin writes must resolve workspace access server-side from
   authenticated identity plus active membership and role checks.
