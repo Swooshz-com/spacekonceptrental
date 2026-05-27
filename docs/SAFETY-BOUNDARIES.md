@@ -137,6 +137,11 @@ variables such as `N8N_CHAT_WEBHOOK_URL`.
   guardrail documentation only; it is not approval to implement real auth,
   admin UI, product/category/product image writes, browser Supabase,
   service-role runtime paths, deployment, or Supabase Cloud connection.
+- Phase 2B-B admin authorization policy code is a pure server-only policy
+  boundary only; it is not approval to add Supabase Auth runtime wiring,
+  login/logout routes, protected admin pages, admin UI, product writes,
+  browser Supabase, service-role runtime paths, deployment, or Supabase Cloud
+  connection.
 - Product, category, and product image writes are trusted-admin operations
   only.
 - Do not add browser-side Supabase writes for product management.

@@ -309,3 +309,19 @@ auth, add admin UI, add product/category/product image writes, add public
 mutation routes, add browser Supabase, add service-role runtime paths, deploy,
 connect to Supabase Cloud, change catalogue RLS/runtime behaviour, change quote
 throttling, add conversation/message writes, or change n8n workflows.
+
+## 2026-05-27: Server-only Admin Authorization Policy Boundary
+
+Decision: Phase 2B-B adds a pure server-only admin authorization policy module
+and tests that model future admin identity, active admin profile, active
+workspace membership, role, workspace, and operation decisions from explicit
+inputs only.
+
+Reason: future product-management routes or server actions need a small,
+testable policy boundary before real auth and membership resolution are wired
+to runtime code. This phase does not implement real auth, add Supabase Auth
+runtime wiring, add login/logout routes, add protected admin pages, add admin
+UI, add product/category/product image writes, add service-role runtime paths,
+add browser Supabase, deploy, connect to Supabase Cloud, change catalogue
+RLS/runtime behaviour, change quote throttling, add conversation/message
+writes, or change n8n workflows.

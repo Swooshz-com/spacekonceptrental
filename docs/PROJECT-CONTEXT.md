@@ -84,6 +84,12 @@ Custom Chat UI -> POST /api/chat -> ChatProvider
   product/category/product image writes. Real auth, admin UI, product writes,
   browser Supabase, service-role runtime paths, deployment, and Supabase Cloud
   connection remain blocked.
+- Phase 2B-B adds a pure server-only admin authorization policy module and
+  tests only. The module evaluates explicit future server-resolved identity,
+  membership, role, workspace, and operation inputs. It does not implement real
+  auth, Supabase Auth wiring, admin UI, routes, server actions, product writes,
+  browser Supabase, service-role runtime paths, deployment, or Supabase Cloud
+  connection.
 
 ## Planning Notes
 

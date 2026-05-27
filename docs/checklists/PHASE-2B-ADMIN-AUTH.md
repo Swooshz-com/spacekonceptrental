@@ -1,8 +1,14 @@
 # Phase 2B Checklist: Admin Auth And Membership
 
-Phase 2B-A is design and guard coverage only. Keep implementation items
-unchecked until a future PR has explicit approval to add real auth, admin UI,
-or product management writes.
+Phase 2B-A is design and guard coverage only. Phase 2B-B adds a pure
+server-only policy module and tests only. Keep real auth, admin UI, product
+management writes, browser Supabase, service-role runtime paths, deployment,
+and Supabase Cloud work unchecked until a future PR has explicit approval.
+
+## Completed Policy Boundary
+
+- [x] Add pure server-only admin authorization policy module.
+- [x] Add policy tests for anonymous, inactive admin, missing membership, cross-workspace, role denial, and allowed-member decisions.
 
 ## Design Approvals
 

@@ -165,6 +165,13 @@ product/category/product image writes. They do not implement auth, admin UI,
 product writes, browser Supabase, service-role runtime paths, deployment, or
 Supabase Cloud connection.
 
+Phase 2B-B adds only a pure server-only admin authorization policy module under
+`website/lib/admin/authorization/`. It models future admin identity,
+membership, role, workspace, and operation decisions from explicit inputs, but
+does not implement real auth, Supabase Auth wiring, admin UI, routes, server
+actions, product writes, browser Supabase, service-role runtime paths,
+deployment, or Supabase Cloud connection.
+
 ## Website App
 
 The website frontend is now a Vercel-ready Next.js scaffold under `website/`.

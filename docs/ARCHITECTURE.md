@@ -158,6 +158,14 @@ real auth, admin UI, product writes, browser Supabase, service-role runtime
 paths, deployment, or Supabase Cloud connection. See
 `docs/ADMIN-AUTH-MEMBERSHIP-DESIGN.md`.
 
+Phase 2B-B adds only a pure server-only admin authorization policy module under
+`website/lib/admin/authorization/`. It evaluates explicit future
+server-resolved identity, admin profile, membership, role, workspace, and
+operation inputs and returns structured allow/deny decisions. It does not call
+Supabase, read cookies, read env, implement real auth, add routes, add server
+actions, add admin UI, add product writes, add service-role runtime paths, add
+browser Supabase, deploy, or connect to Supabase Cloud.
+
 Phase 1K-A adds only route-level quote endpoint abuse throttling. The existing
 quote persistence boundary remains unchanged: accepted requests still use the
 server-only quote repository and approved quote insert path, while throttled
