@@ -50,6 +50,9 @@ function readProductionChatBoundarySource() {
   return [
     "app/api/chat/route.ts",
     "components/ChatWidget.tsx",
+    "lib/chat/persistence/disabled-chat-persistence.ts",
+    "lib/chat/persistence/index.ts",
+    "lib/chat/persistence/types.ts",
     "lib/chat/n8n-provider.ts",
     "lib/chat/provider-factory.ts",
     "next.config.mjs"
@@ -130,6 +133,7 @@ describe("getChatProvider", () => {
 
     expect(source).not.toContain(`${browserPublicPrefix}CHAT_PROVIDER`);
     expect(source).not.toContain(`${browserPublicPrefix}N8N`);
+    expect(source).not.toContain("chat-config");
   });
 
   it("keeps tracked browser-facing code on the custom ChatWidget path", () => {

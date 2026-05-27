@@ -115,6 +115,20 @@ browser. It does not add browser Supabase code, service-role keys,
 product/admin writes, conversation/message persistence, n8n workflow changes,
 Supabase Storage, or deployment configuration.
 
+Phase 1I-A adds the chat persistence privacy/security design and disabled
+server-only scaffolding only. `conversations` and `messages` are
+privacy-sensitive future records, so chat persistence must remain behind
+first-party server routes, use trusted server-side workspace resolution, avoid
+unnecessary PII, and treat browser-provided session IDs only as untrusted
+correlation hints. `clientMessageId` may support idempotency and deduplication
+only; it must not authenticate a caller or authorize access to a conversation.
+The scaffold under `website/lib/chat/persistence/` imports `server-only`, does
+not import Supabase, and returns explicit skipped results. This phase does not
+add Supabase reads or writes, migrations, service-role keys, browser Supabase
+code, Supabase Cloud connection, n8n workflow changes, admin chat history
+tools, RAG/vector DB, streaming/SSE, or authenticated user-linked
+conversations. See `docs/CHAT-PERSISTENCE-DESIGN.md`.
+
 ## n8n Responsibilities
 
 n8n remains temporary server-side integration only:
@@ -168,6 +182,9 @@ Provider selection is also server-only. Phase 1 supports only
 `CHAT_PROVIDER=n8n`; do not add `NEXT_PUBLIC_CHAT_PROVIDER`,
 `NEXT_PUBLIC_N8N_*`, or any browser-visible n8n provider configuration.
 
+Future provider-adjacent chat persistence must also be server-only. It must not
+allow the browser to write directly to Supabase or call n8n directly.
+
 ## Chat API Contract
 
 ### Request Shape
@@ -197,6 +214,10 @@ Provider selection is also server-only. Phase 1 supports only
   "timezone": "Asia/Singapore"
 }
 ```
+
+`clientSessionId` is not trusted identity. `clientMessageId` is for
+idempotency/deduplication only and must not be used for authentication or
+authorization.
 
 ### Response Shape
 

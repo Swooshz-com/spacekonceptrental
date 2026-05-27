@@ -172,6 +172,9 @@ describe("server Supabase runtime wiring", () => {
   it("leaves the existing chat API boundary independent of Supabase", () => {
     const source = [
       "app/api/chat/route.ts",
+      "lib/chat/persistence/disabled-chat-persistence.ts",
+      "lib/chat/persistence/index.ts",
+      "lib/chat/persistence/types.ts",
       "lib/chat/n8n-provider.ts",
       "lib/chat/placeholder-provider.ts",
       "lib/chat/provider.ts",
@@ -182,7 +185,12 @@ describe("server Supabase runtime wiring", () => {
 
     expect(source).not.toContain("@supabase/");
     expect(source).not.toContain("lib/supabase");
+    expect(source).not.toContain('from("conversations")');
+    expect(source).not.toContain('from("messages")');
+    expect(source).not.toContain(".insert(");
     expect(source).not.toContain("SUPABASE_URL");
     expect(source).not.toContain("SUPABASE_ANON_KEY");
+    expect(source).not.toContain("SUPABASE_SERVICE_ROLE");
+    expect(source).not.toContain("NEXT_PUBLIC_SUPABASE");
   });
 });

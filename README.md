@@ -24,7 +24,8 @@ customer-support-agent capstone requirements.
 - `kb/` - Markdown files to upload into the Google Drive knowledge-base folder.
 - `docs/` - operator runbooks, architecture docs, safety boundaries, phase
   roadmap, and checklists. Start with `docs/ARCHITECTURE.md` and
-  `docs/PHASE-ROADMAP.md` for the approved website direction.
+  `docs/PHASE-ROADMAP.md` for the approved website direction; use
+  `docs/CHAT-PERSISTENCE-DESIGN.md` for the deferred chat persistence boundary.
 - `presentation/` - capstone walkthrough deck.
 - `scripts/` - local workflow validation.
 - `website/` - Phase 1A Next.js frontend app root, with preserved design
@@ -144,10 +145,10 @@ The website frontend is now a Vercel-ready Next.js scaffold under `website/`.
 The current public surface includes the homepage, catalogue, quote shell, and
 first-party `POST /api/chat` route.
 
-The chat UI is custom and calls `/api/chat` only. The provider is currently a
-safe placeholder boundary; no live n8n provider wiring is included yet. Any
-future n8n access must stay server-only through environment variables such as
-`N8N_CHAT_WEBHOOK_URL`, not browser-side config.
+The chat UI is custom and calls `/api/chat` only. n8n access stays server-only
+behind `N8nChatProvider` and falls back safely when `N8N_CHAT_WEBHOOK_URL` is
+not configured. Chat persistence has only disabled server-only scaffolding;
+actual conversation/message writes remain deferred.
 
 Local frontend commands:
 

@@ -43,6 +43,22 @@ variables such as `N8N_CHAT_WEBHOOK_URL`.
 - Do not expose provider trace IDs, n8n node names, workflow errors, stack
   traces, or internal provider details to the browser.
 - Browser chat must call first-party `/api/chat`, not n8n.
+- Browser chat must not write directly to Supabase.
+- Do not add browser-visible `NEXT_PUBLIC_SUPABASE_*` or `NEXT_PUBLIC_` n8n
+  variables for the chat path.
+
+## Chat Persistence Privacy Rules
+
+- Treat `conversations` and `messages` as privacy-sensitive.
+- Do not add actual conversation or message persistence without separate
+  approval, migrations, RLS review, and tests.
+- Do not trust browser-provided session IDs as identity or authorization.
+- Use `clientMessageId` only for idempotency and deduplication, not
+  authentication.
+- Resolve chat workspace from trusted server-side configuration or a future
+  trusted host/workspace mapping, never from an anonymous browser field.
+- Avoid storing unnecessary PII, provider debug payloads, raw n8n internals,
+  webhook URLs, forwarding headers, or trace IDs.
 
 ## Chat Rate-Limit Identity Rules
 

@@ -22,7 +22,7 @@ Rough contents:
 - `scripts/` - local workflow validation and sync helper scripts.
 - `kb/` - Markdown knowledge base files for the current RAG demo.
 - `docs/` - architecture, safety, phase roadmap, runbooks, and checklists.
-- `website/` - current website design assets and future Next.js app root.
+- `website/` - Next.js app root plus current website design assets.
 
 ## Current Website State
 
@@ -60,6 +60,8 @@ Custom Chat UI -> POST /api/chat -> ChatProvider
 - MVP chat is non-streaming.
 - The provider interface may support streaming later, but streaming/SSE is not
   Phase 1.
+- Chat persistence design exists before writes. Conversation/message records
+  are privacy-sensitive and actual persistence remains deferred.
 
 ## Planning Notes
 
