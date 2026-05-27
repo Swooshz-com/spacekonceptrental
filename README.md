@@ -139,6 +139,12 @@ website with `npm ci`, tests, typecheck, and build.
 This is CI only. It does not deploy, configure Vercel, use secrets, or add CD;
 deployment remains deferred until separately approved.
 
+Phase 1O-A adds the deployment/environment readiness contract in
+`docs/DEPLOYMENT-ENVIRONMENT-READINESS.md` and the docs-only
+`docs/contracts/server-env-contract.json` manifest. These files document the
+future server-only environment requirements and forbidden public variables
+before any real deployment or Supabase Cloud connection is approved.
+
 ## Website App
 
 The website frontend is now a Vercel-ready Next.js scaffold under `website/`.

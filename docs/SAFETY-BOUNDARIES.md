@@ -47,6 +47,23 @@ variables such as `N8N_CHAT_WEBHOOK_URL`.
 - Do not add browser-visible `NEXT_PUBLIC_SUPABASE_*` or `NEXT_PUBLIC_` n8n
   variables for the chat path.
 
+## Deployment Environment Rules
+
+- Phase 1O-A is readiness only; it is not approval to deploy.
+- Required deployment env for Supabase, catalogue, quote, chat, and trusted
+  proxy header settings must be server-only.
+- Do not add real env values, deployment secrets, production config, Vercel
+  project config, or production seed data without separate approval.
+- Do not add `NEXT_PUBLIC_SUPABASE_*`, `NEXT_PUBLIC_N8N*`,
+  `SUPABASE_SERVICE_ROLE_KEY`, or any service-role runtime path.
+- Keep `N8N_CHAT_WEBHOOK_URL` server-only and never source it from
+  `website/chat-config.js`.
+- Trusted client IP header env must name only a header overwritten by the
+  deployment proxy or CDN.
+- Missing env must continue to fail safely: catalogue fallback, quote
+  persistence-unavailable response, and chat provider fallback or safe
+  unavailable response.
+
 ## Catalogue RLS Hardening Rules
 
 - Public catalogue reads must stay server-only unless a separate browser
