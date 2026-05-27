@@ -241,3 +241,16 @@ across workspaces. The RPC validates the server-configured expected workspace
 against database-owned active workspace state, uses no service-role key, keeps
 Supabase out of browser-facing code, and is covered by local behavioural RLS
 tests.
+
+## 2026-05-27: Active Catalogue Workspace Bootstrap Plan
+
+Decision: Phase 1N-A documents `catalogue_public_workspace_config` as
+deployment/database-owned configuration and adds a docs-only SQL example for a
+future approved operator to set the active public catalogue workspace.
+
+Reason: Phase 1M-A made DB-backed catalogue reads depend on a database-owned
+active workspace config row. The project needs a reviewed bootstrap path before
+real environments enable DB-backed public catalogue reads, while keeping
+Supabase Cloud connection, deployment, production seed data, service-role
+runtime writes, browser Supabase code, catalogue writes, quote throttling
+changes, and n8n workflow changes deferred.

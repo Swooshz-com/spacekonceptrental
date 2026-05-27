@@ -181,6 +181,15 @@ membership-scoped. This phase does not add Supabase Cloud connection, Supabase
 CLI usage, deployment, browser Supabase, service-role keys, catalogue writes,
 quote throttling changes, or n8n workflow changes.
 
+Phase 1N-A adds only the active catalogue workspace bootstrap plan and
+local-only SQL example under `docs/examples/supabase/`. It documents how a
+future approved operator can set `catalogue_public_workspace_config` after
+Supabase Cloud and deployment work are approved, and it keeps the missing-config
+fallback to shell catalogue data explicit. This phase does not change catalogue
+RLS or runtime behaviour from Phase 1M-A, add production seed data, connect to
+Supabase Cloud, use service-role runtime writes, add browser Supabase code,
+change quote throttling, add catalogue writes, or change n8n workflows.
+
 ## n8n Responsibilities
 
 n8n remains temporary server-side integration only:

@@ -125,6 +125,23 @@ Product media should eventually live in Supabase Storage with metadata records
 in `product_images`; Git-tracked prepared images are only for public shell
 visuals.
 
+## Local Operator Examples
+
+Docs-only SQL templates for future reviewed operator actions belong under:
+
+```text
+docs/examples/supabase/
+```
+
+They must not be placed under `supabase/migrations/` or `supabase/seeds/`, and
+the app must not import or execute them. Phase 1N-A uses this pattern for the
+active catalogue workspace bootstrap example that shows how a future approved
+operator could set `catalogue_public_workspace_config` with placeholder values
+only.
+
+These examples are not production seed data, not deployment configuration, and
+not approval to connect to Supabase Cloud or run live database changes.
+
 ## Static Validation
 
 Run:

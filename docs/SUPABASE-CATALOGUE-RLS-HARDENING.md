@@ -105,6 +105,22 @@ browser-facing source free of Supabase imports, service-role keys,
 DB-backed catalogue reads are preserved when the active workspace config is
 present.
 
+## Phase 1N-A Bootstrap Plan
+
+Phase 1N-A adds the active workspace bootstrap plan in
+`docs/SUPABASE-CATALOGUE-WORKSPACE-BOOTSTRAP.md` and a docs-only SQL example in
+`docs/examples/supabase/active-catalogue-workspace.example.sql`.
+
+The example is not a migration, not seed data, not imported by runtime code,
+and not automatically executed by the app. It uses placeholder values only and
+documents the future operator review path for setting
+`catalogue_public_workspace_config` once Supabase Cloud connection and
+deployment work are separately approved.
+
+Catalogue RLS and runtime behaviour from Phase 1M-A are unchanged. Missing
+active workspace config intentionally continues to trigger safe fallback to
+shell catalogue data rather than exposing cross-workspace base-table reads.
+
 ## Non-Approved Shortcuts
 
 The hardening did not add:
@@ -123,8 +139,6 @@ The hardening did not add:
 
 ## Deferred
 
-Database-owned active workspace configuration still needs an approved
-deployment-time management path before Supabase Cloud use. Supabase Cloud
-connection, deployment, browser Supabase clients, service-role reads/writes,
-production seed data, product persistence, conversation/message persistence,
-admin/auth UI, and Supabase Storage wiring remain deferred.
+Supabase Cloud connection, deployment, browser Supabase clients, service-role
+reads/writes, production seed data, product persistence, conversation/message
+persistence, admin/auth UI, and Supabase Storage wiring remain deferred.

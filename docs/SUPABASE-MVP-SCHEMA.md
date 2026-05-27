@@ -11,9 +11,10 @@ catalogue seed fixtures and Docker-only local validation. Phase 1G-A adds only
 server-side Supabase runtime wiring with private environment guards and static
 browser-boundary tests. Phase 1G-B adds server-only public catalogue read code
 for published catalogue data with safe missing-env fallback, and those queries
-must be scoped by server-only `CATALOGUE_WORKSPACE_ID`. Direct anonymous
-catalogue RLS hardening remains deferred until a trusted active-workspace read
-strategy can keep DB-backed catalogue reads working without service-role keys.
+must be scoped by server-only `CATALOGUE_WORKSPACE_ID`. At that point, direct
+anonymous catalogue RLS hardening remained deferred until a trusted
+active-workspace read strategy could keep DB-backed catalogue reads working
+without service-role keys.
 Phase 1H-A adds only first-party quote request persistence from
 `POST /api/quote` into `quote_requests` and optional freeform
 `quote_request_items`. Product persistence, conversation/message persistence,
@@ -40,6 +41,11 @@ through the server-only repository when Supabase env, `CATALOGUE_WORKSPACE_ID`,
 and database-owned active workspace config are present. Browser Supabase code,
 service-role keys, Supabase Cloud connection, deployment, catalogue writes,
 quote throttling changes, and n8n workflow changes remain out of scope.
+Phase 1N-A adds only the active catalogue workspace bootstrap plan and
+docs-only SQL example for future reviewed operator use. It does not add a
+production migration, production seed data, Supabase Cloud connection,
+deployment, service-role runtime writes, browser Supabase code, catalogue
+writes, quote throttling changes, or n8n workflow changes.
 
 ## Naming Decision
 
@@ -199,8 +205,9 @@ workspace config.
 
 Relationships: references `workspaces.id`.
 
-Deferred: approved Supabase Cloud configuration workflow, admin management UI,
-multi-host workspace mapping, and deployment-time active workspace operations.
+Deferred: approved Supabase Cloud configuration workflow, production execution
+of the bootstrap template, admin management UI, multi-host workspace mapping,
+and deployment-time active workspace operations.
 
 ### `quote_requests`
 
@@ -359,8 +366,9 @@ Phase 1F-D adds fake/sample catalogue seed fixtures only.
 Phase 1G-A completes step 6 with server-only runtime wiring only.
 Phase 1G-B completes step 7 with read-only published catalogue query code only,
 scoped by trusted server-only `CATALOGUE_WORKSPACE_ID`. Direct anonymous
-catalogue RLS hardening remains deferred until trusted active workspace
-scoping is approved and tested with a working anon-key read strategy.
+catalogue RLS hardening remained deferred at that point until trusted active
+workspace scoping was approved and tested with a working anon-key read
+strategy.
 Phase 1H-A completes step 8 with first-party quote request persistence only.
 Phase 1I-A documents step 9 and adds a disabled server-only code boundary only;
 step 9 remains deferred until a later approved persistence PR.
@@ -373,8 +381,11 @@ migrations, public catalogue runtime behaviour, or direct anonymous catalogue
 RLS policies.
 Phase 1M-A implements the trusted active-workspace read surface and tightens
 direct anonymous catalogue base-table reads after local behavioural proof.
+Phase 1N-A documents the active workspace bootstrap process and adds a
+local-only SQL example under `docs/examples/supabase/`; it is not a migration,
+not seed data, and not runtime code.
 
-## Deferred After Phase 1M-A
+## Deferred After Phase 1N-A
 
 - Supabase project connection.
 - Browser Supabase client code.

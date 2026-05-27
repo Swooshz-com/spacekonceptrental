@@ -81,6 +81,7 @@ required first.
       scaffolding.
 - [x] Harden direct anonymous catalogue RLS without breaking DB-backed
       catalogue reads.
+- [x] Add active catalogue workspace bootstrap plan and local-only scaffold.
 - [ ] Add product persistence.
 - [ ] Add category/product/product image mutation routes.
 - [ ] Add product image uploads.
@@ -121,6 +122,8 @@ required first.
       tests.
 - [x] Behavioural direct anonymous catalogue RLS hardening tests proving
       cross-workspace denial and configured active-workspace DB-backed reads.
+- [x] Static guard tests for the active catalogue workspace bootstrap
+      documentation and local-only SQL example.
 - [x] Server-only chat persistence scaffold guard tests.
 - [x] Tests proving no chat Supabase writes are added in Phase 1I-A.
 - [x] Server-only product/admin persistence scaffold guard tests.
@@ -144,6 +147,8 @@ required first.
 - [ ] No product publishing approval workflows.
 - [ ] No product audit log workflow.
 - [ ] No service-role product write paths.
+- [ ] No service-role runtime write paths.
+- [ ] No production seed data.
 - [ ] No authenticated user-linked conversations.
 - [ ] No chat history review/search/export.
 - [ ] No streaming/SSE.
