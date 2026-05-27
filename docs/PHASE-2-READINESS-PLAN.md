@@ -94,6 +94,8 @@ Required prerequisites:
 - Admin/auth architecture decision.
 - Membership and role model approval.
 - Workspace resolution rules for trusted admin requests.
+- Actor-to-membership binding rules proving the role belongs to the active
+  admin profile.
 - Mutation API or server-action design.
 - Audit log expectations for product changes.
 
@@ -102,6 +104,8 @@ Main risks:
 - Workspace confusion across tenants.
 - Public mutation routes.
 - Missing role checks.
+- Accepting a role from a membership that does not belong to the active admin
+  user.
 - Unreviewed publishing flows.
 - Service-role shortcuts that bypass RLS without a policy decision.
 
@@ -109,6 +113,8 @@ Required tests/guards:
 
 - Auth and membership unit tests.
 - RLS behavioural tests for admin member access.
+- Unit tests proving same-workspace memberships owned by another admin are
+  denied.
 - Static guards proving no public product mutation routes.
 - Tests proving anon cannot write categories, products, or product images.
 - Audit-log expectations for mutations once writes are approved.
@@ -127,10 +133,13 @@ Suggested first PR:
   guard tests only. Phase 2B-B adds a pure server-only authorization policy
   module and tests from explicit inputs, without real auth, routes, server
   actions, or product writes. Phase 2B-C adds the server-only auth/membership
-  resolver contract and disabled scaffold, still without runtime wiring. The
-  next PR in this track should still avoid product writes and should implement
-  only the reviewed server-side auth/membership resolution boundary with
-  anonymous, non-member, cross-workspace, and allowed-member tests.
+  resolver contract and disabled scaffold, still without runtime wiring.
+  Phase 2B-D adds server-only adapter contracts and dependency-injected
+  resolver tests with fake adapters only, without cookies, headers, real auth,
+  routes, server actions, or product writes. The next PR in this track should
+  still avoid product writes and should implement only the reviewed
+  server-side auth/membership resolution boundary with anonymous, non-member,
+  cross-workspace, and allowed-member tests.
 
 ### C. Conversation/message persistence path
 

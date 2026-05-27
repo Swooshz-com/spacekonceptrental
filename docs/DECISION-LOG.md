@@ -342,3 +342,21 @@ routes/pages/server actions, add product/category/product image writes, add
 service-role runtime paths, add browser Supabase, deploy, connect to Supabase
 Cloud, change catalogue RLS/runtime behaviour, change quote throttling, add
 conversation/message writes, or change n8n workflows.
+
+## 2026-05-28: Dependency-injected Admin Auth Adapter Boundary
+
+Decision: Phase 2B-D adds server-only admin auth/membership adapter contracts
+and a dependency-injected resolver path that can build policy input through
+explicit fake/test adapters only.
+
+Reason: future runtime admin boundaries need named contracts for authenticated
+identity lookup, admin profile lookup, workspace resolution, and membership
+lookup before real auth or database resolution is implemented. This phase does
+bind the policy membership input to the active admin profile so a same-workspace
+membership owned by another admin cannot authorize the actor. It does not
+implement real auth, add Supabase Auth runtime wiring, read cookies, read
+headers, add login/logout routes, add protected admin pages, add admin UI, add
+runtime routes/pages/server actions, add product/category/product image writes,
+add service-role runtime paths, add browser Supabase, deploy, connect to
+Supabase Cloud, change catalogue RLS/runtime behaviour, change quote
+throttling, add conversation/message writes, or change n8n workflows.

@@ -1,6 +1,14 @@
 import "server-only";
 
 import type {
+  AdminAuthAdapter,
+  AdminMembershipAdapter,
+  AdminProfileAdapter,
+  AdminWorkspaceResolver
+} from "./admin-authorization-adapters";
+import { authorizeAdminOperation } from "./admin-authorization-policy";
+import type {
+  AdminAuthorizationDecision,
   AdminAuthorizationInput,
   AdminMembershipState,
   AdminOperation,
@@ -32,6 +40,13 @@ export type AdminAuthResolutionResult =
       resolved: true;
       authorizationInput: AdminAuthorizationInput;
     };
+
+export type AdminAuthorizationAdapterSet = {
+  auth: AdminAuthAdapter;
+  profile: AdminProfileAdapter;
+  workspace: AdminWorkspaceResolver;
+  membership: AdminMembershipAdapter;
+};
 
 export type TrustedAdminAuthorizationContext = {
   authenticated: boolean;
@@ -72,4 +87,54 @@ export function buildAdminAuthorizationInput(
   }
 
   return authorizationInput;
+}
+
+export async function resolveAdminAuthorizationWithAdapters(
+  input: AdminAuthResolutionInput,
+  adapters: AdminAuthorizationAdapterSet
+): Promise<AdminAuthorizationDecision> {
+  const operation = input.requestedOperation ?? "";
+  const identity = await adapters.auth.resolveIdentity();
+
+  if (!identity.authenticated || !identity.authUserId) {
+    return authorizeAdminOperation({
+      authenticated: false,
+      operation
+    });
+  }
+
+  const adminUser = await adapters.profile.resolveAdminProfile(
+    identity.authUserId
+  );
+
+  if (!adminUser) {
+    return authorizeAdminOperation({
+      authenticated: true,
+      adminUser: null,
+      operation
+    });
+  }
+
+  const { serverResolvedWorkspaceId } =
+    await adapters.workspace.resolveWorkspaceForRequest(input);
+  const normalizedWorkspaceId = serverResolvedWorkspaceId?.trim() ?? "";
+  const membership = normalizedWorkspaceId
+    ? await adapters.membership.resolveMembership(
+        adminUser.id,
+        normalizedWorkspaceId
+      )
+    : null;
+
+  return authorizeAdminOperation(
+    buildAdminAuthorizationInput({
+      authenticated: true,
+      adminUser,
+      serverResolvedWorkspaceId: normalizedWorkspaceId,
+      membership,
+      requestedOperation: operation,
+      requestedRecordWorkspaceId: input.requestedRecordWorkspaceId,
+      requestedWorkspaceIdForValidationOnly:
+        input.requestedWorkspaceIdForValidationOnly
+    })
+  );
 }

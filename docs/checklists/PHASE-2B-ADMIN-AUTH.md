@@ -2,10 +2,12 @@
 
 Phase 2B-A is design and guard coverage only. Phase 2B-B adds a pure
 server-only policy module and tests only. Phase 2B-C adds a server-only
-resolver contract and disabled scaffold only. Keep real auth, Supabase Auth
-runtime wiring, admin UI, product management writes, browser Supabase,
-service-role runtime paths, deployment, and Supabase Cloud work unchecked until
-a future PR has explicit approval.
+resolver contract and disabled scaffold only. Phase 2B-D adds server-only
+adapter contracts and dependency-injected resolver tests with fake adapters
+only. Keep real auth, Supabase Auth runtime wiring, cookies, headers, admin UI,
+product management writes, browser Supabase, service-role runtime paths,
+deployment, and Supabase Cloud work unchecked until a future PR has explicit
+approval.
 
 ## Completed Policy Boundary
 
@@ -13,6 +15,8 @@ a future PR has explicit approval.
 - [x] Add policy tests for anonymous, inactive admin, missing membership, cross-workspace, role denial, and allowed-member decisions.
 - [x] Add server-only admin auth/membership resolver contract.
 - [x] Add disabled resolver scaffold tests.
+- [x] Add server-only admin auth/membership adapter contract.
+- [x] Add dependency-injected resolver tests with fake adapters.
 
 ## Design Approvals
 
@@ -45,6 +49,8 @@ a future PR has explicit approval.
 
 - [ ] Real auth runtime wiring.
 - [ ] Supabase Auth runtime wiring.
+- [ ] Cookie/session reads.
+- [ ] Header reads.
 - [ ] Admin UI.
 - [ ] Login/logout routes.
 - [ ] Product writes.

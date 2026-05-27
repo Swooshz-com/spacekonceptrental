@@ -22,6 +22,7 @@ const baseInput: AdminAuthorizationInput = {
   },
   serverResolvedWorkspaceId: activeWorkspaceId,
   membership: {
+    adminUserId: "admin-user-1",
     workspaceId: activeWorkspaceId,
     status: "active",
     role: "admin"
@@ -80,6 +81,7 @@ describe("admin authorization policy", () => {
     expect(
       authorize({
         membership: {
+          adminUserId: "admin-user-1",
           workspaceId: activeWorkspaceId,
           status: "inactive",
           role: "admin"
@@ -96,6 +98,7 @@ describe("admin authorization policy", () => {
     expect(
       authorize({
         membership: {
+          adminUserId: "admin-user-1",
           workspaceId: otherWorkspaceId,
           status: "active",
           role: "admin"
@@ -104,6 +107,45 @@ describe("admin authorization policy", () => {
     ).toEqual({
       allowed: false,
       reason: "workspace_mismatch",
+      statusCode: 403
+    });
+  });
+
+  it("denies memberships without an admin user binding", () => {
+    const unboundMembership = {
+      workspaceId: activeWorkspaceId,
+      status: "active" as const,
+      role: "owner" as const
+    };
+
+    expect(
+      authorize({
+        operation: "membership.manage",
+        membership: unboundMembership as AdminAuthorizationInput["membership"]
+      })
+    ).toEqual({
+      allowed: false,
+      reason: "membership_actor_mismatch",
+      statusCode: 403
+    });
+  });
+
+  it("denies memberships that are not owned by the active admin user", () => {
+    const anotherUsersMembership = {
+      adminUserId: "admin-user-2",
+      workspaceId: activeWorkspaceId,
+      status: "active" as const,
+      role: "owner" as const
+    };
+
+    expect(
+      authorize({
+        operation: "membership.manage",
+        membership: anotherUsersMembership
+      })
+    ).toEqual({
+      allowed: false,
+      reason: "membership_actor_mismatch",
       statusCode: 403
     });
   });
@@ -124,6 +166,7 @@ describe("admin authorization policy", () => {
     expect(
       authorize({
         membership: {
+          adminUserId: "admin-user-1",
           workspaceId: activeWorkspaceId,
           status: "active",
           role: "viewer"
@@ -140,6 +183,7 @@ describe("admin authorization policy", () => {
     expect(
       authorize({
         membership: {
+          adminUserId: "admin-user-1",
           workspaceId: activeWorkspaceId,
           status: "active",
           role: "viewer"
@@ -164,6 +208,7 @@ describe("admin authorization policy", () => {
         authorize({
           operation,
           membership: {
+            adminUserId: "admin-user-1",
             workspaceId: activeWorkspaceId,
             status: "active",
             role: "admin"
@@ -183,6 +228,7 @@ describe("admin authorization policy", () => {
       authorize({
         operation: "membership.manage",
         membership: {
+          adminUserId: "admin-user-1",
           workspaceId: activeWorkspaceId,
           status: "active",
           role: "admin"
@@ -200,6 +246,7 @@ describe("admin authorization policy", () => {
       authorize({
         operation: "membership.manage",
         membership: {
+          adminUserId: "admin-user-1",
           workspaceId: activeWorkspaceId,
           status: "active",
           role: "owner"

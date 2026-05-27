@@ -3,12 +3,17 @@
 Phase 2B-A is design and guard coverage only.
 Phase 2B-B adds a pure server-only policy module only.
 Phase 2B-C adds a server-only resolver contract and disabled scaffold only.
+Phase 2B-D adds server-only adapter contracts and dependency-injected resolver
+logic only.
 
+This PR adds server-only adapter contracts and dependency-injected resolver logic only.
 This PR does not implement auth.
 This PR does not implement real auth.
 This PR does not add admin UI.
 This PR does not add product writes.
 This PR does not add Supabase Auth runtime wiring.
+This PR does not read cookies.
+This PR does not read headers.
 This PR does not add login/logout routes.
 This PR does not add protected admin pages.
 This PR adds a server-only resolver contract and disabled scaffold only.
@@ -20,6 +25,8 @@ Browser Supabase remains forbidden.
 Service-role runtime paths remain forbidden unless separately approved.
 Workspace ID must never be accepted from browser input for trusted admin write scope.
 Admin write scope must be resolved server-side from authenticated identity + membership.
+The membership used for admin write scope must be owned by that active admin
+profile.
 Public mutation routes remain forbidden.
 Audit expectations must exist before product writes.
 
@@ -64,12 +71,23 @@ implement real auth, call Supabase, read cookies, read headers, read
 environment variables, perform database reads or writes, or wire itself into
 routes, pages, or server actions.
 
+Phase 2B-D adds
+`website/lib/admin/authorization/admin-authorization-adapters.ts` as a
+server-only adapter contract and extends the resolver with
+dependency-injected resolution for fake/test adapters. The adapter boundary
+names future identity, admin profile, membership, and workspace resolver
+dependencies. It does not implement real auth, call Supabase, read cookies,
+read headers, read environment variables, perform database reads or writes, or
+wire itself into routes, pages, or server actions.
+
 ## Non-goals
 
 This PR does not:
 
 - Implement real auth.
 - Add Supabase Auth runtime wiring.
+- Read cookies.
+- Read headers.
 - Add login or logout routes.
 - Add protected admin pages.
 - Add admin UI.
@@ -121,14 +139,16 @@ A future trusted admin write request must resolve:
 
 1. Authenticated identity from the approved server-side auth boundary.
 2. Active `admin_users` profile for that identity.
-3. Active `memberships` row for the target workspace.
+3. Active `memberships` row for that admin user and the target workspace.
 4. Role permission that allows the requested operation.
 
-Membership rows should be workspace-scoped and status-aware. Inactive,
-revoked, pending, or missing memberships must deny access.
+Membership rows should be workspace-scoped, actor-scoped, and status-aware.
+Inactive, revoked, pending, missing, or wrong-actor memberships must deny
+access.
 
 Membership IDs, role names, workspace IDs, or admin IDs from browser input must
-never be treated as authority.
+never be treated as authority. A membership role is trusted only when the
+membership row belongs to the active server-resolved admin profile.
 
 ## Role model
 
@@ -172,6 +192,7 @@ Every future admin mutation boundary must:
 - Run only on the server.
 - Validate the authenticated identity.
 - Resolve active admin user and active membership.
+- Verify the active membership belongs to that admin user.
 - Check role permission before mutation.
 - Validate and normalize request input.
 - Scope every read or write by resolved workspace.
@@ -203,15 +224,26 @@ until this gate is implemented and tested.
 
 The Phase 2B-B policy module can return an allowed policy decision for future
 admin and owner operations only when a future server-side resolver has already
-supplied authenticated identity, active admin profile, active same-workspace
-membership, role, requested operation, and optional same-workspace target
-record validation. It does not itself approve or perform product writes.
+supplied authenticated identity, active admin profile, active same-admin
+same-workspace membership, role, requested operation, and optional
+same-workspace target record validation. It does not itself approve or perform
+product writes. The policy denies memberships whose `adminUserId` does not
+match the active `adminUser.id`.
 
 The Phase 2B-C resolver scaffold returns `auth_resolver_disabled` by default.
 Its helper builds policy input only from explicitly supplied trusted
 server-resolved identity, admin profile, workspace, membership, and requested
 operation context. Browser/request workspace IDs remain validation-only
 metadata and must never become trusted workspace authority.
+
+The Phase 2B-D adapter boundary allows tests to supply fake identity, profile,
+workspace, and membership adapters to the resolver. The resolver delegates the
+final decision to `authorizeAdminOperation` after building policy input from
+the injected adapter results. Request or browser workspace IDs remain
+validation-only metadata; the trusted workspace must come from the injected
+server-side workspace resolver, and the trusted membership must be owned by the
+server-resolved admin profile. The default resolver remains disabled and no
+runtime route, page, or server action imports this adapter-driven path.
 
 ## Audit log expectations
 
@@ -242,6 +274,7 @@ RLS must prove:
 - Anonymous callers cannot write `categories`, `products`, or
   `product_images`.
 - Non-members cannot read or write workspace-owned admin data.
+- A member cannot authorize with another admin user's membership or role.
 - Members cannot cross workspace boundaries.
 - View-only roles cannot mutate product catalogue data.
 - Approved admin roles can perform only approved mutations in their workspace.

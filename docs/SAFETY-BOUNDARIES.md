@@ -147,6 +147,13 @@ variables such as `N8N_CHAT_WEBHOOK_URL`.
   runtime wiring, add login/logout routes, add protected admin pages, add admin
   UI, wire runtime routes/pages/server actions, add product writes, add browser
   Supabase, add service-role runtime paths, deploy, or connect Supabase Cloud.
+- Phase 2B-D admin auth/membership adapter code is a server-only
+  dependency-injected boundary tested with fake adapters only; it is not
+  approval to implement real auth, add Supabase Auth runtime wiring, read
+  cookies, read headers, add login/logout routes, add protected admin pages,
+  add admin UI, wire runtime routes/pages/server actions, add product writes,
+  add browser Supabase, add service-role runtime paths, deploy, or connect
+  Supabase Cloud.
 - Product, category, and product image writes are trusted-admin operations
   only.
 - Do not add browser-side Supabase writes for product management.
@@ -155,6 +162,8 @@ variables such as `N8N_CHAT_WEBHOOK_URL`.
 - Do not add service-role product write paths without separate approval.
 - Resolve product-management workspace access from trusted server-side auth and
   membership context, not browser input.
+- Require trusted admin membership context to be owned by the active
+  server-resolved admin profile before using its role.
 - Do not accept browser-provided workspace IDs as trusted admin write scope.
 - Future admin writes must resolve workspace access server-side from
   authenticated identity plus active membership and role checks.
