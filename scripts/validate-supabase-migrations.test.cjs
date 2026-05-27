@@ -412,6 +412,34 @@ test('real migrations add narrow anonymous website quote insert policies only', 
   assert.doesNotMatch(sql, /for delete to anon/);
 });
 
+test('real migrations do not enable anonymous chat persistence writes', () => {
+  const sql = normalizeSql(readAllRealMigrationSql());
+  const chatTables = ['conversations', 'messages'];
+
+  for (const tableName of chatTables) {
+    assert.doesNotMatch(
+      sql,
+      new RegExp(`grant\\s+insert[\\s\\S]*?on public\\.${tableName} to anon;`),
+      `${tableName} should not grant anonymous inserts`,
+    );
+    assert.doesNotMatch(
+      sql,
+      new RegExp(`create policy .* on public\\.${tableName} for insert to anon`),
+      `${tableName} should not have anonymous insert policies`,
+    );
+    assert.doesNotMatch(
+      sql,
+      new RegExp(`create policy .* on public\\.${tableName} for update to anon`),
+      `${tableName} should not have anonymous update policies`,
+    );
+    assert.doesNotMatch(
+      sql,
+      new RegExp(`create policy .* on public\\.${tableName} for delete to anon`),
+      `${tableName} should not have anonymous delete policies`,
+    );
+  }
+});
+
 test('real RLS policy migration scopes admin reads through workspace membership', () => {
   const { content } = readRealRlsPolicyMigration();
   const sql = normalizeSql(content);

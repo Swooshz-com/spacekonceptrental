@@ -31,6 +31,8 @@ platform.
 - [x] Ensure browser output contains no n8n webhook URLs.
 - [x] Ensure old static widget does not become a competing production path.
 - [x] Keep MVP chat non-streaming.
+- [x] Document chat persistence privacy/security design.
+- [x] Add disabled server-only chat persistence scaffold.
 
 ## Basic Supabase Schema Only
 
@@ -68,8 +70,11 @@ required first.
 - [x] Add server-side Supabase runtime wiring.
 - [x] Add public catalogue database reads.
 - [x] Add quote persistence.
+- [x] Add chat persistence design and server-only disabled scaffolding.
 - [ ] Add product persistence.
-- [ ] Add conversation/message persistence.
+- [ ] Add conversation persistence.
+- [ ] Add message persistence.
+- [ ] Connect to Supabase Cloud.
 - [ ] Add deployment.
 
 ## Product And Media Seed Strategy
@@ -97,6 +102,8 @@ required first.
 - [x] Supabase fake/sample seed fixture validation.
 - [x] Server-only Supabase runtime boundary tests.
 - [x] Server-only published catalogue read tests.
+- [x] Server-only chat persistence scaffold guard tests.
+- [x] Tests proving no chat Supabase writes are added in Phase 1I-A.
 - [x] Keep `npm run validate:n8n` while n8n workflows remain in repo.
 - [x] Keep `npm run test:n8n-validation` while n8n workflows remain in repo.
 
@@ -106,8 +113,15 @@ required first.
 - [ ] No full RAG/knowledge ingestion.
 - [ ] No production `InternalSaasChatProvider`.
 - [ ] No pgvector/Pinecone implementation.
+- [ ] No RAG/vector DB.
 - [ ] No full admin inbox/human takeover suite.
+- [ ] No admin/auth UI.
+- [ ] No authenticated user-linked conversations.
+- [ ] No chat history review/search/export.
 - [ ] No streaming/SSE.
+- [ ] No Supabase Cloud connection.
+- [ ] No browser Supabase client.
+- [ ] No Supabase Storage wiring.
 - [ ] No large tool invocation dashboards.
 - [ ] No large audit dashboards.
 - [ ] No large usage dashboards.

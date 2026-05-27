@@ -18,6 +18,10 @@ Phase 1H-A adds only first-party quote request persistence from
 `POST /api/quote` into `quote_requests` and optional freeform
 `quote_request_items`. Product persistence, conversation/message persistence,
 deployment, and Supabase Cloud connection remain deferred.
+Phase 1I-A adds only the chat persistence design and disabled server-only
+scaffolding. It does not read from Supabase, write to Supabase, add migrations,
+enable conversation/message persistence, connect to Supabase Cloud, or add
+browser Supabase code.
 
 ## Naming Decision
 
@@ -203,11 +207,14 @@ Key fields: `id`, `workspace_id`, `public_reference`, `client_session_hash`,
 Ownership / tenant boundary: every conversation belongs to one workspace.
 
 Access: service-only for public chat writes; admin-only for future inbox views.
+No browser-side Supabase writes are approved. Anonymous client-provided session
+IDs are untrusted and should be hashed only if session correlation is needed;
+they must not be used as identity or authorization.
 
 Relationships: parent for `messages`; may link to `quote_requests`.
 
 Deferred: full inbox, human takeover, transcript export, retention workflows,
-and internal chatbot runtime storage.
+internal chatbot runtime storage, and authenticated user-linked conversations.
 
 ### `messages`
 
@@ -220,11 +227,15 @@ Ownership / tenant boundary: every message belongs to the same workspace as its
 conversation.
 
 Access: service-only for writes; admin-only for future support review.
+`client_message_id` is for idempotency and deduplication only, not
+authentication or authorization. Future persistence should avoid unnecessary
+PII and must not store raw n8n internals, webhook URLs, provider trace IDs, or
+debug payloads without a separate privacy review.
 
 Relationships: belongs to `conversations`.
 
 Deferred: embeddings, attachments, streaming chunks, tool traces, provider
-debug payloads, and raw n8n internals.
+debug payloads, raw n8n internals, admin search/export, and retention policy.
 
 ### `usage_events`
 
@@ -305,8 +316,10 @@ scoped by trusted server-only `CATALOGUE_WORKSPACE_ID`. Direct anonymous
 catalogue RLS hardening remains deferred until trusted active workspace
 scoping is approved and tested with a working anon-key read strategy.
 Phase 1H-A completes step 8 with first-party quote request persistence only.
+Phase 1I-A documents step 9 and adds a disabled server-only code boundary only;
+step 9 remains deferred until a later approved persistence PR.
 
-## Deferred After Phase 1H-A
+## Deferred After Phase 1I-A
 
 - Supabase project connection.
 - Browser Supabase client code.
@@ -314,3 +327,8 @@ Phase 1H-A completes step 8 with first-party quote request persistence only.
 - Real product, conversation, or message persistence.
 - Admin product workflows.
 - Customer/private file import.
+- Actual conversation persistence.
+- Actual message persistence.
+- Chat history admin review/search/export.
+- RAG/vector DB.
+- Streaming/SSE.

@@ -166,3 +166,17 @@ The quote request row is the durable lead-capture boundary for this phase; if
 freeform item insertion fails after the quote row is captured, the public
 request is still treated as received and atomic quote/item writes remain
 deferred.
+
+## 2026-05-27: Chat Persistence Design Before Writes
+
+Decision: Phase 1I-A documents the future chat persistence privacy/security
+boundary and adds only disabled server-only scaffolding under
+`website/lib/chat/persistence/`.
+
+Reason: `conversations` and `messages` are privacy-sensitive and need trusted
+server-side workspace resolution, first-party route boundaries, idempotency
+rules, and PII minimization before any real writes are approved. This phase
+does not add conversation/message persistence, Supabase reads or writes,
+migrations, service-role keys, browser Supabase code, Supabase Cloud
+connection, n8n workflow changes, RAG/vector DB, streaming/SSE, admin chat
+history tools, or authenticated user-linked conversations.

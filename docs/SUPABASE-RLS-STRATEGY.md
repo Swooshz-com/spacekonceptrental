@@ -15,12 +15,16 @@ DB-backed catalogue reads working without service-role keys. Phase 1H-A also
 adds only first-party quote request persistence through `POST /api/quote`,
 backed by narrow anonymous insert policies for website quote rows and quote
 item rows.
+Phase 1I-A adds only chat persistence design and disabled server-only
+scaffolding. It does not add Supabase chat reads, chat writes, migrations,
+service-role keys, browser Supabase code, or Supabase Cloud connection.
 
 No runtime route should write Supabase data until each specific flow is
 separately approved and tested. Public catalogue read code is limited to the
 Phase 1G-B server-only repository, requires trusted workspace configuration,
 and applies application-level workspace filters. Quote writes are limited to
 the Phase 1H-A server-only repository and the approved quote tables.
+Conversation and message writes remain unapproved.
 
 ## Boundary Model
 
@@ -101,6 +105,7 @@ Phase 1H-A is the approved narrow exception for quote creation: the first-party
 server route uses the anon-key Supabase runtime with insert-only policies for
 `quote_requests` and `quote_request_items`. It does not add anonymous reads,
 updates, deletes, service-role keys, product writes, or chat persistence.
+Phase 1I-A does not create an exception for chat persistence.
 
 ## Anonymous Quote And Chat Flows
 
@@ -124,6 +129,12 @@ hardening phase must add a trusted active-workspace strategy that keeps
 DB-backed catalogue reads working without service-role keys, limits reads to
 published rows for the active workspace, and includes cross-workspace denial
 tests.
+
+For future chat writes, `clientSessionId` must remain an untrusted correlation
+hint rather than identity. `clientMessageId` may support idempotency and
+deduplication only; it must not authenticate the browser or authorize access to
+a conversation. Workspace identifiers must come from trusted server-side
+configuration or a future trusted host/workspace mapping, not the browser.
 
 ## Future Admin Scoping
 
@@ -163,7 +174,7 @@ Future runtime work must add targeted tests for any newly approved write path,
 including product persistence, chat persistence, and server-side service-role
 operations.
 
-## Deferred After Phase 1H-A
+## Deferred After Phase 1I-A
 
 - Browser Supabase client code.
 - Auth UI.
@@ -172,3 +183,7 @@ operations.
 - Direct anonymous catalogue RLS hardening before a trusted active-workspace
   read strategy exists.
 - Persistence for products, conversations, or messages.
+- Chat retention/audit policy.
+- Admin chat review/search/export.
+- RAG/vector DB.
+- Streaming/SSE.
