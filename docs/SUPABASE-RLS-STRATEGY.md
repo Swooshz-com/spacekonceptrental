@@ -18,6 +18,10 @@ item rows.
 Phase 1I-A adds only chat persistence design and disabled server-only
 scaffolding. It does not add Supabase chat reads, chat writes, migrations,
 service-role keys, browser Supabase code, or Supabase Cloud connection.
+Phase 1J-A adds only product/admin persistence design and disabled server-only
+scaffolding. It does not add Supabase product reads or writes, mutations,
+migrations, service-role keys, browser Supabase code, Supabase Storage, admin
+UI, product image uploads, or Supabase Cloud connection.
 
 No runtime route should write Supabase data until each specific flow is
 separately approved and tested. Public catalogue read code is limited to the
@@ -25,6 +29,7 @@ Phase 1G-B server-only repository, requires trusted workspace configuration,
 and applies application-level workspace filters. Quote writes are limited to
 the Phase 1H-A server-only repository and the approved quote tables.
 Conversation and message writes remain unapproved.
+Product, category, and product image writes remain unapproved.
 
 ## Boundary Model
 
@@ -85,6 +90,26 @@ an active membership in the row workspace:
 
 Future admin policies should scope reads and writes through membership checks,
 not through client-provided role claims alone.
+
+## Product/Admin Write Boundary
+
+Product-management writes are trusted-admin operations only. No anonymous
+category, product, or product image insert, update, delete, or upsert path is
+approved. No public product mutation route is approved.
+
+Future product/admin writes must go through first-party server routes or server
+actions after auth and admin membership boundaries exist. The server must
+resolve workspace access from trusted auth and membership context, not from
+browser-provided workspace IDs, admin IDs, membership IDs, or role names.
+
+No service-role product write path is approved in Phase 1J-A. If a future
+service-role path is proposed, it must be separately approved, remain
+server-only, include abuse and authorization controls, and prove that the
+service-role key cannot reach browser code.
+
+Product image/media writes remain deferred until Supabase Storage buckets,
+policies, upload flows, path validation, and lifecycle rules are approved.
+Git-tracked prepared images remain demo/public-shell assets only.
 
 ## Service-Only Tables Or Operations
 
@@ -169,12 +194,16 @@ Phase 1F-C-A adds static tests proving the intended migration structure. Phase
   representative browser-role writes are rejected.
 - Runtime website Supabase reads stay server-only, published-only,
   workspace-scoped, and out of browser-facing code.
+- Product/admin persistence scaffolding stays server-only, imports no
+  Supabase runtime, and returns disabled results.
+- Migrations add no anonymous category, product, or product image write grants
+  or policies.
 
 Future runtime work must add targeted tests for any newly approved write path,
 including product persistence, chat persistence, and server-side service-role
 operations.
 
-## Deferred After Phase 1I-A
+## Deferred After Phase 1J-A
 
 - Browser Supabase client code.
 - Auth UI.
@@ -182,7 +211,12 @@ operations.
 - Direct browser Supabase reads or writes.
 - Direct anonymous catalogue RLS hardening before a trusted active-workspace
   read strategy exists.
-- Persistence for products, conversations, or messages.
+- Persistence for categories, products, product images, conversations, or
+  messages.
+- Product mutation routes.
+- Supabase Storage wiring.
+- Product image uploads.
+- Service-role product write paths.
 - Chat retention/audit policy.
 - Admin chat review/search/export.
 - RAG/vector DB.

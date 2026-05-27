@@ -62,6 +62,10 @@ Custom Chat UI -> POST /api/chat -> ChatProvider
   Phase 1.
 - Chat persistence design exists before writes. Conversation/message records
   are privacy-sensitive and actual persistence remains deferred.
+- Product/admin persistence design exists before writes. Category, product, and
+  product image writes are trusted-admin operations only, and actual
+  persistence remains deferred until auth/admin and media boundaries are
+  approved.
 
 ## Planning Notes
 

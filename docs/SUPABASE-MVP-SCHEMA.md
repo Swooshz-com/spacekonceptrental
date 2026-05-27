@@ -22,6 +22,11 @@ Phase 1I-A adds only the chat persistence design and disabled server-only
 scaffolding. It does not read from Supabase, write to Supabase, add migrations,
 enable conversation/message persistence, connect to Supabase Cloud, or add
 browser Supabase code.
+Phase 1J-A adds only the product/admin persistence design and disabled
+server-only scaffolding. It does not read from Supabase, write to Supabase, add
+migrations, enable product/category/product image persistence, connect to
+Supabase Cloud, add admin/auth UI, add Supabase Storage wiring, add product
+image upload flows, or add browser Supabase code.
 
 ## Naming Decision
 
@@ -107,7 +112,9 @@ Ownership / tenant boundary: every category belongs to one workspace.
 
 Access: public-readable only when published; runtime public catalogue code
 must additionally scope reads to a trusted active workspace. Admin-only for
-drafts and edits.
+drafts and edits. Future writes must be trusted-admin operations through
+first-party server routes or server actions after auth and membership scoping
+exist; no anonymous category writes are approved.
 
 Relationships: parent for `products.category_id`.
 
@@ -126,7 +133,9 @@ Ownership / tenant boundary: every product belongs to one workspace.
 
 Access: public-readable only when published; runtime public catalogue code
 must additionally scope reads to a trusted active workspace. Admin-only for
-drafts and edits.
+drafts and edits. Future writes must be trusted-admin operations through
+first-party server routes or server actions after auth and membership scoping
+exist; no anonymous product writes are approved.
 
 Relationships: belongs to `categories`; parent for `product_images` and future
 quote item references.
@@ -149,7 +158,10 @@ product.
 Access: public-readable only when the parent product is published and the
 media path is safe for public delivery; runtime public catalogue code must
 additionally scope reads to a trusted active workspace. Admin-only for draft
-media management.
+media management. Future metadata writes must be trusted-admin operations
+through first-party server routes or server actions after auth, membership
+scoping, and the Supabase Storage strategy are approved; no anonymous product
+image writes are approved.
 
 Relationships: belongs to `products`.
 
@@ -318,17 +330,25 @@ scoping is approved and tested with a working anon-key read strategy.
 Phase 1H-A completes step 8 with first-party quote request persistence only.
 Phase 1I-A documents step 9 and adds a disabled server-only code boundary only;
 step 9 remains deferred until a later approved persistence PR.
+Phase 1J-A documents the future product/admin persistence boundary and adds a
+disabled server-only code boundary only; real product persistence remains
+deferred until a later approved persistence PR.
 
-## Deferred After Phase 1I-A
+## Deferred After Phase 1J-A
 
 - Supabase project connection.
 - Browser Supabase client code.
 - Production seed data.
-- Real product, conversation, or message persistence.
+- Real category, product, product image, conversation, or message persistence.
 - Admin product workflows.
+- Admin/auth UI.
 - Customer/private file import.
 - Actual conversation persistence.
 - Actual message persistence.
+- Supabase Storage wiring.
+- Product image upload flows.
+- Product mutation routes.
+- Service-role write paths.
 - Chat history admin review/search/export.
 - RAG/vector DB.
 - Streaming/SSE.

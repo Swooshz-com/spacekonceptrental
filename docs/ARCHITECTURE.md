@@ -45,7 +45,7 @@ The future `website/` Next.js app owns:
 Current Phase 1 public route shells are `/`, `/catalogue`,
 `/catalogue/lounge-sofa-package`, `/events`, and `/quote`. They use static
 placeholder content and prepared assets only; real product persistence, event
-persistence, and Supabase-backed catalogue data are deferred.
+persistence, and product-management writes are deferred.
 
 The browser must receive only safe normalized responses. It must not receive
 provider trace IDs, webhook URLs, n8n errors, n8n node names, or stack traces.
@@ -128,6 +128,19 @@ add Supabase reads or writes, migrations, service-role keys, browser Supabase
 code, Supabase Cloud connection, n8n workflow changes, admin chat history
 tools, RAG/vector DB, streaming/SSE, or authenticated user-linked
 conversations. See `docs/CHAT-PERSISTENCE-DESIGN.md`.
+
+Phase 1J-A adds the product/admin persistence design and disabled server-only
+scaffolding only. Future category, product, and product image writes are
+trusted-admin operations that must go through first-party server routes or
+server actions after auth/admin membership boundaries exist. The scaffold under
+`website/lib/products/persistence/` imports `server-only`, does not import
+Supabase, and returns explicit skipped results. Public catalogue reads remain
+read-only, published-only, and scoped by trusted server-only workspace
+configuration. This phase does not add product/category/product image writes,
+public mutation routes, admin/auth UI, Supabase Storage, product image upload
+flows, service-role write paths, Supabase Cloud connection, browser Supabase
+code, deployment configuration, or n8n workflow changes. See
+`docs/PRODUCT-ADMIN-PERSISTENCE-DESIGN.md`.
 
 ## n8n Responsibilities
 
