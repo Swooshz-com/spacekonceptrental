@@ -195,3 +195,19 @@ image persistence, public mutation routes, admin/auth UI, Supabase reads or
 writes, migrations, service-role keys, browser Supabase code, Supabase Storage,
 product image upload flows, Supabase Cloud connection, deployment, or n8n
 workflow changes.
+
+## 2026-05-27: Quote Endpoint Abuse Throttling
+
+Decision: Phase 1K-A adds best-effort in-process abuse throttling to
+`POST /api/quote` before quote persistence writes.
+
+Reason: the public unauthenticated quote route intentionally accepts bounded
+website quote submissions, but repeated valid submissions can pollute quote
+data and consume Supabase write quota. The route now uses bounded in-memory
+client and normalized-email buckets, trusts forwarding headers only when
+`QUOTE_TRUSTED_CLIENT_IP_HEADER` is configured to an approved proxy/CDN
+header, falls back to a shared fail-closed bucket otherwise, and returns safe
+generic `429` responses with `retry-after`. This phase does not change quote
+table schema, quote persistence semantics, Supabase RLS policies, direct
+anonymous catalogue RLS, browser Supabase code, service-role keys, deployment,
+external anti-abuse services, or n8n workflows.

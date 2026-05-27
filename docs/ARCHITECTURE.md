@@ -59,6 +59,15 @@ fail-closed public chat cap so rotating `clientSessionId` cannot bypass rate
 limits. Deployments should configure a trusted client IP header to avoid
 over-broad fallback throttling.
 
+Quote abuse throttling is also route-level and best-effort in Phase 1K-A.
+`POST /api/quote` validates bounded JSON first, then applies in-process
+throttling before quote persistence writes. It uses a trusted client IP bucket
+only when `QUOTE_TRUSTED_CLIENT_IP_HEADER` names a forwarding header that the
+deployment proxy or CDN overwrites; otherwise it uses a fail-closed fallback
+bucket. Validated lowercase email is used as an additional contact bucket when
+present. Throttled responses return a safe generic `429` with `retry-after`.
+This does not replace future distributed CDN/WAF/platform abuse controls.
+
 ## Supabase Responsibilities
 
 Supabase is the system of record for:
@@ -141,6 +150,15 @@ public mutation routes, admin/auth UI, Supabase Storage, product image upload
 flows, service-role write paths, Supabase Cloud connection, browser Supabase
 code, deployment configuration, or n8n workflow changes. See
 `docs/PRODUCT-ADMIN-PERSISTENCE-DESIGN.md`.
+
+Phase 1K-A adds only route-level quote endpoint abuse throttling. The existing
+quote persistence boundary remains unchanged: accepted requests still use the
+server-only quote repository and approved quote insert path, while throttled
+requests stop before persistence. This phase does not add new Supabase
+migrations, service-role writes, browser Supabase code, external anti-abuse
+services, deployment configuration, admin/auth UI, product persistence,
+conversation/message persistence, Supabase Storage, public catalogue behavior
+changes, direct anonymous catalogue RLS hardening, or n8n workflow changes.
 
 ## n8n Responsibilities
 

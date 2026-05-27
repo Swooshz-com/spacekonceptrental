@@ -1,10 +1,11 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { handleQuotePost, POST } from "./route";
+import { handleQuotePost, POST, resetQuoteRouteStateForTests } from "./route";
 
 const envKeys = [
   "SUPABASE_URL",
   "SUPABASE_ANON_KEY",
-  "QUOTE_WORKSPACE_ID"
+  "QUOTE_WORKSPACE_ID",
+  "QUOTE_TRUSTED_CLIENT_IP_HEADER"
 ] as const;
 const originalEnv = new Map(
   envKeys.map((key) => [key, process.env[key]])
@@ -59,6 +60,7 @@ function restoreEnv() {
 describe("POST /api/quote", () => {
   afterEach(() => {
     restoreEnv();
+    resetQuoteRouteStateForTests();
     vi.restoreAllMocks();
   });
 
@@ -93,6 +95,245 @@ describe("POST /api/quote", () => {
         }
       ]
     });
+  });
+
+  it("uses a fallback rate-limit bucket when no trusted client IP source is available", async () => {
+    delete process.env.QUOTE_TRUSTED_CLIENT_IP_HEADER;
+
+    const repository = vi.fn(async () => ({
+      ok: true as const,
+      quoteRequestId: "70000000-0000-4000-8000-000000000001",
+      publicReference: "QR-20260527-ABC12345"
+    }));
+
+    for (let index = 0; index < 5; index += 1) {
+      const response = await handleQuotePost(
+        postJson(
+          {
+            ...validPayload,
+            customerEmail: `maya-${index}@example.test`
+          },
+          { "x-forwarded-for": `198.51.100.${index}` }
+        ),
+        repository
+      );
+
+      expect(response.status).toBe(201);
+    }
+
+    const blocked = await handleQuotePost(
+      postJson(
+        {
+          ...validPayload,
+          customerEmail: "maya-blocked@example.test"
+        },
+        {
+          "cf-connecting-ip": "203.0.113.220",
+          "x-forwarded-for": "203.0.113.221"
+        }
+      ),
+      repository
+    );
+    const body = await blocked.json();
+
+    expect(blocked.status).toBe(429);
+    expect(blocked.headers.get("retry-after")).toMatch(/^[1-9]\d*$/);
+    expect(body.error.code).toBe("RATE_LIMITED");
+    expect(repository).toHaveBeenCalledTimes(5);
+  });
+
+  it("uses a configured trusted client IP header to separate buckets", async () => {
+    process.env.QUOTE_TRUSTED_CLIENT_IP_HEADER = "cf-connecting-ip";
+
+    const repository = vi.fn(async () => ({
+      ok: true as const,
+      quoteRequestId: crypto.randomUUID(),
+      publicReference: "QR-20260527-ABC12345"
+    }));
+
+    for (let index = 0; index < 5; index += 1) {
+      const response = await handleQuotePost(
+        postJson(
+          {
+            ...validPayload,
+            customerEmail: `trusted-a-${index}@example.test`
+          },
+          { "cf-connecting-ip": "203.0.113.10" }
+        ),
+        repository
+      );
+
+      expect(response.status).toBe(201);
+    }
+
+    for (let index = 0; index < 5; index += 1) {
+      const response = await handleQuotePost(
+        postJson(
+          {
+            ...validPayload,
+            customerEmail: `trusted-b-${index}@example.test`
+          },
+          { "cf-connecting-ip": "203.0.113.11" }
+        ),
+        repository
+      );
+
+      expect(response.status).toBe(201);
+    }
+
+    const blocked = await handleQuotePost(
+      postJson(
+        {
+          ...validPayload,
+          customerEmail: "trusted-a-blocked@example.test"
+        },
+        { "cf-connecting-ip": "203.0.113.10" }
+      ),
+      repository
+    );
+
+    expect(blocked.status).toBe(429);
+    expect(repository).toHaveBeenCalledTimes(10);
+  });
+
+  it("ignores user-supplied forwarding headers unless explicitly configured as trusted", async () => {
+    delete process.env.QUOTE_TRUSTED_CLIENT_IP_HEADER;
+
+    const repository = vi.fn(async () => ({
+      ok: true as const,
+      quoteRequestId: crypto.randomUUID(),
+      publicReference: "QR-20260527-ABC12345"
+    }));
+
+    for (let index = 0; index < 5; index += 1) {
+      const response = await handleQuotePost(
+        postJson(
+          {
+            ...validPayload,
+            customerEmail: `spoofed-${index}@example.test`
+          },
+          { "x-forwarded-for": `198.51.100.${index}` }
+        ),
+        repository
+      );
+
+      expect(response.status).toBe(201);
+    }
+
+    const blocked = await handleQuotePost(
+      postJson(
+        {
+          ...validPayload,
+          customerEmail: "spoofed-blocked@example.test"
+        },
+        { "x-forwarded-for": "198.51.100.200" }
+      ),
+      repository
+    );
+
+    expect(blocked.status).toBe(429);
+    expect(repository).toHaveBeenCalledTimes(5);
+  });
+
+  it("throttles repeated normalized email submissions across trusted client IP buckets", async () => {
+    process.env.QUOTE_TRUSTED_CLIENT_IP_HEADER = "cf-connecting-ip";
+
+    const repository = vi.fn(async () => ({
+      ok: true as const,
+      quoteRequestId: crypto.randomUUID(),
+      publicReference: "QR-20260527-ABC12345"
+    }));
+
+    for (let index = 0; index < 5; index += 1) {
+      const response = await handleQuotePost(
+        postJson(
+          {
+            ...validPayload,
+            customerEmail: "  Maya.Repeated@Example.Test  "
+          },
+          { "cf-connecting-ip": `203.0.113.${index + 40}` }
+        ),
+        repository
+      );
+
+      expect(response.status).toBe(201);
+    }
+
+    const blocked = await handleQuotePost(
+      postJson(
+        {
+          ...validPayload,
+          customerEmail: "maya.repeated@example.test"
+        },
+        { "cf-connecting-ip": "203.0.113.99" }
+      ),
+      repository
+    );
+
+    expect(blocked.status).toBe(429);
+    expect(repository).toHaveBeenCalledTimes(5);
+  });
+
+  it("returns a safe 429 without leaking internal throttling details", async () => {
+    process.env.QUOTE_TRUSTED_CLIENT_IP_HEADER = "cf-connecting-ip";
+
+    const repository = vi.fn(async () => ({
+      ok: true as const,
+      quoteRequestId: crypto.randomUUID(),
+      publicReference: "QR-20260527-ABC12345"
+    }));
+    const headers = {
+      "cf-connecting-ip": "203.0.113.77",
+      "x-forwarded-for": "198.51.100.77"
+    };
+
+    for (let index = 0; index < 5; index += 1) {
+      const response = await handleQuotePost(
+        postJson(
+          {
+            ...validPayload,
+            customerEmail: `safe-limit-${index}@example.test`
+          },
+          headers
+        ),
+        repository
+      );
+
+      expect(response.status).toBe(201);
+    }
+
+    const blocked = await handleQuotePost(
+      postJson(
+        {
+          ...validPayload,
+          customerEmail: "safe-limit-blocked@example.test"
+        },
+        headers
+      ),
+      repository
+    );
+    const body = await blocked.json();
+    const serialized = JSON.stringify(body);
+
+    expect(blocked.status).toBe(429);
+    expect(body).toEqual({
+      error: {
+        code: "RATE_LIMITED",
+        message: "Too many quote requests. Please try again soon."
+      },
+      requestId: expect.any(String)
+    });
+    expect(serialized).not.toContain("203.0.113.77");
+    expect(serialized).not.toContain("198.51.100.77");
+    expect(serialized).not.toContain("cf-connecting-ip");
+    expect(serialized).not.toContain("x-forwarded-for");
+    expect(serialized).not.toContain("fallback");
+    expect(serialized).not.toContain("bucket");
+    expect(serialized).not.toContain("SUPABASE");
+    expect(serialized).not.toContain("Supabase");
+    expect(serialized).not.toContain("quote_requests");
+    expect(serialized).not.toContain("stack");
+    expect(repository).toHaveBeenCalledTimes(5);
   });
 
   it("rejects invalid payloads before calling the repository", async () => {
