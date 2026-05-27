@@ -377,3 +377,31 @@ add product/category/product image writes, add service-role runtime paths, add
 browser Supabase, deploy, connect to Supabase Cloud, change catalogue
 RLS/runtime behaviour, change quote throttling, add conversation/message
 writes, or change n8n workflows.
+
+## 2026-05-28: Checklist Hygiene And Current Phase Status
+
+Decision: Phase 2B-F adds checklist maintenance rules, a quick phase status
+page, reconciled checklist ownership/status, and static guard coverage only.
+
+Reason: after the Phase 2B admin/auth design, policy, resolver, adapter, and
+provider-session milestones, the repo needs checklists that stay truthful,
+non-duplicative, and maintained along with development. This phase does not
+implement real auth, add Supabase Auth runtime wiring, read cookies, read
+headers, add login/logout routes, add protected admin pages, add admin UI, wire
+resolver/adapters into runtime routes/pages/server actions, add
+product/category/product image writes, deploy, connect to Supabase Cloud,
+change catalogue RLS/runtime behaviour, change quote throttling, add
+conversation/message writes, change n8n workflows, add Pinecone runtime code,
+migrate Pinecone, or add SaaS chatbot app code.
+
+## 2026-05-28: Separate Future SaaS Chatbot Boundary
+
+Decision: the current SKR repo may keep using the existing n8n/Pinecone chatbot
+workflow as a temporary production bridge while the website stabilizes. The
+future SaaS chatbot should be a separate project/app, and SKR can later become
+its first client/tenant.
+
+Reason: the current n8n/Pinecone workflow should remain current RAG workflow
+context only, not be forced into the future SaaS architecture. This keeps the
+Phase 2B-F PR limited to docs/status hygiene and avoids Pinecone migration,
+Pinecone credentials, SaaS chatbot app code, or n8n workflow changes.

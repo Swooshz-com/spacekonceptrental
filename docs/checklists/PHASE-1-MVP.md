@@ -1,5 +1,10 @@
 # Phase 1 Checklist: Small MVP
 
+Historical/closeout checklist. This records what Phase 1 completed and what it
+intentionally deferred.
+
+Deferred runtime work below points to the current Phase 2 checklists and remains unchecked.
+
 Phase 1 is intentionally small. It is not approval to build the full SaaS
 platform.
 
@@ -39,6 +44,8 @@ platform.
 - [x] Add disabled server-only product/admin persistence scaffold.
 - [x] Add deployment/environment readiness contract without deployment.
 - [x] Add Phase 1 closeout audit and Phase 2 readiness plan.
+- [x] Reconcile checklist history/status without marking deferred runtime work
+      complete.
 
 ## Basic Supabase Schema Only
 
@@ -94,6 +101,15 @@ required first.
 - [ ] Add message persistence.
 - [ ] Connect to Supabase Cloud.
 - [ ] Add deployment.
+
+Future ownership:
+
+- Deployment readiness now belongs to `PHASE-2A-DEPLOYMENT-READINESS.md`.
+- Admin/auth readiness now belongs to `PHASE-2B-ADMIN-AUTH.md`.
+- Runtime auth implementation now belongs to
+  `PHASE-2B-AUTH-IMPLEMENTATION.md`.
+- Product/category/product image writes remain blocked by the Phase 2 admin
+  auth, RLS, audit, and route/action gates.
 
 ## Product And Media Seed Strategy
 

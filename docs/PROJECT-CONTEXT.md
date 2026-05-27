@@ -56,7 +56,12 @@ Custom Chat UI -> POST /api/chat -> ChatProvider
   conversations, messages, auth, storage, RLS, and tenant-ready boundaries.
 - n8n remains temporary server-side integration only.
 - `N8nChatProvider` calls n8n from the server in Phase 1.
-- `InternalSaasChatProvider` may later replace n8n as the chat runtime.
+- The current SKR website may keep using the existing n8n/Pinecone chatbot
+  workflow as a temporary production bridge while the website stabilizes.
+- The future SaaS chatbot should be a separate project/app, and SKR can later
+  become the first client/tenant of that SaaS chatbot.
+- Do not implement SaaS chatbot app work inside this repo yet.
+- Do not migrate Pinecone in this repo yet.
 - MVP chat is non-streaming.
 - The provider interface may support streaming later, but streaming/SSE is not
   Phase 1.
@@ -110,6 +115,19 @@ Custom Chat UI -> POST /api/chat -> ChatProvider
   not implement real auth, read cookies, read headers, add routes, add server
   actions, add admin UI, add product writes, add browser Supabase, add
   service-role runtime paths, deploy, or connect Supabase Cloud.
+- Phase 2B-F adds checklist hygiene, checklist maintenance rules, phase status
+  reconciliation, and static guard coverage only. It does not implement real
+  auth, add Supabase Auth runtime wiring, read cookies, read headers, add
+  login/logout routes, add protected admin pages, add admin UI, add runtime
+  routes/pages/server actions, add product writes, add browser Supabase, add
+  service-role runtime paths, deploy, connect Supabase Cloud, change n8n
+  workflows, add Pinecone runtime code, migrate Pinecone, or add SaaS chatbot
+  app code.
+
+## Current Status Pages
+
+- `docs/PHASE-STATUS.md` - quick current phase/status summary.
+- `docs/checklists/README.md` - checklist ownership and maintenance rules.
 
 ## Planning Notes
 

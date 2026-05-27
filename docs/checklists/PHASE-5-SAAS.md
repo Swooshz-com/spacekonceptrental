@@ -2,6 +2,10 @@
 
 This phase is not approved for implementation yet.
 
+This checklist is future SaaS guardrail material only. The future SaaS chatbot
+should be a separate project/app; do not implement SaaS chatbot code in this
+SKR repo yet.
+
 ## Directional Scope
 
 - [ ] Multi-tenant SaaS hardening.

@@ -8,6 +8,9 @@ guardrails only and are not approval to implement those phases now.
 Any phase change must update this roadmap, the relevant checklist, the ADR or
 decision log, and safety docs in the same PR.
 
+For the current quick status, see `docs/PHASE-STATUS.md`. For checklist
+ownership and maintenance rules, see `docs/checklists/README.md`.
+
 Before any implementation work, start from a clean branch or explicitly separate
 unrelated local changes.
 
@@ -51,6 +54,9 @@ Deployment readiness checklist:
 Admin/auth readiness checklist:
 `docs/checklists/PHASE-2B-ADMIN-AUTH.md`
 
+Future auth implementation checklist:
+`docs/checklists/PHASE-2B-AUTH-IMPLEMENTATION.md`
+
 Phase 2A-A adds deployment smoke-test runbook and operator evidence templates
 only. It is not approval to deploy, connect Supabase Cloud, add Vercel config,
 or add runtime features.
@@ -86,14 +92,26 @@ routes, add protected admin pages, add admin UI, wire runtime routes/pages/serve
 actions, add product writes, add service-role runtime paths, add browser
 Supabase, deploy, or connect Supabase Cloud.
 
+Phase 2B-F adds checklist hygiene and phase status reconciliation only. It is
+not approval to implement real auth, add Supabase Auth runtime wiring, read
+cookies, read headers, add login/logout routes, add protected admin pages, add
+admin UI, wire runtime routes/pages/server actions, add product/category/product
+image writes, add service-role runtime paths, add browser Supabase, deploy,
+connect Supabase Cloud, change n8n workflows, add Pinecone runtime code, or add
+SaaS chatbot app code.
+
 This phase is not approved for implementation yet.
 
-## Phase 3: Internal Chatbot Provider
+## Phase 3: SaaS Chatbot Boundary
 
-Goal: implement `InternalSaasChatProvider` behind the same provider contract and
-switch providers without changing the frontend.
+Goal: decide the separate SaaS chatbot project/app boundary and how SKR can
+later become its first client/tenant, without implementing SaaS chatbot code in
+this repo yet.
 
 Checklist: `docs/checklists/PHASE-3-INTERNAL-CHATBOT.md`
+
+Current SKR may keep using the existing n8n/Pinecone chatbot workflow as a
+temporary bridge. The browser must never call n8n directly.
 
 This phase is not approved for implementation yet.
 
@@ -103,6 +121,9 @@ Goal: introduce knowledge source models, document ingestion, chunking,
 embeddings, retrieval, and vector storage decisions.
 
 Checklist: `docs/checklists/PHASE-4-RAG-KNOWLEDGE.md`
+
+Do not migrate Pinecone in this repo yet. Pinecone/n8n remain current RAG
+workflow context only.
 
 This phase is not approved for implementation yet.
 

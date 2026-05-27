@@ -2,6 +2,10 @@
 
 This phase is not approved for implementation yet.
 
+This checklist is a future launch guardrail only. It is not approval to add
+payment code, production config, deployment, or SaaS chatbot app code to the
+current SKR repo.
+
 ## Directional Scope
 
 - [ ] Pricing plans.
