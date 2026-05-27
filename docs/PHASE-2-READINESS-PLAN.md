@@ -72,8 +72,11 @@ What should still be forbidden:
 
 Suggested first PR:
 
-- Add a deployment smoke-test runbook and reviewed operator checklist without
-  deploying, then open a separate deployment PR only after explicit approval.
+- Phase 2A-A adds the deployment smoke-test runbook, unchecked operator
+  checklist, and deployment evidence template without deploying. The next PR in
+  this track should still be reviewed separately and must obtain explicit
+  approval before any real deployment, Supabase Cloud connection, Vercel config,
+  or runtime change.
 
 ### B. Admin/auth/product management path
 

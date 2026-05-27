@@ -36,13 +36,21 @@ Checklist: `docs/checklists/PHASE-1-MVP.md`
 Phase 1 is not the full SaaS platform, full RAG system, full admin inbox, vector
 stack, billing system, or streaming implementation.
 
-## Phase 2: Admin, Product, And Quote Operations
+## Phase 2: Deployment, Admin, Product, And Quote Operations
 
-Goal: expand operational admin tools after the MVP foundation exists.
+Goal: prepare reviewed deployment operations and expand operational admin tools
+after the MVP foundation exists.
 
 Checklist: `docs/checklists/PHASE-2-ADMIN-OPS.md`
 
 Readiness plan: `docs/PHASE-2-READINESS-PLAN.md`
+
+Deployment readiness checklist:
+`docs/checklists/PHASE-2A-DEPLOYMENT-READINESS.md`
+
+Phase 2A-A adds deployment smoke-test runbook and operator evidence templates
+only. It is not approval to deploy, connect Supabase Cloud, add Vercel config,
+or add runtime features.
 
 This phase is not approved for implementation yet.
 

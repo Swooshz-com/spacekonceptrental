@@ -52,6 +52,9 @@ variables such as `N8N_CHAT_WEBHOOK_URL`.
 - Phase 1O-A is readiness only; it is not approval to deploy.
 - Phase 1P-A closeout/readiness planning is not approval to start Phase 2
   runtime work.
+- Phase 2A-A deployment smoke-test runbook and operator checklist are
+  preparation only; they are not approval to deploy, connect Supabase Cloud,
+  add Vercel config, add real env values, or add runtime features.
 - Required deployment env for Supabase, catalogue, quote, chat, and trusted
   proxy header settings must be server-only.
 - Do not add real env values, deployment secrets, production config, Vercel

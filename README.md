@@ -150,6 +150,13 @@ Phase 2 readiness plan in `docs/PHASE-2-READINESS-PLAN.md`. These files do not
 approve deployment or new runtime features; they define what Phase 1 completed
 and which Phase 2 decision gates remain closed.
 
+Phase 2A-A adds only deployment smoke-test preparation:
+`docs/DEPLOYMENT-SMOKE-TEST-RUNBOOK.md`,
+`docs/checklists/PHASE-2A-DEPLOYMENT-READINESS.md`, and
+`docs/templates/DEPLOYMENT-EVIDENCE.md`. These files are operator guidance for
+a future reviewed deployment PR; they do not deploy, connect Supabase Cloud,
+add Vercel config, or add runtime features.
+
 ## Website App
 
 The website frontend is now a Vercel-ready Next.js scaffold under `website/`.
