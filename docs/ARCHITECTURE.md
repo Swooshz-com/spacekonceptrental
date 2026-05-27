@@ -90,6 +90,15 @@ app code. It does not connect to Supabase Cloud, add a browser Supabase client,
 use service-role keys, read catalogue data from the database, persist products,
 quotes, conversations, or messages, or add deployment configuration.
 
+Phase 1G-B adds only server-side public catalogue reads under
+`website/lib/catalogue/` for published `categories`, published `products`, and
+`product_images` metadata attached to published products. Missing Supabase env
+or read errors fall back to the existing public catalogue shell data so local
+builds and tests do not require Supabase Cloud. It does not add browser
+Supabase code, service-role keys, writes, product management, quote
+persistence, conversation/message persistence, Supabase Storage delivery, or
+deployment configuration.
+
 ## n8n Responsibilities
 
 n8n remains temporary server-side integration only:

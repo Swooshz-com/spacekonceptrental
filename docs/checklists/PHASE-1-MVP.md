@@ -66,7 +66,7 @@ required first.
 - [x] Add local-only behavioural RLS and tenant-isolation tests.
 - [x] Add fake/sample catalogue seed fixtures only.
 - [x] Add server-side Supabase runtime wiring.
-- [ ] Add public catalogue database reads.
+- [x] Add public catalogue database reads.
 - [ ] Add product persistence.
 - [ ] Add quote persistence.
 - [ ] Add conversation/message persistence.
@@ -96,6 +96,7 @@ required first.
 - [x] Supabase RLS/tenant-isolation tests before runtime use.
 - [x] Supabase fake/sample seed fixture validation.
 - [x] Server-only Supabase runtime boundary tests.
+- [x] Server-only published catalogue read tests.
 - [x] Keep `npm run validate:n8n` while n8n workflows remain in repo.
 - [x] Keep `npm run test:n8n-validation` while n8n workflows remain in repo.
 

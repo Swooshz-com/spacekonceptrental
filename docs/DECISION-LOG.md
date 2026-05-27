@@ -126,3 +126,15 @@ Reason: future server routes need a narrow Supabase foundation, but this phase
 must not introduce browser clients, service-role keys, Supabase Cloud
 connection, catalogue reads, persistence flows, deployment, or n8n workflow
 changes.
+
+## 2026-05-27: Server-only Published Catalogue Reads
+
+Decision: Phase 1G-B adds a server-only public catalogue repository under
+`website/lib/catalogue/` and wires public catalogue pages to read published
+`categories`, published `products`, and image metadata for published products
+when Supabase server env is configured.
+
+Reason: public catalogue pages can now use the approved Supabase runtime
+boundary without adding browser Supabase code, service-role keys, writes,
+quote/chat/admin persistence, Supabase Storage delivery, deployment, or live
+Supabase Cloud validation.

@@ -217,6 +217,9 @@ function assertNoRuntimeSupabaseUse() {
     'website/lib/supabase/env.ts',
     'website/lib/supabase/server.ts',
   ]);
+  const approvedCatalogueReadFiles = new Set([
+    'website/lib/catalogue/catalogue-repository.ts',
+  ]);
   const extensions = new Set(['.js', '.jsx', '.mjs', '.cjs', '.ts', '.tsx']);
   const browserBlockedPatterns = [
     /@supabase\//i,
@@ -225,11 +228,24 @@ function assertNoRuntimeSupabaseUse() {
     /\bSUPABASE_SERVICE_ROLE/i,
     /\bSUPABASE_ANON_KEY\b/i,
     /\bSUPABASE_URL\b/i,
+    /\bcreateServerSupabaseClient\b/i,
+    /supabase[\\/]server/i,
     /lib\/supabase/i,
   ];
   const serverBlockedPatterns = [
     /\bNEXT_PUBLIC_SUPABASE_/i,
     /\bSUPABASE_SERVICE_ROLE/i,
+  ];
+  const blockedCatalogueTablePatterns = [
+    /\bquote_requests\b/i,
+    /\bquote_request_items\b/i,
+    /\bconversations\b/i,
+    /\bmessages\b/i,
+    /\badmin_users\b/i,
+    /\bmemberships\b/i,
+    /\busage_events\b/i,
+    /\baudit_logs\b/i,
+    /\bintegration_connections\b/i,
   ];
   const violations = [];
 
@@ -286,6 +302,37 @@ function assertNoRuntimeSupabaseUse() {
           `${relativePath} must be marked server-only.`,
         );
         assertNoMatches(filePath, content, serverBlockedPatterns);
+        return;
+      }
+
+      if (approvedCatalogueReadFiles.has(relativePath)) {
+        assert.match(
+          content,
+          /import\s+["']server-only["'];/,
+          `${relativePath} must be marked server-only.`,
+        );
+        assert.match(
+          content,
+          /from\(["']categories["']\)/,
+          `${relativePath} must read categories explicitly.`,
+        );
+        assert.match(
+          content,
+          /from\(["']products["']\)/,
+          `${relativePath} must read products explicitly.`,
+        );
+        assert.match(
+          content,
+          /eq\(["']is_published["'],\s*true\)/,
+          `${relativePath} must filter categories to published rows.`,
+        );
+        assert.match(
+          content,
+          /eq\(["']status["'],\s*["']published["']\)/,
+          `${relativePath} must filter products to published rows.`,
+        );
+        assertNoMatches(filePath, content, serverBlockedPatterns);
+        assertNoMatches(filePath, content, blockedCatalogueTablePatterns);
         return;
       }
 
