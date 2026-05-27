@@ -32,7 +32,7 @@ customer-support-agent capstone requirements.
 - `presentation/` - capstone walkthrough deck.
 - `scripts/` - local workflow validation.
 - `website/` - Phase 1A Next.js frontend app root, with preserved design
-  assets under `website/web_design/` and prepared assets used by the current
+  assets under `website/assets/web_design/` and prepared assets used by the current
   public shell.
 
 ## What To Upload For RAG

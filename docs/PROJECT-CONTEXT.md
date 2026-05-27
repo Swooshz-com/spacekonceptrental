@@ -26,7 +26,7 @@ Rough contents:
 
 ## Current Website State
 
-The inspected design folder is `website/web_design/`, not
+The inspected design folder is `website/assets/web_design/`, not
 `website/.web_design/`.
 
 The current website design plan was originally written for a static HTML site.
