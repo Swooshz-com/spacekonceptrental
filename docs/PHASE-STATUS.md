@@ -4,14 +4,17 @@ This is the quick status page for the SKR repo. Use `docs/PHASE-2-READINESS-PLAN
 
 ## Current phase
 
-Current phase: Phase 2B-F - checklist hygiene and phase status reconciliation.
+Current phase: Phase 2B-G - refresh repo agent instructions.
 
-This PR adds checklist hygiene/status docs and static guard coverage only. It
+This PR refreshes `AGENTS.md` and adds static guard coverage only. It
 does not implement runtime features.
 
-Last merged PR: #44
+Latest completed phase: Phase 2B-F - checklist hygiene and phase status
+reconciliation.
 
-Merge commit: `613f70f684340ab61939a76d304604f049c6bbb8`
+Last merged PR: #45
+
+Merge commit: `1e67b2e7ca1098a474b2be29bf372ad60d20807e`
 
 ## Completed foundation
 
@@ -43,6 +46,7 @@ Vercel config, add real env values, or add runtime features.
 - Server-only admin authorization policy module.
 - Server-only disabled auth/membership resolver scaffold.
 - Server-only admin auth/membership adapter contracts with fake-adapter tests.
+- Checklist ownership, maintenance rules, and quick phase status docs.
 
 Supabase Auth is documented as the preferred future server-side admin auth
 provider, but no Supabase Auth runtime wiring exists yet.
