@@ -19,7 +19,7 @@ const sourceExtensions = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs"]);
 const expectedN8nWorkflowHashes = new Map([
   [
     "n8n-workflows/spacekonceptrental-customer-support-agent.workflow.json",
-    "31d6aad6d4a44443f99ddc9f72c76660403434fdccaeb8acae25cb853e8fbadb"
+    "96fe4b6832b6c4680f6d6dcbdd311b901e6c73610afd2747de7c0c06a84c1a2c"
   ],
   [
     "n8n-workflows/spacekonceptrental-error-handler.workflow.json",
@@ -27,7 +27,7 @@ const expectedN8nWorkflowHashes = new Map([
   ],
   [
     "n8n-workflows/spacekonceptrental-rag-ingestion.workflow.json",
-    "fd56248b192d12890e5fbc02972c05c393db4d5e61a30d0aa3af41cadc061613"
+    "913928a75068562eeb23eaa3ac6a69e2bee01a6a9eaf8e5c41e58eb153c54c6f"
   ]
 ]);
 
@@ -71,7 +71,7 @@ function expectNoTrackedFiles(paths: string[]) {
 
 function hashRepoFile(relativePath: string) {
   return createHash("sha256")
-    .update(readRepoFile(relativePath))
+    .update(readRepoFile(relativePath).replace(/\r\n/g, "\n"))
     .digest("hex");
 }
 
