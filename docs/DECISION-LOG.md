@@ -180,3 +180,18 @@ does not add conversation/message persistence, Supabase reads or writes,
 migrations, service-role keys, browser Supabase code, Supabase Cloud
 connection, n8n workflow changes, RAG/vector DB, streaming/SSE, admin chat
 history tools, or authenticated user-linked conversations.
+
+## 2026-05-27: Product/Admin Persistence Design Before Writes
+
+Decision: Phase 1J-A documents the future product/admin persistence boundary
+and adds only disabled server-only scaffolding under
+`website/lib/products/persistence/`.
+
+Reason: category, product, and product image writes are trusted-admin
+operations that need auth, membership-scoped workspace resolution, first-party
+server routes/actions, media strategy, and audit/publishing decisions before
+real writes are approved. This phase does not add product/category/product
+image persistence, public mutation routes, admin/auth UI, Supabase reads or
+writes, migrations, service-role keys, browser Supabase code, Supabase Storage,
+product image upload flows, Supabase Cloud connection, deployment, or n8n
+workflow changes.

@@ -412,6 +412,24 @@ test('real migrations add narrow anonymous website quote insert policies only', 
   assert.doesNotMatch(sql, /for delete to anon/);
 });
 
+test('real migrations do not enable anonymous catalogue product writes', () => {
+  const sql = normalizeSql(readAllRealMigrationSql());
+  const productAdminTables = ['categories', 'products', 'product_images'];
+
+  for (const tableName of productAdminTables) {
+    assert.doesNotMatch(
+      sql,
+      new RegExp(`grant\\s+(insert|update|delete|all)[\\s\\S]*?on public\\.${tableName} to anon;`),
+      `${tableName} should not grant anonymous writes`,
+    );
+    assert.doesNotMatch(
+      sql,
+      new RegExp(`create policy .* on public\\.${tableName} for (insert|update|delete|all) to anon`),
+      `${tableName} should not have anonymous write policies`,
+    );
+  }
+});
+
 test('real migrations do not enable anonymous chat persistence writes', () => {
   const sql = normalizeSql(readAllRealMigrationSql());
   const chatTables = ['conversations', 'messages'];

@@ -74,6 +74,23 @@ variables such as `N8N_CHAT_WEBHOOK_URL`.
 - Configure a trusted client IP header in deployment to avoid over-broad
   fallback throttling.
 
+## Product/Admin Persistence Rules
+
+- Product, category, and product image writes are trusted-admin operations
+  only.
+- Do not add browser-side Supabase writes for product management.
+- Do not add anonymous category, product, or product image write policies.
+- Do not add public product-management mutation routes.
+- Do not add service-role product write paths without separate approval.
+- Resolve product-management workspace access from trusted server-side auth and
+  membership context, not browser input.
+- Keep public catalogue reads read-only, published-only, and scoped by trusted
+  server-side workspace configuration.
+- Keep product image/media persistence deferred until Supabase Storage strategy,
+  upload flows, path validation, and lifecycle rules are approved.
+- Treat Git-tracked prepared images as demo/public-shell assets, not the
+  long-term media store.
+
 ## Worktree Hygiene
 
 The repo was already dirty during planning. Do not mix unrelated dirty worktree

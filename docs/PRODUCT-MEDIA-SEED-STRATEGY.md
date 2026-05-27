@@ -1,8 +1,8 @@
 # Product And Media Seed Strategy
 
-This is a planning document only. It does not add product persistence,
-Supabase Storage buckets, seed files, upload workflows, admin tools, or
-customer/private media.
+This is a planning document only. It does not add real product persistence,
+Supabase Storage buckets, production seed files, upload workflows, admin tools,
+or customer/private media.
 
 ## Current Assets
 
@@ -56,16 +56,17 @@ real catalogue persistence begins.
 
 ## Phase 1 Boundaries
 
-Phase 1 may document the seed strategy and keep static prepared assets for page
-shells. It should not introduce broad product admin workflows.
+Phase 1 may document the seed strategy, keep static prepared assets for page
+shells, use fake/sample seed fixtures, and read published catalogue rows
+through the server-only public catalogue repository. It should not introduce
+real product media persistence or broad product admin workflows.
 
 Deferred until separately approved:
 
+- Category, product, or product image metadata writes.
 - Product create/edit/delete admin UI.
 - Media upload UI.
 - Supabase Storage buckets or policies.
-- Catalogue database reads.
-- Quote persistence.
 - Inventory, pricing, availability, variants, bundles, and billing.
 
 ## Future Safe Sequence

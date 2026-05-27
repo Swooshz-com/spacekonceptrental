@@ -25,8 +25,8 @@ changes, or live/runtime actions belong in Phase 0.
 
 Goal: build the smallest production-shaped Next.js foundation under `website/`
 with custom chat UI, first-party `/api/chat`, server-only `N8nChatProvider`,
-server-only quote capture, chat persistence design/scaffolding, and a basic
-Supabase core schema.
+server-only quote capture, chat persistence design/scaffolding,
+product/admin persistence design/scaffolding, and a basic Supabase core schema.
 
 Checklist: `docs/checklists/PHASE-1-MVP.md`
 

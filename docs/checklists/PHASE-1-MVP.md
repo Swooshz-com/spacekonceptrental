@@ -33,6 +33,8 @@ platform.
 - [x] Keep MVP chat non-streaming.
 - [x] Document chat persistence privacy/security design.
 - [x] Add disabled server-only chat persistence scaffold.
+- [x] Document product/admin persistence design.
+- [x] Add disabled server-only product/admin persistence scaffold.
 
 ## Basic Supabase Schema Only
 
@@ -71,7 +73,12 @@ required first.
 - [x] Add public catalogue database reads.
 - [x] Add quote persistence.
 - [x] Add chat persistence design and server-only disabled scaffolding.
+- [x] Add product/admin persistence design and server-only disabled
+      scaffolding.
 - [ ] Add product persistence.
+- [ ] Add category/product/product image mutation routes.
+- [ ] Add product image uploads.
+- [ ] Add Supabase Storage wiring.
 - [ ] Add conversation persistence.
 - [ ] Add message persistence.
 - [ ] Connect to Supabase Cloud.
@@ -104,6 +111,9 @@ required first.
 - [x] Server-only published catalogue read tests.
 - [x] Server-only chat persistence scaffold guard tests.
 - [x] Tests proving no chat Supabase writes are added in Phase 1I-A.
+- [x] Server-only product/admin persistence scaffold guard tests.
+- [x] Tests proving no product/category/product image Supabase writes are added
+      in Phase 1J-A.
 - [x] Keep `npm run validate:n8n` while n8n workflows remain in repo.
 - [x] Keep `npm run test:n8n-validation` while n8n workflows remain in repo.
 
@@ -116,6 +126,12 @@ required first.
 - [ ] No RAG/vector DB.
 - [ ] No full admin inbox/human takeover suite.
 - [ ] No admin/auth UI.
+- [ ] No product/category/product image mutation routes.
+- [ ] No product image upload flows.
+- [ ] No inventory/pricing management.
+- [ ] No product publishing approval workflows.
+- [ ] No product audit log workflow.
+- [ ] No service-role product write paths.
 - [ ] No authenticated user-linked conversations.
 - [ ] No chat history review/search/export.
 - [ ] No streaming/SSE.
