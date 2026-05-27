@@ -184,6 +184,14 @@ env, implement real auth, add Supabase Auth runtime wiring, add admin UI, add
 product writes, add service-role runtime paths, add browser Supabase, deploy,
 or connect to Supabase Cloud.
 
+Phase 2B-E adds only admin auth provider/session/security design. It documents
+Supabase Auth as the preferred future server-side admin auth provider and
+records the future session cookie, CSRF, login/logout, protected admin page,
+adapter integration, and implementation gates. It does not call Supabase Auth,
+read cookies, read headers, add routes, add server actions, add admin UI, add
+product writes, add service-role runtime paths, add browser Supabase, deploy,
+or connect to Supabase Cloud.
+
 Phase 1K-A adds only route-level quote endpoint abuse throttling. The existing
 quote persistence boundary remains unchanged: accepted requests still use the
 server-only quote repository and approved quote insert path, while throttled

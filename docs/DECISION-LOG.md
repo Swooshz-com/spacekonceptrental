@@ -360,3 +360,20 @@ runtime routes/pages/server actions, add product/category/product image writes,
 add service-role runtime paths, add browser Supabase, deploy, connect to
 Supabase Cloud, change catalogue RLS/runtime behaviour, change quote
 throttling, add conversation/message writes, or change n8n workflows.
+
+## 2026-05-28: Admin Auth Provider And Session Design Before Runtime Auth
+
+Decision: Phase 2B-E documents Supabase Auth as the preferred future
+server-side admin auth provider and records the session/cookie, CSRF,
+login/logout, protected admin page, adapter integration, and implementation
+gates before any real auth runtime is added.
+
+Reason: future auth wiring needs an explicit provider and session security
+contract before cookies, headers, login/logout routes, protected admin pages,
+or admin UI exist. This phase does not implement real auth, add Supabase Auth
+runtime wiring, read cookies, read headers, add login/logout routes, add
+protected admin pages, add admin UI, add runtime routes/pages/server actions,
+add product/category/product image writes, add service-role runtime paths, add
+browser Supabase, deploy, connect to Supabase Cloud, change catalogue
+RLS/runtime behaviour, change quote throttling, add conversation/message
+writes, or change n8n workflows.

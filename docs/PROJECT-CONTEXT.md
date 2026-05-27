@@ -103,6 +103,13 @@ Custom Chat UI -> POST /api/chat -> ChatProvider
   wiring, add routes, add server actions, add admin UI, add product writes, add
   browser Supabase, add service-role runtime paths, deploy, or connect
   Supabase Cloud.
+- Phase 2B-E adds admin auth provider/session/security design only. It
+  recommends Supabase Auth as the future server-side admin auth provider and
+  documents session cookies, CSRF, login/logout, protected admin page, adapter
+  integration, and implementation gates before real auth is approved. It does
+  not implement real auth, read cookies, read headers, add routes, add server
+  actions, add admin UI, add product writes, add browser Supabase, add
+  service-role runtime paths, deploy, or connect Supabase Cloud.
 
 ## Planning Notes
 

@@ -186,6 +186,15 @@ login/logout routes, add admin UI, wire runtime routes/pages/server actions,
 add product writes, add browser Supabase, add service-role runtime paths,
 deploy, or connect to Supabase Cloud.
 
+Phase 2B-E adds only admin auth provider/session/security design and an
+unchecked implementation checklist. It recommends Supabase Auth as the future
+server-side admin auth provider and documents session cookie, CSRF,
+login/logout, protected admin page, adapter integration, and implementation
+gates. It does not implement real auth, add Supabase Auth wiring, read cookies,
+read headers, add routes, add admin UI, wire runtime routes/pages/server
+actions, add product writes, add browser Supabase, add service-role runtime
+paths, deploy, or connect to Supabase Cloud.
+
 ## Website App
 
 The website frontend is now a Vercel-ready Next.js scaffold under `website/`.
