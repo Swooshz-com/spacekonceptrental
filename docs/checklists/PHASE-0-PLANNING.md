@@ -1,5 +1,9 @@
 # Phase 0 Checklist: Planning, Docs, And Context
 
+Historical planning checklist. Current quick status lives in
+`docs/PHASE-STATUS.md`, and checklist ownership rules live in
+`docs/checklists/README.md`.
+
 Phase 0 was docs and planning only. It did not approve app development.
 The repo has since moved into Phase 1; this checklist records whether Phase 0
 planning outcomes were completed and whether its non-actions were upheld during

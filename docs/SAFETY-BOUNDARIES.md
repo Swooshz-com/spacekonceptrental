@@ -47,6 +47,18 @@ variables such as `N8N_CHAT_WEBHOOK_URL`.
 - Do not add browser-visible `NEXT_PUBLIC_SUPABASE_*` or `NEXT_PUBLIC_` n8n
   variables for the chat path.
 
+## Current n8n/Pinecone And SaaS Boundary
+
+- The current SKR website may keep using the existing n8n/Pinecone chatbot
+  workflow as a temporary production bridge.
+- n8n remains temporary server-side integration only.
+- Browser must never call n8n directly.
+- The future SaaS chatbot should be a separate project/app.
+- SKR can later become the first client/tenant of that SaaS chatbot.
+- Do not implement SaaS chatbot app work inside this repo yet.
+- Do not migrate Pinecone in this repo yet.
+- Do not add Pinecone runtime code or credentials without separate approval.
+
 ## Deployment Environment Rules
 
 - Phase 1O-A is readiness only; it is not approval to deploy.
@@ -160,6 +172,14 @@ variables such as `N8N_CHAT_WEBHOOK_URL`.
   protected admin pages, add admin UI, wire runtime routes/pages/server actions,
   add product writes, add browser Supabase, add service-role runtime paths,
   deploy, or connect Supabase Cloud.
+- Phase 2B-F checklist hygiene/status reconciliation is documentation and
+  guard coverage only; it is not approval to implement real auth, add Supabase
+  Auth runtime wiring, read cookies, read headers, add login/logout routes, add
+  protected admin pages, add admin UI, wire runtime routes/pages/server actions,
+  add product/category/product image writes, add browser Supabase, add
+  service-role runtime paths, deploy, connect Supabase Cloud, change n8n
+  workflows, add Pinecone runtime code, migrate Pinecone, or add SaaS chatbot
+  app code.
 - Future admin auth must remain server-side. Future session cookies must be
   HttpOnly, Secure in production, and have reviewed SameSite behaviour. Future
   state-changing admin routes/server actions need CSRF strategy before
@@ -199,3 +219,7 @@ unrelated local changes.
 Docs must be updated when architecture, scope, safety rules, or phase boundaries
 change. Update the roadmap, relevant checklist, ADR or decision log, and safety
 docs in the same PR when applicable.
+
+Every phase PR that changes status must update exactly the relevant
+checklist(s). Do not mark planned, scaffolded, design, or policy work as
+runtime complete until runtime code exists and tests prove it.

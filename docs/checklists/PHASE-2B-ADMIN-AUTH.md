@@ -1,17 +1,24 @@
 # Phase 2B Checklist: Admin Auth And Membership
 
+Completed design, policy, resolver, adapter, and provider-session milestones
+are recorded here as admin/auth readiness work.
+
+Real runtime implementation remains unchecked.
+
 Phase 2B-A is design and guard coverage only. Phase 2B-B adds a pure
 server-only policy module and tests only. Phase 2B-C adds a server-only
 resolver contract and disabled scaffold only. Phase 2B-D adds server-only
 adapter contracts and dependency-injected resolver tests with fake adapters
-only. Phase 2B-E adds auth provider/session/security design and an auth
-implementation checklist only. Keep real auth, Supabase Auth runtime wiring,
-cookies, headers, admin UI, product management writes, browser Supabase,
-service-role runtime paths, deployment, and Supabase Cloud work unchecked until
-a future PR has explicit approval.
+only. Phase 2B-E adds auth provider/session/security design and a future auth
+implementation checklist only. Phase 2B-F reconciles checklist status only.
+Keep real auth, Supabase Auth runtime wiring, cookies, headers, login/logout
+routes, protected admin pages, admin UI, product management writes, browser
+Supabase, service-role runtime paths, deployment, and Supabase Cloud work
+unchecked until a future PR has explicit approval.
 
-## Completed Policy Boundary
+## Completed Design, Policy, Resolver, Adapter, And Provider-session Milestones
 
+- [x] Add admin/auth and workspace membership authorization design.
 - [x] Add pure server-only admin authorization policy module.
 - [x] Add policy tests for anonymous, inactive admin, missing membership, cross-workspace, role denial, and allowed-member decisions.
 - [x] Add server-only admin auth/membership resolver contract.
@@ -20,8 +27,27 @@ a future PR has explicit approval.
 - [x] Add dependency-injected resolver tests with fake adapters.
 - [x] Add admin auth provider/session design.
 - [x] Add admin auth implementation checklist.
+- [x] Add checklist hygiene/status reconciliation guards.
 
-## Design Approvals
+## Design References
+
+- [x] Auth provider preference documented as future server-side Supabase Auth.
+- [x] Admin identity model documented.
+- [x] Workspace membership model documented.
+- [x] Role model documented.
+- [x] Server-side workspace resolution expectations documented.
+- [x] Route/server-action boundary expectations documented.
+- [x] Product/category/product image write gate documented.
+- [x] Audit log expectations documented.
+- [x] RLS expectations documented.
+- [x] Error handling expectations documented.
+- [x] Session/cookie expectations documented.
+
+## Future Runtime Approval Gates
+
+These stay unchecked until a future implementation PR approves and tests the
+actual runtime boundary. Completed design docs above are references, not
+runtime implementation approval.
 
 - [ ] Auth provider selected.
 - [ ] Admin identity model approved.
@@ -35,7 +61,7 @@ a future PR has explicit approval.
 - [ ] Error handling expectations approved.
 - [ ] Session/cookie expectations approved.
 
-## Test Plan Approvals
+## Future Runtime Test Plan Approvals
 
 - [ ] Tests for anonymous denial planned.
 - [ ] Tests for non-member denial planned.
@@ -52,10 +78,11 @@ a future PR has explicit approval.
 
 - [ ] Real auth runtime wiring.
 - [ ] Supabase Auth runtime wiring.
-- [ ] Cookie/session reads.
+- [ ] Cookie reads.
 - [ ] Header reads.
-- [ ] Admin UI.
 - [ ] Login/logout routes.
+- [ ] Protected admin pages.
+- [ ] Admin UI.
 - [ ] Product writes.
 - [ ] Category writes.
 - [ ] Product image writes.

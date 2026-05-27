@@ -2,6 +2,10 @@
 
 This phase is not approved for implementation yet.
 
+Current SKR keeps Pinecone/n8n as current RAG workflow context only. Do not
+migrate away from Pinecone in this repo yet, and do not add Pinecone runtime
+code or credentials in this checklist hygiene PR.
+
 ## Directional Scope
 
 - [ ] Define knowledge source model.
@@ -21,4 +25,6 @@ This phase is not approved for implementation yet.
 
 - [ ] Not part of Phase 1.
 - [ ] Do not add vector DB infrastructure without a phase approval.
+- [ ] Do not migrate Pinecone in this repo yet.
+- [ ] Do not add Pinecone credentials.
 - [ ] Do not expose private documents across tenants.

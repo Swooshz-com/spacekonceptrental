@@ -4,6 +4,9 @@ Phase 2 is not approved by this document. This plan ranks the safest next
 tracks, names their prerequisites, and keeps the remaining forbidden work
 visible before anyone adds new runtime features.
 
+Current quick status lives in `docs/PHASE-STATUS.md`. Checklist ownership and
+maintenance rules live in `docs/checklists/README.md`.
+
 ## Recommendation
 
 Do not start product writes before admin/auth boundaries.
@@ -139,8 +142,9 @@ Suggested first PR:
   routes, server actions, or product writes. Phase 2B-E documents the preferred
   future Supabase Auth provider, server-only session/cookie expectations, CSRF
   expectations, login/logout route gates, protected admin page gates, and auth
-  implementation checklist without runtime wiring. The next PR in this track
-  should still avoid product writes and should implement only the reviewed
+  implementation checklist without runtime wiring. Phase 2B-F reconciles
+  checklist ownership/status and adds a quick phase status page without runtime
+  wiring. The next PR in this track should still avoid product writes and should implement only the reviewed
   server-side auth/membership resolution boundary with anonymous, non-member,
   wrong-actor membership, cross-workspace, and allowed-member tests.
 
@@ -242,13 +246,18 @@ Suggested first PR:
 
 ### E. Internal SaaS chat/RAG path
 
+Current direction: this track now means a separate SaaS chatbot/RAG
+project/app boundary, not SaaS chatbot app code inside the SKR repo.
+
 Rank: later, after the first-party app data boundaries and privacy model are
 stable.
 
 What it unlocks:
 
-- Replacement of temporary n8n chat runtime behind the same `ChatProvider`
-  contract.
+- A separate SaaS chatbot project/app that SKR can later use as its first
+  client/tenant.
+- Replacement of the temporary SKR n8n/Pinecone bridge through a reviewed
+  server-side boundary.
 - First-party retrieval, tool, and knowledge-source decisions.
 - Future streaming and richer support workflows if approved.
 
@@ -263,6 +272,7 @@ Required prerequisites:
 Main risks:
 
 - Rebuilding RAG before basic deployment/admin/data boundaries are ready.
+- Forcing the current n8n/Pinecone workflow into the future SaaS architecture.
 - Storing or retrieving private content without retention and access controls.
 - Tight-coupling the frontend to one provider.
 - Introducing external services without review.
@@ -277,6 +287,8 @@ Required tests/guards:
 
 What should still be forbidden:
 
+- SaaS chatbot app code inside this repo.
+- Pinecone migration inside this repo.
 - Production `InternalSaasChatProvider` before approval.
 - Vector DB or embedding service wiring before design approval.
 - Browser-visible provider secrets or URLs.
@@ -286,5 +298,5 @@ What should still be forbidden:
 
 Suggested first PR:
 
-- Write the internal provider and RAG architecture decision with evaluation
-  requirements, without adding runtime provider code.
+- Write the separate SaaS chatbot boundary and RAG architecture decision with
+  evaluation requirements, without adding runtime provider code.

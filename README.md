@@ -24,15 +24,16 @@ customer-support-agent capstone requirements.
 - `kb/` - Markdown files to upload into the Google Drive knowledge-base folder.
 - `docs/` - operator runbooks, architecture docs, safety boundaries, phase
   roadmap, and checklists. Start with `docs/ARCHITECTURE.md` and
-  `docs/PHASE-ROADMAP.md` for the approved website direction; use
-  `docs/CHAT-PERSISTENCE-DESIGN.md` for the deferred chat persistence boundary.
+  `docs/PHASE-STATUS.md` for the quick current status, then
+  `docs/PHASE-ROADMAP.md` for the approved website direction. Use
+  `docs/checklists/README.md` for checklist ownership and maintenance rules,
+  `docs/CHAT-PERSISTENCE-DESIGN.md` for the deferred chat persistence
+  boundary, and `docs/N8N-TESTING-PLAN.md` for owner-only n8n testing.
 - `presentation/` - capstone walkthrough deck.
 - `scripts/` - local workflow validation.
 - `website/` - Phase 1A Next.js frontend app root, with preserved design
   assets under `website/web_design/` and prepared assets used by the current
   public shell.
-- `SpaceKonceptRental_website_display_design_wishlist.jpg` - future website
-  design reference, not part of the RAG upload.
 
 ## What To Upload For RAG
 
@@ -44,8 +45,8 @@ workflow:
 - `kb/03-product-catalogue-summary.md`
 - `kb/04-privacy-policy.md`
 
-Do not upload `n8n-workflows/`, `scripts/`, `presentation/`, `.tmp/`, or the
-website display wishlist image.
+Do not upload `n8n-workflows/`, `scripts/`, `presentation/`, `.tmp/`, or
+website design assets.
 
 ## n8n Import Order
 
@@ -195,6 +196,15 @@ read headers, add routes, add admin UI, wire runtime routes/pages/server
 actions, add product writes, add browser Supabase, add service-role runtime
 paths, deploy, or connect to Supabase Cloud.
 
+Phase 2B-F adds only checklist hygiene, phase status reconciliation, and static
+guard coverage. It adds `docs/PHASE-STATUS.md` and
+`docs/checklists/README.md`, reconciles checklist ownership/status, and keeps
+all real auth, Supabase Auth runtime wiring, cookie reads, header reads,
+login/logout routes, protected admin pages, admin UI, product/category/product
+image writes, runtime route/page/server action wiring, deployment, Supabase
+Cloud connection, n8n workflow changes, Pinecone runtime work, and SaaS
+chatbot app work out of scope.
+
 ## Website App
 
 The website frontend is now a Vercel-ready Next.js scaffold under `website/`.
@@ -205,6 +215,11 @@ The chat UI is custom and calls `/api/chat` only. n8n access stays server-only
 behind `N8nChatProvider` and falls back safely when `N8N_CHAT_WEBHOOK_URL` is
 not configured. Chat persistence has only disabled server-only scaffolding;
 actual conversation/message writes remain deferred.
+
+Current SKR may keep the existing n8n/Pinecone chatbot workflow as a temporary
+production bridge while the website stabilizes. The future SaaS chatbot should
+be a separate project/app, and SKR can later become its first client/tenant.
+Do not implement SaaS chatbot app work or Pinecone migration in this repo yet.
 
 Local frontend commands:
 
