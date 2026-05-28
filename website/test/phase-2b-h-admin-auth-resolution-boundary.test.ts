@@ -49,10 +49,7 @@ describe("Phase 2B-H admin auth resolution boundary", () => {
     const checklist = readRepoFile("docs/checklists/PHASE-2B-ADMIN-AUTH.md");
 
     expect(phaseStatus).toContain(
-      "Current phase: Phase 2B-H - reviewed server-side admin auth/membership resolution boundary."
-    );
-    expect(phaseStatus).toContain(
-      "Latest completed phase: Phase 2B-G - refresh repo agent instructions."
+      "Latest completed phase: Phase 2B-H - reviewed server-side admin auth/membership resolution boundary."
     );
     expect(roadmap).toContain(
       "Phase 2B-H strengthens the reviewed server-side admin auth/membership"
@@ -61,7 +58,7 @@ describe("Phase 2B-H admin auth resolution boundary", () => {
       "resolution boundary with dependency-injected fake adapters"
     );
     expect(design).toContain(
-      "This PR strengthens the reviewed server-side admin auth/membership resolution boundary only."
+      "Phase 2B-H strengthened the reviewed server-side auth/membership resolution boundary with fake-adapter tests only."
     );
     expect(checklist).toContain(
       "- [x] Add reviewed server-side admin auth/membership resolution tests with fake adapters."

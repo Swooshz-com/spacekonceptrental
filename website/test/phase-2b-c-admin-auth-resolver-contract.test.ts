@@ -53,16 +53,18 @@ describe("Phase 2B-C admin auth resolver contract", () => {
     expect(resolver).toContain("buildAdminAuthorizationInput");
     expect(resolver).toContain("auth_resolver_disabled");
     expect(design).toContain(
-      "This PR adds a server-only resolver contract and disabled scaffold only."
+      "Phase 2B-C adds `website/lib/admin/authorization/admin-authorization-resolver.ts`"
     );
-    expect(design).toContain("This PR does not implement real auth.");
-    expect(design).toContain("This PR does not add Supabase Auth runtime wiring.");
-    expect(design).toContain("This PR does not add login/logout routes.");
-    expect(design).toContain("This PR does not add protected admin pages.");
-    expect(design).toContain("This PR does not add admin UI.");
-    expect(design).toContain("This PR does not add product writes.");
+    expect(design).toContain("This design does not implement real auth.");
     expect(design).toContain(
-      "This PR does not wire the resolver into runtime routes/pages/server actions."
+      "This design does not add Supabase Auth runtime wiring."
+    );
+    expect(design).toContain("This design does not add login or logout routes.");
+    expect(design).toContain("This design does not add protected admin pages.");
+    expect(design).toContain("This design does not add admin UI.");
+    expect(design).toContain("This design does not add product writes.");
+    expect(design).toContain(
+      "This design does not wire the admin resolver into runtime routes, pages, or server actions."
     );
     expect(design).toContain(
       "Product writes remain blocked until real auth/membership resolution, RLS, audit, and route/action boundaries are implemented and tested."

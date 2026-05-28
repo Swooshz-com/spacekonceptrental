@@ -68,9 +68,9 @@ describe("Phase 2B-A admin auth and membership design", () => {
     expect(design).toContain("Forbidden shortcuts");
     expect(design).toContain("What remains deferred");
     expect(design).toContain("First implementation PR after this design");
-    expect(design).toContain("This PR does not implement auth.");
-    expect(design).toContain("This PR does not add admin UI.");
-    expect(design).toContain("This PR does not add product writes.");
+    expect(design).toContain("This design does not implement real auth.");
+    expect(design).toContain("This design does not add admin UI.");
+    expect(design).toContain("This design does not add product writes.");
     expect(design).toContain(
       "Product/category/product image writes remain blocked until admin/auth boundaries are implemented and tested."
     );

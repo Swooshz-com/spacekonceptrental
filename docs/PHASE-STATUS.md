@@ -4,17 +4,18 @@ This is the quick status page for the SKR repo. Use `docs/PHASE-2-READINESS-PLAN
 
 ## Current phase
 
-Current phase: Phase 2B-H - reviewed server-side admin auth/membership resolution boundary.
+Current phase: Phase 2B-I - admin auth implementation gate cleanup and runtime-readiness checklist refinement.
 
-This PR strengthens the dependency-injected server-side admin authorization
-resolver/adapter boundary and adds fake-adapter decision coverage only. It
-does not implement runtime auth or runtime admin features.
+This PR cleans stale admin/auth implementation-gate wording, refines
+runtime-readiness checklist/static guard wording, and keeps Phase 2B-H as the
+latest completed reviewed server-side admin auth/membership boundary. It does
+not implement runtime auth or runtime admin features.
 
-Latest completed phase: Phase 2B-G - refresh repo agent instructions.
+Latest completed phase: Phase 2B-H - reviewed server-side admin auth/membership resolution boundary.
 
-Last merged phase PR: #46
+Last merged phase PR: #48
 
-Merge commit: `2d0c97ec08ece3606e0e70017c74a9b09679c274`
+Merge commit: `5845ff44852805b18ac33333d376cf5cec286276`
 
 ## Completed foundation
 
@@ -48,6 +49,8 @@ Vercel config, add real env values, or add runtime features.
 - Server-only admin auth/membership adapter contracts with fake-adapter tests.
 - Checklist ownership, maintenance rules, and quick phase status docs.
 - Reviewed server-side resolver decisions for trusted fake adapter inputs.
+- Admin auth implementation-gate cleanup and runtime-readiness checklist/static
+  guard refinement is in progress.
 
 Supabase Auth is documented as the preferred future server-side admin auth
 provider, but no Supabase Auth runtime wiring exists yet.
