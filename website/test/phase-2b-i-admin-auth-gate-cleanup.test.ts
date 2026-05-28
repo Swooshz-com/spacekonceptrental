@@ -4,6 +4,8 @@ import { extname, resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
 const repoRoot = resolve(process.cwd(), "..");
+const approvedAuthBoundaryPath =
+  "website/lib/admin/authorization/supabase-admin-auth-identity-adapter.ts";
 const sourceExtensions = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs"]);
 
 function readRepoFile(relativePath: string) {
@@ -30,6 +32,7 @@ function isProductionSource(filePath: string) {
 function readTrackedProductionSources(paths: string[]) {
   return readTrackedFiles(paths)
     .filter(isProductionSource)
+    .filter((filePath) => filePath !== approvedAuthBoundaryPath)
     .map((filePath) => readRepoFile(filePath))
     .join("\n");
 }
@@ -38,18 +41,22 @@ function expectUnchecked(markdown: string, item: string) {
   expect(markdown).toContain(`- [ ] ${item}`);
 }
 
+function expectChecked(markdown: string, item: string) {
+  expect(markdown).toContain(`- [x] ${item}`);
+}
+
 describe("Phase 2B-I admin auth gate cleanup", () => {
-  it("records the current phase and latest completed Phase 2B-H base state", () => {
+  it("records the current phase and latest completed Phase 2B-J base state", () => {
     const status = readRepoFile("docs/PHASE-STATUS.md");
     const roadmap = readRepoFile("docs/PHASE-ROADMAP.md");
     const decisionLog = readRepoFile("docs/DECISION-LOG.md");
 
     expect(status).toContain(
-      "Latest completed phase: Phase 2B-I - admin auth implementation gate cleanup and runtime-readiness checklist refinement."
+      "Latest completed phase: Phase 2B-J - admin auth runtime approval lane."
     );
-    expect(status).toContain("Last merged phase PR: #49");
+    expect(status).toContain("Last merged phase PR: #50");
     expect(status).toContain(
-      "Merge commit: `04fcbb3c8451b671c03b2157af53b19c447738eb`"
+      "Merge commit: `96e7952b8950e3195020f61bd0a775745cfaae0d`"
     );
     expect(roadmap).toContain(
       "Phase 2B-I cleans admin auth implementation gate wording and refines"
@@ -94,7 +101,6 @@ describe("Phase 2B-I admin auth gate cleanup", () => {
     for (const item of [
       "Real auth runtime wiring.",
       "Supabase Auth runtime wiring.",
-      "Cookie reads.",
       "Header reads.",
       "Login/logout routes.",
       "Protected admin pages.",
@@ -109,6 +115,16 @@ describe("Phase 2B-I admin auth gate cleanup", () => {
       expectUnchecked(adminAuthChecklist, item);
       expectUnchecked(authImplementationChecklist, item);
     }
+
+    expectUnchecked(
+      adminAuthChecklist,
+      "Cookie reads outside the Phase 2B-K server-only identity boundary."
+    );
+    expectChecked(
+      authImplementationChecklist,
+      "Server-only Supabase Auth identity boundary."
+    );
+    expectChecked(authImplementationChecklist, "Cookie reads.");
 
     expect(readTrackedFiles(["website/app/admin"])).toEqual([]);
     expect(readTrackedFiles(["website/app/login"])).toEqual([]);

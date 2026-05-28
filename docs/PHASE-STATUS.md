@@ -4,18 +4,20 @@ This is the quick status page for the SKR repo. Use `docs/PHASE-2-READINESS-PLAN
 
 ## Current phase
 
-Current phase: Phase 2B-J - admin auth runtime approval lane.
+Current phase: Phase 2B-K - server-only Supabase Auth identity boundary.
 
-This PR approves and documents the future server-only Supabase Auth runtime
-lane, session/cookie strategy, CSRF expectations, login/logout requirements,
-protected-page requirements, and required runtime-auth tests. It does not
-implement runtime auth or runtime admin features.
+This PR adds the smallest server-only Supabase Auth identity/session-read
+boundary needed for future admin auth. It may read Supabase Auth cookies and
+call Supabase Auth server APIs only inside the reviewed server-only identity
+adapter. It does not add login/logout routes, protected admin pages, admin UI,
+runtime route/page/server-action wiring, product writes, Storage, deployment,
+Supabase Cloud connection, browser Supabase, or service-role runtime paths.
 
-Latest completed phase: Phase 2B-I - admin auth implementation gate cleanup and runtime-readiness checklist refinement.
+Latest completed phase: Phase 2B-J - admin auth runtime approval lane.
 
-Last merged phase PR: #49
+Last merged phase PR: #50
 
-Merge commit: `04fcbb3c8451b671c03b2157af53b19c447738eb`
+Merge commit: `96e7952b8950e3195020f61bd0a775745cfaae0d`
 
 ## Completed foundation
 
@@ -51,16 +53,20 @@ Vercel config, add real env values, or add runtime features.
 - Reviewed server-side resolver decisions for trusted fake adapter inputs.
 - Admin auth implementation-gate cleanup and runtime-readiness checklist/static
   guard refinement is complete.
-- Future server-only Supabase Auth runtime approval lane is in progress.
+- Future server-only Supabase Auth runtime approval lane is complete.
+- Server-only Supabase Auth identity/session-read boundary is in progress.
 
-Supabase Auth is approved as the future server-side admin auth provider, but no
-Supabase Auth runtime wiring exists yet.
+Supabase Auth is approved as the future server-side admin auth provider. The
+Phase 2B-K identity boundary is the only approved place in this phase to read
+Supabase Auth cookies or call Supabase Auth server APIs. It is not wired into
+routes, pages, server actions, protected admin runtime, login/logout, admin UI,
+or product writes.
 
 ## Still blocked
 
 - Real auth runtime wiring.
 - Supabase Auth runtime wiring.
-- Cookie reads.
+- Cookie reads outside the Phase 2B-K server-only identity boundary.
 - Header reads.
 - Login/logout routes.
 - Protected admin pages.
@@ -107,7 +113,9 @@ architecture.
 ## Next recommended PR
 
 The next recommended PR should still avoid product writes. A safe next PR can
-continue auth readiness with reviewed server-side design or test-only boundary
-work, but real auth runtime wiring, cookies, headers, login/logout routes,
-protected admin pages, admin UI, and product/category/product image writes
-remain blocked until separately approved.
+continue auth readiness by adding the next explicitly approved server-only
+auth/profile/membership boundary, but real runtime route/page/server-action
+wiring, cookie reads outside the reviewed identity boundary, headers,
+login/logout routes, protected admin pages, admin UI, and
+product/category/product image writes remain blocked until separately
+approved.

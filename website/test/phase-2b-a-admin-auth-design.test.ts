@@ -6,6 +6,8 @@ import { describe, expect, it } from "vitest";
 const repoRoot = resolve(process.cwd(), "..");
 const designDocPath = "docs/ADMIN-AUTH-MEMBERSHIP-DESIGN.md";
 const checklistPath = "docs/checklists/PHASE-2B-ADMIN-AUTH.md";
+const approvedAuthBoundaryPath =
+  "website/lib/admin/authorization/supabase-admin-auth-identity-adapter.ts";
 const sourceExtensions = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs"]);
 
 function readRepoFile(relativePath: string) {
@@ -177,10 +179,13 @@ describe("Phase 2B-A admin auth and membership design", () => {
       "website/components",
       "website/lib"
     ]);
-    const combinedSource = productionSources
+    const boundaryExcludedSources = productionSources.filter(
+      ({ filePath }) => filePath !== approvedAuthBoundaryPath
+    );
+    const combinedSource = boundaryExcludedSources
       .map(({ source }) => source)
       .join("\n");
-    const browserSource = productionSources
+    const browserSource = boundaryExcludedSources
       .filter(
         ({ filePath }) =>
           !filePath.startsWith("website/app/api/") &&

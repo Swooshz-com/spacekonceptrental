@@ -8,6 +8,8 @@ const designDocPath = "docs/ADMIN-AUTH-PROVIDER-SESSION-DESIGN.md";
 const implementationChecklistPath =
   "docs/checklists/PHASE-2B-AUTH-IMPLEMENTATION.md";
 const membershipDesignPath = "docs/ADMIN-AUTH-MEMBERSHIP-DESIGN.md";
+const approvedAuthBoundaryPath =
+  "website/lib/admin/authorization/supabase-admin-auth-identity-adapter.ts";
 const adminAuthorizationModulePaths = [
   "website/lib/admin/authorization/admin-authorization-policy.ts",
   "website/lib/admin/authorization/admin-authorization-resolver.ts",
@@ -91,11 +93,12 @@ describe("Phase 2B-E admin auth provider and session design", () => {
     expect(design).toContain(
       "Phase 2B-E added auth provider/session/security design only."
     );
-    expect(design).toContain("This document does not implement real auth.");
     expect(design).toContain(
-      "This document does not add Supabase Auth runtime wiring."
+      "Phase 2B-K implements only the server-only Supabase Auth identity boundary."
     );
-    expect(design).toContain("This document does not read cookies.");
+    expect(design).toContain(
+      "This document does not approve auth runtime wiring outside that boundary."
+    );
     expect(design).toContain("This document does not read headers.");
     expect(design).toContain("This document does not add login/logout routes.");
     expect(design).toContain("This document does not add protected admin pages.");
@@ -160,7 +163,6 @@ describe("Phase 2B-E admin auth provider and session design", () => {
       "Explicit approval obtained before product writes.",
       "Real auth runtime wiring.",
       "Supabase Auth runtime wiring.",
-      "Cookie reads.",
       "Header reads.",
       "Login/logout routes.",
       "Protected admin pages.",
@@ -180,6 +182,9 @@ describe("Phase 2B-E admin auth provider and session design", () => {
     for (const item of uncheckedItems) {
       expectUnchecked(checklist, item);
     }
+
+    expectChecked(checklist, "Server-only Supabase Auth identity boundary.");
+    expectChecked(checklist, "Cookie reads.");
   });
 
   it("does not add admin routes, auth routes, login/logout routes, or product mutation routes", () => {
@@ -239,10 +244,13 @@ describe("Phase 2B-E admin auth provider and session design", () => {
       "website/components",
       "website/lib"
     ]);
-    const combinedSource = productionSources
+    const boundaryExcludedSources = productionSources.filter(
+      ({ filePath }) => filePath !== approvedAuthBoundaryPath
+    );
+    const combinedSource = boundaryExcludedSources
       .map(({ source }) => source)
       .join("\n");
-    const browserSource = productionSources
+    const browserSource = boundaryExcludedSources
       .filter(
         ({ filePath }) =>
           !filePath.startsWith("website/app/api/") &&

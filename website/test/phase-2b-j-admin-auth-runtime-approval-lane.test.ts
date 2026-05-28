@@ -4,6 +4,8 @@ import { extname, resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
 const repoRoot = resolve(process.cwd(), "..");
+const approvedAuthBoundaryPath =
+  "website/lib/admin/authorization/supabase-admin-auth-identity-adapter.ts";
 const sourceExtensions = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs"]);
 
 function readRepoFile(relativePath: string) {
@@ -30,6 +32,7 @@ function isProductionSource(filePath: string) {
 function readTrackedProductionSources(paths: string[]) {
   return readTrackedFiles(paths)
     .filter(isProductionSource)
+    .filter((filePath) => filePath !== approvedAuthBoundaryPath)
     .map((filePath) => readRepoFile(filePath))
     .join("\n");
 }
@@ -49,14 +52,14 @@ describe("Phase 2B-J admin auth runtime approval lane", () => {
     const decisionLog = readRepoFile("docs/DECISION-LOG.md");
 
     expect(status).toContain(
-      "Current phase: Phase 2B-J - admin auth runtime approval lane."
+      "Current phase: Phase 2B-K - server-only Supabase Auth identity boundary."
     );
     expect(status).toContain(
-      "Latest completed phase: Phase 2B-I - admin auth implementation gate cleanup and runtime-readiness checklist refinement."
+      "Latest completed phase: Phase 2B-J - admin auth runtime approval lane."
     );
-    expect(status).toContain("Last merged phase PR: #49");
+    expect(status).toContain("Last merged phase PR: #50");
     expect(status).toContain(
-      "Merge commit: `04fcbb3c8451b671c03b2157af53b19c447738eb`"
+      "Merge commit: `96e7952b8950e3195020f61bd0a775745cfaae0d`"
     );
     expect(roadmap).toContain(
       "Phase 2B-J approves the future server-only Supabase Auth runtime lane"
@@ -133,7 +136,6 @@ describe("Phase 2B-J admin auth runtime approval lane", () => {
       "Explicit approval obtained before product writes.",
       "Real auth runtime wiring.",
       "Supabase Auth runtime wiring.",
-      "Cookie reads.",
       "Header reads.",
       "Login/logout routes.",
       "Protected admin pages.",
@@ -147,9 +149,12 @@ describe("Phase 2B-J admin auth runtime approval lane", () => {
     ]) {
       expectUnchecked(checklist, item);
     }
+
+    expectChecked(checklist, "Server-only Supabase Auth identity boundary.");
+    expectChecked(checklist, "Cookie reads.");
   });
 
-  it("does not add runtime auth, admin, storage, deployment, n8n, Pinecone, or chat-config paths", () => {
+  it("does not add disallowed runtime auth, admin, storage, deployment, n8n, Pinecone, or chat-config paths", () => {
     const productionSource = readTrackedProductionSources([
       "website/app",
       "website/components",
@@ -163,6 +168,7 @@ describe("Phase 2B-J admin auth runtime approval lane", () => {
       .filter(
         (filePath) =>
           isProductionSource(filePath) &&
+          filePath !== approvedAuthBoundaryPath &&
           !filePath.startsWith("website/app/api/") &&
           !filePath.startsWith("website/lib/supabase/")
       )

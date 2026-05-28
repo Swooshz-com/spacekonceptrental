@@ -136,7 +136,19 @@ Supabase Storage, add service-role runtime paths, add browser Supabase,
 deploy, connect Supabase Cloud, change n8n workflows, add Pinecone runtime
 code, migrate Pinecone, or add SaaS chatbot app code.
 
-This phase is not approved for implementation yet.
+Phase 2B-K adds only the server-only Supabase Auth identity/session-read boundary
+needed for future admin auth. Cookie reads, `@supabase/ssr`, and Supabase Auth
+server calls are allowed only inside
+`website/lib/admin/authorization/supabase-admin-auth-identity-adapter.ts`.
+It is not approval to wire the resolver or adapters into runtime routes, pages,
+or server actions, read headers, add login/logout routes, add protected admin
+pages, add admin UI, add product/category/product image writes, add Supabase
+Storage, add service-role runtime paths, add browser Supabase, deploy, connect
+Supabase Cloud, change n8n workflows, add Pinecone runtime code, migrate
+Pinecone, or add SaaS chatbot app code.
+
+Further Phase 2 implementation work remains unapproved until scoped in a
+separate phase PR.
 
 ## Phase 3: SaaS Chatbot Boundary
 

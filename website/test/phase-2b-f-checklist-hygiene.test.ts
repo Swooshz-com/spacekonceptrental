@@ -14,6 +14,8 @@ const adminOpsChecklistPath = "docs/checklists/PHASE-2-ADMIN-OPS.md";
 const adminAuthChecklistPath = "docs/checklists/PHASE-2B-ADMIN-AUTH.md";
 const authImplementationChecklistPath =
   "docs/checklists/PHASE-2B-AUTH-IMPLEMENTATION.md";
+const approvedAuthBoundaryPath =
+  "website/lib/admin/authorization/supabase-admin-auth-identity-adapter.ts";
 const sourceExtensions = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs"]);
 
 const expectedN8nWorkflowHashes = new Map([
@@ -63,6 +65,10 @@ function readTrackedProductionSources(paths: string[]) {
 
 function expectUnchecked(markdown: string, item: string) {
   expect(markdown).toContain(`- [ ] ${item}`);
+}
+
+function expectChecked(markdown: string, item: string) {
+  expect(markdown).toContain(`- [x] ${item}`);
 }
 
 function expectNoTrackedFiles(paths: string[]) {
@@ -128,11 +134,11 @@ describe("Phase 2B-F checklist hygiene and phase status reconciliation", () => {
 
     const status = readRepoFile(phaseStatusPath);
 
-    expect(status).toContain("Current phase: Phase 2B-J");
-    expect(status).toContain("Latest completed phase: Phase 2B-I");
-    expect(status).toContain("Last merged phase PR: #49");
+    expect(status).toContain("Current phase: Phase 2B-K");
+    expect(status).toContain("Latest completed phase: Phase 2B-J");
+    expect(status).toContain("Last merged phase PR: #50");
     expect(status).toContain(
-      "Merge commit: `04fcbb3c8451b671c03b2157af53b19c447738eb`"
+      "Merge commit: `96e7952b8950e3195020f61bd0a775745cfaae0d`"
     );
     expect(status).toContain("Completed foundation");
     expect(status).toContain("Completed deployment readiness docs");
@@ -222,7 +228,7 @@ describe("Phase 2B-F checklist hygiene and phase status reconciliation", () => {
     for (const item of [
       "Real auth runtime wiring.",
       "Supabase Auth runtime wiring.",
-      "Cookie reads.",
+      "Cookie reads outside the Phase 2B-K server-only identity boundary.",
       "Header reads.",
       "Login/logout routes.",
       "Protected admin pages.",
@@ -249,7 +255,6 @@ describe("Phase 2B-F checklist hygiene and phase status reconciliation", () => {
     for (const item of [
       "Real auth runtime wiring.",
       "Supabase Auth runtime wiring.",
-      "Cookie reads.",
       "Header reads.",
       "Login/logout routes.",
       "Protected admin pages.",
@@ -263,6 +268,9 @@ describe("Phase 2B-F checklist hygiene and phase status reconciliation", () => {
     ]) {
       expectUnchecked(checklist, item);
     }
+
+    expectChecked(checklist, "Server-only Supabase Auth identity boundary.");
+    expectChecked(checklist, "Cookie reads.");
   });
 
   it("keeps admin operations from implying product CRUD is ready", () => {
@@ -298,10 +306,13 @@ describe("Phase 2B-F checklist hygiene and phase status reconciliation", () => {
       "website/components",
       "website/lib"
     ]);
-    const combinedSource = productionSources
+    const boundaryExcludedSources = productionSources.filter(
+      ({ filePath }) => filePath !== approvedAuthBoundaryPath
+    );
+    const combinedSource = boundaryExcludedSources
       .map(({ source }) => source)
       .join("\n");
-    const browserSource = productionSources
+    const browserSource = boundaryExcludedSources
       .filter(
         ({ filePath }) =>
           !filePath.startsWith("website/app/api/") &&
