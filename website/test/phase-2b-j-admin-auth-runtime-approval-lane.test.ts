@@ -52,14 +52,14 @@ describe("Phase 2B-J admin auth runtime approval lane", () => {
     const decisionLog = readRepoFile("docs/DECISION-LOG.md");
 
     expect(status).toContain(
-      "Current phase: Phase 2B-K - server-only Supabase Auth identity boundary."
+      "Current phase: Phase 2B-L - server-only admin profile and membership read boundary."
     );
     expect(status).toContain(
-      "Latest completed phase: Phase 2B-J - admin auth runtime approval lane."
+      "Latest completed phase: Phase 2B-K - server-only Supabase Auth identity boundary."
     );
-    expect(status).toContain("Last merged phase PR: #50");
+    expect(status).toContain("Last merged phase PR: #51");
     expect(status).toContain(
-      "Merge commit: `96e7952b8950e3195020f61bd0a775745cfaae0d`"
+      "Merge commit: `19f385a20d82109fb73e77f9e5328cc91e16cffd`"
     );
     expect(roadmap).toContain(
       "Phase 2B-J approves the future server-only Supabase Auth runtime lane"
@@ -152,6 +152,10 @@ describe("Phase 2B-J admin auth runtime approval lane", () => {
 
     expectChecked(checklist, "Server-only Supabase Auth identity boundary.");
     expectChecked(checklist, "Cookie reads.");
+    expectChecked(
+      checklist,
+      "Server-only Supabase admin profile/membership read boundary."
+    );
   });
 
   it("does not add disallowed runtime auth, admin, storage, deployment, n8n, Pinecone, or chat-config paths", () => {

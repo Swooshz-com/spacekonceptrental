@@ -134,11 +134,11 @@ describe("Phase 2B-F checklist hygiene and phase status reconciliation", () => {
 
     const status = readRepoFile(phaseStatusPath);
 
-    expect(status).toContain("Current phase: Phase 2B-K");
-    expect(status).toContain("Latest completed phase: Phase 2B-J");
-    expect(status).toContain("Last merged phase PR: #50");
+    expect(status).toContain("Current phase: Phase 2B-L");
+    expect(status).toContain("Latest completed phase: Phase 2B-K");
+    expect(status).toContain("Last merged phase PR: #51");
     expect(status).toContain(
-      "Merge commit: `96e7952b8950e3195020f61bd0a775745cfaae0d`"
+      "Merge commit: `19f385a20d82109fb73e77f9e5328cc91e16cffd`"
     );
     expect(status).toContain("Completed foundation");
     expect(status).toContain("Completed deployment readiness docs");
@@ -271,6 +271,10 @@ describe("Phase 2B-F checklist hygiene and phase status reconciliation", () => {
 
     expectChecked(checklist, "Server-only Supabase Auth identity boundary.");
     expectChecked(checklist, "Cookie reads.");
+    expectChecked(
+      checklist,
+      "Server-only Supabase admin profile/membership read boundary."
+    );
   });
 
   it("keeps admin operations from implying product CRUD is ready", () => {

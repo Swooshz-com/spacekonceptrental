@@ -46,17 +46,17 @@ function expectChecked(markdown: string, item: string) {
 }
 
 describe("Phase 2B-I admin auth gate cleanup", () => {
-  it("records the current phase and latest completed Phase 2B-J base state", () => {
+  it("records the current phase and latest completed Phase 2B-K base state", () => {
     const status = readRepoFile("docs/PHASE-STATUS.md");
     const roadmap = readRepoFile("docs/PHASE-ROADMAP.md");
     const decisionLog = readRepoFile("docs/DECISION-LOG.md");
 
     expect(status).toContain(
-      "Latest completed phase: Phase 2B-J - admin auth runtime approval lane."
+      "Latest completed phase: Phase 2B-K - server-only Supabase Auth identity boundary."
     );
-    expect(status).toContain("Last merged phase PR: #50");
+    expect(status).toContain("Last merged phase PR: #51");
     expect(status).toContain(
-      "Merge commit: `96e7952b8950e3195020f61bd0a775745cfaae0d`"
+      "Merge commit: `19f385a20d82109fb73e77f9e5328cc91e16cffd`"
     );
     expect(roadmap).toContain(
       "Phase 2B-I cleans admin auth implementation gate wording and refines"
@@ -125,6 +125,10 @@ describe("Phase 2B-I admin auth gate cleanup", () => {
       "Server-only Supabase Auth identity boundary."
     );
     expectChecked(authImplementationChecklist, "Cookie reads.");
+    expectChecked(
+      authImplementationChecklist,
+      "Server-only Supabase admin profile/membership read boundary."
+    );
 
     expect(readTrackedFiles(["website/app/admin"])).toEqual([]);
     expect(readTrackedFiles(["website/app/login"])).toEqual([]);

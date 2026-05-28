@@ -1,15 +1,20 @@
 # Admin Auth Provider Session Design
 
 This document records the Phase 2B-E auth provider/session/security design,
-the Phase 2B-J approved future admin auth runtime lane, and the Phase 2B-K
-implemented server-only identity/session-read boundary.
+the Phase 2B-J approved future admin auth runtime lane, the Phase 2B-K
+implemented server-only identity/session-read boundary, and the Phase 2B-L
+implemented server-only profile/membership read boundary.
 
 Phase 2B-E added auth provider/session/security design only.
 Phase 2B-J approves the future server-only Supabase Auth runtime lane only.
 Phase 2B-K implements only the server-only Supabase Auth identity boundary.
+Phase 2B-L implements only the server-only admin profile/membership read
+boundary.
 
 Phase 2B-K cookie reads and Supabase Auth server calls are restricted to the
 server-only identity adapter named below.
+Phase 2B-L `admin_users` and `memberships` reads are restricted to the
+server-only profile/membership adapter named below.
 This document does not approve auth runtime wiring outside that boundary.
 This document does not read headers.
 This document does not add login/logout routes.
@@ -117,6 +122,35 @@ The boundary does not read headers, use service-role keys, create browser
 Supabase clients, add login/logout routes, add protected admin pages, add
 admin UI, add product writes, add Storage, connect Supabase Cloud, or deploy.
 
+## Phase 2B-L Implemented Profile And Membership Read Boundary
+
+`website/lib/admin/authorization/supabase-admin-profile-membership-adapters.ts` is the only approved module for Supabase `admin_users` and `memberships` table reads in this phase.
+
+It implements the existing `AdminProfileAdapter` and `AdminMembershipAdapter` safe shapes only and is not wired into runtime routes, pages, or server actions.
+
+The profile boundary reads `admin_users` by `auth_user_id`, requires exactly one
+active profile row, and returns only `{ id, status }`. Missing, inactive,
+duplicate, non-exact, query-error, or provider-error profile results fail
+closed.
+
+The membership boundary reads `memberships` by active admin profile ID and the
+server-resolved workspace ID, requires exactly one active membership row with a
+known role, and returns only `{ adminUserId, workspaceId, status, role }`.
+Missing, inactive, wrong-actor, cross-workspace, duplicate, non-exact,
+query-error, or provider-error membership results fail closed.
+
+It does not default to the plain anon-key Supabase helper. This phase requires
+an explicitly injected authenticated admin-read client before live Supabase
+admin profile or membership reads can run; without that dependency, the
+adapters fail closed with `null`.
+
+Live authenticated read-client wiring remains deferred. The boundary does not
+read cookies, call Supabase Auth, read headers, use service-role keys, create
+browser Supabase clients, add login/logout routes, add protected admin pages,
+add admin UI, add product writes, add Storage, connect Supabase Cloud, change
+n8n workflows, add Pinecone runtime code, access `website/chat-config.js`, or
+deploy.
+
 ## Non-goals
 
 This document does not:
@@ -124,6 +158,10 @@ This document does not:
 - Wire real auth into runtime routes, pages, or server actions.
 - Add Supabase Auth runtime wiring outside the Phase 2B-K identity boundary.
 - Read cookies outside the Phase 2B-K identity boundary.
+- Read `admin_users` or `memberships` outside the Phase 2B-L
+  profile/membership boundary.
+- Add live authenticated read-client wiring for Phase 2B-L profile/membership
+  reads.
 - Read headers.
 - Add login/logout routes.
 - Add protected admin pages.

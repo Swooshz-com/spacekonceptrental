@@ -18,11 +18,15 @@ runtime-readiness checklist/static guard wording only.
 Phase 2B-J approves the future server-only Supabase Auth runtime lane only.
 Phase 2B-K adds only the server-only Supabase Auth identity/session-read
 boundary. Cookie reads and Supabase Auth server calls are restricted to that
-boundary and tracked in `PHASE-2B-AUTH-IMPLEMENTATION.md`. Keep real auth
-runtime wiring, headers, login/logout routes, protected admin pages, admin UI,
-product management writes, browser Supabase, service-role runtime paths,
-deployment, and Supabase Cloud work unchecked until a future PR has explicit
-approval.
+boundary and tracked in `PHASE-2B-AUTH-IMPLEMENTATION.md`. Phase 2B-L adds
+only the server-only Supabase admin profile/membership read boundary.
+`admin_users` and `memberships` reads are restricted to that boundary and
+tracked in `PHASE-2B-AUTH-IMPLEMENTATION.md`. The boundary requires an
+explicitly injected authenticated admin-read client and fails closed without
+one; live read-client wiring remains deferred. Keep real auth runtime wiring,
+headers, login/logout routes, protected admin pages, admin UI, product
+management writes, browser Supabase, service-role runtime paths, deployment,
+and Supabase Cloud work unchecked until a future PR has explicit approval.
 
 ## Completed Design, Policy, Resolver, Adapter, And Provider-session Milestones
 
@@ -40,6 +44,7 @@ approval.
 - [x] Clean stale admin auth implementation gate wording and runtime-readiness checklist/static guards.
 - [x] Approve future server-only Supabase Auth runtime lane.
 - [x] Add server-only Supabase Auth identity boundary.
+- [x] Add server-only Supabase admin profile/membership read boundary.
 
 ## Design References
 
@@ -91,6 +96,8 @@ runtime implementation approval.
 - [ ] Real auth runtime wiring.
 - [ ] Supabase Auth runtime wiring.
 - [ ] Cookie reads outside the Phase 2B-K server-only identity boundary.
+- [ ] Admin profile/membership Supabase table reads outside the Phase 2B-L server-only read boundary.
+- [ ] Live authenticated read-client wiring for Phase 2B-L profile/membership reads.
 - [ ] Header reads.
 - [ ] Login/logout routes.
 - [ ] Protected admin pages.

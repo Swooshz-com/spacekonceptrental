@@ -53,14 +53,14 @@ describe("Phase 2B-K server-only Supabase Auth identity boundary", () => {
     const decisionLog = readRepoFile("docs/DECISION-LOG.md");
 
     expect(status).toContain(
-      "Current phase: Phase 2B-K - server-only Supabase Auth identity boundary."
+      "Current phase: Phase 2B-L - server-only admin profile and membership read boundary."
     );
     expect(status).toContain(
-      "Latest completed phase: Phase 2B-J - admin auth runtime approval lane."
+      "Latest completed phase: Phase 2B-K - server-only Supabase Auth identity boundary."
     );
-    expect(status).toContain("Last merged phase PR: #50");
+    expect(status).toContain("Last merged phase PR: #51");
     expect(status).toContain(
-      "Merge commit: `96e7952b8950e3195020f61bd0a775745cfaae0d`"
+      "Merge commit: `19f385a20d82109fb73e77f9e5328cc91e16cffd`"
     );
     expect(roadmap).toContain(
       "Phase 2B-K adds only the server-only Supabase Auth identity/session-read boundary"
@@ -92,6 +92,10 @@ describe("Phase 2B-K server-only Supabase Auth identity boundary", () => {
 
     expectChecked(authChecklist, "Server-only Supabase Auth identity boundary.");
     expectChecked(authChecklist, "Cookie reads.");
+    expectChecked(
+      authChecklist,
+      "Server-only Supabase admin profile/membership read boundary."
+    );
     expectUnchecked(authChecklist, "Real auth runtime wiring.");
     expectUnchecked(authChecklist, "Supabase Auth runtime wiring.");
     expectUnchecked(authChecklist, "Header reads.");

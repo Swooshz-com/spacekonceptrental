@@ -147,6 +147,20 @@ Storage, add service-role runtime paths, add browser Supabase, deploy, connect
 Supabase Cloud, change n8n workflows, add Pinecone runtime code, migrate
 Pinecone, or add SaaS chatbot app code.
 
+Phase 2B-L adds only the server-only Supabase-backed admin profile and membership read boundary
+needed for future admin auth. `admin_users` and `memberships` reads are allowed only inside
+`website/lib/admin/authorization/supabase-admin-profile-membership-adapters.ts`.
+It requires an explicitly injected authenticated admin-read client and does not
+default to the plain anon-key Supabase helper. Live authenticated read-client
+wiring remains deferred. It is not approval to wire the resolver or adapters
+into runtime routes, pages, or server actions, read cookies outside the Phase
+2B-K identity boundary, call Supabase Auth outside the Phase 2B-K identity
+boundary, read headers, add login/logout routes, add protected admin pages,
+add admin UI, add product/category/product image writes, add Supabase Storage,
+add service-role runtime paths, add browser Supabase, deploy, connect Supabase
+Cloud, change n8n workflows, add Pinecone runtime code, migrate Pinecone,
+access `website/chat-config.js`, or add SaaS chatbot app code.
+
 Further Phase 2 implementation work remains unapproved until scoped in a
 separate phase PR.
 
