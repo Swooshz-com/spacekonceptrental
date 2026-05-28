@@ -49,6 +49,10 @@ function expectUnchecked(markdown: string, item: string) {
   expect(markdown).toContain(`- [ ] ${item}`);
 }
 
+function expectChecked(markdown: string, item: string) {
+  expect(markdown).toContain(`- [x] ${item}`);
+}
+
 describe("Phase 2B-E admin auth provider and session design", () => {
   it("adds the auth provider/session design and implementation checklist", () => {
     expect(existsSync(resolve(repoRoot, designDocPath))).toBe(true);
@@ -85,23 +89,25 @@ describe("Phase 2B-E admin auth provider and session design", () => {
     expect(normalizedDesign).toContain("forbidden shortcuts");
     expect(normalizedDesign).toContain("first implementation pr after this design");
     expect(design).toContain(
-      "This PR adds auth provider/session/security design only."
+      "Phase 2B-E added auth provider/session/security design only."
     );
-    expect(design).toContain("This PR does not implement real auth.");
-    expect(design).toContain("This PR does not add Supabase Auth runtime wiring.");
-    expect(design).toContain("This PR does not read cookies.");
-    expect(design).toContain("This PR does not read headers.");
-    expect(design).toContain("This PR does not add login/logout routes.");
-    expect(design).toContain("This PR does not add protected admin pages.");
-    expect(design).toContain("This PR does not add admin UI.");
-    expect(design).toContain("This PR does not add product writes.");
+    expect(design).toContain("This document does not implement real auth.");
+    expect(design).toContain(
+      "This document does not add Supabase Auth runtime wiring."
+    );
+    expect(design).toContain("This document does not read cookies.");
+    expect(design).toContain("This document does not read headers.");
+    expect(design).toContain("This document does not add login/logout routes.");
+    expect(design).toContain("This document does not add protected admin pages.");
+    expect(design).toContain("This document does not add admin UI.");
+    expect(design).toContain("This document does not add product writes.");
     expect(design).toContain("Browser Supabase remains forbidden.");
     expect(design).toContain(
       "Service-role runtime paths remain forbidden unless separately approved."
     );
     expect(design).toContain("Future auth must remain server-side.");
     expect(design).toContain(
-      "Future session cookies must be HttpOnly, Secure in production, and have reviewed SameSite behaviour."
+      "Future session cookies must be server-managed, HttpOnly, Secure in"
     );
     expect(design).toContain(
       "Future state-changing admin routes/server actions need CSRF strategy before implementation."
@@ -120,9 +126,9 @@ describe("Phase 2B-E admin auth provider and session design", () => {
     );
   });
 
-  it("keeps the auth implementation checklist real implementation items unchecked", () => {
+  it("keeps the auth implementation checklist approvals separate from runtime implementation items", () => {
     const checklist = readRepoFile(implementationChecklistPath);
-    const uncheckedItems = [
+    const approvedItems = [
       "Supabase Auth provider approved.",
       "Server-only auth boundary approved.",
       "Session cookie strategy approved.",
@@ -143,7 +149,11 @@ describe("Phase 2B-E admin auth provider and session design", () => {
       "Admin allowed path tests planned.",
       "Owner membership-management tests planned.",
       "Safe auth error tests planned.",
-      "Explicit approval obtained before real auth runtime wiring.",
+      "CSRF failure tests planned.",
+      "Safe redirect tests planned.",
+      "Explicit approval obtained before real auth runtime wiring."
+    ];
+    const uncheckedItems = [
       "Explicit approval obtained before login/logout routes.",
       "Explicit approval obtained before protected admin pages.",
       "Explicit approval obtained before admin UI.",
@@ -162,6 +172,10 @@ describe("Phase 2B-E admin auth provider and session design", () => {
       "Service-role runtime paths.",
       "Browser Supabase."
     ];
+
+    for (const item of approvedItems) {
+      expectChecked(checklist, item);
+    }
 
     for (const item of uncheckedItems) {
       expectUnchecked(checklist, item);

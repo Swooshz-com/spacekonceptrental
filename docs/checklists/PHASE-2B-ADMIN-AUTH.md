@@ -15,6 +15,7 @@ Phase 2B-G refreshes repo agent instructions only. Phase 2B-H strengthens the
 reviewed server-side resolver/adapter boundary with fake-adapter tests only.
 Phase 2B-I cleans admin auth implementation gate wording and
 runtime-readiness checklist/static guard wording only.
+Phase 2B-J approves the future server-only Supabase Auth runtime lane only.
 Keep real auth, Supabase Auth runtime wiring, cookies, headers, login/logout
 routes, protected admin pages, admin UI, product management writes, browser
 Supabase, service-role runtime paths, deployment, and Supabase Cloud work
@@ -34,6 +35,7 @@ unchecked until a future PR has explicit approval.
 - [x] Add checklist hygiene/status reconciliation guards.
 - [x] Add reviewed server-side admin auth/membership resolution tests with fake adapters.
 - [x] Clean stale admin auth implementation gate wording and runtime-readiness checklist/static guards.
+- [x] Approve future server-only Supabase Auth runtime lane.
 
 ## Design References
 

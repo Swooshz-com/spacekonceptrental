@@ -49,7 +49,7 @@ describe("Phase 2B-H admin auth resolution boundary", () => {
     const checklist = readRepoFile("docs/checklists/PHASE-2B-ADMIN-AUTH.md");
 
     expect(phaseStatus).toContain(
-      "Latest completed phase: Phase 2B-H - reviewed server-side admin auth/membership resolution boundary."
+      "Reviewed server-side resolver decisions for trusted fake adapter inputs."
     );
     expect(roadmap).toContain(
       "Phase 2B-H strengthens the reviewed server-side admin auth/membership"
