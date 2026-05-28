@@ -51,10 +51,12 @@ describe("Phase 2B-B admin authorization policy boundary", () => {
     expect(policy).toContain('import "server-only";');
     expect(policy).toContain("authorizeAdminOperation");
     expect(design).toContain("pure server-only policy module");
-    expect(design).toContain("This PR does not implement real auth.");
-    expect(design).toContain("This PR does not add Supabase Auth runtime wiring.");
-    expect(design).toContain("This PR does not add login/logout routes.");
-    expect(design).toContain("This PR does not add protected admin pages.");
+    expect(design).toContain("This design does not implement real auth.");
+    expect(design).toContain(
+      "This design does not add Supabase Auth runtime wiring."
+    );
+    expect(design).toContain("This design does not add login or logout routes.");
+    expect(design).toContain("This design does not add protected admin pages.");
     expect(design).toContain(
       "Product writes remain blocked until real auth/membership resolution, RLS, audit, and route/action boundaries are implemented and tested."
     );

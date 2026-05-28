@@ -5,9 +5,10 @@ This is the future implementation checklist for real admin auth runtime work.
 Completed design-only milestones are referenced, not duplicated as implementation work.
 
 Phase 2B-E is design and guard coverage only. Phase 2B-F reconciles checklist
-status only. Keep all real auth, cookie, header, route, UI, product write,
-Storage, browser Supabase, and service-role runtime implementation items
-unchecked until a future PR has explicit approval.
+status only. Phase 2B-I refines current implementation-gate wording only.
+Keep all real auth, cookie, header, route, UI, product write, Storage, browser
+Supabase, and service-role runtime implementation items unchecked until a
+future PR has explicit approval.
 
 Reference docs:
 

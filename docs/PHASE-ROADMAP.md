@@ -118,6 +118,15 @@ service-role runtime paths, add browser Supabase, deploy, connect Supabase
 Cloud, change n8n workflows, add Pinecone runtime code, migrate Pinecone, or
 add SaaS chatbot app code.
 
+Phase 2B-I cleans admin auth implementation gate wording and refines
+runtime-readiness checklist/static guard wording only. It is not approval to
+implement real auth, add Supabase Auth runtime wiring, read cookies, read
+headers, add login/logout routes, add protected admin pages, add admin UI,
+wire runtime routes/pages/server actions, add product/category/product image
+writes, add Supabase Storage, add service-role runtime paths, add browser
+Supabase, deploy, connect Supabase Cloud, change n8n workflows, add Pinecone
+runtime code, migrate Pinecone, or add SaaS chatbot app code.
+
 This phase is not approved for implementation yet.
 
 ## Phase 3: SaaS Chatbot Boundary

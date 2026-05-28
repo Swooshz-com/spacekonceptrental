@@ -58,18 +58,23 @@ describe("Phase 2B-D admin auth adapter boundary", () => {
     expect(adapter).toContain("AdminWorkspaceResolver");
     expect(resolver).toContain("resolveAdminAuthorizationWithAdapters");
     expect(design).toContain(
-      "This PR adds server-only adapter contracts and dependency-injected resolver logic only."
+      "Phase 2B-D added server-only adapter contracts and dependency-injected resolver logic only."
     );
-    expect(design).toContain("This PR does not implement real auth.");
-    expect(design).toContain("This PR does not add Supabase Auth runtime wiring.");
-    expect(design).toContain("This PR does not read cookies.");
-    expect(design).toContain("This PR does not read headers.");
-    expect(design).toContain("This PR does not add login/logout routes.");
-    expect(design).toContain("This PR does not add protected admin pages.");
-    expect(design).toContain("This PR does not add admin UI.");
-    expect(design).toContain("This PR does not add product writes.");
     expect(design).toContain(
-      "This PR does not wire the resolver into runtime routes/pages/server actions."
+      "`website/lib/admin/authorization/admin-authorization-adapters.ts`"
+    );
+    expect(design).toContain("This design does not implement real auth.");
+    expect(design).toContain(
+      "This design does not add Supabase Auth runtime wiring."
+    );
+    expect(design).toContain("This design does not read cookies.");
+    expect(design).toContain("This design does not read headers.");
+    expect(design).toContain("This design does not add login or logout routes.");
+    expect(design).toContain("This design does not add protected admin pages.");
+    expect(design).toContain("This design does not add admin UI.");
+    expect(design).toContain("This design does not add product writes.");
+    expect(design).toContain(
+      "This design does not wire the admin resolver into runtime routes, pages, or server actions."
     );
     expect(checklist).toContain(
       "- [x] Add server-only admin auth/membership adapter contract."

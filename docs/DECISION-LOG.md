@@ -434,3 +434,20 @@ admin UI, runtime route/page/server-action wiring, product/category/product
 image writes, Supabase Storage, service-role runtime paths, browser Supabase,
 deployment, Supabase Cloud connection, n8n workflow changes, Pinecone runtime
 changes, and SaaS chatbot app code out of scope.
+
+## 2026-05-28: Admin Auth Implementation Gate Wording Cleanup
+
+Decision: Phase 2B-I cleans stale stacked current-PR wording in the admin auth
+membership design and refines runtime-readiness checklist/static guard wording
+only.
+
+Reason: the admin auth membership design had accumulated phase-specific
+sentences from older Phase 2B PRs that could make the current work look like
+Phase 2B-D, Phase 2B-E, or Phase 2B-H runtime boundary work. This phase keeps
+the completed phase history, records Phase 2B-H as the latest completed
+server-side boundary state, and leaves real auth runtime wiring, Supabase Auth
+runtime wiring, cookie reads, header reads, login/logout routes, protected
+admin pages, admin UI, runtime route/page/server-action wiring,
+product/category/product image writes, Supabase Storage, service-role runtime
+paths, browser Supabase, deployment, Supabase Cloud connection, n8n workflow
+changes, Pinecone runtime changes, and SaaS chatbot app code out of scope.

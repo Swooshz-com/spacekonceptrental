@@ -116,7 +116,7 @@ describe("Phase 2B-E admin auth provider and session design", () => {
       "Browser/request workspace IDs remain validation-only and never trusted authority."
     );
     expect(membershipDesign).toContain(
-      "This PR adds auth provider/session/security design only."
+      "Phase 2B-E added auth provider/session/security design only."
     );
   });
 

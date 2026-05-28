@@ -1,29 +1,32 @@
 # Admin Auth Membership Design
 
-Phase 2B-A is design and guard coverage only.
-Phase 2B-B adds a pure server-only policy module only.
-Phase 2B-C adds a server-only resolver contract and disabled scaffold only.
-Phase 2B-D adds server-only adapter contracts and dependency-injected resolver
-logic only.
-Phase 2B-E adds auth provider/session/security design only.
-Phase 2B-G refreshes repo agent instructions only.
-Phase 2B-H strengthens the reviewed server-side auth/membership resolution
-boundary with fake-adapter tests only.
+This document records completed Phase 2B admin/auth readiness history and the
+latest reviewed boundary state. It is historical design/status context, not
+runtime approval for auth, admin UI, product writes, or deployment work.
 
-This PR strengthens the reviewed server-side admin auth/membership resolution boundary only.
-This PR adds auth provider/session/security design only.
-This PR adds server-only adapter contracts and dependency-injected resolver logic only.
-This PR does not implement auth.
-This PR does not implement real auth.
-This PR does not add admin UI.
-This PR does not add product writes.
-This PR does not add Supabase Auth runtime wiring.
-This PR does not read cookies.
-This PR does not read headers.
-This PR does not add login/logout routes.
-This PR does not add protected admin pages.
-This PR adds a server-only resolver contract and disabled scaffold only.
-This PR does not wire the resolver into runtime routes/pages/server actions.
+Completed phase history:
+
+- Phase 2B-A added admin/auth and workspace membership design and guard
+  coverage only.
+- Phase 2B-B added a pure server-only policy module and tests only.
+- Phase 2B-C added a server-only resolver contract and disabled scaffold only.
+- Phase 2B-D added server-only adapter contracts and dependency-injected resolver logic only.
+- Phase 2B-E added auth provider/session/security design only.
+- Phase 2B-F reconciled checklist hygiene and phase status only.
+- Phase 2B-G refreshed repo agent instructions only.
+- Phase 2B-H strengthened the reviewed server-side auth/membership resolution boundary with fake-adapter tests only.
+
+Latest completed admin/auth boundary state: Phase 2B-H reviewed dependency-injected server-side resolver/adapter decisions only.
+
+This design does not implement real auth.
+This design does not add admin UI.
+This design does not add product writes.
+This design does not add Supabase Auth runtime wiring.
+This design does not read cookies.
+This design does not read headers.
+This design does not add login or logout routes.
+This design does not add protected admin pages.
+This design does not wire the admin resolver into runtime routes, pages, or server actions.
 
 Product/category/product image writes remain blocked until admin/auth boundaries are implemented and tested.
 Product writes remain blocked until real auth/membership resolution, RLS, audit, and route/action boundaries are implemented and tested.
@@ -108,7 +111,7 @@ Cloud connection.
 
 ## Non-goals
 
-This PR does not:
+This design does not:
 
 - Implement real auth.
 - Add Supabase Auth runtime wiring.
@@ -231,7 +234,7 @@ Supabase credentials or choose the trusted workspace.
 ## Product/category/product image write gate
 
 No category, product, or product image insert, update, upsert, delete,
-publish, archive, or upload path is approved by this PR.
+publish, archive, or upload path is approved by this design.
 
 Before writes are allowed, a later PR must add and test:
 
@@ -353,7 +356,7 @@ Expected properties:
 - No localStorage token authority for admin access.
 - No browser-visible service-role key or server-only Supabase env value.
 
-This PR does not read cookies and does not add session code.
+This design does not read cookies and does not add session code.
 
 ## Forbidden shortcuts
 
