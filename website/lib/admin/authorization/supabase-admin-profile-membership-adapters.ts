@@ -1,7 +1,5 @@
 import "server-only";
 
-import { createServerSupabaseClient } from "../../supabase/server";
-import type { SupabaseServerEnvName } from "../../supabase/env";
 import type {
   AdminMembershipAdapter,
   AdminProfileAdapter,
@@ -35,7 +33,7 @@ export type SupabaseAdminReadClientResult =
   | {
       configured: false;
       client: null;
-      missingEnv: SupabaseServerEnvName[];
+      reason: "authenticated_admin_read_client_required";
     };
 
 export type SupabaseAdminReadDependencies = {
@@ -69,8 +67,11 @@ function getSupabase(
   dependencies: SupabaseAdminReadDependencies = {}
 ): SupabaseAdminReadClientResult {
   return (
-    dependencies.supabase ??
-    (createServerSupabaseClient() as SupabaseAdminReadClientResult)
+    dependencies.supabase ?? {
+      configured: false,
+      client: null,
+      reason: "authenticated_admin_read_client_required"
+    }
   );
 }
 

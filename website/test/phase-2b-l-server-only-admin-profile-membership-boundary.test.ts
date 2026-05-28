@@ -94,6 +94,12 @@ describe("Phase 2B-L server-only admin profile and membership read boundary", ()
     expect(design).toContain(
       "It implements the existing `AdminProfileAdapter` and `AdminMembershipAdapter` safe shapes only and is not wired into runtime routes, pages, or server actions."
     );
+    expect(design).toContain(
+      "It does not default to the plain anon-key Supabase helper."
+    );
+    expect(design).toContain(
+      "Live authenticated read-client wiring remains deferred."
+    );
 
     expectChecked(
       authChecklist,
@@ -170,7 +176,8 @@ describe("Phase 2B-L server-only admin profile and membership read boundary", ()
       .join("\n");
 
     expect(approvedSource).toContain('import "server-only";');
-    expect(approvedSource).toContain("createServerSupabaseClient");
+    expect(approvedSource).not.toContain("createServerSupabaseClient");
+    expect(approvedSource).not.toContain("lib/supabase/server");
     expect(approvedSource).toContain('from("admin_users")');
     expect(approvedSource).toContain('from("memberships")');
     expect(approvedSource).not.toContain("next/headers");

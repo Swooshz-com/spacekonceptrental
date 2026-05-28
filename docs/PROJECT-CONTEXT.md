@@ -161,11 +161,13 @@ Custom Chat UI -> POST /api/chat -> ChatProvider
 - Phase 2B-L adds a server-only Supabase-backed admin profile and membership read boundary
   only. `admin_users` and `memberships` reads are restricted to
   `website/lib/admin/authorization/supabase-admin-profile-membership-adapters.ts`.
-  It is not wired into runtime routes, pages, server actions, protected admin
-  runtime, login/logout, admin UI, product/category/product image writes,
-  Storage, browser Supabase, service-role runtime paths, deployment, Supabase
-  Cloud, n8n workflows, Pinecone runtime code, `website/chat-config.js`, or
-  SaaS chatbot app code.
+  It requires an explicitly injected authenticated admin-read client, fails
+  closed without one, and does not default to the plain anon-key Supabase
+  helper. It is not wired into runtime routes, pages, server actions,
+  protected admin runtime, login/logout, admin UI, product/category/product
+  image writes, Storage, browser Supabase, service-role runtime paths,
+  deployment, Supabase Cloud, n8n workflows, Pinecone runtime code,
+  `website/chat-config.js`, or SaaS chatbot app code.
 
 ## Current Status Pages
 

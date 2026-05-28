@@ -9,8 +9,10 @@ Current phase: Phase 2B-L - server-only admin profile and membership read bounda
 This PR adds the smallest server-only Supabase-backed admin profile and
 workspace membership read boundary needed for future admin auth. It reads
 `admin_users` and `memberships` only inside the reviewed server-only
-profile/membership adapter boundary behind the existing adapter contracts. It
-does not add login/logout routes, protected admin pages, admin UI, runtime
+profile/membership adapter boundary behind the existing adapter contracts, but
+requires an explicitly injected authenticated admin-read client and fails
+closed without one. It does not default to the plain anon-key Supabase helper.
+It does not add login/logout routes, protected admin pages, admin UI, runtime
 route/page/server-action wiring, product writes, Storage, deployment, Supabase
 Cloud connection, browser Supabase, service-role runtime paths, n8n changes,
 Pinecone runtime code, or `website/chat-config.js` access.
@@ -67,6 +69,8 @@ profile/membership boundary is the only approved place in this phase to read
 wired into routes, pages, server actions, protected admin runtime,
 login/logout, admin UI, or product writes.
 
+Live authenticated read-client wiring remains deferred.
+
 ## Still blocked
 
 - Real auth runtime wiring.
@@ -74,6 +78,8 @@ login/logout, admin UI, or product writes.
 - Cookie reads outside the Phase 2B-K server-only identity boundary.
 - Admin profile/membership Supabase table reads outside the Phase 2B-L
   server-only read boundary.
+- Live authenticated read-client wiring for Phase 2B-L profile/membership
+  reads.
 - Header reads.
 - Login/logout routes.
 - Protected admin pages.

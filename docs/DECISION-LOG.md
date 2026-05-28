@@ -511,17 +511,22 @@ The approved implementation boundary is
 It is a server-only `AdminProfileAdapter` and `AdminMembershipAdapter`
 implementation that may read `admin_users` by `auth_user_id` and
 `memberships` by server-resolved `admin_user_id` plus `workspace_id` only
-inside that module. It returns the existing safe adapter shapes only. Missing,
-inactive, duplicate, non-exact, wrong-actor, cross-workspace, query-error, or
-provider-error results fail closed without exposing Supabase errors, SQL,
-provider internals, env values, stack traces, cookies, or tokens.
+inside that module when an authenticated admin-read client is explicitly
+injected. It does not default to the plain anon-key Supabase helper. Without
+that injected dependency, the adapters fail closed with `null`. It returns the
+existing safe adapter shapes only. Missing, inactive, duplicate, non-exact,
+wrong-actor, cross-workspace, query-error, or provider-error results fail
+closed without exposing Supabase errors, SQL, provider internals, env values,
+stack traces, cookies, or tokens.
 
 Reason: Phase 2B-K established the server-only Supabase Auth identity boundary.
 The next safe step is the smallest Supabase-backed profile/membership read
-boundary behind the existing adapter contracts, without wiring auth into
-runtime routes, pages, server actions, protected admin pages, login/logout,
-admin UI, product/category/product image writes, Supabase Storage,
-service-role runtime paths, browser Supabase, deployment, Supabase Cloud, n8n
-workflows, Pinecone runtime code, `website/chat-config.js`, or SaaS chatbot
-code. Cookie reads and Supabase Auth calls remain restricted to the Phase 2B-K
-identity boundary; header reads remain blocked.
+boundary behind the existing adapter contracts, while live authenticated
+read-client wiring remains deferred. This avoids silently using an
+unauthenticated anon-key client for RLS-scoped admin reads. The phase does not
+wire auth into runtime routes, pages, server actions, protected admin pages,
+login/logout, admin UI, product/category/product image writes, Supabase
+Storage, service-role runtime paths, browser Supabase, deployment, Supabase
+Cloud, n8n workflows, Pinecone runtime code, `website/chat-config.js`, or SaaS
+chatbot code. Cookie reads and Supabase Auth calls remain restricted to the
+Phase 2B-K identity boundary; header reads remain blocked.

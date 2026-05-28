@@ -192,6 +192,12 @@ describe("Supabase admin profile adapter", () => {
     ).resolves.toBeNull();
   });
 
+  it("fails closed without an explicitly injected authenticated admin-read client", async () => {
+    await expect(
+      resolveSupabaseAdminProfile("auth-user-1")
+    ).resolves.toBeNull();
+  });
+
   it("fails closed for query and provider errors without leaking internals", async () => {
     const leakyMessage =
       "select failed with SQL and SUPABASE_SERVICE_ROLE_KEY=secret";
@@ -349,6 +355,39 @@ describe("Supabase admin membership adapter", () => {
     ).resolves.toBeNull();
   });
 
+  it("fails closed for duplicate membership results", async () => {
+    const { supabase } = createMockSupabase({
+      memberships: {
+        data: [
+          {
+            admin_user_id: "admin-user-1",
+            workspace_id: "workspace-1",
+            status: "active",
+            role: "admin"
+          },
+          {
+            admin_user_id: "admin-user-1",
+            workspace_id: "workspace-1",
+            status: "active",
+            role: "viewer"
+          }
+        ]
+      }
+    });
+
+    await expect(
+      resolveSupabaseAdminMembership("admin-user-1", "workspace-1", {
+        supabase
+      })
+    ).resolves.toBeNull();
+  });
+
+  it("fails closed without an explicitly injected authenticated admin-read client", async () => {
+    await expect(
+      resolveSupabaseAdminMembership("admin-user-1", "workspace-1")
+    ).resolves.toBeNull();
+  });
+
   it("fails closed for query and provider errors without leaking internals", async () => {
     const leakyMessage =
       "membership select failed with SQL and provider stack secret";
@@ -388,7 +427,8 @@ describe("Supabase admin membership adapter", () => {
     const source = readSource();
 
     expect(source).toContain('import "server-only";');
-    expect(source).toContain("createServerSupabaseClient");
+    expect(source).not.toContain("createServerSupabaseClient");
+    expect(source).not.toContain("../supabase/server");
     expect(source).toContain('from("admin_users")');
     expect(source).toContain('from("memberships")');
     expect(source).toContain('select("id, auth_user_id, status")');

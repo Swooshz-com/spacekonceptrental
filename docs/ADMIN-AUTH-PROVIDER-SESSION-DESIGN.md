@@ -139,12 +139,17 @@ known role, and returns only `{ adminUserId, workspaceId, status, role }`.
 Missing, inactive, wrong-actor, cross-workspace, duplicate, non-exact,
 query-error, or provider-error membership results fail closed.
 
-The boundary uses the existing server-only Supabase helper and anon-key runtime
-configuration. It does not read cookies, call Supabase Auth, read headers, use
-service-role keys, create browser Supabase clients, add login/logout routes,
-add protected admin pages, add admin UI, add product writes, add Storage,
-connect Supabase Cloud, change n8n workflows, add Pinecone runtime code,
-access `website/chat-config.js`, or deploy.
+It does not default to the plain anon-key Supabase helper. This phase requires
+an explicitly injected authenticated admin-read client before live Supabase
+admin profile or membership reads can run; without that dependency, the
+adapters fail closed with `null`.
+
+Live authenticated read-client wiring remains deferred. The boundary does not
+read cookies, call Supabase Auth, read headers, use service-role keys, create
+browser Supabase clients, add login/logout routes, add protected admin pages,
+add admin UI, add product writes, add Storage, connect Supabase Cloud, change
+n8n workflows, add Pinecone runtime code, access `website/chat-config.js`, or
+deploy.
 
 ## Non-goals
 
@@ -155,6 +160,8 @@ This document does not:
 - Read cookies outside the Phase 2B-K identity boundary.
 - Read `admin_users` or `memberships` outside the Phase 2B-L
   profile/membership boundary.
+- Add live authenticated read-client wiring for Phase 2B-L profile/membership
+  reads.
 - Read headers.
 - Add login/logout routes.
 - Add protected admin pages.
