@@ -479,3 +479,25 @@ product/category/product image writes, add Supabase Storage, add service-role
 runtime paths, add browser Supabase, deploy, connect Supabase Cloud, change
 n8n workflows, add Pinecone runtime code, migrate Pinecone, or add SaaS chatbot
 app code.
+
+## 2026-05-28: Server-only Supabase Auth Identity Boundary
+
+Decision: Phase 2B-K adds only the server-only Supabase Auth identity/session-read boundary.
+
+The approved implementation boundary is
+`website/lib/admin/authorization/supabase-admin-auth-identity-adapter.ts`. It
+is a server-only `AdminAuthAdapter` identity adapter that may read request
+cookies with `cookies()` and call Supabase Auth `auth.getUser()` through
+`@supabase/ssr` only inside that module. It returns the existing safe
+authenticated identity shape or boring unauthenticated denial reasons, and it
+does not expose tokens, cookies, provider internals, stack traces, Supabase
+internals, SQL, or env values.
+
+Reason: Phase 2B-J approved Supabase Auth as the future provider and approved
+a server-only auth lane. The next safe step is a narrow identity/session-read
+boundary behind the existing adapter contract, without wiring auth into
+runtime routes, pages, server actions, protected admin pages, login/logout,
+admin UI, product/category/product image writes, Supabase Storage,
+service-role runtime paths, browser Supabase, deployment, Supabase Cloud, n8n
+workflows, Pinecone runtime code, or SaaS chatbot code. Header reads remain
+blocked; no headers are needed for this boundary.

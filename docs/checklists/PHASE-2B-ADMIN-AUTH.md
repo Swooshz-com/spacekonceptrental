@@ -16,10 +16,13 @@ reviewed server-side resolver/adapter boundary with fake-adapter tests only.
 Phase 2B-I cleans admin auth implementation gate wording and
 runtime-readiness checklist/static guard wording only.
 Phase 2B-J approves the future server-only Supabase Auth runtime lane only.
-Keep real auth, Supabase Auth runtime wiring, cookies, headers, login/logout
-routes, protected admin pages, admin UI, product management writes, browser
-Supabase, service-role runtime paths, deployment, and Supabase Cloud work
-unchecked until a future PR has explicit approval.
+Phase 2B-K adds only the server-only Supabase Auth identity/session-read
+boundary. Cookie reads and Supabase Auth server calls are restricted to that
+boundary and tracked in `PHASE-2B-AUTH-IMPLEMENTATION.md`. Keep real auth
+runtime wiring, headers, login/logout routes, protected admin pages, admin UI,
+product management writes, browser Supabase, service-role runtime paths,
+deployment, and Supabase Cloud work unchecked until a future PR has explicit
+approval.
 
 ## Completed Design, Policy, Resolver, Adapter, And Provider-session Milestones
 
@@ -36,6 +39,7 @@ unchecked until a future PR has explicit approval.
 - [x] Add reviewed server-side admin auth/membership resolution tests with fake adapters.
 - [x] Clean stale admin auth implementation gate wording and runtime-readiness checklist/static guards.
 - [x] Approve future server-only Supabase Auth runtime lane.
+- [x] Add server-only Supabase Auth identity boundary.
 
 ## Design References
 
@@ -86,7 +90,7 @@ runtime implementation approval.
 
 - [ ] Real auth runtime wiring.
 - [ ] Supabase Auth runtime wiring.
-- [ ] Cookie reads.
+- [ ] Cookie reads outside the Phase 2B-K server-only identity boundary.
 - [ ] Header reads.
 - [ ] Login/logout routes.
 - [ ] Protected admin pages.
