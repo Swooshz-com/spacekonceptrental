@@ -4,18 +4,18 @@ This is the quick status page for the SKR repo. Use `docs/PHASE-2-READINESS-PLAN
 
 ## Current phase
 
-Current phase: Phase 2B-I - admin auth implementation gate cleanup and runtime-readiness checklist refinement.
+Current phase: Phase 2B-J - admin auth runtime approval lane.
 
-This PR cleans stale admin/auth implementation-gate wording, refines
-runtime-readiness checklist/static guard wording, and keeps Phase 2B-H as the
-latest completed reviewed server-side admin auth/membership boundary. It does
-not implement runtime auth or runtime admin features.
+This PR approves and documents the future server-only Supabase Auth runtime
+lane, session/cookie strategy, CSRF expectations, login/logout requirements,
+protected-page requirements, and required runtime-auth tests. It does not
+implement runtime auth or runtime admin features.
 
-Latest completed phase: Phase 2B-H - reviewed server-side admin auth/membership resolution boundary.
+Latest completed phase: Phase 2B-I - admin auth implementation gate cleanup and runtime-readiness checklist refinement.
 
-Last merged phase PR: #48
+Last merged phase PR: #49
 
-Merge commit: `5845ff44852805b18ac33333d376cf5cec286276`
+Merge commit: `04fcbb3c8451b671c03b2157af53b19c447738eb`
 
 ## Completed foundation
 
@@ -50,10 +50,11 @@ Vercel config, add real env values, or add runtime features.
 - Checklist ownership, maintenance rules, and quick phase status docs.
 - Reviewed server-side resolver decisions for trusted fake adapter inputs.
 - Admin auth implementation-gate cleanup and runtime-readiness checklist/static
-  guard refinement is in progress.
+  guard refinement is complete.
+- Future server-only Supabase Auth runtime approval lane is in progress.
 
-Supabase Auth is documented as the preferred future server-side admin auth
-provider, but no Supabase Auth runtime wiring exists yet.
+Supabase Auth is approved as the future server-side admin auth provider, but no
+Supabase Auth runtime wiring exists yet.
 
 ## Still blocked
 

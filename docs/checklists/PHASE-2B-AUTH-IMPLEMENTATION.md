@@ -6,9 +6,10 @@ Completed design-only milestones are referenced, not duplicated as implementatio
 
 Phase 2B-E is design and guard coverage only. Phase 2B-F reconciles checklist
 status only. Phase 2B-I refines current implementation-gate wording only.
-Keep all real auth, cookie, header, route, UI, product write, Storage, browser
-Supabase, and service-role runtime implementation items unchecked until a
-future PR has explicit approval.
+Phase 2B-J approves the future server-only Supabase Auth runtime lane and
+test-plan gates only. Keep all real auth, cookie, header, route, UI, product
+write, Storage, browser Supabase, and service-role runtime implementation
+items unchecked until a future implementation PR adds and tests runtime code.
 
 Reference docs:
 
@@ -18,33 +19,35 @@ Reference docs:
 
 ## Approval Gates
 
-- [ ] Supabase Auth provider approved.
-- [ ] Server-only auth boundary approved.
-- [ ] Session cookie strategy approved.
-- [ ] CSRF strategy approved.
-- [ ] Login route design approved.
-- [ ] Logout route design approved.
-- [ ] Protected admin page design approved.
-- [ ] Admin identity to `admin_users.auth_user_id` mapping approved.
-- [ ] Admin profile lookup approved.
-- [ ] Membership lookup approved.
-- [ ] Adapter integration approved.
+- [x] Supabase Auth provider approved.
+- [x] Server-only auth boundary approved.
+- [x] Session cookie strategy approved.
+- [x] CSRF strategy approved.
+- [x] Login route design approved.
+- [x] Logout route design approved.
+- [x] Protected admin page design approved.
+- [x] Admin identity to `admin_users.auth_user_id` mapping approved.
+- [x] Admin profile lookup approved.
+- [x] Membership lookup approved.
+- [x] Adapter integration approved.
 
 ## Test Plan
 
-- [ ] Anonymous denial tests planned.
-- [ ] Inactive admin profile tests planned.
-- [ ] Missing membership tests planned.
-- [ ] Wrong-actor membership tests planned.
-- [ ] Cross-workspace denial tests planned.
-- [ ] Viewer write denial tests planned.
-- [ ] Admin allowed path tests planned.
-- [ ] Owner membership-management tests planned.
-- [ ] Safe auth error tests planned.
+- [x] Anonymous denial tests planned.
+- [x] Inactive admin profile tests planned.
+- [x] Missing membership tests planned.
+- [x] Wrong-actor membership tests planned.
+- [x] Cross-workspace denial tests planned.
+- [x] Viewer write denial tests planned.
+- [x] Admin allowed path tests planned.
+- [x] Owner membership-management tests planned.
+- [x] Safe auth error tests planned.
+- [x] CSRF failure tests planned.
+- [x] Safe redirect tests planned.
 
 ## Explicit Future Approval
 
-- [ ] Explicit approval obtained before real auth runtime wiring.
+- [x] Explicit approval obtained before real auth runtime wiring.
 - [ ] Explicit approval obtained before login/logout routes.
 - [ ] Explicit approval obtained before protected admin pages.
 - [ ] Explicit approval obtained before admin UI.

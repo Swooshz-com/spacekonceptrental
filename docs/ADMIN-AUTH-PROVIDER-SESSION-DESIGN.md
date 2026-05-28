@@ -1,21 +1,26 @@
 # Admin Auth Provider Session Design
 
-Phase 2B-E is design and guard coverage only.
+This document records the Phase 2B-E auth provider/session/security design and
+the Phase 2B-J approved future admin auth runtime lane.
 
-This PR adds auth provider/session/security design only.
-This PR does not implement real auth.
-This PR does not add Supabase Auth runtime wiring.
-This PR does not read cookies.
-This PR does not read headers.
-This PR does not add login/logout routes.
-This PR does not add protected admin pages.
-This PR does not add admin UI.
-This PR does not add product writes.
+Phase 2B-E added auth provider/session/security design only.
+Phase 2B-J approves the future server-only Supabase Auth runtime lane only.
+
+This document does not implement real auth.
+This document does not add Supabase Auth runtime wiring.
+This document does not read cookies.
+This document does not read headers.
+This document does not add login/logout routes.
+This document does not add protected admin pages.
+This document does not add admin UI.
+This document does not add product writes.
 
 Browser Supabase remains forbidden.
 Service-role runtime paths remain forbidden unless separately approved.
+Supabase Auth is officially selected as the future admin auth provider.
 Future auth must remain server-side.
-Future session cookies must be HttpOnly, Secure in production, and have reviewed SameSite behaviour.
+Future session cookies must be server-managed, HttpOnly, Secure in
+production, and have reviewed SameSite behaviour.
 Future state-changing admin routes/server actions need CSRF strategy before implementation.
 Admin identity must be resolved server-side and mapped to active admin profile before membership role is trusted.
 Membership role must belong to the active server-resolved admin profile.
@@ -29,7 +34,7 @@ expectations, CSRF expectations, login/logout boundary, protected-admin-page
 boundary, and implementation gates before any real auth runtime is added.
 
 This document extends `docs/ADMIN-AUTH-MEMBERSHIP-DESIGN.md`. It narrows the
-next auth decision without approving runtime auth, cookies, headers, routes,
+next auth decision without adding runtime auth, cookies, headers, routes,
 server actions, admin UI, product writes, Supabase Cloud, deployment, or
 service-role runtime paths.
 
@@ -51,9 +56,47 @@ This document covers:
 
 It does not change any runtime code.
 
+## Phase 2B-J Approved Future Runtime Lane
+
+Supabase Auth is officially selected as the future admin auth provider.
+
+Approved future implementation boundary: first-party server-only routes or server actions may use Supabase Auth server APIs only on the server.
+
+The approved future auth boundary must resolve provider identity server-side,
+map it to exactly one active `admin_users.auth_user_id`, resolve active
+workspace membership owned by that admin profile, build
+`AdminAuthorizationInput` through the existing server-only resolver/adapter
+contracts, and return safe unauthenticated or forbidden results without
+exposing provider internals.
+
+Session cookies must be server-managed, HttpOnly, Secure in production, SameSite=Lax by default unless a later OAuth flow documents an exception, path-scoped, bounded by reviewed lifetime, rotated or refreshed server-side, and cleared on logout.
+
+Session material must not be stored in localStorage, exposed to browser
+components, logged, or mixed with service-role credentials. A later
+implementation PR may read cookies only inside the reviewed server-only auth
+boundary.
+
+CSRF must be implemented before any state-changing admin route or server action by validating a signed per-session CSRF token or an equivalent framework-supported proof, checking Origin/Host, and failing closed for missing, stale, replayed, or mismatched proof.
+
+Login and logout routes must be first-party server routes or server actions, use POST for state changes, validate safe same-origin redirects, return generic errors, avoid logging credentials or tokens, and never expose Supabase internals.
+
+Protected admin pages must resolve identity, active admin profile, and active membership server-side before rendering workspace-scoped admin data.
+
+Protected pages must not import resolver/adapters into browser components, must
+not reveal cross-workspace record existence, and must not add admin UI or
+product/category/product image writes without separate approval.
+
+Runtime auth is not complete until tests cover anonymous denial, expired session denial, inactive profile denial, missing membership denial, wrong-actor membership denial, cross-workspace denial, viewer write denial, admin allowed access, owner membership-management access, CSRF failure, safe redirect handling, safe auth errors, no browser Supabase, and no service-role runtime path.
+
+This approval lane authorizes a later PR to implement only the reviewed
+server-only auth boundary. Login/logout route implementation, protected admin
+pages, admin UI, product writes, Supabase Storage, deployment, Supabase Cloud,
+browser Supabase, and service-role runtime paths remain separate unchecked
+runtime work unless a future PR explicitly approves them.
+
 ## Non-goals
 
-This PR does not:
+This document does not:
 
 - Implement real auth.
 - Add Supabase Auth runtime wiring.
@@ -74,12 +117,12 @@ This PR does not:
 
 ## Recommended Auth Provider
 
-Supabase Auth is the preferred future admin auth provider.
+Supabase Auth is officially selected as the future admin auth provider.
 
-That preference is not runtime approval. A future implementation PR must still
-review the exact Supabase Auth server APIs, session exchange behaviour,
-cookie/session handling, CSRF controls, login/logout routes, protected admin
-page rules, and test strategy before any runtime wiring exists.
+That selection approves only the future server-only lane documented in Phase
+2B-J. Runtime wiring still belongs to a later implementation PR that must
+follow the exact server boundary, cookie/session, CSRF, login/logout,
+protected-page, and test requirements in this document.
 
 ## Why Supabase Auth Is The Preferred Future Provider
 
@@ -132,7 +175,7 @@ Session material must not be stored in localStorage for admin authority.
 Session cookies must not expose tokens, secrets, stack traces, Supabase
 internals, service-role keys, or n8n details.
 
-This PR does not read cookies and does not add session code.
+This document does not read cookies and does not add session code.
 
 ## CSRF Expectations
 
@@ -163,7 +206,7 @@ Future login and logout routes should:
 - Respect CSRF and redirect rules.
 - Clear session state safely on logout.
 
-This PR does not add login/logout routes.
+This document does not add login/logout routes.
 
 ## Protected Admin Page Expectations
 
@@ -179,7 +222,7 @@ Future protected pages should:
 - Avoid importing resolver/adapters into browser components.
 - Avoid product/category/product image writes until the write gate is approved.
 
-This PR does not add protected admin pages.
+This document does not add protected admin pages.
 
 ## Admin Identity Mapping
 
@@ -230,7 +273,7 @@ server-only adapter contracts rather than bypassing them:
 - `AdminMembershipAdapter` resolves membership owned by that admin profile.
 
 The resolver and adapter modules are not wired into runtime routes/pages/server
-actions by this PR.
+actions by this document.
 
 ## Error Handling Expectations
 

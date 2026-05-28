@@ -451,3 +451,31 @@ admin pages, admin UI, runtime route/page/server-action wiring,
 product/category/product image writes, Supabase Storage, service-role runtime
 paths, browser Supabase, deployment, Supabase Cloud connection, n8n workflow
 changes, Pinecone runtime changes, and SaaS chatbot app code out of scope.
+
+## 2026-05-28: Admin Auth Runtime Approval Lane
+
+Decision: Phase 2B-J selects Supabase Auth as the future admin auth provider
+and approves the exact future server-only admin auth runtime lane.
+
+The approved future lane is limited to first-party server-only routes or
+server actions that use Supabase Auth server APIs only on the server, map the
+provider identity to exactly one active `admin_users.auth_user_id`, resolve
+active workspace membership owned by that admin profile, build policy input
+through the existing server-only resolver/adapter contracts, use
+server-managed HttpOnly cookies that are Secure in production and SameSite=Lax
+by default unless a later OAuth flow documents an exception, validate CSRF
+proof plus Origin/Host before any state-changing admin boundary, and prove the
+required anonymous, expired-session, inactive-profile, missing-membership,
+wrong-actor, cross-workspace, viewer-denial, admin-allowed,
+owner-membership-management, CSRF-failure, safe-redirect, safe-error, no
+browser Supabase, and no service-role runtime-path tests.
+
+Reason: future runtime auth now needs one explicit approved lane before code
+starts. This phase approves the lane and checklist gates only. It does not
+implement real auth, add Supabase Auth runtime wiring, read cookies, read
+headers, add login/logout routes, add protected admin pages, add admin UI,
+wire resolver/adapters into runtime routes/pages/server actions, add
+product/category/product image writes, add Supabase Storage, add service-role
+runtime paths, add browser Supabase, deploy, connect Supabase Cloud, change
+n8n workflows, add Pinecone runtime code, migrate Pinecone, or add SaaS chatbot
+app code.

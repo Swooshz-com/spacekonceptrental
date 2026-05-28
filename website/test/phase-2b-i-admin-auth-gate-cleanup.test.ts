@@ -45,14 +45,11 @@ describe("Phase 2B-I admin auth gate cleanup", () => {
     const decisionLog = readRepoFile("docs/DECISION-LOG.md");
 
     expect(status).toContain(
-      "Current phase: Phase 2B-I - admin auth implementation gate cleanup and runtime-readiness checklist refinement."
+      "Latest completed phase: Phase 2B-I - admin auth implementation gate cleanup and runtime-readiness checklist refinement."
     );
+    expect(status).toContain("Last merged phase PR: #49");
     expect(status).toContain(
-      "Latest completed phase: Phase 2B-H - reviewed server-side admin auth/membership resolution boundary."
-    );
-    expect(status).toContain("Last merged phase PR: #48");
-    expect(status).toContain(
-      "Merge commit: `5845ff44852805b18ac33333d376cf5cec286276`"
+      "Merge commit: `04fcbb3c8451b671c03b2157af53b19c447738eb`"
     );
     expect(roadmap).toContain(
       "Phase 2B-I cleans admin auth implementation gate wording and refines"
