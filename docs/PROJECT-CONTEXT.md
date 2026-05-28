@@ -123,6 +123,22 @@ Custom Chat UI -> POST /api/chat -> ChatProvider
   service-role runtime paths, deploy, connect Supabase Cloud, change n8n
   workflows, add Pinecone runtime code, migrate Pinecone, or add SaaS chatbot
   app code.
+- Phase 2B-G refreshes repo agent instructions and static guard coverage only.
+  It does not implement real auth, add Supabase Auth runtime wiring, read
+  cookies, read headers, add login/logout routes, add protected admin pages,
+  add admin UI, add runtime routes/pages/server actions, add product writes,
+  add browser Supabase, add service-role runtime paths, deploy, connect
+  Supabase Cloud, change n8n workflows, add Pinecone runtime code, migrate
+  Pinecone, or add SaaS chatbot app code.
+- Phase 2B-H strengthens the reviewed server-side admin auth/membership
+  resolution boundary with dependency-injected fake adapters and safe
+  allow/deny tests only. It does not implement real auth, add Supabase Auth
+  runtime wiring, read cookies, read headers, add login/logout routes, add
+  protected admin pages, add admin UI, wire runtime routes/pages/server
+  actions, add product/category/product image writes, add Supabase Storage,
+  add browser Supabase, add service-role runtime paths, deploy, connect
+  Supabase Cloud, change n8n workflows, add Pinecone runtime code, migrate
+  Pinecone, or add SaaS chatbot app code.
 
 ## Current Status Pages
 

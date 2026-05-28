@@ -180,6 +180,23 @@ variables such as `N8N_CHAT_WEBHOOK_URL`.
   service-role runtime paths, deploy, connect Supabase Cloud, change n8n
   workflows, add Pinecone runtime code, migrate Pinecone, or add SaaS chatbot
   app code.
+- Phase 2B-G repo agent instruction refresh is instruction and guard coverage
+  only; it is not approval to implement real auth, add Supabase Auth runtime
+  wiring, read cookies, read headers, add login/logout routes, add protected
+  admin pages, add admin UI, wire runtime routes/pages/server actions, add
+  product/category/product image writes, add browser Supabase, add
+  service-role runtime paths, deploy, connect Supabase Cloud, change n8n
+  workflows, add Pinecone runtime code, migrate Pinecone, or add SaaS chatbot
+  app code.
+- Phase 2B-H reviewed server-side admin auth/membership resolution boundary is
+  fake-adapter test coverage and server-only resolver boundary hardening only;
+  it is not approval to implement real auth, add Supabase Auth runtime wiring,
+  read cookies, read headers, add login/logout routes, add protected admin
+  pages, add admin UI, wire runtime routes/pages/server actions, add
+  product/category/product image writes, add Supabase Storage, add browser
+  Supabase, add service-role runtime paths, deploy, connect Supabase Cloud,
+  change n8n workflows, add Pinecone runtime code, migrate Pinecone, or add
+  SaaS chatbot app code.
 - Future admin auth must remain server-side. Future session cookies must be
   HttpOnly, Secure in production, and have reviewed SameSite behaviour. Future
   state-changing admin routes/server actions need CSRF strategy before

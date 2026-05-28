@@ -6,7 +6,10 @@ import type {
   AdminProfileAdapter,
   AdminWorkspaceResolver
 } from "./admin-authorization-adapters";
-import { authorizeAdminOperation } from "./admin-authorization-policy";
+import {
+  authorizeAdminOperation,
+  isSupportedAdminOperation
+} from "./admin-authorization-policy";
 import type {
   AdminAuthorizationDecision,
   AdminAuthorizationInput,
@@ -111,6 +114,22 @@ export async function resolveAdminAuthorizationWithAdapters(
     return authorizeAdminOperation({
       authenticated: true,
       adminUser: null,
+      operation
+    });
+  }
+
+  if (adminUser.status !== "active") {
+    return authorizeAdminOperation({
+      authenticated: true,
+      adminUser,
+      operation
+    });
+  }
+
+  if (!isSupportedAdminOperation(operation)) {
+    return authorizeAdminOperation({
+      authenticated: true,
+      adminUser,
       operation
     });
   }

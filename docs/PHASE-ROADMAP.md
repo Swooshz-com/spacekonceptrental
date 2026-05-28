@@ -100,6 +100,24 @@ image writes, add service-role runtime paths, add browser Supabase, deploy,
 connect Supabase Cloud, change n8n workflows, add Pinecone runtime code, or add
 SaaS chatbot app code.
 
+Phase 2B-G refreshes repo agent instructions and static guard coverage only.
+It is not approval to implement real auth, add Supabase Auth runtime wiring,
+read cookies, read headers, add login/logout routes, add protected admin
+pages, add admin UI, wire runtime routes/pages/server actions, add
+product/category/product image writes, add service-role runtime paths, add
+browser Supabase, deploy, connect Supabase Cloud, change n8n workflows, add
+Pinecone runtime code, or add SaaS chatbot app code.
+
+Phase 2B-H strengthens the reviewed server-side admin auth/membership
+resolution boundary with dependency-injected fake adapters and safe
+allow/deny tests only. It is not approval to implement real auth, add Supabase
+Auth runtime wiring, read cookies, read headers, add login/logout routes, add
+protected admin pages, add admin UI, wire runtime routes/pages/server actions,
+add product/category/product image writes, add Supabase Storage, add
+service-role runtime paths, add browser Supabase, deploy, connect Supabase
+Cloud, change n8n workflows, add Pinecone runtime code, migrate Pinecone, or
+add SaaS chatbot app code.
+
 This phase is not approved for implementation yet.
 
 ## Phase 3: SaaS Chatbot Boundary

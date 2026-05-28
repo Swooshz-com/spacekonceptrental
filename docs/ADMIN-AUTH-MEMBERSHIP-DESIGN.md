@@ -6,7 +6,11 @@ Phase 2B-C adds a server-only resolver contract and disabled scaffold only.
 Phase 2B-D adds server-only adapter contracts and dependency-injected resolver
 logic only.
 Phase 2B-E adds auth provider/session/security design only.
+Phase 2B-G refreshes repo agent instructions only.
+Phase 2B-H strengthens the reviewed server-side auth/membership resolution
+boundary with fake-adapter tests only.
 
+This PR strengthens the reviewed server-side admin auth/membership resolution boundary only.
 This PR adds auth provider/session/security design only.
 This PR adds server-only adapter contracts and dependency-injected resolver logic only.
 This PR does not implement auth.
@@ -90,6 +94,17 @@ page expectations, and implementation gates before any real auth runtime is
 added. It does not implement real auth, call Supabase Auth APIs, read cookies,
 read headers, add routes, add pages, add server actions, add admin UI, add
 product writes, or wire resolver/adapters into runtime.
+
+Phase 2B-H strengthens the existing server-only resolver/adapter boundary with
+additional fake-adapter tests for trusted server-side inputs and safe
+allow/deny decisions. It proves anonymous, missing profile, inactive profile,
+missing membership, inactive membership, wrong-actor membership,
+cross-workspace membership, requested record workspace mismatch, unsupported
+operation, viewer write denial, admin allowed, owner allowed, and owner-only
+membership-management decisions without real auth, Supabase Auth runtime
+wiring, cookies, headers, routes, pages, server actions, admin UI, product
+writes, browser Supabase, service-role runtime paths, deployment, or Supabase
+Cloud connection.
 
 ## Non-goals
 
@@ -263,6 +278,15 @@ production, and have reviewed SameSite behaviour. Future state-changing admin
 routes/server actions need CSRF strategy before implementation. Login/logout
 routes must be added separately and must not expose tokens, secrets, stack
 traces, or Supabase internals.
+
+The Phase 2B-H resolver boundary keeps the default resolver disabled and uses
+only dependency-injected fake adapters for tests. The adapter-driven resolver
+returns early for anonymous identity, missing profile, inactive profile, and
+unsupported operations before resolving deeper workspace or membership context.
+When trusted adapter inputs are available, the policy still revalidates active
+admin profile, membership actor ownership, workspace match, requested record
+workspace match, operation support, and role permission before returning an
+allow decision.
 
 ## Audit log expectations
 
