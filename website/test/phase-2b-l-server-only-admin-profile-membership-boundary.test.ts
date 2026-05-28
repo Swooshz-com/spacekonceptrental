@@ -4,8 +4,10 @@ import { extname, resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
 const repoRoot = resolve(process.cwd(), "..");
-const approvedAuthBoundaryPath =
+const approvedIdentityBoundaryPath =
   "website/lib/admin/authorization/supabase-admin-auth-identity-adapter.ts";
+const approvedProfileMembershipBoundaryPath =
+  "website/lib/admin/authorization/supabase-admin-profile-membership-adapters.ts";
 const sourceExtensions = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs"]);
 
 function readRepoFile(relativePath: string) {
@@ -46,11 +48,12 @@ function expectUnchecked(markdown: string, item: string) {
   expect(markdown).toContain(`- [ ] ${item}`);
 }
 
-describe("Phase 2B-K server-only Supabase Auth identity boundary", () => {
-  it("records Phase 2B-K status, roadmap, and decision-log scope", () => {
+describe("Phase 2B-L server-only admin profile and membership read boundary", () => {
+  it("records Phase 2B-L status, roadmap, decision-log, and project context scope", () => {
     const status = readRepoFile("docs/PHASE-STATUS.md");
     const roadmap = readRepoFile("docs/PHASE-ROADMAP.md");
     const decisionLog = readRepoFile("docs/DECISION-LOG.md");
+    const projectContext = readRepoFile("docs/PROJECT-CONTEXT.md");
 
     expect(status).toContain(
       "Current phase: Phase 2B-L - server-only admin profile and membership read boundary."
@@ -63,14 +66,17 @@ describe("Phase 2B-K server-only Supabase Auth identity boundary", () => {
       "Merge commit: `19f385a20d82109fb73e77f9e5328cc91e16cffd`"
     );
     expect(roadmap).toContain(
-      "Phase 2B-K adds only the server-only Supabase Auth identity/session-read boundary"
+      "Phase 2B-L adds only the server-only Supabase-backed admin profile and membership read boundary"
     );
     expect(decisionLog).toContain(
-      "Decision: Phase 2B-K adds only the server-only Supabase Auth identity/session-read boundary"
+      "Decision: Phase 2B-L adds only the server-only admin profile and membership read boundary"
+    );
+    expect(projectContext).toContain(
+      "Phase 2B-L adds a server-only Supabase-backed admin profile and membership read boundary"
     );
   });
 
-  it("documents the implemented identity boundary and checklist state", () => {
+  it("documents the implemented profile and membership boundary and checklist state", () => {
     const design = readRepoFile("docs/ADMIN-AUTH-PROVIDER-SESSION-DESIGN.md");
     const authChecklist = readRepoFile(
       "docs/checklists/PHASE-2B-AUTH-IMPLEMENTATION.md"
@@ -79,97 +85,130 @@ describe("Phase 2B-K server-only Supabase Auth identity boundary", () => {
       "docs/checklists/PHASE-2B-ADMIN-AUTH.md"
     );
 
-    expect(design).toContain("## Phase 2B-K Implemented Identity Boundary");
     expect(design).toContain(
-      "`website/lib/admin/authorization/supabase-admin-auth-identity-adapter.ts` is the only approved module for reading Supabase Auth cookies and calling Supabase Auth server APIs in this phase."
+      "## Phase 2B-L Implemented Profile And Membership Read Boundary"
     );
     expect(design).toContain(
-      "It implements the existing `AdminAuthAdapter` identity shape only and is not wired into runtime routes, pages, or server actions."
+      "`website/lib/admin/authorization/supabase-admin-profile-membership-adapters.ts` is the only approved module for Supabase `admin_users` and `memberships` table reads in this phase."
     );
     expect(design).toContain(
-      "Cookie reads and `auth.getUser()` are allowed only inside that server-only identity boundary."
+      "It implements the existing `AdminProfileAdapter` and `AdminMembershipAdapter` safe shapes only and is not wired into runtime routes, pages, or server actions."
     );
 
-    expectChecked(authChecklist, "Server-only Supabase Auth identity boundary.");
-    expectChecked(authChecklist, "Cookie reads.");
     expectChecked(
       authChecklist,
       "Server-only Supabase admin profile/membership read boundary."
     );
-    expectUnchecked(authChecklist, "Real auth runtime wiring.");
-    expectUnchecked(authChecklist, "Supabase Auth runtime wiring.");
-    expectUnchecked(authChecklist, "Header reads.");
-    expectUnchecked(authChecklist, "Login/logout routes.");
-    expectUnchecked(authChecklist, "Protected admin pages.");
-    expectUnchecked(authChecklist, "Admin UI.");
-    expectUnchecked(authChecklist, "Product writes.");
-    expectUnchecked(authChecklist, "Category writes.");
-    expectUnchecked(authChecklist, "Product image writes.");
-    expectUnchecked(authChecklist, "Storage.");
-    expectUnchecked(authChecklist, "Service-role runtime paths.");
-    expectUnchecked(authChecklist, "Browser Supabase.");
     expectChecked(
       adminAuthChecklist,
-      "Add server-only Supabase Auth identity boundary."
+      "Add server-only Supabase admin profile/membership read boundary."
+    );
+
+    for (const item of [
+      "Real auth runtime wiring.",
+      "Supabase Auth runtime wiring.",
+      "Header reads.",
+      "Login/logout routes.",
+      "Protected admin pages.",
+      "Admin UI.",
+      "Product writes.",
+      "Category writes.",
+      "Product image writes.",
+      "Storage.",
+      "Service-role runtime paths.",
+      "Browser Supabase."
+    ]) {
+      expectUnchecked(authChecklist, item);
+      expectUnchecked(adminAuthChecklist, item);
+    }
+
+    expectUnchecked(
+      adminAuthChecklist,
+      "Cookie reads outside the Phase 2B-K server-only identity boundary."
     );
   });
 
-  it("allows cookie reads and Supabase Auth calls only in the server-only identity boundary", () => {
-    const packageJson = JSON.parse(readRepoFile("website/package.json"));
+  it("allows cookie reads and Supabase Auth calls only in the identity boundary", () => {
     const productionSources = readTrackedProductionSources([
       "website/app",
       "website/components",
       "website/lib"
     ]);
-    const approvedSource = readRepoFile(approvedAuthBoundaryPath);
-    const outsideApprovedBoundary = productionSources
-      .filter(({ filePath }) => filePath !== approvedAuthBoundaryPath)
-      .map(({ source }) => source)
-      .join("\n");
-    const browserSource = productionSources
-      .filter(
-        ({ filePath }) =>
-          filePath !== approvedAuthBoundaryPath &&
-          !filePath.startsWith("website/app/api/") &&
-          !filePath.startsWith("website/lib/supabase/")
-      )
+    const approvedSource = readRepoFile(approvedIdentityBoundaryPath);
+    const outsideIdentityBoundary = productionSources
+      .filter(({ filePath }) => filePath !== approvedIdentityBoundaryPath)
       .map(({ source }) => source)
       .join("\n");
 
-    expect(readTrackedFiles([approvedAuthBoundaryPath])).toEqual([
-      approvedAuthBoundaryPath
-    ]);
-    expect(packageJson.dependencies["@supabase/ssr"]).toBeDefined();
     expect(approvedSource).toContain('import "server-only";');
     expect(approvedSource).toContain('from "@supabase/ssr"');
     expect(approvedSource).toContain('from "next/headers"');
     expect(approvedSource).toContain("cookies()");
     expect(approvedSource).toContain("auth.getUser()");
-    expect(approvedSource).not.toContain("headers()");
-    expect(approvedSource).not.toContain("SUPABASE_SERVICE_ROLE");
 
-    expect(outsideApprovedBoundary).not.toContain("@supabase/ssr");
-    expect(outsideApprovedBoundary).not.toContain("next/headers");
-    expect(outsideApprovedBoundary).not.toContain("cookies()");
-    expect(outsideApprovedBoundary).not.toContain("headers()");
-    expect(outsideApprovedBoundary).not.toMatch(
+    expect(outsideIdentityBoundary).not.toContain("@supabase/ssr");
+    expect(outsideIdentityBoundary).not.toContain("next/headers");
+    expect(outsideIdentityBoundary).not.toContain("cookies()");
+    expect(outsideIdentityBoundary).not.toContain("headers()");
+    expect(outsideIdentityBoundary).not.toMatch(
       /\.auth\.(?:getUser|getSession|signIn|signOut|setSession|exchangeCodeForSession)/m
     );
-    expect(outsideApprovedBoundary).not.toContain("SUPABASE_SERVICE_ROLE");
-    expect(outsideApprovedBoundary).not.toContain("NEXT_PUBLIC_SUPABASE");
-    expect(browserSource).not.toContain("@supabase/");
-    expect(browserSource).not.toContain("lib/supabase");
-    expect(browserSource).not.toContain("SUPABASE_URL");
-    expect(browserSource).not.toContain("SUPABASE_ANON_KEY");
-    expect(browserSource).not.toContain("chat-config");
   });
 
-  it("keeps routes, protected pages, writes, deployment, n8n, Pinecone, and chat-config out of scope", () => {
+  it("allows admin profile and membership table reads only in the Phase 2B-L boundary", () => {
+    const productionSources = readTrackedProductionSources([
+      "website/app",
+      "website/components",
+      "website/lib"
+    ]);
+    const approvedSource = readRepoFile(approvedProfileMembershipBoundaryPath);
+    const outsideProfileMembershipBoundary = productionSources
+      .filter(
+        ({ filePath }) => filePath !== approvedProfileMembershipBoundaryPath
+      )
+      .map(({ source }) => source)
+      .join("\n");
+
+    expect(approvedSource).toContain('import "server-only";');
+    expect(approvedSource).toContain("createServerSupabaseClient");
+    expect(approvedSource).toContain('from("admin_users")');
+    expect(approvedSource).toContain('from("memberships")');
+    expect(approvedSource).not.toContain("next/headers");
+    expect(approvedSource).not.toContain("cookies()");
+    expect(approvedSource).not.toContain("headers()");
+    expect(approvedSource).not.toContain("auth.getUser()");
+    expect(approvedSource).not.toContain("SUPABASE_SERVICE_ROLE");
+    expect(approvedSource).not.toContain("NEXT_PUBLIC_SUPABASE");
+    expect(approvedSource).not.toContain("chat-config");
+
+    expect(outsideProfileMembershipBoundary).not.toMatch(
+      /\.from\(["']admin_users["']\)/m
+    );
+    expect(outsideProfileMembershipBoundary).not.toMatch(
+      /\.from\(["']memberships["']\)/m
+    );
+  });
+
+  it("keeps routes, protected pages, writes, storage, deployment, n8n, Pinecone, and chat-config out of scope", () => {
     const productionSource = readTrackedProductionSources([
       "website/app",
       "website/components",
       "website/lib"
     ])
+      .map(({ source }) => source)
+      .join("\n");
+    const browserSource = readTrackedProductionSources([
+      "website/app",
+      "website/components",
+      "website/lib"
+    ])
+      .filter(
+        ({ filePath }) =>
+          !filePath.startsWith("website/app/api/") &&
+          !filePath.startsWith("website/lib/supabase/") &&
+          filePath !== approvedIdentityBoundaryPath &&
+          filePath !== approvedProfileMembershipBoundaryPath
+      )
       .map(({ source }) => source)
       .join("\n");
 
@@ -183,18 +222,22 @@ describe("Phase 2B-K server-only Supabase Auth identity boundary", () => {
     expect(readTrackedFiles(["website/app/api/categories"])).toEqual([]);
     expect(readTrackedFiles(["website/app/api/product-images"])).toEqual([]);
     expect(readTrackedFiles(["website/app/api/catalogue"])).toEqual([]);
-    expect(readTrackedFiles(["vercel.json", ".vercel", "website/vercel.json"])).toEqual([]);
+    expect(readTrackedFiles(["website/lib/storage"])).toEqual([]);
     expect(readTrackedFiles(["website/lib/pinecone"])).toEqual([]);
     expect(readTrackedFiles(["website/app/api/pinecone"])).toEqual([]);
     expect(readTrackedFiles(["website/chat-config.js"])).toEqual([]);
+    expect(readTrackedFiles(["vercel.json", ".vercel", "website/vercel.json"])).toEqual([]);
 
     expect(productionSource).not.toMatch(
       /from\(["'](?:categories|products|product_images)["']\)\s*\.\s*(?:insert|update|upsert|delete)\s*\(/m
     );
-    expect(productionSource).not.toContain("SUPABASE_SERVICE_ROLE_KEY");
+    expect(productionSource).not.toContain("SUPABASE_SERVICE_ROLE");
+    expect(productionSource).not.toContain("NEXT_PUBLIC_SUPABASE");
     expect(productionSource).not.toContain("PINECONE_API_KEY");
     expect(productionSource).not.toContain("@pinecone-database");
     expect(productionSource).not.toContain("chat-config");
+    expect(browserSource).not.toContain("@supabase/");
+
     expect(readTrackedFiles(["n8n-workflows"]).sort()).toEqual([
       "n8n-workflows/spacekonceptrental-customer-support-agent.workflow.json",
       "n8n-workflows/spacekonceptrental-error-handler.workflow.json",

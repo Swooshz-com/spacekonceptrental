@@ -8,10 +8,11 @@ Phase 2B-E is design and guard coverage only. Phase 2B-F reconciles checklist
 status only. Phase 2B-I refines current implementation-gate wording only.
 Phase 2B-J approves the future server-only Supabase Auth runtime lane and
 test-plan gates only. Phase 2B-K implements only the server-only Supabase Auth
-identity/session-read boundary. Keep real auth runtime wiring, headers,
-routes, UI, product write, Storage, browser Supabase, and service-role runtime
-implementation items unchecked until a future implementation PR adds and tests
-that runtime code.
+identity/session-read boundary. Phase 2B-L implements only the server-only
+Supabase admin profile/membership read boundary. Keep real auth runtime
+wiring, headers, routes, UI, product write, Storage, browser Supabase, and
+service-role runtime implementation items unchecked until a future
+implementation PR adds and tests that runtime code.
 
 Reference docs:
 
@@ -59,11 +60,14 @@ Reference docs:
 
 - [x] Server-only Supabase Auth identity boundary.
 - [x] Cookie reads.
+- [x] Server-only Supabase admin profile/membership read boundary.
 
 ## Still Deferred
 
 - [ ] Real auth runtime wiring.
 - [ ] Supabase Auth runtime wiring.
+- [ ] Resolver/adapter runtime wiring into routes, pages, or server actions.
+- [ ] Admin profile/membership Supabase table reads outside the Phase 2B-L server-only read boundary.
 - [ ] Header reads.
 - [ ] Login/logout routes.
 - [ ] Protected admin pages.
