@@ -32,22 +32,26 @@ type FakeAdapterState = {
 };
 
 function createFakeAdapters(
-  state: FakeAdapterState
+  state: FakeAdapterState,
+  calls?: string[]
 ): AdminAuthorizationAdapterSet {
   const auth: AdminAuthAdapter = {
     async resolveIdentity() {
+      calls?.push("identity");
       return state.identity;
     }
   };
 
   const profile: AdminProfileAdapter = {
-    async resolveAdminProfile(_authUserId) {
+    async resolveAdminProfile(authUserId) {
+      calls?.push(`profile:${authUserId}`);
       return state.profile;
     }
   };
 
   const workspace: AdminWorkspaceResolver = {
-    async resolveWorkspaceForRequest(_input) {
+    async resolveWorkspaceForRequest(input) {
+      calls?.push(`workspace:${input.requestedOperation ?? "none"}`);
       return {
         serverResolvedWorkspaceId: state.workspaceId
       };
@@ -55,7 +59,8 @@ function createFakeAdapters(
   };
 
   const membership: AdminMembershipAdapter = {
-    async resolveMembership(_adminUserId, _serverResolvedWorkspaceId) {
+    async resolveMembership(adminUserId, serverResolvedWorkspaceId) {
+      calls?.push(`membership:${adminUserId}:${serverResolvedWorkspaceId}`);
       return state.membership;
     }
   };
@@ -69,7 +74,8 @@ function createFakeAdapters(
 }
 
 function createResolvedAdapters(
-  overrides: Partial<FakeAdapterState> = {}
+  overrides: Partial<FakeAdapterState> = {},
+  calls?: string[]
 ): AdminAuthorizationAdapterSet {
   return createFakeAdapters({
     identity: {
@@ -88,7 +94,7 @@ function createResolvedAdapters(
       role: "admin"
     },
     ...overrides
-  });
+  }, calls);
 }
 
 async function resolveWith(overrides: Partial<FakeAdapterState> = {}) {
@@ -161,6 +167,33 @@ describe("admin authorization adapter boundary", () => {
     });
   });
 
+  it("does not resolve workspace or membership after inactive admin profiles", async () => {
+    const calls: string[] = [];
+
+    await expect(
+      resolveAdminAuthorizationWithAdapters(
+        {
+          requestedOperation: "product.write",
+          requestedRecordWorkspaceId: activeWorkspaceId
+        },
+        createResolvedAdapters(
+          {
+            profile: {
+              id: "admin-user-1",
+              status: "inactive"
+            }
+          },
+          calls
+        )
+      )
+    ).resolves.toEqual({
+      allowed: false,
+      reason: "admin_profile_inactive",
+      statusCode: 403
+    });
+    expect(calls).toEqual(["identity", "profile:auth-user-1"]);
+  });
+
   it("denies missing workspace resolution from fake adapters", async () => {
     await expect(resolveWith({ workspaceId: null })).resolves.toEqual({
       allowed: false,
@@ -211,6 +244,22 @@ describe("admin authorization adapter boundary", () => {
     });
   });
 
+  it("denies requested record workspace mismatches from fake adapters", async () => {
+    await expect(
+      resolveAdminAuthorizationWithAdapters(
+        {
+          requestedOperation: "product.write",
+          requestedRecordWorkspaceId: otherWorkspaceId
+        },
+        createResolvedAdapters()
+      )
+    ).resolves.toEqual({
+      allowed: false,
+      reason: "workspace_mismatch",
+      statusCode: 403
+    });
+  });
+
   it("denies memberships owned by another admin from fake adapters", async () => {
     await expect(
       resolveWith({
@@ -254,6 +303,24 @@ describe("admin authorization adapter boundary", () => {
     });
   });
 
+  it("allows owners for same-workspace product-write policy decisions from fake adapters", async () => {
+    await expect(
+      resolveWith({
+        membership: {
+          adminUserId: "admin-user-1",
+          workspaceId: activeWorkspaceId,
+          status: "active",
+          role: "owner"
+        }
+      })
+    ).resolves.toEqual({
+      allowed: true,
+      reason: "allowed",
+      statusCode: 200,
+      workspaceId: activeWorkspaceId
+    });
+  });
+
   it("allows owners for same-workspace membership-management policy decisions from fake adapters", async () => {
     await expect(
       resolveAdminAuthorizationWithAdapters(
@@ -278,6 +345,22 @@ describe("admin authorization adapter boundary", () => {
     });
   });
 
+  it("keeps membership management owner-only from fake adapters", async () => {
+    await expect(
+      resolveAdminAuthorizationWithAdapters(
+        {
+          requestedOperation: "membership.manage",
+          requestedRecordWorkspaceId: activeWorkspaceId
+        },
+        createResolvedAdapters()
+      )
+    ).resolves.toEqual({
+      allowed: false,
+      reason: "role_not_allowed",
+      statusCode: 403
+    });
+  });
+
   it("denies unsupported operations closed from fake adapters", async () => {
     await expect(
       resolveAdminAuthorizationWithAdapters(
@@ -292,6 +375,25 @@ describe("admin authorization adapter boundary", () => {
       reason: "operation_not_supported",
       statusCode: 400
     });
+  });
+
+  it("does not resolve workspace or membership for unsupported operations", async () => {
+    const calls: string[] = [];
+
+    await expect(
+      resolveAdminAuthorizationWithAdapters(
+        {
+          requestedOperation: "billing.manage",
+          requestedRecordWorkspaceId: activeWorkspaceId
+        },
+        createResolvedAdapters({}, calls)
+      )
+    ).resolves.toEqual({
+      allowed: false,
+      reason: "operation_not_supported",
+      statusCode: 400
+    });
+    expect(calls).toEqual(["identity", "profile:auth-user-1"]);
   });
 
   it("keeps deny responses boring and safe", async () => {

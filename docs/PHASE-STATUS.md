@@ -4,17 +4,17 @@ This is the quick status page for the SKR repo. Use `docs/PHASE-2-READINESS-PLAN
 
 ## Current phase
 
-Current phase: Phase 2B-G - refresh repo agent instructions.
+Current phase: Phase 2B-H - reviewed server-side admin auth/membership resolution boundary.
 
-This PR refreshes `AGENTS.md` and adds static guard coverage only. It
-does not implement runtime features.
+This PR strengthens the dependency-injected server-side admin authorization
+resolver/adapter boundary and adds fake-adapter decision coverage only. It
+does not implement runtime auth or runtime admin features.
 
-Latest completed phase: Phase 2B-F - checklist hygiene and phase status
-reconciliation.
+Latest completed phase: Phase 2B-G - refresh repo agent instructions.
 
-Last merged PR: #45
+Last merged phase PR: #46
 
-Merge commit: `1e67b2e7ca1098a474b2be29bf372ad60d20807e`
+Merge commit: `2d0c97ec08ece3606e0e70017c74a9b09679c274`
 
 ## Completed foundation
 
@@ -47,6 +47,7 @@ Vercel config, add real env values, or add runtime features.
 - Server-only disabled auth/membership resolver scaffold.
 - Server-only admin auth/membership adapter contracts with fake-adapter tests.
 - Checklist ownership, maintenance rules, and quick phase status docs.
+- Reviewed server-side resolver decisions for trusted fake adapter inputs.
 
 Supabase Auth is documented as the preferred future server-side admin auth
 provider, but no Supabase Auth runtime wiring exists yet.
@@ -101,8 +102,8 @@ architecture.
 
 ## Next recommended PR
 
-The next recommended PR should still avoid product writes. A safe next PR is a
-reviewed server-side auth/membership resolution boundary with tests for
-anonymous denial, inactive admin denial, missing membership denial,
-wrong-actor membership denial, cross-workspace denial, role denial, safe
-errors, and no browser Supabase.
+The next recommended PR should still avoid product writes. A safe next PR can
+continue auth readiness with reviewed server-side design or test-only boundary
+work, but real auth runtime wiring, cookies, headers, login/logout routes,
+protected admin pages, admin UI, and product/category/product image writes
+remain blocked until separately approved.

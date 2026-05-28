@@ -11,6 +11,8 @@ resolver contract and disabled scaffold only. Phase 2B-D adds server-only
 adapter contracts and dependency-injected resolver tests with fake adapters
 only. Phase 2B-E adds auth provider/session/security design and a future auth
 implementation checklist only. Phase 2B-F reconciles checklist status only.
+Phase 2B-G refreshes repo agent instructions only. Phase 2B-H strengthens the
+reviewed server-side resolver/adapter boundary with fake-adapter tests only.
 Keep real auth, Supabase Auth runtime wiring, cookies, headers, login/logout
 routes, protected admin pages, admin UI, product management writes, browser
 Supabase, service-role runtime paths, deployment, and Supabase Cloud work
@@ -28,6 +30,7 @@ unchecked until a future PR has explicit approval.
 - [x] Add admin auth provider/session design.
 - [x] Add admin auth implementation checklist.
 - [x] Add checklist hygiene/status reconciliation guards.
+- [x] Add reviewed server-side admin auth/membership resolution tests with fake adapters.
 
 ## Design References
 

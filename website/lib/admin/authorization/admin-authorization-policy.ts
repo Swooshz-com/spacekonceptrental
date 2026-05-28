@@ -93,7 +93,7 @@ function deny(
   };
 }
 
-function isSupportedOperation(
+export function isSupportedAdminOperation(
   operation: string
 ): operation is AdminOperation {
   return supportedOperations.has(operation as AdminOperation);
@@ -114,7 +114,7 @@ export function authorizeAdminOperation(
     return deny("admin_profile_inactive");
   }
 
-  if (!isSupportedOperation(input.operation)) {
+  if (!isSupportedAdminOperation(input.operation)) {
     return deny("operation_not_supported", 400);
   }
 

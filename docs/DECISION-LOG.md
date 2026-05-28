@@ -405,3 +405,32 @@ Reason: the current n8n/Pinecone workflow should remain current RAG workflow
 context only, not be forced into the future SaaS architecture. This keeps the
 Phase 2B-F PR limited to docs/status hygiene and avoids Pinecone migration,
 Pinecone credentials, SaaS chatbot app code, or n8n workflow changes.
+
+## 2026-05-28: Repo Agent Instruction Refresh
+
+Decision: Phase 2B-G refreshes repo agent instructions and static guard
+coverage while keeping runtime auth, admin UI, product writes, browser
+Supabase, service-role runtime paths, deployment, n8n workflow changes,
+Pinecone runtime changes, and SaaS chatbot app work blocked.
+
+Reason: future coding agents need the current architecture direction, phase
+status, checklist rules, and hard safety boundaries in the repo-local
+instructions before additional admin/auth boundary work continues.
+
+## 2026-05-28: Reviewed Server-side Admin Auth Resolution Boundary
+
+Decision: Phase 2B-H strengthens the dependency-injected server-only admin
+authorization resolver/adapter boundary and proves safe allow/deny decisions
+from trusted fake adapter inputs only.
+
+Reason: future runtime admin routes or server actions need a reviewed
+server-side boundary that denies anonymous identity, missing or inactive admin
+profiles, missing or inactive memberships, wrong-actor memberships,
+cross-workspace memberships, requested record workspace mismatches,
+unsupported operations, and role violations before product writes are
+approved. This phase keeps real auth runtime wiring, Supabase Auth runtime
+wiring, cookie reads, header reads, login/logout routes, protected admin pages,
+admin UI, runtime route/page/server-action wiring, product/category/product
+image writes, Supabase Storage, service-role runtime paths, browser Supabase,
+deployment, Supabase Cloud connection, n8n workflow changes, Pinecone runtime
+changes, and SaaS chatbot app code out of scope.
