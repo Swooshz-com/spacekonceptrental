@@ -29,11 +29,13 @@ trusted server-side workspace ID. Phase 2B-N adds only the server-only
 session-bound admin read-client factory inside the Phase 2B-K identity
 boundary. Phase 2B-O adds only the server-only admin authorization adapter-set
 composition boundary. Phase 2B-P adds only the server-only composed admin
-authorization decision boundary. Keep real auth runtime wiring, factory,
-adapter-set, or decision-boundary usage from runtime routes/pages/actions,
-headers, login/logout routes, protected admin pages, admin UI, product
-management writes, browser Supabase, service-role runtime paths, deployment,
-and Supabase Cloud work unchecked until a future PR has explicit approval.
+authorization decision boundary. Phase 2B-Q adds only the server-only admin
+request security preflight boundary. Keep real auth runtime wiring, factory,
+adapter-set, decision-boundary, or preflight usage from runtime
+routes/pages/actions, headers, login/logout routes, protected admin pages,
+admin UI, product management writes, browser Supabase, service-role runtime
+paths, deployment, and Supabase Cloud work unchecked until a future PR has
+explicit approval.
 
 ## Completed Design, Policy, Resolver, Adapter, And Provider-session Milestones
 
@@ -56,6 +58,7 @@ and Supabase Cloud work unchecked until a future PR has explicit approval.
 - [x] Add server-only session-bound admin read-client factory.
 - [x] Add server-only admin authorization adapter-set composition boundary.
 - [x] Add server-only composed admin authorization decision boundary.
+- [x] Add server-only admin request security preflight boundary.
 
 ## Design References
 
@@ -113,6 +116,7 @@ runtime implementation approval.
 - [ ] Session-bound admin read-client factory usage from runtime routes, pages, or server actions.
 - [ ] Admin authorization adapter-set usage from runtime routes, pages, or server actions.
 - [ ] Admin authorization decision boundary usage from runtime routes, pages, or server actions.
+- [ ] Admin request security preflight usage from runtime routes, pages, or server actions.
 - [ ] Header reads.
 - [ ] Login/logout routes.
 - [ ] Protected admin pages.

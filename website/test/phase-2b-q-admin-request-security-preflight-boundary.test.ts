@@ -10,6 +10,12 @@ const approvedProfileMembershipBoundaryPath =
   "website/lib/admin/authorization/supabase-admin-profile-membership-adapters.ts";
 const approvedWorkspaceResolverBoundaryPath =
   "website/lib/admin/authorization/server-admin-workspace-resolver.ts";
+const approvedCompositionBoundaryPath =
+  "website/lib/admin/authorization/server-admin-authorization-adapter-set.ts";
+const approvedDecisionBoundaryPath =
+  "website/lib/admin/authorization/server-admin-authorization-decision.ts";
+const approvedPreflightBoundaryPath =
+  "website/lib/admin/authorization/server-admin-request-security-preflight.ts";
 const sourceExtensions = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs"]);
 
 function readRepoFile(relativePath: string) {
@@ -50,8 +56,8 @@ function expectUnchecked(markdown: string, item: string) {
   expect(markdown).toContain(`- [ ] ${item}`);
 }
 
-describe("Phase 2B-N session-bound admin read-client factory", () => {
-  it("records Phase 2B-N status, roadmap, decision-log, and project context scope", () => {
+describe("Phase 2B-Q server-only admin request security preflight boundary", () => {
+  it("records Phase 2B-Q status, roadmap, decision-log, and project context scope", () => {
     const status = readRepoFile("docs/PHASE-STATUS.md");
     const roadmap = readRepoFile("docs/PHASE-ROADMAP.md");
     const decisionLog = readRepoFile("docs/DECISION-LOG.md");
@@ -68,18 +74,22 @@ describe("Phase 2B-N session-bound admin read-client factory", () => {
       "Merge commit: `1ac705d8172a088ceb1fc946b31ca09ceefa74bc`"
     );
     expect(roadmap).toContain(
-      "Phase 2B-N adds only the server-only session-bound admin read-client factory"
+      "Phase 2B-Q adds only the server-only admin request security preflight boundary"
     );
     expect(decisionLog).toContain(
-      "Decision: Phase 2B-N adds only the server-only session-bound admin read-client factory"
+      "Decision: Phase 2B-Q adds only the server-only admin request security preflight boundary"
     );
     expect(projectContext).toContain(
-      "Phase 2B-N adds a server-only session-bound admin read-client factory"
+      "Phase 2B-Q adds a server-only admin request security preflight boundary"
     );
   });
 
-  it("documents the implemented read-client factory and checklist state", () => {
+  it("documents the implemented preflight boundary and checklist state", () => {
     const design = readRepoFile("docs/ADMIN-AUTH-PROVIDER-SESSION-DESIGN.md");
+    const membershipDesign = readRepoFile(
+      "docs/ADMIN-AUTH-MEMBERSHIP-DESIGN.md"
+    );
+    const safety = readRepoFile("docs/SAFETY-BOUNDARIES.md");
     const authChecklist = readRepoFile(
       "docs/checklists/PHASE-2B-AUTH-IMPLEMENTATION.md"
     );
@@ -88,31 +98,41 @@ describe("Phase 2B-N session-bound admin read-client factory", () => {
     );
 
     expect(design).toContain(
-      "## Phase 2B-N Implemented Session-bound Admin Read-client Factory"
+      "## Phase 2B-Q Implemented Request Security Preflight Boundary"
     );
     expect(design).toContain(
-      "`website/lib/admin/authorization/supabase-admin-auth-identity-adapter.ts` is also the only approved module for creating a session-bound admin read client in this phase."
+      "`website/lib/admin/authorization/server-admin-request-security-preflight.ts` is the only approved module for validating admin request security preflight in this phase."
     );
     expect(design).toContain(
-      "The factory returns the Phase 2B-L `SupabaseAdminReadClientResult` shape and is not wired into runtime routes, pages, or server actions."
+      "The preflight boundary validates only explicitly injected request metadata and optional injected CSRF verifier results."
     );
     expect(design).toContain(
-      "Creating this factory does not approve using it from runtime routes, pages, server actions, protected admin pages, login/logout, admin UI, or product writes."
+      "Creating this preflight validator does not approve using it from runtime routes, pages, server actions, protected admin pages, login/logout, admin UI, or product writes."
+    );
+    expect(membershipDesign).toContain(
+      "Phase 2B-Q adds a server-only admin request security preflight boundary"
+    );
+    expect(safety).toContain(
+      "Phase 2B-Q server-only admin request security preflight boundary is approved only as a server-only validator module"
     );
 
     expectChecked(
       authChecklist,
-      "Server-only session-bound admin read-client factory."
+      "Server-only admin request security preflight boundary."
     );
     expectChecked(
       adminAuthChecklist,
-      "Add server-only session-bound admin read-client factory."
+      "Add server-only admin request security preflight boundary."
     );
 
     for (const item of [
       "Real auth runtime wiring.",
       "Supabase Auth runtime wiring.",
       "Resolver/adapter runtime wiring into routes, pages, or server actions.",
+      "Session-bound admin read-client factory usage from runtime routes, pages, or server actions.",
+      "Admin authorization adapter-set usage from runtime routes, pages, or server actions.",
+      "Admin authorization decision boundary usage from runtime routes, pages, or server actions.",
+      "Admin request security preflight usage from runtime routes, pages, or server actions.",
       "Header reads.",
       "Login/logout routes.",
       "Protected admin pages.",
@@ -127,15 +147,6 @@ describe("Phase 2B-N session-bound admin read-client factory", () => {
       expectUnchecked(authChecklist, item);
       expectUnchecked(adminAuthChecklist, item);
     }
-
-    expectUnchecked(
-      authChecklist,
-      "Session-bound admin read-client factory usage from runtime routes, pages, or server actions."
-    );
-    expectUnchecked(
-      adminAuthChecklist,
-      "Session-bound admin read-client factory usage from runtime routes, pages, or server actions."
-    );
   });
 
   it("keeps @supabase/ssr, cookie reads, and Supabase Auth calls inside the identity boundary", () => {
@@ -156,10 +167,6 @@ describe("Phase 2B-N session-bound admin read-client factory", () => {
     expect(approvedSource).toContain("cookies()");
     expect(approvedSource).toContain("auth.getUser()");
     expect(approvedSource).toContain("createSessionBoundSupabaseAdminReadClient");
-    expect(approvedSource).not.toContain("headers()");
-    expect(approvedSource).not.toContain(".from(");
-    expect(approvedSource).not.toContain('from("admin_users")');
-    expect(approvedSource).not.toContain('from("memberships")');
 
     expect(outsideIdentityBoundary).not.toContain("@supabase/ssr");
     expect(outsideIdentityBoundary).not.toContain("next/headers");
@@ -223,6 +230,117 @@ describe("Phase 2B-N session-bound admin read-client factory", () => {
     );
   });
 
+  it("keeps session-bound read-client creation implementation only in the Phase 2B-N identity boundary", () => {
+    const productionSources = readTrackedProductionSources([
+      "website/app",
+      "website/components",
+      "website/lib"
+    ]);
+    const approvedSource = readRepoFile(approvedIdentityBoundaryPath);
+    const outsideIdentityBoundary = productionSources
+      .filter(({ filePath }) => filePath !== approvedIdentityBoundaryPath)
+      .map(({ source }) => source)
+      .join("\n");
+
+    expect(approvedSource).toContain("createSessionBoundSupabaseAdminReadClient");
+    expect(approvedSource).toContain("createSupabaseSsrAdminReadClient");
+
+    expect(outsideIdentityBoundary).not.toContain("createSupabaseSsrAdminReadClient");
+    expect(outsideIdentityBoundary).not.toContain("createServerClient");
+    expect(outsideIdentityBoundary).not.toContain("@supabase/ssr");
+  });
+
+  it("keeps adapter-set composition implementation only in the Phase 2B-O boundary", () => {
+    const productionSources = readTrackedProductionSources([
+      "website/app",
+      "website/components",
+      "website/lib"
+    ]);
+    const approvedSource = readRepoFile(approvedCompositionBoundaryPath);
+    const outsideCompositionImplementation = productionSources
+      .filter(
+        ({ filePath }) =>
+          filePath !== approvedCompositionBoundaryPath &&
+          filePath !== approvedDecisionBoundaryPath &&
+          filePath !== approvedIdentityBoundaryPath &&
+          filePath !== approvedProfileMembershipBoundaryPath &&
+          filePath !== approvedWorkspaceResolverBoundaryPath
+      )
+      .map(({ source }) => source)
+      .join("\n");
+
+    expect(approvedSource).toContain("createSupabaseAdminAuthIdentityAdapter");
+    expect(approvedSource).toContain("createSupabaseAdminProfileAdapter");
+    expect(approvedSource).toContain("createSupabaseAdminMembershipAdapter");
+    expect(approvedSource).toContain("createServerAdminWorkspaceResolver");
+
+    expect(outsideCompositionImplementation).not.toContain(
+      "createSupabaseAdminProfileAdapter"
+    );
+    expect(outsideCompositionImplementation).not.toContain(
+      "createSupabaseAdminMembershipAdapter"
+    );
+    expect(outsideCompositionImplementation).not.toContain(
+      "createSupabaseAdminAuthIdentityAdapter"
+    );
+    expect(outsideCompositionImplementation).not.toContain(
+      "createServerAdminWorkspaceResolver"
+    );
+  });
+
+  it("keeps composed decision resolution only in the Phase 2B-P decision boundary", () => {
+    const productionSources = readTrackedProductionSources([
+      "website/app",
+      "website/components",
+      "website/lib"
+    ]);
+    const approvedSource = readRepoFile(approvedDecisionBoundaryPath);
+    const outsideDecisionBoundary = productionSources
+      .filter(({ filePath }) => filePath !== approvedDecisionBoundaryPath)
+      .map(({ source }) => source)
+      .join("\n");
+
+    expect(approvedSource).toContain("resolveServerAdminAuthorizationDecision");
+    expect(approvedSource).toContain("createServerAdminAuthorizationAdapterSet");
+    expect(approvedSource).toContain("resolveAdminAuthorizationWithAdapters");
+
+    expect(outsideDecisionBoundary).not.toContain(
+      "resolveServerAdminAuthorizationDecision"
+    );
+  });
+
+  it("keeps the request-security preflight module server-only and free of direct runtime/provider shortcuts", () => {
+    const source = readRepoFile(approvedPreflightBoundaryPath);
+
+    expect(source).toContain('import "server-only";');
+    expect(source).toContain("validateServerAdminRequestSecurityPreflight");
+    expect(source).not.toContain("next/headers");
+    expect(source).not.toContain("headers()");
+    expect(source).not.toContain("cookies()");
+    expect(source).not.toContain("@supabase/ssr");
+    expect(source).not.toContain("@supabase/supabase-js");
+    expect(source).not.toContain("auth.getUser()");
+    expect(source).not.toContain("admin_users");
+    expect(source).not.toContain("memberships");
+    expect(source).not.toContain("createSessionBoundSupabaseAdminReadClient");
+    expect(source).not.toContain("createServerAdminAuthorizationAdapterSet");
+    expect(source).not.toContain("resolveServerAdminAuthorizationDecision");
+    expect(source).not.toContain("resolveAdminAuthorizationWithAdapters");
+    expect(source).not.toContain("process.env");
+    expect(source).not.toContain("SUPABASE_SERVICE_ROLE");
+    expect(source).not.toContain("NEXT_PUBLIC_SUPABASE");
+    expect(source).not.toContain("N8N");
+    expect(source).not.toContain("PINECONE");
+    expect(source).not.toContain("chat-config");
+    expect(source).not.toContain(".from(");
+    expect(source).not.toContain(".insert(");
+    expect(source).not.toContain(".update(");
+    expect(source).not.toContain(".upsert(");
+    expect(source).not.toContain(".delete(");
+    expect(source).not.toContain('"use server"');
+    expect(source).not.toMatch(/from ["'][^"']*app\//m);
+  });
+
   it("keeps routes, pages, server actions, writes, storage, deployment, n8n, Pinecone, and chat-config out of scope", () => {
     const productionSource = readTrackedProductionSources([
       "website/app",
@@ -242,7 +360,10 @@ describe("Phase 2B-N session-bound admin read-client factory", () => {
           !filePath.startsWith("website/lib/supabase/") &&
           filePath !== approvedIdentityBoundaryPath &&
           filePath !== approvedProfileMembershipBoundaryPath &&
-          filePath !== approvedWorkspaceResolverBoundaryPath
+          filePath !== approvedWorkspaceResolverBoundaryPath &&
+          filePath !== approvedCompositionBoundaryPath &&
+          filePath !== approvedDecisionBoundaryPath &&
+          filePath !== approvedPreflightBoundaryPath
       )
       .map(({ source }) => source)
       .join("\n");

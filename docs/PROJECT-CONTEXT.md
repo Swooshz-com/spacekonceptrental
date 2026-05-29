@@ -209,6 +209,15 @@ Custom Chat UI -> POST /api/chat -> ChatProvider
   dependencies are unavailable, is not wired into runtime routes, pages,
   server actions, protected admin runtime, login/logout, admin UI, or product
   writes, and does not approve runtime admin auth completion.
+- Phase 2B-Q adds a server-only admin request security preflight boundary
+  only. The validator module is restricted to
+  `website/lib/admin/authorization/server-admin-request-security-preflight.ts`.
+  It validates only explicitly injected request metadata and optional injected
+  CSRF verifier results, treats request/browser supplied fields as untrusted
+  validation inputs, requires same-origin Origin/Host metadata, and requires
+  POST plus a valid CSRF proof for state-changing admin operations. It does
+  not read real headers and is not wired into runtime routes, pages, server
+  actions, protected admin runtime, login/logout, admin UI, or product writes.
 
 ## Current Status Pages
 

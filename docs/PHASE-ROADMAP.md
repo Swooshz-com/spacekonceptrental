@@ -236,6 +236,29 @@ runtime paths, add browser Supabase, read headers, deploy, connect Supabase
 Cloud, change n8n workflows, add Pinecone runtime code, migrate Pinecone,
 access `website/chat-config.js`, or add SaaS chatbot app code.
 
+Phase 2B-Q adds only the server-only admin request security preflight boundary
+needed for future state-changing admin routes and server actions. The
+preflight boundary is allowed only inside
+`website/lib/admin/authorization/server-admin-request-security-preflight.ts`.
+It validates only explicitly injected request metadata and optional injected
+CSRF verifier results; it does not read real request headers. It treats
+request/browser supplied fields as untrusted validation inputs, requires
+same-origin Origin/Host metadata, requires POST and a valid injected CSRF
+proof for state-changing admin operations, permits safe read-only
+`catalogue.read` requests without CSRF proof, and fails closed for missing,
+invalid, stale, replayed, mismatched, or unsupported inputs. It is not
+approval to use the preflight boundary from runtime routes, pages, or server
+actions, read headers, read cookies outside the Phase 2B-K boundary, call
+Supabase Auth outside the Phase 2B-K boundary, query `admin_users` or
+`memberships` outside the Phase 2B-L boundary, resolve workspace scope outside
+the Phase 2B-M boundary, compose adapter sets outside the Phase 2B-O boundary,
+call the composed decision boundary outside the Phase 2B-P boundary, add
+login/logout routes, add protected admin pages, add admin UI, add
+product/category/product image writes, add Supabase Storage, add service-role
+runtime paths, add browser Supabase, deploy, connect Supabase Cloud, change
+n8n workflows, add Pinecone runtime code, migrate Pinecone, access
+`website/chat-config.js`, or add SaaS chatbot app code.
+
 Further Phase 2 implementation work remains unapproved until scoped in a
 separate phase PR.
 

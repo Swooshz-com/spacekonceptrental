@@ -17,11 +17,13 @@ explicitly injected trusted server-side workspace ID. Phase 2B-N implements
 only the server-only session-bound admin read-client factory inside the
 Phase 2B-K identity boundary. Phase 2B-O implements only the server-only admin
 authorization adapter-set composition boundary. Phase 2B-P implements only the
-server-only composed admin authorization decision boundary. Keep real auth
-runtime wiring, factory, adapter-set, or decision-boundary usage from runtime
-routes/pages/actions, headers, routes, UI, product write, Storage, browser
-Supabase, and service-role runtime implementation items unchecked until a
-future implementation PR adds and tests that runtime code.
+server-only composed admin authorization decision boundary. Phase 2B-Q
+implements only the server-only admin request security preflight boundary.
+Keep real auth runtime wiring, factory, adapter-set, decision-boundary, or
+preflight usage from runtime routes/pages/actions, headers, routes, UI,
+product write, Storage, browser Supabase, and service-role runtime
+implementation items unchecked until a future implementation PR adds and tests
+that runtime code.
 
 Reference docs:
 
@@ -74,6 +76,7 @@ Reference docs:
 - [x] Server-only session-bound admin read-client factory.
 - [x] Server-only admin authorization adapter-set composition boundary.
 - [x] Server-only composed admin authorization decision boundary.
+- [x] Server-only admin request security preflight boundary.
 
 ## Still Deferred
 
@@ -85,6 +88,7 @@ Reference docs:
 - [ ] Session-bound admin read-client factory usage from runtime routes, pages, or server actions.
 - [ ] Admin authorization adapter-set usage from runtime routes, pages, or server actions.
 - [ ] Admin authorization decision boundary usage from runtime routes, pages, or server actions.
+- [ ] Admin request security preflight usage from runtime routes, pages, or server actions.
 - [ ] Header reads.
 - [ ] Login/logout routes.
 - [ ] Protected admin pages.

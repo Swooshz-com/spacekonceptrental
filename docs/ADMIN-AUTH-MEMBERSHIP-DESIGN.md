@@ -24,9 +24,11 @@ Completed phase history:
   only.
 - Phase 2B-P adds a server-only composed admin authorization decision boundary
   only.
+- Phase 2B-Q adds a server-only admin request security preflight boundary
+  only.
 
-Latest completed admin/auth boundary state: Phase 2B-P server-only composed
-admin authorization decision boundary.
+Latest completed admin/auth boundary state: Phase 2B-Q server-only admin
+request security preflight boundary.
 
 This design does not implement real auth.
 This design does not add admin UI.
@@ -44,6 +46,8 @@ from runtime routes, pages, or server actions.
 This design does not use the Phase 2B-O admin authorization adapter-set
 composition boundary from runtime routes, pages, or server actions.
 This design does not use the Phase 2B-P composed admin authorization decision
+boundary from runtime routes, pages, or server actions.
+This design does not use the Phase 2B-Q admin request security preflight
 boundary from runtime routes, pages, or server actions.
 
 Product/category/product image writes remain blocked until admin/auth boundaries are implemented and tested.
@@ -171,6 +175,19 @@ dependencies are unavailable. It is not wired into runtime routes, pages,
 server actions, protected admin pages, login/logout, admin UI, or product
 writes.
 
+Phase 2B-Q adds a server-only admin request security preflight boundary at
+`website/lib/admin/authorization/server-admin-request-security-preflight.ts`.
+It validates only explicitly injected request metadata and optional injected
+CSRF verifier results for future state-changing admin routes and server
+actions. It treats request/browser supplied fields as untrusted validation
+inputs, requires same-origin Origin/Host metadata, requires POST and a valid
+CSRF proof for state-changing admin operations, and fails closed for missing,
+invalid, stale, replayed, mismatched, thrown, or unsupported inputs. It does
+not read real headers, read cookies, call Supabase Auth, query Supabase tables,
+compose adapters, call the composed decision boundary, or wire itself into
+runtime routes, pages, server actions, protected admin pages, login/logout,
+admin UI, or product writes.
+
 ## Non-goals
 
 This design does not:
@@ -196,6 +213,8 @@ This design does not:
   runtime routes, pages, or server actions.
 - Use the Phase 2B-P composed admin authorization decision boundary from
   runtime routes, pages, or server actions.
+- Use the Phase 2B-Q admin request security preflight boundary from runtime
+  routes, pages, or server actions.
 - Connect to Supabase Cloud.
 - Add deployment configuration.
 - Add production seed data.

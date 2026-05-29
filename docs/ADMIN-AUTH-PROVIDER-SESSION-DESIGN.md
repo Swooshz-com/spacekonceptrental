@@ -8,7 +8,8 @@ implemented server-only workspace resolution boundary, and the Phase 2B-N
 implemented server-only session-bound admin read-client factory, and the Phase
 2B-O implemented server-only admin authorization adapter-set composition
 boundary, and the Phase 2B-P implemented server-only composed admin
-authorization decision boundary.
+authorization decision boundary, and the Phase 2B-Q implemented server-only
+admin request security preflight boundary.
 
 Phase 2B-E added auth provider/session/security design only.
 Phase 2B-J approves the future server-only Supabase Auth runtime lane only.
@@ -22,6 +23,8 @@ Phase 2B-O implements only the server-only admin authorization adapter-set
 composition boundary.
 Phase 2B-P implements only the server-only composed admin authorization
 decision boundary.
+Phase 2B-Q implements only the server-only admin request security preflight
+boundary.
 
 Phase 2B-K cookie reads and Supabase Auth server calls are restricted to the
 server-only identity adapter named below.
@@ -35,6 +38,8 @@ Phase 2B-O adapter-set composition is restricted to the server-only
 composition module named below.
 Phase 2B-P composed decision resolution is restricted to the server-only
 decision module named below.
+Phase 2B-Q request security preflight validation is restricted to the
+server-only preflight module named below.
 This document does not approve auth runtime wiring outside these boundaries.
 This document does not read headers.
 This document does not add login/logout routes.
@@ -213,6 +218,37 @@ create browser Supabase clients, add product writes, add Storage, connect
 Supabase Cloud, deploy, change n8n workflows, add Pinecone runtime code, or
 duplicate policy logic.
 
+## Phase 2B-Q Implemented Request Security Preflight Boundary
+
+`website/lib/admin/authorization/server-admin-request-security-preflight.ts` is the only approved module for validating admin request security preflight in this phase.
+
+The preflight boundary validates only explicitly injected request metadata and optional injected CSRF verifier results.
+
+It treats request method, Origin, Host, and CSRF proof values as untrusted
+validation inputs supplied by a future server boundary. It does not read real
+request headers, cookies, Supabase Auth, Supabase tables, service-role keys,
+runtime route handlers, pages, or server actions.
+
+The preflight validator permits read-only `catalogue.read` requests with safe
+methods and same-origin metadata without CSRF proof. It treats
+`product.write`, `category.write`, `productImage.write`, and
+`membership.manage` as state-changing admin operations that require POST,
+same-origin Origin/Host metadata, an explicit CSRF proof, and a valid injected
+CSRF verifier result. Missing method, missing Origin, missing Host,
+Origin/Host mismatch, missing CSRF proof, invalid, stale, replayed,
+mismatched, thrown, or unsupported inputs fail closed with safe result shapes.
+
+Creating this preflight validator does not approve using it from runtime routes, pages, server actions, protected admin pages, login/logout, admin UI, or product writes.
+
+The preflight module does not import `next/headers`, `@supabase/ssr`,
+`@supabase/supabase-js`, public catalogue workspace config, n8n, Pinecone, or
+`website/chat-config.js`. It does not read headers or cookies, call Supabase
+Auth, query `admin_users` or `memberships`, create a session-bound admin read
+client, compose the adapter set, call the composed decision boundary, use
+service-role keys, create browser Supabase clients, add product writes, add
+Storage, connect Supabase Cloud, deploy, change n8n workflows, or add Pinecone
+runtime code.
+
 ## Phase 2B-L Implemented Profile And Membership Read Boundary
 
 `website/lib/admin/authorization/supabase-admin-profile-membership-adapters.ts` is the only approved module for Supabase `admin_users` and `memberships` table reads in this phase.
@@ -285,6 +321,8 @@ This document does not:
   runtime routes, pages, or server actions.
 - Use the Phase 2B-P composed admin authorization decision boundary from
   runtime routes, pages, or server actions.
+- Use the Phase 2B-Q admin request security preflight boundary from runtime
+  routes, pages, or server actions.
 - Read headers.
 - Add login/logout routes.
 - Add protected admin pages.
