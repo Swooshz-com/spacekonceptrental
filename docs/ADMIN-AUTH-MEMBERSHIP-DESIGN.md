@@ -218,6 +218,18 @@ Supabase, store replay state, or wire itself into runtime routes, pages,
 server actions, protected admin pages, login/logout, admin UI, or product
 writes.
 
+
+Phase 2B-T adds a server-only admin authorization gate composition boundary at
+`website/lib/admin/authorization/server-admin-authorization-gate.ts`. It runs
+the Phase 2B-Q request-security preflight before the Phase 2B-P composed
+admin authorization decision, may inject the Phase 2B-R CSRF proof verifier
+when verifier dependencies are supplied, and returns only safe allow, deny, or
+unavailable shapes. It does not issue CSRF proofs, read real headers, read
+cookies, read env, call Supabase, query `admin_users` or `memberships`,
+create a session-bound admin read client directly, compose adapter sets
+directly, duplicate admin role/membership policy logic, or wire itself into
+runtime routes, pages, server actions, protected admin pages, login/logout,
+admin UI, or product writes.
 ## Non-goals
 
 This design does not:

@@ -29,6 +29,8 @@ Phase 2B-Q implements only the server-only admin request security preflight
 boundary.
 Phase 2B-R implements only the server-only CSRF proof verifier boundary.
 Phase 2B-S implements only the server-only CSRF proof issuer boundary.
+Phase 2B-T implements only the server-only admin authorization gate
+composition boundary.
 
 Phase 2B-K cookie reads and Supabase Auth server calls are restricted to the
 server-only identity adapter named below.
@@ -320,6 +322,16 @@ workflows, or add Pinecone runtime code. Future runtime callers must pair
 issued nonces with verifier `expectedNonce` or replay checking before runtime
 use is approved.
 
+
+## Phase 2B-T Implemented Admin Authorization Gate Composition Boundary
+
+`website/lib/admin/authorization/server-admin-authorization-gate.ts` is the only approved module for composing the request-security preflight and composed admin authorization decision boundaries in this phase.
+
+The gate runs the Phase 2B-Q request security preflight before the Phase 2B-P composed admin authorization decision. It may inject the Phase 2B-R CSRF proof verifier into preflight when verifier dependencies are supplied. It calls the decision boundary only after preflight passes and returns safe allow, deny, or unavailable shapes.
+
+Creating this gate does not approve using it from runtime routes, pages, server actions, protected admin pages, login/logout, admin UI, or product writes.
+
+The gate module does not import `next/headers`, `@supabase/ssr`, `@supabase/supabase-js`, public catalogue workspace config, n8n, Pinecone, or `website/chat-config.js`. It does not read headers, read cookies, read env, call Supabase Auth, query `admin_users` or `memberships`, create a session-bound admin read client directly, compose adapter sets directly, issue CSRF proofs, duplicate admin role or membership policy logic, use service-role keys, create browser Supabase clients, add product writes, add Storage, connect Supabase Cloud, deploy, change n8n workflows, or add Pinecone runtime code.
 ## Phase 2B-L Implemented Profile And Membership Read Boundary
 
 `website/lib/admin/authorization/supabase-admin-profile-membership-adapters.ts` is the only approved module for Supabase `admin_users` and `memberships` table reads in this phase.

@@ -281,7 +281,19 @@ variables such as `N8N_CHAT_WEBHOOK_URL`.
   routes, protected admin pages, admin UI, product writes, Storage, browser
   Supabase, service-role runtime paths, deployment, Supabase Cloud, n8n
   workflow changes, Pinecone runtime code, or SaaS chatbot app code.
-- Future admin auth must remain server-side. Future session cookies must be
+- Phase 2B-T server-only admin authorization gate composition boundary is approved only as a server-only gate module
+  at `website/lib/admin/authorization/server-admin-authorization-gate.ts`.
+  It may run the Phase 2B-Q request security preflight, inject the Phase 2B-R
+  CSRF proof verifier into preflight when verifier dependencies are supplied,
+  and call the Phase 2B-P composed admin authorization decision only after
+  preflight passes. It is not approval to issue CSRF proofs, read real
+  headers, read cookies, read env, call Supabase, query `admin_users` or
+  `memberships`, create a session-bound admin read client directly, compose
+  adapter sets directly, use that gate from runtime routes, pages, or server
+  actions, add login/logout routes, protected admin pages, admin UI, product
+  writes, Storage, browser Supabase, service-role runtime paths, deployment,
+  Supabase Cloud, n8n workflow changes, Pinecone runtime code, or SaaS
+  chatbot app code.- Future admin auth must remain server-side. Future session cookies must be
   HttpOnly, Secure in production, and have reviewed SameSite behaviour. Future
   state-changing admin routes/server actions need CSRF strategy before
   implementation.

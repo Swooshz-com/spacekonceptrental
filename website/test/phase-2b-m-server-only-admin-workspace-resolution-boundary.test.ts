@@ -58,14 +58,14 @@ describe("Phase 2B-M server-only admin workspace resolution boundary", () => {
     const projectContext = readRepoFile("docs/PROJECT-CONTEXT.md");
 
     expect(status).toContain(
-      "Current phase: Phase 2B-S - server-only CSRF proof issuer boundary."
+      "Current phase: Phase 2B-T - server-only admin authorization gate composition boundary."
     );
     expect(status).toContain(
-      "Latest completed phase: Phase 2B-R - server-only CSRF proof verifier boundary."
+      "Latest completed phase: Phase 2B-S - server-only CSRF proof issuer boundary."
     );
-    expect(status).toContain("Last merged phase PR: #58");
+    expect(status).toContain("Last merged phase PR: #59");
     expect(status).toContain(
-      "Merge commit: `3cb7e24684e2fbd98d56f305e473999d66a3e1fd`"
+      "Merge commit: `5ed4f4fde6fc267ea11f681967c8a589de993e1f`"
     );
     expect(roadmap).toContain(
       "Phase 2B-M adds only the server-only admin workspace resolution boundary"
