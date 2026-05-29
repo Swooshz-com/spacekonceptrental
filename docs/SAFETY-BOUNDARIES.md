@@ -379,3 +379,9 @@ Phase 2B-X admin runtime gate invocation usage approval lane is docs/checklist/s
 Future usage must call only the Phase 2B-W helper from the route/action boundary. Header reads must remain inside Phase 2B-V, cookie reads and Supabase Auth inside Phase 2B-K/N, admin table reads inside Phase 2B-L, workspace resolution inside Phase 2B-M, adapter composition inside Phase 2B-O, decision logic inside Phase 2B-P, preflight inside Phase 2B-Q / Phase 2B-T, CSRF verification inside Phase 2B-R / Phase 2B-T, and CSRF issuance inside Phase 2B-S.
 
 This approval lane does not add runtime route handlers, pages, server actions, login/logout routes, protected admin pages, admin UI, product writes, Storage, deployment config, Supabase Cloud, browser Supabase, service-role runtime paths, n8n changes, Pinecone runtime code, SaaS chatbot app code, or `website/chat-config.js` access.
+
+## Phase 2B-Y Server-only Admin Runtime Route Gate Adapter Boundary
+
+Phase 2B-Y server-only admin runtime route gate adapter boundary is approved only as server-only route/action adapter plumbing at `website/lib/admin/authorization/server-admin-runtime-route-gate-adapter.ts`.
+
+It may call only the Phase 2B-W `resolveServerAdminRuntimeGateInvocation()` helper for authorization. It must not read request headers directly, read cookies, read env, call lower-level auth/security boundaries directly, add route handlers, pages, server actions, login/logout routes, protected admin pages, admin UI, product writes, Storage, deployment config, Supabase Cloud, browser Supabase, service-role runtime paths, n8n changes, Pinecone runtime code, SaaS chatbot app code, or `website/chat-config.js` access.

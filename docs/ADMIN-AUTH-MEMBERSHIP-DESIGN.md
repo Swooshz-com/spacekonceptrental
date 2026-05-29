@@ -34,9 +34,10 @@ Completed phase history:
 - Phase 2B-V adds a server-only admin request metadata adapter boundary only.
 - Phase 2B-W adds a server-only admin runtime gate invocation boundary only.
 - Phase 2B-X adds a docs/checklist/static-guard approval lane for future runtime usage of the Phase 2B-W invocation helper only.
+- Phase 2B-Y adds a server-only admin runtime route gate adapter boundary only.
 
-Latest completed admin/auth boundary state: Phase 2B-W server-only admin
-runtime gate invocation boundary.
+Latest completed admin/auth boundary state: Phase 2B-Y server-only admin
+runtime route gate adapter boundary.
 
 This design does not implement real auth.
 This design does not add admin UI.
@@ -64,6 +65,8 @@ This design does not use the Phase 2B-S CSRF proof issuer boundary from
 runtime routes, pages, or server actions.
 This design does not use the Phase 2B-W admin runtime gate invocation helper
 from runtime routes, pages, or server actions.
+This design does not use the Phase 2B-Y admin runtime route gate adapter from
+runtime routes, pages, or server actions.
 
 Product/category/product image writes remain blocked until admin/auth boundaries are implemented and tested.
 Product writes remain blocked until real auth/membership resolution, RLS, audit, and route/action boundaries are implemented and tested.
