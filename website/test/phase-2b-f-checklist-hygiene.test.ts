@@ -136,11 +136,11 @@ describe("Phase 2B-F checklist hygiene and phase status reconciliation", () => {
 
     const status = readRepoFile(phaseStatusPath);
 
-    expect(status).toContain("Current phase: Phase 2B-V");
+    expect(status).toContain("Current phase: Phase 2B-W");
     expect(status).toContain("Latest completed phase: Phase 2B-U");
-    expect(status).toContain("Last merged phase PR: #61");
+    expect(status).toContain("Last merged phase PR: #62");
     expect(status).toContain(
-      "Merge commit: `b772ab25d7746060d5e14afdebc4192860763935`"
+      "Merge commit: `04e9cce4b96dab73635cc34756d02d3267357e19`"
     );
     expect(status).toContain("Completed foundation");
     expect(status).toContain("Completed deployment readiness docs");

@@ -741,3 +741,13 @@ Reason: Phase 2B-U approved a future runtime lane that requires a reviewed place
 The adapter is the only newly approved production module in this phase that may import `next/headers` and call `headers()`. Trusted expected origin and expected host values must come from explicit dependency/config injection, not from untrusted request headers or env reads. Missing trusted expected origin or host fails closed. Header read failures and dependency throws return only safe unavailable shapes.
 
 Phase 2B-V does not call `resolveServerAdminAuthorizationGate()`, the request-security preflight, the composed authorization decision, the CSRF verifier, the CSRF issuer, adapter-set composition, Supabase Auth, Supabase table reads, or product write logic. It does not add route handlers, pages, server actions, login/logout routes, protected admin pages, admin UI, product/category/product image writes, Supabase Storage, service-role runtime paths, browser Supabase, Supabase Cloud/deployment/env changes, n8n workflow changes, Pinecone runtime code, or `website/chat-config.js` access.
+
+## 2026-05-30: Server-only Admin Runtime Gate Invocation Boundary
+
+Decision: Phase 2B-W adds only the server-only admin runtime gate invocation boundary at `website/lib/admin/authorization/server-admin-runtime-gate-invocation.ts`.
+
+Reason: Phase 2B-V created the reviewed request metadata adapter and Phase 2B-T created the gate. Future admin routes, pages, or server actions need one narrow server-only invocation seam that composes those two approved boundaries without duplicating header reads, preflight, CSRF verification, role policy, membership policy, provider reads, or runtime implementation.
+
+The helper calls the Phase 2B-V request metadata adapter, passes trusted expected origin and expected host only through explicit dependency/config injection, then invokes the Phase 2B-T gate with the explicit operation/workspace validation inputs plus configured metadata. Metadata failures or dependency throws return the existing safe gate unavailable shape.
+
+Phase 2B-W does not import `next/headers`, call `headers()`, read cookies, read env, call Supabase Auth, query `admin_users` or `memberships`, resolve workspaces directly, compose adapter sets directly, call the decision boundary directly, call request-security preflight directly, issue or verify CSRF proofs directly, or add runtime route/page/server-action usage. It does not add login/logout routes, protected admin pages, admin UI, product/category/product image writes, Supabase Storage, browser Supabase, service-role runtime paths, Supabase Cloud/deployment/env changes, n8n workflow changes, Pinecone runtime code, or `website/chat-config.js` access.

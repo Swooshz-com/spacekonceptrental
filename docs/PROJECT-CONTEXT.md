@@ -280,3 +280,11 @@ requires trusted expected Origin and expected Host through explicit dependency
 injection, and does not call the gate, preflight, decision, CSRF, adapter-set,
 Supabase, or product write boundaries. It does not approve runtime route,
 page, or server-action usage.
+
+Phase 2B-W adds a server-only admin runtime gate invocation boundary at
+`website/lib/admin/authorization/server-admin-runtime-gate-invocation.ts`.
+It composes the Phase 2B-V metadata adapter with the Phase 2B-T gate using
+explicit trusted expected origin/host dependencies and existing safe gate
+result shapes. It does not import `next/headers`, read cookies, read env, call
+Supabase, query admin tables, duplicate preflight/decision/CSRF logic, or
+approve runtime route, page, or server-action usage.

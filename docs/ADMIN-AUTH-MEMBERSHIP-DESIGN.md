@@ -32,9 +32,10 @@ Completed phase history:
   only.
 - Phase 2B-U approves only the future admin runtime gate usage lane.
 - Phase 2B-V adds a server-only admin request metadata adapter boundary only.
+- Phase 2B-W adds a server-only admin runtime gate invocation boundary only.
 
-Latest completed admin/auth boundary state: Phase 2B-V server-only admin
-request metadata adapter boundary.
+Latest completed admin/auth boundary state: Phase 2B-W server-only admin
+runtime gate invocation boundary.
 
 This design does not implement real auth.
 This design does not add admin UI.
@@ -60,6 +61,8 @@ This design does not use the Phase 2B-R CSRF proof verifier boundary from
 runtime routes, pages, or server actions.
 This design does not use the Phase 2B-S CSRF proof issuer boundary from
 runtime routes, pages, or server actions.
+This design does not use the Phase 2B-W admin runtime gate invocation helper
+from runtime routes, pages, or server actions.
 
 Product/category/product image writes remain blocked until admin/auth boundaries are implemented and tested.
 Product writes remain blocked until real auth/membership resolution, RLS, audit, and route/action boundaries are implemented and tested.
@@ -263,6 +266,18 @@ boundary, CSRF verifier, CSRF issuer, adapter-set composition, Supabase Auth,
 does not approve using it from runtime routes, pages, server actions,
 protected admin pages, login/logout, admin UI, or product writes.
 
+Phase 2B-W adds a server-only admin runtime gate invocation boundary at
+`website/lib/admin/authorization/server-admin-runtime-gate-invocation.ts`.
+It composes only the Phase 2B-V request metadata adapter and the Phase 2B-T
+admin authorization gate. Trusted expected Origin and expected Host still come
+from explicit dependency/config injection. The helper does not import
+`next/headers`, read cookies, call Supabase Auth, query `admin_users` or
+`memberships`, resolve workspaces directly, compose adapter sets directly,
+call preflight or decision boundaries directly, issue or verify CSRF proofs
+directly, or add route/page/server-action runtime usage. Creating this helper
+does not approve using it from runtime routes, pages, server actions,
+protected admin pages, login/logout, admin UI, or product writes.
+
 ## Non-goals
 
 This design does not:
@@ -294,6 +309,8 @@ This design does not:
   or server actions.
 - Use the Phase 2B-S CSRF proof issuer boundary from runtime routes, pages, or
   server actions.
+- Use the Phase 2B-W admin runtime gate invocation helper from runtime routes,
+  pages, or server actions.
 - Connect to Supabase Cloud.
 - Add deployment configuration.
 - Add production seed data.

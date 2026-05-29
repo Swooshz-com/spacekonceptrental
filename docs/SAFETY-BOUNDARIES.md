@@ -316,6 +316,18 @@ variables such as `N8N_CHAT_WEBHOOK_URL`.
   admin UI, product writes, Storage, browser Supabase, service-role runtime
   paths, deployment, Supabase Cloud, real env values, n8n workflow changes,
   Pinecone runtime code, or `website/chat-config.js` access.
+- Phase 2B-W server-only admin runtime gate invocation boundary is approved only as server-only invocation plumbing
+  at `website/lib/admin/authorization/server-admin-runtime-gate-invocation.ts`.
+  It may compose only the Phase 2B-V request metadata adapter and the Phase
+  2B-T admin authorization gate. It must not import `next/headers`, call
+  `headers()`, read cookies, read env, call Supabase, query `admin_users` or
+  `memberships`, resolve workspaces directly, compose adapter sets directly,
+  call request-security preflight or decision boundaries directly, issue or
+  verify CSRF proofs directly, use that helper from runtime routes, pages, or
+  server actions, add login/logout routes, protected admin pages, admin UI,
+  product writes, Storage, browser Supabase, service-role runtime paths,
+  deployment, Supabase Cloud, real env values, n8n workflow changes, Pinecone
+  runtime code, or `website/chat-config.js` access.
 - Future admin auth must remain server-side. Future session cookies must be
   HttpOnly, Secure in production, and have reviewed SameSite behaviour. Future
   state-changing admin routes/server actions need CSRF strategy before
