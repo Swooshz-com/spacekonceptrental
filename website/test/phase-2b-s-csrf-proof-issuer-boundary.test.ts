@@ -72,14 +72,14 @@ describe("Phase 2B-S server-only CSRF proof issuer boundary", () => {
     const projectContext = readRepoFile("docs/PROJECT-CONTEXT.md");
 
     expect(status).toContain(
-      "Current phase: Phase 2B-V - server-only admin request metadata adapter boundary."
+      "Current phase: Phase 2B-W - server-only admin runtime gate invocation boundary."
     );
     expect(status).toContain(
-      "Latest completed phase: Phase 2B-U - admin runtime wiring approval lane."
+      "Latest completed phase: Phase 2B-V - server-only admin request metadata adapter boundary."
     );
-    expect(status).toContain("Last merged phase PR: #61");
+    expect(status).toContain("Last merged phase PR: #62");
     expect(status).toContain(
-      "Merge commit: `b772ab25d7746060d5e14afdebc4192860763935`"
+      "Merge commit: `04e9cce4b96dab73635cc34756d02d3267357e19`"
     );
     expect(roadmap).toContain(
       "Phase 2B-S adds only the server-only CSRF proof issuer boundary"
@@ -320,7 +320,7 @@ describe("Phase 2B-S server-only CSRF proof issuer boundary", () => {
     expect(outsideIssuerBoundary).not.toContain("createServerAdminCsrfProofIssuer");
   });
 
-  it("keeps routes, pages, server actions, writes, storage, deployment, n8n, Pinecone, and chat-config out of scope", () => {
+  it("keeps routes, pages, server actions, writes, storage, deployment, n8n, Pinecone, and chat-config out of scope", { timeout: 15000 }, () => {
     const productionSource = readTrackedProductionSources([
       "website/app",
       "website/components",

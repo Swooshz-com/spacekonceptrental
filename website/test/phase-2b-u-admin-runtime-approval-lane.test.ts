@@ -24,6 +24,8 @@ const approvedCsrfIssuerBoundaryPath =
   "website/lib/admin/authorization/server-admin-csrf-proof-issuer.ts";
 const approvedGateBoundaryPath =
   "website/lib/admin/authorization/server-admin-authorization-gate.ts";
+const approvedRuntimeGateInvocationBoundaryPath =
+  "website/lib/admin/authorization/server-admin-runtime-gate-invocation.ts";
 const sourceExtensions = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs"]);
 
 function readRepoFile(relativePath: string) {
@@ -72,17 +74,17 @@ describe("Phase 2B-U admin runtime wiring approval lane", () => {
     const projectContext = readRepoFile("docs/PROJECT-CONTEXT.md");
 
     expect(status).toContain(
-      "Current phase: Phase 2B-V - server-only admin request metadata adapter boundary."
+      "Current phase: Phase 2B-W - server-only admin runtime gate invocation boundary."
     );
     expect(status).toContain(
-      "Latest completed phase: Phase 2B-U - admin runtime wiring approval lane."
+      "Latest completed phase: Phase 2B-V - server-only admin request metadata adapter boundary."
     );
-    expect(status).toContain("Last merged phase PR: #61");
+    expect(status).toContain("Last merged phase PR: #62");
     expect(status).toContain(
-      "Merge commit: `b772ab25d7746060d5e14afdebc4192860763935`"
+      "Merge commit: `04e9cce4b96dab73635cc34756d02d3267357e19`"
     );
     expect(status).toContain(
-      "This PR adds only the reviewed server-only admin request metadata adapter"
+      "This PR adds only the reviewed server-only admin runtime gate invocation"
     );
     expect(roadmap).toContain(
       "Phase 2B-U adds only the admin runtime wiring approval lane"
@@ -223,7 +225,10 @@ describe("Phase 2B-U admin runtime wiring approval lane", () => {
     const outsideProfileMembershipBoundary = combinedOutside(
       approvedProfileMembershipBoundaryPath
     );
-    const outsideGateBoundary = combinedOutside(approvedGateBoundaryPath);
+    const outsideGateBoundary = combinedOutside([
+      approvedGateBoundaryPath,
+      approvedRuntimeGateInvocationBoundaryPath
+    ]);
 
     expect(outsideIdentityBoundary).not.toContain("next/headers");
     expect(outsideIdentityBoundary).not.toContain("headers()");
@@ -290,7 +295,8 @@ describe("Phase 2B-U admin runtime wiring approval lane", () => {
           filePath !== approvedPreflightBoundaryPath &&
           filePath !== approvedCsrfVerifierBoundaryPath &&
           filePath !== approvedCsrfIssuerBoundaryPath &&
-          filePath !== approvedGateBoundaryPath
+          filePath !== approvedGateBoundaryPath &&
+          filePath !== approvedRuntimeGateInvocationBoundaryPath
       )
       .map(({ source }) => source)
       .join("\n");

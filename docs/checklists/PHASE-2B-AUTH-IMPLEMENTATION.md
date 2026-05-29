@@ -20,9 +20,9 @@ authorization adapter-set composition boundary. Phase 2B-P implements only the
 server-only composed admin authorization decision boundary. Phase 2B-Q
 implements only the server-only admin request security preflight boundary.
 Phase 2B-R implements only the server-only CSRF proof verifier boundary.
-Phase 2B-S implements only the server-only CSRF proof issuer boundary. Phase 2B-T implements only the server-only admin authorization gate composition boundary. Phase 2B-U approves only the future admin runtime gate usage lane. Phase 2B-V implements only the server-only admin request metadata adapter boundary. Keep
+Phase 2B-S implements only the server-only CSRF proof issuer boundary. Phase 2B-T implements only the server-only admin authorization gate composition boundary. Phase 2B-U approves only the future admin runtime gate usage lane. Phase 2B-V implements only the server-only admin request metadata adapter boundary. Phase 2B-W implements only the server-only admin runtime gate invocation boundary. Keep
 real auth runtime wiring, factory, adapter-set, decision-boundary, preflight,
-CSRF verifier, CSRF issuer, request metadata adapter, or authorization gate usage from runtime routes/pages/actions,
+CSRF verifier, CSRF issuer, request metadata adapter, runtime gate invocation helper, or authorization gate usage from runtime routes/pages/actions,
 headers, routes, UI, product write, Storage, browser Supabase, and service-role runtime
 implementation items unchecked until a future implementation PR adds and tests
 that runtime code.
@@ -84,6 +84,7 @@ Reference docs:
 - [x] Server-only admin authorization gate composition boundary.
 - [x] Admin runtime gate usage approval lane.
 - [x] Server-only admin request metadata adapter boundary.
+- [x] Server-only admin runtime gate invocation boundary.
 
 ## Still Deferred
 
@@ -99,6 +100,7 @@ Reference docs:
 - [ ] Admin CSRF proof verifier usage from runtime routes, pages, or server actions.
 - [ ] Admin CSRF proof issuer usage from runtime routes, pages, or server actions.
 - [ ] Admin authorization gate usage from runtime routes, pages, or server actions.
+- [ ] Admin runtime gate invocation usage from runtime routes, pages, or server actions.
 - [ ] Header reads outside the Phase 2B-V request metadata adapter.
 - [ ] Login/logout routes.
 - [ ] Protected admin pages.

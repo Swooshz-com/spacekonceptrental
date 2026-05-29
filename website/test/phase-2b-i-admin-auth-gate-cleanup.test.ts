@@ -55,11 +55,11 @@ describe("Phase 2B-I admin auth gate cleanup", () => {
     const decisionLog = readRepoFile("docs/DECISION-LOG.md");
 
     expect(status).toContain(
-      "Latest completed phase: Phase 2B-U - admin runtime wiring approval lane."
+      "Latest completed phase: Phase 2B-V - server-only admin request metadata adapter boundary."
     );
-    expect(status).toContain("Last merged phase PR: #61");
+    expect(status).toContain("Last merged phase PR: #62");
     expect(status).toContain(
-      "Merge commit: `b772ab25d7746060d5e14afdebc4192860763935`"
+      "Merge commit: `04e9cce4b96dab73635cc34756d02d3267357e19`"
     );
     expect(roadmap).toContain(
       "Phase 2B-I cleans admin auth implementation gate wording and refines"
@@ -83,7 +83,7 @@ describe("Phase 2B-I admin auth gate cleanup", () => {
       "- Phase 2B-H strengthened the reviewed server-side auth/membership resolution boundary with fake-adapter tests only."
     );
     expect(design).toContain(
-      "Latest completed admin/auth boundary state: Phase 2B-V server-only"
+      "Latest completed admin/auth boundary state: Phase 2B-W server-only"
     );
     expect(design).not.toContain("This PR");
   });

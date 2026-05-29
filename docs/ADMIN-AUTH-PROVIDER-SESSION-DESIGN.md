@@ -14,7 +14,8 @@ server-only CSRF proof verifier boundary, the Phase 2B-S implemented
 server-only CSRF proof issuer boundary, the Phase 2B-T implemented
 server-only admin authorization gate composition boundary, the Phase 2B-U
 approved future admin runtime gate usage lane, and the Phase 2B-V implemented
-server-only admin request metadata adapter boundary.
+server-only admin request metadata adapter boundary, and the Phase 2B-W
+implemented server-only admin runtime gate invocation boundary.
 
 Phase 2B-E added auth provider/session/security design only.
 Phase 2B-J approves the future server-only Supabase Auth runtime lane only.
@@ -36,6 +37,8 @@ Phase 2B-T implements only the server-only admin authorization gate
 composition boundary.
 Phase 2B-U approves only the future admin runtime gate usage lane.
 Phase 2B-V implements only the server-only admin request metadata adapter
+boundary.
+Phase 2B-W implements only the server-only admin runtime gate invocation
 boundary.
 
 Phase 2B-K cookie reads and Supabase Auth server calls are restricted to the
@@ -61,6 +64,8 @@ server-only gate module named below.
 Phase 2B-U is docs/checklist approval only and does not add runtime wiring.
 Phase 2B-V request metadata reads are restricted to the server-only request
 metadata adapter named below.
+Phase 2B-W admin runtime gate invocation is restricted to the server-only
+invocation helper named below.
 This document does not approve auth runtime wiring outside these boundaries.
 This document does not approve header reads outside the Phase 2B-V adapter.
 This document does not add login/logout routes.
@@ -386,6 +391,16 @@ Header values remain validation metadata only. They are not identity, membership
 Creating this metadata adapter does not approve using it from runtime routes, pages, server actions, protected admin pages, login/logout, admin UI, or product writes.
 
 The adapter does not call the Phase 2B-T gate, Phase 2B-Q preflight, Phase 2B-P decision boundary, Phase 2B-R verifier, Phase 2B-S issuer, Phase 2B-O adapter-set composition, Supabase Auth, `admin_users`, `memberships`, product write logic, Storage, n8n, Pinecone, or `website/chat-config.js`.
+
+## Phase 2B-W Implemented Admin Runtime Gate Invocation Boundary
+
+`website/lib/admin/authorization/server-admin-runtime-gate-invocation.ts` is the only approved module in this phase for composing the Phase 2B-V request metadata adapter with the Phase 2B-T admin authorization gate.
+
+The invocation helper calls `readServerAdminRequestMetadata()` to collect explicit request metadata, then passes that metadata plus explicit requested operation and workspace-validation inputs into `resolveServerAdminAuthorizationGate()`. Trusted expected Origin and expected Host must still come through explicit dependency/config injection. Request headers remain untrusted validation metadata and are read only by the Phase 2B-V adapter.
+
+Creating this invocation helper does not approve using it from runtime routes, pages, server actions, protected admin pages, login/logout, admin UI, or product writes.
+
+The helper does not import `next/headers`, call `headers()`, read cookies, read env, call Supabase Auth, query `admin_users` or `memberships`, resolve workspaces directly, compose adapter sets directly, call the decision boundary directly, call request-security preflight directly, issue or verify CSRF proofs directly, use service-role keys, add browser Supabase, add Storage, connect Supabase Cloud, deploy, change n8n workflows, add Pinecone runtime code, or access `website/chat-config.js`.
 
 ## Phase 2B-L Implemented Profile And Membership Read Boundary
 

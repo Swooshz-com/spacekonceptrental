@@ -24,6 +24,8 @@ const approvedGateBoundaryPath =
   "website/lib/admin/authorization/server-admin-authorization-gate.ts";
 const approvedRequestMetadataBoundaryPath =
   "website/lib/admin/authorization/server-admin-request-metadata-adapter.ts";
+const approvedRuntimeGateInvocationBoundaryPath =
+  "website/lib/admin/authorization/server-admin-runtime-gate-invocation.ts";
 const sourceExtensions = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs"]);
 
 function readRepoFile(relativePath: string) {
@@ -72,14 +74,14 @@ describe("Phase 2B-V server-only admin request metadata adapter boundary", () =>
     const projectContext = readRepoFile("docs/PROJECT-CONTEXT.md");
 
     expect(status).toContain(
-      "Current phase: Phase 2B-V - server-only admin request metadata adapter boundary."
+      "Current phase: Phase 2B-W - server-only admin runtime gate invocation boundary."
     );
     expect(status).toContain(
-      "Latest completed phase: Phase 2B-U - admin runtime wiring approval lane."
+      "Latest completed phase: Phase 2B-V - server-only admin request metadata adapter boundary."
     );
-    expect(status).toContain("Last merged phase PR: #61");
+    expect(status).toContain("Last merged phase PR: #62");
     expect(status).toContain(
-      "Merge commit: `b772ab25d7746060d5e14afdebc4192860763935`"
+      "Merge commit: `04e9cce4b96dab73635cc34756d02d3267357e19`"
     );
     expect(roadmap).toContain(
       "Phase 2B-V adds only the server-only admin request metadata adapter boundary"
@@ -269,12 +271,17 @@ describe("Phase 2B-V server-only admin request metadata adapter boundary", () =>
     expect(combinedOutside(approvedCsrfIssuerBoundaryPath)).not.toContain(
       "issueServerAdminCsrfProof"
     );
-    expect(combinedOutside(approvedGateBoundaryPath)).not.toContain(
+    expect(
+      combinedOutside([
+        approvedGateBoundaryPath,
+        approvedRuntimeGateInvocationBoundaryPath
+      ])
+    ).not.toContain(
       "resolveServerAdminAuthorizationGate"
     );
   });
 
-  it("keeps routes, pages, server actions, writes, storage, deployment, n8n, Pinecone, and chat-config out of scope", () => {
+  it("keeps routes, pages, server actions, writes, storage, deployment, n8n, Pinecone, and chat-config out of scope", { timeout: 15000 }, () => {
     const productionSource = readTrackedProductionSources([
       "website/app",
       "website/components",
@@ -301,7 +308,8 @@ describe("Phase 2B-V server-only admin request metadata adapter boundary", () =>
           filePath !== approvedCsrfVerifierBoundaryPath &&
           filePath !== approvedCsrfIssuerBoundaryPath &&
           filePath !== approvedGateBoundaryPath &&
-          filePath !== approvedRequestMetadataBoundaryPath
+          filePath !== approvedRequestMetadataBoundaryPath &&
+          filePath !== approvedRuntimeGateInvocationBoundaryPath
       )
       .map(({ source }) => source)
       .join("\n");

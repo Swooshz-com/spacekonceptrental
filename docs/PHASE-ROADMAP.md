@@ -360,6 +360,22 @@ Supabase Storage, service-role runtime paths, browser Supabase, Supabase Cloud,
 deployment, real env values, n8n workflow changes, Pinecone runtime code, or
 `website/chat-config.js` access.
 
+Phase 2B-W adds only the server-only admin runtime gate invocation boundary
+for future admin routes, pages, or server actions. The invocation boundary is
+allowed only inside
+`website/lib/admin/authorization/server-admin-runtime-gate-invocation.ts`.
+It composes the Phase 2B-V request metadata adapter and the Phase 2B-T admin
+authorization gate, accepts trusted expected origin and host inputs through
+explicit dependency/config injection, and returns the existing safe gate result
+shape. It does not import `next/headers`, read headers directly, read cookies,
+read env, call Supabase, query `admin_users` or `memberships`, duplicate
+preflight/CSRF/policy logic, issue CSRF proofs, add runtime route/page/server
+action usage, add login/logout routes, add protected admin pages, add admin UI,
+add product/category/product image writes, add Supabase Storage, add
+service-role runtime paths, add browser Supabase, deploy, connect Supabase
+Cloud, change n8n workflows, add Pinecone runtime code, or access
+`website/chat-config.js`.
+
 Further Phase 2 implementation work remains unapproved until scoped in a
 separate phase PR.
 
