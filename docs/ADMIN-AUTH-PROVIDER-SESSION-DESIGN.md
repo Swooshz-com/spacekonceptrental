@@ -10,7 +10,8 @@ implemented server-only session-bound admin read-client factory, and the Phase
 boundary, and the Phase 2B-P implemented server-only composed admin
 authorization decision boundary, and the Phase 2B-Q implemented server-only
 admin request security preflight boundary, and the Phase 2B-R implemented
-server-only CSRF proof verifier boundary.
+server-only CSRF proof verifier boundary, and the Phase 2B-S implemented
+server-only CSRF proof issuer boundary.
 
 Phase 2B-E added auth provider/session/security design only.
 Phase 2B-J approves the future server-only Supabase Auth runtime lane only.
@@ -27,6 +28,7 @@ decision boundary.
 Phase 2B-Q implements only the server-only admin request security preflight
 boundary.
 Phase 2B-R implements only the server-only CSRF proof verifier boundary.
+Phase 2B-S implements only the server-only CSRF proof issuer boundary.
 
 Phase 2B-K cookie reads and Supabase Auth server calls are restricted to the
 server-only identity adapter named below.
@@ -44,6 +46,8 @@ Phase 2B-Q request security preflight validation is restricted to the
 server-only preflight module named below.
 Phase 2B-R CSRF proof verification is restricted to the server-only verifier
 module named below.
+Phase 2B-S CSRF proof issuance is restricted to the server-only issuer module
+named below.
 This document does not approve auth runtime wiring outside these boundaries.
 This document does not read headers.
 This document does not add login/logout routes.
@@ -286,6 +290,36 @@ decision boundary, use service-role keys, create browser Supabase clients,
 issue CSRF tokens, add product writes, add Storage, connect Supabase Cloud,
 deploy, change n8n workflows, or add Pinecone runtime code.
 
+## Phase 2B-S Implemented CSRF Proof Issuer Boundary
+
+`website/lib/admin/authorization/server-admin-csrf-proof-issuer.ts` is the only approved module for issuing structured CSRF proofs in this phase.
+
+The issuer creates verifier-compatible proofs only from explicitly injected operation, session binding, nonce, timestamps, and signer dependencies.
+
+It supports only state-changing admin operations and returns a structured
+`base64url(JSON payload).base64url(signature)` proof with safe expiry metadata
+only when operation, session binding, nonce, issued-at timestamp, expiry
+timestamp, and signature signer are all valid. It can use an injected nonce
+generator when no nonce is supplied. Missing or unsupported operations,
+read-only operations, missing session binding, missing nonce, invalid
+timestamps, expiry before or equal issued-at, missing signer, signer empty
+return, signer throw, or dependency failure fail closed with safe issue
+reasons.
+
+Creating this CSRF issuer does not approve using it from runtime routes, pages, server actions, protected admin pages, login/logout, admin UI, or product writes.
+
+The issuer module does not import `next/headers`, `@supabase/ssr`,
+`@supabase/supabase-js`, public catalogue workspace config, n8n, Pinecone, or
+`website/chat-config.js`. It does not read headers, read cookies, read env,
+call Supabase Auth, query `admin_users` or `memberships`, create a
+session-bound admin read client, compose the adapter set, call the composed
+decision boundary, call the preflight boundary, verify CSRF proofs, store
+replay state, use service-role keys, create browser Supabase clients, add
+product writes, add Storage, connect Supabase Cloud, deploy, change n8n
+workflows, or add Pinecone runtime code. Future runtime callers must pair
+issued nonces with verifier `expectedNonce` or replay checking before runtime
+use is approved.
+
 ## Phase 2B-L Implemented Profile And Membership Read Boundary
 
 `website/lib/admin/authorization/supabase-admin-profile-membership-adapters.ts` is the only approved module for Supabase `admin_users` and `memberships` table reads in this phase.
@@ -362,6 +396,8 @@ This document does not:
   routes, pages, or server actions.
 - Use the Phase 2B-R CSRF proof verifier boundary from runtime routes, pages,
   or server actions.
+- Use the Phase 2B-S CSRF proof issuer boundary from runtime routes, pages, or
+  server actions.
 - Read headers.
 - Add login/logout routes.
 - Add protected admin pages.

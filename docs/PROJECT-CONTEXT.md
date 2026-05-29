@@ -227,6 +227,17 @@ Custom Chat UI -> POST /api/chat -> ChatProvider
   issue CSRF tokens, does not read real headers, cookies, or env, and is not
   wired into runtime routes, pages, server actions, protected admin runtime,
   login/logout, admin UI, or product writes.
+- Phase 2B-S adds a server-only CSRF proof issuer boundary only. The issuer
+  module is restricted to
+  `website/lib/admin/authorization/server-admin-csrf-proof-issuer.ts`. It
+  creates verifier-compatible structured CSRF proofs only from explicitly
+  injected operation, session binding, nonce or nonce generator, issued-at and
+  expiry timestamps, and dependency-injected signature signer. It supports only
+  state-changing admin operations, returns safe issue shapes, does not verify
+  proofs, does not read real headers, cookies, or env, does not call Supabase,
+  does not store replay state, and is not wired into runtime routes, pages,
+  server actions, protected admin runtime, login/logout, admin UI, or product
+  writes.
 
 ## Current Status Pages
 

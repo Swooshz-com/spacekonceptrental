@@ -10,6 +10,16 @@ const approvedProfileMembershipBoundaryPath =
   "website/lib/admin/authorization/supabase-admin-profile-membership-adapters.ts";
 const approvedWorkspaceResolverBoundaryPath =
   "website/lib/admin/authorization/server-admin-workspace-resolver.ts";
+const approvedCompositionBoundaryPath =
+  "website/lib/admin/authorization/server-admin-authorization-adapter-set.ts";
+const approvedDecisionBoundaryPath =
+  "website/lib/admin/authorization/server-admin-authorization-decision.ts";
+const approvedPreflightBoundaryPath =
+  "website/lib/admin/authorization/server-admin-request-security-preflight.ts";
+const approvedCsrfVerifierBoundaryPath =
+  "website/lib/admin/authorization/server-admin-csrf-proof-verifier.ts";
+const approvedCsrfIssuerBoundaryPath =
+  "website/lib/admin/authorization/server-admin-csrf-proof-issuer.ts";
 const sourceExtensions = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs"]);
 
 function readRepoFile(relativePath: string) {
@@ -50,8 +60,8 @@ function expectUnchecked(markdown: string, item: string) {
   expect(markdown).toContain(`- [ ] ${item}`);
 }
 
-describe("Phase 2B-M server-only admin workspace resolution boundary", () => {
-  it("records Phase 2B-M status, roadmap, decision-log, and project context scope", () => {
+describe("Phase 2B-S server-only CSRF proof issuer boundary", () => {
+  it("records Phase 2B-S status, roadmap, decision-log, and project context scope", () => {
     const status = readRepoFile("docs/PHASE-STATUS.md");
     const roadmap = readRepoFile("docs/PHASE-ROADMAP.md");
     const decisionLog = readRepoFile("docs/DECISION-LOG.md");
@@ -68,18 +78,22 @@ describe("Phase 2B-M server-only admin workspace resolution boundary", () => {
       "Merge commit: `3cb7e24684e2fbd98d56f305e473999d66a3e1fd`"
     );
     expect(roadmap).toContain(
-      "Phase 2B-M adds only the server-only admin workspace resolution boundary"
+      "Phase 2B-S adds only the server-only CSRF proof issuer boundary"
     );
     expect(decisionLog).toContain(
-      "Decision: Phase 2B-M adds only the server-only admin workspace resolution boundary"
+      "Decision: Phase 2B-S adds only the server-only CSRF proof issuer boundary"
     );
     expect(projectContext).toContain(
-      "Phase 2B-M adds a server-only admin workspace resolution boundary"
+      "Phase 2B-S adds a server-only CSRF proof issuer boundary"
     );
   });
 
-  it("documents the implemented workspace resolver boundary and checklist state", () => {
+  it("documents the implemented CSRF issuer boundary and checklist state", () => {
     const design = readRepoFile("docs/ADMIN-AUTH-PROVIDER-SESSION-DESIGN.md");
+    const membershipDesign = readRepoFile(
+      "docs/ADMIN-AUTH-MEMBERSHIP-DESIGN.md"
+    );
+    const safety = readRepoFile("docs/SAFETY-BOUNDARIES.md");
     const authChecklist = readRepoFile(
       "docs/checklists/PHASE-2B-AUTH-IMPLEMENTATION.md"
     );
@@ -88,34 +102,40 @@ describe("Phase 2B-M server-only admin workspace resolution boundary", () => {
     );
 
     expect(design).toContain(
-      "## Phase 2B-M Implemented Workspace Resolution Boundary"
+      "## Phase 2B-S Implemented CSRF Proof Issuer Boundary"
     );
     expect(design).toContain(
-      "`website/lib/admin/authorization/server-admin-workspace-resolver.ts` is the only approved module for admin workspace resolution in this phase."
+      "`website/lib/admin/authorization/server-admin-csrf-proof-issuer.ts` is the only approved module for issuing structured CSRF proofs in this phase."
     );
     expect(design).toContain(
-      "It implements the existing `AdminWorkspaceResolver` safe shape only and is not wired into runtime routes, pages, or server actions."
+      "The issuer creates verifier-compatible proofs only from explicitly injected operation, session binding, nonce, timestamps, and signer dependencies."
     );
     expect(design).toContain(
-      "Browser/request workspace IDs are validation-only and never become authority."
+      "Creating this CSRF issuer does not approve using it from runtime routes, pages, server actions, protected admin pages, login/logout, admin UI, or product writes."
     );
-    expect(design).toContain(
-      "The boundary fails closed with `{ serverResolvedWorkspaceId: null }` without an explicitly injected trusted server-side workspace ID."
+    expect(membershipDesign).toContain(
+      "Phase 2B-S adds a server-only CSRF proof issuer boundary"
+    );
+    expect(safety).toContain(
+      "Phase 2B-S server-only CSRF proof issuer boundary is approved only as a server-only issuer module"
     );
 
-    expectChecked(
-      authChecklist,
-      "Server-only admin workspace resolution boundary."
-    );
+    expectChecked(authChecklist, "Server-only CSRF proof issuer boundary.");
     expectChecked(
       adminAuthChecklist,
-      "Add server-only admin workspace resolution boundary."
+      "Add server-only CSRF proof issuer boundary."
     );
 
     for (const item of [
       "Real auth runtime wiring.",
       "Supabase Auth runtime wiring.",
       "Resolver/adapter runtime wiring into routes, pages, or server actions.",
+      "Session-bound admin read-client factory usage from runtime routes, pages, or server actions.",
+      "Admin authorization adapter-set usage from runtime routes, pages, or server actions.",
+      "Admin authorization decision boundary usage from runtime routes, pages, or server actions.",
+      "Admin request security preflight usage from runtime routes, pages, or server actions.",
+      "Admin CSRF proof verifier usage from runtime routes, pages, or server actions.",
+      "Admin CSRF proof issuer usage from runtime routes, pages, or server actions.",
       "Header reads.",
       "Login/logout routes.",
       "Protected admin pages.",
@@ -130,22 +150,9 @@ describe("Phase 2B-M server-only admin workspace resolution boundary", () => {
       expectUnchecked(authChecklist, item);
       expectUnchecked(adminAuthChecklist, item);
     }
-
-    expectUnchecked(
-      adminAuthChecklist,
-      "Cookie reads outside the Phase 2B-K server-only identity boundary."
-    );
-    expectUnchecked(
-      authChecklist,
-      "Admin workspace resolution outside the Phase 2B-M server-only workspace boundary."
-    );
-    expectUnchecked(
-      adminAuthChecklist,
-      "Admin workspace resolution outside the Phase 2B-M server-only workspace boundary."
-    );
   });
 
-  it("keeps cookie reads and Supabase Auth calls only in the identity boundary", () => {
+  it("keeps @supabase/ssr, cookie reads, and Supabase Auth calls inside the identity boundary", () => {
     const productionSources = readTrackedProductionSources([
       "website/app",
       "website/components",
@@ -162,6 +169,7 @@ describe("Phase 2B-M server-only admin workspace resolution boundary", () => {
     expect(approvedSource).toContain('from "next/headers"');
     expect(approvedSource).toContain("cookies()");
     expect(approvedSource).toContain("auth.getUser()");
+    expect(approvedSource).toContain("createSessionBoundSupabaseAdminReadClient");
 
     expect(outsideIdentityBoundary).not.toContain("@supabase/ssr");
     expect(outsideIdentityBoundary).not.toContain("next/headers");
@@ -189,13 +197,6 @@ describe("Phase 2B-M server-only admin workspace resolution boundary", () => {
     expect(approvedSource).toContain('import "server-only";');
     expect(approvedSource).toContain('from("admin_users")');
     expect(approvedSource).toContain('from("memberships")');
-    expect(approvedSource).not.toContain("next/headers");
-    expect(approvedSource).not.toContain("cookies()");
-    expect(approvedSource).not.toContain("headers()");
-    expect(approvedSource).not.toContain("auth.getUser()");
-    expect(approvedSource).not.toContain("SUPABASE_SERVICE_ROLE");
-    expect(approvedSource).not.toContain("NEXT_PUBLIC_SUPABASE");
-    expect(approvedSource).not.toContain("chat-config");
 
     expect(outsideProfileMembershipBoundary).not.toMatch(
       /\.from\(["']admin_users["']\)/m
@@ -205,33 +206,113 @@ describe("Phase 2B-M server-only admin workspace resolution boundary", () => {
     );
   });
 
-  it("keeps the Phase 2B-M workspace resolver free of runtime and provider shortcuts", () => {
-    const source = readRepoFile(approvedWorkspaceResolverBoundaryPath);
+  it("keeps each server-only admin boundary in its approved module", () => {
+    const productionSources = readTrackedProductionSources([
+      "website/app",
+      "website/components",
+      "website/lib"
+    ]);
+    const combinedOutside = (approvedPaths: string | string[]) => {
+      const excludedPaths = Array.isArray(approvedPaths)
+        ? approvedPaths
+        : [approvedPaths];
 
-    expect(source).toContain('import "server-only";');
-    expect(source).toContain("AdminWorkspaceResolver");
-    expect(source).toContain("serverResolvedWorkspaceId");
-    expect(source).not.toContain("@supabase/");
-    expect(source).not.toContain("createServerSupabaseClient");
-    expect(source).not.toContain("next/headers");
-    expect(source).not.toContain("cookies()");
-    expect(source).not.toContain("headers()");
-    expect(source).not.toContain("auth.getUser()");
-    expect(source).not.toContain("process.env");
-    expect(source).not.toContain("SUPABASE_SERVICE_ROLE");
-    expect(source).not.toContain("NEXT_PUBLIC_SUPABASE");
-    expect(source).not.toContain("N8N_CHAT_WEBHOOK_URL");
-    expect(source).not.toContain("@n8n/chat");
-    expect(source).not.toContain("PINECONE");
-    expect(source).not.toContain("@pinecone-database");
-    expect(source).not.toContain("chat-config");
-    expect(source).not.toContain("catalogue_public_workspace_config");
-    expect(source).not.toContain("CATALOGUE_WORKSPACE_ID");
-    expect(source).not.toContain(".from(");
-    expect(source).not.toContain(".insert(");
-    expect(source).not.toContain(".update(");
-    expect(source).not.toContain(".upsert(");
-    expect(source).not.toContain(".delete(");
+      return productionSources
+        .filter(({ filePath }) => !excludedPaths.includes(filePath))
+        .map(({ source }) => source)
+        .join("\n");
+    };
+
+    expect(readRepoFile(approvedWorkspaceResolverBoundaryPath)).toContain(
+      "resolveServerAdminWorkspaceForRequest"
+    );
+    expect(
+      combinedOutside(approvedWorkspaceResolverBoundaryPath)
+    ).not.toContain("resolveServerAdminWorkspaceForRequest");
+
+    expect(readRepoFile(approvedIdentityBoundaryPath)).toContain(
+      "createSessionBoundSupabaseAdminReadClient"
+    );
+    expect(combinedOutside(approvedIdentityBoundaryPath)).not.toContain(
+      "createSupabaseSsrAdminReadClient"
+    );
+
+    expect(readRepoFile(approvedCompositionBoundaryPath)).toContain(
+      "createServerAdminAuthorizationAdapterSet"
+    );
+    expect(
+      combinedOutside([
+        approvedCompositionBoundaryPath,
+        approvedDecisionBoundaryPath
+      ])
+    ).not.toContain("createServerAdminAuthorizationAdapterSet");
+
+    expect(readRepoFile(approvedDecisionBoundaryPath)).toContain(
+      "resolveServerAdminAuthorizationDecision"
+    );
+    expect(combinedOutside(approvedDecisionBoundaryPath)).not.toContain(
+      "resolveServerAdminAuthorizationDecision"
+    );
+
+    expect(readRepoFile(approvedPreflightBoundaryPath)).toContain(
+      "validateServerAdminRequestSecurityPreflight"
+    );
+    expect(combinedOutside(approvedPreflightBoundaryPath)).not.toContain(
+      "validateServerAdminRequestSecurityPreflight"
+    );
+
+    expect(readRepoFile(approvedCsrfVerifierBoundaryPath)).toContain(
+      "verifyServerAdminCsrfProof"
+    );
+    expect(combinedOutside(approvedCsrfVerifierBoundaryPath)).not.toContain(
+      "verifyServerAdminCsrfProof"
+    );
+  });
+
+  it("keeps CSRF proof issuance only in the Phase 2B-S issuer boundary", () => {
+    const productionSources = readTrackedProductionSources([
+      "website/app",
+      "website/components",
+      "website/lib"
+    ]);
+    const approvedSource = readRepoFile(approvedCsrfIssuerBoundaryPath);
+    const outsideIssuerBoundary = productionSources
+      .filter(({ filePath }) => filePath !== approvedCsrfIssuerBoundaryPath)
+      .map(({ source }) => source)
+      .join("\n");
+
+    expect(approvedSource).toContain('import "server-only";');
+    expect(approvedSource).toContain("issueServerAdminCsrfProof");
+    expect(approvedSource).toContain("createServerAdminCsrfProofIssuer");
+    expect(approvedSource).not.toContain("next/headers");
+    expect(approvedSource).not.toContain("headers()");
+    expect(approvedSource).not.toContain("cookies()");
+    expect(approvedSource).not.toContain("@supabase/ssr");
+    expect(approvedSource).not.toContain("@supabase/supabase-js");
+    expect(approvedSource).not.toContain("auth.getUser()");
+    expect(approvedSource).not.toContain("admin_users");
+    expect(approvedSource).not.toContain("memberships");
+    expect(approvedSource).not.toContain("createSessionBoundSupabaseAdminReadClient");
+    expect(approvedSource).not.toContain("createServerAdminAuthorizationAdapterSet");
+    expect(approvedSource).not.toContain("resolveServerAdminAuthorizationDecision");
+    expect(approvedSource).not.toContain("resolveAdminAuthorizationWithAdapters");
+    expect(approvedSource).not.toContain("validateServerAdminRequestSecurityPreflight");
+    expect(approvedSource).not.toContain("verifyServerAdminCsrfProof");
+    expect(approvedSource).not.toContain("process.env");
+    expect(approvedSource).not.toContain("SUPABASE_SERVICE_ROLE");
+    expect(approvedSource).not.toContain("NEXT_PUBLIC_SUPABASE");
+    expect(approvedSource).not.toContain("N8N");
+    expect(approvedSource).not.toContain("PINECONE");
+    expect(approvedSource).not.toContain("chat-config");
+    expect(approvedSource).not.toContain(".from(");
+    expect(approvedSource).not.toContain(".insert(");
+    expect(approvedSource).not.toContain(".update(");
+    expect(approvedSource).not.toContain(".upsert(");
+    expect(approvedSource).not.toContain(".delete(");
+    expect(approvedSource).not.toContain('"use server"');
+    expect(approvedSource).not.toMatch(/from ["'][^"']*app\//m);
+    expect(outsideIssuerBoundary).not.toContain("issueServerAdminCsrfProof");
+    expect(outsideIssuerBoundary).not.toContain("createServerAdminCsrfProofIssuer");
   });
 
   it("keeps routes, pages, server actions, writes, storage, deployment, n8n, Pinecone, and chat-config out of scope", () => {
@@ -253,7 +334,12 @@ describe("Phase 2B-M server-only admin workspace resolution boundary", () => {
           !filePath.startsWith("website/lib/supabase/") &&
           filePath !== approvedIdentityBoundaryPath &&
           filePath !== approvedProfileMembershipBoundaryPath &&
-          filePath !== approvedWorkspaceResolverBoundaryPath
+          filePath !== approvedWorkspaceResolverBoundaryPath &&
+          filePath !== approvedCompositionBoundaryPath &&
+          filePath !== approvedDecisionBoundaryPath &&
+          filePath !== approvedPreflightBoundaryPath &&
+          filePath !== approvedCsrfVerifierBoundaryPath &&
+          filePath !== approvedCsrfIssuerBoundaryPath
       )
       .map(({ source }) => source)
       .join("\n");
