@@ -179,6 +179,24 @@ browser Supabase, deploy, connect Supabase Cloud, change n8n workflows, add
 Pinecone runtime code, migrate Pinecone, access `website/chat-config.js`, or
 add SaaS chatbot app code.
 
+Phase 2B-N adds only the server-only session-bound admin read-client factory
+needed for future Phase 2B-L profile/membership reads. The factory is allowed
+only inside
+`website/lib/admin/authorization/supabase-admin-auth-identity-adapter.ts`
+because that module remains the reviewed Phase 2B-K server-only cookie and
+Supabase Auth boundary. It reuses the reviewed server-only Supabase URL, anon
+key, and request-cookie path to create a session-bound Supabase SSR client and
+returns the Phase 2B-L `SupabaseAdminReadClientResult` dependency shape. It
+fails closed when server env is missing, cookie reads fail, client creation
+fails, or no explicit session-bound client can be created. It is not approval
+to query `admin_users` or `memberships` outside the Phase 2B-L boundary, wire
+the client into runtime routes, pages, or server actions, add login/logout
+routes, add protected admin pages, add admin UI, add product/category/product
+image writes, add Supabase Storage, add service-role runtime paths, add
+browser Supabase, read headers, deploy, connect Supabase Cloud, change n8n
+workflows, add Pinecone runtime code, migrate Pinecone, access
+`website/chat-config.js`, or add SaaS chatbot app code.
+
 Further Phase 2 implementation work remains unapproved until scoped in a
 separate phase PR.
 

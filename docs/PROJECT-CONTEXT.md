@@ -180,6 +180,16 @@ Custom Chat UI -> POST /api/chat -> ChatProvider
   product/category/product image writes, Storage, browser Supabase,
   service-role runtime paths, deployment, Supabase Cloud, n8n workflows,
   Pinecone runtime code, `website/chat-config.js`, or SaaS chatbot app code.
+- Phase 2B-N adds a server-only session-bound admin read-client factory only.
+  The factory is restricted to
+  `website/lib/admin/authorization/supabase-admin-auth-identity-adapter.ts`,
+  the existing Phase 2B-K cookie/Auth server boundary. It creates a
+  session-bound Supabase SSR admin-read client from reviewed server-only
+  Supabase env plus request cookies and returns the Phase 2B-L
+  `SupabaseAdminReadClientResult` shape for future profile/membership reads.
+  It does not query `admin_users` or `memberships`, is not wired into runtime
+  routes, pages, server actions, protected admin runtime, login/logout, admin
+  UI, or product writes, and does not approve runtime admin auth completion.
 
 ## Current Status Pages
 
