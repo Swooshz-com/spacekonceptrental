@@ -270,3 +270,13 @@ request metadata adapter, requires explicit metadata to be passed into
 login/logout, protected admin pages, admin UI, product writes, Storage,
 browser Supabase, service-role paths, Supabase Cloud, deployment, n8n,
 Pinecone, and `website/chat-config.js` out of this PR.
+
+Phase 2B-V adds a server-only admin request metadata adapter boundary at
+`website/lib/admin/authorization/server-admin-request-metadata-adapter.ts`.
+It is the only newly approved production module in this phase that may import
+`next/headers` and call `headers()`. It reads only minimal untrusted request
+metadata for future injection into `resolveServerAdminAuthorizationGate()`,
+requires trusted expected Origin and expected Host through explicit dependency
+injection, and does not call the gate, preflight, decision, CSRF, adapter-set,
+Supabase, or product write boundaries. It does not approve runtime route,
+page, or server-action usage.

@@ -68,7 +68,7 @@ describe("Phase 2B-H admin auth resolution boundary", () => {
     expect(checklist).toContain(
       "- [ ] Cookie reads outside the Phase 2B-K server-only identity boundary."
     );
-    expect(checklist).toContain("- [ ] Header reads.");
+    expect(checklist).toContain("- [ ] Header reads outside the Phase 2B-V request metadata adapter.");
     expect(checklist).toContain("- [ ] Login/logout routes.");
     expect(checklist).toContain("- [ ] Protected admin pages.");
     expect(checklist).toContain("- [ ] Admin UI.");

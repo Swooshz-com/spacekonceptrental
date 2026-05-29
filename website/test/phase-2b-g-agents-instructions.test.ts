@@ -8,6 +8,8 @@ const repoRoot = resolve(process.cwd(), "..");
 const agentsPath = "AGENTS.md";
 const approvedAuthBoundaryPath =
   "website/lib/admin/authorization/supabase-admin-auth-identity-adapter.ts";
+const approvedRequestMetadataBoundaryPath =
+  "website/lib/admin/authorization/server-admin-request-metadata-adapter.ts";
 const sourceExtensions = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs"]);
 
 const expectedN8nWorkflowHashes = new Map([
@@ -202,7 +204,9 @@ describe("Phase 2B-G repo agent instructions refresh", () => {
       "website/lib"
     ]);
     const boundaryExcludedSources = productionSources.filter(
-      ({ filePath }) => filePath !== approvedAuthBoundaryPath
+      ({ filePath }) =>
+        filePath !== approvedAuthBoundaryPath &&
+        filePath !== approvedRequestMetadataBoundaryPath
     );
     const combinedSource = boundaryExcludedSources
       .map(({ source }) => source)

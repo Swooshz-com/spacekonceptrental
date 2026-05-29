@@ -6,6 +6,8 @@ import { describe, expect, it } from "vitest";
 const repoRoot = resolve(process.cwd(), "..");
 const approvedIdentityBoundaryPath =
   "website/lib/admin/authorization/supabase-admin-auth-identity-adapter.ts";
+const approvedRequestMetadataBoundaryPath =
+  "website/lib/admin/authorization/server-admin-request-metadata-adapter.ts";
 const approvedProfileMembershipBoundaryPath =
   "website/lib/admin/authorization/supabase-admin-profile-membership-adapters.ts";
 const approvedWorkspaceResolverBoundaryPath =
@@ -58,14 +60,14 @@ describe("Phase 2B-M server-only admin workspace resolution boundary", () => {
     const projectContext = readRepoFile("docs/PROJECT-CONTEXT.md");
 
     expect(status).toContain(
-      "Current phase: Phase 2B-U - admin runtime wiring approval lane."
+      "Current phase: Phase 2B-V - server-only admin request metadata adapter boundary."
     );
     expect(status).toContain(
-      "Latest completed phase: Phase 2B-T - server-only admin authorization gate composition boundary."
+      "Latest completed phase: Phase 2B-U - admin runtime wiring approval lane."
     );
-    expect(status).toContain("Last merged phase PR: #60");
+    expect(status).toContain("Last merged phase PR: #61");
     expect(status).toContain(
-      "Merge commit: `2052f33a68f4c4d141821264bfa8d757e5b23159`"
+      "Merge commit: `b772ab25d7746060d5e14afdebc4192860763935`"
     );
     expect(roadmap).toContain(
       "Phase 2B-M adds only the server-only admin workspace resolution boundary"
@@ -116,7 +118,7 @@ describe("Phase 2B-M server-only admin workspace resolution boundary", () => {
       "Real auth runtime wiring.",
       "Supabase Auth runtime wiring.",
       "Resolver/adapter runtime wiring into routes, pages, or server actions.",
-      "Header reads.",
+      "Header reads outside the Phase 2B-V request metadata adapter.",
       "Login/logout routes.",
       "Protected admin pages.",
       "Admin UI.",
@@ -153,7 +155,8 @@ describe("Phase 2B-M server-only admin workspace resolution boundary", () => {
     ]);
     const approvedSource = readRepoFile(approvedIdentityBoundaryPath);
     const outsideIdentityBoundary = productionSources
-      .filter(({ filePath }) => filePath !== approvedIdentityBoundaryPath)
+      .filter(({ filePath }) => filePath !== approvedIdentityBoundaryPath &&
+          filePath !== approvedRequestMetadataBoundaryPath)
       .map(({ source }) => source)
       .join("\n");
 
@@ -252,6 +255,7 @@ describe("Phase 2B-M server-only admin workspace resolution boundary", () => {
           !filePath.startsWith("website/app/api/") &&
           !filePath.startsWith("website/lib/supabase/") &&
           filePath !== approvedIdentityBoundaryPath &&
+          filePath !== approvedRequestMetadataBoundaryPath &&
           filePath !== approvedProfileMembershipBoundaryPath &&
           filePath !== approvedWorkspaceResolverBoundaryPath
       )

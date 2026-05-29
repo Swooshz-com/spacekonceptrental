@@ -10,8 +10,11 @@ implemented server-only session-bound admin read-client factory, and the Phase
 boundary, and the Phase 2B-P implemented server-only composed admin
 authorization decision boundary, and the Phase 2B-Q implemented server-only
 admin request security preflight boundary, and the Phase 2B-R implemented
-server-only CSRF proof verifier boundary, and the Phase 2B-S implemented
-server-only CSRF proof issuer boundary.
+server-only CSRF proof verifier boundary, the Phase 2B-S implemented
+server-only CSRF proof issuer boundary, the Phase 2B-T implemented
+server-only admin authorization gate composition boundary, the Phase 2B-U
+approved future admin runtime gate usage lane, and the Phase 2B-V implemented
+server-only admin request metadata adapter boundary.
 
 Phase 2B-E added auth provider/session/security design only.
 Phase 2B-J approves the future server-only Supabase Auth runtime lane only.
@@ -31,6 +34,9 @@ Phase 2B-R implements only the server-only CSRF proof verifier boundary.
 Phase 2B-S implements only the server-only CSRF proof issuer boundary.
 Phase 2B-T implements only the server-only admin authorization gate
 composition boundary.
+Phase 2B-U approves only the future admin runtime gate usage lane.
+Phase 2B-V implements only the server-only admin request metadata adapter
+boundary.
 
 Phase 2B-K cookie reads and Supabase Auth server calls are restricted to the
 server-only identity adapter named below.
@@ -53,8 +59,10 @@ named below.
 Phase 2B-T admin authorization gate composition is restricted to the
 server-only gate module named below.
 Phase 2B-U is docs/checklist approval only and does not add runtime wiring.
+Phase 2B-V request metadata reads are restricted to the server-only request
+metadata adapter named below.
 This document does not approve auth runtime wiring outside these boundaries.
-This document does not read headers.
+This document does not approve header reads outside the Phase 2B-V adapter.
 This document does not add login/logout routes.
 This document does not add protected admin pages.
 This document does not add admin UI.
@@ -364,6 +372,21 @@ Future runtime gate usage is not complete until tests prove:
 - No browser Supabase.
 - No service-role runtime path.
 - No `website/chat-config.js` access.
+
+## Phase 2B-V Implemented Admin Request Metadata Adapter Boundary
+
+`website/lib/admin/authorization/server-admin-request-metadata-adapter.ts` is the only newly approved production module in this phase that may import `next/headers` and call `headers()`.
+
+The adapter reads only untrusted request metadata for future injection into `resolveServerAdminAuthorizationGate()` and does not call the gate. It may collect request method from explicit injected input, request Origin and Host from request headers, optional request ID, and optional CSRF proof. Trusted expected Origin and expected Host must be supplied through explicit dependency/config injection rather than request headers, env reads, or deployment metadata.
+
+Missing trusted expected Origin or expected Host fails closed. Header read failures and dependency throws return only safe unavailable shapes. Missing request Origin or Host may be represented as absent untrusted metadata so the Phase 2B-Q preflight can deny it safely when the gate is used in a later approved runtime PR.
+
+Header values remain validation metadata only. They are not identity, membership, workspace, provider, session, or authorization authority, and workspace IDs from headers must not be parsed or trusted as authority.
+
+Creating this metadata adapter does not approve using it from runtime routes, pages, server actions, protected admin pages, login/logout, admin UI, or product writes.
+
+The adapter does not call the Phase 2B-T gate, Phase 2B-Q preflight, Phase 2B-P decision boundary, Phase 2B-R verifier, Phase 2B-S issuer, Phase 2B-O adapter-set composition, Supabase Auth, `admin_users`, `memberships`, product write logic, Storage, n8n, Pinecone, or `website/chat-config.js`.
+
 ## Phase 2B-L Implemented Profile And Membership Read Boundary
 
 `website/lib/admin/authorization/supabase-admin-profile-membership-adapters.ts` is the only approved module for Supabase `admin_users` and `memberships` table reads in this phase.
@@ -442,7 +465,7 @@ This document does not:
   or server actions.
 - Use the Phase 2B-S CSRF proof issuer boundary from runtime routes, pages, or
   server actions.
-- Read headers.
+- Read headers outside the Phase 2B-V request metadata adapter.
 - Add login/logout routes.
 - Add protected admin pages.
 - Add admin UI.
