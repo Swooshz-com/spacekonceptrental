@@ -326,6 +326,24 @@ UI, add product/category/product image writes, add Supabase Storage, add
 service-role runtime paths, add browser Supabase, deploy, connect Supabase
 Cloud, change n8n workflows, add Pinecone runtime code, migrate Pinecone,
 access `website/chat-config.js`, or add SaaS chatbot app code.
+Phase 2B-U adds only the admin runtime wiring approval lane for future use of
+the Phase 2B-T server-only admin authorization gate. This phase is docs and
+checklists only. It approves a future first runtime integration boundary
+limited to first-party server-only route handlers or server actions, with real
+request header reads allowed only inside a future reviewed server-only request
+metadata adapter. That future adapter must pass explicit request metadata into
+`resolveServerAdminAuthorizationGate()`, preserve preflight-before-decision
+ordering, keep Supabase Auth cookie reads only inside the Phase 2B-K identity
+boundary, keep `admin_users` and `memberships` reads only inside the Phase
+2B-L profile/membership boundary, keep workspace resolution only inside the
+Phase 2B-M workspace resolver, keep CSRF proof issuance and verification
+inside the Phase 2B-S and Phase 2B-R boundaries, and return generic errors
+without provider internals. It is not approval to add runtime route handlers,
+pages, server actions, header reads, login/logout routes, protected admin
+pages, admin UI, product/category/product image writes, Supabase Storage,
+service-role runtime paths, browser Supabase, Supabase Cloud, deployment,
+real env values, n8n workflow changes, Pinecone runtime code, or
+`website/chat-config.js` access.
 Further Phase 2 implementation work remains unapproved until scoped in a
 separate phase PR.
 

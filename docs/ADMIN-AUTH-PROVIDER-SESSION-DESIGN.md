@@ -50,6 +50,9 @@ Phase 2B-R CSRF proof verification is restricted to the server-only verifier
 module named below.
 Phase 2B-S CSRF proof issuance is restricted to the server-only issuer module
 named below.
+Phase 2B-T admin authorization gate composition is restricted to the
+server-only gate module named below.
+Phase 2B-U is docs/checklist approval only and does not add runtime wiring.
 This document does not approve auth runtime wiring outside these boundaries.
 This document does not read headers.
 This document does not add login/logout routes.
@@ -332,6 +335,35 @@ The gate runs the Phase 2B-Q request security preflight before the Phase 2B-P co
 Creating this gate does not approve using it from runtime routes, pages, server actions, protected admin pages, login/logout, admin UI, or product writes.
 
 The gate module does not import `next/headers`, `@supabase/ssr`, `@supabase/supabase-js`, public catalogue workspace config, n8n, Pinecone, or `website/chat-config.js`. It does not read headers, read cookies, read env, call Supabase Auth, query `admin_users` or `memberships`, create a session-bound admin read client directly, compose adapter sets directly, issue CSRF proofs, duplicate admin role or membership policy logic, use service-role keys, create browser Supabase clients, add product writes, add Storage, connect Supabase Cloud, deploy, change n8n workflows, or add Pinecone runtime code.
+
+## Phase 2B-U Approved Future Admin Runtime Gate Usage Lane
+
+A future runtime PR may call `resolveServerAdminAuthorizationGate()` only from a first-party server-only route handler or server action after a reviewed request metadata adapter exists.
+
+The future request metadata adapter is the only future place where real request headers may be read, and it must pass explicit method, Origin, Host, expected Origin, expected Host, request ID, operation, workspace validation, and CSRF proof metadata into the gate. Header values remain untrusted validation inputs; they must not become identity, membership, workspace, or provider authority.
+
+The future runtime lane must keep Supabase Auth cookie reads only inside `supabase-admin-auth-identity-adapter.ts`, keep `admin_users` and `memberships` reads only inside `supabase-admin-profile-membership-adapters.ts`, keep trusted workspace resolution only inside `server-admin-workspace-resolver.ts`, keep session-bound admin read-client creation only inside the Phase 2B-K/N identity boundary, keep adapter-set composition only inside `server-admin-authorization-adapter-set.ts`, and keep CSRF proof issuing and verification behind the Phase 2B-S issuer and Phase 2B-R verifier boundaries.
+
+Preflight-before-decision ordering must be preserved by using the Phase 2B-T gate. CSRF proof plus Origin/Host validation must run before any state-changing admin route or server action reaches authorization. Future login/logout work must validate safe same-origin redirects and return generic errors without provider internals.
+
+Phase 2B-U does not add that metadata adapter, route handler, page, server action, header read, login/logout route, protected admin page, admin UI, product write, Supabase Cloud connection, deployment config, or real env value.
+
+Future runtime gate usage is not complete until tests prove:
+
+- Anonymous denial.
+- Expired session denial.
+- Missing or inactive admin profile denial.
+- Missing, inactive, or wrong-actor membership denial.
+- Cross-workspace denial.
+- Viewer write denial.
+- Admin allowed access.
+- Owner membership-management allowed access.
+- Missing, invalid, stale, replayed, or mismatched CSRF proof denial.
+- Origin/Host mismatch denial.
+- Safe unavailable result on dependency failure.
+- No browser Supabase.
+- No service-role runtime path.
+- No `website/chat-config.js` access.
 ## Phase 2B-L Implemented Profile And Membership Read Boundary
 
 `website/lib/admin/authorization/supabase-admin-profile-membership-adapters.ts` is the only approved module for Supabase `admin_users` and `memberships` table reads in this phase.

@@ -261,3 +261,12 @@ admin authorization decision, may inject the Phase 2B-R CSRF proof verifier
 when verifier dependencies are supplied, returns only safe allow, deny, or
 unavailable shapes, and is not wired into runtime routes, pages, server
 actions, protected admin pages, login/logout, admin UI, or product writes.
+Phase 2B-U adds a docs/checklist-only admin runtime wiring approval lane for
+future use of the Phase 2B-T server-only admin authorization gate. The future
+lane is limited to first-party server-only route handlers or server actions,
+allows real request header reads only inside a future reviewed server-only
+request metadata adapter, requires explicit metadata to be passed into
+`resolveServerAdminAuthorizationGate()`, and keeps runtime implementation,
+login/logout, protected admin pages, admin UI, product writes, Storage,
+browser Supabase, service-role paths, Supabase Cloud, deployment, n8n,
+Pinecone, and `website/chat-config.js` out of this PR.

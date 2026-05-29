@@ -293,7 +293,18 @@ variables such as `N8N_CHAT_WEBHOOK_URL`.
   actions, add login/logout routes, protected admin pages, admin UI, product
   writes, Storage, browser Supabase, service-role runtime paths, deployment,
   Supabase Cloud, n8n workflow changes, Pinecone runtime code, or SaaS
-  chatbot app code.- Future admin auth must remain server-side. Future session cookies must be
+  chatbot app code.
+- Phase 2B-U admin runtime wiring approval lane is docs/checklist approval only.
+  It approves only a future first-party server-only route handler or server
+  action lane for calling `resolveServerAdminAuthorizationGate()` after a
+  reviewed request metadata adapter exists. Real request headers may be read
+  only inside that future reviewed server-only metadata adapter. Phase 2B-U
+  does not add that adapter, runtime routes, pages, server actions, header
+  reads, login/logout routes, protected admin pages, admin UI, product writes,
+  Storage, browser Supabase, service-role runtime paths, deployment, Supabase
+  Cloud, real env values, n8n workflow changes, Pinecone runtime code, or
+  `website/chat-config.js` access.
+- Future admin auth must remain server-side. Future session cookies must be
   HttpOnly, Secure in production, and have reviewed SameSite behaviour. Future
   state-changing admin routes/server actions need CSRF strategy before
   implementation.

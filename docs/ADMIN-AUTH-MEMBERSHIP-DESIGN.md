@@ -230,6 +230,20 @@ create a session-bound admin read client directly, compose adapter sets
 directly, duplicate admin role/membership policy logic, or wire itself into
 runtime routes, pages, server actions, protected admin pages, login/logout,
 admin UI, or product writes.
+
+Phase 2B-U adds a docs/checklist-only admin runtime wiring approval lane for
+future use of `resolveServerAdminAuthorizationGate()`. The future lane is
+limited to first-party server-only route handlers or server actions after a
+reviewed request metadata adapter exists. Real request headers may be read
+only inside that future server-only metadata adapter, which must pass explicit
+metadata into the Phase 2B-T gate. Cookie reads, profile/membership reads,
+workspace resolution, adapter-set composition, decision resolution, CSRF proof
+issuance, and CSRF proof verification remain restricted to their existing
+Phase 2B-K through Phase 2B-T boundaries. This phase does not add runtime
+routes, pages, server actions, header reads, login/logout, protected admin
+pages, admin UI, product/category/product image writes, Supabase Storage,
+browser Supabase, service-role runtime paths, Supabase Cloud, deployment,
+n8n changes, Pinecone runtime code, or `website/chat-config.js` access.
 ## Non-goals
 
 This design does not:
