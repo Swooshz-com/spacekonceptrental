@@ -234,6 +234,15 @@ variables such as `N8N_CHAT_WEBHOOK_URL`.
   writes, Storage, browser Supabase, service-role runtime paths, deployment,
   Supabase Cloud, n8n workflow changes, Pinecone runtime code, or SaaS chatbot
   app code.
+- Phase 2B-O server-only admin authorization adapter-set composition boundary is approved only as a server-only composition module
+  at `website/lib/admin/authorization/server-admin-authorization-adapter-set.ts`.
+  It may assemble the existing identity, profile, membership, and workspace
+  adapter contracts when a session-bound admin read client and trusted
+  server-side workspace input are available. It is not approval to use that
+  adapter set from runtime routes, pages, or server actions, add login/logout
+  routes, protected admin pages, admin UI, product writes, Storage, browser
+  Supabase, service-role runtime paths, deployment, Supabase Cloud, n8n
+  workflow changes, Pinecone runtime code, or SaaS chatbot app code.
 - Future admin auth must remain server-side. Future session cookies must be
   HttpOnly, Secure in production, and have reviewed SameSite behaviour. Future
   state-changing admin routes/server actions need CSRF strategy before

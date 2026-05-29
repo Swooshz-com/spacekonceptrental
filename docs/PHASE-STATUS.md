@@ -4,22 +4,23 @@ This is the quick status page for the SKR repo. Use `docs/PHASE-2-READINESS-PLAN
 
 ## Current phase
 
-Current phase: Phase 2B-N - server-only session-bound admin read-client factory.
+Current phase: Phase 2B-O - server-only admin authorization adapter-set composition boundary.
 
-This PR adds the smallest server-only session-bound admin read-client factory
-needed for future Phase 2B-L profile/membership reads. The factory lives inside
-the Phase 2B-K identity boundary, reuses the reviewed server-only Supabase URL,
-anon key, and request-cookie path, returns the Phase 2B-L
-`SupabaseAdminReadClientResult` dependency shape, and fails closed when env,
-cookie reads, or client creation are unavailable. It does not query
-`admin_users` or `memberships`, does not wire the client into runtime routes,
-pages, or server actions, and does not make runtime admin auth complete.
+This PR adds the smallest server-only composition boundary that assembles the
+existing admin authorization adapters into an `AdminAuthorizationAdapterSet`.
+The composition module depends only on the existing Phase 2B-K/N identity and
+session-bound read-client boundary, the Phase 2B-L profile/membership read
+boundary, and the Phase 2B-M trusted workspace resolver boundary. It fails
+closed when the session-bound admin read client or trusted server-side
+workspace input is unavailable. It does not wire the adapter set into runtime
+routes, pages, server actions, protected admin pages, login/logout, admin UI,
+or product writes, and it does not make runtime admin auth complete.
 
-Latest completed phase: Phase 2B-M - server-only admin workspace resolution boundary.
+Latest completed phase: Phase 2B-N - server-only session-bound admin read-client factory.
 
-Last merged phase PR: #53
+Last merged phase PR: #54
 
-Merge commit: `317fbe6c14bebd41901b16c6729fb600116ebc33`
+Merge commit: `f6f56979dac206c06d7957d3d968a5ffa3468304`
 
 ## Completed foundation
 
@@ -59,7 +60,8 @@ Vercel config, add real env values, or add runtime features.
 - Server-only Supabase Auth identity/session-read boundary is complete.
 - Server-only Supabase admin profile/membership read boundary is complete.
 - Server-only admin workspace resolution boundary is complete.
-- Server-only session-bound admin read-client factory is in progress.
+- Server-only session-bound admin read-client factory is complete.
+- Server-only admin authorization adapter-set composition boundary is in progress.
 
 Supabase Auth is approved as the future server-side admin auth provider. The
 Phase 2B-K identity boundary remains the only approved place to read Supabase
@@ -69,11 +71,14 @@ profile/membership boundary is the only approved place in this phase to read
 workspace resolver boundary is the only approved place in this phase to
 resolve trusted admin workspace scope. The Phase 2B-N session-bound admin
 read-client factory is restricted to the Phase 2B-K identity boundary and is
-not a runtime wiring approval. These boundaries are not wired into routes,
-pages, server actions, protected admin runtime, login/logout, admin UI, or
-product writes.
+not a runtime wiring approval. The Phase 2B-O adapter-set composition boundary
+is restricted to composing those existing server-only contracts and is not a
+runtime wiring approval. These boundaries are not wired into routes, pages,
+server actions, protected admin runtime, login/logout, admin UI, or product
+writes.
 
 Runtime session-bound read-client usage remains deferred.
+Runtime adapter-set usage remains deferred.
 
 ## Still blocked
 
@@ -86,6 +91,8 @@ Runtime session-bound read-client usage remains deferred.
   boundary.
 - Session-bound admin read-client factory usage from runtime routes, pages, or
   server actions.
+- Admin authorization adapter-set usage from runtime routes, pages, or server
+  actions.
 - Header reads.
 - Login/logout routes.
 - Protected admin pages.
@@ -133,8 +140,7 @@ architecture.
 
 The next recommended PR should still avoid product writes. A safe next PR can
 continue auth readiness by adding the next explicitly approved server-only
-workspace or resolver boundary, but real runtime route/page/server-action
-wiring, cookie reads outside the reviewed identity boundary, headers,
-login/logout routes, protected admin pages, admin UI, and
-product/category/product image writes remain blocked until separately
-approved.
+boundary, but real runtime route/page/server-action wiring, cookie reads
+outside the reviewed identity boundary, headers, login/logout routes,
+protected admin pages, admin UI, and product/category/product image writes
+remain blocked until separately approved.

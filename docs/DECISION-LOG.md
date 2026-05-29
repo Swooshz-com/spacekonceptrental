@@ -579,3 +579,30 @@ not call Supabase Auth from the read-client factory, does not read headers, use
 service-role keys, add browser Supabase, add Supabase Storage, deploy, connect
 Supabase Cloud, change n8n workflows, add Pinecone runtime code, access
 `website/chat-config.js`, or make runtime admin auth complete.
+
+## 2026-05-29: Server-only Admin Authorization Adapter-set Composition Boundary
+
+Decision: Phase 2B-O adds only the server-only admin authorization adapter-set composition boundary.
+
+The approved implementation boundary is
+`website/lib/admin/authorization/server-admin-authorization-adapter-set.ts`.
+It composes the existing `AdminAuthAdapter`, `AdminProfileAdapter`,
+`AdminMembershipAdapter`, and `AdminWorkspaceResolver` contracts by assembling
+the reviewed Phase 2B-K/N Supabase Auth identity and session-bound read-client
+boundary, the Phase 2B-L profile/membership read boundary, and the Phase 2B-M
+trusted workspace resolver boundary. The factory returns an
+`AdminAuthorizationAdapterSet` only when the session-bound admin read client
+and trusted server-side workspace input are available; otherwise it fails
+closed with a safe unavailable result.
+
+Reason: Phase 2B-N created the missing session-bound admin read-client
+factory, while Phase 2B-L profile/membership adapters and Phase 2B-M workspace
+resolution remained unwired. The next safe step is a server-only composition
+boundary for future runtime use without importing route/page/server-action
+code or completing runtime admin auth. This phase does not use the adapter set
+from runtime routes, pages, or server actions, add login/logout routes, add
+protected admin pages, add admin UI, add product/category/product image writes,
+add Supabase Storage, use service-role keys, add browser Supabase, read
+headers, deploy, connect Supabase Cloud, change n8n workflows, add Pinecone
+runtime code, access `website/chat-config.js`, or make runtime admin auth
+complete.

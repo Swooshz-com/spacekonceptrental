@@ -5,7 +5,9 @@ the Phase 2B-J approved future admin auth runtime lane, the Phase 2B-K
 implemented server-only identity/session-read boundary, and the Phase 2B-L
 implemented server-only profile/membership read boundary, and the Phase 2B-M
 implemented server-only workspace resolution boundary, and the Phase 2B-N
-implemented server-only session-bound admin read-client factory.
+implemented server-only session-bound admin read-client factory, and the Phase
+2B-O implemented server-only admin authorization adapter-set composition
+boundary.
 
 Phase 2B-E added auth provider/session/security design only.
 Phase 2B-J approves the future server-only Supabase Auth runtime lane only.
@@ -15,6 +17,8 @@ boundary.
 Phase 2B-M implements only the server-only admin workspace resolution boundary.
 Phase 2B-N implements only the server-only session-bound admin read-client
 factory.
+Phase 2B-O implements only the server-only admin authorization adapter-set
+composition boundary.
 
 Phase 2B-K cookie reads and Supabase Auth server calls are restricted to the
 server-only identity adapter named below.
@@ -24,7 +28,9 @@ Phase 2B-M admin workspace resolution is restricted to the server-only
 workspace resolver named below.
 Phase 2B-N session-bound admin read-client creation is restricted to the
 server-only identity adapter named below.
-This document does not approve auth runtime wiring outside that boundary.
+Phase 2B-O adapter-set composition is restricted to the server-only
+composition module named below.
+This document does not approve auth runtime wiring outside these boundaries.
 This document does not read headers.
 This document does not add login/logout routes.
 This document does not add protected admin pages.
@@ -156,6 +162,30 @@ Supabase clients, does not add product writes, does not add Storage, does not
 connect Supabase Cloud, does not deploy, does not change n8n workflows, does
 not add Pinecone runtime code, and does not access `website/chat-config.js`.
 
+## Phase 2B-O Implemented Adapter-set Composition Boundary
+
+`website/lib/admin/authorization/server-admin-authorization-adapter-set.ts` is the only approved module for composing the admin authorization adapter set in this phase.
+
+The composition boundary returns an `AdminAuthorizationAdapterSet` only when the session-bound admin read client and trusted server-side workspace input are both available.
+
+It composes the existing `AdminAuthAdapter`, `AdminProfileAdapter`,
+`AdminMembershipAdapter`, and `AdminWorkspaceResolver` contracts by using the
+Phase 2B-K/N identity and session-bound read-client boundary, the Phase 2B-L
+profile/membership read boundary, and the Phase 2B-M workspace resolver
+boundary. Missing server env, cookie-read failure, client-factory failure,
+missing session-bound client, missing trusted workspace input, or workspace
+provider failure returns a safe unavailable result without exposing cookies,
+tokens, env values, Supabase internals, SQL, provider details, stack traces,
+or membership details.
+
+Composing this adapter set does not approve using it from runtime routes, pages, server actions, protected admin pages, login/logout, admin UI, or product writes.
+
+The composition module does not import `next/headers`, `@supabase/ssr`,
+`@supabase/supabase-js`, public catalogue workspace config, n8n, Pinecone, or
+`website/chat-config.js`. It does not read headers, use service-role keys,
+create browser Supabase clients, add product writes, add Storage, connect
+Supabase Cloud, deploy, change n8n workflows, or add Pinecone runtime code.
+
 ## Phase 2B-L Implemented Profile And Membership Read Boundary
 
 `website/lib/admin/authorization/supabase-admin-profile-membership-adapters.ts` is the only approved module for Supabase `admin_users` and `memberships` table reads in this phase.
@@ -224,6 +254,8 @@ This document does not:
   boundary.
 - Use the Phase 2B-N session-bound admin read-client factory from runtime
   routes, pages, or server actions.
+- Use the Phase 2B-O admin authorization adapter-set composition boundary from
+  runtime routes, pages, or server actions.
 - Read headers.
 - Add login/logout routes.
 - Add protected admin pages.

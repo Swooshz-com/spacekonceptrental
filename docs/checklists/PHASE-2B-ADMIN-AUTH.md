@@ -27,11 +27,12 @@ one; live read-client wiring remains deferred. Phase 2B-M adds only the
 server-only admin workspace resolution boundary behind an explicitly injected
 trusted server-side workspace ID. Phase 2B-N adds only the server-only
 session-bound admin read-client factory inside the Phase 2B-K identity
-boundary. Keep real auth runtime wiring, factory usage from runtime
-routes/pages/actions, headers, login/logout routes, protected admin pages,
-admin UI, product management writes, browser Supabase, service-role runtime
-paths, deployment, and Supabase Cloud work unchecked until a future PR has
-explicit approval.
+boundary. Phase 2B-O adds only the server-only admin authorization adapter-set
+composition boundary. Keep real auth runtime wiring, factory or adapter-set
+usage from runtime routes/pages/actions, headers, login/logout routes,
+protected admin pages, admin UI, product management writes, browser Supabase,
+service-role runtime paths, deployment, and Supabase Cloud work unchecked
+until a future PR has explicit approval.
 
 ## Completed Design, Policy, Resolver, Adapter, And Provider-session Milestones
 
@@ -52,6 +53,7 @@ explicit approval.
 - [x] Add server-only Supabase admin profile/membership read boundary.
 - [x] Add server-only admin workspace resolution boundary.
 - [x] Add server-only session-bound admin read-client factory.
+- [x] Add server-only admin authorization adapter-set composition boundary.
 
 ## Design References
 
@@ -107,6 +109,7 @@ runtime implementation approval.
 - [ ] Admin profile/membership Supabase table reads outside the Phase 2B-L server-only read boundary.
 - [ ] Admin workspace resolution outside the Phase 2B-M server-only workspace boundary.
 - [ ] Session-bound admin read-client factory usage from runtime routes, pages, or server actions.
+- [ ] Admin authorization adapter-set usage from runtime routes, pages, or server actions.
 - [ ] Header reads.
 - [ ] Login/logout routes.
 - [ ] Protected admin pages.

@@ -46,17 +46,17 @@ function expectChecked(markdown: string, item: string) {
 }
 
 describe("Phase 2B-I admin auth gate cleanup", () => {
-  it("records the current phase and latest completed Phase 2B-N base state", () => {
+  it("records the current phase and latest completed Phase 2B-O base state", () => {
     const status = readRepoFile("docs/PHASE-STATUS.md");
     const roadmap = readRepoFile("docs/PHASE-ROADMAP.md");
     const decisionLog = readRepoFile("docs/DECISION-LOG.md");
 
     expect(status).toContain(
-      "Latest completed phase: Phase 2B-M - server-only admin workspace resolution boundary."
+      "Latest completed phase: Phase 2B-N - server-only session-bound admin read-client factory."
     );
-    expect(status).toContain("Last merged phase PR: #53");
+    expect(status).toContain("Last merged phase PR: #54");
     expect(status).toContain(
-      "Merge commit: `317fbe6c14bebd41901b16c6729fb600116ebc33`"
+      "Merge commit: `f6f56979dac206c06d7957d3d968a5ffa3468304`"
     );
     expect(roadmap).toContain(
       "Phase 2B-I cleans admin auth implementation gate wording and refines"
@@ -80,7 +80,7 @@ describe("Phase 2B-I admin auth gate cleanup", () => {
       "- Phase 2B-H strengthened the reviewed server-side auth/membership resolution boundary with fake-adapter tests only."
     );
     expect(design).toContain(
-      "Latest completed admin/auth boundary state: Phase 2B-N server-only"
+      "Latest completed admin/auth boundary state: Phase 2B-O server-only"
     );
     expect(design).not.toContain("This PR");
   });

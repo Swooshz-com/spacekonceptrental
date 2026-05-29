@@ -190,6 +190,16 @@ Custom Chat UI -> POST /api/chat -> ChatProvider
   It does not query `admin_users` or `memberships`, is not wired into runtime
   routes, pages, server actions, protected admin runtime, login/logout, admin
   UI, or product writes, and does not approve runtime admin auth completion.
+- Phase 2B-O adds a server-only admin authorization adapter-set composition boundary
+  only. The composition module is restricted to
+  `website/lib/admin/authorization/server-admin-authorization-adapter-set.ts`.
+  It assembles the existing admin authorization adapter contracts from the
+  reviewed Phase 2B-K/N identity/read-client, Phase 2B-L
+  profile/membership, and Phase 2B-M workspace resolver boundaries. It fails
+  closed without a session-bound admin read client or trusted server-side
+  workspace input, is not wired into runtime routes, pages, server actions,
+  protected admin runtime, login/logout, admin UI, or product writes, and does
+  not approve runtime admin auth completion.
 
 ## Current Status Pages
 
