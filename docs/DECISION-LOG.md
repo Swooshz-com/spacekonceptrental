@@ -658,3 +658,30 @@ add product/category/product image writes, add Supabase Storage, use
 service-role keys, add browser Supabase, deploy, connect Supabase Cloud,
 change n8n workflows, add Pinecone runtime code, access
 `website/chat-config.js`, or make runtime admin auth complete.
+
+## 2026-05-29: Server-only CSRF Proof Verifier Boundary
+
+Decision: Phase 2B-R adds only the server-only CSRF proof verifier boundary.
+
+The approved implementation boundary is
+`website/lib/admin/authorization/server-admin-csrf-proof-verifier.ts`. It
+validates only explicitly injected proof material, expected session binding,
+expected nonce, injected timestamps, and dependency-injected signature or
+replay checks. It parses the simple structured
+`base64url(JSON payload).base64url(signature)` proof shape and returns only
+Phase 2B-Q-compatible verifier results: valid or one of the safe CSRF proof
+failure reasons.
+
+Reason: Phase 2B-Q added the request security preflight validator and requires
+an injected CSRF verifier for future state-changing admin operations. The next
+safe step is to add the verifier boundary without issuing tokens, reading real
+headers, reading cookies, reading env, calling Supabase, or wiring the
+verifier into runtime routes, pages, server actions, protected admin pages,
+login/logout, admin UI, or product writes. This phase does not use the
+verifier from runtime routes, pages, or server actions, read headers, read
+cookies, call Supabase Auth, query `admin_users` or `memberships`, compose the
+adapter set, call the decision boundary, add login/logout routes, add
+protected admin pages, add admin UI, add product/category/product image writes,
+add Supabase Storage, use service-role keys, add browser Supabase, deploy,
+connect Supabase Cloud, change n8n workflows, add Pinecone runtime code,
+access `website/chat-config.js`, or make runtime admin auth complete.

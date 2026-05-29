@@ -9,7 +9,8 @@ implemented server-only session-bound admin read-client factory, and the Phase
 2B-O implemented server-only admin authorization adapter-set composition
 boundary, and the Phase 2B-P implemented server-only composed admin
 authorization decision boundary, and the Phase 2B-Q implemented server-only
-admin request security preflight boundary.
+admin request security preflight boundary, and the Phase 2B-R implemented
+server-only CSRF proof verifier boundary.
 
 Phase 2B-E added auth provider/session/security design only.
 Phase 2B-J approves the future server-only Supabase Auth runtime lane only.
@@ -25,6 +26,7 @@ Phase 2B-P implements only the server-only composed admin authorization
 decision boundary.
 Phase 2B-Q implements only the server-only admin request security preflight
 boundary.
+Phase 2B-R implements only the server-only CSRF proof verifier boundary.
 
 Phase 2B-K cookie reads and Supabase Auth server calls are restricted to the
 server-only identity adapter named below.
@@ -40,6 +42,8 @@ Phase 2B-P composed decision resolution is restricted to the server-only
 decision module named below.
 Phase 2B-Q request security preflight validation is restricted to the
 server-only preflight module named below.
+Phase 2B-R CSRF proof verification is restricted to the server-only verifier
+module named below.
 This document does not approve auth runtime wiring outside these boundaries.
 This document does not read headers.
 This document does not add login/logout routes.
@@ -249,6 +253,39 @@ service-role keys, create browser Supabase clients, add product writes, add
 Storage, connect Supabase Cloud, deploy, change n8n workflows, or add Pinecone
 runtime code.
 
+## Phase 2B-R Implemented CSRF Proof Verifier Boundary
+
+`website/lib/admin/authorization/server-admin-csrf-proof-verifier.ts` is the only approved module for validating structured CSRF proofs in this phase.
+
+The verifier validates only explicitly injected proof material and dependency-injected signature or replay checks.
+
+It accepts the Phase 2B-Q `verifyCsrfProof` dependency input shape and returns
+only Phase 2B-Q-compatible results. It can be injected into the Phase 2B-Q
+preflight validator in isolated unit tests, but it is not wired into runtime
+routes, pages, or server actions.
+
+The verifier parses a simple structured
+`base64url(JSON payload).base64url(signature)` proof shape. The payload may
+include operation, session binding, nonce, issued-at timestamp, and expiry
+timestamp. Operation, expected session binding, expected nonce, freshness,
+expiry, replay state, and signature validity are validated only from explicit
+injected inputs or injected verifier dependencies. Missing proof, malformed
+proof, operation mismatch, session binding mismatch, missing nonce, invalid
+timestamps, stale proof, expired proof, replayed proof, invalid signature,
+missing signature verifier, signature verifier throws, and replay checker
+throws fail closed with safe CSRF proof reasons.
+
+Creating this CSRF verifier does not approve using it from runtime routes, pages, server actions, protected admin pages, login/logout, admin UI, or product writes.
+
+The verifier module does not import `next/headers`, `@supabase/ssr`,
+`@supabase/supabase-js`, public catalogue workspace config, n8n, Pinecone, or
+`website/chat-config.js`. It does not read headers, read cookies, read env,
+call Supabase Auth, query `admin_users` or `memberships`, create a
+session-bound admin read client, compose the adapter set, call the composed
+decision boundary, use service-role keys, create browser Supabase clients,
+issue CSRF tokens, add product writes, add Storage, connect Supabase Cloud,
+deploy, change n8n workflows, or add Pinecone runtime code.
+
 ## Phase 2B-L Implemented Profile And Membership Read Boundary
 
 `website/lib/admin/authorization/supabase-admin-profile-membership-adapters.ts` is the only approved module for Supabase `admin_users` and `memberships` table reads in this phase.
@@ -323,6 +360,8 @@ This document does not:
   runtime routes, pages, or server actions.
 - Use the Phase 2B-Q admin request security preflight boundary from runtime
   routes, pages, or server actions.
+- Use the Phase 2B-R CSRF proof verifier boundary from runtime routes, pages,
+  or server actions.
 - Read headers.
 - Add login/logout routes.
 - Add protected admin pages.

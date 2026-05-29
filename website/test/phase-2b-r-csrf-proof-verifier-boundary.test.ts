@@ -16,6 +16,8 @@ const approvedDecisionBoundaryPath =
   "website/lib/admin/authorization/server-admin-authorization-decision.ts";
 const approvedPreflightBoundaryPath =
   "website/lib/admin/authorization/server-admin-request-security-preflight.ts";
+const approvedCsrfVerifierBoundaryPath =
+  "website/lib/admin/authorization/server-admin-csrf-proof-verifier.ts";
 const sourceExtensions = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs"]);
 
 function readRepoFile(relativePath: string) {
@@ -56,8 +58,8 @@ function expectUnchecked(markdown: string, item: string) {
   expect(markdown).toContain(`- [ ] ${item}`);
 }
 
-describe("Phase 2B-Q server-only admin request security preflight boundary", () => {
-  it("records Phase 2B-Q status, roadmap, decision-log, and project context scope", () => {
+describe("Phase 2B-R server-only CSRF proof verifier boundary", () => {
+  it("records Phase 2B-R status, roadmap, decision-log, and project context scope", () => {
     const status = readRepoFile("docs/PHASE-STATUS.md");
     const roadmap = readRepoFile("docs/PHASE-ROADMAP.md");
     const decisionLog = readRepoFile("docs/DECISION-LOG.md");
@@ -74,17 +76,17 @@ describe("Phase 2B-Q server-only admin request security preflight boundary", () 
       "Merge commit: `1151aa5546aa6f2e30537e03da9e7a77fbb13e74`"
     );
     expect(roadmap).toContain(
-      "Phase 2B-Q adds only the server-only admin request security preflight boundary"
+      "Phase 2B-R adds only the server-only CSRF proof verifier boundary"
     );
     expect(decisionLog).toContain(
-      "Decision: Phase 2B-Q adds only the server-only admin request security preflight boundary"
+      "Decision: Phase 2B-R adds only the server-only CSRF proof verifier boundary"
     );
     expect(projectContext).toContain(
-      "Phase 2B-Q adds a server-only admin request security preflight boundary"
+      "Phase 2B-R adds a server-only CSRF proof verifier boundary"
     );
   });
 
-  it("documents the implemented preflight boundary and checklist state", () => {
+  it("documents the implemented CSRF verifier boundary and checklist state", () => {
     const design = readRepoFile("docs/ADMIN-AUTH-PROVIDER-SESSION-DESIGN.md");
     const membershipDesign = readRepoFile(
       "docs/ADMIN-AUTH-MEMBERSHIP-DESIGN.md"
@@ -98,31 +100,28 @@ describe("Phase 2B-Q server-only admin request security preflight boundary", () 
     );
 
     expect(design).toContain(
-      "## Phase 2B-Q Implemented Request Security Preflight Boundary"
+      "## Phase 2B-R Implemented CSRF Proof Verifier Boundary"
     );
     expect(design).toContain(
-      "`website/lib/admin/authorization/server-admin-request-security-preflight.ts` is the only approved module for validating admin request security preflight in this phase."
+      "`website/lib/admin/authorization/server-admin-csrf-proof-verifier.ts` is the only approved module for validating structured CSRF proofs in this phase."
     );
     expect(design).toContain(
-      "The preflight boundary validates only explicitly injected request metadata and optional injected CSRF verifier results."
+      "The verifier validates only explicitly injected proof material and dependency-injected signature or replay checks."
     );
     expect(design).toContain(
-      "Creating this preflight validator does not approve using it from runtime routes, pages, server actions, protected admin pages, login/logout, admin UI, or product writes."
+      "Creating this CSRF verifier does not approve using it from runtime routes, pages, server actions, protected admin pages, login/logout, admin UI, or product writes."
     );
     expect(membershipDesign).toContain(
-      "Phase 2B-Q adds a server-only admin request security preflight boundary"
+      "Phase 2B-R adds a server-only CSRF proof verifier boundary"
     );
     expect(safety).toContain(
-      "Phase 2B-Q server-only admin request security preflight boundary is approved only as a server-only validator module"
+      "Phase 2B-R server-only CSRF proof verifier boundary is approved only as a server-only verifier module"
     );
 
-    expectChecked(
-      authChecklist,
-      "Server-only admin request security preflight boundary."
-    );
+    expectChecked(authChecklist, "Server-only CSRF proof verifier boundary.");
     expectChecked(
       adminAuthChecklist,
-      "Add server-only admin request security preflight boundary."
+      "Add server-only CSRF proof verifier boundary."
     );
 
     for (const item of [
@@ -133,6 +132,7 @@ describe("Phase 2B-Q server-only admin request security preflight boundary", () 
       "Admin authorization adapter-set usage from runtime routes, pages, or server actions.",
       "Admin authorization decision boundary usage from runtime routes, pages, or server actions.",
       "Admin request security preflight usage from runtime routes, pages, or server actions.",
+      "Admin CSRF proof verifier usage from runtime routes, pages, or server actions.",
       "Header reads.",
       "Login/logout routes.",
       "Protected admin pages.",
@@ -309,11 +309,32 @@ describe("Phase 2B-Q server-only admin request security preflight boundary", () 
     );
   });
 
-  it("keeps the request-security preflight module server-only and free of direct runtime/provider shortcuts", () => {
-    const source = readRepoFile(approvedPreflightBoundaryPath);
+  it("keeps request-security preflight validation only in the Phase 2B-Q preflight boundary", () => {
+    const productionSources = readTrackedProductionSources([
+      "website/app",
+      "website/components",
+      "website/lib"
+    ]);
+    const approvedSource = readRepoFile(approvedPreflightBoundaryPath);
+    const outsidePreflightBoundary = productionSources
+      .filter(({ filePath }) => filePath !== approvedPreflightBoundaryPath)
+      .map(({ source }) => source)
+      .join("\n");
+
+    expect(approvedSource).toContain("validateServerAdminRequestSecurityPreflight");
+    expect(approvedSource).toContain("ServerAdminCsrfProofVerifierInput");
+
+    expect(outsidePreflightBoundary).not.toContain(
+      "validateServerAdminRequestSecurityPreflight"
+    );
+  });
+
+  it("keeps the CSRF proof verifier module server-only and free of direct runtime/provider shortcuts", () => {
+    const source = readRepoFile(approvedCsrfVerifierBoundaryPath);
 
     expect(source).toContain('import "server-only";');
-    expect(source).toContain("validateServerAdminRequestSecurityPreflight");
+    expect(source).toContain("createServerAdminCsrfProofVerifier");
+    expect(source).toContain("verifyServerAdminCsrfProof");
     expect(source).not.toContain("next/headers");
     expect(source).not.toContain("headers()");
     expect(source).not.toContain("cookies()");
@@ -363,7 +384,8 @@ describe("Phase 2B-Q server-only admin request security preflight boundary", () 
           filePath !== approvedWorkspaceResolverBoundaryPath &&
           filePath !== approvedCompositionBoundaryPath &&
           filePath !== approvedDecisionBoundaryPath &&
-          filePath !== approvedPreflightBoundaryPath
+          filePath !== approvedPreflightBoundaryPath &&
+          filePath !== approvedCsrfVerifierBoundaryPath
       )
       .map(({ source }) => source)
       .join("\n");

@@ -60,14 +60,14 @@ describe("Phase 2B-O server-only admin authorization adapter-set composition bou
     const projectContext = readRepoFile("docs/PROJECT-CONTEXT.md");
 
     expect(status).toContain(
-      "Current phase: Phase 2B-Q - server-only admin request security preflight boundary."
+      "Current phase: Phase 2B-R - server-only CSRF proof verifier boundary."
     );
     expect(status).toContain(
-      "Latest completed phase: Phase 2B-P - server-only composed admin authorization decision boundary."
+      "Latest completed phase: Phase 2B-Q - server-only admin request security preflight boundary."
     );
-    expect(status).toContain("Last merged phase PR: #56");
+    expect(status).toContain("Last merged phase PR: #57");
     expect(status).toContain(
-      "Merge commit: `1ac705d8172a088ceb1fc946b31ca09ceefa74bc`"
+      "Merge commit: `1151aa5546aa6f2e30537e03da9e7a77fbb13e74`"
     );
     expect(roadmap).toContain(
       "Phase 2B-O adds only the server-only admin authorization adapter-set composition boundary"
