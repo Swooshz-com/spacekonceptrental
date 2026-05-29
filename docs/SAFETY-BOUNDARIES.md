@@ -271,6 +271,16 @@ variables such as `N8N_CHAT_WEBHOOK_URL`.
   Storage, browser Supabase, service-role runtime paths, deployment, Supabase
   Cloud, n8n workflow changes, Pinecone runtime code, or SaaS chatbot app
   code.
+- Phase 2B-S server-only CSRF proof issuer boundary is approved only as a server-only issuer module
+  at `website/lib/admin/authorization/server-admin-csrf-proof-issuer.ts`.
+  It may issue verifier-compatible structured CSRF proofs only from explicitly
+  injected operation, session binding, nonce or nonce generator, timestamps,
+  and a dependency-injected signer. It is not approval to verify proofs, read
+  real headers, read cookies, read env, call Supabase, store replay state, use
+  that issuer from runtime routes, pages, or server actions, add login/logout
+  routes, protected admin pages, admin UI, product writes, Storage, browser
+  Supabase, service-role runtime paths, deployment, Supabase Cloud, n8n
+  workflow changes, Pinecone runtime code, or SaaS chatbot app code.
 - Future admin auth must remain server-side. Future session cookies must be
   HttpOnly, Secure in production, and have reviewed SameSite behaviour. Future
   state-changing admin routes/server actions need CSRF strategy before

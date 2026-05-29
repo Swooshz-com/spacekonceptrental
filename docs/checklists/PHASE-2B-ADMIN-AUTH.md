@@ -31,8 +31,9 @@ boundary. Phase 2B-O adds only the server-only admin authorization adapter-set
 composition boundary. Phase 2B-P adds only the server-only composed admin
 authorization decision boundary. Phase 2B-Q adds only the server-only admin
 request security preflight boundary. Phase 2B-R adds only the server-only CSRF
-proof verifier boundary. Keep real auth runtime wiring, factory, adapter-set,
-decision-boundary, preflight, or CSRF verifier usage from runtime
+proof verifier boundary. Phase 2B-S adds only the server-only CSRF proof issuer
+boundary. Keep real auth runtime wiring, factory, adapter-set,
+decision-boundary, preflight, CSRF verifier, or CSRF issuer usage from runtime
 routes/pages/actions, headers, login/logout routes, protected admin pages,
 admin UI, product management writes, browser Supabase, service-role runtime
 paths, deployment, and Supabase Cloud work unchecked until a future PR has
@@ -61,6 +62,7 @@ explicit approval.
 - [x] Add server-only composed admin authorization decision boundary.
 - [x] Add server-only admin request security preflight boundary.
 - [x] Add server-only CSRF proof verifier boundary.
+- [x] Add server-only CSRF proof issuer boundary.
 
 ## Design References
 
@@ -120,6 +122,7 @@ runtime implementation approval.
 - [ ] Admin authorization decision boundary usage from runtime routes, pages, or server actions.
 - [ ] Admin request security preflight usage from runtime routes, pages, or server actions.
 - [ ] Admin CSRF proof verifier usage from runtime routes, pages, or server actions.
+- [ ] Admin CSRF proof issuer usage from runtime routes, pages, or server actions.
 - [ ] Header reads.
 - [ ] Login/logout routes.
 - [ ] Protected admin pages.

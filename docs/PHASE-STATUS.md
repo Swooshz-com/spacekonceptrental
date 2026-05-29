@@ -4,23 +4,24 @@ This is the quick status page for the SKR repo. Use `docs/PHASE-2-READINESS-PLAN
 
 ## Current phase
 
-Current phase: Phase 2B-R - server-only CSRF proof verifier boundary.
+Current phase: Phase 2B-S - server-only CSRF proof issuer boundary.
 
-This PR adds the smallest server-only CSRF proof verifier boundary for future
-state-changing admin routes and server actions. The verifier accepts only
-explicitly injected proof material, expected session/nonce/timestamp values,
-and dependency-injected signature or replay checks. It validates a structured
-CSRF proof shape for future injection into the Phase 2B-Q preflight boundary
-and fails closed with Phase 2B-Q-compatible safe reasons. It does not read real
-request headers, cookies, env, routes, pages, server actions, Supabase, or
-runtime state, does not wire itself into runtime routes/pages/actions, and does
-not make runtime admin auth complete.
+This PR adds the smallest server-only CSRF proof issuer boundary for future
+state-changing admin routes and server actions. The issuer accepts only
+explicitly injected operation, session binding, nonce or nonce generator,
+issued-at/expiry timestamps, and a dependency-injected signature signer. It
+creates verifier-compatible structured CSRF proofs in the
+`base64url(JSON payload).base64url(signature)` shape and fails closed with
+safe issue reasons. It does not verify proofs, read real request headers,
+cookies, env, routes, pages, server actions, Supabase, or runtime state, does
+not store replay state, does not wire itself into runtime routes/pages/actions,
+and does not make runtime admin auth complete.
 
-Latest completed phase: Phase 2B-Q - server-only admin request security preflight boundary.
+Latest completed phase: Phase 2B-R - server-only CSRF proof verifier boundary.
 
-Last merged phase PR: #57
+Last merged phase PR: #58
 
-Merge commit: `1151aa5546aa6f2e30537e03da9e7a77fbb13e74`
+Merge commit: `3cb7e24684e2fbd98d56f305e473999d66a3e1fd`
 
 ## Completed foundation
 
@@ -64,7 +65,8 @@ Vercel config, add real env values, or add runtime features.
 - Server-only admin authorization adapter-set composition boundary is complete.
 - Server-only composed admin authorization decision boundary is complete.
 - Server-only admin request security preflight boundary is complete.
-- Server-only CSRF proof verifier boundary is in progress.
+- Server-only CSRF proof verifier boundary is complete.
+- Server-only CSRF proof issuer boundary is in progress.
 
 Supabase Auth is approved as the future server-side admin auth provider. The
 Phase 2B-K identity boundary remains the only approved place to read Supabase
@@ -84,15 +86,20 @@ request metadata and optional injected CSRF verifier results; it is not a
 runtime wiring or header-read approval. The Phase 2B-R CSRF proof verifier
 boundary is restricted to validating explicitly injected proof material and
 dependency-injected verifier checks; it is not a runtime wiring, header-read,
-cookie-read, or CSRF issuance approval. These boundaries are not wired into
-routes, pages, server actions, protected admin runtime, login/logout, admin UI,
-or product writes.
+cookie-read, or CSRF issuance approval. The Phase 2B-S CSRF proof issuer
+boundary is restricted to issuing verifier-compatible proofs from explicitly
+injected proof material and dependency-injected signer/nonce dependencies; it
+is not a runtime wiring, header-read, cookie-read, env-read, replay-store, or
+CSRF verification approval. These boundaries are not wired into routes, pages,
+server actions, protected admin runtime, login/logout, admin UI, or product
+writes.
 
 Runtime session-bound read-client usage remains deferred.
 Runtime adapter-set usage remains deferred.
 Runtime decision-boundary usage remains deferred.
 Runtime request-security preflight usage remains deferred.
 Runtime CSRF proof verifier usage remains deferred.
+Runtime CSRF proof issuer usage remains deferred.
 
 ## Still blocked
 
@@ -113,6 +120,7 @@ Runtime CSRF proof verifier usage remains deferred.
   actions.
 - Admin CSRF proof verifier usage from runtime routes, pages, or server
   actions.
+- Admin CSRF proof issuer usage from runtime routes, pages, or server actions.
 - Header reads.
 - Login/logout routes.
 - Protected admin pages.

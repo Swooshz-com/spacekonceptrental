@@ -685,3 +685,32 @@ protected admin pages, add admin UI, add product/category/product image writes,
 add Supabase Storage, use service-role keys, add browser Supabase, deploy,
 connect Supabase Cloud, change n8n workflows, add Pinecone runtime code,
 access `website/chat-config.js`, or make runtime admin auth complete.
+
+## 2026-05-29: Server-only CSRF Proof Issuer Boundary
+
+Decision: Phase 2B-S adds only the server-only CSRF proof issuer boundary.
+
+The approved implementation boundary is
+`website/lib/admin/authorization/server-admin-csrf-proof-issuer.ts`. It issues
+only verifier-compatible structured
+`base64url(JSON payload).base64url(signature)` CSRF proofs for supported
+state-changing admin operations. It accepts only explicitly injected operation,
+session binding, nonce or nonce generator, issued-at/expiry timestamps, and a
+dependency-injected signature signer. It returns a proof and safe expiry
+metadata only when all required inputs are present and valid; otherwise it
+fails closed with safe issue reasons.
+
+Reason: Phase 2B-R created the verifier boundary, and future state-changing
+admin routes or server actions need a matching issuer before any runtime use
+can be considered. The next safe step is to add the issuer boundary without
+reading real headers, cookies, env, Supabase, route handlers, pages, or server
+actions, and without storing replay state or wiring the issuer into runtime.
+This phase does not use the issuer from runtime routes, pages, or server
+actions, read headers, read cookies, call Supabase Auth, query `admin_users`
+or `memberships`, compose the adapter set, call the decision boundary, call
+the preflight boundary from runtime, call the verifier from runtime, add
+login/logout routes, add protected admin pages, add admin UI, add
+product/category/product image writes, add Supabase Storage, use service-role
+keys, add browser Supabase, deploy, connect Supabase Cloud, change n8n
+workflows, add Pinecone runtime code, access `website/chat-config.js`, or make
+runtime admin auth complete.

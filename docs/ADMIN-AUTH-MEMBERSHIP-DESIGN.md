@@ -27,9 +27,10 @@ Completed phase history:
 - Phase 2B-Q adds a server-only admin request security preflight boundary
   only.
 - Phase 2B-R adds a server-only CSRF proof verifier boundary only.
+- Phase 2B-S adds a server-only CSRF proof issuer boundary only.
 
-Latest completed admin/auth boundary state: Phase 2B-R server-only CSRF proof
-verifier boundary.
+Latest completed admin/auth boundary state: Phase 2B-S server-only CSRF proof
+issuer boundary.
 
 This design does not implement real auth.
 This design does not add admin UI.
@@ -51,6 +52,8 @@ boundary from runtime routes, pages, or server actions.
 This design does not use the Phase 2B-Q admin request security preflight
 boundary from runtime routes, pages, or server actions.
 This design does not use the Phase 2B-R CSRF proof verifier boundary from
+runtime routes, pages, or server actions.
+This design does not use the Phase 2B-S CSRF proof issuer boundary from
 runtime routes, pages, or server actions.
 
 Product/category/product image writes remain blocked until admin/auth boundaries are implemented and tested.
@@ -202,6 +205,19 @@ replay state except through an injected dependency, or wire itself into
 runtime routes, pages, server actions, protected admin pages, login/logout,
 admin UI, or product writes.
 
+Phase 2B-S adds a server-only CSRF proof issuer boundary at
+`website/lib/admin/authorization/server-admin-csrf-proof-issuer.ts`. It
+creates verifier-compatible structured CSRF proofs only from explicitly
+injected operation, session binding, nonce or nonce generator, timestamps, and
+dependency-injected signature signer. It supports only state-changing admin
+operations, fails closed for read-only or unsupported operations, missing
+session binding, missing nonce, invalid timestamps, missing signer, signer
+failure, or provider/dependency throws, and returns only safe issue shapes. It
+does not verify CSRF proofs, read real headers, read cookies, read env, call
+Supabase, store replay state, or wire itself into runtime routes, pages,
+server actions, protected admin pages, login/logout, admin UI, or product
+writes.
+
 ## Non-goals
 
 This design does not:
@@ -231,6 +247,8 @@ This design does not:
   routes, pages, or server actions.
 - Use the Phase 2B-R CSRF proof verifier boundary from runtime routes, pages,
   or server actions.
+- Use the Phase 2B-S CSRF proof issuer boundary from runtime routes, pages, or
+  server actions.
 - Connect to Supabase Cloud.
 - Add deployment configuration.
 - Add production seed data.

@@ -283,6 +283,33 @@ Supabase, deploy, connect Supabase Cloud, change n8n workflows, add Pinecone
 runtime code, migrate Pinecone, access `website/chat-config.js`, or add SaaS
 chatbot app code.
 
+Phase 2B-S adds only the server-only CSRF proof issuer boundary needed for
+future state-changing admin routes and server actions. The CSRF issuer
+boundary is allowed only inside
+`website/lib/admin/authorization/server-admin-csrf-proof-issuer.ts`. It
+issues verifier-compatible structured
+`base64url(JSON payload).base64url(signature)` proofs only from explicitly
+injected operation, session binding, nonce or nonce generator, issued-at and
+expiry timestamps, and a dependency-injected signature signer. It supports only
+state-changing admin operations, fails closed for read-only or unsupported
+operations, missing session binding, missing nonce, invalid timestamps,
+missing signer, signer failure, or dependency failure, and returns only safe
+issue results. It does not verify CSRF proofs, read headers, read cookies,
+read env, call Supabase, store replay state, or wire itself into the Phase
+2B-Q preflight boundary or Phase 2B-R verifier outside isolated unit tests. It
+is not approval to use the issuer from runtime routes, pages, or server
+actions, read headers, read cookies outside the Phase 2B-K boundary, call
+Supabase Auth outside the Phase 2B-K boundary, query `admin_users` or
+`memberships` outside the Phase 2B-L boundary, resolve workspace scope outside
+the Phase 2B-M boundary, compose adapter sets outside the Phase 2B-O boundary,
+call the composed decision boundary outside the Phase 2B-P boundary, use the
+preflight boundary from runtime routes/pages/actions, use the verifier from
+runtime routes/pages/actions, add login/logout routes, add protected admin
+pages, add admin UI, add product/category/product image writes, add Supabase
+Storage, add service-role runtime paths, add browser Supabase, deploy, connect
+Supabase Cloud, change n8n workflows, add Pinecone runtime code, migrate
+Pinecone, access `website/chat-config.js`, or add SaaS chatbot app code.
+
 Further Phase 2 implementation work remains unapproved until scoped in a
 separate phase PR.
 
