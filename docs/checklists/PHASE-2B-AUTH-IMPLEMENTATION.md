@@ -84,7 +84,8 @@ Reference docs:
 - [x] Server-only admin authorization gate composition boundary.
 - [x] Admin runtime gate usage approval lane.
 - [x] Server-only admin request metadata adapter boundary.
-- [x] Server-only admin runtime gate invocation boundary.`r`n- [x] Admin runtime gate invocation usage approval lane.
+- [x] Server-only admin runtime gate invocation boundary.
+- [x] Admin runtime gate invocation usage approval lane.
 
 ## Still Deferred
 

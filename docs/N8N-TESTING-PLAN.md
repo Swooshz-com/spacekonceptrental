@@ -77,7 +77,7 @@ Expected:
 
 - Customer support workflow imports when repo differs from live.
 - Unchanged workflows may be skipped.
-- Export refreshes `.n8n-local\n8n-credential-bindings.json`.
+- Export refreshes `.n8n-local/n8n-credential-bindings.json`.
 - `.n8n-local/` and `.tmp/` stay untracked.
 - Validation still passes after export.
 

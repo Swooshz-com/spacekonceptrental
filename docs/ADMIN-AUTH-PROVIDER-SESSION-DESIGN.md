@@ -402,7 +402,19 @@ Creating this invocation helper does not approve using it from runtime routes, p
 
 The helper does not import `next/headers`, call `headers()`, read cookies, read env, call Supabase Auth, query `admin_users` or `memberships`, resolve workspaces directly, compose adapter sets directly, call the decision boundary directly, call request-security preflight directly, issue or verify CSRF proofs directly, use service-role keys, add browser Supabase, add Storage, connect Supabase Cloud, deploy, change n8n workflows, add Pinecone runtime code, or access `website/chat-config.js`.
 
-## Phase 2B-X Approved Future Admin Runtime Gate Invocation Usage Lane`r`n`r`nA future runtime PR may call `resolveServerAdminRuntimeGateInvocation()` only from a first-party server-only route handler or server action.`r`n`r`nFuture runtime usage must call only the Phase 2B-W invocation helper from the route/action boundary. It must pass explicit trusted configuration and dependencies into that helper rather than duplicating lower-level boundary logic.`r`n`r`nHeader reads must remain inside the Phase 2B-V request metadata adapter. Cookie reads and Supabase Auth calls must remain inside the Phase 2B-K/N identity boundary. `admin_users` and `memberships` reads must remain inside the Phase 2B-L profile/membership boundary. Workspace resolution must remain inside Phase 2B-M. Adapter-set composition must remain inside Phase 2B-O. Decision logic must remain inside Phase 2B-P. Request-security preflight must remain inside Phase 2B-Q / Phase 2B-T gate. CSRF verification must remain inside Phase 2B-R / Phase 2B-T gate. CSRF issuance must remain inside the Phase 2B-S issuer boundary.`r`n`r`nPhase 2B-X does not add route handlers, pages, server actions, runtime helper usage, login/logout, protected admin pages, admin UI, product writes, Storage, deployment, Supabase Cloud, browser Supabase, service-role paths, n8n changes, Pinecone runtime code, SaaS chatbot app work, or `website/chat-config.js` access.`r`n`r`nActual runtime route/page/server-action usage of `resolveServerAdminRuntimeGateInvocation()` remains unchecked and deferred until a later implementation PR adds and tests that code.`r`n`r`n## Phase 2B-L Implemented Profile And Membership Read Boundary
+## Phase 2B-X Approved Future Admin Runtime Gate Invocation Usage Lane
+
+A future runtime PR may call `resolveServerAdminRuntimeGateInvocation()` only from a first-party server-only route handler or server action.
+
+Future runtime usage must call only the Phase 2B-W invocation helper from the route/action boundary. It must pass explicit trusted configuration and dependencies into that helper rather than duplicating lower-level boundary logic.
+
+Header reads must remain inside the Phase 2B-V request metadata adapter. Cookie reads and Supabase Auth calls must remain inside the Phase 2B-K/N identity boundary. `admin_users` and `memberships` reads must remain inside the Phase 2B-L profile/membership boundary. Workspace resolution must remain inside Phase 2B-M. Adapter-set composition must remain inside Phase 2B-O. Decision logic must remain inside Phase 2B-P. Request-security preflight must remain inside Phase 2B-Q / Phase 2B-T gate. CSRF verification must remain inside Phase 2B-R / Phase 2B-T gate. CSRF issuance must remain inside the Phase 2B-S issuer boundary.
+
+Phase 2B-X does not add route handlers, pages, server actions, runtime helper usage, login/logout, protected admin pages, admin UI, product writes, Storage, deployment, Supabase Cloud, browser Supabase, service-role paths, n8n changes, Pinecone runtime code, SaaS chatbot app work, or `website/chat-config.js` access.
+
+Actual runtime route/page/server-action usage of `resolveServerAdminRuntimeGateInvocation()` remains unchecked and deferred until a later implementation PR adds and tests that code.
+
+## Phase 2B-L Implemented Profile And Membership Read Boundary
 
 `website/lib/admin/authorization/supabase-admin-profile-membership-adapters.ts` is the only approved module for Supabase `admin_users` and `memberships` table reads in this phase.
 

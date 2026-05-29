@@ -324,4 +324,54 @@ describe("Phase 2B-X admin runtime gate invocation usage approval lane", () => {
       "n8n-workflows/spacekonceptrental-rag-ingestion.workflow.json"
     ]);
   });
+
+  it("keeps tracked Markdown docs and guard tests free of escaped-newline and identifier corruption", { timeout: 15000 }, () => {
+    const scannedFiles = readTrackedFiles(["docs", "website/test"])
+      .filter(
+        (filePath) =>
+          filePath.endsWith(".md") ||
+          filePath.endsWith(".ts") ||
+          filePath.endsWith(".tsx")
+      );
+    const failures: string[] = [];
+
+    for (const filePath of scannedFiles) {
+      const source = readRepoFile(filePath);
+      const isMarkdown = filePath.endsWith(".md");
+      const escapedTickNewline = "`" + "r`n";
+      const mangledResolve = "e" + "solveServerAdminRuntimeGateInvocation";
+      const escapedResolve = "\\" + "resolveServerAdminRuntimeGateInvocation";
+      const mangledAdminUsers = "d" + "min_users";
+      const escapedAdminUsers = "\\" + "admin_users";
+      const checks: Array<[string, boolean]> = [
+        ["literal escaped newline marker", source.includes(escapedTickNewline)],
+        [
+          "mangled resolveServerAdminRuntimeGateInvocation",
+          new RegExp(`(^|[^r])${mangledResolve}`).test(source) ||
+            source.includes(escapedResolve)
+        ],
+        [
+          "mangled admin_users",
+          new RegExp(`(^|[^a])${mangledAdminUsers}`).test(source) ||
+            source.includes(escapedAdminUsers)
+        ],
+        [
+          "control-character corruption",
+          /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/.test(source)
+        ]
+      ];
+
+      if (isMarkdown) {
+        checks.push(["raw escaped newline text", /\\[rn]/.test(source)]);
+      }
+
+      for (const [reason, failed] of checks) {
+        if (failed) {
+          failures.push(`${filePath}: ${reason}`);
+        }
+      }
+    }
+
+    expect(failures).toEqual([]);
+  });
 });
