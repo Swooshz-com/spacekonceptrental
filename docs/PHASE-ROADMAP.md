@@ -391,6 +391,19 @@ product/category/product image writes, Supabase Storage, service-role runtime
 paths, browser Supabase, Supabase Cloud, deployment, real env values, n8n
 workflow changes, Pinecone runtime code, SaaS chatbot app code, or
 `website/chat-config.js` access.
+Phase 2B-Y adds only the server-only admin runtime route gate adapter boundary.
+The adapter is allowed only inside
+`website/lib/admin/authorization/server-admin-runtime-route-gate-adapter.ts`.
+It accepts explicit requested operation/workspace inputs, trusted expected
+origin and host dependencies, gate dependencies, and an explicit or minimal
+request-like method, then calls only the Phase 2B-W
+`resolveServerAdminRuntimeGateInvocation()` helper. It does not read headers,
+read cookies, read env, call lower-level auth/security boundaries directly,
+add route handlers, pages, server actions, login/logout routes, protected admin
+pages, admin UI, product/category/product image writes, Supabase Storage,
+service-role runtime paths, browser Supabase, Supabase Cloud, deployment, real
+env values, n8n workflow changes, Pinecone runtime code, SaaS chatbot app code,
+or `website/chat-config.js` access.
 Further Phase 2 implementation work remains unapproved until scoped in a
 separate phase PR.
 

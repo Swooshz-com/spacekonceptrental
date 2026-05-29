@@ -14,8 +14,10 @@ server-only CSRF proof verifier boundary, the Phase 2B-S implemented
 server-only CSRF proof issuer boundary, the Phase 2B-T implemented
 server-only admin authorization gate composition boundary, the Phase 2B-U
 approved future admin runtime gate usage lane, and the Phase 2B-V implemented
-server-only admin request metadata adapter boundary, and the Phase 2B-W
-implemented server-only admin runtime gate invocation boundary.
+server-only admin request metadata adapter boundary, the Phase 2B-W
+implemented server-only admin runtime gate invocation boundary, the Phase 2B-X
+approved future admin runtime gate invocation usage lane, and the Phase 2B-Y
+implemented server-only admin runtime route gate adapter boundary.
 
 Phase 2B-E added auth provider/session/security design only.
 Phase 2B-J approves the future server-only Supabase Auth runtime lane only.
@@ -39,6 +41,9 @@ Phase 2B-U approves only the future admin runtime gate usage lane.
 Phase 2B-V implements only the server-only admin request metadata adapter
 boundary.
 Phase 2B-W implements only the server-only admin runtime gate invocation
+boundary.
+Phase 2B-X approves only the future admin runtime gate invocation usage lane.
+Phase 2B-Y implements only the server-only admin runtime route gate adapter
 boundary.
 
 Phase 2B-K cookie reads and Supabase Auth server calls are restricted to the
@@ -66,6 +71,8 @@ Phase 2B-V request metadata reads are restricted to the server-only request
 metadata adapter named below.
 Phase 2B-W admin runtime gate invocation is restricted to the server-only
 invocation helper named below.
+Phase 2B-Y admin runtime route gate adapter plumbing is restricted to the
+server-only route gate adapter named below.
 This document does not approve auth runtime wiring outside these boundaries.
 This document does not approve header reads outside the Phase 2B-V adapter.
 This document does not add login/logout routes.
@@ -414,6 +421,17 @@ Phase 2B-X does not add route handlers, pages, server actions, runtime helper us
 
 Actual runtime route/page/server-action usage of `resolveServerAdminRuntimeGateInvocation()` remains unchecked and deferred until a later implementation PR adds and tests that code.
 
+## Phase 2B-Y Implemented Admin Runtime Route Gate Adapter Boundary
+
+`website/lib/admin/authorization/server-admin-runtime-route-gate-adapter.ts` is the only approved module in this phase for route/action-safe calls into `resolveServerAdminRuntimeGateInvocation()`.
+
+The adapter accepts explicit requested operation and workspace-validation inputs, trusted expected Origin and expected Host dependencies, gate dependencies, and either an explicit request method or a minimal request-like object with only `method`. It normalizes the method, injects it into the Phase 2B-W request metadata dependency shape, and calls only `resolveServerAdminRuntimeGateInvocation()`.
+
+Creating this adapter does not approve adding or using route handlers, pages, server actions, protected admin pages, login/logout, admin UI, or product writes.
+
+The adapter does not read request headers directly, read cookies, read env, import `next/headers`, call `headers()`, import or call `cookies()`, call `readServerAdminRequestMetadata()` directly, call `resolveServerAdminAuthorizationGate()` directly, call preflight, decision, CSRF verifier, CSRF issuer, adapter-set composition, Supabase Auth, `admin_users`, `memberships`, or workspace resolver boundaries directly, use service-role keys, add browser Supabase, add Storage, connect Supabase Cloud, deploy, change n8n workflows, add Pinecone runtime code, or access `website/chat-config.js`.
+
+Actual runtime route/page/server-action usage of this adapter remains unchecked and deferred until a later implementation PR adds and tests that code.
 ## Phase 2B-L Implemented Profile And Membership Read Boundary
 
 `website/lib/admin/authorization/supabase-admin-profile-membership-adapters.ts` is the only approved module for Supabase `admin_users` and `memberships` table reads in this phase.

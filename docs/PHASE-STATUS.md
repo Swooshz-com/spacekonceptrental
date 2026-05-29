@@ -4,15 +4,15 @@ This is the quick status page for the SKR repo. Use `docs/PHASE-2-READINESS-PLAN
 
 ## Current phase
 
-Current phase: Phase 2B-X - admin runtime gate invocation usage approval lane.
+Current phase: Phase 2B-Y - server-only admin runtime route gate adapter boundary.
 
-This PR adds only a docs/checklist/static-guard approval lane for future first-party server-only usage of `resolveServerAdminRuntimeGateInvocation()`. It records that future runtime usage, when separately implemented, must be limited to first-party server-only route handlers or server actions and must call only the Phase 2B-W invocation helper from that boundary. Header reads remain inside the Phase 2B-V metadata adapter; cookie reads and Supabase Auth remain inside the Phase 2B-K/N identity boundary; `admin_users` and `memberships` reads remain inside Phase 2B-L; workspace resolution remains inside Phase 2B-M; adapter-set composition remains inside Phase 2B-O; decision logic remains inside Phase 2B-P; request-security preflight remains inside Phase 2B-Q / Phase 2B-T; CSRF verification remains inside Phase 2B-R / Phase 2B-T; and CSRF issuance remains inside Phase 2B-S. This PR does not add route handlers, pages, server actions, runtime helper usage, login/logout, protected admin pages, admin UI, product writes, Storage, browser Supabase, service-role paths, Supabase Cloud, deployment, real env values, n8n changes, Pinecone runtime code, SaaS chatbot app work, or `website/chat-config.js` access.
+This PR adds only a server-only admin runtime route gate adapter boundary for future first-party route handlers or server actions. The adapter lives under `website/lib/admin/authorization/`, imports `server-only`, accepts explicit operation/workspace inputs, trusted expected origin/host configuration, gate dependencies, and an explicit or request-like method, then calls only `resolveServerAdminRuntimeGateInvocation()`. It does not read headers directly, read cookies, read env, call lower-level auth/security boundaries directly, add runtime route/page/server-action usage, add login/logout, protected admin pages, admin UI, product writes, Storage, browser Supabase, service-role paths, Supabase Cloud, deployment, real env values, n8n changes, Pinecone runtime code, SaaS chatbot app work, or `website/chat-config.js` access.
 
-Latest completed phase: Phase 2B-W - server-only admin runtime gate invocation boundary.
+Latest completed phase: Phase 2B-X - admin runtime gate invocation usage approval lane.
 
-Last merged phase PR: #63
+Last merged phase PR: #64
 
-Merge commit: `2673e0e27725c0d6f1d97dc75cf9d55da050179e`
+Merge commit: `d517534477cd54a123945e72aa41fa239668165a`
 
 ## Completed foundation
 
@@ -62,7 +62,8 @@ Vercel config, add real env values, or add runtime features.
 - Admin runtime wiring approval lane is complete.
 - Server-only admin request metadata adapter boundary is complete.
 - Server-only admin runtime gate invocation boundary is complete.
-- Admin runtime gate invocation usage approval lane is in progress.
+- Admin runtime gate invocation usage approval lane is complete.
+- Server-only admin runtime route gate adapter boundary is in progress.
 
 Supabase Auth is approved as the future server-side admin auth provider. The
 Phase 2B-K identity boundary remains the only approved place to read Supabase
@@ -97,7 +98,7 @@ metadata and trusted expected origin/host inputs for future gate injection; it
 is not runtime route/page/server-action wiring approval. The Phase 2B-W
 runtime gate invocation boundary is restricted to composing the Phase 2B-V
 metadata adapter and Phase 2B-T gate from explicit inputs; it is not runtime
-route/page/server-action wiring approval. These boundaries are not wired into
+route/page/server-action wiring approval. The Phase 2B-X approval lane is docs/checklist/static-guard approval only and is not runtime implementation approval. The Phase 2B-Y route gate adapter boundary is restricted to calling the Phase 2B-W invocation helper from explicit inputs only and is not runtime route/page/server-action wiring approval. These boundaries are not wired into
 routes, pages, server actions, protected admin runtime, login/logout, admin UI,
 or product writes.
 
@@ -112,6 +113,8 @@ Runtime request metadata adapter usage from routes, pages, or server actions
 remains deferred.
 Runtime admin gate invocation helper usage from routes, pages, or server
 actions remains deferred.
+Runtime admin route gate adapter usage from routes, pages, or server actions
+remains deferred.
 
 ## Still blocked
 
@@ -135,6 +138,8 @@ actions remains deferred.
 - Admin CSRF proof issuer usage from runtime routes, pages, or server actions.
 - Admin authorization gate usage from runtime routes, pages, or server actions.
 - Admin runtime gate invocation usage from runtime routes, pages, or server
+  actions.
+- Admin runtime route gate adapter usage from runtime routes, pages, or server
   actions.
 - Header reads outside the Phase 2B-V request metadata adapter.
 - Login/logout routes.
@@ -185,6 +190,6 @@ The next recommended PR should still avoid product writes. A safe next PR can
 continue auth readiness by adding the next explicitly approved server-only
 boundary, but real runtime route/page/server-action wiring, cookie reads
 outside the reviewed identity boundary, headers outside the Phase 2B-V request
-metadata adapter, admin gate invocation helper usage from runtime routes/pages/actions,
+metadata adapter, admin route gate adapter usage from runtime routes/pages/actions,
 login/logout routes, protected admin pages, admin UI, and
 product/category/product image writes remain blocked until separately approved.

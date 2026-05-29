@@ -74,17 +74,17 @@ describe("Phase 2B-U admin runtime wiring approval lane", () => {
     const projectContext = readRepoFile("docs/PROJECT-CONTEXT.md");
 
     expect(status).toContain(
-      "Current phase: Phase 2B-X - admin runtime gate invocation usage approval lane."
+      "Current phase: Phase 2B-Y - server-only admin runtime route gate adapter boundary."
     );
     expect(status).toContain(
-      "Latest completed phase: Phase 2B-W - server-only admin runtime gate invocation boundary."
+      "Latest completed phase: Phase 2B-X - admin runtime gate invocation usage approval lane."
     );
-    expect(status).toContain("Last merged phase PR: #63");
+    expect(status).toContain("Last merged phase PR: #64");
     expect(status).toContain(
-      "Merge commit: `2673e0e27725c0d6f1d97dc75cf9d55da050179e`"
+      "Merge commit: `d517534477cd54a123945e72aa41fa239668165a`"
     );
     expect(status).toContain(
-      "This PR adds only a docs/checklist/static-guard approval lane"
+      "This PR adds only a server-only admin runtime route gate adapter boundary"
     );
     expect(roadmap).toContain(
       "Phase 2B-U adds only the admin runtime wiring approval lane"

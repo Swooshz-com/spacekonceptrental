@@ -26,6 +26,8 @@ const approvedRequestMetadataBoundaryPath =
   "website/lib/admin/authorization/server-admin-request-metadata-adapter.ts";
 const approvedRuntimeGateInvocationBoundaryPath =
   "website/lib/admin/authorization/server-admin-runtime-gate-invocation.ts";
+const approvedRuntimeRouteGateAdapterBoundaryPath =
+  "website/lib/admin/authorization/server-admin-runtime-route-gate-adapter.ts";
 const sourceExtensions = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs"]);
 
 function readRepoFile(relativePath: string) {
@@ -74,17 +76,17 @@ describe("Phase 2B-X admin runtime gate invocation usage approval lane", () => {
     const projectContext = readRepoFile("docs/PROJECT-CONTEXT.md");
 
     expect(status).toContain(
-      "Current phase: Phase 2B-X - admin runtime gate invocation usage approval lane."
+      "Current phase: Phase 2B-Y - server-only admin runtime route gate adapter boundary."
     );
     expect(status).toContain(
-      "Latest completed phase: Phase 2B-W - server-only admin runtime gate invocation boundary."
+      "Latest completed phase: Phase 2B-X - admin runtime gate invocation usage approval lane."
     );
-    expect(status).toContain("Last merged phase PR: #63");
+    expect(status).toContain("Last merged phase PR: #64");
     expect(status).toContain(
-      "Merge commit: `2673e0e27725c0d6f1d97dc75cf9d55da050179e`"
+      "Merge commit: `d517534477cd54a123945e72aa41fa239668165a`"
     );
     expect(status).toContain(
-      "This PR adds only a docs/checklist/static-guard approval lane for future first-party server-only usage of `resolveServerAdminRuntimeGateInvocation()`."
+      "This PR adds only a server-only admin runtime route gate adapter boundary for future first-party route handlers or server actions."
     );
     expect(roadmap).toContain(
       "Phase 2B-X adds only the admin runtime gate invocation usage approval lane"
@@ -204,7 +206,10 @@ describe("Phase 2B-X admin runtime gate invocation usage approval lane", () => {
     expect(appSource).not.toContain(
       "server-admin-runtime-gate-invocation"
     );
-    expect(combinedOutside(approvedRuntimeGateInvocationBoundaryPath)).not.toContain(
+    expect(combinedOutside([
+        approvedRuntimeGateInvocationBoundaryPath,
+        approvedRuntimeRouteGateAdapterBoundaryPath
+      ])).not.toContain(
       "resolveServerAdminRuntimeGateInvocation"
     );
   });
