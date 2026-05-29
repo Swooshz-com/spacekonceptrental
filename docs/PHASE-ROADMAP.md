@@ -217,6 +217,25 @@ connect Supabase Cloud, change n8n workflows, add Pinecone runtime code,
 migrate Pinecone, access `website/chat-config.js`, or add SaaS chatbot app
 code.
 
+Phase 2B-P adds only the server-only composed admin authorization decision boundary
+needed for future admin auth runtime wiring. The decision boundary is allowed
+only inside
+`website/lib/admin/authorization/server-admin-authorization-decision.ts`. It
+creates the Phase 2B-O adapter set and calls the existing
+`resolveAdminAuthorizationWithAdapters()` decision function without
+duplicating policy logic. It fails closed when adapter-set composition,
+session-bound admin read-client creation, trusted workspace input, or provider
+dependencies are unavailable. It is not approval to use the decision boundary
+from runtime routes, pages, or server actions, query `admin_users` or
+`memberships` outside the Phase 2B-L boundary, read cookies or call Supabase
+Auth outside the Phase 2B-K boundary, resolve workspace scope outside the Phase
+2B-M boundary, compose adapter sets outside the Phase 2B-O boundary, add
+login/logout routes, add protected admin pages, add admin UI, add
+product/category/product image writes, add Supabase Storage, add service-role
+runtime paths, add browser Supabase, read headers, deploy, connect Supabase
+Cloud, change n8n workflows, add Pinecone runtime code, migrate Pinecone,
+access `website/chat-config.js`, or add SaaS chatbot app code.
+
 Further Phase 2 implementation work remains unapproved until scoped in a
 separate phase PR.
 

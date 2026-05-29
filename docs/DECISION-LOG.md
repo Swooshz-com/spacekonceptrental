@@ -606,3 +606,27 @@ add Supabase Storage, use service-role keys, add browser Supabase, read
 headers, deploy, connect Supabase Cloud, change n8n workflows, add Pinecone
 runtime code, access `website/chat-config.js`, or make runtime admin auth
 complete.
+
+## 2026-05-29: Server-only Composed Admin Authorization Decision Boundary
+
+Decision: Phase 2B-P adds only the server-only composed admin authorization decision boundary.
+
+The approved implementation boundary is
+`website/lib/admin/authorization/server-admin-authorization-decision.ts`. It
+uses the Phase 2B-O adapter-set composition boundary and calls the existing
+`resolveAdminAuthorizationWithAdapters()` decision function. It returns normal
+adapter-driven policy decisions when the composed adapter set is available and
+returns a safe unavailable result when composition, the session-bound admin
+read client, trusted workspace input, or provider dependencies fail.
+
+Reason: Phase 2B-O created the server-only adapter-set composition boundary,
+but runtime routes, pages, and server actions still need a future decision
+entrypoint that does not duplicate policy logic. The next safe step is a
+server-only decision wrapper for future runtime use, while keeping actual
+runtime usage blocked. This phase does not use the decision boundary from
+runtime routes, pages, or server actions, add login/logout routes, add
+protected admin pages, add admin UI, add product/category/product image writes,
+add Supabase Storage, use service-role keys, add browser Supabase, read
+headers, deploy, connect Supabase Cloud, change n8n workflows, add Pinecone
+runtime code, access `website/chat-config.js`, or make runtime admin auth
+complete.

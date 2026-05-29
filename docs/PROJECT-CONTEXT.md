@@ -200,6 +200,15 @@ Custom Chat UI -> POST /api/chat -> ChatProvider
   workspace input, is not wired into runtime routes, pages, server actions,
   protected admin runtime, login/logout, admin UI, or product writes, and does
   not approve runtime admin auth completion.
+- Phase 2B-P adds a server-only composed admin authorization decision boundary
+  only. The decision module is restricted to
+  `website/lib/admin/authorization/server-admin-authorization-decision.ts`.
+  It composes the Phase 2B-O adapter set and calls the existing
+  `resolveAdminAuthorizationWithAdapters()` decision function without
+  duplicating policy logic. It fails closed when composition or provider
+  dependencies are unavailable, is not wired into runtime routes, pages,
+  server actions, protected admin runtime, login/logout, admin UI, or product
+  writes, and does not approve runtime admin auth completion.
 
 ## Current Status Pages
 

@@ -22,9 +22,11 @@ Completed phase history:
   factory.
 - Phase 2B-O adds a server-only admin authorization adapter-set composition boundary
   only.
+- Phase 2B-P adds a server-only composed admin authorization decision boundary
+  only.
 
-Latest completed admin/auth boundary state: Phase 2B-O server-only admin
-authorization adapter-set composition boundary.
+Latest completed admin/auth boundary state: Phase 2B-P server-only composed
+admin authorization decision boundary.
 
 This design does not implement real auth.
 This design does not add admin UI.
@@ -41,6 +43,8 @@ This design does not use the Phase 2B-N session-bound admin read-client factory
 from runtime routes, pages, or server actions.
 This design does not use the Phase 2B-O admin authorization adapter-set
 composition boundary from runtime routes, pages, or server actions.
+This design does not use the Phase 2B-P composed admin authorization decision
+boundary from runtime routes, pages, or server actions.
 
 Product/category/product image writes remain blocked until admin/auth boundaries are implemented and tested.
 Product writes remain blocked until real auth/membership resolution, RLS, audit, and route/action boundaries are implemented and tested.
@@ -156,6 +160,17 @@ a session-bound admin read client or trusted server-side workspace input. It
 is not wired into runtime routes, pages, server actions, protected admin
 pages, login/logout, admin UI, or product writes.
 
+Phase 2B-P adds
+`website/lib/admin/authorization/server-admin-authorization-decision.ts` as a
+server-only composed admin authorization decision boundary. It composes the
+Phase 2B-O adapter set and calls the existing
+`resolveAdminAuthorizationWithAdapters()` decision function without
+duplicating policy logic. It fails closed when adapter-set composition,
+session-bound admin read-client creation, trusted workspace input, or provider
+dependencies are unavailable. It is not wired into runtime routes, pages,
+server actions, protected admin pages, login/logout, admin UI, or product
+writes.
+
 ## Non-goals
 
 This design does not:
@@ -178,6 +193,8 @@ This design does not:
 - Use the Phase 2B-N session-bound admin read-client factory from runtime
   routes, pages, or server actions.
 - Use the Phase 2B-O admin authorization adapter-set composition boundary from
+  runtime routes, pages, or server actions.
+- Use the Phase 2B-P composed admin authorization decision boundary from
   runtime routes, pages, or server actions.
 - Connect to Supabase Cloud.
 - Add deployment configuration.
@@ -363,6 +380,11 @@ server-only assembly point for the existing adapter contracts. Tests may use
 the composed adapter set, but runtime routes, pages, and server actions must
 not use it until a later phase explicitly approves resolver/adapter runtime
 wiring.
+
+The Phase 2B-P composed decision boundary fills only the missing server-only
+decision entrypoint for the composed adapter set. Tests may call it, but
+runtime routes, pages, and server actions must not use it until a later phase
+explicitly approves resolver/adapter/decision runtime wiring.
 
 ## Audit log expectations
 
