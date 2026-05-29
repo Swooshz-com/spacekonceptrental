@@ -60,14 +60,14 @@ describe("Phase 2B-N session-bound admin read-client factory", () => {
     const projectContext = readRepoFile("docs/PROJECT-CONTEXT.md");
 
     expect(status).toContain(
-      "Current phase: Phase 2B-Y - server-only admin runtime route gate adapter boundary."
+      "Current phase: Phase 2B-Z - admin runtime route gate adapter usage approval lane."
     );
     expect(status).toContain(
-      "Latest completed phase: Phase 2B-X - admin runtime gate invocation usage approval lane."
+      "Latest completed phase: Phase 2B-Y - server-only admin runtime route gate adapter boundary."
     );
-    expect(status).toContain("Last merged phase PR: #64");
+    expect(status).toContain("Last merged phase PR: #65");
     expect(status).toContain(
-      "Merge commit: `d517534477cd54a123945e72aa41fa239668165a`"
+      "Merge commit: `0dbf2b4ff739084a73ffbe4adf11cc38a7592dff`"
     );
     expect(roadmap).toContain(
       "Phase 2B-N adds only the server-only session-bound admin read-client factory"

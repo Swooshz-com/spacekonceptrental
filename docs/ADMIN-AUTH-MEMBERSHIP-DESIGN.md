@@ -35,6 +35,7 @@ Completed phase history:
 - Phase 2B-W adds a server-only admin runtime gate invocation boundary only.
 - Phase 2B-X adds a docs/checklist/static-guard approval lane for future runtime usage of the Phase 2B-W invocation helper only.
 - Phase 2B-Y adds a server-only admin runtime route gate adapter boundary only.
+- Phase 2B-Z adds a docs/checklist/static-guard approval lane for future runtime usage of the Phase 2B-Y route gate adapter only.
 
 Latest completed admin/auth boundary state: Phase 2B-Y server-only admin
 runtime route gate adapter boundary.

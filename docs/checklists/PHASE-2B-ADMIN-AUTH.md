@@ -38,7 +38,8 @@ gate usage lane. Phase 2B-V adds only the server-only admin request metadata
 adapter boundary. Phase 2B-W adds only the server-only admin runtime gate
 invocation boundary. Phase 2B-X approves only the future admin runtime gate
 invocation usage lane. Phase 2B-Y adds only the server-only admin runtime route
-gate adapter boundary. Keep real auth runtime wiring, factory, adapter-set,
+gate adapter boundary. Phase 2B-Z approves only the future admin runtime route
+gate adapter usage lane. Keep real auth runtime wiring, factory, adapter-set,
 decision-boundary, preflight, CSRF verifier, CSRF issuer, request metadata
 adapter, runtime gate invocation helper, or authorization gate usage from runtime
 routes/pages/actions, headers, login/logout routes, protected admin pages,
@@ -76,6 +77,7 @@ explicit approval.
 - [x] Add server-only admin runtime gate invocation boundary.
 - [x] Approve future server-only admin runtime gate invocation usage lane.
 - [x] Add server-only admin runtime route gate adapter boundary.
+- [x] Approve future server-only admin runtime route gate adapter usage lane.
 
 ## Design References
 

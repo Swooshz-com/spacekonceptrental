@@ -404,6 +404,15 @@ pages, admin UI, product/category/product image writes, Supabase Storage,
 service-role runtime paths, browser Supabase, Supabase Cloud, deployment, real
 env values, n8n workflow changes, Pinecone runtime code, SaaS chatbot app code,
 or `website/chat-config.js` access.
+Phase 2B-Z adds only the admin runtime route gate adapter usage approval lane.
+It approves future first-party server-only route handlers or server actions to
+call `resolveServerAdminRuntimeRouteGateAdapter()` only through the Phase 2B-Y
+route gate adapter, while keeping actual route/page/server-action usage
+deferred. It is not approval to add routes, pages, server actions,
+login/logout, protected admin pages, admin UI, product writes, Storage,
+deployment, Supabase Cloud, browser Supabase, service-role runtime paths, n8n
+changes, Pinecone runtime code, SaaS chatbot app work, or
+`website/chat-config.js` access.
 Further Phase 2 implementation work remains unapproved until scoped in a
 separate phase PR.
 

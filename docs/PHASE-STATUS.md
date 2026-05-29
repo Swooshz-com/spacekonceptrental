@@ -4,15 +4,15 @@ This is the quick status page for the SKR repo. Use `docs/PHASE-2-READINESS-PLAN
 
 ## Current phase
 
-Current phase: Phase 2B-Y - server-only admin runtime route gate adapter boundary.
+Current phase: Phase 2B-Z - admin runtime route gate adapter usage approval lane.
 
-This PR adds only a server-only admin runtime route gate adapter boundary for future first-party route handlers or server actions. The adapter lives under `website/lib/admin/authorization/`, imports `server-only`, accepts explicit operation/workspace inputs, trusted expected origin/host configuration, gate dependencies, and an explicit or request-like method, then calls only `resolveServerAdminRuntimeGateInvocation()`. It does not read headers directly, read cookies, read env, call lower-level auth/security boundaries directly, add runtime route/page/server-action usage, add login/logout, protected admin pages, admin UI, product writes, Storage, browser Supabase, service-role paths, Supabase Cloud, deployment, real env values, n8n changes, Pinecone runtime code, SaaS chatbot app work, or `website/chat-config.js` access.
+This PR adds only a docs/checklist/static-guard approval lane for future first-party server-only usage of `resolveServerAdminRuntimeRouteGateAdapter()`. It records that future runtime route handlers or server actions may call only the Phase 2B-Y route gate adapter from the route/action boundary, while lower-level header reads, cookie reads, Supabase Auth, admin table reads, workspace resolution, adapter-set composition, decision, preflight, CSRF verification, CSRF issuance, and runtime gate invocation remain inside their approved Phase 2B-K through Phase 2B-Y boundaries. It does not add route handlers, pages, server actions, route gate adapter runtime usage, login/logout, protected admin pages, admin UI, product writes, Storage, browser Supabase, service-role paths, Supabase Cloud, deployment, real env values, n8n changes, Pinecone runtime code, SaaS chatbot app work, or `website/chat-config.js` access.
 
-Latest completed phase: Phase 2B-X - admin runtime gate invocation usage approval lane.
+Latest completed phase: Phase 2B-Y - server-only admin runtime route gate adapter boundary.
 
-Last merged phase PR: #64
+Last merged phase PR: #65
 
-Merge commit: `d517534477cd54a123945e72aa41fa239668165a`
+Merge commit: `0dbf2b4ff739084a73ffbe4adf11cc38a7592dff`
 
 ## Completed foundation
 
@@ -63,7 +63,8 @@ Vercel config, add real env values, or add runtime features.
 - Server-only admin request metadata adapter boundary is complete.
 - Server-only admin runtime gate invocation boundary is complete.
 - Admin runtime gate invocation usage approval lane is complete.
-- Server-only admin runtime route gate adapter boundary is in progress.
+- Server-only admin runtime route gate adapter boundary is complete.
+- Admin runtime route gate adapter usage approval lane is in progress.
 
 Supabase Auth is approved as the future server-side admin auth provider. The
 Phase 2B-K identity boundary remains the only approved place to read Supabase
@@ -98,9 +99,16 @@ metadata and trusted expected origin/host inputs for future gate injection; it
 is not runtime route/page/server-action wiring approval. The Phase 2B-W
 runtime gate invocation boundary is restricted to composing the Phase 2B-V
 metadata adapter and Phase 2B-T gate from explicit inputs; it is not runtime
-route/page/server-action wiring approval. The Phase 2B-X approval lane is docs/checklist/static-guard approval only and is not runtime implementation approval. The Phase 2B-Y route gate adapter boundary is restricted to calling the Phase 2B-W invocation helper from explicit inputs only and is not runtime route/page/server-action wiring approval. These boundaries are not wired into
-routes, pages, server actions, protected admin runtime, login/logout, admin UI,
-or product writes.
+route/page/server-action wiring approval. The Phase 2B-X approval lane is
+docs/checklist/static-guard approval only and is not runtime implementation
+approval. The Phase 2B-Y route gate adapter boundary is restricted to calling
+the Phase 2B-W invocation helper from explicit inputs only and is not runtime
+route/page/server-action wiring approval. The Phase 2B-Z approval lane is
+docs/checklist/static-guard approval only for future first-party server-only
+usage of `resolveServerAdminRuntimeRouteGateAdapter()`, and it is not runtime
+implementation approval. These boundaries are not wired into routes, pages,
+server actions, protected admin runtime, login/logout, admin UI, or product
+writes.
 
 Runtime session-bound read-client usage remains deferred.
 Runtime adapter-set usage remains deferred.
