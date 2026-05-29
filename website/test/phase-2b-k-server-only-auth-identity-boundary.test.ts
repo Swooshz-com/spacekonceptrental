@@ -53,14 +53,14 @@ describe("Phase 2B-K server-only Supabase Auth identity boundary", () => {
     const decisionLog = readRepoFile("docs/DECISION-LOG.md");
 
     expect(status).toContain(
-      "Current phase: Phase 2B-P - server-only composed admin authorization decision boundary."
+      "Current phase: Phase 2B-Q - server-only admin request security preflight boundary."
     );
     expect(status).toContain(
-      "Latest completed phase: Phase 2B-O - server-only admin authorization adapter-set composition boundary."
+      "Latest completed phase: Phase 2B-P - server-only composed admin authorization decision boundary."
     );
-    expect(status).toContain("Last merged phase PR: #55");
+    expect(status).toContain("Last merged phase PR: #56");
     expect(status).toContain(
-      "Merge commit: `45827bdd594ecc90a0509c1e9f3170e2138babd8`"
+      "Merge commit: `1ac705d8172a088ceb1fc946b31ca09ceefa74bc`"
     );
     expect(roadmap).toContain(
       "Phase 2B-K adds only the server-only Supabase Auth identity/session-read boundary"

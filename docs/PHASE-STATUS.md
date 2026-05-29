@@ -4,23 +4,24 @@ This is the quick status page for the SKR repo. Use `docs/PHASE-2-READINESS-PLAN
 
 ## Current phase
 
-Current phase: Phase 2B-P - server-only composed admin authorization decision boundary.
+Current phase: Phase 2B-Q - server-only admin request security preflight boundary.
 
-This PR adds the smallest server-only decision boundary that composes the
-existing Phase 2B-O adapter set and calls the existing
-`resolveAdminAuthorizationWithAdapters()` decision function. The boundary
-depends only on the reviewed Phase 2B-K/N identity/read-client, Phase 2B-L
-profile/membership, Phase 2B-M workspace resolver, and Phase 2B-O adapter-set
-composition boundaries. It fails closed when composition or provider
-dependencies are unavailable. It does not wire the decision boundary into
-runtime routes, pages, server actions, protected admin pages, login/logout,
-admin UI, or product writes, and it does not make runtime admin auth complete.
+This PR adds the smallest server-only request security preflight boundary for
+future state-changing admin routes and server actions. The validator accepts
+only explicitly injected request metadata and optional injected CSRF verifier
+results. It validates supported admin operations, safe methods, same-origin
+Origin/Host metadata, and CSRF proof for state-changing operations, and fails
+closed with safe shapes when metadata, CSRF proof, or verifier results are
+missing or invalid. It does not read real request headers, wire the preflight
+boundary into runtime routes, pages, server actions, protected admin pages,
+login/logout, admin UI, or product writes, and it does not make runtime admin
+auth complete.
 
-Latest completed phase: Phase 2B-O - server-only admin authorization adapter-set composition boundary.
+Latest completed phase: Phase 2B-P - server-only composed admin authorization decision boundary.
 
-Last merged phase PR: #55
+Last merged phase PR: #56
 
-Merge commit: `45827bdd594ecc90a0509c1e9f3170e2138babd8`
+Merge commit: `1ac705d8172a088ceb1fc946b31ca09ceefa74bc`
 
 ## Completed foundation
 
@@ -62,7 +63,8 @@ Vercel config, add real env values, or add runtime features.
 - Server-only admin workspace resolution boundary is complete.
 - Server-only session-bound admin read-client factory is complete.
 - Server-only admin authorization adapter-set composition boundary is complete.
-- Server-only composed admin authorization decision boundary is in progress.
+- Server-only composed admin authorization decision boundary is complete.
+- Server-only admin request security preflight boundary is in progress.
 
 Supabase Auth is approved as the future server-side admin auth provider. The
 Phase 2B-K identity boundary remains the only approved place to read Supabase
@@ -76,13 +78,17 @@ not a runtime wiring approval. The Phase 2B-O adapter-set composition boundary
 is restricted to composing those existing server-only contracts and is not a
 runtime wiring approval. The Phase 2B-P composed decision boundary is
 restricted to composing the adapter set and calling the existing adapter-driven
-decision resolver; it is not a runtime wiring approval. These boundaries are
-not wired into routes, pages, server actions, protected admin runtime,
-login/logout, admin UI, or product writes.
+decision resolver; it is not a runtime wiring approval. The Phase 2B-Q request
+security preflight boundary is restricted to validating explicitly injected
+request metadata and optional injected CSRF verifier results; it is not a
+runtime wiring or header-read approval. These boundaries are not wired into
+routes, pages, server actions, protected admin runtime, login/logout, admin UI,
+or product writes.
 
 Runtime session-bound read-client usage remains deferred.
 Runtime adapter-set usage remains deferred.
 Runtime decision-boundary usage remains deferred.
+Runtime request-security preflight usage remains deferred.
 
 ## Still blocked
 
@@ -99,6 +105,8 @@ Runtime decision-boundary usage remains deferred.
   actions.
 - Admin authorization decision boundary usage from runtime routes, pages, or
   server actions.
+- Admin request security preflight usage from runtime routes, pages, or server
+  actions.
 - Header reads.
 - Login/logout routes.
 - Protected admin pages.

@@ -252,6 +252,15 @@ variables such as `N8N_CHAT_WEBHOOK_URL`.
   Storage, browser Supabase, service-role runtime paths, deployment, Supabase
   Cloud, n8n workflow changes, Pinecone runtime code, or SaaS chatbot app
   code.
+- Phase 2B-Q server-only admin request security preflight boundary is approved only as a server-only validator module
+  at `website/lib/admin/authorization/server-admin-request-security-preflight.ts`.
+  It may validate explicitly injected request metadata and optional injected
+  CSRF verifier results for future state-changing admin routes and server
+  actions. It is not approval to read real headers, use that preflight
+  boundary from runtime routes, pages, or server actions, add login/logout
+  routes, protected admin pages, admin UI, product writes, Storage, browser
+  Supabase, service-role runtime paths, deployment, Supabase Cloud, n8n
+  workflow changes, Pinecone runtime code, or SaaS chatbot app code.
 - Future admin auth must remain server-side. Future session cookies must be
   HttpOnly, Secure in production, and have reviewed SameSite behaviour. Future
   state-changing admin routes/server actions need CSRF strategy before

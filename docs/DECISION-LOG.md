@@ -630,3 +630,31 @@ add Supabase Storage, use service-role keys, add browser Supabase, read
 headers, deploy, connect Supabase Cloud, change n8n workflows, add Pinecone
 runtime code, access `website/chat-config.js`, or make runtime admin auth
 complete.
+
+## 2026-05-29: Server-only Admin Request Security Preflight Boundary
+
+Decision: Phase 2B-Q adds only the server-only admin request security preflight boundary.
+
+The approved implementation boundary is
+`website/lib/admin/authorization/server-admin-request-security-preflight.ts`.
+It validates only explicitly injected request metadata and optional injected
+CSRF verifier results. It treats request/browser supplied method, Origin,
+Host, and CSRF proof values as untrusted validation inputs, permits safe
+read-only `catalogue.read` requests with same-origin metadata, requires POST
+and a valid injected CSRF proof for state-changing admin operations, and fails
+closed with safe shapes for missing, invalid, stale, replayed, mismatched, or
+unsupported inputs.
+
+Reason: Phase 2B-P created the future server-only composed authorization
+decision boundary, but future state-changing admin routes and server actions
+also need a request-security preflight before runtime wiring is approved. The
+next safe step is a pure server-only validator that does not read real
+headers, cookies, Supabase, route handlers, pages, or server actions. This
+phase does not use the preflight boundary from runtime routes, pages, or
+server actions, read headers, read cookies, call Supabase Auth, query
+`admin_users` or `memberships`, compose the adapter set, call the decision
+boundary, add login/logout routes, add protected admin pages, add admin UI,
+add product/category/product image writes, add Supabase Storage, use
+service-role keys, add browser Supabase, deploy, connect Supabase Cloud,
+change n8n workflows, add Pinecone runtime code, access
+`website/chat-config.js`, or make runtime admin auth complete.
