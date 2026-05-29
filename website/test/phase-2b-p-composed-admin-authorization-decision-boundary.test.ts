@@ -12,6 +12,8 @@ const approvedWorkspaceResolverBoundaryPath =
   "website/lib/admin/authorization/server-admin-workspace-resolver.ts";
 const approvedCompositionBoundaryPath =
   "website/lib/admin/authorization/server-admin-authorization-adapter-set.ts";
+const approvedDecisionBoundaryPath =
+  "website/lib/admin/authorization/server-admin-authorization-decision.ts";
 const sourceExtensions = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs"]);
 
 function readRepoFile(relativePath: string) {
@@ -52,8 +54,8 @@ function expectUnchecked(markdown: string, item: string) {
   expect(markdown).toContain(`- [ ] ${item}`);
 }
 
-describe("Phase 2B-O server-only admin authorization adapter-set composition boundary", () => {
-  it("records Phase 2B-O status, roadmap, decision-log, and project context scope", () => {
+describe("Phase 2B-P server-only composed admin authorization decision boundary", () => {
+  it("records Phase 2B-P status, roadmap, decision-log, and project context scope", () => {
     const status = readRepoFile("docs/PHASE-STATUS.md");
     const roadmap = readRepoFile("docs/PHASE-ROADMAP.md");
     const decisionLog = readRepoFile("docs/DECISION-LOG.md");
@@ -70,17 +72,17 @@ describe("Phase 2B-O server-only admin authorization adapter-set composition bou
       "Merge commit: `45827bdd594ecc90a0509c1e9f3170e2138babd8`"
     );
     expect(roadmap).toContain(
-      "Phase 2B-O adds only the server-only admin authorization adapter-set composition boundary"
+      "Phase 2B-P adds only the server-only composed admin authorization decision boundary"
     );
     expect(decisionLog).toContain(
-      "Decision: Phase 2B-O adds only the server-only admin authorization adapter-set composition boundary"
+      "Decision: Phase 2B-P adds only the server-only composed admin authorization decision boundary"
     );
     expect(projectContext).toContain(
-      "Phase 2B-O adds a server-only admin authorization adapter-set composition boundary"
+      "Phase 2B-P adds a server-only composed admin authorization decision boundary"
     );
   });
 
-  it("documents the implemented composition boundary and checklist state", () => {
+  it("documents the implemented decision boundary and checklist state", () => {
     const design = readRepoFile("docs/ADMIN-AUTH-PROVIDER-SESSION-DESIGN.md");
     const membershipDesign = readRepoFile(
       "docs/ADMIN-AUTH-MEMBERSHIP-DESIGN.md"
@@ -94,31 +96,31 @@ describe("Phase 2B-O server-only admin authorization adapter-set composition bou
     );
 
     expect(design).toContain(
-      "## Phase 2B-O Implemented Adapter-set Composition Boundary"
+      "## Phase 2B-P Implemented Composed Decision Boundary"
     );
     expect(design).toContain(
-      "`website/lib/admin/authorization/server-admin-authorization-adapter-set.ts` is the only approved module for composing the admin authorization adapter set in this phase."
+      "`website/lib/admin/authorization/server-admin-authorization-decision.ts` is the only approved module for resolving a composed admin authorization decision in this phase."
     );
     expect(design).toContain(
-      "The composition boundary returns an `AdminAuthorizationAdapterSet` only when the session-bound admin read client and trusted server-side workspace input are both available."
+      "The decision boundary composes the Phase 2B-O adapter set and calls `resolveAdminAuthorizationWithAdapters()`."
     );
     expect(design).toContain(
-      "Composing this adapter set does not approve using it from runtime routes, pages, server actions, protected admin pages, login/logout, admin UI, or product writes."
+      "Creating this decision boundary does not approve using it from runtime routes, pages, server actions, protected admin pages, login/logout, admin UI, or product writes."
     );
     expect(membershipDesign).toContain(
-      "Phase 2B-O adds a server-only admin authorization adapter-set composition boundary"
+      "Phase 2B-P adds a server-only composed admin authorization decision boundary"
     );
     expect(safety).toContain(
-      "Phase 2B-O server-only admin authorization adapter-set composition boundary is approved only as a server-only composition module"
+      "Phase 2B-P server-only composed admin authorization decision boundary is approved only as a server-only decision module"
     );
 
     expectChecked(
       authChecklist,
-      "Server-only admin authorization adapter-set composition boundary."
+      "Server-only composed admin authorization decision boundary."
     );
     expectChecked(
       adminAuthChecklist,
-      "Add server-only admin authorization adapter-set composition boundary."
+      "Add server-only composed admin authorization decision boundary."
     );
 
     for (const item of [
@@ -127,6 +129,7 @@ describe("Phase 2B-O server-only admin authorization adapter-set composition bou
       "Resolver/adapter runtime wiring into routes, pages, or server actions.",
       "Session-bound admin read-client factory usage from runtime routes, pages, or server actions.",
       "Admin authorization adapter-set usage from runtime routes, pages, or server actions.",
+      "Admin authorization decision boundary usage from runtime routes, pages, or server actions.",
       "Header reads.",
       "Login/logout routes.",
       "Protected admin pages.",
@@ -161,8 +164,6 @@ describe("Phase 2B-O server-only admin authorization adapter-set composition bou
     expect(approvedSource).toContain("cookies()");
     expect(approvedSource).toContain("auth.getUser()");
     expect(approvedSource).toContain("createSessionBoundSupabaseAdminReadClient");
-    expect(approvedSource).not.toContain("headers()");
-    expect(approvedSource).not.toContain(".from(");
 
     expect(outsideIdentityBoundary).not.toContain("@supabase/ssr");
     expect(outsideIdentityBoundary).not.toContain("next/headers");
@@ -246,16 +247,50 @@ describe("Phase 2B-O server-only admin authorization adapter-set composition bou
     expect(outsideIdentityBoundary).not.toContain("@supabase/ssr");
   });
 
-  it("keeps the composition module server-only and free of direct runtime/provider shortcuts", () => {
-    const source = readRepoFile(approvedCompositionBoundaryPath);
+  it("keeps adapter-set composition implementation only in the Phase 2B-O boundary", () => {
+    const productionSources = readTrackedProductionSources([
+      "website/app",
+      "website/components",
+      "website/lib"
+    ]);
+    const approvedSource = readRepoFile(approvedCompositionBoundaryPath);
+    const outsideCompositionImplementation = productionSources
+      .filter(
+        ({ filePath }) =>
+          filePath !== approvedCompositionBoundaryPath &&
+          filePath !== approvedIdentityBoundaryPath &&
+          filePath !== approvedProfileMembershipBoundaryPath &&
+          filePath !== approvedWorkspaceResolverBoundaryPath
+      )
+      .map(({ source }) => source)
+      .join("\n");
+
+    expect(approvedSource).toContain("createSupabaseAdminAuthIdentityAdapter");
+    expect(approvedSource).toContain("createSupabaseAdminProfileAdapter");
+    expect(approvedSource).toContain("createSupabaseAdminMembershipAdapter");
+    expect(approvedSource).toContain("createServerAdminWorkspaceResolver");
+
+    expect(outsideCompositionImplementation).not.toContain(
+      "createSupabaseAdminProfileAdapter"
+    );
+    expect(outsideCompositionImplementation).not.toContain(
+      "createSupabaseAdminMembershipAdapter"
+    );
+    expect(outsideCompositionImplementation).not.toContain(
+      "createSupabaseAdminAuthIdentityAdapter"
+    );
+    expect(outsideCompositionImplementation).not.toContain(
+      "createServerAdminWorkspaceResolver"
+    );
+  });
+
+  it("keeps the decision module server-only and free of direct runtime/provider shortcuts", () => {
+    const source = readRepoFile(approvedDecisionBoundaryPath);
 
     expect(source).toContain('import "server-only";');
-    expect(source).toContain("AdminAuthorizationAdapterSet");
-    expect(source).toContain("createSupabaseAdminAuthIdentityAdapter");
-    expect(source).toContain("createSessionBoundSupabaseAdminReadClient");
-    expect(source).toContain("createSupabaseAdminProfileAdapter");
-    expect(source).toContain("createSupabaseAdminMembershipAdapter");
-    expect(source).toContain("createServerAdminWorkspaceResolver");
+    expect(source).toContain("createServerAdminAuthorizationAdapterSet");
+    expect(source).toContain("resolveAdminAuthorizationWithAdapters");
+    expect(source).not.toContain("authorizeAdminOperation");
     expect(source).not.toContain("@supabase/ssr");
     expect(source).not.toContain("@supabase/supabase-js");
     expect(source).not.toContain("next/headers");
@@ -276,7 +311,6 @@ describe("Phase 2B-O server-only admin authorization adapter-set composition bou
     expect(source).not.toContain(".upsert(");
     expect(source).not.toContain(".delete(");
     expect(source).not.toContain('"use server"');
-    expect(source).not.toContain("resolveAdminAuthorizationWithAdapters");
     expect(source).not.toMatch(/from ["'][^"']*app\//m);
   });
 
@@ -300,7 +334,8 @@ describe("Phase 2B-O server-only admin authorization adapter-set composition bou
           filePath !== approvedIdentityBoundaryPath &&
           filePath !== approvedProfileMembershipBoundaryPath &&
           filePath !== approvedWorkspaceResolverBoundaryPath &&
-          filePath !== approvedCompositionBoundaryPath
+          filePath !== approvedCompositionBoundaryPath &&
+          filePath !== approvedDecisionBoundaryPath
       )
       .map(({ source }) => source)
       .join("\n");

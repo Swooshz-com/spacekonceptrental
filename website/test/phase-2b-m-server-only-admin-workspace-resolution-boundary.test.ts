@@ -58,14 +58,14 @@ describe("Phase 2B-M server-only admin workspace resolution boundary", () => {
     const projectContext = readRepoFile("docs/PROJECT-CONTEXT.md");
 
     expect(status).toContain(
-      "Current phase: Phase 2B-O - server-only admin authorization adapter-set composition boundary."
+      "Current phase: Phase 2B-P - server-only composed admin authorization decision boundary."
     );
     expect(status).toContain(
-      "Latest completed phase: Phase 2B-N - server-only session-bound admin read-client factory."
+      "Latest completed phase: Phase 2B-O - server-only admin authorization adapter-set composition boundary."
     );
-    expect(status).toContain("Last merged phase PR: #54");
+    expect(status).toContain("Last merged phase PR: #55");
     expect(status).toContain(
-      "Merge commit: `f6f56979dac206c06d7957d3d968a5ffa3468304`"
+      "Merge commit: `45827bdd594ecc90a0509c1e9f3170e2138babd8`"
     );
     expect(roadmap).toContain(
       "Phase 2B-M adds only the server-only admin workspace resolution boundary"

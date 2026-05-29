@@ -4,23 +4,23 @@ This is the quick status page for the SKR repo. Use `docs/PHASE-2-READINESS-PLAN
 
 ## Current phase
 
-Current phase: Phase 2B-O - server-only admin authorization adapter-set composition boundary.
+Current phase: Phase 2B-P - server-only composed admin authorization decision boundary.
 
-This PR adds the smallest server-only composition boundary that assembles the
-existing admin authorization adapters into an `AdminAuthorizationAdapterSet`.
-The composition module depends only on the existing Phase 2B-K/N identity and
-session-bound read-client boundary, the Phase 2B-L profile/membership read
-boundary, and the Phase 2B-M trusted workspace resolver boundary. It fails
-closed when the session-bound admin read client or trusted server-side
-workspace input is unavailable. It does not wire the adapter set into runtime
-routes, pages, server actions, protected admin pages, login/logout, admin UI,
-or product writes, and it does not make runtime admin auth complete.
+This PR adds the smallest server-only decision boundary that composes the
+existing Phase 2B-O adapter set and calls the existing
+`resolveAdminAuthorizationWithAdapters()` decision function. The boundary
+depends only on the reviewed Phase 2B-K/N identity/read-client, Phase 2B-L
+profile/membership, Phase 2B-M workspace resolver, and Phase 2B-O adapter-set
+composition boundaries. It fails closed when composition or provider
+dependencies are unavailable. It does not wire the decision boundary into
+runtime routes, pages, server actions, protected admin pages, login/logout,
+admin UI, or product writes, and it does not make runtime admin auth complete.
 
-Latest completed phase: Phase 2B-N - server-only session-bound admin read-client factory.
+Latest completed phase: Phase 2B-O - server-only admin authorization adapter-set composition boundary.
 
-Last merged phase PR: #54
+Last merged phase PR: #55
 
-Merge commit: `f6f56979dac206c06d7957d3d968a5ffa3468304`
+Merge commit: `45827bdd594ecc90a0509c1e9f3170e2138babd8`
 
 ## Completed foundation
 
@@ -61,7 +61,8 @@ Vercel config, add real env values, or add runtime features.
 - Server-only Supabase admin profile/membership read boundary is complete.
 - Server-only admin workspace resolution boundary is complete.
 - Server-only session-bound admin read-client factory is complete.
-- Server-only admin authorization adapter-set composition boundary is in progress.
+- Server-only admin authorization adapter-set composition boundary is complete.
+- Server-only composed admin authorization decision boundary is in progress.
 
 Supabase Auth is approved as the future server-side admin auth provider. The
 Phase 2B-K identity boundary remains the only approved place to read Supabase
@@ -73,12 +74,15 @@ resolve trusted admin workspace scope. The Phase 2B-N session-bound admin
 read-client factory is restricted to the Phase 2B-K identity boundary and is
 not a runtime wiring approval. The Phase 2B-O adapter-set composition boundary
 is restricted to composing those existing server-only contracts and is not a
-runtime wiring approval. These boundaries are not wired into routes, pages,
-server actions, protected admin runtime, login/logout, admin UI, or product
-writes.
+runtime wiring approval. The Phase 2B-P composed decision boundary is
+restricted to composing the adapter set and calling the existing adapter-driven
+decision resolver; it is not a runtime wiring approval. These boundaries are
+not wired into routes, pages, server actions, protected admin runtime,
+login/logout, admin UI, or product writes.
 
 Runtime session-bound read-client usage remains deferred.
 Runtime adapter-set usage remains deferred.
+Runtime decision-boundary usage remains deferred.
 
 ## Still blocked
 
@@ -93,6 +97,8 @@ Runtime adapter-set usage remains deferred.
   server actions.
 - Admin authorization adapter-set usage from runtime routes, pages, or server
   actions.
+- Admin authorization decision boundary usage from runtime routes, pages, or
+  server actions.
 - Header reads.
 - Login/logout routes.
 - Protected admin pages.
