@@ -52,14 +52,14 @@ describe("Phase 2B-J admin auth runtime approval lane", () => {
     const decisionLog = readRepoFile("docs/DECISION-LOG.md");
 
     expect(status).toContain(
-      "Current phase: Phase 2B-L - server-only admin profile and membership read boundary."
+      "Current phase: Phase 2B-M - server-only admin workspace resolution boundary."
     );
     expect(status).toContain(
-      "Latest completed phase: Phase 2B-K - server-only Supabase Auth identity boundary."
+      "Latest completed phase: Phase 2B-L - server-only admin profile/membership read boundary."
     );
-    expect(status).toContain("Last merged phase PR: #51");
+    expect(status).toContain("Last merged phase PR: #52");
     expect(status).toContain(
-      "Merge commit: `19f385a20d82109fb73e77f9e5328cc91e16cffd`"
+      "Merge commit: `4f11dabda5fc1c61386b72f16a91e9eb370a7a30`"
     );
     expect(roadmap).toContain(
       "Phase 2B-J approves the future server-only Supabase Auth runtime lane"

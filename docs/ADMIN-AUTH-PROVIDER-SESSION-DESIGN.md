@@ -3,18 +3,22 @@
 This document records the Phase 2B-E auth provider/session/security design,
 the Phase 2B-J approved future admin auth runtime lane, the Phase 2B-K
 implemented server-only identity/session-read boundary, and the Phase 2B-L
-implemented server-only profile/membership read boundary.
+implemented server-only profile/membership read boundary, and the Phase 2B-M
+implemented server-only workspace resolution boundary.
 
 Phase 2B-E added auth provider/session/security design only.
 Phase 2B-J approves the future server-only Supabase Auth runtime lane only.
 Phase 2B-K implements only the server-only Supabase Auth identity boundary.
 Phase 2B-L implements only the server-only admin profile/membership read
 boundary.
+Phase 2B-M implements only the server-only admin workspace resolution boundary.
 
 Phase 2B-K cookie reads and Supabase Auth server calls are restricted to the
 server-only identity adapter named below.
 Phase 2B-L `admin_users` and `memberships` reads are restricted to the
 server-only profile/membership adapter named below.
+Phase 2B-M admin workspace resolution is restricted to the server-only
+workspace resolver named below.
 This document does not approve auth runtime wiring outside that boundary.
 This document does not read headers.
 This document does not add login/logout routes.
@@ -151,6 +155,30 @@ add admin UI, add product writes, add Storage, connect Supabase Cloud, change
 n8n workflows, add Pinecone runtime code, access `website/chat-config.js`, or
 deploy.
 
+## Phase 2B-M Implemented Workspace Resolution Boundary
+
+`website/lib/admin/authorization/server-admin-workspace-resolver.ts` is the only approved module for admin workspace resolution in this phase.
+
+It implements the existing `AdminWorkspaceResolver` safe shape only and is not wired into runtime routes, pages, or server actions.
+
+The boundary resolves trusted admin workspace scope only from an explicitly
+injected trusted server-side workspace ID. Browser/request workspace IDs are validation-only and never become authority.
+`requestedWorkspaceIdForValidationOnly` may validate or compare against the
+trusted server-side workspace ID, but it must not choose the trusted workspace.
+
+The boundary fails closed with `{ serverResolvedWorkspaceId: null }` without an explicitly injected trusted server-side workspace ID.
+Missing, empty, whitespace-only, mismatched, or provider-error values fail
+closed without exposing tokens, cookies, headers, env values, SQL, provider
+internals, or stack traces. Matching validation-only workspace IDs may pass
+only when trusted server-side workspace input is already present.
+
+It does not use public catalogue workspace config as an admin authorization
+shortcut. The boundary does not read cookies, call Supabase Auth, read headers,
+call Supabase tables, use service-role keys, create browser Supabase clients,
+add login/logout routes, add protected admin pages, add admin UI, add product
+writes, add Storage, connect Supabase Cloud, change n8n workflows, add
+Pinecone runtime code, access `website/chat-config.js`, or deploy.
+
 ## Non-goals
 
 This document does not:
@@ -162,6 +190,8 @@ This document does not:
   profile/membership boundary.
 - Add live authenticated read-client wiring for Phase 2B-L profile/membership
   reads.
+- Resolve admin workspace scope outside the Phase 2B-M workspace resolution
+  boundary.
 - Read headers.
 - Add login/logout routes.
 - Add protected admin pages.

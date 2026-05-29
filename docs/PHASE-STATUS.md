@@ -4,24 +4,25 @@ This is the quick status page for the SKR repo. Use `docs/PHASE-2-READINESS-PLAN
 
 ## Current phase
 
-Current phase: Phase 2B-L - server-only admin profile and membership read boundary.
+Current phase: Phase 2B-M - server-only admin workspace resolution boundary.
 
-This PR adds the smallest server-only Supabase-backed admin profile and
-workspace membership read boundary needed for future admin auth. It reads
-`admin_users` and `memberships` only inside the reviewed server-only
-profile/membership adapter boundary behind the existing adapter contracts, but
-requires an explicitly injected authenticated admin-read client and fails
-closed without one. It does not default to the plain anon-key Supabase helper.
-It does not add login/logout routes, protected admin pages, admin UI, runtime
+This PR adds the smallest server-only admin workspace resolution boundary
+needed for future admin auth. It implements the existing
+`AdminWorkspaceResolver` contract behind an explicitly injected trusted
+server-side workspace ID, treats browser/request workspace IDs as
+validation-only, and fails closed with `{ serverResolvedWorkspaceId: null }`
+without trusted input or on mismatches. It does not use public catalogue
+workspace config as an admin authorization shortcut. It does not add
+login/logout routes, protected admin pages, admin UI, runtime
 route/page/server-action wiring, product writes, Storage, deployment, Supabase
 Cloud connection, browser Supabase, service-role runtime paths, n8n changes,
 Pinecone runtime code, or `website/chat-config.js` access.
 
-Latest completed phase: Phase 2B-K - server-only Supabase Auth identity boundary.
+Latest completed phase: Phase 2B-L - server-only admin profile/membership read boundary.
 
-Last merged phase PR: #51
+Last merged phase PR: #52
 
-Merge commit: `19f385a20d82109fb73e77f9e5328cc91e16cffd`
+Merge commit: `4f11dabda5fc1c61386b72f16a91e9eb370a7a30`
 
 ## Completed foundation
 
@@ -59,15 +60,18 @@ Vercel config, add real env values, or add runtime features.
   guard refinement is complete.
 - Future server-only Supabase Auth runtime approval lane is complete.
 - Server-only Supabase Auth identity/session-read boundary is complete.
-- Server-only Supabase admin profile/membership read boundary is in progress.
+- Server-only Supabase admin profile/membership read boundary is complete.
+- Server-only admin workspace resolution boundary is in progress.
 
 Supabase Auth is approved as the future server-side admin auth provider. The
 Phase 2B-K identity boundary remains the only approved place to read Supabase
 Auth cookies or call Supabase Auth server APIs. The Phase 2B-L
 profile/membership boundary is the only approved place in this phase to read
-`admin_users` or `memberships` for admin authorization. Neither boundary is
-wired into routes, pages, server actions, protected admin runtime,
-login/logout, admin UI, or product writes.
+`admin_users` or `memberships` for admin authorization. The Phase 2B-M
+workspace resolver boundary is the only approved place in this phase to
+resolve trusted admin workspace scope. These boundaries are not wired into
+routes, pages, server actions, protected admin runtime, login/logout, admin UI,
+or product writes.
 
 Live authenticated read-client wiring remains deferred.
 
@@ -78,6 +82,8 @@ Live authenticated read-client wiring remains deferred.
 - Cookie reads outside the Phase 2B-K server-only identity boundary.
 - Admin profile/membership Supabase table reads outside the Phase 2B-L
   server-only read boundary.
+- Admin workspace resolution outside the Phase 2B-M server-only workspace
+  boundary.
 - Live authenticated read-client wiring for Phase 2B-L profile/membership
   reads.
 - Header reads.

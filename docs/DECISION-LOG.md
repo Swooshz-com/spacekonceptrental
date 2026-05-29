@@ -530,3 +530,28 @@ Storage, service-role runtime paths, browser Supabase, deployment, Supabase
 Cloud, n8n workflows, Pinecone runtime code, `website/chat-config.js`, or SaaS
 chatbot code. Cookie reads and Supabase Auth calls remain restricted to the
 Phase 2B-K identity boundary; header reads remain blocked.
+
+## 2026-05-29: Server-only Admin Workspace Resolution Boundary
+
+Decision: Phase 2B-M adds only the server-only admin workspace resolution boundary.
+
+The approved implementation boundary is
+`website/lib/admin/authorization/server-admin-workspace-resolver.ts`. It is a
+server-only `AdminWorkspaceResolver` implementation that resolves trusted
+workspace scope only from an explicitly injected trusted server-side workspace
+ID. Browser/request workspace IDs are validation-only and never become
+authority. Missing, empty, whitespace-only, mismatched, or provider-error
+values fail closed with `{ serverResolvedWorkspaceId: null }`. Matching
+validation-only workspace IDs may pass only when trusted server-side workspace
+input is already present.
+
+Reason: Phase 2B-L established the server-only admin profile/membership read
+boundary behind the existing adapter contracts. The next safe step is to fill
+the existing workspace resolver seam without using public catalogue workspace
+configuration as an admin authorization shortcut and without wiring the
+resolver into runtime routes, pages, or server actions. This phase does not
+read cookies, call Supabase Auth, read headers, call Supabase tables, use
+service-role keys, add browser Supabase, add login/logout, add protected admin
+pages, add admin UI, add product/category/product image writes, add Supabase
+Storage, deploy, connect Supabase Cloud, change n8n workflows, add Pinecone
+runtime code, access `website/chat-config.js`, or add SaaS chatbot code.

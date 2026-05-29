@@ -15,8 +15,12 @@ Completed phase history:
 - Phase 2B-F reconciled checklist hygiene and phase status only.
 - Phase 2B-G refreshed repo agent instructions only.
 - Phase 2B-H strengthened the reviewed server-side auth/membership resolution boundary with fake-adapter tests only.
+- Phase 2B-K added only the server-only Supabase Auth identity boundary.
+- Phase 2B-L added only the server-only admin profile/membership read boundary.
+- Phase 2B-M added only the server-only admin workspace resolution boundary.
 
-Latest completed admin/auth boundary state: Phase 2B-H reviewed dependency-injected server-side resolver/adapter decisions only.
+Latest completed admin/auth boundary state: Phase 2B-M server-only workspace
+resolution boundary behind the existing `AdminWorkspaceResolver` contract.
 
 This design does not implement real auth.
 This design does not add admin UI.
@@ -27,6 +31,8 @@ This design does not read headers.
 This design does not add login or logout routes.
 This design does not add protected admin pages.
 This design does not wire the admin resolver into runtime routes, pages, or server actions.
+This design does not resolve admin workspace scope outside the Phase 2B-M
+server-only workspace boundary.
 
 Product/category/product image writes remain blocked until admin/auth boundaries are implemented and tested.
 Product writes remain blocked until real auth/membership resolution, RLS, audit, and route/action boundaries are implemented and tested.
@@ -109,6 +115,18 @@ wiring, cookies, headers, routes, pages, server actions, admin UI, product
 writes, browser Supabase, service-role runtime paths, deployment, or Supabase
 Cloud connection.
 
+Phase 2B-M adds
+`website/lib/admin/authorization/server-admin-workspace-resolver.ts` as a
+server-only workspace resolver boundary behind the existing
+`AdminWorkspaceResolver` contract. It resolves trusted admin workspace scope
+only from an explicitly injected trusted server-side workspace ID, treats
+browser/request workspace IDs as validation-only, fails closed for missing,
+empty, whitespace-only, or mismatched values, and does not use public catalogue
+workspace config as an admin authorization shortcut. It does not read cookies,
+call Supabase Auth, read headers, call Supabase tables, use service-role keys,
+add browser Supabase, add routes, add pages, add server actions, add admin UI,
+or add product writes.
+
 ## Non-goals
 
 This design does not:
@@ -126,6 +144,8 @@ This design does not:
 - Add service-role runtime reads or writes.
 - Add Supabase Storage wiring.
 - Wire the admin resolver into runtime routes, pages, or server actions.
+- Resolve admin workspace scope outside the Phase 2B-M server-only workspace
+  boundary.
 - Connect to Supabase Cloud.
 - Add deployment configuration.
 - Add production seed data.
@@ -290,6 +310,14 @@ When trusted adapter inputs are available, the policy still revalidates active
 admin profile, membership actor ownership, workspace match, requested record
 workspace match, operation support, and role permission before returning an
 allow decision.
+
+The Phase 2B-M workspace resolver boundary fills only the existing
+`AdminWorkspaceResolver` seam. It may return a trusted workspace only from
+explicitly injected trusted server-side workspace input. Browser/request
+workspace IDs remain validation-only and may only match or reject that trusted
+workspace; they must not become authority. Missing trusted input, empty or
+whitespace input, mismatches, or provider errors return
+`{ serverResolvedWorkspaceId: null }`.
 
 ## Audit log expectations
 
