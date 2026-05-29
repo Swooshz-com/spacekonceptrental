@@ -13,11 +13,12 @@ Supabase admin profile/membership read boundary. Phase 2B-L does not default
 to a plain anon-key Supabase helper; it requires an explicitly injected
 authenticated admin-read client and fails closed without one. Phase 2B-M
 implements only the server-only admin workspace resolution boundary behind an
-explicitly injected trusted server-side workspace ID. Keep real auth runtime
-wiring, live authenticated read-client wiring, headers, routes, UI, product
-write, Storage, browser Supabase, and service-role runtime implementation
-items unchecked until a future implementation PR adds and tests that runtime
-code.
+explicitly injected trusted server-side workspace ID. Phase 2B-N implements
+only the server-only session-bound admin read-client factory inside the
+Phase 2B-K identity boundary. Keep real auth runtime wiring, factory usage from
+runtime routes/pages/actions, headers, routes, UI, product write, Storage,
+browser Supabase, and service-role runtime implementation items unchecked
+until a future implementation PR adds and tests that runtime code.
 
 Reference docs:
 
@@ -67,6 +68,7 @@ Reference docs:
 - [x] Cookie reads.
 - [x] Server-only Supabase admin profile/membership read boundary.
 - [x] Server-only admin workspace resolution boundary.
+- [x] Server-only session-bound admin read-client factory.
 
 ## Still Deferred
 
@@ -75,7 +77,7 @@ Reference docs:
 - [ ] Resolver/adapter runtime wiring into routes, pages, or server actions.
 - [ ] Admin profile/membership Supabase table reads outside the Phase 2B-L server-only read boundary.
 - [ ] Admin workspace resolution outside the Phase 2B-M server-only workspace boundary.
-- [ ] Live authenticated read-client wiring for Phase 2B-L profile/membership reads.
+- [ ] Session-bound admin read-client factory usage from runtime routes, pages, or server actions.
 - [ ] Header reads.
 - [ ] Login/logout routes.
 - [ ] Protected admin pages.

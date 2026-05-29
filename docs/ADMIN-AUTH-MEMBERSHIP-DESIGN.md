@@ -18,9 +18,12 @@ Completed phase history:
 - Phase 2B-K added only the server-only Supabase Auth identity boundary.
 - Phase 2B-L added only the server-only admin profile/membership read boundary.
 - Phase 2B-M added only the server-only admin workspace resolution boundary.
+- Phase 2B-N added only the server-only session-bound admin read-client
+  factory.
 
-Latest completed admin/auth boundary state: Phase 2B-M server-only workspace
-resolution boundary behind the existing `AdminWorkspaceResolver` contract.
+Latest completed admin/auth boundary state: Phase 2B-N server-only
+session-bound admin read-client factory inside the existing Phase 2B-K identity
+boundary.
 
 This design does not implement real auth.
 This design does not add admin UI.
@@ -33,6 +36,8 @@ This design does not add protected admin pages.
 This design does not wire the admin resolver into runtime routes, pages, or server actions.
 This design does not resolve admin workspace scope outside the Phase 2B-M
 server-only workspace boundary.
+This design does not use the Phase 2B-N session-bound admin read-client factory
+from runtime routes, pages, or server actions.
 
 Product/category/product image writes remain blocked until admin/auth boundaries are implemented and tested.
 Product writes remain blocked until real auth/membership resolution, RLS, audit, and route/action boundaries are implemented and tested.
@@ -127,6 +132,17 @@ call Supabase Auth, read headers, call Supabase tables, use service-role keys,
 add browser Supabase, add routes, add pages, add server actions, add admin UI,
 or add product writes.
 
+Phase 2B-N adds a session-bound admin read-client factory inside
+`website/lib/admin/authorization/supabase-admin-auth-identity-adapter.ts`.
+That module remains the only approved place in this phase to read cookies,
+call Supabase Auth for identity resolution, and create a session-bound admin
+read client. The factory returns the Phase 2B-L
+`SupabaseAdminReadClientResult` dependency shape for future profile/membership
+reads, fails closed without server env, cookies, or a client, and does not
+query `admin_users` or `memberships`. It is not wired into runtime routes,
+pages, server actions, protected admin pages, login/logout, admin UI, or
+product writes.
+
 ## Non-goals
 
 This design does not:
@@ -146,6 +162,8 @@ This design does not:
 - Wire the admin resolver into runtime routes, pages, or server actions.
 - Resolve admin workspace scope outside the Phase 2B-M server-only workspace
   boundary.
+- Use the Phase 2B-N session-bound admin read-client factory from runtime
+  routes, pages, or server actions.
 - Connect to Supabase Cloud.
 - Add deployment configuration.
 - Add production seed data.
@@ -318,6 +336,12 @@ workspace IDs remain validation-only and may only match or reject that trusted
 workspace; they must not become authority. Missing trusted input, empty or
 whitespace input, mismatches, or provider errors return
 `{ serverResolvedWorkspaceId: null }`.
+
+The Phase 2B-N session-bound admin read-client factory fills only the missing
+dependency needed by the Phase 2B-L profile/membership adapters. Tests may
+inject the returned `SupabaseAdminReadClientResult` into those adapters, but
+runtime routes, pages, and server actions must not use the factory until a
+later phase explicitly approves resolver/adapter runtime wiring.
 
 ## Audit log expectations
 

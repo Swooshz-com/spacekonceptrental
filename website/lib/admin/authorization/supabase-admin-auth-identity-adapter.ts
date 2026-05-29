@@ -7,6 +7,10 @@ import type {
   AdminAuthAdapter,
   ResolvedAdminIdentity
 } from "./admin-authorization-adapters";
+import type {
+  SupabaseAdminReadClient,
+  SupabaseAdminReadClientResult
+} from "./supabase-admin-profile-membership-adapters";
 import {
   getSupabaseServerConfig,
   type SupabaseServerConfig
@@ -51,12 +55,25 @@ export type SupabaseAdminAuthClientFactoryInput = {
   cookies: SupabaseAuthCookie[];
 };
 
+export type SupabaseAdminReadClientFactoryInput = {
+  config: Extract<SupabaseServerConfig, { configured: true }>;
+  cookies: SupabaseAuthCookie[];
+};
+
 export type SupabaseAdminAuthIdentityDependencies = {
   readConfig?: () => SupabaseServerConfig;
   readCookies?: () => Promise<SupabaseAuthCookie[]>;
   createAuthClient?: (
     input: SupabaseAdminAuthClientFactoryInput
   ) => SupabaseAuthUserClient;
+};
+
+export type SupabaseAdminReadClientFactoryDependencies = {
+  readConfig?: () => SupabaseServerConfig;
+  readCookies?: () => Promise<SupabaseAuthCookie[]>;
+  createReadClient?: (
+    input: SupabaseAdminReadClientFactoryInput
+  ) => SupabaseAdminReadClient | null | undefined;
 };
 
 function unauthenticated(
@@ -67,6 +84,14 @@ function unauthenticated(
     authenticated: false,
     reason,
     statusCode
+  };
+}
+
+function adminReadClientUnavailable(): SupabaseAdminReadClientResult {
+  return {
+    configured: false,
+    client: null,
+    reason: "authenticated_admin_read_client_required"
   };
 }
 
@@ -95,6 +120,24 @@ function createSupabaseSsrAuthClient({
       }
     }
   }) as unknown as SupabaseAuthUserClient;
+}
+
+function createSupabaseSsrAdminReadClient({
+  config,
+  cookies: requestCookies
+}: SupabaseAdminReadClientFactoryInput): SupabaseAdminReadClient {
+  return createServerClient(config.supabaseUrl, config.supabaseAnonKey, {
+    auth: {
+      autoRefreshToken: false,
+      detectSessionInUrl: false,
+      persistSession: false
+    },
+    cookies: {
+      getAll() {
+        return requestCookies;
+      }
+    }
+  }) as unknown as SupabaseAdminReadClient;
 }
 
 export async function resolveSupabaseAdminAuthIdentity(
@@ -130,6 +173,41 @@ export async function resolveSupabaseAdminAuthIdentity(
     };
   } catch {
     return unauthenticated("auth_provider_error", 503);
+  }
+}
+
+export async function createSessionBoundSupabaseAdminReadClient(
+  dependencies: SupabaseAdminReadClientFactoryDependencies = {}
+): Promise<SupabaseAdminReadClientResult> {
+  const readConfig = dependencies.readConfig ?? getSupabaseServerConfig;
+  const readCookies = dependencies.readCookies ?? readNextRequestCookies;
+  const createReadClient =
+    dependencies.createReadClient ?? createSupabaseSsrAdminReadClient;
+
+  try {
+    const config = readConfig();
+
+    if (!config.configured) {
+      return adminReadClientUnavailable();
+    }
+
+    const requestCookies = await readCookies();
+    const client = createReadClient({
+      config,
+      cookies: requestCookies
+    });
+
+    if (!client) {
+      return adminReadClientUnavailable();
+    }
+
+    return {
+      configured: true,
+      client,
+      missingEnv: []
+    };
+  } catch {
+    return adminReadClientUnavailable();
   }
 }
 

@@ -224,6 +224,16 @@ variables such as `N8N_CHAT_WEBHOOK_URL`.
   routes, protected admin pages, admin UI, product writes, Storage, browser
   Supabase, service-role runtime paths, deployment, Supabase Cloud, n8n
   workflow changes, Pinecone runtime code, or SaaS chatbot app code.
+- Phase 2B-N server-only session-bound admin read-client factory is approved
+  only inside the existing Phase 2B-K identity boundary. It may create a
+  session-bound Supabase SSR admin-read client from reviewed server-only
+  Supabase env and request cookies, and it returns the Phase 2B-L read-client
+  dependency shape. It is not approval to query `admin_users` or `memberships`
+  outside the Phase 2B-L boundary, wire runtime routes, pages, or server
+  actions, add login/logout routes, protected admin pages, admin UI, product
+  writes, Storage, browser Supabase, service-role runtime paths, deployment,
+  Supabase Cloud, n8n workflow changes, Pinecone runtime code, or SaaS chatbot
+  app code.
 - Future admin auth must remain server-side. Future session cookies must be
   HttpOnly, Secure in production, and have reviewed SameSite behaviour. Future
   state-changing admin routes/server actions need CSRF strategy before

@@ -4,7 +4,8 @@ This document records the Phase 2B-E auth provider/session/security design,
 the Phase 2B-J approved future admin auth runtime lane, the Phase 2B-K
 implemented server-only identity/session-read boundary, and the Phase 2B-L
 implemented server-only profile/membership read boundary, and the Phase 2B-M
-implemented server-only workspace resolution boundary.
+implemented server-only workspace resolution boundary, and the Phase 2B-N
+implemented server-only session-bound admin read-client factory.
 
 Phase 2B-E added auth provider/session/security design only.
 Phase 2B-J approves the future server-only Supabase Auth runtime lane only.
@@ -12,6 +13,8 @@ Phase 2B-K implements only the server-only Supabase Auth identity boundary.
 Phase 2B-L implements only the server-only admin profile/membership read
 boundary.
 Phase 2B-M implements only the server-only admin workspace resolution boundary.
+Phase 2B-N implements only the server-only session-bound admin read-client
+factory.
 
 Phase 2B-K cookie reads and Supabase Auth server calls are restricted to the
 server-only identity adapter named below.
@@ -19,6 +22,8 @@ Phase 2B-L `admin_users` and `memberships` reads are restricted to the
 server-only profile/membership adapter named below.
 Phase 2B-M admin workspace resolution is restricted to the server-only
 workspace resolver named below.
+Phase 2B-N session-bound admin read-client creation is restricted to the
+server-only identity adapter named below.
 This document does not approve auth runtime wiring outside that boundary.
 This document does not read headers.
 This document does not add login/logout routes.
@@ -126,6 +131,31 @@ The boundary does not read headers, use service-role keys, create browser
 Supabase clients, add login/logout routes, add protected admin pages, add
 admin UI, add product writes, add Storage, connect Supabase Cloud, or deploy.
 
+## Phase 2B-N Implemented Session-bound Admin Read-client Factory
+
+`website/lib/admin/authorization/supabase-admin-auth-identity-adapter.ts` is also the only approved module for creating a session-bound admin read client in this phase.
+
+The factory returns the Phase 2B-L `SupabaseAdminReadClientResult` shape and is not wired into runtime routes, pages, or server actions.
+
+The factory reuses the reviewed server-only Supabase URL, anon key, and
+request-cookie path inside the Phase 2B-K identity boundary to create a
+session-bound Supabase SSR client for future RLS-scoped admin profile and
+membership reads. It does not call Supabase Auth itself, does not validate a
+session by querying a provider, and does not make runtime admin auth complete.
+
+Missing server env, cookie-read failure, client-factory failure, or a missing
+session-bound client fail closed with the safe Phase 2B-L unavailable
+dependency shape. The result does not expose cookie values, tokens, Supabase
+internals, env values, SQL, provider errors, or stack traces.
+
+Creating this factory does not approve using it from runtime routes, pages, server actions, protected admin pages, login/logout, admin UI, or product writes.
+
+The factory does not query `admin_users`, does not query `memberships`, does
+not read headers, does not use service-role keys, does not create browser
+Supabase clients, does not add product writes, does not add Storage, does not
+connect Supabase Cloud, does not deploy, does not change n8n workflows, does
+not add Pinecone runtime code, and does not access `website/chat-config.js`.
+
 ## Phase 2B-L Implemented Profile And Membership Read Boundary
 
 `website/lib/admin/authorization/supabase-admin-profile-membership-adapters.ts` is the only approved module for Supabase `admin_users` and `memberships` table reads in this phase.
@@ -192,6 +222,8 @@ This document does not:
   reads.
 - Resolve admin workspace scope outside the Phase 2B-M workspace resolution
   boundary.
+- Use the Phase 2B-N session-bound admin read-client factory from runtime
+  routes, pages, or server actions.
 - Read headers.
 - Add login/logout routes.
 - Add protected admin pages.

@@ -25,10 +25,13 @@ tracked in `PHASE-2B-AUTH-IMPLEMENTATION.md`. The boundary requires an
 explicitly injected authenticated admin-read client and fails closed without
 one; live read-client wiring remains deferred. Phase 2B-M adds only the
 server-only admin workspace resolution boundary behind an explicitly injected
-trusted server-side workspace ID. Keep real auth runtime wiring, headers,
-login/logout routes, protected admin pages, admin UI, product management
-writes, browser Supabase, service-role runtime paths, deployment, and Supabase
-Cloud work unchecked until a future PR has explicit approval.
+trusted server-side workspace ID. Phase 2B-N adds only the server-only
+session-bound admin read-client factory inside the Phase 2B-K identity
+boundary. Keep real auth runtime wiring, factory usage from runtime
+routes/pages/actions, headers, login/logout routes, protected admin pages,
+admin UI, product management writes, browser Supabase, service-role runtime
+paths, deployment, and Supabase Cloud work unchecked until a future PR has
+explicit approval.
 
 ## Completed Design, Policy, Resolver, Adapter, And Provider-session Milestones
 
@@ -48,6 +51,7 @@ Cloud work unchecked until a future PR has explicit approval.
 - [x] Add server-only Supabase Auth identity boundary.
 - [x] Add server-only Supabase admin profile/membership read boundary.
 - [x] Add server-only admin workspace resolution boundary.
+- [x] Add server-only session-bound admin read-client factory.
 
 ## Design References
 
@@ -102,7 +106,7 @@ runtime implementation approval.
 - [ ] Cookie reads outside the Phase 2B-K server-only identity boundary.
 - [ ] Admin profile/membership Supabase table reads outside the Phase 2B-L server-only read boundary.
 - [ ] Admin workspace resolution outside the Phase 2B-M server-only workspace boundary.
-- [ ] Live authenticated read-client wiring for Phase 2B-L profile/membership reads.
+- [ ] Session-bound admin read-client factory usage from runtime routes, pages, or server actions.
 - [ ] Header reads.
 - [ ] Login/logout routes.
 - [ ] Protected admin pages.
