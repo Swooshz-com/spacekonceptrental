@@ -4,28 +4,29 @@ This is the quick status page for the SKR repo. Use `docs/PHASE-2-READINESS-PLAN
 
 ## Current phase
 
-Current phase: Phase 2B-T - server-only admin authorization gate composition boundary.
+Current phase: Phase 2B-U - admin runtime wiring approval lane.
 
-This PR adds the smallest server-only admin authorization gate composition
-boundary for future admin routes and server actions. The gate accepts only
-explicitly injected request metadata, CSRF verifier dependencies, preflight
-dependencies, and decision dependencies. It runs the Phase 2B-Q request
-security preflight first, may inject the Phase 2B-R CSRF proof verifier into
-that preflight when verifier dependencies are supplied, and calls the Phase
-2B-P composed authorization decision only after preflight passes. It returns
-safe allow, deny, or unavailable shapes and fails closed without exposing
-proofs, signatures, tokens, cookies, headers, env values, Supabase internals,
-SQL, provider details, stack traces, session IDs, nonces, workspace IDs in
-failures, membership IDs, or raw dependency errors. It does not issue CSRF
-proofs, read real request headers, read cookies, env, routes, pages, server
-actions, Supabase, or runtime state, does not wire itself into runtime
-routes/pages/actions, and does not make runtime admin auth complete.
+This PR is docs/checklist approval only and does not add runtime code. It
+records the future first runtime integration lane for using the Phase 2B-T
+server-only admin authorization gate from first-party server-only route
+handlers or server actions after a reviewed request metadata adapter exists.
+The future lane may read real request headers only inside that future reviewed
+server-only request metadata adapter, must pass explicit metadata into
+`resolveServerAdminAuthorizationGate()`, must preserve preflight-before-decision
+ordering, and must keep Supabase Auth cookies, profile/membership reads,
+workspace resolution, CSRF proof issuing/verifying, adapter-set composition,
+and decision logic inside their existing Phase 2B-K through Phase 2B-T
+boundaries. This PR does not add route handlers, pages, server actions, header
+reads, login/logout, protected admin pages, admin UI, product writes, Supabase
+Storage, browser Supabase, service-role paths, Supabase Cloud, deployment,
+real env values, n8n changes, Pinecone runtime code, or `website/chat-config.js`
+access.
 
-Latest completed phase: Phase 2B-S - server-only CSRF proof issuer boundary.
+Latest completed phase: Phase 2B-T - server-only admin authorization gate composition boundary.
 
-Last merged phase PR: #59
+Last merged phase PR: #60
 
-Merge commit: `5ed4f4fde6fc267ea11f681967c8a589de993e1f`
+Merge commit: `2052f33a68f4c4d141821264bfa8d757e5b23159`
 
 ## Completed foundation
 
@@ -71,7 +72,8 @@ Vercel config, add real env values, or add runtime features.
 - Server-only admin request security preflight boundary is complete.
 - Server-only CSRF proof verifier boundary is complete.
 - Server-only CSRF proof issuer boundary is complete.
-- Server-only admin authorization gate composition boundary is in progress.
+- Server-only admin authorization gate composition boundary is complete.
+- Admin runtime wiring approval lane is in progress.
 
 Supabase Auth is approved as the future server-side admin auth provider. The
 Phase 2B-K identity boundary remains the only approved place to read Supabase
@@ -95,7 +97,12 @@ cookie-read, or CSRF issuance approval. The Phase 2B-S CSRF proof issuer
 boundary is restricted to issuing verifier-compatible proofs from explicitly
 injected proof material and dependency-injected signer/nonce dependencies; it
 is not a runtime wiring, header-read, cookie-read, env-read, replay-store, or
-CSRF verification approval. These boundaries are not wired into routes, pages,
+CSRF verification approval. The Phase 2B-T admin authorization gate
+composition boundary is restricted to composing those server-only boundaries
+from explicit inputs only and is not a runtime wiring approval. Phase 2B-U
+approves only the future runtime lane for gate usage from first-party
+server-only routes or server actions after a reviewed request metadata adapter
+exists; it is not runtime implementation approval. These boundaries are not wired into routes, pages,
 server actions, protected admin runtime, login/logout, admin UI, or product
 writes.
 
