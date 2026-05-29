@@ -6,8 +6,6 @@ import { describe, expect, it } from "vitest";
 const repoRoot = resolve(process.cwd(), "..");
 const approvedIdentityBoundaryPath =
   "website/lib/admin/authorization/supabase-admin-auth-identity-adapter.ts";
-const approvedRequestMetadataBoundaryPath =
-  "website/lib/admin/authorization/server-admin-request-metadata-adapter.ts";
 const approvedProfileMembershipBoundaryPath =
   "website/lib/admin/authorization/supabase-admin-profile-membership-adapters.ts";
 const approvedWorkspaceResolverBoundaryPath =
@@ -24,6 +22,8 @@ const approvedCsrfIssuerBoundaryPath =
   "website/lib/admin/authorization/server-admin-csrf-proof-issuer.ts";
 const approvedGateBoundaryPath =
   "website/lib/admin/authorization/server-admin-authorization-gate.ts";
+const approvedRequestMetadataBoundaryPath =
+  "website/lib/admin/authorization/server-admin-request-metadata-adapter.ts";
 const sourceExtensions = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs"]);
 
 function readRepoFile(relativePath: string) {
@@ -64,8 +64,8 @@ function expectUnchecked(markdown: string, item: string) {
   expect(markdown).toContain(`- [ ] ${item}`);
 }
 
-describe("Phase 2B-S server-only CSRF proof issuer boundary", () => {
-  it("records Phase 2B-S status, roadmap, decision-log, and project context scope", () => {
+describe("Phase 2B-V server-only admin request metadata adapter boundary", () => {
+  it("records Phase 2B-V status, roadmap, decision-log, and project context scope", () => {
     const status = readRepoFile("docs/PHASE-STATUS.md");
     const roadmap = readRepoFile("docs/PHASE-ROADMAP.md");
     const decisionLog = readRepoFile("docs/DECISION-LOG.md");
@@ -82,17 +82,17 @@ describe("Phase 2B-S server-only CSRF proof issuer boundary", () => {
       "Merge commit: `b772ab25d7746060d5e14afdebc4192860763935`"
     );
     expect(roadmap).toContain(
-      "Phase 2B-S adds only the server-only CSRF proof issuer boundary"
+      "Phase 2B-V adds only the server-only admin request metadata adapter boundary"
     );
     expect(decisionLog).toContain(
-      "Decision: Phase 2B-S adds only the server-only CSRF proof issuer boundary"
+      "Decision: Phase 2B-V adds only the server-only admin request metadata adapter boundary"
     );
     expect(projectContext).toContain(
-      "Phase 2B-S adds a server-only CSRF proof issuer boundary"
+      "Phase 2B-V adds a server-only admin request metadata adapter boundary"
     );
   });
 
-  it("documents the implemented CSRF issuer boundary and checklist state", () => {
+  it("documents the implemented request metadata adapter boundary and checklist state", () => {
     const design = readRepoFile("docs/ADMIN-AUTH-PROVIDER-SESSION-DESIGN.md");
     const membershipDesign = readRepoFile(
       "docs/ADMIN-AUTH-MEMBERSHIP-DESIGN.md"
@@ -106,40 +106,38 @@ describe("Phase 2B-S server-only CSRF proof issuer boundary", () => {
     );
 
     expect(design).toContain(
-      "## Phase 2B-S Implemented CSRF Proof Issuer Boundary"
+      "## Phase 2B-V Implemented Admin Request Metadata Adapter Boundary"
     );
     expect(design).toContain(
-      "`website/lib/admin/authorization/server-admin-csrf-proof-issuer.ts` is the only approved module for issuing structured CSRF proofs in this phase."
+      "`website/lib/admin/authorization/server-admin-request-metadata-adapter.ts` is the only newly approved production module in this phase that may import `next/headers` and call `headers()`."
     );
     expect(design).toContain(
-      "The issuer creates verifier-compatible proofs only from explicitly injected operation, session binding, nonce, timestamps, and signer dependencies."
+      "The adapter reads only untrusted request metadata for future injection into `resolveServerAdminAuthorizationGate()` and does not call the gate."
     );
     expect(design).toContain(
-      "Creating this CSRF issuer does not approve using it from runtime routes, pages, server actions, protected admin pages, login/logout, admin UI, or product writes."
+      "Creating this metadata adapter does not approve using it from runtime routes, pages, server actions, protected admin pages, login/logout, admin UI, or product writes."
     );
     expect(membershipDesign).toContain(
-      "Phase 2B-S adds a server-only CSRF proof issuer boundary"
+      "Phase 2B-V adds a server-only admin request metadata adapter boundary"
     );
     expect(safety).toContain(
-      "Phase 2B-S server-only CSRF proof issuer boundary is approved only as a server-only issuer module"
+      "Phase 2B-V server-only admin request metadata adapter boundary is approved only as a server-only request metadata reader"
     );
 
-    expectChecked(authChecklist, "Server-only CSRF proof issuer boundary.");
+    expectChecked(
+      authChecklist,
+      "Server-only admin request metadata adapter boundary."
+    );
     expectChecked(
       adminAuthChecklist,
-      "Add server-only CSRF proof issuer boundary."
+      "Add server-only admin request metadata adapter boundary."
     );
 
     for (const item of [
       "Real auth runtime wiring.",
       "Supabase Auth runtime wiring.",
       "Resolver/adapter runtime wiring into routes, pages, or server actions.",
-      "Session-bound admin read-client factory usage from runtime routes, pages, or server actions.",
-      "Admin authorization adapter-set usage from runtime routes, pages, or server actions.",
-      "Admin authorization decision boundary usage from runtime routes, pages, or server actions.",
-      "Admin request security preflight usage from runtime routes, pages, or server actions.",
-      "Admin CSRF proof verifier usage from runtime routes, pages, or server actions.",
-      "Admin CSRF proof issuer usage from runtime routes, pages, or server actions.",
+      "Admin authorization gate usage from runtime routes, pages, or server actions.",
       "Header reads outside the Phase 2B-V request metadata adapter.",
       "Login/logout routes.",
       "Protected admin pages.",
@@ -156,62 +154,78 @@ describe("Phase 2B-S server-only CSRF proof issuer boundary", () => {
     }
   });
 
-  it("keeps @supabase/ssr, cookie reads, and Supabase Auth calls inside the identity boundary", () => {
+  it("allows next headers only in the identity boundary and request metadata adapter while cookies stay identity-only", () => {
     const productionSources = readTrackedProductionSources([
       "website/app",
       "website/components",
       "website/lib"
     ]);
-    const approvedSource = readRepoFile(approvedIdentityBoundaryPath);
-    const outsideIdentityBoundary = productionSources
-      .filter(({ filePath }) => filePath !== approvedIdentityBoundaryPath &&
-          filePath !== approvedRequestMetadataBoundaryPath)
-      .map(({ source }) => source)
-      .join("\n");
+    const combinedOutside = (approvedPaths: string | string[]) => {
+      const excludedPaths = Array.isArray(approvedPaths)
+        ? approvedPaths
+        : [approvedPaths];
 
-    expect(approvedSource).toContain('import "server-only";');
-    expect(approvedSource).toContain('from "@supabase/ssr"');
-    expect(approvedSource).toContain('from "next/headers"');
-    expect(approvedSource).toContain("cookies()");
-    expect(approvedSource).toContain("auth.getUser()");
-    expect(approvedSource).toContain("createSessionBoundSupabaseAdminReadClient");
+      return productionSources
+        .filter(({ filePath }) => !excludedPaths.includes(filePath))
+        .map(({ source }) => source)
+        .join("\n");
+    };
+    const outsideHeaderBoundaries = combinedOutside([
+      approvedIdentityBoundaryPath,
+      approvedRequestMetadataBoundaryPath
+    ]);
+    const outsideIdentityBoundary = combinedOutside([approvedIdentityBoundaryPath, approvedRequestMetadataBoundaryPath]);
 
-    expect(outsideIdentityBoundary).not.toContain("@supabase/ssr");
-    expect(outsideIdentityBoundary).not.toContain("next/headers");
+    expect(readRepoFile(approvedIdentityBoundaryPath)).toContain(
+      'from "next/headers"'
+    );
+    expect(readRepoFile(approvedRequestMetadataBoundaryPath)).toContain(
+      'from "next/headers"'
+    );
+    expect(outsideHeaderBoundaries).not.toContain("next/headers");
+    expect(outsideHeaderBoundaries).not.toContain("headers()");
     expect(outsideIdentityBoundary).not.toContain("cookies()");
-    expect(outsideIdentityBoundary).not.toContain("headers()");
+    expect(outsideIdentityBoundary).not.toContain("@supabase/ssr");
     expect(outsideIdentityBoundary).not.toMatch(
       /\.auth\.(?:getUser|getSession|signIn|signOut|setSession|exchangeCodeForSession)/m
     );
   });
 
-  it("keeps admin profile and membership table reads only in the Phase 2B-L boundary", () => {
-    const productionSources = readTrackedProductionSources([
-      "website/app",
-      "website/components",
-      "website/lib"
-    ]);
-    const approvedSource = readRepoFile(approvedProfileMembershipBoundaryPath);
-    const outsideProfileMembershipBoundary = productionSources
-      .filter(
-        ({ filePath }) => filePath !== approvedProfileMembershipBoundaryPath
-      )
-      .map(({ source }) => source)
-      .join("\n");
+  it("keeps the request metadata adapter free of authorization, provider, and write shortcuts", () => {
+    const source = readRepoFile(approvedRequestMetadataBoundaryPath);
 
-    expect(approvedSource).toContain('import "server-only";');
-    expect(approvedSource).toContain('from("admin_users")');
-    expect(approvedSource).toContain('from("memberships")');
-
-    expect(outsideProfileMembershipBoundary).not.toMatch(
-      /\.from\(["']admin_users["']\)/m
-    );
-    expect(outsideProfileMembershipBoundary).not.toMatch(
-      /\.from\(["']memberships["']\)/m
-    );
+    expect(source).toContain('import "server-only";');
+    expect(source).toContain("readServerAdminRequestMetadata");
+    expect(source).toContain("headers()");
+    expect(source).not.toContain("resolveServerAdminAuthorizationGate");
+    expect(source).not.toContain("validateServerAdminRequestSecurityPreflight");
+    expect(source).not.toContain("resolveServerAdminAuthorizationDecision");
+    expect(source).not.toContain("createServerAdminAuthorizationAdapterSet");
+    expect(source).not.toContain("createSessionBoundSupabaseAdminReadClient");
+    expect(source).not.toContain("issueServerAdminCsrfProof");
+    expect(source).not.toContain("verifyServerAdminCsrfProof");
+    expect(source).not.toContain("cookies()");
+    expect(source).not.toContain("@supabase/ssr");
+    expect(source).not.toContain("@supabase/supabase-js");
+    expect(source).not.toContain("auth.getUser()");
+    expect(source).not.toContain("admin_users");
+    expect(source).not.toContain("memberships");
+    expect(source).not.toContain("process.env");
+    expect(source).not.toContain("SUPABASE_SERVICE_ROLE");
+    expect(source).not.toContain("NEXT_PUBLIC_SUPABASE");
+    expect(source).not.toContain("N8N");
+    expect(source).not.toContain("PINECONE");
+    expect(source).not.toContain("chat-config");
+    expect(source).not.toContain(".from(");
+    expect(source).not.toContain(".insert(");
+    expect(source).not.toContain(".update(");
+    expect(source).not.toContain(".upsert(");
+    expect(source).not.toContain(".delete(");
+    expect(source).not.toContain('"use server"');
+    expect(source).not.toMatch(/from ["'][^"']*app\//m);
   });
 
-  it("keeps each server-only admin boundary in its approved module", () => {
+  it("keeps existing admin authorization boundary ownership narrow", () => {
     const productionSources = readTrackedProductionSources([
       "website/app",
       "website/components",
@@ -228,22 +242,14 @@ describe("Phase 2B-S server-only CSRF proof issuer boundary", () => {
         .join("\n");
     };
 
-    expect(readRepoFile(approvedWorkspaceResolverBoundaryPath)).toContain(
+    expect(combinedOutside(approvedProfileMembershipBoundaryPath)).not.toMatch(
+      /\.from\(["']admin_users["']\)/m
+    );
+    expect(combinedOutside(approvedProfileMembershipBoundaryPath)).not.toMatch(
+      /\.from\(["']memberships["']\)/m
+    );
+    expect(combinedOutside(approvedWorkspaceResolverBoundaryPath)).not.toContain(
       "resolveServerAdminWorkspaceForRequest"
-    );
-    expect(
-      combinedOutside(approvedWorkspaceResolverBoundaryPath)
-    ).not.toContain("resolveServerAdminWorkspaceForRequest");
-
-    expect(readRepoFile(approvedIdentityBoundaryPath)).toContain(
-      "createSessionBoundSupabaseAdminReadClient"
-    );
-    expect(combinedOutside([approvedIdentityBoundaryPath, approvedRequestMetadataBoundaryPath])).not.toContain(
-      "createSupabaseSsrAdminReadClient"
-    );
-
-    expect(readRepoFile(approvedCompositionBoundaryPath)).toContain(
-      "createServerAdminAuthorizationAdapterSet"
     );
     expect(
       combinedOutside([
@@ -251,73 +257,21 @@ describe("Phase 2B-S server-only CSRF proof issuer boundary", () => {
         approvedDecisionBoundaryPath
       ])
     ).not.toContain("createServerAdminAuthorizationAdapterSet");
-
-    expect(readRepoFile(approvedDecisionBoundaryPath)).toContain(
-      "resolveServerAdminAuthorizationDecision"
-    );
     expect(
       combinedOutside([approvedDecisionBoundaryPath, approvedGateBoundaryPath])
     ).not.toContain("resolveServerAdminAuthorizationDecision");
-
-    expect(readRepoFile(approvedPreflightBoundaryPath)).toContain(
-      "validateServerAdminRequestSecurityPreflight"
-    );
     expect(
       combinedOutside([approvedPreflightBoundaryPath, approvedGateBoundaryPath])
     ).not.toContain("validateServerAdminRequestSecurityPreflight");
-
-    expect(readRepoFile(approvedCsrfVerifierBoundaryPath)).toContain(
-      "verifyServerAdminCsrfProof"
+    expect(
+      combinedOutside([approvedCsrfVerifierBoundaryPath, approvedGateBoundaryPath])
+    ).not.toContain("verifyServerAdminCsrfProof");
+    expect(combinedOutside(approvedCsrfIssuerBoundaryPath)).not.toContain(
+      "issueServerAdminCsrfProof"
     );
-    expect(combinedOutside(approvedCsrfVerifierBoundaryPath)).not.toContain(
-      "verifyServerAdminCsrfProof"
+    expect(combinedOutside(approvedGateBoundaryPath)).not.toContain(
+      "resolveServerAdminAuthorizationGate"
     );
-  });
-
-  it("keeps CSRF proof issuance only in the Phase 2B-S issuer boundary", () => {
-    const productionSources = readTrackedProductionSources([
-      "website/app",
-      "website/components",
-      "website/lib"
-    ]);
-    const approvedSource = readRepoFile(approvedCsrfIssuerBoundaryPath);
-    const outsideIssuerBoundary = productionSources
-      .filter(({ filePath }) => filePath !== approvedCsrfIssuerBoundaryPath)
-      .map(({ source }) => source)
-      .join("\n");
-
-    expect(approvedSource).toContain('import "server-only";');
-    expect(approvedSource).toContain("issueServerAdminCsrfProof");
-    expect(approvedSource).toContain("createServerAdminCsrfProofIssuer");
-    expect(approvedSource).not.toContain("next/headers");
-    expect(approvedSource).not.toContain("headers()");
-    expect(approvedSource).not.toContain("cookies()");
-    expect(approvedSource).not.toContain("@supabase/ssr");
-    expect(approvedSource).not.toContain("@supabase/supabase-js");
-    expect(approvedSource).not.toContain("auth.getUser()");
-    expect(approvedSource).not.toContain("admin_users");
-    expect(approvedSource).not.toContain("memberships");
-    expect(approvedSource).not.toContain("createSessionBoundSupabaseAdminReadClient");
-    expect(approvedSource).not.toContain("createServerAdminAuthorizationAdapterSet");
-    expect(approvedSource).not.toContain("resolveServerAdminAuthorizationDecision");
-    expect(approvedSource).not.toContain("resolveAdminAuthorizationWithAdapters");
-    expect(approvedSource).not.toContain("validateServerAdminRequestSecurityPreflight");
-    expect(approvedSource).not.toContain("verifyServerAdminCsrfProof");
-    expect(approvedSource).not.toContain("process.env");
-    expect(approvedSource).not.toContain("SUPABASE_SERVICE_ROLE");
-    expect(approvedSource).not.toContain("NEXT_PUBLIC_SUPABASE");
-    expect(approvedSource).not.toContain("N8N");
-    expect(approvedSource).not.toContain("PINECONE");
-    expect(approvedSource).not.toContain("chat-config");
-    expect(approvedSource).not.toContain(".from(");
-    expect(approvedSource).not.toContain(".insert(");
-    expect(approvedSource).not.toContain(".update(");
-    expect(approvedSource).not.toContain(".upsert(");
-    expect(approvedSource).not.toContain(".delete(");
-    expect(approvedSource).not.toContain('"use server"');
-    expect(approvedSource).not.toMatch(/from ["'][^"']*app\//m);
-    expect(outsideIssuerBoundary).not.toContain("issueServerAdminCsrfProof");
-    expect(outsideIssuerBoundary).not.toContain("createServerAdminCsrfProofIssuer");
   });
 
   it("keeps routes, pages, server actions, writes, storage, deployment, n8n, Pinecone, and chat-config out of scope", () => {
@@ -346,7 +300,8 @@ describe("Phase 2B-S server-only CSRF proof issuer boundary", () => {
           filePath !== approvedPreflightBoundaryPath &&
           filePath !== approvedCsrfVerifierBoundaryPath &&
           filePath !== approvedCsrfIssuerBoundaryPath &&
-          filePath !== approvedGateBoundaryPath
+          filePath !== approvedGateBoundaryPath &&
+          filePath !== approvedRequestMetadataBoundaryPath
       )
       .map(({ source }) => source)
       .join("\n");
@@ -357,6 +312,7 @@ describe("Phase 2B-S server-only CSRF proof issuer boundary", () => {
     expect(readTrackedFiles(["website/app/api/auth"])).toEqual([]);
     expect(readTrackedFiles(["website/app/api/login"])).toEqual([]);
     expect(readTrackedFiles(["website/app/api/logout"])).toEqual([]);
+    expect(readTrackedFiles(["website/app/api/admin"])).toEqual([]);
     expect(readTrackedFiles(["website/app/api/products"])).toEqual([]);
     expect(readTrackedFiles(["website/app/api/categories"])).toEqual([]);
     expect(readTrackedFiles(["website/app/api/product-images"])).toEqual([]);
@@ -377,7 +333,6 @@ describe("Phase 2B-S server-only CSRF proof issuer boundary", () => {
     expect(productionSource).not.toContain("@pinecone-database");
     expect(productionSource).not.toContain("chat-config");
     expect(browserSource).not.toContain("@supabase/");
-
     expect(readTrackedFiles(["n8n-workflows"]).sort()).toEqual([
       "n8n-workflows/spacekonceptrental-customer-support-agent.workflow.json",
       "n8n-workflows/spacekonceptrental-error-handler.workflow.json",

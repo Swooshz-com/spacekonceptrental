@@ -28,16 +28,21 @@ Completed phase history:
   only.
 - Phase 2B-R adds a server-only CSRF proof verifier boundary only.
 - Phase 2B-S adds a server-only CSRF proof issuer boundary only.
+- Phase 2B-T adds a server-only admin authorization gate composition boundary
+  only.
+- Phase 2B-U approves only the future admin runtime gate usage lane.
+- Phase 2B-V adds a server-only admin request metadata adapter boundary only.
 
-Latest completed admin/auth boundary state: Phase 2B-S server-only CSRF proof
-issuer boundary.
+Latest completed admin/auth boundary state: Phase 2B-V server-only admin
+request metadata adapter boundary.
 
 This design does not implement real auth.
 This design does not add admin UI.
 This design does not add product writes.
 This design does not add Supabase Auth runtime wiring.
 This design does not read cookies.
-This design does not read headers.
+This design does not approve header reads outside the Phase 2B-V request
+metadata adapter.
 This design does not add login or logout routes.
 This design does not add protected admin pages.
 This design does not wire the admin resolver into runtime routes, pages, or server actions.
@@ -244,6 +249,20 @@ routes, pages, server actions, header reads, login/logout, protected admin
 pages, admin UI, product/category/product image writes, Supabase Storage,
 browser Supabase, service-role runtime paths, Supabase Cloud, deployment,
 n8n changes, Pinecone runtime code, or `website/chat-config.js` access.
+
+Phase 2B-V adds a server-only admin request metadata adapter boundary at
+`website/lib/admin/authorization/server-admin-request-metadata-adapter.ts`.
+It is the only newly approved production module in this phase that may import
+`next/headers` and call `headers()`. It reads only minimal untrusted request
+metadata for future injection into the Phase 2B-T gate, requires trusted
+expected Origin and expected Host from explicit dependency/config injection,
+and does not treat headers as identity, membership, workspace, provider, or
+authorization authority. It does not call the gate, preflight, decision
+boundary, CSRF verifier, CSRF issuer, adapter-set composition, Supabase Auth,
+`admin_users`, `memberships`, or product write logic. Creating this adapter
+does not approve using it from runtime routes, pages, server actions,
+protected admin pages, login/logout, admin UI, or product writes.
+
 ## Non-goals
 
 This design does not:
@@ -251,7 +270,7 @@ This design does not:
 - Implement real auth.
 - Add Supabase Auth runtime wiring.
 - Read cookies.
-- Read headers.
+- Read headers outside the Phase 2B-V request metadata adapter.
 - Add login or logout routes.
 - Add protected admin pages.
 - Add admin UI.

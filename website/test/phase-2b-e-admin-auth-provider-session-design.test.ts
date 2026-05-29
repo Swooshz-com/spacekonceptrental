@@ -10,6 +10,8 @@ const implementationChecklistPath =
 const membershipDesignPath = "docs/ADMIN-AUTH-MEMBERSHIP-DESIGN.md";
 const approvedAuthBoundaryPath =
   "website/lib/admin/authorization/supabase-admin-auth-identity-adapter.ts";
+const approvedRequestMetadataBoundaryPath =
+  "website/lib/admin/authorization/server-admin-request-metadata-adapter.ts";
 const adminAuthorizationModulePaths = [
   "website/lib/admin/authorization/admin-authorization-policy.ts",
   "website/lib/admin/authorization/admin-authorization-resolver.ts",
@@ -99,7 +101,9 @@ describe("Phase 2B-E admin auth provider and session design", () => {
     expect(design).toContain(
       "This document does not approve auth runtime wiring outside these boundaries."
     );
-    expect(design).toContain("This document does not read headers.");
+    expect(design).toContain(
+      "This document does not approve header reads outside the Phase 2B-V adapter."
+    );
     expect(design).toContain("This document does not add login/logout routes.");
     expect(design).toContain("This document does not add protected admin pages.");
     expect(design).toContain("This document does not add admin UI.");
@@ -163,7 +167,7 @@ describe("Phase 2B-E admin auth provider and session design", () => {
       "Explicit approval obtained before product writes.",
       "Real auth runtime wiring.",
       "Supabase Auth runtime wiring.",
-      "Header reads.",
+      "Header reads outside the Phase 2B-V request metadata adapter.",
       "Login/logout routes.",
       "Protected admin pages.",
       "Admin UI.",

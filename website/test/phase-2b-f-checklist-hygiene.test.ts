@@ -16,6 +16,8 @@ const authImplementationChecklistPath =
   "docs/checklists/PHASE-2B-AUTH-IMPLEMENTATION.md";
 const approvedAuthBoundaryPath =
   "website/lib/admin/authorization/supabase-admin-auth-identity-adapter.ts";
+const approvedRequestMetadataBoundaryPath =
+  "website/lib/admin/authorization/server-admin-request-metadata-adapter.ts";
 const sourceExtensions = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs"]);
 
 const expectedN8nWorkflowHashes = new Map([
@@ -134,11 +136,11 @@ describe("Phase 2B-F checklist hygiene and phase status reconciliation", () => {
 
     const status = readRepoFile(phaseStatusPath);
 
-    expect(status).toContain("Current phase: Phase 2B-U");
-    expect(status).toContain("Latest completed phase: Phase 2B-T");
-    expect(status).toContain("Last merged phase PR: #60");
+    expect(status).toContain("Current phase: Phase 2B-V");
+    expect(status).toContain("Latest completed phase: Phase 2B-U");
+    expect(status).toContain("Last merged phase PR: #61");
     expect(status).toContain(
-      "Merge commit: `2052f33a68f4c4d141821264bfa8d757e5b23159`"
+      "Merge commit: `b772ab25d7746060d5e14afdebc4192860763935`"
     );
     expect(status).toContain("Completed foundation");
     expect(status).toContain("Completed deployment readiness docs");
@@ -229,7 +231,7 @@ describe("Phase 2B-F checklist hygiene and phase status reconciliation", () => {
       "Real auth runtime wiring.",
       "Supabase Auth runtime wiring.",
       "Cookie reads outside the Phase 2B-K server-only identity boundary.",
-      "Header reads.",
+      "Header reads outside the Phase 2B-V request metadata adapter.",
       "Login/logout routes.",
       "Protected admin pages.",
       "Admin UI.",
@@ -255,7 +257,7 @@ describe("Phase 2B-F checklist hygiene and phase status reconciliation", () => {
     for (const item of [
       "Real auth runtime wiring.",
       "Supabase Auth runtime wiring.",
-      "Header reads.",
+      "Header reads outside the Phase 2B-V request metadata adapter.",
       "Login/logout routes.",
       "Protected admin pages.",
       "Admin UI.",
@@ -311,7 +313,9 @@ describe("Phase 2B-F checklist hygiene and phase status reconciliation", () => {
       "website/lib"
     ]);
     const boundaryExcludedSources = productionSources.filter(
-      ({ filePath }) => filePath !== approvedAuthBoundaryPath
+      ({ filePath }) =>
+        filePath !== approvedAuthBoundaryPath &&
+        filePath !== approvedRequestMetadataBoundaryPath
     );
     const combinedSource = boundaryExcludedSources
       .map(({ source }) => source)

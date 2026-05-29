@@ -344,6 +344,22 @@ pages, admin UI, product/category/product image writes, Supabase Storage,
 service-role runtime paths, browser Supabase, Supabase Cloud, deployment,
 real env values, n8n workflow changes, Pinecone runtime code, or
 `website/chat-config.js` access.
+
+Phase 2B-V adds only the server-only admin request metadata adapter boundary
+for future admin gate usage. The adapter is allowed only inside
+`website/lib/admin/authorization/server-admin-request-metadata-adapter.ts`.
+It may import `next/headers` and call `headers()` only there, reads only
+minimal untrusted request metadata, requires trusted expected origin and host
+inputs through dependency injection, and returns safe explicit metadata for a
+future call to `resolveServerAdminAuthorizationGate()`. It does not call the
+gate, preflight, decision boundary, CSRF verifier, CSRF issuer, adapter-set
+composition, Supabase, or product write logic. Creating this adapter is not
+approval to add runtime route handlers, pages, server actions, login/logout
+routes, protected admin pages, admin UI, product/category/product image writes,
+Supabase Storage, service-role runtime paths, browser Supabase, Supabase Cloud,
+deployment, real env values, n8n workflow changes, Pinecone runtime code, or
+`website/chat-config.js` access.
+
 Further Phase 2 implementation work remains unapproved until scoped in a
 separate phase PR.
 

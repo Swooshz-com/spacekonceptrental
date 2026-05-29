@@ -12,6 +12,8 @@ const designDocPath = "docs/ADMIN-AUTH-MEMBERSHIP-DESIGN.md";
 const checklistPath = "docs/checklists/PHASE-2B-ADMIN-AUTH.md";
 const approvedAuthBoundaryPath =
   "website/lib/admin/authorization/supabase-admin-auth-identity-adapter.ts";
+const approvedRequestMetadataBoundaryPath =
+  "website/lib/admin/authorization/server-admin-request-metadata-adapter.ts";
 const sourceExtensions = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs"]);
 
 function readRepoFile(relativePath: string) {
@@ -70,7 +72,9 @@ describe("Phase 2B-D admin auth adapter boundary", () => {
       "This design does not add Supabase Auth runtime wiring."
     );
     expect(design).toContain("This design does not read cookies.");
-    expect(design).toContain("This design does not read headers.");
+    expect(design).toContain(
+      "This design does not approve header reads outside the Phase 2B-V request"
+    );
     expect(design).toContain("This design does not add login or logout routes.");
     expect(design).toContain("This design does not add protected admin pages.");
     expect(design).toContain("This design does not add admin UI.");

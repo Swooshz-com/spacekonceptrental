@@ -10,6 +10,8 @@ const designDocPath = "docs/ADMIN-AUTH-MEMBERSHIP-DESIGN.md";
 const checklistPath = "docs/checklists/PHASE-2B-ADMIN-AUTH.md";
 const approvedAuthBoundaryPath =
   "website/lib/admin/authorization/supabase-admin-auth-identity-adapter.ts";
+const approvedRequestMetadataBoundaryPath =
+  "website/lib/admin/authorization/server-admin-request-metadata-adapter.ts";
 const sourceExtensions = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs"]);
 
 function readRepoFile(relativePath: string) {

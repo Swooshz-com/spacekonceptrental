@@ -6,6 +6,8 @@ import { describe, expect, it } from "vitest";
 const repoRoot = resolve(process.cwd(), "..");
 const approvedAuthBoundaryPath =
   "website/lib/admin/authorization/supabase-admin-auth-identity-adapter.ts";
+const approvedRequestMetadataBoundaryPath =
+  "website/lib/admin/authorization/server-admin-request-metadata-adapter.ts";
 const sourceExtensions = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs"]);
 
 function readRepoFile(relativePath: string) {
@@ -32,7 +34,8 @@ function isProductionSource(filePath: string) {
 function readTrackedProductionSources(paths: string[]) {
   return readTrackedFiles(paths)
     .filter(isProductionSource)
-    .filter((filePath) => filePath !== approvedAuthBoundaryPath)
+    .filter((filePath) => filePath !== approvedAuthBoundaryPath &&
+          filePath !== approvedRequestMetadataBoundaryPath)
     .map((filePath) => readRepoFile(filePath))
     .join("\n");
 }
@@ -52,11 +55,11 @@ describe("Phase 2B-I admin auth gate cleanup", () => {
     const decisionLog = readRepoFile("docs/DECISION-LOG.md");
 
     expect(status).toContain(
-      "Latest completed phase: Phase 2B-T - server-only admin authorization gate composition boundary."
+      "Latest completed phase: Phase 2B-U - admin runtime wiring approval lane."
     );
-    expect(status).toContain("Last merged phase PR: #60");
+    expect(status).toContain("Last merged phase PR: #61");
     expect(status).toContain(
-      "Merge commit: `2052f33a68f4c4d141821264bfa8d757e5b23159`"
+      "Merge commit: `b772ab25d7746060d5e14afdebc4192860763935`"
     );
     expect(roadmap).toContain(
       "Phase 2B-I cleans admin auth implementation gate wording and refines"
@@ -80,7 +83,7 @@ describe("Phase 2B-I admin auth gate cleanup", () => {
       "- Phase 2B-H strengthened the reviewed server-side auth/membership resolution boundary with fake-adapter tests only."
     );
     expect(design).toContain(
-      "Latest completed admin/auth boundary state: Phase 2B-S server-only"
+      "Latest completed admin/auth boundary state: Phase 2B-V server-only"
     );
     expect(design).not.toContain("This PR");
   });
@@ -101,7 +104,7 @@ describe("Phase 2B-I admin auth gate cleanup", () => {
     for (const item of [
       "Real auth runtime wiring.",
       "Supabase Auth runtime wiring.",
-      "Header reads.",
+      "Header reads outside the Phase 2B-V request metadata adapter.",
       "Login/logout routes.",
       "Protected admin pages.",
       "Admin UI.",
