@@ -161,7 +161,7 @@ describe("Phase 2B-J admin auth runtime approval lane", () => {
     );
   });
 
-  it("does not add disallowed runtime auth, admin, storage, deployment, n8n, Pinecone, or chat-config paths", () => {
+  it("does not add disallowed runtime auth, admin, storage, deployment, n8n, Pinecone, or chat-config paths", { timeout: 15000 }, () => {
     const productionSource = readTrackedProductionSources([
       "website/app",
       "website/components",

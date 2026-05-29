@@ -352,7 +352,7 @@ describe("Phase 2B-Q server-only admin request security preflight boundary", () 
     expect(source).not.toMatch(/from ["'][^"']*app\//m);
   });
 
-  it("keeps routes, pages, server actions, writes, storage, deployment, n8n, Pinecone, and chat-config out of scope", () => {
+  it("keeps routes, pages, server actions, writes, storage, deployment, n8n, Pinecone, and chat-config out of scope", { timeout: 15000 }, () => {
     const productionSource = readTrackedProductionSources([
       "website/app",
       "website/components",

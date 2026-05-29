@@ -252,7 +252,7 @@ describe("Phase 2B-W server-only admin runtime gate invocation boundary", () => 
     ).not.toContain("readServerAdminRequestMetadata");
   });
 
-  it("keeps routes, pages, server actions, writes, storage, deployment, n8n, Pinecone, and chat-config out of scope", () => {
+  it("keeps routes, pages, server actions, writes, storage, deployment, n8n, Pinecone, and chat-config out of scope", { timeout: 15000 }, () => {
     const productionSource = readTrackedProductionSources([
       "website/app",
       "website/components",

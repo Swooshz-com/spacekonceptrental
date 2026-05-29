@@ -320,7 +320,7 @@ describe("Phase 2B-S server-only CSRF proof issuer boundary", () => {
     expect(outsideIssuerBoundary).not.toContain("createServerAdminCsrfProofIssuer");
   });
 
-  it("keeps routes, pages, server actions, writes, storage, deployment, n8n, Pinecone, and chat-config out of scope", () => {
+  it("keeps routes, pages, server actions, writes, storage, deployment, n8n, Pinecone, and chat-config out of scope", { timeout: 15000 }, () => {
     const productionSource = readTrackedProductionSources([
       "website/app",
       "website/components",

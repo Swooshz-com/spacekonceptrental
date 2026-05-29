@@ -84,7 +84,7 @@ describe("Phase 2B-U admin runtime wiring approval lane", () => {
       "Merge commit: `04e9cce4b96dab73635cc34756d02d3267357e19`"
     );
     expect(status).toContain(
-      "This PR adds only the reviewed server-only admin request metadata adapter"
+      "This PR adds only the reviewed server-only admin runtime gate invocation"
     );
     expect(roadmap).toContain(
       "Phase 2B-U adds only the admin runtime wiring approval lane"

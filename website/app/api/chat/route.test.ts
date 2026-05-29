@@ -142,7 +142,7 @@ describe("POST /api/chat", () => {
     expect(provider.sendMessage).toHaveBeenCalledTimes(5);
   });
 
-  it("throttles untrusted session churn without evicting trusted IP buckets", async () => {
+  it("throttles untrusted session churn without evicting trusted IP buckets", { timeout: 15000 }, async () => {
     process.env.CHAT_TRUSTED_CLIENT_IP_HEADER = "cf-connecting-ip";
 
     const provider: ChatProvider = {

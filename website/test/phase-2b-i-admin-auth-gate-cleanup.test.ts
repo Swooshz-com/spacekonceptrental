@@ -83,7 +83,7 @@ describe("Phase 2B-I admin auth gate cleanup", () => {
       "- Phase 2B-H strengthened the reviewed server-side auth/membership resolution boundary with fake-adapter tests only."
     );
     expect(design).toContain(
-      "Latest completed admin/auth boundary state: Phase 2B-V server-only"
+      "Latest completed admin/auth boundary state: Phase 2B-W server-only"
     );
     expect(design).not.toContain("This PR");
   });

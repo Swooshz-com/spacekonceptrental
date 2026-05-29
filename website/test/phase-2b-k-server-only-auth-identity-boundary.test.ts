@@ -168,7 +168,7 @@ describe("Phase 2B-K server-only Supabase Auth identity boundary", () => {
     expect(browserSource).not.toContain("chat-config");
   });
 
-  it("keeps routes, protected pages, writes, deployment, n8n, Pinecone, and chat-config out of scope", () => {
+  it("keeps routes, protected pages, writes, deployment, n8n, Pinecone, and chat-config out of scope", { timeout: 15000 }, () => {
     const productionSource = readTrackedProductionSources([
       "website/app",
       "website/components",

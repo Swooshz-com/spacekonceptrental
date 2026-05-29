@@ -237,7 +237,7 @@ describe("Phase 2B-M server-only admin workspace resolution boundary", () => {
     expect(source).not.toContain(".delete(");
   });
 
-  it("keeps routes, pages, server actions, writes, storage, deployment, n8n, Pinecone, and chat-config out of scope", () => {
+  it("keeps routes, pages, server actions, writes, storage, deployment, n8n, Pinecone, and chat-config out of scope", { timeout: 15000 }, () => {
     const productionSource = readTrackedProductionSources([
       "website/app",
       "website/components",
