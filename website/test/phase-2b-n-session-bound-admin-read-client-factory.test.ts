@@ -58,14 +58,14 @@ describe("Phase 2B-N session-bound admin read-client factory", () => {
     const projectContext = readRepoFile("docs/PROJECT-CONTEXT.md");
 
     expect(status).toContain(
-      "Current phase: Phase 2B-N - server-only session-bound admin read-client factory."
+      "Current phase: Phase 2B-O - server-only admin authorization adapter-set composition boundary."
     );
     expect(status).toContain(
-      "Latest completed phase: Phase 2B-M - server-only admin workspace resolution boundary."
+      "Latest completed phase: Phase 2B-N - server-only session-bound admin read-client factory."
     );
-    expect(status).toContain("Last merged phase PR: #53");
+    expect(status).toContain("Last merged phase PR: #54");
     expect(status).toContain(
-      "Merge commit: `317fbe6c14bebd41901b16c6729fb600116ebc33`"
+      "Merge commit: `f6f56979dac206c06d7957d3d968a5ffa3468304`"
     );
     expect(roadmap).toContain(
       "Phase 2B-N adds only the server-only session-bound admin read-client factory"
@@ -203,7 +203,7 @@ describe("Phase 2B-N session-bound admin read-client factory", () => {
       "website/lib"
     ]);
     const approvedSource = readRepoFile(approvedWorkspaceResolverBoundaryPath);
-    const outsideWorkspaceBoundary = productionSources
+    const outsideWorkspaceImplementation = productionSources
       .filter(({ filePath }) => filePath !== approvedWorkspaceResolverBoundaryPath)
       .map(({ source }) => source)
       .join("\n");
@@ -212,13 +212,15 @@ describe("Phase 2B-N session-bound admin read-client factory", () => {
     expect(approvedSource).toContain("resolveServerAdminWorkspaceForRequest");
     expect(approvedSource).toContain("trustedServerWorkspaceId");
 
-    expect(outsideWorkspaceBoundary).not.toContain(
-      "createServerAdminWorkspaceResolver"
-    );
-    expect(outsideWorkspaceBoundary).not.toContain(
+    expect(outsideWorkspaceImplementation).not.toContain(
       "resolveServerAdminWorkspaceForRequest"
     );
-    expect(outsideWorkspaceBoundary).not.toContain("trustedServerWorkspaceId");
+    expect(outsideWorkspaceImplementation).not.toContain(
+      "function normalizeWorkspaceId"
+    );
+    expect(outsideWorkspaceImplementation).not.toContain(
+      "catalogue_public_workspace_config"
+    );
   });
 
   it("keeps routes, pages, server actions, writes, storage, deployment, n8n, Pinecone, and chat-config out of scope", () => {

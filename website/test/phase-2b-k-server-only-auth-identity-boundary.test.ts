@@ -53,14 +53,14 @@ describe("Phase 2B-K server-only Supabase Auth identity boundary", () => {
     const decisionLog = readRepoFile("docs/DECISION-LOG.md");
 
     expect(status).toContain(
-      "Current phase: Phase 2B-N - server-only session-bound admin read-client factory."
+      "Current phase: Phase 2B-O - server-only admin authorization adapter-set composition boundary."
     );
     expect(status).toContain(
-      "Latest completed phase: Phase 2B-M - server-only admin workspace resolution boundary."
+      "Latest completed phase: Phase 2B-N - server-only session-bound admin read-client factory."
     );
-    expect(status).toContain("Last merged phase PR: #53");
+    expect(status).toContain("Last merged phase PR: #54");
     expect(status).toContain(
-      "Merge commit: `317fbe6c14bebd41901b16c6729fb600116ebc33`"
+      "Merge commit: `f6f56979dac206c06d7957d3d968a5ffa3468304`"
     );
     expect(roadmap).toContain(
       "Phase 2B-K adds only the server-only Supabase Auth identity/session-read boundary"

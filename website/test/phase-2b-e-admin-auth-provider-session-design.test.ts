@@ -97,7 +97,7 @@ describe("Phase 2B-E admin auth provider and session design", () => {
       "Phase 2B-K implements only the server-only Supabase Auth identity boundary."
     );
     expect(design).toContain(
-      "This document does not approve auth runtime wiring outside that boundary."
+      "This document does not approve auth runtime wiring outside these boundaries."
     );
     expect(design).toContain("This document does not read headers.");
     expect(design).toContain("This document does not add login/logout routes.");
