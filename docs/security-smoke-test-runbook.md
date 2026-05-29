@@ -51,7 +51,7 @@ are safe to use:
 .\scripts\import-n8n-workflows-live.ps1
 .\scripts\export-n8n-workflows-live.ps1 -DryRun
 .\scripts\export-n8n-workflows-live.ps1
-node .\scripts\validate-n8n-workflows.cjs --mode prepared-import .tmp\n8n-live-import
+node .\scripts\validate-n8n-workflows.cjs --mode prepared-import .tmp/n8n-live-import
 git status --short
 ```
 

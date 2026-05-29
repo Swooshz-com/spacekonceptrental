@@ -55,14 +55,14 @@ describe("Phase 2B-J admin auth runtime approval lane", () => {
     const decisionLog = readRepoFile("docs/DECISION-LOG.md");
 
     expect(status).toContain(
-      "Current phase: Phase 2B-W - server-only admin runtime gate invocation boundary."
+      "Current phase: Phase 2B-X - admin runtime gate invocation usage approval lane."
     );
     expect(status).toContain(
-      "Latest completed phase: Phase 2B-V - server-only admin request metadata adapter boundary."
+      "Latest completed phase: Phase 2B-W - server-only admin runtime gate invocation boundary."
     );
-    expect(status).toContain("Last merged phase PR: #62");
+    expect(status).toContain("Last merged phase PR: #63");
     expect(status).toContain(
-      "Merge commit: `04e9cce4b96dab73635cc34756d02d3267357e19`"
+      "Merge commit: `2673e0e27725c0d6f1d97dc75cf9d55da050179e`"
     );
     expect(roadmap).toContain(
       "Phase 2B-J approves the future server-only Supabase Auth runtime lane"

@@ -72,6 +72,7 @@ explicit approval.
 - [x] Approve future server-only admin authorization gate runtime usage lane.
 - [x] Add server-only admin request metadata adapter boundary.
 - [x] Add server-only admin runtime gate invocation boundary.
+- [x] Approve future server-only admin runtime gate invocation usage lane.
 
 ## Design References
 

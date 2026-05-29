@@ -288,3 +288,5 @@ explicit trusted expected origin/host dependencies and existing safe gate
 result shapes. It does not import `next/headers`, read cookies, read env, call
 Supabase, query admin tables, duplicate preflight/decision/CSRF logic, or
 approve runtime route, page, or server-action usage.
+
+Phase 2B-X adds a docs/checklist/static-guard approval lane for future first-party server-only usage of the Phase 2B-W runtime gate invocation helper. It records that future runtime code may call `resolveServerAdminRuntimeGateInvocation()` only from first-party server-only route handlers or server actions, while all lower-level reads and decisions stay inside their approved Phase 2B-K through Phase 2B-W boundaries. It does not add route handlers, pages, server actions, runtime helper usage, login/logout, protected admin pages, admin UI, product/category/product image writes, Storage, browser Supabase, service-role runtime paths, deployment, Supabase Cloud, n8n workflow changes, Pinecone runtime code, SaaS chatbot app work, or `website/chat-config.js` access.
