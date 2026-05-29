@@ -23,10 +23,12 @@ only the server-only Supabase admin profile/membership read boundary.
 `admin_users` and `memberships` reads are restricted to that boundary and
 tracked in `PHASE-2B-AUTH-IMPLEMENTATION.md`. The boundary requires an
 explicitly injected authenticated admin-read client and fails closed without
-one; live read-client wiring remains deferred. Keep real auth runtime wiring,
-headers, login/logout routes, protected admin pages, admin UI, product
-management writes, browser Supabase, service-role runtime paths, deployment,
-and Supabase Cloud work unchecked until a future PR has explicit approval.
+one; live read-client wiring remains deferred. Phase 2B-M adds only the
+server-only admin workspace resolution boundary behind an explicitly injected
+trusted server-side workspace ID. Keep real auth runtime wiring, headers,
+login/logout routes, protected admin pages, admin UI, product management
+writes, browser Supabase, service-role runtime paths, deployment, and Supabase
+Cloud work unchecked until a future PR has explicit approval.
 
 ## Completed Design, Policy, Resolver, Adapter, And Provider-session Milestones
 
@@ -45,6 +47,7 @@ and Supabase Cloud work unchecked until a future PR has explicit approval.
 - [x] Approve future server-only Supabase Auth runtime lane.
 - [x] Add server-only Supabase Auth identity boundary.
 - [x] Add server-only Supabase admin profile/membership read boundary.
+- [x] Add server-only admin workspace resolution boundary.
 
 ## Design References
 
@@ -95,8 +98,10 @@ runtime implementation approval.
 
 - [ ] Real auth runtime wiring.
 - [ ] Supabase Auth runtime wiring.
+- [ ] Resolver/adapter runtime wiring into routes, pages, or server actions.
 - [ ] Cookie reads outside the Phase 2B-K server-only identity boundary.
 - [ ] Admin profile/membership Supabase table reads outside the Phase 2B-L server-only read boundary.
+- [ ] Admin workspace resolution outside the Phase 2B-M server-only workspace boundary.
 - [ ] Live authenticated read-client wiring for Phase 2B-L profile/membership reads.
 - [ ] Header reads.
 - [ ] Login/logout routes.

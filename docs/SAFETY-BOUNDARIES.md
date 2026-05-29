@@ -197,6 +197,33 @@ variables such as `N8N_CHAT_WEBHOOK_URL`.
   Supabase, add service-role runtime paths, deploy, connect Supabase Cloud,
   change n8n workflows, add Pinecone runtime code, migrate Pinecone, or add
   SaaS chatbot app code.
+- Phase 2B-K server-only Supabase Auth identity boundary is the only approved
+  place to read Supabase Auth cookies and call Supabase Auth server APIs in
+  that phase. It is not approval to wire runtime routes, pages, or server
+  actions, read headers, add login/logout routes, protected admin pages, admin
+  UI, product writes, Storage, browser Supabase, service-role runtime paths,
+  deployment, Supabase Cloud, n8n workflow changes, Pinecone runtime code, or
+  SaaS chatbot app code.
+- Phase 2B-L server-only admin profile/membership read boundary is the only
+  approved place to read `admin_users` and `memberships` for admin
+  authorization in that phase. It requires an explicitly injected authenticated
+  admin-read client and fails closed without one. It is not approval to wire
+  runtime routes, pages, or server actions, add live authenticated read-client
+  wiring, read headers, add login/logout routes, protected admin pages, admin
+  UI, product writes, Storage, browser Supabase, service-role runtime paths,
+  deployment, Supabase Cloud, n8n workflow changes, Pinecone runtime code, or
+  SaaS chatbot app code.
+- Phase 2B-M server-only admin workspace resolution boundary is the only
+  approved place to resolve trusted admin workspace scope in that phase. It
+  requires an explicitly injected trusted server-side workspace ID, treats
+  browser/request workspace IDs as validation-only, fails closed for missing,
+  empty, whitespace-only, or mismatched values, and must not use public
+  catalogue workspace config as an admin authorization shortcut. It is not
+  approval to wire runtime routes, pages, or server actions, read cookies,
+  call Supabase Auth, read headers, call Supabase tables, add login/logout
+  routes, protected admin pages, admin UI, product writes, Storage, browser
+  Supabase, service-role runtime paths, deployment, Supabase Cloud, n8n
+  workflow changes, Pinecone runtime code, or SaaS chatbot app code.
 - Future admin auth must remain server-side. Future session cookies must be
   HttpOnly, Secure in production, and have reviewed SameSite behaviour. Future
   state-changing admin routes/server actions need CSRF strategy before

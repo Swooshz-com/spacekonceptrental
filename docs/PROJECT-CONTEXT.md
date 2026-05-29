@@ -168,6 +168,18 @@ Custom Chat UI -> POST /api/chat -> ChatProvider
   image writes, Storage, browser Supabase, service-role runtime paths,
   deployment, Supabase Cloud, n8n workflows, Pinecone runtime code,
   `website/chat-config.js`, or SaaS chatbot app code.
+- Phase 2B-M adds a server-only admin workspace resolution boundary only.
+  Admin workspace resolution is restricted to
+  `website/lib/admin/authorization/server-admin-workspace-resolver.ts`. It
+  implements the existing `AdminWorkspaceResolver` contract, requires an
+  explicitly injected trusted server-side workspace ID, treats browser/request
+  workspace IDs as validation-only, fails closed without trusted input or on
+  mismatches, and does not use public catalogue workspace config as an admin
+  authorization shortcut. It is not wired into runtime routes, pages, server
+  actions, protected admin runtime, login/logout, admin UI,
+  product/category/product image writes, Storage, browser Supabase,
+  service-role runtime paths, deployment, Supabase Cloud, n8n workflows,
+  Pinecone runtime code, `website/chat-config.js`, or SaaS chatbot app code.
 
 ## Current Status Pages
 

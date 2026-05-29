@@ -46,17 +46,17 @@ function expectChecked(markdown: string, item: string) {
 }
 
 describe("Phase 2B-I admin auth gate cleanup", () => {
-  it("records the current phase and latest completed Phase 2B-K base state", () => {
+  it("records the current phase and latest completed Phase 2B-M base state", () => {
     const status = readRepoFile("docs/PHASE-STATUS.md");
     const roadmap = readRepoFile("docs/PHASE-ROADMAP.md");
     const decisionLog = readRepoFile("docs/DECISION-LOG.md");
 
     expect(status).toContain(
-      "Latest completed phase: Phase 2B-K - server-only Supabase Auth identity boundary."
+      "Latest completed phase: Phase 2B-L - server-only admin profile/membership read boundary."
     );
-    expect(status).toContain("Last merged phase PR: #51");
+    expect(status).toContain("Last merged phase PR: #52");
     expect(status).toContain(
-      "Merge commit: `19f385a20d82109fb73e77f9e5328cc91e16cffd`"
+      "Merge commit: `4f11dabda5fc1c61386b72f16a91e9eb370a7a30`"
     );
     expect(roadmap).toContain(
       "Phase 2B-I cleans admin auth implementation gate wording and refines"
@@ -80,7 +80,7 @@ describe("Phase 2B-I admin auth gate cleanup", () => {
       "- Phase 2B-H strengthened the reviewed server-side auth/membership resolution boundary with fake-adapter tests only."
     );
     expect(design).toContain(
-      "Latest completed admin/auth boundary state: Phase 2B-H reviewed dependency-injected server-side resolver/adapter decisions only."
+      "Latest completed admin/auth boundary state: Phase 2B-M server-only workspace"
     );
     expect(design).not.toContain("This PR");
   });

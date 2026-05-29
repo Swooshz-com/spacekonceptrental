@@ -161,6 +161,24 @@ add service-role runtime paths, add browser Supabase, deploy, connect Supabase
 Cloud, change n8n workflows, add Pinecone runtime code, migrate Pinecone,
 access `website/chat-config.js`, or add SaaS chatbot app code.
 
+Phase 2B-M adds only the server-only admin workspace resolution boundary
+needed for future admin auth. Admin workspace resolution is allowed only inside
+`website/lib/admin/authorization/server-admin-workspace-resolver.ts`. It
+implements the existing `AdminWorkspaceResolver` contract, requires an
+explicitly injected trusted server-side workspace ID, treats
+browser/request workspace IDs as validation-only, fails closed for missing,
+empty, whitespace-only, or mismatched values, and does not use public catalogue
+workspace config as an admin authorization shortcut. It is not approval to wire
+the resolver or adapters into runtime routes, pages, or server actions, read
+cookies outside the Phase 2B-K identity boundary, call Supabase Auth outside
+the Phase 2B-K identity boundary, read `admin_users` or `memberships` outside
+the Phase 2B-L profile/membership boundary, read headers, add login/logout
+routes, add protected admin pages, add admin UI, add product/category/product
+image writes, add Supabase Storage, add service-role runtime paths, add
+browser Supabase, deploy, connect Supabase Cloud, change n8n workflows, add
+Pinecone runtime code, migrate Pinecone, access `website/chat-config.js`, or
+add SaaS chatbot app code.
+
 Further Phase 2 implementation work remains unapproved until scoped in a
 separate phase PR.
 

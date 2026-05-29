@@ -8,6 +8,8 @@ const approvedIdentityBoundaryPath =
   "website/lib/admin/authorization/supabase-admin-auth-identity-adapter.ts";
 const approvedProfileMembershipBoundaryPath =
   "website/lib/admin/authorization/supabase-admin-profile-membership-adapters.ts";
+const approvedWorkspaceResolverBoundaryPath =
+  "website/lib/admin/authorization/server-admin-workspace-resolver.ts";
 const sourceExtensions = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs"]);
 
 function readRepoFile(relativePath: string) {
@@ -48,8 +50,8 @@ function expectUnchecked(markdown: string, item: string) {
   expect(markdown).toContain(`- [ ] ${item}`);
 }
 
-describe("Phase 2B-L server-only admin profile and membership read boundary", () => {
-  it("records Phase 2B-L status, roadmap, decision-log, and project context scope", () => {
+describe("Phase 2B-M server-only admin workspace resolution boundary", () => {
+  it("records Phase 2B-M status, roadmap, decision-log, and project context scope", () => {
     const status = readRepoFile("docs/PHASE-STATUS.md");
     const roadmap = readRepoFile("docs/PHASE-ROADMAP.md");
     const decisionLog = readRepoFile("docs/DECISION-LOG.md");
@@ -66,17 +68,17 @@ describe("Phase 2B-L server-only admin profile and membership read boundary", ()
       "Merge commit: `4f11dabda5fc1c61386b72f16a91e9eb370a7a30`"
     );
     expect(roadmap).toContain(
-      "Phase 2B-L adds only the server-only Supabase-backed admin profile and membership read boundary"
+      "Phase 2B-M adds only the server-only admin workspace resolution boundary"
     );
     expect(decisionLog).toContain(
-      "Decision: Phase 2B-L adds only the server-only admin profile and membership read boundary"
+      "Decision: Phase 2B-M adds only the server-only admin workspace resolution boundary"
     );
     expect(projectContext).toContain(
-      "Phase 2B-L adds a server-only Supabase-backed admin profile and membership read boundary"
+      "Phase 2B-M adds a server-only admin workspace resolution boundary"
     );
   });
 
-  it("documents the implemented profile and membership boundary and checklist state", () => {
+  it("documents the implemented workspace resolver boundary and checklist state", () => {
     const design = readRepoFile("docs/ADMIN-AUTH-PROVIDER-SESSION-DESIGN.md");
     const authChecklist = readRepoFile(
       "docs/checklists/PHASE-2B-AUTH-IMPLEMENTATION.md"
@@ -86,33 +88,34 @@ describe("Phase 2B-L server-only admin profile and membership read boundary", ()
     );
 
     expect(design).toContain(
-      "## Phase 2B-L Implemented Profile And Membership Read Boundary"
+      "## Phase 2B-M Implemented Workspace Resolution Boundary"
     );
     expect(design).toContain(
-      "`website/lib/admin/authorization/supabase-admin-profile-membership-adapters.ts` is the only approved module for Supabase `admin_users` and `memberships` table reads in this phase."
+      "`website/lib/admin/authorization/server-admin-workspace-resolver.ts` is the only approved module for admin workspace resolution in this phase."
     );
     expect(design).toContain(
-      "It implements the existing `AdminProfileAdapter` and `AdminMembershipAdapter` safe shapes only and is not wired into runtime routes, pages, or server actions."
+      "It implements the existing `AdminWorkspaceResolver` safe shape only and is not wired into runtime routes, pages, or server actions."
     );
     expect(design).toContain(
-      "It does not default to the plain anon-key Supabase helper."
+      "Browser/request workspace IDs are validation-only and never become authority."
     );
     expect(design).toContain(
-      "Live authenticated read-client wiring remains deferred."
+      "The boundary fails closed with `{ serverResolvedWorkspaceId: null }` without an explicitly injected trusted server-side workspace ID."
     );
 
     expectChecked(
       authChecklist,
-      "Server-only Supabase admin profile/membership read boundary."
+      "Server-only admin workspace resolution boundary."
     );
     expectChecked(
       adminAuthChecklist,
-      "Add server-only Supabase admin profile/membership read boundary."
+      "Add server-only admin workspace resolution boundary."
     );
 
     for (const item of [
       "Real auth runtime wiring.",
       "Supabase Auth runtime wiring.",
+      "Resolver/adapter runtime wiring into routes, pages, or server actions.",
       "Header reads.",
       "Login/logout routes.",
       "Protected admin pages.",
@@ -132,9 +135,17 @@ describe("Phase 2B-L server-only admin profile and membership read boundary", ()
       adminAuthChecklist,
       "Cookie reads outside the Phase 2B-K server-only identity boundary."
     );
+    expectUnchecked(
+      authChecklist,
+      "Admin workspace resolution outside the Phase 2B-M server-only workspace boundary."
+    );
+    expectUnchecked(
+      adminAuthChecklist,
+      "Admin workspace resolution outside the Phase 2B-M server-only workspace boundary."
+    );
   });
 
-  it("allows cookie reads and Supabase Auth calls only in the identity boundary", () => {
+  it("keeps cookie reads and Supabase Auth calls only in the identity boundary", () => {
     const productionSources = readTrackedProductionSources([
       "website/app",
       "website/components",
@@ -161,7 +172,7 @@ describe("Phase 2B-L server-only admin profile and membership read boundary", ()
     );
   });
 
-  it("allows admin profile and membership table reads only in the Phase 2B-L boundary", () => {
+  it("keeps admin profile and membership table reads only in the Phase 2B-L boundary", () => {
     const productionSources = readTrackedProductionSources([
       "website/app",
       "website/components",
@@ -176,8 +187,6 @@ describe("Phase 2B-L server-only admin profile and membership read boundary", ()
       .join("\n");
 
     expect(approvedSource).toContain('import "server-only";');
-    expect(approvedSource).not.toContain("createServerSupabaseClient");
-    expect(approvedSource).not.toContain("lib/supabase/server");
     expect(approvedSource).toContain('from("admin_users")');
     expect(approvedSource).toContain('from("memberships")');
     expect(approvedSource).not.toContain("next/headers");
@@ -196,7 +205,36 @@ describe("Phase 2B-L server-only admin profile and membership read boundary", ()
     );
   });
 
-  it("keeps routes, protected pages, writes, storage, deployment, n8n, Pinecone, and chat-config out of scope", () => {
+  it("keeps the Phase 2B-M workspace resolver free of runtime and provider shortcuts", () => {
+    const source = readRepoFile(approvedWorkspaceResolverBoundaryPath);
+
+    expect(source).toContain('import "server-only";');
+    expect(source).toContain("AdminWorkspaceResolver");
+    expect(source).toContain("serverResolvedWorkspaceId");
+    expect(source).not.toContain("@supabase/");
+    expect(source).not.toContain("createServerSupabaseClient");
+    expect(source).not.toContain("next/headers");
+    expect(source).not.toContain("cookies()");
+    expect(source).not.toContain("headers()");
+    expect(source).not.toContain("auth.getUser()");
+    expect(source).not.toContain("process.env");
+    expect(source).not.toContain("SUPABASE_SERVICE_ROLE");
+    expect(source).not.toContain("NEXT_PUBLIC_SUPABASE");
+    expect(source).not.toContain("N8N_CHAT_WEBHOOK_URL");
+    expect(source).not.toContain("@n8n/chat");
+    expect(source).not.toContain("PINECONE");
+    expect(source).not.toContain("@pinecone-database");
+    expect(source).not.toContain("chat-config");
+    expect(source).not.toContain("catalogue_public_workspace_config");
+    expect(source).not.toContain("CATALOGUE_WORKSPACE_ID");
+    expect(source).not.toContain(".from(");
+    expect(source).not.toContain(".insert(");
+    expect(source).not.toContain(".update(");
+    expect(source).not.toContain(".upsert(");
+    expect(source).not.toContain(".delete(");
+  });
+
+  it("keeps routes, pages, server actions, writes, storage, deployment, n8n, Pinecone, and chat-config out of scope", () => {
     const productionSource = readTrackedProductionSources([
       "website/app",
       "website/components",
@@ -214,7 +252,8 @@ describe("Phase 2B-L server-only admin profile and membership read boundary", ()
           !filePath.startsWith("website/app/api/") &&
           !filePath.startsWith("website/lib/supabase/") &&
           filePath !== approvedIdentityBoundaryPath &&
-          filePath !== approvedProfileMembershipBoundaryPath
+          filePath !== approvedProfileMembershipBoundaryPath &&
+          filePath !== approvedWorkspaceResolverBoundaryPath
       )
       .map(({ source }) => source)
       .join("\n");
@@ -235,6 +274,7 @@ describe("Phase 2B-L server-only admin profile and membership read boundary", ()
     expect(readTrackedFiles(["website/chat-config.js"])).toEqual([]);
     expect(readTrackedFiles(["vercel.json", ".vercel", "website/vercel.json"])).toEqual([]);
 
+    expect(productionSource).not.toContain('"use server"');
     expect(productionSource).not.toMatch(
       /from\(["'](?:categories|products|product_images)["']\)\s*\.\s*(?:insert|update|upsert|delete)\s*\(/m
     );
