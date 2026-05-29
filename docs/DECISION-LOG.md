@@ -714,3 +714,11 @@ product/category/product image writes, add Supabase Storage, use service-role
 keys, add browser Supabase, deploy, connect Supabase Cloud, change n8n
 workflows, add Pinecone runtime code, access `website/chat-config.js`, or make
 runtime admin auth complete.
+
+## 2026-05-29: Server-only Admin Authorization Gate Composition Boundary
+
+Decision: Phase 2B-T adds only the server-only admin authorization gate composition boundary at `website/lib/admin/authorization/server-admin-authorization-gate.ts`.
+
+Reason: future admin runtime boundaries need one reviewed server-only seam that runs request-security preflight before the composed admin authorization decision without duplicating CSRF verification, role policy, membership policy, adapter composition, provider reads, or runtime route/page/server-action wiring.
+
+The gate may run the Phase 2B-Q request security preflight, inject the Phase 2B-R CSRF proof verifier into preflight when verifier dependencies are supplied, and call the Phase 2B-P composed admin authorization decision only after preflight passes. It is not approval to issue CSRF proofs, read real headers, read cookies, read env, call Supabase, query `admin_users` or `memberships`, use the gate from runtime routes, pages, or server actions, add login/logout routes, protected admin pages, admin UI, product writes, Storage, browser Supabase, service-role runtime paths, deployment, Supabase Cloud, n8n workflow changes, Pinecone runtime code, or SaaS chatbot app code.

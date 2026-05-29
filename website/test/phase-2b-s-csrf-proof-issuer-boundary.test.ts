@@ -20,6 +20,8 @@ const approvedCsrfVerifierBoundaryPath =
   "website/lib/admin/authorization/server-admin-csrf-proof-verifier.ts";
 const approvedCsrfIssuerBoundaryPath =
   "website/lib/admin/authorization/server-admin-csrf-proof-issuer.ts";
+const approvedGateBoundaryPath =
+  "website/lib/admin/authorization/server-admin-authorization-gate.ts";
 const sourceExtensions = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs"]);
 
 function readRepoFile(relativePath: string) {
@@ -68,14 +70,14 @@ describe("Phase 2B-S server-only CSRF proof issuer boundary", () => {
     const projectContext = readRepoFile("docs/PROJECT-CONTEXT.md");
 
     expect(status).toContain(
-      "Current phase: Phase 2B-S - server-only CSRF proof issuer boundary."
+      "Current phase: Phase 2B-T - server-only admin authorization gate composition boundary."
     );
     expect(status).toContain(
-      "Latest completed phase: Phase 2B-R - server-only CSRF proof verifier boundary."
+      "Latest completed phase: Phase 2B-S - server-only CSRF proof issuer boundary."
     );
-    expect(status).toContain("Last merged phase PR: #58");
+    expect(status).toContain("Last merged phase PR: #59");
     expect(status).toContain(
-      "Merge commit: `3cb7e24684e2fbd98d56f305e473999d66a3e1fd`"
+      "Merge commit: `5ed4f4fde6fc267ea11f681967c8a589de993e1f`"
     );
     expect(roadmap).toContain(
       "Phase 2B-S adds only the server-only CSRF proof issuer boundary"
@@ -250,16 +252,16 @@ describe("Phase 2B-S server-only CSRF proof issuer boundary", () => {
     expect(readRepoFile(approvedDecisionBoundaryPath)).toContain(
       "resolveServerAdminAuthorizationDecision"
     );
-    expect(combinedOutside(approvedDecisionBoundaryPath)).not.toContain(
-      "resolveServerAdminAuthorizationDecision"
-    );
+    expect(
+      combinedOutside([approvedDecisionBoundaryPath, approvedGateBoundaryPath])
+    ).not.toContain("resolveServerAdminAuthorizationDecision");
 
     expect(readRepoFile(approvedPreflightBoundaryPath)).toContain(
       "validateServerAdminRequestSecurityPreflight"
     );
-    expect(combinedOutside(approvedPreflightBoundaryPath)).not.toContain(
-      "validateServerAdminRequestSecurityPreflight"
-    );
+    expect(
+      combinedOutside([approvedPreflightBoundaryPath, approvedGateBoundaryPath])
+    ).not.toContain("validateServerAdminRequestSecurityPreflight");
 
     expect(readRepoFile(approvedCsrfVerifierBoundaryPath)).toContain(
       "verifyServerAdminCsrfProof"
@@ -339,7 +341,8 @@ describe("Phase 2B-S server-only CSRF proof issuer boundary", () => {
           filePath !== approvedDecisionBoundaryPath &&
           filePath !== approvedPreflightBoundaryPath &&
           filePath !== approvedCsrfVerifierBoundaryPath &&
-          filePath !== approvedCsrfIssuerBoundaryPath
+          filePath !== approvedCsrfIssuerBoundaryPath &&
+          filePath !== approvedGateBoundaryPath
       )
       .map(({ source }) => source)
       .join("\n");

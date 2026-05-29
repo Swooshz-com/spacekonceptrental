@@ -310,6 +310,22 @@ Storage, add service-role runtime paths, add browser Supabase, deploy, connect
 Supabase Cloud, change n8n workflows, add Pinecone runtime code, migrate
 Pinecone, access `website/chat-config.js`, or add SaaS chatbot app code.
 
+Phase 2B-T adds only the server-only admin authorization gate composition boundary
+needed for future admin routes and server actions. The gate boundary is
+allowed only inside
+`website/lib/admin/authorization/server-admin-authorization-gate.ts`. It runs
+the Phase 2B-Q request security preflight before the Phase 2B-P composed
+admin authorization decision, may inject the Phase 2B-R CSRF proof verifier
+into preflight when verifier dependencies are supplied, and returns safe
+allow, deny, or unavailable shapes. It does not issue CSRF proofs, read real
+headers, read cookies, read env, call Supabase, query `admin_users` or
+`memberships`, create a session-bound admin read client, compose adapter sets
+directly, duplicate admin role/membership policy logic, add route/page/server
+action wiring, add login/logout routes, add protected admin pages, add admin
+UI, add product/category/product image writes, add Supabase Storage, add
+service-role runtime paths, add browser Supabase, deploy, connect Supabase
+Cloud, change n8n workflows, add Pinecone runtime code, migrate Pinecone,
+access `website/chat-config.js`, or add SaaS chatbot app code.
 Further Phase 2 implementation work remains unapproved until scoped in a
 separate phase PR.
 

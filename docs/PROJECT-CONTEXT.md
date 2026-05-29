@@ -253,3 +253,11 @@ unrelated local changes.
 The previous Codex planning pass produced the approved architecture direction
 but did not edit files. This docs pass records that context for future LLM
 instances before implementation starts.
+
+Phase 2B-T adds a server-only admin authorization gate composition boundary at
+`website/lib/admin/authorization/server-admin-authorization-gate.ts`. It runs
+the Phase 2B-Q request-security preflight before the Phase 2B-P composed
+admin authorization decision, may inject the Phase 2B-R CSRF proof verifier
+when verifier dependencies are supplied, returns only safe allow, deny, or
+unavailable shapes, and is not wired into runtime routes, pages, server
+actions, protected admin pages, login/logout, admin UI, or product writes.
