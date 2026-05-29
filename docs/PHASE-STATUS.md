@@ -4,26 +4,15 @@ This is the quick status page for the SKR repo. Use `docs/PHASE-2-READINESS-PLAN
 
 ## Current phase
 
-Current phase: Phase 2B-W - server-only admin runtime gate invocation boundary.
+Current phase: Phase 2B-X - admin runtime gate invocation usage approval lane.
 
-This PR adds only the reviewed server-only admin runtime gate invocation
-boundary for future admin runtime usage. The helper composes the Phase 2B-V
-request metadata adapter with the Phase 2B-T admin authorization gate, accepts
-trusted expected origin/host only through explicit dependency/config injection,
-and returns the existing safe gate result shape. It does not read headers
-directly, read cookies, read env, call Supabase, query authorization tables,
-duplicate preflight or policy logic, or add product write logic. This PR does
-not add route handlers, pages, server actions, runtime helper usage,
-login/logout, protected admin pages, admin UI, product writes, Supabase
-Storage, browser Supabase, service-role paths, Supabase Cloud, deployment,
-real env values, n8n changes, Pinecone runtime code, or
-`website/chat-config.js` access.
+This PR adds only a docs/checklist/static-guard approval lane for future first-party server-only usage of `resolveServerAdminRuntimeGateInvocation()`. It records that future runtime usage, when separately implemented, must be limited to first-party server-only route handlers or server actions and must call only the Phase 2B-W invocation helper from that boundary. Header reads remain inside the Phase 2B-V metadata adapter; cookie reads and Supabase Auth remain inside the Phase 2B-K/N identity boundary; `admin_users` and `memberships` reads remain inside Phase 2B-L; workspace resolution remains inside Phase 2B-M; adapter-set composition remains inside Phase 2B-O; decision logic remains inside Phase 2B-P; request-security preflight remains inside Phase 2B-Q / Phase 2B-T; CSRF verification remains inside Phase 2B-R / Phase 2B-T; and CSRF issuance remains inside Phase 2B-S. This PR does not add route handlers, pages, server actions, runtime helper usage, login/logout, protected admin pages, admin UI, product writes, Storage, browser Supabase, service-role paths, Supabase Cloud, deployment, real env values, n8n changes, Pinecone runtime code, SaaS chatbot app work, or `website/chat-config.js` access.
 
-Latest completed phase: Phase 2B-V - server-only admin request metadata adapter boundary.
+Latest completed phase: Phase 2B-W - server-only admin runtime gate invocation boundary.
 
-Last merged phase PR: #62
+Last merged phase PR: #63
 
-Merge commit: `04e9cce4b96dab73635cc34756d02d3267357e19`
+Merge commit: `2673e0e27725c0d6f1d97dc75cf9d55da050179e`
 
 ## Completed foundation
 
@@ -72,7 +61,8 @@ Vercel config, add real env values, or add runtime features.
 - Server-only admin authorization gate composition boundary is complete.
 - Admin runtime wiring approval lane is complete.
 - Server-only admin request metadata adapter boundary is complete.
-- Server-only admin runtime gate invocation boundary is in progress.
+- Server-only admin runtime gate invocation boundary is complete.
+- Admin runtime gate invocation usage approval lane is in progress.
 
 Supabase Auth is approved as the future server-side admin auth provider. The
 Phase 2B-K identity boundary remains the only approved place to read Supabase

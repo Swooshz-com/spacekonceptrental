@@ -371,3 +371,11 @@ docs in the same PR when applicable.
 Every phase PR that changes status must update exactly the relevant
 checklist(s). Do not mark planned, scaffolded, design, or policy work as
 runtime complete until runtime code exists and tests prove it.
+
+## Phase 2B-X Admin Runtime Gate Invocation Usage Approval Lane
+
+Phase 2B-X admin runtime gate invocation usage approval lane is docs/checklist/static-guard approval only. It approves only the future lane where a first-party server-only route handler or server action may call `resolveServerAdminRuntimeGateInvocation()` after separate implementation approval.
+
+Future usage must call only the Phase 2B-W helper from the route/action boundary. Header reads must remain inside Phase 2B-V, cookie reads and Supabase Auth inside Phase 2B-K/N, admin table reads inside Phase 2B-L, workspace resolution inside Phase 2B-M, adapter composition inside Phase 2B-O, decision logic inside Phase 2B-P, preflight inside Phase 2B-Q / Phase 2B-T, CSRF verification inside Phase 2B-R / Phase 2B-T, and CSRF issuance inside Phase 2B-S.
+
+This approval lane does not add runtime route handlers, pages, server actions, login/logout routes, protected admin pages, admin UI, product writes, Storage, deployment config, Supabase Cloud, browser Supabase, service-role runtime paths, n8n changes, Pinecone runtime code, SaaS chatbot app code, or `website/chat-config.js` access.

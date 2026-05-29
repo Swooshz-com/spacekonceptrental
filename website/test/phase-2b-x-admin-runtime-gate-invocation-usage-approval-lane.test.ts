@@ -66,8 +66,8 @@ function expectUnchecked(markdown: string, item: string) {
   expect(markdown).toContain(`- [ ] ${item}`);
 }
 
-describe("Phase 2B-W server-only admin runtime gate invocation boundary", () => {
-  it("records Phase 2B-W status, roadmap, decision-log, and project context scope", () => {
+describe("Phase 2B-X admin runtime gate invocation usage approval lane", () => {
+  it("records Phase 2B-X as approval-lane only and Phase 2B-W as completed", () => {
     const status = readRepoFile("docs/PHASE-STATUS.md");
     const roadmap = readRepoFile("docs/PHASE-ROADMAP.md");
     const decisionLog = readRepoFile("docs/DECISION-LOG.md");
@@ -83,19 +83,25 @@ describe("Phase 2B-W server-only admin runtime gate invocation boundary", () => 
     expect(status).toContain(
       "Merge commit: `2673e0e27725c0d6f1d97dc75cf9d55da050179e`"
     );
+    expect(status).toContain(
+      "This PR adds only a docs/checklist/static-guard approval lane for future first-party server-only usage of `resolveServerAdminRuntimeGateInvocation()`."
+    );
     expect(roadmap).toContain(
-      "Phase 2B-W adds only the server-only admin runtime gate invocation boundary"
+      "Phase 2B-X adds only the admin runtime gate invocation usage approval lane"
     );
     expect(decisionLog).toContain(
-      "Decision: Phase 2B-W adds only the server-only admin runtime gate invocation boundary"
+      "Decision: Phase 2B-X adds only the admin runtime gate invocation usage approval lane"
     );
     expect(projectContext).toContain(
-      "Phase 2B-W adds a server-only admin runtime gate invocation boundary"
+      "Phase 2B-X adds a docs/checklist/static-guard approval lane for future first-party server-only usage of the Phase 2B-W runtime gate invocation helper"
     );
   });
 
-  it("documents the invocation boundary and keeps runtime implementation unchecked", () => {
+  it("documents the future usage lane and keeps runtime usage unchecked", () => {
     const design = readRepoFile("docs/ADMIN-AUTH-PROVIDER-SESSION-DESIGN.md");
+    const membershipDesign = readRepoFile(
+      "docs/ADMIN-AUTH-MEMBERSHIP-DESIGN.md"
+    );
     const safety = readRepoFile("docs/SAFETY-BOUNDARIES.md");
     const authChecklist = readRepoFile(
       "docs/checklists/PHASE-2B-AUTH-IMPLEMENTATION.md"
@@ -105,25 +111,40 @@ describe("Phase 2B-W server-only admin runtime gate invocation boundary", () => 
     );
 
     expect(design).toContain(
-      "## Phase 2B-W Implemented Admin Runtime Gate Invocation Boundary"
+      "## Phase 2B-X Approved Future Admin Runtime Gate Invocation Usage Lane"
     );
     expect(design).toContain(
-      "`website/lib/admin/authorization/server-admin-runtime-gate-invocation.ts` is the only approved module in this phase for composing the Phase 2B-V request metadata adapter with the Phase 2B-T admin authorization gate."
+      "A future runtime PR may call `resolveServerAdminRuntimeGateInvocation()` only from a first-party server-only route handler or server action."
     );
     expect(design).toContain(
-      "Creating this invocation helper does not approve using it from runtime routes, pages, server actions, protected admin pages, login/logout, admin UI, or product writes."
+      "Future runtime usage must call only the Phase 2B-W invocation helper from the route/action boundary."
+    );
+    expect(design).toContain(
+      "Header reads must remain inside the Phase 2B-V request metadata adapter."
+    );
+    expect(design).toContain(
+      "Cookie reads and Supabase Auth calls must remain inside the Phase 2B-K/N identity boundary."
+    );
+    expect(design).toContain(
+      "CSRF issuance must remain inside the Phase 2B-S issuer boundary."
+    );
+    expect(design).toContain(
+      "Phase 2B-X does not add route handlers, pages, server actions, runtime helper usage, login/logout, protected admin pages, admin UI, product writes, Storage, deployment, Supabase Cloud, browser Supabase, service-role paths, n8n changes, Pinecone runtime code, SaaS chatbot app work, or `website/chat-config.js` access."
+    );
+    expect(membershipDesign).toContain(
+      "Phase 2B-X adds a docs/checklist/static-guard approval lane for future runtime usage of the Phase 2B-W invocation helper only."
     );
     expect(safety).toContain(
-      "Phase 2B-W server-only admin runtime gate invocation boundary is approved only as server-only invocation plumbing"
+      "Phase 2B-X admin runtime gate invocation usage approval lane is docs/checklist/static-guard approval only"
     );
 
     expectChecked(
       authChecklist,
-      "Server-only admin runtime gate invocation boundary."
+      "Admin runtime gate invocation usage approval lane."
     );
     expectChecked(
       adminAuthChecklist,
-      "Add server-only admin runtime gate invocation boundary."
+      "Approve future server-only admin runtime gate invocation usage lane."
     );
 
     for (const item of [
@@ -146,40 +167,7 @@ describe("Phase 2B-W server-only admin runtime gate invocation boundary", () => 
     }
   });
 
-  it("keeps the invocation helper free of direct headers, cookies, providers, and writes", () => {
-    const source = readRepoFile(approvedRuntimeGateInvocationBoundaryPath);
-
-    expect(source).toContain('import "server-only";');
-    expect(source).toContain("readServerAdminRequestMetadata");
-    expect(source).toContain("resolveServerAdminAuthorizationGate");
-    expect(source).not.toContain("next/headers");
-    expect(source).not.toContain("headers()");
-    expect(source).not.toContain("cookies()");
-    expect(source).not.toContain("@supabase/ssr");
-    expect(source).not.toContain("@supabase/supabase-js");
-    expect(source).not.toContain("auth.getUser()");
-    expect(source).not.toContain("admin_users");
-    expect(source).not.toContain("memberships");
-    expect(source).not.toContain("createServerAdminAuthorizationAdapterSet");
-    expect(source).not.toContain("validateServerAdminRequestSecurityPreflight");
-    expect(source).not.toContain("resolveServerAdminAuthorizationDecision");
-    expect(source).not.toContain("issueServerAdminCsrfProof");
-    expect(source).not.toContain("verifyServerAdminCsrfProof");
-    expect(source).not.toContain("process.env");
-    expect(source).not.toContain("SUPABASE_SERVICE_ROLE");
-    expect(source).not.toContain("NEXT_PUBLIC_SUPABASE");
-    expect(source).not.toContain("N8N");
-    expect(source).not.toContain("PINECONE");
-    expect(source).not.toContain("chat-config");
-    expect(source).not.toContain(".insert(");
-    expect(source).not.toContain(".update(");
-    expect(source).not.toContain(".upsert(");
-    expect(source).not.toContain(".delete(");
-    expect(source).not.toContain('"use server"');
-    expect(source).not.toMatch(/from ["'][^"']*app\//m);
-  });
-
-  it("keeps approved ownership boundaries narrow while allowing only the invocation helper to call the gate", () => {
+  it("keeps runtime gate invocation usage out of routes, pages, and server actions", { timeout: 15000 }, () => {
     const productionSources = readTrackedProductionSources([
       "website/app",
       "website/components",
@@ -195,6 +183,70 @@ describe("Phase 2B-W server-only admin runtime gate invocation boundary", () => 
         .map(({ source }) => source)
         .join("\n");
     };
+    const appSource = productionSources
+      .filter(({ filePath }) => filePath.startsWith("website/app/"))
+      .map(({ source }) => source)
+      .join("\n");
+
+    expect(readTrackedFiles(["website/app/admin"])).toEqual([]);
+    expect(readTrackedFiles(["website/app/login"])).toEqual([]);
+    expect(readTrackedFiles(["website/app/logout"])).toEqual([]);
+    expect(readTrackedFiles(["website/app/api/auth"])).toEqual([]);
+    expect(readTrackedFiles(["website/app/api/login"])).toEqual([]);
+    expect(readTrackedFiles(["website/app/api/logout"])).toEqual([]);
+    expect(readTrackedFiles(["website/app/api/admin"])).toEqual([]);
+    expect(readTrackedFiles(["website/app/api/products"])).toEqual([]);
+    expect(readTrackedFiles(["website/app/api/categories"])).toEqual([]);
+    expect(readTrackedFiles(["website/app/api/product-images"])).toEqual([]);
+    expect(readTrackedFiles(["website/app/api/catalogue"])).toEqual([]);
+
+    expect(appSource).not.toContain("resolveServerAdminRuntimeGateInvocation");
+    expect(appSource).not.toContain(
+      "server-admin-runtime-gate-invocation"
+    );
+    expect(combinedOutside(approvedRuntimeGateInvocationBoundaryPath)).not.toContain(
+      "resolveServerAdminRuntimeGateInvocation"
+    );
+  });
+
+  it("keeps approved boundary ownership and forbidden imports unchanged", { timeout: 15000 }, () => {
+    const productionSources = readTrackedProductionSources([
+      "website/app",
+      "website/components",
+      "website/lib"
+    ]);
+    const combinedOutside = (approvedPaths: string | string[]) => {
+      const excludedPaths = Array.isArray(approvedPaths)
+        ? approvedPaths
+        : [approvedPaths];
+
+      return productionSources
+        .filter(({ filePath }) => !excludedPaths.includes(filePath))
+        .map(({ source }) => source)
+        .join("\n");
+    };
+    const browserSource = productionSources
+      .filter(
+        ({ filePath }) =>
+          !filePath.startsWith("website/app/api/") &&
+          !filePath.startsWith("website/lib/supabase/") &&
+          filePath !== approvedIdentityBoundaryPath &&
+          filePath !== approvedProfileMembershipBoundaryPath &&
+          filePath !== approvedWorkspaceResolverBoundaryPath &&
+          filePath !== approvedCompositionBoundaryPath &&
+          filePath !== approvedDecisionBoundaryPath &&
+          filePath !== approvedPreflightBoundaryPath &&
+          filePath !== approvedCsrfVerifierBoundaryPath &&
+          filePath !== approvedCsrfIssuerBoundaryPath &&
+          filePath !== approvedGateBoundaryPath &&
+          filePath !== approvedRequestMetadataBoundaryPath &&
+          filePath !== approvedRuntimeGateInvocationBoundaryPath
+      )
+      .map(({ source }) => source)
+      .join("\n");
+    const productionSource = productionSources
+      .map(({ source }) => source)
+      .join("\n");
 
     expect(
       combinedOutside([
@@ -250,56 +302,6 @@ describe("Phase 2B-W server-only admin runtime gate invocation boundary", () => 
         approvedRuntimeGateInvocationBoundaryPath
       ])
     ).not.toContain("readServerAdminRequestMetadata");
-  });
-
-  it("keeps routes, pages, server actions, writes, storage, deployment, n8n, Pinecone, and chat-config out of scope", { timeout: 15000 }, () => {
-    const productionSource = readTrackedProductionSources([
-      "website/app",
-      "website/components",
-      "website/lib"
-    ])
-      .map(({ source }) => source)
-      .join("\n");
-    const browserSource = readTrackedProductionSources([
-      "website/app",
-      "website/components",
-      "website/lib"
-    ])
-      .filter(
-        ({ filePath }) =>
-          !filePath.startsWith("website/app/api/") &&
-          !filePath.startsWith("website/lib/supabase/") &&
-          filePath !== approvedIdentityBoundaryPath &&
-          filePath !== approvedProfileMembershipBoundaryPath &&
-          filePath !== approvedWorkspaceResolverBoundaryPath &&
-          filePath !== approvedCompositionBoundaryPath &&
-          filePath !== approvedDecisionBoundaryPath &&
-          filePath !== approvedPreflightBoundaryPath &&
-          filePath !== approvedCsrfVerifierBoundaryPath &&
-          filePath !== approvedCsrfIssuerBoundaryPath &&
-          filePath !== approvedGateBoundaryPath &&
-          filePath !== approvedRequestMetadataBoundaryPath &&
-          filePath !== approvedRuntimeGateInvocationBoundaryPath
-      )
-      .map(({ source }) => source)
-      .join("\n");
-
-    expect(readTrackedFiles(["website/app/admin"])).toEqual([]);
-    expect(readTrackedFiles(["website/app/login"])).toEqual([]);
-    expect(readTrackedFiles(["website/app/logout"])).toEqual([]);
-    expect(readTrackedFiles(["website/app/api/auth"])).toEqual([]);
-    expect(readTrackedFiles(["website/app/api/login"])).toEqual([]);
-    expect(readTrackedFiles(["website/app/api/logout"])).toEqual([]);
-    expect(readTrackedFiles(["website/app/api/admin"])).toEqual([]);
-    expect(readTrackedFiles(["website/app/api/products"])).toEqual([]);
-    expect(readTrackedFiles(["website/app/api/categories"])).toEqual([]);
-    expect(readTrackedFiles(["website/app/api/product-images"])).toEqual([]);
-    expect(readTrackedFiles(["website/app/api/catalogue"])).toEqual([]);
-    expect(readTrackedFiles(["website/lib/storage"])).toEqual([]);
-    expect(readTrackedFiles(["website/lib/pinecone"])).toEqual([]);
-    expect(readTrackedFiles(["website/app/api/pinecone"])).toEqual([]);
-    expect(readTrackedFiles(["website/chat-config.js"])).toEqual([]);
-    expect(readTrackedFiles(["vercel.json", ".vercel", "website/vercel.json"])).toEqual([]);
 
     expect(productionSource).not.toContain('"use server"');
     expect(productionSource).not.toMatch(
@@ -311,6 +313,11 @@ describe("Phase 2B-W server-only admin runtime gate invocation boundary", () => 
     expect(productionSource).not.toContain("@pinecone-database");
     expect(productionSource).not.toContain("chat-config");
     expect(browserSource).not.toContain("@supabase/");
+    expect(readTrackedFiles(["website/lib/storage"])).toEqual([]);
+    expect(readTrackedFiles(["website/lib/pinecone"])).toEqual([]);
+    expect(readTrackedFiles(["website/app/api/pinecone"])).toEqual([]);
+    expect(readTrackedFiles(["website/chat-config.js"])).toEqual([]);
+    expect(readTrackedFiles(["vercel.json", ".vercel", "website/vercel.json"])).toEqual([]);
     expect(readTrackedFiles(["n8n-workflows"]).sort()).toEqual([
       "n8n-workflows/spacekonceptrental-customer-support-agent.workflow.json",
       "n8n-workflows/spacekonceptrental-error-handler.workflow.json",

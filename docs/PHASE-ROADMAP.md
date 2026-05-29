@@ -376,6 +376,21 @@ service-role runtime paths, add browser Supabase, deploy, connect Supabase
 Cloud, change n8n workflows, add Pinecone runtime code, or access
 `website/chat-config.js`.
 
+Phase 2B-X adds only the admin runtime gate invocation usage approval lane.
+It approves a future first-party server-only route handler or server action
+lane for calling `resolveServerAdminRuntimeGateInvocation()` through the Phase
+2B-W helper only. Header reads must remain inside Phase 2B-V, cookie reads and
+Supabase Auth calls inside Phase 2B-K/N, `admin_users` and `memberships` reads
+inside Phase 2B-L, workspace resolution inside Phase 2B-M, adapter-set
+composition inside Phase 2B-O, decision logic inside Phase 2B-P,
+request-security preflight inside Phase 2B-Q / Phase 2B-T, CSRF verification
+inside Phase 2B-R / Phase 2B-T, and CSRF issuance inside Phase 2B-S. It is
+not approval to add runtime route handlers, pages, server actions, helper
+usage, login/logout routes, protected admin pages, admin UI,
+product/category/product image writes, Supabase Storage, service-role runtime
+paths, browser Supabase, Supabase Cloud, deployment, real env values, n8n
+workflow changes, Pinecone runtime code, SaaS chatbot app code, or
+`website/chat-config.js` access.
 Further Phase 2 implementation work remains unapproved until scoped in a
 separate phase PR.
 

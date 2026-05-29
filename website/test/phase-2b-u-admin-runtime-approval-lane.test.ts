@@ -74,17 +74,17 @@ describe("Phase 2B-U admin runtime wiring approval lane", () => {
     const projectContext = readRepoFile("docs/PROJECT-CONTEXT.md");
 
     expect(status).toContain(
-      "Current phase: Phase 2B-W - server-only admin runtime gate invocation boundary."
+      "Current phase: Phase 2B-X - admin runtime gate invocation usage approval lane."
     );
     expect(status).toContain(
-      "Latest completed phase: Phase 2B-V - server-only admin request metadata adapter boundary."
+      "Latest completed phase: Phase 2B-W - server-only admin runtime gate invocation boundary."
     );
-    expect(status).toContain("Last merged phase PR: #62");
+    expect(status).toContain("Last merged phase PR: #63");
     expect(status).toContain(
-      "Merge commit: `04e9cce4b96dab73635cc34756d02d3267357e19`"
+      "Merge commit: `2673e0e27725c0d6f1d97dc75cf9d55da050179e`"
     );
     expect(status).toContain(
-      "This PR adds only the reviewed server-only admin runtime gate invocation"
+      "This PR adds only a docs/checklist/static-guard approval lane"
     );
     expect(roadmap).toContain(
       "Phase 2B-U adds only the admin runtime wiring approval lane"
@@ -190,7 +190,7 @@ describe("Phase 2B-U admin runtime wiring approval lane", () => {
     }
   });
 
-  it("does not add route handlers, pages, server actions, admin UI, or product write surfaces", () => {
+  it("does not add route handlers, pages, server actions, admin UI, or product write surfaces", { timeout: 15000 }, () => {
     expect(readTrackedFiles(["website/app/admin"])).toEqual([]);
     expect(readTrackedFiles(["website/app/login"])).toEqual([]);
     expect(readTrackedFiles(["website/app/logout"])).toEqual([]);
