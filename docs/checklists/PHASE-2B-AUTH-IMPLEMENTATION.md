@@ -19,8 +19,9 @@ Phase 2B-K identity boundary. Phase 2B-O implements only the server-only admin
 authorization adapter-set composition boundary. Phase 2B-P implements only the
 server-only composed admin authorization decision boundary. Phase 2B-Q
 implements only the server-only admin request security preflight boundary.
-Keep real auth runtime wiring, factory, adapter-set, decision-boundary, or
-preflight usage from runtime routes/pages/actions, headers, routes, UI,
+Phase 2B-R implements only the server-only CSRF proof verifier boundary. Keep
+real auth runtime wiring, factory, adapter-set, decision-boundary, preflight,
+or CSRF verifier usage from runtime routes/pages/actions, headers, routes, UI,
 product write, Storage, browser Supabase, and service-role runtime
 implementation items unchecked until a future implementation PR adds and tests
 that runtime code.
@@ -77,6 +78,7 @@ Reference docs:
 - [x] Server-only admin authorization adapter-set composition boundary.
 - [x] Server-only composed admin authorization decision boundary.
 - [x] Server-only admin request security preflight boundary.
+- [x] Server-only CSRF proof verifier boundary.
 
 ## Still Deferred
 
@@ -89,6 +91,7 @@ Reference docs:
 - [ ] Admin authorization adapter-set usage from runtime routes, pages, or server actions.
 - [ ] Admin authorization decision boundary usage from runtime routes, pages, or server actions.
 - [ ] Admin request security preflight usage from runtime routes, pages, or server actions.
+- [ ] Admin CSRF proof verifier usage from runtime routes, pages, or server actions.
 - [ ] Header reads.
 - [ ] Login/logout routes.
 - [ ] Protected admin pages.

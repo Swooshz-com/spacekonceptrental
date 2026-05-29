@@ -218,6 +218,15 @@ Custom Chat UI -> POST /api/chat -> ChatProvider
   POST plus a valid CSRF proof for state-changing admin operations. It does
   not read real headers and is not wired into runtime routes, pages, server
   actions, protected admin runtime, login/logout, admin UI, or product writes.
+- Phase 2B-R adds a server-only CSRF proof verifier boundary only. The verifier
+  module is restricted to
+  `website/lib/admin/authorization/server-admin-csrf-proof-verifier.ts`. It
+  validates only explicitly injected proof material, expected session binding,
+  expected nonce, timestamps, and dependency-injected signature or replay
+  checks, returns only Phase 2B-Q-compatible safe CSRF proof results, does not
+  issue CSRF tokens, does not read real headers, cookies, or env, and is not
+  wired into runtime routes, pages, server actions, protected admin runtime,
+  login/logout, admin UI, or product writes.
 
 ## Current Status Pages
 

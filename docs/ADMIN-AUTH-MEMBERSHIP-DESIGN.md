@@ -26,9 +26,10 @@ Completed phase history:
   only.
 - Phase 2B-Q adds a server-only admin request security preflight boundary
   only.
+- Phase 2B-R adds a server-only CSRF proof verifier boundary only.
 
-Latest completed admin/auth boundary state: Phase 2B-Q server-only admin
-request security preflight boundary.
+Latest completed admin/auth boundary state: Phase 2B-R server-only CSRF proof
+verifier boundary.
 
 This design does not implement real auth.
 This design does not add admin UI.
@@ -49,6 +50,8 @@ This design does not use the Phase 2B-P composed admin authorization decision
 boundary from runtime routes, pages, or server actions.
 This design does not use the Phase 2B-Q admin request security preflight
 boundary from runtime routes, pages, or server actions.
+This design does not use the Phase 2B-R CSRF proof verifier boundary from
+runtime routes, pages, or server actions.
 
 Product/category/product image writes remain blocked until admin/auth boundaries are implemented and tested.
 Product writes remain blocked until real auth/membership resolution, RLS, audit, and route/action boundaries are implemented and tested.
@@ -188,6 +191,17 @@ compose adapters, call the composed decision boundary, or wire itself into
 runtime routes, pages, server actions, protected admin pages, login/logout,
 admin UI, or product writes.
 
+Phase 2B-R adds a server-only CSRF proof verifier boundary at
+`website/lib/admin/authorization/server-admin-csrf-proof-verifier.ts`. It
+validates only explicitly injected proof material, expected session binding,
+expected nonce, timestamps, and dependency-injected signature or replay
+checks. It accepts the Phase 2B-Q `verifyCsrfProof` dependency input shape and
+returns only Phase 2B-Q-compatible safe CSRF proof results. It does not issue
+CSRF tokens, read real headers, read cookies, read env, call Supabase, store
+replay state except through an injected dependency, or wire itself into
+runtime routes, pages, server actions, protected admin pages, login/logout,
+admin UI, or product writes.
+
 ## Non-goals
 
 This design does not:
@@ -215,6 +229,8 @@ This design does not:
   runtime routes, pages, or server actions.
 - Use the Phase 2B-Q admin request security preflight boundary from runtime
   routes, pages, or server actions.
+- Use the Phase 2B-R CSRF proof verifier boundary from runtime routes, pages,
+  or server actions.
 - Connect to Supabase Cloud.
 - Add deployment configuration.
 - Add production seed data.

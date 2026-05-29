@@ -261,6 +261,16 @@ variables such as `N8N_CHAT_WEBHOOK_URL`.
   routes, protected admin pages, admin UI, product writes, Storage, browser
   Supabase, service-role runtime paths, deployment, Supabase Cloud, n8n
   workflow changes, Pinecone runtime code, or SaaS chatbot app code.
+- Phase 2B-R server-only CSRF proof verifier boundary is approved only as a server-only verifier module
+  at `website/lib/admin/authorization/server-admin-csrf-proof-verifier.ts`.
+  It may validate explicitly injected proof material and dependency-injected
+  signature or replay checks for future CSRF proof validation. It is not
+  approval to issue CSRF tokens, read real headers, read cookies, read env, use
+  that verifier from runtime routes, pages, or server actions, add
+  login/logout routes, protected admin pages, admin UI, product writes,
+  Storage, browser Supabase, service-role runtime paths, deployment, Supabase
+  Cloud, n8n workflow changes, Pinecone runtime code, or SaaS chatbot app
+  code.
 - Future admin auth must remain server-side. Future session cookies must be
   HttpOnly, Secure in production, and have reviewed SameSite behaviour. Future
   state-changing admin routes/server actions need CSRF strategy before

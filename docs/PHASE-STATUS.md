@@ -4,24 +4,23 @@ This is the quick status page for the SKR repo. Use `docs/PHASE-2-READINESS-PLAN
 
 ## Current phase
 
-Current phase: Phase 2B-Q - server-only admin request security preflight boundary.
+Current phase: Phase 2B-R - server-only CSRF proof verifier boundary.
 
-This PR adds the smallest server-only request security preflight boundary for
-future state-changing admin routes and server actions. The validator accepts
-only explicitly injected request metadata and optional injected CSRF verifier
-results. It validates supported admin operations, safe methods, same-origin
-Origin/Host metadata, and CSRF proof for state-changing operations, and fails
-closed with safe shapes when metadata, CSRF proof, or verifier results are
-missing or invalid. It does not read real request headers, wire the preflight
-boundary into runtime routes, pages, server actions, protected admin pages,
-login/logout, admin UI, or product writes, and it does not make runtime admin
-auth complete.
+This PR adds the smallest server-only CSRF proof verifier boundary for future
+state-changing admin routes and server actions. The verifier accepts only
+explicitly injected proof material, expected session/nonce/timestamp values,
+and dependency-injected signature or replay checks. It validates a structured
+CSRF proof shape for future injection into the Phase 2B-Q preflight boundary
+and fails closed with Phase 2B-Q-compatible safe reasons. It does not read real
+request headers, cookies, env, routes, pages, server actions, Supabase, or
+runtime state, does not wire itself into runtime routes/pages/actions, and does
+not make runtime admin auth complete.
 
-Latest completed phase: Phase 2B-P - server-only composed admin authorization decision boundary.
+Latest completed phase: Phase 2B-Q - server-only admin request security preflight boundary.
 
-Last merged phase PR: #56
+Last merged phase PR: #57
 
-Merge commit: `1ac705d8172a088ceb1fc946b31ca09ceefa74bc`
+Merge commit: `1151aa5546aa6f2e30537e03da9e7a77fbb13e74`
 
 ## Completed foundation
 
@@ -64,7 +63,8 @@ Vercel config, add real env values, or add runtime features.
 - Server-only session-bound admin read-client factory is complete.
 - Server-only admin authorization adapter-set composition boundary is complete.
 - Server-only composed admin authorization decision boundary is complete.
-- Server-only admin request security preflight boundary is in progress.
+- Server-only admin request security preflight boundary is complete.
+- Server-only CSRF proof verifier boundary is in progress.
 
 Supabase Auth is approved as the future server-side admin auth provider. The
 Phase 2B-K identity boundary remains the only approved place to read Supabase
@@ -81,7 +81,10 @@ restricted to composing the adapter set and calling the existing adapter-driven
 decision resolver; it is not a runtime wiring approval. The Phase 2B-Q request
 security preflight boundary is restricted to validating explicitly injected
 request metadata and optional injected CSRF verifier results; it is not a
-runtime wiring or header-read approval. These boundaries are not wired into
+runtime wiring or header-read approval. The Phase 2B-R CSRF proof verifier
+boundary is restricted to validating explicitly injected proof material and
+dependency-injected verifier checks; it is not a runtime wiring, header-read,
+cookie-read, or CSRF issuance approval. These boundaries are not wired into
 routes, pages, server actions, protected admin runtime, login/logout, admin UI,
 or product writes.
 
@@ -89,6 +92,7 @@ Runtime session-bound read-client usage remains deferred.
 Runtime adapter-set usage remains deferred.
 Runtime decision-boundary usage remains deferred.
 Runtime request-security preflight usage remains deferred.
+Runtime CSRF proof verifier usage remains deferred.
 
 ## Still blocked
 
@@ -106,6 +110,8 @@ Runtime request-security preflight usage remains deferred.
 - Admin authorization decision boundary usage from runtime routes, pages, or
   server actions.
 - Admin request security preflight usage from runtime routes, pages, or server
+  actions.
+- Admin CSRF proof verifier usage from runtime routes, pages, or server
   actions.
 - Header reads.
 - Login/logout routes.
