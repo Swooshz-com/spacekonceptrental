@@ -76,14 +76,11 @@ describe("Phase 2B-Y server-only admin runtime route gate adapter boundary", () 
     const projectContext = readRepoFile("docs/PROJECT-CONTEXT.md");
 
     expect(status).toContain(
-      "Current phase: Phase 2B-Z - admin runtime route gate adapter usage approval lane."
+      "Latest completed phase: Phase 2B-Z - admin runtime route gate adapter usage approval lane."
     );
+    expect(status).toContain("Last merged phase PR: #66");
     expect(status).toContain(
-      "Latest completed phase: Phase 2B-Y - server-only admin runtime route gate adapter boundary."
-    );
-    expect(status).toContain("Last merged phase PR: #65");
-    expect(status).toContain(
-      "Merge commit: `0dbf2b4ff739084a73ffbe4adf11cc38a7592dff`"
+      "Merge commit: `9ebf36748f1cd98b5008154f9a6389c75a670ab4`"
     );
     expect(roadmap).toContain(
       "Phase 2B-Y adds only the server-only admin runtime route gate adapter boundary"
@@ -202,7 +199,7 @@ describe("Phase 2B-Y server-only admin runtime route gate adapter boundary", () 
         .join("\n");
     };
     const appSource = productionSources
-      .filter(({ filePath }) => filePath.startsWith("website/app/"))
+      .filter(({ filePath }) => filePath.startsWith("website/app/") && filePath !== "website/app/api/admin/auth-check/route.ts")
       .map(({ source }) => source)
       .join("\n");
 
@@ -309,7 +306,7 @@ describe("Phase 2B-Y server-only admin runtime route gate adapter boundary", () 
     expect(readTrackedFiles(["website/app/api/auth"])).toEqual([]);
     expect(readTrackedFiles(["website/app/api/login"])).toEqual([]);
     expect(readTrackedFiles(["website/app/api/logout"])).toEqual([]);
-    expect(readTrackedFiles(["website/app/api/admin"])).toEqual([]);
+    expect(readTrackedFiles(["website/app/api/admin"])).toEqual(["website/app/api/admin/auth-check/route.test.ts", "website/app/api/admin/auth-check/route.ts"]);
     expect(readTrackedFiles(["website/app/api/products"])).toEqual([]);
     expect(readTrackedFiles(["website/app/api/categories"])).toEqual([]);
     expect(readTrackedFiles(["website/app/api/product-images"])).toEqual([]);

@@ -7,7 +7,8 @@ export type AdminOperation =
   | "product.write"
   | "category.write"
   | "productImage.write"
-  | "membership.manage";
+  | "membership.manage"
+  | "admin.auth.check";
 
 export type AdminUserState = {
   id: string;
@@ -63,15 +64,17 @@ const roleOperationAccess: Record<AdminRole, Set<AdminOperation>> = {
     "product.write",
     "category.write",
     "productImage.write",
-    "membership.manage"
+    "membership.manage",
+    "admin.auth.check"
   ]),
   admin: new Set([
     "catalogue.read",
     "product.write",
     "category.write",
-    "productImage.write"
+    "productImage.write",
+    "admin.auth.check"
   ]),
-  viewer: new Set(["catalogue.read"])
+  viewer: new Set(["catalogue.read", "admin.auth.check"])
 };
 
 const supportedOperations = new Set<AdminOperation>([
@@ -79,7 +82,8 @@ const supportedOperations = new Set<AdminOperation>([
   "product.write",
   "category.write",
   "productImage.write",
-  "membership.manage"
+  "membership.manage",
+  "admin.auth.check"
 ]);
 
 function deny(

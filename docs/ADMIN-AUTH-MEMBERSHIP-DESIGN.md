@@ -36,9 +36,9 @@ Completed phase history:
 - Phase 2B-X adds a docs/checklist/static-guard approval lane for future runtime usage of the Phase 2B-W invocation helper only.
 - Phase 2B-Y adds a server-only admin runtime route gate adapter boundary only.
 - Phase 2B-Z adds a docs/checklist/static-guard approval lane for future runtime usage of the Phase 2B-Y route gate adapter only.
+- Phase 2B-AA adds the first admin runtime route gate adapter usage boundary only.
 
-Latest completed admin/auth boundary state: Phase 2B-Y server-only admin
-runtime route gate adapter boundary.
+Latest completed admin/auth boundary state: Phase 2B-AA first admin runtime route gate adapter usage boundary.
 
 This design does not implement real auth.
 This design does not add admin UI.
@@ -67,7 +67,8 @@ runtime routes, pages, or server actions.
 This design does not use the Phase 2B-W admin runtime gate invocation helper
 from runtime routes, pages, or server actions.
 This design does not use the Phase 2B-Y admin runtime route gate adapter from
-runtime routes, pages, or server actions.
+runtime routes, pages, or server actions except for the Phase 2B-AA first admin
+runtime usage boundary.
 
 Product/category/product image writes remain blocked until admin/auth boundaries are implemented and tested.
 Product writes remain blocked until real auth/membership resolution, RLS, audit, and route/action boundaries are implemented and tested.
@@ -283,6 +284,12 @@ directly, or add route/page/server-action runtime usage. Creating this helper
 does not approve using it from runtime routes, pages, server actions,
 protected admin pages, login/logout, admin UI, or product writes.
 
+Phase 2B-Y adds a server-only admin runtime route gate adapter boundary at `website/lib/admin/authorization/server-admin-runtime-route-gate-adapter.ts`. It calls only the Phase 2B-W runtime gate invocation helper. It does not read request headers directly, read cookies, read env, or call lower-level boundaries directly. Creating this adapter does not approve using it from runtime routes, pages, server actions, protected admin pages, login/logout, admin UI, or product writes.
+
+Phase 2B-Z adds a docs/checklist/static-guard approval lane for future runtime usage of the Phase 2B-Y route gate adapter. It records that future runtime code may call `resolveServerAdminRuntimeRouteGateAdapter()` only from first-party server-only route handlers or server actions. It does not add route handlers, pages, server actions, runtime route gate adapter usage, login/logout, protected admin pages, admin UI, product writes, Storage, deployment, Supabase Cloud, browser Supabase, service-role runtime paths, n8n changes, Pinecone runtime code, SaaS chatbot app work, or `website/chat-config.js` access.
+
+Phase 2B-AA adds the first admin runtime route gate adapter usage boundary at `website/app/api/admin/auth-check/route.ts`. It introduces exactly one harmless authorization probe route handler that uses the Phase 2B-Y route gate adapter. It does not add other routes, pages, server actions, login/logout routes, protected admin pages, admin UI, product writes, Storage, deployment, Supabase Cloud, browser Supabase, service-role runtime paths, n8n workflow changes, Pinecone runtime code, SaaS chatbot app work, or `website/chat-config.js` access.
+
 ## Non-goals
 
 This design does not:
@@ -316,6 +323,8 @@ This design does not:
   server actions.
 - Use the Phase 2B-W admin runtime gate invocation helper from runtime routes,
   pages, or server actions.
+- Add other routes or server actions beyond the single Phase 2B-AA authorization
+  probe.
 - Connect to Supabase Cloud.
 - Add deployment configuration.
 - Add production seed data.
