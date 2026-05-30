@@ -306,7 +306,7 @@ describe("Phase 2B-Y server-only admin runtime route gate adapter boundary", () 
     expect(readTrackedFiles(["website/app/api/auth"])).toEqual([]);
     expect(readTrackedFiles(["website/app/api/login"])).toEqual([]);
     expect(readTrackedFiles(["website/app/api/logout"])).toEqual([]);
-    expect(readTrackedFiles(["website/app/api/admin"])).toEqual(["website/app/api/admin/auth-check/route.ts"]);
+    expect(readTrackedFiles(["website/app/api/admin"])).toEqual(["website/app/api/admin/auth-check/route.test.ts", "website/app/api/admin/auth-check/route.ts"]);
     expect(readTrackedFiles(["website/app/api/products"])).toEqual([]);
     expect(readTrackedFiles(["website/app/api/categories"])).toEqual([]);
     expect(readTrackedFiles(["website/app/api/product-images"])).toEqual([]);
