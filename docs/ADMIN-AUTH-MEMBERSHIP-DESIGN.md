@@ -38,7 +38,7 @@ Completed phase history:
 - Phase 2B-Z adds a docs/checklist/static-guard approval lane for future runtime usage of the Phase 2B-Y route gate adapter only.
 - Phase 2B-AA adds the first admin runtime route gate adapter usage boundary only.
 
-Latest completed admin/auth boundary state: Phase 2B-AA first admin runtime route gate adapter usage boundary.
+Latest completed admin/auth boundary state: Phase 2B-AB admin CSRF proof issuer runtime usage approval lane.
 
 This design does not implement real auth.
 This design does not add admin UI.

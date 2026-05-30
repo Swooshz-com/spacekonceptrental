@@ -76,17 +76,17 @@ describe("Phase 2B-AA first admin runtime route gate adapter usage boundary", ()
     const projectContext = readRepoFile("docs/PROJECT-CONTEXT.md");
 
     expect(status).toContain(
-      "Current phase: Phase 2B-AA - first admin runtime route gate adapter usage boundary."
+      "Current phase: Phase 2B-AB - admin CSRF proof issuer runtime usage approval lane."
     );
     expect(status).toContain(
-      "Latest completed phase: Phase 2B-Z - admin runtime route gate adapter usage approval lane."
+      "Latest completed phase: Phase 2B-AA - first admin runtime route gate adapter usage boundary."
     );
-    expect(status).toContain("Last merged phase PR: #66");
+    expect(status).toContain("Last merged phase PR: #68");
     expect(status).toContain(
-      "Merge commit: `9ebf36748f1cd98b5008154f9a6389c75a670ab4`"
+      "Merge commit: `ca800f7604c5ef0a6e19a4f0724121a08576017b`"
     );
     expect(status).toContain(
-      "This PR adds only the first admin runtime route gate adapter usage boundary."
+      "This PR adds only the admin CSRF proof issuer runtime usage approval lane."
     );
     expect(roadmap).toContain(
       "Phase 2B-AA adds the first admin runtime route gate adapter usage boundary"
@@ -116,7 +116,7 @@ describe("Phase 2B-AA first admin runtime route gate adapter usage boundary", ()
       "## Phase 2B-AA Implemented First Admin Runtime Route Gate Adapter Usage Boundary"
     );
     expect(design).toContain(
-      "Phase 2B-AA implemented the first admin runtime route gate adapter usage boundary."
+      "Phase 2B-AA implemented the first admin runtime route gate adapter usage boundary, and the"
     );
     expect(design).toContain(
       "Future runtime usage must call only the Phase 2B-Y route gate adapter from the route/action boundary."
@@ -131,7 +131,7 @@ describe("Phase 2B-AA first admin runtime route gate adapter usage boundary", ()
       "Creating this first runtime boundary does not approve adding or using other route handlers, pages, server actions, login/logout routes, protected admin pages, admin UI, product writes, Storage, deployment, Supabase Cloud, browser Supabase, service-role runtime paths, n8n workflow changes, Pinecone runtime code, SaaS chatbot app work, or `website/chat-config.js` access."
     );
     expect(membershipDesign).toContain(
-      "Latest completed admin/auth boundary state: Phase 2B-AA first admin runtime route gate adapter usage boundary."
+      "Latest completed admin/auth boundary state: Phase 2B-AB admin CSRF proof issuer runtime usage approval lane."
     );
     expect(safety).toContain(
       "Phase 2B-AA first admin runtime route gate adapter usage boundary is approved only as exactly one harmless GET authorization probe/check route handler"

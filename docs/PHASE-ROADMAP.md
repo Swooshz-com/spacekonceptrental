@@ -422,6 +422,22 @@ login/logout, protected admin pages, admin UI, product writes, Storage,
 deployment, Supabase Cloud, browser Supabase, service-role runtime paths, n8n
 changes, Pinecone runtime code, SaaS chatbot app work, or
 `website/chat-config.js` access.
+
+Phase 2B-AB adds only the admin CSRF proof issuer runtime usage approval lane.
+It approves only the future first-party server-only lane for issuing CSRF
+proof material needed by later state-changing admin operations. The future
+route must remain server-only and must not bypass the Phase 2B-Y/AA
+route-gate authorization path. The future route must not call lower-level
+auth/security boundaries directly except the approved Phase 2B-S CSRF issuer
+boundary. The future route must not expose CSRF secrets, verifier internals,
+provider internals, raw headers, cookies, tokens, SQL/provider errors,
+workspace internals, membership internals, or stack traces. The future route
+must not approve product/category/product image writes by itself. It is not
+approval to add routes, pages, server actions, login/logout, protected admin
+pages, admin UI, product writes, Storage, deployment, Supabase Cloud, browser
+Subabase, service-role runtime paths, n8n changes, Pinecone runtime code,
+SaaS chatbot app work, or `website/chat-config.js` access.
+
 Further Phase 2 implementation work remains unapproved until scoped in a
 separate phase PR.
 
