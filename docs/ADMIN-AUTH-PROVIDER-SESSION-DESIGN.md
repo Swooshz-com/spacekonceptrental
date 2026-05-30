@@ -16,8 +16,9 @@ server-only admin authorization gate composition boundary, the Phase 2B-U
 approved future admin runtime gate usage lane, and the Phase 2B-V implemented
 server-only admin request metadata adapter boundary, the Phase 2B-W
 implemented server-only admin runtime gate invocation boundary, the Phase 2B-X
-approved future admin runtime gate invocation usage lane, and the Phase 2B-Y
-implemented server-only admin runtime route gate adapter boundary.
+approved future admin runtime gate invocation usage lane, the Phase 2B-Y
+implemented server-only admin runtime route gate adapter boundary, and the
+Phase 2B-Z approved future admin runtime route gate adapter usage lane.
 
 Phase 2B-E added auth provider/session/security design only.
 Phase 2B-J approves the future server-only Supabase Auth runtime lane only.
@@ -45,6 +46,8 @@ boundary.
 Phase 2B-X approves only the future admin runtime gate invocation usage lane.
 Phase 2B-Y implements only the server-only admin runtime route gate adapter
 boundary.
+Phase 2B-Z approves only the future admin runtime route gate adapter usage
+lane.
 
 Phase 2B-K cookie reads and Supabase Auth server calls are restricted to the
 server-only identity adapter named below.
@@ -73,6 +76,8 @@ Phase 2B-W admin runtime gate invocation is restricted to the server-only
 invocation helper named below.
 Phase 2B-Y admin runtime route gate adapter plumbing is restricted to the
 server-only route gate adapter named below.
+Phase 2B-Z is docs/checklist approval only for future first-party server-only
+usage of the Phase 2B-Y route gate adapter and does not add runtime wiring.
 This document does not approve auth runtime wiring outside these boundaries.
 This document does not approve header reads outside the Phase 2B-V adapter.
 This document does not add login/logout routes.
@@ -432,6 +437,17 @@ Creating this adapter does not approve adding or using route handlers, pages, se
 The adapter does not read request headers directly, read cookies, read env, import `next/headers`, call `headers()`, import or call `cookies()`, call `readServerAdminRequestMetadata()` directly, call `resolveServerAdminAuthorizationGate()` directly, call preflight, decision, CSRF verifier, CSRF issuer, adapter-set composition, Supabase Auth, `admin_users`, `memberships`, or workspace resolver boundaries directly, use service-role keys, add browser Supabase, add Storage, connect Supabase Cloud, deploy, change n8n workflows, add Pinecone runtime code, or access `website/chat-config.js`.
 
 Actual runtime route/page/server-action usage of this adapter remains unchecked and deferred until a later implementation PR adds and tests that code.
+## Phase 2B-Z Approved Future Admin Runtime Route Gate Adapter Usage Lane
+
+A future runtime PR may call `resolveServerAdminRuntimeRouteGateAdapter()` only from a first-party server-only route handler or server action.
+
+Future runtime usage must call only the Phase 2B-Y route gate adapter from the route/action boundary. It must pass explicit trusted configuration and dependencies into that adapter rather than duplicating lower-level boundary logic.
+
+Header reads must remain inside the Phase 2B-V request metadata adapter. Cookie reads and Supabase Auth calls must remain inside the Phase 2B-K/N identity boundary. `admin_users` and `memberships` reads must remain inside the Phase 2B-L profile/membership boundary. Workspace resolution must remain inside Phase 2B-M. Adapter-set composition must remain inside Phase 2B-O. Decision logic must remain inside Phase 2B-P. Request-security preflight must remain inside Phase 2B-Q / Phase 2B-T gate. CSRF verification must remain inside Phase 2B-R / Phase 2B-T gate. CSRF issuance must remain inside the Phase 2B-S issuer boundary. Runtime gate invocation must remain inside the Phase 2B-W invocation boundary. Route gate adapter plumbing must remain inside the Phase 2B-Y route gate adapter boundary.
+
+Phase 2B-Z does not add route handlers, pages, server actions, route gate adapter runtime usage, login/logout, protected admin pages, admin UI, product writes, Storage, deployment, Supabase Cloud, browser Supabase, service-role paths, n8n changes, Pinecone runtime code, SaaS chatbot app work, or `website/chat-config.js` access.
+
+Actual runtime route/page/server-action usage of `resolveServerAdminRuntimeRouteGateAdapter()` remains unchecked and deferred until a later implementation PR adds and tests that code.
 ## Phase 2B-L Implemented Profile And Membership Read Boundary
 
 `website/lib/admin/authorization/supabase-admin-profile-membership-adapters.ts` is the only approved module for Supabase `admin_users` and `memberships` table reads in this phase.
@@ -520,6 +536,8 @@ This document does not:
 - Add browser Supabase.
 - Add service-role runtime reads or writes.
 - Add Supabase Storage wiring.
+- Use the Phase 2B-Y admin runtime route gate adapter from runtime routes,
+  pages, or server actions.
 - Connect to Supabase Cloud.
 - Add deployment configuration.
 - Add production seed data.

@@ -771,3 +771,12 @@ Reason: Phase 2B-X approved the future lane for first-party server-only route ha
 The adapter accepts explicit operation/workspace inputs, trusted expected origin and host dependencies, gate dependencies, and an explicit request method or method from a minimal request-like object. It passes the method into the Phase 2B-W invocation helper through request metadata dependencies and returns the existing safe gate result shape.
 
 Phase 2B-Y does not read headers directly, read cookies, read env, import route/page/server-action code, call `readServerAdminRequestMetadata()` directly, call `resolveServerAdminAuthorizationGate()` directly, call preflight, decision, CSRF verifier, CSRF issuer, adapter-set composition, Supabase Auth, `admin_users`, `memberships`, or workspace resolver boundaries directly, add route handlers, pages, server actions, login/logout routes, protected admin pages, admin UI, product/category/product image writes, Supabase Storage, browser Supabase, service-role runtime paths, Supabase Cloud/deployment/env changes, n8n workflow changes, Pinecone runtime code, SaaS chatbot app work, or `website/chat-config.js` access.
+## 2026-05-30: Admin Runtime Route Gate Adapter Usage Approval Lane
+
+Decision: Phase 2B-Z adds only the admin runtime route gate adapter usage approval lane.
+
+The future approved lane is limited to first-party server-only route handlers or server actions. Future runtime route/action code may call `resolveServerAdminRuntimeRouteGateAdapter()` only through the Phase 2B-Y route gate adapter and must not duplicate lower-level boundary logic.
+
+Header reads remain inside Phase 2B-V, cookie reads and Supabase Auth calls remain inside Phase 2B-K/N, `admin_users` and `memberships` reads remain inside Phase 2B-L, workspace resolution remains inside Phase 2B-M, adapter-set composition remains inside Phase 2B-O, decision logic remains inside Phase 2B-P, request-security preflight remains inside Phase 2B-Q / Phase 2B-T, CSRF verification remains inside Phase 2B-R / Phase 2B-T, CSRF issuance remains inside Phase 2B-S, runtime gate invocation remains inside Phase 2B-W, and route gate adapter plumbing remains inside Phase 2B-Y.
+
+Phase 2B-Z does not add route handlers, pages, server actions, runtime route gate adapter usage, login/logout routes, protected admin pages, admin UI, product/category/product image writes, Storage, deployment, Supabase Cloud, browser Supabase, service-role runtime paths, n8n workflow changes, Pinecone runtime code, SaaS chatbot app work, or `website/chat-config.js` access.

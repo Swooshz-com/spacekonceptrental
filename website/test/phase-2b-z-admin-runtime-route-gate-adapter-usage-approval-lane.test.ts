@@ -68,8 +68,8 @@ function expectUnchecked(markdown: string, item: string) {
   expect(markdown).toContain(`- [ ] ${item}`);
 }
 
-describe("Phase 2B-Y server-only admin runtime route gate adapter boundary", () => {
-  it("records Phase 2B-Y status and Phase 2B-X completion", () => {
+describe("Phase 2B-Z admin runtime route gate adapter usage approval lane", () => {
+  it("records Phase 2B-Z as approval-lane only and Phase 2B-Y as completed", () => {
     const status = readRepoFile("docs/PHASE-STATUS.md");
     const roadmap = readRepoFile("docs/PHASE-ROADMAP.md");
     const decisionLog = readRepoFile("docs/DECISION-LOG.md");
@@ -85,18 +85,21 @@ describe("Phase 2B-Y server-only admin runtime route gate adapter boundary", () 
     expect(status).toContain(
       "Merge commit: `0dbf2b4ff739084a73ffbe4adf11cc38a7592dff`"
     );
+    expect(status).toContain(
+      "This PR adds only a docs/checklist/static-guard approval lane for future first-party server-only usage of `resolveServerAdminRuntimeRouteGateAdapter()`."
+    );
     expect(roadmap).toContain(
-      "Phase 2B-Y adds only the server-only admin runtime route gate adapter boundary"
+      "Phase 2B-Z adds only the admin runtime route gate adapter usage approval lane"
     );
     expect(decisionLog).toContain(
-      "Decision: Phase 2B-Y adds only the server-only admin runtime route gate adapter boundary"
+      "Decision: Phase 2B-Z adds only the admin runtime route gate adapter usage approval lane"
     );
     expect(projectContext).toContain(
-      "Phase 2B-Y adds a server-only admin runtime route gate adapter boundary"
+      "Phase 2B-Z adds a docs/checklist/static-guard approval lane for future first-party server-only usage of the Phase 2B-Y route gate adapter"
     );
   });
 
-  it("documents the adapter boundary and keeps runtime usage deferred", () => {
+  it("documents the future usage lane and keeps runtime usage unchecked", () => {
     const design = readRepoFile("docs/ADMIN-AUTH-PROVIDER-SESSION-DESIGN.md");
     const membershipDesign = readRepoFile(
       "docs/ADMIN-AUTH-MEMBERSHIP-DESIGN.md"
@@ -110,35 +113,44 @@ describe("Phase 2B-Y server-only admin runtime route gate adapter boundary", () 
     );
 
     expect(design).toContain(
-      "## Phase 2B-Y Implemented Admin Runtime Route Gate Adapter Boundary"
+      "## Phase 2B-Z Approved Future Admin Runtime Route Gate Adapter Usage Lane"
     );
     expect(design).toContain(
-      "`website/lib/admin/authorization/server-admin-runtime-route-gate-adapter.ts` is the only approved module in this phase for route/action-safe calls into `resolveServerAdminRuntimeGateInvocation()`."
+      "A future runtime PR may call `resolveServerAdminRuntimeRouteGateAdapter()` only from a first-party server-only route handler or server action."
     );
     expect(design).toContain(
-      "Creating this adapter does not approve adding or using route handlers, pages, server actions, protected admin pages, login/logout, admin UI, or product writes."
+      "Future runtime usage must call only the Phase 2B-Y route gate adapter from the route/action boundary."
+    );
+    expect(design).toContain(
+      "Header reads must remain inside the Phase 2B-V request metadata adapter."
+    );
+    expect(design).toContain(
+      "Runtime gate invocation must remain inside the Phase 2B-W invocation boundary."
+    );
+    expect(design).toContain(
+      "Phase 2B-Z does not add route handlers, pages, server actions, route gate adapter runtime usage, login/logout, protected admin pages, admin UI, product writes, Storage, deployment, Supabase Cloud, browser Supabase, service-role paths, n8n changes, Pinecone runtime code, SaaS chatbot app work, or `website/chat-config.js` access."
     );
     expect(membershipDesign).toContain(
-      "Phase 2B-Y adds a server-only admin runtime route gate adapter boundary only."
+      "Phase 2B-Z adds a docs/checklist/static-guard approval lane for future runtime usage of the Phase 2B-Y route gate adapter only."
     );
     expect(safety).toContain(
-      "Phase 2B-Y server-only admin runtime route gate adapter boundary is approved only as server-only route/action adapter plumbing"
+      "Phase 2B-Z admin runtime route gate adapter usage approval lane is docs/checklist/static-guard approval only"
     );
 
     expectChecked(
       authChecklist,
-      "Server-only admin runtime route gate adapter boundary."
+      "Admin runtime route gate adapter usage approval lane."
     );
     expectChecked(
       adminAuthChecklist,
-      "Add server-only admin runtime route gate adapter boundary."
+      "Approve future server-only admin runtime route gate adapter usage lane."
     );
 
     for (const item of [
       "Real auth runtime wiring.",
       "Supabase Auth runtime wiring.",
       "Resolver/adapter runtime wiring into routes, pages, or server actions.",
-      "Admin runtime gate invocation usage from runtime routes, pages, or server actions.",
+      "Admin runtime route gate adapter usage from runtime routes, pages, or server actions.",
       "Login/logout routes.",
       "Protected admin pages.",
       "Admin UI.",
@@ -154,38 +166,47 @@ describe("Phase 2B-Y server-only admin runtime route gate adapter boundary", () 
     }
   });
 
-  it("keeps the adapter server-only and limited to the Phase 2B-W invocation helper", () => {
-    const source = readRepoFile(approvedRuntimeRouteGateAdapterBoundaryPath);
+  it("keeps route gate adapter usage out of app routes, pages, and server actions", { timeout: 15000 }, () => {
+    const productionSources = readTrackedProductionSources([
+      "website/app",
+      "website/components",
+      "website/lib"
+    ]);
+    const appSource = productionSources
+      .filter(({ filePath }) => filePath.startsWith("website/app/"))
+      .map(({ source }) => source)
+      .join("\n");
+    const productionOutsideRouteAdapter = productionSources
+      .filter(
+        ({ filePath }) => filePath !== approvedRuntimeRouteGateAdapterBoundaryPath
+      )
+      .map(({ source }) => source)
+      .join("\n");
 
-    expect(source).toContain('import "server-only";');
-    expect(source).toContain("resolveServerAdminRuntimeGateInvocation");
-    expect(source).not.toContain("readServerAdminRequestMetadata");
-    expect(source).not.toContain("resolveServerAdminAuthorizationGate");
-    expect(source).not.toContain("validateServerAdminRequestSecurityPreflight");
-    expect(source).not.toContain("resolveServerAdminAuthorizationDecision");
-    expect(source).not.toContain("verifyServerAdminCsrfProof");
-    expect(source).not.toContain("issueServerAdminCsrfProof");
-    expect(source).not.toContain("createServerAdminAuthorizationAdapterSet");
-    expect(source).not.toContain("createSessionBoundSupabaseAdminReadClient");
-    expect(source).not.toContain("resolveServerAdminWorkspaceForRequest");
-    expect(source).not.toContain("next/headers");
-    expect(source).not.toContain("headers()");
-    expect(source).not.toContain("cookies()");
-    expect(source).not.toContain("@supabase/ssr");
-    expect(source).not.toContain("@supabase/supabase-js");
-    expect(source).not.toContain("auth.getUser()");
-    expect(source).not.toContain("admin_users");
-    expect(source).not.toContain("memberships");
-    expect(source).not.toContain("process.env");
-    expect(source).not.toContain("SUPABASE_SERVICE_ROLE");
-    expect(source).not.toContain("NEXT_PUBLIC_SUPABASE");
-    expect(source).not.toContain("N8N");
-    expect(source).not.toContain("PINECONE");
-    expect(source).not.toContain("chat-config");
-    expect(source).not.toContain('"use server"');
+    expect(readTrackedFiles(["website/app/admin"])).toEqual([]);
+    expect(readTrackedFiles(["website/app/login"])).toEqual([]);
+    expect(readTrackedFiles(["website/app/logout"])).toEqual([]);
+    expect(readTrackedFiles(["website/app/api/auth"])).toEqual([]);
+    expect(readTrackedFiles(["website/app/api/login"])).toEqual([]);
+    expect(readTrackedFiles(["website/app/api/logout"])).toEqual([]);
+    expect(readTrackedFiles(["website/app/api/admin"])).toEqual([]);
+    expect(readTrackedFiles(["website/app/api/products"])).toEqual([]);
+    expect(readTrackedFiles(["website/app/api/categories"])).toEqual([]);
+    expect(readTrackedFiles(["website/app/api/product-images"])).toEqual([]);
+    expect(readTrackedFiles(["website/app/api/catalogue"])).toEqual([]);
+
+    expect(appSource).not.toContain("server-admin-runtime-route-gate-adapter");
+    expect(appSource).not.toContain("resolveServerAdminRuntimeRouteGateAdapter");
+    expect(productionOutsideRouteAdapter).not.toContain(
+      "server-admin-runtime-route-gate-adapter"
+    );
+    expect(productionOutsideRouteAdapter).not.toContain(
+      "resolveServerAdminRuntimeRouteGateAdapter"
+    );
+    expect(productionOutsideRouteAdapter).not.toContain('"use server"');
   });
 
-  it("keeps lower-level boundary ownership narrow while allowing only the route adapter to call the invocation helper", { timeout: 15000 }, () => {
+  it("keeps lower-level ownership and forbidden runtime surfaces unchanged", { timeout: 15000 }, () => {
     const productionSources = readTrackedProductionSources([
       "website/app",
       "website/components",
@@ -201,8 +222,27 @@ describe("Phase 2B-Y server-only admin runtime route gate adapter boundary", () 
         .map(({ source }) => source)
         .join("\n");
     };
-    const appSource = productionSources
-      .filter(({ filePath }) => filePath.startsWith("website/app/"))
+    const productionSource = productionSources
+      .map(({ source }) => source)
+      .join("\n");
+    const browserSource = productionSources
+      .filter(
+        ({ filePath }) =>
+          !filePath.startsWith("website/app/api/") &&
+          !filePath.startsWith("website/lib/supabase/") &&
+          filePath !== approvedIdentityBoundaryPath &&
+          filePath !== approvedProfileMembershipBoundaryPath &&
+          filePath !== approvedWorkspaceResolverBoundaryPath &&
+          filePath !== approvedCompositionBoundaryPath &&
+          filePath !== approvedDecisionBoundaryPath &&
+          filePath !== approvedPreflightBoundaryPath &&
+          filePath !== approvedCsrfVerifierBoundaryPath &&
+          filePath !== approvedCsrfIssuerBoundaryPath &&
+          filePath !== approvedGateBoundaryPath &&
+          filePath !== approvedRequestMetadataBoundaryPath &&
+          filePath !== approvedRuntimeGateInvocationBoundaryPath &&
+          filePath !== approvedRuntimeRouteGateAdapterBoundaryPath
+      )
       .map(({ source }) => source)
       .join("\n");
 
@@ -266,61 +306,7 @@ describe("Phase 2B-Y server-only admin runtime route gate adapter boundary", () 
         approvedRuntimeRouteGateAdapterBoundaryPath
       ])
     ).not.toContain("resolveServerAdminRuntimeGateInvocation");
-    expect(appSource).not.toContain("server-admin-runtime-route-gate-adapter");
-    expect(appSource).not.toContain("resolveServerAdminRuntimeRouteGateAdapter");
-  });
 
-  it("keeps routes, pages, server actions, writes, storage, deployment, n8n, Pinecone, and chat-config out of scope", { timeout: 15000 }, () => {
-    const productionSource = readTrackedProductionSources([
-      "website/app",
-      "website/components",
-      "website/lib"
-    ])
-      .map(({ source }) => source)
-      .join("\n");
-    const browserSource = readTrackedProductionSources([
-      "website/app",
-      "website/components",
-      "website/lib"
-    ])
-      .filter(
-        ({ filePath }) =>
-          !filePath.startsWith("website/app/api/") &&
-          !filePath.startsWith("website/lib/supabase/") &&
-          filePath !== approvedIdentityBoundaryPath &&
-          filePath !== approvedProfileMembershipBoundaryPath &&
-          filePath !== approvedWorkspaceResolverBoundaryPath &&
-          filePath !== approvedCompositionBoundaryPath &&
-          filePath !== approvedDecisionBoundaryPath &&
-          filePath !== approvedPreflightBoundaryPath &&
-          filePath !== approvedCsrfVerifierBoundaryPath &&
-          filePath !== approvedCsrfIssuerBoundaryPath &&
-          filePath !== approvedGateBoundaryPath &&
-          filePath !== approvedRequestMetadataBoundaryPath &&
-          filePath !== approvedRuntimeGateInvocationBoundaryPath &&
-          filePath !== approvedRuntimeRouteGateAdapterBoundaryPath
-      )
-      .map(({ source }) => source)
-      .join("\n");
-
-    expect(readTrackedFiles(["website/app/admin"])).toEqual([]);
-    expect(readTrackedFiles(["website/app/login"])).toEqual([]);
-    expect(readTrackedFiles(["website/app/logout"])).toEqual([]);
-    expect(readTrackedFiles(["website/app/api/auth"])).toEqual([]);
-    expect(readTrackedFiles(["website/app/api/login"])).toEqual([]);
-    expect(readTrackedFiles(["website/app/api/logout"])).toEqual([]);
-    expect(readTrackedFiles(["website/app/api/admin"])).toEqual([]);
-    expect(readTrackedFiles(["website/app/api/products"])).toEqual([]);
-    expect(readTrackedFiles(["website/app/api/categories"])).toEqual([]);
-    expect(readTrackedFiles(["website/app/api/product-images"])).toEqual([]);
-    expect(readTrackedFiles(["website/app/api/catalogue"])).toEqual([]);
-    expect(readTrackedFiles(["website/lib/storage"])).toEqual([]);
-    expect(readTrackedFiles(["website/lib/pinecone"])).toEqual([]);
-    expect(readTrackedFiles(["website/app/api/pinecone"])).toEqual([]);
-    expect(readTrackedFiles(["website/chat-config.js"])).toEqual([]);
-    expect(readTrackedFiles(["vercel.json", ".vercel", "website/vercel.json"])).toEqual([]);
-
-    expect(productionSource).not.toContain('"use server"');
     expect(productionSource).not.toMatch(
       /from\(["'](?:categories|products|product_images)["']\)\s*\.\s*(?:insert|update|upsert|delete)\s*\(/m
     );
@@ -330,10 +316,75 @@ describe("Phase 2B-Y server-only admin runtime route gate adapter boundary", () 
     expect(productionSource).not.toContain("@pinecone-database");
     expect(productionSource).not.toContain("chat-config");
     expect(browserSource).not.toContain("@supabase/");
+    expect(readTrackedFiles(["website/lib/storage"])).toEqual([]);
+    expect(readTrackedFiles(["website/lib/pinecone"])).toEqual([]);
+    expect(readTrackedFiles(["website/app/api/pinecone"])).toEqual([]);
+    expect(readTrackedFiles(["website/chat-config.js"])).toEqual([]);
+    expect(readTrackedFiles(["vercel.json", ".vercel", "website/vercel.json"])).toEqual([]);
     expect(readTrackedFiles(["n8n-workflows"]).sort()).toEqual([
       "n8n-workflows/spacekonceptrental-customer-support-agent.workflow.json",
       "n8n-workflows/spacekonceptrental-error-handler.workflow.json",
       "n8n-workflows/spacekonceptrental-rag-ingestion.workflow.json"
     ]);
+  });
+
+  it("keeps tracked Markdown docs and guard tests free of escaped-newline and identifier corruption", { timeout: 15000 }, () => {
+    const scannedFiles = readTrackedFiles(["docs", "website/test"])
+      .filter(
+        (filePath) =>
+          filePath.endsWith(".md") ||
+          filePath.endsWith(".ts") ||
+          filePath.endsWith(".tsx")
+      );
+    const failures: string[] = [];
+
+    for (const filePath of scannedFiles) {
+      const source = readRepoFile(filePath);
+      const isMarkdown = filePath.endsWith(".md");
+      const escapedTickNewline = "`" + "r`n";
+      const mangledInvocation = "e" + "solveServerAdminRuntimeGateInvocation";
+      const escapedInvocation =
+        "\\" + "resolveServerAdminRuntimeGateInvocation";
+      const mangledRouteGate =
+        "e" + "solveServerAdminRuntimeRouteGateAdapter";
+      const escapedRouteGate =
+        "\\" + "resolveServerAdminRuntimeRouteGateAdapter";
+      const mangledAdminUsers = "d" + "min_users";
+      const escapedAdminUsers = "\\" + "admin_users";
+      const checks: Array<[string, boolean]> = [
+        ["literal escaped newline marker", source.includes(escapedTickNewline)],
+        [
+          "mangled resolveServerAdminRuntimeGateInvocation",
+          new RegExp(`(^|[^r])${mangledInvocation}`).test(source) ||
+            source.includes(escapedInvocation)
+        ],
+        [
+          "mangled resolveServerAdminRuntimeRouteGateAdapter",
+          new RegExp(`(^|[^r])${mangledRouteGate}`).test(source) ||
+            source.includes(escapedRouteGate)
+        ],
+        [
+          "mangled admin_users",
+          new RegExp(`(^|[^a])${mangledAdminUsers}`).test(source) ||
+            source.includes(escapedAdminUsers)
+        ],
+        [
+          "control-character corruption",
+          /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/.test(source)
+        ]
+      ];
+
+      if (isMarkdown) {
+        checks.push(["raw escaped newline text", /\\[rn]/.test(source)]);
+      }
+
+      for (const [reason, failed] of checks) {
+        if (failed) {
+          failures.push(`${filePath}: ${reason}`);
+        }
+      }
+    }
+
+    expect(failures).toEqual([]);
   });
 });
