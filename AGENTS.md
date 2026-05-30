@@ -31,9 +31,8 @@ Use these docs as the source of truth:
 - `docs/DECISION-LOG.md` - accepted decisions and rationale.
 - `docs/PROJECT-CONTEXT.md` - repo and architecture context.
 
-Latest completed phase at the start of Phase 2B-G: Phase 2B-F - checklist
-hygiene and status reconciliation, merged in PR #45 at
-`1e67b2e7ca1098a474b2be29bf372ad60d20807e`.
+Latest completed phase: Phase 2B-Z, merged in PR #66 at
+`9ebf36748f1cd98b5008154f9a6389c75a670ab4`.
 
 ## Current Architecture Direction
 
@@ -66,6 +65,8 @@ Do not migrate Pinecone in this repo yet.
 Do not add Pinecone runtime code or credentials without separate approval.
 
 ## Current Runtime Blockers
+
+The next auth/runtime implementation step must still avoid product writes, admin UI, login/logout, protected admin pages, Storage, deployment, Supabase Cloud, browser Supabase, service-role runtime paths, n8n changes, Pinecone runtime code, SaaS chatbot work, and `website/chat-config.js`.
 
 These remain blocked until explicitly approved, implemented in the right phase,
 and proven by tests:
@@ -112,6 +113,8 @@ Checkbox/status trackers stay in `docs/checklists/`.
 
 Keep PRs narrow.
 
+Agent-instruction refreshes must be separate PRs and must not be mixed into phase/status/runtime PRs.
+
 Avoid unrelated cleanup unless owner explicitly approves it.
 
 When the owner explicitly approves a deletion/move, document it in the PR body.
@@ -135,9 +138,10 @@ Never print, copy, migrate, expose, or commit secrets, webhook URLs, `.env`
 files, `.n8n-local/`, `.tmp/`, credential bindings, runtime payloads, local
 config files, private keys, or product repo secrets.
 
+`.agent-toolkit-backups/**` must never be committed.
+
 `website/chat-config.js` is gitignored and may contain a local real webhook URL.
-Never read it as source for the new app, print it, copy it, migrate it, commit
-it, or expose it. The new app must read the n8n webhook URL only from
+Never read, copy, print, migrate, expose, or use it. The new app must read the n8n webhook URL only from
 server-side environment variables such as `N8N_CHAT_WEBHOOK_URL`.
 
 Never expose Supabase service-role keys to the browser. Browser Supabase
