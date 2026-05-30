@@ -1,4 +1,4 @@
-﻿<!--
+<!--
 Curated AI-facing source.
 Project: development.ai-coding-agent-rules
 Review rule: Preserve safety constraints from preserved source. Do not weaken credential, .env, .tmp, .n8n-local, live n8n action, approval, attribution, or local-only rules.
@@ -327,6 +327,8 @@ Checkbox/status trackers stay in `docs/checklists/`.
 ## Repo-Specific Scope Control
 
 Keep PRs narrow.
+
+Do not stop after setup; continue implementation unless blocked by a real error.
 
 Agent-instruction refreshes must be separate PRs and must not be mixed into phase/status/runtime PRs.
 
