@@ -226,6 +226,30 @@ describe("server admin request security preflight", () => {
     expectSafeShape(result);
   });
 
+  it("allows admin.auth.check for safe read methods without requiring CSRF proof", async () => {
+    const result = await validateServerAdminRequestSecurityPreflight({
+      ...safeReadInput,
+      requestedOperation: "admin.auth.check",
+      requestMethod: "GET"
+    });
+
+    expect(result).toEqual({
+      allowed: true,
+      reason: "request_security_preflight_passed"
+    });
+  });
+
+  it.each(["POST", "PUT", "DELETE", "PATCH"])("denies unsafe method %s for admin.auth.check", async (method) => {
+    const result = await validateServerAdminRequestSecurityPreflight({
+      ...safeReadInput,
+      requestedOperation: "admin.auth.check",
+      requestMethod: method
+    });
+
+    expectDenied(result, "request_method_not_allowed", 403);
+    expectSafeShape(result);
+  });
+
   it("keeps the request security preflight server-only and free of runtime/provider shortcuts", () => {
     const source = readSource();
 

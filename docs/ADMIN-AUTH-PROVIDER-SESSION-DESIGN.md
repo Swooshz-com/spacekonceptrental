@@ -456,7 +456,7 @@ Actual runtime route/page/server-action usage of `resolveServerAdminRuntimeRoute
 
 `website/app/api/admin/auth-check/route.ts` is the only approved first-party server-only route handler in this phase that calls `resolveServerAdminRuntimeRouteGateAdapter()`.
 
-This boundary introduces a harmless GET authorization probe/check that uses the Phase 2B-Y route gate adapter. It passes explicit requested operation, empty workspace-validation inputs, and the request method to the adapter. Trusted expected Origin and expected Host continue to come from explicit dependency injection.
+This boundary introduces a harmless GET authorization probe/check that uses the Phase 2B-Y route gate adapter with the read-only `admin.auth.check` operation. It passes explicit requested operation, empty workspace-validation inputs, and the request method to the adapter. Trusted expected Origin and expected Host continue to come from explicit dependency injection.
 
 This first usage boundary does not read request headers directly, read cookies directly, import `next/headers` directly, call `headers()` directly, import or call `cookies()` directly, call `readServerAdminRequestMetadata()` directly, call `resolveServerAdminAuthorizationGate()` directly, call preflight, decision, CSRF verifier, CSRF issuer, adapter-set composition, Supabase Auth, `admin_users`, `memberships`, workspace resolver, or invocation boundaries directly. It reads only `ADMIN_EXPECTED_ORIGIN` and `ADMIN_EXPECTED_HOST` from env to supply expected request metadata to the route gate adapter.
 
