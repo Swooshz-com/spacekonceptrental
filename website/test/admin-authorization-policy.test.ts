@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   authorizeAdminOperation,
+  isSupportedAdminOperation,
   type AdminAuthorizationInput,
   type AdminOperation
 } from "../lib/admin/authorization/admin-authorization-policy";
@@ -257,6 +258,144 @@ describe("admin authorization policy", () => {
       reason: "allowed",
       statusCode: 200,
       workspaceId: activeWorkspaceId
+    });
+  });
+
+  describe("admin.auth.check", () => {
+    it("is a supported admin operation", () => {
+      expect(isSupportedAdminOperation("admin.auth.check")).toBe(true);
+    });
+
+    it.each(["owner", "admin", "viewer"] as const)(
+      "allows active %s membership",
+      (role) => {
+        expect(
+          authorize({
+            operation: "admin.auth.check",
+            membership: {
+              adminUserId: "admin-user-1",
+              workspaceId: activeWorkspaceId,
+              status: "active",
+              role
+            }
+          })
+        ).toEqual({
+          allowed: true,
+          reason: "allowed",
+          statusCode: 200,
+          workspaceId: activeWorkspaceId
+        });
+      }
+    );
+
+    it("denies unauthenticated user", () => {
+      expect(
+        authorize({ operation: "admin.auth.check", authenticated: false })
+      ).toEqual({
+        allowed: false,
+        reason: "unauthenticated",
+        statusCode: 401
+      });
+    });
+
+    it("denies missing admin profile", () => {
+      expect(
+        authorize({ operation: "admin.auth.check", adminUser: null })
+      ).toEqual({
+        allowed: false,
+        reason: "admin_profile_missing",
+        statusCode: 403
+      });
+    });
+
+    it("denies inactive admin profile", () => {
+      expect(
+        authorize({
+          operation: "admin.auth.check",
+          adminUser: { id: "admin-user-1", status: "inactive" }
+        })
+      ).toEqual({
+        allowed: false,
+        reason: "admin_profile_inactive",
+        statusCode: 403
+      });
+    });
+
+    it("denies missing workspace", () => {
+      expect(
+        authorize({
+          operation: "admin.auth.check",
+          serverResolvedWorkspaceId: undefined
+        })
+      ).toEqual({
+        allowed: false,
+        reason: "workspace_missing",
+        statusCode: 403
+      });
+    });
+
+    it("denies missing membership", () => {
+      expect(
+        authorize({ operation: "admin.auth.check", membership: null })
+      ).toEqual({
+        allowed: false,
+        reason: "membership_missing",
+        statusCode: 403
+      });
+    });
+
+    it("denies inactive membership", () => {
+      expect(
+        authorize({
+          operation: "admin.auth.check",
+          membership: {
+            adminUserId: "admin-user-1",
+            workspaceId: activeWorkspaceId,
+            status: "inactive",
+            role: "owner"
+          }
+        })
+      ).toEqual({
+        allowed: false,
+        reason: "membership_inactive",
+        statusCode: 403
+      });
+    });
+
+    it("denies membership actor mismatch", () => {
+      expect(
+        authorize({
+          operation: "admin.auth.check",
+          membership: {
+            adminUserId: "admin-user-2",
+            workspaceId: activeWorkspaceId,
+            status: "active",
+            role: "owner"
+          }
+        })
+      ).toEqual({
+        allowed: false,
+        reason: "membership_actor_mismatch",
+        statusCode: 403
+      });
+    });
+
+    it("denies workspace mismatch", () => {
+      expect(
+        authorize({
+          operation: "admin.auth.check",
+          membership: {
+            adminUserId: "admin-user-1",
+            workspaceId: otherWorkspaceId,
+            status: "active",
+            role: "owner"
+          }
+        })
+      ).toEqual({
+        allowed: false,
+        reason: "workspace_mismatch",
+        statusCode: 403
+      });
     });
   });
 
