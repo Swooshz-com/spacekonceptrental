@@ -17,8 +17,9 @@ approved future admin runtime gate usage lane, and the Phase 2B-V implemented
 server-only admin request metadata adapter boundary, the Phase 2B-W
 implemented server-only admin runtime gate invocation boundary, the Phase 2B-X
 approved future admin runtime gate invocation usage lane, the Phase 2B-Y
-implemented server-only admin runtime route gate adapter boundary, and the
-Phase 2B-Z approved future admin runtime route gate adapter usage lane.
+implemented server-only admin runtime route gate adapter boundary, the
+Phase 2B-Z approved future admin runtime route gate adapter usage lane, and the
+Phase 2B-AA implemented the first admin runtime route gate adapter usage boundary.
 
 Phase 2B-E added auth provider/session/security design only.
 Phase 2B-J approves the future server-only Supabase Auth runtime lane only.
@@ -48,6 +49,7 @@ Phase 2B-Y implements only the server-only admin runtime route gate adapter
 boundary.
 Phase 2B-Z approves only the future admin runtime route gate adapter usage
 lane.
+Phase 2B-AA implements only the first admin runtime route gate adapter usage boundary.
 
 Phase 2B-K cookie reads and Supabase Auth server calls are restricted to the
 server-only identity adapter named below.
@@ -78,6 +80,7 @@ Phase 2B-Y admin runtime route gate adapter plumbing is restricted to the
 server-only route gate adapter named below.
 Phase 2B-Z is docs/checklist approval only for future first-party server-only
 usage of the Phase 2B-Y route gate adapter and does not add runtime wiring.
+Phase 2B-AA first admin runtime usage is restricted to the server-only probe route named below.
 This document does not approve auth runtime wiring outside these boundaries.
 This document does not approve header reads outside the Phase 2B-V adapter.
 This document does not add login/logout routes.
@@ -448,6 +451,16 @@ Header reads must remain inside the Phase 2B-V request metadata adapter. Cookie 
 Phase 2B-Z does not add route handlers, pages, server actions, route gate adapter runtime usage, login/logout, protected admin pages, admin UI, product writes, Storage, deployment, Supabase Cloud, browser Supabase, service-role paths, n8n changes, Pinecone runtime code, SaaS chatbot app work, or `website/chat-config.js` access.
 
 Actual runtime route/page/server-action usage of `resolveServerAdminRuntimeRouteGateAdapter()` remains unchecked and deferred until a later implementation PR adds and tests that code.
+
+## Phase 2B-AA Implemented First Admin Runtime Route Gate Adapter Usage Boundary
+
+`website/app/api/admin/auth-check/route.ts` is the only approved first-party server-only route handler in this phase that calls `resolveServerAdminRuntimeRouteGateAdapter()`.
+
+This boundary introduces a harmless GET authorization probe/check that uses the Phase 2B-Y route gate adapter. It passes explicit requested operation, empty workspace-validation inputs, and the request method to the adapter. Trusted expected Origin and expected Host continue to come from explicit dependency injection.
+
+This first usage boundary does not read request headers directly, read cookies directly, read env directly, import `next/headers` directly, call `headers()` directly, import or call `cookies()` directly, call `readServerAdminRequestMetadata()` directly, call `resolveServerAdminAuthorizationGate()` directly, call preflight, decision, CSRF verifier, CSRF issuer, adapter-set composition, Supabase Auth, `admin_users`, `memberships`, workspace resolver, or invocation boundaries directly.
+
+Creating this first runtime boundary does not approve adding or using other route handlers, pages, server actions, login/logout routes, protected admin pages, admin UI, product writes, Storage, deployment, Supabase Cloud, browser Supabase, service-role runtime paths, n8n workflow changes, Pinecone runtime code, SaaS chatbot app work, or `website/chat-config.js` access.
 ## Phase 2B-L Implemented Profile And Membership Read Boundary
 
 `website/lib/admin/authorization/supabase-admin-profile-membership-adapters.ts` is the only approved module for Supabase `admin_users` and `memberships` table reads in this phase.

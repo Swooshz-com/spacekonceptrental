@@ -60,14 +60,14 @@ describe("Phase 2B-M server-only admin workspace resolution boundary", () => {
     const projectContext = readRepoFile("docs/PROJECT-CONTEXT.md");
 
     expect(status).toContain(
-      "Current phase: Phase 2B-Z - admin runtime route gate adapter usage approval lane."
+      "Current phase: Phase 2B-AA - first admin runtime route gate adapter usage boundary."
     );
     expect(status).toContain(
-      "Latest completed phase: Phase 2B-Y - server-only admin runtime route gate adapter boundary."
+      "Latest completed phase: Phase 2B-Z - admin runtime route gate adapter usage approval lane."
     );
-    expect(status).toContain("Last merged phase PR: #65");
+    expect(status).toContain("Last merged phase PR: #66");
     expect(status).toContain(
-      "Merge commit: `0dbf2b4ff739084a73ffbe4adf11cc38a7592dff`"
+      "Merge commit: `9ebf36748f1cd98b5008154f9a6389c75a670ab4`"
     );
     expect(roadmap).toContain(
       "Phase 2B-M adds only the server-only admin workspace resolution boundary"

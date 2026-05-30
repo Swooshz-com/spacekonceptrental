@@ -68,38 +68,38 @@ function expectUnchecked(markdown: string, item: string) {
   expect(markdown).toContain(`- [ ] ${item}`);
 }
 
-describe("Phase 2B-Z admin runtime route gate adapter usage approval lane", () => {
-  it("records Phase 2B-Z as approval-lane only and Phase 2B-Y as completed", () => {
+describe("Phase 2B-AA first admin runtime route gate adapter usage boundary", () => {
+  it("records Phase 2B-AA as completed and Phase 2B-Z as completed", () => {
     const status = readRepoFile("docs/PHASE-STATUS.md");
     const roadmap = readRepoFile("docs/PHASE-ROADMAP.md");
     const decisionLog = readRepoFile("docs/DECISION-LOG.md");
     const projectContext = readRepoFile("docs/PROJECT-CONTEXT.md");
 
     expect(status).toContain(
-      "Current phase: Phase 2B-Z - admin runtime route gate adapter usage approval lane."
+      "Current phase: Phase 2B-AA - first admin runtime route gate adapter usage boundary."
     );
     expect(status).toContain(
-      "Latest completed phase: Phase 2B-Y - server-only admin runtime route gate adapter boundary."
+      "Latest completed phase: Phase 2B-Z - admin runtime route gate adapter usage approval lane."
     );
-    expect(status).toContain("Last merged phase PR: #65");
+    expect(status).toContain("Last merged phase PR: #66");
     expect(status).toContain(
-      "Merge commit: `0dbf2b4ff739084a73ffbe4adf11cc38a7592dff`"
+      "Merge commit: `9ebf36748f1cd98b5008154f9a6389c75a670ab4`"
     );
     expect(status).toContain(
-      "This PR adds only a docs/checklist/static-guard approval lane for future first-party server-only usage of `resolveServerAdminRuntimeRouteGateAdapter()`."
+      "This PR adds only the first admin runtime route gate adapter usage boundary."
     );
     expect(roadmap).toContain(
-      "Phase 2B-Z adds only the admin runtime route gate adapter usage approval lane"
+      "Phase 2B-AA adds the first admin runtime route gate adapter usage boundary"
     );
     expect(decisionLog).toContain(
-      "Decision: Phase 2B-Z adds only the admin runtime route gate adapter usage approval lane"
+      "Decision: Phase 2B-AA adds the first admin runtime route gate adapter usage boundary"
     );
     expect(projectContext).toContain(
-      "Phase 2B-Z adds a docs/checklist/static-guard approval lane for future first-party server-only usage of the Phase 2B-Y route gate adapter"
+      "Phase 2B-AA adds the first admin runtime route gate adapter usage boundary"
     );
   });
 
-  it("documents the future usage lane and keeps runtime usage unchecked", () => {
+  it("documents the new usage boundary and keeps further runtime usage unchecked", () => {
     const design = readRepoFile("docs/ADMIN-AUTH-PROVIDER-SESSION-DESIGN.md");
     const membershipDesign = readRepoFile(
       "docs/ADMIN-AUTH-MEMBERSHIP-DESIGN.md"
@@ -113,10 +113,10 @@ describe("Phase 2B-Z admin runtime route gate adapter usage approval lane", () =
     );
 
     expect(design).toContain(
-      "## Phase 2B-Z Approved Future Admin Runtime Route Gate Adapter Usage Lane"
+      "## Phase 2B-AA Implemented First Admin Runtime Route Gate Adapter Usage Boundary"
     );
     expect(design).toContain(
-      "A future runtime PR may call `resolveServerAdminRuntimeRouteGateAdapter()` only from a first-party server-only route handler or server action."
+      "Phase 2B-AA implemented the first admin runtime route gate adapter usage boundary."
     );
     expect(design).toContain(
       "Future runtime usage must call only the Phase 2B-Y route gate adapter from the route/action boundary."
@@ -128,29 +128,28 @@ describe("Phase 2B-Z admin runtime route gate adapter usage approval lane", () =
       "Runtime gate invocation must remain inside the Phase 2B-W invocation boundary."
     );
     expect(design).toContain(
-      "Phase 2B-Z does not add route handlers, pages, server actions, route gate adapter runtime usage, login/logout, protected admin pages, admin UI, product writes, Storage, deployment, Supabase Cloud, browser Supabase, service-role paths, n8n changes, Pinecone runtime code, SaaS chatbot app work, or `website/chat-config.js` access."
+      "Creating this first runtime boundary does not approve adding or using other route handlers, pages, server actions, login/logout routes, protected admin pages, admin UI, product writes, Storage, deployment, Supabase Cloud, browser Supabase, service-role runtime paths, n8n workflow changes, Pinecone runtime code, SaaS chatbot app work, or `website/chat-config.js` access."
     );
     expect(membershipDesign).toContain(
-      "Phase 2B-Z adds a docs/checklist/static-guard approval lane for future runtime usage of the Phase 2B-Y route gate adapter only."
+      "Latest completed admin/auth boundary state: Phase 2B-AA first admin runtime route gate adapter usage boundary."
     );
     expect(safety).toContain(
-      "Phase 2B-Z admin runtime route gate adapter usage approval lane is docs/checklist/static-guard approval only"
+      "Phase 2B-AA first admin runtime route gate adapter usage boundary is approved only as exactly one harmless GET authorization probe/check route handler"
     );
 
     expectChecked(
       authChecklist,
-      "Admin runtime route gate adapter usage approval lane."
+      "First admin runtime route gate adapter usage boundary."
     );
     expectChecked(
       adminAuthChecklist,
-      "Approve future server-only admin runtime route gate adapter usage lane."
+      "Add first admin runtime route gate adapter usage boundary."
     );
 
     for (const item of [
       "Real auth runtime wiring.",
       "Supabase Auth runtime wiring.",
       "Resolver/adapter runtime wiring into routes, pages, or server actions.",
-      "Admin runtime route gate adapter usage from runtime routes, pages, or server actions.",
       "Login/logout routes.",
       "Protected admin pages.",
       "Admin UI.",
@@ -166,19 +165,19 @@ describe("Phase 2B-Z admin runtime route gate adapter usage approval lane", () =
     }
   });
 
-  it("keeps route gate adapter usage out of app routes, pages, and server actions", { timeout: 15000 }, () => {
+  it("restricts route gate adapter usage to exactly one approved route handler", { timeout: 15000 }, () => {
     const productionSources = readTrackedProductionSources([
       "website/app",
       "website/components",
       "website/lib"
     ]);
-    const appSource = productionSources
-      .filter(({ filePath }) => filePath.startsWith("website/app/"))
+    const appSourceOutsideAuthCheck = productionSources
+      .filter(({ filePath }) => filePath.startsWith("website/app/") && filePath !== "website/app/api/admin/auth-check/route.ts")
       .map(({ source }) => source)
       .join("\n");
-    const productionOutsideRouteAdapter = productionSources
+    const productionOutsideRouteAdapterAndAuthCheck = productionSources
       .filter(
-        ({ filePath }) => filePath !== approvedRuntimeRouteGateAdapterBoundaryPath
+        ({ filePath }) => filePath !== approvedRuntimeRouteGateAdapterBoundaryPath && filePath !== "website/app/api/admin/auth-check/route.ts"
       )
       .map(({ source }) => source)
       .join("\n");
@@ -189,21 +188,21 @@ describe("Phase 2B-Z admin runtime route gate adapter usage approval lane", () =
     expect(readTrackedFiles(["website/app/api/auth"])).toEqual([]);
     expect(readTrackedFiles(["website/app/api/login"])).toEqual([]);
     expect(readTrackedFiles(["website/app/api/logout"])).toEqual([]);
-    expect(readTrackedFiles(["website/app/api/admin"])).toEqual([]);
+    expect(readTrackedFiles(["website/app/api/admin"])).toEqual(["website/app/api/admin/auth-check/route.ts"]);
     expect(readTrackedFiles(["website/app/api/products"])).toEqual([]);
     expect(readTrackedFiles(["website/app/api/categories"])).toEqual([]);
     expect(readTrackedFiles(["website/app/api/product-images"])).toEqual([]);
     expect(readTrackedFiles(["website/app/api/catalogue"])).toEqual([]);
 
-    expect(appSource).not.toContain("server-admin-runtime-route-gate-adapter");
-    expect(appSource).not.toContain("resolveServerAdminRuntimeRouteGateAdapter");
-    expect(productionOutsideRouteAdapter).not.toContain(
+    expect(appSourceOutsideAuthCheck).not.toContain("server-admin-runtime-route-gate-adapter");
+    expect(appSourceOutsideAuthCheck).not.toContain("resolveServerAdminRuntimeRouteGateAdapter");
+    expect(productionOutsideRouteAdapterAndAuthCheck).not.toContain(
       "server-admin-runtime-route-gate-adapter"
     );
-    expect(productionOutsideRouteAdapter).not.toContain(
+    expect(productionOutsideRouteAdapterAndAuthCheck).not.toContain(
       "resolveServerAdminRuntimeRouteGateAdapter"
     );
-    expect(productionOutsideRouteAdapter).not.toContain('"use server"');
+    expect(productionOutsideRouteAdapterAndAuthCheck).not.toContain('"use server"');
   });
 
   it("keeps lower-level ownership and forbidden runtime surfaces unchanged", { timeout: 15000 }, () => {

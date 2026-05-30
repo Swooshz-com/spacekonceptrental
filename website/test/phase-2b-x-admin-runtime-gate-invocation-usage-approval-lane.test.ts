@@ -76,17 +76,17 @@ describe("Phase 2B-X admin runtime gate invocation usage approval lane", () => {
     const projectContext = readRepoFile("docs/PROJECT-CONTEXT.md");
 
     expect(status).toContain(
-      "Current phase: Phase 2B-Z - admin runtime route gate adapter usage approval lane."
+      "Current phase: Phase 2B-AA - first admin runtime route gate adapter usage boundary."
     );
     expect(status).toContain(
-      "Latest completed phase: Phase 2B-Y - server-only admin runtime route gate adapter boundary."
+      "Latest completed phase: Phase 2B-Z - admin runtime route gate adapter usage approval lane."
     );
-    expect(status).toContain("Last merged phase PR: #65");
+    expect(status).toContain("Last merged phase PR: #66");
     expect(status).toContain(
-      "Merge commit: `0dbf2b4ff739084a73ffbe4adf11cc38a7592dff`"
+      "Merge commit: `9ebf36748f1cd98b5008154f9a6389c75a670ab4`"
     );
     expect(status).toContain(
-      "This PR adds only a docs/checklist/static-guard approval lane for future first-party server-only usage of `resolveServerAdminRuntimeRouteGateAdapter()`."
+      "This PR adds only the first admin runtime route gate adapter usage boundary."
     );
     expect(roadmap).toContain(
       "Phase 2B-X adds only the admin runtime gate invocation usage approval lane"
@@ -186,7 +186,7 @@ describe("Phase 2B-X admin runtime gate invocation usage approval lane", () => {
         .join("\n");
     };
     const appSource = productionSources
-      .filter(({ filePath }) => filePath.startsWith("website/app/"))
+      .filter(({ filePath }) => filePath.startsWith("website/app/") && filePath !== "website/app/api/admin/auth-check/route.ts")
       .map(({ source }) => source)
       .join("\n");
 
@@ -196,7 +196,7 @@ describe("Phase 2B-X admin runtime gate invocation usage approval lane", () => {
     expect(readTrackedFiles(["website/app/api/auth"])).toEqual([]);
     expect(readTrackedFiles(["website/app/api/login"])).toEqual([]);
     expect(readTrackedFiles(["website/app/api/logout"])).toEqual([]);
-    expect(readTrackedFiles(["website/app/api/admin"])).toEqual([]);
+    expect(readTrackedFiles(["website/app/api/admin"])).toEqual(["website/app/api/admin/auth-check/route.ts"]);
     expect(readTrackedFiles(["website/app/api/products"])).toEqual([]);
     expect(readTrackedFiles(["website/app/api/categories"])).toEqual([]);
     expect(readTrackedFiles(["website/app/api/product-images"])).toEqual([]);

@@ -413,6 +413,15 @@ login/logout, protected admin pages, admin UI, product writes, Storage,
 deployment, Supabase Cloud, browser Supabase, service-role runtime paths, n8n
 changes, Pinecone runtime code, SaaS chatbot app work, or
 `website/chat-config.js` access.
+
+Phase 2B-AA adds the first admin runtime route gate adapter usage boundary.
+It adds exactly one first-party server-only route handler at
+`website/app/api/admin/auth-check/route.ts` as a harmless authorization probe
+only. It is not approval to add other routes, pages, server actions,
+login/logout, protected admin pages, admin UI, product writes, Storage,
+deployment, Supabase Cloud, browser Supabase, service-role runtime paths, n8n
+changes, Pinecone runtime code, SaaS chatbot app work, or
+`website/chat-config.js` access.
 Further Phase 2 implementation work remains unapproved until scoped in a
 separate phase PR.
 

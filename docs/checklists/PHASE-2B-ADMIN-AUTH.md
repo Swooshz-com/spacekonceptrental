@@ -38,14 +38,15 @@ gate usage lane. Phase 2B-V adds only the server-only admin request metadata
 adapter boundary. Phase 2B-W adds only the server-only admin runtime gate
 invocation boundary. Phase 2B-X approves only the future admin runtime gate
 invocation usage lane. Phase 2B-Y adds only the server-only admin runtime route
-gate adapter boundary. Phase 2B-Z approves only the future admin runtime route
-gate adapter usage lane. Keep real auth runtime wiring, factory, adapter-set,
+gate adapter usage lane. Phase 2B-AA adds the first admin runtime route gate
+adapter usage boundary as exactly one harmless GET authorization probe/check
+route handler. Keep real auth runtime wiring, factory, adapter-set,
 decision-boundary, preflight, CSRF verifier, CSRF issuer, request metadata
-adapter, runtime gate invocation helper, or authorization gate usage from runtime
-routes/pages/actions, headers, login/logout routes, protected admin pages,
-admin UI, product management writes, browser Supabase, service-role runtime
-paths, deployment, and Supabase Cloud work unchecked until a future PR has
-explicit approval.
+adapter, runtime gate invocation helper, or authorization gate usage from other
+runtime routes/pages/actions, headers, login/logout routes, protected admin
+pages, admin UI, product management writes, browser Supabase, service-role
+runtime paths, deployment, and Supabase Cloud work unchecked until a future PR
+has explicit approval.
 
 ## Completed Design, Policy, Resolver, Adapter, And Provider-session Milestones
 
@@ -78,6 +79,7 @@ explicit approval.
 - [x] Approve future server-only admin runtime gate invocation usage lane.
 - [x] Add server-only admin runtime route gate adapter boundary.
 - [x] Approve future server-only admin runtime route gate adapter usage lane.
+- [x] Add first admin runtime route gate adapter usage boundary.
 
 ## Design References
 
@@ -140,7 +142,7 @@ runtime implementation approval.
 - [ ] Admin CSRF proof issuer usage from runtime routes, pages, or server actions.
 - [ ] Admin authorization gate usage from runtime routes, pages, or server actions.
 - [ ] Admin runtime gate invocation usage from runtime routes, pages, or server actions.
-- [ ] Admin runtime route gate adapter usage from runtime routes, pages, or server actions.
+- [ ] Admin runtime route gate adapter usage from other runtime routes, pages, or server actions.
 - [ ] Header reads outside the Phase 2B-V request metadata adapter.
 - [ ] Login/logout routes.
 - [ ] Protected admin pages.

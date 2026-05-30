@@ -780,3 +780,11 @@ The future approved lane is limited to first-party server-only route handlers or
 Header reads remain inside Phase 2B-V, cookie reads and Supabase Auth calls remain inside Phase 2B-K/N, `admin_users` and `memberships` reads remain inside Phase 2B-L, workspace resolution remains inside Phase 2B-M, adapter-set composition remains inside Phase 2B-O, decision logic remains inside Phase 2B-P, request-security preflight remains inside Phase 2B-Q / Phase 2B-T, CSRF verification remains inside Phase 2B-R / Phase 2B-T, CSRF issuance remains inside Phase 2B-S, runtime gate invocation remains inside Phase 2B-W, and route gate adapter plumbing remains inside Phase 2B-Y.
 
 Phase 2B-Z does not add route handlers, pages, server actions, runtime route gate adapter usage, login/logout routes, protected admin pages, admin UI, product/category/product image writes, Storage, deployment, Supabase Cloud, browser Supabase, service-role runtime paths, n8n workflow changes, Pinecone runtime code, SaaS chatbot app work, or `website/chat-config.js` access.
+
+## 2026-05-30: First Admin Runtime Route Gate Adapter Usage Boundary
+
+Decision: Phase 2B-AA adds the first admin runtime route gate adapter usage boundary at `website/app/api/admin/auth-check/route.ts`.
+
+Reason: Phase 2B-Z approved the lane for route usage, and now the system needs a harmless authorization probe to verify the entire server-side authorization stack without modifying product data or exposing protected admin UI.
+
+The route handler is a first-party server-only boundary that only calls the Phase 2B-Y route gate adapter. It does not import or call lower-level boundaries directly. Phase 2B-AA does not add login/logout routes, protected admin pages, admin UI, product writes, Storage, deployment, Supabase Cloud, browser Supabase, service-role runtime paths, n8n changes, Pinecone runtime code, SaaS chatbot app work, or `website/chat-config.js` access.
