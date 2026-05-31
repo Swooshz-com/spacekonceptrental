@@ -4,16 +4,15 @@ This is the quick status page for the SKR repo. Use `docs/PHASE-2-READINESS-PLAN
 
 ## Current phase
 
-Current phase: Phase 2B-AF - admin CSRF proof issuer route readiness and route-if-safe boundary.
+Current phase: Phase 2B-AG - admin CSRF proof signer and nonce runtime dependency boundary.
 
-This phase implements only docs/checklist/static-guard approval for the admin CSRF proof issuer route readiness. The actual route implementation is intentionally deferred because the required runtime `signCsrfProof` and `generateNonce` dependencies are not yet implemented or approved. This phase preserves the existing `admin.csrf.issue` operation policy and preflight boundaries. This phase does not add product/category/product image writes, admin UI, pages, server actions, login/logout, protected admin pages, Storage, deployment, Supabase Cloud, browser Supabase, service-role runtime paths, n8n workflow changes, Pinecone runtime code, SaaS chatbot work, or `website/chat-config.js` access.
+This phase implements only the missing server-only runtime dependency boundary needed by the existing CSRF proof issuer/verifier contracts. It provides nonce generation, signing, and signature verification using Node server-only crypto. This phase does not implement the actual CSRF proof issuer route. This phase does not add product/category/product image writes, admin UI, pages, server actions, login/logout, protected admin pages, Storage, deployment, Supabase Cloud, browser Supabase, service-role runtime paths, n8n workflow changes, Pinecone runtime code, SaaS chatbot work, or `website/chat-config.js` access.
 
-Latest completed phase: Phase 2B-AE - admin CSRF issue operation policy and preflight boundary.
+Latest completed phase: Phase 2B-AF - admin CSRF proof issuer route readiness and route-if-safe boundary.
 
-Last merged phase PR: #72
+Last merged phase PR: #73
 
-Merge commit: `f8c5ceb77ef53243da700d6c76720814864ee770`
-
+Merge commit: `0c6edc05d8baed88ce1014cd9f9dd6c574dfef3d`
 ## Completed foundation
 
 - Next.js app root exists under `website/`.
@@ -70,7 +69,8 @@ Vercel config, add real env values, or add runtime features.
 - Admin auth-check trusted workspace dependency repair is complete.
 - Admin CSRF proof issuer route operation approval boundary is complete.
 - Admin CSRF issue operation policy and preflight boundary is complete.
-- Admin CSRF proof issuer route readiness and route-if-safe boundary is in progress.
+- Admin CSRF proof issuer route readiness and route-if-safe boundary is complete.
+- Admin CSRF proof runtime dependency boundary is in progress.
 Supabase Auth is approved as the future server-side admin auth provider. The
 Phase 2B-K identity boundary remains the only approved place to read Supabase
 Auth cookies or call Supabase Auth server APIs. The Phase 2B-L
@@ -115,7 +115,7 @@ implementation approval. Phase 2B-AA approves and adds the first admin runtime
 route gate adapter usage boundary from exactly one first-party server-only
 route handler. Phase 2B-AB approves only the future server-only admin CSRF
 proof issuer runtime usage lane. Phase 2B-AC repairs the admin auth-check
-trusted workspace dependency. Phase 2B-AD is docs/checklist/static-guard approval only for the future admin CSRF proof issuer route operation model, and it is not runtime implementation approval. Phase 2B-AE implements only the admin CSRF issue operation policy and preflight boundary. Phase 2B-AF is docs/checklist/static-guard approval only for the admin CSRF proof issuer route readiness, because the required runtime signer dependencies are not yet implemented. These boundaries are not wired into pages, server actions,
+trusted workspace dependency. Phase 2B-AD is docs/checklist/static-guard approval only for the future admin CSRF proof issuer route operation model, and it is not runtime implementation approval. Phase 2B-AE implements only the admin CSRF issue operation policy and preflight boundary. Phase 2B-AF is docs/checklist/static-guard approval only for the admin CSRF proof issuer route readiness, because the required runtime signer dependencies are not yet implemented. Phase 2B-AG implements only the missing server-only runtime dependency boundary needed by the existing CSRF proof issuer/verifier contracts. These boundaries are not wired into pages, server actions,
 protected admin runtime, login/logout, admin UI, or product writes.
 
 Runtime session-bound read-client usage remains deferred.

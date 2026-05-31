@@ -19,15 +19,13 @@ function readTrackedFiles(paths: string[]) {
 }
 
 describe("Phase 2B-AF Admin CSRF Proof Issuer Route Readiness Boundary", () => {
-  it("must document that the signCsrfProof and generateNonce dependencies are missing", () => {
+  it("must document that the actual route implementation is still deferred", () => {
     const status = readRepoFile("docs/PHASE-STATUS.md");
     const authChecklist = readRepoFile("docs/checklists/PHASE-2B-AUTH-IMPLEMENTATION.md");
 
-    expect(status).toContain("`signCsrfProof`");
-    expect(status).toContain("`generateNonce`");
-    expect(status).toContain("actual route implementation is intentionally deferred");
-    expect(status).toContain("runtime `signCsrfProof` and `generateNonce` dependencies are not yet implemented or approved");
-    expect(status).toContain("This phase implements only docs/checklist/static-guard approval for the admin CSRF proof issuer route readiness");
+    expect(status).toContain("nonce generation, signing, and signature verification");
+    expect(status).toContain("does not implement the actual CSRF proof issuer route");
+    expect(status).toContain("This phase implements only the missing server-only runtime dependency boundary needed by the existing CSRF proof issuer/verifier contracts. It provides nonce generation, signing, and signature verification using Node server-only crypto. This phase does not implement the actual CSRF proof issuer route. This phase does not add product/category/product image writes, admin UI, pages, server actions, login/logout, protected admin pages, Storage, deployment, Supabase Cloud, browser Supabase, service-role runtime paths, n8n workflow changes, Pinecone runtime code, SaaS chatbot work, or `website/chat-config.js` access.");
     
     expect(status).toContain("Phase 2B-AF is docs/checklist/static-guard approval only for the admin CSRF proof issuer route readiness, because the required runtime signer dependencies are not yet implemented.");
 

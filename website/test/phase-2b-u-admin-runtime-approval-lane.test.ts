@@ -74,17 +74,17 @@ describe("Phase 2B-U admin runtime wiring approval lane", () => {
     const projectContext = readRepoFile("docs/PROJECT-CONTEXT.md");
 
     expect(status).toContain(
-      "Current phase: Phase 2B-AF - admin CSRF proof issuer route readiness and route-if-safe boundary."
+      "Current phase: Phase 2B-AG - admin CSRF proof signer and nonce runtime dependency boundary."
     );
     expect(status).toContain(
-      "Latest completed phase: Phase 2B-AE - admin CSRF issue operation policy and preflight boundary."
+      "Latest completed phase: Phase 2B-AF - admin CSRF proof issuer route readiness and route-if-safe boundary."
     );
-    expect(status).toContain("Last merged phase PR: #72");
+    expect(status).toContain("Last merged phase PR: #73");
     expect(status).toContain(
-      "Merge commit: `f8c5ceb77ef53243da700d6c76720814864ee770`"
+      "Merge commit: `0c6edc05d8baed88ce1014cd9f9dd6c574dfef3d`"
     );
     expect(status).toContain(
-      "This phase implements only docs/checklist/static-guard approval for the admin CSRF proof issuer route readiness. The actual route implementation is intentionally deferred because the required runtime `signCsrfProof` and `generateNonce` dependencies are not yet implemented or approved. This phase preserves the existing `admin.csrf.issue` operation policy and preflight boundaries. This phase does not add product/category/product image writes, admin UI, pages, server actions, login/logout, protected admin pages, Storage, deployment, Supabase Cloud, browser Supabase, service-role runtime paths, n8n workflow changes, Pinecone runtime code, SaaS chatbot work, or `website/chat-config.js` access."
+      "This phase implements only the missing server-only runtime dependency boundary needed by the existing CSRF proof issuer/verifier contracts. It provides nonce generation, signing, and signature verification using Node server-only crypto. This phase does not implement the actual CSRF proof issuer route. This phase does not add product/category/product image writes, admin UI, pages, server actions, login/logout, protected admin pages, Storage, deployment, Supabase Cloud, browser Supabase, service-role runtime paths, n8n workflow changes, Pinecone runtime code, SaaS chatbot work, or `website/chat-config.js` access."
     );
     expect(roadmap).toContain(
       "Phase 2B-U adds only the admin runtime wiring approval lane"
