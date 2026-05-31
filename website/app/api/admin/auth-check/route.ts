@@ -12,6 +12,13 @@ export async function GET(request: NextRequest) {
       requestMetadata: {
         expectedOrigin: process.env.ADMIN_EXPECTED_ORIGIN ?? null,
         expectedHost: process.env.ADMIN_EXPECTED_HOST ?? null
+      },
+      gate: {
+        decision: {
+          workspace: {
+            trustedServerWorkspaceId: process.env.ADMIN_TRUSTED_WORKSPACE_ID ?? null
+          }
+        }
       }
     }
   );

@@ -15,11 +15,13 @@ describe("GET /api/admin/auth-check", () => {
     vi.clearAllMocks();
     delete process.env.ADMIN_EXPECTED_ORIGIN;
     delete process.env.ADMIN_EXPECTED_HOST;
+    delete process.env.ADMIN_TRUSTED_WORKSPACE_ID;
   });
 
   it("calls resolveServerAdminRuntimeRouteGateAdapter with expected parameters and returns safe allowed JSON", async () => {
     process.env.ADMIN_EXPECTED_ORIGIN = "https://example.com";
     process.env.ADMIN_EXPECTED_HOST = "example.com";
+    process.env.ADMIN_TRUSTED_WORKSPACE_ID = "ws-123";
 
     vi.mocked(resolveServerAdminRuntimeRouteGateAdapter).mockResolvedValueOnce({
       allowed: true,
@@ -45,6 +47,13 @@ describe("GET /api/admin/auth-check", () => {
         requestMetadata: {
           expectedOrigin: "https://example.com",
           expectedHost: "example.com"
+        },
+        gate: {
+          decision: {
+            workspace: {
+              trustedServerWorkspaceId: "ws-123"
+            }
+          }
         }
       }
     );
@@ -78,6 +87,13 @@ describe("GET /api/admin/auth-check", () => {
         requestMetadata: {
           expectedOrigin: null,
           expectedHost: null
+        },
+        gate: {
+          decision: {
+            workspace: {
+              trustedServerWorkspaceId: null
+            }
+          }
         }
       }
     );

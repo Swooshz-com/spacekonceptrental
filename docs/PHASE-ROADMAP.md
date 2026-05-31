@@ -438,6 +438,16 @@ pages, admin UI, product writes, Storage, deployment, Supabase Cloud, browser
 Supabase, service-role runtime paths, n8n changes, Pinecone runtime code,
 SaaS chatbot app work, or `website/chat-config.js` access.
 
+Phase 2B-AC repairs the Phase 2B-AA auth-check route by supplying the trusted
+workspace dependency through the existing approved dependency path. It prevents
+the route from failing closed unconditionally due to a missing expected
+server-resolved workspace ID. It relies on the environment via
+`process.env.ADMIN_TRUSTED_WORKSPACE_ID`. It remains fail-closed and does not
+add any routes, pages, server actions, admin UI, product writes, login/logout
+routes, protected admin pages, Storage, deployment, Supabase Cloud, browser
+Supabase, service-role runtime paths, n8n changes, Pinecone runtime code, SaaS
+chatbot app work, or `website/chat-config.js` access.
+
 Further Phase 2 implementation work remains unapproved until scoped in a
 separate phase PR.
 

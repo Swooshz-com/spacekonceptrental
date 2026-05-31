@@ -715,6 +715,12 @@ keys, add browser Supabase, deploy, connect Supabase Cloud, change n8n
 workflows, add Pinecone runtime code, access `website/chat-config.js`, or make
 runtime admin auth complete.
 
+## 2026-05-31: Phase 2B-AC Admin Auth-check Trusted Workspace Dependency Repair
+
+Decision: Phase 2B-AC repairs the Phase 2B-AA auth-check route by supplying the trusted workspace dependency through the existing approved dependency path.
+
+Reason: The route previously passed only request metadata to the route gate adapter. Because the default `trustedServerWorkspaceId` was undefined without explicit injection, the internal workspace resolver failed closed (returning `{ serverResolvedWorkspaceId: null }`). The auth-check would therefore return HTTP 503 Service Unavailable, failing closed unconditionally. The fix leverages `process.env.ADMIN_TRUSTED_WORKSPACE_ID` and injects it as the trusted workspace dependency. It remains fail-closed and does not add routes, pages, server actions, login/logout routes, protected admin pages, admin UI, product writes, Storage, deployment config, Supabase Cloud, browser Supabase, service-role runtime paths, n8n changes, Pinecone runtime code, SaaS chatbot app code, or `website/chat-config.js` access.
+
 ## 2026-05-29: Server-only Admin Authorization Gate Composition Boundary
 
 Decision: Phase 2B-T adds only the server-only admin authorization gate composition boundary at `website/lib/admin/authorization/server-admin-authorization-gate.ts`.

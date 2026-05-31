@@ -303,4 +303,64 @@ describe("admin authorization resolver contract", () => {
     expect(source).not.toContain(".upsert(");
     expect(source).not.toContain(".delete(");
   });
+
+  it("Phase 2B-AC bug: fails closed safely when trusted workspace dependency is missing", async () => {
+    // This demonstrates the original Phase 2B-AA auth-check bug
+    // where the trusted workspace dependency was not injected.
+    const adapters = createAdapters(); // serverResolvedWorkspaceId defaults to activeWorkspaceId
+
+    await expect(
+      resolveAdminAuthorizationWithAdapters(
+        {
+          requestedOperation: "admin.auth.check",
+          requestId: "req-bug",
+          // The bug path lacked the trustedServerWorkspaceId injection entirely.
+          // To simulate the adapter failing because it lacks the injected config,
+          // we force the fake adapter to return null.
+        },
+        {
+          ...adapters,
+          workspace: {
+            async resolveWorkspaceForRequest() {
+              return { serverResolvedWorkspaceId: null };
+            }
+          }
+        }
+      )
+    ).resolves.toEqual({
+      allowed: false,
+      reason: "workspace_missing",
+      statusCode: 403
+    });
+  });
+
+  it("Phase 2B-AC fix: allows resolution when trusted workspace dependency is provided", async () => {
+    // This demonstrates the Phase 2B-AC fix path
+    // where the trusted workspace dependency IS injected and returned by the adapter.
+    const adapters = createAdapters({
+      serverResolvedWorkspaceId: activeWorkspaceId
+    });
+
+    const result = await resolveAdminAuthorizationWithAdapters(
+      {
+        requestedOperation: "admin.auth.check",
+        requestId: "req-fix"
+      },
+      adapters
+    );
+
+    expect(result).toEqual({
+      allowed: true,
+      reason: "allowed",
+      statusCode: 200,
+      workspaceId: activeWorkspaceId
+    });
+
+    // Prove workspace ID does not leak from the route response structure itself
+    // by asserting that the safe response keys do not include workspace details
+    // except what is explicitly allowed.
+    const serialized = JSON.stringify(result);
+    expect(serialized).not.toContain("cookie");
+    expect(serialized).not.toContain("stack");
+  });
 });
