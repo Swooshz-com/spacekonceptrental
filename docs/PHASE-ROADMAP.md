@@ -448,6 +448,8 @@ routes, protected admin pages, Storage, deployment, Supabase Cloud, browser
 Supabase, service-role runtime paths, n8n changes, Pinecone runtime code, SaaS
 chatbot app work, or `website/chat-config.js` access.
 
+Phase 2B-AD adds only the admin CSRF proof issuer route operation approval boundary. It documents that a future first-party server-only CSRF proof issuer route needs a dedicated route-gate operation model (likely `admin.csrf.issue`) before implementation. The current request preflight requires state-changing operations to be `POST` and to already include a valid CSRF proof, so the issuer route must not route-gate itself as a state-changing operation (like `product.write`), nor use only `admin.auth.check` as a loose substitute for write-operation authorisation. The future route must remain server-only, use the approved route-gate path, and not call lower-level auth/security boundaries directly except the approved CSRF proof issuer boundary. It must not issue proofs for unsupported operations, nor expose CSRF secrets, verifier internals, signer internals, provider internals, raw headers, cookies, tokens, SQL/provider errors, membership internals, workspace internals, or stack traces. Phase 2B-AD does not implement the actual route, approve or implement product/category/product image writes by itself, add admin UI, protected admin pages, login/logout routes, Storage, deployment config, Supabase Cloud connection, browser Supabase, service-role runtime paths, n8n changes, Pinecone runtime code, SaaS chatbot work, or `website/chat-config.js` access.
+
 Further Phase 2 implementation work remains unapproved until scoped in a
 separate phase PR.
 

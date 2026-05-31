@@ -55,11 +55,11 @@ describe("Phase 2B-I admin auth gate cleanup", () => {
     const decisionLog = readRepoFile("docs/DECISION-LOG.md");
 
     expect(status).toContain(
-      "Latest completed phase: Phase 2B-AB - admin CSRF proof issuer runtime usage approval lane."
+      "Latest completed phase: Phase 2B-AC - admin auth-check trusted workspace dependency repair."
     );
-    expect(status).toContain("Last merged phase PR: #69");
+    expect(status).toContain("Last merged phase PR: #70");
     expect(status).toContain(
-      "Merge commit: `ca51fc792aa3c34e2b8df314ac7a41b2ebb3244f`"
+      "Merge commit: `a3514995eaa6f33e70bcb98161aec1e81d63820d`"
     );
     expect(roadmap).toContain(
       "Phase 2B-I cleans admin auth implementation gate wording and refines"

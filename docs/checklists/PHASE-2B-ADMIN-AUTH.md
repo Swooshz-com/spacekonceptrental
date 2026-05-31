@@ -38,11 +38,10 @@ gate usage lane. Phase 2B-V adds only the server-only admin request metadata
 adapter boundary. Phase 2B-W adds only the server-only admin runtime gate
 invocation boundary. Phase 2B-X approves only the future admin runtime gate
 invocation usage lane. Phase 2B-Y adds only the server-only admin runtime route
-gate adapter usage lane. Phase 2B-AA adds the first admin runtime route gate
-adapter usage boundary as exactly one harmless GET authorization probe/check
+usage boundary as exactly one harmless GET authorization probe/check
 route handler. Phase 2B-AB approves only the future server-only admin CSRF
 proof issuer runtime usage lane. Phase 2B-AC repairs the admin auth-check
-trusted workspace dependency. Keep real auth runtime wiring, factory,
+trusted workspace dependency. Phase 2B-AD approves only the future admin CSRF proof issuer route operation model. Keep real auth runtime wiring, factory,
 adapter-set, decision-boundary, preflight, CSRF verifier, CSRF issuer,
 request metadata adapter, runtime gate invocation helper, or authorization
 gate usage from other runtime routes/pages/actions, headers, login/logout
@@ -84,6 +83,7 @@ unchecked until a future PR has explicit approval.
 - [x] Add first admin runtime route gate adapter usage boundary.
 - [x] Approve future server-only admin CSRF proof issuer runtime usage lane.
 - [x] Admin auth-check trusted workspace dependency repair.
+- [x] Approve future admin CSRF proof issuer route operation model.
 
 ## Design References
 

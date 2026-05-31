@@ -52,17 +52,17 @@ describe("Phase 2B-AB admin CSRF proof issuer runtime usage approval lane", () =
     const projectContext = readRepoFile("docs/PROJECT-CONTEXT.md");
 
     expect(status).toContain(
-      "Current phase: Phase 2B-AC - admin auth-check trusted workspace dependency repair."
+      "Current phase: Phase 2B-AD - admin CSRF proof issuer route operation approval boundary."
     );
     expect(status).toContain(
-      "Latest completed phase: Phase 2B-AB - admin CSRF proof issuer runtime usage approval lane."
+      "Latest completed phase: Phase 2B-AC - admin auth-check trusted workspace dependency repair."
     );
-    expect(status).toContain("Last merged phase PR: #69");
+    expect(status).toContain("Last merged phase PR: #70");
     expect(status).toContain(
-      "Merge commit: `ca51fc792aa3c34e2b8df314ac7a41b2ebb3244f`"
+      "Merge commit: `a3514995eaa6f33e70bcb98161aec1e81d63820d`"
     );
     expect(status).toContain(
-      "This PR repairs the Phase 2B-AA auth-check route by supplying the trusted workspace dependency through the existing approved dependency path."
+      "This phase adds a narrow docs/checklist/static-guard approval boundary for the future first-party server-only admin CSRF proof issuer route operation model."
     );
     expect(roadmap).toContain(
       "Phase 2B-AB adds only the admin CSRF proof issuer runtime usage approval lane"
