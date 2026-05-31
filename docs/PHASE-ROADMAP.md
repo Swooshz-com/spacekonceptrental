@@ -495,3 +495,5 @@ and legal readiness decisions if a public SaaS launch is needed.
 Checklist: `docs/checklists/PHASE-6-BILLING-LAUNCH.md`
 
 This phase is not approved for implementation yet.
+
+Phase 2B-AE adds only the admin CSRF issue operation policy and preflight boundary. It does not implement the actual CSRF proof issuer route.

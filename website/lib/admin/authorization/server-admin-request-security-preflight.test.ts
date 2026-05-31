@@ -226,6 +226,30 @@ describe("server admin request security preflight", () => {
     expectSafeShape(result);
   });
 
+  it("allows admin.csrf.issue with POST and same-origin metadata without requiring CSRF proof", async () => {
+    const result = await validateServerAdminRequestSecurityPreflight({
+      ...safeReadInput,
+      requestedOperation: "admin.csrf.issue",
+      requestMethod: "POST"
+    });
+
+    expect(result).toEqual({
+      allowed: true,
+      reason: "request_security_preflight_passed"
+    });
+  });
+
+  it.each(["GET", "PUT", "DELETE", "PATCH"])("denies unsafe method %s for admin.csrf.issue", async (method) => {
+    const result = await validateServerAdminRequestSecurityPreflight({
+      ...safeReadInput,
+      requestedOperation: "admin.csrf.issue",
+      requestMethod: method
+    });
+
+    expectDenied(result, "request_method_not_allowed", 403);
+    expectSafeShape(result);
+  });
+
   it("allows admin.auth.check for safe read methods without requiring CSRF proof", async () => {
     const result = await validateServerAdminRequestSecurityPreflight({
       ...safeReadInput,

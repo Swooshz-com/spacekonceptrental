@@ -4,15 +4,15 @@ This is the quick status page for the SKR repo. Use `docs/PHASE-2-READINESS-PLAN
 
 ## Current phase
 
-Current phase: Phase 2B-AD - admin CSRF proof issuer route operation approval boundary.
+Current phase: Phase 2B-AE - admin CSRF issue operation policy and preflight boundary.
 
 This phase adds a narrow docs/checklist/static-guard approval boundary for the future first-party server-only admin CSRF proof issuer route operation model. The current request preflight requires state-changing operations to be `POST` and to already include a valid CSRF proof. Therefore, a future CSRF proof issuer route must not simply route-gate itself as `product.write` or `membership.manage`, because that creates a chicken-and-egg path where the proof issuer already needs the proof it is issuing. A future CSRF proof issuer route must also not use only `admin.auth.check` as a loose substitute for write-operation authorisation without a clearly reviewed operation model. The likely future operation name is `admin.csrf.issue`. This phase does not implement the actual route, add product/category/product image writes, admin UI, pages, server actions, login/logout, protected admin pages, Storage, deployment, Supabase Cloud, browser Supabase, service-role runtime paths, n8n workflow changes, Pinecone runtime code, SaaS chatbot work, or `website/chat-config.js` access.
 
-Latest completed phase: Phase 2B-AC - admin auth-check trusted workspace dependency repair.
+Latest completed phase: Phase 2B-AD - admin CSRF proof issuer route operation approval boundary.
 
-Last merged phase PR: #70
+Last merged phase PR: #71
 
-Merge commit: `a3514995eaa6f33e70bcb98161aec1e81d63820d`
+Merge commit: `219026566257caa8bd87e4e56d6b92d48c1e437b`
 
 ## Completed foundation
 

@@ -261,6 +261,52 @@ describe("admin authorization policy", () => {
     });
   });
 
+  describe("admin.csrf.issue", () => {
+    it("is a supported admin operation", () => {
+      expect(isSupportedAdminOperation("admin.csrf.issue")).toBe(true);
+    });
+
+    it.each(["owner", "admin"] as const)(
+      "allows active %s membership",
+      (role) => {
+        expect(
+          authorize({
+            operation: "admin.csrf.issue",
+            membership: {
+              adminUserId: "admin-user-1",
+              workspaceId: activeWorkspaceId,
+              status: "active",
+              role
+            }
+          })
+        ).toEqual({
+          allowed: true,
+          reason: "allowed",
+          statusCode: 200,
+          workspaceId: activeWorkspaceId
+        });
+      }
+    );
+
+    it("denies viewer membership", () => {
+      expect(
+        authorize({
+          operation: "admin.csrf.issue",
+          membership: {
+            adminUserId: "admin-user-1",
+            workspaceId: activeWorkspaceId,
+            status: "active",
+            role: "viewer"
+          }
+        })
+      ).toEqual({
+        allowed: false,
+        reason: "role_not_allowed",
+        statusCode: 403
+      });
+    });
+  });
+
   describe("admin.auth.check", () => {
     it("is a supported admin operation", () => {
       expect(isSupportedAdminOperation("admin.auth.check")).toBe(true);

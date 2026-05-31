@@ -76,11 +76,11 @@ describe("Phase 2B-Y server-only admin runtime route gate adapter boundary", () 
     const projectContext = readRepoFile("docs/PROJECT-CONTEXT.md");
 
     expect(status).toContain(
-      "Latest completed phase: Phase 2B-AC - admin auth-check trusted workspace dependency repair."
+      "Latest completed phase: Phase 2B-AD - admin CSRF proof issuer route operation approval boundary."
     );
-    expect(status).toContain("Last merged phase PR: #70");
+    expect(status).toContain("Last merged phase PR: #71");
     expect(status).toContain(
-      "Merge commit: `a3514995eaa6f33e70bcb98161aec1e81d63820d`"
+      "Merge commit: `219026566257caa8bd87e4e56d6b92d48c1e437b`"
     );
     expect(roadmap).toContain(
       "Phase 2B-Y adds only the server-only admin runtime route gate adapter boundary"
