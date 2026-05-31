@@ -4,15 +4,15 @@ This is the quick status page for the SKR repo. Use `docs/PHASE-2-READINESS-PLAN
 
 ## Current phase
 
-Current phase: Phase 2B-AB - admin CSRF proof issuer runtime usage approval lane.
+Current phase: Phase 2B-AC - admin auth-check trusted workspace dependency repair.
 
-This PR adds only the admin CSRF proof issuer runtime usage approval lane. This approval lane documents and guards the future first-party server-only CSRF proof issuer runtime usage lane. A future implementation PR may add exactly one first-party server-only CSRF proof issuer route under `website/app/api/admin/**`. The future route must remain server-only and must not bypass the Phase 2B-Y/AA route-gate authorization path. The future route must not call lower-level auth/security boundaries directly except the approved CSRF issuer boundary. The future route must not expose CSRF secrets, verifier internals, provider internals, raw headers, cookies, tokens, SQL/provider errors, workspace internals, membership internals, or stack traces. This phase does not add routes, pages, server actions, login/logout, protected admin pages, admin UI, product/category/product image writes, Storage, deployment, Supabase Cloud, browser Supabase, service-role runtime paths, n8n workflow changes, Pinecone runtime code, SaaS chatbot work, or `website/chat-config.js` access.
+This PR repairs the Phase 2B-AA auth-check route by supplying the trusted workspace dependency through the existing approved dependency path. This prevents the route from failing closed due to a missing server-resolved workspace ID, while keeping all existing safe, fail-closed boundaries intact. This phase does not add product/category/product image writes, admin UI, routes, pages, server actions, login/logout, protected admin pages, Storage, deployment, Supabase Cloud, browser Supabase, service-role runtime paths, n8n workflow changes, Pinecone runtime code, SaaS chatbot work, or `website/chat-config.js` access.
 
-Latest completed phase: Phase 2B-AA - first admin runtime route gate adapter usage boundary.
+Latest completed phase: Phase 2B-AB - admin CSRF proof issuer runtime usage approval lane.
 
-Last merged phase PR: #68
+Last merged phase PR: #69
 
-Merge commit: `ca800f7604c5ef0a6e19a4f0724121a08576017b`
+Merge commit: `ca51fc792aa3c34e2b8df314ac7a41b2ebb3244f`
 
 ## Completed foundation
 
@@ -66,7 +66,8 @@ Vercel config, add real env values, or add runtime features.
 - Server-only admin runtime route gate adapter boundary is complete.
 - Admin runtime route gate adapter usage approval lane is complete.
 - First admin runtime route gate adapter usage boundary is complete.
-- Admin CSRF proof issuer runtime usage approval lane is in progress.
+- Admin CSRF proof issuer runtime usage approval lane is complete.
+- Admin auth-check trusted workspace dependency repair is in progress.
 
 Supabase Auth is approved as the future server-side admin auth provider. The
 Phase 2B-K identity boundary remains the only approved place to read Supabase
