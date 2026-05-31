@@ -55,14 +55,14 @@ describe("Phase 2B-J admin auth runtime approval lane", () => {
     const decisionLog = readRepoFile("docs/DECISION-LOG.md");
 
     expect(status).toContain(
-      "Current phase: Phase 2B-AD - admin CSRF proof issuer route operation approval boundary."
+      "Current phase: Phase 2B-AE - admin CSRF issue operation policy and preflight boundary."
     );
     expect(status).toContain(
-      "Latest completed phase: Phase 2B-AC - admin auth-check trusted workspace dependency repair."
+      "Latest completed phase: Phase 2B-AD - admin CSRF proof issuer route operation approval boundary."
     );
-    expect(status).toContain("Last merged phase PR: #70");
+    expect(status).toContain("Last merged phase PR: #71");
     expect(status).toContain(
-      "Merge commit: `a3514995eaa6f33e70bcb98161aec1e81d63820d`"
+      "Merge commit: `219026566257caa8bd87e4e56d6b92d48c1e437b`"
     );
     expect(roadmap).toContain(
       "Phase 2B-J approves the future server-only Supabase Auth runtime lane"

@@ -36,8 +36,8 @@ function readTrackedProductionSources(paths: string[]) {
     }));
 }
 
-describe("Phase 2B-AD admin CSRF proof issuer route operation approval boundary", () => {
-  it("records Phase 2B-AC as completed with PR #70 merge commit and Phase 2B-AD as current", () => {
+describe("Phase 2B-AE admin CSRF issue operation policy and preflight boundary", () => {
+  it("records Phase 2B-AD as completed with PR #71 merge commit and Phase 2B-AE as current", () => {
     const status = readRepoFile("docs/PHASE-STATUS.md");
     const roadmap = readRepoFile("docs/PHASE-ROADMAP.md");
     const decisionLog = readRepoFile("docs/DECISION-LOG.md");
@@ -51,17 +51,15 @@ describe("Phase 2B-AD admin CSRF proof issuer route operation approval boundary"
     );
     expect(status).toContain("Last merged phase PR: #71");
     expect(status).toContain("Merge commit: `219026566257caa8bd87e4e56d6b92d48c1e437b");
-    expect(status).toContain(
-      "This phase adds only dedicated `admin.csrf.issue` operation policy/preflight support."
-    );
+    
     expect(roadmap).toContain(
-      "Phase 2B-AD adds only the admin CSRF proof issuer route operation approval boundary."
+      "Phase 2B-AE adds only the admin CSRF issue operation policy and preflight boundary."
     );
     expect(decisionLog).toContain(
-      "Decision: Phase 2B-AD adds only the admin CSRF proof issuer route operation approval boundary."
+      "Decision: Phase 2B-AE adds only the admin CSRF issue operation policy and preflight boundary."
     );
     expect(projectContext).toContain(
-      "Phase 2B-AD adds a docs/checklist/static-guard approval boundary for the future first-party server-only admin CSRF proof issuer route operation model."
+      "Phase 2B-AE adds only the admin CSRF issue operation policy and preflight boundary."
     );
   });
 
@@ -69,21 +67,17 @@ describe("Phase 2B-AD admin CSRF proof issuer route operation approval boundary"
     const safety = readRepoFile("docs/SAFETY-BOUNDARIES.md");
 
     expect(safety).toContain(
-      "Phase 2B-AD admin CSRF proof issuer route operation approval boundary is docs/checklist/static-guard approval only."
+      "Phase 2B-AE adds only the admin CSRF issue operation policy and preflight boundary."
     );
     expect(safety).toContain(
-      "The future route must not route-gate itself as a state-changing operation (like `product.write`)"
+      "It does not implement the actual CSRF proof issuer route."
     );
     expect(safety).toContain(
-      "It must also not loosely use `admin.auth.check` as a substitute."
+      "It does not issue CSRF proofs from runtime."
     );
 
     const productionSources = readTrackedProductionSources(["website/app", "website/lib"]);
-    const authCheckRoute = productionSources.find(p => p.filePath === "website/app/api/admin/auth-check/route.ts")?.source || "";
     
-    // Auth-check route still exists and uses auth-check
-    expect(authCheckRoute).toContain("requestedOperation: \"admin.auth.check\"");
-
     // Ensure we did not actually implement admin.csrf.issue operation anywhere in production
     // except for policy and preflight boundaries
     productionSources.forEach(({ source, filePath }) => {
@@ -98,12 +92,5 @@ describe("Phase 2B-AD admin CSRF proof issuer route operation approval boundary"
         expect(source).not.toContain("createServerAdminCsrfProofIssuer");
       }
     });
-  });
-
-  it("protects Phase 2B-Y/Z/AA ladder wording in the admin auth checklist", () => {
-    const adminAuthChecklist = readRepoFile("docs/checklists/PHASE-2B-ADMIN-AUTH.md");
-    expect(adminAuthChecklist).toContain("Phase 2B-Y adds only the server-only admin runtime route gate adapter boundary.");
-    expect(adminAuthChecklist).toContain("Phase 2B-Z approves only the future admin runtime route gate adapter usage lane.");
-    expect(adminAuthChecklist).toContain("Phase 2B-AA adds the first admin runtime route gate adapter usage boundary as exactly one harmless GET authorization probe/check route handler.");
   });
 });

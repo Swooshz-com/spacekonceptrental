@@ -235,6 +235,12 @@ export async function validateServerAdminRequestSecurityPreflight(
   }
 
   if (!isStateChangingOperation(requestedOperation)) {
+    if (requestedOperation === "admin.csrf.issue") {
+      return requestMethod === "POST"
+        ? allow()
+        : deny("request_method_not_allowed", 403);
+    }
+
     return readOnlySafeMethods.has(requestMethod)
       ? allow()
       : deny("request_method_not_allowed", 403);
