@@ -20,7 +20,7 @@ authorization adapter-set composition boundary. Phase 2B-P implements only the
 server-only composed admin authorization decision boundary. Phase 2B-Q
 implements only the server-only admin request security preflight boundary.
 Phase 2B-R implements only the server-only CSRF proof verifier boundary.
-Phase 2B-Z approves only the future admin runtime route gate adapter usage lane. Phase 2B-AA implements only the first admin runtime route gate adapter usage boundary as a harmless GET authorization probe via the `admin.auth.check` operation. Phase 2B-AB approves only the future server-only admin CSRF proof issuer runtime usage lane. Phase 2B-AC repairs the admin auth-check trusted workspace dependency. Phase 2B-AD approves only the future admin CSRF proof issuer route operation model. Phase 2B-AE implements only the admin CSRF issue operation policy and preflight boundary. Phase 2B-AF is docs/checklist/static-guard approval only for the admin CSRF proof issuer route readiness; actual route implementation is deferred because the required runtime signer dependencies are missing. Keep
+Phase 2B-Z approves only the future admin runtime route gate adapter usage lane. Phase 2B-AA implements only the first admin runtime route gate adapter usage boundary as a harmless GET authorization probe via the `admin.auth.check` operation. Phase 2B-AB approves only the future server-only admin CSRF proof issuer runtime usage lane. Phase 2B-AC repairs the admin auth-check trusted workspace dependency. Phase 2B-AD approves only the future admin CSRF proof issuer route operation model. Phase 2B-AE implements only the admin CSRF issue operation policy and preflight boundary. Phase 2B-AF is docs/checklist/static-guard approval only for the admin CSRF proof issuer route readiness; actual route implementation is deferred because the required runtime signer dependencies are missing. Phase 2B-AG implements only the missing server-only runtime dependency boundary needed by the existing CSRF proof issuer/verifier contracts. Keep
 real auth runtime wiring, factory, adapter-set, decision-boundary, preflight,
 CSRF verifier, CSRF issuer, request metadata adapter, runtime gate invocation helper, or authorization gate usage from runtime routes/pages/actions,
 headers, other routes, UI, product write, Storage, browser Supabase, and service-role runtime
@@ -94,6 +94,7 @@ Reference docs:
 - [x] Admin CSRF proof issuer route operation approval boundary.
 - [x] Admin CSRF issue operation policy and preflight boundary.
 - [x] Admin CSRF proof issuer route readiness and route-if-safe boundary.
+- [x] Admin CSRF proof runtime dependency boundary.
 
 ## Still Deferred
 
