@@ -44,13 +44,13 @@ describe("Phase 2B-AE admin CSRF issue operation policy and preflight boundary",
     const projectContext = readRepoFile("docs/PROJECT-CONTEXT.md");
 
     expect(status).toContain(
-      "Current phase: Phase 2B-AG - admin CSRF proof signer and nonce runtime dependency boundary."
+      "Current phase: Phase 2B-AH - admin CSRF proof issuer route runtime boundary."
     );
     expect(status).toContain(
-      "Latest completed phase: Phase 2B-AF - admin CSRF proof issuer route readiness and route-if-safe boundary."
+      "Latest completed phase: Phase 2B-AG - admin CSRF proof signer and nonce runtime dependency boundary."
     );
-    expect(status).toContain("Last merged phase PR: #73");
-    expect(status).toContain("Merge commit: `0c6edc05d8baed88ce1014cd9f9dd6c574dfef3d");
+    expect(status).toContain("Last merged phase PR: #74");
+    expect(status).toContain("Merge commit: `bfbcca40ec21b7f278a62a638ccb95a2bcd9c2e7");
     
     expect(roadmap).toContain(
       "Phase 2B-AE adds only the admin CSRF issue operation policy and preflight boundary."
