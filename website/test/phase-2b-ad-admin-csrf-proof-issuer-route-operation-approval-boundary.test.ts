@@ -90,4 +90,11 @@ describe("Phase 2B-AD admin CSRF proof issuer route operation approval boundary"
       expect(source).not.toContain("resolveServerAdminCsrfProofIssuer");
     });
   });
+
+  it("protects Phase 2B-Y/Z/AA ladder wording in the admin auth checklist", () => {
+    const adminAuthChecklist = readRepoFile("docs/checklists/PHASE-2B-ADMIN-AUTH.md");
+    expect(adminAuthChecklist).toContain("Phase 2B-Y adds only the server-only admin runtime route gate adapter boundary.");
+    expect(adminAuthChecklist).toContain("Phase 2B-Z approves only the future admin runtime route gate adapter usage lane.");
+    expect(adminAuthChecklist).toContain("Phase 2B-AA adds the first admin runtime route gate adapter usage boundary as exactly one harmless GET authorization probe/check route handler.");
+  });
 });
