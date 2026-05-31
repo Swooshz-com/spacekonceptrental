@@ -76,17 +76,17 @@ describe("Phase 2B-AA first admin runtime route gate adapter usage boundary", ()
     const projectContext = readRepoFile("docs/PROJECT-CONTEXT.md");
 
     expect(status).toContain(
-      "Current phase: Phase 2B-AE - admin CSRF issue operation policy and preflight boundary."
+      "Current phase: Phase 2B-AF - admin CSRF proof issuer route readiness and route-if-safe boundary."
     );
     expect(status).toContain(
-      "Latest completed phase: Phase 2B-AD - admin CSRF proof issuer route operation approval boundary."
+      "Latest completed phase: Phase 2B-AE - admin CSRF issue operation policy and preflight boundary."
     );
-    expect(status).toContain("Last merged phase PR: #71");
+    expect(status).toContain("Last merged phase PR: #72");
     expect(status).toContain(
-      "Merge commit: `219026566257caa8bd87e4e56d6b92d48c1e437b`"
+      "Merge commit: `f8c5ceb77ef53243da700d6c76720814864ee770`"
     );
     expect(status).toContain(
-      "This phase adds only dedicated `admin.csrf.issue` operation policy/preflight support."
+      "This phase implements only docs/checklist/static-guard approval for the admin CSRF proof issuer route readiness. The actual route implementation is intentionally deferred because the required runtime `signCsrfProof` and `generateNonce` dependencies are not yet implemented or approved. This phase preserves the existing `admin.csrf.issue` operation policy and preflight boundaries. This phase does not add product/category/product image writes, admin UI, pages, server actions, login/logout, protected admin pages, Storage, deployment, Supabase Cloud, browser Supabase, service-role runtime paths, n8n workflow changes, Pinecone runtime code, SaaS chatbot work, or `website/chat-config.js` access."
     );
     expect(roadmap).toContain(
       "Phase 2B-AA adds the first admin runtime route gate adapter usage boundary"
