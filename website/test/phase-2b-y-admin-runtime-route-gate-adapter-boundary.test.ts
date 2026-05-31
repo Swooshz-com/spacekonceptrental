@@ -76,7 +76,7 @@ describe("Phase 2B-Y server-only admin runtime route gate adapter boundary", () 
     const projectContext = readRepoFile("docs/PROJECT-CONTEXT.md");
 
     expect(status).toContain(
-      "Latest completed phase: Phase 2B-AF - admin CSRF proof issuer route readiness and route-if-safe boundary."
+      "Latest completed phase: Phase 2B-AG - admin CSRF proof signer and nonce runtime dependency boundary."
     );
     expect(status).toContain("Last merged phase PR: #73");
     expect(status).toContain(

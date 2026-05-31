@@ -72,10 +72,10 @@ describe("Phase 2B-S server-only CSRF proof issuer boundary", () => {
     const projectContext = readRepoFile("docs/PROJECT-CONTEXT.md");
 
     expect(status).toContain(
-      "Current phase: Phase 2B-AG - admin CSRF proof signer and nonce runtime dependency boundary."
+      "Current phase: Phase 2B-AH - admin CSRF proof issuer route runtime boundary."
     );
     expect(status).toContain(
-      "Latest completed phase: Phase 2B-AF - admin CSRF proof issuer route readiness and route-if-safe boundary."
+      "Latest completed phase: Phase 2B-AG - admin CSRF proof signer and nonce runtime dependency boundary."
     );
     expect(status).toContain("Last merged phase PR: #73");
     expect(status).toContain(
