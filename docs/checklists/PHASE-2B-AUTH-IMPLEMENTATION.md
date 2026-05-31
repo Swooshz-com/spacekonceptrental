@@ -20,7 +20,7 @@ authorization adapter-set composition boundary. Phase 2B-P implements only the
 server-only composed admin authorization decision boundary. Phase 2B-Q
 implements only the server-only admin request security preflight boundary.
 Phase 2B-R implements only the server-only CSRF proof verifier boundary.
-Phase 2B-Z approves only the future admin runtime route gate adapter usage lane. Phase 2B-AA implements only the first admin runtime route gate adapter usage boundary as a harmless GET authorization probe via the `admin.auth.check` operation. Keep
+Phase 2B-Z approves only the future admin runtime route gate adapter usage lane. Phase 2B-AA implements only the first admin runtime route gate adapter usage boundary as a harmless GET authorization probe via the `admin.auth.check` operation. Phase 2B-AB approves only the future server-only admin CSRF proof issuer runtime usage lane. Keep
 real auth runtime wiring, factory, adapter-set, decision-boundary, preflight,
 CSRF verifier, CSRF issuer, request metadata adapter, runtime gate invocation helper, or authorization gate usage from runtime routes/pages/actions,
 headers, other routes, UI, product write, Storage, browser Supabase, and service-role runtime
@@ -89,6 +89,7 @@ Reference docs:
 - [x] Server-only admin runtime route gate adapter boundary.
 - [x] Admin runtime route gate adapter usage approval lane.
 - [x] First admin runtime route gate adapter usage boundary.
+- [x] Admin CSRF proof issuer runtime usage approval lane.
 
 ## Still Deferred
 

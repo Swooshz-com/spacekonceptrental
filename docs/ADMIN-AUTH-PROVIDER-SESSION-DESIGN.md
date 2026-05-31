@@ -19,7 +19,8 @@ implemented server-only admin runtime gate invocation boundary, the Phase 2B-X
 approved future admin runtime gate invocation usage lane, the Phase 2B-Y
 implemented server-only admin runtime route gate adapter boundary, the
 Phase 2B-Z approved future admin runtime route gate adapter usage lane, and the
-Phase 2B-AA implemented the first admin runtime route gate adapter usage boundary.
+Phase 2B-AA implemented the first admin runtime route gate adapter usage boundary, and the
+Phase 2B-AB approved future admin CSRF proof issuer runtime usage lane.
 
 Phase 2B-E added auth provider/session/security design only.
 Phase 2B-J approves the future server-only Supabase Auth runtime lane only.
@@ -50,6 +51,7 @@ boundary.
 Phase 2B-Z approves only the future admin runtime route gate adapter usage
 lane.
 Phase 2B-AA implements only the first admin runtime route gate adapter usage boundary.
+Phase 2B-AB approves only the future admin CSRF proof issuer runtime usage lane.
 
 Phase 2B-K cookie reads and Supabase Auth server calls are restricted to the
 server-only identity adapter named below.
@@ -797,6 +799,28 @@ Do not use:
   configuration.
 - Production seed data to create admin access without review.
 - Deployment configuration as auth implementation.
+
+## Phase 2B-AB Approved Admin CSRF Proof Issuer Runtime Usage Lane
+
+Phase 2B-AB approves the future first-party server-only CSRF proof issuer runtime usage lane.
+
+A future implementation PR may add exactly one first-party server-only CSRF proof issuer route under `website/app/api/admin/**`. The future route must call only the Phase 2B-S CSRF issuer boundary for CSRF proof issuance.
+
+The future route must remain server-only and must not bypass the Phase 2B-Y/AA route-gate authorization path.
+
+The future route must not call lower-level auth/security boundaries directly except the approved CSRF issuer boundary.
+
+The future route must not expose CSRF secrets, verifier internals, provider internals, raw headers, cookies, tokens, SQL/provider errors, workspace internals, membership internals, or stack traces.
+
+The future route must not approve product/category/product image writes by itself.
+
+The future route must not add login/logout, protected admin pages, or admin UI.
+
+Header reads must remain inside the Phase 2B-V request metadata adapter.
+
+Runtime gate invocation must remain inside the Phase 2B-W invocation boundary.
+
+Creating this approval lane does not approve adding or using route handlers, pages, server actions, login/logout routes, protected admin pages, admin UI, product writes, Storage, deployment, Supabase Cloud, browser Supabase, service-role runtime paths, n8n workflow changes, Pinecone runtime code, SaaS chatbot app work, or `website/chat-config.js` access.
 
 ## First Implementation PR After This Design
 

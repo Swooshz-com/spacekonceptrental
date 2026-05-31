@@ -788,3 +788,13 @@ Decision: Phase 2B-AA adds the first admin runtime route gate adapter usage boun
 Reason: Phase 2B-Z approved the lane for route usage, and now the system needs a harmless authorization probe to verify the entire server-side authorization stack without modifying product data or exposing protected admin UI.
 
 The route handler is a first-party server-only boundary that only calls the Phase 2B-Y route gate adapter. It does not import or call lower-level boundaries directly. Phase 2B-AA does not add login/logout routes, protected admin pages, admin UI, product writes, Storage, deployment, Supabase Cloud, browser Supabase, service-role runtime paths, n8n changes, Pinecone runtime code, SaaS chatbot app work, or `website/chat-config.js` access.
+
+## 2026-05-30: Admin CSRF Proof Issuer Runtime Usage Approval Lane
+
+Decision: Phase 2B-AB adds only the admin CSRF proof issuer runtime usage approval lane for future use of `issueServerAdminCsrfProof()` from a first-party server-only CSRF proof issuer route.
+
+Reason: Phase 2B-AA proved the route gate adapter can be used safely from exactly one harmless auth-check route. The next smallest safe step is to approve the future runtime lane for issuing CSRF proofs, because future state-changing admin routes will eventually require CSRF proof flow.
+
+The approved future lane is limited to exactly one first-party server-only CSRF proof issuer route under `website/app/api/admin/**`. The future route must remain server-only and must not bypass the Phase 2B-Y/AA route-gate authorization path. The future route must not call lower-level auth/security boundaries directly except the approved Phase 2B-S CSRF issuer boundary. The future route must not expose CSRF secrets, verifier internals, provider internals, raw headers, cookies, tokens, SQL/provider errors, workspace internals, membership internals, or stack traces. The future route must not approve product/category/product image writes by itself. The future route must not add login/logout, protected admin pages, or admin UI.
+
+This phase is docs/checklist/static-guard approval only. It does not add routes, pages, server actions, login/logout routes, protected admin pages, admin UI, product/category/product image writes, Storage, deployment, Supabase Cloud, browser Supabase, service-role runtime paths, n8n workflow changes, Pinecone runtime code, SaaS chatbot app work, or `website/chat-config.js` access.
