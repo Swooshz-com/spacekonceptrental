@@ -77,9 +77,9 @@ describe("Phase 2B-S server-only CSRF proof issuer boundary", () => {
     expect(status).toContain(
       "Latest completed phase: Phase 2B-AG - admin CSRF proof signer and nonce runtime dependency boundary."
     );
-    expect(status).toContain("Last merged phase PR: #73");
+    expect(status).toContain("Last merged phase PR: #74");
     expect(status).toContain(
-      "Merge commit: `0c6edc05d8baed88ce1014cd9f9dd6c574dfef3d`"
+      "Merge commit: `bfbcca40ec21b7f278a62a638ccb95a2bcd9c2e7`"
     );
     expect(roadmap).toContain(
       "Phase 2B-S adds only the server-only CSRF proof issuer boundary"

@@ -10,9 +10,9 @@ This phase is docs/checklist/static-guard approval only for the admin CSRF proof
 
 Latest completed phase: Phase 2B-AG - admin CSRF proof signer and nonce runtime dependency boundary.
 
-Last merged phase PR: #73
+Last merged phase PR: #74
 
-Merge commit: `0c6edc05d8baed88ce1014cd9f9dd6c574dfef3d`
+Merge commit: `bfbcca40ec21b7f278a62a638ccb95a2bcd9c2e7`
 ## Completed foundation
 
 - Next.js app root exists under `website/`.
