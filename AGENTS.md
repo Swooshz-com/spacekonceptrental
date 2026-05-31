@@ -246,8 +246,8 @@ Use these docs as the source of truth:
 - `docs/DECISION-LOG.md` - accepted decisions and rationale.
 - `docs/PROJECT-CONTEXT.md` - repo and architecture context.
 
-Latest completed phase: Phase 2B-AA, merged in PR #68 at
-`ca800f7604c5ef0a6e19a4f0724121a08576017b`.
+Latest completed phase: Phase 2B-Z, merged in PR #66 at
+`9ebf36748f1cd98b5008154f9a6389c75a670ab4`.
 
 ## Current Architecture Direction
 

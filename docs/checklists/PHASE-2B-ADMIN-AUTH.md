@@ -46,7 +46,7 @@ adapter-set, decision-boundary, preflight, CSRF verifier, CSRF issuer,
 request metadata adapter, runtime gate invocation helper, or authorization
 gate usage from other runtime routes/pages/actions, headers, login/logout
 routes, protected admin pages, admin UI, product management writes, browser
-Subabase, service-role runtime paths, deployment, and Supabase Cloud work
+Supabase, service-role runtime paths, deployment, and Supabase Cloud work
 unchecked until a future PR has explicit approval.
 
 ## Completed Design, Policy, Resolver, Adapter, And Provider-session Milestones

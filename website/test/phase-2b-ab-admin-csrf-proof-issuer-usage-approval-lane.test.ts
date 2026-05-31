@@ -172,16 +172,17 @@ describe("Phase 2B-AB admin CSRF proof issuer runtime usage approval lane", () =
       "resolveServerAdminRuntimeRouteGateAdapter"
     );
 
-    // No issueServerAdminCsrfProof in any app route or page
-    expect(appSourceOutsideAuthCheck).not.toContain(
-      "issueServerAdminCsrfProof"
-    );
-
-    // No server actions
     const allAppSources = productionSources
       .filter(({ filePath }) => filePath.startsWith("website/app/"))
       .map(({ source }) => source)
       .join("\n");
+
+    // No CSRF proof issuer usage in any app route or page
+    expect(allAppSources).not.toContain("issueServerAdminCsrfProof");
+    expect(allAppSources).not.toContain("createServerAdminCsrfProofIssuer");
+    expect(allAppSources).not.toContain("server-admin-csrf-proof-issuer");
+
+    // No server actions
     expect(allAppSources).not.toContain('"use server"');
   });
 

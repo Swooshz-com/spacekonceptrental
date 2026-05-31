@@ -435,7 +435,7 @@ workspace internals, membership internals, or stack traces. The future route
 must not approve product/category/product image writes by itself. It is not
 approval to add routes, pages, server actions, login/logout, protected admin
 pages, admin UI, product writes, Storage, deployment, Supabase Cloud, browser
-Subabase, service-role runtime paths, n8n changes, Pinecone runtime code,
+Supabase, service-role runtime paths, n8n changes, Pinecone runtime code,
 SaaS chatbot app work, or `website/chat-config.js` access.
 
 Further Phase 2 implementation work remains unapproved until scoped in a
