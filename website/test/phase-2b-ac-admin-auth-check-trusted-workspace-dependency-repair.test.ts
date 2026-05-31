@@ -52,7 +52,7 @@ describe("Phase 2B-AC admin auth-check trusted workspace dependency repair", () 
     expect(status).toContain("Last merged phase PR: #71");
     expect(status).toContain("Merge commit: `219026566257caa8bd87e4e56d6b92d48c1e437b");
     expect(status).toContain(
-      "This phase adds a narrow docs/checklist/static-guard approval boundary for the future first-party server-only admin CSRF proof issuer route operation model."
+      "This phase adds only dedicated `admin.csrf.issue` operation policy/preflight support."
     );
     expect(roadmap).toContain(
       "Phase 2B-AC repairs the Phase 2B-AA auth-check route by supplying the trusted"

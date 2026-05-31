@@ -250,6 +250,50 @@ describe("server admin request security preflight", () => {
     expectSafeShape(result);
   });
 
+  it("denies admin.csrf.issue when request method is missing", async () => {
+    const result = await validateServerAdminRequestSecurityPreflight({
+      ...safeReadInput,
+      requestedOperation: "admin.csrf.issue",
+      requestMethod: ""
+    });
+
+    expectDenied(result, "request_method_missing", 400);
+  });
+
+  it("denies admin.csrf.issue when Origin is missing", async () => {
+    const result = await validateServerAdminRequestSecurityPreflight({
+      ...safeReadInput,
+      requestedOperation: "admin.csrf.issue",
+      requestMethod: "POST",
+      requestOrigin: ""
+    });
+
+    expectDenied(result, "origin_missing", 400);
+  });
+
+  it("denies admin.csrf.issue when Host is missing", async () => {
+    const result = await validateServerAdminRequestSecurityPreflight({
+      ...safeReadInput,
+      requestedOperation: "admin.csrf.issue",
+      requestMethod: "POST",
+      requestHost: " "
+    });
+
+    expectDenied(result, "host_missing", 400);
+  });
+
+  it("denies admin.csrf.issue when Origin and Host do not match the expected same-origin metadata", async () => {
+    const result = await validateServerAdminRequestSecurityPreflight({
+      ...safeReadInput,
+      requestedOperation: "admin.csrf.issue",
+      requestMethod: "POST",
+      requestOrigin: "https://evil.example",
+      requestHost: "evil.example"
+    });
+
+    expectDenied(result, "origin_host_mismatch", 403);
+  });
+
   it("allows admin.auth.check for safe read methods without requiring CSRF proof", async () => {
     const result = await validateServerAdminRequestSecurityPreflight({
       ...safeReadInput,

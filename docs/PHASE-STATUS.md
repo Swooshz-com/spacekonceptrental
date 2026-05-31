@@ -6,7 +6,7 @@ This is the quick status page for the SKR repo. Use `docs/PHASE-2-READINESS-PLAN
 
 Current phase: Phase 2B-AE - admin CSRF issue operation policy and preflight boundary.
 
-This phase adds a narrow docs/checklist/static-guard approval boundary for the future first-party server-only admin CSRF proof issuer route operation model. The current request preflight requires state-changing operations to be `POST` and to already include a valid CSRF proof. Therefore, a future CSRF proof issuer route must not simply route-gate itself as `product.write` or `membership.manage`, because that creates a chicken-and-egg path where the proof issuer already needs the proof it is issuing. A future CSRF proof issuer route must also not use only `admin.auth.check` as a loose substitute for write-operation authorisation without a clearly reviewed operation model. The likely future operation name is `admin.csrf.issue`. This phase does not implement the actual route, add product/category/product image writes, admin UI, pages, server actions, login/logout, protected admin pages, Storage, deployment, Supabase Cloud, browser Supabase, service-role runtime paths, n8n workflow changes, Pinecone runtime code, SaaS chatbot work, or `website/chat-config.js` access.
+This phase adds only dedicated `admin.csrf.issue` operation policy/preflight support. It updates preflight so the CSRF issue operation can bootstrap without requiring an existing CSRF proof. `admin.csrf.issue` is allowed only for `POST` plus valid same-origin metadata. Product/category/product image/membership writes still require valid CSRF proof. This phase does not implement the actual CSRF proof issuer route. This phase does not issue CSRF proofs from runtime. This phase does not add product/category/product image writes, admin UI, pages, server actions, login/logout, protected admin pages, Storage, deployment, Supabase Cloud, browser Supabase, service-role runtime paths, n8n workflow changes, Pinecone runtime code, SaaS chatbot work, or `website/chat-config.js` access.
 
 Latest completed phase: Phase 2B-AD - admin CSRF proof issuer route operation approval boundary.
 
@@ -68,7 +68,8 @@ Vercel config, add real env values, or add runtime features.
 - First admin runtime route gate adapter usage boundary is complete.
 - Admin CSRF proof issuer runtime usage approval lane is complete.
 - Admin auth-check trusted workspace dependency repair is complete.
-- Admin CSRF proof issuer route operation approval boundary is in progress.
+- Admin CSRF proof issuer route operation approval boundary is complete.
+- Admin CSRF issue operation policy and preflight boundary is in progress.
 
 Supabase Auth is approved as the future server-side admin auth provider. The
 Phase 2B-K identity boundary remains the only approved place to read Supabase

@@ -52,7 +52,7 @@ describe("Phase 2B-AD admin CSRF proof issuer route operation approval boundary"
     expect(status).toContain("Last merged phase PR: #71");
     expect(status).toContain("Merge commit: `219026566257caa8bd87e4e56d6b92d48c1e437b");
     expect(status).toContain(
-      "This phase adds a narrow docs/checklist/static-guard approval boundary for the future first-party server-only admin CSRF proof issuer route operation model."
+      "This phase adds only dedicated `admin.csrf.issue` operation policy/preflight support."
     );
     expect(roadmap).toContain(
       "Phase 2B-AD adds only the admin CSRF proof issuer route operation approval boundary."
@@ -93,7 +93,10 @@ describe("Phase 2B-AD admin CSRF proof issuer route operation approval boundary"
       ) {
         expect(source).not.toContain("admin.csrf.issue");
       }
-      expect(source).not.toContain("resolveServerAdminCsrfProofIssuer");
+      if (filePath !== "website/lib/admin/authorization/server-admin-csrf-proof-issuer.ts") {
+        expect(source).not.toContain("issueServerAdminCsrfProof");
+        expect(source).not.toContain("createServerAdminCsrfProofIssuer");
+      }
     });
   });
 

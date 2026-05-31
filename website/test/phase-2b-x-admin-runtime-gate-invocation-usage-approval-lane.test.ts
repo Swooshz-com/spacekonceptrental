@@ -86,7 +86,7 @@ describe("Phase 2B-X admin runtime gate invocation usage approval lane", () => {
       "Merge commit: `219026566257caa8bd87e4e56d6b92d48c1e437b`"
     );
     expect(status).toContain(
-      "This phase adds a narrow docs/checklist/static-guard approval boundary for the future first-party server-only admin CSRF proof issuer route operation model."
+      "This phase adds only dedicated `admin.csrf.issue` operation policy/preflight support."
     );
     expect(roadmap).toContain(
       "Phase 2B-X adds only the admin runtime gate invocation usage approval lane"

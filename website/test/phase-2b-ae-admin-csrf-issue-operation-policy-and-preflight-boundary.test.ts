@@ -87,7 +87,10 @@ describe("Phase 2B-AE admin CSRF issue operation policy and preflight boundary",
       ) {
         expect(source).not.toContain("admin.csrf.issue");
       }
-      expect(source).not.toContain("resolveServerAdminCsrfProofIssuer");
+      if (filePath !== "website/lib/admin/authorization/server-admin-csrf-proof-issuer.ts") {
+        expect(source).not.toContain("issueServerAdminCsrfProof");
+        expect(source).not.toContain("createServerAdminCsrfProofIssuer");
+      }
     });
   });
 });
