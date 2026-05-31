@@ -721,6 +721,14 @@ Decision: Phase 2B-AC repairs the Phase 2B-AA auth-check route by supplying the 
 
 Reason: The route previously passed only request metadata to the route gate adapter. Because the default `trustedServerWorkspaceId` was undefined without explicit injection, the internal workspace resolver failed closed (returning `{ serverResolvedWorkspaceId: null }`). The auth-check would therefore return HTTP 503 Service Unavailable, failing closed unconditionally. The fix leverages `process.env.ADMIN_TRUSTED_WORKSPACE_ID` and injects it as the trusted workspace dependency. It remains fail-closed and does not add routes, pages, server actions, login/logout routes, protected admin pages, admin UI, product writes, Storage, deployment config, Supabase Cloud, browser Supabase, service-role runtime paths, n8n changes, Pinecone runtime code, SaaS chatbot app code, or `website/chat-config.js` access.
 
+## 2026-05-31: Phase 2B-AD Admin CSRF Proof Issuer Route Operation Approval Boundary
+
+Decision: Phase 2B-AD adds only the admin CSRF proof issuer route operation approval boundary.
+
+Reason: A future first-party server-only CSRF proof issuer route needs a dedicated route-gate operation model before implementation. The current request preflight requires state-changing operations to be `POST` and to already include a valid CSRF proof. Therefore, a future CSRF proof issuer route must not route-gate itself as `product.write`, `category.write`, `productImage.write`, or `membership.manage`, because that creates a chicken-and-egg path where the proof issuer already needs the proof it is issuing. It must also not use only `admin.auth.check` as a loose substitute for write-operation authorisation without a clearly reviewed operation model. The likely future operation name is `admin.csrf.issue`.
+
+The future route must remain server-only, use the approved route-gate path, and not call lower-level auth/security boundaries directly except the approved CSRF proof issuer boundary. It must not issue proofs for unsupported operations, nor expose CSRF secrets, verifier internals, signer internals, provider internals, raw headers, cookies, tokens, SQL/provider errors, membership internals, workspace internals, or stack traces. Phase 2B-AD does not implement the actual route, approve or implement product/category/product image writes by itself, add admin UI, protected admin pages, login/logout routes, Storage, deployment config, Supabase Cloud connection, browser Supabase, service-role runtime paths, n8n changes, Pinecone runtime code, SaaS chatbot work, or `website/chat-config.js` access.
+
 ## 2026-05-29: Server-only Admin Authorization Gate Composition Boundary
 
 Decision: Phase 2B-T adds only the server-only admin authorization gate composition boundary at `website/lib/admin/authorization/server-admin-authorization-gate.ts`.

@@ -4,15 +4,15 @@ This is the quick status page for the SKR repo. Use `docs/PHASE-2-READINESS-PLAN
 
 ## Current phase
 
-Current phase: Phase 2B-AC - admin auth-check trusted workspace dependency repair.
+Current phase: Phase 2B-AD - admin CSRF proof issuer route operation approval boundary.
 
-This PR repairs the Phase 2B-AA auth-check route by supplying the trusted workspace dependency through the existing approved dependency path. This prevents the route from failing closed due to a missing server-resolved workspace ID, while keeping all existing safe, fail-closed boundaries intact. This phase does not add product/category/product image writes, admin UI, routes, pages, server actions, login/logout, protected admin pages, Storage, deployment, Supabase Cloud, browser Supabase, service-role runtime paths, n8n workflow changes, Pinecone runtime code, SaaS chatbot work, or `website/chat-config.js` access.
+This phase adds a narrow docs/checklist/static-guard approval boundary for the future first-party server-only admin CSRF proof issuer route operation model. The current request preflight requires state-changing operations to be `POST` and to already include a valid CSRF proof. Therefore, a future CSRF proof issuer route must not simply route-gate itself as `product.write` or `membership.manage`, because that creates a chicken-and-egg path where the proof issuer already needs the proof it is issuing. A future CSRF proof issuer route must also not use only `admin.auth.check` as a loose substitute for write-operation authorisation without a clearly reviewed operation model. The likely future operation name is `admin.csrf.issue`. This phase does not implement the actual route, add product/category/product image writes, admin UI, pages, server actions, login/logout, protected admin pages, Storage, deployment, Supabase Cloud, browser Supabase, service-role runtime paths, n8n workflow changes, Pinecone runtime code, SaaS chatbot work, or `website/chat-config.js` access.
 
-Latest completed phase: Phase 2B-AB - admin CSRF proof issuer runtime usage approval lane.
+Latest completed phase: Phase 2B-AC - admin auth-check trusted workspace dependency repair.
 
-Last merged phase PR: #69
+Last merged phase PR: #70
 
-Merge commit: `ca51fc792aa3c34e2b8df314ac7a41b2ebb3244f`
+Merge commit: `a3514995eaa6f33e70bcb98161aec1e81d63820d`
 
 ## Completed foundation
 
@@ -67,7 +67,8 @@ Vercel config, add real env values, or add runtime features.
 - Admin runtime route gate adapter usage approval lane is complete.
 - First admin runtime route gate adapter usage boundary is complete.
 - Admin CSRF proof issuer runtime usage approval lane is complete.
-- Admin auth-check trusted workspace dependency repair is in progress.
+- Admin auth-check trusted workspace dependency repair is complete.
+- Admin CSRF proof issuer route operation approval boundary is in progress.
 
 Supabase Auth is approved as the future server-side admin auth provider. The
 Phase 2B-K identity boundary remains the only approved place to read Supabase
@@ -111,7 +112,9 @@ docs/checklist/static-guard approval only for future first-party server-only
 usage of `resolveServerAdminRuntimeRouteGateAdapter()`, and it is not runtime
 implementation approval. Phase 2B-AA approves and adds the first admin runtime
 route gate adapter usage boundary from exactly one first-party server-only
-route handler. These boundaries are not wired into pages, server actions,
+route handler. Phase 2B-AB approves only the future server-only admin CSRF
+proof issuer runtime usage lane. Phase 2B-AC repairs the admin auth-check
+trusted workspace dependency. Phase 2B-AD is docs/checklist/static-guard approval only for the future admin CSRF proof issuer route operation model, and it is not runtime implementation approval. These boundaries are not wired into pages, server actions,
 protected admin runtime, login/logout, admin UI, or product writes.
 
 Runtime session-bound read-client usage remains deferred.
