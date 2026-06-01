@@ -136,11 +136,11 @@ describe("Phase 2B-F checklist hygiene and phase status reconciliation", () => {
 
     const status = readRepoFile(phaseStatusPath);
 
-    expect(status).toContain("Current phase: Phase 2B-AJ");
-    expect(status).toContain("Latest completed phase: Phase 2B-AI");
-    expect(status).toContain("Last merged phase PR: #76");
+    expect(status).toContain("Current phase: Phase 2B-AK");
+    expect(status).toContain("Latest completed phase: Phase 2B-AJ");
+    expect(status).toContain("Last merged phase PR: #77");
     expect(status).toContain(
-      "Merge commit: `984b93e490d3e35b7d73995e3a7a0173b409bc1d`"
+      "Merge commit: `75b9ea7b3dea43b5160fc7d0ad9a98ed5a22f0d7`"
     );
     expect(status).toContain("Completed foundation");
     expect(status).toContain("Completed deployment readiness docs");
@@ -221,7 +221,7 @@ describe("Phase 2B-F checklist hygiene and phase status reconciliation", () => {
       "Completed design, policy, resolver, adapter, and provider-session milestones"
     );
     expect(checklist).toContain(
-      "Real runtime implementation remains unchecked."
+      "Real auth and product-write runtime implementation remains unchecked."
     );
     expect(checklist).toContain(
       "- [x] Add admin auth provider/session design."

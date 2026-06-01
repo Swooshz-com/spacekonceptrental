@@ -22,6 +22,8 @@ const approvedCsrfVerifierBoundaryPath =
   "website/lib/admin/authorization/server-admin-csrf-proof-verifier.ts";
 const approvedCsrfIssuerBoundaryPath =
   "website/lib/admin/authorization/server-admin-csrf-proof-issuer.ts";
+const approvedCsrfIssuerRoutePath =
+  "website/app/api/admin/csrf-proof/route.ts";
 const approvedCsrfSessionWorkspaceBindingBoundaryPath =
   "website/lib/admin/authorization/server-admin-csrf-proof-session-workspace-binding.ts";
 const approvedGateBoundaryPath =
@@ -76,14 +78,14 @@ describe("Phase 2B-T server-only admin authorization gate composition boundary",
     const projectContext = readRepoFile("docs/PROJECT-CONTEXT.md");
 
     expect(status).toContain(
-      "Current phase: Phase 2B-AJ - admin CSRF proof session/workspace binding runtime dependency boundary."
+      "Current phase: Phase 2B-AK - admin CSRF proof issuer route implementation."
     );
     expect(status).toContain(
-      "Latest completed phase: Phase 2B-AI - admin CSRF proof issuer session/workspace binding boundary."
+      "Latest completed phase: Phase 2B-AJ - admin CSRF proof session/workspace binding runtime dependency boundary."
     );
-    expect(status).toContain("Last merged phase PR: #76");
+    expect(status).toContain("Last merged phase PR: #77");
     expect(status).toContain(
-      "Merge commit: `984b93e490d3e35b7d73995e3a7a0173b409bc1d`"
+      "Merge commit: `75b9ea7b3dea43b5160fc7d0ad9a98ed5a22f0d7`"
     );
     expect(roadmap).toContain(
       "Phase 2B-T adds only the server-only admin authorization gate composition boundary"
@@ -143,7 +145,7 @@ describe("Phase 2B-T server-only admin authorization gate composition boundary",
       "Admin authorization decision boundary usage from runtime routes, pages, or server actions.",
       "Admin request security preflight usage from runtime routes, pages, or server actions.",
       "Admin CSRF proof verifier usage from runtime routes, pages, or server actions.",
-      "Admin CSRF proof issuer usage from runtime routes, pages, or server actions.",
+      "Admin CSRF proof issuer usage from other runtime routes, pages, or server actions.",
       "Admin authorization gate usage from runtime routes, pages, or server actions.",
       "Header reads outside the Phase 2B-V request metadata adapter.",
       "Login/logout routes.",
@@ -243,7 +245,7 @@ describe("Phase 2B-T server-only admin authorization gate composition boundary",
     expect(readRepoFile(approvedCsrfIssuerBoundaryPath)).toContain(
       "issueServerAdminCsrfProof"
     );
-    expect(combinedOutside(approvedCsrfIssuerBoundaryPath)).not.toContain(
+    expect(combinedOutside([approvedCsrfIssuerBoundaryPath, approvedCsrfIssuerRoutePath])).not.toContain(
       "issueServerAdminCsrfProof"
     );
 
@@ -321,6 +323,7 @@ describe("Phase 2B-T server-only admin authorization gate composition boundary",
           filePath !== approvedPreflightBoundaryPath &&
           filePath !== approvedCsrfVerifierBoundaryPath &&
           filePath !== approvedCsrfIssuerBoundaryPath &&
+          filePath !== approvedCsrfIssuerRoutePath &&
           filePath !== approvedCsrfSessionWorkspaceBindingBoundaryPath &&
           filePath !== approvedGateBoundaryPath &&
           filePath !== approvedRuntimeGateInvocationBoundaryPath

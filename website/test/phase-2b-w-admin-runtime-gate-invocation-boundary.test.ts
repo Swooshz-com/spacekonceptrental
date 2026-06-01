@@ -20,6 +20,8 @@ const approvedCsrfVerifierBoundaryPath =
   "website/lib/admin/authorization/server-admin-csrf-proof-verifier.ts";
 const approvedCsrfIssuerBoundaryPath =
   "website/lib/admin/authorization/server-admin-csrf-proof-issuer.ts";
+const approvedCsrfIssuerRoutePath =
+  "website/app/api/admin/csrf-proof/route.ts";
 const approvedCsrfSessionWorkspaceBindingBoundaryPath =
   "website/lib/admin/authorization/server-admin-csrf-proof-session-workspace-binding.ts";
 const approvedGateBoundaryPath =
@@ -76,14 +78,14 @@ describe("Phase 2B-W server-only admin runtime gate invocation boundary", () => 
     const projectContext = readRepoFile("docs/PROJECT-CONTEXT.md");
 
     expect(status).toContain(
-      "Current phase: Phase 2B-AJ - admin CSRF proof session/workspace binding runtime dependency boundary."
+      "Current phase: Phase 2B-AK - admin CSRF proof issuer route implementation."
     );
     expect(status).toContain(
-      "Latest completed phase: Phase 2B-AI - admin CSRF proof issuer session/workspace binding boundary."
+      "Latest completed phase: Phase 2B-AJ - admin CSRF proof session/workspace binding runtime dependency boundary."
     );
-    expect(status).toContain("Last merged phase PR: #76");
+    expect(status).toContain("Last merged phase PR: #77");
     expect(status).toContain(
-      "Merge commit: `984b93e490d3e35b7d73995e3a7a0173b409bc1d`"
+      "Merge commit: `75b9ea7b3dea43b5160fc7d0ad9a98ed5a22f0d7`"
     );
     expect(roadmap).toContain(
       "Phase 2B-W adds only the server-only admin runtime gate invocation boundary"
@@ -238,7 +240,7 @@ describe("Phase 2B-W server-only admin runtime gate invocation boundary", () => 
     expect(
       combinedOutside([approvedCsrfVerifierBoundaryPath, approvedGateBoundaryPath])
     ).not.toContain("verifyServerAdminCsrfProof");
-    expect(combinedOutside(approvedCsrfIssuerBoundaryPath)).not.toContain(
+    expect(combinedOutside([approvedCsrfIssuerBoundaryPath, approvedCsrfIssuerRoutePath])).not.toContain(
       "issueServerAdminCsrfProof"
     );
     expect(
@@ -280,6 +282,7 @@ describe("Phase 2B-W server-only admin runtime gate invocation boundary", () => 
           filePath !== approvedPreflightBoundaryPath &&
           filePath !== approvedCsrfVerifierBoundaryPath &&
           filePath !== approvedCsrfIssuerBoundaryPath &&
+          filePath !== approvedCsrfIssuerRoutePath &&
           filePath !== approvedCsrfSessionWorkspaceBindingBoundaryPath &&
           filePath !== approvedGateBoundaryPath &&
           filePath !== approvedRequestMetadataBoundaryPath &&
@@ -294,7 +297,7 @@ describe("Phase 2B-W server-only admin runtime gate invocation boundary", () => 
     expect(readTrackedFiles(["website/app/api/auth"])).toEqual([]);
     expect(readTrackedFiles(["website/app/api/login"])).toEqual([]);
     expect(readTrackedFiles(["website/app/api/logout"])).toEqual([]);
-    expect(readTrackedFiles(["website/app/api/admin"])).toEqual(["website/app/api/admin/auth-check/route.test.ts", "website/app/api/admin/auth-check/route.ts"]);
+    expect(readTrackedFiles(["website/app/api/admin"])).toEqual(["website/app/api/admin/auth-check/route.test.ts", "website/app/api/admin/auth-check/route.ts", "website/app/api/admin/csrf-proof/route.test.ts", "website/app/api/admin/csrf-proof/route.ts"]);
     expect(readTrackedFiles(["website/app/api/products"])).toEqual([]);
     expect(readTrackedFiles(["website/app/api/categories"])).toEqual([]);
     expect(readTrackedFiles(["website/app/api/product-images"])).toEqual([]);

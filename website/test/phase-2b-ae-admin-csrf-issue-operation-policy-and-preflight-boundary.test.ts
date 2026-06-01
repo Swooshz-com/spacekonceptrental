@@ -44,13 +44,13 @@ describe("Phase 2B-AE admin CSRF issue operation policy and preflight boundary",
     const projectContext = readRepoFile("docs/PROJECT-CONTEXT.md");
 
     expect(status).toContain(
-      "Current phase: Phase 2B-AJ - admin CSRF proof session/workspace binding runtime dependency boundary."
+      "Current phase: Phase 2B-AK - admin CSRF proof issuer route implementation."
     );
     expect(status).toContain(
-      "Latest completed phase: Phase 2B-AI - admin CSRF proof issuer session/workspace binding boundary."
+      "Latest completed phase: Phase 2B-AJ - admin CSRF proof session/workspace binding runtime dependency boundary."
     );
-    expect(status).toContain("Last merged phase PR: #76");
-    expect(status).toContain("Merge commit: `984b93e490d3e35b7d73995e3a7a0173b409bc1d");
+    expect(status).toContain("Last merged phase PR: #77");
+    expect(status).toContain("Merge commit: `75b9ea7b3dea43b5160fc7d0ad9a98ed5a22f0d7");
     
     expect(roadmap).toContain(
       "Phase 2B-AE adds only the admin CSRF issue operation policy and preflight boundary."
@@ -78,16 +78,19 @@ describe("Phase 2B-AE admin CSRF issue operation policy and preflight boundary",
 
     const productionSources = readTrackedProductionSources(["website/app", "website/lib"]);
     
-    // Ensure we did not actually implement admin.csrf.issue operation anywhere in production
-    // except for policy and preflight boundaries
+    // The Phase 2B-AK issuer route is the only approved runtime use of admin.csrf.issue.
     productionSources.forEach(({ source, filePath }) => {
       if (
         filePath !== "website/lib/admin/authorization/admin-authorization-policy.ts" &&
-        filePath !== "website/lib/admin/authorization/server-admin-request-security-preflight.ts"
+        filePath !== "website/lib/admin/authorization/server-admin-request-security-preflight.ts" &&
+        filePath !== "website/app/api/admin/csrf-proof/route.ts"
       ) {
         expect(source).not.toContain("admin.csrf.issue");
       }
-      if (filePath !== "website/lib/admin/authorization/server-admin-csrf-proof-issuer.ts") {
+      if (
+        filePath !== "website/lib/admin/authorization/server-admin-csrf-proof-issuer.ts" &&
+        filePath !== "website/app/api/admin/csrf-proof/route.ts"
+      ) {
         expect(source).not.toContain("issueServerAdminCsrfProof");
         expect(source).not.toContain("createServerAdminCsrfProofIssuer");
       }

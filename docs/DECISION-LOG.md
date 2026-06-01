@@ -822,6 +822,16 @@ Reason: Phase 2B-AH deferred the actual issuer route because existing approved b
 
 This phase does not implement the actual CSRF proof issuer route, does not approve binding usage from routes/pages/server actions, and does not add product/category/product image writes, admin UI, login/logout, protected admin pages, Storage, deployment, Supabase Cloud, browser Supabase, service-role runtime paths, n8n changes, Pinecone runtime code, SaaS chatbot work, or `website/chat-config.js` access.
 
+## 2026-06-01: Admin CSRF Proof Issuer Route Implementation
+
+Decision: Phase 2B-AK adds only the first-party server-only admin CSRF proof issuer route at `website/app/api/admin/csrf-proof/route.ts`.
+
+Reason: Phase 2B-AE added the dedicated `admin.csrf.issue` operation/preflight lane, Phase 2B-AI added the safe session/workspace binding boundary, and Phase 2B-AJ added the runtime deriver/signer dependencies. The next narrow implementation step is the actual proof issuer route that can issue proof material for future state-changing admin routes without making those write routes available yet.
+
+The route accepts only `POST`, validates safe JSON body input, rejects missing, malformed, unsupported, and non-state-changing target operations, gates itself as `admin.csrf.issue`, resolves the requested target operation binding through the Phase 2B-AI boundary and Phase 2B-AJ runtime dependencies, and returns only `{ ok: true, csrfProof, expiresAt }` or `{ ok: false, error }`.
+
+Phase 2B-AK does not add a replay store, product/category/product image write routes, admin UI, login/logout, protected admin pages, Storage, deployment, Supabase Cloud, browser Supabase, service-role runtime paths, n8n changes, Pinecone runtime code, SaaS chatbot work, or `website/chat-config.js` access.
+
 ## 2026-06-01: Admin CSRF Proof Session/Workspace Binding Runtime Dependency Boundary
 
 Decision: Phase 2B-AJ adds only the server-only admin CSRF proof session/workspace binding runtime dependency boundary at `website/lib/admin/authorization/server-admin-csrf-proof-runtime-dependencies.ts`.
