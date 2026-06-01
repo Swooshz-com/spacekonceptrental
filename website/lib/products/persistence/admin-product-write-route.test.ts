@@ -117,8 +117,34 @@ describe("admin product write route helper", () => {
   it.each([
     [request(undefined), "request_body_missing", 400],
     [request(undefined, { headers: { "content-type": "text/plain" } }), "request_content_type_invalid", 415],
+    [request(undefined, { headers: { "content-type": "text/plain+json" } }), "request_content_type_invalid", 415],
     [request(undefined, { headers: { "content-type": "" } }), "request_content_type_invalid", 415],
     [request("a".repeat(33 * 1024), { headers: { "content-length": String(33 * 1024) } }), "request_body_too_large", 413],
+    [
+      (function() {
+        const req = new Request("https://admin.space.test/api/admin/products", {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            origin: env.ADMIN_EXPECTED_ORIGIN,
+            host: env.ADMIN_EXPECTED_HOST,
+            "x-csrf-proof": "proof"
+          },
+          body: new ReadableStream({
+            start(controller) {
+              controller.enqueue(new TextEncoder().encode("a".repeat(33 * 1024)));
+              controller.close();
+            }
+          }),
+          // @ts-ignore
+          duplex: "half"
+        });
+        req.headers.delete("content-length");
+        return req as unknown as NextRequest;
+      })(),
+      "request_body_too_large",
+      413
+    ],
     [request("{"), "request_body_malformed", 400],
     [request({ slug: "valid", name: "Valid", isPublished: true, extra: "nope" }), "request_payload_invalid", 400],
     [request({ slug: "Bad Slug", name: "Valid", isPublished: true }), "request_payload_invalid", 400],
@@ -147,6 +173,32 @@ describe("admin product write route helper", () => {
     });
     expect(dependencies.resolveSessionWorkspaceBinding).not.toHaveBeenCalled();
     expect(dependencies.resolveRouteGate).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    "application/json",
+    "application/json; charset=utf-8",
+    "application/vnd.api+json",
+    "application/vnd.api+json; charset=utf-8"
+  ])("accepts valid JSON content type: %s", async (contentType) => {
+    const dependencies = createDependencies();
+    const response = await handleAdminProductWriteRoute(
+      request({
+        slug: "modular-lounge",
+        name: "Modular Lounge",
+        status: "draft"
+      }, {
+        headers: { "content-type": contentType }
+      }),
+      {
+        action: "createProduct",
+        operation: "product.write"
+      },
+      dependencies
+    );
+
+    expect(response.status).toBe(201);
+    expect(dependencies.resolveRouteGate).toHaveBeenCalled();
   });
 
   it("verifies the CSRF proof with the expected current session/workspace binding before writing", async () => {

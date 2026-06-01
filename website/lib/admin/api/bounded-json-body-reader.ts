@@ -29,12 +29,11 @@ export async function readBoundedJsonBody(
 ): Promise<BoundedBodyParseResult> {
   const contentType = request.headers.get("content-type")?.trim().toLowerCase();
 
-  if (
-    !contentType ||
-    (contentType !== "application/json" &&
-      !contentType.startsWith("application/json;") &&
-      !contentType.includes("+json"))
-  ) {
+  const isValidContentType = /^application\/(?:[a-z0-9_.-]+\+)?json(?:;.*)?$/i.test(
+    contentType || ""
+  );
+
+  if (!isValidContentType) {
     return {
       ok: false,
       error: "request_content_type_invalid",

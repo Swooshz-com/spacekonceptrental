@@ -352,6 +352,8 @@ function assertNoRuntimeSupabaseUse() {
   const approvedServerSupabaseFiles = new Set([
     'website/lib/supabase/env.ts',
     'website/lib/supabase/server.ts',
+    'website/lib/admin/authorization/supabase-admin-auth-identity-adapter.ts',
+    'website/lib/admin/authorization/supabase-admin-profile-membership-adapters.ts',
   ]);
   const approvedCatalogueReadFiles = new Set([
     'website/lib/catalogue/catalogue-repository.ts',
