@@ -4,15 +4,15 @@ This is the quick status page for the SKR repo. Use `docs/PHASE-2-READINESS-PLAN
 
 ## Current phase
 
-Current phase: Phase 2B-AK - admin CSRF proof issuer route implementation.
+Current phase: Phase 2B-AL - admin product persistence and protected write API routes.
 
-This phase implements only the first-party server-only `POST /api/admin/csrf-proof` proof issuer route at `website/app/api/admin/csrf-proof/route.ts`. The route validates safe JSON input, gates itself through the approved `admin.csrf.issue` route-gate lane, resolves the target operation binding through the Phase 2B-AI boundary and Phase 2B-AJ runtime deriver, and issues short-lived CSRF proofs for `product.write`, `category.write`, `productImage.write`, and `membership.manage`. Product/category/product image write routes remain deferred.
+This phase implements the first backend-only protected admin product-management write surface. It adds session-bound Supabase product/category/product image metadata persistence, owner/admin RLS write policies, product-management audit inserts, and protected first-party admin write API routes for category, product, and product-image metadata changes. The routes use the approved admin route-gate stack, matching CSRF proofs, `ADMIN_TRUSTED_WORKSPACE_ID`, safe JSON validation, and no-store responses. It does not add admin UI, login/logout routes, protected admin pages, Supabase Storage, binary uploads, browser Supabase, service-role runtime paths, deployment config, n8n changes, Pinecone runtime code, SaaS chatbot work, or `website/chat-config.js` access.
 
-Latest completed phase: Phase 2B-AJ - admin CSRF proof session/workspace binding runtime dependency boundary.
+Latest completed phase: Phase 2B-AK - admin CSRF proof issuer route implementation.
 
-Last merged phase PR: #77
+Last merged phase PR: #78
 
-Merge commit: `75b9ea7b3dea43b5160fc7d0ad9a98ed5a22f0d7`
+Merge commit: `d862b5a6a75031146cac9e881296eacbeb26d414`
 ## Completed foundation
 
 - Next.js app root exists under `website/`.
@@ -21,8 +21,9 @@ Merge commit: `75b9ea7b3dea43b5160fc7d0ad9a98ed5a22f0d7`
 - Browser chat calls first-party `POST /api/chat` only.
 - n8n remains behind the server-only `N8nChatProvider`.
 - Supabase schema, migrations, RLS strategy, local RLS tests, server-only
-  Supabase helper, public catalogue reads, and quote persistence exist.
-- Disabled server-only chat and product/admin persistence scaffolds exist.
+  Supabase helper, public catalogue reads, quote persistence, and
+  session-bound admin product persistence exist.
+- Disabled server-only chat persistence scaffold exists.
 
 ## Completed deployment readiness docs
 
@@ -74,7 +75,9 @@ Vercel config, add real env values, or add runtime features.
 - Admin CSRF proof issuer route deferred because of missing safe server-side session/workspace binding is complete.
 - Admin CSRF proof issuer session/workspace binding boundary is complete.
 - Admin CSRF proof session/workspace binding runtime dependency boundary is complete.
-- Admin CSRF proof issuer route implementation is in progress.
+- Admin CSRF proof issuer route implementation is complete.
+- Backend-only protected admin product persistence and write API routes are in
+  progress.
 Supabase Auth is approved as the future server-side admin auth provider. The
 Phase 2B-K identity boundary remains the only approved place to read Supabase
 Auth cookies or call Supabase Auth server APIs. The Phase 2B-L
@@ -120,7 +123,12 @@ route gate adapter usage boundary from exactly one first-party server-only
 route handler. Phase 2B-AB approves only the future server-only admin CSRF
 proof issuer runtime usage lane. Phase 2B-AC repairs the admin auth-check
 trusted workspace dependency. Phase 2B-AD is docs/checklist/static-guard approval only for the future admin CSRF proof issuer route operation model, and it is not runtime implementation approval. Phase 2B-AE implements only the admin CSRF issue operation policy and preflight boundary. Phase 2B-AF is docs/checklist/static-guard approval only for the admin CSRF proof issuer route readiness, because the required runtime signer dependencies are not yet implemented. Phase 2B-AG implements only the missing server-only runtime dependency boundary needed by the existing CSRF proof issuer/verifier contracts. Phase 2B-AH is docs/checklist/static-guard approval only for the admin CSRF proof issuer route boundary, deferring the route because safe server-side session/workspace binding cannot be derived from existing approved boundaries. Phase 2B-AI implements only the server-only admin CSRF proof issuer session/workspace binding boundary. Phase 2B-AJ implements only the server-only runtime dependency that derives opaque session/workspace bindings for that boundary from canonical operation, auth user, admin user, trusted workspace, and membership role inputs. Phase 2B-AK implements only the first-party server-only admin CSRF proof issuer route. It reuses the approved `admin.csrf.issue` route gate lane, `ADMIN_EXPECTED_ORIGIN`, `ADMIN_EXPECTED_HOST`, `ADMIN_TRUSTED_WORKSPACE_ID`, the Phase 2B-AI binding boundary, and the Phase 2B-AJ runtime dependencies. It does not add a replay store, product/category/product image write routes, admin UI, login/logout, protected admin pages, Storage, deployment, Supabase Cloud, browser Supabase, service-role runtime paths, n8n changes, Pinecone runtime code, SaaS chatbot work, or `website/chat-config.js` access. These boundaries are not wired into pages, server actions,
-protected admin runtime, login/logout, admin UI, or product writes.
+protected admin runtime, login/logout, admin UI, or product writes. Phase
+2B-AL implements only backend protected product/category/product-image metadata
+write routes and session-bound persistence through the approved admin
+gate/CSRF/RLS/audit boundaries. These 2B-AL boundaries are not wired into
+pages, server actions, protected admin runtime, login/logout, admin UI,
+Storage, uploads, browser Supabase, or service-role paths.
 
 Runtime session-bound read-client usage remains deferred.
 Runtime adapter-set usage remains deferred.
@@ -137,8 +145,8 @@ remains deferred (except the approved Phase 2B-AA route boundary).
 Runtime admin gate invocation helper usage from routes, pages, or server
 actions remains deferred (except the approved Phase 2B-AA route boundary).
 Runtime admin route gate adapter usage from routes, pages, or server actions
-remains deferred (except the approved Phase 2B-AA and Phase 2B-AK route
-boundaries).
+remains deferred except the approved Phase 2B-AA, Phase 2B-AK, and Phase 2B-AL
+route boundaries.
 
 ## Still blocked
 
@@ -167,13 +175,14 @@ boundaries).
 - Admin runtime gate invocation usage from routes, pages, or server
   actions (except the approved Phase 2B-AA route boundary).
 - Admin runtime route gate adapter usage from routes, pages, or server
-  actions (except the approved Phase 2B-AA and Phase 2B-AK route boundaries).
+  actions except the approved Phase 2B-AA, Phase 2B-AK, and Phase 2B-AL route
+  boundaries.
 - Header reads outside the Phase 2B-V request metadata adapter.
 - Login/logout routes.
 - Protected admin pages.
 - Admin UI.
 - Resolver/adapter runtime wiring into routes, pages, or server actions.
-- Product/category/product image writes.
+- Product writes outside the Phase 2B-AL backend API route boundary.
 - Product image uploads and Supabase Storage wiring.
 - Conversation/message writes.
 - Supabase Cloud connection.
@@ -185,8 +194,7 @@ boundaries).
 - SaaS chatbot app work in this repo.
 - n8n workflow import, export, activation, execution, or mutation.
 
-Product writes remain blocked until real auth/membership resolution, RLS,
-audit, and route/action boundaries are implemented and tested.
+Product writes are approved only through the Phase 2B-AL backend API route boundary. Admin UI, protected admin pages, server actions, binary image upload, Supabase Storage, service-role shortcuts, and browser Supabase product writes remain blocked.
 
 ## Current n8n/Pinecone position
 
@@ -213,10 +221,10 @@ architecture.
 
 ## Next recommended PR
 
-The next recommended PR should still avoid product writes. A safe next PR can
-continue auth readiness by adding the next explicitly approved server-only
-boundary, but real runtime route/page/server-action wiring, cookie reads
-outside the reviewed identity boundary, headers outside the Phase 2B-V request
-metadata adapter, admin route gate adapter usage from runtime routes/pages/actions,
-login/logout routes, protected admin pages, admin UI, and
-product/category/product image writes remain blocked until separately approved.
+The next recommended PR should keep product-management work backend-only unless
+admin UI is separately approved. Safe follow-up work can harden the Phase 2B-AL
+route and persistence boundary, add more fixture coverage, or prepare a
+separate admin UI plan. Login/logout routes, protected admin pages, admin UI,
+binary image uploads, Supabase Storage, deployment config, browser Supabase,
+service-role runtime paths, n8n changes, Pinecone runtime code, SaaS chatbot
+work, and `website/chat-config.js` access remain blocked.

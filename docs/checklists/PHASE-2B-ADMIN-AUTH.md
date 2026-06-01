@@ -3,7 +3,7 @@
 Completed design, policy, resolver, adapter, and provider-session milestones
 are recorded here as admin/auth readiness work.
 
-Real auth and product-write runtime implementation remains unchecked.
+Real auth runtime implementation remains unchecked. Product-management writes are approved only through the Phase 2B-AL backend API route boundary.
 
 Phase 2B-A is design and guard coverage only. Phase 2B-B adds a pure
 server-only policy module and tests only. Phase 2B-C adds a server-only
@@ -49,14 +49,17 @@ and preflight boundary. Phase 2B-AI adds only the server-only admin CSRF proof
 issuer session/workspace binding boundary and keeps the actual route deferred.
 Phase 2B-AJ adds only the server-only admin CSRF proof session/workspace
 binding runtime dependency boundary and keeps the actual route deferred. Phase
-2B-AK adds only the first-party server-only admin CSRF proof issuer route and
-keeps product/category/product image write routes deferred. Keep real auth
+2B-AK adds only the first-party server-only admin CSRF proof issuer route.
+Phase 2B-AL adds only backend protected product/category/product-image
+metadata write API routes through the approved route gate, CSRF proof,
+session-bound Supabase client, RLS, and audit-log boundary. Keep real auth
 runtime wiring, factory, adapter-set, decision-boundary, preflight, CSRF
 verifier, CSRF issuer, request metadata adapter, runtime gate invocation
 helper, or authorization gate usage from other runtime routes/pages/actions,
 headers, login/logout routes, protected admin pages, admin UI, product
-management writes, browser Supabase, service-role runtime paths, deployment,
-and Supabase Cloud work unchecked until a future PR has explicit approval.
+management writes outside the Phase 2B-AL backend API route boundary, browser
+Supabase, service-role runtime paths, deployment, and Supabase Cloud work
+unchecked until a future PR has explicit approval.
 
 ## Completed Design, Policy, Resolver, Adapter, And Provider-session Milestones
 
@@ -96,6 +99,7 @@ and Supabase Cloud work unchecked until a future PR has explicit approval.
 - [x] Add server-only admin CSRF proof issuer session/workspace binding boundary.
 - [x] Add server-only admin CSRF proof session/workspace binding runtime dependency boundary.
 - [x] Add first-party server-only admin CSRF proof issuer route.
+- [x] Add backend-only admin product persistence and protected product write API routes.
 
 ## Design References
 
@@ -127,6 +131,11 @@ runtime implementation approval.
 - [ ] Audit log expectations approved.
 - [ ] RLS expectations approved.
 - [ ] Error handling expectations approved.
+- [x] Route/server-action boundary approved for Phase 2B-AL backend API routes.
+- [x] Product/category/product image write gate approved for Phase 2B-AL backend API routes.
+- [x] Audit log expectations approved for Phase 2B-AL backend API routes.
+- [x] RLS expectations approved for Phase 2B-AL backend API routes.
+- [x] Error handling expectations approved for Phase 2B-AL backend API routes.
 - [ ] Session/cookie expectations approved.
 
 ## Future Runtime Test Plan Approvals
@@ -138,6 +147,7 @@ runtime implementation approval.
 
 ## Explicit Future Approval Gates
 
+- [x] Explicit approval obtained before Phase 2B-AL backend product writes.
 - [ ] Explicit approval obtained before product writes.
 - [ ] Explicit approval obtained before admin UI.
 - [ ] Explicit approval obtained before service-role runtime path, if ever needed.
@@ -164,9 +174,11 @@ runtime implementation approval.
 - [ ] Login/logout routes.
 - [ ] Protected admin pages.
 - [ ] Admin UI.
+- [ ] Product/category/product image writes outside the Phase 2B-AL backend API route boundary.
 - [ ] Product writes.
 - [ ] Category writes.
 - [ ] Product image writes.
+- [ ] Storage and binary product image uploads.
 - [ ] Storage.
 - [ ] Service-role runtime paths.
 - [ ] Browser Supabase.

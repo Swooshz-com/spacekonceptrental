@@ -39,6 +39,13 @@ export type ServerAdminCsrfProofSessionWorkspaceBindingDeriverInput = {
   requestId?: string;
 };
 
+export type ServerAdminCsrfProofBoundAdminContext = {
+  workspaceId: string;
+  adminUserId: string;
+  membershipId?: string;
+  resolution: "server-auth-membership";
+};
+
 export type ServerAdminCsrfProofSessionWorkspaceBindingDependencies =
   ServerAdminAuthorizationAdapterSetDependencies & {
     createAdapterSet?: (
@@ -62,6 +69,7 @@ export type ServerAdminCsrfProofSessionWorkspaceBindingResult =
   | {
       bound: true;
       sessionBinding: string;
+      adminContext: ServerAdminCsrfProofBoundAdminContext;
       requestId?: string;
     }
   | {
@@ -174,7 +182,8 @@ function workspaceDecision(
 async function deriveBinding(
   input: ServerAdminCsrfProofSessionWorkspaceBindingInput,
   dependencies: ServerAdminCsrfProofSessionWorkspaceBindingDependencies,
-  deriverInput: ServerAdminCsrfProofSessionWorkspaceBindingDeriverInput
+  deriverInput: ServerAdminCsrfProofSessionWorkspaceBindingDeriverInput,
+  adminContext: ServerAdminCsrfProofBoundAdminContext
 ): Promise<ServerAdminCsrfProofSessionWorkspaceBindingResult> {
   if (!dependencies.deriveSessionWorkspaceBinding) {
     return deny(input, "session_workspace_binding_deriver_unavailable", 503);
@@ -192,6 +201,7 @@ async function deriveBinding(
     return {
       bound: true,
       sessionBinding,
+      adminContext,
       ...(input.requestId ? { requestId: input.requestId } : {})
     };
   } catch {
@@ -283,6 +293,10 @@ export async function resolveServerAdminCsrfProofSessionWorkspaceBinding(
       workspaceId: workspaceAuthorization.workspaceId,
       membershipRole: membership.role,
       ...(input.requestId ? { requestId: input.requestId } : {})
+    }, {
+      workspaceId: workspaceAuthorization.workspaceId,
+      adminUserId: adminUser.id,
+      resolution: "server-auth-membership"
     });
   } catch {
     return unavailable(input);

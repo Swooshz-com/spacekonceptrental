@@ -1,8 +1,9 @@
 # Product/Admin Persistence Design
 
-Phase 1J-A defines the future product-management persistence boundary and adds
-only disabled server-only scaffolding. It does not persist categories,
-products, or product images.
+Phase 1J-A defined the future product-management persistence boundary and
+added only disabled server-only scaffolding. Phase 2B-AL implements the first
+backend-only product-management metadata write boundary for categories,
+products, and product image rows.
 
 ## Current Phase Boundary
 
@@ -11,22 +12,26 @@ products, or product images.
 - No anonymous category, product, or product image writes are approved.
 - No public category, product, or product image mutation routes are approved.
 - No Supabase service-role key may reach the browser.
-- No service-role write path is approved in Phase 1J-A.
-- Future product writes must go through first-party server routes or server
-  actions only after auth, admin membership, and workspace boundaries exist.
+- No service-role write path is approved.
+- Product writes must go through first-party server routes or server actions
+  after auth, admin membership, workspace, CSRF, RLS, and audit boundaries
+  exist.
 - Workspace must be resolved from trusted server-side auth and membership
   context, not from anonymous browser input.
-- The disabled scaffold under `website/lib/products/persistence/` imports
-  `server-only`, does not import Supabase, and returns explicit skipped
-  results.
-- No Supabase migration, RLS policy, database read, database write,
-  Supabase Cloud connection, Supabase CLI action, admin/auth UI, mutation
-  route, storage wiring, or image upload flow is part of Phase 1J-A.
+- The Phase 2B-AL API routes under `website/app/api/admin/` are the only
+  approved runtime product write surface in this repo.
+- The Phase 2B-AL persistence layer uses the session-bound server Supabase
+  client, product-manager RLS policies, safe error codes, and audit-log rows.
+- Product image persistence is metadata only. Storage buckets, binary uploads,
+  replacement/removal flows, URL helpers, and admin UI remain deferred.
+- No Supabase Cloud connection, Supabase CLI action, deployment, browser
+  Supabase client, service-role runtime path, admin/auth UI, or binary upload
+  flow is part of Phase 2B-AL.
 
-## Future Data Model
+## Data Model
 
-Future product-management persistence should write only after the admin boundary
-is approved:
+Product-management persistence writes only after the admin boundary is
+approved:
 
 - `categories`: trusted workspace, slug, name, description, sort order, and
   published state.
@@ -40,9 +45,9 @@ database.
 
 ## Workspace And Admin Resolution
 
-The browser must not choose a workspace for product/admin writes. A future
-server route or action must derive workspace access from trusted server-side
-auth and membership state:
+The browser must not choose a workspace for product/admin writes. A server
+route or action must derive workspace access from trusted server-side auth and
+membership state:
 
 1. Supabase Auth identifies the signed-in admin user.
 2. `admin_users.auth_user_id` maps the auth user to an app admin profile.
@@ -65,9 +70,10 @@ mutation code.
 
 ## Media Boundary
 
-Product image and media persistence remains deferred until the Supabase Storage
-strategy is approved. Git-tracked prepared images remain demo and public-shell
-assets only; they are not the long-term product media store.
+Product image metadata persistence is approved through the Phase 2B-AL backend
+API route boundary. Binary media persistence remains deferred until the
+Supabase Storage strategy is approved. Git-tracked prepared images remain demo
+and public-shell assets only; they are not the long-term product media store.
 
 Future media work must separately approve storage buckets, storage policies,
 upload flows, path validation, image replacement/removal behavior, and any
@@ -75,15 +81,10 @@ delivery helper that exposes public media URLs.
 
 ## Deferred Work
 
-- Actual category persistence.
-- Actual product persistence.
-- Actual product image metadata persistence.
-- Public or admin mutation routes.
 - Admin/auth UI.
 - Supabase Storage buckets, policies, or URL helpers.
 - Product image upload, replace, or remove flows.
 - Inventory, pricing, availability, variant, and bundle management.
-- Audit logs for product-management changes.
 - Publishing approval workflows.
 - Service-role write paths.
 - Supabase Cloud connection.

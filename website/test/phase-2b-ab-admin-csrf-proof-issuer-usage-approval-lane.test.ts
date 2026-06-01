@@ -52,17 +52,17 @@ describe("Phase 2B-AB admin CSRF proof issuer runtime usage approval lane", () =
     const projectContext = readRepoFile("docs/PROJECT-CONTEXT.md");
 
     expect(status).toContain(
-      "Current phase: Phase 2B-AK - admin CSRF proof issuer route implementation."
+      "Current phase: Phase 2B-AL - admin product persistence and protected write API routes."
     );
     expect(status).toContain(
-      "Latest completed phase: Phase 2B-AJ - admin CSRF proof session/workspace binding runtime dependency boundary."
+      "Latest completed phase: Phase 2B-AK - admin CSRF proof issuer route implementation."
     );
-    expect(status).toContain("Last merged phase PR: #77");
+    expect(status).toContain("Last merged phase PR: #78");
     expect(status).toContain(
-      "Merge commit: `75b9ea7b3dea43b5160fc7d0ad9a98ed5a22f0d7`"
+      "Merge commit: `d862b5a6a75031146cac9e881296eacbeb26d414`"
     );
     expect(status).toContain(
-      "This phase implements only the first-party server-only `POST /api/admin/csrf-proof` proof issuer route at `website/app/api/admin/csrf-proof/route.ts`. The route validates safe JSON input, gates itself through the approved `admin.csrf.issue` route-gate lane, resolves the target operation binding through the Phase 2B-AI boundary and Phase 2B-AJ runtime deriver, and issues short-lived CSRF proofs for `product.write`, `category.write`, `productImage.write`, and `membership.manage`. Product/category/product image write routes remain deferred."
+      "This phase implements the first backend-only protected admin product-management write surface. It adds session-bound Supabase product/category/product image metadata persistence, owner/admin RLS write policies, product-management audit inserts, and protected first-party admin write API routes for category, product, and product-image metadata changes. The routes use the approved admin route-gate stack, matching CSRF proofs, `ADMIN_TRUSTED_WORKSPACE_ID`, safe JSON validation, and no-store responses. It does not add admin UI, login/logout routes, protected admin pages, Supabase Storage, binary uploads, browser Supabase, service-role runtime paths, deployment config, n8n changes, Pinecone runtime code, SaaS chatbot work, or `website/chat-config.js` access."
     );
     expect(roadmap).toContain(
       "Phase 2B-AB adds only the admin CSRF proof issuer runtime usage approval lane"
@@ -151,8 +151,15 @@ describe("Phase 2B-AB admin CSRF proof issuer runtime usage approval lane", () =
     expect(readTrackedFiles(["website/app/api/admin"])).toEqual([
       "website/app/api/admin/auth-check/route.test.ts",
       "website/app/api/admin/auth-check/route.ts",
+      "website/app/api/admin/categories/[categoryId]/route.ts",
+      "website/app/api/admin/categories/route.ts",
       "website/app/api/admin/csrf-proof/route.test.ts",
-      "website/app/api/admin/csrf-proof/route.ts"
+      "website/app/api/admin/csrf-proof/route.ts",
+      "website/app/api/admin/product-images/[imageId]/route.ts",
+      "website/app/api/admin/product-images/route.ts",
+      "website/app/api/admin/products/[productId]/publish/route.ts",
+      "website/app/api/admin/products/[productId]/route.ts",
+      "website/app/api/admin/products/route.ts"
     ]);
 
     // No login/logout/products/categories/admin pages

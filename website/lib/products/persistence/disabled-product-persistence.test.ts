@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
-import { getProductPersistence } from "./index";
+import { disabledProductPersistence } from "./index";
 
 const trustedAdminContext = {
   workspaceId: "11111111-1111-4111-8111-111111111111",
@@ -27,7 +27,7 @@ function readPersistenceSource() {
 
 describe("disabled product persistence scaffold", () => {
   it("returns explicit skipped results for future category, product, and image mutations", async () => {
-    const persistence = getProductPersistence();
+    const persistence = disabledProductPersistence;
 
     await expect(
       persistence.createCategory({
@@ -49,6 +49,16 @@ describe("disabled product persistence scaffold", () => {
         updates: {
           name: "Updated lounge",
           isPublished: true
+        }
+      })
+    ).resolves.toEqual(expectedDisabledResult);
+
+    await expect(
+      persistence.archiveCategory({
+        admin: trustedAdminContext,
+        categoryId: "44444444-4444-4444-8444-444444444444",
+        updates: {
+          isPublished: false
         }
       })
     ).resolves.toEqual(expectedDisabledResult);
