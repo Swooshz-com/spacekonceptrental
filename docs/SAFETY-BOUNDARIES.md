@@ -459,3 +459,27 @@ Phase 2B-AM resolves the atomicity limitation from Phase 2B-AL by migrating prod
 The Postgres RPC must use explicit static SQL branches per action to remain type-aware and prevent dynamic SQL injection. It must securely resolve the actor ID via `current_product_admin_user_id()`.
 
 Phase 2B-AM does not add admin UI, login/logout routes, protected admin pages, server actions, binary uploads, Supabase Storage, browser Supabase, service-role runtime paths, deployment config, n8n changes, Pinecone runtime code, SaaS chatbot work, or `website/chat-config.js` access.
+
+## Phase 2B-AN Admin Auth Login Logout And Protected Shell
+
+Phase 2B-AN adds only a minimal first-party admin login page, server-owned
+login/logout routes, and a protected admin shell.
+
+Login/logout must use the existing server-only Supabase Auth/session boundary.
+Cookie reads, cookie writes, and Supabase Auth session calls must stay inside
+`website/lib/admin/authorization/supabase-admin-auth-identity-adapter.ts`.
+Route responses must be no-store and must expose only generic
+unauthenticated or unavailable states.
+
+The protected shell must use the existing server-only route-gate path with the
+read-only `admin.shell.access` operation. It may render only safe
+unauthenticated, authenticated-but-not-authorised, authorised-admin, and
+unavailable/misconfigured states. It must not expose provider errors, SQL,
+stack traces, cookie values, tokens, workspace internals, membership internals,
+or secrets.
+
+Phase 2B-AN does not add product-management UI, product/category/product-image
+write forms, server actions, binary uploads, Supabase Storage, browser
+Supabase, service-role runtime paths, deployment config, Supabase Cloud,
+n8n changes, Pinecone runtime code, SaaS chatbot work, or
+`website/chat-config.js` access.

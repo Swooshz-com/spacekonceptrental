@@ -39,18 +39,23 @@ Completed phase history:
 - Phase 2B-AA adds the first admin runtime route gate adapter usage boundary only.
 - Phase 2B-AB adds a docs/checklist/static-guard approval lane for future runtime usage of the Phase 2B-S CSRF proof issuer only.
 - Phase 2B-AC repairs the admin auth-check trusted workspace dependency.
+- Phase 2B-AN adds a minimal first-party admin login/logout and protected
+  shell boundary.
 
-Latest completed admin/auth boundary state: Phase 2B-AC admin auth-check trusted workspace dependency repair.
+Latest completed admin/auth boundary state: Phase 2B-AN admin auth login/logout
+and protected shell boundary.
 
 This design does not implement real auth.
-This design does not add admin UI.
+This design does not add product-management admin UI.
 This design does not add product writes.
-This design does not add Supabase Auth runtime wiring.
+This design does not add Supabase Auth runtime wiring outside the Phase 2B-AN
+login/logout boundary.
 This design does not read cookies.
 This design does not approve header reads outside the Phase 2B-V request
 metadata adapter.
-This design does not add login or logout routes.
-This design does not add protected admin pages.
+This design does not add login or logout routes outside Phase 2B-AN.
+This design does not add protected admin pages outside the Phase 2B-AN minimal
+protected shell.
 This design does not wire the admin resolver into runtime routes, pages, or server actions.
 This design does not resolve admin workspace scope outside the Phase 2B-M
 server-only workspace boundary.

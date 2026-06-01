@@ -55,11 +55,11 @@ describe("Phase 2B-I admin auth gate cleanup", () => {
     const decisionLog = readRepoFile("docs/DECISION-LOG.md");
 
     expect(status).toContain(
-      "Latest completed phase: Phase 2B-AL - admin product persistence and protected write API routes."
+      "Latest completed phase: Phase 2B-AM - admin product write audit atomicity boundary."
     );
-    expect(status).toContain("Last merged phase PR: #79");
+    expect(status).toContain("Last merged phase PR: #80");
     expect(status).toContain(
-      "Merge commit: `1c08d99b2ad11243578f6c57b1e8ff44d3379ccc`"
+      "Merge commit: `c61fd3511daba3a950e650378eb98152ec6a3ff2`"
     );
     expect(roadmap).toContain(
       "Phase 2B-I cleans admin auth implementation gate wording and refines"
@@ -83,7 +83,7 @@ describe("Phase 2B-I admin auth gate cleanup", () => {
       "- Phase 2B-H strengthened the reviewed server-side auth/membership resolution boundary with fake-adapter tests only."
     );
     expect(design).toContain(
-      "Latest completed admin/auth boundary state: Phase 2B-AC admin auth-check trusted workspace dependency repair."
+      "Latest completed admin/auth boundary state: Phase 2B-AN admin auth login/logout"
     );
     expect(design).not.toContain("This PR");
   });
@@ -102,12 +102,12 @@ describe("Phase 2B-I admin auth gate cleanup", () => {
     ]);
 
     for (const item of [
-      "Real auth runtime wiring.",
-      "Supabase Auth runtime wiring.",
+      "Real auth runtime wiring outside the Phase 2B-AN login/logout and protected shell boundary.",
+      "Supabase Auth runtime wiring outside the Phase 2B-K/N/AN server-only auth session boundaries.",
       "Header reads outside the Phase 2B-V request metadata adapter.",
-      "Login/logout routes.",
-      "Protected admin pages.",
-      "Admin UI.",
+      "Product-management admin UI.",
+      "Product-management admin UI.",
+      "Product-management admin UI.",
       "Product writes.",
       "Category writes.",
       "Product image writes.",
@@ -133,7 +133,15 @@ describe("Phase 2B-I admin auth gate cleanup", () => {
       "Server-only Supabase admin profile/membership read boundary."
     );
 
-    expect(readTrackedFiles(["website/app/admin"])).toEqual([]);
+    expect(readTrackedFiles(["website/app/admin"])).toEqual([
+      "website/app/admin/login/page.test.tsx",
+      "website/app/admin/login/page.tsx",
+      "website/app/admin/logout/route.test.ts",
+      "website/app/admin/logout/route.ts",
+      "website/app/admin/page.tsx",
+      "website/app/admin/protected-admin-shell.test.tsx",
+      "website/app/admin/protected-admin-shell.tsx"
+    ]);
     expect(readTrackedFiles(["website/app/login"])).toEqual([]);
     expect(readTrackedFiles(["website/app/logout"])).toEqual([]);
     expect(readTrackedFiles(["website/app/api/auth"])).toEqual([]);

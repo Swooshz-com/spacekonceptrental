@@ -168,7 +168,6 @@ describe("Phase 2B-G repo agent instructions refresh", () => {
 
   it("does not add admin, auth, login/logout, product mutation, SaaS, Pinecone, deployment, or env paths", () => {
     expectNoTrackedFiles([
-      "website/app/admin",
       "website/app/login",
       "website/app/logout",
       "website/app/api/auth",

@@ -822,6 +822,35 @@ Reason: Phase 2B-AH deferred the actual issuer route because existing approved b
 
 This phase does not implement the actual CSRF proof issuer route, does not approve binding usage from routes/pages/server actions, and does not add product/category/product image writes, admin UI, login/logout, protected admin pages, Storage, deployment, Supabase Cloud, browser Supabase, service-role runtime paths, n8n changes, Pinecone runtime code, SaaS chatbot work, or `website/chat-config.js` access.
 
+## 2026-06-02: Admin Auth Login Logout And Protected Shell
+
+Decision: Phase 2B-AN adds a minimal first-party admin login/logout and
+protected admin shell boundary.
+
+Reason: The product-management API routes now exist, but operators still need
+a first-party session entry point and a safe protected shell before any admin
+product-management UI is built. The smallest safe step is a login page,
+server-owned login/logout routes, and a protected shell that proves
+owner/admin access while keeping product editing out of scope.
+
+Login/logout use the existing server-only Supabase Auth boundary in
+`supabase-admin-auth-identity-adapter.ts`. Cookie reads and session mutation
+stay inside that boundary, and the routes return only generic
+unauthenticated/unavailable redirects without exposing provider errors, SQL,
+tokens, cookies, env values, or stack traces.
+
+The protected shell uses the existing server-only route-gate path with the
+new read-only `admin.shell.access` operation. Owner/admin memberships are
+allowed, viewer memberships are denied, and the UI renders only safe states:
+unauthenticated, authenticated but not authorised, authorised admin, and
+unavailable/misconfigured.
+
+Phase 2B-AN does not add product-management UI, product/category/product-image
+write forms, server actions, binary uploads, Supabase Storage, browser
+Supabase, service-role runtime paths, deployment config, Supabase Cloud,
+n8n changes, Pinecone runtime code, SaaS chatbot work, or
+`website/chat-config.js` access.
+
 ## 2026-06-01: Admin Product Persistence And Protected Write API Routes
 
 Decision: Phase 2B-AL adds the first backend-only protected admin product-management write surface.

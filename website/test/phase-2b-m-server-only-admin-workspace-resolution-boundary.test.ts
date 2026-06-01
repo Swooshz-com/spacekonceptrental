@@ -60,14 +60,14 @@ describe("Phase 2B-M server-only admin workspace resolution boundary", () => {
     const projectContext = readRepoFile("docs/PROJECT-CONTEXT.md");
 
     expect(status).toContain(
-      "Current phase: Phase 2B-AM - admin product write audit atomicity boundary."
+      "Current phase: Phase 2B-AN - admin auth login logout protected shell."
     );
     expect(status).toContain(
-      "Latest completed phase: Phase 2B-AL - admin product persistence and protected write API routes."
+      "Latest completed phase: Phase 2B-AM - admin product write audit atomicity boundary."
     );
-    expect(status).toContain("Last merged phase PR: #79");
+    expect(status).toContain("Last merged phase PR: #80");
     expect(status).toContain(
-      "Merge commit: `1c08d99b2ad11243578f6c57b1e8ff44d3379ccc`"
+      "Merge commit: `c61fd3511daba3a950e650378eb98152ec6a3ff2`"
     );
     expect(roadmap).toContain(
       "Phase 2B-M adds only the server-only admin workspace resolution boundary"
@@ -115,13 +115,13 @@ describe("Phase 2B-M server-only admin workspace resolution boundary", () => {
     );
 
     for (const item of [
-      "Real auth runtime wiring.",
-      "Supabase Auth runtime wiring.",
+      "Real auth runtime wiring outside the Phase 2B-AN login/logout and protected shell boundary.",
+      "Supabase Auth runtime wiring outside the Phase 2B-K/N/AN server-only auth session boundaries.",
       "Resolver/adapter runtime wiring into routes, pages, or server actions.",
       "Header reads outside the Phase 2B-V request metadata adapter.",
-      "Login/logout routes.",
-      "Protected admin pages.",
-      "Admin UI.",
+      "Product-management admin UI.",
+      "Product-management admin UI.",
+      "Product-management admin UI.",
       "Product writes.",
       "Category writes.",
       "Product image writes.",
@@ -262,7 +262,15 @@ describe("Phase 2B-M server-only admin workspace resolution boundary", () => {
       .map(({ source }) => source)
       .join("\n");
 
-    expect(readTrackedFiles(["website/app/admin"])).toEqual([]);
+    expect(readTrackedFiles(["website/app/admin"])).toEqual([
+      "website/app/admin/login/page.test.tsx",
+      "website/app/admin/login/page.tsx",
+      "website/app/admin/logout/route.test.ts",
+      "website/app/admin/logout/route.ts",
+      "website/app/admin/page.tsx",
+      "website/app/admin/protected-admin-shell.test.tsx",
+      "website/app/admin/protected-admin-shell.tsx"
+    ]);
     expect(readTrackedFiles(["website/app/login"])).toEqual([]);
     expect(readTrackedFiles(["website/app/logout"])).toEqual([]);
     expect(readTrackedFiles(["website/app/api/auth"])).toEqual([]);

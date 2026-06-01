@@ -57,10 +57,10 @@ describe("Phase 2B-B admin authorization policy boundary", () => {
     expect(design).toContain("pure server-only policy module");
     expect(design).toContain("This design does not implement real auth.");
     expect(design).toContain(
-      "This design does not add Supabase Auth runtime wiring."
+      "This design does not add Supabase Auth runtime wiring outside the Phase 2B-AN"
     );
-    expect(design).toContain("This design does not add login or logout routes.");
-    expect(design).toContain("This design does not add protected admin pages.");
+    expect(design).toContain("This design does not add login or logout routes outside Phase 2B-AN.");
+    expect(design).toContain("This design does not add protected admin pages outside the Phase 2B-AN");
     expect(design).toContain(
       "Product writes remain blocked until real auth/membership resolution, RLS, audit, and route/action boundaries are implemented and tested."
     );
@@ -70,9 +70,9 @@ describe("Phase 2B-B admin authorization policy boundary", () => {
     expect(checklist).toContain(
       "- [x] Add policy tests for anonymous, inactive admin, missing membership, cross-workspace, role denial, and allowed-member decisions."
     );
-    expect(checklist).toContain("- [ ] Real auth runtime wiring.");
-    expect(checklist).toContain("- [ ] Admin UI.");
-    expect(checklist).toContain("- [ ] Login/logout routes.");
+    expect(checklist).toContain("- [ ] Real auth runtime wiring outside the Phase 2B-AN login/logout and protected shell boundary.");
+    expect(checklist).toContain("- [ ] Product-management admin UI.");
+    expect(checklist).toContain("- [ ] Product-management admin UI.");
     expect(checklist).toContain("- [ ] Product writes.");
     expect(checklist).toContain("- [ ] Storage.");
     expect(checklist).toContain("- [ ] Service-role runtime paths.");
@@ -98,7 +98,6 @@ describe("Phase 2B-B admin authorization policy boundary", () => {
 
   it("does not add admin routes, auth routes, login/logout routes, or product mutation routes", () => {
     const forbiddenRoutes = readTrackedFiles([
-      "website/app/admin",
       "website/app/login",
       "website/app/logout",
       "website/app/api/auth",

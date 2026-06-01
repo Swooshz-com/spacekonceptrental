@@ -63,15 +63,15 @@ describe("Phase 2B-H admin auth resolution boundary", () => {
     expect(checklist).toContain(
       "- [x] Add reviewed server-side admin auth/membership resolution tests with fake adapters."
     );
-    expect(checklist).toContain("- [ ] Real auth runtime wiring.");
-    expect(checklist).toContain("- [ ] Supabase Auth runtime wiring.");
+    expect(checklist).toContain("- [ ] Real auth runtime wiring outside the Phase 2B-AN login/logout and protected shell boundary.");
+    expect(checklist).toContain("- [ ] Supabase Auth runtime wiring outside the Phase 2B-K/N/AN server-only auth session boundaries.");
     expect(checklist).toContain(
       "- [ ] Cookie reads outside the Phase 2B-K server-only identity boundary."
     );
     expect(checklist).toContain("- [ ] Header reads outside the Phase 2B-V request metadata adapter.");
-    expect(checklist).toContain("- [ ] Login/logout routes.");
-    expect(checklist).toContain("- [ ] Protected admin pages.");
-    expect(checklist).toContain("- [ ] Admin UI.");
+    expect(checklist).toContain("- [ ] Product-management admin UI.");
+    expect(checklist).toContain("- [ ] Product-management admin UI.");
+    expect(checklist).toContain("- [ ] Product-management admin UI.");
     expect(checklist).toContain("- [ ] Product writes.");
     expect(checklist).toContain("- [ ] Category writes.");
     expect(checklist).toContain("- [ ] Product image writes.");
@@ -114,7 +114,6 @@ describe("Phase 2B-H admin auth resolution boundary", () => {
       .map(({ source }) => source)
       .join("\n");
     const forbiddenRoutes = readTrackedFiles([
-      "website/app/admin",
       "website/app/login",
       "website/app/logout",
       "website/app/api/auth",

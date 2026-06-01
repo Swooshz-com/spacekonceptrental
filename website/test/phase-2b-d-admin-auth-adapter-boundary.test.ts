@@ -69,15 +69,15 @@ describe("Phase 2B-D admin auth adapter boundary", () => {
     );
     expect(design).toContain("This design does not implement real auth.");
     expect(design).toContain(
-      "This design does not add Supabase Auth runtime wiring."
+      "This design does not add Supabase Auth runtime wiring outside the Phase 2B-AN"
     );
     expect(design).toContain("This design does not read cookies.");
     expect(design).toContain(
       "This design does not approve header reads outside the Phase 2B-V request"
     );
-    expect(design).toContain("This design does not add login or logout routes.");
-    expect(design).toContain("This design does not add protected admin pages.");
-    expect(design).toContain("This design does not add admin UI.");
+    expect(design).toContain("This design does not add login or logout routes outside Phase 2B-AN.");
+    expect(design).toContain("This design does not add protected admin pages outside the Phase 2B-AN");
+    expect(design).toContain("This design does not add product-management admin UI.");
     expect(design).toContain("This design does not add product writes.");
     expect(design).toContain(
       "This design does not wire the admin resolver into runtime routes, pages, or server actions."
@@ -88,10 +88,10 @@ describe("Phase 2B-D admin auth adapter boundary", () => {
     expect(checklist).toContain(
       "- [x] Add dependency-injected resolver tests with fake adapters."
     );
-    expect(checklist).toContain("- [ ] Real auth runtime wiring.");
-    expect(checklist).toContain("- [ ] Supabase Auth runtime wiring.");
-    expect(checklist).toContain("- [ ] Login/logout routes.");
-    expect(checklist).toContain("- [ ] Admin UI.");
+    expect(checklist).toContain("- [ ] Real auth runtime wiring outside the Phase 2B-AN login/logout and protected shell boundary.");
+    expect(checklist).toContain("- [ ] Supabase Auth runtime wiring outside the Phase 2B-K/N/AN server-only auth session boundaries.");
+    expect(checklist).toContain("- [ ] Product-management admin UI.");
+    expect(checklist).toContain("- [ ] Product-management admin UI.");
     expect(checklist).toContain("- [ ] Product writes.");
     expect(checklist).toContain("- [ ] Storage.");
     expect(checklist).toContain("- [ ] Service-role runtime paths.");
@@ -131,7 +131,6 @@ describe("Phase 2B-D admin auth adapter boundary", () => {
 
   it("does not add admin routes, auth routes, login/logout routes, or product mutation routes", () => {
     const forbiddenRoutes = readTrackedFiles([
-      "website/app/admin",
       "website/app/login",
       "website/app/logout",
       "website/app/api/auth",

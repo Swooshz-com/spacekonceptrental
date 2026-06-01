@@ -287,13 +287,72 @@ select {
 }
 
 .quote-form input,
-.quote-form textarea {
+.quote-form textarea,
+.admin-login__form input {
   background: #fbfaf7;
   border: 1px solid var(--border);
   border-radius: 8px;
   color: var(--text);
   min-height: 44px;
   padding: 12px 14px;
+}
+
+.admin-login,
+.admin-shell {
+  display: grid;
+  min-height: min(620px, calc(100vh - 220px));
+  place-items: center;
+}
+
+.admin-login__panel,
+.admin-shell__panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  display: grid;
+  gap: 18px;
+  max-width: 520px;
+  padding: clamp(24px, 5vw, 38px);
+  width: min(100%, 520px);
+}
+
+.admin-login__panel h1,
+.admin-shell__panel h1 {
+  font-size: clamp(2rem, 4vw, 3rem);
+  line-height: 1.05;
+  margin: 0;
+}
+
+.admin-login__panel p,
+.admin-shell__panel p {
+  color: var(--muted);
+  line-height: 1.6;
+  margin: 0;
+}
+
+.admin-login__status {
+  background: var(--accent-soft);
+  border: 1px solid #c9e1d2;
+  border-radius: 8px;
+  color: var(--accent-dark);
+  padding: 12px 14px;
+}
+
+.admin-login__form {
+  display: grid;
+  gap: 16px;
+}
+
+.admin-login__form label {
+  color: var(--muted);
+  display: grid;
+  font-size: 0.92rem;
+  font-weight: 800;
+  gap: 8px;
+}
+
+.admin-shell__panel form {
+  margin: 0;
 }
 
 .site-footer {

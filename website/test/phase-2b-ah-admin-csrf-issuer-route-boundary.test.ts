@@ -23,7 +23,7 @@ describe("Phase 2B-AH Admin CSRF Proof Issuer Route Boundary", () => {
     const status = readRepoFile("docs/PHASE-STATUS.md");
     const authChecklist = readRepoFile("docs/checklists/PHASE-2B-AUTH-IMPLEMENTATION.md");
 
-    expect(status).toContain("Product writes are approved only through the Phase 2B-AL backend API route boundary");
+    expect(status).toContain("Product writes are approved only through the Phase 2B-AL/AM backend API route");
     expect(status).toContain("safe server-side session/workspace binding cannot be derived from existing approved boundaries");
     expect(status).toContain("Phase 2B-AH is docs/checklist/static-guard approval only for the admin CSRF proof issuer route boundary, deferring the route because safe server-side session/workspace binding cannot be derived from existing approved boundaries.");
 
@@ -42,6 +42,8 @@ describe("Phase 2B-AH Admin CSRF Proof Issuer Route Boundary", () => {
       "website/app/api/admin/categories/route.ts",
       "website/app/api/admin/csrf-proof/route.test.ts",
       "website/app/api/admin/csrf-proof/route.ts",
+      "website/app/api/admin/login/route.test.ts",
+      "website/app/api/admin/login/route.ts",
       "website/app/api/admin/product-images/[imageId]/archive/route.ts",
       "website/app/api/admin/product-images/[imageId]/route.ts",
       "website/app/api/admin/product-images/route.ts",

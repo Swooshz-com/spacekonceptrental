@@ -1,6 +1,6 @@
 import "server-only";
 
-import { createServerClient } from "@supabase/ssr";
+import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
 import type {
@@ -37,6 +37,14 @@ export type SupabaseAuthCookie = {
   value: string;
 };
 
+export type SupabaseAuthCookieReader = {
+  getAll(): SupabaseAuthCookie[];
+};
+
+export type SupabaseAuthCookieWriter = {
+  set(name: string, value: string, options?: CookieOptions): void;
+};
+
 export type SupabaseAuthUserClient = {
   auth: {
     getUser(): Promise<{
@@ -45,6 +53,20 @@ export type SupabaseAuthUserClient = {
           id?: string | null;
         } | null;
       } | null;
+      error?: unknown;
+    }>;
+  };
+};
+
+export type SupabaseAdminAuthSessionClient = {
+  auth: {
+    signInWithPassword(input: {
+      email: string;
+      password: string;
+    }): Promise<{
+      error?: unknown;
+    }>;
+    signOut(): Promise<{
       error?: unknown;
     }>;
   };
@@ -60,6 +82,31 @@ export type SupabaseAdminReadClientFactoryInput = {
   cookies: SupabaseAuthCookie[];
 };
 
+export type SupabaseAdminAuthSessionClientFactoryInput = {
+  config: Extract<SupabaseServerConfig, { configured: true }>;
+  requestCookies: SupabaseAuthCookieReader;
+  responseCookies: SupabaseAuthCookieWriter;
+};
+
+export type SupabaseAdminAuthSessionInput = {
+  email: string;
+  password: string;
+};
+
+export type SupabaseAdminAuthSessionFailureReason =
+  | "supabase_server_env_missing"
+  | "auth_session_invalid"
+  | "auth_provider_error";
+
+export type SupabaseAdminAuthSessionResult =
+  | {
+      ok: true;
+    }
+  | {
+      ok: false;
+      reason: SupabaseAdminAuthSessionFailureReason;
+    };
+
 export type SupabaseAdminAuthIdentityDependencies = {
   readConfig?: () => SupabaseServerConfig;
   readCookies?: () => Promise<SupabaseAuthCookie[]>;
@@ -74,6 +121,15 @@ export type SupabaseAdminReadClientFactoryDependencies = {
   createReadClient?: (
     input: SupabaseAdminReadClientFactoryInput
   ) => SupabaseAdminReadClient | null | undefined;
+};
+
+export type SupabaseAdminAuthSessionDependencies = {
+  readConfig?: () => SupabaseServerConfig;
+  requestCookies: SupabaseAuthCookieReader;
+  responseCookies: SupabaseAuthCookieWriter;
+  createSessionClient?: (
+    input: SupabaseAdminAuthSessionClientFactoryInput
+  ) => SupabaseAdminAuthSessionClient;
 };
 
 function unauthenticated(
@@ -138,6 +194,30 @@ function createSupabaseSsrAdminReadClient({
       }
     }
   }) as unknown as SupabaseAdminReadClient;
+}
+
+function createSupabaseSsrAuthSessionClient({
+  config,
+  requestCookies,
+  responseCookies
+}: SupabaseAdminAuthSessionClientFactoryInput): SupabaseAdminAuthSessionClient {
+  return createServerClient(config.supabaseUrl, config.supabaseAnonKey, {
+    auth: {
+      autoRefreshToken: false,
+      detectSessionInUrl: false,
+      persistSession: false
+    },
+    cookies: {
+      getAll() {
+        return requestCookies.getAll();
+      },
+      setAll(cookiesToSet) {
+        cookiesToSet.forEach(({ name, value, options }) => {
+          responseCookies.set(name, value, options);
+        });
+      }
+    }
+  }) as unknown as SupabaseAdminAuthSessionClient;
 }
 
 export async function resolveSupabaseAdminAuthIdentity(
@@ -219,4 +299,85 @@ export function createSupabaseAdminAuthIdentityAdapter(
       return resolveSupabaseAdminAuthIdentity(dependencies);
     }
   };
+}
+
+export async function signInSupabaseAdminAuthSession(
+  input: SupabaseAdminAuthSessionInput,
+  dependencies: SupabaseAdminAuthSessionDependencies
+): Promise<SupabaseAdminAuthSessionResult> {
+  const readConfig = dependencies.readConfig ?? getSupabaseServerConfig;
+  const config = readConfig();
+
+  if (!config.configured) {
+    return {
+      ok: false,
+      reason: "supabase_server_env_missing"
+    };
+  }
+
+  const createSessionClient =
+    dependencies.createSessionClient ?? createSupabaseSsrAuthSessionClient;
+
+  try {
+    const client = createSessionClient({
+      config,
+      requestCookies: dependencies.requestCookies,
+      responseCookies: dependencies.responseCookies
+    });
+    const { error } = await client.auth.signInWithPassword(input);
+
+    return error
+      ? {
+          ok: false,
+          reason: "auth_session_invalid"
+        }
+      : {
+          ok: true
+        };
+  } catch {
+    return {
+      ok: false,
+      reason: "auth_provider_error"
+    };
+  }
+}
+
+export async function signOutSupabaseAdminAuthSession(
+  dependencies: SupabaseAdminAuthSessionDependencies
+): Promise<SupabaseAdminAuthSessionResult> {
+  const readConfig = dependencies.readConfig ?? getSupabaseServerConfig;
+  const config = readConfig();
+
+  if (!config.configured) {
+    return {
+      ok: false,
+      reason: "supabase_server_env_missing"
+    };
+  }
+
+  const createSessionClient =
+    dependencies.createSessionClient ?? createSupabaseSsrAuthSessionClient;
+
+  try {
+    const client = createSessionClient({
+      config,
+      requestCookies: dependencies.requestCookies,
+      responseCookies: dependencies.responseCookies
+    });
+    const { error } = await client.auth.signOut();
+
+    return error
+      ? {
+          ok: false,
+          reason: "auth_session_invalid"
+        }
+      : {
+          ok: true
+        };
+  } catch {
+    return {
+      ok: false,
+      reason: "auth_provider_error"
+    };
+  }
 }

@@ -20,10 +20,11 @@ authorization adapter-set composition boundary. Phase 2B-P implements only the
 server-only composed admin authorization decision boundary. Phase 2B-Q
 implements only the server-only admin request security preflight boundary.
 Phase 2B-R implements only the server-only CSRF proof verifier boundary.
-Phase 2B-Z approves only the future admin runtime route gate adapter usage lane. Phase 2B-AA implements only the first admin runtime route gate adapter usage boundary as a harmless GET authorization probe via the `admin.auth.check` operation. Phase 2B-AB approves only the future server-only admin CSRF proof issuer runtime usage lane. Phase 2B-AC repairs the admin auth-check trusted workspace dependency. Phase 2B-AD approves only the future admin CSRF proof issuer route operation model. Phase 2B-AE implements only the admin CSRF issue operation policy and preflight boundary. Phase 2B-AF is docs/checklist/static-guard approval only for the admin CSRF proof issuer route readiness; actual route implementation is deferred because the required runtime signer dependencies are missing. Phase 2B-AG implements only the missing server-only runtime dependency boundary needed by the existing CSRF proof issuer/verifier contracts. Phase 2B-AH is docs/checklist/static-guard approval only for the admin CSRF proof issuer route boundary, deferring the route because safe server-side session/workspace binding cannot be derived from existing approved boundaries. Phase 2B-AI implements only the server-only admin CSRF proof issuer session/workspace binding boundary and keeps the actual route deferred. Phase 2B-AJ implements only the server-only admin CSRF proof session/workspace binding runtime dependency boundary, deriving opaque bindings from canonical session/workspace inputs with the existing server-only `ADMIN_CSRF_PROOF_SECRET`. Phase 2B-AK implements only the first-party server-only admin CSRF proof issuer route for supported state-changing admin operations. Phase 2B-AL implements only backend protected product/category/product-image metadata write API routes through the approved route gate, CSRF proof, session-bound Supabase client, RLS, and audit-log boundary. Keep
-real auth runtime wiring, factory, adapter-set, decision-boundary, preflight,
+Phase 2B-Z approves only the future admin runtime route gate adapter usage lane. Phase 2B-AA implements only the first admin runtime route gate adapter usage boundary as a harmless GET authorization probe via the `admin.auth.check` operation. Phase 2B-AB approves only the future server-only admin CSRF proof issuer runtime usage lane. Phase 2B-AC repairs the admin auth-check trusted workspace dependency. Phase 2B-AD approves only the future admin CSRF proof issuer route operation model. Phase 2B-AE implements only the admin CSRF issue operation policy and preflight boundary. Phase 2B-AF is docs/checklist/static-guard approval only for the admin CSRF proof issuer route readiness; actual route implementation is deferred because the required runtime signer dependencies are missing. Phase 2B-AG implements only the missing server-only runtime dependency boundary needed by the existing CSRF proof issuer/verifier contracts. Phase 2B-AH is docs/checklist/static-guard approval only for the admin CSRF proof issuer route boundary, deferring the route because safe server-side session/workspace binding cannot be derived from existing approved boundaries. Phase 2B-AI implements only the server-only admin CSRF proof issuer session/workspace binding boundary and keeps the actual route deferred. Phase 2B-AJ implements only the server-only admin CSRF proof session/workspace binding runtime dependency boundary, deriving opaque bindings from canonical session/workspace inputs with the existing server-only `ADMIN_CSRF_PROOF_SECRET`. Phase 2B-AK implements only the first-party server-only admin CSRF proof issuer route for supported state-changing admin operations. Phase 2B-AL implements only backend protected product/category/product-image metadata write API routes through the approved route gate, CSRF proof, session-bound Supabase client, RLS, and audit-log boundary. Phase 2B-AN implements only a minimal first-party admin login page, server-owned login/logout routes, and a protected admin shell through the approved route-gate path. Keep
+real auth runtime wiring outside Phase 2B-AN, factory, adapter-set,
+decision-boundary, preflight,
 CSRF verifier, CSRF issuer, request metadata adapter, runtime gate invocation helper, or authorization gate usage from other runtime routes/pages/actions,
-headers, other routes, UI, product writes outside the Phase 2B-AL backend API route boundary, Storage, browser Supabase, and service-role runtime
+headers, other routes, product-management UI, product writes outside the Phase 2B-AL/AM backend API route boundary, Storage, browser Supabase, and service-role runtime
 implementation items unchecked until a future implementation PR adds and tests
 that runtime code.
 
@@ -64,9 +65,9 @@ Reference docs:
 ## Explicit Future Approval
 
 - [x] Explicit approval obtained before real auth runtime wiring.
-- [ ] Explicit approval obtained before login/logout routes.
-- [ ] Explicit approval obtained before protected admin pages.
-- [ ] Explicit approval obtained before admin UI.
+- [x] Explicit approval obtained before Phase 2B-AN login/logout routes.
+- [x] Explicit approval obtained before Phase 2B-AN protected admin shell.
+- [ ] Explicit approval obtained before product-management admin UI.
 - [x] Explicit approval obtained before Phase 2B-AL backend product writes.
 - [ ] Explicit approval obtained before product writes.
 
@@ -101,11 +102,12 @@ Reference docs:
 - [x] Admin CSRF proof session/workspace binding runtime dependency boundary.
 - [x] Admin CSRF proof issuer route implementation.
 - [x] Backend-only protected product/category/product-image write API route boundary.
+- [x] Minimal first-party admin login/logout and protected shell boundary.
 
 ## Still Deferred
 
-- [ ] Real auth runtime wiring.
-- [ ] Supabase Auth runtime wiring.
+- [ ] Real auth runtime wiring outside the Phase 2B-AN login/logout and protected shell boundary.
+- [ ] Supabase Auth runtime wiring outside the Phase 2B-K/N/AN server-only auth session boundaries.
 - [ ] Resolver/adapter runtime wiring into routes, pages, or server actions.
 - [ ] Admin profile/membership Supabase table reads outside the Phase 2B-L server-only read boundary.
 - [ ] Admin workspace resolution outside the Phase 2B-M server-only workspace boundary.
@@ -120,10 +122,10 @@ Reference docs:
 - [ ] Admin runtime gate invocation usage from runtime routes, pages, or server actions.
 - [ ] Admin runtime route gate adapter usage from other runtime routes, pages, or server actions.
 - [ ] Header reads outside the Phase 2B-V request metadata adapter.
-- [ ] Login/logout routes.
-- [ ] Protected admin pages.
-- [ ] Admin UI.
-- [ ] Product/category/product image writes outside the Phase 2B-AL backend API route boundary.
+- [x] Login/logout routes for the Phase 2B-AN first-party admin auth boundary.
+- [x] Protected admin shell for Phase 2B-AN.
+- [ ] Product-management admin UI.
+- [ ] Product/category/product image writes outside the Phase 2B-AL/AM backend API route boundary.
 - [ ] Product writes.
 - [ ] Category writes.
 - [ ] Product image writes.

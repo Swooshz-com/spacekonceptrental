@@ -24,8 +24,8 @@ describe("Phase 2B-AF Admin CSRF Proof Issuer Route Readiness Boundary", () => {
     const authChecklist = readRepoFile("docs/checklists/PHASE-2B-AUTH-IMPLEMENTATION.md");
 
     expect(status).toContain("nonce generation, signing, and signature verification");
-    expect(status).toContain("Product writes are approved only through the Phase 2B-AL backend API route boundary");
-    expect(status).toContain("This phase resolves the limitation where product mutations and audit log insertions were not executed in one atomic transaction boundary. It migrates backend admin product writes to use a static `execute_admin_product_write` PL/pgSQL RPC, ensuring atomicity via implicit Postgres transaction blocks. The routes have also been upgraded to strictly require the POST HTTP method for all update and archive state changes. It does not add admin UI, login/logout routes, protected admin pages, Supabase Storage, binary uploads, browser Supabase, service-role runtime paths, deployment config, n8n changes, Pinecone runtime code, SaaS chatbot work, or `website/chat-config.js` access.");
+    expect(status).toContain("Product writes are approved only through the Phase 2B-AL/AM backend API route");
+    expect(status).toContain("This phase adds a minimal first-party admin login page, server-owned Supabase Auth login/logout routes, and a protected admin shell gated through the approved server-only route-gate path using `admin.shell.access`. It returns only safe unauthenticated, authenticated-but-not-authorised, authorised-admin, and unavailable/misconfigured states. It does not add product-management UI, product/category/product-image write forms, Supabase Storage, binary uploads, deployment config, Supabase Cloud, browser Supabase, service-role runtime paths, n8n changes, Pinecone runtime code, SaaS chatbot work, or `website/chat-config.js` access.");
     
     expect(status).toContain("Phase 2B-AF is docs/checklist/static-guard approval only for the admin CSRF proof issuer route readiness, because the required runtime signer dependencies are not yet implemented.");
 
@@ -44,6 +44,8 @@ describe("Phase 2B-AF Admin CSRF Proof Issuer Route Readiness Boundary", () => {
       "website/app/api/admin/categories/route.ts",
       "website/app/api/admin/csrf-proof/route.test.ts",
       "website/app/api/admin/csrf-proof/route.ts",
+      "website/app/api/admin/login/route.test.ts",
+      "website/app/api/admin/login/route.ts",
       "website/app/api/admin/product-images/[imageId]/archive/route.ts",
       "website/app/api/admin/product-images/[imageId]/route.ts",
       "website/app/api/admin/product-images/route.ts",

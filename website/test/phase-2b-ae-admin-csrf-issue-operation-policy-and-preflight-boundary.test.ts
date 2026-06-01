@@ -44,13 +44,13 @@ describe("Phase 2B-AE admin CSRF issue operation policy and preflight boundary",
     const projectContext = readRepoFile("docs/PROJECT-CONTEXT.md");
 
     expect(status).toContain(
-      "Current phase: Phase 2B-AM - admin product write audit atomicity boundary."
+      "Current phase: Phase 2B-AN - admin auth login logout protected shell."
     );
     expect(status).toContain(
-      "Latest completed phase: Phase 2B-AL - admin product persistence and protected write API routes."
+      "Latest completed phase: Phase 2B-AM - admin product write audit atomicity boundary."
     );
-    expect(status).toContain("Last merged phase PR: #79");
-    expect(status).toContain("Merge commit: `1c08d99b2ad11243578f6c57b1e8ff44d3379ccc");
+    expect(status).toContain("Last merged phase PR: #80");
+    expect(status).toContain("Merge commit: `c61fd3511daba3a950e650378eb98152ec6a3ff2");
     
     expect(roadmap).toContain(
       "Phase 2B-AE adds only the admin CSRF issue operation policy and preflight boundary."
