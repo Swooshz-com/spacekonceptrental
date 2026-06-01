@@ -22,13 +22,14 @@ const adminContext = {
 function request(body?: unknown, init: RequestInit = {}) {
   const requestInit: RequestInit = {
     method: "POST",
+    ...init,
     headers: {
       "content-type": "application/json",
       origin: env.ADMIN_EXPECTED_ORIGIN,
       host: env.ADMIN_EXPECTED_HOST,
-      "x-csrf-proof": "proof"
-    },
-    ...init
+      "x-csrf-proof": "proof",
+      ...(init.headers as Record<string, string> || {})
+    }
   };
 
   if (body !== undefined) {
@@ -114,14 +115,18 @@ async function json(response: Response) {
 
 describe("admin product write route helper", () => {
   it.each([
-    [request(undefined), "request_body_missing"],
-    [request("{"), "request_body_malformed"],
-    [request({ slug: "valid", name: "Valid", isPublished: true, extra: "nope" }), "request_payload_invalid"],
-    [request({ slug: "Bad Slug", name: "Valid", isPublished: true }), "request_payload_invalid"],
-    [request({ slug: "valid", name: "", isPublished: true }), "request_payload_invalid"]
+    [request(undefined), "request_body_missing", 400],
+    [request(undefined, { headers: { "content-type": "text/plain" } }), "request_content_type_invalid", 415],
+    [request(undefined, { headers: { "content-type": "" } }), "request_content_type_invalid", 415],
+    [request("a".repeat(33 * 1024), { headers: { "content-length": String(33 * 1024) } }), "request_body_too_large", 413],
+    [request("{"), "request_body_malformed", 400],
+    [request({ slug: "valid", name: "Valid", isPublished: true, extra: "nope" }), "request_payload_invalid", 400],
+    [request({ slug: "Bad Slug", name: "Valid", isPublished: true }), "request_payload_invalid", 400],
+    [request({ slug: "valid", name: "", isPublished: true }), "request_payload_invalid", 400]
   ])("rejects invalid category create requests before auth or persistence", async (
     input,
-    expectedError
+    expectedError,
+    expectedStatus
   ) => {
     const dependencies = createDependencies();
 
@@ -134,7 +139,7 @@ describe("admin product write route helper", () => {
       dependencies
     );
 
-    expect(response.status).toBe(400);
+    expect(response.status).toBe(expectedStatus);
     expect(response.headers.get("cache-control")).toBe("no-store");
     expect(await json(response)).toEqual({
       ok: false,

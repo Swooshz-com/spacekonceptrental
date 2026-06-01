@@ -17,6 +17,7 @@ import {
 import type {
   StateChangingAdminOperation
 } from "../../admin/authorization/server-admin-request-security-preflight";
+import { readBoundedJsonBody } from "../../admin/api/bounded-json-body-reader";
 import {
   getProductPersistence,
   type CategoryDraft,
@@ -73,16 +74,6 @@ export type AdminProductWriteRouteDependencies = {
 };
 
 type AdminProductWriteRouteError = string;
-
-type BodyParseResult =
-  | {
-      ok: true;
-      body: Record<string, unknown>;
-    }
-  | {
-      ok: false;
-      error: "request_body_missing" | "request_body_malformed";
-    };
 
 type PayloadParseResult =
   | {
@@ -231,47 +222,6 @@ function successJson(result: ProductPersistenceResult, status: number) {
       headers: noStoreHeaders
     }
   );
-}
-
-async function readJsonBody(request: NextRequest): Promise<BodyParseResult> {
-  let bodyText: string;
-
-  try {
-    bodyText = await request.text();
-  } catch {
-    return {
-      ok: false,
-      error: "request_body_malformed"
-    };
-  }
-
-  if (!bodyText.trim()) {
-    return {
-      ok: false,
-      error: "request_body_missing"
-    };
-  }
-
-  try {
-    const parsed = JSON.parse(bodyText);
-
-    if (!isRecord(parsed)) {
-      return {
-        ok: false,
-        error: "request_body_malformed"
-      };
-    }
-
-    return {
-      ok: true,
-      body: parsed
-    };
-  } catch {
-    return {
-      ok: false,
-      error: "request_body_malformed"
-    };
-  }
 }
 
 function parseCategoryDraft(body: Record<string, unknown>): PayloadParseResult {
@@ -795,10 +745,10 @@ export async function handleAdminProductWriteRoute(
     return errorJson("request_payload_invalid", 400);
   }
 
-  const body = await readJsonBody(request);
+  const body = await readBoundedJsonBody(request);
 
   if (!body.ok) {
-    return errorJson(body.error, 400);
+    return errorJson(body.error, body.status);
   }
 
   const payload = parsePayload(config, body.body);

@@ -280,5 +280,38 @@ describe("SupabaseProductPersistence", () => {
     });
     expect(upload).not.toHaveBeenCalled();
     expect(JSON.stringify(calls)).not.toContain("storage.objects");
+  it("fails safely when audit insert fails without leaking internals", async () => {
+    const { calls, supabase } = createMockSupabase([
+      {
+        data: {
+          id: "44444444-4444-4444-8444-444444444444",
+          is_published: false
+        },
+        error: null
+      },
+      { data: null, error: new Error("audit log insert failed due to database error sql stack") }
+    ]);
+    const persistence = new SupabaseProductPersistence({ supabase });
+
+    const result = await persistence.createCategory({
+      admin,
+      category: {
+        slug: "lounge",
+        name: "Lounge",
+        description: "Seating",
+        sortOrder: 10,
+        isPublished: false
+      }
+    });
+
+    expect(result).toEqual({
+      ok: false,
+      code: "PRODUCT_PERSISTENCE_FAILED"
+    });
+
+    const serialized = JSON.stringify(result);
+    expect(serialized).not.toContain("sql stack");
+    expect(calls.length).toBe(2);
+    expect(calls[1].table).toBe("audit_logs");
   });
 });

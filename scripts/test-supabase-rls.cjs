@@ -1089,6 +1089,46 @@ check('authenticated product writes reject cross-workspace, viewer, and no-membe
   );
 });
 
+check('authenticated product writes reject cross-workspace relationships', () => {
+  statementFailsAs(
+    'authenticated',
+    ids.authMemberA,
+    `
+      insert into public.products (workspace_id, category_id, slug, name, status)
+      values ('${ids.workspaceA}', '${ids.categoryPublishedB}', 'cross-workspace-product', 'Cross', 'draft')
+    `,
+  );
+
+  statementFailsAs(
+    'authenticated',
+    ids.authMemberA,
+    `
+      update public.products
+      set category_id = '${ids.categoryPublishedB}'
+      where id = '${ids.productPublishedA}'
+    `,
+  );
+
+  statementFailsAs(
+    'authenticated',
+    ids.authMemberA,
+    `
+      insert into public.product_images (
+        workspace_id,
+        product_id,
+        storage_bucket,
+        storage_path
+      )
+      values (
+        '${ids.workspaceA}',
+        '${ids.productPublishedB}',
+        'test-public',
+        'cross-workspace-product-image.jpg'
+      )
+    `,
+  );
+});
+
 check('service-only tables expose no broad anonymous or authenticated client access', () => {
   for (const [role, authUserId] of [
     ['anon', null],

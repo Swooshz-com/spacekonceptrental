@@ -136,14 +136,26 @@ create policy products_product_admin_insert
   on public.products
   for insert
   to authenticated
-  with check (public.is_workspace_product_manager(workspace_id));
+  with check (
+    public.is_workspace_product_manager(workspace_id)
+    and (
+      category_id is null
+      or category_id in (select id from public.categories where workspace_id = products.workspace_id)
+    )
+  );
 
 create policy products_product_admin_update
   on public.products
   for update
   to authenticated
   using (public.is_workspace_product_manager(workspace_id))
-  with check (public.is_workspace_product_manager(workspace_id));
+  with check (
+    public.is_workspace_product_manager(workspace_id)
+    and (
+      category_id is null
+      or category_id in (select id from public.categories where workspace_id = products.workspace_id)
+    )
+  );
 
 grant select on public.product_images to authenticated;
 grant insert (
@@ -170,7 +182,10 @@ create policy product_images_product_admin_insert
   on public.product_images
   for insert
   to authenticated
-  with check (public.is_workspace_product_manager(workspace_id));
+  with check (
+    public.is_workspace_product_manager(workspace_id)
+    and product_id in (select id from public.products where workspace_id = product_images.workspace_id)
+  );
 
 create policy product_images_product_admin_update
   on public.product_images

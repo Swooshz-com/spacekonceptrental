@@ -39,6 +39,9 @@ const routeSourcePath = resolve(process.cwd(), "app/api/admin/csrf-proof/route.t
 function createRequest(body?: unknown, init?: RequestInit) {
   const requestInit: RequestInit = {
     method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
     ...init
   };
 
@@ -171,8 +174,11 @@ describe("POST /api/admin/csrf-proof", () => {
 
   it.each([
     [createRequest(undefined), 400, "request_body_missing"],
-    [createRequest("{"), 400, "request_body_malformed"],
-    [createRequest([]), 400, "request_body_malformed"],
+    [createRequest(undefined, { headers: { "Content-Type": "text/plain" } }), 415, "request_content_type_invalid"],
+    [createRequest(undefined, { headers: {} }), 415, "request_content_type_invalid"],
+    [createRequest("a".repeat(33 * 1024), { headers: { "Content-Type": "application/json", "Content-Length": String(33 * 1024) } }), 413, "request_body_too_large"],
+    [createRequest("{", { headers: { "Content-Type": "application/json" } }), 400, "request_body_malformed"],
+    [createRequest([], { headers: { "Content-Type": "application/json" } }), 400, "request_body_malformed"],
     [createRequest({}), 400, "requested_operation_missing"],
     [createRequest({ requestedOperation: "conversation.write" }), 400, "operation_not_supported"],
     [createRequest({ requestedOperation: "catalogue.read" }), 400, "operation_not_state_changing"],
