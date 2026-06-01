@@ -423,3 +423,11 @@ Phase 2B-AI adds only the server-only admin CSRF proof issuer session/workspace 
 The boundary may derive an opaque proof binding only after existing Phase 2B server-only adapters resolve an authenticated admin session, active admin profile, active owner/admin membership, and trusted server-resolved workspace for a state-changing proof target operation. The actual binding value must come from an explicitly injected deriver and must fail closed when the deriver is missing or returns a blank value.
 
 Phase 2B-AI does not add the actual CSRF proof issuer route, runtime route/page/server-action usage, product/category/product image writes, admin UI, login/logout, protected admin pages, Storage, deployment, Supabase Cloud, browser Supabase, service-role runtime paths, n8n changes, Pinecone runtime code, SaaS chatbot work, or `website/chat-config.js` access.
+
+## Phase 2B-AJ Admin CSRF Proof Session/Workspace Binding Runtime Dependency Boundary
+
+Phase 2B-AJ adds only the server-only admin CSRF proof session/workspace binding runtime dependency boundary at `website/lib/admin/authorization/server-admin-csrf-proof-runtime-dependencies.ts`.
+
+The dependency derives an opaque binding from canonical requested operation, auth user ID, admin user ID, trusted workspace ID, and membership role inputs. It reuses the existing server-only `ADMIN_CSRF_PROOF_SECRET` with Node crypto, never records a real secret value, fails closed for missing or blank secrets, malformed inputs, and crypto failures, and is exposed only through the existing runtime dependency factory for injection into the Phase 2B-AI boundary.
+
+Phase 2B-AJ does not add the actual CSRF proof issuer route, runtime route/page/server-action usage, product/category/product image writes, admin UI, login/logout, protected admin pages, Storage, deployment, Supabase Cloud, browser Supabase, service-role runtime paths, n8n changes, Pinecone runtime code, SaaS chatbot work, or `website/chat-config.js` access.

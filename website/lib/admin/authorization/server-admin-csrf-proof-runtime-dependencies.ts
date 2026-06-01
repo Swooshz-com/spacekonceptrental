@@ -6,9 +6,19 @@ import type {
   ServerAdminCsrfProofSignerInput
 } from "./server-admin-csrf-proof-issuer";
 import type {
+  ServerAdminCsrfProofBindingOperation,
+  ServerAdminCsrfProofSessionWorkspaceBindingDeriverInput
+} from "./server-admin-csrf-proof-session-workspace-binding";
+import type {
   ServerAdminCsrfProofVerifierDependencies,
   ServerAdminCsrfSignatureVerifierInput
 } from "./server-admin-csrf-proof-verifier";
+
+const bindingVersion = "csrf-session-binding-v1";
+const csrfProofBindingOperations = new Set<ServerAdminCsrfProofBindingOperation>(
+  ["product.write", "category.write", "productImage.write", "membership.manage"]
+);
+const csrfProofBindingRoles = new Set(["owner", "admin"]);
 
 export function generateServerAdminCsrfNonce(): string {
   // cryptographically random and base64url safe
@@ -20,7 +30,7 @@ function getCsrfSecret(): string | null {
   return secret ? secret : null;
 }
 
-function computeSignatureSegment(payloadSegment: string): string | null {
+function computeHmacBase64Url(value: string): string | null {
   const secret = getCsrfSecret();
 
   if (!secret) {
@@ -29,11 +39,74 @@ function computeSignatureSegment(payloadSegment: string): string | null {
 
   try {
     const hmac = crypto.createHmac("sha256", secret);
-    hmac.update(payloadSegment);
+    hmac.update(value);
     return hmac.digest("base64url");
   } catch {
     return null;
   }
+}
+
+function computeSignatureSegment(payloadSegment: string): string | null {
+  return computeHmacBase64Url(payloadSegment);
+}
+
+function normalizeRequiredString(value: unknown) {
+  return typeof value === "string" && value.trim() ? value.trim() : null;
+}
+
+function isBindingOperation(
+  value: string | null
+): value is ServerAdminCsrfProofBindingOperation {
+  return csrfProofBindingOperations.has(
+    value as ServerAdminCsrfProofBindingOperation
+  );
+}
+
+function isBindingRole(value: string | null) {
+  return value ? csrfProofBindingRoles.has(value) : false;
+}
+
+function createCanonicalBindingPayload(
+  input: ServerAdminCsrfProofSessionWorkspaceBindingDeriverInput
+) {
+  const requestedOperation = normalizeRequiredString(input.requestedOperation);
+  const authUserId = normalizeRequiredString(input.authUserId);
+  const adminUserId = normalizeRequiredString(input.adminUserId);
+  const workspaceId = normalizeRequiredString(input.workspaceId);
+  const membershipRole = normalizeRequiredString(input.membershipRole);
+
+  if (
+    !isBindingOperation(requestedOperation) ||
+    !authUserId ||
+    !adminUserId ||
+    !workspaceId ||
+    !isBindingRole(membershipRole)
+  ) {
+    return null;
+  }
+
+  return JSON.stringify([
+    ["version", bindingVersion],
+    ["requestedOperation", requestedOperation],
+    ["authUserId", authUserId],
+    ["adminUserId", adminUserId],
+    ["workspaceId", workspaceId],
+    ["membershipRole", membershipRole]
+  ]);
+}
+
+export function deriveServerAdminCsrfProofSessionWorkspaceBinding(
+  input: ServerAdminCsrfProofSessionWorkspaceBindingDeriverInput
+): string | null {
+  const canonicalPayload = createCanonicalBindingPayload(input);
+
+  if (!canonicalPayload) {
+    return null;
+  }
+
+  const digest = computeHmacBase64Url(canonicalPayload);
+
+  return digest ? `${bindingVersion}.${digest}` : null;
 }
 
 export function signServerAdminCsrfProof(
@@ -66,6 +139,9 @@ export function verifyServerAdminCsrfSignature(
 
 export type ServerAdminCsrfProofRuntimeDependencies = {
   issuerDependencies: ServerAdminCsrfProofIssuerDependencies;
+  sessionWorkspaceBindingDependencies: {
+    deriveSessionWorkspaceBinding: typeof deriveServerAdminCsrfProofSessionWorkspaceBinding;
+  };
   verifierDependencies: ServerAdminCsrfProofVerifierDependencies;
 };
 
@@ -79,6 +155,10 @@ export function createServerAdminCsrfProofRuntimeDependencies(
     issuerDependencies: {
       generateNonce: generateServerAdminCsrfNonce,
       signCsrfProof: signServerAdminCsrfProof
+    },
+    sessionWorkspaceBindingDependencies: {
+      deriveSessionWorkspaceBinding:
+        deriveServerAdminCsrfProofSessionWorkspaceBinding
     },
     verifierDependencies: {
       ...verifierContext,

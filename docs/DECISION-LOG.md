@@ -821,3 +821,11 @@ Decision: Phase 2B-AI adds only the server-only admin CSRF proof issuer session/
 Reason: Phase 2B-AH deferred the actual issuer route because existing approved boundaries could authorize a request and issue a signed proof, but did not yet provide a safe opaque session/workspace binding for proof payloads. The new boundary resolves the authenticated admin session, active admin profile, active owner/admin membership, and trusted workspace through existing server-only Phase 2B adapters before invoking an explicitly injected binding deriver.
 
 This phase does not implement the actual CSRF proof issuer route, does not approve binding usage from routes/pages/server actions, and does not add product/category/product image writes, admin UI, login/logout, protected admin pages, Storage, deployment, Supabase Cloud, browser Supabase, service-role runtime paths, n8n changes, Pinecone runtime code, SaaS chatbot work, or `website/chat-config.js` access.
+
+## 2026-06-01: Admin CSRF Proof Session/Workspace Binding Runtime Dependency Boundary
+
+Decision: Phase 2B-AJ adds only the server-only admin CSRF proof session/workspace binding runtime dependency boundary at `website/lib/admin/authorization/server-admin-csrf-proof-runtime-dependencies.ts`.
+
+Reason: Phase 2B-AI created the binding boundary but required an explicitly injected opaque deriver. The runtime dependency factory now supplies that deriver from canonical requested operation, auth user ID, admin user ID, trusted workspace ID, and membership role inputs using the existing server-only `ADMIN_CSRF_PROOF_SECRET` and Node crypto. The binding is deterministic for the same canonical input and secret, changes when any security-relevant input changes, and fails closed for missing secrets, malformed input, or crypto failures.
+
+This phase does not implement the actual CSRF proof issuer route, does not approve binding usage from routes/pages/server actions, and does not add product/category/product image writes, admin UI, login/logout, protected admin pages, Storage, deployment, Supabase Cloud, browser Supabase, service-role runtime paths, n8n changes, Pinecone runtime code, SaaS chatbot work, or `website/chat-config.js` access.

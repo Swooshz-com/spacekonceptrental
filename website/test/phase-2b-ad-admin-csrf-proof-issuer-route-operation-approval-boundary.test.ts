@@ -44,15 +44,15 @@ describe("Phase 2B-AD admin CSRF proof issuer route operation approval boundary"
     const projectContext = readRepoFile("docs/PROJECT-CONTEXT.md");
 
     expect(status).toContain(
-      "Current phase: Phase 2B-AI - admin CSRF proof issuer session/workspace binding boundary."
+      "Current phase: Phase 2B-AJ - admin CSRF proof session/workspace binding runtime dependency boundary."
     );
     expect(status).toContain(
-      "Latest completed phase: Phase 2B-AH - admin CSRF proof issuer route runtime boundary."
+      "Latest completed phase: Phase 2B-AI - admin CSRF proof issuer session/workspace binding boundary."
     );
-    expect(status).toContain("Last merged phase PR: #75");
-    expect(status).toContain("Merge commit: `6bb96ff609043892fca29814a48d1dd16a1ec7de");
+    expect(status).toContain("Last merged phase PR: #76");
+    expect(status).toContain("Merge commit: `984b93e490d3e35b7d73995e3a7a0173b409bc1d");
     expect(status).toContain(
-      "This phase implements only the missing server-only runtime dependency boundary needed by the existing CSRF proof issuer/verifier contracts. It provides nonce generation, signing, and signature verification using Node server-only crypto. This phase does not implement the actual CSRF proof issuer route. This phase does not add product/category/product image writes, admin UI, pages, server actions, login/logout, protected admin pages, Storage, deployment, Supabase Cloud, browser Supabase, service-role runtime paths, n8n workflow changes, Pinecone runtime code, SaaS chatbot work, or `website/chat-config.js` access."
+      "This phase implements only the missing server-only runtime dependency that derives an opaque admin CSRF session/workspace binding for the existing proof binding boundary. It reuses the existing server-only `ADMIN_CSRF_PROOF_SECRET` with Node crypto, deterministic canonical binding input, and fail-closed handling for missing secrets, malformed input, or crypto failures. This phase does not implement the actual CSRF proof issuer route."
     );
     expect(roadmap).toContain(
       "Phase 2B-AD adds only the admin CSRF proof issuer route operation approval boundary."
