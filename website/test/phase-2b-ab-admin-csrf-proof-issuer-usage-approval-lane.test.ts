@@ -52,17 +52,17 @@ describe("Phase 2B-AB admin CSRF proof issuer runtime usage approval lane", () =
     const projectContext = readRepoFile("docs/PROJECT-CONTEXT.md");
 
     expect(status).toContain(
-      "Current phase: Phase 2B-AJ - admin CSRF proof session/workspace binding runtime dependency boundary."
+      "Current phase: Phase 2B-AK - admin CSRF proof issuer route implementation."
     );
     expect(status).toContain(
-      "Latest completed phase: Phase 2B-AI - admin CSRF proof issuer session/workspace binding boundary."
+      "Latest completed phase: Phase 2B-AJ - admin CSRF proof session/workspace binding runtime dependency boundary."
     );
-    expect(status).toContain("Last merged phase PR: #76");
+    expect(status).toContain("Last merged phase PR: #77");
     expect(status).toContain(
-      "Merge commit: `984b93e490d3e35b7d73995e3a7a0173b409bc1d`"
+      "Merge commit: `75b9ea7b3dea43b5160fc7d0ad9a98ed5a22f0d7`"
     );
     expect(status).toContain(
-      "This phase implements only the missing server-only runtime dependency that derives an opaque admin CSRF session/workspace binding for the existing proof binding boundary. It reuses the existing server-only `ADMIN_CSRF_PROOF_SECRET` with Node crypto, deterministic canonical binding input, and fail-closed handling for missing secrets, malformed input, or crypto failures. This phase does not implement the actual CSRF proof issuer route."
+      "This phase implements only the first-party server-only `POST /api/admin/csrf-proof` proof issuer route at `website/app/api/admin/csrf-proof/route.ts`. The route validates safe JSON input, gates itself through the approved `admin.csrf.issue` route-gate lane, resolves the target operation binding through the Phase 2B-AI boundary and Phase 2B-AJ runtime deriver, and issues short-lived CSRF proofs for `product.write`, `category.write`, `productImage.write`, and `membership.manage`. Product/category/product image write routes remain deferred."
     );
     expect(roadmap).toContain(
       "Phase 2B-AB adds only the admin CSRF proof issuer runtime usage approval lane"
@@ -132,25 +132,28 @@ describe("Phase 2B-AB admin CSRF proof issuer runtime usage approval lane", () =
     }
   });
 
-  it("does not add any new route handlers beyond existing Phase 2B-AA auth-check route", { timeout: 15000 }, () => {
+  it("keeps route usage scoped to auth-check plus the Phase 2B-AK csrf-proof route", { timeout: 15000 }, () => {
     const productionSources = readTrackedProductionSources([
       "website/app",
       "website/components",
       "website/lib"
     ]);
-    const appSourceOutsideAuthCheck = productionSources
-      .filter(({ filePath }) => filePath.startsWith("website/app/") && filePath !== "website/app/api/admin/auth-check/route.ts")
+    const appSourceOutsideApprovedRoutes = productionSources
+      .filter(
+        ({ filePath }) =>
+          filePath.startsWith("website/app/") &&
+          filePath !== "website/app/api/admin/auth-check/route.ts" &&
+          filePath !== "website/app/api/admin/csrf-proof/route.ts"
+      )
       .map(({ source }) => source)
       .join("\n");
 
-    // Only auth-check should exist under app/api/admin
     expect(readTrackedFiles(["website/app/api/admin"])).toEqual([
       "website/app/api/admin/auth-check/route.test.ts",
-      "website/app/api/admin/auth-check/route.ts"
+      "website/app/api/admin/auth-check/route.ts",
+      "website/app/api/admin/csrf-proof/route.test.ts",
+      "website/app/api/admin/csrf-proof/route.ts"
     ]);
-
-    // No csrf-proof route yet
-    expect(readTrackedFiles(["website/app/api/admin/csrf-proof"])).toEqual([]);
 
     // No login/logout/products/categories/admin pages
     expect(readTrackedFiles(["website/app/admin"])).toEqual([]);
@@ -164,26 +167,30 @@ describe("Phase 2B-AB admin CSRF proof issuer runtime usage approval lane", () =
     expect(readTrackedFiles(["website/app/api/product-images"])).toEqual([]);
     expect(readTrackedFiles(["website/app/api/catalogue"])).toEqual([]);
 
-    // No route gate adapter usage outside auth-check
-    expect(appSourceOutsideAuthCheck).not.toContain(
+    // No route gate adapter usage outside the two approved admin routes
+    expect(appSourceOutsideApprovedRoutes).not.toContain(
       "server-admin-runtime-route-gate-adapter"
     );
-    expect(appSourceOutsideAuthCheck).not.toContain(
+    expect(appSourceOutsideApprovedRoutes).not.toContain(
       "resolveServerAdminRuntimeRouteGateAdapter"
     );
 
-    const allAppSources = productionSources
-      .filter(({ filePath }) => filePath.startsWith("website/app/"))
+    const appSourceOutsideCsrfRoute = productionSources
+      .filter(
+        ({ filePath }) =>
+          filePath.startsWith("website/app/") &&
+          filePath !== "website/app/api/admin/csrf-proof/route.ts"
+      )
       .map(({ source }) => source)
       .join("\n");
 
-    // No CSRF proof issuer usage in any app route or page
-    expect(allAppSources).not.toContain("issueServerAdminCsrfProof");
-    expect(allAppSources).not.toContain("createServerAdminCsrfProofIssuer");
-    expect(allAppSources).not.toContain("server-admin-csrf-proof-issuer");
+    // No CSRF proof issuer usage outside the approved csrf-proof route
+    expect(appSourceOutsideCsrfRoute).not.toContain("issueServerAdminCsrfProof");
+    expect(appSourceOutsideCsrfRoute).not.toContain("createServerAdminCsrfProofIssuer");
+    expect(appSourceOutsideCsrfRoute).not.toContain("server-admin-csrf-proof-issuer");
 
     // No server actions
-    expect(allAppSources).not.toContain('"use server"');
+    expect(appSourceOutsideCsrfRoute).not.toContain('"use server"');
   });
 
   it("keeps lower-level ownership and forbidden runtime surfaces unchanged", { timeout: 15000 }, () => {

@@ -118,20 +118,20 @@ describe("Phase 2B-AJ - admin CSRF session/workspace binding runtime dependencie
     );
 
     expect(status).toContain(
-      "Current phase: Phase 2B-AJ - admin CSRF proof session/workspace binding runtime dependency boundary."
+      "Current phase: Phase 2B-AK - admin CSRF proof issuer route implementation."
     );
     expect(status).toContain(
-      "Latest completed phase: Phase 2B-AI - admin CSRF proof issuer session/workspace binding boundary."
+      "Latest completed phase: Phase 2B-AJ - admin CSRF proof session/workspace binding runtime dependency boundary."
     );
-    expect(status).toContain("Last merged phase PR: #76");
+    expect(status).toContain("Last merged phase PR: #77");
     expect(status).toContain(
-      "Merge commit: `984b93e490d3e35b7d73995e3a7a0173b409bc1d`"
-    );
-    expect(status).toContain(
-      "This phase implements only the missing server-only runtime dependency that derives an opaque admin CSRF session/workspace binding for the existing proof binding boundary."
+      "Merge commit: `75b9ea7b3dea43b5160fc7d0ad9a98ed5a22f0d7`"
     );
     expect(status).toContain(
-      "This phase does not implement the actual CSRF proof issuer route."
+      "This phase implements only the first-party server-only `POST /api/admin/csrf-proof` proof issuer route"
+    );
+    expect(status).toContain(
+      "Product/category/product image write routes remain deferred."
     );
     expect(authChecklist).toContain(
       "- [x] Admin CSRF proof session/workspace binding runtime dependency boundary."
@@ -297,12 +297,13 @@ describe("Phase 2B-AJ - admin CSRF session/workspace binding runtime dependencie
     expect(source).not.toContain("chat-config");
   });
 
-  it("does not add the admin CSRF proof issuer route or product write routes", () => {
+  it("keeps the admin CSRF route surface limited to auth-check and the Phase 2B-AK issuer", () => {
     expect(readTrackedFiles(["website/app/api/admin"])).toEqual([
       "website/app/api/admin/auth-check/route.test.ts",
-      "website/app/api/admin/auth-check/route.ts"
+      "website/app/api/admin/auth-check/route.ts",
+      "website/app/api/admin/csrf-proof/route.test.ts",
+      "website/app/api/admin/csrf-proof/route.ts"
     ]);
-    expect(readTrackedFiles(["website/app/api/admin/csrf-proof"])).toEqual([]);
     expect(readTrackedFiles(["website/app/api/products"])).toEqual([]);
     expect(readTrackedFiles(["website/app/api/categories"])).toEqual([]);
     expect(readTrackedFiles(["website/app/api/product-images"])).toEqual([]);
@@ -317,8 +318,12 @@ describe("Phase 2B-AJ - admin CSRF session/workspace binding runtime dependencie
       "website/components",
       "website/lib"
     ]);
-    const appSource = productionSources
-      .filter(({ filePath }) => filePath.startsWith("website/app/"))
+    const appSourceOutsideCsrfRoute = productionSources
+      .filter(
+        ({ filePath }) =>
+          filePath.startsWith("website/app/") &&
+          filePath !== "website/app/api/admin/csrf-proof/route.ts"
+      )
       .map(({ source }) => source)
       .join("\n");
     const productionSource = productionSources
@@ -336,9 +341,9 @@ describe("Phase 2B-AJ - admin CSRF session/workspace binding runtime dependencie
 
     expect(preflight).toContain("csrf_proof_missing");
     expect(preflight).toContain("verifyCsrfProof");
-    expect(appSource).not.toContain("issueServerAdminCsrfProof");
-    expect(appSource).not.toContain("createServerAdminCsrfProofIssuer");
-    expect(appSource).not.toContain("server-admin-csrf-proof-issuer");
+    expect(appSourceOutsideCsrfRoute).not.toContain("issueServerAdminCsrfProof");
+    expect(appSourceOutsideCsrfRoute).not.toContain("createServerAdminCsrfProofIssuer");
+    expect(appSourceOutsideCsrfRoute).not.toContain("server-admin-csrf-proof-issuer");
     expect(productionSource).not.toMatch(
       /from\(["'](?:categories|products|product_images)["']\)\s*\.\s*(?:insert|update|upsert|delete)\s*\(/m
     );

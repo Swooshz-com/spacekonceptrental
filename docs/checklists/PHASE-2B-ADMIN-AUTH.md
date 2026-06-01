@@ -3,7 +3,7 @@
 Completed design, policy, resolver, adapter, and provider-session milestones
 are recorded here as admin/auth readiness work.
 
-Real runtime implementation remains unchecked.
+Real auth and product-write runtime implementation remains unchecked.
 
 Phase 2B-A is design and guard coverage only. Phase 2B-B adds a pure
 server-only policy module and tests only. Phase 2B-C adds a server-only
@@ -14,30 +14,49 @@ implementation checklist only. Phase 2B-F reconciles checklist status only.
 Phase 2B-G refreshes repo agent instructions only. Phase 2B-H strengthens the
 reviewed server-side resolver/adapter boundary with fake-adapter tests only.
 Phase 2B-I cleans admin auth implementation gate wording and
-runtime-readiness checklist/static guard wording only.
-Phase 2B-J approves the future server-only Supabase Auth runtime lane only.
-Phase 2B-K adds only the server-only Supabase Auth identity/session-read
-boundary. Cookie reads and Supabase Auth server calls are restricted to that
-boundary and tracked in `PHASE-2B-AUTH-IMPLEMENTATION.md`. Phase 2B-L adds
-only the server-only Supabase admin profile/membership read boundary.
-`admin_users` and `memberships` reads are restricted to that boundary and
-tracked in `PHASE-2B-AUTH-IMPLEMENTATION.md`. The boundary requires an
-explicitly injected authenticated admin-read client and fails closed without
-one; live read-client wiring remains deferred. Phase 2B-M adds only the
-server-only admin workspace resolution boundary behind an explicitly injected
-trusted server-side workspace ID. Phase 2B-N adds only the server-only
-session-bound admin read-client factory inside the Phase 2B-K identity
-boundary. Phase 2B-O adds only the server-only admin authorization adapter-set
-composition boundary. Phase 2B-P adds only the server-only composed admin
-authorization decision boundary. Phase 2B-Q adds only the server-only admin
-request security preflight boundary. Phase 2B-R adds only the server-only CSRF
-proof verifier boundary. Phase 2B-S adds only the server-only CSRF proof issuer
-boundary. Phase 2B-T adds only the server-only admin authorization gate
-composition boundary. Phase 2B-U approves only the future admin runtime
-gate usage lane. Phase 2B-V adds only the server-only admin request metadata
-adapter boundary. Phase 2B-W adds only the server-only admin runtime gate
-invocation boundary. Phase 2B-X approves only the future admin runtime gate
-invocation usage lane. Phase 2B-Y adds only the server-only admin runtime route gate adapter boundary. Phase 2B-Z approves only the future admin runtime route gate adapter usage lane. Phase 2B-AA adds the first admin runtime route gate adapter usage boundary as exactly one harmless GET authorization probe/check route handler. Phase 2B-AB approves only the future server-only admin CSRF proof issuer runtime usage lane. Phase 2B-AC repairs the admin auth-check trusted workspace dependency. Phase 2B-AD approves only the future admin CSRF proof issuer route operation model. Phase 2B-AE adds only the admin CSRF issue operation policy and preflight boundary. Phase 2B-AI adds only the server-only admin CSRF proof issuer session/workspace binding boundary and keeps the actual route deferred. Phase 2B-AJ adds only the server-only admin CSRF proof session/workspace binding runtime dependency boundary and keeps the actual route deferred. Keep real auth runtime wiring, factory, adapter-set, decision-boundary, preflight, CSRF verifier, CSRF issuer, request metadata adapter, runtime gate invocation helper, or authorization gate usage from other runtime routes/pages/actions, headers, login/logout routes, protected admin pages, admin UI, product management writes, browser Supabase, service-role runtime paths, deployment, and Supabase Cloud work unchecked until a future PR has explicit approval.
+runtime-readiness checklist/static guard wording only. Phase 2B-J approves the
+future server-only Supabase Auth runtime lane only. Phase 2B-K adds only the
+server-only Supabase Auth identity/session-read boundary. Cookie reads and
+Supabase Auth server calls are restricted to that boundary and tracked in
+`PHASE-2B-AUTH-IMPLEMENTATION.md`. Phase 2B-L adds only the server-only
+Supabase admin profile/membership read boundary. `admin_users` and
+`memberships` reads are restricted to that boundary and tracked in
+`PHASE-2B-AUTH-IMPLEMENTATION.md`. The boundary requires an explicitly
+injected authenticated admin-read client and fails closed without one; live
+read-client wiring remains deferred. Phase 2B-M adds only the server-only
+admin workspace resolution boundary behind an explicitly injected trusted
+server-side workspace ID. Phase 2B-N adds only the server-only session-bound
+admin read-client factory inside the Phase 2B-K identity boundary. Phase 2B-O
+adds only the server-only admin authorization adapter-set composition
+boundary. Phase 2B-P adds only the server-only composed admin authorization
+decision boundary. Phase 2B-Q adds only the server-only admin request security
+preflight boundary. Phase 2B-R adds only the server-only CSRF proof verifier
+boundary. Phase 2B-S adds only the server-only CSRF proof issuer boundary.
+Phase 2B-T adds only the server-only admin authorization gate composition
+boundary. Phase 2B-U approves only the future admin runtime gate usage lane.
+Phase 2B-V adds only the server-only admin request metadata adapter boundary.
+Phase 2B-W adds only the server-only admin runtime gate invocation boundary.
+Phase 2B-X approves only the future admin runtime gate invocation usage lane.
+Phase 2B-Y adds only the server-only admin runtime route gate adapter
+boundary. Phase 2B-Z approves only the future admin runtime route gate adapter
+usage lane. Phase 2B-AA adds the first admin runtime route gate adapter usage
+boundary as exactly one harmless GET authorization probe/check route handler.
+Phase 2B-AB approves only the future server-only admin CSRF proof issuer
+runtime usage lane. Phase 2B-AC repairs the admin auth-check trusted workspace
+dependency. Phase 2B-AD approves only the future admin CSRF proof issuer route
+operation model. Phase 2B-AE adds only the admin CSRF issue operation policy
+and preflight boundary. Phase 2B-AI adds only the server-only admin CSRF proof
+issuer session/workspace binding boundary and keeps the actual route deferred.
+Phase 2B-AJ adds only the server-only admin CSRF proof session/workspace
+binding runtime dependency boundary and keeps the actual route deferred. Phase
+2B-AK adds only the first-party server-only admin CSRF proof issuer route and
+keeps product/category/product image write routes deferred. Keep real auth
+runtime wiring, factory, adapter-set, decision-boundary, preflight, CSRF
+verifier, CSRF issuer, request metadata adapter, runtime gate invocation
+helper, or authorization gate usage from other runtime routes/pages/actions,
+headers, login/logout routes, protected admin pages, admin UI, product
+management writes, browser Supabase, service-role runtime paths, deployment,
+and Supabase Cloud work unchecked until a future PR has explicit approval.
 
 ## Completed Design, Policy, Resolver, Adapter, And Provider-session Milestones
 
@@ -76,6 +95,7 @@ invocation usage lane. Phase 2B-Y adds only the server-only admin runtime route 
 - [x] Approve future admin CSRF proof issuer route operation model.
 - [x] Add server-only admin CSRF proof issuer session/workspace binding boundary.
 - [x] Add server-only admin CSRF proof session/workspace binding runtime dependency boundary.
+- [x] Add first-party server-only admin CSRF proof issuer route.
 
 ## Design References
 
@@ -135,8 +155,8 @@ runtime implementation approval.
 - [ ] Admin authorization decision boundary usage from runtime routes, pages, or server actions.
 - [ ] Admin request security preflight usage from runtime routes, pages, or server actions.
 - [ ] Admin CSRF proof verifier usage from runtime routes, pages, or server actions.
-- [ ] Admin CSRF proof issuer usage from runtime routes, pages, or server actions.
-- [ ] Admin CSRF proof session/workspace binding usage from runtime routes, pages, or server actions.
+- [ ] Admin CSRF proof issuer usage from other runtime routes, pages, or server actions.
+- [ ] Admin CSRF proof session/workspace binding usage from other runtime routes, pages, or server actions.
 - [ ] Admin authorization gate usage from runtime routes, pages, or server actions.
 - [ ] Admin runtime gate invocation usage from runtime routes, pages, or server actions.
 - [ ] Admin runtime route gate adapter usage from other runtime routes, pages, or server actions.

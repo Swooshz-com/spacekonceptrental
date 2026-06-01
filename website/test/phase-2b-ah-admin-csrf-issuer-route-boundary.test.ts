@@ -23,20 +23,22 @@ describe("Phase 2B-AH Admin CSRF Proof Issuer Route Boundary", () => {
     const status = readRepoFile("docs/PHASE-STATUS.md");
     const authChecklist = readRepoFile("docs/checklists/PHASE-2B-AUTH-IMPLEMENTATION.md");
 
-    expect(status).toContain("does not implement the actual CSRF proof issuer route");
+    expect(status).toContain("Product/category/product image write routes remain deferred");
     expect(status).toContain("safe server-side session/workspace binding cannot be derived from existing approved boundaries");
     expect(status).toContain("Phase 2B-AH is docs/checklist/static-guard approval only for the admin CSRF proof issuer route boundary, deferring the route because safe server-side session/workspace binding cannot be derived from existing approved boundaries.");
 
     expect(authChecklist).toContain("Admin CSRF proof issuer route deferred because of missing safe server-side session/workspace binding.");
   });
 
-  it("must not implement the admin CSRF issuer route until safe workspace binding exists", () => {
+  it("keeps the route surface limited after safe workspace binding exists", () => {
     const apiAdminFiles = readTrackedFiles(["website/app/api/admin"]);
-    
-    // The only allowed route files in website/app/api/admin are for auth-check
+
+    // Only auth-check and the Phase 2B-AK csrf-proof route are allowed here.
     const allowedFiles = [
       "website/app/api/admin/auth-check/route.test.ts",
-      "website/app/api/admin/auth-check/route.ts"
+      "website/app/api/admin/auth-check/route.ts",
+      "website/app/api/admin/csrf-proof/route.test.ts",
+      "website/app/api/admin/csrf-proof/route.ts"
     ];
     
     for (const file of apiAdminFiles) {

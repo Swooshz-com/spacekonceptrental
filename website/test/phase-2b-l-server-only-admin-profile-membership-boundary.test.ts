@@ -58,14 +58,14 @@ describe("Phase 2B-L server-only admin profile and membership read boundary", ()
     const projectContext = readRepoFile("docs/PROJECT-CONTEXT.md");
 
     expect(status).toContain(
-      "Current phase: Phase 2B-AJ - admin CSRF proof session/workspace binding runtime dependency boundary."
+      "Current phase: Phase 2B-AK - admin CSRF proof issuer route implementation."
     );
     expect(status).toContain(
-      "Latest completed phase: Phase 2B-AI - admin CSRF proof issuer session/workspace binding boundary."
+      "Latest completed phase: Phase 2B-AJ - admin CSRF proof session/workspace binding runtime dependency boundary."
     );
-    expect(status).toContain("Last merged phase PR: #76");
+    expect(status).toContain("Last merged phase PR: #77");
     expect(status).toContain(
-      "Merge commit: `984b93e490d3e35b7d73995e3a7a0173b409bc1d`"
+      "Merge commit: `75b9ea7b3dea43b5160fc7d0ad9a98ed5a22f0d7`"
     );
     expect(roadmap).toContain(
       "Phase 2B-L adds only the server-only Supabase-backed admin profile and membership read boundary"

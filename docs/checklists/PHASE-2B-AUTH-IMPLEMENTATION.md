@@ -20,9 +20,9 @@ authorization adapter-set composition boundary. Phase 2B-P implements only the
 server-only composed admin authorization decision boundary. Phase 2B-Q
 implements only the server-only admin request security preflight boundary.
 Phase 2B-R implements only the server-only CSRF proof verifier boundary.
-Phase 2B-Z approves only the future admin runtime route gate adapter usage lane. Phase 2B-AA implements only the first admin runtime route gate adapter usage boundary as a harmless GET authorization probe via the `admin.auth.check` operation. Phase 2B-AB approves only the future server-only admin CSRF proof issuer runtime usage lane. Phase 2B-AC repairs the admin auth-check trusted workspace dependency. Phase 2B-AD approves only the future admin CSRF proof issuer route operation model. Phase 2B-AE implements only the admin CSRF issue operation policy and preflight boundary. Phase 2B-AF is docs/checklist/static-guard approval only for the admin CSRF proof issuer route readiness; actual route implementation is deferred because the required runtime signer dependencies are missing. Phase 2B-AG implements only the missing server-only runtime dependency boundary needed by the existing CSRF proof issuer/verifier contracts. Phase 2B-AH is docs/checklist/static-guard approval only for the admin CSRF proof issuer route boundary, deferring the route because safe server-side session/workspace binding cannot be derived from existing approved boundaries. Phase 2B-AI implements only the server-only admin CSRF proof issuer session/workspace binding boundary and keeps the actual route deferred. Phase 2B-AJ implements only the server-only admin CSRF proof session/workspace binding runtime dependency boundary, deriving opaque bindings from canonical session/workspace inputs with the existing server-only `ADMIN_CSRF_PROOF_SECRET`. Keep
+Phase 2B-Z approves only the future admin runtime route gate adapter usage lane. Phase 2B-AA implements only the first admin runtime route gate adapter usage boundary as a harmless GET authorization probe via the `admin.auth.check` operation. Phase 2B-AB approves only the future server-only admin CSRF proof issuer runtime usage lane. Phase 2B-AC repairs the admin auth-check trusted workspace dependency. Phase 2B-AD approves only the future admin CSRF proof issuer route operation model. Phase 2B-AE implements only the admin CSRF issue operation policy and preflight boundary. Phase 2B-AF is docs/checklist/static-guard approval only for the admin CSRF proof issuer route readiness; actual route implementation is deferred because the required runtime signer dependencies are missing. Phase 2B-AG implements only the missing server-only runtime dependency boundary needed by the existing CSRF proof issuer/verifier contracts. Phase 2B-AH is docs/checklist/static-guard approval only for the admin CSRF proof issuer route boundary, deferring the route because safe server-side session/workspace binding cannot be derived from existing approved boundaries. Phase 2B-AI implements only the server-only admin CSRF proof issuer session/workspace binding boundary and keeps the actual route deferred. Phase 2B-AJ implements only the server-only admin CSRF proof session/workspace binding runtime dependency boundary, deriving opaque bindings from canonical session/workspace inputs with the existing server-only `ADMIN_CSRF_PROOF_SECRET`. Phase 2B-AK implements only the first-party server-only admin CSRF proof issuer route for supported state-changing admin operations and keeps product/category/product image write routes deferred. Keep
 real auth runtime wiring, factory, adapter-set, decision-boundary, preflight,
-CSRF verifier, CSRF issuer, request metadata adapter, runtime gate invocation helper, or authorization gate usage from runtime routes/pages/actions,
+CSRF verifier, CSRF issuer, request metadata adapter, runtime gate invocation helper, or authorization gate usage from other runtime routes/pages/actions,
 headers, other routes, UI, product write, Storage, browser Supabase, and service-role runtime
 implementation items unchecked until a future implementation PR adds and tests
 that runtime code.
@@ -98,6 +98,7 @@ Reference docs:
 - [x] Admin CSRF proof issuer route deferred because of missing safe server-side session/workspace binding.
 - [x] Admin CSRF proof issuer session/workspace binding boundary.
 - [x] Admin CSRF proof session/workspace binding runtime dependency boundary.
+- [x] Admin CSRF proof issuer route implementation.
 
 ## Still Deferred
 
@@ -111,8 +112,8 @@ Reference docs:
 - [ ] Admin authorization decision boundary usage from runtime routes, pages, or server actions.
 - [ ] Admin request security preflight usage from runtime routes, pages, or server actions.
 - [ ] Admin CSRF proof verifier usage from runtime routes, pages, or server actions.
-- [ ] Admin CSRF proof issuer usage from runtime routes, pages, or server actions.
-- [ ] Admin CSRF proof session/workspace binding usage from runtime routes, pages, or server actions.
+- [ ] Admin CSRF proof issuer usage from other runtime routes, pages, or server actions.
+- [ ] Admin CSRF proof session/workspace binding usage from other runtime routes, pages, or server actions.
 - [ ] Admin authorization gate usage from runtime routes, pages, or server actions.
 - [ ] Admin runtime gate invocation usage from runtime routes, pages, or server actions.
 - [ ] Admin runtime route gate adapter usage from other runtime routes, pages, or server actions.

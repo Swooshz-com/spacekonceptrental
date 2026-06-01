@@ -24,26 +24,23 @@ describe("Phase 2B-AF Admin CSRF Proof Issuer Route Readiness Boundary", () => {
     const authChecklist = readRepoFile("docs/checklists/PHASE-2B-AUTH-IMPLEMENTATION.md");
 
     expect(status).toContain("nonce generation, signing, and signature verification");
-    expect(status).toContain("does not implement the actual CSRF proof issuer route");
-    expect(status).toContain("This phase implements only the missing server-only runtime dependency that derives an opaque admin CSRF session/workspace binding for the existing proof binding boundary. It reuses the existing server-only `ADMIN_CSRF_PROOF_SECRET` with Node crypto, deterministic canonical binding input, and fail-closed handling for missing secrets, malformed input, or crypto failures. This phase does not implement the actual CSRF proof issuer route.");
+    expect(status).toContain("Product/category/product image write routes remain deferred");
+    expect(status).toContain("This phase implements only the first-party server-only `POST /api/admin/csrf-proof` proof issuer route at `website/app/api/admin/csrf-proof/route.ts`. The route validates safe JSON input, gates itself through the approved `admin.csrf.issue` route-gate lane, resolves the target operation binding through the Phase 2B-AI boundary and Phase 2B-AJ runtime deriver, and issues short-lived CSRF proofs for `product.write`, `category.write`, `productImage.write`, and `membership.manage`. Product/category/product image write routes remain deferred.");
     
     expect(status).toContain("Phase 2B-AF is docs/checklist/static-guard approval only for the admin CSRF proof issuer route readiness, because the required runtime signer dependencies are not yet implemented.");
 
     expect(authChecklist).toContain("Admin CSRF proof issuer route readiness and route-if-safe boundary.");
   });
 
-  it("must not implement the admin CSRF issuer route until dependencies are approved", () => {
-    // We enforce that no such route exists yet, because the required
-    // `signCsrfProof` and `generateNonce` runtime dependencies are not yet implemented
-    // and approved. Implementing the route without these dependencies would either
-    // require fake stubs (violating safety rules) or scope creep to implement them.
-    
+  it("keeps the route surface limited after the dependencies are approved", () => {
     const apiAdminFiles = readTrackedFiles(["website/app/api/admin"]);
-    
-    // The only allowed route files in website/app/api/admin are for auth-check
+
+    // Only auth-check and the Phase 2B-AK csrf-proof route are allowed here.
     const allowedFiles = [
       "website/app/api/admin/auth-check/route.test.ts",
-      "website/app/api/admin/auth-check/route.ts"
+      "website/app/api/admin/auth-check/route.ts",
+      "website/app/api/admin/csrf-proof/route.test.ts",
+      "website/app/api/admin/csrf-proof/route.ts"
     ];
     
     for (const file of apiAdminFiles) {
