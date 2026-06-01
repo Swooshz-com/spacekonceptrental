@@ -50,17 +50,17 @@ describe("Phase 2B-AI admin CSRF proof issuer session/workspace binding boundary
     );
 
     expect(status).toContain(
-      "Current phase: Phase 2B-AL - admin product persistence and protected write API routes."
+      "Current phase: Phase 2B-AM - admin product write audit atomicity boundary."
     );
     expect(status).toContain(
-      "Latest completed phase: Phase 2B-AK - admin CSRF proof issuer route implementation."
+      "Latest completed phase: Phase 2B-AL - admin product persistence and protected write API routes."
     );
-    expect(status).toContain("Last merged phase PR: #78");
+    expect(status).toContain("Last merged phase PR: #79");
     expect(status).toContain(
-      "Merge commit: `d862b5a6a75031146cac9e881296eacbeb26d414`"
+      "Merge commit: `1c08d99b2ad11243578f6c57b1e8ff44d3379ccc`"
     );
     expect(status).toContain(
-      "This phase implements the first backend-only protected admin product-management write surface"
+      "This phase resolves the limitation where product mutations and audit log insertions were not executed in one atomic transaction boundary"
     );
     expect(status).toContain(
       "Product writes are approved only through the Phase 2B-AL backend API route boundary."
@@ -108,12 +108,15 @@ describe("Phase 2B-AI admin CSRF proof issuer session/workspace binding boundary
     expect(readTrackedFiles(["website/app/api/admin"])).toEqual([
       "website/app/api/admin/auth-check/route.test.ts",
       "website/app/api/admin/auth-check/route.ts",
+      "website/app/api/admin/categories/[categoryId]/archive/route.ts",
       "website/app/api/admin/categories/[categoryId]/route.ts",
       "website/app/api/admin/categories/route.ts",
       "website/app/api/admin/csrf-proof/route.test.ts",
       "website/app/api/admin/csrf-proof/route.ts",
+      "website/app/api/admin/product-images/[imageId]/archive/route.ts",
       "website/app/api/admin/product-images/[imageId]/route.ts",
       "website/app/api/admin/product-images/route.ts",
+      "website/app/api/admin/products/[productId]/archive/route.ts",
       "website/app/api/admin/products/[productId]/publish/route.ts",
       "website/app/api/admin/products/[productId]/route.ts",
       "website/app/api/admin/products/route.ts"
