@@ -565,18 +565,7 @@ function parsePayload(
 }
 
 function expectedMethod(action: AdminProductWriteAction) {
-  switch (action) {
-    case "updateCategory":
-    case "updateProduct":
-    case "updateProductImage":
-      return "PATCH";
-    case "archiveCategory":
-    case "archiveProduct":
-    case "archiveProductImage":
-      return "DELETE";
-    default:
-      return "POST";
-  }
+  return "POST";
 }
 
 function successStatus(action: AdminProductWriteAction) {

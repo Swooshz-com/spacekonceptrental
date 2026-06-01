@@ -4,15 +4,15 @@ This is the quick status page for the SKR repo. Use `docs/PHASE-2-READINESS-PLAN
 
 ## Current phase
 
-Current phase: Phase 2B-AL - admin product persistence and protected write API routes.
+Current phase: Phase 2B-AM - admin product write audit atomicity boundary.
 
-This phase implements the first backend-only protected admin product-management write surface. It adds session-bound Supabase product/category/product image metadata persistence, owner/admin RLS write policies, product-management audit inserts, and protected first-party admin write API routes for category, product, and product-image metadata changes. The routes use the approved admin route-gate stack, matching CSRF proofs, `ADMIN_TRUSTED_WORKSPACE_ID`, safe JSON validation, and no-store responses. It does not add admin UI, login/logout routes, protected admin pages, Supabase Storage, binary uploads, browser Supabase, service-role runtime paths, deployment config, n8n changes, Pinecone runtime code, SaaS chatbot work, or `website/chat-config.js` access.
+This phase resolves the limitation where product mutations and audit log insertions were not executed in one atomic transaction boundary. It migrates backend admin product writes to use a static `execute_admin_product_write` PL/pgSQL RPC, ensuring atomicity via implicit Postgres transaction blocks. The routes have also been upgraded to strictly require the POST HTTP method for all update and archive state changes. It does not add admin UI, login/logout routes, protected admin pages, Supabase Storage, binary uploads, browser Supabase, service-role runtime paths, deployment config, n8n changes, Pinecone runtime code, SaaS chatbot work, or `website/chat-config.js` access.
 
-Latest completed phase: Phase 2B-AK - admin CSRF proof issuer route implementation.
+Latest completed phase: Phase 2B-AL - admin product persistence and protected write API routes.
 
-Last merged phase PR: #78
+Last merged phase PR: #79
 
-Merge commit: `d862b5a6a75031146cac9e881296eacbeb26d414`
+Merge commit: `1c08d99b2ad11243578f6c57b1e8ff44d3379ccc`
 ## Completed foundation
 
 - Next.js app root exists under `website/`.
@@ -126,9 +126,12 @@ trusted workspace dependency. Phase 2B-AD is docs/checklist/static-guard approva
 protected admin runtime, login/logout, admin UI, or product writes. Phase
 2B-AL implements only backend protected product/category/product-image metadata
 write routes and session-bound persistence through the approved admin
-gate/CSRF/RLS/audit boundaries. These 2B-AL boundaries are not wired into
-pages, server actions, protected admin runtime, login/logout, admin UI,
-Storage, uploads, browser Supabase, or service-role paths.
+gate/CSRF/RLS/audit boundaries. Phase 2B-AM resolves the atomicity limitation in
+2B-AL by migrating product metadata mutations and audit insertions to a single
+Postgres RPC transaction block (`execute_admin_product_write`), and hardens
+route methods to POST-only for state changes. These 2B-AL/AM boundaries are not
+wired into pages, server actions, protected admin runtime, login/logout, admin
+UI, Storage, uploads, browser Supabase, or service-role paths.
 
 Runtime session-bound read-client usage remains deferred.
 Runtime adapter-set usage remains deferred.

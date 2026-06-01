@@ -52,12 +52,14 @@ binding runtime dependency boundary and keeps the actual route deferred. Phase
 2B-AK adds only the first-party server-only admin CSRF proof issuer route.
 Phase 2B-AL adds only backend protected product/category/product-image
 metadata write API routes through the approved route gate, CSRF proof,
-session-bound Supabase client, RLS, and audit-log boundary. Keep real auth
-runtime wiring, factory, adapter-set, decision-boundary, preflight, CSRF
-verifier, CSRF issuer, request metadata adapter, runtime gate invocation
-helper, or authorization gate usage from other runtime routes/pages/actions,
+session-bound Supabase client, RLS, and audit-log boundary. Phase 2B-AM hardens
+the Phase 2B-AL write boundary by migrating product mutations and audit inserts
+into a single Postgres RPC transaction block, and enforcing POST-only state
+changes. Keep real auth runtime wiring, factory, adapter-set, decision-boundary,
+preflight, CSRF verifier, CSRF issuer, request metadata adapter, runtime gate
+invocation helper, or authorization gate usage from other runtime routes/pages/actions,
 headers, login/logout routes, protected admin pages, admin UI, product
-management writes outside the Phase 2B-AL backend API route boundary, browser
+management writes outside the Phase 2B-AL/AM backend API route boundary, browser
 Supabase, service-role runtime paths, deployment, and Supabase Cloud work
 unchecked until a future PR has explicit approval.
 
@@ -100,6 +102,7 @@ unchecked until a future PR has explicit approval.
 - [x] Add server-only admin CSRF proof session/workspace binding runtime dependency boundary.
 - [x] Add first-party server-only admin CSRF proof issuer route.
 - [x] Add backend-only admin product persistence and protected product write API routes.
+- [x] Add admin product write audit atomicity boundary.
 
 ## Design References
 
@@ -136,6 +139,8 @@ runtime implementation approval.
 - [x] Audit log expectations approved for Phase 2B-AL backend API routes.
 - [x] RLS expectations approved for Phase 2B-AL backend API routes.
 - [x] Error handling expectations approved for Phase 2B-AL backend API routes.
+- [x] Phase 2B-AL backend admin product persistence and write API routes.
+- [x] Phase 2B-AM admin product write audit atomicity boundary.
 - [ ] Session/cookie expectations approved.
 
 ## Future Runtime Test Plan Approvals
@@ -174,7 +179,7 @@ runtime implementation approval.
 - [ ] Login/logout routes.
 - [ ] Protected admin pages.
 - [ ] Admin UI.
-- [ ] Product/category/product image writes outside the Phase 2B-AL backend API route boundary.
+- [ ] Product/category/product image writes outside the Phase 2B-AL/AM backend API route boundary.
 - [ ] Product writes.
 - [ ] Category writes.
 - [ ] Product image writes.

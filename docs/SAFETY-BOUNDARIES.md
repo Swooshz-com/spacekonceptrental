@@ -451,3 +451,11 @@ The protected route boundary may create, update, publish, or archive category/pr
 The persistence boundary may use only a session-bound authenticated Supabase client, owner/admin RLS policies, workspace filters, and product-management audit inserts. It must not use service-role keys, browser Supabase, public mutation routes, hard deletes, binary uploads, Supabase Storage, production seed data, raw SQL errors in responses, or workspace/admin/membership internals in route responses.
 
 Phase 2B-AL does not add admin UI, login/logout routes, protected admin pages, server actions, deployment config, Supabase Cloud actions, n8n changes, Pinecone runtime code, SaaS chatbot work, or `website/chat-config.js` access.
+
+## Phase 2B-AM Admin Product Write Audit Atomicity Boundary
+
+Phase 2B-AM resolves the atomicity limitation from Phase 2B-AL by migrating product metadata mutations and audit insertions into a single Postgres RPC transaction block (`execute_admin_product_write`), and enforcing POST-only routing for all state changes.
+
+The Postgres RPC must use explicit static SQL branches per action to remain type-aware and prevent dynamic SQL injection. It must securely resolve the actor ID via `current_product_admin_user_id()`.
+
+Phase 2B-AM does not add admin UI, login/logout routes, protected admin pages, server actions, binary uploads, Supabase Storage, browser Supabase, service-role runtime paths, deployment config, n8n changes, Pinecone runtime code, SaaS chatbot work, or `website/chat-config.js` access.

@@ -1,7 +1,7 @@
 import "server-only";
 
 import type { NextRequest } from "next/server";
-import { handleAdminProductWriteRoute } from "../../../../../lib/products/persistence/admin-product-write-route";
+import { handleAdminProductWriteRoute } from "../../../../../../lib/products/persistence/admin-product-write-route";
 
 type ProductRouteContext = {
   params: Promise<{
@@ -16,7 +16,7 @@ export async function POST(
   const { productId } = await context.params;
 
   return handleAdminProductWriteRoute(request, {
-    action: "updateProduct",
+    action: "archiveProduct",
     operation: "product.write",
     recordId: productId
   });

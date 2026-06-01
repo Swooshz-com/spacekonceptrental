@@ -830,9 +830,15 @@ Reason: Phase 2B-AK made CSRF proof issuance available for state-changing admin 
 
 The implementation adds session-bound product persistence under `website/lib/products/persistence/`, owner/admin RLS write policies and product-management audit inserts, and first-party admin API routes for category, product, and product-image metadata create/update/publish/archive operations. Route responses stay safe and no-store, and product image writes are metadata-only.
 
-**Known Limitation - Audit Log Atomicity:** Product mutation and audit log insertion are not executed in a single transaction/RPC boundary for this phase. If the audit log insertion fails after the product write succeeds, the write remains committed but the route fails safely with a generic error code without leaking internals. This keeps the PR backend-only and narrowly scoped to API surfaces and RLS checks, deferring the implementation of transaction/RPC wrappers to a later phase.
-
 Phase 2B-AL does not add admin UI, login/logout routes, protected admin pages, server actions, binary uploads, Supabase Storage, browser Supabase, service-role runtime paths, deployment config, n8n changes, Pinecone runtime code, SaaS chatbot work, or `website/chat-config.js` access.
+
+## 2026-06-01: Admin Product Write Audit Atomicity Boundary
+
+Decision: Phase 2B-AM resolves the atomicity limitation from Phase 2B-AL by migrating product metadata mutations and audit insertions into a single Postgres RPC transaction block (`execute_admin_product_write`).
+
+Reason: The initial protected admin API routes successfully gated persistence but allowed a state where a write could commit without an audit log if the second insert failed. By moving the mutation boundary into a single PL/pgSQL function with explicit static SQL branches per action, both operations happen within an atomic transaction. This also keeps the RPC type-aware, prevents dynamic SQL injection, securely resolves the actor ID via `current_product_admin_user_id()`, and hardens route methods to POST-only for all state changes.
+
+Phase 2B-AM does not add admin UI, login/logout routes, protected admin pages, server actions, binary uploads, Supabase Storage, browser Supabase, service-role runtime paths, deployment config, n8n changes, Pinecone runtime code, SaaS chatbot work, or `website/chat-config.js` access.
 
 ## 2026-06-01: Admin CSRF Proof Issuer Route Implementation
 

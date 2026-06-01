@@ -1131,6 +1131,58 @@ check('authenticated product writes reject cross-workspace relationships', () =>
   );
 });
 
+check('execute_admin_product_write rolls back mutation if audit insert fails', () => {
+  psql(`
+    create or replace function public.fail_audit() returns trigger as $$
+    begin
+      raise exception 'throwaway audit failure';
+    end;
+    $$ language plpgsql;
+
+    create trigger force_audit_failure
+    before insert on public.audit_logs
+    for each row execute function public.fail_audit();
+  `);
+
+  try {
+    const categoryId = 'f0000000-0000-4000-8000-000000000001';
+
+    const result = psql(
+      roleSql(
+        'authenticated',
+        ids.authMemberA,
+        `
+          select public.execute_admin_product_write(
+            'category.create',
+            '${categoryId}',
+            '${ids.workspaceA}',
+            '{"slug": "atomic-test", "name": "Atomic Test", "sort_order": 0}'::jsonb
+          )
+        `
+      ),
+      { check: false }
+    );
+
+    assert.notEqual(result.status, 0, 'Mutation should have failed due to trigger');
+    assert.match(
+      `${result.stdout}\n${result.stderr}`,
+      /throwaway audit failure/i,
+      'Mutation should have failed with throwaway audit failure',
+    );
+
+    assert.equal(
+      scalarAs('anon', null, `select count(*)::text from public.categories where id = '${categoryId}'`),
+      '0',
+      'Mutation should have been rolled back',
+    );
+  } finally {
+    psql(`
+      drop trigger if exists force_audit_failure on public.audit_logs;
+      drop function if exists public.fail_audit();
+    `);
+  }
+});
+
 check('service-only tables expose no broad anonymous or authenticated client access', () => {
   for (const [role, authUserId] of [
     ['anon', null],
