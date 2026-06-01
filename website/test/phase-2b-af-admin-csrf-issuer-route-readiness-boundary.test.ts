@@ -25,7 +25,7 @@ describe("Phase 2B-AF Admin CSRF Proof Issuer Route Readiness Boundary", () => {
 
     expect(status).toContain("nonce generation, signing, and signature verification");
     expect(status).toContain("does not implement the actual CSRF proof issuer route");
-    expect(status).toContain("This phase implements only the missing server-only runtime dependency boundary needed by the existing CSRF proof issuer/verifier contracts. It provides nonce generation, signing, and signature verification using Node server-only crypto. This phase does not implement the actual CSRF proof issuer route. This phase does not add product/category/product image writes, admin UI, pages, server actions, login/logout, protected admin pages, Storage, deployment, Supabase Cloud, browser Supabase, service-role runtime paths, n8n workflow changes, Pinecone runtime code, SaaS chatbot work, or `website/chat-config.js` access.");
+    expect(status).toContain("This phase implements only the missing server-only runtime dependency that derives an opaque admin CSRF session/workspace binding for the existing proof binding boundary. It reuses the existing server-only `ADMIN_CSRF_PROOF_SECRET` with Node crypto, deterministic canonical binding input, and fail-closed handling for missing secrets, malformed input, or crypto failures. This phase does not implement the actual CSRF proof issuer route.");
     
     expect(status).toContain("Phase 2B-AF is docs/checklist/static-guard approval only for the admin CSRF proof issuer route readiness, because the required runtime signer dependencies are not yet implemented.");
 

@@ -4,15 +4,15 @@ This is the quick status page for the SKR repo. Use `docs/PHASE-2-READINESS-PLAN
 
 ## Current phase
 
-Current phase: Phase 2B-AI - admin CSRF proof issuer session/workspace binding boundary.
+Current phase: Phase 2B-AJ - admin CSRF proof session/workspace binding runtime dependency boundary.
 
-This phase implements only the missing server-only session/workspace binding boundary needed before the admin CSRF proof issuer route can safely issue proofs. It derives an opaque binding only after an approved owner/admin session, active admin profile, active membership, and trusted workspace context are resolved through existing Phase 2B server-only boundaries. This phase does not implement the actual CSRF proof issuer route.
+This phase implements only the missing server-only runtime dependency that derives an opaque admin CSRF session/workspace binding for the existing proof binding boundary. It reuses the existing server-only `ADMIN_CSRF_PROOF_SECRET` with Node crypto, deterministic canonical binding input, and fail-closed handling for missing secrets, malformed input, or crypto failures. This phase does not implement the actual CSRF proof issuer route.
 
-Latest completed phase: Phase 2B-AH - admin CSRF proof issuer route runtime boundary.
+Latest completed phase: Phase 2B-AI - admin CSRF proof issuer session/workspace binding boundary.
 
-Last merged phase PR: #75
+Last merged phase PR: #76
 
-Merge commit: `6bb96ff609043892fca29814a48d1dd16a1ec7de`
+Merge commit: `984b93e490d3e35b7d73995e3a7a0173b409bc1d`
 ## Completed foundation
 
 - Next.js app root exists under `website/`.
@@ -72,7 +72,8 @@ Vercel config, add real env values, or add runtime features.
 - Admin CSRF proof issuer route readiness and route-if-safe boundary is complete.
 - Admin CSRF proof runtime dependency boundary is complete. This phase implements only the missing server-only runtime dependency boundary needed by the existing CSRF proof issuer/verifier contracts. It provides nonce generation, signing, and signature verification using Node server-only crypto. This phase does not implement the actual CSRF proof issuer route. This phase does not add product/category/product image writes, admin UI, pages, server actions, login/logout, protected admin pages, Storage, deployment, Supabase Cloud, browser Supabase, service-role runtime paths, n8n workflow changes, Pinecone runtime code, SaaS chatbot work, or `website/chat-config.js` access.
 - Admin CSRF proof issuer route deferred because of missing safe server-side session/workspace binding is complete.
-- Admin CSRF proof issuer session/workspace binding boundary is in progress.
+- Admin CSRF proof issuer session/workspace binding boundary is complete.
+- Admin CSRF proof session/workspace binding runtime dependency boundary is in progress.
 Supabase Auth is approved as the future server-side admin auth provider. The
 Phase 2B-K identity boundary remains the only approved place to read Supabase
 Auth cookies or call Supabase Auth server APIs. The Phase 2B-L
@@ -117,7 +118,7 @@ implementation approval. Phase 2B-AA approves and adds the first admin runtime
 route gate adapter usage boundary from exactly one first-party server-only
 route handler. Phase 2B-AB approves only the future server-only admin CSRF
 proof issuer runtime usage lane. Phase 2B-AC repairs the admin auth-check
-trusted workspace dependency. Phase 2B-AD is docs/checklist/static-guard approval only for the future admin CSRF proof issuer route operation model, and it is not runtime implementation approval. Phase 2B-AE implements only the admin CSRF issue operation policy and preflight boundary. Phase 2B-AF is docs/checklist/static-guard approval only for the admin CSRF proof issuer route readiness, because the required runtime signer dependencies are not yet implemented. Phase 2B-AG implements only the missing server-only runtime dependency boundary needed by the existing CSRF proof issuer/verifier contracts. Phase 2B-AH is docs/checklist/static-guard approval only for the admin CSRF proof issuer route boundary, deferring the route because safe server-side session/workspace binding cannot be derived from existing approved boundaries. Phase 2B-AI implements only the server-only admin CSRF proof issuer session/workspace binding boundary. It does not implement the actual CSRF proof issuer route, and it does not approve product/category/product image writes, admin UI, login/logout, protected admin pages, Storage, deployment, Supabase Cloud, browser Supabase, service-role runtime paths, n8n changes, Pinecone runtime code, SaaS chatbot work, or `website/chat-config.js` access. These boundaries are not wired into pages, server actions,
+trusted workspace dependency. Phase 2B-AD is docs/checklist/static-guard approval only for the future admin CSRF proof issuer route operation model, and it is not runtime implementation approval. Phase 2B-AE implements only the admin CSRF issue operation policy and preflight boundary. Phase 2B-AF is docs/checklist/static-guard approval only for the admin CSRF proof issuer route readiness, because the required runtime signer dependencies are not yet implemented. Phase 2B-AG implements only the missing server-only runtime dependency boundary needed by the existing CSRF proof issuer/verifier contracts. Phase 2B-AH is docs/checklist/static-guard approval only for the admin CSRF proof issuer route boundary, deferring the route because safe server-side session/workspace binding cannot be derived from existing approved boundaries. Phase 2B-AI implements only the server-only admin CSRF proof issuer session/workspace binding boundary. Phase 2B-AJ implements only the server-only runtime dependency that derives opaque session/workspace bindings for that boundary from canonical operation, auth user, admin user, trusted workspace, and membership role inputs. It reuses `ADMIN_CSRF_PROOF_SECRET` and does not add a route, route usage, replay store, product/category/product image writes, admin UI, login/logout, protected admin pages, Storage, deployment, Supabase Cloud, browser Supabase, service-role runtime paths, n8n changes, Pinecone runtime code, SaaS chatbot work, or `website/chat-config.js` access. These boundaries are not wired into pages, server actions,
 protected admin runtime, login/logout, admin UI, or product writes.
 
 Runtime session-bound read-client usage remains deferred.
@@ -126,6 +127,8 @@ Runtime decision-boundary usage remains deferred.
 Runtime request-security preflight usage remains deferred.
 Runtime CSRF proof verifier usage remains deferred.
 Runtime CSRF proof issuer usage remains deferred.
+Runtime CSRF proof session/workspace binding usage from routes, pages, or
+server actions remains deferred.
 Runtime admin authorization gate usage remains deferred.
 Runtime request metadata adapter usage from routes, pages, or server actions
 remains deferred (except the approved Phase 2B-AA route boundary).
@@ -154,6 +157,8 @@ remains deferred (except the approved Phase 2B-AA route boundary).
 - Admin CSRF proof verifier usage from runtime routes, pages, or server
   actions.
 - Admin CSRF proof issuer usage from runtime routes, pages, or server actions.
+- Admin CSRF proof session/workspace binding usage from runtime routes, pages,
+  or server actions.
 - Admin authorization gate usage from runtime routes, pages, or server actions.
 - Admin runtime gate invocation usage from routes, pages, or server
   actions (except the approved Phase 2B-AA route boundary).
