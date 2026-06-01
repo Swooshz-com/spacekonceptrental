@@ -280,6 +280,8 @@ describe("SupabaseProductPersistence", () => {
     });
     expect(upload).not.toHaveBeenCalled();
     expect(JSON.stringify(calls)).not.toContain("storage.objects");
+  });
+
   it("fails safely when audit insert fails without leaking internals", async () => {
     const { calls, supabase } = createMockSupabase([
       {

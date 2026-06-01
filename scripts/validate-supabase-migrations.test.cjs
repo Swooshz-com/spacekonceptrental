@@ -491,12 +491,12 @@ test('real migrations add authenticated product-admin write policies without ser
   ]) {
     assert.match(
       sql,
-      new RegExp(`create policy ${policyPrefix}_insert on public\\.${tableName} for insert to authenticated with check \\(public\\.is_workspace_product_manager\\(workspace_id\\)\\);`),
+      new RegExp(`create policy ${policyPrefix}_insert on public\\.${tableName} for insert to authenticated with check \\(\\s*public\\.is_workspace_product_manager\\(workspace_id\\)[^;]*\\);`),
       `${tableName} should have product-admin insert policy`,
     );
     assert.match(
       sql,
-      new RegExp(`create policy ${policyPrefix}_update on public\\.${tableName} for update to authenticated using \\(public\\.is_workspace_product_manager\\(workspace_id\\)\\) with check \\(public\\.is_workspace_product_manager\\(workspace_id\\)\\);`),
+      new RegExp(`create policy ${policyPrefix}_update on public\\.${tableName} for update to authenticated using \\(\\s*public\\.is_workspace_product_manager\\(workspace_id\\)\\s*\\) with check \\(\\s*public\\.is_workspace_product_manager\\(workspace_id\\)[^;]*\\);`),
       `${tableName} should have product-admin update policy`,
     );
   }
