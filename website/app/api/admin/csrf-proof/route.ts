@@ -98,6 +98,9 @@ const targetOperations = new Set<StateChangingAdminOperation>([
   "productImage.write",
   "membership.manage"
 ]);
+const noStoreHeaders = {
+  "Cache-Control": "no-store"
+};
 
 function normalizeRequired(value: string | null | undefined) {
   const normalized = value?.trim();
@@ -124,16 +127,24 @@ function errorJson(
       ok: false,
       error
     },
-    { status }
+    {
+      status,
+      headers: noStoreHeaders
+    }
   );
 }
 
 function successJson(csrfProof: string, expiresAt: number): NextResponse {
-  return NextResponse.json({
-    ok: true,
-    csrfProof,
-    expiresAt
-  });
+  return NextResponse.json(
+    {
+      ok: true,
+      csrfProof,
+      expiresAt
+    },
+    {
+      headers: noStoreHeaders
+    }
+  );
 }
 
 async function readJsonBody(request: NextRequest): Promise<BodyParseResult> {

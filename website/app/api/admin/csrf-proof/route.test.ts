@@ -134,6 +134,8 @@ async function expectSafeError(
   error: string
 ) {
   expect(response.status).toBe(status);
+  expect(response.headers.get("cache-control")).toBe("no-store");
+
   const json = await readJsonResponse(response);
 
   expect(json).toStrictEqual({
@@ -176,6 +178,14 @@ describe("POST /api/admin/csrf-proof", () => {
     [createRequest({ requestedOperation: "catalogue.read" }), 400, "operation_not_state_changing"],
     [createRequest({ requestedOperation: "admin.auth.check" }), 400, "operation_not_state_changing"],
     [createRequest({ requestedOperation: "admin.csrf.issue" }), 400, "operation_not_state_changing"],
+    [
+      createRequest({
+        requestedOperation: "product.write",
+        requestedWorkspaceIdForValidationOnly: 123
+      }),
+      400,
+      "requested_workspace_invalid"
+    ],
     [
       createRequest(undefined, { method: "GET" }),
       405,
@@ -251,6 +261,8 @@ describe("POST /api/admin/csrf-proof", () => {
       );
 
       expect(response.status).toBe(200);
+      expect(response.headers.get("cache-control")).toBe("no-store");
+
       const json = await readJsonResponse(response);
 
       expect(json.ok).toBe(true);
@@ -340,12 +352,49 @@ describe("POST /api/admin/csrf-proof", () => {
       "admin_profile_missing"
     ],
     [
+      "inactive admin profile",
+      {
+        adminUser: {
+          id: "admin-user-1",
+          status: "inactive" as const
+        }
+      },
+      403,
+      "admin_profile_inactive"
+    ],
+    [
       "missing membership",
       {
         membership: null
       },
       403,
       "membership_missing"
+    ],
+    [
+      "inactive membership",
+      {
+        membership: {
+          adminUserId: "admin-user-1",
+          workspaceId: trustedWorkspaceId,
+          status: "inactive" as const,
+          role: "admin" as const
+        }
+      },
+      403,
+      "membership_inactive"
+    ],
+    [
+      "workspace mismatch",
+      {
+        membership: {
+          adminUserId: "admin-user-1",
+          workspaceId: "workspace-2",
+          status: "active" as const,
+          role: "admin" as const
+        }
+      },
+      403,
+      "workspace_mismatch"
     ],
     [
       "missing trusted workspace",
