@@ -22,6 +22,8 @@ const approvedCsrfVerifierBoundaryPath =
   "website/lib/admin/authorization/server-admin-csrf-proof-verifier.ts";
 const approvedCsrfIssuerBoundaryPath =
   "website/lib/admin/authorization/server-admin-csrf-proof-issuer.ts";
+const approvedCsrfSessionWorkspaceBindingBoundaryPath =
+  "website/lib/admin/authorization/server-admin-csrf-proof-session-workspace-binding.ts";
 const approvedGateBoundaryPath =
   "website/lib/admin/authorization/server-admin-authorization-gate.ts";
 const sourceExtensions = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs"]);
@@ -248,7 +250,8 @@ describe("Phase 2B-S server-only CSRF proof issuer boundary", () => {
     expect(
       combinedOutside([
         approvedCompositionBoundaryPath,
-        approvedDecisionBoundaryPath
+        approvedDecisionBoundaryPath,
+        approvedCsrfSessionWorkspaceBindingBoundaryPath
       ])
     ).not.toContain("createServerAdminAuthorizationAdapterSet");
 
@@ -346,6 +349,7 @@ describe("Phase 2B-S server-only CSRF proof issuer boundary", () => {
           filePath !== approvedPreflightBoundaryPath &&
           filePath !== approvedCsrfVerifierBoundaryPath &&
           filePath !== approvedCsrfIssuerBoundaryPath &&
+          filePath !== approvedCsrfSessionWorkspaceBindingBoundaryPath &&
           filePath !== approvedGateBoundaryPath
       )
       .map(({ source }) => source)

@@ -20,6 +20,8 @@ const approvedCsrfVerifierBoundaryPath =
   "website/lib/admin/authorization/server-admin-csrf-proof-verifier.ts";
 const approvedCsrfIssuerBoundaryPath =
   "website/lib/admin/authorization/server-admin-csrf-proof-issuer.ts";
+const approvedCsrfSessionWorkspaceBindingBoundaryPath =
+  "website/lib/admin/authorization/server-admin-csrf-proof-session-workspace-binding.ts";
 const approvedGateBoundaryPath =
   "website/lib/admin/authorization/server-admin-authorization-gate.ts";
 const approvedRequestMetadataBoundaryPath =
@@ -230,7 +232,8 @@ describe("Phase 2B-Y server-only admin runtime route gate adapter boundary", () 
     expect(
       combinedOutside([
         approvedCompositionBoundaryPath,
-        approvedDecisionBoundaryPath
+        approvedDecisionBoundaryPath,
+        approvedCsrfSessionWorkspaceBindingBoundaryPath
       ])
     ).not.toContain("createServerAdminAuthorizationAdapterSet");
     expect(
@@ -292,6 +295,7 @@ describe("Phase 2B-Y server-only admin runtime route gate adapter boundary", () 
           filePath !== approvedPreflightBoundaryPath &&
           filePath !== approvedCsrfVerifierBoundaryPath &&
           filePath !== approvedCsrfIssuerBoundaryPath &&
+          filePath !== approvedCsrfSessionWorkspaceBindingBoundaryPath &&
           filePath !== approvedGateBoundaryPath &&
           filePath !== approvedRequestMetadataBoundaryPath &&
           filePath !== approvedRuntimeGateInvocationBoundaryPath &&
