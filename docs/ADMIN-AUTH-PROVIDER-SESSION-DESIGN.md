@@ -656,6 +656,15 @@ Future login and logout routes should:
 Phase 2B-AN adds the first minimal login/logout route boundary. Additional
 login/logout routes remain out of scope.
 
+The Phase 2B-AN login route accepts only bounded URL-encoded form bodies and
+rejects invalid content types, declared oversized bodies, and streamed
+oversized bodies before session mutation. Phase 2B-AN login/logout routes
+validate same-origin `Origin` and `Host` against `ADMIN_EXPECTED_ORIGIN` and
+`ADMIN_EXPECTED_HOST` before calling the server-only Supabase Auth boundary. A
+full login/logout CSRF token boundary remains deferred because the existing
+CSRF proof issuer is session/workspace-bound and is designed for authenticated
+admin operations after an admin session exists.
+
 ## Protected Admin Page Expectations
 
 Protected admin pages beyond the Phase 2B-AN minimal protected shell must be

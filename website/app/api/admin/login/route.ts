@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 
+import { readBoundedUrlEncodedFormBody } from "../../../../lib/admin/api/bounded-json-body-reader";
 import { signInSupabaseAdminAuthSession } from "../../../../lib/admin/authorization/supabase-admin-auth-identity-adapter";
 
 const noStoreHeaders = {
@@ -25,17 +26,60 @@ function normalizeRequired(value: FormDataEntryValue | null) {
   return typeof value === "string" ? value.trim() : "";
 }
 
-export async function POST(request: NextRequest) {
-  let formData: FormData;
+function normalizeHeaderValue(value: string | null | undefined) {
+  const normalized = value?.trim();
+
+  return normalized ? normalized : null;
+}
+
+function normalizeHost(value: string | null | undefined) {
+  return normalizeHeaderValue(value)?.toLowerCase() ?? null;
+}
+
+function normalizeOrigin(value: string | null | undefined) {
+  const normalized = normalizeHeaderValue(value);
+
+  if (!normalized) {
+    return null;
+  }
 
   try {
-    formData = await request.formData();
+    return new URL(normalized).origin.toLowerCase();
   } catch {
+    return null;
+  }
+}
+
+function isSameOriginAdminRequest(request: NextRequest) {
+  const expectedOrigin = normalizeOrigin(process.env.ADMIN_EXPECTED_ORIGIN);
+  const expectedHost = normalizeHost(process.env.ADMIN_EXPECTED_HOST);
+  const requestOrigin = normalizeOrigin(request.headers.get("origin"));
+  const requestHost = normalizeHost(request.headers.get("host"));
+
+  return Boolean(
+    expectedOrigin &&
+      expectedHost &&
+      requestOrigin &&
+      requestHost &&
+      requestOrigin === expectedOrigin &&
+      requestHost === expectedHost &&
+      new URL(requestOrigin).host.toLowerCase() === requestHost
+  );
+}
+
+export async function POST(request: NextRequest) {
+  if (!isSameOriginAdminRequest(request)) {
     return redirectTo(request, "/admin/login", "unauthenticated");
   }
 
-  const email = normalizeRequired(formData.get("email"));
-  const password = normalizeRequired(formData.get("password"));
+  const formData = await readBoundedUrlEncodedFormBody(request);
+
+  if (!formData.ok) {
+    return redirectTo(request, "/admin/login", "unauthenticated");
+  }
+
+  const email = normalizeRequired(formData.body.get("email"));
+  const password = normalizeRequired(formData.body.get("password"));
 
   if (!email || !password) {
     return redirectTo(request, "/admin/login", "unauthenticated");

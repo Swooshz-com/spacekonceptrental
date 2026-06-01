@@ -471,6 +471,13 @@ Cookie reads, cookie writes, and Supabase Auth session calls must stay inside
 Route responses must be no-store and must expose only generic
 unauthenticated or unavailable states.
 
+Login must read only bounded `application/x-www-form-urlencoded` bodies before
+session mutation. Login and logout must validate same-origin `Origin` and
+`Host` against `ADMIN_EXPECTED_ORIGIN` and `ADMIN_EXPECTED_HOST` before
+session mutation. A full login/logout CSRF token boundary is deferred because
+the existing CSRF proof issuer is session/workspace-bound and intended for
+authenticated admin operations after an admin session exists.
+
 The protected shell must use the existing server-only route-gate path with the
 read-only `admin.shell.access` operation. It may render only safe
 unauthenticated, authenticated-but-not-authorised, authorised-admin, and
