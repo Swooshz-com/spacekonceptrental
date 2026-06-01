@@ -37,12 +37,15 @@ describe("Phase 2B-AH Admin CSRF Proof Issuer Route Boundary", () => {
     const allowedFiles = [
       "website/app/api/admin/auth-check/route.test.ts",
       "website/app/api/admin/auth-check/route.ts",
+      "website/app/api/admin/categories/[categoryId]/archive/route.ts",
       "website/app/api/admin/categories/[categoryId]/route.ts",
       "website/app/api/admin/categories/route.ts",
       "website/app/api/admin/csrf-proof/route.test.ts",
       "website/app/api/admin/csrf-proof/route.ts",
+      "website/app/api/admin/product-images/[imageId]/archive/route.ts",
       "website/app/api/admin/product-images/[imageId]/route.ts",
       "website/app/api/admin/product-images/route.ts",
+      "website/app/api/admin/products/[productId]/archive/route.ts",
       "website/app/api/admin/products/[productId]/publish/route.ts",
       "website/app/api/admin/products/[productId]/route.ts",
       "website/app/api/admin/products/route.ts"

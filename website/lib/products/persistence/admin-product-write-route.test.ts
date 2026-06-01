@@ -334,7 +334,7 @@ describe("admin product write route helper", () => {
       request({
         name: "Sensitive Product Name",
         status: "draft"
-      }, { method: "PATCH" }),
+      }, { method: "POST" }),
       {
         action: "updateProduct",
         operation: "product.write",
@@ -353,5 +353,29 @@ describe("admin product write route helper", () => {
     expect(serialized).not.toContain("Sensitive Product Name");
     expect(serialized).not.toContain(env.ADMIN_TRUSTED_WORKSPACE_ID);
     expect(serialized).not.toContain(adminContext.adminUserId);
+  });
+
+  it.each(["PATCH", "DELETE"])("denies state-changing %s requests before gate", async (method) => {
+    const dependencies = createDependencies();
+
+    const response = await handleAdminProductWriteRoute(
+      request({
+        name: "Sensitive Product Name",
+        status: "draft"
+      }, { method }),
+      {
+        action: "updateProduct",
+        operation: "product.write",
+        recordId: "55555555-5555-4555-8555-555555555555"
+      },
+      dependencies
+    );
+
+    expect(response.status).toBe(405);
+    expect(await json(response)).toEqual({
+      ok: false,
+      error: "request_method_not_allowed"
+    });
+    expect(dependencies.resolveRouteGate).not.toHaveBeenCalled();
   });
 });

@@ -11,11 +11,8 @@ type MutationResult = {
 };
 
 type MutationCall = {
-  table: string;
-  method: "insert" | "update";
-  row: unknown;
-  filters: Array<[string, string]>;
-  select?: string;
+  fn: string;
+  args: Record<string, unknown>;
 };
 
 const admin: TrustedProductAdminContext = {
@@ -54,54 +51,16 @@ function createMockSupabase(results: MutationResult[] = []) {
     };
 
   const client = {
-    from(table: string) {
+    rpc(fn: string, args: Record<string, unknown>) {
+      const call: MutationCall = {
+        fn,
+        args
+      };
+      calls.push(call);
+      const result = nextResult();
+
       return {
-        insert(row: unknown) {
-          const call: MutationCall = {
-            table,
-            method: "insert",
-            row,
-            filters: []
-          };
-          calls.push(call);
-          const result = nextResult();
-
-          return Object.assign(createThenableResult(result), {
-            select(columns: string) {
-              call.select = columns;
-
-              return {
-                single: () => Promise.resolve(result)
-              };
-            }
-          });
-        },
-        update(row: unknown) {
-          const call: MutationCall = {
-            table,
-            method: "update",
-            row,
-            filters: []
-          };
-          calls.push(call);
-
-          const builder = {
-            eq(column: string, value: string) {
-              call.filters.push([column, value]);
-              return builder;
-            },
-            select(columns: string) {
-              call.select = columns;
-              const result = nextResult();
-
-              return {
-                single: () => Promise.resolve(result)
-              };
-            }
-          };
-
-          return builder;
-        }
+        single: () => Promise.resolve(result)
       };
     }
   };
@@ -174,27 +133,19 @@ describe("SupabaseProductPersistence", () => {
     });
     expect(calls).toMatchObject([
       {
-        table: "categories",
-        method: "insert",
-        row: {
-          workspace_id: admin.workspaceId,
-          slug: "lounge",
-          name: "Lounge",
-          description: "Seating",
-          sort_order: 10,
-          is_published: false
-        }
-      },
-      {
-        table: "audit_logs",
-        method: "insert",
-        row: {
-          workspace_id: admin.workspaceId,
-          actor_admin_user_id: admin.adminUserId,
-          actor_type: "admin",
-          action: "category.create",
-          target_type: "category",
-          target_id: "44444444-4444-4444-8444-444444444444"
+        fn: "execute_admin_product_write",
+        args: {
+          p_action: "category.create",
+          p_target_id: null,
+          p_workspace_id: admin.workspaceId,
+          p_payload: {
+            workspace_id: admin.workspaceId,
+            slug: "lounge",
+            name: "Lounge",
+            description: "Seating",
+            sort_order: 10,
+            is_published: false
+          }
         }
       }
     ]);
@@ -227,29 +178,27 @@ describe("SupabaseProductPersistence", () => {
     expect(JSON.stringify(result)).not.toContain(admin.workspaceId);
     expect(JSON.stringify(result)).not.toContain("duplicate slug");
     expect(calls[0]).toMatchObject({
-      table: "products",
-      method: "update",
-      row: {
-        name: "Updated product",
-        status: "draft"
-      },
-      filters: [
-        ["id", "55555555-5555-4555-8555-555555555555"],
-        ["workspace_id", admin.workspaceId]
-      ]
+      fn: "execute_admin_product_write",
+      args: {
+        p_action: "product.update",
+        p_target_id: "55555555-5555-4555-8555-555555555555",
+        p_workspace_id: admin.workspaceId,
+        p_payload: {
+          name: "Updated product",
+          status: "draft"
+        }
+      }
     });
   });
 
-  it("archives product image metadata without binary uploads or storage calls", async () => {
+  it("archives product images metadata-only", async () => {
     const { calls, supabase } = createMockSupabase([
       {
         data: {
-          id: "66666666-6666-4666-8666-666666666666",
-          status: "archived"
+          id: "66666666-6666-4666-8666-666666666666"
         },
         error: null
-      },
-      { data: null, error: null }
+      }
     ]);
     const upload = vi.fn();
     const persistence = new SupabaseProductPersistence({ supabase });
@@ -267,31 +216,21 @@ describe("SupabaseProductPersistence", () => {
       }
     });
     expect(calls[0]).toMatchObject({
-      table: "product_images",
-      method: "update",
-      row: {
-        status: "archived",
-        is_primary: false
-      },
-      filters: [
-        ["id", "66666666-6666-4666-8666-666666666666"],
-        ["workspace_id", admin.workspaceId]
-      ]
+      fn: "execute_admin_product_write",
+      args: {
+        p_action: "productImage.archive",
+        p_target_id: "66666666-6666-4666-8666-666666666666",
+        p_workspace_id: admin.workspaceId,
+        p_payload: {}
+      }
     });
     expect(upload).not.toHaveBeenCalled();
     expect(JSON.stringify(calls)).not.toContain("storage.objects");
   });
 
-  it("fails safely when audit insert fails without leaking internals", async () => {
+  it("fails safely when RPC fails without leaking internals", async () => {
     const { calls, supabase } = createMockSupabase([
-      {
-        data: {
-          id: "44444444-4444-4444-8444-444444444444",
-          is_published: false
-        },
-        error: null
-      },
-      { data: null, error: new Error("audit log insert failed due to database error sql stack") }
+      { data: null, error: new Error("RPC failed due to database error sql stack") }
     ]);
     const persistence = new SupabaseProductPersistence({ supabase });
 
@@ -313,7 +252,7 @@ describe("SupabaseProductPersistence", () => {
 
     const serialized = JSON.stringify(result);
     expect(serialized).not.toContain("sql stack");
-    expect(calls.length).toBe(2);
-    expect(calls[1].table).toBe("audit_logs");
+    expect(calls.length).toBe(1);
+    expect(calls[0].fn).toBe("execute_admin_product_write");
   });
 });

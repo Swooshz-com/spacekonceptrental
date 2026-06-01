@@ -43,9 +43,16 @@ type ProductWriteUpdateBuilder = {
 };
 
 export type ProductWriteSupabaseClient = {
-  from(table: string): {
-    insert(row: unknown): ProductWriteInsertBuilder;
-    update(row: unknown): ProductWriteUpdateBuilder;
+  rpc(
+    fn: "execute_admin_product_write",
+    args: {
+      p_action: string;
+      p_target_id: string | null;
+      p_workspace_id: string;
+      p_payload: Record<string, unknown>;
+    }
+  ): {
+    single(): Promise<ProductWriteMutationResult>;
   };
 };
 
@@ -69,18 +76,9 @@ type MutationConfig = {
   admin: TrustedProductAdminContext;
   type: ProductPersistenceRecord["type"];
   action: string;
-  targetType: "category" | "product" | "product_image";
-  mutate: (
-    client: ProductWriteSupabaseClient
-  ) => Promise<ProductWriteMutationResult>;
+  targetId: string | null;
+  payload: Record<string, unknown>;
 };
-
-const productWriteTables = {
-  auditLogs: "audit_logs",
-  categories: "categories",
-  productImages: "product_images",
-  products: "products"
-} as const;
 
 const uuidPattern =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -264,41 +262,7 @@ function productImageUpdateRow(updates: ProductImageMetadataUpdate) {
   };
 }
 
-function updateByWorkspace(
-  client: ProductWriteSupabaseClient,
-  table: string,
-  row: Record<string, unknown>,
-  id: string,
-  workspaceId: string
-) {
-  return client
-    .from(table)
-    .update(row)
-    .eq("id", id)
-    .eq("workspace_id", workspaceId)
-    .select("id")
-    .single();
-}
 
-async function insertAuditLog(
-  client: ProductWriteSupabaseClient,
-  admin: TrustedProductAdminContext,
-  action: string,
-  targetType: MutationConfig["targetType"],
-  targetId: string
-) {
-  const result = await client.from(productWriteTables.auditLogs).insert({
-    workspace_id: admin.workspaceId,
-    actor_admin_user_id: admin.adminUserId,
-    actor_type: "admin",
-    action,
-    target_type: targetType,
-    target_id: targetId,
-    metadata: {}
-  });
-
-  return !result.error;
-}
 
 export class SupabaseProductPersistence implements ProductPersistence {
   constructor(private readonly options: SupabaseProductPersistenceOptions = {}) {}
@@ -311,8 +275,8 @@ export class SupabaseProductPersistence implements ProductPersistence {
     admin,
     type,
     action,
-    targetType,
-    mutate
+    targetId,
+    payload
   }: MutationConfig): Promise<ProductPersistenceResult> {
     if (!validAdminContext(admin)) {
       return failure("PRODUCT_ADMIN_CONTEXT_INVALID");
@@ -325,22 +289,22 @@ export class SupabaseProductPersistence implements ProductPersistence {
     }
 
     try {
-      const result = await mutate(supabase.client);
+      const result = await supabase.client
+        .rpc("execute_admin_product_write", {
+          p_action: action,
+          p_target_id: targetId,
+          p_workspace_id: admin.workspaceId,
+          p_payload: payload
+        })
+        .single();
+
       const id = resultRecordId(result);
 
       if (!id) {
         return failure("PRODUCT_PERSISTENCE_FAILED");
       }
 
-      const auditRecorded = await insertAuditLog(
-        supabase.client,
-        admin,
-        action,
-        targetType,
-        id
-      );
-
-      return auditRecorded ? success(type, id) : failure("PRODUCT_PERSISTENCE_FAILED");
+      return success(type, id);
     } catch {
       return failure("PRODUCT_PERSISTENCE_FAILED");
     }
@@ -351,13 +315,8 @@ export class SupabaseProductPersistence implements ProductPersistence {
       admin: input.admin,
       type: "category",
       action: "category.create",
-      targetType: "category",
-      mutate: (client) =>
-        client
-          .from(productWriteTables.categories)
-          .insert(categoryInsertRow(input.admin, input.category))
-          .select("id")
-          .single()
+      targetId: null,
+      payload: categoryInsertRow(input.admin, input.category)
     });
   }
 
@@ -366,15 +325,8 @@ export class SupabaseProductPersistence implements ProductPersistence {
       admin: input.admin,
       type: "category",
       action: "category.update",
-      targetType: "category",
-      mutate: (client) =>
-        updateByWorkspace(
-          client,
-          productWriteTables.categories,
-          categoryUpdateRow(input.updates),
-          input.categoryId,
-          input.admin.workspaceId
-        )
+      targetId: input.categoryId,
+      payload: categoryUpdateRow(input.updates)
     });
   }
 
@@ -383,15 +335,8 @@ export class SupabaseProductPersistence implements ProductPersistence {
       admin: input.admin,
       type: "category",
       action: "category.archive",
-      targetType: "category",
-      mutate: (client) =>
-        updateByWorkspace(
-          client,
-          productWriteTables.categories,
-          { is_published: false },
-          input.categoryId,
-          input.admin.workspaceId
-        )
+      targetId: input.categoryId,
+      payload: {}
     });
   }
 
@@ -400,13 +345,8 @@ export class SupabaseProductPersistence implements ProductPersistence {
       admin: input.admin,
       type: "product",
       action: "product.create",
-      targetType: "product",
-      mutate: (client) =>
-        client
-          .from(productWriteTables.products)
-          .insert(productInsertRow(input.admin, input.product))
-          .select("id")
-          .single()
+      targetId: null,
+      payload: productInsertRow(input.admin, input.product)
     });
   }
 
@@ -415,15 +355,8 @@ export class SupabaseProductPersistence implements ProductPersistence {
       admin: input.admin,
       type: "product",
       action: "product.update",
-      targetType: "product",
-      mutate: (client) =>
-        updateByWorkspace(
-          client,
-          productWriteTables.products,
-          productUpdateRow(input.updates),
-          input.productId,
-          input.admin.workspaceId
-        )
+      targetId: input.productId,
+      payload: productUpdateRow(input.updates)
     });
   }
 
@@ -432,15 +365,8 @@ export class SupabaseProductPersistence implements ProductPersistence {
       admin: input.admin,
       type: "product",
       action: "product.archive",
-      targetType: "product",
-      mutate: (client) =>
-        updateByWorkspace(
-          client,
-          productWriteTables.products,
-          productStatusRow("archived"),
-          input.productId,
-          input.admin.workspaceId
-        )
+      targetId: input.productId,
+      payload: {}
     });
   }
 
@@ -449,15 +375,8 @@ export class SupabaseProductPersistence implements ProductPersistence {
       admin: input.admin,
       type: "product",
       action: "product.publish",
-      targetType: "product",
-      mutate: (client) =>
-        updateByWorkspace(
-          client,
-          productWriteTables.products,
-          productStatusRow("published"),
-          input.productId,
-          input.admin.workspaceId
-        )
+      targetId: input.productId,
+      payload: {}
     });
   }
 
@@ -468,13 +387,8 @@ export class SupabaseProductPersistence implements ProductPersistence {
       admin: input.admin,
       type: "productImage",
       action: "productImage.create",
-      targetType: "product_image",
-      mutate: (client) =>
-        client
-          .from(productWriteTables.productImages)
-          .insert(productImageInsertRow(input.admin, input.image))
-          .select("id")
-          .single()
+      targetId: null,
+      payload: productImageInsertRow(input.admin, input.image)
     });
   }
 
@@ -485,15 +399,8 @@ export class SupabaseProductPersistence implements ProductPersistence {
       admin: input.admin,
       type: "productImage",
       action: "productImage.update",
-      targetType: "product_image",
-      mutate: (client) =>
-        updateByWorkspace(
-          client,
-          productWriteTables.productImages,
-          productImageUpdateRow(input.updates),
-          input.imageId,
-          input.admin.workspaceId
-        )
+      targetId: input.imageId,
+      payload: productImageUpdateRow(input.updates)
     });
   }
 
@@ -504,18 +411,8 @@ export class SupabaseProductPersistence implements ProductPersistence {
       admin: input.admin,
       type: "productImage",
       action: "productImage.archive",
-      targetType: "product_image",
-      mutate: (client) =>
-        updateByWorkspace(
-          client,
-          productWriteTables.productImages,
-          {
-            status: "archived",
-            is_primary: false
-          },
-          input.imageId,
-          input.admin.workspaceId
-        )
+      targetId: input.imageId,
+      payload: {}
     });
   }
 }
