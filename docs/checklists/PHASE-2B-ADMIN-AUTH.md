@@ -37,7 +37,7 @@ composition boundary. Phase 2B-U approves only the future admin runtime
 gate usage lane. Phase 2B-V adds only the server-only admin request metadata
 adapter boundary. Phase 2B-W adds only the server-only admin runtime gate
 invocation boundary. Phase 2B-X approves only the future admin runtime gate
-invocation usage lane. Phase 2B-Y adds only the server-only admin runtime route gate adapter boundary. Phase 2B-Z approves only the future admin runtime route gate adapter usage lane. Phase 2B-AA adds the first admin runtime route gate adapter usage boundary as exactly one harmless GET authorization probe/check route handler. Phase 2B-AB approves only the future server-only admin CSRF proof issuer runtime usage lane. Phase 2B-AC repairs the admin auth-check trusted workspace dependency. Phase 2B-AD approves only the future admin CSRF proof issuer route operation model. Phase 2B-AE adds only the admin CSRF issue operation policy and preflight boundary. Keep real auth runtime wiring, factory, adapter-set, decision-boundary, preflight, CSRF verifier, CSRF issuer, request metadata adapter, runtime gate invocation helper, or authorization gate usage from other runtime routes/pages/actions, headers, login/logout routes, protected admin pages, admin UI, product management writes, browser Supabase, service-role runtime paths, deployment, and Supabase Cloud work unchecked until a future PR has explicit approval.
+invocation usage lane. Phase 2B-Y adds only the server-only admin runtime route gate adapter boundary. Phase 2B-Z approves only the future admin runtime route gate adapter usage lane. Phase 2B-AA adds the first admin runtime route gate adapter usage boundary as exactly one harmless GET authorization probe/check route handler. Phase 2B-AB approves only the future server-only admin CSRF proof issuer runtime usage lane. Phase 2B-AC repairs the admin auth-check trusted workspace dependency. Phase 2B-AD approves only the future admin CSRF proof issuer route operation model. Phase 2B-AE adds only the admin CSRF issue operation policy and preflight boundary. Phase 2B-AI adds only the server-only admin CSRF proof issuer session/workspace binding boundary and keeps the actual route deferred. Keep real auth runtime wiring, factory, adapter-set, decision-boundary, preflight, CSRF verifier, CSRF issuer, request metadata adapter, runtime gate invocation helper, or authorization gate usage from other runtime routes/pages/actions, headers, login/logout routes, protected admin pages, admin UI, product management writes, browser Supabase, service-role runtime paths, deployment, and Supabase Cloud work unchecked until a future PR has explicit approval.
 
 ## Completed Design, Policy, Resolver, Adapter, And Provider-session Milestones
 
@@ -74,6 +74,7 @@ invocation usage lane. Phase 2B-Y adds only the server-only admin runtime route 
 - [x] Approve future server-only admin CSRF proof issuer runtime usage lane.
 - [x] Admin auth-check trusted workspace dependency repair.
 - [x] Approve future admin CSRF proof issuer route operation model.
+- [x] Add server-only admin CSRF proof issuer session/workspace binding boundary.
 
 ## Design References
 
@@ -134,6 +135,7 @@ runtime implementation approval.
 - [ ] Admin request security preflight usage from runtime routes, pages, or server actions.
 - [ ] Admin CSRF proof verifier usage from runtime routes, pages, or server actions.
 - [ ] Admin CSRF proof issuer usage from runtime routes, pages, or server actions.
+- [ ] Admin CSRF proof session/workspace binding usage from runtime routes, pages, or server actions.
 - [ ] Admin authorization gate usage from runtime routes, pages, or server actions.
 - [ ] Admin runtime gate invocation usage from runtime routes, pages, or server actions.
 - [ ] Admin runtime route gate adapter usage from other runtime routes, pages, or server actions.

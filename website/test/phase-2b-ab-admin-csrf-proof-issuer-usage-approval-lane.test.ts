@@ -52,14 +52,14 @@ describe("Phase 2B-AB admin CSRF proof issuer runtime usage approval lane", () =
     const projectContext = readRepoFile("docs/PROJECT-CONTEXT.md");
 
     expect(status).toContain(
-      "Current phase: Phase 2B-AH - admin CSRF proof issuer route runtime boundary."
+      "Current phase: Phase 2B-AI - admin CSRF proof issuer session/workspace binding boundary."
     );
     expect(status).toContain(
-      "Latest completed phase: Phase 2B-AG - admin CSRF proof signer and nonce runtime dependency boundary."
+      "Latest completed phase: Phase 2B-AH - admin CSRF proof issuer route runtime boundary."
     );
-    expect(status).toContain("Last merged phase PR: #74");
+    expect(status).toContain("Last merged phase PR: #75");
     expect(status).toContain(
-      "Merge commit: `bfbcca40ec21b7f278a62a638ccb95a2bcd9c2e7`"
+      "Merge commit: `6bb96ff609043892fca29814a48d1dd16a1ec7de`"
     );
     expect(status).toContain(
       "This phase implements only the missing server-only runtime dependency boundary needed by the existing CSRF proof issuer/verifier contracts. It provides nonce generation, signing, and signature verification using Node server-only crypto. This phase does not implement the actual CSRF proof issuer route. This phase does not add product/category/product image writes, admin UI, pages, server actions, login/logout, protected admin pages, Storage, deployment, Supabase Cloud, browser Supabase, service-role runtime paths, n8n workflow changes, Pinecone runtime code, SaaS chatbot work, or `website/chat-config.js` access."
@@ -95,7 +95,7 @@ describe("Phase 2B-AB admin CSRF proof issuer runtime usage approval lane", () =
       "The future route must remain server-only and must not bypass the Phase 2B-Y/AA route-gate authorization path."
     );
     expect(design).toContain(
-      "The future route must not call lower-level auth/security boundaries directly except the approved CSRF issuer boundary."
+      "The future route must not call lower-level auth/security boundaries directly except the approved CSRF issuer and session/workspace binding boundaries."
     );
     expect(membershipDesign).toContain(
       "Latest completed admin/auth boundary state: Phase 2B-AC admin auth-check trusted workspace dependency repair."
