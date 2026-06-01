@@ -99,6 +99,11 @@ describe("resolveServerAdminCsrfProofSessionWorkspaceBinding", () => {
       expect(result).toStrictEqual({
         bound: true,
         sessionBinding: "opaque-session-workspace-binding",
+        adminContext: {
+          workspaceId: "workspace-1",
+          adminUserId: "admin-user-1",
+          resolution: "server-auth-membership"
+        },
         requestId: "request-1"
       });
       expect(result).not.toHaveProperty("authUserId");

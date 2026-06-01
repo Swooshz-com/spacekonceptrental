@@ -297,7 +297,7 @@ test('real migration directory passes static validation', () => {
   const result = runValidator(realMigrationsDir);
 
   assert.equal(result.status, 0, result.stdout + result.stderr);
-  assert.match(result.stdout, /checked 4 migration SQL file\(s\)/);
+  assert.match(result.stdout, /checked 5 migration SQL file\(s\)/);
 });
 
 test('real base schema migration creates the planned MVP tables', () => {
@@ -465,6 +465,55 @@ test('real migrations do not enable anonymous catalogue product writes', () => {
       `${tableName} should not have anonymous write policies`,
     );
   }
+});
+
+test('real migrations add authenticated product-admin write policies without service-role paths', () => {
+  const sql = normalizeSql(readAllRealMigrationSql());
+
+  assert.match(
+    sql,
+    /create or replace function public\.is_workspace_product_manager\(\s*target_workspace_id uuid\s*\)/,
+  );
+  assert.match(sql, /m\.role in \('owner', 'admin'\)/);
+  assert.match(
+    sql,
+    /grant execute on function public\.is_workspace_product_manager\(uuid\) to authenticated;/,
+  );
+  assert.match(
+    sql,
+    /alter table public\.product_images add column if not exists status text not null default 'active'/,
+  );
+
+  for (const [tableName, policyPrefix] of [
+    ['categories', 'categories_product_admin'],
+    ['products', 'products_product_admin'],
+    ['product_images', 'product_images_product_admin'],
+  ]) {
+    assert.match(
+      sql,
+      new RegExp(`create policy ${policyPrefix}_insert on public\\.${tableName} for insert to authenticated with check \\(\\s*public\\.is_workspace_product_manager\\(workspace_id\\)[^;]*\\);`),
+      `${tableName} should have product-admin insert policy`,
+    );
+    assert.match(
+      sql,
+      new RegExp(`create policy ${policyPrefix}_update on public\\.${tableName} for update to authenticated using \\(\\s*public\\.is_workspace_product_manager\\(workspace_id\\)\\s*\\) with check \\(\\s*public\\.is_workspace_product_manager\\(workspace_id\\)[^;]*\\);`),
+      `${tableName} should have product-admin update policy`,
+    );
+  }
+
+  assert.match(
+    sql,
+    /create policy audit_logs_product_admin_insert on public\.audit_logs for insert to authenticated with check \(/,
+  );
+  assert.match(
+    sql,
+    /action in \([\s\S]*'category\.create'[\s\S]*'category\.update'[\s\S]*'category\.archive'[\s\S]*'product\.create'[\s\S]*'product\.update'[\s\S]*'product\.publish'[\s\S]*'product\.archive'[\s\S]*'productimage\.create'[\s\S]*'productimage\.update'[\s\S]*'productimage\.archive'[\s\S]*\)/,
+  );
+  assert.doesNotMatch(sql, /service_role/i);
+  assert.doesNotMatch(
+    sql,
+    /grant\s+(insert|update|delete|all)\b[\s\S]*on public\.(categories|products|product_images) to anon;/,
+  );
 });
 
 test('real migrations do not enable anonymous chat persistence writes', () => {

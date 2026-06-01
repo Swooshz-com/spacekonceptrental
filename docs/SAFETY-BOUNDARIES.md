@@ -441,3 +441,13 @@ The route accepts only `POST /api/admin/csrf-proof`, validates a safe JSON body 
 The route may read only `ADMIN_EXPECTED_ORIGIN`, `ADMIN_EXPECTED_HOST`, and `ADMIN_TRUSTED_WORKSPACE_ID` to supply existing approved runtime dependencies. It may use the Phase 2B-AI session/workspace binding boundary, Phase 2B-AJ runtime dependencies, and Phase 2B-S CSRF proof issuer. It must not expose raw headers, cookies, tokens, secrets, SQL/provider errors, workspace internals, membership internals, signer internals, verifier internals, or stack traces.
 
 Phase 2B-AK does not add product/category/product image write routes, admin UI, login/logout, protected admin pages, Storage, deployment, Supabase Cloud, browser Supabase, service-role runtime paths, n8n changes, Pinecone runtime code, SaaS chatbot work, a replay store, or `website/chat-config.js` access.
+
+## Phase 2B-AL Admin Product Persistence And Protected Write API Routes
+
+Phase 2B-AL adds only backend first-party admin product-management write routes and session-bound product persistence.
+
+The protected route boundary may create, update, publish, or archive category/product/product-image metadata through `website/app/api/admin/**` route handlers only. Every route must use the approved admin route-gate stack, a matching CSRF proof for `category.write`, `product.write`, or `productImage.write`, `ADMIN_TRUSTED_WORKSPACE_ID`, safe JSON validation, and no-store JSON responses. Product image writes are metadata-only.
+
+The persistence boundary may use only a session-bound authenticated Supabase client, owner/admin RLS policies, workspace filters, and product-management audit inserts. It must not use service-role keys, browser Supabase, public mutation routes, hard deletes, binary uploads, Supabase Storage, production seed data, raw SQL errors in responses, or workspace/admin/membership internals in route responses.
+
+Phase 2B-AL does not add admin UI, login/logout routes, protected admin pages, server actions, deployment config, Supabase Cloud actions, n8n changes, Pinecone runtime code, SaaS chatbot work, or `website/chat-config.js` access.

@@ -38,9 +38,11 @@ const ids = {
   authMemberA: '20000000-0000-4000-8000-000000000001',
   authMemberB: '20000000-0000-4000-8000-000000000002',
   authNoMembership: '20000000-0000-4000-8000-000000000003',
+  authViewerA: '20000000-0000-4000-8000-000000000004',
   adminA: '30000000-0000-4000-8000-000000000001',
   adminB: '30000000-0000-4000-8000-000000000002',
   adminNoMembership: '30000000-0000-4000-8000-000000000003',
+  adminViewerA: '30000000-0000-4000-8000-000000000004',
   categoryPublishedA: '40000000-0000-4000-8000-000000000001',
   categoryDraftA: '40000000-0000-4000-8000-000000000002',
   categoryPublishedB: '40000000-0000-4000-8000-000000000003',
@@ -239,12 +241,14 @@ function seedFixtures() {
     values
       ('${ids.adminA}', '${ids.authMemberA}', 'admin-a@example.test', 'Admin A'),
       ('${ids.adminB}', '${ids.authMemberB}', 'admin-b@example.test', 'Admin B'),
-      ('${ids.adminNoMembership}', '${ids.authNoMembership}', 'admin-no-membership@example.test', 'No Membership');
+      ('${ids.adminNoMembership}', '${ids.authNoMembership}', 'admin-no-membership@example.test', 'No Membership'),
+      ('${ids.adminViewerA}', '${ids.authViewerA}', 'viewer-a@example.test', 'Viewer A');
 
     insert into public.memberships (workspace_id, admin_user_id, role, status)
     values
       ('${ids.workspaceA}', '${ids.adminA}', 'owner', 'active'),
-      ('${ids.workspaceB}', '${ids.adminB}', 'owner', 'active');
+      ('${ids.workspaceB}', '${ids.adminB}', 'owner', 'active'),
+      ('${ids.workspaceA}', '${ids.adminViewerA}', 'viewer', 'active');
 
     insert into public.categories (id, workspace_id, slug, name, is_published, sort_order)
     values
@@ -348,6 +352,8 @@ function assertNoRuntimeSupabaseUse() {
   const approvedServerSupabaseFiles = new Set([
     'website/lib/supabase/env.ts',
     'website/lib/supabase/server.ts',
+    'website/lib/admin/authorization/supabase-admin-auth-identity-adapter.ts',
+    'website/lib/admin/authorization/supabase-admin-profile-membership-adapters.ts',
   ]);
   const approvedCatalogueReadFiles = new Set([
     'website/lib/catalogue/catalogue-repository.ts',
@@ -926,6 +932,200 @@ check('anonymous public cannot write catalogue tables', () => {
         '${ids.productPublishedA}',
         'test-public',
         'anon-product-image-write.jpg'
+      )
+    `,
+  );
+});
+
+check('authenticated product admins can write only their workspace catalogue rows and audit product actions', () => {
+  const categoryId = '40000000-0000-4000-8000-000000000101';
+  const productId = '50000000-0000-4000-8000-000000000101';
+  const imageId = '60000000-0000-4000-8000-000000000101';
+  const output = queryAs(
+    'authenticated',
+    ids.authMemberA,
+    `
+      insert into public.categories (
+        id,
+        workspace_id,
+        slug,
+        name,
+        is_published,
+        sort_order
+      )
+      values (
+        '${categoryId}',
+        '${ids.workspaceA}',
+        'admin-category-write',
+        'Admin Category Write',
+        false,
+        10
+      )
+      returning id::text;
+
+      update public.categories
+      set is_published = true
+      where id = '${categoryId}'
+        and workspace_id = '${ids.workspaceA}'
+      returning id::text;
+
+      insert into public.products (
+        id,
+        workspace_id,
+        category_id,
+        slug,
+        name,
+        status,
+        sort_order
+      )
+      values (
+        '${productId}',
+        '${ids.workspaceA}',
+        '${categoryId}',
+        'admin-product-write',
+        'Admin Product Write',
+        'draft',
+        10
+      )
+      returning id::text;
+
+      update public.products
+      set status = 'published'
+      where id = '${productId}'
+        and workspace_id = '${ids.workspaceA}'
+      returning id::text;
+
+      insert into public.product_images (
+        id,
+        workspace_id,
+        product_id,
+        storage_bucket,
+        storage_path,
+        alt_text,
+        sort_order,
+        is_primary
+      )
+      values (
+        '${imageId}',
+        '${ids.workspaceA}',
+        '${productId}',
+        'test-public',
+        'admin-product-write.jpg',
+        'Admin product write image',
+        10,
+        true
+      )
+      returning id::text;
+
+      update public.product_images
+      set status = 'archived',
+        is_primary = false
+      where id = '${imageId}'
+        and workspace_id = '${ids.workspaceA}'
+      returning id::text;
+
+      insert into public.audit_logs (
+        workspace_id,
+        actor_admin_user_id,
+        actor_type,
+        action,
+        target_type,
+        target_id,
+        metadata
+      )
+      values (
+        '${ids.workspaceA}',
+        '${ids.adminA}',
+        'admin',
+        'product.create',
+        'product',
+        '${productId}',
+        '{}'::jsonb
+      );
+    `,
+  );
+
+  assert.deepEqual(
+    output.split('\n').filter(Boolean),
+    [categoryId, categoryId, productId, productId, imageId, imageId],
+    'owner should write and update only their workspace catalogue rows',
+  );
+});
+
+check('authenticated product writes reject cross-workspace, viewer, and no-membership callers', () => {
+  statementFailsAs(
+    'authenticated',
+    ids.authMemberA,
+    `
+      insert into public.categories (workspace_id, slug, name, is_published)
+      values ('${ids.workspaceB}', 'cross-workspace-write', 'Cross Workspace Write', false)
+    `,
+  );
+
+  statementFailsAs(
+    'authenticated',
+    ids.authViewerA,
+    `
+      insert into public.products (workspace_id, slug, name, status)
+      values ('${ids.workspaceA}', 'viewer-product-write', 'Viewer Product Write', 'draft')
+    `,
+  );
+
+  statementFailsAs(
+    'authenticated',
+    ids.authNoMembership,
+    `
+      insert into public.product_images (
+        workspace_id,
+        product_id,
+        storage_bucket,
+        storage_path
+      )
+      values (
+        '${ids.workspaceA}',
+        '${ids.productPublishedA}',
+        'test-public',
+        'no-membership-product-image-write.jpg'
+      )
+    `,
+  );
+});
+
+check('authenticated product writes reject cross-workspace relationships', () => {
+  statementFailsAs(
+    'authenticated',
+    ids.authMemberA,
+    `
+      insert into public.products (workspace_id, category_id, slug, name, status)
+      values ('${ids.workspaceA}', '${ids.categoryPublishedB}', 'cross-workspace-product', 'Cross', 'draft')
+    `,
+  );
+
+  statementFailsAs(
+    'authenticated',
+    ids.authMemberA,
+    `
+      update public.products
+      set category_id = '${ids.categoryPublishedB}'
+      where id = '${ids.productPublishedA}'
+    `,
+  );
+
+  statementFailsAs(
+    'authenticated',
+    ids.authMemberA,
+    `
+      insert into public.product_images (
+        workspace_id,
+        product_id,
+        storage_bucket,
+        storage_path
+      )
+      values (
+        '${ids.workspaceA}',
+        '${ids.productPublishedB}',
+        'test-public',
+        'cross-workspace-product-image.jpg'
       )
     `,
   );

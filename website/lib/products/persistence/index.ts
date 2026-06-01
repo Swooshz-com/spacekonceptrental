@@ -4,6 +4,11 @@ import {
   disabledProductPersistence,
   DisabledProductPersistence
 } from "./disabled-product-persistence";
+import {
+  supabaseProductPersistence,
+  SupabaseProductPersistence,
+  type ProductWriteSupabaseClientResult
+} from "./supabase-product-persistence";
 import type {
   ArchiveProductImageInput,
   ArchiveProductInput,
@@ -16,6 +21,9 @@ import type {
   ProductImageMetadataDraft,
   ProductImageMetadataUpdate,
   ProductPersistence,
+  ProductPersistenceFailureCode,
+  ProductPersistenceRecord,
+  ProductPersistenceRecordType,
   ProductPersistenceResult,
   ProductStatus,
   ProductUpdate,
@@ -26,7 +34,12 @@ import type {
   UpdateProductInput
 } from "./types";
 
-export { disabledProductPersistence, DisabledProductPersistence };
+export {
+  disabledProductPersistence,
+  DisabledProductPersistence,
+  supabaseProductPersistence,
+  SupabaseProductPersistence
+};
 export type {
   ArchiveProductImageInput,
   ArchiveProductInput,
@@ -39,8 +52,12 @@ export type {
   ProductImageMetadataDraft,
   ProductImageMetadataUpdate,
   ProductPersistence,
+  ProductPersistenceFailureCode,
+  ProductPersistenceRecord,
+  ProductPersistenceRecordType,
   ProductPersistenceResult,
   ProductStatus,
+  ProductWriteSupabaseClientResult,
   ProductUpdate,
   PublishProductInput,
   TrustedProductAdminContext,
@@ -50,5 +67,5 @@ export type {
 };
 
 export function getProductPersistence(): ProductPersistence {
-  return disabledProductPersistence;
+  return supabaseProductPersistence;
 }

@@ -50,20 +50,20 @@ describe("Phase 2B-AI admin CSRF proof issuer session/workspace binding boundary
     );
 
     expect(status).toContain(
-      "Current phase: Phase 2B-AK - admin CSRF proof issuer route implementation."
+      "Current phase: Phase 2B-AL - admin product persistence and protected write API routes."
     );
     expect(status).toContain(
-      "Latest completed phase: Phase 2B-AJ - admin CSRF proof session/workspace binding runtime dependency boundary."
+      "Latest completed phase: Phase 2B-AK - admin CSRF proof issuer route implementation."
     );
-    expect(status).toContain("Last merged phase PR: #77");
+    expect(status).toContain("Last merged phase PR: #78");
     expect(status).toContain(
-      "Merge commit: `75b9ea7b3dea43b5160fc7d0ad9a98ed5a22f0d7`"
-    );
-    expect(status).toContain(
-      "This phase implements only the first-party server-only `POST /api/admin/csrf-proof` proof issuer route"
+      "Merge commit: `d862b5a6a75031146cac9e881296eacbeb26d414`"
     );
     expect(status).toContain(
-      "Product/category/product image write routes remain deferred."
+      "This phase implements the first backend-only protected admin product-management write surface"
+    );
+    expect(status).toContain(
+      "Product writes are approved only through the Phase 2B-AL backend API route boundary."
     );
     expect(status).toContain(
       "Phase 2B-AI implements only the server-only admin CSRF proof issuer session/workspace binding boundary."
@@ -108,8 +108,15 @@ describe("Phase 2B-AI admin CSRF proof issuer session/workspace binding boundary
     expect(readTrackedFiles(["website/app/api/admin"])).toEqual([
       "website/app/api/admin/auth-check/route.test.ts",
       "website/app/api/admin/auth-check/route.ts",
+      "website/app/api/admin/categories/[categoryId]/route.ts",
+      "website/app/api/admin/categories/route.ts",
       "website/app/api/admin/csrf-proof/route.test.ts",
-      "website/app/api/admin/csrf-proof/route.ts"
+      "website/app/api/admin/csrf-proof/route.ts",
+      "website/app/api/admin/product-images/[imageId]/route.ts",
+      "website/app/api/admin/product-images/route.ts",
+      "website/app/api/admin/products/[productId]/publish/route.ts",
+      "website/app/api/admin/products/[productId]/route.ts",
+      "website/app/api/admin/products/route.ts"
     ]);
     expect(readTrackedFiles(["website/app/api/products"])).toEqual([]);
     expect(readTrackedFiles(["website/app/api/categories"])).toEqual([]);

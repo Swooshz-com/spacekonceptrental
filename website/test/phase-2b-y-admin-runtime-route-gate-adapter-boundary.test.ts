@@ -80,11 +80,11 @@ describe("Phase 2B-Y server-only admin runtime route gate adapter boundary", () 
     const projectContext = readRepoFile("docs/PROJECT-CONTEXT.md");
 
     expect(status).toContain(
-      "Latest completed phase: Phase 2B-AJ - admin CSRF proof session/workspace binding runtime dependency boundary."
+      "Latest completed phase: Phase 2B-AK - admin CSRF proof issuer route implementation."
     );
-    expect(status).toContain("Last merged phase PR: #77");
+    expect(status).toContain("Last merged phase PR: #78");
     expect(status).toContain(
-      "Merge commit: `75b9ea7b3dea43b5160fc7d0ad9a98ed5a22f0d7`"
+      "Merge commit: `d862b5a6a75031146cac9e881296eacbeb26d414`"
     );
     expect(roadmap).toContain(
       "Phase 2B-Y adds only the server-only admin runtime route gate adapter boundary"
@@ -313,7 +313,19 @@ describe("Phase 2B-Y server-only admin runtime route gate adapter boundary", () 
     expect(readTrackedFiles(["website/app/api/auth"])).toEqual([]);
     expect(readTrackedFiles(["website/app/api/login"])).toEqual([]);
     expect(readTrackedFiles(["website/app/api/logout"])).toEqual([]);
-    expect(readTrackedFiles(["website/app/api/admin"])).toEqual(["website/app/api/admin/auth-check/route.test.ts", "website/app/api/admin/auth-check/route.ts", "website/app/api/admin/csrf-proof/route.test.ts", "website/app/api/admin/csrf-proof/route.ts"]);
+    expect(readTrackedFiles(["website/app/api/admin"])).toEqual([
+      "website/app/api/admin/auth-check/route.test.ts",
+      "website/app/api/admin/auth-check/route.ts",
+      "website/app/api/admin/categories/[categoryId]/route.ts",
+      "website/app/api/admin/categories/route.ts",
+      "website/app/api/admin/csrf-proof/route.test.ts",
+      "website/app/api/admin/csrf-proof/route.ts",
+      "website/app/api/admin/product-images/[imageId]/route.ts",
+      "website/app/api/admin/product-images/route.ts",
+      "website/app/api/admin/products/[productId]/publish/route.ts",
+      "website/app/api/admin/products/[productId]/route.ts",
+      "website/app/api/admin/products/route.ts"
+    ]);
     expect(readTrackedFiles(["website/app/api/products"])).toEqual([]);
     expect(readTrackedFiles(["website/app/api/categories"])).toEqual([]);
     expect(readTrackedFiles(["website/app/api/product-images"])).toEqual([]);

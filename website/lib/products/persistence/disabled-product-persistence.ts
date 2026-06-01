@@ -32,6 +32,12 @@ export class DisabledProductPersistence implements ProductPersistence {
     return disabledResult;
   }
 
+  async archiveCategory(
+    _input: UpdateCategoryInput
+  ): Promise<ProductPersistenceResult> {
+    return disabledResult;
+  }
+
   async createProduct(
     _input: CreateProductInput
   ): Promise<ProductPersistenceResult> {

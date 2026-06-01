@@ -20,6 +20,7 @@ import {
   resolveServerAdminRuntimeRouteGateAdapter,
   type ServerAdminRuntimeRouteGateAdapterResult
 } from "../../../../lib/admin/authorization/server-admin-runtime-route-gate-adapter";
+import { readBoundedJsonBody } from "../../../../lib/admin/api/bounded-json-body-reader";
 
 type AdminCsrfProofRouteEnv = {
   ADMIN_EXPECTED_ORIGIN?: string | null;
@@ -48,6 +49,8 @@ type AdminCsrfProofRouteDependencies = {
 
 type AdminCsrfProofRouteError =
   | "request_method_not_allowed"
+  | "request_content_type_invalid"
+  | "request_body_too_large"
   | "request_body_missing"
   | "request_body_malformed"
   | "requested_operation_missing"
@@ -57,16 +60,6 @@ type AdminCsrfProofRouteError =
   | "admin_csrf_session_workspace_binding_unavailable"
   | "session_workspace_binding_deriver_unavailable"
   | "session_workspace_binding_derivation_failed";
-
-type BodyParseResult =
-  | {
-      ok: true;
-      body: Record<string, unknown>;
-    }
-  | {
-      ok: false;
-      error: "request_body_missing" | "request_body_malformed";
-    };
 
 type OperationParseResult =
   | {
@@ -145,47 +138,6 @@ function successJson(csrfProof: string, expiresAt: number): NextResponse {
       headers: noStoreHeaders
     }
   );
-}
-
-async function readJsonBody(request: NextRequest): Promise<BodyParseResult> {
-  let bodyText: string;
-
-  try {
-    bodyText = await request.text();
-  } catch {
-    return {
-      ok: false,
-      error: "request_body_malformed"
-    };
-  }
-
-  if (!bodyText.trim()) {
-    return {
-      ok: false,
-      error: "request_body_missing"
-    };
-  }
-
-  try {
-    const parsed = JSON.parse(bodyText);
-
-    if (!isRecord(parsed)) {
-      return {
-        ok: false,
-        error: "request_body_malformed"
-      };
-    }
-
-    return {
-      ok: true,
-      body: parsed
-    };
-  } catch {
-    return {
-      ok: false,
-      error: "request_body_malformed"
-    };
-  }
 }
 
 function parseRequestedOperation(
@@ -305,10 +257,10 @@ export async function issueAdminCsrfProofRoute(
     return errorJson("request_method_not_allowed", 405);
   }
 
-  const body = await readJsonBody(request);
+  const body = await readBoundedJsonBody(request);
 
   if (!body.ok) {
-    return errorJson(body.error, 400);
+    return errorJson(body.error, body.status);
   }
 
   const operation = parseRequestedOperation(body.body);

@@ -24,8 +24,8 @@ describe("Phase 2B-AF Admin CSRF Proof Issuer Route Readiness Boundary", () => {
     const authChecklist = readRepoFile("docs/checklists/PHASE-2B-AUTH-IMPLEMENTATION.md");
 
     expect(status).toContain("nonce generation, signing, and signature verification");
-    expect(status).toContain("Product/category/product image write routes remain deferred");
-    expect(status).toContain("This phase implements only the first-party server-only `POST /api/admin/csrf-proof` proof issuer route at `website/app/api/admin/csrf-proof/route.ts`. The route validates safe JSON input, gates itself through the approved `admin.csrf.issue` route-gate lane, resolves the target operation binding through the Phase 2B-AI boundary and Phase 2B-AJ runtime deriver, and issues short-lived CSRF proofs for `product.write`, `category.write`, `productImage.write`, and `membership.manage`. Product/category/product image write routes remain deferred.");
+    expect(status).toContain("Product writes are approved only through the Phase 2B-AL backend API route boundary");
+    expect(status).toContain("This phase implements the first backend-only protected admin product-management write surface. It adds session-bound Supabase product/category/product image metadata persistence, owner/admin RLS write policies, product-management audit inserts, and protected first-party admin write API routes for category, product, and product-image metadata changes. The routes use the approved admin route-gate stack, matching CSRF proofs, `ADMIN_TRUSTED_WORKSPACE_ID`, safe JSON validation, and no-store responses. It does not add admin UI, login/logout routes, protected admin pages, Supabase Storage, binary uploads, browser Supabase, service-role runtime paths, deployment config, n8n changes, Pinecone runtime code, SaaS chatbot work, or `website/chat-config.js` access.");
     
     expect(status).toContain("Phase 2B-AF is docs/checklist/static-guard approval only for the admin CSRF proof issuer route readiness, because the required runtime signer dependencies are not yet implemented.");
 
@@ -39,8 +39,15 @@ describe("Phase 2B-AF Admin CSRF Proof Issuer Route Readiness Boundary", () => {
     const allowedFiles = [
       "website/app/api/admin/auth-check/route.test.ts",
       "website/app/api/admin/auth-check/route.ts",
+      "website/app/api/admin/categories/[categoryId]/route.ts",
+      "website/app/api/admin/categories/route.ts",
       "website/app/api/admin/csrf-proof/route.test.ts",
-      "website/app/api/admin/csrf-proof/route.ts"
+      "website/app/api/admin/csrf-proof/route.ts",
+      "website/app/api/admin/product-images/[imageId]/route.ts",
+      "website/app/api/admin/product-images/route.ts",
+      "website/app/api/admin/products/[productId]/publish/route.ts",
+      "website/app/api/admin/products/[productId]/route.ts",
+      "website/app/api/admin/products/route.ts"
     ];
     
     for (const file of apiAdminFiles) {

@@ -10,10 +10,34 @@ export type TrustedProductAdminContext = {
 export type ProductPersistenceSkippedReason =
   "PRODUCT_PERSISTENCE_DISABLED_PHASE_1J_A";
 
-export type ProductPersistenceResult = {
-  status: "skipped";
-  reason: ProductPersistenceSkippedReason;
+export type ProductPersistenceFailureCode =
+  | "PRODUCT_PERSISTENCE_UNAVAILABLE"
+  | "PRODUCT_ADMIN_CONTEXT_INVALID"
+  | "PRODUCT_PERSISTENCE_FAILED";
+
+export type ProductPersistenceRecordType =
+  | "category"
+  | "product"
+  | "productImage";
+
+export type ProductPersistenceRecord = {
+  id: string;
+  type: ProductPersistenceRecordType;
 };
+
+export type ProductPersistenceResult =
+  | {
+      ok: true;
+      record: ProductPersistenceRecord;
+    }
+  | {
+      ok: false;
+      code: ProductPersistenceFailureCode;
+    }
+  | {
+      status: "skipped";
+      reason: ProductPersistenceSkippedReason;
+    };
 
 export type ProductStatus = "draft" | "published" | "archived";
 
@@ -105,6 +129,9 @@ export interface ProductPersistence {
     input: CreateCategoryInput
   ) => Promise<ProductPersistenceResult>;
   updateCategory: (
+    input: UpdateCategoryInput
+  ) => Promise<ProductPersistenceResult>;
+  archiveCategory: (
     input: UpdateCategoryInput
   ) => Promise<ProductPersistenceResult>;
   createProduct: (

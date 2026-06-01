@@ -39,6 +39,9 @@ const routeSourcePath = resolve(process.cwd(), "app/api/admin/csrf-proof/route.t
 function createRequest(body?: unknown, init?: RequestInit) {
   const requestInit: RequestInit = {
     method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
     ...init
   };
 
@@ -171,8 +174,32 @@ describe("POST /api/admin/csrf-proof", () => {
 
   it.each([
     [createRequest(undefined), 400, "request_body_missing"],
-    [createRequest("{"), 400, "request_body_malformed"],
-    [createRequest([]), 400, "request_body_malformed"],
+    [createRequest(undefined, { headers: { "Content-Type": "text/plain" } }), 415, "request_content_type_invalid"],
+    [createRequest(undefined, { headers: { "Content-Type": "text/plain+json" } }), 415, "request_content_type_invalid"],
+    [createRequest(undefined, { headers: {} }), 415, "request_content_type_invalid"],
+    [createRequest("a".repeat(33 * 1024), { headers: { "Content-Type": "application/json", "Content-Length": String(33 * 1024) } }), 413, "request_body_too_large"],
+    [
+      (function() {
+        const req = new Request("https://admin.space.test/api/admin/csrf-proof", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: new ReadableStream({
+            start(controller) {
+              controller.enqueue(new TextEncoder().encode("a".repeat(33 * 1024)));
+              controller.close();
+            }
+          }),
+          // @ts-ignore
+          duplex: "half"
+        });
+        req.headers.delete("Content-Length");
+        return req as unknown as NextRequest;
+      })(),
+      413,
+      "request_body_too_large"
+    ],
+    [createRequest("{", { headers: { "Content-Type": "application/json" } }), 400, "request_body_malformed"],
+    [createRequest([], { headers: { "Content-Type": "application/json" } }), 400, "request_body_malformed"],
     [createRequest({}), 400, "requested_operation_missing"],
     [createRequest({ requestedOperation: "conversation.write" }), 400, "operation_not_supported"],
     [createRequest({ requestedOperation: "catalogue.read" }), 400, "operation_not_state_changing"],
@@ -235,6 +262,27 @@ describe("POST /api/admin/csrf-proof", () => {
         }
       }
     );
+  });
+
+  it.each([
+    "application/json",
+    "application/json; charset=utf-8",
+    "application/vnd.api+json",
+    "application/vnd.api+json; charset=utf-8"
+  ])("accepts valid JSON content type: %s", async (contentType) => {
+    const dependencies = createRouteDependencies();
+    const response = await issueAdminCsrfProofRoute(
+      createRequest({
+        requestedOperation: "product.write",
+        requestedWorkspaceIdForValidationOnly: trustedWorkspaceId
+      }, {
+        headers: { "Content-Type": contentType }
+      }),
+      dependencies
+    );
+
+    expect(response.status).toBe(200);
+    expect(dependencies.resolveRouteGate).toHaveBeenCalled();
   });
 
   it.each([
