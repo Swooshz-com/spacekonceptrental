@@ -497,3 +497,5 @@ Checklist: `docs/checklists/PHASE-6-BILLING-LAUNCH.md`
 This phase is not approved for implementation yet.
 
 Phase 2B-AE adds only the admin CSRF issue operation policy and preflight boundary. It does not implement the actual CSRF proof issuer route.
+
+Phase 2B-AI adds only the server-only admin CSRF proof issuer session/workspace binding boundary. It resolves a binding only from existing Phase 2B server-only session, profile, membership, and trusted workspace boundaries, requires an explicitly injected opaque binding deriver, and keeps the actual issuer route deferred.

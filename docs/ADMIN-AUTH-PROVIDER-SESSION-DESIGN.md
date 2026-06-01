@@ -804,11 +804,11 @@ Do not use:
 
 Phase 2B-AB approves the future first-party server-only CSRF proof issuer runtime usage lane.
 
-A future implementation PR may add exactly one first-party server-only CSRF proof issuer route under `website/app/api/admin/**`. The future route must call only the Phase 2B-S CSRF issuer boundary for CSRF proof issuance.
+A future implementation PR may add exactly one first-party server-only CSRF proof issuer route under `website/app/api/admin/**`. The future route must call only the Phase 2B-S CSRF issuer boundary for CSRF proof issuance and the Phase 2B-AI session/workspace binding boundary for deriving the opaque proof binding, after separate route-usage approval.
 
 The future route must remain server-only and must not bypass the Phase 2B-Y/AA route-gate authorization path.
 
-The future route must not call lower-level auth/security boundaries directly except the approved CSRF issuer boundary.
+The future route must not call lower-level auth/security boundaries directly except the approved CSRF issuer and session/workspace binding boundaries.
 
 The future route must not expose CSRF secrets, verifier internals, provider internals, raw headers, cookies, tokens, SQL/provider errors, workspace internals, membership internals, or stack traces.
 

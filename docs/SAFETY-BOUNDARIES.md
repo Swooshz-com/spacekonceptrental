@@ -401,7 +401,7 @@ It may call only the Phase 2B-Y route gate adapter using the harmless read-only 
 
 ## Phase 2B-AB Admin CSRF Proof Issuer Runtime Usage Approval Lane
 
-Phase 2B-AB admin CSRF proof issuer runtime usage approval lane is docs/checklist/static-guard approval only. It approves only a future first-party server-only lane for issuing CSRF proof material needed by later state-changing admin operations. The future route must remain server-only and must not bypass the Phase 2B-Y/AA route-gate authorization path. The future route must not call lower-level auth/security boundaries directly except the approved Phase 2B-S CSRF issuer boundary. The future route must not expose CSRF secrets, verifier internals, provider internals, raw headers, cookies, tokens, SQL/provider errors, workspace internals, membership internals, or stack traces.
+Phase 2B-AB admin CSRF proof issuer runtime usage approval lane is docs/checklist/static-guard approval only. It approves only a future first-party server-only lane for issuing CSRF proof material needed by later state-changing admin operations. The future route must remain server-only and must not bypass the Phase 2B-Y/AA route-gate authorization path. The future route must not call lower-level auth/security boundaries directly except the approved Phase 2B-S CSRF issuer boundary and the Phase 2B-AI session/workspace binding boundary. The future route must not expose CSRF secrets, verifier internals, provider internals, raw headers, cookies, tokens, SQL/provider errors, workspace internals, membership internals, or stack traces.
 
 Phase 2B-AB does not add routes, pages, server actions, runtime CSRF proof issuer usage, login/logout routes, protected admin pages, admin UI, product/category/product image writes, Storage, deployment, Supabase Cloud, browser Supabase, service-role runtime paths, n8n workflow changes, Pinecone runtime code, SaaS chatbot app work, or `website/chat-config.js` access.
 
@@ -415,3 +415,11 @@ Phase 2B-AD admin CSRF proof issuer route operation approval boundary is docs/ch
 
 Phase 2B-AD does not implement the actual route, nor does it add product writes, admin UI, pages, server actions, login/logout routes, protected admin pages, Storage, deployment config, Supabase Cloud connection, browser Supabase, service-role runtime paths, n8n changes, Pinecone runtime code, SaaS chatbot work, or `website/chat-config.js` access.
 Phase 2B-AE adds only the admin CSRF issue operation policy and preflight boundary. It does not implement the actual CSRF proof issuer route. It does not issue CSRF proofs from runtime. A future runtime route must still validate the requested proof target operation before issuing a proof.
+
+## Phase 2B-AI Admin CSRF Proof Issuer Session/Workspace Binding Boundary
+
+Phase 2B-AI adds only the server-only admin CSRF proof issuer session/workspace binding boundary at `website/lib/admin/authorization/server-admin-csrf-proof-session-workspace-binding.ts`.
+
+The boundary may derive an opaque proof binding only after existing Phase 2B server-only adapters resolve an authenticated admin session, active admin profile, active owner/admin membership, and trusted server-resolved workspace for a state-changing proof target operation. The actual binding value must come from an explicitly injected deriver and must fail closed when the deriver is missing or returns a blank value.
+
+Phase 2B-AI does not add the actual CSRF proof issuer route, runtime route/page/server-action usage, product/category/product image writes, admin UI, login/logout, protected admin pages, Storage, deployment, Supabase Cloud, browser Supabase, service-role runtime paths, n8n changes, Pinecone runtime code, SaaS chatbot work, or `website/chat-config.js` access.
