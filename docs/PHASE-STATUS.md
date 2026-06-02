@@ -4,6 +4,24 @@ This is the quick status page for the SKR repo. Use `docs/PHASE-2-READINESS-PLAN
 
 ## Current phase
 
+Current phase: Phase 2B-AR - admin shell GET origin handling fix.
+
+This phase fixes the protected admin shell request-security gate so safe
+top-level `GET`/`HEAD` admin shell access can proceed when the browser omits
+`Origin` and the request `Host` matches trusted expected host configuration.
+Strict Origin/Host validation remains required when Origin is present, for
+`admin.csrf.issue`, and for state-changing admin writes. The shell maps
+request-security denials to generic unavailable copy rather than implying an
+authenticated-but-not-authorised account state.
+
+Latest completed phase: Phase 2B-AQ - furniture listing catalogue direction pivot.
+
+Last merged phase PR: #84
+
+Merge commit: `0cc3db57d7f2d1f578a5e1384fc17fe530e8a9f7`
+
+## Previous merged status snapshot: Phase 2B-AQ
+
 Current phase: Phase 2B-AQ - furniture listing catalogue direction pivot.
 
 This phase updates direction and presentation copy so the current product track is clearly a furniture/event-rental listing catalogue plus customer enquiry/quote request system. Admin-managed categories and catalogue listings remain the operating model; carts, checkout, payments, customer accounts, stock reservation, order fulfilment, and online ordering are not the near-term direction. Internal database/API names such as `products`, `categories`, and `product_images` remain unchanged for now to avoid risky churn.
@@ -102,6 +120,7 @@ Vercel config, add real env values, or add runtime features.
 - Minimal first-party admin login/logout and protected admin shell boundary is
   complete.
 - Read-only admin furniture listing dashboard boundary is complete.
+- Admin shell GET missing-Origin route-gate repair is complete.
 Supabase Auth is approved as the future server-side admin auth provider. The
 Phase 2B-K identity boundary remains the only approved place to read Supabase
 Auth cookies or call Supabase Auth server APIs. The Phase 2B-L
@@ -198,7 +217,7 @@ actions remains deferred except the approved Phase 2B-AA route boundary, Phase
 protected admin shell boundary.
 Runtime admin route gate adapter usage from routes, pages, or server actions
 remains deferred except the approved Phase 2B-AA, Phase 2B-AK, Phase 2B-AL/AM,
-Phase 2B-AN, and Phase 2B-AO boundaries.
+Phase 2B-AN, Phase 2B-AO, and Phase 2B-AR boundaries.
 
 ## Still blocked
 
@@ -230,7 +249,8 @@ Phase 2B-AN, and Phase 2B-AO boundaries.
   actions (except the approved Phase 2B-AA route boundary).
 - Admin runtime route gate adapter usage from routes, pages, or server
   actions except the approved Phase 2B-AA, Phase 2B-AK, and Phase 2B-AL route
-  boundaries.
+  boundaries, plus the Phase 2B-AN/AO protected admin shell boundary repaired
+  in Phase 2B-AR.
 - Header reads outside the Phase 2B-V request metadata adapter.
 - Login/logout routes outside the Phase 2B-AN first-party admin auth boundary.
 - Protected admin pages outside the Phase 2B-AN minimal protected shell and

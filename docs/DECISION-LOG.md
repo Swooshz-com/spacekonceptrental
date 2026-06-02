@@ -933,3 +933,27 @@ Reason: SpaceKonceptRental is not pursuing ecommerce carts, checkout, payments, 
 Existing `products`, `categories`, `product_images`, product-management routes, RLS policies, RPCs, and server helper names remain technical internals for now. Renaming those database/API concepts is explicitly deferred to avoid risky churn and should happen only through a separately approved migration/compatibility plan.
 
 Phase 2B-AQ does not add listing write UI, upload/storage implementation, public catalogue rebuilds, enquiry form implementation, SQL migrations, service-role runtime paths, browser Supabase, n8n changes, Pinecone runtime code, SaaS chatbot work, deployment config, or `website/chat-config.js` access.
+
+## 2026-06-02: Admin Shell GET Origin Handling Fix
+
+Decision: Phase 2B-AR repairs protected admin shell GET handling for normal
+top-level browser navigations that omit the `Origin` header.
+
+Reason: The admin shell uses the approved server-only route-gate path with
+`admin.shell.access` and `requestMethod: "GET"`. Browser top-level navigation,
+including a 303 GET after login, may omit Origin. The request-security
+preflight previously required Origin before reaching the read-only method
+branch, so legitimate admins could be denied before the authorization decision
+ran.
+
+Safe read-only admin operations may now pass preflight without Origin only when
+the request Host matches the trusted expected host or the host derived from the
+trusted expected Origin. If Origin is present, strict Origin/Host validation
+still applies. `admin.csrf.issue` and state-changing admin writes still require
+strict Origin/Host validation, POST, and the existing CSRF proof checks for
+writes. Shell request-security denials map to generic unavailable UI copy.
+
+Phase 2B-AR does not add listing CRUD UI, listing image upload/storage, public
+catalogue redesign, enquiry form implementation, SQL migrations, browser
+Supabase, service-role runtime paths, deployment config, n8n changes, Pinecone
+runtime code, SaaS chatbot work, or access `website/chat-config.js`.

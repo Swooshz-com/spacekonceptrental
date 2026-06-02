@@ -517,3 +517,13 @@ config, Supabase Cloud, n8n changes, Pinecone runtime code, SaaS chatbot work,
 or access `website/chat-config.js`.
 
 Phase 2B-AQ pivots current product direction to an admin-managed furniture/event-rental listing catalogue plus customer enquiry/quote request system. It is docs/status/checklist and safe-copy work only. It does not rename existing `products`, `categories`, or `product_images` tables/routes/helpers, add listing write UI, uploads, Storage, browser Supabase, service-role runtime paths, deployment, n8n changes, Pinecone runtime code, SaaS chatbot work, carts, checkout, payments, stock reservation, order fulfilment, online ordering, or access `website/chat-config.js`.
+
+Phase 2B-AR fixes only the protected admin shell GET missing-Origin handling
+inside the existing server-only route-gate path. Safe read-only `GET`/`HEAD`
+operations may proceed without Origin only when Host matches the trusted
+expected host, while present Origin metadata remains strictly validated.
+`admin.csrf.issue` and state-changing writes still require strict Origin/Host
+validation, POST, and the existing CSRF proof requirements for writes. Phase
+2B-AR does not add listing CRUD UI, listing uploads, Storage, browser Supabase,
+service-role runtime paths, deployment config, n8n changes, Pinecone runtime
+code, SaaS chatbot work, SQL migrations, or access `website/chat-config.js`.
