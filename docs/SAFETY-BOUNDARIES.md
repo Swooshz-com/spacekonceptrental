@@ -512,3 +512,11 @@ create/edit/archive/publish/delete controls, server actions, binary uploads,
 Supabase Storage, browser Supabase, service-role runtime paths, deployment
 config, Supabase Cloud actions, n8n changes, Pinecone runtime code, SaaS
 chatbot work, or `website/chat-config.js` access.
+
+## Phase 2B-AP Admin Category Management UI Boundary
+
+Phase 2B-AP adds only category create, update, and archive controls inside the protected admin shell.
+
+The category UI may run as a small browser component only after the server-rendered protected shell resolves authorised owner/admin access and loaded dashboard data. Browser code may call only first-party admin HTTP APIs: `POST /api/admin/csrf-proof` for `category.write`, `POST /api/admin/categories`, `POST /api/admin/categories/[categoryId]`, and `POST /api/admin/categories/[categoryId]/archive`. Category write requests must include `x-csrf-proof` and must keep route responses safe and generic.
+
+Phase 2B-AP does not add product create/edit/archive/publish UI, product image write UI, server actions, binary uploads, Supabase Storage, browser Supabase, service-role runtime paths, deployment config, Supabase Cloud actions, n8n changes, Pinecone runtime code, SaaS chatbot work, or `website/chat-config.js` access.

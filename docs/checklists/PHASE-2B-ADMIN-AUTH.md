@@ -111,6 +111,7 @@ explicit approval.
 - [x] Add admin product write audit atomicity boundary.
 - [x] Add minimal first-party admin login/logout and protected shell boundary.
 - [x] Add read-only admin product dashboard boundary.
+- [x] Add category management UI boundary.
 
 ## Design References
 
@@ -166,6 +167,7 @@ runtime implementation approval.
 - [x] Explicit approval obtained before Phase 2B-AN login/logout routes and minimal protected shell.
 - [ ] Explicit approval obtained before product writes.
 - [ ] Explicit approval obtained before product-management admin UI.
+- [x] Explicit approval obtained before Phase 2B-AP category-management admin UI.
 - [ ] Explicit approval obtained before service-role runtime path, if ever needed.
 
 ## Still Deferred
@@ -190,6 +192,7 @@ runtime implementation approval.
 - [x] Login/logout routes for the Phase 2B-AN first-party admin auth boundary.
 - [x] Protected admin shell for Phase 2B-AN.
 - [ ] Product-management admin UI.
+- [x] Category-management admin UI for Phase 2B-AP.
 - [ ] Product/category/product image writes outside the Phase 2B-AL/AM backend API route boundary.
 - [ ] Product writes.
 - [ ] Category writes.

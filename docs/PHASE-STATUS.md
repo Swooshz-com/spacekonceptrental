@@ -4,7 +4,7 @@ This is the quick status page for the SKR repo. Use `docs/PHASE-2-READINESS-PLAN
 
 ## Current phase
 
-Current phase: Phase 2B-AO - admin read-only product dashboard boundary.
+Current phase: Phase 2B-AP - admin category management UI boundary.
 
 This phase adds a read-only admin product dashboard inside the protected admin
 shell. It uses the existing `admin.shell.access` owner/admin gate, a
@@ -17,11 +17,11 @@ Storage, binary uploads, deployment config, Supabase Cloud, browser Supabase,
 service-role runtime paths, n8n changes, Pinecone runtime code, SaaS chatbot
 work, or `website/chat-config.js` access.
 
-Latest completed phase: Phase 2B-AN - admin auth login logout protected shell.
+Latest completed phase: Phase 2B-AO - admin read-only product dashboard boundary.
 
-Last merged phase PR: #81
+Last merged phase PR: #82
 
-Merge commit: `f66a37644c51123780fee0944e584ab5e00d6f3e`
+Merge commit: `faff042ac1e9e0b0d2cc6b4740fac0e237141e21`
 
 ## Previous merged status snapshot
 
@@ -286,3 +286,15 @@ prepare a separate product-management UI plan. Product write forms, binary
 image uploads, Supabase Storage, deployment config, browser Supabase,
 service-role runtime paths, n8n changes, Pinecone runtime code, SaaS chatbot
 work, and `website/chat-config.js` access remain blocked.
+
+## Phase 2B-AP Current Boundary
+
+Phase 2B-AP adds category-only create, update, and archive controls inside the protected admin shell for authorised owner/admin users. The browser requests a CSRF proof for `category.write` from the first-party `/api/admin/csrf-proof` route and then calls only the existing first-party category write endpoints with `x-csrf-proof`.
+
+Product create/edit/archive/publish UI, product image write UI, binary uploads, Supabase Storage, server actions, browser Supabase, service-role runtime paths, deployment config, Supabase Cloud actions, n8n changes, Pinecone runtime code, SaaS chatbot work, and `website/chat-config.js` access remain out of scope.
+## Previous merged status snapshot: Phase 2B-AO
+
+Current phase: Phase 2B-AO - admin read-only product dashboard boundary.
+Latest completed phase: Phase 2B-AN - admin auth login logout protected shell.
+Last merged phase PR: #81
+Merge commit: `f66a37644c51123780fee0944e584ab5e00d6f3e`

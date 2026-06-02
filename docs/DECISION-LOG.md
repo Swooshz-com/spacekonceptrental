@@ -911,3 +911,13 @@ Decision: Phase 2B-AJ adds only the server-only admin CSRF proof session/workspa
 Reason: Phase 2B-AI created the binding boundary but required an explicitly injected opaque deriver. The runtime dependency factory now supplies that deriver from canonical requested operation, auth user ID, admin user ID, trusted workspace ID, and membership role inputs using the existing server-only `ADMIN_CSRF_PROOF_SECRET` and Node crypto. The binding is deterministic for the same canonical input and secret, changes when any security-relevant input changes, and fails closed for missing secrets, malformed input, or crypto failures.
 
 This phase does not implement the actual CSRF proof issuer route, does not approve binding usage from routes/pages/server actions, and does not add product/category/product image writes, admin UI, login/logout, protected admin pages, Storage, deployment, Supabase Cloud, browser Supabase, service-role runtime paths, n8n changes, Pinecone runtime code, SaaS chatbot work, or `website/chat-config.js` access.
+
+## 2026-06-02: Admin Category Management UI Boundary
+
+Decision: Phase 2B-AP adds category-only create, update, and archive controls inside the protected admin shell.
+
+Reason: PR #82 added safe read-only catalogue visibility for authorised admins. The next smallest product-management write surface is category management only, using the already protected backend category routes rather than adding product/product-image UI, server actions, browser Supabase, service-role paths, uploads, Storage, deployment changes, or external workflow changes.
+
+The browser component requests a CSRF proof for `category.write` from the first-party `/api/admin/csrf-proof` route, then calls only `POST /api/admin/categories`, `POST /api/admin/categories/[categoryId]`, or `POST /api/admin/categories/[categoryId]/archive` with `x-csrf-proof`. Route-gate, same-origin, CSRF proof, owner/admin membership, trusted workspace, RLS, audit, and atomic RPC boundaries remain server-side. UI success and failure messages stay generic and do not render raw CSRF proof values, provider errors, SQL, stack traces, cookies, tokens, env values, workspace internals, membership internals, or secrets.
+
+Phase 2B-AP does not add product create/edit/archive/publish UI, product image write UI, binary uploads, Supabase Storage, server actions, browser Supabase, service-role runtime paths, deployment config, Supabase Cloud actions, n8n changes, Pinecone runtime code, SaaS chatbot work, or `website/chat-config.js` access.
