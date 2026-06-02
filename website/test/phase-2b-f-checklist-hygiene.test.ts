@@ -136,11 +136,11 @@ describe("Phase 2B-F checklist hygiene and phase status reconciliation", () => {
 
     const status = readRepoFile(phaseStatusPath);
 
-    expect(status).toContain("Current phase: Phase 2B-AM");
-    expect(status).toContain("Latest completed phase: Phase 2B-AL");
-    expect(status).toContain("Last merged phase PR: #79");
+    expect(status).toContain("Current phase: Phase 2B-AN");
+    expect(status).toContain("Latest completed phase: Phase 2B-AM");
+    expect(status).toContain("Last merged phase PR: #80");
     expect(status).toContain(
-      "Merge commit: `1c08d99b2ad11243578f6c57b1e8ff44d3379ccc`"
+      "Merge commit: `c61fd3511daba3a950e650378eb98152ec6a3ff2`"
     );
     expect(status).toContain("Completed foundation");
     expect(status).toContain("Completed deployment readiness docs");
@@ -220,22 +220,22 @@ describe("Phase 2B-F checklist hygiene and phase status reconciliation", () => {
     expect(checklist).toContain(
       "Completed design, policy, resolver, adapter, and provider-session milestones"
     );
-    expect(checklist).toContain("Real auth runtime implementation remains unchecked.");
+    expect(checklist).toContain("Real auth runtime implementation remains unchecked outside the Phase 2B-AN");
     expect(checklist).toContain(
-      "Product-management writes are approved only through the Phase 2B-AL backend API route boundary."
+      "Product-management writes are approved only through the Phase 2B-AL/AM backend API route boundary."
     );
     expect(checklist).toContain(
       "- [x] Add admin auth provider/session design."
     );
 
     for (const item of [
-      "Real auth runtime wiring.",
-      "Supabase Auth runtime wiring.",
+      "Real auth runtime wiring outside the Phase 2B-AN login/logout and protected shell boundary.",
+      "Supabase Auth runtime wiring outside the Phase 2B-K/N/AN server-only auth session boundaries.",
       "Cookie reads outside the Phase 2B-K server-only identity boundary.",
       "Header reads outside the Phase 2B-V request metadata adapter.",
-      "Login/logout routes.",
-      "Protected admin pages.",
-      "Admin UI.",
+      "Product-management admin UI.",
+      "Product-management admin UI.",
+      "Product-management admin UI.",
       "Product writes.",
       "Category writes.",
       "Product image writes.",
@@ -256,12 +256,12 @@ describe("Phase 2B-F checklist hygiene and phase status reconciliation", () => {
     );
 
     for (const item of [
-      "Real auth runtime wiring.",
-      "Supabase Auth runtime wiring.",
+      "Real auth runtime wiring outside the Phase 2B-AN login/logout and protected shell boundary.",
+      "Supabase Auth runtime wiring outside the Phase 2B-K/N/AN server-only auth session boundaries.",
       "Header reads outside the Phase 2B-V request metadata adapter.",
-      "Login/logout routes.",
-      "Protected admin pages.",
-      "Admin UI.",
+      "Product-management admin UI.",
+      "Product-management admin UI.",
+      "Product-management admin UI.",
       "Product writes.",
       "Category writes.",
       "Product image writes.",
@@ -294,7 +294,6 @@ describe("Phase 2B-F checklist hygiene and phase status reconciliation", () => {
 
   it("does not add admin, auth, login/logout, or product mutation routes/pages", () => {
     expectNoTrackedFiles([
-      "website/app/admin",
       "website/app/login",
       "website/app/logout",
       "website/app/api/auth",

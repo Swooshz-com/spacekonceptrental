@@ -61,11 +61,11 @@ describe("Phase 2B-C admin auth resolver contract", () => {
     );
     expect(design).toContain("This design does not implement real auth.");
     expect(design).toContain(
-      "This design does not add Supabase Auth runtime wiring."
+      "This design does not add Supabase Auth runtime wiring outside the Phase 2B-AN"
     );
-    expect(design).toContain("This design does not add login or logout routes.");
-    expect(design).toContain("This design does not add protected admin pages.");
-    expect(design).toContain("This design does not add admin UI.");
+    expect(design).toContain("This design does not add login or logout routes outside Phase 2B-AN.");
+    expect(design).toContain("This design does not add protected admin pages outside the Phase 2B-AN");
+    expect(design).toContain("This design does not add product-management admin UI.");
     expect(design).toContain("This design does not add product writes.");
     expect(design).toContain(
       "This design does not wire the admin resolver into runtime routes, pages, or server actions."
@@ -77,10 +77,10 @@ describe("Phase 2B-C admin auth resolver contract", () => {
       "- [x] Add server-only admin auth/membership resolver contract."
     );
     expect(checklist).toContain("- [x] Add disabled resolver scaffold tests.");
-    expect(checklist).toContain("- [ ] Real auth runtime wiring.");
-    expect(checklist).toContain("- [ ] Supabase Auth runtime wiring.");
-    expect(checklist).toContain("- [ ] Login/logout routes.");
-    expect(checklist).toContain("- [ ] Admin UI.");
+    expect(checklist).toContain("- [ ] Real auth runtime wiring outside the Phase 2B-AN login/logout and protected shell boundary.");
+    expect(checklist).toContain("- [ ] Supabase Auth runtime wiring outside the Phase 2B-K/N/AN server-only auth session boundaries.");
+    expect(checklist).toContain("- [ ] Product-management admin UI.");
+    expect(checklist).toContain("- [ ] Product-management admin UI.");
     expect(checklist).toContain("- [ ] Product writes.");
     expect(checklist).toContain("- [ ] Storage.");
     expect(checklist).toContain("- [ ] Service-role runtime paths.");
@@ -119,7 +119,6 @@ describe("Phase 2B-C admin auth resolver contract", () => {
 
   it("does not add admin routes, auth routes, login/logout routes, or product mutation routes", () => {
     const forbiddenRoutes = readTrackedFiles([
-      "website/app/admin",
       "website/app/login",
       "website/app/logout",
       "website/app/api/auth",

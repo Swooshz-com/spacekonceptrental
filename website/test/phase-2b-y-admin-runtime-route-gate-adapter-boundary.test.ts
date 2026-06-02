@@ -80,11 +80,11 @@ describe("Phase 2B-Y server-only admin runtime route gate adapter boundary", () 
     const projectContext = readRepoFile("docs/PROJECT-CONTEXT.md");
 
     expect(status).toContain(
-      "Latest completed phase: Phase 2B-AL - admin product persistence and protected write API routes."
+      "Latest completed phase: Phase 2B-AM - admin product write audit atomicity boundary."
     );
-    expect(status).toContain("Last merged phase PR: #79");
+    expect(status).toContain("Last merged phase PR: #80");
     expect(status).toContain(
-      "Merge commit: `1c08d99b2ad11243578f6c57b1e8ff44d3379ccc`"
+      "Merge commit: `c61fd3511daba3a950e650378eb98152ec6a3ff2`"
     );
     expect(roadmap).toContain(
       "Phase 2B-Y adds only the server-only admin runtime route gate adapter boundary"
@@ -136,13 +136,13 @@ describe("Phase 2B-Y server-only admin runtime route gate adapter boundary", () 
     );
 
     for (const item of [
-      "Real auth runtime wiring.",
-      "Supabase Auth runtime wiring.",
+      "Real auth runtime wiring outside the Phase 2B-AN login/logout and protected shell boundary.",
+      "Supabase Auth runtime wiring outside the Phase 2B-K/N/AN server-only auth session boundaries.",
       "Resolver/adapter runtime wiring into routes, pages, or server actions.",
       "Admin runtime gate invocation usage from runtime routes, pages, or server actions.",
-      "Login/logout routes.",
-      "Protected admin pages.",
-      "Admin UI.",
+      "Product-management admin UI.",
+      "Product-management admin UI.",
+      "Product-management admin UI.",
       "Product writes.",
       "Category writes.",
       "Product image writes.",
@@ -203,7 +203,10 @@ describe("Phase 2B-Y server-only admin runtime route gate adapter boundary", () 
         .join("\n");
     };
     const appSource = productionSources
-      .filter(({ filePath }) => filePath.startsWith("website/app/") && filePath !== "website/app/api/admin/auth-check/route.ts" && filePath !== "website/app/api/admin/csrf-proof/route.ts")
+      .filter(({ filePath }) => filePath.startsWith("website/app/") && filePath !== "website/app/api/admin/auth-check/route.ts" &&
+          filePath !== "website/app/api/admin/login/route.ts" &&
+          filePath !== "website/app/api/admin/csrf-proof/route.ts" &&
+          filePath !== "website/app/admin/protected-admin-shell.tsx")
       .map(({ source }) => source)
       .join("\n");
 
@@ -307,7 +310,15 @@ describe("Phase 2B-Y server-only admin runtime route gate adapter boundary", () 
       .map(({ source }) => source)
       .join("\n");
 
-    expect(readTrackedFiles(["website/app/admin"])).toEqual([]);
+    expect(readTrackedFiles(["website/app/admin"])).toEqual([
+      "website/app/admin/login/page.test.tsx",
+      "website/app/admin/login/page.tsx",
+      "website/app/admin/logout/route.test.ts",
+      "website/app/admin/logout/route.ts",
+      "website/app/admin/page.tsx",
+      "website/app/admin/protected-admin-shell.test.tsx",
+      "website/app/admin/protected-admin-shell.tsx"
+    ]);
     expect(readTrackedFiles(["website/app/login"])).toEqual([]);
     expect(readTrackedFiles(["website/app/logout"])).toEqual([]);
     expect(readTrackedFiles(["website/app/api/auth"])).toEqual([]);
@@ -321,6 +332,8 @@ describe("Phase 2B-Y server-only admin runtime route gate adapter boundary", () 
       "website/app/api/admin/categories/route.ts",
       "website/app/api/admin/csrf-proof/route.test.ts",
       "website/app/api/admin/csrf-proof/route.ts",
+      "website/app/api/admin/login/route.test.ts",
+      "website/app/api/admin/login/route.ts",
       "website/app/api/admin/product-images/[imageId]/archive/route.ts",
       "website/app/api/admin/product-images/[imageId]/route.ts",
       "website/app/api/admin/product-images/route.ts",

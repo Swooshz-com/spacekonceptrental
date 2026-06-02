@@ -55,14 +55,14 @@ describe("Phase 2B-K server-only Supabase Auth identity boundary", () => {
     const decisionLog = readRepoFile("docs/DECISION-LOG.md");
 
     expect(status).toContain(
-      "Current phase: Phase 2B-AM - admin product write audit atomicity boundary."
+      "Current phase: Phase 2B-AN - admin auth login logout protected shell."
     );
     expect(status).toContain(
-      "Latest completed phase: Phase 2B-AL - admin product persistence and protected write API routes."
+      "Latest completed phase: Phase 2B-AM - admin product write audit atomicity boundary."
     );
-    expect(status).toContain("Last merged phase PR: #79");
+    expect(status).toContain("Last merged phase PR: #80");
     expect(status).toContain(
-      "Merge commit: `1c08d99b2ad11243578f6c57b1e8ff44d3379ccc`"
+      "Merge commit: `c61fd3511daba3a950e650378eb98152ec6a3ff2`"
     );
     expect(roadmap).toContain(
       "Phase 2B-K adds only the server-only Supabase Auth identity/session-read boundary"
@@ -98,12 +98,12 @@ describe("Phase 2B-K server-only Supabase Auth identity boundary", () => {
       authChecklist,
       "Server-only Supabase admin profile/membership read boundary."
     );
-    expectUnchecked(authChecklist, "Real auth runtime wiring.");
-    expectUnchecked(authChecklist, "Supabase Auth runtime wiring.");
+    expectUnchecked(authChecklist, "Real auth runtime wiring outside the Phase 2B-AN login/logout and protected shell boundary.");
+    expectUnchecked(authChecklist, "Supabase Auth runtime wiring outside the Phase 2B-K/N/AN server-only auth session boundaries.");
     expectUnchecked(authChecklist, "Header reads outside the Phase 2B-V request metadata adapter.");
-    expectUnchecked(authChecklist, "Login/logout routes.");
-    expectUnchecked(authChecklist, "Protected admin pages.");
-    expectUnchecked(authChecklist, "Admin UI.");
+    expectUnchecked(authChecklist, "Product-management admin UI.");
+    expectUnchecked(authChecklist, "Product-management admin UI.");
+    expectUnchecked(authChecklist, "Product-management admin UI.");
     expectUnchecked(authChecklist, "Product writes.");
     expectUnchecked(authChecklist, "Category writes.");
     expectUnchecked(authChecklist, "Product image writes.");
@@ -177,7 +177,15 @@ describe("Phase 2B-K server-only Supabase Auth identity boundary", () => {
       .map(({ source }) => source)
       .join("\n");
 
-    expect(readTrackedFiles(["website/app/admin"])).toEqual([]);
+    expect(readTrackedFiles(["website/app/admin"])).toEqual([
+      "website/app/admin/login/page.test.tsx",
+      "website/app/admin/login/page.tsx",
+      "website/app/admin/logout/route.test.ts",
+      "website/app/admin/logout/route.ts",
+      "website/app/admin/page.tsx",
+      "website/app/admin/protected-admin-shell.test.tsx",
+      "website/app/admin/protected-admin-shell.tsx"
+    ]);
     expect(readTrackedFiles(["website/app/login"])).toEqual([]);
     expect(readTrackedFiles(["website/app/logout"])).toEqual([]);
     expect(readTrackedFiles(["website/app/api/auth"])).toEqual([]);

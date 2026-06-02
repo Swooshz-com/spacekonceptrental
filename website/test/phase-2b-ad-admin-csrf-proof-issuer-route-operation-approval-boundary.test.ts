@@ -44,15 +44,15 @@ describe("Phase 2B-AD admin CSRF proof issuer route operation approval boundary"
     const projectContext = readRepoFile("docs/PROJECT-CONTEXT.md");
 
     expect(status).toContain(
-      "Current phase: Phase 2B-AM - admin product write audit atomicity boundary."
+      "Current phase: Phase 2B-AN - admin auth login logout protected shell."
     );
     expect(status).toContain(
-      "Latest completed phase: Phase 2B-AL - admin product persistence and protected write API routes."
+      "Latest completed phase: Phase 2B-AM - admin product write audit atomicity boundary."
     );
-    expect(status).toContain("Last merged phase PR: #79");
-    expect(status).toContain("Merge commit: `1c08d99b2ad11243578f6c57b1e8ff44d3379ccc");
+    expect(status).toContain("Last merged phase PR: #80");
+    expect(status).toContain("Merge commit: `c61fd3511daba3a950e650378eb98152ec6a3ff2");
     expect(status).toContain(
-      "This phase resolves the limitation where product mutations and audit log insertions were not executed in one atomic transaction boundary. It migrates backend admin product writes to use a static `execute_admin_product_write` PL/pgSQL RPC, ensuring atomicity via implicit Postgres transaction blocks. The routes have also been upgraded to strictly require the POST HTTP method for all update and archive state changes. It does not add admin UI, login/logout routes, protected admin pages, Supabase Storage, binary uploads, browser Supabase, service-role runtime paths, deployment config, n8n changes, Pinecone runtime code, SaaS chatbot work, or `website/chat-config.js` access."
+      "This phase adds a minimal first-party admin login page, server-owned Supabase Auth login/logout routes, and a protected admin shell gated through the approved server-only route-gate path using `admin.shell.access`. It returns only safe unauthenticated, authenticated-but-not-authorised, authorised-admin, and unavailable/misconfigured states. It does not add product-management UI, product/category/product-image write forms, Supabase Storage, binary uploads, deployment config, Supabase Cloud, browser Supabase, service-role runtime paths, n8n changes, Pinecone runtime code, SaaS chatbot work, or `website/chat-config.js` access."
     );
     expect(roadmap).toContain(
       "Phase 2B-AD adds only the admin CSRF proof issuer route operation approval boundary."

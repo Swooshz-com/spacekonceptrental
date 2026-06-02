@@ -118,20 +118,20 @@ describe("Phase 2B-AJ - admin CSRF session/workspace binding runtime dependencie
     );
 
     expect(status).toContain(
-      "Current phase: Phase 2B-AM - admin product write audit atomicity boundary."
+      "Current phase: Phase 2B-AN - admin auth login logout protected shell."
     );
     expect(status).toContain(
-      "Latest completed phase: Phase 2B-AL - admin product persistence and protected write API routes."
+      "Latest completed phase: Phase 2B-AM - admin product write audit atomicity boundary."
     );
-    expect(status).toContain("Last merged phase PR: #79");
+    expect(status).toContain("Last merged phase PR: #80");
     expect(status).toContain(
-      "Merge commit: `1c08d99b2ad11243578f6c57b1e8ff44d3379ccc`"
-    );
-    expect(status).toContain(
-      "This phase resolves the limitation where product mutations and audit log insertions were not executed in one atomic transaction boundary"
+      "Merge commit: `c61fd3511daba3a950e650378eb98152ec6a3ff2`"
     );
     expect(status).toContain(
-      "Product writes are approved only through the Phase 2B-AL backend API route boundary."
+      "This phase adds a minimal first-party admin login page"
+    );
+    expect(status).toContain(
+      "Product writes are approved only through the Phase 2B-AL/AM backend API route."
     );
     expect(authChecklist).toContain(
       "- [x] Admin CSRF proof session/workspace binding runtime dependency boundary."
@@ -311,6 +311,8 @@ describe("Phase 2B-AJ - admin CSRF session/workspace binding runtime dependencie
       "website/app/api/admin/categories/route.ts",
       "website/app/api/admin/csrf-proof/route.test.ts",
       "website/app/api/admin/csrf-proof/route.ts",
+      "website/app/api/admin/login/route.test.ts",
+      "website/app/api/admin/login/route.ts",
       "website/app/api/admin/product-images/[imageId]/archive/route.ts",
       "website/app/api/admin/product-images/[imageId]/route.ts",
       "website/app/api/admin/product-images/route.ts",

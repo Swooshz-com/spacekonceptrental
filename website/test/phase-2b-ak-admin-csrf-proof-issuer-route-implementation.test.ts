@@ -53,20 +53,20 @@ describe("Phase 2B-AK admin CSRF proof issuer route implementation", () => {
     );
 
     expect(status).toContain(
-      "Current phase: Phase 2B-AM - admin product write audit atomicity boundary."
+      "Current phase: Phase 2B-AN - admin auth login logout protected shell."
     );
     expect(status).toContain(
-      "Latest completed phase: Phase 2B-AL - admin product persistence and protected write API routes."
+      "Latest completed phase: Phase 2B-AM - admin product write audit atomicity boundary."
     );
-    expect(status).toContain("Last merged phase PR: #79");
+    expect(status).toContain("Last merged phase PR: #80");
     expect(status).toContain(
-      "Merge commit: `1c08d99b2ad11243578f6c57b1e8ff44d3379ccc`"
-    );
-    expect(status).toContain(
-      "This phase resolves the limitation where product mutations and audit log insertions were not executed in one atomic transaction boundary"
+      "Merge commit: `c61fd3511daba3a950e650378eb98152ec6a3ff2`"
     );
     expect(status).toContain(
-      "Product writes are approved only through the Phase 2B-AL backend API route boundary."
+      "This phase adds a minimal first-party admin login page"
+    );
+    expect(status).toContain(
+      "Product writes are approved only through the Phase 2B-AL/AM backend API route."
     );
     expect(authChecklist).toContain(
       "- [x] Admin CSRF proof issuer route implementation."
@@ -97,6 +97,8 @@ describe("Phase 2B-AK admin CSRF proof issuer route implementation", () => {
       "website/app/api/admin/categories/route.ts",
       "website/app/api/admin/csrf-proof/route.test.ts",
       "website/app/api/admin/csrf-proof/route.ts",
+      "website/app/api/admin/login/route.test.ts",
+      "website/app/api/admin/login/route.ts",
       "website/app/api/admin/product-images/[imageId]/archive/route.ts",
       "website/app/api/admin/product-images/[imageId]/route.ts",
       "website/app/api/admin/product-images/route.ts",
@@ -108,7 +110,15 @@ describe("Phase 2B-AK admin CSRF proof issuer route implementation", () => {
     expect(readTrackedFiles(["website/app/api/products"])).toEqual([]);
     expect(readTrackedFiles(["website/app/api/categories"])).toEqual([]);
     expect(readTrackedFiles(["website/app/api/product-images"])).toEqual([]);
-    expect(readTrackedFiles(["website/app/admin"])).toEqual([]);
+    expect(readTrackedFiles(["website/app/admin"])).toEqual([
+      "website/app/admin/login/page.test.tsx",
+      "website/app/admin/login/page.tsx",
+      "website/app/admin/logout/route.test.ts",
+      "website/app/admin/logout/route.ts",
+      "website/app/admin/page.tsx",
+      "website/app/admin/protected-admin-shell.test.tsx",
+      "website/app/admin/protected-admin-shell.tsx"
+    ]);
     expect(readTrackedFiles(["website/app/login"])).toEqual([]);
     expect(readTrackedFiles(["website/app/logout"])).toEqual([]);
   });

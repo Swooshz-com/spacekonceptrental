@@ -80,17 +80,17 @@ describe("Phase 2B-X admin runtime gate invocation usage approval lane", () => {
     const projectContext = readRepoFile("docs/PROJECT-CONTEXT.md");
 
     expect(status).toContain(
-      "Current phase: Phase 2B-AM - admin product write audit atomicity boundary."
+      "Current phase: Phase 2B-AN - admin auth login logout protected shell."
     );
     expect(status).toContain(
-      "Latest completed phase: Phase 2B-AL - admin product persistence and protected write API routes."
+      "Latest completed phase: Phase 2B-AM - admin product write audit atomicity boundary."
     );
-    expect(status).toContain("Last merged phase PR: #79");
+    expect(status).toContain("Last merged phase PR: #80");
     expect(status).toContain(
-      "Merge commit: `1c08d99b2ad11243578f6c57b1e8ff44d3379ccc`"
+      "Merge commit: `c61fd3511daba3a950e650378eb98152ec6a3ff2`"
     );
     expect(status).toContain(
-      "This phase resolves the limitation where product mutations and audit log insertions were not executed in one atomic transaction boundary. It migrates backend admin product writes to use a static `execute_admin_product_write` PL/pgSQL RPC, ensuring atomicity via implicit Postgres transaction blocks. The routes have also been upgraded to strictly require the POST HTTP method for all update and archive state changes. It does not add admin UI, login/logout routes, protected admin pages, Supabase Storage, binary uploads, browser Supabase, service-role runtime paths, deployment config, n8n changes, Pinecone runtime code, SaaS chatbot work, or `website/chat-config.js` access."
+      "This phase adds a minimal first-party admin login page, server-owned Supabase Auth login/logout routes, and a protected admin shell gated through the approved server-only route-gate path using `admin.shell.access`. It returns only safe unauthenticated, authenticated-but-not-authorised, authorised-admin, and unavailable/misconfigured states. It does not add product-management UI, product/category/product-image write forms, Supabase Storage, binary uploads, deployment config, Supabase Cloud, browser Supabase, service-role runtime paths, n8n changes, Pinecone runtime code, SaaS chatbot work, or `website/chat-config.js` access."
     );
     expect(roadmap).toContain(
       "Phase 2B-X adds only the admin runtime gate invocation usage approval lane"
@@ -154,13 +154,13 @@ describe("Phase 2B-X admin runtime gate invocation usage approval lane", () => {
     );
 
     for (const item of [
-      "Real auth runtime wiring.",
-      "Supabase Auth runtime wiring.",
+      "Real auth runtime wiring outside the Phase 2B-AN login/logout and protected shell boundary.",
+      "Supabase Auth runtime wiring outside the Phase 2B-K/N/AN server-only auth session boundaries.",
       "Resolver/adapter runtime wiring into routes, pages, or server actions.",
       "Admin runtime gate invocation usage from runtime routes, pages, or server actions.",
-      "Login/logout routes.",
-      "Protected admin pages.",
-      "Admin UI.",
+      "Product-management admin UI.",
+      "Product-management admin UI.",
+      "Product-management admin UI.",
       "Product writes.",
       "Category writes.",
       "Product image writes.",
@@ -190,11 +190,20 @@ describe("Phase 2B-X admin runtime gate invocation usage approval lane", () => {
         .join("\n");
     };
     const appSource = productionSources
-      .filter(({ filePath }) => filePath.startsWith("website/app/") && filePath !== "website/app/api/admin/auth-check/route.ts" && filePath !== "website/app/api/admin/csrf-proof/route.ts")
+      .filter(({ filePath }) => filePath.startsWith("website/app/") && filePath !== "website/app/api/admin/auth-check/route.ts" &&
+          filePath !== "website/app/api/admin/login/route.ts" && filePath !== "website/app/api/admin/csrf-proof/route.ts")
       .map(({ source }) => source)
       .join("\n");
 
-    expect(readTrackedFiles(["website/app/admin"])).toEqual([]);
+    expect(readTrackedFiles(["website/app/admin"])).toEqual([
+      "website/app/admin/login/page.test.tsx",
+      "website/app/admin/login/page.tsx",
+      "website/app/admin/logout/route.test.ts",
+      "website/app/admin/logout/route.ts",
+      "website/app/admin/page.tsx",
+      "website/app/admin/protected-admin-shell.test.tsx",
+      "website/app/admin/protected-admin-shell.tsx"
+    ]);
     expect(readTrackedFiles(["website/app/login"])).toEqual([]);
     expect(readTrackedFiles(["website/app/logout"])).toEqual([]);
     expect(readTrackedFiles(["website/app/api/auth"])).toEqual([]);
@@ -208,6 +217,8 @@ describe("Phase 2B-X admin runtime gate invocation usage approval lane", () => {
       "website/app/api/admin/categories/route.ts",
       "website/app/api/admin/csrf-proof/route.test.ts",
       "website/app/api/admin/csrf-proof/route.ts",
+      "website/app/api/admin/login/route.test.ts",
+      "website/app/api/admin/login/route.ts",
       "website/app/api/admin/product-images/[imageId]/archive/route.ts",
       "website/app/api/admin/product-images/[imageId]/route.ts",
       "website/app/api/admin/product-images/route.ts",

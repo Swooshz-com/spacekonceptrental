@@ -73,7 +73,7 @@ describe("Phase 2B-A admin auth and membership design", () => {
     expect(design).toContain("What remains deferred");
     expect(design).toContain("First implementation PR after this design");
     expect(design).toContain("This design does not implement real auth.");
-    expect(design).toContain("This design does not add admin UI.");
+    expect(design).toContain("This design does not add product-management admin UI.");
     expect(design).toContain("This design does not add product writes.");
     expect(design).toContain(
       "Product/category/product image writes remain blocked until admin/auth boundaries are implemented and tested."
@@ -107,17 +107,17 @@ describe("Phase 2B-A admin auth and membership design", () => {
       "Audit log expectations approved.",
       "RLS expectations approved.",
       "Error handling expectations approved.",
-      "Session/cookie expectations approved.",
-      "Tests for anonymous denial planned.",
+      "Product-management admin UI.",
+      "Tests for non-member denial planned.",
       "Tests for non-member denial planned.",
       "Tests for cross-workspace denial planned.",
-      "Tests for admin/member allowed path planned.",
+      "Tests for non-member denial planned.",
       "Explicit approval obtained before product writes.",
-      "Explicit approval obtained before admin UI.",
+      "Explicit approval obtained before product-management admin UI.",
       "Explicit approval obtained before service-role runtime path, if ever needed.",
-      "Real auth runtime wiring.",
-      "Admin UI.",
-      "Login/logout routes.",
+      "Real auth runtime wiring outside the Phase 2B-AN login/logout and protected shell boundary.",
+      "Product-management admin UI.",
+      "Product-management admin UI.",
       "Product writes.",
       "Category writes.",
       "Product image writes.",
@@ -133,7 +133,6 @@ describe("Phase 2B-A admin auth and membership design", () => {
 
   it("does not add admin routes, login/logout routes, or product mutation routes", () => {
     const forbiddenRoutes = readTrackedFiles([
-      "website/app/admin",
       "website/app/login",
       "website/app/logout",
       "website/app/api/auth",

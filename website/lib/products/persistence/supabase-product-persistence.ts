@@ -114,7 +114,15 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 function resultRecordId(result: ProductWriteMutationResult) {
-  if (result.error || !isRecord(result.data)) {
+  if (result.error) {
+    return null;
+  }
+
+  if (typeof result.data === "string") {
+    return isUuid(result.data) ? result.data : null;
+  }
+
+  if (!isRecord(result.data)) {
     return null;
   }
 

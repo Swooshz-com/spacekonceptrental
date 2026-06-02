@@ -505,3 +505,13 @@ Phase 2B-AJ adds only the server-only admin CSRF proof session/workspace binding
 Phase 2B-AK implements only the first-party server-only admin CSRF proof issuer route at `website/app/api/admin/csrf-proof/route.ts`. The route accepts only `POST`, rejects missing or malformed JSON, rejects missing, unsupported, and non-state-changing target operations, gates itself with the approved `admin.csrf.issue` route-gate lane, resolves the target operation binding through the Phase 2B-AI boundary and Phase 2B-AJ runtime dependencies, and returns only safe JSON success or failure shapes. It issues proofs only for `product.write`, `category.write`, `productImage.write`, and `membership.manage`. Phase 2B-AK does not add a replay store, product/category/product image write routes, admin UI, login/logout, protected admin pages, Storage, deployment, Supabase Cloud, browser Supabase, service-role runtime paths, n8n changes, Pinecone runtime code, SaaS chatbot work, or access `website/chat-config.js`.
 
 Phase 2B-AL implements the first backend-only admin product-management write surface. It adds session-bound product/category/product image metadata persistence under `website/lib/products/persistence/`, owner/admin RLS write policies and product-management audit inserts, and protected first-party admin routes under `website/app/api/admin/` for category, product, and product-image metadata mutations. The routes require the approved route-gate stack, a matching CSRF proof for `category.write`, `product.write`, or `productImage.write`, `ADMIN_TRUSTED_WORKSPACE_ID`, safe JSON validation, and no-store responses. Phase 2B-AL does not add admin UI, login/logout, protected admin pages, server actions, binary uploads, Supabase Storage, browser Supabase, service-role runtime paths, deployment config, n8n changes, Pinecone runtime code, SaaS chatbot work, or access `website/chat-config.js`.
+
+Phase 2B-AN implements only a minimal first-party admin login page,
+server-owned Supabase Auth login/logout routes, and a protected admin shell.
+The protected shell uses the existing route-gate path with
+`admin.shell.access`, allowing owner/admin membership and denying viewer
+membership. Phase 2B-AN does not add product-management UI,
+product/category/product-image write forms, server actions, binary uploads,
+Supabase Storage, browser Supabase, service-role runtime paths, deployment
+config, Supabase Cloud, n8n changes, Pinecone runtime code, SaaS chatbot work,
+or access `website/chat-config.js`.

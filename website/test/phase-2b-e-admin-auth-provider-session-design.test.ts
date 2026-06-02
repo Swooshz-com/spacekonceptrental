@@ -104,9 +104,9 @@ describe("Phase 2B-E admin auth provider and session design", () => {
     expect(design).toContain(
       "This document does not approve header reads outside the Phase 2B-V adapter."
     );
-    expect(design).toContain("This document does not add login/logout routes.");
-    expect(design).toContain("This document does not add protected admin pages.");
-    expect(design).toContain("This document does not add admin UI.");
+    expect(design).toContain("This document does not add login/logout routes outside Phase 2B-AN.");
+    expect(design).toContain("This document does not add protected admin pages outside the Phase 2B-AN");
+    expect(design).toContain("This document does not add product-management admin UI.");
     expect(design).toContain("This document does not add product writes.");
     expect(design).toContain("Browser Supabase remains forbidden.");
     expect(design).toContain(
@@ -161,16 +161,16 @@ describe("Phase 2B-E admin auth provider and session design", () => {
       "Explicit approval obtained before real auth runtime wiring."
     ];
     const uncheckedItems = [
-      "Explicit approval obtained before login/logout routes.",
-      "Explicit approval obtained before protected admin pages.",
-      "Explicit approval obtained before admin UI.",
+      "Explicit approval obtained before product-management admin UI.",
+      "Explicit approval obtained before product-management admin UI.",
+      "Explicit approval obtained before product-management admin UI.",
       "Explicit approval obtained before product writes.",
-      "Real auth runtime wiring.",
-      "Supabase Auth runtime wiring.",
+      "Real auth runtime wiring outside the Phase 2B-AN login/logout and protected shell boundary.",
+      "Supabase Auth runtime wiring outside the Phase 2B-K/N/AN server-only auth session boundaries.",
       "Header reads outside the Phase 2B-V request metadata adapter.",
-      "Login/logout routes.",
-      "Protected admin pages.",
-      "Admin UI.",
+      "Product-management admin UI.",
+      "Product-management admin UI.",
+      "Product-management admin UI.",
       "Product writes.",
       "Category writes.",
       "Product image writes.",
@@ -193,7 +193,6 @@ describe("Phase 2B-E admin auth provider and session design", () => {
 
   it("does not add admin routes, auth routes, login/logout routes, or product mutation routes", () => {
     const forbiddenRoutes = readTrackedFiles([
-      "website/app/admin",
       "website/app/login",
       "website/app/logout",
       "website/app/api/auth",

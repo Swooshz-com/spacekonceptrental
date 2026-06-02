@@ -20,7 +20,9 @@ approved future admin runtime gate invocation usage lane, the Phase 2B-Y
 implemented server-only admin runtime route gate adapter boundary, the
 Phase 2B-Z approved future admin runtime route gate adapter usage lane, and the
 Phase 2B-AA implemented the first admin runtime route gate adapter usage boundary, and the
-Phase 2B-AB approved future admin CSRF proof issuer runtime usage lane.
+Phase 2B-AB approved future admin CSRF proof issuer runtime usage lane, and
+Phase 2B-AN implemented a minimal first-party admin login/logout and protected
+shell boundary.
 
 Phase 2B-E added auth provider/session/security design only.
 Phase 2B-J approves the future server-only Supabase Auth runtime lane only.
@@ -52,6 +54,8 @@ Phase 2B-Z approves only the future admin runtime route gate adapter usage
 lane.
 Phase 2B-AA implements only the first admin runtime route gate adapter usage boundary.
 Phase 2B-AB approves only the future admin CSRF proof issuer runtime usage lane.
+Phase 2B-AN implements only a minimal first-party admin login page,
+server-owned login/logout routes, and a protected admin shell.
 
 Phase 2B-K cookie reads and Supabase Auth server calls are restricted to the
 server-only identity adapter named below.
@@ -85,9 +89,10 @@ usage of the Phase 2B-Y route gate adapter and does not add runtime wiring.
 Phase 2B-AA first admin runtime usage is restricted to the server-only probe route named below.
 This document does not approve auth runtime wiring outside these boundaries.
 This document does not approve header reads outside the Phase 2B-V adapter.
-This document does not add login/logout routes.
-This document does not add protected admin pages.
-This document does not add admin UI.
+This document does not add login/logout routes outside Phase 2B-AN.
+This document does not add protected admin pages outside the Phase 2B-AN
+minimal protected shell.
+This document does not add product-management admin UI.
 This document does not add product writes.
 
 Browser Supabase remains forbidden.
@@ -636,7 +641,7 @@ Product/category/product image writes remain blocked until this is resolved.
 
 ## Login/logout Route Expectations
 
-Login/logout routes must be added separately and must not expose tokens, secrets, stack traces, or Supabase internals.
+Login/logout routes must not expose tokens, secrets, stack traces, or Supabase internals.
 
 Future login and logout routes should:
 
@@ -648,12 +653,22 @@ Future login and logout routes should:
 - Respect CSRF and redirect rules.
 - Clear session state safely on logout.
 
-This document does not add login/logout routes.
+Phase 2B-AN adds the first minimal login/logout route boundary. Additional
+login/logout routes remain out of scope.
+
+The Phase 2B-AN login route accepts only bounded URL-encoded form bodies and
+rejects invalid content types, declared oversized bodies, and streamed
+oversized bodies before session mutation. Phase 2B-AN login/logout routes
+validate same-origin `Origin` and `Host` against `ADMIN_EXPECTED_ORIGIN` and
+`ADMIN_EXPECTED_HOST` before calling the server-only Supabase Auth boundary. A
+full login/logout CSRF token boundary remains deferred because the existing
+CSRF proof issuer is session/workspace-bound and is designed for authenticated
+admin operations after an admin session exists.
 
 ## Protected Admin Page Expectations
 
-Protected admin pages must be added separately after the server-only auth
-boundary is implemented and tested.
+Protected admin pages beyond the Phase 2B-AN minimal protected shell must be
+added separately after the server-only auth boundary is implemented and tested.
 
 Future protected pages should:
 
@@ -664,7 +679,8 @@ Future protected pages should:
 - Avoid importing resolver/adapters into browser components.
 - Avoid product/category/product image writes until the write gate is approved.
 
-This document does not add protected admin pages.
+Phase 2B-AN adds only the minimal protected admin shell. Additional protected
+admin pages remain out of scope.
 
 ## Admin Identity Mapping
 
