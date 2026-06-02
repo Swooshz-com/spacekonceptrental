@@ -29,7 +29,7 @@ changes, or live/runtime actions belong in Phase 0.
 Goal: build the smallest production-shaped Next.js foundation under `website/`
 with custom chat UI, first-party `/api/chat`, server-only `N8nChatProvider`,
 server-only quote capture with route-level abuse throttling, chat persistence
-design/scaffolding, product/admin persistence design/scaffolding, trusted
+design/scaffolding, furniture listing/admin persistence design/scaffolding, trusted
 active-workspace catalogue RLS hardening proof, deployment environment
 readiness, Phase 1 closeout audit, Phase 2 readiness plan, and a basic
 Supabase core schema.
@@ -39,9 +39,9 @@ Checklist: `docs/checklists/PHASE-1-MVP.md`
 Phase 1 is not the full SaaS platform, full RAG system, full admin inbox, vector
 stack, billing system, or streaming implementation.
 
-## Phase 2: Deployment, Admin, Product, And Quote Operations
+## Phase 2: Deployment, Admin, Furniture Listing, And Quote Operations
 
-Goal: prepare reviewed deployment operations and expand operational admin tools
+Goal: prepare reviewed deployment operations and expand operational admin tools for furniture listings and enquiries
 after the MVP foundation exists.
 
 Checklist: `docs/checklists/PHASE-2-ADMIN-OPS.md`
@@ -515,3 +515,5 @@ product/category/product-image write forms, server actions, binary uploads,
 Supabase Storage, browser Supabase, service-role runtime paths, deployment
 config, Supabase Cloud, n8n changes, Pinecone runtime code, SaaS chatbot work,
 or access `website/chat-config.js`.
+
+Phase 2B-AQ pivots current product direction to an admin-managed furniture/event-rental listing catalogue plus customer enquiry/quote request system. It is docs/status/checklist and safe-copy work only. It does not rename existing `products`, `categories`, or `product_images` tables/routes/helpers, add listing write UI, uploads, Storage, browser Supabase, service-role runtime paths, deployment, n8n changes, Pinecone runtime code, SaaS chatbot work, carts, checkout, payments, stock reservation, order fulfilment, online ordering, or access `website/chat-config.js`.

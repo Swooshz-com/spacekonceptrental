@@ -57,7 +57,7 @@ export function CataloguePageContent({
               <p>{product.shortDescription ?? product.description}</p>
               {product.categoryName ? <p>{product.categoryName}</p> : null}
               <Link className="card-link" href={`/catalogue/${product.slug}`}>
-                View product shell
+                View listing shell
               </Link>
             </div>
           </article>

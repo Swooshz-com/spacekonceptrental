@@ -284,12 +284,14 @@ describe("Phase 2B-F checklist hygiene and phase status reconciliation", () => {
     const checklist = readRepoFile(adminOpsChecklistPath);
 
     expect(checklist).toContain(
-      "Product/category/product image writes are blocked until auth/membership/RLS/audit gates pass."
+      "Furniture listing/category/listing image writes remain constrained to approved admin route-gated boundaries"
     );
-    expect(checklist).not.toContain("- [x] Expand admin product CRUD.");
+    expect(checklist).not.toContain("- [x] Expand admin furniture listing management.");
     expect(checklist).not.toContain("- [x] Add admin image upload");
-    expectUnchecked(checklist, "Expand admin product CRUD.");
-    expectUnchecked(checklist, "Add admin image upload, replace, and remove flows.");
+    expectUnchecked(checklist, "Expand admin furniture listing management.");
+    expectUnchecked(checklist, "Add listing image upload, replace, and remove flows.");
+    expectUnchecked(checklist, "Do not add checkout.");
+    expectUnchecked(checklist, "Do not add payments.");
   });
 
   it("does not add admin, auth, login/logout, or product mutation routes/pages", () => {

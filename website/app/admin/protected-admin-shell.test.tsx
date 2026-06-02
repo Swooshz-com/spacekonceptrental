@@ -199,7 +199,9 @@ describe("protected admin shell", () => {
     ).toBeInTheDocument();
     expect(screen.getAllByText("Lounge").length).toBeGreaterThan(0);
     expect(screen.getByText("Modular Lounge")).toBeInTheDocument();
-    expect(screen.getAllByText(/2 image metadata records/i).length).toBeGreaterThan(0);
+    expect(
+      screen.getAllByText(/2 listing image metadata records/i).length
+    ).toBeGreaterThan(0);
     expect(
       screen.getByRole("button", { name: /sign out/i })
     ).toBeInTheDocument();

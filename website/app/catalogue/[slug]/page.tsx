@@ -43,7 +43,7 @@ export function ProductPageContent({
   return (
     <section className="section">
       <div className="page-title">
-        <p className="eyebrow">Product shell</p>
+        <p className="eyebrow">Listing shell</p>
         <h1>{product.name}</h1>
         <p>{product.shortDescription ?? product.description}</p>
       </div>

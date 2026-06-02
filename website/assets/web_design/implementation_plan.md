@@ -1,3 +1,4 @@
+> Phase 2B-AQ direction note: this historical design plan predates the current furniture listing catalogue pivot. Any references below to quote carts, checkout, payment methods, WooCommerce, side carts, product carts, inventory/stock, or ecommerce-style ordering are superseded for the current SKR direction. Current work should prefer admin-managed furniture/event-rental listings and customer enquiry/quote requests, with no cart, checkout, payment, stock reservation, order fulfilment, or online ordering flow unless separately approved.
 # SpaceKonceptRental — Website Design v2
 
 > Design produced using the Secure UI/UX Frontend Design skill workflow.

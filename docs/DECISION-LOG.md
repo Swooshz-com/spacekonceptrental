@@ -736,6 +736,7 @@ Decision: Phase 2B-T adds only the server-only admin authorization gate composit
 Reason: future admin runtime boundaries need one reviewed server-only seam that runs request-security preflight before the composed admin authorization decision without duplicating CSRF verification, role policy, membership policy, adapter composition, provider reads, or runtime route/page/server-action wiring.
 
 The gate may run the Phase 2B-Q request security preflight, inject the Phase 2B-R CSRF proof verifier into preflight when verifier dependencies are supplied, and call the Phase 2B-P composed admin authorization decision only after preflight passes. It is not approval to issue CSRF proofs, read real headers, read cookies, read env, call Supabase, query `admin_users` or `memberships`, use the gate from runtime routes, pages, or server actions, add login/logout routes, protected admin pages, admin UI, product writes, Storage, browser Supabase, service-role runtime paths, deployment, Supabase Cloud, n8n workflow changes, Pinecone runtime code, or SaaS chatbot app code.
+
 ## 2026-05-29: Admin Runtime Wiring Approval Lane
 
 Decision: Phase 2B-U adds only the admin runtime wiring approval lane for future use of `resolveServerAdminAuthorizationGate()`.
@@ -785,6 +786,7 @@ Reason: Phase 2B-X approved the future lane for first-party server-only route ha
 The adapter accepts explicit operation/workspace inputs, trusted expected origin and host dependencies, gate dependencies, and an explicit request method or method from a minimal request-like object. It passes the method into the Phase 2B-W invocation helper through request metadata dependencies and returns the existing safe gate result shape.
 
 Phase 2B-Y does not read headers directly, read cookies, read env, import route/page/server-action code, call `readServerAdminRequestMetadata()` directly, call `resolveServerAdminAuthorizationGate()` directly, call preflight, decision, CSRF verifier, CSRF issuer, adapter-set composition, Supabase Auth, `admin_users`, `memberships`, or workspace resolver boundaries directly, add route handlers, pages, server actions, login/logout routes, protected admin pages, admin UI, product/category/product image writes, Supabase Storage, browser Supabase, service-role runtime paths, Supabase Cloud/deployment/env changes, n8n workflow changes, Pinecone runtime code, SaaS chatbot app work, or `website/chat-config.js` access.
+
 ## 2026-05-30: Admin Runtime Route Gate Adapter Usage Approval Lane
 
 Decision: Phase 2B-Z adds only the admin runtime route gate adapter usage approval lane.
@@ -921,3 +923,13 @@ Reason: PR #82 added safe read-only catalogue visibility for authorised admins. 
 The browser component requests a CSRF proof for `category.write` from the first-party `/api/admin/csrf-proof` route, then calls only `POST /api/admin/categories`, `POST /api/admin/categories/[categoryId]`, or `POST /api/admin/categories/[categoryId]/archive` with `x-csrf-proof`. Route-gate, same-origin, CSRF proof, owner/admin membership, trusted workspace, RLS, audit, and atomic RPC boundaries remain server-side. UI success and failure messages stay generic and do not render raw CSRF proof values, provider errors, SQL, stack traces, cookies, tokens, env values, workspace internals, membership internals, or secrets.
 
 Phase 2B-AP does not add product create/edit/archive/publish UI, product image write UI, binary uploads, Supabase Storage, server actions, browser Supabase, service-role runtime paths, deployment config, Supabase Cloud actions, n8n changes, Pinecone runtime code, SaaS chatbot work, or `website/chat-config.js` access.
+
+## 2026-06-02: Furniture Listing Catalogue Direction Pivot
+
+Decision: Phase 2B-AQ pivots the current product direction to furniture/event-rental listings plus customer enquiries.
+
+Reason: SpaceKonceptRental is not pursuing ecommerce carts, checkout, payments, customer accounts, stock reservation, order fulfilment, or online ordering as the near-term product direction. The useful near-term operator surface is an admin-managed listing catalogue where authorised admins can organise furniture/event-rental listings and customers can browse listings before submitting enquiry or quote requests.
+
+Existing `products`, `categories`, `product_images`, product-management routes, RLS policies, RPCs, and server helper names remain technical internals for now. Renaming those database/API concepts is explicitly deferred to avoid risky churn and should happen only through a separately approved migration/compatibility plan.
+
+Phase 2B-AQ does not add listing write UI, upload/storage implementation, public catalogue rebuilds, enquiry form implementation, SQL migrations, service-role runtime paths, browser Supabase, n8n changes, Pinecone runtime code, SaaS chatbot work, deployment config, or `website/chat-config.js` access.

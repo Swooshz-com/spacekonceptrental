@@ -23,7 +23,9 @@ describe("Phase 2B-AH Admin CSRF Proof Issuer Route Boundary", () => {
     const status = readRepoFile("docs/PHASE-STATUS.md");
     const authChecklist = readRepoFile("docs/checklists/PHASE-2B-AUTH-IMPLEMENTATION.md");
 
-    expect(status).toContain("Product writes are approved only through the Phase 2B-AL/AM backend API route");
+    expect(status).toContain(
+      "Furniture listing metadata writes currently use the existing Phase 2B-AL/AM backend API route boundary, whose internal technical names still reference product/product image tables and routes."
+    );
     expect(status).toContain("safe server-side session/workspace binding cannot be derived from existing approved boundaries");
     expect(status).toContain("Phase 2B-AH is docs/checklist/static-guard approval only for the admin CSRF proof issuer route boundary, deferring the route because safe server-side session/workspace binding cannot be derived from existing approved boundaries.");
 
