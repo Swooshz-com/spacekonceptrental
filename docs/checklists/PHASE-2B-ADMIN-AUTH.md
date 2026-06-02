@@ -60,7 +60,9 @@ the Phase 2B-AL write boundary by migrating product mutations and audit inserts
 into a single Postgres RPC transaction block, and enforcing POST-only state
 changes. Phase 2B-AN adds only a minimal first-party admin login page,
 server-owned login/logout routes, and a protected admin shell through the
-approved server-only route-gate path. Keep real auth runtime wiring outside
+approved server-only route-gate path. Phase 2B-AR repairs only missing-Origin
+GET handling for that protected shell while preserving strict Origin/Host/CSRF
+requirements for CSRF issuance and state-changing writes. Keep real auth runtime wiring outside
 Phase 2B-AN, factory, adapter-set, decision-boundary, preflight, CSRF verifier,
 CSRF issuer, request metadata adapter, runtime gate invocation helper, or
 authorization gate usage from other runtime routes/pages/actions, headers,
@@ -112,6 +114,7 @@ explicit approval.
 - [x] Add minimal first-party admin login/logout and protected shell boundary.
 - [x] Add read-only admin product dashboard boundary.
 - [x] Add category management UI boundary.
+- [x] Add admin shell GET missing-Origin route-gate repair.
 
 ## Design References
 
@@ -153,6 +156,7 @@ runtime implementation approval.
 - [x] Phase 2B-AN admin login/logout and protected shell boundary.
 - [x] Session/cookie expectations approved for Phase 2B-AN login/logout.
 - [x] Phase 2B-AO read-only admin product dashboard boundary.
+- [x] Phase 2B-AR admin shell GET missing-Origin route-gate repair.
 
 ## Future Runtime Test Plan Approvals
 

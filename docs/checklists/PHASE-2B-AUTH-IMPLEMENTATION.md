@@ -106,6 +106,7 @@ Reference docs:
 - [x] Minimal first-party admin login/logout and protected shell boundary.
 - [x] Read-only admin product dashboard boundary.
 - [x] Category management UI boundary.
+- [x] Admin shell GET missing-Origin route-gate repair.
 
 ## Still Deferred
 

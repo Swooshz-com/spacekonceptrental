@@ -209,6 +209,24 @@ function validateSameOrigin(
   };
 }
 
+function validateReadOnlySafeHost(
+  input: ServerAdminRequestSecurityPreflightInput
+): ServerAdminRequestSecurityPreflightResult | null {
+  const requestHost = normalizeHost(input.requestHost);
+
+  if (!requestHost) {
+    return deny("host_missing", 400);
+  }
+
+  const expectedHost = getExpectedHost(input);
+
+  if (!expectedHost || requestHost !== expectedHost) {
+    return deny("origin_host_mismatch", 403);
+  }
+
+  return null;
+}
+
 export async function validateServerAdminRequestSecurityPreflight(
   input: ServerAdminRequestSecurityPreflightInput,
   dependencies: ServerAdminRequestSecurityPreflightDependencies = {}
@@ -228,26 +246,40 @@ export async function validateServerAdminRequestSecurityPreflight(
     return deny("operation_not_supported", 400);
   }
 
-  const sameOrigin = validateSameOrigin(input);
-
-  if (!sameOrigin.ok) {
-    return sameOrigin.result;
-  }
-
   if (!isStateChangingOperation(requestedOperation)) {
     if (requestedOperation === "admin.csrf.issue") {
-      return requestMethod === "POST"
-        ? allow()
-        : deny("request_method_not_allowed", 403);
+      if (requestMethod !== "POST") {
+        return deny("request_method_not_allowed", 403);
+      }
+
+      const sameOrigin = validateSameOrigin(input);
+
+      return sameOrigin.ok ? allow() : sameOrigin.result;
     }
 
-    return readOnlySafeMethods.has(requestMethod)
-      ? allow()
-      : deny("request_method_not_allowed", 403);
+    if (!readOnlySafeMethods.has(requestMethod)) {
+      return deny("request_method_not_allowed", 403);
+    }
+
+    const rawOrigin = normalizeRequired(input.requestOrigin);
+
+    if (!rawOrigin) {
+      return validateReadOnlySafeHost(input) ?? allow();
+    }
+
+    const sameOrigin = validateSameOrigin(input);
+
+    return sameOrigin.ok ? allow() : sameOrigin.result;
   }
 
   if (requestMethod !== "POST") {
     return deny("request_method_not_allowed", 403);
+  }
+
+  const sameOrigin = validateSameOrigin(input);
+
+  if (!sameOrigin.ok) {
+    return sameOrigin.result;
   }
 
   const csrfProof = normalizeRequired(input.csrfProof);

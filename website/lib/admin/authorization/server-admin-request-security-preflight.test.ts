@@ -165,22 +165,60 @@ describe("server admin request security preflight", () => {
     });
   });
 
-  it("fails closed when Origin is missing", async () => {
+  it("allows read-only admin shell GET without Origin when Host matches the expected host", async () => {
     const result = await validateServerAdminRequestSecurityPreflight({
       ...safeReadInput,
+      requestedOperation: "admin.shell.access",
+      requestOrigin: ""
+    });
+
+    expect(result).toEqual({
+      allowed: true,
+      reason: "request_security_preflight_passed"
+    });
+  });
+
+  it("allows read-only admin auth checks without Origin when Host matches the host derived from expected Origin", async () => {
+    const result = await validateServerAdminRequestSecurityPreflight({
+      ...safeReadInput,
+      requestedOperation: "admin.auth.check",
+      requestOrigin: "",
+      expectedHost: ""
+    });
+
+    expect(result).toEqual({
+      allowed: true,
+      reason: "request_security_preflight_passed"
+    });
+  });
+
+  it("fails closed when Origin is missing for state-changing operations", async () => {
+    const result = await validateServerAdminRequestSecurityPreflight({
+      ...safeWriteInput,
       requestOrigin: ""
     });
 
     expectDenied(result, "origin_missing", 400);
   });
 
-  it("fails closed when Host is missing", async () => {
+  it("fails closed when Host is missing for read-only requests without Origin", async () => {
     const result = await validateServerAdminRequestSecurityPreflight({
       ...safeReadInput,
+      requestOrigin: "",
       requestHost: " "
     });
 
     expectDenied(result, "host_missing", 400);
+  });
+
+  it("fails closed when Host mismatches expected Host for read-only requests without Origin", async () => {
+    const result = await validateServerAdminRequestSecurityPreflight({
+      ...safeReadInput,
+      requestOrigin: "",
+      requestHost: "evil.example"
+    });
+
+    expectDenied(result, "origin_host_mismatch", 403);
   });
 
   it("fails closed when Origin and Host do not match the expected same-origin metadata", async () => {

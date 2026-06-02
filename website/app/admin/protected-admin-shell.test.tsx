@@ -117,6 +117,19 @@ describe("protected admin shell", () => {
     expect(resolveAdminProductDashboardRead).not.toHaveBeenCalled();
   });
 
+  it("maps request-security denials to a generic unavailable state", async () => {
+    vi.mocked(resolveServerAdminRuntimeRouteGateAdapter).mockResolvedValueOnce({
+      allowed: false,
+      reason: "origin_missing",
+      statusCode: 400
+    });
+
+    await expect(resolveProtectedAdminShellState()).resolves.toEqual({
+      status: "unavailable"
+    });
+    expect(resolveAdminProductDashboardRead).not.toHaveBeenCalled();
+  });
+
   it("maps missing env or dependency failures to a safe unavailable state", async () => {
     vi.mocked(resolveServerAdminRuntimeRouteGateAdapter).mockResolvedValueOnce({
       allowed: false,

@@ -29,6 +29,22 @@ type ProtectedAdminShellGateState =
       status: "authorised_admin";
     };
 
+const requestSecurityDenyReasons = new Set<string>([
+  "operation_not_supported",
+  "request_method_missing",
+  "request_method_not_allowed",
+  "origin_missing",
+  "host_missing",
+  "origin_host_mismatch",
+  "csrf_proof_missing",
+  "csrf_verifier_unavailable",
+  "csrf_verification_failed",
+  "csrf_proof_invalid",
+  "csrf_proof_stale",
+  "csrf_proof_replayed",
+  "csrf_proof_mismatched"
+]);
+
 function mapGateResult(
   result: ServerAdminRuntimeRouteGateAdapterResult
 ): ProtectedAdminShellGateState {
@@ -44,7 +60,10 @@ function mapGateResult(
     };
   }
 
-  if (result.statusCode === 503) {
+  if (
+    result.statusCode === 503 ||
+    requestSecurityDenyReasons.has(result.reason)
+  ) {
     return {
       status: "unavailable"
     };

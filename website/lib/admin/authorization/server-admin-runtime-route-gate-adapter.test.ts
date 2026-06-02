@@ -96,6 +96,215 @@ describe("server admin runtime route gate adapter", () => {
     });
   });
 
+  it("allows admin shell GET without Origin to reach the authorization decision when Host matches", async () => {
+    let decisionReached = false;
+
+    const result = await resolveServerAdminRuntimeRouteGateAdapter(
+      {
+        requestedOperation: "admin.shell.access",
+        requestMethod: "GET"
+      },
+      {
+        requestMetadata: {
+          expectedOrigin: "https://admin.space.test",
+          expectedHost: "admin.space.test"
+        },
+        async readRequestMetadata(dependencies) {
+          expect(dependencies.requestMethod).toBe("GET");
+
+          return {
+            configured: true,
+            metadata: {
+              requestMethod: "GET",
+              requestOrigin: null,
+              requestHost: "admin.space.test",
+              expectedOrigin: "https://admin.space.test",
+              expectedHost: "admin.space.test"
+            }
+          };
+        },
+        gate: {
+          async resolveDecision(input) {
+            decisionReached = true;
+            expect(input).toEqual({
+              requestedOperation: "admin.shell.access"
+            });
+
+            return {
+              allowed: true,
+              reason: "allowed",
+              statusCode: 200,
+              workspaceId: "workspace-1"
+            };
+          }
+        }
+      }
+    );
+
+    expect(decisionReached).toBe(true);
+    expect(result).toEqual({
+      allowed: true,
+      reason: "allowed",
+      statusCode: 200,
+      workspaceId: "workspace-1"
+    });
+  });
+
+  it("denies admin shell GET without Origin before authorization when Host is missing or mismatched", async () => {
+    for (const requestHost of [null, "evil.example"]) {
+      let decisionReached = false;
+      const result = await resolveServerAdminRuntimeRouteGateAdapter(
+        {
+          requestedOperation: "admin.shell.access",
+          requestMethod: "GET"
+        },
+        {
+          requestMetadata: {
+            expectedOrigin: "https://admin.space.test",
+            expectedHost: "admin.space.test"
+          },
+          async readRequestMetadata() {
+            return {
+              configured: true,
+              metadata: {
+                requestMethod: "GET",
+                requestOrigin: null,
+                requestHost,
+                expectedOrigin: "https://admin.space.test",
+                expectedHost: "admin.space.test"
+              }
+            };
+          },
+          gate: {
+            async resolveDecision() {
+              decisionReached = true;
+
+              return {
+                allowed: true,
+                reason: "allowed",
+                statusCode: 200,
+                workspaceId: "workspace-1"
+              };
+            }
+          }
+        }
+      );
+
+      expect(decisionReached).toBe(false);
+      expect(result.allowed).toBe(false);
+    }
+  });
+
+  it("denies admin shell GET with a bad Origin before authorization", async () => {
+    let decisionReached = false;
+
+    const result = await resolveServerAdminRuntimeRouteGateAdapter(
+      {
+        requestedOperation: "admin.shell.access",
+        requestMethod: "GET"
+      },
+      {
+        requestMetadata: {
+          expectedOrigin: "https://admin.space.test",
+          expectedHost: "admin.space.test"
+        },
+        async readRequestMetadata() {
+          return {
+            configured: true,
+            metadata: {
+              requestMethod: "GET",
+              requestOrigin: "https://evil.example",
+              requestHost: "admin.space.test",
+              expectedOrigin: "https://admin.space.test",
+              expectedHost: "admin.space.test"
+            }
+          };
+        },
+        gate: {
+          async resolveDecision() {
+            decisionReached = true;
+
+            return {
+              allowed: true,
+              reason: "allowed",
+              statusCode: 200,
+              workspaceId: "workspace-1"
+            };
+          }
+        }
+      }
+    );
+
+    expect(decisionReached).toBe(false);
+    expect(result).toEqual({
+      allowed: false,
+      reason: "origin_host_mismatch",
+      statusCode: 403
+    });
+  });
+
+  it("denies write and CSRF issuer POST requests without Origin before authorization", async () => {
+    for (const requestedOperation of ["category.write", "admin.csrf.issue"] as const) {
+      let decisionReached = false;
+      const result = await resolveServerAdminRuntimeRouteGateAdapter(
+        {
+          requestedOperation,
+          requestMethod: "POST"
+        },
+        {
+          requestMetadata: {
+            expectedOrigin: "https://admin.space.test",
+            expectedHost: "admin.space.test"
+          },
+          async readRequestMetadata() {
+            return {
+              configured: true,
+              metadata: {
+                requestMethod: "POST",
+                requestOrigin: null,
+                requestHost: "admin.space.test",
+                expectedOrigin: "https://admin.space.test",
+                expectedHost: "admin.space.test",
+                ...(requestedOperation === "category.write"
+                  ? { csrfProof: "proof" }
+                  : {})
+              }
+            };
+          },
+          gate: {
+            preflight:
+              requestedOperation === "category.write"
+                ? {
+                    async verifyCsrfProof() {
+                      return {
+                        valid: true
+                      };
+                    }
+                  }
+                : undefined,
+            async resolveDecision() {
+              decisionReached = true;
+
+              return {
+                allowed: true,
+                reason: "allowed",
+                statusCode: 200,
+                workspaceId: "workspace-1"
+              };
+            }
+          }
+        }
+      );
+
+      expect(decisionReached).toBe(false);
+      expect(result).toEqual({
+        allowed: false,
+        reason: "origin_missing",
+        statusCode: 400
+      });
+    }
+  });
+
   it("derives only method from a minimal request-like object", async () => {
     const result = await resolveServerAdminRuntimeRouteGateAdapter(
       {
