@@ -149,7 +149,7 @@ describe("protected admin shell", () => {
     });
   });
 
-  it("renders safe read-only dashboard data without product write controls", () => {
+  it("renders safe dashboard data with category-only write controls", () => {
     render(
       <AdminShellContent
         state={{
@@ -197,20 +197,62 @@ describe("protected admin shell", () => {
     expect(
       screen.getByRole("heading", { name: /read-only catalogue dashboard/i })
     ).toBeInTheDocument();
-    expect(screen.getByText("Lounge")).toBeInTheDocument();
+    expect(screen.getAllByText("Lounge").length).toBeGreaterThan(0);
     expect(screen.getByText("Modular Lounge")).toBeInTheDocument();
     expect(screen.getAllByText(/2 image metadata records/i).length).toBeGreaterThan(0);
     expect(
       screen.getByRole("button", { name: /sign out/i })
     ).toBeInTheDocument();
     expect(
-      screen.queryByRole("button", { name: /create|edit|archive|publish/i })
+      screen.getByRole("button", { name: /create category/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /save category lounge/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /archive category lounge/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", {
+        name: /create product|edit product|archive product|publish product|product image/i
+      })
     ).not.toBeInTheDocument();
     expect(
-      screen.queryByRole("link", { name: /create|edit|archive|publish/i })
+      screen.queryByRole("link", {
+        name: /create product|edit product|archive product|publish product|product image/i
+      })
     ).not.toBeInTheDocument();
     expect(screen.queryByLabelText(/product editor/i)).not.toBeInTheDocument();
-    expect(screen.queryByLabelText(/category editor/i)).not.toBeInTheDocument();
+  });
+
+  it("does not render category write controls outside loaded authorised dashboard state", () => {
+    const blockedStates = [
+      {
+        status: "unauthenticated" as const
+      },
+      {
+        status: "authenticated_not_authorised" as const
+      },
+      {
+        status: "unavailable" as const
+      },
+      {
+        status: "authorised_admin" as const,
+        dashboard: {
+          status: "unavailable" as const
+        }
+      }
+    ];
+
+    for (const state of blockedStates) {
+      const { unmount } = render(<AdminShellContent state={state} />);
+
+      expect(
+        screen.queryByRole("button", { name: /create category/i })
+      ).not.toBeInTheDocument();
+      expect(screen.queryByLabelText(/category management/i)).not.toBeInTheDocument();
+      unmount();
+    }
   });
 
   it("renders a safe dashboard unavailable state without provider details", () => {
