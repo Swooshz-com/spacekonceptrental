@@ -43,7 +43,7 @@ export function ProductPageContent({
   return (
     <section className="section">
       <div className="page-title">
-        <p className="eyebrow">Listing shell</p>
+        <p className="eyebrow">Furniture listing</p>
         <h1>{product.name}</h1>
         <p>{product.shortDescription ?? product.description}</p>
       </div>
@@ -70,7 +70,7 @@ export function ProductPageContent({
               Back to catalogue
             </Link>
             <Link className="button" href="/quote">
-              Start quote
+              Start enquiry
             </Link>
           </div>
         </article>

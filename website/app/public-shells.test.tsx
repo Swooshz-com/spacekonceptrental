@@ -27,18 +27,19 @@ describe("public page shells", () => {
     cleanup();
   });
 
-  it("renders the static product detail shell when Supabase env is missing", async () => {
+  it("renders the static product detail copy when Supabase env is missing", async () => {
     render(await ProductPage());
 
     expect(
       screen.getByRole("heading", { name: /lounge sofa package/i })
     ).toBeInTheDocument();
     expect(screen.getByText(/rental details/i)).toBeInTheDocument();
+    expect(screen.getByText(/furniture listing/i)).toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: /back to catalogue/i })
     ).toHaveAttribute("href", "/catalogue");
     expect(
-      screen.getByRole("link", { name: /start quote/i })
+      screen.getByRole("link", { name: /start enquiry/i })
     ).toHaveAttribute("href", "/quote");
   });
 
@@ -65,10 +66,31 @@ describe("public page shells", () => {
     render(await CataloguePage());
 
     expect(
-      screen
-        .getAllByRole("link", { name: /view listing shell/i })
-        .map((link) => link.getAttribute("href"))
+      screen.queryByRole("link", { name: /view listing shell/i })
+    ).not.toBeInTheDocument();
+
+    const catalogueLinks = screen.getAllByRole("link", { name: /view listing/i });
+    expect(
+      catalogueLinks.map((link) => link.getAttribute("href"))
     ).toContain("/catalogue/lounge-sofa-package");
+    expect(
+      screen.getByRole("link", { name: /start enquiry/i })
+    ).toHaveAttribute("href", "/quote");
+  });
+
+  it("renders a clean empty state when no public listings are available", () => {
+    render(
+      <CataloguePageContent
+        catalogue={{
+          source: "fallback",
+          categories: [],
+          products: []
+        }}
+      />
+    );
+
+    expect(screen.getByRole("heading", { name: /furniture catalogue/i })).toBeInTheDocument();
+    expect(screen.getByText(/no listings are available right now/i)).toBeInTheDocument();
   });
 
   it("renders published catalogue data supplied by the server read layer", () => {
@@ -145,5 +167,60 @@ describe("public page shells", () => {
     ).toBeInTheDocument();
     expect(screen.getByText(/published details for a lounge set/i)).toBeInTheDocument();
     expect(screen.queryByText(/concept backdrop frame/i)).not.toBeInTheDocument();
+  });
+
+  it("keeps public listing pages free from shell and ecommerce-only copy", async () => {
+    const catalogueSource = readFileSync(
+      resolve(process.cwd(), "app/catalogue/page.tsx"),
+      "utf8"
+    );
+    const detailSource = readFileSync(
+      resolve(process.cwd(), "app/catalogue/[slug]/page.tsx"),
+      "utf8"
+    );
+
+    expect(catalogueSource).not.toMatch(/listing shell/i);
+    expect(detailSource).not.toMatch(/listing shell/i);
+    expect(catalogueSource).not.toMatch(/supabase service role/i);
+    expect(detailSource).not.toMatch(/supabase service role/i);
+    expect(catalogueSource).not.toMatch(/createBrowserClient|supabaseBrowserClient/i);
+    expect(detailSource).not.toMatch(/createBrowserClient|supabaseBrowserClient/i);
+
+    render(await ProductPage());
+    expect(
+      screen.queryByText(/shell/i)
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(
+        /cart|checkout|payment|customer account|stock reservation|order fulfilment|online ordering/i
+      )
+    ).not.toBeInTheDocument();
+
+    render(
+      <CataloguePageContent
+        catalogue={{
+          source: "fallback",
+          categories: [],
+          products: [
+            {
+              id: "product-published",
+              slug: "compact-chair",
+              name: "Compact Chair",
+              shortDescription: "Compact event chair.",
+              rentalUnit: "item",
+              sortOrder: 10,
+              source: "fallback"
+            }
+          ]
+        }}
+      />
+    );
+    expect(screen.getByRole("link", { name: /view listing/i })).toBeInTheDocument();
+    expect(screen.queryByText(/shell/i)).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(
+        /cart|checkout|payment|customer account|stock reservation|order fulfilment|online ordering/i
+      )
+    ).not.toBeInTheDocument();
   });
 });
