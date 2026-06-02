@@ -316,6 +316,15 @@ select {
   width: min(100%, 520px);
 }
 
+.admin-shell {
+  place-items: start center;
+}
+
+.admin-shell__panel {
+  max-width: 1120px;
+  width: min(100%, 1120px);
+}
+
 .admin-login__panel h1,
 .admin-shell__panel h1 {
   font-size: clamp(2rem, 4vw, 3rem);
@@ -353,6 +362,100 @@ select {
 
 .admin-shell__panel form {
   margin: 0;
+}
+
+.admin-dashboard {
+  border-top: 1px solid var(--border);
+  display: grid;
+  gap: 18px;
+  margin-top: 10px;
+  padding-top: 24px;
+}
+
+.admin-dashboard__header {
+  align-items: start;
+  display: grid;
+  gap: 18px;
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.admin-dashboard__header h2,
+.admin-dashboard__card h3 {
+  margin: 0;
+}
+
+.admin-dashboard__stats {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(3, minmax(72px, 1fr));
+  margin: 0;
+}
+
+.admin-dashboard__stats div,
+.admin-dashboard__card {
+  background: #fbfaf7;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.admin-dashboard__stats div {
+  padding: 12px;
+}
+
+.admin-dashboard__stats dt {
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.admin-dashboard__stats dd {
+  font-size: 1.45rem;
+  font-weight: 900;
+  margin: 2px 0 0;
+}
+
+.admin-dashboard__grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.admin-dashboard__card {
+  display: grid;
+  gap: 12px;
+  padding: 18px;
+}
+
+.admin-dashboard__card--summary,
+.admin-dashboard--unavailable {
+  grid-column: 1 / -1;
+}
+
+.admin-dashboard__list {
+  display: grid;
+  gap: 10px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.admin-dashboard__list li {
+  border-top: 1px solid var(--border);
+  display: grid;
+  gap: 4px;
+  padding-top: 10px;
+}
+
+.admin-dashboard__list strong,
+.admin-dashboard__list span,
+.admin-dashboard__list small {
+  display: block;
+}
+
+.admin-dashboard__list span,
+.admin-dashboard__list small {
+  color: var(--muted);
 }
 
 .site-footer {
@@ -479,7 +582,9 @@ select {
   .hero,
   .catalogue-grid,
   .detail-layout,
-  .route-grid {
+  .route-grid,
+  .admin-dashboard__header,
+  .admin-dashboard__grid {
     grid-template-columns: 1fr;
   }
 

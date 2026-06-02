@@ -2,6 +2,10 @@ import {
   resolveServerAdminRuntimeRouteGateAdapter,
   type ServerAdminRuntimeRouteGateAdapterResult
 } from "../../lib/admin/authorization/server-admin-runtime-route-gate-adapter";
+import {
+  resolveAdminProductDashboardRead,
+  type AdminProductDashboardReadResult
+} from "../../lib/products/admin-read/admin-product-dashboard-read";
 
 export type ProtectedAdminShellState =
   | {
@@ -12,14 +16,21 @@ export type ProtectedAdminShellState =
     }
   | {
       status: "authorised_admin";
+      dashboard: AdminProductDashboardReadResult;
     }
   | {
       status: "unavailable";
     };
 
+type ProtectedAdminShellGateState =
+  | Exclude<ProtectedAdminShellState, { status: "authorised_admin" }>
+  | {
+      status: "authorised_admin";
+    };
+
 function mapGateResult(
   result: ServerAdminRuntimeRouteGateAdapterResult
-): ProtectedAdminShellState {
+): ProtectedAdminShellGateState {
   if (result.allowed) {
     return {
       status: "authorised_admin"
@@ -44,6 +55,8 @@ function mapGateResult(
 }
 
 export async function resolveProtectedAdminShellState(): Promise<ProtectedAdminShellState> {
+  const trustedServerWorkspaceId = process.env.ADMIN_TRUSTED_WORKSPACE_ID ?? null;
+
   try {
     const result = await resolveServerAdminRuntimeRouteGateAdapter(
       {
@@ -58,20 +71,140 @@ export async function resolveProtectedAdminShellState(): Promise<ProtectedAdminS
         gate: {
           decision: {
             workspace: {
-              trustedServerWorkspaceId:
-                process.env.ADMIN_TRUSTED_WORKSPACE_ID ?? null
+              trustedServerWorkspaceId
             }
           }
         }
       }
     );
 
-    return mapGateResult(result);
+    const gateState = mapGateResult(result);
+
+    if (gateState.status !== "authorised_admin") {
+      return gateState;
+    }
+
+    return {
+      status: "authorised_admin",
+      dashboard: await resolveAdminProductDashboardRead({
+        env: {
+          ADMIN_TRUSTED_WORKSPACE_ID: trustedServerWorkspaceId
+        }
+      })
+    };
   } catch {
     return {
       status: "unavailable"
     };
   }
+}
+
+function statusLabel(value: string) {
+  return value.replace(/_/g, " ");
+}
+
+function AdminDashboard({
+  dashboard
+}: {
+  dashboard: AdminProductDashboardReadResult;
+}) {
+  if (dashboard.status === "unavailable") {
+    return (
+      <section className="admin-dashboard admin-dashboard--unavailable">
+        <h2>Read-only catalogue dashboard</h2>
+        <p>Catalogue data is temporarily unavailable.</p>
+      </section>
+    );
+  }
+
+  return (
+    <section className="admin-dashboard" aria-label="Read-only catalogue dashboard">
+      <div className="admin-dashboard__header">
+        <div>
+          <p className="eyebrow">Read-only</p>
+          <h2>Read-only catalogue dashboard</h2>
+          <p>
+            View catalogue management data for this workspace. Changes still go
+            through backend-only protected routes.
+          </p>
+        </div>
+        <dl className="admin-dashboard__stats" aria-label="Catalogue summary">
+          <div>
+            <dt>Categories</dt>
+            <dd>{dashboard.data.categories.length}</dd>
+          </div>
+          <div>
+            <dt>Products</dt>
+            <dd>{dashboard.data.products.length}</dd>
+          </div>
+          <div>
+            <dt>Images</dt>
+            <dd>{dashboard.data.imageSummary.totalImages}</dd>
+          </div>
+        </dl>
+      </div>
+
+      <div className="admin-dashboard__grid">
+        <section className="admin-dashboard__card">
+          <h3>Categories</h3>
+          {dashboard.data.categories.length === 0 ? (
+            <p>No categories are visible for this workspace.</p>
+          ) : (
+            <ul className="admin-dashboard__list">
+              {dashboard.data.categories.map((category) => (
+                <li key={category.id}>
+                  <div>
+                    <strong>{category.name}</strong>
+                    <span>{category.slug}</span>
+                  </div>
+                  <small>
+                    {category.productCount} products ·{" "}
+                    {category.isPublished ? "Published" : "Not published"}
+                  </small>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+
+        <section className="admin-dashboard__card">
+          <h3>Products</h3>
+          {dashboard.data.products.length === 0 ? (
+            <p>No products are visible for this workspace.</p>
+          ) : (
+            <ul className="admin-dashboard__list">
+              {dashboard.data.products.map((product) => (
+                <li key={product.id}>
+                  <div>
+                    <strong>{product.name}</strong>
+                    <span>
+                      {product.slug} · {statusLabel(product.status)}
+                    </span>
+                  </div>
+                  <small>
+                    {product.imageCount} image metadata records
+                    {product.primaryImageAltText
+                      ? ` · Primary alt: ${product.primaryImageAltText}`
+                      : ""}
+                  </small>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+
+        <section className="admin-dashboard__card admin-dashboard__card--summary">
+          <h3>Image metadata summary</h3>
+          <p>
+            {dashboard.data.imageSummary.totalImages} image metadata records,
+            {" "}
+            {dashboard.data.imageSummary.activeImages} active,{" "}
+            {dashboard.data.imageSummary.primaryImages} primary.
+          </p>
+        </section>
+      </div>
+    </section>
+  );
 }
 
 function AdminStatusMessage({ state }: { state: ProtectedAdminShellState }) {
@@ -114,6 +247,7 @@ function AdminStatusMessage({ state }: { state: ProtectedAdminShellState }) {
           Sign out
         </button>
       </form>
+      <AdminDashboard dashboard={state.dashboard} />
     </>
   );
 }

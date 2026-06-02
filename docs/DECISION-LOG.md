@@ -851,6 +851,31 @@ Supabase, service-role runtime paths, deployment config, Supabase Cloud,
 n8n changes, Pinecone runtime code, SaaS chatbot work, or
 `website/chat-config.js` access.
 
+## 2026-06-02: Admin Read-only Product Dashboard Boundary
+
+Decision: Phase 2B-AO adds a read-only admin product dashboard inside the protected admin shell.
+
+Reason: PR #81 proved the first-party login/logout and protected admin shell
+boundary. The next smallest safe operator surface is read-only catalogue
+visibility for authorised owner/admin users before any product-management
+write UI, upload flow, or server action exists.
+
+The dashboard remains under the existing `admin.shell.access` page gate, which
+allows owner/admin membership and denies viewer membership. After that gate
+allows access, the dashboard uses a server-only session-bound authenticated
+admin read client and trusted `ADMIN_TRUSTED_WORKSPACE_ID` configuration to
+perform select-only RLS-scoped reads of `categories`, `products`, and
+`product_images`. The UI renders only category/product summaries and product
+image metadata counts or alt-text summaries. It does not expose workspace
+internals, membership internals, SQL/provider errors, stack traces, cookies,
+tokens, env values, storage paths, or secrets.
+
+Phase 2B-AO does not add product/category/product-image create, edit, archive,
+publish, upload, or delete controls; product write forms; server actions;
+Supabase Storage; binary uploads; browser Supabase; service-role runtime
+paths; deployment config; Supabase Cloud actions; n8n changes; Pinecone
+runtime code; SaaS chatbot work; or `website/chat-config.js` access.
+
 ## 2026-06-01: Admin Product Persistence And Protected Write API Routes
 
 Decision: Phase 2B-AL adds the first backend-only protected admin product-management write surface.

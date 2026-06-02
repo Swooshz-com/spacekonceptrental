@@ -2,6 +2,7 @@ import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { resolveServerAdminRuntimeRouteGateAdapter } from "../../lib/admin/authorization/server-admin-runtime-route-gate-adapter";
+import { resolveAdminProductDashboardRead } from "../../lib/products/admin-read/admin-product-dashboard-read";
 import {
   AdminShellContent,
   resolveProtectedAdminShellState
@@ -9,6 +10,9 @@ import {
 
 vi.mock("../../lib/admin/authorization/server-admin-runtime-route-gate-adapter", () => ({
   resolveServerAdminRuntimeRouteGateAdapter: vi.fn()
+}));
+vi.mock("../../lib/products/admin-read/admin-product-dashboard-read", () => ({
+  resolveAdminProductDashboardRead: vi.fn()
 }));
 
 describe("protected admin shell", () => {
@@ -32,8 +36,33 @@ describe("protected admin shell", () => {
       workspaceId: "workspace-secret"
     });
 
+    vi.mocked(resolveAdminProductDashboardRead).mockResolvedValueOnce({
+      status: "loaded",
+      data: {
+        categories: [],
+        products: [],
+        imageSummary: {
+          totalImages: 0,
+          activeImages: 0,
+          primaryImages: 0
+        }
+      }
+    });
+
     await expect(resolveProtectedAdminShellState()).resolves.toEqual({
-      status: "authorised_admin"
+      status: "authorised_admin",
+      dashboard: {
+        status: "loaded",
+        data: {
+          categories: [],
+          products: [],
+          imageSummary: {
+            totalImages: 0,
+            activeImages: 0,
+            primaryImages: 0
+          }
+        }
+      }
     });
 
     expect(resolveServerAdminRuntimeRouteGateAdapter).toHaveBeenCalledWith(
@@ -55,6 +84,11 @@ describe("protected admin shell", () => {
         }
       }
     );
+    expect(resolveAdminProductDashboardRead).toHaveBeenCalledWith({
+      env: {
+        ADMIN_TRUSTED_WORKSPACE_ID: "workspace-admin"
+      }
+    });
   });
 
   it("maps unauthenticated users to a safe login-required state", async () => {
@@ -67,6 +101,7 @@ describe("protected admin shell", () => {
     await expect(resolveProtectedAdminShellState()).resolves.toEqual({
       status: "unauthenticated"
     });
+    expect(resolveAdminProductDashboardRead).not.toHaveBeenCalled();
   });
 
   it("maps authenticated viewers to a safe not-authorised state", async () => {
@@ -79,6 +114,7 @@ describe("protected admin shell", () => {
     await expect(resolveProtectedAdminShellState()).resolves.toEqual({
       status: "authenticated_not_authorised"
     });
+    expect(resolveAdminProductDashboardRead).not.toHaveBeenCalled();
   });
 
   it("maps missing env or dependency failures to a safe unavailable state", async () => {
@@ -91,18 +127,106 @@ describe("protected admin shell", () => {
     await expect(resolveProtectedAdminShellState()).resolves.toEqual({
       status: "unavailable"
     });
+    expect(resolveAdminProductDashboardRead).not.toHaveBeenCalled();
   });
 
-  it("renders only safe state copy and no admin product-management UI", () => {
-    render(<AdminShellContent state={{ status: "authorised_admin" }} />);
+  it("keeps authorised admins in a safe state when dashboard reads are unavailable", async () => {
+    vi.mocked(resolveServerAdminRuntimeRouteGateAdapter).mockResolvedValueOnce({
+      allowed: true,
+      reason: "allowed",
+      statusCode: 200,
+      workspaceId: "workspace-secret"
+    });
+    vi.mocked(resolveAdminProductDashboardRead).mockResolvedValueOnce({
+      status: "unavailable"
+    });
+
+    await expect(resolveProtectedAdminShellState()).resolves.toEqual({
+      status: "authorised_admin",
+      dashboard: {
+        status: "unavailable"
+      }
+    });
+  });
+
+  it("renders safe read-only dashboard data without product write controls", () => {
+    render(
+      <AdminShellContent
+        state={{
+          status: "authorised_admin",
+          dashboard: {
+            status: "loaded",
+            data: {
+              categories: [
+                {
+                  id: "category-1",
+                  slug: "lounge",
+                  name: "Lounge",
+                  sortOrder: 20,
+                  isPublished: true,
+                  productCount: 1
+                }
+              ],
+              products: [
+                {
+                  id: "product-1",
+                  categoryId: "category-1",
+                  slug: "modular-lounge",
+                  name: "Modular Lounge",
+                  rentalUnit: "set",
+                  status: "draft",
+                  sortOrder: 10,
+                  imageCount: 2,
+                  primaryImageAltText: "Lounge set"
+                }
+              ],
+              imageSummary: {
+                totalImages: 2,
+                activeImages: 2,
+                primaryImages: 1
+              }
+            }
+          }
+        }}
+      />
+    );
 
     expect(
       screen.getByRole("heading", { name: /admin workspace/i })
     ).toBeInTheDocument();
     expect(
+      screen.getByRole("heading", { name: /read-only catalogue dashboard/i })
+    ).toBeInTheDocument();
+    expect(screen.getByText("Lounge")).toBeInTheDocument();
+    expect(screen.getByText("Modular Lounge")).toBeInTheDocument();
+    expect(screen.getAllByText(/2 image metadata records/i).length).toBeGreaterThan(0);
+    expect(
       screen.getByRole("button", { name: /sign out/i })
     ).toBeInTheDocument();
-    expect(screen.queryByText(/product editor/i)).not.toBeInTheDocument();
-    expect(screen.queryByText(/category editor/i)).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /create|edit|archive|publish/i })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", { name: /create|edit|archive|publish/i })
+    ).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/product editor/i)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/category editor/i)).not.toBeInTheDocument();
+  });
+
+  it("renders a safe dashboard unavailable state without provider details", () => {
+    render(
+      <AdminShellContent
+        state={{
+          status: "authorised_admin",
+          dashboard: {
+            status: "unavailable"
+          }
+        }}
+      />
+    );
+
+    expect(screen.getByText(/catalogue data is temporarily unavailable/i)).toBeInTheDocument();
+    expect(screen.queryByText(/sql/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/supabase/i)).not.toBeInTheDocument();
   });
 });

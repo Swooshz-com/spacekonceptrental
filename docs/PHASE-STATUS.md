@@ -4,6 +4,27 @@ This is the quick status page for the SKR repo. Use `docs/PHASE-2-READINESS-PLAN
 
 ## Current phase
 
+Current phase: Phase 2B-AO - admin read-only product dashboard boundary.
+
+This phase adds a read-only admin product dashboard inside the protected admin
+shell. It uses the existing `admin.shell.access` owner/admin gate, a
+session-bound authenticated admin read client, trusted server-side workspace
+configuration, and RLS-scoped select-only catalogue table reads. It renders
+safe category, product, and product-image metadata summaries only for
+authorised owner/admin users. It does not add product/category/product-image
+write forms, create/edit/archive/publish controls, server actions, Supabase
+Storage, binary uploads, deployment config, Supabase Cloud, browser Supabase,
+service-role runtime paths, n8n changes, Pinecone runtime code, SaaS chatbot
+work, or `website/chat-config.js` access.
+
+Latest completed phase: Phase 2B-AN - admin auth login logout protected shell.
+
+Last merged phase PR: #81
+
+Merge commit: `f66a37644c51123780fee0944e584ab5e00d6f3e`
+
+## Previous merged status snapshot
+
 Current phase: Phase 2B-AN - admin auth login logout protected shell.
 
 This phase adds a minimal first-party admin login page, server-owned Supabase Auth login/logout routes, and a protected admin shell gated through the approved server-only route-gate path using `admin.shell.access`. It returns only safe unauthenticated, authenticated-but-not-authorised, authorised-admin, and unavailable/misconfigured states. It does not add product-management UI, product/category/product-image write forms, Supabase Storage, binary uploads, deployment config, Supabase Cloud, browser Supabase, service-role runtime paths, n8n changes, Pinecone runtime code, SaaS chatbot work, or `website/chat-config.js` access.
@@ -80,7 +101,8 @@ Vercel config, add real env values, or add runtime features.
   complete.
 - Admin product write audit atomicity boundary is complete.
 - Minimal first-party admin login/logout and protected admin shell boundary is
-  in progress.
+  complete.
+- Read-only admin product dashboard boundary is in progress.
 Supabase Auth is approved as the future server-side admin auth provider. The
 Phase 2B-K identity boundary remains the only approved place to read Supabase
 Auth cookies or call Supabase Auth server APIs. The Phase 2B-L
@@ -143,9 +165,17 @@ and denies viewer membership. It does not add product-management UI, product
 write forms, server actions, Storage, uploads, browser Supabase, service-role
 paths, deployment config, Supabase Cloud, n8n changes, Pinecone runtime code,
 SaaS chatbot work, or `website/chat-config.js` access.
+Phase 2B-AO adds only a read-only product dashboard inside that protected
+shell. It keeps the existing `admin.shell.access` gate as the page boundary,
+uses a session-bound authenticated read client for select-only catalogue table
+reads, and renders only safe catalogue management summaries. It does not add
+write forms, mutation controls, server actions, Storage/uploads, browser
+Supabase, service-role paths, deployment config, Supabase Cloud, n8n changes,
+Pinecone runtime code, SaaS chatbot work, or `website/chat-config.js` access.
 
 Runtime session-bound read-client usage remains deferred outside the approved
-Phase 2B-AL/AM backend routes and Phase 2B-AN protected admin shell path.
+Phase 2B-AL/AM backend routes, Phase 2B-AN protected admin shell path, and
+Phase 2B-AO read-only admin dashboard path.
 Runtime adapter-set usage remains deferred outside the approved Phase 2B-AL/AM
 backend routes and Phase 2B-AN protected admin shell path.
 Runtime decision-boundary usage remains deferred outside the approved Phase
@@ -169,7 +199,7 @@ actions remains deferred except the approved Phase 2B-AA route boundary, Phase
 protected admin shell boundary.
 Runtime admin route gate adapter usage from routes, pages, or server actions
 remains deferred except the approved Phase 2B-AA, Phase 2B-AK, Phase 2B-AL/AM,
-and Phase 2B-AN boundaries.
+Phase 2B-AN, and Phase 2B-AO boundaries.
 
 ## Still blocked
 
@@ -204,8 +234,9 @@ and Phase 2B-AN boundaries.
   boundaries.
 - Header reads outside the Phase 2B-V request metadata adapter.
 - Login/logout routes outside the Phase 2B-AN first-party admin auth boundary.
-- Protected admin pages outside the Phase 2B-AN minimal protected shell.
-- Product-management admin UI.
+- Protected admin pages outside the Phase 2B-AN minimal protected shell and
+  Phase 2B-AO read-only dashboard boundary.
+- Product-management write UI.
 - Resolver/adapter runtime wiring into routes, pages, or server actions.
 - Product writes outside the Phase 2B-AL backend API route boundary.
 - Product image uploads and Supabase Storage wiring.
@@ -220,7 +251,7 @@ and Phase 2B-AN boundaries.
 - n8n workflow import, export, activation, execution, or mutation.
 
 Product writes are approved only through the Phase 2B-AL/AM backend API route.
-Product-management admin UI, server actions, binary image upload, Supabase
+Product-management write UI, server actions, binary image upload, Supabase
 Storage, service-role shortcuts, and browser Supabase product writes remain
 blocked.
 
@@ -249,10 +280,9 @@ architecture.
 
 ## Next recommended PR
 
-The next recommended PR should keep product-management UI separate and narrow.
-Safe follow-up work can harden the Phase 2B-AN protected shell, add first
-admin read-only dashboard data, or prepare a separate product-management UI
-plan. Product write forms, binary image uploads, Supabase Storage, deployment
-config, browser Supabase, service-role runtime paths, n8n changes, Pinecone
-runtime code, SaaS chatbot work, and `website/chat-config.js` access remain
-blocked.
+The next recommended PR should keep product-management write UI separate and
+narrow. Safe follow-up work can harden the Phase 2B-AO read-only dashboard or
+prepare a separate product-management UI plan. Product write forms, binary
+image uploads, Supabase Storage, deployment config, browser Supabase,
+service-role runtime paths, n8n changes, Pinecone runtime code, SaaS chatbot
+work, and `website/chat-config.js` access remain blocked.
