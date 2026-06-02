@@ -527,3 +527,15 @@ validation, POST, and the existing CSRF proof requirements for writes. Phase
 2B-AR does not add listing CRUD UI, listing uploads, Storage, browser Supabase,
 service-role runtime paths, deployment config, n8n changes, Pinecone runtime
 code, SaaS chatbot work, SQL migrations, or access `website/chat-config.js`.
+
+Phase 2B-AS adds only metadata admin furniture listing management UI inside
+the existing protected admin shell. It uses the existing Phase 2B-AL/AM
+product internals and protected `product.write` backend routes for create,
+update, publish/unpublish via status updates, and archive. The browser UI
+requests a first-party CSRF proof and sends `x-csrf-proof` on write requests.
+It does not add listing image upload, Supabase Storage, public catalogue
+redesign, enquiry forms, DB/API/table/RPC/RLS renames, SQL migrations,
+browser Supabase, service-role runtime paths, deployment config, n8n changes,
+Pinecone runtime code, SaaS chatbot work, cart, checkout, payments, customer
+accounts, stock reservation, order fulfilment, online ordering, or access
+`website/chat-config.js`.

@@ -957,3 +957,30 @@ Phase 2B-AR does not add listing CRUD UI, listing image upload/storage, public
 catalogue redesign, enquiry form implementation, SQL migrations, browser
 Supabase, service-role runtime paths, deployment config, n8n changes, Pinecone
 runtime code, SaaS chatbot work, or access `website/chat-config.js`.
+
+## 2026-06-02: Admin Furniture Listing Management UI Boundary
+
+Decision: Phase 2B-AS adds metadata-only furniture listing management controls
+inside the existing protected admin shell.
+
+Reason: Phase 2B-AQ confirmed the current direction as a furniture/event-rental
+listing catalogue rather than ecommerce. The existing Phase 2B-AL/AM backend
+routes already provide route-gated, CSRF-protected, RLS/audit-backed product
+metadata mutations. The next narrow operator surface is a browser UI that uses
+those existing routes without adding new backend write paths or renaming
+technical internals.
+
+The browser component requests a CSRF proof for `product.write`, then calls
+only `POST /api/admin/products`, `POST /api/admin/products/[productId]`, and
+`POST /api/admin/products/[productId]/archive` with `x-csrf-proof`. Create and
+edit payloads use only `categoryId`, `slug`, `name`, `shortDescription`,
+`description`, `rentalUnit`, `status`, and `sortOrder`. Publish and unpublish
+use the update route with `status: "published"` or `status: "draft"`, and
+archive uses the archive route rather than hard delete.
+
+Phase 2B-AS does not add listing image upload, Supabase Storage, public
+catalogue redesign, enquiry form implementation, DB/API/table/RPC/RLS renames,
+SQL migrations, browser Supabase, service-role runtime paths, deployment
+config, n8n changes, Pinecone runtime code, SaaS chatbot work, cart, checkout,
+payments, customer accounts, stock reservation, order fulfilment, online
+ordering, or access `website/chat-config.js`.

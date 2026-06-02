@@ -7,6 +7,7 @@ import {
   type AdminProductDashboardReadResult
 } from "../../lib/products/admin-read/admin-product-dashboard-read";
 import { CategoryManagementPanel } from "../../components/admin/category-management-panel";
+import { ListingManagementPanel } from "../../components/admin/listing-management-panel";
 
 export type ProtectedAdminShellState =
   | {
@@ -224,6 +225,10 @@ function AdminDashboard({
         </section>
       </div>
       <CategoryManagementPanel categories={dashboard.data.categories} />
+      <ListingManagementPanel
+        categories={dashboard.data.categories}
+        products={dashboard.data.products}
+      />
     </section>
   );
 }
