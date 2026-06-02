@@ -4,6 +4,25 @@ This is the quick status page for the SKR repo. Use `docs/PHASE-2-READINESS-PLAN
 
 ## Current phase
 
+Current phase: Phase 2B-AT - public furniture catalogue UX polish.
+
+This phase polishes public catalogue and listing detail UX without changing the
+public data path. The pages now use listing-forward copy for browsing and detail
+views, keep a safe fallback empty state, and preserve existing read paths using
+`getPublicCatalogue()` and `getPublicProductBySlug()`. It does not add image
+upload, Supabase Storage, public image generation from Supabase Storage URLs,
+enquiry form implementation, DB/API/table/RPC/RLS renames, ecommerce flows,
+browser Supabase, service-role runtime paths, or `website/chat-config.js`
+access.
+
+Latest completed phase: Phase 2B-AS - metadata-only admin listing management.
+
+Last merged phase PR: #86
+
+Merge commit: `6b031b3a287a6b763f55676a791ee29a7504b4a8`
+
+## Previous merged status snapshot: Phase 2B-AS
+
 Current phase: Phase 2B-AS - admin furniture listing management UI boundary.
 
 This phase adds metadata-only furniture listing management controls inside the

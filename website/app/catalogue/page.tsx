@@ -33,13 +33,25 @@ export function CataloguePageContent({
 }: {
   catalogue: PublicCatalogue;
 }) {
+  if (catalogue.products.length === 0) {
+    return (
+      <section className="section">
+        <div className="page-title">
+          <h1>Furniture catalogue</h1>
+          <p>Browse furniture and event-rental listings from our collection.</p>
+        </div>
+        <p>No listings are available right now. Please check back soon.</p>
+      </section>
+    );
+  }
+
   return (
     <section className="section">
       <div className="page-title">
-        <h1>Catalogue</h1>
+        <h1>Furniture catalogue</h1>
         <p>
-          Browse starter categories for event furniture, lounge layouts, and
-          corporate rental setups.
+          Browse furniture and event-rental listings made for spaces, occasions,
+          and styled setups.
         </p>
       </div>
 
@@ -57,7 +69,7 @@ export function CataloguePageContent({
               <p>{product.shortDescription ?? product.description}</p>
               {product.categoryName ? <p>{product.categoryName}</p> : null}
               <Link className="card-link" href={`/catalogue/${product.slug}`}>
-                View listing shell
+                View listing
               </Link>
             </div>
           </article>
@@ -66,7 +78,7 @@ export function CataloguePageContent({
 
       <div className="hero__actions">
         <Link className="button" href="/quote">
-          Start quote
+          Start enquiry
         </Link>
       </div>
     </section>

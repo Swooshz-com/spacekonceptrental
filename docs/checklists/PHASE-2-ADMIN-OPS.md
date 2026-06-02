@@ -33,6 +33,13 @@ and route/action boundaries are implemented and tested.
 - [ ] Improve audit logs.
 - [ ] Improve permissions.
 
+## Phase 2B-AT Public UX Polish
+
+- [x] Public catalogue and listing detail pages use listing-oriented, non-shell copy.
+- [x] Public catalogue no-listings empty state is defined and rendered.
+- [x] Listing detail CTA copy is enquiry/quote oriented.
+- [x] Existing public catalogue read paths and fallback behavior are preserved.
+
 ## Ecommerce Non-goals
 
 - [ ] Do not add carts.

@@ -984,3 +984,21 @@ SQL migrations, browser Supabase, service-role runtime paths, deployment
 config, n8n changes, Pinecone runtime code, SaaS chatbot work, cart, checkout,
 payments, customer accounts, stock reservation, order fulfilment, online
 ordering, or access `website/chat-config.js`.
+
+## 2026-06-03: Public Furniture Catalogue UX Polish
+
+Decision: Phase 2B-AT adds only public-facing furniture/event-rental listing
+UX and copy polish for the existing catalogue path.
+
+Reason: the existing admin-managed listing management work in Phase 2B-AS
+introduced listing metadata controls and required the public catalogue surfaces to
+feel like a real furniture listing website. This phase updates listing copy,
+CTA language, and no-data state handling while preserving existing read
+paths and safe fallback behavior.
+
+Phase 2B-AT does not add listing image upload or Supabase Storage, image
+metadata admin UI, enquiry form implementation, DB/API/table/RPC/RLS renames,
+SQL migrations, browser Supabase, service-role runtime paths, deployment
+changes, n8n changes, Pinecone runtime code, SaaS chatbot work, cart,
+checkout, payments, customer accounts, stock reservation, order fulfilment,
+online ordering, or access `website/chat-config.js`.

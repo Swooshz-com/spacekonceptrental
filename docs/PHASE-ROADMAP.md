@@ -539,3 +539,17 @@ browser Supabase, service-role runtime paths, deployment config, n8n changes,
 Pinecone runtime code, SaaS chatbot work, cart, checkout, payments, customer
 accounts, stock reservation, order fulfilment, online ordering, or access
 `website/chat-config.js`.
+
+Phase 2B-AT adds only public furniture catalogue and listing detail UX polish.
+The public catalogue and listing detail pages keep the existing
+`getPublicCatalogue()` and `getPublicProductBySlug()` read paths, update
+visible copy to reflect furniture/event-rental listings, keep safe fallback
+behavior when env/catalogue data is unavailable, and add a clean empty-state
+view when no public listings are available.
+
+Phase 2B-AT does not add listing image upload/storage, image metadata admin
+UI, enquiry form implementation, DB/API/table/RPC/RLS renames, SQL migrations,
+browser Supabase, service-role runtime paths, deployment, n8n changes, Pinecone
+runtime code, SaaS chatbot work, or ecommerce flows such as carts,
+checkout, payments, customer accounts, stock reservation, order fulfilment,
+or online ordering.
