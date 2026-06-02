@@ -110,6 +110,7 @@ explicit approval.
 - [x] Add backend-only admin product persistence and protected product write API routes.
 - [x] Add admin product write audit atomicity boundary.
 - [x] Add minimal first-party admin login/logout and protected shell boundary.
+- [x] Add read-only admin product dashboard boundary.
 
 ## Design References
 
@@ -150,6 +151,7 @@ runtime implementation approval.
 - [x] Phase 2B-AM admin product write audit atomicity boundary.
 - [x] Phase 2B-AN admin login/logout and protected shell boundary.
 - [x] Session/cookie expectations approved for Phase 2B-AN login/logout.
+- [x] Phase 2B-AO read-only admin product dashboard boundary.
 
 ## Future Runtime Test Plan Approvals
 

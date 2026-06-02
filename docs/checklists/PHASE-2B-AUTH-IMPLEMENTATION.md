@@ -103,6 +103,7 @@ Reference docs:
 - [x] Admin CSRF proof issuer route implementation.
 - [x] Backend-only protected product/category/product-image write API route boundary.
 - [x] Minimal first-party admin login/logout and protected shell boundary.
+- [x] Read-only admin product dashboard boundary.
 
 ## Still Deferred
 

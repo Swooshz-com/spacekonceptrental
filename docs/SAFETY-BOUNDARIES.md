@@ -490,3 +490,25 @@ write forms, server actions, binary uploads, Supabase Storage, browser
 Supabase, service-role runtime paths, deployment config, Supabase Cloud,
 n8n changes, Pinecone runtime code, SaaS chatbot work, or
 `website/chat-config.js` access.
+
+## Phase 2B-AO Admin Read-only Product Dashboard Boundary
+
+Phase 2B-AO adds only a read-only admin product dashboard inside the protected admin shell.
+
+The dashboard must stay under the existing server-only `admin.shell.access`
+gate and must render catalogue management data only after owner/admin access
+is allowed. It may use only a session-bound authenticated admin read client,
+trusted `ADMIN_TRUSTED_WORKSPACE_ID`, RLS, and select-only reads of
+`categories`, `products`, and `product_images`.
+
+The dashboard must not expose SQL/provider errors, stack traces, cookies,
+tokens, env values, workspace internals, membership internals, storage paths,
+service-role details, or secrets. Missing env, unavailable dependencies,
+provider errors, and malformed rows must fail into a generic unavailable
+state.
+
+Phase 2B-AO does not add product/category/product-image write forms,
+create/edit/archive/publish/delete controls, server actions, binary uploads,
+Supabase Storage, browser Supabase, service-role runtime paths, deployment
+config, Supabase Cloud actions, n8n changes, Pinecone runtime code, SaaS
+chatbot work, or `website/chat-config.js` access.
