@@ -76,6 +76,33 @@ function createMockSupabase(results: MutationResult[] = []) {
 }
 
 describe("SupabaseProductPersistence", () => {
+  it("accepts scalar UUID RPC results from the SQL returns uuid contract", async () => {
+    const { supabase } = createMockSupabase([
+      {
+        data: "44444444-4444-4444-8444-444444444444",
+        error: null
+      }
+    ]);
+    const persistence = new SupabaseProductPersistence({ supabase });
+
+    const result = await persistence.createCategory({
+      admin,
+      category: {
+        slug: "lounge",
+        name: "Lounge",
+        isPublished: false
+      }
+    });
+
+    expect(result).toEqual({
+      ok: true,
+      record: {
+        id: "44444444-4444-4444-8444-444444444444",
+        type: "category"
+      }
+    });
+  });
+
   it("fails safely without pretending writes succeeded when the session-bound client is unavailable", async () => {
     const persistence = new SupabaseProductPersistence({
       supabase: {
@@ -254,5 +281,55 @@ describe("SupabaseProductPersistence", () => {
     expect(serialized).not.toContain("sql stack");
     expect(calls.length).toBe(1);
     expect(calls[0].fn).toBe("execute_admin_product_write");
+  });
+
+  it("fails safely when RPC returns malformed scalar data", async () => {
+    const { supabase } = createMockSupabase([
+      {
+        data: "not-a-valid-uuid",
+        error: null
+      }
+    ]);
+    const persistence = new SupabaseProductPersistence({ supabase });
+
+    const result = await persistence.createCategory({
+      admin,
+      category: {
+        slug: "lounge",
+        name: "Lounge",
+        isPublished: false
+      }
+    });
+
+    expect(result).toEqual({
+      ok: false,
+      code: "PRODUCT_PERSISTENCE_FAILED"
+    });
+  });
+
+  it("fails safely when RPC returns an object without a valid id", async () => {
+    const { supabase } = createMockSupabase([
+      {
+        data: {
+          id: "not-a-valid-uuid"
+        },
+        error: null
+      }
+    ]);
+    const persistence = new SupabaseProductPersistence({ supabase });
+
+    const result = await persistence.createCategory({
+      admin,
+      category: {
+        slug: "lounge",
+        name: "Lounge",
+        isPublished: false
+      }
+    });
+
+    expect(result).toEqual({
+      ok: false,
+      code: "PRODUCT_PERSISTENCE_FAILED"
+    });
   });
 });
