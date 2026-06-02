@@ -6,16 +6,7 @@ This is the quick status page for the SKR repo. Use `docs/PHASE-2-READINESS-PLAN
 
 Current phase: Phase 2B-AP - admin category management UI boundary.
 
-This phase adds a read-only admin product dashboard inside the protected admin
-shell. It uses the existing `admin.shell.access` owner/admin gate, a
-session-bound authenticated admin read client, trusted server-side workspace
-configuration, and RLS-scoped select-only catalogue table reads. It renders
-safe category, product, and product-image metadata summaries only for
-authorised owner/admin users. It does not add product/category/product-image
-write forms, create/edit/archive/publish controls, server actions, Supabase
-Storage, binary uploads, deployment config, Supabase Cloud, browser Supabase,
-service-role runtime paths, n8n changes, Pinecone runtime code, SaaS chatbot
-work, or `website/chat-config.js` access.
+This phase adds category-only create, update, and archive controls inside the protected admin shell for authorised owner/admin users. Browser code only calls first-party admin HTTP APIs, requests a CSRF proof for `category.write`, and sends category writes only to the existing protected category endpoints. Product/product-image UI, uploads, Supabase Storage, browser Supabase, service-role runtime paths, deployment, n8n changes, Pinecone runtime code, SaaS chatbot work, and `website/chat-config.js` access remain out of scope.
 
 Latest completed phase: Phase 2B-AO - admin read-only product dashboard boundary.
 
@@ -292,6 +283,8 @@ work, and `website/chat-config.js` access remain blocked.
 Phase 2B-AP adds category-only create, update, and archive controls inside the protected admin shell for authorised owner/admin users. The browser requests a CSRF proof for `category.write` from the first-party `/api/admin/csrf-proof` route and then calls only the existing first-party category write endpoints with `x-csrf-proof`.
 
 Product create/edit/archive/publish UI, product image write UI, binary uploads, Supabase Storage, server actions, browser Supabase, service-role runtime paths, deployment config, Supabase Cloud actions, n8n changes, Pinecone runtime code, SaaS chatbot work, and `website/chat-config.js` access remain out of scope.
+
+
 ## Previous merged status snapshot: Phase 2B-AO
 
 Current phase: Phase 2B-AO - admin read-only product dashboard boundary.
