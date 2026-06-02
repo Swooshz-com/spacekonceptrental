@@ -131,7 +131,7 @@ describe("Phase 2B-AJ - admin CSRF session/workspace binding runtime dependencie
       "This phase adds a minimal first-party admin login page"
     );
     expect(status).toContain(
-      "Product writes are approved only through the Phase 2B-AL/AM backend API route."
+      "Furniture listing metadata writes currently use the existing Phase 2B-AL/AM backend API route boundary, whose internal technical names still reference product/product image tables and routes."
     );
     expect(authChecklist).toContain(
       "- [x] Admin CSRF proof session/workspace binding runtime dependency boundary."

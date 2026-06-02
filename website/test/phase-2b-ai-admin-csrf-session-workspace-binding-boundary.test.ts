@@ -63,7 +63,7 @@ describe("Phase 2B-AI admin CSRF proof issuer session/workspace binding boundary
       "This phase adds a minimal first-party admin login page"
     );
     expect(status).toContain(
-      "Product writes are approved only through the Phase 2B-AL/AM backend API route."
+      "Furniture listing metadata writes currently use the existing Phase 2B-AL/AM backend API route boundary, whose internal technical names still reference product/product image tables and routes."
     );
     expect(status).toContain(
       "Phase 2B-AI implements only the server-only admin CSRF proof issuer session/workspace binding boundary."
