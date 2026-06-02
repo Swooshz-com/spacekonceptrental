@@ -52,6 +52,7 @@ export type AdminProductDashboardProduct = {
   slug: string;
   name: string;
   shortDescription?: string;
+  description?: string;
   rentalUnit: string;
   status: "draft" | "published" | "archived";
   sortOrder: number;
@@ -100,6 +101,7 @@ type ProductRow = {
   slug?: unknown;
   name?: unknown;
   short_description?: unknown;
+  description?: unknown;
   rental_unit?: unknown;
   status?: unknown;
   sort_order?: unknown;
@@ -223,6 +225,7 @@ function toProduct(row: ProductRow): AdminProductDashboardProduct | null {
     slug,
     name,
     shortDescription: getString(row.short_description),
+    description: getString(row.description),
     rentalUnit: getString(row.rental_unit) ?? "item",
     status: status as AdminProductDashboardProduct["status"],
     sortOrder,
@@ -345,7 +348,7 @@ export async function resolveAdminProductDashboardRead(
       supabase.client
         .from("products")
         .select(
-          "id, category_id, slug, name, short_description, rental_unit, status, sort_order"
+          "id, category_id, slug, name, short_description, description, rental_unit, status, sort_order"
         )
         .eq("workspace_id", workspaceId)
         .order("sort_order", { ascending: true })

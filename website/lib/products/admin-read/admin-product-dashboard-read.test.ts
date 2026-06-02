@@ -97,6 +97,7 @@ describe("admin product dashboard read boundary", () => {
             slug: "modular-lounge",
             name: "Modular Lounge",
             short_description: "Low modular lounge set",
+            description: "Existing full modular lounge listing description.",
             rental_unit: "set",
             status: "draft",
             sort_order: 10
@@ -156,6 +157,7 @@ describe("admin product dashboard read boundary", () => {
             slug: "modular-lounge",
             name: "Modular Lounge",
             shortDescription: "Low modular lounge set",
+            description: "Existing full modular lounge listing description.",
             rentalUnit: "set",
             status: "draft",
             sortOrder: 10,
@@ -182,6 +184,9 @@ describe("admin product dashboard read boundary", () => {
         value: "99999999-9999-4999-8999-999999999999"
       });
     }
+    expect(calls.find((call) => call.table === "products")?.select).toContain(
+      "description"
+    );
   });
 
   it("fails closed when the session-bound admin read client is unavailable", async () => {

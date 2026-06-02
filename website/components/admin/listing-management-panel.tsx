@@ -17,6 +17,7 @@ export type ListingManagementProduct = {
   slug: string;
   name: string;
   shortDescription?: string;
+  description?: string;
   rentalUnit: string;
   status: "draft" | "published" | "archived";
   sortOrder: number;
@@ -499,6 +500,7 @@ export function ListingManagementPanel({
                 <label htmlFor={`listing-description-${product.id}`}>
                   Listing description for {product.name}
                   <textarea
+                    defaultValue={product.description ?? ""}
                     id={`listing-description-${product.id}`}
                     maxLength={2000}
                     name="description"

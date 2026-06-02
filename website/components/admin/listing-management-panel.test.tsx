@@ -27,6 +27,7 @@ const listing: ListingManagementProduct = {
   slug: "modular-lounge",
   name: "Modular Lounge",
   shortDescription: "Soft modular seating",
+  description: "Existing full modular lounge listing description.",
   rentalUnit: "set",
   status: "draft",
   sortOrder: 10,
@@ -241,6 +242,7 @@ describe("listing management panel", () => {
       slug: "modular-lounge",
       name: "Premium Modular Lounge",
       shortDescription: "Soft modular seating",
+      description: "Existing full modular lounge listing description.",
       rentalUnit: "set",
       status: "draft",
       sortOrder: 10
