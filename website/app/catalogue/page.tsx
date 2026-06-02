@@ -50,8 +50,8 @@ export function CataloguePageContent({
       <div className="page-title">
         <h1>Furniture catalogue</h1>
         <p>
-          Browse furniture and event-lifestyle listing groups made for spaces and
-          occasions.
+          Browse furniture and event-rental listings made for spaces, occasions,
+          and styled setups.
         </p>
       </div>
 
