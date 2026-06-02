@@ -921,3 +921,12 @@ Reason: PR #82 added safe read-only catalogue visibility for authorised admins. 
 The browser component requests a CSRF proof for `category.write` from the first-party `/api/admin/csrf-proof` route, then calls only `POST /api/admin/categories`, `POST /api/admin/categories/[categoryId]`, or `POST /api/admin/categories/[categoryId]/archive` with `x-csrf-proof`. Route-gate, same-origin, CSRF proof, owner/admin membership, trusted workspace, RLS, audit, and atomic RPC boundaries remain server-side. UI success and failure messages stay generic and do not render raw CSRF proof values, provider errors, SQL, stack traces, cookies, tokens, env values, workspace internals, membership internals, or secrets.
 
 Phase 2B-AP does not add product create/edit/archive/publish UI, product image write UI, binary uploads, Supabase Storage, server actions, browser Supabase, service-role runtime paths, deployment config, Supabase Cloud actions, n8n changes, Pinecone runtime code, SaaS chatbot work, or `website/chat-config.js` access.
+## 2026-06-02: Furniture Listing Catalogue Direction Pivot
+
+Decision: Phase 2B-AQ pivots the current product direction to furniture/event-rental listings plus customer enquiries.
+
+Reason: SpaceKonceptRental is not pursuing ecommerce carts, checkout, payments, customer accounts, stock reservation, order fulfilment, or online ordering as the near-term product direction. The useful near-term operator surface is an admin-managed listing catalogue where authorised admins can organise furniture/event-rental listings and customers can browse listings before submitting enquiry or quote requests.
+
+Existing `products`, `categories`, `product_images`, product-management routes, RLS policies, RPCs, and server helper names remain technical internals for now. Renaming those database/API concepts is explicitly deferred to avoid risky churn and should happen only through a separately approved migration/compatibility plan.
+
+Phase 2B-AQ does not add listing write UI, upload/storage implementation, public catalogue rebuilds, enquiry form implementation, SQL migrations, service-role runtime paths, browser Supabase, n8n changes, Pinecone runtime code, SaaS chatbot work, deployment config, or `website/chat-config.js` access.

@@ -143,6 +143,12 @@ variables such as `N8N_CHAT_WEBHOOK_URL`.
 - In-process throttling is best-effort only. It is not a production-grade
   distributed rate limit and does not replace future CDN/WAF/platform controls.
 
+## Furniture Listing Catalogue Direction Rules
+
+The current SKR product direction is an admin-managed furniture/event-rental listing catalogue with customer enquiry/quote requests. Do not add ecommerce carts, checkout, payment, customer-account, stock-reservation, order-fulfilment, or online-ordering flows without separate explicit approval.
+
+Keep existing `products`, `categories`, and `product_images` database/API/RPC/helper names as technical internals until a separately approved rename/migration strategy exists. Prefer furniture listing, catalogue listing, and listing image wording in safe visible copy.
+
 ## Product/Admin Persistence Rules
 
 - Phase 2B-A admin/auth and workspace membership authorization design is
@@ -332,24 +338,24 @@ variables such as `N8N_CHAT_WEBHOOK_URL`.
   HttpOnly, Secure in production, and have reviewed SameSite behaviour. Future
   state-changing admin routes/server actions need CSRF strategy before
   implementation.
-- Product, category, and product image writes are trusted-admin operations
+- Furniture listing, category, and listing image metadata writes are trusted-admin operations
   only.
-- Do not add browser-side Supabase writes for product management.
+- Do not add browser-side Supabase writes for furniture listing management.
 - Do not add anonymous category, product, or product image write policies.
-- Do not add public product-management mutation routes.
+- Do not add public furniture listing mutation routes.
 - Do not add service-role product write paths without separate approval.
-- Resolve product-management workspace access from trusted server-side auth and
+- Resolve furniture listing management workspace access from trusted server-side auth and
   membership context, not browser input.
 - Require trusted admin membership context to be owned by the active
   server-resolved admin profile before using its role.
 - Do not accept browser-provided workspace IDs as trusted admin write scope.
 - Future admin writes must resolve workspace access server-side from
   authenticated identity plus active membership and role checks.
-- Future product writes must have audit expectations and RLS tests before they
+- Future furniture listing writes must have audit expectations and RLS tests before they
   are enabled.
 - Keep public catalogue reads read-only, published-only, and scoped by trusted
   server-side workspace configuration.
-- Keep product image/media persistence deferred until Supabase Storage strategy,
+- Keep listing image/media persistence deferred until Supabase Storage strategy,
   upload flows, path validation, and lifecycle rules are approved.
 - Treat Git-tracked prepared images as demo/public-shell assets, not the
   long-term media store.

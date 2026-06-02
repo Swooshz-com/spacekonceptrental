@@ -12,7 +12,7 @@ const eventUseCases = [
   },
   {
     title: "Exhibitions",
-    description: "Booth seating, discussion tables, and product demo spaces.",
+    description: "Booth seating, discussion tables, and showcase spaces.",
     image: exhibitionImage
   },
   {
@@ -29,8 +29,7 @@ export default function EventsPage() {
         <p className="eyebrow">Event shell</p>
         <h1>Event rental shells</h1>
         <p>
-          Static MVP route for common event rental use cases before real product
-          inventory, persistence, or event-specific workflows are introduced.
+          Static MVP route for common event rental use cases before real listing catalogue data, persistence, or event-specific workflows are introduced.
         </p>
       </div>
 

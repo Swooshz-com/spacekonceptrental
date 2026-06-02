@@ -49,10 +49,16 @@ The approved direction is to own the frontend and API boundary from day one:
 Custom Chat UI -> POST /api/chat -> ChatProvider
 ```
 
+## Current Product Direction Pivot
+
+The current SKR direction is an admin-managed furniture/event-rental listing catalogue plus customer enquiry/quote request flow. The project is not building ecommerce carts, checkout, payments, customer accounts, stock reservation, order fulfilment, or online order flows for now.
+
+Current database and API internals still use names such as `products`, `categories`, and `product_images`. Those names describe existing Supabase tables and hardened route/RPC boundaries and must not be renamed in a small direction-pivot PR. Treat them as temporary internal names for furniture catalogue listings until a separate migration/rename strategy is approved.
+
 ## Approved Direction
 
 - `website/` becomes the future Next.js app root deployed by Vercel.
-- Supabase becomes the system of record for product data, quote requests,
+- Supabase becomes the system of record for furniture listing data, quote requests,
   conversations, messages, auth, storage, RLS, and tenant-ready boundaries.
 - n8n remains temporary server-side integration only.
 - `N8nChatProvider` calls n8n from the server in Phase 1.

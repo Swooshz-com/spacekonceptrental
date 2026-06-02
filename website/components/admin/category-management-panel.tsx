@@ -287,7 +287,7 @@ export function CategoryManagementPanel({
         <h2>Category management</h2>
         <p>
           Create, update, and archive categories through the protected admin
-          API. Product and product image editing stay out of scope.
+          API. Furniture listing and listing image editing stay out of scope.
         </p>
       </div>
 
@@ -362,7 +362,7 @@ export function CategoryManagementPanel({
               <div>
                 <h3>{category.name}</h3>
                 <p>
-                  {category.slug} - {category.productCount} products -{" "}
+                  {category.slug} - {category.productCount} listings -{" "}
                   {category.isPublished ? "Published" : "Not published"}
                 </p>
               </div>

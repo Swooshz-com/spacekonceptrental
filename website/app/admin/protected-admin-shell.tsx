@@ -135,11 +135,11 @@ function AdminDashboard({
             <dd>{dashboard.data.categories.length}</dd>
           </div>
           <div>
-            <dt>Products</dt>
+            <dt>Furniture listings</dt>
             <dd>{dashboard.data.products.length}</dd>
           </div>
           <div>
-            <dt>Images</dt>
+            <dt>Listing images</dt>
             <dd>{dashboard.data.imageSummary.totalImages}</dd>
           </div>
         </dl>
@@ -159,7 +159,7 @@ function AdminDashboard({
                     <span>{category.slug}</span>
                   </div>
                   <small>
-                    {category.productCount} products ·{" "}
+                    {category.productCount} listings ·{" "}
                     {category.isPublished ? "Published" : "Not published"}
                   </small>
                 </li>
@@ -169,9 +169,9 @@ function AdminDashboard({
         </section>
 
         <section className="admin-dashboard__card">
-          <h3>Products</h3>
+          <h3>Furniture listings</h3>
           {dashboard.data.products.length === 0 ? (
-            <p>No products are visible for this workspace.</p>
+            <p>No furniture listings are visible for this workspace.</p>
           ) : (
             <ul className="admin-dashboard__list">
               {dashboard.data.products.map((product) => (
@@ -183,7 +183,7 @@ function AdminDashboard({
                     </span>
                   </div>
                   <small>
-                    {product.imageCount} image metadata records
+                    {product.imageCount} listing image metadata records
                     {product.primaryImageAltText
                       ? ` · Primary alt: ${product.primaryImageAltText}`
                       : ""}
@@ -195,9 +195,9 @@ function AdminDashboard({
         </section>
 
         <section className="admin-dashboard__card admin-dashboard__card--summary">
-          <h3>Image metadata summary</h3>
+          <h3>Listing image metadata summary</h3>
           <p>
-            {dashboard.data.imageSummary.totalImages} image metadata records,
+            {dashboard.data.imageSummary.totalImages} listing image metadata records,
             {" "}
             {dashboard.data.imageSummary.activeImages} active,{" "}
             {dashboard.data.imageSummary.primaryImages} primary.

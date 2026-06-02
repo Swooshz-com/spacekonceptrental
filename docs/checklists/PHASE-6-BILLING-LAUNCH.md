@@ -9,7 +9,7 @@ current SKR repo.
 ## Directional Scope
 
 - [ ] Pricing plans.
-- [ ] Stripe/payment provider decision.
+- [ ] Future SaaS Stripe/payment provider decision, if a SaaS launch is separately approved.
 - [ ] Subscription lifecycle.
 - [ ] Trial limits.
 - [ ] Invoice/receipt flows.
@@ -21,5 +21,5 @@ current SKR repo.
 ## Guardrails
 
 - [ ] Do not implement billing without separate approval.
-- [ ] Do not touch production payment systems without explicit approval.
+- [ ] Do not touch production payment systems, checkout flows, or order flows without explicit approval.
 - [ ] Complete security and legal review before public SaaS launch.

@@ -16,6 +16,12 @@ Browser -> Custom ChatWidget -> POST /api/chat -> ChatProvider
 
 The browser must never call n8n directly in the long-term app.
 
+## Furniture Listing Catalogue Direction
+
+The current catalogue direction is furniture/event-rental listings plus enquiry and quote requests. The app is not an ecommerce system and should not add carts, checkout, payments, customer accounts, stock reservation, order fulfilment, or online ordering without a separate direction change.
+
+Existing database/API names such as `products` and `product_images` remain technical internals for now. Presentation copy should prefer furniture listings, catalogue listings, and listing images where safe.
+
 ## System Boundaries
 
 - Next.js is the browser-facing app and first-party API boundary.
@@ -30,8 +36,8 @@ The browser must never call n8n directly in the long-term app.
 The future `website/` Next.js app owns:
 
 - Public site pages.
-- Catalogue and product browsing.
-- Quote cart and quote request UX.
+- Furniture/event-rental listing catalogue browsing.
+- Customer enquiry and quote request UX, without cart or checkout flows.
 - Admin UI later.
 - Route handlers and server actions.
 - `POST /api/chat`.
@@ -75,8 +81,8 @@ Supabase is the system of record for:
 - Database records.
 - Auth.
 - Storage.
-- Product data.
-- Product media metadata.
+- Furniture listing data currently stored in existing `products` table internals.
+- Listing image/media metadata currently stored in existing `product_images` table internals.
 - Quote requests and quote items.
 - Conversations and messages.
 - Usage events and audit logs.

@@ -166,9 +166,9 @@ Future ownership:
 - [ ] No admin/auth UI.
 - [ ] No product/category/product image mutation routes.
 - [ ] No product image upload flows.
-- [ ] No inventory/pricing management.
-- [ ] No product publishing approval workflows.
-- [ ] No product audit log workflow.
+- [ ] No ecommerce inventory, pricing, cart, checkout, payment, or order management.
+- [ ] No furniture listing publishing approval workflows.
+- [ ] No furniture listing audit log workflow.
 - [ ] No service-role product write paths.
 - [ ] No service-role runtime write paths.
 - [ ] No production seed data.

@@ -66,7 +66,7 @@ describe("public page shells", () => {
 
     expect(
       screen
-        .getAllByRole("link", { name: /view product shell/i })
+        .getAllByRole("link", { name: /view listing shell/i })
         .map((link) => link.getAttribute("href"))
     ).toContain("/catalogue/lounge-sofa-package");
   });
