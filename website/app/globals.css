@@ -522,6 +522,7 @@ select {
 }
 
 .category-management__form input,
+.category-management__form select,
 .category-management__form textarea {
   background: #ffffff;
   border: 1px solid var(--border);

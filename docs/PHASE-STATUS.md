@@ -4,6 +4,25 @@ This is the quick status page for the SKR repo. Use `docs/PHASE-2-READINESS-PLAN
 
 ## Current phase
 
+Current phase: Phase 2B-AS - admin furniture listing management UI boundary.
+
+This phase adds metadata-only furniture listing management controls inside the
+existing protected admin shell. Authorised admins can create, edit,
+publish/unpublish, and archive listing metadata through the existing hardened
+`product.write` backend routes. The UI requests a first-party CSRF proof and
+sends `x-csrf-proof` on write requests. It does not add image upload, Supabase
+Storage, public catalogue redesign, enquiry forms, DB/API/table/RPC/RLS
+renames, ecommerce flows, browser Supabase, service-role runtime paths, or
+`website/chat-config.js` access.
+
+Latest completed phase: Phase 2B-AR - admin shell GET origin handling fix.
+
+Last merged phase PR: #85
+
+Merge commit: `b120ebe24290c9a7d675fc51160f9b63ded464e2`
+
+## Previous merged status snapshot: Phase 2B-AR
+
 Current phase: Phase 2B-AR - admin shell GET origin handling fix.
 
 This phase fixes the protected admin shell request-security gate so safe
@@ -121,6 +140,7 @@ Vercel config, add real env values, or add runtime features.
   complete.
 - Read-only admin furniture listing dashboard boundary is complete.
 - Admin shell GET missing-Origin route-gate repair is complete.
+- Metadata-only admin furniture listing management UI boundary is complete.
 Supabase Auth is approved as the future server-side admin auth provider. The
 Phase 2B-K identity boundary remains the only approved place to read Supabase
 Auth cookies or call Supabase Auth server APIs. The Phase 2B-L
@@ -217,7 +237,7 @@ actions remains deferred except the approved Phase 2B-AA route boundary, Phase
 protected admin shell boundary.
 Runtime admin route gate adapter usage from routes, pages, or server actions
 remains deferred except the approved Phase 2B-AA, Phase 2B-AK, Phase 2B-AL/AM,
-Phase 2B-AN, Phase 2B-AO, and Phase 2B-AR boundaries.
+Phase 2B-AN, Phase 2B-AO, Phase 2B-AR, and Phase 2B-AS boundaries.
 
 ## Still blocked
 
@@ -256,6 +276,8 @@ Phase 2B-AN, Phase 2B-AO, and Phase 2B-AR boundaries.
 - Protected admin pages outside the Phase 2B-AN minimal protected shell and
   Phase 2B-AO read-only dashboard boundary.
 - Furniture listing write UI beyond the approved category management controls.
+  Phase 2B-AS adds only metadata listing controls through the existing backend
+  routes; listing image UI and binary upload remain blocked.
 - Resolver/adapter runtime wiring into routes, pages, or server actions.
 - Product writes outside the Phase 2B-AL backend API route boundary.
 - Listing image uploads and Supabase Storage wiring.
@@ -270,7 +292,8 @@ Phase 2B-AN, Phase 2B-AO, and Phase 2B-AR boundaries.
 - n8n workflow import, export, activation, execution, or mutation.
 
 Furniture listing metadata writes currently use the existing Phase 2B-AL/AM backend API route boundary, whose internal technical names still reference product/product image tables and routes.
-Furniture listing write UI beyond categories, server actions, binary listing image upload, Supabase
+Furniture listing write UI beyond categories and Phase 2B-AS metadata-only
+listing controls, server actions, binary listing image upload, Supabase
 Storage, service-role shortcuts, and browser Supabase product writes remain
 blocked.
 
@@ -299,7 +322,7 @@ architecture.
 
 ## Next recommended PR
 
-The next recommended PR should keep the furniture listing catalogue direction narrow. Safe follow-up work can harden listing terminology, prepare a separate furniture listing management plan, or improve enquiry/quote planning docs. Product/listing write forms beyond category management, binary listing image uploads, Supabase Storage, carts, checkout, payments, customer accounts, stock reservation, order fulfilment, online ordering, deployment config, browser Supabase, service-role runtime paths, n8n changes, Pinecone runtime code, SaaS chatbot work, and `website/chat-config.js` access remain blocked.
+The next recommended PR should keep the furniture listing catalogue direction narrow. Safe follow-up work can harden listing terminology, prepare listing image metadata planning without upload/storage, or improve enquiry/quote planning docs. Binary listing image uploads, Supabase Storage, carts, checkout, payments, customer accounts, stock reservation, order fulfilment, online ordering, deployment config, browser Supabase, service-role runtime paths, n8n changes, Pinecone runtime code, SaaS chatbot work, and `website/chat-config.js` access remain blocked.
 
 ## Phase 2B-AP Current Boundary
 
@@ -322,3 +345,18 @@ Phase 2B-AQ is a terminology and direction pivot only. It makes current docs, ch
 This phase does not rename database tables, Supabase tables, API routes, RPCs, RLS policies, or server helper modules. The existing internal `products`, `categories`, and `product_images` names remain in place until a separately approved migration/rename strategy exists.
 
 Carts, checkout, payments, customer accounts, stock reservation, order fulfilment, online order flows, new listing write UI, uploads, Supabase Storage, browser Supabase, service-role runtime paths, deployment, n8n changes, Pinecone runtime code, SaaS chatbot work, and `website/chat-config.js` access remain out of scope.
+
+## Phase 2B-AS Current Boundary
+
+Phase 2B-AS adds only metadata furniture listing management controls inside
+the protected admin shell. The browser component requests a CSRF proof for
+`product.write`, then calls only `POST /api/admin/products`,
+`POST /api/admin/products/[productId]`, and
+`POST /api/admin/products/[productId]/archive` with `x-csrf-proof`.
+
+Image upload, Supabase Storage, public catalogue redesign, enquiry forms,
+DB/API/table/RPC/RLS renames, cart, checkout, payments, customer accounts,
+stock reservation, order fulfilment, online ordering, browser Supabase,
+service-role runtime paths, deployment config, n8n changes, Pinecone runtime
+code, SaaS chatbot work, and `website/chat-config.js` access remain out of
+scope.

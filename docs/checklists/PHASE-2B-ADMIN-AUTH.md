@@ -62,7 +62,9 @@ changes. Phase 2B-AN adds only a minimal first-party admin login page,
 server-owned login/logout routes, and a protected admin shell through the
 approved server-only route-gate path. Phase 2B-AR repairs only missing-Origin
 GET handling for that protected shell while preserving strict Origin/Host/CSRF
-requirements for CSRF issuance and state-changing writes. Keep real auth runtime wiring outside
+requirements for CSRF issuance and state-changing writes. Phase 2B-AS adds
+only metadata furniture listing management UI through the existing protected
+`product.write` backend routes. Keep real auth runtime wiring outside
 Phase 2B-AN, factory, adapter-set, decision-boundary, preflight, CSRF verifier,
 CSRF issuer, request metadata adapter, runtime gate invocation helper, or
 authorization gate usage from other runtime routes/pages/actions, headers,
@@ -115,6 +117,7 @@ explicit approval.
 - [x] Add read-only admin product dashboard boundary.
 - [x] Add category management UI boundary.
 - [x] Add admin shell GET missing-Origin route-gate repair.
+- [x] Add metadata-only admin furniture listing management UI boundary.
 
 ## Design References
 
@@ -157,6 +160,7 @@ runtime implementation approval.
 - [x] Session/cookie expectations approved for Phase 2B-AN login/logout.
 - [x] Phase 2B-AO read-only admin product dashboard boundary.
 - [x] Phase 2B-AR admin shell GET missing-Origin route-gate repair.
+- [x] Phase 2B-AS metadata-only admin furniture listing management UI boundary.
 
 ## Future Runtime Test Plan Approvals
 
@@ -172,6 +176,7 @@ runtime implementation approval.
 - [ ] Explicit approval obtained before product writes.
 - [ ] Explicit approval obtained before product-management admin UI.
 - [x] Explicit approval obtained before Phase 2B-AP category-management admin UI.
+- [x] Explicit approval obtained before Phase 2B-AS metadata listing management UI.
 - [ ] Explicit approval obtained before service-role runtime path, if ever needed.
 
 ## Still Deferred
@@ -197,6 +202,7 @@ runtime implementation approval.
 - [x] Protected admin shell for Phase 2B-AN.
 - [ ] Product-management admin UI.
 - [x] Category-management admin UI for Phase 2B-AP.
+- [x] Metadata listing management UI for Phase 2B-AS.
 - [ ] Product/category/product image writes outside the Phase 2B-AL/AM backend API route boundary.
 - [ ] Product writes.
 - [ ] Category writes.

@@ -1,0 +1,576 @@
+"use client";
+
+import { useState, type FormEvent } from "react";
+
+export type ListingManagementCategory = {
+  id: string;
+  slug: string;
+  name: string;
+  sortOrder: number;
+  isPublished: boolean;
+  productCount: number;
+};
+
+export type ListingManagementProduct = {
+  id: string;
+  categoryId?: string;
+  slug: string;
+  name: string;
+  shortDescription?: string;
+  description?: string;
+  rentalUnit: string;
+  status: "draft" | "published" | "archived";
+  sortOrder: number;
+  imageCount: number;
+  primaryImageAltText?: string;
+};
+
+type ListingManagementPanelProps = {
+  categories: ListingManagementCategory[];
+  products: ListingManagementProduct[];
+  fetcher?: typeof fetch;
+  onMutationComplete?: () => void | Promise<void>;
+};
+
+type PanelStatus =
+  | {
+      kind: "idle";
+    }
+  | {
+      kind: "pending";
+      message: string;
+    }
+  | {
+      kind: "success";
+      message: string;
+    }
+  | {
+      kind: "error";
+      message: string;
+    };
+
+type ListingPayload = {
+  categoryId?: string;
+  slug?: string;
+  name?: string;
+  shortDescription?: string;
+  description?: string;
+  rentalUnit?: string;
+  status?: ListingManagementProduct["status"];
+  sortOrder?: number;
+};
+
+const listingWriteOperation = "product.write";
+const genericFailureMessage =
+  "Listing change could not be saved. Try again or refresh the page.";
+
+function formValue(formData: FormData, name: string) {
+  const value = formData.get(name);
+
+  return typeof value === "string" ? value.trim() : "";
+}
+
+function parseOptionalSortOrder(value: string) {
+  if (!value) {
+    return {
+      ok: true as const
+    };
+  }
+
+  const parsed = Number(value);
+
+  if (
+    !Number.isInteger(parsed) ||
+    parsed < 0 ||
+    parsed > 1_000_000
+  ) {
+    return {
+      ok: false as const
+    };
+  }
+
+  return {
+    ok: true as const,
+    sortOrder: parsed
+  };
+}
+
+function parseStatus(value: string): ListingManagementProduct["status"] | null {
+  return value === "draft" || value === "published" || value === "archived"
+    ? value
+    : null;
+}
+
+async function readSafeJson(response: Response) {
+  try {
+    return (await response.json()) as unknown;
+  } catch {
+    return null;
+  }
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
+async function requestListingWriteProof(fetcher: typeof fetch) {
+  const response = await fetcher("/api/admin/csrf-proof", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      requestedOperation: listingWriteOperation,
+      operation: listingWriteOperation
+    })
+  });
+
+  if (!response.ok) {
+    return null;
+  }
+
+  const body = await readSafeJson(response);
+
+  if (
+    !isRecord(body) ||
+    body.ok !== true ||
+    typeof body.csrfProof !== "string" ||
+    !body.csrfProof.trim()
+  ) {
+    return null;
+  }
+
+  return body.csrfProof;
+}
+
+function reloadDashboard() {
+  if (typeof window !== "undefined") {
+    window.location.reload();
+  }
+}
+
+function buildPayload(
+  formData: FormData,
+  sortOrder: number | undefined
+): ListingPayload | null {
+  const status = parseStatus(formValue(formData, "status"));
+
+  if (!status) {
+    return null;
+  }
+
+  const categoryId = formValue(formData, "categoryId");
+  const payload: ListingPayload = {
+    ...(categoryId ? { categoryId } : {}),
+    slug: formValue(formData, "slug"),
+    name: formValue(formData, "name"),
+    shortDescription: formValue(formData, "shortDescription"),
+    description: formValue(formData, "description"),
+    rentalUnit: formValue(formData, "rentalUnit"),
+    status,
+    ...(sortOrder !== undefined ? { sortOrder } : {})
+  };
+
+  return payload;
+}
+
+export function ListingManagementPanel({
+  categories,
+  products,
+  fetcher = fetch,
+  onMutationComplete = reloadDashboard
+}: ListingManagementPanelProps) {
+  const [status, setStatus] = useState<PanelStatus>({
+    kind: "idle"
+  });
+
+  async function submitListingMutation(
+    endpoint: string,
+    payload: ListingPayload,
+    successMessage: string
+  ) {
+    setStatus({
+      kind: "pending",
+      message: "Saving listing change..."
+    });
+
+    try {
+      const csrfProof = await requestListingWriteProof(fetcher);
+
+      if (!csrfProof) {
+        setStatus({
+          kind: "error",
+          message: genericFailureMessage
+        });
+        return;
+      }
+
+      const response = await fetcher(endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-csrf-proof": csrfProof
+        },
+        body: JSON.stringify(payload)
+      });
+      const responseBody = await readSafeJson(response);
+
+      if (!response.ok || !isRecord(responseBody) || responseBody.ok !== true) {
+        setStatus({
+          kind: "error",
+          message: genericFailureMessage
+        });
+        return;
+      }
+
+      setStatus({
+        kind: "success",
+        message: successMessage
+      });
+
+      try {
+        await onMutationComplete();
+      } catch {
+        // Keep the rendered result generic even if the refresh hook is unavailable.
+      }
+    } catch {
+      setStatus({
+        kind: "error",
+        message: genericFailureMessage
+      });
+    }
+  }
+
+  async function handleCreate(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    const formData = new FormData(event.currentTarget);
+    const sortOrder = parseOptionalSortOrder(
+      formValue(formData, "sortOrder")
+    );
+
+    if (!sortOrder.ok) {
+      setStatus({
+        kind: "error",
+        message: genericFailureMessage
+      });
+      return;
+    }
+
+    const payload = buildPayload(formData, sortOrder.sortOrder);
+
+    if (!payload) {
+      setStatus({
+        kind: "error",
+        message: genericFailureMessage
+      });
+      return;
+    }
+
+    await submitListingMutation(
+      "/api/admin/products",
+      payload,
+      "Listing created. Refreshing dashboard."
+    );
+  }
+
+  async function handleUpdate(
+    event: FormEvent<HTMLFormElement>,
+    product: ListingManagementProduct
+  ) {
+    event.preventDefault();
+
+    const formData = new FormData(event.currentTarget);
+    const sortOrder = parseOptionalSortOrder(
+      formValue(formData, "sortOrder")
+    );
+
+    if (!sortOrder.ok) {
+      setStatus({
+        kind: "error",
+        message: genericFailureMessage
+      });
+      return;
+    }
+
+    const payload = buildPayload(formData, sortOrder.sortOrder);
+
+    if (!payload) {
+      setStatus({
+        kind: "error",
+        message: genericFailureMessage
+      });
+      return;
+    }
+
+    await submitListingMutation(
+      `/api/admin/products/${encodeURIComponent(product.id)}`,
+      payload,
+      "Listing updated. Refreshing dashboard."
+    );
+  }
+
+  async function handleStatusChange(
+    product: ListingManagementProduct,
+    nextStatus: Extract<ListingManagementProduct["status"], "draft" | "published">
+  ) {
+    await submitListingMutation(
+      `/api/admin/products/${encodeURIComponent(product.id)}`,
+      {
+        status: nextStatus
+      },
+      "Listing status updated. Refreshing dashboard."
+    );
+  }
+
+  async function handleArchive(product: ListingManagementProduct) {
+    await submitListingMutation(
+      `/api/admin/products/${encodeURIComponent(product.id)}/archive`,
+      {},
+      "Listing archived. Refreshing dashboard."
+    );
+  }
+
+  return (
+    <section className="category-management" aria-label="Listing management">
+      <div className="category-management__header">
+        <p className="eyebrow">Metadata-only listing writes</p>
+        <h2>Listing management</h2>
+        <p>
+          Create, update, publish, unpublish, and archive furniture listing
+          metadata through the protected admin API.
+        </p>
+      </div>
+
+      <div
+        className={`category-management__status category-management__status--${status.kind}`}
+        aria-live="polite"
+      >
+        {status.kind === "idle"
+          ? "Listing write controls are ready."
+          : status.message}
+      </div>
+
+      <form
+        aria-label="Create listing"
+        className="category-management__form"
+        onSubmit={handleCreate}
+      >
+        <h3>Create listing</h3>
+        <label htmlFor="new-listing-category">
+          New listing category
+          <select id="new-listing-category" name="categoryId">
+            <option value="">No category</option>
+            {categories.map((category) => (
+              <option key={category.id} value={category.id}>
+                {category.name}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label htmlFor="new-listing-slug">
+          New listing slug
+          <input
+            id="new-listing-slug"
+            name="slug"
+            pattern="[a-z0-9][a-z0-9-]{1,98}[a-z0-9]"
+            required
+            type="text"
+          />
+        </label>
+        <label htmlFor="new-listing-name">
+          New listing name
+          <input id="new-listing-name" maxLength={160} name="name" required />
+        </label>
+        <label htmlFor="new-listing-short-description">
+          New listing short description
+          <textarea
+            id="new-listing-short-description"
+            maxLength={240}
+            name="shortDescription"
+            rows={2}
+          />
+        </label>
+        <label htmlFor="new-listing-description">
+          New listing description
+          <textarea
+            id="new-listing-description"
+            maxLength={2000}
+            name="description"
+            rows={4}
+          />
+        </label>
+        <label htmlFor="new-listing-rental-unit">
+          New listing rental unit
+          <input
+            defaultValue="item"
+            id="new-listing-rental-unit"
+            maxLength={80}
+            name="rentalUnit"
+            required
+          />
+        </label>
+        <label htmlFor="new-listing-status">
+          New listing status
+          <select defaultValue="draft" id="new-listing-status" name="status">
+            <option value="draft">Draft</option>
+            <option value="published">Published</option>
+            <option value="archived">Archived</option>
+          </select>
+        </label>
+        <label htmlFor="new-listing-sort-order">
+          New listing sort order
+          <input
+            id="new-listing-sort-order"
+            max={1000000}
+            min={0}
+            name="sortOrder"
+            type="number"
+          />
+        </label>
+        <button className="button" type="submit">
+          Create listing
+        </button>
+      </form>
+
+      <div className="category-management__list" aria-label="Update listings">
+        {products.length === 0 ? (
+          <p>No furniture listings are available to update yet.</p>
+        ) : (
+          products.map((product) => (
+            <article className="category-management__item" key={product.id}>
+              <div>
+                <h3>{product.name}</h3>
+                <p>
+                  {product.slug} - {product.status} - {product.imageCount} image
+                  metadata records
+                </p>
+              </div>
+              <form
+                aria-label={`Update listing ${product.name}`}
+                className="category-management__form"
+                onSubmit={(event) => void handleUpdate(event, product)}
+              >
+                <label htmlFor={`listing-category-${product.id}`}>
+                  Listing category for {product.name}
+                  <select
+                    defaultValue={product.categoryId ?? ""}
+                    id={`listing-category-${product.id}`}
+                    name="categoryId"
+                  >
+                    <option value="">No category</option>
+                    {categories.map((category) => (
+                      <option key={category.id} value={category.id}>
+                        {category.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label htmlFor={`listing-slug-${product.id}`}>
+                  Listing slug for {product.name}
+                  <input
+                    defaultValue={product.slug}
+                    id={`listing-slug-${product.id}`}
+                    name="slug"
+                    pattern="[a-z0-9][a-z0-9-]{1,98}[a-z0-9]"
+                    required
+                    type="text"
+                  />
+                </label>
+                <label htmlFor={`listing-name-${product.id}`}>
+                  Listing name for {product.name}
+                  <input
+                    defaultValue={product.name}
+                    id={`listing-name-${product.id}`}
+                    maxLength={160}
+                    name="name"
+                    required
+                  />
+                </label>
+                <label htmlFor={`listing-short-description-${product.id}`}>
+                  Listing short description for {product.name}
+                  <textarea
+                    defaultValue={product.shortDescription ?? ""}
+                    id={`listing-short-description-${product.id}`}
+                    maxLength={240}
+                    name="shortDescription"
+                    rows={2}
+                  />
+                </label>
+                <label htmlFor={`listing-description-${product.id}`}>
+                  Listing description for {product.name}
+                  <textarea
+                    defaultValue={product.description ?? ""}
+                    id={`listing-description-${product.id}`}
+                    maxLength={2000}
+                    name="description"
+                    rows={4}
+                  />
+                </label>
+                <label htmlFor={`listing-rental-unit-${product.id}`}>
+                  Listing rental unit for {product.name}
+                  <input
+                    defaultValue={product.rentalUnit}
+                    id={`listing-rental-unit-${product.id}`}
+                    maxLength={80}
+                    name="rentalUnit"
+                    required
+                  />
+                </label>
+                <label htmlFor={`listing-status-${product.id}`}>
+                  Listing status for {product.name}
+                  <select
+                    defaultValue={product.status}
+                    id={`listing-status-${product.id}`}
+                    name="status"
+                  >
+                    <option value="draft">Draft</option>
+                    <option value="published">Published</option>
+                    <option value="archived">Archived</option>
+                  </select>
+                </label>
+                <label htmlFor={`listing-sort-order-${product.id}`}>
+                  Listing sort order for {product.name}
+                  <input
+                    defaultValue={product.sortOrder}
+                    id={`listing-sort-order-${product.id}`}
+                    max={1000000}
+                    min={0}
+                    name="sortOrder"
+                    type="number"
+                  />
+                </label>
+                <div className="category-management__actions">
+                  <button className="button" type="submit">
+                    Save listing {product.name}
+                  </button>
+                  <button
+                    className="button button--secondary"
+                    onClick={() =>
+                      void handleStatusChange(
+                        product,
+                        product.status === "published" ? "draft" : "published"
+                      )
+                    }
+                    type="button"
+                  >
+                    {product.status === "published"
+                      ? `Unpublish listing ${product.name}`
+                      : `Publish listing ${product.name}`}
+                  </button>
+                  <button
+                    className="button button--secondary"
+                    onClick={() => void handleArchive(product)}
+                    type="button"
+                  >
+                    Archive listing {product.name}
+                  </button>
+                </div>
+              </form>
+            </article>
+          ))
+        )}
+      </div>
+    </section>
+  );
+}

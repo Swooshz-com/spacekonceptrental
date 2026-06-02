@@ -107,6 +107,7 @@ Reference docs:
 - [x] Read-only admin product dashboard boundary.
 - [x] Category management UI boundary.
 - [x] Admin shell GET missing-Origin route-gate repair.
+- [x] Metadata-only admin furniture listing management UI boundary.
 
 ## Still Deferred
 
@@ -130,6 +131,7 @@ Reference docs:
 - [x] Protected admin shell for Phase 2B-AN.
 - [ ] Product-management admin UI.
 - [x] Category-management admin UI for Phase 2B-AP.
+- [x] Metadata listing management UI for Phase 2B-AS.
 - [ ] Product/category/product image writes outside the Phase 2B-AL/AM backend API route boundary.
 - [ ] Product writes.
 - [ ] Category writes.
