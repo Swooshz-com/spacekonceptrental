@@ -18,8 +18,8 @@ Merge commit: `110888f684f55fa55dc03bc4f26f71500e5d17ab`
 
 Current phase: Phase 2B-AP - admin category management UI boundary.
 Latest completed phase: Phase 2B-AO - admin read-only product dashboard boundary.
-Last merged phase PR: #82
-Merge commit: `faff042ac1e9e0b0d2cc6b4740fac0e237141e21`
+Last merged phase PR: #83
+Merge commit: `110888f684f55fa55dc03bc4f26f71500e5d17ab`
 
 ## Previous merged status snapshot
 
@@ -32,6 +32,7 @@ Latest completed phase: Phase 2B-AM - admin product write audit atomicity bounda
 Last merged phase PR: #80
 
 Merge commit: `c61fd3511daba3a950e650378eb98152ec6a3ff2`
+
 ## Completed foundation
 
 - Next.js app root exists under `website/`.
@@ -248,7 +249,7 @@ Phase 2B-AN, and Phase 2B-AO boundaries.
 - SaaS chatbot app work in this repo.
 - n8n workflow import, export, activation, execution, or mutation.
 
-Furniture listing metadata writes are approved only through the existing Phase 2B-AL/AM backend API route boundary, which still uses internal product table/API names. Historical/internal terminology remains: Product writes are approved only through the Phase 2B-AL/AM backend API route. Product writes are approved only through the Phase 2B-AL/AM backend API route boundary.
+Furniture listing metadata writes currently use the existing Phase 2B-AL/AM backend API route boundary, whose internal technical names still reference product/product image tables and routes.
 Furniture listing write UI beyond categories, server actions, binary listing image upload, Supabase
 Storage, service-role shortcuts, and browser Supabase product writes remain
 blocked.
@@ -287,19 +288,13 @@ Phase 2B-AP adds category-only create, update, and archive controls inside the p
 Product create/edit/archive/publish UI, product image write UI, binary uploads, Supabase Storage, server actions, browser Supabase, service-role runtime paths, deployment config, Supabase Cloud actions, n8n changes, Pinecone runtime code, SaaS chatbot work, and `website/chat-config.js` access remain out of scope.
 
 
-## Previous merged status snapshot: Phase 2B-AP
-
-Current phase: Phase 2B-AP - admin category management UI boundary.
-Latest completed phase: Phase 2B-AO - admin read-only product dashboard boundary.
-Last merged phase PR: #82
-Merge commit: `faff042ac1e9e0b0d2cc6b4740fac0e237141e21`
-
 ## Previous merged status snapshot: Phase 2B-AO
 
 Current phase: Phase 2B-AO - admin read-only product dashboard boundary.
 Latest completed phase: Phase 2B-AN - admin auth login logout protected shell.
 Last merged phase PR: #81
 Merge commit: `f66a37644c51123780fee0944e584ab5e00d6f3e`
+
 ## Phase 2B-AQ Current Boundary
 
 Phase 2B-AQ is a terminology and direction pivot only. It makes current docs, checklists, and safe visible copy point to an admin-managed furniture/event-rental listing catalogue with customer enquiry/quote requests.

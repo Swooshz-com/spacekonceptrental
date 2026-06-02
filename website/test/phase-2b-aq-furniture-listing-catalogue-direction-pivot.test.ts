@@ -54,6 +54,10 @@ describe("Phase 2B-AQ furniture listing catalogue direction pivot", () => {
     expect(status).toContain(
       "Merge commit: `110888f684f55fa55dc03bc4f26f71500e5d17ab`"
     );
+    expect(status).toContain("Last merged phase PR: #83");
+    expect(status).not.toContain(
+      "Merge commit: `faff042ac1e9e0b0d2cc6b4740fac0e237141e21`"
+    );
     for (const source of [status, context, roadmap, safety, decisionLog]) {
       expect(source).toContain("furniture");
       expect(source).toContain("listing");

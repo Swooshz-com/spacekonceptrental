@@ -37,7 +37,7 @@ function readTrackedProductionSources(paths: string[]) {
 }
 
 describe("Phase 2B-AP admin category management UI boundary", () => {
-  it("records PR #82 as merged and Phase 2B-AP as the current narrow phase", () => {
+  it("records PR #83 as the previous merged phase snapshot and Phase 2B-AP as the current narrow phase", () => {
     const status = readRepoFile("docs/PHASE-STATUS.md");
     const decisionLog = readRepoFile("docs/DECISION-LOG.md");
     const adminAuthChecklist = readRepoFile(
@@ -54,9 +54,9 @@ describe("Phase 2B-AP admin category management UI boundary", () => {
     expect(status).toContain(
       "Latest completed phase: Phase 2B-AO - admin read-only product dashboard boundary."
     );
-    expect(status).toContain("Last merged phase PR: #82");
+    expect(status).toContain("Last merged phase PR: #83");
     expect(status).toContain(
-      "Merge commit: `faff042ac1e9e0b0d2cc6b4740fac0e237141e21`"
+      "Merge commit: `110888f684f55fa55dc03bc4f26f71500e5d17ab`"
     );
     expect(decisionLog).toContain(
       "Decision: Phase 2B-AP adds category-only create, update, and archive controls inside the protected admin shell."
