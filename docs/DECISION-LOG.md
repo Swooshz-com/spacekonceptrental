@@ -1020,3 +1020,26 @@ confirmed booking, order fulfilment, online ordering, admin changes, image
 upload, Supabase Storage, SQL migrations, DB/API/table/RPC/RLS renames, browser
 Supabase, service-role runtime paths, deployment changes, n8n changes, Pinecone
 runtime code, SaaS chatbot work, or access `website/chat-config.js`.
+
+## 2026-06-03: Admin Anti-framing Header Hardening
+
+Decision: Phase 2B-AV adds narrow anti-framing headers for the protected admin
+UI.
+
+Reason: the protected `/admin` UI renders real admin write controls, including
+category and listing management controls, but the app did not configure
+anti-framing response headers. CSRF proof validation and Origin/Host checks
+remain necessary and unchanged, but they do not stop a same-session user from
+interacting with a framed first-party admin UI. SameSite=Lax auth cookies may
+reduce arbitrary off-site exploitability, but anti-framing headers close the
+missing browser-side defence.
+
+The Next.js config applies only `Content-Security-Policy: frame-ancestors
+'none'` and `X-Frame-Options: DENY` to `/admin` and nested admin UI routes.
+It does not introduce a broad public-site CSP.
+
+Phase 2B-AV does not change admin auth, CSRF, Origin/Host checks, Supabase SSR
+cookies, admin UI behavior, product/category write route logic, SQL
+migrations, DB/API/table/RPC/RLS names, browser Supabase, service-role runtime
+paths, image upload, Supabase Storage, n8n/Pinecone runtime behavior, SaaS
+chatbot runtime work, ecommerce flows, or access `website/chat-config.js`.

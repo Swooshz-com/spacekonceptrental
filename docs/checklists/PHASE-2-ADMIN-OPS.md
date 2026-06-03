@@ -48,6 +48,14 @@ and route/action boundaries are implemented and tested.
 - [x] Public quote page and metadata do not imply ecommerce or online ordering.
 - [x] Existing quote request form behavior is preserved.
 
+## Phase 2B-AV Admin Anti-framing Header Hardening
+
+- [x] Protected admin UI routes receive `frame-ancestors 'none'`.
+- [x] Protected admin UI routes receive `X-Frame-Options: DENY`.
+- [x] Anti-framing headers are scoped to `/admin` and nested admin UI routes.
+- [x] No broad public-site CSP is introduced.
+- [x] Admin auth, CSRF, Origin/Host checks, and admin UI behavior are preserved.
+
 ## Ecommerce Non-goals
 
 - [ ] Do not add carts.
