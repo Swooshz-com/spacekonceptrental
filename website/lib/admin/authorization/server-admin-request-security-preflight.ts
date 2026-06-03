@@ -9,6 +9,7 @@ export type StateChangingAdminOperation =
   | "product.write"
   | "category.write"
   | "productImage.write"
+  | "quote.write"
   | "membership.manage";
 
 export type ServerAdminRequestSecurityPreflightInput = {
@@ -82,6 +83,7 @@ const stateChangingOperations = new Set<StateChangingAdminOperation>([
   "product.write",
   "category.write",
   "productImage.write",
+  "quote.write",
   "membership.manage"
 ]);
 

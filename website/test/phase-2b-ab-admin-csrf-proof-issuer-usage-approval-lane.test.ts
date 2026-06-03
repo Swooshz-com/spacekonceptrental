@@ -166,7 +166,8 @@ describe("Phase 2B-AB admin CSRF proof issuer runtime usage approval lane", () =
       "website/app/api/admin/products/[productId]/archive/route.ts",
       "website/app/api/admin/products/[productId]/publish/route.ts",
       "website/app/api/admin/products/[productId]/route.ts",
-      "website/app/api/admin/products/route.ts"
+      "website/app/api/admin/products/route.ts",
+      "website/app/api/admin/quote-requests/[quoteRequestId]/status/route.ts"
     ]);
 
     // No login/logout/products/categories/admin pages

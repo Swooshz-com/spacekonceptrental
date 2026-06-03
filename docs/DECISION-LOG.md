@@ -1067,3 +1067,31 @@ payments, fulfilment, stock reservation, confirmed booking, SQL migrations,
 DB/API/table/RPC/RLS renames, browser Supabase, service-role runtime paths,
 image upload, Supabase Storage, n8n/Pinecone runtime behavior, SaaS chatbot
 runtime work, ecommerce flows, or access `website/chat-config.js`.
+
+## 2026-06-03: Admin Quote Request Status Update Boundary
+
+Decision: Phase 2B-AX adds only admin quote request status updates from the
+protected admin quote request inbox.
+
+Reason: Phase 2B-AW gave authorised admins a read-only quote request inbox.
+The next narrow operations step is to let owner/admin users move an existing
+quote request through the already-defined internal status values without
+adding customer-facing quote tracking, notifications, CRM sync, ecommerce
+ordering, or broader workflow management.
+
+The implementation introduces the quote-specific `quote.write` admin
+operation instead of reusing product/category operations. Owner/admin
+memberships are allowed, viewer memberships are denied, and the CSRF proof
+issuer can issue operation-bound proofs for `quote.write`. The protected
+route accepts only `POST` with a bounded `{ status }` JSON payload, validates
+the quote request ID and allowed status, requires same-origin and
+`x-csrf-proof` checks, resolves the trusted admin workspace, and updates only
+`quote_requests.status`.
+
+Phase 2B-AX does not add public quote status pages, customer-facing quote
+tracking, notifications, CRM integration, internal notes, assignment,
+customer accounts, cart, checkout, payments, stock reservation, fulfilment,
+confirmed booking, online ordering, image upload, Supabase Storage, SQL
+migrations, DB/API/table/RPC/RLS renames, browser Supabase, service-role
+runtime paths, n8n/Pinecone runtime behavior, SaaS chatbot runtime work,
+ecommerce flows, or access `website/chat-config.js`.

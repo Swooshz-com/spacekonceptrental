@@ -199,7 +199,7 @@ describe("protected admin shell", () => {
     });
   });
 
-  it("renders safe dashboard data with category/listing controls and the read-only quote inbox", () => {
+  it("renders safe dashboard data with category/listing controls and the quote status inbox", () => {
     render(
       <AdminShellContent
         state={{
@@ -318,13 +318,18 @@ describe("protected admin shell", () => {
     expect(screen.getByText(/2 x Modular lounge set/i)).toBeInTheDocument();
     expect(screen.getByText(/VIP reception area/i)).toBeInTheDocument();
     expect(
+      screen.getByRole("button", {
+        name: /save status for QR-20260603-NEWEST/i
+      })
+    ).toBeInTheDocument();
+    expect(
       screen.queryByRole("link", {
         name: /create product|edit product|archive product|publish product|product image/i
       })
     ).not.toBeInTheDocument();
     expect(
       screen.queryByRole("button", {
-        name: /quote|status|notify|email|send|crm/i
+        name: /notify|email|send|crm|checkout|payment|book|reserve/i
       })
     ).not.toBeInTheDocument();
     expect(
@@ -367,6 +372,9 @@ describe("protected admin shell", () => {
       ).not.toBeInTheDocument();
       expect(screen.queryByLabelText(/category management/i)).not.toBeInTheDocument();
       expect(screen.queryByLabelText(/listing management/i)).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole("button", { name: /save status/i })
+      ).not.toBeInTheDocument();
       unmount();
     }
   });

@@ -502,7 +502,7 @@ Phase 2B-AI adds only the server-only admin CSRF proof issuer session/workspace 
 
 Phase 2B-AJ adds only the server-only admin CSRF proof session/workspace binding runtime dependency boundary. It derives an opaque binding from canonical requested operation, auth user ID, admin user ID, trusted workspace ID, and membership role inputs using the existing server-only `ADMIN_CSRF_PROOF_SECRET` and Node crypto. It does not implement the actual issuer route, add route/page/server-action usage, add a replay store, approve product/category/product image writes, add admin UI, login/logout, protected admin pages, Storage, deployment, Supabase Cloud, browser Supabase, service-role runtime paths, n8n changes, Pinecone runtime code, SaaS chatbot work, or access `website/chat-config.js`.
 
-Phase 2B-AK implements only the first-party server-only admin CSRF proof issuer route at `website/app/api/admin/csrf-proof/route.ts`. The route accepts only `POST`, rejects missing or malformed JSON, rejects missing, unsupported, and non-state-changing target operations, gates itself with the approved `admin.csrf.issue` route-gate lane, resolves the target operation binding through the Phase 2B-AI boundary and Phase 2B-AJ runtime dependencies, and returns only safe JSON success or failure shapes. It issues proofs only for `product.write`, `category.write`, `productImage.write`, and `membership.manage`. Phase 2B-AK does not add a replay store, product/category/product image write routes, admin UI, login/logout, protected admin pages, Storage, deployment, Supabase Cloud, browser Supabase, service-role runtime paths, n8n changes, Pinecone runtime code, SaaS chatbot work, or access `website/chat-config.js`.
+Phase 2B-AK implements only the first-party server-only admin CSRF proof issuer route at `website/app/api/admin/csrf-proof/route.ts`. The route accepts only `POST`, rejects missing or malformed JSON, rejects missing, unsupported, and non-state-changing target operations, gates itself with the approved `admin.csrf.issue` route-gate lane, resolves the target operation binding through the Phase 2B-AI boundary and Phase 2B-AJ runtime dependencies, and returns only safe JSON success or failure shapes. It issues proofs only for `product.write`, `category.write`, `productImage.write`, `quote.write`, and `membership.manage`. Phase 2B-AK does not add a replay store, product/category/product image write routes, admin UI, login/logout, protected admin pages, Storage, deployment, Supabase Cloud, browser Supabase, service-role runtime paths, n8n changes, Pinecone runtime code, SaaS chatbot work, or access `website/chat-config.js`.
 
 Phase 2B-AL implements the first backend-only admin product-management write surface. It adds session-bound product/category/product image metadata persistence under `website/lib/products/persistence/`, owner/admin RLS write policies and product-management audit inserts, and protected first-party admin routes under `website/app/api/admin/` for category, product, and product-image metadata mutations. The routes require the approved route-gate stack, a matching CSRF proof for `category.write`, `product.write`, or `productImage.write`, `ADMIN_TRUSTED_WORKSPACE_ID`, safe JSON validation, and no-store responses. Phase 2B-AL does not add admin UI, login/logout, protected admin pages, server actions, binary uploads, Supabase Storage, browser Supabase, service-role runtime paths, deployment config, n8n changes, Pinecone runtime code, SaaS chatbot work, or access `website/chat-config.js`.
 
@@ -596,3 +596,20 @@ confirmed booking, SQL migrations, DB/API/table/RPC/RLS renames, browser
 Supabase, service-role runtime paths, image upload, Supabase Storage,
 n8n/Pinecone runtime behavior, SaaS chatbot runtime work, ecommerce flows, or
 access `website/chat-config.js`.
+
+Phase 2B-AX adds only admin quote request status updates from the protected
+admin quote request inbox. It introduces the quote-specific `quote.write`
+admin operation, permits it for owner/admin memberships only, adds it to the
+CSRF proof target operation set, and uses a first-party server-only route at
+`POST /api/admin/quote-requests/[quoteRequestId]/status` to accept only
+`{ status }` payloads for existing quote requests. The server-side write
+boundary updates only `quote_requests.status` for the trusted admin workspace
+and returns generic failure results.
+
+Phase 2B-AX does not add public quote status pages, customer-facing quote
+tracking, notifications, CRM integration, internal notes, assignment,
+customer accounts, cart, checkout, payments, stock reservation, fulfilment,
+confirmed booking, online ordering, image upload, Supabase Storage, SQL
+migrations, DB/API/table/RPC/RLS renames, browser Supabase, service-role
+runtime paths, n8n/Pinecone runtime behavior, SaaS chatbot runtime work,
+ecommerce flows, or access `website/chat-config.js`.

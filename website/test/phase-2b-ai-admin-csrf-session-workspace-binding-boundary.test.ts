@@ -121,7 +121,8 @@ describe("Phase 2B-AI admin CSRF proof issuer session/workspace binding boundary
       "website/app/api/admin/products/[productId]/archive/route.ts",
       "website/app/api/admin/products/[productId]/publish/route.ts",
       "website/app/api/admin/products/[productId]/route.ts",
-      "website/app/api/admin/products/route.ts"
+      "website/app/api/admin/products/route.ts",
+      "website/app/api/admin/quote-requests/[quoteRequestId]/status/route.ts"
     ]);
     expect(readTrackedFiles(["website/app/api/products"])).toEqual([]);
     expect(readTrackedFiles(["website/app/api/categories"])).toEqual([]);

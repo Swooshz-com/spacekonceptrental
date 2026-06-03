@@ -65,6 +65,15 @@ and route/action boundaries are implemented and tested.
 - [x] Empty and unavailable quote request states use generic admin-safe copy.
 - [x] Quote status writes, notifications, CRM integration, and ecommerce flows remain out of scope.
 
+## Phase 2B-AX Admin Quote Request Status Update Boundary
+
+- [x] `quote.write` is a dedicated admin operation for quote status updates.
+- [x] Owner/admin memberships can use `quote.write`; viewer memberships cannot.
+- [x] CSRF proof issuance supports `quote.write` as a state-changing target.
+- [x] Protected admin route updates only existing quote request status.
+- [x] Admin quote inbox renders internal status controls with generic success and failure states.
+- [x] Public quote tracking, notifications, CRM, customer accounts, and ecommerce flows remain out of scope.
+
 ## Ecommerce Non-goals
 
 - [ ] Do not add carts.
