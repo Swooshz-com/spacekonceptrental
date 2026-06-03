@@ -4,6 +4,34 @@ This is the quick status page for the SKR repo. Use `docs/PHASE-2-READINESS-PLAN
 
 ## Current phase
 
+Current phase: Phase 2C-D - quote workflow atomicity and admin operations hardening.
+
+This phase hardens the internal admin quote workflow write path. The protected
+admin status/note route still uses the existing `quote.write` route gate,
+same-origin checks, CSRF proof, trusted workspace resolution, and a
+session-bound authenticated Supabase client, but persistence now calls a single
+`execute_admin_quote_workflow` RPC. The database function validates the
+authenticated owner/admin workspace actor, locks the target quote request,
+updates only `quote_requests.status` and `quote_requests.updated_at`, and
+inserts status-change and internal-note activity in one transaction. Status and
+activity now succeed or fail together. Direct authenticated table update/insert
+grants for quote workflow writes are revoked, while admin activity reads remain
+RLS-scoped. This phase does not add public quote status tracking,
+customer-visible internal notes, notifications, CRM integration, cart,
+checkout, payments, customer accounts, stock reservation, order fulfilment,
+confirmed booking, online ordering, customer uploads, arbitrary public upload
+routes, browser Supabase, service-role runtime paths, deployment config,
+Supabase Cloud actions, n8n/Pinecone runtime behavior, SaaS chatbot runtime
+work, or `website/chat-config.js` access.
+
+Latest completed phase: Phase 2C-C - admin quote operations and enquiry workflow closeout.
+
+Last merged phase PR: #95
+
+Merge commit: `ab59adb8bf3c328b71ed91cc7a8141df9a43948e`
+
+## Previous merged status snapshot: Phase 2C-C
+
 Current phase: Phase 2C-C - admin quote operations and enquiry workflow closeout.
 
 This phase improves internal quote/enquiry follow-up for authorised admins.

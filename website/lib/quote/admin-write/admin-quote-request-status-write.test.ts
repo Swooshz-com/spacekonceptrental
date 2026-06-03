@@ -3,8 +3,7 @@ import { resolve } from "node:path";
 import { describe, expect, it, vi } from "vitest";
 
 import {
-  updateAdminQuoteRequestStatus,
-  type AdminQuoteRequestStatusWriteSupabaseClient
+  updateAdminQuoteRequestStatus
 } from "./admin-quote-request-status-write";
 
 const workspaceId = "11111111-1111-4111-8111-111111111111";
@@ -21,226 +20,25 @@ type MutationResult = {
   error: unknown;
 };
 
-function createSupabase(result: MutationResult = {
-  data: {
-    id: quoteRequestId
-  },
+function createRpcSupabase(result: MutationResult = {
+  data: quoteRequestId,
   error: null
 }) {
   const calls: Array<{
-    step: string;
-    args: unknown[];
+    fn: string;
+    args: Record<string, unknown>;
   }> = [];
-  const builder = {
-    eq: vi.fn((column: string, value: string) => {
+  const client = {
+    rpc(fn: string, args: Record<string, unknown>) {
       calls.push({
-        step: "eq",
-        args: [column, value]
-      });
-
-      return builder;
-    }),
-    select: vi.fn((columns: string) => {
-      calls.push({
-        step: "select",
-        args: [columns]
+        fn,
+        args
       });
 
       return {
         single: vi.fn(async () => result)
       };
-    })
-  };
-  const client: AdminQuoteRequestStatusWriteSupabaseClient = {
-    from: vi.fn((table) => {
-      calls.push({
-        step: "from",
-        args: [table]
-      });
-
-      return {
-        select: vi.fn((columns: string) => {
-          calls.push({
-            step: "quote_select",
-            args: [columns]
-          });
-
-          const quoteSelectBuilder = {
-            eq: vi.fn((column: string, value: string) => {
-              calls.push({
-                step: "quote_eq",
-                args: [column, value]
-              });
-
-              return quoteSelectBuilder;
-            }),
-            single: vi.fn(async () => ({
-              data: {
-                id: quoteRequestId,
-                status: "new"
-              },
-              error: null
-            }))
-          };
-
-          return quoteSelectBuilder;
-        }),
-        update: vi.fn((payload: Record<string, unknown>) => {
-          calls.push({
-            step: "update",
-            args: [payload]
-          });
-
-          return builder;
-        }),
-        insert: vi.fn((payload: unknown) => {
-          calls.push({
-            step: "activity_insert",
-            args: [payload]
-          });
-
-          return {
-            select: vi.fn(async (columns: string) => {
-              calls.push({
-                step: "activity_select",
-                args: [columns]
-              });
-
-              return {
-                data: [
-                  {
-                    id: "55555555-5555-4555-8555-555555555555"
-                  }
-                ],
-                error: null
-              };
-            })
-          };
-        })
-      };
-    })
-  };
-
-  return {
-    calls,
-    client
-  };
-}
-
-function createWorkflowSupabase({
-  currentStatus = "new",
-  updateResult = {
-    data: {
-      id: quoteRequestId
-    },
-    error: null
-  },
-  activityResult = {
-    data: [
-      {
-        id: "55555555-5555-4555-8555-555555555555"
-      },
-      {
-        id: "66666666-6666-4666-8666-666666666666"
-      }
-    ],
-    error: null
-  }
-}: {
-  currentStatus?: string;
-  updateResult?: MutationResult;
-  activityResult?: MutationResult;
-} = {}) {
-  const calls: Array<{
-    step: string;
-    args: unknown[];
-  }> = [];
-  const quoteSelectBuilder = {
-    eq: vi.fn((column: string, value: string) => {
-      calls.push({
-        step: "quote_eq",
-        args: [column, value]
-      });
-
-      return quoteSelectBuilder;
-    }),
-    single: vi.fn(async () => ({
-      data: {
-        id: quoteRequestId,
-        status: currentStatus
-      },
-      error: null
-    }))
-  };
-  const updateBuilder = {
-    eq: vi.fn((column: string, value: string) => {
-      calls.push({
-        step: "update_eq",
-        args: [column, value]
-      });
-
-      return updateBuilder;
-    }),
-    select: vi.fn((columns: string) => {
-      calls.push({
-        step: "update_select",
-        args: [columns]
-      });
-
-      return {
-        single: vi.fn(async () => updateResult)
-      };
-    })
-  };
-  const activityInsertBuilder = {
-    select: vi.fn((columns: string) => {
-      calls.push({
-        step: "activity_select",
-        args: [columns]
-      });
-
-      return Promise.resolve(activityResult);
-    })
-  };
-  const client = {
-    from: vi.fn((table: string) => {
-      calls.push({
-        step: "from",
-        args: [table]
-      });
-
-      if (table === "quote_requests") {
-        return {
-          select: vi.fn((columns: string) => {
-            calls.push({
-              step: "quote_select",
-              args: [columns]
-            });
-
-            return quoteSelectBuilder;
-          }),
-          update: vi.fn((payload: Record<string, unknown>) => {
-            calls.push({
-              step: "update",
-              args: [payload]
-            });
-
-            return updateBuilder;
-          })
-        };
-      }
-
-      return {
-        insert: vi.fn((payload: unknown) => {
-          calls.push({
-            step: "activity_insert",
-            args: [payload]
-          });
-
-          return activityInsertBuilder;
-        })
-      };
-    })
+    }
   };
 
   return {
@@ -250,113 +48,8 @@ function createWorkflowSupabase({
 }
 
 describe("admin quote request status write boundary", () => {
-  it("updates only quote_requests.status for the trusted workspace", async () => {
-    const { calls, client } = createSupabase();
-
-    await expect(
-      updateAdminQuoteRequestStatus(
-        {
-          admin: adminContext,
-          quoteRequestId,
-          status: "reviewing"
-        },
-        {
-          supabase: {
-            configured: true,
-            client,
-            missingEnv: []
-          }
-        }
-      )
-    ).resolves.toStrictEqual({
-      ok: true,
-      record: {
-        id: quoteRequestId,
-        type: "quoteRequest"
-      }
-    });
-
-    expect(calls).toEqual(
-      expect.arrayContaining([
-      {
-        step: "from",
-        args: ["quote_requests"]
-      },
-      {
-        step: "quote_select",
-        args: ["id, status"]
-      },
-      {
-        step: "update",
-        args: [
-          {
-            status: "reviewing",
-            updated_at: expect.any(String)
-          }
-        ]
-      },
-      {
-        step: "eq",
-        args: ["id", quoteRequestId]
-      },
-      {
-        step: "eq",
-        args: ["workspace_id", workspaceId]
-      },
-      {
-        step: "select",
-        args: ["id"]
-      }
-      ])
-    );
-    expect(calls).toContainEqual({
-      step: "activity_insert",
-      args: [
-        [
-          {
-            workspace_id: workspaceId,
-            quote_request_id: quoteRequestId,
-            actor_admin_user_id: adminContext.adminUserId,
-            activity_type: "status_change",
-            status_from: "new",
-            status_to: "reviewing",
-            note: null
-          }
-        ]
-      ]
-    });
-    expect(JSON.stringify(calls)).not.toContain("customer_name");
-    expect(JSON.stringify(calls)).not.toContain("quote_request_items");
-  });
-
-  it.each(["new", "reviewing", "quoted", "closed", "archived"] as const)(
-    "accepts %s as a quote request status",
-    async (status) => {
-      const { client } = createSupabase();
-
-      await expect(
-        updateAdminQuoteRequestStatus(
-          {
-            admin: adminContext,
-            quoteRequestId,
-            status
-          },
-          {
-            supabase: {
-              configured: true,
-              client,
-              missingEnv: []
-            }
-          }
-        )
-      ).resolves.toMatchObject({
-        ok: true
-      });
-    }
-  );
-
-  it("writes internal status activity and bounded notes for the trusted workspace", async () => {
-    const { calls, client } = createWorkflowSupabase();
+  it("persists quote workflow changes through a single atomic RPC boundary", async () => {
+    const { calls, client } = createRpcSupabase();
 
     await expect(
       updateAdminQuoteRequestStatus(
@@ -382,44 +75,125 @@ describe("admin quote request status write boundary", () => {
       }
     });
 
-    expect(calls).toContainEqual({
-      step: "quote_select",
-      args: ["id, status"]
-    });
-    expect(calls).toContainEqual({
-      step: "update",
-      args: [
-        {
-          status: "reviewing",
-          updated_at: expect.any(String)
+    expect(calls).toStrictEqual([
+      {
+        fn: "execute_admin_quote_workflow",
+        args: {
+          p_quote_request_id: quoteRequestId,
+          p_workspace_id: workspaceId,
+          p_status: "reviewing",
+          p_internal_note: "Call Maya about sofa quantities."
         }
-      ]
+      }
+    ]);
+  });
+
+  it("passes only the narrow quote workflow payload for the trusted workspace", async () => {
+    const { calls, client } = createRpcSupabase();
+
+    await expect(
+      updateAdminQuoteRequestStatus(
+        {
+          admin: adminContext,
+          quoteRequestId,
+          status: "reviewing"
+        },
+        {
+          supabase: {
+            configured: true,
+            client,
+            missingEnv: []
+          }
+        }
+      )
+    ).resolves.toStrictEqual({
+      ok: true,
+      record: {
+        id: quoteRequestId,
+        type: "quoteRequest"
+      }
     });
-    expect(calls).toContainEqual({
-      step: "activity_insert",
-      args: [
-        [
+
+    expect(calls).toStrictEqual([
+      {
+        fn: "execute_admin_quote_workflow",
+        args: {
+          p_quote_request_id: quoteRequestId,
+          p_workspace_id: workspaceId,
+          p_status: "reviewing",
+          p_internal_note: null
+        }
+      }
+    ]);
+    expect(JSON.stringify(calls)).not.toContain("customer_name");
+    expect(JSON.stringify(calls)).not.toContain("quote_request_items");
+    expect(JSON.stringify(calls)).not.toContain("actor_admin_user_id");
+  });
+
+  it.each(["new", "reviewing", "quoted", "closed", "archived"] as const)(
+    "accepts %s as a quote request status",
+    async (status) => {
+      const { client } = createRpcSupabase();
+
+      await expect(
+        updateAdminQuoteRequestStatus(
           {
-            workspace_id: workspaceId,
-            quote_request_id: quoteRequestId,
-            actor_admin_user_id: adminContext.adminUserId,
-            activity_type: "status_change",
-            status_from: "new",
-            status_to: "reviewing",
-            note: null
+            admin: adminContext,
+            quoteRequestId,
+            status
           },
           {
-            workspace_id: workspaceId,
-            quote_request_id: quoteRequestId,
-            actor_admin_user_id: adminContext.adminUserId,
-            activity_type: "internal_note",
-            status_from: null,
-            status_to: null,
-            note: "Call Maya about sofa quantities."
+            supabase: {
+              configured: true,
+              client,
+              missingEnv: []
+            }
           }
-        ]
-      ]
+        )
+      ).resolves.toMatchObject({
+        ok: true
+      });
+    }
+  );
+
+  it("passes a bounded trimmed internal note to the atomic workflow RPC", async () => {
+    const { calls, client } = createRpcSupabase();
+
+    await expect(
+      updateAdminQuoteRequestStatus(
+        {
+          admin: adminContext,
+          quoteRequestId,
+          status: "reviewing",
+          internalNote: " Call Maya about sofa quantities. "
+        },
+        {
+          supabase: {
+            configured: true,
+            client,
+            missingEnv: []
+          }
+        }
+      )
+    ).resolves.toStrictEqual({
+      ok: true,
+      record: {
+        id: quoteRequestId,
+        type: "quoteRequest"
+      }
     });
+
+    expect(calls).toStrictEqual([
+      {
+        fn: "execute_admin_quote_workflow",
+        args: {
+          p_quote_request_id: quoteRequestId,
+          p_workspace_id: workspaceId,
+          p_status: "reviewing",
+          p_internal_note: "Call Maya about sofa quantities."
+        }
+      }
+    ]);
   });
 
   it("fails closed for invalid admin context, quote ID, status, missing client, and provider errors", async () => {
@@ -435,7 +209,7 @@ describe("admin quote request status write boundary", () => {
       {
         supabase: {
           configured: true,
-          client: createSupabase().client,
+          client: createRpcSupabase().client,
           missingEnv: []
         }
       }
@@ -449,7 +223,7 @@ describe("admin quote request status write boundary", () => {
       {
         supabase: {
           configured: true,
-          client: createSupabase().client,
+          client: createRpcSupabase().client,
           missingEnv: []
         }
       }
@@ -463,7 +237,7 @@ describe("admin quote request status write boundary", () => {
       {
         supabase: {
           configured: true,
-          client: createSupabase().client,
+          client: createRpcSupabase().client,
           missingEnv: []
         }
       }
@@ -491,7 +265,7 @@ describe("admin quote request status write boundary", () => {
       {
         supabase: {
           configured: true,
-          client: createSupabase({
+          client: createRpcSupabase({
             data: null,
             error: new Error(
               "sql supabase stack env token cookie workspace-secret"
@@ -553,9 +327,12 @@ describe("admin quote request status write boundary", () => {
 
     expect(source).toContain('import "server-only";');
     expect(source).toContain("createSessionBoundSupabaseAdminReadClient");
-    expect(source).toContain('from("quote_requests")');
-    expect(source).toContain(".update(");
+    expect(source).toContain('rpc("execute_admin_quote_workflow"');
     expect(source).toContain('status');
+    expect(source).not.toContain('from("quote_requests")');
+    expect(source).not.toContain('from("quote_request_activity")');
+    expect(source).not.toContain(".update(");
+    expect(source).not.toContain(".insert(");
     expect(source).not.toContain("quote_request_items");
     expect(source).not.toContain("customer_name");
     expect(source).not.toContain("customer_email");

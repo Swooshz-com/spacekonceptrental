@@ -39,35 +39,17 @@ type MutationResult = {
   error: unknown;
 };
 
-type SelectSingleResult = {
-  data: unknown;
-  error: unknown;
-};
-
-type QuoteRequestStatusSelectBuilder = {
-  eq(column: string, value: string): QuoteRequestStatusSelectBuilder;
-  single(): Promise<SelectSingleResult>;
-};
-
-type QuoteRequestStatusUpdateBuilder = {
-  eq(column: string, value: string): QuoteRequestStatusUpdateBuilder;
-  select(columns: string): {
-    single(): Promise<MutationResult>;
-  };
-};
-
 export type AdminQuoteRequestStatusWriteSupabaseClient = {
-  from(table: "quote_requests"): {
-    select(columns: string): QuoteRequestStatusSelectBuilder;
-    update(payload: {
-      status: AdminQuoteRequestStatus;
-      updated_at: string;
-    }): QuoteRequestStatusUpdateBuilder;
-  };
-  from(table: "quote_request_activity"): {
-    insert(payload: QuoteRequestActivityInsert[]): {
-      select(columns: string): Promise<MutationResult>;
-    };
+  rpc(
+    fn: "execute_admin_quote_workflow",
+    args: {
+      p_quote_request_id: string;
+      p_workspace_id: string;
+      p_status: AdminQuoteRequestStatus;
+      p_internal_note: string | null;
+    }
+  ): {
+    single(): Promise<MutationResult>;
   };
 };
 
@@ -110,16 +92,6 @@ const quoteRequestStatuses = new Set<AdminQuoteRequestStatus>([
   "archived"
 ]);
 const maxInternalNoteLength = 1200;
-
-type QuoteRequestActivityInsert = {
-  workspace_id: string;
-  quote_request_id: string;
-  actor_admin_user_id: string;
-  activity_type: "status_change" | "internal_note";
-  status_from: AdminQuoteRequestStatus | null;
-  status_to: AdminQuoteRequestStatus | null;
-  note: string | null;
-};
 
 function isUuid(value: unknown): value is string {
   return typeof value === "string" && uuidPattern.test(value.trim());
@@ -183,31 +155,21 @@ async function createDefaultSupabase(): Promise<AdminQuoteRequestStatusWriteSupa
 }
 
 function resultRecordId(result: MutationResult) {
-  if (result.error || !isRecord(result.data)) {
+  if (result.error) {
+    return null;
+  }
+
+  if (isUuid(result.data)) {
+    return result.data.trim();
+  }
+
+  if (!isRecord(result.data)) {
     return null;
   }
 
   const id = result.data.id;
 
   return isUuid(id) ? id.trim() : null;
-}
-
-function resultCurrentStatus(result: SelectSingleResult) {
-  if (result.error || !isRecord(result.data)) {
-    return null;
-  }
-
-  const id = result.data.id;
-  const status = result.data.status;
-
-  return isUuid(id) &&
-    typeof status === "string" &&
-    isQuoteRequestStatus(status)
-    ? {
-        id: id.trim(),
-        status
-      }
-    : null;
 }
 
 function normalizeInternalNote(value: string | undefined) {
@@ -222,16 +184,6 @@ function normalizeInternalNote(value: string | undefined) {
   }
 
   return note.length <= maxInternalNoteLength ? note : null;
-}
-
-function activityRecordIds(result: MutationResult) {
-  if (result.error || !Array.isArray(result.data)) {
-    return null;
-  }
-
-  return result.data.every((row) => isRecord(row) && isUuid(row.id))
-    ? result.data.map((row) => String((row as { id: string }).id).trim())
-    : null;
 }
 
 export async function updateAdminQuoteRequestStatus(
@@ -259,73 +211,17 @@ export async function updateAdminQuoteRequestStatus(
   }
 
   try {
-    const currentStatusResult = await supabase.client
-      .from("quote_requests")
-      .select("id, status")
-      .eq("id", input.quoteRequestId.trim())
-      .eq("workspace_id", input.admin.workspaceId)
-      .single();
-    const currentStatus = resultCurrentStatus(currentStatusResult);
-
-    if (!currentStatus) {
-      return failure("QUOTE_STATUS_UPDATE_FAILED");
-    }
-
     const result = await supabase.client
-      .from("quote_requests")
-      .update({
-        status: input.status,
-        updated_at: new Date().toISOString()
+      .rpc("execute_admin_quote_workflow", {
+        p_quote_request_id: input.quoteRequestId.trim(),
+        p_workspace_id: input.admin.workspaceId,
+        p_status: input.status,
+        p_internal_note: internalNote ?? null
       })
-      .eq("id", input.quoteRequestId.trim())
-      .eq("workspace_id", input.admin.workspaceId)
-      .select("id")
       .single();
     const id = resultRecordId(result);
 
-    if (!id) {
-      return failure("QUOTE_STATUS_UPDATE_FAILED");
-    }
-
-    const activityRows: QuoteRequestActivityInsert[] = [];
-
-    if (currentStatus.status !== input.status) {
-      activityRows.push({
-        workspace_id: input.admin.workspaceId,
-        quote_request_id: input.quoteRequestId.trim(),
-        actor_admin_user_id: input.admin.adminUserId,
-        activity_type: "status_change",
-        status_from: currentStatus.status,
-        status_to: input.status,
-        note: null
-      });
-    }
-
-    if (internalNote) {
-      activityRows.push({
-        workspace_id: input.admin.workspaceId,
-        quote_request_id: input.quoteRequestId.trim(),
-        actor_admin_user_id: input.admin.adminUserId,
-        activity_type: "internal_note",
-        status_from: null,
-        status_to: null,
-        note: internalNote
-      });
-    }
-
-    if (activityRows.length > 0) {
-      const activityResult = await supabase.client
-        .from("quote_request_activity")
-        .insert(activityRows)
-        .select("id");
-      const activityIds = activityRecordIds(activityResult);
-
-      if (!activityIds || activityIds.length !== activityRows.length) {
-        return failure("QUOTE_STATUS_UPDATE_FAILED");
-      }
-    }
-
-    return success(id);
+    return id ? success(id) : failure("QUOTE_STATUS_UPDATE_FAILED");
   } catch {
     return failure("QUOTE_STATUS_UPDATE_FAILED");
   }

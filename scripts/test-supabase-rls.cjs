@@ -1000,38 +1000,145 @@ check('anonymous public quote creation rejects non-website workflow states', () 
   );
 });
 
-check('authenticated quote admins can update status and insert internal activity only for their workspace', () => {
+check('atomic quote workflow RPC updates status and activity together for owner/admin users', () => {
   const output = queryAs(
     'authenticated',
     ids.authMemberA,
     `
+      select public.execute_admin_quote_workflow(
+        '${ids.quoteA}',
+        '${ids.workspaceA}',
+        'reviewing',
+        ' Follow up on lounge seating quantities. '
+      )::text;
+
+      select status from public.quote_requests where id = '${ids.quoteA}';
+
+      select count(*)::text
+      from public.quote_request_activity
+      where quote_request_id = '${ids.quoteA}'
+        and activity_type = 'status_change'
+        and status_from = 'new'
+        and status_to = 'reviewing';
+
+      select count(*)::text
+      from public.quote_request_activity
+      where quote_request_id = '${ids.quoteA}'
+        and activity_type = 'internal_note'
+        and note = 'Follow up on lounge seating quantities.';
+
+      select public.execute_admin_quote_workflow(
+        '${ids.quoteA}',
+        '${ids.workspaceA}',
+        'reviewing',
+        '   '
+      )::text;
+
+      select count(*)::text
+      from public.quote_request_activity
+      where quote_request_id = '${ids.quoteA}'
+        and activity_type = 'status_change'
+        and status_to = 'reviewing';
+
+      select count(*)::text
+      from public.quote_request_activity
+      where quote_request_id = '${ids.quoteA}'
+        and activity_type = 'internal_note'
+        and note = 'Follow up on lounge seating quantities.';
+    `,
+  );
+
+  assert.deepEqual(
+    output.split('\n').filter(Boolean),
+    [ids.quoteA, 'reviewing', '1', '1', ids.quoteA, '1', '1'],
+    'owner should update quote workflow atomically and skip duplicate/blank activity rows',
+  );
+});
+
+check('atomic quote workflow RPC denies oversized notes, cross-workspace, viewer, no-membership, and anonymous callers', () => {
+  statementFailsAs(
+    'authenticated',
+    ids.authMemberA,
+    `
+      select public.execute_admin_quote_workflow(
+        '${ids.quoteA}',
+        '${ids.workspaceA}',
+        'reviewing',
+        repeat('x', 1201)
+      )
+    `,
+  );
+
+  statementFailsAs(
+    'authenticated',
+    ids.authMemberA,
+    `
+      select public.execute_admin_quote_workflow(
+        '${ids.quoteB}',
+        '${ids.workspaceB}',
+        'reviewing',
+        'Cross-workspace note should fail.'
+      )
+    `,
+  );
+
+  statementFailsAs(
+    'authenticated',
+    ids.authViewerA,
+    `
+      select public.execute_admin_quote_workflow(
+        '${ids.quoteA}',
+        '${ids.workspaceA}',
+        'reviewing',
+        'Viewer note should fail.'
+      )
+    `,
+  );
+
+  statementFailsAs(
+    'authenticated',
+    ids.authNoMembership,
+    `
+      select public.execute_admin_quote_workflow(
+        '${ids.quoteA}',
+        '${ids.workspaceA}',
+        'reviewing',
+        'No-membership note should fail.'
+      )
+    `,
+  );
+
+  statementFailsAs(
+    'anon',
+    null,
+    `
+      select public.execute_admin_quote_workflow(
+        '${ids.quoteA}',
+        '${ids.workspaceA}',
+        'reviewing',
+        'Anonymous note should fail.'
+      )
+    `,
+  );
+});
+
+check('direct quote workflow table writes are not granted after atomic RPC hardening', () => {
+  statementFailsAs(
+    'authenticated',
+    ids.authMemberA,
+    `
       update public.quote_requests
-      set status = 'reviewing',
+      set status = 'quoted',
         updated_at = now()
       where id = '${ids.quoteA}'
         and workspace_id = '${ids.workspaceA}'
-      returning status;
+    `,
+  );
 
-      insert into public.quote_request_activity (
-        workspace_id,
-        quote_request_id,
-        actor_admin_user_id,
-        activity_type,
-        status_from,
-        status_to,
-        note
-      )
-      values (
-        '${ids.workspaceA}',
-        '${ids.quoteA}',
-        '${ids.adminA}',
-        'status_change',
-        'new',
-        'reviewing',
-        null
-      )
-      returning activity_type;
-
+  statementFailsAs(
+    'authenticated',
+    ids.authMemberA,
+    `
       insert into public.quote_request_activity (
         workspace_id,
         quote_request_id,
@@ -1044,34 +1151,23 @@ check('authenticated quote admins can update status and insert internal activity
         '${ids.quoteA}',
         '${ids.adminA}',
         'internal_note',
-        'Follow up on lounge seating quantities.'
+        'Direct table insert should fail.'
       )
-      returning note;
     `,
-  );
-
-  assert.deepEqual(
-    output.split('\n').filter(Boolean),
-    ['reviewing', 'status_change', 'Follow up on lounge seating quantities.'],
-    'owner should update quote workflow and write internal activity in their workspace',
   );
 });
 
-check('authenticated quote workflow writes reject cross-workspace, viewer, and anonymous callers', () => {
-  assert.equal(
-    queryAs(
-      'authenticated',
-      ids.authMemberA,
-      `
+check('direct quote workflow table writes reject cross-workspace, viewer, and anonymous callers', () => {
+  statementFailsAs(
+    'authenticated',
+    ids.authMemberA,
+    `
       update public.quote_requests
       set status = 'quoted'
       where id = '${ids.quoteB}'
         and workspace_id = '${ids.workspaceB}'
       returning id::text
     `,
-    ),
-    '',
-    'owner A should not update quote request status in workspace B',
   );
 
   statementFailsAs(

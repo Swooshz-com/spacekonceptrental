@@ -297,7 +297,7 @@ test('real migration directory passes static validation', () => {
   const result = runValidator(realMigrationsDir);
 
   assert.equal(result.status, 0, result.stdout + result.stderr);
-  assert.match(result.stdout, /checked 8 migration SQL file\(s\)/);
+  assert.match(result.stdout, /checked 9 migration SQL file\(s\)/);
 });
 
 test('real base schema migration creates the planned MVP tables', () => {
@@ -499,6 +499,48 @@ test('real migrations add admin-only quote workflow activity policies', () => {
   assert.doesNotMatch(
     sql,
     /create policy .* on public\.quote_request_activity .* to anon/,
+  );
+});
+
+test('real migrations add atomic admin quote workflow RPC with least-privilege grants', () => {
+  const sql = normalizeSql(readAllRealMigrationSql());
+
+  assert.match(
+    sql,
+    /create or replace function public\.execute_admin_quote_workflow\(\s*p_quote_request_id uuid,\s*p_workspace_id uuid,\s*p_status text,\s*p_internal_note text\s*\)/,
+  );
+  assert.match(sql, /security definer/);
+  assert.match(sql, /set search_path = public/);
+  assert.match(sql, /public\.current_quote_admin_user_id\(p_workspace_id\)/);
+  assert.match(sql, /for update/);
+  assert.match(sql, /insert into public\.quote_request_activity/);
+  assert.match(
+    sql,
+    /revoke all on function public\.execute_admin_quote_workflow\(uuid, uuid, text, text\) from public;/,
+  );
+  assert.match(
+    sql,
+    /grant execute on function public\.execute_admin_quote_workflow\(uuid, uuid, text, text\) to authenticated;/,
+  );
+  assert.match(
+    sql,
+    /revoke update \(\s*status,\s*updated_at\s*\) on public\.quote_requests from authenticated;/,
+  );
+  assert.match(
+    sql,
+    /revoke insert on public\.quote_request_activity from authenticated;/,
+  );
+  assert.match(
+    sql,
+    /alter policy quote_requests_quote_admin_update on public\.quote_requests using \(false\) with check \(false\);/,
+  );
+  assert.match(
+    sql,
+    /alter policy quote_request_activity_quote_admin_insert on public\.quote_request_activity with check \(false\);/,
+  );
+  assert.doesNotMatch(
+    sql,
+    /grant execute on function public\.execute_admin_quote_workflow\(uuid, uuid, text, text\) to anon;/,
   );
 });
 

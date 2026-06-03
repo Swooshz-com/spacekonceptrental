@@ -111,6 +111,15 @@ and route/action boundaries are implemented and tested.
 - [x] Internal quote activity is not exposed on public quote pages or public quote APIs.
 - [x] Public quote tracking, customer-visible internal notes, notifications, CRM, ecommerce flows, browser Supabase, and service-role runtime paths remain out of scope.
 
+## Phase 2C-D Quote Workflow Atomicity And Admin Operations Hardening
+
+- [x] Admin quote status and internal activity writes use one atomic DB-side RPC boundary.
+- [x] Status changes and internal activity inserts succeed or fail together.
+- [x] Status-change activity is inserted only when status changes.
+- [x] Internal-note activity is inserted only for non-blank bounded notes.
+- [x] Direct authenticated quote status update and quote activity insert grants are revoked or narrowed.
+- [x] Public quote tracking, customer-visible internal notes, notifications, CRM, ecommerce flows, browser Supabase, and service-role runtime paths remain out of scope.
+
 ## Ecommerce Non-goals
 
 - [ ] Do not add carts.
