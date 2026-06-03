@@ -111,6 +111,8 @@ describe("admin product dashboard read boundary", () => {
             id: "33333333-3333-4333-8333-333333333333",
             product_id: "22222222-2222-4222-8222-222222222222",
             alt_text: "Lounge set",
+            storage_bucket: "catalogue-metadata",
+            storage_path: "fixtures/lounge-main.jpg",
             sort_order: 1,
             is_primary: true,
             status: "active"
@@ -119,6 +121,8 @@ describe("admin product dashboard read boundary", () => {
             id: "44444444-4444-4444-8444-444444444444",
             product_id: "22222222-2222-4222-8222-222222222222",
             alt_text: "Detail view",
+            storage_bucket: "catalogue-metadata",
+            storage_path: "fixtures/lounge-detail.jpg",
             sort_order: 2,
             is_primary: false,
             status: "archived"
@@ -165,6 +169,28 @@ describe("admin product dashboard read boundary", () => {
             primaryImageAltText: "Lounge set"
           }
         ],
+        images: [
+          {
+            id: "33333333-3333-4333-8333-333333333333",
+            productId: "22222222-2222-4222-8222-222222222222",
+            storageBucket: "catalogue-metadata",
+            storagePath: "fixtures/lounge-main.jpg",
+            altText: "Lounge set",
+            sortOrder: 1,
+            isPrimary: true,
+            status: "active"
+          },
+          {
+            id: "44444444-4444-4444-8444-444444444444",
+            productId: "22222222-2222-4222-8222-222222222222",
+            storageBucket: "catalogue-metadata",
+            storagePath: "fixtures/lounge-detail.jpg",
+            altText: "Detail view",
+            sortOrder: 2,
+            isPrimary: false,
+            status: "archived"
+          }
+        ],
         imageSummary: {
           totalImages: 2,
           activeImages: 1,
@@ -186,6 +212,12 @@ describe("admin product dashboard read boundary", () => {
     }
     expect(calls.find((call) => call.table === "products")?.select).toContain(
       "description"
+    );
+    expect(calls.find((call) => call.table === "product_images")?.select).toContain(
+      "storage_bucket"
+    );
+    expect(calls.find((call) => call.table === "product_images")?.select).toContain(
+      "storage_path"
     );
   });
 

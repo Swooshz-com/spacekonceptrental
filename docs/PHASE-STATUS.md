@@ -4,6 +4,31 @@ This is the quick status page for the SKR repo. Use `docs/PHASE-2-READINESS-PLAN
 
 ## Current phase
 
+Current phase: Phase 2B-AY - admin listing image metadata UI boundary.
+
+This phase adds metadata-only listing image management controls inside the
+protected admin shell. Authorised owner/admin users can request a
+`productImage.write` CSRF proof and create, update, or archive listing image
+metadata through the existing protected product-image metadata backend routes.
+The dashboard read boundary now includes the editable image metadata needed by
+the UI, scoped to the trusted admin workspace and mapped to generic unavailable
+states on provider errors. This phase does not add binary image upload,
+`<input type="file">`, multipart form handling, Supabase Storage bucket
+creation or API calls, public image upload or management routes, browser
+Supabase, service-role runtime paths, SQL migrations, DB/API/table/RPC/RLS
+renames, carts, checkout, payments, customer accounts, stock reservation,
+order fulfilment, confirmed booking, online ordering, notifications, CRM
+integration, n8n/Pinecone runtime behavior, SaaS chatbot runtime work, or
+`website/chat-config.js` access.
+
+Latest completed phase: Phase 2B-AX - admin quote request status update boundary.
+
+Last merged phase PR: #91
+
+Merge commit: `0977f70a85c15cc82350160d6b8d8394b16ba5d9`
+
+## Previous merged status snapshot: Phase 2B-AX
+
 Current phase: Phase 2B-AX - admin quote request status update boundary.
 
 This phase adds admin-only quote request status updates from the protected
@@ -382,9 +407,10 @@ Phase 2B-AN, Phase 2B-AO, Phase 2B-AR, and Phase 2B-AS boundaries.
 - Login/logout routes outside the Phase 2B-AN first-party admin auth boundary.
 - Protected admin pages outside the Phase 2B-AN minimal protected shell and
   Phase 2B-AO read-only dashboard boundary.
-- Furniture listing write UI beyond the approved category management controls.
-  Phase 2B-AS adds only metadata listing controls through the existing backend
-  routes; listing image UI and binary upload remain blocked.
+- Furniture listing write UI beyond the approved category management,
+  metadata listing, and metadata listing image controls. Phase 2B-AY adds only
+  listing image metadata controls through the existing backend routes; binary
+  upload and Supabase Storage remain blocked.
 - Resolver/adapter runtime wiring into routes, pages, or server actions.
 - Product writes outside the Phase 2B-AL backend API route boundary.
 - Listing image uploads and Supabase Storage wiring.
@@ -399,10 +425,10 @@ Phase 2B-AN, Phase 2B-AO, Phase 2B-AR, and Phase 2B-AS boundaries.
 - n8n workflow import, export, activation, execution, or mutation.
 
 Furniture listing metadata writes currently use the existing Phase 2B-AL/AM backend API route boundary, whose internal technical names still reference product/product image tables and routes.
-Furniture listing write UI beyond categories and Phase 2B-AS metadata-only
-listing controls, server actions, binary listing image upload, Supabase
-Storage, service-role shortcuts, and browser Supabase product writes remain
-blocked.
+Furniture listing write UI beyond categories, Phase 2B-AS metadata-only
+listing controls, and Phase 2B-AY metadata-only listing image controls, plus
+server actions, binary listing image upload, Supabase Storage, service-role
+shortcuts, and browser Supabase product writes remain blocked.
 
 ## Current n8n/Pinecone position
 
@@ -467,3 +493,19 @@ stock reservation, order fulfilment, online ordering, browser Supabase,
 service-role runtime paths, deployment config, n8n changes, Pinecone runtime
 code, SaaS chatbot work, and `website/chat-config.js` access remain out of
 scope.
+
+## Phase 2B-AY Current Boundary
+
+Phase 2B-AY adds only metadata listing image management controls inside the
+protected admin shell. The browser component requests a CSRF proof for
+`productImage.write`, then calls only `POST /api/admin/product-images`,
+`POST /api/admin/product-images/[imageId]`, and
+`POST /api/admin/product-images/[imageId]/archive` with `x-csrf-proof`.
+
+Binary image upload, file inputs, multipart form handling, Supabase Storage,
+public image upload or management routes, DB/API/table/RPC/RLS renames, SQL
+migrations, cart, checkout, payments, customer accounts, stock reservation,
+order fulfilment, confirmed booking, online ordering, notifications, CRM
+integration, browser Supabase, service-role runtime paths, deployment config,
+n8n/Pinecone runtime behavior, SaaS chatbot runtime work, and
+`website/chat-config.js` access remain out of scope.

@@ -287,7 +287,8 @@ export function CategoryManagementPanel({
         <h2>Category management</h2>
         <p>
           Create, update, and archive categories through the protected admin
-          API. Furniture listing and listing image editing stay out of scope.
+          API. Furniture listing edits use their own protected panel, and image
+          file handling stays out of scope.
         </p>
       </div>
 

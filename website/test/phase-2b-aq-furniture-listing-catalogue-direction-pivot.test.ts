@@ -111,8 +111,9 @@ describe("Phase 2B-AQ furniture listing catalogue direction pivot", () => {
     expect(adminShell).toContain("Furniture listings");
     expect(adminShell).toContain("Listing image metadata summary");
     expect(categoryPanel).toContain(
-      "Furniture listing and listing image editing stay out of scope."
+      "Furniture listing edits use their own protected panel, and image"
     );
+    expect(categoryPanel).toContain("file handling stays out of scope.");
     expect(cataloguePage).toContain("View listing");
     expect(detailPage).toContain("Furniture listing");
     expect(detailPage).toContain("Start enquiry");

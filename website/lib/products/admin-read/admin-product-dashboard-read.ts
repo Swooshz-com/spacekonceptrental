@@ -60,9 +60,21 @@ export type AdminProductDashboardProduct = {
   primaryImageAltText?: string;
 };
 
+export type AdminProductDashboardImage = {
+  id: string;
+  productId: string;
+  storageBucket: string;
+  storagePath: string;
+  altText?: string;
+  sortOrder: number;
+  isPrimary: boolean;
+  status: "active" | "archived";
+};
+
 export type AdminProductDashboardReadData = {
   categories: AdminProductDashboardCategory[];
   products: AdminProductDashboardProduct[];
+  images: AdminProductDashboardImage[];
   imageSummary: {
     totalImages: number;
     activeImages: number;
@@ -110,6 +122,8 @@ type ProductRow = {
 type ProductImageRow = {
   id?: unknown;
   product_id?: unknown;
+  storage_bucket?: unknown;
+  storage_path?: unknown;
   alt_text?: unknown;
   sort_order?: unknown;
   is_primary?: unknown;
@@ -236,19 +250,30 @@ function toProduct(row: ProductRow): AdminProductDashboardProduct | null {
 function toProductImage(row: ProductImageRow) {
   const id = isUuid(row.id) ? row.id.trim() : null;
   const productId = isUuid(row.product_id) ? row.product_id.trim() : null;
+  const storageBucket = getString(row.storage_bucket);
+  const storagePath = getString(row.storage_path);
   const status =
     typeof row.status === "string" && productImageStatuses.has(row.status)
       ? row.status
       : null;
   const sortOrder = getNumber(row.sort_order);
 
-  if (!id || !productId || !status || sortOrder === undefined) {
+  if (
+    !id ||
+    !productId ||
+    !storageBucket ||
+    !storagePath ||
+    !status ||
+    sortOrder === undefined
+  ) {
     return null;
   }
 
   return {
     id,
     productId,
+    storageBucket,
+    storagePath,
     altText: getString(row.alt_text),
     sortOrder,
     isPrimary: row.is_primary === true,
@@ -314,6 +339,11 @@ function mapDashboardData(
         ? first.name.localeCompare(second.name)
         : first.sortOrder - second.sortOrder
     ),
+    images: mappedImages.sort((first, second) =>
+      first.sortOrder === second.sortOrder
+        ? first.storagePath.localeCompare(second.storagePath)
+        : first.sortOrder - second.sortOrder
+    ),
     imageSummary: {
       totalImages: mappedImages.length,
       activeImages: mappedImages.filter((image) => image.status === "active").length,
@@ -355,7 +385,9 @@ export async function resolveAdminProductDashboardRead(
         .limit(500),
       supabase.client
         .from("product_images")
-        .select("id, product_id, alt_text, sort_order, is_primary, status")
+        .select(
+          "id, product_id, storage_bucket, storage_path, alt_text, sort_order, is_primary, status"
+        )
         .eq("workspace_id", workspaceId)
         .order("sort_order", { ascending: true })
         .limit(1_000)

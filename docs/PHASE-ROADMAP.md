@@ -613,3 +613,19 @@ confirmed booking, online ordering, image upload, Supabase Storage, SQL
 migrations, DB/API/table/RPC/RLS renames, browser Supabase, service-role
 runtime paths, n8n/Pinecone runtime behavior, SaaS chatbot runtime work,
 ecommerce flows, or access `website/chat-config.js`.
+
+Phase 2B-AY adds only metadata listing image management UI inside the existing
+protected admin shell. It reuses the existing protected product-image metadata
+backend routes and `productImage.write` CSRF operation for create, update, and
+archive actions. The browser UI sends only JSON metadata fields and
+`x-csrf-proof`; the server-only dashboard read boundary includes editable
+image metadata scoped to `ADMIN_TRUSTED_WORKSPACE_ID`.
+
+Phase 2B-AY does not add binary image upload, file inputs,
+multipart/form-data, Supabase Storage bucket creation or API calls, public
+image upload or management routes, DB/API/table/RPC/RLS renames, SQL
+migrations, browser Supabase, service-role runtime paths, notifications, CRM
+integration, n8n/Pinecone runtime behavior, SaaS chatbot runtime work, access
+to `website/chat-config.js`, or ecommerce flows such as carts, checkout,
+payments, customer accounts, stock reservation, fulfilment, confirmed booking,
+or online ordering.

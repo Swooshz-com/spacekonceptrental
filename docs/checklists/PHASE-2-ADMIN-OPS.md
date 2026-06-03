@@ -74,6 +74,14 @@ and route/action boundaries are implemented and tested.
 - [x] Admin quote inbox renders internal status controls with generic success and failure states.
 - [x] Public quote tracking, notifications, CRM, customer accounts, and ecommerce flows remain out of scope.
 
+## Phase 2B-AY Admin Listing Image Metadata UI Boundary
+
+- [x] Protected admin shell renders listing image metadata controls only for loaded authorised admins.
+- [x] Listing image metadata create, update, and archive actions request `productImage.write` CSRF proofs.
+- [x] Listing image metadata actions call only the existing protected product-image metadata routes.
+- [x] Image metadata UI sends only approved JSON metadata fields.
+- [x] Binary image upload, Supabase Storage, public image routes, and ecommerce flows remain out of scope.
+
 ## Ecommerce Non-goals
 
 - [ ] Do not add carts.
