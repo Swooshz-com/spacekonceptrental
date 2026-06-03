@@ -566,3 +566,18 @@ DB/API/table/RPC/RLS renames, browser Supabase, service-role runtime paths,
 deployment, n8n changes, Pinecone runtime code, SaaS chatbot work, or
 ecommerce flows such as carts, checkout, payments, customer accounts, stock
 reservation, order fulfilment, or online ordering.
+
+Phase 2B-AV adds only narrow anti-framing response headers for the protected
+admin UI. `website/next.config.mjs` applies
+`Content-Security-Policy: frame-ancestors 'none'` and
+`X-Frame-Options: DENY` to `/admin` and nested admin UI routes. This is a
+low-severity clickjacking hardening fix: SameSite=Lax auth cookies may reduce
+arbitrary off-site exploitability, but anti-framing headers close the missing
+browser-side defence.
+
+Phase 2B-AV does not add or change admin UI features, admin auth, CSRF,
+Origin/Host checks, Supabase SSR cookie handling, product/category write route
+logic, SQL migrations, DB/API/table/RPC/RLS names, browser Supabase,
+service-role runtime paths, image upload, Supabase Storage, n8n/Pinecone
+runtime behavior, SaaS chatbot runtime work, ecommerce flows, or access
+`website/chat-config.js`.

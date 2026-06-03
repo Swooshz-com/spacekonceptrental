@@ -4,6 +4,28 @@ This is the quick status page for the SKR repo. Use `docs/PHASE-2-READINESS-PLAN
 
 ## Current phase
 
+Current phase: Phase 2B-AV - admin anti-framing header hardening.
+
+This phase adds a narrow browser-side clickjacking hardening control for the
+protected admin UI. The Next.js config now applies only
+`Content-Security-Policy: frame-ancestors 'none'` and
+`X-Frame-Options: DENY` to `/admin` and nested admin UI routes. This is a
+low-severity hardening fix: SameSite=Lax auth cookies may reduce arbitrary
+off-site exploitability, but anti-framing headers close the missing
+browser-side defence for the real first-party admin UI. It does not change
+admin auth, CSRF, Origin/Host checks, Supabase SSR cookies, write route logic,
+admin UI behavior, SQL migrations, browser Supabase, service-role runtime
+paths, ecommerce flows, n8n/Pinecone runtime behavior, SaaS chatbot runtime
+work, or `website/chat-config.js` access.
+
+Latest completed phase: Phase 2B-AU - public events and quote copy polish.
+
+Last merged phase PR: #88
+
+Merge commit: `8b7ef181ba44c63847d3accc324627ae38e4b5b8`
+
+## Previous merged status snapshot: Phase 2B-AU
+
 Current phase: Phase 2B-AU - public events and quote copy polish.
 
 This phase polishes public events and quote-request copy without changing the
