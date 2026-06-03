@@ -1,7 +1,70 @@
 {
-  "phase": "Phase 1O-A",
+  "phase": "Phase 2D-A",
   "status": "readiness-only",
-  "description": "Docs-only server environment contract for a future approved Vercel and Supabase deployment. No values are stored here.",
+  "description": "Docs-only server environment contract for a future approved deployment. No values are stored here.",
+  "categories": [
+    {
+      "name": "Public-safe client env",
+      "visibility": "public-safe-only",
+      "variables": [],
+      "rule": "No public client env is currently required; future public vars must be non-secret and separately reviewed."
+    },
+    {
+      "name": "Server-only app env",
+      "visibility": "server-only",
+      "variables": [
+        "CHAT_PROVIDER",
+        "CHAT_TRUSTED_CLIENT_IP_HEADER",
+        "QUOTE_TRUSTED_CLIENT_IP_HEADER",
+        "ADMIN_EXPECTED_ORIGIN",
+        "ADMIN_EXPECTED_HOST",
+        "ADMIN_CSRF_PROOF_SECRET"
+      ],
+      "rule": "Used only by server-side Next.js routes, repositories, and helpers."
+    },
+    {
+      "name": "Supabase/project env",
+      "visibility": "server-only",
+      "variables": [
+        "SUPABASE_URL",
+        "SUPABASE_ANON_KEY",
+        "CATALOGUE_WORKSPACE_ID",
+        "QUOTE_WORKSPACE_ID"
+      ],
+      "rule": "Used only server-side with RLS and trusted workspace review."
+    },
+    {
+      "name": "n8n/server-only webhook env",
+      "visibility": "server-only",
+      "variables": [
+        "N8N_CHAT_WEBHOOK_URL",
+        "N8N_CHAT_WEBHOOK_TIMEOUT_MS"
+      ],
+      "rule": "n8n webhook values stay behind first-party server routes."
+    },
+    {
+      "name": "Admin/auth/workspace env",
+      "visibility": "server-only",
+      "variables": [
+        "ADMIN_TRUSTED_WORKSPACE_ID",
+        "ADMIN_EXPECTED_ORIGIN",
+        "ADMIN_EXPECTED_HOST",
+        "ADMIN_CSRF_PROOF_SECRET"
+      ],
+      "rule": "Protected admin paths use trusted server-side workspace and request-security configuration."
+    },
+    {
+      "name": "Forbidden env exposure",
+      "visibility": "forbidden",
+      "variables": [
+        "NEXT_PUBLIC_SUPABASE_*",
+        "NEXT_PUBLIC_N8N*",
+        "NEXT_PUBLIC_SUPABASE_SERVICE_ROLE",
+        "SUPABASE_SERVICE_ROLE_KEY"
+      ],
+      "rule": "Do not expose Supabase, n8n, service-role, workspace, admin, quote, provider, or secret values to the browser."
+    }
+  ],
   "variables": [
     {
       "name": "SUPABASE_URL",
@@ -28,7 +91,7 @@
       "requiredFor": "DB-backed catalogue list and detail reads",
       "browserAllowed": false,
       "status": "future-deployment-required",
-      "notes": "Must match the database-owned active catalogue workspace config row."
+      "notes": "Must match the database-owned active catalogue workspace config row before public traffic."
     },
     {
       "name": "QUOTE_WORKSPACE_ID",
@@ -38,6 +101,42 @@
       "browserAllowed": false,
       "status": "future-deployment-required",
       "notes": "Trusted server-side workspace gate for public quote submissions."
+    },
+    {
+      "name": "ADMIN_TRUSTED_WORKSPACE_ID",
+      "visibility": "server-only",
+      "feature": "Admin protected operations",
+      "requiredFor": "Protected admin catalogue, listing media, and quote workflow operations",
+      "browserAllowed": false,
+      "status": "future-deployment-required",
+      "notes": "Must be reviewed separately from catalogue and quote workspace settings."
+    },
+    {
+      "name": "ADMIN_EXPECTED_ORIGIN",
+      "visibility": "server-only",
+      "feature": "Admin request security",
+      "requiredFor": "Same-origin admin request validation",
+      "browserAllowed": false,
+      "status": "future-deployment-required",
+      "notes": "Trusted deployment origin for protected admin routes."
+    },
+    {
+      "name": "ADMIN_EXPECTED_HOST",
+      "visibility": "server-only",
+      "feature": "Admin request security",
+      "requiredFor": "Expected host validation for protected admin routes",
+      "browserAllowed": false,
+      "status": "future-deployment-required",
+      "notes": "Trusted deployment host for protected admin routes."
+    },
+    {
+      "name": "ADMIN_CSRF_PROOF_SECRET",
+      "visibility": "server-only",
+      "feature": "Admin CSRF proof signing",
+      "requiredFor": "Authenticated state-changing admin operations",
+      "browserAllowed": false,
+      "status": "future-deployment-required",
+      "notes": "Server-only proof signing secret; never include values in docs."
     },
     {
       "name": "CHAT_PROVIDER",
@@ -97,6 +196,12 @@
       "browserAllowed": false,
       "status": "forbidden",
       "reason": "n8n must remain behind the first-party server API boundary."
+    },
+    {
+      "namePattern": "NEXT_PUBLIC_SUPABASE_SERVICE_ROLE",
+      "browserAllowed": false,
+      "status": "forbidden",
+      "reason": "Service-role keys must never be browser/client/public env."
     },
     {
       "namePattern": "SUPABASE_SERVICE_ROLE_KEY",

@@ -28,6 +28,24 @@ auth implementation steps.
 - [ ] Deployment evidence template prepared.
 - [ ] Explicit approval obtained before real deployment.
 
+## Phase 2D-A Deployment Readiness Refresh
+
+- [ ] Environment contract reviewed for public-safe client env, server-only app env, Supabase/project env, n8n/server-only webhook env, admin/auth/workspace env, and forbidden env exposure.
+- [ ] `CATALOGUE_WORKSPACE_ID` reviewed before public traffic.
+- [ ] `QUOTE_WORKSPACE_ID` reviewed before public traffic.
+- [ ] `ADMIN_TRUSTED_WORKSPACE_ID` reviewed before public traffic.
+- [ ] Listing media public bucket serving model reviewed as public-by-unguessable-server-generated-URL with metadata-gated catalogue rendering.
+- [ ] Admin listing image upload smoke test planned.
+- [ ] Admin quote inbox/status/internal note workflow smoke test planned.
+- [ ] Atomic quote workflow RPC behaviour smoke test planned.
+- [ ] Quote handoff from catalogue/detail to quote page smoke test planned.
+- [ ] Static/fallback homepage smoke test planned.
+- [ ] 404/error states smoke test planned.
+- [ ] No provider/SQL/secret leakage review planned.
+- [ ] No browser console exposure of server-only env values review planned.
+- [ ] Rollback/disable plan reviewed for disabling public traffic, rotating leaked env values, disabling n8n webhook env, reverting deployment, fallback catalogue behaviour, and quote unavailable-or-safe behaviour.
+- [ ] Operator evidence template prepared for the expanded smoke-test sequence.
+
 ## Still Deferred
 
 - [ ] Actual deployment.

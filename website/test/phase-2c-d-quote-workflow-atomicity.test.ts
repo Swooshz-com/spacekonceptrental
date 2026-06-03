@@ -92,8 +92,8 @@ describe("Phase 2C-D quote workflow atomicity and admin operations hardening", (
     expect(migration).toContain(
       "grant execute on function public.execute_admin_quote_workflow(uuid, uuid, text, text) to authenticated"
     );
-    expect(migration).toContain(
-      "revoke update (\n  status,\n  updated_at\n) on public.quote_requests from authenticated"
+    expect(migration).toMatch(
+      /revoke update \(\r?\n  status,\r?\n  updated_at\r?\n\) on public\.quote_requests from authenticated/
     );
     expect(migration).toContain(
       "revoke insert on public.quote_request_activity from authenticated"

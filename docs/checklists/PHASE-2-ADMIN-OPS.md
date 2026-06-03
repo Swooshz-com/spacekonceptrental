@@ -120,6 +120,14 @@ and route/action boundaries are implemented and tested.
 - [x] Direct authenticated quote status update and quote activity insert grants are revoked or narrowed.
 - [x] Public quote tracking, customer-visible internal notes, notifications, CRM, ecommerce flows, browser Supabase, and service-role runtime paths remain out of scope.
 
+## Phase 2D-A Deployment Readiness And Smoke-Test Runbook
+
+- [x] Deployment readiness docs are refreshed for catalogue media, admin listing media upload, public quote handoff, and atomic admin quote workflow surfaces.
+- [x] Environment contract classifies public-safe client, server-only app, Supabase/project, n8n/server-only webhook, admin/auth/workspace, and forbidden env exposure categories.
+- [x] Smoke-test runbook covers public catalogue/detail, listing media, quote, admin shell, admin listing management, admin image upload, admin quote workflow, chat fallback, server-only n8n, and leakage checks.
+- [x] Rollback/disable plan is documented without adding runtime kill switches.
+- [x] No deployment, Vercel config, Supabase Cloud config, production env, browser Supabase, service-role runtime path, n8n/Pinecone runtime change, or ecommerce flow is added.
+
 ## Ecommerce Non-goals
 
 - [ ] Do not add carts.

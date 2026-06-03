@@ -4,6 +4,29 @@ This is the quick status page for the SKR repo. Use `docs/PHASE-2-READINESS-PLAN
 
 ## Current phase
 
+Current phase: Phase 2D-A - deployment readiness, environment contract, and smoke-test runbook.
+
+This phase updates deployment readiness documentation, the environment
+contract, operator smoke-test runbook, rollback/disable plan, evidence
+template, and static guard coverage for the current SKR app after
+storage-backed listing media, public catalogue/detail handoff, protected admin
+listing management, and atomic admin quote workflow hardening. No deployment is approved by this phase. It does not add Vercel project config, Supabase
+Cloud config, production env files, real secrets, production seed data,
+runtime env behaviour changes, browser Supabase, service-role runtime paths,
+customer uploads, public upload routes, public quote status tracking,
+customer-visible internal notes, notifications, CRM integration, cart,
+checkout, payments, customer accounts, stock reservation, order fulfilment,
+confirmed booking, online ordering, n8n/Pinecone runtime changes, SaaS chatbot
+runtime work, or `website/chat-config.js` access.
+
+Latest completed phase: Phase 2C-D - quote workflow atomicity and admin operations hardening.
+
+Last merged phase PR: #96
+
+Merge commit: `3147c1206e763412e9edc6e8b792cc87b80e523b`
+
+## Previous merged status snapshot: Phase 2C-D
+
 Current phase: Phase 2C-D - quote workflow atomicity and admin operations hardening.
 
 This phase hardens the internal admin quote workflow write path. The protected

@@ -23,6 +23,7 @@ values, tokens, webhook URLs, private dashboard links, or customer data.
 - Supabase env values are server-only: `<confirmed-by>`
 - Catalogue workspace env is server-only: `<confirmed-by>`
 - Quote workspace env is server-only: `<confirmed-by>`
+- Admin trusted workspace env is server-only: `<confirmed-by>`
 - n8n webhook env is server-only: `<confirmed-by>`
 - Trusted proxy header env is server-only: `<confirmed-by>`
 
@@ -46,6 +47,7 @@ values, tokens, webhook URLs, private dashboard links, or customer data.
 - `CATALOGUE_WORKSPACE_ID` reviewed: `<confirmed-by>`
 - `catalogue_public_workspace_config` reviewed: `<confirmed-by>`
 - Direct anonymous base-table catalogue denial reviewed: `<confirmed-by>`
+- Public catalogue metadata gate reviewed: `<confirmed-by>`
 
 ## Quote workspace confirmation
 
@@ -53,6 +55,24 @@ values, tokens, webhook URLs, private dashboard links, or customer data.
 - `QUOTE_WORKSPACE_ID` reviewed: `<confirmed-by>`
 - Quote route safe error behaviour reviewed: `<confirmed-by>`
 - Quote throttling unchanged: `<confirmed-by>`
+
+## Admin trusted workspace confirmation
+
+- Admin workspace reviewed: `<approved-admin-workspace-id>`
+- `ADMIN_TRUSTED_WORKSPACE_ID` reviewed: `<confirmed-by>`
+- Admin expected origin and host reviewed: `<confirmed-by>`
+- Admin CSRF proof secret placement reviewed as server-only: `<confirmed-by>`
+- Owner/admin membership smoke-test actor reviewed: `<confirmed-by>`
+- Viewer or wrong-workspace denial actor reviewed: `<confirmed-by>`
+
+## Listing media confirmation
+
+- `listing-media` public bucket model reviewed: `<confirmed-by>`
+- Public object serving by unguessable server-generated URL acknowledged:
+  `<confirmed-by>`
+- Public catalogue rendering metadata gate reviewed: `<confirmed-by>`
+- Admin listing media upload boundary reviewed: `<confirmed-by>`
+- No customer upload or arbitrary public upload route: `<confirmed-by>`
 
 ## n8n server-only webhook confirmation
 
@@ -63,26 +83,45 @@ values, tokens, webhook URLs, private dashboard links, or customer data.
 
 ## Smoke-test evidence
 
+- Static/fallback homepage smoke test: `<result-and-evidence>`
 - Catalogue fallback smoke test: `<result-and-evidence>`
 - DB-backed catalogue smoke test: `<result-and-evidence>`
+- Listing detail page smoke test: `<result-and-evidence>`
+- Uploaded listing image rendering smoke test: `<result-and-evidence>`
 - Quote submission smoke test: `<result-and-evidence>`
+- Quote handoff smoke test: `<result-and-evidence>`
+- Admin login/protected shell smoke test: `<result-and-evidence>`
+- Admin product/category/listing management smoke test: `<result-and-evidence>`
+- Admin listing media upload smoke test: `<result-and-evidence>`
+- Admin quote inbox/status/internal note workflow smoke test: `<result-and-evidence>`
+- Atomic quote workflow RPC smoke test: `<result-and-evidence>`
 - Chat fallback smoke test: `<result-and-evidence>`
 - Server-only n8n chat smoke test: `<result-and-evidence>`
+- 404/error states smoke test: `<result-and-evidence>`
+- No provider/SQL/secret leakage check: `<result-and-evidence>`
 - Browser bundle exposure check: `<result-and-evidence>`
+- Browser console server-only env exposure check: `<result-and-evidence>`
 
 ## Rollback plan
 
 - Rollback owner: `<owner>`
 - Rollback trigger: `<trigger>`
-- Rollback action: `<action>`
-- Fallback behaviour verified: `<result-and-evidence>`
+- Disable public traffic action: `<action>`
+- Remove or rotate leaked env values action: `<action>`
+- Disable n8n webhook env action: `<action>`
+- Revert deployment action: `<action>`
+- Fallback catalogue behaviour verified: `<result-and-evidence>`
+- Quote submission unavailable-or-safe behaviour verified: `<result-and-evidence>`
+- Incident notes captured: `<location-or-reference>`
 
 ## Known limitations
 
 - In-process throttling limitation: `<acknowledged>`
-- Deferred product writes: `<acknowledged>`
+- Service-role runtime path prohibition: `<acknowledged>`
+- Browser Supabase prohibition: `<acknowledged>`
 - Deferred conversation/message writes: `<acknowledged>`
-- Deferred Storage/admin/auth/internal RAG work: `<acknowledged>`
+- Deferred public quote status, notifications, CRM, and ecommerce flows:
+  `<acknowledged>`
 
 ## Safety confirmations
 
@@ -91,8 +130,10 @@ values, tokens, webhook URLs, private dashboard links, or customer data.
   deployment PR.
 - No service-role runtime path is added unless separately approved.
 - No browser Supabase config is added unless separately approved.
-- No product/category/product image writes are added unless separately
-  approved.
 - No conversation/message writes are added unless separately approved.
 - No n8n workflow files are changed unless separately approved.
+- No customer uploads, public upload routes, public quote status tracking,
+  notifications, CRM, carts, checkout, payments, customer accounts, stock
+  reservation, order fulfilment, confirmed booking, or online ordering are
+  added unless separately approved.
 - `website/chat-config.js` was not read, copied, printed, exposed, or changed.

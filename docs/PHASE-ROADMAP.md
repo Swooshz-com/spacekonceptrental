@@ -699,3 +699,22 @@ actions, browser Supabase, service-role runtime paths, n8n/Pinecone runtime
 behavior, SaaS chatbot runtime work, access to `website/chat-config.js`, or
 ecommerce flows such as carts, checkout, payments, stock reservation,
 fulfilment, confirmed booking, or online ordering.
+
+Phase 2D-A adds deployment readiness, environment contract, and smoke-test runbook updates only. It refreshes the existing deployment readiness package
+for the current app state: active public catalogue workspace review, quote
+workspace review, trusted admin workspace review, public `listing-media` bucket
+serving expectations, storage-backed listing image rendering smoke tests,
+admin listing image upload smoke tests, admin quote inbox/status/internal note
+smoke tests, atomic quote workflow RPC checks, server-only n8n webhook checks,
+trusted proxy/CDN client IP header review, rollback/disable steps, and operator
+evidence capture.
+
+Phase 2D-A does not approve deployment, Vercel project config, Supabase Cloud
+config, production env files, real secrets, production seed data, runtime env
+behaviour changes, browser Supabase, service-role runtime paths, customer
+uploads, arbitrary public upload routes, public quote status tracking,
+customer-visible internal notes, notifications, CRM integration, n8n/Pinecone
+runtime behavior, SaaS chatbot runtime work, access to
+`website/chat-config.js`, or ecommerce flows such as carts, checkout, payments,
+customer accounts, stock reservation, fulfilment, confirmed booking, or online
+ordering.
