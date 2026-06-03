@@ -535,15 +535,7 @@ test('real migrations add listing media storage bucket and workspace-scoped obje
   );
   assert.match(
     sql,
-    /create policy listing_media_public_read on storage\.objects for select to anon, authenticated using \(/,
-  );
-  assert.match(
-    sql,
     /create policy listing_media_product_admin_insert on storage\.objects for insert to authenticated with check \(/,
-  );
-  assert.match(
-    sql,
-    /create or replace function public\.is_public_listing_media_object\( object_bucket text, object_name text \)/,
   );
   assert.match(
     sql,
@@ -556,12 +548,11 @@ test('real migrations add listing media storage bucket and workspace-scoped obje
   assert.match(sql, /p\.id = split_part\(object_name, '\/', 2\)::uuid/);
   assert.match(
     sql,
-    /public\.is_public_listing_media_object\( storage\.objects\.bucket_id, storage\.objects\.name \)/,
-  );
-  assert.match(
-    sql,
     /public\.is_listing_media_product_admin_object\( storage\.objects\.bucket_id, storage\.objects\.name \)/,
   );
+  assert.doesNotMatch(storageMigration, /listing_media_public_read/);
+  assert.doesNotMatch(storageMigration, /for select to anon/);
+  assert.doesNotMatch(storageMigration, /grant select on storage\.objects to anon/);
   assert.doesNotMatch(storageMigration, /for insert to anon/);
   assert.doesNotMatch(storageMigration, /image\/svg\+xml|svg/);
   assert.doesNotMatch(storageMigration, /service_role/i);

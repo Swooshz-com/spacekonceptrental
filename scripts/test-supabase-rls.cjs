@@ -1200,9 +1200,8 @@ check('authenticated product writes reject cross-workspace relationships', () =>
   );
 });
 
-check('listing media storage is workspace-admin scoped and publicly readable only through active published metadata', () => {
+check('listing media storage uses public bucket URLs with workspace-admin scoped writes', () => {
   const storagePath = `${ids.workspaceA}/${ids.productPublishedA}/1700000000000-60000000-0000-4000-8000-000000000201.webp`;
-  const imageId = '60000000-0000-4000-8000-000000000201';
 
   assert.equal(
     scalarAs(
@@ -1214,88 +1213,33 @@ check('listing media storage is workspace-admin scoped and publicly readable onl
     'listing-media bucket should be public for rendered catalogue images',
   );
 
-  const transactionOutput = psql(`
-    begin;
-
-    set local role authenticated;
-    set local "request.jwt.claim.role" = 'authenticated';
-    set local "request.jwt.claim.sub" = '${ids.authMemberA}';
-
-    insert into storage.objects (
-      bucket_id,
-      name,
-      owner,
-      metadata
-    )
-    values (
-      'listing-media',
-      '${storagePath}',
-      '${ids.authMemberA}',
-      '{"mimetype": "image/webp"}'::jsonb
-    );
-
-    set local role anon;
-    set local "request.jwt.claim.role" = 'anon';
-    set local "request.jwt.claim.sub" = '';
-
-    select 'before_metadata=' || count(*)::text
-    from storage.objects
-    where name = '${storagePath}';
-
-    set local role authenticated;
-    set local "request.jwt.claim.role" = 'authenticated';
-    set local "request.jwt.claim.sub" = '${ids.authMemberA}';
-
-    insert into public.product_images (
-      id,
-      workspace_id,
-      product_id,
-      storage_bucket,
-      storage_path,
-      alt_text,
-      sort_order,
-      is_primary
-    )
-    values (
-      '${imageId}',
-      '${ids.workspaceA}',
-      '${ids.productPublishedA}',
-      'listing-media',
-      '${storagePath}',
-      'Published storage image',
-      20,
-      false
-    );
-
-    set local role anon;
-    set local "request.jwt.claim.role" = 'anon';
-    set local "request.jwt.claim.sub" = '';
-
-    select 'after_metadata=' || count(*)::text
-    from storage.objects
-    where name = '${storagePath}';
-
-    rollback;
-  `);
-
-  const transactionResults = new Map(
-    transactionOutput
-      .trim()
-      .split(/\r?\n/)
-      .filter(Boolean)
-      .map((line) => line.split('='))
+  queryAs(
+    'authenticated',
+    ids.authMemberA,
+    `
+      insert into storage.objects (
+        bucket_id,
+        name,
+        owner,
+        metadata
+      )
+      values (
+        'listing-media',
+        '${storagePath}',
+        '${ids.authMemberA}',
+        '{"mimetype": "image/webp"}'::jsonb
+      )
+    `,
   );
 
-  assert.equal(
-    transactionResults.get('before_metadata'),
-    '0',
-    'anon should not read listing media objects until active public metadata exists',
-  );
-
-  assert.equal(
-    transactionResults.get('after_metadata'),
-    '1',
-    'anon should read listing media objects with active published image metadata',
+  statementFailsAs(
+    'anon',
+    null,
+    `
+      select count(*)::text
+      from storage.objects
+      where name = '${storagePath}'
+    `,
   );
 
   statementFailsAs(

@@ -544,11 +544,14 @@ only after owner/admin access. It must require `productImage.write`, same-origin
 Origin/Host validation, a valid CSRF proof, trusted workspace resolution, and
 a session-bound authenticated Supabase client. It may store only approved
 JPEG, PNG, WebP, or AVIF files in the `listing-media` bucket under
-server-generated workspace/listing paths.
+server-generated workspace/listing paths. Because `listing-media` is a public
+bucket, object serving is public to anyone with the unguessable URL; RLS must
+not be described as the public URL serving gate.
 
 Public catalogue and listing detail pages may render derived public image URLs
 for active listing image metadata and must keep fallback imagery when images
-are missing or unavailable. Public reads remain read-only.
+are missing or unavailable. Public catalogue rendering remains read-only and
+metadata-gated.
 
 Phase 2C-A does not approve customer image uploads, arbitrary public upload
 routes, SVG upload, client-controlled storage path writes, browser Supabase,

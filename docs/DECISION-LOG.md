@@ -1146,8 +1146,11 @@ a 5 MB size limit, safe filenames, and server-generated
 `workspaceId/productId/timestamp-randomId.ext` paths in the public
 `listing-media` bucket. Metadata is created through the existing
 `product_images` persistence contract after upload, and the route attempts to
-remove the object if metadata persistence fails. Public catalogue reads derive
-public image URLs server-side and render fallbacks when media is absent.
+remove the object if metadata persistence fails. Because `listing-media` is a
+public bucket, object serving is public to anyone with the unguessable
+server-generated URL; RLS is used for write/delete scope, not as a public URL
+serving gate. Public catalogue reads derive and render image URLs only from
+active published listing metadata and render fallbacks when media is absent.
 
 Phase 2C-A does not add customer uploads, arbitrary public upload routes,
 quote status public tracking, notifications, CRM integration, DB/API/table/RPC

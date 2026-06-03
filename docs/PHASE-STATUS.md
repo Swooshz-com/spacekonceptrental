@@ -15,9 +15,11 @@ Origin/Host validation, a valid CSRF proof, trusted workspace resolution, and a
 session-bound authenticated Supabase client. Uploaded files are stored in the
 public `listing-media` bucket under server-generated workspace/listing paths,
 then existing `product_images` metadata is created through the current
-metadata persistence contract. Public catalogue and listing detail pages render
-real listing images when image URLs are available and keep safe fallback
-imagery when they are not. This phase does not add customer uploads, arbitrary
+metadata persistence contract. Because the bucket is public, object serving is
+public to anyone with the unguessable server-generated URL; RLS is not treated
+as a public URL serving gate. Public catalogue and listing detail pages render
+only URLs surfaced by active published listing metadata and keep safe fallback
+imagery when they are not available. This phase does not add customer uploads, arbitrary
 public upload routes, carts, checkout, payments, customer accounts, stock
 reservation, order fulfilment, confirmed booking, online ordering, quote
 status tracking, notifications, CRM integration, browser Supabase, service-role

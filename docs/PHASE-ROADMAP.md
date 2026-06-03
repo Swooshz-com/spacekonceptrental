@@ -639,7 +639,10 @@ validation, a valid CSRF proof, trusted workspace resolution, a session-bound
 authenticated Supabase client, safe MIME/size/filename validation, and
 server-generated `listing-media` storage paths. Public catalogue and listing
 detail pages render real listing image URLs from approved metadata and keep
-fallback images when media is missing or unavailable.
+fallback images when media is missing or unavailable. The `listing-media`
+bucket is public, so object serving is public by unguessable server-generated
+URL; catalogue metadata gates which URLs the website renders, not whether a
+known public object URL can be fetched.
 
 Phase 2C-A approves only admin-controlled listing media upload and public
 rendering. It does not add customer uploads, arbitrary public upload routes,

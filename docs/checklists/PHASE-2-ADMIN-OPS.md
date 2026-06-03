@@ -88,6 +88,7 @@ and route/action boundaries are implemented and tested.
 - [x] Uploads require `productImage.write`, same-origin Origin/Host validation, CSRF proof, and trusted workspace scope.
 - [x] Upload paths are generated server-side under workspace/listing scoped paths.
 - [x] Uploaded image metadata is created through the existing product-image metadata persistence contract.
+- [x] The public bucket serving model is documented as public-by-unguessable-server-generated-URL, with catalogue rendering gated by metadata.
 - [x] Public catalogue cards render listing images when available.
 - [x] Public listing detail pages render primary and additional listing images when available.
 - [x] Public catalogue/detail fallback images remain available when listing media is missing.

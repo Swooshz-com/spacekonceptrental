@@ -71,6 +71,18 @@ describe("Phase 2C-A storage-backed listing media upload and public rendering", 
     expect(adminOpsChecklist).toContain(
       "- [x] Admin-controlled listing media upload stores approved image files in the `listing-media` bucket."
     );
+    expect(status).toContain(
+      "unguessable server-generated URL"
+    );
+    expect(roadmap).toContain(
+      "catalogue metadata gates which URLs the website renders"
+    );
+    expect(safety).toContain(
+      "public URL serving gate"
+    );
+    expect(adminOpsChecklist).toContain(
+      "- [x] The public bucket serving model is documented as public-by-unguessable-server-generated-URL, with catalogue rendering gated by metadata."
+    );
   });
 
   it("keeps upload server-only and reuses the existing product image route without browser Supabase", () => {
@@ -113,11 +125,14 @@ describe("Phase 2C-A storage-backed listing media upload and public rendering", 
     expect(migration).toContain("'image/webp'");
     expect(migration).toContain("'image/avif'");
     expect(migration).toContain("listing_media_product_admin_insert");
-    expect(migration).toContain("public.is_public_listing_media_object");
     expect(migration).toContain("public.is_listing_media_product_admin_object");
     expect(migration).toContain(
       "public.is_workspace_product_manager(\n      split_part(object_name, '/', 1)::uuid\n    )"
     );
+    expect(migration).not.toContain("listing_media_public_read");
+    expect(migration).not.toContain("public.is_public_listing_media_object");
+    expect(migration).not.toContain("grant select on storage.objects to anon");
+    expect(migration).not.toMatch(/for select\s+to anon/i);
     expect(migration).not.toMatch(/image\/svg|svg/i);
     expect(migration).not.toMatch(/for insert\s+to anon/i);
     expect(migration).toContain("Customer uploads");

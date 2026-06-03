@@ -1,6 +1,8 @@
 -- Phase 2C-A listing media storage.
--- Adds one public bucket for admin-controlled listing images. Customer uploads
--- and arbitrary public uploads remain out of scope.
+-- Adds one public bucket for admin-controlled listing images. Object serving
+-- is public for anyone with the server-generated URL; catalogue rendering is
+-- gated by active published product image metadata. Customer uploads and
+-- arbitrary public uploads remain out of scope.
 
 insert into storage.buckets (
   id,
@@ -25,7 +27,6 @@ set
 alter table storage.objects enable row level security;
 
 grant select on storage.buckets to anon, authenticated;
-grant select on storage.objects to anon, authenticated;
 grant insert (
   bucket_id,
   name,
@@ -58,50 +59,6 @@ comment on function public.is_listing_media_object_path(text) is
 
 revoke all on function public.is_listing_media_object_path(text) from public;
 grant execute on function public.is_listing_media_object_path(text) to anon, authenticated;
-
-create or replace function public.is_public_listing_media_object(
-  object_bucket text,
-  object_name text
-)
-returns boolean
-language sql
-stable
-security definer
-set search_path = public
-as $$
-  select case
-    when object_bucket <> 'listing-media'
-      or not public.is_listing_media_object_path(object_name)
-    then false
-    else exists (
-      select 1
-      from public.product_images pi
-      join public.products p
-        on p.id = pi.product_id
-       and p.workspace_id = pi.workspace_id
-      join public.catalogue_public_workspace_config cfg
-        on cfg.active_workspace_id = p.workspace_id
-       and cfg.id = true
-       and cfg.is_enabled = true
-      join public.workspaces w
-        on w.id = cfg.active_workspace_id
-       and w.status = 'active'
-      where pi.storage_bucket = object_bucket
-        and pi.storage_path = object_name
-        and pi.workspace_id = split_part(object_name, '/', 1)::uuid
-        and pi.product_id = split_part(object_name, '/', 2)::uuid
-        and pi.status = 'active'
-        and p.status = 'published'
-    )
-  end;
-$$;
-
-comment on function public.is_public_listing_media_object(text, text) is
-  'Verifies public listing media visibility without exposing catalogue tables directly.';
-
-revoke all on function public.is_public_listing_media_object(text, text) from public;
-grant execute on function public.is_public_listing_media_object(text, text)
-  to anon, authenticated;
 
 create or replace function public.is_listing_media_product_admin_object(
   object_bucket text,
@@ -138,25 +95,6 @@ grant execute on function public.is_listing_media_product_admin_object(text, tex
 
 do $policies$
 begin
-  if not exists (
-    select 1
-    from pg_policies
-    where schemaname = 'storage'
-      and tablename = 'objects'
-      and policyname = 'listing_media_public_read'
-  ) then
-    create policy listing_media_public_read
-      on storage.objects
-      for select
-      to anon, authenticated
-      using (
-        public.is_public_listing_media_object(
-          storage.objects.bucket_id,
-          storage.objects.name
-        )
-      );
-  end if;
-
   if not exists (
     select 1
     from pg_policies
