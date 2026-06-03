@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { resolveServerAdminRuntimeRouteGateAdapter } from "../../lib/admin/authorization/server-admin-runtime-route-gate-adapter";
 import { resolveAdminProductDashboardRead } from "../../lib/products/admin-read/admin-product-dashboard-read";
+import { resolveAdminQuoteRequestInboxRead } from "../../lib/quote/admin-read/admin-quote-request-dashboard-read";
 import {
   AdminShellContent,
   resolveProtectedAdminShellState
@@ -13,6 +14,9 @@ vi.mock("../../lib/admin/authorization/server-admin-runtime-route-gate-adapter",
 }));
 vi.mock("../../lib/products/admin-read/admin-product-dashboard-read", () => ({
   resolveAdminProductDashboardRead: vi.fn()
+}));
+vi.mock("../../lib/quote/admin-read/admin-quote-request-dashboard-read", () => ({
+  resolveAdminQuoteRequestInboxRead: vi.fn()
 }));
 
 describe("protected admin shell", () => {
@@ -48,6 +52,12 @@ describe("protected admin shell", () => {
         }
       }
     });
+    vi.mocked(resolveAdminQuoteRequestInboxRead).mockResolvedValueOnce({
+      status: "loaded",
+      data: {
+        quoteRequests: []
+      }
+    });
 
     await expect(resolveProtectedAdminShellState()).resolves.toEqual({
       status: "authorised_admin",
@@ -61,6 +71,12 @@ describe("protected admin shell", () => {
             activeImages: 0,
             primaryImages: 0
           }
+        }
+      },
+      quoteInbox: {
+        status: "loaded",
+        data: {
+          quoteRequests: []
         }
       }
     });
@@ -89,6 +105,11 @@ describe("protected admin shell", () => {
         ADMIN_TRUSTED_WORKSPACE_ID: "workspace-admin"
       }
     });
+    expect(resolveAdminQuoteRequestInboxRead).toHaveBeenCalledWith({
+      env: {
+        ADMIN_TRUSTED_WORKSPACE_ID: "workspace-admin"
+      }
+    });
   });
 
   it("maps unauthenticated users to a safe login-required state", async () => {
@@ -102,6 +123,7 @@ describe("protected admin shell", () => {
       status: "unauthenticated"
     });
     expect(resolveAdminProductDashboardRead).not.toHaveBeenCalled();
+    expect(resolveAdminQuoteRequestInboxRead).not.toHaveBeenCalled();
   });
 
   it("maps authenticated viewers to a safe not-authorised state", async () => {
@@ -115,6 +137,7 @@ describe("protected admin shell", () => {
       status: "authenticated_not_authorised"
     });
     expect(resolveAdminProductDashboardRead).not.toHaveBeenCalled();
+    expect(resolveAdminQuoteRequestInboxRead).not.toHaveBeenCalled();
   });
 
   it("maps request-security denials to a generic unavailable state", async () => {
@@ -128,6 +151,7 @@ describe("protected admin shell", () => {
       status: "unavailable"
     });
     expect(resolveAdminProductDashboardRead).not.toHaveBeenCalled();
+    expect(resolveAdminQuoteRequestInboxRead).not.toHaveBeenCalled();
   });
 
   it("maps missing env or dependency failures to a safe unavailable state", async () => {
@@ -141,6 +165,7 @@ describe("protected admin shell", () => {
       status: "unavailable"
     });
     expect(resolveAdminProductDashboardRead).not.toHaveBeenCalled();
+    expect(resolveAdminQuoteRequestInboxRead).not.toHaveBeenCalled();
   });
 
   it("keeps authorised admins in a safe state when dashboard reads are unavailable", async () => {
@@ -153,16 +178,28 @@ describe("protected admin shell", () => {
     vi.mocked(resolveAdminProductDashboardRead).mockResolvedValueOnce({
       status: "unavailable"
     });
+    vi.mocked(resolveAdminQuoteRequestInboxRead).mockResolvedValueOnce({
+      status: "loaded",
+      data: {
+        quoteRequests: []
+      }
+    });
 
     await expect(resolveProtectedAdminShellState()).resolves.toEqual({
       status: "authorised_admin",
       dashboard: {
         status: "unavailable"
+      },
+      quoteInbox: {
+        status: "loaded",
+        data: {
+          quoteRequests: []
+        }
       }
     });
   });
 
-  it("renders safe dashboard data with category and listing write controls", () => {
+  it("renders safe dashboard data with category/listing controls and the read-only quote inbox", () => {
     render(
       <AdminShellContent
         state={{
@@ -198,6 +235,35 @@ describe("protected admin shell", () => {
                 activeImages: 2,
                 primaryImages: 1
               }
+            }
+          },
+          quoteInbox: {
+            status: "loaded",
+            data: {
+              quoteRequests: [
+                {
+                  id: "quote-1",
+                  publicReference: "QR-20260603-NEWEST",
+                  customerName: "Maya Tan",
+                  customerEmail: "maya@example.test",
+                  customerPhone: "+65 8123 4567",
+                  eventDate: "2026-06-20",
+                  venue: "Marina Bay Sands",
+                  status: "new",
+                  source: "website",
+                  createdAt: "2026-06-03T10:30:00.000Z",
+                  items: [
+                    {
+                      id: "item-1",
+                      quoteRequestId: "quote-1",
+                      productNameSnapshot: "Modular lounge set",
+                      quantity: 2,
+                      notes: "VIP reception area",
+                      createdAt: "2026-06-03T10:31:00.000Z"
+                    }
+                  ]
+                }
+              ]
             }
           }
         }}
@@ -240,8 +306,25 @@ describe("protected admin shell", () => {
       screen.getByRole("button", { name: /archive listing modular lounge/i })
     ).toBeInTheDocument();
     expect(
+      screen.getByRole("heading", { name: /quote request inbox/i })
+    ).toBeInTheDocument();
+    expect(screen.getByText("QR-20260603-NEWEST")).toBeInTheDocument();
+    expect(screen.getByText("Maya Tan")).toBeInTheDocument();
+    expect(screen.getByText("maya@example.test")).toBeInTheDocument();
+    expect(screen.getByText("+65 8123 4567")).toBeInTheDocument();
+    expect(screen.getByText("2026-06-20")).toBeInTheDocument();
+    expect(screen.getByText("Marina Bay Sands")).toBeInTheDocument();
+    expect(screen.getByText("new - website")).toBeInTheDocument();
+    expect(screen.getByText(/2 x Modular lounge set/i)).toBeInTheDocument();
+    expect(screen.getByText(/VIP reception area/i)).toBeInTheDocument();
+    expect(
       screen.queryByRole("link", {
         name: /create product|edit product|archive product|publish product|product image/i
+      })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", {
+        name: /quote|status|notify|email|send|crm/i
       })
     ).not.toBeInTheDocument();
     expect(
@@ -265,6 +348,9 @@ describe("protected admin shell", () => {
       {
         status: "authorised_admin" as const,
         dashboard: {
+          status: "unavailable" as const
+        },
+        quoteInbox: {
           status: "unavailable" as const
         }
       }
@@ -292,6 +378,9 @@ describe("protected admin shell", () => {
           status: "authorised_admin",
           dashboard: {
             status: "unavailable"
+          },
+          quoteInbox: {
+            status: "unavailable"
           }
         }}
       />
@@ -300,5 +389,52 @@ describe("protected admin shell", () => {
     expect(screen.getByText(/catalogue data is temporarily unavailable/i)).toBeInTheDocument();
     expect(screen.queryByText(/sql/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/supabase/i)).not.toBeInTheDocument();
+  });
+
+  it("renders an empty quote request inbox state for authorised admins", () => {
+    render(
+      <AdminShellContent
+        state={{
+          status: "authorised_admin",
+          dashboard: {
+            status: "unavailable"
+          },
+          quoteInbox: {
+            status: "loaded",
+            data: {
+              quoteRequests: []
+            }
+          }
+        }}
+      />
+    );
+
+    expect(
+      screen.getByRole("heading", { name: /quote request inbox/i })
+    ).toBeInTheDocument();
+    expect(screen.getByText(/no quote requests are visible yet/i)).toBeInTheDocument();
+  });
+
+  it("renders a generic quote request unavailable state without provider details", () => {
+    render(
+      <AdminShellContent
+        state={{
+          status: "authorised_admin",
+          dashboard: {
+            status: "unavailable"
+          },
+          quoteInbox: {
+            status: "unavailable"
+          }
+        }}
+      />
+    );
+
+    expect(
+      screen.getByText(/quote requests are temporarily unavailable/i)
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/sql/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/supabase/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/stack/i)).not.toBeInTheDocument();
   });
 });

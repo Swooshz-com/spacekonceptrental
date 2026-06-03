@@ -4,6 +4,27 @@ This is the quick status page for the SKR repo. Use `docs/PHASE-2-READINESS-PLAN
 
 ## Current phase
 
+Current phase: Phase 2B-AW - admin quote request inbox boundary.
+
+This phase adds a read-only admin quote request inbox inside the protected
+admin shell. Authorised admins can review recent customer quote requests and
+requested item snapshots for the trusted admin workspace through a server-only,
+session-bound admin read path. The inbox is read-only and returns only generic
+unavailable UI when quote data cannot be loaded. It does not add quote status
+writes, notifications, CRM integration, customer accounts, ordering, checkout,
+payments, fulfilment, stock reservation, confirmed booking, SQL migrations,
+browser Supabase, service-role runtime paths, ecommerce flows, n8n/Pinecone
+runtime behavior, SaaS chatbot runtime work, or `website/chat-config.js`
+access.
+
+Latest completed phase: Phase 2B-AV - admin anti-framing header hardening.
+
+Last merged phase PR: #89
+
+Merge commit: `59c79e8e6e08f3065944e0252333f2f6a8947597`
+
+## Previous merged status snapshot: Phase 2B-AV
+
 Current phase: Phase 2B-AV - admin anti-framing header hardening.
 
 This phase adds a narrow browser-side clickjacking hardening control for the

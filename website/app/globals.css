@@ -458,6 +458,28 @@ select {
   color: var(--muted);
 }
 
+.quote-inbox__details {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+}
+
+.quote-inbox__details div {
+  display: grid;
+  gap: 2px;
+}
+
+.quote-inbox__details dt {
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.quote-inbox__details dd {
+  margin: 0;
+}
+
 .category-management {
   border-top: 1px solid var(--border);
   display: grid;
