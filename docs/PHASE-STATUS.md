@@ -4,6 +4,31 @@ This is the quick status page for the SKR repo. Use `docs/PHASE-2-READINESS-PLAN
 
 ## Current phase
 
+Current phase: Phase 2C-C - admin quote operations and enquiry workflow closeout.
+
+This phase improves internal quote/enquiry follow-up for authorised admins.
+The protected admin quote inbox can now save internal follow-up notes alongside
+status changes, and the server-only quote read boundary returns recent
+admin-only quote activity scoped to the trusted workspace. Persistence uses a
+session-bound authenticated Supabase client, owner/admin RLS policies, CSRF
+proofs for `quote.write`, generic route responses, and a new admin-only
+`quote_request_activity` table. Internal activity is never shown on public
+quote pages. This phase does not add public quote status tracking,
+customer-visible internal notes, notifications, CRM integration, cart,
+checkout, payments, customer accounts, stock reservation, order fulfilment,
+confirmed booking, online ordering, customer uploads, arbitrary public upload
+routes, browser Supabase, service-role runtime paths, deployment config,
+Supabase Cloud actions, n8n/Pinecone runtime behavior, SaaS chatbot runtime
+work, or `website/chat-config.js` access.
+
+Latest completed phase: Phase 2C-B - public catalogue polish and enquiry handoff.
+
+Last merged phase PR: #94
+
+Merge commit: `33067c3b3dd86847885db7c57c81c8e17962b043`
+
+## Previous merged status snapshot: Phase 2C-B
+
 Current phase: Phase 2C-B - public catalogue polish and enquiry handoff.
 
 This phase polishes the public catalogue and listing detail experience for the

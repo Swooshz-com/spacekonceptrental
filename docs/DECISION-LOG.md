@@ -1184,3 +1184,33 @@ or RLS renames, browser Supabase, service-role runtime paths, n8n/Pinecone
 runtime behavior, SaaS chatbot runtime work, ecommerce flows including cart,
 checkout, payments, customer accounts, stock reservation, fulfilment,
 confirmed booking, online ordering, or access `website/chat-config.js`.
+
+## 2026-06-03: Admin Quote Operations And Enquiry Workflow Closeout
+
+Decision: Phase 2C-C adds internal admin quote follow-up activity while
+keeping public quote requests enquiry-oriented.
+
+Reason: Phase 2B-AW/AX gave authorised admins a quote inbox and a narrow
+status update boundary, while Phase 2C-B improved the public handoff into the
+quote request flow. The next coherent operations step is to let the internal
+team record lightweight follow-up context and see recent quote activity
+without adding public status tracking, notifications, CRM sync, or ecommerce
+ordering.
+
+The implementation adds an admin-only `quote_request_activity` table for
+bounded internal notes and status-change activity. Owner/admin RLS policies
+allow only authenticated quote managers for the workspace to update quote
+status and insert/select activity. The existing protected status route remains
+first-party and server-only, requires `quote.write`, same-origin Origin/Host
+validation, CSRF proof verification, trusted workspace resolution, and a
+session-bound authenticated Supabase client. Public quote pages and APIs are
+unchanged and do not expose internal notes or quote workflow status.
+
+Phase 2C-C does not add public quote status tracking, customer-visible
+internal notes, notifications, CRM integration, customer uploads, arbitrary
+public upload routes, DB/API/RPC/table renames, browser Supabase,
+service-role runtime paths, deployment config, Supabase Cloud actions,
+n8n/Pinecone runtime behavior, SaaS chatbot runtime work, ecommerce flows
+including cart, checkout, payments, customer accounts, stock reservation,
+fulfilment, confirmed booking, online ordering, or access
+`website/chat-config.js`.

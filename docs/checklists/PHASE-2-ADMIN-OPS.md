@@ -103,6 +103,14 @@ and route/action boundaries are implemented and tested.
 - [x] Catalogue and listing detail metadata uses only safe public listing data.
 - [x] Customer uploads, public quote tracking, ecommerce flows, notifications, CRM, browser Supabase, and service-role runtime paths remain out of scope.
 
+## Phase 2C-C Admin Quote Operations And Enquiry Workflow Closeout
+
+- [x] Protected admin quote inbox can save bounded internal follow-up notes with status changes.
+- [x] Server-only admin quote read boundary returns recent admin-only quote activity for the trusted workspace.
+- [x] Quote workflow writes require `quote.write`, same-origin checks, CSRF proof, trusted workspace scope, and owner/admin RLS.
+- [x] Internal quote activity is not exposed on public quote pages or public quote APIs.
+- [x] Public quote tracking, customer-visible internal notes, notifications, CRM, ecommerce flows, browser Supabase, and service-role runtime paths remain out of scope.
+
 ## Ecommerce Non-goals
 
 - [ ] Do not add carts.

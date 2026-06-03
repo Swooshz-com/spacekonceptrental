@@ -297,7 +297,7 @@ test('real migration directory passes static validation', () => {
   const result = runValidator(realMigrationsDir);
 
   assert.equal(result.status, 0, result.stdout + result.stderr);
-  assert.match(result.stdout, /checked 7 migration SQL file\(s\)/);
+  assert.match(result.stdout, /checked 8 migration SQL file\(s\)/);
 });
 
 test('real base schema migration creates the planned MVP tables', () => {
@@ -447,6 +447,59 @@ test('real migrations add narrow anonymous website quote insert policies only', 
   );
   assert.doesNotMatch(sql, /for update to anon/);
   assert.doesNotMatch(sql, /for delete to anon/);
+});
+
+test('real migrations add admin-only quote workflow activity policies', () => {
+  const sql = normalizeSql(readAllRealMigrationSql());
+
+  assert.match(
+    sql,
+    /create table if not exists public\.quote_request_activity \(/,
+  );
+  assert.match(
+    sql,
+    /constraint quote_request_activity_quote_request_workspace_id_fkey foreign key \(quote_request_id, workspace_id\) references public\.quote_requests \(id, workspace_id\) on delete cascade/,
+  );
+  assert.match(
+    sql,
+    /constraint quote_request_activity_type_check check \(activity_type in \('status_change', 'internal_note'\)\)/,
+  );
+  assert.match(
+    sql,
+    /constraint quote_request_activity_note_length_check check \(note is null or char_length\(note\) <= 1200\)/,
+  );
+  assert.match(
+    sql,
+    /alter table public\.quote_request_activity enable row level security;/,
+  );
+  assert.match(
+    sql,
+    /grant update \(\s*status, updated_at\s*\) on public\.quote_requests to authenticated;/,
+  );
+  assert.match(
+    sql,
+    /grant select, insert on public\.quote_request_activity to authenticated;/,
+  );
+  assert.match(
+    sql,
+    /create policy quote_requests_quote_admin_update on public\.quote_requests for update to authenticated using \(public\.is_workspace_quote_manager\(workspace_id\)\) with check \(public\.is_workspace_quote_manager\(workspace_id\)\);/,
+  );
+  assert.match(
+    sql,
+    /create policy quote_request_activity_quote_admin_select on public\.quote_request_activity for select to authenticated using \(public\.is_workspace_quote_manager\(workspace_id\)\);/,
+  );
+  assert.match(
+    sql,
+    /create policy quote_request_activity_quote_admin_insert on public\.quote_request_activity for insert to authenticated with check \(/,
+  );
+  assert.doesNotMatch(
+    sql,
+    /grant (select|insert|update|delete).*on public\.quote_request_activity to anon;/,
+  );
+  assert.doesNotMatch(
+    sql,
+    /create policy .* on public\.quote_request_activity .* to anon/,
+  );
 });
 
 test('real migrations do not enable anonymous catalogue product writes', () => {

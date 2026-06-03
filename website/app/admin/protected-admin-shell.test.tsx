@@ -266,6 +266,7 @@ describe("protected admin shell", () => {
                   status: "new",
                   source: "website",
                   createdAt: "2026-06-03T10:30:00.000Z",
+                  activity: [],
                   items: [
                     {
                       id: "item-1",
@@ -351,8 +352,11 @@ describe("protected admin shell", () => {
     expect(screen.getByText(/2 x Modular lounge set/i)).toBeInTheDocument();
     expect(screen.getByText(/VIP reception area/i)).toBeInTheDocument();
     expect(
+      screen.getByLabelText(/internal note for QR-20260603-NEWEST/i)
+    ).toBeInTheDocument();
+    expect(
       screen.getByRole("button", {
-        name: /save status for QR-20260603-NEWEST/i
+        name: /save follow-up for QR-20260603-NEWEST/i
       })
     ).toBeInTheDocument();
     expect(
@@ -414,7 +418,7 @@ describe("protected admin shell", () => {
       expect(screen.queryByLabelText(/category management/i)).not.toBeInTheDocument();
       expect(screen.queryByLabelText(/listing management/i)).not.toBeInTheDocument();
       expect(
-        screen.queryByRole("button", { name: /save status/i })
+        screen.queryByRole("button", { name: /save follow-up/i })
       ).not.toBeInTheDocument();
       unmount();
     }

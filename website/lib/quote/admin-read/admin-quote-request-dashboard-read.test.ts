@@ -155,17 +155,22 @@ describe("admin quote request inbox read boundary", () => {
             status: "new",
             source: "website",
             createdAt: "2026-06-03T10:30:00.000Z",
-            items: []
+            items: [],
+            activity: []
           },
           {
             id: "22222222-2222-4222-8222-222222222222",
             publicReference: "QR-20260602-OLDER",
             customerName: "Ravi Lim",
+            customerEmail: undefined,
+            customerPhone: undefined,
+            eventDate: undefined,
             venue: "TBC",
             status: "reviewing",
             source: "chat",
             createdAt: "2026-06-02T10:30:00.000Z",
-            items: []
+            items: [],
+            activity: []
           }
         ]
       }
@@ -231,6 +236,10 @@ describe("admin quote request inbox read boundary", () => {
             id: "11111111-1111-4111-8111-111111111111",
             publicReference: "QR-20260603-NEWEST",
             customerName: "Maya Tan",
+            customerEmail: undefined,
+            customerPhone: undefined,
+            eventDate: undefined,
+            venue: undefined,
             status: "new",
             source: "website",
             createdAt: "2026-06-03T10:30:00.000Z",
@@ -243,7 +252,8 @@ describe("admin quote request inbox read boundary", () => {
                 notes: "VIP reception area",
                 createdAt: "2026-06-03T10:31:00.000Z"
               }
-            ]
+            ],
+            activity: []
           }
         ]
       }
@@ -258,6 +268,106 @@ describe("admin quote request inbox read boundary", () => {
       value: "99999999-9999-4999-8999-999999999999"
     });
     expect(calls[1].inFilters).toContainEqual({
+      column: "quote_request_id",
+      values: ["11111111-1111-4111-8111-111111111111"]
+    });
+  });
+
+  it("includes internal quote activity for loaded requests and keeps it workspace-scoped", async () => {
+    const { calls, supabase } = createMockSupabase({
+      quote_requests: {
+        data: [
+          {
+            id: "11111111-1111-4111-8111-111111111111",
+            public_reference: "QR-20260603-NEWEST",
+            customer_name: "Maya Tan",
+            status: "reviewing",
+            source: "website",
+            created_at: "2026-06-03T10:30:00.000Z"
+          }
+        ],
+        error: null
+      },
+      quote_request_items: {
+        data: [],
+        error: null
+      },
+      quote_request_activity: {
+        data: [
+          {
+            id: "44444444-4444-4444-8444-444444444444",
+            quote_request_id: "11111111-1111-4111-8111-111111111111",
+            activity_type: "internal_note",
+            status_from: null,
+            status_to: null,
+            note: "Call Maya about sofa quantities.",
+            created_at: "2026-06-03T10:40:00.000Z"
+          },
+          {
+            id: "55555555-5555-4555-8555-555555555555",
+            quote_request_id: "11111111-1111-4111-8111-111111111111",
+            activity_type: "status_change",
+            status_from: "new",
+            status_to: "reviewing",
+            note: null,
+            created_at: "2026-06-03T10:35:00.000Z"
+          }
+        ],
+        error: null
+      }
+    });
+
+    await expect(
+      resolveAdminQuoteRequestInboxRead({
+        supabase,
+        env: {
+          ADMIN_TRUSTED_WORKSPACE_ID:
+            "99999999-9999-4999-8999-999999999999"
+        }
+      })
+    ).resolves.toEqual({
+      status: "loaded",
+      data: {
+        quoteRequests: [
+          {
+            id: "11111111-1111-4111-8111-111111111111",
+            publicReference: "QR-20260603-NEWEST",
+            customerName: "Maya Tan",
+            status: "reviewing",
+            source: "website",
+            createdAt: "2026-06-03T10:30:00.000Z",
+            items: [],
+            activity: [
+              {
+                id: "44444444-4444-4444-8444-444444444444",
+                quoteRequestId: "11111111-1111-4111-8111-111111111111",
+                activityType: "internal_note",
+                note: "Call Maya about sofa quantities.",
+                createdAt: "2026-06-03T10:40:00.000Z"
+              },
+              {
+                id: "55555555-5555-4555-8555-555555555555",
+                quoteRequestId: "11111111-1111-4111-8111-111111111111",
+                activityType: "status_change",
+                statusFrom: "new",
+                statusTo: "reviewing",
+                createdAt: "2026-06-03T10:35:00.000Z"
+              }
+            ]
+          }
+        ]
+      }
+    });
+
+    expect(calls[2]).toMatchObject({
+      table: "quote_request_activity",
+      limit: 250
+    });
+    expect(calls[2].filters).toContainEqual({
+      column: "workspace_id",
+      value: "99999999-9999-4999-8999-999999999999"
+    });
+    expect(calls[2].inFilters).toContainEqual({
       column: "quote_request_id",
       values: ["11111111-1111-4111-8111-111111111111"]
     });

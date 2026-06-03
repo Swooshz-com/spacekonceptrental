@@ -16,6 +16,16 @@ type AdminQuoteRequestInboxItem = {
   notes?: string;
 };
 
+type AdminQuoteRequestInboxActivity = {
+  id: string;
+  quoteRequestId: string;
+  activityType: "status_change" | "internal_note";
+  statusFrom?: AdminQuoteRequestStatus;
+  statusTo?: AdminQuoteRequestStatus;
+  note?: string;
+  createdAt: string;
+};
+
 type AdminQuoteRequestInboxQuoteRequest = {
   id: string;
   publicReference: string;
@@ -28,6 +38,7 @@ type AdminQuoteRequestInboxQuoteRequest = {
   source: "website" | "chat" | "admin";
   createdAt: string;
   items: AdminQuoteRequestInboxItem[];
+  activity: AdminQuoteRequestInboxActivity[];
 };
 
 type AdminQuoteRequestInboxReadResult =
@@ -77,6 +88,14 @@ const genericFailureMessage =
 
 function statusLabel(value: string) {
   return value.replace(/_/g, " ");
+}
+
+function activityText(activity: AdminQuoteRequestInboxActivity) {
+  if (activity.activityType === "internal_note") {
+    return activity.note ?? "Internal note recorded.";
+  }
+
+  return `Status changed from ${statusLabel(activity.statusFrom ?? "unknown")} to ${statusLabel(activity.statusTo ?? "unknown")}.`;
 }
 
 async function readSafeJson(response: Response) {
@@ -144,11 +163,12 @@ export function QuoteRequestInboxPanel({
 
   async function submitStatusChange(
     quoteRequestId: string,
-    nextStatus: AdminQuoteRequestStatus
+    nextStatus: AdminQuoteRequestStatus,
+    internalNote?: string
   ) {
     setStatus({
       kind: "pending",
-      message: "Saving quote status..."
+      message: "Saving follow-up..."
     });
 
     try {
@@ -171,7 +191,8 @@ export function QuoteRequestInboxPanel({
             "x-csrf-proof": csrfProof
           },
           body: JSON.stringify({
-            status: nextStatus
+            status: nextStatus,
+            ...(internalNote ? { internalNote } : {})
           })
         }
       );
@@ -215,6 +236,11 @@ export function QuoteRequestInboxPanel({
       typeof nextStatusValue === "string"
         ? parseQuoteStatus(nextStatusValue)
         : null;
+    const internalNoteValue = formData.get("internalNote");
+    const internalNote =
+      typeof internalNoteValue === "string"
+        ? internalNoteValue.trim()
+        : undefined;
 
     if (!nextStatus) {
       setStatus({
@@ -224,7 +250,7 @@ export function QuoteRequestInboxPanel({
       return;
     }
 
-    await submitStatusChange(quoteRequestId, nextStatus);
+    await submitStatusChange(quoteRequestId, nextStatus, internalNote);
   }
 
   if (inbox.status === "unavailable") {
@@ -273,86 +299,115 @@ export function QuoteRequestInboxPanel({
         </section>
       ) : (
         <div className="admin-dashboard__grid">
-          {inbox.data.quoteRequests.map((quoteRequest) => (
-            <article className="admin-dashboard__card" key={quoteRequest.id}>
-              <div>
-                <p className="eyebrow">{quoteRequest.publicReference}</p>
-                <h3>{quoteRequest.customerName ?? "Unnamed customer"}</h3>
-                <p>
-                  {statusLabel(quoteRequest.status)} - {quoteRequest.source}
-                </p>
-              </div>
-              <dl className="quote-inbox__details">
+          {inbox.data.quoteRequests.map((quoteRequest) => {
+            const activity = quoteRequest.activity ?? [];
+
+            return (
+              <article className="admin-dashboard__card" key={quoteRequest.id}>
                 <div>
-                  <dt>Submitted</dt>
-                  <dd>{quoteRequest.createdAt}</dd>
+                  <p className="eyebrow">{quoteRequest.publicReference}</p>
+                  <h3>{quoteRequest.customerName ?? "Unnamed customer"}</h3>
+                  <p>
+                    {statusLabel(quoteRequest.status)} - {quoteRequest.source}
+                  </p>
                 </div>
-                {quoteRequest.customerEmail ? (
+                <dl className="quote-inbox__details">
                   <div>
-                    <dt>Email</dt>
-                    <dd>{quoteRequest.customerEmail}</dd>
+                    <dt>Submitted</dt>
+                    <dd>{quoteRequest.createdAt}</dd>
                   </div>
-                ) : null}
-                {quoteRequest.customerPhone ? (
-                  <div>
-                    <dt>Phone</dt>
-                    <dd>{quoteRequest.customerPhone}</dd>
-                  </div>
-                ) : null}
-                {quoteRequest.eventDate ? (
-                  <div>
-                    <dt>Event date</dt>
-                    <dd>{quoteRequest.eventDate}</dd>
-                  </div>
-                ) : null}
-                {quoteRequest.venue ? (
-                  <div>
-                    <dt>Venue</dt>
-                    <dd>{quoteRequest.venue}</dd>
-                  </div>
-                ) : null}
-              </dl>
-              {quoteRequest.items.length === 0 ? (
-                <p>No requested item snapshots were captured.</p>
-              ) : (
-                <ul className="admin-dashboard__list">
-                  {quoteRequest.items.map((item) => (
-                    <li key={item.id}>
-                      <strong>
-                        {item.quantity} x {item.productNameSnapshot}
-                      </strong>
-                      {item.notes ? <small>{item.notes}</small> : null}
-                    </li>
-                  ))}
-                </ul>
-              )}
-              <form
-                aria-label={`Update quote status ${quoteRequest.publicReference}`}
-                className="category-management__form"
-                onSubmit={(event) =>
-                  void handleStatusSubmit(event, quoteRequest.id)
-                }
-              >
-                <label htmlFor={`quote-status-${quoteRequest.id}`}>
-                  Internal status for {quoteRequest.publicReference}
-                  <select
-                    defaultValue={quoteRequest.status}
-                    id={`quote-status-${quoteRequest.id}`}
-                    name="status"
-                  >
-                    {quoteStatuses.map((quoteStatus) => (
-                      <option key={quoteStatus} value={quoteStatus}>
-                        {statusLabel(quoteStatus)}
-                      </option>
+                  {quoteRequest.customerEmail ? (
+                    <div>
+                      <dt>Email</dt>
+                      <dd>{quoteRequest.customerEmail}</dd>
+                    </div>
+                  ) : null}
+                  {quoteRequest.customerPhone ? (
+                    <div>
+                      <dt>Phone</dt>
+                      <dd>{quoteRequest.customerPhone}</dd>
+                    </div>
+                  ) : null}
+                  {quoteRequest.eventDate ? (
+                    <div>
+                      <dt>Event date</dt>
+                      <dd>{quoteRequest.eventDate}</dd>
+                    </div>
+                  ) : null}
+                  {quoteRequest.venue ? (
+                    <div>
+                      <dt>Venue</dt>
+                      <dd>{quoteRequest.venue}</dd>
+                    </div>
+                  ) : null}
+                </dl>
+                {quoteRequest.items.length === 0 ? (
+                  <p>No requested item snapshots were captured.</p>
+                ) : (
+                  <ul className="admin-dashboard__list">
+                    {quoteRequest.items.map((item) => (
+                      <li key={item.id}>
+                        <strong>
+                          {item.quantity} x {item.productNameSnapshot}
+                        </strong>
+                        {item.notes ? <small>{item.notes}</small> : null}
+                      </li>
                     ))}
-                  </select>
-                </label>
-                <button className="button" type="submit">
-                  Save status for {quoteRequest.publicReference}
-                </button>
-              </form>
-            </article>
-          ))}
+                  </ul>
+                )}
+                {activity.length === 0 ? (
+                  <p>No internal follow-up activity has been recorded yet.</p>
+                ) : (
+                  <ul
+                    className="admin-dashboard__list"
+                    aria-label={`Internal activity ${quoteRequest.publicReference}`}
+                  >
+                    {activity.map((activityItem) => (
+                      <li key={activityItem.id}>
+                        <strong>{activityText(activityItem)}</strong>
+                        <small>{activityItem.createdAt}</small>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                <form
+                  aria-label={`Update quote follow-up ${quoteRequest.publicReference}`}
+                  className="category-management__form"
+                  onSubmit={(event) =>
+                    void handleStatusSubmit(event, quoteRequest.id)
+                  }
+                >
+                  <label htmlFor={`quote-status-${quoteRequest.id}`}>
+                    Internal status for {quoteRequest.publicReference}
+                    <select
+                      defaultValue={quoteRequest.status}
+                      id={`quote-status-${quoteRequest.id}`}
+                      name="status"
+                    >
+                      {quoteStatuses.map((quoteStatus) => (
+                        <option key={quoteStatus} value={quoteStatus}>
+                          {statusLabel(quoteStatus)}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label htmlFor={`quote-note-${quoteRequest.id}`}>
+                    Internal note for {quoteRequest.publicReference}
+                    <textarea
+                      id={`quote-note-${quoteRequest.id}`}
+                      maxLength={1200}
+                      name="internalNote"
+                      placeholder="Add internal follow-up context for the team"
+                      rows={3}
+                    />
+                  </label>
+                  <button className="button" type="submit">
+                    Save follow-up for {quoteRequest.publicReference}
+                  </button>
+                </form>
+              </article>
+            );
+          })}
         </div>
       )}
     </section>
