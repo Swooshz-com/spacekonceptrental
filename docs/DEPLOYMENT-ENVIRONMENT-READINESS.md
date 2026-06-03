@@ -1,12 +1,19 @@
 # Deployment Environment Readiness
 
-Phase 1O-A is readiness only. No deployment is performed, no Supabase Cloud
-connection is used, and no real environment values are added.
+Phase 2D-A is readiness only. No deployment is performed, no Supabase Cloud
+connection is used, no Vercel project config is added, and no real environment
+values are added.
+
+This document is the reviewed environment contract for a future deployment of
+the `website/` Next.js app after the catalogue, storage-backed listing media,
+admin shell, and quote workflow phases. It classifies environment variables by
+visibility and names the reviews required before public traffic is enabled.
 
 The future target shape remains a Vercel-hosted `website/` Next.js app with
-server-only Supabase access and a temporary server-side n8n provider behind the
-first-party chat API. This document defines the environment contract that must
-be reviewed before a future deployment is approved.
+server-only Supabase and a temporary server-side n8n provider behind
+first-party routes. Catalogue missing-env behaviour keeps safe fallback to shell catalogue data. Quote route fails safely, and Chat route fails safely,
+when required runtime configuration is absent. The future deployment preflight
+checklist now lives in the required pre-deployment review below. Future deployment preflight checklist coverage is preserved.
 
 The machine-readable companion contract is:
 
@@ -17,123 +24,151 @@ docs/contracts/server-env-contract.json
 It lists names, feature ownership, visibility, and browser-exposure rules only.
 It does not contain values.
 
-## Required Server-Only Runtime Variables
+## Public-safe client env
 
-### Supabase read/write runtime
+No public client environment variable is currently required for SKR deployment.
 
-- `SUPABASE_URL`: server-side Supabase project endpoint used only by the
-  server Supabase helper.
+Allowed future public variables must be reviewed separately, must be
+non-secret, and must not include Supabase, n8n, workspace, admin, quote, or
+provider credentials. No `NEXT_PUBLIC_SUPABASE_*`, `NEXT_PUBLIC_N8N*`, or
+`NEXT_PUBLIC_SUPABASE_SERVICE_ROLE` variable may be present.
+
+## Server-only app env
+
+These values are used only by server-side Next.js routes, repositories, or
+helpers:
+
+- `CHAT_PROVIDER`: server-side provider selector for the first-party chat API.
+- `CHAT_TRUSTED_CLIENT_IP_HEADER`: optional trusted proxy/CDN header name for
+  chat throttling.
+- `QUOTE_TRUSTED_CLIENT_IP_HEADER`: optional trusted proxy/CDN header name for
+  quote throttling.
+- `ADMIN_EXPECTED_ORIGIN`: trusted expected admin request origin.
+- `ADMIN_EXPECTED_HOST`: trusted expected admin request host.
+- `ADMIN_CSRF_PROOF_SECRET`: server-only proof signing secret for admin CSRF
+  proof material.
+
+Trusted client IP header values must name only headers overwritten by the
+deployment proxy or CDN. In-process quote and chat throttling remains
+best-effort and must not be treated as final distributed abuse protection.
+
+## Supabase/project env
+
+These values are server-only even when the Supabase anon key is used:
+
+- `SUPABASE_URL`: server-side Supabase project endpoint used only by server
+  helpers.
 - `SUPABASE_ANON_KEY`: server-side anon key used with RLS through first-party
-  server routes and repositories.
+  server routes, repositories, and session-bound server clients.
+- `CATALOGUE_WORKSPACE_ID`: trusted server-side workspace gate for DB-backed
+  public catalogue reads.
+- `QUOTE_WORKSPACE_ID`: trusted server-side workspace gate for public quote
+  persistence.
 
-These variables are required before any DB-backed catalogue read or approved
-quote persistence path can use Supabase. They must never be exposed through
-browser-visible variables.
+`CATALOGUE_WORKSPACE_ID` must match the reviewed
+`catalogue_public_workspace_config` active workspace row before DB-backed
+catalogue reads are enabled. `QUOTE_WORKSPACE_ID` must match the reviewed quote
+capture workspace before quote persistence is enabled.
 
-### Public catalogue DB-backed reads
+## n8n/server-only webhook env
 
-- `CATALOGUE_WORKSPACE_ID`: trusted server-side workspace gate used by the
-  catalogue repository.
-- Matching `catalogue_public_workspace_config` row: database-owned active
-  workspace configuration required by `get_public_catalogue`.
+The temporary n8n bridge remains server-only:
 
-The browser must not choose the catalogue workspace. If Supabase env,
-`CATALOGUE_WORKSPACE_ID`, the RPC response, or the active config row is
-missing, the catalogue uses safe fallback to shell catalogue data.
-
-### Quote persistence
-
-- `QUOTE_WORKSPACE_ID`: trusted server-side workspace gate for approved public
-  quote request persistence.
-
-Quote route fails safely when Supabase or quote workspace configuration is
-missing. It must not expose Supabase errors or workspace details to the
-browser.
-
-### Chat provider
-
-- `CHAT_PROVIDER`: server-side provider selector. Phase 1 uses `n8n`.
-- `N8N_CHAT_WEBHOOK_URL`: server-only n8n webhook URL for the temporary
+- `N8N_CHAT_WEBHOOK_URL`: server-only n8n webhook URL for the temporary chat
   provider.
-- `N8N_CHAT_WEBHOOK_TIMEOUT_MS`: server-only timeout setting for the temporary
-  provider.
+- `N8N_CHAT_WEBHOOK_TIMEOUT_MS`: optional server-only timeout setting.
 
-Chat route fails safely when the provider or webhook config is missing. The
-browser must only call `POST /api/chat` and must never receive the n8n webhook
-URL.
+n8n webhook values are server-only. Browser code must call only first-party
+`POST /api/chat`; it must never receive, reconstruct, log, or configure n8n
+webhook values. The app must not read `website/chat-config.js`.
 
-### Abuse throttling and trusted proxy headers
+## Admin/auth/workspace env
 
-- `CHAT_TRUSTED_CLIENT_IP_HEADER`: optional server-side header allowlist entry
-  for chat rate limiting.
-- `QUOTE_TRUSTED_CLIENT_IP_HEADER`: optional server-side header allowlist entry
-  for quote rate limiting.
+These values are server-only and are required for protected admin runtime
+paths:
 
-Only set these to headers overwritten by the trusted deployment proxy or CDN.
-User-supplied forwarding headers must not be trusted by default. If no trusted
-header is configured or present, the routes use their fail-closed fallback
-buckets.
+- `ADMIN_TRUSTED_WORKSPACE_ID`: trusted admin workspace gate for protected
+  admin catalogue, listing media, and quote workflow operations.
+- `ADMIN_EXPECTED_ORIGIN`: expected first-party admin origin.
+- `ADMIN_EXPECTED_HOST`: expected first-party admin host.
+- `ADMIN_CSRF_PROOF_SECRET`: server-only CSRF proof signing secret.
 
-## Explicitly Forbidden Environment And Config
+`ADMIN_TRUSTED_WORKSPACE_ID` must be reviewed separately from
+`CATALOGUE_WORKSPACE_ID` and `QUOTE_WORKSPACE_ID`. It must not be supplied by
+the browser and must not be inferred from public catalogue workspace config.
 
-Do not add:
+## Listing media bucket expectations
 
-- `NEXT_PUBLIC_SUPABASE_*`.
-- `NEXT_PUBLIC_N8N*`.
-- Browser-visible n8n URLs.
-- `SUPABASE_SERVICE_ROLE_KEY`.
-- Any service-role runtime key or path.
-- `website/chat-config.js` as source for the Next.js app.
+The `listing-media` bucket is public. Object serving is public to anyone with
+the unguessable server-generated URL. Public catalogue rendering remains
+metadata-gated by trusted public read surfaces; RLS must not be described as a
+public URL serving gate.
 
-Service-role runtime paths remain deferred. Browser Supabase remains forbidden.
-n8n webhook access remains server-only.
+Storage writes remain protected admin operations requiring same-origin request
+checks, CSRF proof validation, owner/admin workspace scope, and a session-bound
+authenticated Supabase client. Customer uploads and arbitrary public upload
+routes remain forbidden.
 
-## Safe Missing-Env Behaviour
+## Forbidden env exposure
 
-- Catalogue: falls back to shell catalogue data when Supabase env, trusted
-  workspace config, or the active workspace config row is missing.
+Forbidden exposure includes:
+
+- No `NEXT_PUBLIC_SUPABASE_*`.
+- No `NEXT_PUBLIC_N8N*`.
+- No `NEXT_PUBLIC_SUPABASE_SERVICE_ROLE`.
+- No browser-visible n8n URLs.
+- No browser Supabase unless separately approved.
+- No `SUPABASE_SERVICE_ROLE_KEY` in runtime paths.
+- No service-role key in browser/client/public env.
+- No `website/chat-config.js` source usage.
+- No real secrets or env values in docs, examples, PR bodies, screenshots, or
+  logs.
+
+Service-role key prohibition in runtime paths remains active. never put service-role keys in browser/client/public env, and never document a path that does so.
+
+## Safe missing-env behaviour
+
+- Catalogue: uses safe fallback catalogue data when Supabase env,
+  `CATALOGUE_WORKSPACE_ID`, the RPC response, or the active workspace config
+  row is missing.
 - Quote: returns a safe persistence-unavailable response when required
   persistence env is missing or persistence fails.
-- Chat: returns or delegates to safe fallback behaviour when provider or webhook
-  config is missing.
+- Chat: returns or delegates to safe fallback behaviour when provider or
+  webhook config is missing.
+- Admin: protected admin paths fail closed or render generic unavailable states
+  when admin auth, workspace, request-security, CSRF, Supabase, or RLS
+  dependencies are missing.
 
-These behaviours are intentional so local development, tests, and unconfigured
-environments do not need Supabase Cloud, deployment secrets, live n8n, or
-service-role keys.
+## Required pre-deployment review
 
-## Future deployment preflight checklist
+Before public traffic is enabled, reviewers must confirm:
 
-Before any future deployment is approved, verify:
-
-- All required variables are configured only in server-side deployment
-  settings.
-- No `NEXT_PUBLIC_SUPABASE_*` or `NEXT_PUBLIC_N8N*` variables exist.
-- No browser bundle references Supabase server env, n8n webhook env, or
-  service-role key names.
-- `CATALOGUE_WORKSPACE_ID` matches the reviewed workspace.
-- `catalogue_public_workspace_config` points to the same active workspace.
-- `QUOTE_WORKSPACE_ID` names the approved quote workspace.
-- `N8N_CHAT_WEBHOOK_URL` remains server-only and is not logged or exposed to
-  the browser.
-- Trusted client IP header variables are set only to proxy or CDN overwritten
-  headers.
-- Missing-env fallback behaviour has been checked before enabling real env.
-- Smoke tests are planned for public catalogue list/detail, quote submission,
-  chat fallback/provider behaviour, and browser bundle exposure after
-  deployment is separately approved.
+- No deployment is approved by Phase 2D-A.
+- A later deployment PR has explicit current approval.
+- `CATALOGUE_WORKSPACE_ID`, `QUOTE_WORKSPACE_ID`, and
+  `ADMIN_TRUSTED_WORKSPACE_ID` are reviewed before public traffic.
+- Server-only Supabase env placement is reviewed.
+- Server-only n8n webhook placement is reviewed.
+- Trusted proxy/CDN client IP header behaviour is reviewed.
+- The smoke-test checklist in `docs/DEPLOYMENT-SMOKE-TEST-RUNBOOK.md` is run
+  before public traffic.
+- Evidence is captured using `docs/templates/DEPLOYMENT-EVIDENCE.md`.
 
 ## Deferred
 
 The following remain deferred until separately approved:
 
+- Actual deployment.
 - Actual Vercel deployment.
+- Vercel project config.
 - Supabase Cloud connection.
 - Production seed data.
 - Service-role runtime paths.
 - Browser Supabase client code.
-- Admin/auth UI.
-- Supabase Storage.
-- Product/category/product image writes.
-- Conversation/message writes.
-- Public product/category/product image mutation routes.
-- Deployment or production configuration files.
+- Customer uploads.
+- Arbitrary public upload routes.
+- Public quote status tracking.
+- Notifications or CRM integration.
+- Customer accounts, carts, checkout, payments, stock reservation, order
+  fulfilment, confirmed booking, or online ordering.
+- n8n workflow import, export, activation, execution, or mutation.

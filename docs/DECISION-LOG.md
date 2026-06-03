@@ -1244,3 +1244,32 @@ deployment config, Supabase Cloud actions, n8n/Pinecone runtime behavior,
 SaaS chatbot runtime work, ecommerce flows including cart, checkout,
 payments, customer accounts, stock reservation, fulfilment, confirmed
 booking, online ordering, or access `website/chat-config.js`.
+
+## 2026-06-04: Deployment Readiness For Catalogue Media And Quote Workflow Operations
+
+Decision: Phase 2D-A refreshes deployment readiness for catalogue media and quote workflow operations without deploying.
+
+Reason: the app now has admin-managed furniture/event-rental listings,
+storage-backed listing media rendering, protected admin listing image upload,
+public quote handoff, and an atomic admin quote workflow RPC. Before any real
+deployment, Supabase Cloud wiring, Vercel configuration, production env setup,
+or public traffic, operators need a reviewed environment contract,
+smoke-test sequence, rollback/disable plan, and evidence template that covers
+those current surfaces.
+
+The readiness contract classifies public-safe, server-only app,
+Supabase/project, n8n/server-only webhook, admin/auth/workspace, and forbidden
+environment exposure categories. Future operators must review
+`CATALOGUE_WORKSPACE_ID`, `QUOTE_WORKSPACE_ID`, and
+`ADMIN_TRUSTED_WORKSPACE_ID` before public traffic. The `listing-media` bucket
+model remains public object serving by unguessable server-generated URL, while
+public catalogue rendering remains metadata-gated by trusted public read
+surfaces.
+
+Phase 2D-A does not deploy, add Vercel project config, connect Supabase Cloud,
+add production env files, add real secrets, add production seed data, change
+runtime env behaviour, add browser Supabase, add service-role runtime paths,
+add customer uploads, add arbitrary public upload routes, add public quote
+status tracking, add customer-visible internal notes, add notifications or CRM
+integration, change n8n/Pinecone runtime behavior, add SaaS chatbot runtime
+work, add ecommerce flows, or access `website/chat-config.js`.

@@ -118,7 +118,7 @@ describe("Phase 1O-A deployment environment readiness", () => {
 
     const contract = parseEnvContract();
 
-    expect(contract.phase).toBe("Phase 1O-A");
+    expect(contract.phase).toBe("Phase 2D-A");
     expect(contract.status).toBe("readiness-only");
 
     const variables = contract.variables ?? [];

@@ -628,3 +628,26 @@ online ordering, customer uploads, arbitrary public upload routes, browser
 Supabase, service-role runtime paths, deployment config, Supabase Cloud
 actions, n8n/Pinecone runtime behavior, SaaS chatbot runtime work, or
 `website/chat-config.js` access.
+
+## Phase 2D-A Deployment Readiness Boundary
+
+Phase 2D-A is deployment readiness documentation and static guard coverage only.
+It may update readiness docs, the environment contract, smoke-test checklist,
+rollback/disable plan, evidence template, phase status, roadmap, decision log,
+and checklist wording.
+
+Phase 2D-A does not approve or perform deployment. It must not add Vercel
+project config, Supabase Cloud config, production env files, real secrets,
+production seed data, runtime env behaviour changes, browser Supabase,
+service-role runtime paths, customer uploads, arbitrary public upload routes,
+public quote status tracking, customer-visible internal notes, notifications,
+CRM integration, n8n/Pinecone runtime changes, SaaS chatbot runtime work,
+`website/chat-config.js` access, or ecommerce flows such as carts, checkout,
+payments, customer accounts, stock reservation, order fulfilment, confirmed
+booking, or online ordering.
+
+Future operators must review `CATALOGUE_WORKSPACE_ID`, `QUOTE_WORKSPACE_ID`,
+and `ADMIN_TRUSTED_WORKSPACE_ID` before public traffic. The `listing-media`
+bucket remains public-by-unguessable-server-generated-URL for object serving,
+while public catalogue rendering remains metadata-gated. n8n webhook values
+must remain server-only behind first-party `POST /api/chat`.
