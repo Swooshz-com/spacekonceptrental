@@ -1043,3 +1043,27 @@ cookies, admin UI behavior, product/category write route logic, SQL
 migrations, DB/API/table/RPC/RLS names, browser Supabase, service-role runtime
 paths, image upload, Supabase Storage, n8n/Pinecone runtime behavior, SaaS
 chatbot runtime work, ecommerce flows, or access `website/chat-config.js`.
+
+## 2026-06-03: Admin Quote Request Inbox Boundary
+
+Decision: Phase 2B-AW adds a read-only admin quote request inbox inside the
+protected admin shell.
+
+Reason: public quote requests are already validated, rate-limited, and
+persisted through the existing `/quote` form and `POST /api/quote` route.
+Admins now need a bounded review surface for recent submitted enquiries
+without adding quote workflow writes, notifications, CRM sync, ecommerce
+ordering, or customer accounts.
+
+The inbox uses a server-only admin quote read boundary with the existing
+session-bound admin Supabase read client and trusted `ADMIN_TRUSTED_WORKSPACE_ID`.
+It queries recent `quote_requests` newest first, includes matching
+`quote_request_items` when available, scopes every read to the trusted
+workspace, and maps provider failures to generic unavailable UI.
+
+Phase 2B-AW does not add public quote request lists, quote status writes,
+notifications, CRM integration, customer accounts, ordering, checkout,
+payments, fulfilment, stock reservation, confirmed booking, SQL migrations,
+DB/API/table/RPC/RLS renames, browser Supabase, service-role runtime paths,
+image upload, Supabase Storage, n8n/Pinecone runtime behavior, SaaS chatbot
+runtime work, ecommerce flows, or access `website/chat-config.js`.

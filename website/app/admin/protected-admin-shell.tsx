@@ -6,8 +6,13 @@ import {
   resolveAdminProductDashboardRead,
   type AdminProductDashboardReadResult
 } from "../../lib/products/admin-read/admin-product-dashboard-read";
+import {
+  resolveAdminQuoteRequestInboxRead,
+  type AdminQuoteRequestInboxReadResult
+} from "../../lib/quote/admin-read/admin-quote-request-dashboard-read";
 import { CategoryManagementPanel } from "../../components/admin/category-management-panel";
 import { ListingManagementPanel } from "../../components/admin/listing-management-panel";
+import { QuoteRequestInboxPanel } from "../../components/admin/quote-request-inbox-panel";
 
 export type ProtectedAdminShellState =
   | {
@@ -19,6 +24,7 @@ export type ProtectedAdminShellState =
   | {
       status: "authorised_admin";
       dashboard: AdminProductDashboardReadResult;
+      quoteInbox: AdminQuoteRequestInboxReadResult;
     }
   | {
       status: "unavailable";
@@ -105,13 +111,23 @@ export async function resolveProtectedAdminShellState(): Promise<ProtectedAdminS
       return gateState;
     }
 
-    return {
-      status: "authorised_admin",
-      dashboard: await resolveAdminProductDashboardRead({
+    const [dashboard, quoteInbox] = await Promise.all([
+      resolveAdminProductDashboardRead({
+        env: {
+          ADMIN_TRUSTED_WORKSPACE_ID: trustedServerWorkspaceId
+        }
+      }),
+      resolveAdminQuoteRequestInboxRead({
         env: {
           ADMIN_TRUSTED_WORKSPACE_ID: trustedServerWorkspaceId
         }
       })
+    ]);
+
+    return {
+      status: "authorised_admin",
+      dashboard,
+      quoteInbox
     };
   } catch {
     return {
@@ -274,6 +290,7 @@ function AdminStatusMessage({ state }: { state: ProtectedAdminShellState }) {
         </button>
       </form>
       <AdminDashboard dashboard={state.dashboard} />
+      <QuoteRequestInboxPanel inbox={state.quoteInbox} />
     </>
   );
 }

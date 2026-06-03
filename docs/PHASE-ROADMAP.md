@@ -581,3 +581,18 @@ logic, SQL migrations, DB/API/table/RPC/RLS names, browser Supabase,
 service-role runtime paths, image upload, Supabase Storage, n8n/Pinecone
 runtime behavior, SaaS chatbot runtime work, ecommerce flows, or access
 `website/chat-config.js`.
+
+Phase 2B-AW adds only a read-only admin quote request inbox inside the
+protected admin shell. It uses a server-only, session-bound admin read client
+and trusted admin workspace configuration to load recent quote requests and
+requested item snapshots from `quote_requests` and `quote_request_items`.
+Authorised admins can review recent quote request details, but cannot update
+status, send notifications, assign follow-up, sync to CRM, confirm bookings,
+or create orders from this phase.
+
+Phase 2B-AW does not add quote status writes, notifications, CRM integration,
+customer accounts, ordering, checkout, payments, fulfilment, stock reservation,
+confirmed booking, SQL migrations, DB/API/table/RPC/RLS renames, browser
+Supabase, service-role runtime paths, image upload, Supabase Storage,
+n8n/Pinecone runtime behavior, SaaS chatbot runtime work, ecommerce flows, or
+access `website/chat-config.js`.

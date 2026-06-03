@@ -56,6 +56,15 @@ and route/action boundaries are implemented and tested.
 - [x] No broad public-site CSP is introduced.
 - [x] Admin auth, CSRF, Origin/Host checks, and admin UI behavior are preserved.
 
+## Phase 2B-AW Admin Quote Request Inbox Boundary
+
+- [x] Server-only admin quote request read boundary is added.
+- [x] Quote request reads are scoped to the trusted admin workspace.
+- [x] Recent quote requests render inside the protected admin shell only.
+- [x] Requested item snapshots render when available.
+- [x] Empty and unavailable quote request states use generic admin-safe copy.
+- [x] Quote status writes, notifications, CRM integration, and ecommerce flows remain out of scope.
+
 ## Ecommerce Non-goals
 
 - [ ] Do not add carts.
