@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import type { StaticImageData } from "next/image";
 import chairImage from "../../assets/images/product_chair.png";
 import sofaImage from "../../assets/images/product_sofa.png";
 import corporateImage from "../../assets/images/event_corporate.png";
@@ -26,6 +27,27 @@ function getProductImage(product: PublicCatalogueProduct) {
   }
 
   return sofaImage;
+}
+
+function CatalogueCardImage({
+  product,
+  fallbackImage
+}: {
+  product: PublicCatalogueProduct;
+  fallbackImage: StaticImageData;
+}) {
+  const image = product.primaryImage;
+
+  if (image?.publicUrl) {
+    return (
+      <img
+        alt={image.altText ?? `${product.name} furniture rental setup`}
+        src={image.publicUrl}
+      />
+    );
+  }
+
+  return <Image alt={image?.altText ?? ""} src={fallbackImage} />;
 }
 
 export function CataloguePageContent({
@@ -59,9 +81,9 @@ export function CataloguePageContent({
         {catalogue.products.map((product) => (
           <article className="catalogue-card" key={product.slug}>
             <div className="catalogue-card__image">
-              <Image
-                alt={product.primaryImage?.altText ?? ""}
-                src={getProductImage(product)}
+              <CatalogueCardImage
+                fallbackImage={getProductImage(product)}
+                product={product}
               />
             </div>
             <div className="catalogue-card__body">

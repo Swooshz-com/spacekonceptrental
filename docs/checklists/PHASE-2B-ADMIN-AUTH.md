@@ -165,6 +165,7 @@ runtime implementation approval.
 - [x] Phase 2B-AR admin shell GET missing-Origin route-gate repair.
 - [x] Phase 2B-AS metadata-only admin furniture listing management UI boundary.
 - [x] Phase 2B-AY metadata-only admin listing image management UI boundary.
+- [x] Phase 2C-A admin-controlled listing media upload and public rendering boundary.
 
 ## Future Runtime Test Plan Approvals
 
@@ -213,6 +214,7 @@ runtime implementation approval.
 - [ ] Category writes.
 - [ ] Product image writes.
 - [x] Product image metadata writes through the Phase 2B-AL/AM backend API route boundary and Phase 2B-AY protected admin UI.
+- [x] Admin-controlled listing media uploads through the Phase 2C-A protected server-only route branch.
 - [ ] Storage and binary product image uploads.
 - [ ] Storage.
 - [ ] Service-role runtime paths.

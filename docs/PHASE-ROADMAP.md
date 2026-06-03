@@ -629,3 +629,22 @@ integration, n8n/Pinecone runtime behavior, SaaS chatbot runtime work, access
 to `website/chat-config.js`, or ecommerce flows such as carts, checkout,
 payments, customer accounts, stock reservation, fulfilment, confirmed booking,
 or online ordering.
+
+Phase 2C-A adds storage-backed listing media upload and public image rendering.
+Authorised owner/admin users may upload approved listing image files from the
+protected admin shell. The existing `POST /api/admin/product-images` route
+keeps JSON metadata creation unchanged and handles multipart uploads through a
+server-only branch that requires `productImage.write`, same-origin Origin/Host
+validation, a valid CSRF proof, trusted workspace resolution, a session-bound
+authenticated Supabase client, safe MIME/size/filename validation, and
+server-generated `listing-media` storage paths. Public catalogue and listing
+detail pages render real listing image URLs from approved metadata and keep
+fallback images when media is missing or unavailable.
+
+Phase 2C-A approves only admin-controlled listing media upload and public
+rendering. It does not add customer uploads, arbitrary public upload routes,
+browser Supabase, service-role runtime paths, DB/API/table/RPC/RLS renames,
+notifications, CRM integration, n8n/Pinecone runtime behavior, SaaS chatbot
+runtime work, access to `website/chat-config.js`, or ecommerce flows such as
+carts, checkout, payments, customer accounts, stock reservation, fulfilment,
+confirmed booking, or online ordering.

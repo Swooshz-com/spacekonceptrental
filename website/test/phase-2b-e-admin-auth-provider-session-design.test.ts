@@ -12,6 +12,7 @@ const approvedAuthBoundaryPath =
   "website/lib/admin/authorization/supabase-admin-auth-identity-adapter.ts";
 const approvedRequestMetadataBoundaryPath =
   "website/lib/admin/authorization/server-admin-request-metadata-adapter.ts";
+const approvedCatalogueReadPath = "website/lib/catalogue/catalogue-repository.ts";
 const adminAuthorizationModulePaths = [
   "website/lib/admin/authorization/admin-authorization-policy.ts",
   "website/lib/admin/authorization/admin-authorization-resolver.ts",
@@ -257,7 +258,8 @@ describe("Phase 2B-E admin auth provider and session design", () => {
       .filter(
         ({ filePath }) =>
           !filePath.startsWith("website/app/api/") &&
-          !filePath.startsWith("website/lib/supabase/")
+          !filePath.startsWith("website/lib/supabase/") &&
+          filePath !== approvedCatalogueReadPath
       )
       .map(({ source }) => source)
       .join("\n");

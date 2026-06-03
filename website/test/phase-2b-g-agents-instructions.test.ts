@@ -10,6 +10,7 @@ const approvedAuthBoundaryPath =
   "website/lib/admin/authorization/supabase-admin-auth-identity-adapter.ts";
 const approvedRequestMetadataBoundaryPath =
   "website/lib/admin/authorization/server-admin-request-metadata-adapter.ts";
+const approvedCatalogueReadPath = "website/lib/catalogue/catalogue-repository.ts";
 const sourceExtensions = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs"]);
 
 const expectedN8nWorkflowHashes = new Map([
@@ -214,7 +215,8 @@ describe("Phase 2B-G repo agent instructions refresh", () => {
       .filter(
         ({ filePath }) =>
           !filePath.startsWith("website/app/api/") &&
-          !filePath.startsWith("website/lib/supabase/")
+          !filePath.startsWith("website/lib/supabase/") &&
+          filePath !== approvedCatalogueReadPath
       )
       .map(({ source }) => source)
       .join("\n");

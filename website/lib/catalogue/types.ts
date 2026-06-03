@@ -12,6 +12,7 @@ export type PublicCatalogueImage = {
   id: string;
   storageBucket: string;
   storagePath: string;
+  publicUrl?: string;
   altText?: string;
   sortOrder: number;
   isPrimary: boolean;
@@ -27,6 +28,7 @@ export type PublicCatalogueProduct = {
   sortOrder: number;
   categoryId?: string;
   categoryName?: string;
+  images?: PublicCatalogueImage[];
   primaryImage?: PublicCatalogueImage;
   source: PublicCatalogueSource;
 };

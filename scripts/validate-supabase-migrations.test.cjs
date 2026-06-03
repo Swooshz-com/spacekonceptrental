@@ -297,7 +297,7 @@ test('real migration directory passes static validation', () => {
   const result = runValidator(realMigrationsDir);
 
   assert.equal(result.status, 0, result.stdout + result.stderr);
-  assert.match(result.stdout, /checked 6 migration SQL file\(s\)/);
+  assert.match(result.stdout, /checked 7 migration SQL file\(s\)/);
 });
 
 test('real base schema migration creates the planned MVP tables', () => {
@@ -514,6 +514,57 @@ test('real migrations add authenticated product-admin write policies without ser
     sql,
     /grant\s+(insert|update|delete|all)\b[\s\S]*on public\.(categories|products|product_images) to anon;/,
   );
+});
+
+test('real migrations add listing media storage bucket and workspace-scoped object policies', () => {
+  const sql = normalizeSql(readAllRealMigrationSql());
+  const storageMigration = normalizeSql(
+    fs.readFileSync(
+      path.join(realMigrationsDir, '20260603090000_listing_media_storage.sql'),
+      'utf8',
+    ),
+  );
+
+  assert.match(
+    sql,
+    /insert into storage\.buckets \( id, name, public, file_size_limit, allowed_mime_types \) values \( 'listing-media', 'listing-media', true, 5242880, array\['image\/jpeg', 'image\/png', 'image\/webp', 'image\/avif'\] \)/,
+  );
+  assert.match(
+    sql,
+    /create or replace function public\.is_listing_media_object_path\( object_name text \)/,
+  );
+  assert.match(
+    sql,
+    /create policy listing_media_public_read on storage\.objects for select to anon, authenticated using \(/,
+  );
+  assert.match(
+    sql,
+    /create policy listing_media_product_admin_insert on storage\.objects for insert to authenticated with check \(/,
+  );
+  assert.match(
+    sql,
+    /create or replace function public\.is_public_listing_media_object\( object_bucket text, object_name text \)/,
+  );
+  assert.match(
+    sql,
+    /create or replace function public\.is_listing_media_product_admin_object\( object_bucket text, object_name text \)/,
+  );
+  assert.match(
+    sql,
+    /public\.is_workspace_product_manager\( split_part\(object_name, '\/', 1\)::uuid \)/,
+  );
+  assert.match(sql, /p\.id = split_part\(object_name, '\/', 2\)::uuid/);
+  assert.match(
+    sql,
+    /public\.is_public_listing_media_object\( storage\.objects\.bucket_id, storage\.objects\.name \)/,
+  );
+  assert.match(
+    sql,
+    /public\.is_listing_media_product_admin_object\( storage\.objects\.bucket_id, storage\.objects\.name \)/,
+  );
+  assert.doesNotMatch(storageMigration, /for insert to anon/);
+  assert.doesNotMatch(storageMigration, /image\/svg\+xml|svg/);
+  assert.doesNotMatch(storageMigration, /service_role/i);
 });
 
 test('real migrations do not enable anonymous chat persistence writes', () => {

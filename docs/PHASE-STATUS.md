@@ -4,6 +4,34 @@ This is the quick status page for the SKR repo. Use `docs/PHASE-2-READINESS-PLAN
 
 ## Current phase
 
+Current phase: Phase 2C-A - storage-backed listing media upload and public image rendering.
+
+This phase adds an admin-controlled listing media workflow. Authorised
+owner/admin users can upload approved JPEG, PNG, WebP, or AVIF listing images
+through the protected admin shell. The existing `POST /api/admin/product-images`
+route now keeps JSON metadata creation unchanged and handles multipart uploads
+through a server-only branch that requires `productImage.write`, same-origin
+Origin/Host validation, a valid CSRF proof, trusted workspace resolution, and a
+session-bound authenticated Supabase client. Uploaded files are stored in the
+public `listing-media` bucket under server-generated workspace/listing paths,
+then existing `product_images` metadata is created through the current
+metadata persistence contract. Public catalogue and listing detail pages render
+real listing images when image URLs are available and keep safe fallback
+imagery when they are not. This phase does not add customer uploads, arbitrary
+public upload routes, carts, checkout, payments, customer accounts, stock
+reservation, order fulfilment, confirmed booking, online ordering, quote
+status tracking, notifications, CRM integration, browser Supabase, service-role
+runtime paths, DB/API/table/RPC/RLS renames, n8n/Pinecone runtime behavior,
+SaaS chatbot runtime work, or `website/chat-config.js` access.
+
+Latest completed phase: Phase 2B-AY - admin listing image metadata UI boundary.
+
+Last merged phase PR: #92
+
+Merge commit: `eaf6f19a42e47b9bfb7f9ecb780bbec5bed50cbd`
+
+## Previous merged status snapshot: Phase 2B-AY
+
 Current phase: Phase 2B-AY - admin listing image metadata UI boundary.
 
 This phase adds metadata-only listing image management controls inside the
