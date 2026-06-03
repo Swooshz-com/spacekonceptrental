@@ -319,7 +319,8 @@ describe("Phase 2B-AJ - admin CSRF session/workspace binding runtime dependencie
       "website/app/api/admin/products/[productId]/archive/route.ts",
       "website/app/api/admin/products/[productId]/publish/route.ts",
       "website/app/api/admin/products/[productId]/route.ts",
-      "website/app/api/admin/products/route.ts"
+      "website/app/api/admin/products/route.ts",
+      "website/app/api/admin/quote-requests/[quoteRequestId]/status/route.ts"
     ]);
     expect(readTrackedFiles(["website/app/api/products"])).toEqual([]);
     expect(readTrackedFiles(["website/app/api/categories"])).toEqual([]);
