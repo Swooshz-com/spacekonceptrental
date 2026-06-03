@@ -355,8 +355,13 @@ Keep existing `products`, `categories`, and `product_images` database/API/RPC/he
   are enabled.
 - Keep public catalogue reads read-only, published-only, and scoped by trusted
   server-side workspace configuration.
-- Keep listing image/media persistence deferred until Supabase Storage strategy,
-  upload flows, path validation, and lifecycle rules are approved.
+- Keep binary listing image/media persistence deferred until Supabase Storage
+  strategy, upload flows, path validation, and lifecycle rules are approved.
+- Phase 2B-AY may expose listing image bucket/path metadata only to
+  authorised admins inside the protected admin shell. It must not add binary
+  image upload, file inputs, multipart form handling, Supabase Storage calls,
+  public image upload routes, public image management routes, browser
+  Supabase, or service-role runtime paths.
 - Treat Git-tracked prepared images as demo/public-shell assets, not the
   long-term media store.
 
@@ -507,11 +512,13 @@ is allowed. It may use only a session-bound authenticated admin read client,
 trusted `ADMIN_TRUSTED_WORKSPACE_ID`, RLS, and select-only reads of
 `categories`, `products`, and `product_images`.
 
-The dashboard must not expose SQL/provider errors, stack traces, cookies,
-tokens, env values, workspace internals, membership internals, storage paths,
-service-role details, or secrets. Missing env, unavailable dependencies,
-provider errors, and malformed rows must fail into a generic unavailable
-state.
+The Phase 2B-AO read-only dashboard summary must not expose SQL/provider
+errors, stack traces, cookies, tokens, env values, workspace internals,
+membership internals, service-role details, or secrets. Phase 2B-AY is the
+separate approved metadata-only admin UI boundary for authorised admins to
+view and edit listing image bucket/path metadata. Missing env, unavailable
+dependencies, provider errors, and malformed rows must fail into a generic
+unavailable state.
 
 Phase 2B-AO does not add product/category/product-image write forms,
 create/edit/archive/publish/delete controls, server actions, binary uploads,

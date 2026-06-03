@@ -1095,3 +1095,33 @@ confirmed booking, online ordering, image upload, Supabase Storage, SQL
 migrations, DB/API/table/RPC/RLS renames, browser Supabase, service-role
 runtime paths, n8n/Pinecone runtime behavior, SaaS chatbot runtime work,
 ecommerce flows, or access `website/chat-config.js`.
+
+## 2026-06-03: Admin Listing Image Metadata UI Boundary
+
+Decision: Phase 2B-AY adds only metadata listing image management controls
+inside the protected admin shell.
+
+Reason: Phase 2B-AL/AM already added protected backend product-image metadata
+routes, and Phase 2B-AS added listing metadata controls while leaving image
+management UI out of scope. The next narrow admin step is to reuse the
+existing `productImage.write` route/CSRF boundary for image metadata records
+without adding file handling or Supabase Storage.
+
+The implementation extends the existing server-only admin dashboard read
+boundary to include editable image metadata rows scoped to
+`ADMIN_TRUSTED_WORKSPACE_ID`. The browser component is visible only after the
+protected admin shell has loaded authorised dashboard data. It requests a
+first-party CSRF proof for `productImage.write`, posts only approved JSON
+metadata fields to `POST /api/admin/product-images` and
+`POST /api/admin/product-images/[imageId]`, and archives through
+`POST /api/admin/product-images/[imageId]/archive`. Failures render only
+generic admin-safe copy.
+
+Phase 2B-AY does not add binary image upload, file inputs,
+multipart/form-data, Supabase Storage bucket creation or API calls, public
+image upload routes, public image management routes, DB/API/table/RPC/RLS
+renames, SQL migrations, browser Supabase, service-role runtime paths,
+notifications, CRM integration, n8n/Pinecone runtime behavior, SaaS chatbot
+runtime work, ecommerce flows including cart, checkout, payments, customer
+accounts, stock reservation, fulfilment, confirmed booking, online ordering,
+or access `website/chat-config.js`.

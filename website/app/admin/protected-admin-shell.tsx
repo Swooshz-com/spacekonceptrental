@@ -11,6 +11,7 @@ import {
   type AdminQuoteRequestInboxReadResult
 } from "../../lib/quote/admin-read/admin-quote-request-dashboard-read";
 import { CategoryManagementPanel } from "../../components/admin/category-management-panel";
+import { ListingImageMetadataManagementPanel } from "../../components/admin/listing-image-metadata-management-panel";
 import { ListingManagementPanel } from "../../components/admin/listing-management-panel";
 import { QuoteRequestInboxPanel } from "../../components/admin/quote-request-inbox-panel";
 
@@ -243,6 +244,10 @@ function AdminDashboard({
       <CategoryManagementPanel categories={dashboard.data.categories} />
       <ListingManagementPanel
         categories={dashboard.data.categories}
+        products={dashboard.data.products}
+      />
+      <ListingImageMetadataManagementPanel
+        images={dashboard.data.images}
         products={dashboard.data.products}
       />
     </section>

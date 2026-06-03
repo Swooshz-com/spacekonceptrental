@@ -45,6 +45,7 @@ describe("protected admin shell", () => {
       data: {
         categories: [],
         products: [],
+        images: [],
         imageSummary: {
           totalImages: 0,
           activeImages: 0,
@@ -66,6 +67,7 @@ describe("protected admin shell", () => {
         data: {
           categories: [],
           products: [],
+          images: [],
           imageSummary: {
             totalImages: 0,
             activeImages: 0,
@@ -230,6 +232,18 @@ describe("protected admin shell", () => {
                   primaryImageAltText: "Lounge set"
                 }
               ],
+              images: [
+                {
+                  id: "image-1",
+                  productId: "product-1",
+                  storageBucket: "catalogue-metadata",
+                  storagePath: "fixtures/lounge-main.jpg",
+                  altText: "Lounge set",
+                  sortOrder: 1,
+                  isPrimary: true,
+                  status: "active"
+                }
+              ],
               imageSummary: {
                 totalImages: 2,
                 activeImages: 2,
@@ -294,7 +308,7 @@ describe("protected admin shell", () => {
       screen.getByRole("button", { name: /archive category lounge/i })
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: /create listing/i })
+      screen.getByRole("button", { name: /^create listing$/i })
     ).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: /save listing modular lounge/i })
@@ -304,6 +318,18 @@ describe("protected admin shell", () => {
     ).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: /archive listing modular lounge/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: /listing image metadata management/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /create listing image metadata/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /save image metadata lounge set/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /archive image metadata lounge set/i })
     ).toBeInTheDocument();
     expect(
       screen.getByRole("heading", { name: /quote request inbox/i })
@@ -335,7 +361,7 @@ describe("protected admin shell", () => {
     expect(
       screen.queryByText(/cart|checkout|payment|customer account|stock reservation|order fulfilment|online ordering/i)
     ).not.toBeInTheDocument();
-    expect(screen.queryByLabelText(/image upload|storage path/i)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/image upload|file upload/i)).not.toBeInTheDocument();
     expect(screen.queryByLabelText(/product editor/i)).not.toBeInTheDocument();
   });
 
@@ -368,8 +394,12 @@ describe("protected admin shell", () => {
         screen.queryByRole("button", { name: /create category/i })
       ).not.toBeInTheDocument();
       expect(
-        screen.queryByRole("button", { name: /create listing/i })
+        screen.queryByRole("button", { name: /^create listing$/i })
       ).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole("button", { name: /create listing image metadata/i })
+      ).not.toBeInTheDocument();
+      expect(screen.queryByLabelText(/listing image metadata management/i)).not.toBeInTheDocument();
       expect(screen.queryByLabelText(/category management/i)).not.toBeInTheDocument();
       expect(screen.queryByLabelText(/listing management/i)).not.toBeInTheDocument();
       expect(
