@@ -23,6 +23,23 @@ const quoteRequest = {
       notes: "VIP reception area",
       createdAt: "2026-06-03T10:31:00.000Z"
     }
+  ],
+  activity: [
+    {
+      id: "44444444-4444-4444-8444-444444444444",
+      quoteRequestId: "22222222-2222-4222-8222-222222222222",
+      activityType: "internal_note" as const,
+      note: "Call Maya about sofa quantities.",
+      createdAt: "2026-06-03T10:40:00.000Z"
+    },
+    {
+      id: "55555555-5555-4555-8555-555555555555",
+      quoteRequestId: "22222222-2222-4222-8222-222222222222",
+      activityType: "status_change" as const,
+      statusFrom: "new" as const,
+      statusTo: "reviewing" as const,
+      createdAt: "2026-06-03T10:35:00.000Z"
+    }
   ]
 };
 
@@ -62,9 +79,12 @@ describe("QuoteRequestInboxPanel", () => {
     ).toBeInTheDocument();
     expect(
       screen.getByRole("button", {
-        name: /save status for QR-20260603-NEWEST/i
+        name: /save follow-up for QR-20260603-NEWEST/i
       })
     ).toBeInTheDocument();
+    expect(screen.getByLabelText(/internal note for QR-20260603-NEWEST/i)).toBeInTheDocument();
+    expect(screen.getByText(/call maya about sofa quantities/i)).toBeInTheDocument();
+    expect(screen.getByText(/status changed from new to reviewing/i)).toBeInTheDocument();
     expect(
       screen.getByText(/internal follow-up status only/i)
     ).toBeInTheDocument();
@@ -106,9 +126,17 @@ describe("QuoteRequestInboxPanel", () => {
         }
       }
     );
+    fireEvent.change(
+      screen.getByLabelText(/internal note for QR-20260603-NEWEST/i),
+      {
+        target: {
+          value: "Call Maya about sofa quantities."
+        }
+      }
+    );
     fireEvent.click(
       screen.getByRole("button", {
-        name: /save status for QR-20260603-NEWEST/i
+        name: /save follow-up for QR-20260603-NEWEST/i
       })
     );
 
@@ -136,7 +164,8 @@ describe("QuoteRequestInboxPanel", () => {
           "x-csrf-proof": "proof-secret"
         },
         body: JSON.stringify({
-          status: "quoted"
+          status: "quoted",
+          internalNote: "Call Maya about sofa quantities."
         })
       }
     );
@@ -163,7 +192,7 @@ describe("QuoteRequestInboxPanel", () => {
 
     fireEvent.click(
       screen.getByRole("button", {
-        name: /save status for QR-20260603-NEWEST/i
+        name: /save follow-up for QR-20260603-NEWEST/i
       })
     );
 

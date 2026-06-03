@@ -667,3 +667,19 @@ runtime paths, n8n/Pinecone runtime behavior, SaaS chatbot runtime work, access
 to `website/chat-config.js`, or ecommerce flows such as carts, checkout,
 payments, customer accounts, stock reservation, fulfilment, confirmed booking,
 or online ordering.
+
+Phase 2C-C adds admin quote operations and enquiry workflow closeout. It lets
+authorised owner/admin users save internal follow-up notes alongside quote
+request status changes from the protected admin quote inbox, and lets the
+server-only admin quote read boundary return recent admin-only quote activity
+for the trusted workspace. Quote workflow writes remain first-party,
+route-gated, CSRF-protected, session-bound, and scoped by owner/admin RLS.
+
+Phase 2C-C does not add public quote status tracking, customer-visible
+internal notes, notifications, CRM integration, customer accounts, customer
+uploads, arbitrary public upload routes, DB/API/RPC/table renames, browser
+Supabase, service-role runtime paths, deployment config, Supabase Cloud
+actions, n8n/Pinecone runtime behavior, SaaS chatbot runtime work, access to
+`website/chat-config.js`, or ecommerce flows such as carts, checkout,
+payments, stock reservation, fulfilment, confirmed booking, or online
+ordering.

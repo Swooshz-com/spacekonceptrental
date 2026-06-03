@@ -576,3 +576,29 @@ uploads, arbitrary public upload routes, public quote status tracking,
 notifications, CRM integration, browser Supabase, service-role runtime paths,
 DB/API/table/RPC/RLS renames, n8n/Pinecone runtime behavior, SaaS chatbot
 runtime work, or `website/chat-config.js` access.
+
+## Phase 2C-C Admin Quote Operations Boundary
+
+Phase 2C-C approves only internal admin quote/enquiry follow-up inside the
+protected admin shell. Authorised owner/admin users may update an existing
+quote request status and save bounded internal notes through the first-party
+`POST /api/admin/quote-requests/[quoteRequestId]/status` route. The route must
+require the existing `quote.write` operation, same-origin Origin/Host
+validation, a valid CSRF proof, trusted workspace resolution, and a
+session-bound authenticated Supabase client. Writes may update only
+`quote_requests.status`/`updated_at` and insert admin-only
+`quote_request_activity` rows scoped to the trusted workspace.
+
+The admin quote read boundary may return recent internal activity only to the
+protected admin shell after owner/admin access. Public quote pages and public
+quote APIs must not expose quote workflow status, internal notes, admin user
+IDs, workspace internals, provider errors, SQL, stack traces, service-role
+details, tokens, or secrets.
+
+Phase 2C-C does not approve public quote status tracking, customer-visible
+internal notes, notifications, CRM integration, carts, checkout, payments,
+customer accounts, stock reservation, order fulfilment, confirmed booking,
+online ordering, customer uploads, arbitrary public upload routes, browser
+Supabase, service-role runtime paths, deployment config, Supabase Cloud
+actions, n8n/Pinecone runtime behavior, SaaS chatbot runtime work, or
+`website/chat-config.js` access.

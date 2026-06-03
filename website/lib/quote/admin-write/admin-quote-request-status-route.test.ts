@@ -114,13 +114,14 @@ async function json(response: Response) {
 }
 
 describe("admin quote request status update route helper", () => {
-  it("updates quote request status after quote.write CSRF and admin gate checks", async () => {
+  it("updates quote request workflow after quote.write CSRF and admin gate checks", async () => {
     const persistence = createPersistence();
     const dependencies = createDependencies(persistence);
 
     const response = await handleAdminQuoteRequestStatusUpdateRoute(
       request({
-        status: "reviewing"
+        status: "reviewing",
+        internalNote: "Call Maya about sofa quantities."
       }),
       {
         quoteRequestId
@@ -164,7 +165,8 @@ describe("admin quote request status update route helper", () => {
     expect(persistence.updateStatus).toHaveBeenCalledWith({
       admin: adminContext,
       quoteRequestId,
-      status: "reviewing"
+      status: "reviewing",
+      internalNote: "Call Maya about sofa quantities."
     });
     expect(await json(response)).toStrictEqual({
       ok: true,
@@ -178,6 +180,7 @@ describe("admin quote request status update route helper", () => {
   it.each([
     [request({ status: "reviewing" }, { headers: { "x-csrf-proof": "" } }), "csrf_proof_missing", 403],
     [request({ status: "paid" }), "request_payload_invalid", 400],
+    [request({ status: "reviewing", internalNote: "x".repeat(1201) }), "request_payload_invalid", 400],
     [request({ status: "reviewing", customerName: "Maya" }), "request_payload_invalid", 400],
     [request(undefined), "request_body_missing", 400],
     [request(undefined, { method: "GET" }), "request_method_not_allowed", 405]

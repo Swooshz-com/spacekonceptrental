@@ -59,6 +59,32 @@ function createSupabase(result: MutationResult = {
       });
 
       return {
+        select: vi.fn((columns: string) => {
+          calls.push({
+            step: "quote_select",
+            args: [columns]
+          });
+
+          const quoteSelectBuilder = {
+            eq: vi.fn((column: string, value: string) => {
+              calls.push({
+                step: "quote_eq",
+                args: [column, value]
+              });
+
+              return quoteSelectBuilder;
+            }),
+            single: vi.fn(async () => ({
+              data: {
+                id: quoteRequestId,
+                status: "new"
+              },
+              error: null
+            }))
+          };
+
+          return quoteSelectBuilder;
+        }),
         update: vi.fn((payload: Record<string, unknown>) => {
           calls.push({
             step: "update",
@@ -66,6 +92,30 @@ function createSupabase(result: MutationResult = {
           });
 
           return builder;
+        }),
+        insert: vi.fn((payload: unknown) => {
+          calls.push({
+            step: "activity_insert",
+            args: [payload]
+          });
+
+          return {
+            select: vi.fn(async (columns: string) => {
+              calls.push({
+                step: "activity_select",
+                args: [columns]
+              });
+
+              return {
+                data: [
+                  {
+                    id: "55555555-5555-4555-8555-555555555555"
+                  }
+                ],
+                error: null
+              };
+            })
+          };
         })
       };
     })
@@ -74,6 +124,128 @@ function createSupabase(result: MutationResult = {
   return {
     calls,
     client
+  };
+}
+
+function createWorkflowSupabase({
+  currentStatus = "new",
+  updateResult = {
+    data: {
+      id: quoteRequestId
+    },
+    error: null
+  },
+  activityResult = {
+    data: [
+      {
+        id: "55555555-5555-4555-8555-555555555555"
+      },
+      {
+        id: "66666666-6666-4666-8666-666666666666"
+      }
+    ],
+    error: null
+  }
+}: {
+  currentStatus?: string;
+  updateResult?: MutationResult;
+  activityResult?: MutationResult;
+} = {}) {
+  const calls: Array<{
+    step: string;
+    args: unknown[];
+  }> = [];
+  const quoteSelectBuilder = {
+    eq: vi.fn((column: string, value: string) => {
+      calls.push({
+        step: "quote_eq",
+        args: [column, value]
+      });
+
+      return quoteSelectBuilder;
+    }),
+    single: vi.fn(async () => ({
+      data: {
+        id: quoteRequestId,
+        status: currentStatus
+      },
+      error: null
+    }))
+  };
+  const updateBuilder = {
+    eq: vi.fn((column: string, value: string) => {
+      calls.push({
+        step: "update_eq",
+        args: [column, value]
+      });
+
+      return updateBuilder;
+    }),
+    select: vi.fn((columns: string) => {
+      calls.push({
+        step: "update_select",
+        args: [columns]
+      });
+
+      return {
+        single: vi.fn(async () => updateResult)
+      };
+    })
+  };
+  const activityInsertBuilder = {
+    select: vi.fn((columns: string) => {
+      calls.push({
+        step: "activity_select",
+        args: [columns]
+      });
+
+      return Promise.resolve(activityResult);
+    })
+  };
+  const client = {
+    from: vi.fn((table: string) => {
+      calls.push({
+        step: "from",
+        args: [table]
+      });
+
+      if (table === "quote_requests") {
+        return {
+          select: vi.fn((columns: string) => {
+            calls.push({
+              step: "quote_select",
+              args: [columns]
+            });
+
+            return quoteSelectBuilder;
+          }),
+          update: vi.fn((payload: Record<string, unknown>) => {
+            calls.push({
+              step: "update",
+              args: [payload]
+            });
+
+            return updateBuilder;
+          })
+        };
+      }
+
+      return {
+        insert: vi.fn((payload: unknown) => {
+          calls.push({
+            step: "activity_insert",
+            args: [payload]
+          });
+
+          return activityInsertBuilder;
+        })
+      };
+    })
+  };
+
+  return {
+    calls,
+    client: client as never
   };
 }
 
@@ -104,16 +276,22 @@ describe("admin quote request status write boundary", () => {
       }
     });
 
-    expect(calls).toStrictEqual([
+    expect(calls).toEqual(
+      expect.arrayContaining([
       {
         step: "from",
         args: ["quote_requests"]
       },
       {
+        step: "quote_select",
+        args: ["id, status"]
+      },
+      {
         step: "update",
         args: [
           {
-            status: "reviewing"
+            status: "reviewing",
+            updated_at: expect.any(String)
           }
         ]
       },
@@ -129,7 +307,24 @@ describe("admin quote request status write boundary", () => {
         step: "select",
         args: ["id"]
       }
-    ]);
+      ])
+    );
+    expect(calls).toContainEqual({
+      step: "activity_insert",
+      args: [
+        [
+          {
+            workspace_id: workspaceId,
+            quote_request_id: quoteRequestId,
+            actor_admin_user_id: adminContext.adminUserId,
+            activity_type: "status_change",
+            status_from: "new",
+            status_to: "reviewing",
+            note: null
+          }
+        ]
+      ]
+    });
     expect(JSON.stringify(calls)).not.toContain("customer_name");
     expect(JSON.stringify(calls)).not.toContain("quote_request_items");
   });
@@ -159,6 +354,73 @@ describe("admin quote request status write boundary", () => {
       });
     }
   );
+
+  it("writes internal status activity and bounded notes for the trusted workspace", async () => {
+    const { calls, client } = createWorkflowSupabase();
+
+    await expect(
+      updateAdminQuoteRequestStatus(
+        {
+          admin: adminContext,
+          quoteRequestId,
+          status: "reviewing",
+          internalNote: "Call Maya about sofa quantities."
+        },
+        {
+          supabase: {
+            configured: true,
+            client,
+            missingEnv: []
+          }
+        }
+      )
+    ).resolves.toStrictEqual({
+      ok: true,
+      record: {
+        id: quoteRequestId,
+        type: "quoteRequest"
+      }
+    });
+
+    expect(calls).toContainEqual({
+      step: "quote_select",
+      args: ["id, status"]
+    });
+    expect(calls).toContainEqual({
+      step: "update",
+      args: [
+        {
+          status: "reviewing",
+          updated_at: expect.any(String)
+        }
+      ]
+    });
+    expect(calls).toContainEqual({
+      step: "activity_insert",
+      args: [
+        [
+          {
+            workspace_id: workspaceId,
+            quote_request_id: quoteRequestId,
+            actor_admin_user_id: adminContext.adminUserId,
+            activity_type: "status_change",
+            status_from: "new",
+            status_to: "reviewing",
+            note: null
+          },
+          {
+            workspace_id: workspaceId,
+            quote_request_id: quoteRequestId,
+            actor_admin_user_id: adminContext.adminUserId,
+            activity_type: "internal_note",
+            status_from: null,
+            status_to: null,
+            note: "Call Maya about sofa quantities."
+          }
+        ]
+      ]
+    });
+  });
 
   it("fails closed for invalid admin context, quote ID, status, missing client, and provider errors", async () => {
     const invalidContext = await updateAdminQuoteRequestStatus(

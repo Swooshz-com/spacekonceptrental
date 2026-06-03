@@ -26,6 +26,7 @@ const expectedTables = [
   'messages',
   'product_images',
   'products',
+  'quote_request_activity',
   'quote_request_items',
   'quote_requests',
   'usage_events',
@@ -57,6 +58,7 @@ const ids = {
   imageDraftB: '60000000-0000-4000-8000-000000000004',
   quoteA: '70000000-0000-4000-8000-000000000001',
   quoteB: '70000000-0000-4000-8000-000000000002',
+  quoteActivityA: '70500000-0000-4000-8000-000000000001',
   quoteItemA: '71000000-0000-4000-8000-000000000001',
   quoteItemB: '71000000-0000-4000-8000-000000000002',
   conversationA: '80000000-0000-4000-8000-000000000001',
@@ -303,6 +305,23 @@ function seedFixtures() {
     values
       ('${ids.quoteItemA}', '${ids.workspaceA}', '${ids.quoteA}', '${ids.productPublishedA}', 'Published Product A', 2),
       ('${ids.quoteItemB}', '${ids.workspaceB}', '${ids.quoteB}', '${ids.productPublishedB}', 'Published Product B', 3);
+
+    insert into public.quote_request_activity (
+      id,
+      workspace_id,
+      quote_request_id,
+      actor_admin_user_id,
+      activity_type,
+      note
+    )
+    values (
+      '${ids.quoteActivityA}',
+      '${ids.workspaceA}',
+      '${ids.quoteA}',
+      '${ids.adminA}',
+      'internal_note',
+      'Seeded internal quote note'
+    );
 
     insert into public.conversations (id, workspace_id, public_reference, quote_request_id)
     values
@@ -631,6 +650,16 @@ check('authenticated active member reads only their workspace admin data', () =>
     scalarAs(
       'authenticated',
       ids.authMemberA,
+      "select coalesce(string_agg(note, ',' order by note), '') from public.quote_request_activity",
+    ),
+    'Seeded internal quote note',
+    'owner A should read only workspace A quote activity',
+  );
+
+  assertCsv(
+    scalarAs(
+      'authenticated',
+      ids.authMemberA,
       "select coalesce(string_agg(public_reference, ',' order by public_reference), '') from public.conversations",
     ),
     'conversation-a',
@@ -662,6 +691,7 @@ check('authenticated active member cannot read another workspace admin rows', ()
   const workspaceBFilters = [
     ['workspaces', `id = '${ids.workspaceB}'`],
     ['memberships', `workspace_id = '${ids.workspaceB}'`],
+    ['quote_request_activity', `workspace_id = '${ids.workspaceB}'`],
     ['quote_requests', `workspace_id = '${ids.workspaceB}'`],
     ['quote_request_items', `workspace_id = '${ids.workspaceB}'`],
     ['conversations', `workspace_id = '${ids.workspaceB}'`],
@@ -686,6 +716,7 @@ check('authenticated user without membership cannot read admin-only workspace ro
   const adminOnlyTables = [
     'workspaces',
     'memberships',
+    'quote_request_activity',
     'quote_requests',
     'quote_request_items',
     'conversations',
@@ -964,6 +995,144 @@ check('anonymous public quote creation rejects non-website workflow states', () 
         'public-customer@example.test',
         'reviewing',
         'website'
+      )
+    `,
+  );
+});
+
+check('authenticated quote admins can update status and insert internal activity only for their workspace', () => {
+  const output = queryAs(
+    'authenticated',
+    ids.authMemberA,
+    `
+      update public.quote_requests
+      set status = 'reviewing',
+        updated_at = now()
+      where id = '${ids.quoteA}'
+        and workspace_id = '${ids.workspaceA}'
+      returning status;
+
+      insert into public.quote_request_activity (
+        workspace_id,
+        quote_request_id,
+        actor_admin_user_id,
+        activity_type,
+        status_from,
+        status_to,
+        note
+      )
+      values (
+        '${ids.workspaceA}',
+        '${ids.quoteA}',
+        '${ids.adminA}',
+        'status_change',
+        'new',
+        'reviewing',
+        null
+      )
+      returning activity_type;
+
+      insert into public.quote_request_activity (
+        workspace_id,
+        quote_request_id,
+        actor_admin_user_id,
+        activity_type,
+        note
+      )
+      values (
+        '${ids.workspaceA}',
+        '${ids.quoteA}',
+        '${ids.adminA}',
+        'internal_note',
+        'Follow up on lounge seating quantities.'
+      )
+      returning note;
+    `,
+  );
+
+  assert.deepEqual(
+    output.split('\n').filter(Boolean),
+    ['reviewing', 'status_change', 'Follow up on lounge seating quantities.'],
+    'owner should update quote workflow and write internal activity in their workspace',
+  );
+});
+
+check('authenticated quote workflow writes reject cross-workspace, viewer, and anonymous callers', () => {
+  assert.equal(
+    queryAs(
+      'authenticated',
+      ids.authMemberA,
+      `
+      update public.quote_requests
+      set status = 'quoted'
+      where id = '${ids.quoteB}'
+        and workspace_id = '${ids.workspaceB}'
+      returning id::text
+    `,
+    ),
+    '',
+    'owner A should not update quote request status in workspace B',
+  );
+
+  statementFailsAs(
+    'authenticated',
+    ids.authViewerA,
+    `
+      insert into public.quote_request_activity (
+        workspace_id,
+        quote_request_id,
+        actor_admin_user_id,
+        activity_type,
+        note
+      )
+      values (
+        '${ids.workspaceA}',
+        '${ids.quoteA}',
+        '${ids.adminViewerA}',
+        'internal_note',
+        'Viewer should not write notes.'
+      )
+    `,
+  );
+
+  statementFailsAs(
+    'authenticated',
+    ids.authNoMembership,
+    `
+      insert into public.quote_request_activity (
+        workspace_id,
+        quote_request_id,
+        actor_admin_user_id,
+        activity_type,
+        note
+      )
+      values (
+        '${ids.workspaceA}',
+        '${ids.quoteA}',
+        '${ids.adminNoMembership}',
+        'internal_note',
+        'No-membership user should not write notes.'
+      )
+    `,
+  );
+
+  statementFailsAs(
+    'anon',
+    null,
+    `
+      insert into public.quote_request_activity (
+        workspace_id,
+        quote_request_id,
+        actor_admin_user_id,
+        activity_type,
+        note
+      )
+      values (
+        '${ids.workspaceA}',
+        '${ids.quoteA}',
+        '${ids.adminA}',
+        'internal_note',
+        'Anonymous note should fail.'
       )
     `,
   );

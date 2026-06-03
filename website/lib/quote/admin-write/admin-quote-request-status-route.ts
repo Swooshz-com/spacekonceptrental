@@ -53,6 +53,7 @@ type PayloadParseResult =
   | {
       ok: true;
       status: AdminQuoteRequestStatus;
+      internalNote?: string;
     }
   | {
       ok: false;
@@ -71,6 +72,7 @@ const quoteRequestStatuses = new Set<AdminQuoteRequestStatus>([
   "archived"
 ]);
 const defaultProofMaxAgeMs = 5 * 60_000;
+const maxInternalNoteLength = 1200;
 
 function normalizeRequired(value: string | null | undefined) {
   const normalized = value?.trim();
@@ -129,10 +131,37 @@ function successJson(result: AdminQuoteRequestStatusWriteResult) {
 }
 
 function parsePayload(body: Record<string, unknown>): PayloadParseResult {
-  if (!hasOnlyKeys(body, ["status"]) || !isQuoteRequestStatus(body.status)) {
+  if (
+    !hasOnlyKeys(body, ["status", "internalNote"]) ||
+    !isQuoteRequestStatus(body.status)
+  ) {
     return {
       ok: false
     };
+  }
+
+  if (body.internalNote !== undefined) {
+    if (typeof body.internalNote !== "string") {
+      return {
+        ok: false
+      };
+    }
+
+    const internalNote = body.internalNote.trim();
+
+    if (internalNote.length > maxInternalNoteLength) {
+      return {
+        ok: false
+      };
+    }
+
+    if (internalNote) {
+      return {
+        ok: true,
+        status: body.status,
+        internalNote
+      };
+    }
   }
 
   return {
@@ -307,7 +336,8 @@ export async function handleAdminQuoteRequestStatusUpdateRoute(
   const result = await persistence.updateStatus({
     admin: binding.adminContext,
     quoteRequestId: config.quoteRequestId.trim(),
-    status: payload.status
+    status: payload.status,
+    internalNote: payload.internalNote
   });
 
   if (!("ok" in result) || !result.ok) {
