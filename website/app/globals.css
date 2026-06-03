@@ -163,8 +163,14 @@ select {
 .hero__image img,
 .catalogue-card__image img {
   display: block;
-  height: auto;
+  height: 100%;
+  object-fit: cover;
   width: 100%;
+}
+
+.catalogue-card__image {
+  aspect-ratio: 4 / 3;
+  background: var(--accent-soft);
 }
 
 .section__header {
@@ -206,6 +212,11 @@ select {
   padding: 22px;
 }
 
+.catalogue-card__body {
+  display: grid;
+  gap: 12px;
+}
+
 .catalogue-card h3,
 .catalogue-card h2,
 .route-card h2,
@@ -221,11 +232,25 @@ select {
   margin: 0;
 }
 
+.catalogue-card__meta,
+.catalogue-card__actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+}
+
+.catalogue-card__meta {
+  color: var(--accent-dark);
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
 .card-link {
   color: var(--accent-dark);
   display: inline-flex;
   font-weight: 800;
-  margin-top: 16px;
 }
 
 .page-title {
@@ -257,9 +282,16 @@ select {
   overflow: hidden;
 }
 
-.detail-visual img {
+.detail-primary-image {
+  aspect-ratio: 4 / 3;
+  background: var(--accent-soft);
+}
+
+.detail-visual img,
+.detail-primary-image img {
   display: block;
-  height: auto;
+  height: 100%;
+  object-fit: cover;
   width: 100%;
 }
 
@@ -283,7 +315,37 @@ select {
   gap: 12px;
   line-height: 1.6;
   margin: 18px 0 0;
-  padding-left: 20px;
+}
+
+.detail-list div,
+.quote-context__details div {
+  display: grid;
+  gap: 3px;
+}
+
+.detail-list dt,
+.quote-context__details dt {
+  color: var(--accent-dark);
+  font-size: 0.76rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.detail-list dd,
+.quote-context__details dd {
+  margin: 0;
+}
+
+.quote-context {
+  display: grid;
+  gap: 12px;
+}
+
+.quote-context__details {
+  color: var(--muted);
+  display: grid;
+  gap: 10px;
+  margin: 0;
 }
 
 .quote-form {

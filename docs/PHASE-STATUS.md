@@ -4,6 +4,31 @@ This is the quick status page for the SKR repo. Use `docs/PHASE-2-READINESS-PLAN
 
 ## Current phase
 
+Current phase: Phase 2C-B - public catalogue polish and enquiry handoff.
+
+This phase polishes the public catalogue and listing detail experience for the
+furniture/event-rental website now that admin-uploaded listing images can be
+rendered. Catalogue cards and detail pages use stable image frames, clearer
+category/rental-unit hierarchy, safe fallback imagery, and enquiry-oriented CTA
+copy. Catalogue and detail CTA links may pass an optional listing slug to the
+existing quote request page; the quote page validates that slug through the
+public catalogue read surface before displaying context or pre-filling the
+existing items text area. This phase also adds safe catalogue/detail metadata
+using only public listing data. It does not add carts, checkout, payments,
+customer accounts, stock reservation, order fulfilment, confirmed booking,
+online ordering, customer uploads, arbitrary public upload routes, public quote
+status tracking, notifications, CRM integration, browser Supabase, service-role
+runtime paths, DB/API/table/RPC/RLS renames, n8n/Pinecone runtime behavior,
+SaaS chatbot runtime work, or `website/chat-config.js` access.
+
+Latest completed phase: Phase 2C-A - storage-backed listing media upload and public image rendering.
+
+Last merged phase PR: #93
+
+Merge commit: `88f8b7147bcabb06189f44c300187a4149415c2f`
+
+## Previous merged status snapshot: Phase 2C-A
+
 Current phase: Phase 2C-A - storage-backed listing media upload and public image rendering.
 
 This phase adds an admin-controlled listing media workflow. Authorised

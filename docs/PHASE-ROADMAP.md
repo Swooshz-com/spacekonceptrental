@@ -651,3 +651,19 @@ notifications, CRM integration, n8n/Pinecone runtime behavior, SaaS chatbot
 runtime work, access to `website/chat-config.js`, or ecommerce flows such as
 carts, checkout, payments, customer accounts, stock reservation, fulfilment,
 confirmed booking, or online ordering.
+
+Phase 2C-B adds public catalogue/detail polish and quote enquiry handoff. It
+improves public catalogue cards and listing detail pages for real uploaded
+listing images, preserves fallback imagery, adds safe catalogue/detail
+metadata, and lets public CTAs pass an optional listing slug into the existing
+quote request page. The quote page treats that slug as untrusted until resolved
+through the public catalogue read surface and only uses it to display context
+and prefill the existing items text area.
+
+Phase 2C-B is public read-only polish only. It does not add customer uploads,
+arbitrary public upload routes, public quote status tracking, notifications,
+CRM integration, DB/API/table/RPC/RLS renames, browser Supabase, service-role
+runtime paths, n8n/Pinecone runtime behavior, SaaS chatbot runtime work, access
+to `website/chat-config.js`, or ecommerce flows such as carts, checkout,
+payments, customer accounts, stock reservation, fulfilment, confirmed booking,
+or online ordering.

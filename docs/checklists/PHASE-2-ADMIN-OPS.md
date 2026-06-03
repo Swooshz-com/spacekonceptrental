@@ -94,6 +94,15 @@ and route/action boundaries are implemented and tested.
 - [x] Public catalogue/detail fallback images remain available when listing media is missing.
 - [x] Customer uploads, ecommerce flows, notifications, CRM, browser Supabase, and service-role runtime paths remain out of scope.
 
+## Phase 2C-B Public Catalogue Polish And Enquiry Handoff
+
+- [x] Public catalogue and listing detail pages render uploaded listing images with stable fallbacks.
+- [x] Catalogue cards use clearer listing, category, and rental-unit hierarchy.
+- [x] Listing detail pages render primary and additional gallery images when available.
+- [x] Quote enquiry handoff uses optional validated public listing context without changing the quote backend contract.
+- [x] Catalogue and listing detail metadata uses only safe public listing data.
+- [x] Customer uploads, public quote tracking, ecommerce flows, notifications, CRM, browser Supabase, and service-role runtime paths remain out of scope.
+
 ## Ecommerce Non-goals
 
 - [ ] Do not add carts.

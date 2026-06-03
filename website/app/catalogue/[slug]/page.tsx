@@ -1,8 +1,10 @@
 import Image from "next/image";
 import Link from "next/link";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import sofaImage from "../../../assets/images/product_sofa.png";
 import { getPublicProductBySlug } from "../../../lib/catalogue/catalogue-repository";
+import { getQuoteHrefForListing } from "../../../lib/catalogue/quote-handoff";
 import type {
   PublicCatalogueImage,
   PublicCatalogueProduct
@@ -19,13 +21,13 @@ export function generateStaticParams() {
   return [{ slug: "lounge-sofa-package" }];
 }
 
-function getRentalDetails(product: PublicCatalogueProduct) {
-  return [
-    product.description ?? product.shortDescription,
-    product.categoryName ? `Category: ${product.categoryName}` : undefined,
-    `Rental unit: ${product.rentalUnit}`,
-    "Final availability, delivery, and styling details are confirmed by the team."
-  ].filter((detail): detail is string => Boolean(detail));
+function getMetadataDescription(product: PublicCatalogueProduct | null) {
+  const productDescription =
+    product?.shortDescription ?? product?.description ?? undefined;
+
+  return productDescription
+    ? `${productDescription} Request an event furniture rental quote with Space Koncept Rentals.`
+    : "Browse event furniture rental listing details and request an enquiry with Space Koncept Rentals.";
 }
 
 function imageAltText(
@@ -33,6 +35,25 @@ function imageAltText(
   product: PublicCatalogueProduct
 ) {
   return image?.altText ?? `${product.name} furniture rental setup`;
+}
+
+export async function generateMetadata({
+  params
+}: ProductPageProps = {}): Promise<Metadata> {
+  const slug = await getSlug(params);
+  const product = await getPublicProductBySlug(slug);
+
+  if (!product) {
+    return {
+      title: "Furniture listing | Space Koncept Rentals",
+      description: getMetadataDescription(null)
+    };
+  }
+
+  return {
+    title: `${product.name} | Space Koncept Rentals`,
+    description: getMetadataDescription(product)
+  };
 }
 
 async function getSlug(params: ProductPageProps["params"]) {
@@ -65,18 +86,20 @@ export function ProductPageContent({
 
       <div className="detail-layout">
         <div className="detail-visual">
-          {product.primaryImage?.publicUrl ? (
-            <img
-              alt={imageAltText(product.primaryImage, product)}
-              src={product.primaryImage.publicUrl}
-            />
-          ) : (
-            <Image
-              alt={product.primaryImage?.altText ?? "Sample lounge sofa rental setup"}
-              priority
-              src={sofaImage}
-            />
-          )}
+          <div className="detail-primary-image">
+            {product.primaryImage?.publicUrl ? (
+              <img
+                alt={imageAltText(product.primaryImage, product)}
+                src={product.primaryImage.publicUrl}
+              />
+            ) : (
+              <Image
+                alt={product.primaryImage?.altText ?? `${product.name} furniture rental setup`}
+                priority
+                src={sofaImage}
+              />
+            )}
+          </div>
           {publicImages.length > 1 ? (
             <div className="detail-gallery" aria-label="Additional listing images">
               {galleryImages.map((image) => (
@@ -92,17 +115,32 @@ export function ProductPageContent({
 
         <article className="quote-panel">
           <h2>Rental details</h2>
-          <ul className="detail-list">
-            {getRentalDetails(product).map((item) => (
-              <li key={item}>{item}</li>
-            ))}
-          </ul>
+          <p>{product.description ?? product.shortDescription}</p>
+          <dl className="detail-list">
+            {product.categoryName ? (
+              <div>
+                <dt>Category</dt>
+                <dd>{product.categoryName}</dd>
+              </div>
+            ) : null}
+            <div>
+              <dt>Rental unit</dt>
+              <dd>{product.rentalUnit}</dd>
+            </div>
+            <div>
+              <dt>Follow-up</dt>
+              <dd>
+                Final availability, delivery, and styling details are confirmed
+                by the team.
+              </dd>
+            </div>
+          </dl>
 
           <div className="hero__actions">
             <Link className="button button--secondary" href="/catalogue">
               Back to catalogue
             </Link>
-            <Link className="button" href="/quote">
+            <Link className="button" href={getQuoteHrefForListing(product.slug)}>
               Start enquiry
             </Link>
           </div>

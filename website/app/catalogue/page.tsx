@@ -1,13 +1,21 @@
 import Image from "next/image";
 import Link from "next/link";
+import type { Metadata } from "next";
 import type { StaticImageData } from "next/image";
 import chairImage from "../../assets/images/product_chair.png";
 import sofaImage from "../../assets/images/product_sofa.png";
 import corporateImage from "../../assets/images/event_corporate.png";
 import { getPublicCatalogue } from "../../lib/catalogue/catalogue-repository";
+import { getQuoteHrefForListing } from "../../lib/catalogue/quote-handoff";
 import type { PublicCatalogueProduct, PublicCatalogue } from "../../lib/catalogue/types";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Furniture catalogue | Space Koncept Rentals",
+  description:
+    "Browse public event furniture rental listings and request an enquiry with Space Koncept Rentals."
+};
 
 function getProductImage(product: PublicCatalogueProduct) {
   const slug = product.slug.toLowerCase();
@@ -50,6 +58,15 @@ function CatalogueCardImage({
   return <Image alt={image?.altText ?? ""} src={fallbackImage} />;
 }
 
+function CatalogueCardMeta({ product }: { product: PublicCatalogueProduct }) {
+  return (
+    <div className="catalogue-card__meta">
+      {product.categoryName ? <span>{product.categoryName}</span> : null}
+      <span>Rental unit: {product.rentalUnit}</span>
+    </div>
+  );
+}
+
 export function CataloguePageContent({
   catalogue
 }: {
@@ -87,12 +104,20 @@ export function CataloguePageContent({
               />
             </div>
             <div className="catalogue-card__body">
+              <CatalogueCardMeta product={product} />
               <h2>{product.name}</h2>
               <p>{product.shortDescription ?? product.description}</p>
-              {product.categoryName ? <p>{product.categoryName}</p> : null}
-              <Link className="card-link" href={`/catalogue/${product.slug}`}>
-                View listing
-              </Link>
+              <div className="catalogue-card__actions">
+                <Link className="card-link" href={`/catalogue/${product.slug}`}>
+                  View listing
+                </Link>
+                <Link
+                  className="card-link"
+                  href={getQuoteHrefForListing(product.slug)}
+                >
+                  Start enquiry
+                </Link>
+              </div>
             </div>
           </article>
         ))}
@@ -100,7 +125,7 @@ export function CataloguePageContent({
 
       <div className="hero__actions">
         <Link className="button" href="/quote">
-          Start enquiry
+          Start a general enquiry
         </Link>
       </div>
     </section>

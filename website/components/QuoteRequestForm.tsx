@@ -15,7 +15,11 @@ type SubmitState =
   | { status: "success"; publicReference?: string }
   | { status: "error"; message: string };
 
-export default function QuoteRequestForm() {
+export default function QuoteRequestForm({
+  initialItemsText = ""
+}: {
+  initialItemsText?: string;
+}) {
   const [submitState, setSubmitState] = useState<SubmitState>({
     status: "idle"
   });
@@ -97,6 +101,7 @@ export default function QuoteRequestForm() {
       <label>
         Items needed
         <textarea
+          defaultValue={initialItemsText}
           name="items"
           placeholder="Example: 20 stools, 4 cocktail tables"
           rows={4}
