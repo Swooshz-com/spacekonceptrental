@@ -38,6 +38,7 @@ type PublicCatalogueRepositoryOptions = {
   supabase?: PublicCatalogueSupabaseResult;
   env?: {
     CATALOGUE_WORKSPACE_ID?: string;
+    SUPABASE_URL?: string;
   };
 };
 
@@ -118,6 +119,7 @@ const fallbackProducts: PublicCatalogueProduct[] = [
     sortOrder: 10,
     categoryId: "fallback-seating",
     categoryName: "Seating",
+    images: [],
     source: "fallback"
   },
   {
@@ -132,6 +134,7 @@ const fallbackProducts: PublicCatalogueProduct[] = [
     sortOrder: 20,
     categoryId: "fallback-lounge",
     categoryName: "Lounge",
+    images: [],
     source: "fallback"
   },
   {
@@ -146,6 +149,7 @@ const fallbackProducts: PublicCatalogueProduct[] = [
     sortOrder: 30,
     categoryId: "fallback-event-sets",
     categoryName: "Event Sets",
+    images: [],
     source: "fallback"
   }
 ];
@@ -178,7 +182,45 @@ function toCataloguePayload(value: unknown): CatalogueRpcPayload | undefined {
   return isRecord(value) ? value : undefined;
 }
 
-function toImage(row: ImageRow): PublicCatalogueImage | undefined {
+function isSafeStoragePath(value: string) {
+  return (
+    value.length > 0 &&
+    value.length <= 512 &&
+    !value.includes("..") &&
+    !value.includes("\\") &&
+    !value.startsWith("/")
+  );
+}
+
+function buildPublicImageUrl(
+  storageBucket: string,
+  storagePath: string,
+  options: PublicCatalogueRepositoryOptions
+) {
+  if (!isSafeStoragePath(storagePath)) {
+    return undefined;
+  }
+
+  const supabaseUrl =
+    options.env?.SUPABASE_URL?.trim() ?? process.env.SUPABASE_URL?.trim();
+
+  if (!supabaseUrl) {
+    return undefined;
+  }
+
+  const base = supabaseUrl.replace(/\/$/, "");
+  const encodedPath = storagePath
+    .split("/")
+    .map((segment) => encodeURIComponent(segment))
+    .join("/");
+
+  return `${base}/storage/v1/object/public/${encodeURIComponent(storageBucket)}/${encodedPath}`;
+}
+
+function toImage(
+  row: ImageRow,
+  options: PublicCatalogueRepositoryOptions
+): PublicCatalogueImage | undefined {
   const id = getString(row.id);
   const storageBucket = getString(row.storage_bucket);
   const storagePath = getString(row.storage_path);
@@ -191,6 +233,7 @@ function toImage(row: ImageRow): PublicCatalogueImage | undefined {
     id,
     storageBucket,
     storagePath,
+    publicUrl: buildPublicImageUrl(storageBucket, storagePath, options),
     altText: getString(row.alt_text),
     sortOrder: getNumber(row.sort_order),
     isPrimary: row.is_primary === true
@@ -221,7 +264,8 @@ function toCategory(row: CategoryRow): PublicCatalogueCategory | undefined {
 
 function toProduct(
   row: ProductRow,
-  categoryById: Map<string, PublicCatalogueCategory>
+  categoryById: Map<string, PublicCatalogueCategory>,
+  options: PublicCatalogueRepositoryOptions
 ): PublicCatalogueProduct | undefined {
   if (row.status !== "published") {
     return undefined;
@@ -236,7 +280,7 @@ function toProduct(
   }
 
   const images = toRows(row.product_images)
-    .map((imageRow) => toImage(imageRow))
+    .map((imageRow) => toImage(imageRow, options))
     .filter((image): image is PublicCatalogueImage => Boolean(image))
     .sort((first, second) => first.sortOrder - second.sortOrder);
   const primaryImage =
@@ -255,6 +299,7 @@ function toProduct(
     sortOrder: getNumber(row.sort_order),
     categoryId,
     categoryName,
+    images,
     primaryImage,
     source: "supabase"
   };
@@ -294,7 +339,10 @@ async function readCatalogueRpcPayload(
   return toCataloguePayload(result.data);
 }
 
-function mapCataloguePayload(payload: CatalogueRpcPayload): PublicCatalogue {
+function mapCataloguePayload(
+  payload: CatalogueRpcPayload,
+  options: PublicCatalogueRepositoryOptions
+): PublicCatalogue {
   const categories = toRows(payload.categories)
     .map((row) => toCategory(row))
     .filter((category): category is PublicCatalogueCategory =>
@@ -304,7 +352,7 @@ function mapCataloguePayload(payload: CatalogueRpcPayload): PublicCatalogue {
     categories.map((category) => [category.id, category])
   );
   const products = toRows(payload.products)
-    .map((row) => toProduct(row, categoryById))
+    .map((row) => toProduct(row, categoryById, options))
     .filter((product): product is PublicCatalogueProduct => Boolean(product));
 
   return {
@@ -343,7 +391,7 @@ export async function getPublicCatalogue(
     null
   );
 
-  return payload ? mapCataloguePayload(payload) : fallbackCatalogue;
+  return payload ? mapCataloguePayload(payload, options) : fallbackCatalogue;
 }
 
 export async function getPublicProductBySlug(
@@ -369,7 +417,7 @@ export async function getPublicProductBySlug(
     return fallbackProduct;
   }
 
-  const catalogue = mapCataloguePayload(payload);
+  const catalogue = mapCataloguePayload(payload, options);
 
   return (
     catalogue.products.find((product) => product.slug === slug) ??

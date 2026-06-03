@@ -1125,3 +1125,36 @@ notifications, CRM integration, n8n/Pinecone runtime behavior, SaaS chatbot
 runtime work, ecommerce flows including cart, checkout, payments, customer
 accounts, stock reservation, fulfilment, confirmed booking, online ordering,
 or access `website/chat-config.js`.
+
+## 2026-06-03: Storage-backed Listing Media Upload And Public Rendering
+
+Decision: Phase 2C-A approves admin-controlled listing media upload and public
+image rendering.
+
+Reason: Phase 2B-AY gave authorised admins metadata-only listing image
+management. The next coherent product capability is to let those same
+owner/admin users upload actual listing media through the protected admin
+boundary and let public catalogue/detail pages render the resulting media
+without adding ecommerce, customer uploads, or unsafe Supabase shortcuts.
+
+The implementation uses the existing `POST /api/admin/product-images` route:
+JSON requests still create metadata through the existing route helper, while
+multipart requests enter a server-only upload branch. That branch requires
+`productImage.write`, same-origin Origin/Host validation, a valid CSRF proof,
+trusted workspace resolution, target listing validation, approved MIME types,
+a 5 MB size limit, safe filenames, and server-generated
+`workspaceId/productId/timestamp-randomId.ext` paths in the public
+`listing-media` bucket. Metadata is created through the existing
+`product_images` persistence contract after upload, and the route attempts to
+remove the object if metadata persistence fails. Because `listing-media` is a
+public bucket, object serving is public to anyone with the unguessable
+server-generated URL; RLS is used for write/delete scope, not as a public URL
+serving gate. Public catalogue reads derive and render image URLs only from
+active published listing metadata and render fallbacks when media is absent.
+
+Phase 2C-A does not add customer uploads, arbitrary public upload routes,
+quote status public tracking, notifications, CRM integration, DB/API/table/RPC
+or RLS renames, browser Supabase, service-role runtime paths, n8n/Pinecone
+runtime behavior, SaaS chatbot runtime work, ecommerce flows including cart,
+checkout, payments, customer accounts, stock reservation, fulfilment,
+confirmed booking, online ordering, or access `website/chat-config.js`.

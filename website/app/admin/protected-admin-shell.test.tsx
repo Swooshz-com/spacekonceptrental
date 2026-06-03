@@ -323,6 +323,13 @@ describe("protected admin shell", () => {
       screen.getByRole("heading", { name: /listing image metadata management/i })
     ).toBeInTheDocument();
     expect(
+      screen.getByRole("heading", { name: /upload listing image/i })
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText(/listing image file/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /upload listing image/i })
+    ).toBeInTheDocument();
+    expect(
       screen.getByRole("button", { name: /create listing image metadata/i })
     ).toBeInTheDocument();
     expect(
@@ -361,7 +368,6 @@ describe("protected admin shell", () => {
     expect(
       screen.queryByText(/cart|checkout|payment|customer account|stock reservation|order fulfilment|online ordering/i)
     ).not.toBeInTheDocument();
-    expect(screen.queryByLabelText(/image upload|file upload/i)).not.toBeInTheDocument();
     expect(screen.queryByLabelText(/product editor/i)).not.toBeInTheDocument();
   });
 
@@ -399,7 +405,12 @@ describe("protected admin shell", () => {
       expect(
         screen.queryByRole("button", { name: /create listing image metadata/i })
       ).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole("button", { name: /upload listing image/i })
+      ).not.toBeInTheDocument();
+      expect(screen.queryByLabelText(/listing image file/i)).not.toBeInTheDocument();
       expect(screen.queryByLabelText(/listing image metadata management/i)).not.toBeInTheDocument();
+      expect(screen.queryByLabelText(/listing image upload/i)).not.toBeInTheDocument();
       expect(screen.queryByLabelText(/category management/i)).not.toBeInTheDocument();
       expect(screen.queryByLabelText(/listing management/i)).not.toBeInTheDocument();
       expect(

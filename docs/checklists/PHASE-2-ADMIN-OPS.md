@@ -82,6 +82,18 @@ and route/action boundaries are implemented and tested.
 - [x] Image metadata UI sends only approved JSON metadata fields.
 - [x] Binary image upload, Supabase Storage, public image routes, and ecommerce flows remain out of scope.
 
+## Phase 2C-A Storage-backed Listing Media Upload And Public Rendering
+
+- [x] Admin-controlled listing media upload stores approved image files in the `listing-media` bucket.
+- [x] Uploads require `productImage.write`, same-origin Origin/Host validation, CSRF proof, and trusted workspace scope.
+- [x] Upload paths are generated server-side under workspace/listing scoped paths.
+- [x] Uploaded image metadata is created through the existing product-image metadata persistence contract.
+- [x] The public bucket serving model is documented as public-by-unguessable-server-generated-URL, with catalogue rendering gated by metadata.
+- [x] Public catalogue cards render listing images when available.
+- [x] Public listing detail pages render primary and additional listing images when available.
+- [x] Public catalogue/detail fallback images remain available when listing media is missing.
+- [x] Customer uploads, ecommerce flows, notifications, CRM, browser Supabase, and service-role runtime paths remain out of scope.
+
 ## Ecommerce Non-goals
 
 - [ ] Do not add carts.

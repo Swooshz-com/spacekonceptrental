@@ -36,6 +36,8 @@ const approvedAdminProductWriteRouteBoundaryPath =
   "website/lib/products/persistence/admin-product-write-route.ts";
 const approvedAdminQuoteStatusRouteBoundaryPath =
   "website/lib/quote/admin-write/admin-quote-request-status-route.ts";
+const approvedMediaUploadRouteBoundaryPath =
+  "website/lib/products/media/admin-product-image-upload-route.ts";
 const sourceExtensions = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs"]);
 
 function readRepoFile(relativePath: string) {
@@ -193,6 +195,7 @@ describe("Phase 2B-AA first admin runtime route gate adapter usage boundary", ()
           filePath !== approvedRuntimeRouteGateAdapterBoundaryPath &&
           filePath !== approvedAdminProductWriteRouteBoundaryPath &&
           filePath !== approvedAdminQuoteStatusRouteBoundaryPath &&
+          filePath !== approvedMediaUploadRouteBoundaryPath &&
           filePath !== "website/app/api/admin/auth-check/route.ts" &&
           filePath !== "website/app/api/admin/login/route.ts" &&
           filePath !== "website/app/api/admin/csrf-proof/route.ts" &&
@@ -288,7 +291,8 @@ describe("Phase 2B-AA first admin runtime route gate adapter usage boundary", ()
           filePath !== approvedGateBoundaryPath &&
           filePath !== approvedRequestMetadataBoundaryPath &&
           filePath !== approvedRuntimeGateInvocationBoundaryPath &&
-          filePath !== approvedRuntimeRouteGateAdapterBoundaryPath
+          filePath !== approvedRuntimeRouteGateAdapterBoundaryPath &&
+          filePath !== approvedMediaUploadRouteBoundaryPath
       )
       .map(({ source }) => source)
       .join("\n");

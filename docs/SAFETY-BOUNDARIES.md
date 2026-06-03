@@ -533,3 +533,28 @@ Phase 2B-AP adds only category create, update, and archive controls inside the p
 The category UI may run as a small browser component only after the server-rendered protected shell resolves authorised owner/admin access and loaded dashboard data. Browser code may call only first-party admin HTTP APIs: `POST /api/admin/csrf-proof` for `category.write`, `POST /api/admin/categories`, `POST /api/admin/categories/[categoryId]`, and `POST /api/admin/categories/[categoryId]/archive`. Category write requests must include `x-csrf-proof` and must keep route responses safe and generic.
 
 Phase 2B-AP does not add product create/edit/archive/publish UI, product image write UI, server actions, binary uploads, Supabase Storage, browser Supabase, service-role runtime paths, deployment config, Supabase Cloud actions, n8n changes, Pinecone runtime code, SaaS chatbot work, or `website/chat-config.js` access.
+
+## Phase 2C-A Listing Media Storage Boundary
+
+Phase 2C-A approves only admin-controlled listing media upload and public
+image rendering for the furniture/event-rental catalogue. The approved upload
+surface is the server-only multipart branch of
+`POST /api/admin/product-images`, reachable from the protected admin shell
+only after owner/admin access. It must require `productImage.write`, same-origin
+Origin/Host validation, a valid CSRF proof, trusted workspace resolution, and
+a session-bound authenticated Supabase client. It may store only approved
+JPEG, PNG, WebP, or AVIF files in the `listing-media` bucket under
+server-generated workspace/listing paths. Because `listing-media` is a public
+bucket, object serving is public to anyone with the unguessable URL; RLS must
+not be described as the public URL serving gate.
+
+Public catalogue and listing detail pages may render derived public image URLs
+for active listing image metadata and must keep fallback imagery when images
+are missing or unavailable. Public catalogue rendering remains read-only and
+metadata-gated.
+
+Phase 2C-A does not approve customer image uploads, arbitrary public upload
+routes, SVG upload, client-controlled storage path writes, browser Supabase,
+service-role runtime paths, DB/API/table/RPC/RLS renames, notifications, CRM
+integration, quote status public tracking, n8n/Pinecone runtime behavior, SaaS
+chatbot runtime work, ecommerce flows, or `website/chat-config.js` access.

@@ -202,6 +202,7 @@ function setupSupabaseCompatibility() {
     $setup$;
 
     create schema if not exists auth;
+    create schema if not exists storage;
 
     create or replace function auth.uid()
     returns uuid
@@ -214,6 +215,28 @@ function setupSupabaseCompatibility() {
     grant usage on schema auth to anon, authenticated;
     grant execute on function auth.uid() to anon, authenticated;
     grant usage on schema public to anon, authenticated;
+    grant usage on schema storage to anon, authenticated;
+
+    create table if not exists storage.buckets (
+      id text primary key,
+      name text not null,
+      public boolean not null default false,
+      file_size_limit integer,
+      allowed_mime_types text[],
+      created_at timestamptz not null default now(),
+      updated_at timestamptz not null default now()
+    );
+
+    create table if not exists storage.objects (
+      id uuid primary key default gen_random_uuid(),
+      bucket_id text not null references storage.buckets (id),
+      name text not null,
+      owner uuid,
+      metadata jsonb not null default '{}'::jsonb,
+      created_at timestamptz not null default now(),
+      updated_at timestamptz not null default now(),
+      constraint storage_objects_bucket_name_key unique (bucket_id, name)
+    );
   `);
 }
 
@@ -361,6 +384,9 @@ function assertNoRuntimeSupabaseUse() {
   const approvedQuoteWriteFiles = new Set([
     'website/lib/quote/quote-repository.ts',
   ]);
+  const approvedMediaUploadFiles = new Set([
+    'website/lib/products/media/admin-product-image-upload-route.ts',
+  ]);
   const extensions = new Set(['.js', '.jsx', '.mjs', '.cjs', '.ts', '.tsx']);
   const browserBlockedPatterns = [
     /@supabase\//i,
@@ -392,6 +418,18 @@ function assertNoRuntimeSupabaseUse() {
     /from\(["']products["']\)/i,
     /from\(["']categories["']\)/i,
     /from\(["']product_images["']\)/i,
+    /from\(["']conversations["']\)/i,
+    /from\(["']messages["']\)/i,
+    /from\(["']admin_users["']\)/i,
+    /from\(["']memberships["']\)/i,
+    /from\(["']usage_events["']\)/i,
+    /from\(["']audit_logs["']\)/i,
+    /from\(["']integration_connections["']\)/i,
+  ];
+  const blockedMediaUploadTablePatterns = [
+    /from\(["']categories["']\)/i,
+    /from\(["']quote_requests["']\)/i,
+    /from\(["']quote_request_items["']\)/i,
     /from\(["']conversations["']\)/i,
     /from\(["']messages["']\)/i,
     /from\(["']admin_users["']\)/i,
@@ -497,6 +535,37 @@ function assertNoRuntimeSupabaseUse() {
         );
         assertNoMatches(filePath, content, serverBlockedPatterns);
         assertNoMatches(filePath, content, blockedQuoteWriteTablePatterns);
+        return;
+      }
+
+      if (approvedMediaUploadFiles.has(relativePath)) {
+        assert.match(
+          content,
+          /import\s+["']server-only["'];/,
+          `${relativePath} must be marked server-only.`,
+        );
+        assert.match(
+          content,
+          /resolveServerAdminCsrfProofSessionWorkspaceBinding/,
+          `${relativePath} must require the approved admin CSRF/session workspace binding.`,
+        );
+        assert.match(
+          content,
+          /requestedOperation:\s*productImageWriteOperation/,
+          `${relativePath} must require productImage.write.`,
+        );
+        assert.match(
+          content,
+          /createSessionBoundSupabaseAdminReadClient/,
+          `${relativePath} must use the session-bound Supabase client.`,
+        );
+        assert.match(
+          content,
+          /\.storage\.from\(listingMediaBucket\)/,
+          `${relativePath} must write only through the fixed listing media bucket.`,
+        );
+        assertNoMatches(filePath, content, serverBlockedPatterns);
+        assertNoMatches(filePath, content, blockedMediaUploadTablePatterns);
         return;
       }
 
@@ -1126,6 +1195,92 @@ check('authenticated product writes reject cross-workspace relationships', () =>
         '${ids.productPublishedB}',
         'test-public',
         'cross-workspace-product-image.jpg'
+      )
+    `,
+  );
+});
+
+check('listing media storage uses public bucket URLs with workspace-admin scoped writes', () => {
+  const storagePath = `${ids.workspaceA}/${ids.productPublishedA}/1700000000000-60000000-0000-4000-8000-000000000201.webp`;
+
+  assert.equal(
+    scalarAs(
+      'anon',
+      null,
+      'select "public"::text from storage.buckets where id = \'listing-media\'',
+    ),
+    'true',
+    'listing-media bucket should be public for rendered catalogue images',
+  );
+
+  queryAs(
+    'authenticated',
+    ids.authMemberA,
+    `
+      insert into storage.objects (
+        bucket_id,
+        name,
+        owner,
+        metadata
+      )
+      values (
+        'listing-media',
+        '${storagePath}',
+        '${ids.authMemberA}',
+        '{"mimetype": "image/webp"}'::jsonb
+      )
+    `,
+  );
+
+  statementFailsAs(
+    'anon',
+    null,
+    `
+      select count(*)::text
+      from storage.objects
+      where name = '${storagePath}'
+    `,
+  );
+
+  statementFailsAs(
+    'authenticated',
+    ids.authViewerA,
+    `
+      insert into storage.objects (
+        bucket_id,
+        name,
+        owner
+      )
+      values (
+        'listing-media',
+        '${ids.workspaceA}/${ids.productPublishedA}/1700000000000-60000000-0000-4000-8000-000000000202.webp',
+        '${ids.authViewerA}'
+      )
+    `,
+  );
+
+  statementFailsAs(
+    'authenticated',
+    ids.authMemberA,
+    `
+      insert into storage.objects (bucket_id, name, owner)
+      values (
+        'listing-media',
+        '${ids.workspaceB}/${ids.productPublishedB}/1700000000000-60000000-0000-4000-8000-000000000203.webp',
+        '${ids.authMemberA}'
+      )
+    `,
+  );
+
+  statementFailsAs(
+    'authenticated',
+    ids.authMemberA,
+    `
+      insert into storage.objects (bucket_id, name, owner)
+      values (
+        'listing-media',
+        '${ids.workspaceA}/${ids.productPublishedA}/unsafe-name.svg',
+        '${ids.authMemberA}'
       )
     `,
   );

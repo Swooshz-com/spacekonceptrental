@@ -179,7 +179,10 @@ describe("public catalogue repository", () => {
 
     const catalogue = await getPublicCatalogue({
       supabase,
-      env: { CATALOGUE_WORKSPACE_ID: workspaceA }
+      env: {
+        CATALOGUE_WORKSPACE_ID: workspaceA,
+        SUPABASE_URL: "https://space.supabase.co"
+      }
     });
     const serializedCatalogue = JSON.stringify(catalogue);
 
@@ -194,6 +197,19 @@ describe("public catalogue repository", () => {
     ]);
     expect(catalogue.source).toBe("supabase");
     expect(serializedCatalogue).toContain("Modular Lounge Set");
+    expect(catalogue.products[0].primaryImage).toMatchObject({
+      storageBucket: "sample-catalogue-public",
+      storagePath: "sample-fixtures/modular-lounge-set-main.jpg",
+      publicUrl:
+        "https://space.supabase.co/storage/v1/object/public/sample-catalogue-public/sample-fixtures/modular-lounge-set-main.jpg"
+    });
+    expect(catalogue.products[0].images).toEqual([
+      expect.objectContaining({
+        id: "image-published",
+        publicUrl:
+          "https://space.supabase.co/storage/v1/object/public/sample-catalogue-public/sample-fixtures/modular-lounge-set-main.jpg"
+      })
+    ]);
     expect(serializedCatalogue).not.toContain("Draft Concepts");
     expect(serializedCatalogue).not.toContain("Concept Backdrop Frame");
     expect(serializedCatalogue).not.toContain("sample-fixtures/draft");
