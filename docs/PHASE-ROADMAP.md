@@ -553,3 +553,16 @@ browser Supabase, service-role runtime paths, deployment, n8n changes, Pinecone
 runtime code, SaaS chatbot work, or ecommerce flows such as carts,
 checkout, payments, customer accounts, stock reservation, order fulfilment,
 or online ordering.
+
+Phase 2B-AU adds only public events and quote copy polish. The public events
+page removes shell/MVP wording and uses normal event-rental, furniture-rental,
+styled-setup, enquiry, and quote-request language. The quote page and site
+metadata remain quote-request oriented without implying checkout, payment,
+online ordering, stock reservation, confirmed booking, or fulfilment.
+
+Phase 2B-AU does not add enquiry form implementation beyond the existing quote
+request form, admin changes, image upload, Supabase Storage, SQL migrations,
+DB/API/table/RPC/RLS renames, browser Supabase, service-role runtime paths,
+deployment, n8n changes, Pinecone runtime code, SaaS chatbot work, or
+ecommerce flows such as carts, checkout, payments, customer accounts, stock
+reservation, order fulfilment, or online ordering.

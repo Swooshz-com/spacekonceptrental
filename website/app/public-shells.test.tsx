@@ -15,6 +15,8 @@ import {
   default as ProductPage
 } from "./catalogue/[slug]/page";
 import EventsPage from "./events/page";
+import { metadata } from "./layout";
+import QuotePage from "./quote/page";
 
 vi.mock("next/image", () => ({
   default: ({ alt, src }: { alt: string; src: string | { src: string } }) => (
@@ -43,19 +45,44 @@ describe("public page shells", () => {
     ).toHaveAttribute("href", "/quote");
   });
 
-  it("renders the static event rental shell", () => {
+  it("renders public events copy with event and furniture rental language", () => {
     render(<EventsPage />);
 
     expect(
-      screen.getByRole("heading", { name: /event rental shells/i })
+      screen.getByRole("heading", { name: /events/i })
     ).toBeInTheDocument();
+    expect(screen.getByText(/event rentals/i)).toBeInTheDocument();
+    expect(screen.getByText(/furniture rentals/i)).toBeInTheDocument();
+    expect(screen.getByText(/styled setups/i)).toBeInTheDocument();
     expect(screen.getByText(/corporate receptions/i)).toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: /browse catalogue/i })
     ).toHaveAttribute("href", "/catalogue");
     expect(
-      screen.getByRole("link", { name: /start quote/i })
+      screen.getByRole("link", { name: /request quote/i })
     ).toHaveAttribute("href", "/quote");
+  });
+
+  it("keeps public events copy free from shell and MVP wording", () => {
+    render(<EventsPage />);
+
+    expect(screen.queryByText(/shell/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/mvp/i)).not.toBeInTheDocument();
+  });
+
+  it("keeps public quote copy from implying ecommerce or online ordering", () => {
+    render(<QuotePage />);
+
+    expect(screen.getByRole("heading", { name: /quote request/i })).toBeInTheDocument();
+    expect(screen.getByText(/furniture rental follow-up/i)).toBeInTheDocument();
+    expect(screen.queryByText(/shell|mvp/i)).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(
+        /cart|checkout|payment|customer account|stock reservation|order fulfilment|online ordering|confirmed order/i
+      )
+    ).not.toBeInTheDocument();
+    expect(metadata.description).toMatch(/event furniture rental catalogue/i);
+    expect(metadata.description).not.toMatch(/shell|mvp|checkout|payment|online ordering/i);
   });
 
   it("keeps the new public pages reachable from navigation and catalogue", async () => {
