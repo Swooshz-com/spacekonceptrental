@@ -31,6 +31,11 @@ const safeWriteInput = {
   csrfProof: "csrf-proof-token"
 };
 
+const safeQuoteWriteInput = {
+  ...safeWriteInput,
+  requestedOperation: "quote.write"
+};
+
 function readSource() {
   return readFileSync(sourcePath, "utf8");
 }
@@ -163,6 +168,43 @@ describe("server admin request security preflight", () => {
       allowed: true,
       reason: "request_security_preflight_passed"
     });
+  });
+
+  it("treats quote.write as a state-changing operation bound to CSRF proof verification", async () => {
+    const result = await validateServerAdminRequestSecurityPreflight(
+      safeQuoteWriteInput,
+      {
+        verifyCsrfProof: async (input) => {
+          expect(input).toEqual({
+            requestedOperation: "quote.write",
+            requestMethod: "POST",
+            requestOrigin: "https://admin.space.test",
+            requestHost: "admin.space.test",
+            csrfProof: "csrf-proof-token"
+          });
+
+          return {
+            valid: true
+          };
+        }
+      }
+    );
+
+    expect(result).toEqual({
+      allowed: true,
+      reason: "request_security_preflight_passed"
+    });
+  });
+
+  it("rejects non-state-changing operations without a CSRF verifier", async () => {
+    const result = await validateServerAdminRequestSecurityPreflight({
+      ...safeReadInput,
+      requestedOperation: "catalogue.read",
+      requestMethod: "POST",
+      csrfProof: "csrf-proof-token"
+    });
+
+    expectDenied(result, "request_method_not_allowed", 403);
   });
 
   it("allows read-only admin shell GET without Origin when Host matches the expected host", async () => {

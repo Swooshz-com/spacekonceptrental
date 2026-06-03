@@ -16,7 +16,13 @@ import type {
 
 const bindingVersion = "csrf-session-binding-v1";
 const csrfProofBindingOperations = new Set<ServerAdminCsrfProofBindingOperation>(
-  ["product.write", "category.write", "productImage.write", "membership.manage"]
+  [
+    "product.write",
+    "category.write",
+    "productImage.write",
+    "quote.write",
+    "membership.manage"
+  ]
 );
 const csrfProofBindingRoles = new Set(["owner", "admin"]);
 

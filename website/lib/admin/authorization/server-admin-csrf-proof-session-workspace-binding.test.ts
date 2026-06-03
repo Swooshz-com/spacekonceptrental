@@ -74,6 +74,75 @@ function createBindingDeriver(value = "opaque-session-workspace-binding") {
 
 describe("resolveServerAdminCsrfProofSessionWorkspaceBinding", () => {
   it.each<AdminRole>(["owner", "admin"])(
+    "binds quote.write for %s sessions to the trusted workspace",
+    async (role) => {
+      const deriveSessionWorkspaceBinding = createBindingDeriver();
+
+      const result = await resolveServerAdminCsrfProofSessionWorkspaceBinding(
+        {
+          requestedOperation: "quote.write",
+          requestId: "request-quote-1"
+        },
+        {
+          createAdapterSet: createConfiguredAdapters({
+            membership: {
+              adminUserId: "admin-user-1",
+              workspaceId: "workspace-1",
+              status: "active",
+              role
+            }
+          }),
+          deriveSessionWorkspaceBinding
+        }
+      );
+
+      expect(result).toStrictEqual({
+        bound: true,
+        sessionBinding: "opaque-session-workspace-binding",
+        adminContext: {
+          workspaceId: "workspace-1",
+          adminUserId: "admin-user-1",
+          resolution: "server-auth-membership"
+        },
+        requestId: "request-quote-1"
+      });
+      expect(deriveSessionWorkspaceBinding).toHaveBeenCalledWith({
+        requestedOperation: "quote.write",
+        authUserId: "auth-user-1",
+        adminUserId: "admin-user-1",
+        workspaceId: "workspace-1",
+        membershipRole: role,
+        requestId: "request-quote-1"
+      });
+    }
+  );
+
+  it("denies viewer membership for quote.write proof binding", async () => {
+    const result = await resolveServerAdminCsrfProofSessionWorkspaceBinding(
+      {
+        requestedOperation: "quote.write"
+      },
+      {
+        createAdapterSet: createConfiguredAdapters({
+          membership: {
+            adminUserId: "admin-user-1",
+            workspaceId: "workspace-1",
+            status: "active",
+            role: "viewer"
+          }
+        }),
+        deriveSessionWorkspaceBinding: createBindingDeriver()
+      }
+    );
+
+    expect(result).toStrictEqual({
+      bound: false,
+      reason: "role_not_allowed",
+      statusCode: 403
+    });
+  });
+
+  it.each<AdminRole>(["owner", "admin"])(
     "binds a %s session to the trusted workspace with an opaque output",
     async (role) => {
       const deriveSessionWorkspaceBinding = createBindingDeriver();

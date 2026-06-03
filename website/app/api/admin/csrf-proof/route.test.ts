@@ -292,6 +292,8 @@ describe("POST /api/admin/csrf-proof", () => {
     ["category.write", "admin"],
     ["productImage.write", "owner"],
     ["productImage.write", "admin"],
+    ["quote.write", "owner"],
+    ["quote.write", "admin"],
     ["membership.manage", "owner"]
   ] as const)(
     "issues a verifier-compatible proof for %s as %s",

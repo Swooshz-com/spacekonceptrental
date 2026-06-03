@@ -89,6 +89,7 @@ const targetOperations = new Set<StateChangingAdminOperation>([
   "product.write",
   "category.write",
   "productImage.write",
+  "quote.write",
   "membership.manage"
 ]);
 const noStoreHeaders = {

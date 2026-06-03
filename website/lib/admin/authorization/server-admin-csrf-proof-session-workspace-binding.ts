@@ -22,6 +22,7 @@ export type ServerAdminCsrfProofBindingOperation =
   | "product.write"
   | "category.write"
   | "productImage.write"
+  | "quote.write"
   | "membership.manage";
 
 export type ServerAdminCsrfProofSessionWorkspaceBindingInput = {
@@ -80,7 +81,13 @@ export type ServerAdminCsrfProofSessionWorkspaceBindingResult =
     };
 
 const csrfProofBindingOperations = new Set<ServerAdminCsrfProofBindingOperation>(
-  ["product.write", "category.write", "productImage.write", "membership.manage"]
+  [
+    "product.write",
+    "category.write",
+    "productImage.write",
+    "quote.write",
+    "membership.manage"
+  ]
 );
 
 function normalizeRequired(value: string | null | undefined) {

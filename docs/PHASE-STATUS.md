@@ -4,6 +4,30 @@ This is the quick status page for the SKR repo. Use `docs/PHASE-2-READINESS-PLAN
 
 ## Current phase
 
+Current phase: Phase 2B-AX - admin quote request status update boundary.
+
+This phase adds admin-only quote request status updates from the protected
+admin quote request inbox. Authorised owner/admin users can request a
+`quote.write` CSRF proof and update only the `status` field of an existing
+quote request through a first-party server-only route scoped to the trusted
+admin workspace. Viewer memberships cannot use `quote.write`. The UI presents
+these statuses as internal follow-up status only and returns generic success or
+failure states. It does not add public quote tracking, customer-facing status
+pages, notifications, CRM integration, internal notes, assignment, customer
+accounts, ecommerce ordering, checkout, payments, fulfilment, stock
+reservation, confirmed booking, online ordering, image upload, Supabase
+Storage, SQL migrations, DB/API/table/RPC/RLS renames, browser Supabase,
+service-role runtime paths, n8n/Pinecone runtime behavior, SaaS chatbot
+runtime work, or `website/chat-config.js` access.
+
+Latest completed phase: Phase 2B-AW - admin quote request inbox boundary.
+
+Last merged phase PR: #90
+
+Merge commit: `1852b6910fdd1eb5ddf19aaf788ead47d4a05bf0`
+
+## Previous merged status snapshot: Phase 2B-AW
+
 Current phase: Phase 2B-AW - admin quote request inbox boundary.
 
 This phase adds a read-only admin quote request inbox inside the protected
