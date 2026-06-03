@@ -1002,3 +1002,21 @@ SQL migrations, browser Supabase, service-role runtime paths, deployment
 changes, n8n changes, Pinecone runtime code, SaaS chatbot work, cart,
 checkout, payments, customer accounts, stock reservation, order fulfilment,
 online ordering, or access `website/chat-config.js`.
+
+## 2026-06-03: Public Events And Quote Copy Polish
+
+Decision: Phase 2B-AU adds only public-facing events and quote-request copy
+polish.
+
+Reason: Phase 2B-AT made the catalogue and listing detail pages read like a
+real furniture/event-rental website, but the public events route still exposed
+shell/MVP wording. This phase completes the adjacent public copy pass by using
+normal event-rental, furniture-rental, styled-setup, enquiry, and quote-request
+language while keeping the existing quote form honest as a follow-up request.
+
+Phase 2B-AU does not add enquiry form implementation beyond the existing quote
+request form, cart, checkout, payment, customer account, stock reservation,
+confirmed booking, order fulfilment, online ordering, admin changes, image
+upload, Supabase Storage, SQL migrations, DB/API/table/RPC/RLS renames, browser
+Supabase, service-role runtime paths, deployment changes, n8n changes, Pinecone
+runtime code, SaaS chatbot work, or access `website/chat-config.js`.

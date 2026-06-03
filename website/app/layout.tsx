@@ -5,7 +5,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "SpaceKonceptRental",
-  description: "Event furniture rental catalogue and quote shell."
+  description: "Event furniture rental catalogue and quote requests."
 };
 
 function SiteHeader() {

@@ -26,10 +26,12 @@ export default function EventsPage() {
   return (
     <section className="section">
       <div className="page-title">
-        <p className="eyebrow">Event shell</p>
-        <h1>Event rental shells</h1>
+        <p className="eyebrow">Event rentals</p>
+        <h1>Events</h1>
         <p>
-          Static MVP route for common event rental use cases before real listing catalogue data, persistence, or event-specific workflows are introduced.
+          Explore furniture rentals and styled setups for common event formats.
+          Browse the catalogue first, then send an enquiry or quote request when
+          the team should follow up.
         </p>
       </div>
 
@@ -52,7 +54,7 @@ export default function EventsPage() {
           Browse catalogue
         </Link>
         <Link className="button" href="/quote">
-          Start quote
+          Request quote
         </Link>
       </div>
     </section>

@@ -4,6 +4,27 @@ This is the quick status page for the SKR repo. Use `docs/PHASE-2-READINESS-PLAN
 
 ## Current phase
 
+Current phase: Phase 2B-AU - public events and quote copy polish.
+
+This phase polishes public events and quote-request copy without changing the
+public data path or quote form behavior. The events page now uses normal
+event-rental, furniture-rental, styled-setup, enquiry, and quote-request
+language instead of public shell/MVP wording. The quote page and site metadata
+stay focused on quote requests and do not imply checkout, payment, online
+ordering, stock reservation, or confirmed bookings. It does not add enquiry
+form implementation beyond the existing quote request form, admin changes,
+image upload, Supabase Storage, SQL migrations, DB/API/table/RPC/RLS renames,
+ecommerce flows, browser Supabase, service-role runtime paths, n8n/Pinecone
+changes, SaaS chatbot runtime work, or `website/chat-config.js` access.
+
+Latest completed phase: Phase 2B-AT - public furniture catalogue UX polish.
+
+Last merged phase PR: #87
+
+Merge commit: `806395ba83e1b7114a4305be772ec8ac2a6d190c`
+
+## Previous merged status snapshot: Phase 2B-AT
+
 Current phase: Phase 2B-AT - public furniture catalogue UX polish.
 
 This phase polishes public catalogue and listing detail UX without changing the

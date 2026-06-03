@@ -40,6 +40,14 @@ and route/action boundaries are implemented and tested.
 - [x] Listing detail CTA copy is enquiry/quote oriented.
 - [x] Existing public catalogue read paths and fallback behavior are preserved.
 
+## Phase 2B-AU Public Events And Quote Copy Polish
+
+- [x] Public events page uses event-rental and furniture-rental language.
+- [x] Public events page no longer exposes shell or MVP wording.
+- [x] Public events CTA copy is enquiry/quote-request oriented.
+- [x] Public quote page and metadata do not imply ecommerce or online ordering.
+- [x] Existing quote request form behavior is preserved.
+
 ## Ecommerce Non-goals
 
 - [ ] Do not add carts.
