@@ -1158,3 +1158,29 @@ or RLS renames, browser Supabase, service-role runtime paths, n8n/Pinecone
 runtime behavior, SaaS chatbot runtime work, ecommerce flows including cart,
 checkout, payments, customer accounts, stock reservation, fulfilment,
 confirmed booking, online ordering, or access `website/chat-config.js`.
+
+## 2026-06-03: Public Catalogue Polish And Enquiry Handoff
+
+Decision: Phase 2C-B improves public catalogue/detail presentation and quote
+enquiry handoff using existing public read surfaces.
+
+Reason: Phase 2C-A made real admin-uploaded listing media available for public
+rendering. The next coherent public capability is to make catalogue cards and
+listing detail pages feel production-ready for furniture/event rentals and help
+customers start a quote request from the listing they were browsing without
+adding ecommerce behavior.
+
+The implementation keeps public catalogue/detail pages read-only, improves
+stable uploaded-image and fallback presentation, adds safe catalogue/detail
+metadata, and passes only an optional public listing slug into `/quote`. The
+quote page treats that query value as untrusted until it resolves through the
+existing public catalogue read surface, then uses the resolved public listing
+only as customer-facing context and as the initial text for the existing quote
+items field. The quote backend contract is unchanged.
+
+Phase 2C-B does not add customer uploads, arbitrary public upload routes,
+public quote status tracking, notifications, CRM integration, DB/API/table/RPC
+or RLS renames, browser Supabase, service-role runtime paths, n8n/Pinecone
+runtime behavior, SaaS chatbot runtime work, ecommerce flows including cart,
+checkout, payments, customer accounts, stock reservation, fulfilment,
+confirmed booking, online ordering, or access `website/chat-config.js`.

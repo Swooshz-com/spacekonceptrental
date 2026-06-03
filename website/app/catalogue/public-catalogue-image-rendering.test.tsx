@@ -12,7 +12,10 @@ vi.mock("next/image", () => ({
 }));
 
 import { CataloguePageContent } from "./page";
-import { ProductPageContent } from "./[slug]/page";
+import {
+  generateMetadata,
+  ProductPageContent
+} from "./[slug]/page";
 import type { PublicCatalogue, PublicCatalogueProduct } from "../../lib/catalogue/types";
 
 const productWithImage: PublicCatalogueProduct = {
@@ -35,6 +38,16 @@ const productWithImage: PublicCatalogueProduct = {
       altText: "Modular lounge furniture rental setup",
       sortOrder: 1,
       isPrimary: true
+    },
+    {
+      id: "image-2",
+      storageBucket: "listing-media",
+      storagePath: "workspace/product/lounge-side.webp",
+      publicUrl:
+        "https://space.supabase.co/storage/v1/object/public/listing-media/workspace/product/lounge-side.webp",
+      altText: "Side view of modular lounge furniture rental setup",
+      sortOrder: 2,
+      isPrimary: false
     }
   ],
   primaryImage: {
@@ -80,6 +93,10 @@ describe("public catalogue image rendering", () => {
       "href",
       "/catalogue/modular-lounge"
     );
+    expect(screen.getByRole("link", { name: /start enquiry/i })).toHaveAttribute(
+      "href",
+      "/quote?listing=modular-lounge"
+    );
     expect(screen.queryByText(/cart|checkout|payment|online ordering/i)).not.toBeInTheDocument();
   });
 
@@ -91,15 +108,19 @@ describe("public catalogue image rendering", () => {
     });
 
     expect(images[0]).toHaveAttribute("src", productWithImage.primaryImage?.publicUrl);
-    expect(images.length).toBeGreaterThanOrEqual(1);
+    expect(
+      screen.getByRole("img", {
+        name: /side view of modular lounge furniture rental setup/i
+      })
+    ).toHaveAttribute("src", productWithImage.images?.[1]?.publicUrl);
     expect(screen.getByRole("link", { name: /start enquiry/i })).toHaveAttribute(
       "href",
-      "/quote"
+      "/quote?listing=modular-lounge"
     );
     expect(screen.queryByText(/checkout|payment|reserve|book now/i)).not.toBeInTheDocument();
   });
 
-  it("keeps safe fallback imagery when no listing image URL is available", () => {
+  it("keeps safe fallback imagery on catalogue cards when no listing image URL is available", () => {
     const { container } = render(
       <CataloguePageContent
         catalogue={{
@@ -119,5 +140,43 @@ describe("public catalogue image rendering", () => {
       "src",
       "/assets/images/product_sofa.png"
     );
+  });
+
+  it("keeps safe fallback imagery on listing details when no listing image URL is available", () => {
+    const { container } = render(
+      <ProductPageContent
+        product={{
+          ...productWithImage,
+          images: [],
+          primaryImage: undefined
+        }}
+      />
+    );
+
+    expect(container.querySelector(".detail-primary-image img")).toHaveAttribute(
+      "src",
+      "/assets/images/product_sofa.png"
+    );
+  });
+
+  it("generates safe listing metadata from public catalogue data", async () => {
+    const metadata = await generateMetadata({
+      params: Promise.resolve({ slug: "lounge-sofa-package" })
+    });
+
+    expect(metadata.title).toMatch(/lounge sofa package/i);
+    expect(metadata.description).toMatch(/event furniture rental/i);
+    expect(JSON.stringify(metadata)).not.toMatch(
+      /workspace|storagePath|storage\/v1|admin|draft|checkout|payment/i
+    );
+  });
+
+  it("uses safe fallback listing metadata when public catalogue data is unavailable", async () => {
+    const metadata = await generateMetadata({
+      params: Promise.resolve({ slug: "missing-listing" })
+    });
+
+    expect(metadata.title).toMatch(/furniture listing/i);
+    expect(metadata.description).toMatch(/event furniture rental/i);
   });
 });

@@ -558,3 +558,21 @@ routes, SVG upload, client-controlled storage path writes, browser Supabase,
 service-role runtime paths, DB/API/table/RPC/RLS renames, notifications, CRM
 integration, quote status public tracking, n8n/Pinecone runtime behavior, SaaS
 chatbot runtime work, ecommerce flows, or `website/chat-config.js` access.
+
+## Phase 2C-B Public Catalogue Polish Boundary
+
+Phase 2C-B approves only public read-only catalogue/detail polish and quote
+enquiry handoff. Public pages may improve uploaded listing image presentation,
+fallback image behavior, listing/category/rental-unit hierarchy,
+enquiry-oriented CTA copy, and safe metadata derived from public listing data.
+Public CTA links may pass an optional listing slug to the existing quote page,
+but the quote page must resolve that slug through the public catalogue read
+surface before displaying context or pre-filling the existing quote items text
+area.
+
+Phase 2C-B does not approve carts, checkout, payments, customer accounts, stock
+reservation, order fulfilment, confirmed booking, online ordering, customer
+uploads, arbitrary public upload routes, public quote status tracking,
+notifications, CRM integration, browser Supabase, service-role runtime paths,
+DB/API/table/RPC/RLS renames, n8n/Pinecone runtime behavior, SaaS chatbot
+runtime work, or `website/chat-config.js` access.

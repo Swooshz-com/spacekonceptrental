@@ -126,8 +126,8 @@ describe("Phase 2C-A storage-backed listing media upload and public rendering", 
     expect(migration).toContain("'image/avif'");
     expect(migration).toContain("listing_media_product_admin_insert");
     expect(migration).toContain("public.is_listing_media_product_admin_object");
-    expect(migration).toContain(
-      "public.is_workspace_product_manager(\n      split_part(object_name, '/', 1)::uuid\n    )"
+    expect(migration).toMatch(
+      /public\.is_workspace_product_manager\(\r?\n\s+split_part\(object_name, '\/', 1\)::uuid\r?\n\s+\)/
     );
     expect(migration).not.toContain("listing_media_public_read");
     expect(migration).not.toContain("public.is_public_listing_media_object");

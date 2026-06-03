@@ -42,7 +42,7 @@ describe("public page shells", () => {
     ).toHaveAttribute("href", "/catalogue");
     expect(
       screen.getByRole("link", { name: /start enquiry/i })
-    ).toHaveAttribute("href", "/quote");
+    ).toHaveAttribute("href", "/quote?listing=lounge-sofa-package");
   });
 
   it("renders public events copy with event and furniture rental language", () => {
@@ -70,8 +70,8 @@ describe("public page shells", () => {
     expect(screen.queryByText(/mvp/i)).not.toBeInTheDocument();
   });
 
-  it("keeps public quote copy from implying ecommerce or online ordering", () => {
-    render(<QuotePage />);
+  it("keeps public quote copy from implying ecommerce or online ordering", async () => {
+    render(await QuotePage());
 
     expect(screen.getByRole("heading", { name: /quote request/i })).toBeInTheDocument();
     expect(screen.getByText(/furniture rental follow-up/i)).toBeInTheDocument();
@@ -101,8 +101,10 @@ describe("public page shells", () => {
       catalogueLinks.map((link) => link.getAttribute("href"))
     ).toContain("/catalogue/lounge-sofa-package");
     expect(
-      screen.getByRole("link", { name: /start enquiry/i })
-    ).toHaveAttribute("href", "/quote");
+      screen
+        .getAllByRole("link", { name: /start enquiry/i })
+        .map((link) => link.getAttribute("href"))
+    ).toContain("/quote?listing=lounge-sofa-package");
   });
 
   it("renders a clean empty state when no public listings are available", () => {
@@ -243,6 +245,11 @@ describe("public page shells", () => {
       />
     );
     expect(screen.getByRole("link", { name: /view listing/i })).toBeInTheDocument();
+    expect(
+      screen
+        .getAllByRole("link", { name: /start enquiry/i })
+        .map((link) => link.getAttribute("href"))
+    ).toContain("/quote?listing=compact-chair");
     expect(screen.queryByText(/shell/i)).not.toBeInTheDocument();
     expect(
       screen.queryByText(
