@@ -367,12 +367,17 @@ function queryAs(role, authUserId, sql) {
   return psql(roleSql(role, authUserId, sql));
 }
 
-function statementFailsAs(role, authUserId, sql) {
+function statementFailsAs(
+  role,
+  authUserId,
+  sql,
+  expectedError = /permission denied|violates row-level security/i,
+) {
   const result = psql(roleSql(role, authUserId, sql), { check: false });
   assert.notEqual(result.status, 0, `${role} statement unexpectedly succeeded: ${sql}`);
   assert.match(
     `${result.stdout}\n${result.stderr}`,
-    /permission denied|violates row-level security/i,
+    expectedError,
     `${role} statement failed for an unexpected reason: ${result.stdout}${result.stderr}`,
   );
 }
@@ -1067,6 +1072,7 @@ check('atomic quote workflow RPC denies oversized notes, cross-workspace, viewer
         repeat('x', 1201)
       )
     `,
+    /quote_workflow_note_too_long/i,
   );
 
   statementFailsAs(
@@ -1080,6 +1086,7 @@ check('atomic quote workflow RPC denies oversized notes, cross-workspace, viewer
         'Cross-workspace note should fail.'
       )
     `,
+    /quote_workflow_not_authorized/i,
   );
 
   statementFailsAs(
@@ -1093,6 +1100,7 @@ check('atomic quote workflow RPC denies oversized notes, cross-workspace, viewer
         'Viewer note should fail.'
       )
     `,
+    /quote_workflow_not_authorized/i,
   );
 
   statementFailsAs(
@@ -1106,6 +1114,7 @@ check('atomic quote workflow RPC denies oversized notes, cross-workspace, viewer
         'No-membership note should fail.'
       )
     `,
+    /quote_workflow_not_authorized/i,
   );
 
   statementFailsAs(
