@@ -683,3 +683,19 @@ actions, n8n/Pinecone runtime behavior, SaaS chatbot runtime work, access to
 `website/chat-config.js`, or ecommerce flows such as carts, checkout,
 payments, stock reservation, fulfilment, confirmed booking, or online
 ordering.
+
+Phase 2C-D adds quote workflow atomicity and admin operations hardening. It
+replaces the Phase 2C-C multi-call quote status/activity write path with a
+single narrow `execute_admin_quote_workflow` database function. The function
+validates the authenticated owner/admin workspace actor, locks the target
+quote request, updates only quote workflow status fields, and inserts related
+internal activity in one transaction. Direct authenticated table write grants
+for quote workflow updates/activity inserts are revoked or narrowed.
+
+Phase 2C-D does not add public quote status tracking, customer-visible
+internal notes, notifications, CRM integration, customer accounts, customer
+uploads, arbitrary public upload routes, deployment config, Supabase Cloud
+actions, browser Supabase, service-role runtime paths, n8n/Pinecone runtime
+behavior, SaaS chatbot runtime work, access to `website/chat-config.js`, or
+ecommerce flows such as carts, checkout, payments, stock reservation,
+fulfilment, confirmed booking, or online ordering.

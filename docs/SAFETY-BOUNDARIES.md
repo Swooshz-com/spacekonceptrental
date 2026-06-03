@@ -602,3 +602,29 @@ online ordering, customer uploads, arbitrary public upload routes, browser
 Supabase, service-role runtime paths, deployment config, Supabase Cloud
 actions, n8n/Pinecone runtime behavior, SaaS chatbot runtime work, or
 `website/chat-config.js` access.
+
+## Phase 2C-D Quote Workflow Atomicity Boundary
+
+Phase 2C-D approves only atomic hardening of the existing internal admin quote
+workflow write path. The protected admin route may continue to accept only a
+required quote status and optional bounded internal note after `quote.write`,
+same-origin, CSRF, and trusted-workspace checks. The persistence layer must
+call only the `execute_admin_quote_workflow` RPC through a session-bound
+authenticated Supabase client.
+
+The RPC must validate the authenticated owner/admin actor for the target
+workspace, lock the target quote request, update only
+`quote_requests.status`/`updated_at`, insert status-change activity only when
+the status changes, insert internal-note activity only for non-blank bounded
+notes, and return only a narrow success result. The status update and activity
+inserts must succeed or fail together. Direct authenticated table grants for
+quote status updates and quote activity inserts must remain revoked or
+narrowed so the RPC is the write boundary.
+
+Phase 2C-D does not approve public quote status tracking, customer-visible
+internal notes, notifications, CRM integration, carts, checkout, payments,
+customer accounts, stock reservation, order fulfilment, confirmed booking,
+online ordering, customer uploads, arbitrary public upload routes, browser
+Supabase, service-role runtime paths, deployment config, Supabase Cloud
+actions, n8n/Pinecone runtime behavior, SaaS chatbot runtime work, or
+`website/chat-config.js` access.

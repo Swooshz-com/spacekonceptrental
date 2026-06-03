@@ -95,12 +95,13 @@ describe("Phase 2C-C admin quote operations and enquiry workflow closeout", () =
     expect(routeSource).toContain("resolveServerAdminRuntimeRouteGateAdapter");
     expect(writeSource).toContain('import "server-only";');
     expect(writeSource).toContain("createSessionBoundSupabaseAdminReadClient");
-    expect(writeSource).toContain("quote_request_activity");
-    expect(writeSource).toContain("status_change");
-    expect(writeSource).toContain("internal_note");
+    expect(writeSource).toContain("execute_admin_quote_workflow");
+    expect(writeSource).toContain("p_internal_note");
     expect(readSource).toContain('import "server-only";');
     expect(readSource).toContain("quote_request_activity");
     expect(migration).toContain("create table if not exists public.quote_request_activity");
+    expect(migration).toContain("status_change");
+    expect(migration).toContain("internal_note");
     expect(migration).toContain("public.is_workspace_quote_manager");
     expect(migration).toContain("public.current_quote_admin_user_id");
     expect(migration).toContain("quote_requests_quote_admin_update");

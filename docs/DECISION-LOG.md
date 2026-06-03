@@ -1214,3 +1214,33 @@ n8n/Pinecone runtime behavior, SaaS chatbot runtime work, ecommerce flows
 including cart, checkout, payments, customer accounts, stock reservation,
 fulfilment, confirmed booking, online ordering, or access
 `website/chat-config.js`.
+
+## 2026-06-03: Quote Workflow Atomicity And Admin Operations Hardening
+
+Decision: Phase 2C-D replaces the admin quote status/activity multi-call write
+path with a single atomic database function.
+
+Reason: Phase 2C-C added internal quote activity, but the application wrote
+the status update and activity rows through separate Supabase client calls.
+That could allow partial persistence if one call succeeded and a later call
+failed. The hardened boundary makes quote workflow status and internal
+activity persist together or not at all.
+
+The implementation adds `execute_admin_quote_workflow`, a narrow
+security-definer database function granted only to authenticated callers. It
+validates the current authenticated owner/admin actor for the trusted
+workspace, locks the target quote request, updates only `status` and
+`updated_at`, inserts status-change activity only when the status actually
+changes, and inserts bounded internal-note activity only when a non-blank note
+is supplied. Direct authenticated table grants for quote workflow updates and
+activity inserts are revoked or narrowed, while admin activity reads remain
+RLS-scoped. The server-only application persistence now calls this RPC once
+through the existing session-bound authenticated Supabase client.
+
+Phase 2C-D does not add public quote status tracking, customer-visible
+internal notes, notifications, CRM integration, customer uploads, arbitrary
+public upload routes, browser Supabase, service-role runtime paths,
+deployment config, Supabase Cloud actions, n8n/Pinecone runtime behavior,
+SaaS chatbot runtime work, ecommerce flows including cart, checkout,
+payments, customer accounts, stock reservation, fulfilment, confirmed
+booking, online ordering, or access `website/chat-config.js`.
