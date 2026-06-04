@@ -1490,3 +1490,59 @@ public quote tracking or public transcript access, add notifications or CRM
 integration, change n8n/Pinecone runtime behavior, add SaaS chatbot runtime
 work, add browser Supabase, add ecommerce flows, or access
 `website/chat-config.js`.
+
+## 2026-06-04: Transcript Audit Evidence Model And Operator Runbook Readiness
+
+Decision: Phase 2E-G adds transcript audit/evidence model and operator runbook readiness only.
+
+Reason: PR #104 merged at `49bb60131af99a0a3829a536eb5d29575218a442` and
+completed Phase 2E-F transcript lifecycle governance and
+retention/deletion/export readiness. The next safe step is to define the
+future audit/evidence and operator-readiness model before any lifecycle action,
+audit writer, production evidence artifact, transcript read, deletion/export,
+retention cleanup, `/api/chat` persistence wiring, live executor, or
+service-role path treats transcript storage as operational.
+
+Phase 2E-G documents future audit events for transcript persistence attempts,
+transcript access/read, transcript export requests, transcript deletion
+requests, retention expiry processing, retention cleanup failure, admin
+override, lifecycle disable/rollback, operator approval, and evidence capture.
+It defines future approved field categories for `event_type`, `workspace_id`,
+approved `conversation_id`, approved `quote_request_id`, `actor_type`,
+approved `actor_admin_user_id`, `request_id`, `approval_reference`,
+`reason_code`, `result_status`, `affected_record_count`, `created_at`, and
+minimal redacted metadata.
+
+Phase 2E-G also forbids copying full transcript content, raw provider
+payloads, n8n workflow payloads, webhook URLs, raw headers, cookies, tokens,
+API keys, private keys, secrets, service-role material, or customer-visible
+internal notes into audit/evidence records or artifacts. Future operator
+runbooks must cover owner approval capture, dry-run/local proof, local SQL/RLS
+proof, static guard proof, evidence template completion, failure triage,
+rollback/disable steps, audit review, data minimisation review, redaction
+review, post-action verification, and "Do not proceed" stop conditions.
+Future evidence templates remain placeholder-only and must explicitly state
+that no secrets or transcript content are copied into evidence.
+
+Explicit approval remains required before any audit/evidence runtime writer,
+audit/evidence storage or tables, production evidence file or artifact,
+runtime transcript writes, runtime transcript reads, live Supabase RPC
+executor, service-role or privileged DB execution strategy, `/api/chat`
+transcript write wiring, transcript deletion/export runtime paths, retention
+cleanup jobs, admin transcript UI, customer accounts, public quote tracking or
+public transcript access, notifications, CRM integration, n8n/Pinecone runtime
+changes, SaaS chatbot runtime work, deployment, Vercel config, Supabase Cloud
+config, env/secrets, production evidence, browser Supabase, service-role
+runtime paths, or `website/chat-config.js` access.
+
+This phase does not deploy, add Vercel project config, connect Supabase Cloud,
+add production env files, add real secrets, add production seed data, add
+runtime transcript writes, add runtime transcript reads, add a live Supabase
+RPC executor, add service-role runtime paths, wire transcript writes or reads
+into `/api/chat`, add transcript deletion/export runtime paths, add retention
+cleanup jobs, add audit/evidence storage, add an audit/evidence runtime
+writer, add production evidence files, add admin transcript UI, approve
+customer accounts, approve public quote tracking or public transcript access,
+add notifications or CRM integration, change n8n/Pinecone runtime behavior,
+add SaaS chatbot runtime work, add browser Supabase, add ecommerce flows, or
+access `website/chat-config.js`.

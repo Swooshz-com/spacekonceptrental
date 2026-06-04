@@ -833,3 +833,21 @@ integration, n8n/Pinecone runtime changes, SaaS chatbot runtime work,
 Deployment, Vercel config, Supabase Cloud config, env/secrets, production
 evidence, browser Supabase, ecommerce flows, or `website/chat-config.js`
 access.
+
+Phase 2E-G adds transcript audit/evidence model and operator runbook readiness
+only. It documents future transcript lifecycle audit event types, safe
+audit/evidence field categories, forbidden audit/evidence material, operator
+approval capture, dry-run/local proof, local SQL/RLS proof, static guard proof,
+evidence template placeholders, failure triage, rollback/disable steps, audit
+review, data minimisation review, redaction review, post-action verification,
+and "Do not proceed" stop conditions.
+
+Phase 2E-G does not add audit/evidence storage, audit/evidence runtime writers,
+production evidence files, runtime transcript writes, runtime transcript reads,
+Live Supabase RPC executor, Any service-role or privileged DB execution
+strategy, `/api/chat` transcript write wiring, Transcript deletion/export
+runtime paths, Retention cleanup jobs, Admin transcript UI, Customer accounts,
+Public quote tracking or public transcript access, Notifications, CRM
+integration, n8n/Pinecone runtime changes, SaaS chatbot runtime work,
+Deployment, Vercel config, Supabase Cloud config, env/secrets, browser
+Supabase, ecommerce flows, or `website/chat-config.js` access.

@@ -115,6 +115,30 @@ for transcript writes, transcript reads, or admin transcript UI.
 - [x] Public quote tracking/public transcript access risks are documented.
 - [x] Static guards prove Phase 2E-F remains governance/readiness only.
 
+## Phase 2E-G Audit/Evidence Model And Operator Runbook Readiness
+
+- [x] Phase 2E-G is documented as governance/readiness only.
+- [x] Future transcript lifecycle audit event types are documented.
+- [x] Safe future audit/evidence field categories are documented.
+- [x] Forbidden audit/evidence fields and copied material are documented.
+- [x] Future operator runbook requirements are documented.
+- [x] Future evidence template placeholder requirements are documented.
+- [x] "Do not proceed" stop conditions are documented.
+- [x] Static guards prove Phase 2E-G remains governance/readiness only.
+
+Audit/evidence approval gates requiring explicit owner approval:
+
+- [ ] Audit event model owner approval.
+- [ ] Evidence template owner approval.
+- [ ] Operator runbook owner approval.
+- [ ] Redaction policy approval.
+- [ ] Stop-condition approval.
+- [ ] Rollback/disable approval.
+- [ ] Local SQL/RLS proof.
+- [ ] Static guard proof.
+- [ ] No full transcript content in audit/evidence.
+- [ ] No secrets/provider payloads in audit/evidence.
+
 Lifecycle approval gates requiring explicit owner approval:
 
 - [ ] Retention/deletion/export owner approval.
@@ -130,6 +154,9 @@ Lifecycle approval gates requiring explicit owner approval:
 
 Approval gates requiring explicit owner approval:
 
+- [ ] Audit/evidence runtime writer.
+- [ ] Audit/evidence storage or tables.
+- [ ] Production evidence file or artifact.
 - [ ] Live Supabase RPC executor.
 - [ ] Any service-role or privileged DB execution strategy.
 - [ ] `/api/chat` transcript write wiring.

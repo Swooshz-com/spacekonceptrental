@@ -219,8 +219,46 @@ Suggested first PR:
   activation governance baseline, without adding deletion/export runtime paths,
   retention cleanup jobs, transcript reads, admin transcript UI, customer
   accounts, or public transcript/quote access.
+- Phase 2E-G follows with transcript audit/evidence model and operator runbook
+  readiness only, after PR #104 records the lifecycle governance baseline,
+  without adding audit/evidence storage, runtime writers, production evidence,
+  deletion/export runtime paths, retention cleanup jobs, transcript reads,
+  admin transcript UI, customer accounts, or public transcript/quote access.
 
-Current Phase 2E-F status:
+Current Phase 2E-G status:
+
+- PR #104 merged Phase 2E-F transcript lifecycle governance and
+  retention/deletion/export readiness at merge commit
+  `49bb60131af99a0a3829a536eb5d29575218a442`.
+- Phase 2E-F is complete as lifecycle governance/readiness only.
+- Phase 2E-G is current as audit/evidence model and operator runbook readiness
+  only.
+- Future audit/evidence implementation must define owner-approved event types,
+  safe field categories, forbidden evidence content, redaction policy,
+  operator approval capture, local SQL/RLS proof, static guard proof,
+  rollback/disable controls, evidence template completion, failure triage, and
+  post-action verification before runtime writers or production evidence exist.
+- Future audit/evidence rows must never copy full transcript content, raw
+  provider payloads, n8n workflow payloads, webhook URLs, raw headers, cookies,
+  tokens, API keys, private keys, secrets, service-role material, or
+  customer-visible internal notes.
+- Audit/evidence runtime writers remain blocked.
+- Production evidence files remain blocked.
+- Runtime transcript writes remain blocked.
+- Runtime transcript reads remain blocked.
+- Admin transcript UI remains blocked.
+- Customer accounts remain blocked.
+- Public quote tracking remains blocked.
+- Notifications remain blocked.
+- CRM integration remains blocked.
+- n8n/Pinecone runtime changes remain blocked.
+- SaaS chatbot runtime work remains blocked.
+- Deployment remains blocked.
+- Browser Supabase remains forbidden.
+- Service-role runtime paths remain forbidden.
+- `website/chat-config.js` access remains forbidden.
+
+Previous Current Phase 2E-F status:
 
 - PR #103 merged the Phase 2E-D hotfix and Phase 2E-E transcript persistence
   activation governance at merge commit
