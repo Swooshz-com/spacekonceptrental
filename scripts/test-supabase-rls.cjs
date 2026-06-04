@@ -1137,6 +1137,9 @@ check('transcript persistence RPC persists idempotent batches for privileged exe
   const conversationId = '80000000-0000-4000-8000-000000000101';
   const firstMessageId = '90000000-0000-4000-8000-000000000101';
   const duplicateMessageId = '90000000-0000-4000-8000-000000000102';
+  const contentConflictMessageId = '90000000-0000-4000-8000-000000000103';
+  const requestConflictMessageId = '90000000-0000-4000-8000-000000000104';
+  const metadataConflictMessageId = '90000000-0000-4000-8000-000000000105';
   const clientMessageId = 'rpc-client-message-a';
   const first = psql(`
     select public.persist_transcript_batch(
@@ -1158,6 +1161,7 @@ check('transcript persistence RPC persists idempotent batches for privileged exe
           'role', 'user',
           'message_type', 'chat',
           'content', 'I need chairs for an event.',
+          'provider', 'n8n',
           'client_message_id', '${clientMessageId}',
           'request_id', 'rls-request-a',
           'sequence_number', 0,
@@ -1188,10 +1192,12 @@ check('transcript persistence RPC persists idempotent batches for privileged exe
           'conversation_id', '${conversationId}',
           'role', 'user',
           'message_type', 'chat',
-          'content', 'Duplicate browser retry should not create another row.',
+          'content', 'I need chairs for an event.',
+          'provider', 'n8n',
           'client_message_id', '${clientMessageId}',
-          'request_id', 'rls-request-a-retry',
+          'request_id', 'rls-request-a',
           'sequence_number', 0,
+          'retention_expires_at', '2026-07-04T00:00:00.000Z',
           'metadata', jsonb_build_object('source', 'rls-test')
         )
       )
@@ -1212,6 +1218,116 @@ check('transcript persistence RPC persists idempotent batches for privileged exe
     ),
     '1',
     'duplicate clientMessageId should not insert another message',
+  );
+
+  statementFails(
+    `
+      select public.persist_transcript_batch(
+        '${ids.workspaceA}'::uuid,
+        jsonb_build_object(
+          'id', '${conversationId}',
+          'workspace_id', '${ids.workspaceA}',
+          'public_reference', 'rpc-conversation-a',
+          'metadata', jsonb_build_object('entryPoint', 'rls-test')
+        ),
+        jsonb_build_array(
+          jsonb_build_object(
+            'id', '${contentConflictMessageId}',
+            'workspace_id', '${ids.workspaceA}',
+            'conversation_id', '${conversationId}',
+            'role', 'user',
+            'message_type', 'chat',
+            'content', 'Changed content must not be silently dropped.',
+            'provider', 'n8n',
+            'client_message_id', '${clientMessageId}',
+            'request_id', 'rls-request-a',
+            'sequence_number', 0,
+            'retention_expires_at', '2026-07-04T00:00:00.000Z',
+            'metadata', jsonb_build_object('source', 'rls-test')
+          )
+        )
+      )
+    `,
+    /transcript_client_message_id_conflict/i,
+  );
+
+  statementFails(
+    `
+      select public.persist_transcript_batch(
+        '${ids.workspaceA}'::uuid,
+        jsonb_build_object(
+          'id', '${conversationId}',
+          'workspace_id', '${ids.workspaceA}',
+          'public_reference', 'rpc-conversation-a',
+          'metadata', jsonb_build_object('entryPoint', 'rls-test')
+        ),
+        jsonb_build_array(
+          jsonb_build_object(
+            'id', '${requestConflictMessageId}',
+            'workspace_id', '${ids.workspaceA}',
+            'conversation_id', '${conversationId}',
+            'role', 'user',
+            'message_type', 'chat',
+            'content', 'I need chairs for an event.',
+            'provider', 'n8n',
+            'client_message_id', '${clientMessageId}',
+            'request_id', 'rls-request-a-changed',
+            'sequence_number', 0,
+            'retention_expires_at', '2026-07-04T00:00:00.000Z',
+            'metadata', jsonb_build_object('source', 'rls-test')
+          )
+        )
+      )
+    `,
+    /transcript_client_message_id_conflict/i,
+  );
+
+  statementFails(
+    `
+      select public.persist_transcript_batch(
+        '${ids.workspaceA}'::uuid,
+        jsonb_build_object(
+          'id', '${conversationId}',
+          'workspace_id', '${ids.workspaceA}',
+          'public_reference', 'rpc-conversation-a',
+          'metadata', jsonb_build_object('entryPoint', 'rls-test')
+        ),
+        jsonb_build_array(
+          jsonb_build_object(
+            'id', '${metadataConflictMessageId}',
+            'workspace_id', '${ids.workspaceA}',
+            'conversation_id', '${conversationId}',
+            'role', 'user',
+            'message_type', 'chat',
+            'content', 'I need chairs for an event.',
+            'provider', 'n8n',
+            'client_message_id', '${clientMessageId}',
+            'request_id', 'rls-request-a',
+            'sequence_number', 0,
+            'retention_expires_at', '2026-07-04T00:00:00.000Z',
+            'metadata', jsonb_build_object('source', 'changed-rls-test')
+          )
+        )
+      )
+    `,
+    /transcript_client_message_id_conflict/i,
+  );
+
+  assert.equal(
+    psql(
+      `
+        select count(*)::text
+        from public.messages
+        where workspace_id = '${ids.workspaceA}'
+          and conversation_id = '${conversationId}'
+          and client_message_id = '${clientMessageId}'
+          and content = 'I need chairs for an event.'
+          and request_id = 'rls-request-a'
+          and metadata = jsonb_build_object('source', 'rls-test')
+      `
+    ),
+    '1',
+    'conflicting clientMessageId retries should leave only the original message row',
   );
 });
 

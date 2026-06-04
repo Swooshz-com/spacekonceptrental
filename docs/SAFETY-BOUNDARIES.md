@@ -106,6 +106,12 @@ variables such as `N8N_CHAT_WEBHOOK_URL`.
   adapter tests. It is not runtime transcript write approval.
 - Phase 2E-D approves only the local server-only SQL/RPC contract and injected
   TypeScript RPC adapter boundary. It is not runtime transcript write approval.
+- Phase 2E-D hotfixes only RPC idempotency conflict rejection and malformed
+  runtime validation. It is not runtime transcript write approval.
+- Phase 2E-E approves only transcript persistence activation governance and
+  executor approval gates. It is not live executor, service-role runtime,
+  `/api/chat` transcript write, transcript read, or admin transcript UI
+  approval.
 - Do not trust browser-provided session IDs as identity or authorization.
 - Use `clientMessageId` only for idempotency and deduplication, not
   authentication.
@@ -122,6 +128,16 @@ variables such as `N8N_CHAT_WEBHOOK_URL`.
 - Phase 2E-D adds only an ungranted local RPC contract and injected adapter
   boundary; the default persistence path remains unavailable and `/api/chat`
   remains unwired.
+- Phase 2E-E documents approval gates only. Explicit owner approval is required
+  before any of these: Live Supabase RPC executor; Any service-role or
+  privileged DB execution strategy; `/api/chat` transcript write wiring;
+  Transcript read paths; Admin transcript UI; Transcript deletion/export paths;
+  Retention cleanup jobs; Customer identity/account linking; Public quote
+  tracking or public transcript access; Notifications or CRM integration.
+- Any future live transcript executor must have a reviewed privilege model,
+  avoid browser/client exposure of service-role material, redact failures, prove
+  idempotency, define audit/evidence requirements, and include rollback/disable
+  controls before `/api/chat` can use it.
 - Runtime transcript writes remain blocked.
 - Runtime transcript reads remain blocked.
 - Admin transcript UI remains blocked.

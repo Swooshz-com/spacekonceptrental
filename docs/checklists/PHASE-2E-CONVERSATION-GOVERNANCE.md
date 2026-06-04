@@ -69,6 +69,49 @@ for transcript writes, transcript reads, or admin transcript UI.
       Supabase, service-role runtime paths, env reads, or transcript read/UI
       surfaces.
 
+## Phase 2E-D Hotfix Completed Findings
+
+- [x] Conflicting `clientMessageId` reuse is rejected instead of silently dropping changed messages.
+- [x] Exact duplicate retries with the same `clientMessageId` and matching
+      payload return the original message ID and do not create a second row.
+- [x] Conflicts on changed content, changed request ID, and changed metadata
+      fail with `transcript_client_message_id_conflict`.
+- [x] RPC idempotency fingerprint compares role, message type, content,
+      provider, request ID, sequence number, retention expiry, and metadata.
+- [x] RPC idempotency fingerprint excludes message `id` because a future
+      server-side executor may regenerate server-owned IDs while replaying the
+      same client idempotency key.
+- [x] Transcript command validation returns safe rejected results for malformed
+      JSON-like runtime input instead of throwing validation exceptions.
+- [x] Static guards prove conflict rejection behavior remains in the migration
+      and browser roles still do not receive RPC execute grants.
+
+## Phase 2E-E Activation Governance And Executor Approval Gate
+
+- [x] Phase 2E-E is documented as governance/approval-gate only.
+- [x] Current Phase 2E-D RPC is documented as ungranted to browser roles.
+- [x] Current TypeScript adapter is documented as requiring an injected
+      executor.
+- [x] No live executor exists yet.
+- [x] Future live executor requirements are documented for owner approval,
+      reviewed privilege model, browser/client service-role separation,
+      failure redaction, idempotency proof, audit/evidence requirements,
+      rollback/disable controls, and tests before `/api/chat` usage.
+- [x] Static guards prove Phase 2E-E remains governance/approval-gate only.
+
+Approval gates requiring explicit owner approval:
+
+- [ ] Live Supabase RPC executor.
+- [ ] Any service-role or privileged DB execution strategy.
+- [ ] `/api/chat` transcript write wiring.
+- [ ] Transcript read paths.
+- [ ] Admin transcript UI.
+- [ ] Transcript deletion/export paths.
+- [ ] Retention cleanup jobs.
+- [ ] Customer identity/account linking.
+- [ ] Public quote tracking or public transcript access.
+- [ ] Notifications or CRM integration.
+
 ## Runtime Blockers
 
 - [ ] Runtime transcript writes remain blocked.

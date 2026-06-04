@@ -824,6 +824,32 @@ test('real migrations add the Phase 2E-D transcript persistence RPC boundary wit
     /concurrency arbiter/i,
     'migration should document that DB uniqueness is the concurrency arbiter for client_message_id retries',
   );
+  assert.match(
+    migration,
+    /transcript_client_message_id_conflict/,
+    'persist_transcript_batch must reject conflicting client_message_id reuse with a controlled exception',
+  );
+  assert.match(
+    migration,
+    /exact duplicate retries are accepted while conflicting client_message_id reuse is rejected/i,
+    'migration should document exact duplicate retry acceptance and conflicting reuse rejection',
+  );
+  for (const field of [
+    'role',
+    'message_type',
+    'content',
+    'provider',
+    'request_id',
+    'sequence_number',
+    'retention_expires_at',
+    'metadata',
+  ]) {
+    assert.match(
+      sql,
+      new RegExp(`public\\.messages\\.${field}\\s+is\\s+not\\s+distinct\\s+from\\s+excluded\\.${field}`),
+      `client_message_id idempotency fingerprint must compare ${field}`,
+    );
+  }
   assert.ok(
     sql.includes(
       'revoke all on function public.persist_transcript_batch(uuid, jsonb, jsonb) from public;',

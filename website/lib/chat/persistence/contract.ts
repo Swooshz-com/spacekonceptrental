@@ -58,7 +58,7 @@ type OptionalStringResult =
 
 function reject(
   reason: TranscriptPersistenceRejectReason
-): TranscriptPersistenceCommandResult {
+): Extract<TranscriptPersistenceCommandResult, { ok: false }> {
   return {
     ok: false,
     status: "rejected",
@@ -79,10 +79,14 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 function normalizeUuid(
-  value: string | null | undefined,
+  value: unknown,
   reason: TranscriptPersistenceRejectReason
 ): RequiredStringResult {
-  const normalized = value?.trim().toLowerCase();
+  if (typeof value !== "string") {
+    return { ok: false, reason };
+  }
+
+  const normalized = value.trim().toLowerCase();
 
   if (!normalized || !uuidPattern.test(normalized)) {
     return { ok: false, reason };
@@ -92,10 +96,18 @@ function normalizeUuid(
 }
 
 function normalizeOptionalUuid(
-  value: string | null | undefined,
+  value: unknown,
   reason: TranscriptPersistenceRejectReason
 ): OptionalStringResult {
-  const normalized = value?.trim();
+  if (value == null) {
+    return { ok: true };
+  }
+
+  if (typeof value !== "string") {
+    return { ok: false, reason };
+  }
+
+  const normalized = value.trim();
 
   if (!normalized) {
     return { ok: true };
@@ -105,11 +117,15 @@ function normalizeOptionalUuid(
 }
 
 function normalizeRequiredText(
-  value: string | null | undefined,
+  value: unknown,
   maxLength: number,
   reason: TranscriptPersistenceRejectReason
 ): RequiredStringResult {
-  const normalized = value?.trim();
+  if (typeof value !== "string") {
+    return { ok: false, reason };
+  }
+
+  const normalized = value.trim();
 
   if (!normalized || normalized.length > maxLength) {
     return { ok: false, reason };
@@ -119,12 +135,20 @@ function normalizeRequiredText(
 }
 
 function normalizeOptionalText(
-  value: string | null | undefined,
+  value: unknown,
   maxLength: number,
   reason: TranscriptPersistenceRejectReason,
   rejectWhitespace = false
 ): OptionalStringResult {
-  const normalized = value?.trim();
+  if (value == null) {
+    return { ok: true };
+  }
+
+  if (typeof value !== "string") {
+    return { ok: false, reason };
+  }
+
+  const normalized = value.trim();
 
   if (!normalized) {
     return { ok: true };
@@ -140,14 +164,17 @@ function normalizeOptionalText(
   return { ok: true, value: normalized };
 }
 
-function normalizeOptionalTimestamp(
-  value: Date | string | null | undefined
-): OptionalStringResult {
+function normalizeOptionalTimestamp(value: unknown): OptionalStringResult {
   if (value == null) {
     return { ok: true };
   }
 
-  const timestamp = value instanceof Date ? value : new Date(value.trim());
+  if (!(value instanceof Date) && typeof value !== "string") {
+    return { ok: false, reason: "retention_expires_at_invalid" };
+  }
+
+  const timestamp =
+    value instanceof Date ? value : new Date(value.trim());
 
   if (Number.isNaN(timestamp.getTime())) {
     return { ok: false, reason: "retention_expires_at_invalid" };
@@ -156,28 +183,41 @@ function normalizeOptionalTimestamp(
   return { ok: true, value: timestamp.toISOString() };
 }
 
-function getJsonByteLength(value: unknown) {
-  return new TextEncoder().encode(JSON.stringify(value)).byteLength;
+function getJsonByteLength(value: string) {
+  return new TextEncoder().encode(value).byteLength;
 }
 
-function hasUnsafeMetadataKey(value: unknown): boolean {
+function hasUnsafeMetadataKey(
+  value: unknown,
+  seen = new WeakSet<object>()
+): boolean {
   if (Array.isArray(value)) {
-    return value.some((item) => hasUnsafeMetadataKey(item));
+    if (seen.has(value)) {
+      return false;
+    }
+
+    seen.add(value);
+    return value.some((item) => hasUnsafeMetadataKey(item, seen));
   }
 
   if (!isRecord(value)) {
     return false;
   }
 
+  if (seen.has(value)) {
+    return false;
+  }
+
+  seen.add(value);
   return Object.entries(value).some(
     ([key, nestedValue]) =>
       unsafeMetadataKeyPattern.test(key) ||
-      hasUnsafeMetadataKey(nestedValue)
+      hasUnsafeMetadataKey(nestedValue, seen)
   );
 }
 
 function normalizeMetadata(
-  value: TranscriptMetadataInput | null | undefined,
+  value: unknown,
   maxBytes: number
 ): MetadataValidationResult {
   if (value == null) {
@@ -195,7 +235,7 @@ function normalizeMetadata(
   try {
     const serialized = JSON.stringify(value);
 
-    if (!serialized || getJsonByteLength(value) > maxBytes) {
+    if (!serialized || getJsonByteLength(serialized) > maxBytes) {
       return { ok: false, reason: "metadata_too_large" };
     }
 
@@ -212,9 +252,17 @@ function normalizeMetadata(
 }
 
 function normalizeClientSessionHash(
-  value: string | null | undefined
+  value: unknown
 ): OptionalStringResult {
-  const normalized = value?.trim();
+  if (value == null) {
+    return { ok: true };
+  }
+
+  if (typeof value !== "string") {
+    return { ok: false, reason: "anonymous_session_hash_invalid" };
+  }
+
+  const normalized = value.trim();
 
   if (!normalized) {
     return { ok: true };
@@ -232,14 +280,24 @@ function normalizeClientSessionHash(
 }
 
 function normalizeConversationStatus(
-  value: string | null | undefined
+  value: unknown
 ): TranscriptConversationStatus | null {
-  if (value == null || value === "") {
+  if (value == null) {
     return "open";
   }
 
-  return conversationStatuses.has(value as TranscriptConversationStatus)
-    ? (value as TranscriptConversationStatus)
+  if (typeof value !== "string") {
+    return null;
+  }
+
+  const normalized = value.trim();
+
+  if (!normalized) {
+    return "open";
+  }
+
+  return conversationStatuses.has(normalized as TranscriptConversationStatus)
+    ? (normalized as TranscriptConversationStatus)
     : null;
 }
 
@@ -255,23 +313,39 @@ function isValidMessageRoleType(
 }
 
 function normalizeMessageType(
-  value: string | null | undefined
+  value: unknown
 ): TranscriptPersistenceMessageType | null {
-  if (value == null || value === "") {
+  if (value == null) {
     return "chat";
   }
 
-  return value === "chat" || value === "system_notice" ? value : null;
+  if (typeof value !== "string") {
+    return null;
+  }
+
+  const normalized = value.trim();
+
+  if (!normalized) {
+    return "chat";
+  }
+
+  return normalized === "chat" || normalized === "system_notice"
+    ? normalized
+    : null;
 }
 
 function buildConversationCommand(
-  input: TranscriptPersistenceCommandInput,
+  input: unknown,
   trustedWorkspaceId: string
 ):
   | { ok: true; conversation: ConversationPersistenceCommand }
   | { ok: false; reason: TranscriptPersistenceRejectReason } {
+  if (!isRecord(input)) {
+    return { ok: false, reason: "conversation_id_invalid" };
+  }
+
   const conversationId = normalizeUuid(
-    input.conversation?.id,
+    input.id,
     "conversation_id_invalid"
   );
   if (!conversationId.ok) {
@@ -279,7 +353,7 @@ function buildConversationCommand(
   }
 
   const publicReference = normalizeRequiredText(
-    input.conversation.publicReference,
+    input.publicReference,
     MAX_PUBLIC_REFERENCE_LENGTH,
     "conversation_public_reference_invalid"
   );
@@ -287,20 +361,20 @@ function buildConversationCommand(
     return { ok: false, reason: publicReference.reason };
   }
 
-  const status = normalizeConversationStatus(input.conversation.status);
+  const status = normalizeConversationStatus(input.status);
   if (!status) {
     return { ok: false, reason: "conversation_status_invalid" };
   }
 
   const clientSessionHash = normalizeClientSessionHash(
-    input.conversation.clientSessionHash
+    input.clientSessionHash
   );
   if (!clientSessionHash.ok) {
     return { ok: false, reason: clientSessionHash.reason };
   }
 
   const quoteRequestId = normalizeOptionalUuid(
-    input.conversation.quoteRequestId,
+    input.quoteRequestId,
     "quote_request_id_invalid"
   );
   if (!quoteRequestId.ok) {
@@ -308,14 +382,14 @@ function buildConversationCommand(
   }
 
   const retentionExpiresAt = normalizeOptionalTimestamp(
-    input.conversation.retentionExpiresAt
+    input.retentionExpiresAt
   );
   if (!retentionExpiresAt.ok) {
     return { ok: false, reason: retentionExpiresAt.reason };
   }
 
   const metadata = normalizeMetadata(
-    input.conversation.metadata,
+    input.metadata,
     MAX_CONVERSATION_METADATA_BYTES
   );
   if (!metadata.ok) {
@@ -347,25 +421,29 @@ function buildConversationCommand(
 }
 
 function buildMessageCommand(
-  input: TranscriptPersistenceCommandInput["messages"][number],
+  input: unknown,
   trustedWorkspaceId: string,
   conversationId: string
 ):
   | { ok: true; message: MessagePersistenceCommand }
   | { ok: false; reason: TranscriptPersistenceRejectReason } {
+  if (!isRecord(input)) {
+    return { ok: false, reason: "message_id_invalid" };
+  }
+
   const messageId = normalizeUuid(input.id, "message_id_invalid");
   if (!messageId.ok) {
     return { ok: false, reason: messageId.reason };
   }
 
-  const role = input.role?.trim();
+  const role = typeof input.role === "string" ? input.role.trim() : null;
   const messageType = normalizeMessageType(input.messageType);
 
   if (!messageType || !isValidMessageRoleType(role, messageType)) {
     return { ok: false, reason: "message_role_type_invalid" };
   }
 
-  const content = input.content?.trim();
+  const content = typeof input.content === "string" ? input.content.trim() : "";
   if (!content) {
     return { ok: false, reason: "message_content_missing" };
   }
@@ -402,9 +480,12 @@ function buildMessageCommand(
     return { ok: false, reason: requestId.reason };
   }
 
+  const sequenceNumber = input.sequenceNumber;
   if (
-    input.sequenceNumber != null &&
-    (!Number.isInteger(input.sequenceNumber) || input.sequenceNumber < 0)
+    sequenceNumber != null &&
+    (typeof sequenceNumber !== "number" ||
+      !Number.isInteger(sequenceNumber) ||
+      sequenceNumber < 0)
   ) {
     return { ok: false, reason: "sequence_number_invalid" };
   }
@@ -447,8 +528,8 @@ function buildMessageCommand(
     message.requestId = requestId.value;
   }
 
-  if (input.sequenceNumber != null) {
-    message.sequenceNumber = input.sequenceNumber;
+  if (sequenceNumber != null) {
+    message.sequenceNumber = sequenceNumber;
   }
 
   if (retentionExpiresAt.value) {
@@ -461,20 +542,24 @@ function buildMessageCommand(
 export function createTranscriptPersistenceCommand(
   input: TranscriptPersistenceCommandInput
 ): TranscriptPersistenceCommandResult {
+  const commandInput: Record<string, unknown> = isRecord(input) ? input : {};
   const trustedWorkspaceId = normalizeUuid(
-    input.trustedWorkspaceId,
+    commandInput.trustedWorkspaceId,
     "trusted_workspace_missing"
   );
   if (!trustedWorkspaceId.ok) {
     return reject(trustedWorkspaceId.reason);
   }
 
-  if (!Array.isArray(input.messages) || input.messages.length === 0) {
+  if (
+    !Array.isArray(commandInput.messages) ||
+    commandInput.messages.length === 0
+  ) {
     return reject("messages_missing");
   }
 
   const conversation = buildConversationCommand(
-    input,
+    commandInput.conversation,
     trustedWorkspaceId.value
   );
   if (!conversation.ok) {
@@ -482,7 +567,7 @@ export function createTranscriptPersistenceCommand(
   }
 
   const messages: MessagePersistenceCommand[] = [];
-  for (const messageInput of input.messages) {
+  for (const messageInput of commandInput.messages) {
     const message = buildMessageCommand(
       messageInput,
       trustedWorkspaceId.value,
@@ -527,7 +612,13 @@ export async function persistTranscriptCommand(
   input: TranscriptPersistenceCommandInput,
   dependencies: TranscriptPersistenceDependencies = {}
 ): Promise<TranscriptPersistenceResult> {
-  const command = createTranscriptPersistenceCommand(input);
+  let command: TranscriptPersistenceCommandResult;
+
+  try {
+    command = createTranscriptPersistenceCommand(input);
+  } catch {
+    return reject("trusted_workspace_missing");
+  }
 
   if (!command.ok) {
     return command;

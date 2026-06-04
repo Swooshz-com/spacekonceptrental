@@ -26,6 +26,14 @@ wire transcript writes into `/api/chat`, instantiate Supabase from env, add
 browser Supabase, create service-role runtime paths, or expose transcript
 reads.
 
+Phase 2E-E records transcript persistence activation governance and executor
+approval gates only. It also documents the Phase 2E-D hotfix for
+`clientMessageId` idempotency conflicts and malformed runtime validation. It
+does not implement a live Supabase RPC executor, service-role runtime path,
+`/api/chat` transcript write wiring, transcript reads, admin transcript UI,
+deletion/export paths, retention cleanup jobs, customer identity/account
+linking, public quote tracking, notifications, or CRM integration.
+
 Runtime transcript writes remain blocked. Runtime transcript reads remain
 blocked. Admin transcript UI remains blocked. Customer accounts remain blocked.
 Public quote tracking remains blocked. Notifications remain blocked. CRM
@@ -53,6 +61,64 @@ validated command shape into the RPC payload shape, including
 `client_message_id` for idempotency/deduplication only. It does not instantiate
 Supabase, read env, read cookies, read headers, read `website/chat-config.js`,
 or make persistence available by default.
+
+The Phase 2E-D hotfix changes RPC idempotency handling so exact duplicate
+retries return the original message ID, while conflicting `clientMessageId`
+reuse now rejects with `transcript_client_message_id_conflict`. The RPC
+compares role, message type, content, provider, request ID, sequence number,
+retention expiry, and metadata before accepting a reused client key.
+
+The RPC idempotency fingerprint deliberately excludes `id` because a future
+server-side executor may generate a new server-owned message ID while replaying
+the same client idempotency key. `clientMessageId` plus the normalized payload
+is the retry contract.
+
+The Phase 2E-D hotfix also makes transcript command validation total and
+non-throwing for malformed JSON-like runtime input. Missing or non-object
+conversation payloads, missing/non-array messages, null message elements,
+non-string IDs, non-string roles, non-string content, non-string provider,
+non-string client message IDs, non-string request IDs, invalid retention
+timestamps, and malformed metadata return safe rejected results instead of
+propagating validation exceptions.
+
+In short, transcript command validation is total and non-throwing for
+malformed JSON-like runtime input.
+
+## Phase 2E-E activation governance and executor approval gate
+
+Phase 2E-E is governance and static-guard coverage only. It defines the
+approval gates required before transcript persistence can move from the local
+RPC/adapter contract into runtime use.
+
+Explicit owner approval is required before implementing any of these:
+
+- Live Supabase RPC executor.
+- Any service-role or privileged DB execution strategy.
+- `/api/chat` transcript write wiring.
+- Transcript read paths.
+- Admin transcript UI.
+- Transcript deletion/export paths.
+- Retention cleanup jobs.
+- Customer identity/account linking.
+- Public quote tracking or public transcript access.
+- Notifications or CRM integration.
+
+Executor approval strategy:
+
+- The current Phase 2E-D RPC is ungranted to browser roles.
+- The current TypeScript adapter requires an injected executor.
+- No live executor exists yet.
+- A future live executor must have explicit owner approval.
+- A future live executor must have a reviewed privilege model.
+- A future live executor must not expose service-role material to
+  browser/client code.
+- A future live executor must have failure redaction, idempotency proof,
+  audit/evidence requirements, and rollback/disable controls.
+- A future live executor must be tested before `/api/chat` can use it.
+- The Phase 2E-D hotfix makes conflicting `clientMessageId` reuse reject
+  instead of silently dropping changed messages.
+- The Phase 2E-D hotfix makes transcript command validation total and
+  non-throwing for malformed runtime input.
 
 ## Phase 2E-C server-only persistence contract
 
