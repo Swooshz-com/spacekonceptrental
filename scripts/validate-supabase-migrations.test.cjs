@@ -301,7 +301,7 @@ test('real migration directory passes static validation', () => {
   const result = runValidator(realMigrationsDir);
 
   assert.equal(result.status, 0, result.stdout + result.stderr);
-  assert.match(result.stdout, /checked 11 migration SQL file\(s\)/);
+  assert.match(result.stdout, /checked 12 migration SQL file\(s\)/);
 });
 
 test('real base schema migration creates the planned MVP tables', () => {
@@ -861,6 +861,104 @@ test('real migrations add the Phase 2E-D transcript persistence RPC boundary wit
     /grant execute on function public\.persist_transcript_batch\(uuid, jsonb, jsonb\) to (anon|authenticated)/i,
   );
   assert.doesNotMatch(migration, /service_role|service-role|NEXT_PUBLIC|chat-config/i);
+});
+
+test('real migrations add the Phase 2E-H transcript audit/evidence schema without browser grants', () => {
+  const migrationFileName = '20260604110000_transcript_audit_evidence_foundation.sql';
+  const migration = readRealMigration(migrationFileName);
+  const sql = normalizeSql(migration);
+
+  assert.match(
+    migration,
+    /create table if not exists public\.transcript_audit_events \(/,
+  );
+  assert.match(
+    migration,
+    /create table if not exists public\.transcript_evidence_records \(/,
+  );
+
+  for (const tableName of ['transcript_audit_events', 'transcript_evidence_records']) {
+    assert.match(
+      migration,
+      new RegExp(`alter table public\\.${tableName} enable row level security;`),
+      `${tableName} must enable RLS`,
+    );
+    assert.match(
+      migration,
+      new RegExp(`revoke all on table public\\.${tableName} from public;`),
+      `${tableName} must revoke public table privileges`,
+    );
+    assert.match(
+      migration,
+      new RegExp(`revoke all on table public\\.${tableName} from anon, authenticated;`),
+      `${tableName} must revoke browser-role table privileges`,
+    );
+    assert.doesNotMatch(
+      migration,
+      new RegExp(`grant\\s+(select|insert|update|delete|all)[\\s\\S]*?on table public\\.${tableName} to (anon|authenticated);`, 'i'),
+      `${tableName} should not grant direct browser access`,
+    );
+    assert.doesNotMatch(
+      migration,
+      new RegExp(`create policy [^;]* on public\\.${tableName}`, 'i'),
+      `${tableName} should not add browser-access policies yet`,
+    );
+  }
+
+  assert.match(sql, /constraint transcript_audit_events_workspace_id_fkey foreign key \(workspace_id\) references public\.workspaces \(id\)/);
+  assert.match(sql, /constraint transcript_audit_events_conversation_workspace_id_fkey foreign key \(conversation_id, workspace_id\) references public\.conversations \(id, workspace_id\)/);
+  assert.match(sql, /constraint transcript_audit_events_quote_request_workspace_id_fkey foreign key \(quote_request_id, workspace_id\) references public\.quote_requests \(id, workspace_id\)/);
+  assert.match(sql, /constraint transcript_audit_events_actor_admin_user_id_fkey foreign key \(actor_admin_user_id\) references public\.admin_users \(id\)/);
+  assert.match(sql, /constraint transcript_audit_events_event_type_check check/);
+  assert.match(sql, /transcript_persistence_attempt/);
+  assert.match(sql, /transcript_access_read/);
+  assert.match(sql, /transcript_export_request/);
+  assert.match(sql, /transcript_deletion_request/);
+  assert.match(sql, /retention_expiry_processing/);
+  assert.match(sql, /evidence_capture/);
+  assert.match(sql, /constraint transcript_audit_events_actor_type_check check/);
+  assert.match(sql, /constraint transcript_audit_events_result_status_check check/);
+  assert.match(sql, /constraint transcript_audit_events_affected_record_count_check check/);
+  assert.match(sql, /constraint transcript_audit_events_metadata_safe_check check \(public\.is_safe_transcript_metadata\(metadata, 4096\)\)/);
+
+  assert.match(sql, /constraint transcript_evidence_records_workspace_id_fkey foreign key \(workspace_id\) references public\.workspaces \(id\)/);
+  assert.match(sql, /constraint transcript_evidence_records_audit_event_workspace_id_fkey foreign key \(audit_event_id, workspace_id\) references public\.transcript_audit_events \(id, workspace_id\)/);
+  assert.match(sql, /constraint transcript_evidence_records_evidence_type_check check/);
+  assert.match(sql, /local_sql_rls_proof/);
+  assert.match(sql, /static_guard_proof/);
+  assert.match(sql, /operator_approval/);
+  assert.match(sql, /post_action_verification/);
+  assert.match(sql, /constraint transcript_evidence_records_metadata_safe_check check \(public\.is_safe_transcript_metadata\(metadata, 4096\)\)/);
+  assert.match(sql, /constraint transcript_evidence_records_safe_text_check check/);
+
+  for (const columnName of [
+    'full_transcript',
+    'transcript_content',
+    'raw_provider_payload',
+    'provider_payload',
+    'workflow_payload',
+    'webhook_url',
+    'raw_headers',
+    'cookies',
+    'tokens',
+    'api_keys',
+    'private_keys',
+    'secrets',
+    'service_role_material',
+    'production_evidence',
+  ]) {
+    assert.doesNotMatch(
+      sql,
+      new RegExp(`\\b${columnName}\\b\\s+(text|jsonb|bytea|uuid)`),
+      `${columnName} must not be stored as a transcript audit/evidence column`,
+    );
+  }
+
+  assert.doesNotMatch(
+    migration,
+    /grant execute on function public\.[a-z_]*transcript_(audit|evidence)[a-z_]*\(.*\) to (anon|authenticated)/i,
+    'Phase 2E-H must not introduce browser-granted audit/evidence RPCs',
+  );
 });
 
 test('real RLS policy migration scopes admin reads through workspace membership', () => {

@@ -851,3 +851,20 @@ Public quote tracking or public transcript access, Notifications, CRM
 integration, n8n/Pinecone runtime changes, SaaS chatbot runtime work,
 Deployment, Vercel config, Supabase Cloud config, env/secrets, browser
 Supabase, ecommerce flows, or `website/chat-config.js` access.
+
+Phase 2E-H adds local transcript audit/evidence schema, RLS, and server-only contract foundation only. It creates local workspace-scoped
+`transcript_audit_events` and `transcript_evidence_records` tables with RLS
+enabled, no browser grants, no public policies, safe event/result/actor and
+metadata constraints, and placeholder-only evidence summaries. It also adds a
+server-only TypeScript contract under `website/lib/chat/audit/` with safe
+command validation, unsafe payload rejection, a disabled default adapter, and
+injected adapter calls only.
+
+Phase 2E-H does not wire `/api/chat`, add runtime transcript writes, runtime
+transcript reads, audit/evidence runtime writers, deletion/export runtime
+paths, retention cleanup jobs, a live Supabase RPC executor, service-role
+runtime paths, browser Supabase, admin transcript UI, production evidence,
+customer accounts, public quote tracking or public transcript access,
+notifications, CRM integration, n8n/Pinecone runtime changes, SaaS chatbot
+runtime work, deployment, Vercel config, Supabase Cloud config, env/secrets,
+ecommerce flows, or `website/chat-config.js` access.

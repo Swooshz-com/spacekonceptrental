@@ -29,6 +29,8 @@ const expectedTables = [
   'quote_request_activity',
   'quote_request_items',
   'quote_requests',
+  'transcript_audit_events',
+  'transcript_evidence_records',
   'usage_events',
   'workspaces',
 ];
@@ -71,6 +73,10 @@ const ids = {
   auditB: 'b0000000-0000-4000-8000-000000000002',
   integrationA: 'c0000000-0000-4000-8000-000000000001',
   integrationB: 'c0000000-0000-4000-8000-000000000002',
+  transcriptAuditEventA: 'd0000000-0000-4000-8000-000000000001',
+  transcriptAuditEventB: 'd0000000-0000-4000-8000-000000000002',
+  transcriptEvidenceRecordA: 'e0000000-0000-4000-8000-000000000001',
+  transcriptEvidenceRecordB: 'e0000000-0000-4000-8000-000000000002',
 };
 
 const checks = [];
@@ -353,6 +359,94 @@ function seedFixtures() {
     values
       ('${ids.integrationA}', '${ids.workspaceA}', 'test-provider', 'Test Provider A', 'disabled', '{"fake": true}'::jsonb),
       ('${ids.integrationB}', '${ids.workspaceB}', 'test-provider', 'Test Provider B', 'disabled', '{"fake": true}'::jsonb);
+
+    insert into public.transcript_audit_events (
+      id,
+      workspace_id,
+      conversation_id,
+      quote_request_id,
+      actor_admin_user_id,
+      event_type,
+      actor_type,
+      request_id,
+      approval_reference,
+      reason_code,
+      result_status,
+      affected_record_count,
+      metadata
+    )
+    values
+      (
+        '${ids.transcriptAuditEventA}',
+        '${ids.workspaceA}',
+        '${ids.conversationA}',
+        '${ids.quoteA}',
+        '${ids.adminA}',
+        'transcript_persistence_attempt',
+        'system',
+        'rls-audit-request-a',
+        'approval-a',
+        'local_rls_seed',
+        'succeeded',
+        1,
+        '{"source": "rls-seed"}'::jsonb
+      ),
+      (
+        '${ids.transcriptAuditEventB}',
+        '${ids.workspaceB}',
+        '${ids.conversationB}',
+        '${ids.quoteB}',
+        '${ids.adminB}',
+        'evidence_capture',
+        'operator',
+        'rls-audit-request-b',
+        'approval-b',
+        'local_rls_seed',
+        'succeeded',
+        1,
+        '{"source": "rls-seed"}'::jsonb
+      );
+
+    insert into public.transcript_evidence_records (
+      id,
+      workspace_id,
+      audit_event_id,
+      evidence_type,
+      environment_label,
+      commit_sha,
+      validation_summary,
+      dry_run_summary,
+      rollback_summary,
+      operator_notes,
+      metadata
+    )
+    values
+      (
+        '${ids.transcriptEvidenceRecordA}',
+        '${ids.workspaceA}',
+        '${ids.transcriptAuditEventA}',
+        'local_sql_rls_proof',
+        'local',
+        'a59547130c33ec56e275dfdee48ceac9a1f8587f',
+        'Local RLS proof placeholder only.',
+        'Dry-run placeholder only.',
+        'Rollback placeholder only.',
+        'Operator note placeholder only.',
+        '{"source": "rls-seed"}'::jsonb
+      ),
+      (
+        '${ids.transcriptEvidenceRecordB}',
+        '${ids.workspaceB}',
+        '${ids.transcriptAuditEventB}',
+        'static_guard_proof',
+        'local',
+        'a59547130c33ec56e275dfdee48ceac9a1f8587f',
+        'Static guard proof placeholder only.',
+        'Dry-run placeholder only.',
+        'Rollback placeholder only.',
+        'Operator note placeholder only.',
+        '{"source": "rls-seed"}'::jsonb
+      );
   `);
 }
 
@@ -1359,6 +1453,326 @@ check('transcript persistence RPC rejects unsafe metadata before inserts', () =>
       )
     `,
     /transcript_metadata_unsafe/i,
+  );
+});
+
+check('transcript audit/evidence tables deny direct client reads and writes', () => {
+  const clientRoles = [
+    ['anon', null],
+    ['authenticated', ids.authMemberA],
+    ['authenticated', ids.authMemberB],
+    ['authenticated', ids.authViewerA],
+    ['authenticated', ids.authNoMembership],
+  ];
+
+  for (const [role, authUserId] of clientRoles) {
+    for (const table of ['transcript_audit_events', 'transcript_evidence_records']) {
+      assert.equal(
+        scalarAs(role, authUserId, `select count(*)::text from public.${table}`),
+        '0',
+        `${role} should not read ${table}`,
+      );
+    }
+
+    statementFailsAs(
+      role,
+      authUserId,
+      `
+        insert into public.transcript_audit_events (
+          workspace_id,
+          event_type,
+          actor_type,
+          result_status,
+          metadata
+        )
+        values (
+          '${ids.workspaceA}',
+          'transcript_persistence_attempt',
+          'system',
+          'succeeded',
+          '{"source": "client-write-attempt"}'::jsonb
+        )
+      `,
+    );
+
+    statementFailsAs(
+      role,
+      authUserId,
+      `
+        insert into public.transcript_evidence_records (
+          workspace_id,
+          evidence_type,
+          metadata
+        )
+        values (
+          '${ids.workspaceA}',
+          'local_sql_rls_proof',
+          '{"source": "client-write-attempt"}'::jsonb
+        )
+      `,
+    );
+
+    statementFailsAs(
+      role,
+      authUserId,
+      `
+        update public.transcript_audit_events
+        set metadata = '{"source": "client-update-attempt"}'::jsonb
+        where id = '${ids.transcriptAuditEventA}'
+      `,
+    );
+
+    statementFailsAs(
+      role,
+      authUserId,
+      `
+        update public.transcript_evidence_records
+        set metadata = '{"source": "client-update-attempt"}'::jsonb
+        where id = '${ids.transcriptEvidenceRecordA}'
+      `,
+    );
+
+    statementFailsAs(
+      role,
+      authUserId,
+      `
+        delete from public.transcript_audit_events
+        where id = '${ids.transcriptAuditEventA}'
+      `,
+    );
+
+    statementFailsAs(
+      role,
+      authUserId,
+      `
+        delete from public.transcript_evidence_records
+        where id = '${ids.transcriptEvidenceRecordA}'
+      `,
+    );
+  }
+});
+
+check('transcript audit/evidence constraints accept safe local rows and reject unsafe payloads', () => {
+  const safeAuditEventId = 'd0000000-0000-4000-8000-000000000101';
+  const safeEvidenceRecordId = 'e0000000-0000-4000-8000-000000000101';
+
+  psql(`
+    insert into public.transcript_audit_events (
+      id,
+      workspace_id,
+      conversation_id,
+      quote_request_id,
+      actor_admin_user_id,
+      event_type,
+      actor_type,
+      request_id,
+      approval_reference,
+      reason_code,
+      result_status,
+      affected_record_count,
+      metadata
+    )
+    values (
+      '${safeAuditEventId}',
+      '${ids.workspaceA}',
+      '${ids.conversationA}',
+      '${ids.quoteA}',
+      '${ids.adminA}',
+      'evidence_capture',
+      'operator',
+      'rls-safe-audit-request',
+      'local-approval',
+      'local_sql_rls_proof',
+      'succeeded',
+      1,
+      jsonb_build_object('source', 'rls-test', 'nested', jsonb_build_object('proof', true))
+    );
+  `);
+
+  psql(`
+    insert into public.transcript_evidence_records (
+      id,
+      workspace_id,
+      audit_event_id,
+      evidence_type,
+      environment_label,
+      commit_sha,
+      validation_summary,
+      dry_run_summary,
+      rollback_summary,
+      operator_notes,
+      metadata
+    )
+    values (
+      '${safeEvidenceRecordId}',
+      '${ids.workspaceA}',
+      '${safeAuditEventId}',
+      'local_sql_rls_proof',
+      'local',
+      'a59547130c33ec56e275dfdee48ceac9a1f8587f',
+      'Local SQL and RLS proof summary placeholder.',
+      'Dry-run proof placeholder.',
+      'Rollback and disable plan placeholder.',
+      'Operator notes placeholder.',
+      jsonb_build_object('source', 'rls-test')
+    );
+  `);
+
+  assert.equal(
+    psql(`
+      select count(*)::text
+      from public.transcript_evidence_records
+      where id = '${safeEvidenceRecordId}'
+        and metadata = jsonb_build_object('source', 'rls-test')
+    `),
+    '1',
+    'safe local evidence placeholder row should be inserted by privileged harness',
+  );
+
+  assert.equal(
+    psql(`
+      select count(*)::text
+      from public.transcript_audit_events tae
+      left join public.transcript_evidence_records ter on ter.audit_event_id = tae.id
+      where (tae.metadata::text || coalesce(ter.metadata::text, '') || coalesce(ter.validation_summary, '')) ~*
+        'full[_ -]?transcript|raw[_ -]?provider|provider[_ -]?payload|workflow[_ -]?payload|webhook|tokens?|api[_ -]?key|private[_ -]?key|secret|service[_ -]?role'
+    `),
+    '0',
+    'audit/evidence placeholders should not store transcript content, provider payloads, or secrets',
+  );
+
+  statementFails(
+    `
+      insert into public.transcript_audit_events (
+        workspace_id,
+        event_type,
+        actor_type,
+        result_status,
+        metadata
+      )
+      values (
+        '${ids.workspaceA}',
+        'unsupported_event',
+        'system',
+        'succeeded',
+        '{"source": "rls-test"}'::jsonb
+      )
+    `,
+    /transcript_audit_events_event_type_check/i,
+  );
+
+  statementFails(
+    `
+      insert into public.transcript_audit_events (
+        workspace_id,
+        event_type,
+        actor_type,
+        result_status,
+        metadata
+      )
+      values (
+        '${ids.workspaceA}',
+        'transcript_persistence_attempt',
+        'customer',
+        'succeeded',
+        '{"source": "rls-test"}'::jsonb
+      )
+    `,
+    /transcript_audit_events_actor_type_check/i,
+  );
+
+  statementFails(
+    `
+      insert into public.transcript_audit_events (
+        workspace_id,
+        event_type,
+        actor_type,
+        result_status,
+        affected_record_count,
+        metadata
+      )
+      values (
+        '${ids.workspaceA}',
+        'transcript_persistence_attempt',
+        'system',
+        'succeeded',
+        -1,
+        '{"source": "rls-test"}'::jsonb
+      )
+    `,
+    /transcript_audit_events_affected_record_count_check/i,
+  );
+
+  statementFails(
+    `
+      insert into public.transcript_audit_events (
+        workspace_id,
+        event_type,
+        actor_type,
+        result_status,
+        metadata
+      )
+      values (
+        '${ids.workspaceA}',
+        'transcript_persistence_attempt',
+        'system',
+        'succeeded',
+        jsonb_build_object('nested', jsonb_build_object('rawProviderPayload', 'blocked'))
+      )
+    `,
+    /transcript_audit_events_metadata_safe_check/i,
+  );
+
+  statementFails(
+    `
+      insert into public.transcript_evidence_records (
+        workspace_id,
+        evidence_type,
+        validation_summary,
+        metadata
+      )
+      values (
+        '${ids.workspaceA}',
+        'local_sql_rls_proof',
+        'raw provider payload should not be stored',
+        '{"source": "rls-test"}'::jsonb
+      )
+    `,
+    /transcript_evidence_records_safe_text_check/i,
+  );
+
+  statementFails(
+    `
+      insert into public.transcript_evidence_records (
+        workspace_id,
+        evidence_type,
+        metadata
+      )
+      values (
+        '${ids.workspaceA}',
+        'local_sql_rls_proof',
+        jsonb_build_object('apiKey', 'blocked')
+      )
+    `,
+    /transcript_evidence_records_metadata_safe_check/i,
+  );
+
+  statementFails(
+    `
+      insert into public.transcript_evidence_records (
+        workspace_id,
+        audit_event_id,
+        evidence_type,
+        metadata
+      )
+      values (
+        '${ids.workspaceB}',
+        '${safeAuditEventId}',
+        'local_sql_rls_proof',
+        '{"source": "rls-test"}'::jsonb
+      )
+    `,
+    /transcript_evidence_records_audit_event_workspace_id_fkey/i,
   );
 });
 

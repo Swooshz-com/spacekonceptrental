@@ -56,6 +56,20 @@ audit/evidence storage, does not add an audit/evidence runtime writer, does
 not add production evidence, and does not implement any transcript lifecycle
 runtime action.
 
+Phase 2E-H adds transcript audit/evidence local schema, RLS, and server-only
+contract foundation only. It defines local workspace-scoped
+`transcript_audit_events` and `transcript_evidence_records` tables with RLS
+enabled, no browser grants, no public policies, safe event/result/actor
+checks, bounded redacted metadata, and placeholder-only evidence summaries. It
+also adds a server-only TypeScript contract under `website/lib/chat/audit/`
+with safe command validation, unsafe payload rejection, a disabled default
+adapter, and injected adapter calls only. Phase 2E-H does not wire
+`/api/chat`, does not add runtime transcript writes or reads, does not add
+audit/evidence runtime writers, does not add deletion/export runtime paths,
+does not add retention cleanup jobs, does not add a live Supabase RPC executor,
+does not add service-role runtime paths, does not add browser Supabase, does
+not add admin transcript UI, and does not add production evidence.
+
 Runtime transcript writes remain blocked. Runtime transcript reads remain
 blocked. Live Supabase RPC executor remains blocked. Any service-role or
 privileged DB execution strategy remains blocked. `/api/chat` transcript write
@@ -69,6 +83,58 @@ chatbot runtime work remains blocked. Deployment, Vercel config, Supabase
 Cloud config, env/secrets, production evidence remain blocked. Browser
 Supabase remains forbidden. Service-role runtime paths remain forbidden.
 `website/chat-config.js` access remains forbidden.
+
+## Phase 2E-H local audit/evidence schema and contract foundation
+
+Phase 2E-H is local schema/RLS and server-only contract foundation only. It is
+the first concrete local audit/evidence storage foundation, but it does not
+approve a runtime writer, production evidence capture, transcript reads,
+transcript lifecycle actions, `/api/chat` persistence wiring, live executor, or
+service-role runtime path.
+
+The local audit event table stores only:
+
+- `workspace_id`.
+- Optional `conversation_id` constrained to the same workspace.
+- Optional `quote_request_id` constrained to the same workspace.
+- Optional `actor_admin_user_id`.
+- `event_type`.
+- `actor_type`.
+- Optional `request_id`.
+- Optional `approval_reference`.
+- Optional `reason_code`.
+- `result_status`.
+- Optional non-negative `affected_record_count`.
+- Minimal redacted metadata.
+- `created_at`.
+
+The local evidence table stores only:
+
+- `workspace_id`.
+- Optional `audit_event_id` constrained to the same workspace.
+- `evidence_type`.
+- Optional `environment_label`.
+- Optional `commit_sha`.
+- Placeholder validation, dry-run, rollback, and operator summaries.
+- Minimal redacted metadata.
+- `created_at`.
+
+The local SQL constraints and TypeScript contract reject unsafe audit/evidence
+material before storage or adapter execution. Unsafe material includes full
+transcript content, raw provider payloads, n8n workflow payloads, webhook URLs,
+raw headers, cookies, tokens, API keys, private keys, secrets, service-role
+material, and customer-visible internal notes.
+
+The server-only TypeScript contract is dependency-injected and disabled by
+default. It does not instantiate Supabase, call RPCs, read env, read cookies or
+headers, use browser Supabase, read `website/chat-config.js`, or provide a live
+executor. Unknown, malformed, unsafe, or oversized inputs return safe rejected
+results, and adapter failures return a generic unavailable result.
+
+Direct anonymous/public and authenticated client reads and writes are denied by
+RLS and missing grants. Future admin or operator access to these tables still
+requires a separately approved server-only runtime boundary, audit review,
+redaction policy, local SQL/RLS proof, static guard proof, and tests.
 
 ## Phase 2E-G audit/evidence model and operator runbook readiness
 
@@ -172,7 +238,8 @@ service-role material, or customer-visible internal notes.
 Explicit owner approval remains required before any of these:
 
 - Audit/evidence runtime writer.
-- Audit/evidence storage or tables.
+- Audit/evidence runtime storage paths or table changes beyond the Phase 2E-H
+  local schema foundation.
 - Production evidence file or artifact.
 - Runtime transcript writes.
 - Runtime transcript reads.

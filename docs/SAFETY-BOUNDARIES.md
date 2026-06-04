@@ -123,6 +123,13 @@ variables such as `N8N_CHAT_WEBHOOK_URL`.
   approval, not runtime transcript write/read approval, not deletion/export
   runtime approval, not retention cleanup job approval, not `/api/chat`
   persistence wiring approval, and not Admin transcript UI approval.
+- Phase 2E-H approves only local transcript audit/evidence schema, RLS, and
+  server-only contract foundation. It is not `/api/chat` wiring approval, not
+  runtime transcript write/read approval, not audit/evidence runtime writer
+  approval, not deletion/export runtime approval, not retention cleanup job
+  approval, not live Supabase RPC executor approval, not service-role runtime
+  approval, not browser Supabase approval, not Admin transcript UI approval,
+  and not production evidence approval.
 - Future lifecycle work must define these before runtime implementation:
   Transcript retention policy; Retention expiry handling; Manual deletion
   requests; Export requests; Admin-only transcript access review;
@@ -140,6 +147,9 @@ variables such as `N8N_CHAT_WEBHOOK_URL`.
   transcript content, Raw provider payloads, n8n workflow payloads, Webhook
   URLs, Raw headers, Cookies, Tokens, API keys, Private keys, Secrets,
   Service-role material, or Customer-visible internal notes.
+- Current Phase 2E-H audit/evidence tables are local-only, RLS-enabled,
+  ungranted to browser roles, and policy-free. Future admin or operator access
+  requires a separately approved server-only runtime boundary.
 - Do not trust browser-provided session IDs as identity or authorization.
 - Use `clientMessageId` only for idempotency and deduplication, not
   authentication.
@@ -177,6 +187,17 @@ variables such as `N8N_CHAT_WEBHOOK_URL`.
   evidence file or artifact; Runtime transcript writes; Runtime transcript
   reads; Live Supabase RPC executor; Any service-role or privileged DB
   execution strategy; `/api/chat` transcript write wiring; Transcript
+  deletion/export runtime paths; Retention cleanup jobs; Admin transcript UI;
+  Customer accounts; Public quote tracking or public transcript access;
+  Notifications; CRM integration; n8n/Pinecone runtime changes; SaaS chatbot
+  runtime work; Deployment, Vercel config, Supabase Cloud config, env/secrets,
+  production evidence.
+- Phase 2E-H adds only local audit/evidence schema/RLS plus a server-only
+  disabled contract. Explicit owner approval is still required before any of
+  these: Audit/evidence runtime writer; runtime audit/evidence storage path;
+  Production evidence file or artifact; Runtime transcript writes; Runtime
+  transcript reads; Live Supabase RPC executor; Any service-role or privileged
+  DB execution strategy; `/api/chat` transcript write wiring; Transcript
   deletion/export runtime paths; Retention cleanup jobs; Admin transcript UI;
   Customer accounts; Public quote tracking or public transcript access;
   Notifications; CRM integration; n8n/Pinecone runtime changes; SaaS chatbot

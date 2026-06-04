@@ -1546,3 +1546,40 @@ customer accounts, approve public quote tracking or public transcript access,
 add notifications or CRM integration, change n8n/Pinecone runtime behavior,
 add SaaS chatbot runtime work, add browser Supabase, add ecommerce flows, or
 access `website/chat-config.js`.
+
+## 2026-06-04: Transcript Audit Evidence Local Schema And Contract Foundation
+
+Decision: Phase 2E-H adds transcript audit/evidence local schema, RLS, and server-only contract foundation only.
+
+Reason: PR #105 merged at `a59547130c33ec56e275dfdee48ceac9a1f8587f` and
+completed Phase 2E-G transcript audit/evidence model and operator runbook
+readiness. The next safe step is a local, fail-closed schema/RLS and
+server-only contract foundation that can be tested without making
+audit/evidence capture available to runtime routes, browser roles, a live
+executor, or operators.
+
+The implementation adds local `transcript_audit_events` and
+`transcript_evidence_records` tables. They are workspace-scoped, RLS-enabled,
+ungranted to anonymous/public and authenticated browser roles, policy-free,
+and constrained to safe audit event/result/actor/evidence values, non-negative
+affected counts, same-workspace relationships, bounded redacted metadata, and
+placeholder-only evidence summaries.
+
+The implementation also adds `website/lib/chat/audit/` as a server-only
+TypeScript contract. It builds safe audit event and evidence commands from
+explicit inputs, rejects malformed or unsafe payloads, rejects attempts to pass
+full transcript content, raw provider payloads, tokens, API keys, private
+keys, secrets, or service-role material, returns safe rejected/unavailable
+results, and records only through an injected adapter. The default adapter
+remains disabled.
+
+Phase 2E-H does not deploy, add Vercel project config, connect Supabase Cloud,
+add production env files, add real secrets, add production seed data, wire
+`/api/chat`, add runtime transcript writes, add runtime transcript reads, add
+audit/evidence runtime writers, add transcript deletion/export runtime paths,
+add retention cleanup jobs, add a live Supabase RPC executor, add service-role
+runtime paths, add browser Supabase, add admin transcript UI, add production
+evidence, approve customer accounts, approve public quote tracking or public
+transcript access, add notifications or CRM integration, change n8n/Pinecone
+runtime behavior, add SaaS chatbot runtime work, add ecommerce flows, or
+access `website/chat-config.js`.

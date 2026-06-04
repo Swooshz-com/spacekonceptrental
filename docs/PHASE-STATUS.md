@@ -4,21 +4,21 @@ This is the quick status page for the SKR repo. Use `docs/PHASE-2-READINESS-PLAN
 
 ## Current phase
 
-Current phase: Phase 2E-G - transcript audit/evidence model and operator runbook readiness.
+Current phase: Phase 2E-H - transcript audit/evidence local schema, RLS, and server-only contract foundation.
 
-This phase records the future audit/evidence model and operator runbook
-readiness required before transcript lifecycle actions can move toward
-implementation. It documents safe event categories, approved future
-audit/evidence fields, forbidden audit/evidence fields, owner approval capture,
-dry-run/local proof, local SQL/RLS proof, static guard proof, evidence template
-placeholders, failure triage, rollback/disable steps, audit review, data
-minimisation review, redaction review, post-action verification, and "Do not
-proceed" stop conditions. This is docs, checklist, and static-guard work only.
-It does not implement audit/evidence storage, does not add an audit/evidence
-runtime writer, does not add runtime transcript writes or reads, does not
-implement transcript deletion/export, does not implement retention cleanup jobs,
-does not wire transcript persistence into `/api/chat`, does not add a live
-Supabase RPC executor, and does not add admin transcript UI.
+This phase adds local-only transcript audit/evidence schema, fail-closed RLS,
+and a server-only TypeScript contract foundation for future reviewed audit and
+evidence capture. It defines `transcript_audit_events` and
+`transcript_evidence_records` tables with workspace scope, safe event/result/
+actor checks, bounded redacted metadata, no browser grants, and no public
+policies. It also adds `website/lib/chat/audit/` as a server-only,
+dependency-injected contract with a disabled default adapter. This is local
+schema/RLS plus contract foundation only. It does not wire `/api/chat`, does
+not add runtime transcript writes or reads, does not add audit/evidence runtime
+writers, does not add deletion/export runtime paths, does not add retention
+jobs, does not add a live Supabase RPC executor, does not add service-role
+runtime paths, does not add browser Supabase, does not add admin transcript UI,
+and does not add production evidence.
 
 Runtime transcript writes remain blocked. Runtime transcript reads remain
 blocked. Live Supabase RPC executor remains blocked. Any service-role or
@@ -34,16 +34,20 @@ Cloud config, env/secrets, production evidence remain blocked. Browser
 Supabase remains forbidden. Service-role runtime paths remain forbidden.
 `website/chat-config.js` access remains forbidden.
 
-Latest completed phase: Phase 2E-F - transcript lifecycle governance and retention/deletion/export readiness.
+Latest completed phase: Phase 2E-G - transcript audit/evidence model and operator runbook readiness.
 
-Last merged phase PR: #104
+Last merged phase PR: #105
 
-Merge commit: `49bb60131af99a0a3829a536eb5d29575218a442`
+Merge commit: `a59547130c33ec56e275dfdee48ceac9a1f8587f`
 
 ## Remaining-work map
 
-Completed through PR #104:
+Completed through PR #105:
 
+- PR #105 merged Phase 2E-G transcript audit/evidence model and operator runbook readiness
+  at merge commit `a59547130c33ec56e275dfdee48ceac9a1f8587f`.
+- Phase 2E-G transcript audit/evidence model and operator runbook readiness is
+  complete as docs, checklist, and static guard work only.
 - PR #104 merged Phase 2E-F transcript lifecycle governance and retention/deletion/export readiness
   at merge commit `49bb60131af99a0a3829a536eb5d29575218a442`.
 - Phase 2E-F transcript lifecycle governance and retention/deletion/export
@@ -74,14 +78,15 @@ Completed through PR #104:
 
 Safe next phases:
 
-- Continue only narrow docs/static-guard readiness work for conversation/message
-  privacy, retention, deletion/export, transcript access, and operator
-  evidence when it remains separate from runtime implementation.
-- A future transcript audit/evidence implementation phase must be separately
-  approved and must define the audited lifecycle actions, approved event
-  fields, redaction policy, operator runbook, evidence template, rollback/
-  disable controls, local SQL/RLS proof, and static guard proof before runtime
-  writers exist.
+- Continue only narrow local-only contract/schema hardening or docs/static-guard
+  readiness work for conversation/message privacy, retention, deletion/export,
+  transcript access, and operator evidence when it remains separate from
+  runtime implementation.
+- A future transcript audit/evidence runtime implementation phase must be
+  separately approved and must define the audited lifecycle actions, approved
+  event fields, redaction policy, operator runbook, evidence template,
+  rollback/disable controls, local SQL/RLS proof, static guard proof, and the
+  server-side execution model before runtime writers exist.
 - A future transcript lifecycle implementation phase must be separately
   approved and must define retention/deletion/export ownership, data
   classification, admin access, audit events, evidence templates,
@@ -127,6 +132,49 @@ Too broad or risky to bundle here:
 - Executor approval governance plus a live executor implementation.
 - Transcript access plus customer accounts, public quote tracking,
   notifications, CRM, or SaaS chatbot runtime implementation.
+
+## Previous merged status snapshot: Phase 2E-G
+
+Current phase: Phase 2E-G - transcript audit/evidence model and operator runbook readiness.
+
+This phase records the future audit/evidence model and operator runbook
+readiness required before transcript lifecycle actions can move toward
+implementation. It documents safe event categories, approved future
+audit/evidence fields, forbidden audit/evidence fields, owner approval capture,
+dry-run/local proof, local SQL/RLS proof, static guard proof, evidence template
+placeholders, failure triage, rollback/disable steps, audit review, data
+minimisation review, redaction review, post-action verification, and "Do not
+proceed" stop conditions. This is docs, checklist, and static-guard work only.
+It does not implement audit/evidence storage, does not add an audit/evidence
+runtime writer, does not add runtime transcript writes or reads, does not
+implement transcript deletion/export, does not implement retention cleanup jobs,
+does not wire transcript persistence into `/api/chat`, does not add a live
+Supabase RPC executor, and does not add admin transcript UI.
+
+Runtime transcript writes remain blocked. Runtime transcript reads remain
+blocked. Live Supabase RPC executor remains blocked. Any service-role or
+privileged DB execution strategy remains blocked. `/api/chat` transcript write
+wiring remains blocked. Transcript deletion/export runtime paths remain
+blocked. Retention cleanup jobs remain blocked. Audit/evidence runtime writers
+remain blocked. Production evidence files remain blocked. Admin transcript UI
+remains blocked. Customer accounts remain blocked. Public quote tracking or
+public transcript access remains blocked. Notifications remain blocked. CRM
+integration remains blocked. n8n/Pinecone runtime changes remain blocked. SaaS
+chatbot runtime work remains blocked. Deployment, Vercel config, Supabase
+Cloud config, env/secrets, production evidence remain blocked. Browser
+Supabase remains forbidden. Service-role runtime paths remain forbidden.
+`website/chat-config.js` access remains forbidden.
+
+Latest completed phase: Phase 2E-F - transcript lifecycle governance and retention/deletion/export readiness.
+
+Last merged phase PR: #104
+
+Merge commit: `49bb60131af99a0a3829a536eb5d29575218a442`
+
+Completed through PR #104:
+
+- PR #104 merged Phase 2E-F transcript lifecycle governance and retention/deletion/export readiness
+  at merge commit `49bb60131af99a0a3829a536eb5d29575218a442`.
 
 ## Previous merged status snapshot: Phase 2E-F
 

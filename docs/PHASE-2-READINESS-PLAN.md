@@ -224,8 +224,48 @@ Suggested first PR:
   without adding audit/evidence storage, runtime writers, production evidence,
   deletion/export runtime paths, retention cleanup jobs, transcript reads,
   admin transcript UI, customer accounts, or public transcript/quote access.
+- Phase 2E-H follows with transcript audit/evidence local schema, RLS, and
+  server-only contract foundation only, after PR #105 records the
+  audit/evidence readiness baseline, without wiring `/api/chat`, runtime
+  transcript writes or reads, audit/evidence runtime writers, deletion/export
+  runtime paths, retention cleanup jobs, a live Supabase RPC executor,
+  service-role runtime paths, browser Supabase, admin transcript UI,
+  production evidence, customer accounts, or public transcript/quote access.
 
-Current Phase 2E-G status:
+Current Phase 2E-H status:
+
+- PR #105 merged Phase 2E-G transcript audit/evidence model and operator
+  runbook readiness at merge commit
+  `a59547130c33ec56e275dfdee48ceac9a1f8587f`.
+- Phase 2E-G is complete as audit/evidence model and operator runbook
+  readiness only.
+- Phase 2E-H is current as local schema/RLS and server-only contract
+  foundation only.
+- The new local `transcript_audit_events` and `transcript_evidence_records`
+  tables are workspace-scoped, RLS-enabled, ungranted to browser roles, and
+  policy-free until a future reviewed server-side access path exists.
+- The new `website/lib/chat/audit/` contract is server-only, dependency
+  injected, disabled by default, and contains no Supabase client, env, cookie,
+  header, RPC, service-role, browser Supabase, or `website/chat-config.js`
+  path.
+- `/api/chat` remains unwired to transcript audit/evidence.
+- Audit/evidence runtime writers remain blocked.
+- Production evidence files remain blocked.
+- Runtime transcript writes remain blocked.
+- Runtime transcript reads remain blocked.
+- Admin transcript UI remains blocked.
+- Customer accounts remain blocked.
+- Public quote tracking remains blocked.
+- Notifications remain blocked.
+- CRM integration remains blocked.
+- n8n/Pinecone runtime changes remain blocked.
+- SaaS chatbot runtime work remains blocked.
+- Deployment remains blocked.
+- Browser Supabase remains forbidden.
+- Service-role runtime paths remain forbidden.
+- `website/chat-config.js` access remains forbidden.
+
+Previous Current Phase 2E-G status:
 
 - PR #104 merged Phase 2E-F transcript lifecycle governance and
   retention/deletion/export readiness at merge commit
