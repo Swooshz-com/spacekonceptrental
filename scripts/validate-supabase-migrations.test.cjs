@@ -787,6 +787,7 @@ test('real migrations add the Phase 2E-B conversation/message schema and RLS fou
 test('real migrations add the Phase 2E-D transcript persistence RPC boundary without browser grants', () => {
   const migrationFileName = '20260604100000_transcript_persistence_rpc_boundary.sql';
   const migration = readRealMigration(migrationFileName);
+  const allSql = normalizeSql(readAllRealMigrationSql());
   const sql = normalizeSql(migration);
 
   assert.match(
@@ -804,6 +805,25 @@ test('real migrations add the Phase 2E-D transcript persistence RPC boundary wit
   assert.match(migration, /transcript_workspace_mismatch/);
   assert.match(migration, /on conflict \(id\) do update/i);
   assert.match(migration, /client_message_id/);
+  assert.ok(
+    allSql.includes(
+      'constraint messages_workspace_conversation_client_message_key unique (workspace_id, conversation_id, client_message_id)',
+    ) ||
+      allSql.includes(
+        'create unique index if not exists messages_workspace_conversation_client_message_id_unique_idx on public.messages (workspace_id, conversation_id, client_message_id) where client_message_id is not null;',
+      ),
+    'messages must have a DB-level idempotency uniqueness arbiter for non-null client_message_id values',
+  );
+  assert.match(
+    sql,
+    /on conflict on constraint messages_workspace_conversation_client_message_key do update/,
+    'persist_transcript_batch must use the DB idempotency constraint so concurrent duplicate client_message_id inserts return the original row',
+  );
+  assert.match(
+    migration,
+    /concurrency arbiter/i,
+    'migration should document that DB uniqueness is the concurrency arbiter for client_message_id retries',
+  );
   assert.ok(
     sql.includes(
       'revoke all on function public.persist_transcript_batch(uuid, jsonb, jsonb) from public;',

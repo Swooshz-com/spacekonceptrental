@@ -1119,6 +1119,20 @@ check('transcript persistence RPC stays ungranted to direct client roles', () =>
   }
 });
 
+check('transcript persistence RPC has a DB-backed client_message_id idempotency arbiter', () => {
+  assert.equal(
+    psql(`
+      select count(*)::text
+      from pg_constraint
+      where conrelid = 'public.messages'::regclass
+        and conname = 'messages_workspace_conversation_client_message_key'
+        and contype = 'u'
+    `),
+    '1',
+    'client_message_id retries must be protected by a database uniqueness constraint for concurrency safety',
+  );
+});
+
 check('transcript persistence RPC persists idempotent batches for privileged executor only', () => {
   const conversationId = '80000000-0000-4000-8000-000000000101';
   const firstMessageId = '90000000-0000-4000-8000-000000000101';

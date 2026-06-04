@@ -71,7 +71,6 @@ declare
   v_message_conversation_id uuid;
   v_message_metadata jsonb;
   v_client_message_id text;
-  v_existing_message_id uuid;
   v_persisted_message_id uuid;
   v_message_ids uuid[] := array[]::uuid[];
 begin
@@ -172,72 +171,105 @@ begin
     end if;
 
     v_client_message_id := nullif(v_message->>'client_message_id', '');
-    v_existing_message_id := null;
+    v_persisted_message_id := null;
 
     if v_client_message_id is not null then
-      select id
-      into v_existing_message_id
-      from public.messages
-      where workspace_id = p_workspace_id
-        and conversation_id = v_conversation_id
-        and client_message_id = v_client_message_id
-      limit 1;
-
-      if v_existing_message_id is not null then
-        v_message_ids := v_message_ids || v_existing_message_id;
-        continue;
-      end if;
+      -- The base schema unique constraint is the concurrency arbiter for
+      -- non-null client_message_id retries. A duplicate retry returns the
+      -- original message id instead of surfacing a unique-constraint error.
+      insert into public.messages (
+        id,
+        workspace_id,
+        conversation_id,
+        role,
+        message_type,
+        content,
+        provider,
+        client_message_id,
+        request_id,
+        sequence_number,
+        retention_expires_at,
+        metadata
+      )
+      values (
+        v_message_id,
+        p_workspace_id,
+        v_conversation_id,
+        nullif(v_message->>'role', ''),
+        coalesce(nullif(v_message->>'message_type', ''), 'chat'),
+        nullif(v_message->>'content', ''),
+        nullif(v_message->>'provider', ''),
+        v_client_message_id,
+        nullif(v_message->>'request_id', ''),
+        case
+          when nullif(v_message->>'sequence_number', '') is null
+            then null
+          else (v_message->>'sequence_number')::integer
+        end,
+        case
+          when nullif(v_message->>'retention_expires_at', '') is null
+            then null
+          else (v_message->>'retention_expires_at')::timestamptz
+        end,
+        v_message_metadata
+      )
+      on conflict on constraint messages_workspace_conversation_client_message_key do update
+        set client_message_id = excluded.client_message_id
+        where public.messages.workspace_id = excluded.workspace_id
+          and public.messages.conversation_id = excluded.conversation_id
+          and public.messages.client_message_id = excluded.client_message_id
+      returning id into v_persisted_message_id;
+    else
+      insert into public.messages (
+        id,
+        workspace_id,
+        conversation_id,
+        role,
+        message_type,
+        content,
+        provider,
+        client_message_id,
+        request_id,
+        sequence_number,
+        retention_expires_at,
+        metadata
+      )
+      values (
+        v_message_id,
+        p_workspace_id,
+        v_conversation_id,
+        nullif(v_message->>'role', ''),
+        coalesce(nullif(v_message->>'message_type', ''), 'chat'),
+        nullif(v_message->>'content', ''),
+        nullif(v_message->>'provider', ''),
+        null,
+        nullif(v_message->>'request_id', ''),
+        case
+          when nullif(v_message->>'sequence_number', '') is null
+            then null
+          else (v_message->>'sequence_number')::integer
+        end,
+        case
+          when nullif(v_message->>'retention_expires_at', '') is null
+            then null
+          else (v_message->>'retention_expires_at')::timestamptz
+        end,
+        v_message_metadata
+      )
+      on conflict (id) do update
+        set role = excluded.role,
+            message_type = excluded.message_type,
+            content = excluded.content,
+            provider = excluded.provider,
+            client_message_id = excluded.client_message_id,
+            request_id = excluded.request_id,
+            sequence_number = excluded.sequence_number,
+            retention_expires_at = excluded.retention_expires_at,
+            metadata = excluded.metadata
+        where public.messages.workspace_id = excluded.workspace_id
+          and public.messages.conversation_id = excluded.conversation_id
+      returning id into v_persisted_message_id;
     end if;
-
-    insert into public.messages (
-      id,
-      workspace_id,
-      conversation_id,
-      role,
-      message_type,
-      content,
-      provider,
-      client_message_id,
-      request_id,
-      sequence_number,
-      retention_expires_at,
-      metadata
-    )
-    values (
-      v_message_id,
-      p_workspace_id,
-      v_conversation_id,
-      nullif(v_message->>'role', ''),
-      coalesce(nullif(v_message->>'message_type', ''), 'chat'),
-      nullif(v_message->>'content', ''),
-      nullif(v_message->>'provider', ''),
-      v_client_message_id,
-      nullif(v_message->>'request_id', ''),
-      case
-        when nullif(v_message->>'sequence_number', '') is null
-          then null
-        else (v_message->>'sequence_number')::integer
-      end,
-      case
-        when nullif(v_message->>'retention_expires_at', '') is null
-          then null
-        else (v_message->>'retention_expires_at')::timestamptz
-      end,
-      v_message_metadata
-    )
-    on conflict (id) do update
-      set role = excluded.role,
-          message_type = excluded.message_type,
-          content = excluded.content,
-          provider = excluded.provider,
-          client_message_id = excluded.client_message_id,
-          request_id = excluded.request_id,
-          sequence_number = excluded.sequence_number,
-          retention_expires_at = excluded.retention_expires_at,
-          metadata = excluded.metadata
-      where public.messages.workspace_id = excluded.workspace_id
-        and public.messages.conversation_id = excluded.conversation_id
-    returning id into v_persisted_message_id;
 
     if v_persisted_message_id is null then
       raise exception 'transcript_workspace_mismatch';
