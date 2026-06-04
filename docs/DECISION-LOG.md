@@ -1450,3 +1450,43 @@ transcript UI, approve customer accounts, approve public quote tracking, add
 notifications or CRM integration, change n8n/Pinecone runtime behavior, add
 SaaS chatbot runtime work, add browser Supabase, add ecommerce flows, or access
 `website/chat-config.js`.
+
+## 2026-06-04: Transcript Lifecycle Governance And Retention/Deletion/Export Readiness
+
+Decision: Phase 2E-F adds transcript lifecycle governance and retention/deletion/export readiness only.
+
+Reason: PR #103 merged at `72a85eedfcd30da26e716f95973785cb1408760b` and
+completed the Phase 2E-D hotfix plus Phase 2E-E activation governance baseline.
+The next safe step is to record lifecycle governance before any runtime
+deletion/export, retention cleanup, transcript read, admin transcript UI,
+customer account, public quote tracking, notification, CRM, n8n/Pinecone,
+SaaS chatbot, deployment, or service-role path treats transcript storage as
+operationally ready.
+
+Phase 2E-F documents future requirements for transcript retention policy,
+retention expiry handling, manual deletion requests, export requests,
+admin-only transcript access review, audit/evidence requirements, operator
+runbook requirements, failure/rollback/disable controls, data minimisation and
+redaction requirements, customer identity/account linking risks, and public
+quote tracking/public transcript access risks.
+
+Explicit approval remains required before Runtime transcript writes, Runtime
+transcript reads, Live Supabase RPC executor, Any service-role or privileged DB
+execution strategy, `/api/chat` transcript write wiring, Transcript
+deletion/export runtime paths, Retention cleanup jobs, Admin transcript UI,
+Customer accounts, Public quote tracking or public transcript access,
+Notifications, CRM integration, n8n/Pinecone runtime changes, SaaS chatbot
+runtime work, Deployment, Vercel config, Supabase Cloud config, env/secrets,
+production evidence, browser Supabase, service-role runtime paths, or
+`website/chat-config.js` access.
+
+This phase does not deploy, add Vercel project config, connect Supabase Cloud,
+add production env files, add real secrets, add production seed data, add
+runtime transcript writes, add runtime transcript reads, add a live Supabase
+RPC executor, add service-role runtime paths, wire transcript writes or reads
+into `/api/chat`, add transcript deletion/export runtime paths, add retention
+cleanup jobs, add admin transcript UI, approve customer accounts, approve
+public quote tracking or public transcript access, add notifications or CRM
+integration, change n8n/Pinecone runtime behavior, add SaaS chatbot runtime
+work, add browser Supabase, add ecommerce flows, or access
+`website/chat-config.js`.

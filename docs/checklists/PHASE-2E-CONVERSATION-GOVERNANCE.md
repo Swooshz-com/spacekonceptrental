@@ -99,6 +99,35 @@ for transcript writes, transcript reads, or admin transcript UI.
       rollback/disable controls, and tests before `/api/chat` usage.
 - [x] Static guards prove Phase 2E-E remains governance/approval-gate only.
 
+## Phase 2E-F Lifecycle Governance And Retention/Deletion/Export Readiness
+
+- [x] Phase 2E-F is documented as governance/readiness only.
+- [x] Transcript retention policy requirements are documented.
+- [x] Retention expiry handling requirements are documented.
+- [x] Manual deletion request requirements are documented.
+- [x] Export request requirements are documented.
+- [x] Admin-only transcript access review requirements are documented.
+- [x] Audit/evidence requirements are documented.
+- [x] Operator runbook requirements are documented.
+- [x] Failure/rollback/disable controls are documented.
+- [x] Data minimisation and redaction requirements are documented.
+- [x] Customer identity/account linking risks are documented.
+- [x] Public quote tracking/public transcript access risks are documented.
+- [x] Static guards prove Phase 2E-F remains governance/readiness only.
+
+Lifecycle approval gates requiring explicit owner approval:
+
+- [ ] Retention/deletion/export owner approval.
+- [ ] Data classification review.
+- [ ] Admin access approval.
+- [ ] Audit event model approval.
+- [ ] Evidence template approval.
+- [ ] Failure rollback/disable plan approval.
+- [ ] Local SQL/RLS proof before any runtime implementation.
+- [ ] Static guard proof before any runtime implementation.
+- [ ] No customer-visible internal notes.
+- [ ] No public transcript visibility.
+
 Approval gates requiring explicit owner approval:
 
 - [ ] Live Supabase RPC executor.

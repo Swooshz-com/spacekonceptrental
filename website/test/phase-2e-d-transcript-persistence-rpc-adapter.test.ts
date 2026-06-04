@@ -39,7 +39,7 @@ function readTrackedProductionSources(paths: string[]) {
 }
 
 describe("Phase 2E-D transcript persistence RPC/adapter boundary", () => {
-  it("records Phase 2E-D as completed on the PR #102 baseline", () => {
+  it("keeps Phase 2E-D completed while status advances to Phase 2E-F", () => {
     const status = readRepoFile("docs/PHASE-STATUS.md");
     const roadmap = readRepoFile("docs/PHASE-ROADMAP.md");
     const readiness = readRepoFile("docs/PHASE-2-READINESS-PLAN.md");
@@ -49,19 +49,19 @@ describe("Phase 2E-D transcript persistence RPC/adapter boundary", () => {
     );
 
     expect(status).toContain(
-      "Current phase: Phase 2E-E - transcript persistence activation governance and executor approval gate."
+      "Current phase: Phase 2E-F - transcript lifecycle governance and retention/deletion/export readiness."
     );
     expect(status).toContain(
-      "Latest completed phase: Phase 2E-D - server-only transcript persistence RPC/adapter boundary."
+      "Latest completed phase: Phase 2E-E - transcript persistence activation governance and executor approval gate."
     );
-    expect(status).toContain("Last merged phase PR: #102");
+    expect(status).toContain("Last merged phase PR: #103");
     expect(status).toContain(
-      "Merge commit: `b34cc02a67e73d497e9b90fd904786da3bbe77d3`"
+      "Merge commit: `72a85eedfcd30da26e716f95973785cb1408760b`"
     );
     expect(normalizeWhitespace(roadmap)).toContain(
       "Phase 2E-D adds the server-only transcript persistence RPC/adapter boundary"
     );
-    expect(readiness).toContain("Current Phase 2E-E status");
+    expect(readiness).toContain("Current Phase 2E-F status");
     expect(decisionLog).toContain(
       "Decision: Phase 2E-D adds only the server-only transcript persistence RPC/adapter boundary"
     );

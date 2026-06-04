@@ -112,6 +112,18 @@ variables such as `N8N_CHAT_WEBHOOK_URL`.
   executor approval gates. It is not live executor, service-role runtime,
   `/api/chat` transcript write, transcript read, or admin transcript UI
   approval.
+- Phase 2E-F approves only transcript lifecycle governance and
+  retention/deletion/export readiness. It is not runtime transcript writes,
+  runtime transcript reads, live executor, service-role runtime,
+  `/api/chat` transcript write wiring, Transcript deletion/export runtime
+  paths, Retention cleanup jobs, or Admin transcript UI approval.
+- Future lifecycle work must define these before runtime implementation:
+  Transcript retention policy; Retention expiry handling; Manual deletion
+  requests; Export requests; Admin-only transcript access review;
+  Audit/evidence requirements; Operator runbook requirements;
+  Failure/rollback/disable controls; Data minimisation and redaction
+  requirements; Customer identity/account linking risks; Public quote
+  tracking/public transcript access risks.
 - Do not trust browser-provided session IDs as identity or authorization.
 - Use `clientMessageId` only for idempotency and deduplication, not
   authentication.
@@ -134,6 +146,15 @@ variables such as `N8N_CHAT_WEBHOOK_URL`.
   Transcript read paths; Admin transcript UI; Transcript deletion/export paths;
   Retention cleanup jobs; Customer identity/account linking; Public quote
   tracking or public transcript access; Notifications or CRM integration.
+- Phase 2E-F documents lifecycle governance only. Explicit owner approval is
+  required before any of these: Runtime transcript writes; Runtime transcript
+  reads; Live Supabase RPC executor; Any service-role or privileged DB
+  execution strategy; `/api/chat` transcript write wiring; Transcript
+  deletion/export runtime paths; Retention cleanup jobs; Admin transcript UI;
+  Customer accounts; Public quote tracking or public transcript access;
+  Notifications; CRM integration; n8n/Pinecone runtime changes; SaaS chatbot
+  runtime work; Deployment, Vercel config, Supabase Cloud config, env/secrets,
+  production evidence.
 - Any future live transcript executor must have a reviewed privilege model,
   avoid browser/client exposure of service-role material, redact failures, prove
   idempotency, define audit/evidence requirements, and include rollback/disable
@@ -757,3 +778,26 @@ Runtime transcript writes remain blocked. Runtime transcript reads remain
 blocked. Admin transcript UI remains blocked. Customer accounts remain
 blocked. Public quote tracking remains blocked. Notifications remain blocked.
 CRM integration remains blocked. Deployment remains blocked.
+
+## Phase 2E-F Transcript Lifecycle Governance Boundary
+
+Phase 2E-F is documentation, checklist, and static guard coverage only. It may
+document transcript lifecycle governance and retention/deletion/export
+readiness for future approved work.
+
+Phase 2E-F may document future requirements for Transcript retention policy,
+Retention expiry handling, Manual deletion requests, Export requests,
+Admin-only transcript access review, Audit/evidence requirements, Operator
+runbook requirements, Failure/rollback/disable controls, Data minimisation and
+redaction requirements, Customer identity/account linking risks, and Public
+quote tracking/public transcript access risks.
+
+Phase 2E-F does not approve runtime transcript writes, Runtime transcript
+reads, Live Supabase RPC executor, Any service-role or privileged DB execution
+strategy, `/api/chat` transcript write wiring, Transcript deletion/export
+runtime paths, Retention cleanup jobs, Admin transcript UI, Customer accounts,
+Public quote tracking or public transcript access, Notifications, CRM
+integration, n8n/Pinecone runtime changes, SaaS chatbot runtime work, browser
+Supabase, service-role runtime paths, `website/chat-config.js` access, or
+Deployment, Vercel config, Supabase Cloud config, env/secrets, production
+evidence.

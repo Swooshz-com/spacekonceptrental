@@ -182,6 +182,8 @@ describe("Phase 2E-A conversation privacy and retention governance", () => {
     );
     expect(docs).not.toContain(".supabase.co");
     expect(docs).not.toContain(".vercel.app");
-    expect(docs).not.toMatch(/production evidence|customer data captured/i);
+    expect(docs).not.toMatch(
+      /production evidence (captured|attached|collected|recorded)|customer data captured/i
+    );
   });
 });
