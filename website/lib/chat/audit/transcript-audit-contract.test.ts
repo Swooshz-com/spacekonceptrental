@@ -148,12 +148,29 @@ describe("Phase 2E-H transcript audit/evidence contract", () => {
         reason: "payload_unsafe"
       },
       {
+        name: "unsafe top-level transcript",
+        input: {
+          ...validAuditInput(),
+          fullTranscript: "copying the transcript is blocked"
+        },
+        reason: "payload_unsafe"
+      },
+      {
         name: "unsafe metadata key",
         input: validAuditInput({
           metadata: {
             nested: {
               apiKey: "blocked"
             }
+          }
+        }),
+        reason: "metadata_unsafe_key"
+      },
+      {
+        name: "unsafe customer-visible internal notes metadata key",
+        input: validAuditInput({
+          metadata: {
+            customerVisibleInternalNotes: "blocked"
           }
         }),
         reason: "metadata_unsafe_key"
@@ -226,6 +243,24 @@ describe("Phase 2E-H transcript audit/evidence contract", () => {
         input: validEvidenceInput({
           metadata: {
             privateKey: "blocked"
+          }
+        }),
+        reason: "metadata_unsafe_key"
+      },
+      {
+        name: "unsafe service-role metadata key",
+        input: validEvidenceInput({
+          metadata: {
+            serviceRole: "blocked"
+          }
+        }),
+        reason: "metadata_unsafe_key"
+      },
+      {
+        name: "unsafe customer-visible internal notes metadata key",
+        input: validEvidenceInput({
+          metadata: {
+            customerVisibleInternalNotes: "blocked"
           }
         }),
         reason: "metadata_unsafe_key"

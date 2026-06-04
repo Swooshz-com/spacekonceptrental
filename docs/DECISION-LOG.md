@@ -1564,6 +1564,10 @@ ungranted to anonymous/public and authenticated browser roles, policy-free,
 and constrained to safe audit event/result/actor/evidence values, non-negative
 affected counts, same-workspace relationships, bounded redacted metadata, and
 placeholder-only evidence summaries.
+Phase 2E-H also tightens the shared recursive
+`public.is_safe_transcript_metadata` helper used by the existing transcript
+persistence RPC so Phase 2E-H forbidden audit/evidence key classes are
+rejected by local SQL constraints.
 
 The implementation also adds `website/lib/chat/audit/` as a server-only
 TypeScript contract. It builds safe audit event and evidence commands from

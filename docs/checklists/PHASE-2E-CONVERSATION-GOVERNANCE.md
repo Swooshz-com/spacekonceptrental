@@ -139,6 +139,9 @@ for transcript writes, transcript reads, or admin transcript UI.
       grants or policies.
 - [x] Local SQL constraints reject unsafe metadata keys and unsafe evidence
       summary text.
+- [x] Shared SQL metadata helper denylist is expanded for Phase 2E-H
+      forbidden key classes while preserving recursive object-only metadata
+      checks.
 - [x] Local SQL constraints reject invalid audit event, actor, result, evidence
       type, cross-workspace evidence relationships, and negative affected
       record counts.

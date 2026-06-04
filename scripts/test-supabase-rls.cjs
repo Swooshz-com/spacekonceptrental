@@ -485,13 +485,14 @@ function statementFailsAs(
 function statementFails(
   sql,
   expectedError = /violates|invalid|permission denied|constraint|cannot/i,
+  label = 'Statement',
 ) {
   const result = psql(sql, { check: false });
-  assert.notEqual(result.status, 0, `Statement unexpectedly succeeded: ${sql}`);
+  assert.notEqual(result.status, 0, `${label} unexpectedly succeeded: ${sql}`);
   assert.match(
     `${result.stdout}\n${result.stderr}`,
     expectedError,
-    `Statement failed for an unexpected reason: ${result.stdout}${result.stderr}`,
+    `${label} failed for an unexpected reason: ${result.stdout}${result.stderr}`,
   );
 }
 
@@ -1703,25 +1704,64 @@ check('transcript audit/evidence constraints accept safe local rows and reject u
     /transcript_audit_events_affected_record_count_check/i,
   );
 
-  statementFails(
-    `
-      insert into public.transcript_audit_events (
-        workspace_id,
-        event_type,
-        actor_type,
-        result_status,
-        metadata
-      )
-      values (
-        '${ids.workspaceA}',
-        'transcript_persistence_attempt',
-        'system',
-        'succeeded',
-        jsonb_build_object('nested', jsonb_build_object('rawProviderPayload', 'blocked'))
-      )
-    `,
-    /transcript_audit_events_metadata_safe_check/i,
-  );
+  const unsafeMetadataCases = [
+    ['fullTranscript', "jsonb_build_object('fullTranscript', 'blocked')"],
+    ['transcriptContent', "jsonb_build_object('transcriptContent', 'blocked')"],
+    ['serviceRole', "jsonb_build_object('serviceRole', 'blocked')"],
+    [
+      'customerVisibleInternalNotes',
+      "jsonb_build_object('customerVisibleInternalNotes', 'blocked')",
+    ],
+    [
+      'nested customerVisibleInternalNotes',
+      "jsonb_build_object('nested', jsonb_build_object('customerVisibleInternalNotes', 'blocked'))",
+    ],
+    [
+      'nested rawProviderPayload',
+      "jsonb_build_object('nested', jsonb_build_object('rawProviderPayload', 'blocked'))",
+    ],
+    ['apiKey', "jsonb_build_object('apiKey', 'blocked')"],
+  ];
+
+  for (const [label, metadataSql] of unsafeMetadataCases) {
+    statementFails(
+      `
+        insert into public.transcript_audit_events (
+          workspace_id,
+          event_type,
+          actor_type,
+          result_status,
+          metadata
+        )
+        values (
+          '${ids.workspaceA}',
+          'transcript_persistence_attempt',
+          'system',
+          'succeeded',
+          ${metadataSql}
+        )
+      `,
+      /transcript_audit_events_metadata_safe_check/i,
+      `transcript_audit_events should reject unsafe metadata key ${label}`,
+    );
+
+    statementFails(
+      `
+        insert into public.transcript_evidence_records (
+          workspace_id,
+          evidence_type,
+          metadata
+        )
+        values (
+          '${ids.workspaceA}',
+          'local_sql_rls_proof',
+          ${metadataSql}
+        )
+      `,
+      /transcript_evidence_records_metadata_safe_check/i,
+      `transcript_evidence_records should reject unsafe metadata key ${label}`,
+    );
+  }
 
   statementFails(
     `
@@ -1739,22 +1779,6 @@ check('transcript audit/evidence constraints accept safe local rows and reject u
       )
     `,
     /transcript_evidence_records_safe_text_check/i,
-  );
-
-  statementFails(
-    `
-      insert into public.transcript_evidence_records (
-        workspace_id,
-        evidence_type,
-        metadata
-      )
-      values (
-        '${ids.workspaceA}',
-        'local_sql_rls_proof',
-        jsonb_build_object('apiKey', 'blocked')
-      )
-    `,
-    /transcript_evidence_records_metadata_safe_check/i,
   );
 
   statementFails(

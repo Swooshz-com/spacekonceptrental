@@ -124,6 +124,10 @@ material before storage or adapter execution. Unsafe material includes full
 transcript content, raw provider payloads, n8n workflow payloads, webhook URLs,
 raw headers, cookies, tokens, API keys, private keys, secrets, service-role
 material, and customer-visible internal notes.
+Phase 2E-H also tightens the shared recursive
+`public.is_safe_transcript_metadata` helper used by the existing transcript
+persistence RPC, so the stricter audit/evidence denylist can harden that local
+metadata path as well.
 
 The server-only TypeScript contract is dependency-injected and disabled by
 default. It does not instantiate Supabase, call RPCs, read env, read cookies or

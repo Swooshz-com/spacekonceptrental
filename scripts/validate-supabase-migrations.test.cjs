@@ -876,6 +876,58 @@ test('real migrations add the Phase 2E-H transcript audit/evidence schema withou
     migration,
     /create table if not exists public\.transcript_evidence_records \(/,
   );
+  assert.match(
+    migration,
+    /create or replace function public\.is_safe_transcript_metadata\(\s*p_metadata jsonb,\s*p_max_bytes integer\s*\)/,
+    'Phase 2E-H must harden the shared transcript metadata helper before audit/evidence constraints use it',
+  );
+  assert.match(
+    migration,
+    /with recursive metadata_walk\(key_name, value\) as/,
+    'metadata helper must keep recursive metadata traversal',
+  );
+  assert.match(
+    sql,
+    /jsonb_typeof\(p_metadata\) = 'object'/,
+    'metadata helper must keep top-level JSON object enforcement',
+  );
+  assert.match(
+    sql,
+    /octet_length\(p_metadata::text\) <= p_max_bytes/,
+    'metadata helper must keep the configured byte-size limit',
+  );
+  assert.match(
+    migration,
+    /revoke all on function public\.is_safe_transcript_metadata\(jsonb, integer\) from public;/,
+    'metadata helper must keep public execute revoked',
+  );
+
+  for (const denylistFragment of [
+    'full[_-]?transcript',
+    'transcript[_-]?content',
+    'raw[_-]?provider[_-]?payload',
+    'provider[_-]?payload',
+    'debug[_-]?payload',
+    'workflow[_-]?payload',
+    'webhook',
+    'headers?',
+    'raw[_-]?headers?',
+    'tokens?',
+    'authorization',
+    'cookie',
+    'credentials?',
+    'private[_-]?key',
+    'secret',
+    'password',
+    'api[_-]?key',
+    'service[_-]?role',
+    'customer[_-]?visible[_-]?internal[_-]?notes',
+  ]) {
+    assert.ok(
+      migration.includes(denylistFragment),
+      `metadata helper denylist must include ${denylistFragment}`,
+    );
+  }
 
   for (const tableName of ['transcript_audit_events', 'transcript_evidence_records']) {
     assert.match(

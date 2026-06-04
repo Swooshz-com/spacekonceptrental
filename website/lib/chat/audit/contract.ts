@@ -70,7 +70,7 @@ const evidenceTypes = new Set<TranscriptEvidenceType>([
 ]);
 
 const unsafePayloadKeyPattern =
-  /full[_-]?transcript|transcript[_-]?content|raw[_-]?provider[_-]?payload|provider[_-]?payload|debug[_-]?payload|workflow[_-]?payload|webhook|headers?|raw[_-]?headers?|tokens?|authorization|cookie|credentials?|private[_-]?key|secret|password|api[_-]?key|service[_-]?role/i;
+  /full[_-]?transcript|transcript[_-]?content|raw[_-]?provider[_-]?payload|provider[_-]?payload|debug[_-]?payload|workflow[_-]?payload|webhook|headers?|raw[_-]?headers?|tokens?|authorization|cookie|credentials?|private[_-]?key|secret|password|api[_-]?key|service[_-]?role|customer[_-]?visible[_-]?internal[_-]?notes/i;
 
 const unsafeEvidenceTextPattern =
   /full[_ -]?transcript|raw[_ -]?provider|provider[_ -]?payload|workflow[_ -]?payload|webhook|headers?|cookies?|tokens?|authorization|credentials?|private[_ -]?key|secret|password|api[_ -]?key|service[_ -]?role/i;
