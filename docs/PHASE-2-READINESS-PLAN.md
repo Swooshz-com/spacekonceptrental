@@ -203,13 +203,23 @@ Suggested first PR:
   n8n/Pinecone runtime changes, SaaS chatbot runtime work, deployment,
   browser Supabase, service-role runtime paths, or `website/chat-config.js`
   access.
+- Phase 2E-C follows with the server-only TypeScript persistence contract,
+  validation/minimisation helpers, safe command shaping, and fake/injected
+  adapter tests only, without wiring runtime transcript writes or reads.
 
-Current Phase 2E-B status:
+Current Phase 2E-C status:
 
 - The existing `conversations` and `messages` tables now have the local schema
   and RLS foundation needed for a future reviewed persistence path.
 - Direct anonymous/public and authenticated client reads and writes are denied
   by RLS.
+- The server-only transcript persistence contract and validation boundary are
+  now defined behind injected adapter dependencies only.
+- Trusted workspace IDs are server-owned inputs; anonymous session hashes are
+  correlation only; `clientMessageId` is idempotency/deduplication only.
+- Validation rejects invalid workspace IDs, unsafe server-generated IDs,
+  invalid message role/type pairs, oversized content, oversized metadata, and
+  unsafe metadata keys before any adapter can run.
 - Runtime transcript writes remain blocked.
 - Runtime transcript reads remain blocked.
 - Admin transcript UI remains blocked.

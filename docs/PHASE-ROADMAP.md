@@ -763,3 +763,24 @@ Runtime transcript reads remain blocked. Admin transcript UI remains blocked.
 Customer accounts remain blocked. Public quote tracking remains blocked.
 Notifications remain blocked. CRM integration remains blocked. Deployment
 remains blocked.
+
+Phase 2E-C adds the server-only transcript persistence contract and validation
+boundary. It defines TypeScript command/result/adapter shapes for future
+conversation/message persistence, pure validation and minimisation helpers,
+safe command construction, safe unavailable/failure results, and
+fake/injected adapter tests. The contract treats trusted workspace IDs as
+server-owned, conversation/message IDs as server-generated inputs, anonymous
+session hashes as correlation only, and `clientMessageId` as idempotency and
+deduplication only.
+
+Phase 2E-C does not wire runtime transcript writes, runtime transcript reads,
+admin transcript UI, public transcript access, customer accounts, public quote
+tracking, notifications, CRM integration, n8n/Pinecone runtime changes, SaaS
+chatbot runtime work, deployment config, Supabase Cloud actions, browser
+Supabase, service-role runtime paths, ecommerce flows, or
+`website/chat-config.js` access. It does not call live Supabase, SQL, RPC,
+n8n, Pinecone, or external providers. Runtime transcript writes remain
+blocked. Runtime transcript reads remain blocked. Admin transcript UI remains
+blocked. Customer accounts remain blocked. Public quote tracking remains
+blocked. Browser Supabase remains forbidden. Service-role runtime paths remain
+forbidden.

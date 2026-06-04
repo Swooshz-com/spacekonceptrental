@@ -11,6 +11,13 @@ tracking, notifications, CRM integration, n8n/Pinecone runtime changes, SaaS
 chatbot runtime work, deployment, browser Supabase, service-role runtime paths,
 or `website/chat-config.js` access.
 
+Phase 2E-C adds the server-only transcript persistence contract and validation
+boundary only. It defines TypeScript command/result/adapter shapes and pure
+validation/minimisation helpers for a future persistence adapter, but it does
+not wire transcript writes into `/api/chat`, call Supabase, call SQL/RPC, call
+n8n/Pinecone, read cookies or headers, read env, use service-role runtime
+paths, or expose transcript reads.
+
 Runtime transcript writes remain blocked. Runtime transcript reads remain
 blocked. Admin transcript UI remains blocked. Customer accounts remain blocked.
 Public quote tracking remains blocked. Notifications remain blocked. CRM
@@ -18,6 +25,29 @@ integration remains blocked. n8n/Pinecone runtime changes remain blocked. SaaS
 chatbot runtime work remains blocked. Deployment remains blocked. Browser
 Supabase remains forbidden. Service-role runtime paths remain forbidden.
 `website/chat-config.js` access remains forbidden.
+
+## Phase 2E-C server-only persistence contract
+
+The Phase 2E-C contract lives behind server-only TypeScript modules. It shapes
+future conversation/message persistence commands from explicit trusted inputs
+and keeps all database work behind an injected adapter interface. The default
+adapter remains unavailable, and tests use fake adapters only.
+
+The contract validates that the workspace ID is trusted server input, not a
+browser-controlled selector. Conversation IDs and message IDs are treated as
+server-generated inputs. Invalid IDs, missing trusted workspace scope, invalid
+message role/type pairs, blank or oversized content, oversized metadata, and
+unsafe metadata keys fail closed before any adapter can run.
+
+Metadata is minimized to JSON-compatible objects and rejects unsafe operational
+keys such as provider debug payloads, workflow payloads, webhook URLs, raw
+headers, tokens, trace dumps, credentials, private keys, secrets, passwords,
+and API keys. Adapter failures return only a generic safe unavailable result.
+
+Anonymous session hashes remain correlation only. They do not prove identity,
+ownership, workspace access, or transcript access. `clientMessageId` remains
+idempotency and deduplication only. It does not prove authentication,
+authorization, transcript ownership, or customer identity.
 
 ## Phase 2E-B schema/RLS foundation
 

@@ -102,6 +102,15 @@ Current database and API internals still use names such as `products`, `categori
   work remains blocked. Deployment remains blocked. Browser Supabase remains
   forbidden. Service-role runtime paths remain forbidden, and
   `website/chat-config.js` access remains forbidden.
+- Phase 2E-C adds only the server-only transcript persistence contract and
+  validation boundary. It defines future conversation/message command, result,
+  unavailable, and injected adapter shapes plus pure validation/minimisation
+  helpers tested with fake adapters. It does not wire `/api/chat` to transcript
+  persistence, call Supabase, call SQL/RPC, add transcript reads, add admin
+  transcript UI, approve customer accounts, approve public quote tracking,
+  deploy, add browser Supabase, add service-role runtime paths, change
+  n8n/Pinecone runtime behavior, add SaaS chatbot runtime work, add ecommerce
+  flows, or access `website/chat-config.js`.
 - Phase 2A-A deployment smoke-test preparation is docs-only. It provides an
   operator runbook, unchecked readiness checklist, and evidence template for a
   future reviewed deployment PR, while deployment, Supabase Cloud connection,

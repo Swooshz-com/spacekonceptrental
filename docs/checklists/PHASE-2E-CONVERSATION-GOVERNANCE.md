@@ -38,6 +38,22 @@ for transcript writes, transcript reads, or admin transcript UI.
 - [x] Direct authenticated conversation/message writes are denied by RLS.
 - [x] Static guards prove Phase 2E-B stays schema/RLS-only.
 
+## Phase 2E-C Completed Contract And Validation Boundary
+
+- [x] Server-only persistence contract is completed for future
+      conversation/message persistence commands.
+- [x] Conversation persistence command, message persistence command, batch
+      transcript persistence command, result, unavailable, and adapter
+      dependency shapes are defined.
+- [x] Validation/minimisation helpers are completed for trusted workspace IDs,
+      server-generated conversation/message IDs, message role/type pairs,
+      bounded content, bounded metadata, and unsafe metadata keys.
+- [x] Anonymous session hash is treated as correlation only, not identity.
+- [x] `clientMessageId` is treated as idempotency/deduplication only, not
+      authentication or authorization.
+- [x] Fake/injected adapter tests prove no live persistence dependency is used.
+- [x] Static guards prove Phase 2E-C stays contract/validation-only.
+
 ## Runtime Blockers
 
 - [ ] Runtime transcript writes remain blocked.

@@ -35,7 +35,7 @@ function readTrackedProductionSources(paths: string[]) {
 }
 
 describe("Phase 2E-B conversation/message schema and RLS foundation", () => {
-  it("records Phase 2E-B as current and Phase 2E-A / PR #99 as completed", () => {
+  it("keeps Phase 2E-B recorded as the previous merged schema/RLS snapshot", () => {
     const status = readRepoFile("docs/PHASE-STATUS.md");
     const roadmap = readRepoFile("docs/PHASE-ROADMAP.md");
     const readiness = readRepoFile("docs/PHASE-2-READINESS-PLAN.md");
@@ -44,6 +44,9 @@ describe("Phase 2E-B conversation/message schema and RLS foundation", () => {
       "docs/checklists/PHASE-2E-CONVERSATION-GOVERNANCE.md"
     );
 
+    expect(status).toContain(
+      "Previous merged status snapshot: Phase 2E-B"
+    );
     expect(status).toContain(
       "Current phase: Phase 2E-B - conversation/message schema and RLS foundation."
     );
@@ -60,7 +63,9 @@ describe("Phase 2E-B conversation/message schema and RLS foundation", () => {
     expect(roadmap).toContain(
       "Phase 2E-B adds the conversation/message schema and RLS foundation only"
     );
-    expect(readiness).toContain("Current Phase 2E-B status");
+    expect(readiness).toContain(
+      "Phase 2E-B follows with the local conversation/message schema and RLS"
+    );
     expect(decisionLog).toContain(
       "Decision: Phase 2E-B adds only the conversation/message schema and RLS foundation"
     );

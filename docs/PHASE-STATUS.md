@@ -4,33 +4,38 @@ This is the quick status page for the SKR repo. Use `docs/PHASE-2-READINESS-PLAN
 
 ## Current phase
 
-Current phase: Phase 2E-B - conversation/message schema and RLS foundation.
+Current phase: Phase 2E-C - server-only transcript persistence contract and validation boundary.
 
-This phase adds the local Supabase schema and RLS foundation for the existing
-`conversations` and `messages` tables after the Phase 2E-A privacy governance
-bundle. It adds additive metadata, retention, deletion marker, ordering, and
-message-type constraints; bounds message content and metadata; documents the
-anonymous session hash as non-identity correlation only; and changes direct
-conversation/message RLS to fail closed for anonymous/public and authenticated
-client roles. This is schema/RLS/docs/static-guard work only. Runtime
-transcript writes remain blocked. Runtime transcript reads remain blocked.
-Admin transcript UI remains blocked. Customer accounts remain blocked. Public
-quote tracking remains blocked. Notifications remain blocked. CRM integration
-remains blocked. n8n/Pinecone runtime changes remain blocked. SaaS chatbot
-runtime work remains blocked. Deployment remains blocked. Browser Supabase
-remains forbidden. Service-role runtime paths remain forbidden.
-`website/chat-config.js` access remains forbidden.
+This phase adds the server-only TypeScript transcript persistence contract
+after the Phase 2E-B schema/RLS foundation. It defines conversation, message,
+batch transcript, result, unavailable, and injected adapter shapes; adds pure
+validation and minimisation helpers for trusted workspace IDs, server-generated
+conversation/message IDs, role/type pairs, bounded content, bounded metadata,
+unsafe metadata keys, anonymous session-hash correlation, and client-message
+idempotency; and proves the behavior with fake/injected adapter tests. This is
+contract/validation/docs/static-guard work only. It does not wire
+`POST /api/chat` to transcript persistence and does not call Supabase,
+SQL/RPC, n8n, Pinecone, or external providers. Runtime transcript writes
+remain blocked. Runtime transcript reads remain blocked. Admin transcript UI
+remains blocked. Customer accounts remain blocked. Public quote tracking
+remains blocked. Notifications remain blocked. CRM integration remains
+blocked. n8n/Pinecone runtime changes remain blocked. SaaS chatbot runtime
+work remains blocked. Deployment remains blocked. Browser Supabase remains
+forbidden. Service-role runtime paths remain forbidden. `website/chat-config.js`
+access remains forbidden.
 
-Latest completed phase: Phase 2E-A - privacy, retention, identity, and conversation/message governance planning.
+Latest completed phase: Phase 2E-B - conversation/message schema and RLS foundation.
 
-Last merged phase PR: #99
+Last merged phase PR: #100
 
-Merge commit: `8fc982616e119cce9484ef5feb1f11dc4705c17e`
+Merge commit: `28610850213950d256862a6b16936c9362402b42`
 
 ## Remaining-work map
 
-Completed through PR #99:
+Completed through PR #100:
 
+- Phase 2E-B conversation/message schema and RLS foundation is complete as
+  local migration, RLS, docs, and static guard work only.
 - Phase 2E-A conversation privacy, retention, identity, transcript access,
   admin visibility, idempotency, and redaction governance is complete as
   planning/static guard work.
@@ -42,12 +47,13 @@ Completed through PR #99:
 
 Safe next phases:
 
-- Continue only narrow docs/static-guard or local schema/RLS work for
-  conversation/message privacy, retention, deletion/export, transcript access,
-  and operator evidence when it remains separate from runtime implementation.
+- Continue only narrow docs/static-guard, local schema/RLS, or server-only
+  contract/validation work for conversation/message privacy, retention,
+  deletion/export, transcript access, and operator evidence when it remains
+  separate from runtime implementation.
 - A future transcript write path must be separately approved, server-only,
-  trusted-workspace scoped, idempotent, and tested before any runtime storage
-  exists.
+  trusted-workspace scoped, idempotent, adapter-backed, and tested before any
+  runtime storage exists.
 - A future transcript read/admin UI path must be separately approved, protected
   by owner/admin access, audited, and tested before admin visibility exists.
 - A separately approved deployment PR can use the Phase 2D-A runbook and
@@ -72,6 +78,31 @@ Too broad or risky to bundle here:
 - Schema/RLS foundation plus deployment action or deployment config.
 - Transcript access plus customer accounts, public quote tracking,
   notifications, CRM, or SaaS chatbot runtime implementation.
+
+## Previous merged status snapshot: Phase 2E-B
+
+Current phase: Phase 2E-B - conversation/message schema and RLS foundation.
+
+This phase adds the local Supabase schema and RLS foundation for the existing
+`conversations` and `messages` tables after the Phase 2E-A privacy governance
+bundle. It adds additive metadata, retention, deletion marker, ordering, and
+message-type constraints; bounds message content and metadata; documents the
+anonymous session hash as non-identity correlation only; and changes direct
+conversation/message RLS to fail closed for anonymous/public and authenticated
+client roles. This is schema/RLS/docs/static-guard work only. Runtime
+transcript writes remain blocked. Runtime transcript reads remain blocked.
+Admin transcript UI remains blocked. Customer accounts remain blocked. Public
+quote tracking remains blocked. Notifications remain blocked. CRM integration
+remains blocked. n8n/Pinecone runtime changes remain blocked. SaaS chatbot
+runtime work remains blocked. Deployment remains blocked. Browser Supabase
+remains forbidden. Service-role runtime paths remain forbidden.
+`website/chat-config.js` access remains forbidden.
+
+Latest completed phase: Phase 2E-A - privacy, retention, identity, and conversation/message governance planning.
+
+Last merged phase PR: #99
+
+Merge commit: `8fc982616e119cce9484ef5feb1f11dc4705c17e`
 
 ## Previous merged status snapshot: Phase 2E-A
 

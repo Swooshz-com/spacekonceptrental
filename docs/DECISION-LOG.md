@@ -1347,3 +1347,29 @@ UI, approve customer accounts, approve public quote tracking, add
 notifications or CRM integration, change n8n/Pinecone runtime behavior, add
 SaaS chatbot runtime work, add browser Supabase, add service-role runtime
 paths, add ecommerce flows, or access `website/chat-config.js`.
+
+## 2026-06-04: Server-only Transcript Persistence Contract And Validation Boundary
+
+Decision: Phase 2E-C adds only the server-only transcript persistence contract and validation boundary.
+
+Reason: PR #100 completed the conversation/message schema and fail-closed RLS
+foundation. The next safe bundle is a TypeScript contract layer that defines
+future persistence command shapes and rejects unsafe inputs before any runtime
+chat route can treat transcript storage as available.
+
+The implementation defines conversation persistence commands, message
+persistence commands, batch transcript persistence commands, safe
+persisted/unavailable/rejected result shapes, and an injected adapter
+dependency shape. It adds pure validation and minimisation helpers for trusted
+workspace IDs, server-generated conversation/message IDs, message role/type
+pairs, bounded content, bounded metadata, unsafe metadata keys, anonymous
+session-hash correlation, and `clientMessageId` idempotency/deduplication. The
+tests use fake/injected adapters only.
+
+Phase 2E-C does not deploy, add Vercel project config, connect Supabase Cloud,
+add production env files, add real secrets, add production seed data, wire
+runtime transcript writes into `/api/chat`, add runtime transcript reads, add
+admin transcript UI, approve customer accounts, approve public quote tracking,
+add notifications or CRM integration, change n8n/Pinecone runtime behavior,
+add SaaS chatbot runtime work, add browser Supabase, add service-role runtime
+paths, add ecommerce flows, or access `website/chat-config.js`.
