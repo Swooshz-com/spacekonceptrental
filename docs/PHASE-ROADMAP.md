@@ -735,3 +735,14 @@ runtime behavior, SaaS chatbot runtime work, access to
 `website/chat-config.js`, or ecommerce flows such as carts, checkout, payments,
 customer accounts, stock reservation, fulfilment, confirmed booking, or online
 ordering.
+
+Phase 2E-A adds privacy, retention, identity, and conversation/message governance planning before future transcript persistence. It documents PII minimisation, anonymous visitor identity, future authenticated/admin-linked identity considerations, retention rules, deletion/export expectations, transcript access rules, admin visibility boundaries, future persistence idempotency expectations, and redaction guidance.
+
+Phase 2E-A is docs/checklist/static-guard planning only. Conversation/message
+persistence is not implemented, transcript storage is not implemented, admin
+transcript UI is not implemented, customer accounts are not approved, public
+quote tracking is not approved, notifications are not approved, CRM integration
+is not approved, n8n/Pinecone runtime changes are not approved, SaaS chatbot
+runtime work is not approved, deployment is not approved, browser Supabase
+remains forbidden, service-role runtime paths remain forbidden, and
+`website/chat-config.js` access remains forbidden.

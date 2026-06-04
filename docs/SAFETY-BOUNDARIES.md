@@ -107,6 +107,17 @@ variables such as `N8N_CHAT_WEBHOOK_URL`.
   trusted host/workspace mapping, never from an anonymous browser field.
 - Avoid storing unnecessary PII, provider debug payloads, raw n8n internals,
   webhook URLs, forwarding headers, or trace IDs.
+- Phase 2E-A is governance planning and static guard coverage only.
+  Conversation/message persistence is not implemented, transcript storage is
+  not implemented, admin transcript UI is not implemented, customer accounts
+  are not approved, public quote tracking is not approved, notifications are
+  not approved, CRM integration is not approved, n8n/Pinecone runtime changes
+  are not approved, SaaS chatbot runtime work is not approved, deployment is
+  not approved, browser Supabase remains forbidden, service-role runtime paths
+  remain forbidden, and `website/chat-config.js` access remains forbidden.
+- Retention timers, deletion/export rules, transcript access rules, and admin
+  visibility boundaries must be approved before any migration stores
+  transcripts.
 
 ## Chat Rate-Limit Identity Rules
 
@@ -674,3 +685,20 @@ CRM integration, n8n/Pinecone runtime changes, SaaS chatbot runtime work,
 `website/chat-config.js` access, or ecommerce flows such as carts, checkout,
 payments, customer accounts, stock reservation, order fulfilment, confirmed
 booking, or online ordering.
+
+## Phase 2E-A Conversation Privacy And Retention Governance Boundary
+
+Phase 2E-A is documentation, checklist, and static guard coverage only. It may
+document conversation privacy, PII minimisation, anonymous visitor identity,
+future authenticated/admin-linked identity considerations, retention,
+deletion/export, transcript access, admin visibility, persistence idempotency,
+and redaction guidance.
+
+Phase 2E-A does not approve or implement runtime transcript storage.
+Conversation/message persistence is not implemented, transcript storage is not
+implemented, admin transcript UI is not implemented, customer accounts are not
+approved, public quote tracking is not approved, notifications are not
+approved, CRM integration is not approved, n8n/Pinecone runtime changes are
+not approved, SaaS chatbot runtime work is not approved, deployment is not
+approved, browser Supabase remains forbidden, service-role runtime paths remain
+forbidden, and `website/chat-config.js` access remains forbidden.

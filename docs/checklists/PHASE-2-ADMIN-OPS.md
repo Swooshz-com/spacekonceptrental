@@ -136,6 +136,17 @@ and route/action boundaries are implemented and tested.
 - [x] Stale blocker wording no longer treats the approved Phase 2C-A admin-controlled listing media upload boundary as wholly future or blocked.
 - [x] No deployment, Vercel config, Supabase Cloud config, production env, browser Supabase, service-role runtime path, n8n/Pinecone runtime change, SaaS chatbot runtime work, or ecommerce flow is added.
 
+## Phase 2E-A Conversation Privacy And Retention Governance
+
+- [x] Privacy and PII minimisation model is documented before transcript persistence.
+- [x] Anonymous visitor identity model is documented.
+- [x] Future authenticated/admin-linked identity considerations are documented without approving customer accounts.
+- [x] Retention, deletion/export, transcript access, and admin visibility rules are documented.
+- [x] Future persistence idempotency and redaction guidance are documented.
+- [x] Conversation/message persistence is not implemented.
+- [x] Transcript storage is not implemented.
+- [x] Admin transcript UI, customer accounts, public quote tracking, notifications, CRM, n8n/Pinecone runtime changes, SaaS chatbot runtime work, deployment, browser Supabase, service-role runtime paths, and `website/chat-config.js` access remain blocked.
+
 ## Ecommerce Non-goals
 
 - [ ] Do not add carts.

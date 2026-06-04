@@ -9,7 +9,7 @@ function readRepoFile(relativePath: string) {
 }
 
 describe("Phase 2D-B post-readiness reconciliation", () => {
-  it("records PR #97 as completed and Phase 2D-B as current reconciliation work", () => {
+  it("records PR #97 as completed and Phase 2D-B as the previous merged reconciliation snapshot", () => {
     const status = readRepoFile("docs/PHASE-STATUS.md");
     const roadmap = readRepoFile("docs/PHASE-ROADMAP.md");
     const decisionLog = readRepoFile("docs/DECISION-LOG.md");
@@ -21,6 +21,9 @@ describe("Phase 2D-B post-readiness reconciliation", () => {
       "docs/checklists/PHASE-2-ADMIN-OPS.md"
     );
 
+    expect(status).toContain(
+      "Previous merged status snapshot: Phase 2D-B"
+    );
     expect(status).toContain(
       "Current phase: Phase 2D-B - post-readiness status, remaining-work map, and evidence guard reconciliation."
     );
