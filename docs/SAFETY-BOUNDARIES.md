@@ -98,8 +98,9 @@ variables such as `N8N_CHAT_WEBHOOK_URL`.
 ## Chat Persistence Privacy Rules
 
 - Treat `conversations` and `messages` as privacy-sensitive.
-- Do not add actual conversation or message persistence without separate
-  approval, migrations, RLS review, and tests.
+- Phase 2E-B approves only local conversation/message schema and RLS
+  foundation work. Do not add runtime transcript writes or reads without
+  separate approval, a reviewed server-side access path, RLS review, and tests.
 - Do not trust browser-provided session IDs as identity or authorization.
 - Use `clientMessageId` only for idempotency and deduplication, not
   authentication.
@@ -108,16 +109,24 @@ variables such as `N8N_CHAT_WEBHOOK_URL`.
 - Avoid storing unnecessary PII, provider debug payloads, raw n8n internals,
   webhook URLs, forwarding headers, or trace IDs.
 - Phase 2E-A is governance planning and static guard coverage only.
-  Conversation/message persistence is not implemented, transcript storage is
-  not implemented, admin transcript UI is not implemented, customer accounts
-  are not approved, public quote tracking is not approved, notifications are
-  not approved, CRM integration is not approved, n8n/Pinecone runtime changes
-  are not approved, SaaS chatbot runtime work is not approved, deployment is
-  not approved, browser Supabase remains forbidden, service-role runtime paths
-  remain forbidden, and `website/chat-config.js` access remains forbidden.
-- Retention timers, deletion/export rules, transcript access rules, and admin
-  visibility boundaries must be approved before any migration stores
-  transcripts.
+- Phase 2E-B adds the local schema/RLS foundation for `conversations` and
+  `messages` while direct anonymous/public and authenticated client reads and
+  writes remain denied.
+- Runtime transcript writes remain blocked.
+- Runtime transcript reads remain blocked.
+- Admin transcript UI remains blocked.
+- Customer accounts remain blocked.
+- Public quote tracking remains blocked.
+- Notifications remain blocked.
+- CRM integration remains blocked.
+- n8n/Pinecone runtime changes remain blocked.
+- SaaS chatbot runtime work remains blocked.
+- Deployment remains blocked.
+- Browser Supabase remains forbidden.
+- Service-role runtime paths remain forbidden.
+- `website/chat-config.js` access remains forbidden.
+- Deletion/export workflows, transcript access rules, admin visibility
+  implementation, and retention cleanup jobs remain future reviewed work.
 
 ## Chat Rate-Limit Identity Rules
 
@@ -702,3 +711,23 @@ approved, CRM integration is not approved, n8n/Pinecone runtime changes are
 not approved, SaaS chatbot runtime work is not approved, deployment is not
 approved, browser Supabase remains forbidden, service-role runtime paths remain
 forbidden, and `website/chat-config.js` access remains forbidden.
+
+## Phase 2E-B Conversation Message Schema And RLS Foundation Boundary
+
+Phase 2E-B approves only local Supabase schema and RLS foundation work for the
+existing `conversations` and `messages` tables. It may add bounded metadata,
+retention, deletion marker, ordering, message-type, content-size, and
+metadata-safety constraints. It may also change direct conversation/message
+RLS to fail closed for anonymous/public and authenticated client roles.
+
+Phase 2E-B does not approve runtime transcript writes, runtime transcript
+reads, admin transcript UI, public transcript access, customer accounts,
+public quote tracking, notifications, CRM integration, n8n/Pinecone runtime
+changes, SaaS chatbot runtime work, deployment, Supabase Cloud actions,
+browser Supabase, service-role runtime paths, ecommerce flows, or
+`website/chat-config.js` access.
+
+Runtime transcript writes remain blocked. Runtime transcript reads remain
+blocked. Admin transcript UI remains blocked. Customer accounts remain
+blocked. Public quote tracking remains blocked. Notifications remain blocked.
+CRM integration remains blocked. Deployment remains blocked.

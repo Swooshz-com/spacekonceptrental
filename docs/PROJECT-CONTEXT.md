@@ -89,13 +89,18 @@ Current database and API internals still use names such as `products`, `categori
   before transcript persistence. It records PII minimisation, anonymous visitor
   identity, future authenticated/admin-linked identity considerations,
   retention, deletion/export, transcript access, admin visibility,
-  idempotency, and redaction expectations. Conversation/message persistence is
-  not implemented, transcript storage is not implemented, admin transcript UI
-  is not implemented, customer accounts are not approved, public quote tracking
-  is not approved, notifications are not approved, CRM integration is not
-  approved, n8n/Pinecone runtime changes are not approved, SaaS chatbot runtime
-  work is not approved, deployment is not approved, browser Supabase remains
-  forbidden, service-role runtime paths remain forbidden, and
+  idempotency, and redaction expectations.
+- Phase 2E-B adds the local conversation/message schema and RLS foundation
+  only. The existing `conversations` and `messages` tables have additive
+  metadata, retention, deletion marker, ordering, message-type, content-size,
+  and metadata-safety constraints, and direct anonymous/public or
+  authenticated client reads and writes fail closed. Runtime transcript writes
+  remain blocked. Runtime transcript reads remain blocked. Admin transcript UI
+  remains blocked. Customer accounts remain blocked. Public quote tracking
+  remains blocked. Notifications remain blocked. CRM integration remains
+  blocked. n8n/Pinecone runtime changes remain blocked. SaaS chatbot runtime
+  work remains blocked. Deployment remains blocked. Browser Supabase remains
+  forbidden. Service-role runtime paths remain forbidden, and
   `website/chat-config.js` access remains forbidden.
 - Phase 2A-A deployment smoke-test preparation is docs-only. It provides an
   operator runbook, unchecked readiness checklist, and evidence template for a

@@ -4,6 +4,77 @@ This is the quick status page for the SKR repo. Use `docs/PHASE-2-READINESS-PLAN
 
 ## Current phase
 
+Current phase: Phase 2E-B - conversation/message schema and RLS foundation.
+
+This phase adds the local Supabase schema and RLS foundation for the existing
+`conversations` and `messages` tables after the Phase 2E-A privacy governance
+bundle. It adds additive metadata, retention, deletion marker, ordering, and
+message-type constraints; bounds message content and metadata; documents the
+anonymous session hash as non-identity correlation only; and changes direct
+conversation/message RLS to fail closed for anonymous/public and authenticated
+client roles. This is schema/RLS/docs/static-guard work only. Runtime
+transcript writes remain blocked. Runtime transcript reads remain blocked.
+Admin transcript UI remains blocked. Customer accounts remain blocked. Public
+quote tracking remains blocked. Notifications remain blocked. CRM integration
+remains blocked. n8n/Pinecone runtime changes remain blocked. SaaS chatbot
+runtime work remains blocked. Deployment remains blocked. Browser Supabase
+remains forbidden. Service-role runtime paths remain forbidden.
+`website/chat-config.js` access remains forbidden.
+
+Latest completed phase: Phase 2E-A - privacy, retention, identity, and conversation/message governance planning.
+
+Last merged phase PR: #99
+
+Merge commit: `8fc982616e119cce9484ef5feb1f11dc4705c17e`
+
+## Remaining-work map
+
+Completed through PR #99:
+
+- Phase 2E-A conversation privacy, retention, identity, transcript access,
+  admin visibility, idempotency, and redaction governance is complete as
+  planning/static guard work.
+- Phase 2D-A deployment readiness, environment contract, smoke-test runbook,
+  rollback/disable plan, evidence template, and static guard coverage remain
+  completed preparation only.
+- Phase 2D-B post-readiness status, remaining-work mapping, deployment
+  evidence expectations, and stale blocker reconciliation are complete.
+
+Safe next phases:
+
+- Continue only narrow docs/static-guard or local schema/RLS work for
+  conversation/message privacy, retention, deletion/export, transcript access,
+  and operator evidence when it remains separate from runtime implementation.
+- A future transcript write path must be separately approved, server-only,
+  trusted-workspace scoped, idempotent, and tested before any runtime storage
+  exists.
+- A future transcript read/admin UI path must be separately approved, protected
+  by owner/admin access, audited, and tested before admin visibility exists.
+- A separately approved deployment PR can use the Phase 2D-A runbook and
+  evidence template, but must not bundle transcript persistence or unrelated
+  runtime expansion.
+
+Blocked phases requiring explicit owner approval:
+
+- Runtime transcript writes, runtime transcript reads, admin transcript UI,
+  customer accounts, public quote tracking, notifications, CRM, n8n/Pinecone
+  runtime changes, SaaS chatbot runtime work, browser Supabase, service-role
+  runtime paths, and `website/chat-config.js` access.
+- Real deployment, Vercel project config, Supabase Cloud connection,
+  production env files, real secrets, production seed data, and deployment
+  actions.
+- Ecommerce flows including carts, checkout, payments, customer accounts,
+  stock reservation, order fulfilment, confirmed booking, and online ordering.
+
+Too broad or risky to bundle here:
+
+- Schema/RLS foundation plus runtime transcript writes or reads.
+- Schema/RLS foundation plus deployment action or deployment config.
+- Transcript access plus customer accounts, public quote tracking,
+  notifications, CRM, or SaaS chatbot runtime implementation.
+
+## Previous merged status snapshot: Phase 2E-A
+
 Current phase: Phase 2E-A - privacy, retention, identity, and conversation/message governance planning.
 
 This phase adds conversation privacy and retention governance before future
@@ -25,44 +96,6 @@ Latest completed phase: Phase 2D-B - post-readiness status, remaining-work map, 
 Last merged phase PR: #98
 
 Merge commit: `173138e81e612e8effe54803c495c056f2c5bfd3`
-
-## Remaining-work map
-
-Completed through PR #98:
-
-- Phase 2D-B post-readiness status, remaining-work mapping, deployment
-  evidence expectations, and stale blocker reconciliation are complete.
-- Phase 2D-A deployment readiness, environment contract, smoke-test runbook,
-  rollback/disable plan, evidence template, and static guard coverage remain
-  completed preparation only.
-
-Safe next phases:
-
-- Continue docs/static-guard work for conversation/message privacy,
-  retention, deletion/export, transcript access, and operator evidence when it
-  remains separate from runtime implementation.
-- A separately approved deployment PR can use the Phase 2D-A runbook and
-  evidence template, but must not bundle transcript persistence or unrelated
-  runtime expansion.
-
-Blocked phases requiring explicit owner approval:
-
-- Conversation/message migrations, transcript writes, transcript reads, admin
-  transcript UI, customer accounts, public quote tracking, notifications, CRM,
-  n8n/Pinecone runtime changes, SaaS chatbot runtime work, browser Supabase,
-  service-role runtime paths, and `website/chat-config.js` access.
-- Real deployment, Vercel project config, Supabase Cloud connection,
-  production env files, real secrets, production seed data, and deployment
-  actions.
-- Ecommerce flows including carts, checkout, payments, customer accounts,
-  stock reservation, order fulfilment, confirmed booking, and online ordering.
-
-Too broad or risky to bundle here:
-
-- Privacy governance plus transcript persistence.
-- Privacy governance plus deployment action or deployment config.
-- Transcript access plus customer accounts, public quote tracking,
-  notifications, CRM, or SaaS chatbot runtime implementation.
 
 ## Previous merged status snapshot: Phase 2D-B
 

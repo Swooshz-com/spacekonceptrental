@@ -1322,3 +1322,28 @@ tracking, add notifications or CRM integration, change n8n/Pinecone runtime
 behavior, add SaaS chatbot runtime work, add browser Supabase, add
 service-role runtime paths, add ecommerce flows, or access
 `website/chat-config.js`.
+
+## 2026-06-04: Conversation Message Schema And RLS Foundation
+
+Decision: Phase 2E-B adds only the conversation/message schema and RLS foundation.
+
+Reason: PR #99 completed the privacy, retention, identity, and transcript
+governance prerequisites. The next safe bundle is to harden the existing
+`conversations` and `messages` tables locally before any runtime write or read
+path can treat transcript persistence as available. This keeps the database
+shape, constraints, and deny-by-default RLS proof separate from chat provider
+wiring, admin transcript access, customer accounts, public quote tracking,
+notifications, CRM, deployment, and chatbot runtime changes.
+
+The implementation keeps the existing table names, adds only additive
+metadata, retention, deletion marker, ordering, message-type, content-size, and
+metadata-safety constraints, and changes direct conversation/message RLS to
+fail closed for anonymous/public and authenticated client roles.
+
+Phase 2E-B does not deploy, add Vercel project config, connect Supabase Cloud,
+add production env files, add real secrets, add production seed data, add
+runtime transcript writes, add runtime transcript reads, add admin transcript
+UI, approve customer accounts, approve public quote tracking, add
+notifications or CRM integration, change n8n/Pinecone runtime behavior, add
+SaaS chatbot runtime work, add browser Supabase, add service-role runtime
+paths, add ecommerce flows, or access `website/chat-config.js`.

@@ -382,6 +382,19 @@ function statementFailsAs(
   );
 }
 
+function statementFails(
+  sql,
+  expectedError = /violates|invalid|permission denied|constraint|cannot/i,
+) {
+  const result = psql(sql, { check: false });
+  assert.notEqual(result.status, 0, `Statement unexpectedly succeeded: ${sql}`);
+  assert.match(
+    `${result.stdout}\n${result.stderr}`,
+    expectedError,
+    `Statement failed for an unexpected reason: ${result.stdout}${result.stderr}`,
+  );
+}
+
 function scalarAs(role, authUserId, sql) {
   return queryAs(role, authUserId, sql).trim();
 }
@@ -665,26 +678,6 @@ check('authenticated active member reads only their workspace admin data', () =>
     scalarAs(
       'authenticated',
       ids.authMemberA,
-      "select coalesce(string_agg(public_reference, ',' order by public_reference), '') from public.conversations",
-    ),
-    'conversation-a',
-    'member A should read only workspace A conversations',
-  );
-
-  assertCsv(
-    scalarAs(
-      'authenticated',
-      ids.authMemberA,
-      "select coalesce(string_agg(content, ',' order by content), '') from public.messages",
-    ),
-    'Fake message A',
-    'member A should read only workspace A messages',
-  );
-
-  assertCsv(
-    scalarAs(
-      'authenticated',
-      ids.authMemberA,
       "select coalesce(string_agg(display_name, ',' order by display_name), '') from public.integration_connections",
     ),
     'Test Provider A',
@@ -699,8 +692,6 @@ check('authenticated active member cannot read another workspace admin rows', ()
     ['quote_request_activity', `workspace_id = '${ids.workspaceB}'`],
     ['quote_requests', `workspace_id = '${ids.workspaceB}'`],
     ['quote_request_items', `workspace_id = '${ids.workspaceB}'`],
-    ['conversations', `workspace_id = '${ids.workspaceB}'`],
-    ['messages', `workspace_id = '${ids.workspaceB}'`],
     ['integration_connections', `workspace_id = '${ids.workspaceB}'`],
   ];
 
@@ -724,8 +715,6 @@ check('authenticated user without membership cannot read admin-only workspace ro
     'quote_request_activity',
     'quote_requests',
     'quote_request_items',
-    'conversations',
-    'messages',
     'integration_connections',
   ];
 
@@ -918,6 +907,188 @@ check('anonymous public reads do not return private workspace data', () => {
       `anon should not read ${table}`,
     );
   }
+});
+
+check('conversation and message transcript tables deny direct client reads and writes', () => {
+  for (const [role, authUserId] of [
+    ['anon', null],
+    ['authenticated', ids.authMemberA],
+    ['authenticated', ids.authMemberB],
+    ['authenticated', ids.authViewerA],
+    ['authenticated', ids.authNoMembership],
+  ]) {
+    for (const table of ['conversations', 'messages']) {
+      assert.equal(
+        scalarAs(role, authUserId, `select count(*)::text from public.${table}`),
+        '0',
+        `${role} should not read ${table}`,
+      );
+    }
+
+    statementFailsAs(
+      role,
+      authUserId,
+      `
+        insert into public.conversations (
+          workspace_id,
+          public_reference,
+          status
+        )
+        values (
+          '${ids.workspaceA}',
+          'direct-client-conversation-${role}-${authUserId || 'anon'}',
+          'open'
+        )
+      `,
+    );
+
+    statementFailsAs(
+      role,
+      authUserId,
+      `
+        insert into public.messages (
+          workspace_id,
+          conversation_id,
+          role,
+          content
+        )
+        values (
+          '${ids.workspaceA}',
+          '${ids.conversationA}',
+          'user',
+          'Direct client transcript write should fail.'
+        )
+      `,
+    );
+  }
+});
+
+check('conversation and message schema constraints reject unsafe transcript shapes', () => {
+  statementFails(
+    `
+      insert into public.conversations (
+        workspace_id,
+        public_reference,
+        client_session_hash
+      )
+      values (
+        '${ids.workspaceA}',
+        'unsafe-short-session-hash',
+        'raw-session'
+      )
+    `,
+    /conversations_client_session_hash_format_check/i,
+  );
+
+  statementFails(
+    `
+      insert into public.conversations (
+        workspace_id,
+        public_reference,
+        metadata
+      )
+      values (
+        '${ids.workspaceA}',
+        'unsafe-conversation-metadata',
+        '{"webhook_url": "blocked"}'::jsonb
+      )
+    `,
+    /conversations_metadata_safe_keys_check/i,
+  );
+
+  statementFails(
+    `
+      insert into public.messages (
+        workspace_id,
+        conversation_id,
+        role,
+        content
+      )
+      values (
+        '${ids.workspaceA}',
+        '${ids.conversationA}',
+        'tool',
+        'Invalid role should fail.'
+      )
+    `,
+    /messages_role_check/i,
+  );
+
+  statementFails(
+    `
+      insert into public.messages (
+        workspace_id,
+        conversation_id,
+        role,
+        message_type,
+        content
+      )
+      values (
+        '${ids.workspaceA}',
+        '${ids.conversationA}',
+        'assistant',
+        'provider_debug',
+        'Invalid message type should fail.'
+      )
+    `,
+    /messages_message_type_check/i,
+  );
+
+  statementFails(
+    `
+      insert into public.messages (
+        workspace_id,
+        conversation_id,
+        role,
+        content
+      )
+      values (
+        '${ids.workspaceA}',
+        '${ids.conversationA}',
+        'user',
+        repeat('x', 8001)
+      )
+    `,
+    /messages_content_length_check/i,
+  );
+
+  statementFails(
+    `
+      insert into public.messages (
+        workspace_id,
+        conversation_id,
+        role,
+        content,
+        metadata
+      )
+      values (
+        '${ids.workspaceA}',
+        '${ids.conversationA}',
+        'assistant',
+        'Unsafe metadata should fail.',
+        '{"provider_debug": true}'::jsonb
+      )
+    `,
+    /messages_metadata_safe_keys_check/i,
+  );
+
+  statementFails(
+    `
+      insert into public.messages (
+        workspace_id,
+        conversation_id,
+        role,
+        content
+      )
+      values (
+        '${ids.workspaceA}',
+        '${ids.conversationB}',
+        'user',
+        'Cross-workspace relationship should fail.'
+      )
+    `,
+    /messages_conversation_workspace_id_fkey/i,
+  );
 });
 
 check('anonymous public can create website quote rows without reading them back', () => {

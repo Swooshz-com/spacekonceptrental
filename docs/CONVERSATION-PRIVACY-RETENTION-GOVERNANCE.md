@@ -1,17 +1,48 @@
 # Conversation Privacy Retention Governance
 
-Phase 2E-A is governance planning and static guard coverage only. It records
-privacy, identity, retention, deletion/export, transcript access, and admin
-visibility decisions that must exist before future conversation/message
-persistence is implemented.
+Phase 2E-A recorded privacy, identity, retention, deletion/export, transcript
+access, and admin visibility decisions before future conversation/message
+persistence.
 
-Conversation/message persistence is not implemented. Transcript storage is not
-implemented. Admin transcript UI is not implemented. Customer accounts are not
-approved. Public quote tracking is not approved. Notifications are not
-approved. CRM integration is not approved. n8n/Pinecone runtime changes are
-not approved. SaaS chatbot runtime work is not approved. Deployment is not
-approved. Browser Supabase remains forbidden. Service-role runtime paths remain
-forbidden. `website/chat-config.js` access remains forbidden.
+Phase 2E-B adds the local conversation/message schema and RLS foundation only.
+It does not add runtime transcript writes, runtime transcript reads, admin
+transcript UI, public transcript access, customer accounts, public quote
+tracking, notifications, CRM integration, n8n/Pinecone runtime changes, SaaS
+chatbot runtime work, deployment, browser Supabase, service-role runtime paths,
+or `website/chat-config.js` access.
+
+Runtime transcript writes remain blocked. Runtime transcript reads remain
+blocked. Admin transcript UI remains blocked. Customer accounts remain blocked.
+Public quote tracking remains blocked. Notifications remain blocked. CRM
+integration remains blocked. n8n/Pinecone runtime changes remain blocked. SaaS
+chatbot runtime work remains blocked. Deployment remains blocked. Browser
+Supabase remains forbidden. Service-role runtime paths remain forbidden.
+`website/chat-config.js` access remains forbidden.
+
+## Phase 2E-B schema/RLS foundation
+
+The existing `conversations` and `messages` tables remain the stable table
+names. Phase 2E-B hardens them rather than creating parallel transcript tables
+or renaming unrelated database/API/RPC boundaries.
+
+`conversations` stores only workspace-scoped conversation metadata for future
+server-side persistence. It may hold a server-created non-reversible anonymous
+session hash for correlation, but that hash does not prove identity,
+ownership, workspace access, or transcript access. The table has bounded
+metadata, retention, deletion marker, last-message, status, and workspace-safe
+relationship constraints.
+
+`messages` stores only normalized message rows for a future server-side write
+path. It has bounded content, role/type constraints, bounded metadata,
+retention and deletion markers, optional sequence ordering, and workspace-safe
+conversation relationships. Metadata must stay minimal and must not contain
+provider diagnostics, workflow payloads, webhook URLs, forwarding headers,
+tokens, trace dumps, credentials, private keys, or raw operational dumps.
+
+Direct anonymous/public reads and writes are denied. Direct authenticated
+reads and writes are denied, including for current owner/admin workspace
+members, until a later reviewed server-side transcript write/read path exists.
+Admin transcript reads remain blocked by design in Phase 2E-B.
 
 ## Privacy and PII minimisation model
 
