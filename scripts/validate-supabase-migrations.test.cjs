@@ -297,7 +297,7 @@ test('real migration directory passes static validation', () => {
   const result = runValidator(realMigrationsDir);
 
   assert.equal(result.status, 0, result.stdout + result.stderr);
-  assert.match(result.stdout, /checked 9 migration SQL file\(s\)/);
+  assert.match(result.stdout, /checked 10 migration SQL file\(s\)/);
 });
 
 test('real base schema migration creates the planned MVP tables', () => {
@@ -445,8 +445,22 @@ test('real migrations add narrow anonymous website quote insert policies only', 
     sql,
     /create policy .* on public\.quote_request_items for select to anon/,
   );
-  assert.doesNotMatch(sql, /for update to anon/);
-  assert.doesNotMatch(sql, /for delete to anon/);
+  assert.doesNotMatch(
+    sql,
+    /on public\.quote_requests for update to anon/,
+  );
+  assert.doesNotMatch(
+    sql,
+    /on public\.quote_requests for delete to anon/,
+  );
+  assert.doesNotMatch(
+    sql,
+    /on public\.quote_request_items for update to anon/,
+  );
+  assert.doesNotMatch(
+    sql,
+    /on public\.quote_request_items for delete to anon/,
+  );
 });
 
 test('real migrations add admin-only quote workflow activity policies', () => {
@@ -498,7 +512,7 @@ test('real migrations add admin-only quote workflow activity policies', () => {
   );
   assert.doesNotMatch(
     sql,
-    /create policy .* on public\.quote_request_activity .* to anon/,
+    /create policy [^;]* on public\.quote_request_activity [^;]* to anon/,
   );
 });
 
@@ -665,20 +679,105 @@ test('real migrations do not enable anonymous chat persistence writes', () => {
     );
     assert.doesNotMatch(
       sql,
-      new RegExp(`create policy .* on public\\.${tableName} for insert to anon`),
-      `${tableName} should not have anonymous insert policies`,
+      new RegExp(`create policy (?!${tableName}_no_direct_)[^;]* on public\\.${tableName} for insert to anon`),
+      `${tableName} should not have anonymous insert policies except fail-closed direct-deny policies`,
     );
     assert.doesNotMatch(
       sql,
-      new RegExp(`create policy .* on public\\.${tableName} for update to anon`),
-      `${tableName} should not have anonymous update policies`,
+      new RegExp(`create policy (?!${tableName}_no_direct_)[^;]* on public\\.${tableName} for update to anon`),
+      `${tableName} should not have anonymous update policies except fail-closed direct-deny policies`,
     );
     assert.doesNotMatch(
       sql,
-      new RegExp(`create policy .* on public\\.${tableName} for delete to anon`),
-      `${tableName} should not have anonymous delete policies`,
+      new RegExp(`create policy (?!${tableName}_no_direct_)[^;]* on public\\.${tableName} for delete to anon`),
+      `${tableName} should not have anonymous delete policies except fail-closed direct-deny policies`,
     );
   }
+});
+
+test('real migrations add the Phase 2E-B conversation/message schema and RLS foundation', () => {
+  const migrationFileName = '20260604090000_conversation_message_schema_rls_foundation.sql';
+  const migrationPath = path.join(realMigrationsDir, migrationFileName);
+  assert.ok(fs.existsSync(migrationPath), `Missing ${migrationFileName}`);
+
+  const migration = normalizeSql(fs.readFileSync(migrationPath, 'utf8'));
+
+  assert.match(
+    migration,
+    /alter table public\.conversations add column if not exists metadata jsonb not null default '\{\}'::jsonb/,
+  );
+  assert.match(
+    migration,
+    /alter table public\.conversations add column if not exists retention_expires_at timestamptz/,
+  );
+  assert.match(
+    migration,
+    /alter table public\.conversations add column if not exists deleted_at timestamptz/,
+  );
+  assert.match(
+    migration,
+    /alter table public\.conversations add column if not exists last_message_at timestamptz/,
+  );
+  assert.match(
+    migration,
+    /constraint conversations_client_session_hash_format_check check/,
+  );
+  assert.match(
+    migration,
+    /constraint conversations_metadata_safe_keys_check check/,
+  );
+
+  assert.match(
+    migration,
+    /alter table public\.messages add column if not exists message_type text not null default 'chat'/,
+  );
+  assert.match(
+    migration,
+    /alter table public\.messages add column if not exists metadata jsonb not null default '\{\}'::jsonb/,
+  );
+  assert.match(
+    migration,
+    /alter table public\.messages add column if not exists retention_expires_at timestamptz/,
+  );
+  assert.match(
+    migration,
+    /alter table public\.messages add column if not exists deleted_at timestamptz/,
+  );
+  assert.match(
+    migration,
+    /alter table public\.messages add column if not exists sequence_number integer/,
+  );
+  assert.match(migration, /constraint messages_message_type_check check/);
+  assert.match(migration, /constraint messages_role_type_check check/);
+  assert.match(migration, /constraint messages_content_length_check check/);
+  assert.match(migration, /constraint messages_metadata_safe_keys_check check/);
+
+  assert.match(
+    migration,
+    /alter policy conversations_member_read on public\.conversations using \(false\);/,
+  );
+  assert.match(
+    migration,
+    /alter policy messages_member_read on public\.messages using \(false\);/,
+  );
+
+  for (const tableName of ['conversations', 'messages']) {
+    for (const action of ['insert', 'update', 'delete']) {
+      assert.match(
+        migration,
+        new RegExp(`create policy ${tableName}_no_direct_${action} on public\\.${tableName}`),
+        `${tableName} should have a fail-closed ${action} policy`,
+      );
+    }
+
+    assert.doesNotMatch(
+      migration,
+      new RegExp(`grant\\s+(select|insert|update|delete|all)[\\s\\S]*on public\\.${tableName} to (anon|authenticated);`),
+      `${tableName} should not grant direct client access`,
+    );
+  }
+
+  assert.doesNotMatch(migration, /webhook-test|raw_provider_payload|raw_headers/i);
 });
 
 test('real RLS policy migration scopes admin reads through workspace membership', () => {

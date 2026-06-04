@@ -197,19 +197,29 @@ Suggested first PR:
 - Phase 2E-A adds the privacy, identity, retention, deletion/export,
   transcript-access, admin-visibility, idempotency, and redaction governance
   doc with static guards, without enabling writes.
+- Phase 2E-B follows with the local conversation/message schema and RLS
+  foundation only, without runtime transcript writes, transcript reads, admin
+  transcript UI, customer accounts, public quote tracking, notifications, CRM,
+  n8n/Pinecone runtime changes, SaaS chatbot runtime work, deployment,
+  browser Supabase, service-role runtime paths, or `website/chat-config.js`
+  access.
 
-Current Phase 2E-A status:
+Current Phase 2E-B status:
 
-- Conversation/message persistence is not implemented.
-- Transcript storage is not implemented.
-- Admin transcript UI is not implemented.
-- Customer accounts are not approved.
-- Public quote tracking is not approved.
-- Notifications are not approved.
-- CRM integration is not approved.
-- n8n/Pinecone runtime changes are not approved.
-- SaaS chatbot runtime work is not approved.
-- Deployment is not approved.
+- The existing `conversations` and `messages` tables now have the local schema
+  and RLS foundation needed for a future reviewed persistence path.
+- Direct anonymous/public and authenticated client reads and writes are denied
+  by RLS.
+- Runtime transcript writes remain blocked.
+- Runtime transcript reads remain blocked.
+- Admin transcript UI remains blocked.
+- Customer accounts remain blocked.
+- Public quote tracking remains blocked.
+- Notifications remain blocked.
+- CRM integration remains blocked.
+- n8n/Pinecone runtime changes remain blocked.
+- SaaS chatbot runtime work remains blocked.
+- Deployment remains blocked.
 - Browser Supabase remains forbidden.
 - Service-role runtime paths remain forbidden.
 - `website/chat-config.js` access remains forbidden.

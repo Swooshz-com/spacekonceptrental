@@ -35,7 +35,7 @@ function readTrackedProductionSources(paths: string[]) {
 }
 
 describe("Phase 2E-A conversation privacy and retention governance", () => {
-  it("records Phase 2E-A as current and Phase 2D-B / PR #98 as completed", () => {
+  it("keeps Phase 2E-A recorded as the previous merged governance snapshot", () => {
     const status = readRepoFile("docs/PHASE-STATUS.md");
     const roadmap = readRepoFile("docs/PHASE-ROADMAP.md");
     const decisionLog = readRepoFile("docs/DECISION-LOG.md");
@@ -45,17 +45,13 @@ describe("Phase 2E-A conversation privacy and retention governance", () => {
     );
 
     expect(status).toContain(
+      "Previous merged status snapshot: Phase 2E-A"
+    );
+    expect(status).toContain(
       "Current phase: Phase 2E-A - privacy, retention, identity, and conversation/message governance planning."
     );
     expect(status).toContain(
       "Latest completed phase: Phase 2D-B - post-readiness status, remaining-work map, and evidence guard reconciliation."
-    );
-    expect(status).toContain("Last merged phase PR: #98");
-    expect(status).toContain(
-      "Merge commit: `173138e81e612e8effe54803c495c056f2c5bfd3`"
-    );
-    expect(status).toContain(
-      "Previous merged status snapshot: Phase 2D-B"
     );
     expect(roadmap).toContain(
       "Phase 2E-A adds privacy, retention, identity, and conversation/message governance planning"
@@ -67,7 +63,10 @@ describe("Phase 2E-A conversation privacy and retention governance", () => {
       "PHASE-2E-CONVERSATION-GOVERNANCE.md"
     );
     expect(checklist).toContain(
-      "Phase 2E-A Conversation Privacy And Retention Governance"
+      "Phase 2E Conversation Governance And Persistence Foundation"
+    );
+    expect(checklist).toContain(
+      "Static guards prove Phase 2E-A stays governance-only"
     );
   });
 
@@ -102,7 +101,7 @@ describe("Phase 2E-A conversation privacy and retention governance", () => {
     );
   });
 
-  it("keeps conversation/message persistence and runtime expansion explicitly blocked", () => {
+  it("keeps transcript runtime expansion explicitly blocked after the schema/RLS foundation", () => {
     const docs = [
       "docs/CONVERSATION-PRIVACY-RETENTION-GOVERNANCE.md",
       "docs/PHASE-STATUS.md",
@@ -118,16 +117,16 @@ describe("Phase 2E-A conversation privacy and retention governance", () => {
     const normalizedDocs = docs.toLowerCase();
 
     for (const forbiddenBoundary of [
-      "conversation/message persistence is not implemented",
-      "transcript storage is not implemented",
-      "admin transcript UI is not implemented",
-      "customer accounts are not approved",
-      "public quote tracking is not approved",
-      "notifications are not approved",
-      "CRM integration is not approved",
-      "n8n/Pinecone runtime changes are not approved",
-      "SaaS chatbot runtime work is not approved",
-      "deployment is not approved",
+      "runtime transcript writes remain blocked",
+      "runtime transcript reads remain blocked",
+      "admin transcript UI remains blocked",
+      "customer accounts remain blocked",
+      "public quote tracking remains blocked",
+      "notifications remain blocked",
+      "CRM integration remains blocked",
+      "n8n/Pinecone runtime changes remain blocked",
+      "SaaS chatbot runtime work remains blocked",
+      "deployment remains blocked",
       "browser Supabase remains forbidden",
       "service-role runtime paths remain forbidden",
       "`website/chat-config.js` access remains forbidden"
@@ -136,18 +135,13 @@ describe("Phase 2E-A conversation privacy and retention governance", () => {
     }
   });
 
-  it("does not introduce persistence tables, transcript routes, customer accounts, quote tracking, deployment config, or unsafe runtime code", () => {
+  it("does not introduce transcript routes, customer accounts, quote tracking, deployment config, or unsafe runtime code", () => {
     const productionSource = readTrackedProductionSources([
       "website/app",
       "website/components",
       "website/lib"
     ]);
 
-    expect(
-      readTrackedFiles(["supabase/migrations"]).filter((filePath) =>
-        /conversation|message|transcript/i.test(filePath)
-      )
-    ).toEqual([]);
     expect(readTrackedFiles(["website/app/api/transcripts"])).toEqual([]);
     expect(readTrackedFiles(["website/app/api/conversations"])).toEqual([]);
     expect(readTrackedFiles(["website/app/api/messages"])).toEqual([]);

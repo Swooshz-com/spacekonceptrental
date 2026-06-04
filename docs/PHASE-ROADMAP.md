@@ -746,3 +746,20 @@ is not approved, n8n/Pinecone runtime changes are not approved, SaaS chatbot
 runtime work is not approved, deployment is not approved, browser Supabase
 remains forbidden, service-role runtime paths remain forbidden, and
 `website/chat-config.js` access remains forbidden.
+
+Phase 2E-B adds the conversation/message schema and RLS foundation only. It
+hardens the existing `conversations` and `messages` tables with additive
+metadata, retention, deletion marker, ordering, message-type, content-size,
+and metadata-safety constraints, and it changes direct conversation/message
+RLS to fail closed for anonymous/public and authenticated client roles.
+
+Phase 2E-B does not wire runtime transcript writes, runtime transcript reads,
+admin transcript UI, public transcript access, customer accounts, public quote
+tracking, notifications, CRM integration, n8n/Pinecone runtime changes, SaaS
+chatbot runtime work, deployment config, Supabase Cloud actions, browser
+Supabase, service-role runtime paths, ecommerce flows, or
+`website/chat-config.js` access. Runtime transcript writes remain blocked.
+Runtime transcript reads remain blocked. Admin transcript UI remains blocked.
+Customer accounts remain blocked. Public quote tracking remains blocked.
+Notifications remain blocked. CRM integration remains blocked. Deployment
+remains blocked.
