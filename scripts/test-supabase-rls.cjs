@@ -178,10 +178,16 @@ function waitForDatabase() {
     );
 
     if (result.status === 0) {
-      return;
-    }
+      const queryResult = psql('select 1;', { check: false });
 
-    lastError = `${result.stdout}${result.stderr}`.trim();
+      if (queryResult.status === 0) {
+        return;
+      }
+
+      lastError = `${queryResult.stdout}${queryResult.stderr}`.trim();
+    } else {
+      lastError = `${result.stdout}${result.stderr}`.trim();
+    }
     Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 500);
   }
 
@@ -1088,6 +1094,155 @@ check('conversation and message schema constraints reject unsafe transcript shap
       )
     `,
     /messages_conversation_workspace_id_fkey/i,
+  );
+});
+
+check('transcript persistence RPC stays ungranted to direct client roles', () => {
+  for (const [role, authUserId] of [
+    ['anon', null],
+    ['authenticated', ids.authMemberA],
+    ['authenticated', ids.authMemberB],
+    ['authenticated', ids.authViewerA],
+    ['authenticated', ids.authNoMembership],
+  ]) {
+    statementFailsAs(
+      role,
+      authUserId,
+      `
+        select public.persist_transcript_batch(
+          '${ids.workspaceA}'::uuid,
+          '{}'::jsonb,
+          '[]'::jsonb
+        )
+      `,
+    );
+  }
+});
+
+check('transcript persistence RPC has a DB-backed client_message_id idempotency arbiter', () => {
+  assert.equal(
+    psql(`
+      select count(*)::text
+      from pg_constraint
+      where conrelid = 'public.messages'::regclass
+        and conname = 'messages_workspace_conversation_client_message_key'
+        and contype = 'u'
+    `),
+    '1',
+    'client_message_id retries must be protected by a database uniqueness constraint for concurrency safety',
+  );
+});
+
+check('transcript persistence RPC persists idempotent batches for privileged executor only', () => {
+  const conversationId = '80000000-0000-4000-8000-000000000101';
+  const firstMessageId = '90000000-0000-4000-8000-000000000101';
+  const duplicateMessageId = '90000000-0000-4000-8000-000000000102';
+  const clientMessageId = 'rpc-client-message-a';
+  const first = psql(`
+    select public.persist_transcript_batch(
+      '${ids.workspaceA}'::uuid,
+      jsonb_build_object(
+        'id', '${conversationId}',
+        'workspace_id', '${ids.workspaceA}',
+        'public_reference', 'rpc-conversation-a',
+        'client_session_hash', repeat('d', 64),
+        'status', 'open',
+        'retention_expires_at', '2026-07-04T00:00:00.000Z',
+        'metadata', jsonb_build_object('entryPoint', 'rls-test')
+      ),
+      jsonb_build_array(
+        jsonb_build_object(
+          'id', '${firstMessageId}',
+          'workspace_id', '${ids.workspaceA}',
+          'conversation_id', '${conversationId}',
+          'role', 'user',
+          'message_type', 'chat',
+          'content', 'I need chairs for an event.',
+          'client_message_id', '${clientMessageId}',
+          'request_id', 'rls-request-a',
+          'sequence_number', 0,
+          'retention_expires_at', '2026-07-04T00:00:00.000Z',
+          'metadata', jsonb_build_object('source', 'rls-test')
+        )
+      )
+    )::text;
+  `);
+
+  assert.match(first, new RegExp(firstMessageId));
+
+  const second = psql(`
+    select public.persist_transcript_batch(
+      '${ids.workspaceA}'::uuid,
+      jsonb_build_object(
+        'id', '${conversationId}',
+        'workspace_id', '${ids.workspaceA}',
+        'public_reference', 'rpc-conversation-a',
+        'client_session_hash', repeat('d', 64),
+        'status', 'open',
+        'metadata', jsonb_build_object('entryPoint', 'rls-test')
+      ),
+      jsonb_build_array(
+        jsonb_build_object(
+          'id', '${duplicateMessageId}',
+          'workspace_id', '${ids.workspaceA}',
+          'conversation_id', '${conversationId}',
+          'role', 'user',
+          'message_type', 'chat',
+          'content', 'Duplicate browser retry should not create another row.',
+          'client_message_id', '${clientMessageId}',
+          'request_id', 'rls-request-a-retry',
+          'sequence_number', 0,
+          'metadata', jsonb_build_object('source', 'rls-test')
+        )
+      )
+    )::text;
+  `);
+
+  assert.match(second, new RegExp(firstMessageId));
+  assert.doesNotMatch(second, new RegExp(duplicateMessageId));
+  assert.equal(
+    psql(
+      `
+        select count(*)::text
+        from public.messages
+        where workspace_id = '${ids.workspaceA}'
+          and conversation_id = '${conversationId}'
+          and client_message_id = '${clientMessageId}'
+      `
+    ),
+    '1',
+    'duplicate clientMessageId should not insert another message',
+  );
+});
+
+check('transcript persistence RPC rejects unsafe metadata before inserts', () => {
+  const conversationId = '80000000-0000-4000-8000-000000000201';
+  const messageId = '90000000-0000-4000-8000-000000000201';
+
+  statementFails(
+    `
+      select public.persist_transcript_batch(
+        '${ids.workspaceA}'::uuid,
+        jsonb_build_object(
+          'id', '${conversationId}',
+          'workspace_id', '${ids.workspaceA}',
+          'public_reference', 'rpc-unsafe-metadata',
+          'metadata', jsonb_build_object('webhook_url', 'blocked')
+        ),
+        jsonb_build_array(
+          jsonb_build_object(
+            'id', '${messageId}',
+            'workspace_id', '${ids.workspaceA}',
+            'conversation_id', '${conversationId}',
+            'role', 'user',
+            'message_type', 'chat',
+            'content', 'Unsafe conversation metadata should fail.',
+            'metadata', jsonb_build_object('source', 'rls-test')
+          )
+        )
+      )
+    `,
+    /transcript_metadata_unsafe/i,
   );
 });
 

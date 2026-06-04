@@ -74,6 +74,61 @@ export type BatchTranscriptPersistenceCommand = {
   messages: MessagePersistenceCommand[];
 };
 
+export type TranscriptPersistenceRpcConversationPayload = {
+  id: string;
+  workspace_id: string;
+  public_reference: string;
+  client_session_hash: string | null;
+  quote_request_id: string | null;
+  status: TranscriptConversationStatus;
+  retention_expires_at: string | null;
+  metadata: TranscriptMetadataInput;
+};
+
+export type TranscriptPersistenceRpcMessagePayload = {
+  id: string;
+  workspace_id: string;
+  conversation_id: string;
+  role: TranscriptPersistenceMessageRole;
+  message_type: TranscriptPersistenceMessageType;
+  content: string;
+  provider: string | null;
+  client_message_id: string | null;
+  request_id: string | null;
+  sequence_number: number | null;
+  retention_expires_at: string | null;
+  metadata: TranscriptMetadataInput;
+};
+
+export type TranscriptPersistenceRpcPayload = {
+  p_workspace_id: string;
+  p_conversation: TranscriptPersistenceRpcConversationPayload;
+  p_messages: TranscriptPersistenceRpcMessagePayload[];
+};
+
+export type TranscriptPersistenceRpcExecutorResult =
+  | {
+      ok: true;
+      conversationId: string;
+      messageIds: string[];
+    }
+  | {
+      ok: false;
+      reason: "rpc_rejected" | "rpc_unavailable" | "rpc_failed";
+    };
+
+export type TranscriptPersistenceRpcExecutor = {
+  persistTranscriptBatch(
+    payload: TranscriptPersistenceRpcPayload
+  ):
+    | TranscriptPersistenceRpcExecutorResult
+    | Promise<TranscriptPersistenceRpcExecutorResult>;
+};
+
+export type TranscriptPersistenceRpcAdapterDependencies = {
+  executor?: TranscriptPersistenceRpcExecutor;
+};
+
 export type TranscriptPersistenceRejectReason =
   | "trusted_workspace_missing"
   | "conversation_id_invalid"

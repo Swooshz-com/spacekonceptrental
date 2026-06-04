@@ -206,8 +206,12 @@ Suggested first PR:
 - Phase 2E-C follows with the server-only TypeScript persistence contract,
   validation/minimisation helpers, safe command shaping, and fake/injected
   adapter tests only, without wiring runtime transcript writes or reads.
+- Phase 2E-D follows with the server-only transcript persistence RPC/adapter
+  boundary, including a local ungranted SQL/RPC contract and an injected
+  TypeScript executor adapter only, without wiring runtime transcript writes or
+  reads.
 
-Current Phase 2E-C status:
+Current Phase 2E-D status:
 
 - The existing `conversations` and `messages` tables now have the local schema
   and RLS foundation needed for a future reviewed persistence path.
@@ -215,6 +219,13 @@ Current Phase 2E-C status:
   by RLS.
 - The server-only transcript persistence contract and validation boundary are
   now defined behind injected adapter dependencies only.
+- The local transcript persistence RPC boundary is defined for validated
+  trusted-workspace conversation/message batches and remains ungranted to
+  anonymous/public and authenticated browser roles.
+- The server-only RPC adapter maps the validated command into an injected
+  executor payload only; it does not instantiate Supabase, read env, read
+  cookies/headers, or use `website/chat-config.js`.
+- The default persistence adapter remains unavailable.
 - Trusted workspace IDs are server-owned inputs; anonymous session hashes are
   correlation only; `clientMessageId` is idempotency/deduplication only.
 - Validation rejects invalid workspace IDs, unsafe server-generated IDs,

@@ -1373,3 +1373,29 @@ admin transcript UI, approve customer accounts, approve public quote tracking,
 add notifications or CRM integration, change n8n/Pinecone runtime behavior,
 add SaaS chatbot runtime work, add browser Supabase, add service-role runtime
 paths, add ecommerce flows, or access `website/chat-config.js`.
+
+## 2026-06-04: Server-only Transcript Persistence RPC/Adapter Boundary
+
+Decision: Phase 2E-D adds only the server-only transcript persistence RPC/adapter boundary.
+
+Reason: PR #101 completed the server-only transcript persistence contract and
+validation boundary at merge commit
+`cfc48f132e170121e1eb90f6b1af4c60762a7227`. The next safe bundle is a local
+database/RPC and adapter boundary that can be tested without making transcript
+persistence available to `/api/chat` or browser roles.
+
+The implementation adds an ungranted local `persist_transcript_batch` SQL/RPC
+contract for validated trusted-workspace conversation/message batches, repeats
+safe metadata checks at the database edge, preserves retention fields,
+preserves anonymous session hashes only as correlation, and preserves
+`clientMessageId` as idempotency/deduplication only. It also adds a server-only
+TypeScript adapter that maps the Phase 2E-C command into an injected RPC
+executor payload. The default persistence adapter remains unavailable.
+
+Phase 2E-D does not deploy, add Vercel project config, connect Supabase Cloud,
+add production env files, add real secrets, add production seed data, wire
+runtime transcript writes into `/api/chat`, add runtime transcript reads, add
+admin transcript UI, approve customer accounts, approve public quote tracking,
+add notifications or CRM integration, change n8n/Pinecone runtime behavior,
+add SaaS chatbot runtime work, add browser Supabase, add service-role runtime
+paths, add ecommerce flows, or access `website/chat-config.js`.

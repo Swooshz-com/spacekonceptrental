@@ -8,6 +8,7 @@ import {
   createTranscriptPersistenceCommand,
   persistTranscriptCommand
 } from "./contract";
+import { createRpcTranscriptPersistenceAdapter } from "./rpc-transcript-persistence-adapter";
 import type {
   BatchTranscriptPersistenceCommand,
   ConversationPersistenceCommand,
@@ -26,12 +27,19 @@ import type {
   TranscriptPersistencePersistedResult,
   TranscriptPersistenceRejectReason,
   TranscriptPersistenceRejectedResult,
+  TranscriptPersistenceRpcAdapterDependencies,
+  TranscriptPersistenceRpcConversationPayload,
+  TranscriptPersistenceRpcExecutor,
+  TranscriptPersistenceRpcExecutorResult,
+  TranscriptPersistenceRpcMessagePayload,
+  TranscriptPersistenceRpcPayload,
   TranscriptPersistenceResult,
   TranscriptPersistenceUnavailableResult
 } from "./types";
 
 export {
   createTranscriptPersistenceCommand,
+  createRpcTranscriptPersistenceAdapter,
   disabledChatPersistence,
   DisabledChatPersistence,
   persistTranscriptCommand
@@ -54,6 +62,12 @@ export type {
   TranscriptPersistencePersistedResult,
   TranscriptPersistenceRejectReason,
   TranscriptPersistenceRejectedResult,
+  TranscriptPersistenceRpcAdapterDependencies,
+  TranscriptPersistenceRpcConversationPayload,
+  TranscriptPersistenceRpcExecutor,
+  TranscriptPersistenceRpcExecutorResult,
+  TranscriptPersistenceRpcMessagePayload,
+  TranscriptPersistenceRpcPayload,
   TranscriptPersistenceResult,
   TranscriptPersistenceUnavailableResult
 };

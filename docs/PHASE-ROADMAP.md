@@ -784,3 +784,23 @@ blocked. Runtime transcript reads remain blocked. Admin transcript UI remains
 blocked. Customer accounts remain blocked. Public quote tracking remains
 blocked. Browser Supabase remains forbidden. Service-role runtime paths remain
 forbidden.
+
+Phase 2E-D adds the server-only transcript persistence RPC/adapter boundary.
+It adds a local Supabase SQL/RPC contract for validated trusted-workspace
+conversation/message batches, keeps `clientMessageId` as idempotency only,
+keeps anonymous session hashes as correlation only, preserves retention fields
+and minimised metadata, and keeps browser roles ungranted. It also adds a
+server-only TypeScript adapter that maps the Phase 2E-C command into an
+injected RPC executor payload.
+
+Phase 2E-D does not wire runtime transcript writes, runtime transcript reads,
+admin transcript UI, public transcript access, customer accounts, public quote
+tracking, notifications, CRM integration, n8n/Pinecone runtime changes, SaaS
+chatbot runtime work, deployment config, Supabase Cloud actions, browser
+Supabase, service-role runtime paths, ecommerce flows, or
+`website/chat-config.js` access. It does not create a live service-role runtime
+path and `/api/chat` remains unwired. Runtime transcript writes remain blocked.
+Runtime transcript reads remain blocked. Admin transcript UI remains blocked.
+Customer accounts remain blocked. Public quote tracking remains blocked.
+Browser Supabase remains forbidden. Service-role runtime paths remain
+forbidden.
