@@ -85,6 +85,18 @@ Current database and API internals still use names such as `products`, `categori
   the local foundation and the readiness plan keeps deployment, product writes,
   conversation/message persistence, Storage, admin/auth UI, and internal RAG
   work behind separate Phase 2 decisions.
+- Phase 2E-A conversation privacy and retention governance is documented
+  before transcript persistence. It records PII minimisation, anonymous visitor
+  identity, future authenticated/admin-linked identity considerations,
+  retention, deletion/export, transcript access, admin visibility,
+  idempotency, and redaction expectations. Conversation/message persistence is
+  not implemented, transcript storage is not implemented, admin transcript UI
+  is not implemented, customer accounts are not approved, public quote tracking
+  is not approved, notifications are not approved, CRM integration is not
+  approved, n8n/Pinecone runtime changes are not approved, SaaS chatbot runtime
+  work is not approved, deployment is not approved, browser Supabase remains
+  forbidden, service-role runtime paths remain forbidden, and
+  `website/chat-config.js` access remains forbidden.
 - Phase 2A-A deployment smoke-test preparation is docs-only. It provides an
   operator runbook, unchecked readiness checklist, and evidence template for a
   future reviewed deployment PR, while deployment, Supabase Cloud connection,

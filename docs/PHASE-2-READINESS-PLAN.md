@@ -194,8 +194,25 @@ What should still be forbidden:
 
 Suggested first PR:
 
-- Add the privacy, identity, retention, and transcript-access decision doc with
-  non-failing static guards, without enabling writes.
+- Phase 2E-A adds the privacy, identity, retention, deletion/export,
+  transcript-access, admin-visibility, idempotency, and redaction governance
+  doc with static guards, without enabling writes.
+
+Current Phase 2E-A status:
+
+- Conversation/message persistence is not implemented.
+- Transcript storage is not implemented.
+- Admin transcript UI is not implemented.
+- Customer accounts are not approved.
+- Public quote tracking is not approved.
+- Notifications are not approved.
+- CRM integration is not approved.
+- n8n/Pinecone runtime changes are not approved.
+- SaaS chatbot runtime work is not approved.
+- Deployment is not approved.
+- Browser Supabase remains forbidden.
+- Service-role runtime paths remain forbidden.
+- `website/chat-config.js` access remains forbidden.
 
 ### D. Supabase Storage/product media path
 

@@ -1297,3 +1297,28 @@ add customer uploads, add arbitrary public upload routes, add public quote
 status tracking, add customer-visible internal notes, add notifications or CRM
 integration, change n8n/Pinecone runtime behavior, add SaaS chatbot runtime
 work, add ecommerce flows, or access `website/chat-config.js`.
+
+## 2026-06-04: Conversation Privacy Retention And Identity Governance
+
+Decision: Phase 2E-A documents conversation privacy, retention, identity, and transcript governance before future persistence work.
+
+Reason: Conversation and message records are privacy-sensitive. The next safe
+bundle after PR #98 is to decide the governance model before any migration,
+write path, transcript read path, admin UI, customer account, public quote
+tracking, notification, CRM, n8n/Pinecone runtime, SaaS chatbot runtime, or
+deployment work can accidentally treat transcript storage as already approved.
+
+The governance model documents PII minimisation, anonymous visitor identity,
+future authenticated/admin-linked identity considerations, retention rules,
+deletion/export expectations, transcript access rules, admin visibility
+boundaries, future persistence idempotency expectations, and redaction
+guidance.
+
+Phase 2E-A does not deploy, add Vercel project config, connect Supabase Cloud,
+add production env files, add real secrets, add production seed data, add
+conversation/message persistence, add transcript storage, add transcript
+reads, add admin transcript UI, approve customer accounts, approve public quote
+tracking, add notifications or CRM integration, change n8n/Pinecone runtime
+behavior, add SaaS chatbot runtime work, add browser Supabase, add
+service-role runtime paths, add ecommerce flows, or access
+`website/chat-config.js`.

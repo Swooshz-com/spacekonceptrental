@@ -1,0 +1,167 @@
+# Conversation Privacy Retention Governance
+
+Phase 2E-A is governance planning and static guard coverage only. It records
+privacy, identity, retention, deletion/export, transcript access, and admin
+visibility decisions that must exist before future conversation/message
+persistence is implemented.
+
+Conversation/message persistence is not implemented. Transcript storage is not
+implemented. Admin transcript UI is not implemented. Customer accounts are not
+approved. Public quote tracking is not approved. Notifications are not
+approved. CRM integration is not approved. n8n/Pinecone runtime changes are
+not approved. SaaS chatbot runtime work is not approved. Deployment is not
+approved. Browser Supabase remains forbidden. Service-role runtime paths remain
+forbidden. `website/chat-config.js` access remains forbidden.
+
+## Privacy and PII minimisation model
+
+Future chat persistence must treat every conversation and message as
+privacy-sensitive. Store only the minimum fields needed for support continuity,
+quote handoff, abuse review, and safe analytics after those use cases are
+approved.
+
+The default storage model should avoid:
+
+- Raw provider debug payloads.
+- n8n internals, node names, workflow traces, webhook URLs, and provider error
+  details.
+- Raw forwarding headers, IP addresses, user agent strings, and trace IDs.
+- Payment details, credentials, private event addresses, government IDs, or
+  other sensitive content unless a later approved workflow has a specific field,
+  purpose, and retention rule.
+
+If sensitive text appears in a customer message, future persistence should keep
+the customer-visible message only when it is necessary for support context and
+should redact or avoid copying sensitive fragments into summaries, analytics,
+operator notes, exports, or logs.
+
+## Anonymous visitor identity model
+
+Anonymous chat must remain unlinkable to a named customer account. A browser
+provided `clientSessionId` may be used only as an untrusted correlation and
+rate-limit hint. It must not prove identity, ownership, workspace, or transcript
+access.
+
+Future persistence may store a non-reversible session hash only if the hash is
+created server-side, scoped to the trusted workspace, and documented with an
+expiry and deletion rule. The raw anonymous session identifier should not be
+stored unless a later privacy review approves a narrower reason.
+
+Anonymous conversation identifiers must be generated server-side. Browser
+provided conversation IDs may be treated only as untrusted lookup or
+idempotency hints after the server verifies the trusted workspace and future
+access policy.
+
+## Future authenticated/admin-linked identity considerations
+
+Future authenticated identity is separate from anonymous chat. Customer
+accounts are not approved in Phase 2E-A, and no public account, login, profile,
+or quote-tracking surface is added by this phase.
+
+If authenticated customer identity is approved later, it must define:
+
+- How an anonymous conversation can be linked only after an authenticated
+  customer action proves ownership.
+- Whether old anonymous transcripts remain separate from the new account.
+- What admins can see about account-linked transcripts.
+- How exports and deletion requests handle anonymous and authenticated records.
+
+Admin-linked identity is also future work. Admin users may be associated with
+internal transcript review actions only after protected admin access, role
+checks, audit expectations, and transcript permissions are implemented.
+
+## Conversation/message retention rules
+
+Retention timers must be defined before any migration stores transcripts.
+Future retention rules should name separate windows for:
+
+- Raw conversation/message content.
+- Redacted summaries or quote handoff context.
+- Provider metadata allowed by privacy review.
+- Abuse-review records.
+- Admin audit events for transcript access or deletion/export actions.
+
+The default policy should prefer short transcript retention unless longer
+retention is needed for a documented support, legal, audit, or quote-follow-up
+purpose. Retention expiry should delete or anonymise stored content instead of
+leaving it available indefinitely.
+
+## Deletion and export expectations
+
+Future deletion/export support must be defined before transcript persistence is
+implemented. The design should support a way to locate records by server-owned
+conversation reference, future verified account identity, or another approved
+lookup path without trusting anonymous browser input as ownership.
+
+Deletion should remove or anonymise conversation content, message content, and
+unnecessary correlation metadata when the approved retention or user-request
+rule applies. Export should include only customer-relevant transcript content
+and approved metadata, not provider internals, webhook details, raw headers,
+tokens, workspace internals, admin-only notes, or unrelated records.
+
+## Transcript access rules
+
+Admins may view transcripts only through a future protected admin boundary.
+Transcript access must require owner/admin membership for the trusted workspace,
+use server-only authorization, and return generic unavailable states on
+provider or policy failures.
+
+Public visitors must not get a public transcript lookup, quote status tracker,
+or account-linked transcript page in Phase 2E-A. Any future public transcript
+access must prove ownership through a separately approved identity model.
+
+## Admin visibility boundaries
+
+Admin visibility should be need-to-know. Future admin transcript views should
+show only the fields required to support a furniture/event-rental enquiry or
+quote follow-up. Admins should not see raw provider diagnostics, secrets,
+tokens, webhook URLs, raw headers, service-role details, workspace internals,
+or unrelated tenant data.
+
+Any future admin transcript access should be auditable. Audit events should
+record safe metadata such as action type, trusted workspace, approved admin
+actor, and timestamp, without copying full transcript content into audit rows.
+
+## Future persistence idempotency expectations
+
+Future persistence must be idempotent around provider retries and browser
+retries. `clientMessageId` may be used only for deduplication and ordering
+support after the server verifies trusted workspace scope. It must not be used
+as authentication or authorization.
+
+Server-generated request IDs, conversation IDs, and message IDs should be the
+canonical write keys. Provider calls and persistence writes should avoid
+duplicating messages, reordering customer/assistant turns, or creating partial
+conversation records when the provider or database fails.
+
+## Redaction and minimisation guidance
+
+Future redaction should prefer avoiding storage over storing and masking later.
+When content must be stored, sensitive fragments should not be copied into
+summaries, analytics, admin notes, logs, exports, or provider diagnostics.
+
+Messages should have bounded size limits, and future persistence should reject
+or safely truncate oversized content before storage. Truncation must not expose
+raw errors to the browser.
+
+## Non-goals and blocked work
+
+Phase 2E-A does not add runtime implementation. The following stay blocked:
+
+- Conversation/message persistence is not implemented.
+- Transcript storage is not implemented.
+- Transcript reads are not implemented.
+- Admin transcript UI is not implemented.
+- Customer accounts are not approved.
+- Public quote tracking is not approved.
+- Notifications are not approved.
+- CRM integration is not approved.
+- n8n/Pinecone runtime changes are not approved.
+- SaaS chatbot runtime work is not approved.
+- Deployment is not approved.
+- Browser Supabase remains forbidden.
+- Service-role runtime paths remain forbidden.
+- `website/chat-config.js` access remains forbidden.
+- Ecommerce flows remain blocked, including carts, checkout, payments,
+  customer accounts, stock reservation, order fulfilment, confirmed booking,
+  and online ordering.
