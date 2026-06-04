@@ -1273,3 +1273,27 @@ add customer uploads, add arbitrary public upload routes, add public quote
 status tracking, add customer-visible internal notes, add notifications or CRM
 integration, change n8n/Pinecone runtime behavior, add SaaS chatbot runtime
 work, add ecommerce flows, or access `website/chat-config.js`.
+
+## 2026-06-04: Post-readiness Status And Evidence Guard Reconciliation
+
+Decision: Phase 2D-B reconciles post-Phase 2D-A status, remaining-work mapping,
+deployment evidence expectations, and static guard coverage without adding
+runtime changes.
+
+Reason: PR #97 merged the deployment readiness package, so the quick status
+page must now record Phase 2D-A as the latest completed capability. The repo
+also needs the remaining work separated into completed, safe next,
+approval-blocked, and too-broad tracks so future work does not accidentally
+bundle real deployment, privacy governance, or unrelated runtime expansion.
+Finally, stale blocker wording must distinguish the completed
+admin-controlled `listing-media` upload boundary from still-blocked
+customer uploads, arbitrary public upload routes, and storage usage outside
+that approved workflow.
+
+Phase 2D-B does not deploy, add Vercel project config, connect Supabase Cloud,
+add production env files, add real secrets, add production seed data, change
+runtime env behaviour, add browser Supabase, add service-role runtime paths,
+add customer uploads, add arbitrary public upload routes, add public quote
+status tracking, add customer-visible internal notes, add notifications or CRM
+integration, change n8n/Pinecone runtime behavior, add SaaS chatbot runtime
+work, add ecommerce flows, or access `website/chat-config.js`.

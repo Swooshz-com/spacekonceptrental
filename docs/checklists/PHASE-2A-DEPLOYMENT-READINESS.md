@@ -46,6 +46,14 @@ auth implementation steps.
 - [ ] Rollback/disable plan reviewed for disabling public traffic, rotating leaked env values, disabling n8n webhook env, reverting deployment, fallback catalogue behaviour, and quote unavailable-or-safe behaviour.
 - [ ] Operator evidence template prepared for the expanded smoke-test sequence.
 
+## Phase 2D-B Post-readiness Reconciliation
+
+- [x] Phase status records Phase 2D-A as the latest completed capability with PR #97 and merge commit `e04444a41a8993758bb00d6be234c255abb1ff9b`.
+- [x] Remaining-work map separates completed phases, safe next phases, approval-blocked phases, and phases too broad or risky to bundle.
+- [x] Deployment evidence template asks future PR authors to include the remaining-work map and largest-safe-bundle rationale.
+- [x] Static guard coverage checks post-PR-97 status and stale storage/upload blocker wording.
+- [x] No deployment, Vercel config, Supabase Cloud config, production env, browser Supabase, service-role runtime path, n8n/Pinecone runtime change, or ecommerce flow is added.
+
 ## Still Deferred
 
 - [ ] Actual deployment.
@@ -55,9 +63,11 @@ auth implementation steps.
 - [ ] Production seed data.
 - [ ] Service-role runtime paths.
 - [ ] Browser Supabase client code.
-- [ ] Product/category/product image writes.
+- [ ] Product/category/product image writes outside approved admin route-gated boundaries.
 - [ ] Conversation/message writes.
-- [ ] Supabase Storage wiring.
-- [ ] Admin/auth UI.
+- [ ] Supabase Storage usage outside the approved admin-controlled `listing-media` workflow.
+- [ ] Admin/auth UI outside approved protected admin boundaries.
+- [ ] Customer uploads and arbitrary public upload routes.
+- [ ] Public quote status tracking, customer-visible internal notes, notifications, or CRM integration.
 - [ ] Internal SaaS chat/RAG implementation.
 - [ ] n8n workflow import, export, activation, execution, or mutation.

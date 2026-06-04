@@ -718,3 +718,20 @@ runtime behavior, SaaS chatbot runtime work, access to
 `website/chat-config.js`, or ecommerce flows such as carts, checkout, payments,
 customer accounts, stock reservation, fulfilment, confirmed booking, or online
 ordering.
+
+Phase 2D-B reconciles post-Phase 2D-A status, remaining-work mapping,
+deployment evidence expectations, and static guard coverage only. It records
+PR #97 as the latest completed deployment-readiness capability, distinguishes
+completed admin-controlled listing media upload from still-blocked
+customer/public upload surfaces, and keeps future deployment, privacy,
+governance, and runtime tracks separate.
+
+Phase 2D-B does not approve deployment, Vercel project config, Supabase Cloud
+config, production env files, real secrets, production seed data, runtime env
+behaviour changes, browser Supabase, service-role runtime paths, customer
+uploads, arbitrary public upload routes, public quote status tracking,
+customer-visible internal notes, notifications, CRM integration, n8n/Pinecone
+runtime behavior, SaaS chatbot runtime work, access to
+`website/chat-config.js`, or ecommerce flows such as carts, checkout, payments,
+customer accounts, stock reservation, fulfilment, confirmed booking, or online
+ordering.

@@ -66,6 +66,8 @@ Before any future deployment is approved, reviewers must confirm:
   `ADMIN_TRUSTED_WORKSPACE_ID` are reviewed before public traffic.
 - Rollback owner, backup approver, rollback trigger, and rollback action are
   named.
+- The remaining-work map is reviewed so deployment does not bundle unrelated
+  privacy, runtime, CRM, notification, SaaS chatbot, or ecommerce work.
 - Smoke-test evidence will be captured using
   `docs/templates/DEPLOYMENT-EVIDENCE.md`.
 
@@ -352,6 +354,7 @@ Future deployment PR authors should capture:
 - Environment reviewed: `<environment-name>`.
 - Deployment target placeholder or reviewed deployment URL:
   `<deployment-url>`.
+- Remaining-work map and largest safe bundle rationale.
 - Server-only env placement confirmation.
 - Forbidden public env confirmation.
 - Active catalogue workspace confirmation.

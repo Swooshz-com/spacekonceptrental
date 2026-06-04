@@ -651,3 +651,26 @@ and `ADMIN_TRUSTED_WORKSPACE_ID` before public traffic. The `listing-media`
 bucket remains public-by-unguessable-server-generated-URL for object serving,
 while public catalogue rendering remains metadata-gated. n8n webhook values
 must remain server-only behind first-party `POST /api/chat`.
+
+## Phase 2D-B Post-readiness Reconciliation Boundary
+
+Phase 2D-B is documentation, checklist, evidence-template, and static guard
+coverage only. It may reconcile `docs/PHASE-STATUS.md`,
+`docs/PHASE-ROADMAP.md`, checklist status, deployment evidence expectations,
+decision-log entries, and static guard tests after PR #97 merged Phase 2D-A.
+
+Phase 2D-B may distinguish the completed Phase 2C-A admin-controlled
+`listing-media` upload boundary from still-blocked customer uploads, arbitrary
+public upload routes, and storage usage outside the approved listing media
+workflow. It must not describe admin-controlled listing media upload as still
+entirely future or blocked.
+
+Phase 2D-B does not approve or perform deployment. It must not add Vercel
+project config, Supabase Cloud config, production env files, real secrets,
+production seed data, runtime env behaviour changes, browser Supabase,
+service-role runtime paths, customer uploads, arbitrary public upload routes,
+public quote status tracking, customer-visible internal notes, notifications,
+CRM integration, n8n/Pinecone runtime changes, SaaS chatbot runtime work,
+`website/chat-config.js` access, or ecommerce flows such as carts, checkout,
+payments, customer accounts, stock reservation, order fulfilment, confirmed
+booking, or online ordering.
