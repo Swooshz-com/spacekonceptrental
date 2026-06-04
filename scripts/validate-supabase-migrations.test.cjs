@@ -110,6 +110,10 @@ function readAllRealMigrationSql() {
     .join('\n');
 }
 
+function readRealMigration(fileName) {
+  return fs.readFileSync(path.join(realMigrationsDir, fileName), 'utf8');
+}
+
 function normalizeSql(sql) {
   return sql.replace(/\s+/g, ' ').trim().toLowerCase();
 }
@@ -297,7 +301,7 @@ test('real migration directory passes static validation', () => {
   const result = runValidator(realMigrationsDir);
 
   assert.equal(result.status, 0, result.stdout + result.stderr);
-  assert.match(result.stdout, /checked 10 migration SQL file\(s\)/);
+  assert.match(result.stdout, /checked 11 migration SQL file\(s\)/);
 });
 
 test('real base schema migration creates the planned MVP tables', () => {
@@ -778,6 +782,39 @@ test('real migrations add the Phase 2E-B conversation/message schema and RLS fou
   }
 
   assert.doesNotMatch(migration, /webhook-test|raw_provider_payload|raw_headers/i);
+});
+
+test('real migrations add the Phase 2E-D transcript persistence RPC boundary without browser grants', () => {
+  const migrationFileName = '20260604100000_transcript_persistence_rpc_boundary.sql';
+  const migration = readRealMigration(migrationFileName);
+  const sql = normalizeSql(migration);
+
+  assert.match(
+    migration,
+    /create or replace function public\.is_safe_transcript_metadata\(\s*p_metadata jsonb,\s*p_max_bytes integer\s*\)/,
+  );
+  assert.match(
+    migration,
+    /create or replace function public\.persist_transcript_batch\(\s*p_workspace_id uuid,\s*p_conversation jsonb,\s*p_messages jsonb\s*\)/,
+  );
+  assert.match(migration, /returns jsonb/i);
+  assert.match(migration, /security definer/i);
+  assert.match(migration, /set search_path = public/i);
+  assert.match(migration, /transcript_metadata_unsafe/);
+  assert.match(migration, /transcript_workspace_mismatch/);
+  assert.match(migration, /on conflict \(id\) do update/i);
+  assert.match(migration, /client_message_id/);
+  assert.ok(
+    sql.includes(
+      'revoke all on function public.persist_transcript_batch(uuid, jsonb, jsonb) from public;',
+    ),
+    'transcript persistence RPC must revoke default public execute',
+  );
+  assert.doesNotMatch(
+    migration,
+    /grant execute on function public\.persist_transcript_batch\(uuid, jsonb, jsonb\) to (anon|authenticated)/i,
+  );
+  assert.doesNotMatch(migration, /service_role|service-role|NEXT_PUBLIC|chat-config/i);
 });
 
 test('real RLS policy migration scopes admin reads through workspace membership', () => {

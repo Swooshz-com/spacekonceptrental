@@ -38,8 +38,8 @@ function readTrackedProductionSources(paths: string[]) {
     .join("\n");
 }
 
-describe("Phase 2E-C transcript persistence contract boundary", () => {
-  it("keeps Phase 2E-C recorded as the previous merged contract snapshot", () => {
+describe("Phase 2E-D transcript persistence RPC/adapter boundary", () => {
+  it("records Phase 2E-D as current and Phase 2E-C / PR #101 as completed", () => {
     const status = readRepoFile("docs/PHASE-STATUS.md");
     const roadmap = readRepoFile("docs/PHASE-ROADMAP.md");
     const readiness = readRepoFile("docs/PHASE-2-READINESS-PLAN.md");
@@ -48,35 +48,57 @@ describe("Phase 2E-C transcript persistence contract boundary", () => {
       "docs/checklists/PHASE-2E-CONVERSATION-GOVERNANCE.md"
     );
 
-    expect(status).toContain("Previous merged status snapshot: Phase 2E-C");
     expect(status).toContain(
-      "Current phase: Phase 2E-C - server-only transcript persistence contract and validation boundary."
+      "Current phase: Phase 2E-D - server-only transcript persistence RPC/adapter boundary."
     );
     expect(status).toContain(
-      "Latest completed phase: Phase 2E-B - conversation/message schema and RLS foundation."
+      "Latest completed phase: Phase 2E-C - server-only transcript persistence contract and validation boundary."
     );
-    expect(status).toContain("Last merged phase PR: #100");
+    expect(status).toContain("Last merged phase PR: #101");
     expect(status).toContain(
-      "Merge commit: `28610850213950d256862a6b16936c9362402b42`"
+      "Merge commit: `cfc48f132e170121e1eb90f6b1af4c60762a7227`"
     );
     expect(normalizeWhitespace(roadmap)).toContain(
-      "Phase 2E-C adds the server-only transcript persistence contract and validation boundary"
+      "Phase 2E-D adds the server-only transcript persistence RPC/adapter boundary"
     );
-    expect(readiness).toContain(
-      "Phase 2E-C follows with the server-only TypeScript persistence contract"
-    );
+    expect(readiness).toContain("Current Phase 2E-D status");
     expect(decisionLog).toContain(
-      "Decision: Phase 2E-C adds only the server-only transcript persistence contract and validation boundary"
+      "Decision: Phase 2E-D adds only the server-only transcript persistence RPC/adapter boundary"
     );
     expect(checklist).toContain(
-      "Phase 2E-C Completed Contract And Validation Boundary"
+      "Phase 2E-D Completed RPC And Adapter Boundary"
     );
   });
 
-  it("keeps the persistence contract server-only and adapter-injected", () => {
+  it("adds a local SQL RPC contract without granting browser roles transcript writes", () => {
+    const migration = readRepoFile(
+      "supabase/migrations/20260604100000_transcript_persistence_rpc_boundary.sql"
+    );
+
+    expect(migration).toContain(
+      "create or replace function public.persist_transcript_batch"
+    );
+    expect(migration).toContain(
+      "create or replace function public.is_safe_transcript_metadata"
+    );
+    expect(migration).toContain("security definer");
+    expect(migration).toContain("set search_path = public");
+    expect(migration).toContain("on conflict (id) do update");
+    expect(migration).toContain("client_message_id");
+    expect(migration).toContain("transcript_metadata_unsafe");
+    expect(migration).toContain(
+      "revoke all on function public.persist_transcript_batch(uuid, jsonb, jsonb) from public"
+    );
+    expect(migration).not.toMatch(
+      /grant execute on function public\.persist_transcript_batch\(uuid, jsonb, jsonb\) to (anon|authenticated)/i
+    );
+  });
+
+  it("keeps the RPC adapter server-only, injected, and free of direct Supabase runtime shortcuts", () => {
     const productionFiles = [
       "website/lib/chat/persistence/types.ts",
       "website/lib/chat/persistence/contract.ts",
+      "website/lib/chat/persistence/rpc-transcript-persistence-adapter.ts",
       "website/lib/chat/persistence/disabled-chat-persistence.ts",
       "website/lib/chat/persistence/index.ts"
     ];
@@ -87,8 +109,8 @@ describe("Phase 2E-C transcript persistence contract boundary", () => {
     expect(source.every((fileSource) => fileSource.includes('import "server-only";'))).toBe(
       true
     );
-    expect(joinedSource).toContain("TranscriptPersistenceAdapter");
-    expect(joinedSource).toContain("persistTranscriptCommand");
+    expect(joinedSource).toContain("TranscriptPersistenceRpcExecutor");
+    expect(joinedSource).toContain("createRpcTranscriptPersistenceAdapter");
     expect(joinedSource).not.toContain("@supabase/");
     expect(joinedSource).not.toContain("createClient(");
     expect(joinedSource).not.toContain("createServerSupabaseClient");
@@ -117,7 +139,7 @@ describe("Phase 2E-C transcript persistence contract boundary", () => {
     ]);
 
     expect(routeSource).not.toMatch(
-      /persistTranscriptCommand|createTranscriptPersistenceCommand|getChatPersistence|TranscriptPersistence/i
+      /persistTranscriptCommand|createRpcTranscriptPersistenceAdapter|createTranscriptPersistenceCommand|getChatPersistence|TranscriptPersistence/i
     );
     expect(readTrackedFiles(["website/app/api/transcripts"])).toEqual([]);
     expect(readTrackedFiles(["website/app/api/conversations"])).toEqual([]);
@@ -147,32 +169,5 @@ describe("Phase 2E-C transcript persistence contract boundary", () => {
     expect(productionSource).not.toMatch(
       /customer account|quote status tracking|admin transcript|crm|notification/i
     );
-  });
-
-  it("keeps docs explicit that Phase 2E-C is contract-only", () => {
-    const docs = [
-      "docs/PHASE-STATUS.md",
-      "docs/PHASE-ROADMAP.md",
-      "docs/PHASE-2-READINESS-PLAN.md",
-      "docs/CONVERSATION-PRIVACY-RETENTION-GOVERNANCE.md",
-      "docs/SAFETY-BOUNDARIES.md",
-      "docs/checklists/PHASE-2E-CONVERSATION-GOVERNANCE.md"
-    ]
-      .map(readRepoFile)
-      .join("\n");
-
-    for (const requiredBoundary of [
-      "Runtime transcript writes remain blocked",
-      "Runtime transcript reads remain blocked",
-      "Admin transcript UI remains blocked",
-      "Customer accounts remain blocked",
-      "Public quote tracking remains blocked",
-      "Deployment remains blocked",
-      "Browser Supabase remains forbidden",
-      "Service-role runtime paths remain forbidden",
-      "`website/chat-config.js` access remains forbidden"
-    ]) {
-      expect(docs).toContain(requiredBoundary);
-    }
   });
 });

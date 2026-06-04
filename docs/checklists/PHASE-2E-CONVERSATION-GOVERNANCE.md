@@ -54,6 +54,21 @@ for transcript writes, transcript reads, or admin transcript UI.
 - [x] Fake/injected adapter tests prove no live persistence dependency is used.
 - [x] Static guards prove Phase 2E-C stays contract/validation-only.
 
+## Phase 2E-D Completed RPC And Adapter Boundary
+
+- [x] Local `persist_transcript_batch` SQL/RPC contract is defined for
+      validated trusted-workspace transcript batches.
+- [x] Browser roles are not granted execute on the transcript persistence RPC.
+- [x] RPC metadata checks reject unsafe operational keys before table writes.
+- [x] RPC persistence keeps `clientMessageId` as idempotency/deduplication only.
+- [x] RPC persistence keeps anonymous session hashes as correlation only.
+- [x] Server-only RPC adapter maps validated commands to an injected executor
+      payload.
+- [x] Default persistence remains unavailable without explicit injection.
+- [x] Static guards prove Phase 2E-D does not wire `/api/chat`, browser
+      Supabase, service-role runtime paths, env reads, or transcript read/UI
+      surfaces.
+
 ## Runtime Blockers
 
 - [ ] Runtime transcript writes remain blocked.

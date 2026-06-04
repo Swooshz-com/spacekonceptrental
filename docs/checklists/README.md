@@ -21,8 +21,8 @@ permission slips for implementation.
 - `PHASE-2B-AUTH-IMPLEMENTATION.md` is the future auth implementation checklist.
 - `PHASE-2E-CONVERSATION-GOVERNANCE.md` is the privacy, identity, retention,
   deletion/export, transcript access, admin visibility, idempotency, redaction,
-  schema/RLS foundation, and server-only persistence contract checklist for
-  future conversation/message persistence.
+  schema/RLS foundation, server-only persistence contract, and server-only
+  RPC/adapter boundary checklist for future conversation/message persistence.
 - `PHASE-3-INTERNAL-CHATBOT.md` is future chatbot direction only. Current SKR
   should keep the n8n/Pinecone workflow as a temporary bridge, and any future
   SaaS chatbot should be a separate project/app.

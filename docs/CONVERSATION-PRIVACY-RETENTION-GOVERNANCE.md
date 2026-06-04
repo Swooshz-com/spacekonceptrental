@@ -18,6 +18,14 @@ not wire transcript writes into `/api/chat`, call Supabase, call SQL/RPC, call
 n8n/Pinecone, read cookies or headers, read env, use service-role runtime
 paths, or expose transcript reads.
 
+Phase 2E-D adds the server-only transcript persistence RPC/adapter boundary
+only. It defines a local SQL/RPC contract for validated trusted-workspace
+conversation/message batches and a server-only TypeScript adapter that maps
+the Phase 2E-C command into an injected RPC executor payload, but it does not
+wire transcript writes into `/api/chat`, instantiate Supabase from env, add
+browser Supabase, create service-role runtime paths, or expose transcript
+reads.
+
 Runtime transcript writes remain blocked. Runtime transcript reads remain
 blocked. Admin transcript UI remains blocked. Customer accounts remain blocked.
 Public quote tracking remains blocked. Notifications remain blocked. CRM
@@ -25,6 +33,26 @@ integration remains blocked. n8n/Pinecone runtime changes remain blocked. SaaS
 chatbot runtime work remains blocked. Deployment remains blocked. Browser
 Supabase remains forbidden. Service-role runtime paths remain forbidden.
 `website/chat-config.js` access remains forbidden.
+
+## Phase 2E-D server-only RPC/adapter boundary
+
+The Phase 2E-D RPC boundary persists only a validated batch for a trusted
+workspace into the existing `conversations` and `messages` tables. It keeps
+conversation and message rows workspace-scoped, preserves retention fields,
+and treats the anonymous session hash as correlation only. Browser roles are
+not granted execute on the RPC.
+
+The RPC checks metadata again before table writes. It rejects provider debug
+payloads, workflow payloads, webhook references, raw headers, tokens,
+authorization values, cookies, trace dumps, credentials, private keys,
+secrets, passwords, and API keys. This repeats the TypeScript minimisation
+boundary at the database edge.
+
+The TypeScript adapter is server-only and injected. It maps the existing
+validated command shape into the RPC payload shape, including
+`client_message_id` for idempotency/deduplication only. It does not instantiate
+Supabase, read env, read cookies, read headers, read `website/chat-config.js`,
+or make persistence available by default.
 
 ## Phase 2E-C server-only persistence contract
 

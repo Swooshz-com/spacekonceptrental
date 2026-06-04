@@ -111,6 +111,14 @@ Current database and API internals still use names such as `products`, `categori
   deploy, add browser Supabase, add service-role runtime paths, change
   n8n/Pinecone runtime behavior, add SaaS chatbot runtime work, add ecommerce
   flows, or access `website/chat-config.js`.
+- Phase 2E-D adds only the server-only transcript persistence RPC/adapter
+  boundary. It defines an ungranted local SQL/RPC contract and an injected
+  TypeScript adapter for validated trusted-workspace batches. It does not wire
+  `/api/chat` to transcript persistence, add transcript reads, add admin
+  transcript UI, approve customer accounts, approve public quote tracking,
+  deploy, add browser Supabase, add service-role runtime paths, change
+  n8n/Pinecone runtime behavior, add SaaS chatbot runtime work, add ecommerce
+  flows, or access `website/chat-config.js`.
 - Phase 2A-A deployment smoke-test preparation is docs-only. It provides an
   operator runbook, unchecked readiness checklist, and evidence template for a
   future reviewed deployment PR, while deployment, Supabase Cloud connection,
