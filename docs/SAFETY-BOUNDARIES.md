@@ -117,6 +117,12 @@ variables such as `N8N_CHAT_WEBHOOK_URL`.
   runtime transcript reads, live executor, service-role runtime,
   `/api/chat` transcript write wiring, Transcript deletion/export runtime
   paths, Retention cleanup jobs, or Admin transcript UI approval.
+- Phase 2E-G approves only transcript audit/evidence model and operator runbook readiness.
+  It is not audit/evidence storage approval, not an audit/evidence runtime
+  writer approval, not production evidence approval, not operator execution
+  approval, not runtime transcript write/read approval, not deletion/export
+  runtime approval, not retention cleanup job approval, not `/api/chat`
+  persistence wiring approval, and not Admin transcript UI approval.
 - Future lifecycle work must define these before runtime implementation:
   Transcript retention policy; Retention expiry handling; Manual deletion
   requests; Export requests; Admin-only transcript access review;
@@ -124,6 +130,16 @@ variables such as `N8N_CHAT_WEBHOOK_URL`.
   Failure/rollback/disable controls; Data minimisation and redaction
   requirements; Customer identity/account linking risks; Public quote
   tracking/public transcript access risks.
+- Future audit/evidence work must define these before runtime implementation:
+  event type ownership; safe audit field categories; forbidden evidence
+  material; owner approval capture; dry-run/local proof; local SQL/RLS proof;
+  static guard proof; rollback/disable controls; evidence template completion;
+  failure triage; audit review; data minimisation review; redaction review;
+  post-action verification; and "Do not proceed" stop conditions.
+- Future audit/evidence rows, templates, or artifacts must not include Full
+  transcript content, Raw provider payloads, n8n workflow payloads, Webhook
+  URLs, Raw headers, Cookies, Tokens, API keys, Private keys, Secrets,
+  Service-role material, or Customer-visible internal notes.
 - Do not trust browser-provided session IDs as identity or authorization.
 - Use `clientMessageId` only for idempotency and deduplication, not
   authentication.
@@ -155,12 +171,25 @@ variables such as `N8N_CHAT_WEBHOOK_URL`.
   Notifications; CRM integration; n8n/Pinecone runtime changes; SaaS chatbot
   runtime work; Deployment, Vercel config, Supabase Cloud config, env/secrets,
   production evidence.
+- Phase 2E-G documents audit/evidence model and operator runbook readiness
+  only. Explicit owner approval is required before any of these:
+  Audit/evidence runtime writer; Audit/evidence storage or tables; Production
+  evidence file or artifact; Runtime transcript writes; Runtime transcript
+  reads; Live Supabase RPC executor; Any service-role or privileged DB
+  execution strategy; `/api/chat` transcript write wiring; Transcript
+  deletion/export runtime paths; Retention cleanup jobs; Admin transcript UI;
+  Customer accounts; Public quote tracking or public transcript access;
+  Notifications; CRM integration; n8n/Pinecone runtime changes; SaaS chatbot
+  runtime work; Deployment, Vercel config, Supabase Cloud config, env/secrets,
+  production evidence.
 - Any future live transcript executor must have a reviewed privilege model,
   avoid browser/client exposure of service-role material, redact failures, prove
   idempotency, define audit/evidence requirements, and include rollback/disable
   controls before `/api/chat` can use it.
 - Runtime transcript writes remain blocked.
 - Runtime transcript reads remain blocked.
+- Audit/evidence runtime writers remain blocked.
+- Production evidence files remain blocked.
 - Admin transcript UI remains blocked.
 - Customer accounts remain blocked.
 - Public quote tracking remains blocked.

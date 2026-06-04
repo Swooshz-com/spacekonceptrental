@@ -45,18 +45,150 @@ governance/readiness and static-guard coverage only. It does not implement
 runtime transcript deletion/export, does not implement retention cleanup jobs,
 and does not wire transcript writes or reads into `/api/chat`.
 
+Phase 2E-G adds transcript audit/evidence model and operator runbook readiness
+only. It documents future audit event categories, safe field categories,
+forbidden audit/evidence fields, operator runbook requirements, evidence
+template placeholders, and stop conditions before any lifecycle audit writer,
+operator action, production evidence, transcript read, deletion/export,
+retention cleanup, or `/api/chat` persistence wiring exists. Phase 2E-G is
+governance/readiness and static-guard coverage only. It does not implement
+audit/evidence storage, does not add an audit/evidence runtime writer, does
+not add production evidence, and does not implement any transcript lifecycle
+runtime action.
+
 Runtime transcript writes remain blocked. Runtime transcript reads remain
 blocked. Live Supabase RPC executor remains blocked. Any service-role or
 privileged DB execution strategy remains blocked. `/api/chat` transcript write
 wiring remains blocked. Transcript deletion/export runtime paths remain
-blocked. Retention cleanup jobs remain blocked. Admin transcript UI remains
-blocked. Customer accounts remain blocked. Public quote tracking or public
-transcript access remains blocked. Notifications remain blocked. CRM
+blocked. Retention cleanup jobs remain blocked. Audit/evidence runtime writers
+remain blocked. Production evidence files remain blocked. Admin transcript UI
+remains blocked. Customer accounts remain blocked. Public quote tracking or
+public transcript access remains blocked. Notifications remain blocked. CRM
 integration remains blocked. n8n/Pinecone runtime changes remain blocked. SaaS
 chatbot runtime work remains blocked. Deployment, Vercel config, Supabase
 Cloud config, env/secrets, production evidence remain blocked. Browser
 Supabase remains forbidden. Service-role runtime paths remain forbidden.
 `website/chat-config.js` access remains forbidden.
+
+## Phase 2E-G audit/evidence model and operator runbook readiness
+
+Phase 2E-G is governance/readiness and static-guard coverage only. It defines
+the future transcript lifecycle audit/evidence and operator-readiness model
+that must be approved before any audit/evidence runtime writer, production
+evidence artifact, operator lifecycle action, transcript read,
+deletion/export, retention cleanup, or `/api/chat` persistence wiring exists.
+
+Future audit/evidence implementation must document and obtain approval for
+these event types before runtime work starts:
+
+- Transcript persistence attempt.
+- Transcript access/read.
+- Transcript export request.
+- Transcript deletion request.
+- Retention expiry processing.
+- Retention cleanup failure.
+- Admin override.
+- Lifecycle disable/rollback.
+- Operator approval.
+- Evidence capture.
+
+Approved future audit/evidence field categories are limited to:
+
+- `event_type`.
+- `workspace_id`.
+- `conversation_id` where approved.
+- `quote_request_id` where approved.
+- `actor_type`.
+- `actor_admin_user_id` where approved.
+- `request_id`.
+- `approval_reference`.
+- `reason_code`.
+- `result_status`.
+- `affected_record_count`.
+- `created_at`.
+- Minimal redacted metadata.
+
+Forbidden audit/evidence fields and copied material are:
+
+- Full transcript content.
+- Raw provider payloads.
+- n8n workflow payloads.
+- Webhook URLs.
+- Raw headers.
+- Cookies.
+- Tokens.
+- API keys.
+- Private keys.
+- Secrets.
+- Service-role material.
+- Customer-visible internal notes.
+
+Future operator runbooks must include:
+
+- Owner approval capture.
+- Dry-run/local proof before production action.
+- Local SQL/RLS proof.
+- Static guard proof.
+- Evidence template completion.
+- Failure triage.
+- Rollback/disable steps.
+- Audit review.
+- Data minimisation review.
+- Redaction review.
+- Post-action verification.
+- "Do not proceed" stop conditions.
+
+"Do not proceed" stop conditions must include missing owner approval, missing
+dry-run/local proof, failing local SQL/RLS proof, failing static guard proof,
+unclear affected-record scope, unreviewed rollback/disable steps, any need to
+copy secrets or transcript content into evidence, any service-role exposure to
+browser/client code, any production evidence path that is not explicitly
+approved, and any request to combine audit/evidence readiness with runtime
+transcript writes, reads, deletion/export, retention cleanup, admin transcript
+UI, deployment, n8n/Pinecone changes, SaaS chatbot runtime, customer accounts,
+public quote tracking, notifications, or CRM work.
+
+Future evidence templates must be placeholder-only until a separately approved
+production action exists. A template must require:
+
+- Action type.
+- Approved by.
+- Approval reference.
+- Environment.
+- Commit SHA.
+- Local validation commands.
+- Dry-run result.
+- Affected record count.
+- Rollback/disable plan.
+- Operator notes.
+- Follow-up checklist.
+- Explicit statement that no secrets or transcript content are copied into evidence.
+
+The evidence template must not contain real production evidence, real customer
+data, full transcript content, provider payloads, n8n workflow payloads,
+webhook URLs, raw headers, cookies, tokens, API keys, private keys, secrets,
+service-role material, or customer-visible internal notes.
+
+Explicit owner approval remains required before any of these:
+
+- Audit/evidence runtime writer.
+- Audit/evidence storage or tables.
+- Production evidence file or artifact.
+- Runtime transcript writes.
+- Runtime transcript reads.
+- Live Supabase RPC executor.
+- Any service-role or privileged DB execution strategy.
+- `/api/chat` transcript write wiring.
+- Transcript deletion/export runtime paths.
+- Retention cleanup jobs.
+- Admin transcript UI.
+- Customer accounts.
+- Public quote tracking or public transcript access.
+- Notifications.
+- CRM integration.
+- n8n/Pinecone runtime changes.
+- SaaS chatbot runtime work.
+- Deployment, Vercel config, Supabase Cloud config, env/secrets, production evidence.
 
 ## Phase 2E-F lifecycle governance and retention/deletion/export readiness
 
