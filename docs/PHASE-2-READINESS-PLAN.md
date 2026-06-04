@@ -214,9 +214,24 @@ Suggested first PR:
   executor approval gates only, after the Phase 2E-D hotfix rejects conflicting
   `clientMessageId` reuse and hardens malformed runtime input validation,
   without adding a live executor or wiring `/api/chat`.
+- Phase 2E-F follows with transcript lifecycle governance and
+  retention/deletion/export readiness only, after PR #103 records the
+  activation governance baseline, without adding deletion/export runtime paths,
+  retention cleanup jobs, transcript reads, admin transcript UI, customer
+  accounts, or public transcript/quote access.
 
-Current Phase 2E-E status:
+Current Phase 2E-F status:
 
+- PR #103 merged the Phase 2E-D hotfix and Phase 2E-E transcript persistence
+  activation governance at merge commit
+  `72a85eedfcd30da26e716f95973785cb1408760b`.
+- Phase 2E-E is complete as activation governance and executor approval gates
+  only.
+- Phase 2E-F is current as lifecycle governance/readiness only.
+- Future lifecycle implementation must define retention/deletion/export owner
+  approval, data classification, admin access approval, audit event model
+  approval, evidence template approval, rollback/disable controls, local
+  SQL/RLS proof, and static guard proof before runtime implementation.
 - The existing `conversations` and `messages` tables now have the local schema
   and RLS foundation needed for a future reviewed persistence path.
 - Direct anonymous/public and authenticated client reads and writes are denied

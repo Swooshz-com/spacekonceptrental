@@ -4,6 +4,113 @@ This is the quick status page for the SKR repo. Use `docs/PHASE-2-READINESS-PLAN
 
 ## Current phase
 
+Current phase: Phase 2E-F - transcript lifecycle governance and retention/deletion/export readiness.
+
+This phase records the future lifecycle governance required before transcript
+retention, deletion, export, admin transcript access review, audit/evidence,
+operator runbooks, rollback/disable controls, redaction, customer identity
+linking, or public transcript/quote access can move toward implementation.
+This is docs, checklist, and static-guard work only. It does not implement
+runtime transcript deletion/export, does not implement retention cleanup jobs,
+does not wire transcript writes or reads into `/api/chat`, does not add a live
+Supabase RPC executor, and does not add admin transcript UI.
+
+Runtime transcript writes remain blocked. Runtime transcript reads remain
+blocked. Live Supabase RPC executor remains blocked. Any service-role or
+privileged DB execution strategy remains blocked. `/api/chat` transcript write
+wiring remains blocked. Transcript deletion/export runtime paths remain
+blocked. Retention cleanup jobs remain blocked. Admin transcript UI remains
+blocked. Customer accounts remain blocked. Public quote tracking or public
+transcript access remains blocked. Notifications remain blocked. CRM
+integration remains blocked. n8n/Pinecone runtime changes remain blocked. SaaS
+chatbot runtime work remains blocked. Deployment, Vercel config, Supabase
+Cloud config, env/secrets, production evidence remain blocked. Browser
+Supabase remains forbidden. Service-role runtime paths remain forbidden.
+`website/chat-config.js` access remains forbidden.
+
+Latest completed phase: Phase 2E-E - transcript persistence activation governance and executor approval gate.
+
+Last merged phase PR: #103
+
+Merge commit: `72a85eedfcd30da26e716f95973785cb1408760b`
+
+## Remaining-work map
+
+Completed through PR #103:
+
+- PR #103 merged the Phase 2E-D hotfix and Phase 2E-E transcript persistence activation governance
+  at merge commit `72a85eedfcd30da26e716f95973785cb1408760b`.
+- Phase 2E-E transcript persistence activation governance and executor
+  approval gate is complete as docs, checklist, and static guard work only.
+- Phase 2E-D hotfix coverage is complete for conflicting `clientMessageId`
+  reuse rejection and total/non-throwing malformed runtime command validation.
+- Phase 2E-D server-only transcript persistence RPC/adapter boundary is
+  complete as local ungranted SQL/RPC, injected server-only adapter, docs, and
+  static guard work only.
+- Phase 2E-C server-only transcript persistence contract and validation
+  boundary is complete as server-only TypeScript contract, validation, docs,
+  and static guard work only.
+- Phase 2E-B conversation/message schema and RLS foundation is complete as
+  local migration, RLS, docs, and static guard work only.
+- Phase 2E-A conversation privacy, retention, identity, transcript access,
+  admin visibility, idempotency, and redaction governance is complete as
+  planning/static guard work.
+- Phase 2D-A deployment readiness, environment contract, smoke-test runbook,
+  rollback/disable plan, evidence template, and static guard coverage remain
+  completed preparation only.
+- Phase 2D-B post-readiness status, remaining-work mapping, deployment
+  evidence expectations, and stale blocker reconciliation are complete.
+
+Safe next phases:
+
+- Continue only narrow docs/static-guard readiness work for conversation/message
+  privacy, retention, deletion/export, transcript access, and operator
+  evidence when it remains separate from runtime implementation.
+- A future transcript lifecycle implementation phase must be separately
+  approved and must define retention/deletion/export ownership, data
+  classification, admin access, audit events, evidence templates,
+  rollback/disable controls, local SQL/RLS proof, and static guard proof before
+  runtime paths exist.
+- A future live Supabase RPC executor must be separately approved, have a
+  reviewed privilege model, avoid browser/client service-role exposure, prove
+  idempotency and failure redaction, and include audit/evidence plus
+  rollback/disable controls before `/api/chat` can use it.
+- A future transcript write path must be separately approved, server-only,
+  trusted-workspace scoped, idempotent, adapter-backed, and tested before any
+  runtime storage exists.
+- A future transcript read/admin UI path must be separately approved, protected
+  by owner/admin access, audited, and tested before admin visibility exists.
+- A separately approved deployment PR can use the Phase 2D-A runbook and
+  evidence template, but must not bundle transcript persistence or unrelated
+  runtime expansion.
+
+Blocked phases requiring explicit owner approval:
+
+- Runtime transcript writes, Runtime transcript reads, Live Supabase RPC
+  executor, Any service-role or privileged DB execution strategy, `/api/chat`
+  transcript write wiring, Transcript deletion/export runtime paths, Retention
+  cleanup jobs, Admin transcript UI, Customer accounts, Public quote tracking
+  or public transcript access, Notifications, CRM integration, n8n/Pinecone
+  runtime changes, SaaS chatbot runtime work, browser Supabase, service-role
+  runtime paths, and `website/chat-config.js` access.
+- Real deployment, Vercel project config, Supabase Cloud connection,
+  production env files, real secrets, production seed data, production
+  evidence, and deployment actions. Deployment, Vercel config, Supabase Cloud
+  config, env/secrets, production evidence remain blocked.
+- Ecommerce flows including carts, checkout, payments, customer accounts,
+  stock reservation, order fulfilment, confirmed booking, and online ordering.
+
+Too broad or risky to bundle here:
+
+- Lifecycle governance plus runtime transcript deletion/export, retention
+  cleanup jobs, transcript reads, admin transcript UI, or `/api/chat`
+  persistence wiring.
+- Executor approval governance plus a live executor implementation.
+- Transcript access plus customer accounts, public quote tracking,
+  notifications, CRM, or SaaS chatbot runtime implementation.
+
+## Previous merged status snapshot: Phase 2E-E
+
 Current phase: Phase 2E-E - transcript persistence activation governance and executor approval gate.
 
 This phase first hotfixes two Phase 2E-D findings, then records the governance
@@ -30,70 +137,6 @@ Latest completed phase: Phase 2E-D - server-only transcript persistence RPC/adap
 Last merged phase PR: #102
 
 Merge commit: `b34cc02a67e73d497e9b90fd904786da3bbe77d3`
-
-## Remaining-work map
-
-Completed through PR #102:
-
-- PR #102 merged the Phase 2E-D server-only transcript persistence RPC/adapter
-  boundary at merge commit `b34cc02a67e73d497e9b90fd904786da3bbe77d3`.
-- Phase 2E-D server-only transcript persistence RPC/adapter boundary is
-  complete as local ungranted SQL/RPC, injected server-only adapter, docs, and
-  static guard work only.
-- Phase 2E-C server-only transcript persistence contract and validation
-  boundary is complete as server-only TypeScript contract, validation, docs,
-  and static guard work only.
-- Phase 2E-B conversation/message schema and RLS foundation is complete as
-  local migration, RLS, docs, and static guard work only.
-- Phase 2E-A conversation privacy, retention, identity, transcript access,
-  admin visibility, idempotency, and redaction governance is complete as
-  planning/static guard work.
-- Phase 2D-A deployment readiness, environment contract, smoke-test runbook,
-  rollback/disable plan, evidence template, and static guard coverage remain
-  completed preparation only.
-- Phase 2D-B post-readiness status, remaining-work mapping, deployment
-  evidence expectations, and stale blocker reconciliation are complete.
-
-Safe next phases:
-
-- Continue only narrow docs/static-guard, local schema/RLS, server-only
-  contract/validation, or injected-adapter boundary work for conversation/message
-  privacy, retention, deletion/export, transcript access, and operator evidence
-  when it remains separate from runtime implementation.
-- A future live Supabase RPC executor must be separately approved, have a
-  reviewed privilege model, avoid browser/client service-role exposure, prove
-  idempotency and failure redaction, and include audit/evidence plus
-  rollback/disable controls before `/api/chat` can use it.
-- A future transcript write path must be separately approved, server-only,
-  trusted-workspace scoped, idempotent, adapter-backed, and tested before any
-  runtime storage exists.
-- A future transcript read/admin UI path must be separately approved, protected
-  by owner/admin access, audited, and tested before admin visibility exists.
-- A separately approved deployment PR can use the Phase 2D-A runbook and
-  evidence template, but must not bundle transcript persistence or unrelated
-  runtime expansion.
-
-Blocked phases requiring explicit owner approval:
-
-- Live Supabase RPC executor, any service-role or privileged DB execution
-  strategy, `/api/chat` transcript write wiring, transcript read paths, admin
-  transcript UI, transcript deletion/export paths, retention cleanup jobs,
-  customer identity/account linking, public quote tracking or public transcript
-  access, notifications, CRM, n8n/Pinecone runtime changes, SaaS chatbot
-  runtime work, browser Supabase, service-role runtime paths, and
-  `website/chat-config.js` access.
-- Real deployment, Vercel project config, Supabase Cloud connection,
-  production env files, real secrets, production seed data, and deployment
-  actions.
-- Ecommerce flows including carts, checkout, payments, customer accounts,
-  stock reservation, order fulfilment, confirmed booking, and online ordering.
-
-Too broad or risky to bundle here:
-
-- Phase 2E-D hotfix plus runtime transcript writes or reads.
-- Executor approval governance plus a live executor implementation.
-- Transcript access plus customer accounts, public quote tracking,
-  notifications, CRM, or SaaS chatbot runtime implementation.
 
 ## Previous merged status snapshot: Phase 2E-D
 

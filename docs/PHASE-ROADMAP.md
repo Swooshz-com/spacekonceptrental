@@ -821,3 +821,15 @@ identity/account linking, public quote tracking, notifications, CRM,
 n8n/Pinecone runtime changes, SaaS chatbot runtime work, deployment config,
 Supabase Cloud actions, browser Supabase, ecommerce flows, or
 `website/chat-config.js` access.
+
+Phase 2E-F adds transcript lifecycle governance and retention/deletion/export readiness only. It documents the future approval requirements for transcript retention policy, retention expiry handling, manual deletion requests, export requests, admin-only transcript access review, audit/evidence requirements, operator runbook requirements, failure/rollback/disable controls, data minimisation and redaction requirements, customer identity/account linking risks, and public quote tracking/public transcript access risks.
+
+Phase 2E-F does not add runtime transcript writes, runtime transcript reads,
+Live Supabase RPC executor, Any service-role or privileged DB execution
+strategy, `/api/chat` transcript write wiring, Transcript deletion/export
+runtime paths, Retention cleanup jobs, Admin transcript UI, Customer accounts,
+Public quote tracking or public transcript access, Notifications, CRM
+integration, n8n/Pinecone runtime changes, SaaS chatbot runtime work,
+Deployment, Vercel config, Supabase Cloud config, env/secrets, production
+evidence, browser Supabase, ecommerce flows, or `website/chat-config.js`
+access.
