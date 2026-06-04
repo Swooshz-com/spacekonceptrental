@@ -150,6 +150,9 @@ Before public traffic is enabled, reviewers must confirm:
 - Server-only Supabase env placement is reviewed.
 - Server-only n8n webhook placement is reviewed.
 - Trusted proxy/CDN client IP header behaviour is reviewed.
+- The remaining-work map is reviewed so deployment is not bundled with
+  unrelated privacy, runtime, CRM, notification, SaaS chatbot, or ecommerce
+  work.
 - The smoke-test checklist in `docs/DEPLOYMENT-SMOKE-TEST-RUNBOOK.md` is run
   before public traffic.
 - Evidence is captured using `docs/templates/DEPLOYMENT-EVIDENCE.md`.

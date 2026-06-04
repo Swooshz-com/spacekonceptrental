@@ -65,7 +65,7 @@ function parseEnvContract() {
 }
 
 describe("Phase 2D-A deployment readiness and smoke-test runbook", () => {
-  it("records Phase 2C-D as completed and Phase 2D-A as readiness-only current work", () => {
+  it("keeps Phase 2D-A recorded as the previous merged readiness snapshot", () => {
     const status = readRepoFile("docs/PHASE-STATUS.md");
     const roadmap = readRepoFile("docs/PHASE-ROADMAP.md");
     const decisionLog = readRepoFile("docs/DECISION-LOG.md");
@@ -74,6 +74,9 @@ describe("Phase 2D-A deployment readiness and smoke-test runbook", () => {
       "docs/checklists/PHASE-2A-DEPLOYMENT-READINESS.md"
     );
 
+    expect(status).toContain(
+      "Previous merged status snapshot: Phase 2D-A"
+    );
     expect(status).toContain(
       "Current phase: Phase 2D-A - deployment readiness, environment contract, and smoke-test runbook."
     );
@@ -87,7 +90,7 @@ describe("Phase 2D-A deployment readiness and smoke-test runbook", () => {
     expect(status).toContain(
       "Previous merged status snapshot: Phase 2C-D"
     );
-    expect(status).toContain("No deployment is approved by this phase");
+    expect(status).toMatch(/No deployment\s+is approved by this phase/);
     expect(roadmap).toContain(
       "Phase 2D-A adds deployment readiness, environment contract, and smoke-test runbook updates"
     );

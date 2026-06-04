@@ -128,6 +128,14 @@ and route/action boundaries are implemented and tested.
 - [x] Rollback/disable plan is documented without adding runtime kill switches.
 - [x] No deployment, Vercel config, Supabase Cloud config, production env, browser Supabase, service-role runtime path, n8n/Pinecone runtime change, or ecommerce flow is added.
 
+## Phase 2D-B Post-readiness Status And Evidence Guard Reconciliation
+
+- [x] Phase status records Phase 2D-A as the latest completed capability after PR #97.
+- [x] Remaining-work map names completed phases, safe next phases, approval-blocked phases, and too-broad phases.
+- [x] Deployment evidence expectations include remaining-work map and largest-safe-bundle rationale fields for future PRs.
+- [x] Stale blocker wording no longer treats the approved Phase 2C-A admin-controlled listing media upload boundary as wholly future or blocked.
+- [x] No deployment, Vercel config, Supabase Cloud config, production env, browser Supabase, service-role runtime path, n8n/Pinecone runtime change, SaaS chatbot runtime work, or ecommerce flow is added.
+
 ## Ecommerce Non-goals
 
 - [ ] Do not add carts.
@@ -141,9 +149,9 @@ and route/action boundaries are implemented and tested.
 ## Guardrails
 
 - [ ] Do not implement full SaaS unless separately approved.
-- [ ] Do not mark furniture listing/category/listing image writes complete until real
-      auth, membership resolution, RLS, audit, and route/action boundaries
-      exist and tests prove them.
+- [ ] Do not mark new or expanded furniture listing/category/listing image
+      writes complete until real auth, membership resolution, RLS, audit, and
+      route/action boundaries exist and tests prove the new surface.
 - [ ] Do not expand beyond the approved Phase 2 scope without updating the
       roadmap, decision log, and safety docs.
 - [ ] Keep n8n as optional automation/integration, not the browser-facing app

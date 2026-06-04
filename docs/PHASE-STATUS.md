@@ -4,13 +4,78 @@ This is the quick status page for the SKR repo. Use `docs/PHASE-2-READINESS-PLAN
 
 ## Current phase
 
+Current phase: Phase 2D-B - post-readiness status, remaining-work map, and evidence guard reconciliation.
+
+This phase reconciles the canonical status surfaces after PR #97 merged Phase
+2D-A. It records Phase 2D-A as the latest completed capability, adds a
+remaining-work map, hardens future deployment evidence expectations, and adds
+static guard coverage for post-readiness status and stale blocker wording. No
+deployment is approved by this phase. It does not add Vercel project config,
+Supabase Cloud config, production env files, real secrets, production seed
+data, runtime env behaviour changes, browser Supabase, service-role runtime
+paths, customer uploads, public upload routes, public quote status tracking,
+customer-visible internal notes, notifications, CRM integration, cart,
+checkout, payments, customer accounts, stock reservation, order fulfilment,
+confirmed booking, online ordering, n8n/Pinecone runtime changes, SaaS chatbot
+runtime work, or `website/chat-config.js` access.
+
+Latest completed phase: Phase 2D-A - deployment readiness, environment contract, and smoke-test runbook.
+
+Last merged phase PR: #97
+
+Merge commit: `e04444a41a8993758bb00d6be234c255abb1ff9b`
+
+## Remaining-work map
+
+Completed through PR #97:
+
+- Phase 2D-A deployment readiness, environment contract, smoke-test runbook,
+  rollback/disable plan, evidence template, and static guard coverage are
+  complete as preparation only.
+- Admin-managed listing metadata, protected listing media upload, public
+  listing image rendering, quote handoff, admin quote inbox/status/internal
+  note workflow, and atomic quote workflow RPC hardening are already reflected
+  in the Phase 2D-A readiness package.
+
+Safe next phases:
+
+- A separately approved deployment PR can use the Phase 2D-A runbook and
+  evidence template, but must remain isolated from unrelated runtime expansion.
+- Docs/static-guard work for privacy, retention, conversation/message
+  governance, or operator evidence hardening can proceed if scoped separately.
+- Small copy or checklist reconciliations can proceed when they preserve the
+  furniture/event-rental enquiry and quote direction.
+
+Blocked phases requiring explicit owner approval:
+
+- Real deployment, Vercel project config, Supabase Cloud connection,
+  production env files, real secrets, production seed data, and deployment
+  actions.
+- Browser Supabase, service-role runtime paths, public/customer uploads,
+  arbitrary public upload routes, public quote status tracking,
+  customer-visible internal notes, notifications, CRM integration,
+  n8n/Pinecone runtime changes, Pinecone migration, SaaS chatbot runtime work,
+  and `website/chat-config.js` access.
+- Ecommerce flows including carts, checkout, payments, customer accounts,
+  stock reservation, order fulfilment, confirmed booking, and online ordering.
+
+Too broad or risky to bundle here:
+
+- Real deployment plus any new runtime feature.
+- Privacy/retention governance plus deployment readiness or deployment action.
+- Database/API/table/RPC/RLS renames, ecommerce pivots, CRM/notification
+  workflows, customer-facing quote tracking, or SaaS chatbot implementation.
+
+## Previous merged status snapshot: Phase 2D-A
+
 Current phase: Phase 2D-A - deployment readiness, environment contract, and smoke-test runbook.
 
 This phase updates deployment readiness documentation, the environment
 contract, operator smoke-test runbook, rollback/disable plan, evidence
 template, and static guard coverage for the current SKR app after
 storage-backed listing media, public catalogue/detail handoff, protected admin
-listing management, and atomic admin quote workflow hardening. No deployment is approved by this phase. It does not add Vercel project config, Supabase
+listing management, and atomic admin quote workflow hardening. No deployment
+is approved by this phase. It does not add Vercel project config, Supabase
 Cloud config, production env files, real secrets, production seed data,
 runtime env behaviour changes, browser Supabase, service-role runtime paths,
 customer uploads, public upload routes, public quote status tracking,
@@ -475,32 +540,17 @@ Supabase, service-role paths, deployment config, Supabase Cloud, n8n changes,
 Pinecone runtime code, SaaS chatbot work, or `website/chat-config.js` access.
 
 Runtime session-bound read-client usage remains deferred outside the approved
-Phase 2B-AL/AM backend routes, Phase 2B-AN protected admin shell path, and
-Phase 2B-AO read-only admin dashboard path.
-Runtime adapter-set usage remains deferred outside the approved Phase 2B-AL/AM
-backend routes and Phase 2B-AN protected admin shell path.
-Runtime decision-boundary usage remains deferred outside the approved Phase
-2B-AL/AM backend routes and Phase 2B-AN protected admin shell path.
-Runtime request-security preflight usage remains deferred outside the approved
-Phase 2B-AL/AM backend routes and Phase 2B-AN protected admin shell path.
-Runtime CSRF proof verifier usage remains deferred.
-Runtime CSRF proof issuer usage remains deferred except the approved
-Phase 2B-AK `POST /api/admin/csrf-proof` route.
-Runtime CSRF proof session/workspace binding usage from routes, pages, or
-server actions remains deferred except the approved Phase 2B-AK route.
-Runtime admin authorization gate usage remains deferred outside the approved
-Phase 2B-AL/AM backend routes and Phase 2B-AN protected admin shell path.
-Runtime request metadata adapter usage from routes, pages, or server actions
-remains deferred except the approved Phase 2B-AA route boundary, Phase 2B-AK
-route boundary, Phase 2B-AL/AM backend route boundaries, and Phase 2B-AN
-protected admin shell boundary.
-Runtime admin gate invocation helper usage from routes, pages, or server
-actions remains deferred except the approved Phase 2B-AA route boundary, Phase
-2B-AK route boundary, Phase 2B-AL/AM backend route boundaries, and Phase 2B-AN
-protected admin shell boundary.
-Runtime admin route gate adapter usage from routes, pages, or server actions
-remains deferred except the approved Phase 2B-AA, Phase 2B-AK, Phase 2B-AL/AM,
-Phase 2B-AN, Phase 2B-AO, Phase 2B-AR, and Phase 2B-AS boundaries.
+first-party admin, listing media, and quote workflow boundaries documented
+through Phase 2C-D.
+Runtime adapter-set, decision-boundary, request-security preflight, admin
+authorization gate, request metadata adapter, gate invocation helper, and
+route gate adapter usage remains deferred outside the approved first-party
+admin route/page boundaries documented through Phase 2C-D.
+Runtime CSRF proof verifier usage remains restricted to approved
+state-changing admin operations, including product/category/listing image
+metadata writes, admin-controlled listing media upload, and quote workflow
+writes. Runtime CSRF proof issuer and session/workspace binding usage remains
+deferred except the approved Phase 2B-AK `POST /api/admin/csrf-proof` route.
 
 ## Still blocked
 
@@ -513,38 +563,31 @@ Phase 2B-AN, Phase 2B-AO, Phase 2B-AR, and Phase 2B-AS boundaries.
   server-only read boundary.
 - Admin workspace resolution outside the Phase 2B-M server-only workspace
   boundary.
-- Session-bound admin read-client factory usage from runtime routes, pages, or
-  server actions.
-- Admin authorization adapter-set usage from runtime routes, pages, or server
-  actions.
-- Admin authorization decision boundary usage from runtime routes, pages, or
-  server actions.
-- Admin request security preflight usage from runtime routes, pages, or server
-  actions.
-- Admin CSRF proof verifier usage from runtime routes, pages, or server
-  actions.
+- Session-bound admin read-client factory usage outside the approved
+  first-party admin, listing media, and quote workflow boundaries documented
+  through Phase 2C-D.
+- Admin authorization adapter-set, decision-boundary, request-security
+  preflight, and gate usage outside approved first-party admin route/page
+  boundaries documented through Phase 2C-D.
+- Admin CSRF proof verifier usage outside approved state-changing admin
+  operations documented through Phase 2C-D.
 - Admin CSRF proof issuer usage from other runtime routes, pages, or server
   actions.
 - Admin CSRF proof session/workspace binding usage from other runtime routes,
   pages, or server actions.
-- Admin authorization gate usage from runtime routes, pages, or server actions.
-- Admin runtime gate invocation usage from routes, pages, or server
-  actions (except the approved Phase 2B-AA route boundary).
-- Admin runtime route gate adapter usage from routes, pages, or server
-  actions except the approved Phase 2B-AA, Phase 2B-AK, and Phase 2B-AL route
-  boundaries, plus the Phase 2B-AN/AO protected admin shell boundary repaired
-  in Phase 2B-AR.
+- Admin runtime gate invocation and route gate adapter usage outside approved
+  first-party admin route/page boundaries documented through Phase 2C-D.
 - Header reads outside the Phase 2B-V request metadata adapter.
 - Login/logout routes outside the Phase 2B-AN first-party admin auth boundary.
 - Protected admin pages outside the Phase 2B-AN minimal protected shell and
   Phase 2B-AO read-only dashboard boundary.
 - Furniture listing write UI beyond the approved category management,
-  metadata listing, and metadata listing image controls. Phase 2B-AY adds only
-  listing image metadata controls through the existing backend routes; binary
-  upload and Supabase Storage remain blocked.
+  metadata listing, metadata listing image controls, and Phase 2C-A
+  admin-controlled listing media upload boundary.
 - Resolver/adapter runtime wiring into routes, pages, or server actions.
 - Product writes outside the Phase 2B-AL backend API route boundary.
-- Listing image uploads and Supabase Storage wiring.
+- Customer uploads, arbitrary public upload routes, and storage usage outside
+  the approved admin-controlled `listing-media` workflow.
 - Conversation/message writes.
 - Supabase Cloud connection.
 - Deployment and Vercel project config.
@@ -556,10 +599,15 @@ Phase 2B-AN, Phase 2B-AO, Phase 2B-AR, and Phase 2B-AS boundaries.
 - n8n workflow import, export, activation, execution, or mutation.
 
 Furniture listing metadata writes currently use the existing Phase 2B-AL/AM backend API route boundary, whose internal technical names still reference product/product image tables and routes.
+Listing media uploads currently use the approved Phase 2C-A protected
+server-only multipart branch and public `listing-media` bucket model.
+
 Furniture listing write UI beyond categories, Phase 2B-AS metadata-only
-listing controls, and Phase 2B-AY metadata-only listing image controls, plus
-server actions, binary listing image upload, Supabase Storage, service-role
-shortcuts, and browser Supabase product writes remain blocked.
+listing controls, Phase 2B-AY metadata-only listing image controls, and the
+Phase 2C-A admin-controlled listing media upload boundary remains blocked.
+Customer uploads, arbitrary public upload routes, server actions, storage
+usage outside the approved listing media workflow, service-role shortcuts, and
+browser Supabase product writes remain blocked.
 
 ## Current n8n/Pinecone position
 
@@ -586,7 +634,17 @@ architecture.
 
 ## Next recommended PR
 
-The next recommended PR should keep the furniture listing catalogue direction narrow. Safe follow-up work can harden listing terminology, prepare listing image metadata planning without upload/storage, or improve enquiry/quote planning docs. Binary listing image uploads, Supabase Storage, carts, checkout, payments, customer accounts, stock reservation, order fulfilment, online ordering, deployment config, browser Supabase, service-role runtime paths, n8n changes, Pinecone runtime code, SaaS chatbot work, and `website/chat-config.js` access remain blocked.
+The next recommended PR after this reconciliation should keep tracks separate.
+A future deployment PR must be separately approved and should use the Phase
+2D-A runbook and evidence template without bundling unrelated runtime work.
+Safe non-deployment follow-up can be docs/static-guard work for privacy,
+retention, conversation/message governance, or operator evidence hardening.
+Customer uploads, arbitrary public upload routes, public quote status
+tracking, customer-visible internal notes, notifications, CRM integration,
+carts, checkout, payments, customer accounts, stock reservation, order
+fulfilment, online ordering, deployment config without explicit approval,
+browser Supabase, service-role runtime paths, n8n changes, Pinecone runtime
+code, SaaS chatbot work, and `website/chat-config.js` access remain blocked.
 
 ## Phase 2B-AP Current Boundary
 

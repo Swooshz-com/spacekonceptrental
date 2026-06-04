@@ -12,6 +12,16 @@ values, tokens, webhook URLs, private dashboard links, or customer data.
 - Reviewers: `<reviewer-list>`
 - Approval reference: `<approval-reference>`
 
+## Remaining-work map
+
+- Completed phases confirmed: `<summary>`
+- Safe next phases not bundled into this PR: `<summary>`
+- Blocked phases requiring explicit owner approval: `<summary>`
+- Phases too broad or risky to bundle: `<summary>`
+- Largest safe bundle rationale: `<summary>`
+- Confirmation that unrelated runtime, privacy, CRM, notification, SaaS chatbot,
+  or ecommerce work is not bundled: `<confirmed-by>`
+
 ## Environment reviewed
 
 - Supabase project reviewed: `<review-summary>`
