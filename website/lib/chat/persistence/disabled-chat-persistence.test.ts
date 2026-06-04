@@ -1,51 +1,37 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
-import type {
-  ChatProviderRequest,
-  ChatProviderResponse
-} from "../provider";
-import { getChatPersistence } from "./index";
+import {
+  createTranscriptPersistenceCommand,
+  getChatPersistence,
+  persistTranscriptCommand,
+  type TranscriptPersistenceCommandInput
+} from "./index";
 
-const trustedWorkspace = {
-  workspaceId: "11111111-1111-4111-8111-111111111111",
-  resolution: "server-config" as const
-};
-
-const providerRequest: ChatProviderRequest = {
-  requestId: "request-1",
-  conversationId: "conversation-1",
-  clientSessionId: "browser-session-1",
-  clientMessageId: "client-message-1",
-  message: {
-    role: "user",
-    content: "I need 20 stools for an event"
+const transcriptInput: TranscriptPersistenceCommandInput = {
+  trustedWorkspaceId: "11111111-1111-4111-8111-111111111111",
+  conversation: {
+    id: "22222222-2222-4222-8222-222222222222",
+    publicReference: "chat-disabled-default",
+    clientSessionHash: "b".repeat(64)
   },
-  context: {
-    pagePath: "/catalogue"
-  },
-  capabilities: {
-    stream: false
-  },
-  locale: "en-SG",
-  timezone: "Asia/Singapore"
-};
-
-const providerResponse: ChatProviderResponse = {
-  conversationId: "conversation-1",
-  assistantMessageId: "assistant-message-1",
-  status: "completed",
-  reply: {
-    role: "assistant",
-    content: "Thanks. Could you share the event date?",
-    quickReplies: [],
-    actions: []
-  }
+  messages: [
+    {
+      id: "33333333-3333-4333-8333-333333333333",
+      role: "user",
+      messageType: "chat",
+      content: "I need 20 stools for an event",
+      clientMessageId: "client-message-disabled-default",
+      requestId: "request-disabled-default",
+      sequenceNumber: 0
+    }
+  ]
 };
 
 function readPersistenceSource() {
   return [
     "lib/chat/persistence/types.ts",
+    "lib/chat/persistence/contract.ts",
     "lib/chat/persistence/disabled-chat-persistence.ts",
     "lib/chat/persistence/index.ts"
   ]
@@ -54,38 +40,29 @@ function readPersistenceSource() {
 }
 
 describe("disabled chat persistence scaffold", () => {
-  it("returns explicit skipped results for user and assistant messages", async () => {
-    const persistence = getChatPersistence();
+  it("keeps the default persistence adapter unavailable for transcript writes", async () => {
+    const command = createTranscriptPersistenceCommand(transcriptInput);
 
+    expect(command.ok).toBe(true);
     await expect(
-      persistence.recordUserMessage({
-        workspace: trustedWorkspace,
-        providerRequest
+      persistTranscriptCommand(transcriptInput, {
+        adapter: getChatPersistence()
       })
     ).resolves.toEqual({
-      status: "skipped",
-      reason: "CHAT_PERSISTENCE_DISABLED_PHASE_1I_A"
-    });
-
-    await expect(
-      persistence.recordAssistantMessage({
-        workspace: trustedWorkspace,
-        providerRequest,
-        providerResponse
-      })
-    ).resolves.toEqual({
-      status: "skipped",
-      reason: "CHAT_PERSISTENCE_DISABLED_PHASE_1I_A"
+      ok: false,
+      status: "unavailable",
+      reason: "transcript_persistence_unavailable"
     });
   });
 
   it("keeps the scaffold server-only and unable to write chat data", () => {
     const source = readPersistenceSource();
 
-    expect(source.match(/import "server-only";/g)).toHaveLength(3);
+    expect(source.match(/import "server-only";/g)).toHaveLength(4);
     expect(source).not.toContain("@supabase/");
     expect(source).not.toContain("createServerSupabaseClient");
     expect(source).not.toContain(".insert(");
+    expect(source).not.toContain(".upsert(");
     expect(source).not.toContain('from("conversations")');
     expect(source).not.toContain('from("messages")');
     expect(source).not.toContain("SUPABASE_SERVICE_ROLE");

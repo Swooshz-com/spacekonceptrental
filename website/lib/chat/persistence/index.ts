@@ -4,23 +4,60 @@ import {
   disabledChatPersistence,
   DisabledChatPersistence
 } from "./disabled-chat-persistence";
+import {
+  createTranscriptPersistenceCommand,
+  persistTranscriptCommand
+} from "./contract";
 import type {
-  ChatPersistence,
-  ChatPersistenceResult,
-  RecordAssistantMessageInput,
-  RecordUserMessageInput,
-  TrustedChatWorkspace
+  BatchTranscriptPersistenceCommand,
+  ConversationPersistenceCommand,
+  ConversationPersistenceCommandInput,
+  MessagePersistenceCommand,
+  MessagePersistenceCommandInput,
+  TranscriptConversationStatus,
+  TranscriptMetadataInput,
+  TranscriptPersistenceAdapter,
+  TranscriptPersistenceAdapterResult,
+  TranscriptPersistenceCommandInput,
+  TranscriptPersistenceCommandResult,
+  TranscriptPersistenceDependencies,
+  TranscriptPersistenceMessageRole,
+  TranscriptPersistenceMessageType,
+  TranscriptPersistencePersistedResult,
+  TranscriptPersistenceRejectReason,
+  TranscriptPersistenceRejectedResult,
+  TranscriptPersistenceResult,
+  TranscriptPersistenceUnavailableResult
 } from "./types";
 
-export { disabledChatPersistence, DisabledChatPersistence };
+export {
+  createTranscriptPersistenceCommand,
+  disabledChatPersistence,
+  DisabledChatPersistence,
+  persistTranscriptCommand
+};
 export type {
-  ChatPersistence,
-  ChatPersistenceResult,
-  RecordAssistantMessageInput,
-  RecordUserMessageInput,
-  TrustedChatWorkspace
+  BatchTranscriptPersistenceCommand,
+  ConversationPersistenceCommand,
+  ConversationPersistenceCommandInput,
+  MessagePersistenceCommand,
+  MessagePersistenceCommandInput,
+  TranscriptConversationStatus,
+  TranscriptMetadataInput,
+  TranscriptPersistenceAdapter,
+  TranscriptPersistenceAdapterResult,
+  TranscriptPersistenceCommandInput,
+  TranscriptPersistenceCommandResult,
+  TranscriptPersistenceDependencies,
+  TranscriptPersistenceMessageRole,
+  TranscriptPersistenceMessageType,
+  TranscriptPersistencePersistedResult,
+  TranscriptPersistenceRejectReason,
+  TranscriptPersistenceRejectedResult,
+  TranscriptPersistenceResult,
+  TranscriptPersistenceUnavailableResult
 };
 
-export function getChatPersistence(): ChatPersistence {
+export function getChatPersistence(): TranscriptPersistenceAdapter {
   return disabledChatPersistence;
 }

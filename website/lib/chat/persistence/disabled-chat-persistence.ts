@@ -1,27 +1,20 @@
 import "server-only";
 
 import type {
-  ChatPersistence,
-  ChatPersistenceResult,
-  RecordAssistantMessageInput,
-  RecordUserMessageInput
+  BatchTranscriptPersistenceCommand,
+  TranscriptPersistenceAdapter,
+  TranscriptPersistenceAdapterResult
 } from "./types";
 
-const disabledResult: ChatPersistenceResult = {
-  status: "skipped",
-  reason: "CHAT_PERSISTENCE_DISABLED_PHASE_1I_A"
+const disabledResult: TranscriptPersistenceAdapterResult = {
+  ok: false,
+  reason: "adapter_unavailable"
 };
 
-export class DisabledChatPersistence implements ChatPersistence {
-  async recordUserMessage(
-    _input: RecordUserMessageInput
-  ): Promise<ChatPersistenceResult> {
-    return disabledResult;
-  }
-
-  async recordAssistantMessage(
-    _input: RecordAssistantMessageInput
-  ): Promise<ChatPersistenceResult> {
+export class DisabledChatPersistence implements TranscriptPersistenceAdapter {
+  async persistTranscript(
+    _command: BatchTranscriptPersistenceCommand
+  ): Promise<TranscriptPersistenceAdapterResult> {
     return disabledResult;
   }
 }

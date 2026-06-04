@@ -101,6 +101,9 @@ variables such as `N8N_CHAT_WEBHOOK_URL`.
 - Phase 2E-B approves only local conversation/message schema and RLS
   foundation work. Do not add runtime transcript writes or reads without
   separate approval, a reviewed server-side access path, RLS review, and tests.
+- Phase 2E-C approves only the server-only TypeScript persistence contract,
+  validation/minimisation helpers, safe command shaping, and fake/injected
+  adapter tests. It is not runtime transcript write approval.
 - Do not trust browser-provided session IDs as identity or authorization.
 - Use `clientMessageId` only for idempotency and deduplication, not
   authentication.
@@ -112,6 +115,8 @@ variables such as `N8N_CHAT_WEBHOOK_URL`.
 - Phase 2E-B adds the local schema/RLS foundation for `conversations` and
   `messages` while direct anonymous/public and authenticated client reads and
   writes remain denied.
+- Phase 2E-C adds only an injected-adapter contract boundary; the default
+  persistence path remains unavailable and `/api/chat` remains unwired.
 - Runtime transcript writes remain blocked.
 - Runtime transcript reads remain blocked.
 - Admin transcript UI remains blocked.
