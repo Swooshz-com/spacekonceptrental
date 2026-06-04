@@ -287,4 +287,205 @@ describe("Phase 2E-C transcript persistence contract", () => {
     expect(JSON.stringify(result)).not.toContain("sk-secret");
     expect(JSON.stringify(result)).not.toContain("webhook");
   });
+
+  it("returns safe rejections for malformed runtime input without throwing", async () => {
+    const circularMetadata: Record<string, unknown> = {};
+    circularMetadata.self = circularMetadata;
+
+    const cases: Array<{
+      name: string;
+      input: unknown;
+      reason: string;
+    }> = [
+      {
+        name: "null top-level input",
+        input: null,
+        reason: "trusted_workspace_missing"
+      },
+      {
+        name: "numeric top-level input",
+        input: 42,
+        reason: "trusted_workspace_missing"
+      },
+      {
+        name: "missing conversation",
+        input: {
+          trustedWorkspaceId: workspaceId,
+          messages: validInput().messages
+        },
+        reason: "conversation_id_invalid"
+      },
+      {
+        name: "null conversation",
+        input: validInput({ conversation: null as never }),
+        reason: "conversation_id_invalid"
+      },
+      {
+        name: "numeric conversation id",
+        input: validInput({
+          conversation: {
+            ...validInput().conversation,
+            id: 7 as never
+          }
+        }),
+        reason: "conversation_id_invalid"
+      },
+      {
+        name: "numeric public reference",
+        input: validInput({
+          conversation: {
+            ...validInput().conversation,
+            publicReference: 7 as never
+          }
+        }),
+        reason: "conversation_public_reference_invalid"
+      },
+      {
+        name: "numeric conversation retention timestamp",
+        input: validInput({
+          conversation: {
+            ...validInput().conversation,
+            retentionExpiresAt: 7 as never
+          }
+        }),
+        reason: "retention_expires_at_invalid"
+      },
+      {
+        name: "missing messages",
+        input: {
+          trustedWorkspaceId: workspaceId,
+          conversation: validInput().conversation
+        },
+        reason: "messages_missing"
+      },
+      {
+        name: "non-array messages",
+        input: {
+          trustedWorkspaceId: workspaceId,
+          conversation: validInput().conversation,
+          messages: {} as never
+        },
+        reason: "messages_missing"
+      },
+      {
+        name: "null message element",
+        input: validInput({ messages: [null as never] }),
+        reason: "message_id_invalid"
+      },
+      {
+        name: "numeric message role",
+        input: validInput({
+          messages: [
+            {
+              ...validInput().messages[0],
+              role: 5 as never
+            }
+          ]
+        }),
+        reason: "message_role_type_invalid"
+      },
+      {
+        name: "numeric message content",
+        input: validInput({
+          messages: [
+            {
+              ...validInput().messages[0],
+              content: 5 as never
+            }
+          ]
+        }),
+        reason: "message_content_missing"
+      },
+      {
+        name: "numeric provider",
+        input: validInput({
+          messages: [
+            {
+              ...validInput().messages[0],
+              provider: 5 as never
+            }
+          ]
+        }),
+        reason: "provider_invalid"
+      },
+      {
+        name: "object client message id",
+        input: validInput({
+          messages: [
+            {
+              ...validInput().messages[0],
+              clientMessageId: { value: "client-message-object" } as never
+            }
+          ]
+        }),
+        reason: "client_message_id_invalid"
+      },
+      {
+        name: "numeric request id",
+        input: validInput({
+          messages: [
+            {
+              ...validInput().messages[0],
+              requestId: 5 as never
+            }
+          ]
+        }),
+        reason: "request_id_invalid"
+      },
+      {
+        name: "object message retention timestamp",
+        input: validInput({
+          messages: [
+            {
+              ...validInput().messages[0],
+              retentionExpiresAt: { value: "2026-07-04" } as never
+            }
+          ]
+        }),
+        reason: "retention_expires_at_invalid"
+      },
+      {
+        name: "malformed metadata",
+        input: validInput({
+          messages: [
+            {
+              ...validInput().messages[0],
+              metadata: circularMetadata
+            }
+          ]
+        }),
+        reason: "metadata_invalid"
+      }
+    ];
+
+    for (const testCase of cases) {
+      expect(() =>
+        createTranscriptPersistenceCommand(
+          testCase.input as TranscriptPersistenceCommandInput
+        )
+      ).not.toThrow();
+
+      expect(
+        createTranscriptPersistenceCommand(
+          testCase.input as TranscriptPersistenceCommandInput
+        ),
+        testCase.name
+      ).toMatchObject({
+        ok: false,
+        status: "rejected",
+        reason: testCase.reason
+      });
+
+      await expect(
+        persistTranscriptCommand(
+          testCase.input as TranscriptPersistenceCommandInput,
+          {}
+        )
+      ).resolves.toMatchObject({
+        ok: false,
+        status: "rejected",
+        reason: testCase.reason
+      });
+    }
+  });
 });

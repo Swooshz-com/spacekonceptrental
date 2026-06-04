@@ -210,8 +210,12 @@ Suggested first PR:
   boundary, including a local ungranted SQL/RPC contract and an injected
   TypeScript executor adapter only, without wiring runtime transcript writes or
   reads.
+- Phase 2E-E follows with transcript persistence activation governance and
+  executor approval gates only, after the Phase 2E-D hotfix rejects conflicting
+  `clientMessageId` reuse and hardens malformed runtime input validation,
+  without adding a live executor or wiring `/api/chat`.
 
-Current Phase 2E-D status:
+Current Phase 2E-E status:
 
 - The existing `conversations` and `messages` tables now have the local schema
   and RLS foundation needed for a future reviewed persistence path.
@@ -222,10 +226,22 @@ Current Phase 2E-D status:
 - The local transcript persistence RPC boundary is defined for validated
   trusted-workspace conversation/message batches and remains ungranted to
   anonymous/public and authenticated browser roles.
+- Phase 2E-D hotfix coverage now proves exact duplicate
+  `clientMessageId` retries return the original message ID, while changed
+  content, changed request ID, or changed metadata rejects with
+  `transcript_client_message_id_conflict`.
+- Phase 2E-D hotfix coverage now proves malformed JSON-like transcript command
+  inputs return safe rejected results instead of throwing validation
+  exceptions.
 - The server-only RPC adapter maps the validated command into an injected
   executor payload only; it does not instantiate Supabase, read env, read
   cookies/headers, or use `website/chat-config.js`.
 - The default persistence adapter remains unavailable.
+- No live Supabase RPC executor exists yet.
+- Future live executor work requires explicit owner approval, a reviewed
+  privilege model, service-role/browser separation, failure redaction,
+  idempotency proof, audit/evidence requirements, rollback/disable controls,
+  and tests before `/api/chat` can use it.
 - Trusted workspace IDs are server-owned inputs; anonymous session hashes are
   correlation only; `clientMessageId` is idempotency/deduplication only.
 - Validation rejects invalid workspace IDs, unsafe server-generated IDs,

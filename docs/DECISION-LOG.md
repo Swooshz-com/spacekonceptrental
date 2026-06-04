@@ -1399,3 +1399,54 @@ admin transcript UI, approve customer accounts, approve public quote tracking,
 add notifications or CRM integration, change n8n/Pinecone runtime behavior,
 add SaaS chatbot runtime work, add browser Supabase, add service-role runtime
 paths, add ecommerce flows, or access `website/chat-config.js`.
+
+## 2026-06-04: Phase 2E-D Hotfix And Transcript Activation Governance
+
+Decision: Phase 2E-D hotfixes conflicting clientMessageId reuse and malformed runtime validation, and Phase 2E-E adds transcript persistence activation governance and executor approval gates only.
+
+Reason: PR #102 merged at `b34cc02a67e73d497e9b90fd904786da3bbe77d3` and
+completed the server-only transcript persistence RPC/adapter boundary. Follow-up
+review found two bounded fixes needed before activation governance: reused
+`clientMessageId` values with changed payloads must not silently return the old
+message row, and transcript command validation must not throw when malformed
+JSON-like runtime input reaches the helper boundary.
+
+The hotfix keeps the database uniqueness constraint as the concurrency arbiter
+for `(workspace_id, conversation_id, client_message_id)`. Exact duplicate
+retries return the original message ID only when role, message type, content,
+provider, request ID, sequence number, retention expiry, and metadata match.
+Conflicting reused `clientMessageId` payloads reject with
+`transcript_client_message_id_conflict`. The fingerprint excludes `id` because
+a future server-side executor may regenerate server-owned message IDs while
+replaying the same client idempotency key.
+
+The TypeScript transcript persistence contract now safely rejects malformed
+runtime input, including non-object top-level payloads, missing/null
+conversation objects, missing/non-array messages, null message elements,
+non-string IDs, non-string role/content/provider/client message/request IDs,
+invalid retention timestamps, and malformed metadata. `persistTranscriptCommand`
+returns safe rejected or unavailable result shapes and does not leak validation
+exceptions.
+
+Phase 2E-E records that the Phase 2E-D RPC remains ungranted to browser roles,
+the TypeScript adapter requires an injected executor, and no live executor
+exists yet. A future live executor requires explicit owner approval, a reviewed
+privilege model, no service-role material in browser/client code, failure
+redaction, idempotency proof, audit/evidence requirements, rollback/disable
+controls, and tests before `/api/chat` can use it.
+
+Explicit approval remains required before any Live Supabase RPC executor, Any
+service-role or privileged DB execution strategy, `/api/chat` transcript write
+wiring, Transcript read paths, Admin transcript UI, Transcript
+deletion/export paths, Retention cleanup jobs, Customer identity/account
+linking, Public quote tracking or public transcript access, Notifications or
+CRM integration.
+
+This phase does not deploy, add Vercel project config, connect Supabase Cloud,
+add production env files, add real secrets, add production seed data, add a
+live Supabase RPC executor, add service-role runtime paths, wire runtime
+transcript writes into `/api/chat`, add runtime transcript reads, add admin
+transcript UI, approve customer accounts, approve public quote tracking, add
+notifications or CRM integration, change n8n/Pinecone runtime behavior, add
+SaaS chatbot runtime work, add browser Supabase, add ecommerce flows, or access
+`website/chat-config.js`.

@@ -804,3 +804,20 @@ Runtime transcript reads remain blocked. Admin transcript UI remains blocked.
 Customer accounts remain blocked. Public quote tracking remains blocked.
 Browser Supabase remains forbidden. Service-role runtime paths remain
 forbidden.
+
+Phase 2E-E adds transcript persistence activation governance and executor
+approval gates only. It follows the Phase 2E-D hotfix that rejects conflicting
+`clientMessageId` reuse and makes malformed runtime validation non-throwing.
+It documents that the RPC remains ungranted to browser roles, the TypeScript
+adapter requires an injected executor, no live executor exists yet, and any
+future executor requires explicit owner approval, a reviewed privilege model,
+failure redaction, idempotency proof, audit/evidence requirements, and
+rollback/disable controls before `/api/chat` can use it.
+
+Phase 2E-E does not add a live Supabase RPC executor, service-role runtime
+path, `/api/chat` transcript write wiring, transcript reads, admin transcript
+UI, deletion/export runtime paths, retention cleanup jobs, customer
+identity/account linking, public quote tracking, notifications, CRM,
+n8n/Pinecone runtime changes, SaaS chatbot runtime work, deployment config,
+Supabase Cloud actions, browser Supabase, ecommerce flows, or
+`website/chat-config.js` access.

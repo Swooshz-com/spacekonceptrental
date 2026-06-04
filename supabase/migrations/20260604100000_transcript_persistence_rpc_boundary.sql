@@ -175,8 +175,10 @@ begin
 
     if v_client_message_id is not null then
       -- The base schema unique constraint is the concurrency arbiter for
-      -- non-null client_message_id retries. A duplicate retry returns the
-      -- original message id instead of surfacing a unique-constraint error.
+      -- non-null client_message_id retries.
+      -- exact duplicate retries are accepted while conflicting client_message_id reuse is rejected.
+      -- The idempotency fingerprint excludes id because a future server-side
+      -- executor may generate message ids while replaying the same client key.
       insert into public.messages (
         id,
         workspace_id,
@@ -218,7 +220,19 @@ begin
         where public.messages.workspace_id = excluded.workspace_id
           and public.messages.conversation_id = excluded.conversation_id
           and public.messages.client_message_id = excluded.client_message_id
+          and public.messages.role is not distinct from excluded.role
+          and public.messages.message_type is not distinct from excluded.message_type
+          and public.messages.content is not distinct from excluded.content
+          and public.messages.provider is not distinct from excluded.provider
+          and public.messages.request_id is not distinct from excluded.request_id
+          and public.messages.sequence_number is not distinct from excluded.sequence_number
+          and public.messages.retention_expires_at is not distinct from excluded.retention_expires_at
+          and public.messages.metadata is not distinct from excluded.metadata
       returning id into v_persisted_message_id;
+
+      if v_persisted_message_id is null then
+        raise exception 'transcript_client_message_id_conflict';
+      end if;
     else
       insert into public.messages (
         id,

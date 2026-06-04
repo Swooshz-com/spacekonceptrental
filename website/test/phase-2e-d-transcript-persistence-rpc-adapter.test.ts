@@ -39,7 +39,7 @@ function readTrackedProductionSources(paths: string[]) {
 }
 
 describe("Phase 2E-D transcript persistence RPC/adapter boundary", () => {
-  it("records Phase 2E-D as current and Phase 2E-C / PR #101 as completed", () => {
+  it("records Phase 2E-D as completed on the PR #102 baseline", () => {
     const status = readRepoFile("docs/PHASE-STATUS.md");
     const roadmap = readRepoFile("docs/PHASE-ROADMAP.md");
     const readiness = readRepoFile("docs/PHASE-2-READINESS-PLAN.md");
@@ -49,25 +49,29 @@ describe("Phase 2E-D transcript persistence RPC/adapter boundary", () => {
     );
 
     expect(status).toContain(
-      "Current phase: Phase 2E-D - server-only transcript persistence RPC/adapter boundary."
+      "Current phase: Phase 2E-E - transcript persistence activation governance and executor approval gate."
     );
     expect(status).toContain(
-      "Latest completed phase: Phase 2E-C - server-only transcript persistence contract and validation boundary."
+      "Latest completed phase: Phase 2E-D - server-only transcript persistence RPC/adapter boundary."
     );
-    expect(status).toContain("Last merged phase PR: #101");
+    expect(status).toContain("Last merged phase PR: #102");
     expect(status).toContain(
-      "Merge commit: `cfc48f132e170121e1eb90f6b1af4c60762a7227`"
+      "Merge commit: `b34cc02a67e73d497e9b90fd904786da3bbe77d3`"
     );
     expect(normalizeWhitespace(roadmap)).toContain(
       "Phase 2E-D adds the server-only transcript persistence RPC/adapter boundary"
     );
-    expect(readiness).toContain("Current Phase 2E-D status");
+    expect(readiness).toContain("Current Phase 2E-E status");
     expect(decisionLog).toContain(
       "Decision: Phase 2E-D adds only the server-only transcript persistence RPC/adapter boundary"
+    );
+    expect(decisionLog).toContain(
+      "Decision: Phase 2E-D hotfixes conflicting clientMessageId reuse and malformed runtime validation"
     );
     expect(checklist).toContain(
       "Phase 2E-D Completed RPC And Adapter Boundary"
     );
+    expect(checklist).toContain("Phase 2E-D Hotfix Completed Findings");
   });
 
   it("adds a local SQL RPC contract without granting browser roles transcript writes", () => {
@@ -85,6 +89,23 @@ describe("Phase 2E-D transcript persistence RPC/adapter boundary", () => {
     expect(migration).toContain("set search_path = public");
     expect(migration).toContain("on conflict (id) do update");
     expect(migration).toContain("client_message_id");
+    expect(migration).toContain("transcript_client_message_id_conflict");
+    expect(normalizeWhitespace(migration)).toContain(
+      "exact duplicate retries are accepted while conflicting client_message_id reuse is rejected"
+    );
+    for (const field of [
+      "role",
+      "message_type",
+      "content",
+      "provider",
+      "request_id",
+      "sequence_number",
+      "retention_expires_at",
+      "metadata"
+    ]) {
+      expect(migration, field).toContain(`public.messages.${field}`);
+      expect(migration, field).toContain(`excluded.${field}`);
+    }
     expect(migration).toContain("transcript_metadata_unsafe");
     expect(migration).toContain(
       "revoke all on function public.persist_transcript_batch(uuid, jsonb, jsonb) from public"
