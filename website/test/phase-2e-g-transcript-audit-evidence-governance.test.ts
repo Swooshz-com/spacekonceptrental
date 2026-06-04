@@ -48,15 +48,23 @@ function isProductionSource(filePath: string) {
   );
 }
 
-function readTrackedProductionSources(paths: string[]) {
+function readTrackedProductionSources(paths: string[], excludePaths: string[] = []) {
+  const normalizedExcludePaths = excludePaths.map(normalizePathForGit);
+
   return readTrackedFiles(paths)
+    .filter(
+      (filePath) =>
+        !normalizedExcludePaths.some(
+          (path) => filePath === path || filePath.startsWith(`${path}/`)
+        )
+    )
     .filter(isProductionSource)
     .map((filePath) => readRepoFile(filePath))
     .join("\n");
 }
 
 describe("Phase 2E-G transcript audit/evidence governance", () => {
-  it("records Phase 2E-G as current and Phase 2E-F PR #104 as completed", () => {
+  it("records Phase 2E-H as current and Phase 2E-G PR #105 as completed", () => {
     const status = normalizeWhitespace(readRepoFile("docs/PHASE-STATUS.md"));
     const readiness = readRepoFile("docs/PHASE-2-READINESS-PLAN.md");
     const checklist = readRepoFile(
@@ -65,27 +73,27 @@ describe("Phase 2E-G transcript audit/evidence governance", () => {
     const decisionLog = readRepoFile("docs/DECISION-LOG.md");
 
     expect(status).toContain(
-      "Current phase: Phase 2E-G - transcript audit/evidence model and operator runbook readiness."
+      "Current phase: Phase 2E-H - transcript audit/evidence local schema, RLS, and server-only contract foundation."
     );
     expect(status).toContain(
-      "Latest completed phase: Phase 2E-F - transcript lifecycle governance and retention/deletion/export readiness."
+      "Latest completed phase: Phase 2E-G - transcript audit/evidence model and operator runbook readiness."
     );
-    expect(status).toContain("Last merged phase PR: #104");
+    expect(status).toContain("Last merged phase PR: #105");
     expect(status).toContain(
-      "Merge commit: `49bb60131af99a0a3829a536eb5d29575218a442`"
+      "Merge commit: `a59547130c33ec56e275dfdee48ceac9a1f8587f`"
     );
     expect(status).toContain(
-      "PR #104 merged Phase 2E-F transcript lifecycle governance and retention/deletion/export readiness"
+      "PR #105 merged Phase 2E-G transcript audit/evidence model and operator runbook readiness"
     );
-    expect(readiness).toContain("Current Phase 2E-G status");
+    expect(readiness).toContain("Current Phase 2E-H status");
     expect(checklist).toContain(
-      "Phase 2E-G Audit/Evidence Model And Operator Runbook Readiness"
+      "Phase 2E-H Completed Local Schema/RLS And Server-Only Contract Foundation"
     );
     expect(decisionLog).toContain(
-      "Decision: Phase 2E-G adds transcript audit/evidence model and operator runbook readiness only."
+      "Decision: Phase 2E-H adds transcript audit/evidence local schema, RLS, and server-only contract foundation only."
     );
     expect(decisionLog).toContain(
-      "PR #104 merged at `49bb60131af99a0a3829a536eb5d29575218a442`"
+      "PR #105 merged at `a59547130c33ec56e275dfdee48ceac9a1f8587f`"
     );
   });
 
@@ -226,6 +234,9 @@ describe("Phase 2E-G transcript audit/evidence governance", () => {
     const persistenceSource = readTrackedProductionSources([
       "website/lib/chat/persistence"
     ]);
+    const auditContractSource = readTrackedProductionSources([
+      "website/lib/chat/audit"
+    ]);
     const browserSurfaceSource = readTrackedProductionSources([
       "website/app",
       "website/components"
@@ -233,7 +244,10 @@ describe("Phase 2E-G transcript audit/evidence governance", () => {
     const chatRuntimeSource = readTrackedProductionSources([
       "website/app/api/chat",
       "website/lib/chat"
+    ], [
+      "website/lib/chat/audit"
     ]);
+    const auditContractFiles = readTrackedFiles(["website/lib/chat/audit"]);
 
     expect(routeSource).not.toMatch(
       /persistTranscriptCommand|createRpcTranscriptPersistenceAdapter|createTranscriptPersistenceCommand|getChatPersistence|TranscriptPersistence/i
@@ -246,6 +260,20 @@ describe("Phase 2E-G transcript audit/evidence governance", () => {
     expect(persistenceSource).not.toContain("SUPABASE_SERVICE_ROLE");
     expect(persistenceSource).not.toContain("NEXT_PUBLIC_SUPABASE");
     expect(persistenceSource).not.toContain("chat-config");
+    expect(auditContractSource.match(/import "server-only";/g)).toHaveLength(4);
+    expect(auditContractSource).not.toContain("@supabase/");
+    expect(auditContractSource).not.toContain("createClient(");
+    expect(auditContractSource).not.toContain("createServerSupabaseClient");
+    expect(auditContractSource).not.toContain("process.env");
+    expect(auditContractSource).not.toContain("headers()");
+    expect(auditContractSource).not.toContain("cookies()");
+    expect(auditContractSource).not.toContain(".insert(");
+    expect(auditContractSource).not.toContain(".upsert(");
+    expect(auditContractSource).not.toContain(".select(");
+    expect(auditContractSource).not.toContain(".rpc(");
+    expect(auditContractSource).not.toContain("SUPABASE_SERVICE_ROLE");
+    expect(auditContractSource).not.toContain("NEXT_PUBLIC_SUPABASE");
+    expect(auditContractSource).not.toContain("chat-config");
     expect(browserSurfaceSource).not.toContain("@supabase/");
     expect(browserSurfaceSource).not.toContain("NEXT_PUBLIC_SUPABASE");
     expect(browserSurfaceSource).not.toContain("SUPABASE_SERVICE_ROLE");
@@ -272,7 +300,13 @@ describe("Phase 2E-G transcript audit/evidence governance", () => {
     expect(readTrackedFiles(["website/app/api/jobs"])).toEqual([]);
     expect(readTrackedFiles(["website/lib/chat/retention"])).toEqual([]);
     expect(readTrackedFiles(["website/lib/chat/lifecycle"])).toEqual([]);
-    expect(readTrackedFiles(["website/lib/chat/audit"])).toEqual([]);
+    expect(auditContractFiles).toEqual([
+      "website/lib/chat/audit/contract.ts",
+      "website/lib/chat/audit/disabled-transcript-audit.ts",
+      "website/lib/chat/audit/index.ts",
+      "website/lib/chat/audit/transcript-audit-contract.test.ts",
+      "website/lib/chat/audit/types.ts"
+    ]);
     expect(readTrackedFiles(["website/lib/chat/evidence"])).toEqual([]);
     expect(readTrackedFiles(["website/lib/chat/transcript-audit"])).toEqual(
       []

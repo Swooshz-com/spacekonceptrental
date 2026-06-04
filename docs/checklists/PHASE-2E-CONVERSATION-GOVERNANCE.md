@@ -126,6 +126,40 @@ for transcript writes, transcript reads, or admin transcript UI.
 - [x] "Do not proceed" stop conditions are documented.
 - [x] Static guards prove Phase 2E-G remains governance/readiness only.
 
+## Phase 2E-H Completed Local Schema/RLS And Server-Only Contract Foundation
+
+- [x] Phase 2E-H is documented as local schema/RLS and server-only contract
+      foundation only.
+- [x] Local `transcript_audit_events` table exists for workspace-scoped,
+      redacted audit event facts only.
+- [x] Local `transcript_evidence_records` table exists for workspace-scoped,
+      placeholder evidence references and summaries only.
+- [x] Both tables enable RLS.
+- [x] Anonymous/public and authenticated browser roles receive no direct table
+      grants or policies.
+- [x] Local SQL constraints reject unsafe metadata keys and unsafe evidence
+      summary text.
+- [x] Shared SQL metadata helper denylist is expanded for Phase 2E-H
+      forbidden key classes while preserving recursive object-only metadata
+      checks.
+- [x] Local SQL constraints reject invalid audit event, actor, result, evidence
+      type, cross-workspace evidence relationships, and negative affected
+      record counts.
+- [x] Server-only TypeScript audit/evidence contract exists under
+      `website/lib/chat/audit/`.
+- [x] Default audit/evidence adapter remains unavailable.
+- [x] Contract calls are dependency-injected only and do not instantiate
+      Supabase, read env, read cookies or headers, call RPCs, use browser
+      Supabase, or read `website/chat-config.js`.
+- [x] Contract validation rejects malformed input, unsafe payload keys, unsafe
+      metadata, full transcript attempts, raw provider payload attempts,
+      tokens, API keys, private keys, secrets, and service-role material before
+      an adapter can run.
+- [x] Static guards prove Phase 2E-H keeps `/api/chat`, runtime writers,
+      deletion/export routes, retention jobs, admin transcript UI, production
+      evidence, deployment/config, browser Supabase, and service-role runtime
+      paths unwired.
+
 Audit/evidence approval gates requiring explicit owner approval:
 
 - [ ] Audit event model owner approval.
@@ -155,7 +189,7 @@ Lifecycle approval gates requiring explicit owner approval:
 Approval gates requiring explicit owner approval:
 
 - [ ] Audit/evidence runtime writer.
-- [ ] Audit/evidence storage or tables.
+- [ ] Audit/evidence runtime storage path beyond the local Phase 2E-H tables.
 - [ ] Production evidence file or artifact.
 - [ ] Live Supabase RPC executor.
 - [ ] Any service-role or privileged DB execution strategy.
