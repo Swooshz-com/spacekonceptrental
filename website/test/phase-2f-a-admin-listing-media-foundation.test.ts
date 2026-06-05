@@ -32,7 +32,7 @@ function readTrackedFiles(paths: string[]) {
 }
 
 describe("Phase 2F-A admin rental listing/media foundation", () => {
-  it("records Phase 2F-A status with Phase 2E-I PR #107 completed", () => {
+  it("records Phase 2F-A as completed after PR #108", () => {
     const status = normalizeWhitespace(readRepoFile("docs/PHASE-STATUS.md"));
     const roadmap = readRepoFile("docs/PHASE-ROADMAP.md");
     const readiness = readRepoFile("docs/PHASE-2-READINESS-PLAN.md");
@@ -42,19 +42,19 @@ describe("Phase 2F-A admin rental listing/media foundation", () => {
     const decisionLog = readRepoFile("docs/DECISION-LOG.md");
 
     expect(status).toContain(
-      "Current phase: Phase 2F-A - admin rental listing/media foundation."
+      "Latest completed phase: Phase 2F-A - admin rental listing/media foundation."
+    );
+    expect(status).toContain("Last merged phase PR: #108");
+    expect(status).toContain(
+      "Merge commit: `8385ac2d925b5edd44cdf016707bb2cd00d67264`"
     );
     expect(status).toContain(
-      "Latest completed phase: Phase 2E-I - transcript audit/evidence server-only insert boundary."
-    );
-    expect(status).toContain("Last merged phase PR: #107");
-    expect(status).toContain(
-      "Merge commit: `0f114c3085917f80afab2a5a2b8d30d90596b66f`"
+      "Phase 2F-A admin rental listing/media foundation is complete"
     );
     expect(roadmap).toContain(
       "Phase 2F-A adds a server-only listing-facing admin domain foundation"
     );
-    expect(readiness).toContain("Current Phase 2F-A status");
+    expect(readiness).toContain("Previous Current Phase 2F-A status");
     expect(adminOpsChecklist).toContain(
       "Phase 2F-A Admin Rental Listing/Media Foundation"
     );
@@ -96,7 +96,7 @@ describe("Phase 2F-A admin rental listing/media foundation", () => {
       .map(readRepoFile)
       .join("\n");
     const sourceWithoutSafetyPattern = source.replace(
-      /const unsafePayloadKeyPattern =[\s\S]*?;\n/,
+      /const unsafePayloadKeyPattern =[\s\S]*?\);\r?\n/,
       ""
     );
 

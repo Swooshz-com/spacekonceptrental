@@ -895,3 +895,23 @@ notifications, CRM integration, deployment, Vercel or Supabase Cloud config,
 real env values, production evidence, or ecommerce flows such as carts,
 checkout, payments, stock reservation, order fulfilment, confirmed booking, or
 online ordering. Product wording remains listing/enquiry/quote/request.
+
+Phase 2G-A adds RAG/search-index architecture and sync governance only. It
+documents that Supabase/listing data remains canonical for website/admin
+listing data and quote/enquiry workflows, while Pinecone is a future derived
+search index only. It adds a dedicated `docs/RAG-SEARCH-INDEX-PLAN.md`
+covering the future search document model, public-safe metadata rules,
+outbox/worker sync lifecycle, stable IDs and `content_hash`, archived/
+unpublished delete-or-hide behavior, metadata filters, reranking, and hybrid
+search as a later decision gate.
+
+Phase 2G-A does not add Pinecone runtime code, Pinecone package dependencies,
+Pinecone env reads, secrets, API keys, n8n workflow/runtime changes,
+embedding runtime, search-index tables, sync workers, `/api/chat` retrieval
+wiring, admin UI changes, real data ingestion, real vector upsert/delete,
+runtime reranking, hybrid search runtime, public/customer uploads, customer
+accounts, public quote tracking, customer-visible internal notes,
+notifications, CRM integration, deployment, Vercel or Supabase Cloud config,
+browser Supabase, service-role runtime paths, transcript runtime paths, or
+ecommerce flows. Future runtime sync/retrieval/reranking requires explicit
+owner approval.
