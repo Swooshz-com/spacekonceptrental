@@ -269,6 +269,29 @@ describe("Phase 2E-I RPC transcript audit/evidence adapter", () => {
       status: "rejected",
       reason: "evidence_text_unsafe"
     });
+    for (const testCase of [
+      {
+        name: "transcript content validation summary",
+        input: validEvidenceInput({
+          validationSummary: "transcript content placeholder"
+        })
+      },
+      {
+        name: "customer visible internal notes operator notes",
+        input: validEvidenceInput({
+          operatorNotes: "customer visible internal notes placeholder"
+        })
+      }
+    ]) {
+      await expect(
+        recordTranscriptEvidenceRecord(testCase.input, { adapter }),
+        testCase.name
+      ).resolves.toEqual({
+        ok: false,
+        status: "rejected",
+        reason: "evidence_text_unsafe"
+      });
+    }
     await expect(
       recordTranscriptEvidenceRecord(
         validEvidenceInput({

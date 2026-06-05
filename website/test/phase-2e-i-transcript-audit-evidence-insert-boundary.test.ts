@@ -165,6 +165,21 @@ describe("Phase 2E-I transcript audit/evidence insert boundary", () => {
     expect(auditSource).not.toContain("chat-config");
   });
 
+  it("keeps TypeScript evidence text safety classes aligned with the SQL RPC", () => {
+    const migration = readRepoFile(
+      "supabase/migrations/20260604120000_transcript_audit_evidence_insert_boundary.sql"
+    );
+    const contract = readRepoFile("website/lib/chat/audit/contract.ts");
+
+    for (const unsafeTextClass of [
+      "transcript[_ -]?content",
+      "customer[_ -]?visible[_ -]?internal[_ -]?notes"
+    ]) {
+      expect(migration).toContain(unsafeTextClass);
+      expect(contract).toContain(unsafeTextClass);
+    }
+  });
+
   it("keeps /api/chat and runtime transcript audit/evidence paths unwired", () => {
     const routeSource = readRepoFile("website/app/api/chat/route.ts");
     const runtimeSource = readTrackedProductionSources(
