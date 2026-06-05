@@ -160,6 +160,34 @@ for transcript writes, transcript reads, or admin transcript UI.
       evidence, deployment/config, browser Supabase, and service-role runtime
       paths unwired.
 
+## Phase 2E-I Completed Server-Only Insert Boundary
+
+- [x] Phase 2E-I is documented as a server-only local/test-only insert
+      boundary only.
+- [x] Local `insert_transcript_audit_event` and
+      `insert_transcript_evidence_record` RPC contracts are defined for
+      validated audit/evidence rows.
+- [x] Browser roles are not granted execute on the transcript audit/evidence
+      insert RPCs.
+- [x] The insert RPCs validate trusted workspace scope and same-workspace
+      conversation, quote request, actor membership, and audit event
+      relationships.
+- [x] The insert RPCs reuse safe recursive metadata validation and reject full
+      transcript content, transcript content keys, provider payloads, webhook
+      headers, cookies, tokens, credentials, service-role material, and
+      customer-visible internal notes before inserts.
+- [x] Evidence inserts remain placeholder/summary-only and reject unsafe
+      evidence summary text.
+- [x] Server-only TypeScript RPC adapter maps validated commands into an
+      injected executor payload only.
+- [x] Default audit/evidence adapter remains disabled and unavailable.
+- [x] Static guards prove Phase 2E-I keeps `/api/chat`, admin UI,
+      deletion/export routes, retention jobs, live Supabase service-role
+      execution, browser grants, browser Supabase, production evidence, and
+      `website/chat-config.js` unwired.
+- [x] Product wording remains enquiry/quote/request and does not add ecommerce,
+      cart, checkout, payment, fulfilment, or online ordering flows.
+
 Audit/evidence approval gates requiring explicit owner approval:
 
 - [ ] Audit event model owner approval.

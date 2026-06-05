@@ -301,7 +301,7 @@ test('real migration directory passes static validation', () => {
   const result = runValidator(realMigrationsDir);
 
   assert.equal(result.status, 0, result.stdout + result.stderr);
-  assert.match(result.stdout, /checked 12 migration SQL file\(s\)/);
+  assert.match(result.stdout, /checked 13 migration SQL file\(s\)/);
 });
 
 test('real base schema migration creates the planned MVP tables', () => {
@@ -1011,6 +1011,73 @@ test('real migrations add the Phase 2E-H transcript audit/evidence schema withou
     /grant execute on function public\.[a-z_]*transcript_(audit|evidence)[a-z_]*\(.*\) to (anon|authenticated)/i,
     'Phase 2E-H must not introduce browser-granted audit/evidence RPCs',
   );
+});
+
+test('real migrations add the Phase 2E-I transcript audit/evidence insert RPC boundary without browser grants', () => {
+  const migrationFileName = '20260604120000_transcript_audit_evidence_insert_boundary.sql';
+  const migration = readRealMigration(migrationFileName);
+  const sql = normalizeSql(migration);
+
+  assert.match(
+    migration,
+    /create or replace function public\.insert_transcript_audit_event\(\s*p_workspace_id uuid,\s*p_event jsonb\s*\)/,
+  );
+  assert.match(
+    migration,
+    /create or replace function public\.insert_transcript_evidence_record\(\s*p_workspace_id uuid,\s*p_evidence jsonb\s*\)/,
+  );
+  assert.match(migration, /returns jsonb/i);
+  assert.match(migration, /security definer/i);
+  assert.match(migration, /set search_path = public/i);
+  assert.match(migration, /public\.is_safe_transcript_metadata/);
+  assert.match(sql, /insert into public\.transcript_audit_events/);
+  assert.match(sql, /insert into public\.transcript_evidence_records/);
+
+  for (const controlledError of [
+    'transcript_audit_workspace_required',
+    'transcript_audit_event_invalid',
+    'transcript_audit_workspace_mismatch',
+    'transcript_audit_conversation_workspace_mismatch',
+    'transcript_audit_quote_request_workspace_mismatch',
+    'transcript_audit_actor_workspace_mismatch',
+    'transcript_audit_metadata_unsafe',
+    'transcript_evidence_workspace_required',
+    'transcript_evidence_record_invalid',
+    'transcript_evidence_workspace_mismatch',
+    'transcript_evidence_audit_event_workspace_mismatch',
+    'transcript_evidence_metadata_unsafe',
+    'transcript_evidence_text_unsafe',
+  ]) {
+    assert.match(
+      migration,
+      new RegExp(controlledError),
+      `Phase 2E-I insert RPC must keep controlled error ${controlledError}`,
+    );
+  }
+
+  for (const signature of [
+    'public.insert_transcript_audit_event(uuid, jsonb)',
+    'public.insert_transcript_evidence_record(uuid, jsonb)',
+  ]) {
+    assert.ok(
+      sql.includes(`revoke all on function ${signature} from public;`),
+      `${signature} must revoke default public execute`,
+    );
+    assert.ok(
+      sql.includes(`revoke all on function ${signature} from anon, authenticated;`),
+      `${signature} must explicitly revoke browser-role execute`,
+    );
+  }
+
+  assert.doesNotMatch(
+    migration,
+    /grant execute on function public\.insert_transcript_(audit_event|evidence_record)\(uuid, jsonb\) to (anon|authenticated)/i,
+  );
+  assert.doesNotMatch(
+    migration,
+    /grant\s+(select|insert|update|delete|all)[\s\S]*?on table public\.transcript_(audit_events|evidence_records) to (anon|authenticated)/i,
+  );
+  assert.doesNotMatch(migration, /service_role|service-role|NEXT_PUBLIC|chat-config/i);
 });
 
 test('real RLS policy migration scopes admin reads through workspace membership', () => {

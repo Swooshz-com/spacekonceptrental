@@ -868,3 +868,12 @@ customer accounts, public quote tracking or public transcript access,
 notifications, CRM integration, n8n/Pinecone runtime changes, SaaS chatbot
 runtime work, deployment, Vercel config, Supabase Cloud config, env/secrets,
 ecommerce flows, or `website/chat-config.js` access.
+
+Phase 2E-I adds a server-only local/test-only insert boundary for transcript audit/evidence rows. It defines local `insert_transcript_audit_event` and `insert_transcript_evidence_record` RPC contracts for validated audit/evidence rows, keeps those functions ungranted to browser roles, validates trusted workspace scope and same-workspace relationships, reuses the shared safe metadata helper, and adds an injected TypeScript RPC adapter under `website/lib/chat/audit/`.
+
+Phase 2E-I does not wire `/api/chat`, add admin transcript UI, add
+deletion/export/retention runtime paths, add live Supabase service-role
+execution, add browser grants, add browser Supabase, add production evidence,
+change n8n/Pinecone runtime behavior, add SaaS chatbot runtime work, deploy,
+change Vercel or Supabase Cloud config, access `website/chat-config.js`, or
+add ecommerce flows. Product wording remains enquiry/quote/request.

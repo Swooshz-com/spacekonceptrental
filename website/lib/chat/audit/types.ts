@@ -91,6 +91,77 @@ export type TranscriptEvidenceRecordCommand = {
   operatorNotes?: string;
 };
 
+export type TranscriptAuditEventRpcPayload = {
+  p_workspace_id: string;
+  p_event: {
+    workspace_id: string;
+    conversation_id: string | null;
+    quote_request_id: string | null;
+    actor_admin_user_id: string | null;
+    event_type: TranscriptAuditEventType;
+    actor_type: TranscriptAuditActorType;
+    request_id: string | null;
+    approval_reference: string | null;
+    reason_code: string | null;
+    result_status: TranscriptAuditResultStatus;
+    affected_record_count: number | null;
+    metadata: TranscriptAuditMetadataInput;
+  };
+};
+
+export type TranscriptEvidenceRecordRpcPayload = {
+  p_workspace_id: string;
+  p_evidence: {
+    workspace_id: string;
+    audit_event_id: string | null;
+    evidence_type: TranscriptEvidenceType;
+    environment_label: string | null;
+    commit_sha: string | null;
+    validation_summary: string | null;
+    dry_run_summary: string | null;
+    rollback_summary: string | null;
+    operator_notes: string | null;
+    metadata: TranscriptAuditMetadataInput;
+  };
+};
+
+export type TranscriptAuditEventRpcExecutorResult =
+  | {
+      ok: true;
+      auditEventId: string;
+    }
+  | {
+      ok: false;
+      reason: "rpc_rejected" | "rpc_unavailable" | "rpc_failed";
+    };
+
+export type TranscriptEvidenceRecordRpcExecutorResult =
+  | {
+      ok: true;
+      evidenceRecordId: string;
+    }
+  | {
+      ok: false;
+      reason: "rpc_rejected" | "rpc_unavailable" | "rpc_failed";
+    };
+
+export type TranscriptAuditRpcExecutor = {
+  insertTranscriptAuditEvent(
+    payload: TranscriptAuditEventRpcPayload
+  ):
+    | TranscriptAuditEventRpcExecutorResult
+    | Promise<TranscriptAuditEventRpcExecutorResult>;
+  insertTranscriptEvidenceRecord(
+    payload: TranscriptEvidenceRecordRpcPayload
+  ):
+    | TranscriptEvidenceRecordRpcExecutorResult
+    | Promise<TranscriptEvidenceRecordRpcExecutorResult>;
+};
+
+export type TranscriptAuditRpcAdapterDependencies = {
+  executor?: TranscriptAuditRpcExecutor;
+};
+
 export type TranscriptAuditRejectReason =
   | "input_invalid"
   | "payload_unsafe"

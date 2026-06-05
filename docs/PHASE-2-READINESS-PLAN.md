@@ -231,8 +231,40 @@ Suggested first PR:
   runtime paths, retention cleanup jobs, a live Supabase RPC executor,
   service-role runtime paths, browser Supabase, admin transcript UI,
   production evidence, customer accounts, or public transcript/quote access.
+- Phase 2E-I follows with transcript audit/evidence server-only insert
+  boundary only, after PR #106 records the local schema/RLS and contract
+  foundation, without wiring `/api/chat`, admin UI, deletion/export/retention
+  runtime paths, live Supabase service-role execution, browser grants, browser
+  Supabase, production evidence, or ecommerce flows. Product language remains
+  enquiry/quote/request.
 
-Current Phase 2E-H status:
+Current Phase 2E-I status:
+
+- PR #106 merged Phase 2E-H transcript audit/evidence local schema, RLS, and
+  server-only contract foundation at merge commit
+  `8607e16d3c405df0797ec08536cce79f1b4f68d2`.
+- Phase 2E-H is complete as local schema/RLS and server-only contract
+  foundation only.
+- Phase 2E-I is current as a server-only local/test-only insert boundary only.
+- Local `insert_transcript_audit_event` and
+  `insert_transcript_evidence_record` RPCs are defined for validated
+  audit/evidence rows and explicitly ungranted to browser roles.
+- The TypeScript audit/evidence RPC adapter maps validated commands into an
+  injected executor only. It does not instantiate Supabase, read env, read
+  cookies or headers, call `.rpc`, use browser Supabase, or read
+  `website/chat-config.js`.
+- `/api/chat` remains unwired to transcript audit/evidence writes or reads.
+- Admin transcript UI remains blocked.
+- Transcript deletion/export runtime paths remain blocked.
+- Retention cleanup jobs remain blocked.
+- Live Supabase service-role execution remains blocked.
+- Browser grants and browser Supabase remain forbidden.
+- Production evidence files remain blocked.
+- Runtime transcript writes remain blocked.
+- Runtime transcript reads remain blocked.
+- Product wording remains enquiry/quote/request, not ecommerce/cart/checkout.
+
+Previous Current Phase 2E-H status:
 
 - PR #105 merged Phase 2E-G transcript audit/evidence model and operator
   runbook readiness at merge commit

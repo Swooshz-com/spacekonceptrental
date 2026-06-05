@@ -1800,6 +1800,215 @@ check('transcript audit/evidence constraints accept safe local rows and reject u
   );
 });
 
+check('transcript audit/evidence insert RPCs insert safe local rows for privileged executor only', () => {
+  const rpcAuditEventId = 'd0000000-0000-4000-8000-000000000201';
+  const rpcEvidenceRecordId = 'e0000000-0000-4000-8000-000000000201';
+
+  const auditOutput = psql(`
+    select public.insert_transcript_audit_event(
+      '${ids.workspaceA}'::uuid,
+      jsonb_build_object(
+        'id', '${rpcAuditEventId}',
+        'workspace_id', '${ids.workspaceA}',
+        'conversation_id', '${ids.conversationA}',
+        'quote_request_id', '${ids.quoteA}',
+        'actor_admin_user_id', '${ids.adminA}',
+        'event_type', 'evidence_capture',
+        'actor_type', 'operator',
+        'request_id', 'rls-insert-boundary-audit',
+        'approval_reference', 'local-approval-2e-i',
+        'reason_code', 'local_sql_rls_proof',
+        'result_status', 'succeeded',
+        'affected_record_count', 1,
+        'metadata', jsonb_build_object('source', 'phase-2e-i-rls')
+      )
+    )::text;
+  `);
+
+  assert.match(auditOutput, new RegExp(rpcAuditEventId));
+
+  const evidenceOutput = psql(`
+    select public.insert_transcript_evidence_record(
+      '${ids.workspaceA}'::uuid,
+      jsonb_build_object(
+        'id', '${rpcEvidenceRecordId}',
+        'workspace_id', '${ids.workspaceA}',
+        'audit_event_id', '${rpcAuditEventId}',
+        'evidence_type', 'local_sql_rls_proof',
+        'environment_label', 'local',
+        'commit_sha', '8607e16d3c405df0797ec08536cce79f1b4f68d2',
+        'validation_summary', 'Local SQL and RLS proof placeholder.',
+        'dry_run_summary', 'Dry-run placeholder.',
+        'rollback_summary', 'Rollback placeholder.',
+        'operator_notes', 'Operator note placeholder.',
+        'metadata', jsonb_build_object('source', 'phase-2e-i-rls')
+      )
+    )::text;
+  `);
+
+  assert.match(evidenceOutput, new RegExp(rpcEvidenceRecordId));
+  assert.equal(
+    psql(`
+      select count(*)::text
+      from public.transcript_evidence_records
+      where id = '${rpcEvidenceRecordId}'
+        and audit_event_id = '${rpcAuditEventId}'
+        and workspace_id = '${ids.workspaceA}'
+    `),
+    '1',
+    'privileged local insert RPC should create a same-workspace evidence placeholder row',
+  );
+
+  statementFails(
+    `
+      select public.insert_transcript_audit_event(
+        '${ids.workspaceA}'::uuid,
+        jsonb_build_object(
+          'workspace_id', '${ids.workspaceA}',
+          'conversation_id', '${ids.conversationB}',
+          'event_type', 'evidence_capture',
+          'actor_type', 'operator',
+          'result_status', 'succeeded',
+          'metadata', jsonb_build_object('source', 'phase-2e-i-rls')
+        )
+      )
+    `,
+    /transcript_audit_conversation_workspace_mismatch/i,
+  );
+
+  statementFails(
+    `
+      select public.insert_transcript_evidence_record(
+        '${ids.workspaceA}'::uuid,
+        jsonb_build_object(
+          'workspace_id', '${ids.workspaceA}',
+          'audit_event_id', '${ids.transcriptAuditEventB}',
+          'evidence_type', 'local_sql_rls_proof',
+          'metadata', jsonb_build_object('source', 'phase-2e-i-rls')
+        )
+      )
+    `,
+    /transcript_evidence_audit_event_workspace_mismatch/i,
+  );
+
+  for (const [label, metadataSql] of [
+    ['fullTranscript', "jsonb_build_object('fullTranscript', 'blocked')"],
+    ['transcriptContent', "jsonb_build_object('transcriptContent', 'blocked')"],
+    ['providerPayload', "jsonb_build_object('providerPayload', 'blocked')"],
+    ['webhookHeaders', "jsonb_build_object('webhookHeaders', 'blocked')"],
+    ['cookie', "jsonb_build_object('cookie', 'blocked')"],
+    ['token', "jsonb_build_object('token', 'blocked')"],
+    ['credential', "jsonb_build_object('credential', 'blocked')"],
+    ['serviceRole', "jsonb_build_object('serviceRole', 'blocked')"],
+    [
+      'customerVisibleInternalNotes',
+      "jsonb_build_object('customerVisibleInternalNotes', 'blocked')",
+    ],
+  ]) {
+    statementFails(
+      `
+        select public.insert_transcript_audit_event(
+          '${ids.workspaceA}'::uuid,
+          jsonb_build_object(
+            'workspace_id', '${ids.workspaceA}',
+            'event_type', 'evidence_capture',
+            'actor_type', 'operator',
+            'result_status', 'succeeded',
+            'metadata', ${metadataSql}
+          )
+        )
+      `,
+      /transcript_audit_metadata_unsafe/i,
+      `insert_transcript_audit_event should reject unsafe metadata key ${label}`,
+    );
+
+    statementFails(
+      `
+        select public.insert_transcript_evidence_record(
+          '${ids.workspaceA}'::uuid,
+          jsonb_build_object(
+            'workspace_id', '${ids.workspaceA}',
+            'evidence_type', 'local_sql_rls_proof',
+            'metadata', ${metadataSql}
+          )
+        )
+      `,
+      /transcript_evidence_metadata_unsafe/i,
+      `insert_transcript_evidence_record should reject unsafe metadata key ${label}`,
+    );
+  }
+
+  statementFails(
+    `
+      select public.insert_transcript_evidence_record(
+        '${ids.workspaceA}'::uuid,
+        jsonb_build_object(
+          'workspace_id', '${ids.workspaceA}',
+          'evidence_type', 'local_sql_rls_proof',
+          'validation_summary', 'provider payload and service-role token',
+          'metadata', jsonb_build_object('source', 'phase-2e-i-rls')
+        )
+      )
+    `,
+    /transcript_evidence_text_unsafe/i,
+  );
+});
+
+check('browser roles cannot execute transcript audit/evidence insert RPCs', () => {
+  for (const role of ['anon', 'authenticated']) {
+    for (const signature of [
+      'public.insert_transcript_audit_event(uuid,jsonb)',
+      'public.insert_transcript_evidence_record(uuid,jsonb)',
+    ]) {
+      assert.equal(
+        psql(`select has_function_privilege('${role}', '${signature}', 'EXECUTE')::text`),
+        'false',
+        `${role} should not have execute on ${signature}`,
+      );
+    }
+  }
+
+  for (const [role, authUserId] of [
+    ['anon', null],
+    ['authenticated', ids.authMemberA],
+    ['authenticated', ids.authNoMembership],
+  ]) {
+    statementFailsAs(
+      role,
+      authUserId,
+      `
+        select public.insert_transcript_audit_event(
+          '${ids.workspaceA}'::uuid,
+          jsonb_build_object(
+            'workspace_id', '${ids.workspaceA}',
+            'event_type', 'evidence_capture',
+            'actor_type', 'operator',
+            'result_status', 'succeeded',
+            'metadata', jsonb_build_object('source', 'client-rpc-attempt')
+          )
+        )
+      `,
+      /permission denied/i,
+    );
+
+    statementFailsAs(
+      role,
+      authUserId,
+      `
+        select public.insert_transcript_evidence_record(
+          '${ids.workspaceA}'::uuid,
+          jsonb_build_object(
+            'workspace_id', '${ids.workspaceA}',
+            'evidence_type', 'local_sql_rls_proof',
+            'metadata', jsonb_build_object('source', 'client-rpc-attempt')
+          )
+        )
+      `,
+      /permission denied/i,
+    );
+  }
+});
+
 check('anonymous public can create website quote rows without reading them back', () => {
   const quoteId = '70000000-0000-4000-8000-000000000101';
   const output = queryAs(
