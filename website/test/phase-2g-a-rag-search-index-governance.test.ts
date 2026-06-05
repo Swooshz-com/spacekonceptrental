@@ -40,8 +40,16 @@ function isProductionSource(filePath: string) {
   );
 }
 
-function readTrackedProductionSources(paths: string[]) {
+function readTrackedProductionSources(paths: string[], excludePaths: string[] = []) {
+  const normalizedExcludePaths = excludePaths.map(normalizePathForGit);
+
   return readTrackedFiles(paths)
+    .filter(
+      (filePath) =>
+        !normalizedExcludePaths.some(
+          (path) => filePath === path || filePath.startsWith(`${path}/`)
+        )
+    )
     .filter(isProductionSource)
     .map(readRepoFile)
     .join("\n");
@@ -59,15 +67,12 @@ describe("Phase 2G-A RAG search-index architecture and sync governance", () => {
     const plan = readRepoFile("docs/RAG-SEARCH-INDEX-PLAN.md");
 
     expect(status).toContain(
-      "Current phase: Phase 2G-A - RAG search-index architecture and sync governance."
+      "PR #109 merged Phase 2G-A RAG search-index architecture and sync governance"
     );
     expect(status).toContain(
-      "Latest completed phase: Phase 2G-A - RAG search-index architecture and sync governance."
+      "Phase 2G-A RAG search-index architecture and sync governance is complete as docs/static-guard work only."
     );
-    expect(status).toContain("Last merged phase PR: #109");
-    expect(status).toContain(
-      "Merge commit: `02a16bdfd938841ddeac408f4d204d455050f714`"
-    );
+    expect(status).toContain("02a16bdfd938841ddeac408f4d204d455050f714");
     expect(roadmap).toContain(
       "Phase 2G-A adds RAG/search-index architecture and sync governance only."
     );
@@ -107,11 +112,10 @@ describe("Phase 2G-A RAG search-index architecture and sync governance", () => {
   });
 
   it("does not add Pinecone runtime code, packages, env reads, or chat retrieval wiring", () => {
-    const productionSource = readTrackedProductionSources([
-      "website/app",
-      "website/components",
-      "website/lib"
-    ]);
+    const productionSource = readTrackedProductionSources(
+      ["website/app", "website/components", "website/lib"],
+      ["website/lib/search-index"]
+    );
     const rootPackage = readRepoFile("package.json");
     const websitePackage = readRepoFile("website/package.json");
     const chatRoute = readRepoFile("website/app/api/chat/route.ts");

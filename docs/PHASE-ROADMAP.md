@@ -922,3 +922,20 @@ and TypeScript audit/evidence contract only. It adds no transcript runtime
 writes or reads, no live Supabase executor, no admin transcript UI, no
 Pinecone/n8n runtime changes, no customer/public quote tracking functionality,
 and no ecommerce functionality.
+
+Phase 2G-B adds a local search-index outbox foundation only. It adds local
+Supabase `search_index_jobs` and `search_index_documents` tables for future
+queue/document tracking, plus a server-only disabled/injected TypeScript
+contract boundary. Supabase/listing data remains canonical, and Pinecone
+remains a future derived search index only.
+
+Phase 2G-B does not add Pinecone runtime code, Pinecone package dependencies,
+Pinecone env reads, Pinecone executors, API keys, n8n workflow/runtime
+changes, embedding runtime, sync workers, `/api/chat` retrieval wiring, admin
+UI changes, real data ingestion, real vector upsert/delete, runtime
+reranking, hybrid search runtime, public/customer uploads, customer accounts,
+public quote tracking, customer-visible internal notes, notifications, CRM
+integration, deployment, Vercel or Supabase Cloud config, browser Supabase,
+service-role runtime paths, transcript runtime paths, or ecommerce flows.
+Future sync worker/retrieval/reranking/hybrid runtime requires explicit owner
+approval.

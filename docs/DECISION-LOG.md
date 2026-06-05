@@ -1708,3 +1708,37 @@ keys, secrets, API keys, service-role material, and customer-visible internal
 notes. It adds no transcript runtime writes or reads, no live Supabase
 executor, no admin transcript UI, no Pinecone/n8n runtime changes, no
 customer/public quote tracking functionality, and no ecommerce functionality.
+
+## 2026-06-05: Local Search-Index Outbox Foundation
+
+Decision: Phase 2G-B adds local search-index outbox and document tracking tables only.
+
+Reason: PR #110 merged the transcript metadata diagnostic denylist hotfix at
+`608e53892964c172b64286a554ee202c8d1147d8`. After Phase 2G-A defined the
+RAG/search-index architecture, the next safe implementation step is a
+local-only Supabase foundation that can support future reviewed sync jobs
+without adding external index runtime behavior.
+
+Phase 2G-B adds `search_index_jobs` and `search_index_documents` as local
+queue/document tracking tables with workspace scope, safe source type,
+visibility, operation, and status checks, bounded redacted metadata, active-job
+idempotency, source lookup indexes, fail-closed RLS, no browser grants, and no
+public policies. It also adds a server-only TypeScript contract boundary whose
+default adapter is disabled and whose tests use injected fakes only.
+
+Supabase/listing data remains canonical for website/admin listing data,
+quote/enquiry workflows, workspace ownership, and admin audit trails.
+Search-index tables are local queue/document tracking foundations only.
+Pinecone remains a future derived search index only.
+
+Phase 2G-B adds no Pinecone runtime code, Pinecone package dependencies,
+Pinecone env reads, Pinecone executor, API keys, n8n workflow/runtime changes,
+embedding runtime, sync worker, `/api/chat` retrieval wiring, admin UI, real
+data ingestion, real vector upsert/delete, runtime reranking, hybrid search
+runtime, public/customer upload route, customer account, public quote
+tracking, customer-visible internal notes, notification, CRM integration,
+deployment, Vercel or Supabase Cloud config, browser Supabase, service-role
+runtime path, transcript runtime path, or ecommerce flow.
+
+Future sync worker, retrieval, reranking, and hybrid runtime work requires
+explicit owner approval in a separate phase.
