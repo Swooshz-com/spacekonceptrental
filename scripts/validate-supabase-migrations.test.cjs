@@ -1261,7 +1261,7 @@ test('real migrations add the Phase 2G-B search-index outbox foundation without 
   assert.match(sql, /constraint search_index_jobs_metadata_safe_check check \(public\.is_safe_search_index_metadata\(metadata, 4096\)\)/);
 
   assert.match(sql, /constraint search_index_documents_workspace_id_fkey foreign key \(workspace_id\) references public\.workspaces \(id\)/);
-  assert.match(sql, /constraint search_index_documents_last_index_job_workspace_id_fkey foreign key \(last_index_job_id, workspace_id\) references public\.search_index_jobs \(id, workspace_id\)/);
+  assert.match(sql, /constraint search_index_documents_last_index_job_workspace_id_fkey foreign key \(last_index_job_id, workspace_id\) references public\.search_index_jobs \(id, workspace_id\) on delete restrict/);
   assert.match(sql, /constraint search_index_documents_source_visibility_key unique \(workspace_id, source_type, source_id, visibility\)/);
   assert.match(sql, /constraint search_index_documents_chunk_count_check check \(chunk_count >= 0\)/);
   assert.match(sql, /constraint search_index_documents_metadata_safe_check check \(public\.is_safe_search_index_metadata\(metadata, 4096\)\)/);

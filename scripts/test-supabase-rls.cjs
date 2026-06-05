@@ -2129,6 +2129,27 @@ check('search-index outbox constraints accept safe local rows and reject unsafe 
 
   statementFails(
     `
+      delete from public.search_index_jobs
+      where id = '${safeJobId}'
+        and workspace_id = '${ids.workspaceA}'
+    `,
+    /search_index_documents_last_index_job_workspace_id_fkey|still referenced|foreign key/i,
+    'referenced search_index_jobs row should be restricted while a document points at it',
+  );
+
+  assert.equal(
+    psql(`
+      select count(*)::text
+      from public.search_index_documents
+      where id = '${safeDocumentId}'
+        and last_index_job_id = '${safeJobId}'
+    `),
+    '1',
+    'restricted job deletion should leave the document/job reference intact',
+  );
+
+  statementFails(
+    `
       insert into public.search_index_jobs (
         workspace_id,
         source_type,

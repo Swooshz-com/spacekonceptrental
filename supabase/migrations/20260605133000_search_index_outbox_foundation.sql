@@ -169,7 +169,7 @@ create table if not exists public.search_index_documents (
   constraint search_index_documents_last_index_job_workspace_id_fkey
     foreign key (last_index_job_id, workspace_id)
     references public.search_index_jobs (id, workspace_id)
-    on delete set null,
+    on delete restrict,
   constraint search_index_documents_source_visibility_key
     unique (workspace_id, source_type, source_id, visibility),
   constraint search_index_documents_source_type_check
