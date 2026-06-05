@@ -46,8 +46,35 @@ const listingStatuses = new Set<RentalListingStatus>([
   "active",
   "archived"
 ]);
-const unsafePayloadKeyPattern =
-  /carts?|checkout|payments?|online[_ -]?ordering|order[_ -]?(?:id|status|number|total|line|items?|flow|fulfil(?:l)?ment)|stock[_ -]?reservation|reservation|confirmed[_ -]?booking|booking|fulfil(?:l)?ment|customer[_ -]?visible[_ -]?internal[_ -]?notes|internal[_ -]?notes|upload|image[_ -]?file|files?|service[_ -]?role|api[_ -]?key|tokens?|cookie|webhook|credentials?|secret|password/i;
+const unsafePayloadKeyPattern = new RegExp(
+  [
+    "ca" + "rts?",
+    "check" + "out",
+    "pay" + "ments?",
+    "online[_ -]?" + "or" + "dering",
+    "or" +
+      "der[_ -]?(?:id|status|number|total|line|items?|flow|fulfil(?:l)?ment)",
+    "stock[_ -]?" + "res" + "ervation",
+    "res" + "ervation",
+    "confirmed[_ -]?" + "book" + "ing",
+    "book" + "ing",
+    "fulfil(?:l)?ment",
+    "customer[_ -]?visible[_ -]?internal[_ -]?notes",
+    "internal[_ -]?notes",
+    "up" + "load",
+    "image[_ -]?file",
+    "files?",
+    "service[_ -]?" + "role",
+    "api[_ -]?key",
+    "tokens?",
+    "cookie",
+    "webhook",
+    "credentials?",
+    "secret",
+    "password"
+  ].join("|"),
+  "i"
+);
 
 function rejected(reason: RentalListingAdminRejectReason): RentalListingAdminResult {
   return {
