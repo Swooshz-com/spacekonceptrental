@@ -1621,3 +1621,32 @@ production evidence, change n8n/Pinecone runtime behavior, add SaaS chatbot
 runtime work, deploy, change Vercel or Supabase Cloud config, add ecommerce
 flows, or access `website/chat-config.js`. Product wording remains
 enquiry/quote/request.
+
+## 2026-06-05: Admin Rental Listing Media Foundation
+
+Decision: Phase 2F-A adds a server-only listing-facing admin domain foundation.
+
+Reason: PR #107 merged Phase 2E-I at
+`0f114c3085917f80afab2a5a2b8d30d90596b66f` and completed the transcript
+audit/evidence insert boundary without wiring runtime transcript paths. The
+next useful product-direction step is to move back to admin-managed
+rental/event furniture listings while avoiding a risky rename of the existing
+database and API internals.
+
+The implementation adds `website/lib/listings/admin/` as a server-only
+listing/enquiry/quote/request oriented contract. It validates rental listing
+metadata and listing image metadata, rejects ecommerce, upload-file, and
+customer-visible internal-note payload classes, and maps validated commands
+into an explicitly injected `ProductPersistence` boundary. Existing
+`products`, `categories`, and `product_images` names remain legacy technical
+internals for this phase.
+
+Phase 2F-A does not add a Supabase migration, new runtime route, public or
+customer upload route, arbitrary upload endpoint, live Supabase executor,
+browser Supabase, service-role runtime path, admin transcript UI, `/api/chat`
+transcript wiring, transcript deletion/export/retention runtime path, customer
+account, public quote tracking, customer-visible internal notes,
+notifications, CRM integration, deployment, Vercel or Supabase Cloud config,
+real env values, production evidence, or ecommerce flows such as carts,
+checkout, payments, stock reservation, order fulfilment, confirmed booking, or
+online ordering.

@@ -238,14 +238,36 @@ Suggested first PR:
   Supabase, production evidence, or ecommerce flows. Product language remains
   enquiry/quote/request.
 
-Current Phase 2E-I status:
+Current Phase 2F-A status:
+
+- PR #107 merged Phase 2E-I transcript audit/evidence server-only insert
+  boundary at merge commit `0f114c3085917f80afab2a5a2b8d30d90596b66f`.
+- Phase 2E-I is complete as local ungranted RPC and server-only injected
+  adapter work only.
+- Phase 2F-A is current as a server-only listing-facing admin domain
+  foundation for rental/event furniture listing metadata and listing image
+  metadata.
+- Existing `categories`, `products`, and `product_images` tables remain the
+  technical persistence internals. New TypeScript/domain names use listing
+  wording where practical and map into the existing product persistence
+  boundary.
+- No new Supabase migration, public upload route, customer upload route, live
+  Supabase executor, browser Supabase, service-role runtime path, deployment
+  config, customer account, public quote tracking, customer-visible internal
+  notes, notification, CRM integration, or ecommerce/cart/checkout/order flow
+  is added.
+- `/api/chat` remains unwired to transcript audit/evidence writes or reads.
+- Product wording remains listing/enquiry/quote/request in new user-facing and
+  domain surfaces.
+
+Previous Current Phase 2E-I status:
 
 - PR #106 merged Phase 2E-H transcript audit/evidence local schema, RLS, and
   server-only contract foundation at merge commit
   `8607e16d3c405df0797ec08536cce79f1b4f68d2`.
 - Phase 2E-H is complete as local schema/RLS and server-only contract
   foundation only.
-- Phase 2E-I is current as a server-only local/test-only insert boundary only.
+- Phase 2E-I was current as a server-only local/test-only insert boundary only.
 - Local `insert_transcript_audit_event` and
   `insert_transcript_evidence_record` RPCs are defined for validated
   audit/evidence rows and explicitly ungranted to browser roles.
