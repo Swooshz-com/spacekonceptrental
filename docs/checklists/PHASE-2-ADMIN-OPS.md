@@ -129,6 +129,15 @@ and route/action boundaries are implemented and tested.
 - [x] Direct authenticated quote status update and quote activity insert grants are revoked or narrowed.
 - [x] Public quote tracking, customer-visible internal notes, notifications, CRM, ecommerce flows, browser Supabase, and service-role runtime paths remain out of scope.
 
+## Phase 2H-A/B Admin Operations UI MVP
+
+- [x] Protected admin operations dashboard links to listing, category, media, and quote workflow surfaces.
+- [x] Listing management UI stays behind the protected admin shell and existing product write boundary.
+- [x] Category management UI stays behind the protected admin shell and existing category write boundary.
+- [x] Listing media upload and metadata management stay behind the protected admin shell and existing listing image boundaries.
+- [x] Quote request workflow review, status changes, and internal notes stay behind the protected admin shell and existing quote workflow RPC boundary.
+- [x] Public quote tracking, customer-visible internal notes, notifications, CRM, customer accounts, customer/public uploads, browser Supabase, service-role runtime paths, n8n/Pinecone runtime changes, and ecommerce flows remain out of scope.
+
 ## Phase 2D-A Deployment Readiness And Smoke-Test Runbook
 
 - [x] Deployment readiness docs are refreshed for catalogue media, admin listing media upload, public quote handoff, and atomic admin quote workflow surfaces.

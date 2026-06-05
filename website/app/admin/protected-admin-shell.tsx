@@ -32,6 +32,30 @@ export type ProtectedAdminShellState =
       status: "unavailable";
     };
 
+export type AdminShellView =
+  | {
+      kind: "overview";
+    }
+  | {
+      kind: "home";
+    }
+  | {
+      kind: "listings";
+    }
+  | {
+      kind: "categories";
+    }
+  | {
+      kind: "media";
+    }
+  | {
+      kind: "quotes";
+    }
+  | {
+      kind: "quote-detail";
+      quoteRequestId: string;
+    };
+
 type ProtectedAdminShellGateState =
   | Exclude<ProtectedAdminShellState, { status: "authorised_admin" }>
   | {
@@ -256,7 +280,301 @@ function AdminDashboard({
   );
 }
 
-function AdminStatusMessage({ state }: { state: ProtectedAdminShellState }) {
+function AdminOperationsNavigation() {
+  const links = [
+    ["Listings", "/admin/listings"],
+    ["Categories", "/admin/categories"],
+    ["Media", "/admin/media"],
+    ["Quote requests", "/admin/quotes"]
+  ] as const;
+
+  return (
+    <nav className="admin-ops-nav" aria-label="Admin operations">
+      <a href="/admin">Overview</a>
+      {links.map(([label, href]) => (
+        <a href={href} key={href}>
+          {label}
+        </a>
+      ))}
+    </nav>
+  );
+}
+
+function AdminOperationsHome({
+  dashboard,
+  quoteInbox
+}: {
+  dashboard: AdminProductDashboardReadResult;
+  quoteInbox: AdminQuoteRequestInboxReadResult;
+}) {
+  const categoryCount =
+    dashboard.status === "loaded" ? dashboard.data.categories.length : 0;
+  const listingCount =
+    dashboard.status === "loaded" ? dashboard.data.products.length : 0;
+  const imageCount =
+    dashboard.status === "loaded" ? dashboard.data.imageSummary.totalImages : 0;
+  const quoteCount =
+    quoteInbox.status === "loaded" ? quoteInbox.data.quoteRequests.length : 0;
+  const cards = [
+    {
+      href: "/admin/listings",
+      label: "Open listings",
+      title: "Listings",
+      count: listingCount,
+      body: "Create, edit, publish, and archive rental/event furniture listings."
+    },
+    {
+      href: "/admin/categories",
+      label: "Open categories",
+      title: "Categories",
+      count: categoryCount,
+      body: "Manage listing categories and publication state."
+    },
+    {
+      href: "/admin/media",
+      label: "Open media",
+      title: "Listing media",
+      count: imageCount,
+      body: "Upload approved listing images and maintain image metadata."
+    },
+    {
+      href: "/admin/quotes",
+      label: "Open quote requests",
+      title: "Quote requests",
+      count: quoteCount,
+      body: "Review enquiries and record admin-only follow-up notes."
+    }
+  ];
+
+  return (
+    <section className="admin-dashboard" aria-label="Admin operations">
+      <div className="admin-dashboard__header">
+        <div>
+          <p className="eyebrow">Operations</p>
+          <h2>Admin operations</h2>
+          <p>
+            Use these protected work areas for listing management and quote
+            request follow-up.
+          </p>
+        </div>
+      </div>
+      <div className="admin-dashboard__grid">
+        {cards.map((card) => (
+          <article className="admin-dashboard__card" key={card.href}>
+            <p className="eyebrow">{card.count} records</p>
+            <h3>{card.title}</h3>
+            <p>{card.body}</p>
+            <a className="button button--secondary" href={card.href}>
+              {card.label}
+            </a>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function AdminListingOperations({
+  dashboard
+}: {
+  dashboard: AdminProductDashboardReadResult;
+}) {
+  if (dashboard.status === "unavailable") {
+    return <AdminDashboard dashboard={dashboard} />;
+  }
+
+  return (
+    <>
+      <section className="admin-dashboard" aria-label="Listing operations">
+        <div className="admin-dashboard__header">
+          <div>
+            <p className="eyebrow">Listings</p>
+            <h2>Listing operations</h2>
+            <p>
+              Review listing metadata by status, then create or update rental
+              listing records through the protected write boundary.
+            </p>
+          </div>
+          <dl className="admin-dashboard__stats" aria-label="Listing summary">
+            <div>
+              <dt>Published</dt>
+              <dd>
+                {
+                  dashboard.data.products.filter(
+                    (product) => product.status === "published"
+                  ).length
+                }
+              </dd>
+            </div>
+            <div>
+              <dt>Draft</dt>
+              <dd>
+                {
+                  dashboard.data.products.filter(
+                    (product) => product.status === "draft"
+                  ).length
+                }
+              </dd>
+            </div>
+            <div>
+              <dt>Archived</dt>
+              <dd>
+                {
+                  dashboard.data.products.filter(
+                    (product) => product.status === "archived"
+                  ).length
+                }
+              </dd>
+            </div>
+          </dl>
+        </div>
+      </section>
+      <ListingManagementPanel
+        categories={dashboard.data.categories}
+        products={dashboard.data.products}
+      />
+    </>
+  );
+}
+
+function AdminCategoryOperations({
+  dashboard
+}: {
+  dashboard: AdminProductDashboardReadResult;
+}) {
+  if (dashboard.status === "unavailable") {
+    return <AdminDashboard dashboard={dashboard} />;
+  }
+
+  return <CategoryManagementPanel categories={dashboard.data.categories} />;
+}
+
+function AdminMediaOperations({
+  dashboard
+}: {
+  dashboard: AdminProductDashboardReadResult;
+}) {
+  if (dashboard.status === "unavailable") {
+    return <AdminDashboard dashboard={dashboard} />;
+  }
+
+  return (
+    <>
+      <ListingImageUploadPanel products={dashboard.data.products} />
+      <ListingImageMetadataManagementPanel
+        images={dashboard.data.images}
+        products={dashboard.data.products}
+      />
+    </>
+  );
+}
+
+function AdminQuoteDetail({
+  quoteInbox,
+  quoteRequestId
+}: {
+  quoteInbox: AdminQuoteRequestInboxReadResult;
+  quoteRequestId: string;
+}) {
+  if (quoteInbox.status === "unavailable") {
+    return <QuoteRequestInboxPanel inbox={quoteInbox} />;
+  }
+
+  const quoteRequest = quoteInbox.data.quoteRequests.find(
+    (item) => item.id === quoteRequestId
+  );
+
+  if (!quoteRequest) {
+    return (
+      <section className="admin-dashboard admin-dashboard--unavailable">
+        <h2>Quote request detail</h2>
+        <p>Quote request details are temporarily unavailable.</p>
+      </section>
+    );
+  }
+
+  return (
+    <>
+      <section className="admin-dashboard" aria-label="Quote request detail">
+        <div className="admin-dashboard__header">
+          <div>
+            <p className="eyebrow">Quote request detail</p>
+            <h2>Quote request detail</h2>
+            <p>
+              Review the selected enquiry and save admin-only follow-up status
+              or internal notes.
+            </p>
+          </div>
+        </div>
+      </section>
+      <QuoteRequestInboxPanel
+        inbox={{
+          status: "loaded",
+          data: {
+            quoteRequests: [quoteRequest]
+          }
+        }}
+      />
+    </>
+  );
+}
+
+function AdminOperationsView({
+  state,
+  view
+}: {
+  state: Extract<ProtectedAdminShellState, { status: "authorised_admin" }>;
+  view: AdminShellView;
+}) {
+  if (view.kind === "home") {
+    return (
+      <AdminOperationsHome
+        dashboard={state.dashboard}
+        quoteInbox={state.quoteInbox}
+      />
+    );
+  }
+
+  if (view.kind === "listings") {
+    return <AdminListingOperations dashboard={state.dashboard} />;
+  }
+
+  if (view.kind === "categories") {
+    return <AdminCategoryOperations dashboard={state.dashboard} />;
+  }
+
+  if (view.kind === "media") {
+    return <AdminMediaOperations dashboard={state.dashboard} />;
+  }
+
+  if (view.kind === "quotes") {
+    return <QuoteRequestInboxPanel inbox={state.quoteInbox} />;
+  }
+
+  if (view.kind === "quote-detail") {
+    return (
+      <AdminQuoteDetail
+        quoteInbox={state.quoteInbox}
+        quoteRequestId={view.quoteRequestId}
+      />
+    );
+  }
+
+  return (
+    <>
+      <AdminDashboard dashboard={state.dashboard} />
+      <QuoteRequestInboxPanel inbox={state.quoteInbox} />
+    </>
+  );
+}
+
+function AdminStatusMessage({
+  state,
+  view
+}: {
+  state: ProtectedAdminShellState;
+  view: AdminShellView;
+}) {
   if (state.status === "unauthenticated") {
     return (
       <>
@@ -296,22 +614,26 @@ function AdminStatusMessage({ state }: { state: ProtectedAdminShellState }) {
           Sign out
         </button>
       </form>
-      <AdminDashboard dashboard={state.dashboard} />
-      <QuoteRequestInboxPanel inbox={state.quoteInbox} />
+      <AdminOperationsNavigation />
+      <AdminOperationsView state={state} view={view} />
     </>
   );
 }
 
 export function AdminShellContent({
-  state
+  state,
+  view = {
+    kind: "overview"
+  }
 }: {
   state: ProtectedAdminShellState;
+  view?: AdminShellView;
 }) {
   return (
     <section className="section admin-shell" aria-live="polite">
       <div className="admin-shell__panel">
         <p className="eyebrow">Secure admin</p>
-        <AdminStatusMessage state={state} />
+        <AdminStatusMessage state={state} view={view} />
       </div>
     </section>
   );

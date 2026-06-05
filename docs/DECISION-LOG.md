@@ -1775,3 +1775,29 @@ hybrid search runtime, public/customer upload route, customer account, public
 quote tracking, customer-visible internal notes, notification, CRM
 integration, deployment, Vercel or Supabase Cloud config, browser Supabase,
 service-role runtime path, transcript runtime path, or ecommerce flow.
+
+## 2026-06-06: Admin Operations UI MVP
+
+Decision: Phase 2H-A/B adds the protected admin operations UI MVP.
+
+Reason: PR #112 merged Phase 2G-C/D at
+`116f3761032b2af23e2bc240a77b6e810f45e918`, so the next useful local phase is
+to make the already-approved admin listing/category/media and quote workflow
+boundaries easier to operate without widening runtime scope.
+
+The implementation adds focused protected admin pages for listing management,
+category management, listing media management, quote request review, and quote
+detail review. Listing/category/listing-image writes continue through the
+existing first-party admin routes and `execute_admin_product_write` boundary,
+preserving the local search-index enqueue behavior. Quote workflow status and
+internal notes continue through the existing protected quote route and
+`execute_admin_quote_workflow` RPC.
+
+Phase 2H-A/B does not add Pinecone runtime code, Pinecone package
+dependencies, Pinecone env reads, Pinecone executor, API keys, n8n workflow or
+runtime changes, embedding runtime, sync worker, `/api/chat` retrieval wiring,
+search-index document writer, real vector upsert/delete, runtime reranking,
+hybrid search runtime, public or customer upload routes, customer accounts,
+public quote tracking, customer-visible internal notes, notifications, CRM,
+deployment, Vercel or Supabase Cloud config, browser Supabase, service-role
+runtime paths, transcript runtime paths, or ecommerce flows.

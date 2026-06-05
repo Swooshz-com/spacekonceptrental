@@ -37,6 +37,7 @@ type AdminQuoteRequestInboxQuoteRequest = {
   status: AdminQuoteRequestStatus;
   source: "website" | "chat" | "admin";
   createdAt: string;
+  updatedAt?: string;
   items: AdminQuoteRequestInboxItem[];
   activity: AdminQuoteRequestInboxActivity[];
 };
@@ -316,6 +317,12 @@ export function QuoteRequestInboxPanel({
                     <dt>Submitted</dt>
                     <dd>{quoteRequest.createdAt}</dd>
                   </div>
+                  {quoteRequest.updatedAt ? (
+                    <div>
+                      <dt>Updated</dt>
+                      <dd>{quoteRequest.updatedAt}</dd>
+                    </div>
+                  ) : null}
                   {quoteRequest.customerEmail ? (
                     <div>
                       <dt>Email</dt>
@@ -341,6 +348,12 @@ export function QuoteRequestInboxPanel({
                     </div>
                   ) : null}
                 </dl>
+                <a
+                  className="button button--secondary"
+                  href={`/admin/quotes/${encodeURIComponent(quoteRequest.id)}`}
+                >
+                  Open quote detail {quoteRequest.publicReference}
+                </a>
                 {quoteRequest.items.length === 0 ? (
                   <p>No requested item snapshots were captured.</p>
                 ) : (

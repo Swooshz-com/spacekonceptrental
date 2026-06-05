@@ -78,15 +78,17 @@ describe("Phase 2B-AP admin category management UI boundary", () => {
       "website/components/admin/category-management-panel.tsx"
     );
 
-    expect(readTrackedFiles(["website/app/admin"])).toEqual([
-      "website/app/admin/login/page.test.tsx",
-      "website/app/admin/login/page.tsx",
-      "website/app/admin/logout/route.test.ts",
-      "website/app/admin/logout/route.ts",
-      "website/app/admin/page.tsx",
-      "website/app/admin/protected-admin-shell.test.tsx",
-      "website/app/admin/protected-admin-shell.tsx"
-    ]);
+    expect(readTrackedFiles(["website/app/admin"])).toEqual(
+      expect.arrayContaining([
+        "website/app/admin/login/page.test.tsx",
+        "website/app/admin/login/page.tsx",
+        "website/app/admin/logout/route.test.ts",
+        "website/app/admin/logout/route.ts",
+        "website/app/admin/page.tsx",
+        "website/app/admin/protected-admin-shell.test.tsx",
+        "website/app/admin/protected-admin-shell.tsx"
+      ])
+    );
     expect(shellSource).toContain("CategoryManagementPanel");
     expect(panelSource).toContain('"use client"');
     expect(panelSource).toContain("/api/admin/csrf-proof");

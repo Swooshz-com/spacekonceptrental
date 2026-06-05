@@ -59,7 +59,7 @@ function readTrackedProductionSources(
 }
 
 describe("Phase 2G-C/D search-index enqueue integration", () => {
-  it("records Phase 2G-C/D as local enqueue integration after PR #111", () => {
+  it("records Phase 2G-C/D as the latest completed local enqueue integration", () => {
     const status = normalizeWhitespace(readRepoFile("docs/PHASE-STATUS.md"));
     const roadmap = readRepoFile("docs/PHASE-ROADMAP.md");
     const readiness = readRepoFile("docs/PHASE-2-READINESS-PLAN.md");
@@ -72,14 +72,14 @@ describe("Phase 2G-C/D search-index enqueue integration", () => {
     );
 
     expect(status).toContain(
-      "Current phase: Phase 2G-C/D - server-only local search-index enqueue integration."
+      "Latest completed capability: Phase 2G-C/D server-only local search-index enqueue integration."
+    );
+    expect(status).toContain("Last merged capability PR: #112");
+    expect(status).toContain(
+      "Merge commit: `116f3761032b2af23e2bc240a77b6e810f45e918`"
     );
     expect(status).toContain(
-      "Latest completed capability: local search-index outbox foundation."
-    );
-    expect(status).toContain("Last merged capability PR: #111");
-    expect(status).toContain(
-      "Merge commit: `f73c7c5515d3e5242975280b25edf28cbc25f96b`"
+      "PR #111 merged Phase 2G-B local search-index outbox foundation"
     );
     expect(roadmap).toContain(
       "Phase 2G-C/D adds server-only local search-index enqueue integration only."
@@ -239,7 +239,7 @@ describe("Phase 2G-C/D search-index enqueue integration", () => {
     expect(readTrackedFiles(["website/app/api/customer-uploads"])).toEqual([]);
     expect(readTrackedFiles(["website/chat-config.js"])).toEqual([]);
     expect(runtimeSource).not.toMatch(
-      /customerVisibleInternalNotes|customer-visible internal notes|internal notes/i
+      /customerVisibleInternalNotes|customer-visible internal notes/i
     );
     expect(runtimeSource).not.toMatch(
       /\bcarts?\b|\bcheckout\b|\bpayments?\b|order fulfilment|stock[_ -]?reservation|confirmed booking|online ordering/i

@@ -6,5 +6,5 @@ export const revalidate = 0;
 export default async function AdminPage() {
   const state = await resolveProtectedAdminShellState();
 
-  return <AdminShellContent state={state} />;
+  return <AdminShellContent state={state} view={{ kind: "home" }} />;
 }

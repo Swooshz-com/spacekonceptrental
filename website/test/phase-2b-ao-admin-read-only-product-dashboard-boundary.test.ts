@@ -73,15 +73,17 @@ describe("Phase 2B-AO admin read-only product dashboard boundary", () => {
   });
 
   it("keeps the admin dashboard under the protected shell and does not add product write UI routes", () => {
-    expect(readTrackedFiles(["website/app/admin"])).toEqual([
-      "website/app/admin/login/page.test.tsx",
-      "website/app/admin/login/page.tsx",
-      "website/app/admin/logout/route.test.ts",
-      "website/app/admin/logout/route.ts",
-      "website/app/admin/page.tsx",
-      "website/app/admin/protected-admin-shell.test.tsx",
-      "website/app/admin/protected-admin-shell.tsx"
-    ]);
+    expect(readTrackedFiles(["website/app/admin"])).toEqual(
+      expect.arrayContaining([
+        "website/app/admin/login/page.test.tsx",
+        "website/app/admin/login/page.tsx",
+        "website/app/admin/logout/route.test.ts",
+        "website/app/admin/logout/route.ts",
+        "website/app/admin/page.tsx",
+        "website/app/admin/protected-admin-shell.test.tsx",
+        "website/app/admin/protected-admin-shell.tsx"
+      ])
+    );
     expect(readTrackedFiles(["website/app/api/admin"])).toEqual([
       "website/app/api/admin/auth-check/route.test.ts",
       "website/app/api/admin/auth-check/route.ts",

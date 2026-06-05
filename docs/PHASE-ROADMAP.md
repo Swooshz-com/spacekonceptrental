@@ -957,3 +957,24 @@ notes, notifications, CRM integration, deployment, Vercel or Supabase Cloud
 config, browser Supabase, service-role runtime paths, transcript runtime
 paths, or ecommerce flows. Future sync worker/retrieval/reranking/hybrid
 runtime requires explicit owner approval.
+
+Phase 2H-A/B adds the admin operations UI MVP. It splits the protected admin
+shell into focused listing, category, media, quote request, and quote detail
+surfaces while reusing the existing server-only admin auth/session/workspace
+route-gate conventions.
+
+Phase 2H-A/B keeps listing/category/listing-image writes on the existing
+first-party admin routes and `execute_admin_product_write` persistence
+boundary, preserving the Phase 2G-C/D local search-index enqueue behavior. It
+keeps quote workflow review, status changes, and internal notes on the
+existing protected quote workflow route and `execute_admin_quote_workflow`
+RPC.
+
+Phase 2H-A/B does not add Pinecone runtime code, Pinecone packages, Pinecone
+env reads, Pinecone executors, API keys, n8n workflow/runtime changes,
+embedding runtime, sync workers, `/api/chat` retrieval wiring, search-index
+document writers, real vector upsert/delete, runtime reranking, hybrid search
+runtime, public/customer upload routes, customer accounts, public quote
+tracking, customer-visible internal notes, notifications, CRM integration,
+deployment, Vercel or Supabase Cloud config, browser Supabase, service-role
+runtime paths, transcript runtime paths, or ecommerce flows.
