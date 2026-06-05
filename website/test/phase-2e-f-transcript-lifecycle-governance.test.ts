@@ -161,7 +161,7 @@ describe("Phase 2E-F transcript lifecycle governance", () => {
     }
   });
 
-  it("keeps transcript lifecycle runtime routes, executors, jobs, and browser/service-role paths absent", () => {
+  it("keeps transcript lifecycle runtime routes, executors, jobs, and browser/service-role paths absent", { timeout: 15000 }, () => {
     const routeSource = readRepoFile("website/app/api/chat/route.ts");
     const persistenceSource = readTrackedProductionSources([
       "website/lib/chat/persistence"

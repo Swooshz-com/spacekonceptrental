@@ -59,7 +59,7 @@ function readTrackedProductionSources(
 }
 
 describe("Phase 2E-I transcript audit/evidence insert boundary", () => {
-  it("records Phase 2E-I as completed after PR #107", () => {
+  it("keeps Phase 2E-I recorded after PR #107", () => {
     const status = normalizeWhitespace(readRepoFile("docs/PHASE-STATUS.md"));
     const readiness = readRepoFile("docs/PHASE-2-READINESS-PLAN.md");
     const roadmap = readRepoFile("docs/PHASE-ROADMAP.md");
@@ -69,11 +69,7 @@ describe("Phase 2E-I transcript audit/evidence insert boundary", () => {
     const decisionLog = readRepoFile("docs/DECISION-LOG.md");
 
     expect(status).toContain(
-      "Latest completed phase: Phase 2E-I - transcript audit/evidence server-only insert boundary."
-    );
-    expect(status).toContain("Last merged phase PR: #107");
-    expect(status).toContain(
-      "Merge commit: `0f114c3085917f80afab2a5a2b8d30d90596b66f`"
+      "PR #107 merged Phase 2E-I transcript audit/evidence server-only insert"
     );
     expect(readiness).toContain("Previous Current Phase 2E-I status");
     expect(readiness).toContain(

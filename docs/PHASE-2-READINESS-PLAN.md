@@ -238,13 +238,50 @@ Suggested first PR:
   Supabase, production evidence, or ecommerce flows. Product language remains
   enquiry/quote/request.
 
-Current Phase 2F-A status:
+Current Phase 2G-A status:
+
+- PR #108 merged Phase 2F-A admin rental listing/media foundation at merge
+  commit `8385ac2d925b5edd44cdf016707bb2cd00d67264`.
+- Phase 2F-A is complete as a server-only listing-facing domain contract and
+  injected adapter foundation only.
+- Phase 2G-A is current as RAG/search-index architecture and sync governance
+  docs/static-guard work only.
+- Supabase/listing data remains canonical for website/admin listing data,
+  quote/enquiry request workflows, workspace ownership, and admin audit trails.
+- Pinecone is a future derived search index only and must not become
+  canonical business storage.
+- Future listing/category/image changes can later enqueue search-index sync
+  jobs through an outbox/worker pattern, not direct admin-save-to-Pinecone
+  calls.
+- Future sync must be idempotent, retryable, auditable, replayable, and safe
+  for admin listing writes when Pinecone or network dependencies fail.
+- Future retrieval/reranking must be server-only, apply workspace/visibility/
+  status/source metadata filters, and require explicit owner approval before
+  any runtime wiring.
+- No Pinecone runtime code, Pinecone package, Pinecone env read, API key,
+  n8n workflow/runtime change, `/api/chat` retrieval wiring, embedding
+  runtime, search-index table, sync worker, runtime reranking, or hybrid
+  search runtime is added.
+- Existing `categories`, `products`, and `product_images` tables remain the
+  technical persistence internals. New TypeScript/domain names use listing
+  wording where practical and map into the existing product persistence
+  boundary.
+- No new Supabase migration, public upload route, customer upload route, live
+  Supabase executor, browser Supabase, service-role runtime path, deployment
+  config, customer account, public quote tracking, customer-visible internal
+  notes, notification, CRM integration, or ecommerce/cart/checkout/order flow
+  is added.
+- `/api/chat` remains unwired to transcript audit/evidence writes or reads.
+- Product wording remains listing/enquiry/quote/request in new user-facing and
+  domain surfaces.
+
+Previous Current Phase 2F-A status:
 
 - PR #107 merged Phase 2E-I transcript audit/evidence server-only insert
   boundary at merge commit `0f114c3085917f80afab2a5a2b8d30d90596b66f`.
 - Phase 2E-I is complete as local ungranted RPC and server-only injected
   adapter work only.
-- Phase 2F-A is current as a server-only listing-facing admin domain
+- Phase 2F-A was current as a server-only listing-facing admin domain
   foundation for rental/event furniture listing metadata and listing image
   metadata.
 - Existing `categories`, `products`, and `product_images` tables remain the

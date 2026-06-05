@@ -1650,3 +1650,43 @@ notifications, CRM integration, deployment, Vercel or Supabase Cloud config,
 real env values, production evidence, or ecommerce flows such as carts,
 checkout, payments, stock reservation, order fulfilment, confirmed booking, or
 online ordering.
+
+## 2026-06-05: RAG Search-Index Architecture And Sync Governance
+
+Decision: Phase 2G-A defines future-safe RAG/search-index architecture and sync governance.
+
+Reason: PR #108 merged Phase 2F-A at
+`8385ac2d925b5edd44cdf016707bb2cd00d67264` and completed the server-only
+admin rental listing/media foundation. The next safe RAG step is to document
+how listing data can later become searchable without treating Pinecone or any
+retrieval provider as canonical business storage.
+
+Supabase/listing data remains canonical for website/admin listing data,
+quote/enquiry request workflows, workspace ownership, and admin audit trails.
+Pinecone is a future derived search index only. Future listing/category/image
+changes should enqueue search-index work through a durable outbox/worker
+pattern instead of calling Pinecone directly from admin save paths.
+
+Future sync must render public-safe searchable text from canonical Supabase
+records, compute stable IDs and `content_hash`, skip unchanged records, upsert
+changed records, delete or mark invisible archived/unpublished/deleted public
+sources, and record success/failure/retry state. Future sync must be
+idempotent, retryable, auditable, replayable, and must not block admin listing
+writes when Pinecone or network dependencies fail.
+
+Future retrieval must be server-only, separately approved, filtered by
+workspace, visibility, status, source type, category, and event/listing type
+where available, and limited to public-safe visibility such as `public_chat`
+for public chatbot answers. Reranking is planned as a future retrieval quality
+layer. Hybrid search remains a later decision gate if exact term recall is
+weak.
+
+Phase 2G-A does not add Pinecone runtime code, Pinecone package dependencies,
+Pinecone env reads, secrets, API keys, n8n workflow/runtime changes,
+embedding runtime, search-index tables, sync workers, `/api/chat` retrieval
+wiring, admin UI changes, real data ingestion, real vector upsert/delete,
+runtime reranking, hybrid search runtime, public/customer uploads, customer
+accounts, public quote tracking, customer-visible internal notes,
+notifications, CRM integration, deployment, Vercel or Supabase Cloud config,
+browser Supabase, service-role runtime paths, transcript runtime paths, or
+ecommerce flows.

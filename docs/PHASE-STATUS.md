@@ -4,25 +4,27 @@ This is the quick status page for the SKR repo. Use `docs/PHASE-2-READINESS-PLAN
 
 ## Current phase
 
-Current phase: Phase 2F-A - admin rental listing/media foundation.
+Current phase: Phase 2G-A - RAG search-index architecture and sync governance.
 
-This phase moves the active work back to the rental website product direction
-with a server-only listing-facing admin domain foundation. It adds
-`website/lib/listings/admin/` as a listing/enquiry/quote/request oriented
-contract for admin-managed rental/event furniture listings and listing image
-metadata. The new contract validates listing titles, slugs, category links,
-descriptions/details, rental units, draft/active/archived status, sort order,
-and safe listing image metadata before mapping into the existing
-`ProductPersistence` boundary. Existing database/API internals still use the
-legacy `products` and `product_images` table names; this phase does not rename
-tables, RPCs, routes, or RLS policies.
+This phase adds docs and static guards for future RAG/search-index work only.
+It records that Supabase/listing data remains canonical for website/admin
+listing data, quote/enquiry workflows, workspace ownership, and admin audit
+trails. Pinecone is a future derived search index only and must not become
+canonical business storage.
 
-The new listing admin adapter is server-only, dependency injected, disabled by
-default, and does not instantiate Supabase, read env, read cookies or headers,
-call `.rpc`, use browser Supabase, use service-role material, or read
-`website/chat-config.js`. No new Supabase migration is added because the
-existing workspace-scoped `categories`, `products`, and `product_images`
-schema already supports this listing/media foundation.
+The Phase 2G-A plan defines the future search document model, public-safe
+metadata rules, outbox/worker sync lifecycle, idempotent content-hash and
+stable-ID expectations, archived/unpublished delete-or-hide behavior, metadata
+filtering, reranking, and hybrid search decision gates. Future Pinecone
+upsert/delete/retrieval/reranking work must be server-only and separately
+approved. Admin listing writes must not be blocked by Pinecone or network
+failures, and retrieval remains eventually consistent.
+
+Phase 2G-A does not add Pinecone runtime code, Pinecone packages, Pinecone env
+reads, secrets, API keys, n8n workflow/runtime changes, embedding runtime,
+search-index tables, sync workers, `/api/chat` retrieval wiring, admin UI
+changes, real data ingestion, real vector upsert/delete, runtime reranking, or
+hybrid search runtime.
 
 Runtime transcript writes remain blocked. Runtime transcript reads remain
 blocked. Live Supabase RPC executor remains blocked. Any service-role or
@@ -43,22 +45,27 @@ flows, carts, checkout, payments, stock reservation, order fulfilment,
 confirmed booking, online ordering, deployment, Vercel config, Supabase Cloud
 config, env/secrets, and production evidence remain blocked.
 
-Latest completed phase: Phase 2E-I - transcript audit/evidence server-only insert boundary.
+Latest completed phase: Phase 2F-A - admin rental listing/media foundation.
 
-Last merged phase PR: #107
+Last merged phase PR: #108
 
-Merge commit: `0f114c3085917f80afab2a5a2b8d30d90596b66f`
+Merge commit: `8385ac2d925b5edd44cdf016707bb2cd00d67264`
 
 ## Remaining-work map
 
-Completed through PR #107:
+Completed through PR #108:
 
+- PR #108 merged Phase 2F-A admin rental listing/media foundation at merge
+  commit `8385ac2d925b5edd44cdf016707bb2cd00d67264`.
+- Phase 2F-A admin rental listing/media foundation is complete as a
+  server-only listing-facing domain contract and injected adapter foundation
+  only.
+- Phase 2G-A is current as RAG/search-index architecture and sync governance
+  docs/static-guard work only.
 - PR #107 merged Phase 2E-I transcript audit/evidence server-only insert
   boundary at merge commit `0f114c3085917f80afab2a5a2b8d30d90596b66f`.
 - Phase 2E-I transcript audit/evidence server-only insert boundary is complete
   as local ungranted RPC and server-only injected adapter work only.
-- Phase 2F-A is current as a server-only listing-facing admin domain
-  foundation only.
 - PR #106 merged Phase 2E-H transcript audit/evidence local schema, RLS, and
   server-only contract foundation at merge commit
   `8607e16d3c405df0797ec08536cce79f1b4f68d2`.
