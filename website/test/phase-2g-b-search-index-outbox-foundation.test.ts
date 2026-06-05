@@ -58,8 +58,8 @@ function readTrackedProductionSources(
     .join("\n");
 }
 
-describe("Phase 2G-B search-index outbox foundation", () => {
-  it("records Phase 2G-B as local outbox foundation after the PR #110 hotfix", () => {
+describe("Phase 2G-C/D search-index enqueue integration", () => {
+  it("records Phase 2G-C/D as local enqueue integration after PR #111", () => {
     const status = normalizeWhitespace(readRepoFile("docs/PHASE-STATUS.md"));
     const roadmap = readRepoFile("docs/PHASE-ROADMAP.md");
     const readiness = readRepoFile("docs/PHASE-2-READINESS-PLAN.md");
@@ -72,26 +72,26 @@ describe("Phase 2G-B search-index outbox foundation", () => {
     );
 
     expect(status).toContain(
-      "Current phase: Phase 2G-B - local search-index outbox foundation."
+      "Current phase: Phase 2G-C/D - server-only local search-index enqueue integration."
     );
     expect(status).toContain(
-      "Latest completed capability: transcript metadata diagnostic denylist hotfix."
+      "Latest completed capability: local search-index outbox foundation."
     );
-    expect(status).toContain("Last merged capability PR: #110");
+    expect(status).toContain("Last merged capability PR: #111");
     expect(status).toContain(
-      "Merge commit: `608e53892964c172b64286a554ee202c8d1147d8`"
+      "Merge commit: `f73c7c5515d3e5242975280b25edf28cbc25f96b`"
     );
     expect(roadmap).toContain(
-      "Phase 2G-B adds a local search-index outbox foundation only."
+      "Phase 2G-C/D adds server-only local search-index enqueue integration only."
     );
-    expect(readiness).toContain("Current Phase 2G-B status");
+    expect(readiness).toContain("Current Phase 2G-C/D status");
     expect(ragChecklist).toContain(
-      "Phase 2G-B Local Search-Index Outbox Foundation"
+      "Phase 2G-C/D Server-Only Local Search-Index Enqueue Integration"
     );
     expect(decisionLog).toContain(
-      "Decision: Phase 2G-B adds local search-index outbox and document tracking tables only."
+      "Decision: Phase 2G-C/D adds server-only local search-index enqueue integration only."
     );
-    expect(plan).toContain("Search-index tables are local queue/document tracking foundations only");
+    expect(plan).toContain("Phase 2G-C/D implements only the local enqueue step");
     expect(plan).toContain("Pinecone remains a future derived search index only");
   });
 
@@ -152,23 +152,41 @@ describe("Phase 2G-B search-index outbox foundation", () => {
     }
   });
 
-  it("adds a server-only disabled/injected TypeScript contract without live executors", () => {
+  it("adds server-only TypeScript search-index contracts and local enqueue helpers without external executors", () => {
     const index = readRepoFile("website/lib/search-index/index.ts");
     const contract = readRepoFile("website/lib/search-index/contract.ts");
     const disabled = readRepoFile(
       "website/lib/search-index/disabled-search-index.ts"
     );
+    const builder = readRepoFile("website/lib/search-index/search-index-builder.ts");
+    const supabaseAdapter = readRepoFile(
+      "website/lib/search-index/supabase-search-index-adapter.ts"
+    );
     const types = readRepoFile("website/lib/search-index/types.ts");
 
-    for (const source of [index, contract, disabled, types]) {
+    for (const source of [index, contract, disabled, builder, types]) {
       expect(source).toContain('import "server-only";');
       expect(source).not.toContain("@pinecone-database");
       expect(source).not.toMatch(/process\.env|cookies\(|headers\(/);
       expect(source).not.toMatch(/createClient|\.rpc\(|\.insert\(|\.select\(|\.upsert\(/);
     }
 
+    expect(supabaseAdapter).toContain('import "server-only";');
+    expect(supabaseAdapter).toContain("enqueue_search_index_job");
+    expect(supabaseAdapter).toContain("createSessionBoundSupabaseAdminReadClient");
+    expect(supabaseAdapter).toContain("recordDocument");
+    expect(supabaseAdapter).toContain("adapter_unavailable");
+    expect(supabaseAdapter).not.toContain("@pinecone-database");
+    expect(supabaseAdapter).not.toMatch(
+      /process\.env|cookies\(|headers\(|createClient|\.insert\(|\.select\(|\.upsert\(/
+    );
+
     expect(index).toContain("getSearchIndexAdapter");
     expect(index).toContain("disabledSearchIndex");
+    expect(index).toContain("SupabaseSearchIndexAdapter");
+    expect(index).toContain("buildListingSearchIndexJob");
+    expect(index).toContain("buildCategorySearchIndexJob");
+    expect(index).toContain("buildListingImageAltTextSearchIndexJob");
     expect(contract).toContain("createSearchIndexJobCommand");
     expect(contract).toContain("createSearchIndexDocumentCommand");
     expect(contract).toContain("recordSearchIndexJob");
@@ -185,9 +203,11 @@ describe("Phase 2G-B search-index outbox foundation", () => {
       ["website/app", "website/components", "website/lib"],
       ["website/lib/search-index"]
     );
-    const searchIndexSource = readTrackedProductionSources([
-      "website/lib/search-index"
-    ]);
+    const searchIndexSource = [
+      readTrackedProductionSources(["website/lib/search-index"]),
+      readRepoFile("website/lib/search-index/search-index-builder.ts"),
+      readRepoFile("website/lib/search-index/supabase-search-index-adapter.ts")
+    ].join("\n");
     const rootPackage = readRepoFile("package.json");
     const websitePackage = readRepoFile("website/package.json");
     const chatRoute = readRepoFile("website/app/api/chat/route.ts");
@@ -197,7 +217,13 @@ describe("Phase 2G-B search-index outbox foundation", () => {
     expect(runtimeSource).not.toContain("@pinecone-database");
     expect(runtimeSource).not.toMatch(/process\.env\.[A-Z0-9_]*PINECONE/i);
     expect(searchIndexSource).not.toContain("@pinecone-database");
-    expect(searchIndexSource).not.toMatch(/process\.env|createClient|\.rpc\(/);
+    expect(searchIndexSource).not.toMatch(
+      /process\.env|createClient|\.insert\(|\.select\(|\.upsert\(/
+    );
+    expect(searchIndexSource).not.toMatch(
+      /search_index_documents[\s\S]{0,80}\.(?:insert|upsert)\(/
+    );
+    expect(searchIndexSource).toContain('rpc("enqueue_search_index_job"');
     expect(chatRoute).not.toMatch(
       /pinecone|retrieval|rerank|vector|embedding|rag|search[_ -]?index/i
     );

@@ -554,8 +554,25 @@ function roleSql(role, authUserId, sql) {
   `;
 }
 
+function committedRoleSql(role, authUserId, sql) {
+  assert.ok(role === 'anon' || role === 'authenticated', `Unexpected role: ${role}`);
+
+  return `
+    begin;
+    set local role ${role};
+    set local "request.jwt.claim.role" = '${role}';
+    set local "request.jwt.claim.sub" = '${authUserId || ''}';
+    ${sql.trim().replace(/;?\s*$/, ';')}
+    commit;
+  `;
+}
+
 function queryAs(role, authUserId, sql) {
   return psql(roleSql(role, authUserId, sql));
+}
+
+function queryCommittedAs(role, authUserId, sql) {
+  return psql(committedRoleSql(role, authUserId, sql));
 }
 
 function statementFailsAs(
@@ -2392,6 +2409,328 @@ check('search-index outbox constraints accept safe local rows and reject unsafe 
       )
     `,
     /search_index_documents_source_visibility_key/i,
+  );
+});
+
+check('search-index enqueue RPC is narrow, idempotent, and metadata safe', () => {
+  const enqueueSourceId = 'f3000000-0000-4000-8000-000000000101';
+  const retrySourceId = 'f3000000-0000-4000-8000-000000000102';
+  const activeHash =
+    '1111111111111111111111111111111111111111111111111111111111111111';
+  const retryHash =
+    '2222222222222222222222222222222222222222222222222222222222222222';
+
+  statementFailsAs(
+    'anon',
+    null,
+    `
+      select public.enqueue_search_index_job(
+        '${ids.workspaceA}'::uuid,
+        'listing',
+        '${enqueueSourceId}'::uuid,
+        'public_chat',
+        'upsert',
+        'listing-v1',
+        '${activeHash}',
+        '{"source": "anon-attempt"}'::jsonb
+      )
+    `,
+    /permission denied|search_index_not_authorized/i,
+  );
+
+  statementFailsAs(
+    'authenticated',
+    ids.authViewerA,
+    `
+      select public.enqueue_search_index_job(
+        '${ids.workspaceA}'::uuid,
+        'listing',
+        '${enqueueSourceId}'::uuid,
+        'public_chat',
+        'upsert',
+        'listing-v1',
+        '${activeHash}',
+        '{"source": "viewer-attempt"}'::jsonb
+      )
+    `,
+    /search_index_not_authorized/i,
+  );
+
+  const firstOutput = queryAs(
+    'authenticated',
+    ids.authMemberA,
+    `
+      with first_result as (
+        select public.enqueue_search_index_job(
+          '${ids.workspaceA}'::uuid,
+          'listing',
+          '${enqueueSourceId}'::uuid,
+          'public_chat',
+          'upsert',
+          'listing-v1',
+          '${activeHash}',
+          jsonb_build_object('source', 'rls-enqueue-test')
+        ) as result
+      ),
+      second_result as (
+        select public.enqueue_search_index_job(
+          '${ids.workspaceA}'::uuid,
+          'listing',
+          '${enqueueSourceId}'::uuid,
+          'public_chat',
+          'upsert',
+          'listing-v1',
+          '${activeHash}',
+          jsonb_build_object('source', 'rls-enqueue-test')
+        ) as result
+      )
+      select
+        first_result.result->>'status',
+        second_result.result->>'reused',
+        (
+          first_result.result->>'searchIndexJobId'
+          = second_result.result->>'searchIndexJobId'
+        )::text
+      from first_result, second_result;
+    `,
+  );
+
+  assert.deepEqual(
+    firstOutput.split('\n').filter(Boolean),
+    ['queued\ttrue\ttrue'],
+    'active duplicate enqueue should reuse the existing queued job id',
+  );
+
+  psql(`
+    insert into public.search_index_jobs (
+      workspace_id,
+      source_type,
+      source_id,
+      source_version,
+      visibility,
+      operation,
+      status,
+      content_hash,
+      metadata
+    )
+    values (
+      '${ids.workspaceA}',
+      'listing',
+      '${retrySourceId}',
+      'listing-v1',
+      'public_chat',
+      'upsert',
+      'failed',
+      '${retryHash}',
+      '{"source": "failed-history"}'::jsonb
+    );
+  `);
+
+  const retryOutput = queryAs(
+    'authenticated',
+    ids.authMemberA,
+    `
+      select
+        public.enqueue_search_index_job(
+        '${ids.workspaceA}'::uuid,
+        'listing',
+        '${retrySourceId}'::uuid,
+        'public_chat',
+        'upsert',
+        'listing-v1',
+        '${retryHash}',
+        jsonb_build_object('source', 'retry-after-failure')
+      )->>'status',
+      public.enqueue_search_index_job(
+        '${ids.workspaceA}'::uuid,
+        'listing',
+        '${retrySourceId}'::uuid,
+        'public_chat',
+        'upsert',
+        'listing-v1',
+        '${retryHash}',
+        jsonb_build_object('source', 'retry-after-failure')
+      )->>'reused';
+    `,
+  );
+
+  assert.deepEqual(
+    retryOutput.split('\n').filter(Boolean),
+    ['queued\ttrue'],
+    'failed historical jobs should allow a retry enqueue that can be reused while active',
+  );
+
+  for (const [label, sql] of [
+    [
+      'invalid source type',
+      `'quote_request', '${enqueueSourceId}'::uuid, 'public_chat', 'upsert', 'listing-v1', '${activeHash}', '{}'::jsonb`,
+    ],
+    [
+      'invalid visibility',
+      `'listing', '${enqueueSourceId}'::uuid, 'customer_visible', 'upsert', 'listing-v1', '${activeHash}', '{}'::jsonb`,
+    ],
+    [
+      'invalid operation',
+      `'listing', '${enqueueSourceId}'::uuid, 'public_chat', 'vector_upsert', 'listing-v1', '${activeHash}', '{}'::jsonb`,
+    ],
+    [
+      'invalid status',
+      `'listing', '${enqueueSourceId}'::uuid, 'public_chat', 'upsert', 'listing-v1', '${activeHash}', '{}'::jsonb, 'processing'`,
+    ],
+  ]) {
+    statementFailsAs(
+      'authenticated',
+      ids.authMemberA,
+      `select public.enqueue_search_index_job('${ids.workspaceA}'::uuid, ${sql})`,
+      /search_index_.*invalid/i,
+      `enqueue RPC should reject ${label}`,
+    );
+  }
+
+  const unsafeMetadataCases = [
+    ['providerDebug', "jsonb_build_object('nested', jsonb_build_object('providerDebug', 'blocked'))"],
+    ['provider_debug', "jsonb_build_object('provider_debug', 'blocked')"],
+    ['traceDump', "jsonb_build_object('traceDump', 'blocked')"],
+    ['trace_dump', "jsonb_build_object('trace_dump', 'blocked')"],
+    ['fullTranscript', "jsonb_build_object('fullTranscript', 'blocked')"],
+    ['transcriptContent', "jsonb_build_object('transcriptContent', 'blocked')"],
+    ['rawProviderPayload', "jsonb_build_object('rawProviderPayload', 'blocked')"],
+    ['webhookHeaders', "jsonb_build_object('webhookHeaders', 'blocked')"],
+    ['apiKey', "jsonb_build_object('apiKey', 'blocked')"],
+    ['serviceRole', "jsonb_build_object('serviceRole', 'blocked')"],
+    ['internalNotes', "jsonb_build_object('internalNotes', 'blocked')"],
+    ['customerVisibleInternalNotes', "jsonb_build_object('customerVisibleInternalNotes', 'blocked')"],
+    ['customerContact', "jsonb_build_object('customerContact', 'blocked')"],
+    ['contactEmail', "jsonb_build_object('contactEmail', 'blocked')"],
+    ['contactPhone', "jsonb_build_object('contactPhone', 'blocked')"],
+    ['email', "jsonb_build_object('email', 'blocked')"],
+    ['phone', "jsonb_build_object('phone', 'blocked')"],
+    ['payment', "jsonb_build_object('payment', 'blocked')"],
+  ];
+
+  for (const [label, metadataSql] of unsafeMetadataCases) {
+    statementFailsAs(
+      'authenticated',
+      ids.authMemberA,
+      `
+        select public.enqueue_search_index_job(
+          '${ids.workspaceA}'::uuid,
+          'listing',
+          '${enqueueSourceId}'::uuid,
+          'blocked',
+          'hide',
+          'listing-v1',
+          '3333333333333333333333333333333333333333333333333333333333333333',
+          ${metadataSql}
+        )
+      `,
+      /search_index_metadata_unsafe/i,
+      `enqueue RPC should reject unsafe metadata key ${label}`,
+    );
+  }
+});
+
+check('admin listing and media writes enqueue local search-index jobs only', () => {
+  const createdProductId = '50000000-0000-4000-8000-000000000301';
+  const createdCategoryId = '40000000-0000-4000-8000-000000000301';
+  const createdImageId = '60000000-0000-4000-8000-000000000301';
+
+  const output = queryCommittedAs(
+    'authenticated',
+    ids.authMemberA,
+    `
+      select public.execute_admin_product_write(
+        'category.create',
+        '${createdCategoryId}'::uuid,
+        '${ids.workspaceA}'::uuid,
+        jsonb_build_object(
+          'slug', 'indexed-lounge',
+          'name', 'Indexed Lounge',
+          'description', 'Public lounge category',
+          'is_published', true,
+          'sort_order', 40
+        )
+      )::text;
+
+      select public.execute_admin_product_write(
+        'product.create',
+        '${createdProductId}'::uuid,
+        '${ids.workspaceA}'::uuid,
+        jsonb_build_object(
+          'category_id', '${createdCategoryId}',
+          'slug', 'indexed-sofa',
+          'name', 'Indexed Sofa',
+          'short_description', 'Public searchable sofa',
+          'description', 'Safe listing details',
+          'rental_unit', 'day',
+          'status', 'published',
+          'sort_order', 50
+        )
+      )::text;
+
+      select public.execute_admin_product_write(
+        'productImage.create',
+        '${createdImageId}'::uuid,
+        '${ids.workspaceA}'::uuid,
+        jsonb_build_object(
+          'product_id', '${createdProductId}',
+          'storage_bucket', 'listing-media',
+          'storage_path', '${ids.workspaceA}/${createdProductId}/indexed-sofa.webp',
+          'alt_text', 'Indexed sofa image',
+          'sort_order', 1,
+          'is_primary', true
+        )
+      )::text;
+
+      select public.execute_admin_product_write(
+        'product.archive',
+        '${createdProductId}'::uuid,
+        '${ids.workspaceA}'::uuid,
+        '{}'::jsonb
+      )::text;
+    `,
+  );
+
+  assert.deepEqual(
+    output.split('\n').filter(Boolean),
+    [
+      createdCategoryId,
+      createdProductId,
+      createdImageId,
+      createdProductId,
+    ],
+    'admin category/listing/image writes should return the mutated row ids',
+  );
+
+  const jobOutput = psql(`
+    select source_type || ':' || visibility || ':' || operation
+    from public.search_index_jobs
+    where workspace_id = '${ids.workspaceA}'
+      and source_id = '${createdCategoryId}'
+    order by created_at asc;
+
+    select source_type || ':' || visibility || ':' || operation
+    from public.search_index_jobs
+    where workspace_id = '${ids.workspaceA}'
+      and source_id = '${createdProductId}'
+    order by case when operation = 'upsert' then 0 else 1 end, created_at asc;
+
+    select source_type || ':' || visibility || ':' || operation
+    from public.search_index_jobs
+    where workspace_id = '${ids.workspaceA}'
+      and source_id = '${createdImageId}'
+    order by created_at asc;
+  `);
+
+  assert.deepEqual(
+    jobOutput.split('\n').filter(Boolean),
+    [
+      'category:public_chat:upsert',
+      'listing:public_chat:upsert',
+      'listing:blocked:hide',
+      'listing_image_alt_text:public_chat:upsert',
+    ],
+    'admin category/listing/image writes should enqueue local search-index jobs with safe mappings',
   );
 });
 

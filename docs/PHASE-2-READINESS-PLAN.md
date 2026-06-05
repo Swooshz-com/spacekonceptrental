@@ -238,20 +238,23 @@ Suggested first PR:
   Supabase, production evidence, or ecommerce flows. Product language remains
   enquiry/quote/request.
 
-Current Phase 2G-B status:
+Current Phase 2G-C/D status:
 
-- PR #110 merged the metadata diagnostic denylist hotfix at merge commit
-  `608e53892964c172b64286a554ee202c8d1147d8`.
-- Latest completed capability is the PR #110 metadata diagnostic denylist
-  hotfix.
-- Phase 2G-B is current as local search-index outbox foundation only.
-- Phase 2G-B adds local Supabase `search_index_jobs` and
-  `search_index_documents` queue/document tracking tables only.
-- The tables are local foundations for future sync and evaluation. Supabase/
-  listing data remains canonical, and Pinecone remains a future derived search
-  index only.
-- The server-only TypeScript contract is disabled by default and records only
-  through an injected adapter in tests.
+- PR #111 merged Phase 2G-B local search-index outbox foundation at merge
+  commit `f73c7c5515d3e5242975280b25edf28cbc25f96b`.
+- Latest completed capability is the Phase 2G-B local search-index outbox
+  foundation.
+- Phase 2G-C/D is current as server-only local search-index enqueue
+  integration only.
+- The current local integration adds a narrow authenticated
+  `enqueue_search_index_job` RPC and keeps direct `search_index_jobs` and
+  `search_index_documents` table access fail-closed for browser roles.
+- Existing admin listing, category, and listing-image metadata writes enqueue
+  local outbox jobs after successful database writes. Supabase/listing data
+  remains canonical, and Pinecone remains a future derived search index only.
+- The server-only TypeScript boundary adds a Supabase enqueue adapter and pure
+  safe job builders, but no search-index document writer or live external
+  executor.
 - No Pinecone runtime code, Pinecone package, Pinecone env read, Pinecone
   executor, API key, n8n workflow/runtime change, `/api/chat` retrieval wiring,
   embedding runtime, sync worker, runtime reranking, hybrid search runtime,

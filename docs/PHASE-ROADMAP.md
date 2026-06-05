@@ -939,3 +939,21 @@ integration, deployment, Vercel or Supabase Cloud config, browser Supabase,
 service-role runtime paths, transcript runtime paths, or ecommerce flows.
 Future sync worker/retrieval/reranking/hybrid runtime requires explicit owner
 approval.
+
+Phase 2G-C/D adds server-only local search-index enqueue integration only. It
+adds a narrow authenticated `enqueue_search_index_job` RPC, keeps direct
+search-index table grants fail-closed, lets existing admin listing/category/
+image metadata writes enqueue local outbox jobs after successful database
+writes, and adds server-only TypeScript enqueue adapter plus pure safe job
+builders.
+
+Phase 2G-C/D does not add Pinecone runtime code, Pinecone package
+dependencies, Pinecone env reads, Pinecone executors, API keys, n8n workflow/
+runtime changes, embedding runtime, sync workers, `/api/chat` retrieval
+wiring, admin UI changes, search-index document writers, real vector
+upsert/delete, runtime reranking, hybrid search runtime, public/customer
+uploads, customer accounts, public quote tracking, customer-visible internal
+notes, notifications, CRM integration, deployment, Vercel or Supabase Cloud
+config, browser Supabase, service-role runtime paths, transcript runtime
+paths, or ecommerce flows. Future sync worker/retrieval/reranking/hybrid
+runtime requires explicit owner approval.

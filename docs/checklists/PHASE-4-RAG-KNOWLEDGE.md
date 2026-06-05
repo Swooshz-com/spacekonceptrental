@@ -1,12 +1,12 @@
 # Phase 4 Checklist: RAG, Knowledge, And Vector Work
 
 Runtime vector/retrieval work is not approved for implementation yet. Phase
-2G-B approves only the local search-index outbox table and disabled
-server-only contract foundation.
+2G-C/D approves only local search-index enqueue integration on top of the
+Phase 2G-B outbox table and server-only contract foundation.
 
 Current SKR keeps Pinecone/n8n as current RAG workflow context only. Do not
 migrate away from Pinecone in this repo yet, and do not add Pinecone runtime
-code or credentials in this Phase 2G-B PR.
+code or credentials in this Phase 2G-C/D PR.
 
 ## Phase 2G-A RAG Search-Index Governance
 
@@ -27,6 +27,14 @@ code or credentials in this Phase 2G-B PR.
 - [x] Add idempotency/source lookup constraints and indexes for future queue processing without blocking failed-job retries.
 - [x] Add a server-only disabled/injected TypeScript contract boundary with no live executor.
 - [x] Confirm no Pinecone runtime code, package dependency, env read, executor, n8n workflow/runtime change, or `/api/chat` retrieval wiring is added.
+
+## Phase 2G-C/D Server-Only Local Search-Index Enqueue Integration
+
+- [x] Add a narrow authenticated `enqueue_search_index_job` RPC that enqueues local jobs only.
+- [x] Keep direct `search_index_jobs` and `search_index_documents` table grants fail-closed for browser roles.
+- [x] Enqueue local jobs from existing admin listing, category, and listing-image metadata writes after successful database mutations.
+- [x] Add server-only TypeScript enqueue adapter and pure safe job builders without a search-index document writer.
+- [x] Confirm no Pinecone runtime code, package dependency, env read, executor, sync worker, n8n workflow/runtime change, or `/api/chat` retrieval wiring is added.
 
 ## Future Runtime Work
 

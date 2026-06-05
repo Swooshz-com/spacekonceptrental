@@ -1742,3 +1742,36 @@ runtime path, transcript runtime path, or ecommerce flow.
 
 Future sync worker, retrieval, reranking, and hybrid runtime work requires
 explicit owner approval in a separate phase.
+
+## 2026-06-05: Server-Only Local Search-Index Enqueue Integration
+
+Decision: Phase 2G-C/D adds server-only local search-index enqueue integration only.
+
+Reason: PR #111 merged Phase 2G-B local search-index outbox foundation at
+`f73c7c5515d3e5242975280b25edf28cbc25f96b`. The next safe step is to allow
+approved admin listing/category/image metadata writes to enqueue local outbox
+jobs while keeping Supabase/listing data canonical and external search runtime
+work deferred.
+
+The implementation adds a narrow authenticated `enqueue_search_index_job` RPC
+that validates owner/admin workspace access, safe source/visibility/operation
+values, queued-only status, idempotency, and bounded safe metadata before
+inserting into `search_index_jobs`. Direct search-index table grants remain
+fail-closed for browser roles, and `search_index_documents` remains a future
+derived document tracking table with no writer in this phase.
+
+Existing admin product-write RPC mutations now enqueue local search-index jobs
+for listing, category, and listing image alt-text sources after successful
+database writes. The TypeScript boundary adds a server-only Supabase enqueue
+adapter and pure safe job builders only. Search-index job cleanup policy
+remains future-reviewed; referenced jobs are restricted rather than silently
+detached.
+
+Phase 2G-C/D adds no Pinecone runtime code, Pinecone package dependencies,
+Pinecone env reads, Pinecone executor, API keys, n8n workflow/runtime changes,
+embedding runtime, sync worker, `/api/chat` retrieval wiring, admin UI,
+search-index document writer, real vector upsert/delete, runtime reranking,
+hybrid search runtime, public/customer upload route, customer account, public
+quote tracking, customer-visible internal notes, notification, CRM
+integration, deployment, Vercel or Supabase Cloud config, browser Supabase,
+service-role runtime path, transcript runtime path, or ecommerce flow.
