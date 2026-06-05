@@ -48,7 +48,7 @@ function readTrackedProductionSources(paths: string[]) {
 }
 
 describe("Phase 2G-A RAG search-index architecture and sync governance", () => {
-  it("records Phase 2G-A status after Phase 2F-A PR #108", () => {
+  it("records Phase 2G-A status after PR #109", () => {
     const status = normalizeWhitespace(readRepoFile("docs/PHASE-STATUS.md"));
     const roadmap = readRepoFile("docs/PHASE-ROADMAP.md");
     const readiness = readRepoFile("docs/PHASE-2-READINESS-PLAN.md");
@@ -62,11 +62,11 @@ describe("Phase 2G-A RAG search-index architecture and sync governance", () => {
       "Current phase: Phase 2G-A - RAG search-index architecture and sync governance."
     );
     expect(status).toContain(
-      "Latest completed phase: Phase 2F-A - admin rental listing/media foundation."
+      "Latest completed phase: Phase 2G-A - RAG search-index architecture and sync governance."
     );
-    expect(status).toContain("Last merged phase PR: #108");
+    expect(status).toContain("Last merged phase PR: #109");
     expect(status).toContain(
-      "Merge commit: `8385ac2d925b5edd44cdf016707bb2cd00d67264`"
+      "Merge commit: `02a16bdfd938841ddeac408f4d204d455050f714`"
     );
     expect(roadmap).toContain(
       "Phase 2G-A adds RAG/search-index architecture and sync governance only."

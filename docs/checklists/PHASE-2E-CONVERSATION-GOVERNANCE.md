@@ -188,6 +188,21 @@ for transcript writes, transcript reads, or admin transcript UI.
 - [x] Product wording remains enquiry/quote/request and does not add ecommerce,
       cart, checkout, payment, fulfilment, or online ordering flows.
 
+## Metadata Diagnostic Denylist Hotfix
+
+- [x] The metadata diagnostic denylist hotfix restores provider debug key
+      rejection in the shared SQL transcript metadata helper and TypeScript
+      audit/evidence contract.
+- [x] The metadata diagnostic denylist hotfix restores trace dump key
+      rejection in the shared SQL transcript metadata helper and TypeScript
+      audit/evidence contract.
+- [x] The hotfix preserves Phase 2E-H and Phase 2E-I transcript metadata
+      hardening.
+- [x] The hotfix adds no transcript runtime writes or reads.
+- [x] The hotfix adds no live Supabase executor and no admin transcript UI.
+- [x] The hotfix adds no Pinecone/n8n runtime changes, no customer/public quote
+      tracking functionality, and no ecommerce functionality.
+
 Audit/evidence approval gates requiring explicit owner approval:
 
 - [ ] Audit event model owner approval.

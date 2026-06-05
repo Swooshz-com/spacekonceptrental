@@ -58,6 +58,25 @@ function validEvidenceInput(
   };
 }
 
+const unsafeDiagnosticMetadataCases = [
+  {
+    name: "nested providerDebug",
+    metadata: { nested: { providerDebug: "blocked" } }
+  },
+  {
+    name: "nested provider_debug",
+    metadata: { nested: { provider_debug: "blocked" } }
+  },
+  {
+    name: "nested traceDump",
+    metadata: { nested: { traceDump: "blocked" } }
+  },
+  {
+    name: "nested trace_dump",
+    metadata: { nested: { trace_dump: "blocked" } }
+  }
+];
+
 describe("Phase 2E-H transcript audit/evidence contract", () => {
   it("builds minimized audit event and evidence commands", () => {
     expect(createTranscriptAuditEventCommand(validAuditInput())).toEqual({
@@ -285,6 +304,68 @@ describe("Phase 2E-H transcript audit/evidence contract", () => {
         reason: testCase.reason
       });
     }
+  });
+
+  it("rejects diagnostic metadata keys before adapter calls", async () => {
+    const adapter = {
+      recordAuditEvent: vi.fn(async (_command: unknown) => ({
+        ok: true as const,
+        auditEventId
+      })),
+      recordEvidenceRecord: vi.fn(async (_command: unknown) => ({
+        ok: true as const,
+        evidenceRecordId
+      }))
+    };
+
+    for (const testCase of unsafeDiagnosticMetadataCases) {
+      expect(
+        createTranscriptAuditEventCommand(
+          validAuditInput({ metadata: testCase.metadata })
+        ),
+        `audit command ${testCase.name}`
+      ).toMatchObject({
+        ok: false,
+        status: "rejected",
+        reason: "metadata_unsafe_key"
+      });
+      await expect(
+        recordTranscriptAuditEvent(
+          validAuditInput({ metadata: testCase.metadata }),
+          { adapter }
+        ),
+        `audit record ${testCase.name}`
+      ).resolves.toMatchObject({
+        ok: false,
+        status: "rejected",
+        reason: "metadata_unsafe_key"
+      });
+
+      expect(
+        createTranscriptEvidenceRecordCommand(
+          validEvidenceInput({ metadata: testCase.metadata })
+        ),
+        `evidence command ${testCase.name}`
+      ).toMatchObject({
+        ok: false,
+        status: "rejected",
+        reason: "metadata_unsafe_key"
+      });
+      await expect(
+        recordTranscriptEvidenceRecord(
+          validEvidenceInput({ metadata: testCase.metadata }),
+          { adapter }
+        ),
+        `evidence record ${testCase.name}`
+      ).resolves.toMatchObject({
+        ok: false,
+        status: "rejected",
+        reason: "metadata_unsafe_key"
+      });
+    }
+
+    expect(adapter.recordAuditEvent).not.toHaveBeenCalled();
+    expect(adapter.recordEvidenceRecord).not.toHaveBeenCalled();
   });
 
   it("defaults to unavailable and only records through an injected adapter", async () => {

@@ -1427,34 +1427,65 @@ check('transcript persistence RPC persists idempotent batches for privileged exe
 });
 
 check('transcript persistence RPC rejects unsafe metadata before inserts', () => {
-  const conversationId = '80000000-0000-4000-8000-000000000201';
-  const messageId = '90000000-0000-4000-8000-000000000201';
+  const unsafeMetadataCases = [
+    [
+      'conversation webhook_url',
+      "jsonb_build_object('webhook_url', 'blocked')",
+      "jsonb_build_object('source', 'rls-test')",
+    ],
+    [
+      'conversation nested providerDebug',
+      "jsonb_build_object('nested', jsonb_build_object('providerDebug', 'blocked'))",
+      "jsonb_build_object('source', 'rls-test')",
+    ],
+    [
+      'conversation nested provider_debug',
+      "jsonb_build_object('nested', jsonb_build_object('provider_debug', 'blocked'))",
+      "jsonb_build_object('source', 'rls-test')",
+    ],
+    [
+      'message nested traceDump',
+      "jsonb_build_object('entryPoint', 'rls-test')",
+      "jsonb_build_object('nested', jsonb_build_object('traceDump', 'blocked'))",
+    ],
+    [
+      'message nested trace_dump',
+      "jsonb_build_object('entryPoint', 'rls-test')",
+      "jsonb_build_object('nested', jsonb_build_object('trace_dump', 'blocked'))",
+    ],
+  ];
 
-  statementFails(
-    `
-      select public.persist_transcript_batch(
-        '${ids.workspaceA}'::uuid,
-        jsonb_build_object(
-          'id', '${conversationId}',
-          'workspace_id', '${ids.workspaceA}',
-          'public_reference', 'rpc-unsafe-metadata',
-          'metadata', jsonb_build_object('webhook_url', 'blocked')
-        ),
-        jsonb_build_array(
+  for (const [index, [label, conversationMetadataSql, messageMetadataSql]] of unsafeMetadataCases.entries()) {
+    const conversationId = `80000000-0000-4000-8000-${String(201 + index).padStart(12, '0')}`;
+    const messageId = `90000000-0000-4000-8000-${String(201 + index).padStart(12, '0')}`;
+
+    statementFails(
+      `
+        select public.persist_transcript_batch(
+          '${ids.workspaceA}'::uuid,
           jsonb_build_object(
-            'id', '${messageId}',
+            'id', '${conversationId}',
             'workspace_id', '${ids.workspaceA}',
-            'conversation_id', '${conversationId}',
-            'role', 'user',
-            'message_type', 'chat',
-            'content', 'Unsafe conversation metadata should fail.',
-            'metadata', jsonb_build_object('source', 'rls-test')
+            'public_reference', 'rpc-unsafe-metadata-${index}',
+            'metadata', ${conversationMetadataSql}
+          ),
+          jsonb_build_array(
+            jsonb_build_object(
+              'id', '${messageId}',
+              'workspace_id', '${ids.workspaceA}',
+              'conversation_id', '${conversationId}',
+              'role', 'user',
+              'message_type', 'chat',
+              'content', 'Unsafe metadata should fail.',
+              'metadata', ${messageMetadataSql}
+            )
           )
         )
-      )
-    `,
-    /transcript_metadata_unsafe/i,
-  );
+      `,
+      /transcript_metadata_unsafe/i,
+      `persist_transcript_batch should reject unsafe metadata key ${label}`,
+    );
+  }
 });
 
 check('transcript audit/evidence tables deny direct client reads and writes', () => {
@@ -1707,6 +1738,22 @@ check('transcript audit/evidence constraints accept safe local rows and reject u
   const unsafeMetadataCases = [
     ['fullTranscript', "jsonb_build_object('fullTranscript', 'blocked')"],
     ['transcriptContent', "jsonb_build_object('transcriptContent', 'blocked')"],
+    [
+      'nested providerDebug',
+      "jsonb_build_object('nested', jsonb_build_object('providerDebug', 'blocked'))",
+    ],
+    [
+      'nested provider_debug',
+      "jsonb_build_object('nested', jsonb_build_object('provider_debug', 'blocked'))",
+    ],
+    [
+      'nested traceDump',
+      "jsonb_build_object('nested', jsonb_build_object('traceDump', 'blocked'))",
+    ],
+    [
+      'nested trace_dump',
+      "jsonb_build_object('nested', jsonb_build_object('trace_dump', 'blocked'))",
+    ],
     ['serviceRole', "jsonb_build_object('serviceRole', 'blocked')"],
     [
       'customerVisibleInternalNotes',
@@ -1895,6 +1942,22 @@ check('transcript audit/evidence insert RPCs insert safe local rows for privileg
     ['fullTranscript', "jsonb_build_object('fullTranscript', 'blocked')"],
     ['transcriptContent', "jsonb_build_object('transcriptContent', 'blocked')"],
     ['providerPayload', "jsonb_build_object('providerPayload', 'blocked')"],
+    [
+      'nested providerDebug',
+      "jsonb_build_object('nested', jsonb_build_object('providerDebug', 'blocked'))",
+    ],
+    [
+      'nested provider_debug',
+      "jsonb_build_object('nested', jsonb_build_object('provider_debug', 'blocked'))",
+    ],
+    [
+      'nested traceDump',
+      "jsonb_build_object('nested', jsonb_build_object('traceDump', 'blocked'))",
+    ],
+    [
+      'nested trace_dump',
+      "jsonb_build_object('nested', jsonb_build_object('trace_dump', 'blocked'))",
+    ],
     ['webhookHeaders', "jsonb_build_object('webhookHeaders', 'blocked')"],
     ['cookie', "jsonb_build_object('cookie', 'blocked')"],
     ['token', "jsonb_build_object('token', 'blocked')"],

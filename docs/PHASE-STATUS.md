@@ -6,6 +6,15 @@ This is the quick status page for the SKR repo. Use `docs/PHASE-2-READINESS-PLAN
 
 Current phase: Phase 2G-A - RAG search-index architecture and sync governance.
 
+Current hotfix: metadata diagnostic denylist hotfix after Phase 2G-A.
+
+The metadata diagnostic denylist hotfix restores provider debug and trace dump
+key rejection in the shared transcript metadata helper and TypeScript
+audit/evidence contract. It preserves Phase 2E-H and Phase 2E-I hardening and
+adds no transcript runtime writes or reads, no live Supabase executor, no admin
+transcript UI, no Pinecone/n8n runtime changes, no customer/public quote
+tracking functionality, and no ecommerce functionality.
+
 This phase adds docs and static guards for future RAG/search-index work only.
 It records that Supabase/listing data remains canonical for website/admin
 listing data, quote/enquiry workflows, workspace ownership, and admin audit
@@ -45,16 +54,25 @@ flows, carts, checkout, payments, stock reservation, order fulfilment,
 confirmed booking, online ordering, deployment, Vercel config, Supabase Cloud
 config, env/secrets, and production evidence remain blocked.
 
-Latest completed phase: Phase 2F-A - admin rental listing/media foundation.
+Latest completed phase: Phase 2G-A - RAG search-index architecture and sync governance.
 
-Last merged phase PR: #108
+Last merged phase PR: #109
 
-Merge commit: `8385ac2d925b5edd44cdf016707bb2cd00d67264`
+Merge commit: `02a16bdfd938841ddeac408f4d204d455050f714`
 
 ## Remaining-work map
 
-Completed through PR #108:
+Completed through PR #109:
 
+- PR #109 merged Phase 2G-A RAG search-index architecture and sync governance
+  at merge commit `02a16bdfd938841ddeac408f4d204d455050f714`.
+- Phase 2G-A RAG search-index architecture and sync governance is complete as
+  docs/static-guard work only.
+- The current metadata diagnostic denylist hotfix restores provider debug and
+  trace dump rejection only. It adds no transcript runtime writes or reads, no
+  live Supabase executor, no admin transcript UI, no Pinecone/n8n runtime
+  changes, no customer/public quote tracking functionality, and no ecommerce
+  functionality.
 - PR #108 merged Phase 2F-A admin rental listing/media foundation at merge
   commit `8385ac2d925b5edd44cdf016707bb2cd00d67264`.
 - Phase 2F-A admin rental listing/media foundation is complete as a

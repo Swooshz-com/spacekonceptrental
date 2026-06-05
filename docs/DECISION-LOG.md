@@ -1690,3 +1690,21 @@ accounts, public quote tracking, customer-visible internal notes,
 notifications, CRM integration, deployment, Vercel or Supabase Cloud config,
 browser Supabase, service-role runtime paths, transcript runtime paths, or
 ecommerce flows.
+
+## 2026-06-05: Transcript Metadata Diagnostic Denylist Hotfix
+
+Decision: Add a metadata diagnostic denylist hotfix after Phase 2G-A.
+
+Reason: PR #109 merged Phase 2G-A at
+`02a16bdfd938841ddeac408f4d204d455050f714`. Phase 2E-D originally rejected
+provider debug and trace dump diagnostic metadata keys, but the Phase 2E-H
+shared helper rewrite accidentally dropped those two denylist classes. The
+hotfix restores provider debug and trace dump key rejection in the final shared
+SQL transcript metadata helper and the TypeScript audit/evidence contract.
+
+The hotfix preserves Phase 2E-H and Phase 2E-I hardening for transcript
+content, provider payloads, webhooks, headers, tokens, credentials, private
+keys, secrets, API keys, service-role material, and customer-visible internal
+notes. It adds no transcript runtime writes or reads, no live Supabase
+executor, no admin transcript UI, no Pinecone/n8n runtime changes, no
+customer/public quote tracking functionality, and no ecommerce functionality.

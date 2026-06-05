@@ -915,3 +915,10 @@ notifications, CRM integration, deployment, Vercel or Supabase Cloud config,
 browser Supabase, service-role runtime paths, transcript runtime paths, or
 ecommerce flows. Future runtime sync/retrieval/reranking requires explicit
 owner approval.
+
+The metadata diagnostic denylist hotfix after Phase 2G-A restores provider
+debug and trace dump key rejection in the shared SQL transcript metadata helper
+and TypeScript audit/evidence contract only. It adds no transcript runtime
+writes or reads, no live Supabase executor, no admin transcript UI, no
+Pinecone/n8n runtime changes, no customer/public quote tracking functionality,
+and no ecommerce functionality.
