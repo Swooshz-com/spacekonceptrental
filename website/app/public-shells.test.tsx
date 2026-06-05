@@ -16,6 +16,7 @@ import {
 } from "./catalogue/[slug]/page";
 import EventsPage from "./events/page";
 import { metadata } from "./layout";
+import HomePage from "./page";
 import QuotePage from "./quote/page";
 
 vi.mock("next/image", () => ({
@@ -43,6 +44,43 @@ describe("public page shells", () => {
     expect(
       screen.getByRole("link", { name: /start enquiry/i })
     ).toHaveAttribute("href", "/quote?listing=lounge-sofa-package");
+  });
+
+  it("renders a conversion-focused rental homepage with quote and listing CTAs", async () => {
+    render(await HomePage());
+
+    expect(
+      screen.getByRole("heading", {
+        name: /event furniture rental for singapore spaces/i
+      })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: /request a quote/i })
+    ).toHaveAttribute("href", "/quote");
+    expect(
+      screen.getByRole("link", { name: /browse listings/i })
+    ).toHaveAttribute("href", "/listings");
+    for (const useCase of [
+      /corporate events/i,
+      /weddings/i,
+      /exhibitions/i,
+      /gala lounges/i
+    ]) {
+      expect(screen.getByRole("heading", { name: useCase })).toBeInTheDocument();
+    }
+    expect(
+      screen.getByRole("heading", { name: /featured rental listings/i })
+    ).toBeInTheDocument();
+    expect(
+      screen
+        .getAllByRole("link", { name: /view listing/i })
+        .map((link) => link.getAttribute("href"))
+    ).toContain("/listings/lounge-sofa-package");
+    expect(
+      screen.queryByText(
+        /cart|checkout|payment|customer account|stock reservation|order fulfilment|online ordering/i
+      )
+    ).not.toBeInTheDocument();
   });
 
   it("renders public events copy with event and furniture rental language", () => {

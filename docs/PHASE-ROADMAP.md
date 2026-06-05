@@ -978,3 +978,26 @@ runtime, public/customer upload routes, customer accounts, public quote
 tracking, customer-visible internal notes, notifications, CRM integration,
 deployment, Vercel or Supabase Cloud config, browser Supabase, service-role
 runtime paths, transcript runtime paths, or ecommerce flows.
+
+Phase 2I-A/B adds the public rental catalogue and quote request UX MVP. It
+improves public homepage conversion sections, public rental listing browsing,
+listing detail pages, category browsing, and quote/enquiry handoff while using
+the existing public catalogue read boundary and public quote request boundary.
+
+Phase 2I-A/B keeps public users limited to published public-safe
+listing/category/listing-image data. Quote/enquiry submission confirms receipt
+without exposing internal quote workflow state, admin internal notes, public
+tracking links, customer accounts, notifications, CRM, or ecommerce flows.
+Supabase remains canonical for website/admin listing and quote data, while
+Pinecone remains a future derived index only.
+
+Phase 2I-A/B does not add Pinecone runtime code, Pinecone packages, Pinecone
+env reads, Pinecone executors, API keys, n8n workflow/runtime changes,
+embedding runtime, sync workers, `/api/chat` retrieval wiring, search-index
+document writers, real vector upsert/delete, runtime reranking, hybrid search
+runtime, public/customer upload routes, customer accounts, public quote
+tracking, customer-visible internal notes, notifications, CRM integration,
+deployment, Vercel or Supabase Cloud config, browser Supabase, service-role
+runtime paths, transcript runtime paths, or ecommerce flows such as carts,
+checkout, payments, stock reservation, confirmed booking, order fulfilment, or
+online ordering.

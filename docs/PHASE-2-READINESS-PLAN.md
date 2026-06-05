@@ -238,7 +238,27 @@ Suggested first PR:
   Supabase, production evidence, or ecommerce flows. Product language remains
   enquiry/quote/request.
 
-Current Phase 2H-A/B status:
+Current Phase 2I-A/B status:
+
+- PR #113 merged Phase 2H-A/B protected admin operations UI MVP at merge
+  commit `dbf59c1250e22956162475284dcbe94899f50c4b`.
+- Latest completed capability is Phase 2H-A/B protected admin operations UI
+  MVP.
+- Phase 2I-A/B is current as the public rental catalogue and quote request UX
+  MVP.
+- Public homepage, listing browse/detail, category browsing, and quote/enquiry
+  handoff are improved using existing public-safe catalogue reads and public
+  quote request submission boundaries.
+- Public users only see published public-safe listing/category/image data.
+- Public quote/enquiry submission does not expose internal quote workflow
+  state, public quote tracking, customer accounts, or admin internal notes.
+- Supabase remains canonical for website/admin listing and quote data, while
+  Pinecone remains a future derived index only.
+- No Pinecone runtime, n8n runtime, `/api/chat` retrieval/RAG wiring,
+  public/customer upload route, browser Supabase, service-role runtime path,
+  notification/CRM integration, customer account, or ecommerce flow is added.
+
+Previous Current Phase 2H-A/B status:
 
 - PR #112 merged Phase 2G-C/D server-only local search-index enqueue
   integration at merge commit

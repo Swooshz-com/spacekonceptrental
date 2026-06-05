@@ -68,18 +68,26 @@ function CatalogueCardMeta({ product }: { product: PublicCatalogueProduct }) {
 }
 
 export function CataloguePageContent({
-  catalogue
+  catalogue,
+  detailBasePath = "/catalogue",
+  emptyMessage = "No listings are available right now. Please check back soon.",
+  intro = "Browse furniture and event-rental listings made for spaces, occasions, and styled setups.",
+  title = "Furniture catalogue"
 }: {
   catalogue: PublicCatalogue;
+  detailBasePath?: string;
+  emptyMessage?: string;
+  intro?: string;
+  title?: string;
 }) {
   if (catalogue.products.length === 0) {
     return (
       <section className="section">
         <div className="page-title">
-          <h1>Furniture catalogue</h1>
-          <p>Browse furniture and event-rental listings from our collection.</p>
+          <h1>{title}</h1>
+          <p>{intro}</p>
         </div>
-        <p>No listings are available right now. Please check back soon.</p>
+        <p>{emptyMessage}</p>
       </section>
     );
   }
@@ -87,11 +95,8 @@ export function CataloguePageContent({
   return (
     <section className="section">
       <div className="page-title">
-        <h1>Furniture catalogue</h1>
-        <p>
-          Browse furniture and event-rental listings made for spaces, occasions,
-          and styled setups.
-        </p>
+        <h1>{title}</h1>
+        <p>{intro}</p>
       </div>
 
       <div className="catalogue-grid">
@@ -108,7 +113,10 @@ export function CataloguePageContent({
               <h2>{product.name}</h2>
               <p>{product.shortDescription ?? product.description}</p>
               <div className="catalogue-card__actions">
-                <Link className="card-link" href={`/catalogue/${product.slug}`}>
+                <Link
+                  className="card-link"
+                  href={`${detailBasePath}/${product.slug}`}
+                >
                   View listing
                 </Link>
                 <Link

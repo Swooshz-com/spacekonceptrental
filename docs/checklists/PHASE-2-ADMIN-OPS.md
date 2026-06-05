@@ -138,6 +138,15 @@ and route/action boundaries are implemented and tested.
 - [x] Quote request workflow review, status changes, and internal notes stay behind the protected admin shell and existing quote workflow RPC boundary.
 - [x] Public quote tracking, customer-visible internal notes, notifications, CRM, customer accounts, customer/public uploads, browser Supabase, service-role runtime paths, n8n/Pinecone runtime changes, and ecommerce flows remain out of scope.
 
+## Phase 2I-A/B Public Rental Catalogue And Quote Request UX MVP
+
+- [x] Public rental catalogue browsing, listing detail, category browsing, and quote request handoff are improved.
+- [x] Public listing and category routes use the existing public-safe catalogue read boundary.
+- [x] Public quote/enquiry submission uses the existing first-party quote request boundary.
+- [x] Public users only see published public-safe listing/category/image data.
+- [x] Public quote/enquiry submission does not expose internal quote workflow state, public quote tracking, customer accounts, or admin internal notes.
+- [x] No ecommerce/cart/checkout/payment/order, customer upload, browser Supabase, service-role runtime path, n8n/Pinecone runtime change, `/api/chat` retrieval/RAG wiring, notification, or CRM surface is added.
+
 ## Phase 2D-A Deployment Readiness And Smoke-Test Runbook
 
 - [x] Deployment readiness docs are refreshed for catalogue media, admin listing media upload, public quote handoff, and atomic admin quote workflow surfaces.

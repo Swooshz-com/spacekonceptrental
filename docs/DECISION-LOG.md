@@ -1801,3 +1801,39 @@ hybrid search runtime, public or customer upload routes, customer accounts,
 public quote tracking, customer-visible internal notes, notifications, CRM,
 deployment, Vercel or Supabase Cloud config, browser Supabase, service-role
 runtime paths, transcript runtime paths, or ecommerce flows.
+
+## 2026-06-06: Public Rental Catalogue And Quote Request UX MVP
+
+Decision: Phase 2I-A/B adds the public rental catalogue and quote request UX MVP.
+
+Reason: PR #113 merged Phase 2H-A/B at
+`dbf59c1250e22956162475284dcbe94899f50c4b`, completing the protected admin
+operations UI MVP. The next safe step is to make the public rental website
+more usable for browsing listings/categories and sending quote/enquiry requests
+without changing the existing data or runtime boundaries.
+
+The implementation improves public homepage conversion sections, public
+listing browse/detail routes, category browsing, and quote/enquiry handoff.
+Public catalogue views keep using the existing `get_public_catalogue` read
+surface and public quote submission keeps using the existing first-party
+`/api/quote` boundary.
+
+Public users only see public-safe published listing/category/image data.
+Public quote/enquiry submission confirms receipt without exposing internal
+quote workflow state, admin internal notes, public quote tracking, customer
+accounts, notifications, CRM, or ecommerce flows. Supabase remains canonical
+for website/admin listing and quote data. Pinecone remains a future derived
+index only.
+
+Phase 2I-A/B does not deploy, add Vercel config, connect Supabase Cloud, add
+real secrets or env values, add browser Supabase, add service-role runtime
+paths, access `website/chat-config.js`, add public/customer upload routes, add
+customer accounts, add public quote tracking, expose customer-visible internal
+notes, add notifications or CRM integration, change n8n/Pinecone runtime
+behavior, add SaaS chatbot runtime work, add Pinecone SDK/package
+dependencies, add Pinecone env vars or API keys, add embedding/reranking
+runtime, wire `/api/chat` to retrieval/RAG, wire transcript reads or writes
+into `/api/chat`, add admin transcript UI, add transcript deletion/export
+runtime paths, add retention cleanup jobs, or add ecommerce flows such as
+carts, checkout, payments, stock reservation, confirmed booking, order
+fulfilment, or online ordering.
