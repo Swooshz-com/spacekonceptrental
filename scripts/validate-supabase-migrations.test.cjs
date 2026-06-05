@@ -301,7 +301,7 @@ test('real migration directory passes static validation', () => {
   const result = runValidator(realMigrationsDir);
 
   assert.equal(result.status, 0, result.stdout + result.stderr);
-  assert.match(result.stdout, /checked 15 migration SQL file\(s\)/);
+  assert.match(result.stdout, /checked 16 migration SQL file\(s\)/);
 });
 
 test('real base schema migration creates the planned MVP tables', () => {
@@ -1296,6 +1296,66 @@ test('real migrations add the Phase 2G-B search-index outbox foundation without 
   assert.match(sql, /create index if not exists search_index_jobs_source_lookup_idx/);
   assert.match(sql, /create index if not exists search_index_documents_source_lookup_idx/);
   assert.match(sql, /create index if not exists search_index_documents_last_job_idx/);
+
+  assert.doesNotMatch(migration, /@pinecone-database|pinecone_api_key|process\.env|n8n|chat-config/i);
+  assert.doesNotMatch(migration, /embedding|rerank|vector[_ -]?(upsert|delete)|retrieval/i);
+});
+
+test('real migrations add the Phase 2G-C/D local search-index enqueue RPC without browser table grants', () => {
+  const migrationFileName = '20260605150000_search_index_enqueue_integration.sql';
+  const migration = readRealMigration(migrationFileName);
+  const sql = normalizeSql(migration);
+  const allSql = normalizeSql(readAllRealMigrationSql());
+
+  assert.match(
+    migration,
+    /create or replace function public\.enqueue_search_index_job\(\s*p_workspace_id uuid,\s*p_source_type text,\s*p_source_id uuid,\s*p_visibility text,\s*p_operation text,\s*p_source_version text default null,\s*p_content_hash text default null,\s*p_metadata jsonb default '\{\}'::jsonb,\s*p_status text default 'queued'\s*\)/,
+    'Phase 2G-C/D must add the narrow local enqueue RPC',
+  );
+  assert.match(sql, /returns jsonb/);
+  assert.match(sql, /security definer/);
+  assert.match(sql, /set search_path = public/);
+  assert.match(sql, /public\.is_workspace_product_manager\(p_workspace_id\)/);
+  assert.match(sql, /public\.is_safe_search_index_metadata\(v_metadata, 4096\)/);
+  assert.match(sql, /insert into public\.search_index_jobs/);
+  assert.match(sql, /status in \('queued', 'processing'\)/);
+  assert.match(sql, /unique_violation/);
+  assert.match(sql, /search_index_reused/);
+  assert.match(sql, /search_index_queued/);
+
+  assert.match(
+    sql,
+    /revoke all on function public\.enqueue_search_index_job\(uuid, text, uuid, text, text, text, text, jsonb, text\) from public;/,
+  );
+  assert.match(
+    sql,
+    /grant execute on function public\.enqueue_search_index_job\(uuid, text, uuid, text, text, text, text, jsonb, text\) to authenticated;/,
+  );
+  assert.doesNotMatch(
+    migration,
+    /grant\s+(select|insert|update|delete|all)[\s\S]*?on table public\.search_index_(jobs|documents) to (anon|authenticated);/i,
+    'Phase 2G-C/D must not grant browser table access to search-index tables',
+  );
+  assert.doesNotMatch(
+    migration,
+    /create policy [^;]* on public\.search_index_(jobs|documents)/i,
+    'Phase 2G-C/D must not add browser-access table policies',
+  );
+
+  assert.match(sql, /perform public\.enqueue_search_index_job/);
+  assert.match(sql, /p_action = 'category\.archive'/);
+  assert.match(sql, /p_action = 'product\.publish'/);
+  assert.match(sql, /p_action = 'productimage\.archive'/);
+  assert.match(
+    allSql,
+    /create or replace function public\.execute_admin_product_write\(\s*p_action text,\s*p_target_id uuid,\s*p_workspace_id uuid,\s*p_payload jsonb\s*\) returns uuid/,
+    'final migration set must keep the admin product write RPC',
+  );
+  assert.match(
+    allSql,
+    /perform public\.enqueue_search_index_job\(\s*p_workspace_id,\s*v_search_source_type,\s*v_returned_id,\s*v_search_visibility,\s*v_search_operation,/,
+    'admin listing/category/image writes must enqueue local search-index jobs in the DB boundary',
+  );
 
   assert.doesNotMatch(migration, /@pinecone-database|pinecone_api_key|process\.env|n8n|chat-config/i);
   assert.doesNotMatch(migration, /embedding|rerank|vector[_ -]?(upsert|delete)|retrieval/i);

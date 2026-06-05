@@ -5,6 +5,12 @@ import {
   DisabledSearchIndex
 } from "./disabled-search-index";
 import {
+  buildCategorySearchIndexJob,
+  buildListingImageAltTextSearchIndexJob,
+  buildListingSearchIndexJob
+} from "./search-index-builder";
+import { SupabaseSearchIndexAdapter } from "./supabase-search-index-adapter";
+import {
   createSearchIndexDocumentCommand,
   createSearchIndexJobCommand,
   recordSearchIndexDocument,
@@ -41,8 +47,12 @@ export {
   createSearchIndexJobCommand,
   disabledSearchIndex,
   DisabledSearchIndex,
+  buildCategorySearchIndexJob,
+  buildListingImageAltTextSearchIndexJob,
+  buildListingSearchIndexJob,
   recordSearchIndexDocument,
-  recordSearchIndexJob
+  recordSearchIndexJob,
+  SupabaseSearchIndexAdapter
 };
 
 export type {

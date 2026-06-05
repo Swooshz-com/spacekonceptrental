@@ -1,12 +1,13 @@
 # RAG Search-Index Plan
 
-Phase 2G-B adds the local search-index outbox foundation after the Phase 2G-A
-architecture and governance work. It adds local Supabase queue/document
-tracking tables and a server-only disabled/injected TypeScript contract
-boundary only. It does not add runtime Pinecone code, Pinecone packages, env
+Phase 2G-C/D builds on the Phase 2G-B local search-index outbox foundation by
+adding server-only local enqueue integration. It adds a narrow authenticated
+enqueue RPC, lets existing admin listing/category/image metadata writes enqueue
+local jobs after successful database writes, and adds server-only TypeScript
+enqueue helpers. It does not add runtime Pinecone code, Pinecone packages, env
 reads, secrets, API keys, n8n workflow changes, embedding runtime, sync
-workers, reranking runtime, hybrid search runtime, or `/api/chat` retrieval
-wiring.
+workers, reranking runtime, hybrid search runtime, search-index document
+writers, or `/api/chat` retrieval wiring.
 
 ## Source Of Truth
 
@@ -22,10 +23,10 @@ is unavailable. Future admin listing writes must not be blocked by Pinecone
 or network failures.
 
 Search-index tables are local queue/document tracking foundations only.
-`search_index_jobs` records future workspace-scoped source sync work, and
-`search_index_documents` records future derived document state. Supabase/
-listing data remains canonical. Pinecone remains a future derived search
-index only.
+`search_index_jobs` records workspace-scoped source sync work that can now be
+queued by approved local admin listing writes, and `search_index_documents`
+records future derived document state. Supabase/listing data remains
+canonical. Pinecone remains a future derived search index only.
 
 Future Pinecone upsert, delete, retrieval, reranking, and hybrid search work
 requires explicit owner approval in a separate runtime phase. Future
@@ -86,9 +87,9 @@ duplicate vector junk when a source is re-rendered or retried.
 Search-index sync should use an outbox/worker pattern, not direct
 admin-save-to-Pinecone calls.
 
-Phase 2G-B implements only the local table/contract foundation for that
-pattern. It does not add a worker, scheduler, external index executor, real
-ingestion path, or vector upsert/delete path.
+Phase 2G-C/D implements only the local enqueue step for that pattern. It does
+not add a worker, scheduler, external index executor, real ingestion path,
+search-index document writer, or vector upsert/delete path.
 
 Future lifecycle:
 
@@ -134,11 +135,11 @@ Hybrid search is a later decision gate if exact term recall is weak. That gate
 must evaluate whether lexical search, keyword filters, or a blended retrieval
 strategy is needed before adding runtime implementation.
 
-`/api/chat` remains unwired from retrieval/RAG in Phase 2G-B.
+`/api/chat` remains unwired from retrieval/RAG in Phase 2G-C/D.
 
 ## Non-Goals
 
-Phase 2G-B does not implement:
+Phase 2G-C/D does not implement:
 
 - Pinecone SDK usage.
 - Pinecone executor code.
@@ -146,6 +147,7 @@ Phase 2G-B does not implement:
 - Pinecone package dependencies.
 - Embedding model runtime.
 - Sync worker jobs.
+- Search-index document writes.
 - n8n workflow edits.
 - `/api/chat` retrieval wiring.
 - Admin UI changes.

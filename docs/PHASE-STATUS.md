@@ -4,37 +4,39 @@ This is the quick status page for the SKR repo. Use `docs/PHASE-2-READINESS-PLAN
 
 ## Current phase
 
-Current phase: Phase 2G-B - local search-index outbox foundation.
+Current phase: Phase 2G-C/D - server-only local search-index enqueue integration.
 
-Latest completed capability: transcript metadata diagnostic denylist hotfix.
+Latest completed capability: local search-index outbox foundation.
 
-Last merged capability PR: #110
+Last merged capability PR: #111
 
-Merge commit: `608e53892964c172b64286a554ee202c8d1147d8`
+Merge commit: `f73c7c5515d3e5242975280b25edf28cbc25f96b`
 
-Phase 2G-B adds local Supabase search-index queue/document tracking
-foundations only. It defines `search_index_jobs` and
-`search_index_documents` with workspace scope, safe source/visibility/
-operation/status checks, bounded redacted metadata, fail-closed RLS, no
-browser grants, and no public policies. It also adds a server-only
-disabled/injected TypeScript contract boundary for validated local commands.
+Phase 2G-C/D adds server-only local search-index enqueue integration only. It
+adds a narrow authenticated `enqueue_search_index_job` RPC, keeps direct
+search-index table access fail-closed, and lets existing admin listing,
+category, and listing-image metadata writes enqueue local outbox jobs after
+successful database writes.
 
-Search-index tables are local queue/document tracking foundations only.
+The TypeScript search-index boundary now includes a server-only Supabase
+enqueue adapter and pure safe job builders for listing, category, and listing
+image alt-text sources. These paths enqueue local jobs only. They do not write
+search-index document rows, run external sync, call Pinecone, call n8n, or wire
+retrieval into `/api/chat`.
+
+Search-index tables remain local queue/document tracking foundations only.
 Supabase/listing data remains canonical for website/admin listing data,
-quote/enquiry workflows, workspace ownership, and admin audit trails.
-Pinecone remains a future derived search index only and must not become
-canonical business storage.
+quote/enquiry workflows, workspace ownership, and admin audit trails. Pinecone
+remains a future derived search index only and must not become canonical
+business storage. Search-index job cleanup policy remains future-reviewed; this
+local foundation restricts deletion of referenced jobs instead of silently
+detaching document history.
 
-The latest completed capability before this phase is the PR #110 metadata
-diagnostic denylist hotfix, which restored provider debug and trace dump key
-rejection in the shared transcript metadata helper and TypeScript
-audit/evidence contract.
-
-Phase 2G-B does not add Pinecone runtime code, Pinecone packages, Pinecone env
-reads, secrets, API keys, Pinecone executors, n8n workflow/runtime changes,
+Phase 2G-C/D does not add Pinecone runtime code, Pinecone packages, Pinecone
+env reads, secrets, API keys, Pinecone executors, n8n workflow/runtime changes,
 embedding runtime, sync workers, `/api/chat` retrieval wiring, admin UI
-changes, real data ingestion, real vector upsert/delete, runtime reranking, or
-hybrid search runtime.
+changes, search-index document writers, real vector upsert/delete, runtime
+reranking, or hybrid search runtime.
 
 Runtime transcript writes remain blocked. Runtime transcript reads remain
 blocked. Live Supabase RPC executor remains blocked. Any service-role or
@@ -57,19 +59,30 @@ config, env/secrets, and production evidence remain blocked.
 
 ## Remaining-work map
 
-Completed through PR #110:
+Completed through PR #111:
+
+- PR #111 merged Phase 2G-B local search-index outbox foundation at merge
+  commit `f73c7c5515d3e5242975280b25edf28cbc25f96b`.
+- The latest completed capability is the local search-index outbox foundation.
+  It added local `search_index_jobs` and `search_index_documents` queue/
+  document tracking tables plus a disabled server-only TypeScript contract,
+  with fail-closed table access and no external search runtime.
+- Phase 2G-C/D is current as server-only local search-index enqueue
+  integration only. It adds a narrow local enqueue RPC, admin listing/category/
+  image write enqueue hooks inside the existing database transaction boundary,
+  a server-only Supabase enqueue adapter, and pure safe job builders, with no
+  Pinecone runtime/package/env/executor, no n8n workflow/runtime change, no
+  sync worker, no search-index document writer, and no `/api/chat` retrieval
+  wiring.
 
 - PR #110 merged the transcript metadata diagnostic denylist hotfix at merge
   commit `608e53892964c172b64286a554ee202c8d1147d8`.
-- The latest completed capability is the metadata diagnostic denylist hotfix.
-  It restored provider debug and trace dump rejection only, adding no
-  transcript runtime writes or reads, no live Supabase executor, no admin
-  transcript UI, no Pinecone/n8n runtime changes, no customer/public quote
-  tracking functionality, and no ecommerce functionality.
-- Phase 2G-B is current as local search-index outbox foundation only. It adds
-  local table and disabled server-only contract foundations, with no Pinecone
-  runtime/package/env/executor, no n8n workflow/runtime change, and no
-  `/api/chat` retrieval wiring.
+- The PR #110 metadata diagnostic denylist hotfix restored provider debug and
+  trace dump key rejection in the shared transcript metadata helper and
+  TypeScript audit/evidence contract only, adding no transcript runtime writes
+  or reads, no live Supabase executor, no admin transcript UI, no Pinecone/n8n
+  runtime changes, no customer/public quote tracking functionality, and no
+  ecommerce functionality.
 
 - PR #109 merged Phase 2G-A RAG search-index architecture and sync governance
   at merge commit `02a16bdfd938841ddeac408f4d204d455050f714`.
