@@ -4,21 +4,22 @@ This is the quick status page for the SKR repo. Use `docs/PHASE-2-READINESS-PLAN
 
 ## Current phase
 
-Current phase: Phase 2E-H - transcript audit/evidence local schema, RLS, and server-only contract foundation.
+Current phase: Phase 2E-I - transcript audit/evidence server-only insert boundary.
 
-This phase adds local-only transcript audit/evidence schema, fail-closed RLS,
-and a server-only TypeScript contract foundation for future reviewed audit and
-evidence capture. It defines `transcript_audit_events` and
-`transcript_evidence_records` tables with workspace scope, safe event/result/
-actor checks, bounded redacted metadata, no browser grants, and no public
-policies. It also adds `website/lib/chat/audit/` as a server-only,
-dependency-injected contract with a disabled default adapter. This is local
-schema/RLS plus contract foundation only. It does not wire `/api/chat`, does
-not add runtime transcript writes or reads, does not add audit/evidence runtime
-writers, does not add deletion/export runtime paths, does not add retention
-jobs, does not add a live Supabase RPC executor, does not add service-role
-runtime paths, does not add browser Supabase, does not add admin transcript UI,
-and does not add production evidence.
+This phase adds a server-only local/test-only insert boundary for validated
+transcript audit/evidence rows. It adds local `insert_transcript_audit_event`
+and `insert_transcript_evidence_record` RPC contracts for the existing
+`transcript_audit_events` and `transcript_evidence_records` tables, validates
+trusted workspace scope and same-workspace relationships, reuses the shared
+safe metadata helper, keeps placeholder evidence summaries bounded and
+redacted, and explicitly revokes function execution from public/browser roles.
+It also adds a server-only TypeScript RPC adapter that maps already validated
+audit/evidence commands into injected executor payloads only. The default
+adapter remains disabled. This keeps product language as enquiry/quote/request
+work, not an ecommerce flow. It does not wire `/api/chat`, does not add admin
+UI, does not add deletion/export/retention runtime paths, does not add a live
+Supabase service-role executor, does not add browser grants, and does not add
+browser Supabase.
 
 Runtime transcript writes remain blocked. Runtime transcript reads remain
 blocked. Live Supabase RPC executor remains blocked. Any service-role or
@@ -34,16 +35,23 @@ Cloud config, env/secrets, production evidence remain blocked. Browser
 Supabase remains forbidden. Service-role runtime paths remain forbidden.
 `website/chat-config.js` access remains forbidden.
 
-Latest completed phase: Phase 2E-G - transcript audit/evidence model and operator runbook readiness.
+Latest completed phase: Phase 2E-H - transcript audit/evidence local schema, RLS, and server-only contract foundation.
 
-Last merged phase PR: #105
+Last merged phase PR: #106
 
-Merge commit: `a59547130c33ec56e275dfdee48ceac9a1f8587f`
+Merge commit: `8607e16d3c405df0797ec08536cce79f1b4f68d2`
 
 ## Remaining-work map
 
-Completed through PR #105:
+Completed through PR #106:
 
+- PR #106 merged Phase 2E-H transcript audit/evidence local schema, RLS, and
+  server-only contract foundation at merge commit
+  `8607e16d3c405df0797ec08536cce79f1b4f68d2`.
+- Phase 2E-H transcript audit/evidence local schema, RLS, and server-only
+  contract foundation is complete as local schema/RLS and server-only contract
+  work only.
+- Phase 2E-I is current as a server-only local/test-only insert boundary only.
 - PR #105 merged Phase 2E-G transcript audit/evidence model and operator runbook readiness
   at merge commit `a59547130c33ec56e275dfdee48ceac9a1f8587f`.
 - Phase 2E-G transcript audit/evidence model and operator runbook readiness is
@@ -127,11 +135,35 @@ Too broad or risky to bundle here:
 - Lifecycle governance plus runtime transcript deletion/export, retention
   cleanup jobs, transcript reads, admin transcript UI, or `/api/chat`
   persistence wiring.
-- Audit/evidence readiness plus audit/evidence storage, runtime writers,
-  production evidence files, or operator execution.
+- Audit/evidence readiness plus runtime writers, production evidence files, or
+  operator execution.
 - Executor approval governance plus a live executor implementation.
 - Transcript access plus customer accounts, public quote tracking,
   notifications, CRM, or SaaS chatbot runtime implementation.
+
+## Previous merged status snapshot: Phase 2E-H
+
+Current phase: Phase 2E-H - transcript audit/evidence local schema, RLS, and server-only contract foundation.
+
+This phase adds local-only transcript audit/evidence schema, fail-closed RLS,
+and a server-only TypeScript contract foundation for future reviewed audit and
+evidence capture. It defines `transcript_audit_events` and
+`transcript_evidence_records` tables with workspace scope, safe event/result/
+actor checks, bounded redacted metadata, no browser grants, and no public
+policies. It also adds `website/lib/chat/audit/` as a server-only,
+dependency-injected contract with a disabled default adapter. This is local
+schema/RLS plus contract foundation only. It does not wire `/api/chat`, does
+not add runtime transcript writes or reads, does not add audit/evidence runtime
+writers, does not add deletion/export runtime paths, does not add retention
+jobs, does not add a live Supabase RPC executor, does not add service-role
+runtime paths, does not add browser Supabase, does not add admin transcript UI,
+and does not add production evidence.
+
+Latest completed phase: Phase 2E-G - transcript audit/evidence model and operator runbook readiness.
+
+Last merged phase PR: #105
+
+Merge commit: `a59547130c33ec56e275dfdee48ceac9a1f8587f`
 
 ## Previous merged status snapshot: Phase 2E-G
 

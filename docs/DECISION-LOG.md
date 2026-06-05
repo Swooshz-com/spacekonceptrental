@@ -1587,3 +1587,37 @@ evidence, approve customer accounts, approve public quote tracking or public
 transcript access, add notifications or CRM integration, change n8n/Pinecone
 runtime behavior, add SaaS chatbot runtime work, add ecommerce flows, or
 access `website/chat-config.js`.
+
+## 2026-06-05: Transcript Audit Evidence Server-Only Insert Boundary
+
+Decision: Phase 2E-I adds a server-only local/test-only insert boundary for transcript audit/evidence rows.
+
+Reason: PR #106 merged at `8607e16d3c405df0797ec08536cce79f1b4f68d2` and
+completed Phase 2E-H transcript audit/evidence local schema, RLS, and
+server-only contract foundation. The next safe step is to define a local
+insert RPC and injected TypeScript adapter boundary for already validated
+audit/evidence rows without approving any runtime writer, live executor, admin
+UI, transcript read path, deletion/export path, or retention job.
+
+The implementation adds local `insert_transcript_audit_event` and
+`insert_transcript_evidence_record` RPC contracts. They validate trusted
+workspace scope, same-workspace conversation/quote/audit relationships,
+active actor workspace membership when an admin actor is supplied, recursive
+safe metadata, and placeholder-only evidence summary text before inserting
+rows into the Phase 2E-H tables. Both functions are explicitly revoked from
+public, anon, and authenticated roles, and no browser table grants are added.
+
+The implementation also adds a server-only TypeScript RPC adapter under
+`website/lib/chat/audit/`. It maps validated audit/evidence commands into an
+injected executor payload only, keeps the default adapter disabled, returns
+safe non-leaking unavailable results for executor failures, and does not
+instantiate Supabase, read env, read cookies or headers, call `.rpc`, use
+browser Supabase, or read `website/chat-config.js`.
+
+Phase 2E-I does not wire `/api/chat`, add admin UI, add transcript
+deletion/export runtime paths, add retention cleanup jobs, add live Supabase
+service-role execution, add browser grants, add browser Supabase, add
+production evidence, change n8n/Pinecone runtime behavior, add SaaS chatbot
+runtime work, deploy, change Vercel or Supabase Cloud config, add ecommerce
+flows, or access `website/chat-config.js`. Product wording remains
+enquiry/quote/request.

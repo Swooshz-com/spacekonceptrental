@@ -171,13 +171,16 @@ describe("Phase 2E-H transcript audit/evidence foundation", () => {
       "website/lib/chat/audit/contract.ts",
       "website/lib/chat/audit/disabled-transcript-audit.ts",
       "website/lib/chat/audit/index.ts",
+      "website/lib/chat/audit/rpc-transcript-audit-adapter.test.ts",
+      "website/lib/chat/audit/rpc-transcript-audit-adapter.ts",
       "website/lib/chat/audit/transcript-audit-contract.test.ts",
       "website/lib/chat/audit/types.ts"
     ]);
-    expect(auditSource.match(/import "server-only";/g)).toHaveLength(4);
+    expect(auditSource.match(/import "server-only";/g)).toHaveLength(5);
     expect(auditSource).toContain("TranscriptAuditAdapter");
     expect(auditSource).toContain("disabledTranscriptAudit");
     expect(auditSource).toContain("getTranscriptAuditAdapter");
+    expect(auditSource).toContain("createRpcTranscriptAuditAdapter");
     expect(auditSource).not.toContain("@supabase/");
     expect(auditSource).not.toContain("createClient(");
     expect(auditSource).not.toContain("createServerSupabaseClient");

@@ -10,6 +10,7 @@ import {
   recordTranscriptAuditEvent,
   recordTranscriptEvidenceRecord
 } from "./contract";
+import { createRpcTranscriptAuditAdapter } from "./rpc-transcript-audit-adapter";
 import type {
   TranscriptAuditActorType,
   TranscriptAuditAdapter,
@@ -22,9 +23,13 @@ import type {
   TranscriptAuditEventCommandResult,
   TranscriptAuditEventRecordedResult,
   TranscriptAuditEventRecordResult,
+  TranscriptAuditEventRpcExecutorResult,
+  TranscriptAuditEventRpcPayload,
   TranscriptAuditEventType,
   TranscriptAuditMetadataInput,
   TranscriptAuditRejectReason,
+  TranscriptAuditRpcAdapterDependencies,
+  TranscriptAuditRpcExecutor,
   TranscriptAuditResultStatus,
   TranscriptAuditUnavailableResult,
   TranscriptEvidenceRecordAdapterResult,
@@ -32,6 +37,8 @@ import type {
   TranscriptEvidenceRecordCommandInput,
   TranscriptEvidenceRecordCommandResult,
   TranscriptEvidenceRecordRecordedResult,
+  TranscriptEvidenceRecordRpcExecutorResult,
+  TranscriptEvidenceRecordRpcPayload,
   TranscriptEvidenceRecordResult,
   TranscriptEvidenceType
 } from "./types";
@@ -39,6 +46,7 @@ import type {
 export {
   createTranscriptAuditEventCommand,
   createTranscriptEvidenceRecordCommand,
+  createRpcTranscriptAuditAdapter,
   disabledTranscriptAudit,
   DisabledTranscriptAudit,
   recordTranscriptAuditEvent,
@@ -56,9 +64,13 @@ export type {
   TranscriptAuditEventCommandResult,
   TranscriptAuditEventRecordedResult,
   TranscriptAuditEventRecordResult,
+  TranscriptAuditEventRpcExecutorResult,
+  TranscriptAuditEventRpcPayload,
   TranscriptAuditEventType,
   TranscriptAuditMetadataInput,
   TranscriptAuditRejectReason,
+  TranscriptAuditRpcAdapterDependencies,
+  TranscriptAuditRpcExecutor,
   TranscriptAuditResultStatus,
   TranscriptAuditUnavailableResult,
   TranscriptEvidenceRecordAdapterResult,
@@ -66,6 +78,8 @@ export type {
   TranscriptEvidenceRecordCommandInput,
   TranscriptEvidenceRecordCommandResult,
   TranscriptEvidenceRecordRecordedResult,
+  TranscriptEvidenceRecordRpcExecutorResult,
+  TranscriptEvidenceRecordRpcPayload,
   TranscriptEvidenceRecordResult,
   TranscriptEvidenceType
 };

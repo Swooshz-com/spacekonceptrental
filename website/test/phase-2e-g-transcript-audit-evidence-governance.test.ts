@@ -260,7 +260,7 @@ describe("Phase 2E-G transcript audit/evidence governance", () => {
     expect(persistenceSource).not.toContain("SUPABASE_SERVICE_ROLE");
     expect(persistenceSource).not.toContain("NEXT_PUBLIC_SUPABASE");
     expect(persistenceSource).not.toContain("chat-config");
-    expect(auditContractSource.match(/import "server-only";/g)).toHaveLength(4);
+    expect(auditContractSource.match(/import "server-only";/g)).toHaveLength(5);
     expect(auditContractSource).not.toContain("@supabase/");
     expect(auditContractSource).not.toContain("createClient(");
     expect(auditContractSource).not.toContain("createServerSupabaseClient");
@@ -304,6 +304,8 @@ describe("Phase 2E-G transcript audit/evidence governance", () => {
       "website/lib/chat/audit/contract.ts",
       "website/lib/chat/audit/disabled-transcript-audit.ts",
       "website/lib/chat/audit/index.ts",
+      "website/lib/chat/audit/rpc-transcript-audit-adapter.test.ts",
+      "website/lib/chat/audit/rpc-transcript-audit-adapter.ts",
       "website/lib/chat/audit/transcript-audit-contract.test.ts",
       "website/lib/chat/audit/types.ts"
     ]);
