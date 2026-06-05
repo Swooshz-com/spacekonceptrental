@@ -152,7 +152,7 @@ describe("Phase 2G-A RAG search-index architecture and sync governance", () => {
     expect(readTrackedFiles(["website/app/api/customer-uploads"])).toEqual([]);
     expect(readTrackedFiles(["website/chat-config.js"])).toEqual([]);
     expect(productionSource).not.toMatch(
-      /customerVisibleInternalNotes|customer-visible internal notes|internal notes/i
+      /customerVisibleInternalNotes|customer-visible internal notes/i
     );
     expect(productionSource).not.toMatch(
       /\bcarts?\b|\bcheckout\b|\bpayments?\b|order fulfilment|stock[_ -]?reservation|confirmed booking|online ordering/i

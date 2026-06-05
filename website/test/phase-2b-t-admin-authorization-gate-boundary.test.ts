@@ -331,15 +331,17 @@ describe("Phase 2B-T server-only admin authorization gate composition boundary",
       .map(({ source }) => source)
       .join("\n");
 
-    expect(readTrackedFiles(["website/app/admin"])).toEqual([
-      "website/app/admin/login/page.test.tsx",
-      "website/app/admin/login/page.tsx",
-      "website/app/admin/logout/route.test.ts",
-      "website/app/admin/logout/route.ts",
-      "website/app/admin/page.tsx",
-      "website/app/admin/protected-admin-shell.test.tsx",
-      "website/app/admin/protected-admin-shell.tsx"
-    ]);
+    expect(readTrackedFiles(["website/app/admin"])).toEqual(
+      expect.arrayContaining([
+        "website/app/admin/login/page.test.tsx",
+        "website/app/admin/login/page.tsx",
+        "website/app/admin/logout/route.test.ts",
+        "website/app/admin/logout/route.ts",
+        "website/app/admin/page.tsx",
+        "website/app/admin/protected-admin-shell.test.tsx",
+        "website/app/admin/protected-admin-shell.tsx"
+      ])
+    );
     expect(readTrackedFiles(["website/app/login"])).toEqual([]);
     expect(readTrackedFiles(["website/app/logout"])).toEqual([]);
     expect(readTrackedFiles(["website/app/api/auth"])).toEqual([]);

@@ -4,39 +4,33 @@ This is the quick status page for the SKR repo. Use `docs/PHASE-2-READINESS-PLAN
 
 ## Current phase
 
-Current phase: Phase 2G-C/D - server-only local search-index enqueue integration.
+Current phase: Phase 2H-A/B - admin operations UI MVP.
 
-Latest completed capability: local search-index outbox foundation.
+Latest completed capability: Phase 2G-C/D server-only local search-index enqueue integration.
 
-Last merged capability PR: #111
+Last merged capability PR: #112
 
-Merge commit: `f73c7c5515d3e5242975280b25edf28cbc25f96b`
+Merge commit: `116f3761032b2af23e2bc240a77b6e810f45e918`
 
-Phase 2G-C/D adds server-only local search-index enqueue integration only. It
-adds a narrow authenticated `enqueue_search_index_job` RPC, keeps direct
-search-index table access fail-closed, and lets existing admin listing,
-category, and listing-image metadata writes enqueue local outbox jobs after
-successful database writes.
+Phase 2H-A/B adds the protected admin operations UI MVP. It splits the
+protected admin shell into focused listing, category, media, and quote workflow
+surfaces while reusing the existing server-only admin auth, session,
+workspace, route-gate, and CSRF conventions.
 
-The TypeScript search-index boundary now includes a server-only Supabase
-enqueue adapter and pure safe job builders for listing, category, and listing
-image alt-text sources. These paths enqueue local jobs only. They do not write
-search-index document rows, run external sync, call Pinecone, call n8n, or wire
-retrieval into `/api/chat`.
+Listing/category/image management remains on the existing first-party admin
+API routes and the `execute_admin_product_write(...)` persistence boundary.
+This preserves the Phase 2G-C/D local search-index enqueue behavior because
+admin saves still pass through the approved product write boundary. Quote
+workflow review, status changes, and internal notes remain protected by the
+existing quote workflow route and `execute_admin_quote_workflow(...)` RPC.
 
-Search-index tables remain local queue/document tracking foundations only.
-Supabase/listing data remains canonical for website/admin listing data,
-quote/enquiry workflows, workspace ownership, and admin audit trails. Pinecone
-remains a future derived search index only and must not become canonical
-business storage. Search-index job cleanup policy remains future-reviewed; this
-local foundation restricts deletion of referenced jobs instead of silently
-detaching document history.
-
-Phase 2G-C/D does not add Pinecone runtime code, Pinecone packages, Pinecone
+Phase 2H-A/B does not add Pinecone runtime code, Pinecone packages, Pinecone
 env reads, secrets, API keys, Pinecone executors, n8n workflow/runtime changes,
-embedding runtime, sync workers, `/api/chat` retrieval wiring, admin UI
-changes, search-index document writers, real vector upsert/delete, runtime
-reranking, or hybrid search runtime.
+embedding runtime, sync workers, `/api/chat` retrieval wiring,
+search-index document writers, real vector upsert/delete, runtime reranking,
+hybrid search runtime, browser Supabase, service-role runtime paths, public or
+customer upload routes, public quote tracking, customer-visible internal
+notes, notifications, CRM integration, customer accounts, or ecommerce flows.
 
 Runtime transcript writes remain blocked. Runtime transcript reads remain
 blocked. Live Supabase RPC executor remains blocked. Any service-role or
@@ -59,7 +53,22 @@ config, env/secrets, and production evidence remain blocked.
 
 ## Remaining-work map
 
-Completed through PR #111:
+Completed through PR #112:
+
+- PR #112 merged Phase 2G-C/D server-only local search-index enqueue
+  integration at merge commit
+  `116f3761032b2af23e2bc240a77b6e810f45e918`.
+- The latest completed capability is Phase 2G-C/D server-only local
+  search-index enqueue integration. It added the narrow authenticated
+  `enqueue_search_index_job` RPC, admin listing/category/image metadata enqueue
+  hooks inside the existing database transaction boundary, a server-only
+  Supabase enqueue adapter, and pure safe job builders, with no Pinecone
+  runtime/package/env/executor, no n8n workflow/runtime change, no sync worker,
+  no search-index document writer, and no `/api/chat` retrieval wiring.
+- Phase 2H-A/B is current as the protected admin operations UI MVP. It keeps
+  listing/category/image writes on the existing RPC-backed admin product write
+  boundary and quote workflow writes on the existing RPC-backed quote workflow
+  boundary.
 
 - PR #111 merged Phase 2G-B local search-index outbox foundation at merge
   commit `f73c7c5515d3e5242975280b25edf28cbc25f96b`.

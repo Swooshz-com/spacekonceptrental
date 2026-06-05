@@ -67,6 +67,7 @@ export type AdminQuoteRequestInboxQuoteRequest = {
   status: "new" | "reviewing" | "quoted" | "closed" | "archived";
   source: "website" | "chat" | "admin";
   createdAt: string;
+  updatedAt?: string;
   items: AdminQuoteRequestInboxItem[];
   activity: AdminQuoteRequestInboxActivity[];
 };
@@ -102,6 +103,7 @@ type QuoteRequestRow = {
   status?: unknown;
   source?: unknown;
   created_at?: unknown;
+  updated_at?: unknown;
 };
 
 type QuoteRequestItemRow = {
@@ -227,6 +229,7 @@ function toQuoteRequest(
     status: status as AdminQuoteRequestInboxQuoteRequest["status"],
     source: source as AdminQuoteRequestInboxQuoteRequest["source"],
     createdAt,
+    updatedAt: getString(row.updated_at),
     items: [],
     activity: []
   };
@@ -348,7 +351,7 @@ export async function resolveAdminQuoteRequestInboxRead(
     const quoteRequestResult = await supabase.client
       .from("quote_requests")
       .select(
-        "id, public_reference, customer_name, customer_email, customer_phone, event_date, venue, status, source, created_at"
+        "id, public_reference, customer_name, customer_email, customer_phone, event_date, venue, status, source, created_at, updated_at"
       )
       .eq("workspace_id", workspaceId)
       .order("created_at", { ascending: false })

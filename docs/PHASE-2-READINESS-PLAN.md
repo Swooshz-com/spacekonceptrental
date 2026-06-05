@@ -238,7 +238,27 @@ Suggested first PR:
   Supabase, production evidence, or ecommerce flows. Product language remains
   enquiry/quote/request.
 
-Current Phase 2G-C/D status:
+Current Phase 2H-A/B status:
+
+- PR #112 merged Phase 2G-C/D server-only local search-index enqueue
+  integration at merge commit
+  `116f3761032b2af23e2bc240a77b6e810f45e918`.
+- Latest completed capability is Phase 2G-C/D server-only local search-index
+  enqueue integration.
+- Phase 2H-A/B is current as the protected admin operations UI MVP.
+- The MVP splits the protected admin shell into focused listing, category,
+  media, quote request, and quote detail surfaces without adding new auth,
+  browser Supabase, service-role, deployment, Pinecone, or n8n runtime paths.
+- Listing/category/listing-image writes keep using the existing first-party
+  admin routes and `execute_admin_product_write` boundary, which preserves the
+  Phase 2G-C/D local search-index enqueue behavior.
+- Quote workflow review, status changes, and internal notes keep using the
+  existing protected admin quote route and `execute_admin_quote_workflow` RPC.
+- Public quote tracking, customer-visible internal notes, notifications, CRM,
+  customer accounts, customer/public upload routes, and ecommerce flows remain
+  blocked.
+
+Previous Current Phase 2G-C/D status:
 
 - PR #111 merged Phase 2G-B local search-index outbox foundation at merge
   commit `f73c7c5515d3e5242975280b25edf28cbc25f96b`.
