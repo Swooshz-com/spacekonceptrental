@@ -238,7 +238,30 @@ Suggested first PR:
   Supabase, production evidence, or ecommerce flows. Product language remains
   enquiry/quote/request.
 
-Current metadata diagnostic denylist hotfix status:
+Current Phase 2G-B status:
+
+- PR #110 merged the metadata diagnostic denylist hotfix at merge commit
+  `608e53892964c172b64286a554ee202c8d1147d8`.
+- Latest completed capability is the PR #110 metadata diagnostic denylist
+  hotfix.
+- Phase 2G-B is current as local search-index outbox foundation only.
+- Phase 2G-B adds local Supabase `search_index_jobs` and
+  `search_index_documents` queue/document tracking tables only.
+- The tables are local foundations for future sync and evaluation. Supabase/
+  listing data remains canonical, and Pinecone remains a future derived search
+  index only.
+- The server-only TypeScript contract is disabled by default and records only
+  through an injected adapter in tests.
+- No Pinecone runtime code, Pinecone package, Pinecone env read, Pinecone
+  executor, API key, n8n workflow/runtime change, `/api/chat` retrieval wiring,
+  embedding runtime, sync worker, runtime reranking, hybrid search runtime,
+  public/customer upload route, customer account, public quote tracking,
+  customer-visible internal note, notification, CRM integration, or ecommerce
+  flow is added.
+- Future sync worker/retrieval/reranking/hybrid runtime requires explicit
+  owner approval.
+
+Previous metadata diagnostic denylist hotfix status:
 
 - PR #109 merged Phase 2G-A RAG search-index architecture and sync governance
   at merge commit `02a16bdfd938841ddeac408f4d204d455050f714`.

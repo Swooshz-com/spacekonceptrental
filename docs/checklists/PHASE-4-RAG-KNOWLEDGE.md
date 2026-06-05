@@ -1,10 +1,12 @@
 # Phase 4 Checklist: RAG, Knowledge, And Vector Work
 
-This phase is not approved for implementation yet.
+Runtime vector/retrieval work is not approved for implementation yet. Phase
+2G-B approves only the local search-index outbox table and disabled
+server-only contract foundation.
 
 Current SKR keeps Pinecone/n8n as current RAG workflow context only. Do not
 migrate away from Pinecone in this repo yet, and do not add Pinecone runtime
-code or credentials in this checklist hygiene PR.
+code or credentials in this Phase 2G-B PR.
 
 ## Phase 2G-A RAG Search-Index Governance
 
@@ -16,7 +18,18 @@ code or credentials in this checklist hygiene PR.
 - [x] Hybrid search is documented as a later decision gate if exact term recall is weak.
 - [x] Search-index records must exclude admin-only notes, internal notes, customer-visible internal notes, transcript content, raw provider payloads, webhooks, headers, cookies, tokens, credentials, and secrets unless a later approved phase explicitly allows a safe subset.
 - [x] No Pinecone runtime code, package dependency, env read, n8n workflow/runtime change, or `/api/chat` retrieval wiring is added.
-- [ ] Implement search-index tables.
+
+## Phase 2G-B Local Search-Index Outbox Foundation
+
+- [x] Implement local `search_index_jobs` and `search_index_documents` tables as queue/document tracking foundations only.
+- [x] Enable fail-closed RLS and revoke browser-role table access without public policies.
+- [x] Reject unsafe search-index metadata keys for provider debug, trace dumps, secrets, service-role material, webhooks/headers, transcript content, internal notes, and customer contact/payment identifiers.
+- [x] Add idempotency/source lookup constraints and indexes for future queue processing without blocking failed-job retries.
+- [x] Add a server-only disabled/injected TypeScript contract boundary with no live executor.
+- [x] Confirm no Pinecone runtime code, package dependency, env read, executor, n8n workflow/runtime change, or `/api/chat` retrieval wiring is added.
+
+## Future Runtime Work
+
 - [ ] Implement sync workers.
 - [ ] Implement Pinecone upsert/delete/retrieval/reranking runtime.
 

@@ -29,6 +29,8 @@ const expectedTables = [
   'quote_request_activity',
   'quote_request_items',
   'quote_requests',
+  'search_index_documents',
+  'search_index_jobs',
   'transcript_audit_events',
   'transcript_evidence_records',
   'usage_events',
@@ -77,6 +79,10 @@ const ids = {
   transcriptAuditEventB: 'd0000000-0000-4000-8000-000000000002',
   transcriptEvidenceRecordA: 'e0000000-0000-4000-8000-000000000001',
   transcriptEvidenceRecordB: 'e0000000-0000-4000-8000-000000000002',
+  searchIndexJobA: 'f1000000-0000-4000-8000-000000000001',
+  searchIndexJobB: 'f1000000-0000-4000-8000-000000000002',
+  searchIndexDocumentA: 'f2000000-0000-4000-8000-000000000001',
+  searchIndexDocumentB: 'f2000000-0000-4000-8000-000000000002',
 };
 
 const checks = [];
@@ -445,6 +451,91 @@ function seedFixtures() {
         'Dry-run placeholder only.',
         'Rollback placeholder only.',
         'Operator note placeholder only.',
+        '{"source": "rls-seed"}'::jsonb
+      );
+
+    insert into public.search_index_jobs (
+      id,
+      workspace_id,
+      source_type,
+      source_id,
+      source_version,
+      visibility,
+      operation,
+      status,
+      content_hash,
+      metadata
+    )
+    values
+      (
+        '${ids.searchIndexJobA}',
+        '${ids.workspaceA}',
+        'listing',
+        '${ids.productPublishedA}',
+        'listing-v1',
+        'public_chat',
+        'upsert',
+        'queued',
+        'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+        '{"source": "rls-seed"}'::jsonb
+      ),
+      (
+        '${ids.searchIndexJobB}',
+        '${ids.workspaceB}',
+        'category',
+        '${ids.categoryPublishedB}',
+        'category-v1',
+        'public_chat',
+        'upsert',
+        'queued',
+        'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
+        '{"source": "rls-seed"}'::jsonb
+      );
+
+    insert into public.search_index_documents (
+      id,
+      workspace_id,
+      source_type,
+      source_id,
+      source_version,
+      visibility,
+      status,
+      title,
+      content_hash,
+      chunk_count,
+      last_index_job_id,
+      indexed_at,
+      metadata
+    )
+    values
+      (
+        '${ids.searchIndexDocumentA}',
+        '${ids.workspaceA}',
+        'listing',
+        '${ids.productPublishedA}',
+        'listing-v1',
+        'public_chat',
+        'succeeded',
+        'Published product A',
+        'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+        2,
+        '${ids.searchIndexJobA}',
+        now(),
+        '{"source": "rls-seed"}'::jsonb
+      ),
+      (
+        '${ids.searchIndexDocumentB}',
+        '${ids.workspaceB}',
+        'category',
+        '${ids.categoryPublishedB}',
+        'category-v1',
+        'public_chat',
+        'succeeded',
+        'Published category B',
+        'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
+        1,
+        '${ids.searchIndexJobB}',
+        now(),
         '{"source": "rls-seed"}'::jsonb
       );
   `);
@@ -1844,6 +1935,463 @@ check('transcript audit/evidence constraints accept safe local rows and reject u
       )
     `,
     /transcript_evidence_records_audit_event_workspace_id_fkey/i,
+  );
+});
+
+check('search-index outbox tables deny direct client reads and writes', () => {
+  const clientRoles = [
+    ['anon', null],
+    ['authenticated', ids.authMemberA],
+    ['authenticated', ids.authMemberB],
+    ['authenticated', ids.authViewerA],
+    ['authenticated', ids.authNoMembership],
+  ];
+
+  for (const [role, authUserId] of clientRoles) {
+    for (const table of ['search_index_jobs', 'search_index_documents']) {
+      assert.equal(
+        scalarAs(role, authUserId, `select count(*)::text from public.${table}`),
+        '0',
+        `${role} should not read ${table}`,
+      );
+    }
+
+    statementFailsAs(
+      role,
+      authUserId,
+      `
+        insert into public.search_index_jobs (
+          workspace_id,
+          source_type,
+          source_id,
+          visibility,
+          operation,
+          status,
+          content_hash,
+          metadata
+        )
+        values (
+          '${ids.workspaceA}',
+          'listing',
+          '${ids.productPublishedA}',
+          'public_chat',
+          'upsert',
+          'queued',
+          'cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc',
+          '{"source": "client-write-attempt"}'::jsonb
+        )
+      `,
+    );
+
+    statementFailsAs(
+      role,
+      authUserId,
+      `
+        insert into public.search_index_documents (
+          workspace_id,
+          source_type,
+          source_id,
+          visibility,
+          status,
+          content_hash,
+          metadata
+        )
+        values (
+          '${ids.workspaceA}',
+          'listing',
+          '${ids.productPublishedA}',
+          'public_chat',
+          'succeeded',
+          'cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc',
+          '{"source": "client-write-attempt"}'::jsonb
+        )
+      `,
+    );
+
+    statementFailsAs(
+      role,
+      authUserId,
+      `
+        update public.search_index_jobs
+        set metadata = '{"source": "client-update-attempt"}'::jsonb
+        where id = '${ids.searchIndexJobA}'
+      `,
+    );
+
+    statementFailsAs(
+      role,
+      authUserId,
+      `
+        update public.search_index_documents
+        set metadata = '{"source": "client-update-attempt"}'::jsonb
+        where id = '${ids.searchIndexDocumentA}'
+      `,
+    );
+
+    statementFailsAs(
+      role,
+      authUserId,
+      `
+        delete from public.search_index_jobs
+        where id = '${ids.searchIndexJobA}'
+      `,
+    );
+
+    statementFailsAs(
+      role,
+      authUserId,
+      `
+        delete from public.search_index_documents
+        where id = '${ids.searchIndexDocumentA}'
+      `,
+    );
+  }
+});
+
+check('search-index outbox constraints accept safe local rows and reject unsafe payloads', () => {
+  const safeJobId = 'f1000000-0000-4000-8000-000000000101';
+  const safeDocumentId = 'f2000000-0000-4000-8000-000000000101';
+  const duplicateFailedJobId = 'f1000000-0000-4000-8000-000000000102';
+  const contentHash =
+    'cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc';
+
+  psql(`
+    insert into public.search_index_jobs (
+      id,
+      workspace_id,
+      source_type,
+      source_id,
+      source_version,
+      visibility,
+      operation,
+      status,
+      content_hash,
+      metadata
+    )
+    values (
+      '${safeJobId}',
+      '${ids.workspaceA}',
+      'listing',
+      '${ids.productDraftA}',
+      'listing-v2',
+      'admin_only',
+      'upsert',
+      'queued',
+      '${contentHash}',
+      jsonb_build_object('source', 'rls-test', 'nested', jsonb_build_object('proof', true))
+    );
+  `);
+
+  psql(`
+    insert into public.search_index_documents (
+      id,
+      workspace_id,
+      source_type,
+      source_id,
+      source_version,
+      visibility,
+      status,
+      title,
+      content_hash,
+      chunk_count,
+      last_index_job_id,
+      indexed_at,
+      metadata
+    )
+    values (
+      '${safeDocumentId}',
+      '${ids.workspaceA}',
+      'listing',
+      '${ids.productDraftA}',
+      'listing-v2',
+      'admin_only',
+      'succeeded',
+      'Draft product A',
+      '${contentHash}',
+      3,
+      '${safeJobId}',
+      now(),
+      jsonb_build_object('source', 'rls-test')
+    );
+  `);
+
+  assert.equal(
+    psql(`
+      select count(*)::text
+      from public.search_index_documents
+      where id = '${safeDocumentId}'
+        and chunk_count = 3
+        and metadata = jsonb_build_object('source', 'rls-test')
+    `),
+    '1',
+    'safe local search-index document row should be inserted by privileged harness',
+  );
+
+  statementFails(
+    `
+      delete from public.search_index_jobs
+      where id = '${safeJobId}'
+        and workspace_id = '${ids.workspaceA}'
+    `,
+    /search_index_documents_last_index_job_workspace_id_fkey|still referenced|foreign key/i,
+    'referenced search_index_jobs row should be restricted while a document points at it',
+  );
+
+  assert.equal(
+    psql(`
+      select count(*)::text
+      from public.search_index_documents
+      where id = '${safeDocumentId}'
+        and last_index_job_id = '${safeJobId}'
+    `),
+    '1',
+    'restricted job deletion should leave the document/job reference intact',
+  );
+
+  statementFails(
+    `
+      insert into public.search_index_jobs (
+        workspace_id,
+        source_type,
+        source_id,
+        visibility,
+        operation,
+        status,
+        content_hash,
+        metadata
+      )
+      values (
+        '${ids.workspaceA}',
+        'quote_request',
+        '${ids.quoteA}',
+        'public_chat',
+        'upsert',
+        'queued',
+        '${contentHash}',
+        '{"source": "rls-test"}'::jsonb
+      )
+    `,
+    /search_index_jobs_source_type_check/i,
+  );
+
+  statementFails(
+    `
+      insert into public.search_index_jobs (
+        workspace_id,
+        source_type,
+        source_id,
+        visibility,
+        operation,
+        status,
+        attempt_count,
+        metadata
+      )
+      values (
+        '${ids.workspaceA}',
+        'listing',
+        '${ids.productDraftA}',
+        'public_chat',
+        'rebuild',
+        'queued',
+        -1,
+        '{"source": "rls-test"}'::jsonb
+      )
+    `,
+    /search_index_jobs_attempt_count_check/i,
+  );
+
+  statementFails(
+    `
+      insert into public.search_index_documents (
+        workspace_id,
+        source_type,
+        source_id,
+        visibility,
+        status,
+        content_hash,
+        chunk_count,
+        metadata
+      )
+      values (
+        '${ids.workspaceA}',
+        'listing',
+        '${ids.productDraftA}',
+        'customer_visible',
+        'succeeded',
+        'dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd',
+        1,
+        '{"source": "rls-test"}'::jsonb
+      )
+    `,
+    /search_index_documents_visibility_check/i,
+  );
+
+  statementFails(
+    `
+      insert into public.search_index_documents (
+        workspace_id,
+        source_type,
+        source_id,
+        visibility,
+        status,
+        content_hash,
+        chunk_count,
+        metadata
+      )
+      values (
+        '${ids.workspaceA}',
+        'listing',
+        '${ids.productDraftA}',
+        'blocked',
+        'succeeded',
+        'dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd',
+        -1,
+        '{"source": "rls-test"}'::jsonb
+      )
+    `,
+    /search_index_documents_chunk_count_check/i,
+  );
+
+  const unsafeMetadataCases = [
+    ['providerDebug', "jsonb_build_object('providerDebug', 'blocked')"],
+    ['traceDump', "jsonb_build_object('traceDump', 'blocked')"],
+    ['apiKey', "jsonb_build_object('apiKey', 'blocked')"],
+    ['serviceRole', "jsonb_build_object('serviceRole', 'blocked')"],
+    [
+      'customerVisibleInternalNotes',
+      "jsonb_build_object('customerVisibleInternalNotes', 'blocked')",
+    ],
+    ['fullTranscript', "jsonb_build_object('fullTranscript', 'blocked')"],
+    ['webhookHeaders', "jsonb_build_object('webhookHeaders', 'blocked')"],
+  ];
+
+  for (const [label, metadataSql] of unsafeMetadataCases) {
+    statementFails(
+      `
+        insert into public.search_index_jobs (
+          workspace_id,
+          source_type,
+          source_id,
+          visibility,
+          operation,
+          status,
+          content_hash,
+          metadata
+        )
+        values (
+          '${ids.workspaceA}',
+          'listing',
+          '${ids.productDraftA}',
+          'blocked',
+          'hide',
+          'queued',
+          'eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
+          ${metadataSql}
+        )
+      `,
+      /search_index_jobs_metadata_safe_check/i,
+      `search_index_jobs should reject unsafe metadata key ${label}`,
+    );
+
+    statementFails(
+      `
+        insert into public.search_index_documents (
+          workspace_id,
+          source_type,
+          source_id,
+          visibility,
+          status,
+          content_hash,
+          metadata
+        )
+        values (
+          '${ids.workspaceA}',
+          'listing_image_alt_text',
+          '${ids.imageDraftA}',
+          'blocked',
+          'skipped',
+          'eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
+          ${metadataSql}
+        )
+      `,
+      /search_index_documents_metadata_safe_check/i,
+      `search_index_documents should reject unsafe metadata key ${label}`,
+    );
+  }
+
+  statementFails(
+    `
+      insert into public.search_index_jobs (
+        workspace_id,
+        source_type,
+        source_id,
+        visibility,
+        operation,
+        status,
+        content_hash,
+        metadata
+      )
+      values (
+        '${ids.workspaceA}',
+        'listing',
+        '${ids.productDraftA}',
+        'admin_only',
+        'upsert',
+        'queued',
+        '${contentHash}',
+        '{"source": "duplicate-active-job"}'::jsonb
+      )
+    `,
+    /search_index_jobs_active_idempotency_key/i,
+  );
+
+  psql(`
+    insert into public.search_index_jobs (
+      id,
+      workspace_id,
+      source_type,
+      source_id,
+      visibility,
+      operation,
+      status,
+      content_hash,
+      metadata
+    )
+    values (
+      '${duplicateFailedJobId}',
+      '${ids.workspaceA}',
+      'listing',
+      '${ids.productDraftA}',
+      'admin_only',
+      'upsert',
+      'failed',
+      '${contentHash}',
+      '{"source": "retry-after-failure"}'::jsonb
+    );
+  `);
+
+  statementFails(
+    `
+      insert into public.search_index_documents (
+        workspace_id,
+        source_type,
+        source_id,
+        visibility,
+        status,
+        content_hash,
+        metadata
+      )
+      values (
+        '${ids.workspaceA}',
+        'listing',
+        '${ids.productDraftA}',
+        'admin_only',
+        'succeeded',
+        'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff',
+        '{"source": "duplicate-document"}'::jsonb
+      )
+    `,
+    /search_index_documents_source_visibility_key/i,
   );
 });
 

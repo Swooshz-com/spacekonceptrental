@@ -301,7 +301,7 @@ test('real migration directory passes static validation', () => {
   const result = runValidator(realMigrationsDir);
 
   assert.equal(result.status, 0, result.stdout + result.stderr);
-  assert.match(result.stdout, /checked 14 migration SQL file\(s\)/);
+  assert.match(result.stdout, /checked 15 migration SQL file\(s\)/);
 });
 
 test('real base schema migration creates the planned MVP tables', () => {
@@ -1156,6 +1156,149 @@ test('real migrations restore transcript metadata diagnostic denylist classes wi
     /service_role|service-role|NEXT_PUBLIC|chat-config|PINECONE/i,
     'hotfix must not introduce runtime secrets or Pinecone/chat config references',
   );
+});
+
+test('real migrations add the Phase 2G-B search-index outbox foundation without browser grants', () => {
+  const migrationFileName = '20260605133000_search_index_outbox_foundation.sql';
+  const migration = readRealMigration(migrationFileName);
+  const sql = normalizeSql(migration);
+
+  assert.match(
+    migration,
+    /create or replace function public\.is_safe_search_index_metadata\(\s*p_metadata jsonb,\s*p_max_bytes integer\s*\)/,
+    'Phase 2G-B must add a dedicated recursive metadata helper for search-index metadata',
+  );
+  assert.match(
+    migration,
+    /with recursive metadata_walk\(key_name, value\) as/,
+    'search-index metadata helper must recursively inspect nested metadata keys',
+  );
+  assert.match(
+    sql,
+    /jsonb_typeof\(p_metadata\) = 'object'/,
+    'search-index metadata helper must require a top-level object',
+  );
+  assert.match(
+    sql,
+    /octet_length\(p_metadata::text\) <= p_max_bytes/,
+    'search-index metadata helper must enforce a byte-size bound',
+  );
+
+  for (const denylistFragment of [
+    'provider[_-]?debug',
+    'trace[_-]?dump',
+    'full[_-]?transcript',
+    'transcript[_-]?content',
+    'raw[_-]?provider[_-]?payload',
+    'provider[_-]?payload',
+    'webhook',
+    'headers?',
+    'tokens?',
+    'cookie',
+    'credentials?',
+    'private[_-]?key',
+    'secret',
+    'password',
+    'api[_-]?key',
+    'service[_-]?role',
+    'customer[_-]?visible[_-]?internal[_-]?notes',
+    'internal[_-]?notes',
+    'payment',
+    'customer[_-]?contact',
+  ]) {
+    assert.ok(
+      migration.includes(denylistFragment),
+      `search-index metadata helper denylist must include ${denylistFragment}`,
+    );
+  }
+
+  assert.match(
+    migration,
+    /create table if not exists public\.search_index_jobs \(/,
+  );
+  assert.match(
+    migration,
+    /create table if not exists public\.search_index_documents \(/,
+  );
+
+  for (const tableName of ['search_index_jobs', 'search_index_documents']) {
+    assert.match(
+      migration,
+      new RegExp(`alter table public\\.${tableName} enable row level security;`),
+      `${tableName} must enable RLS`,
+    );
+    assert.match(
+      migration,
+      new RegExp(`revoke all on table public\\.${tableName} from public;`),
+      `${tableName} must revoke public table privileges`,
+    );
+    assert.match(
+      migration,
+      new RegExp(`revoke all on table public\\.${tableName} from anon, authenticated;`),
+      `${tableName} must revoke browser-role table privileges`,
+    );
+    assert.doesNotMatch(
+      migration,
+      new RegExp(`grant\\s+(select|insert|update|delete|all)[\\s\\S]*?on table public\\.${tableName} to (anon|authenticated);`, 'i'),
+      `${tableName} should not grant direct browser access`,
+    );
+    assert.doesNotMatch(
+      migration,
+      new RegExp(`create policy [^;]* on public\\.${tableName}`, 'i'),
+      `${tableName} should not add browser-access policies yet`,
+    );
+  }
+
+  assert.match(sql, /constraint search_index_jobs_workspace_id_fkey foreign key \(workspace_id\) references public\.workspaces \(id\)/);
+  assert.match(sql, /constraint search_index_jobs_source_type_check check/);
+  assert.match(sql, /constraint search_index_jobs_visibility_check check/);
+  assert.match(sql, /constraint search_index_jobs_operation_check check/);
+  assert.match(sql, /constraint search_index_jobs_status_check check/);
+  assert.match(sql, /constraint search_index_jobs_attempt_count_check check \(attempt_count >= 0\)/);
+  assert.match(sql, /constraint search_index_jobs_error_code_check check/);
+  assert.match(sql, /constraint search_index_jobs_error_message_check check/);
+  assert.match(sql, /constraint search_index_jobs_content_hash_check check/);
+  assert.match(sql, /constraint search_index_jobs_metadata_safe_check check \(public\.is_safe_search_index_metadata\(metadata, 4096\)\)/);
+
+  assert.match(sql, /constraint search_index_documents_workspace_id_fkey foreign key \(workspace_id\) references public\.workspaces \(id\)/);
+  assert.match(sql, /constraint search_index_documents_last_index_job_workspace_id_fkey foreign key \(last_index_job_id, workspace_id\) references public\.search_index_jobs \(id, workspace_id\) on delete restrict/);
+  assert.match(sql, /constraint search_index_documents_source_visibility_key unique \(workspace_id, source_type, source_id, visibility\)/);
+  assert.match(sql, /constraint search_index_documents_chunk_count_check check \(chunk_count >= 0\)/);
+  assert.match(sql, /constraint search_index_documents_metadata_safe_check check \(public\.is_safe_search_index_metadata\(metadata, 4096\)\)/);
+
+  for (const enumValue of [
+    'listing',
+    'category',
+    'policy',
+    'faq',
+    'document',
+    'listing_image_alt_text',
+    'public_chat',
+    'admin_only',
+    'blocked',
+    'upsert',
+    'delete',
+    'hide',
+    'rebuild',
+    'queued',
+    'processing',
+    'succeeded',
+    'failed',
+    'skipped',
+    'cancelled',
+  ]) {
+    assert.match(sql, new RegExp(`'${enumValue}'`));
+  }
+
+  assert.match(sql, /create unique index if not exists search_index_jobs_active_idempotency_key/);
+  assert.match(sql, /where content_hash is not null and status in \('queued', 'processing'\)/);
+  assert.match(sql, /create index if not exists search_index_jobs_queued_idx/);
+  assert.match(sql, /create index if not exists search_index_jobs_source_lookup_idx/);
+  assert.match(sql, /create index if not exists search_index_documents_source_lookup_idx/);
+  assert.match(sql, /create index if not exists search_index_documents_last_job_idx/);
+
+  assert.doesNotMatch(migration, /@pinecone-database|pinecone_api_key|process\.env|n8n|chat-config/i);
+  assert.doesNotMatch(migration, /embedding|rerank|vector[_ -]?(upsert|delete)|retrieval/i);
 });
 
 test('real RLS policy migration scopes admin reads through workspace membership', () => {

@@ -1,9 +1,12 @@
 # RAG Search-Index Plan
 
-Phase 2G-A defines architecture and governance only. It does not add runtime
-Pinecone code, Pinecone packages, env reads, secrets, API keys, n8n workflow
-changes, embedding runtime, search-index tables, sync workers, reranking
-runtime, hybrid search runtime, or `/api/chat` retrieval wiring.
+Phase 2G-B adds the local search-index outbox foundation after the Phase 2G-A
+architecture and governance work. It adds local Supabase queue/document
+tracking tables and a server-only disabled/injected TypeScript contract
+boundary only. It does not add runtime Pinecone code, Pinecone packages, env
+reads, secrets, API keys, n8n workflow changes, embedding runtime, sync
+workers, reranking runtime, hybrid search runtime, or `/api/chat` retrieval
+wiring.
 
 ## Source Of Truth
 
@@ -17,6 +20,12 @@ business storage, must not be used as the source of record for listing state,
 and must not block admin listing writes when Pinecone or a network dependency
 is unavailable. Future admin listing writes must not be blocked by Pinecone
 or network failures.
+
+Search-index tables are local queue/document tracking foundations only.
+`search_index_jobs` records future workspace-scoped source sync work, and
+`search_index_documents` records future derived document state. Supabase/
+listing data remains canonical. Pinecone remains a future derived search
+index only.
 
 Future Pinecone upsert, delete, retrieval, reranking, and hybrid search work
 requires explicit owner approval in a separate runtime phase. Future
@@ -77,6 +86,10 @@ duplicate vector junk when a source is re-rendered or retried.
 Search-index sync should use an outbox/worker pattern, not direct
 admin-save-to-Pinecone calls.
 
+Phase 2G-B implements only the local table/contract foundation for that
+pattern. It does not add a worker, scheduler, external index executor, real
+ingestion path, or vector upsert/delete path.
+
 Future lifecycle:
 
 1. A listing, category, or listing image metadata change is committed in
@@ -121,18 +134,17 @@ Hybrid search is a later decision gate if exact term recall is weak. That gate
 must evaluate whether lexical search, keyword filters, or a blended retrieval
 strategy is needed before adding runtime implementation.
 
-`/api/chat` remains unwired from retrieval/RAG in Phase 2G-A.
+`/api/chat` remains unwired from retrieval/RAG in Phase 2G-B.
 
 ## Non-Goals
 
-Phase 2G-A does not implement:
+Phase 2G-B does not implement:
 
 - Pinecone SDK usage.
 - Pinecone executor code.
 - Pinecone env vars or secret placeholders.
 - Pinecone package dependencies.
 - Embedding model runtime.
-- Search-index tables.
 - Sync worker jobs.
 - n8n workflow edits.
 - `/api/chat` retrieval wiring.
