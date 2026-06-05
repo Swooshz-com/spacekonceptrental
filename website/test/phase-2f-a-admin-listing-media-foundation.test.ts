@@ -42,11 +42,10 @@ describe("Phase 2F-A admin rental listing/media foundation", () => {
     const decisionLog = readRepoFile("docs/DECISION-LOG.md");
 
     expect(status).toContain(
-      "Latest completed phase: Phase 2F-A - admin rental listing/media foundation."
+      "PR #108 merged Phase 2F-A admin rental listing/media foundation"
     );
-    expect(status).toContain("Last merged phase PR: #108");
     expect(status).toContain(
-      "Merge commit: `8385ac2d925b5edd44cdf016707bb2cd00d67264`"
+      "commit `8385ac2d925b5edd44cdf016707bb2cd00d67264`"
     );
     expect(status).toContain(
       "Phase 2F-A admin rental listing/media foundation is complete"

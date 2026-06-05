@@ -238,7 +238,19 @@ Suggested first PR:
   Supabase, production evidence, or ecommerce flows. Product language remains
   enquiry/quote/request.
 
-Current Phase 2G-A status:
+Current metadata diagnostic denylist hotfix status:
+
+- PR #109 merged Phase 2G-A RAG search-index architecture and sync governance
+  at merge commit `02a16bdfd938841ddeac408f4d204d455050f714`.
+- The metadata diagnostic denylist hotfix restores provider debug and trace dump
+  key rejection in the shared SQL transcript metadata helper and TypeScript
+  audit/evidence contract only.
+- It preserves Phase 2E-H and Phase 2E-I metadata hardening.
+- It adds no transcript runtime writes or reads, no live Supabase executor, no
+  admin transcript UI, no Pinecone/n8n runtime changes, no customer/public
+  quote tracking functionality, and no ecommerce functionality.
+
+Previous Current Phase 2G-A status:
 
 - PR #108 merged Phase 2F-A admin rental listing/media foundation at merge
   commit `8385ac2d925b5edd44cdf016707bb2cd00d67264`.

@@ -301,7 +301,7 @@ test('real migration directory passes static validation', () => {
   const result = runValidator(realMigrationsDir);
 
   assert.equal(result.status, 0, result.stdout + result.stderr);
-  assert.match(result.stdout, /checked 13 migration SQL file\(s\)/);
+  assert.match(result.stdout, /checked 14 migration SQL file\(s\)/);
 });
 
 test('real base schema migration creates the planned MVP tables', () => {
@@ -1078,6 +1078,84 @@ test('real migrations add the Phase 2E-I transcript audit/evidence insert RPC bo
     /grant\s+(select|insert|update|delete|all)[\s\S]*?on table public\.transcript_(audit_events|evidence_records) to (anon|authenticated)/i,
   );
   assert.doesNotMatch(migration, /service_role|service-role|NEXT_PUBLIC|chat-config/i);
+});
+
+test('real migrations restore transcript metadata diagnostic denylist classes without browser grants', () => {
+  const migrationFileName = '20260605122000_transcript_metadata_diagnostic_denylist_hotfix.sql';
+  const migration = readRealMigration(migrationFileName);
+  const sql = normalizeSql(migration);
+  const allSql = normalizeSql(readAllRealMigrationSql());
+
+  assert.match(
+    migration,
+    /create or replace function public\.is_safe_transcript_metadata\(\s*p_metadata jsonb,\s*p_max_bytes integer\s*\)/,
+    'hotfix must replace the shared transcript metadata helper',
+  );
+  assert.match(
+    migration,
+    /with recursive metadata_walk\(key_name, value\) as/,
+    'hotfix must preserve recursive metadata traversal',
+  );
+  assert.match(
+    sql,
+    /jsonb_typeof\(p_metadata\) = 'object'/,
+    'hotfix must preserve top-level JSON object enforcement',
+  );
+  assert.match(
+    sql,
+    /octet_length\(p_metadata::text\) <= p_max_bytes/,
+    'hotfix must preserve byte-size enforcement',
+  );
+  assert.match(
+    migration,
+    /revoke all on function public\.is_safe_transcript_metadata\(jsonb, integer\) from public;/,
+    'hotfix must preserve public execute revocation',
+  );
+
+  for (const denylistFragment of [
+    'provider[_-]?debug',
+    'trace[_-]?dump',
+    'full[_-]?transcript',
+    'transcript[_-]?content',
+    'raw[_-]?provider[_-]?payload',
+    'provider[_-]?payload',
+    'debug[_-]?payload',
+    'workflow[_-]?payload',
+    'webhook',
+    'headers?',
+    'raw[_-]?headers?',
+    'tokens?',
+    'authorization',
+    'cookie',
+    'credentials?',
+    'private[_-]?key',
+    'secret',
+    'password',
+    'api[_-]?key',
+    'service[_-]?role',
+    'customer[_-]?visible[_-]?internal[_-]?notes',
+  ]) {
+    assert.ok(
+      migration.includes(denylistFragment),
+      `hotfix metadata helper denylist must include ${denylistFragment}`,
+    );
+  }
+
+  assert.match(
+    allSql,
+    /create or replace function public\.is_safe_transcript_metadata/,
+    'final migration set must include the shared transcript metadata helper',
+  );
+  assert.doesNotMatch(
+    migration,
+    /grant execute on function public\.is_safe_transcript_metadata\(jsonb, integer\) to (anon|authenticated)/i,
+    'hotfix must not grant browser execute on the helper',
+  );
+  assert.doesNotMatch(
+    migration,
+    /service_role|service-role|NEXT_PUBLIC|chat-config|PINECONE/i,
+    'hotfix must not introduce runtime secrets or Pinecone/chat config references',
+  );
 });
 
 test('real RLS policy migration scopes admin reads through workspace membership', () => {
