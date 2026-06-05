@@ -33,6 +33,15 @@ and route/action boundaries are implemented and tested.
 - [ ] Improve audit logs.
 - [ ] Improve permissions.
 
+## Phase 2F-A Admin Rental Listing/Media Foundation
+
+- [x] Server-only listing-facing admin domain contracts are added under `website/lib/listings/admin/`.
+- [x] Listing create/update/archive commands use listing wording and map into the existing product persistence boundary.
+- [x] Listing image metadata commands use listing wording and map into the existing product image metadata boundary.
+- [x] The foundation validates listing titles, slugs, descriptions/details, rental units, status, sort order, storage paths, alt text, and primary image flags.
+- [x] Existing `products`, `categories`, and `product_images` names remain technical internals only; no risky DB/API/table/RPC/RLS rename is attempted.
+- [x] No ecommerce/cart/checkout/order flow, public/customer upload route, browser Supabase, service-role runtime path, or `/api/chat` transcript wiring is added.
+
 ## Phase 2B-AT Public UX Polish
 
 - [x] Public catalogue and listing detail pages use listing-oriented, non-shell copy.

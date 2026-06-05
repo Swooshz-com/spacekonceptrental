@@ -877,3 +877,21 @@ execution, add browser grants, add browser Supabase, add production evidence,
 change n8n/Pinecone runtime behavior, add SaaS chatbot runtime work, deploy,
 change Vercel or Supabase Cloud config, access `website/chat-config.js`, or
 add ecommerce flows. Product wording remains enquiry/quote/request.
+
+Phase 2F-A adds a server-only listing-facing admin domain foundation for
+admin-managed rental/event furniture listings and listing image metadata. It
+adds `website/lib/listings/admin/` with listing-named TypeScript contracts and
+an injected adapter that maps validated listing commands into the existing
+`ProductPersistence` boundary. Existing `products`, `categories`, and
+`product_images` database/API internals remain legacy technical names for this
+phase; no DB/API/table/RPC/RLS rename is attempted.
+
+Phase 2F-A does not add a Supabase migration, new runtime routes, public or
+customer uploads, arbitrary upload endpoints, live Supabase executors, browser
+Supabase, service-role runtime paths, admin transcript UI, `/api/chat`
+transcript wiring, deletion/export/retention transcript runtime paths,
+customer accounts, public quote tracking, customer-visible internal notes,
+notifications, CRM integration, deployment, Vercel or Supabase Cloud config,
+real env values, production evidence, or ecommerce flows such as carts,
+checkout, payments, stock reservation, order fulfilment, confirmed booking, or
+online ordering. Product wording remains listing/enquiry/quote/request.

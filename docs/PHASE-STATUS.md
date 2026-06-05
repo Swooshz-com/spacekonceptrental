@@ -4,22 +4,25 @@ This is the quick status page for the SKR repo. Use `docs/PHASE-2-READINESS-PLAN
 
 ## Current phase
 
-Current phase: Phase 2E-I - transcript audit/evidence server-only insert boundary.
+Current phase: Phase 2F-A - admin rental listing/media foundation.
 
-This phase adds a server-only local/test-only insert boundary for validated
-transcript audit/evidence rows. It adds local `insert_transcript_audit_event`
-and `insert_transcript_evidence_record` RPC contracts for the existing
-`transcript_audit_events` and `transcript_evidence_records` tables, validates
-trusted workspace scope and same-workspace relationships, reuses the shared
-safe metadata helper, keeps placeholder evidence summaries bounded and
-redacted, and explicitly revokes function execution from public/browser roles.
-It also adds a server-only TypeScript RPC adapter that maps already validated
-audit/evidence commands into injected executor payloads only. The default
-adapter remains disabled. This keeps product language as enquiry/quote/request
-work, not an ecommerce flow. It does not wire `/api/chat`, does not add admin
-UI, does not add deletion/export/retention runtime paths, does not add a live
-Supabase service-role executor, does not add browser grants, and does not add
-browser Supabase.
+This phase moves the active work back to the rental website product direction
+with a server-only listing-facing admin domain foundation. It adds
+`website/lib/listings/admin/` as a listing/enquiry/quote/request oriented
+contract for admin-managed rental/event furniture listings and listing image
+metadata. The new contract validates listing titles, slugs, category links,
+descriptions/details, rental units, draft/active/archived status, sort order,
+and safe listing image metadata before mapping into the existing
+`ProductPersistence` boundary. Existing database/API internals still use the
+legacy `products` and `product_images` table names; this phase does not rename
+tables, RPCs, routes, or RLS policies.
+
+The new listing admin adapter is server-only, dependency injected, disabled by
+default, and does not instantiate Supabase, read env, read cookies or headers,
+call `.rpc`, use browser Supabase, use service-role material, or read
+`website/chat-config.js`. No new Supabase migration is added because the
+existing workspace-scoped `categories`, `products`, and `product_images`
+schema already supports this listing/media foundation.
 
 Runtime transcript writes remain blocked. Runtime transcript reads remain
 blocked. Live Supabase RPC executor remains blocked. Any service-role or
@@ -33,25 +36,35 @@ integration remains blocked. n8n/Pinecone runtime changes remain blocked. SaaS
 chatbot runtime work remains blocked. Deployment, Vercel config, Supabase
 Cloud config, env/secrets, production evidence remain blocked. Browser
 Supabase remains forbidden. Service-role runtime paths remain forbidden.
-`website/chat-config.js` access remains forbidden.
+`website/chat-config.js` access remains forbidden. Customer uploads, arbitrary
+public upload routes, customer accounts, public quote tracking,
+customer-visible internal notes, notifications, CRM integration, ecommerce
+flows, carts, checkout, payments, stock reservation, order fulfilment,
+confirmed booking, online ordering, deployment, Vercel config, Supabase Cloud
+config, env/secrets, and production evidence remain blocked.
 
-Latest completed phase: Phase 2E-H - transcript audit/evidence local schema, RLS, and server-only contract foundation.
+Latest completed phase: Phase 2E-I - transcript audit/evidence server-only insert boundary.
 
-Last merged phase PR: #106
+Last merged phase PR: #107
 
-Merge commit: `8607e16d3c405df0797ec08536cce79f1b4f68d2`
+Merge commit: `0f114c3085917f80afab2a5a2b8d30d90596b66f`
 
 ## Remaining-work map
 
-Completed through PR #106:
+Completed through PR #107:
 
+- PR #107 merged Phase 2E-I transcript audit/evidence server-only insert
+  boundary at merge commit `0f114c3085917f80afab2a5a2b8d30d90596b66f`.
+- Phase 2E-I transcript audit/evidence server-only insert boundary is complete
+  as local ungranted RPC and server-only injected adapter work only.
+- Phase 2F-A is current as a server-only listing-facing admin domain
+  foundation only.
 - PR #106 merged Phase 2E-H transcript audit/evidence local schema, RLS, and
   server-only contract foundation at merge commit
   `8607e16d3c405df0797ec08536cce79f1b4f68d2`.
 - Phase 2E-H transcript audit/evidence local schema, RLS, and server-only
   contract foundation is complete as local schema/RLS and server-only contract
   work only.
-- Phase 2E-I is current as a server-only local/test-only insert boundary only.
 - PR #105 merged Phase 2E-G transcript audit/evidence model and operator runbook readiness
   at merge commit `a59547130c33ec56e275dfdee48ceac9a1f8587f`.
 - Phase 2E-G transcript audit/evidence model and operator runbook readiness is

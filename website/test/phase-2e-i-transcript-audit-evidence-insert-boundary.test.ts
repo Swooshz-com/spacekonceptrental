@@ -59,7 +59,7 @@ function readTrackedProductionSources(
 }
 
 describe("Phase 2E-I transcript audit/evidence insert boundary", () => {
-  it("records Phase 2E-I status with Phase 2E-H PR #106 completed", () => {
+  it("records Phase 2E-I as completed after PR #107", () => {
     const status = normalizeWhitespace(readRepoFile("docs/PHASE-STATUS.md"));
     const readiness = readRepoFile("docs/PHASE-2-READINESS-PLAN.md");
     const roadmap = readRepoFile("docs/PHASE-ROADMAP.md");
@@ -69,16 +69,16 @@ describe("Phase 2E-I transcript audit/evidence insert boundary", () => {
     const decisionLog = readRepoFile("docs/DECISION-LOG.md");
 
     expect(status).toContain(
-      "Current phase: Phase 2E-I - transcript audit/evidence server-only insert boundary."
+      "Latest completed phase: Phase 2E-I - transcript audit/evidence server-only insert boundary."
     );
+    expect(status).toContain("Last merged phase PR: #107");
     expect(status).toContain(
-      "Latest completed phase: Phase 2E-H - transcript audit/evidence local schema, RLS, and server-only contract foundation."
+      "Merge commit: `0f114c3085917f80afab2a5a2b8d30d90596b66f`"
     );
-    expect(status).toContain("Last merged phase PR: #106");
-    expect(status).toContain(
-      "Merge commit: `8607e16d3c405df0797ec08536cce79f1b4f68d2`"
+    expect(readiness).toContain("Previous Current Phase 2E-I status");
+    expect(readiness).toContain(
+      "PR #107 merged Phase 2E-I transcript audit/evidence server-only insert"
     );
-    expect(readiness).toContain("Current Phase 2E-I status");
     expect(roadmap).toContain(
       "Phase 2E-I adds a server-only local/test-only insert boundary for transcript audit/evidence rows."
     );

@@ -86,8 +86,14 @@ describe("Phase 2B-AQ furniture listing catalogue direction pivot", () => {
     expect(decisionLog).toContain(
       "Renaming those database/API concepts is explicitly deferred"
     );
+    const listingLibFiles = readTrackedFiles(["website/lib/listings"]);
+
     expect(readTrackedFiles(["website/app/api/listings"])).toEqual([]);
-    expect(readTrackedFiles(["website/lib/listings"])).toEqual([]);
+    expect(
+      listingLibFiles.filter(
+        (filePath) => !filePath.startsWith("website/lib/listings/admin/")
+      )
+    ).toEqual([]);
     expect(productionSource).not.toContain("from(\"listings\")");
     expect(productionSource).not.toContain("/api/admin/listings");
   });
