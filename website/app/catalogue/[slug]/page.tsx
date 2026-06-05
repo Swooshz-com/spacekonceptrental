@@ -67,8 +67,12 @@ async function getSlug(params: ProductPageProps["params"]) {
 }
 
 export function ProductPageContent({
+  backHref = "/catalogue",
+  backLabel = "Back to catalogue",
   product
 }: {
+  backHref?: string;
+  backLabel?: string;
   product: PublicCatalogueProduct;
 }) {
   const publicImages = (product.images ?? []).filter((image) => image.publicUrl);
@@ -137,8 +141,8 @@ export function ProductPageContent({
           </dl>
 
           <div className="hero__actions">
-            <Link className="button button--secondary" href="/catalogue">
-              Back to catalogue
+            <Link className="button button--secondary" href={backHref}>
+              {backLabel}
             </Link>
             <Link className="button" href={getQuoteHrefForListing(product.slug)}>
               Start enquiry

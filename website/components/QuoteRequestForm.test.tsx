@@ -46,6 +46,11 @@ describe("QuoteRequestForm", () => {
     fireEvent.change(screen.getByLabelText(/items needed/i), {
       target: { value: "2 modular lounge sets" }
     });
+    fireEvent.change(screen.getByLabelText(/message or notes/i), {
+      target: {
+        value: "Prefer a warm lounge setup for a corporate reception."
+      }
+    });
     fireEvent.click(screen.getByRole("button", { name: /send quote request/i }));
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
@@ -62,12 +67,13 @@ describe("QuoteRequestForm", () => {
           eventDate: "2026-06-12",
           venue: "Marina Bay Sands",
           items: [
-            {
-              productName: "2 modular lounge sets",
-              quantity: 1
-            }
-          ]
-        })
+          {
+            productName: "2 modular lounge sets",
+            quantity: 1,
+            notes: "Prefer a warm lounge setup for a corporate reception."
+          }
+        ]
+      })
       })
     );
     expect(

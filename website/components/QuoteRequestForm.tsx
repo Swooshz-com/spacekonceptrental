@@ -33,6 +33,7 @@ export default function QuoteRequestForm({
 
     const formData = new FormData(event.currentTarget);
     const itemsText = String(formData.get("items") ?? "").trim();
+    const notesText = String(formData.get("notes") ?? "").trim();
     const payload = {
       customerName: String(formData.get("customerName") ?? "").trim(),
       customerEmail: String(formData.get("customerEmail") ?? "").trim(),
@@ -43,7 +44,8 @@ export default function QuoteRequestForm({
         ? [
             {
               productName: itemsText,
-              quantity: 1
+              quantity: 1,
+              ...(notesText ? { notes: notesText } : {})
             }
           ]
         : []
@@ -104,6 +106,14 @@ export default function QuoteRequestForm({
           defaultValue={initialItemsText}
           name="items"
           placeholder="Example: 20 stools, 4 cocktail tables"
+          rows={4}
+        />
+      </label>
+      <label>
+        Message or notes
+        <textarea
+          name="notes"
+          placeholder="Example: delivery timing, preferred setup style, or event context"
           rows={4}
         />
       </label>

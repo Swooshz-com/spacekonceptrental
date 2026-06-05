@@ -253,6 +253,28 @@ select {
   font-weight: 800;
 }
 
+.category-listings {
+  display: grid;
+  gap: 8px;
+  list-style: none;
+  margin: 16px 0 0;
+  padding: 0;
+}
+
+.category-listings li {
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  justify-content: space-between;
+  padding-top: 10px;
+}
+
+.category-listings a {
+  color: var(--accent-dark);
+  font-weight: 800;
+}
+
 .page-title {
   display: grid;
   gap: 18px;

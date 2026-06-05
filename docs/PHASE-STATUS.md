@@ -4,27 +4,27 @@ This is the quick status page for the SKR repo. Use `docs/PHASE-2-READINESS-PLAN
 
 ## Current phase
 
-Current phase: Phase 2H-A/B - admin operations UI MVP.
+Current phase: Phase 2I-A/B - public rental catalogue and quote request UX MVP.
 
-Latest completed capability: Phase 2G-C/D server-only local search-index enqueue integration.
+Latest completed capability: Phase 2H-A/B protected admin operations UI MVP.
 
-Last merged capability PR: #112
+Last merged capability PR: #113
 
-Merge commit: `116f3761032b2af23e2bc240a77b6e810f45e918`
+Merge commit: `dbf59c1250e22956162475284dcbe94899f50c4b`
 
-Phase 2H-A/B adds the protected admin operations UI MVP. It splits the
-protected admin shell into focused listing, category, media, and quote workflow
-surfaces while reusing the existing server-only admin auth, session,
-workspace, route-gate, and CSRF conventions.
+Phase 2I-A/B adds the public rental catalogue and quote request UX MVP. It
+improves public rental listing browse/detail, category browsing, homepage
+conversion sections, and public quote/enquiry handoff while using only the
+existing public-safe catalogue read boundary and public quote request boundary.
 
-Listing/category/image management remains on the existing first-party admin
-API routes and the `execute_admin_product_write(...)` persistence boundary.
-This preserves the Phase 2G-C/D local search-index enqueue behavior because
-admin saves still pass through the approved product write boundary. Quote
-workflow review, status changes, and internal notes remain protected by the
-existing quote workflow route and `execute_admin_quote_workflow(...)` RPC.
+Public users only see public-safe published listing, category, and listing
+image data. Public quote/enquiry submission does not expose internal quote
+workflow state, public quote tracking, customer accounts, or admin internal
+notes. Supabase remains canonical for website/admin listing and quote data.
+Pinecone remains a future derived index only and is not used as canonical
+business storage.
 
-Phase 2H-A/B does not add Pinecone runtime code, Pinecone packages, Pinecone
+Phase 2I-A/B does not add Pinecone runtime code, Pinecone packages, Pinecone
 env reads, secrets, API keys, Pinecone executors, n8n workflow/runtime changes,
 embedding runtime, sync workers, `/api/chat` retrieval wiring,
 search-index document writers, real vector upsert/delete, runtime reranking,
@@ -53,7 +53,19 @@ config, env/secrets, and production evidence remain blocked.
 
 ## Remaining-work map
 
-Completed through PR #112:
+Completed through PR #113:
+
+- PR #113 merged Phase 2H-A/B protected admin operations UI MVP at merge
+  commit `dbf59c1250e22956162475284dcbe94899f50c4b`.
+- The latest completed capability is Phase 2H-A/B protected admin operations
+  UI MVP. It added focused protected admin pages for listing, category, media,
+  quote request, and quote detail operations while keeping listing/category/
+  image writes on `execute_admin_product_write(...)` and quote workflow writes
+  on `execute_admin_quote_workflow(...)`.
+- Phase 2I-A/B is current as the public rental catalogue and quote request UX
+  MVP. Public listing/category/detail browsing and quote/enquiry submission
+  are improved while public users only see public-safe listing/category/image
+  data and never see admin internal notes or internal quote workflow state.
 
 - PR #112 merged Phase 2G-C/D server-only local search-index enqueue
   integration at merge commit
@@ -65,7 +77,7 @@ Completed through PR #112:
   Supabase enqueue adapter, and pure safe job builders, with no Pinecone
   runtime/package/env/executor, no n8n workflow/runtime change, no sync worker,
   no search-index document writer, and no `/api/chat` retrieval wiring.
-- Phase 2H-A/B is current as the protected admin operations UI MVP. It keeps
+- Phase 2H-A/B completed the protected admin operations UI MVP. It keeps
   listing/category/image writes on the existing RPC-backed admin product write
   boundary and quote workflow writes on the existing RPC-backed quote workflow
   boundary.

@@ -59,7 +59,7 @@ function readTrackedProductionSources(
 }
 
 describe("Phase 2G-C/D search-index enqueue integration", () => {
-  it("records Phase 2G-C/D as the latest completed local enqueue integration", () => {
+  it("records Phase 2G-C/D as a completed local enqueue integration", () => {
     const status = normalizeWhitespace(readRepoFile("docs/PHASE-STATUS.md"));
     const roadmap = readRepoFile("docs/PHASE-ROADMAP.md");
     const readiness = readRepoFile("docs/PHASE-2-READINESS-PLAN.md");
@@ -72,11 +72,13 @@ describe("Phase 2G-C/D search-index enqueue integration", () => {
     );
 
     expect(status).toContain(
-      "Latest completed capability: Phase 2G-C/D server-only local search-index enqueue integration."
+      "PR #112 merged Phase 2G-C/D server-only local search-index enqueue integration"
     );
-    expect(status).toContain("Last merged capability PR: #112");
     expect(status).toContain(
-      "Merge commit: `116f3761032b2af23e2bc240a77b6e810f45e918`"
+      "The latest completed capability is Phase 2G-C/D server-only local search-index enqueue integration."
+    );
+    expect(status).toContain(
+      "at merge commit `116f3761032b2af23e2bc240a77b6e810f45e918`"
     );
     expect(status).toContain(
       "PR #111 merged Phase 2G-B local search-index outbox foundation"
