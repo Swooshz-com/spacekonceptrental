@@ -214,6 +214,16 @@ and route/action boundaries are implemented and tested.
 - [x] Rollback drill docs and result templates are redacted-only and state that filled preview or production evidence must not be committed.
 - [x] No deployment, deployment approval, Vercel config, Supabase Cloud config, secrets/env values, filled preview or production evidence, browser Supabase, service-role runtime path, customer uploads, public quote tracking, customer accounts, customer-visible internal notes, notifications, CRM, n8n/Pinecone runtime change, or ecommerce flow is added.
 
+## Phase 2Q-A/B Preview Deployment Handoff And Branch-Freeze Package
+
+- [x] Preview deployment handoff docs record the verified PR #117 through PR #121 capability chain.
+- [x] Branch-freeze docs state that generic deployment-prep PRs should stop unless a verified blocker is discovered.
+- [x] Handoff docs include the next-step decision table for approve preview deployment, hold deployment, or pivot to product polish.
+- [x] Handoff docs define blocker and non-blocker work before any separately approved preview deployment PR.
+- [x] `npm run validate:preview-handoff` validates the handoff package without network access, provider APIs, deployment, real env values, or filled evidence.
+- [x] Pull-request CI runs the deterministic preview handoff validator and does not run the live smoke command.
+- [x] No deployment, deployment approval, Vercel config, Supabase Cloud config, secrets/env values, filled preview or production evidence, browser Supabase, service-role runtime path, customer uploads, public quote tracking, customer accounts, customer-visible internal notes, notifications, CRM, n8n/Pinecone runtime change, or ecommerce flow is added.
+
 ## Phase 2D-A Deployment Readiness And Smoke-Test Runbook
 
 - [x] Deployment readiness docs are refreshed for catalogue media, admin listing media upload, public quote handoff, and atomic admin quote workflow surfaces.

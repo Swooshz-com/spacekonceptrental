@@ -29,6 +29,9 @@ jobs:
       - name: Validate preview smoke harness
         run: npm run validate:preview-smoke-harness
 
+      - name: Validate preview handoff
+        run: npm run validate:preview-handoff
+
       - name: Validate Supabase migration scaffold
         run: npm run validate:supabase-migrations
 

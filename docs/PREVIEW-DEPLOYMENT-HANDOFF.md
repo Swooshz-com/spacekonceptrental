@@ -1,0 +1,109 @@
+# Preview Deployment Handoff
+
+No deployment is performed by this PR.
+
+This does not approve deployment.
+
+Future preview deployment requires explicit later approval. This handoff closes
+the generic pre-deployment prep lane and gives the operator one place to review
+the deploy-candidate state before a separate preview deployment PR.
+
+## Verified Capability Chain
+
+PR #121 merged the latest completed capability, Phase 2P-A/B external preview
+smoke harness and rollback drill package, at
+`15a5d23941ac7fbe3297792311f50e414d622f5f`.
+
+| PR | Capability | Merge commit |
+| --- | --- | --- |
+| #117 | Phase 2L-A/B release-candidate acceptance suite and final MVP polish | `aceee2ded00aee41b4e20197091f8527d9e8f8b7` |
+| #118 | Phase 2M-A/B preview/deployment review preflight and CI parity hardening | `a8bd77239ebf8e6908d36bc5f5c4866ffa2dd489` |
+| #119 | Phase 2N-A/B server runtime configuration hardening and deploy dry-run harness | `ad97aace9c2145af139a45f3e0f2d0b6d09a24a9` |
+| #120 | Phase 2O-A/B preview deployment approval package and operator evidence templates | `81431f13836e0b9b182aaca9638ae2e07abd7571` |
+| #121 | Phase 2P-A/B external preview smoke harness and rollback drill package | `15a5d23941ac7fbe3297792311f50e414d622f5f` |
+
+## Next-Step Decision Table
+
+| Decision | Meaning | Allowed next action |
+| --- | --- | --- |
+| Approve preview deployment | Owner explicitly approves a separate preview deployment PR. | Open a deployment PR using the approval packet, handoff, branch-freeze checklist, and operator evidence templates. |
+| Hold deployment | Owner decides not to deploy yet. | Keep the branch frozen and wait for a new owner decision. |
+| Pivot to product polish | Owner wants content, public UI, or admin workflow polish instead of deployment. | Open a product/content/UI iteration PR that does not bundle generic deployment-prep work. |
+
+## Required Commands Before Deployment Approval
+
+Run these locally or in CI for the candidate branch before asking for preview
+deployment approval:
+
+```powershell
+npm run validate:release-candidate
+npm run validate:deploy-dry-run
+npm run validate:preview-approval-package
+npm run validate:preview-smoke-harness
+npm run validate:preview-handoff
+```
+
+## Operator-Only Commands After A Preview Exists
+
+After a separate preview deployment exists and a reviewed external preview URL
+has been supplied outside git, the operator may run:
+
+```powershell
+npm run smoke:preview
+```
+
+`npm run smoke:preview` is operator-only. `SKR_PREVIEW_BASE_URL` must be set
+outside git to `<redacted>` from a `<reviewed externally>` preview source. Do
+not run live preview smoke in CI.
+
+## External Checks That Stay Outside Git
+
+Record these externally and do not commit filled evidence:
+
+- Preview URL and deployment target review: `<reviewed externally>`.
+- Supabase Cloud project/config review: `<reviewed externally>`.
+- Vercel project/config review: `<reviewed externally>`.
+- Server-only environment value placement: `<redacted>`.
+- Admin access and workspace review: `<reviewed externally>`.
+- Public listing/category/quote/enquiry smoke evidence: `<reviewed externally>`.
+- Rollback drill or rollback target evidence: `<reviewed externally>`.
+
+Do not commit raw URLs, dashboard links, provider IDs, deployment IDs, env
+values, secrets, tokens, screenshots containing secret material, customer data,
+filled preview evidence, or filled production evidence.
+
+## Stop Doing Generic Deployment-Prep PRs
+
+Stop doing generic deployment-prep PRs after this handoff unless a verified
+blocker is discovered. The next useful step should be either explicit preview
+deployment approval or a product polish/content/UI iteration.
+
+## What counts as a blocker
+
+- A required validation command fails for a reproducible repo-owned reason.
+- A reviewed operator check finds a missing or unsafe deployment approval
+  requirement.
+- A release-blocking public listing/category/quote/enquiry flow is broken.
+- A release-blocking admin listing/image/quote workflow is broken.
+- A security boundary is violated, weakened, or missing.
+- A required handoff, freeze, approval, or rollback instruction is inaccurate.
+
+## What does not count as a blocker
+
+- A preference for more generic deployment-prep documentation.
+- Desire to add new features before preview deployment.
+- Product polish that can be handled in a separate product/content/UI PR.
+- Optional UI expansion that is not release-blocking.
+- Future n8n, Pinecone, RAG, transcript, CRM, notification, customer account,
+  public quote tracking, upload, or ecommerce ideas.
+- Missing live preview evidence before a preview deployment exists.
+
+## Scope Boundaries
+
+This handoff does not deploy, approve deployment, add Vercel config, connect
+Supabase Cloud, add real secrets or env values, add filled evidence, add
+browser Supabase, add service-role runtime paths, access
+`website/chat-config.js`, change n8n workflows, add Pinecone runtime work, wire
+`/api/chat` to retrieval/RAG, add transcript runtime paths, add public uploads,
+add customer accounts, add public quote tracking, add notifications, add CRM,
+or add ecommerce flows.

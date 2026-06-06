@@ -1,0 +1,198 @@
+import { execFileSync } from "node:child_process";
+import { readFileSync } from "node:fs";
+import { extname, resolve } from "node:path";
+import { describe, expect, it } from "vitest";
+
+const repoRoot = resolve(process.cwd(), "..");
+const sourceExtensions = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"]);
+const phase2pMergeCommit = "15a5d23941ac7fbe3297792311f50e414d622f5f";
+const handoffDocPath = "docs/PREVIEW-DEPLOYMENT-HANDOFF.md";
+const branchFreezeDocPath = "docs/PREVIEW-DEPLOYMENT-BRANCH-FREEZE.md";
+const handoffValidatorPath = "scripts/validate-preview-handoff.cjs";
+const handoffDocPaths = [handoffDocPath, branchFreezeDocPath];
+
+function readRepoFile(relativePath: string) {
+  return readFileSync(resolve(repoRoot, relativePath), "utf8");
+}
+
+function normalizeWhitespace(value: string) {
+  return value.replace(/\s+/g, " ").trim();
+}
+
+function readTrackedFiles(paths: string[]) {
+  return execFileSync("git", ["ls-files", "--", ...paths], {
+    cwd: repoRoot,
+    encoding: "utf8"
+  })
+    .split(/\r?\n/)
+    .filter(Boolean);
+}
+
+function isProductionSource(filePath: string) {
+  return (
+    sourceExtensions.has(extname(filePath)) &&
+    !/\.(?:test|spec)\.[cm]?[tj]sx?$/.test(filePath) &&
+    !filePath.startsWith("website/test/")
+  );
+}
+
+function readTrackedProductionSources(paths: string[]) {
+  return readTrackedFiles(paths)
+    .filter(isProductionSource)
+    .map((filePath) => readRepoFile(filePath))
+    .join("\n");
+}
+
+describe("Phase 2Q-A/B preview deployment handoff", () => {
+  it("records Phase 2Q-A/B as current and Phase 2P-A/B as the completed capability", () => {
+    const status = normalizeWhitespace(readRepoFile("docs/PHASE-STATUS.md"));
+    const roadmap = normalizeWhitespace(readRepoFile("docs/PHASE-ROADMAP.md"));
+    const readiness = readRepoFile("docs/PHASE-2-READINESS-PLAN.md");
+    const decisionLog = readRepoFile("docs/DECISION-LOG.md");
+    const checklist = readRepoFile("docs/checklists/PHASE-2-ADMIN-OPS.md");
+
+    expect(status).toContain(
+      "Current phase: Phase 2Q-A/B - preview deployment handoff and branch-freeze package."
+    );
+    expect(status).toContain(
+      "Latest completed capability: Phase 2P-A/B external preview smoke harness and rollback drill package."
+    );
+    expect(status).toContain("Last merged capability PR: #121");
+    expect(status).toContain(`Merge commit: \`${phase2pMergeCommit}\``);
+    expect(roadmap).toContain(
+      "Phase 2Q-A/B adds the final preview deployment handoff and branch-freeze package"
+    );
+    expect(readiness).toContain("Current Phase 2Q-A/B status");
+    expect(decisionLog).toContain(
+      "Decision: Phase 2Q-A/B adds the final preview deployment handoff and branch-freeze package."
+    );
+    expect(checklist).toContain(
+      "## Phase 2Q-A/B Preview Deployment Handoff And Branch-Freeze Package"
+    );
+  });
+
+  it("adds final handoff and branch-freeze docs without approving deployment", () => {
+    const trackedDocs = readTrackedFiles(handoffDocPaths).sort();
+    const docs = handoffDocPaths.map(readRepoFile).join("\n");
+    const normalizedDocs = normalizeWhitespace(docs);
+
+    expect(trackedDocs).toEqual([...handoffDocPaths].sort());
+    expect(normalizedDocs).toContain("No deployment is performed by this PR.");
+    expect(normalizedDocs).toContain("This does not approve deployment.");
+    expect(normalizedDocs).toContain(
+      "Future preview deployment requires explicit later approval."
+    );
+    expect(normalizedDocs).toContain("Approve preview deployment");
+    expect(normalizedDocs).toContain("Hold deployment");
+    expect(normalizedDocs).toContain("Pivot to product polish");
+    expect(normalizedDocs).toContain("Stop doing generic deployment-prep PRs");
+    expect(normalizedDocs).toContain("What counts as a blocker");
+    expect(normalizedDocs).toContain("What does not count as a blocker");
+    expect(normalizedDocs).toContain("npm run validate:release-candidate");
+    expect(normalizedDocs).toContain("npm run validate:deploy-dry-run");
+    expect(normalizedDocs).toContain("npm run validate:preview-approval-package");
+    expect(normalizedDocs).toContain("npm run validate:preview-smoke-harness");
+    expect(normalizedDocs).toContain("npm run smoke:preview");
+    expect(normalizedDocs).toContain("operator-only");
+    expect(normalizedDocs).toContain("<redacted>");
+    expect(normalizedDocs).toContain("<reviewed externally>");
+    expect(docs).not.toMatch(/https?:\/\/|www\./i);
+    expect(docs).not.toMatch(
+      /\b(?:sk|pk|rk|gh[pousr]|xox[baprs])_[A-Za-z0-9_-]{8,}\b/i
+    );
+    expect(docs).not.toMatch(/eyJ[A-Za-z0-9_-]{20,}/);
+  });
+
+  it("adds a deterministic no-network handoff validator for CI", () => {
+    const packageJson = JSON.parse(readRepoFile("package.json"));
+    const validator = readRepoFile(handoffValidatorPath);
+    const workflow = readRepoFile(".github/workflows/ci.yml");
+
+    expect(packageJson.scripts["validate:preview-handoff"]).toBe(
+      "node scripts/validate-preview-handoff.cjs"
+    );
+    expect(validator).toContain("git ls-files");
+    expect(validator).toContain(handoffDocPath);
+    expect(validator).toContain(branchFreezeDocPath);
+    expect(validator).toContain("Phase 2Q-A/B");
+    expect(validator).toContain("Phase 2P-A/B");
+    expect(validator).toContain(phase2pMergeCommit);
+    expect(validator).toContain("validate:release-candidate");
+    expect(validator).toContain("validate:deploy-dry-run");
+    expect(validator).toContain("validate:preview-approval-package");
+    expect(validator).toContain("validate:preview-smoke-harness");
+    expect(validator).toContain("smoke:preview");
+    expect(validator).not.toMatch(/\bcurl\b|fetch\s*\(/i);
+    expect(validator).not.toMatch(/\bvercel\s+(?:deploy|link|env|pull|promote)\b/i);
+    expect(validator).not.toMatch(
+      /\bsupabase\s+(?:link|login|db|secrets|projects|functions)\b/i
+    );
+    expect(validator).not.toMatch(/\bn8n\s+(?:import|execute|start)\b/i);
+    expect(workflow).toContain("npm run validate:preview-handoff");
+    expect(workflow).not.toContain("npm run smoke:preview");
+  });
+
+  it("keeps the handoff slice free of runtime/deployment/evidence expansion", { timeout: 15000 }, () => {
+    const packageSource = [
+      readRepoFile("package.json"),
+      readRepoFile("website/package.json")
+    ].join("\n");
+    const appAndLibSource = readTrackedProductionSources([
+      "website/app",
+      "website/components",
+      "website/lib"
+    ]);
+    const browserFacingSource = readTrackedProductionSources([
+      "website/app/page.tsx",
+      "website/app/listings",
+      "website/app/categories",
+      "website/app/catalogue",
+      "website/app/events",
+      "website/app/quote",
+      "website/components"
+    ]);
+    const chatRoute = readRepoFile("website/app/api/chat/route.ts");
+
+    expect(readTrackedFiles(["vercel.json", "website/vercel.json", ".vercel"])).toEqual([]);
+    expect(readTrackedFiles(["supabase/config.toml", "supabase/.branches"])).toEqual([]);
+    expect(readTrackedFiles(["website/chat-config.js"])).toEqual([]);
+    expect(
+      readTrackedFiles([
+        ".env",
+        ".env.local",
+        ".env.development",
+        ".env.production",
+        ".env.test",
+        "website/.env",
+        "website/.env.local",
+        "website/.env.development",
+        "website/.env.production",
+        "website/.env.test"
+      ])
+    ).toEqual([]);
+    expect(readTrackedFiles(["docs/evidence", "docs/production-evidence"])).toEqual([]);
+    expect(readTrackedFiles(["website/app/api/customer-uploads"])).toEqual([]);
+    expect(readTrackedFiles(["website/app/api/public/uploads"])).toEqual([]);
+    expect(readTrackedFiles(["website/app/api/customer-accounts"])).toEqual([]);
+    expect(readTrackedFiles(["website/app/api/quote-tracking"])).toEqual([]);
+    expect(readTrackedFiles(["website/app/api/notifications"])).toEqual([]);
+    expect(readTrackedFiles(["website/app/api/crm"])).toEqual([]);
+    expect(readTrackedFiles(["website/app/api/chat/retrieval"])).toEqual([]);
+    expect(readTrackedFiles(["n8n-workflows"]).sort()).toEqual([
+      "n8n-workflows/spacekonceptrental-customer-support-agent.workflow.json",
+      "n8n-workflows/spacekonceptrental-error-handler.workflow.json",
+      "n8n-workflows/spacekonceptrental-rag-ingestion.workflow.json"
+    ]);
+
+    expect(packageSource).not.toMatch(/@pinecone-database|pinecone/i);
+    expect(browserFacingSource).not.toContain("@supabase/");
+    expect(browserFacingSource).not.toContain("createBrowserClient");
+    expect(appAndLibSource).not.toContain("NEXT_PUBLIC_SUPABASE");
+    expect(appAndLibSource).not.toContain("NEXT_PUBLIC_N8N");
+    expect(appAndLibSource).not.toContain("SUPABASE_SERVICE_ROLE");
+    expect(appAndLibSource).not.toMatch(/PINECONE_API_KEY|PINECONE_ENV|PINECONE_INDEX/i);
+    expect(chatRoute).not.toMatch(
+      /pinecone|retrieval|rerank|vector|embedding|rag|search[_ -]?index/i
+    );
+  });
+});

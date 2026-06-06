@@ -238,7 +238,38 @@ Suggested first PR:
   Supabase, production evidence, or ecommerce flows. Product language remains
   enquiry/quote/request.
 
-Current Phase 2P-A/B status:
+Current Phase 2Q-A/B status:
+
+- PR #121 merged Phase 2P-A/B external preview smoke harness and rollback
+  drill package at merge commit
+  `15a5d23941ac7fbe3297792311f50e414d622f5f`.
+- Latest completed capability is Phase 2P-A/B external preview smoke harness
+  and rollback drill package.
+- Phase 2Q-A/B is current as preview deployment handoff and branch-freeze
+  package work.
+- `docs/PREVIEW-DEPLOYMENT-HANDOFF.md` records the verified PR #117 through
+  PR #121 capability chain, no-deploy/no-approval stance, exact next-step
+  decision table, required local validators, operator-only preview smoke
+  command after a preview exists, outside-git evidence handling, and blocker
+  definitions.
+- `docs/PREVIEW-DEPLOYMENT-BRANCH-FREEZE.md` records the branch-freeze rules:
+  no feature expansion, runtime provider wiring, database migration, or UI
+  expansion before preview deployment unless explicitly approved or fixing a
+  verified release blocker.
+- `npm run validate:preview-handoff` is deterministic and no-network, so it
+  can run in CI without live provider access or deployment.
+- This should be the final generic pre-deployment prep PR unless a verified
+  blocker is discovered. The next action should be either a separately
+  approved preview deployment, holding deployment, or a product polish/content
+  UI iteration.
+- No deployment, deployment approval, Vercel config, Supabase Cloud config,
+  real env values, production evidence, browser Supabase, service-role runtime
+  paths, n8n/Pinecone/RAG runtime work, public quote tracking, customer
+  accounts, customer-visible internal notes, notifications, CRM integration,
+  public/customer upload routes, transcript runtime paths, or ecommerce flow
+  is added.
+
+Previous Current Phase 2P-A/B status:
 
 - PR #120 merged Phase 2O-A/B preview deployment approval package and
   operator evidence templates at merge commit
