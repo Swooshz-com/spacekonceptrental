@@ -1838,6 +1838,38 @@ runtime paths, add retention cleanup jobs, or add ecommerce flows such as
 carts, checkout, payments, stock reservation, confirmed booking, order
 fulfilment, or online ordering.
 
+## 2026-06-06: Preview Smoke Harness And Rollback Drill Package
+
+Decision: Phase 2P-A/B adds an operator-run external preview smoke harness and rollback drill package.
+
+Reason: PR #120 merged Phase 2O-A/B at
+`81431f13836e0b9b182aaca9638ae2e07abd7571`, creating the preview deployment
+approval packet and redacted evidence templates. The next safe non-deployment
+step is to provide an operator-run preview smoke command and rollback drill
+package for a future separately approved preview deployment, while keeping CI
+and default local validation deterministic and no-network.
+
+The implementation adds `npm run smoke:preview`, which requires
+`SKR_PREVIEW_BASE_URL`, fails closed for missing, local, non-preview, or unsafe
+values, redacts the supplied URL in output, and performs only public GET checks
+against the reviewed external preview target. It also adds
+`npm run validate:preview-smoke-harness` for static CI validation, plus
+`docs/PREVIEW-ROLLBACK-DRILL.md` and redacted result templates.
+
+No deployment is performed in this PR. Phase 2P-A/B does not approve
+deployment, add Vercel config, connect Supabase Cloud, add real secrets or env
+values, add filled preview or production evidence, add browser Supabase, add
+service-role runtime paths, access `website/chat-config.js`, add
+public/customer upload routes, add customer accounts, add public quote
+tracking, expose customer-visible internal notes, add notifications or CRM
+integration, change n8n/Pinecone runtime behavior, add SaaS chatbot runtime
+work, add Pinecone SDK/package dependencies, add Pinecone env vars or API
+keys, add embedding/reranking runtime, wire `/api/chat` to retrieval/RAG, wire
+transcript reads or writes into `/api/chat`, add admin transcript UI, add
+transcript deletion/export runtime paths, add retention cleanup jobs, or add
+ecommerce flows such as carts, checkout, payments, stock reservation,
+confirmed booking, order fulfilment, or online ordering.
+
 ## 2026-06-06: Preview Deployment Approval Package And Operator Evidence Templates
 
 Decision: Phase 2O-A/B adds preview deployment approval packaging and redacted operator evidence templates.

@@ -1124,3 +1124,20 @@ runtime changes, SaaS chatbot runtime work, Pinecone packages/env/API keys,
 embedding or reranking runtime, `/api/chat` retrieval/RAG wiring, transcript
 runtime paths, or ecommerce flows such as carts, checkout, payments, stock
 reservation, confirmed booking, order fulfilment, or online ordering.
+
+Phase 2P-A/B adds an external preview smoke harness and rollback drill package.
+It gives operators a reviewed `npm run smoke:preview` command for external
+preview targets supplied through `SKR_PREVIEW_BASE_URL`, a deterministic
+no-network `npm run validate:preview-smoke-harness` static validator for CI,
+and redacted rollback drill/result templates.
+
+Phase 2P-A/B does not deploy, approve deployment, add Vercel or Supabase
+Cloud config, add real env values, add filled preview or production evidence,
+add browser Supabase, add service-role runtime paths, access
+`website/chat-config.js`, add public/customer upload routes, add customer
+accounts, public quote tracking, customer-visible internal notes,
+notifications, CRM integration, n8n/Pinecone runtime changes, SaaS chatbot
+runtime work, Pinecone packages/env/API keys, embedding or reranking runtime,
+`/api/chat` retrieval/RAG wiring, transcript runtime paths, or ecommerce flows
+such as carts, checkout, payments, stock reservation, confirmed booking, order
+fulfilment, or online ordering.
