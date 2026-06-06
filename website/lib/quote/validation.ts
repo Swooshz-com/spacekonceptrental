@@ -13,6 +13,7 @@ const allowedTopLevelKeys = new Set([
   "customerName",
   "customerEmail",
   "customerPhone",
+  "customerMessage",
   "eventDate",
   "venue",
   "items"
@@ -23,6 +24,7 @@ const datePattern = /^\d{4}-\d{2}-\d{2}$/;
 const MAX_NAME_LENGTH = 120;
 const MAX_EMAIL_LENGTH = 254;
 const MAX_PHONE_LENGTH = 40;
+const MAX_CUSTOMER_MESSAGE_LENGTH = 1200;
 const MAX_VENUE_LENGTH = 180;
 const MAX_ITEM_NAME_LENGTH = 180;
 const MAX_ITEM_NOTES_LENGTH = 500;
@@ -154,12 +156,18 @@ export function validateQuoteSubmission(payload: unknown): ValidationResult {
   const customerName = getString(payload, "customerName");
   const customerEmail = getString(payload, "customerEmail");
   const customerPhone = getString(payload, "customerPhone");
+  const customerMessage = getString(payload, "customerMessage");
   const eventDate = getString(payload, "eventDate");
   const venue = getString(payload, "venue");
   const lengthError =
     validateLength(customerName, "customerName", MAX_NAME_LENGTH) ??
     validateLength(customerEmail, "customerEmail", MAX_EMAIL_LENGTH) ??
     validateLength(customerPhone, "customerPhone", MAX_PHONE_LENGTH) ??
+    validateLength(
+      customerMessage,
+      "customerMessage",
+      MAX_CUSTOMER_MESSAGE_LENGTH
+    ) ??
     validateLength(venue, "venue", MAX_VENUE_LENGTH);
 
   if (!customerName) {
@@ -217,6 +225,7 @@ export function validateQuoteSubmission(payload: unknown): ValidationResult {
       customerName,
       ...(customerEmail ? { customerEmail } : {}),
       ...(customerPhone ? { customerPhone } : {}),
+      ...(customerMessage ? { customerMessage } : {}),
       ...(eventDate ? { eventDate } : {}),
       ...(venue ? { venue } : {}),
       items

@@ -578,6 +578,16 @@ select {
   margin: 0;
 }
 
+.quote-inbox__section {
+  display: grid;
+  gap: 8px;
+}
+
+.quote-inbox__section h4,
+.quote-inbox__section p {
+  margin: 0;
+}
+
 .category-management {
   border-top: 1px solid var(--border);
   display: grid;

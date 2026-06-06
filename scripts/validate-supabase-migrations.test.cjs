@@ -301,7 +301,7 @@ test('real migration directory passes static validation', () => {
   const result = runValidator(realMigrationsDir);
 
   assert.equal(result.status, 0, result.stdout + result.stderr);
-  assert.match(result.stdout, /checked 16 migration SQL file\(s\)/);
+  assert.match(result.stdout, /checked 17 migration SQL file\(s\)/);
 });
 
 test('real base schema migration creates the planned MVP tables', () => {
@@ -423,7 +423,19 @@ test('real migrations add narrow anonymous website quote insert policies only', 
 
   assert.match(
     sql,
+    /alter table public\.quote_requests add column if not exists customer_message text;/,
+  );
+  assert.match(
+    sql,
+    /constraint quote_requests_customer_message_length_check check \(customer_message is null or char_length\(customer_message\) <= 1200\)/,
+  );
+  assert.match(
+    sql,
     /grant insert \(\s*id, workspace_id, public_reference, customer_name, customer_email, customer_phone, event_date, venue, status, source\s*\) on public\.quote_requests to anon;/,
+  );
+  assert.match(
+    sql,
+    /grant insert \(\s*customer_message\s*\) on public\.quote_requests to anon;/,
   );
   assert.match(
     sql,

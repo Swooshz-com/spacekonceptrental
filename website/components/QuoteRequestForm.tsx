@@ -33,11 +33,17 @@ export default function QuoteRequestForm({
 
     const formData = new FormData(event.currentTarget);
     const itemsText = String(formData.get("items") ?? "").trim();
-    const notesText = String(formData.get("notes") ?? "").trim();
+    const customerMessageText = String(
+      formData.get("customerMessage") ?? ""
+    ).trim();
+    const itemNotesText = String(formData.get("itemNotes") ?? "").trim();
     const payload = {
       customerName: String(formData.get("customerName") ?? "").trim(),
       customerEmail: String(formData.get("customerEmail") ?? "").trim(),
       customerPhone: String(formData.get("customerPhone") ?? "").trim(),
+      ...(customerMessageText
+        ? { customerMessage: customerMessageText }
+        : {}),
       eventDate: String(formData.get("eventDate") ?? "").trim(),
       venue: String(formData.get("venue") ?? "").trim(),
       items: itemsText
@@ -45,7 +51,7 @@ export default function QuoteRequestForm({
             {
               productName: itemsText,
               quantity: 1,
-              ...(notesText ? { notes: notesText } : {})
+              ...(itemNotesText ? { notes: itemNotesText } : {})
             }
           ]
         : []
@@ -82,7 +88,7 @@ export default function QuoteRequestForm({
     <form className="quote-form" onSubmit={handleSubmit}>
       <label>
         Name
-        <input autoComplete="name" name="customerName" type="text" />
+        <input autoComplete="name" name="customerName" required type="text" />
       </label>
       <label>
         Email
@@ -91,6 +97,7 @@ export default function QuoteRequestForm({
       <label>
         Phone
         <input autoComplete="tel" name="customerPhone" type="tel" />
+        <small>Share one contact method so the team can follow up.</small>
       </label>
       <label>
         Event date
@@ -108,12 +115,23 @@ export default function QuoteRequestForm({
           placeholder="Example: 20 stools, 4 cocktail tables"
           rows={4}
         />
+        <small>Leave this blank if you need help deciding quantities.</small>
       </label>
       <label>
-        Message or notes
+        Customer message
         <textarea
-          name="notes"
-          placeholder="Example: delivery timing, preferred setup style, or event context"
+          maxLength={1200}
+          name="customerMessage"
+          placeholder="Example: event context, preferred setup style, or what you need help deciding"
+          rows={4}
+        />
+      </label>
+      <label>
+        Item-specific notes
+        <textarea
+          maxLength={500}
+          name="itemNotes"
+          placeholder="Example: delivery timing or placement notes for the listed items"
           rows={4}
         />
       </label>

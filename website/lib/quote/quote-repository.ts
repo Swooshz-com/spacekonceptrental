@@ -100,6 +100,7 @@ export async function createQuoteRequest(
     customer_name: quote.customerName,
     customer_email: quote.customerEmail ?? null,
     customer_phone: quote.customerPhone ?? null,
+    customer_message: quote.customerMessage ?? null,
     event_date: quote.eventDate ?? null,
     venue: quote.venue ?? null,
     status: "new",

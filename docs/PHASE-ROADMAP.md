@@ -1001,3 +1001,25 @@ deployment, Vercel or Supabase Cloud config, browser Supabase, service-role
 runtime paths, transcript runtime paths, or ecommerce flows such as carts,
 checkout, payments, stock reservation, confirmed booking, order fulfilment, or
 online ordering.
+
+Phase 2J-A/B adds MVP hardening, quote intake correctness, and demo readiness.
+It preserves public quote/enquiry customer messages safely, adds a protected
+dedicated admin quote-detail read path, improves public quote/listing empty,
+error, success, and not-found states, and strengthens public catalogue to quote
+submission to admin quote review coverage.
+
+Phase 2J-A/B keeps public users unable to track quotes or view internal quote
+workflow state. Admin internal notes remain admin-only. Supabase remains
+canonical for website/admin listing and quote data, while Pinecone remains a
+future derived index only.
+
+Phase 2J-A/B does not add Pinecone runtime code, Pinecone packages, Pinecone
+env reads, Pinecone executors, API keys, n8n workflow/runtime changes,
+embedding runtime, sync workers, `/api/chat` retrieval wiring, search-index
+document writers, real vector upsert/delete, runtime reranking, hybrid search
+runtime, public/customer upload routes, customer accounts, public quote
+tracking, customer-visible internal notes, notifications, CRM integration,
+deployment, Vercel or Supabase Cloud config, browser Supabase, service-role
+runtime paths, transcript runtime paths, or ecommerce flows such as carts,
+checkout, payments, stock reservation, confirmed booking, order fulfilment, or
+online ordering.

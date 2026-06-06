@@ -39,7 +39,7 @@ function readTrackedProductionSources(paths: string[]) {
 }
 
 describe("Phase 2I-A/B public rental catalogue and quote request UX MVP", () => {
-  it("records Phase 2I-A/B as the current public rental catalogue and quote UX MVP", () => {
+  it("records Phase 2I-A/B as the latest completed public rental catalogue and quote UX MVP", () => {
     const status = normalizeWhitespace(readRepoFile("docs/PHASE-STATUS.md"));
     const roadmap = readRepoFile("docs/PHASE-ROADMAP.md");
     const readiness = readRepoFile("docs/PHASE-2-READINESS-PLAN.md");
@@ -49,19 +49,19 @@ describe("Phase 2I-A/B public rental catalogue and quote request UX MVP", () => 
     );
 
     expect(status).toContain(
-      "Current phase: Phase 2I-A/B - public rental catalogue and quote request UX MVP."
+      "Latest completed capability: Phase 2I-A/B public rental catalogue and quote request UX MVP."
+    );
+    expect(status).toContain("Last merged capability PR: #114");
+    expect(status).toContain(
+      "Merge commit: `6bf9202df80fbfac995ee168dceea0ef7c26edfa`"
     );
     expect(status).toContain(
-      "Latest completed capability: Phase 2H-A/B protected admin operations UI MVP."
-    );
-    expect(status).toContain("Last merged capability PR: #113");
-    expect(status).toContain(
-      "Merge commit: `dbf59c1250e22956162475284dcbe94899f50c4b`"
+      "PR #114 merged Phase 2I-A/B public rental catalogue and quote request UX MVP"
     );
     expect(roadmap).toContain(
       "Phase 2I-A/B adds the public rental catalogue and quote request UX MVP"
     );
-    expect(readiness).toContain("Current Phase 2I-A/B status");
+    expect(readiness).toContain("Previous Current Phase 2I-A/B status");
     expect(decisionLog).toContain(
       "Decision: Phase 2I-A/B adds the public rental catalogue and quote request UX MVP."
     );
@@ -72,6 +72,7 @@ describe("Phase 2I-A/B public rental catalogue and quote request UX MVP", () => 
 
   it("adds public listing and category routes backed by the existing public catalogue read boundary", () => {
     expect(readTrackedFiles(["website/app/listings"])).toEqual([
+      "website/app/listings/[slug]/not-found.tsx",
       "website/app/listings/[slug]/page.tsx",
       "website/app/listings/page.tsx"
     ]);

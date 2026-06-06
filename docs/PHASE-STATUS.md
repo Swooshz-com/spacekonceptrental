@@ -4,27 +4,27 @@ This is the quick status page for the SKR repo. Use `docs/PHASE-2-READINESS-PLAN
 
 ## Current phase
 
-Current phase: Phase 2I-A/B - public rental catalogue and quote request UX MVP.
+Current phase: Phase 2J-A/B - MVP hardening, quote intake correctness, and demo readiness.
 
-Latest completed capability: Phase 2H-A/B protected admin operations UI MVP.
+Latest completed capability: Phase 2I-A/B public rental catalogue and quote request UX MVP.
 
-Last merged capability PR: #113
+Last merged capability PR: #114
 
-Merge commit: `dbf59c1250e22956162475284dcbe94899f50c4b`
+Merge commit: `6bf9202df80fbfac995ee168dceea0ef7c26edfa`
 
-Phase 2I-A/B adds the public rental catalogue and quote request UX MVP. It
-improves public rental listing browse/detail, category browsing, homepage
-conversion sections, and public quote/enquiry handoff while using only the
-existing public-safe catalogue read boundary and public quote request boundary.
+Phase 2J-A/B adds MVP hardening, quote intake correctness, and demo readiness.
+It preserves public quote/enquiry customer messages safely, adds a protected
+dedicated admin quote-detail read path, and improves public quote/listing
+empty, error, success, and not-found states while keeping the existing
+public-safe catalogue read boundary and public quote request boundary.
 
 Public users only see public-safe published listing, category, and listing
-image data. Public quote/enquiry submission does not expose internal quote
-workflow state, public quote tracking, customer accounts, or admin internal
-notes. Supabase remains canonical for website/admin listing and quote data.
-Pinecone remains a future derived index only and is not used as canonical
-business storage.
+image data. Public users still cannot track quotes or view internal quote
+workflow state. Admin internal notes remain admin-only. Supabase remains
+canonical for website/admin listing and quote data. Pinecone remains a future
+derived index only and is not used as canonical business storage.
 
-Phase 2I-A/B does not add Pinecone runtime code, Pinecone packages, Pinecone
+Phase 2J-A/B does not add Pinecone runtime code, Pinecone packages, Pinecone
 env reads, secrets, API keys, Pinecone executors, n8n workflow/runtime changes,
 embedding runtime, sync workers, `/api/chat` retrieval wiring,
 search-index document writers, real vector upsert/delete, runtime reranking,
@@ -53,7 +53,19 @@ config, env/secrets, and production evidence remain blocked.
 
 ## Remaining-work map
 
-Completed through PR #113:
+Completed through PR #114:
+
+- PR #114 merged Phase 2I-A/B public rental catalogue and quote request UX MVP
+  at merge commit `6bf9202df80fbfac995ee168dceea0ef7c26edfa`.
+- The latest completed capability is Phase 2I-A/B public rental catalogue and
+  quote request UX MVP. It improved the public homepage, listing/category/
+  detail browsing, and quote/enquiry handoff while keeping public users on
+  published public-safe listing/category/image data only.
+- Phase 2J-A/B is current as MVP hardening, quote intake correctness, and demo
+  readiness. It preserves public customer messages, adds a protected dedicated
+  admin quote-detail read path, keeps admin internal notes admin-only, and does
+  not add public quote tracking, customer accounts, notifications, CRM,
+  Pinecone/n8n/RAG runtime work, or ecommerce flows.
 
 - PR #113 merged Phase 2H-A/B protected admin operations UI MVP at merge
   commit `dbf59c1250e22956162475284dcbe94899f50c4b`.
@@ -62,10 +74,10 @@ Completed through PR #113:
   quote request, and quote detail operations while keeping listing/category/
   image writes on `execute_admin_product_write(...)` and quote workflow writes
   on `execute_admin_quote_workflow(...)`.
-- Phase 2I-A/B is current as the public rental catalogue and quote request UX
-  MVP. Public listing/category/detail browsing and quote/enquiry submission
-  are improved while public users only see public-safe listing/category/image
-  data and never see admin internal notes or internal quote workflow state.
+- Phase 2I-A/B completed the public rental catalogue and quote request UX MVP.
+  Public listing/category/detail browsing and quote/enquiry submission are
+  improved while public users only see public-safe listing/category/image data
+  and never see admin internal notes or internal quote workflow state.
 
 - PR #112 merged Phase 2G-C/D server-only local search-index enqueue
   integration at merge commit

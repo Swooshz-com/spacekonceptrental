@@ -147,6 +147,15 @@ and route/action boundaries are implemented and tested.
 - [x] Public quote/enquiry submission does not expose internal quote workflow state, public quote tracking, customer accounts, or admin internal notes.
 - [x] No ecommerce/cart/checkout/payment/order, customer upload, browser Supabase, service-role runtime path, n8n/Pinecone runtime change, `/api/chat` retrieval/RAG wiring, notification, or CRM surface is added.
 
+## Phase 2J-A/B MVP Hardening, Quote Intake Correctness, And Demo Readiness
+
+- [x] Public quote/enquiry customer messages are preserved safely.
+- [x] Item-specific quote request notes remain supported separately from the customer message.
+- [x] Admin quote detail uses a protected dedicated server-only read path.
+- [x] Public users cannot track quotes or view internal quote workflow state.
+- [x] Admin internal notes remain admin-only.
+- [x] No ecommerce/cart/checkout/payment/order, customer upload, browser Supabase, service-role runtime path, n8n/Pinecone runtime change, `/api/chat` retrieval/RAG wiring, notification, CRM, customer account, or public quote tracking surface is added.
+
 ## Phase 2D-A Deployment Readiness And Smoke-Test Runbook
 
 - [x] Deployment readiness docs are refreshed for catalogue media, admin listing media upload, public quote handoff, and atomic admin quote workflow surfaces.

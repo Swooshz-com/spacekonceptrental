@@ -10,6 +10,10 @@ import {
   resolveAdminQuoteRequestInboxRead,
   type AdminQuoteRequestInboxReadResult
 } from "../../lib/quote/admin-read/admin-quote-request-dashboard-read";
+import {
+  resolveAdminQuoteRequestDetailRead,
+  type AdminQuoteRequestDetailReadResult
+} from "../../lib/quote/admin-read/admin-quote-request-detail-read";
 import { CategoryManagementPanel } from "../../components/admin/category-management-panel";
 import { ListingImageMetadataManagementPanel } from "../../components/admin/listing-image-metadata-management-panel";
 import { ListingImageUploadPanel } from "../../components/admin/listing-image-upload-panel";
@@ -27,6 +31,7 @@ export type ProtectedAdminShellState =
       status: "authorised_admin";
       dashboard: AdminProductDashboardReadResult;
       quoteInbox: AdminQuoteRequestInboxReadResult;
+      quoteDetail?: AdminQuoteRequestDetailReadResult;
     }
   | {
       status: "unavailable";
@@ -61,6 +66,10 @@ type ProtectedAdminShellGateState =
   | {
       status: "authorised_admin";
     };
+
+type ResolveProtectedAdminShellStateOptions = {
+  quoteDetailId?: string;
+};
 
 const requestSecurityDenyReasons = new Set<string>([
   "operation_not_supported",
@@ -107,7 +116,9 @@ function mapGateResult(
   };
 }
 
-export async function resolveProtectedAdminShellState(): Promise<ProtectedAdminShellState> {
+export async function resolveProtectedAdminShellState(
+  options: ResolveProtectedAdminShellStateOptions = {}
+): Promise<ProtectedAdminShellState> {
   const trustedServerWorkspaceId = process.env.ADMIN_TRUSTED_WORKSPACE_ID ?? null;
 
   try {
@@ -137,7 +148,7 @@ export async function resolveProtectedAdminShellState(): Promise<ProtectedAdminS
       return gateState;
     }
 
-    const [dashboard, quoteInbox] = await Promise.all([
+    const [dashboard, quoteInbox, quoteDetail] = await Promise.all([
       resolveAdminProductDashboardRead({
         env: {
           ADMIN_TRUSTED_WORKSPACE_ID: trustedServerWorkspaceId
@@ -147,13 +158,22 @@ export async function resolveProtectedAdminShellState(): Promise<ProtectedAdminS
         env: {
           ADMIN_TRUSTED_WORKSPACE_ID: trustedServerWorkspaceId
         }
-      })
+      }),
+      options.quoteDetailId
+        ? resolveAdminQuoteRequestDetailRead({
+            quoteRequestId: options.quoteDetailId,
+            env: {
+              ADMIN_TRUSTED_WORKSPACE_ID: trustedServerWorkspaceId
+            }
+          })
+        : Promise.resolve(undefined)
     ]);
 
     return {
       status: "authorised_admin",
       dashboard,
-      quoteInbox
+      quoteInbox,
+      ...(quoteDetail ? { quoteDetail } : {})
     };
   } catch {
     return {
@@ -470,25 +490,24 @@ function AdminMediaOperations({
 }
 
 function AdminQuoteDetail({
-  quoteInbox,
-  quoteRequestId
+  quoteDetail
 }: {
-  quoteInbox: AdminQuoteRequestInboxReadResult;
-  quoteRequestId: string;
+  quoteDetail?: AdminQuoteRequestDetailReadResult;
 }) {
-  if (quoteInbox.status === "unavailable") {
-    return <QuoteRequestInboxPanel inbox={quoteInbox} />;
-  }
-
-  const quoteRequest = quoteInbox.data.quoteRequests.find(
-    (item) => item.id === quoteRequestId
-  );
-
-  if (!quoteRequest) {
+  if (!quoteDetail || quoteDetail.status === "unavailable") {
     return (
       <section className="admin-dashboard admin-dashboard--unavailable">
         <h2>Quote request detail</h2>
         <p>Quote request details are temporarily unavailable.</p>
+      </section>
+    );
+  }
+
+  if (quoteDetail.status === "not_found") {
+    return (
+      <section className="admin-dashboard admin-dashboard--unavailable">
+        <h2>Quote request detail</h2>
+        <p>Quote request details were not found for this workspace.</p>
       </section>
     );
   }
@@ -511,7 +530,7 @@ function AdminQuoteDetail({
         inbox={{
           status: "loaded",
           data: {
-            quoteRequests: [quoteRequest]
+            quoteRequests: [quoteDetail.data.quoteRequest]
           }
         }}
       />
@@ -552,12 +571,7 @@ function AdminOperationsView({
   }
 
   if (view.kind === "quote-detail") {
-    return (
-      <AdminQuoteDetail
-        quoteInbox={state.quoteInbox}
-        quoteRequestId={view.quoteRequestId}
-      />
-    );
+    return <AdminQuoteDetail quoteDetail={state.quoteDetail} />;
   }
 
   return (

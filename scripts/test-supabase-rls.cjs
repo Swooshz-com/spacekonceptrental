@@ -2961,7 +2961,7 @@ check('browser roles cannot execute transcript audit/evidence insert RPCs', () =
 
 check('anonymous public can create website quote rows without reading them back', () => {
   const quoteId = '70000000-0000-4000-8000-000000000101';
-  const output = queryAs(
+  const output = queryCommittedAs(
     'anon',
     null,
     `
@@ -2972,6 +2972,7 @@ check('anonymous public can create website quote rows without reading them back'
         customer_name,
         customer_email,
         customer_phone,
+        customer_message,
         event_date,
         venue,
         status,
@@ -2984,6 +2985,7 @@ check('anonymous public can create website quote rows without reading them back'
         'Fake Public Customer',
         'public-customer@example.test',
         '+65 8123 4567',
+        'Please recommend a warm lounge setup for a reception.',
         '2026-06-12',
         'Fake Venue',
         'new',
@@ -3015,6 +3017,22 @@ check('anonymous public can create website quote rows without reading them back'
     ['0', '0'],
     'anon quote inserts should not grant anonymous quote reads.',
   );
+
+  const adminOutput = queryAs(
+    'authenticated',
+    ids.authMemberA,
+    `
+      select customer_message
+      from public.quote_requests
+      where id = '${quoteId}';
+    `,
+  );
+
+  assert.equal(
+    adminOutput,
+    'Please recommend a warm lounge setup for a reception.',
+    'authenticated workspace admins should read customer-submitted quote messages.',
+  );
 });
 
 check('anonymous public quote creation rejects non-website workflow states', () => {
@@ -3041,6 +3059,36 @@ check('anonymous public quote creation rejects non-website workflow states', () 
         'website'
       )
     `,
+  );
+});
+
+check('anonymous public quote creation rejects oversized customer messages', () => {
+  statementFailsAs(
+    'anon',
+    null,
+    `
+      insert into public.quote_requests (
+        id,
+        workspace_id,
+        public_reference,
+        customer_name,
+        customer_email,
+        customer_message,
+        status,
+        source
+      )
+      values (
+        '70000000-0000-4000-8000-000000000103',
+        '${ids.workspaceA}',
+        'quote-public-rejected-message',
+        'Fake Public Customer',
+        'public-customer@example.test',
+        '${'x'.repeat(1201)}',
+        'new',
+        'website'
+      )
+    `,
+    /quote_requests_customer_message_length_check/i,
   );
 });
 

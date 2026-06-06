@@ -13,6 +13,8 @@ const quoteSubmission: QuoteSubmission = {
   customerName: "Maya Tan",
   customerEmail: "maya@example.test",
   customerPhone: "+65 8123 4567",
+  customerMessage:
+    "Please recommend a warm lounge setup for a corporate reception.",
   eventDate: "2026-06-12",
   venue: "Marina Bay Sands",
   items: [
@@ -114,6 +116,8 @@ describe("quote repository", () => {
       customer_name: "Maya Tan",
       customer_email: "maya@example.test",
       customer_phone: "+65 8123 4567",
+      customer_message:
+        "Please recommend a warm lounge setup for a corporate reception.",
       event_date: "2026-06-12",
       venue: "Marina Bay Sands",
       status: "new",
