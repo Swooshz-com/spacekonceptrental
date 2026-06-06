@@ -10,6 +10,7 @@ export type QuoteSubmission = {
   customerName: string;
   customerEmail?: string;
   customerPhone?: string;
+  customerMessage?: string;
   eventDate?: string;
   venue?: string;
   items: QuoteItemSubmission[];

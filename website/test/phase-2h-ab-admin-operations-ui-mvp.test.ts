@@ -39,7 +39,7 @@ function readTrackedProductionSources(paths: string[]) {
 }
 
 describe("Phase 2H-A/B admin operations UI MVP", () => {
-  it("records Phase 2H-A/B as the latest completed admin operations UI MVP", () => {
+  it("records Phase 2H-A/B as a completed admin operations UI MVP", () => {
     const status = normalizeWhitespace(readRepoFile("docs/PHASE-STATUS.md"));
     const roadmap = readRepoFile("docs/PHASE-ROADMAP.md");
     const readiness = readRepoFile("docs/PHASE-2-READINESS-PLAN.md");
@@ -49,19 +49,15 @@ describe("Phase 2H-A/B admin operations UI MVP", () => {
     );
 
     expect(status).toContain(
-      "Latest completed capability: Phase 2H-A/B protected admin operations UI MVP."
-    );
-    expect(status).toContain("Last merged capability PR: #113");
-    expect(status).toContain(
-      "Merge commit: `dbf59c1250e22956162475284dcbe94899f50c4b`"
-    );
-    expect(status).toContain(
       "PR #113 merged Phase 2H-A/B protected admin operations UI MVP"
+    );
+    expect(status).toContain(
+      "The latest completed capability is Phase 2H-A/B protected admin operations UI MVP."
     );
     expect(roadmap).toContain(
       "Phase 2H-A/B adds the admin operations UI MVP"
     );
-    expect(readiness).toContain("Current Phase 2H-A/B status");
+    expect(readiness).toContain("Previous Current Phase 2H-A/B status");
     expect(decisionLog).toContain(
       "Decision: Phase 2H-A/B adds the protected admin operations UI MVP."
     );

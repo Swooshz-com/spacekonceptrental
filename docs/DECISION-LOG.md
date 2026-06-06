@@ -1837,3 +1837,37 @@ into `/api/chat`, add admin transcript UI, add transcript deletion/export
 runtime paths, add retention cleanup jobs, or add ecommerce flows such as
 carts, checkout, payments, stock reservation, confirmed booking, order
 fulfilment, or online ordering.
+
+## 2026-06-06: MVP Hardening, Quote Intake Correctness, And Demo Readiness
+
+Decision: Phase 2J-A/B adds MVP hardening, quote intake correctness, and demo readiness.
+
+Reason: PR #114 merged Phase 2I-A/B at
+`6bf9202df80fbfac995ee168dceea0ef7c26edfa`, completing the public rental
+catalogue and quote request UX MVP. The next safe step is to harden quote
+intake and admin review for demo use without widening runtime scope.
+
+The implementation preserves public quote/enquiry customer messages in a
+first-class `quote_requests.customer_message` column with a bounded length and
+narrow anonymous insert grant. Item-specific quote notes remain on
+`quote_request_items.notes`. Admin quote detail uses a protected dedicated
+server-only read path for one quote request, customer message, requested
+items, and internal activity.
+
+Public users still cannot track quotes or view internal quote workflow state.
+Admin internal notes remain admin-only. Supabase remains canonical for
+website/admin listing and quote data. Pinecone remains a future derived index
+only.
+
+Phase 2J-A/B does not deploy, add Vercel config, connect Supabase Cloud, add
+real secrets or env values, add browser Supabase, add service-role runtime
+paths, access `website/chat-config.js`, add public/customer upload routes, add
+customer accounts, add public quote tracking, expose customer-visible internal
+notes, add notifications or CRM integration, change n8n/Pinecone runtime
+behavior, add SaaS chatbot runtime work, add Pinecone SDK/package
+dependencies, add Pinecone env vars or API keys, add embedding/reranking
+runtime, wire `/api/chat` to retrieval/RAG, wire transcript reads or writes
+into `/api/chat`, add admin transcript UI, add transcript deletion/export
+runtime paths, add retention cleanup jobs, or add ecommerce flows such as
+carts, checkout, payments, stock reservation, confirmed booking, order
+fulfilment, or online ordering.

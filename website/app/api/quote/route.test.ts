@@ -15,6 +15,8 @@ const validPayload = {
   customerName: "Maya Tan",
   customerEmail: "maya@example.test",
   customerPhone: "+65 8123 4567",
+  customerMessage:
+    "Please recommend a warm lounge setup for a corporate reception.",
   eventDate: "2026-06-12",
   venue: "Marina Bay Sands",
   items: [
@@ -85,6 +87,8 @@ describe("POST /api/quote", () => {
       customerName: "Maya Tan",
       customerEmail: "maya@example.test",
       customerPhone: "+65 8123 4567",
+      customerMessage:
+        "Please recommend a warm lounge setup for a corporate reception.",
       eventDate: "2026-06-12",
       venue: "Marina Bay Sands",
       items: [

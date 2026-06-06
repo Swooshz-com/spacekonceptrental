@@ -1,34 +1,40 @@
 import "server-only";
 
 import { createSessionBoundSupabaseAdminReadClient } from "../../admin/authorization/supabase-admin-auth-identity-adapter";
+import type {
+  AdminQuoteRequestInboxActivity,
+  AdminQuoteRequestInboxItem,
+  AdminQuoteRequestInboxQuoteRequest
+} from "./admin-quote-request-dashboard-read";
 
 type QueryResult = {
   data: unknown;
   error: unknown;
 };
 
-type AdminQuoteRequestInboxReadFilter = {
-  eq(column: string, value: string): AdminQuoteRequestInboxReadFilter;
-  in(column: string, values: string[]): AdminQuoteRequestInboxReadFilter;
+type AdminQuoteRequestDetailReadFilter = {
+  eq(column: string, value: string): AdminQuoteRequestDetailReadFilter;
   order(
     column: string,
     options?: {
       ascending?: boolean;
     }
-  ): AdminQuoteRequestInboxReadFilter;
+  ): AdminQuoteRequestDetailReadFilter;
   limit(count: number): Promise<QueryResult>;
 };
 
-export type AdminQuoteRequestInboxReadSupabaseClient = {
-  from(table: "quote_requests" | "quote_request_items" | "quote_request_activity"): {
-    select(columns: string): AdminQuoteRequestInboxReadFilter;
+export type AdminQuoteRequestDetailReadSupabaseClient = {
+  from(
+    table: "quote_requests" | "quote_request_items" | "quote_request_activity"
+  ): {
+    select(columns: string): AdminQuoteRequestDetailReadFilter;
   };
 };
 
-export type AdminQuoteRequestInboxReadSupabaseClientResult =
+export type AdminQuoteRequestDetailReadSupabaseClientResult =
   | {
       configured: true;
-      client: AdminQuoteRequestInboxReadSupabaseClient;
+      client: AdminQuoteRequestDetailReadSupabaseClient;
       missingEnv: [];
     }
   | {
@@ -37,57 +43,25 @@ export type AdminQuoteRequestInboxReadSupabaseClientResult =
       reason: "authenticated_admin_read_client_required";
     };
 
-export type AdminQuoteRequestInboxItem = {
-  id: string;
-  quoteRequestId: string;
-  productNameSnapshot: string;
-  quantity: number;
-  notes?: string;
-  createdAt: string;
+export type AdminQuoteRequestDetailReadData = {
+  quoteRequest: AdminQuoteRequestInboxQuoteRequest;
 };
 
-export type AdminQuoteRequestInboxActivity = {
-  id: string;
-  quoteRequestId: string;
-  activityType: "status_change" | "internal_note";
-  statusFrom?: AdminQuoteRequestInboxQuoteRequest["status"];
-  statusTo?: AdminQuoteRequestInboxQuoteRequest["status"];
-  note?: string;
-  createdAt: string;
-};
-
-export type AdminQuoteRequestInboxQuoteRequest = {
-  id: string;
-  publicReference: string;
-  customerName?: string;
-  customerEmail?: string;
-  customerPhone?: string;
-  customerMessage?: string;
-  eventDate?: string;
-  venue?: string;
-  status: "new" | "reviewing" | "quoted" | "closed" | "archived";
-  source: "website" | "chat" | "admin";
-  createdAt: string;
-  updatedAt?: string;
-  items: AdminQuoteRequestInboxItem[];
-  activity: AdminQuoteRequestInboxActivity[];
-};
-
-export type AdminQuoteRequestInboxReadData = {
-  quoteRequests: AdminQuoteRequestInboxQuoteRequest[];
-};
-
-export type AdminQuoteRequestInboxReadResult =
+export type AdminQuoteRequestDetailReadResult =
   | {
       status: "loaded";
-      data: AdminQuoteRequestInboxReadData;
+      data: AdminQuoteRequestDetailReadData;
+    }
+  | {
+      status: "not_found";
     }
   | {
       status: "unavailable";
     };
 
-type AdminQuoteRequestInboxReadOptions = {
-  supabase?: AdminQuoteRequestInboxReadSupabaseClientResult;
+type AdminQuoteRequestDetailReadOptions = {
+  quoteRequestId: string;
+  supabase?: AdminQuoteRequestDetailReadSupabaseClientResult;
   env?: {
     ADMIN_TRUSTED_WORKSPACE_ID?: string | null;
   };
@@ -139,7 +113,7 @@ const quoteRequestStatuses = new Set([
 const quoteRequestSources = new Set(["website", "chat", "admin"]);
 const quoteRequestActivityTypes = new Set(["status_change", "internal_note"]);
 
-function unavailable(): AdminQuoteRequestInboxReadResult {
+function unavailable(): AdminQuoteRequestDetailReadResult {
   return {
     status: "unavailable"
   };
@@ -161,7 +135,7 @@ function getPositiveInteger(value: unknown) {
   return Number.isInteger(value) && Number(value) > 0 ? Number(value) : undefined;
 }
 
-function getWorkspaceId(options: AdminQuoteRequestInboxReadOptions) {
+function getWorkspaceId(options: AdminQuoteRequestDetailReadOptions) {
   const workspaceId =
     options.env && "ADMIN_TRUSTED_WORKSPACE_ID" in options.env
       ? options.env.ADMIN_TRUSTED_WORKSPACE_ID
@@ -172,8 +146,8 @@ function getWorkspaceId(options: AdminQuoteRequestInboxReadOptions) {
 }
 
 async function getSupabase(
-  options: AdminQuoteRequestInboxReadOptions
-): Promise<AdminQuoteRequestInboxReadSupabaseClientResult> {
+  options: AdminQuoteRequestDetailReadOptions
+): Promise<AdminQuoteRequestDetailReadSupabaseClientResult> {
   if (options.supabase) {
     return options.supabase;
   }
@@ -183,7 +157,7 @@ async function getSupabase(
   return supabase.configured
     ? {
         configured: true,
-        client: supabase.client as unknown as AdminQuoteRequestInboxReadSupabaseClient,
+        client: supabase.client as unknown as AdminQuoteRequestDetailReadSupabaseClient,
         missingEnv: []
       }
     : {
@@ -201,15 +175,18 @@ function requireRows(result: QueryResult) {
   return result.data.every(isRecord) ? result.data : null;
 }
 
+function getQuoteRequestStatus(value: unknown) {
+  return typeof value === "string" && quoteRequestStatuses.has(value)
+    ? (value as AdminQuoteRequestInboxQuoteRequest["status"])
+    : undefined;
+}
+
 function toQuoteRequest(
   row: QuoteRequestRow
 ): AdminQuoteRequestInboxQuoteRequest | null {
   const id = isUuid(row.id) ? row.id.trim() : null;
   const publicReference = getString(row.public_reference);
-  const status =
-    typeof row.status === "string" && quoteRequestStatuses.has(row.status)
-      ? row.status
-      : null;
+  const status = getQuoteRequestStatus(row.status);
   const source =
     typeof row.source === "string" && quoteRequestSources.has(row.source)
       ? row.source
@@ -229,7 +206,7 @@ function toQuoteRequest(
     customerMessage: getString(row.customer_message),
     eventDate: getString(row.event_date),
     venue: getString(row.venue),
-    status: status as AdminQuoteRequestInboxQuoteRequest["status"],
+    status,
     source: source as AdminQuoteRequestInboxQuoteRequest["source"],
     createdAt,
     updatedAt: getString(row.updated_at),
@@ -263,12 +240,6 @@ function toQuoteRequestItem(
   };
 }
 
-function getQuoteRequestStatus(value: unknown) {
-  return typeof value === "string" && quoteRequestStatuses.has(value)
-    ? (value as AdminQuoteRequestInboxQuoteRequest["status"])
-    : undefined;
-}
-
 function toQuoteRequestActivity(
   row: QuoteRequestActivityRow
 ): AdminQuoteRequestInboxActivity | null {
@@ -298,49 +269,15 @@ function toQuoteRequestActivity(
   };
 }
 
-function mapData(
-  quoteRequestRows: Record<string, unknown>[],
-  itemRows: Record<string, unknown>[],
-  activityRows: Record<string, unknown>[]
-): AdminQuoteRequestInboxReadData | null {
-  const quoteRequests = quoteRequestRows.map(toQuoteRequest);
-  const items = itemRows.map(toQuoteRequestItem);
-  const activities = activityRows.map(toQuoteRequestActivity);
-
-  if (
-    quoteRequests.some((quoteRequest) => !quoteRequest) ||
-    items.some((item) => !item) ||
-    activities.some((activity) => !activity)
-  ) {
-    return null;
-  }
-
-  const mappedQuoteRequests =
-    quoteRequests as AdminQuoteRequestInboxQuoteRequest[];
-  const mappedItems = items as AdminQuoteRequestInboxItem[];
-  const quoteRequestById = new Map(
-    mappedQuoteRequests.map((quoteRequest) => [quoteRequest.id, quoteRequest])
-  );
-
-  for (const item of mappedItems) {
-    quoteRequestById.get(item.quoteRequestId)?.items.push(item);
-  }
-
-  for (const activity of activities as AdminQuoteRequestInboxActivity[]) {
-    quoteRequestById.get(activity.quoteRequestId)?.activity.push(activity);
-  }
-
-  return {
-    quoteRequests: mappedQuoteRequests
-  };
-}
-
-export async function resolveAdminQuoteRequestInboxRead(
-  options: AdminQuoteRequestInboxReadOptions = {}
-): Promise<AdminQuoteRequestInboxReadResult> {
+export async function resolveAdminQuoteRequestDetailRead(
+  options: AdminQuoteRequestDetailReadOptions
+): Promise<AdminQuoteRequestDetailReadResult> {
   const workspaceId = getWorkspaceId(options);
+  const quoteRequestId = isUuid(options.quoteRequestId)
+    ? options.quoteRequestId.trim()
+    : null;
 
-  if (!workspaceId) {
+  if (!workspaceId || !quoteRequestId) {
     return unavailable();
   }
 
@@ -357,8 +294,8 @@ export async function resolveAdminQuoteRequestInboxRead(
         "id, public_reference, customer_name, customer_email, customer_phone, customer_message, event_date, venue, status, source, created_at, updated_at"
       )
       .eq("workspace_id", workspaceId)
-      .order("created_at", { ascending: false })
-      .limit(25);
+      .eq("id", quoteRequestId)
+      .limit(1);
     const quoteRequestRows = requireRows(quoteRequestResult);
 
     if (!quoteRequestRows) {
@@ -367,19 +304,14 @@ export async function resolveAdminQuoteRequestInboxRead(
 
     if (quoteRequestRows.length === 0) {
       return {
-        status: "loaded",
-        data: {
-          quoteRequests: []
-        }
+        status: "not_found"
       };
     }
 
-    const quoteRequestIds = quoteRequestRows
-      .map((row) => row.id)
-      .filter(isUuid)
-      .map((id) => id.trim());
+    const [quoteRequestRow] = quoteRequestRows;
+    const quoteRequest = toQuoteRequest(quoteRequestRow);
 
-    if (quoteRequestIds.length !== quoteRequestRows.length) {
+    if (!quoteRequest) {
       return unavailable();
     }
 
@@ -389,7 +321,7 @@ export async function resolveAdminQuoteRequestInboxRead(
         "id, quote_request_id, product_name_snapshot, quantity, notes, created_at"
       )
       .eq("workspace_id", workspaceId)
-      .in("quote_request_id", quoteRequestIds)
+      .eq("quote_request_id", quoteRequestId)
       .order("created_at", { ascending: true })
       .limit(250);
     const itemRows = requireRows(itemResult);
@@ -404,7 +336,7 @@ export async function resolveAdminQuoteRequestInboxRead(
         "id, quote_request_id, activity_type, status_from, status_to, note, created_at"
       )
       .eq("workspace_id", workspaceId)
-      .in("quote_request_id", quoteRequestIds)
+      .eq("quote_request_id", quoteRequestId)
       .order("created_at", { ascending: false })
       .limit(250);
     const activityRows = requireRows(activityResult);
@@ -413,14 +345,27 @@ export async function resolveAdminQuoteRequestInboxRead(
       return unavailable();
     }
 
-    const data = mapData(quoteRequestRows, itemRows, activityRows);
+    const items = itemRows.map(toQuoteRequestItem);
+    const activity = activityRows.map(toQuoteRequestActivity);
 
-    return data
-      ? {
-          status: "loaded",
-          data
-        }
-      : unavailable();
+    if (
+      items.some((item) => !item) ||
+      activity.some((activityItem) => !activityItem)
+    ) {
+      return unavailable();
+    }
+
+    quoteRequest.items.push(...(items as AdminQuoteRequestInboxItem[]));
+    quoteRequest.activity.push(
+      ...(activity as AdminQuoteRequestInboxActivity[])
+    );
+
+    return {
+      status: "loaded",
+      data: {
+        quoteRequest
+      }
+    };
   } catch {
     return unavailable();
   }

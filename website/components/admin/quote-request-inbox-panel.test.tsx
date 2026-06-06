@@ -9,6 +9,8 @@ const quoteRequest = {
   customerName: "Maya Tan",
   customerEmail: "maya@example.test",
   customerPhone: "+65 8123 4567",
+  customerMessage:
+    "Please recommend a warm lounge setup for a corporate reception.",
   eventDate: "2026-06-20",
   venue: "Marina Bay Sands",
   status: "new" as const,
@@ -83,6 +85,18 @@ describe("QuoteRequestInboxPanel", () => {
       })
     ).toBeInTheDocument();
     expect(screen.getByLabelText(/internal note for QR-20260603-NEWEST/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: /customer message/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/please recommend a warm lounge setup/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: /requested items/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: /admin-only internal activity/i })
+    ).toBeInTheDocument();
     expect(screen.getByText(/call maya about sofa quantities/i)).toBeInTheDocument();
     expect(screen.getByText(/status changed from new to reviewing/i)).toBeInTheDocument();
     expect(

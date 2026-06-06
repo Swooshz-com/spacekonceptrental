@@ -14,7 +14,9 @@ import {
   ProductPageContent,
   default as ProductPage
 } from "./catalogue/[slug]/page";
+import CatalogueListingNotFound from "./catalogue/[slug]/not-found";
 import EventsPage from "./events/page";
+import ListingNotFound from "./listings/[slug]/not-found";
 import { metadata } from "./layout";
 import HomePage from "./page";
 import QuotePage from "./quote/page";
@@ -158,6 +160,36 @@ describe("public page shells", () => {
 
     expect(screen.getByRole("heading", { name: /furniture catalogue/i })).toBeInTheDocument();
     expect(screen.getByText(/no listings are available right now/i)).toBeInTheDocument();
+  });
+
+  it("renders safe rental listing not-found states", () => {
+    render(<CatalogueListingNotFound />);
+
+    expect(
+      screen.getByRole("heading", { name: /listing unavailable/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: /browse catalogue/i })
+    ).toHaveAttribute("href", "/catalogue");
+    expect(
+      screen.getByRole("link", { name: /send a general enquiry/i })
+    ).toHaveAttribute("href", "/quote");
+    expect(
+      screen.queryByText(/draft|archived|internal note|workflow status/i)
+    ).not.toBeInTheDocument();
+
+    cleanup();
+    render(<ListingNotFound />);
+
+    expect(
+      screen.getByRole("heading", { name: /listing unavailable/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: /browse listings/i })
+    ).toHaveAttribute("href", "/listings");
+    expect(
+      screen.getByRole("link", { name: /send a general enquiry/i })
+    ).toHaveAttribute("href", "/quote");
   });
 
   it("renders published catalogue data supplied by the server read layer", () => {

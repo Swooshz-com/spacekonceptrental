@@ -105,6 +105,8 @@ describe("admin quote request inbox read boundary", () => {
             customer_name: "Maya Tan",
             customer_email: "maya@example.test",
             customer_phone: "+65 8123 4567",
+            customer_message:
+              "Please recommend a warm lounge setup for a reception.",
             event_date: "2026-06-20",
             venue: "Marina Bay Sands",
             status: "new",
@@ -150,6 +152,8 @@ describe("admin quote request inbox read boundary", () => {
             customerName: "Maya Tan",
             customerEmail: "maya@example.test",
             customerPhone: "+65 8123 4567",
+            customerMessage:
+              "Please recommend a warm lounge setup for a reception.",
             eventDate: "2026-06-20",
             venue: "Marina Bay Sands",
             status: "new",

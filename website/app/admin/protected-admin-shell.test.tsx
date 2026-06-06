@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { resolveServerAdminRuntimeRouteGateAdapter } from "../../lib/admin/authorization/server-admin-runtime-route-gate-adapter";
 import { resolveAdminProductDashboardRead } from "../../lib/products/admin-read/admin-product-dashboard-read";
+import { resolveAdminQuoteRequestDetailRead } from "../../lib/quote/admin-read/admin-quote-request-detail-read";
 import { resolveAdminQuoteRequestInboxRead } from "../../lib/quote/admin-read/admin-quote-request-dashboard-read";
 import {
   AdminShellContent,
@@ -17,6 +18,9 @@ vi.mock("../../lib/products/admin-read/admin-product-dashboard-read", () => ({
 }));
 vi.mock("../../lib/quote/admin-read/admin-quote-request-dashboard-read", () => ({
   resolveAdminQuoteRequestInboxRead: vi.fn()
+}));
+vi.mock("../../lib/quote/admin-read/admin-quote-request-detail-read", () => ({
+  resolveAdminQuoteRequestDetailRead: vi.fn()
 }));
 
 describe("protected admin shell", () => {
@@ -110,6 +114,80 @@ describe("protected admin shell", () => {
     expect(resolveAdminQuoteRequestInboxRead).toHaveBeenCalledWith({
       env: {
         ADMIN_TRUSTED_WORKSPACE_ID: "workspace-admin"
+      }
+    });
+    expect(resolveAdminQuoteRequestDetailRead).not.toHaveBeenCalled();
+  });
+
+  it("loads a dedicated quote detail read when the detail view requests one", async () => {
+    const quoteRequestId = "70000000-0000-4000-8000-000000000001";
+
+    process.env.ADMIN_TRUSTED_WORKSPACE_ID =
+      "99999999-9999-4999-8999-999999999999";
+
+    vi.mocked(resolveServerAdminRuntimeRouteGateAdapter).mockResolvedValueOnce({
+      allowed: true,
+      reason: "allowed",
+      statusCode: 200,
+      workspaceId: "workspace-secret"
+    });
+    vi.mocked(resolveAdminProductDashboardRead).mockResolvedValueOnce({
+      status: "loaded",
+      data: {
+        categories: [],
+        products: [],
+        images: [],
+        imageSummary: {
+          totalImages: 0,
+          activeImages: 0,
+          primaryImages: 0
+        }
+      }
+    });
+    vi.mocked(resolveAdminQuoteRequestInboxRead).mockResolvedValueOnce({
+      status: "loaded",
+      data: {
+        quoteRequests: []
+      }
+    });
+    vi.mocked(resolveAdminQuoteRequestDetailRead).mockResolvedValueOnce({
+      status: "loaded",
+      data: {
+        quoteRequest: {
+          id: quoteRequestId,
+          publicReference: "QR-20260603-NEWEST",
+          customerName: "Maya Tan",
+          customerMessage:
+            "Please recommend a warm lounge setup for a reception.",
+          status: "new",
+          source: "website",
+          createdAt: "2026-06-03T10:30:00.000Z",
+          items: [],
+          activity: []
+        }
+      }
+    });
+
+    await expect(
+      resolveProtectedAdminShellState({ quoteDetailId: quoteRequestId })
+    ).resolves.toMatchObject({
+      status: "authorised_admin",
+      quoteDetail: {
+        status: "loaded",
+        data: {
+          quoteRequest: {
+            id: quoteRequestId,
+            customerMessage:
+              "Please recommend a warm lounge setup for a reception."
+          }
+        }
+      }
+    });
+    expect(resolveAdminQuoteRequestDetailRead).toHaveBeenCalledWith({
+      quoteRequestId,
+      env: {
+        ADMIN_TRUSTED_WORKSPACE_ID:
+          "99999999-9999-4999-8999-999999999999"
       }
     });
   });
@@ -466,6 +544,59 @@ describe("protected admin shell", () => {
       screen.getByRole("heading", { name: /quote request inbox/i })
     ).toBeInTheDocument();
     expect(screen.getByText(/no quote requests are visible yet/i)).toBeInTheDocument();
+  });
+
+  it("renders quote detail from the dedicated detail read state", () => {
+    render(
+      <AdminShellContent
+        state={{
+          status: "authorised_admin",
+          dashboard: {
+            status: "unavailable"
+          },
+          quoteInbox: {
+            status: "loaded",
+            data: {
+              quoteRequests: []
+            }
+          },
+          quoteDetail: {
+            status: "loaded",
+            data: {
+              quoteRequest: {
+                id: "70000000-0000-4000-8000-000000000001",
+                publicReference: "QR-20260603-NEWEST",
+                customerName: "Maya Tan",
+                customerMessage:
+                  "Please recommend a warm lounge setup for a reception.",
+                status: "new",
+                source: "website",
+                createdAt: "2026-06-03T10:30:00.000Z",
+                items: [],
+                activity: []
+              }
+            }
+          }
+        }}
+        view={{
+          kind: "quote-detail",
+          quoteRequestId: "70000000-0000-4000-8000-000000000001"
+        }}
+      />
+    );
+
+    expect(
+      screen.getByRole("heading", { name: /quote request detail/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: /customer message/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/please recommend a warm lounge setup/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText(/details are temporarily unavailable/i)
+    ).not.toBeInTheDocument();
   });
 
   it("renders a generic quote request unavailable state without provider details", () => {

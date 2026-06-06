@@ -15,10 +15,10 @@ export const revalidate = 0;
 export default async function AdminQuoteRequestDetailPage({
   params
 }: AdminQuoteRequestDetailPageProps) {
-  const [{ quoteRequestId }, state] = await Promise.all([
-    params,
-    resolveProtectedAdminShellState()
-  ]);
+  const { quoteRequestId } = await params;
+  const state = await resolveProtectedAdminShellState({
+    quoteDetailId: quoteRequestId
+  });
 
   return (
     <AdminShellContent

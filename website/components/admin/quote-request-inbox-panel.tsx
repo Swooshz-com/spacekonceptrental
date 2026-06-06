@@ -32,6 +32,7 @@ type AdminQuoteRequestInboxQuoteRequest = {
   customerName?: string;
   customerEmail?: string;
   customerPhone?: string;
+  customerMessage?: string;
   eventDate?: string;
   venue?: string;
   status: AdminQuoteRequestStatus;
@@ -354,35 +355,49 @@ export function QuoteRequestInboxPanel({
                 >
                   Open quote detail {quoteRequest.publicReference}
                 </a>
-                {quoteRequest.items.length === 0 ? (
-                  <p>No requested item snapshots were captured.</p>
-                ) : (
-                  <ul className="admin-dashboard__list">
-                    {quoteRequest.items.map((item) => (
-                      <li key={item.id}>
-                        <strong>
-                          {item.quantity} x {item.productNameSnapshot}
-                        </strong>
-                        {item.notes ? <small>{item.notes}</small> : null}
-                      </li>
-                    ))}
-                  </ul>
-                )}
-                {activity.length === 0 ? (
-                  <p>No internal follow-up activity has been recorded yet.</p>
-                ) : (
-                  <ul
-                    className="admin-dashboard__list"
-                    aria-label={`Internal activity ${quoteRequest.publicReference}`}
-                  >
-                    {activity.map((activityItem) => (
-                      <li key={activityItem.id}>
-                        <strong>{activityText(activityItem)}</strong>
-                        <small>{activityItem.createdAt}</small>
-                      </li>
-                    ))}
-                  </ul>
-                )}
+                <section className="quote-inbox__section">
+                  <h4>Customer message</h4>
+                  {quoteRequest.customerMessage ? (
+                    <p>{quoteRequest.customerMessage}</p>
+                  ) : (
+                    <p>No customer message was submitted.</p>
+                  )}
+                </section>
+                <section className="quote-inbox__section">
+                  <h4>Requested items</h4>
+                  {quoteRequest.items.length === 0 ? (
+                    <p>No requested item snapshots were captured.</p>
+                  ) : (
+                    <ul className="admin-dashboard__list">
+                      {quoteRequest.items.map((item) => (
+                        <li key={item.id}>
+                          <strong>
+                            {item.quantity} x {item.productNameSnapshot}
+                          </strong>
+                          {item.notes ? <small>{item.notes}</small> : null}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </section>
+                <section className="quote-inbox__section">
+                  <h4>Admin-only internal activity</h4>
+                  {activity.length === 0 ? (
+                    <p>No internal follow-up activity has been recorded yet.</p>
+                  ) : (
+                    <ul
+                      className="admin-dashboard__list"
+                      aria-label={`Internal activity ${quoteRequest.publicReference}`}
+                    >
+                      {activity.map((activityItem) => (
+                        <li key={activityItem.id}>
+                          <strong>{activityText(activityItem)}</strong>
+                          <small>{activityItem.createdAt}</small>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </section>
                 <form
                   aria-label={`Update quote follow-up ${quoteRequest.publicReference}`}
                   className="category-management__form"
