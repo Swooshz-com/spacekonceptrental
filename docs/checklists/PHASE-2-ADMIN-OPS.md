@@ -196,6 +196,15 @@ and route/action boundaries are implemented and tested.
 - [x] Deploy dry-run docs state that no deployment is performed and no live service config is added.
 - [x] No deployment, Vercel config, Supabase Cloud config, secrets/env values, production evidence, browser Supabase, service-role runtime path, customer uploads, public quote tracking, customer accounts, customer-visible internal notes, notifications, CRM, n8n/Pinecone runtime change, or ecommerce flow is added.
 
+## Phase 2O-A/B Preview Deployment Approval Package And Operator Evidence Templates
+
+- [x] Preview deployment approval package docs cover purpose, scope, non-approval, reviewer checks, validation, dry-runs, Supabase Cloud review, Vercel review, server-only env setup, admin access, public listing/quote smoke, rollback/abort, and go/no-go decisions.
+- [x] Redacted operator evidence templates exist for preview evidence, env inventory, and go/no-go decision capture.
+- [x] Templates state that filled production evidence, screenshots containing secrets, and real env values must not be committed.
+- [x] `npm run validate:preview-approval-package` validates the approval package and static scope without deployment, Docker, real env values, or live provider connections.
+- [x] Pull-request CI runs the deterministic approval-package validator.
+- [x] No deployment, deployment approval, Vercel config, Supabase Cloud config, secrets/env values, filled production evidence, browser Supabase, service-role runtime path, customer uploads, public quote tracking, customer accounts, customer-visible internal notes, notifications, CRM, n8n/Pinecone runtime change, or ecommerce flow is added.
+
 ## Phase 2D-A Deployment Readiness And Smoke-Test Runbook
 
 - [x] Deployment readiness docs are refreshed for catalogue media, admin listing media upload, public quote handoff, and atomic admin quote workflow surfaces.

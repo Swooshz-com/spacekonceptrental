@@ -238,7 +238,34 @@ Suggested first PR:
   Supabase, production evidence, or ecommerce flows. Product language remains
   enquiry/quote/request.
 
-Current Phase 2N-A/B status:
+Current Phase 2O-A/B status:
+
+- PR #119 merged Phase 2N-A/B server runtime configuration hardening and
+  deploy dry-run harness at merge commit
+  `ad97aace9c2145af139a45f3e0f2d0b6d09a24a9`.
+- Latest completed capability is Phase 2N-A/B server runtime configuration
+  hardening and deploy dry-run harness.
+- Phase 2O-A/B is current as preview deployment approval package and operator
+  evidence template work.
+- `docs/PREVIEW-DEPLOYMENT-APPROVAL-PACKAGE.md` records the future approval
+  packet for reviewer checks, validation, dry-run commands, Supabase Cloud
+  review, Vercel review, server-only env setup by variable name, admin access,
+  public listing/quote smoke checks, rollback/abort checks, and final
+  go/no-go decision capture.
+- Redacted templates under `docs/templates/` are template-only and state that
+  filled production evidence, screenshots containing secrets, and real env
+  values must not be committed.
+- `npm run validate:preview-approval-package` validates the approval packet
+  and static scope without deployment, Docker, real env values, or live
+  provider connections.
+- No deployment, deployment approval, Vercel config, Supabase Cloud config,
+  real env values, production evidence, browser Supabase, service-role runtime
+  paths, n8n/Pinecone/RAG runtime work, public quote tracking, customer
+  accounts, customer-visible internal notes, notifications, CRM integration,
+  public/customer upload routes, transcript runtime paths, or ecommerce flow
+  is added.
+
+Previous Current Phase 2N-A/B status:
 
 - PR #118 merged Phase 2M-A/B preview/deployment review preflight and CI
   parity hardening at merge commit

@@ -23,6 +23,9 @@ jobs:
         with:
           node-version: 24
 
+      - name: Validate preview approval package
+        run: npm run validate:preview-approval-package
+
       - name: Validate Supabase migration scaffold
         run: npm run validate:supabase-migrations
 

@@ -19,6 +19,10 @@ performed by the preflight gate.
 Phase 2N-A/B adds server runtime configuration hardening and a local deploy
 dry-run harness. No deployment is performed by the dry-run harness.
 
+Phase 2O-A/B adds preview deployment approval package docs and redacted
+operator evidence templates before any later deployment approval. No
+deployment is performed by Phase 2O-A/B.
+
 ## Purpose
 
 Use this runbook during a future approved deployment review to prove the SKR
@@ -196,6 +200,7 @@ traffic:
 
 - `npm run validate:release-candidate`.
 - `npm run validate:deploy-dry-run`.
+- `npm run validate:preview-approval-package`.
 - Confirm the Phase 2L-A/B release-candidate acceptance tests are included in
   `cd website && npm test`.
 - `cd website && npm test`.

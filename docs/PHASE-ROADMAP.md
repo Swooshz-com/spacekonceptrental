@@ -1108,3 +1108,19 @@ SaaS chatbot runtime work, Pinecone packages/env/API keys, embedding or
 reranking runtime, `/api/chat` retrieval/RAG wiring, transcript runtime paths,
 or ecommerce flows such as carts, checkout, payments, stock reservation,
 confirmed booking, order fulfilment, or online ordering.
+
+Phase 2O-A/B adds preview deployment approval package docs and redacted
+operator evidence templates. It gives the future deployment lane an
+operator-facing approval packet, redacted evidence templates, go/no-go
+decision capture, and `npm run validate:preview-approval-package` static
+validation before any separately approved preview or deployment PR.
+
+Phase 2O-A/B does not deploy, approve deployment, add Vercel or Supabase
+Cloud config, add real env values, add filled production evidence, add browser
+Supabase, add service-role runtime paths, access `website/chat-config.js`, add
+public/customer upload routes, add customer accounts, public quote tracking,
+customer-visible internal notes, notifications, CRM integration, n8n/Pinecone
+runtime changes, SaaS chatbot runtime work, Pinecone packages/env/API keys,
+embedding or reranking runtime, `/api/chat` retrieval/RAG wiring, transcript
+runtime paths, or ecommerce flows such as carts, checkout, payments, stock
+reservation, confirmed booking, order fulfilment, or online ordering.

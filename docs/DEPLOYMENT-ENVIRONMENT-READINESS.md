@@ -15,6 +15,9 @@ Phase 2M-A/B adds preview/deployment review preflight and CI parity
 hardening. No deployment is performed by that preflight work.
 Phase 2N-A/B adds server runtime configuration hardening and a local deploy
 dry-run harness. No deployment is performed by that dry-run work.
+Phase 2O-A/B adds preview deployment approval package docs and redacted
+operator evidence templates. No deployment is performed by that approval
+package work.
 
 The future target shape remains a Vercel-hosted `website/` Next.js app with
 server-only Supabase and a temporary server-side n8n provider behind
@@ -181,6 +184,9 @@ Before public traffic is enabled, reviewers must confirm:
   candidate branch.
 - `npm run validate:deploy-dry-run` has passed locally for the candidate
   branch without deployment.
+- `npm run validate:preview-approval-package` has passed locally or in CI for
+  the candidate branch without deployment.
+- `docs/PREVIEW-DEPLOYMENT-APPROVAL-PACKAGE.md` has been reviewed.
 - The Phase 2L-A/B release-candidate acceptance suite has passed locally or in
   CI for the candidate branch.
 - A later deployment PR has explicit current approval.
@@ -194,7 +200,9 @@ Before public traffic is enabled, reviewers must confirm:
   work.
 - The smoke-test checklist in `docs/DEPLOYMENT-SMOKE-TEST-RUNBOOK.md` is run
   before public traffic.
-- Evidence is captured using `docs/templates/DEPLOYMENT-EVIDENCE.md`.
+- Evidence is captured using redacted templates only. Filled production
+  evidence stays outside the repo unless a later approved policy says
+  otherwise.
 - Direct browser-role listing metadata table writes are blocked while
   `execute_admin_product_write(...)` still succeeds for owner/admin users and
   enqueues a local search-index job.
