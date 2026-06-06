@@ -4,20 +4,20 @@ This is the quick status page for the SKR repo. Use `docs/PHASE-2-READINESS-PLAN
 
 ## Current phase
 
-Current phase: Phase 2N-A/B - server runtime configuration hardening and deploy dry-run harness.
+Current phase: Phase 2O-A/B - preview deployment approval package and operator evidence templates.
 
-Latest completed capability: Phase 2M-A/B preview/deployment review preflight and CI parity hardening.
+Latest completed capability: Phase 2N-A/B server runtime configuration hardening and deploy dry-run harness.
 
-Last merged capability PR: #118
+Last merged capability PR: #119
 
-Merge commit: `a8bd77239ebf8e6908d36bc5f5c4866ffa2dd489`
+Merge commit: `ad97aace9c2145af139a45f3e0f2d0b6d09a24a9`
 
-Phase 2N-A/B adds server runtime configuration hardening and a local deploy
-dry-run harness. It centralizes parsing for the existing server-only settings,
-normalizes invalid or missing values into safe unavailable/fallback behavior,
-and adds a local `npm run validate:deploy-dry-run` command for release-gate
-plus config/static checks before any future separately approved deployment
-review.
+Phase 2O-A/B adds the preview deployment approval package and redacted
+operator evidence templates for a future explicitly approved preview or
+deployment PR. It records required reviewer checks, validation and dry-run
+commands, Supabase Cloud and Vercel review checklists, server-only env setup
+by variable name only, admin access checks, public listing/quote smoke checks,
+rollback/abort checks, and a final go/no-go decision table.
 
 Public users only see public-safe published listing, category, and listing
 image data. Public quote/enquiry success stays receipt-only with no public
@@ -25,15 +25,16 @@ tracking/status link. Admin internal notes remain admin-only. Supabase remains
 canonical for website/admin listing and quote data. Pinecone remains a future
 derived index only and is not used as canonical business storage.
 
-Phase 2N-A/B is local hardening and dry-run readiness only. It does not deploy, add
-Vercel config, connect Supabase Cloud, add real secrets or env values, add
-production evidence, add Pinecone runtime code, Pinecone packages, Pinecone
-env reads, secrets, API keys, Pinecone executors, n8n workflow/runtime
-changes, embedding runtime, sync workers, `/api/chat` retrieval wiring,
-search-index document writers, real vector upsert/delete, runtime reranking,
-hybrid search runtime, browser Supabase, service-role runtime paths, public or
-customer upload routes, public quote tracking, customer-visible internal
-notes, notifications, CRM integration, customer accounts, or ecommerce flows.
+Phase 2O-A/B is approval packaging only. It does not deploy, approve
+deployment, add Vercel config, connect Supabase Cloud, add real secrets or env
+values, add filled production evidence, add Pinecone runtime code, Pinecone
+packages, Pinecone env reads, secrets, API keys, Pinecone executors, n8n
+workflow/runtime changes, embedding runtime, sync workers, `/api/chat`
+retrieval wiring, search-index document writers, real vector upsert/delete,
+runtime reranking, hybrid search runtime, browser Supabase, service-role
+runtime paths, public or customer upload routes, public quote tracking,
+customer-visible internal notes, notifications, CRM integration, customer
+accounts, or ecommerce flows.
 
 Runtime transcript writes remain blocked. Runtime transcript reads remain
 blocked. Live Supabase RPC executor remains blocked. Any service-role or
@@ -56,7 +57,29 @@ config, env/secrets, and production evidence remain blocked.
 
 ## Remaining-work map
 
-Completed through PR #118:
+Completed through PR #119:
+
+- PR #119 merged Phase 2N-A/B server runtime configuration hardening and
+  deploy dry-run harness at merge commit
+  `ad97aace9c2145af139a45f3e0f2d0b6d09a24a9`.
+- The latest completed capability is Phase 2N-A/B server runtime
+  configuration hardening and deploy dry-run harness. It centralizes typed
+  server-only config parsing for the existing runtime settings and adds a
+  local deploy dry-run harness without live deployment, cloud config, real env
+  values, production evidence, or runtime scope expansion.
+- Phase 2O-A/B is current as preview deployment approval package and operator
+  evidence templates work. It adds docs/templates/static validation around the
+  future deployment approval path without performing or approving deployment.
+
+Previous Current Phase 2N-A/B status:
+
+Current phase: Phase 2N-A/B - server runtime configuration hardening and deploy dry-run harness.
+
+Latest completed capability: Phase 2M-A/B preview/deployment review preflight and CI parity hardening.
+
+Last merged capability PR: #118
+
+Merge commit: `a8bd77239ebf8e6908d36bc5f5c4866ffa2dd489`
 
 - PR #118 merged Phase 2M-A/B preview/deployment review preflight and CI
   parity hardening at merge commit

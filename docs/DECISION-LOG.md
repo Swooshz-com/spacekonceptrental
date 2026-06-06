@@ -1838,6 +1838,42 @@ runtime paths, add retention cleanup jobs, or add ecommerce flows such as
 carts, checkout, payments, stock reservation, confirmed booking, order
 fulfilment, or online ordering.
 
+## 2026-06-06: Preview Deployment Approval Package And Operator Evidence Templates
+
+Decision: Phase 2O-A/B adds preview deployment approval packaging and redacted operator evidence templates.
+
+Reason: PR #119 merged Phase 2N-A/B at
+`ad97aace9c2145af139a45f3e0f2d0b6d09a24a9`, leaving the repo with typed
+server-only runtime config parsing and a deploy dry-run harness, but without a
+single final operator packet for a future explicitly approved preview or
+deployment PR. The next safe step is to create the approval package,
+redacted-only evidence templates, go/no-go decision template, and deterministic
+static validation around that approval lane.
+
+The implementation adds `docs/PREVIEW-DEPLOYMENT-APPROVAL-PACKAGE.md`,
+redacted templates under `docs/templates/`, and
+`npm run validate:preview-approval-package`. The validator checks that PR #119
+and its merge commit are recorded, required docs/templates exist, required
+release/dry-run commands are named, explicit later deployment approval is
+required, approval docs/templates avoid raw values, and forbidden runtime,
+provider, evidence, deployment, browser Supabase, service-role, n8n/Pinecone,
+public quote tracking, customer account, upload, notification, CRM, transcript,
+and ecommerce surfaces remain absent.
+
+No deployment is performed in this PR. Phase 2O-A/B does not approve
+deployment, add Vercel config, connect Supabase Cloud, add real secrets or env
+values, add filled production evidence, add browser Supabase, add service-role
+runtime paths, access `website/chat-config.js`, add public/customer upload
+routes, add customer accounts, add public quote tracking, expose
+customer-visible internal notes, add notifications or CRM integration, change
+n8n/Pinecone runtime behavior, add SaaS chatbot runtime work, add Pinecone
+SDK/package dependencies, add Pinecone env vars or API keys, add
+embedding/reranking runtime, wire `/api/chat` to retrieval/RAG, wire
+transcript reads or writes into `/api/chat`, add admin transcript UI, add
+transcript deletion/export runtime paths, add retention cleanup jobs, or add
+ecommerce flows such as carts, checkout, payments, stock reservation,
+confirmed booking, order fulfilment, or online ordering.
+
 ## 2026-06-06: Server Runtime Configuration Hardening And Deploy Dry-Run Harness
 
 Decision: Phase 2N-A/B hardens server-only runtime configuration parsing and deploy dry-run validation.

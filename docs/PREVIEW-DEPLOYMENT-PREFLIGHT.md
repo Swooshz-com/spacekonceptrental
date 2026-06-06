@@ -6,6 +6,8 @@ No deployment is performed by Phase 2M-A/B.
 
 No deployment is performed by Phase 2N-A/B.
 
+No deployment is performed by Phase 2O-A/B.
+
 Phase 2M-A/B is a local and CI readiness gate for a future preview/deployment
 review. It makes the release-candidate validation commands deterministic and
 names the operator checks that must be completed before any later approved
@@ -14,13 +16,20 @@ deployment PR can enable public traffic.
 Phase 2N-A/B adds a server-only runtime config contract and local deploy
 dry-run harness for the same future review lane.
 
+Phase 2O-A/B adds the operator-facing approval package and redacted evidence
+templates for the same future review lane. It does not approve deployment.
+
 ## Future Preview/Deployment Review Checklist
 
 - Confirm the later deployment PR has explicit current approval to deploy.
 - Confirm `npm run validate:release-candidate` passes for the candidate branch.
 - Confirm `npm run validate:deploy-dry-run` passes for the candidate branch.
+- Confirm `npm run validate:preview-approval-package` passes for the candidate
+  branch.
 - Confirm CI runs the same release-gate commands, including
   `npm run test:supabase-rls` and `git diff --check`.
+- Confirm `docs/PREVIEW-DEPLOYMENT-APPROVAL-PACKAGE.md` and the redacted
+  templates under `docs/templates/` are reviewed before public traffic.
 - Confirm the candidate branch does not add Vercel config, Supabase Cloud
   config, real secrets, env values, production evidence, browser Supabase,
   service-role runtime paths, n8n/Pinecone runtime changes, customer accounts,
@@ -128,6 +137,8 @@ raw values.
 
 - Abort before public traffic if any release-gate command fails.
 - Abort before public traffic if `npm run validate:deploy-dry-run` fails.
+- Abort before public traffic if `npm run validate:preview-approval-package`
+  fails.
 - Abort before public traffic if Docker-backed `npm run test:supabase-rls`
   cannot run.
 - Abort before public traffic if any secret, env value, local config,
