@@ -21,7 +21,8 @@ describe("GET /api/admin/auth-check", () => {
   it("calls resolveServerAdminRuntimeRouteGateAdapter with expected parameters and returns safe allowed JSON", async () => {
     process.env.ADMIN_EXPECTED_ORIGIN = "https://example.com";
     process.env.ADMIN_EXPECTED_HOST = "example.com";
-    process.env.ADMIN_TRUSTED_WORKSPACE_ID = "ws-123";
+    process.env.ADMIN_TRUSTED_WORKSPACE_ID =
+      "99999999-9999-4999-8999-999999999999";
 
     vi.mocked(resolveServerAdminRuntimeRouteGateAdapter).mockResolvedValueOnce({
       allowed: true,
@@ -51,7 +52,8 @@ describe("GET /api/admin/auth-check", () => {
         gate: {
           decision: {
             workspace: {
-              trustedServerWorkspaceId: "ws-123"
+              trustedServerWorkspaceId:
+                "99999999-9999-4999-8999-999999999999"
             }
           }
         }

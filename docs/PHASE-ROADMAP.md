@@ -1092,3 +1092,19 @@ SaaS chatbot runtime work, Pinecone packages/env/API keys, embedding or
 reranking runtime, `/api/chat` retrieval/RAG wiring, transcript runtime paths,
 or ecommerce flows such as carts, checkout, payments, stock reservation,
 confirmed booking, order fulfilment, or online ordering.
+
+Phase 2N-A/B adds server runtime configuration hardening and a local deploy
+dry-run harness. It centralizes typed, server-only parsing for the existing
+Supabase, catalogue, quote, admin, chat, n8n, and trusted-header settings and
+adds `npm run validate:deploy-dry-run` as a local review harness that runs the
+release-candidate gate plus static/runtime config checks.
+
+Phase 2N-A/B does not deploy, add Vercel or Supabase Cloud config, add real
+env values, add production evidence, add browser Supabase, add service-role
+runtime paths, access `website/chat-config.js`, add public/customer upload
+routes, add customer accounts, public quote tracking, customer-visible
+internal notes, notifications, CRM integration, n8n/Pinecone runtime changes,
+SaaS chatbot runtime work, Pinecone packages/env/API keys, embedding or
+reranking runtime, `/api/chat` retrieval/RAG wiring, transcript runtime paths,
+or ecommerce flows such as carts, checkout, payments, stock reservation,
+confirmed booking, order fulfilment, or online ordering.

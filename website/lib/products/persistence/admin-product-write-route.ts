@@ -18,6 +18,7 @@ import type {
   StateChangingAdminOperation
 } from "../../admin/authorization/server-admin-request-security-preflight";
 import { readBoundedJsonBody } from "../../admin/api/bounded-json-body-reader";
+import { getAdminRouteRuntimeConfig } from "../../server-runtime-config";
 import {
   getProductPersistence,
   type CategoryDraft,
@@ -576,22 +577,8 @@ function successStatus(action: AdminProductWriteAction) {
     : 200;
 }
 
-function getEnvValue(
-  env: AdminProductWriteRouteEnv | undefined,
-  name: keyof AdminProductWriteRouteEnv
-) {
-  return env && name in env ? env[name] ?? null : process.env[name] ?? null;
-}
-
 function getRouteEnv(dependencies: AdminProductWriteRouteDependencies) {
-  return {
-    expectedOrigin: getEnvValue(dependencies.env, "ADMIN_EXPECTED_ORIGIN"),
-    expectedHost: getEnvValue(dependencies.env, "ADMIN_EXPECTED_HOST"),
-    trustedServerWorkspaceId: getEnvValue(
-      dependencies.env,
-      "ADMIN_TRUSTED_WORKSPACE_ID"
-    )
-  };
+  return getAdminRouteRuntimeConfig(dependencies.env ?? process.env);
 }
 
 function getProofMaxAgeMs(dependencies: AdminProductWriteRouteDependencies) {

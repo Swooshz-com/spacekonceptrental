@@ -231,7 +231,9 @@ describe("Phase 2A-A deployment smoke-test runbook", () => {
     expect(catalogueSource).not.toContain(".upsert(");
     expect(catalogueSource).not.toContain(".delete(");
     expect(quoteRouteSource).toContain("consumeQuoteRateLimit");
-    expect(quoteRouteSource).toContain("QUOTE_TRUSTED_CLIENT_IP_HEADER");
+    expect(readRepoFile("website/lib/server-runtime-config.ts")).toContain(
+      "QUOTE_TRUSTED_CLIENT_IP_HEADER"
+    );
     expect(chatPersistenceSource).not.toContain("@supabase/");
     expect(chatPersistenceSource).not.toContain("createServerSupabaseClient");
     expect(productPersistenceSource).not.toContain("@supabase/");

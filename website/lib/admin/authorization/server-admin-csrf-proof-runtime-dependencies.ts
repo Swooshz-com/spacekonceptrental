@@ -13,6 +13,7 @@ import type {
   ServerAdminCsrfProofVerifierDependencies,
   ServerAdminCsrfSignatureVerifierInput
 } from "./server-admin-csrf-proof-verifier";
+import { getAdminCsrfProofSecret } from "../../server-runtime-config";
 
 const bindingVersion = "csrf-session-binding-v1";
 const csrfProofBindingOperations = new Set<ServerAdminCsrfProofBindingOperation>(
@@ -32,8 +33,7 @@ export function generateServerAdminCsrfNonce(): string {
 }
 
 function getCsrfSecret(): string | null {
-  const secret = process.env.ADMIN_CSRF_PROOF_SECRET?.trim();
-  return secret ? secret : null;
+  return getAdminCsrfProofSecret();
 }
 
 function computeHmacBase64Url(value: string): string | null {

@@ -16,6 +16,9 @@ Phase 2M-A/B adds preview/deployment review preflight and CI parity
 hardening before any future preview/deployment review. No deployment is
 performed by the preflight gate.
 
+Phase 2N-A/B adds server runtime configuration hardening and a local deploy
+dry-run harness. No deployment is performed by the dry-run harness.
+
 ## Purpose
 
 Use this runbook during a future approved deployment review to prove the SKR
@@ -192,6 +195,7 @@ Run these commands before a future deployment PR is considered for public
 traffic:
 
 - `npm run validate:release-candidate`.
+- `npm run validate:deploy-dry-run`.
 - Confirm the Phase 2L-A/B release-candidate acceptance tests are included in
   `cd website && npm test`.
 - `cd website && npm test`.

@@ -1,5 +1,6 @@
 import "server-only";
 
+import { getTrustedClientIpHeader as getConfiguredTrustedClientIpHeader } from "../../../lib/server-runtime-config";
 import { createQuoteRequest } from "../../../lib/quote/quote-repository";
 import type {
   QuotePersistenceResult,
@@ -23,15 +24,6 @@ const MAX_CONTACT_RATE_LIMIT_BUCKETS = 1_000;
 const FALLBACK_RATE_LIMIT_BUCKET_KEY = "untrusted-client-ip";
 const FALLBACK_MESSAGE =
   "Quote requests are temporarily unavailable. Please try again later.";
-// Configure only with a deployment header overwritten by a trusted proxy/CDN.
-// User-supplied forwarding headers must not be trusted by default.
-const TRUSTED_CLIENT_IP_HEADERS = new Set([
-  "cf-connecting-ip",
-  "fly-client-ip",
-  "x-real-ip",
-  "x-vercel-forwarded-for",
-  "x-forwarded-for"
-]);
 
 function createRequestId() {
   return crypto.randomUUID();
@@ -208,15 +200,7 @@ async function parseBoundedJsonBody(
 }
 
 function getTrustedClientIpHeader() {
-  const headerName = process.env.QUOTE_TRUSTED_CLIENT_IP_HEADER
-    ?.trim()
-    .toLowerCase();
-
-  if (!headerName || !TRUSTED_CLIENT_IP_HEADERS.has(headerName)) {
-    return undefined;
-  }
-
-  return headerName;
+  return getConfiguredTrustedClientIpHeader("quote");
 }
 
 function getClientIpFromHeader(request: Request, headerName: string) {

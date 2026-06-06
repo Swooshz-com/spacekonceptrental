@@ -28,7 +28,7 @@ type BindingScenario = {
 };
 
 const now = 1_700_000_000_000;
-const trustedWorkspaceId = "workspace-1";
+const trustedWorkspaceId = "99999999-9999-4999-8999-999999999999";
 const routeEnv = {
   ADMIN_EXPECTED_ORIGIN: "https://admin.space.test",
   ADMIN_EXPECTED_HOST: "admin.space.test",

@@ -19,6 +19,7 @@ const approvedAuthBoundaryPath =
 const approvedRequestMetadataBoundaryPath =
   "website/lib/admin/authorization/server-admin-request-metadata-adapter.ts";
 const approvedCatalogueReadPath = "website/lib/catalogue/catalogue-repository.ts";
+const approvedServerRuntimeConfigPath = "website/lib/server-runtime-config.ts";
 const sourceExtensions = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs"]);
 
 const expectedN8nWorkflowHashes = new Map([
@@ -328,7 +329,8 @@ describe("Phase 2B-F checklist hygiene and phase status reconciliation", () => {
         ({ filePath }) =>
           !filePath.startsWith("website/app/api/") &&
           !filePath.startsWith("website/lib/supabase/") &&
-          filePath !== approvedCatalogueReadPath
+          filePath !== approvedCatalogueReadPath &&
+          filePath !== approvedServerRuntimeConfigPath
       )
       .map(({ source }) => source)
       .join("\n");
@@ -412,7 +414,9 @@ describe("Phase 2B-F checklist hygiene and phase status reconciliation", () => {
     expect(catalogueSource).not.toContain(".upsert(");
     expect(catalogueSource).not.toContain(".delete(");
     expect(quoteRouteSource).toContain("consumeQuoteRateLimit");
-    expect(quoteRouteSource).toContain("QUOTE_TRUSTED_CLIENT_IP_HEADER");
+    expect(readRepoFile("website/lib/server-runtime-config.ts")).toContain(
+      "QUOTE_TRUSTED_CLIENT_IP_HEADER"
+    );
     expect(quoteRouteSource).toContain("RATE_LIMIT_MAX_REQUESTS");
     expect(workflowFiles).toEqual([...expectedN8nWorkflowHashes.keys()].sort());
 

@@ -1,5 +1,6 @@
 import "server-only";
 
+import { getTrustedClientIpHeader as getConfiguredTrustedClientIpHeader } from "../../../lib/server-runtime-config";
 import { getChatProvider } from "../../../lib/chat/provider-factory";
 import {
   ChatProviderError,
@@ -23,15 +24,6 @@ const MAX_IP_RATE_LIMIT_BUCKETS = 1_000;
 const MAX_SESSION_RATE_LIMIT_BUCKETS = 1_000;
 const MAX_IDEMPOTENCY_ENTRIES = 1_000;
 const FALLBACK_RATE_LIMIT_BUCKET_KEY = "untrusted-client-ip";
-// Configure only with a deployment header overwritten by a trusted proxy/CDN.
-// User-supplied forwarding headers must not be trusted by default.
-const TRUSTED_CLIENT_IP_HEADERS = new Set([
-  "cf-connecting-ip",
-  "fly-client-ip",
-  "x-real-ip",
-  "x-vercel-forwarded-for",
-  "x-forwarded-for"
-]);
 
 type ValidationResult =
   | { ok: true; value: ChatProviderRequest }
@@ -373,15 +365,7 @@ function chatResponse(
 }
 
 function getTrustedClientIpHeader() {
-  const headerName = process.env.CHAT_TRUSTED_CLIENT_IP_HEADER
-    ?.trim()
-    .toLowerCase();
-
-  if (!headerName || !TRUSTED_CLIENT_IP_HEADERS.has(headerName)) {
-    return undefined;
-  }
-
-  return headerName;
+  return getConfiguredTrustedClientIpHeader("chat");
 }
 
 function getClientIpFromHeader(request: Request, headerName: string) {

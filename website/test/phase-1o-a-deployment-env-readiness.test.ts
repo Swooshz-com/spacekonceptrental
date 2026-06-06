@@ -191,12 +191,9 @@ describe("Phase 1O-A deployment environment readiness", () => {
     );
 
     expect(envReadingSources.map(({ filePath }) => filePath).sort()).toEqual([
-      "website/app/api/chat/route.ts",
-      "website/app/api/quote/route.ts",
       "website/lib/catalogue/catalogue-repository.ts",
-      "website/lib/chat/n8n-provider.ts",
-      "website/lib/chat/provider-factory.ts",
       "website/lib/quote/quote-repository.ts",
+      "website/lib/server-runtime-config.ts",
       "website/lib/supabase/env.ts"
     ]);
 
@@ -238,6 +235,7 @@ describe("Phase 1O-A deployment environment readiness", () => {
     );
     const bootstrapExample = readRepoFile(bootstrapExamplePath);
     const quoteRouteSource = readRepoFile("website/app/api/quote/route.ts");
+    const runtimeConfigSource = readRepoFile("website/lib/server-runtime-config.ts");
     const chatProviderSource = readRepoFile("website/lib/chat/n8n-provider.ts");
     const chatPersistenceSource = readRepoFile(
       "website/lib/chat/persistence/disabled-chat-persistence.ts"
@@ -256,8 +254,8 @@ describe("Phase 1O-A deployment environment readiness", () => {
     expect(bootstrapExample).toContain("EXAMPLE ONLY");
     expect(bootstrapExample).toContain("rollback;");
     expect(quoteRouteSource).toContain("consumeQuoteRateLimit");
-    expect(quoteRouteSource).toContain("QUOTE_TRUSTED_CLIENT_IP_HEADER");
-    expect(chatProviderSource).toContain("process.env.N8N_CHAT_WEBHOOK_URL");
+    expect(runtimeConfigSource).toContain("QUOTE_TRUSTED_CLIENT_IP_HEADER");
+    expect(chatProviderSource).toContain("getN8nChatRuntimeConfig");
     expect(chatPersistenceSource).not.toContain("@supabase/");
     expect(chatPersistenceSource).not.toContain("createServerSupabaseClient");
     expect(productPersistenceSource).not.toContain("@supabase/");

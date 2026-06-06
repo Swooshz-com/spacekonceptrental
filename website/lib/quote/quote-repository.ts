@@ -1,5 +1,6 @@
 import "server-only";
 
+import { getQuoteWorkspaceId } from "../server-runtime-config";
 import { createServerSupabaseClient } from "../supabase/server";
 import type { SupabaseServerEnvName } from "../supabase/env";
 import type { QuotePersistenceResult, QuoteSubmission } from "./types";
@@ -37,9 +38,6 @@ type QuoteRepositoryOptions = {
   };
 };
 
-const workspaceIdPattern =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-
 function defaultCreateId() {
   return crypto.randomUUID();
 }
@@ -52,13 +50,15 @@ function defaultCreatePublicReference() {
 }
 
 function readWorkspaceId(options: QuoteRepositoryOptions) {
-  const workspaceId =
-    options.workspaceId ??
-    options.env?.QUOTE_WORKSPACE_ID ??
-    process.env.QUOTE_WORKSPACE_ID;
-  const trimmed = workspaceId?.trim();
+  if (options.workspaceId !== undefined) {
+    return (
+      getQuoteWorkspaceId({
+        QUOTE_WORKSPACE_ID: options.workspaceId
+      }) ?? undefined
+    );
+  }
 
-  return trimmed && workspaceIdPattern.test(trimmed) ? trimmed : undefined;
+  return getQuoteWorkspaceId(options.env ?? process.env) ?? undefined;
 }
 
 function getSupabase(options: QuoteRepositoryOptions = {}) {

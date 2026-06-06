@@ -9,6 +9,7 @@ const approvedAuthBoundaryPath =
 const approvedRequestMetadataBoundaryPath =
   "website/lib/admin/authorization/server-admin-request-metadata-adapter.ts";
 const approvedCatalogueReadPath = "website/lib/catalogue/catalogue-repository.ts";
+const approvedServerRuntimeConfigPath = "website/lib/server-runtime-config.ts";
 const sourceExtensions = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs"]);
 
 function readRepoFile(relativePath: string) {
@@ -137,7 +138,8 @@ describe("Phase 2B-K server-only Supabase Auth identity boundary", () => {
           filePath !== approvedRequestMetadataBoundaryPath &&
           !filePath.startsWith("website/app/api/") &&
           !filePath.startsWith("website/lib/supabase/") &&
-          filePath !== approvedCatalogueReadPath
+          filePath !== approvedCatalogueReadPath &&
+          filePath !== approvedServerRuntimeConfigPath
       )
       .map(({ source }) => source)
       .join("\n");

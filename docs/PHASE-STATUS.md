@@ -4,19 +4,19 @@ This is the quick status page for the SKR repo. Use `docs/PHASE-2-READINESS-PLAN
 
 ## Current phase
 
-Current phase: Phase 2M-A/B - preview/deployment review preflight and CI parity hardening.
+Current phase: Phase 2N-A/B - server runtime configuration hardening and deploy dry-run harness.
 
-Latest completed capability: Phase 2L-A/B release-candidate acceptance suite and final MVP polish.
+Latest completed capability: Phase 2M-A/B preview/deployment review preflight and CI parity hardening.
 
-Last merged capability PR: #117
+Last merged capability PR: #118
 
-Merge commit: `aceee2ded00aee41b4e20197091f8527d9e8f8b7`
+Merge commit: `a8bd77239ebf8e6908d36bc5f5c4866ffa2dd489`
 
-Phase 2M-A/B adds preview/deployment review preflight and CI parity
-hardening. It makes the normal pull-request validation include the full
-release-gate command set where practical, including Docker-backed local
-Supabase RLS/schema tests and `git diff --check`, and records the operator
-preflight checklist for a future separately approved preview/deployment
+Phase 2N-A/B adds server runtime configuration hardening and a local deploy
+dry-run harness. It centralizes parsing for the existing server-only settings,
+normalizes invalid or missing values into safe unavailable/fallback behavior,
+and adds a local `npm run validate:deploy-dry-run` command for release-gate
+plus config/static checks before any future separately approved deployment
 review.
 
 Public users only see public-safe published listing, category, and listing
@@ -25,7 +25,7 @@ tracking/status link. Admin internal notes remain admin-only. Supabase remains
 canonical for website/admin listing and quote data. Pinecone remains a future
 derived index only and is not used as canonical business storage.
 
-Phase 2M-A/B is preflight and CI readiness only. It does not deploy, add
+Phase 2N-A/B is local hardening and dry-run readiness only. It does not deploy, add
 Vercel config, connect Supabase Cloud, add real secrets or env values, add
 production evidence, add Pinecone runtime code, Pinecone packages, Pinecone
 env reads, secrets, API keys, Pinecone executors, n8n workflow/runtime
@@ -56,10 +56,33 @@ config, env/secrets, and production evidence remain blocked.
 
 ## Remaining-work map
 
-Completed through PR #117:
+Completed through PR #118:
 
-- PR #117 merged Phase 2L-A/B release-candidate acceptance suite and final MVP
-  polish at merge commit
+- PR #118 merged Phase 2M-A/B preview/deployment review preflight and CI
+  parity hardening at merge commit
+  `a8bd77239ebf8e6908d36bc5f5c4866ffa2dd489`.
+- The latest completed capability is Phase 2M-A/B preview/deployment review
+  preflight and CI parity hardening. It aligns CI and local review gates
+  around the release-candidate command set and records a future
+  preview/deployment preflight without deploying or adding live service config.
+- Phase 2N-A/B is current as server runtime configuration hardening and deploy
+  dry-run harness work. It centralizes typed server-only config parsing for the
+  existing runtime settings and adds a local deploy dry-run harness without
+  live deployment, cloud config, real env values, production evidence, or
+  runtime scope expansion.
+
+Previous Current Phase 2M-A/B status:
+
+Current phase: Phase 2M-A/B - preview/deployment review preflight and CI parity hardening.
+
+Latest completed capability: Phase 2L-A/B release-candidate acceptance suite and final MVP polish.
+
+Last merged capability PR: #117
+
+Merge commit: `aceee2ded00aee41b4e20197091f8527d9e8f8b7`
+
+- PR #117 merged Phase 2L-A/B release-candidate acceptance suite and final
+  MVP polish at merge commit
   `aceee2ded00aee41b4e20197091f8527d9e8f8b7`.
 - The latest completed capability is Phase 2L-A/B release-candidate
   acceptance suite and final MVP polish. It ties public catalogue/listing/

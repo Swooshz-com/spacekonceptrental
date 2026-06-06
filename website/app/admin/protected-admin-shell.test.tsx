@@ -35,7 +35,8 @@ describe("protected admin shell", () => {
   it("uses the approved route-gate adapter for admin shell access", async () => {
     process.env.ADMIN_EXPECTED_ORIGIN = "https://space.example";
     process.env.ADMIN_EXPECTED_HOST = "space.example";
-    process.env.ADMIN_TRUSTED_WORKSPACE_ID = "workspace-admin";
+    process.env.ADMIN_TRUSTED_WORKSPACE_ID =
+      "99999999-9999-4999-8999-999999999999";
 
     vi.mocked(resolveServerAdminRuntimeRouteGateAdapter).mockResolvedValueOnce({
       allowed: true,
@@ -100,7 +101,8 @@ describe("protected admin shell", () => {
         gate: {
           decision: {
             workspace: {
-              trustedServerWorkspaceId: "workspace-admin"
+              trustedServerWorkspaceId:
+                "99999999-9999-4999-8999-999999999999"
             }
           }
         }
@@ -108,12 +110,14 @@ describe("protected admin shell", () => {
     );
     expect(resolveAdminProductDashboardRead).toHaveBeenCalledWith({
       env: {
-        ADMIN_TRUSTED_WORKSPACE_ID: "workspace-admin"
+        ADMIN_TRUSTED_WORKSPACE_ID:
+          "99999999-9999-4999-8999-999999999999"
       }
     });
     expect(resolveAdminQuoteRequestInboxRead).toHaveBeenCalledWith({
       env: {
-        ADMIN_TRUSTED_WORKSPACE_ID: "workspace-admin"
+        ADMIN_TRUSTED_WORKSPACE_ID:
+          "99999999-9999-4999-8999-999999999999"
       }
     });
     expect(resolveAdminQuoteRequestDetailRead).not.toHaveBeenCalled();

@@ -21,6 +21,7 @@ import {
   type ServerAdminRuntimeRouteGateAdapterResult
 } from "../../../../lib/admin/authorization/server-admin-runtime-route-gate-adapter";
 import { readBoundedJsonBody } from "../../../../lib/admin/api/bounded-json-body-reader";
+import { getAdminRouteRuntimeConfig } from "../../../../lib/server-runtime-config";
 
 type AdminCsrfProofRouteEnv = {
   ADMIN_EXPECTED_ORIGIN?: string | null;
@@ -207,22 +208,8 @@ function parseRequestedWorkspaceId(
   };
 }
 
-function getEnvValue(
-  env: AdminCsrfProofRouteEnv | undefined,
-  name: keyof AdminCsrfProofRouteEnv
-) {
-  return env && name in env ? env[name] ?? null : process.env[name] ?? null;
-}
-
 function getRouteEnv(dependencies: AdminCsrfProofRouteDependencies) {
-  return {
-    expectedOrigin: getEnvValue(dependencies.env, "ADMIN_EXPECTED_ORIGIN"),
-    expectedHost: getEnvValue(dependencies.env, "ADMIN_EXPECTED_HOST"),
-    trustedServerWorkspaceId: getEnvValue(
-      dependencies.env,
-      "ADMIN_TRUSTED_WORKSPACE_ID"
-    )
-  };
+  return getAdminRouteRuntimeConfig(dependencies.env ?? process.env);
 }
 
 function getProofTtlMs(dependencies: AdminCsrfProofRouteDependencies) {

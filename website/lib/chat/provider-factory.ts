@@ -1,12 +1,13 @@
 import "server-only";
 
+import { getChatProviderRuntimeConfig } from "../server-runtime-config";
 import { N8nChatProvider } from "./n8n-provider";
 import { ChatProviderError, type ChatProvider } from "./provider";
 
 export function getChatProvider(): ChatProvider {
-  const providerName = process.env.CHAT_PROVIDER?.trim().toLowerCase() || "n8n";
+  const providerConfig = getChatProviderRuntimeConfig();
 
-  if (providerName === "n8n") {
+  if (providerConfig.configured && providerConfig.provider === "n8n") {
     return new N8nChatProvider();
   }
 
