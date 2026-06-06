@@ -3616,6 +3616,68 @@ check('authenticated product writes reject cross-workspace relationships', () =>
   );
 });
 
+check('execute_admin_product_write rejects cross-workspace relationship payloads', () => {
+  statementFailsAs(
+    'authenticated',
+    ids.authMemberA,
+    `
+      select public.execute_admin_product_write(
+        'product.create',
+        '50000000-0000-4000-8000-000000000401'::uuid,
+        '${ids.workspaceA}'::uuid,
+        jsonb_build_object(
+          'category_id', '${ids.categoryPublishedB}',
+          'slug', 'rpc-cross-category-create',
+          'name', 'RPC Cross Category Create',
+          'short_description', 'Rejected',
+          'description', 'Rejected',
+          'rental_unit', 'day',
+          'status', 'draft',
+          'sort_order', 60
+        )
+      )
+    `,
+    /product_category_workspace_mismatch/i,
+  );
+
+  statementFailsAs(
+    'authenticated',
+    ids.authMemberA,
+    `
+      select public.execute_admin_product_write(
+        'product.update',
+        '${ids.productDraftA}'::uuid,
+        '${ids.workspaceA}'::uuid,
+        jsonb_build_object(
+          'category_id', '${ids.categoryPublishedB}'
+        )
+      )
+    `,
+    /product_category_workspace_mismatch/i,
+  );
+
+  statementFailsAs(
+    'authenticated',
+    ids.authMemberA,
+    `
+      select public.execute_admin_product_write(
+        'productImage.create',
+        '60000000-0000-4000-8000-000000000401'::uuid,
+        '${ids.workspaceA}'::uuid,
+        jsonb_build_object(
+          'product_id', '${ids.productPublishedB}',
+          'storage_bucket', 'listing-media',
+          'storage_path', '${ids.workspaceA}/${ids.productPublishedB}/rpc-cross-product-image.webp',
+          'alt_text', 'Rejected cross-workspace product image',
+          'sort_order', 10,
+          'is_primary', false
+        )
+      )
+    `,
+    /product_image_workspace_mismatch/i,
+  );
+});
+
 check('listing media storage uses public bucket URLs with workspace-admin scoped writes', () => {
   const storagePath = `${ids.workspaceA}/${ids.productPublishedA}/1700000000000-60000000-0000-4000-8000-000000000201.webp`;
 

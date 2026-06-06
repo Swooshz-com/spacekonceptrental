@@ -79,8 +79,23 @@ describe("Phase 2K-A/B admin write hardening and readiness", () => {
     const migration = readRepoFile(migrationPath);
     const normalized = normalizeWhitespace(migration);
 
+    expect(normalized).toMatch(
+      /create or replace function public\.execute_admin_product_write\( p_action text, p_target_id uuid, p_workspace_id uuid, p_payload jsonb \) returns uuid language plpgsql security definer set search_path = public/
+    );
+    expect(
+      normalized.match(
+        /from public\.categories c where c\.id = v_category_id and c\.workspace_id = p_workspace_id/g
+      )?.length ?? 0
+    ).toBeGreaterThanOrEqual(2);
+    expect(
+      normalized.match(/raise exception 'product_category_workspace_mismatch';/g)
+        ?.length ?? 0
+    ).toBeGreaterThanOrEqual(2);
+    expect(normalized).toMatch(
+      /from public\.products p where p\.id = v_product_id and p\.workspace_id = p_workspace_id/
+    );
     expect(normalized).toContain(
-      "alter function public.execute_admin_product_write(text, uuid, uuid, jsonb) security definer"
+      "raise exception 'product_image_workspace_mismatch';"
     );
     expect(normalized).toContain(
       "grant execute on function public.execute_admin_product_write(text, uuid, uuid, jsonb) to authenticated"

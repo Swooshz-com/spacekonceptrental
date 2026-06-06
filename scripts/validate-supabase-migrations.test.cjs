@@ -652,7 +652,30 @@ test('real migrations harden product-admin writes behind the RPC boundary only',
 
   assert.match(
     hardeningMigration,
-    /alter function public\.execute_admin_product_write\(text, uuid, uuid, jsonb\) security definer;/,
+    /create or replace function public\.execute_admin_product_write\( p_action text, p_target_id uuid, p_workspace_id uuid, p_payload jsonb \) returns uuid language plpgsql security definer set search_path = public as \$\$/,
+  );
+  assert.ok(
+    (
+      hardeningMigration.match(
+        /from public\.categories c where c\.id = v_category_id and c\.workspace_id = p_workspace_id/g,
+      ) || []
+    ).length >= 2,
+    'execute_admin_product_write should validate product category relationships against the target workspace',
+  );
+  assert.ok(
+    (hardeningMigration.match(/raise exception 'product_category_workspace_mismatch';/g) || [])
+      .length >= 2,
+    'execute_admin_product_write should raise a safe category workspace mismatch error',
+  );
+  assert.match(
+    hardeningMigration,
+    /from public\.products p where p\.id = v_product_id and p\.workspace_id = p_workspace_id/,
+    'execute_admin_product_write should validate product image relationships against the target workspace',
+  );
+  assert.match(
+    hardeningMigration,
+    /raise exception 'product_image_workspace_mismatch';/,
+    'execute_admin_product_write should raise a safe product image workspace mismatch error',
   );
   assert.match(
     hardeningMigration,
