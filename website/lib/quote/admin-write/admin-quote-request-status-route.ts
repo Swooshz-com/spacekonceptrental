@@ -21,6 +21,7 @@ import {
   type AdminQuoteRequestStatusWritePersistence,
   type AdminQuoteRequestStatusWriteResult
 } from "./admin-quote-request-status-write";
+import { getAdminRouteRuntimeConfig } from "../../server-runtime-config";
 
 type AdminQuoteRequestStatusUpdateRouteEnv = {
   ADMIN_EXPECTED_ORIGIN?: string | null;
@@ -170,24 +171,10 @@ function parsePayload(body: Record<string, unknown>): PayloadParseResult {
   };
 }
 
-function getEnvValue(
-  env: AdminQuoteRequestStatusUpdateRouteEnv | undefined,
-  name: keyof AdminQuoteRequestStatusUpdateRouteEnv
-) {
-  return env && name in env ? env[name] ?? null : process.env[name] ?? null;
-}
-
 function getRouteEnv(
   dependencies: AdminQuoteRequestStatusUpdateRouteDependencies
 ) {
-  return {
-    expectedOrigin: getEnvValue(dependencies.env, "ADMIN_EXPECTED_ORIGIN"),
-    expectedHost: getEnvValue(dependencies.env, "ADMIN_EXPECTED_HOST"),
-    trustedServerWorkspaceId: getEnvValue(
-      dependencies.env,
-      "ADMIN_TRUSTED_WORKSPACE_ID"
-    )
-  };
+  return getAdminRouteRuntimeConfig(dependencies.env ?? process.env);
 }
 
 function getProofMaxAgeMs(

@@ -1,5 +1,6 @@
 import "server-only";
 
+import { getN8nChatRuntimeConfig } from "../server-runtime-config";
 import { PlaceholderChatProvider } from "./placeholder-provider";
 import {
   ChatProviderError,
@@ -41,6 +42,15 @@ function normalizeTimeoutMs(value: number | string | undefined) {
   }
 
   return Math.min(Math.floor(timeout), MAX_TIMEOUT_MS);
+}
+
+function getDefaultN8nRuntimeOptions() {
+  const config = getN8nChatRuntimeConfig();
+
+  return {
+    webhookUrl: config.configured ? config.webhookUrl : undefined,
+    timeoutMs: config.timeoutMs
+  };
 }
 
 function isAbortError(error: unknown) {
@@ -157,11 +167,13 @@ export class N8nChatProvider implements ChatProvider {
     this.fallbackProvider =
       options.fallbackProvider ?? new PlaceholderChatProvider();
     this.fetch = options.fetch ?? globalThis.fetch.bind(globalThis);
+    const runtimeOptions = getDefaultN8nRuntimeOptions();
+
     this.timeoutMs = normalizeTimeoutMs(
-      options.timeoutMs ?? process.env.N8N_CHAT_WEBHOOK_TIMEOUT_MS
+      options.timeoutMs ?? runtimeOptions.timeoutMs
     );
     this.webhookUrl = normalizeWebhookUrl(
-      options.webhookUrl ?? process.env.N8N_CHAT_WEBHOOK_URL
+      options.webhookUrl ?? runtimeOptions.webhookUrl
     );
   }
 

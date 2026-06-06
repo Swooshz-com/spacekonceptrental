@@ -151,6 +151,8 @@ describe("Phase 1N-A catalogue workspace bootstrap scaffold", () => {
     expect(productPersistenceSource).not.toContain("createServerSupabaseClient");
     expect(quoteRouteSource).toContain("consumeQuoteRateLimit");
     expect(quoteRouteSource).toContain("RATE_LIMIT_MAX_REQUESTS");
-    expect(quoteRouteSource).toContain("QUOTE_TRUSTED_CLIENT_IP_HEADER");
+    expect(readRepoFile("website/lib/server-runtime-config.ts")).toContain(
+      "QUOTE_TRUSTED_CLIENT_IP_HEADER"
+    );
   });
 });

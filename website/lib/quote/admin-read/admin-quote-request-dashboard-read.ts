@@ -1,5 +1,6 @@
 import "server-only";
 
+import { getAdminTrustedWorkspaceId } from "../../server-runtime-config";
 import { createSessionBoundSupabaseAdminReadClient } from "../../admin/authorization/supabase-admin-auth-identity-adapter";
 
 type QueryResult = {
@@ -162,13 +163,7 @@ function getPositiveInteger(value: unknown) {
 }
 
 function getWorkspaceId(options: AdminQuoteRequestInboxReadOptions) {
-  const workspaceId =
-    options.env && "ADMIN_TRUSTED_WORKSPACE_ID" in options.env
-      ? options.env.ADMIN_TRUSTED_WORKSPACE_ID
-      : process.env.ADMIN_TRUSTED_WORKSPACE_ID;
-  const trimmed = workspaceId?.trim();
-
-  return trimmed && isUuid(trimmed) ? trimmed : null;
+  return getAdminTrustedWorkspaceId(options.env ?? process.env);
 }
 
 async function getSupabase(

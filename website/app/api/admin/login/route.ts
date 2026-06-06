@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 
 import { readBoundedUrlEncodedFormBody } from "../../../../lib/admin/api/bounded-json-body-reader";
 import { signInSupabaseAdminAuthSession } from "../../../../lib/admin/authorization/supabase-admin-auth-identity-adapter";
+import { getAdminRouteRuntimeConfig } from "../../../../lib/server-runtime-config";
 
 const noStoreHeaders = {
   "Cache-Control": "no-store"
@@ -51,8 +52,9 @@ function normalizeOrigin(value: string | null | undefined) {
 }
 
 function isSameOriginAdminRequest(request: NextRequest) {
-  const expectedOrigin = normalizeOrigin(process.env.ADMIN_EXPECTED_ORIGIN);
-  const expectedHost = normalizeHost(process.env.ADMIN_EXPECTED_HOST);
+  const routeConfig = getAdminRouteRuntimeConfig();
+  const expectedOrigin = routeConfig.expectedOrigin;
+  const expectedHost = routeConfig.expectedHost;
   const requestOrigin = normalizeOrigin(request.headers.get("origin"));
   const requestHost = normalizeHost(request.headers.get("host"));
 

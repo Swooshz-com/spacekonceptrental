@@ -21,6 +21,7 @@ import {
   type ProductPersistence,
   type ProductPersistenceResult
 } from "../persistence";
+import { getAdminRouteRuntimeConfig } from "../../server-runtime-config";
 
 type AdminProductImageUploadRouteEnv = {
   ADMIN_EXPECTED_ORIGIN?: string | null;
@@ -210,22 +211,8 @@ function persistenceError(result: ProductPersistenceResult) {
   }
 }
 
-function getEnvValue(
-  env: AdminProductImageUploadRouteEnv | undefined,
-  name: keyof AdminProductImageUploadRouteEnv
-) {
-  return env && name in env ? env[name] ?? null : process.env[name] ?? null;
-}
-
 function getRouteEnv(dependencies: AdminProductImageUploadRouteDependencies) {
-  return {
-    expectedOrigin: getEnvValue(dependencies.env, "ADMIN_EXPECTED_ORIGIN"),
-    expectedHost: getEnvValue(dependencies.env, "ADMIN_EXPECTED_HOST"),
-    trustedServerWorkspaceId: getEnvValue(
-      dependencies.env,
-      "ADMIN_TRUSTED_WORKSPACE_ID"
-    )
-  };
+  return getAdminRouteRuntimeConfig(dependencies.env ?? process.env);
 }
 
 function getProofMaxAgeMs(dependencies: AdminProductImageUploadRouteDependencies) {

@@ -289,7 +289,7 @@ describe("Phase 2B-AJ - admin CSRF session/workspace binding runtime dependencie
 
     expect(source).toContain('import "server-only";');
     expect(source).toContain("node:crypto");
-    expect(source).toContain("ADMIN_CSRF_PROOF_SECRET");
+    expect(source).toContain("getAdminCsrfProofSecret");
     expect(source).toContain(
       "deriveServerAdminCsrfProofSessionWorkspaceBinding"
     );

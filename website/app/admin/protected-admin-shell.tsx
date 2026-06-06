@@ -14,6 +14,7 @@ import {
   resolveAdminQuoteRequestDetailRead,
   type AdminQuoteRequestDetailReadResult
 } from "../../lib/quote/admin-read/admin-quote-request-detail-read";
+import { getAdminRouteRuntimeConfig } from "../../lib/server-runtime-config";
 import { CategoryManagementPanel } from "../../components/admin/category-management-panel";
 import { ListingImageMetadataManagementPanel } from "../../components/admin/listing-image-metadata-management-panel";
 import { ListingImageUploadPanel } from "../../components/admin/listing-image-upload-panel";
@@ -119,7 +120,8 @@ function mapGateResult(
 export async function resolveProtectedAdminShellState(
   options: ResolveProtectedAdminShellStateOptions = {}
 ): Promise<ProtectedAdminShellState> {
-  const trustedServerWorkspaceId = process.env.ADMIN_TRUSTED_WORKSPACE_ID ?? null;
+  const routeConfig = getAdminRouteRuntimeConfig();
+  const trustedServerWorkspaceId = routeConfig.trustedServerWorkspaceId;
 
   try {
     const result = await resolveServerAdminRuntimeRouteGateAdapter(
@@ -129,8 +131,8 @@ export async function resolveProtectedAdminShellState(
       },
       {
         requestMetadata: {
-          expectedOrigin: process.env.ADMIN_EXPECTED_ORIGIN ?? null,
-          expectedHost: process.env.ADMIN_EXPECTED_HOST ?? null
+          expectedOrigin: routeConfig.expectedOrigin,
+          expectedHost: routeConfig.expectedHost
         },
         gate: {
           decision: {

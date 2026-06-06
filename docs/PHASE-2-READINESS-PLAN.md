@@ -238,7 +238,28 @@ Suggested first PR:
   Supabase, production evidence, or ecommerce flows. Product language remains
   enquiry/quote/request.
 
-Current Phase 2M-A/B status:
+Current Phase 2N-A/B status:
+
+- PR #118 merged Phase 2M-A/B preview/deployment review preflight and CI
+  parity hardening at merge commit
+  `a8bd77239ebf8e6908d36bc5f5c4866ffa2dd489`.
+- Latest completed capability is Phase 2M-A/B preview/deployment review
+  preflight and CI parity hardening.
+- Phase 2N-A/B is current as server runtime configuration hardening and deploy
+  dry-run harness work.
+- Existing server-only runtime settings now have a typed parser and safe
+  public summary that reports only names/reasons, not values.
+- `npm run validate:deploy-dry-run` runs the release-candidate gate plus local
+  server-runtime config and static scope checks without deployment.
+- The repo is better prepared for a future preview/deployment review, but no
+  deployment is performed in this PR.
+- No n8n/Pinecone/RAG runtime work, public quote tracking, customer accounts,
+  customer-visible internal notes, notifications, CRM integration,
+  public/customer upload routes, browser Supabase, service-role runtime paths,
+  deployment config, Supabase Cloud config, real env values, production
+  evidence, or ecommerce flow is added.
+
+Previous Current Phase 2M-A/B status:
 
 - PR #117 merged Phase 2L-A/B release-candidate acceptance suite and final
   MVP polish at merge commit

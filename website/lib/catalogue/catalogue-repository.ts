@@ -1,5 +1,9 @@
 import "server-only";
 
+import {
+  getCatalogueWorkspaceId,
+  getSupabasePublicStorageBaseUrl
+} from "../server-runtime-config";
 import { createServerSupabaseClient } from "../supabase/server";
 import type { SupabaseServerEnvName } from "../supabase/env";
 import type {
@@ -78,9 +82,6 @@ type CatalogueRpcPayload = {
   categories?: unknown;
   products?: unknown;
 };
-
-const workspaceIdPattern =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 const fallbackCategories: PublicCatalogueCategory[] = [
   {
@@ -201,20 +202,18 @@ function buildPublicImageUrl(
     return undefined;
   }
 
-  const supabaseUrl =
-    options.env?.SUPABASE_URL?.trim() ?? process.env.SUPABASE_URL?.trim();
+  const base = getSupabasePublicStorageBaseUrl(options.env ?? process.env);
 
-  if (!supabaseUrl) {
+  if (!base) {
     return undefined;
   }
 
-  const base = supabaseUrl.replace(/\/$/, "");
   const encodedPath = storagePath
     .split("/")
     .map((segment) => encodeURIComponent(segment))
     .join("/");
 
-  return `${base}/storage/v1/object/public/${encodeURIComponent(storageBucket)}/${encodedPath}`;
+  return `${base}/${encodeURIComponent(storageBucket)}/${encodedPath}`;
 }
 
 function toImage(
@@ -313,13 +312,15 @@ function getSupabase(options: PublicCatalogueRepositoryOptions = {}) {
 }
 
 function readCatalogueWorkspaceId(options: PublicCatalogueRepositoryOptions) {
-  const workspaceId =
-    options.workspaceId ??
-    options.env?.CATALOGUE_WORKSPACE_ID ??
-    process.env.CATALOGUE_WORKSPACE_ID;
-  const trimmed = workspaceId?.trim();
+  if (options.workspaceId !== undefined) {
+    return (
+      getCatalogueWorkspaceId({
+        CATALOGUE_WORKSPACE_ID: options.workspaceId
+      }) ?? undefined
+    );
+  }
 
-  return trimmed && workspaceIdPattern.test(trimmed) ? trimmed : undefined;
+  return getCatalogueWorkspaceId(options.env ?? process.env) ?? undefined;
 }
 
 async function readCatalogueRpcPayload(

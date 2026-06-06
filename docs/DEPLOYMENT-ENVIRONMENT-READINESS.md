@@ -13,6 +13,8 @@ surfaces. No deployment is performed by that release-candidate acceptance
 work.
 Phase 2M-A/B adds preview/deployment review preflight and CI parity
 hardening. No deployment is performed by that preflight work.
+Phase 2N-A/B adds server runtime configuration hardening and a local deploy
+dry-run harness. No deployment is performed by that dry-run work.
 
 The future target shape remains a Vercel-hosted `website/` Next.js app with
 server-only Supabase and a temporary server-side n8n provider behind
@@ -28,6 +30,11 @@ docs/contracts/server-env-contract.json
 
 It lists names, feature ownership, visibility, and browser-exposure rules only.
 It does not contain values.
+
+The server runtime parser in `website/lib/server-runtime-config.ts` is the
+code-level contract for the existing server-only app settings. It normalizes
+missing or invalid values into safe unavailable/fallback behavior and exposes
+only public-safe issue names/reasons for local review.
 
 ## Public-safe client env
 
@@ -172,6 +179,8 @@ Before public traffic is enabled, reviewers must confirm:
   `docs/PREVIEW-DEPLOYMENT-PREFLIGHT.md` has been reviewed.
 - `npm run validate:release-candidate` has passed locally or in CI for the
   candidate branch.
+- `npm run validate:deploy-dry-run` has passed locally for the candidate
+  branch without deployment.
 - The Phase 2L-A/B release-candidate acceptance suite has passed locally or in
   CI for the candidate branch.
 - A later deployment PR has explicit current approval.

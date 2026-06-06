@@ -1,7 +1,9 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { resolveServerAdminRuntimeRouteGateAdapter } from "../../../../lib/admin/authorization/server-admin-runtime-route-gate-adapter";
+import { getAdminRouteRuntimeConfig } from "../../../../lib/server-runtime-config";
 
 export async function GET(request: NextRequest) {
+  const routeConfig = getAdminRouteRuntimeConfig();
   const result = await resolveServerAdminRuntimeRouteGateAdapter(
     {
       requestedOperation: "admin.auth.check",
@@ -10,13 +12,13 @@ export async function GET(request: NextRequest) {
     },
     {
       requestMetadata: {
-        expectedOrigin: process.env.ADMIN_EXPECTED_ORIGIN ?? null,
-        expectedHost: process.env.ADMIN_EXPECTED_HOST ?? null
+        expectedOrigin: routeConfig.expectedOrigin,
+        expectedHost: routeConfig.expectedHost
       },
       gate: {
         decision: {
           workspace: {
-            trustedServerWorkspaceId: process.env.ADMIN_TRUSTED_WORKSPACE_ID ?? null
+            trustedServerWorkspaceId: routeConfig.trustedServerWorkspaceId
           }
         }
       }

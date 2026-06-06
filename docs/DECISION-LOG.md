@@ -1838,6 +1838,39 @@ runtime paths, add retention cleanup jobs, or add ecommerce flows such as
 carts, checkout, payments, stock reservation, confirmed booking, order
 fulfilment, or online ordering.
 
+## 2026-06-06: Server Runtime Configuration Hardening And Deploy Dry-Run Harness
+
+Decision: Phase 2N-A/B hardens server-only runtime configuration parsing and deploy dry-run validation.
+
+Reason: PR #118 merged Phase 2M-A/B at
+`a8bd77239ebf8e6908d36bc5f5c4866ffa2dd489`, leaving the repo with local and CI
+release-gate parity but without a single typed contract for the existing
+server-only runtime settings. The next safe step is to centralize parsing for
+the already-approved Supabase, catalogue, quote, admin, chat, n8n, and trusted
+header settings and add a local deploy dry-run harness before any future
+deployment review.
+
+The implementation adds a server-only runtime config contract with safe
+normalization and redacted issue summaries, wires it into existing server
+config/fallback paths where it reduces duplicated parsing, and adds
+`npm run validate:deploy-dry-run` to run the release-candidate gate plus local
+config/static checks. Missing or invalid runtime config stays unavailable or
+falls back safely without exposing raw values.
+
+No deployment is performed in this PR. Phase 2N-A/B does not add Vercel
+config, connect Supabase Cloud, add real secrets or env values, add production
+evidence, add browser Supabase, add service-role runtime paths, access
+`website/chat-config.js`, add public/customer upload routes, add customer
+accounts, add public quote tracking, expose customer-visible internal notes,
+add notifications or CRM integration, change n8n/Pinecone runtime behavior,
+add SaaS chatbot runtime work, add Pinecone SDK/package dependencies, add
+Pinecone env vars or API keys, add embedding/reranking runtime, wire
+`/api/chat` to retrieval/RAG, wire transcript reads or writes into
+`/api/chat`, add admin transcript UI, add transcript deletion/export runtime
+paths, add retention cleanup jobs, or add ecommerce flows such as carts,
+checkout, payments, stock reservation, confirmed booking, order fulfilment, or
+online ordering.
+
 ## 2026-06-06: Preview/Deployment Review Preflight And CI Parity Hardening
 
 Decision: Phase 2M-A/B makes the release-candidate gate deterministic in CI.

@@ -619,6 +619,7 @@ function assertNoRuntimeSupabaseUse() {
   ];
   const libRoot = path.join(repoRoot, 'website', 'lib');
   const approvedServerSupabaseFiles = new Set([
+    'website/lib/server-runtime-config.ts',
     'website/lib/supabase/env.ts',
     'website/lib/supabase/server.ts',
     'website/lib/admin/authorization/supabase-admin-auth-identity-adapter.ts',

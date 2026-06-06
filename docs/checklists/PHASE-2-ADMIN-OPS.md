@@ -187,6 +187,15 @@ and route/action boundaries are implemented and tested.
 - [x] Preflight docs state that Phase 2M-A/B performs no deployment and does not approve deployment by itself.
 - [x] No deployment, Vercel config, Supabase Cloud config, secrets/env values, production evidence, browser Supabase, service-role runtime path, customer uploads, public quote tracking, customer accounts, customer-visible internal notes, notifications, CRM, n8n/Pinecone runtime change, or ecommerce flow is added.
 
+## Phase 2N-A/B Server Runtime Configuration Hardening And Deploy Dry-Run Harness
+
+- [x] Existing server-only runtime settings are enumerated in one typed server-only config contract.
+- [x] Supabase, catalogue, quote, admin, chat, n8n, and trusted-header config parsing normalizes missing or invalid values into safe unavailable/fallback behavior.
+- [x] Public-safe config summaries report only env names, issue kinds, and safe reasons without raw values.
+- [x] `npm run validate:deploy-dry-run` runs the release-candidate gate plus server-runtime config and static scope checks locally.
+- [x] Deploy dry-run docs state that no deployment is performed and no live service config is added.
+- [x] No deployment, Vercel config, Supabase Cloud config, secrets/env values, production evidence, browser Supabase, service-role runtime path, customer uploads, public quote tracking, customer accounts, customer-visible internal notes, notifications, CRM, n8n/Pinecone runtime change, or ecommerce flow is added.
+
 ## Phase 2D-A Deployment Readiness And Smoke-Test Runbook
 
 - [x] Deployment readiness docs are refreshed for catalogue media, admin listing media upload, public quote handoff, and atomic admin quote workflow surfaces.
