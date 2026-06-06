@@ -181,7 +181,7 @@ and route/action boundaries are implemented and tested.
 ## Phase 2M-A/B Preview/Deployment Review Preflight And CI Parity Hardening
 
 - [x] Pull-request CI includes the full release-gate command set where practical, including website tests, typecheck, build, Supabase migration validation, Supabase migration tests, Docker-backed Supabase RLS/schema tests, and `git diff --check`.
-- [x] `npm run validate:release-candidate` provides a local convenience gate for the same release-candidate commands.
+- [x] `npm run validate:release-candidate` provides a local convenience gate for the same release-candidate commands, including n8n workflow export validation and n8n validation-rule tests.
 - [x] The local release-candidate gate fails loudly when Docker is unavailable for `npm run test:supabase-rls`.
 - [x] Preview/deployment preflight docs cover future review checklist, environment variable inventory, workspace ID review, Supabase Cloud review, admin access review, public quote/listing smoke checks, and rollback/abort checks.
 - [x] Preflight docs state that Phase 2M-A/B performs no deployment and does not approve deployment by itself.

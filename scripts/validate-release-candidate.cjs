@@ -24,6 +24,14 @@ const releaseGateCommands = [
     shellCommand: 'npm run test:supabase-migrations',
   },
   {
+    label: 'n8n workflow export validation',
+    shellCommand: 'npm run validate:n8n',
+  },
+  {
+    label: 'n8n validation rule tests',
+    shellCommand: 'npm run test:n8n-validation',
+  },
+  {
     label: 'Supabase RLS/schema tests',
     shellCommand: 'npm run test:supabase-rls',
     requiresDocker: true,
