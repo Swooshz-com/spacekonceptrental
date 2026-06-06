@@ -4,19 +4,19 @@ This is the quick status page for the SKR repo. Use `docs/PHASE-2-READINESS-PLAN
 
 ## Current phase
 
-Current phase: Phase 2P-A/B - external preview smoke harness and rollback drill package.
+Current phase: Phase 2Q-A/B - preview deployment handoff and branch-freeze package.
 
-Latest completed capability: Phase 2O-A/B preview deployment approval package and operator evidence templates.
+Latest completed capability: Phase 2P-A/B external preview smoke harness and rollback drill package.
 
-Last merged capability PR: #120
+Last merged capability PR: #121
 
-Merge commit: `81431f13836e0b9b182aaca9638ae2e07abd7571`
+Merge commit: `15a5d23941ac7fbe3297792311f50e414d622f5f`
 
-Phase 2P-A/B adds an operator-run external preview smoke harness and rollback
-drill package for a future separately approved preview deployment. It adds
-`npm run smoke:preview` for reviewed external preview targets only,
-`npm run validate:preview-smoke-harness` for deterministic no-network static
-validation, and redacted rollback drill/result templates.
+Phase 2Q-A/B adds the final preview deployment handoff and branch-freeze
+package for a future separately approved preview deployment PR. It records the
+verified PR #117 through PR #121 capability chain, final no-deploy handoff,
+branch-freeze rules, exact next-step decision table, blocker definitions, and
+`npm run validate:preview-handoff` deterministic no-network static validation.
 
 Public users only see public-safe published listing, category, and listing
 image data. Public quote/enquiry success stays receipt-only with no public
@@ -24,16 +24,16 @@ tracking/status link. Admin internal notes remain admin-only. Supabase remains
 canonical for website/admin listing and quote data. Pinecone remains a future
 derived index only and is not used as canonical business storage.
 
-Phase 2P-A/B is local harness and rollback drill packaging only. It does not
-deploy, approve deployment, add Vercel config, connect Supabase Cloud, add
-real secrets or env values, add filled preview or production evidence, add
-Pinecone runtime code, Pinecone packages, Pinecone env reads, secrets, API
-keys, Pinecone executors, n8n workflow/runtime changes, embedding runtime,
-sync workers, `/api/chat` retrieval wiring, search-index document writers,
-real vector upsert/delete, runtime reranking, hybrid search runtime, browser
-Supabase, service-role runtime paths, public or customer upload routes, public
-quote tracking, customer-visible internal notes, notifications, CRM
-integration, customer accounts, or ecommerce flows.
+Phase 2Q-A/B is final handoff packaging only. It does not deploy, approve
+deployment, add Vercel config, connect Supabase Cloud, add real secrets or env
+values, add filled preview or production evidence, add Pinecone runtime code,
+Pinecone packages, Pinecone env reads, secrets, API keys, Pinecone executors,
+n8n workflow/runtime changes, embedding runtime, sync workers, `/api/chat`
+retrieval wiring, search-index document writers, real vector upsert/delete,
+runtime reranking, hybrid search runtime, browser Supabase, service-role
+runtime paths, public or customer upload routes, public quote tracking,
+customer-visible internal notes, notifications, CRM integration, customer
+accounts, or ecommerce flows.
 
 Runtime transcript writes remain blocked. Runtime transcript reads remain
 blocked. Live Supabase RPC executor remains blocked. Any service-role or
@@ -56,7 +56,30 @@ config, env/secrets, and production evidence remain blocked.
 
 ## Remaining-work map
 
-Completed through PR #120:
+Completed through PR #121:
+
+- PR #121 merged Phase 2P-A/B external preview smoke harness and rollback
+  drill package at merge commit
+  `15a5d23941ac7fbe3297792311f50e414d622f5f`.
+- The latest completed capability is Phase 2P-A/B external preview smoke
+  harness and rollback drill package. It adds an operator-run smoke command,
+  no-network static validator, rollback drill docs, redacted result templates,
+  and local release-gate n8n validation parity without performing or approving
+  deployment.
+- Phase 2Q-A/B is current as preview deployment handoff and branch-freeze
+  package work. It is intended as the final generic pre-deployment prep PR
+  before either a separately approved preview deployment or a product
+  polish/content/UI iteration, unless a verified blocker is discovered.
+
+Previous Current Phase 2P-A/B status:
+
+Current phase: Phase 2P-A/B - external preview smoke harness and rollback drill package.
+
+Latest completed capability: Phase 2O-A/B preview deployment approval package and operator evidence templates.
+
+Last merged capability PR: #120
+
+Merge commit: `81431f13836e0b9b182aaca9638ae2e07abd7571`
 
 - PR #120 merged Phase 2O-A/B preview deployment approval package and operator
   evidence templates at merge commit
@@ -66,10 +89,10 @@ Completed through PR #120:
   deployment approval packet, redacted evidence templates, go/no-go decision
   capture, and deterministic static validation without performing or approving
   deployment.
-- Phase 2P-A/B is current as external preview smoke harness and rollback drill
-  package work. It adds an operator-run smoke command plus no-network static
-  validator and redacted rollback drill templates without deployment, provider
-  access, real env values, or filled evidence.
+- Phase 2P-A/B was current as external preview smoke harness and rollback
+  drill package work. It added an operator-run smoke command plus no-network
+  static validator and redacted rollback drill templates without deployment,
+  provider access, real env values, or filled evidence.
 
 Previous Current Phase 2O-A/B status:
 
@@ -1234,11 +1257,13 @@ architecture.
 
 ## Next recommended PR
 
-The next recommended PR after this reconciliation should keep tracks separate.
-A future deployment PR must be separately approved and should use the Phase
-2D-A runbook and evidence template without bundling unrelated runtime work.
-Safe non-deployment follow-up can be docs/static-guard work for privacy,
-retention, conversation/message governance, or operator evidence hardening.
+After Phase 2Q-A/B, stop doing generic deployment-prep PRs unless a verified
+blocker is discovered. The next action should be one of:
+
+- an explicitly approved preview deployment PR,
+- holding deployment, or
+- a product polish/content/UI iteration.
+
 Customer uploads, arbitrary public upload routes, public quote status
 tracking, customer-visible internal notes, notifications, CRM integration,
 carts, checkout, payments, customer accounts, stock reservation, order
