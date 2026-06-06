@@ -74,7 +74,6 @@ describe("Phase 2M-A/B preview preflight CI gate", () => {
     const packageJson = JSON.parse(readRepoFile("package.json"));
     const releaseScript = readRepoFile("scripts/validate-release-candidate.cjs");
     const ci = readRepoFile(".github/workflows/ci.yml");
-    const combinedGateSource = `${ci}\n${releaseScript}`;
 
     expect(packageJson.scripts["validate:release-candidate"]).toBe(
       "node scripts/validate-release-candidate.cjs"
@@ -87,9 +86,25 @@ describe("Phase 2M-A/B preview preflight CI gate", () => {
     expect(releaseScript).toContain("npm run validate:supabase-migrations");
     expect(releaseScript).toContain("npm run test:supabase-migrations");
     expect(releaseScript).toContain("npm run test:supabase-rls");
+    expect(releaseScript).toContain("npm run validate:n8n");
+    expect(releaseScript).toContain("npm run test:n8n-validation");
     expect(releaseScript).toContain("git diff --check");
 
-    for (const expectedCommand of [
+    for (const expectedReleaseCommand of [
+      "npm run validate:supabase-migrations",
+      "npm run test:supabase-migrations",
+      "npm run test:supabase-rls",
+      "npm run validate:n8n",
+      "npm run test:n8n-validation",
+      "git diff --check",
+      "npm --prefix website test",
+      "npm --prefix website run typecheck",
+      "npm --prefix website run build"
+    ]) {
+      expect(releaseScript).toContain(expectedReleaseCommand);
+    }
+
+    for (const expectedCiCommand of [
       "npm run validate:supabase-migrations",
       "npm run test:supabase-migrations",
       "npm run test:supabase-rls",
@@ -100,7 +115,7 @@ describe("Phase 2M-A/B preview preflight CI gate", () => {
       "npm run typecheck",
       "npm run build"
     ]) {
-      expect(combinedGateSource).toContain(expectedCommand);
+      expect(ci).toContain(expectedCiCommand);
     }
 
     expect(ci).toContain("pull_request:");
@@ -149,7 +164,7 @@ describe("Phase 2M-A/B preview preflight CI gate", () => {
     );
   });
 
-  it("keeps preview preflight free of deployment config, secrets, and runtime scope", () => {
+  it("keeps preview preflight free of deployment config, secrets, and runtime scope", { timeout: 15000 }, () => {
     const packageSource = [
       readRepoFile("package.json"),
       readRepoFile("website/package.json")

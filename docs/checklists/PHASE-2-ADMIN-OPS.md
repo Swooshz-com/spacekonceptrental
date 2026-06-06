@@ -181,7 +181,7 @@ and route/action boundaries are implemented and tested.
 ## Phase 2M-A/B Preview/Deployment Review Preflight And CI Parity Hardening
 
 - [x] Pull-request CI includes the full release-gate command set where practical, including website tests, typecheck, build, Supabase migration validation, Supabase migration tests, Docker-backed Supabase RLS/schema tests, and `git diff --check`.
-- [x] `npm run validate:release-candidate` provides a local convenience gate for the same release-candidate commands.
+- [x] `npm run validate:release-candidate` provides a local convenience gate for the same release-candidate commands, including n8n workflow export validation and n8n validation-rule tests.
 - [x] The local release-candidate gate fails loudly when Docker is unavailable for `npm run test:supabase-rls`.
 - [x] Preview/deployment preflight docs cover future review checklist, environment variable inventory, workspace ID review, Supabase Cloud review, admin access review, public quote/listing smoke checks, and rollback/abort checks.
 - [x] Preflight docs state that Phase 2M-A/B performs no deployment and does not approve deployment by itself.
@@ -204,6 +204,15 @@ and route/action boundaries are implemented and tested.
 - [x] `npm run validate:preview-approval-package` validates the approval package and static scope without deployment, Docker, real env values, or live provider connections.
 - [x] Pull-request CI runs the deterministic approval-package validator.
 - [x] No deployment, deployment approval, Vercel config, Supabase Cloud config, secrets/env values, filled production evidence, browser Supabase, service-role runtime path, customer uploads, public quote tracking, customer accounts, customer-visible internal notes, notifications, CRM, n8n/Pinecone runtime change, or ecommerce flow is added.
+
+## Phase 2P-A/B External Preview Smoke Harness And Rollback Drill Package
+
+- [x] `npm run smoke:preview` exists as an operator-run external preview smoke command only.
+- [x] The preview smoke command requires `SKR_PREVIEW_BASE_URL`, rejects missing/local/non-preview/unsafe values, and redacts the supplied URL in output.
+- [x] `npm run validate:preview-smoke-harness` validates the local package without network access, provider APIs, deployment, real env values, or filled evidence.
+- [x] Pull-request CI runs only the deterministic preview smoke harness validator and does not run the live smoke command.
+- [x] Rollback drill docs and result templates are redacted-only and state that filled preview or production evidence must not be committed.
+- [x] No deployment, deployment approval, Vercel config, Supabase Cloud config, secrets/env values, filled preview or production evidence, browser Supabase, service-role runtime path, customer uploads, public quote tracking, customer accounts, customer-visible internal notes, notifications, CRM, n8n/Pinecone runtime change, or ecommerce flow is added.
 
 ## Phase 2D-A Deployment Readiness And Smoke-Test Runbook
 

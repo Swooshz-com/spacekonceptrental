@@ -4,20 +4,19 @@ This is the quick status page for the SKR repo. Use `docs/PHASE-2-READINESS-PLAN
 
 ## Current phase
 
-Current phase: Phase 2O-A/B - preview deployment approval package and operator evidence templates.
+Current phase: Phase 2P-A/B - external preview smoke harness and rollback drill package.
 
-Latest completed capability: Phase 2N-A/B server runtime configuration hardening and deploy dry-run harness.
+Latest completed capability: Phase 2O-A/B preview deployment approval package and operator evidence templates.
 
-Last merged capability PR: #119
+Last merged capability PR: #120
 
-Merge commit: `ad97aace9c2145af139a45f3e0f2d0b6d09a24a9`
+Merge commit: `81431f13836e0b9b182aaca9638ae2e07abd7571`
 
-Phase 2O-A/B adds the preview deployment approval package and redacted
-operator evidence templates for a future explicitly approved preview or
-deployment PR. It records required reviewer checks, validation and dry-run
-commands, Supabase Cloud and Vercel review checklists, server-only env setup
-by variable name only, admin access checks, public listing/quote smoke checks,
-rollback/abort checks, and a final go/no-go decision table.
+Phase 2P-A/B adds an operator-run external preview smoke harness and rollback
+drill package for a future separately approved preview deployment. It adds
+`npm run smoke:preview` for reviewed external preview targets only,
+`npm run validate:preview-smoke-harness` for deterministic no-network static
+validation, and redacted rollback drill/result templates.
 
 Public users only see public-safe published listing, category, and listing
 image data. Public quote/enquiry success stays receipt-only with no public
@@ -25,16 +24,16 @@ tracking/status link. Admin internal notes remain admin-only. Supabase remains
 canonical for website/admin listing and quote data. Pinecone remains a future
 derived index only and is not used as canonical business storage.
 
-Phase 2O-A/B is approval packaging only. It does not deploy, approve
-deployment, add Vercel config, connect Supabase Cloud, add real secrets or env
-values, add filled production evidence, add Pinecone runtime code, Pinecone
-packages, Pinecone env reads, secrets, API keys, Pinecone executors, n8n
-workflow/runtime changes, embedding runtime, sync workers, `/api/chat`
-retrieval wiring, search-index document writers, real vector upsert/delete,
-runtime reranking, hybrid search runtime, browser Supabase, service-role
-runtime paths, public or customer upload routes, public quote tracking,
-customer-visible internal notes, notifications, CRM integration, customer
-accounts, or ecommerce flows.
+Phase 2P-A/B is local harness and rollback drill packaging only. It does not
+deploy, approve deployment, add Vercel config, connect Supabase Cloud, add
+real secrets or env values, add filled preview or production evidence, add
+Pinecone runtime code, Pinecone packages, Pinecone env reads, secrets, API
+keys, Pinecone executors, n8n workflow/runtime changes, embedding runtime,
+sync workers, `/api/chat` retrieval wiring, search-index document writers,
+real vector upsert/delete, runtime reranking, hybrid search runtime, browser
+Supabase, service-role runtime paths, public or customer upload routes, public
+quote tracking, customer-visible internal notes, notifications, CRM
+integration, customer accounts, or ecommerce flows.
 
 Runtime transcript writes remain blocked. Runtime transcript reads remain
 blocked. Live Supabase RPC executor remains blocked. Any service-role or
@@ -57,7 +56,30 @@ config, env/secrets, and production evidence remain blocked.
 
 ## Remaining-work map
 
-Completed through PR #119:
+Completed through PR #120:
+
+- PR #120 merged Phase 2O-A/B preview deployment approval package and operator
+  evidence templates at merge commit
+  `81431f13836e0b9b182aaca9638ae2e07abd7571`.
+- The latest completed capability is Phase 2O-A/B preview deployment approval
+  package and operator evidence templates. It adds the future preview
+  deployment approval packet, redacted evidence templates, go/no-go decision
+  capture, and deterministic static validation without performing or approving
+  deployment.
+- Phase 2P-A/B is current as external preview smoke harness and rollback drill
+  package work. It adds an operator-run smoke command plus no-network static
+  validator and redacted rollback drill templates without deployment, provider
+  access, real env values, or filled evidence.
+
+Previous Current Phase 2O-A/B status:
+
+Current phase: Phase 2O-A/B - preview deployment approval package and operator evidence templates.
+
+Latest completed capability: Phase 2N-A/B server runtime configuration hardening and deploy dry-run harness.
+
+Last merged capability PR: #119
+
+Merge commit: `ad97aace9c2145af139a45f3e0f2d0b6d09a24a9`
 
 - PR #119 merged Phase 2N-A/B server runtime configuration hardening and
   deploy dry-run harness at merge commit
@@ -67,8 +89,8 @@ Completed through PR #119:
   server-only config parsing for the existing runtime settings and adds a
   local deploy dry-run harness without live deployment, cloud config, real env
   values, production evidence, or runtime scope expansion.
-- Phase 2O-A/B is current as preview deployment approval package and operator
-  evidence templates work. It adds docs/templates/static validation around the
+- Phase 2O-A/B was current as preview deployment approval package and operator
+  evidence template work. It added docs/templates/static validation around the
   future deployment approval path without performing or approving deployment.
 
 Previous Current Phase 2N-A/B status:

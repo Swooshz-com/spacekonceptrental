@@ -238,7 +238,32 @@ Suggested first PR:
   Supabase, production evidence, or ecommerce flows. Product language remains
   enquiry/quote/request.
 
-Current Phase 2O-A/B status:
+Current Phase 2P-A/B status:
+
+- PR #120 merged Phase 2O-A/B preview deployment approval package and
+  operator evidence templates at merge commit
+  `81431f13836e0b9b182aaca9638ae2e07abd7571`.
+- Latest completed capability is Phase 2O-A/B preview deployment approval
+  package and operator evidence templates.
+- Phase 2P-A/B is current as external preview smoke harness and rollback drill
+  package work.
+- `npm run smoke:preview` is an operator-run command only. It requires a
+  reviewed external preview URL via `SKR_PREVIEW_BASE_URL`, fails closed for
+  missing/local/non-preview/unsafe values, redacts the supplied URL in output,
+  and performs public smoke checks only against the reviewed preview target.
+- `npm run validate:preview-smoke-harness` is deterministic and no-network,
+  so it can run in CI without live provider access or deployment.
+- `docs/PREVIEW-ROLLBACK-DRILL.md` and redacted result templates record the
+  future rollback drill package. Filled preview or production evidence must
+  not be committed.
+- No deployment, deployment approval, Vercel config, Supabase Cloud config,
+  real env values, production evidence, browser Supabase, service-role runtime
+  paths, n8n/Pinecone/RAG runtime work, public quote tracking, customer
+  accounts, customer-visible internal notes, notifications, CRM integration,
+  public/customer upload routes, transcript runtime paths, or ecommerce flow
+  is added.
+
+Previous Current Phase 2O-A/B status:
 
 - PR #119 merged Phase 2N-A/B server runtime configuration hardening and
   deploy dry-run harness at merge commit

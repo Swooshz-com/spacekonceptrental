@@ -6,6 +6,8 @@
     "validate:release-candidate": "node scripts/validate-release-candidate.cjs",
     "validate:deploy-dry-run": "node scripts/validate-deploy-dry-run.cjs",
     "validate:preview-approval-package": "node scripts/validate-preview-approval-package.cjs",
+    "validate:preview-smoke-harness": "node scripts/validate-preview-smoke-harness.cjs",
+    "smoke:preview": "node scripts/smoke-preview.cjs",
     "test:supabase-seed": "node scripts/test-supabase-seed.cjs",
     "test:supabase-rls": "node scripts/test-supabase-rls.cjs",
     "test:supabase-migrations": "node --test scripts/validate-supabase-migrations.test.cjs",
