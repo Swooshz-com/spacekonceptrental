@@ -4,30 +4,32 @@ This is the quick status page for the SKR repo. Use `docs/PHASE-2-READINESS-PLAN
 
 ## Current phase
 
-Current phase: Phase 2K-A/B - admin write-boundary hardening and deployment readiness.
+Current phase: Phase 2L-A/B - release-candidate acceptance suite and final MVP polish.
 
-Latest completed capability: Phase 2J-A/B MVP hardening, quote intake correctness, and demo readiness.
+Latest completed capability: Phase 2K-A/B admin write-boundary hardening and deployment readiness.
 
-Last merged capability PR: #115
+Last merged capability PR: #116
 
-Merge commit: `611ef1eafee5971b1d60929d17ab41a94a357522`
+Merge commit: `0bf12dad7255ce667cdbfbdc86c27b59abaac4bc`
 
-Phase 2K-A/B adds admin write-boundary hardening and deployment readiness. It
-keeps admin listing/category/image metadata writes behind the protected
-`execute_admin_product_write(...)` RPC, blocks direct authenticated
-browser-role writes to listing metadata tables, preserves product audit and
-local search-index enqueue invariants, and refreshes deployment/demo readiness
-docs and smoke-test coverage without deploying.
+Phase 2L-A/B adds the release-candidate acceptance suite and final MVP polish.
+It ties public catalogue/listing/category/quote UX, protected admin
+operations, admin quote workflow, admin write-boundary preservation, and
+static security boundaries into local deterministic acceptance coverage. It
+also adds a safe global public not-found page and keeps route copy aligned with
+listing/enquiry/quote language.
 
 Public users only see public-safe published listing, category, and listing
-image data. Public users still cannot track quotes or view internal quote
-workflow state. Admin internal notes remain admin-only. Supabase remains
+image data. Public quote/enquiry success stays receipt-only with no public
+tracking/status link. Admin internal notes remain admin-only. Supabase remains
 canonical for website/admin listing and quote data. Pinecone remains a future
 derived index only and is not used as canonical business storage.
 
-Phase 2K-A/B does not add Pinecone runtime code, Pinecone packages, Pinecone
-env reads, secrets, API keys, Pinecone executors, n8n workflow/runtime changes,
-embedding runtime, sync workers, `/api/chat` retrieval wiring,
+Phase 2L-A/B is release-candidate readiness only. It does not deploy, add
+Vercel config, connect Supabase Cloud, add real secrets or env values, add
+production evidence, add Pinecone runtime code, Pinecone packages, Pinecone
+env reads, secrets, API keys, Pinecone executors, n8n workflow/runtime
+changes, embedding runtime, sync workers, `/api/chat` retrieval wiring,
 search-index document writers, real vector upsert/delete, runtime reranking,
 hybrid search runtime, browser Supabase, service-role runtime paths, public or
 customer upload routes, public quote tracking, customer-visible internal
@@ -54,7 +56,35 @@ config, env/secrets, and production evidence remain blocked.
 
 ## Remaining-work map
 
-Completed through PR #115:
+Completed through PR #116:
+
+- PR #116 merged Phase 2K-A/B admin write-boundary hardening and deployment
+  readiness at merge commit
+  `0bf12dad7255ce667cdbfbdc86c27b59abaac4bc`.
+- The latest completed capability is Phase 2K-A/B admin write-boundary
+  hardening and deployment readiness. It blocks direct authenticated
+  browser-role writes to listing metadata tables, keeps admin
+  listing/category/image writes on `execute_admin_product_write(...)`,
+  preserves local search-index enqueue and audit invariants, refreshes
+  deployment/demo runbooks, and does not add deployment, Pinecone/n8n/RAG
+  runtime work, public quote tracking, customer accounts, notifications, CRM,
+  uploads, browser Supabase, service-role runtime paths, or ecommerce flows.
+- Phase 2L-A/B is current as release-candidate acceptance suite and final MVP
+  polish. Public catalogue/quote UX, admin operations, quote workflow, admin
+  write boundary, and final static security boundaries are now covered by
+  local deterministic release-candidate acceptance checks. The repo is ready
+  for a future preview/deployment review, but no deployment is performed in
+  this PR.
+
+Previous Current Phase 2K-A/B status:
+
+Current phase: Phase 2K-A/B - admin write-boundary hardening and deployment readiness.
+
+Latest completed capability: Phase 2J-A/B MVP hardening, quote intake correctness, and demo readiness.
+
+Last merged capability PR: #115
+
+Merge commit: `611ef1eafee5971b1d60929d17ab41a94a357522`
 
 - PR #115 merged Phase 2J-A/B MVP hardening, quote intake correctness, and
   demo readiness at merge commit

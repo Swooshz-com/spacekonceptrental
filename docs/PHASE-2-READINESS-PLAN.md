@@ -238,7 +238,32 @@ Suggested first PR:
   Supabase, production evidence, or ecommerce flows. Product language remains
   enquiry/quote/request.
 
-Current Phase 2K-A/B status:
+Current Phase 2L-A/B status:
+
+- PR #116 merged Phase 2K-A/B admin write-boundary hardening and deployment
+  readiness at merge commit
+  `0bf12dad7255ce667cdbfbdc86c27b59abaac4bc`.
+- Latest completed capability is Phase 2K-A/B admin write-boundary hardening
+  and deployment readiness.
+- Phase 2L-A/B is current as release-candidate acceptance suite and final MVP
+  polish.
+- Release-candidate acceptance coverage now ties together public homepage,
+  listings, listing detail, categories, catalogue compatibility, quote/enquiry
+  submission, safe not-found states, protected admin operations, admin quote
+  detail separation, admin write-boundary preservation, quote workflow
+  preservation, and final static/security boundary checks.
+- Public catalogue/quote UX, admin operations, quote workflow, and admin write
+  boundary are covered by local deterministic checks.
+- The repo is ready for a future preview/deployment review, but no deployment
+  is performed in this PR.
+- Supabase remains canonical for website/admin listing and quote data.
+  Pinecone remains a future derived index only.
+- No n8n/Pinecone/RAG runtime work, public quote tracking, customer accounts,
+  customer-visible internal notes, notifications, CRM integration,
+  public/customer upload routes, browser Supabase, service-role runtime paths,
+  deployment config, Supabase Cloud config, or ecommerce flow is added.
+
+Previous Current Phase 2K-A/B status:
 
 - PR #115 merged Phase 2J-A/B MVP hardening, quote intake correctness, and
   demo readiness at merge commit

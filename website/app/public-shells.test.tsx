@@ -99,7 +99,7 @@ describe("public page shells", () => {
       screen.getByRole("link", { name: /browse catalogue/i })
     ).toHaveAttribute("href", "/catalogue");
     expect(
-      screen.getByRole("link", { name: /request quote/i })
+      screen.getByRole("link", { name: /request a quote/i })
     ).toHaveAttribute("href", "/quote");
   });
 

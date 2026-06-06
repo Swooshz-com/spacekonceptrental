@@ -54,7 +54,7 @@ export default function EventsPage() {
           Browse catalogue
         </Link>
         <Link className="button" href="/quote">
-          Request quote
+          Request a quote
         </Link>
       </div>
     </section>

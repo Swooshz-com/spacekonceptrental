@@ -1838,6 +1838,45 @@ runtime paths, add retention cleanup jobs, or add ecommerce flows such as
 carts, checkout, payments, stock reservation, confirmed booking, order
 fulfilment, or online ordering.
 
+## 2026-06-06: Release-Candidate Acceptance Suite And Final MVP Polish
+
+Decision: Phase 2L-A/B marks the MVP release candidate as locally acceptance-covered.
+
+Reason: PR #116 merged Phase 2K-A/B at
+`0bf12dad7255ce667cdbfbdc86c27b59abaac4bc`, leaving the MVP feature set and
+admin write boundaries implemented. The next safe step is to add a
+release-candidate acceptance suite and small public/admin polish so future
+preview or deployment review starts from a locally proven candidate.
+
+The implementation adds deterministic acceptance coverage for public homepage,
+listings, listing detail, categories, catalogue compatibility, quote/enquiry,
+events, safe not-found states, quote form success/error behavior, protected
+admin operations, admin quote detail separation, admin write-boundary
+preservation, quote workflow preservation, and final static/security
+boundaries. Public catalogue/quote UX, admin operations, quote workflow, and
+admin write boundaries are covered locally without requiring live Supabase,
+Vercel, n8n, Pinecone, real env values, or deployment.
+
+Supabase remains canonical for website/admin listing and quote data. Pinecone
+remains a future derived index only. Search-index jobs remain local enqueue
+records produced by approved admin listing/category/image writes through
+`execute_admin_product_write(...)`.
+
+The repo is ready for a future preview/deployment review, but no deployment is
+performed in this PR. Phase 2L-A/B does not add Vercel config, connect
+Supabase Cloud, add real secrets or env values, add production evidence, add
+browser Supabase, add service-role runtime paths, access
+`website/chat-config.js`, add public/customer upload routes, add customer
+accounts, add public quote tracking, expose customer-visible internal notes,
+add notifications or CRM integration, change n8n/Pinecone runtime behavior,
+add SaaS chatbot runtime work, add Pinecone SDK/package dependencies, add
+Pinecone env vars or API keys, add embedding/reranking runtime, wire
+`/api/chat` to retrieval/RAG, wire transcript reads or writes into
+`/api/chat`, add admin transcript UI, add transcript deletion/export runtime
+paths, add retention cleanup jobs, or add ecommerce flows such as carts,
+checkout, payments, stock reservation, confirmed booking, order fulfilment, or
+online ordering.
+
 ## 2026-06-06: Admin Write-Boundary Hardening And Deployment Readiness
 
 Decision: Phase 2K-A/B hardens admin write boundaries and deployment/demo readiness.

@@ -166,6 +166,18 @@ and route/action boundaries are implemented and tested.
 - [x] Deployment/demo readiness docs and smoke-test runbooks are refreshed without deploying or adding production evidence.
 - [x] No ecommerce/cart/checkout/payment/order, customer upload, browser Supabase, service-role runtime path, n8n/Pinecone runtime change, `/api/chat` retrieval/RAG wiring, notification, CRM, customer account, or public quote tracking surface is added.
 
+## Phase 2L-A/B Release-Candidate Acceptance Suite And Final MVP Polish
+
+- [x] Release-candidate acceptance coverage proves public catalogue/quote UX, admin operations, quote workflow, and admin write boundaries locally.
+- [x] Public homepage, listings, listing detail, categories, catalogue compatibility, quote, events, and not-found states use consistent listing/enquiry/quote wording.
+- [x] Quote/enquiry form coverage includes customer message with no items, item-specific notes, safe success receipt, and safe generic error state without public tracking/status links.
+- [x] Protected admin overview/listing/category/media/quote/detail surfaces remain behind the protected admin shell.
+- [x] Admin quote detail separates customer message, requested items, and admin-only internal activity.
+- [x] Admin listing/category/image writes remain first-party, CSRF-protected, and `execute_admin_product_write(...)` backed.
+- [x] Admin quote workflow writes remain `execute_admin_quote_workflow(...)` backed.
+- [x] Search-index enqueue remains local and unwired to Pinecone, n8n, `/api/chat` retrieval/RAG, sync workers, or search-index document writers.
+- [x] No deployment, Vercel config, Supabase Cloud config, secrets/env values, production evidence, browser Supabase, service-role runtime path, customer uploads, public quote tracking, customer accounts, customer-visible internal notes, notifications, CRM, n8n/Pinecone runtime change, or ecommerce flow is added.
+
 ## Phase 2D-A Deployment Readiness And Smoke-Test Runbook
 
 - [x] Deployment readiness docs are refreshed for catalogue media, admin listing media upload, public quote handoff, and atomic admin quote workflow surfaces.
