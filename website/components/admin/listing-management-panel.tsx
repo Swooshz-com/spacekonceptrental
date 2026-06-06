@@ -435,7 +435,12 @@ export function ListingManagementPanel({
 
       <div className="category-management__list" aria-label="Update listings">
         {products.length === 0 ? (
-          <p>No furniture listings are available to update yet.</p>
+          <section className="admin-dashboard__card admin-dashboard__card--summary">
+            <p>
+              No furniture listings are available to update yet. Create a draft
+              listing above before adding media or publishing.
+            </p>
+          </section>
         ) : (
           products.map((product) => (
             <article className="category-management__item" key={product.id}>
@@ -540,6 +545,10 @@ export function ListingManagementPanel({
                     type="number"
                   />
                 </label>
+                <p className="category-management__hint">
+                  Archive hides this listing from public browsing and active
+                  admin work; it does not delete it.
+                </p>
                 <div className="category-management__actions">
                   <button className="button" type="submit">
                     Save listing {product.name}

@@ -4,19 +4,19 @@ This is the quick status page for the SKR repo. Use `docs/PHASE-2-READINESS-PLAN
 
 ## Current phase
 
-Current phase: Phase 2Q-A/B - preview deployment handoff and branch-freeze package.
+Current phase: Phase 3A-A/B - product polish, content, and rental UI iteration.
 
-Latest completed capability: Phase 2P-A/B external preview smoke harness and rollback drill package.
+Latest completed capability: Phase 2Q-A/B preview deployment handoff and branch-freeze package.
 
-Last merged capability PR: #121
+Last merged capability PR: #122
 
-Merge commit: `15a5d23941ac7fbe3297792311f50e414d622f5f`
+Merge commit: `62c2b11b6b15192434eb4035ba0a66a44cd6f763`
 
-Phase 2Q-A/B adds the final preview deployment handoff and branch-freeze
-package for a future separately approved preview deployment PR. It records the
-verified PR #117 through PR #121 capability chain, final no-deploy handoff,
-branch-freeze rules, exact next-step decision table, blocker definitions, and
-`npm run validate:preview-handoff` deterministic no-network static validation.
+Phase 3A-A/B adds product-facing polish for the public rental catalogue,
+quote/enquiry flow, and protected admin usability. It improves public listing
+card quote cues, quote request helper and receipt copy, admin empty states,
+admin archive clarity, accessibility details, and deterministic static
+coverage for rental/listing/enquiry/quote wording.
 
 Public users only see public-safe published listing, category, and listing
 image data. Public quote/enquiry success stays receipt-only with no public
@@ -24,16 +24,15 @@ tracking/status link. Admin internal notes remain admin-only. Supabase remains
 canonical for website/admin listing and quote data. Pinecone remains a future
 derived index only and is not used as canonical business storage.
 
-Phase 2Q-A/B is final handoff packaging only. It does not deploy, approve
-deployment, add Vercel config, connect Supabase Cloud, add real secrets or env
-values, add filled preview or production evidence, add Pinecone runtime code,
-Pinecone packages, Pinecone env reads, secrets, API keys, Pinecone executors,
-n8n workflow/runtime changes, embedding runtime, sync workers, `/api/chat`
-retrieval wiring, search-index document writers, real vector upsert/delete,
-runtime reranking, hybrid search runtime, browser Supabase, service-role
-runtime paths, public or customer upload routes, public quote tracking,
-customer-visible internal notes, notifications, CRM integration, customer
-accounts, or ecommerce flows.
+No deployment is performed or approved by Phase 3A-A/B. It does not add Vercel
+config, connect Supabase Cloud, add real secrets or env values, add filled
+preview or production evidence, add Pinecone runtime code, Pinecone packages,
+Pinecone env reads, secrets, API keys, Pinecone executors, n8n workflow/runtime
+changes, embedding runtime, sync workers, `/api/chat` retrieval wiring,
+search-index document writers, real vector upsert/delete, runtime reranking,
+hybrid search runtime, browser Supabase, service-role runtime paths, public or
+customer upload routes, public quote tracking, customer-visible internal notes,
+notifications, CRM integration, customer accounts, or ecommerce flows.
 
 Runtime transcript writes remain blocked. Runtime transcript reads remain
 blocked. Live Supabase RPC executor remains blocked. Any service-role or
@@ -56,7 +55,30 @@ config, env/secrets, and production evidence remain blocked.
 
 ## Remaining-work map
 
-Completed through PR #121:
+Completed through PR #122:
+
+- PR #122 merged Phase 2Q-A/B preview deployment handoff and branch-freeze
+  package at merge commit
+  `62c2b11b6b15192434eb4035ba0a66a44cd6f763`.
+- The latest completed capability is Phase 2Q-A/B preview deployment handoff
+  and branch-freeze package. It records the verified PR #117 through PR #121
+  capability chain, final no-deploy handoff, branch-freeze rules, exact
+  next-step decision table, blocker definitions, and
+  `npm run validate:preview-handoff` deterministic no-network static
+  validation.
+- Phase 3A-A/B is current as a product polish/content/UI iteration for the
+  public catalogue, quote/enquiry flow, and protected admin usability. It is
+  repo-local only and does not perform or approve deployment.
+
+Previous Current Phase 2Q-A/B status:
+
+Current phase: Phase 2Q-A/B - preview deployment handoff and branch-freeze package.
+
+Latest completed capability: Phase 2P-A/B external preview smoke harness and rollback drill package.
+
+Last merged capability PR: #121
+
+Merge commit: `15a5d23941ac7fbe3297792311f50e414d622f5f`
 
 - PR #121 merged Phase 2P-A/B external preview smoke harness and rollback
   drill package at merge commit
@@ -66,7 +88,7 @@ Completed through PR #121:
   no-network static validator, rollback drill docs, redacted result templates,
   and local release-gate n8n validation parity without performing or approving
   deployment.
-- Phase 2Q-A/B is current as preview deployment handoff and branch-freeze
+- Phase 2Q-A/B was current as preview deployment handoff and branch-freeze
   package work. It is intended as the final generic pre-deployment prep PR
   before either a separately approved preview deployment or a product
   polish/content/UI iteration, unless a verified blocker is discovered.
@@ -1257,12 +1279,10 @@ architecture.
 
 ## Next recommended PR
 
-After Phase 2Q-A/B, stop doing generic deployment-prep PRs unless a verified
-blocker is discovered. The next action should be one of:
-
-- an explicitly approved preview deployment PR,
-- holding deployment, or
-- a product polish/content/UI iteration.
+Phase 3A-A/B is the approved product polish/content/UI iteration after the
+Phase 2Q-A/B branch-freeze handoff. After this PR, continue product/content
+iteration only when it is explicitly scoped, or move to a separately approved
+preview deployment PR if the owner chooses deployment.
 
 Customer uploads, arbitrary public upload routes, public quote status
 tracking, customer-visible internal notes, notifications, CRM integration,

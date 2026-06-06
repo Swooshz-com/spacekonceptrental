@@ -93,10 +93,9 @@ describe("public catalogue image rendering", () => {
       "href",
       "/catalogue/modular-lounge"
     );
-    expect(screen.getByRole("link", { name: /start enquiry/i })).toHaveAttribute(
-      "href",
-      "/quote?listing=modular-lounge"
-    );
+    expect(
+      screen.getByRole("link", { name: /request this listing/i })
+    ).toHaveAttribute("href", "/quote?listing=modular-lounge");
     expect(screen.queryByText(/cart|checkout|payment|online ordering/i)).not.toBeInTheDocument();
   });
 
@@ -113,10 +112,9 @@ describe("public catalogue image rendering", () => {
         name: /side view of modular lounge furniture rental setup/i
       })
     ).toHaveAttribute("src", productWithImage.images?.[1]?.publicUrl);
-    expect(screen.getByRole("link", { name: /start enquiry/i })).toHaveAttribute(
-      "href",
-      "/quote?listing=modular-lounge"
-    );
+    expect(
+      screen.getByRole("link", { name: /request this listing/i })
+    ).toHaveAttribute("href", "/quote?listing=modular-lounge");
     expect(screen.queryByText(/checkout|payment|reserve|book now/i)).not.toBeInTheDocument();
   });
 

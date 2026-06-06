@@ -251,6 +251,9 @@ export function ListingImageUploadPanel({
               </option>
             ))}
           </select>
+          <small>
+            Create a draft listing before uploading media for that listing.
+          </small>
         </label>
         <label htmlFor="upload-image-file">
           Listing image file
@@ -265,6 +268,10 @@ export function ListingImageUploadPanel({
         <label htmlFor="upload-image-alt-text">
           Upload image alt text
           <input id="upload-image-alt-text" maxLength={240} name="altText" />
+          <small>
+            Describe the rental furniture setup shown in the image for public
+            catalogue accessibility.
+          </small>
         </label>
         <label htmlFor="upload-image-sort-order">
           Upload image sort order

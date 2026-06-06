@@ -297,7 +297,10 @@ export function QuoteRequestInboxPanel({
 
       {inbox.data.quoteRequests.length === 0 ? (
         <section className="admin-dashboard__card admin-dashboard__card--summary">
-          <p>No quote requests are visible yet.</p>
+          <p>
+            No quote requests are visible yet. New website enquiries will
+            appear here for internal follow-up.
+          </p>
         </section>
       ) : (
         <div className="admin-dashboard__grid">
@@ -429,6 +432,10 @@ export function QuoteRequestInboxPanel({
                       rows={3}
                     />
                   </label>
+                  <p className="category-management__hint">
+                    Internal status changes stay inside this admin workspace
+                    and are used for team follow-up.
+                  </p>
                   <button className="button" type="submit">
                     Save follow-up for {quoteRequest.publicReference}
                   </button>

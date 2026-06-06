@@ -342,6 +342,10 @@ export function ListingImageMetadataManagementPanel({
         <label htmlFor="new-image-alt-text">
           New image alt text
           <input id="new-image-alt-text" maxLength={240} name="altText" />
+          <small>
+            Describe the visible rental furniture setup for public catalogue
+            accessibility.
+          </small>
         </label>
         <label htmlFor="new-image-sort-order">
           New image sort order
@@ -367,7 +371,12 @@ export function ListingImageMetadataManagementPanel({
         aria-label="Update listing image metadata"
       >
         {images.length === 0 ? (
-          <p>No listing image metadata records are available to update yet.</p>
+          <section className="admin-dashboard__card admin-dashboard__card--summary">
+            <p>
+              No listing image metadata records are available to update yet.
+              Add approved listing media before choosing primary images.
+            </p>
+          </section>
         ) : (
           images.map((image) => {
             const label = imageLabel(image);
@@ -440,6 +449,10 @@ export function ListingImageMetadataManagementPanel({
                     />
                     Mark {label} as primary
                   </label>
+                  <p className="category-management__hint">
+                    Archive removes this image from active listing media; it
+                    does not delete the file from storage.
+                  </p>
                   <div className="category-management__actions">
                     <button className="button" type="submit">
                       Save image metadata {label}

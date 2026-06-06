@@ -34,6 +34,15 @@ a {
   text-decoration: none;
 }
 
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid var(--warm);
+  outline-offset: 3px;
+}
+
 button,
 textarea,
 input,
@@ -247,6 +256,26 @@ select {
   text-transform: uppercase;
 }
 
+.catalogue-card__planning {
+  background: var(--accent-soft);
+  border: 1px solid #c9e1d2;
+  border-radius: 8px;
+  color: var(--accent-dark);
+  display: grid;
+  gap: 4px;
+  line-height: 1.5;
+  padding: 12px;
+}
+
+.catalogue-card__planning strong {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+}
+
+.catalogue-card__planning span {
+  color: var(--text);
+}
+
 .card-link {
   color: var(--accent-dark);
   display: inline-flex;
@@ -374,6 +403,30 @@ select {
   display: grid;
   gap: 16px;
   margin-top: 22px;
+}
+
+.quote-form__intro {
+  background: var(--accent-soft);
+  border: 1px solid #c9e1d2;
+  border-radius: 8px;
+  color: var(--accent-dark) !important;
+  font-weight: 800;
+  padding: 12px 14px;
+}
+
+.quote-form fieldset {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  display: grid;
+  gap: 14px;
+  margin: 0;
+  padding: 16px;
+}
+
+.quote-form legend {
+  color: var(--accent-dark);
+  font-weight: 900;
+  padding: 0 6px;
 }
 
 .quote-form label {
@@ -649,6 +702,15 @@ select {
   font-size: 0.9rem;
   font-weight: 800;
   gap: 8px;
+}
+
+.category-management__form small,
+.category-management__hint {
+  color: var(--muted);
+  font-size: 0.86rem;
+  font-weight: 700;
+  line-height: 1.55;
+  margin: 0;
 }
 
 .category-management__form input,
