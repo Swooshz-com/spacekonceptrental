@@ -39,7 +39,7 @@ function readTrackedProductionSources(paths: string[]) {
 }
 
 describe("Phase 2J-A/B MVP hardening and quote intake correctness", () => {
-  it("records Phase 2J-A/B as the current MVP hardening phase", () => {
+  it("records Phase 2J-A/B as the latest completed MVP hardening phase", () => {
     const status = normalizeWhitespace(readRepoFile("docs/PHASE-STATUS.md"));
     const roadmap = readRepoFile("docs/PHASE-ROADMAP.md");
     const readiness = readRepoFile("docs/PHASE-2-READINESS-PLAN.md");
@@ -49,19 +49,22 @@ describe("Phase 2J-A/B MVP hardening and quote intake correctness", () => {
     );
 
     expect(status).toContain(
-      "Current phase: Phase 2J-A/B - MVP hardening, quote intake correctness, and demo readiness."
+      "Current phase: Phase 2K-A/B - admin write-boundary hardening and deployment readiness."
     );
     expect(status).toContain(
-      "Latest completed capability: Phase 2I-A/B public rental catalogue and quote request UX MVP."
+      "Latest completed capability: Phase 2J-A/B MVP hardening, quote intake correctness, and demo readiness."
     );
-    expect(status).toContain("Last merged capability PR: #114");
+    expect(status).toContain("Last merged capability PR: #115");
     expect(status).toContain(
-      "Merge commit: `6bf9202df80fbfac995ee168dceea0ef7c26edfa`"
+      "Merge commit: `611ef1eafee5971b1d60929d17ab41a94a357522`"
+    );
+    expect(status).toContain(
+      "PR #115 merged Phase 2J-A/B MVP hardening, quote intake correctness, and demo readiness"
     );
     expect(roadmap).toContain(
       "Phase 2J-A/B adds MVP hardening, quote intake correctness, and demo readiness"
     );
-    expect(readiness).toContain("Current Phase 2J-A/B status");
+    expect(readiness).toContain("Previous Current Phase 2J-A/B status");
     expect(decisionLog).toContain(
       "Decision: Phase 2J-A/B adds MVP hardening, quote intake correctness, and demo readiness."
     );

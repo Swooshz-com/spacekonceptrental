@@ -156,6 +156,16 @@ and route/action boundaries are implemented and tested.
 - [x] Admin internal notes remain admin-only.
 - [x] No ecommerce/cart/checkout/payment/order, customer upload, browser Supabase, service-role runtime path, n8n/Pinecone runtime change, `/api/chat` retrieval/RAG wiring, notification, CRM, customer account, or public quote tracking surface is added.
 
+## Phase 2K-A/B Admin Write-Boundary Hardening And Deployment Readiness
+
+- [x] Direct authenticated browser-role writes to listing metadata tables are blocked.
+- [x] Admin listing/category/image writes remain on `execute_admin_product_write(...)`.
+- [x] Product audit insertion and local search-index enqueue remain inside the approved admin write RPC transaction.
+- [x] Admin quote workflow writes remain on `execute_admin_quote_workflow(...)`.
+- [x] Public catalogue reads remain on the public-safe `get_public_catalogue(...)` boundary.
+- [x] Deployment/demo readiness docs and smoke-test runbooks are refreshed without deploying or adding production evidence.
+- [x] No ecommerce/cart/checkout/payment/order, customer upload, browser Supabase, service-role runtime path, n8n/Pinecone runtime change, `/api/chat` retrieval/RAG wiring, notification, CRM, customer account, or public quote tracking surface is added.
+
 ## Phase 2D-A Deployment Readiness And Smoke-Test Runbook
 
 - [x] Deployment readiness docs are refreshed for catalogue media, admin listing media upload, public quote handoff, and atomic admin quote workflow surfaces.

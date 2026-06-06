@@ -49,14 +49,10 @@ describe("Phase 2I-A/B public rental catalogue and quote request UX MVP", () => 
     );
 
     expect(status).toContain(
-      "Latest completed capability: Phase 2I-A/B public rental catalogue and quote request UX MVP."
-    );
-    expect(status).toContain("Last merged capability PR: #114");
-    expect(status).toContain(
-      "Merge commit: `6bf9202df80fbfac995ee168dceea0ef7c26edfa`"
-    );
-    expect(status).toContain(
       "PR #114 merged Phase 2I-A/B public rental catalogue and quote request UX MVP"
+    );
+    expect(status).toContain(
+      "Phase 2I-A/B completed the public rental catalogue and quote request UX MVP."
     );
     expect(roadmap).toContain(
       "Phase 2I-A/B adds the public rental catalogue and quote request UX MVP"

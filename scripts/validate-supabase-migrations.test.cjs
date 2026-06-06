@@ -301,7 +301,7 @@ test('real migration directory passes static validation', () => {
   const result = runValidator(realMigrationsDir);
 
   assert.equal(result.status, 0, result.stdout + result.stderr);
-  assert.match(result.stdout, /checked 17 migration SQL file\(s\)/);
+  assert.match(result.stdout, /checked 18 migration SQL file\(s\)/);
 });
 
 test('real base schema migration creates the planned MVP tables', () => {
@@ -639,6 +639,68 @@ test('real migrations add authenticated product-admin write policies without ser
     sql,
     /grant\s+(insert|update|delete|all)\b[\s\S]*on public\.(categories|products|product_images) to anon;/,
   );
+});
+
+test('real migrations harden product-admin writes behind the RPC boundary only', () => {
+  const sql = normalizeSql(readAllRealMigrationSql());
+  const hardeningMigration = normalizeSql(
+    fs.readFileSync(
+      path.join(realMigrationsDir, '20260606143000_admin_write_boundary_hardening.sql'),
+      'utf8',
+    ),
+  );
+
+  assert.match(
+    hardeningMigration,
+    /alter function public\.execute_admin_product_write\(text, uuid, uuid, jsonb\) security definer;/,
+  );
+  assert.match(
+    hardeningMigration,
+    /revoke all on function public\.execute_admin_product_write\(text, uuid, uuid, jsonb\) from public;/,
+  );
+  assert.match(
+    hardeningMigration,
+    /grant execute on function public\.execute_admin_product_write\(text, uuid, uuid, jsonb\) to authenticated;/,
+  );
+
+  for (const [tableName, insertPolicy, updatePolicy] of [
+    ['categories', 'categories_product_admin_insert', 'categories_product_admin_update'],
+    ['products', 'products_product_admin_insert', 'products_product_admin_update'],
+    ['product_images', 'product_images_product_admin_insert', 'product_images_product_admin_update'],
+  ]) {
+    assert.match(
+      hardeningMigration,
+      new RegExp(`revoke insert[\\s\\S]*on public\\.${tableName} from authenticated;`),
+      `${tableName} should revoke direct authenticated inserts`,
+    );
+    assert.match(
+      hardeningMigration,
+      new RegExp(`revoke update[\\s\\S]*on public\\.${tableName} from authenticated;`),
+      `${tableName} should revoke direct authenticated updates`,
+    );
+    assert.match(
+      hardeningMigration,
+      new RegExp(`alter policy ${insertPolicy} on public\\.${tableName} with check \\(false\\);`),
+      `${tableName} should neutralize the direct insert policy`,
+    );
+    assert.match(
+      hardeningMigration,
+      new RegExp(`alter policy ${updatePolicy} on public\\.${tableName} using \\(false\\) with check \\(false\\);`),
+      `${tableName} should neutralize the direct update policy`,
+    );
+  }
+
+  assert.match(
+    hardeningMigration,
+    /revoke insert[\s\S]*on public\.audit_logs from authenticated;/,
+  );
+  assert.match(
+    hardeningMigration,
+    /alter policy audit_logs_product_admin_insert on public\.audit_logs with check \(false\);/,
+  );
+  assert.match(sql, /grant execute on function public\.execute_admin_product_write\(text, uuid, uuid, jsonb\) to authenticated;/);
+  assert.doesNotMatch(hardeningMigration, /service_role|supabase_service_role/i);
+  assert.doesNotMatch(hardeningMigration, /grant\s+(insert|update|delete|all)[\s\S]*on public\.(categories|products|product_images|audit_logs) to anon;/);
 });
 
 test('real migrations add listing media storage bucket and workspace-scoped object policies', () => {

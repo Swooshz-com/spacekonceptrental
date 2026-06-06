@@ -3367,11 +3367,12 @@ check('anonymous public cannot write catalogue tables', () => {
   );
 });
 
-check('authenticated product admins can write only their workspace catalogue rows and audit product actions', () => {
+check('authenticated product admins cannot bypass product write RPC with direct catalogue or audit writes', () => {
   const categoryId = '40000000-0000-4000-8000-000000000101';
   const productId = '50000000-0000-4000-8000-000000000101';
   const imageId = '60000000-0000-4000-8000-000000000101';
-  const output = queryAs(
+
+  statementFailsAs(
     'authenticated',
     ids.authMemberA,
     `
@@ -3391,14 +3392,34 @@ check('authenticated product admins can write only their workspace catalogue row
         false,
         10
       )
-      returning id::text;
+    `,
+  );
 
+  statementFailsAs(
+    'authenticated',
+    ids.authMemberA,
+    `
       update public.categories
       set is_published = true
-      where id = '${categoryId}'
+      where id = '${ids.categoryDraftA}'
         and workspace_id = '${ids.workspaceA}'
-      returning id::text;
+    `,
+  );
 
+  statementFailsAs(
+    'authenticated',
+    ids.authMemberA,
+    `
+      delete from public.categories
+      where id = '${ids.categoryDraftA}'
+        and workspace_id = '${ids.workspaceA}'
+    `,
+  );
+
+  statementFailsAs(
+    'authenticated',
+    ids.authMemberA,
+    `
       insert into public.products (
         id,
         workspace_id,
@@ -3417,14 +3438,34 @@ check('authenticated product admins can write only their workspace catalogue row
         'draft',
         10
       )
-      returning id::text;
+    `,
+  );
 
+  statementFailsAs(
+    'authenticated',
+    ids.authMemberA,
+    `
       update public.products
       set status = 'published'
-      where id = '${productId}'
+      where id = '${ids.productDraftA}'
         and workspace_id = '${ids.workspaceA}'
-      returning id::text;
+    `,
+  );
 
+  statementFailsAs(
+    'authenticated',
+    ids.authMemberA,
+    `
+      delete from public.products
+      where id = '${ids.productDraftA}'
+        and workspace_id = '${ids.workspaceA}'
+    `,
+  );
+
+  statementFailsAs(
+    'authenticated',
+    ids.authMemberA,
+    `
       insert into public.product_images (
         id,
         workspace_id,
@@ -3445,15 +3486,35 @@ check('authenticated product admins can write only their workspace catalogue row
         10,
         true
       )
-      returning id::text;
+    `,
+  );
 
+  statementFailsAs(
+    'authenticated',
+    ids.authMemberA,
+    `
       update public.product_images
       set status = 'archived',
         is_primary = false
-      where id = '${imageId}'
+      where id = '${ids.imagePublishedA}'
         and workspace_id = '${ids.workspaceA}'
-      returning id::text;
+    `,
+  );
 
+  statementFailsAs(
+    'authenticated',
+    ids.authMemberA,
+    `
+      delete from public.product_images
+      where id = '${ids.imagePublishedA}'
+        and workspace_id = '${ids.workspaceA}'
+    `,
+  );
+
+  statementFailsAs(
+    'authenticated',
+    ids.authMemberA,
+    `
       insert into public.audit_logs (
         workspace_id,
         actor_admin_user_id,
@@ -3473,12 +3534,6 @@ check('authenticated product admins can write only their workspace catalogue row
         '{}'::jsonb
       );
     `,
-  );
-
-  assert.deepEqual(
-    output.split('\n').filter(Boolean),
-    [categoryId, categoryId, productId, productId, imageId, imageId],
-    'owner should write and update only their workspace catalogue rows',
   );
 });
 
