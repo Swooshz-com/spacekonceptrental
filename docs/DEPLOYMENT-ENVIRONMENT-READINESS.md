@@ -8,6 +8,9 @@ This document is the reviewed environment contract for a future deployment of
 the `website/` Next.js app after the catalogue, storage-backed listing media,
 admin shell, and quote workflow phases. It classifies environment variables by
 visibility and names the reviews required before public traffic is enabled.
+Phase 2L-A/B adds local release-candidate acceptance coverage for these
+surfaces. No deployment is performed by that release-candidate acceptance
+work.
 
 The future target shape remains a Vercel-hosted `website/` Next.js app with
 server-only Supabase and a temporary server-side n8n provider behind
@@ -163,6 +166,8 @@ Service-role key prohibition in runtime paths remains active. never put service-
 Before public traffic is enabled, reviewers must confirm:
 
 - No deployment is approved by Phase 2D-A.
+- The Phase 2L-A/B release-candidate acceptance suite has passed locally or in
+  CI for the candidate branch.
 - A later deployment PR has explicit current approval.
 - `CATALOGUE_WORKSPACE_ID`, `QUOTE_WORKSPACE_ID`, and
   `ADMIN_TRUSTED_WORKSPACE_ID` are reviewed before public traffic.
@@ -178,6 +183,9 @@ Before public traffic is enabled, reviewers must confirm:
 - Direct browser-role listing metadata table writes are blocked while
   `execute_admin_product_write(...)` still succeeds for owner/admin users and
   enqueues a local search-index job.
+- Public catalogue/quote UX, protected admin operations, quote workflow,
+  admin write-boundary preservation, and search-index non-runtime scope remain
+  covered by deterministic release-candidate acceptance checks.
 
 ## Deferred
 

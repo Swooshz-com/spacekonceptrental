@@ -1047,3 +1047,27 @@ SaaS chatbot runtime work, Pinecone packages/env/API keys, embedding or
 reranking runtime, `/api/chat` retrieval/RAG wiring, transcript runtime paths,
 or ecommerce flows such as carts, checkout, payments, stock reservation,
 confirmed booking, order fulfilment, or online ordering.
+
+Phase 2L-A/B adds the release-candidate acceptance suite and final MVP polish.
+It proves the current MVP surfaces locally before any future preview or
+deployment review: public homepage/listings/listing detail/categories/
+catalogue/quote/events/not-found states, quote/enquiry form behaviour,
+protected admin operations, admin quote detail separation, admin listing/
+category/image write boundaries, quote workflow boundaries, and final
+static/security non-runtime scope.
+
+Phase 2L-A/B keeps Supabase canonical for website/admin listing and quote data.
+Pinecone remains a future derived search/retrieval index only. Admin
+listing/category/image writes remain behind `execute_admin_product_write(...)`;
+admin quote workflow writes remain behind `execute_admin_quote_workflow(...)`;
+local search-index jobs remain local enqueue records only.
+
+Phase 2L-A/B does not deploy, add Vercel or Supabase Cloud config, add real
+env values, add production evidence, add browser Supabase, add service-role
+runtime paths, access `website/chat-config.js`, add public/customer upload
+routes, add customer accounts, public quote tracking, customer-visible
+internal notes, notifications, CRM integration, n8n/Pinecone runtime changes,
+SaaS chatbot runtime work, Pinecone packages/env/API keys, embedding or
+reranking runtime, `/api/chat` retrieval/RAG wiring, transcript runtime paths,
+or ecommerce flows such as carts, checkout, payments, stock reservation,
+confirmed booking, order fulfilment, or online ordering.

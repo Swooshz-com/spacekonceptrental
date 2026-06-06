@@ -8,6 +8,10 @@ Phase 2D-A is preparation only. It does not deploy, connect Supabase Cloud, add
 Vercel project config, add real env values, add production config, or change
 runtime behaviour.
 
+Phase 2L-A/B adds release-candidate acceptance coverage before any future
+preview/deployment review. No deployment is performed by the
+release-candidate acceptance suite.
+
 ## Purpose
 
 Use this runbook during a future approved deployment review to prove the SKR
@@ -183,6 +187,8 @@ Before chat provider smoke testing:
 Run these commands before a future deployment PR is considered for public
 traffic:
 
+- Confirm the Phase 2L-A/B release-candidate acceptance tests are included in
+  `cd website && npm test`.
 - `cd website && npm test`.
 - `cd website && npm run typecheck`.
 - `cd website && npm run build`.
