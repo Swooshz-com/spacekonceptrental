@@ -6,6 +6,7 @@ import { describe, expect, it } from "vitest";
 const repoRoot = resolve(process.cwd(), "..");
 const sourceExtensions = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"]);
 const phase2pMergeCommit = "15a5d23941ac7fbe3297792311f50e414d622f5f";
+const phase2qMergeCommit = "62c2b11b6b15192434eb4035ba0a66a44cd6f763";
 const handoffDocPath = "docs/PREVIEW-DEPLOYMENT-HANDOFF.md";
 const branchFreezeDocPath = "docs/PREVIEW-DEPLOYMENT-BRANCH-FREEZE.md";
 const handoffValidatorPath = "scripts/validate-preview-handoff.cjs";
@@ -44,7 +45,7 @@ function readTrackedProductionSources(paths: string[]) {
 }
 
 describe("Phase 2Q-A/B preview deployment handoff", () => {
-  it("records Phase 2Q-A/B as current and Phase 2P-A/B as the completed capability", () => {
+  it("records Phase 2Q-A/B as the completed handoff after Phase 3A starts", () => {
     const status = normalizeWhitespace(readRepoFile("docs/PHASE-STATUS.md"));
     const roadmap = normalizeWhitespace(readRepoFile("docs/PHASE-ROADMAP.md"));
     const readiness = readRepoFile("docs/PHASE-2-READINESS-PLAN.md");
@@ -52,17 +53,19 @@ describe("Phase 2Q-A/B preview deployment handoff", () => {
     const checklist = readRepoFile("docs/checklists/PHASE-2-ADMIN-OPS.md");
 
     expect(status).toContain(
-      "Current phase: Phase 2Q-A/B - preview deployment handoff and branch-freeze package."
+      "Current phase: Phase 3A-A/B - product polish, content, and rental UI iteration."
     );
     expect(status).toContain(
-      "Latest completed capability: Phase 2P-A/B external preview smoke harness and rollback drill package."
+      "Latest completed capability: Phase 2Q-A/B preview deployment handoff and branch-freeze package."
     );
-    expect(status).toContain("Last merged capability PR: #121");
-    expect(status).toContain(`Merge commit: \`${phase2pMergeCommit}\``);
+    expect(status).toContain("Last merged capability PR: #122");
+    expect(status).toContain(`Merge commit: \`${phase2qMergeCommit}\``);
+    expect(status).toContain("Previous Current Phase 2Q-A/B status");
     expect(roadmap).toContain(
       "Phase 2Q-A/B adds the final preview deployment handoff and branch-freeze package"
     );
-    expect(readiness).toContain("Current Phase 2Q-A/B status");
+    expect(readiness).toContain("Current Phase 3A-A/B status");
+    expect(readiness).toContain("Previous Current Phase 2Q-A/B status");
     expect(decisionLog).toContain(
       "Decision: Phase 2Q-A/B adds the final preview deployment handoff and branch-freeze package."
     );
@@ -115,8 +118,8 @@ describe("Phase 2Q-A/B preview deployment handoff", () => {
     expect(validator).toContain(handoffDocPath);
     expect(validator).toContain(branchFreezeDocPath);
     expect(validator).toContain("Phase 2Q-A/B");
-    expect(validator).toContain("Phase 2P-A/B");
     expect(validator).toContain(phase2pMergeCommit);
+    expect(validator).toContain(phase2qMergeCommit);
     expect(validator).toContain("validate:release-candidate");
     expect(validator).toContain("validate:deploy-dry-run");
     expect(validator).toContain("validate:preview-approval-package");

@@ -45,17 +45,18 @@ function CatalogueCardImage({
   fallbackImage: StaticImageData;
 }) {
   const image = product.primaryImage;
+  const fallbackAltText = `${product.name} furniture rental setup`;
 
   if (image?.publicUrl) {
     return (
       <img
-        alt={image.altText ?? `${product.name} furniture rental setup`}
+        alt={image.altText ?? fallbackAltText}
         src={image.publicUrl}
       />
     );
   }
 
-  return <Image alt={image?.altText ?? ""} src={fallbackImage} />;
+  return <Image alt={image?.altText ?? fallbackAltText} src={fallbackImage} />;
 }
 
 function CatalogueCardMeta({ product }: { product: PublicCatalogueProduct }) {
@@ -64,6 +65,22 @@ function CatalogueCardMeta({ product }: { product: PublicCatalogueProduct }) {
       {product.categoryName ? <span>{product.categoryName}</span> : null}
       <span>Rental unit: {product.rentalUnit}</span>
     </div>
+  );
+}
+
+function CatalogueCardPlanning({
+  product
+}: {
+  product: PublicCatalogueProduct;
+}) {
+  return (
+    <aside className="catalogue-card__planning" aria-label={`Quote planning for ${product.name}`}>
+      <strong>Quote planning</strong>
+      <span>
+        Share event date, venue, quantities, and setup notes when you request
+        this listing.
+      </span>
+    </aside>
   );
 }
 
@@ -88,6 +105,11 @@ export function CataloguePageContent({
           <p>{intro}</p>
         </div>
         <p>{emptyMessage}</p>
+        <div className="hero__actions">
+          <Link className="button" href="/quote">
+            Send a general enquiry
+          </Link>
+        </div>
       </section>
     );
   }
@@ -112,6 +134,7 @@ export function CataloguePageContent({
               <CatalogueCardMeta product={product} />
               <h2>{product.name}</h2>
               <p>{product.shortDescription ?? product.description}</p>
+              <CatalogueCardPlanning product={product} />
               <div className="catalogue-card__actions">
                 <Link
                   className="card-link"
@@ -123,7 +146,7 @@ export function CataloguePageContent({
                   className="card-link"
                   href={getQuoteHrefForListing(product.slug)}
                 >
-                  Start enquiry
+                  Request this listing
                 </Link>
               </div>
             </div>

@@ -105,7 +105,7 @@ export default async function HomePage() {
                     className="card-link"
                     href={getQuoteHrefForListing(listing.slug)}
                   >
-                    Send enquiry
+                    Request this listing
                   </Link>
                 </div>
               </article>

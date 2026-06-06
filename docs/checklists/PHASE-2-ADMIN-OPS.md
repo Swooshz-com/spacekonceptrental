@@ -224,6 +224,15 @@ and route/action boundaries are implemented and tested.
 - [x] Pull-request CI runs the deterministic preview handoff validator and does not run the live smoke command.
 - [x] No deployment, deployment approval, Vercel config, Supabase Cloud config, secrets/env values, filled preview or production evidence, browser Supabase, service-role runtime path, customer uploads, public quote tracking, customer accounts, customer-visible internal notes, notifications, CRM, n8n/Pinecone runtime change, or ecommerce flow is added.
 
+## Phase 3A-A/B Product Polish Content And Rental UI Iteration
+
+- [x] Public rental catalogue/listing cards include clearer quote-planning cues and rental/enquiry CTAs.
+- [x] Public quote/enquiry form copy, helper text, safe validation copy, and receipt messaging are clearer without adding public tracking.
+- [x] Protected admin listing, category, media, and quote surfaces include clearer empty states and archive/follow-up guidance.
+- [x] User-facing copy stays aligned with rental/listing/enquiry/quote/request wording.
+- [x] Static and render tests cover the polished public/admin states and forbidden runtime/scope boundaries.
+- [x] No deployment, deployment approval, Vercel config, Supabase Cloud config, secrets/env values, filled preview or production evidence, browser Supabase, service-role runtime path, customer uploads, public quote tracking, customer accounts, customer-visible internal notes, notifications, CRM, n8n/Pinecone runtime change, or ecommerce flow is added.
+
 ## Phase 2D-A Deployment Readiness And Smoke-Test Runbook
 
 - [x] Deployment readiness docs are refreshed for catalogue media, admin listing media upload, public quote handoff, and atomic admin quote workflow surfaces.

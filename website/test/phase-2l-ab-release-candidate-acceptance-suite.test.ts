@@ -129,7 +129,7 @@ describe("Phase 2L-A/B release-candidate acceptance suite", () => {
     expect(cataloguePage).toContain("Start a general enquiry");
     expect(cataloguePage).toContain("fallbackImage");
     expect(catalogueDetail).toContain("Furniture listing");
-    expect(catalogueDetail).toContain("Start enquiry");
+    expect(catalogueDetail).toContain("Request this listing");
     expect(catalogueNotFound).toContain("Listing unavailable");
     expect(quotePage).toContain("Quote request");
     expect(quotePage).toContain("QuoteRequestForm");

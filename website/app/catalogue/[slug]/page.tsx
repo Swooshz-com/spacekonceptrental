@@ -138,6 +138,13 @@ export function ProductPageContent({
                 by the team.
               </dd>
             </div>
+            <div>
+              <dt>Quote planning</dt>
+              <dd>
+                Share event date, venue, preferred quantities, and delivery
+                notes so the team can confirm the right rental fit.
+              </dd>
+            </div>
           </dl>
 
           <div className="hero__actions">
@@ -145,7 +152,7 @@ export function ProductPageContent({
               {backLabel}
             </Link>
             <Link className="button" href={getQuoteHrefForListing(product.slug)}>
-              Start enquiry
+              Request this listing
             </Link>
           </div>
         </article>

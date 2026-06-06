@@ -238,7 +238,26 @@ Suggested first PR:
   Supabase, production evidence, or ecommerce flows. Product language remains
   enquiry/quote/request.
 
-Current Phase 2Q-A/B status:
+Current Phase 3A-A/B status:
+
+- PR #122 merged Phase 2Q-A/B preview deployment handoff and branch-freeze
+  package at merge commit
+  `62c2b11b6b15192434eb4035ba0a66a44cd6f763`.
+- Latest completed capability is Phase 2Q-A/B preview deployment handoff and
+  branch-freeze package.
+- Phase 3A-A/B is current as product-facing polish for the public rental
+  catalogue, quote/enquiry flow, and protected admin usability.
+- Public listing cards, listing detail, quote request helper/receipt copy, and
+  protected admin empty/destructive states are improved while keeping the
+  existing public catalogue read boundary and protected admin write boundaries.
+- No deployment, deployment approval, Vercel config, Supabase Cloud config,
+  real env values, production evidence, browser Supabase, service-role runtime
+  paths, n8n/Pinecone/RAG runtime work, public quote tracking, customer
+  accounts, customer-visible internal notes, notifications, CRM integration,
+  public/customer upload routes, transcript runtime paths, or ecommerce flow
+  is added.
+
+Previous Current Phase 2Q-A/B status:
 
 - PR #121 merged Phase 2P-A/B external preview smoke harness and rollback
   drill package at merge commit

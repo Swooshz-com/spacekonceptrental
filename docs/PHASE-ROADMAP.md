@@ -1158,3 +1158,29 @@ runtime work, Pinecone packages/env/API keys, embedding or reranking runtime,
 `/api/chat` retrieval/RAG wiring, transcript runtime paths, or ecommerce flows
 such as carts, checkout, payments, stock reservation, confirmed booking, order
 fulfilment, or online ordering.
+
+## Phase 3A: Product Polish, Content, And Rental UI Iteration
+
+Phase 3A-A/B adds product-facing polish for the public rental catalogue,
+quote/enquiry flow, and protected admin usability. It improves listing card
+quote cues, listing detail planning copy, quote form helper/receipt/error
+states, admin empty states, archive guidance, focus states, and accessibility
+text while keeping public users on published public-safe listing/category/
+image data only.
+
+Phase 3A-A/B keeps the site as a normal furniture/event rental website. Public
+users browse rental/event furniture listings and submit quote/enquiry requests.
+Admin users manage listings/images and the quote workflow. Copy should use
+listing, enquiry, quote, quote request, rental request, selected items, and
+requested items wording.
+
+Phase 3A-A/B does not deploy, approve deployment, add Vercel or Supabase
+Cloud config, add real env values, add filled preview or production evidence,
+add browser Supabase, add service-role runtime paths, access
+`website/chat-config.js`, add public/customer uploads, add customer accounts,
+add public quote tracking, expose customer-visible internal notes, add
+notifications or CRM integration, change n8n/Pinecone runtime behavior, add
+Pinecone packages/env/API keys, wire `/api/chat` to retrieval/RAG, add
+transcript runtime paths, or add ecommerce flows such as carts, checkout,
+payments, stock reservation, confirmed booking, order fulfilment, or online
+ordering.

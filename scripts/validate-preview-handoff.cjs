@@ -7,6 +7,7 @@ const handoffDocPath = 'docs/PREVIEW-DEPLOYMENT-HANDOFF.md';
 const branchFreezeDocPath = 'docs/PREVIEW-DEPLOYMENT-BRANCH-FREEZE.md';
 const handoffValidatorPath = 'scripts/validate-preview-handoff.cjs';
 const phase2pMergeCommit = '15a5d23941ac7fbe3297792311f50e414d622f5f';
+const phase2qMergeCommit = '62c2b11b6b15192434eb4035ba0a66a44cd6f763';
 
 function fail(message) {
   console.error(message);
@@ -123,22 +124,24 @@ function assertStatusDocs() {
 
   assertIncludes(
     status,
-    'Current phase: Phase 2Q-A/B - preview deployment handoff and branch-freeze package.',
+    'Current phase: Phase 3A-A/B - product polish, content, and rental UI iteration.',
     'phase status',
   );
   assertIncludes(
     status,
-    'Latest completed capability: Phase 2P-A/B external preview smoke harness and rollback drill package.',
+    'Latest completed capability: Phase 2Q-A/B preview deployment handoff and branch-freeze package.',
     'phase status',
   );
-  assertIncludes(status, 'Last merged capability PR: #121', 'phase status');
-  assertIncludes(status, `Merge commit: \`${phase2pMergeCommit}\``, 'phase status');
+  assertIncludes(status, 'Last merged capability PR: #122', 'phase status');
+  assertIncludes(status, `Merge commit: \`${phase2qMergeCommit}\``, 'phase status');
+  assertIncludes(status, 'Previous Current Phase 2Q-A/B status', 'phase status');
   assertIncludes(
     roadmap,
     'Phase 2Q-A/B adds the final preview deployment handoff and branch-freeze package',
     'phase roadmap',
   );
-  assertIncludes(readiness, 'Current Phase 2Q-A/B status', 'readiness plan');
+  assertIncludes(readiness, 'Current Phase 3A-A/B status', 'readiness plan');
+  assertIncludes(readiness, 'Previous Current Phase 2Q-A/B status', 'readiness plan');
   assertIncludes(
     decisionLog,
     'Decision: Phase 2Q-A/B adds the final preview deployment handoff and branch-freeze package.',

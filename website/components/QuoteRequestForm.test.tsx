@@ -32,7 +32,7 @@ describe("QuoteRequestForm", () => {
     fireEvent.change(screen.getByLabelText(/name/i), {
       target: { value: "Maya Tan" }
     });
-    fireEvent.change(screen.getByLabelText(/email/i), {
+    fireEvent.change(screen.getByLabelText(/email address/i), {
       target: { value: "maya@example.test" }
     });
     fireEvent.change(screen.getByLabelText(/phone/i), {
@@ -112,7 +112,7 @@ describe("QuoteRequestForm", () => {
     fireEvent.change(screen.getByLabelText(/name/i), {
       target: { value: "Maya Tan" }
     });
-    fireEvent.change(screen.getByLabelText(/email/i), {
+    fireEvent.change(screen.getByLabelText(/email address/i), {
       target: { value: "maya@example.test" }
     });
     fireEvent.change(screen.getByLabelText(/customer message/i), {

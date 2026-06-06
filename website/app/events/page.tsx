@@ -39,7 +39,7 @@ export default function EventsPage() {
         {eventUseCases.map((item) => (
           <article className="catalogue-card" key={item.title}>
             <div className="catalogue-card__image">
-              <Image alt="" src={item.image} />
+              <Image alt={`${item.title} event furniture setup`} src={item.image} />
             </div>
             <div className="catalogue-card__body">
               <h2>{item.title}</h2>

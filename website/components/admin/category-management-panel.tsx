@@ -356,7 +356,12 @@ export function CategoryManagementPanel({
 
       <div className="category-management__list" aria-label="Update categories">
         {categories.length === 0 ? (
-          <p>No categories are available to update yet.</p>
+          <section className="admin-dashboard__card admin-dashboard__card--summary">
+            <p>
+              No categories are available to update yet. Create a category
+              above before grouping rental listings.
+            </p>
+          </section>
         ) : (
           categories.map((category) => (
             <article className="category-management__item" key={category.id}>
@@ -415,6 +420,10 @@ export function CategoryManagementPanel({
                   />
                   Publish {category.name}
                 </label>
+                <p className="category-management__hint">
+                  Archive removes this category from active catalogue grouping;
+                  it does not delete the category record.
+                </p>
                 <div className="category-management__actions">
                   <button className="button" type="submit">
                     Save category {category.name}
