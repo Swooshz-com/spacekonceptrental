@@ -1071,3 +1071,24 @@ SaaS chatbot runtime work, Pinecone packages/env/API keys, embedding or
 reranking runtime, `/api/chat` retrieval/RAG wiring, transcript runtime paths,
 or ecommerce flows such as carts, checkout, payments, stock reservation,
 confirmed booking, order fulfilment, or online ordering.
+
+Phase 2M-A/B adds preview/deployment review preflight and CI parity hardening.
+It closes the release-gate parity gap by making pull-request CI run the full
+release-candidate command set where practical, including Docker-backed local
+Supabase RLS/schema tests and `git diff --check`, and by adding a local
+`npm run validate:release-candidate` convenience gate.
+
+Phase 2M-A/B records the future preview/deployment review preflight checklist:
+environment variable inventory by visibility, workspace ID review, Supabase
+Cloud review, admin access review, public quote/listing smoke checks, and
+rollback/abort checks.
+
+Phase 2M-A/B does not deploy, add Vercel or Supabase Cloud config, add real
+env values, add production evidence, add browser Supabase, add service-role
+runtime paths, access `website/chat-config.js`, add public/customer upload
+routes, add customer accounts, public quote tracking, customer-visible
+internal notes, notifications, CRM integration, n8n/Pinecone runtime changes,
+SaaS chatbot runtime work, Pinecone packages/env/API keys, embedding or
+reranking runtime, `/api/chat` retrieval/RAG wiring, transcript runtime paths,
+or ecommerce flows such as carts, checkout, payments, stock reservation,
+confirmed booking, order fulfilment, or online ordering.

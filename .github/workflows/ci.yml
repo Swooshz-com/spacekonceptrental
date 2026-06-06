@@ -29,6 +29,9 @@ jobs:
       - name: Test Supabase migration validator
         run: npm run test:supabase-migrations
 
+      - name: Run Supabase RLS/schema tests
+        run: npm run test:supabase-rls
+
       - name: Validate n8n workflow exports
         run: npm run validate:n8n
 
@@ -73,6 +76,17 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check diff hygiene
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --check
+          if [ -n "${GITHUB_BASE_REF:-}" ]; then
+            git diff --check "origin/${GITHUB_BASE_REF}...HEAD"
+          fi
 
       - name: Check forbidden tracked local/runtime files
         shell: bash

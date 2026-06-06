@@ -12,6 +12,10 @@ Phase 2L-A/B adds release-candidate acceptance coverage before any future
 preview/deployment review. No deployment is performed by the
 release-candidate acceptance suite.
 
+Phase 2M-A/B adds preview/deployment review preflight and CI parity
+hardening before any future preview/deployment review. No deployment is
+performed by the preflight gate.
+
 ## Purpose
 
 Use this runbook during a future approved deployment review to prove the SKR
@@ -187,6 +191,7 @@ Before chat provider smoke testing:
 Run these commands before a future deployment PR is considered for public
 traffic:
 
+- `npm run validate:release-candidate`.
 - Confirm the Phase 2L-A/B release-candidate acceptance tests are included in
   `cd website && npm test`.
 - `cd website && npm test`.

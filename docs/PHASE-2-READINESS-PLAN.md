@@ -238,7 +238,35 @@ Suggested first PR:
   Supabase, production evidence, or ecommerce flows. Product language remains
   enquiry/quote/request.
 
-Current Phase 2L-A/B status:
+Current Phase 2M-A/B status:
+
+- PR #117 merged Phase 2L-A/B release-candidate acceptance suite and final
+  MVP polish at merge commit
+  `aceee2ded00aee41b4e20197091f8527d9e8f8b7`.
+- Latest completed capability is Phase 2L-A/B release-candidate acceptance
+  suite and final MVP polish.
+- Phase 2M-A/B is current as preview/deployment review preflight and CI parity
+  hardening.
+- Pull-request CI now includes the full release-gate command set where
+  practical: website tests, typecheck, build, Supabase migration validation,
+  Supabase migration tests, Docker-backed Supabase RLS/schema tests, and
+  `git diff --check`.
+- `npm run validate:release-candidate` is the local convenience gate for the
+  same release-candidate command set and fails loudly when Docker is not
+  available for the RLS/schema suite.
+- `docs/PREVIEW-DEPLOYMENT-PREFLIGHT.md` records the future
+  preview/deployment review checklist, environment inventory, workspace ID
+  review, Supabase Cloud review, admin access review, public quote/listing
+  smoke checklist, and rollback/abort checklist.
+- The repo is better prepared for a future preview/deployment review, but no
+  deployment is performed in this PR.
+- No n8n/Pinecone/RAG runtime work, public quote tracking, customer accounts,
+  customer-visible internal notes, notifications, CRM integration,
+  public/customer upload routes, browser Supabase, service-role runtime paths,
+  deployment config, Supabase Cloud config, real env values, production
+  evidence, or ecommerce flow is added.
+
+Previous Current Phase 2L-A/B status:
 
 - PR #116 merged Phase 2K-A/B admin write-boundary hardening and deployment
   readiness at merge commit
