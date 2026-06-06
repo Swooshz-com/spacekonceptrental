@@ -178,6 +178,37 @@ Before chat provider smoke testing:
 - Confirm no live n8n workflow import, export, activation, execution, or
   mutation is part of the deployment PR unless separately approved.
 
+## Local validation checklist
+
+Run these commands before a future deployment PR is considered for public
+traffic:
+
+- `cd website && npm test`.
+- `cd website && npm run typecheck`.
+- `cd website && npm run build`.
+- `npm run validate:supabase-migrations`.
+- `npm run test:supabase-migrations`.
+- `npm run test:supabase-rls`.
+- `git diff --check`.
+
+## Manual smoke-test checklist
+
+- Public homepage loads.
+- Public listings load.
+- Public listing detail loads.
+- Public quote/enquiry can submit customer message with no item selected.
+- Public quote success has no tracking/status link.
+- Admin login/route gate blocks unauthenticated users.
+- Admin dashboard loads.
+- Admin category/listing/image metadata write works through protected UI/API.
+- Local search-index job is enqueued after admin listing/category/image write.
+- Admin quote inbox/detail shows customer message and separates internal notes.
+- Admin quote status/internal note update works.
+- Public user cannot read quote records back.
+- Public catalogue pages display published public-safe listing/category/image
+  data only.
+- Direct authenticated browser-role writes to listing metadata tables fail.
+
 ## Trusted proxy/CDN client IP header review
 
 Before enabling trusted client IP buckets:
@@ -265,7 +296,13 @@ Run these in order and capture evidence before public traffic.
 
 - As an owner/admin, confirm category and listing management controls render.
 - Confirm create, edit, publish/unpublish, and archive actions remain
-  first-party, CSRF-protected, and generic in success/failure states.
+  first-party, CSRF-protected, RPC-backed, and generic in success/failure
+  states.
+- Confirm metadata mutations go through `execute_admin_product_write(...)`.
+- Confirm direct authenticated inserts, updates, and deletes on `categories`,
+  `products`, and `product_images` fail.
+- Confirm a successful admin metadata write creates the expected product audit
+  row and enqueues a local search-index job.
 - Confirm viewer or wrong-workspace users cannot use management controls.
 
 ### Admin listing image upload
@@ -346,6 +383,20 @@ configuration, and rollback controls:
 - Verify chat fallback is safe if provider env is removed.
 - Capture incident notes, timeline, affected surfaces, evidence, and follow-up
   actions in the deployment PR or incident record.
+
+## Rollback notes
+
+- Database migration rollback considerations: reverting Phase 2K hardening
+  would re-open direct authenticated browser-role metadata writes, so rollback
+  requires a reviewed compensating control or immediate re-application of the
+  RPC-only write boundary.
+- Admin write-boundary hardening rollback considerations: if
+  `execute_admin_product_write(...)` fails in a future deployment, disable
+  admin metadata writes at the route/UI level while keeping direct table writes
+  blocked until the RPC is repaired.
+- No Pinecone/n8n runtime rollback is required for Phase 2K-A/B because no
+  Pinecone runtime, n8n workflow/runtime change, retrieval/RAG wiring, sync
+  worker, vector upsert/delete, or external search executor is added.
 
 ## Evidence checklist
 

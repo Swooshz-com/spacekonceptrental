@@ -238,7 +238,31 @@ Suggested first PR:
   Supabase, production evidence, or ecommerce flows. Product language remains
   enquiry/quote/request.
 
-Current Phase 2J-A/B status:
+Current Phase 2K-A/B status:
+
+- PR #115 merged Phase 2J-A/B MVP hardening, quote intake correctness, and
+  demo readiness at merge commit
+  `611ef1eafee5971b1d60929d17ab41a94a357522`.
+- Latest completed capability is Phase 2J-A/B MVP hardening, quote intake
+  correctness, and demo readiness.
+- Phase 2K-A/B is current as admin write-boundary hardening and deployment
+  readiness.
+- Direct authenticated browser-role writes to `categories`, `products`,
+  `product_images`, and product audit inserts are blocked.
+- Admin listing/category/image writes remain on the protected
+  `execute_admin_product_write(...)` RPC path and still preserve product audit
+  plus local search-index enqueue invariants.
+- Quote workflow writes remain on `execute_admin_quote_workflow(...)`; public
+  quote creation remains on the first-party public quote boundary.
+- Public catalogue reads remain on the public-safe `get_public_catalogue(...)`
+  boundary and display only published listing/category/image data.
+- Deployment/demo readiness docs and smoke-test runbooks are refreshed without
+  deployment, production secrets, real evidence artifacts, Vercel config,
+  Supabase Cloud config, browser Supabase, service-role runtime paths,
+  Pinecone/n8n/RAG runtime work, public quote tracking, customer accounts,
+  notifications, CRM, uploads, or ecommerce flows.
+
+Previous Current Phase 2J-A/B status:
 
 - PR #114 merged Phase 2I-A/B public rental catalogue and quote request UX MVP
   at merge commit `6bf9202df80fbfac995ee168dceea0ef7c26edfa`.

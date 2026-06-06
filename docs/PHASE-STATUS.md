@@ -4,19 +4,20 @@ This is the quick status page for the SKR repo. Use `docs/PHASE-2-READINESS-PLAN
 
 ## Current phase
 
-Current phase: Phase 2J-A/B - MVP hardening, quote intake correctness, and demo readiness.
+Current phase: Phase 2K-A/B - admin write-boundary hardening and deployment readiness.
 
-Latest completed capability: Phase 2I-A/B public rental catalogue and quote request UX MVP.
+Latest completed capability: Phase 2J-A/B MVP hardening, quote intake correctness, and demo readiness.
 
-Last merged capability PR: #114
+Last merged capability PR: #115
 
-Merge commit: `6bf9202df80fbfac995ee168dceea0ef7c26edfa`
+Merge commit: `611ef1eafee5971b1d60929d17ab41a94a357522`
 
-Phase 2J-A/B adds MVP hardening, quote intake correctness, and demo readiness.
-It preserves public quote/enquiry customer messages safely, adds a protected
-dedicated admin quote-detail read path, and improves public quote/listing
-empty, error, success, and not-found states while keeping the existing
-public-safe catalogue read boundary and public quote request boundary.
+Phase 2K-A/B adds admin write-boundary hardening and deployment readiness. It
+keeps admin listing/category/image metadata writes behind the protected
+`execute_admin_product_write(...)` RPC, blocks direct authenticated
+browser-role writes to listing metadata tables, preserves product audit and
+local search-index enqueue invariants, and refreshes deployment/demo readiness
+docs and smoke-test coverage without deploying.
 
 Public users only see public-safe published listing, category, and listing
 image data. Public users still cannot track quotes or view internal quote
@@ -24,7 +25,7 @@ workflow state. Admin internal notes remain admin-only. Supabase remains
 canonical for website/admin listing and quote data. Pinecone remains a future
 derived index only and is not used as canonical business storage.
 
-Phase 2J-A/B does not add Pinecone runtime code, Pinecone packages, Pinecone
+Phase 2K-A/B does not add Pinecone runtime code, Pinecone packages, Pinecone
 env reads, secrets, API keys, Pinecone executors, n8n workflow/runtime changes,
 embedding runtime, sync workers, `/api/chat` retrieval wiring,
 search-index document writers, real vector upsert/delete, runtime reranking,
@@ -53,7 +54,23 @@ config, env/secrets, and production evidence remain blocked.
 
 ## Remaining-work map
 
-Completed through PR #114:
+Completed through PR #115:
+
+- PR #115 merged Phase 2J-A/B MVP hardening, quote intake correctness, and
+  demo readiness at merge commit
+  `611ef1eafee5971b1d60929d17ab41a94a357522`.
+- The latest completed capability is Phase 2J-A/B MVP hardening, quote intake
+  correctness, and demo readiness. It preserved public quote/enquiry customer
+  messages, added a protected dedicated admin quote-detail read path, and
+  improved public quote/listing empty, error, success, and not-found states.
+- Phase 2K-A/B is current as admin write-boundary hardening and deployment
+  readiness. It blocks direct authenticated browser-role writes to listing
+  metadata tables, keeps admin listing/category/image writes on
+  `execute_admin_product_write(...)`, preserves local search-index enqueue and
+  audit invariants, refreshes deployment/demo runbooks, and does not add
+  deployment, Pinecone/n8n/RAG runtime work, public quote tracking, customer
+  accounts, notifications, CRM, uploads, browser Supabase, service-role
+  runtime paths, or ecommerce flows.
 
 - PR #114 merged Phase 2I-A/B public rental catalogue and quote request UX MVP
   at merge commit `6bf9202df80fbfac995ee168dceea0ef7c26edfa`.
@@ -61,7 +78,7 @@ Completed through PR #114:
   quote request UX MVP. It improved the public homepage, listing/category/
   detail browsing, and quote/enquiry handoff while keeping public users on
   published public-safe listing/category/image data only.
-- Phase 2J-A/B is current as MVP hardening, quote intake correctness, and demo
+- Phase 2J-A/B completed MVP hardening, quote intake correctness, and demo
   readiness. It preserves public customer messages, adds a protected dedicated
   admin quote-detail read path, keeps admin internal notes admin-only, and does
   not add public quote tracking, customer accounts, notifications, CRM,

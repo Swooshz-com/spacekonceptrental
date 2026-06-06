@@ -1023,3 +1023,27 @@ deployment, Vercel or Supabase Cloud config, browser Supabase, service-role
 runtime paths, transcript runtime paths, or ecommerce flows such as carts,
 checkout, payments, stock reservation, confirmed booking, order fulfilment, or
 online ordering.
+
+Phase 2K-A/B adds admin write-boundary hardening and deployment readiness. It
+blocks direct authenticated browser-role writes to listing metadata tables,
+keeps admin listing/category/image writes on the protected
+`execute_admin_product_write(...)` RPC, preserves product audit and local
+search-index enqueue invariants, and refreshes deployment/demo readiness docs
+and smoke-test runbooks.
+
+Phase 2K-A/B keeps public catalogue reads on `get_public_catalogue(...)`,
+public quote/enquiry submissions on `POST /api/quote`, and admin quote workflow
+writes on `execute_admin_quote_workflow(...)`. Public users still cannot track
+quotes or view internal quote workflow state, customer messages, quote items,
+quote activity, or admin internal notes. Admin internal notes remain
+admin-only.
+
+Phase 2K-A/B does not deploy, add Vercel or Supabase Cloud config, add real
+env values, add production evidence, add browser Supabase, add service-role
+runtime paths, access `website/chat-config.js`, add public/customer upload
+routes, add customer accounts, public quote tracking, customer-visible
+internal notes, notifications, CRM integration, n8n/Pinecone runtime changes,
+SaaS chatbot runtime work, Pinecone packages/env/API keys, embedding or
+reranking runtime, `/api/chat` retrieval/RAG wiring, transcript runtime paths,
+or ecommerce flows such as carts, checkout, payments, stock reservation,
+confirmed booking, order fulfilment, or online ordering.

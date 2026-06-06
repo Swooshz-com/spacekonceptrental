@@ -3367,11 +3367,12 @@ check('anonymous public cannot write catalogue tables', () => {
   );
 });
 
-check('authenticated product admins can write only their workspace catalogue rows and audit product actions', () => {
+check('authenticated product admins cannot bypass product write RPC with direct catalogue or audit writes', () => {
   const categoryId = '40000000-0000-4000-8000-000000000101';
   const productId = '50000000-0000-4000-8000-000000000101';
   const imageId = '60000000-0000-4000-8000-000000000101';
-  const output = queryAs(
+
+  statementFailsAs(
     'authenticated',
     ids.authMemberA,
     `
@@ -3391,14 +3392,34 @@ check('authenticated product admins can write only their workspace catalogue row
         false,
         10
       )
-      returning id::text;
+    `,
+  );
 
+  statementFailsAs(
+    'authenticated',
+    ids.authMemberA,
+    `
       update public.categories
       set is_published = true
-      where id = '${categoryId}'
+      where id = '${ids.categoryDraftA}'
         and workspace_id = '${ids.workspaceA}'
-      returning id::text;
+    `,
+  );
 
+  statementFailsAs(
+    'authenticated',
+    ids.authMemberA,
+    `
+      delete from public.categories
+      where id = '${ids.categoryDraftA}'
+        and workspace_id = '${ids.workspaceA}'
+    `,
+  );
+
+  statementFailsAs(
+    'authenticated',
+    ids.authMemberA,
+    `
       insert into public.products (
         id,
         workspace_id,
@@ -3417,14 +3438,34 @@ check('authenticated product admins can write only their workspace catalogue row
         'draft',
         10
       )
-      returning id::text;
+    `,
+  );
 
+  statementFailsAs(
+    'authenticated',
+    ids.authMemberA,
+    `
       update public.products
       set status = 'published'
-      where id = '${productId}'
+      where id = '${ids.productDraftA}'
         and workspace_id = '${ids.workspaceA}'
-      returning id::text;
+    `,
+  );
 
+  statementFailsAs(
+    'authenticated',
+    ids.authMemberA,
+    `
+      delete from public.products
+      where id = '${ids.productDraftA}'
+        and workspace_id = '${ids.workspaceA}'
+    `,
+  );
+
+  statementFailsAs(
+    'authenticated',
+    ids.authMemberA,
+    `
       insert into public.product_images (
         id,
         workspace_id,
@@ -3445,15 +3486,35 @@ check('authenticated product admins can write only their workspace catalogue row
         10,
         true
       )
-      returning id::text;
+    `,
+  );
 
+  statementFailsAs(
+    'authenticated',
+    ids.authMemberA,
+    `
       update public.product_images
       set status = 'archived',
         is_primary = false
-      where id = '${imageId}'
+      where id = '${ids.imagePublishedA}'
         and workspace_id = '${ids.workspaceA}'
-      returning id::text;
+    `,
+  );
 
+  statementFailsAs(
+    'authenticated',
+    ids.authMemberA,
+    `
+      delete from public.product_images
+      where id = '${ids.imagePublishedA}'
+        and workspace_id = '${ids.workspaceA}'
+    `,
+  );
+
+  statementFailsAs(
+    'authenticated',
+    ids.authMemberA,
+    `
       insert into public.audit_logs (
         workspace_id,
         actor_admin_user_id,
@@ -3473,12 +3534,6 @@ check('authenticated product admins can write only their workspace catalogue row
         '{}'::jsonb
       );
     `,
-  );
-
-  assert.deepEqual(
-    output.split('\n').filter(Boolean),
-    [categoryId, categoryId, productId, productId, imageId, imageId],
-    'owner should write and update only their workspace catalogue rows',
   );
 });
 
@@ -3558,6 +3613,68 @@ check('authenticated product writes reject cross-workspace relationships', () =>
         'cross-workspace-product-image.jpg'
       )
     `,
+  );
+});
+
+check('execute_admin_product_write rejects cross-workspace relationship payloads', () => {
+  statementFailsAs(
+    'authenticated',
+    ids.authMemberA,
+    `
+      select public.execute_admin_product_write(
+        'product.create',
+        '50000000-0000-4000-8000-000000000401'::uuid,
+        '${ids.workspaceA}'::uuid,
+        jsonb_build_object(
+          'category_id', '${ids.categoryPublishedB}',
+          'slug', 'rpc-cross-category-create',
+          'name', 'RPC Cross Category Create',
+          'short_description', 'Rejected',
+          'description', 'Rejected',
+          'rental_unit', 'day',
+          'status', 'draft',
+          'sort_order', 60
+        )
+      )
+    `,
+    /product_category_workspace_mismatch/i,
+  );
+
+  statementFailsAs(
+    'authenticated',
+    ids.authMemberA,
+    `
+      select public.execute_admin_product_write(
+        'product.update',
+        '${ids.productDraftA}'::uuid,
+        '${ids.workspaceA}'::uuid,
+        jsonb_build_object(
+          'category_id', '${ids.categoryPublishedB}'
+        )
+      )
+    `,
+    /product_category_workspace_mismatch/i,
+  );
+
+  statementFailsAs(
+    'authenticated',
+    ids.authMemberA,
+    `
+      select public.execute_admin_product_write(
+        'productImage.create',
+        '60000000-0000-4000-8000-000000000401'::uuid,
+        '${ids.workspaceA}'::uuid,
+        jsonb_build_object(
+          'product_id', '${ids.productPublishedB}',
+          'storage_bucket', 'listing-media',
+          'storage_path', '${ids.workspaceA}/${ids.productPublishedB}/rpc-cross-product-image.webp',
+          'alt_text', 'Rejected cross-workspace product image',
+          'sort_order', 10,
+          'is_primary', false
+        )
+      )
+    `,
+    /product_image_workspace_mismatch/i,
   );
 });
 

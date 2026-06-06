@@ -1838,6 +1838,45 @@ runtime paths, add retention cleanup jobs, or add ecommerce flows such as
 carts, checkout, payments, stock reservation, confirmed booking, order
 fulfilment, or online ordering.
 
+## 2026-06-06: Admin Write-Boundary Hardening And Deployment Readiness
+
+Decision: Phase 2K-A/B hardens admin write boundaries and deployment/demo readiness.
+
+Reason: PR #115 merged Phase 2J-A/B at
+`611ef1eafee5971b1d60929d17ab41a94a357522`, leaving the MVP ready for a
+pre-deployment hardening pass. Admin listing/category/image metadata writes
+must not be bypassable through direct authenticated browser-role table writes;
+they should go through the approved protected admin API and
+`execute_admin_product_write(...)` boundary so mutation, product audit, and
+local search-index enqueue stay together.
+
+The implementation revokes direct authenticated insert/update grants and drops
+direct insert/update policies for `categories`, `products`, and
+`product_images`. It also removes the direct product-admin audit insert policy
+so product audit rows are written through the same protected RPC transaction.
+The product write RPC remains executable by authenticated admin sessions and is
+security-definer with its own owner/admin workspace check, relationship
+constraints, product audit insert, and local search-index enqueue.
+
+Quote workflow writes remain on `execute_admin_quote_workflow(...)`. Public
+quote creation remains on the public quote request boundary. Public catalogue
+reads remain on `get_public_catalogue(...)` and display published public-safe
+listing/category/image data only.
+
+Deployment/demo readiness docs and smoke-test runbooks are refreshed without
+deploying. Phase 2K-A/B does not add Vercel config, connect Supabase Cloud,
+add real secrets or env values, add production evidence, add browser Supabase,
+add service-role runtime paths, access `website/chat-config.js`, add
+public/customer upload routes, add customer accounts, add public quote
+tracking, expose customer-visible internal notes, add notifications or CRM
+integration, change n8n/Pinecone runtime behavior, add SaaS chatbot runtime
+work, add Pinecone SDK/package dependencies, add Pinecone env vars or API
+keys, add embedding/reranking runtime, wire `/api/chat` to retrieval/RAG, wire
+transcript reads or writes into `/api/chat`, add admin transcript UI, add
+transcript deletion/export runtime paths, add retention cleanup jobs, or add
+ecommerce flows such as carts, checkout, payments, stock reservation,
+confirmed booking, order fulfilment, or online ordering.
+
 ## 2026-06-06: MVP Hardening, Quote Intake Correctness, And Demo Readiness
 
 Decision: Phase 2J-A/B adds MVP hardening, quote intake correctness, and demo readiness.

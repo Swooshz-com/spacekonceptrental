@@ -109,6 +109,25 @@ checks, CSRF proof validation, owner/admin workspace scope, and a session-bound
 authenticated Supabase client. Customer uploads and arbitrary public upload
 routes remain forbidden.
 
+## Admin write-boundary expectations
+
+Admin listing/category/image metadata writes must use the protected
+first-party admin API route, CSRF/session/workspace/admin gate, and
+`execute_admin_product_write(...)`. Direct authenticated browser-role writes to
+`categories`, `products`, `product_images`, and product audit inserts are
+blocked.
+
+The approved RPC performs the metadata mutation, product audit insert, and
+local search-index job enqueue in one database transaction. Reviewers should
+confirm admin UI writes still enqueue a local search-index job and that no
+Pinecone, n8n, sync worker, vector upsert/delete, retrieval, or external search
+runtime is added.
+
+Storage object writes for listing media remain separate from product metadata
+table writes. The protected upload route may verify a product exists in the
+trusted workspace and write to the approved `listing-media` bucket, but listing
+image metadata must still be created through `execute_admin_product_write(...)`.
+
 ## Forbidden env exposure
 
 Forbidden exposure includes:
@@ -156,6 +175,9 @@ Before public traffic is enabled, reviewers must confirm:
 - The smoke-test checklist in `docs/DEPLOYMENT-SMOKE-TEST-RUNBOOK.md` is run
   before public traffic.
 - Evidence is captured using `docs/templates/DEPLOYMENT-EVIDENCE.md`.
+- Direct browser-role listing metadata table writes are blocked while
+  `execute_admin_product_write(...)` still succeeds for owner/admin users and
+  enqueues a local search-index job.
 
 ## Deferred
 
