@@ -1838,6 +1838,38 @@ runtime paths, add retention cleanup jobs, or add ecommerce flows such as
 carts, checkout, payments, stock reservation, confirmed booking, order
 fulfilment, or online ordering.
 
+## 2026-06-06: Preview/Deployment Review Preflight And CI Parity Hardening
+
+Decision: Phase 2M-A/B makes the release-candidate gate deterministic in CI.
+
+Reason: PR #117 merged Phase 2L-A/B at
+`aceee2ded00aee41b4e20197091f8527d9e8f8b7`, and the local validation set used
+for release-candidate review was broader than the normal pull-request CI gate.
+The next safe step is to make the pull-request gate include the full
+release-candidate command set where practical and document the future
+preview/deployment review preflight without deploying.
+
+The implementation adds Docker-backed `npm run test:supabase-rls` and
+`git diff --check` to pull-request CI, adds
+`npm run validate:release-candidate` as a local convenience gate, and records a
+future preview/deployment preflight checklist covering environment visibility,
+workspace IDs, Supabase Cloud review, admin access review, public
+quote/listing smoke checks, and rollback/abort checks.
+
+No deployment is performed in this PR. Phase 2M-A/B does not add Vercel
+config, connect Supabase Cloud, add real secrets or env values, add production
+evidence, add browser Supabase, add service-role runtime paths, access
+`website/chat-config.js`, add public/customer upload routes, add customer
+accounts, add public quote tracking, expose customer-visible internal notes,
+add notifications or CRM integration, change n8n/Pinecone runtime behavior,
+add SaaS chatbot runtime work, add Pinecone SDK/package dependencies, add
+Pinecone env vars or API keys, add embedding/reranking runtime, wire
+`/api/chat` to retrieval/RAG, wire transcript reads or writes into
+`/api/chat`, add admin transcript UI, add transcript deletion/export runtime
+paths, add retention cleanup jobs, or add ecommerce flows such as carts,
+checkout, payments, stock reservation, confirmed booking, order fulfilment, or
+online ordering.
+
 ## 2026-06-06: Release-Candidate Acceptance Suite And Final MVP Polish
 
 Decision: Phase 2L-A/B marks the MVP release candidate as locally acceptance-covered.

@@ -11,6 +11,8 @@ visibility and names the reviews required before public traffic is enabled.
 Phase 2L-A/B adds local release-candidate acceptance coverage for these
 surfaces. No deployment is performed by that release-candidate acceptance
 work.
+Phase 2M-A/B adds preview/deployment review preflight and CI parity
+hardening. No deployment is performed by that preflight work.
 
 The future target shape remains a Vercel-hosted `website/` Next.js app with
 server-only Supabase and a temporary server-side n8n provider behind
@@ -166,6 +168,10 @@ Service-role key prohibition in runtime paths remains active. never put service-
 Before public traffic is enabled, reviewers must confirm:
 
 - No deployment is approved by Phase 2D-A.
+- The Phase 2M-A/B preview/deployment preflight in
+  `docs/PREVIEW-DEPLOYMENT-PREFLIGHT.md` has been reviewed.
+- `npm run validate:release-candidate` has passed locally or in CI for the
+  candidate branch.
 - The Phase 2L-A/B release-candidate acceptance suite has passed locally or in
   CI for the candidate branch.
 - A later deployment PR has explicit current approval.
