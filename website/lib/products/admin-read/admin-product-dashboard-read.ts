@@ -317,7 +317,12 @@ function mapDashboardData(
     if (product) {
       product.imageCount += 1;
 
-      if (image.isPrimary && image.altText && !product.primaryImageAltText) {
+      if (
+        image.isPrimary &&
+        image.status === "active" &&
+        image.altText &&
+        !product.primaryImageAltText
+      ) {
         product.primaryImageAltText = image.altText;
       }
     }

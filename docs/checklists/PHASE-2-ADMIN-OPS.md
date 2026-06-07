@@ -233,6 +233,15 @@ and route/action boundaries are implemented and tested.
 - [x] Static and render tests cover the polished public/admin states and forbidden runtime/scope boundaries.
 - [x] No deployment, deployment approval, Vercel config, Supabase Cloud config, secrets/env values, filled preview or production evidence, browser Supabase, service-role runtime path, customer uploads, public quote tracking, customer accounts, customer-visible internal notes, notifications, CRM, n8n/Pinecone runtime change, or ecommerce flow is added.
 
+## Phase 3B-A/B Admin Operations Readiness And Quote Triage Polish
+
+- [x] Protected admin listing surfaces show publication readiness cues from existing listing metadata, category, description, rental unit, and image metadata.
+- [x] Protected admin category and media surfaces show grouping/media readiness guidance, primary image effects, alt text guidance, and archive meaning without adding hard-delete flows.
+- [x] Protected admin quote surfaces show triage summaries and missing-data/follow-up cues from existing quote request, requested item, message, and internal activity data.
+- [x] Public quote success remains receipt-only with no public tracking/status route or customer account surface.
+- [x] Static and render tests cover admin readiness/triage states and forbidden runtime/scope boundaries.
+- [x] No deployment, deployment approval, Vercel config, Supabase Cloud config, secrets/env values, filled preview or production evidence, browser Supabase, service-role runtime path, customer uploads, public quote tracking, customer accounts, customer-visible internal notes, notifications, CRM, n8n/Pinecone runtime change, or ecommerce flow is added.
+
 ## Phase 2D-A Deployment Readiness And Smoke-Test Runbook
 
 - [x] Deployment readiness docs are refreshed for catalogue media, admin listing media upload, public quote handoff, and atomic admin quote workflow surfaces.

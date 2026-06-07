@@ -631,6 +631,73 @@ select {
   margin: 0;
 }
 
+.quote-inbox__triage-summary,
+.admin-readiness {
+  background: var(--accent-soft);
+  border: 1px solid #c9e1d2;
+  border-radius: 8px;
+  color: var(--accent-dark);
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+}
+
+.quote-inbox__triage-summary {
+  grid-template-columns: minmax(0, 0.9fr) minmax(280px, 1fr);
+}
+
+.quote-inbox__triage-summary h3,
+.admin-readiness h3,
+.admin-readiness p {
+  margin: 0;
+}
+
+.admin-readiness--inline {
+  background: #ffffff;
+  border-color: var(--border);
+  color: var(--text);
+}
+
+.admin-readiness__badge {
+  border-radius: 999px;
+  display: inline-flex;
+  font-size: 0.78rem;
+  font-weight: 900;
+  justify-self: start;
+  padding: 6px 10px;
+  text-transform: uppercase;
+}
+
+.admin-readiness__badge--ready {
+  background: var(--accent-soft);
+  color: var(--accent-dark);
+}
+
+.admin-readiness__badge--attention {
+  background: #fff4ee;
+  color: #7b3418;
+}
+
+.admin-readiness__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.admin-readiness__list li {
+  background: #fbfaf7;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  font-size: 0.84rem;
+  font-weight: 800;
+  line-height: 1.4;
+  padding: 8px 10px;
+}
+
 .quote-inbox__section {
   display: grid;
   gap: 8px;
@@ -866,7 +933,8 @@ select {
   .detail-layout,
   .route-grid,
   .admin-dashboard__header,
-  .admin-dashboard__grid {
+  .admin-dashboard__grid,
+  .quote-inbox__triage-summary {
     grid-template-columns: 1fr;
   }
 

@@ -92,6 +92,44 @@ function statusLabel(value: string) {
   return value.replace(/_/g, " ");
 }
 
+function quoteStatusSummary(
+  quoteRequests: AdminQuoteRequestInboxQuoteRequest[]
+) {
+  return {
+    newRequests: quoteRequests.filter((quoteRequest) => quoteRequest.status === "new").length,
+    inReview: quoteRequests.filter(
+      (quoteRequest) => quoteRequest.status === "reviewing"
+    ).length,
+    quoted: quoteRequests.filter((quoteRequest) => quoteRequest.status === "quoted").length,
+    closed: quoteRequests.filter(
+      (quoteRequest) => quoteRequest.status === "closed"
+    ).length
+  };
+}
+
+function quoteTriageCues(quoteRequest: AdminQuoteRequestInboxQuoteRequest) {
+  const hasContact = Boolean(
+    quoteRequest.customerEmail || quoteRequest.customerPhone
+  );
+
+  return [
+    hasContact ? "Contact method available" : "Missing contact method",
+    quoteRequest.eventDate ? "Event date captured" : "Missing event date",
+    quoteRequest.venue ? "Venue captured" : "Missing venue",
+    quoteRequest.items.length > 0
+      ? `${quoteRequest.items.length} requested ${
+          quoteRequest.items.length === 1 ? "item" : "items"
+        }`
+      : "No requested items captured",
+    quoteRequest.customerMessage
+      ? "Customer message captured"
+      : "No customer message",
+    quoteRequest.activity.length > 0
+      ? "Internal activity recorded"
+      : "No internal activity yet"
+  ];
+}
+
 function activityText(activity: AdminQuoteRequestInboxActivity) {
   if (activity.activityType === "internal_note") {
     return activity.note ?? "Internal note recorded.";
@@ -267,6 +305,8 @@ export function QuoteRequestInboxPanel({
     );
   }
 
+  const summary = quoteStatusSummary(inbox.data.quoteRequests);
+
   return (
     <section className="admin-dashboard" aria-label="Quote request inbox">
       <div className="admin-dashboard__header">
@@ -295,6 +335,37 @@ export function QuoteRequestInboxPanel({
           : status.message}
       </div>
 
+      <section
+        className="quote-inbox__triage-summary"
+        aria-label="Quote triage summary"
+      >
+        <div>
+          <h3>Quote triage summary</h3>
+          <p className="category-management__hint">
+            Internal triage cues stay inside this admin workspace and help the
+            team prioritise follow-up from existing quote request details.
+          </p>
+        </div>
+        <dl className="admin-dashboard__stats">
+          <div>
+            <dt>New requests</dt>
+            <dd>{summary.newRequests}</dd>
+          </div>
+          <div>
+            <dt>In review</dt>
+            <dd>{summary.inReview}</dd>
+          </div>
+          <div>
+            <dt>Quoted/contacted</dt>
+            <dd>{summary.quoted}</dd>
+          </div>
+          <div>
+            <dt>Closed requests</dt>
+            <dd>{summary.closed}</dd>
+          </div>
+        </dl>
+      </section>
+
       {inbox.data.quoteRequests.length === 0 ? (
         <section className="admin-dashboard__card admin-dashboard__card--summary">
           <p>
@@ -316,6 +387,14 @@ export function QuoteRequestInboxPanel({
                     {statusLabel(quoteRequest.status)} - {quoteRequest.source}
                   </p>
                 </div>
+                <section className="quote-inbox__section">
+                  <h4>Triage cues</h4>
+                  <ul className="admin-readiness__list">
+                    {quoteTriageCues(quoteRequest).map((cue) => (
+                      <li key={cue}>{cue}</li>
+                    ))}
+                  </ul>
+                </section>
                 <dl className="quote-inbox__details">
                   <div>
                     <dt>Submitted</dt>

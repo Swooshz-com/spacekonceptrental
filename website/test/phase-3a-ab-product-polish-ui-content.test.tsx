@@ -27,6 +27,7 @@ vi.mock("next/image", () => ({
 const repoRoot = resolve(process.cwd(), "..");
 const sourceExtensions = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"]);
 const phase2qMergeCommit = "62c2b11b6b15192434eb4035ba0a66a44cd6f763";
+const phase3aMergeCommit = "6e8bcf23bc8d7eef12b738613344764c0c1961e6";
 const forbiddenCommercePattern =
   /cart|checkout|payments?|customer account|stock reservation|order fulfilment|confirmed booking|online ordering/i;
 
@@ -103,7 +104,7 @@ describe("Phase 3A-A/B product polish and rental UI copy", () => {
     vi.restoreAllMocks();
   });
 
-  it("records Phase 3A-A/B as current without implying deployment approval", () => {
+  it("records Phase 3A-A/B as completed after Phase 3B starts", () => {
     const status = normalizeWhitespace(readRepoFile("docs/PHASE-STATUS.md"));
     const roadmap = normalizeWhitespace(readRepoFile("docs/PHASE-ROADMAP.md"));
     const readiness = readRepoFile("docs/PHASE-2-READINESS-PLAN.md");
@@ -111,18 +112,21 @@ describe("Phase 3A-A/B product polish and rental UI copy", () => {
     const checklist = readRepoFile("docs/checklists/PHASE-2-ADMIN-OPS.md");
 
     expect(status).toContain(
-      "Current phase: Phase 3A-A/B - product polish, content, and rental UI iteration."
+      "Current phase: Phase 3B-A/B - admin operations readiness and quote triage polish."
     );
     expect(status).toContain(
-      "Latest completed capability: Phase 2Q-A/B preview deployment handoff and branch-freeze package."
+      "Latest completed capability: Phase 3A-A/B product polish, content, and rental UI iteration."
     );
-    expect(status).toContain("Last merged capability PR: #122");
+    expect(status).toContain("Last merged capability PR: #123");
+    expect(status).toContain(`Merge commit: \`${phase3aMergeCommit}\``);
+    expect(status).toContain("Previous Current Phase 3A-A/B status");
     expect(status).toContain(`Merge commit: \`${phase2qMergeCommit}\``);
     expect(status).toContain("No deployment is performed or approved");
     expect(roadmap).toContain(
       "Phase 3A-A/B adds product-facing polish for the public rental catalogue, quote/enquiry flow, and protected admin usability"
     );
-    expect(readiness).toContain("Current Phase 3A-A/B status");
+    expect(readiness).toContain("Current Phase 3B-A/B status");
+    expect(readiness).toContain("Previous Current Phase 3A-A/B status");
     expect(decisionLog).toContain(
       "Decision: Phase 3A-A/B adds product polish, content, and rental UI iteration."
     );

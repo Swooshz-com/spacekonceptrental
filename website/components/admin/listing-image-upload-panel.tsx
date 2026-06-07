@@ -227,6 +227,10 @@ export function ListingImageUploadPanel({
           Upload approved image files for furniture and event-rental listings.
           The server stores the file and creates the listing image metadata.
         </p>
+        <p className="category-management__hint">
+          Use approved listing images only. Primary uploaded images can lead
+          the public catalogue display after the image metadata is active.
+        </p>
       </div>
 
       <div

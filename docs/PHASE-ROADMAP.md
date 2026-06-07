@@ -1184,3 +1184,29 @@ Pinecone packages/env/API keys, wire `/api/chat` to retrieval/RAG, add
 transcript runtime paths, or add ecommerce flows such as carts, checkout,
 payments, stock reservation, confirmed booking, order fulfilment, or online
 ordering.
+
+## Phase 3B: Admin Operations Readiness And Quote Triage Polish
+
+Phase 3B-A/B adds admin operations readiness and quote triage polish for the
+protected admin listing, category, media, and quote workflow surfaces. It
+improves listing publication readiness cues, category grouping guidance, media
+readiness guidance, quote request triage summaries, missing-data hints,
+requested item cues, customer message cues, and admin-only internal follow-up
+guidance.
+
+Phase 3B-A/B keeps the work repo-local and admin/product-scoped. Public users
+still browse rental/event furniture listings and submit quote/enquiry requests
+with receipt-only success. Admin users use the protected existing admin
+surfaces to understand listing readiness and quote triage status before any
+separately approved preview deployment.
+
+Phase 3B-A/B does not deploy, approve deployment, add Vercel or Supabase Cloud
+config, add real env values, add filled preview or production evidence, add
+browser Supabase, add service-role runtime paths, access
+`website/chat-config.js`, add public/customer uploads, add customer accounts,
+add public quote tracking, expose customer-visible internal notes, add
+notifications or CRM integration, change n8n/Pinecone runtime behavior, add
+Pinecone packages/env/API keys, wire `/api/chat` to retrieval/RAG, add
+transcript runtime paths, or add ecommerce flows such as carts, checkout,
+payments, stock reservation, confirmed booking, order fulfilment, or online
+ordering.
