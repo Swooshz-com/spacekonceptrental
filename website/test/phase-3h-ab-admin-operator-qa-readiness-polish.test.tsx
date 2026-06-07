@@ -10,6 +10,7 @@ import QuotePage from "../app/quote/page";
 const repoRoot = resolve(process.cwd(), "..");
 const sourceExtensions = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"]);
 const phase3gMergeCommit = "75fd104966e3e8c69a434f2325f6f79e4742a40f";
+const phase3hMergeCommit = "09f92ede4b5d9f725d0df560838a12fef27940b9";
 const forbiddenCommercePattern =
   /cart|checkout|payments?|purchase|customer account|stock reservation|order fulfilment|confirmed booking|online ordering/i;
 
@@ -182,7 +183,7 @@ describe("Phase 3H-A/B admin operator QA readiness polish", () => {
     cleanup();
   });
 
-  it("records Phase 3H-A/B as current after Phase 3G completed in PR #129", () => {
+  it("records Phase 3H-A/B as completed after Phase 3I starts", () => {
     const status = normalizeWhitespace(readRepoFile("docs/PHASE-STATUS.md"));
     const roadmap = normalizeWhitespace(readRepoFile("docs/PHASE-ROADMAP.md"));
     const readiness = readRepoFile("docs/PHASE-2-READINESS-PLAN.md");
@@ -191,20 +192,22 @@ describe("Phase 3H-A/B admin operator QA readiness polish", () => {
     const validator = readRepoFile("scripts/validate-preview-handoff.cjs");
 
     expect(status).toContain(
-      "Current phase: Phase 3H-A/B - admin operator QA, dashboard consistency, and non-deployment release readiness polish."
+      "Current phase: Phase 3I-A/B - full-site acceptance QA, public SEO/accessibility polish, and non-deployment release hardening."
     );
     expect(status).toContain(
-      "Latest completed capability: Phase 3G-A/B quote intake quality, admin triage depth, and enquiry workflow polish."
+      "Latest completed capability: Phase 3H-A/B admin operator QA, dashboard consistency, and non-deployment release readiness polish."
     );
-    expect(status).toContain("Last merged capability PR: #129");
-    expect(status).toContain(`Merge commit: \`${phase3gMergeCommit}\``);
+    expect(status).toContain("Last merged capability PR: #130");
+    expect(status).toContain(`Merge commit: \`${phase3hMergeCommit}\``);
+    expect(status).toContain("Previous Current Phase 3H-A/B status");
     expect(status).toContain("Previous Current Phase 3G-A/B status");
     expect(status).toContain("Previous Current Phase 3F-A/B status");
     expect(status).toContain("No deployment is performed or approved");
     expect(roadmap).toContain(
       "Phase 3H-A/B adds admin operator QA, dashboard consistency, and non-deployment release readiness polish"
     );
-    expect(readiness).toContain("Current Phase 3H-A/B status");
+    expect(readiness).toContain("Current Phase 3I-A/B status");
+    expect(readiness).toContain("Previous Current Phase 3H-A/B status");
     expect(readiness).toContain("Previous Current Phase 3G-A/B status");
     expect(decisionLog).toContain(
       "Decision: Phase 3H-A/B adds admin operator QA, dashboard consistency, and non-deployment release readiness polish."
@@ -213,6 +216,8 @@ describe("Phase 3H-A/B admin operator QA readiness polish", () => {
       "## Phase 3H-A/B Admin Operator QA Dashboard Consistency And Non-Deployment Release Readiness Polish"
     );
     expect(validator).toContain(phase3gMergeCommit);
+    expect(validator).toContain(phase3hMergeCommit);
+    expect(validator).toContain("Phase 3I-A/B");
     expect(validator).toContain("Phase 3H-A/B");
     expect(validator).not.toMatch(/\bvercel\s+(?:deploy|link|env|pull|promote)\b/i);
   });

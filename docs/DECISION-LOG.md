@@ -2170,6 +2170,38 @@ paths, add retention cleanup jobs, or add ecommerce flows such as carts,
 checkout, payments, stock reservation, confirmed booking, order fulfilment, or
 online ordering.
 
+## 2026-06-07: Full-Site Acceptance QA, Public SEO/Accessibility Polish, And Non-Deployment Release Hardening
+
+Decision: Phase 3I-A/B adds full-site acceptance QA, public SEO/accessibility polish, and non-deployment release hardening.
+
+Reason: PR #130 merged Phase 3H-A/B at
+`09f92ede4b5d9f725d0df560838a12fef27940b9`, completing admin operator QA,
+dashboard consistency, and non-deployment release readiness polish without
+deploying or approving deployment. The next approved work item is public
+full-site acceptance QA and release hardening that keeps deployment approval
+separate.
+
+The implementation improves public route metadata, primary navigation copy,
+homepage enquiry-step wording, route heading coverage, public-only internal
+links, selected-listing quote expectations, not-found/recovery coverage, and
+deterministic no-deployment guardrails. It keeps the existing public catalogue
+read boundary, public quote request API contract, protected admin routes, and
+RPC-backed admin write boundaries.
+
+Phase 3I-A/B does not deploy, approve deployment, add Vercel config, connect
+Supabase Cloud, add real secrets or env values, add production evidence, add
+browser Supabase, add service-role runtime paths, access
+`website/chat-config.js`, add public/customer upload routes, add customer
+accounts, add public quote tracking, expose customer-visible internal notes,
+add notifications or CRM integration, change n8n/Pinecone runtime behavior,
+add SaaS chatbot runtime work, add Pinecone SDK/package dependencies, add
+Pinecone env vars or API keys, add embedding/reranking runtime, wire
+`/api/chat` to retrieval/RAG, wire transcript reads or writes into
+`/api/chat`, add admin transcript UI, add transcript deletion/export runtime
+paths, add retention cleanup jobs, or add ecommerce flows such as carts,
+checkout, payments, stock reservation, confirmed booking, order fulfilment, or
+online ordering.
+
 ## 2026-06-06: Preview/Deployment Review Preflight And CI Parity Hardening
 
 Decision: Phase 2M-A/B makes the release-candidate gate deterministic in CI.

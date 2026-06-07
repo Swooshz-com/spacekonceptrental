@@ -4,8 +4,9 @@ import ChatWidget from "../components/ChatWidget";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "SpaceKonceptRental",
-  description: "Event furniture rental catalogue and quote requests."
+  title: "Space Koncept Rentals | Event furniture rental",
+  description:
+    "Browse the event furniture rental catalogue and send a quote enquiry."
 };
 
 function SiteHeader() {
@@ -22,7 +23,7 @@ function SiteHeader() {
         <Link href="/catalogue">Catalogue</Link>
         <Link href="/events">Events</Link>
         <Link className="site-nav__quote" href="/quote">
-          Quote
+          Quote enquiry
         </Link>
       </nav>
     </header>

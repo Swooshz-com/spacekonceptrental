@@ -46,7 +46,7 @@ const rentalJourneySteps = [
       "Prepare the event date, venue, requested quantities, alternates, and setup notes before sending an enquiry."
   },
   {
-    title: "Team reviews availability and fit",
+    title: "Team reviews event fit",
     description:
       "The team checks whether the requested furniture and setup notes fit the event context."
   },

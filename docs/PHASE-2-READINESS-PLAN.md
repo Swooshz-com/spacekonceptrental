@@ -238,21 +238,21 @@ Suggested first PR:
   Supabase, production evidence, or ecommerce flows. Product language remains
   enquiry/quote/request.
 
-Current Phase 3H-A/B status:
+Current Phase 3I-A/B status:
 
-- PR #129 merged Phase 3G-A/B quote intake quality, admin triage depth, and
-  enquiry workflow polish at merge commit
-  `75fd104966e3e8c69a434f2325f6f79e4742a40f`.
-- Latest completed capability is Phase 3G-A/B quote intake quality, admin
-  triage depth, and enquiry workflow polish.
-- Phase 3H-A/B is current as admin operator QA, dashboard consistency, and
-  non-deployment release readiness polish for the protected admin overview,
-  listing, category, media, quote inbox, quote detail, docs, validators, and
-  deterministic no-deploy guardrails.
-- Admin-only operator guidance, read-only/write-enabled distinctions,
-  public-facing/admin-only boundaries, next safe actions, and safe recovery
-  links are improved while keeping the existing public catalogue, public quote
-  API, and protected admin route boundaries.
+- PR #130 merged Phase 3H-A/B admin operator QA, dashboard consistency, and
+  non-deployment release readiness polish at merge commit
+  `09f92ede4b5d9f725d0df560838a12fef27940b9`.
+- Latest completed capability is Phase 3H-A/B admin operator QA, dashboard
+  consistency, and non-deployment release readiness polish.
+- Phase 3I-A/B is current as full-site acceptance QA, public
+  SEO/accessibility polish, and non-deployment release hardening for the
+  homepage, catalogue, listings, categories, events, quote, listing detail,
+  not-found, docs, validators, and deterministic no-deploy guardrails.
+- Public metadata, headings, internal links, selected-listing quote context,
+  receipt-only quote expectations, and recovery routes are hardened while
+  keeping the existing public catalogue, public quote API, and protected admin
+  route boundaries.
 - No deployment, deployment approval, Vercel config, Supabase Cloud config,
   real env values, production evidence, browser Supabase, service-role runtime
   paths, n8n/Pinecone/RAG runtime work, public quote tracking, customer
@@ -260,6 +260,29 @@ Current Phase 3H-A/B status:
   public/customer upload routes, transcript runtime paths, invented real
   contact details, testimonials, client names, legal claims, production
   policies, or ecommerce flow is added.
+
+Previous Current Phase 3H-A/B status:
+
+- PR #129 merged Phase 3G-A/B quote intake quality, admin triage depth, and
+  enquiry workflow polish at merge commit
+  `75fd104966e3e8c69a434f2325f6f79e4742a40f`.
+- Latest completed capability was Phase 3G-A/B quote intake quality, admin
+  triage depth, and enquiry workflow polish.
+- Phase 3H-A/B was current as admin operator QA, dashboard consistency, and
+  non-deployment release readiness polish for the protected admin overview,
+  listing, category, media, quote inbox, quote detail, docs, validators, and
+  deterministic no-deploy guardrails.
+- Admin-only operator guidance, read-only/write-enabled distinctions,
+  public-facing/admin-only boundaries, next safe actions, and safe recovery
+  links were improved while keeping the existing public catalogue, public
+  quote API, and protected admin route boundaries.
+- No deployment, deployment approval, Vercel config, Supabase Cloud config,
+  real env values, production evidence, browser Supabase, service-role runtime
+  paths, n8n/Pinecone/RAG runtime work, public quote tracking, customer
+  accounts, customer-visible internal notes, notifications, CRM integration,
+  public/customer upload routes, transcript runtime paths, invented real
+  contact details, testimonials, client names, legal claims, production
+  policies, or ecommerce flow was added.
 
 Previous Current Phase 3G-A/B status:
 
