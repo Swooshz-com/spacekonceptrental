@@ -33,7 +33,7 @@ vi.mock("next/image", () => ({
 const repoRoot = resolve(process.cwd(), "..");
 const sourceExtensions = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"]);
 const phase3dMergeCommit = "de357ee234ed1d92ab27eb1f6d571c0c4f0ccd04";
-const phase3fMergeCommit = "f369b81ee939d21813af1c94c1d9702a14a8e43b";
+const phase3fMergeCommit = "69665bb241b1af5c05ad34ac1464cdaeece8b7f8";
 const forbiddenCommercePattern =
   /cart|checkout|payments?|purchase|customer account|stock reservation|order fulfilment|online ordering|(?<![.\w])(?<!sort[- ])\border(?:s)?\b(?!\s*[:(])/i;
 const forbiddenProofClaimPattern =

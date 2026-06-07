@@ -30,7 +30,7 @@ const phase2qMergeCommit = "62c2b11b6b15192434eb4035ba0a66a44cd6f763";
 const phase3aMergeCommit = "6e8bcf23bc8d7eef12b738613344764c0c1961e6";
 const phase3bMergeCommit = "bfcf9916a0edd1b7133a1765719b9ddd73197dac";
 const phase3cMergeCommit = "d031d7f47a6893f92d0b6739300d52147f6abfa4";
-const phase3fMergeCommit = "f369b81ee939d21813af1c94c1d9702a14a8e43b";
+const phase3fMergeCommit = "69665bb241b1af5c05ad34ac1464cdaeece8b7f8";
 const forbiddenCommercePattern =
   /cart|checkout|payments?|customer account|stock reservation|order fulfilment|confirmed booking|online ordering/i;
 

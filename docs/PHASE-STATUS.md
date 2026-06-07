@@ -10,7 +10,7 @@ Latest completed capability: Phase 3F-A/B catalogue content quality, media readi
 
 Last merged capability PR: #128
 
-Merge commit: `f369b81ee939d21813af1c94c1d9702a14a8e43b`
+Merge commit: `69665bb241b1af5c05ad34ac1464cdaeece8b7f8`
 
 Phase 3G-A/B adds quote intake quality, admin triage depth, and enquiry
 workflow polish. It inspects the public quote/enquiry form, selected-listing
@@ -65,7 +65,7 @@ Completed through PR #128:
 
 - PR #128 merged Phase 3F-A/B catalogue content quality, media readiness, and
   admin publication polish at merge commit
-  `f369b81ee939d21813af1c94c1d9702a14a8e43b`.
+  `69665bb241b1af5c05ad34ac1464cdaeece8b7f8`.
 - The latest completed capability is Phase 3F-A/B catalogue content quality,
   media readiness, and admin publication polish. It improved incomplete-but-safe
   public listing/category copy, fallback image alt text, selected-listing

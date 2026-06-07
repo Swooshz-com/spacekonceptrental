@@ -2108,7 +2108,7 @@ confirmed booking, order fulfilment, or online ordering.
 Decision: Phase 3G-A/B adds quote intake quality, admin triage depth, and enquiry workflow polish.
 
 Reason: PR #128 merged Phase 3F-A/B at
-`f369b81ee939d21813af1c94c1d9702a14a8e43b`, completing catalogue content
+`69665bb241b1af5c05ad34ac1464cdaeece8b7f8`, completing catalogue content
 quality, media readiness, and admin publication polish without deploying or
 approving deployment. The next approved work item is focused quote/enquiry
 workflow polish across the existing public quote intake, selected-listing
