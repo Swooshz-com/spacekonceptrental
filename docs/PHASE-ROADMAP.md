@@ -1397,3 +1397,31 @@ transcript runtime paths, invent real contact details, testimonials, client
 names, awards, certifications, legal claims, production policies, or add
 ecommerce flows such as carts, checkout, payments, stock reservation,
 confirmed booking, order fulfilment, or online ordering.
+
+## Phase 3J: Owner Review Readiness Package, Manual QA Runbook, And Release-Decision Preparation
+
+Phase 3J-A/B adds an owner review readiness package, manual QA runbook, and
+release-decision preparation for the current repo-local rental website
+candidate. It summarizes what is ready for owner review, what is intentionally
+not implemented, public website journey readiness, protected admin
+listing/category/media readiness, quote/enquiry intake and admin triage
+readiness, owner-supplied content needs, known deferred capabilities, and
+future go/no-go decision points.
+
+Phase 3J-A/B keeps deployment approval separate. Manual QA steps are non-live
+and repo-local. Owner decision materials can say Hold deployment or Approve
+future deployment separately, but this phase does not perform deployment,
+approve deployment, connect providers, or add filled preview or production
+evidence.
+
+Phase 3J-A/B does not deploy, approve deployment, add Vercel or Supabase Cloud
+config, add real env values, add filled preview or production evidence, add
+browser Supabase, add service-role runtime paths, access
+`website/chat-config.js`, add public/customer uploads, add customer accounts,
+add public quote tracking, expose customer-visible internal notes, add
+notifications or CRM integration, change n8n/Pinecone runtime behavior, add
+Pinecone packages/env/API keys, wire `/api/chat` to retrieval/RAG, add
+transcript runtime paths, invent real contact details, testimonials, client
+names, awards, certifications, legal claims, production policies, or add
+ecommerce flows such as carts, checkout, payments, stock reservation,
+confirmed booking, order fulfilment, or online ordering.

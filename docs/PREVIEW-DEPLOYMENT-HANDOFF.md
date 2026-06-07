@@ -30,6 +30,47 @@ smoke harness and rollback drill package, at
 | Hold deployment | Owner decides not to deploy yet. | Keep the branch frozen and wait for a new owner decision. |
 | Pivot to product polish | Owner wants content, public UI, or admin workflow polish instead of deployment. | Open a product/content/UI iteration PR that does not bundle generic deployment-prep work. |
 
+## Owner Review Decision Inputs
+
+Before any future launch decision, review `docs/OWNER-REVIEW-READINESS-PACKAGE.md`
+and review `docs/manual-qa/OWNER-REVIEW-MANUAL-QA.md`.
+
+What the owner should review:
+
+- Public website journey readiness for homepage, catalogue, listings,
+  categories, events, quote/enquiry, detail, and recovery routes.
+- Protected admin listing, category, media, quote inbox, and quote detail
+  readiness.
+- Quote/enquiry intake and admin triage readiness.
+- Known deferred capabilities and intentionally not implemented scope.
+- Local validation results and any local-only manual QA notes.
+
+What the owner should supply before launch:
+
+- Approved public listing/category content, images, and alt text.
+- Approved public-facing contact, availability, operating, legal, and policy
+  content if those items are required for launch.
+- Reviewed admin access and workspace ownership expectations.
+- External provider, environment placement, and public traffic review outcomes
+  outside the repo.
+
+What remains blocked until explicit approval:
+
+- Deployment, public traffic enablement, provider configuration, cloud project
+  connection, real environment values, filled preview evidence, and production
+  evidence.
+- Browser Supabase, service-role runtime paths, public/customer uploads,
+  customer accounts, public quote tracking, notifications, CRM integration,
+  n8n/Pinecone runtime changes, `/api/chat` retrieval/RAG wiring, transcript
+  runtime paths, and ecommerce flows.
+
+Owner decision language remains:
+
+- Hold deployment.
+- Approve future deployment separately.
+
+This handoff does not approve deployment and does not perform deployment.
+
 ## Required Commands Before Deployment Approval
 
 Run these locally or in CI for the candidate branch before asking for preview

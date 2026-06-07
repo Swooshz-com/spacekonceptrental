@@ -5,6 +5,8 @@ const path = require('node:path');
 const repoRoot = path.resolve(__dirname, '..');
 const handoffDocPath = 'docs/PREVIEW-DEPLOYMENT-HANDOFF.md';
 const branchFreezeDocPath = 'docs/PREVIEW-DEPLOYMENT-BRANCH-FREEZE.md';
+const ownerReviewPackagePath = 'docs/OWNER-REVIEW-READINESS-PACKAGE.md';
+const ownerManualQaPath = 'docs/manual-qa/OWNER-REVIEW-MANUAL-QA.md';
 const handoffValidatorPath = 'scripts/validate-preview-handoff.cjs';
 const phase2pMergeCommit = '15a5d23941ac7fbe3297792311f50e414d622f5f';
 const phase2qMergeCommit = '62c2b11b6b15192434eb4035ba0a66a44cd6f763';
@@ -15,6 +17,7 @@ const phase3dMergeCommit = 'de357ee234ed1d92ab27eb1f6d571c0c4f0ccd04';
 const phase3fMergeCommit = '69665bb241b1af5c05ad34ac1464cdaeece8b7f8';
 const phase3gMergeCommit = '75fd104966e3e8c69a434f2325f6f79e4742a40f';
 const phase3hMergeCommit = '09f92ede4b5d9f725d0df560838a12fef27940b9';
+const phase3iMergeCommit = '0d2d40898c4e716032fdec130704117494c542d6';
 
 function fail(message) {
   console.error(message);
@@ -92,7 +95,13 @@ function assertHandoffDocs() {
     'No deployment is performed by this PR.',
     'This does not approve deployment.',
     'Future preview deployment requires explicit later approval.',
+    'Owner Review Decision Inputs',
+    'review `docs/OWNER-REVIEW-READINESS-PACKAGE.md`',
+    'review `docs/manual-qa/OWNER-REVIEW-MANUAL-QA.md`',
+    'What the owner should supply before launch',
+    'What remains blocked until explicit approval',
     'Approve preview deployment',
+    'Approve future deployment separately',
     'Hold deployment',
     'Pivot to product polish',
     'Stop doing generic deployment-prep PRs',
@@ -122,6 +131,54 @@ function assertHandoffDocs() {
   assertNoMatch(docs, /eyJ[A-Za-z0-9_-]{20,}/, 'handoff docs');
 }
 
+function assertOwnerReviewDocs() {
+  const packageDoc = readRepoFile(ownerReviewPackagePath);
+  const manualQa = readRepoFile(ownerManualQaPath);
+  const combined = [packageDoc, manualQa].join('\n');
+
+  assertTracked([ownerReviewPackagePath, ownerManualQaPath], 'owner review docs');
+
+  for (const required of [
+    'Ready for owner review',
+    'Intentionally not implemented',
+    'Public website journey readiness',
+    'Admin listing/category/media readiness',
+    'Quote/enquiry intake and admin triage readiness',
+    'Known deferred capabilities',
+    'Non-deployment decision status',
+    'Owner go/no-go decision points',
+    'Needs owner-supplied content',
+    'Needs deployment approval later',
+    'Explicitly deferred features',
+    'Hold deployment',
+    'Approve future deployment separately',
+    'This package does not approve deployment and does not deploy anything.',
+    'This manual QA runbook is non-live and does not approve deployment.',
+    'Protected admin quote detail',
+    'Not-found/recovery states',
+  ]) {
+    assertIncludes(combined, required, 'owner review docs');
+  }
+
+  assertNoMatch(combined, /\bvercel\s+(?:deploy|link|env|pull|promote)\b/i, 'owner review docs');
+  assertNoMatch(
+    combined,
+    /\bsupabase\s+(?:link|login|projects|secrets|functions|db\s+(?:push|pull|remote|reset))\b/i,
+    'owner review docs',
+  );
+  assertNoMatch(
+    combined,
+    /\b(?:create|copy|edit|fill|commit|configure|add)\s+(?:a\s+)?`?\.env/i,
+    'owner review docs',
+  );
+  assertNoMatch(combined, /\bnpm run smoke:preview\b|live preview smoke/i, 'owner review docs');
+  assertNoMatch(
+    combined,
+    /award-winning|certified partner|trusted by|5-star|guaranteed availability|guaranteed delivery/i,
+    'owner review docs',
+  );
+}
+
 function assertStatusDocs() {
   const status = readRepoFile('docs/PHASE-STATUS.md');
   const roadmap = readRepoFile('docs/PHASE-ROADMAP.md').replace(/\s+/g, ' ');
@@ -131,16 +188,17 @@ function assertStatusDocs() {
 
   assertIncludes(
     status,
-    'Current phase: Phase 3I-A/B - full-site acceptance QA, public SEO/accessibility polish, and non-deployment release hardening.',
+    'Current phase: Phase 3J-A/B - owner review readiness package, manual QA runbook, and release-decision preparation.',
     'phase status',
   );
   assertIncludes(
     status,
-    'Latest completed capability: Phase 3H-A/B admin operator QA, dashboard consistency, and non-deployment release readiness polish.',
+    'Latest completed capability: Phase 3I-A/B full-site acceptance QA, public SEO/accessibility polish, and non-deployment release hardening.',
     'phase status',
   );
-  assertIncludes(status, 'Last merged capability PR: #130', 'phase status');
-  assertIncludes(status, `Merge commit: \`${phase3hMergeCommit}\``, 'phase status');
+  assertIncludes(status, 'Last merged capability PR: #131', 'phase status');
+  assertIncludes(status, `Merge commit: \`${phase3iMergeCommit}\``, 'phase status');
+  assertIncludes(status, 'Previous Current Phase 3I-A/B status', 'phase status');
   assertIncludes(status, 'Previous Current Phase 3H-A/B status', 'phase status');
   assertIncludes(status, 'Previous Current Phase 3G-A/B status', 'phase status');
   assertIncludes(status, 'Previous Current Phase 3F-A/B status', 'phase status');
@@ -160,7 +218,13 @@ function assertStatusDocs() {
     'Phase 3I-A/B adds full-site acceptance QA, public SEO/accessibility polish, and non-deployment release hardening',
     'phase roadmap',
   );
-  assertIncludes(readiness, 'Current Phase 3I-A/B status', 'readiness plan');
+  assertIncludes(
+    roadmap,
+    'Phase 3J-A/B adds an owner review readiness package, manual QA runbook, and release-decision preparation',
+    'phase roadmap',
+  );
+  assertIncludes(readiness, 'Current Phase 3J-A/B status', 'readiness plan');
+  assertIncludes(readiness, 'Previous Current Phase 3I-A/B status', 'readiness plan');
   assertIncludes(readiness, 'Previous Current Phase 3H-A/B status', 'readiness plan');
   assertIncludes(readiness, 'Previous Current Phase 3G-A/B status', 'readiness plan');
   assertIncludes(readiness, 'Previous Current Phase 3F-A/B status', 'readiness plan');
@@ -218,6 +282,16 @@ function assertStatusDocs() {
   assertIncludes(
     checklist,
     '## Phase 3I-A/B Full-Site Acceptance QA Public SEO Accessibility Polish And Non-Deployment Release Hardening',
+    'phase checklist',
+  );
+  assertIncludes(
+    decisionLog,
+    'Decision: Phase 3J-A/B adds an owner review readiness package, manual QA runbook, and release-decision preparation.',
+    'decision log',
+  );
+  assertIncludes(
+    checklist,
+    '## Phase 3J-A/B Owner Review Readiness Package Manual QA Runbook And Release-Decision Preparation',
     'phase checklist',
   );
 }
@@ -283,6 +357,7 @@ function assertValidatorSafety() {
 
 assertPackageAndCi();
 assertHandoffDocs();
+assertOwnerReviewDocs();
 assertStatusDocs();
 assertStaticScope();
 assertValidatorSafety();

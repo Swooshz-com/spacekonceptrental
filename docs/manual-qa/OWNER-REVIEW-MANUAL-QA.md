@@ -1,0 +1,160 @@
+# Owner Review Manual QA
+
+This manual QA runbook is non-live and does not approve deployment.
+
+Use it for repo-local owner review of the current rental website candidate.
+Do not use this runbook to connect providers, enable public traffic, capture
+filled preview evidence, or perform a deployment.
+
+## Local validation commands
+
+Run these commands from the repo root unless noted:
+
+```powershell
+cd website && npm test
+cd website && npm run typecheck
+cd website && npm run build
+cd ..
+git diff --check
+npm run validate:preview-handoff
+```
+
+`npm run validate:release-candidate` may also be run when local Docker access
+is available. If Docker access is unavailable, record that as a local blocker
+for the release-candidate gate and keep the review non-live.
+
+## Public route checks
+
+### `/`
+
+- Confirm the page presents the event furniture rental journey.
+- Confirm links route to `/listings`, `/categories`, `/events`, and `/quote`.
+- Confirm copy uses rental, listing, enquiry, quote, and request wording.
+- Confirm there are no admin URLs, internal quote notes, provider errors,
+  secrets, stack traces, or ecommerce wording.
+
+### `/catalogue`
+
+- Confirm public catalogue cards render public-safe listing names,
+  descriptions, category labels, rental units, image alt text, and quote
+  planning copy.
+- Confirm listing links route to `/catalogue/[slug]` and quote links route to
+  `/quote?listing=...`.
+- Confirm empty catalogue recovery routes remain public-only.
+
+### `/listings`
+
+- Confirm public listing cards render public-safe data.
+- Confirm category filters keep users on `/listings`.
+- Confirm selected listing quote links route to `/quote?listing=...`.
+- Confirm filtered-empty states route to public recovery paths only.
+
+### `/listings/[slug]`
+
+- Confirm listing detail pages show one public heading, image/fallback image,
+  rental details, quote checklist, and a quote request link.
+- Confirm selected listing copy does not imply reservation, confirmed booking,
+  or availability confirmation.
+- Confirm unavailable listings render safe public recovery.
+
+### `/categories`
+
+- Confirm published categories show public listing counts and public listing
+  links.
+- Confirm categories without public listings route to all listings or quote
+  enquiry.
+- Confirm category copy does not expose admin readiness details.
+
+### `/catalogue/[slug]`
+
+- Confirm compatibility listing detail pages show the same public-safe listing
+  detail content as the listing route.
+- Confirm back links point to public catalogue/category/quote routes.
+- Confirm unavailable catalogue detail routes render safe public recovery.
+
+### `/events`
+
+- Confirm event guidance is presented as planning support, not a fixed package
+  or booking promise.
+- Confirm event setup links route to catalogue, listings, and quote enquiry.
+- Confirm event copy avoids invented claims, contact details, or policies.
+
+### `/quote`
+
+- Confirm the quote form asks for contact, event, venue, requested items, and
+  setup notes.
+- Confirm selected listing context is prefilled only when a valid listing is
+  supplied.
+- Confirm invalid or missing selected listing context falls back to a general
+  rental enquiry.
+- Confirm success is receipt-only and does not expose public tracking or
+  status links.
+
+### Not-found/recovery states
+
+- Confirm global not-found pages route to public listings and quote enquiry.
+- Confirm listing not-found pages route to public listings, categories, and
+  quote enquiry.
+- Confirm catalogue listing not-found pages route to public catalogue,
+  categories, and quote enquiry.
+- Confirm recovery copy is generic and does not expose provider errors,
+  internals, stack traces, admin routes, or secrets.
+
+## Protected admin checks
+
+### Protected admin overview
+
+- Confirm the overview shows operator QA summary and next safe action copy.
+- Confirm the surface remains protected and admin-only.
+- Confirm no public quote/customer tracking link is introduced.
+
+### Protected admin listings
+
+- Confirm listing readiness cues distinguish public-facing metadata from
+  admin-only readiness.
+- Confirm write-enabled listing actions remain inside protected admin routes.
+- Confirm missing category, description, rental unit, and media readiness cues
+  remain admin-only.
+
+### Protected admin categories
+
+- Confirm category readiness cues distinguish public category grouping from
+  admin-only management.
+- Confirm empty published category guidance remains admin-only.
+- Confirm recovery links stay inside protected admin routes.
+
+### Protected admin media
+
+- Confirm image readiness cues include missing alt text, missing primary image,
+  duplicate active primary image, inactive metadata, and no active public image
+  cases when applicable.
+- Confirm media guidance remains protected admin guidance only.
+- Confirm no public/customer upload route is introduced.
+
+### Protected admin quotes
+
+- Confirm quote inbox shows status buckets, missing-info summaries, customer
+  message/activity cues, and admin-only next actions.
+- Confirm internal notes and activity remain admin-only.
+- Confirm public users cannot see admin triage details.
+
+### Protected admin quote detail
+
+- Confirm customer/enquiry details, requested item snapshots, customer message,
+  internal activity, current status, and protected follow-up controls are
+  readable for authorized admin review.
+- Confirm missing quote detail recovery routes back to protected quote
+  management.
+- Confirm unavailable states do not expose provider errors, SQL, stack traces,
+  workspace identifiers, tokens, or raw environment values.
+
+## Owner decision notes
+
+- Ready for owner review means local/manual review can continue.
+- Needs owner-supplied content means a later content PR should be opened before
+  launch decisions.
+- Needs deployment approval later means deployment remains blocked until a
+  separate explicit owner approval.
+- Hold deployment means no provider or public traffic step is allowed.
+- Approve future deployment separately means a later deployment PR may be
+  prepared, but this runbook still remains non-live.
