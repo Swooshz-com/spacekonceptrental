@@ -30,11 +30,14 @@ export function CategoriesPageContent({
         </div>
         <p>No public categories are available right now.</p>
         <div className="hero__actions">
+          <Link className="button button--secondary" href="/catalogue">
+            Browse catalogue
+          </Link>
           <Link className="button button--secondary" href="/listings">
             Browse all listings
           </Link>
           <Link className="button" href="/quote">
-            Send a general enquiry
+            Request a quote
           </Link>
         </div>
       </section>

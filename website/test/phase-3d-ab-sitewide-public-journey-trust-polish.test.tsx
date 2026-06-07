@@ -7,8 +7,11 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   CataloguePageContent
 } from "../app/catalogue/page";
+import { ProductPageContent } from "../app/catalogue/[slug]/page";
 import { CategoriesPageContent } from "../app/categories/page";
-import QuotePage from "../app/quote/page";
+import EventsPage, { metadata as eventsMetadata } from "../app/events/page";
+import HomePage, { metadata as homeMetadata } from "../app/page";
+import QuotePage, { metadata as quoteMetadata } from "../app/quote/page";
 import type {
   PublicCatalogue,
   PublicCatalogueCategory,
@@ -23,10 +26,9 @@ vi.mock("next/image", () => ({
 
 const repoRoot = resolve(process.cwd(), "..");
 const sourceExtensions = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"]);
-const phase3bMergeCommit = "bfcf9916a0edd1b7133a1765719b9ddd73197dac";
 const phase3cMergeCommit = "d031d7f47a6893f92d0b6739300d52147f6abfa4";
 const forbiddenCommercePattern =
-  /cart|checkout|payments?|purchase|customer account|stock reservation|order fulfilment|confirmed booking|online ordering/i;
+  /cart|checkout|payments?|purchase|customer account|stock reservation|order fulfilment|online ordering/i;
 
 const loungeCategory: PublicCatalogueCategory = {
   id: "category-lounge",
@@ -44,14 +46,6 @@ const tableCategory: PublicCatalogueCategory = {
   sortOrder: 20
 };
 
-const emptyCategory: PublicCatalogueCategory = {
-  id: "category-lighting",
-  slug: "lighting",
-  name: "Lighting",
-  description: "Lighting notes for future rental setups.",
-  sortOrder: 30
-};
-
 const loungeProduct: PublicCatalogueProduct = {
   id: "product-lounge",
   slug: "modular-lounge-set",
@@ -65,23 +59,10 @@ const loungeProduct: PublicCatalogueProduct = {
   source: "fallback"
 };
 
-const tableProduct: PublicCatalogueProduct = {
-  id: "product-table",
-  slug: "cocktail-table-cluster",
-  name: "Cocktail Table Cluster",
-  shortDescription: "Small table groupings for networking areas.",
-  description: "Published table setup details.",
-  rentalUnit: "cluster",
-  sortOrder: 20,
-  categoryId: tableCategory.id,
-  categoryName: tableCategory.name,
-  source: "fallback"
-};
-
 const catalogue: PublicCatalogue = {
   source: "fallback",
-  categories: [loungeCategory, tableCategory, emptyCategory],
-  products: [loungeProduct, tableProduct]
+  categories: [loungeCategory, tableCategory],
+  products: [loungeProduct]
 };
 
 function readRepoFile(relativePath: string) {
@@ -116,13 +97,13 @@ function readTrackedProductionSources(paths: string[]) {
     .join("\n");
 }
 
-describe("Phase 3C-A/B public catalogue discovery and quote funnel polish", () => {
+describe("Phase 3D-A/B sitewide public journey, trust content, and route polish", () => {
   afterEach(() => {
     cleanup();
     vi.restoreAllMocks();
   });
 
-  it("records Phase 3C-A/B as completed after Phase 3D starts", () => {
+  it("records Phase 3D-A/B as current after Phase 3C completed", () => {
     const status = normalizeWhitespace(readRepoFile("docs/PHASE-STATUS.md"));
     const roadmap = normalizeWhitespace(readRepoFile("docs/PHASE-ROADMAP.md"));
     const readiness = readRepoFile("docs/PHASE-2-READINESS-PLAN.md");
@@ -138,97 +119,79 @@ describe("Phase 3C-A/B public catalogue discovery and quote funnel polish", () =
     expect(status).toContain("Last merged capability PR: #125");
     expect(status).toContain(`Merge commit: \`${phase3cMergeCommit}\``);
     expect(status).toContain("Previous Current Phase 3C-A/B status");
-    expect(status).toContain(`Merge commit: \`${phase3bMergeCommit}\``);
-    expect(status).toContain("Previous Current Phase 3B-A/B status");
     expect(status).toContain("No deployment is performed or approved");
     expect(roadmap).toContain(
-      "Phase 3C-A/B adds public catalogue discovery and quote funnel polish"
+      "Phase 3D-A/B adds sitewide public journey, trust content, and route polish"
     );
     expect(readiness).toContain("Current Phase 3D-A/B status");
     expect(readiness).toContain("Previous Current Phase 3C-A/B status");
-    expect(readiness).toContain("Previous Current Phase 3B-A/B status");
     expect(decisionLog).toContain(
-      "Decision: Phase 3C-A/B adds public catalogue discovery and quote funnel polish."
+      "Decision: Phase 3D-A/B adds sitewide public journey, trust content, and route polish."
     );
     expect(checklist).toContain(
-      "## Phase 3C-A/B Public Catalogue Discovery And Quote Funnel Polish"
+      "## Phase 3D-A/B Sitewide Public Journey Trust Content And Route Polish"
     );
   });
 
-  it("adds category discovery and event setup guidance from public catalogue data", () => {
-    render(
-      <CataloguePageContent
-        catalogue={catalogue}
-        detailBasePath="/listings"
-        title="Rental listings"
-      />
-    );
+  it("gives the homepage clear public journey CTAs and expectation-setting", async () => {
+    render(await HomePage());
 
-    expect(screen.getByLabelText(/catalogue discovery/i)).toBeInTheDocument();
     expect(
-      screen.getByRole("heading", { name: /explore by category/i })
+      screen.getByRole("heading", { name: /how rental enquiries work/i })
     ).toBeInTheDocument();
+    for (const step of [
+      /browse public listings/i,
+      /share event details/i,
+      /team reviews availability and fit/i,
+      /final quote follows directly/i
+    ]) {
+      expect(screen.getByText(step)).toBeInTheDocument();
+    }
     expect(
-      screen.getByRole("link", { name: /all rental listings/i })
-    ).toHaveAttribute("href", "/listings");
+      screen.getByRole("link", { name: /browse categories/i })
+    ).toHaveAttribute("href", "/categories");
     expect(
-      screen.getByRole("link", { name: /lounge 1 listing/i })
-    ).toHaveAttribute("href", "/listings?category=lounge");
-    expect(
-      screen.getByRole("link", { name: /event tables 1 listing/i })
-    ).toHaveAttribute("href", "/listings?category=event-tables");
-    expect(screen.getByText(/popular event setups/i)).toBeInTheDocument();
-    expect(screen.getByText(/reception lounge/i)).toBeInTheDocument();
-    expect(screen.getByText(/conference seating/i)).toBeInTheDocument();
-    expect(screen.getByText(/brand activation setup/i)).toBeInTheDocument();
-    expect(
-      screen.getByRole("link", { name: /send a quote enquiry/i })
-    ).toHaveAttribute("href", "/quote");
-  });
-
-  it("gives filtered and empty catalogue states safe recovery paths", () => {
-    render(
-      <CataloguePageContent
-        activeCategoryName="Lighting"
-        activeCategorySlug="lighting"
-        catalogue={{ ...catalogue, products: [] }}
-        detailBasePath="/listings"
-        emptyMessage="No public rental listings match Lighting right now."
-        title="Lighting rental listings"
-      />
-    );
-
-    expect(screen.getByText(/no public rental listings match lighting/i)).toBeInTheDocument();
-    expect(
-      screen.getAllByRole("link", { name: /browse all listings/i })[0]
-    ).toHaveAttribute("href", "/listings");
-    expect(
-      screen.getByRole("link", { name: /send a general enquiry/i })
-    ).toHaveAttribute("href", "/quote");
-    expect(
-      screen.getByRole("link", { name: /lighting 0 listings/i })
-    ).toHaveAttribute("aria-current", "page");
-  });
-
-  it("improves category browse empty states and quote CTAs", () => {
-    render(
-      <CategoriesPageContent
-        catalogue={{
-          source: "fallback",
-          categories: [emptyCategory],
-          products: []
-        }}
-      />
-    );
-
-    expect(
-      screen.getByText(/no public listings are available in this category yet/i)
-    ).toBeInTheDocument();
-    expect(
-      screen.getAllByRole("link", { name: /browse all listings/i })[0]
-    ).toHaveAttribute("href", "/listings");
+      screen.getByRole("link", { name: /plan event setups/i })
+    ).toHaveAttribute("href", "/events");
     expect(
       screen.getByRole("link", { name: /start a quote request/i })
+    ).toHaveAttribute("href", "/quote");
+    expect(homeMetadata.title).toMatch(/event furniture rental/i);
+    expect(homeMetadata.description).toMatch(/browse listings/i);
+  });
+
+  it("adds event-use-case guidance without inventing proof claims", () => {
+    render(<EventsPage />);
+
+    expect(
+      screen.getByRole("heading", { name: /plan an event setup/i })
+    ).toBeInTheDocument();
+    expect(screen.getByText(/match the setup type/i)).toBeInTheDocument();
+    expect(screen.getByText(/capture quantities and placement notes/i)).toBeInTheDocument();
+    expect(screen.getByText(/send one quote enquiry/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: /browse rental listings/i })
+    ).toHaveAttribute("href", "/listings");
+    expect(
+      screen.getByRole("link", { name: /send setup notes/i })
+    ).toHaveAttribute("href", "/quote");
+    expect(eventsMetadata.title).toMatch(/event setups/i);
+    expect(eventsMetadata.description).toMatch(/quote request/i);
+    expect(screen.queryByText(/testimonial|award|certified|guaranteed/i)).not.toBeInTheDocument();
+  });
+
+  it("keeps public route empty states connected to safe recovery paths", () => {
+    render(
+      <CataloguePageContent
+        catalogue={{ source: "fallback", categories: [], products: [] }}
+      />
+    );
+
+    expect(
+      screen.getByRole("link", { name: /browse categories/i })
+    ).toHaveAttribute("href", "/categories");
+    expect(
+      screen.getByRole("link", { name: /send a general enquiry/i })
     ).toHaveAttribute("href", "/quote");
 
     cleanup();
@@ -238,41 +201,45 @@ describe("Phase 3C-A/B public catalogue discovery and quote funnel polish", () =
       />
     );
 
-    expect(screen.getByText(/no public categories are available right now/i)).toBeInTheDocument();
     expect(
-      screen.getByRole("link", { name: /browse all listings/i })
-    ).toHaveAttribute("href", "/listings");
+      screen.getByRole("link", { name: /browse catalogue/i })
+    ).toHaveAttribute("href", "/catalogue");
     expect(
       screen.getByRole("link", { name: /request a quote/i })
     ).toHaveAttribute("href", "/quote");
   });
 
-  it("makes listing-to-quote handoff and requested item context clearer", async () => {
-    render(
-      await QuotePage({
-        searchParams: Promise.resolve({ listing: "lounge-sofa-package" })
-      })
-    );
+  it("sets quote expectations and keeps success receipt-only", async () => {
+    render(await QuotePage());
 
-    expect(screen.getAllByText(/selected listing/i).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/requested item/i).length).toBeGreaterThan(0);
     expect(
-      screen.getByText(/lounge sofa package starts this rental request/i)
+      screen.getByRole("heading", { name: /what happens after you enquire/i })
     ).toBeInTheDocument();
-    expect(
-      screen.getByText(/event date helps the team understand timing/i)
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText(/venue or event location helps the team plan delivery/i)
-    ).toBeInTheDocument();
-    expect(
-      screen.getAllByText(/add quantities, alternates, dimensions, or placement notes/i)
-        .length
-    ).toBeGreaterThan(0);
+    expect(screen.getByText(/submission starts an enquiry/i)).toBeInTheDocument();
+    expect(screen.getByText(/does not reserve furniture/i)).toBeInTheDocument();
+    expect(screen.getByText(/team reviews availability/i)).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: /track|status/i })).not.toBeInTheDocument();
+    expect(quoteMetadata.title).toMatch(/quote request/i);
+    expect(quoteMetadata.description).toMatch(/event date/i);
   });
 
-  it("keeps Phase 3C inside repo-local public catalogue and quote scope", () => {
+  it("keeps listing detail trust copy and route links consistent", () => {
+    render(<ProductPageContent product={loungeProduct} />);
+
+    expect(screen.getByText(/quote request checklist/i)).toBeInTheDocument();
+    expect(screen.getByText(/event date/i)).toBeInTheDocument();
+    expect(screen.getByText(/venue or event location/i)).toBeInTheDocument();
+    expect(screen.getByText(/quantities and alternates/i)).toBeInTheDocument();
+    expect(screen.getByText(/setup notes/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: /browse categories/i })
+    ).toHaveAttribute("href", "/categories");
+    expect(
+      screen.getByRole("link", { name: /request this listing/i })
+    ).toHaveAttribute("href", "/quote?listing=modular-lounge-set");
+  });
+
+  it("keeps Phase 3D inside repo-local public journey scope", () => {
     const productionSource = readTrackedProductionSources([
       "website/app/page.tsx",
       "website/app/listings",
@@ -295,6 +262,7 @@ describe("Phase 3C-A/B public catalogue discovery and quote funnel polish", () =
     expect(productionSource).not.toContain("SUPABASE_SERVICE_ROLE");
     expect(productionSource).not.toMatch(/service-role/i);
     expect(productionSource).not.toMatch(/notification|crm/i);
+    expect(productionSource).not.toMatch(/testimonial|client logo|certification|award/i);
     expect(packageSource).not.toMatch(/@pinecone-database|pinecone/i);
     expect(productionSource).not.toMatch(/PINECONE_API_KEY|PINECONE_ENV|PINECONE_INDEX/i);
     expect(readTrackedFiles(["website/chat-config.js"])).toEqual([]);

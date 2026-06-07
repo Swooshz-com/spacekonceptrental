@@ -371,6 +371,29 @@ select {
   font-weight: 800;
 }
 
+.journey-list {
+  color: var(--muted);
+  display: grid;
+  gap: 10px;
+  line-height: 1.6;
+  margin: 14px 0 0;
+  padding-left: 20px;
+}
+
+.journey-list li::marker {
+  color: var(--accent);
+}
+
+.listing-checklist {
+  border-top: 1px solid var(--border);
+  margin-top: 20px;
+  padding-top: 18px;
+}
+
+.listing-checklist h3 {
+  margin: 0;
+}
+
 .page-title {
   display: grid;
   gap: 18px;

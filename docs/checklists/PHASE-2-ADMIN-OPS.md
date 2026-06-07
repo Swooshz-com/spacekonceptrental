@@ -251,6 +251,15 @@ and route/action boundaries are implemented and tested.
 - [x] Static and render tests cover discovery, empty states, quote handoff, and forbidden runtime/scope boundaries.
 - [x] No deployment, deployment approval, Vercel config, Supabase Cloud config, secrets/env values, filled preview or production evidence, browser Supabase, service-role runtime path, customer uploads, public quote tracking, customer accounts, customer-visible internal notes, notifications, CRM, n8n/Pinecone runtime change, or ecommerce flow is added.
 
+## Phase 3D-A/B Sitewide Public Journey Trust Content And Route Polish
+
+- [x] Homepage journey content explains browsing listings/categories/events, preparing event details, team review, and direct quote follow-up.
+- [x] Event setup/use-case content sets public-safe expectations and links back to listings and quote/enquiry actions.
+- [x] Public catalogue, category, listing detail, and quote routes include safe recovery links and quote-request preparation guidance.
+- [x] Route metadata and copy stay consistent around rental/listing/enquiry/quote/request wording.
+- [x] Static and render tests cover sitewide journey content, route recovery paths, quote expectations, metadata, and forbidden runtime/scope boundaries.
+- [x] No deployment, deployment approval, Vercel config, Supabase Cloud config, secrets/env values, filled preview or production evidence, browser Supabase, service-role runtime path, customer uploads, public quote tracking, customer accounts, customer-visible internal notes, notifications, CRM, n8n/Pinecone runtime change, invented real contact details, testimonials, client names, legal claims, production policies, or ecommerce flow is added.
+
 ## Phase 2D-A Deployment Readiness And Smoke-Test Runbook
 
 - [x] Deployment readiness docs are refreshed for catalogue media, admin listing media upload, public quote handoff, and atomic admin quote workflow surfaces.

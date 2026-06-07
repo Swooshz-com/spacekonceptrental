@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 
 import QuoteRequestForm from "../../components/QuoteRequestForm";
 import { getPublicProductBySlug } from "../../lib/catalogue/catalogue-repository";
@@ -9,6 +10,12 @@ type QuotePageProps = {
   searchParams?:
     | Promise<Record<string, string | string[] | undefined>>
     | Record<string, string | string[] | undefined>;
+};
+
+export const metadata: Metadata = {
+  title: "Quote request | Space Koncept Rentals",
+  description:
+    "Send a furniture rental quote request with event date, venue, requested items, quantities, and setup notes."
 };
 
 function firstSearchParam(value: string | string[] | undefined) {
@@ -69,6 +76,24 @@ function QuoteListingContext({
   );
 }
 
+function QuoteExpectationCard() {
+  return (
+    <article className="route-card">
+      <p className="eyebrow">Expectations</p>
+      <h2>What happens after you enquire</h2>
+      <p>
+        This submission starts an enquiry and does not reserve furniture, dates,
+        or delivery capacity.
+      </p>
+      <ul className="journey-list">
+        <li>The team reviews availability and fit against your event details.</li>
+        <li>Follow-up happens directly using the contact details you share.</li>
+        <li>Final rental quote details are confirmed outside this public form.</li>
+      </ul>
+    </article>
+  );
+}
+
 export default async function QuotePage({
   searchParams
 }: QuotePageProps = {}) {
@@ -101,6 +126,8 @@ export default async function QuotePage({
             product categories before the team follows up.
           </p>
         </article>
+
+        <QuoteExpectationCard />
       </div>
     </section>
   );

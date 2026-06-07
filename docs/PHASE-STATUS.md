@@ -4,19 +4,19 @@ This is the quick status page for the SKR repo. Use `docs/PHASE-2-READINESS-PLAN
 
 ## Current phase
 
-Current phase: Phase 3C-A/B - public catalogue discovery and quote funnel polish.
+Current phase: Phase 3D-A/B - sitewide public journey, trust content, and route polish.
 
-Latest completed capability: Phase 3B-A/B admin operations readiness and quote triage polish.
+Latest completed capability: Phase 3C-A/B public catalogue discovery and quote funnel polish.
 
-Last merged capability PR: #124
+Last merged capability PR: #125
 
-Merge commit: `bfcf9916a0edd1b7133a1765719b9ddd73197dac`
+Merge commit: `d031d7f47a6893f92d0b6739300d52147f6abfa4`
 
-Phase 3C-A/B adds public catalogue discovery and quote funnel polish. It
-improves category discovery affordances, event setup guidance, filtered
-catalogue recovery paths, category empty states, selected-listing quote
-handoff, and deterministic static coverage for the rental/listing/enquiry/quote
-direction.
+Phase 3D-A/B adds sitewide public journey, trust content, and route polish. It
+improves homepage journey guidance, event setup expectation-setting, route
+recovery links, listing detail quote-request preparation, quote enquiry
+expectations, page metadata, and deterministic static coverage for the
+rental/listing/enquiry/quote direction.
 
 Public users only see public-safe published listing, category, and listing
 image data. Public quote/enquiry success stays receipt-only with no public
@@ -24,7 +24,7 @@ tracking/status link. Admin internal notes remain admin-only. Supabase remains
 canonical for website/admin listing and quote data. Pinecone remains a future
 derived index only and is not used as canonical business storage.
 
-No deployment is performed or approved by Phase 3C-A/B. It does not add Vercel
+No deployment is performed or approved by Phase 3D-A/B. It does not add Vercel
 config, connect Supabase Cloud, add real secrets or env values, add filled
 preview or production evidence, add Pinecone runtime code, Pinecone packages,
 Pinecone env reads, secrets, API keys, Pinecone executors, n8n workflow/runtime
@@ -55,18 +55,40 @@ config, env/secrets, and production evidence remain blocked.
 
 ## Remaining-work map
 
-Completed through PR #124:
+Completed through PR #125:
+
+- PR #125 merged Phase 3C-A/B public catalogue discovery and quote funnel
+  polish at merge commit `d031d7f47a6893f92d0b6739300d52147f6abfa4`.
+- The latest completed capability is Phase 3C-A/B public catalogue discovery
+  and quote funnel polish. It improved category discovery affordances, event
+  setup guidance, filtered catalogue recovery paths, category empty states,
+  selected-listing quote handoff, requested-item line parsing, and quote helper
+  copy without deploying or adding runtime scope.
+- Phase 3D-A/B is current as sitewide public journey, trust content, and route
+  polish for the homepage, public catalogue, listing, category, event setup,
+  and quote request surfaces. It is repo-local only and does not perform or
+  approve deployment.
+
+Previous Current Phase 3C-A/B status:
+
+Current phase: Phase 3C-A/B - public catalogue discovery and quote funnel polish.
+
+Latest completed capability: Phase 3B-A/B admin operations readiness and quote triage polish.
+
+Last merged capability PR: #124
+
+Merge commit: `bfcf9916a0edd1b7133a1765719b9ddd73197dac`
 
 - PR #124 merged Phase 3B-A/B admin operations readiness and quote triage
   polish at merge commit `bfcf9916a0edd1b7133a1765719b9ddd73197dac`.
-- The latest completed capability is Phase 3B-A/B admin operations readiness
+- The latest completed capability was Phase 3B-A/B admin operations readiness
   and quote triage polish. It improved listing publication readiness cues,
   category and media readiness guidance, quote request triage summaries,
   admin-only follow-up hints, and active primary image readiness semantics
   without deploying or adding runtime scope.
-- Phase 3C-A/B is current as public catalogue discovery and quote funnel
+- Phase 3C-A/B was current as public catalogue discovery and quote funnel
   polish for the public catalogue, listing, category, and quote request
-  surfaces. It is repo-local only and does not perform or approve deployment.
+  surfaces. It was repo-local only and did not perform or approve deployment.
 
 Previous Current Phase 3B-A/B status:
 
@@ -1322,8 +1344,8 @@ architecture.
 
 ## Next recommended PR
 
-Phase 3C-A/B is the approved public catalogue discovery and quote funnel
-polish iteration after Phase 3B-A/B. After this PR, continue product/public/
+Phase 3D-A/B is the approved sitewide public journey, trust content, and route
+polish iteration after Phase 3C-A/B. After this PR, continue product/public/
 admin polish only when explicitly scoped, or move to a separately approved
 preview deployment PR if the owner chooses deployment.
 
