@@ -1370,3 +1370,30 @@ transcript runtime paths, invent real contact details, testimonials, client
 names, awards, certifications, legal claims, production policies, or add
 ecommerce flows such as carts, checkout, payments, stock reservation,
 confirmed booking, order fulfilment, or online ordering.
+
+## Phase 3I: Full-Site Acceptance QA, Public SEO/Accessibility Polish, And Non-Deployment Release Hardening
+
+Phase 3I-A/B adds full-site acceptance QA, public SEO/accessibility polish, and
+non-deployment release hardening for the homepage, catalogue, listings,
+categories, events, quote, listing detail, and recovery surfaces. It verifies
+public route metadata, heading clarity, internal link paths, selected-listing
+quote context, receipt-only quote expectations, and deterministic no-deploy
+guardrails.
+
+Phase 3I-A/B keeps public and admin boundaries separated. Public users browse
+public rental/event furniture listings, public categories, event setup
+guidance, listing detail pages, safe not-found/recovery states, and
+receipt-only quote/enquiry requests without seeing admin readiness cues,
+internal quote notes, protected management URLs, or admin triage details.
+
+Phase 3I-A/B does not deploy, approve deployment, add Vercel or Supabase Cloud
+config, add real env values, add filled preview or production evidence, add
+browser Supabase, add service-role runtime paths, access
+`website/chat-config.js`, add public/customer uploads, add customer accounts,
+add public quote tracking, expose customer-visible internal notes, add
+notifications or CRM integration, change n8n/Pinecone runtime behavior, add
+Pinecone packages/env/API keys, wire `/api/chat` to retrieval/RAG, add
+transcript runtime paths, invent real contact details, testimonials, client
+names, awards, certifications, legal claims, production policies, or add
+ecommerce flows such as carts, checkout, payments, stock reservation,
+confirmed booking, order fulfilment, or online ordering.

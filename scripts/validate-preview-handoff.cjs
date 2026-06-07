@@ -14,6 +14,7 @@ const phase3cMergeCommit = 'd031d7f47a6893f92d0b6739300d52147f6abfa4';
 const phase3dMergeCommit = 'de357ee234ed1d92ab27eb1f6d571c0c4f0ccd04';
 const phase3fMergeCommit = '69665bb241b1af5c05ad34ac1464cdaeece8b7f8';
 const phase3gMergeCommit = '75fd104966e3e8c69a434f2325f6f79e4742a40f';
+const phase3hMergeCommit = '09f92ede4b5d9f725d0df560838a12fef27940b9';
 
 function fail(message) {
   console.error(message);
@@ -130,16 +131,17 @@ function assertStatusDocs() {
 
   assertIncludes(
     status,
-    'Current phase: Phase 3H-A/B - admin operator QA, dashboard consistency, and non-deployment release readiness polish.',
+    'Current phase: Phase 3I-A/B - full-site acceptance QA, public SEO/accessibility polish, and non-deployment release hardening.',
     'phase status',
   );
   assertIncludes(
     status,
-    'Latest completed capability: Phase 3G-A/B quote intake quality, admin triage depth, and enquiry workflow polish.',
+    'Latest completed capability: Phase 3H-A/B admin operator QA, dashboard consistency, and non-deployment release readiness polish.',
     'phase status',
   );
-  assertIncludes(status, 'Last merged capability PR: #129', 'phase status');
-  assertIncludes(status, `Merge commit: \`${phase3gMergeCommit}\``, 'phase status');
+  assertIncludes(status, 'Last merged capability PR: #130', 'phase status');
+  assertIncludes(status, `Merge commit: \`${phase3hMergeCommit}\``, 'phase status');
+  assertIncludes(status, 'Previous Current Phase 3H-A/B status', 'phase status');
   assertIncludes(status, 'Previous Current Phase 3G-A/B status', 'phase status');
   assertIncludes(status, 'Previous Current Phase 3F-A/B status', 'phase status');
   assertIncludes(status, 'Previous Current Phase 3E-A/B status', 'phase status');
@@ -153,7 +155,13 @@ function assertStatusDocs() {
     'Phase 2Q-A/B adds the final preview deployment handoff and branch-freeze package',
     'phase roadmap',
   );
-  assertIncludes(readiness, 'Current Phase 3H-A/B status', 'readiness plan');
+  assertIncludes(
+    roadmap,
+    'Phase 3I-A/B adds full-site acceptance QA, public SEO/accessibility polish, and non-deployment release hardening',
+    'phase roadmap',
+  );
+  assertIncludes(readiness, 'Current Phase 3I-A/B status', 'readiness plan');
+  assertIncludes(readiness, 'Previous Current Phase 3H-A/B status', 'readiness plan');
   assertIncludes(readiness, 'Previous Current Phase 3G-A/B status', 'readiness plan');
   assertIncludes(readiness, 'Previous Current Phase 3F-A/B status', 'readiness plan');
   assertIncludes(readiness, 'Previous Current Phase 3E-A/B status', 'readiness plan');
@@ -200,6 +208,16 @@ function assertStatusDocs() {
   assertIncludes(
     checklist,
     '## Phase 3H-A/B Admin Operator QA Dashboard Consistency And Non-Deployment Release Readiness Polish',
+    'phase checklist',
+  );
+  assertIncludes(
+    decisionLog,
+    'Decision: Phase 3I-A/B adds full-site acceptance QA, public SEO/accessibility polish, and non-deployment release hardening.',
+    'decision log',
+  );
+  assertIncludes(
+    checklist,
+    '## Phase 3I-A/B Full-Site Acceptance QA Public SEO Accessibility Polish And Non-Deployment Release Hardening',
     'phase checklist',
   );
 }
