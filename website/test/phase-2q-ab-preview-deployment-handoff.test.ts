@@ -12,6 +12,7 @@ const phase3bMergeCommit = "bfcf9916a0edd1b7133a1765719b9ddd73197dac";
 const phase3cMergeCommit = "d031d7f47a6893f92d0b6739300d52147f6abfa4";
 const phase3dMergeCommit = "de357ee234ed1d92ab27eb1f6d571c0c4f0ccd04";
 const phase3fMergeCommit = "69665bb241b1af5c05ad34ac1464cdaeece8b7f8";
+const phase3gMergeCommit = "75fd104966e3e8c69a434f2325f6f79e4742a40f";
 const handoffDocPath = "docs/PREVIEW-DEPLOYMENT-HANDOFF.md";
 const branchFreezeDocPath = "docs/PREVIEW-DEPLOYMENT-BRANCH-FREEZE.md";
 const handoffValidatorPath = "scripts/validate-preview-handoff.cjs";
@@ -50,7 +51,7 @@ function readTrackedProductionSources(paths: string[]) {
 }
 
 describe("Phase 2Q-A/B preview deployment handoff", () => {
-  it("records Phase 2Q-A/B as the completed handoff after Phase 3G starts", () => {
+  it("records Phase 2Q-A/B as the completed handoff after Phase 3H starts", () => {
     const status = normalizeWhitespace(readRepoFile("docs/PHASE-STATUS.md"));
     const roadmap = normalizeWhitespace(readRepoFile("docs/PHASE-ROADMAP.md"));
     const readiness = readRepoFile("docs/PHASE-2-READINESS-PLAN.md");
@@ -58,13 +59,14 @@ describe("Phase 2Q-A/B preview deployment handoff", () => {
     const checklist = readRepoFile("docs/checklists/PHASE-2-ADMIN-OPS.md");
 
     expect(status).toContain(
-      "Current phase: Phase 3G-A/B - quote intake quality, admin triage depth, and enquiry workflow polish."
+      "Current phase: Phase 3H-A/B - admin operator QA, dashboard consistency, and non-deployment release readiness polish."
     );
     expect(status).toContain(
-      "Latest completed capability: Phase 3F-A/B catalogue content quality, media readiness, and admin publication polish."
+      "Latest completed capability: Phase 3G-A/B quote intake quality, admin triage depth, and enquiry workflow polish."
     );
-    expect(status).toContain("Last merged capability PR: #128");
-    expect(status).toContain(`Merge commit: \`${phase3fMergeCommit}\``);
+    expect(status).toContain("Last merged capability PR: #129");
+    expect(status).toContain(`Merge commit: \`${phase3gMergeCommit}\``);
+    expect(status).toContain("Previous Current Phase 3G-A/B status");
     expect(status).toContain("Previous Current Phase 3F-A/B status");
     expect(status).toContain("Previous Current Phase 3E-A/B status");
     expect(status).toContain("Previous Current Phase 3D-A/B status");
@@ -75,7 +77,8 @@ describe("Phase 2Q-A/B preview deployment handoff", () => {
     expect(roadmap).toContain(
       "Phase 2Q-A/B adds the final preview deployment handoff and branch-freeze package"
     );
-    expect(readiness).toContain("Current Phase 3G-A/B status");
+    expect(readiness).toContain("Current Phase 3H-A/B status");
+    expect(readiness).toContain("Previous Current Phase 3G-A/B status");
     expect(readiness).toContain("Previous Current Phase 3F-A/B status");
     expect(readiness).toContain("Previous Current Phase 3E-A/B status");
     expect(readiness).toContain("Previous Current Phase 3D-A/B status");
@@ -142,6 +145,7 @@ describe("Phase 2Q-A/B preview deployment handoff", () => {
     expect(validator).toContain(phase3cMergeCommit);
     expect(validator).toContain(phase3dMergeCommit);
     expect(validator).toContain(phase3fMergeCommit);
+    expect(validator).toContain(phase3gMergeCommit);
     expect(validator).toContain("validate:release-candidate");
     expect(validator).toContain("validate:deploy-dry-run");
     expect(validator).toContain("validate:preview-approval-package");

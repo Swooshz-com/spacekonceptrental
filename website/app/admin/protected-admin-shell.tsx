@@ -197,6 +197,50 @@ function quoteDetailActivityText(activity: AdminQuoteRequestInboxActivity) {
   return `Status changed from ${statusLabel(activity.statusFrom ?? "unknown")} to ${statusLabel(activity.statusTo ?? "unknown")}.`;
 }
 
+function AdminOperatorGuidance({
+  label,
+  readOnly,
+  writeEnabled,
+  publicFacing,
+  adminOnly,
+  nextAction
+}: {
+  label: string;
+  readOnly: string;
+  writeEnabled: string;
+  publicFacing: string;
+  adminOnly: string;
+  nextAction: string;
+}) {
+  return (
+    <section
+      aria-label={`${label} operator guidance`}
+      className="admin-dashboard__card admin-dashboard__card--summary"
+    >
+      <h3>Operator QA summary</h3>
+      <dl className="quote-inbox__details">
+        <div>
+          <dt>Read-only</dt>
+          <dd>{readOnly}</dd>
+        </div>
+        <div>
+          <dt>Write-enabled</dt>
+          <dd>{writeEnabled}</dd>
+        </div>
+        <div>
+          <dt>Public-facing</dt>
+          <dd>{publicFacing}</dd>
+        </div>
+        <div>
+          <dt>Admin-only</dt>
+          <dd>{adminOnly}</dd>
+        </div>
+      </dl>
+      <p>{nextAction}</p>
+    </section>
+  );
+}
+
 function AdminDashboard({
   dashboard
 }: {
@@ -422,6 +466,14 @@ function AdminOperationsHome({
         </div>
       </div>
       <div className="admin-dashboard__grid">
+        <AdminOperatorGuidance
+          adminOnly="Admin-only workspace, management summaries, readiness cues, and internal follow-up details."
+          label="Admin overview"
+          nextAction="Next safe action: review listings, categories, media, and quote requests before any separately approved deployment."
+          publicFacing="Public-facing changes are limited to published listing, category, and active media content."
+          readOnly="Overview counts and dashboard summaries are read-only snapshots of the current workspace."
+          writeEnabled="Write-enabled surfaces stay behind protected admin routes."
+        />
         {cards.map((card) => (
           <article className="admin-dashboard__card" key={card.href}>
             <p className="eyebrow">{card.count} records</p>
@@ -491,6 +543,16 @@ function AdminListingOperations({
             </div>
           </dl>
         </div>
+        <div className="admin-dashboard__grid">
+          <AdminOperatorGuidance
+            adminOnly="Admin-only readiness checks, draft state, archive context, and protected write controls."
+            label="Listing operations"
+            nextAction="Next safe action: fix missing category, descriptions, rental unit, and media before publishing."
+            publicFacing="Public-facing after publication."
+            readOnly="Listing status counts and readiness summaries are read-only operator QA cues."
+            writeEnabled="Write-enabled listing metadata."
+          />
+        </div>
       </section>
       <ListingManagementPanel
         categories={dashboard.data.categories}
@@ -509,7 +571,33 @@ function AdminCategoryOperations({
     return <AdminDashboard dashboard={dashboard} />;
   }
 
-  return <CategoryManagementPanel categories={dashboard.data.categories} />;
+  return (
+    <>
+      <section className="admin-dashboard" aria-label="Category operations">
+        <div className="admin-dashboard__header">
+          <div>
+            <p className="eyebrow">Categories</p>
+            <h2>Category operations</h2>
+            <p>
+              Review category grouping and publication state before changing
+              the public catalogue structure.
+            </p>
+          </div>
+        </div>
+        <div className="admin-dashboard__grid">
+          <AdminOperatorGuidance
+            adminOnly="Admin-only grouping readiness, empty published category warnings, and protected category controls."
+            label="Category operations"
+            nextAction="Next safe action: keep empty published categories unpublished or add published listings."
+            publicFacing="Public-facing category grouping."
+            readOnly="Category counts and readiness summaries are read-only operator QA cues."
+            writeEnabled="Write-enabled category metadata."
+          />
+        </div>
+      </section>
+      <CategoryManagementPanel categories={dashboard.data.categories} />
+    </>
+  );
 }
 
 function AdminMediaOperations({
@@ -523,6 +611,28 @@ function AdminMediaOperations({
 
   return (
     <>
+      <section className="admin-dashboard" aria-label="Media operations">
+        <div className="admin-dashboard__header">
+          <div>
+            <p className="eyebrow">Media</p>
+            <h2>Media operations</h2>
+            <p>
+              Review image upload readiness and metadata before media appears
+              in public catalogue or listing galleries.
+            </p>
+          </div>
+        </div>
+        <div className="admin-dashboard__grid">
+          <AdminOperatorGuidance
+            adminOnly="Admin-only media readiness, upload controls, archive context, and metadata checks."
+            label="Media operations"
+            nextAction="Next safe action: add alt text and keep one active primary image per listing."
+            publicFacing="Public-facing active media."
+            readOnly="Media readiness by listing is a read-only operator QA summary."
+            writeEnabled="Write-enabled image upload and metadata."
+          />
+        </div>
+      </section>
       <ListingImageUploadPanel products={dashboard.data.products} />
       <ListingImageMetadataManagementPanel
         images={dashboard.data.images}
@@ -545,9 +655,11 @@ function AdminQuoteDetail({
           Quote request details are temporarily unavailable. Return to the
           quote request inbox and retry from the protected admin workspace.
         </p>
-        <a className="button button--secondary" href="/admin/quotes">
-          Back to quote requests
-        </a>
+        <nav className="hero__actions" aria-label="Admin recovery">
+          <a className="button button--secondary" href="/admin/quotes">
+            Back to quote requests
+          </a>
+        </nav>
       </section>
     );
   }
@@ -560,9 +672,11 @@ function AdminQuoteDetail({
           Quote request details are not visible in this workspace, or the
           enquiry may have been removed from the current admin view.
         </p>
-        <a className="button button--secondary" href="/admin/quotes">
-          Back to quote requests
-        </a>
+        <nav className="hero__actions" aria-label="Admin recovery">
+          <a className="button button--secondary" href="/admin/quotes">
+            Back to quote requests
+          </a>
+        </nav>
       </section>
     );
   }
@@ -583,6 +697,14 @@ function AdminQuoteDetail({
           </div>
         </div>
         <div className="admin-dashboard__grid">
+          <AdminOperatorGuidance
+            adminOnly="Admin-only internal notes, status history, and protected quote workflow recovery."
+            label="Quote detail"
+            nextAction="Next safe action: review details, then record an internal note or status change inside the protected workspace."
+            publicFacing="Public-facing quote pages do not show this detail view, internal activity, or status history."
+            readOnly="Read-only customer submission snapshot."
+            writeEnabled="Write-enabled follow-up controls remain below via the protected quote workflow panel."
+          />
           <section className="admin-dashboard__card">
             <h3>Customer / enquiry details</h3>
             <dl className="quote-inbox__details">
