@@ -298,7 +298,8 @@ describe("protected admin shell", () => {
                   name: "Lounge",
                   sortOrder: 20,
                   isPublished: true,
-                  productCount: 1
+                  productCount: 1,
+                  publishedProductCount: 0
                 }
               ],
               products: [

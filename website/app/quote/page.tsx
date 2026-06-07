@@ -76,6 +76,28 @@ function QuoteListingContext({
   );
 }
 
+function QuoteGeneralContext() {
+  return (
+    <article className="route-card quote-context">
+      <p className="eyebrow">Listing context</p>
+      <h2>General rental enquiry</h2>
+      <p>
+        If a selected listing link is missing, invalid, unpublished, or
+        unavailable, you can still send the team a general rental request with
+        the items and event setup you have in mind.
+      </p>
+      <div className="catalogue-card__actions">
+        <Link className="card-link" href="/listings">
+          Browse public listings
+        </Link>
+        <Link className="card-link" href="/categories">
+          Browse rental categories
+        </Link>
+      </div>
+    </article>
+  );
+}
+
 function QuoteExpectationCard() {
   return (
     <article className="route-card">
@@ -133,7 +155,9 @@ export default async function QuotePage({
 
         {listingContext ? (
           <QuoteListingContext product={listingContext} />
-        ) : null}
+        ) : (
+          <QuoteGeneralContext />
+        )}
 
         <article className="route-card">
           <h2>Need guidance?</h2>

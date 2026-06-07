@@ -4,19 +4,20 @@ This is the quick status page for the SKR repo. Use `docs/PHASE-2-READINESS-PLAN
 
 ## Current phase
 
-Current phase: Phase 3E-A/B - product readiness, navigation QA, and dead-end polish.
+Current phase: Phase 3F-A/B - catalogue content quality, media readiness, and admin publication polish.
 
-Latest completed capability: Phase 3D-A/B sitewide public journey, trust content, and route polish.
+Latest completed capability: Phase 3E-A/B product readiness, navigation QA, and public/admin dead-end polish.
 
-Last merged capability PR: #126
+Last merged capability PR: #127
 
-Merge commit: `de357ee234ed1d92ab27eb1f6d571c0c4f0ccd04`
+Merge commit: `03c8a21522e6e68aa8b2caf32aedc4218e77f66e`
 
-Phase 3E-A/B adds product readiness, navigation QA, and public/admin dead-end
-polish. It inspects public and protected admin route surfaces, adds
-deterministic internal route coverage, improves empty, filtered, missing, and
-blocked recovery states, and tightens content consistency checks around
-rental/listing/enquiry/quote/request wording.
+Phase 3F-A/B adds catalogue content quality, media readiness, and admin
+publication polish. It inspects public listing/category rendering paths and
+protected admin listing/category/media panels, improves incomplete-but-safe
+catalogue copy, strengthens quote handoff behavior when listing context is
+missing or unavailable, and adds admin-only publication/media readiness cues
+for category, listing, image metadata, and quote-planning gaps.
 
 Public users only see public-safe published listing, category, and listing
 image data. Public quote/enquiry success stays receipt-only with no public
@@ -24,7 +25,7 @@ tracking/status link. Admin internal notes remain admin-only. Supabase remains
 canonical for website/admin listing and quote data. Pinecone remains a future
 derived index only and is not used as canonical business storage.
 
-No deployment is performed or approved by Phase 3E-A/B. It does not add Vercel
+No deployment is performed or approved by Phase 3F-A/B. It does not add Vercel
 config, connect Supabase Cloud, add real secrets or env values, add filled
 preview or production evidence, add Pinecone runtime code, Pinecone packages,
 Pinecone env reads, secrets, API keys, Pinecone executors, n8n workflow/runtime
@@ -57,18 +58,41 @@ config, env/secrets, and production evidence remain blocked.
 
 ## Remaining-work map
 
-Completed through PR #126:
+Completed through PR #127:
+
+- PR #127 merged Phase 3E-A/B product readiness, navigation QA, and
+  public/admin dead-end polish at merge commit
+  `03c8a21522e6e68aa8b2caf32aedc4218e77f66e`.
+- The latest completed capability is Phase 3E-A/B product readiness,
+  navigation QA, and public/admin dead-end polish. It verified key public and
+  protected admin internal route surfaces, improved empty, filtered, missing,
+  blocked, and unavailable recovery states, and tightened rental/listing/
+  enquiry/quote/request wording checks without deployment or runtime expansion.
+- Phase 3F-A/B is current as catalogue content quality, media readiness, and
+  admin publication polish for public listing/category/quote handoff behavior
+  and protected admin listing/category/media readiness cues. It is repo-local
+  only and does not perform or approve deployment.
+
+Previous Current Phase 3E-A/B status:
+
+Current phase: Phase 3E-A/B - product readiness, navigation QA, and dead-end polish.
+
+Latest completed capability: Phase 3D-A/B sitewide public journey, trust content, and route polish.
+
+Last merged capability PR: #126
+
+Merge commit: `de357ee234ed1d92ab27eb1f6d571c0c4f0ccd04`
 
 - PR #126 merged Phase 3D-A/B sitewide public journey, trust content, and
   route polish at merge commit `de357ee234ed1d92ab27eb1f6d571c0c4f0ccd04`.
-- The latest completed capability is Phase 3D-A/B sitewide public journey,
+- The latest completed capability was Phase 3D-A/B sitewide public journey,
   trust content, and route polish. It improved homepage journey guidance,
   event setup expectation-setting, route recovery links, listing detail
   quote-request preparation, quote enquiry expectations, page metadata, and
   deterministic static coverage for the rental/listing/enquiry/quote direction.
-- Phase 3E-A/B is current as product readiness, navigation QA, and public/admin
-  dead-end polish for key public and protected admin surfaces. It is repo-local
-  only and does not perform or approve deployment.
+- Phase 3E-A/B was current as product readiness, navigation QA, and
+  public/admin dead-end polish for key public and protected admin surfaces. It
+  was repo-local only and did not perform or approve deployment.
 
 Previous Current Phase 3D-A/B status:
 
@@ -1367,8 +1391,8 @@ architecture.
 
 ## Next recommended PR
 
-Phase 3E-A/B is the approved product readiness, navigation QA, and public/admin
-dead-end polish iteration after Phase 3D-A/B. After this PR, continue
+Phase 3F-A/B is the approved catalogue content quality, media readiness, and
+admin publication polish iteration after Phase 3E-A/B. After this PR, continue
 product/public/admin polish only when explicitly scoped, or move to a
 separately approved preview deployment PR if the owner chooses deployment.
 

@@ -13,6 +13,21 @@ export const metadata: Metadata = {
     "Browse public furniture and event rental categories and send a quote enquiry to Space Koncept Rentals."
 };
 
+function textOrUndefined(value: string | undefined) {
+  return value?.trim() || undefined;
+}
+
+function categoryDescription(value: string | undefined) {
+  return (
+    textOrUndefined(value) ??
+    "Category description can be confirmed with the team during quote follow-up."
+  );
+}
+
+function publicListingCountText(count: number) {
+  return `${count} public ${count === 1 ? "listing" : "listings"}`;
+}
+
 export function CategoriesPageContent({
   catalogue
 }: {
@@ -63,9 +78,11 @@ export function CategoriesPageContent({
 
           return (
             <article className="route-card" key={category.id}>
-              <p className="eyebrow">{categoryListings.length} listings</p>
+              <p className="eyebrow">
+                {publicListingCountText(categoryListings.length)}
+              </p>
               <h2>{category.name}</h2>
-              {category.description ? <p>{category.description}</p> : null}
+              <p>{categoryDescription(category.description)}</p>
               <div className="catalogue-card__actions">
                 <Link
                   className="card-link"

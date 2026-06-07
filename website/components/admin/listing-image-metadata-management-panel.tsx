@@ -143,6 +143,10 @@ function imageLabel(image: ListingImageMetadataImage) {
   return image.altText || image.storagePath;
 }
 
+function hasText(value: string | undefined) {
+  return Boolean(value?.trim());
+}
+
 function imageReadiness(
   image: ListingImageMetadataImage,
   product: ListingImageMetadataProduct | undefined
@@ -161,6 +165,45 @@ function imageReadiness(
         ? "Primary selection is inactive while archived"
         : "Secondary image supports the listing gallery"
   ];
+}
+
+function mediaReadinessByListing(
+  product: ListingImageMetadataProduct,
+  images: ListingImageMetadataImage[]
+) {
+  const productImages = images.filter((image) => image.productId === product.id);
+  const activeImages = productImages.filter((image) => image.status === "active");
+  const activePrimaryImages = activeImages.filter((image) => image.isPrimary);
+  const activeImagesMissingAlt = activeImages.filter(
+    (image) => !hasText(image.altText)
+  );
+  const messages: string[] = [];
+
+  if (product.status === "published" && activeImages.length === 0) {
+    messages.push(`${product.name} has no active public image metadata.`);
+  }
+
+  if (activeImages.length > 0 && activePrimaryImages.length === 0) {
+    messages.push(`${product.name} is missing an active primary image.`);
+  }
+
+  if (activePrimaryImages.length > 1) {
+    messages.push(
+      `${product.name} has ${activePrimaryImages.length} active primary images. Keep one active primary image before publication.`
+    );
+  }
+
+  if (activeImagesMissingAlt.length > 0) {
+    messages.push(
+      `${product.name} has ${activeImagesMissingAlt.length} active ${
+        activeImagesMissingAlt.length === 1 ? "image" : "images"
+      } missing alt text.`
+    );
+  }
+
+  return messages.length > 0
+    ? messages
+    : [`${product.name} media readiness is clear for current publication state.`];
 }
 
 function buildImagePayload(
@@ -197,6 +240,9 @@ export function ListingImageMetadataManagementPanel({
   const [status, setStatus] = useState<PanelStatus>({
     kind: "idle"
   });
+  const archivedImageCount = images.filter(
+    (image) => image.status === "archived"
+  ).length;
 
   async function submitImageMutation(
     endpoint: string,
@@ -340,6 +386,20 @@ export function ListingImageMetadataManagementPanel({
           Public-ready media needs an active image, useful alt text, and a clear
           primary image when the listing should lead with that setup.
         </p>
+        <h4>Media readiness by listing</h4>
+        <ul className="admin-readiness__list">
+          {products.flatMap((product) =>
+            mediaReadinessByListing(product, images).map((message) => (
+              <li key={`${product.id}-${message}`}>{message}</li>
+            ))
+          )}
+        </ul>
+        {archivedImageCount > 0 ? (
+          <p className="category-management__hint">
+            Archived image metadata stays hidden from public catalogue and
+            listing galleries.
+          </p>
+        ) : null}
       </section>
 
       <form

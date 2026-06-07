@@ -10,6 +10,7 @@ export type CategoryManagementCategory = {
   sortOrder: number;
   isPublished: boolean;
   productCount: number;
+  publishedProductCount?: number;
 };
 
 type CategoryManagementPanelProps = {
@@ -82,20 +83,34 @@ function hasText(value: string | undefined) {
   return Boolean(value?.trim());
 }
 
+function publishedProductCount(category: CategoryManagementCategory) {
+  return category.publishedProductCount ?? category.productCount;
+}
+
 function categoryReadiness(category: CategoryManagementCategory) {
+  const publicListingCount = publishedProductCount(category);
+
   return [
-    category.isPublished
-      ? `Published grouping with ${category.productCount} ${
-          category.productCount === 1 ? "listing" : "listings"
-        }`
-      : "Not published for public browsing",
-    category.productCount > 0
+    category.isPublished && publicListingCount > 0
+      ? `Published grouping with ${publicListingCount} ${
+          publicListingCount === 1 ? "listing" : "listings"
+        } for public browsing`
+      : category.isPublished
+        ? "Published category has no published listings"
+        : "Not published for public browsing",
+    publicListingCount > 0
       ? "Listings are grouped for public browsing"
       : "Add listings before this category helps public browsing",
     hasText(category.description)
       ? "Category description present"
       : "Add a category description for admin clarity"
   ];
+}
+
+function categoriesWithoutPublishedListings(categories: CategoryManagementCategory[]) {
+  return categories.filter(
+    (category) => category.isPublished && publishedProductCount(category) === 0
+  );
 }
 
 async function readSafeJson(response: Response) {
@@ -154,6 +169,7 @@ export function CategoryManagementPanel({
   const [status, setStatus] = useState<PanelStatus>({
     kind: "idle"
   });
+  const publishedEmptyCategories = categoriesWithoutPublishedListings(categories);
 
   async function submitCategoryMutation(
     endpoint: string,
@@ -322,11 +338,22 @@ export function CategoryManagementPanel({
       </div>
 
       <section className="admin-readiness" aria-label="Category readiness">
-        <h3>Category readiness</h3>
+        <h3>Category publication readiness</h3>
         <p>
           Categories should group rental listings that are ready for public
           browsing. Unpublished categories stay out of public catalogue
           grouping.
+        </p>
+        <p className="category-management__hint">
+          Category readiness checks use published listing counts when they are
+          available from the admin dashboard.
+        </p>
+        <p>
+          {publishedEmptyCategories.length > 0
+            ? `Published categories without published listings: ${publishedEmptyCategories
+                .map((category) => category.name)
+                .join(", ")}.`
+            : "All published categories have published listings or are intentionally unpublished."}
         </p>
       </section>
 
