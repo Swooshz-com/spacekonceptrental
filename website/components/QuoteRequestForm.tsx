@@ -15,6 +15,20 @@ type SubmitState =
   | { status: "success"; publicReference?: string }
   | { status: "error"; message: string };
 
+function parseRequestedItems(itemsText: string, itemNotesText: string) {
+  const itemLines = itemsText
+    .split(/\r?\n|\r/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  return itemLines.map((productName, index) => ({
+    productName,
+    quantity: 1,
+    // Item notes are shared form context, so submit them once on the first item.
+    ...(index === 0 && itemNotesText ? { notes: itemNotesText } : {})
+  }));
+}
+
 export default function QuoteRequestForm({
   initialItemsText = ""
 }: {
@@ -46,15 +60,7 @@ export default function QuoteRequestForm({
         : {}),
       eventDate: String(formData.get("eventDate") ?? "").trim(),
       venue: String(formData.get("venue") ?? "").trim(),
-      items: itemsText
-        ? [
-            {
-              productName: itemsText,
-              quantity: 1,
-              ...(itemNotesText ? { notes: itemNotesText } : {})
-            }
-          ]
-        : []
+      items: parseRequestedItems(itemsText, itemNotesText)
     };
 
     if (!payload.customerEmail && !payload.customerPhone) {

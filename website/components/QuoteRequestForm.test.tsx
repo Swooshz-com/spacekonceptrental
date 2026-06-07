@@ -147,6 +147,128 @@ describe("QuoteRequestForm", () => {
     expect(screen.queryByRole("link", { name: /track|status/i })).not.toBeInTheDocument();
   });
 
+  it("submits a selected listing as one quote item and keeps success receipt-only", async () => {
+    const fetchMock = vi.fn(async () => {
+      return new Response(
+        JSON.stringify({
+          status: "received",
+          quoteRequestId: "70000000-0000-4000-8000-000000000001",
+          publicReference: "QR-20260527-ABC12345"
+        }),
+        {
+          headers: { "content-type": "application/json" },
+          status: 201
+        }
+      );
+    });
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(<QuoteRequestForm initialItemsText="Modular Lounge Set" />);
+
+    fireEvent.change(screen.getByLabelText(/name/i), {
+      target: { value: "Maya Tan" }
+    });
+    fireEvent.change(screen.getByLabelText(/email address/i), {
+      target: { value: "maya@example.test" }
+    });
+    fireEvent.click(screen.getByRole("button", { name: /send quote request/i }));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/quote",
+      expect.objectContaining({
+        body: JSON.stringify({
+          customerName: "Maya Tan",
+          customerEmail: "maya@example.test",
+          customerPhone: "",
+          eventDate: "",
+          venue: "",
+          items: [
+            {
+              productName: "Modular Lounge Set",
+              quantity: 1
+            }
+          ]
+        })
+      })
+    );
+    expect(
+      await screen.findByText(/quote request received/i)
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /track|status/i })).not.toBeInTheDocument();
+  });
+
+  it("splits requested item lines, trims them, and ignores blanks", async () => {
+    const fetchMock = vi.fn(async () => {
+      return new Response(
+        JSON.stringify({
+          status: "received",
+          quoteRequestId: "70000000-0000-4000-8000-000000000001",
+          publicReference: "QR-20260527-ABC12345"
+        }),
+        {
+          headers: { "content-type": "application/json" },
+          status: 201
+        }
+      );
+    });
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(<QuoteRequestForm />);
+
+    fireEvent.change(screen.getByLabelText(/name/i), {
+      target: { value: "Maya Tan" }
+    });
+    fireEvent.change(screen.getByLabelText(/email address/i), {
+      target: { value: "maya@example.test" }
+    });
+    fireEvent.change(screen.getByLabelText(/items needed/i), {
+      target: {
+        value:
+          "  20 stools  \n\n4 cocktail tables\r\n   \nModular lounge setup  "
+      }
+    });
+    fireEvent.change(screen.getByLabelText(/item-specific notes/i), {
+      target: {
+        value: "Place priority items near the reception zone."
+      }
+    });
+    fireEvent.click(screen.getByRole("button", { name: /send quote request/i }));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/quote",
+      expect.objectContaining({
+        body: JSON.stringify({
+          customerName: "Maya Tan",
+          customerEmail: "maya@example.test",
+          customerPhone: "",
+          eventDate: "",
+          venue: "",
+          items: [
+            {
+              productName: "20 stools",
+              quantity: 1,
+              notes: "Place priority items near the reception zone."
+            },
+            {
+              productName: "4 cocktail tables",
+              quantity: 1
+            },
+            {
+              productName: "Modular lounge setup",
+              quantity: 1
+            }
+          ]
+        })
+      })
+    );
+  });
+
   it("does not import Supabase or server-only quote persistence in browser-facing code", () => {
     const source = readFileSync(
       resolve(process.cwd(), "components/QuoteRequestForm.tsx"),
