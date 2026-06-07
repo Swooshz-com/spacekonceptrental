@@ -238,22 +238,24 @@ Suggested first PR:
   Supabase, production evidence, or ecommerce flows. Product language remains
   enquiry/quote/request.
 
-Current Phase 3J-A/B status:
+Current Phase 3K-A/B status:
 
-- PR #131 merged Phase 3I-A/B full-site acceptance QA, public
-  SEO/accessibility polish, and non-deployment release hardening at merge
-  commit `0d2d40898c4e716032fdec130704117494c542d6`.
-- Latest completed capability is Phase 3I-A/B full-site acceptance QA, public
-  SEO/accessibility polish, and non-deployment release hardening.
-- Phase 3J-A/B is current as owner review readiness package, manual QA
-  runbook, and release-decision preparation for the public website journey,
-  protected admin operations surfaces, quote/enquiry intake, admin triage,
-  owner-supplied content needs, explicit deferred capability lists, docs,
-  validators, and deterministic no-deploy guardrails.
-- Owner review materials and manual QA steps are repo-local and non-live. They
-  do not approve deployment, do not connect providers, do not add filled
-  preview or production evidence, and do not change the existing public
-  catalogue, public quote API, or protected admin route boundaries.
+- PR #132 merged Phase 3J-A/B owner review readiness package, manual QA
+  runbook, and release-decision preparation at merge commit
+  `1c7dc0ac7c2532fa8a837cd46b0d1f0103d5ccfa`.
+- Latest completed capability is Phase 3J-A/B owner review readiness package,
+  manual QA runbook, and release-decision preparation.
+- Phase 3K-A/B is current as owner content intake, content gap register, and
+  launch-blocker governance for owner-supplied brand, listing, category,
+  event, image, alt-text, service-area, contact, operating, legal/policy, and
+  admin ownership inputs; content gap tracking; owner review blocker classes;
+  launch/deployment blocker classes; and deterministic no-deploy guardrails.
+- Owner content intake and the content gap register are repo-local controls.
+  Unknown real-world business facts remain marked as Owner input required.
+  Missing real contact/legal/business-hour content does not get invented.
+  Owner review can continue without deployment, but public launch cannot
+  proceed until required owner content and explicit deployment approval are
+  both supplied.
 - No deployment, deployment approval, Vercel config, Supabase Cloud config,
   real env values, production evidence, browser Supabase, service-role runtime
   paths, n8n/Pinecone/RAG runtime work, public quote tracking, customer
@@ -261,6 +263,30 @@ Current Phase 3J-A/B status:
   public/customer upload routes, transcript runtime paths, invented real
   contact details, testimonials, client names, legal claims, production
   policies, or ecommerce flow is added.
+
+Previous Current Phase 3J-A/B status:
+
+- PR #131 merged Phase 3I-A/B full-site acceptance QA, public
+  SEO/accessibility polish, and non-deployment release hardening at merge
+  commit `0d2d40898c4e716032fdec130704117494c542d6`.
+- Latest completed capability was Phase 3I-A/B full-site acceptance QA, public
+  SEO/accessibility polish, and non-deployment release hardening.
+- Phase 3J-A/B was current as owner review readiness package, manual QA
+  runbook, and release-decision preparation for the public website journey,
+  protected admin operations surfaces, quote/enquiry intake, admin triage,
+  owner-supplied content needs, explicit deferred capability lists, docs,
+  validators, and deterministic no-deploy guardrails.
+- Owner review materials and manual QA steps are repo-local and non-live. They
+  did not approve deployment, did not connect providers, did not add filled
+  preview or production evidence, and did not change the existing public
+  catalogue, public quote API, or protected admin route boundaries.
+- No deployment, deployment approval, Vercel config, Supabase Cloud config,
+  real env values, production evidence, browser Supabase, service-role runtime
+  paths, n8n/Pinecone/RAG runtime work, public quote tracking, customer
+  accounts, customer-visible internal notes, notifications, CRM integration,
+  public/customer upload routes, transcript runtime paths, invented real
+  contact details, testimonials, client names, legal claims, production
+  policies, or ecommerce flow was added.
 
 Previous Current Phase 3I-A/B status:
 

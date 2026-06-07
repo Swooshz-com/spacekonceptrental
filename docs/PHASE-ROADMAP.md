@@ -1425,3 +1425,36 @@ transcript runtime paths, invent real contact details, testimonials, client
 names, awards, certifications, legal claims, production policies, or add
 ecommerce flows such as carts, checkout, payments, stock reservation,
 confirmed booking, order fulfilment, or online ordering.
+
+## Phase 3K: Owner Content Intake, Content Gap Register, And Launch-Blocker Governance
+
+Phase 3K-A/B adds owner content intake, a content gap register, and
+launch-blocker governance for the current repo-local rental website candidate.
+It collects owner-supplied requirements for approved brand spelling, public
+display name, listing/product names, listing/category/event descriptions,
+image selection and alt text, public service-area wording, public contact
+details, business hours, operating expectations, legal/policy wording, and
+admin access/workspace ownership expectations.
+
+Phase 3K-A/B keeps unknown real-world business facts marked as owner input
+required. Missing real contact/legal/business-hour content does not get
+invented. Owner review can continue without deployment, but public launch
+cannot proceed until required owner content and explicit deployment approval
+are both supplied.
+
+Phase 3K-A/B separates Blocks owner review, Blocks launch/deployment, Deferred
+after launch, and Not in scope by owner direction so content decisions do not
+silently turn into deployment approval or runtime work.
+
+Phase 3K-A/B does not deploy, approve deployment, add Vercel or Supabase Cloud
+config, add real env values, add filled preview or production evidence, add
+browser Supabase, add service-role runtime paths, access
+`website/chat-config.js`, add public/customer uploads, add customer accounts,
+add public quote tracking, expose customer-visible internal notes, add
+notifications or CRM integration, change n8n/Pinecone runtime behavior, add
+Pinecone packages/env/API keys, wire `/api/chat` to retrieval/RAG, add
+transcript runtime paths, invent real contact details, business hours,
+addresses, testimonials, client names, awards, certifications, legal claims,
+guarantees, production policies, or add ecommerce flows such as carts,
+checkout, payments, stock reservation, confirmed booking, order fulfilment, or
+online ordering.

@@ -5,8 +5,9 @@ import { describe, expect, it } from "vitest";
 
 const repoRoot = resolve(process.cwd(), "..");
 const sourceExtensions = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"]);
-const phase3iMergeCommit = "0d2d40898c4e716032fdec130704117494c542d6";
 const phase3jMergeCommit = "1c7dc0ac7c2532fa8a837cd46b0d1f0103d5ccfa";
+const ownerContentIntakePath = "docs/content/OWNER-CONTENT-INTAKE.md";
+const contentGapRegisterPath = "docs/content/CONTENT-GAP-REGISTER.md";
 const ownerReviewPackagePath = "docs/OWNER-REVIEW-READINESS-PACKAGE.md";
 const ownerManualQaPath = "docs/manual-qa/OWNER-REVIEW-MANUAL-QA.md";
 const previewHandoffPath = "docs/PREVIEW-DEPLOYMENT-HANDOFF.md";
@@ -16,11 +17,12 @@ const forbiddenSupabaseCloudCommandPattern =
   /\bsupabase\s+(?:link|login|projects|secrets|functions|db\s+(?:push|pull|remote|reset))\b/i;
 const forbiddenEnvInstructionPattern =
   /\b(?:create|copy|edit|fill|commit|configure|add)\s+(?:a\s+)?`?\.env/i;
-const forbiddenLiveSmokePattern = /\bnpm run smoke:preview\b|live preview smoke/i;
+const forbiddenInventedClaimPattern =
+  /award-winning|certified partner|trusted by|5-star|guaranteed availability|guaranteed delivery|licensed and insured/i;
+const forbiddenContactFactPattern =
+  /\b(?:\+?\d[\d\s().-]{7,}|[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}|Mon(?:day)?\s*-\s*Fri|24\/7|123\s+Main|Singapore\s+\d{6})\b/i;
 const forbiddenCommercePattern =
   /cart|checkout|payments?|purchase|customer account|stock reservation|order fulfilment|confirmed booking|online ordering/i;
-const forbiddenInventedClaimPattern =
-  /award-winning|certified partner|trusted by|5-star|guaranteed availability|guaranteed delivery/i;
 
 function readRepoFile(relativePath: string) {
   return readFileSync(resolve(repoRoot, relativePath), "utf8");
@@ -54,7 +56,7 @@ function readTrackedProductionSources(paths: string[]) {
     .join("\n");
 }
 
-describe("Phase 3J-A/B owner review readiness package", () => {
+describe("Phase 3K-A/B owner content gap governance", () => {
   it("records Phase 3K-A/B as current after Phase 3J completed in PR #132", () => {
     const status = readRepoFile("docs/PHASE-STATUS.md");
     const currentStatus = normalizeWhitespace(
@@ -76,14 +78,11 @@ describe("Phase 3J-A/B owner review readiness package", () => {
     expect(currentStatus).toContain(`Merge commit: \`${phase3jMergeCommit}\``);
     expect(status).toContain("Previous Current Phase 3J-A/B status");
     expect(status).toContain("Previous Current Phase 3I-A/B status");
-    expect(status).toContain("Previous Current Phase 3H-A/B status");
     expect(roadmap).toContain(
       "Phase 3K-A/B adds owner content intake, a content gap register, and launch-blocker governance"
     );
     expect(readiness).toContain("Current Phase 3K-A/B status");
     expect(readiness).toContain("Previous Current Phase 3J-A/B status");
-    expect(readiness).toContain("Previous Current Phase 3I-A/B status");
-    expect(readiness).toContain("Previous Current Phase 3H-A/B status");
     expect(decisionLog).toContain(
       "Decision: Phase 3K-A/B adds owner content intake, content gap register, and launch-blocker governance."
     );
@@ -91,97 +90,91 @@ describe("Phase 3J-A/B owner review readiness package", () => {
       "## Phase 3K-A/B Owner Content Intake Content Gap Register And Launch-Blocker Governance"
     );
     expect(validator).toContain(phase3jMergeCommit);
-    expect(validator).toContain(ownerReviewPackagePath);
-    expect(validator).toContain(ownerManualQaPath);
+    expect(validator).toContain(ownerContentIntakePath);
+    expect(validator).toContain(contentGapRegisterPath);
     expect(validator).toContain("Phase 3K-A/B");
   });
 
-  it("adds an owner review package with safe go/no-go decision boundaries", () => {
-    expect(existsSync(resolve(repoRoot, ownerReviewPackagePath))).toBe(true);
-    const packageDoc = readRepoFile(ownerReviewPackagePath);
-    const normalizedPackage = normalizeWhitespace(packageDoc);
+  it("adds owner content intake without inventing real-world business facts", () => {
+    expect(existsSync(resolve(repoRoot, ownerContentIntakePath))).toBe(true);
+    const intake = readRepoFile(ownerContentIntakePath);
+    const normalizedIntake = normalizeWhitespace(intake);
 
     for (const required of [
-      "Ready for owner review",
-      "Intentionally not implemented",
-      "Public website journey readiness",
-      "Admin listing/category/media readiness",
-      "Quote/enquiry intake and admin triage readiness",
-      "Known deferred capabilities",
-      "Non-deployment decision status",
-      "Owner go/no-go decision points",
-      "Hold deployment",
-      "Approve future deployment separately",
-      "Needs owner-supplied content",
-      "Needs deployment approval later",
-      "Explicitly deferred features"
+      "Approved brand spelling and public display name",
+      "Approved listing/product names",
+      "Listing/category/event descriptions",
+      "Image selection and alt text",
+      "Public service-area wording",
+      "Public contact details",
+      "Business hours",
+      "Operating expectations",
+      "Legal/policy wording",
+      "Admin access/workspace ownership expectations",
+      "Owner input required"
     ]) {
-      expect(normalizedPackage).toContain(required);
+      expect(normalizedIntake).toContain(required);
     }
-    expect(normalizedPackage).toContain(
-      "This package does not approve deployment and does not deploy anything."
-    );
-    expect(packageDoc).not.toMatch(forbiddenDeploymentCommandPattern);
-    expect(packageDoc).not.toMatch(forbiddenSupabaseCloudCommandPattern);
-    expect(packageDoc).not.toMatch(forbiddenEnvInstructionPattern);
-    expect(packageDoc).not.toMatch(forbiddenLiveSmokePattern);
-    expect(packageDoc).not.toMatch(forbiddenInventedClaimPattern);
+    expect(intake).not.toMatch(forbiddenDeploymentCommandPattern);
+    expect(intake).not.toMatch(forbiddenSupabaseCloudCommandPattern);
+    expect(intake).not.toMatch(forbiddenEnvInstructionPattern);
+    expect(intake).not.toMatch(forbiddenInventedClaimPattern);
+    expect(intake).not.toMatch(forbiddenContactFactPattern);
   });
 
-  it("adds a non-live manual QA runbook for public and protected admin review", () => {
-    expect(existsSync(resolve(repoRoot, ownerManualQaPath))).toBe(true);
-    const runbook = readRepoFile(ownerManualQaPath);
-    const normalizedRunbook = normalizeWhitespace(runbook);
+  it("adds a content gap register with launch-blocker governance fields", () => {
+    expect(existsSync(resolve(repoRoot, contentGapRegisterPath))).toBe(true);
+    const register = readRepoFile(contentGapRegisterPath);
+    const normalizedRegister = normalizeWhitespace(register);
 
     for (const required of [
-      "/",
-      "/catalogue",
-      "/listings",
-      "/listings/[slug]",
-      "/categories",
-      "/catalogue/[slug]",
-      "/events",
-      "/quote",
-      "Not-found/recovery states",
-      "Protected admin overview",
-      "Protected admin listings",
-      "Protected admin categories",
-      "Protected admin media",
-      "Protected admin quotes",
-      "Protected admin quote detail",
-      "cd website && npm test",
-      "cd website && npm run typecheck",
-      "cd website && npm run build",
-      "npm run validate:preview-handoff"
+      "Brand and naming",
+      "Public route copy",
+      "Listings/categories/events",
+      "Images and alt text",
+      "Quote/enquiry expectations",
+      "Admin access and operator ownership",
+      "Launch/legal/policy/contact content",
+      "Gap",
+      "Impact",
+      "Required owner input",
+      "Launch blocker status",
+      "Deferred / not required for current owner review",
+      "Owner input required",
+      "Blocks owner review",
+      "Blocks launch/deployment",
+      "Deferred after launch",
+      "Not in scope by owner direction"
     ]) {
-      expect(normalizedRunbook).toContain(required);
+      expect(normalizedRegister).toContain(required);
     }
-    expect(normalizedRunbook).toContain("non-live");
-    expect(normalizedRunbook).toContain("does not approve deployment");
-    expect(runbook).not.toMatch(forbiddenDeploymentCommandPattern);
-    expect(runbook).not.toMatch(forbiddenSupabaseCloudCommandPattern);
-    expect(runbook).not.toMatch(forbiddenEnvInstructionPattern);
-    expect(runbook).not.toMatch(forbiddenLiveSmokePattern);
-    expect(runbook).not.toMatch(forbiddenInventedClaimPattern);
+    expect(register).not.toMatch(forbiddenDeploymentCommandPattern);
+    expect(register).not.toMatch(forbiddenSupabaseCloudCommandPattern);
+    expect(register).not.toMatch(forbiddenEnvInstructionPattern);
+    expect(register).not.toMatch(forbiddenInventedClaimPattern);
+    expect(register).not.toMatch(forbiddenContactFactPattern);
   });
 
-  it("adds owner-decision clarity to preview handoff without live evidence", () => {
+  it("cross-links content governance into owner review and deployment handoff docs", () => {
+    const ownerReview = readRepoFile(ownerReviewPackagePath);
+    const manualQa = readRepoFile(ownerManualQaPath);
     const handoff = readRepoFile(previewHandoffPath);
-    const normalizedHandoff = normalizeWhitespace(handoff);
+    const combined = normalizeWhitespace([ownerReview, manualQa, handoff].join("\n"));
 
-    expect(normalizedHandoff).toContain("Owner Review Decision Inputs");
-    expect(normalizedHandoff).toContain("review `docs/OWNER-REVIEW-READINESS-PACKAGE.md`");
-    expect(normalizedHandoff).toContain("review `docs/manual-qa/OWNER-REVIEW-MANUAL-QA.md`");
-    expect(normalizedHandoff).toContain("What the owner should supply before launch");
-    expect(normalizedHandoff).toContain("What remains blocked until explicit approval");
-    expect(normalizedHandoff).toContain("Hold deployment");
-    expect(normalizedHandoff).toContain("Approve future deployment separately");
-    expect(handoff).not.toMatch(forbiddenDeploymentCommandPattern);
-    expect(handoff).not.toMatch(forbiddenSupabaseCloudCommandPattern);
+    expect(combined).toContain("docs/content/OWNER-CONTENT-INTAKE.md");
+    expect(combined).toContain("docs/content/CONTENT-GAP-REGISTER.md");
+    expect(combined).toContain("Owner content blockers");
+    expect(combined).toContain("Missing real contact/legal/business-hour content does not get invented");
+    expect(combined).toContain(
+      "Public launch cannot proceed until required owner content and explicit deployment approval are both supplied"
+    );
+    expect(combined).toContain("Owner review can continue without deployment");
+    expect(ownerReview).not.toMatch(forbiddenDeploymentCommandPattern);
+    expect(manualQa).not.toMatch(forbiddenSupabaseCloudCommandPattern);
     expect(handoff).not.toMatch(forbiddenEnvInstructionPattern);
   });
 
-  it("keeps Phase 3J inside owner review and non-deployment scope", () => {
+  it("keeps Phase 3K inside documentation governance and non-deployment scope", () => {
     const packageSource = [
       readRepoFile("package.json"),
       readRepoFile("website/package.json")

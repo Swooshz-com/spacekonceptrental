@@ -4,29 +4,29 @@ This is the quick status page for the SKR repo. Use `docs/PHASE-2-READINESS-PLAN
 
 ## Current phase
 
-Current phase: Phase 3J-A/B - owner review readiness package, manual QA runbook, and release-decision preparation.
+Current phase: Phase 3K-A/B - owner content intake, content gap register, and launch-blocker governance.
 
-Latest completed capability: Phase 3I-A/B full-site acceptance QA, public SEO/accessibility polish, and non-deployment release hardening.
+Latest completed capability: Phase 3J-A/B owner review readiness package, manual QA runbook, and release-decision preparation.
 
-Last merged capability PR: #131
+Last merged capability PR: #132
 
-Merge commit: `0d2d40898c4e716032fdec130704117494c542d6`
+Merge commit: `1c7dc0ac7c2532fa8a837cd46b0d1f0103d5ccfa`
 
-Phase 3J-A/B adds an owner review readiness package, manual QA runbook, and
-release-decision preparation. It collects the current public website journey,
-protected admin operations surfaces, quote/enquiry intake, admin triage
-readiness, intentionally deferred capabilities, owner-supplied content needs,
-and future go/no-go decision points in repo-local documentation.
+Phase 3K-A/B adds owner content intake, a content gap register, and
+launch-blocker governance. It records owner-supplied content requirements,
+marks unknown real-world facts as owner input required, separates owner review
+blockers from launch/deployment blockers, and cross-links content blockers
+into the owner review and preview handoff docs.
 
 Public users only see public-safe published listing, category, listing image,
-selected-listing quote context, and public recovery guidance. Owner review
-materials stay repo-local and do not expose admin internal notes, protected
-management URLs, provider details, secrets, production evidence, or filled
-preview evidence. Supabase remains canonical for website/admin listing and
-quote data. Pinecone remains a future derived index only and is not used as
-canonical business storage.
+selected-listing quote context, and public recovery guidance. Content intake
+and gap register materials stay repo-local and do not expose admin internal
+notes, protected management URLs, provider details, secrets, production
+evidence, filled preview evidence, or invented public business facts. Supabase
+remains canonical for website/admin listing and quote data. Pinecone remains a
+future derived index only and is not used as canonical business storage.
 
-No deployment is performed or approved by Phase 3J-A/B. It does not add Vercel
+No deployment is performed or approved by Phase 3K-A/B. It does not add Vercel
 config, connect Supabase Cloud, add real secrets or env values, add filled
 preview or production evidence, add Pinecone runtime code, Pinecone packages,
 Pinecone env reads, secrets, API keys, Pinecone executors, n8n workflow/runtime
@@ -55,24 +55,51 @@ public upload routes, customer accounts, public quote tracking,
 customer-visible internal notes, notifications, CRM integration, ecommerce
 flows, carts, checkout, payments, stock reservation, order fulfilment,
 confirmed booking, online ordering, deployment, Vercel config, Supabase Cloud
-config, env/secrets, and production evidence remain blocked.
+config, env/secrets, and production evidence remain blocked. Missing real
+contact, legal, policy, business-hour, service-area, proof, testimonial,
+client-name, award, certification, or guarantee content must remain marked as
+owner input required and must not be invented.
 
 ## Remaining-work map
 
-Completed through PR #131:
+Completed through PR #132:
+
+- PR #132 merged Phase 3J-A/B owner review readiness package, manual QA
+  runbook, and release-decision preparation at merge commit
+  `1c7dc0ac7c2532fa8a837cd46b0d1f0103d5ccfa`.
+- The latest completed capability is Phase 3J-A/B owner review readiness
+  package, manual QA runbook, and release-decision preparation. It added
+  repo-local owner review materials, non-live manual QA, preview handoff
+  owner decision inputs, and deterministic no-deploy guardrails without
+  deployment or runtime expansion.
+- Phase 3K-A/B is current as owner content intake, content gap register, and
+  launch-blocker governance for owner-required content, content gaps, launch
+  blocker classes, owner review cross-links, and deterministic no-deploy
+  guardrails. It is repo-local only and does not perform or approve
+  deployment.
+
+Previous Current Phase 3J-A/B status:
+
+Current phase: Phase 3J-A/B - owner review readiness package, manual QA runbook, and release-decision preparation.
+
+Latest completed capability: Phase 3I-A/B full-site acceptance QA, public SEO/accessibility polish, and non-deployment release hardening.
+
+Last merged capability PR: #131
+
+Merge commit: `0d2d40898c4e716032fdec130704117494c542d6`
 
 - PR #131 merged Phase 3I-A/B full-site acceptance QA, public
   SEO/accessibility polish, and non-deployment release hardening at merge
   commit `0d2d40898c4e716032fdec130704117494c542d6`.
-- The latest completed capability is Phase 3I-A/B full-site acceptance QA,
+- The latest completed capability was Phase 3I-A/B full-site acceptance QA,
   public SEO/accessibility polish, and non-deployment release hardening. It
   improved public route metadata, headings, recovery paths, quote
   expectations, public/admin boundary checks, and deterministic no-deploy
   guardrail tests without deployment or runtime expansion.
-- Phase 3J-A/B is current as owner review readiness package, manual QA
+- Phase 3J-A/B was current as owner review readiness package, manual QA
   runbook, and release-decision preparation for repo-local owner review,
   manual QA, explicit non-deployment decision language, and deterministic
-  no-deploy guardrails. It is repo-local only and does not perform or approve
+  no-deploy guardrails. It was repo-local only and did not perform or approve
   deployment.
 
 Previous Current Phase 3I-A/B status:

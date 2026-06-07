@@ -7,6 +7,8 @@ const handoffDocPath = 'docs/PREVIEW-DEPLOYMENT-HANDOFF.md';
 const branchFreezeDocPath = 'docs/PREVIEW-DEPLOYMENT-BRANCH-FREEZE.md';
 const ownerReviewPackagePath = 'docs/OWNER-REVIEW-READINESS-PACKAGE.md';
 const ownerManualQaPath = 'docs/manual-qa/OWNER-REVIEW-MANUAL-QA.md';
+const ownerContentIntakePath = 'docs/content/OWNER-CONTENT-INTAKE.md';
+const contentGapRegisterPath = 'docs/content/CONTENT-GAP-REGISTER.md';
 const handoffValidatorPath = 'scripts/validate-preview-handoff.cjs';
 const phase2pMergeCommit = '15a5d23941ac7fbe3297792311f50e414d622f5f';
 const phase2qMergeCommit = '62c2b11b6b15192434eb4035ba0a66a44cd6f763';
@@ -18,6 +20,7 @@ const phase3fMergeCommit = '69665bb241b1af5c05ad34ac1464cdaeece8b7f8';
 const phase3gMergeCommit = '75fd104966e3e8c69a434f2325f6f79e4742a40f';
 const phase3hMergeCommit = '09f92ede4b5d9f725d0df560838a12fef27940b9';
 const phase3iMergeCommit = '0d2d40898c4e716032fdec130704117494c542d6';
+const phase3jMergeCommit = '1c7dc0ac7c2532fa8a837cd46b0d1f0103d5ccfa';
 
 function fail(message) {
   console.error(message);
@@ -67,6 +70,10 @@ function assertIncludes(source, needle, label) {
   assert(source.includes(needle), `${label} is missing required text: ${needle}`);
 }
 
+function normalizeWhitespace(source) {
+  return source.replace(/\s+/g, ' ').trim();
+}
+
 function assertNoMatch(source, pattern, label) {
   assert(!pattern.test(source), `${label} contains forbidden content.`);
 }
@@ -88,6 +95,7 @@ function assertHandoffDocs() {
     readRepoFile(handoffDocPath),
     readRepoFile(branchFreezeDocPath),
   ].join('\n');
+  const normalizedDocs = normalizeWhitespace(docs);
 
   assertTracked([handoffDocPath, branchFreezeDocPath], 'handoff docs');
 
@@ -98,8 +106,14 @@ function assertHandoffDocs() {
     'Owner Review Decision Inputs',
     'review `docs/OWNER-REVIEW-READINESS-PACKAGE.md`',
     'review `docs/manual-qa/OWNER-REVIEW-MANUAL-QA.md`',
+    'docs/content/OWNER-CONTENT-INTAKE.md',
+    'docs/content/CONTENT-GAP-REGISTER.md',
     'What the owner should supply before launch',
     'What remains blocked until explicit approval',
+    'Owner content blockers',
+    'Missing real contact/legal/business-hour content does not get invented',
+    'Public launch cannot proceed until required owner content and explicit deployment approval are both supplied',
+    'Owner review can continue without deployment',
     'Approve preview deployment',
     'Approve future deployment separately',
     'Hold deployment',
@@ -119,7 +133,7 @@ function assertHandoffDocs() {
     '<redacted>',
     '<reviewed externally>',
   ]) {
-    assertIncludes(docs, required, 'handoff docs');
+    assertIncludes(normalizedDocs, required, 'handoff docs');
   }
 
   assertNoMatch(docs, /https?:\/\/|www\./i, 'handoff docs');
@@ -135,6 +149,7 @@ function assertOwnerReviewDocs() {
   const packageDoc = readRepoFile(ownerReviewPackagePath);
   const manualQa = readRepoFile(ownerManualQaPath);
   const combined = [packageDoc, manualQa].join('\n');
+  const normalizedCombined = normalizeWhitespace(combined);
 
   assertTracked([ownerReviewPackagePath, ownerManualQaPath], 'owner review docs');
 
@@ -156,8 +171,14 @@ function assertOwnerReviewDocs() {
     'This manual QA runbook is non-live and does not approve deployment.',
     'Protected admin quote detail',
     'Not-found/recovery states',
+    'docs/content/OWNER-CONTENT-INTAKE.md',
+    'docs/content/CONTENT-GAP-REGISTER.md',
+    'Owner content blockers',
+    'Missing real contact/legal/business-hour content does not get invented',
+    'Public launch cannot proceed until required owner content and explicit deployment approval are both supplied',
+    'Owner review can continue without deployment',
   ]) {
-    assertIncludes(combined, required, 'owner review docs');
+    assertIncludes(normalizedCombined, required, 'owner review docs');
   }
 
   assertNoMatch(combined, /\bvercel\s+(?:deploy|link|env|pull|promote)\b/i, 'owner review docs');
@@ -179,6 +200,73 @@ function assertOwnerReviewDocs() {
   );
 }
 
+function assertContentGovernanceDocs() {
+  const intake = readRepoFile(ownerContentIntakePath);
+  const register = readRepoFile(contentGapRegisterPath);
+  const combined = [intake, register].join('\n');
+  const normalizedCombined = normalizeWhitespace(combined);
+
+  assertTracked([ownerContentIntakePath, contentGapRegisterPath], 'content governance docs');
+
+  for (const required of [
+    'Approved brand spelling and public display name',
+    'Approved listing/product names',
+    'Listing/category/event descriptions',
+    'Image selection and alt text',
+    'Public service-area wording',
+    'Public contact details',
+    'Business hours',
+    'Operating expectations',
+    'Legal/policy wording',
+    'Admin access/workspace ownership expectations',
+    'Owner input required',
+    'Content Gap Register',
+    'Brand and naming',
+    'Public route copy',
+    'Listings/categories/events',
+    'Images and alt text',
+    'Quote/enquiry expectations',
+    'Admin access and operator ownership',
+    'Launch/legal/policy/contact content',
+    'Gap',
+    'Impact',
+    'Required owner input',
+    'Launch blocker status',
+    'Deferred / not required for current owner review',
+    'Blocks owner review',
+    'Blocks launch/deployment',
+    'Deferred after launch',
+    'Not in scope by owner direction',
+    'Missing real contact/legal/business-hour content does not get invented',
+    'Public launch cannot proceed until required owner content and explicit deployment approval are both supplied',
+    'Owner review can continue without deployment',
+  ]) {
+    assertIncludes(normalizedCombined, required, 'content governance docs');
+  }
+
+  assertNoMatch(combined, /\bvercel\s+(?:deploy|link|env|pull|promote)\b/i, 'content governance docs');
+  assertNoMatch(
+    combined,
+    /\bsupabase\s+(?:link|login|projects|secrets|functions|db\s+(?:push|pull|remote|reset))\b/i,
+    'content governance docs',
+  );
+  assertNoMatch(
+    combined,
+    /\b(?:create|copy|edit|fill|commit|configure|add)\s+(?:a\s+)?`?\.env/i,
+    'content governance docs',
+  );
+  assertNoMatch(
+    combined,
+    /award-winning|certified partner|trusted by|5-star|guaranteed availability|guaranteed delivery|licensed and insured/i,
+    'content governance docs',
+  );
+  assertNoMatch(
+    combined,
+    /\b(?:\+?\d[\d\s().-]{7,}|[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}|Mon(?:day)?\s*-\s*Fri|24\/7|123\s+Main|Singapore\s+\d{6})\b/i,
+    'content governance docs',
+  );
+}
+
 function assertStatusDocs() {
   const status = readRepoFile('docs/PHASE-STATUS.md');
   const roadmap = readRepoFile('docs/PHASE-ROADMAP.md').replace(/\s+/g, ' ');
@@ -188,16 +276,17 @@ function assertStatusDocs() {
 
   assertIncludes(
     status,
-    'Current phase: Phase 3J-A/B - owner review readiness package, manual QA runbook, and release-decision preparation.',
+    'Current phase: Phase 3K-A/B - owner content intake, content gap register, and launch-blocker governance.',
     'phase status',
   );
   assertIncludes(
     status,
-    'Latest completed capability: Phase 3I-A/B full-site acceptance QA, public SEO/accessibility polish, and non-deployment release hardening.',
+    'Latest completed capability: Phase 3J-A/B owner review readiness package, manual QA runbook, and release-decision preparation.',
     'phase status',
   );
-  assertIncludes(status, 'Last merged capability PR: #131', 'phase status');
-  assertIncludes(status, `Merge commit: \`${phase3iMergeCommit}\``, 'phase status');
+  assertIncludes(status, 'Last merged capability PR: #132', 'phase status');
+  assertIncludes(status, `Merge commit: \`${phase3jMergeCommit}\``, 'phase status');
+  assertIncludes(status, 'Previous Current Phase 3J-A/B status', 'phase status');
   assertIncludes(status, 'Previous Current Phase 3I-A/B status', 'phase status');
   assertIncludes(status, 'Previous Current Phase 3H-A/B status', 'phase status');
   assertIncludes(status, 'Previous Current Phase 3G-A/B status', 'phase status');
@@ -223,7 +312,13 @@ function assertStatusDocs() {
     'Phase 3J-A/B adds an owner review readiness package, manual QA runbook, and release-decision preparation',
     'phase roadmap',
   );
-  assertIncludes(readiness, 'Current Phase 3J-A/B status', 'readiness plan');
+  assertIncludes(
+    roadmap,
+    'Phase 3K-A/B adds owner content intake, a content gap register, and launch-blocker governance',
+    'phase roadmap',
+  );
+  assertIncludes(readiness, 'Current Phase 3K-A/B status', 'readiness plan');
+  assertIncludes(readiness, 'Previous Current Phase 3J-A/B status', 'readiness plan');
   assertIncludes(readiness, 'Previous Current Phase 3I-A/B status', 'readiness plan');
   assertIncludes(readiness, 'Previous Current Phase 3H-A/B status', 'readiness plan');
   assertIncludes(readiness, 'Previous Current Phase 3G-A/B status', 'readiness plan');
@@ -294,6 +389,16 @@ function assertStatusDocs() {
     '## Phase 3J-A/B Owner Review Readiness Package Manual QA Runbook And Release-Decision Preparation',
     'phase checklist',
   );
+  assertIncludes(
+    decisionLog,
+    'Decision: Phase 3K-A/B adds owner content intake, content gap register, and launch-blocker governance.',
+    'decision log',
+  );
+  assertIncludes(
+    checklist,
+    '## Phase 3K-A/B Owner Content Intake Content Gap Register And Launch-Blocker Governance',
+    'phase checklist',
+  );
 }
 
 function assertStaticScope() {
@@ -358,6 +463,7 @@ function assertValidatorSafety() {
 assertPackageAndCi();
 assertHandoffDocs();
 assertOwnerReviewDocs();
+assertContentGovernanceDocs();
 assertStatusDocs();
 assertStaticScope();
 assertValidatorSafety();

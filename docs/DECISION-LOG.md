@@ -2202,6 +2202,40 @@ paths, add retention cleanup jobs, or add ecommerce flows such as carts,
 checkout, payments, stock reservation, confirmed booking, order fulfilment, or
 online ordering.
 
+## 2026-06-08: Owner Content Intake, Content Gap Register, And Launch-Blocker Governance
+
+Decision: Phase 3K-A/B adds owner content intake, content gap register, and launch-blocker governance.
+
+Reason: PR #132 merged Phase 3J-A/B at
+`1c7dc0ac7c2532fa8a837cd46b0d1f0103d5ccfa`, completing the owner review
+readiness package, manual QA runbook, and release-decision preparation without
+deploying or approving deployment. The next approved work item is a repo-local
+content governance package that records owner-required content inputs and
+launch blockers without inventing public business facts or changing runtime
+surfaces.
+
+The implementation adds owner content intake and content gap register docs,
+cross-links them from the owner review and preview handoff surfaces, and
+records deterministic docs/tests for owner content governance. It keeps the
+existing public catalogue read boundary, public quote request API contract,
+protected admin routes, and RPC-backed admin write boundaries.
+
+Phase 3K-A/B does not deploy, approve deployment, add Vercel config, connect
+Supabase Cloud, add real secrets or env values, add production evidence, add
+browser Supabase, add service-role runtime paths, access
+`website/chat-config.js`, add public/customer upload routes, add customer
+accounts, add public quote tracking, expose customer-visible internal notes,
+add notifications or CRM integration, change n8n/Pinecone runtime behavior,
+add SaaS chatbot runtime work, add Pinecone SDK/package dependencies, add
+Pinecone env vars or API keys, add embedding/reranking runtime, wire
+`/api/chat` to retrieval/RAG, wire transcript reads or writes into
+`/api/chat`, add admin transcript UI, add transcript deletion/export runtime
+paths, add retention cleanup jobs, invent real contact details, business
+hours, addresses, testimonials, client names, awards, certifications, legal
+claims, guarantees, production policies, or add ecommerce flows such as carts,
+checkout, payments, stock reservation, confirmed booking, order fulfilment, or
+online ordering.
+
 ## 2026-06-07: Owner Review Readiness Package, Manual QA Runbook, And Release-Decision Preparation
 
 Decision: Phase 3J-A/B adds an owner review readiness package, manual QA runbook, and release-decision preparation.

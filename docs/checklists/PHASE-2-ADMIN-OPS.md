@@ -316,6 +316,15 @@ and route/action boundaries are implemented and tested.
 - [x] Static tests cover owner review docs, manual QA runbook, preview handoff decision inputs, non-live/no-deploy instructions, and forbidden provider/runtime/ecommerce scope.
 - [x] No deployment, deployment approval, Vercel config, Supabase Cloud config, secrets/env values, filled preview or production evidence, browser Supabase, service-role runtime path, customer uploads, public quote tracking, customer accounts, customer-visible internal notes, notifications, CRM, n8n/Pinecone runtime change, invented real contact details, testimonials, client names, awards, certifications, legal claims, production policies, or ecommerce flow is added.
 
+## Phase 3K-A/B Owner Content Intake Content Gap Register And Launch-Blocker Governance
+
+- [x] Owner content intake collects owner-required brand spelling, public display name, listing/product names, listing/category/event descriptions, image selection, alt text, service-area wording, public contact, business-hour, operating, legal/policy, and admin ownership inputs without inventing facts.
+- [x] Content gap register tracks Brand and naming, Public route copy, Listings/categories/events, Images and alt text, Quote/enquiry expectations, Admin access and operator ownership, and Launch/legal/policy/contact content.
+- [x] Launch-blocker governance separates Blocks owner review, Blocks launch/deployment, Deferred after launch, and Not in scope by owner direction.
+- [x] Owner review package, manual QA runbook, and preview deployment handoff cross-link content intake, the gap register, and owner content blockers without turning content review into deployment approval.
+- [x] Static tests cover Phase 3K docs/status roll-forward, owner-required unknowns, launch-blocker governance, cross-links, no-deploy instructions, and forbidden provider/runtime/ecommerce scope.
+- [x] No deployment, deployment approval, Vercel config, Supabase Cloud config, secrets/env values, filled preview or production evidence, browser Supabase, service-role runtime path, customer uploads, public quote tracking, customer accounts, customer-visible internal notes, notifications, CRM, n8n/Pinecone runtime change, invented real contact details, business hours, addresses, testimonials, client names, awards, certifications, legal claims, guarantees, production policies, or ecommerce flow is added.
+
 ## Phase 2D-A Deployment Readiness And Smoke-Test Runbook
 
 - [x] Deployment readiness docs are refreshed for catalogue media, admin listing media upload, public quote handoff, and atomic admin quote workflow surfaces.
