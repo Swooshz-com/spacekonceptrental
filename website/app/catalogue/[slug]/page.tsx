@@ -23,18 +23,39 @@ export function generateStaticParams() {
 
 function getMetadataDescription(product: PublicCatalogueProduct | null) {
   const productDescription =
-    product?.shortDescription ?? product?.description ?? undefined;
+    textOrUndefined(product?.shortDescription) ??
+    textOrUndefined(product?.description);
 
   return productDescription
     ? `${productDescription} Request an event furniture rental quote with Space Koncept Rentals.`
     : "Browse event furniture rental listing details and request an enquiry with Space Koncept Rentals.";
 }
 
+function textOrUndefined(value: string | undefined) {
+  return value?.trim() || undefined;
+}
+
+function publicListingSummary(product: PublicCatalogueProduct) {
+  return (
+    textOrUndefined(product.shortDescription) ??
+    textOrUndefined(product.description) ??
+    "Listing details can be confirmed with the team during quote follow-up."
+  );
+}
+
+function publicCategoryLabel(product: PublicCatalogueProduct) {
+  return textOrUndefined(product.categoryName) ?? "Category to confirm";
+}
+
+function publicRentalUnit(product: PublicCatalogueProduct) {
+  return textOrUndefined(product.rentalUnit) ?? "confirm with team";
+}
+
 function imageAltText(
   image: PublicCatalogueImage | undefined,
   product: PublicCatalogueProduct
 ) {
-  return image?.altText ?? `${product.name} furniture rental setup`;
+  return textOrUndefined(image?.altText) ?? `${product.name} furniture rental setup`;
 }
 
 export async function generateMetadata({
@@ -85,7 +106,7 @@ export function ProductPageContent({
       <div className="page-title">
         <p className="eyebrow">Furniture listing</p>
         <h1>{product.name}</h1>
-        <p>{product.shortDescription ?? product.description}</p>
+        <p>{publicListingSummary(product)}</p>
       </div>
 
       <div className="detail-layout">
@@ -98,7 +119,7 @@ export function ProductPageContent({
               />
             ) : (
               <Image
-                alt={product.primaryImage?.altText ?? `${product.name} furniture rental setup`}
+                alt={imageAltText(product.primaryImage, product)}
                 priority
                 src={sofaImage}
               />
@@ -119,17 +140,19 @@ export function ProductPageContent({
 
         <article className="quote-panel">
           <h2>Rental details</h2>
-          <p>{product.description ?? product.shortDescription}</p>
+          <p>
+            {textOrUndefined(product.description) ??
+              textOrUndefined(product.shortDescription) ??
+              "Listing details can be confirmed with the team during quote follow-up."}
+          </p>
           <dl className="detail-list">
-            {product.categoryName ? (
-              <div>
-                <dt>Category</dt>
-                <dd>{product.categoryName}</dd>
-              </div>
-            ) : null}
+            <div>
+              <dt>Category</dt>
+              <dd>{publicCategoryLabel(product)}</dd>
+            </div>
             <div>
               <dt>Rental unit</dt>
-              <dd>{product.rentalUnit}</dd>
+              <dd>{publicRentalUnit(product)}</dd>
             </div>
             <div>
               <dt>Follow-up</dt>

@@ -1289,3 +1289,30 @@ transcript runtime paths, invent real contact details, testimonials, client
 names, awards, certifications, legal claims, production policies, or add
 ecommerce flows such as carts, checkout, payments, stock reservation,
 confirmed booking, order fulfilment, or online ordering.
+
+## Phase 3F: Catalogue Content Quality, Media Readiness, And Admin Publication Polish
+
+Phase 3F-A/B adds catalogue content quality, media readiness, and admin
+publication polish for public listing/category/quote handoff surfaces and
+protected admin listing/category/media readiness panels. It improves
+incomplete-but-safe public listing and category copy, keeps fallback imagery
+and honest alt text coherent, and clarifies quote handoff copy when selected
+listing context is missing, invalid, unpublished, or unavailable.
+
+Phase 3F-A/B keeps readiness hints admin-only. Protected admin surfaces may
+summarize draft, published, and archived listings; published listings missing
+category, media, alt text, or quote-planning details; categories with no
+published listings; duplicate or missing active primary image metadata; inactive
+image metadata; and listings with no active public image metadata.
+
+Phase 3F-A/B does not deploy, approve deployment, add Vercel or Supabase Cloud
+config, add real env values, add filled preview or production evidence, add
+browser Supabase, add service-role runtime paths, access
+`website/chat-config.js`, add public/customer uploads, add customer accounts,
+add public quote tracking, expose customer-visible internal notes, add
+notifications or CRM integration, change n8n/Pinecone runtime behavior, add
+Pinecone packages/env/API keys, wire `/api/chat` to retrieval/RAG, add
+transcript runtime paths, invent real contact details, testimonials, client
+names, awards, certifications, legal claims, production policies, or add
+ecommerce flows such as carts, checkout, payments, stock reservation,
+confirmed booking, order fulfilment, or online ordering.

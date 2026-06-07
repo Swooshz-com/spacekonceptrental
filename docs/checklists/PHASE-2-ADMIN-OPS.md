@@ -269,6 +269,16 @@ and route/action boundaries are implemented and tested.
 - [x] Static and render tests enforce rental/listing/enquiry/quote/request wording and block ecommerce wording or invented proof/contact claims on production surfaces touched by this phase.
 - [x] No deployment, deployment approval, Vercel config, Supabase Cloud config, secrets/env values, filled preview or production evidence, browser Supabase, service-role runtime path, customer uploads, public quote tracking, customer accounts, customer-visible internal notes, notifications, CRM, n8n/Pinecone runtime change, invented real contact details, testimonials, client names, awards, certifications, legal claims, production policies, or ecommerce flow is added.
 
+## Phase 3F-A/B Catalogue Content Quality Media Readiness And Admin Publication Polish
+
+- [x] Public catalogue/listing/category rendering stays readable when optional descriptions, categories, rental units, image alt text, or filtered counts are incomplete.
+- [x] Public quote handoff copy stays coherent when selected listing context is missing, invalid, unpublished, or unavailable, while success remains receipt-only.
+- [x] Public rendering keeps fallback imagery and honest listing alt text without exposing admin readiness hints.
+- [x] Protected admin listing and category surfaces summarize draft/published/archived state, categories without published listings, and published listings missing category/media/alt/quote-planning readiness details.
+- [x] Protected admin media surfaces show missing alt text, missing or duplicate active primary image state, inactive metadata, and listings with no active public image metadata.
+- [x] Static and render tests cover content completeness, admin-only readiness cues, public/admin boundary separation, and forbidden ecommerce/provider/deployment/runtime scope.
+- [x] No deployment, deployment approval, Vercel config, Supabase Cloud config, secrets/env values, filled preview or production evidence, browser Supabase, service-role runtime path, customer uploads, public quote tracking, customer accounts, customer-visible internal notes, notifications, CRM, n8n/Pinecone runtime change, invented real contact details, testimonials, client names, awards, certifications, legal claims, production policies, or ecommerce flow is added.
+
 ## Phase 2D-A Deployment Readiness And Smoke-Test Runbook
 
 - [x] Deployment readiness docs are refreshed for catalogue media, admin listing media upload, public quote handoff, and atomic admin quote workflow surfaces.

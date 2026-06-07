@@ -238,18 +238,19 @@ Suggested first PR:
   Supabase, production evidence, or ecommerce flows. Product language remains
   enquiry/quote/request.
 
-Current Phase 3E-A/B status:
+Current Phase 3F-A/B status:
 
-- PR #126 merged Phase 3D-A/B sitewide public journey, trust content, and route
-  polish at merge commit
-  `de357ee234ed1d92ab27eb1f6d571c0c4f0ccd04`.
-- Latest completed capability is Phase 3D-A/B sitewide public journey, trust
-  content, and route polish.
-- Phase 3E-A/B is current as product readiness, navigation QA, and public/admin
-  dead-end polish for the homepage, public catalogue, listing, category, event
-  setup, quote request, and protected admin operations surfaces.
-- Deterministic route/navigation QA, semantic public recovery states,
-  admin-only recovery paths, and content consistency checks are added while
+- PR #127 merged Phase 3E-A/B product readiness, navigation QA, and
+  public/admin dead-end polish at merge commit
+  `03c8a21522e6e68aa8b2caf32aedc4218e77f66e`.
+- Latest completed capability is Phase 3E-A/B product readiness, navigation
+  QA, and public/admin dead-end polish.
+- Phase 3F-A/B is current as catalogue content quality, media readiness, and
+  admin publication polish for public listing/category/quote handoff behavior
+  and protected admin listing/category/media readiness panels.
+- Incomplete-but-safe catalogue copy, honest fallback image alt text, missing
+  listing quote handoff context, admin-only publication summaries, category
+  published-listing gaps, and media metadata readiness cues are improved while
   keeping the existing public catalogue, public quote, and protected admin
   boundaries.
 - No deployment, deployment approval, Vercel config, Supabase Cloud config,
@@ -259,6 +260,29 @@ Current Phase 3E-A/B status:
   public/customer upload routes, transcript runtime paths, invented real
   contact details, testimonials, client names, legal claims, production
   policies, or ecommerce flow is added.
+
+Previous Current Phase 3E-A/B status:
+
+- PR #126 merged Phase 3D-A/B sitewide public journey, trust content, and route
+  polish at merge commit
+  `de357ee234ed1d92ab27eb1f6d571c0c4f0ccd04`.
+- Latest completed capability was Phase 3D-A/B sitewide public journey, trust
+  content, and route polish.
+- Phase 3E-A/B was current as product readiness, navigation QA, and
+  public/admin dead-end polish for the homepage, public catalogue, listing,
+  category, event setup, quote request, and protected admin operations
+  surfaces.
+- Deterministic route/navigation QA, semantic public recovery states,
+  admin-only recovery paths, and content consistency checks were added while
+  keeping the existing public catalogue, public quote, and protected admin
+  boundaries.
+- No deployment, deployment approval, Vercel config, Supabase Cloud config,
+  real env values, production evidence, browser Supabase, service-role runtime
+  paths, n8n/Pinecone/RAG runtime work, public quote tracking, customer
+  accounts, customer-visible internal notes, notifications, CRM integration,
+  public/customer upload routes, transcript runtime paths, invented real
+  contact details, testimonials, client names, legal claims, production
+  policies, or ecommerce flow was added.
 
 Previous Current Phase 3D-A/B status:
 

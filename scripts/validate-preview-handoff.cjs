@@ -12,6 +12,7 @@ const phase3aMergeCommit = '6e8bcf23bc8d7eef12b738613344764c0c1961e6';
 const phase3bMergeCommit = 'bfcf9916a0edd1b7133a1765719b9ddd73197dac';
 const phase3cMergeCommit = 'd031d7f47a6893f92d0b6739300d52147f6abfa4';
 const phase3dMergeCommit = 'de357ee234ed1d92ab27eb1f6d571c0c4f0ccd04';
+const phase3eMergeCommit = '03c8a21522e6e68aa8b2caf32aedc4218e77f66e';
 
 function fail(message) {
   console.error(message);
@@ -128,16 +129,17 @@ function assertStatusDocs() {
 
   assertIncludes(
     status,
-    'Current phase: Phase 3E-A/B - product readiness, navigation QA, and dead-end polish.',
+    'Current phase: Phase 3F-A/B - catalogue content quality, media readiness, and admin publication polish.',
     'phase status',
   );
   assertIncludes(
     status,
-    'Latest completed capability: Phase 3D-A/B sitewide public journey, trust content, and route polish.',
+    'Latest completed capability: Phase 3E-A/B product readiness, navigation QA, and public/admin dead-end polish.',
     'phase status',
   );
-  assertIncludes(status, 'Last merged capability PR: #126', 'phase status');
-  assertIncludes(status, `Merge commit: \`${phase3dMergeCommit}\``, 'phase status');
+  assertIncludes(status, 'Last merged capability PR: #127', 'phase status');
+  assertIncludes(status, `Merge commit: \`${phase3eMergeCommit}\``, 'phase status');
+  assertIncludes(status, 'Previous Current Phase 3E-A/B status', 'phase status');
   assertIncludes(status, 'Previous Current Phase 3D-A/B status', 'phase status');
   assertIncludes(status, 'Previous Current Phase 3C-A/B status', 'phase status');
   assertIncludes(status, 'Previous Current Phase 3B-A/B status', 'phase status');
@@ -148,7 +150,8 @@ function assertStatusDocs() {
     'Phase 2Q-A/B adds the final preview deployment handoff and branch-freeze package',
     'phase roadmap',
   );
-  assertIncludes(readiness, 'Current Phase 3E-A/B status', 'readiness plan');
+  assertIncludes(readiness, 'Current Phase 3F-A/B status', 'readiness plan');
+  assertIncludes(readiness, 'Previous Current Phase 3E-A/B status', 'readiness plan');
   assertIncludes(readiness, 'Previous Current Phase 3D-A/B status', 'readiness plan');
   assertIncludes(readiness, 'Previous Current Phase 3C-A/B status', 'readiness plan');
   assertIncludes(readiness, 'Previous Current Phase 3B-A/B status', 'readiness plan');
@@ -166,12 +169,12 @@ function assertStatusDocs() {
   );
   assertIncludes(
     decisionLog,
-    'Decision: Phase 3E-A/B adds product readiness, navigation QA, and public/admin dead-end polish.',
+    'Decision: Phase 3F-A/B adds catalogue content quality, media readiness, and admin publication polish.',
     'decision log',
   );
   assertIncludes(
     checklist,
-    '## Phase 3E-A/B Product Readiness Navigation QA And Public Admin Dead-End Polish',
+    '## Phase 3F-A/B Catalogue Content Quality Media Readiness And Admin Publication Polish',
     'phase checklist',
   );
 }

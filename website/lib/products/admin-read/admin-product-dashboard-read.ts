@@ -45,6 +45,7 @@ export type AdminProductDashboardCategory = {
   sortOrder: number;
   isPublished: boolean;
   productCount: number;
+  publishedProductCount: number;
 };
 
 export type AdminProductDashboardProduct = {
@@ -209,7 +210,8 @@ function toCategory(row: CategoryRow): AdminProductDashboardCategory | null {
     description: getString(row.description),
     sortOrder,
     isPublished: row.is_published === true,
-    productCount: 0
+    productCount: 0,
+    publishedProductCount: 0
   };
 }
 
@@ -307,6 +309,10 @@ function mapDashboardData(
 
       if (category) {
         category.productCount += 1;
+
+        if (product.status === "published") {
+          category.publishedProductCount += 1;
+        }
       }
     }
   }

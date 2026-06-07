@@ -37,6 +37,33 @@ function getProductImage(product: PublicCatalogueProduct) {
   return sofaImage;
 }
 
+function textOrUndefined(value: string | undefined) {
+  return value?.trim() || undefined;
+}
+
+function publicListingSummary(product: PublicCatalogueProduct) {
+  return (
+    textOrUndefined(product.shortDescription) ??
+    textOrUndefined(product.description) ??
+    "Listing details can be confirmed with the team during quote follow-up."
+  );
+}
+
+function publicCategoryLabel(product: PublicCatalogueProduct) {
+  return textOrUndefined(product.categoryName) ?? "Category to confirm";
+}
+
+function publicRentalUnit(product: PublicCatalogueProduct) {
+  return textOrUndefined(product.rentalUnit) ?? "confirm with team";
+}
+
+function publicImageAltText(
+  image: PublicCatalogueProduct["primaryImage"],
+  product: PublicCatalogueProduct
+) {
+  return textOrUndefined(image?.altText) ?? `${product.name} furniture rental setup`;
+}
+
 function CatalogueCardImage({
   product,
   fallbackImage
@@ -45,25 +72,25 @@ function CatalogueCardImage({
   fallbackImage: StaticImageData;
 }) {
   const image = product.primaryImage;
-  const fallbackAltText = `${product.name} furniture rental setup`;
+  const altText = publicImageAltText(image, product);
 
   if (image?.publicUrl) {
     return (
       <img
-        alt={image.altText ?? fallbackAltText}
+        alt={altText}
         src={image.publicUrl}
       />
     );
   }
 
-  return <Image alt={image?.altText ?? fallbackAltText} src={fallbackImage} />;
+  return <Image alt={altText} src={fallbackImage} />;
 }
 
 function CatalogueCardMeta({ product }: { product: PublicCatalogueProduct }) {
   return (
     <div className="catalogue-card__meta">
-      {product.categoryName ? <span>{product.categoryName}</span> : null}
-      <span>Rental unit: {product.rentalUnit}</span>
+      <span>{publicCategoryLabel(product)}</span>
+      <span>Rental unit: {publicRentalUnit(product)}</span>
     </div>
   );
 }
@@ -287,7 +314,7 @@ export function CataloguePageContent({
             <div className="catalogue-card__body">
               <CatalogueCardMeta product={product} />
               <h2>{product.name}</h2>
-              <p>{product.shortDescription ?? product.description}</p>
+              <p>{publicListingSummary(product)}</p>
               <CatalogueCardPlanning product={product} />
               <div className="catalogue-card__actions">
                 <Link

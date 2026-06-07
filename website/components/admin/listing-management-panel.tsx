@@ -112,6 +112,7 @@ function listingReadiness(product: ListingManagementProduct) {
   const hasRentalUnit = hasText(product.rentalUnit);
   const hasImageMetadata = product.imageCount > 0;
   const hasPrimaryImage = hasText(product.primaryImageAltText);
+  const hasQuotePlanning = hasShortDescription && hasDescription && hasRentalUnit;
   const ready =
     product.status === "published" &&
     hasCategory &&
@@ -141,9 +142,19 @@ function listingReadiness(product: ListingManagementProduct) {
         : "Add image metadata before publishing",
       hasPrimaryImage
         ? "Primary public image available"
-        : "Missing primary public image"
+        : "Missing primary public image",
+      hasQuotePlanning
+        ? "Quote-planning details ready"
+        : "Add quote-planning details before publication"
     ]
   };
+}
+
+function listingStatusCount(
+  products: ListingManagementProduct[],
+  status: ListingManagementProduct["status"]
+) {
+  return products.filter((product) => product.status === status).length;
 }
 
 async function readSafeJson(response: Response) {
@@ -235,6 +246,11 @@ export function ListingManagementPanel({
     (product) => listingReadinessById.get(product.id)?.ready
   ).length;
   const listingsNeedingAttention = products.length - readyListings;
+  const publishedListingsNeedingFixes = products.filter(
+    (product) =>
+      product.status === "published" &&
+      !listingReadinessById.get(product.id)?.ready
+  );
 
   async function submitListingMutation(
     endpoint: string,
@@ -405,10 +421,30 @@ export function ListingManagementPanel({
 
       <section className="admin-readiness" aria-label="Publication readiness">
         <h3>Publication readiness</h3>
+        <div className="admin-readiness__summary" aria-label="Listing status summary">
+          <p>Published: {listingStatusCount(products, "published")}</p>
+          <p>Draft: {listingStatusCount(products, "draft")}</p>
+          <p>Archived: {listingStatusCount(products, "archived")}</p>
+        </div>
         <p>
           {readyListings} ready for public browsing.{" "}
           {listingsNeedingAttention} needing attention.
         </p>
+        <p>
+          {publishedListingsNeedingFixes.length}{" "}
+          {publishedListingsNeedingFixes.length === 1
+            ? "published listing needs"
+            : "published listings need"}{" "}
+          publication fixes before public browsing.
+        </p>
+        {publishedListingsNeedingFixes.length > 0 ? (
+          <p>
+            Published listings needing fixes:{" "}
+            {publishedListingsNeedingFixes
+              .map((product) => product.name)
+              .join(", ")}
+          </p>
+        ) : null}
         <p className="category-management__hint">
           Readiness is derived from existing listing metadata, category,
           descriptions, rental unit, and image metadata already available in

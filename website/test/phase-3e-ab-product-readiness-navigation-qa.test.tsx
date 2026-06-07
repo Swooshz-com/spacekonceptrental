@@ -33,6 +33,7 @@ vi.mock("next/image", () => ({
 const repoRoot = resolve(process.cwd(), "..");
 const sourceExtensions = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"]);
 const phase3dMergeCommit = "de357ee234ed1d92ab27eb1f6d571c0c4f0ccd04";
+const phase3eMergeCommit = "03c8a21522e6e68aa8b2caf32aedc4218e77f66e";
 const forbiddenCommercePattern =
   /cart|checkout|payments?|purchase|customer account|stock reservation|order fulfilment|online ordering|(?<![.\w])(?<!sort[- ])\border(?:s)?\b(?!\s*[:(])/i;
 const forbiddenProofClaimPattern =
@@ -94,7 +95,8 @@ const adminState: Extract<ProtectedAdminShellState, { status: "authorised_admin"
           description: loungeCategory.description,
           sortOrder: 10,
           isPublished: true,
-          productCount: 1
+          productCount: 1,
+          publishedProductCount: 1
         }
       ],
       products: [
@@ -226,7 +228,7 @@ describe("Phase 3E-A/B product readiness, navigation QA, and dead-end polish", (
     vi.restoreAllMocks();
   });
 
-  it("records Phase 3E-A/B as current after Phase 3D completed in PR #126", () => {
+  it("records Phase 3E-A/B as completed after Phase 3F starts", () => {
     const status = normalizeWhitespace(readRepoFile("docs/PHASE-STATUS.md"));
     const roadmap = normalizeWhitespace(readRepoFile("docs/PHASE-ROADMAP.md"));
     const readiness = readRepoFile("docs/PHASE-2-READINESS-PLAN.md");
@@ -235,19 +237,22 @@ describe("Phase 3E-A/B product readiness, navigation QA, and dead-end polish", (
     const validator = readRepoFile("scripts/validate-preview-handoff.cjs");
 
     expect(status).toContain(
-      "Current phase: Phase 3E-A/B - product readiness, navigation QA, and dead-end polish."
+      "Current phase: Phase 3F-A/B - catalogue content quality, media readiness, and admin publication polish."
     );
     expect(status).toContain(
-      "Latest completed capability: Phase 3D-A/B sitewide public journey, trust content, and route polish."
+      "Latest completed capability: Phase 3E-A/B product readiness, navigation QA, and public/admin dead-end polish."
     );
-    expect(status).toContain("Last merged capability PR: #126");
-    expect(status).toContain(`Merge commit: \`${phase3dMergeCommit}\``);
+    expect(status).toContain("Last merged capability PR: #127");
+    expect(status).toContain(`Merge commit: \`${phase3eMergeCommit}\``);
+    expect(status).toContain("Previous Current Phase 3E-A/B status");
     expect(status).toContain("Previous Current Phase 3D-A/B status");
+    expect(status).toContain(`Merge commit: \`${phase3dMergeCommit}\``);
     expect(status).toContain("No deployment is performed or approved");
     expect(roadmap).toContain(
       "Phase 3E-A/B adds product readiness, navigation QA, and public/admin dead-end polish"
     );
-    expect(readiness).toContain("Current Phase 3E-A/B status");
+    expect(readiness).toContain("Current Phase 3F-A/B status");
+    expect(readiness).toContain("Previous Current Phase 3E-A/B status");
     expect(readiness).toContain("Previous Current Phase 3D-A/B status");
     expect(decisionLog).toContain(
       "Decision: Phase 3E-A/B adds product readiness, navigation QA, and public/admin dead-end polish."
@@ -255,8 +260,8 @@ describe("Phase 3E-A/B product readiness, navigation QA, and dead-end polish", (
     expect(checklist).toContain(
       "## Phase 3E-A/B Product Readiness Navigation QA And Public Admin Dead-End Polish"
     );
-    expect(validator).toContain(phase3dMergeCommit);
-    expect(validator).toContain("Phase 3E-A/B");
+    expect(validator).toContain(phase3eMergeCommit);
+    expect(validator).toContain("Phase 3F-A/B");
     expect(validator).not.toMatch(/\bvercel\s+(?:deploy|link|env|pull|promote)\b/i);
   });
 
