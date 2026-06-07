@@ -459,6 +459,40 @@ export function QuoteRequestInboxPanel({
         </dl>
       </section>
 
+      <section
+        aria-label="Quote request inbox operator guidance"
+        className="admin-dashboard__card admin-dashboard__card--summary"
+      >
+        <h3>Operator QA summary</h3>
+        <dl className="quote-inbox__details">
+          <div>
+            <dt>Read-only</dt>
+            <dd>
+              Quote request summaries, customer-submitted details, and triage
+              counts are read-only operator QA cues.
+            </dd>
+          </div>
+          <div>
+            <dt>Write-enabled</dt>
+            <dd>Write-enabled internal quote follow-up.</dd>
+          </div>
+          <div>
+            <dt>Public-facing</dt>
+            <dd>
+              Public quote pages only show receipt-style enquiry confirmation.
+            </dd>
+          </div>
+          <div>
+            <dt>Admin-only</dt>
+            <dd>Admin-only triage.</dd>
+          </div>
+        </dl>
+        <p>
+          Next safe action: capture contact, event, venue, and requested items
+          before closing follow-up.
+        </p>
+      </section>
+
       {inbox.data.quoteRequests.length === 0 ? (
         <section className="admin-dashboard__card admin-dashboard__card--summary">
           <p>

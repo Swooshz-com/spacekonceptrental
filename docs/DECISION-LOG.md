@@ -2138,6 +2138,38 @@ client names, awards, certifications, legal claims, production policies, or
 add ecommerce flows such as carts, checkout, payments, stock reservation,
 confirmed booking, order fulfilment, or online ordering.
 
+## 2026-06-07: Admin Operator QA, Dashboard Consistency, And Non-Deployment Release Readiness Polish
+
+Decision: Phase 3H-A/B adds admin operator QA, dashboard consistency, and non-deployment release readiness polish.
+
+Reason: PR #129 merged Phase 3G-A/B at
+`75fd104966e3e8c69a434f2325f6f79e4742a40f`, completing quote intake
+quality, admin triage depth, and enquiry workflow polish without deploying or
+approving deployment. The next approved work item is protected admin operator
+QA and release-readiness polish that keeps deployment approval separate.
+
+The implementation improves protected admin overview, listing, category,
+media, quote inbox, and quote detail guidance with consistent summaries,
+read-only/write-enabled distinctions, public-facing/admin-only boundaries,
+next safe admin actions, recovery links, and deterministic no-deployment
+guardrails. It keeps the existing public catalogue read boundary, public quote
+request API contract, protected admin routes, and RPC-backed admin write
+boundaries.
+
+Phase 3H-A/B does not deploy, approve deployment, add Vercel config, connect
+Supabase Cloud, add real secrets or env values, add production evidence, add
+browser Supabase, add service-role runtime paths, access
+`website/chat-config.js`, add public/customer upload routes, add customer
+accounts, add public quote tracking, expose customer-visible internal notes,
+add notifications or CRM integration, change n8n/Pinecone runtime behavior,
+add SaaS chatbot runtime work, add Pinecone SDK/package dependencies, add
+Pinecone env vars or API keys, add embedding/reranking runtime, wire
+`/api/chat` to retrieval/RAG, wire transcript reads or writes into
+`/api/chat`, add admin transcript UI, add transcript deletion/export runtime
+paths, add retention cleanup jobs, or add ecommerce flows such as carts,
+checkout, payments, stock reservation, confirmed booking, order fulfilment, or
+online ordering.
+
 ## 2026-06-06: Preview/Deployment Review Preflight And CI Parity Hardening
 
 Decision: Phase 2M-A/B makes the release-candidate gate deterministic in CI.

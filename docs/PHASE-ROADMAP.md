@@ -1344,3 +1344,29 @@ transcript runtime paths, invent real contact details, testimonials, client
 names, awards, certifications, legal claims, production policies, or add
 ecommerce flows such as carts, checkout, payments, stock reservation,
 confirmed booking, order fulfilment, or online ordering.
+
+## Phase 3H: Admin Operator QA, Dashboard Consistency, And Non-Deployment Release Readiness Polish
+
+Phase 3H-A/B adds admin operator QA, dashboard consistency, and
+non-deployment release readiness polish for the protected admin overview,
+listings, categories, media, quote inbox, and quote detail surfaces. It
+improves consistent headings, summaries, aria labels, read-only/write-enabled
+distinctions, public-facing/admin-only boundaries, empty and recovery states,
+and next safe admin actions from existing workspace data.
+
+Phase 3H-A/B keeps recovery and readiness guidance admin-only. Public users
+continue to browse public rental/event furniture listings and submit
+receipt-only quote/enquiry requests without public quote tracking, customer
+accounts, internal notes, admin management URLs, or admin triage details.
+
+Phase 3H-A/B does not deploy, approve deployment, add Vercel or Supabase Cloud
+config, add real env values, add filled preview or production evidence, add
+browser Supabase, add service-role runtime paths, access
+`website/chat-config.js`, add public/customer uploads, add customer accounts,
+add public quote tracking, expose customer-visible internal notes, add
+notifications or CRM integration, change n8n/Pinecone runtime behavior, add
+Pinecone packages/env/API keys, wire `/api/chat` to retrieval/RAG, add
+transcript runtime paths, invent real contact details, testimonials, client
+names, awards, certifications, legal claims, production policies, or add
+ecommerce flows such as carts, checkout, payments, stock reservation,
+confirmed booking, order fulfilment, or online ordering.
