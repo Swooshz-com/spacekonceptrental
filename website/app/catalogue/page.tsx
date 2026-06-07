@@ -232,13 +232,21 @@ export function CataloguePageContent({
           catalogue={catalogue}
           listingBasePath={listingBasePath}
         />
-        <p>{emptyMessage}</p>
-        {activeCategoryName ? (
-          <p className="category-management__hint">
-            Browse all listings or send a general enquiry if your event setup
-            spans more than {activeCategoryName}.
-          </p>
-        ) : null}
+        <section className="route-card" aria-label="Public listing recovery">
+          <h2>No matching public listings</h2>
+          <p>{emptyMessage}</p>
+          {activeCategoryName ? (
+            <p className="category-management__hint">
+              Browse all listings or send a general enquiry if your event setup
+              spans more than {activeCategoryName}.
+            </p>
+          ) : (
+            <p className="category-management__hint">
+              Browse categories while the public catalogue is being prepared,
+              or use the enquiry form to share the setup you need.
+            </p>
+          )}
+        </section>
         <div className="hero__actions">
           <Link className="button button--secondary" href={listingBasePath}>
             Browse all listings

@@ -260,6 +260,15 @@ and route/action boundaries are implemented and tested.
 - [x] Static and render tests cover sitewide journey content, route recovery paths, quote expectations, metadata, and forbidden runtime/scope boundaries.
 - [x] No deployment, deployment approval, Vercel config, Supabase Cloud config, secrets/env values, filled preview or production evidence, browser Supabase, service-role runtime path, customer uploads, public quote tracking, customer accounts, customer-visible internal notes, notifications, CRM, n8n/Pinecone runtime change, invented real contact details, testimonials, client names, legal claims, production policies, or ecommerce flow is added.
 
+## Phase 3E-A/B Product Readiness Navigation QA And Public Admin Dead-End Polish
+
+- [x] Deterministic route/navigation QA covers key public routes, listing/category detail links, and protected admin operations routes without adding browser/e2e dependencies.
+- [x] Public empty, filtered, missing, and quote-start states include semantic recovery paths to listings, categories, events, or quote enquiry.
+- [x] Protected admin blocked, unavailable, empty, and missing states include admin-only recovery paths to overview, listing, category, media, or quote management surfaces.
+- [x] Public and admin route links stay separated so public surfaces do not link into admin and admin recovery does not point to public quote/catalogue paths.
+- [x] Static and render tests enforce rental/listing/enquiry/quote/request wording and block ecommerce wording or invented proof/contact claims on production surfaces touched by this phase.
+- [x] No deployment, deployment approval, Vercel config, Supabase Cloud config, secrets/env values, filled preview or production evidence, browser Supabase, service-role runtime path, customer uploads, public quote tracking, customer accounts, customer-visible internal notes, notifications, CRM, n8n/Pinecone runtime change, invented real contact details, testimonials, client names, awards, certifications, legal claims, production policies, or ecommerce flow is added.
+
 ## Phase 2D-A Deployment Readiness And Smoke-Test Runbook
 
 - [x] Deployment readiness docs are refreshed for catalogue media, admin listing media upload, public quote handoff, and atomic admin quote workflow surfaces.

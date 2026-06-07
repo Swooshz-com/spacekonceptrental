@@ -94,6 +94,22 @@ function QuoteExpectationCard() {
   );
 }
 
+function QuoteRequestRecovery() {
+  return (
+    <nav className="hero__actions" aria-label="Quote request recovery">
+      <Link className="button button--secondary" href="/listings">
+        Browse listings
+      </Link>
+      <Link className="button button--secondary" href="/categories">
+        Browse categories
+      </Link>
+      <Link className="button button--secondary" href="/events">
+        Plan event setups
+      </Link>
+    </nav>
+  );
+}
+
 export default async function QuotePage({
   searchParams
 }: QuotePageProps = {}) {
@@ -129,6 +145,8 @@ export default async function QuotePage({
 
         <QuoteExpectationCard />
       </div>
+
+      <QuoteRequestRecovery />
     </section>
   );
 }
