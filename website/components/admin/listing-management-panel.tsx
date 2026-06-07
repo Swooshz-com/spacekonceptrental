@@ -101,6 +101,51 @@ function parseStatus(value: string): ListingManagementProduct["status"] | null {
     : null;
 }
 
+function hasText(value: string | undefined) {
+  return Boolean(value?.trim());
+}
+
+function listingReadiness(product: ListingManagementProduct) {
+  const hasCategory = hasText(product.categoryId);
+  const hasShortDescription = hasText(product.shortDescription);
+  const hasDescription = hasText(product.description);
+  const hasRentalUnit = hasText(product.rentalUnit);
+  const hasImageMetadata = product.imageCount > 0;
+  const hasPrimaryImage = hasText(product.primaryImageAltText);
+  const ready =
+    product.status === "published" &&
+    hasCategory &&
+    hasShortDescription &&
+    hasDescription &&
+    hasRentalUnit &&
+    hasImageMetadata &&
+    hasPrimaryImage;
+
+  return {
+    ready,
+    label:
+      product.status === "archived"
+        ? "Archived from public browsing"
+        : ready
+          ? "Ready for public browsing"
+          : "Needs attention before publishing",
+    checks: [
+      hasCategory ? "Category assigned" : "Missing category assignment",
+      hasShortDescription
+        ? "Short description present"
+        : "Missing short description",
+      hasDescription ? "Full description present" : "Missing full description",
+      hasRentalUnit ? "Rental unit present" : "Missing rental unit",
+      hasImageMetadata
+        ? `${product.imageCount} image metadata records`
+        : "Add image metadata before publishing",
+      hasPrimaryImage
+        ? "Primary public image available"
+        : "Missing primary public image"
+    ]
+  };
+}
+
 async function readSafeJson(response: Response) {
   try {
     return (await response.json()) as unknown;
@@ -183,6 +228,13 @@ export function ListingManagementPanel({
   const [status, setStatus] = useState<PanelStatus>({
     kind: "idle"
   });
+  const listingReadinessById = new Map(
+    products.map((product) => [product.id, listingReadiness(product)])
+  );
+  const readyListings = products.filter(
+    (product) => listingReadinessById.get(product.id)?.ready
+  ).length;
+  const listingsNeedingAttention = products.length - readyListings;
 
   async function submitListingMutation(
     endpoint: string,
@@ -351,6 +403,19 @@ export function ListingManagementPanel({
           : status.message}
       </div>
 
+      <section className="admin-readiness" aria-label="Publication readiness">
+        <h3>Publication readiness</h3>
+        <p>
+          {readyListings} ready for public browsing.{" "}
+          {listingsNeedingAttention} needing attention.
+        </p>
+        <p className="category-management__hint">
+          Readiness is derived from existing listing metadata, category,
+          descriptions, rental unit, and image metadata already available in
+          this admin workspace.
+        </p>
+      </section>
+
       <form
         aria-label="Create listing"
         className="category-management__form"
@@ -444,13 +509,41 @@ export function ListingManagementPanel({
         ) : (
           products.map((product) => (
             <article className="category-management__item" key={product.id}>
-              <div>
-                <h3>{product.name}</h3>
-                <p>
-                  {product.slug} - {product.status} - {product.imageCount} image
-                  metadata records
-                </p>
-              </div>
+              {(() => {
+                const readiness = listingReadinessById.get(product.id) ??
+                  listingReadiness(product);
+
+                return (
+                  <>
+                    <div>
+                      <h3>{product.name}</h3>
+                      <p>
+                        {product.slug} - {product.status} -{" "}
+                        {product.imageCount} image metadata records
+                      </p>
+                    </div>
+                    <section
+                      className="admin-readiness admin-readiness--inline"
+                      aria-label={`Publication readiness ${product.name}`}
+                    >
+                      <p
+                        className={`admin-readiness__badge ${
+                          readiness.ready
+                            ? "admin-readiness__badge--ready"
+                            : "admin-readiness__badge--attention"
+                        }`}
+                      >
+                        {readiness.label}
+                      </p>
+                      <ul className="admin-readiness__list">
+                        {readiness.checks.map((check) => (
+                          <li key={check}>{check}</li>
+                        ))}
+                      </ul>
+                    </section>
+                  </>
+                );
+              })()}
               <form
                 aria-label={`Update listing ${product.name}`}
                 className="category-management__form"

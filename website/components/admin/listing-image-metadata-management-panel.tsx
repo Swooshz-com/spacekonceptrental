@@ -143,6 +143,26 @@ function imageLabel(image: ListingImageMetadataImage) {
   return image.altText || image.storagePath;
 }
 
+function imageReadiness(
+  image: ListingImageMetadataImage,
+  product: ListingImageMetadataProduct | undefined
+) {
+  return [
+    product ? `Matched to listing ${product.name}` : "Unmatched listing",
+    image.status === "active"
+      ? "Active image is available to listing media"
+      : "Archived image is hidden from active listing media",
+    image.altText
+      ? "Alt text ready for public accessibility"
+      : "Missing alt text for public accessibility",
+    image.isPrimary && image.status === "active"
+      ? "Primary active image can lead the public catalogue display"
+      : image.isPrimary
+        ? "Primary selection is inactive while archived"
+        : "Secondary image supports the listing gallery"
+  ];
+}
+
 function buildImagePayload(
   form: HTMLFormElement,
   formData: FormData,
@@ -314,6 +334,14 @@ export function ListingImageMetadataManagementPanel({
           : status.message}
       </div>
 
+      <section className="admin-readiness" aria-label="Media readiness">
+        <h3>Media readiness</h3>
+        <p>
+          Public-ready media needs an active image, useful alt text, and a clear
+          primary image when the listing should lead with that setup.
+        </p>
+      </section>
+
       <form
         aria-label="Create listing image metadata"
         className="category-management__form"
@@ -392,6 +420,16 @@ export function ListingImageMetadataManagementPanel({
                     {image.isPrimary ? "primary" : "secondary"}
                   </p>
                 </div>
+                <section
+                  className="admin-readiness admin-readiness--inline"
+                  aria-label={`Media readiness ${label}`}
+                >
+                  <ul className="admin-readiness__list">
+                    {imageReadiness(image, product).map((item) => (
+                      <li key={item}>{item}</li>
+                    ))}
+                  </ul>
+                </section>
                 <form
                   aria-label={`Update image metadata ${label}`}
                   className="category-management__form"

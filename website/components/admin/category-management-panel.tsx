@@ -78,6 +78,26 @@ function parseOptionalSortOrder(value: string) {
   };
 }
 
+function hasText(value: string | undefined) {
+  return Boolean(value?.trim());
+}
+
+function categoryReadiness(category: CategoryManagementCategory) {
+  return [
+    category.isPublished
+      ? `Published grouping with ${category.productCount} ${
+          category.productCount === 1 ? "listing" : "listings"
+        }`
+      : "Not published for public browsing",
+    category.productCount > 0
+      ? "Listings are grouped for public browsing"
+      : "Add listings before this category helps public browsing",
+    hasText(category.description)
+      ? "Category description present"
+      : "Add a category description for admin clarity"
+  ];
+}
+
 async function readSafeJson(response: Response) {
   try {
     return (await response.json()) as unknown;
@@ -301,6 +321,15 @@ export function CategoryManagementPanel({
           : status.message}
       </div>
 
+      <section className="admin-readiness" aria-label="Category readiness">
+        <h3>Category readiness</h3>
+        <p>
+          Categories should group rental listings that are ready for public
+          browsing. Unpublished categories stay out of public catalogue
+          grouping.
+        </p>
+      </section>
+
       <form
         aria-label="Create category"
         className="category-management__form"
@@ -372,6 +401,16 @@ export function CategoryManagementPanel({
                   {category.isPublished ? "Published" : "Not published"}
                 </p>
               </div>
+              <section
+                className="admin-readiness admin-readiness--inline"
+                aria-label={`Category readiness ${category.name}`}
+              >
+                <ul className="admin-readiness__list">
+                  {categoryReadiness(category).map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              </section>
               <form
                 aria-label={`Update category ${category.name}`}
                 className="category-management__form"

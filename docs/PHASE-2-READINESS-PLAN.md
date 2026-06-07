@@ -238,14 +238,35 @@ Suggested first PR:
   Supabase, production evidence, or ecommerce flows. Product language remains
   enquiry/quote/request.
 
-Current Phase 3A-A/B status:
+Current Phase 3B-A/B status:
+
+- PR #123 merged Phase 3A-A/B product polish, content, and rental UI iteration
+  at merge commit
+  `6e8bcf23bc8d7eef12b738613344764c0c1961e6`.
+- Latest completed capability is Phase 3A-A/B product polish, content, and
+  rental UI iteration.
+- Phase 3B-A/B is current as admin operations readiness and quote triage
+  polish for the protected admin listing, category, media, and quote workflow
+  surfaces.
+- Admin listing readiness cues, category/media readiness guidance, quote
+  triage summaries, missing-data hints, requested item cues, and admin-only
+  internal follow-up guidance are improved while keeping the existing protected
+  admin read/write boundaries.
+- No deployment, deployment approval, Vercel config, Supabase Cloud config,
+  real env values, production evidence, browser Supabase, service-role runtime
+  paths, n8n/Pinecone/RAG runtime work, public quote tracking, customer
+  accounts, customer-visible internal notes, notifications, CRM integration,
+  public/customer upload routes, transcript runtime paths, or ecommerce flow
+  is added.
+
+Previous Current Phase 3A-A/B status:
 
 - PR #122 merged Phase 2Q-A/B preview deployment handoff and branch-freeze
   package at merge commit
   `62c2b11b6b15192434eb4035ba0a66a44cd6f763`.
 - Latest completed capability is Phase 2Q-A/B preview deployment handoff and
   branch-freeze package.
-- Phase 3A-A/B is current as product-facing polish for the public rental
+- Phase 3A-A/B was current as product-facing polish for the public rental
   catalogue, quote/enquiry flow, and protected admin usability.
 - Public listing cards, listing detail, quote request helper/receipt copy, and
   protected admin empty/destructive states are improved while keeping the
