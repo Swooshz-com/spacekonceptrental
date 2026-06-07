@@ -29,7 +29,7 @@ const sourceExtensions = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"])
 const phase3aMergeCommit = "6e8bcf23bc8d7eef12b738613344764c0c1961e6";
 const phase3bMergeCommit = "bfcf9916a0edd1b7133a1765719b9ddd73197dac";
 const phase3cMergeCommit = "d031d7f47a6893f92d0b6739300d52147f6abfa4";
-const phase3eMergeCommit = "03c8a21522e6e68aa8b2caf32aedc4218e77f66e";
+const phase3fMergeCommit = "69665bb241b1af5c05ad34ac1464cdaeece8b7f8";
 const forbiddenCommercePattern =
   /cart|checkout|payments?|purchase|customer account|stock reservation|order fulfilment|confirmed booking|online ordering/i;
 
@@ -204,7 +204,7 @@ describe("Phase 3B-A/B admin operations readiness and quote triage polish", () =
     cleanup();
   });
 
-  it("records Phase 3B-A/B as completed after Phase 3F starts", () => {
+  it("records Phase 3B-A/B as completed after Phase 3G starts", () => {
     const status = normalizeWhitespace(readRepoFile("docs/PHASE-STATUS.md"));
     const roadmap = normalizeWhitespace(readRepoFile("docs/PHASE-ROADMAP.md"));
     const readiness = readRepoFile("docs/PHASE-2-READINESS-PLAN.md");
@@ -212,13 +212,14 @@ describe("Phase 3B-A/B admin operations readiness and quote triage polish", () =
     const checklist = readRepoFile("docs/checklists/PHASE-2-ADMIN-OPS.md");
 
     expect(status).toContain(
-      "Current phase: Phase 3F-A/B - catalogue content quality, media readiness, and admin publication polish."
+      "Current phase: Phase 3G-A/B - quote intake quality, admin triage depth, and enquiry workflow polish."
     );
     expect(status).toContain(
-      "Latest completed capability: Phase 3E-A/B product readiness, navigation QA, and public/admin dead-end polish."
+      "Latest completed capability: Phase 3F-A/B catalogue content quality, media readiness, and admin publication polish."
     );
-    expect(status).toContain("Last merged capability PR: #127");
-    expect(status).toContain(`Merge commit: \`${phase3eMergeCommit}\``);
+    expect(status).toContain("Last merged capability PR: #128");
+    expect(status).toContain(`Merge commit: \`${phase3fMergeCommit}\``);
+    expect(status).toContain("Previous Current Phase 3F-A/B status");
     expect(status).toContain("Previous Current Phase 3E-A/B status");
     expect(status).toContain("Previous Current Phase 3D-A/B status");
     expect(status).toContain("Previous Current Phase 3C-A/B status");
@@ -229,7 +230,8 @@ describe("Phase 3B-A/B admin operations readiness and quote triage polish", () =
     expect(roadmap).toContain(
       "Phase 3B-A/B adds admin operations readiness and quote triage polish"
     );
-    expect(readiness).toContain("Current Phase 3F-A/B status");
+    expect(readiness).toContain("Current Phase 3G-A/B status");
+    expect(readiness).toContain("Previous Current Phase 3F-A/B status");
     expect(readiness).toContain("Previous Current Phase 3E-A/B status");
     expect(readiness).toContain("Previous Current Phase 3D-A/B status");
     expect(readiness).toContain("Previous Current Phase 3C-A/B status");
@@ -347,8 +349,8 @@ describe("Phase 3B-A/B admin operations readiness and quote triage polish", () =
     expect(screen.getByText(/closed requests/i)).toBeInTheDocument();
     expect(screen.getAllByText(/triage cues/i).length).toBeGreaterThan(0);
     expect(screen.getByText(/missing contact method/i)).toBeInTheDocument();
-    expect(screen.getByText(/missing event date/i)).toBeInTheDocument();
-    expect(screen.getByText(/missing venue/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/missing event date/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/missing venue/i).length).toBeGreaterThan(0);
     expect(screen.getByText(/no requested items captured/i)).toBeInTheDocument();
     expect(screen.getAllByText(/no customer message/i).length).toBeGreaterThan(0);
     expect(screen.getByText(/no internal activity yet/i)).toBeInTheDocument();

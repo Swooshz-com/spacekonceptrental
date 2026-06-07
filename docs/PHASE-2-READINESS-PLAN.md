@@ -238,19 +238,41 @@ Suggested first PR:
   Supabase, production evidence, or ecommerce flows. Product language remains
   enquiry/quote/request.
 
-Current Phase 3F-A/B status:
+Current Phase 3G-A/B status:
+
+- PR #128 merged Phase 3F-A/B catalogue content quality, media readiness, and
+  admin publication polish at merge commit
+  `69665bb241b1af5c05ad34ac1464cdaeece8b7f8`.
+- Latest completed capability is Phase 3F-A/B catalogue content quality,
+  media readiness, and admin publication polish.
+- Phase 3G-A/B is current as quote intake quality, admin triage depth, and
+  enquiry workflow polish for the public quote/enquiry form, selected-listing
+  handoff, protected admin quote inbox, and protected admin quote detail view.
+- Public quote helper copy, receipt-only success expectations, selected-listing
+  no-reservation language, admin-only triage summaries, next-action cues, and
+  quote detail readability are improved while keeping the existing public
+  quote API, public catalogue, and protected admin boundaries.
+- No deployment, deployment approval, Vercel config, Supabase Cloud config,
+  real env values, production evidence, browser Supabase, service-role runtime
+  paths, n8n/Pinecone/RAG runtime work, public quote tracking, customer
+  accounts, customer-visible internal notes, notifications, CRM integration,
+  public/customer upload routes, transcript runtime paths, invented real
+  contact details, testimonials, client names, legal claims, production
+  policies, or ecommerce flow is added.
+
+Previous Current Phase 3F-A/B status:
 
 - PR #127 merged Phase 3E-A/B product readiness, navigation QA, and
   public/admin dead-end polish at merge commit
   `03c8a21522e6e68aa8b2caf32aedc4218e77f66e`.
-- Latest completed capability is Phase 3E-A/B product readiness, navigation
+- Latest completed capability was Phase 3E-A/B product readiness, navigation
   QA, and public/admin dead-end polish.
-- Phase 3F-A/B is current as catalogue content quality, media readiness, and
+- Phase 3F-A/B was current as catalogue content quality, media readiness, and
   admin publication polish for public listing/category/quote handoff behavior
   and protected admin listing/category/media readiness panels.
 - Incomplete-but-safe catalogue copy, honest fallback image alt text, missing
   listing quote handoff context, admin-only publication summaries, category
-  published-listing gaps, and media metadata readiness cues are improved while
+  published-listing gaps, and media metadata readiness cues were improved while
   keeping the existing public catalogue, public quote, and protected admin
   boundaries.
 - No deployment, deployment approval, Vercel config, Supabase Cloud config,
@@ -259,7 +281,7 @@ Current Phase 3F-A/B status:
   accounts, customer-visible internal notes, notifications, CRM integration,
   public/customer upload routes, transcript runtime paths, invented real
   contact details, testimonials, client names, legal claims, production
-  policies, or ecommerce flow is added.
+  policies, or ecommerce flow was added.
 
 Previous Current Phase 3E-A/B status:
 

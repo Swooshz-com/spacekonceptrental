@@ -8,6 +8,7 @@ import {
 } from "../../lib/products/admin-read/admin-product-dashboard-read";
 import {
   resolveAdminQuoteRequestInboxRead,
+  type AdminQuoteRequestInboxActivity,
   type AdminQuoteRequestInboxReadResult
 } from "../../lib/quote/admin-read/admin-quote-request-dashboard-read";
 import {
@@ -186,6 +187,14 @@ export async function resolveProtectedAdminShellState(
 
 function statusLabel(value: string) {
   return value.replace(/_/g, " ");
+}
+
+function quoteDetailActivityText(activity: AdminQuoteRequestInboxActivity) {
+  if (activity.activityType === "internal_note") {
+    return activity.note ?? "Internal note recorded.";
+  }
+
+  return `Status changed from ${statusLabel(activity.statusFrom ?? "unknown")} to ${statusLabel(activity.statusTo ?? "unknown")}.`;
 }
 
 function AdminDashboard({
@@ -532,7 +541,10 @@ function AdminQuoteDetail({
     return (
       <section className="admin-dashboard admin-dashboard--unavailable">
         <h2>Quote request detail</h2>
-        <p>Quote request details are temporarily unavailable.</p>
+        <p>
+          Quote request details are temporarily unavailable. Return to the
+          quote request inbox and retry from the protected admin workspace.
+        </p>
         <a className="button button--secondary" href="/admin/quotes">
           Back to quote requests
         </a>
@@ -544,13 +556,18 @@ function AdminQuoteDetail({
     return (
       <section className="admin-dashboard admin-dashboard--unavailable">
         <h2>Quote request detail</h2>
-        <p>Quote request details were not found for this workspace.</p>
+        <p>
+          Quote request details are not visible in this workspace, or the
+          enquiry may have been removed from the current admin view.
+        </p>
         <a className="button button--secondary" href="/admin/quotes">
           Back to quote requests
         </a>
       </section>
     );
   }
+
+  const quoteRequest = quoteDetail.data.quoteRequest;
 
   return (
     <>
@@ -564,6 +581,114 @@ function AdminQuoteDetail({
               or internal notes.
             </p>
           </div>
+        </div>
+        <div className="admin-dashboard__grid">
+          <section className="admin-dashboard__card">
+            <h3>Customer / enquiry details</h3>
+            <dl className="quote-inbox__details">
+              <div>
+                <dt>Reference</dt>
+                <dd>Reference {quoteRequest.publicReference}</dd>
+              </div>
+              <div>
+                <dt>Current status</dt>
+                <dd>{statusLabel(quoteRequest.status)}</dd>
+              </div>
+              <div>
+                <dt>Source</dt>
+                <dd>{quoteRequest.source}</dd>
+              </div>
+              <div>
+                <dt>Submitted</dt>
+                <dd>{quoteRequest.createdAt}</dd>
+              </div>
+              {quoteRequest.updatedAt ? (
+                <div>
+                  <dt>Updated</dt>
+                  <dd>{quoteRequest.updatedAt}</dd>
+                </div>
+              ) : null}
+              <div>
+                <dt>Customer</dt>
+                <dd>
+                  Customer - {quoteRequest.customerName ?? "Unnamed customer"}
+                </dd>
+              </div>
+              {quoteRequest.customerEmail ? (
+                <div>
+                  <dt>Email</dt>
+                  <dd>Email - {quoteRequest.customerEmail}</dd>
+                </div>
+              ) : null}
+              {quoteRequest.customerPhone ? (
+                <div>
+                  <dt>Phone</dt>
+                  <dd>Phone - {quoteRequest.customerPhone}</dd>
+                </div>
+              ) : null}
+              {quoteRequest.eventDate ? (
+                <div>
+                  <dt>Event date</dt>
+                  <dd>{quoteRequest.eventDate}</dd>
+                </div>
+              ) : null}
+              {quoteRequest.venue ? (
+                <div>
+                  <dt>Venue</dt>
+                  <dd>Venue - {quoteRequest.venue}</dd>
+                </div>
+              ) : null}
+            </dl>
+          </section>
+
+          <section className="admin-dashboard__card">
+            <h3>Customer message</h3>
+            {quoteRequest.customerMessage ? (
+              <p>{quoteRequest.customerMessage}</p>
+            ) : (
+              <p>No customer message was submitted.</p>
+            )}
+          </section>
+
+          <section className="admin-dashboard__card">
+            <h3>Requested item snapshots</h3>
+            {quoteRequest.items.length === 0 ? (
+              <p>No requested item snapshots were captured.</p>
+            ) : (
+              <ul className="admin-dashboard__list">
+                {quoteRequest.items.map((item) => (
+                  <li key={item.id}>
+                    <strong>
+                      Snapshot: {item.quantity} x {item.productNameSnapshot}
+                    </strong>
+                    {item.notes ? <small>{item.notes}</small> : null}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+
+          <section className="admin-dashboard__card">
+            <h3>Admin-only follow-up context</h3>
+            <p>
+              Internal notes and status history stay inside the protected admin
+              workspace and are not shown on public quote pages.
+            </p>
+            {quoteRequest.activity.length === 0 ? (
+              <p>No internal activity has been recorded yet.</p>
+            ) : (
+              <ul className="admin-dashboard__list">
+                {quoteRequest.activity.map((activity) => (
+                  <li key={activity.id}>
+                    <strong>
+                      Activity: {quoteDetailActivityText(activity)}
+                    </strong>
+                    <small>{activity.createdAt}</small>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
         </div>
       </section>
       <QuoteRequestInboxPanel

@@ -25,7 +25,7 @@ const repoRoot = resolve(process.cwd(), "..");
 const sourceExtensions = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"]);
 const phase3bMergeCommit = "bfcf9916a0edd1b7133a1765719b9ddd73197dac";
 const phase3cMergeCommit = "d031d7f47a6893f92d0b6739300d52147f6abfa4";
-const phase3eMergeCommit = "03c8a21522e6e68aa8b2caf32aedc4218e77f66e";
+const phase3fMergeCommit = "69665bb241b1af5c05ad34ac1464cdaeece8b7f8";
 const forbiddenCommercePattern =
   /cart|checkout|payments?|purchase|customer account|stock reservation|order fulfilment|confirmed booking|online ordering/i;
 
@@ -123,7 +123,7 @@ describe("Phase 3C-A/B public catalogue discovery and quote funnel polish", () =
     vi.restoreAllMocks();
   });
 
-  it("records Phase 3C-A/B as completed after Phase 3F starts", () => {
+  it("records Phase 3C-A/B as completed after Phase 3G starts", () => {
     const status = normalizeWhitespace(readRepoFile("docs/PHASE-STATUS.md"));
     const roadmap = normalizeWhitespace(readRepoFile("docs/PHASE-ROADMAP.md"));
     const readiness = readRepoFile("docs/PHASE-2-READINESS-PLAN.md");
@@ -131,13 +131,14 @@ describe("Phase 3C-A/B public catalogue discovery and quote funnel polish", () =
     const checklist = readRepoFile("docs/checklists/PHASE-2-ADMIN-OPS.md");
 
     expect(status).toContain(
-      "Current phase: Phase 3F-A/B - catalogue content quality, media readiness, and admin publication polish."
+      "Current phase: Phase 3G-A/B - quote intake quality, admin triage depth, and enquiry workflow polish."
     );
     expect(status).toContain(
-      "Latest completed capability: Phase 3E-A/B product readiness, navigation QA, and public/admin dead-end polish."
+      "Latest completed capability: Phase 3F-A/B catalogue content quality, media readiness, and admin publication polish."
     );
-    expect(status).toContain("Last merged capability PR: #127");
-    expect(status).toContain(`Merge commit: \`${phase3eMergeCommit}\``);
+    expect(status).toContain("Last merged capability PR: #128");
+    expect(status).toContain(`Merge commit: \`${phase3fMergeCommit}\``);
+    expect(status).toContain("Previous Current Phase 3F-A/B status");
     expect(status).toContain("Previous Current Phase 3E-A/B status");
     expect(status).toContain("Previous Current Phase 3D-A/B status");
     expect(status).toContain("Previous Current Phase 3C-A/B status");
@@ -147,7 +148,8 @@ describe("Phase 3C-A/B public catalogue discovery and quote funnel polish", () =
     expect(roadmap).toContain(
       "Phase 3C-A/B adds public catalogue discovery and quote funnel polish"
     );
-    expect(readiness).toContain("Current Phase 3F-A/B status");
+    expect(readiness).toContain("Current Phase 3G-A/B status");
+    expect(readiness).toContain("Previous Current Phase 3F-A/B status");
     expect(readiness).toContain("Previous Current Phase 3E-A/B status");
     expect(readiness).toContain("Previous Current Phase 3D-A/B status");
     expect(readiness).toContain("Previous Current Phase 3C-A/B status");

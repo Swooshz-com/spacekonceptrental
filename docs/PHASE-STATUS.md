@@ -4,28 +4,31 @@ This is the quick status page for the SKR repo. Use `docs/PHASE-2-READINESS-PLAN
 
 ## Current phase
 
-Current phase: Phase 3F-A/B - catalogue content quality, media readiness, and admin publication polish.
+Current phase: Phase 3G-A/B - quote intake quality, admin triage depth, and enquiry workflow polish.
 
-Latest completed capability: Phase 3E-A/B product readiness, navigation QA, and public/admin dead-end polish.
+Latest completed capability: Phase 3F-A/B catalogue content quality, media readiness, and admin publication polish.
 
-Last merged capability PR: #127
+Last merged capability PR: #128
 
-Merge commit: `03c8a21522e6e68aa8b2caf32aedc4218e77f66e`
+Merge commit: `69665bb241b1af5c05ad34ac1464cdaeece8b7f8`
 
-Phase 3F-A/B adds catalogue content quality, media readiness, and admin
-publication polish. It inspects public listing/category rendering paths and
-protected admin listing/category/media panels, improves incomplete-but-safe
-catalogue copy, strengthens quote handoff behavior when listing context is
-missing or unavailable, and adds admin-only publication/media readiness cues
-for category, listing, image metadata, and quote-planning gaps.
+Phase 3G-A/B adds quote intake quality, admin triage depth, and enquiry
+workflow polish. It inspects the public quote/enquiry form, selected-listing
+handoff, quote API validation boundary, protected admin quote inbox, and
+protected admin quote detail view, then improves helper copy, receipt-only
+success copy, admin-only triage summaries, next-action cues, and detail
+readability from existing quote request data.
 
-Public users only see public-safe published listing, category, and listing
-image data. Public quote/enquiry success stays receipt-only with no public
-tracking/status link. Admin internal notes remain admin-only. Supabase remains
-canonical for website/admin listing and quote data. Pinecone remains a future
-derived index only and is not used as canonical business storage.
+Public users only see public-safe published listing, category, listing image,
+and selected-listing quote context. Public quote/enquiry success stays
+receipt-only with no public tracking/status link. Selected listing context is
+a request starting point only and does not reserve furniture, dates, delivery
+capacity, or availability. Admin triage summaries, next actions, internal
+notes, and activity remain admin-only. Supabase remains canonical for
+website/admin listing and quote data. Pinecone remains a future derived index
+only and is not used as canonical business storage.
 
-No deployment is performed or approved by Phase 3F-A/B. It does not add Vercel
+No deployment is performed or approved by Phase 3G-A/B. It does not add Vercel
 config, connect Supabase Cloud, add real secrets or env values, add filled
 preview or production evidence, add Pinecone runtime code, Pinecone packages,
 Pinecone env reads, secrets, API keys, Pinecone executors, n8n workflow/runtime
@@ -58,20 +61,43 @@ config, env/secrets, and production evidence remain blocked.
 
 ## Remaining-work map
 
-Completed through PR #127:
+Completed through PR #128:
+
+- PR #128 merged Phase 3F-A/B catalogue content quality, media readiness, and
+  admin publication polish at merge commit
+  `69665bb241b1af5c05ad34ac1464cdaeece8b7f8`.
+- The latest completed capability is Phase 3F-A/B catalogue content quality,
+  media readiness, and admin publication polish. It improved incomplete-but-safe
+  public listing/category copy, fallback image alt text, selected-listing
+  quote handoff behavior, and protected admin listing/category/media readiness
+  cues without deployment or runtime expansion.
+- Phase 3G-A/B is current as quote intake quality, admin triage depth, and
+  enquiry workflow polish for the public quote/enquiry form, selected-listing
+  handoff, protected admin quote inbox, and protected admin quote detail view.
+  It is repo-local only and does not perform or approve deployment.
+
+Previous Current Phase 3F-A/B status:
+
+Current phase: Phase 3F-A/B - catalogue content quality, media readiness, and admin publication polish.
+
+Latest completed capability: Phase 3E-A/B product readiness, navigation QA, and public/admin dead-end polish.
+
+Last merged capability PR: #127
+
+Merge commit: `03c8a21522e6e68aa8b2caf32aedc4218e77f66e`
 
 - PR #127 merged Phase 3E-A/B product readiness, navigation QA, and
   public/admin dead-end polish at merge commit
   `03c8a21522e6e68aa8b2caf32aedc4218e77f66e`.
-- The latest completed capability is Phase 3E-A/B product readiness,
+- The latest completed capability was Phase 3E-A/B product readiness,
   navigation QA, and public/admin dead-end polish. It verified key public and
   protected admin internal route surfaces, improved empty, filtered, missing,
   blocked, and unavailable recovery states, and tightened rental/listing/
   enquiry/quote/request wording checks without deployment or runtime expansion.
-- Phase 3F-A/B is current as catalogue content quality, media readiness, and
+- Phase 3F-A/B was current as catalogue content quality, media readiness, and
   admin publication polish for public listing/category/quote handoff behavior
-  and protected admin listing/category/media readiness cues. It is repo-local
-  only and does not perform or approve deployment.
+  and protected admin listing/category/media readiness cues. It was repo-local
+  only and did not perform or approve deployment.
 
 Previous Current Phase 3E-A/B status:
 
@@ -1391,8 +1417,8 @@ architecture.
 
 ## Next recommended PR
 
-Phase 3F-A/B is the approved catalogue content quality, media readiness, and
-admin publication polish iteration after Phase 3E-A/B. After this PR, continue
+Phase 3G-A/B is the approved quote intake quality, admin triage depth, and
+enquiry workflow polish iteration after Phase 3F-A/B. After this PR, continue
 product/public/admin polish only when explicitly scoped, or move to a
 separately approved preview deployment PR if the owner chooses deployment.
 
