@@ -238,14 +238,35 @@ Suggested first PR:
   Supabase, production evidence, or ecommerce flows. Product language remains
   enquiry/quote/request.
 
-Current Phase 3B-A/B status:
+Current Phase 3C-A/B status:
+
+- PR #124 merged Phase 3B-A/B admin operations readiness and quote triage
+  polish at merge commit
+  `bfcf9916a0edd1b7133a1765719b9ddd73197dac`.
+- Latest completed capability is Phase 3B-A/B admin operations readiness and
+  quote triage polish.
+- Phase 3C-A/B is current as public catalogue discovery and quote funnel
+  polish for the public catalogue, listing, category, and quote request
+  surfaces.
+- Category discovery affordances, static event setup guidance, filtered
+  catalogue recovery paths, category empty states, selected-listing quote
+  context, and requested-item helper copy are improved while keeping the
+  existing public catalogue read boundary and public quote API contract.
+- No deployment, deployment approval, Vercel config, Supabase Cloud config,
+  real env values, production evidence, browser Supabase, service-role runtime
+  paths, n8n/Pinecone/RAG runtime work, public quote tracking, customer
+  accounts, customer-visible internal notes, notifications, CRM integration,
+  public/customer upload routes, transcript runtime paths, or ecommerce flow
+  is added.
+
+Previous Current Phase 3B-A/B status:
 
 - PR #123 merged Phase 3A-A/B product polish, content, and rental UI iteration
   at merge commit
   `6e8bcf23bc8d7eef12b738613344764c0c1961e6`.
-- Latest completed capability is Phase 3A-A/B product polish, content, and
+- Latest completed capability was Phase 3A-A/B product polish, content, and
   rental UI iteration.
-- Phase 3B-A/B is current as admin operations readiness and quote triage
+- Phase 3B-A/B was current as admin operations readiness and quote triage
   polish for the protected admin listing, category, media, and quote workflow
   surfaces.
 - Admin listing readiness cues, category/media readiness guidance, quote

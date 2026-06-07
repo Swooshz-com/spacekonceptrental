@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import QuoteRequestForm from "../../components/QuoteRequestForm";
 import { getPublicProductBySlug } from "../../lib/catalogue/catalogue-repository";
 import { normalizePublicListingSlug } from "../../lib/catalogue/quote-handoff";
@@ -35,13 +37,18 @@ function QuoteListingContext({
 }) {
   return (
     <article className="route-card quote-context">
-      <p className="eyebrow">Listing enquiry</p>
+      <p className="eyebrow">Selected listing</p>
       <h2>Enquiry for {product.name}</h2>
       <p>
-        This listing has been added as a starting point. Share event dates,
-        quantities, and styling notes so the team can follow up.
+        This listing has been added as a starting point for your rental
+        request. Share event dates, quantities, and styling notes so the team
+        can follow up.
       </p>
       <dl className="quote-context__details">
+        <div>
+          <dt>Requested item</dt>
+          <dd>{product.name}</dd>
+        </div>
         {product.categoryName ? (
           <div>
             <dt>Category</dt>
@@ -53,6 +60,11 @@ function QuoteListingContext({
           <dd>{product.rentalUnit}</dd>
         </div>
       </dl>
+      <div className="catalogue-card__actions">
+        <Link className="card-link" href={`/listings/${product.slug}`}>
+          Review selected listing
+        </Link>
+      </div>
     </article>
   );
 }

@@ -1210,3 +1210,29 @@ Pinecone packages/env/API keys, wire `/api/chat` to retrieval/RAG, add
 transcript runtime paths, or add ecommerce flows such as carts, checkout,
 payments, stock reservation, confirmed booking, order fulfilment, or online
 ordering.
+
+## Phase 3C: Public Catalogue Discovery And Quote Funnel Polish
+
+Phase 3C-A/B adds public catalogue discovery and quote funnel polish for the
+public catalogue, listing, category, and quote request surfaces. It improves
+category discovery affordances, event setup guidance, filtered catalogue
+recovery paths, category empty states, selected-listing quote handoff,
+requested-item context, and quote helper copy around event date, venue,
+quantities, setup notes, and contact method.
+
+Phase 3C-A/B keeps the work repo-local and public/product-scoped. Public users
+still browse public-safe rental/event furniture listings and submit
+quote/enquiry requests with receipt-only success. Admin internal notes remain
+admin-only, and public catalogue data stays limited to published listing,
+category, and image metadata.
+
+Phase 3C-A/B does not deploy, approve deployment, add Vercel or Supabase Cloud
+config, add real env values, add filled preview or production evidence, add
+browser Supabase, add service-role runtime paths, access
+`website/chat-config.js`, add public/customer uploads, add customer accounts,
+add public quote tracking, expose customer-visible internal notes, add
+notifications or CRM integration, change n8n/Pinecone runtime behavior, add
+Pinecone packages/env/API keys, wire `/api/chat` to retrieval/RAG, add
+transcript runtime paths, or add ecommerce flows such as carts, checkout,
+payments, stock reservation, confirmed booking, order fulfilment, or online
+ordering.

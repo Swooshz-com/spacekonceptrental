@@ -99,6 +99,15 @@ export default function QuoteRequestForm({
         Include event date, venue, listing interest, quantities, and setup
         notes so the team can prepare a useful rental reply.
       </p>
+      {initialItemsText ? (
+        <aside className="quote-form__selected" aria-label="Selected listing">
+          <strong>Selected listing</strong>
+          <span>
+            {initialItemsText} starts this rental request. Add quantities,
+            alternates, dimensions, or placement notes before sending.
+          </span>
+        </aside>
+      ) : null}
       <fieldset>
         <legend>Contact details</legend>
         <label>
@@ -120,10 +129,18 @@ export default function QuoteRequestForm({
         <label>
           Event date
           <input name="eventDate" type="date" />
+          <small>
+            Event date helps the team understand timing, delivery windows, and
+            setup priority.
+          </small>
         </label>
         <label>
           Venue or location
           <input name="venue" placeholder="Singapore venue or event location" type="text" />
+          <small>
+            Venue or event location helps the team plan delivery, access, and
+            layout fit.
+          </small>
         </label>
       </fieldset>
       <fieldset>
@@ -136,7 +153,10 @@ export default function QuoteRequestForm({
             placeholder="Example: 20 stools, 4 cocktail tables, or a lounge setup"
             rows={4}
           />
-          <small>Leave this blank if you need help deciding quantities.</small>
+          <small>
+            Use one line per requested item. Leave this blank if you need help
+            deciding quantities.
+          </small>
         </label>
         <label>
           Event notes for the team
@@ -157,6 +177,10 @@ export default function QuoteRequestForm({
             placeholder="Example: delivery timing or placement notes for the listed items"
             rows={4}
           />
+          <small>
+            Add quantities, alternates, dimensions, or placement notes for the
+            requested items.
+          </small>
         </label>
       </fieldset>
       <button
