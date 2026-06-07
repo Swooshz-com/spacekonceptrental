@@ -1236,3 +1236,30 @@ Pinecone packages/env/API keys, wire `/api/chat` to retrieval/RAG, add
 transcript runtime paths, or add ecommerce flows such as carts, checkout,
 payments, stock reservation, confirmed booking, order fulfilment, or online
 ordering.
+
+## Phase 3D: Sitewide Public Journey, Trust Content, And Route Polish
+
+Phase 3D-A/B adds sitewide public journey, trust content, and route polish for
+the homepage, public catalogue, listing, category, event setup, and quote
+request surfaces. It improves homepage journey guidance, event setup
+expectation-setting, route recovery links, listing detail quote-request
+preparation, quote enquiry expectations, and route metadata.
+
+Phase 3D-A/B keeps content public-safe and honest. Public users browse
+public-safe rental/event furniture listings, prepare event date, venue,
+quantities, alternates, and setup notes, then submit quote/enquiry requests
+with receipt-only success. The site does not claim verified clients, awards,
+certifications, real contact details, legal commitments, or production
+policies that are not already present in the repo.
+
+Phase 3D-A/B does not deploy, approve deployment, add Vercel or Supabase Cloud
+config, add real env values, add filled preview or production evidence, add
+browser Supabase, add service-role runtime paths, access
+`website/chat-config.js`, add public/customer uploads, add customer accounts,
+add public quote tracking, expose customer-visible internal notes, add
+notifications or CRM integration, change n8n/Pinecone runtime behavior, add
+Pinecone packages/env/API keys, wire `/api/chat` to retrieval/RAG, add
+transcript runtime paths, invent real contact details, testimonials, client
+names, legal claims, production policies, or add ecommerce flows such as
+carts, checkout, payments, stock reservation, confirmed booking, order
+fulfilment, or online ordering.

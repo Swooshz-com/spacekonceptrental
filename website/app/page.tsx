@@ -1,8 +1,15 @@
 import Image from "next/image";
 import Link from "next/link";
+import type { Metadata } from "next";
 import heroImage from "../assets/images/hero_homepage.png";
 import { getPublicCatalogue } from "../lib/catalogue/catalogue-repository";
 import { getQuoteHrefForListing } from "../lib/catalogue/quote-handoff";
+
+export const metadata: Metadata = {
+  title: "Event furniture rental listings | Space Koncept Rentals",
+  description:
+    "Browse listings, categories, and event setup ideas before sending a public quote enquiry to Space Koncept Rentals."
+};
 
 const eventUseCases = [
   {
@@ -27,6 +34,29 @@ const eventUseCases = [
   }
 ];
 
+const rentalJourneySteps = [
+  {
+    title: "Browse public listings",
+    description:
+      "Start with rental listings, categories, or event setup ideas that match the space you are planning."
+  },
+  {
+    title: "Share event details",
+    description:
+      "Prepare the event date, venue, requested quantities, alternates, and setup notes before sending an enquiry."
+  },
+  {
+    title: "Team reviews availability and fit",
+    description:
+      "The team checks whether the requested furniture and setup notes fit the event context."
+  },
+  {
+    title: "Final quote follows directly",
+    description:
+      "The submitted form is a quote request. Final follow-up and quote details happen directly with the team."
+  }
+];
+
 export default async function HomePage() {
   const catalogue = await getPublicCatalogue();
   const featuredListings = catalogue.products.slice(0, 3);
@@ -48,6 +78,9 @@ export default async function HomePage() {
             <Link className="button button--secondary" href="/listings">
               Browse listings
             </Link>
+            <Link className="button button--secondary" href="/categories">
+              Browse categories
+            </Link>
           </div>
         </div>
         <div className="hero__image">
@@ -56,6 +89,32 @@ export default async function HomePage() {
             priority
             src={heroImage}
           />
+        </div>
+      </section>
+
+      <section className="section">
+        <div className="section__header">
+          <h2>How rental enquiries work</h2>
+          <p className="section__intro">
+            Use the site to shortlist public rental options, then send one
+            enquiry with the details needed for a useful follow-up.
+          </p>
+        </div>
+        <div className="route-grid">
+          {rentalJourneySteps.map((step) => (
+            <article className="route-card" key={step.title}>
+              <h2>{step.title}</h2>
+              <p>{step.description}</p>
+            </article>
+          ))}
+        </div>
+        <div className="hero__actions">
+          <Link className="button button--secondary" href="/events">
+            Plan event setups
+          </Link>
+          <Link className="button" href="/quote">
+            Start a quote request
+          </Link>
         </div>
       </section>
 
@@ -86,7 +145,17 @@ export default async function HomePage() {
           </p>
         </div>
         {featuredListings.length === 0 ? (
-          <p>No public rental listings are available right now.</p>
+          <>
+            <p>No public rental listings are available right now.</p>
+            <div className="hero__actions">
+              <Link className="button button--secondary" href="/categories">
+                Browse categories
+              </Link>
+              <Link className="button" href="/quote">
+                Send a general enquiry
+              </Link>
+            </div>
+          </>
         ) : (
           <div className="catalogue-grid">
             {featuredListings.map((listing) => (

@@ -238,14 +238,36 @@ Suggested first PR:
   Supabase, production evidence, or ecommerce flows. Product language remains
   enquiry/quote/request.
 
-Current Phase 3C-A/B status:
+Current Phase 3D-A/B status:
+
+- PR #125 merged Phase 3C-A/B public catalogue discovery and quote funnel
+  polish at merge commit
+  `d031d7f47a6893f92d0b6739300d52147f6abfa4`.
+- Latest completed capability is Phase 3C-A/B public catalogue discovery and
+  quote funnel polish.
+- Phase 3D-A/B is current as sitewide public journey, trust content, and route
+  polish for the homepage, public catalogue, listing, category, event setup,
+  and quote request surfaces.
+- Homepage journey guidance, event setup expectation-setting, route recovery
+  links, listing detail quote-request preparation, quote enquiry expectations,
+  and page metadata are improved while keeping the existing public catalogue
+  read boundary and public quote API contract.
+- No deployment, deployment approval, Vercel config, Supabase Cloud config,
+  real env values, production evidence, browser Supabase, service-role runtime
+  paths, n8n/Pinecone/RAG runtime work, public quote tracking, customer
+  accounts, customer-visible internal notes, notifications, CRM integration,
+  public/customer upload routes, transcript runtime paths, invented real
+  contact details, testimonials, client names, legal claims, production
+  policies, or ecommerce flow is added.
+
+Previous Current Phase 3C-A/B status:
 
 - PR #124 merged Phase 3B-A/B admin operations readiness and quote triage
   polish at merge commit
   `bfcf9916a0edd1b7133a1765719b9ddd73197dac`.
-- Latest completed capability is Phase 3B-A/B admin operations readiness and
+- Latest completed capability was Phase 3B-A/B admin operations readiness and
   quote triage polish.
-- Phase 3C-A/B is current as public catalogue discovery and quote funnel
+- Phase 3C-A/B was current as public catalogue discovery and quote funnel
   polish for the public catalogue, listing, category, and quote request
   surfaces.
 - Category discovery affordances, static event setup guidance, filtered

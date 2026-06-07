@@ -141,15 +141,28 @@ export function ProductPageContent({
             <div>
               <dt>Quote planning</dt>
               <dd>
-                Share event date, venue, preferred quantities, and delivery
+                Share timing, venue, preferred quantities, and delivery
                 notes so the team can confirm the right rental fit.
               </dd>
             </div>
           </dl>
 
+          <section className="listing-checklist" aria-label="Quote request checklist">
+            <h3>Quote request checklist</h3>
+            <ul className="journey-list">
+              <li>Event date or timing window.</li>
+              <li>Venue or event location.</li>
+              <li>Preferred quantities and alternates.</li>
+              <li>Setup notes, access details, or placement needs.</li>
+            </ul>
+          </section>
+
           <div className="hero__actions">
             <Link className="button button--secondary" href={backHref}>
               {backLabel}
+            </Link>
+            <Link className="button button--secondary" href="/categories">
+              Browse categories
             </Link>
             <Link className="button" href={getQuoteHrefForListing(product.slug)}>
               Request this listing
