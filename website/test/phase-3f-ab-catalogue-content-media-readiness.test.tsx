@@ -33,7 +33,7 @@ vi.mock("next/image", () => ({
 
 const repoRoot = resolve(process.cwd(), "..");
 const sourceExtensions = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"]);
-const phase3eMergeCommit = "03c8a21522e6e68aa8b2caf32aedc4218e77f66e";
+const phase3fMergeCommit = "f369b81ee939d21813af1c94c1d9702a14a8e43b";
 const forbiddenCommercePattern =
   /cart|checkout|payments?|purchase|customer account|stock reservation|order fulfilment|confirmed booking|online ordering/i;
 
@@ -217,7 +217,7 @@ describe("Phase 3F-A/B catalogue content quality, media readiness, and publicati
     vi.restoreAllMocks();
   });
 
-  it("records Phase 3F-A/B as current after Phase 3E completed in PR #127", () => {
+  it("records Phase 3F-A/B as completed after Phase 3G starts", () => {
     const status = normalizeWhitespace(readRepoFile("docs/PHASE-STATUS.md"));
     const roadmap = normalizeWhitespace(readRepoFile("docs/PHASE-ROADMAP.md"));
     const readiness = readRepoFile("docs/PHASE-2-READINESS-PLAN.md");
@@ -226,19 +226,21 @@ describe("Phase 3F-A/B catalogue content quality, media readiness, and publicati
     const validator = readRepoFile("scripts/validate-preview-handoff.cjs");
 
     expect(status).toContain(
-      "Current phase: Phase 3F-A/B - catalogue content quality, media readiness, and admin publication polish."
+      "Current phase: Phase 3G-A/B - quote intake quality, admin triage depth, and enquiry workflow polish."
     );
     expect(status).toContain(
-      "Latest completed capability: Phase 3E-A/B product readiness, navigation QA, and public/admin dead-end polish."
+      "Latest completed capability: Phase 3F-A/B catalogue content quality, media readiness, and admin publication polish."
     );
-    expect(status).toContain("Last merged capability PR: #127");
-    expect(status).toContain(`Merge commit: \`${phase3eMergeCommit}\``);
+    expect(status).toContain("Last merged capability PR: #128");
+    expect(status).toContain(`Merge commit: \`${phase3fMergeCommit}\``);
+    expect(status).toContain("Previous Current Phase 3F-A/B status");
     expect(status).toContain("Previous Current Phase 3E-A/B status");
     expect(status).toContain("No deployment is performed or approved");
     expect(roadmap).toContain(
       "Phase 3F-A/B adds catalogue content quality, media readiness, and admin publication polish"
     );
-    expect(readiness).toContain("Current Phase 3F-A/B status");
+    expect(readiness).toContain("Current Phase 3G-A/B status");
+    expect(readiness).toContain("Previous Current Phase 3F-A/B status");
     expect(readiness).toContain("Previous Current Phase 3E-A/B status");
     expect(decisionLog).toContain(
       "Decision: Phase 3F-A/B adds catalogue content quality, media readiness, and admin publication polish."
@@ -246,8 +248,8 @@ describe("Phase 3F-A/B catalogue content quality, media readiness, and publicati
     expect(checklist).toContain(
       "## Phase 3F-A/B Catalogue Content Quality Media Readiness And Admin Publication Polish"
     );
-    expect(validator).toContain(phase3eMergeCommit);
-    expect(validator).toContain("Phase 3F-A/B");
+    expect(validator).toContain(phase3fMergeCommit);
+    expect(validator).toContain("Phase 3G-A/B");
     expect(validator).not.toMatch(/\bvercel\s+(?:deploy|link|env|pull|promote)\b/i);
   });
 

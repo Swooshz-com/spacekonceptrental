@@ -47,9 +47,9 @@ function QuoteListingContext({
       <p className="eyebrow">Selected listing</p>
       <h2>Enquiry for {product.name}</h2>
       <p>
-        This listing has been added as a starting point for your rental
-        request. Share event dates, quantities, and styling notes so the team
-        can follow up.
+        Selected listing is a starting point only for your rental request. It
+        does not reserve furniture, dates, or delivery capacity. Share event
+        dates, quantities, and styling notes so the team can follow up.
       </p>
       <dl className="quote-context__details">
         <div>

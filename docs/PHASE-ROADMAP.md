@@ -1316,3 +1316,31 @@ transcript runtime paths, invent real contact details, testimonials, client
 names, awards, certifications, legal claims, production policies, or add
 ecommerce flows such as carts, checkout, payments, stock reservation,
 confirmed booking, order fulfilment, or online ordering.
+
+## Phase 3G: Quote Intake Quality, Admin Triage Depth, And Enquiry Workflow Polish
+
+Phase 3G-A/B adds quote intake quality, admin triage depth, and enquiry
+workflow polish for the public quote/enquiry form, selected-listing handoff,
+protected admin quote inbox, and protected admin quote detail surfaces. It
+improves contact/event/item helper copy, receipt-only success copy, selected
+listing expectation-setting, admin-only missing-info summaries, next-action
+cues, and detail readability from existing quote request data.
+
+Phase 3G-A/B keeps public and admin boundaries separated. Public users submit
+quote/enquiry requests and receive only receipt-style confirmation. Admin
+users can triage quote requests, read requested item snapshots, review
+customer messages, and record internal follow-up status or notes inside the
+protected admin workspace. Internal activity, internal notes, and admin triage
+details remain admin-only.
+
+Phase 3G-A/B does not deploy, approve deployment, add Vercel or Supabase Cloud
+config, add real env values, add filled preview or production evidence, add
+browser Supabase, add service-role runtime paths, access
+`website/chat-config.js`, add public/customer uploads, add customer accounts,
+add public quote tracking, expose customer-visible internal notes, add
+notifications or CRM integration, change n8n/Pinecone runtime behavior, add
+Pinecone packages/env/API keys, wire `/api/chat` to retrieval/RAG, add
+transcript runtime paths, invent real contact details, testimonials, client
+names, awards, certifications, legal claims, production policies, or add
+ecommerce flows such as carts, checkout, payments, stock reservation,
+confirmed booking, order fulfilment, or online ordering.

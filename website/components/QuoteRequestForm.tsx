@@ -67,7 +67,7 @@ export default function QuoteRequestForm({
       setSubmitState({
         status: "error",
         message:
-          "Please share an email or phone number so the team can follow up."
+          "Share an email address or phone number so the team can follow up on this enquiry."
       });
       return;
     }
@@ -102,15 +102,19 @@ export default function QuoteRequestForm({
   return (
     <form className="quote-form" onSubmit={handleSubmit}>
       <p className="quote-form__intro">
-        Include event date, venue, listing interest, quantities, and setup
-        notes so the team can prepare a useful rental reply.
+        Share one reliable contact method, event timing, venue or access notes,
+        and any listing or setup ideas so the team can triage the rental
+        enquiry.
       </p>
       {initialItemsText ? (
         <aside className="quote-form__selected" aria-label="Selected listing">
           <strong>Selected listing</strong>
           <span>
-            {initialItemsText} starts this rental request. Add quantities,
-            alternates, dimensions, or placement notes before sending.
+            {initialItemsText} starts this rental request. Selected listing is
+            a starting point only, not a reservation or availability
+            confirmation.
+            Add quantities, alternates, dimensions, or placement notes before
+            sending.
           </span>
         </aside>
       ) : null}
@@ -127,7 +131,10 @@ export default function QuoteRequestForm({
         <label>
           Phone number
           <input autoComplete="tel" name="customerPhone" type="tel" />
-          <small>Email or phone is required for follow-up.</small>
+          <small>
+            Share email, phone, or both. The team uses this only for direct
+            quote follow-up.
+          </small>
         </label>
       </fieldset>
       <fieldset>
@@ -137,7 +144,8 @@ export default function QuoteRequestForm({
           <input name="eventDate" type="date" />
           <small>
             Event date helps the team understand timing, delivery windows, and
-            setup priority.
+            setup priority. Final availability is confirmed directly by the
+            team.
           </small>
         </label>
         <label>
@@ -165,7 +173,7 @@ export default function QuoteRequestForm({
           </small>
         </label>
         <label>
-          Event notes for the team
+          Event goals or customer message
           <textarea
             aria-label="Customer message / event notes for the team"
             maxLength={1200}
@@ -200,8 +208,8 @@ export default function QuoteRequestForm({
       </button>
       {submitState.status === "success" ? (
         <p className="quote-form__status" role="status">
-          Quote request received. The team will review your event details and
-          follow up directly
+          Quote request received. This is a receipt only; the team will review
+          your enquiry and follow up directly
           {submitState.publicReference
             ? `. Reference: ${submitState.publicReference}`
             : "."}

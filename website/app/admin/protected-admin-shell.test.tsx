@@ -594,11 +594,11 @@ describe("protected admin shell", () => {
       screen.getByRole("heading", { name: /quote request detail/i })
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("heading", { name: /customer message/i })
-    ).toBeInTheDocument();
+      screen.getAllByRole("heading", { name: /customer message/i }).length
+    ).toBeGreaterThan(0);
     expect(
-      screen.getByText(/please recommend a warm lounge setup/i)
-    ).toBeInTheDocument();
+      screen.getAllByText(/please recommend a warm lounge setup/i).length
+    ).toBeGreaterThan(0);
     expect(
       screen.queryByText(/details are temporarily unavailable/i)
     ).not.toBeInTheDocument();

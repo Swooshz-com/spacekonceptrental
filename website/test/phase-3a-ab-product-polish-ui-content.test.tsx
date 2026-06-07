@@ -30,7 +30,7 @@ const phase2qMergeCommit = "62c2b11b6b15192434eb4035ba0a66a44cd6f763";
 const phase3aMergeCommit = "6e8bcf23bc8d7eef12b738613344764c0c1961e6";
 const phase3bMergeCommit = "bfcf9916a0edd1b7133a1765719b9ddd73197dac";
 const phase3cMergeCommit = "d031d7f47a6893f92d0b6739300d52147f6abfa4";
-const phase3eMergeCommit = "03c8a21522e6e68aa8b2caf32aedc4218e77f66e";
+const phase3fMergeCommit = "f369b81ee939d21813af1c94c1d9702a14a8e43b";
 const forbiddenCommercePattern =
   /cart|checkout|payments?|customer account|stock reservation|order fulfilment|confirmed booking|online ordering/i;
 
@@ -107,7 +107,7 @@ describe("Phase 3A-A/B product polish and rental UI copy", () => {
     vi.restoreAllMocks();
   });
 
-  it("records Phase 3A-A/B as completed after Phase 3F starts", () => {
+  it("records Phase 3A-A/B as completed after Phase 3G starts", () => {
     const status = normalizeWhitespace(readRepoFile("docs/PHASE-STATUS.md"));
     const roadmap = normalizeWhitespace(readRepoFile("docs/PHASE-ROADMAP.md"));
     const readiness = readRepoFile("docs/PHASE-2-READINESS-PLAN.md");
@@ -115,13 +115,14 @@ describe("Phase 3A-A/B product polish and rental UI copy", () => {
     const checklist = readRepoFile("docs/checklists/PHASE-2-ADMIN-OPS.md");
 
     expect(status).toContain(
-      "Current phase: Phase 3F-A/B - catalogue content quality, media readiness, and admin publication polish."
+      "Current phase: Phase 3G-A/B - quote intake quality, admin triage depth, and enquiry workflow polish."
     );
     expect(status).toContain(
-      "Latest completed capability: Phase 3E-A/B product readiness, navigation QA, and public/admin dead-end polish."
+      "Latest completed capability: Phase 3F-A/B catalogue content quality, media readiness, and admin publication polish."
     );
-    expect(status).toContain("Last merged capability PR: #127");
-    expect(status).toContain(`Merge commit: \`${phase3eMergeCommit}\``);
+    expect(status).toContain("Last merged capability PR: #128");
+    expect(status).toContain(`Merge commit: \`${phase3fMergeCommit}\``);
+    expect(status).toContain("Previous Current Phase 3F-A/B status");
     expect(status).toContain("Previous Current Phase 3E-A/B status");
     expect(status).toContain("Previous Current Phase 3D-A/B status");
     expect(status).toContain("Previous Current Phase 3C-A/B status");
@@ -134,7 +135,8 @@ describe("Phase 3A-A/B product polish and rental UI copy", () => {
     expect(roadmap).toContain(
       "Phase 3A-A/B adds product-facing polish for the public rental catalogue, quote/enquiry flow, and protected admin usability"
     );
-    expect(readiness).toContain("Current Phase 3F-A/B status");
+    expect(readiness).toContain("Current Phase 3G-A/B status");
+    expect(readiness).toContain("Previous Current Phase 3F-A/B status");
     expect(readiness).toContain("Previous Current Phase 3E-A/B status");
     expect(readiness).toContain("Previous Current Phase 3D-A/B status");
     expect(readiness).toContain("Previous Current Phase 3C-A/B status");
@@ -238,9 +240,9 @@ describe("Phase 3A-A/B product polish and rental UI copy", () => {
     vi.stubGlobal("fetch", fetchMock);
     render(<QuoteRequestForm initialItemsText="Modular Lounge Set" />);
 
-    expect(screen.getByText(/email or phone is required for follow-up/i)).toBeInTheDocument();
+    expect(screen.getByText(/share email, phone, or both/i)).toBeInTheDocument();
     expect(
-      screen.getByText(/include event date, venue, listing interest, quantities, and setup notes/i)
+      screen.getByText(/share one reliable contact method/i)
     ).toBeInTheDocument();
 
     fireEvent.change(screen.getByLabelText(/your name/i), {
@@ -250,13 +252,13 @@ describe("Phase 3A-A/B product polish and rental UI copy", () => {
 
     expect(fetchMock).not.toHaveBeenCalled();
     expect(
-      screen.getByText(/please share an email or phone number so the team can follow up/i)
+      screen.getByText(/share an email address or phone number so the team can follow up/i)
     ).toBeInTheDocument();
 
     fireEvent.change(screen.getByLabelText(/email address/i), {
       target: { value: "maya@example.test" }
     });
-    fireEvent.change(screen.getByLabelText(/event notes for the team/i), {
+    fireEvent.change(screen.getByLabelText(/event goals or customer message/i), {
       target: {
         value: "Reception lounge near the entrance."
       }
@@ -265,7 +267,7 @@ describe("Phase 3A-A/B product polish and rental UI copy", () => {
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
     expect(
-      await screen.findByText(/the team will review your event details and follow up directly/i)
+      await screen.findByText(/this is a receipt only/i)
     ).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: /track|status/i })).not.toBeInTheDocument();
   });

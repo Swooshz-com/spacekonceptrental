@@ -279,6 +279,16 @@ and route/action boundaries are implemented and tested.
 - [x] Static and render tests cover content completeness, admin-only readiness cues, public/admin boundary separation, and forbidden ecommerce/provider/deployment/runtime scope.
 - [x] No deployment, deployment approval, Vercel config, Supabase Cloud config, secrets/env values, filled preview or production evidence, browser Supabase, service-role runtime path, customer uploads, public quote tracking, customer accounts, customer-visible internal notes, notifications, CRM, n8n/Pinecone runtime change, invented real contact details, testimonials, client names, awards, certifications, legal claims, production policies, or ecommerce flow is added.
 
+## Phase 3G-A/B Quote Intake Quality Admin Triage Depth And Enquiry Workflow Polish
+
+- [x] Public quote/enquiry form copy, field labels, helper text, validation copy, and receipt-only success message are clearer without adding public tracking.
+- [x] Selected-listing quote handoff keeps valid listing context useful while making clear it is not a reservation, booking, order, or availability confirmation.
+- [x] Invalid, missing, unpublished, or unavailable selected-listing context falls back to a safe general rental enquiry without exposing admin readiness or internal notes.
+- [x] Protected admin quote inbox surfaces status buckets, missing-info summaries, customer-message/activity cues, and admin-only next actions from existing quote request data.
+- [x] Protected admin quote detail view gives readable customer/enquiry, requested item snapshot, customer message, internal activity, current status, and admin-only follow-up context with safe recovery copy.
+- [x] Static and render tests cover public quote intake, selected-listing fallback, admin triage/detail states, public/admin boundary separation, and forbidden ecommerce/provider/deployment/runtime scope.
+- [x] No deployment, deployment approval, Vercel config, Supabase Cloud config, secrets/env values, filled preview or production evidence, browser Supabase, service-role runtime path, customer uploads, public quote tracking, customer accounts, customer-visible internal notes, notifications, CRM, n8n/Pinecone runtime change, invented real contact details, testimonials, client names, awards, certifications, legal claims, production policies, or ecommerce flow is added.
+
 ## Phase 2D-A Deployment Readiness And Smoke-Test Runbook
 
 - [x] Deployment readiness docs are refreshed for catalogue media, admin listing media upload, public quote handoff, and atomic admin quote workflow surfaces.

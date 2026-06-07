@@ -92,6 +92,10 @@ function statusLabel(value: string) {
   return value.replace(/_/g, " ");
 }
 
+function hasContactMethod(quoteRequest: AdminQuoteRequestInboxQuoteRequest) {
+  return Boolean(quoteRequest.customerEmail || quoteRequest.customerPhone);
+}
+
 function quoteStatusSummary(
   quoteRequests: AdminQuoteRequestInboxQuoteRequest[]
 ) {
@@ -103,14 +107,32 @@ function quoteStatusSummary(
     quoted: quoteRequests.filter((quoteRequest) => quoteRequest.status === "quoted").length,
     closed: quoteRequests.filter(
       (quoteRequest) => quoteRequest.status === "closed"
+    ).length,
+    archived: quoteRequests.filter(
+      (quoteRequest) => quoteRequest.status === "archived"
+    ).length,
+    missingContact: quoteRequests.filter(
+      (quoteRequest) => !hasContactMethod(quoteRequest)
+    ).length,
+    missingEventDate: quoteRequests.filter(
+      (quoteRequest) => !quoteRequest.eventDate
+    ).length,
+    missingVenue: quoteRequests.filter((quoteRequest) => !quoteRequest.venue)
+      .length,
+    missingItems: quoteRequests.filter(
+      (quoteRequest) => quoteRequest.items.length === 0
+    ).length,
+    missingCustomerMessage: quoteRequests.filter(
+      (quoteRequest) => !quoteRequest.customerMessage
+    ).length,
+    withoutInternalActivity: quoteRequests.filter(
+      (quoteRequest) => quoteRequest.activity.length === 0
     ).length
   };
 }
 
 function quoteTriageCues(quoteRequest: AdminQuoteRequestInboxQuoteRequest) {
-  const hasContact = Boolean(
-    quoteRequest.customerEmail || quoteRequest.customerPhone
-  );
+  const hasContact = hasContactMethod(quoteRequest);
 
   return [
     hasContact ? "Contact method available" : "Missing contact method",
@@ -128,6 +150,38 @@ function quoteTriageCues(quoteRequest: AdminQuoteRequestInboxQuoteRequest) {
       ? "Internal activity recorded"
       : "No internal activity yet"
   ];
+}
+
+function quoteNextAction(quoteRequest: AdminQuoteRequestInboxQuoteRequest) {
+  if (!hasContactMethod(quoteRequest)) {
+    return "Next action: capture a contact method before follow-up.";
+  }
+
+  if (quoteRequest.status === "archived") {
+    return "Next action: archived enquiry is retained for admin reference.";
+  }
+
+  if (!quoteRequest.eventDate || !quoteRequest.venue) {
+    return "Next action: confirm event date and venue before detailed quote work.";
+  }
+
+  if (quoteRequest.items.length === 0) {
+    return "Next action: clarify requested items or setup needs with the customer.";
+  }
+
+  if (quoteRequest.status === "new") {
+    return "Next action: confirm event basics and move to reviewing when triage starts.";
+  }
+
+  if (quoteRequest.status === "reviewing") {
+    return "Next action: prepare quote response or move to quoted after direct follow-up.";
+  }
+
+  if (quoteRequest.status === "quoted") {
+    return "Next action: monitor direct follow-up and close when the enquiry is resolved.";
+  }
+
+  return "Next action: closed enquiry is retained for admin reference.";
 }
 
 function activityText(activity: AdminQuoteRequestInboxActivity) {
@@ -374,6 +428,34 @@ export function QuoteRequestInboxPanel({
             <dt>Closed requests</dt>
             <dd>{summary.closed}</dd>
           </div>
+          <div>
+            <dt>Archived requests</dt>
+            <dd>{summary.archived}</dd>
+          </div>
+          <div>
+            <dt>Contact gaps</dt>
+            <dd>{summary.missingContact}</dd>
+          </div>
+          <div>
+            <dt>Missing event dates</dt>
+            <dd>{summary.missingEventDate}</dd>
+          </div>
+          <div>
+            <dt>Missing venues</dt>
+            <dd>{summary.missingVenue}</dd>
+          </div>
+          <div>
+            <dt>Missing requested items</dt>
+            <dd>{summary.missingItems}</dd>
+          </div>
+          <div>
+            <dt>Missing customer messages</dt>
+            <dd>{summary.missingCustomerMessage}</dd>
+          </div>
+          <div>
+            <dt>Without internal activity</dt>
+            <dd>{summary.withoutInternalActivity}</dd>
+          </div>
         </dl>
       </section>
 
@@ -408,6 +490,10 @@ export function QuoteRequestInboxPanel({
                       <li key={cue}>{cue}</li>
                     ))}
                   </ul>
+                </section>
+                <section className="quote-inbox__section">
+                  <h4>Next action</h4>
+                  <p>{quoteNextAction(quoteRequest)}</p>
                 </section>
                 <dl className="quote-inbox__details">
                   <div>
