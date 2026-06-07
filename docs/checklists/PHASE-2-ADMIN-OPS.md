@@ -242,6 +242,15 @@ and route/action boundaries are implemented and tested.
 - [x] Static and render tests cover admin readiness/triage states and forbidden runtime/scope boundaries.
 - [x] No deployment, deployment approval, Vercel config, Supabase Cloud config, secrets/env values, filled preview or production evidence, browser Supabase, service-role runtime path, customer uploads, public quote tracking, customer accounts, customer-visible internal notes, notifications, CRM, n8n/Pinecone runtime change, or ecommerce flow is added.
 
+## Phase 3C-A/B Public Catalogue Discovery And Quote Funnel Polish
+
+- [x] Public catalogue/listing surfaces show category discovery affordances, active category state, and event setup guidance from existing public-safe catalogue data.
+- [x] Filtered and empty catalogue/category states include clear recovery links back to listings and quote/enquiry actions.
+- [x] Public quote handoff shows selected-listing and requested-item context while preserving receipt-only success and the existing public quote API contract.
+- [x] Quote form helper copy clarifies event date, venue/location, quantities, setup notes, and contact method needs.
+- [x] Static and render tests cover discovery, empty states, quote handoff, and forbidden runtime/scope boundaries.
+- [x] No deployment, deployment approval, Vercel config, Supabase Cloud config, secrets/env values, filled preview or production evidence, browser Supabase, service-role runtime path, customer uploads, public quote tracking, customer accounts, customer-visible internal notes, notifications, CRM, n8n/Pinecone runtime change, or ecommerce flow is added.
+
 ## Phase 2D-A Deployment Readiness And Smoke-Test Runbook
 
 - [x] Deployment readiness docs are refreshed for catalogue media, admin listing media upload, public quote handoff, and atomic admin quote workflow surfaces.

@@ -1972,6 +1972,37 @@ paths, add retention cleanup jobs, or add ecommerce flows such as carts,
 checkout, payments, stock reservation, confirmed booking, order fulfilment, or
 online ordering.
 
+## 2026-06-07: Public Catalogue Discovery And Quote Funnel Polish
+
+Decision: Phase 3C-A/B adds public catalogue discovery and quote funnel polish.
+
+Reason: PR #124 merged Phase 3B-A/B at
+`bfcf9916a0edd1b7133a1765719b9ddd73197dac`, completing admin operations
+readiness and quote triage polish without deploying or approving deployment.
+The next approved work item is public catalogue discovery and quote funnel
+polish using existing public-safe catalogue and quote request data only.
+
+The implementation improves category discovery affordances, static event setup
+guidance, filtered catalogue recovery paths, category empty states,
+selected-listing quote context, requested-item context, and quote helper copy
+around event date, venue/location, quantities, setup notes, and contact method.
+It keeps the existing public catalogue read boundary and public quote API
+contract.
+
+Phase 3C-A/B does not deploy, approve deployment, add Vercel config, connect
+Supabase Cloud, add real secrets or env values, add production evidence, add
+browser Supabase, add service-role runtime paths, access
+`website/chat-config.js`, add public/customer upload routes, add customer
+accounts, add public quote tracking, expose customer-visible internal notes,
+add notifications or CRM integration, change n8n/Pinecone runtime behavior,
+add SaaS chatbot runtime work, add Pinecone SDK/package dependencies, add
+Pinecone env vars or API keys, add embedding/reranking runtime, wire
+`/api/chat` to retrieval/RAG, wire transcript reads or writes into
+`/api/chat`, add admin transcript UI, add transcript deletion/export runtime
+paths, add retention cleanup jobs, or add ecommerce flows such as carts,
+checkout, payments, stock reservation, confirmed booking, order fulfilment, or
+online ordering.
+
 ## 2026-06-06: Preview/Deployment Review Preflight And CI Parity Hardening
 
 Decision: Phase 2M-A/B makes the release-candidate gate deterministic in CI.

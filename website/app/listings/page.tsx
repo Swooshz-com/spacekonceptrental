@@ -71,14 +71,33 @@ export default async function ListingsPage({
     getPublicCatalogue(),
     resolveCategoryFilter(searchParams)
   ]);
+  const activeCategory = categorySlug
+    ? catalogue.categories.find((category) => category.slug === categorySlug)
+    : undefined;
+  const filteredCatalogue = filterCatalogueByCategory(catalogue, categorySlug);
 
   return (
     <CataloguePageContent
-      catalogue={filterCatalogueByCategory(catalogue, categorySlug)}
+      activeCategoryName={activeCategory?.name}
+      activeCategorySlug={categorySlug}
+      catalogue={filteredCatalogue}
       detailBasePath="/listings"
-      emptyMessage="No public rental listings match this view right now. Please send a general enquiry and the team can help."
-      intro="Browse public-safe rental/event furniture listings, then send an enquiry for the pieces that fit your event."
-      title="Rental listings"
+      emptyMessage={
+        activeCategory
+          ? `No public rental listings match ${activeCategory.name} right now. Please send a general enquiry and the team can help.`
+          : "No public rental listings match this view right now. Please send a general enquiry and the team can help."
+      }
+      intro={
+        activeCategory
+          ? `Browse public-safe ${activeCategory.name} rental/event furniture listings, then send an enquiry for the pieces that fit your event.`
+          : "Browse public-safe rental/event furniture listings, then send an enquiry for the pieces that fit your event."
+      }
+      listingBasePath="/listings"
+      title={
+        activeCategory
+          ? `${activeCategory.name} rental listings`
+          : "Rental listings"
+      }
     />
   );
 }

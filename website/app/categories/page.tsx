@@ -29,6 +29,14 @@ export function CategoriesPageContent({
           </p>
         </div>
         <p>No public categories are available right now.</p>
+        <div className="hero__actions">
+          <Link className="button button--secondary" href="/listings">
+            Browse all listings
+          </Link>
+          <Link className="button" href="/quote">
+            Send a general enquiry
+          </Link>
+        </div>
       </section>
     );
   }
@@ -62,6 +70,9 @@ export function CategoriesPageContent({
                 >
                   View category listings
                 </Link>
+                <Link className="card-link" href="/quote">
+                  Start category enquiry
+                </Link>
               </div>
               {categoryListings.length > 0 ? (
                 <ul className="category-listings">
@@ -77,11 +88,33 @@ export function CategoriesPageContent({
                   ))}
                 </ul>
               ) : (
-                <p>No public listings are available in this category yet.</p>
+                <>
+                  <p>
+                    No public listings are available in this category yet.
+                    Browse all listings or send a quote request and the team can
+                    suggest an event setup.
+                  </p>
+                  <div className="catalogue-card__actions">
+                    <Link className="card-link" href="/listings">
+                      Browse all listings
+                    </Link>
+                    <Link className="card-link" href="/quote">
+                      Start a quote request
+                    </Link>
+                  </div>
+                </>
               )}
             </article>
           );
         })}
+      </div>
+      <div className="hero__actions">
+        <Link className="button button--secondary" href="/listings">
+          Browse all listings
+        </Link>
+        <Link className="button" href="/quote">
+          Send a general enquiry
+        </Link>
       </div>
     </section>
   );

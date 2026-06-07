@@ -276,6 +276,73 @@ select {
   color: var(--text);
 }
 
+.catalogue-discovery,
+.catalogue-use-cases,
+.quote-form__selected {
+  background: var(--accent-soft);
+  border: 1px solid #c9e1d2;
+  border-radius: 8px;
+  color: var(--accent-dark);
+}
+
+.catalogue-discovery,
+.catalogue-use-cases {
+  display: grid;
+  gap: 16px;
+  margin-bottom: 24px;
+  padding: 18px;
+}
+
+.catalogue-discovery h2,
+.catalogue-use-cases h2,
+.catalogue-use-cases h3 {
+  margin: 0;
+}
+
+.catalogue-discovery p,
+.catalogue-use-cases p {
+  color: var(--text);
+  line-height: 1.6;
+  margin: 0;
+}
+
+.catalogue-discovery__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.catalogue-chip {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--accent-dark);
+  display: inline-flex;
+  font-size: 0.88rem;
+  font-weight: 900;
+  padding: 9px 12px;
+}
+
+.catalogue-chip[aria-current="page"] {
+  background: var(--accent-dark);
+  border-color: var(--accent-dark);
+  color: #ffffff;
+}
+
+.catalogue-use-cases {
+  margin-top: 30px;
+}
+
+.catalogue-use-cases__grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.catalogue-use-cases .route-card {
+  background: #ffffff;
+}
+
 .card-link {
   color: var(--accent-dark);
   display: inline-flex;
@@ -414,6 +481,22 @@ select {
   padding: 12px 14px;
 }
 
+.quote-form__selected {
+  display: grid;
+  gap: 4px;
+  padding: 12px 14px;
+}
+
+.quote-form__selected strong {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+}
+
+.quote-form__selected span {
+  color: var(--text);
+  line-height: 1.5;
+}
+
 .quote-form fieldset {
   border: 1px solid var(--border);
   border-radius: 8px;
@@ -435,6 +518,12 @@ select {
   font-size: 0.9rem;
   font-weight: 700;
   gap: 8px;
+}
+
+.quote-form small {
+  color: var(--muted);
+  font-weight: 600;
+  line-height: 1.5;
 }
 
 .quote-form input,
@@ -930,6 +1019,7 @@ select {
 
   .hero,
   .catalogue-grid,
+  .catalogue-use-cases__grid,
   .detail-layout,
   .route-grid,
   .admin-dashboard__header,
