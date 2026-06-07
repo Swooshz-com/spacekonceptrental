@@ -238,20 +238,20 @@ Suggested first PR:
   Supabase, production evidence, or ecommerce flows. Product language remains
   enquiry/quote/request.
 
-Current Phase 3D-A/B status:
+Current Phase 3E-A/B status:
 
-- PR #125 merged Phase 3C-A/B public catalogue discovery and quote funnel
+- PR #126 merged Phase 3D-A/B sitewide public journey, trust content, and route
   polish at merge commit
-  `d031d7f47a6893f92d0b6739300d52147f6abfa4`.
-- Latest completed capability is Phase 3C-A/B public catalogue discovery and
-  quote funnel polish.
-- Phase 3D-A/B is current as sitewide public journey, trust content, and route
-  polish for the homepage, public catalogue, listing, category, event setup,
-  and quote request surfaces.
-- Homepage journey guidance, event setup expectation-setting, route recovery
-  links, listing detail quote-request preparation, quote enquiry expectations,
-  and page metadata are improved while keeping the existing public catalogue
-  read boundary and public quote API contract.
+  `de357ee234ed1d92ab27eb1f6d571c0c4f0ccd04`.
+- Latest completed capability is Phase 3D-A/B sitewide public journey, trust
+  content, and route polish.
+- Phase 3E-A/B is current as product readiness, navigation QA, and public/admin
+  dead-end polish for the homepage, public catalogue, listing, category, event
+  setup, quote request, and protected admin operations surfaces.
+- Deterministic route/navigation QA, semantic public recovery states,
+  admin-only recovery paths, and content consistency checks are added while
+  keeping the existing public catalogue, public quote, and protected admin
+  boundaries.
 - No deployment, deployment approval, Vercel config, Supabase Cloud config,
   real env values, production evidence, browser Supabase, service-role runtime
   paths, n8n/Pinecone/RAG runtime work, public quote tracking, customer
@@ -259,6 +259,28 @@ Current Phase 3D-A/B status:
   public/customer upload routes, transcript runtime paths, invented real
   contact details, testimonials, client names, legal claims, production
   policies, or ecommerce flow is added.
+
+Previous Current Phase 3D-A/B status:
+
+- PR #125 merged Phase 3C-A/B public catalogue discovery and quote funnel
+  polish at merge commit
+  `d031d7f47a6893f92d0b6739300d52147f6abfa4`.
+- Latest completed capability was Phase 3C-A/B public catalogue discovery and
+  quote funnel polish.
+- Phase 3D-A/B was current as sitewide public journey, trust content, and route
+  polish for the homepage, public catalogue, listing, category, event setup,
+  and quote request surfaces.
+- Homepage journey guidance, event setup expectation-setting, route recovery
+  links, listing detail quote-request preparation, quote enquiry expectations,
+  and page metadata were improved while keeping the existing public catalogue
+  read boundary and public quote API contract.
+- No deployment, deployment approval, Vercel config, Supabase Cloud config,
+  real env values, production evidence, browser Supabase, service-role runtime
+  paths, n8n/Pinecone/RAG runtime work, public quote tracking, customer
+  accounts, customer-visible internal notes, notifications, CRM integration,
+  public/customer upload routes, transcript runtime paths, invented real
+  contact details, testimonials, client names, legal claims, production
+  policies, or ecommerce flow was added.
 
 Previous Current Phase 3C-A/B status:
 

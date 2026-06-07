@@ -1263,3 +1263,29 @@ transcript runtime paths, invent real contact details, testimonials, client
 names, legal claims, production policies, or add ecommerce flows such as
 carts, checkout, payments, stock reservation, confirmed booking, order
 fulfilment, or online ordering.
+
+## Phase 3E: Product Readiness, Navigation QA, And Dead-End Polish
+
+Phase 3E-A/B adds product readiness, navigation QA, and public/admin dead-end
+polish for key public and protected admin surfaces. It verifies internal route
+links across homepage, catalogue, listings, categories, events, quote, listing
+detail, and protected admin operations surfaces with deterministic static and
+render coverage.
+
+Phase 3E-A/B improves empty, filtered, missing, blocked, and unavailable
+states without crossing public/admin boundaries. Public recovery paths point
+back to listings, categories, events, or quote enquiry. Admin recovery paths
+stay inside protected admin overview, listing, category, media, and quote
+management surfaces.
+
+Phase 3E-A/B does not deploy, approve deployment, add Vercel or Supabase Cloud
+config, add real env values, add filled preview or production evidence, add
+browser Supabase, add service-role runtime paths, access
+`website/chat-config.js`, add public/customer uploads, add customer accounts,
+add public quote tracking, expose customer-visible internal notes, add
+notifications or CRM integration, change n8n/Pinecone runtime behavior, add
+Pinecone packages/env/API keys, wire `/api/chat` to retrieval/RAG, add
+transcript runtime paths, invent real contact details, testimonials, client
+names, awards, certifications, legal claims, production policies, or add
+ecommerce flows such as carts, checkout, payments, stock reservation,
+confirmed booking, order fulfilment, or online ordering.

@@ -301,6 +301,17 @@ export function QuoteRequestInboxPanel({
       >
         <h2>Quote request inbox</h2>
         <p>Quote requests are temporarily unavailable.</p>
+        <nav className="hero__actions" aria-label="Admin recovery">
+          <a className="button button--secondary" href="/admin">
+            Open admin overview
+          </a>
+          <a className="button button--secondary" href="/admin/listings">
+            Open listings
+          </a>
+          <a className="button button--secondary" href="/admin/quotes">
+            Open quote requests
+          </a>
+        </nav>
       </section>
     );
   }
@@ -372,6 +383,9 @@ export function QuoteRequestInboxPanel({
             No quote requests are visible yet. New website enquiries will
             appear here for internal follow-up.
           </p>
+          <a className="button button--secondary" href="/admin/listings">
+            Review listings
+          </a>
         </section>
       ) : (
         <div className="admin-dashboard__grid">

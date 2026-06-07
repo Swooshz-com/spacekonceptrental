@@ -27,6 +27,7 @@ vi.mock("next/image", () => ({
 const repoRoot = resolve(process.cwd(), "..");
 const sourceExtensions = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"]);
 const phase3cMergeCommit = "d031d7f47a6893f92d0b6739300d52147f6abfa4";
+const phase3dMergeCommit = "de357ee234ed1d92ab27eb1f6d571c0c4f0ccd04";
 const forbiddenCommercePattern =
   /cart|checkout|payments?|purchase|customer account|stock reservation|order fulfilment|online ordering/i;
 
@@ -103,7 +104,7 @@ describe("Phase 3D-A/B sitewide public journey, trust content, and route polish"
     vi.restoreAllMocks();
   });
 
-  it("records Phase 3D-A/B as current after Phase 3C completed", () => {
+  it("records Phase 3D-A/B as completed after Phase 3E starts", () => {
     const status = normalizeWhitespace(readRepoFile("docs/PHASE-STATUS.md"));
     const roadmap = normalizeWhitespace(readRepoFile("docs/PHASE-ROADMAP.md"));
     const readiness = readRepoFile("docs/PHASE-2-READINESS-PLAN.md");
@@ -111,19 +112,21 @@ describe("Phase 3D-A/B sitewide public journey, trust content, and route polish"
     const checklist = readRepoFile("docs/checklists/PHASE-2-ADMIN-OPS.md");
 
     expect(status).toContain(
-      "Current phase: Phase 3D-A/B - sitewide public journey, trust content, and route polish."
+      "Current phase: Phase 3E-A/B - product readiness, navigation QA, and dead-end polish."
     );
     expect(status).toContain(
-      "Latest completed capability: Phase 3C-A/B public catalogue discovery and quote funnel polish."
+      "Latest completed capability: Phase 3D-A/B sitewide public journey, trust content, and route polish."
     );
-    expect(status).toContain("Last merged capability PR: #125");
-    expect(status).toContain(`Merge commit: \`${phase3cMergeCommit}\``);
+    expect(status).toContain("Last merged capability PR: #126");
+    expect(status).toContain(`Merge commit: \`${phase3dMergeCommit}\``);
+    expect(status).toContain("Previous Current Phase 3D-A/B status");
     expect(status).toContain("Previous Current Phase 3C-A/B status");
     expect(status).toContain("No deployment is performed or approved");
     expect(roadmap).toContain(
       "Phase 3D-A/B adds sitewide public journey, trust content, and route polish"
     );
-    expect(readiness).toContain("Current Phase 3D-A/B status");
+    expect(readiness).toContain("Current Phase 3E-A/B status");
+    expect(readiness).toContain("Previous Current Phase 3D-A/B status");
     expect(readiness).toContain("Previous Current Phase 3C-A/B status");
     expect(decisionLog).toContain(
       "Decision: Phase 3D-A/B adds sitewide public journey, trust content, and route polish."

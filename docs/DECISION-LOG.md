@@ -2035,6 +2035,40 @@ client names, legal claims, production policies, or add ecommerce flows such
 as carts, checkout, payments, stock reservation, confirmed booking, order
 fulfilment, or online ordering.
 
+## 2026-06-07: Product Readiness, Navigation QA, And Public/Admin Dead-End Polish
+
+Decision: Phase 3E-A/B adds product readiness, navigation QA, and public/admin dead-end polish.
+
+Reason: PR #126 merged Phase 3D-A/B at
+`de357ee234ed1d92ab27eb1f6d571c0c4f0ccd04`, completing sitewide public
+journey, trust content, and route polish without deploying or approving
+deployment. The next approved work item is deterministic product readiness and
+navigation QA across existing public-safe catalogue, quote, and protected admin
+surfaces.
+
+The implementation adds internal route allowlist coverage across key public
+routes and protected admin operations routes, improves semantic recovery for
+empty, filtered, missing, blocked, and unavailable states, and keeps public
+recovery links separate from admin-only management links. It also adds content
+consistency checks for rental/listing/enquiry/quote/request wording and guards
+against ecommerce wording or invented proof/contact claims on production
+surfaces touched by this phase.
+
+Phase 3E-A/B does not deploy, approve deployment, add Vercel config, connect
+Supabase Cloud, add real secrets or env values, add production evidence, add
+browser Supabase, add service-role runtime paths, access
+`website/chat-config.js`, add public/customer upload routes, add customer
+accounts, add public quote tracking, expose customer-visible internal notes,
+add notifications or CRM integration, change n8n/Pinecone runtime behavior,
+add SaaS chatbot runtime work, add Pinecone SDK/package dependencies, add
+Pinecone env vars or API keys, add embedding/reranking runtime, wire
+`/api/chat` to retrieval/RAG, wire transcript reads or writes into
+`/api/chat`, add admin transcript UI, add transcript deletion/export runtime
+paths, add retention cleanup jobs, invent real contact details, testimonials,
+client names, awards, certifications, legal claims, production policies, or
+add ecommerce flows such as carts, checkout, payments, stock reservation,
+confirmed booking, order fulfilment, or online ordering.
+
 ## 2026-06-06: Preview/Deployment Review Preflight And CI Parity Hardening
 
 Decision: Phase 2M-A/B makes the release-candidate gate deterministic in CI.

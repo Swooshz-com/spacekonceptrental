@@ -198,6 +198,7 @@ function AdminDashboard({
       <section className="admin-dashboard admin-dashboard--unavailable">
         <h2>Read-only catalogue dashboard</h2>
         <p>Catalogue data is temporarily unavailable.</p>
+        <AdminRecoveryLinks />
       </section>
     );
   }
@@ -299,6 +300,37 @@ function AdminDashboard({
         products={dashboard.data.products}
       />
     </section>
+  );
+}
+
+function AdminRecoveryLinks({
+  includeSignIn = false
+}: {
+  includeSignIn?: boolean;
+}) {
+  return (
+    <nav className="hero__actions" aria-label="Admin recovery">
+      {includeSignIn ? (
+        <a className="button" href="/admin/login">
+          Return to admin sign in
+        </a>
+      ) : null}
+      <a className="button button--secondary" href="/admin">
+        Open admin overview
+      </a>
+      <a className="button button--secondary" href="/admin/listings">
+        Open listings
+      </a>
+      <a className="button button--secondary" href="/admin/categories">
+        Open categories
+      </a>
+      <a className="button button--secondary" href="/admin/media">
+        Open media
+      </a>
+      <a className="button button--secondary" href="/admin/quotes">
+        Open quote requests
+      </a>
+    </nav>
   );
 }
 
@@ -501,6 +533,9 @@ function AdminQuoteDetail({
       <section className="admin-dashboard admin-dashboard--unavailable">
         <h2>Quote request detail</h2>
         <p>Quote request details are temporarily unavailable.</p>
+        <a className="button button--secondary" href="/admin/quotes">
+          Back to quote requests
+        </a>
       </section>
     );
   }
@@ -510,6 +545,9 @@ function AdminQuoteDetail({
       <section className="admin-dashboard admin-dashboard--unavailable">
         <h2>Quote request detail</h2>
         <p>Quote request details were not found for this workspace.</p>
+        <a className="button button--secondary" href="/admin/quotes">
+          Back to quote requests
+        </a>
       </section>
     );
   }
@@ -608,6 +646,7 @@ function AdminStatusMessage({
       <>
         <h1>Admin access unavailable</h1>
         <p>Your account is authenticated but not authorised for this workspace.</p>
+        <AdminRecoveryLinks includeSignIn />
       </>
     );
   }
@@ -617,6 +656,7 @@ function AdminStatusMessage({
       <>
         <h1>Admin access unavailable</h1>
         <p>Admin access is temporarily unavailable.</p>
+        <AdminRecoveryLinks includeSignIn />
       </>
     );
   }
