@@ -238,19 +238,43 @@ Suggested first PR:
   Supabase, production evidence, or ecommerce flows. Product language remains
   enquiry/quote/request.
 
-Current Phase 3I-A/B status:
+Current Phase 3J-A/B status:
+
+- PR #131 merged Phase 3I-A/B full-site acceptance QA, public
+  SEO/accessibility polish, and non-deployment release hardening at merge
+  commit `0d2d40898c4e716032fdec130704117494c542d6`.
+- Latest completed capability is Phase 3I-A/B full-site acceptance QA, public
+  SEO/accessibility polish, and non-deployment release hardening.
+- Phase 3J-A/B is current as owner review readiness package, manual QA
+  runbook, and release-decision preparation for the public website journey,
+  protected admin operations surfaces, quote/enquiry intake, admin triage,
+  owner-supplied content needs, explicit deferred capability lists, docs,
+  validators, and deterministic no-deploy guardrails.
+- Owner review materials and manual QA steps are repo-local and non-live. They
+  do not approve deployment, do not connect providers, do not add filled
+  preview or production evidence, and do not change the existing public
+  catalogue, public quote API, or protected admin route boundaries.
+- No deployment, deployment approval, Vercel config, Supabase Cloud config,
+  real env values, production evidence, browser Supabase, service-role runtime
+  paths, n8n/Pinecone/RAG runtime work, public quote tracking, customer
+  accounts, customer-visible internal notes, notifications, CRM integration,
+  public/customer upload routes, transcript runtime paths, invented real
+  contact details, testimonials, client names, legal claims, production
+  policies, or ecommerce flow is added.
+
+Previous Current Phase 3I-A/B status:
 
 - PR #130 merged Phase 3H-A/B admin operator QA, dashboard consistency, and
   non-deployment release readiness polish at merge commit
   `09f92ede4b5d9f725d0df560838a12fef27940b9`.
-- Latest completed capability is Phase 3H-A/B admin operator QA, dashboard
+- Latest completed capability was Phase 3H-A/B admin operator QA, dashboard
   consistency, and non-deployment release readiness polish.
-- Phase 3I-A/B is current as full-site acceptance QA, public
+- Phase 3I-A/B was current as full-site acceptance QA, public
   SEO/accessibility polish, and non-deployment release hardening for the
   homepage, catalogue, listings, categories, events, quote, listing detail,
   not-found, docs, validators, and deterministic no-deploy guardrails.
 - Public metadata, headings, internal links, selected-listing quote context,
-  receipt-only quote expectations, and recovery routes are hardened while
+  receipt-only quote expectations, and recovery routes were hardened while
   keeping the existing public catalogue, public quote API, and protected admin
   route boundaries.
 - No deployment, deployment approval, Vercel config, Supabase Cloud config,
@@ -259,7 +283,7 @@ Current Phase 3I-A/B status:
   accounts, customer-visible internal notes, notifications, CRM integration,
   public/customer upload routes, transcript runtime paths, invented real
   contact details, testimonials, client names, legal claims, production
-  policies, or ecommerce flow is added.
+  policies, or ecommerce flow was added.
 
 Previous Current Phase 3H-A/B status:
 

@@ -307,6 +307,15 @@ and route/action boundaries are implemented and tested.
 - [x] Static and render tests cover full-site public route acceptance, SEO/accessibility copy, public/admin boundary separation, non-deployment release hardening, and forbidden ecommerce/provider/runtime scope.
 - [x] No deployment, deployment approval, Vercel config, Supabase Cloud config, secrets/env values, filled preview or production evidence, browser Supabase, service-role runtime path, customer uploads, public quote tracking, customer accounts, customer-visible internal notes, notifications, CRM, n8n/Pinecone runtime change, invented real contact details, testimonials, client names, awards, certifications, legal claims, production policies, or ecommerce flow is added.
 
+## Phase 3J-A/B Owner Review Readiness Package Manual QA Runbook And Release-Decision Preparation
+
+- [x] Owner review readiness package summarizes ready surfaces, intentionally not implemented scope, owner-supplied content needs, deferred capabilities, and non-deployment decision status.
+- [x] Manual QA runbook covers public homepage, catalogue, listings, listing detail, categories, catalogue detail, events, quote, not-found/recovery states, and protected admin overview/listings/categories/media/quotes/quote detail.
+- [x] Owner decision checklist separates Ready for owner review, Needs owner-supplied content, Needs deployment approval later, and Explicitly deferred features.
+- [x] Release decision language includes Hold deployment and Approve future deployment separately while making clear this phase does not approve deployment.
+- [x] Static tests cover owner review docs, manual QA runbook, preview handoff decision inputs, non-live/no-deploy instructions, and forbidden provider/runtime/ecommerce scope.
+- [x] No deployment, deployment approval, Vercel config, Supabase Cloud config, secrets/env values, filled preview or production evidence, browser Supabase, service-role runtime path, customer uploads, public quote tracking, customer accounts, customer-visible internal notes, notifications, CRM, n8n/Pinecone runtime change, invented real contact details, testimonials, client names, awards, certifications, legal claims, production policies, or ecommerce flow is added.
+
 ## Phase 2D-A Deployment Readiness And Smoke-Test Runbook
 
 - [x] Deployment readiness docs are refreshed for catalogue media, admin listing media upload, public quote handoff, and atomic admin quote workflow surfaces.

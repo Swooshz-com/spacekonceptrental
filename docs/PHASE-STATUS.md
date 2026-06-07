@@ -4,28 +4,29 @@ This is the quick status page for the SKR repo. Use `docs/PHASE-2-READINESS-PLAN
 
 ## Current phase
 
-Current phase: Phase 3I-A/B - full-site acceptance QA, public SEO/accessibility polish, and non-deployment release hardening.
+Current phase: Phase 3J-A/B - owner review readiness package, manual QA runbook, and release-decision preparation.
 
-Latest completed capability: Phase 3H-A/B admin operator QA, dashboard consistency, and non-deployment release readiness polish.
+Latest completed capability: Phase 3I-A/B full-site acceptance QA, public SEO/accessibility polish, and non-deployment release hardening.
 
-Last merged capability PR: #130
+Last merged capability PR: #131
 
-Merge commit: `09f92ede4b5d9f725d0df560838a12fef27940b9`
+Merge commit: `0d2d40898c4e716032fdec130704117494c542d6`
 
-Phase 3I-A/B adds full-site acceptance QA, public SEO/accessibility polish, and
-non-deployment release hardening. It inspects the public homepage, catalogue,
-listing, category, event, quote, detail, and recovery surfaces for descriptive
-metadata, clear headings, public-only route links, receipt-only quote
-expectations, and deterministic guardrail tests.
+Phase 3J-A/B adds an owner review readiness package, manual QA runbook, and
+release-decision preparation. It collects the current public website journey,
+protected admin operations surfaces, quote/enquiry intake, admin triage
+readiness, intentionally deferred capabilities, owner-supplied content needs,
+and future go/no-go decision points in repo-local documentation.
 
 Public users only see public-safe published listing, category, listing image,
-selected-listing quote context, and public recovery guidance. Admin operator QA
-summaries, readiness cues, internal notes, quote activity, admin recovery
-links, and protected management URLs remain admin-only. Supabase remains
-canonical for website/admin listing and quote data. Pinecone remains a future
-derived index only and is not used as canonical business storage.
+selected-listing quote context, and public recovery guidance. Owner review
+materials stay repo-local and do not expose admin internal notes, protected
+management URLs, provider details, secrets, production evidence, or filled
+preview evidence. Supabase remains canonical for website/admin listing and
+quote data. Pinecone remains a future derived index only and is not used as
+canonical business storage.
 
-No deployment is performed or approved by Phase 3I-A/B. It does not add Vercel
+No deployment is performed or approved by Phase 3J-A/B. It does not add Vercel
 config, connect Supabase Cloud, add real secrets or env values, add filled
 preview or production evidence, add Pinecone runtime code, Pinecone packages,
 Pinecone env reads, secrets, API keys, Pinecone executors, n8n workflow/runtime
@@ -58,21 +59,45 @@ config, env/secrets, and production evidence remain blocked.
 
 ## Remaining-work map
 
-Completed through PR #130:
+Completed through PR #131:
+
+- PR #131 merged Phase 3I-A/B full-site acceptance QA, public
+  SEO/accessibility polish, and non-deployment release hardening at merge
+  commit `0d2d40898c4e716032fdec130704117494c542d6`.
+- The latest completed capability is Phase 3I-A/B full-site acceptance QA,
+  public SEO/accessibility polish, and non-deployment release hardening. It
+  improved public route metadata, headings, recovery paths, quote
+  expectations, public/admin boundary checks, and deterministic no-deploy
+  guardrail tests without deployment or runtime expansion.
+- Phase 3J-A/B is current as owner review readiness package, manual QA
+  runbook, and release-decision preparation for repo-local owner review,
+  manual QA, explicit non-deployment decision language, and deterministic
+  no-deploy guardrails. It is repo-local only and does not perform or approve
+  deployment.
+
+Previous Current Phase 3I-A/B status:
+
+Current phase: Phase 3I-A/B - full-site acceptance QA, public SEO/accessibility polish, and non-deployment release hardening.
+
+Latest completed capability: Phase 3H-A/B admin operator QA, dashboard consistency, and non-deployment release readiness polish.
+
+Last merged capability PR: #130
+
+Merge commit: `09f92ede4b5d9f725d0df560838a12fef27940b9`
 
 - PR #130 merged Phase 3H-A/B admin operator QA, dashboard consistency, and
   non-deployment release readiness polish at merge commit
   `09f92ede4b5d9f725d0df560838a12fef27940b9`.
-- The latest completed capability is Phase 3H-A/B admin operator QA,
+- The latest completed capability was Phase 3H-A/B admin operator QA,
   dashboard consistency, and non-deployment release readiness polish. It
   improved protected admin operator guidance, read-only/write-enabled
   distinctions, public-facing/admin-only boundaries, next safe actions,
   recovery links, docs, validators, and deterministic guardrail tests without
   deployment or runtime expansion.
-- Phase 3I-A/B is current as full-site acceptance QA, public
+- Phase 3I-A/B was current as full-site acceptance QA, public
   SEO/accessibility polish, and non-deployment release hardening for public
   route metadata, headings, recovery paths, quote expectations, and
-  deterministic no-deploy guardrails. It is repo-local only and does not
+  deterministic no-deploy guardrails. It was repo-local only and did not
   perform or approve deployment.
 
 Previous Current Phase 3H-A/B status:
