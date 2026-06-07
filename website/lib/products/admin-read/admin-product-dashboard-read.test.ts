@@ -221,6 +221,89 @@ describe("admin product dashboard read boundary", () => {
     );
   });
 
+  it("only exposes primary image alt text from active primary image metadata", async () => {
+    const { supabase } = createMockSupabase({
+      categories: {
+        data: [],
+        error: null
+      },
+      products: {
+        data: [
+          {
+            id: "22222222-2222-4222-8222-222222222222",
+            slug: "active-primary",
+            name: "Active Primary",
+            rental_unit: "set",
+            status: "published",
+            sort_order: 10
+          },
+          {
+            id: "55555555-5555-4555-8555-555555555555",
+            slug: "archived-primary",
+            name: "Archived Primary",
+            rental_unit: "set",
+            status: "published",
+            sort_order: 20
+          }
+        ],
+        error: null
+      },
+      product_images: {
+        data: [
+          {
+            id: "33333333-3333-4333-8333-333333333333",
+            product_id: "22222222-2222-4222-8222-222222222222",
+            alt_text: "Active public primary",
+            storage_bucket: "catalogue-metadata",
+            storage_path: "fixtures/active-primary.jpg",
+            sort_order: 1,
+            is_primary: true,
+            status: "active"
+          },
+          {
+            id: "66666666-6666-4666-8666-666666666666",
+            product_id: "55555555-5555-4555-8555-555555555555",
+            alt_text: "Archived primary should stay hidden",
+            storage_bucket: "catalogue-metadata",
+            storage_path: "fixtures/archived-primary.jpg",
+            sort_order: 2,
+            is_primary: true,
+            status: "archived"
+          }
+        ],
+        error: null
+      }
+    });
+
+    const result = await resolveAdminProductDashboardRead({
+      supabase,
+      env: {
+        ADMIN_TRUSTED_WORKSPACE_ID: "99999999-9999-4999-8999-999999999999"
+      }
+    });
+
+    expect(result.status).toBe("loaded");
+    if (result.status !== "loaded") {
+      return;
+    }
+
+    const activePrimary = result.data.products.find(
+      (product) => product.slug === "active-primary"
+    );
+    const archivedPrimary = result.data.products.find(
+      (product) => product.slug === "archived-primary"
+    );
+
+    expect(activePrimary).toMatchObject({
+      imageCount: 1,
+      primaryImageAltText: "Active public primary"
+    });
+    expect(archivedPrimary).toMatchObject({
+      imageCount: 1
+    });
+    expect(archivedPrimary).not.toHaveProperty("primaryImageAltText");
+  });
+
   it("fails closed when the session-bound admin read client is unavailable", async () => {
     await expect(
       resolveAdminProductDashboardRead({

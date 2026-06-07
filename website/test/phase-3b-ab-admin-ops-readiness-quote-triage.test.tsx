@@ -1,7 +1,7 @@
 import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { extname, resolve } from "node:path";
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 
 import {
@@ -73,6 +73,19 @@ const incompleteListing: ListingManagementProduct = {
   imageCount: 0
 };
 
+const archivedPrimaryResolvedListing: ListingManagementProduct = {
+  id: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+  categoryId: category.id,
+  slug: "archived-primary-lounge",
+  name: "Archived Primary Lounge",
+  shortDescription: "Published listing with archived primary metadata",
+  description: "Existing listing text with only archived primary image metadata.",
+  rentalUnit: "set",
+  status: "published",
+  sortOrder: 20,
+  imageCount: 1
+};
+
 const imageProduct: ListingImageMetadataProduct & ListingImageUploadProduct = {
   ...readyListing
 };
@@ -88,12 +101,23 @@ const primaryImage: ListingImageMetadataImage = {
   status: "active"
 };
 
+const archivedPrimaryImageWithAlt: ListingImageMetadataImage = {
+  id: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
+  productId: readyListing.id,
+  storageBucket: "catalogue-metadata",
+  storagePath: "fixtures/lounge-archived-primary.jpg",
+  altText: "Archived lounge hero",
+  sortOrder: 2,
+  isPrimary: true,
+  status: "archived"
+};
+
 const archivedImageMissingAlt: ListingImageMetadataImage = {
   id: "66666666-6666-4666-8666-666666666666",
   productId: readyListing.id,
   storageBucket: "catalogue-metadata",
   storagePath: "fixtures/lounge-archived.jpg",
-  sortOrder: 2,
+  sortOrder: 3,
   isPrimary: false,
   status: "archived"
 };
@@ -131,7 +155,7 @@ const quoteRequestReadyForFollowUp = {
   ],
   activity: [
     {
-      id: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+      id: "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
       quoteRequestId: "88888888-8888-4888-8888-888888888888",
       activityType: "internal_note" as const,
       note: "Review requested quantities before follow-up.",
@@ -210,20 +234,32 @@ describe("Phase 3B-A/B admin operations readiness and quote triage polish", () =
     render(
       <ListingManagementPanel
         categories={[category]}
-        products={[readyListing, incompleteListing]}
+        products={[readyListing, archivedPrimaryResolvedListing, incompleteListing]}
       />
     );
 
     expect(screen.getByText(/publication readiness/i)).toBeInTheDocument();
     expect(screen.getByText(/1 ready for public browsing/i)).toBeInTheDocument();
-    expect(screen.getByText(/1 needing attention/i)).toBeInTheDocument();
+    expect(screen.getByText(/2 needing attention/i)).toBeInTheDocument();
     expect(screen.getAllByText(/ready for public browsing/i).length).toBeGreaterThan(0);
-    expect(screen.getByText(/needs attention before publishing/i)).toBeInTheDocument();
-    expect(screen.getByText(/category assigned/i)).toBeInTheDocument();
+    expect(
+      screen.getAllByText(/needs attention before publishing/i).length
+    ).toBeGreaterThan(0);
+    expect(screen.getAllByText(/category assigned/i).length).toBeGreaterThan(0);
     expect(screen.getByText(/primary public image available/i)).toBeInTheDocument();
+    expect(
+      within(
+        screen.getByLabelText(/publication readiness archived primary lounge/i)
+      ).queryByText(/primary public image available/i)
+    ).not.toBeInTheDocument();
+    expect(
+      within(
+        screen.getByLabelText(/publication readiness archived primary lounge/i)
+      ).getByText(/missing primary public image/i)
+    ).toBeInTheDocument();
     expect(screen.getByText(/missing category assignment/i)).toBeInTheDocument();
     expect(screen.getByText(/add image metadata before publishing/i)).toBeInTheDocument();
-    expect(screen.getByText(/missing primary public image/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/missing primary public image/i).length).toBeGreaterThan(0);
     expect(screen.getByText(/missing rental unit/i)).toBeInTheDocument();
   });
 
@@ -252,7 +288,7 @@ describe("Phase 3B-A/B admin operations readiness and quote triage polish", () =
     cleanup();
     render(
       <ListingImageMetadataManagementPanel
-        images={[primaryImage, archivedImageMissingAlt]}
+        images={[primaryImage, archivedPrimaryImageWithAlt, archivedImageMissingAlt]}
         products={[imageProduct]}
       />
     );
@@ -265,8 +301,12 @@ describe("Phase 3B-A/B admin operations readiness and quote triage polish", () =
       screen.getByText(/missing alt text for public accessibility/i)
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/archived image is hidden from active listing media/i)
+      screen.getByText(/primary selection is inactive while archived/i)
     ).toBeInTheDocument();
+    expect(
+      screen.getAllByText(/archived image is hidden from active listing media/i)
+        .length
+    ).toBeGreaterThan(0);
     expect(screen.queryByRole("button", { name: /delete/i })).not.toBeInTheDocument();
   });
 
