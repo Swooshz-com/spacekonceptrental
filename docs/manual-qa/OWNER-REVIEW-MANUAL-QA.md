@@ -6,6 +6,12 @@ Use it for repo-local owner review of the current rental website candidate.
 Do not use this runbook to connect providers, enable public traffic, capture
 filled preview evidence, or perform a deployment.
 
+Record content gaps in `docs/content/CONTENT-GAP-REGISTER.md` and collect
+owner-supplied content requirements in `docs/content/OWNER-CONTENT-INTAKE.md`.
+Owner content blockers are governance notes only. Missing real
+contact/legal/business-hour content does not get invented. Owner review can
+continue without deployment.
+
 ## Local validation commands
 
 Run these commands from the repo root unless noted:
@@ -153,6 +159,8 @@ for the release-candidate gate and keep the review non-live.
 - Ready for owner review means local/manual review can continue.
 - Needs owner-supplied content means a later content PR should be opened before
   launch decisions.
+- Owner content blockers should be recorded in the content gap register, not
+  invented in public copy.
 - Needs deployment approval later means deployment remains blocked until a
   separate explicit owner approval.
 - Hold deployment means no provider or public traffic step is allowed.

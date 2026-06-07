@@ -7,6 +7,17 @@ owner review. It summarizes what can be reviewed now, what still needs owner
 input, what remains blocked until a later explicit approval, and what is
 deferred by design.
 
+## Content Governance Links
+
+Review `docs/content/OWNER-CONTENT-INTAKE.md` for owner-supplied content
+requirements and review `docs/content/CONTENT-GAP-REGISTER.md` for content gap
+status before any future launch decision.
+
+Owner content blockers must remain separate from deployment approval. Missing
+real contact/legal/business-hour content does not get invented. Public launch
+cannot proceed until required owner content and explicit deployment approval
+are both supplied. Owner review can continue without deployment.
+
 ## Ready for owner review
 
 - Public website journey from homepage to catalogue, listings, categories,

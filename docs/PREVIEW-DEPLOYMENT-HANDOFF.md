@@ -33,7 +33,9 @@ smoke harness and rollback drill package, at
 ## Owner Review Decision Inputs
 
 Before any future launch decision, review `docs/OWNER-REVIEW-READINESS-PACKAGE.md`
-and review `docs/manual-qa/OWNER-REVIEW-MANUAL-QA.md`.
+and review `docs/manual-qa/OWNER-REVIEW-MANUAL-QA.md`. Use
+`docs/content/OWNER-CONTENT-INTAKE.md` for owner-supplied content requirements
+and `docs/content/CONTENT-GAP-REGISTER.md` for content gap status.
 
 What the owner should review:
 
@@ -68,6 +70,13 @@ Owner decision language remains:
 
 - Hold deployment.
 - Approve future deployment separately.
+
+Owner content blockers:
+
+- Missing real contact/legal/business-hour content does not get invented.
+- Public launch cannot proceed until required owner content and explicit
+  deployment approval are both supplied.
+- Owner review can continue without deployment.
 
 This handoff does not approve deployment and does not perform deployment.
 

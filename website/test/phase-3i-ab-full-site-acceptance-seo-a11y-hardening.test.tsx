@@ -46,6 +46,7 @@ const repoRoot = resolve(process.cwd(), "..");
 const sourceExtensions = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"]);
 const phase3hMergeCommit = "09f92ede4b5d9f725d0df560838a12fef27940b9";
 const phase3iMergeCommit = "0d2d40898c4e716032fdec130704117494c542d6";
+const phase3jMergeCommit = "1c7dc0ac7c2532fa8a837cd46b0d1f0103d5ccfa";
 const forbiddenCommercePattern =
   /cart|checkout|payments?|purchase|customer account|stock reservation|order fulfilment|confirmed booking|online ordering/i;
 const forbiddenPublicAdminPattern =
@@ -178,20 +179,22 @@ describe("Phase 3I-A/B full-site acceptance SEO accessibility hardening", () => 
     const validator = readRepoFile("scripts/validate-preview-handoff.cjs");
 
     expect(currentStatus).toContain(
-      "Current phase: Phase 3J-A/B - owner review readiness package, manual QA runbook, and release-decision preparation."
+      "Current phase: Phase 3K-A/B - owner content intake, content gap register, and launch-blocker governance."
     );
     expect(currentStatus).toContain(
-      "Latest completed capability: Phase 3I-A/B full-site acceptance QA, public SEO/accessibility polish, and non-deployment release hardening."
+      "Latest completed capability: Phase 3J-A/B owner review readiness package, manual QA runbook, and release-decision preparation."
     );
-    expect(currentStatus).toContain("Last merged capability PR: #131");
-    expect(currentStatus).toContain(`Merge commit: \`${phase3iMergeCommit}\``);
+    expect(currentStatus).toContain("Last merged capability PR: #132");
+    expect(currentStatus).toContain(`Merge commit: \`${phase3jMergeCommit}\``);
+    expect(status).toContain("Previous Current Phase 3J-A/B status");
     expect(status).toContain("Previous Current Phase 3I-A/B status");
     expect(status).toContain("Previous Current Phase 3H-A/B status");
     expect(status).toContain("Previous Current Phase 3G-A/B status");
     expect(roadmap).toContain(
       "Phase 3I-A/B adds full-site acceptance QA, public SEO/accessibility polish, and non-deployment release hardening"
     );
-    expect(readiness).toContain("Current Phase 3J-A/B status");
+    expect(readiness).toContain("Current Phase 3K-A/B status");
+    expect(readiness).toContain("Previous Current Phase 3J-A/B status");
     expect(readiness).toContain("Previous Current Phase 3I-A/B status");
     expect(readiness).toContain("Previous Current Phase 3H-A/B status");
     expect(decisionLog).toContain(
@@ -201,8 +204,8 @@ describe("Phase 3I-A/B full-site acceptance SEO accessibility hardening", () => 
       "## Phase 3I-A/B Full-Site Acceptance QA Public SEO Accessibility Polish And Non-Deployment Release Hardening"
     );
     expect(validator).toContain(phase3hMergeCommit);
-    expect(validator).toContain(phase3iMergeCommit);
-    expect(validator).toContain("Phase 3J-A/B");
+    expect(validator).toContain(phase3jMergeCommit);
+    expect(validator).toContain("Phase 3K-A/B");
     expect(validator).toContain("Phase 3I-A/B");
     expect(validator).not.toMatch(/\bvercel\s+(?:deploy|link|env|pull|promote)\b/i);
   });

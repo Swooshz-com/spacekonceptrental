@@ -33,6 +33,7 @@ const phase3fMergeCommit = "69665bb241b1af5c05ad34ac1464cdaeece8b7f8";
 const phase3gMergeCommit = "75fd104966e3e8c69a434f2325f6f79e4742a40f";
 const phase3hMergeCommit = "09f92ede4b5d9f725d0df560838a12fef27940b9";
 const phase3iMergeCommit = "0d2d40898c4e716032fdec130704117494c542d6";
+const phase3jMergeCommit = "1c7dc0ac7c2532fa8a837cd46b0d1f0103d5ccfa";
 const forbiddenCommercePattern =
   /cart|checkout|payments?|purchase|customer account|stock reservation|order fulfilment|confirmed booking|online ordering/i;
 
@@ -215,13 +216,14 @@ describe("Phase 3B-A/B admin operations readiness and quote triage polish", () =
     const checklist = readRepoFile("docs/checklists/PHASE-2-ADMIN-OPS.md");
 
     expect(status).toContain(
-      "Current phase: Phase 3J-A/B - owner review readiness package, manual QA runbook, and release-decision preparation."
+      "Current phase: Phase 3K-A/B - owner content intake, content gap register, and launch-blocker governance."
     );
     expect(status).toContain(
-      "Latest completed capability: Phase 3I-A/B full-site acceptance QA, public SEO/accessibility polish, and non-deployment release hardening."
+      "Latest completed capability: Phase 3J-A/B owner review readiness package, manual QA runbook, and release-decision preparation."
     );
-    expect(status).toContain("Last merged capability PR: #131");
-    expect(status).toContain(`Merge commit: \`${phase3iMergeCommit}\``);
+    expect(status).toContain("Last merged capability PR: #132");
+    expect(status).toContain(`Merge commit: \`${phase3jMergeCommit}\``);
+    expect(status).toContain("Previous Current Phase 3J-A/B status");
     expect(status).toContain("Previous Current Phase 3I-A/B status");
     expect(status).toContain("Previous Current Phase 3H-A/B status");
     expect(status).toContain("Previous Current Phase 3G-A/B status");
@@ -236,7 +238,8 @@ describe("Phase 3B-A/B admin operations readiness and quote triage polish", () =
     expect(roadmap).toContain(
       "Phase 3B-A/B adds admin operations readiness and quote triage polish"
     );
-    expect(readiness).toContain("Current Phase 3J-A/B status");
+    expect(readiness).toContain("Current Phase 3K-A/B status");
+    expect(readiness).toContain("Previous Current Phase 3J-A/B status");
     expect(readiness).toContain("Previous Current Phase 3I-A/B status");
     expect(readiness).toContain("Previous Current Phase 3H-A/B status");
     expect(readiness).toContain("Previous Current Phase 3G-A/B status");
