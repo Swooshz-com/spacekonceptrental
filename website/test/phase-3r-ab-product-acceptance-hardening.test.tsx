@@ -261,7 +261,7 @@ describe("Phase 3R-A/B product acceptance hardening", () => {
       screen.getByRole("heading", { name: /fit check before enquiry/i })
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/bring event date, venue, quantities, and setup notes/i)
+      screen.getByText(/bring event date, venue, quantities, alternatives, setup, access, and timing notes/i)
     ).toBeInTheDocument();
 
     cleanup();

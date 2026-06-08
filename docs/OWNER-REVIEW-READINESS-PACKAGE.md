@@ -48,7 +48,9 @@ release-candidate command centre and safe local suite sequence. Use
 handoff pack, `docs/content/LOCAL-ACCEPTANCE-TRIAGE-BOARD.md` for the local
 acceptance triage board, and
 `docs/content/DEPLOYMENT-DECISION-FIREWALL.md` for the deployment decision
-firewall.
+firewall. Use
+`docs/content/QUOTE-ENQUIRY-WORKFLOW-ACCEPTANCE-CHECKLIST.md` for the
+repo-local quote/enquiry workflow acceptance checklist.
 
 Owner content blockers must remain separate from deployment approval. Missing
 real contact/legal/business-hour content does not get invented. Public launch
@@ -105,6 +107,12 @@ materials are template-only, repo-local, and admin-only; they do not record
 owner sign-off, filled evidence, preview publication, production launch, or
 deployment approval.
 
+The protected workspace also references the quote/enquiry workflow acceptance
+checklist. That material is template-only, repo-local, and admin-only; it keeps
+public quote route expectations, listing/category/event handoff expectations,
+protected admin quote triage expectations, internal note boundaries, local
+acceptance placeholders, and deployment boundaries separate from public routes.
+
 ## Ready for owner review
 
 - Public website journey from homepage to catalogue, listings, categories,
@@ -140,6 +148,9 @@ deployment approval.
   decision firewall for owner/operator handoff without recording approval,
   filled evidence, provider configuration, preview publication, or production
   launch.
+- Quote/enquiry workflow acceptance checklist for public quote route,
+  listing/category/event handoff, protected admin triage, and internal note
+  boundary review without public tracking or customer accounts.
 - Admin-only readiness cues, internal quote follow-up context, and recovery
   links that stay inside protected admin routes.
 - Local validation commands and deterministic docs/tests for the owner review

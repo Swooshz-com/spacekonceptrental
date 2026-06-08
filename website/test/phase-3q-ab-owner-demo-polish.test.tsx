@@ -238,7 +238,7 @@ describe("Phase 3Q-A/B owner-demo polish", () => {
       screen.getByRole("heading", { name: /fit check before enquiry/i })
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/bring event date, venue, quantities, and setup notes/i)
+      screen.getByText(/bring event date, venue, quantities, alternatives, setup, access, and timing notes/i)
     ).toBeInTheDocument();
 
     cleanup();
@@ -248,7 +248,7 @@ describe("Phase 3Q-A/B owner-demo polish", () => {
       screen.getByRole("heading", { name: /check your enquiry details/i })
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/event date, venue, requested listings, quantities, and setup notes/i)
+      screen.getByText(/event date, venue or location, requested listings or items, quantities, alternates, setup, access, and timing notes/i)
     ).toBeInTheDocument();
 
     cleanup();

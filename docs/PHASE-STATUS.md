@@ -4,6 +4,51 @@ This is the quick status page for the SKR repo. Use `docs/PHASE-2-READINESS-PLAN
 
 ## Current phase
 
+Current phase: Phase 3V-A/B - quote/enquiry workflow hardening, protected admin triage polish, and local acceptance coverage.
+
+Latest completed capability: Phase 3U-A/B final local owner handoff pack, acceptance triage board, and deployment decision firewall.
+
+Last merged capability PR: #143
+
+Merge commit: `dd2c3c0176c427e69efa01d6e54841637d61548c`
+
+Phase 3V-A/B hardens the public quote/enquiry conversion path and protected
+admin quote triage for the current furniture/event rental website candidate.
+It improves public quote guidance for event date, venue or location, requested
+listings or items, quantities, alternatives, setup/access/timing notes, and
+preferred contact method while keeping public response copy receipt-like.
+
+Phase 3V-A/B also adds
+`docs/content/QUOTE-ENQUIRY-WORKFLOW-ACCEPTANCE-CHECKLIST.md` as a repo-local,
+template-only, non-live checklist for public quote/enquiry expectations,
+listing/category/event handoff expectations, protected admin quote triage
+expectations, public allowed/forbidden wording, the admin-only internal note
+boundary, local acceptance placeholders, and deployment boundary.
+
+The protected content readiness workspace now includes an admin-only
+quote/enquiry acceptance snapshot with template-only quote workflow checklist,
+public quote route, listing/category/event handoff, protected admin triage,
+internal notes boundary, public tracking/accounts, deployment approval, and
+last local quote workflow update values.
+
+No deployment is performed or approved by Phase 3V-A/B. It does not add Vercel
+config, connect Supabase Cloud, add real secrets or env values, add filled
+owner-review evidence, filled preview evidence, production evidence, Pinecone
+runtime code, Pinecone packages, Pinecone env reads, secrets, API keys,
+Pinecone executors, n8n workflow/runtime changes, embedding runtime, sync
+workers, `/api/chat` retrieval wiring, search-index document writers, real
+vector upsert/delete, runtime reranking, hybrid search runtime, browser
+Supabase, service-role runtime paths, public or customer upload routes, public
+quote tracking, customer-visible internal notes, notifications, CRM
+integration, customer accounts, invented real-world operational details,
+unsupported business assertions, or self-service completion-like,
+stock-hold-like, rental-completion-like, or customer account flows.
+
+Missing real-world operational details and unsupported business assertions must
+remain marked as owner input required and must not be invented.
+
+Previous Current Phase 3U-A/B status:
+
 Current phase: Phase 3U-A/B - final local owner handoff pack, acceptance triage board, and deployment decision firewall.
 
 Latest completed capability: Phase 3T-A/B local release-candidate command centre, acceptance-suite orchestration, and no-deploy command allowlist.

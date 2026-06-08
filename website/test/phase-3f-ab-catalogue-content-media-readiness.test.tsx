@@ -345,9 +345,9 @@ describe("Phase 3F-A/B catalogue content quality, media readiness, and publicati
 
     expect(screen.getByRole("heading", { name: /general rental enquiry/i })).toBeInTheDocument();
     expect(
-      screen.getByText(/if a selected listing link is missing, invalid, unpublished, or unavailable/i)
+      screen.getByText(/share the requested listings or items/i)
     ).toBeInTheDocument();
-    expect(screen.getByLabelText(/listings or items needed/i)).toHaveValue("");
+    expect(screen.getByLabelText(/requested listings or items/i)).toHaveValue("");
     expect(screen.queryByRole("link", { name: /track|status/i })).not.toBeInTheDocument();
   });
 

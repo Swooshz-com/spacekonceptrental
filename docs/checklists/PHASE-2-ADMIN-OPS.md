@@ -364,6 +364,16 @@ and route/action boundaries are implemented and tested.
 - [x] Preview handoff validation checks Phase 3O docs/status roll-forward, PR #136 merge commit, correction intake tracking, launch-blocker freeze gate tracking, correction PR plan tracking, protected content readiness workspace references, public-route leakage, no deployment/provider/runtime/ecommerce scope creep, and no fake business facts.
 - [x] No deployment, deployment approval, Vercel config, Supabase Cloud config, secrets/env values, filled owner-review, preview, or production evidence, browser Supabase, service-role runtime path, customer uploads, public quote tracking, customer accounts, customer-visible internal notes, notifications, CRM, n8n/Pinecone runtime change, invented real contact details, phone numbers, email addresses, physical addresses, business hours, testimonials, client names, awards, certifications, legal claims, guarantees, production policies, or ecommerce flow is added.
 
+## Phase 3V-A/B Quote Enquiry Workflow Hardening Protected Admin Triage Polish And Local Acceptance Coverage
+
+- [x] Public quote/enquiry route guidance asks for event date, venue or location, requested listings or items, quantities, alternatives, setup/access/timing notes, and preferred contact method.
+- [x] Public listing, category, and event handoff copy stays customer-facing with Request this listing, Send category enquiry, Compare event setup guidance, Start quote request, Bring event details, Add quantities and alternatives, and Share setup/access/timing notes.
+- [x] Protected admin quote triage groups contact and follow-up, event and setup details, requested listings and items, and admin-only status and notes.
+- [x] `docs/content/QUOTE-ENQUIRY-WORKFLOW-ACCEPTANCE-CHECKLIST.md` records a repo-local, template-only, non-live checklist with placeholders only.
+- [x] Protected content readiness includes an admin-only quote/enquiry acceptance snapshot for the checklist, public quote route, listing/category/event handoff, protected admin triage, internal notes boundary, public tracking/accounts, deployment approval, and local update placeholder.
+- [x] Static tests and validators cover Phase 3V docs/status roll-forward, quote workflow checklist tracking, public quote guidance, listing/category/event handoff links, protected admin snapshot rendering, protected admin quote triage grouping, public leakage boundaries, forbidden tracked config/runtime/evidence paths, and no fake business facts.
+- [x] Phase 3V remains repo-local only and does not add deployment approval, provider config, secrets/env values, filled evidence, owner sign-off, real business facts, public quote tracking, customer accounts, notifications, CRM, uploads, transaction-like, retail-like, stock-hold-like, rental-completion-like, browser Supabase, service-role runtime paths, n8n/Pinecone/RAG runtime changes, live preview smoke, network checks, evidence-writing commands, or self-service completion-like flows.
+
 ## Phase 3U-A/B Final Local Owner Handoff Pack Acceptance Triage Board And Deployment Decision Firewall
 
 - [x] `docs/content/FINAL-LOCAL-OWNER-HANDOFF-PACK.md` records a repo-local, template-only, non-live final handoff pack with placeholders only.

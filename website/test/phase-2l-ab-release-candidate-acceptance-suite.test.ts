@@ -126,14 +126,14 @@ describe("Phase 2L-A/B release-candidate acceptance suite", () => {
     expect(categoriesPage).toContain("Rental categories");
     expect(categoriesPage).toContain("No public categories are available");
     expect(cataloguePage).toContain("Furniture catalogue");
-    expect(cataloguePage).toContain("Start a general enquiry");
+    expect(cataloguePage).toContain("Send a general enquiry");
     expect(cataloguePage).toContain("fallbackImage");
     expect(catalogueDetail).toContain("Furniture listing");
     expect(catalogueDetail).toContain("Request this listing");
     expect(catalogueNotFound).toContain("Listing unavailable");
     expect(quotePage).toContain("Quote request");
     expect(quotePage).toContain("QuoteRequestForm");
-    expect(eventsPage).toContain("Request a quote");
+    expect(eventsPage).toContain("Start quote request");
     expect(globalNotFound).toContain("Page unavailable");
     expect(globalNotFound).toContain("Browse listings");
     expect(globalNotFound).toContain("Request a quote");
@@ -225,8 +225,8 @@ describe("Phase 2L-A/B release-candidate acceptance suite", () => {
     expect(inboxPanel).toContain('requestedOperation: quoteWriteOperation');
     expect(inboxPanel).toContain("genericFailureMessage");
     expect(inboxPanel).toContain("Customer message");
-    expect(inboxPanel).toContain("Requested items");
-    expect(inboxPanel).toContain("Admin-only internal activity");
+    expect(inboxPanel).toContain("Requested listings and items");
+    expect(inboxPanel).toContain("Admin-only status and notes");
     expect(inboxPanelTest).toContain("does not imply ecommerce or customer-facing quote tracking");
     expect(`${shell}\n${inboxPanel}`).not.toMatch(forbiddenCommercePattern);
     expect(`${shell}\n${inboxPanel}`).not.toMatch(

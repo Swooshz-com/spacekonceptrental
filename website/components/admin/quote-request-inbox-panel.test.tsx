@@ -86,16 +86,16 @@ describe("QuoteRequestInboxPanel", () => {
     ).toBeInTheDocument();
     expect(screen.getByLabelText(/internal note for QR-20260603-NEWEST/i)).toBeInTheDocument();
     expect(
-      screen.getByRole("heading", { name: /customer message/i })
+      screen.getByRole("heading", { name: /event and setup details/i })
     ).toBeInTheDocument();
     expect(
       screen.getByText(/please recommend a warm lounge setup/i)
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("heading", { name: /requested items/i })
+      screen.getByRole("heading", { name: /requested listings and items/i })
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("heading", { name: /admin-only internal activity/i })
+      screen.getByRole("heading", { name: /admin-only status and notes/i })
     ).toBeInTheDocument();
     expect(screen.getByText(/call maya about sofa quantities/i)).toBeInTheDocument();
     expect(screen.getByText(/status changed from new to reviewing/i)).toBeInTheDocument();

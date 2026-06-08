@@ -19,7 +19,7 @@ describe("QuotePage", () => {
     ).toBeInTheDocument();
     expect(screen.getByText("Lounge", { selector: "dd" })).toBeInTheDocument();
     expect(screen.getByText("set", { selector: "dd" })).toBeInTheDocument();
-    expect(screen.getByLabelText(/items needed/i)).toHaveValue(
+    expect(screen.getByLabelText(/requested listings or items/i)).toHaveValue(
       "Lounge sofa package"
     );
     expect(
@@ -37,7 +37,7 @@ describe("QuotePage", () => {
     expect(
       screen.queryByRole("heading", { name: /enquiry for/i })
     ).not.toBeInTheDocument();
-    expect(screen.getByLabelText(/items needed/i)).toHaveValue("");
+    expect(screen.getByLabelText(/requested listings or items/i)).toHaveValue("");
     expect(
       screen.queryByText(/cart|checkout|payment|book now|online ordering/i)
     ).not.toBeInTheDocument();

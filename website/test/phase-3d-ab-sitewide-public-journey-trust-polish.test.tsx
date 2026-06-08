@@ -237,8 +237,8 @@ describe("Phase 3D-A/B sitewide public journey, trust content, and route polish"
       screen.getByRole("heading", { name: /what happens after you enquire/i })
     ).toBeInTheDocument();
     expect(screen.getByText(/submission starts an enquiry/i)).toBeInTheDocument();
-    expect(screen.getByText(/does not reserve furniture/i)).toBeInTheDocument();
-    expect(screen.getByText(/team reviews availability/i)).toBeInTheDocument();
+    expect(screen.getByText(/does not confirm furniture/i)).toBeInTheDocument();
+    expect(screen.getByText(/team reviews fit/i)).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: /track|status/i })).not.toBeInTheDocument();
     expect(quoteMetadata.title).toMatch(/quote request/i);
     expect(quoteMetadata.description).toMatch(/event date/i);
@@ -251,10 +251,10 @@ describe("Phase 3D-A/B sitewide public journey, trust content, and route polish"
     const quoteRequestChecklist = screen.getByRole("region", {
       name: /quote request checklist/i
     });
-    expect(within(quoteRequestChecklist).getByText(/event date/i)).toBeInTheDocument();
+    expect(within(quoteRequestChecklist).getByText(/event details such as date/i)).toBeInTheDocument();
     expect(within(quoteRequestChecklist).getByText(/venue or event location/i)).toBeInTheDocument();
-    expect(within(quoteRequestChecklist).getByText(/quantities and alternates/i)).toBeInTheDocument();
-    expect(within(quoteRequestChecklist).getByText(/setup notes/i)).toBeInTheDocument();
+    expect(within(quoteRequestChecklist).getByText(/quantities and alternatives/i)).toBeInTheDocument();
+    expect(within(quoteRequestChecklist).getByText(/setup, access, and timing notes/i)).toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: /browse categories/i })
     ).toHaveAttribute("href", "/categories");
