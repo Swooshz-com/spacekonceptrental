@@ -32,7 +32,7 @@ const eventUseCases = [
 const setupSteps = [
   "Match the setup type to the event format and guest flow.",
   "Capture quantities and placement notes for the requested furniture.",
-  "Send one quote enquiry so the team can review the event context."
+  "Send one quote enquiry with listing, category, quantity, and setup notes so the team can review the event context."
 ];
 
 export default function EventsPage() {
@@ -77,6 +77,9 @@ export default function EventsPage() {
           ))}
         </ul>
         <div className="hero__actions">
+          <Link className="button button--secondary" href="/categories">
+            Browse rental categories
+          </Link>
           <Link className="button button--secondary" href="/listings">
             Browse rental listings
           </Link>

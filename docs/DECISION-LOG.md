@@ -2835,3 +2835,5 @@ Pinecone env vars or API keys, add embedding/reranking runtime, wire
 paths, add retention cleanup jobs, or add ecommerce flows such as carts,
 checkout, payments, stock reservation, confirmed booking, order fulfilment, or
 online ordering.
+
+Decision: Phase 3W-A/B hardens public catalogue/listing/category/media discovery, protected admin content operations, and local catalogue/listing/media acceptance coverage. It remains repo-local only, does not approve deployment, does not add provider config or evidence, and keeps public/admin wording separated.

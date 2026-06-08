@@ -61,7 +61,10 @@ function publicImageAltText(
   image: PublicCatalogueProduct["primaryImage"],
   product: PublicCatalogueProduct
 ) {
-  return textOrUndefined(image?.altText) ?? `${product.name} furniture rental setup`;
+  return (
+    textOrUndefined(image?.altText) ??
+    `${product.name} furniture rental setup`
+  );
 }
 
 function CatalogueCardImage({
@@ -83,7 +86,12 @@ function CatalogueCardImage({
     );
   }
 
-  return <Image alt={altText} src={fallbackImage} />;
+  return (
+    <figure className="catalogue-card__fallback-image">
+      <Image alt={altText} src={fallbackImage} />
+      <figcaption>Representative rental image; final media can be confirmed during enquiry follow-up.</figcaption>
+    </figure>
+  );
 }
 
 function CatalogueCardMeta({ product }: { product: PublicCatalogueProduct }) {
@@ -105,7 +113,7 @@ function CatalogueCardPlanning({
       <strong>Quote planning</strong>
       <span>
         Share event date, venue, quantities, and setup notes when you request
-        this listing.
+        this listing. Include category fit and rental unit notes if helpful.
       </span>
     </aside>
   );
@@ -220,6 +228,9 @@ function EventSetupGuidance() {
         </article>
       </div>
       <div className="hero__actions">
+        <Link className="button button--secondary" href="/events">
+          Compare event setup guidance
+        </Link>
         <Link className="button" href="/quote">
           Send setup notes
         </Link>
@@ -264,13 +275,14 @@ export function CataloguePageContent({
           <p>{emptyMessage}</p>
           {activeCategoryName ? (
             <p className="category-management__hint">
-              Browse all listings or send a general enquiry if your event setup
-              spans more than {activeCategoryName}.
+              Browse all listings, compare event-use guidance, or send a
+              general enquiry if your rental setup spans more than {activeCategoryName}.
             </p>
           ) : (
             <p className="category-management__hint">
-              Browse categories while the public catalogue is being prepared,
-              or use the enquiry form to share the setup you need.
+              Browse categories or event-use guidance while public listings are
+              being prepared, or use the enquiry form to share the rental setup
+              you need.
             </p>
           )}
         </section>

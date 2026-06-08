@@ -55,7 +55,10 @@ function imageAltText(
   image: PublicCatalogueImage | undefined,
   product: PublicCatalogueProduct
 ) {
-  return textOrUndefined(image?.altText) ?? `${product.name} furniture rental setup`;
+  return (
+    textOrUndefined(image?.altText) ??
+    `${product.name} furniture rental setup`
+  );
 }
 
 export async function generateMetadata({
@@ -111,7 +114,7 @@ export function ProductPageContent({
 
       <div className="detail-layout">
         <div className="detail-visual">
-          <div className="detail-primary-image">
+          <figure className="detail-primary-image">
             {product.primaryImage?.publicUrl ? (
               <img
                 alt={imageAltText(product.primaryImage, product)}
@@ -124,9 +127,14 @@ export function ProductPageContent({
                 src={sofaImage}
               />
             )}
-          </div>
+          <figcaption>
+              {product.primaryImage?.publicUrl
+                ? "Listing media is shown with public-safe alt text for rental browsing."
+                : "Representative rental image shown while listing media is confirmed."}
+            </figcaption>
+          </figure>
           {publicImages.length > 1 ? (
-            <div className="detail-gallery" aria-label="Additional listing images">
+            <div className="detail-gallery" aria-label="Additional public listing images with alt text">
               {galleryImages.map((image) => (
                 <img
                   alt={imageAltText(image, product)}
@@ -155,17 +163,18 @@ export function ProductPageContent({
               <dd>{publicRentalUnit(product)}</dd>
             </div>
             <div>
-              <dt>Follow-up</dt>
+              <dt>Event-use context</dt>
               <dd>
-                Final availability, delivery, and styling details are confirmed
-                by the team.
+                Use this listing as a starting point for event furniture rental
+                planning; final fit and styling notes are confirmed by the team.
               </dd>
             </div>
             <div>
               <dt>Quote planning</dt>
               <dd>
                 Share timing, venue, preferred quantities, and delivery
-                notes so the team can confirm the right rental fit.
+                notes so the team can confirm the right rental fit. Include
+                alternatives and setup notes if helpful.
               </dd>
             </div>
           </dl>
@@ -180,11 +189,12 @@ export function ProductPageContent({
             </ul>
           </section>
 
-          <section className="listing-checklist" aria-label="Quote request preparation">
-            <h3>Fit check before enquiry</h3>
+          <section className="listing-checklist" aria-label="Media and quote request preparation">
+            <h3>Media and fit check before enquiry</h3>
             <ul className="journey-list">
               <li>Check the listing details and rental unit.</li>
               <li>Compare the category and rental unit for your setup.</li>
+              <li>Use image alt text and fallback media as browsing context, not as a final media claim.</li>
               <li>
                 Bring event date, venue, quantities, alternatives, setup,
                 access, and timing notes before sending the listing for
@@ -199,6 +209,9 @@ export function ProductPageContent({
             </Link>
             <Link className="button button--secondary" href="/categories">
               Browse categories
+            </Link>
+            <Link className="button button--secondary" href="/events">
+              Browse event guidance
             </Link>
             <Link className="button" href={getQuoteHrefForListing(product.slug)}>
               Request this listing

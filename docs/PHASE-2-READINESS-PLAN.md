@@ -1421,3 +1421,7 @@ Suggested first PR:
 
 - Write the separate SaaS chatbot boundary and RAG architecture decision with
   evaluation requirements, without adding runtime provider code.
+
+Current Phase 3W-A/B status: catalogue/listing/media discovery and protected admin content-ops hardening is repo-local only, does not approve deployment, does not add provider config, and keeps acceptance placeholders template-only.
+
+Previous Current Phase 3V-A/B status remains the latest completed capability from PR #144 at `3904a661aa3d72606d4c48743030406656128b2c`.

@@ -33,6 +33,8 @@ const localAcceptanceTriageBoardPath = 'docs/content/LOCAL-ACCEPTANCE-TRIAGE-BOA
 const deploymentDecisionFirewallPath = 'docs/content/DEPLOYMENT-DECISION-FIREWALL.md';
 const quoteWorkflowChecklistPath =
   'docs/content/QUOTE-ENQUIRY-WORKFLOW-ACCEPTANCE-CHECKLIST.md';
+const catalogueListingMediaChecklistPath =
+  'docs/content/CATALOGUE-LISTING-MEDIA-ACCEPTANCE-CHECKLIST.md';
 const contentReadinessRoutePath = 'website/app/admin/content-readiness/page.tsx';
 const protectedAdminShellPath = 'website/app/admin/protected-admin-shell.tsx';
 const handoffValidatorPath = 'scripts/validate-preview-handoff.cjs';
@@ -77,6 +79,7 @@ const phase3rMergeCommit = 'ef18c2357d37fdb613851c427130bb108861de31';
 const phase3sMergeCommit = '7d6af15e09f7603e2107801f3b6417fd4d2d40bc';
 const phase3tMergeCommit = '66840d5d3bb77d39200a864bfcbecc29ee859f76';
 const phase3uMergeCommit = 'dd2c3c0176c427e69efa01d6e54841637d61548c';
+const phase3vMergeCommit = '3904a661aa3d72606d4c48743030406656128b2c';
 
 function fail(message) {
   console.error(message);
@@ -1252,6 +1255,7 @@ function assertLocalReleaseCandidateDocs() {
   const localAcceptanceTriageBoard = readRepoFile(localAcceptanceTriageBoardPath);
   const deploymentDecisionFirewall = readRepoFile(deploymentDecisionFirewallPath);
   const quoteWorkflowChecklist = readRepoFile(quoteWorkflowChecklistPath);
+  const catalogueListingMediaChecklist = readRepoFile(catalogueListingMediaChecklistPath);
   const suiteRunner = readRepoFile(suiteRunnerPath);
   const combined = [
     matrix,
@@ -1261,6 +1265,7 @@ function assertLocalReleaseCandidateDocs() {
     localAcceptanceTriageBoard,
     deploymentDecisionFirewall,
     quoteWorkflowChecklist,
+    catalogueListingMediaChecklist,
   ].join('\n');
   const normalizedCombined = normalizeWhitespace(combined);
 
@@ -1273,6 +1278,7 @@ function assertLocalReleaseCandidateDocs() {
       localAcceptanceTriageBoardPath,
       deploymentDecisionFirewallPath,
       quoteWorkflowChecklistPath,
+      catalogueListingMediaChecklistPath,
       suiteRunnerPath,
     ],
     'local release-candidate docs',
@@ -1333,6 +1339,12 @@ function assertLocalReleaseCandidateDocs() {
     'Production launch',
     'Post-launch monitoring',
     'Public quote/enquiry route expectations',
+    'Public Catalogue Route Expectations',
+    'Public Listing Detail Expectations',
+    'Public Category Route Expectations',
+    'Public Event-Use Handoff Expectations',
+    'Protected Admin Listing Category Media Expectations',
+    'Media And Alt-Text Expectations',
     'Listing/category/event handoff expectations',
     'Protected admin quote triage expectations',
     'Public copy allowed wording',
@@ -1358,6 +1370,7 @@ function assertLocalReleaseCandidateDocs() {
     '[REVIEW DATE]',
     '[ROUTE / AREA]',
     '[PUBLIC / PROTECTED ADMIN]',
+    '[CATALOGUE / LISTING / MEDIA CHECK]',
     '[LOCAL ACCEPTANCE STATE: NOT RUN / PASS / NEEDS FOLLOW-UP]',
     '[OWNER INPUT REQUIRED]',
     '[LOCAL FOLLOW-UP]',
@@ -1449,17 +1462,24 @@ function assertStatusDocs() {
 
   assertIncludes(
     status,
-    'Current phase: Phase 3V-A/B - quote/enquiry workflow hardening, protected admin triage polish, and local acceptance coverage.',
+    'Current phase: Phase 3W-A/B - catalogue listing media hardening, protected admin content-ops polish, and local acceptance coverage.',
     'phase status',
   );
   assertIncludes(
     status,
-    'Latest completed capability: Phase 3U-A/B final local owner handoff pack, acceptance triage board, and deployment decision firewall.',
+    'Latest completed capability: Phase 3V-A/B quote/enquiry workflow hardening, protected admin triage polish, and local acceptance coverage.',
     'phase status',
   );
-  assertIncludes(status, 'Last merged capability PR: #143', 'phase status');
+  assertIncludes(status, 'Last merged capability PR: #144', 'phase status');
+  assertIncludes(status, `Merge commit: \`${phase3vMergeCommit}\``, 'phase status');
+  assertIncludes(status, 'Previous Current Phase 3V-A/B status', 'phase status');
   assertIncludes(status, `Merge commit: \`${phase3uMergeCommit}\``, 'phase status');
   assertIncludes(status, 'Previous Current Phase 3U-A/B status', 'phase status');
+  assertIncludes(
+    status,
+    'Current phase: Phase 3V-A/B - quote/enquiry workflow hardening, protected admin triage polish, and local acceptance coverage.',
+    'phase status',
+  );
   assertIncludes(
     status,
     'Current phase: Phase 3U-A/B - final local owner handoff pack, acceptance triage board, and deployment decision firewall.',
@@ -1650,6 +1670,11 @@ function assertStatusDocs() {
   );
   assertIncludes(
     roadmap,
+    'Phase 3W-A/B hardens the public catalogue/listing/category/media discovery path and protected admin content-ops surfaces',
+    'phase roadmap',
+  );
+  assertIncludes(
+    roadmap,
     'Phase 3V-A/B hardens the public quote/enquiry conversion path and protected admin quote triage',
     'phase roadmap',
   );
@@ -1819,8 +1844,18 @@ function assertStatusDocs() {
   );
   assertIncludes(
     decisionLog,
+    'Decision: Phase 3W-A/B hardens public catalogue/listing/category/media discovery, protected admin content operations, and local catalogue/listing/media acceptance coverage.',
+    'decision log',
+  );
+  assertIncludes(
+    decisionLog,
     'Decision: Phase 3V-A/B hardens the quote/enquiry workflow, protected admin triage, and local acceptance coverage.',
     'decision log',
+  );
+  assertIncludes(
+    checklist,
+    '## Phase 3W-A/B Catalogue Listing Media Hardening Protected Admin Content-Ops Polish And Local Acceptance Coverage',
+    'admin ops checklist',
   );
   assertIncludes(
     checklist,
@@ -1936,6 +1971,9 @@ function assertProtectedContentReadinessWorkspace() {
   assertIncludes(shellSource, localAcceptanceTriageBoardPath, protectedAdminShellPath);
   assertIncludes(shellSource, deploymentDecisionFirewallPath, protectedAdminShellPath);
   assertIncludes(shellSource, quoteWorkflowChecklistPath, protectedAdminShellPath);
+  assertIncludes(shellSource, catalogueListingMediaChecklistPath, protectedAdminShellPath);
+  assertIncludes(shellSource, 'Catalogue/listing/media acceptance snapshot', protectedAdminShellPath);
+  assertIncludes(shellSource, 'catalogueListingMediaAcceptanceSnapshot', protectedAdminShellPath);
   assertIncludes(shellSource, 'reviewSurfaceGroups', protectedAdminShellPath);
   assertIncludes(shellSource, 'routeFamiliesCovered', protectedAdminShellPath);
   assertIncludes(shellSource, 'ownerDecisionCategories', protectedAdminShellPath);
