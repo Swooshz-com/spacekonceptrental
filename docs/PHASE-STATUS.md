@@ -4,6 +4,50 @@ This is the quick status page for the SKR repo. Use `docs/PHASE-2-READINESS-PLAN
 
 ## Current phase
 
+Current phase: Phase 3Q-A/B - repo-local owner-demo polish, public journey QA hardening, and protected admin closure workspace polish.
+
+Latest completed capability: Phase 3P-A/B owner-review closure packet, readiness sign-off template, and deployment approval separation.
+
+Last merged capability PR: #138
+
+Merge commit: `586d17e3f909fcf2986115633bb329a06fbcdf49`
+
+Phase 3Q-A/B adds repo-local owner-demo polish, public journey QA hardening,
+and protected admin closure workspace polish for the current rental website
+candidate. It adds a template-only owner-demo walkthrough, improves review-safe
+public route guidance, and adds an admin-only owner-demo snapshot inside the
+protected content readiness workspace.
+
+Public users only see public-safe listing, category, event-use, quote request,
+and recovery guidance. Owner-demo walkthrough details, closure readiness
+notes, sign-off template details, deployment approval separation notes,
+correction intake details, launch-blocker freeze gate details, dry-run details,
+route decision matrix notes, issue ledger details, admin internal notes,
+protected management URLs, provider details, secrets, production evidence,
+filled preview evidence, and invented public business facts stay out of public
+routes.
+
+No deployment is performed or approved by Phase 3Q-A/B. It does not add Vercel
+config, connect Supabase Cloud, add real secrets or env values, add filled
+owner-review evidence, filled preview evidence, production evidence, Pinecone
+runtime code, Pinecone packages, Pinecone env reads, secrets, API keys,
+Pinecone executors, n8n workflow/runtime changes, embedding runtime, sync
+workers, `/api/chat` retrieval wiring, search-index document writers, real
+vector upsert/delete, runtime reranking, hybrid search runtime, browser
+Supabase, service-role runtime paths, public or customer upload routes, public
+quote tracking, customer-visible internal notes, notifications, CRM
+integration, customer accounts, invented real contact details, phone numbers,
+email addresses, physical addresses, business hours, testimonials, client
+names, awards, certifications, legal claims, guarantees, production policies,
+or public self-service rental completion flows outside the current quote
+request path.
+
+Missing real contact, legal, policy, business-hour, service-area, proof,
+testimonial, client-name, award, certification, or guarantee content must
+remain marked as owner input required and must not be invented.
+
+Previous Current Phase 3P-A/B status:
+
 Current phase: Phase 3P-A/B - owner-review closure packet, readiness sign-off template, and deployment approval separation.
 
 Latest completed capability: Phase 3O-A/B owner-review correction intake, launch-blocker freeze gate, and admin triage snapshot.

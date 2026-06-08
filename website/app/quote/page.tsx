@@ -116,6 +116,24 @@ function QuoteExpectationCard() {
   );
 }
 
+function QuoteReviewChecklistCard() {
+  return (
+    <article className="route-card">
+      <p className="eyebrow">Before you send</p>
+      <h2>Review before sending</h2>
+      <p>
+        Check event date, venue, requested listings, quantities, and setup notes
+        before sending the enquiry.
+      </p>
+      <ul className="journey-list">
+        <li>Use listing names or short item descriptions.</li>
+        <li>Add alternates when you are still comparing rental options.</li>
+        <li>Keep access, timing, and placement notes practical.</li>
+      </ul>
+    </article>
+  );
+}
+
 function QuoteRequestRecovery() {
   return (
     <nav className="hero__actions" aria-label="Quote request recovery">
@@ -166,6 +184,8 @@ export default async function QuotePage({
             product categories before the team follows up.
           </p>
         </article>
+
+        <QuoteReviewChecklistCard />
 
         <QuoteExpectationCard />
       </div>

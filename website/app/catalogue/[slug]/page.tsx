@@ -180,6 +180,15 @@ export function ProductPageContent({
             </ul>
           </section>
 
+          <section className="listing-checklist" aria-label="Quote request preparation">
+            <h3>Before requesting a quote</h3>
+            <ul className="journey-list">
+              <li>Check the listing details and rental unit.</li>
+              <li>Compare the category and rental unit for your setup.</li>
+              <li>Send the listing with your event details for follow-up.</li>
+            </ul>
+          </section>
+
           <div className="hero__actions">
             <Link className="button button--secondary" href={backHref}>
               {backLabel}

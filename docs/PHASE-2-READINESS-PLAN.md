@@ -238,7 +238,34 @@ Suggested first PR:
   Supabase, production evidence, or ecommerce flows. Product language remains
   enquiry/quote/request.
 
-Current Phase 3P-A/B status:
+Current Phase 3Q-A/B status:
+
+- PR #138 merged Phase 3P-A/B owner-review closure packet, readiness sign-off
+  template, and deployment approval separation at merge commit
+  `586d17e3f909fcf2986115633bb329a06fbcdf49`.
+- Latest completed capability is Phase 3P-A/B owner-review closure packet,
+  readiness sign-off template, and deployment approval separation.
+- Phase 3Q-A/B is current as repo-local owner-demo polish, public journey QA
+  hardening, and protected admin closure workspace polish for template-only
+  owner-demo walkthrough material, public route review polish, protected
+  content readiness owner-demo snapshot, and no-live-review boundaries.
+- The protected content readiness workspace now summarizes an owner-demo
+  walkthrough snapshot and references `docs/content/OWNER-DEMO-WALKTHROUGH.md`
+  without creating public route tracking or mutable review state.
+- Public copy must stay focused on listing, enquiry, quote, request, rental,
+  and event furniture wording. Owner-demo walkthrough details, closure
+  readiness notes, sign-off template details, deployment approval separation,
+  and internal review hints remain protected/admin-only.
+- No deployment, deployment approval, Vercel config, Supabase Cloud config,
+  real env values, production evidence, preview evidence, owner-review
+  evidence, browser Supabase, service-role runtime paths, n8n/Pinecone/RAG
+  runtime work, public quote tracking, customer accounts, customer-visible
+  internal notes, notifications, CRM integration, public/customer upload
+  routes, transcript runtime paths, invented real contact details,
+  testimonials, client names, legal claims, production policies, or public
+  self-service rental completion flow is added.
+
+Previous Current Phase 3P-A/B status:
 
 - PR #137 merged Phase 3O-A/B owner-review correction intake,
   launch-blocker freeze gate, and admin triage snapshot at merge commit

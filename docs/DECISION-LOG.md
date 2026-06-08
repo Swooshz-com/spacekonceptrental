@@ -2202,6 +2202,42 @@ paths, add retention cleanup jobs, or add ecommerce flows such as carts,
 checkout, payments, stock reservation, confirmed booking, order fulfilment, or
 online ordering.
 
+## 2026-06-08: Repo-Local Owner-Demo Polish, Public Journey QA Hardening, And Protected Admin Closure Workspace Polish
+
+Decision: Phase 3Q-A/B adds repo-local owner-demo polish, public journey QA hardening, and protected admin closure workspace polish.
+
+Reason: PR #138 merged Phase 3P-A/B at
+`586d17e3f909fcf2986115633bb329a06fbcdf49`, completing the owner-review
+closure packet, readiness sign-off template, and deployment approval separation
+without deploying, approving deployment, filling owner-review evidence, or
+inventing missing real-world facts. The next approved work item is to make the
+repo-local public/admin candidate easier for an owner/admin to review while
+keeping all deployment, provider, evidence, and filled-signoff boundaries in
+place.
+
+The implementation adds a template-only owner-demo walkthrough, public journey
+copy polish, an admin-only owner-demo walkthrough snapshot in the protected
+content readiness workspace, deterministic Phase 3Q tests, preview handoff
+validation coverage, and docs/status roll-forward from PR #138. It keeps the
+existing public catalogue read boundary, public quote request API contract,
+protected admin shell gate, and RPC-backed admin write boundaries.
+
+Phase 3Q-A/B does not deploy, approve deployment, add Vercel config, connect
+Supabase Cloud, add real secrets or env values, add production evidence, add
+filled owner-review evidence, add browser Supabase, add service-role runtime
+paths, access `website/chat-config.js`, add public/customer upload routes, add
+customer accounts, add public quote tracking, expose customer-visible internal
+notes, add notifications or CRM integration, change n8n/Pinecone runtime
+behavior, add SaaS chatbot runtime work, add Pinecone SDK/package
+dependencies, add Pinecone env vars or API keys, add embedding/reranking
+runtime, wire `/api/chat` to retrieval/RAG, wire transcript reads or writes
+into `/api/chat`, add admin transcript UI, add transcript deletion/export
+runtime paths, add retention cleanup jobs, invent real contact details, phone
+numbers, email addresses, physical addresses, business hours, testimonials,
+client names, awards, certifications, legal claims, guarantees, production
+policies, or add public self-service rental completion flows outside the
+current quote request path.
+
 ## 2026-06-08: Owner-Review Closure Packet, Readiness Sign-Off Template, And Deployment Approval Separation
 
 Decision: Phase 3P-A/B adds an owner-review closure packet, readiness sign-off template, and deployment approval separation.

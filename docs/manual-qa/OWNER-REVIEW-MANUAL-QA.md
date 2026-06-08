@@ -29,7 +29,9 @@ closure packet,
 `docs/content/OWNER-REVIEW-CLOSURE-SIGN-OFF-TEMPLATE.md` for the readiness
 sign-off template, and
 `docs/content/OWNER-REVIEW-DEPLOYMENT-APPROVAL-SEPARATION.md` for deployment
-approval separation.
+approval separation. Use `docs/content/OWNER-DEMO-WALKTHROUGH.md` for the
+Owner-demo walkthrough, public journey review, and protected admin closure
+workspace review.
 Owner content blockers are governance notes only. Missing real
 contact/legal/business-hour content does not get invented. Owner review can
 continue without deployment.
@@ -46,6 +48,9 @@ correction freeze boundary.
 Confirm the closure readiness snapshot references current owner-review closure
 state, open blockers, correction intake status, closure readiness notes,
 deployment approval status, and last local packet update placeholders.
+Confirm the owner-demo walkthrough snapshot references public journey review,
+admin workflow review, closure readiness, deployment approval, and last local
+review packet update placeholders.
 
 ## Local validation commands
 
@@ -72,7 +77,7 @@ for the release-candidate gate and keep the review non-live.
 - Confirm links route to `/listings`, `/categories`, `/events`, and `/quote`.
 - Confirm copy uses rental, listing, enquiry, quote, and request wording.
 - Confirm there are no admin URLs, internal quote notes, provider errors,
-  secrets, stack traces, or ecommerce wording.
+  secrets, stack traces, or public self-service rental completion wording.
 
 ### `/catalogue`
 

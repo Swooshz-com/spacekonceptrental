@@ -57,6 +57,22 @@ const rentalJourneySteps = [
   }
 ];
 
+const publicReviewPrompts = [
+  {
+    title: "Find suitable rental pieces",
+    description: "Browse listing details before requesting a quote."
+  },
+  {
+    title: "Plan by event setup",
+    description:
+      "Use categories and event guidance to describe your setup."
+  },
+  {
+    title: "Send a quote request",
+    description: "Add event details so the team can follow up."
+  }
+];
+
 export default async function HomePage() {
   const catalogue = await getPublicCatalogue();
   const featuredListings = catalogue.products.slice(0, 3);
@@ -114,6 +130,35 @@ export default async function HomePage() {
           </Link>
           <Link className="button" href="/quote">
             Start a quote request
+          </Link>
+        </div>
+      </section>
+
+      <section className="section">
+        <div className="section__header">
+          <h2>Plan your rental journey</h2>
+          <p className="section__intro">
+            Listings, categories, event-use guidance, and quote requests help
+            you describe the setup you need.
+          </p>
+        </div>
+        <div className="route-grid">
+          {publicReviewPrompts.map((prompt) => (
+            <article className="route-card" key={prompt.title}>
+              <h2>{prompt.title}</h2>
+              <p>{prompt.description}</p>
+            </article>
+          ))}
+        </div>
+        <div className="hero__actions">
+          <Link className="button button--secondary" href="/listings">
+            Browse rental listings
+          </Link>
+          <Link className="button button--secondary" href="/events">
+            Browse event guidance
+          </Link>
+          <Link className="button" href="/quote">
+            Open quote request
           </Link>
         </div>
       </section>
