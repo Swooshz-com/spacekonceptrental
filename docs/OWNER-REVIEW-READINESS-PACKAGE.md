@@ -35,7 +35,8 @@ sign-off template, and
 `docs/content/OWNER-REVIEW-DEPLOYMENT-APPROVAL-SEPARATION.md` for deployment
 approval separation. Use `docs/content/OWNER-DEMO-WALKTHROUGH.md` for the
 Owner-demo walkthrough, public journey review, and protected admin closure
-workspace review.
+workspace review. Use `docs/content/OWNER-DEMO-ISSUE-BACKLOG.md` for the
+Owner-demo issue backlog and product acceptance hardening follow-up template.
 
 Owner content blockers must remain separate from deployment approval. Missing
 real contact/legal/business-hour content does not get invented. Public launch
@@ -72,6 +73,10 @@ The protected workspace also references the Owner-demo walkthrough. That
 walkthrough is template-only, keeps public journey review separate from
 admin-only closure readiness, and does not approve deployment.
 
+The protected workspace also references the Owner-demo issue backlog. That
+backlog is template-only, keeps product acceptance hardening follow-up separate
+from deployment approval, and does not record real owner corrections.
+
 ## Ready for owner review
 
 - Public website journey from homepage to catalogue, listings, categories,
@@ -96,6 +101,8 @@ admin-only closure readiness, and does not approve deployment.
   approval separation for placeholder-only closure readiness.
 - Owner-demo walkthrough for public journey review and protected admin closure
   workspace review without filled evidence.
+- Owner-demo issue backlog for product acceptance hardening follow-up without
+  filled owner issues.
 - Admin-only readiness cues, internal quote follow-up context, and recovery
   links that stay inside protected admin routes.
 - Local validation commands and deterministic docs/tests for the owner review

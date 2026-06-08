@@ -238,6 +238,37 @@ Suggested first PR:
   Supabase, production evidence, or ecommerce flows. Product language remains
   enquiry/quote/request.
 
+Current Phase 3R-A/B status:
+
+- PR #139 merged Phase 3Q-A/B repo-local owner-demo polish, public journey QA
+  hardening, and protected admin closure workspace polish at merge commit
+  `0a0bd665111decffb6cdc837e48782943940f22f`.
+- Latest completed capability is Phase 3Q-A/B repo-local owner-demo polish,
+  public journey QA hardening, and protected admin closure workspace polish.
+- Phase 3R-A/B is current as repo-local product acceptance hardening,
+  public/admin route polish, and owner-demo issue backlog readiness for
+  customer-facing route polish, protected admin backlog summaries, and
+  template-only follow-up issue capture.
+- The protected content readiness workspace now summarizes an owner-demo issue
+  backlog snapshot and references `docs/content/OWNER-DEMO-ISSUE-BACKLOG.md`
+  without creating public route tracking, mutable public state, or filled
+  owner-review evidence.
+- Public copy must stay focused on listing, enquiry, quote, request, rental,
+  and event furniture wording. Owner-demo walkthrough details, issue backlog
+  details, closure readiness notes, deployment approval separation, and
+  internal review hints remain protected/admin-only.
+- No deployment, deployment approval, Vercel config, Supabase Cloud config,
+  real env values, production evidence, preview evidence, owner-review
+  evidence, browser Supabase, service-role runtime paths, n8n/Pinecone/RAG
+  runtime work, public quote tracking, customer accounts, customer-visible
+  internal notes, notifications, CRM integration, public/customer upload
+  routes, transcript runtime paths, invented real contact details,
+  testimonials, client names, legal claims, production policies, self-service
+  completion-like flows, stock-reservation-like flows, fulfilment-like flows,
+  or customer account flows are added.
+
+Previous Current Phase 3Q-A/B status:
+
 Current Phase 3Q-A/B status:
 
 - PR #138 merged Phase 3P-A/B owner-review closure packet, readiness sign-off

@@ -15,6 +15,9 @@ export default function NotFound() {
         <Link className="button button--secondary" href="/listings">
           Browse listings
         </Link>
+        <Link className="button button--secondary" href="/categories">
+          Browse categories
+        </Link>
         <Link className="button button--secondary" href="/events">
           Plan event setups
         </Link>

@@ -73,6 +73,24 @@ const publicReviewPrompts = [
   }
 ];
 
+const rentalAcceptanceChecks = [
+  {
+    title: "Confirm the rental fit",
+    description:
+      "Compare listing details, rental unit, category, and setup notes before sending an enquiry."
+  },
+  {
+    title: "Prepare event context",
+    description:
+      "Bring event date, venue, quantities, alternates, and placement notes into the quote request."
+  },
+  {
+    title: "Keep follow-up direct",
+    description:
+      "Use the public form to start the enquiry; final quote details stay with the team."
+  }
+] as const;
+
 export default async function HomePage() {
   const catalogue = await getPublicCatalogue();
   const featuredListings = catalogue.products.slice(0, 3);
@@ -178,6 +196,35 @@ export default async function HomePage() {
               <p>{item.description}</p>
             </article>
           ))}
+        </div>
+      </section>
+
+      <section className="section">
+        <div className="section__header">
+          <h2>Ready to request a rental quote</h2>
+          <p className="section__intro">
+            Compare listings, categories, event setup notes, and quote details
+            before sending the enquiry.
+          </p>
+        </div>
+        <div className="route-grid">
+          {rentalAcceptanceChecks.map((item) => (
+            <article className="route-card" key={item.title}>
+              <h2>{item.title}</h2>
+              <p>{item.description}</p>
+            </article>
+          ))}
+        </div>
+        <div className="hero__actions">
+          <Link className="button button--secondary" href="/categories">
+            Compare categories
+          </Link>
+          <Link className="button button--secondary" href="/events">
+            Browse event guidance
+          </Link>
+          <Link className="button" href="/quote">
+            Start quote request
+          </Link>
         </div>
       </section>
 

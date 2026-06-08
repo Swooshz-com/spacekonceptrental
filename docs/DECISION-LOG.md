@@ -2202,6 +2202,43 @@ paths, add retention cleanup jobs, or add ecommerce flows such as carts,
 checkout, payments, stock reservation, confirmed booking, order fulfilment, or
 online ordering.
 
+## 2026-06-08: Product Acceptance Hardening, Public/Admin Route Polish, And Owner-Demo Issue Backlog Readiness
+
+Decision: Phase 3R-A/B adds repo-local product acceptance hardening, public/admin route polish, and owner-demo issue backlog readiness.
+
+Reason: PR #139 merged Phase 3Q-A/B at
+`0a0bd665111decffb6cdc837e48782943940f22f`, completing the owner-demo
+walkthrough, public journey QA hardening, and protected admin closure workspace
+polish without deploying, approving deployment, filling owner-review evidence,
+or inventing missing real-world facts. The next approved work item is to
+harden the public/admin product acceptance surface and prepare a template-only
+owner-demo issue backlog for future follow-up.
+
+The implementation improves public route guidance, empty-state recovery,
+category/listing/event setup cross-links, listing fit-check copy, and
+quote/enquiry handoff clarity. It adds a template-only owner-demo issue
+backlog, an admin-only owner-demo issue backlog snapshot in the protected
+content readiness workspace, deterministic Phase 3R tests, preview handoff
+validation coverage, and docs/status roll-forward from PR #139. It keeps the
+existing public catalogue read boundary, public quote request API contract,
+protected admin shell gate, and RPC-backed admin write boundaries.
+
+Phase 3R-A/B does not deploy, approve deployment, add Vercel config, connect
+Supabase Cloud, add real secrets or env values, add production evidence, add
+filled owner-review evidence, add browser Supabase, add service-role runtime
+paths, access `website/chat-config.js`, add public/customer upload routes, add
+customer accounts, add public quote tracking, expose customer-visible internal
+notes, add notifications or CRM integration, change n8n/Pinecone runtime
+behavior, add SaaS chatbot runtime work, add Pinecone SDK/package
+dependencies, add Pinecone env vars or API keys, add embedding/reranking
+runtime, wire `/api/chat` to retrieval/RAG, wire transcript reads or writes
+into `/api/chat`, add admin transcript UI, add transcript deletion/export
+runtime paths, add retention cleanup jobs, invent real contact details, phone
+numbers, email addresses, physical addresses, business hours, testimonials,
+client names, awards, certifications, legal claims, guarantees, production
+policies, or add self-service completion-like flows,
+stock-reservation-like flows, fulfilment-like flows, or customer account flows.
+
 ## 2026-06-08: Repo-Local Owner-Demo Polish, Public Journey QA Hardening, And Protected Admin Closure Workspace Polish
 
 Decision: Phase 3Q-A/B adds repo-local owner-demo polish, public journey QA hardening, and protected admin closure workspace polish.
