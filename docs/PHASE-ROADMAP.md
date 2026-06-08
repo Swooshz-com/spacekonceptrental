@@ -1558,3 +1558,34 @@ addresses, testimonials, client names, awards, certifications, legal claims,
 guarantees, production policies, or add ecommerce flows such as carts,
 checkout, payments, stock reservation, confirmed booking, order fulfilment, or
 online ordering.
+
+## Phase 3O: Owner-Review Correction Intake, Launch-Blocker Freeze Gate, And Admin Triage Snapshot
+
+Phase 3O-A/B adds owner-review correction intake, a launch-blocker freeze gate,
+and admin triage snapshot for the current repo-local rental website candidate.
+It turns the Phase 3N dry-run packet and launch rehearsal into template-only
+future correction capture and freeze planning.
+
+Phase 3O-A/B keeps correction handling non-live and placeholder-only. The
+correction intake defines safe correction categories, safe statuses, future
+local PR placeholders, evidence handling placeholders, and owner-input-required
+boundaries without recording actual owner corrections or owner sign-off.
+
+Phase 3O-A/B adds a launch-blocker freeze gate that separates owner-review
+blockers, launch/deployment blockers, deferred items, out-of-scope items, and
+separate deployment approval boundaries. It also adds a correction PR plan that
+shows how future owner-supplied corrections should be split into narrow local
+PRs after the owner supplies approved content.
+
+Phase 3O-A/B does not deploy, approve deployment, add Vercel or Supabase Cloud
+config, add real env values, add filled owner-review evidence, add filled
+preview or production evidence, add browser Supabase, add service-role runtime
+paths, access `website/chat-config.js`, add public/customer uploads, add
+customer accounts, add public quote tracking, expose customer-visible internal
+notes, add notifications or CRM integration, change n8n/Pinecone runtime
+behavior, add Pinecone packages/env/API keys, wire `/api/chat` to
+retrieval/RAG, add transcript runtime paths, invent real contact details,
+business hours, addresses, testimonials, client names, awards, certifications,
+legal claims, guarantees, production policies, or add ecommerce flows such as
+carts, checkout, payments, stock reservation, confirmed booking, order
+fulfilment, or online ordering.

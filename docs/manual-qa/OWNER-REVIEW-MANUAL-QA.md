@@ -18,7 +18,12 @@ Owner-review dry-run packet,
 `docs/content/OWNER-REVIEW-FINDINGS-DISPOSITION.md` for the findings
 disposition workflow, and
 `docs/content/OWNER-REVIEW-LAUNCH-DECISION-REHEARSAL.md` for the launch
-hold/approve rehearsal.
+hold/approve rehearsal. Use
+`docs/content/OWNER-REVIEW-CORRECTION-INTAKE.md` for the Owner-review
+correction intake,
+`docs/content/OWNER-REVIEW-LAUNCH-BLOCKER-FREEZE-GATE.md` for the
+launch-blocker freeze gate, and
+`docs/content/OWNER-REVIEW-CORRECTION-PR-PLAN.md` for the correction PR plan.
 Owner content blockers are governance notes only. Missing real
 contact/legal/business-hour content does not get invented. Owner review can
 continue without deployment.
@@ -29,6 +34,9 @@ owner decision categories, owner-input-required categories, and launch-blocker
 categories. Also confirm the dry-run review snapshot references dry-run review
 areas, findings disposition statuses, launch decision rehearsal states,
 owner-input-required categories, and the explicit deployment approval boundary.
+Confirm the correction/freeze snapshot references correction categories,
+correction statuses, freeze states, future correction PR types, and the
+correction freeze boundary.
 
 ## Local validation commands
 
@@ -183,6 +191,9 @@ for the release-candidate gate and keep the review non-live.
 - Confirm the workspace references the Owner-review dry-run packet, findings
   disposition workflow, and launch hold/approve rehearsal without exposing
   them to public routes.
+- Confirm the workspace references the Owner-review correction intake,
+  launch-blocker freeze gate, and correction PR plan without exposing them to
+  public routes.
 - Confirm missing facts remain Owner input required.
 - Confirm public routes do not expose content readiness statuses, owner-review
   issue ledger details, protected admin URLs, or admin-only readiness notes.

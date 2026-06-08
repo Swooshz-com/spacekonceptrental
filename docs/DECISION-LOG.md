@@ -2202,6 +2202,41 @@ paths, add retention cleanup jobs, or add ecommerce flows such as carts,
 checkout, payments, stock reservation, confirmed booking, order fulfilment, or
 online ordering.
 
+## 2026-06-08: Owner-Review Correction Intake, Launch-Blocker Freeze Gate, And Admin Triage Snapshot
+
+Decision: Phase 3O-A/B adds owner-review correction intake, a launch-blocker freeze gate, and admin triage snapshot.
+
+Reason: PR #136 merged Phase 3N-A/B at
+`98d62e9d6641d0d34770c76f156e914be5ba4edd`, completing the owner-review
+dry-run packet, findings disposition workflow, and launch hold/approve
+rehearsal without deploying or approving deployment. The next approved work
+item is to define how future owner-supplied corrections would be captured,
+frozen, deferred, or split into safe local PRs while keeping all rows
+placeholder-only.
+
+The implementation adds owner-review correction intake, a launch-blocker
+freeze gate, correction PR planning, protected content readiness workspace
+correction/freeze snapshot update, deterministic Phase 3O tests, preview
+handoff validation coverage, and docs/status roll-forward from PR #136. It
+keeps the existing public catalogue read boundary, public quote request API
+contract, protected admin shell gate, and RPC-backed admin write boundaries.
+
+Phase 3O-A/B does not deploy, approve deployment, add Vercel config, connect
+Supabase Cloud, add real secrets or env values, add production evidence, add
+filled owner-review evidence, add browser Supabase, add service-role runtime
+paths, access `website/chat-config.js`, add public/customer upload routes, add
+customer accounts, add public quote tracking, expose customer-visible internal
+notes, add notifications or CRM integration, change n8n/Pinecone runtime
+behavior, add SaaS chatbot runtime work, add Pinecone SDK/package
+dependencies, add Pinecone env vars or API keys, add embedding/reranking
+runtime, wire `/api/chat` to retrieval/RAG, wire transcript reads or writes
+into `/api/chat`, add admin transcript UI, add transcript deletion/export
+runtime paths, add retention cleanup jobs, invent real contact details, phone
+numbers, email addresses, physical addresses, business hours, testimonials,
+client names, awards, certifications, legal claims, guarantees, production
+policies, or add ecommerce flows such as carts, checkout, payments, stock
+reservation, confirmed booking, order fulfilment, or online ordering.
+
 ## 2026-06-08: Owner-Review Dry-Run Packet, Findings Disposition Workflow, And Launch Hold/Approve Rehearsal
 
 Decision: Phase 3N-A/B adds an owner-review dry-run packet, findings disposition workflow, and launch hold/approve rehearsal.
