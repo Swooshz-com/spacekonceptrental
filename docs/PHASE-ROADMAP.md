@@ -1458,3 +1458,38 @@ addresses, testimonials, client names, awards, certifications, legal claims,
 guarantees, production policies, or add ecommerce flows such as carts,
 checkout, payments, stock reservation, confirmed booking, order fulfilment, or
 online ordering.
+
+## Phase 3L: Protected Content Readiness Workspace, Owner-Review Issue Ledger, And Public Copy Fact-Safety Audit
+
+Phase 3L-A/B adds a protected content readiness workspace, owner-review issue
+ledger, and public copy fact-safety audit for the current repo-local rental
+website candidate. It turns the Phase 3K owner content intake and content gap
+register into an admin-only review surface inside the existing protected admin
+shell.
+
+Phase 3L-A/B keeps owner review and public launch separate. The protected
+workspace summarizes owner-required content gaps from
+`docs/content/OWNER-CONTENT-INTAKE.md` and
+`docs/content/CONTENT-GAP-REGISTER.md`, while the owner-review issue ledger
+records safe issue categories and status values without adding public customer
+issue tracking.
+
+Phase 3L-A/B adds deterministic public copy fact-safety coverage. Public
+routes must not expose owner-only readiness statuses, admin issue ledger
+details, protected admin URLs, internal notes, fake contact details, business
+hours, physical addresses, client names, testimonials, awards,
+certifications, legal claims, guarantees, production policies, or ecommerce
+wording.
+
+Phase 3L-A/B does not deploy, approve deployment, add Vercel or Supabase Cloud
+config, add real env values, add filled preview or production evidence, add
+browser Supabase, add service-role runtime paths, access
+`website/chat-config.js`, add public/customer uploads, add customer accounts,
+add public quote tracking, expose customer-visible internal notes, add
+notifications or CRM integration, change n8n/Pinecone runtime behavior, add
+Pinecone packages/env/API keys, wire `/api/chat` to retrieval/RAG, add
+transcript runtime paths, invent real contact details, business hours,
+addresses, testimonials, client names, awards, certifications, legal claims,
+guarantees, production policies, or add ecommerce flows such as carts,
+checkout, payments, stock reservation, confirmed booking, order fulfilment, or
+online ordering.

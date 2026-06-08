@@ -9,7 +9,11 @@ const ownerReviewPackagePath = 'docs/OWNER-REVIEW-READINESS-PACKAGE.md';
 const ownerManualQaPath = 'docs/manual-qa/OWNER-REVIEW-MANUAL-QA.md';
 const ownerContentIntakePath = 'docs/content/OWNER-CONTENT-INTAKE.md';
 const contentGapRegisterPath = 'docs/content/CONTENT-GAP-REGISTER.md';
+const ownerReviewLedgerPath = 'docs/content/OWNER-REVIEW-ISSUE-LEDGER.md';
+const contentReadinessRoutePath = 'website/app/admin/content-readiness/page.tsx';
+const protectedAdminShellPath = 'website/app/admin/protected-admin-shell.tsx';
 const handoffValidatorPath = 'scripts/validate-preview-handoff.cjs';
+const sourceExtensions = new Set(['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs']);
 const phase2pMergeCommit = '15a5d23941ac7fbe3297792311f50e414d622f5f';
 const phase2qMergeCommit = '62c2b11b6b15192434eb4035ba0a66a44cd6f763';
 const phase3aMergeCommit = '6e8bcf23bc8d7eef12b738613344764c0c1961e6';
@@ -21,6 +25,7 @@ const phase3gMergeCommit = '75fd104966e3e8c69a434f2325f6f79e4742a40f';
 const phase3hMergeCommit = '09f92ede4b5d9f725d0df560838a12fef27940b9';
 const phase3iMergeCommit = '0d2d40898c4e716032fdec130704117494c542d6';
 const phase3jMergeCommit = '1c7dc0ac7c2532fa8a837cd46b0d1f0103d5ccfa';
+const phase3kMergeCommit = 'd4271ea6b181ee702dfe9d6f2b6003903b0c54dd';
 
 function fail(message) {
   console.error(message);
@@ -78,6 +83,21 @@ function assertNoMatch(source, pattern, label) {
   assert(!pattern.test(source), `${label} contains forbidden content.`);
 }
 
+function isProductionSource(filePath) {
+  return (
+    sourceExtensions.has(path.extname(filePath)) &&
+    !/\.(?:test|spec)\.[cm]?[tj]sx?$/.test(filePath) &&
+    !filePath.startsWith('website/test/')
+  );
+}
+
+function readTrackedProductionSources(paths) {
+  return gitLsFiles(paths)
+    .filter(isProductionSource)
+    .map((filePath) => readRepoFile(filePath))
+    .join('\n');
+}
+
 function assertPackageAndCi() {
   const packageJson = JSON.parse(readRepoFile('package.json'));
   const workflow = readRepoFile('.github/workflows/ci.yml');
@@ -108,6 +128,9 @@ function assertHandoffDocs() {
     'review `docs/manual-qa/OWNER-REVIEW-MANUAL-QA.md`',
     'docs/content/OWNER-CONTENT-INTAKE.md',
     'docs/content/CONTENT-GAP-REGISTER.md',
+    'docs/content/OWNER-REVIEW-ISSUE-LEDGER.md',
+    '/admin/content-readiness',
+    'Protected content readiness workspace',
     'What the owner should supply before launch',
     'What remains blocked until explicit approval',
     'Owner content blockers',
@@ -170,9 +193,12 @@ function assertOwnerReviewDocs() {
     'This package does not approve deployment and does not deploy anything.',
     'This manual QA runbook is non-live and does not approve deployment.',
     'Protected admin quote detail',
+    'Protected content readiness workspace',
     'Not-found/recovery states',
     'docs/content/OWNER-CONTENT-INTAKE.md',
     'docs/content/CONTENT-GAP-REGISTER.md',
+    'docs/content/OWNER-REVIEW-ISSUE-LEDGER.md',
+    '/admin/content-readiness',
     'Owner content blockers',
     'Missing real contact/legal/business-hour content does not get invented',
     'Public launch cannot proceed until required owner content and explicit deployment approval are both supplied',
@@ -267,6 +293,53 @@ function assertContentGovernanceDocs() {
   );
 }
 
+function assertOwnerReviewIssueLedger() {
+  const ledger = readRepoFile(ownerReviewLedgerPath);
+  const normalizedLedger = normalizeWhitespace(ledger);
+
+  assertTracked([ownerReviewLedgerPath], 'owner-review issue ledger');
+
+  for (const required of [
+    'Public copy',
+    'Listing/category/event content',
+    'Images and alt text',
+    'Quote/enquiry expectations',
+    'Admin operator ownership',
+    'Legal/policy/contact gaps',
+    'Launch/deployment blockers',
+    'Owner input required',
+    'Ready for owner review',
+    'Blocks owner review',
+    'Blocks launch/deployment',
+    'Deferred after launch',
+    'Not in scope by owner direction',
+  ]) {
+    assertIncludes(normalizedLedger, required, 'owner-review issue ledger');
+  }
+
+  assertNoMatch(ledger, /\bvercel\s+(?:deploy|link|env|pull|promote)\b/i, 'owner-review issue ledger');
+  assertNoMatch(
+    ledger,
+    /\bsupabase\s+(?:link|login|projects|secrets|functions|db\s+(?:push|pull|remote|reset))\b/i,
+    'owner-review issue ledger',
+  );
+  assertNoMatch(
+    ledger,
+    /\b(?:create|copy|edit|fill|commit|configure|add)\s+(?:a\s+)?`?\.env/i,
+    'owner-review issue ledger',
+  );
+  assertNoMatch(
+    ledger,
+    /award-winning|certified partner|trusted by|5-star|guaranteed availability|guaranteed delivery|licensed and insured|testimonial|client logo|case study|legal guarantee|production policy/i,
+    'owner-review issue ledger',
+  );
+  assertNoMatch(
+    ledger,
+    /\b(?:\+?\d[\d\s().-]{7,}|[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}|Mon(?:day)?\s*-\s*Fri|24\/7|123\s+Main|Singapore\s+\d{6})\b/i,
+    'owner-review issue ledger',
+  );
+}
+
 function assertStatusDocs() {
   const status = readRepoFile('docs/PHASE-STATUS.md');
   const roadmap = readRepoFile('docs/PHASE-ROADMAP.md').replace(/\s+/g, ' ');
@@ -274,6 +347,19 @@ function assertStatusDocs() {
   const decisionLog = readRepoFile('docs/DECISION-LOG.md');
   const checklist = readRepoFile('docs/checklists/PHASE-2-ADMIN-OPS.md');
 
+  assertIncludes(
+    status,
+    'Current phase: Phase 3L-A/B - protected content readiness workspace, owner-review issue ledger, and public copy fact-safety audit.',
+    'phase status',
+  );
+  assertIncludes(
+    status,
+    'Latest completed capability: Phase 3K-A/B owner content intake, content gap register, and launch-blocker governance.',
+    'phase status',
+  );
+  assertIncludes(status, 'Last merged capability PR: #133', 'phase status');
+  assertIncludes(status, `Merge commit: \`${phase3kMergeCommit}\``, 'phase status');
+  assertIncludes(status, 'Previous Current Phase 3K-A/B status', 'phase status');
   assertIncludes(
     status,
     'Current phase: Phase 3K-A/B - owner content intake, content gap register, and launch-blocker governance.',
@@ -317,7 +403,14 @@ function assertStatusDocs() {
     'Phase 3K-A/B adds owner content intake, a content gap register, and launch-blocker governance',
     'phase roadmap',
   );
+  assertIncludes(
+    roadmap,
+    'Phase 3L-A/B adds a protected content readiness workspace, owner-review issue ledger, and public copy fact-safety audit',
+    'phase roadmap',
+  );
+  assertIncludes(readiness, 'Current Phase 3L-A/B status', 'readiness plan');
   assertIncludes(readiness, 'Current Phase 3K-A/B status', 'readiness plan');
+  assertIncludes(readiness, 'Previous Current Phase 3K-A/B status', 'readiness plan');
   assertIncludes(readiness, 'Previous Current Phase 3J-A/B status', 'readiness plan');
   assertIncludes(readiness, 'Previous Current Phase 3I-A/B status', 'readiness plan');
   assertIncludes(readiness, 'Previous Current Phase 3H-A/B status', 'readiness plan');
@@ -399,6 +492,71 @@ function assertStatusDocs() {
     '## Phase 3K-A/B Owner Content Intake Content Gap Register And Launch-Blocker Governance',
     'phase checklist',
   );
+  assertIncludes(
+    decisionLog,
+    'Decision: Phase 3L-A/B adds a protected content readiness workspace, owner-review issue ledger, and public copy fact-safety audit.',
+    'decision log',
+  );
+  assertIncludes(
+    checklist,
+    '## Phase 3L-A/B Protected Content Readiness Workspace Owner-Review Issue Ledger And Public Copy Fact-Safety Audit',
+    'phase checklist',
+  );
+}
+
+function assertProtectedContentReadinessWorkspace() {
+  const routeSource = readRepoFile(contentReadinessRoutePath);
+  const shellSource = readRepoFile(protectedAdminShellPath);
+
+  assertTracked(
+    [contentReadinessRoutePath, protectedAdminShellPath],
+    'protected content readiness workspace',
+  );
+  assertIncludes(routeSource, 'resolveProtectedAdminShellState', contentReadinessRoutePath);
+  assertIncludes(routeSource, 'AdminShellContent', contentReadinessRoutePath);
+  assertIncludes(routeSource, 'view={{ kind: "content-readiness" }}', contentReadinessRoutePath);
+  assertIncludes(routeSource, 'dynamic = "force-dynamic"', contentReadinessRoutePath);
+  assertIncludes(routeSource, 'revalidate = 0', contentReadinessRoutePath);
+  assertIncludes(shellSource, '"content-readiness"', protectedAdminShellPath);
+  assertIncludes(shellSource, ownerContentIntakePath, protectedAdminShellPath);
+  assertIncludes(shellSource, contentGapRegisterPath, protectedAdminShellPath);
+  assertIncludes(shellSource, ownerReviewLedgerPath, protectedAdminShellPath);
+  assertNoMatch(routeSource, /NEXT_PUBLIC_SUPABASE|NEXT_PUBLIC_N8N|SUPABASE_SERVICE_ROLE/i, contentReadinessRoutePath);
+}
+
+function assertPublicCopyFactSafety() {
+  const publicSource = readTrackedProductionSources([
+    'website/app/layout.tsx',
+    'website/app/page.tsx',
+    'website/app/listings',
+    'website/app/categories',
+    'website/app/catalogue',
+    'website/app/events',
+    'website/app/quote',
+    'website/components/QuoteRequestForm.tsx',
+    'website/components/ChatWidget.tsx',
+  ]);
+
+  assertNoMatch(
+    publicSource,
+    /\b(?:\+?\d[\d\s().-]{7,}|[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}|Mon(?:day)?\s*-\s*Fri|24\/7|123\s+Main|Singapore\s+\d{6})\b/i,
+    'public route source',
+  );
+  assertNoMatch(
+    publicSource,
+    /award-winning|certified partner|trusted by|5-star|guaranteed availability|guaranteed delivery|licensed and insured|testimonial|client logo|case study|legal guarantee|production policy/i,
+    'public route source',
+  );
+  assertNoMatch(
+    publicSource,
+    /\b(?:cart|checkout|payments?|purchase|orders?|customer accounts?|stock reservation|order fulfilment|fulfilment|confirmed booking|online ordering)\b/i,
+    'public route source',
+  );
+  assertNoMatch(
+    publicSource,
+    /Owner input required|Ready for owner review|Blocks owner review|Blocks launch\/deployment|Deferred after launch|Not in scope by owner direction|Owner-review issue ledger|content readiness workspace|admin-only readiness|\/admin\/content-readiness|admin issue ledger/i,
+    'public route source',
+  );
 }
 
 function assertStaticScope() {
@@ -464,7 +622,10 @@ assertPackageAndCi();
 assertHandoffDocs();
 assertOwnerReviewDocs();
 assertContentGovernanceDocs();
+assertOwnerReviewIssueLedger();
 assertStatusDocs();
+assertProtectedContentReadinessWorkspace();
+assertPublicCopyFactSafety();
 assertStaticScope();
 assertValidatorSafety();
 

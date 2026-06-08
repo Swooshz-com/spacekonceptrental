@@ -175,6 +175,7 @@ const internalRouteAllowlist = [
   /^\/admin\/listings$/,
   /^\/admin\/categories$/,
   /^\/admin\/media$/,
+  /^\/admin\/content-readiness$/,
   /^\/admin\/quotes$/,
   /^\/admin\/quotes\/[A-Za-z0-9-]+$/
 ];
@@ -329,6 +330,7 @@ describe("Phase 3E-A/B product readiness, navigation QA, and dead-end polish", (
       { kind: "categories" as const },
       { kind: "media" as const },
       { kind: "quotes" as const },
+      { kind: "content-readiness" as const },
       {
         kind: "quote-detail" as const,
         quoteRequestId: "quote-1"
@@ -348,6 +350,7 @@ describe("Phase 3E-A/B product readiness, navigation QA, and dead-end polish", (
       "/admin/listings",
       "/admin/categories",
       "/admin/media",
+      "/admin/content-readiness",
       "/admin/quotes",
       "/admin/quotes/quote-1"
     ]) {

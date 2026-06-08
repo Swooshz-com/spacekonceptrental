@@ -2202,6 +2202,39 @@ paths, add retention cleanup jobs, or add ecommerce flows such as carts,
 checkout, payments, stock reservation, confirmed booking, order fulfilment, or
 online ordering.
 
+## 2026-06-08: Protected Content Readiness Workspace, Owner-Review Issue Ledger, And Public Copy Fact-Safety Audit
+
+Decision: Phase 3L-A/B adds a protected content readiness workspace, owner-review issue ledger, and public copy fact-safety audit.
+
+Reason: PR #133 merged Phase 3K-A/B at
+`d4271ea6b181ee702dfe9d6f2b6003903b0c54dd`, completing owner content intake,
+content gap register, and launch-blocker governance without deploying or
+approving deployment. The next approved work item is to make that repo-local
+content governance visible inside protected admin review and add deterministic
+public copy fact-safety checks.
+
+The implementation adds a protected admin content readiness workspace, an
+owner-review issue ledger, public copy fact-safety coverage, and docs/status
+roll-forward from PR #133. It keeps the existing public catalogue read
+boundary, public quote request API contract, protected admin shell gate, and
+RPC-backed admin write boundaries.
+
+Phase 3L-A/B does not deploy, approve deployment, add Vercel config, connect
+Supabase Cloud, add real secrets or env values, add production evidence, add
+browser Supabase, add service-role runtime paths, access
+`website/chat-config.js`, add public/customer upload routes, add customer
+accounts, add public quote tracking, expose customer-visible internal notes,
+add notifications or CRM integration, change n8n/Pinecone runtime behavior,
+add SaaS chatbot runtime work, add Pinecone SDK/package dependencies, add
+Pinecone env vars or API keys, add embedding/reranking runtime, wire
+`/api/chat` to retrieval/RAG, wire transcript reads or writes into
+`/api/chat`, add admin transcript UI, add transcript deletion/export runtime
+paths, add retention cleanup jobs, invent real contact details, phone numbers,
+email addresses, physical addresses, business hours, testimonials, client
+names, awards, certifications, legal claims, guarantees, production policies,
+or add ecommerce flows such as carts, checkout, payments, stock reservation,
+confirmed booking, order fulfilment, or online ordering.
+
 ## 2026-06-08: Owner Content Intake, Content Gap Register, And Launch-Blocker Governance
 
 Decision: Phase 3K-A/B adds owner content intake, content gap register, and launch-blocker governance.
