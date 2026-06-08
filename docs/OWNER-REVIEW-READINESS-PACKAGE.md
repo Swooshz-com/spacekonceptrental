@@ -41,7 +41,9 @@ Use `docs/content/LOCAL-RELEASE-CANDIDATE-ACCEPTANCE-MATRIX.md` for the local
 release-candidate acceptance gate and
 `docs/content/LOCAL-ROUTE-INVENTORY-FREEZE.md` for the local route inventory
 freeze. Local release-candidate acceptance matrix and Local route inventory
-freeze materials remain repo-local and template-only.
+freeze materials remain repo-local and template-only. Use
+`docs/content/LOCAL-RELEASE-CANDIDATE-COMMAND-CENTRE.md` for the local
+release-candidate command centre and safe local suite order.
 
 Owner content blockers must remain separate from deployment approval. Missing
 real contact/legal/business-hour content does not get invented. Public launch
@@ -87,6 +89,11 @@ matrix and local route inventory freeze. Those materials are template-only,
 repo-local, and admin-only; they do not record completed manual QA, preview
 evidence, production evidence, owner sign-off, or deployment approval.
 
+The protected workspace also references the local release-candidate command
+centre. That material is template-only, repo-local, and admin-only; it defines
+safe local command groups and forbidden command categories without approving
+deployment or creating filled evidence.
+
 ## Ready for owner review
 
 - Public website journey from homepage to catalogue, listings, categories,
@@ -115,12 +122,17 @@ evidence, production evidence, owner sign-off, or deployment approval.
   filled owner issues.
 - Local release-candidate acceptance gate and route inventory freeze for
   deterministic repo-local public/admin boundary review.
+- Local release-candidate command centre for safe local suite orchestration
+  without deployment, provider configuration, live preview checks, or evidence
+  writing.
 - Admin-only readiness cues, internal quote follow-up context, and recovery
   links that stay inside protected admin routes.
 - Local validation commands and deterministic docs/tests for the owner review
   package.
 - `validate:local-release-candidate` for the repo-local acceptance gate without
   deployment/provider/live-preview commands.
+- `validate:release-candidate-suite` for local-only fail-fast orchestration of
+  approved validators, tests, typecheck, and build commands.
 
 ## Intentionally not implemented
 

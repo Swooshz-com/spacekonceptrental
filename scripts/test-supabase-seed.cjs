@@ -143,7 +143,7 @@ function waitForDatabase() {
   throw new Error(`Local test database did not become ready. ${lastError}`);
 }
 
-// Test-only Supabase auth shim. Production migrations and seed files must not define auth.uid().
+// Test-only Supabase auth/storage shim. Production migrations and seed files must not define these.
 function setupSupabaseCompatibility() {
   psql(`
     do $setup$
@@ -159,6 +159,7 @@ function setupSupabaseCompatibility() {
     $setup$;
 
     create schema if not exists auth;
+    create schema if not exists storage;
 
     create or replace function auth.uid()
     returns uuid
@@ -171,6 +172,28 @@ function setupSupabaseCompatibility() {
     grant usage on schema auth to anon, authenticated;
     grant execute on function auth.uid() to anon, authenticated;
     grant usage on schema public to anon, authenticated;
+    grant usage on schema storage to anon, authenticated;
+
+    create table if not exists storage.buckets (
+      id text primary key,
+      name text not null,
+      public boolean not null default false,
+      file_size_limit integer,
+      allowed_mime_types text[],
+      created_at timestamptz not null default now(),
+      updated_at timestamptz not null default now()
+    );
+
+    create table if not exists storage.objects (
+      id uuid primary key default gen_random_uuid(),
+      bucket_id text not null references storage.buckets (id),
+      name text not null,
+      owner uuid,
+      metadata jsonb not null default '{}'::jsonb,
+      created_at timestamptz not null default now(),
+      updated_at timestamptz not null default now(),
+      constraint storage_objects_bucket_name_key unique (bucket_id, name)
+    );
   `);
 }
 
@@ -178,6 +201,24 @@ function grantBrowserRoleSelects() {
   psql(`
     grant usage on schema public to anon, authenticated;
     grant select on all tables in schema public to anon, authenticated;
+  `);
+}
+
+function setupPublicCatalogueConfig() {
+  psql(`
+    insert into public.catalogue_public_workspace_config (
+      id,
+      active_workspace_id,
+      is_enabled
+    ) values (
+      true,
+      '11111111-1111-4111-8111-111111111111',
+      true
+    )
+    on conflict (id) do update
+    set
+      active_workspace_id = excluded.active_workspace_id,
+      is_enabled = excluded.is_enabled;
   `);
 }
 
@@ -214,14 +255,20 @@ function assertNoRuntimeSupabaseUse() {
   ];
   const libRoot = path.join(repoRoot, 'website', 'lib');
   const approvedServerSupabaseFiles = new Set([
+    'website/lib/server-runtime-config.ts',
     'website/lib/supabase/env.ts',
     'website/lib/supabase/server.ts',
+    'website/lib/admin/authorization/supabase-admin-auth-identity-adapter.ts',
+    'website/lib/admin/authorization/supabase-admin-profile-membership-adapters.ts',
   ]);
   const approvedCatalogueReadFiles = new Set([
     'website/lib/catalogue/catalogue-repository.ts',
   ]);
   const approvedQuoteWriteFiles = new Set([
     'website/lib/quote/quote-repository.ts',
+  ]);
+  const approvedMediaUploadFiles = new Set([
+    'website/lib/products/media/admin-product-image-upload-route.ts',
   ]);
   const extensions = new Set(['.js', '.jsx', '.mjs', '.cjs', '.ts', '.tsx']);
   const browserBlockedPatterns = [
@@ -254,6 +301,18 @@ function assertNoRuntimeSupabaseUse() {
     /from\(["']products["']\)/i,
     /from\(["']categories["']\)/i,
     /from\(["']product_images["']\)/i,
+    /from\(["']conversations["']\)/i,
+    /from\(["']messages["']\)/i,
+    /from\(["']admin_users["']\)/i,
+    /from\(["']memberships["']\)/i,
+    /from\(["']usage_events["']\)/i,
+    /from\(["']audit_logs["']\)/i,
+    /from\(["']integration_connections["']\)/i,
+  ];
+  const blockedMediaUploadTablePatterns = [
+    /from\(["']categories["']\)/i,
+    /from\(["']quote_requests["']\)/i,
+    /from\(["']quote_request_items["']\)/i,
     /from\(["']conversations["']\)/i,
     /from\(["']messages["']\)/i,
     /from\(["']admin_users["']\)/i,
@@ -328,23 +387,23 @@ function assertNoRuntimeSupabaseUse() {
         );
         assert.match(
           content,
-          /from\(["']categories["']\)/,
-          `${relativePath} must read categories explicitly.`,
+          /\.rpc\(["']get_public_catalogue["']/,
+          `${relativePath} must read catalogue data through the approved RPC.`,
         );
         assert.match(
           content,
-          /from\(["']products["']\)/,
-          `${relativePath} must read products explicitly.`,
+          /\bexpected_workspace_id\b/,
+          `${relativePath} must pass the expected workspace id to the catalogue RPC.`,
         );
         assert.match(
           content,
-          /eq\(["']is_published["'],\s*true\)/,
-          `${relativePath} must filter categories to published rows.`,
+          /\bproduct_slug\b/,
+          `${relativePath} must keep product slug filtering inside the catalogue RPC.`,
         );
-        assert.match(
+        assert.doesNotMatch(
           content,
-          /eq\(["']status["'],\s*["']published["']\)/,
-          `${relativePath} must filter products to published rows.`,
+          /\.from\(["'](?:categories|products|product_images)["']\)/,
+          `${relativePath} must not read catalogue base tables directly.`,
         );
         assertNoMatches(filePath, content, serverBlockedPatterns);
         assertNoMatches(filePath, content, blockedCatalogueTablePatterns);
@@ -374,6 +433,37 @@ function assertNoRuntimeSupabaseUse() {
         );
         assertNoMatches(filePath, content, serverBlockedPatterns);
         assertNoMatches(filePath, content, blockedQuoteWriteTablePatterns);
+        return;
+      }
+
+      if (approvedMediaUploadFiles.has(relativePath)) {
+        assert.match(
+          content,
+          /import\s+["']server-only["'];/,
+          `${relativePath} must be marked server-only.`,
+        );
+        assert.match(
+          content,
+          /resolveServerAdminCsrfProofSessionWorkspaceBinding/,
+          `${relativePath} must require the approved admin CSRF/session workspace binding.`,
+        );
+        assert.match(
+          content,
+          /requestedOperation:\s*productImageWriteOperation/,
+          `${relativePath} must require productImage.write.`,
+        );
+        assert.match(
+          content,
+          /createSessionBoundSupabaseAdminReadClient/,
+          `${relativePath} must use the session-bound Supabase client.`,
+        );
+        assert.match(
+          content,
+          /\.storage\.from\(listingMediaBucket\)/,
+          `${relativePath} must write only through the fixed listing media bucket.`,
+        );
+        assertNoMatches(filePath, content, serverBlockedPatterns);
+        assertNoMatches(filePath, content, blockedMediaUploadTablePatterns);
         return;
       }
 
@@ -475,32 +565,53 @@ check('seed data respects workspace-safe foreign keys', () => {
 });
 
 check('anonymous users see only published catalogue seed rows', () => {
-  assert.equal(
+  const catalogue = JSON.parse(
     scalarAs(
       'anon',
-      "select coalesce(string_agg(slug, ',' order by slug), '') from public.categories",
+      `
+        select public.get_public_catalogue(
+          '11111111-1111-4111-8111-111111111111',
+          null
+        )::text
+      `,
     ),
-    'banquet-tables,lounge-seating,outdoor-sets',
   );
 
-  assert.equal(
-    scalarAs(
-      'anon',
-      "select coalesce(string_agg(slug, ',' order by slug), '') from public.products",
-    ),
-    'banquet-table-pair,garden-bistro-set,modular-lounge-set',
+  assert.deepEqual(
+    catalogue.categories.map((category) => category.slug),
+    ['lounge-seating', 'banquet-tables'],
   );
 
-  assert.equal(
-    scalarAs(
-      'anon',
-      "select coalesce(string_agg(storage_path, ',' order by storage_path), '') from public.product_images",
+  assert.deepEqual(
+    catalogue.products.map((product) => product.slug),
+    ['modular-lounge-set', 'banquet-table-pair'],
+  );
+
+  assert.deepEqual(
+    catalogue.products.flatMap((product) =>
+      product.product_images.map((image) => image.storage_path),
     ),
     [
-      'sample-fixtures/banquet-table-pair-main.jpg',
-      'sample-fixtures/garden-bistro-set-main.jpg',
       'sample-fixtures/modular-lounge-set-main.jpg',
-    ].join(','),
+      'sample-fixtures/banquet-table-pair-main.jpg',
+    ],
+  );
+});
+
+check('anonymous users cannot read catalogue base tables directly', () => {
+  assert.equal(
+    scalarAs('anon', 'select count(*)::text from public.categories'),
+    '0',
+  );
+
+  assert.equal(
+    scalarAs('anon', 'select count(*)::text from public.products'),
+    '0',
+  );
+
+  assert.equal(
+    scalarAs('anon', 'select count(*)::text from public.product_images'),
+    '0',
   );
 });
 
@@ -584,6 +695,7 @@ function main() {
 
     grantBrowserRoleSelects();
     runSqlFile(seedFile);
+    setupPublicCatalogueConfig();
     runChecks();
   } finally {
     if (keepContainer) {

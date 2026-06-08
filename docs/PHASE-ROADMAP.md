@@ -1622,6 +1622,39 @@ legal claims, guarantees, production policies, or add public/customer
 transaction flows, retail transaction flows, stock-reservation-like flows, or
 fulfilment-like flows.
 
+## Phase 3T: Local Release-Candidate Command Centre, Acceptance-Suite Orchestration, And No-Deploy Command Allowlist
+
+Phase 3T-A/B adds a local release-candidate command centre,
+acceptance-suite orchestration, and no-deploy command allowlist for the current
+furniture/event rental website candidate.
+
+Phase 3T-A/B adds
+`docs/content/LOCAL-RELEASE-CANDIDATE-COMMAND-CENTRE.md` as a repo-local,
+template-only, non-live command centre defining safe local command groups,
+forbidden command categories, local acceptance-suite sequence, command purpose,
+what commands prove, what commands do not prove, blocked future work, and
+failure reporting without filled evidence.
+
+Phase 3T-A/B adds `scripts/validate-release-candidate-suite.cjs` and
+`validate:release-candidate-suite` as a fail-fast local suite runner for the
+safe repo validators, local Supabase checks, n8n validators, website tests,
+website typecheck, and website build. The suite runner does not run deployment,
+provider, live preview, network, environment-file, evidence-writing, or legacy
+local chat configuration commands.
+
+Phase 3T-A/B adds an admin-only command centre snapshot inside the protected
+content readiness workspace and extends local validators to check the command
+centre, suite runner, package script, allowlist, forbidden-command audit,
+public leakage boundaries, and no-deploy/no-evidence scope.
+
+Phase 3T-A/B does not deploy, approve deployment, add Vercel or Supabase Cloud
+config, add real secrets or env values, add filled evidence, invent owner
+review, invent real business facts, add browser Supabase, add service-role
+runtime paths, add n8n/Pinecone/RAG runtime changes, add public uploads, add
+customer accounts, add public quote tracking, add notifications or CRM, or add
+self-service completion-like flows, stock-reservation-like flows,
+fulfilment-like flows, or customer account flows.
+
 ## Phase 3S: Local Release-Candidate Acceptance Gate, Route Inventory Freeze, And Public/Admin Regression Harness
 
 Phase 3S-A/B adds a repo-local release-candidate acceptance gate, route

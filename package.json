@@ -9,6 +9,7 @@
     "validate:preview-smoke-harness": "node scripts/validate-preview-smoke-harness.cjs",
     "validate:preview-handoff": "node scripts/validate-preview-handoff.cjs",
     "validate:local-release-candidate": "node scripts/validate-local-release-candidate.cjs",
+    "validate:release-candidate-suite": "node scripts/validate-release-candidate-suite.cjs",
     "smoke:preview": "node scripts/smoke-preview.cjs",
     "test:supabase-seed": "node scripts/test-supabase-seed.cjs",
     "test:supabase-rls": "node scripts/test-supabase-rls.cjs",
