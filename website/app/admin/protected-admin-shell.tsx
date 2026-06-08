@@ -519,7 +519,9 @@ const contentReadinessSources = [
   "docs/content/OWNER-REVIEW-CLOSURE-SIGN-OFF-TEMPLATE.md",
   "docs/content/OWNER-REVIEW-DEPLOYMENT-APPROVAL-SEPARATION.md",
   "docs/content/OWNER-DEMO-WALKTHROUGH.md",
-  "docs/content/OWNER-DEMO-ISSUE-BACKLOG.md"
+  "docs/content/OWNER-DEMO-ISSUE-BACKLOG.md",
+  "docs/content/LOCAL-RELEASE-CANDIDATE-ACCEPTANCE-MATRIX.md",
+  "docs/content/LOCAL-ROUTE-INVENTORY-FREEZE.md"
 ] as const;
 
 const reviewSurfaceGroups = 11;
@@ -644,6 +646,19 @@ const ownerDemoIssueBacklogSnapshot = [
   ["Future launch/deployment blockers", "[TEMPLATE ONLY]"],
   ["Deployment approval", closureDeploymentApprovalStatus],
   ["Last local backlog update", ownerDemoIssueBacklogLastLocalUpdate]
+] as const;
+const localReleaseCandidateAcceptanceMatrixPath =
+  "docs/content/LOCAL-RELEASE-CANDIDATE-ACCEPTANCE-MATRIX.md";
+const localRouteInventoryFreezePath = "docs/content/LOCAL-ROUTE-INVENTORY-FREEZE.md";
+const localAcceptanceLastLocalUpdate = "[DATE PLACEHOLDER]";
+const localAcceptanceSnapshot = [
+  ["Local release-candidate acceptance matrix", "Template only"],
+  ["Route inventory freeze", "Template only"],
+  ["Public route acceptance", "[TEMPLATE ONLY]"],
+  ["Protected admin acceptance", "[TEMPLATE ONLY]"],
+  ["Public leakage audit", "[TEMPLATE ONLY]"],
+  ["Provider/deployment boundary", closureDeploymentApprovalStatus],
+  ["Last local acceptance update", localAcceptanceLastLocalUpdate]
 ] as const;
 
 const contentReadinessGroups = [
@@ -840,6 +855,24 @@ function ContentReadinessWorkspace() {
             public route polish, admin workflow follow-up, owner input, locally
             resolved items, and any future launch blockers from deployment
             approval.
+          </p>
+        </section>
+
+        <section className="admin-dashboard__card admin-dashboard__card--summary">
+          <h3>Local release-candidate acceptance snapshot</h3>
+          <dl className="quote-inbox__details">
+            {localAcceptanceSnapshot.map(([label, value]) => (
+              <div key={label}>
+                <dt>{label}</dt>
+                <dd>{value}</dd>
+              </div>
+            ))}
+          </dl>
+          <p>
+            The local acceptance matrix and route inventory freeze stay
+            template-only, admin-only, and repo-local. They do not approve
+            provider setup, deployment, preview evidence, owner sign-off, or
+            launch work.
           </p>
         </section>
 

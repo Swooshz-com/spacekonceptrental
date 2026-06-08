@@ -1622,6 +1622,40 @@ legal claims, guarantees, production policies, or add public/customer
 transaction flows, retail transaction flows, stock-reservation-like flows, or
 fulfilment-like flows.
 
+## Phase 3S: Local Release-Candidate Acceptance Gate, Route Inventory Freeze, And Public/Admin Regression Harness
+
+Phase 3S-A/B adds a repo-local release-candidate acceptance gate, route
+inventory freeze, and public/admin regression harness for the current
+furniture/event rental website candidate.
+
+Phase 3S-A/B adds
+`docs/content/LOCAL-RELEASE-CANDIDATE-ACCEPTANCE-MATRIX.md` as a
+template-only, non-live matrix for route purpose, audience, allowed wording,
+forbidden public wording, data boundary, owner input status, deployment
+boundary, acceptance status placeholders, and local follow-up placeholders.
+
+Phase 3S-A/B adds `docs/content/LOCAL-ROUTE-INVENTORY-FREEZE.md` as a local
+route-group expectation freeze covering public homepage, listings/catalogue,
+listing detail, categories, category-to-listing journey, events/event-use
+guidance, quote/enquiry request, not-found/recovery, protected admin overview,
+protected listing/category/media operations, protected quote inbox/detail, and
+the protected content readiness workspace.
+
+Phase 3S-A/B adds `scripts/validate-local-release-candidate.cjs` and
+`validate:local-release-candidate` to make local review deterministic. The
+validator checks the new docs, Phase 3S status tracking, public route leakage,
+public wording safety, protected admin snapshot references, forbidden tracked
+runtime/config/evidence paths, and Pinecone/n8n boundary preservation without
+running deployment, provider, or live preview commands.
+
+Phase 3S-A/B does not deploy, approve deployment, add Vercel or Supabase Cloud
+config, add real secrets or env values, add filled evidence, invent owner
+review, invent real business facts, add browser Supabase, add service-role
+runtime paths, add n8n/Pinecone/RAG runtime changes, add public uploads, add
+customer accounts, add public quote tracking, add notifications or CRM, or add
+self-service completion-like flows, stock-reservation-like flows,
+fulfilment-like flows, or customer account flows.
+
 ## Phase 3R: Product Acceptance Hardening, Public/Admin Route Polish, And Owner-Demo Issue Backlog Readiness
 
 Phase 3R-A/B adds repo-local product acceptance hardening, public/admin route

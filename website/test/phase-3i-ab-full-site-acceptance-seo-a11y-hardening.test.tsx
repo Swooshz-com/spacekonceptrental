@@ -276,7 +276,7 @@ describe("Phase 3I-A/B full-site acceptance SEO accessibility hardening", () => 
     cleanup();
     render(await QuotePage());
     expect(
-      screen.getByRole("heading", { level: 1, name: /quote request/i })
+      screen.getByRole("heading", { level: 1, name: /request a rental quote/i })
     ).toBeInTheDocument();
     expect(
       screen.getByRole("navigation", { name: /quote request recovery/i })

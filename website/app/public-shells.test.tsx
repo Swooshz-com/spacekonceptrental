@@ -113,7 +113,7 @@ describe("public page shells", () => {
   it("keeps public quote copy from implying ecommerce or online ordering", async () => {
     render(await QuotePage());
 
-    expect(screen.getByRole("heading", { name: /quote request/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /request a rental quote/i })).toBeInTheDocument();
     expect(screen.getByText(/furniture rental follow-up/i)).toBeInTheDocument();
     expect(screen.queryByText(/shell|mvp/i)).not.toBeInTheDocument();
     expect(

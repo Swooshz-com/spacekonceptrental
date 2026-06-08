@@ -158,7 +158,7 @@ export default async function QuotePage({
   return (
     <section className="section">
       <div className="page-title">
-        <h1>Quote request</h1>
+        <h1>Request a rental quote</h1>
         <p>
           Share the event details the team will need for a furniture rental
           follow-up.
