@@ -4,6 +4,56 @@ This is the quick status page for the SKR repo. Use `docs/PHASE-2-READINESS-PLAN
 
 ## Current phase
 
+Current phase: Phase 3U-A/B - final local owner handoff pack, acceptance triage board, and deployment decision firewall.
+
+Latest completed capability: Phase 3T-A/B local release-candidate command centre, acceptance-suite orchestration, and no-deploy command allowlist.
+
+Last merged capability PR: #142
+
+Merge commit: `66840d5d3bb77d39200a864bfcbecc29ee859f76`
+
+Phase 3U-A/B adds a final local owner handoff pack, acceptance triage board,
+and deployment decision firewall for the current furniture/event rental
+website candidate. It adds
+`docs/content/FINAL-LOCAL-OWNER-HANDOFF-PACK.md`,
+`docs/content/LOCAL-ACCEPTANCE-TRIAGE-BOARD.md`, and
+`docs/content/DEPLOYMENT-DECISION-FIREWALL.md` as repo-local,
+template-only, non-live materials that explain local acceptance scope, public
+route expectations, protected admin expectations, owner input still required,
+local follow-up categories, blocked future work, and deployment approval
+separation.
+
+Phase 3U-A/B keeps owner handoff, deployment firewall, local acceptance,
+release-candidate, protected admin, owner input, and internal review wording in
+docs and protected admin only. Public users only see listing, category,
+event-use, quote request, enquiry, rental, event furniture, and recovery
+guidance.
+
+The protected content readiness workspace now includes an admin-only final
+local owner handoff snapshot with template-only handoff pack, acceptance
+triage board, deployment decision firewall, public route handoff, protected
+admin handoff, owner input required, local follow-up, deployment approval, and
+last local handoff update values.
+
+No deployment is performed or approved by Phase 3U-A/B. It does not add Vercel
+config, connect Supabase Cloud, add real secrets or env values, add filled
+owner-review evidence, filled preview evidence, production evidence, Pinecone
+runtime code, Pinecone packages, Pinecone env reads, secrets, API keys,
+Pinecone executors, n8n workflow/runtime changes, embedding runtime, sync
+workers, `/api/chat` retrieval wiring, search-index document writers, real
+vector upsert/delete, runtime reranking, hybrid search runtime, browser
+Supabase, service-role runtime paths, public or customer upload routes, public
+quote tracking, customer-visible internal notes, notifications, CRM
+integration, customer accounts, invented real-world operational details,
+unsupported business assertions, or self-service completion-like flows,
+stock-reservation-like flows, fulfilment-like flows, or customer account
+flows.
+
+Missing real-world operational details and unsupported business assertions must
+remain marked as owner input required and must not be invented.
+
+Previous Current Phase 3T-A/B status:
+
 Current phase: Phase 3T-A/B - local release-candidate command centre, acceptance-suite orchestration, and no-deploy command allowlist.
 
 Latest completed capability: Phase 3S-A/B repo-local release-candidate acceptance gate, route inventory freeze, and public/admin regression harness.

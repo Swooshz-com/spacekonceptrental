@@ -1622,6 +1622,43 @@ legal claims, guarantees, production policies, or add public/customer
 transaction flows, retail transaction flows, stock-reservation-like flows, or
 fulfilment-like flows.
 
+## Phase 3U: Final Local Owner Handoff Pack, Acceptance Triage Board, And Deployment Decision Firewall
+
+Phase 3U-A/B adds a final local owner handoff pack, acceptance triage board,
+and deployment decision firewall for the current furniture/event rental website
+candidate.
+
+Phase 3U-A/B adds `docs/content/FINAL-LOCAL-OWNER-HANDOFF-PACK.md` as a
+repo-local, template-only, non-live handoff pack that summarizes current
+candidate purpose, public route review, protected admin review, local suite
+scope, owner input still required, local follow-up categories, blocked future
+work, and failure reporting without evidence files.
+
+Phase 3U-A/B adds `docs/content/LOCAL-ACCEPTANCE-TRIAGE-BOARD.md` as a
+template-only triage board for public route polish, listing/category/media
+content, quote/enquiry flow, protected admin workflow, owner input required,
+local suite failure, future deployment blockers, deferred after launch, and
+not-in-current-scope follow-up.
+
+Phase 3U-A/B adds `docs/content/DEPLOYMENT-DECISION-FIREWALL.md` to separate
+local acceptance readiness, owner review readiness, owner sign-off, deployment
+approval, provider configuration, preview publication, production launch, and
+post-launch monitoring. Local acceptance, owner-review closure readiness, and
+handoff pack completion do not approve deployment.
+
+Phase 3U-A/B adds an admin-only final handoff snapshot inside the protected
+content readiness workspace and extends local validators to check the new
+handoff pack, triage board, deployment decision firewall, public leakage
+boundaries, and no-deploy/no-evidence scope.
+
+Phase 3U-A/B does not deploy, approve deployment, add Vercel or Supabase Cloud
+config, add real secrets or env values, add filled evidence, invent owner
+review, invent real business facts, add browser Supabase, add service-role
+runtime paths, add n8n/Pinecone/RAG runtime changes, add public uploads, add
+customer accounts, add public quote tracking, add notifications or CRM, or add
+self-service completion-like flows, stock-reservation-like flows,
+fulfilment-like flows, or customer account flows.
+
 ## Phase 3T: Local Release-Candidate Command Centre, Acceptance-Suite Orchestration, And No-Deploy Command Allowlist
 
 Phase 3T-A/B adds a local release-candidate command centre,

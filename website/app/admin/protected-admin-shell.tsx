@@ -522,7 +522,10 @@ const contentReadinessSources = [
   "docs/content/OWNER-DEMO-ISSUE-BACKLOG.md",
   "docs/content/LOCAL-RELEASE-CANDIDATE-ACCEPTANCE-MATRIX.md",
   "docs/content/LOCAL-ROUTE-INVENTORY-FREEZE.md",
-  "docs/content/LOCAL-RELEASE-CANDIDATE-COMMAND-CENTRE.md"
+  "docs/content/LOCAL-RELEASE-CANDIDATE-COMMAND-CENTRE.md",
+  "docs/content/FINAL-LOCAL-OWNER-HANDOFF-PACK.md",
+  "docs/content/LOCAL-ACCEPTANCE-TRIAGE-BOARD.md",
+  "docs/content/DEPLOYMENT-DECISION-FIREWALL.md"
 ] as const;
 
 const reviewSurfaceGroups = 11;
@@ -672,6 +675,24 @@ const localCommandCentreSnapshot = [
   ["Public leakage audit", "[TEMPLATE ONLY]"],
   ["Provider/deployment boundary", closureDeploymentApprovalStatus],
   ["Last local command-centre update", localCommandCentreLastLocalUpdate]
+] as const;
+const finalOwnerHandoffPackPath =
+  "docs/content/FINAL-LOCAL-OWNER-HANDOFF-PACK.md";
+const localAcceptanceTriageBoardPath =
+  "docs/content/LOCAL-ACCEPTANCE-TRIAGE-BOARD.md";
+const deploymentDecisionFirewallPath =
+  "docs/content/DEPLOYMENT-DECISION-FIREWALL.md";
+const finalOwnerHandoffLastLocalUpdate = "[DATE PLACEHOLDER]";
+const finalOwnerHandoffSnapshot = [
+  ["Final local owner handoff pack", "Template only"],
+  ["Acceptance triage board", "Template only"],
+  ["Deployment decision firewall", "Template only"],
+  ["Public route handoff", "[TEMPLATE ONLY]"],
+  ["Protected admin handoff", "[TEMPLATE ONLY]"],
+  ["Owner input required", "[TEMPLATE ONLY]"],
+  ["Local follow-up", "[TEMPLATE ONLY]"],
+  ["Deployment approval", closureDeploymentApprovalStatus],
+  ["Last local handoff update", finalOwnerHandoffLastLocalUpdate]
 ] as const;
 
 const contentReadinessGroups = [
@@ -904,6 +925,24 @@ function ContentReadinessWorkspace() {
             admin-only, and repo-local. They do not approve deployment, provider
             setup, live preview checks, evidence capture, owner sign-off, or
             launch work.
+          </p>
+        </section>
+
+        <section className="admin-dashboard__card admin-dashboard__card--summary">
+          <h3>Final local owner handoff snapshot</h3>
+          <dl className="quote-inbox__details">
+            {finalOwnerHandoffSnapshot.map(([label, value]) => (
+              <div key={label}>
+                <dt>{label}</dt>
+                <dd>{value}</dd>
+              </div>
+            ))}
+          </dl>
+          <p>
+            The final handoff pack, triage board, and deployment decision
+            firewall stay template-only, protected, and repo-local. They do not
+            record owner approval, filled evidence, provider setup, preview
+            publication, production launch, or deployment approval.
           </p>
         </section>
 

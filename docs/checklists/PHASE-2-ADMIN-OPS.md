@@ -364,6 +364,15 @@ and route/action boundaries are implemented and tested.
 - [x] Preview handoff validation checks Phase 3O docs/status roll-forward, PR #136 merge commit, correction intake tracking, launch-blocker freeze gate tracking, correction PR plan tracking, protected content readiness workspace references, public-route leakage, no deployment/provider/runtime/ecommerce scope creep, and no fake business facts.
 - [x] No deployment, deployment approval, Vercel config, Supabase Cloud config, secrets/env values, filled owner-review, preview, or production evidence, browser Supabase, service-role runtime path, customer uploads, public quote tracking, customer accounts, customer-visible internal notes, notifications, CRM, n8n/Pinecone runtime change, invented real contact details, phone numbers, email addresses, physical addresses, business hours, testimonials, client names, awards, certifications, legal claims, guarantees, production policies, or ecommerce flow is added.
 
+## Phase 3U-A/B Final Local Owner Handoff Pack Acceptance Triage Board And Deployment Decision Firewall
+
+- [x] `docs/content/FINAL-LOCAL-OWNER-HANDOFF-PACK.md` records a repo-local, template-only, non-live final handoff pack with placeholders only.
+- [x] `docs/content/LOCAL-ACCEPTANCE-TRIAGE-BOARD.md` records template-only triage lanes for public route polish, listing/category/media content, quote/enquiry flow, protected admin workflow, owner input required, local suite failure, future deployment blocker, deferred after launch, and not-in-current-scope follow-up.
+- [x] `docs/content/DEPLOYMENT-DECISION-FIREWALL.md` separates local acceptance readiness, owner review readiness, owner sign-off, deployment approval, provider configuration, preview publication, production launch, and post-launch monitoring.
+- [x] Protected content readiness includes an admin-only final handoff snapshot for the handoff pack, triage board, deployment decision firewall, public route handoff, protected admin handoff, owner input required, local follow-up, deployment approval, and local update placeholder.
+- [x] Static tests cover Phase 3U docs/status roll-forward, final owner handoff pack tracking, acceptance triage board tracking, deployment decision firewall tracking, protected admin-only snapshot rendering, public leakage boundaries, forbidden tracked config/runtime/evidence paths, and no fake business facts.
+- [x] Phase 3U remains repo-local only and does not add deployment approval, provider config, secrets/env values, filled evidence, owner sign-off, real business facts, browser Supabase, service-role runtime paths, n8n/Pinecone/RAG runtime changes, public uploads, customer accounts, public quote tracking, notifications, CRM, live preview smoke, network checks, evidence-writing commands, or self-service completion-like flows.
+
 ## Phase 3T-A/B Local Release-Candidate Command Centre Acceptance-Suite Orchestration And No-Deploy Command Allowlist
 
 - [x] `docs/content/LOCAL-RELEASE-CANDIDATE-COMMAND-CENTRE.md` records a repo-local, template-only, non-live command centre with placeholders only.

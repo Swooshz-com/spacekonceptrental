@@ -37,7 +37,12 @@ Use `docs/content/LOCAL-RELEASE-CANDIDATE-ACCEPTANCE-MATRIX.md` for the local
 release-candidate acceptance gate and
 `docs/content/LOCAL-ROUTE-INVENTORY-FREEZE.md` for the local route inventory
 freeze. Use `docs/content/LOCAL-RELEASE-CANDIDATE-COMMAND-CENTRE.md` for the
-local release-candidate command centre and safe local suite order.
+local release-candidate command centre and safe local suite sequence. Use
+`docs/content/FINAL-LOCAL-OWNER-HANDOFF-PACK.md` for the final local owner
+handoff pack, `docs/content/LOCAL-ACCEPTANCE-TRIAGE-BOARD.md` for the local
+acceptance triage board, and
+`docs/content/DEPLOYMENT-DECISION-FIREWALL.md` for the deployment decision
+firewall.
 Owner content blockers are governance notes only. Missing real
 contact/legal/business-hour content does not get invented. Owner review can
 continue without deployment.
@@ -69,6 +74,10 @@ Confirm the local release-candidate command centre snapshot references the
 command centre, suite runner, safe command allowlist, forbidden command audit,
 public leakage audit, provider/deployment boundary, and last local
 command-centre update placeholders.
+Confirm the final local owner handoff snapshot references the final local owner
+handoff pack, acceptance triage board, deployment decision firewall, public
+route handoff, protected admin handoff, owner input required, local follow-up,
+deployment approval, and last local handoff update placeholders.
 
 ## Local validation commands
 

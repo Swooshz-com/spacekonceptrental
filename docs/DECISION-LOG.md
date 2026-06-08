@@ -2202,6 +2202,35 @@ paths, add retention cleanup jobs, or add ecommerce flows such as carts,
 checkout, payments, stock reservation, confirmed booking, order fulfilment, or
 online ordering.
 
+## 2026-06-09: Final Local Owner Handoff Pack, Acceptance Triage Board, And Deployment Decision Firewall
+
+Decision: Phase 3U-A/B adds a final local owner handoff pack, acceptance triage board, and deployment decision firewall.
+
+Reason: PR #142 merged Phase 3T-A/B at
+`66840d5d3bb77d39200a864bfcbecc29ee859f76`. The repo now has a local
+release-candidate command centre and suite runner, but owner/operator handoff
+still needs one final repo-local layer that separates local acceptance
+readiness, owner review readiness, and deployment approval.
+
+Implementation: Phase 3U-A/B adds
+`docs/content/FINAL-LOCAL-OWNER-HANDOFF-PACK.md`,
+`docs/content/LOCAL-ACCEPTANCE-TRIAGE-BOARD.md`,
+`docs/content/DEPLOYMENT-DECISION-FIREWALL.md`, an admin-only final handoff
+snapshot inside the protected content readiness workspace, deterministic Phase
+3U regression tests, and local validator coverage for the handoff/firewall
+materials and public/admin boundary.
+
+Boundary: Phase 3U-A/B is repo-local only. It does not deploy, approve
+deployment, add Vercel config, connect Supabase Cloud, add real secrets or env
+values, add filled owner-review evidence, add filled preview evidence, add
+production evidence, invent owner review, invent owner sign-off, invent real
+business facts, add browser Supabase, add service-role runtime paths, add n8n
+or Pinecone runtime changes, wire `/api/chat` to retrieval, add public uploads,
+add customer accounts, add public quote tracking, add notifications or CRM, run
+live preview smoke, run network URL checks, write evidence files, or add
+self-service completion-like flows, stock-reservation-like flows,
+fulfilment-like flows, or customer account flows.
+
 ## 2026-06-09: Local Release-Candidate Command Centre, Acceptance-Suite Orchestration, And No-Deploy Command Allowlist
 
 Decision: Phase 3T-A/B adds a local release-candidate command centre, acceptance-suite orchestration, and no-deploy command allowlist.
