@@ -238,7 +238,37 @@ Suggested first PR:
   Supabase, production evidence, or ecommerce flows. Product language remains
   enquiry/quote/request.
 
-Current Phase 3O-A/B status:
+Current Phase 3P-A/B status:
+
+- PR #137 merged Phase 3O-A/B owner-review correction intake,
+  launch-blocker freeze gate, and admin triage snapshot at merge commit
+  `fd5614bb1e0a9e0e33f064ecaba7bc85dba36efb`.
+- Latest completed capability is Phase 3O-A/B owner-review correction intake,
+  launch-blocker freeze gate, and admin triage snapshot.
+- Phase 3P-A/B is current as owner-review closure packet, readiness sign-off
+  template, and deployment approval separation for template-only closure
+  readiness, safe owner-review closure state separation, deployment approval
+  separation, and public/admin visibility separation.
+- The protected content readiness workspace now summarizes the closure
+  readiness snapshot and references the closure packet, readiness sign-off
+  template, and deployment approval separation note without creating public
+  route tracking or mutable closure state.
+- Public copy must not invent phone numbers, email addresses, physical
+  addresses, business hours, client names, testimonials, awards,
+  certifications, legal claims, guarantees, production policies, service-area
+  claims, or public/customer transaction flows. Owner-only closure packet,
+  sign-off template, approval separation, and closure readiness details remain
+  protected/admin-only.
+- No deployment, deployment approval, Vercel config, Supabase Cloud config,
+  real env values, production evidence, preview evidence, owner-review
+  evidence, browser Supabase, service-role runtime paths, n8n/Pinecone/RAG
+  runtime work, public quote tracking, customer accounts, customer-visible
+  internal notes, notifications, CRM integration, public/customer upload
+  routes, transcript runtime paths, invented real contact details,
+  testimonials, client names, legal claims, production policies, or
+  public/customer transaction flow is added.
+
+Previous Current Phase 3O-A/B status:
 
 - PR #136 merged Phase 3N-A/B owner-review dry-run packet, findings
   disposition workflow, and launch hold/approve rehearsal at merge commit

@@ -514,7 +514,10 @@ const contentReadinessSources = [
   "docs/content/OWNER-REVIEW-LAUNCH-DECISION-REHEARSAL.md",
   "docs/content/OWNER-REVIEW-CORRECTION-INTAKE.md",
   "docs/content/OWNER-REVIEW-LAUNCH-BLOCKER-FREEZE-GATE.md",
-  "docs/content/OWNER-REVIEW-CORRECTION-PR-PLAN.md"
+  "docs/content/OWNER-REVIEW-CORRECTION-PR-PLAN.md",
+  "docs/content/OWNER-REVIEW-CLOSURE-PACKET.md",
+  "docs/content/OWNER-REVIEW-CLOSURE-SIGN-OFF-TEMPLATE.md",
+  "docs/content/OWNER-REVIEW-DEPLOYMENT-APPROVAL-SEPARATION.md"
 ] as const;
 
 const reviewSurfaceGroups = 11;
@@ -601,6 +604,23 @@ const futureCorrectionPrTypes = [
 ] as const;
 const correctionFreezeDeploymentBoundary =
   "Future correction planning cannot approve deployment.";
+const ownerReviewClosureStates = [
+  "Continue",
+  "Blocked",
+  "Ready to close"
+] as const;
+const ownerReviewClosureTemplateFields = [
+  "[OWNER NAME / ROLE]",
+  "[REVIEW DATE]",
+  "[ROUTE / AREA]",
+  "[DECISION: CONTINUE / BLOCKED / READY TO CLOSE]",
+  "[OPEN ITEM SUMMARY]",
+  "[REQUIRED FOLLOW-UP]",
+  "[DEPLOYMENT APPROVAL: NOT GRANTED]"
+] as const;
+const closureDeploymentApprovalStatus =
+  "Not approved / separate explicit approval required";
+const closureSnapshotLastLocalPacketUpdate = "[DATE PLACEHOLDER]";
 
 const contentReadinessGroups = [
   {
@@ -670,6 +690,17 @@ function ContentReadinessWorkspace() {
     ["Future correction PR types", futureCorrectionPrTypes.length],
     ["Correction freeze boundary", "Required"]
   ] as const;
+  const closureReadinessSnapshot = [
+    [
+      "Current owner-review closure state",
+      "[CONTINUE / BLOCKED / READY TO CLOSE]"
+    ],
+    ["Open blockers", "[TEMPLATE ONLY]"],
+    ["Correction intake status", "[TEMPLATE ONLY]"],
+    ["Closure readiness notes", "[TEMPLATE ONLY]"],
+    ["Deployment approval status", closureDeploymentApprovalStatus],
+    ["Last local packet update", closureSnapshotLastLocalPacketUpdate]
+  ] as const;
 
   return (
     <section className="admin-dashboard" aria-label="Content readiness workspace">
@@ -726,6 +757,31 @@ function ContentReadinessWorkspace() {
             ))}
           </dl>
           <p>{correctionFreezeDeploymentBoundary}</p>
+        </section>
+
+        <section className="admin-dashboard__card admin-dashboard__card--summary">
+          <h3>Closure readiness snapshot</h3>
+          <dl className="quote-inbox__details">
+            {closureReadinessSnapshot.map(([label, value]) => (
+              <div key={label}>
+                <dt>{label}</dt>
+                <dd>{value}</dd>
+              </div>
+            ))}
+            <div>
+              <dt>Closure states</dt>
+              <dd>{ownerReviewClosureStates.length}</dd>
+            </div>
+            <div>
+              <dt>Template fields</dt>
+              <dd>{ownerReviewClosureTemplateFields.length}</dd>
+            </div>
+          </dl>
+          <p>
+            Closure readiness is template-only and cannot approve deployment,
+            preview publication, production launch, provider configuration, or
+            live smoke testing.
+          </p>
         </section>
 
         <section className="admin-dashboard__card admin-dashboard__card--summary">

@@ -52,6 +52,12 @@ correction intake,
 `docs/content/OWNER-REVIEW-LAUNCH-BLOCKER-FREEZE-GATE.md` for the
 launch-blocker freeze gate, and
 `docs/content/OWNER-REVIEW-CORRECTION-PR-PLAN.md` for the correction PR plan.
+Use `docs/content/OWNER-REVIEW-CLOSURE-PACKET.md` for the Owner-review
+closure packet,
+`docs/content/OWNER-REVIEW-CLOSURE-SIGN-OFF-TEMPLATE.md` for the readiness
+sign-off template, and
+`docs/content/OWNER-REVIEW-DEPLOYMENT-APPROVAL-SEPARATION.md` for deployment
+approval separation.
 
 What the owner should review:
 
@@ -69,6 +75,8 @@ What the owner should review:
   hold/approve rehearsal for placeholder-only owner/admin review preparation.
 - Owner-review correction intake, launch-blocker freeze gate, and correction
   PR plan for placeholder-only future correction routing.
+- Owner-review closure packet, readiness sign-off template, and deployment
+  approval separation for placeholder-only closure readiness.
 - Known deferred capabilities and intentionally not implemented scope.
 - Local validation results and any local-only manual QA notes.
 
@@ -86,6 +94,9 @@ What remains blocked until explicit approval:
 - Deployment, public traffic enablement, provider configuration, cloud project
   connection, real environment values, filled preview evidence, and production
   evidence.
+- Owner-review closure readiness does not approve deployment, preview
+  publication, production launch, provider configuration, or live smoke
+  testing.
 - Browser Supabase, service-role runtime paths, public/customer uploads,
   customer accounts, public quote tracking, notifications, CRM integration,
   n8n/Pinecone runtime changes, `/api/chat` retrieval/RAG wiring, transcript

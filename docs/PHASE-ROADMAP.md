@@ -1589,3 +1589,35 @@ business hours, addresses, testimonials, client names, awards, certifications,
 legal claims, guarantees, production policies, or add ecommerce flows such as
 carts, checkout, payments, stock reservation, confirmed booking, order
 fulfilment, or online ordering.
+
+## Phase 3P: Owner-Review Closure Packet, Readiness Sign-Off Template, And Deployment Approval Separation
+
+Phase 3P-A/B adds an owner-review closure packet, readiness sign-off template,
+and deployment approval separation for the current repo-local rental website
+candidate. It turns the Phase 3O correction intake, launch-blocker freeze
+gate, and correction PR plan into template-only closure readiness material.
+
+Phase 3P-A/B keeps closure handling non-live and placeholder-only. The closure
+packet defines what it means for owner review to continue, owner review to be
+blocked, and owner review to be locally ready to close. The sign-off template
+keeps required fields empty and makes clear that closure readiness does not
+record owner sign-off.
+
+Phase 3P-A/B adds deployment approval separation material that distinguishes
+owner-review closure readiness, deployment approval, preview evidence,
+production launch, and post-launch monitoring. It also adds a protected admin
+closure readiness snapshot with template-only status values and explicit
+deployment approval status.
+
+Phase 3P-A/B does not deploy, approve deployment, add Vercel or Supabase Cloud
+config, add real env values, add filled owner-review evidence, add filled
+preview or production evidence, add browser Supabase, add service-role runtime
+paths, access `website/chat-config.js`, add public/customer uploads, add
+customer accounts, add public quote tracking, expose customer-visible internal
+notes, add notifications or CRM integration, change n8n/Pinecone runtime
+behavior, add Pinecone packages/env/API keys, wire `/api/chat` to
+retrieval/RAG, add transcript runtime paths, invent real contact details,
+business hours, addresses, testimonials, client names, awards, certifications,
+legal claims, guarantees, production policies, or add public/customer
+transaction flows, retail transaction flows, stock-reservation-like flows, or
+fulfilment-like flows.
