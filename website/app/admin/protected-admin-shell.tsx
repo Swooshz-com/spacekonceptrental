@@ -521,7 +521,8 @@ const contentReadinessSources = [
   "docs/content/OWNER-DEMO-WALKTHROUGH.md",
   "docs/content/OWNER-DEMO-ISSUE-BACKLOG.md",
   "docs/content/LOCAL-RELEASE-CANDIDATE-ACCEPTANCE-MATRIX.md",
-  "docs/content/LOCAL-ROUTE-INVENTORY-FREEZE.md"
+  "docs/content/LOCAL-ROUTE-INVENTORY-FREEZE.md",
+  "docs/content/LOCAL-RELEASE-CANDIDATE-COMMAND-CENTRE.md"
 ] as const;
 
 const reviewSurfaceGroups = 11;
@@ -659,6 +660,18 @@ const localAcceptanceSnapshot = [
   ["Public leakage audit", "[TEMPLATE ONLY]"],
   ["Provider/deployment boundary", closureDeploymentApprovalStatus],
   ["Last local acceptance update", localAcceptanceLastLocalUpdate]
+] as const;
+const localReleaseCandidateCommandCentrePath =
+  "docs/content/LOCAL-RELEASE-CANDIDATE-COMMAND-CENTRE.md";
+const localCommandCentreLastLocalUpdate = "[DATE PLACEHOLDER]";
+const localCommandCentreSnapshot = [
+  ["Release-candidate command centre", "Template only"],
+  ["Suite runner", "Local only"],
+  ["Safe command allowlist", "[TEMPLATE ONLY]"],
+  ["Forbidden command audit", "[TEMPLATE ONLY]"],
+  ["Public leakage audit", "[TEMPLATE ONLY]"],
+  ["Provider/deployment boundary", closureDeploymentApprovalStatus],
+  ["Last local command-centre update", localCommandCentreLastLocalUpdate]
 ] as const;
 
 const contentReadinessGroups = [
@@ -872,6 +885,24 @@ function ContentReadinessWorkspace() {
             The local acceptance matrix and route inventory freeze stay
             template-only, admin-only, and repo-local. They do not approve
             provider setup, deployment, preview evidence, owner sign-off, or
+            launch work.
+          </p>
+        </section>
+
+        <section className="admin-dashboard__card admin-dashboard__card--summary">
+          <h3>Local release-candidate command centre snapshot</h3>
+          <dl className="quote-inbox__details">
+            {localCommandCentreSnapshot.map(([label, value]) => (
+              <div key={label}>
+                <dt>{label}</dt>
+                <dd>{value}</dd>
+              </div>
+            ))}
+          </dl>
+          <p>
+            The local command centre and suite runner stay template-only,
+            admin-only, and repo-local. They do not approve deployment, provider
+            setup, live preview checks, evidence capture, owner sign-off, or
             launch work.
           </p>
         </section>

@@ -36,7 +36,8 @@ Owner-demo issue backlog and product acceptance hardening follow-up template.
 Use `docs/content/LOCAL-RELEASE-CANDIDATE-ACCEPTANCE-MATRIX.md` for the local
 release-candidate acceptance gate and
 `docs/content/LOCAL-ROUTE-INVENTORY-FREEZE.md` for the local route inventory
-freeze.
+freeze. Use `docs/content/LOCAL-RELEASE-CANDIDATE-COMMAND-CENTRE.md` for the
+local release-candidate command centre and safe local suite order.
 Owner content blockers are governance notes only. Missing real
 contact/legal/business-hour content does not get invented. Owner review can
 continue without deployment.
@@ -64,6 +65,10 @@ Confirm the local release-candidate acceptance snapshot references the local
 acceptance matrix, route inventory freeze, public route acceptance, protected
 admin acceptance, public leakage audit, provider/deployment boundary, and last
 local acceptance update placeholders.
+Confirm the local release-candidate command centre snapshot references the
+command centre, suite runner, safe command allowlist, forbidden command audit,
+public leakage audit, provider/deployment boundary, and last local
+command-centre update placeholders.
 
 ## Local validation commands
 
@@ -77,6 +82,7 @@ cd ..
 git diff --check
 npm run validate:preview-handoff
 npm run validate:local-release-candidate
+npm run validate:release-candidate-suite
 ```
 
 `npm run validate:release-candidate` may also be run when local Docker access
@@ -230,6 +236,9 @@ for the release-candidate gate and keep the review non-live.
   required.
 - Confirm the local release-candidate acceptance snapshot stays template-only
   and points to the local acceptance matrix and route inventory freeze.
+- Confirm the local release-candidate command centre snapshot stays
+  template-only and points to the local command centre and local-only suite
+  runner.
 - Confirm missing facts remain Owner input required.
 - Confirm public routes do not expose content readiness statuses, owner-review
   issue ledger details, protected admin URLs, or admin-only readiness notes.

@@ -6,8 +6,11 @@ const repoRoot = path.resolve(__dirname, '..');
 const acceptanceMatrixPath =
   'docs/content/LOCAL-RELEASE-CANDIDATE-ACCEPTANCE-MATRIX.md';
 const routeInventoryFreezePath = 'docs/content/LOCAL-ROUTE-INVENTORY-FREEZE.md';
+const commandCentrePath = 'docs/content/LOCAL-RELEASE-CANDIDATE-COMMAND-CENTRE.md';
+const suiteRunnerPath = 'scripts/validate-release-candidate-suite.cjs';
 const protectedAdminShellPath = 'website/app/admin/protected-admin-shell.tsx';
 const phase3rMergeCommit = 'ef18c2357d37fdb613851c427130bb108861de31';
+const phase3sMergeCommit = '7d6af15e09f7603e2107801f3b6417fd4d2d40bc';
 const sourceExtensions = new Set(['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs']);
 const forbiddenCustomerFlowTermPattern = new RegExp(
   `\\b(?:${[
@@ -23,7 +26,7 @@ const forbiddenCustomerFlowTermPattern = new RegExp(
   'i',
 );
 const publicInternalLeakPattern =
-  /Owner-demo|walkthrough|closure readiness|deployment approval|internal review|admin-only|protected content readiness|owner input required|issue backlog|route decision matrix|\/admin\/content-readiness|release-candidate acceptance matrix|route inventory freeze|acceptance status|local release-candidate/i;
+  /Owner-demo|walkthrough|closure readiness|deployment approval|internal review|admin-only|protected content readiness|owner input required|issue backlog|route decision matrix|\/admin\/content-readiness|release-candidate acceptance matrix|route inventory freeze|acceptance status|local release-candidate|command centre/i;
 const forbiddenBusinessFactPattern =
   /award-winning|certified partner|trusted by|5-star|guaranteed availability|guaranteed delivery|licensed and insured|testimonial|client logo|case study|legal guarantee|production policy/i;
 const forbiddenContactFactPattern =
@@ -176,10 +179,78 @@ function assertRouteInventoryFreeze() {
   assertNoMatch(routeFreeze, forbiddenContactFactPattern, 'local route inventory freeze');
 }
 
+function assertCommandCentre() {
+  const commandCentre = readRepoFile(commandCentrePath);
+  const normalized = normalizeWhitespace(commandCentre);
+
+  assertTracked([commandCentrePath], 'local release-candidate command centre');
+
+  for (const required of [
+    'This command centre is repo-local, template-only, non-live, and not evidence.',
+    'Safe local command groups',
+    'Forbidden commands',
+    'Local acceptance-suite sequence',
+    'What each command proves',
+    'What each command does not prove',
+    'What remains blocked until explicit future approval',
+    'How to report failures without creating filled evidence',
+    '[COMMAND GROUP]',
+    '[COMMAND]',
+    '[LOCAL PURPOSE]',
+    '[PASS / FAIL / NOT RUN]',
+    '[LOCAL FOLLOW-UP]',
+    '[DEPLOYMENT APPROVAL: NOT GRANTED]',
+  ]) {
+    assertIncludes(normalized, required, 'local release-candidate command centre');
+  }
+
+  assertNoMatch(commandCentre, filledEvidencePattern, 'local release-candidate command centre');
+  assertNoMatch(commandCentre, forbiddenBusinessFactPattern, 'local release-candidate command centre');
+  assertNoMatch(commandCentre, forbiddenContactFactPattern, 'local release-candidate command centre');
+}
+
+function assertSuiteRunner() {
+  const runner = readRepoFile(suiteRunnerPath);
+
+  assertTracked([suiteRunnerPath], 'local release-candidate suite runner');
+
+  for (const required of [
+    'validate:preview-approval-package',
+    'validate:preview-smoke-harness',
+    'validate:preview-handoff',
+    'validate:local-release-candidate',
+    'validate:supabase-migrations',
+    'test:supabase-seed',
+    'test:supabase-rls',
+    'validate:n8n',
+    'test:n8n-validation',
+    'website:test',
+    'website:typecheck',
+    'website:build',
+    'Local release-candidate suite passed. No deployment was performed. This does not approve deployment.',
+  ]) {
+    assertIncludes(runner, required, 'local release-candidate suite runner');
+  }
+
+  assertNoMatch(runner, /\bvercel\s+(?:deploy|link|env|pull|promote)\b/i, 'local release-candidate suite runner');
+  assertNoMatch(
+    runner,
+    /\bsupabase\s+(?:link|login|secrets|projects|functions|db\s+(?:push|pull|remote|reset))\b/i,
+    'local release-candidate suite runner',
+  );
+  assertNoMatch(runner, /smoke:preview|curl\b|fetch\s*\(|https?:\/\/|www\./i, 'local release-candidate suite runner');
+  assertNoMatch(
+    runner,
+    /docs\/(?:evidence|preview-evidence|production-evidence|owner-review-evidence)/i,
+    'local release-candidate suite runner',
+  );
+  assertNoMatch(runner, /(?:^|[\\/])\.env(?:\.|$)|website\/chat-config\.js/i, 'local release-candidate suite runner');
+}
+
 function assertStatusDocs() {
   const status = readRepoFile('docs/PHASE-STATUS.md');
   const currentStatus = normalizeWhitespace(
-    status.split('Previous Current Phase 3R-A/B status:')[0] || status,
+    status.split('Previous Current Phase 3S-A/B status:')[0] || status,
   );
   const roadmap = normalizeWhitespace(readRepoFile('docs/PHASE-ROADMAP.md'));
   const readiness = readRepoFile('docs/PHASE-2-READINESS-PLAN.md');
@@ -194,22 +265,41 @@ function assertStatusDocs() {
   );
 
   for (const required of [
-    'Current phase: Phase 3S-A/B - repo-local release-candidate acceptance gate, route inventory freeze, and public/admin regression harness.',
-    'Latest completed capability: Phase 3R-A/B repo-local product acceptance hardening, public/admin route polish, and owner-demo issue backlog readiness.',
-    'Last merged capability PR: #140',
-    `Merge commit: \`${phase3rMergeCommit}\``,
+    'Current phase: Phase 3T-A/B - local release-candidate command centre, acceptance-suite orchestration, and no-deploy command allowlist.',
+    'Latest completed capability: Phase 3S-A/B repo-local release-candidate acceptance gate, route inventory freeze, and public/admin regression harness.',
+    'Last merged capability PR: #141',
+    `Merge commit: \`${phase3sMergeCommit}\``,
   ]) {
-    assertIncludes(currentStatus, required, 'Phase 3S status');
+    assertIncludes(currentStatus, required, 'Phase 3T status');
   }
 
+  assertIncludes(status, 'Previous Current Phase 3S-A/B status', 'Phase 3T status');
+  assertIncludes(status, `Merge commit: \`${phase3rMergeCommit}\``, 'Phase 3S history');
   assertIncludes(status, 'Previous Current Phase 3R-A/B status', 'Phase 3S status');
+  assertIncludes(
+    roadmap,
+    'Phase 3T-A/B adds a local release-candidate command centre, acceptance-suite orchestration, and no-deploy command allowlist',
+    'Phase 3T roadmap',
+  );
   assertIncludes(
     roadmap,
     'Phase 3S-A/B adds a repo-local release-candidate acceptance gate, route inventory freeze, and public/admin regression harness',
     'Phase 3S roadmap',
   );
+  assertIncludes(readiness, 'Current Phase 3T-A/B status', 'Phase 3T readiness');
+  assertIncludes(readiness, 'Previous Current Phase 3S-A/B status', 'Phase 3T readiness');
   assertIncludes(readiness, 'Current Phase 3S-A/B status', 'Phase 3S readiness');
   assertIncludes(readiness, 'Previous Current Phase 3R-A/B status', 'Phase 3S readiness');
+  assertIncludes(
+    decisionLog,
+    'Decision: Phase 3T-A/B adds a local release-candidate command centre, acceptance-suite orchestration, and no-deploy command allowlist.',
+    'Phase 3T decision log',
+  );
+  assertIncludes(
+    checklist,
+    '## Phase 3T-A/B Local Release-Candidate Command Centre Acceptance-Suite Orchestration And No-Deploy Command Allowlist',
+    'Phase 3T checklist',
+  );
   assertIncludes(
     decisionLog,
     'Decision: Phase 3S-A/B adds a repo-local release-candidate acceptance gate, route inventory freeze, and public/admin regression harness.',
@@ -222,6 +312,8 @@ function assertStatusDocs() {
   );
   assertIncludes(ownerReviewDocs, acceptanceMatrixPath, 'owner review docs');
   assertIncludes(ownerReviewDocs, routeInventoryFreezePath, 'owner review docs');
+  assertIncludes(ownerReviewDocs, commandCentrePath, 'owner review docs');
+  assertIncludes(ownerReviewDocs, 'local release-candidate command centre', 'owner review docs');
   assertIncludes(ownerReviewDocs, 'local release-candidate acceptance gate', 'owner review docs');
 }
 
@@ -230,9 +322,13 @@ function assertProtectedAdminShell() {
 
   assertIncludes(shell, acceptanceMatrixPath, 'protected admin shell');
   assertIncludes(shell, routeInventoryFreezePath, 'protected admin shell');
+  assertIncludes(shell, commandCentrePath, 'protected admin shell');
   assertIncludes(shell, 'localAcceptanceSnapshot', 'protected admin shell');
   assertIncludes(shell, 'localAcceptanceLastLocalUpdate', 'protected admin shell');
   assertIncludes(shell, 'Local release-candidate acceptance snapshot', 'protected admin shell');
+  assertIncludes(shell, 'localCommandCentreSnapshot', 'protected admin shell');
+  assertIncludes(shell, 'localCommandCentreLastLocalUpdate', 'protected admin shell');
+  assertIncludes(shell, 'Local release-candidate command centre snapshot', 'protected admin shell');
 }
 
 function assertPublicSourceBoundary() {
@@ -318,11 +414,18 @@ function assertPackageAndCi() {
       'node scripts/validate-local-release-candidate.cjs',
     'validate:local-release-candidate script is missing.',
   );
+  assert(
+    packageJson.scripts['validate:release-candidate-suite'] ===
+      'node scripts/validate-release-candidate-suite.cjs',
+    'validate:release-candidate-suite script is missing.',
+  );
   assertIncludes(workflow, 'npm run validate:local-release-candidate', '.github/workflows/ci.yml');
 }
 
 assertAcceptanceMatrix();
 assertRouteInventoryFreeze();
+assertCommandCentre();
+assertSuiteRunner();
 assertStatusDocs();
 assertProtectedAdminShell();
 assertPublicSourceBoundary();

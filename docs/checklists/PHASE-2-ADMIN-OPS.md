@@ -364,6 +364,15 @@ and route/action boundaries are implemented and tested.
 - [x] Preview handoff validation checks Phase 3O docs/status roll-forward, PR #136 merge commit, correction intake tracking, launch-blocker freeze gate tracking, correction PR plan tracking, protected content readiness workspace references, public-route leakage, no deployment/provider/runtime/ecommerce scope creep, and no fake business facts.
 - [x] No deployment, deployment approval, Vercel config, Supabase Cloud config, secrets/env values, filled owner-review, preview, or production evidence, browser Supabase, service-role runtime path, customer uploads, public quote tracking, customer accounts, customer-visible internal notes, notifications, CRM, n8n/Pinecone runtime change, invented real contact details, phone numbers, email addresses, physical addresses, business hours, testimonials, client names, awards, certifications, legal claims, guarantees, production policies, or ecommerce flow is added.
 
+## Phase 3T-A/B Local Release-Candidate Command Centre Acceptance-Suite Orchestration And No-Deploy Command Allowlist
+
+- [x] `docs/content/LOCAL-RELEASE-CANDIDATE-COMMAND-CENTRE.md` records a repo-local, template-only, non-live command centre with placeholders only.
+- [x] `scripts/validate-release-candidate-suite.cjs` and `validate:release-candidate-suite` orchestrate existing safe local validators, Supabase checks, n8n validators, website tests, website typecheck, and website build in a fail-fast sequence.
+- [x] Local validators check the suite runner command allowlist, forbidden-command audit, no evidence writes, no environment-file access, no provider/deploy/live preview commands, and no legacy local chat configuration reference.
+- [x] Protected content readiness includes an admin-only command centre snapshot for command centre, suite runner, safe command allowlist, forbidden command audit, public leakage audit, provider/deployment boundary, and local update placeholder.
+- [x] Static tests cover Phase 3T docs/status roll-forward, command centre tracking, suite runner tracking, package script wiring, protected admin-only snapshot rendering, public leakage boundaries, forbidden tracked config/runtime/evidence paths, and no fake business facts.
+- [x] Phase 3T remains repo-local only and does not add deployment approval, provider config, secrets/env values, filled evidence, owner sign-off, real business facts, browser Supabase, service-role runtime paths, n8n/Pinecone/RAG runtime changes, public uploads, customer accounts, public quote tracking, notifications, CRM, live preview smoke, network checks, evidence-writing commands, or self-service completion-like flows.
+
 ## Phase 3S-A/B Local Release-Candidate Acceptance Gate Route Inventory Freeze And Public-Admin Regression Harness
 
 - [x] `docs/content/LOCAL-RELEASE-CANDIDATE-ACCEPTANCE-MATRIX.md` records a repo-local, template-only, non-live local acceptance matrix with placeholders only.

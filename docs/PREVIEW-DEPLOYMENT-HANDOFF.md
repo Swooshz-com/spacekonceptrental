@@ -65,7 +65,9 @@ Use `docs/content/LOCAL-RELEASE-CANDIDATE-ACCEPTANCE-MATRIX.md` for the local
 release-candidate acceptance gate and
 `docs/content/LOCAL-ROUTE-INVENTORY-FREEZE.md` for the local route inventory
 freeze. Local release-candidate acceptance matrix and Local route inventory
-freeze materials remain repo-local and template-only.
+freeze materials remain repo-local and template-only. Use
+`docs/content/LOCAL-RELEASE-CANDIDATE-COMMAND-CENTRE.md` for the local
+release-candidate command centre and safe local suite order.
 
 What the owner should review:
 
@@ -90,6 +92,8 @@ What the owner should review:
 - Owner-demo issue backlog for product acceptance hardening follow-up.
 - Local release-candidate acceptance matrix and local route inventory freeze
   for repo-local public/admin boundary review.
+- Local release-candidate command centre for local-only safe command
+  orchestration and forbidden-command boundaries.
 - Known deferred capabilities and intentionally not implemented scope.
 - Local validation results and any local-only manual QA notes.
 
@@ -144,6 +148,7 @@ npm run validate:preview-approval-package
 npm run validate:preview-smoke-harness
 npm run validate:preview-handoff
 npm run validate:local-release-candidate
+npm run validate:release-candidate-suite
 ```
 
 ## Operator-Only Commands After A Preview Exists

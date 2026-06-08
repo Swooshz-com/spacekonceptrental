@@ -2202,6 +2202,36 @@ paths, add retention cleanup jobs, or add ecommerce flows such as carts,
 checkout, payments, stock reservation, confirmed booking, order fulfilment, or
 online ordering.
 
+## 2026-06-09: Local Release-Candidate Command Centre, Acceptance-Suite Orchestration, And No-Deploy Command Allowlist
+
+Decision: Phase 3T-A/B adds a local release-candidate command centre, acceptance-suite orchestration, and no-deploy command allowlist.
+
+Reason: PR #141 merged Phase 3S-A/B at
+`7d6af15e09f7603e2107801f3b6417fd4d2d40bc`. The repo now has a local
+acceptance matrix and route inventory freeze, but future reviews need one clear
+local command centre that names safe commands, forbidden commands, suite sequence,
+what each command proves, and what remains outside scope before any deployment
+discussion.
+
+Implementation: Phase 3T-A/B adds
+`docs/content/LOCAL-RELEASE-CANDIDATE-COMMAND-CENTRE.md`,
+`scripts/validate-release-candidate-suite.cjs`,
+`validate:release-candidate-suite`, an admin-only command centre snapshot
+inside the protected content readiness workspace, deterministic Phase 3T
+regression tests, and local validator coverage for the command allowlist and
+forbidden-command audit.
+
+Boundary: Phase 3T-A/B is repo-local only. It does not deploy, approve
+deployment, add Vercel config, connect Supabase Cloud, add real secrets or env
+values, add filled owner-review evidence, add filled preview evidence, add
+production evidence, invent owner review, invent owner sign-off, invent real
+business facts, add browser Supabase, add service-role runtime paths, add n8n
+or Pinecone runtime changes, wire `/api/chat` to retrieval, add public uploads,
+add customer accounts, add public quote tracking, add notifications or CRM, run
+live preview smoke, run network URL checks, write evidence files, or add
+self-service completion-like flows, stock-reservation-like flows,
+fulfilment-like flows, or customer account flows.
+
 ## 2026-06-09: Local Release-Candidate Acceptance Gate, Route Inventory Freeze, And Public/Admin Regression Harness
 
 Decision: Phase 3S-A/B adds a repo-local release-candidate acceptance gate, route inventory freeze, and public/admin regression harness.

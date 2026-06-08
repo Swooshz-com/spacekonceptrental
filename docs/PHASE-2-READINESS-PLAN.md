@@ -238,6 +238,42 @@ Suggested first PR:
   Supabase, production evidence, or ecommerce flows. Product language remains
   enquiry/quote/request.
 
+Current Phase 3T-A/B status:
+
+- PR #141 merged Phase 3S-A/B repo-local release-candidate acceptance gate,
+  route inventory freeze, and public/admin regression harness at
+  `7d6af15e09f7603e2107801f3b6417fd4d2d40bc`.
+- Latest completed capability is Phase 3S-A/B repo-local release-candidate
+  acceptance gate, route inventory freeze, and public/admin regression
+  harness.
+- Phase 3T-A/B is current as a local release-candidate command centre,
+  acceptance-suite orchestration, and no-deploy command allowlist.
+- `docs/content/LOCAL-RELEASE-CANDIDATE-COMMAND-CENTRE.md` is a repo-local,
+  template-only, non-live command centre for safe local command groups,
+  forbidden command categories, local suite sequence, what commands prove, what
+  commands do not prove, blocked future work, and failure reporting without
+  filled evidence.
+- `scripts/validate-release-candidate-suite.cjs` and
+  `validate:release-candidate-suite` provide a fail-fast local-only suite
+  runner for existing safe repo validators, local Supabase checks, n8n
+  validators, website tests, website typecheck, and website build.
+- The suite runner does not run deployment, provider, live preview, network,
+  environment-file, evidence-writing, or legacy local chat configuration
+  commands.
+- Public pages remain customer-facing and use listing, enquiry, quote, request,
+  rental, and event furniture wording. Command-centre, internal,
+  release-candidate, protected admin, deployment approval, and owner input
+  details stay in docs or protected admin only.
+- Phase 3T-A/B does not deploy, approve deployment, add provider config, add
+  real secrets/env values, add filled evidence, invent owner review, invent
+  real business facts, add browser Supabase, add service-role runtime paths,
+  add n8n/Pinecone/RAG runtime changes, add public uploads, add customer
+  accounts, add public quote tracking, add notifications or CRM, or add
+  self-service completion-like flows, stock-reservation-like flows,
+  fulfilment-like flows, or customer account flows.
+
+Previous Current Phase 3S-A/B status:
+
 Current Phase 3S-A/B status:
 
 - PR #140 merged Phase 3R-A/B repo-local product acceptance hardening,

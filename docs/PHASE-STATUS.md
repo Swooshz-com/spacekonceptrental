@@ -4,6 +4,54 @@ This is the quick status page for the SKR repo. Use `docs/PHASE-2-READINESS-PLAN
 
 ## Current phase
 
+Current phase: Phase 3T-A/B - local release-candidate command centre, acceptance-suite orchestration, and no-deploy command allowlist.
+
+Latest completed capability: Phase 3S-A/B repo-local release-candidate acceptance gate, route inventory freeze, and public/admin regression harness.
+
+Last merged capability PR: #141
+
+Merge commit: `7d6af15e09f7603e2107801f3b6417fd4d2d40bc`
+
+Phase 3T-A/B adds a local release-candidate command centre,
+acceptance-suite orchestration, and no-deploy command allowlist for the current
+furniture/event rental website candidate. It adds
+`docs/content/LOCAL-RELEASE-CANDIDATE-COMMAND-CENTRE.md`,
+`scripts/validate-release-candidate-suite.cjs`, and
+`validate:release-candidate-suite` so local operators can run the safe
+repo-local validation sequence without deploying, connecting providers,
+running live preview checks, or creating filled evidence.
+
+Phase 3T-A/B keeps command-centre and release-candidate wording in docs and
+protected admin only. Public users only see listing, category, event-use, quote
+request, enquiry, rental, event furniture, and recovery guidance.
+
+The protected content readiness workspace now includes an admin-only local
+release-candidate command centre snapshot with template-only command centre,
+local-only suite runner, safe command allowlist, forbidden command audit,
+public leakage audit, provider/deployment boundary, and last local
+command-centre update values.
+
+No deployment is performed or approved by Phase 3T-A/B. It does not add Vercel
+config, connect Supabase Cloud, add real secrets or env values, add filled
+owner-review evidence, filled preview evidence, production evidence, Pinecone
+runtime code, Pinecone packages, Pinecone env reads, secrets, API keys,
+Pinecone executors, n8n workflow/runtime changes, embedding runtime, sync
+workers, `/api/chat` retrieval wiring, search-index document writers, real
+vector upsert/delete, runtime reranking, hybrid search runtime, browser
+Supabase, service-role runtime paths, public or customer upload routes, public
+quote tracking, customer-visible internal notes, notifications, CRM
+integration, customer accounts, invented real contact details, phone numbers,
+email addresses, physical addresses, business hours, testimonials, client
+names, awards, certifications, legal claims, guarantees, production policies,
+or self-service completion-like flows, stock-reservation-like flows,
+fulfilment-like flows, or customer account flows.
+
+Missing real contact, legal, policy, business-hour, service-area, proof,
+testimonial, client-name, award, certification, or guarantee content must
+remain marked as owner input required and must not be invented.
+
+Previous Current Phase 3S-A/B status:
+
 Current phase: Phase 3S-A/B - repo-local release-candidate acceptance gate, route inventory freeze, and public/admin regression harness.
 
 Latest completed capability: Phase 3R-A/B repo-local product acceptance hardening, public/admin route polish, and owner-demo issue backlog readiness.
