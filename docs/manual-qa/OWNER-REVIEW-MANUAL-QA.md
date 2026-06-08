@@ -33,6 +33,10 @@ approval separation. Use `docs/content/OWNER-DEMO-WALKTHROUGH.md` for the
 Owner-demo walkthrough, public journey review, and protected admin closure
 workspace review. Use `docs/content/OWNER-DEMO-ISSUE-BACKLOG.md` for the
 Owner-demo issue backlog and product acceptance hardening follow-up template.
+Use `docs/content/LOCAL-RELEASE-CANDIDATE-ACCEPTANCE-MATRIX.md` for the local
+release-candidate acceptance gate and
+`docs/content/LOCAL-ROUTE-INVENTORY-FREEZE.md` for the local route inventory
+freeze.
 Owner content blockers are governance notes only. Missing real
 contact/legal/business-hour content does not get invented. Owner review can
 continue without deployment.
@@ -56,6 +60,10 @@ Confirm the owner-demo issue backlog snapshot references public route issues,
 admin workflow issues, owner input required, locally resolved items, future
 launch/deployment blockers, deployment approval, and last local backlog update
 placeholders.
+Confirm the local release-candidate acceptance snapshot references the local
+acceptance matrix, route inventory freeze, public route acceptance, protected
+admin acceptance, public leakage audit, provider/deployment boundary, and last
+local acceptance update placeholders.
 
 ## Local validation commands
 
@@ -68,6 +76,7 @@ cd website && npm run build
 cd ..
 git diff --check
 npm run validate:preview-handoff
+npm run validate:local-release-candidate
 ```
 
 `npm run validate:release-candidate` may also be run when local Docker access
@@ -219,6 +228,8 @@ for the release-candidate gate and keep the review non-live.
 - Confirm the closure readiness snapshot stays template-only and shows
   deployment approval status as not approved / separate explicit approval
   required.
+- Confirm the local release-candidate acceptance snapshot stays template-only
+  and points to the local acceptance matrix and route inventory freeze.
 - Confirm missing facts remain Owner input required.
 - Confirm public routes do not expose content readiness statuses, owner-review
   issue ledger details, protected admin URLs, or admin-only readiness notes.

@@ -364,6 +364,15 @@ and route/action boundaries are implemented and tested.
 - [x] Preview handoff validation checks Phase 3O docs/status roll-forward, PR #136 merge commit, correction intake tracking, launch-blocker freeze gate tracking, correction PR plan tracking, protected content readiness workspace references, public-route leakage, no deployment/provider/runtime/ecommerce scope creep, and no fake business facts.
 - [x] No deployment, deployment approval, Vercel config, Supabase Cloud config, secrets/env values, filled owner-review, preview, or production evidence, browser Supabase, service-role runtime path, customer uploads, public quote tracking, customer accounts, customer-visible internal notes, notifications, CRM, n8n/Pinecone runtime change, invented real contact details, phone numbers, email addresses, physical addresses, business hours, testimonials, client names, awards, certifications, legal claims, guarantees, production policies, or ecommerce flow is added.
 
+## Phase 3S-A/B Local Release-Candidate Acceptance Gate Route Inventory Freeze And Public-Admin Regression Harness
+
+- [x] `docs/content/LOCAL-RELEASE-CANDIDATE-ACCEPTANCE-MATRIX.md` records a repo-local, template-only, non-live local acceptance matrix with placeholders only.
+- [x] `docs/content/LOCAL-ROUTE-INVENTORY-FREEZE.md` freezes local public/protected route group expectations without recording preview or production evidence.
+- [x] `scripts/validate-local-release-candidate.cjs`, `validate:local-release-candidate`, and CI repo validation cover the local release-candidate gate without deployment/provider/live preview commands.
+- [x] Protected content readiness includes an admin-only local acceptance snapshot for the acceptance matrix, route inventory freeze, public route acceptance, protected admin acceptance, public leakage audit, provider/deployment boundary, and local update placeholder.
+- [x] Static tests cover Phase 3S docs/status roll-forward, template-only matrix/freeze tracking, public route customer-facing copy, public leakage boundaries, protected admin-only snapshot rendering, forbidden tracked config/runtime/evidence paths, and no fake business facts.
+- [x] Phase 3S remains repo-local only and does not add deployment approval, provider config, secrets/env values, filled evidence, owner sign-off, real business facts, browser Supabase, service-role runtime paths, n8n/Pinecone/RAG runtime changes, public uploads, customer accounts, public quote tracking, notifications, CRM, or self-service completion-like flows.
+
 ## Phase 3R-A/B Product Acceptance Hardening Public-Admin Route Polish And Owner-Demo Issue Backlog Readiness
 
 - [x] Public route polish hardens homepage acceptance guidance, listing/category/event setup cross-links, catalogue empty-state recovery, listing fit-check copy, quote/enquiry handoff wording, and not-found recovery while keeping public copy customer-facing.

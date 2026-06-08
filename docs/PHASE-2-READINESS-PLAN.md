@@ -238,6 +238,43 @@ Suggested first PR:
   Supabase, production evidence, or ecommerce flows. Product language remains
   enquiry/quote/request.
 
+Current Phase 3S-A/B status:
+
+- PR #140 merged Phase 3R-A/B repo-local product acceptance hardening,
+  public/admin route polish, and owner-demo issue backlog readiness at
+  `ef18c2357d37fdb613851c427130bb108861de31`.
+- Latest completed capability is Phase 3R-A/B repo-local product acceptance
+  hardening, public/admin route polish, and owner-demo issue backlog readiness.
+- Phase 3S-A/B is current as a repo-local release-candidate acceptance gate,
+  route inventory freeze, and public/admin regression harness for the current
+  furniture/event rental website candidate.
+- `docs/content/LOCAL-RELEASE-CANDIDATE-ACCEPTANCE-MATRIX.md` is a
+  template-only, non-live local acceptance matrix. It uses placeholders for
+  route, audience, purpose, data boundary, owner input, acceptance status,
+  local follow-up, and deployment approval status.
+- `docs/content/LOCAL-ROUTE-INVENTORY-FREEZE.md` freezes local route group
+  expectations for public homepage, listings/catalogue, listing detail,
+  categories, category-to-listing journey, events/event-use guidance,
+  quote/enquiry request, not-found/recovery, protected admin overview,
+  protected listing/category/media operations, protected quote inbox/detail,
+  and protected content readiness.
+- `scripts/validate-local-release-candidate.cjs` and
+  `validate:local-release-candidate` provide a deterministic local acceptance
+  gate without deployment, provider, live preview, or network commands.
+- Public pages remain customer-facing and use listing, enquiry, quote, request,
+  rental, and event furniture wording. Local acceptance, route inventory,
+  owner-demo, issue backlog, internal review, protected admin, deployment
+  approval, and owner input details stay in docs or protected admin only.
+- Phase 3S-A/B does not deploy, approve deployment, add provider config, add
+  real secrets/env values, add filled evidence, invent owner review, invent
+  real business facts, add browser Supabase, add service-role runtime paths,
+  add n8n/Pinecone/RAG runtime changes, add public uploads, add customer
+  accounts, add public quote tracking, add notifications or CRM, or add
+  self-service completion-like flows, stock-reservation-like flows,
+  fulfilment-like flows, or customer account flows.
+
+Previous Current Phase 3R-A/B status:
+
 Current Phase 3R-A/B status:
 
 - PR #139 merged Phase 3Q-A/B repo-local owner-demo polish, public journey QA

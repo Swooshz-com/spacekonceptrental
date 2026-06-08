@@ -37,6 +37,11 @@ approval separation. Use `docs/content/OWNER-DEMO-WALKTHROUGH.md` for the
 Owner-demo walkthrough, public journey review, and protected admin closure
 workspace review. Use `docs/content/OWNER-DEMO-ISSUE-BACKLOG.md` for the
 Owner-demo issue backlog and product acceptance hardening follow-up template.
+Use `docs/content/LOCAL-RELEASE-CANDIDATE-ACCEPTANCE-MATRIX.md` for the local
+release-candidate acceptance gate and
+`docs/content/LOCAL-ROUTE-INVENTORY-FREEZE.md` for the local route inventory
+freeze. Local release-candidate acceptance matrix and Local route inventory
+freeze materials remain repo-local and template-only.
 
 Owner content blockers must remain separate from deployment approval. Missing
 real contact/legal/business-hour content does not get invented. Public launch
@@ -77,6 +82,11 @@ The protected workspace also references the Owner-demo issue backlog. That
 backlog is template-only, keeps product acceptance hardening follow-up separate
 from deployment approval, and does not record real owner corrections.
 
+The protected workspace also references the local release-candidate acceptance
+matrix and local route inventory freeze. Those materials are template-only,
+repo-local, and admin-only; they do not record completed manual QA, preview
+evidence, production evidence, owner sign-off, or deployment approval.
+
 ## Ready for owner review
 
 - Public website journey from homepage to catalogue, listings, categories,
@@ -103,10 +113,14 @@ from deployment approval, and does not record real owner corrections.
   workspace review without filled evidence.
 - Owner-demo issue backlog for product acceptance hardening follow-up without
   filled owner issues.
+- Local release-candidate acceptance gate and route inventory freeze for
+  deterministic repo-local public/admin boundary review.
 - Admin-only readiness cues, internal quote follow-up context, and recovery
   links that stay inside protected admin routes.
 - Local validation commands and deterministic docs/tests for the owner review
   package.
+- `validate:local-release-candidate` for the repo-local acceptance gate without
+  deployment/provider/live-preview commands.
 
 ## Intentionally not implemented
 

@@ -32,6 +32,9 @@ jobs:
       - name: Validate preview handoff
         run: npm run validate:preview-handoff
 
+      - name: Validate local release candidate
+        run: npm run validate:local-release-candidate
+
       - name: Validate Supabase migration scaffold
         run: npm run validate:supabase-migrations
 

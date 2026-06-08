@@ -4,6 +4,58 @@ This is the quick status page for the SKR repo. Use `docs/PHASE-2-READINESS-PLAN
 
 ## Current phase
 
+Current phase: Phase 3S-A/B - repo-local release-candidate acceptance gate, route inventory freeze, and public/admin regression harness.
+
+Latest completed capability: Phase 3R-A/B repo-local product acceptance hardening, public/admin route polish, and owner-demo issue backlog readiness.
+
+Last merged capability PR: #140
+
+Merge commit: `ef18c2357d37fdb613851c427130bb108861de31`
+
+Phase 3S-A/B adds a repo-local release-candidate acceptance gate, route
+inventory freeze, and public/admin regression harness for the current
+furniture/event rental website candidate. It adds
+`docs/content/LOCAL-RELEASE-CANDIDATE-ACCEPTANCE-MATRIX.md`,
+`docs/content/LOCAL-ROUTE-INVENTORY-FREEZE.md`, and
+`scripts/validate-local-release-candidate.cjs` so future PR review can verify
+the local public/admin route boundary without creating preview or production
+evidence.
+
+Phase 3S-A/B keeps public pages customer-facing. Public users only see
+listing, category, event-use, quote request, enquiry, rental, event furniture,
+and recovery guidance. The local acceptance matrix, route inventory freeze,
+owner-demo materials, issue backlog, closure readiness, protected content
+readiness details, admin internal notes, deployment approval separation notes,
+provider details, and owner input statuses stay in docs or protected admin
+only.
+
+The protected content readiness workspace now includes an admin-only local
+release-candidate acceptance snapshot with template-only acceptance matrix,
+route inventory freeze, public route acceptance, protected admin acceptance,
+public leakage audit, provider/deployment boundary, and last local acceptance
+update values.
+
+No deployment is performed or approved by Phase 3S-A/B. It does not add Vercel
+config, connect Supabase Cloud, add real secrets or env values, add filled
+owner-review evidence, filled preview evidence, production evidence, Pinecone
+runtime code, Pinecone packages, Pinecone env reads, secrets, API keys,
+Pinecone executors, n8n workflow/runtime changes, embedding runtime, sync
+workers, `/api/chat` retrieval wiring, search-index document writers, real
+vector upsert/delete, runtime reranking, hybrid search runtime, browser
+Supabase, service-role runtime paths, public or customer upload routes, public
+quote tracking, customer-visible internal notes, notifications, CRM
+integration, customer accounts, invented real contact details, phone numbers,
+email addresses, physical addresses, business hours, testimonials, client
+names, awards, certifications, legal claims, guarantees, production policies,
+or self-service completion-like flows, stock-reservation-like flows,
+fulfilment-like flows, or customer account flows.
+
+Missing real contact, legal, policy, business-hour, service-area, proof,
+testimonial, client-name, award, certification, or guarantee content must
+remain marked as owner input required and must not be invented.
+
+Previous Current Phase 3R-A/B status:
+
 Current phase: Phase 3R-A/B - repo-local product acceptance hardening, public/admin route polish, and owner-demo issue backlog readiness.
 
 Latest completed capability: Phase 3Q-A/B repo-local owner-demo polish, public journey QA hardening, and protected admin closure workspace polish.

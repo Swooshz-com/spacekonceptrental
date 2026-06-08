@@ -61,6 +61,11 @@ approval separation. Use `docs/content/OWNER-DEMO-WALKTHROUGH.md` for the
 Owner-demo walkthrough, public journey review, and protected admin closure
 workspace review. Use `docs/content/OWNER-DEMO-ISSUE-BACKLOG.md` for the
 Owner-demo issue backlog and product acceptance hardening follow-up template.
+Use `docs/content/LOCAL-RELEASE-CANDIDATE-ACCEPTANCE-MATRIX.md` for the local
+release-candidate acceptance gate and
+`docs/content/LOCAL-ROUTE-INVENTORY-FREEZE.md` for the local route inventory
+freeze. Local release-candidate acceptance matrix and Local route inventory
+freeze materials remain repo-local and template-only.
 
 What the owner should review:
 
@@ -83,6 +88,8 @@ What the owner should review:
 - Owner-demo walkthrough for public journey review and protected admin closure
   workspace review.
 - Owner-demo issue backlog for product acceptance hardening follow-up.
+- Local release-candidate acceptance matrix and local route inventory freeze
+  for repo-local public/admin boundary review.
 - Known deferred capabilities and intentionally not implemented scope.
 - Local validation results and any local-only manual QA notes.
 
@@ -136,6 +143,7 @@ npm run validate:deploy-dry-run
 npm run validate:preview-approval-package
 npm run validate:preview-smoke-harness
 npm run validate:preview-handoff
+npm run validate:local-release-candidate
 ```
 
 ## Operator-Only Commands After A Preview Exists

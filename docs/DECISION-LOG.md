@@ -2202,6 +2202,36 @@ paths, add retention cleanup jobs, or add ecommerce flows such as carts,
 checkout, payments, stock reservation, confirmed booking, order fulfilment, or
 online ordering.
 
+## 2026-06-09: Local Release-Candidate Acceptance Gate, Route Inventory Freeze, And Public/Admin Regression Harness
+
+Decision: Phase 3S-A/B adds a repo-local release-candidate acceptance gate, route inventory freeze, and public/admin regression harness.
+
+Reason: PR #140 merged Phase 3R-A/B at
+`ef18c2357d37fdb613851c427130bb108861de31`. Before any deployment discussion,
+the repo needs a deterministic local gate that proves the current
+furniture/event rental website candidate keeps public routes customer-facing,
+keeps internal review materials protected, and preserves deployment/provider
+boundaries.
+
+Implementation: Phase 3S-A/B adds
+`docs/content/LOCAL-RELEASE-CANDIDATE-ACCEPTANCE-MATRIX.md`,
+`docs/content/LOCAL-ROUTE-INVENTORY-FREEZE.md`,
+`scripts/validate-local-release-candidate.cjs`,
+`validate:local-release-candidate`, CI coverage for the new validator, an
+admin-only local acceptance snapshot inside the protected content readiness
+workspace, a public quote heading polish, and deterministic Phase 3S regression
+tests.
+
+Boundary: Phase 3S-A/B is repo-local only. It does not deploy, approve
+deployment, add Vercel config, connect Supabase Cloud, add real secrets or env
+values, add filled owner-review evidence, add filled preview evidence, add
+production evidence, invent owner review, invent owner sign-off, invent real
+business facts, add browser Supabase, add service-role runtime paths, add n8n
+or Pinecone runtime changes, wire `/api/chat` to retrieval, add public uploads,
+add customer accounts, add public quote tracking, add notifications or CRM, or
+add self-service completion-like flows, stock-reservation-like flows,
+fulfilment-like flows, or customer account flows.
+
 ## 2026-06-08: Product Acceptance Hardening, Public/Admin Route Polish, And Owner-Demo Issue Backlog Readiness
 
 Decision: Phase 3R-A/B adds repo-local product acceptance hardening, public/admin route polish, and owner-demo issue backlog readiness.
