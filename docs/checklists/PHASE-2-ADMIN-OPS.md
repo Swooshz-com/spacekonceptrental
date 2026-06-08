@@ -482,4 +482,3 @@ and route/action boundaries are implemented and tested.
 - [x] Harden public catalogue/listing/category/event-use media discovery with customer-facing rental wording.
 - [x] Add protected admin catalogue/listing/media acceptance snapshot as template-only protected content.
 - [x] Add repo-local catalogue/listing/media acceptance checklist without filled evidence or deployment approval.
-
