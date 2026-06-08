@@ -11,12 +11,19 @@ deferred by design.
 
 Review `docs/content/OWNER-CONTENT-INTAKE.md` for owner-supplied content
 requirements and review `docs/content/CONTENT-GAP-REGISTER.md` for content gap
-status before any future launch decision.
+status before any future launch decision. Review
+`docs/content/OWNER-REVIEW-ISSUE-LEDGER.md` for owner-review issue categories
+and safe status values.
 
 Owner content blockers must remain separate from deployment approval. Missing
 real contact/legal/business-hour content does not get invented. Public launch
 cannot proceed until required owner content and explicit deployment approval
 are both supplied. Owner review can continue without deployment.
+
+The Protected content readiness workspace at `/admin/content-readiness` is an
+admin-only review surface. It summarizes content gaps for authorised admin
+review and must not be exposed to public routes or customer-facing issue
+tracking.
 
 ## Ready for owner review
 
@@ -30,6 +37,8 @@ are both supplied. Owner review can continue without deployment.
   customer account surface.
 - Protected admin overview, listings, categories, media, quote inbox, and quote
   detail surfaces.
+- Protected content readiness workspace for owner-required content gaps and
+  owner-review status separation.
 - Admin-only readiness cues, internal quote follow-up context, and recovery
   links that stay inside protected admin routes.
 - Local validation commands and deterministic docs/tests for the owner review
@@ -51,6 +60,8 @@ are both supplied. Owner review can continue without deployment.
 - Real business contact details, opening hours, client names, testimonials,
   certifications, awards, legal claims, or production policies that have not
   already been supplied by the owner.
+- Public route exposure of the owner-review issue ledger, content readiness
+  statuses, protected admin URLs, or admin-only readiness details.
 
 ## Public website journey readiness
 

@@ -59,6 +59,9 @@ export type AdminShellView =
       kind: "quotes";
     }
   | {
+      kind: "content-readiness";
+    }
+  | {
       kind: "quote-detail";
       quoteRequestId: string;
     };
@@ -383,6 +386,9 @@ function AdminRecoveryLinks({
       <a className="button button--secondary" href="/admin/quotes">
         Open quote requests
       </a>
+      <a className="button button--secondary" href="/admin/content-readiness">
+        Open content readiness
+      </a>
     </nav>
   );
 }
@@ -392,7 +398,8 @@ function AdminOperationsNavigation() {
     ["Listings", "/admin/listings"],
     ["Categories", "/admin/categories"],
     ["Media", "/admin/media"],
-    ["Quote requests", "/admin/quotes"]
+    ["Quote requests", "/admin/quotes"],
+    ["Content readiness", "/admin/content-readiness"]
   ] as const;
 
   return (
@@ -450,6 +457,13 @@ function AdminOperationsHome({
       title: "Quote requests",
       count: quoteCount,
       body: "Review enquiries and record admin-only follow-up notes."
+    },
+    {
+      href: "/admin/content-readiness",
+      label: "Open content readiness",
+      title: "Content readiness",
+      count: 4,
+      body: "Review owner-required content gaps before any separate launch decision."
     }
   ];
 
@@ -483,6 +497,107 @@ function AdminOperationsHome({
               {card.label}
             </a>
           </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+const contentReadinessSources = [
+  "docs/content/OWNER-CONTENT-INTAKE.md",
+  "docs/content/CONTENT-GAP-REGISTER.md",
+  "docs/content/OWNER-REVIEW-ISSUE-LEDGER.md"
+] as const;
+
+const contentReadinessGroups = [
+  {
+    status: "Blocks owner review",
+    summary:
+      "Owner review cannot close while the affected route, listing, image, quote expectation, or operator ownership gap is unresolved.",
+    gaps: [
+      "Approved brand spelling and public display name.",
+      "Approved listing/category/event descriptions for owner-reviewed surfaces.",
+      "Admin access and workspace ownership expectations."
+    ]
+  },
+  {
+    status: "Blocks launch/deployment",
+    summary:
+      "Public launch stays blocked until required owner facts and explicit deployment approval are both supplied.",
+    gaps: [
+      "Final launch listing names, descriptions, image choices, and alt text.",
+      "Public contact, business-hour, legal, policy, service-area, and operating expectation wording if required for launch.",
+      "Owner-approved quote/enquiry expectation wording for public launch."
+    ]
+  },
+  {
+    status: "Deferred after launch",
+    summary:
+      "Useful future content or workflow improvements that do not block current owner review.",
+    gaps: [
+      "Service-area expansion language if the owner does not need it for launch.",
+      "Additional event-use guidance beyond the current public-safe planning copy.",
+      "Optional operator accountability labels after the first review pass."
+    ]
+  },
+  {
+    status: "Not in scope by owner direction",
+    summary:
+      "Content or capability types that remain excluded unless the owner gives separate approval.",
+    gaps: [
+      "Unsupported proof, assurance, named-client, legal, or operating claims until supplied and approved.",
+      "Public self-service account, status-tracking, outbound automation, and sales-system capabilities.",
+      "Provider, deployment, temporary chat bridge, or search-assistant runtime changes."
+    ]
+  }
+] as const;
+
+function ContentReadinessWorkspace() {
+  return (
+    <section className="admin-dashboard" aria-label="Content readiness workspace">
+      <div className="admin-dashboard__header">
+        <div>
+          <p className="eyebrow">Owner review</p>
+          <h2>Content readiness</h2>
+          <p>
+            Missing facts remain Owner input required. This protected admin
+            workspace summarizes the repo-local content intake and gap register
+            without publishing owner-review details to public routes.
+          </p>
+        </div>
+      </div>
+
+      <div className="admin-dashboard__grid">
+        <section className="admin-dashboard__card admin-dashboard__card--summary">
+          <h3>Review sources</h3>
+          <p>
+            Use these repo-local sources as the owner-review issue ledger and
+            content readiness record.
+          </p>
+          <ul className="admin-dashboard__list">
+            {contentReadinessSources.map((source) => (
+              <li key={source}>
+                <strong>
+                  <code>{source}</code>
+                </strong>
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        {contentReadinessGroups.map((group) => (
+          <section className="admin-dashboard__card" key={group.status}>
+            <p className="eyebrow">Owner-review issue status</p>
+            <h3>{group.status}</h3>
+            <p>{group.summary}</p>
+            <ul className="admin-dashboard__list">
+              {group.gaps.map((gap) => (
+                <li key={gap}>
+                  <span>{gap}</span>
+                </li>
+              ))}
+            </ul>
+          </section>
         ))}
       </div>
     </section>
@@ -855,6 +970,10 @@ function AdminOperationsView({
 
   if (view.kind === "quotes") {
     return <QuoteRequestInboxPanel inbox={state.quoteInbox} />;
+  }
+
+  if (view.kind === "content-readiness") {
+    return <ContentReadinessWorkspace />;
   }
 
   if (view.kind === "quote-detail") {

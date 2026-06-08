@@ -238,24 +238,25 @@ Suggested first PR:
   Supabase, production evidence, or ecommerce flows. Product language remains
   enquiry/quote/request.
 
-Current Phase 3K-A/B status:
+Current Phase 3L-A/B status:
 
-- PR #132 merged Phase 3J-A/B owner review readiness package, manual QA
-  runbook, and release-decision preparation at merge commit
-  `1c7dc0ac7c2532fa8a837cd46b0d1f0103d5ccfa`.
-- Latest completed capability is Phase 3J-A/B owner review readiness package,
-  manual QA runbook, and release-decision preparation.
-- Phase 3K-A/B is current as owner content intake, content gap register, and
-  launch-blocker governance for owner-supplied brand, listing, category,
-  event, image, alt-text, service-area, contact, operating, legal/policy, and
-  admin ownership inputs; content gap tracking; owner review blocker classes;
-  launch/deployment blocker classes; and deterministic no-deploy guardrails.
-- Owner content intake and the content gap register are repo-local controls.
-  Unknown real-world business facts remain marked as Owner input required.
-  Missing real contact/legal/business-hour content does not get invented.
-  Owner review can continue without deployment, but public launch cannot
-  proceed until required owner content and explicit deployment approval are
-  both supplied.
+- PR #133 merged Phase 3K-A/B owner content intake, content gap register, and
+  launch-blocker governance at merge commit
+  `d4271ea6b181ee702dfe9d6f2b6003903b0c54dd`.
+- Latest completed capability is Phase 3K-A/B owner content intake, content
+  gap register, and launch-blocker governance.
+- Phase 3L-A/B is current as protected content readiness workspace,
+  owner-review issue ledger, and public copy fact-safety audit for admin-only
+  owner review, repo-local issue categories, public copy fake-fact/ecommerce
+  checks, owner-only readiness leakage checks, and deterministic no-deploy
+  guardrails.
+- The content readiness workspace stays inside protected admin routes and
+  summarizes the owner content intake and content gap register without
+  creating public customer-facing issue tracking.
+- Public copy must not invent phone numbers, email addresses, physical
+  addresses, business hours, client names, testimonials, awards,
+  certifications, legal claims, guarantees, production policies, or ecommerce
+  flows. Owner-only readiness details remain protected/admin-only.
 - No deployment, deployment approval, Vercel config, Supabase Cloud config,
   real env values, production evidence, browser Supabase, service-role runtime
   paths, n8n/Pinecone/RAG runtime work, public quote tracking, customer
@@ -263,6 +264,32 @@ Current Phase 3K-A/B status:
   public/customer upload routes, transcript runtime paths, invented real
   contact details, testimonials, client names, legal claims, production
   policies, or ecommerce flow is added.
+
+Previous Current Phase 3K-A/B status:
+
+- PR #132 merged Phase 3J-A/B owner review readiness package, manual QA
+  runbook, and release-decision preparation at merge commit
+  `1c7dc0ac7c2532fa8a837cd46b0d1f0103d5ccfa`.
+- Latest completed capability was Phase 3J-A/B owner review readiness package,
+  manual QA runbook, and release-decision preparation.
+- Phase 3K-A/B was current as owner content intake, content gap register, and
+  launch-blocker governance for owner-supplied brand, listing, category,
+  event, image, alt-text, service-area, contact, operating, legal/policy, and
+  admin ownership inputs; content gap tracking; owner review blocker classes;
+  launch/deployment blocker classes; and deterministic no-deploy guardrails.
+- Owner content intake and the content gap register were repo-local controls.
+  Unknown real-world business facts remained marked as Owner input required.
+  Missing real contact/legal/business-hour content did not get invented.
+  Owner review could continue without deployment, but public launch could not
+  proceed until required owner content and explicit deployment approval were
+  both supplied.
+- No deployment, deployment approval, Vercel config, Supabase Cloud config,
+  real env values, production evidence, browser Supabase, service-role runtime
+  paths, n8n/Pinecone/RAG runtime work, public quote tracking, customer
+  accounts, customer-visible internal notes, notifications, CRM integration,
+  public/customer upload routes, transcript runtime paths, invented real
+  contact details, testimonials, client names, legal claims, production
+  policies, or ecommerce flow was added.
 
 Previous Current Phase 3J-A/B status:
 

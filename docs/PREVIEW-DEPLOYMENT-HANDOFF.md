@@ -35,7 +35,9 @@ smoke harness and rollback drill package, at
 Before any future launch decision, review `docs/OWNER-REVIEW-READINESS-PACKAGE.md`
 and review `docs/manual-qa/OWNER-REVIEW-MANUAL-QA.md`. Use
 `docs/content/OWNER-CONTENT-INTAKE.md` for owner-supplied content requirements
-and `docs/content/CONTENT-GAP-REGISTER.md` for content gap status.
+and `docs/content/CONTENT-GAP-REGISTER.md` for content gap status. Use
+`docs/content/OWNER-REVIEW-ISSUE-LEDGER.md` for owner-review issue categories
+and safe status values.
 
 What the owner should review:
 
@@ -44,6 +46,8 @@ What the owner should review:
 - Protected admin listing, category, media, quote inbox, and quote detail
   readiness.
 - Quote/enquiry intake and admin triage readiness.
+- Protected content readiness workspace at `/admin/content-readiness` for
+  owner-required content gaps, status separation, and launch-blocker review.
 - Known deferred capabilities and intentionally not implemented scope.
 - Local validation results and any local-only manual QA notes.
 
@@ -74,6 +78,8 @@ Owner decision language remains:
 Owner content blockers:
 
 - Missing real contact/legal/business-hour content does not get invented.
+- Protected content readiness workspace details stay admin-only and do not
+  become public route copy or customer-facing issue tracking.
 - Public launch cannot proceed until required owner content and explicit
   deployment approval are both supplied.
 - Owner review can continue without deployment.

@@ -8,6 +8,8 @@ filled preview evidence, or perform a deployment.
 
 Record content gaps in `docs/content/CONTENT-GAP-REGISTER.md` and collect
 owner-supplied content requirements in `docs/content/OWNER-CONTENT-INTAKE.md`.
+Use `docs/content/OWNER-REVIEW-ISSUE-LEDGER.md` for owner-review issue
+categories and safe status values.
 Owner content blockers are governance notes only. Missing real
 contact/legal/business-hour content does not get invented. Owner review can
 continue without deployment.
@@ -153,6 +155,18 @@ for the release-candidate gate and keep the review non-live.
   management.
 - Confirm unavailable states do not expose provider errors, SQL, stack traces,
   workspace identifiers, tokens, or raw environment values.
+
+### Protected content readiness workspace
+
+- Confirm `/admin/content-readiness` stays inside the protected admin shell.
+- Confirm the workspace links the owner content intake, content gap register,
+  and owner-review issue ledger.
+- Confirm the workspace separates Blocks owner review, Blocks
+  launch/deployment, Deferred after launch, and Not in scope by owner
+  direction.
+- Confirm missing facts remain Owner input required.
+- Confirm public routes do not expose content readiness statuses, owner-review
+  issue ledger details, protected admin URLs, or admin-only readiness notes.
 
 ## Owner decision notes
 
