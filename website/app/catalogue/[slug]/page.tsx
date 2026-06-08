@@ -180,12 +180,12 @@ export function ProductPageContent({
             </ul>
           </section>
 
-          <section className="listing-checklist" aria-label="Public review prompts">
-            <h3>Public review prompts</h3>
+          <section className="listing-checklist" aria-label="Quote request preparation">
+            <h3>Before requesting a quote</h3>
             <ul className="journey-list">
-              <li>Listing copy is clear for public review.</li>
-              <li>Rental unit and category read clearly.</li>
-              <li>Quote request handoff stays simple.</li>
+              <li>Check the listing details and rental unit.</li>
+              <li>Compare the category and rental unit for your setup.</li>
+              <li>Send the listing with your event details for follow-up.</li>
             </ul>
           </section>
 

@@ -59,19 +59,17 @@ const rentalJourneySteps = [
 
 const publicReviewPrompts = [
   {
-    title: "Listing discovery",
-    description:
-      "Confirm each listing gives enough rental context before visitors move to a quote request."
+    title: "Find suitable rental pieces",
+    description: "Browse listing details before requesting a quote."
   },
   {
-    title: "Event-use guidance",
+    title: "Plan by event setup",
     description:
-      "Check that categories and event pages give practical setup prompts without inventing facts."
+      "Use categories and event guidance to describe your setup."
   },
   {
-    title: "Quote request handoff",
-    description:
-      "Make sure the enquiry path asks for event details and keeps final follow-up with the team."
+    title: "Send a quote request",
+    description: "Add event details so the team can follow up."
   }
 ];
 
@@ -138,10 +136,10 @@ export default async function HomePage() {
 
       <section className="section">
         <div className="section__header">
-          <h2>Review the rental journey</h2>
+          <h2>Plan your rental journey</h2>
           <p className="section__intro">
-            Listings, categories, event-use guidance, and quote requests stay
-            connected for a review-safe walkthrough.
+            Listings, categories, event-use guidance, and quote requests help
+            you describe the setup you need.
           </p>
         </div>
         <div className="route-grid">
@@ -157,10 +155,10 @@ export default async function HomePage() {
             Browse rental listings
           </Link>
           <Link className="button button--secondary" href="/events">
-            Review event guidance
+            Browse event guidance
           </Link>
           <Link className="button" href="/quote">
-            Review quote request path
+            Open quote request
           </Link>
         </div>
       </section>

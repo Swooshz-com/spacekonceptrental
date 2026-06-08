@@ -119,7 +119,7 @@ function QuoteExpectationCard() {
 function QuoteReviewChecklistCard() {
   return (
     <article className="route-card">
-      <p className="eyebrow">Request review</p>
+      <p className="eyebrow">Before you send</p>
       <h2>Review before sending</h2>
       <p>
         Check event date, venue, requested listings, quantities, and setup notes

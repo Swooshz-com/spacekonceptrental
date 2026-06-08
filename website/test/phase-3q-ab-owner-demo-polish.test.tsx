@@ -51,7 +51,7 @@ const forbiddenCustomerFlowTermPattern = new RegExp(
   "i"
 );
 const ownerOnlyDemoPattern =
-  /Owner-demo walkthrough|Owner-demo walkthrough snapshot|Protected content readiness workspace|\/admin\/content-readiness|admin-only readiness|Admin-only notes|Current owner-review closure state|DEPLOYMENT APPROVAL: NOT GRANTED|Owner-review closure packet|Owner-review closure sign-off template|deployment approval separation/i;
+  /Owner-demo walkthrough|Owner-demo walkthrough snapshot|Protected content readiness workspace|\/admin\/content-readiness|admin-only readiness|Admin-only notes|Current owner-review closure state|DEPLOYMENT APPROVAL: NOT GRANTED|Owner-review closure packet|Owner-review closure sign-off template|deployment approval separation|Public review prompts|Review the rental journey|Confirm each listing|Check that categories|Make sure the enquiry path|Request review|owner-demo|walkthrough|closure readiness|deployment approval|internal review|admin-only|protected content readiness/i;
 const filledReviewEvidencePattern =
   /owner approved|owner sign-?off complete|owner correction recorded|filled owner note|review completed on|signed off by|production evidence captured|preview evidence captured|actual owner decision|actual owner sign-off/i;
 
@@ -214,26 +214,36 @@ describe("Phase 3Q-A/B owner-demo polish", () => {
     expect(walkthrough).not.toMatch(filledReviewEvidencePattern);
   });
 
-  it("polishes the public review journey with listing, enquiry, quote, request, rental, and event furniture wording", async () => {
+  it("polishes the public rental journey with customer-facing listing, enquiry, quote, request, rental, and event furniture wording", async () => {
     render(await HomePage());
     expect(
-      screen.getByRole("heading", { name: /review the rental journey/i })
+      screen.getByRole("heading", { name: /plan your rental journey/i })
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/listings, categories, event-use guidance, and quote requests stay connected/i)
+      screen.getByText(/listings, categories, event-use guidance, and quote requests help you describe the setup/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: /find suitable rental pieces/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: /plan by event setup/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: /send a quote request/i })
     ).toBeInTheDocument();
 
     cleanup();
     render(<ProductPageContent product={loungeProduct} />);
     expect(
-      screen.getByRole("heading", { name: /public review prompts/i })
+      screen.getByRole("heading", { name: /before requesting a quote/i })
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/quote request handoff stays simple/i)
+      screen.getByText(/send the listing with your event details for follow-up/i)
     ).toBeInTheDocument();
 
     cleanup();
     render(await QuotePage());
+    expect(screen.getByText(/before you send/i)).toBeInTheDocument();
     expect(
       screen.getByRole("heading", { name: /review before sending/i })
     ).toBeInTheDocument();
