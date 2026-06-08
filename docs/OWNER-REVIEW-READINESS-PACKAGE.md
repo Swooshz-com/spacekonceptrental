@@ -274,3 +274,5 @@ owner decision and a separate implementation/release step.
 The deferred capabilities above are not blockers for owner review unless the
 owner decides one of them must be completed before a later launch decision.
 They are not approved by this package.
+
+Phase 3W-A/B adds `docs/content/CATALOGUE-LISTING-MEDIA-ACCEPTANCE-CHECKLIST.md` for repo-local catalogue/listing/media review. Public catalogue, listing, category, and event-use copy stays customer-facing; protected admin content ops and media readiness notes stay protected. No deployment, provider config, secrets, filled evidence, owner approval, or real business facts are added.

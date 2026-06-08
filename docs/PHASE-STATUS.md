@@ -4,6 +4,54 @@ This is the quick status page for the SKR repo. Use `docs/PHASE-2-READINESS-PLAN
 
 ## Current phase
 
+Current phase: Phase 3W-A/B - catalogue listing media hardening, protected admin content-ops polish, and local acceptance coverage.
+
+Latest completed capability: Phase 3V-A/B quote/enquiry workflow hardening, protected admin triage polish, and local acceptance coverage.
+
+Last merged capability PR: #144
+
+Merge commit: `3904a661aa3d72606d4c48743030406656128b2c`
+
+Phase 3W-A/B hardens public catalogue, listing detail, category, media, and
+event-use discovery for the current furniture/event rental website. It keeps
+public copy customer-facing with listing, enquiry, quote, request, rental,
+category, event-use, rental unit, and event furniture wording.
+
+Phase 3W-A/B also polishes protected admin listing/category/media content
+operations with clearer admin-only readiness grouping for listing content,
+category grouping, media state, alt-text review, empty/unavailable states, and
+safe protected recovery copy.
+
+Phase 3W-A/B adds
+`docs/content/CATALOGUE-LISTING-MEDIA-ACCEPTANCE-CHECKLIST.md` as a repo-local,
+template-only, non-live checklist for public catalogue route expectations,
+public listing detail expectations, public category route expectations, public
+event-use handoff expectations, protected admin listing/category/media
+expectations, media and alt-text expectations, public allowed/forbidden wording,
+the admin-only boundary, local acceptance placeholders, and deployment boundary.
+
+The protected content readiness workspace now includes an admin-only
+catalogue/listing/media acceptance snapshot with template-only catalogue route,
+listing detail route, category route, event-use handoff, protected admin content
+ops, media/alt-text boundary, public uploads/accounts/tracking, deployment
+approval, and last local catalogue/media update values.
+
+No deployment is performed or approved by Phase 3W-A/B. It does not add Vercel
+config, connect Supabase Cloud, add real secrets or env values, add filled
+owner-review evidence, filled preview evidence, production evidence, provider
+config, Pinecone runtime code, Pinecone packages, Pinecone env reads, browser
+Supabase, service-role runtime paths, n8n workflow/runtime changes, `/api/chat`
+retrieval wiring, public or customer upload routes, public quote tracking,
+customer-visible internal notes, notifications, CRM integration, customer
+accounts, invented real-world operational details, unsupported business
+assertions, payment/order/checkout flows, reservation/booking flows,
+fulfilment-like flows, retail transaction flows, or customer account flows.
+
+Missing real-world operational details and unsupported business assertions must
+remain marked as owner input required and must not be invented.
+
+Previous Current Phase 3V-A/B status:
+
 Current phase: Phase 3V-A/B - quote/enquiry workflow hardening, protected admin triage polish, and local acceptance coverage.
 
 Latest completed capability: Phase 3U-A/B final local owner handoff pack, acceptance triage board, and deployment decision firewall.
@@ -46,6 +94,7 @@ stock-hold-like, rental-completion-like, or customer account flows.
 
 Missing real-world operational details and unsupported business assertions must
 remain marked as owner input required and must not be invented.
+
 
 Previous Current Phase 3U-A/B status:
 

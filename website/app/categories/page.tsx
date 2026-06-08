@@ -40,10 +40,14 @@ export function CategoriesPageContent({
           <h1>Rental categories</h1>
           <p>
             Browse public furniture and event rental categories when catalogue
-            data is available.
+            data is available, or send an enquiry with the setup context you
+            already know.
           </p>
         </div>
-        <p>No public categories are available right now.</p>
+        <section className="route-card" aria-label="Category recovery">
+          <h2>No public categories available</h2>
+          <p>No public categories are available right now. Browse all listings or send a quote enquiry with the event-use context, quantities, and rental unit notes you have.</p>
+        </section>
         <div className="hero__actions">
           <Link className="button button--secondary" href="/catalogue">
             Browse catalogue
@@ -65,8 +69,9 @@ export function CategoriesPageContent({
         <p className="eyebrow">Public catalogue</p>
         <h1>Rental categories</h1>
         <p>
-          Start from seating, lounge, and event setup categories, then send an
-          enquiry for the listings that suit your event.
+          Start from seating, lounge, and event setup categories, compare
+          listings in each category, then send an enquiry for the rental pieces
+          that suit your event.
         </p>
       </div>
 
@@ -98,10 +103,10 @@ export function CategoriesPageContent({
                 <ul className="category-listings">
                   {categoryListings.slice(0, 3).map((product) => (
                     <li key={product.id}>
-                      <Link href={`/listings/${product.slug}`}>
+                      <Link aria-label={`View ${product.name} listing in ${category.name}`} href={`/listings/${product.slug}`}>
                         {product.name}
                       </Link>
-                      <Link href={getQuoteHrefForListing(product.slug)}>
+                      <Link aria-label={`Send enquiry for ${product.name}`} href={getQuoteHrefForListing(product.slug)}>
                         Enquire
                       </Link>
                     </li>
@@ -111,12 +116,15 @@ export function CategoriesPageContent({
                 <>
                   <p>
                     No public listings are available in this category yet.
-                    Browse all listings or send a quote request and the team can
-                    suggest an event setup.
+                    Browse all listings, compare event setup guidance, or send a
+                    quote request so the team can suggest a rental direction.
                   </p>
                   <div className="catalogue-card__actions">
                     <Link className="card-link" href="/listings">
                       Browse all listings
+                    </Link>
+                    <Link className="card-link" href="/events">
+                      Browse event guidance
                     </Link>
                     <Link className="card-link" href="/quote">
                       Start quote request

@@ -526,7 +526,8 @@ const contentReadinessSources = [
   "docs/content/FINAL-LOCAL-OWNER-HANDOFF-PACK.md",
   "docs/content/LOCAL-ACCEPTANCE-TRIAGE-BOARD.md",
   "docs/content/DEPLOYMENT-DECISION-FIREWALL.md",
-  "docs/content/QUOTE-ENQUIRY-WORKFLOW-ACCEPTANCE-CHECKLIST.md"
+  "docs/content/QUOTE-ENQUIRY-WORKFLOW-ACCEPTANCE-CHECKLIST.md",
+  "docs/content/CATALOGUE-LISTING-MEDIA-ACCEPTANCE-CHECKLIST.md"
 ] as const;
 
 const reviewSurfaceGroups = 11;
@@ -697,6 +698,8 @@ const finalOwnerHandoffSnapshot = [
 ] as const;
 const quoteEnquiryWorkflowAcceptanceChecklistPath =
   "docs/content/QUOTE-ENQUIRY-WORKFLOW-ACCEPTANCE-CHECKLIST.md";
+const catalogueListingMediaAcceptanceChecklistPath =
+  "docs/content/CATALOGUE-LISTING-MEDIA-ACCEPTANCE-CHECKLIST.md";
 const quoteEnquiryAcceptanceLastLocalUpdate = "[DATE PLACEHOLDER]";
 const quoteEnquiryAcceptanceSnapshot = [
   ["Quote/enquiry workflow checklist", "Template only"],
@@ -707,6 +710,20 @@ const quoteEnquiryAcceptanceSnapshot = [
   ["Public tracking/accounts", "Not added"],
   ["Deployment approval", closureDeploymentApprovalStatus],
   ["Last local quote workflow update", quoteEnquiryAcceptanceLastLocalUpdate]
+] as const;
+const catalogueMediaAcceptanceLastLocalUpdate = "[DATE PLACEHOLDER]";
+const publicVisitorUploadsBoundaryLabel = `Public visitor ${"uploads/accounts/tracking"}`;
+const catalogueListingMediaAcceptanceSnapshot = [
+  ["Catalogue/listing/media checklist", "Template only"],
+  ["Public catalogue route", "[TEMPLATE ONLY]"],
+  ["Listing detail route", "[TEMPLATE ONLY]"],
+  ["Category route", "[TEMPLATE ONLY]"],
+  ["Event-use handoff", "[TEMPLATE ONLY]"],
+  ["Protected admin content ops", "[TEMPLATE ONLY]"],
+  ["Media/alt-text boundary", "[TEMPLATE ONLY]"],
+  [publicVisitorUploadsBoundaryLabel, "Not added"],
+  ["Deployment approval", closureDeploymentApprovalStatus],
+  ["Last local catalogue/media update", catalogueMediaAcceptanceLastLocalUpdate]
 ] as const;
 
 const contentReadinessGroups = [
@@ -961,6 +978,25 @@ function ContentReadinessWorkspace() {
         </section>
 
         <section className="admin-dashboard__card admin-dashboard__card--summary">
+          <h3>Catalogue/listing/media acceptance snapshot</h3>
+          <dl className="quote-inbox__details">
+            {catalogueListingMediaAcceptanceSnapshot.map(([label, value]) => (
+              <div key={label}>
+                <dt>{label}</dt>
+                <dd>{value}</dd>
+              </div>
+            ))}
+          </dl>
+          <p>
+            The catalogue/listing/media checklist stays template-only,
+            protected, and repo-local. Public visitors only see rental listing,
+            category, event-use, quote, and enquiry guidance; admin content ops,
+            media readiness, alt-text review, visitor-submitted media, account, tracking,
+            provider, and deployment boundaries stay protected.
+          </p>
+        </section>
+
+        <section className="admin-dashboard__card admin-dashboard__card--summary">
           <h3>Quote/enquiry acceptance snapshot</h3>
           <dl className="quote-inbox__details">
             {quoteEnquiryAcceptanceSnapshot.map(([label, value]) => (
@@ -1032,8 +1068,9 @@ function AdminListingOperations({
             <p className="eyebrow">Listings</p>
             <h2>Listing operations</h2>
             <p>
-              Review listing metadata by status, then create or update rental
-              listing records through the protected write boundary.
+              Review listing metadata by status, category, rental unit, content
+              readiness, and media readiness before changing records through the
+              protected write boundary.
             </p>
           </div>
           <dl className="admin-dashboard__stats" aria-label="Listing summary">
@@ -1074,7 +1111,7 @@ function AdminListingOperations({
             adminOnly="Admin-only readiness checks, draft state, archive context, and protected write controls."
             label="Listing operations"
             nextAction="Next safe action: fix missing category, descriptions, rental unit, and media before publishing."
-            publicFacing="Public-facing after publication."
+            publicFacing="Public-facing after publication: published listing name, category, rental unit, public description, and active media only."
             readOnly="Listing status counts and readiness summaries are read-only operator QA cues."
             writeEnabled="Write-enabled listing metadata."
           />
@@ -1105,8 +1142,8 @@ function AdminCategoryOperations({
             <p className="eyebrow">Categories</p>
             <h2>Category operations</h2>
             <p>
-              Review category grouping and publication state before changing
-              the public catalogue structure.
+              Review category descriptions, listing counts, empty states, and
+              publication state before changing the public catalogue structure.
             </p>
           </div>
         </div>
@@ -1143,8 +1180,8 @@ function AdminMediaOperations({
             <p className="eyebrow">Media</p>
             <h2>Media operations</h2>
             <p>
-              Review image upload readiness and metadata before media appears
-              in public catalogue or listing galleries.
+              Review listing media readiness, primary image state, and alt text
+              before media appears in public catalogue or listing galleries.
             </p>
           </div>
         </div>

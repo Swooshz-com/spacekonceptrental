@@ -476,3 +476,9 @@ and route/action boundaries are implemented and tested.
       roadmap, decision log, and safety docs.
 - [ ] Keep n8n as optional automation/integration, not the browser-facing app
       boundary.
+
+## Phase 3W-A/B Catalogue Listing Media Hardening Protected Admin Content-Ops Polish And Local Acceptance Coverage
+
+- [x] Harden public catalogue/listing/category/event-use media discovery with customer-facing rental wording.
+- [x] Add protected admin catalogue/listing/media acceptance snapshot as template-only protected content.
+- [x] Add repo-local catalogue/listing/media acceptance checklist without filled evidence or deployment approval.

@@ -1823,3 +1823,5 @@ retrieval/RAG, add transcript runtime paths, invent real contact details,
 business hours, addresses, testimonials, client names, awards, certifications,
 legal claims, guarantees, production policies, or add public self-service
 rental completion flows outside the current quote request path.
+
+Phase 3W-A/B hardens the public catalogue/listing/category/media discovery path and protected admin content-ops surfaces while keeping catalogue/listing/media acceptance repo-local and template-only.

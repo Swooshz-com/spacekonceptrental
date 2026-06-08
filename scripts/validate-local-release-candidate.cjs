@@ -12,12 +12,15 @@ const localAcceptanceTriageBoardPath = 'docs/content/LOCAL-ACCEPTANCE-TRIAGE-BOA
 const deploymentDecisionFirewallPath = 'docs/content/DEPLOYMENT-DECISION-FIREWALL.md';
 const quoteWorkflowChecklistPath =
   'docs/content/QUOTE-ENQUIRY-WORKFLOW-ACCEPTANCE-CHECKLIST.md';
+const catalogueListingMediaChecklistPath =
+  'docs/content/CATALOGUE-LISTING-MEDIA-ACCEPTANCE-CHECKLIST.md';
 const suiteRunnerPath = 'scripts/validate-release-candidate-suite.cjs';
 const protectedAdminShellPath = 'website/app/admin/protected-admin-shell.tsx';
 const phase3rMergeCommit = 'ef18c2357d37fdb613851c427130bb108861de31';
 const phase3sMergeCommit = '7d6af15e09f7603e2107801f3b6417fd4d2d40bc';
 const phase3tMergeCommit = '66840d5d3bb77d39200a864bfcbecc29ee859f76';
 const phase3uMergeCommit = 'dd2c3c0176c427e69efa01d6e54841637d61548c';
+const phase3vMergeCommit = '3904a661aa3d72606d4c48743030406656128b2c';
 const sourceExtensions = new Set(['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs']);
 const forbiddenCustomerFlowTermPattern = new RegExp(
   `\\b(?:${[
@@ -371,10 +374,45 @@ function assertQuoteEnquiryWorkflowChecklist() {
   assertNoMatch(checklist, forbiddenContactFactPattern, 'quote/enquiry workflow acceptance checklist');
 }
 
+function assertCatalogueListingMediaChecklist() {
+  const checklist = readRepoFile(catalogueListingMediaChecklistPath);
+  const normalized = normalizeWhitespace(checklist);
+
+  assertTracked([catalogueListingMediaChecklistPath], 'catalogue/listing/media acceptance checklist');
+
+  for (const required of [
+    'repo-local, template-only, non-live, and not evidence',
+    'Public Catalogue Route Expectations',
+    'Public Listing Detail Expectations',
+    'Public Category Route Expectations',
+    'Public Event-Use Handoff Expectations',
+    'Protected Admin Listing Category Media Expectations',
+    'Media And Alt-Text Expectations',
+    'Public Allowed Wording',
+    'Public Forbidden Wording',
+    'Admin-Only Boundary',
+    'Local Acceptance Placeholders',
+    'Deployment Boundary',
+    '[ROUTE / AREA]',
+    '[PUBLIC / PROTECTED ADMIN]',
+    '[CATALOGUE / LISTING / MEDIA CHECK]',
+    '[LOCAL ACCEPTANCE STATE: NOT RUN / PASS / NEEDS FOLLOW-UP]',
+    '[OWNER INPUT REQUIRED]',
+    '[LOCAL FOLLOW-UP]',
+    '[DEPLOYMENT APPROVAL: NOT GRANTED]',
+  ]) {
+    assertIncludes(normalized, required, 'catalogue/listing/media acceptance checklist');
+  }
+
+  assertNoMatch(checklist, filledEvidencePattern, 'catalogue/listing/media acceptance checklist');
+  assertNoMatch(checklist, forbiddenBusinessFactPattern, 'catalogue/listing/media acceptance checklist');
+  assertNoMatch(checklist, forbiddenContactFactPattern, 'catalogue/listing/media acceptance checklist');
+}
+
 function assertStatusDocs() {
   const status = readRepoFile('docs/PHASE-STATUS.md');
   const currentStatus = normalizeWhitespace(
-    status.split('Previous Current Phase 3U-A/B status:')[0] || status,
+    status.split('Previous Current Phase 3V-A/B status:')[0] || status,
   );
   const roadmap = normalizeWhitespace(readRepoFile('docs/PHASE-ROADMAP.md'));
   const readiness = readRepoFile('docs/PHASE-2-READINESS-PLAN.md');
@@ -389,14 +427,16 @@ function assertStatusDocs() {
   );
 
   for (const required of [
-    'Current phase: Phase 3V-A/B - quote/enquiry workflow hardening, protected admin triage polish, and local acceptance coverage.',
-    'Latest completed capability: Phase 3U-A/B final local owner handoff pack, acceptance triage board, and deployment decision firewall.',
-    'Last merged capability PR: #143',
-    `Merge commit: \`${phase3uMergeCommit}\``,
+    'Current phase: Phase 3W-A/B - catalogue listing media hardening, protected admin content-ops polish, and local acceptance coverage.',
+    'Latest completed capability: Phase 3V-A/B quote/enquiry workflow hardening, protected admin triage polish, and local acceptance coverage.',
+    'Last merged capability PR: #144',
+    `Merge commit: \`${phase3vMergeCommit}\``,
   ]) {
-    assertIncludes(currentStatus, required, 'Phase 3V status');
+    assertIncludes(currentStatus, required, 'Phase 3W status');
   }
 
+  assertIncludes(status, 'Previous Current Phase 3V-A/B status', 'Phase 3W status');
+  assertIncludes(status, `Merge commit: \`${phase3uMergeCommit}\``, 'Phase 3V history');
   assertIncludes(status, 'Previous Current Phase 3U-A/B status', 'Phase 3V status');
   assertIncludes(status, `Merge commit: \`${phase3tMergeCommit}\``, 'Phase 3U history');
   assertIncludes(status, 'Previous Current Phase 3T-A/B status', 'Phase 3U status');
@@ -405,6 +445,11 @@ function assertStatusDocs() {
   assertIncludes(status, 'Previous Current Phase 3S-A/B status', 'Phase 3T status');
   assertIncludes(status, `Merge commit: \`${phase3rMergeCommit}\``, 'Phase 3S history');
   assertIncludes(status, 'Previous Current Phase 3R-A/B status', 'Phase 3S status');
+  assertIncludes(
+    roadmap,
+    'Phase 3W-A/B hardens the public catalogue/listing/category/media discovery path and protected admin content-ops surfaces',
+    'Phase 3W roadmap',
+  );
   assertIncludes(
     roadmap,
     'Phase 3V-A/B hardens the public quote/enquiry conversion path and protected admin quote triage',
@@ -425,6 +470,8 @@ function assertStatusDocs() {
     'Phase 3S-A/B adds a repo-local release-candidate acceptance gate, route inventory freeze, and public/admin regression harness',
     'Phase 3S roadmap',
   );
+  assertIncludes(readiness, 'Current Phase 3W-A/B status', 'Phase 3W readiness');
+  assertIncludes(readiness, 'Previous Current Phase 3V-A/B status', 'Phase 3W readiness');
   assertIncludes(readiness, 'Current Phase 3V-A/B status', 'Phase 3V readiness');
   assertIncludes(readiness, 'Previous Current Phase 3U-A/B status', 'Phase 3V readiness');
   assertIncludes(readiness, 'Current Phase 3T-A/B status', 'Phase 3T readiness');
@@ -435,8 +482,18 @@ function assertStatusDocs() {
   assertIncludes(readiness, 'Previous Current Phase 3R-A/B status', 'Phase 3S readiness');
   assertIncludes(
     decisionLog,
+    'Decision: Phase 3W-A/B hardens public catalogue/listing/category/media discovery, protected admin content operations, and local catalogue/listing/media acceptance coverage.',
+    'Phase 3W decision log',
+  );
+  assertIncludes(
+    decisionLog,
     'Decision: Phase 3V-A/B hardens the quote/enquiry workflow, protected admin triage, and local acceptance coverage.',
     'Phase 3V decision log',
+  );
+  assertIncludes(
+    checklist,
+    '## Phase 3W-A/B Catalogue Listing Media Hardening Protected Admin Content-Ops Polish And Local Acceptance Coverage',
+    'Phase 3W checklist',
   );
   assertIncludes(
     checklist,
@@ -480,7 +537,9 @@ function assertStatusDocs() {
   assertIncludes(ownerReviewDocs, localAcceptanceTriageBoardPath, 'owner review docs');
   assertIncludes(ownerReviewDocs, deploymentDecisionFirewallPath, 'owner review docs');
   assertIncludes(ownerReviewDocs, quoteWorkflowChecklistPath, 'owner review docs');
+  assertIncludes(ownerReviewDocs, catalogueListingMediaChecklistPath, 'owner review docs');
   assertIncludes(ownerReviewDocs, 'quote/enquiry workflow acceptance checklist', 'owner review docs');
+  assertIncludes(ownerReviewDocs, 'catalogue/listing/media', 'owner review docs');
   assertIncludes(ownerReviewDocs, 'final local owner handoff pack', 'owner review docs');
   assertIncludes(ownerReviewDocs, 'local release-candidate command centre', 'owner review docs');
   assertIncludes(ownerReviewDocs, 'local release-candidate acceptance gate', 'owner review docs');
@@ -496,6 +555,7 @@ function assertProtectedAdminShell() {
   assertIncludes(shell, localAcceptanceTriageBoardPath, 'protected admin shell');
   assertIncludes(shell, deploymentDecisionFirewallPath, 'protected admin shell');
   assertIncludes(shell, quoteWorkflowChecklistPath, 'protected admin shell');
+  assertIncludes(shell, catalogueListingMediaChecklistPath, 'protected admin shell');
   assertIncludes(shell, 'localAcceptanceSnapshot', 'protected admin shell');
   assertIncludes(shell, 'localAcceptanceLastLocalUpdate', 'protected admin shell');
   assertIncludes(shell, 'Local release-candidate acceptance snapshot', 'protected admin shell');
@@ -508,6 +568,9 @@ function assertProtectedAdminShell() {
   assertIncludes(shell, 'quoteEnquiryAcceptanceSnapshot', 'protected admin shell');
   assertIncludes(shell, 'quoteEnquiryAcceptanceLastLocalUpdate', 'protected admin shell');
   assertIncludes(shell, 'Quote/enquiry acceptance snapshot', 'protected admin shell');
+  assertIncludes(shell, 'catalogueListingMediaAcceptanceSnapshot', 'protected admin shell');
+  assertIncludes(shell, 'catalogueMediaAcceptanceLastLocalUpdate', 'protected admin shell');
+  assertIncludes(shell, 'Catalogue/listing/media acceptance snapshot', 'protected admin shell');
 }
 
 function assertPublicSourceBoundary() {
@@ -607,6 +670,7 @@ assertCommandCentre();
 assertSuiteRunner();
 assertFinalOwnerHandoffMaterials();
 assertQuoteEnquiryWorkflowChecklist();
+assertCatalogueListingMediaChecklist();
 assertStatusDocs();
 assertProtectedAdminShell();
 assertPublicSourceBoundary();

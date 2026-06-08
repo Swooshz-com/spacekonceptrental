@@ -230,3 +230,5 @@ browser Supabase, add service-role runtime paths, access
 add customer accounts, add public quote tracking, add notifications, add CRM,
 or add public self-service rental completion flows outside the current quote
 request path.
+
+Phase 3W-A/B roll-forward: include `docs/content/CATALOGUE-LISTING-MEDIA-ACCEPTANCE-CHECKLIST.md` in repo-local acceptance materials for catalogue/listing/media readiness. This does not approve deployment, does not add provider config, does not create evidence, and keeps public catalogue/listing/category/event copy separate from protected admin content-ops readiness wording.

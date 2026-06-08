@@ -277,3 +277,5 @@ for the release-candidate gate and keep the review non-live.
 - Hold deployment means no provider or public traffic step is allowed.
 - Approve future deployment separately means a later deployment PR may be
   prepared, but this runbook still remains non-live.
+
+Phase 3W-A/B manual QA should include `docs/content/CATALOGUE-LISTING-MEDIA-ACCEPTANCE-CHECKLIST.md` as template-only local review support for public catalogue, listing detail, category, event-use handoff, protected admin content ops, and media/alt-text boundaries. Do not fill evidence or record owner sign-off.
