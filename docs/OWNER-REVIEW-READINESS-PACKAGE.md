@@ -28,6 +28,12 @@ correction intake,
 `docs/content/OWNER-REVIEW-LAUNCH-BLOCKER-FREEZE-GATE.md` for the
 launch-blocker freeze gate, and
 `docs/content/OWNER-REVIEW-CORRECTION-PR-PLAN.md` for the correction PR plan.
+Use `docs/content/OWNER-REVIEW-CLOSURE-PACKET.md` for the Owner-review
+closure packet,
+`docs/content/OWNER-REVIEW-CLOSURE-SIGN-OFF-TEMPLATE.md` for the readiness
+sign-off template, and
+`docs/content/OWNER-REVIEW-DEPLOYMENT-APPROVAL-SEPARATION.md` for deployment
+approval separation.
 
 Owner content blockers must remain separate from deployment approval. Missing
 real contact/legal/business-hour content does not get invented. Public launch
@@ -54,6 +60,12 @@ launch-blocker freeze gate, and correction PR plan. Those materials are
 template-only and do not record owner corrections, owner sign-off, filled
 evidence, or deployment approval.
 
+The protected workspace also references the Owner-review closure packet,
+readiness sign-off template, and deployment approval separation. Those
+materials are template-only and do not record owner-review closure, owner
+sign-off, filled evidence, preview evidence, production launch, or deployment
+approval.
+
 ## Ready for owner review
 
 - Public website journey from homepage to catalogue, listings, categories,
@@ -74,6 +86,8 @@ evidence, or deployment approval.
   hold/approve rehearsal for placeholder-only review preparation.
 - Owner-review correction intake, launch-blocker freeze gate, and correction
   PR plan for placeholder-only future correction routing.
+- Owner-review closure packet, readiness sign-off template, and deployment
+  approval separation for placeholder-only closure readiness.
 - Admin-only readiness cues, internal quote follow-up context, and recovery
   links that stay inside protected admin routes.
 - Local validation commands and deterministic docs/tests for the owner review
@@ -83,6 +97,8 @@ evidence, or deployment approval.
 
 - Deployment, deployment approval, provider connection, and public traffic
   enablement.
+- Owner sign-off, owner-review closure, filled owner-review evidence, preview
+  evidence, production launch, and post-launch monitoring.
 - Vercel project configuration, Supabase Cloud configuration, real environment
   values, production seed data, filled preview evidence, and production
   evidence.
@@ -182,6 +198,7 @@ owner decision and a separate implementation/release step.
 | --- | --- | --- |
 | Ready for owner review | Owner can review the repo-local website, admin, quote, docs, and validation package. | Continue local/manual review using the manual QA runbook. |
 | Needs owner-supplied content | Owner wants content changes before any launch decision. | Open a content/public/admin polish PR that remains non-deployment. |
+| Owner review ready to close | Template-only closure materials suggest the review may be closable after owner confirmation. | Prepare the owner-facing closure packet without deployment approval. |
 | Hold deployment | Owner decides public launch is not approved yet. | Keep deployment blocked and continue only approved local polish. |
 | Approve future deployment separately | Owner explicitly approves a later deployment lane. | Open a separate deployment PR with provider and evidence review outside this Phase 3J package. |
 

@@ -4,6 +4,53 @@ This is the quick status page for the SKR repo. Use `docs/PHASE-2-READINESS-PLAN
 
 ## Current phase
 
+Current phase: Phase 3P-A/B - owner-review closure packet, readiness sign-off template, and deployment approval separation.
+
+Latest completed capability: Phase 3O-A/B owner-review correction intake, launch-blocker freeze gate, and admin triage snapshot.
+
+Last merged capability PR: #137
+
+Merge commit: `fd5614bb1e0a9e0e33f064ecaba7bc85dba36efb`
+
+Phase 3P-A/B adds an owner-review closure packet, readiness sign-off
+template, deployment approval separation note, and admin closure readiness
+snapshot. It turns the Phase 3O correction intake, launch-blocker freeze gate,
+and correction PR plan into template-only closure readiness materials without
+recording actual owner sign-off, approving deployment, adding preview evidence,
+or inventing missing real-world facts.
+
+Public users only see public-safe published listing, category, listing image,
+selected-listing quote context, and public recovery guidance. Owner-review
+closure packet details, readiness sign-off template details, deployment
+approval separation notes, correction intake details, launch-blocker freeze
+gate details, correction PR planning notes, dry-run details, findings
+disposition rows, launch decision rehearsal notes, route decision matrix notes,
+issue ledger details, admin internal notes, protected management URLs, provider
+details, secrets, production evidence, filled preview evidence, and invented
+public business facts stay out of public routes. Supabase remains canonical for
+website/admin listing and quote data. Pinecone remains a future derived index
+only and is not used as canonical business storage.
+
+No deployment is performed or approved by Phase 3P-A/B. It does not add Vercel
+config, connect Supabase Cloud, add real secrets or env values, add filled
+owner-review evidence, filled preview evidence, production evidence, Pinecone
+runtime code, Pinecone packages, Pinecone env reads, secrets, API keys,
+Pinecone executors, n8n workflow/runtime changes, embedding runtime, sync
+workers, `/api/chat` retrieval wiring, search-index document writers, real
+vector upsert/delete, runtime reranking, hybrid search runtime, browser
+Supabase, service-role runtime paths, public or customer upload routes, public
+quote tracking, customer-visible internal notes, notifications, CRM
+integration, customer accounts, invented real contact details, phone numbers,
+email addresses, physical addresses, business hours, testimonials, client
+names, awards, certifications, legal claims, guarantees, production policies,
+or ecommerce flows.
+
+Missing real contact, legal, policy, business-hour, service-area, proof,
+testimonial, client-name, award, certification, or guarantee content must
+remain marked as owner input required and must not be invented.
+
+Previous Current Phase 3O-A/B status:
+
 Current phase: Phase 3O-A/B - owner-review correction intake, launch-blocker freeze gate, and admin triage snapshot.
 
 Latest completed capability: Phase 3N-A/B owner-review dry-run packet, findings disposition workflow, and launch hold/approve rehearsal.
@@ -219,22 +266,21 @@ Merge commit: `1c7dc0ac7c2532fa8a837cd46b0d1f0103d5ccfa`
 
 ## Remaining-work map
 
-Completed through PR #136:
+Completed through PR #137:
 
-- PR #136 merged Phase 3N-A/B owner-review dry-run packet, findings
-  disposition workflow, and launch hold/approve rehearsal at merge commit
-  `98d62e9d6641d0d34770c76f156e914be5ba4edd`.
-- The latest completed capability is Phase 3N-A/B owner-review dry-run packet,
-  findings disposition workflow, and launch hold/approve rehearsal. It added
-  template-only owner-review dry-run preparation, placeholder-only findings
-  routing, launch hold/approve rehearsal language, explicit deployment
-  approval boundaries, and deterministic no-deploy guardrails.
-- Phase 3O-A/B is current as owner-review correction intake, launch-blocker
-  freeze gate, and admin triage snapshot for template-only future correction
-  capture, freeze-state classification, safe correction PR planning, protected
-  admin correction/freeze summaries, and deterministic no-deploy guardrails.
-  It is repo-local and admin-protected only and does not perform or approve
-  deployment.
+- PR #137 merged Phase 3O-A/B owner-review correction intake,
+  launch-blocker freeze gate, and admin triage snapshot at merge commit
+  `fd5614bb1e0a9e0e33f064ecaba7bc85dba36efb`.
+- The latest completed capability is Phase 3O-A/B owner-review correction
+  intake, launch-blocker freeze gate, and admin triage snapshot. It added
+  template-only future correction intake, safe correction statuses,
+  freeze-state classification, future correction PR planning, protected admin
+  correction/freeze summaries, and deterministic no-deploy guardrails.
+- Phase 3P-A/B is current as owner-review closure packet, readiness sign-off
+  template, and deployment approval separation for template-only closure
+  readiness, owner-review closure state separation, protected admin closure
+  summaries, and deterministic no-deploy guardrails. It is repo-local and
+  admin-protected only and does not perform or approve deployment.
 
 Previous Current Phase 3J-A/B status:
 

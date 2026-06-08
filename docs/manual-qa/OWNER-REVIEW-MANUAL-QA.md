@@ -24,6 +24,12 @@ correction intake,
 `docs/content/OWNER-REVIEW-LAUNCH-BLOCKER-FREEZE-GATE.md` for the
 launch-blocker freeze gate, and
 `docs/content/OWNER-REVIEW-CORRECTION-PR-PLAN.md` for the correction PR plan.
+Use `docs/content/OWNER-REVIEW-CLOSURE-PACKET.md` for the Owner-review
+closure packet,
+`docs/content/OWNER-REVIEW-CLOSURE-SIGN-OFF-TEMPLATE.md` for the readiness
+sign-off template, and
+`docs/content/OWNER-REVIEW-DEPLOYMENT-APPROVAL-SEPARATION.md` for deployment
+approval separation.
 Owner content blockers are governance notes only. Missing real
 contact/legal/business-hour content does not get invented. Owner review can
 continue without deployment.
@@ -37,6 +43,9 @@ owner-input-required categories, and the explicit deployment approval boundary.
 Confirm the correction/freeze snapshot references correction categories,
 correction statuses, freeze states, future correction PR types, and the
 correction freeze boundary.
+Confirm the closure readiness snapshot references current owner-review closure
+state, open blockers, correction intake status, closure readiness notes,
+deployment approval status, and last local packet update placeholders.
 
 ## Local validation commands
 
@@ -194,6 +203,12 @@ for the release-candidate gate and keep the review non-live.
 - Confirm the workspace references the Owner-review correction intake,
   launch-blocker freeze gate, and correction PR plan without exposing them to
   public routes.
+- Confirm the workspace references the Owner-review closure packet, readiness
+  sign-off template, and deployment approval separation without exposing them
+  to public routes.
+- Confirm the closure readiness snapshot stays template-only and shows
+  deployment approval status as not approved / separate explicit approval
+  required.
 - Confirm missing facts remain Owner input required.
 - Confirm public routes do not expose content readiness statuses, owner-review
   issue ledger details, protected admin URLs, or admin-only readiness notes.
@@ -205,6 +220,11 @@ for the release-candidate gate and keep the review non-live.
   launch decisions.
 - Owner content blockers should be recorded in the content gap register, not
   invented in public copy.
+- Owner review ready to close means template-only closure readiness can be
+  prepared for later owner confirmation.
+- Owner-review closure readiness does not approve deployment, preview
+  publication, production launch, provider configuration, or live smoke
+  testing.
 - Needs deployment approval later means deployment remains blocked until a
   separate explicit owner approval.
 - Hold deployment means no provider or public traffic step is allowed.
