@@ -13,7 +13,12 @@ categories and safe status values. Use
 `docs/content/OWNER-REVIEW-EXECUTION-CHECKLIST.md` for the Owner-review
 execution checklist and
 `docs/content/OWNER-REVIEW-ROUTE-DECISION-MATRIX.md` for the Route-by-route
-decision matrix.
+decision matrix. Use `docs/content/OWNER-REVIEW-DRY-RUN-PACKET.md` for the
+Owner-review dry-run packet,
+`docs/content/OWNER-REVIEW-FINDINGS-DISPOSITION.md` for the findings
+disposition workflow, and
+`docs/content/OWNER-REVIEW-LAUNCH-DECISION-REHEARSAL.md` for the launch
+hold/approve rehearsal.
 Owner content blockers are governance notes only. Missing real
 contact/legal/business-hour content does not get invented. Owner review can
 continue without deployment.
@@ -21,7 +26,9 @@ continue without deployment.
 During protected admin review, use `/admin/content-readiness` to confirm the
 admin review snapshot covers review surface groups, route families covered,
 owner decision categories, owner-input-required categories, and launch-blocker
-categories.
+categories. Also confirm the dry-run review snapshot references dry-run review
+areas, findings disposition statuses, launch decision rehearsal states,
+owner-input-required categories, and the explicit deployment approval boundary.
 
 ## Local validation commands
 
@@ -173,6 +180,9 @@ for the release-candidate gate and keep the review non-live.
 - Confirm the workspace separates Blocks owner review, Blocks
   launch/deployment, Deferred after launch, and Not in scope by owner
   direction.
+- Confirm the workspace references the Owner-review dry-run packet, findings
+  disposition workflow, and launch hold/approve rehearsal without exposing
+  them to public routes.
 - Confirm missing facts remain Owner input required.
 - Confirm public routes do not expose content readiness statuses, owner-review
   issue ledger details, protected admin URLs, or admin-only readiness notes.

@@ -41,7 +41,12 @@ and safe status values. Use
 `docs/content/OWNER-REVIEW-EXECUTION-CHECKLIST.md` for the Owner-review
 execution checklist and
 `docs/content/OWNER-REVIEW-ROUTE-DECISION-MATRIX.md` for the Route-by-route
-decision matrix.
+decision matrix. Use `docs/content/OWNER-REVIEW-DRY-RUN-PACKET.md` for the
+Owner-review dry-run packet,
+`docs/content/OWNER-REVIEW-FINDINGS-DISPOSITION.md` for the findings
+disposition workflow, and
+`docs/content/OWNER-REVIEW-LAUNCH-DECISION-REHEARSAL.md` for the launch
+hold/approve rehearsal.
 
 What the owner should review:
 
@@ -55,6 +60,8 @@ What the owner should review:
   the admin review snapshot.
 - Owner-review execution checklist and Route-by-route decision matrix for
   non-live route-by-route owner/admin decisions.
+- Owner-review dry-run packet, findings disposition workflow, and launch
+  hold/approve rehearsal for placeholder-only owner/admin review preparation.
 - Known deferred capabilities and intentionally not implemented scope.
 - Local validation results and any local-only manual QA notes.
 

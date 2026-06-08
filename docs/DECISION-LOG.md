@@ -2202,6 +2202,40 @@ paths, add retention cleanup jobs, or add ecommerce flows such as carts,
 checkout, payments, stock reservation, confirmed booking, order fulfilment, or
 online ordering.
 
+## 2026-06-08: Owner-Review Dry-Run Packet, Findings Disposition Workflow, And Launch Hold/Approve Rehearsal
+
+Decision: Phase 3N-A/B adds an owner-review dry-run packet, findings disposition workflow, and launch hold/approve rehearsal.
+
+Reason: PR #135 merged Phase 3M-A/B at
+`0528ad92ad756a68d2094a16cd204f1c404c99a3`, completing the owner-review
+execution checklist, route-by-route decision matrix, and admin review snapshot
+without deploying or approving deployment. The next approved work item is to
+make owner review dry-run-ready while keeping findings, owner input, and launch
+decision language placeholder-only.
+
+The implementation adds an owner-review dry-run packet, findings disposition
+workflow, launch decision rehearsal, protected content readiness workspace
+snapshot update, deterministic Phase 3N tests, preview handoff validation
+coverage, and docs/status roll-forward from PR #135. It keeps the existing
+public catalogue read boundary, public quote request API contract, protected
+admin shell gate, and RPC-backed admin write boundaries.
+
+Phase 3N-A/B does not deploy, approve deployment, add Vercel config, connect
+Supabase Cloud, add real secrets or env values, add production evidence, add
+browser Supabase, add service-role runtime paths, access
+`website/chat-config.js`, add public/customer upload routes, add customer
+accounts, add public quote tracking, expose customer-visible internal notes,
+add notifications or CRM integration, change n8n/Pinecone runtime behavior,
+add SaaS chatbot runtime work, add Pinecone SDK/package dependencies, add
+Pinecone env vars or API keys, add embedding/reranking runtime, wire
+`/api/chat` to retrieval/RAG, wire transcript reads or writes into
+`/api/chat`, add admin transcript UI, add transcript deletion/export runtime
+paths, add retention cleanup jobs, invent real contact details, phone numbers,
+email addresses, physical addresses, business hours, testimonials, client
+names, awards, certifications, legal claims, guarantees, production policies,
+or add ecommerce flows such as carts, checkout, payments, stock reservation,
+confirmed booking, order fulfilment, or online ordering.
+
 ## 2026-06-08: Owner-Review Execution Checklist, Route-By-Route Decision Matrix, And Admin Review Snapshot
 
 Decision: Phase 3M-A/B adds an owner-review execution checklist, route-by-route decision matrix, and admin review snapshot.

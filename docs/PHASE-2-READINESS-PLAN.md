@@ -238,7 +238,35 @@ Suggested first PR:
   Supabase, production evidence, or ecommerce flows. Product language remains
   enquiry/quote/request.
 
-Current Phase 3M-A/B status:
+Current Phase 3N-A/B status:
+
+- PR #135 merged Phase 3M-A/B owner-review execution checklist,
+  route-by-route decision matrix, and admin review snapshot at merge commit
+  `0528ad92ad756a68d2094a16cd204f1c404c99a3`.
+- Latest completed capability is Phase 3M-A/B owner-review execution
+  checklist, route-by-route decision matrix, and admin review snapshot.
+- Phase 3N-A/B is current as owner-review dry-run packet, findings disposition
+  workflow, and launch hold/approve rehearsal for template-only owner-review
+  dry-run preparation, placeholder-only findings routing, safe launch
+  hold/approve language, owner-input-required categories, explicit deployment
+  approval boundaries, and public/admin visibility separation.
+- The protected content readiness workspace now summarizes the dry-run review
+  snapshot and references the dry-run packet, findings disposition workflow,
+  and launch decision rehearsal without creating public route tracking.
+- Public copy must not invent phone numbers, email addresses, physical
+  addresses, business hours, client names, testimonials, awards,
+  certifications, legal claims, guarantees, production policies, service-area
+  claims, or ecommerce flows. Owner-only dry-run details, findings disposition
+  statuses, and launch decision rehearsal notes remain protected/admin-only.
+- No deployment, deployment approval, Vercel config, Supabase Cloud config,
+  real env values, production evidence, browser Supabase, service-role runtime
+  paths, n8n/Pinecone/RAG runtime work, public quote tracking, customer
+  accounts, customer-visible internal notes, notifications, CRM integration,
+  public/customer upload routes, transcript runtime paths, invented real
+  contact details, testimonials, client names, legal claims, production
+  policies, or ecommerce flow is added.
+
+Previous Current Phase 3M-A/B status:
 
 - PR #134 merged Phase 3L-A/B protected content readiness workspace,
   owner-review issue ledger, and public copy fact-safety audit at merge commit
