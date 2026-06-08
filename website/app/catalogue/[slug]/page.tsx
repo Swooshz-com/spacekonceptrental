@@ -180,6 +180,15 @@ export function ProductPageContent({
             </ul>
           </section>
 
+          <section className="listing-checklist" aria-label="Public review prompts">
+            <h3>Public review prompts</h3>
+            <ul className="journey-list">
+              <li>Listing copy is clear for public review.</li>
+              <li>Rental unit and category read clearly.</li>
+              <li>Quote request handoff stays simple.</li>
+            </ul>
+          </section>
+
           <div className="hero__actions">
             <Link className="button button--secondary" href={backHref}>
               {backLabel}

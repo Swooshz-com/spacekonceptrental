@@ -1621,3 +1621,34 @@ business hours, addresses, testimonials, client names, awards, certifications,
 legal claims, guarantees, production policies, or add public/customer
 transaction flows, retail transaction flows, stock-reservation-like flows, or
 fulfilment-like flows.
+
+## Phase 3Q: Repo-Local Owner-Demo Polish, Public Journey QA Hardening, And Protected Admin Closure Workspace Polish
+
+Phase 3Q-A/B adds repo-local owner-demo polish, public journey QA hardening,
+and protected admin closure workspace polish for the current rental website
+candidate. It pivots from governance-only closure templates into a reviewable
+public/admin walkthrough while keeping the work non-live and local.
+
+Phase 3Q-A/B adds a template-only owner-demo walkthrough covering homepage,
+catalogue/listing, category/event-use, quote/enquiry request, protected admin
+overview, listing/category/media, quote workflow, and protected content
+readiness review. The walkthrough keeps placeholders empty and records no
+owner decision.
+
+Phase 3Q-A/B polishes public route guidance around listing, enquiry, quote,
+request, rental, and event furniture wording. It also adds an admin-only
+owner-demo snapshot to the protected content readiness workspace so authorised
+admins can see that demo review, closure readiness, and deployment approval
+remain separate.
+
+Phase 3Q-A/B does not deploy, approve deployment, add Vercel or Supabase Cloud
+config, add real env values, add filled owner-review evidence, add filled
+preview or production evidence, add browser Supabase, add service-role runtime
+paths, access `website/chat-config.js`, add public/customer uploads, add
+customer accounts, add public quote tracking, expose customer-visible internal
+notes, add notifications or CRM integration, change n8n/Pinecone runtime
+behavior, add Pinecone packages/env/API keys, wire `/api/chat` to
+retrieval/RAG, add transcript runtime paths, invent real contact details,
+business hours, addresses, testimonials, client names, awards, certifications,
+legal claims, guarantees, production policies, or add public self-service
+rental completion flows outside the current quote request path.

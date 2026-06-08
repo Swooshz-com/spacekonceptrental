@@ -517,7 +517,8 @@ const contentReadinessSources = [
   "docs/content/OWNER-REVIEW-CORRECTION-PR-PLAN.md",
   "docs/content/OWNER-REVIEW-CLOSURE-PACKET.md",
   "docs/content/OWNER-REVIEW-CLOSURE-SIGN-OFF-TEMPLATE.md",
-  "docs/content/OWNER-REVIEW-DEPLOYMENT-APPROVAL-SEPARATION.md"
+  "docs/content/OWNER-REVIEW-DEPLOYMENT-APPROVAL-SEPARATION.md",
+  "docs/content/OWNER-DEMO-WALKTHROUGH.md"
 ] as const;
 
 const reviewSurfaceGroups = 11;
@@ -621,6 +622,16 @@ const ownerReviewClosureTemplateFields = [
 const closureDeploymentApprovalStatus =
   "Not approved / separate explicit approval required";
 const closureSnapshotLastLocalPacketUpdate = "[DATE PLACEHOLDER]";
+const ownerDemoWalkthroughPath = "docs/content/OWNER-DEMO-WALKTHROUGH.md";
+const ownerDemoSnapshotLastLocalPacketUpdate = "[DATE PLACEHOLDER]";
+const ownerDemoWalkthroughSnapshot = [
+  ["Owner-demo walkthrough", "Template only"],
+  ["Public journey review", "[TEMPLATE ONLY]"],
+  ["Admin workflow review", "[TEMPLATE ONLY]"],
+  ["Closure readiness", "[TEMPLATE ONLY]"],
+  ["Deployment approval", closureDeploymentApprovalStatus],
+  ["Last local review packet update", ownerDemoSnapshotLastLocalPacketUpdate]
+] as const;
 
 const contentReadinessGroups = [
   {
@@ -781,6 +792,23 @@ function ContentReadinessWorkspace() {
             Closure readiness is template-only and cannot approve deployment,
             preview publication, production launch, provider configuration, or
             live smoke testing.
+          </p>
+        </section>
+
+        <section className="admin-dashboard__card admin-dashboard__card--summary">
+          <h3>Owner-demo walkthrough snapshot</h3>
+          <dl className="quote-inbox__details">
+            {ownerDemoWalkthroughSnapshot.map(([label, value]) => (
+              <div key={label}>
+                <dt>{label}</dt>
+                <dd>{value}</dd>
+              </div>
+            ))}
+          </dl>
+          <p>
+            The owner-demo walkthrough stays template-only, admin-only, and
+            repo-local. Public visitors cannot see closure readiness notes or
+            internal review prompts.
           </p>
         </section>
 

@@ -290,9 +290,10 @@ describe("Phase 3P-A/B owner review closure package", () => {
     expect(screen.getAllByText(/\[TEMPLATE ONLY\]/i).length).toBeGreaterThan(1);
     expect(screen.getByText(/deployment approval status/i)).toBeInTheDocument();
     expect(
-      screen.getByText(/not approved \/ separate explicit approval required/i)
-    ).toBeInTheDocument();
-    expect(screen.getByText(/\[DATE PLACEHOLDER\]/i)).toBeInTheDocument();
+      screen.getAllByText(/not approved \/ separate explicit approval required/i)
+        .length
+    ).toBeGreaterThan(0);
+    expect(screen.getAllByText(/\[DATE PLACEHOLDER\]/i).length).toBeGreaterThan(0);
     expect(screen.getByText(ownerReviewClosurePacketPath)).toBeInTheDocument();
     expect(screen.getByText(ownerReviewClosureSignoffTemplatePath)).toBeInTheDocument();
     expect(screen.getByText(ownerReviewDeploymentApprovalSeparationPath)).toBeInTheDocument();

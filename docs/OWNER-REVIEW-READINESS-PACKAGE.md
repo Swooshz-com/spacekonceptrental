@@ -33,7 +33,9 @@ closure packet,
 `docs/content/OWNER-REVIEW-CLOSURE-SIGN-OFF-TEMPLATE.md` for the readiness
 sign-off template, and
 `docs/content/OWNER-REVIEW-DEPLOYMENT-APPROVAL-SEPARATION.md` for deployment
-approval separation.
+approval separation. Use `docs/content/OWNER-DEMO-WALKTHROUGH.md` for the
+Owner-demo walkthrough, public journey review, and protected admin closure
+workspace review.
 
 Owner content blockers must remain separate from deployment approval. Missing
 real contact/legal/business-hour content does not get invented. Public launch
@@ -66,6 +68,10 @@ materials are template-only and do not record owner-review closure, owner
 sign-off, filled evidence, preview evidence, production launch, or deployment
 approval.
 
+The protected workspace also references the Owner-demo walkthrough. That
+walkthrough is template-only, keeps public journey review separate from
+admin-only closure readiness, and does not approve deployment.
+
 ## Ready for owner review
 
 - Public website journey from homepage to catalogue, listings, categories,
@@ -88,6 +94,8 @@ approval.
   PR plan for placeholder-only future correction routing.
 - Owner-review closure packet, readiness sign-off template, and deployment
   approval separation for placeholder-only closure readiness.
+- Owner-demo walkthrough for public journey review and protected admin closure
+  workspace review without filled evidence.
 - Admin-only readiness cues, internal quote follow-up context, and recovery
   links that stay inside protected admin routes.
 - Local validation commands and deterministic docs/tests for the owner review
@@ -106,8 +114,8 @@ approval.
   customer accounts, public quote tracking, notifications, CRM integration,
   n8n/Pinecone runtime changes, Pinecone SDK/env/runtime, and `/api/chat`
   retrieval/RAG wiring.
-- Ecommerce flows such as carts, checkout, payments, stock reservation,
-  confirmed booking, order fulfilment, or online ordering.
+- Public self-service rental completion flows outside the current
+  quote/enquiry request path.
 - Real business contact details, opening hours, client names, testimonials,
   certifications, awards, legal claims, or production policies that have not
   already been supplied by the owner.
@@ -180,8 +188,8 @@ approval.
 - Pinecone/RAG runtime wiring for `/api/chat`.
 - Transcript runtime reads/writes, transcript admin UI, retention jobs, and
   deletion/export paths.
-- Ecommerce carts, checkout, payments, stock reservation, confirmed booking,
-  order fulfilment, and online ordering.
+- Public self-service rental completion flows outside the current
+  quote/enquiry request path.
 
 ## Non-deployment decision status
 

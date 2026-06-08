@@ -57,6 +57,24 @@ const rentalJourneySteps = [
   }
 ];
 
+const publicReviewPrompts = [
+  {
+    title: "Listing discovery",
+    description:
+      "Confirm each listing gives enough rental context before visitors move to a quote request."
+  },
+  {
+    title: "Event-use guidance",
+    description:
+      "Check that categories and event pages give practical setup prompts without inventing facts."
+  },
+  {
+    title: "Quote request handoff",
+    description:
+      "Make sure the enquiry path asks for event details and keeps final follow-up with the team."
+  }
+];
+
 export default async function HomePage() {
   const catalogue = await getPublicCatalogue();
   const featuredListings = catalogue.products.slice(0, 3);
@@ -114,6 +132,35 @@ export default async function HomePage() {
           </Link>
           <Link className="button" href="/quote">
             Start a quote request
+          </Link>
+        </div>
+      </section>
+
+      <section className="section">
+        <div className="section__header">
+          <h2>Review the rental journey</h2>
+          <p className="section__intro">
+            Listings, categories, event-use guidance, and quote requests stay
+            connected for a review-safe walkthrough.
+          </p>
+        </div>
+        <div className="route-grid">
+          {publicReviewPrompts.map((prompt) => (
+            <article className="route-card" key={prompt.title}>
+              <h2>{prompt.title}</h2>
+              <p>{prompt.description}</p>
+            </article>
+          ))}
+        </div>
+        <div className="hero__actions">
+          <Link className="button button--secondary" href="/listings">
+            Browse rental listings
+          </Link>
+          <Link className="button button--secondary" href="/events">
+            Review event guidance
+          </Link>
+          <Link className="button" href="/quote">
+            Review quote request path
           </Link>
         </div>
       </section>

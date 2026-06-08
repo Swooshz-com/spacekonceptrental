@@ -57,7 +57,9 @@ closure packet,
 `docs/content/OWNER-REVIEW-CLOSURE-SIGN-OFF-TEMPLATE.md` for the readiness
 sign-off template, and
 `docs/content/OWNER-REVIEW-DEPLOYMENT-APPROVAL-SEPARATION.md` for deployment
-approval separation.
+approval separation. Use `docs/content/OWNER-DEMO-WALKTHROUGH.md` for the
+Owner-demo walkthrough, public journey review, and protected admin closure
+workspace review.
 
 What the owner should review:
 
@@ -77,6 +79,8 @@ What the owner should review:
   PR plan for placeholder-only future correction routing.
 - Owner-review closure packet, readiness sign-off template, and deployment
   approval separation for placeholder-only closure readiness.
+- Owner-demo walkthrough for public journey review and protected admin closure
+  workspace review.
 - Known deferred capabilities and intentionally not implemented scope.
 - Local validation results and any local-only manual QA notes.
 
@@ -100,7 +104,8 @@ What remains blocked until explicit approval:
 - Browser Supabase, service-role runtime paths, public/customer uploads,
   customer accounts, public quote tracking, notifications, CRM integration,
   n8n/Pinecone runtime changes, `/api/chat` retrieval/RAG wiring, transcript
-  runtime paths, and ecommerce flows.
+  runtime paths, and public self-service rental completion flows outside the
+  current quote request path.
 
 Owner decision language remains:
 
@@ -183,7 +188,8 @@ deployment approval or a product polish/content/UI iteration.
 - Product polish that can be handled in a separate product/content/UI PR.
 - Optional UI expansion that is not release-blocking.
 - Future n8n, Pinecone, RAG, transcript, CRM, notification, customer account,
-  public quote tracking, upload, or ecommerce ideas.
+  public quote tracking, upload, or public self-service rental completion
+  ideas.
 - Missing live preview evidence before a preview deployment exists.
 
 ## Scope Boundaries
@@ -194,4 +200,5 @@ browser Supabase, add service-role runtime paths, access
 `website/chat-config.js`, change n8n workflows, add Pinecone runtime work, wire
 `/api/chat` to retrieval/RAG, add transcript runtime paths, add public uploads,
 add customer accounts, add public quote tracking, add notifications, add CRM,
-or add ecommerce flows.
+or add public self-service rental completion flows outside the current quote
+request path.
