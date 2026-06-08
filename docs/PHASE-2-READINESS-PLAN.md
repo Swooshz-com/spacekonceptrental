@@ -238,6 +238,43 @@ Suggested first PR:
   Supabase, production evidence, or ecommerce flows. Product language remains
   enquiry/quote/request.
 
+Current Phase 3U-A/B status:
+
+- PR #142 merged Phase 3T-A/B local release-candidate command centre,
+  acceptance-suite orchestration, and no-deploy command allowlist at
+  `66840d5d3bb77d39200a864bfcbecc29ee859f76`.
+- Latest completed capability is Phase 3T-A/B local release-candidate command
+  centre, acceptance-suite orchestration, and no-deploy command allowlist.
+- Phase 3U-A/B is current as a final local owner handoff pack, acceptance
+  triage board, and deployment decision firewall.
+- `docs/content/FINAL-LOCAL-OWNER-HANDOFF-PACK.md` is a repo-local,
+  template-only, non-live handoff pack for current candidate purpose, public
+  route review, protected admin review, local suite summary, owner input still
+  required, local follow-up categories, blocked future work, deployment
+  firewall, and failure reporting without evidence files.
+- `docs/content/LOCAL-ACCEPTANCE-TRIAGE-BOARD.md` is a template-only triage
+  board for public route polish, listing/category/media content, quote/enquiry
+  flow, protected admin workflow, owner input required, local suite failure,
+  future deployment blocker, deferred after launch, and not-in-current-scope
+  lanes.
+- `docs/content/DEPLOYMENT-DECISION-FIREWALL.md` separates local acceptance
+  readiness, owner review readiness, owner sign-off, deployment approval,
+  provider configuration, preview publication, production launch, and
+  post-launch monitoring.
+- Public pages remain customer-facing and use listing, enquiry, quote, request,
+  rental, and event furniture wording. Owner handoff, deployment firewall,
+  acceptance triage, internal, release-candidate, protected admin, deployment
+  approval, and owner input details stay in docs or protected admin only.
+- Phase 3U-A/B does not deploy, approve deployment, add provider config, add
+  real secrets/env values, add filled evidence, invent owner review, invent
+  real business facts, add browser Supabase, add service-role runtime paths,
+  add n8n/Pinecone/RAG runtime changes, add public uploads, add customer
+  accounts, add public quote tracking, add notifications or CRM, or add
+  self-service completion-like flows, stock-reservation-like flows,
+  fulfilment-like flows, or customer account flows.
+
+Previous Current Phase 3T-A/B status:
+
 Current Phase 3T-A/B status:
 
 - PR #141 merged Phase 3S-A/B repo-local release-candidate acceptance gate,

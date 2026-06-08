@@ -43,7 +43,12 @@ release-candidate acceptance gate and
 freeze. Local release-candidate acceptance matrix and Local route inventory
 freeze materials remain repo-local and template-only. Use
 `docs/content/LOCAL-RELEASE-CANDIDATE-COMMAND-CENTRE.md` for the local
-release-candidate command centre and safe local suite order.
+release-candidate command centre and safe local suite sequence. Use
+`docs/content/FINAL-LOCAL-OWNER-HANDOFF-PACK.md` for the final local owner
+handoff pack, `docs/content/LOCAL-ACCEPTANCE-TRIAGE-BOARD.md` for the local
+acceptance triage board, and
+`docs/content/DEPLOYMENT-DECISION-FIREWALL.md` for the deployment decision
+firewall.
 
 Owner content blockers must remain separate from deployment approval. Missing
 real contact/legal/business-hour content does not get invented. Public launch
@@ -94,6 +99,12 @@ centre. That material is template-only, repo-local, and admin-only; it defines
 safe local command groups and forbidden command categories without approving
 deployment or creating filled evidence.
 
+The protected workspace also references the final local owner handoff pack,
+local acceptance triage board, and deployment decision firewall. Those
+materials are template-only, repo-local, and admin-only; they do not record
+owner sign-off, filled evidence, preview publication, production launch, or
+deployment approval.
+
 ## Ready for owner review
 
 - Public website journey from homepage to catalogue, listings, categories,
@@ -125,6 +136,10 @@ deployment or creating filled evidence.
 - Local release-candidate command centre for safe local suite orchestration
   without deployment, provider configuration, live preview checks, or evidence
   writing.
+- Final local owner handoff pack, local acceptance triage board, and deployment
+  decision firewall for owner/operator handoff without recording approval,
+  filled evidence, provider configuration, preview publication, or production
+  launch.
 - Admin-only readiness cues, internal quote follow-up context, and recovery
   links that stay inside protected admin routes.
 - Local validation commands and deterministic docs/tests for the owner review

@@ -67,7 +67,12 @@ release-candidate acceptance gate and
 freeze. Local release-candidate acceptance matrix and Local route inventory
 freeze materials remain repo-local and template-only. Use
 `docs/content/LOCAL-RELEASE-CANDIDATE-COMMAND-CENTRE.md` for the local
-release-candidate command centre and safe local suite order.
+release-candidate command centre and safe local suite sequence. Use
+`docs/content/FINAL-LOCAL-OWNER-HANDOFF-PACK.md` for the final local owner
+handoff pack, `docs/content/LOCAL-ACCEPTANCE-TRIAGE-BOARD.md` for the local
+acceptance triage board, and
+`docs/content/DEPLOYMENT-DECISION-FIREWALL.md` for the deployment decision
+firewall.
 
 What the owner should review:
 
@@ -94,6 +99,9 @@ What the owner should review:
   for repo-local public/admin boundary review.
 - Local release-candidate command centre for local-only safe command
   orchestration and forbidden-command boundaries.
+- Final local owner handoff pack, local acceptance triage board, and deployment
+  decision firewall for repo-local owner/operator handoff without deployment
+  approval or filled evidence.
 - Known deferred capabilities and intentionally not implemented scope.
 - Local validation results and any local-only manual QA notes.
 
