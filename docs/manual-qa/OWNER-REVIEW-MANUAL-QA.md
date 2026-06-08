@@ -42,7 +42,9 @@ local release-candidate command centre and safe local suite sequence. Use
 handoff pack, `docs/content/LOCAL-ACCEPTANCE-TRIAGE-BOARD.md` for the local
 acceptance triage board, and
 `docs/content/DEPLOYMENT-DECISION-FIREWALL.md` for the deployment decision
-firewall.
+firewall. Use
+`docs/content/QUOTE-ENQUIRY-WORKFLOW-ACCEPTANCE-CHECKLIST.md` for the
+repo-local quote/enquiry workflow acceptance checklist.
 Owner content blockers are governance notes only. Missing real
 contact/legal/business-hour content does not get invented. Owner review can
 continue without deployment.
@@ -78,6 +80,10 @@ Confirm the final local owner handoff snapshot references the final local owner
 handoff pack, acceptance triage board, deployment decision firewall, public
 route handoff, protected admin handoff, owner input required, local follow-up,
 deployment approval, and last local handoff update placeholders.
+Confirm the quote/enquiry acceptance snapshot references the quote/enquiry
+workflow checklist, public quote route, listing/category/event handoff,
+protected admin triage, internal notes boundary, public tracking/accounts,
+deployment approval, and last local quote workflow update placeholders.
 
 ## Local validation commands
 
@@ -158,6 +164,8 @@ for the release-candidate gate and keep the review non-live.
 
 - Confirm the quote form asks for contact, event, venue, requested items, and
   setup notes.
+- Confirm the quote form asks for preferred contact method, quantities,
+  alternatives, setup/access/timing notes, and receipt-like follow-up copy.
 - Confirm selected listing context is prefilled only when a valid listing is
   supplied.
 - Confirm invalid or missing selected listing context falls back to a general

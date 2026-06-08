@@ -238,6 +238,41 @@ Suggested first PR:
   Supabase, production evidence, or ecommerce flows. Product language remains
   enquiry/quote/request.
 
+Current Phase 3V-A/B status:
+
+- PR #143 merged Phase 3U-A/B final local owner handoff pack, acceptance
+  triage board, and deployment decision firewall at
+  `dd2c3c0176c427e69efa01d6e54841637d61548c`.
+- Latest completed capability is Phase 3U-A/B final local owner handoff pack,
+  acceptance triage board, and deployment decision firewall.
+- Phase 3V-A/B is current as quote/enquiry workflow hardening, protected admin
+  triage polish, and local acceptance coverage.
+- Public quote/enquiry guidance now asks for event date, venue or location,
+  requested listings or items, quantities, alternatives, setup/access/timing
+  notes, and preferred contact method while keeping response copy receipt-like.
+- Listing, category, and event handoff copy stays public/customer-facing and
+  uses listing, enquiry, quote, request, rental, and event furniture wording.
+- Protected admin quote triage groups contact and follow-up, event and setup
+  details, requested listings and items, and admin-only status and notes.
+- `docs/content/QUOTE-ENQUIRY-WORKFLOW-ACCEPTANCE-CHECKLIST.md` is a
+  repo-local, template-only, non-live checklist for public quote/enquiry route
+  expectations, listing/category/event handoff expectations, protected admin
+  quote triage expectations, public allowed/forbidden wording, internal note
+  boundaries, local acceptance placeholders, and deployment boundary.
+- Public pages do not show internal/admin/handoff/firewall/release-candidate
+  wording, public quote tracking, customer accounts, notifications, CRM,
+  uploads, transaction-like, retail-like, stock-hold-like,
+  rental-completion-like flows, or admin internal notes.
+- Phase 3V-A/B does not deploy, approve deployment, add provider config, add
+  real secrets/env values, add filled evidence, invent owner review, invent
+  real business facts, add browser Supabase, add service-role runtime paths,
+  add n8n/Pinecone/RAG runtime changes, add public uploads, add customer
+  accounts, add public quote tracking, add notifications or CRM, or add
+  self-service completion-like, stock-hold-like, rental-completion-like, or
+  customer account flows.
+
+Previous Current Phase 3U-A/B status:
+
 Current Phase 3U-A/B status:
 
 - PR #142 merged Phase 3T-A/B local release-candidate command centre,

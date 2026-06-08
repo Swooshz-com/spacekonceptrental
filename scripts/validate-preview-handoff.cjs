@@ -31,6 +31,8 @@ const localReleaseCandidateCommandCentrePath =
 const finalOwnerHandoffPackPath = 'docs/content/FINAL-LOCAL-OWNER-HANDOFF-PACK.md';
 const localAcceptanceTriageBoardPath = 'docs/content/LOCAL-ACCEPTANCE-TRIAGE-BOARD.md';
 const deploymentDecisionFirewallPath = 'docs/content/DEPLOYMENT-DECISION-FIREWALL.md';
+const quoteWorkflowChecklistPath =
+  'docs/content/QUOTE-ENQUIRY-WORKFLOW-ACCEPTANCE-CHECKLIST.md';
 const contentReadinessRoutePath = 'website/app/admin/content-readiness/page.tsx';
 const protectedAdminShellPath = 'website/app/admin/protected-admin-shell.tsx';
 const handoffValidatorPath = 'scripts/validate-preview-handoff.cjs';
@@ -46,6 +48,10 @@ const forbiddenTransactionTermPattern = new RegExp(
     'pur' + 'chase',
     'trans' + 'action',
     'ret' + 'ail',
+    'book' + 'ing',
+    'reser' + 'vation',
+    'reser' + 'ved',
+    'fulfil' + 'ment',
   ].join('|')})s?\\b`,
   'i',
 );
@@ -70,6 +76,7 @@ const phase3qMergeCommit = '0a0bd665111decffb6cdc837e48782943940f22f';
 const phase3rMergeCommit = 'ef18c2357d37fdb613851c427130bb108861de31';
 const phase3sMergeCommit = '7d6af15e09f7603e2107801f3b6417fd4d2d40bc';
 const phase3tMergeCommit = '66840d5d3bb77d39200a864bfcbecc29ee859f76';
+const phase3uMergeCommit = 'dd2c3c0176c427e69efa01d6e54841637d61548c';
 
 function fail(message) {
   console.error(message);
@@ -197,6 +204,8 @@ function assertHandoffDocs() {
     'docs/content/FINAL-LOCAL-OWNER-HANDOFF-PACK.md',
     'docs/content/LOCAL-ACCEPTANCE-TRIAGE-BOARD.md',
     'docs/content/DEPLOYMENT-DECISION-FIREWALL.md',
+    'docs/content/QUOTE-ENQUIRY-WORKFLOW-ACCEPTANCE-CHECKLIST.md',
+    'docs/content/QUOTE-ENQUIRY-WORKFLOW-ACCEPTANCE-CHECKLIST.md',
     '/admin/content-readiness',
     'Protected content readiness workspace',
     'Owner-review execution checklist',
@@ -219,6 +228,8 @@ function assertHandoffDocs() {
     'final local owner handoff pack',
     'local acceptance triage board',
     'deployment decision firewall',
+    'quote/enquiry workflow acceptance checklist',
+    'quote/enquiry workflow acceptance checklist',
     'product acceptance hardening',
     'public journey review',
     'protected admin closure workspace',
@@ -1240,6 +1251,7 @@ function assertLocalReleaseCandidateDocs() {
   const finalOwnerHandoffPack = readRepoFile(finalOwnerHandoffPackPath);
   const localAcceptanceTriageBoard = readRepoFile(localAcceptanceTriageBoardPath);
   const deploymentDecisionFirewall = readRepoFile(deploymentDecisionFirewallPath);
+  const quoteWorkflowChecklist = readRepoFile(quoteWorkflowChecklistPath);
   const suiteRunner = readRepoFile(suiteRunnerPath);
   const combined = [
     matrix,
@@ -1248,6 +1260,7 @@ function assertLocalReleaseCandidateDocs() {
     finalOwnerHandoffPack,
     localAcceptanceTriageBoard,
     deploymentDecisionFirewall,
+    quoteWorkflowChecklist,
   ].join('\n');
   const normalizedCombined = normalizeWhitespace(combined);
 
@@ -1259,6 +1272,7 @@ function assertLocalReleaseCandidateDocs() {
       finalOwnerHandoffPackPath,
       localAcceptanceTriageBoardPath,
       deploymentDecisionFirewallPath,
+      quoteWorkflowChecklistPath,
       suiteRunnerPath,
     ],
     'local release-candidate docs',
@@ -1318,6 +1332,28 @@ function assertLocalReleaseCandidateDocs() {
     'Preview publication',
     'Production launch',
     'Post-launch monitoring',
+    'Public quote/enquiry route expectations',
+    'Listing/category/event handoff expectations',
+    'Protected admin quote triage expectations',
+    'Public copy allowed wording',
+    'Public copy forbidden wording',
+    'Admin-only internal note boundary',
+    'Local acceptance placeholders',
+    'event date',
+    'venue or location',
+    'requested listings or items',
+    'quantities',
+    'alternatives',
+    'setup/access/timing notes',
+    'preferred contact method',
+    'Request this listing',
+    'Send category enquiry',
+    'Compare event setup guidance',
+    'Start quote request',
+    'contact and follow-up',
+    'event and setup details',
+    'requested listings and items',
+    'admin-only status and notes',
     '[OWNER REVIEWER]',
     '[REVIEW DATE]',
     '[ROUTE / AREA]',
@@ -1334,6 +1370,7 @@ function assertLocalReleaseCandidateDocs() {
     '[DECISION DATE]',
     '[DECISION: NOT GRANTED / GRANTED IN FUTURE SEPARATE LANE]',
     '[SCOPE IF GRANTED]',
+    '[QUOTE / ENQUIRY CHECK]',
     '[DEPLOYMENT APPROVAL: NOT GRANTED]',
   ]) {
     assertIncludes(normalizedCombined, required, 'local release-candidate docs');
@@ -1410,6 +1447,19 @@ function assertStatusDocs() {
   const decisionLog = readRepoFile('docs/DECISION-LOG.md');
   const checklist = readRepoFile('docs/checklists/PHASE-2-ADMIN-OPS.md');
 
+  assertIncludes(
+    status,
+    'Current phase: Phase 3V-A/B - quote/enquiry workflow hardening, protected admin triage polish, and local acceptance coverage.',
+    'phase status',
+  );
+  assertIncludes(
+    status,
+    'Latest completed capability: Phase 3U-A/B final local owner handoff pack, acceptance triage board, and deployment decision firewall.',
+    'phase status',
+  );
+  assertIncludes(status, 'Last merged capability PR: #143', 'phase status');
+  assertIncludes(status, `Merge commit: \`${phase3uMergeCommit}\``, 'phase status');
+  assertIncludes(status, 'Previous Current Phase 3U-A/B status', 'phase status');
   assertIncludes(
     status,
     'Current phase: Phase 3U-A/B - final local owner handoff pack, acceptance triage board, and deployment decision firewall.',
@@ -1600,6 +1650,11 @@ function assertStatusDocs() {
   );
   assertIncludes(
     roadmap,
+    'Phase 3V-A/B hardens the public quote/enquiry conversion path and protected admin quote triage',
+    'phase roadmap',
+  );
+  assertIncludes(
+    roadmap,
     'Phase 3U-A/B adds a final local owner handoff pack, acceptance triage board, and deployment decision firewall',
     'phase roadmap',
   );
@@ -1633,6 +1688,8 @@ function assertStatusDocs() {
     'Phase 3O-A/B adds owner-review correction intake, a launch-blocker freeze gate, and admin triage snapshot',
     'phase roadmap',
   );
+  assertIncludes(readiness, 'Current Phase 3V-A/B status', 'readiness plan');
+  assertIncludes(readiness, 'Previous Current Phase 3U-A/B status', 'readiness plan');
   assertIncludes(readiness, 'Current Phase 3U-A/B status', 'readiness plan');
   assertIncludes(readiness, 'Previous Current Phase 3T-A/B status', 'readiness plan');
   assertIncludes(readiness, 'Current Phase 3T-A/B status', 'readiness plan');
@@ -1762,6 +1819,16 @@ function assertStatusDocs() {
   );
   assertIncludes(
     decisionLog,
+    'Decision: Phase 3V-A/B hardens the quote/enquiry workflow, protected admin triage, and local acceptance coverage.',
+    'decision log',
+  );
+  assertIncludes(
+    checklist,
+    '## Phase 3V-A/B Quote Enquiry Workflow Hardening Protected Admin Triage Polish And Local Acceptance Coverage',
+    'phase checklist',
+  );
+  assertIncludes(
+    decisionLog,
     'Decision: Phase 3U-A/B adds a final local owner handoff pack, acceptance triage board, and deployment decision firewall.',
     'decision log',
   );
@@ -1868,6 +1935,7 @@ function assertProtectedContentReadinessWorkspace() {
   assertIncludes(shellSource, finalOwnerHandoffPackPath, protectedAdminShellPath);
   assertIncludes(shellSource, localAcceptanceTriageBoardPath, protectedAdminShellPath);
   assertIncludes(shellSource, deploymentDecisionFirewallPath, protectedAdminShellPath);
+  assertIncludes(shellSource, quoteWorkflowChecklistPath, protectedAdminShellPath);
   assertIncludes(shellSource, 'reviewSurfaceGroups', protectedAdminShellPath);
   assertIncludes(shellSource, 'routeFamiliesCovered', protectedAdminShellPath);
   assertIncludes(shellSource, 'ownerDecisionCategories', protectedAdminShellPath);
@@ -1897,6 +1965,9 @@ function assertProtectedContentReadinessWorkspace() {
   assertIncludes(shellSource, 'localCommandCentreLastLocalUpdate', protectedAdminShellPath);
   assertIncludes(shellSource, 'finalOwnerHandoffSnapshot', protectedAdminShellPath);
   assertIncludes(shellSource, 'finalOwnerHandoffLastLocalUpdate', protectedAdminShellPath);
+  assertIncludes(shellSource, 'quoteEnquiryAcceptanceSnapshot', protectedAdminShellPath);
+  assertIncludes(shellSource, 'quoteEnquiryAcceptanceLastLocalUpdate', protectedAdminShellPath);
+  assertIncludes(shellSource, 'Quote/enquiry acceptance snapshot', protectedAdminShellPath);
   assertNoMatch(routeSource, /NEXT_PUBLIC_SUPABASE|NEXT_PUBLIC_N8N|SUPABASE_SERVICE_ROLE/i, contentReadinessRoutePath);
 }
 
@@ -1930,7 +2001,7 @@ function assertPublicCopyFactSafety() {
   );
   assertNoMatch(
     publicSource,
-    /Owner input required|Ready for owner review|Blocks owner review|Blocks launch\/deployment|Deferred after launch|Not in scope by owner direction|Requires separate deployment approval|Correction template only|Owner-demo walkthrough|Owner-demo walkthrough snapshot|Owner-review issue ledger|Owner-review execution checklist|Owner-review dry-run packet|Owner-review correction intake|Owner-review closure packet|Owner-review closure sign-off template|deployment approval separation|Closure readiness snapshot|Current owner-review closure state|DEPLOYMENT APPROVAL: NOT GRANTED|findings disposition|launch decision rehearsal|launch-blocker freeze gate|correction PR plan|Dry-run review snapshot|Correction\/freeze snapshot|route decision matrix|content readiness workspace|admin-only readiness|Protected admin content readiness|\/admin\/content-readiness|admin issue ledger|owner decision needed|owner-only statuses|Admin-only notes|Public review prompts|Review the rental journey|Confirm each listing|Check that categories|Make sure the enquiry path|Request review|owner-demo|walkthrough|closure readiness|deployment approval|internal review|admin-only|protected content readiness|owner handoff|handoff pack|deployment firewall|acceptance triage|final local owner handoff/i,
+    /Owner input required|Ready for owner review|Blocks owner review|Blocks launch\/deployment|Deferred after launch|Not in scope by owner direction|Requires separate deployment approval|Correction template only|Owner-demo walkthrough|Owner-demo walkthrough snapshot|Owner-review issue ledger|Owner-review execution checklist|Owner-review dry-run packet|Owner-review correction intake|Owner-review closure packet|Owner-review closure sign-off template|deployment approval separation|Closure readiness snapshot|Current owner-review closure state|DEPLOYMENT APPROVAL: NOT GRANTED|findings disposition|launch decision rehearsal|launch-blocker freeze gate|correction PR plan|Dry-run review snapshot|Correction\/freeze snapshot|route decision matrix|content readiness workspace|admin-only readiness|Protected admin content readiness|\/admin\/content-readiness|admin issue ledger|owner decision needed|owner-only statuses|Admin-only notes|Public review prompts|Review the rental journey|Confirm each listing|Check that categories|Make sure the enquiry path|Request review|owner-demo|walkthrough|closure readiness|deployment approval|internal review|admin-only|protected content readiness|owner handoff|handoff pack|deployment firewall|acceptance triage|final local owner handoff|quote\/enquiry acceptance snapshot/i,
     'public route source',
   );
 }

@@ -594,7 +594,7 @@ describe("protected admin shell", () => {
       screen.getByRole("heading", { name: /quote request detail/i })
     ).toBeInTheDocument();
     expect(
-      screen.getAllByRole("heading", { name: /customer message/i }).length
+      screen.getAllByRole("heading", { name: /event and setup details/i }).length
     ).toBeGreaterThan(0);
     expect(
       screen.getAllByText(/please recommend a warm lounge setup/i).length

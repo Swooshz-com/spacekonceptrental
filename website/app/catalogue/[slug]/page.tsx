@@ -173,10 +173,10 @@ export function ProductPageContent({
           <section className="listing-checklist" aria-label="Quote request checklist">
             <h3>Quote request checklist</h3>
             <ul className="journey-list">
-              <li>Event date or timing window.</li>
+              <li>Bring event details such as date, venue, and timing window.</li>
               <li>Venue or event location.</li>
-              <li>Preferred quantities and alternates.</li>
-              <li>Setup notes, access details, or placement needs.</li>
+              <li>Add quantities and alternatives for the requested listing.</li>
+              <li>Share setup, access, and timing notes for the team.</li>
             </ul>
           </section>
 
@@ -186,8 +186,9 @@ export function ProductPageContent({
               <li>Check the listing details and rental unit.</li>
               <li>Compare the category and rental unit for your setup.</li>
               <li>
-                Bring event date, venue, quantities, and setup notes before
-                sending the listing for follow-up.
+                Bring event date, venue, quantities, alternatives, setup,
+                access, and timing notes before sending the listing for
+                follow-up.
               </li>
             </ul>
           </section>

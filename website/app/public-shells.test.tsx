@@ -96,10 +96,10 @@ describe("public page shells", () => {
     expect(screen.getByText(/styled setups/i)).toBeInTheDocument();
     expect(screen.getByText(/corporate receptions/i)).toBeInTheDocument();
     expect(
-      screen.getByRole("link", { name: /browse catalogue/i })
+      screen.getByRole("link", { name: /compare event setup guidance/i })
     ).toHaveAttribute("href", "/catalogue");
     expect(
-      screen.getByRole("link", { name: /request a quote/i })
+      screen.getByRole("link", { name: /start quote request/i })
     ).toHaveAttribute("href", "/quote");
   });
 

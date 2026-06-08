@@ -15,7 +15,7 @@ type QuotePageProps = {
 export const metadata: Metadata = {
   title: "Quote request | Space Koncept Rentals",
   description:
-    "Send a furniture rental quote request with event date, venue, requested items, quantities, and setup notes."
+    "Send an event furniture rental quote request with event date, venue, requested items, quantities, and setup notes."
 };
 
 function firstSearchParam(value: string | string[] | undefined) {
@@ -26,7 +26,10 @@ async function resolveQuoteListingContext(
   searchParams: QuotePageProps["searchParams"]
 ) {
   if (!searchParams) {
-    return null;
+    return {
+      product: null,
+      requestedSlug: undefined
+    };
   }
 
   const resolvedSearchParams = await searchParams;
@@ -34,7 +37,10 @@ async function resolveQuoteListingContext(
     firstSearchParam(resolvedSearchParams.listing)
   );
 
-  return slug ? getPublicProductBySlug(slug) : null;
+  return {
+    product: slug ? await getPublicProductBySlug(slug) : null,
+    requestedSlug: slug
+  };
 }
 
 function QuoteListingContext({
@@ -48,8 +54,9 @@ function QuoteListingContext({
       <h2>Enquiry for {product.name}</h2>
       <p>
         Selected listing is a starting point only for your rental request. It
-        does not reserve furniture, dates, or delivery capacity. Share event
-        dates, quantities, and styling notes so the team can follow up.
+        helps the team understand the item you are considering. Share event
+        dates, quantities, alternates, and setup/access/timing notes so the
+        team can follow up.
       </p>
       <dl className="quote-context__details">
         <div>
@@ -76,16 +83,27 @@ function QuoteListingContext({
   );
 }
 
-function QuoteGeneralContext() {
+function QuoteGeneralContext({
+  requestedSlug
+}: {
+  requestedSlug?: string;
+}) {
   return (
     <article className="route-card quote-context">
       <p className="eyebrow">Listing context</p>
       <h2>General rental enquiry</h2>
-      <p>
-        If a selected listing link is missing, invalid, unpublished, or
-        unavailable, you can still send the team a general rental request with
-        the items and event setup you have in mind.
-      </p>
+      {requestedSlug ? (
+        <p>
+          Selected listing could not be loaded. You can still send a general
+          rental request with the requested listings or items, quantities,
+          alternates, and event setup you have in mind.
+        </p>
+      ) : (
+        <p>
+          Share the requested listings or items, quantities, alternates, and
+          event setup you have in mind so the team can follow up.
+        </p>
+      )}
       <div className="catalogue-card__actions">
         <Link className="card-link" href="/listings">
           Browse public listings
@@ -104,13 +122,14 @@ function QuoteExpectationCard() {
       <p className="eyebrow">Expectations</p>
       <h2>What happens after you enquire</h2>
       <p>
-        This submission starts an enquiry and does not reserve furniture, dates,
-        or delivery capacity.
+        This submission starts an enquiry and does not confirm furniture,
+        dates, or delivery capacity.
       </p>
       <ul className="journey-list">
-        <li>The team reviews availability and fit against your event details.</li>
+        <li>The team reviews fit against your event details.</li>
         <li>Follow-up happens directly using the contact details you share.</li>
         <li>Final rental quote details are confirmed outside this public form.</li>
+        <li>You can share more details if the team needs clarification.</li>
       </ul>
     </article>
   );
@@ -122,8 +141,9 @@ function QuoteReviewChecklistCard() {
       <p className="eyebrow">Before you send</p>
       <h2>Check your enquiry details</h2>
       <p>
-        Check event date, venue, requested listings, quantities, and setup notes
-        before sending the enquiry.
+        Check event date, venue or location, requested listings or items,
+        quantities, alternates, setup, access, and timing notes before sending
+        the enquiry.
       </p>
       <ul className="journey-list">
         <li>Use listing names or short item descriptions.</li>
@@ -154,27 +174,29 @@ export default async function QuotePage({
   searchParams
 }: QuotePageProps = {}) {
   const listingContext = await resolveQuoteListingContext(searchParams);
+  const selectedListing = listingContext.product;
 
   return (
     <section className="section">
       <div className="page-title">
         <h1>Request a rental quote</h1>
         <p>
-          Share the event details the team will need for a furniture rental
-          follow-up.
+          Share the event details the team will need for an event furniture
+          rental follow-up. Include requested listings or items, quantities,
+          alternates, setup, access, timing notes, and preferred contact method.
         </p>
       </div>
 
       <div className="route-grid">
         <article className="quote-panel">
           <h2>Event basics</h2>
-          <QuoteRequestForm initialItemsText={listingContext?.name} />
+          <QuoteRequestForm initialItemsText={selectedListing?.name} />
         </article>
 
-        {listingContext ? (
-          <QuoteListingContext product={listingContext} />
+        {selectedListing ? (
+          <QuoteListingContext product={selectedListing} />
         ) : (
-          <QuoteGeneralContext />
+          <QuoteGeneralContext requestedSlug={listingContext.requestedSlug} />
         )}
 
         <article className="route-card">

@@ -1622,6 +1622,41 @@ legal claims, guarantees, production policies, or add public/customer
 transaction flows, retail transaction flows, stock-reservation-like flows, or
 fulfilment-like flows.
 
+## Phase 3V: Quote Enquiry Workflow Hardening, Protected Admin Triage Polish, And Local Acceptance Coverage
+
+Phase 3V-A/B hardens the public quote/enquiry conversion path and protected
+admin quote triage for the current furniture/event rental website candidate.
+
+Phase 3V-A/B improves the public quote/enquiry page so users can understand
+what to provide: event date, venue or location, requested listings or items,
+quantities, alternatives, setup/access/timing notes, and preferred contact
+method. Public response copy remains receipt-like and does not imply customer
+accounts, public tracking, transaction-like, retail-like,
+stock-hold-like, or rental-completion-like flows.
+
+Phase 3V-A/B improves listing, category, and event handoff wording with
+customer-facing rental language such as Request this listing, Send category
+enquiry, Compare event setup guidance, Start quote request, Bring event
+details, Add quantities and alternatives, and Share setup/access/timing notes.
+
+Phase 3V-A/B polishes protected admin quote triage by grouping contact and
+follow-up, event and setup details, requested listings and items, and
+admin-only status and notes. Internal notes and status history stay inside
+protected admin surfaces and never appear on public routes.
+
+Phase 3V-A/B adds
+`docs/content/QUOTE-ENQUIRY-WORKFLOW-ACCEPTANCE-CHECKLIST.md` as a repo-local,
+template-only, non-live checklist and adds an admin-only quote/enquiry
+acceptance snapshot inside the protected content readiness workspace.
+
+Phase 3V-A/B does not deploy, approve deployment, add Vercel or Supabase Cloud
+config, add real secrets or env values, add filled evidence, invent owner
+review, invent real business facts, add browser Supabase, add service-role
+runtime paths, add n8n/Pinecone/RAG runtime changes, add public uploads, add
+customer accounts, add public quote tracking, add notifications or CRM, or add
+self-service completion-like, stock-hold-like, rental-completion-like, or
+customer account flows.
+
 ## Phase 3U: Final Local Owner Handoff Pack, Acceptance Triage Board, And Deployment Decision Firewall
 
 Phase 3U-A/B adds a final local owner handoff pack, acceptance triage board,

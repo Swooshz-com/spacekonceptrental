@@ -199,9 +199,7 @@ describe("Phase 3G-A/B quote intake quality, admin triage depth, and enquiry wor
     expect(
       screen.getAllByText(/selected listing is a starting point only/i).length
     ).toBeGreaterThan(0);
-    expect(
-      screen.getByText(/not a reservation or availability confirmation/i)
-    ).toBeInTheDocument();
+    expect(screen.getByText(/not a confirmed hold or fit confirmation/i)).toBeInTheDocument();
     expect(
       screen.getByText(/the team uses this only for direct quote follow-up/i)
     ).toBeInTheDocument();
@@ -247,10 +245,10 @@ describe("Phase 3G-A/B quote intake quality, admin triage depth, and enquiry wor
       screen.getAllByText(/selected listing is a starting point only/i).length
     ).toBeGreaterThan(0);
     expect(
-      screen.getAllByText(/does not reserve furniture, dates, or delivery capacity/i)
+      screen.getAllByText(/does not confirm furniture, dates, or delivery capacity/i)
         .length
     ).toBeGreaterThan(0);
-    expect(screen.getByLabelText(/listings or items needed/i)).toHaveValue(
+    expect(screen.getByLabelText(/requested listings or items/i)).toHaveValue(
       "Lounge sofa package"
     );
     expect(
@@ -268,9 +266,9 @@ describe("Phase 3G-A/B quote intake quality, admin triage depth, and enquiry wor
       screen.getByRole("heading", { name: /general rental enquiry/i })
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/missing, invalid, unpublished, or unavailable/i)
+      screen.getByText(/selected listing could not be loaded/i)
     ).toBeInTheDocument();
-    expect(screen.getByLabelText(/listings or items needed/i)).toHaveValue("");
+    expect(screen.getByLabelText(/requested listings or items/i)).toHaveValue("");
   });
 
   it("shows deeper admin-only quote triage summaries and next-action cues", () => {
@@ -328,20 +326,22 @@ describe("Phase 3G-A/B quote intake quality, admin triage depth, and enquiry wor
     );
 
     expect(
-      screen.getByRole("heading", { name: /customer \/ enquiry details/i })
-    ).toBeInTheDocument();
+      screen.getAllByRole("heading", { name: /contact and follow-up/i }).length
+    ).toBeGreaterThan(0);
     expect(screen.getByText("QR-20260607-READY")).toBeInTheDocument();
     expect(screen.getByText("Darren Lee")).toBeInTheDocument();
     expect(screen.getByText("darren@example.test")).toBeInTheDocument();
     expect(screen.getByText("+65 8123 4567")).toBeInTheDocument();
     expect(screen.getByText("Suntec Singapore")).toBeInTheDocument();
     expect(
-      screen.getByRole("heading", { name: /requested item snapshots/i })
-    ).toBeInTheDocument();
+      screen.getAllByRole("heading", { name: /requested listings and items/i })
+        .length
+    ).toBeGreaterThan(0);
     expect(screen.getAllByText(/2 x Modular lounge set/i).length).toBeGreaterThan(0);
     expect(
-      screen.getByRole("heading", { name: /admin-only follow-up context/i })
-    ).toBeInTheDocument();
+      screen.getAllByRole("heading", { name: /admin-only status and notes/i })
+        .length
+    ).toBeGreaterThan(0);
     expect(
       screen.getAllByText(/review requested quantities before follow-up/i).length
     ).toBeGreaterThan(0);

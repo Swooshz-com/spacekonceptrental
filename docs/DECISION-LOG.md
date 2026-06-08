@@ -2202,6 +2202,35 @@ paths, add retention cleanup jobs, or add ecommerce flows such as carts,
 checkout, payments, stock reservation, confirmed booking, order fulfilment, or
 online ordering.
 
+## 2026-06-09: Quote Enquiry Workflow Hardening, Protected Admin Triage Polish, And Local Acceptance Coverage
+
+Decision: Phase 3V-A/B hardens the quote/enquiry workflow, protected admin triage, and local acceptance coverage.
+
+Reason: PR #143 merged Phase 3U-A/B at
+`dd2c3c0176c427e69efa01d6e54841637d61548c`. The repo now has a final local
+owner handoff pack, acceptance triage board, and deployment decision firewall,
+but the core public conversion path and protected admin quote triage need a
+product-hardening pass before any separate deployment lane is considered.
+
+Implementation: Phase 3V-A/B improves public quote/enquiry guidance, invalid
+listing handoff recovery, listing/category/event quote handoff wording,
+protected admin quote triage grouping, and local acceptance coverage. It adds
+`docs/content/QUOTE-ENQUIRY-WORKFLOW-ACCEPTANCE-CHECKLIST.md`, an admin-only
+quote/enquiry acceptance snapshot inside the protected content readiness
+workspace, deterministic Phase 3V regression tests, and local validator
+coverage for the quote workflow boundary.
+
+Boundary: Phase 3V-A/B is repo-local only. It does not deploy, approve
+deployment, add Vercel config, connect Supabase Cloud, add real secrets or env
+values, add filled owner-review evidence, add filled preview evidence, add
+production evidence, invent owner review, invent owner sign-off, invent real
+business facts, add browser Supabase, add service-role runtime paths, add n8n
+or Pinecone runtime changes, wire `/api/chat` to retrieval, add public uploads,
+add customer accounts, add public quote tracking, add notifications or CRM, run
+live preview smoke, run network URL checks, write evidence files, or add
+self-service completion-like, stock-hold-like, rental-completion-like, or
+customer account flows.
+
 ## 2026-06-09: Final Local Owner Handoff Pack, Acceptance Triage Board, And Deployment Decision Firewall
 
 Decision: Phase 3U-A/B adds a final local owner handoff pack, acceptance triage board, and deployment decision firewall.

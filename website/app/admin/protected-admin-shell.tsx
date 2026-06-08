@@ -525,7 +525,8 @@ const contentReadinessSources = [
   "docs/content/LOCAL-RELEASE-CANDIDATE-COMMAND-CENTRE.md",
   "docs/content/FINAL-LOCAL-OWNER-HANDOFF-PACK.md",
   "docs/content/LOCAL-ACCEPTANCE-TRIAGE-BOARD.md",
-  "docs/content/DEPLOYMENT-DECISION-FIREWALL.md"
+  "docs/content/DEPLOYMENT-DECISION-FIREWALL.md",
+  "docs/content/QUOTE-ENQUIRY-WORKFLOW-ACCEPTANCE-CHECKLIST.md"
 ] as const;
 
 const reviewSurfaceGroups = 11;
@@ -693,6 +694,19 @@ const finalOwnerHandoffSnapshot = [
   ["Local follow-up", "[TEMPLATE ONLY]"],
   ["Deployment approval", closureDeploymentApprovalStatus],
   ["Last local handoff update", finalOwnerHandoffLastLocalUpdate]
+] as const;
+const quoteEnquiryWorkflowAcceptanceChecklistPath =
+  "docs/content/QUOTE-ENQUIRY-WORKFLOW-ACCEPTANCE-CHECKLIST.md";
+const quoteEnquiryAcceptanceLastLocalUpdate = "[DATE PLACEHOLDER]";
+const quoteEnquiryAcceptanceSnapshot = [
+  ["Quote/enquiry workflow checklist", "Template only"],
+  ["Public quote route", "[TEMPLATE ONLY]"],
+  ["Listing/category/event handoff", "[TEMPLATE ONLY]"],
+  ["Protected admin triage", "[TEMPLATE ONLY]"],
+  ["Internal notes boundary", "[TEMPLATE ONLY]"],
+  ["Public tracking/accounts", "Not added"],
+  ["Deployment approval", closureDeploymentApprovalStatus],
+  ["Last local quote workflow update", quoteEnquiryAcceptanceLastLocalUpdate]
 ] as const;
 
 const contentReadinessGroups = [
@@ -943,6 +957,25 @@ function ContentReadinessWorkspace() {
             firewall stay template-only, protected, and repo-local. They do not
             record owner approval, filled evidence, provider setup, preview
             publication, production launch, or deployment approval.
+          </p>
+        </section>
+
+        <section className="admin-dashboard__card admin-dashboard__card--summary">
+          <h3>Quote/enquiry acceptance snapshot</h3>
+          <dl className="quote-inbox__details">
+            {quoteEnquiryAcceptanceSnapshot.map(([label, value]) => (
+              <div key={label}>
+                <dt>{label}</dt>
+                <dd>{value}</dd>
+              </div>
+            ))}
+          </dl>
+          <p>
+            The quote/enquiry workflow checklist stays template-only,
+            protected, and repo-local. Public quote pages do not show internal
+            notes, status history, public tracking, customer-account surfaces,
+            outbound alerting, sales-system sync, uploads, or deployment
+            approval.
           </p>
         </section>
 
@@ -1199,7 +1232,7 @@ function AdminQuoteDetail({
             writeEnabled="Write-enabled follow-up controls remain below via the protected quote workflow panel."
           />
           <section className="admin-dashboard__card">
-            <h3>Customer / enquiry details</h3>
+            <h3>Contact and follow-up</h3>
             <dl className="quote-inbox__details">
               <div>
                 <dt>Reference</dt>
@@ -1241,6 +1274,12 @@ function AdminQuoteDetail({
                   <dd>Phone - {quoteRequest.customerPhone}</dd>
                 </div>
               ) : null}
+            </dl>
+          </section>
+
+          <section className="admin-dashboard__card">
+            <h3>Event and setup details</h3>
+            <dl className="quote-inbox__details">
               {quoteRequest.eventDate ? (
                 <div>
                   <dt>Event date</dt>
@@ -1254,10 +1293,6 @@ function AdminQuoteDetail({
                 </div>
               ) : null}
             </dl>
-          </section>
-
-          <section className="admin-dashboard__card">
-            <h3>Customer message</h3>
             {quoteRequest.customerMessage ? (
               <p>{quoteRequest.customerMessage}</p>
             ) : (
@@ -1266,9 +1301,9 @@ function AdminQuoteDetail({
           </section>
 
           <section className="admin-dashboard__card">
-            <h3>Requested item snapshots</h3>
+            <h3>Requested listings and items</h3>
             {quoteRequest.items.length === 0 ? (
-              <p>No requested item snapshots were captured.</p>
+              <p>No requested listing or item snapshots were captured.</p>
             ) : (
               <ul className="admin-dashboard__list">
                 {quoteRequest.items.map((item) => (
@@ -1284,7 +1319,7 @@ function AdminQuoteDetail({
           </section>
 
           <section className="admin-dashboard__card">
-            <h3>Admin-only follow-up context</h3>
+            <h3>Admin-only status and notes</h3>
             <p>
               Internal notes and status history stay inside the protected admin
               workspace and are not shown on public quote pages.

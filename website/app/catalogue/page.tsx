@@ -221,7 +221,7 @@ function EventSetupGuidance() {
       </div>
       <div className="hero__actions">
         <Link className="button" href="/quote">
-          Send a quote enquiry
+          Send setup notes
         </Link>
       </div>
     </section>
@@ -340,7 +340,7 @@ export function CataloguePageContent({
 
       <div className="hero__actions">
         <Link className="button" href="/quote">
-          Start a general enquiry
+          Start quote request
         </Link>
       </div>
 

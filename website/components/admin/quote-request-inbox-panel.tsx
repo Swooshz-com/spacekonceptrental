@@ -517,7 +517,10 @@ export function QuoteRequestInboxPanel({
                     {statusLabel(quoteRequest.status)} - {quoteRequest.source}
                   </p>
                 </div>
-                <section className="quote-inbox__section">
+          <section
+            aria-label={`Requested items summary ${quoteRequest.publicReference}`}
+            className="quote-inbox__section"
+          >
                   <h4>Triage cues</h4>
                   <ul className="admin-readiness__list">
                     {quoteTriageCues(quoteRequest).map((cue) => (
@@ -529,42 +532,55 @@ export function QuoteRequestInboxPanel({
                   <h4>Next action</h4>
                   <p>{quoteNextAction(quoteRequest)}</p>
                 </section>
-                <dl className="quote-inbox__details">
-                  <div>
-                    <dt>Submitted</dt>
-                    <dd>{quoteRequest.createdAt}</dd>
-                  </div>
-                  {quoteRequest.updatedAt ? (
+                <section className="quote-inbox__section">
+                  <h4>Contact and follow-up</h4>
+                  <dl className="quote-inbox__details">
                     <div>
-                      <dt>Updated</dt>
-                      <dd>{quoteRequest.updatedAt}</dd>
+                      <dt>Submitted</dt>
+                      <dd>{quoteRequest.createdAt}</dd>
                     </div>
-                  ) : null}
-                  {quoteRequest.customerEmail ? (
-                    <div>
-                      <dt>Email</dt>
-                      <dd>{quoteRequest.customerEmail}</dd>
-                    </div>
-                  ) : null}
-                  {quoteRequest.customerPhone ? (
-                    <div>
-                      <dt>Phone</dt>
-                      <dd>{quoteRequest.customerPhone}</dd>
-                    </div>
-                  ) : null}
-                  {quoteRequest.eventDate ? (
-                    <div>
-                      <dt>Event date</dt>
-                      <dd>{quoteRequest.eventDate}</dd>
-                    </div>
-                  ) : null}
-                  {quoteRequest.venue ? (
-                    <div>
-                      <dt>Venue</dt>
-                      <dd>{quoteRequest.venue}</dd>
-                    </div>
-                  ) : null}
-                </dl>
+                    {quoteRequest.updatedAt ? (
+                      <div>
+                        <dt>Updated</dt>
+                        <dd>{quoteRequest.updatedAt}</dd>
+                      </div>
+                    ) : null}
+                    {quoteRequest.customerEmail ? (
+                      <div>
+                        <dt>Email</dt>
+                        <dd>{quoteRequest.customerEmail}</dd>
+                      </div>
+                    ) : null}
+                    {quoteRequest.customerPhone ? (
+                      <div>
+                        <dt>Phone</dt>
+                        <dd>{quoteRequest.customerPhone}</dd>
+                      </div>
+                    ) : null}
+                  </dl>
+                </section>
+                <section className="quote-inbox__section">
+                  <h4>Event and setup details</h4>
+                  <dl className="quote-inbox__details">
+                    {quoteRequest.eventDate ? (
+                      <div>
+                        <dt>Event date</dt>
+                        <dd>{quoteRequest.eventDate}</dd>
+                      </div>
+                    ) : null}
+                    {quoteRequest.venue ? (
+                      <div>
+                        <dt>Venue</dt>
+                        <dd>{quoteRequest.venue}</dd>
+                      </div>
+                    ) : null}
+                  </dl>
+                  {quoteRequest.customerMessage ? (
+                    <p>{quoteRequest.customerMessage}</p>
+                  ) : (
+                    <p>No customer message was submitted.</p>
+                  )}
+                </section>
                 <a
                   className="button button--secondary"
                   href={`/admin/quotes/${encodeURIComponent(quoteRequest.id)}`}
@@ -572,17 +588,9 @@ export function QuoteRequestInboxPanel({
                   Open quote detail {quoteRequest.publicReference}
                 </a>
                 <section className="quote-inbox__section">
-                  <h4>Customer message</h4>
-                  {quoteRequest.customerMessage ? (
-                    <p>{quoteRequest.customerMessage}</p>
-                  ) : (
-                    <p>No customer message was submitted.</p>
-                  )}
-                </section>
-                <section className="quote-inbox__section">
-                  <h4>Requested items</h4>
+                  <h4>Requested listings and items</h4>
                   {quoteRequest.items.length === 0 ? (
-                    <p>No requested item snapshots were captured.</p>
+                    <p>No requested listing or item snapshots were captured.</p>
                   ) : (
                     <ul className="admin-dashboard__list">
                       {quoteRequest.items.map((item) => (
@@ -597,7 +605,12 @@ export function QuoteRequestInboxPanel({
                   )}
                 </section>
                 <section className="quote-inbox__section">
-                  <h4>Admin-only internal activity</h4>
+                  <h4>Admin-only status and notes</h4>
+                  <p>
+                    Internal notes and status history stay inside this
+                    protected admin workspace and are not shown on public quote
+                    pages.
+                  </p>
                   {activity.length === 0 ? (
                     <p>No internal follow-up activity has been recorded yet.</p>
                   ) : (

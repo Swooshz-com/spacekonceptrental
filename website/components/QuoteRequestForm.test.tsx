@@ -44,8 +44,11 @@ describe("QuoteRequestForm", () => {
     fireEvent.change(screen.getByLabelText(/venue/i), {
       target: { value: "Marina Bay Sands" }
     });
-    fireEvent.change(screen.getByLabelText(/items needed/i), {
+    fireEvent.change(screen.getByLabelText(/requested listings or items/i), {
       target: { value: "2 modular lounge sets" }
+    });
+    fireEvent.change(screen.getByLabelText(/preferred contact method/i), {
+      target: { value: "email" }
     });
     fireEvent.change(screen.getByLabelText(/customer message/i), {
       target: {
@@ -71,7 +74,7 @@ describe("QuoteRequestForm", () => {
           customerEmail: "maya@example.test",
           customerPhone: "+65 8123 4567",
           customerMessage:
-            "Prefer a warm lounge setup for a corporate reception.",
+            "Preferred contact method: email\n\nPrefer a warm lounge setup for a corporate reception.",
           eventDate: "2026-06-12",
           venue: "Marina Bay Sands",
           items: [
@@ -225,7 +228,7 @@ describe("QuoteRequestForm", () => {
     fireEvent.change(screen.getByLabelText(/email address/i), {
       target: { value: "maya@example.test" }
     });
-    fireEvent.change(screen.getByLabelText(/items needed/i), {
+    fireEvent.change(screen.getByLabelText(/requested listings or items/i), {
       target: {
         value:
           "  20 stools  \n\n4 cocktail tables\r\n   \nModular lounge setup  "

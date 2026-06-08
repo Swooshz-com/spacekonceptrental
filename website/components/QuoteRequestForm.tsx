@@ -29,6 +29,20 @@ function parseRequestedItems(itemsText: string, itemNotesText: string) {
   }));
 }
 
+function combineCustomerMessage(
+  customerMessageText: string,
+  preferredContactMethod: string
+) {
+  const details = [
+    preferredContactMethod
+      ? `Preferred contact method: ${preferredContactMethod}`
+      : "",
+    customerMessageText
+  ].filter(Boolean);
+
+  return details.join("\n\n").trim();
+}
+
 export default function QuoteRequestForm({
   initialItemsText = ""
 }: {
@@ -50,13 +64,20 @@ export default function QuoteRequestForm({
     const customerMessageText = String(
       formData.get("customerMessage") ?? ""
     ).trim();
+    const preferredContactMethod = String(
+      formData.get("preferredContactMethod") ?? ""
+    ).trim();
     const itemNotesText = String(formData.get("itemNotes") ?? "").trim();
+    const combinedCustomerMessage = combineCustomerMessage(
+      customerMessageText,
+      preferredContactMethod
+    );
     const payload = {
       customerName: String(formData.get("customerName") ?? "").trim(),
       customerEmail: String(formData.get("customerEmail") ?? "").trim(),
       customerPhone: String(formData.get("customerPhone") ?? "").trim(),
-      ...(customerMessageText
-        ? { customerMessage: customerMessageText }
+      ...(combinedCustomerMessage
+        ? { customerMessage: combinedCustomerMessage }
         : {}),
       eventDate: String(formData.get("eventDate") ?? "").trim(),
       venue: String(formData.get("venue") ?? "").trim(),
@@ -102,19 +123,19 @@ export default function QuoteRequestForm({
   return (
     <form className="quote-form" onSubmit={handleSubmit}>
       <p className="quote-form__intro">
-        Share one reliable contact method, event timing, venue or access notes,
-        and any listing or setup ideas so the team can triage the rental
-        enquiry.
+        Share one reliable contact method, your preferred contact method,
+        event date, venue or location, requested listings or items, quantities,
+        alternates, and setup, access, and timing notes so the team can triage
+        the rental enquiry.
       </p>
       {initialItemsText ? (
         <aside className="quote-form__selected" aria-label="Selected listing">
           <strong>Selected listing</strong>
           <span>
             {initialItemsText} starts this rental request. Selected listing is
-            a starting point only, not a reservation or availability
-            confirmation.
-            Add quantities, alternates, dimensions, or placement notes before
-            sending.
+            a starting point only, not a confirmed hold or fit confirmation.
+            Add quantities, alternates, dimensions, setup, access, or timing
+            notes before sending.
           </span>
         </aside>
       ) : null}
@@ -134,6 +155,19 @@ export default function QuoteRequestForm({
           <small>
             Share email, phone, or both. The team uses this only for direct
             quote follow-up.
+          </small>
+        </label>
+        <label>
+          Preferred contact method
+          <select name="preferredContactMethod">
+            <option value="">No preference</option>
+            <option value="email">Email</option>
+            <option value="phone">Phone</option>
+            <option value="either email or phone">Either email or phone</option>
+          </select>
+          <small>
+            Pick the easiest way for the team to ask questions or share more
+            details about the enquiry.
           </small>
         </label>
       </fieldset>
@@ -160,7 +194,7 @@ export default function QuoteRequestForm({
       <fieldset>
         <legend>Requested items</legend>
         <label>
-          Listings or items needed
+          Requested listings or items
           <textarea
             defaultValue={initialItemsText}
             name="items"
@@ -178,22 +212,26 @@ export default function QuoteRequestForm({
             aria-label="Customer message / event notes for the team"
             maxLength={1200}
             name="customerMessage"
-            placeholder="Example: event context, preferred setup style, or what you need help deciding"
+            placeholder="Example: event context, preferred setup style, alternates, or what you need help deciding"
             rows={4}
           />
+          <small>
+            Use this area to share more details, alternates, and practical
+            setup/access/timing notes.
+          </small>
         </label>
         <label>
-          Quantity or setup notes
+          Quantity, setup, access, and timing notes
           <textarea
             aria-label="Item-specific notes / quantity or setup notes"
             maxLength={500}
             name="itemNotes"
-            placeholder="Example: delivery timing or placement notes for the listed items"
+            placeholder="Example: delivery timing, venue access, placement notes, or alternates for the listed items"
             rows={4}
           />
           <small>
-            Add quantities, alternates, dimensions, or placement notes for the
-            requested items.
+            Add quantities, alternates, dimensions, setup, access, and timing
+            notes for the requested items.
           </small>
         </label>
       </fieldset>
@@ -208,7 +246,7 @@ export default function QuoteRequestForm({
       </button>
       {submitState.status === "success" ? (
         <p className="quote-form__status" role="status">
-          Quote request received. This is a receipt only; the team will review
+          Quote request received. This is a receipt only; the team can review
           your enquiry and follow up directly
           {submitState.publicReference
             ? `. Reference: ${submitState.publicReference}`

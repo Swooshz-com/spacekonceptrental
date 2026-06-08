@@ -10,11 +10,14 @@ const commandCentrePath = 'docs/content/LOCAL-RELEASE-CANDIDATE-COMMAND-CENTRE.m
 const finalOwnerHandoffPackPath = 'docs/content/FINAL-LOCAL-OWNER-HANDOFF-PACK.md';
 const localAcceptanceTriageBoardPath = 'docs/content/LOCAL-ACCEPTANCE-TRIAGE-BOARD.md';
 const deploymentDecisionFirewallPath = 'docs/content/DEPLOYMENT-DECISION-FIREWALL.md';
+const quoteWorkflowChecklistPath =
+  'docs/content/QUOTE-ENQUIRY-WORKFLOW-ACCEPTANCE-CHECKLIST.md';
 const suiteRunnerPath = 'scripts/validate-release-candidate-suite.cjs';
 const protectedAdminShellPath = 'website/app/admin/protected-admin-shell.tsx';
 const phase3rMergeCommit = 'ef18c2357d37fdb613851c427130bb108861de31';
 const phase3sMergeCommit = '7d6af15e09f7603e2107801f3b6417fd4d2d40bc';
 const phase3tMergeCommit = '66840d5d3bb77d39200a864bfcbecc29ee859f76';
+const phase3uMergeCommit = 'dd2c3c0176c427e69efa01d6e54841637d61548c';
 const sourceExtensions = new Set(['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs']);
 const forbiddenCustomerFlowTermPattern = new RegExp(
   `\\b(?:${[
@@ -26,11 +29,15 @@ const forbiddenCustomerFlowTermPattern = new RegExp(
     'pur' + 'chase',
     'trans' + 'action',
     'ret' + 'ail',
+    'book' + 'ing',
+    'reser' + 'vation',
+    'reser' + 'ved',
+    'fulfil' + 'ment',
   ].join('|')})s?\\b`,
   'i',
 );
 const publicInternalLeakPattern =
-  /Owner-demo|walkthrough|closure readiness|deployment approval|internal review|admin-only|protected content readiness|owner input required|issue backlog|route decision matrix|\/admin\/content-readiness|release-candidate acceptance matrix|route inventory freeze|acceptance status|local release-candidate|command centre|owner handoff|handoff pack|deployment firewall|acceptance triage|final local owner handoff/i;
+  /Owner-demo|walkthrough|closure readiness|deployment approval|internal review|admin-only|protected content readiness|owner input required|issue backlog|route decision matrix|\/admin\/content-readiness|release-candidate acceptance matrix|route inventory freeze|acceptance status|local release-candidate|command centre|owner handoff|handoff pack|deployment firewall|acceptance triage|final local owner handoff|quote\/enquiry acceptance snapshot/i;
 const forbiddenBusinessFactPattern =
   /award-winning|certified partner|trusted by|5-star|guaranteed availability|guaranteed delivery|licensed and insured|testimonial|client logo|case study|legal guarantee|production policy/i;
 const forbiddenContactFactPattern =
@@ -317,10 +324,57 @@ function assertFinalOwnerHandoffMaterials() {
   assertNoMatch(combined, forbiddenContactFactPattern, 'final local owner handoff materials');
 }
 
+function assertQuoteEnquiryWorkflowChecklist() {
+  const checklist = readRepoFile(quoteWorkflowChecklistPath);
+  const normalized = normalizeWhitespace(checklist);
+
+  assertTracked([quoteWorkflowChecklistPath], 'quote/enquiry workflow acceptance checklist');
+
+  for (const required of [
+    'repo-local, template-only, non-live, and not evidence',
+    'Public quote/enquiry route expectations',
+    'Listing/category/event handoff expectations',
+    'Protected admin quote triage expectations',
+    'Public copy allowed wording',
+    'Public copy forbidden wording',
+    'Admin-only internal note boundary',
+    'Local acceptance placeholders',
+    'Deployment boundary',
+    'event date',
+    'venue or location',
+    'requested listings or items',
+    'quantities',
+    'alternatives',
+    'setup/access/timing notes',
+    'preferred contact method',
+    'Request this listing',
+    'Send category enquiry',
+    'Compare event setup guidance',
+    'Start quote request',
+    'contact and follow-up',
+    'event and setup details',
+    'requested listings and items',
+    'admin-only status and notes',
+    '[ROUTE / AREA]',
+    '[PUBLIC / PROTECTED ADMIN]',
+    '[QUOTE / ENQUIRY CHECK]',
+    '[LOCAL ACCEPTANCE STATE: NOT RUN / PASS / NEEDS FOLLOW-UP]',
+    '[OWNER INPUT REQUIRED]',
+    '[LOCAL FOLLOW-UP]',
+    '[DEPLOYMENT APPROVAL: NOT GRANTED]',
+  ]) {
+    assertIncludes(normalized, required, 'quote/enquiry workflow acceptance checklist');
+  }
+
+  assertNoMatch(checklist, filledEvidencePattern, 'quote/enquiry workflow acceptance checklist');
+  assertNoMatch(checklist, forbiddenBusinessFactPattern, 'quote/enquiry workflow acceptance checklist');
+  assertNoMatch(checklist, forbiddenContactFactPattern, 'quote/enquiry workflow acceptance checklist');
+}
+
 function assertStatusDocs() {
   const status = readRepoFile('docs/PHASE-STATUS.md');
   const currentStatus = normalizeWhitespace(
-    status.split('Previous Current Phase 3T-A/B status:')[0] || status,
+    status.split('Previous Current Phase 3U-A/B status:')[0] || status,
   );
   const roadmap = normalizeWhitespace(readRepoFile('docs/PHASE-ROADMAP.md'));
   const readiness = readRepoFile('docs/PHASE-2-READINESS-PLAN.md');
@@ -335,19 +389,27 @@ function assertStatusDocs() {
   );
 
   for (const required of [
-    'Current phase: Phase 3U-A/B - final local owner handoff pack, acceptance triage board, and deployment decision firewall.',
-    'Latest completed capability: Phase 3T-A/B local release-candidate command centre, acceptance-suite orchestration, and no-deploy command allowlist.',
-    'Last merged capability PR: #142',
-    `Merge commit: \`${phase3tMergeCommit}\``,
+    'Current phase: Phase 3V-A/B - quote/enquiry workflow hardening, protected admin triage polish, and local acceptance coverage.',
+    'Latest completed capability: Phase 3U-A/B final local owner handoff pack, acceptance triage board, and deployment decision firewall.',
+    'Last merged capability PR: #143',
+    `Merge commit: \`${phase3uMergeCommit}\``,
   ]) {
-    assertIncludes(currentStatus, required, 'Phase 3U status');
+    assertIncludes(currentStatus, required, 'Phase 3V status');
   }
 
+  assertIncludes(status, 'Previous Current Phase 3U-A/B status', 'Phase 3V status');
+  assertIncludes(status, `Merge commit: \`${phase3tMergeCommit}\``, 'Phase 3U history');
+  assertIncludes(status, 'Previous Current Phase 3T-A/B status', 'Phase 3U status');
   assertIncludes(status, 'Previous Current Phase 3T-A/B status', 'Phase 3U status');
   assertIncludes(status, `Merge commit: \`${phase3sMergeCommit}\``, 'Phase 3T history');
   assertIncludes(status, 'Previous Current Phase 3S-A/B status', 'Phase 3T status');
   assertIncludes(status, `Merge commit: \`${phase3rMergeCommit}\``, 'Phase 3S history');
   assertIncludes(status, 'Previous Current Phase 3R-A/B status', 'Phase 3S status');
+  assertIncludes(
+    roadmap,
+    'Phase 3V-A/B hardens the public quote/enquiry conversion path and protected admin quote triage',
+    'Phase 3V roadmap',
+  );
   assertIncludes(
     roadmap,
     'Phase 3U-A/B adds a final local owner handoff pack, acceptance triage board, and deployment decision firewall',
@@ -363,12 +425,24 @@ function assertStatusDocs() {
     'Phase 3S-A/B adds a repo-local release-candidate acceptance gate, route inventory freeze, and public/admin regression harness',
     'Phase 3S roadmap',
   );
+  assertIncludes(readiness, 'Current Phase 3V-A/B status', 'Phase 3V readiness');
+  assertIncludes(readiness, 'Previous Current Phase 3U-A/B status', 'Phase 3V readiness');
   assertIncludes(readiness, 'Current Phase 3T-A/B status', 'Phase 3T readiness');
   assertIncludes(readiness, 'Current Phase 3U-A/B status', 'Phase 3U readiness');
   assertIncludes(readiness, 'Previous Current Phase 3T-A/B status', 'Phase 3U readiness');
   assertIncludes(readiness, 'Previous Current Phase 3S-A/B status', 'Phase 3T readiness');
   assertIncludes(readiness, 'Current Phase 3S-A/B status', 'Phase 3S readiness');
   assertIncludes(readiness, 'Previous Current Phase 3R-A/B status', 'Phase 3S readiness');
+  assertIncludes(
+    decisionLog,
+    'Decision: Phase 3V-A/B hardens the quote/enquiry workflow, protected admin triage, and local acceptance coverage.',
+    'Phase 3V decision log',
+  );
+  assertIncludes(
+    checklist,
+    '## Phase 3V-A/B Quote Enquiry Workflow Hardening Protected Admin Triage Polish And Local Acceptance Coverage',
+    'Phase 3V checklist',
+  );
   assertIncludes(
     decisionLog,
     'Decision: Phase 3U-A/B adds a final local owner handoff pack, acceptance triage board, and deployment decision firewall.',
@@ -405,6 +479,8 @@ function assertStatusDocs() {
   assertIncludes(ownerReviewDocs, finalOwnerHandoffPackPath, 'owner review docs');
   assertIncludes(ownerReviewDocs, localAcceptanceTriageBoardPath, 'owner review docs');
   assertIncludes(ownerReviewDocs, deploymentDecisionFirewallPath, 'owner review docs');
+  assertIncludes(ownerReviewDocs, quoteWorkflowChecklistPath, 'owner review docs');
+  assertIncludes(ownerReviewDocs, 'quote/enquiry workflow acceptance checklist', 'owner review docs');
   assertIncludes(ownerReviewDocs, 'final local owner handoff pack', 'owner review docs');
   assertIncludes(ownerReviewDocs, 'local release-candidate command centre', 'owner review docs');
   assertIncludes(ownerReviewDocs, 'local release-candidate acceptance gate', 'owner review docs');
@@ -419,6 +495,7 @@ function assertProtectedAdminShell() {
   assertIncludes(shell, finalOwnerHandoffPackPath, 'protected admin shell');
   assertIncludes(shell, localAcceptanceTriageBoardPath, 'protected admin shell');
   assertIncludes(shell, deploymentDecisionFirewallPath, 'protected admin shell');
+  assertIncludes(shell, quoteWorkflowChecklistPath, 'protected admin shell');
   assertIncludes(shell, 'localAcceptanceSnapshot', 'protected admin shell');
   assertIncludes(shell, 'localAcceptanceLastLocalUpdate', 'protected admin shell');
   assertIncludes(shell, 'Local release-candidate acceptance snapshot', 'protected admin shell');
@@ -428,6 +505,9 @@ function assertProtectedAdminShell() {
   assertIncludes(shell, 'finalOwnerHandoffSnapshot', 'protected admin shell');
   assertIncludes(shell, 'finalOwnerHandoffLastLocalUpdate', 'protected admin shell');
   assertIncludes(shell, 'Final local owner handoff snapshot', 'protected admin shell');
+  assertIncludes(shell, 'quoteEnquiryAcceptanceSnapshot', 'protected admin shell');
+  assertIncludes(shell, 'quoteEnquiryAcceptanceLastLocalUpdate', 'protected admin shell');
+  assertIncludes(shell, 'Quote/enquiry acceptance snapshot', 'protected admin shell');
 }
 
 function assertPublicSourceBoundary() {
@@ -526,6 +606,7 @@ assertRouteInventoryFreeze();
 assertCommandCentre();
 assertSuiteRunner();
 assertFinalOwnerHandoffMaterials();
+assertQuoteEnquiryWorkflowChecklist();
 assertStatusDocs();
 assertProtectedAdminShell();
 assertPublicSourceBoundary();

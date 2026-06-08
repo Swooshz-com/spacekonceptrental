@@ -88,10 +88,10 @@ export default function EventsPage() {
 
       <div className="hero__actions">
         <Link className="button button--secondary" href="/catalogue">
-          Browse catalogue
+          Compare event setup guidance
         </Link>
         <Link className="button" href="/quote">
-          Request a quote
+          Start quote request
         </Link>
       </div>
     </section>

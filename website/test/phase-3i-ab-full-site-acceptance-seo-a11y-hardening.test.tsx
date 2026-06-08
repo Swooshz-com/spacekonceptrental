@@ -306,11 +306,9 @@ describe("Phase 3I-A/B full-site acceptance SEO accessibility hardening", () => 
       })
     );
 
+    expect(screen.getByText(/not a confirmed hold or fit confirmation/i)).toBeInTheDocument();
     expect(
-      screen.getByText(/not a reservation or availability confirmation/i)
-    ).toBeInTheDocument();
-    expect(
-      screen.getAllByText(/does not reserve furniture, dates, or delivery capacity/i)
+      screen.getAllByText(/does not confirm furniture, dates, or delivery capacity/i)
         .length
     ).toBeGreaterThan(0);
     expect(

@@ -91,7 +91,7 @@ export function CategoriesPageContent({
                   Compare {category.name} listings
                 </Link>
                 <Link className="card-link" href="/quote">
-                  Start category enquiry
+                  Send category enquiry
                 </Link>
               </div>
               {categoryListings.length > 0 ? (
@@ -119,7 +119,7 @@ export function CategoriesPageContent({
                       Browse all listings
                     </Link>
                     <Link className="card-link" href="/quote">
-                      Start a quote request
+                      Start quote request
                     </Link>
                   </div>
                 </>
@@ -133,7 +133,7 @@ export function CategoriesPageContent({
           Browse all listings
         </Link>
         <Link className="button" href="/quote">
-          Send a general enquiry
+          Send category enquiry
         </Link>
       </div>
     </section>

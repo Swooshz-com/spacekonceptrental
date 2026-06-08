@@ -300,7 +300,7 @@ describe("Phase 3S-A/B local release-candidate acceptance gate", () => {
     cleanup();
     render(<EventsPage />);
     expect(screen.getByRole("heading", { name: /plan an event setup/i })).toBeInTheDocument();
-    expect(screen.getByText(/quote request/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/quote request/i).length).toBeGreaterThan(0);
 
     cleanup();
     render(await QuotePage());

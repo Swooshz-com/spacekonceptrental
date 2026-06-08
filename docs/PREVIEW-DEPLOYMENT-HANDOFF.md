@@ -72,7 +72,9 @@ release-candidate command centre and safe local suite sequence. Use
 handoff pack, `docs/content/LOCAL-ACCEPTANCE-TRIAGE-BOARD.md` for the local
 acceptance triage board, and
 `docs/content/DEPLOYMENT-DECISION-FIREWALL.md` for the deployment decision
-firewall.
+firewall. Use
+`docs/content/QUOTE-ENQUIRY-WORKFLOW-ACCEPTANCE-CHECKLIST.md` for the
+repo-local quote/enquiry workflow acceptance checklist.
 
 What the owner should review:
 
@@ -102,6 +104,9 @@ What the owner should review:
 - Final local owner handoff pack, local acceptance triage board, and deployment
   decision firewall for repo-local owner/operator handoff without deployment
   approval or filled evidence.
+- Quote/enquiry workflow acceptance checklist for public quote route,
+  listing/category/event handoff, protected admin triage, and internal note
+  boundary review without public quote tracking or customer account flows.
 - Known deferred capabilities and intentionally not implemented scope.
 - Local validation results and any local-only manual QA notes.
 
