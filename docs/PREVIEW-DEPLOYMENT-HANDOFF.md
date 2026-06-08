@@ -46,7 +46,12 @@ Owner-review dry-run packet,
 `docs/content/OWNER-REVIEW-FINDINGS-DISPOSITION.md` for the findings
 disposition workflow, and
 `docs/content/OWNER-REVIEW-LAUNCH-DECISION-REHEARSAL.md` for the launch
-hold/approve rehearsal.
+hold/approve rehearsal. Use
+`docs/content/OWNER-REVIEW-CORRECTION-INTAKE.md` for the Owner-review
+correction intake,
+`docs/content/OWNER-REVIEW-LAUNCH-BLOCKER-FREEZE-GATE.md` for the
+launch-blocker freeze gate, and
+`docs/content/OWNER-REVIEW-CORRECTION-PR-PLAN.md` for the correction PR plan.
 
 What the owner should review:
 
@@ -62,6 +67,8 @@ What the owner should review:
   non-live route-by-route owner/admin decisions.
 - Owner-review dry-run packet, findings disposition workflow, and launch
   hold/approve rehearsal for placeholder-only owner/admin review preparation.
+- Owner-review correction intake, launch-blocker freeze gate, and correction
+  PR plan for placeholder-only future correction routing.
 - Known deferred capabilities and intentionally not implemented scope.
 - Local validation results and any local-only manual QA notes.
 

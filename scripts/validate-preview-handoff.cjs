@@ -15,6 +15,9 @@ const ownerReviewRouteDecisionMatrixPath = 'docs/content/OWNER-REVIEW-ROUTE-DECI
 const ownerReviewDryRunPacketPath = 'docs/content/OWNER-REVIEW-DRY-RUN-PACKET.md';
 const ownerReviewFindingsDispositionPath = 'docs/content/OWNER-REVIEW-FINDINGS-DISPOSITION.md';
 const ownerReviewLaunchDecisionRehearsalPath = 'docs/content/OWNER-REVIEW-LAUNCH-DECISION-REHEARSAL.md';
+const ownerReviewCorrectionIntakePath = 'docs/content/OWNER-REVIEW-CORRECTION-INTAKE.md';
+const ownerReviewLaunchBlockerFreezeGatePath = 'docs/content/OWNER-REVIEW-LAUNCH-BLOCKER-FREEZE-GATE.md';
+const ownerReviewCorrectionPrPlanPath = 'docs/content/OWNER-REVIEW-CORRECTION-PR-PLAN.md';
 const contentReadinessRoutePath = 'website/app/admin/content-readiness/page.tsx';
 const protectedAdminShellPath = 'website/app/admin/protected-admin-shell.tsx';
 const handoffValidatorPath = 'scripts/validate-preview-handoff.cjs';
@@ -33,6 +36,7 @@ const phase3jMergeCommit = '1c7dc0ac7c2532fa8a837cd46b0d1f0103d5ccfa';
 const phase3kMergeCommit = 'd4271ea6b181ee702dfe9d6f2b6003903b0c54dd';
 const phase3lMergeCommit = 'be7fda99f25f73c86494e1ab323e0624dd917806';
 const phase3mMergeCommit = '0528ad92ad756a68d2094a16cd204f1c404c99a3';
+const phase3nMergeCommit = '98d62e9d6641d0d34770c76f156e914be5ba4edd';
 
 function fail(message) {
   console.error(message);
@@ -141,6 +145,9 @@ function assertHandoffDocs() {
     'docs/content/OWNER-REVIEW-DRY-RUN-PACKET.md',
     'docs/content/OWNER-REVIEW-FINDINGS-DISPOSITION.md',
     'docs/content/OWNER-REVIEW-LAUNCH-DECISION-REHEARSAL.md',
+    'docs/content/OWNER-REVIEW-CORRECTION-INTAKE.md',
+    'docs/content/OWNER-REVIEW-LAUNCH-BLOCKER-FREEZE-GATE.md',
+    'docs/content/OWNER-REVIEW-CORRECTION-PR-PLAN.md',
     '/admin/content-readiness',
     'Protected content readiness workspace',
     'Owner-review execution checklist',
@@ -148,6 +155,9 @@ function assertHandoffDocs() {
     'Owner-review dry-run packet',
     'findings disposition workflow',
     'launch hold/approve rehearsal',
+    'Owner-review correction intake',
+    'launch-blocker freeze gate',
+    'correction PR plan',
     'What the owner should supply before launch',
     'What remains blocked until explicit approval',
     'Owner content blockers',
@@ -220,6 +230,9 @@ function assertOwnerReviewDocs() {
     'docs/content/OWNER-REVIEW-DRY-RUN-PACKET.md',
     'docs/content/OWNER-REVIEW-FINDINGS-DISPOSITION.md',
     'docs/content/OWNER-REVIEW-LAUNCH-DECISION-REHEARSAL.md',
+    'docs/content/OWNER-REVIEW-CORRECTION-INTAKE.md',
+    'docs/content/OWNER-REVIEW-LAUNCH-BLOCKER-FREEZE-GATE.md',
+    'docs/content/OWNER-REVIEW-CORRECTION-PR-PLAN.md',
     '/admin/content-readiness',
     'Owner content blockers',
     'Owner-review execution checklist',
@@ -227,6 +240,9 @@ function assertOwnerReviewDocs() {
     'Owner-review dry-run packet',
     'findings disposition workflow',
     'launch hold/approve rehearsal',
+    'Owner-review correction intake',
+    'launch-blocker freeze gate',
+    'correction PR plan',
     'Missing real contact/legal/business-hour content does not get invented',
     'Public launch cannot proceed until required owner content and explicit deployment approval are both supplied',
     'Owner review can continue without deployment',
@@ -657,6 +673,187 @@ function assertOwnerReviewLaunchDecisionRehearsal() {
   );
 }
 
+function assertOwnerReviewCorrectionIntake() {
+  const intake = readRepoFile(ownerReviewCorrectionIntakePath);
+  const normalizedIntake = normalizeWhitespace(intake);
+
+  assertTracked([ownerReviewCorrectionIntakePath], 'owner-review correction intake');
+
+  for (const required of [
+    'repo-local and template-only',
+    'No actual owner corrections are recorded in this phase',
+    'No owner sign-off is recorded',
+    'No deployment approval is created',
+    'Missing owner facts remain `Owner input required`',
+    'Public homepage copy',
+    'Public catalogue/listing summary copy',
+    'Public listing detail copy',
+    'Category/event-use wording',
+    'Quote/enquiry expectation wording',
+    'Image selection and alt text',
+    'Protected admin listing/category/media workflow',
+    'Protected admin quote workflow',
+    'Legal/policy/contact/business-hour content',
+    'Launch/deployment approval boundary',
+    'Correction template only',
+    'Owner input required',
+    'Ready for local correction PR',
+    'Blocks owner review',
+    'Blocks launch/deployment',
+    'Deferred after launch',
+    'Not in scope by owner direction',
+    'Requires separate deployment approval',
+    '<correction category>',
+    '<owner correction placeholder>',
+    '<safe correction status>',
+    '<future local PR placeholder>',
+    '<evidence handling placeholder>',
+  ]) {
+    assertIncludes(normalizedIntake, required, 'owner-review correction intake');
+  }
+
+  assertNoMatch(intake, /\bvercel\s+(?:deploy|link|env|pull|promote)\b/i, 'owner-review correction intake');
+  assertNoMatch(
+    intake,
+    /\bsupabase\s+(?:link|login|projects|secrets|functions|db\s+(?:push|pull|remote|reset))\b/i,
+    'owner-review correction intake',
+  );
+  assertNoMatch(
+    intake,
+    /\b(?:create|copy|edit|fill|commit|configure|add)\s+(?:a\s+)?`?\.env/i,
+    'owner-review correction intake',
+  );
+  assertNoMatch(
+    intake,
+    /award-winning|certified partner|trusted by|5-star|guaranteed availability|guaranteed delivery|licensed and insured|testimonial|client logo|case study|legal guarantee|production policy/i,
+    'owner-review correction intake',
+  );
+  assertNoMatch(
+    intake,
+    /\b(?:\+?\d[\d\s().-]{7,}|[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}|Mon(?:day)?\s*-\s*Fri|24\/7|123\s+Main|Singapore\s+\d{6})\b/i,
+    'owner-review correction intake',
+  );
+  assertNoMatch(
+    intake,
+    /owner approved|owner sign-?off complete|owner correction recorded|filled owner note|review completed on|signed off by|production evidence captured|preview evidence captured/i,
+    'owner-review correction intake',
+  );
+}
+
+function assertOwnerReviewLaunchBlockerFreezeGate() {
+  const freezeGate = readRepoFile(ownerReviewLaunchBlockerFreezeGatePath);
+  const normalizedFreezeGate = normalizeWhitespace(freezeGate);
+
+  assertTracked([ownerReviewLaunchBlockerFreezeGatePath], 'owner-review launch-blocker freeze gate');
+
+  for (const required of [
+    'repo-local gate',
+    'does not approve launch or deployment',
+    'Owner-review blockers',
+    'Launch/deployment blockers',
+    'Deferred after launch',
+    'Not in scope by owner direction',
+    'Requires separate deployment approval',
+    'Not evaluated',
+    'Owner input required',
+    'Blocked before owner review closes',
+    'Blocked before launch planning',
+    'Ready for later planning, not deployment approval',
+    'Public launch remains blocked until owner-required facts and explicit deployment approval both exist',
+    'No production evidence is created',
+    'No preview evidence is filled',
+    'No provider config is changed',
+    'No route, upload, account, notification, CRM, Pinecone, n8n, or RAG runtime is added',
+    '<freeze area>',
+    '<freeze state>',
+    '<owner input placeholder>',
+    '<local blocker placeholder>',
+  ]) {
+    assertIncludes(normalizedFreezeGate, required, 'owner-review launch-blocker freeze gate');
+  }
+
+  assertNoMatch(freezeGate, /\bvercel\s+(?:deploy|link|env|pull|promote)\b/i, 'owner-review launch-blocker freeze gate');
+  assertNoMatch(
+    freezeGate,
+    /\bsupabase\s+(?:link|login|projects|secrets|functions|db\s+(?:push|pull|remote|reset))\b/i,
+    'owner-review launch-blocker freeze gate',
+  );
+  assertNoMatch(
+    freezeGate,
+    /\b(?:create|copy|edit|fill|commit|configure|add)\s+(?:a\s+)?`?\.env/i,
+    'owner-review launch-blocker freeze gate',
+  );
+  assertNoMatch(
+    freezeGate,
+    /award-winning|certified partner|trusted by|5-star|guaranteed availability|guaranteed delivery|licensed and insured|testimonial|client logo|case study|legal guarantee|production policy/i,
+    'owner-review launch-blocker freeze gate',
+  );
+  assertNoMatch(
+    freezeGate,
+    /\b(?:\+?\d[\d\s().-]{7,}|[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}|Mon(?:day)?\s*-\s*Fri|24\/7|123\s+Main|Singapore\s+\d{6})\b/i,
+    'owner-review launch-blocker freeze gate',
+  );
+  assertNoMatch(
+    freezeGate,
+    /owner approved|owner sign-?off complete|owner correction recorded|filled owner note|review completed on|signed off by|production evidence captured|preview evidence captured/i,
+    'owner-review launch-blocker freeze gate',
+  );
+}
+
+function assertOwnerReviewCorrectionPrPlan() {
+  const plan = readRepoFile(ownerReviewCorrectionPrPlanPath);
+  const normalizedPlan = normalizeWhitespace(plan);
+
+  assertTracked([ownerReviewCorrectionPrPlanPath], 'owner-review correction PR plan');
+
+  for (const required of [
+    'does not implement actual owner corrections',
+    'Public copy correction PR',
+    'Listing/category content correction PR',
+    'Image/alt-text correction PR',
+    'Quote/enquiry wording correction PR',
+    'Protected admin workflow wording correction PR',
+    'Legal/policy/contact content PR',
+    'only when owner supplies approved content',
+    'Deployment planning PR',
+    'only after separate explicit approval',
+    'Allowed changes',
+    'Forbidden changes',
+    'Required validation',
+    'Evidence handling',
+    'repo-local and non-deployment',
+  ]) {
+    assertIncludes(normalizedPlan, required, 'owner-review correction PR plan');
+  }
+
+  assertNoMatch(plan, /\bvercel\s+(?:deploy|link|env|pull|promote)\b/i, 'owner-review correction PR plan');
+  assertNoMatch(
+    plan,
+    /\bsupabase\s+(?:link|login|projects|secrets|functions|db\s+(?:push|pull|remote|reset))\b/i,
+    'owner-review correction PR plan',
+  );
+  assertNoMatch(
+    plan,
+    /\b(?:create|copy|edit|fill|commit|configure|add)\s+(?:a\s+)?`?\.env/i,
+    'owner-review correction PR plan',
+  );
+  assertNoMatch(
+    plan,
+    /award-winning|certified partner|trusted by|5-star|guaranteed availability|guaranteed delivery|licensed and insured|testimonial|client logo|case study|legal guarantee|production policy/i,
+    'owner-review correction PR plan',
+  );
+  assertNoMatch(
+    plan,
+    /\b(?:\+?\d[\d\s().-]{7,}|[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}|Mon(?:day)?\s*-\s*Fri|24\/7|123\s+Main|Singapore\s+\d{6})\b/i,
+    'owner-review correction PR plan',
+  );
+  assertNoMatch(
+    plan,
+    /owner approved|owner sign-?off complete|owner correction recorded|filled owner note|review completed on|signed off by|production evidence captured|preview evidence captured/i,
+    'owner-review correction PR plan',
+  );
+}
+
 function assertStatusDocs() {
   const status = readRepoFile('docs/PHASE-STATUS.md');
   const roadmap = readRepoFile('docs/PHASE-ROADMAP.md').replace(/\s+/g, ' ');
@@ -664,6 +861,19 @@ function assertStatusDocs() {
   const decisionLog = readRepoFile('docs/DECISION-LOG.md');
   const checklist = readRepoFile('docs/checklists/PHASE-2-ADMIN-OPS.md');
 
+  assertIncludes(
+    status,
+    'Current phase: Phase 3O-A/B - owner-review correction intake, launch-blocker freeze gate, and admin triage snapshot.',
+    'phase status',
+  );
+  assertIncludes(
+    status,
+    'Latest completed capability: Phase 3N-A/B owner-review dry-run packet, findings disposition workflow, and launch hold/approve rehearsal.',
+    'phase status',
+  );
+  assertIncludes(status, 'Last merged capability PR: #136', 'phase status');
+  assertIncludes(status, `Merge commit: \`${phase3nMergeCommit}\``, 'phase status');
+  assertIncludes(status, 'Previous Current Phase 3N-A/B status', 'phase status');
   assertIncludes(
     status,
     'Current phase: Phase 3N-A/B - owner-review dry-run packet, findings disposition workflow, and launch hold/approve rehearsal.',
@@ -761,7 +971,13 @@ function assertStatusDocs() {
     'Phase 3N-A/B adds an owner-review dry-run packet, findings disposition workflow, and launch hold/approve rehearsal',
     'phase roadmap',
   );
-  assertIncludes(readiness, 'Current Phase 3N-A/B status', 'readiness plan');
+  assertIncludes(
+    roadmap,
+    'Phase 3O-A/B adds owner-review correction intake, a launch-blocker freeze gate, and admin triage snapshot',
+    'phase roadmap',
+  );
+  assertIncludes(readiness, 'Current Phase 3O-A/B status', 'readiness plan');
+  assertIncludes(readiness, 'Previous Current Phase 3N-A/B status', 'readiness plan');
   assertIncludes(readiness, 'Previous Current Phase 3M-A/B status', 'readiness plan');
   assertIncludes(readiness, 'Previous Current Phase 3L-A/B status', 'readiness plan');
   assertIncludes(readiness, 'Previous Current Phase 3K-A/B status', 'readiness plan');
@@ -877,6 +1093,16 @@ function assertStatusDocs() {
     '## Phase 3N-A/B Owner-Review Dry-Run Packet Findings Disposition Workflow And Launch Hold/Approve Rehearsal',
     'phase checklist',
   );
+  assertIncludes(
+    decisionLog,
+    'Decision: Phase 3O-A/B adds owner-review correction intake, a launch-blocker freeze gate, and admin triage snapshot.',
+    'decision log',
+  );
+  assertIncludes(
+    checklist,
+    '## Phase 3O-A/B Owner-Review Correction Intake Launch-Blocker Freeze Gate And Admin Triage Snapshot',
+    'phase checklist',
+  );
 }
 
 function assertProtectedContentReadinessWorkspace() {
@@ -901,6 +1127,9 @@ function assertProtectedContentReadinessWorkspace() {
   assertIncludes(shellSource, ownerReviewDryRunPacketPath, protectedAdminShellPath);
   assertIncludes(shellSource, ownerReviewFindingsDispositionPath, protectedAdminShellPath);
   assertIncludes(shellSource, ownerReviewLaunchDecisionRehearsalPath, protectedAdminShellPath);
+  assertIncludes(shellSource, ownerReviewCorrectionIntakePath, protectedAdminShellPath);
+  assertIncludes(shellSource, ownerReviewLaunchBlockerFreezeGatePath, protectedAdminShellPath);
+  assertIncludes(shellSource, ownerReviewCorrectionPrPlanPath, protectedAdminShellPath);
   assertIncludes(shellSource, 'reviewSurfaceGroups', protectedAdminShellPath);
   assertIncludes(shellSource, 'routeFamiliesCovered', protectedAdminShellPath);
   assertIncludes(shellSource, 'ownerDecisionCategories', protectedAdminShellPath);
@@ -911,6 +1140,11 @@ function assertProtectedContentReadinessWorkspace() {
   assertIncludes(shellSource, 'launchDecisionRehearsalStates', protectedAdminShellPath);
   assertIncludes(shellSource, 'dryRunOwnerInputRequiredCategories', protectedAdminShellPath);
   assertIncludes(shellSource, 'explicitDeploymentApprovalBoundary', protectedAdminShellPath);
+  assertIncludes(shellSource, 'ownerCorrectionCategories', protectedAdminShellPath);
+  assertIncludes(shellSource, 'ownerCorrectionStatuses', protectedAdminShellPath);
+  assertIncludes(shellSource, 'launchBlockerFreezeStates', protectedAdminShellPath);
+  assertIncludes(shellSource, 'futureCorrectionPrTypes', protectedAdminShellPath);
+  assertIncludes(shellSource, 'correctionFreezeDeploymentBoundary', protectedAdminShellPath);
   assertNoMatch(routeSource, /NEXT_PUBLIC_SUPABASE|NEXT_PUBLIC_N8N|SUPABASE_SERVICE_ROLE/i, contentReadinessRoutePath);
 }
 
@@ -944,7 +1178,7 @@ function assertPublicCopyFactSafety() {
   );
   assertNoMatch(
     publicSource,
-    /Owner input required|Ready for owner review|Blocks owner review|Blocks launch\/deployment|Deferred after launch|Not in scope by owner direction|Requires separate deployment approval|Owner-review issue ledger|Owner-review execution checklist|Owner-review dry-run packet|findings disposition|launch decision rehearsal|Dry-run review snapshot|route decision matrix|content readiness workspace|admin-only readiness|Protected admin content readiness|\/admin\/content-readiness|admin issue ledger|owner decision needed|owner-only statuses|Admin-only notes/i,
+    /Owner input required|Ready for owner review|Blocks owner review|Blocks launch\/deployment|Deferred after launch|Not in scope by owner direction|Requires separate deployment approval|Correction template only|Owner-review issue ledger|Owner-review execution checklist|Owner-review dry-run packet|Owner-review correction intake|findings disposition|launch decision rehearsal|launch-blocker freeze gate|correction PR plan|Dry-run review snapshot|Correction\/freeze snapshot|route decision matrix|content readiness workspace|admin-only readiness|Protected admin content readiness|\/admin\/content-readiness|admin issue ledger|owner decision needed|owner-only statuses|Admin-only notes/i,
     'public route source',
   );
 }
@@ -1022,6 +1256,9 @@ assertOwnerReviewRouteDecisionMatrix();
 assertOwnerReviewDryRunPacket();
 assertOwnerReviewFindingsDisposition();
 assertOwnerReviewLaunchDecisionRehearsal();
+assertOwnerReviewCorrectionIntake();
+assertOwnerReviewLaunchBlockerFreezeGate();
+assertOwnerReviewCorrectionPrPlan();
 assertStatusDocs();
 assertProtectedContentReadinessWorkspace();
 assertPublicCopyFactSafety();

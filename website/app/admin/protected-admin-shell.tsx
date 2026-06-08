@@ -511,7 +511,10 @@ const contentReadinessSources = [
   "docs/content/OWNER-REVIEW-ROUTE-DECISION-MATRIX.md",
   "docs/content/OWNER-REVIEW-DRY-RUN-PACKET.md",
   "docs/content/OWNER-REVIEW-FINDINGS-DISPOSITION.md",
-  "docs/content/OWNER-REVIEW-LAUNCH-DECISION-REHEARSAL.md"
+  "docs/content/OWNER-REVIEW-LAUNCH-DECISION-REHEARSAL.md",
+  "docs/content/OWNER-REVIEW-CORRECTION-INTAKE.md",
+  "docs/content/OWNER-REVIEW-LAUNCH-BLOCKER-FREEZE-GATE.md",
+  "docs/content/OWNER-REVIEW-CORRECTION-PR-PLAN.md"
 ] as const;
 
 const reviewSurfaceGroups = 11;
@@ -557,6 +560,47 @@ const dryRunOwnerInputRequiredCategories = [
 ] as const;
 const explicitDeploymentApprovalBoundary =
   "Any launch or deployment step still requires separate explicit approval.";
+const ownerCorrectionCategories = [
+  "Public homepage copy",
+  "Public catalogue/listing summary copy",
+  "Public listing detail copy",
+  "Category/event-use wording",
+  "Quote/enquiry expectation wording",
+  "Image selection and alt text",
+  "Protected admin listing/category/media workflow",
+  "Protected admin quote workflow",
+  "Legal/policy/contact/business-hour content",
+  "Launch/deployment approval boundary"
+] as const;
+const ownerCorrectionStatuses = [
+  "Correction template only",
+  "Owner input required",
+  "Ready for local correction PR",
+  "Blocks owner review",
+  "Blocks launch/deployment",
+  "Deferred after launch",
+  "Not in scope by owner direction",
+  "Requires separate deployment approval"
+] as const;
+const launchBlockerFreezeStates = [
+  "Not evaluated",
+  "Owner input required",
+  "Blocked before owner review closes",
+  "Blocked before launch planning",
+  "Ready for later planning, not deployment approval",
+  "Requires separate deployment approval"
+] as const;
+const futureCorrectionPrTypes = [
+  "Public copy correction PR",
+  "Listing/category content correction PR",
+  "Image/alt-text correction PR",
+  "Quote/enquiry wording correction PR",
+  "Protected admin workflow wording correction PR",
+  "Legal/policy/contact content PR",
+  "Deployment planning PR"
+] as const;
+const correctionFreezeDeploymentBoundary =
+  "Future correction planning cannot approve deployment.";
 
 const contentReadinessGroups = [
   {
@@ -619,6 +663,13 @@ function ContentReadinessWorkspace() {
     ],
     ["Explicit deployment approval boundary", "Required"]
   ] as const;
+  const correctionFreezeSnapshot = [
+    ["Correction categories", ownerCorrectionCategories.length],
+    ["Correction statuses", ownerCorrectionStatuses.length],
+    ["Freeze states", launchBlockerFreezeStates.length],
+    ["Future correction PR types", futureCorrectionPrTypes.length],
+    ["Correction freeze boundary", "Required"]
+  ] as const;
 
   return (
     <section className="admin-dashboard" aria-label="Content readiness workspace">
@@ -662,6 +713,19 @@ function ContentReadinessWorkspace() {
             ))}
           </dl>
           <p>{explicitDeploymentApprovalBoundary}</p>
+        </section>
+
+        <section className="admin-dashboard__card admin-dashboard__card--summary">
+          <h3>Correction/freeze snapshot</h3>
+          <dl className="quote-inbox__details">
+            {correctionFreezeSnapshot.map(([label, value]) => (
+              <div key={label}>
+                <dt>{label}</dt>
+                <dd>{value}</dd>
+              </div>
+            ))}
+          </dl>
+          <p>{correctionFreezeDeploymentBoundary}</p>
         </section>
 
         <section className="admin-dashboard__card admin-dashboard__card--summary">

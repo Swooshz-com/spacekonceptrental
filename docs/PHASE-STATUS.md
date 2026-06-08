@@ -4,6 +4,52 @@ This is the quick status page for the SKR repo. Use `docs/PHASE-2-READINESS-PLAN
 
 ## Current phase
 
+Current phase: Phase 3O-A/B - owner-review correction intake, launch-blocker freeze gate, and admin triage snapshot.
+
+Latest completed capability: Phase 3N-A/B owner-review dry-run packet, findings disposition workflow, and launch hold/approve rehearsal.
+
+Last merged capability PR: #136
+
+Merge commit: `98d62e9d6641d0d34770c76f156e914be5ba4edd`
+
+Phase 3O-A/B adds owner-review correction intake, a launch-blocker freeze
+gate, and admin triage snapshot. It turns the Phase 3N dry-run packet,
+findings disposition workflow, and launch hold/approve rehearsal into
+template-only correction capture and freeze planning without recording actual
+owner corrections, approving deployment, or inventing missing real-world
+facts.
+
+Public users only see public-safe published listing, category, listing image,
+selected-listing quote context, and public recovery guidance. Owner-review
+correction intake details, launch-blocker freeze gate details, correction PR
+planning notes, dry-run details, findings disposition rows, launch decision
+rehearsal notes, route decision matrix notes, issue ledger details, admin
+internal notes, protected management URLs, provider details, secrets,
+production evidence, filled preview evidence, and invented public business
+facts stay out of public routes. Supabase remains canonical for website/admin
+listing and quote data. Pinecone remains a future derived index only and is
+not used as canonical business storage.
+
+No deployment is performed or approved by Phase 3O-A/B. It does not add Vercel
+config, connect Supabase Cloud, add real secrets or env values, add filled
+owner-review evidence, filled preview evidence, production evidence, Pinecone
+runtime code, Pinecone packages, Pinecone env reads, secrets, API keys,
+Pinecone executors, n8n workflow/runtime changes, embedding runtime, sync
+workers, `/api/chat` retrieval wiring, search-index document writers, real
+vector upsert/delete, runtime reranking, hybrid search runtime, browser
+Supabase, service-role runtime paths, public or customer upload routes, public
+quote tracking, customer-visible internal notes, notifications, CRM
+integration, customer accounts, invented real contact details, phone numbers,
+email addresses, physical addresses, business hours, testimonials, client
+names, awards, certifications, legal claims, guarantees, production policies,
+or ecommerce flows.
+
+Missing real contact, legal, policy, business-hour, service-area, proof,
+testimonial, client-name, award, certification, or guarantee content must
+remain marked as owner input required and must not be invented.
+
+Previous Current Phase 3N-A/B status:
+
 Current phase: Phase 3N-A/B - owner-review dry-run packet, findings disposition workflow, and launch hold/approve rehearsal.
 
 Latest completed capability: Phase 3M-A/B owner-review execution checklist, route-by-route decision matrix, and admin review snapshot.
@@ -173,22 +219,22 @@ Merge commit: `1c7dc0ac7c2532fa8a837cd46b0d1f0103d5ccfa`
 
 ## Remaining-work map
 
-Completed through PR #135:
+Completed through PR #136:
 
-- PR #135 merged Phase 3M-A/B owner-review execution checklist,
-  route-by-route decision matrix, and admin review snapshot at merge commit
-  `0528ad92ad756a68d2094a16cd204f1c404c99a3`.
-- The latest completed capability is Phase 3M-A/B owner-review execution
-  checklist, route-by-route decision matrix, and admin review snapshot. It
-  added executable owner/admin route review, protected admin review summaries,
-  public/admin visibility boundaries, owner-input-required tracking,
-  launch-blocker classification, and deterministic no-deploy guardrails.
-- Phase 3N-A/B is current as owner-review dry-run packet, findings disposition
-  workflow, and launch hold/approve rehearsal for template-only owner-review
-  dry-run preparation, placeholder-only findings routing, launch hold/approve
-  rehearsal language, explicit deployment approval boundaries, and
-  deterministic no-deploy guardrails. It is repo-local and admin-protected
-  only and does not perform or approve deployment.
+- PR #136 merged Phase 3N-A/B owner-review dry-run packet, findings
+  disposition workflow, and launch hold/approve rehearsal at merge commit
+  `98d62e9d6641d0d34770c76f156e914be5ba4edd`.
+- The latest completed capability is Phase 3N-A/B owner-review dry-run packet,
+  findings disposition workflow, and launch hold/approve rehearsal. It added
+  template-only owner-review dry-run preparation, placeholder-only findings
+  routing, launch hold/approve rehearsal language, explicit deployment
+  approval boundaries, and deterministic no-deploy guardrails.
+- Phase 3O-A/B is current as owner-review correction intake, launch-blocker
+  freeze gate, and admin triage snapshot for template-only future correction
+  capture, freeze-state classification, safe correction PR planning, protected
+  admin correction/freeze summaries, and deterministic no-deploy guardrails.
+  It is repo-local and admin-protected only and does not perform or approve
+  deployment.
 
 Previous Current Phase 3J-A/B status:
 

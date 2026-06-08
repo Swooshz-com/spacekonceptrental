@@ -22,7 +22,12 @@ Owner-review dry-run packet,
 `docs/content/OWNER-REVIEW-FINDINGS-DISPOSITION.md` for the findings
 disposition workflow, and
 `docs/content/OWNER-REVIEW-LAUNCH-DECISION-REHEARSAL.md` for the launch
-hold/approve rehearsal.
+hold/approve rehearsal. Use
+`docs/content/OWNER-REVIEW-CORRECTION-INTAKE.md` for the Owner-review
+correction intake,
+`docs/content/OWNER-REVIEW-LAUNCH-BLOCKER-FREEZE-GATE.md` for the
+launch-blocker freeze gate, and
+`docs/content/OWNER-REVIEW-CORRECTION-PR-PLAN.md` for the correction PR plan.
 
 Owner content blockers must remain separate from deployment approval. Missing
 real contact/legal/business-hour content does not get invented. Public launch
@@ -44,6 +49,11 @@ findings disposition workflow, and launch hold/approve rehearsal. Those
 materials are template-only and do not record owner review completion or
 deployment approval.
 
+The protected workspace also references the Owner-review correction intake,
+launch-blocker freeze gate, and correction PR plan. Those materials are
+template-only and do not record owner corrections, owner sign-off, filled
+evidence, or deployment approval.
+
 ## Ready for owner review
 
 - Public website journey from homepage to catalogue, listings, categories,
@@ -62,6 +72,8 @@ deployment approval.
   non-live route-by-route owner/admin decisions.
 - Owner-review dry-run packet, findings disposition workflow, and launch
   hold/approve rehearsal for placeholder-only review preparation.
+- Owner-review correction intake, launch-blocker freeze gate, and correction
+  PR plan for placeholder-only future correction routing.
 - Admin-only readiness cues, internal quote follow-up context, and recovery
   links that stay inside protected admin routes.
 - Local validation commands and deterministic docs/tests for the owner review
