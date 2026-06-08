@@ -59,7 +59,8 @@ sign-off template, and
 `docs/content/OWNER-REVIEW-DEPLOYMENT-APPROVAL-SEPARATION.md` for deployment
 approval separation. Use `docs/content/OWNER-DEMO-WALKTHROUGH.md` for the
 Owner-demo walkthrough, public journey review, and protected admin closure
-workspace review.
+workspace review. Use `docs/content/OWNER-DEMO-ISSUE-BACKLOG.md` for the
+Owner-demo issue backlog and product acceptance hardening follow-up template.
 
 What the owner should review:
 
@@ -81,6 +82,7 @@ What the owner should review:
   approval separation for placeholder-only closure readiness.
 - Owner-demo walkthrough for public journey review and protected admin closure
   workspace review.
+- Owner-demo issue backlog for product acceptance hardening follow-up.
 - Known deferred capabilities and intentionally not implemented scope.
 - Local validation results and any local-only manual QA notes.
 

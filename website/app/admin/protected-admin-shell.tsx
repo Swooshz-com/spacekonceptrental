@@ -518,7 +518,8 @@ const contentReadinessSources = [
   "docs/content/OWNER-REVIEW-CLOSURE-PACKET.md",
   "docs/content/OWNER-REVIEW-CLOSURE-SIGN-OFF-TEMPLATE.md",
   "docs/content/OWNER-REVIEW-DEPLOYMENT-APPROVAL-SEPARATION.md",
-  "docs/content/OWNER-DEMO-WALKTHROUGH.md"
+  "docs/content/OWNER-DEMO-WALKTHROUGH.md",
+  "docs/content/OWNER-DEMO-ISSUE-BACKLOG.md"
 ] as const;
 
 const reviewSurfaceGroups = 11;
@@ -631,6 +632,18 @@ const ownerDemoWalkthroughSnapshot = [
   ["Closure readiness", "[TEMPLATE ONLY]"],
   ["Deployment approval", closureDeploymentApprovalStatus],
   ["Last local review packet update", ownerDemoSnapshotLastLocalPacketUpdate]
+] as const;
+const ownerDemoIssueBacklogPath = "docs/content/OWNER-DEMO-ISSUE-BACKLOG.md";
+const ownerDemoIssueBacklogLastLocalUpdate = "[DATE PLACEHOLDER]";
+const ownerDemoIssueBacklogSnapshot = [
+  ["Owner-demo issue backlog", "Template only"],
+  ["Public route issues", "[TEMPLATE ONLY]"],
+  ["Admin workflow issues", "[TEMPLATE ONLY]"],
+  ["Owner input required", "[TEMPLATE ONLY]"],
+  ["Locally resolved", "[TEMPLATE ONLY]"],
+  ["Future launch/deployment blockers", "[TEMPLATE ONLY]"],
+  ["Deployment approval", closureDeploymentApprovalStatus],
+  ["Last local backlog update", ownerDemoIssueBacklogLastLocalUpdate]
 ] as const;
 
 const contentReadinessGroups = [
@@ -809,6 +822,24 @@ function ContentReadinessWorkspace() {
             The owner-demo walkthrough stays template-only, admin-only, and
             repo-local. Public visitors cannot see closure readiness notes or
             internal review prompts.
+          </p>
+        </section>
+
+        <section className="admin-dashboard__card admin-dashboard__card--summary">
+          <h3>Owner-demo issue backlog snapshot</h3>
+          <dl className="quote-inbox__details">
+            {ownerDemoIssueBacklogSnapshot.map(([label, value]) => (
+              <div key={label}>
+                <dt>{label}</dt>
+                <dd>{value}</dd>
+              </div>
+            ))}
+          </dl>
+          <p>
+            The issue backlog is template-only and protected. It separates
+            public route polish, admin workflow follow-up, owner input, locally
+            resolved items, and any future launch blockers from deployment
+            approval.
           </p>
         </section>
 

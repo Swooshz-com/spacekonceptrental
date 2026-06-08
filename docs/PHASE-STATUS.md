@@ -4,6 +4,57 @@ This is the quick status page for the SKR repo. Use `docs/PHASE-2-READINESS-PLAN
 
 ## Current phase
 
+Current phase: Phase 3R-A/B - repo-local product acceptance hardening, public/admin route polish, and owner-demo issue backlog readiness.
+
+Latest completed capability: Phase 3Q-A/B repo-local owner-demo polish, public journey QA hardening, and protected admin closure workspace polish.
+
+Last merged capability PR: #139
+
+Merge commit: `0a0bd665111decffb6cdc837e48782943940f22f`
+
+Phase 3R-A/B adds repo-local product acceptance hardening, public/admin route
+polish, and owner-demo issue backlog readiness for the current furniture/event
+rental website candidate. It improves public route guidance, empty-state
+recovery, listing/category/event setup cross-links, and quote/enquiry handoff
+copy while keeping public pages customer-facing.
+
+Phase 3R-A/B adds `docs/content/OWNER-DEMO-ISSUE-BACKLOG.md` as a
+template-only, non-live backlog for possible owner-demo follow-up issues. The
+protected content readiness workspace includes an admin-only owner-demo issue
+backlog snapshot with template-only public route, admin workflow, owner input,
+locally resolved, future launch/deployment blocker, deployment approval, and
+last local update values.
+
+Public users only see public-safe listing, category, event-use, quote request,
+and recovery guidance. Owner-demo walkthrough details, issue backlog details,
+closure readiness notes, sign-off template details, deployment approval
+separation notes, correction intake details, launch-blocker freeze gate
+details, dry-run details, route decision matrix notes, issue ledger details,
+admin internal notes, protected management URLs, provider details, secrets,
+production evidence, filled preview evidence, and invented public business
+facts stay out of public routes.
+
+No deployment is performed or approved by Phase 3R-A/B. It does not add Vercel
+config, connect Supabase Cloud, add real secrets or env values, add filled
+owner-review evidence, filled preview evidence, production evidence, Pinecone
+runtime code, Pinecone packages, Pinecone env reads, secrets, API keys,
+Pinecone executors, n8n workflow/runtime changes, embedding runtime, sync
+workers, `/api/chat` retrieval wiring, search-index document writers, real
+vector upsert/delete, runtime reranking, hybrid search runtime, browser
+Supabase, service-role runtime paths, public or customer upload routes, public
+quote tracking, customer-visible internal notes, notifications, CRM
+integration, customer accounts, invented real contact details, phone numbers,
+email addresses, physical addresses, business hours, testimonials, client
+names, awards, certifications, legal claims, guarantees, production policies,
+or self-service completion-like flows, stock-reservation-like flows,
+fulfilment-like flows, or customer account flows.
+
+Missing real contact, legal, policy, business-hour, service-area, proof,
+testimonial, client-name, award, certification, or guarantee content must
+remain marked as owner input required and must not be invented.
+
+Previous Current Phase 3Q-A/B status:
+
 Current phase: Phase 3Q-A/B - repo-local owner-demo polish, public journey QA hardening, and protected admin closure workspace polish.
 
 Latest completed capability: Phase 3P-A/B owner-review closure packet, readiness sign-off template, and deployment approval separation.

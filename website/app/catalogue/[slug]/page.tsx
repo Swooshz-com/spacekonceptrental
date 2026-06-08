@@ -181,11 +181,14 @@ export function ProductPageContent({
           </section>
 
           <section className="listing-checklist" aria-label="Quote request preparation">
-            <h3>Before requesting a quote</h3>
+            <h3>Fit check before enquiry</h3>
             <ul className="journey-list">
               <li>Check the listing details and rental unit.</li>
               <li>Compare the category and rental unit for your setup.</li>
-              <li>Send the listing with your event details for follow-up.</li>
+              <li>
+                Bring event date, venue, quantities, and setup notes before
+                sending the listing for follow-up.
+              </li>
             </ul>
           </section>
 

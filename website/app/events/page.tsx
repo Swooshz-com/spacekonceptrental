@@ -8,7 +8,7 @@ import galaImage from "../../assets/images/event_gala.png";
 export const metadata: Metadata = {
   title: "Event setups and rental use cases | Space Koncept Rentals",
   description:
-    "Review event setup guidance, browse rental listings, and send a quote request with setup notes."
+    "Explore event setup guidance, browse rental listings, and send a quote request with setup notes."
 };
 
 const eventUseCases = [
@@ -43,8 +43,8 @@ export default function EventsPage() {
         <h1>Events</h1>
         <p>
           Explore furniture rentals and styled setups for common event formats.
-          Browse the catalogue first, then send an enquiry or quote request when
-          the team should follow up.
+          Compare the setup guidance with catalogue listings before sending a
+          quote request.
         </p>
       </div>
 

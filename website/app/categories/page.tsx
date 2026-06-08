@@ -88,7 +88,7 @@ export function CategoriesPageContent({
                   className="card-link"
                   href={`/listings?category=${encodeURIComponent(category.slug)}`}
                 >
-                  View category listings
+                  Compare {category.name} listings
                 </Link>
                 <Link className="card-link" href="/quote">
                   Start category enquiry

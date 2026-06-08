@@ -5,11 +5,15 @@ import { cleanup, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { AdminShellContent } from "../app/admin/protected-admin-shell";
+import { CategoriesPageContent } from "../app/categories/page";
+import { CataloguePageContent } from "../app/catalogue/page";
 import { ProductPageContent } from "../app/catalogue/[slug]/page";
+import EventsPage from "../app/events/page";
 import HomePage from "../app/page";
 import QuotePage from "../app/quote/page";
 import NotFound from "../app/not-found";
 import type {
+  PublicCatalogue,
   PublicCatalogueCategory,
   PublicCatalogueProduct
 } from "../lib/catalogue/types";
@@ -22,10 +26,9 @@ vi.mock("next/image", () => ({
 
 const repoRoot = resolve(process.cwd(), "..");
 const sourceExtensions = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"]);
-const phase3pMergeCommit = "586d17e3f909fcf2986115633bb329a06fbcdf49";
-const ownerDemoWalkthroughPath = "docs/content/OWNER-DEMO-WALKTHROUGH.md";
+const phase3qMergeCommit = "0a0bd665111decffb6cdc837e48782943940f22f";
+const ownerDemoIssueBacklogPath = "docs/content/OWNER-DEMO-ISSUE-BACKLOG.md";
 const protectedAdminShellPath = "website/app/admin/protected-admin-shell.tsx";
-const contentReadinessRoutePath = "website/app/admin/content-readiness/page.tsx";
 
 const forbiddenDeploymentCommandPattern =
   /\bvercel\s+(?:deploy|link|env|pull|promote)\b/i;
@@ -50,8 +53,8 @@ const forbiddenCustomerFlowTermPattern = new RegExp(
   ].join("|")})s?\\b`,
   "i"
 );
-const ownerOnlyDemoPattern =
-  /Owner-demo walkthrough|Owner-demo walkthrough snapshot|Protected content readiness workspace|\/admin\/content-readiness|admin-only readiness|Admin-only notes|Current owner-review closure state|DEPLOYMENT APPROVAL: NOT GRANTED|Owner-review closure packet|Owner-review closure sign-off template|deployment approval separation|Public review prompts|Review the rental journey|Confirm each listing|Check that categories|Make sure the enquiry path|Request review|owner-demo|walkthrough|closure readiness|deployment approval|internal review|admin-only|protected content readiness/i;
+const publicInternalLeakPattern =
+  /Owner-demo|walkthrough|closure readiness|deployment approval|internal review|admin-only|protected content readiness|\/admin\/content-readiness|Owner input required|Ready for owner review|Blocks owner review|Blocks launch\/deployment|Route decision matrix|Issue ledger|Review execution checklist|Dry-run packet|Findings disposition|Launch decision rehearsal|Launch-blocker freeze gate|Correction PR plan|Public review prompts|Review the rental journey|Confirm each listing|Make sure the enquiry path/i;
 const filledReviewEvidencePattern =
   /owner approved|owner sign-?off complete|owner correction recorded|filled owner note|review completed on|signed off by|production evidence captured|preview evidence captured|actual owner decision|actual owner sign-off/i;
 
@@ -73,6 +76,18 @@ const loungeProduct: PublicCatalogueProduct = {
   sortOrder: 10,
   categoryId: loungeCategory.id,
   categoryName: loungeCategory.name,
+  source: "fallback"
+};
+
+const catalogue: PublicCatalogue = {
+  categories: [loungeCategory],
+  products: [loungeProduct],
+  source: "fallback"
+};
+
+const emptyCatalogue: PublicCatalogue = {
+  categories: [],
+  products: [],
   source: "fallback"
 };
 
@@ -121,16 +136,16 @@ function extractRequiredSection(source: string, start: string, end?: string) {
   return source.slice(startIndex, endIndex);
 }
 
-describe("Phase 3Q-A/B owner-demo polish", () => {
+describe("Phase 3R-A/B product acceptance hardening", () => {
   afterEach(() => {
     cleanup();
     vi.restoreAllMocks();
   });
 
-  it("records Phase 3Q-A/B as current after Phase 3P completed in PR #138", () => {
+  it("records Phase 3R-A/B as current after Phase 3Q completed in PR #139", () => {
     const status = readRepoFile("docs/PHASE-STATUS.md");
     const currentStatus = normalizeWhitespace(
-      status.split("## Remaining-work map")[0] ?? status
+      status.split("Previous Current Phase 3Q-A/B status:")[0] ?? status
     );
     const roadmap = normalizeWhitespace(readRepoFile("docs/PHASE-ROADMAP.md"));
     const readiness = readRepoFile("docs/PHASE-2-READINESS-PLAN.md");
@@ -142,95 +157,103 @@ describe("Phase 3Q-A/B owner-demo polish", () => {
     const validator = readRepoFile("scripts/validate-preview-handoff.cjs");
 
     expect(currentStatus).toContain(
-      "Current phase: Phase 3Q-A/B - repo-local owner-demo polish, public journey QA hardening, and protected admin closure workspace polish."
+      "Current phase: Phase 3R-A/B - repo-local product acceptance hardening, public/admin route polish, and owner-demo issue backlog readiness."
     );
     expect(currentStatus).toContain(
-      "Latest completed capability: Phase 3P-A/B owner-review closure packet, readiness sign-off template, and deployment approval separation."
+      "Latest completed capability: Phase 3Q-A/B repo-local owner-demo polish, public journey QA hardening, and protected admin closure workspace polish."
     );
-    expect(currentStatus).toContain("Last merged capability PR: #138");
-    expect(currentStatus).toContain(`Merge commit: \`${phase3pMergeCommit}\``);
-    expect(status).toContain("Previous Current Phase 3P-A/B status");
+    expect(currentStatus).toContain("Last merged capability PR: #139");
+    expect(currentStatus).toContain(`Merge commit: \`${phase3qMergeCommit}\``);
+    expect(status).toContain("Previous Current Phase 3Q-A/B status");
     expect(roadmap).toContain(
-      "Phase 3Q-A/B adds repo-local owner-demo polish, public journey QA hardening, and protected admin closure workspace polish"
+      "Phase 3R-A/B adds repo-local product acceptance hardening, public/admin route polish, and owner-demo issue backlog readiness"
     );
-    expect(readiness).toContain("Current Phase 3Q-A/B status");
-    expect(readiness).toContain("Previous Current Phase 3P-A/B status");
+    expect(readiness).toContain("Current Phase 3R-A/B status");
+    expect(readiness).toContain("Previous Current Phase 3Q-A/B status");
     expect(decisionLog).toContain(
-      "Decision: Phase 3Q-A/B adds repo-local owner-demo polish, public journey QA hardening, and protected admin closure workspace polish."
+      "Decision: Phase 3R-A/B adds repo-local product acceptance hardening, public/admin route polish, and owner-demo issue backlog readiness."
     );
     expect(checklist).toContain(
-      "## Phase 3Q-A/B Repo-Local Owner-Demo Polish Public Journey QA Hardening And Protected Admin Closure Workspace Polish"
+      "## Phase 3R-A/B Product Acceptance Hardening Public-Admin Route Polish And Owner-Demo Issue Backlog Readiness"
     );
 
     const combinedOwnerDocs = normalizeWhitespace([ownerReview, manualQa, handoff].join("\n"));
-    expect(combinedOwnerDocs).toContain(ownerDemoWalkthroughPath);
-    expect(combinedOwnerDocs).toContain("Owner-demo walkthrough");
-    expect(combinedOwnerDocs).toContain("public journey review");
-    expect(combinedOwnerDocs).toContain("protected admin closure workspace");
-    expect(validator).toContain(phase3pMergeCommit);
-    expect(validator).toContain(ownerDemoWalkthroughPath);
-    expect(validator).toContain("Phase 3Q-A/B");
+    expect(combinedOwnerDocs).toContain(ownerDemoIssueBacklogPath);
+    expect(combinedOwnerDocs).toContain("Owner-demo issue backlog");
+    expect(combinedOwnerDocs).toContain("product acceptance hardening");
+    expect(validator).toContain(phase3qMergeCommit);
+    expect(validator).toContain(ownerDemoIssueBacklogPath);
+    expect(validator).toContain("Phase 3R-A/B");
   });
 
-  it("adds a template-only owner-demo walkthrough without recording evidence or approval", () => {
-    expect(existsSync(resolve(repoRoot, ownerDemoWalkthroughPath))).toBe(true);
-    expect(readTrackedFiles([ownerDemoWalkthroughPath])).toEqual([
-      ownerDemoWalkthroughPath
+  it("adds a template-only owner-demo issue backlog without recording evidence or approval", () => {
+    expect(existsSync(resolve(repoRoot, ownerDemoIssueBacklogPath))).toBe(true);
+    expect(readTrackedFiles([ownerDemoIssueBacklogPath])).toEqual([
+      ownerDemoIssueBacklogPath
     ]);
 
-    const walkthrough = readRepoFile(ownerDemoWalkthroughPath);
-    const normalizedWalkthrough = normalizeWhitespace(walkthrough);
+    const backlog = readRepoFile(ownerDemoIssueBacklogPath);
+    const normalizedBacklog = normalizeWhitespace(backlog);
 
     for (const required of [
-      "This walkthrough is repo-local, template-only, and non-live.",
-      "Public homepage review",
-      "Public catalogue/listing review",
-      "Public category/event-use review",
-      "Public quote/enquiry request review",
-      "Protected admin overview review",
-      "Protected admin listing/category/media review",
-      "Protected admin quote workflow review",
-      "Protected content readiness / closure workspace review",
-      "What the owner should check",
-      "What remains owner input required",
-      "What remains blocked until explicit later approval",
-      "This must not be treated as deployment approval",
-      "[OWNER REVIEWER]",
-      "[REVIEW DATE]",
-      "[ROUTE REVIEWED]",
+      "This backlog is repo-local, template-only, and non-live.",
+      "Public Route Issue Template",
+      "Listing/Category/Media Issue Template",
+      "Quote/Enquiry Workflow Issue Template",
+      "Protected Admin Workflow Issue Template",
+      "Content Readiness / Closure Workspace Issue Template",
+      "Product polish",
+      "Owner input required",
+      "Blocks owner review",
+      "Blocks future launch/deployment",
+      "Deferred after launch",
+      "Not in current scope",
+      "[ISSUE ID]",
+      "[ROUTE / AREA]",
+      "[PUBLIC OR ADMIN]",
+      "[OBSERVED ISSUE]",
       "[OWNER INPUT REQUIRED]",
-      "[LOCAL ISSUE / FOLLOW-UP]",
+      "[LOCAL FOLLOW-UP]",
+      "[STATUS: OPEN / OWNER INPUT REQUIRED / LOCALLY RESOLVED / DEFERRED]",
       "[DEPLOYMENT APPROVAL: NOT GRANTED]"
     ]) {
-      expect(normalizedWalkthrough).toContain(required);
+      expect(normalizedBacklog).toContain(required);
     }
 
-    expect(walkthrough).not.toMatch(forbiddenDeploymentCommandPattern);
-    expect(walkthrough).not.toMatch(forbiddenSupabaseCloudCommandPattern);
-    expect(walkthrough).not.toMatch(forbiddenEnvInstructionPattern);
-    expect(walkthrough).not.toMatch(forbiddenBusinessFactPattern);
-    expect(walkthrough).not.toMatch(forbiddenContactFactPattern);
-    expect(walkthrough).not.toMatch(forbiddenCustomerFlowTermPattern);
-    expect(walkthrough).not.toMatch(filledReviewEvidencePattern);
+    expect(backlog).not.toMatch(forbiddenDeploymentCommandPattern);
+    expect(backlog).not.toMatch(forbiddenSupabaseCloudCommandPattern);
+    expect(backlog).not.toMatch(forbiddenEnvInstructionPattern);
+    expect(backlog).not.toMatch(forbiddenBusinessFactPattern);
+    expect(backlog).not.toMatch(forbiddenContactFactPattern);
+    expect(backlog).not.toMatch(forbiddenCustomerFlowTermPattern);
+    expect(backlog).not.toMatch(filledReviewEvidencePattern);
   });
 
-  it("polishes the public rental journey with customer-facing listing, enquiry, quote, request, rental, and event furniture wording", async () => {
+  it("hardens public route acceptance copy with customer-facing rental guidance", async () => {
     render(await HomePage());
     expect(
-      screen.getByRole("heading", { name: /plan your rental journey/i })
+      screen.getByRole("heading", { name: /ready to request a rental quote/i })
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/listings, categories, event-use guidance, and quote requests help you describe the setup/i)
+      screen.getByText(/compare listings, categories, event setup notes, and quote details/i)
     ).toBeInTheDocument();
+
+    cleanup();
+    render(
+      <CataloguePageContent
+        catalogue={emptyCatalogue}
+        emptyMessage="No public rental listings are available for this view yet."
+      />
+    );
     expect(
-      screen.getByRole("heading", { name: /find suitable rental pieces/i })
-    ).toBeInTheDocument();
+      screen.getByRole("link", { name: /browse event setup guidance/i })
+    ).toHaveAttribute("href", "/events");
+
+    cleanup();
+    render(<CategoriesPageContent catalogue={catalogue} />);
     expect(
-      screen.getByRole("heading", { name: /plan by event setup/i })
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("heading", { name: /send a quote request/i })
-    ).toBeInTheDocument();
+      screen.getByRole("link", { name: /compare lounge listings/i })
+    ).toHaveAttribute("href", "/listings?category=lounge");
 
     cleanup();
     render(<ProductPageContent product={loungeProduct} />);
@@ -242,23 +265,25 @@ describe("Phase 3Q-A/B owner-demo polish", () => {
     ).toBeInTheDocument();
 
     cleanup();
+    render(<EventsPage />);
+    expect(
+      screen.getByText(/compare the setup guidance with catalogue listings before sending a quote request/i)
+    ).toBeInTheDocument();
+
+    cleanup();
     render(await QuotePage());
-    expect(screen.getByText(/before you send/i)).toBeInTheDocument();
     expect(
       screen.getByRole("heading", { name: /check your enquiry details/i })
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText(/event date, venue, requested listings, quantities, and setup notes/i)
     ).toBeInTheDocument();
 
     cleanup();
     render(<NotFound />);
     expect(
-      screen.getByRole("link", { name: /plan event setups/i })
-    ).toHaveAttribute("href", "/events");
+      screen.getByRole("link", { name: /browse categories/i })
+    ).toHaveAttribute("href", "/categories");
   });
 
-  it("renders an admin-only owner-demo snapshot inside the protected content readiness workspace", () => {
+  it("renders an admin-only owner-demo issue backlog snapshot for authorised admins", () => {
     render(
       <AdminShellContent
         state={{
@@ -274,38 +299,33 @@ describe("Phase 3Q-A/B owner-demo polish", () => {
       />
     );
 
-    expect(readRepoFile(contentReadinessRoutePath)).toContain(
-      'view={{ kind: "content-readiness" }}'
-    );
     const shellSource = readRepoFile(protectedAdminShellPath);
-    expect(shellSource).toContain(ownerDemoWalkthroughPath);
-    expect(shellSource).toContain("ownerDemoWalkthroughSnapshot");
-    expect(shellSource).toContain("ownerDemoSnapshotLastLocalPacketUpdate");
+    expect(shellSource).toContain(ownerDemoIssueBacklogPath);
+    expect(shellSource).toContain("ownerDemoIssueBacklogSnapshot");
+    expect(shellSource).toContain("ownerDemoIssueBacklogLastLocalUpdate");
 
-    const ownerDemoSnapshotHeading = screen.getByRole("heading", {
-      name: /owner-demo walkthrough snapshot/i
+    const backlogHeading = screen.getByRole("heading", {
+      name: /owner-demo issue backlog snapshot/i
     });
-    expect(ownerDemoSnapshotHeading).toBeInTheDocument();
-    const ownerDemoSnapshotCard = ownerDemoSnapshotHeading.closest("section");
-    expect(ownerDemoSnapshotCard).not.toBeNull();
-    const ownerDemoSnapshot = within(ownerDemoSnapshotCard as HTMLElement);
+    expect(backlogHeading).toBeInTheDocument();
+    const backlogCard = backlogHeading.closest("section");
+    expect(backlogCard).not.toBeNull();
+    const backlogSnapshot = within(backlogCard as HTMLElement);
 
-    expect(screen.getByText(ownerDemoWalkthroughPath)).toBeInTheDocument();
-    expect(ownerDemoSnapshot.getByText(/public journey review/i)).toBeInTheDocument();
-    expect(ownerDemoSnapshot.getByText(/admin workflow review/i)).toBeInTheDocument();
-    expect(ownerDemoSnapshot.getByText(/^Closure readiness$/i)).toBeInTheDocument();
+    expect(screen.getByText(ownerDemoIssueBacklogPath)).toBeInTheDocument();
+    expect(backlogSnapshot.getByText(/^Template only$/i)).toBeInTheDocument();
+    expect(backlogSnapshot.getByText(/public route issues/i)).toBeInTheDocument();
+    expect(backlogSnapshot.getByText(/admin workflow issues/i)).toBeInTheDocument();
+    expect(backlogSnapshot.getByText(/future launch\/deployment blockers/i)).toBeInTheDocument();
     expect(
-      ownerDemoSnapshot.getAllByText(/\[TEMPLATE ONLY\]/i).length
-    ).toBeGreaterThan(2);
-    expect(
-      ownerDemoSnapshot.getByText(
+      backlogSnapshot.getByText(
         /not approved \/ separate explicit approval required/i
       )
     ).toBeInTheDocument();
-    expect(ownerDemoSnapshot.getByText(/\[DATE PLACEHOLDER\]/i)).toBeInTheDocument();
+    expect(backlogSnapshot.getByText(/\[DATE PLACEHOLDER\]/i)).toBeInTheDocument();
   });
 
-  it("does not render owner-demo or closure workspace details for blocked admin states", () => {
+  it("does not render owner-demo issue backlog details for blocked admin states", () => {
     for (const state of [
       { status: "unauthenticated" as const },
       { status: "authenticated_not_authorised" as const },
@@ -316,15 +336,15 @@ describe("Phase 3Q-A/B owner-demo polish", () => {
       );
 
       expect(
-        screen.queryByText(/owner-demo walkthrough snapshot/i)
+        screen.queryByText(/owner-demo issue backlog snapshot/i)
       ).not.toBeInTheDocument();
-      expect(screen.queryByText(ownerDemoWalkthroughPath)).not.toBeInTheDocument();
-      expect(screen.queryByText(/\[DEPLOYMENT APPROVAL: NOT GRANTED\]/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(ownerDemoIssueBacklogPath)).not.toBeInTheDocument();
+      expect(screen.queryByText(/future launch\/deployment blockers/i)).not.toBeInTheDocument();
       unmount();
     }
   });
 
-  it("keeps Phase 3Q public and admin copy inside repo-local no-provider, no-deploy, no-evidence scope", () => {
+  it("keeps Phase 3R public and admin copy inside repo-local no-provider, no-deploy, no-evidence scope", () => {
     const publicSource = readTrackedProductionSources([
       "website/app/layout.tsx",
       "website/app/page.tsx",
@@ -345,32 +365,32 @@ describe("Phase 3Q-A/B owner-demo polish", () => {
       readRepoFile("package.json"),
       readRepoFile("website/package.json")
     ].join("\n");
-    const phase3qMaterials = [
+    const phase3rMaterials = [
       extractRequiredSection(
         readRepoFile("docs/DECISION-LOG.md"),
-        "## 2026-06-08: Repo-Local Owner-Demo Polish, Public Journey QA Hardening, And Protected Admin Closure Workspace Polish",
-        "## 2026-06-08: Owner-Review Closure Packet, Readiness Sign-Off Template, And Deployment Approval Separation"
+        "## 2026-06-08: Product Acceptance Hardening, Public/Admin Route Polish, And Owner-Demo Issue Backlog Readiness",
+        "## 2026-06-08: Repo-Local Owner-Demo Polish, Public Journey QA Hardening, And Protected Admin Closure Workspace Polish"
       ),
       extractRequiredSection(
         readRepoFile("docs/PHASE-ROADMAP.md"),
-        "## Phase 3Q: Repo-Local Owner-Demo Polish, Public Journey QA Hardening, And Protected Admin Closure Workspace Polish"
+        "## Phase 3R: Product Acceptance Hardening, Public/Admin Route Polish, And Owner-Demo Issue Backlog Readiness"
       ),
       extractRequiredSection(
         readRepoFile("docs/PHASE-STATUS.md"),
-        "Current phase: Phase 3Q-A/B - repo-local owner-demo polish, public journey QA hardening, and protected admin closure workspace polish.",
-        "Previous Current Phase 3P-A/B status:"
+        "Current phase: Phase 3R-A/B - repo-local product acceptance hardening, public/admin route polish, and owner-demo issue backlog readiness.",
+        "Previous Current Phase 3Q-A/B status:"
       ),
       extractRequiredSection(
         readRepoFile("docs/PHASE-2-READINESS-PLAN.md"),
-        "Current Phase 3Q-A/B status:",
-        "Previous Current Phase 3P-A/B status:"
+        "Current Phase 3R-A/B status:",
+        "Previous Current Phase 3Q-A/B status:"
       ),
       extractRequiredSection(
         readRepoFile("docs/checklists/PHASE-2-ADMIN-OPS.md"),
-        "## Phase 3Q-A/B Repo-Local Owner-Demo Polish Public Journey QA Hardening And Protected Admin Closure Workspace Polish",
-        "## Phase 3P-A/B Owner-Review Closure Packet Readiness Sign-Off Template And Deployment Approval Separation"
+        "## Phase 3R-A/B Product Acceptance Hardening Public-Admin Route Polish And Owner-Demo Issue Backlog Readiness",
+        "## Phase 3Q-A/B Repo-Local Owner-Demo Polish Public Journey QA Hardening And Protected Admin Closure Workspace Polish"
       ),
-      readRepoFile(ownerDemoWalkthroughPath)
+      readRepoFile(ownerDemoIssueBacklogPath)
     ].join("\n");
 
     expect(publicSource).toMatch(/listing/i);
@@ -382,8 +402,8 @@ describe("Phase 3Q-A/B owner-demo polish", () => {
     expect(publicSource).not.toMatch(forbiddenContactFactPattern);
     expect(publicSource).not.toMatch(forbiddenBusinessFactPattern);
     expect(publicSource).not.toMatch(forbiddenCustomerFlowTermPattern);
-    expect(publicSource).not.toMatch(ownerOnlyDemoPattern);
-    expect(phase3qMaterials).not.toMatch(forbiddenCustomerFlowTermPattern);
+    expect(publicSource).not.toMatch(publicInternalLeakPattern);
+    expect(phase3rMaterials).not.toMatch(forbiddenCustomerFlowTermPattern);
     expect(packageSource).not.toMatch(/@pinecone-database|pinecone/i);
     expect(appAndLibSource).not.toContain("NEXT_PUBLIC_SUPABASE");
     expect(appAndLibSource).not.toContain("NEXT_PUBLIC_N8N");

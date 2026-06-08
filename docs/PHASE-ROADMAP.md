@@ -1622,6 +1622,38 @@ legal claims, guarantees, production policies, or add public/customer
 transaction flows, retail transaction flows, stock-reservation-like flows, or
 fulfilment-like flows.
 
+## Phase 3R: Product Acceptance Hardening, Public/Admin Route Polish, And Owner-Demo Issue Backlog Readiness
+
+Phase 3R-A/B adds repo-local product acceptance hardening, public/admin route
+polish, and owner-demo issue backlog readiness for the current furniture/event
+rental website candidate. It keeps the public website focused on normal
+listing, enquiry, quote, request, rental, and event furniture language.
+
+Phase 3R-A/B improves public route guidance, empty-state recovery,
+category/listing/event setup cross-links, listing fit-check copy, and
+quote/enquiry handoff clarity without adding public tracking, customer
+accounts, self-service completion flows, or invented facts.
+
+Phase 3R-A/B adds `docs/content/OWNER-DEMO-ISSUE-BACKLOG.md` as a
+template-only owner-demo issue backlog and adds an admin-only backlog snapshot
+to the protected content readiness workspace. The backlog separates product
+polish, owner input required, owner-review blockers, future launch/deployment
+blockers, deferred work, and out-of-scope items without recording real owner
+corrections or approving launch.
+
+Phase 3R-A/B does not deploy, approve deployment, add Vercel or Supabase Cloud
+config, add real env values, add filled owner-review evidence, add filled
+preview or production evidence, add browser Supabase, add service-role runtime
+paths, access `website/chat-config.js`, add public/customer uploads, add
+customer accounts, add public quote tracking, expose customer-visible internal
+notes, add notifications or CRM integration, change n8n/Pinecone runtime
+behavior, add Pinecone packages/env/API keys, wire `/api/chat` to
+retrieval/RAG, add transcript runtime paths, invent real contact details,
+business hours, addresses, testimonials, client names, awards, certifications,
+legal claims, guarantees, production policies, or add self-service
+completion-like flows, stock-reservation-like flows, fulfilment-like flows, or
+customer account flows.
+
 ## Phase 3Q: Repo-Local Owner-Demo Polish, Public Journey QA Hardening, And Protected Admin Closure Workspace Polish
 
 Phase 3Q-A/B adds repo-local owner-demo polish, public journey QA hardening,

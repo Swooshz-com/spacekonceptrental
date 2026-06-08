@@ -1,7 +1,7 @@
 import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { extname, resolve } from "node:path";
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
@@ -248,10 +248,13 @@ describe("Phase 3D-A/B sitewide public journey, trust content, and route polish"
     render(<ProductPageContent product={loungeProduct} />);
 
     expect(screen.getByText(/quote request checklist/i)).toBeInTheDocument();
-    expect(screen.getByText(/event date/i)).toBeInTheDocument();
-    expect(screen.getByText(/venue or event location/i)).toBeInTheDocument();
-    expect(screen.getByText(/quantities and alternates/i)).toBeInTheDocument();
-    expect(screen.getByText(/setup notes/i)).toBeInTheDocument();
+    const quoteRequestChecklist = screen.getByRole("region", {
+      name: /quote request checklist/i
+    });
+    expect(within(quoteRequestChecklist).getByText(/event date/i)).toBeInTheDocument();
+    expect(within(quoteRequestChecklist).getByText(/venue or event location/i)).toBeInTheDocument();
+    expect(within(quoteRequestChecklist).getByText(/quantities and alternates/i)).toBeInTheDocument();
+    expect(within(quoteRequestChecklist).getByText(/setup notes/i)).toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: /browse categories/i })
     ).toHaveAttribute("href", "/categories");

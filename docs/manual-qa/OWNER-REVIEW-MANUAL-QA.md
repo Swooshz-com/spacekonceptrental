@@ -31,7 +31,8 @@ sign-off template, and
 `docs/content/OWNER-REVIEW-DEPLOYMENT-APPROVAL-SEPARATION.md` for deployment
 approval separation. Use `docs/content/OWNER-DEMO-WALKTHROUGH.md` for the
 Owner-demo walkthrough, public journey review, and protected admin closure
-workspace review.
+workspace review. Use `docs/content/OWNER-DEMO-ISSUE-BACKLOG.md` for the
+Owner-demo issue backlog and product acceptance hardening follow-up template.
 Owner content blockers are governance notes only. Missing real
 contact/legal/business-hour content does not get invented. Owner review can
 continue without deployment.
@@ -51,6 +52,10 @@ deployment approval status, and last local packet update placeholders.
 Confirm the owner-demo walkthrough snapshot references public journey review,
 admin workflow review, closure readiness, deployment approval, and last local
 review packet update placeholders.
+Confirm the owner-demo issue backlog snapshot references public route issues,
+admin workflow issues, owner input required, locally resolved items, future
+launch/deployment blockers, deployment approval, and last local backlog update
+placeholders.
 
 ## Local validation commands
 
