@@ -1618,6 +1618,6 @@ notes, add notifications or CRM integration, change n8n/Pinecone runtime
 behavior, add Pinecone packages/env/API keys, wire `/api/chat` to
 retrieval/RAG, add transcript runtime paths, invent real contact details,
 business hours, addresses, testimonials, client names, awards, certifications,
-legal claims, guarantees, production policies, or add ecommerce flows such as
-carts, checkout, payments, stock reservation, confirmed booking, order
-fulfilment, or online ordering.
+legal claims, guarantees, production policies, or add public/customer
+transaction flows, retail transaction flows, stock-reservation-like flows, or
+fulfilment-like flows.

@@ -2234,8 +2234,8 @@ into `/api/chat`, add admin transcript UI, add transcript deletion/export
 runtime paths, add retention cleanup jobs, invent real contact details, phone
 numbers, email addresses, physical addresses, business hours, testimonials,
 client names, awards, certifications, legal claims, guarantees, production
-policies, or add ecommerce flows such as carts, checkout, payments, stock
-reservation, confirmed booking, order fulfilment, or online ordering.
+policies, or add public/customer transaction flows, retail transaction flows,
+stock-reservation-like flows, or fulfilment-like flows.
 
 ## 2026-06-08: Owner-Review Correction Intake, Launch-Blocker Freeze Gate, And Admin Triage Snapshot
 

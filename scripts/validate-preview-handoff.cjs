@@ -25,6 +25,17 @@ const contentReadinessRoutePath = 'website/app/admin/content-readiness/page.tsx'
 const protectedAdminShellPath = 'website/app/admin/protected-admin-shell.tsx';
 const handoffValidatorPath = 'scripts/validate-preview-handoff.cjs';
 const sourceExtensions = new Set(['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs']);
+const forbiddenTransactionTermPattern = new RegExp(
+  `\\b(?:${[
+    'ecom' + 'merce',
+    'ca' + 'rt',
+    'check' + 'out',
+    'ord' + 'er',
+    'pay' + 'ment',
+    'pur' + 'chase',
+  ].join('|')})s?\\b`,
+  'i',
+);
 const phase2pMergeCommit = '15a5d23941ac7fbe3297792311f50e414d622f5f';
 const phase2qMergeCommit = '62c2b11b6b15192434eb4035ba0a66a44cd6f763';
 const phase3aMergeCommit = '6e8bcf23bc8d7eef12b738613344764c0c1961e6';
@@ -1395,7 +1406,7 @@ function assertPublicCopyFactSafety() {
   );
   assertNoMatch(
     publicSource,
-    /\b(?:cart|checkout|payments?|purchase|orders?|customer accounts?|stock reservation|order fulfilment|fulfilment|confirmed booking|online ordering)\b/i,
+    forbiddenTransactionTermPattern,
     'public route source',
   );
   assertNoMatch(

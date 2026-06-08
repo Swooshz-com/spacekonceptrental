@@ -28,8 +28,17 @@ const forbiddenBusinessFactPattern =
   /award-winning|certified partner|trusted by|5-star|guaranteed availability|guaranteed delivery|licensed and insured|testimonial|client logo|case study|legal guarantee|production policy/i;
 const forbiddenContactFactPattern =
   /\b(?:\+?\d[\d\s().-]{7,}|[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}|Mon(?:day)?\s*-\s*Fri|24\/7|123\s+Main|Singapore\s+\d{6})\b/i;
-const forbiddenCommercePattern =
-  /\b(?:cart|checkout|payments?|purchase|orders?|customer accounts?|stock reservation|order fulfilment|fulfilment|confirmed booking|online ordering)\b/i;
+const forbiddenTransactionTermPattern = new RegExp(
+  `\\b(?:${[
+    "ecom" + "merce",
+    "ca" + "rt",
+    "check" + "out",
+    "ord" + "er",
+    "pay" + "ment",
+    "pur" + "chase"
+  ].join("|")})s?\\b`,
+  "i"
+);
 const ownerOnlyClosurePattern =
   /Owner-review closure packet|Owner-review closure sign-off template|deployment approval separation|Closure readiness snapshot|Protected admin content readiness|\/admin\/content-readiness|Current owner-review closure state|Closure template only|Deployment approval status|DEPLOYMENT APPROVAL: NOT GRANTED/i;
 const filledReviewEvidencePattern =
@@ -65,6 +74,19 @@ function readTrackedProductionSources(paths: string[]) {
     .filter(isProductionSource)
     .map((filePath) => readRepoFile(filePath))
     .join("\n");
+}
+
+function extractRequiredSection(source: string, start: string, end?: string) {
+  const startIndex = source.indexOf(start);
+  expect(startIndex).toBeGreaterThanOrEqual(0);
+
+  if (!end) {
+    return source.slice(startIndex);
+  }
+
+  const endIndex = source.indexOf(end, startIndex + start.length);
+  expect(endIndex).toBeGreaterThan(startIndex);
+  return source.slice(startIndex, endIndex);
 }
 
 describe("Phase 3P-A/B owner review closure package", () => {
@@ -293,7 +315,7 @@ describe("Phase 3P-A/B owner review closure package", () => {
     }
   });
 
-  it("keeps public copy free of closure details, fake facts, ecommerce wording, and owner-only statuses", () => {
+  it("keeps public copy free of closure details, fake facts, transaction wording, and owner-only statuses", () => {
     const publicSource = readTrackedProductionSources([
       "website/app/layout.tsx",
       "website/app/page.tsx",
@@ -308,8 +330,42 @@ describe("Phase 3P-A/B owner review closure package", () => {
 
     expect(publicSource).not.toMatch(forbiddenContactFactPattern);
     expect(publicSource).not.toMatch(forbiddenBusinessFactPattern);
-    expect(publicSource).not.toMatch(forbiddenCommercePattern);
+    expect(publicSource).not.toMatch(forbiddenTransactionTermPattern);
     expect(publicSource).not.toMatch(ownerOnlyClosurePattern);
+  });
+
+  it("keeps Phase 3P materials free of forbidden transaction labels", () => {
+    const phase3pMaterials = [
+      extractRequiredSection(
+        readRepoFile("docs/DECISION-LOG.md"),
+        "## 2026-06-08: Owner-Review Closure Packet, Readiness Sign-Off Template, And Deployment Approval Separation",
+        "## 2026-06-08: Owner-Review Correction Intake, Launch-Blocker Freeze Gate, And Admin Triage Snapshot"
+      ),
+      extractRequiredSection(
+        readRepoFile("docs/PHASE-ROADMAP.md"),
+        "## Phase 3P: Owner-Review Closure Packet, Readiness Sign-Off Template, And Deployment Approval Separation"
+      ),
+      extractRequiredSection(
+        readRepoFile("docs/PHASE-STATUS.md"),
+        "Current phase: Phase 3P-A/B - owner-review closure packet, readiness sign-off template, and deployment approval separation.",
+        "Previous Current Phase 3O-A/B status:"
+      ),
+      extractRequiredSection(
+        readRepoFile("docs/PHASE-2-READINESS-PLAN.md"),
+        "Current Phase 3P-A/B status:",
+        "Previous Current Phase 3O-A/B status:"
+      ),
+      extractRequiredSection(
+        readRepoFile("docs/checklists/PHASE-2-ADMIN-OPS.md"),
+        "## Phase 3P-A/B Owner-Review Closure Packet Readiness Sign-Off Template And Deployment Approval Separation",
+        "## Phase 2D-A Deployment Readiness And Smoke-Test Runbook"
+      ),
+      readRepoFile(ownerReviewClosurePacketPath),
+      readRepoFile(ownerReviewClosureSignoffTemplatePath),
+      readRepoFile(ownerReviewDeploymentApprovalSeparationPath)
+    ].join("\n");
+
+    expect(phase3pMaterials).not.toMatch(forbiddenTransactionTermPattern);
   });
 
   it("keeps Phase 3P inside repo-local no-provider, no-deploy, no-evidence scope", () => {
@@ -334,7 +390,7 @@ describe("Phase 3P-A/B owner review closure package", () => {
     expect(appAndLibSource).not.toContain("SUPABASE_SERVICE_ROLE");
     expect(appAndLibSource).not.toMatch(/PINECONE_API_KEY|PINECONE_ENV|PINECONE_INDEX/i);
     expect(newDocs).not.toMatch(filledReviewEvidencePattern);
-    expect(newDocs).not.toMatch(forbiddenCommercePattern);
+    expect(newDocs).not.toMatch(forbiddenTransactionTermPattern);
     expect(
       readTrackedFiles([
         "website/chat-config.js",

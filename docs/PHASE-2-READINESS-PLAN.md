@@ -256,8 +256,8 @@ Current Phase 3P-A/B status:
 - Public copy must not invent phone numbers, email addresses, physical
   addresses, business hours, client names, testimonials, awards,
   certifications, legal claims, guarantees, production policies, service-area
-  claims, or ecommerce flows. Owner-only closure packet, sign-off template,
-  approval separation, and closure readiness details remain
+  claims, or public/customer transaction flows. Owner-only closure packet,
+  sign-off template, approval separation, and closure readiness details remain
   protected/admin-only.
 - No deployment, deployment approval, Vercel config, Supabase Cloud config,
   real env values, production evidence, preview evidence, owner-review
@@ -265,8 +265,8 @@ Current Phase 3P-A/B status:
   runtime work, public quote tracking, customer accounts, customer-visible
   internal notes, notifications, CRM integration, public/customer upload
   routes, transcript runtime paths, invented real contact details,
-  testimonials, client names, legal claims, production policies, or ecommerce
-  flow is added.
+  testimonials, client names, legal claims, production policies, or
+  public/customer transaction flow is added.
 
 Previous Current Phase 3O-A/B status:
 

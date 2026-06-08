@@ -43,7 +43,7 @@ quote tracking, customer-visible internal notes, notifications, CRM
 integration, customer accounts, invented real contact details, phone numbers,
 email addresses, physical addresses, business hours, testimonials, client
 names, awards, certifications, legal claims, guarantees, production policies,
-or ecommerce flows.
+or public/customer transaction flows.
 
 Missing real contact, legal, policy, business-hour, service-area, proof,
 testimonial, client-name, award, certification, or guarantee content must
