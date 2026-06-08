@@ -10,6 +10,8 @@ const ownerManualQaPath = 'docs/manual-qa/OWNER-REVIEW-MANUAL-QA.md';
 const ownerContentIntakePath = 'docs/content/OWNER-CONTENT-INTAKE.md';
 const contentGapRegisterPath = 'docs/content/CONTENT-GAP-REGISTER.md';
 const ownerReviewLedgerPath = 'docs/content/OWNER-REVIEW-ISSUE-LEDGER.md';
+const ownerReviewExecutionChecklistPath = 'docs/content/OWNER-REVIEW-EXECUTION-CHECKLIST.md';
+const ownerReviewRouteDecisionMatrixPath = 'docs/content/OWNER-REVIEW-ROUTE-DECISION-MATRIX.md';
 const contentReadinessRoutePath = 'website/app/admin/content-readiness/page.tsx';
 const protectedAdminShellPath = 'website/app/admin/protected-admin-shell.tsx';
 const handoffValidatorPath = 'scripts/validate-preview-handoff.cjs';
@@ -26,6 +28,7 @@ const phase3hMergeCommit = '09f92ede4b5d9f725d0df560838a12fef27940b9';
 const phase3iMergeCommit = '0d2d40898c4e716032fdec130704117494c542d6';
 const phase3jMergeCommit = '1c7dc0ac7c2532fa8a837cd46b0d1f0103d5ccfa';
 const phase3kMergeCommit = 'd4271ea6b181ee702dfe9d6f2b6003903b0c54dd';
+const phase3lMergeCommit = 'be7fda99f25f73c86494e1ab323e0624dd917806';
 
 function fail(message) {
   console.error(message);
@@ -129,8 +132,12 @@ function assertHandoffDocs() {
     'docs/content/OWNER-CONTENT-INTAKE.md',
     'docs/content/CONTENT-GAP-REGISTER.md',
     'docs/content/OWNER-REVIEW-ISSUE-LEDGER.md',
+    'docs/content/OWNER-REVIEW-EXECUTION-CHECKLIST.md',
+    'docs/content/OWNER-REVIEW-ROUTE-DECISION-MATRIX.md',
     '/admin/content-readiness',
     'Protected content readiness workspace',
+    'Owner-review execution checklist',
+    'Route-by-route decision matrix',
     'What the owner should supply before launch',
     'What remains blocked until explicit approval',
     'Owner content blockers',
@@ -198,8 +205,12 @@ function assertOwnerReviewDocs() {
     'docs/content/OWNER-CONTENT-INTAKE.md',
     'docs/content/CONTENT-GAP-REGISTER.md',
     'docs/content/OWNER-REVIEW-ISSUE-LEDGER.md',
+    'docs/content/OWNER-REVIEW-EXECUTION-CHECKLIST.md',
+    'docs/content/OWNER-REVIEW-ROUTE-DECISION-MATRIX.md',
     '/admin/content-readiness',
     'Owner content blockers',
+    'Owner-review execution checklist',
+    'Route-by-route decision matrix',
     'Missing real contact/legal/business-hour content does not get invented',
     'Public launch cannot proceed until required owner content and explicit deployment approval are both supplied',
     'Owner review can continue without deployment',
@@ -340,6 +351,125 @@ function assertOwnerReviewIssueLedger() {
   );
 }
 
+function assertOwnerReviewExecutionChecklist() {
+  const checklist = readRepoFile(ownerReviewExecutionChecklistPath);
+  const normalizedChecklist = normalizeWhitespace(checklist);
+
+  assertTracked([ownerReviewExecutionChecklistPath], 'owner-review execution checklist');
+
+  for (const required of [
+    'Public homepage',
+    'Public catalogue/listings',
+    'Public listing detail',
+    'Public categories',
+    'Public events/event-use guidance',
+    'Public quote/enquiry request flow',
+    'Public recovery/not-found states',
+    'Protected admin overview',
+    'Protected admin listings/categories/media',
+    'Protected admin quote inbox/detail',
+    'Protected admin content readiness workspace',
+    'What to review',
+    'Required owner decision',
+    'Owner input required fields',
+    'Launch/deployment blocker status',
+    'Deferred/not-in-scope notes',
+    'Public/admin visibility boundary',
+    'Owner input required',
+    'Blocks launch/deployment',
+    'Not in scope by owner direction',
+  ]) {
+    assertIncludes(normalizedChecklist, required, 'owner-review execution checklist');
+  }
+
+  assertNoMatch(checklist, /\bvercel\s+(?:deploy|link|env|pull|promote)\b/i, 'owner-review execution checklist');
+  assertNoMatch(
+    checklist,
+    /\bsupabase\s+(?:link|login|projects|secrets|functions|db\s+(?:push|pull|remote|reset))\b/i,
+    'owner-review execution checklist',
+  );
+  assertNoMatch(
+    checklist,
+    /\b(?:create|copy|edit|fill|commit|configure|add)\s+(?:a\s+)?`?\.env/i,
+    'owner-review execution checklist',
+  );
+  assertNoMatch(
+    checklist,
+    /award-winning|certified partner|trusted by|5-star|guaranteed availability|guaranteed delivery|licensed and insured|testimonial|client logo|case study|legal guarantee|production policy/i,
+    'owner-review execution checklist',
+  );
+  assertNoMatch(
+    checklist,
+    /\b(?:\+?\d[\d\s().-]{7,}|[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}|Mon(?:day)?\s*-\s*Fri|24\/7|123\s+Main|Singapore\s+\d{6})\b/i,
+    'owner-review execution checklist',
+  );
+}
+
+function assertOwnerReviewRouteDecisionMatrix() {
+  const matrix = readRepoFile(ownerReviewRouteDecisionMatrixPath);
+  const normalizedMatrix = normalizeWhitespace(matrix);
+
+  assertTracked([ownerReviewRouteDecisionMatrixPath], 'owner-review route decision matrix');
+
+  for (const required of [
+    'Route',
+    'Audience',
+    'Review category',
+    'Current readiness status',
+    'Owner decision needed',
+    'Blocks owner review?',
+    'Blocks launch/deployment?',
+    'Public-safe notes',
+    'Admin-only notes',
+    '`/`',
+    '`/catalogue`',
+    '`/listings`',
+    '`/listings/[slug]`',
+    '`/catalogue/[slug]`',
+    '`/categories`',
+    '`/categories/[slug]`',
+    '`/events`',
+    '`/quote`',
+    'Public recovery/not-found',
+    '`/admin`',
+    '`/admin/listings`',
+    '`/admin/categories`',
+    '`/admin/media`',
+    '`/admin/quotes`',
+    '`/admin/quotes/[quoteRequestId]`',
+    '`/admin/content-readiness`',
+    'Owner input required',
+    'Ready for owner review',
+    'Blocks launch/deployment',
+    'Deferred after launch',
+    'Not in scope by owner direction',
+  ]) {
+    assertIncludes(normalizedMatrix, required, 'owner-review route decision matrix');
+  }
+
+  assertNoMatch(matrix, /\bvercel\s+(?:deploy|link|env|pull|promote)\b/i, 'owner-review route decision matrix');
+  assertNoMatch(
+    matrix,
+    /\bsupabase\s+(?:link|login|projects|secrets|functions|db\s+(?:push|pull|remote|reset))\b/i,
+    'owner-review route decision matrix',
+  );
+  assertNoMatch(
+    matrix,
+    /\b(?:create|copy|edit|fill|commit|configure|add)\s+(?:a\s+)?`?\.env/i,
+    'owner-review route decision matrix',
+  );
+  assertNoMatch(
+    matrix,
+    /award-winning|certified partner|trusted by|5-star|guaranteed availability|guaranteed delivery|licensed and insured|testimonial|client logo|case study|legal guarantee|production policy/i,
+    'owner-review route decision matrix',
+  );
+  assertNoMatch(
+    matrix,
+    /\b(?:\+?\d[\d\s().-]{7,}|[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}|Mon(?:day)?\s*-\s*Fri|24\/7|123\s+Main|Singapore\s+\d{6})\b/i,
+    'owner-review route decision matrix',
+  );
+}
+
 function assertStatusDocs() {
   const status = readRepoFile('docs/PHASE-STATUS.md');
   const roadmap = readRepoFile('docs/PHASE-ROADMAP.md').replace(/\s+/g, ' ');
@@ -347,6 +477,19 @@ function assertStatusDocs() {
   const decisionLog = readRepoFile('docs/DECISION-LOG.md');
   const checklist = readRepoFile('docs/checklists/PHASE-2-ADMIN-OPS.md');
 
+  assertIncludes(
+    status,
+    'Current phase: Phase 3M-A/B - owner-review execution checklist, route-by-route decision matrix, and admin review snapshot.',
+    'phase status',
+  );
+  assertIncludes(
+    status,
+    'Latest completed capability: Phase 3L-A/B protected content readiness workspace, owner-review issue ledger, and public copy fact-safety audit.',
+    'phase status',
+  );
+  assertIncludes(status, 'Last merged capability PR: #134', 'phase status');
+  assertIncludes(status, `Merge commit: \`${phase3lMergeCommit}\``, 'phase status');
+  assertIncludes(status, 'Previous Current Phase 3L-A/B status', 'phase status');
   assertIncludes(
     status,
     'Current phase: Phase 3L-A/B - protected content readiness workspace, owner-review issue ledger, and public copy fact-safety audit.',
@@ -408,8 +551,14 @@ function assertStatusDocs() {
     'Phase 3L-A/B adds a protected content readiness workspace, owner-review issue ledger, and public copy fact-safety audit',
     'phase roadmap',
   );
-  assertIncludes(readiness, 'Current Phase 3L-A/B status', 'readiness plan');
-  assertIncludes(readiness, 'Current Phase 3K-A/B status', 'readiness plan');
+  assertIncludes(
+    roadmap,
+    'Phase 3M-A/B adds an owner-review execution checklist, route-by-route decision matrix, and admin review snapshot',
+    'phase roadmap',
+  );
+  assertIncludes(readiness, 'Current Phase 3M-A/B status', 'readiness plan');
+  assertIncludes(readiness, 'Previous Current Phase 3L-A/B status', 'readiness plan');
+  assertIncludes(readiness, 'Previous Current Phase 3K-A/B status', 'readiness plan');
   assertIncludes(readiness, 'Previous Current Phase 3K-A/B status', 'readiness plan');
   assertIncludes(readiness, 'Previous Current Phase 3J-A/B status', 'readiness plan');
   assertIncludes(readiness, 'Previous Current Phase 3I-A/B status', 'readiness plan');
@@ -502,6 +651,16 @@ function assertStatusDocs() {
     '## Phase 3L-A/B Protected Content Readiness Workspace Owner-Review Issue Ledger And Public Copy Fact-Safety Audit',
     'phase checklist',
   );
+  assertIncludes(
+    decisionLog,
+    'Decision: Phase 3M-A/B adds an owner-review execution checklist, route-by-route decision matrix, and admin review snapshot.',
+    'decision log',
+  );
+  assertIncludes(
+    checklist,
+    '## Phase 3M-A/B Owner-Review Execution Checklist Route-By-Route Decision Matrix And Admin Review Snapshot',
+    'phase checklist',
+  );
 }
 
 function assertProtectedContentReadinessWorkspace() {
@@ -521,6 +680,13 @@ function assertProtectedContentReadinessWorkspace() {
   assertIncludes(shellSource, ownerContentIntakePath, protectedAdminShellPath);
   assertIncludes(shellSource, contentGapRegisterPath, protectedAdminShellPath);
   assertIncludes(shellSource, ownerReviewLedgerPath, protectedAdminShellPath);
+  assertIncludes(shellSource, ownerReviewExecutionChecklistPath, protectedAdminShellPath);
+  assertIncludes(shellSource, ownerReviewRouteDecisionMatrixPath, protectedAdminShellPath);
+  assertIncludes(shellSource, 'reviewSurfaceGroups', protectedAdminShellPath);
+  assertIncludes(shellSource, 'routeFamiliesCovered', protectedAdminShellPath);
+  assertIncludes(shellSource, 'ownerDecisionCategories', protectedAdminShellPath);
+  assertIncludes(shellSource, 'ownerInputRequiredCategories', protectedAdminShellPath);
+  assertIncludes(shellSource, 'launchBlockerCategories', protectedAdminShellPath);
   assertNoMatch(routeSource, /NEXT_PUBLIC_SUPABASE|NEXT_PUBLIC_N8N|SUPABASE_SERVICE_ROLE/i, contentReadinessRoutePath);
 }
 
@@ -554,7 +720,7 @@ function assertPublicCopyFactSafety() {
   );
   assertNoMatch(
     publicSource,
-    /Owner input required|Ready for owner review|Blocks owner review|Blocks launch\/deployment|Deferred after launch|Not in scope by owner direction|Owner-review issue ledger|content readiness workspace|admin-only readiness|\/admin\/content-readiness|admin issue ledger/i,
+    /Owner input required|Ready for owner review|Blocks owner review|Blocks launch\/deployment|Deferred after launch|Not in scope by owner direction|Owner-review issue ledger|Owner-review execution checklist|route decision matrix|content readiness workspace|admin-only readiness|\/admin\/content-readiness|admin issue ledger|owner decision needed|Admin-only notes/i,
     'public route source',
   );
 }
@@ -623,6 +789,8 @@ assertHandoffDocs();
 assertOwnerReviewDocs();
 assertContentGovernanceDocs();
 assertOwnerReviewIssueLedger();
+assertOwnerReviewExecutionChecklist();
+assertOwnerReviewRouteDecisionMatrix();
 assertStatusDocs();
 assertProtectedContentReadinessWorkspace();
 assertPublicCopyFactSafety();

@@ -238,7 +238,35 @@ Suggested first PR:
   Supabase, production evidence, or ecommerce flows. Product language remains
   enquiry/quote/request.
 
-Current Phase 3L-A/B status:
+Current Phase 3M-A/B status:
+
+- PR #134 merged Phase 3L-A/B protected content readiness workspace,
+  owner-review issue ledger, and public copy fact-safety audit at merge commit
+  `be7fda99f25f73c86494e1ab323e0624dd917806`.
+- Latest completed capability is Phase 3L-A/B protected content readiness
+  workspace, owner-review issue ledger, and public copy fact-safety audit.
+- Phase 3M-A/B is current as owner-review execution checklist,
+  route-by-route decision matrix, and admin review snapshot for route-by-route
+  owner/admin review, required owner decisions, owner-input-required fields,
+  launch/deployment blocker classification, deferred/not-in-scope notes, and
+  public/admin visibility boundaries.
+- The protected content readiness workspace now summarizes the owner-review
+  execution snapshot and references the execution checklist plus route decision
+  matrix without creating public route tracking.
+- Public copy must not invent phone numbers, email addresses, physical
+  addresses, business hours, client names, testimonials, awards,
+  certifications, legal claims, guarantees, production policies, service-area
+  claims, or ecommerce flows. Owner-only route review details remain
+  protected/admin-only.
+- No deployment, deployment approval, Vercel config, Supabase Cloud config,
+  real env values, production evidence, browser Supabase, service-role runtime
+  paths, n8n/Pinecone/RAG runtime work, public quote tracking, customer
+  accounts, customer-visible internal notes, notifications, CRM integration,
+  public/customer upload routes, transcript runtime paths, invented real
+  contact details, testimonials, client names, legal claims, production
+  policies, or ecommerce flow is added.
+
+Previous Current Phase 3L-A/B status:
 
 - PR #133 merged Phase 3K-A/B owner content intake, content gap register, and
   launch-blocker governance at merge commit

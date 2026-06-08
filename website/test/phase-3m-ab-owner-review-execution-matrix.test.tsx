@@ -8,12 +8,14 @@ import { AdminShellContent } from "../app/admin/protected-admin-shell";
 
 const repoRoot = resolve(process.cwd(), "..");
 const sourceExtensions = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"]);
-const phase3kMergeCommit = "d4271ea6b181ee702dfe9d6f2b6003903b0c54dd";
+const phase3lMergeCommit = "be7fda99f25f73c86494e1ab323e0624dd917806";
 const ownerReviewLedgerPath = "docs/content/OWNER-REVIEW-ISSUE-LEDGER.md";
+const ownerReviewExecutionChecklistPath =
+  "docs/content/OWNER-REVIEW-EXECUTION-CHECKLIST.md";
+const ownerReviewRouteDecisionMatrixPath =
+  "docs/content/OWNER-REVIEW-ROUTE-DECISION-MATRIX.md";
 const contentReadinessRoutePath = "website/app/admin/content-readiness/page.tsx";
 const protectedAdminShellPath = "website/app/admin/protected-admin-shell.tsx";
-const ownerContentIntakePath = "docs/content/OWNER-CONTENT-INTAKE.md";
-const contentGapRegisterPath = "docs/content/CONTENT-GAP-REGISTER.md";
 
 const forbiddenDeploymentCommandPattern =
   /\bvercel\s+(?:deploy|link|env|pull|promote)\b/i;
@@ -27,8 +29,8 @@ const forbiddenContactFactPattern =
   /\b(?:\+?\d[\d\s().-]{7,}|[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}|Mon(?:day)?\s*-\s*Fri|24\/7|123\s+Main|Singapore\s+\d{6})\b/i;
 const forbiddenCommercePattern =
   /\b(?:cart|checkout|payments?|purchase|orders?|customer accounts?|stock reservation|order fulfilment|fulfilment|confirmed booking|online ordering)\b/i;
-const ownerOnlyStatusPattern =
-  /Owner input required|Ready for owner review|Blocks owner review|Blocks launch\/deployment|Deferred after launch|Not in scope by owner direction|Owner-review issue ledger|content readiness workspace|admin-only readiness/i;
+const ownerOnlyRouteReviewPattern =
+  /Owner-review execution checklist|route decision matrix|Admin-only notes|Protected admin content readiness|\/admin\/content-readiness|owner decision needed/i;
 
 function readRepoFile(relativePath: string) {
   return readFileSync(resolve(repoRoot, relativePath), "utf8");
@@ -62,12 +64,12 @@ function readTrackedProductionSources(paths: string[]) {
     .join("\n");
 }
 
-describe("Phase 3L-A/B protected content readiness", () => {
+describe("Phase 3M-A/B owner review execution matrix", () => {
   afterEach(() => {
     cleanup();
   });
 
-  it("records Phase 3L-A/B as current after Phase 3K completed in PR #133", () => {
+  it("records Phase 3M-A/B as current after Phase 3L completed in PR #134", () => {
     const status = readRepoFile("docs/PHASE-STATUS.md");
     const currentStatus = normalizeWhitespace(
       status.split("## Remaining-work map")[0] ?? status
@@ -82,69 +84,124 @@ describe("Phase 3L-A/B protected content readiness", () => {
     const validator = readRepoFile("scripts/validate-preview-handoff.cjs");
 
     expect(currentStatus).toContain(
-      "Current phase: Phase 3L-A/B - protected content readiness workspace, owner-review issue ledger, and public copy fact-safety audit."
+      "Current phase: Phase 3M-A/B - owner-review execution checklist, route-by-route decision matrix, and admin review snapshot."
     );
     expect(currentStatus).toContain(
-      "Latest completed capability: Phase 3K-A/B owner content intake, content gap register, and launch-blocker governance."
+      "Latest completed capability: Phase 3L-A/B protected content readiness workspace, owner-review issue ledger, and public copy fact-safety audit."
     );
-    expect(currentStatus).toContain("Last merged capability PR: #133");
-    expect(currentStatus).toContain(`Merge commit: \`${phase3kMergeCommit}\``);
-    expect(status).toContain("Previous Current Phase 3K-A/B status");
+    expect(currentStatus).toContain("Last merged capability PR: #134");
+    expect(currentStatus).toContain(`Merge commit: \`${phase3lMergeCommit}\``);
+    expect(status).toContain("Previous Current Phase 3L-A/B status");
     expect(roadmap).toContain(
-      "Phase 3L-A/B adds a protected content readiness workspace, owner-review issue ledger, and public copy fact-safety audit"
+      "Phase 3M-A/B adds an owner-review execution checklist, route-by-route decision matrix, and admin review snapshot"
     );
-    expect(readiness).toContain("Current Phase 3L-A/B status");
-    expect(readiness).toContain("Previous Current Phase 3K-A/B status");
+    expect(readiness).toContain("Current Phase 3M-A/B status");
+    expect(readiness).toContain("Previous Current Phase 3L-A/B status");
     expect(decisionLog).toContain(
-      "Decision: Phase 3L-A/B adds a protected content readiness workspace, owner-review issue ledger, and public copy fact-safety audit."
+      "Decision: Phase 3M-A/B adds an owner-review execution checklist, route-by-route decision matrix, and admin review snapshot."
     );
     expect(checklist).toContain(
-      "## Phase 3L-A/B Protected Content Readiness Workspace Owner-Review Issue Ledger And Public Copy Fact-Safety Audit"
+      "## Phase 3M-A/B Owner-Review Execution Checklist Route-By-Route Decision Matrix And Admin Review Snapshot"
     );
 
     const combinedOwnerDocs = normalizeWhitespace([ownerReview, manualQa, handoff].join("\n"));
-    expect(combinedOwnerDocs).toContain(ownerReviewLedgerPath);
+    expect(combinedOwnerDocs).toContain(ownerReviewExecutionChecklistPath);
+    expect(combinedOwnerDocs).toContain(ownerReviewRouteDecisionMatrixPath);
     expect(combinedOwnerDocs).toContain("/admin/content-readiness");
-    expect(combinedOwnerDocs).toContain(
-      "Protected content readiness workspace"
-    );
-    expect(validator).toContain(phase3kMergeCommit);
-    expect(validator).toContain(ownerReviewLedgerPath);
-    expect(validator).toContain(contentReadinessRoutePath);
-    expect(validator).toContain("Phase 3L-A/B");
+    expect(combinedOwnerDocs).toContain("Owner-review execution checklist");
+    expect(combinedOwnerDocs).toContain("Route-by-route decision matrix");
+    expect(validator).toContain(phase3lMergeCommit);
+    expect(validator).toContain(ownerReviewExecutionChecklistPath);
+    expect(validator).toContain(ownerReviewRouteDecisionMatrixPath);
+    expect(validator).toContain("Phase 3M-A/B");
   });
 
-  it("adds an owner-review issue ledger with safe categories and statuses", () => {
-    expect(existsSync(resolve(repoRoot, ownerReviewLedgerPath))).toBe(true);
-    const ledger = readRepoFile(ownerReviewLedgerPath);
-    const normalizedLedger = normalizeWhitespace(ledger);
+  it("adds a repo-local owner-review execution checklist for required review surfaces", () => {
+    expect(existsSync(resolve(repoRoot, ownerReviewExecutionChecklistPath))).toBe(true);
+    const executionChecklist = readRepoFile(ownerReviewExecutionChecklistPath);
+    const normalizedChecklist = normalizeWhitespace(executionChecklist);
 
     for (const required of [
-      "Public copy",
-      "Listing/category/event content",
-      "Images and alt text",
-      "Quote/enquiry expectations",
-      "Admin operator ownership",
-      "Legal/policy/contact gaps",
-      "Launch/deployment blockers",
+      "Public homepage",
+      "Public catalogue/listings",
+      "Public listing detail",
+      "Public categories",
+      "Public events/event-use guidance",
+      "Public quote/enquiry request flow",
+      "Public recovery/not-found states",
+      "Protected admin overview",
+      "Protected admin listings/categories/media",
+      "Protected admin quote inbox/detail",
+      "Protected admin content readiness workspace",
+      "What to review",
+      "Required owner decision",
+      "Owner input required fields",
+      "Launch/deployment blocker status",
+      "Deferred/not-in-scope notes",
+      "Public/admin visibility boundary",
+      "Owner input required",
+      "Blocks launch/deployment",
+      "Not in scope by owner direction"
+    ]) {
+      expect(normalizedChecklist).toContain(required);
+    }
+
+    expect(executionChecklist).not.toMatch(forbiddenDeploymentCommandPattern);
+    expect(executionChecklist).not.toMatch(forbiddenSupabaseCloudCommandPattern);
+    expect(executionChecklist).not.toMatch(forbiddenEnvInstructionPattern);
+    expect(executionChecklist).not.toMatch(forbiddenBusinessFactPattern);
+    expect(executionChecklist).not.toMatch(forbiddenContactFactPattern);
+  });
+
+  it("adds a route-by-route owner decision matrix for public and protected route families", () => {
+    expect(existsSync(resolve(repoRoot, ownerReviewRouteDecisionMatrixPath))).toBe(true);
+    const routeMatrix = readRepoFile(ownerReviewRouteDecisionMatrixPath);
+    const normalizedMatrix = normalizeWhitespace(routeMatrix);
+
+    for (const required of [
+      "Route",
+      "Audience",
+      "Review category",
+      "Current readiness status",
+      "Owner decision needed",
+      "Blocks owner review?",
+      "Blocks launch/deployment?",
+      "Public-safe notes",
+      "Admin-only notes",
+      "`/`",
+      "`/catalogue`",
+      "`/listings`",
+      "`/listings/[slug]`",
+      "`/catalogue/[slug]`",
+      "`/categories`",
+      "`/categories/[slug]`",
+      "`/events`",
+      "`/quote`",
+      "Public recovery/not-found",
+      "`/admin`",
+      "`/admin/listings`",
+      "`/admin/categories`",
+      "`/admin/media`",
+      "`/admin/quotes`",
+      "`/admin/quotes/[quoteRequestId]`",
+      "`/admin/content-readiness`",
       "Owner input required",
       "Ready for owner review",
-      "Blocks owner review",
       "Blocks launch/deployment",
       "Deferred after launch",
       "Not in scope by owner direction"
     ]) {
-      expect(normalizedLedger).toContain(required);
+      expect(normalizedMatrix).toContain(required);
     }
 
-    expect(ledger).not.toMatch(forbiddenDeploymentCommandPattern);
-    expect(ledger).not.toMatch(forbiddenSupabaseCloudCommandPattern);
-    expect(ledger).not.toMatch(forbiddenEnvInstructionPattern);
-    expect(ledger).not.toMatch(forbiddenBusinessFactPattern);
-    expect(ledger).not.toMatch(forbiddenContactFactPattern);
+    expect(routeMatrix).not.toMatch(forbiddenDeploymentCommandPattern);
+    expect(routeMatrix).not.toMatch(forbiddenSupabaseCloudCommandPattern);
+    expect(routeMatrix).not.toMatch(forbiddenEnvInstructionPattern);
+    expect(routeMatrix).not.toMatch(forbiddenBusinessFactPattern);
+    expect(routeMatrix).not.toMatch(forbiddenContactFactPattern);
   });
 
-  it("renders content readiness only through the protected admin shell", () => {
+  it("renders the owner-review execution snapshot only inside the protected admin shell", () => {
     expect(existsSync(resolve(repoRoot, contentReadinessRoutePath))).toBe(true);
     const routeSource = readRepoFile(contentReadinessRoutePath);
     const shellSource = readRepoFile(protectedAdminShellPath);
@@ -152,12 +209,14 @@ describe("Phase 3L-A/B protected content readiness", () => {
     expect(routeSource).toContain("resolveProtectedAdminShellState");
     expect(routeSource).toContain("AdminShellContent");
     expect(routeSource).toContain('view={{ kind: "content-readiness" }}');
-    expect(routeSource).toContain('dynamic = "force-dynamic"');
-    expect(routeSource).toContain("revalidate = 0");
-    expect(shellSource).toContain('"content-readiness"');
-    expect(shellSource).toContain(ownerContentIntakePath);
-    expect(shellSource).toContain(contentGapRegisterPath);
     expect(shellSource).toContain(ownerReviewLedgerPath);
+    expect(shellSource).toContain(ownerReviewExecutionChecklistPath);
+    expect(shellSource).toContain(ownerReviewRouteDecisionMatrixPath);
+    expect(shellSource).toContain("reviewSurfaceGroups");
+    expect(shellSource).toContain("routeFamiliesCovered");
+    expect(shellSource).toContain("ownerDecisionCategories");
+    expect(shellSource).toContain("ownerInputRequiredCategories");
+    expect(shellSource).toContain("launchBlockerCategories");
 
     render(
       <AdminShellContent
@@ -175,21 +234,18 @@ describe("Phase 3L-A/B protected content readiness", () => {
     );
 
     expect(
-      screen.getByRole("heading", { name: /content readiness/i })
+      screen.getByRole("heading", { name: /owner-review execution snapshot/i })
     ).toBeInTheDocument();
-    expect(screen.getAllByText(/owner input required/i).length).toBeGreaterThan(0);
-    expect(screen.getByText(/blocks owner review/i)).toBeInTheDocument();
-    expect(screen.getByText(/blocks launch\/deployment/i)).toBeInTheDocument();
-    expect(screen.getByText(/deferred after launch/i)).toBeInTheDocument();
-    expect(
-      screen.getByText(/not in scope by owner direction/i)
-    ).toBeInTheDocument();
-    expect(screen.getByText(ownerContentIntakePath)).toBeInTheDocument();
-    expect(screen.getByText(contentGapRegisterPath)).toBeInTheDocument();
-    expect(screen.getByText(ownerReviewLedgerPath)).toBeInTheDocument();
+    expect(screen.getByText(/review surface groups/i)).toBeInTheDocument();
+    expect(screen.getByText(/route families covered/i)).toBeInTheDocument();
+    expect(screen.getByText(/owner decision categories/i)).toBeInTheDocument();
+    expect(screen.getByText(/owner input required categories/i)).toBeInTheDocument();
+    expect(screen.getByText(/launch-blocker categories/i)).toBeInTheDocument();
+    expect(screen.getByText(ownerReviewExecutionChecklistPath)).toBeInTheDocument();
+    expect(screen.getByText(ownerReviewRouteDecisionMatrixPath)).toBeInTheDocument();
   });
 
-  it("does not render owner-only readiness details for blocked admin states", () => {
+  it("does not render owner-review execution details for blocked admin states", () => {
     for (const state of [
       { status: "unauthenticated" as const },
       { status: "authenticated_not_authorised" as const },
@@ -199,19 +255,17 @@ describe("Phase 3L-A/B protected content readiness", () => {
         <AdminShellContent state={state} view={{ kind: "content-readiness" }} />
       );
 
-      expect(screen.queryByText(/owner input required/i)).not.toBeInTheDocument();
-      expect(screen.queryByText(/blocks owner review/i)).not.toBeInTheDocument();
       expect(
-        screen.queryByText(/blocks launch\/deployment/i)
+        screen.queryByText(/owner-review execution snapshot/i)
       ).not.toBeInTheDocument();
       expect(
-        screen.queryByText(ownerReviewLedgerPath)
+        screen.queryByText(ownerReviewRouteDecisionMatrixPath)
       ).not.toBeInTheDocument();
       unmount();
     }
   });
 
-  it("keeps public copy free of fake business facts, ecommerce wording, and owner-only readiness details", () => {
+  it("keeps public copy free of fake business facts, ecommerce wording, and owner-only route review details", () => {
     const publicSource = readTrackedProductionSources([
       "website/app/layout.tsx",
       "website/app/page.tsx",
@@ -227,11 +281,10 @@ describe("Phase 3L-A/B protected content readiness", () => {
     expect(publicSource).not.toMatch(forbiddenContactFactPattern);
     expect(publicSource).not.toMatch(forbiddenBusinessFactPattern);
     expect(publicSource).not.toMatch(forbiddenCommercePattern);
-    expect(publicSource).not.toMatch(ownerOnlyStatusPattern);
-    expect(publicSource).not.toMatch(/\/admin\/content-readiness|internal notes|admin issue ledger/i);
+    expect(publicSource).not.toMatch(ownerOnlyRouteReviewPattern);
   });
 
-  it("keeps Phase 3L inside repo-local no-provider, no-deploy, no-ecommerce scope", () => {
+  it("keeps Phase 3M inside repo-local no-provider, no-deploy, no-ecommerce scope", () => {
     const packageSource = [
       readRepoFile("package.json"),
       readRepoFile("website/package.json")

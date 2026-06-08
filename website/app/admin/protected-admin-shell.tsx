@@ -506,7 +506,28 @@ function AdminOperationsHome({
 const contentReadinessSources = [
   "docs/content/OWNER-CONTENT-INTAKE.md",
   "docs/content/CONTENT-GAP-REGISTER.md",
-  "docs/content/OWNER-REVIEW-ISSUE-LEDGER.md"
+  "docs/content/OWNER-REVIEW-ISSUE-LEDGER.md",
+  "docs/content/OWNER-REVIEW-EXECUTION-CHECKLIST.md",
+  "docs/content/OWNER-REVIEW-ROUTE-DECISION-MATRIX.md"
+] as const;
+
+const reviewSurfaceGroups = 11;
+const routeFamiliesCovered = 15;
+const ownerDecisionCategories = [
+  "Approve current public-safe wording",
+  "Supply missing owner facts",
+  "Confirm protected operator ownership"
+] as const;
+const ownerInputRequiredCategories = [
+  "Brand and public display wording",
+  "Listing, category, and event-use content",
+  "Image selection, alt text, and launch expectations",
+  "Contact, operating, and policy wording if required later"
+] as const;
+const launchBlockerCategories = [
+  "Owner-required public content for launch",
+  "Protected admin ownership before public traffic",
+  "Separate deployment approval"
 ] as const;
 
 const contentReadinessGroups = [
@@ -553,6 +574,14 @@ const contentReadinessGroups = [
 ] as const;
 
 function ContentReadinessWorkspace() {
+  const executionSnapshot = [
+    ["Review surface groups", reviewSurfaceGroups],
+    ["Route families covered", routeFamiliesCovered],
+    ["Owner decision categories", ownerDecisionCategories.length],
+    ["Owner input required categories", ownerInputRequiredCategories.length],
+    ["Launch-blocker categories", launchBlockerCategories.length]
+  ] as const;
+
   return (
     <section className="admin-dashboard" aria-label="Content readiness workspace">
       <div className="admin-dashboard__header">
@@ -568,6 +597,22 @@ function ContentReadinessWorkspace() {
       </div>
 
       <div className="admin-dashboard__grid">
+        <section className="admin-dashboard__card admin-dashboard__card--summary">
+          <h3>Owner-review execution snapshot</h3>
+          <dl className="quote-inbox__details">
+            {executionSnapshot.map(([label, value]) => (
+              <div key={label}>
+                <dt>{label}</dt>
+                <dd>{value}</dd>
+              </div>
+            ))}
+          </dl>
+          <p>
+            Review decisions stay repo-local and protected until the owner
+            supplies missing facts and separately approves any launch step.
+          </p>
+        </section>
+
         <section className="admin-dashboard__card admin-dashboard__card--summary">
           <h3>Review sources</h3>
           <p>

@@ -335,6 +335,15 @@ and route/action boundaries are implemented and tested.
 - [x] Preview handoff validation checks Phase 3L docs/status roll-forward, PR #133 merge commit, owner-review issue ledger tracking, protected content readiness workspace, public-route leakage, no deployment/provider/runtime/ecommerce scope creep, and no fake business facts.
 - [x] No deployment, deployment approval, Vercel config, Supabase Cloud config, secrets/env values, filled preview or production evidence, browser Supabase, service-role runtime path, customer uploads, public quote tracking, customer accounts, customer-visible internal notes, notifications, CRM, n8n/Pinecone runtime change, invented real contact details, phone numbers, email addresses, physical addresses, business hours, testimonials, client names, awards, certifications, legal claims, guarantees, production policies, or ecommerce flow is added.
 
+## Phase 3M-A/B Owner-Review Execution Checklist Route-By-Route Decision Matrix And Admin Review Snapshot
+
+- [x] Owner-review execution checklist covers public homepage, catalogue/listings, listing detail, categories, events/event-use guidance, quote/enquiry request flow, recovery/not-found states, protected admin overview, protected admin listings/categories/media, protected admin quote inbox/detail, and protected admin content readiness workspace.
+- [x] Route-by-route decision matrix maps public and protected route families to audience, review category, current readiness status, owner decision needed, owner review blockers, launch/deployment blockers, public-safe notes, and admin-only notes.
+- [x] Protected content readiness workspace includes an owner-review execution snapshot with review surface groups, route families covered, owner decision categories, owner-input-required categories, and launch-blocker categories.
+- [x] Static tests cover Phase 3M docs/status roll-forward, execution checklist, route decision matrix, protected admin-only snapshot rendering, public-route leakage, no deployment/provider/runtime/ecommerce scope creep, and no fake business facts.
+- [x] Preview handoff validation checks Phase 3M docs/status roll-forward, PR #134 merge commit, execution checklist tracking, route decision matrix tracking, protected content readiness workspace references, public-route leakage, no deployment/provider/runtime/ecommerce scope creep, and no fake business facts.
+- [x] No deployment, deployment approval, Vercel config, Supabase Cloud config, secrets/env values, filled preview or production evidence, browser Supabase, service-role runtime path, customer uploads, public quote tracking, customer accounts, customer-visible internal notes, notifications, CRM, n8n/Pinecone runtime change, invented real contact details, phone numbers, email addresses, physical addresses, business hours, testimonials, client names, awards, certifications, legal claims, guarantees, production policies, or ecommerce flow is added.
+
 ## Phase 2D-A Deployment Readiness And Smoke-Test Runbook
 
 - [x] Deployment readiness docs are refreshed for catalogue media, admin listing media upload, public quote handoff, and atomic admin quote workflow surfaces.

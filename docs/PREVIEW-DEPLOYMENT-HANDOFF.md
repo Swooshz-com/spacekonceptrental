@@ -37,7 +37,11 @@ and review `docs/manual-qa/OWNER-REVIEW-MANUAL-QA.md`. Use
 `docs/content/OWNER-CONTENT-INTAKE.md` for owner-supplied content requirements
 and `docs/content/CONTENT-GAP-REGISTER.md` for content gap status. Use
 `docs/content/OWNER-REVIEW-ISSUE-LEDGER.md` for owner-review issue categories
-and safe status values.
+and safe status values. Use
+`docs/content/OWNER-REVIEW-EXECUTION-CHECKLIST.md` for the Owner-review
+execution checklist and
+`docs/content/OWNER-REVIEW-ROUTE-DECISION-MATRIX.md` for the Route-by-route
+decision matrix.
 
 What the owner should review:
 
@@ -47,7 +51,10 @@ What the owner should review:
   readiness.
 - Quote/enquiry intake and admin triage readiness.
 - Protected content readiness workspace at `/admin/content-readiness` for
-  owner-required content gaps, status separation, and launch-blocker review.
+  owner-required content gaps, status separation, launch-blocker review, and
+  the admin review snapshot.
+- Owner-review execution checklist and Route-by-route decision matrix for
+  non-live route-by-route owner/admin decisions.
 - Known deferred capabilities and intentionally not implemented scope.
 - Local validation results and any local-only manual QA notes.
 

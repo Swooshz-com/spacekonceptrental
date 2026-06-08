@@ -1493,3 +1493,36 @@ addresses, testimonials, client names, awards, certifications, legal claims,
 guarantees, production policies, or add ecommerce flows such as carts,
 checkout, payments, stock reservation, confirmed booking, order fulfilment, or
 online ordering.
+
+## Phase 3M: Owner-Review Execution Checklist, Route-By-Route Decision Matrix, And Admin Review Snapshot
+
+Phase 3M-A/B adds an owner-review execution checklist, route-by-route decision
+matrix, and admin review snapshot for the current repo-local rental website
+candidate. It turns the Phase 3L protected content readiness workspace and
+owner-review issue ledger into an executable owner/admin review package.
+
+Phase 3M-A/B keeps owner review non-live and route-specific. The execution
+checklist defines what to review, the required owner decision, owner-input
+fields, launch/deployment blocker status, deferred/not-in-scope notes, and the
+public/admin visibility boundary for every public and protected review
+surface.
+
+Phase 3M-A/B adds a route decision matrix that maps public and protected route
+families to readiness status, owner decisions, owner review blockers, launch
+blockers, public-safe notes, and admin-only notes. The protected content
+readiness workspace summarizes review surface groups, route families covered,
+owner decision categories, owner-input-required categories, and launch-blocker
+categories while keeping those details inside protected admin routes.
+
+Phase 3M-A/B does not deploy, approve deployment, add Vercel or Supabase Cloud
+config, add real env values, add filled preview or production evidence, add
+browser Supabase, add service-role runtime paths, access
+`website/chat-config.js`, add public/customer uploads, add customer accounts,
+add public quote tracking, expose customer-visible internal notes, add
+notifications or CRM integration, change n8n/Pinecone runtime behavior, add
+Pinecone packages/env/API keys, wire `/api/chat` to retrieval/RAG, add
+transcript runtime paths, invent real contact details, business hours,
+addresses, testimonials, client names, awards, certifications, legal claims,
+guarantees, production policies, or add ecommerce flows such as carts,
+checkout, payments, stock reservation, confirmed booking, order fulfilment, or
+online ordering.
