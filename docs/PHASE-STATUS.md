@@ -4,6 +4,49 @@ This is the quick status page for the SKR repo. Use `docs/PHASE-2-READINESS-PLAN
 
 ## Current phase
 
+Current phase: Phase 3M-A/B - owner-review execution checklist, route-by-route decision matrix, and admin review snapshot.
+
+Latest completed capability: Phase 3L-A/B protected content readiness workspace, owner-review issue ledger, and public copy fact-safety audit.
+
+Last merged capability PR: #134
+
+Merge commit: `be7fda99f25f73c86494e1ab323e0624dd917806`
+
+Phase 3M-A/B adds an owner-review execution checklist, route-by-route decision
+matrix, and admin review snapshot. It turns the Phase 3L protected content
+readiness workspace and owner-review issue ledger into an executable
+route-by-route owner/admin review package without deploying, connecting
+providers, or inventing missing real-world facts.
+
+Public users only see public-safe published listing, category, listing image,
+selected-listing quote context, and public recovery guidance. Owner review
+execution details, route decision matrix notes, issue ledger details, admin
+internal notes, protected management URLs, provider details, secrets,
+production evidence, filled preview evidence, and invented public business
+facts stay out of public routes. Supabase remains canonical for website/admin
+listing and quote data. Pinecone remains a future derived index only and is not
+used as canonical business storage.
+
+No deployment is performed or approved by Phase 3M-A/B. It does not add Vercel
+config, connect Supabase Cloud, add real secrets or env values, add filled
+preview or production evidence, add Pinecone runtime code, Pinecone packages,
+Pinecone env reads, secrets, API keys, Pinecone executors, n8n
+workflow/runtime changes, embedding runtime, sync workers, `/api/chat`
+retrieval wiring, search-index document writers, real vector upsert/delete,
+runtime reranking, hybrid search runtime, browser Supabase, service-role
+runtime paths, public or customer upload routes, public quote tracking,
+customer-visible internal notes, notifications, CRM integration, customer
+accounts, invented real contact details, phone numbers, email addresses,
+physical addresses, business hours, testimonials, client names, awards,
+certifications, legal claims, guarantees, production policies, or ecommerce
+flows.
+
+Missing real contact, legal, policy, business-hour, service-area, proof,
+testimonial, client-name, award, certification, or guarantee content must
+remain marked as owner input required and must not be invented.
+
+Previous Current Phase 3L-A/B status:
+
 Current phase: Phase 3L-A/B - protected content readiness workspace, owner-review issue ledger, and public copy fact-safety audit.
 
 Latest completed capability: Phase 3K-A/B owner content intake, content gap register, and launch-blocker governance.
@@ -12,10 +55,10 @@ Last merged capability PR: #133
 
 Merge commit: `d4271ea6b181ee702dfe9d6f2b6003903b0c54dd`
 
-Phase 3L-A/B adds a protected content readiness workspace, owner-review issue
-ledger, and public copy fact-safety audit. It turns the Phase 3K owner content
+Phase 3L-A/B added a protected content readiness workspace, owner-review issue
+ledger, and public copy fact-safety audit. It turned the Phase 3K owner content
 intake and content gap register into a protected admin-only review surface,
-records repo-local issue categories and safe status values, and adds
+recorded repo-local issue categories and safe status values, and added
 deterministic public copy checks for fake business facts, ecommerce wording,
 and owner-only readiness leakage.
 
@@ -86,22 +129,22 @@ Merge commit: `1c7dc0ac7c2532fa8a837cd46b0d1f0103d5ccfa`
 
 ## Remaining-work map
 
-Completed through PR #133:
+Completed through PR #134:
 
-- PR #133 merged Phase 3K-A/B owner content intake, content gap register, and
-  launch-blocker governance at merge commit
-  `d4271ea6b181ee702dfe9d6f2b6003903b0c54dd`.
-- The latest completed capability is Phase 3K-A/B owner content intake,
-  content gap register, and launch-blocker governance. It added repo-local
-  owner content intake, content gap status, launch-blocker governance,
-  owner-review cross-links, and deterministic no-deploy guardrails without
-  deployment or runtime expansion.
-- Phase 3L-A/B is current as protected content readiness workspace,
-  owner-review issue ledger, and public copy fact-safety audit for admin-only
-  owner review, repo-local issue categories, public copy fake-fact/ecommerce
-  checks, owner-only readiness leakage checks, and deterministic no-deploy
-  guardrails. It is repo-local/admin-protected only and does not perform or
-  approve deployment.
+- PR #134 merged Phase 3L-A/B protected content readiness workspace,
+  owner-review issue ledger, and public copy fact-safety audit at merge commit
+  `be7fda99f25f73c86494e1ab323e0624dd917806`.
+- The latest completed capability is Phase 3L-A/B protected content readiness
+  workspace, owner-review issue ledger, and public copy fact-safety audit. It
+  added an admin-protected content readiness workspace, repo-local issue
+  ledger, public copy fact-safety checks, owner-only readiness leakage checks,
+  and deterministic no-deploy guardrails.
+- Phase 3M-A/B is current as owner-review execution checklist,
+  route-by-route decision matrix, and admin review snapshot for executable
+  owner/admin route review, protected admin review summaries, public/admin
+  visibility boundaries, owner-input-required tracking, launch-blocker
+  classification, and deterministic no-deploy guardrails. It is repo-local and
+  admin-protected only and does not perform or approve deployment.
 
 Previous Current Phase 3J-A/B status:
 

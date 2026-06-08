@@ -2202,6 +2202,40 @@ paths, add retention cleanup jobs, or add ecommerce flows such as carts,
 checkout, payments, stock reservation, confirmed booking, order fulfilment, or
 online ordering.
 
+## 2026-06-08: Owner-Review Execution Checklist, Route-By-Route Decision Matrix, And Admin Review Snapshot
+
+Decision: Phase 3M-A/B adds an owner-review execution checklist, route-by-route decision matrix, and admin review snapshot.
+
+Reason: PR #134 merged Phase 3L-A/B at
+`be7fda99f25f73c86494e1ab323e0624dd917806`, completing the protected content
+readiness workspace, owner-review issue ledger, and public copy fact-safety
+audit without deploying or approving deployment. The next approved work item is
+to make owner review executable route by route while keeping review decisions
+repo-local and protected.
+
+The implementation adds an owner-review execution checklist, route-by-route
+decision matrix, protected content readiness workspace snapshot update,
+deterministic Phase 3M tests, preview handoff validation coverage, and
+docs/status roll-forward from PR #134. It keeps the existing public catalogue
+read boundary, public quote request API contract, protected admin shell gate,
+and RPC-backed admin write boundaries.
+
+Phase 3M-A/B does not deploy, approve deployment, add Vercel config, connect
+Supabase Cloud, add real secrets or env values, add production evidence, add
+browser Supabase, add service-role runtime paths, access
+`website/chat-config.js`, add public/customer upload routes, add customer
+accounts, add public quote tracking, expose customer-visible internal notes,
+add notifications or CRM integration, change n8n/Pinecone runtime behavior,
+add SaaS chatbot runtime work, add Pinecone SDK/package dependencies, add
+Pinecone env vars or API keys, add embedding/reranking runtime, wire
+`/api/chat` to retrieval/RAG, wire transcript reads or writes into
+`/api/chat`, add admin transcript UI, add transcript deletion/export runtime
+paths, add retention cleanup jobs, invent real contact details, phone numbers,
+email addresses, physical addresses, business hours, testimonials, client
+names, awards, certifications, legal claims, guarantees, production policies,
+or add ecommerce flows such as carts, checkout, payments, stock reservation,
+confirmed booking, order fulfilment, or online ordering.
+
 ## 2026-06-08: Protected Content Readiness Workspace, Owner-Review Issue Ledger, And Public Copy Fact-Safety Audit
 
 Decision: Phase 3L-A/B adds a protected content readiness workspace, owner-review issue ledger, and public copy fact-safety audit.

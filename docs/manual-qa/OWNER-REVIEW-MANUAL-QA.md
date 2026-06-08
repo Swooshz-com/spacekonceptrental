@@ -9,10 +9,19 @@ filled preview evidence, or perform a deployment.
 Record content gaps in `docs/content/CONTENT-GAP-REGISTER.md` and collect
 owner-supplied content requirements in `docs/content/OWNER-CONTENT-INTAKE.md`.
 Use `docs/content/OWNER-REVIEW-ISSUE-LEDGER.md` for owner-review issue
-categories and safe status values.
+categories and safe status values. Use
+`docs/content/OWNER-REVIEW-EXECUTION-CHECKLIST.md` for the Owner-review
+execution checklist and
+`docs/content/OWNER-REVIEW-ROUTE-DECISION-MATRIX.md` for the Route-by-route
+decision matrix.
 Owner content blockers are governance notes only. Missing real
 contact/legal/business-hour content does not get invented. Owner review can
 continue without deployment.
+
+During protected admin review, use `/admin/content-readiness` to confirm the
+admin review snapshot covers review surface groups, route families covered,
+owner decision categories, owner-input-required categories, and launch-blocker
+categories.
 
 ## Local validation commands
 

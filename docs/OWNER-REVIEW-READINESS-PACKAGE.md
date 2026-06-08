@@ -13,7 +13,11 @@ Review `docs/content/OWNER-CONTENT-INTAKE.md` for owner-supplied content
 requirements and review `docs/content/CONTENT-GAP-REGISTER.md` for content gap
 status before any future launch decision. Review
 `docs/content/OWNER-REVIEW-ISSUE-LEDGER.md` for owner-review issue categories
-and safe status values.
+and safe status values. Review
+`docs/content/OWNER-REVIEW-EXECUTION-CHECKLIST.md` for the Owner-review
+execution checklist and
+`docs/content/OWNER-REVIEW-ROUTE-DECISION-MATRIX.md` for the Route-by-route
+decision matrix.
 
 Owner content blockers must remain separate from deployment approval. Missing
 real contact/legal/business-hour content does not get invented. Public launch
@@ -24,6 +28,11 @@ The Protected content readiness workspace at `/admin/content-readiness` is an
 admin-only review surface. It summarizes content gaps for authorised admin
 review and must not be exposed to public routes or customer-facing issue
 tracking.
+
+The protected workspace also includes an admin review snapshot for review
+surface groups, route families covered, owner decision categories,
+owner-input-required categories, and launch-blocker categories. The snapshot is
+for owner/admin review only and does not approve deployment.
 
 ## Ready for owner review
 
@@ -39,6 +48,8 @@ tracking.
   detail surfaces.
 - Protected content readiness workspace for owner-required content gaps and
   owner-review status separation.
+- Owner-review execution checklist and Route-by-route decision matrix for
+  non-live route-by-route owner/admin decisions.
 - Admin-only readiness cues, internal quote follow-up context, and recovery
   links that stay inside protected admin routes.
 - Local validation commands and deterministic docs/tests for the owner review
