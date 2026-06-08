@@ -508,11 +508,15 @@ const contentReadinessSources = [
   "docs/content/CONTENT-GAP-REGISTER.md",
   "docs/content/OWNER-REVIEW-ISSUE-LEDGER.md",
   "docs/content/OWNER-REVIEW-EXECUTION-CHECKLIST.md",
-  "docs/content/OWNER-REVIEW-ROUTE-DECISION-MATRIX.md"
+  "docs/content/OWNER-REVIEW-ROUTE-DECISION-MATRIX.md",
+  "docs/content/OWNER-REVIEW-DRY-RUN-PACKET.md",
+  "docs/content/OWNER-REVIEW-FINDINGS-DISPOSITION.md",
+  "docs/content/OWNER-REVIEW-LAUNCH-DECISION-REHEARSAL.md"
 ] as const;
 
 const reviewSurfaceGroups = 11;
 const routeFamiliesCovered = 15;
+const dryRunReviewAreas = 11;
 const ownerDecisionCategories = [
   "Approve current public-safe wording",
   "Supply missing owner facts",
@@ -529,6 +533,30 @@ const launchBlockerCategories = [
   "Protected admin ownership before public traffic",
   "Separate deployment approval"
 ] as const;
+const findingDispositionStatuses = [
+  "No issue found",
+  "Owner input required",
+  "Change requested before owner review closes",
+  "Blocks owner review",
+  "Blocks launch/deployment",
+  "Deferred after launch",
+  "Not in scope by owner direction",
+  "Requires separate deployment approval"
+] as const;
+const launchDecisionRehearsalStates = [
+  "Continue owner review",
+  "Hold launch",
+  "Ready for later deployment planning",
+  "Approve future deployment separately"
+] as const;
+const dryRunOwnerInputRequiredCategories = [
+  "Public-safe wording",
+  "Listing, category, and image readiness",
+  "Protected operator responsibility",
+  "Later deployment approval"
+] as const;
+const explicitDeploymentApprovalBoundary =
+  "Any launch or deployment step still requires separate explicit approval.";
 
 const contentReadinessGroups = [
   {
@@ -581,6 +609,16 @@ function ContentReadinessWorkspace() {
     ["Owner input required categories", ownerInputRequiredCategories.length],
     ["Launch-blocker categories", launchBlockerCategories.length]
   ] as const;
+  const dryRunSnapshot = [
+    ["Dry-run review areas", dryRunReviewAreas],
+    ["Finding disposition statuses", findingDispositionStatuses.length],
+    ["Launch decision rehearsal states", launchDecisionRehearsalStates.length],
+    [
+      "Dry-run owner input placeholders",
+      dryRunOwnerInputRequiredCategories.length
+    ],
+    ["Explicit deployment approval boundary", "Required"]
+  ] as const;
 
   return (
     <section className="admin-dashboard" aria-label="Content readiness workspace">
@@ -611,6 +649,19 @@ function ContentReadinessWorkspace() {
             Review decisions stay repo-local and protected until the owner
             supplies missing facts and separately approves any launch step.
           </p>
+        </section>
+
+        <section className="admin-dashboard__card admin-dashboard__card--summary">
+          <h3>Dry-run review snapshot</h3>
+          <dl className="quote-inbox__details">
+            {dryRunSnapshot.map(([label, value]) => (
+              <div key={label}>
+                <dt>{label}</dt>
+                <dd>{value}</dd>
+              </div>
+            ))}
+          </dl>
+          <p>{explicitDeploymentApprovalBoundary}</p>
         </section>
 
         <section className="admin-dashboard__card admin-dashboard__card--summary">

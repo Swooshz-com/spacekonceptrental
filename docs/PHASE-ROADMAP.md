@@ -1526,3 +1526,35 @@ addresses, testimonials, client names, awards, certifications, legal claims,
 guarantees, production policies, or add ecommerce flows such as carts,
 checkout, payments, stock reservation, confirmed booking, order fulfilment, or
 online ordering.
+
+## Phase 3N: Owner-Review Dry-Run Packet, Findings Disposition Workflow, And Launch Hold/Approve Rehearsal
+
+Phase 3N-A/B adds an owner-review dry-run packet, findings disposition
+workflow, and launch hold/approve rehearsal for the current repo-local rental
+website candidate. It turns the Phase 3M execution checklist, route decision
+matrix, and admin review snapshot into template-only review materials.
+
+Phase 3N-A/B keeps owner review non-live and placeholder-only. The dry-run
+packet lists each public and protected review area, review objectives,
+questions for the owner, safe outcome statuses, owner-input-required
+placeholders, launch-blocker classification, deferred/not-in-scope notes, and
+public/admin visibility boundaries without claiming that review happened.
+
+Phase 3N-A/B adds a findings disposition workflow that routes placeholder
+findings into safe statuses and next local actions. It also adds launch
+hold/approve rehearsal language that separates continuing owner review, holding
+launch, preparing for later deployment planning, and separately approving any
+future deployment.
+
+Phase 3N-A/B does not deploy, approve deployment, add Vercel or Supabase Cloud
+config, add real env values, add filled preview or production evidence, add
+browser Supabase, add service-role runtime paths, access
+`website/chat-config.js`, add public/customer uploads, add customer accounts,
+add public quote tracking, expose customer-visible internal notes, add
+notifications or CRM integration, change n8n/Pinecone runtime behavior, add
+Pinecone packages/env/API keys, wire `/api/chat` to retrieval/RAG, add
+transcript runtime paths, invent real contact details, business hours,
+addresses, testimonials, client names, awards, certifications, legal claims,
+guarantees, production policies, or add ecommerce flows such as carts,
+checkout, payments, stock reservation, confirmed booking, order fulfilment, or
+online ordering.
