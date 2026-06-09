@@ -61,6 +61,9 @@ Phase 2A-A adds deployment smoke-test runbook and operator evidence templates
 only. It is not approval to deploy, connect Supabase Cloud, add Vercel config,
 or add runtime features.
 
+
+Phase 3Y-A/B hardens protected admin destructive-action safeguards, recovery lanes, status-transition guidance, existing admin helper copy, and deterministic local acceptance coverage for listing, category, media, and quote operations. It adds only repo-local protected-admin documentation and UI copy; it is not deployment approval and does not add provider, runtime, public self-service, or ecommerce scope.
+
 Phase 2B-A adds admin/auth and workspace membership authorization design only.
 It is not approval to implement real auth, add admin UI, add product, category,
 or product image writes, add browser Supabase, add service-role runtime paths,

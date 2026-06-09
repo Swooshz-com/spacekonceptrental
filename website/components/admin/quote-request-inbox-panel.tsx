@@ -479,7 +479,7 @@ export function QuoteRequestInboxPanel({
           <div>
             <dt>Public-facing</dt>
             <dd>
-              Public quote pages only show receipt-style enquiry confirmation; they do not expose admin status, notes, or tracking.
+              Public quote pages only show receipt-style enquiry confirmation; they do not expose admin status, notes, recovery states, or tracking.
             </dd>
           </div>
           <div>
@@ -489,7 +489,7 @@ export function QuoteRequestInboxPanel({
         </dl>
         <p>
           Next safe action: capture contact, event, venue, and requested items
-          before closing follow-up.
+          before closing follow-up. If a status or note save fails, keep the prior protected state and retry locally without exposing internal notes.
         </p>
       </section>
 
@@ -646,7 +646,7 @@ export function QuoteRequestInboxPanel({
                         </option>
                       ))}
                     </select>
-                    <small>Status is an admin-only follow-up control and is never shown as a public quote status view.</small>
+                    <small>Status is an admin-only follow-up control and is never shown as a public quote status view, confirmed outcome, or public tracking lane.</small>
                   </label>
                   <label htmlFor={`quote-note-${quoteRequest.id}`}>
                     Protected internal note for {quoteRequest.publicReference}
@@ -657,10 +657,10 @@ export function QuoteRequestInboxPanel({
                       placeholder="Add protected follow-up context for the team"
                       rows={3}
                     />
-                    <small>Internal notes stay protected; do not write public-facing promises, outbound automation or sales-system instructions here.</small>
+                    <small>Internal notes stay protected; do not write public-facing promises, outbound automation, owner sign-off, or sales-system instructions here.</small>
                   </label>
                   <p className="category-management__hint">
-                    Protected write boundary: internal status changes and notes stay inside this admin workspace and are used for team follow-up only.
+                    Protected write boundary: internal status changes and notes stay inside this admin workspace and are used for team follow-up only. If save fails, keep the previous status, review note privacy, and retry the protected write locally.
                   </p>
                   <button className="button" type="submit">
                     Save follow-up for {quoteRequest.publicReference}

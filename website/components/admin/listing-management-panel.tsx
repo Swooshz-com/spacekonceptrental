@@ -525,7 +525,7 @@ export function ListingManagementPanel({
             <option value="published">Published</option>
             <option value="archived">Archived</option>
           </select>
-          <small>Draft stays protected, published can appear publicly when readiness checks pass, archived is hidden from active browsing.</small>
+          <small>Draft stays protected for recovery, published can appear publicly when readiness checks pass, and archived is hidden from active browsing without deleting the record.</small>
         </label>
         <label htmlFor="new-listing-sort-order">
           New listing sort order
@@ -677,7 +677,7 @@ export function ListingManagementPanel({
                     <option value="published">Published</option>
                     <option value="archived">Archived</option>
                   </select>
-                  <small>Draft is protected, published can be public when ready, and archived is hidden from active browsing.</small>
+                  <small>Draft is protected, published can be public when ready, and archived is hidden from active browsing. Draft/unpublish keeps the listing protected until readiness checks pass and archive does not delete it.</small>
                 </label>
                 <label htmlFor={`listing-sort-order-${product.id}`}>
                   Listing sort order for {product.name}
@@ -692,7 +692,7 @@ export function ListingManagementPanel({
                   <small>Sort order controls display ordering where listing groups use it.</small>
                 </label>
                 <p className="category-management__hint">
-                  Protected write boundary: save changes only after checking public-facing fields. Archive hides this listing from public browsing and active admin work; it does not delete it.
+                  Protected write boundary: save changes only after checking public-facing fields, category, rental unit, and media readiness. If save fails, keep draft/protected, review the missing field, and retry the protected write locally. Archive hides this listing from public browsing and active admin work; it does not delete it.
                 </p>
                 <div className="category-management__actions">
                   <button className="button" type="submit">

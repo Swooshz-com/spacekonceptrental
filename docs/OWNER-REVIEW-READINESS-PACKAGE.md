@@ -279,3 +279,6 @@ Phase 3W-A/B adds `docs/content/CATALOGUE-LISTING-MEDIA-ACCEPTANCE-CHECKLIST.md`
 
 
 Phase 3X-A/B adds `docs/content/PROTECTED-ADMIN-WRITE-OPS-ACCEPTANCE-CHECKLIST.md` for repo-local protected admin write-operation review. Listing, category, media, and quote follow-up hardening remains protected/admin-only; public pages do not expose write-ops/internal wording. No deployment, provider config, secrets, filled evidence, owner approval, owner sign-off, or real business facts are added.
+
+
+Phase 3Y-A/B protected admin destructive-action safeguard references: `docs/content/PROTECTED-ADMIN-DESTRUCTIVE-ACTION-SAFEGUARDS.md`, `docs/content/PROTECTED-ADMIN-RECOVERY-LANE.md`, and `docs/content/PROTECTED-ADMIN-STATUS-TRANSITION-MATRIX.md`. These are repo-local, template-only, non-live, not evidence, and do not approve deployment. Last merged capability PR: #146. Merge commit: `50316a5c4052607487ba7409d5dc854889db6e24`. Current phase: Phase 3Y-A/B - protected admin destructive-action safeguards, recovery lanes, and local acceptance coverage. Latest completed capability: Phase 3X-A/B protected admin write-ops hardening, content-operation guardrails, and local acceptance coverage.

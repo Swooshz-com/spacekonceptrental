@@ -1,5 +1,12 @@
 # Phase 2 Readiness Plan
 
+## Current Phase 3Y-A/B status
+
+Phase 3Y-A/B adds protected admin destructive-action safeguards, recovery lane guidance, and a status-transition matrix for listing, category, media, and quote operations. Latest completed capability: Phase 3X-A/B protected admin write-ops hardening, content-operation guardrails, and local acceptance coverage. Last merged capability PR: #146. Merge commit: `50316a5c4052607487ba7409d5dc854889db6e24`.
+
+Previous Current Phase 3X-A/B status remains below for continuity.
+
+
 Phase 2 is not approved by this document. This plan ranks the safest next
 tracks, names their prerequisites, and keeps the remaining forbidden work
 visible before anyone adds new runtime features.

@@ -16,6 +16,11 @@ const catalogueListingMediaChecklistPath =
   'docs/content/CATALOGUE-LISTING-MEDIA-ACCEPTANCE-CHECKLIST.md';
 const protectedAdminWriteOpsChecklistPath =
   'docs/content/PROTECTED-ADMIN-WRITE-OPS-ACCEPTANCE-CHECKLIST.md';
+const protectedAdminDestructiveActionSafeguardsPath =
+  'docs/content/PROTECTED-ADMIN-DESTRUCTIVE-ACTION-SAFEGUARDS.md';
+const protectedAdminRecoveryLanePath = 'docs/content/PROTECTED-ADMIN-RECOVERY-LANE.md';
+const protectedAdminStatusTransitionMatrixPath =
+  'docs/content/PROTECTED-ADMIN-STATUS-TRANSITION-MATRIX.md';
 const suiteRunnerPath = 'scripts/validate-release-candidate-suite.cjs';
 const protectedAdminShellPath = 'website/app/admin/protected-admin-shell.tsx';
 const phase3rMergeCommit = 'ef18c2357d37fdb613851c427130bb108861de31';
@@ -24,6 +29,7 @@ const phase3tMergeCommit = '66840d5d3bb77d39200a864bfcbecc29ee859f76';
 const phase3uMergeCommit = 'dd2c3c0176c427e69efa01d6e54841637d61548c';
 const phase3vMergeCommit = '3904a661aa3d72606d4c48743030406656128b2c';
 const phase3wMergeCommit = '54cd8d5e7b829e56d245da2ca503c9b4058dca76';
+const phase3xMergeCommit = '50316a5c4052607487ba7409d5dc854889db6e24';
 const sourceExtensions = new Set(['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs']);
 const forbiddenCustomerFlowTermPattern = new RegExp(
   `\\b(?:${[
@@ -43,7 +49,7 @@ const forbiddenCustomerFlowTermPattern = new RegExp(
   'i',
 );
 const publicInternalLeakPattern =
-  /Owner-demo|walkthrough|closure readiness|deployment approval|internal review|admin-only|protected content readiness|owner input required|issue backlog|route decision matrix|\/admin\/content-readiness|release-candidate acceptance matrix|route inventory freeze|acceptance status|local release-candidate|command centre|owner handoff|handoff pack|deployment firewall|acceptance triage|final local owner handoff|quote\/enquiry acceptance snapshot/i;
+  /Owner-demo|walkthrough|closure readiness|deployment approval|internal review|admin-only|protected content readiness|owner input required|issue backlog|route decision matrix|\/admin\/content-readiness|release-candidate acceptance matrix|route inventory freeze|acceptance status|local release-candidate|command centre|owner handoff|handoff pack|deployment firewall|acceptance triage|final local owner handoff|quote\/enquiry acceptance snapshot|destructive-action safeguards|recovery lane statuses|status-transition matrix|protected admin destructive-action\/recovery snapshot|internal notes|admin-only readiness/i;
 const forbiddenBusinessFactPattern =
   /award-winning|certified partner|trusted by|5-star|guaranteed availability|guaranteed delivery|licensed and insured|testimonial|client logo|case study|legal guarantee|production policy/i;
 const forbiddenContactFactPattern =
@@ -448,10 +454,76 @@ function assertProtectedAdminWriteOpsChecklist() {
   assertNoMatch(checklist, forbiddenContactFactPattern, 'protected admin write-ops acceptance checklist');
 }
 
+
+function assertProtectedAdminDestructiveActionDocs() {
+  const safeguards = readRepoFile(protectedAdminDestructiveActionSafeguardsPath);
+  const recovery = readRepoFile(protectedAdminRecoveryLanePath);
+  const matrix = readRepoFile(protectedAdminStatusTransitionMatrixPath);
+  const combined = [safeguards, recovery, matrix].join('\n');
+  const normalized = normalizeWhitespace(combined);
+
+  assertTracked(
+    [
+      protectedAdminDestructiveActionSafeguardsPath,
+      protectedAdminRecoveryLanePath,
+      protectedAdminStatusTransitionMatrixPath,
+    ],
+    'protected admin destructive-action recovery docs',
+  );
+
+  for (const required of [
+    'repo-local, template-only, non-live, and not evidence',
+    'Listing archive',
+    'Listing unpublish/draft',
+    'Category unpublish/archive',
+    'Media archive/deactivate',
+    'Primary image changes',
+    'Quote status transitions',
+    'Quote internal note updates',
+    'Recovery from failed admin writes',
+    'Protected action',
+    'Risk being guarded',
+    'Admin confirmation/helper text',
+    'Public exposure boundary',
+    'Recovery path',
+    'Local acceptance placeholder',
+    'Deployment approval remains not granted',
+    'Failed listing save',
+    'Missing category',
+    'Listing missing public-safe description',
+    'Missing rental unit',
+    'Listing missing media',
+    'Media missing alt text',
+    'Category published but empty',
+    'Quote status update failure',
+    'Quote internal note update failure',
+    'Admin review required',
+    'Owner input required',
+    'Retry protected write',
+    'Keep draft/protected',
+    'Safe to retry locally',
+    'Blocked before public visibility',
+    'Requires separate deployment approval',
+    'No guaranteed availability',
+    'No confirmed booking',
+    'No public quote status tracking',
+    'No payment/order/checkout wording',
+    'No deployment approval',
+    '[LOCAL ACCEPTANCE: NOT RUN / PASS / NEEDS FOLLOW-UP]',
+    '[DEPLOYMENT APPROVAL: NOT GRANTED]',
+  ]) {
+    assertIncludes(normalized, required, 'protected admin destructive-action recovery docs');
+  }
+
+  assertNoMatch(combined, filledEvidencePattern, 'protected admin destructive-action recovery docs');
+  assertNoMatch(combined.replace(/No guaranteed availability/g, 'No availability guarantee'), forbiddenBusinessFactPattern, 'protected admin destructive-action recovery docs');
+  assertNoMatch(combined, forbiddenContactFactPattern, 'protected admin destructive-action recovery docs');
+}
+
 function assertStatusDocs() {
   const status = readRepoFile('docs/PHASE-STATUS.md');
   const currentStatus = normalizeWhitespace(
-    status.split('Previous Current Phase 3W-A/B status:')[0] || status,
+    status.split('Previous Current Phase 3X-A/B status:')[0] || status,
   );
   const roadmap = normalizeWhitespace(readRepoFile('docs/PHASE-ROADMAP.md'));
   const readiness = readRepoFile('docs/PHASE-2-READINESS-PLAN.md');
@@ -466,14 +538,16 @@ function assertStatusDocs() {
   );
 
   for (const required of [
-    'Current phase: Phase 3X-A/B - protected admin write-ops hardening, content-operation guardrails, and local acceptance coverage.',
-    'Latest completed capability: Phase 3W-A/B catalogue listing media hardening, protected admin content-ops polish, and local acceptance coverage.',
-    'Last merged capability PR: #145',
-    `Merge commit: \`${phase3wMergeCommit}\``,
+    'Current phase: Phase 3Y-A/B - protected admin destructive-action safeguards, recovery lanes, and local acceptance coverage.',
+    'Latest completed capability: Phase 3X-A/B protected admin write-ops hardening, content-operation guardrails, and local acceptance coverage.',
+    'Last merged capability PR: #146',
+    `Merge commit: \`${phase3xMergeCommit}\``,
   ]) {
-    assertIncludes(currentStatus, required, 'Phase 3X status');
+    assertIncludes(currentStatus, required, 'Phase 3Y status');
   }
 
+  assertIncludes(status, 'Previous Current Phase 3X-A/B status', 'Phase 3Y status');
+  assertIncludes(status, `Merge commit: \`${phase3wMergeCommit}\``, 'Phase 3X history');
   assertIncludes(status, 'Previous Current Phase 3W-A/B status', 'Phase 3X status');
   assertIncludes(status, `Merge commit: \`${phase3vMergeCommit}\``, 'Phase 3W history');
   assertIncludes(status, 'Previous Current Phase 3V-A/B status', 'Phase 3W status');
@@ -488,8 +562,8 @@ function assertStatusDocs() {
   assertIncludes(status, 'Previous Current Phase 3R-A/B status', 'Phase 3S status');
   assertIncludes(
     roadmap,
-    'Phase 3X-A/B hardens the protected admin write operations lane',
-    'Phase 3X roadmap',
+    'Phase 3Y-A/B hardens protected admin destructive-action safeguards',
+    'Phase 3Y roadmap',
   );
   assertIncludes(
     roadmap,
@@ -511,6 +585,8 @@ function assertStatusDocs() {
     'Phase 3S-A/B adds a repo-local release-candidate acceptance gate, route inventory freeze, and public/admin regression harness',
     'Phase 3S roadmap',
   );
+  assertIncludes(readiness, 'Current Phase 3Y-A/B status', 'Phase 3Y readiness');
+  assertIncludes(readiness, 'Previous Current Phase 3X-A/B status', 'Phase 3Y readiness');
   assertIncludes(readiness, 'Current Phase 3X-A/B status', 'Phase 3X readiness');
   assertIncludes(readiness, 'Previous Current Phase 3W-A/B status', 'Phase 3X readiness');
   assertIncludes(readiness, 'Previous Current Phase 3V-A/B status', 'Phase 3W readiness');
@@ -524,8 +600,8 @@ function assertStatusDocs() {
   assertIncludes(readiness, 'Previous Current Phase 3R-A/B status', 'Phase 3S readiness');
   assertIncludes(
     decisionLog,
-    'Decision: Phase 3X-A/B hardens protected admin listing, category, media, and quote follow-up write operations, content-operation guardrails, and local acceptance coverage.',
-    'Phase 3W decision log',
+    'Decision: Phase 3Y-A/B adds protected admin destructive-action safeguard docs, recovery lane guidance, a status-transition matrix',
+    'Phase 3Y decision log',
   );
   assertIncludes(
     decisionLog,
@@ -534,8 +610,8 @@ function assertStatusDocs() {
   );
   assertIncludes(
     checklist,
-    '## Phase 3X-A/B Protected Admin Write-Ops Hardening Content-Operation Guardrails And Local Acceptance Coverage',
-    'Phase 3W checklist',
+    '## Phase 3Y-A/B Protected Admin Destructive-Action Safeguards Recovery Lanes And Local Acceptance Coverage',
+    'Phase 3Y checklist',
   );
   assertIncludes(
     checklist,
@@ -581,6 +657,9 @@ function assertStatusDocs() {
   assertIncludes(ownerReviewDocs, quoteWorkflowChecklistPath, 'owner review docs');
   assertIncludes(ownerReviewDocs, catalogueListingMediaChecklistPath, 'owner review docs');
   assertIncludes(ownerReviewDocs, protectedAdminWriteOpsChecklistPath, 'owner review docs');
+  assertIncludes(ownerReviewDocs, protectedAdminDestructiveActionSafeguardsPath, 'owner review docs');
+  assertIncludes(ownerReviewDocs, protectedAdminRecoveryLanePath, 'owner review docs');
+  assertIncludes(ownerReviewDocs, protectedAdminStatusTransitionMatrixPath, 'owner review docs');
   assertIncludes(ownerReviewDocs, 'quote/enquiry workflow acceptance checklist', 'owner review docs');
   assertIncludes(ownerReviewDocs, 'catalogue/listing/media', 'owner review docs');
   assertIncludes(ownerReviewDocs, 'final local owner handoff pack', 'owner review docs');
@@ -600,6 +679,9 @@ function assertProtectedAdminShell() {
   assertIncludes(shell, quoteWorkflowChecklistPath, 'protected admin shell');
   assertIncludes(shell, catalogueListingMediaChecklistPath, 'protected admin shell');
   assertIncludes(shell, protectedAdminWriteOpsChecklistPath, 'protected admin shell');
+  assertIncludes(shell, protectedAdminDestructiveActionSafeguardsPath, 'protected admin shell');
+  assertIncludes(shell, protectedAdminRecoveryLanePath, 'protected admin shell');
+  assertIncludes(shell, protectedAdminStatusTransitionMatrixPath, 'protected admin shell');
   assertIncludes(shell, 'localAcceptanceSnapshot', 'protected admin shell');
   assertIncludes(shell, 'localAcceptanceLastLocalUpdate', 'protected admin shell');
   assertIncludes(shell, 'Local release-candidate acceptance snapshot', 'protected admin shell');
@@ -618,6 +700,8 @@ function assertProtectedAdminShell() {
   assertIncludes(shell, 'protectedAdminWriteOpsAcceptanceSnapshot', 'protected admin shell');
   assertIncludes(shell, 'protectedAdminWriteOpsLastLocalUpdate', 'protected admin shell');
   assertIncludes(shell, 'Protected admin write-ops acceptance snapshot', 'protected admin shell');
+  assertIncludes(shell, 'protectedAdminDestructiveRecoverySnapshot', 'protected admin shell');
+  assertIncludes(shell, 'Protected admin destructive-action/recovery snapshot', 'protected admin shell');
 }
 
 function assertPublicSourceBoundary() {
@@ -719,6 +803,7 @@ assertFinalOwnerHandoffMaterials();
 assertQuoteEnquiryWorkflowChecklist();
 assertCatalogueListingMediaChecklist();
 assertProtectedAdminWriteOpsChecklist();
+assertProtectedAdminDestructiveActionDocs();
 assertStatusDocs();
 assertProtectedAdminShell();
 assertPublicSourceBoundary();
