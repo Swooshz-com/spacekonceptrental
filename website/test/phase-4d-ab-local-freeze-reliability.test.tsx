@@ -8,15 +8,18 @@ import { AdminShellContent } from "../app/admin/protected-admin-shell";
 
 const repoRoot = resolve(process.cwd(), "..");
 const sourceExtensions = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"]);
-const rehearsalPackPath = "docs/content/LOCAL-OWNER-REVIEW-REHEARSAL-PACK.md";
-const blockerLedgerPath = "docs/content/LOCAL-BLOCKER-LEDGER-TEMPLATE.md";
-const acceptanceDrillPath = "docs/content/LOCAL-ACCEPTANCE-DRILL.md";
-const phase150MergeCommit = "baa076679756751a725ea65ac565545c6fe56d76";
+const localFreezePath = "docs/content/LOCAL-RELEASE-CANDIDATE-FREEZE.md";
+const fullSuiteGatePath = "docs/content/FULL-SUITE-RELIABILITY-GATE.md";
+const deploymentFirewallPath = "docs/content/DEPLOYMENT-PLANNING-FIREWALL-CLOSURE.md";
+const phase151MergeCommit = "9c7d167f98694f2ffbb1d9a0439c9fbbed4a9336";
 
 const publicLeakPattern = new RegExp(
   [
+    "Local release-candidate freeze",
+    "Full-suite reliability gate",
+    "Deployment-planning firewall closure",
     "Local owner-review rehearsal pack",
-    "Local blocker ledger template",
+    "Local blocker ledger",
     "Local acceptance drill",
     "Owner-input intake control",
     "Local correction queue",
@@ -98,57 +101,47 @@ function readTrackedProductionSources(paths: string[]) {
     .join("\n");
 }
 
-describe("Phase 4C-A/B local owner-review rehearsal", () => {
+describe("Phase 4D-A/B local freeze reliability gate", () => {
   afterEach(() => cleanup());
 
-  it("adds template-only rehearsal, blocker ledger, and acceptance drill docs", () => {
-    expect(readTrackedFiles([rehearsalPackPath, blockerLedgerPath, acceptanceDrillPath]).sort()).toEqual(
-      [rehearsalPackPath, blockerLedgerPath, acceptanceDrillPath].sort()
+  it("adds template-only local freeze, full-suite reliability, and deployment firewall docs", () => {
+    expect(readTrackedFiles([localFreezePath, fullSuiteGatePath, deploymentFirewallPath]).sort()).toEqual(
+      [localFreezePath, fullSuiteGatePath, deploymentFirewallPath].sort()
     );
 
     const combined = normalizeWhitespace(
-      [readRepoFile(rehearsalPackPath), readRepoFile(blockerLedgerPath), readRepoFile(acceptanceDrillPath)].join("\n")
+      [readRepoFile(localFreezePath), readRepoFile(fullSuiteGatePath), readRepoFile(deploymentFirewallPath)].join("\n")
     );
 
     for (const required of [
       "repo-local, template-only, non-live, and not evidence",
-      "Homepage",
-      "Listings/catalogue/category route",
-      "Listing detail",
-      "Event-use browsing",
-      "Quote/enquiry form",
-      "Quote/enquiry receipt-style confirmation",
-      "Protected admin listing/category/media workspace",
-      "Protected admin quote inbox",
-      "Protected admin release-control workspace",
-      "Owner-input/correction queue snapshot",
-      "What to show",
-      "What to ask",
-      "What must not be claimed",
-      "Missing owner input placeholder",
-      "Local correction placeholder",
+      "Locally frozen",
+      "Owner input still required",
+      "Local correction still required",
+      "Protected admin review still required",
+      "Public visibility still blocked",
+      "Deployment planning still blocked",
+      "Requires separate deployment approval",
+      "Freeze area",
+      "Required local proof",
+      "Remaining blocker placeholder",
+      "Owner input boundary",
       "Public exposure boundary",
       "Evidence status",
       "Deployment approval status",
       "[NOT EVIDENCE / NOT RECORDED]",
       "[DEPLOYMENT APPROVAL: NOT GRANTED]",
-      "Owner input missing",
-      "Local correction required",
-      "Public visibility blocked",
-      "Protected admin review required",
-      "Fake-fact risk",
-      "Public leakage risk",
-      "Provider/runtime blocked",
-      "Deployment planning blocked",
-      "Requires separate deployment approval",
-      "Confirm public route wording remains rental/enquiry-only",
-      "Confirm quote/enquiry remains request/intake only",
-      "Confirm no public account/tracking/upload/notification/CRM flow exists",
-      "Confirm no ecommerce/cart/checkout/order/payment wording exists",
-      "Confirm admin-only release-control and correction internals are protected",
-      "Confirm fake facts remain absent",
-      "Confirm no provider/runtime/deployment files or env reads were added",
-      "Confirm release-candidate suite was not weakened"
+      "Full website tests must not hang",
+      "Targeted tests do not replace the full suite",
+      "CI-green is required before merge",
+      "No validator or suite may be altered to skip Docker-required checks",
+      "No safety assertion may be removed just to pass tests",
+      "Local release-candidate freeze is not deployment approval",
+      "Owner review rehearsal is not owner sign-off",
+      "Owner input placeholders are not owner decisions",
+      "Passing local tests is not provider approval",
+      "Preview deployment planning is blocked until explicit owner approval",
+      "Production launch is blocked"
     ]) {
       expect(combined).toContain(required);
     }
@@ -156,7 +149,7 @@ describe("Phase 4C-A/B local owner-review rehearsal", () => {
     expect(combined).not.toMatch(forbiddenEvidencePattern);
   });
 
-  it("rolls status docs forward from PR #150", () => {
+  it("rolls status docs forward from PR #151", () => {
     const combined = normalizeWhitespace(
       [
         readRepoFile("docs/PHASE-STATUS.md"),
@@ -170,30 +163,28 @@ describe("Phase 4C-A/B local owner-review rehearsal", () => {
       ].join("\n")
     );
 
-    expect(combined).toContain("Current phase: Phase 4C-A/B local owner-review rehearsal pack, blocker ledger, and acceptance drill validator");
-    expect(combined).toContain(
-      "Latest completed capability: Phase 4B-A/B owner-input intake control, local correction queue, and review-ready handoff closure"
-    );
-    expect(combined).toContain("Last merged capability PR: #150");
-    expect(combined).toContain(phase150MergeCommit);
-    expect(combined).toContain(rehearsalPackPath);
-    expect(combined).toContain(blockerLedgerPath);
-    expect(combined).toContain(acceptanceDrillPath);
-    expect(combined).toContain("validate:owner-review-rehearsal");
+    expect(combined).toContain("Current phase: Phase 4D-A/B local release-candidate freeze, full-suite reliability gate, and deployment-planning firewall closure");
+    expect(combined).toContain("Latest completed capability: Phase 4C-A/B local owner-review rehearsal pack, blocker ledger, and acceptance drill validator");
+    expect(combined).toContain("Last merged capability PR: #151");
+    expect(combined).toContain(phase151MergeCommit);
+    expect(combined).toContain(localFreezePath);
+    expect(combined).toContain(fullSuiteGatePath);
+    expect(combined).toContain(deploymentFirewallPath);
+    expect(combined).toContain("validate:local-freeze");
   });
 
-  it("renders the Phase 4C rehearsal snapshot only for authorised admin state", () => {
+  it("renders the Phase 4D local-freeze snapshot only for authorised admin state", () => {
     render(<AdminShellContent state={authorisedAdminState} view={{ kind: "release-control" }} />);
     expect(screen.getByRole("heading", { name: /phase 4d-a\/b local release-candidate freeze/i })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: /phase 4c rehearsal snapshot/i })).toBeInTheDocument();
-    expect(screen.getByText("Phase 4C-A/B")).toBeInTheDocument();
-    expect(screen.getByText("#150")).toBeInTheDocument();
-    expect(screen.getByText(phase150MergeCommit)).toBeInTheDocument();
-    expect(screen.getAllByText(rehearsalPackPath).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(blockerLedgerPath).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(acceptanceDrillPath).length).toBeGreaterThan(0);
+    expect(screen.getByRole("heading", { name: /phase 4d local-freeze snapshot/i })).toBeInTheDocument();
+    expect(screen.getAllByText(localFreezePath).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(fullSuiteGatePath).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(deploymentFirewallPath).length).toBeGreaterThan(0);
     expect(screen.getAllByText("Owner input boundary").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Local correction boundary").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Public exposure boundary").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Evidence boundary").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Deployment approval boundary").length).toBeGreaterThan(0);
     cleanup();
 
     for (const state of [
@@ -202,26 +193,26 @@ describe("Phase 4C-A/B local owner-review rehearsal", () => {
       { status: "unavailable" as const }
     ]) {
       render(<AdminShellContent state={state} view={{ kind: "release-control" }} />);
-      expect(screen.queryByRole("heading", { name: /phase 4c rehearsal snapshot/i })).not.toBeInTheDocument();
-      expect(screen.queryByText(rehearsalPackPath)).not.toBeInTheDocument();
+      expect(screen.queryByRole("heading", { name: /phase 4d local-freeze snapshot/i })).not.toBeInTheDocument();
+      expect(screen.queryByText(localFreezePath)).not.toBeInTheDocument();
       cleanup();
     }
   });
 
-  it("keeps protected admin shell and route wired to Phase 4C docs", () => {
+  it("keeps protected admin shell and route wired to Phase 4D docs", () => {
     const shell = readRepoFile("website/app/admin/protected-admin-shell.tsx");
     const route = readRepoFile("website/app/admin/release-control/page.tsx");
 
-    expect(shell).toContain(rehearsalPackPath);
-    expect(shell).toContain(blockerLedgerPath);
-    expect(shell).toContain(acceptanceDrillPath);
-    expect(shell).toContain("phase4cOwnerReviewRehearsalSnapshot");
-    expect(shell).toContain("phase4cOwnerReviewRehearsalDocs");
-    expect(shell).toContain("Phase 4C rehearsal snapshot");
+    expect(shell).toContain(localFreezePath);
+    expect(shell).toContain(fullSuiteGatePath);
+    expect(shell).toContain(deploymentFirewallPath);
+    expect(shell).toContain("phase4dLocalFreezeSnapshot");
+    expect(shell).toContain("phase4dLocalFreezeDocs");
+    expect(shell).toContain("Phase 4D local-freeze snapshot");
     expect(route).toContain('view={{ kind: "release-control" }}');
   });
 
-  it("keeps public source free of rehearsal internals and blocked public wording", () => {
+  it("keeps public source free of local-freeze internals and blocked public wording", () => {
     const publicSource = readTrackedProductionSources([
       "website/app/layout.tsx",
       "website/app/page.tsx",
@@ -244,7 +235,7 @@ describe("Phase 4C-A/B local owner-review rehearsal", () => {
     expect(publicSource).not.toMatch(/public quote tracking|customer account|customer upload|CRM|notification/i);
   });
 
-  it("keeps forbidden runtime/provider/deployment files, env reads, and suite bypasses absent", () => {
+  it("keeps forbidden runtime/provider/deployment files, env reads, suite bypasses, and test skips absent", () => {
     expect(existsSync(resolve(repoRoot, "website/chat-config.js"))).toBe(false);
     expect(readTrackedFiles([
       "website/chat-config.js",
@@ -270,8 +261,18 @@ describe("Phase 4C-A/B local owner-review rehearsal", () => {
     const appAndLibSource = readTrackedProductionSources(["website/app", "website/components", "website/lib"]);
     const packageSource = readRepoFile("package.json") + readRepoFile("website/package.json");
     const suiteRunner = readRepoFile("scripts/validate-release-candidate-suite.cjs");
+    const websiteTests = readTrackedFiles(["website"])
+      .filter((filePath) => /\.(?:test|spec)\.[cm]?[tj]sx?$/.test(filePath))
+      .map((filePath) => readRepoFile(filePath))
+      .join("\n");
     expect(packageSource).not.toMatch(/@pinecone-database|pinecone/i);
     expect(appAndLibSource).not.toMatch(/NEXT_PUBLIC_SUPABASE|NEXT_PUBLIC_N8N|SUPABASE_SERVICE_ROLE|PINECONE_API_KEY|PINECONE_ENV|PINECONE_INDEX/i);
     expect(suiteRunner).not.toMatch(/docker[^\n]*(?:skip|bypass)|(?:skip|bypass)[^\n]*docker/i);
+    expect(websiteTests).not.toMatch(/\b(?:describe|it|test)\.(?:skip|only)\s*\(/);
+  });
+
+  it("registers validate:local-freeze", () => {
+    const packageJson = JSON.parse(readRepoFile("package.json"));
+    expect(packageJson.scripts["validate:local-freeze"]).toBe("node scripts/validate-local-freeze.cjs");
   });
 });

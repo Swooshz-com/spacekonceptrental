@@ -861,6 +861,29 @@ const phase4cOwnerReviewRehearsalSnapshot = [
   ["Deployment approval boundary", "[DEPLOYMENT APPROVAL: NOT GRANTED]"]
 ] as const;
 
+
+const localReleaseCandidateFreezePath =
+  "docs/content/LOCAL-RELEASE-CANDIDATE-FREEZE.md";
+const fullSuiteReliabilityGatePath =
+  "docs/content/FULL-SUITE-RELIABILITY-GATE.md";
+const deploymentPlanningFirewallClosurePath =
+  "docs/content/DEPLOYMENT-PLANNING-FIREWALL-CLOSURE.md";
+const phase4dLocalFreezeDocs = [
+  localReleaseCandidateFreezePath,
+  fullSuiteReliabilityGatePath,
+  deploymentPlanningFirewallClosurePath
+] as const;
+const phase4dLocalFreezeSnapshot = [
+  ["Local release-candidate freeze", "Locally frozen / template only / not evidence"],
+  ["Full-suite reliability gate", "Full website tests must not hang"],
+  ["Deployment-planning firewall closure", "Deployment planning still blocked"],
+  ["Owner input boundary", "Owner input still required; no owner decisions recorded"],
+  ["Local correction boundary", "Local correction still required before public visibility"],
+  ["Public exposure boundary", "Public visibility still blocked for release-control internals"],
+  ["Evidence boundary", "[NOT EVIDENCE / NOT RECORDED]"],
+  ["Deployment approval boundary", "[DEPLOYMENT APPROVAL: NOT GRANTED]"]
+] as const;
+
 const publicJourneyReadinessClosurePath =
   "docs/content/PUBLIC-JOURNEY-READINESS-CLOSURE.md";
 const quoteEnquiryPublicExpectationBoundaryPath =
@@ -971,7 +994,7 @@ function ReleaseControlWorkspace() {
       <div className="admin-dashboard__header">
         <div>
           <p className="eyebrow">Release control</p>
-          <h2>Phase 4C-A/B local owner-review rehearsal</h2>
+          <h2>Phase 4D-A/B local release-candidate freeze</h2>
           <p>
             This protected admin workspace is repo-local and template-only. It
             summarizes local review boundaries before any future deployment
@@ -1005,7 +1028,8 @@ function ReleaseControlWorkspace() {
             {[
               ...phase4aReleaseControlDocs,
               ...phase4bOwnerInputCorrectionDocs,
-              ...phase4cOwnerReviewRehearsalDocs
+              ...phase4cOwnerReviewRehearsalDocs,
+              ...phase4dLocalFreezeDocs
             ].map((docPath) => (
               <li key={docPath}>
                 <div>
@@ -1039,11 +1063,35 @@ function ReleaseControlWorkspace() {
             ))}
           </ul>
           <p>
-            The Phase 4C rehearsal snapshot is protected admin-only. It keeps
-            owner review prompts, blocker ledger placeholders, local acceptance
+            The Phase 4C-A/B local owner-review rehearsal snapshot is protected
+            admin-only. It keeps owner review prompts, blocker ledger placeholders, local acceptance
             drill commands, owner-input boundaries, local correction boundaries,
             evidence boundaries, and deployment approval boundaries out of
             public routes.
+          </p>
+        </section>
+
+        <section className="admin-dashboard__card admin-dashboard__card--summary">
+          <h3>Phase 4D local-freeze snapshot</h3>
+          <dl className="quote-inbox__details">
+            {phase4dLocalFreezeSnapshot.map(([label, value]) => (
+              <div key={label}>
+                <dt>{label}</dt>
+                <dd>{value}</dd>
+              </div>
+            ))}
+          </dl>
+          <ul className="admin-dashboard__list">
+            {phase4dLocalFreezeDocs.map((docPath) => (
+              <li key={docPath}>{docPath}</li>
+            ))}
+          </ul>
+          <p>
+            The Phase 4D local-freeze snapshot is protected admin-only. It keeps
+            release-candidate freeze details, full-suite reliability boundaries,
+            deployment-planning firewall closure, owner input boundaries, local
+            correction boundaries, evidence boundaries, and deployment approval
+            boundaries out of public routes.
           </p>
         </section>
 

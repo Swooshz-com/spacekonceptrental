@@ -1,5 +1,22 @@
 # Phase Roadmap
 
+## Phase 4D-A/B Local Release-Candidate Freeze References
+
+Current phase: Phase 4D-A/B local release-candidate freeze, full-suite reliability gate, and deployment-planning firewall closure.
+
+Latest completed capability: Phase 4C-A/B local owner-review rehearsal pack, blocker ledger, and acceptance drill validator.
+
+Last merged capability PR: #151
+
+Merge commit: `9c7d167f98694f2ffbb1d9a0439c9fbbed4a9336`
+
+Phase 4D-A/B adds a repo-local local release-candidate freeze, full-suite reliability gate, deployment-planning firewall closure, validate:local-freeze validator, full website test-suite reliability hardening, and protected admin Phase 4D local-freeze snapshot. These controls are template-only, non-live, not evidence, and do not record owner feedback, owner decisions, owner corrections, owner sign-off, preview evidence, production evidence, provider approval, or deployment approval.
+
+Phase 4D-A/B references `docs/content/LOCAL-RELEASE-CANDIDATE-FREEZE.md`, `docs/content/FULL-SUITE-RELIABILITY-GATE.md`, `docs/content/DEPLOYMENT-PLANNING-FIREWALL-CLOSURE.md`, and `scripts/validate-local-freeze.cjs`.
+
+No deployment is performed or approved by Phase 4D-A/B. It does not add provider config, Vercel config, Supabase Cloud config, real secrets or env values, filled evidence, browser Supabase, service-role runtime paths, n8n/Pinecone runtime changes, `/api/chat` retrieval wiring, public uploads, customer accounts, public quote tracking, notifications, CRM, invented operational facts, ecommerce flows, payment/order/checkout flows, booking/reservation flows, fulfilment flows, stock-reservation flows, or public admin internals.
+
+
 ## Phase 4C-A/B Local Owner-Review Rehearsal Pack Blocker Ledger And Acceptance Drill Validator
 
 Phase 4C-A/B turns the Phase 4B-A/B owner-input intake and local correction queue into a deterministic local rehearsal workflow. It adds a template-only local owner-review rehearsal pack, blocker ledger template, local acceptance drill, owner-review rehearsal validator, and protected admin Phase 4C rehearsal snapshot for local review readiness only.

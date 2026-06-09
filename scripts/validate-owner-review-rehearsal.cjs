@@ -31,6 +31,12 @@ const publicSourceRoots = [
 ];
 const sourceExtensions = new Set(['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs']);
 const phase4bMergeCommit = 'baa076679756751a725ea65ac565545c6fe56d76';
+const phase151MergeCommit = '9c7d167f98694f2ffbb1d9a0439c9fbbed4a9336';
+const phase4dDocs = [
+  'docs/content/LOCAL-RELEASE-CANDIDATE-FREEZE.md',
+  'docs/content/FULL-SUITE-RELIABILITY-GATE.md',
+  'docs/content/DEPLOYMENT-PLANNING-FIREWALL-CLOSURE.md',
+];
 
 function fail(message) {
   console.error(`Owner-review rehearsal validation failed: ${message}`);
@@ -60,6 +66,10 @@ function assertIncludes(source, expected, label) {
 
 function assertNoMatch(source, pattern, label) {
   assert(!pattern.test(source), `${label} contains forbidden ${pattern}`);
+}
+
+function normalizeWhitespace(source) {
+  return source.replace(/\s+/g, ' ').trim();
 }
 
 function isProductionSource(filePath) {
@@ -154,6 +164,32 @@ function assertAdminReleaseControl() {
   assertIncludes(route, 'view={{ kind: "release-control" }}', 'release-control route');
 }
 
+function assertPhase4dLocalFreeze() {
+  const tracked = trackedFiles(phase4dDocs).sort();
+  assert(JSON.stringify(tracked) === JSON.stringify([...phase4dDocs].sort()), 'Phase 4D local-freeze docs must be tracked.');
+  const statusDocs = normalizeWhitespace(statusDocPaths.map(readRepoFile).join('\n'));
+  for (const required of [
+    'Current phase: Phase 4D-A/B local release-candidate freeze, full-suite reliability gate, and deployment-planning firewall closure',
+    'Latest completed capability: Phase 4C-A/B local owner-review rehearsal pack, blocker ledger, and acceptance drill validator',
+    'Last merged capability PR: #151',
+    phase151MergeCommit,
+    'validate:local-freeze',
+    ...phase4dDocs,
+  ]) {
+    assertIncludes(statusDocs, required, 'Phase 4D status docs');
+  }
+  const shell = readRepoFile('website/app/admin/protected-admin-shell.tsx');
+  for (const required of ['phase4dLocalFreezeSnapshot', 'phase4dLocalFreezeDocs', ...phase4dDocs]) {
+    assertIncludes(shell, required, 'protected admin shell Phase 4D snapshot');
+  }
+  const packageJson = JSON.parse(readRepoFile('package.json'));
+  assert(
+    packageJson.scripts['validate:local-freeze'] === 'node scripts/validate-local-freeze.cjs',
+    'validate:local-freeze script is missing.',
+  );
+  execFileSync('node', ['scripts/validate-local-freeze.cjs'], { cwd: repoRoot, stdio: 'inherit' });
+}
+
 function assertNoFilledEvidenceOrForbiddenTrackedFiles() {
   const tracked = trackedFiles(['.']);
   const forbiddenPrefixes = [
@@ -232,5 +268,6 @@ assertNoFilledEvidenceOrForbiddenTrackedFiles();
 assertPublicSourceSafe();
 assertReleaseCandidateSuiteNotWeakened();
 assertPackageScript();
+assertPhase4dLocalFreeze();
 
 console.log('Owner-review rehearsal validation passed. No deployment was performed. This does not approve deployment.');

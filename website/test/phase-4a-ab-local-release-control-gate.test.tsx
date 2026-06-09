@@ -181,7 +181,7 @@ describe("Phase 4A-A/B local release-control gate", () => {
 
   it("renders the release-control workspace only for authorised admin state", () => {
     render(<AdminShellContent state={authorisedAdminState} view={{ kind: "release-control" }} />);
-    expect(screen.getByRole("heading", { name: /phase 4c-a\/b local owner-review rehearsal/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /phase 4d-a\/b local release-candidate freeze/i })).toBeInTheDocument();
     expect(screen.getByText("Current phase")).toBeInTheDocument();
     expect(screen.getByText("Phase 4C-A/B")).toBeInTheDocument();
     expect(screen.getByText("Last merged capability PR")).toBeInTheDocument();
@@ -197,7 +197,7 @@ describe("Phase 4A-A/B local release-control gate", () => {
       { status: "unavailable" as const }
     ]) {
       render(<AdminShellContent state={state} view={{ kind: "release-control" }} />);
-      expect(screen.queryByRole("heading", { name: /phase 4c-a\/b local owner-review rehearsal/i })).not.toBeInTheDocument();
+      expect(screen.queryByRole("heading", { name: /phase 4d-a\/b local release-candidate freeze/i })).not.toBeInTheDocument();
       expect(screen.queryByText(phase4aGatePath)).not.toBeInTheDocument();
       cleanup();
     }
