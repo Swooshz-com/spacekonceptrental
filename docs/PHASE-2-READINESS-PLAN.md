@@ -1,3 +1,19 @@
+## Phase 4F-A/B Owner Handoff Bundle References
+
+Current phase: Phase 4F-A/B owner-facing review handoff bundle, approval issue template, and no-deploy preflight command center.
+
+Latest completed capability: Phase 4E-A/B owner approval request packet, preview-planning handoff template, and final no-deploy decision gate.
+
+Last merged capability PR: #153.
+
+Last merged capability merge commit: 0e5379d21edd9ee67b9f929a3ba8e217d51ed17f.
+
+Phase 4F-A/B adds a repo-local owner-facing review brief, blank owner approval issue template, no-deploy preflight command center, owner handoff bundle index, validate:owner-handoff-bundle validator, and protected admin Phase 4F handoff-bundle snapshot. These controls are template-only, non-live, not evidence, and do not record owner approval, owner feedback, owner decisions, owner corrections, owner sign-off, preview evidence, production evidence, provider approval, or deployment approval.
+
+Phase 4F-A/B references `docs/content/OWNER-FACING-REVIEW-BRIEF.md`, `.github/ISSUE_TEMPLATE/owner-approval-request.md`, `docs/content/NO-DEPLOY-PREFLIGHT-COMMAND-CENTER.md`, `docs/OWNER-HANDOFF-BUNDLE.md`, and `scripts/validate-owner-handoff-bundle.cjs`.
+
+No deployment is performed or approved by Phase 4F-A/B. It does not add provider config, Vercel config, Supabase Cloud config, real secrets or env values, filled evidence, browser Supabase, service-role runtime paths, n8n/Pinecone runtime changes, `/api/chat` retrieval wiring, public uploads, customer accounts, public quote tracking, notifications, CRM, invented operational facts, ecommerce flows, payment/order/checkout flows, booking/reservation flows, fulfilment flows, stock-reservation flows, or public admin internals.
+
 
 ## Phase 4E-A/B Owner Approval Request Gate References
 

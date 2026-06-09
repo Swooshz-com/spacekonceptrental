@@ -30,6 +30,11 @@ const commandPlan = [
     args: ['run', 'validate:local-freeze'],
   },
   {
+    label: 'Validate owner handoff bundle',
+    cwd: repoRoot,
+    args: ['run', 'validate:owner-handoff-bundle'],
+  },
+  {
     label: 'Validate owner approval request',
     cwd: repoRoot,
     args: ['run', 'validate:owner-approval-request'],
