@@ -1,5 +1,13 @@
 # Phase Roadmap
 
+## Phase 4B-A/B Owner-Input Intake Control Local Correction Queue And Review-Ready Handoff Closure
+
+Phase 4B-A/B turns the Phase 4A-A/B release-control gate into a deterministic owner-input and local-correction control layer. It adds owner-input intake control, a local correction queue, review-ready handoff closure templates, and a protected admin owner-input/correction snapshot for local review readiness only.
+
+Deployment remains unapproved. Provider setup, Vercel config, Supabase Cloud config, browser Supabase, service-role runtime paths, n8n/Pinecone runtime changes, public tracking, customer accounts, uploads, ecommerce/payment/order/checkout flows, booking/reservation/fulfilment/stock-reservation flows, filled evidence, owner sign-off, owner feedback, and invented business facts remain out of scope.
+
+Last merged capability PR: #149. Merge commit: `d825a112d017e95bd28ce030a5755ef78223e4c1`. Latest completed capability: Phase 4A-A/B local release-control gate, owner-review rehearsal, and deployment approval firewall.
+
 ## Phase 4A-A/B Local Release-Control Gate Owner-Review Rehearsal And Deployment Approval Firewall
 
 Phase 4A-A/B moves from Phase 3Z-A/B public/admin readiness hardening into a protected repo-local release-control layer. It adds a local release-control gate, owner-review rehearsal runbook, deployment approval firewall matrix, and protected admin release-control workspace for local review readiness only.

@@ -1,5 +1,7 @@
 # Phase 2 Readiness Plan
 
+Phase 4B-A/B adds repo-local owner-input intake control, local correction queue, review-ready handoff closure templates, protected admin owner-input/correction snapshot coverage, deterministic local test coverage, and validator roll-forward. Latest completed capability: Phase 4A-A/B local release-control gate, owner-review rehearsal, and deployment approval firewall. Last merged capability PR: #149. Merge commit: `d825a112d017e95bd28ce030a5755ef78223e4c1`. Current phase: Phase 4B-A/B - owner-input intake control, local correction queue, and review-ready handoff closure.
+
 ## Current Phase 4A-A/B status
 
 Phase 4A-A/B adds a repo-local release-control gate, owner-review rehearsal runbook, deployment approval firewall matrix, protected admin release-control workspace, deterministic local test coverage, and validator roll-forward. Latest completed capability: Phase 3Z-A/B public route readiness closure, protected admin review bridge, and local acceptance coverage. Last merged capability PR: #148. Merge commit: `26792f73f8e7943eac5e421c6d829bde7613b562`.

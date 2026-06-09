@@ -768,12 +768,12 @@ const ownerReviewRehearsalRunbookPath =
 const deploymentApprovalFirewallMatrixPath =
   "docs/content/DEPLOYMENT-APPROVAL-FIREWALL-MATRIX.md";
 const phase4aReleaseControlSnapshot = [
-  ["Current phase", "Phase 4A-A/B"],
-  ["Last merged capability PR", "#148"],
-  ["Merge commit", "26792f73f8e7943eac5e421c6d829bde7613b562"],
+  ["Current phase", "Phase 4B-A/B"],
+  ["Last merged capability PR", "#149"],
+  ["Merge commit", "d825a112d017e95bd28ce030a5755ef78223e4c1"],
   [
     "Latest completed capability",
-    "Phase 3Z-A/B public route readiness closure, protected admin review bridge, and local acceptance coverage"
+    "Phase 4A-A/B local release-control gate, owner-review rehearsal, and deployment approval firewall"
   ],
   ["Public route readiness gate", "Local review ready / Local correction required"],
   ["Protected admin gate", "Protected admin review required"],
@@ -787,6 +787,56 @@ const phase4aReleaseControlDocs = [
   phase4aLocalReleaseControlGatePath,
   ownerReviewRehearsalRunbookPath,
   deploymentApprovalFirewallMatrixPath
+] as const;
+const ownerInputIntakeControlPath =
+  "docs/content/OWNER-INPUT-INTAKE-CONTROL.md";
+const localCorrectionQueuePath =
+  "docs/content/LOCAL-CORRECTION-QUEUE.md";
+const reviewReadyHandoffClosurePath =
+  "docs/content/REVIEW-READY-HANDOFF-CLOSURE.md";
+const phase4bOwnerInputCorrectionDocs = [
+  ownerInputIntakeControlPath,
+  localCorrectionQueuePath,
+  reviewReadyHandoffClosurePath
+] as const;
+const ownerInputIntakeCategories = [
+  "Public homepage wording",
+  "Public listing/category/event-use wording",
+  "Listing detail facts",
+  "Image selection and alt text",
+  "Quote/enquiry expectation wording",
+  "Contact/business-hour/service-area facts",
+  "Legal/policy/proof wording",
+  "Protected admin operator ownership",
+  "Deployment approval"
+] as const;
+const localCorrectionQueueStatuses = [
+  "Not evaluated",
+  "Owner input required",
+  "Ready for local correction",
+  "Local correction in progress",
+  "Local correction complete",
+  "Blocked before public visibility",
+  "Blocked before deployment planning",
+  "Requires separate deployment approval"
+] as const;
+const reviewReadyHandoffClosureStates = [
+  "Local review ready",
+  "Owner input required",
+  "Local correction required",
+  "Protected admin review required",
+  "Public visibility blocked",
+  "Deployment planning blocked",
+  "Requires separate deployment approval"
+] as const;
+const phase4bOwnerInputCorrectionSnapshot = [
+  ["Owner-input intake categories", ownerInputIntakeCategories.length],
+  ["Local correction queue statuses", localCorrectionQueueStatuses.length],
+  ["Review-ready handoff closure states", reviewReadyHandoffClosureStates.length],
+  ["Public exposure boundary", "No public owner-input, correction queue, handoff, or release-control internals"],
+  ["Admin-only privacy boundary", "Internal notes, operator ownership, and review details stay protected"],
+  ["Evidence boundary", "[NOT EVIDENCE / NOT RECORDED]"],
+  ["Deployment approval boundary", "[DEPLOYMENT APPROVAL: NOT GRANTED]"]
 ] as const;
 
 const publicJourneyReadinessClosurePath =
@@ -899,7 +949,7 @@ function ReleaseControlWorkspace() {
       <div className="admin-dashboard__header">
         <div>
           <p className="eyebrow">Release control</p>
-          <h2>Phase 4A-A/B release-control gate</h2>
+          <h2>Phase 4B-A/B owner-input correction queue</h2>
           <p>
             This protected admin workspace is repo-local and template-only. It
             summarizes local review boundaries before any future deployment
@@ -930,7 +980,7 @@ function ReleaseControlWorkspace() {
         <section className="admin-dashboard__card admin-dashboard__card--summary">
           <h3>Release-control documents</h3>
           <ul className="admin-dashboard__list">
-            {phase4aReleaseControlDocs.map((docPath) => (
+            {[...phase4aReleaseControlDocs, ...phase4bOwnerInputCorrectionDocs].map((docPath) => (
               <li key={docPath}>
                 <div>
                   <strong>{docPath}</strong>
@@ -944,6 +994,29 @@ function ReleaseControlWorkspace() {
             approval firewall checks without recording owner feedback, owner
             sign-off, live preview evidence, production evidence, provider
             configuration, or deployment approval.
+          </p>
+        </section>
+
+        <section className="admin-dashboard__card admin-dashboard__card--summary">
+          <h3>Owner-input and local correction snapshot</h3>
+          <dl className="quote-inbox__details">
+            {phase4bOwnerInputCorrectionSnapshot.map(([label, value]) => (
+              <div key={label}>
+                <dt>{label}</dt>
+                <dd>{value}</dd>
+              </div>
+            ))}
+          </dl>
+          <ul className="admin-dashboard__list">
+            <li>Owner-input intake categories: {ownerInputIntakeCategories.join("; ")}</li>
+            <li>Local correction queue statuses: {localCorrectionQueueStatuses.join("; ")}</li>
+            <li>Review-ready handoff closure states: {reviewReadyHandoffClosureStates.join("; ")}</li>
+          </ul>
+          <p>
+            This snapshot is protected admin-only. It separates missing owner
+            input, local correction work, admin-only review details, public
+            exposure boundaries, evidence boundaries, and deployment approval
+            boundaries without recording owner feedback or sign-off.
           </p>
         </section>
       </div>

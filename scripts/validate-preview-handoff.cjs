@@ -52,6 +52,9 @@ const contentReadinessRoutePath = 'website/app/admin/content-readiness/page.tsx'
 const protectedAdminShellPath = 'website/app/admin/protected-admin-shell.tsx';
 const releaseControlRoutePath = 'website/app/admin/release-control/page.tsx';
 const phase4aLocalReleaseControlGatePath = 'docs/release/PHASE-4A-LOCAL-RELEASE-CONTROL-GATE.md';
+const ownerInputIntakeControlPath = 'docs/content/OWNER-INPUT-INTAKE-CONTROL.md';
+const localCorrectionQueuePath = 'docs/content/LOCAL-CORRECTION-QUEUE.md';
+const reviewReadyHandoffClosurePath = 'docs/content/REVIEW-READY-HANDOFF-CLOSURE.md';
 const ownerReviewRehearsalRunbookPath = 'docs/content/OWNER-REVIEW-REHEARSAL-RUNBOOK.md';
 const deploymentApprovalFirewallMatrixPath = 'docs/content/DEPLOYMENT-APPROVAL-FIREWALL-MATRIX.md';
 const handoffValidatorPath = 'scripts/validate-preview-handoff.cjs';
@@ -101,6 +104,9 @@ const phase3wMergeCommit = '54cd8d5e7b829e56d245da2ca503c9b4058dca76';
 const phase3xMergeCommit = '50316a5c4052607487ba7409d5dc854889db6e24';
 const phase3yMergeCommit = '7f422fd47ffa75cf982bd4f9d859b530a96961ad';
 const phase3zMergeCommit = '26792f73f8e7943eac5e421c6d829bde7613b562';
+const phase4aMergeCommit = 'd825a112d017e95bd28ce030a5755ef78223e4c1';
+const filledEvidencePattern =
+  /owner approved|owner sign-?off complete|owner correction recorded|filled owner note|review completed on|signed off by|production evidence captured|preview evidence captured|actual owner decision|actual owner sign-off|manual QA completed|acceptance passed on/i;
 
 function fail(message) {
   console.error(message);
@@ -1560,17 +1566,26 @@ function assertPhase4aReleaseControl() {
       phase4aLocalReleaseControlGatePath,
       ownerReviewRehearsalRunbookPath,
       deploymentApprovalFirewallMatrixPath,
+      ownerInputIntakeControlPath,
+      localCorrectionQueuePath,
+      reviewReadyHandoffClosurePath,
       releaseControlRoutePath,
     ],
-    'Phase 4A release-control docs and route',
+    'Phase 4A/4B release-control docs and route',
   );
 
-  const docs = [
+  const phase4aDocs = [
     readRepoFile(phase4aLocalReleaseControlGatePath),
     readRepoFile(ownerReviewRehearsalRunbookPath),
     readRepoFile(deploymentApprovalFirewallMatrixPath),
   ].join('\n');
-  const normalized = normalizeWhitespace(docs);
+  const phase4bDocs = [
+    readRepoFile(ownerInputIntakeControlPath),
+    readRepoFile(localCorrectionQueuePath),
+    readRepoFile(reviewReadyHandoffClosurePath),
+  ].join('\n');
+  const normalized4a = normalizeWhitespace(phase4aDocs);
+  const normalized4b = normalizeWhitespace(phase4bDocs);
   const statusDocs = normalizeWhitespace(
     [
       readRepoFile('docs/PHASE-STATUS.md'),
@@ -1610,33 +1625,88 @@ function assertPhase4aReleaseControl() {
     'Production launch',
     '[DEPLOYMENT APPROVAL: NOT GRANTED]',
   ]) {
-    assertIncludes(normalized, required, 'Phase 4A release-control docs');
+    assertIncludes(normalized4a, required, 'Phase 4A release-control docs');
   }
 
   for (const required of [
-    'Current phase: Phase 4A-A/B',
-    'Latest completed capability: Phase 3Z-A/B public route readiness closure, protected admin review bridge, and local acceptance coverage',
-    'Last merged capability PR: #148',
-    phase3zMergeCommit,
-    phase4aLocalReleaseControlGatePath,
-    ownerReviewRehearsalRunbookPath,
-    deploymentApprovalFirewallMatrixPath,
+    'Public homepage wording',
+    'Public listing/category/event-use wording',
+    'Listing detail facts',
+    'Image selection and alt text',
+    'Quote/enquiry expectation wording',
+    'Contact/business-hour/service-area facts',
+    'Legal/policy/guarantee wording',
+    'Protected admin operator ownership',
+    'Deployment approval',
+    'Owner input needed',
+    'Current safe placeholder',
+    'Public exposure boundary',
+    'Admin-only handling',
+    'Local correction lane',
+    'Deployment approval boundary',
+    'Not evaluated',
+    'Owner input required',
+    'Ready for local correction',
+    'Local correction in progress',
+    'Local correction complete',
+    'Blocked before public visibility',
+    'Blocked before deployment planning',
+    'Requires separate deployment approval',
+    'Public copy',
+    'Listing/category content',
+    'Media/alt text',
+    'Quote/enquiry wording',
+    'Protected admin helper text',
+    'Admin workflow privacy',
+    'Fake-fact removal',
+    'Public leakage removal',
+    'Provider/deployment boundary',
+    'Local review ready',
+    'Local correction required',
+    'Protected admin review required',
+    'Public visibility blocked',
+    'Deployment planning blocked',
+    'No owner feedback recorded',
+    'No owner sign-off recorded',
+    'No preview evidence created',
+    'No production evidence created',
+    'No deployment approval granted',
+    '[NOT EVIDENCE / NOT RECORDED]',
   ]) {
-    assertIncludes(statusDocs, required, 'Phase 4A status docs');
+    assertIncludes(normalized4b, required, 'Phase 4B owner-input correction docs');
+  }
+
+  for (const required of [
+    'Current phase: Phase 4B-A/B',
+    'Latest completed capability: Phase 4A-A/B local release-control gate, owner-review rehearsal, and deployment approval firewall',
+    'Last merged capability PR: #149',
+    phase4aMergeCommit,
+    ownerInputIntakeControlPath,
+    localCorrectionQueuePath,
+    reviewReadyHandoffClosurePath,
+  ]) {
+    assertIncludes(statusDocs, required, 'Phase 4B status docs');
   }
 
   for (const required of [
     phase4aLocalReleaseControlGatePath,
     ownerReviewRehearsalRunbookPath,
     deploymentApprovalFirewallMatrixPath,
-    'phase4aReleaseControlSnapshot',
-    'Phase 4A-A/B release-control gate',
+    ownerInputIntakeControlPath,
+    localCorrectionQueuePath,
+    reviewReadyHandoffClosurePath,
+    'phase4bOwnerInputCorrectionSnapshot',
+    'ownerInputIntakeCategories',
+    'localCorrectionQueueStatuses',
+    'reviewReadyHandoffClosureStates',
+    'Owner-input and local correction snapshot',
     '/admin/release-control',
   ]) {
     assertIncludes(shell, required, 'protected admin shell release-control snapshot');
   }
   assertIncludes(route, 'view={{ kind: "release-control" }}', 'release-control route');
-  assertNoMatch(docs, /owner approved|owner sign-?off complete|owner correction recorded|filled owner note|review completed on|signed off by|production evidence captured|preview evidence captured|actual owner decision|actual owner sign-off|manual QA completed|acceptance passed on/i, 'Phase 4A release-control docs');
+  assertNoMatch(phase4aDocs, filledEvidencePattern, 'Phase 4A release-control docs');
+  assertNoMatch(phase4bDocs, filledEvidencePattern, 'Phase 4B owner-input correction docs');
 }
 
 function assertStatusDocs() {
@@ -1657,7 +1727,7 @@ function assertStatusDocs() {
     'phase status',
   );
   assertIncludes(status, 'Last merged capability PR: #147', 'phase status');
-  assertIncludes(status, `Merge commit: \`${phase3yMergeCommit}\``, 'phase status');
+  assertIncludes(status, `Merge commit: \`${phase4aMergeCommit}\``, 'phase status');
   assertIncludes(status, 'Previous Current Phase 3Y-A/B status', 'phase status');
   assertIncludes(status, `Merge commit: \`${phase3xMergeCommit}\``, 'phase status');
   assertIncludes(status, 'Previous Current Phase 3X-A/B status', 'phase status');
@@ -2260,7 +2330,7 @@ function assertPublicCopyFactSafety() {
   );
   assertNoMatch(
     publicSource,
-    /Owner input required|Ready for owner review|Blocks owner review|Blocks launch\/deployment|Deferred after launch|Not in scope by owner direction|Requires separate deployment approval|Correction template only|Owner-demo walkthrough|Owner-demo walkthrough snapshot|Owner-review issue ledger|Owner-review execution checklist|Owner-review dry-run packet|Owner-review correction intake|Owner-review closure packet|Owner-review closure sign-off template|deployment approval separation|Closure readiness snapshot|Current owner-review closure state|DEPLOYMENT APPROVAL: NOT GRANTED|findings disposition|launch decision rehearsal|launch-blocker freeze gate|correction PR plan|Dry-run review snapshot|Correction\/freeze snapshot|route decision matrix|content readiness workspace|admin-only readiness|Protected admin content readiness|\/admin\/content-readiness|admin issue ledger|owner decision needed|owner-only statuses|Admin-only notes|Public review prompts|Review the rental journey|Confirm each listing|Check that categories|Make sure the enquiry path|Request review|owner-demo|walkthrough|closure readiness|deployment approval|internal review|admin-only|protected content readiness|owner handoff|handoff pack|deployment firewall|acceptance triage|final local owner handoff|quote\/enquiry acceptance snapshot|catalogue\/listing\/media acceptance snapshot|protected admin write-ops acceptance snapshot|protected admin write-ops checklist|destructive-action safeguards|recovery lane statuses|status-transition matrix|protected admin destructive-action\/recovery snapshot|release-control gate|owner-review rehearsal|deployment approval firewall matrix|\/admin\/release-control/i,
+    /Owner input required|Ready for owner review|Blocks owner review|Blocks launch\/deployment|Deferred after launch|Not in scope by owner direction|Requires separate deployment approval|Correction template only|Owner-demo walkthrough|Owner-demo walkthrough snapshot|Owner-review issue ledger|Owner-review execution checklist|Owner-review dry-run packet|Owner-review correction intake|Owner-review closure packet|Owner-review closure sign-off template|deployment approval separation|Closure readiness snapshot|Current owner-review closure state|DEPLOYMENT APPROVAL: NOT GRANTED|findings disposition|launch decision rehearsal|launch-blocker freeze gate|correction PR plan|Dry-run review snapshot|Correction\/freeze snapshot|route decision matrix|content readiness workspace|admin-only readiness|Protected admin content readiness|\/admin\/content-readiness|admin issue ledger|owner decision needed|owner-only statuses|Admin-only notes|Public review prompts|Review the rental journey|Confirm each listing|Check that categories|Make sure the enquiry path|Request review|owner-demo|walkthrough|closure readiness|deployment approval|internal review|admin-only|protected content readiness|owner handoff|handoff pack|deployment firewall|acceptance triage|final local owner handoff|quote\/enquiry acceptance snapshot|catalogue\/listing\/media acceptance snapshot|protected admin write-ops acceptance snapshot|protected admin write-ops checklist|destructive-action safeguards|recovery lane statuses|status-transition matrix|protected admin destructive-action\/recovery snapshot|release-control gate|owner-review rehearsal|deployment approval firewall matrix|owner-input intake control|local correction queue|review-ready handoff closure|owner-input and local correction snapshot|\/admin\/release-control/i,
     'public route source',
   );
 }

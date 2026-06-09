@@ -2882,3 +2882,24 @@ Decision: Phase 4A-A/B adds a repo-local release-control gate, owner-review rehe
 Rationale: Phase 3Z-A/B closed public route readiness locally. The next safe step is to keep owner review, protected admin readiness, local acceptance, provider/runtime boundaries, and deployment approval separation deterministic and reviewable without creating filled evidence or live provider changes.
 
 Safety: This phase is template-only, non-live, and not evidence. It records PR #148 as the last merged capability PR with merge commit `26792f73f8e7943eac5e421c6d829bde7613b562`. It does not grant deployment approval, add provider config, add real secrets, add browser Supabase, add service-role runtime paths, add n8n/Pinecone runtime changes, expose admin internals publicly, invent business facts, or add ecommerce/cart/checkout/order/payment/purchase flows.
+
+## Phase 4B-A/B Owner-Input Intake Control Local Correction Queue And Review-Ready Handoff Closure
+
+Decision: Phase 4B-A/B adds template-only owner-input intake control, a local correction queue, review-ready handoff closure templates, protected admin owner-input/correction snapshot coverage, and deterministic validators/tests. It keeps deployment, provider setup, fake facts, ecommerce flows, and filled evidence out of scope.
+
+Context: PR #149 merged Phase 4A-A/B local release-control gate at `d825a112d017e95bd28ce030a5755ef78223e4c1`. The next safe repo-local step is to separate missing owner input from local correction work and review-ready handoff closure without recording real owner feedback or sign-off.
+
+Safety: This phase is repo-local, template-only, non-live, and not evidence. It records PR #149 as the last merged capability PR with merge commit `d825a112d017e95bd28ce030a5755ef78223e4c1`. It does not grant deployment approval, add provider config, add secrets, add browser Supabase, add service-role runtime paths, add n8n/Pinecone runtime changes, expose admin internals publicly, invent business facts, or add ecommerce/cart/checkout/order/payment/purchase flows.
+
+## Phase 4B-A/B Owner-Input Correction Queue References
+
+- Current phase: Phase 4B-A/B - owner-input intake control, local correction queue, and review-ready handoff closure.
+- Latest completed capability: Phase 4A-A/B local release-control gate, owner-review rehearsal, and deployment approval firewall.
+- Last merged capability PR: #149.
+- Merge commit: `d825a112d017e95bd28ce030a5755ef78223e4c1`.
+- Owner-input intake control: `docs/content/OWNER-INPUT-INTAKE-CONTROL.md`.
+- Local correction queue: `docs/content/LOCAL-CORRECTION-QUEUE.md`.
+- Review-ready handoff closure: `docs/content/REVIEW-READY-HANDOFF-CLOSURE.md`.
+- Protected admin release-control workspace: `/admin/release-control`.
+
+These references are repo-local, template-only, non-live, and not evidence. No owner feedback is recorded, no owner corrections are recorded, no owner sign-off is recorded, no preview evidence is created, no production evidence is created, and no deployment approval is granted.
