@@ -1,5 +1,16 @@
 # Phase 2 Checklist: Admin, Furniture Listing, And Quote Operations
 
+## Phase 3Y-A/B Protected Admin Destructive-Action Safeguards Recovery Lanes And Local Acceptance Coverage
+
+- [x] Protected admin destructive-action safeguards doc is repo-local, template-only, non-live, and not evidence.
+- [x] Protected admin recovery lane doc defines admin-only safe recovery statuses and public exposure boundaries.
+- [x] Protected admin status-transition matrix maps listing, category, media, and quote request transitions.
+- [x] Existing protected admin panels include safer helper and recovery text for archive, unpublish, draft, public visibility, failed saves, internal notes, status privacy, and media alt text.
+- [x] Protected content readiness includes an admin-only destructive-action/recovery snapshot.
+- [x] Deterministic local acceptance coverage verifies docs, admin-only rendering, public leakage boundaries, and forbidden scope creep.
+- [x] No deployment, provider config, ecommerce/customer self-service, fake facts, or filled owner-review/preview/production evidence is added.
+
+
 This phase is not approved for implementation yet.
 
 This is the admin/product/quote operations planning checklist. It should not

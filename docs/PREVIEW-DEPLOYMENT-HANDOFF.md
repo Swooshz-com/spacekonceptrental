@@ -235,3 +235,6 @@ Phase 3W-A/B roll-forward: include `docs/content/CATALOGUE-LISTING-MEDIA-ACCEPTA
 
 
 Phase 3X-A/B roll-forward: include `docs/content/PROTECTED-ADMIN-WRITE-OPS-ACCEPTANCE-CHECKLIST.md` in repo-local acceptance materials for protected admin write-operation readiness. This does not approve deployment, does not add provider config, does not create evidence, and keeps protected admin write-ops/internal wording out of public routes.
+
+
+Phase 3Y-A/B protected admin destructive-action safeguard references: `docs/content/PROTECTED-ADMIN-DESTRUCTIVE-ACTION-SAFEGUARDS.md`, `docs/content/PROTECTED-ADMIN-RECOVERY-LANE.md`, and `docs/content/PROTECTED-ADMIN-STATUS-TRANSITION-MATRIX.md`. These are repo-local, template-only, non-live, not evidence, and do not approve deployment. Last merged capability PR: #146. Merge commit: `50316a5c4052607487ba7409d5dc854889db6e24`. Current phase: Phase 3Y-A/B - protected admin destructive-action safeguards, recovery lanes, and local acceptance coverage. Latest completed capability: Phase 3X-A/B protected admin write-ops hardening, content-operation guardrails, and local acceptance coverage.

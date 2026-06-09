@@ -322,7 +322,7 @@ export function CategoryManagementPanel({
         <p className="eyebrow">Category-only writes</p>
         <h2>Category management</h2>
         <p>
-          Create, update, and archive categories through the protected admin
+          Create, update, unpublish, and archive categories through the protected admin
           API. Furniture listing edits use their own protected panel, and image
           file handling stays out of scope. Categories are public grouping
           metadata when published.
@@ -494,7 +494,7 @@ export function CategoryManagementPanel({
                   Publish {category.name} for public grouping
                 </label>
                 <p className="category-management__hint">
-                  Protected write boundary: publish only when grouping and listing-count cues are clear. Archive removes this category from active catalogue grouping; it does not delete the category record.
+                  Protected write boundary: publish only when grouping and listing-count cues are clear. Check description before saving. Unpublish or archive hides the grouping from public browsing without deleting the category record. If save fails, keep unpublished/protected and retry after admin review.
                 </p>
                 <div className="category-management__actions">
                   <button className="button" type="submit">

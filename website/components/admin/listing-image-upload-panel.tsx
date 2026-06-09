@@ -229,7 +229,7 @@ export function ListingImageUploadPanel({
         </p>
         <p className="category-management__hint">
           Use approved listing images only. Primary uploaded images can lead
-          the public catalogue display after the image metadata is active; this is not an availability assertion.
+          the public catalogue display after the image metadata is active; this is not an availability assertion. If upload fails, keep the listing draft/protected, check file type and public-safe alt text, and retry the protected write locally.
         </p>
       </div>
 
@@ -274,7 +274,7 @@ export function ListingImageUploadPanel({
           <input id="upload-image-alt-text" maxLength={240} name="altText" />
           <small>
             Describe the rental furniture setup shown in the image with public-safe wording for public
-            catalogue accessibility; do not add availability, proof, or policy claims.
+            catalogue accessibility; do not add availability, proof, policy, or owner sign-off claims.
           </small>
         </label>
         <label htmlFor="upload-image-sort-order">
@@ -292,7 +292,7 @@ export function ListingImageUploadPanel({
           htmlFor="upload-image-primary"
         >
           <input id="upload-image-primary" name="isPrimary" type="checkbox" />
-          Mark uploaded image as primary public browsing image
+          Mark uploaded image as primary public browsing image after alt-text review
         </label>
         <button className="button" type="submit">
           Upload listing image

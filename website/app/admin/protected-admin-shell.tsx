@@ -528,7 +528,10 @@ const contentReadinessSources = [
   "docs/content/DEPLOYMENT-DECISION-FIREWALL.md",
   "docs/content/QUOTE-ENQUIRY-WORKFLOW-ACCEPTANCE-CHECKLIST.md",
   "docs/content/CATALOGUE-LISTING-MEDIA-ACCEPTANCE-CHECKLIST.md",
-  "docs/content/PROTECTED-ADMIN-WRITE-OPS-ACCEPTANCE-CHECKLIST.md"
+  "docs/content/PROTECTED-ADMIN-WRITE-OPS-ACCEPTANCE-CHECKLIST.md",
+  "docs/content/PROTECTED-ADMIN-DESTRUCTIVE-ACTION-SAFEGUARDS.md",
+  "docs/content/PROTECTED-ADMIN-RECOVERY-LANE.md",
+  "docs/content/PROTECTED-ADMIN-STATUS-TRANSITION-MATRIX.md"
 ] as const;
 
 const reviewSurfaceGroups = 11;
@@ -741,6 +744,37 @@ const protectedAdminWriteOpsAcceptanceSnapshot = [
   [`Public ${"uploads/accounts/tracking"}`, "Not added"],
   ["Deployment approval", closureDeploymentApprovalStatus],
   ["Last local write-ops update", protectedAdminWriteOpsLastLocalUpdate]
+] as const;
+
+const protectedAdminDestructiveActionSafeguardsPath =
+  "docs/content/PROTECTED-ADMIN-DESTRUCTIVE-ACTION-SAFEGUARDS.md";
+const protectedAdminRecoveryLanePath =
+  "docs/content/PROTECTED-ADMIN-RECOVERY-LANE.md";
+const protectedAdminStatusTransitionMatrixPath =
+  "docs/content/PROTECTED-ADMIN-STATUS-TRANSITION-MATRIX.md";
+const protectedAdminDestructiveRecoveryLastLocalUpdate = "[DATE PLACEHOLDER]";
+const protectedAdminDestructiveRecoverySnapshot = [
+  [
+    "Destructive-action safeguards",
+    "Listing archive, listing unpublish/draft, category unpublish/archive, media archive/deactivate, primary image changes, quote status transitions, quote internal note updates, failed write recovery"
+  ],
+  [
+    "Recovery lane statuses",
+    "Admin review required; Owner input required; Retry protected write; Keep draft/protected; Safe to retry locally; Blocked before public visibility; Requires separate deployment approval"
+  ],
+  [
+    "Status transition groups",
+    "Listing draft/published/archived; category unpublished/published/archived; media active/archived and primary/not-primary; quote request new/reviewing/quoted/closed/archived"
+  ],
+  [
+    "Public exposure boundary",
+    "Public routes must not expose destructive-action safeguards, recovery lane statuses, transition matrix details, admin URLs, or internal notes"
+  ],
+  ["Deployment approval", closureDeploymentApprovalStatus],
+  [
+    "Last local destructive-action update",
+    protectedAdminDestructiveRecoveryLastLocalUpdate
+  ]
 ] as const;
 
 const contentReadinessGroups = [
@@ -1032,7 +1066,6 @@ function ContentReadinessWorkspace() {
           </p>
         </section>
 
-
         <section className="admin-dashboard__card admin-dashboard__card--summary">
           <h3>Protected admin write-ops acceptance snapshot</h3>
           <dl className="quote-inbox__details">
@@ -1052,6 +1085,25 @@ function ContentReadinessWorkspace() {
           </p>
         </section>
 
+
+        <section className="admin-dashboard__card admin-dashboard__card--summary">
+          <h3>Protected admin destructive-action/recovery snapshot</h3>
+          <dl className="quote-inbox__details">
+            {protectedAdminDestructiveRecoverySnapshot.map(([label, value]) => (
+              <div key={label}>
+                <dt>{label}</dt>
+                <dd>{value}</dd>
+              </div>
+            ))}
+          </dl>
+          <p>
+            The destructive-action safeguards, recovery lane, and status-transition
+            matrix stay template-only, admin-only, protected, and repo-local.
+            They do not expose recovery details publicly, approve deployment,
+            create provider configuration, add public quote tracking, or add
+            transaction-style public flows.
+          </p>
+        </section>
         <section className="admin-dashboard__card admin-dashboard__card--summary">
           <h3>Review sources</h3>
           <p>

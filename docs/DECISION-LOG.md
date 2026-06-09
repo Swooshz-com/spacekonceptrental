@@ -1,5 +1,12 @@
 # Decision Log
 
+## Phase 3Y-A/B Protected Admin Destructive-Action Safeguards
+
+Decision: Phase 3Y-A/B adds protected admin destructive-action safeguard docs, recovery lane guidance, a status-transition matrix, protected admin helper/recovery copy, content readiness snapshot coverage, validators, and deterministic local tests. Latest completed capability is Phase 3X-A/B protected admin write-ops hardening, content-operation guardrails, and local acceptance coverage from PR #146 at `50316a5c4052607487ba7409d5dc854889db6e24`.
+
+Rationale: Admin actions that hide, archive, unpublish, or change operational state need clearer repo-local guardrails and recovery guidance without adding public routes, provider changes, deployment work, ecommerce flows, fake facts, or filled evidence.
+
+
 ## 2026-05-26: Vercel/Next.js Direction
 
 Decision: `website/` becomes the future Next.js app root deployed by Vercel.

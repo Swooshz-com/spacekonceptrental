@@ -367,7 +367,7 @@ export function ListingImageMetadataManagementPanel({
         <p>
           Create, update, and archive listing image metadata through the
           protected admin API. Alt text and primary state can affect public
-          browsing, but media readiness is not an availability assertion.
+          browsing, but media readiness is not an availability assertion. If a save fails, keep the prior protected media state, review alt text and primary selection, and retry locally.
         </p>
       </div>
 
@@ -549,7 +549,7 @@ export function ListingImageMetadataManagementPanel({
                     Mark {label} as primary public browsing image
                   </label>
                   <p className="category-management__hint">
-                    Protected write boundary: primary and active media choices can affect public browsing. Archive removes this image from active listing media; it does not delete the file from storage.
+                    Protected write boundary: primary and active media choices can affect public browsing. Archive removes this image from active listing media; it does not delete the file from storage. If save fails, keep the prior media state, review alt text and primary selection, and retry locally.
                   </p>
                   <div className="category-management__actions">
                     <button className="button" type="submit">
