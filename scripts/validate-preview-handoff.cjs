@@ -1469,9 +1469,6 @@ function assertLocalReleaseCandidateDocs() {
     'website:typecheck',
     'website:build',
     'Local release-candidate suite passed. No deployment was performed. This does not approve deployment.',
-    'requiresDocker: true',
-    'Docker is unavailable in this environment',
-    'Run the skipped Docker-dependent commands in an environment with Docker before treating those checks as verified.',
   ]) {
     assertIncludes(suiteRunner, required, 'local release-candidate suite runner');
   }

@@ -1,6 +1,7 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { useState } from "react";
+import type { ChangeEvent, FormEvent } from "react";
 
 type QuoteApiResponse = {
   publicReference?: string;
@@ -14,6 +15,24 @@ type SubmitState =
   | { status: "submitting" }
   | { status: "success"; publicReference?: string }
   | { status: "error"; message: string };
+
+const customerMessageMaxLength = 1200;
+
+function formatPreferredContactMethod(preferredContactMethod: string) {
+  return preferredContactMethod
+    ? `Preferred contact method: ${preferredContactMethod}`
+    : "";
+}
+
+function getCustomerMessageMaxLength(preferredContactMethod: string) {
+  const preferredContactPrefix = formatPreferredContactMethod(
+    preferredContactMethod
+  );
+
+  return preferredContactPrefix
+    ? customerMessageMaxLength - preferredContactPrefix.length - 2
+    : customerMessageMaxLength;
+}
 
 function parseRequestedItems(itemsText: string, itemNotesText: string) {
   const itemLines = itemsText
@@ -34,9 +53,7 @@ function combineCustomerMessage(
   preferredContactMethod: string
 ) {
   const details = [
-    preferredContactMethod
-      ? `Preferred contact method: ${preferredContactMethod}`
-      : "",
+    formatPreferredContactMethod(preferredContactMethod),
     customerMessageText
   ].filter(Boolean);
 
@@ -51,6 +68,35 @@ export default function QuoteRequestForm({
   const [submitState, setSubmitState] = useState<SubmitState>({
     status: "idle"
   });
+  const [preferredContactMethod, setPreferredContactMethod] = useState("");
+  const [customerMessageText, setCustomerMessageText] = useState("");
+  const customerMessageInputMaxLength = getCustomerMessageMaxLength(
+    preferredContactMethod
+  );
+
+  function handlePreferredContactMethodChange(
+    event: ChangeEvent<HTMLSelectElement>
+  ) {
+    const nextPreferredContactMethod = event.target.value;
+    const nextMaxLength = getCustomerMessageMaxLength(
+      nextPreferredContactMethod
+    );
+
+    setPreferredContactMethod(nextPreferredContactMethod);
+    setCustomerMessageText((currentMessage) =>
+      currentMessage.length > nextMaxLength
+        ? currentMessage.slice(0, nextMaxLength)
+        : currentMessage
+    );
+  }
+
+  function handleCustomerMessageChange(
+    event: ChangeEvent<HTMLTextAreaElement>
+  ) {
+    setCustomerMessageText(
+      event.target.value.slice(0, customerMessageInputMaxLength)
+    );
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -61,16 +107,12 @@ export default function QuoteRequestForm({
 
     const formData = new FormData(event.currentTarget);
     const itemsText = String(formData.get("items") ?? "").trim();
-    const customerMessageText = String(
-      formData.get("customerMessage") ?? ""
-    ).trim();
-    const preferredContactMethod = String(
-      formData.get("preferredContactMethod") ?? ""
-    ).trim();
+    const submittedCustomerMessageText = customerMessageText.trim();
+    const submittedPreferredContactMethod = preferredContactMethod.trim();
     const itemNotesText = String(formData.get("itemNotes") ?? "").trim();
     const combinedCustomerMessage = combineCustomerMessage(
-      customerMessageText,
-      preferredContactMethod
+      submittedCustomerMessageText,
+      submittedPreferredContactMethod
     );
     const payload = {
       customerName: String(formData.get("customerName") ?? "").trim(),
@@ -159,7 +201,11 @@ export default function QuoteRequestForm({
         </label>
         <label>
           Preferred contact method
-          <select name="preferredContactMethod">
+          <select
+            name="preferredContactMethod"
+            onChange={handlePreferredContactMethodChange}
+            value={preferredContactMethod}
+          >
             <option value="">No preference</option>
             <option value="email">Email</option>
             <option value="phone">Phone</option>
@@ -209,10 +255,12 @@ export default function QuoteRequestForm({
           Event goals or customer message
           <textarea
             aria-label="Customer message / event notes for the team"
-            maxLength={1200}
+            maxLength={customerMessageInputMaxLength}
             name="customerMessage"
+            onChange={handleCustomerMessageChange}
             placeholder="Example: event context, preferred setup style, alternates, or what you need help deciding"
             rows={4}
+            value={customerMessageText}
           />
           <small>
             Use this area to share more details, alternates, and practical
