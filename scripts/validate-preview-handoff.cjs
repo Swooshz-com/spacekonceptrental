@@ -2595,6 +2595,22 @@ assertPhase4dLocalFreeze();
 assertProtectedContentReadinessWorkspace();
 assertPublicCopyFactSafety();
 assertStaticScope();
+
+function assertOwnerApprovalRequestGate() {
+  const packageJson = JSON.parse(readRepoFile('package.json'));
+  assert(
+    packageJson.scripts['validate:owner-approval-request'] === 'node scripts/validate-owner-approval-request.cjs',
+    'validate:owner-approval-request script is missing.',
+  );
+  const result = spawnSync('node', ['scripts/validate-owner-approval-request.cjs'], {
+    cwd: repoRoot,
+    encoding: 'utf8',
+    stdio: 'inherit',
+  });
+  assert(result.status === 0, 'validate-owner-approval-request must pass from existing validators.');
+}
+
 assertValidatorSafety();
+assertOwnerApprovalRequestGate();
 
 console.log('Preview handoff validation passed. No deployment was performed. This does not approve deployment.');

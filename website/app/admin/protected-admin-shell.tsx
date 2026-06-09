@@ -884,6 +884,28 @@ const phase4dLocalFreezeSnapshot = [
   ["Deployment approval boundary", "[DEPLOYMENT APPROVAL: NOT GRANTED]"]
 ] as const;
 
+const ownerApprovalRequestPacketPath =
+  "docs/content/OWNER-APPROVAL-REQUEST-PACKET.md";
+const previewPlanningHandoffTemplatePath =
+  "docs/content/PREVIEW-PLANNING-HANDOFF-TEMPLATE.md";
+const finalNoDeployDecisionGatePath =
+  "docs/content/FINAL-NO-DEPLOY-DECISION-GATE.md";
+const phase4eOwnerApprovalRequestDocs = [
+  ownerApprovalRequestPacketPath,
+  previewPlanningHandoffTemplatePath,
+  finalNoDeployDecisionGatePath
+] as const;
+const phase4eOwnerApprovalRequestSnapshot = [
+  ["Owner approval request packet", "Template only / not evidence / no owner approval recorded"],
+  ["Preview-planning handoff template", "Placeholder only / no provider setup approved"],
+  ["Final no-deploy decision gate", "Local validators do not equal approval"],
+  ["Approval request boundary", "Approval categories are placeholders only"],
+  ["Owner sign-off boundary", "No owner sign-off recorded"],
+  ["Evidence capture boundary", "[NOT EVIDENCE / NOT RECORDED]"],
+  ["Provider setup boundary", "Provider/environment setup blocked"],
+  ["Deployment approval boundary", "[DEPLOYMENT APPROVAL: NOT GRANTED]"]
+] as const;
+
 const publicJourneyReadinessClosurePath =
   "docs/content/PUBLIC-JOURNEY-READINESS-CLOSURE.md";
 const quoteEnquiryPublicExpectationBoundaryPath =
@@ -1029,7 +1051,8 @@ function ReleaseControlWorkspace() {
               ...phase4aReleaseControlDocs,
               ...phase4bOwnerInputCorrectionDocs,
               ...phase4cOwnerReviewRehearsalDocs,
-              ...phase4dLocalFreezeDocs
+              ...phase4dLocalFreezeDocs,
+              ...phase4eOwnerApprovalRequestDocs
             ].map((docPath) => (
               <li key={docPath}>
                 <div>
@@ -1092,6 +1115,30 @@ function ReleaseControlWorkspace() {
             deployment-planning firewall closure, owner input boundaries, local
             correction boundaries, evidence boundaries, and deployment approval
             boundaries out of public routes.
+          </p>
+        </section>
+
+        <section className="admin-dashboard__card admin-dashboard__card--summary">
+          <h3>Phase 4E approval-request snapshot</h3>
+          <dl className="quote-inbox__details">
+            {phase4eOwnerApprovalRequestSnapshot.map(([label, value]) => (
+              <div key={label}>
+                <dt>{label}</dt>
+                <dd>{value}</dd>
+              </div>
+            ))}
+          </dl>
+          <ul className="admin-dashboard__list">
+            {phase4eOwnerApprovalRequestDocs.map((docPath) => (
+              <li key={docPath}>{docPath}</li>
+            ))}
+          </ul>
+          <p>
+            The Phase 4E approval-request snapshot is protected admin-only. It
+            keeps the owner approval request packet, preview-planning handoff
+            template, final no-deploy decision gate, approval request boundary,
+            owner sign-off boundary, evidence capture boundary, provider setup
+            boundary, and deployment approval boundary out of public routes.
           </p>
         </section>
 
