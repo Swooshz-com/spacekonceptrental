@@ -62,7 +62,7 @@ type ListingPayload = {
 
 const listingWriteOperation = "product.write";
 const genericFailureMessage =
-  "Listing change could not be saved. Try again or refresh the page.";
+  "Listing change could not be saved. Check required fields, keep public fields factual, and try again.";
 
 function formValue(formData: FormData, name: string) {
   const value = formData.get(name);
@@ -259,7 +259,7 @@ export function ListingManagementPanel({
   ) {
     setStatus({
       kind: "pending",
-      message: "Saving listing change..."
+      message: "Saving protected listing write..."
     });
 
     try {
@@ -406,7 +406,8 @@ export function ListingManagementPanel({
         <h2>Listing management</h2>
         <p>
           Create, update, publish, unpublish, and archive furniture listing
-          metadata through the protected admin API.
+          metadata through the protected admin API. Public-facing fields should
+          describe rental/event furniture only; internal readiness cues stay here.
         </p>
       </div>
 
@@ -448,7 +449,7 @@ export function ListingManagementPanel({
         <p className="category-management__hint">
           Readiness is derived from existing listing metadata, category,
           descriptions, rental unit, and image metadata already available in
-          this admin workspace.
+          this admin workspace. It is an admin-only cue, not a public availability claim.
         </p>
       </section>
 
@@ -461,13 +462,14 @@ export function ListingManagementPanel({
         <label htmlFor="new-listing-category">
           New listing category
           <select id="new-listing-category" name="categoryId">
-            <option value="">No category</option>
+            <option value="">No category - keep as draft until grouped</option>
             {categories.map((category) => (
               <option key={category.id} value={category.id}>
                 {category.name}
               </option>
             ))}
           </select>
+          <small>Choose the public category grouping used for browsing and quote/enquiry recovery.</small>
         </label>
         <label htmlFor="new-listing-slug">
           New listing slug
@@ -478,10 +480,12 @@ export function ListingManagementPanel({
             required
             type="text"
           />
+          <small>Use lowercase letters, numbers, and hyphens; this can become part of the public listing URL.</small>
         </label>
         <label htmlFor="new-listing-name">
           New listing name
           <input id="new-listing-name" maxLength={160} name="name" required />
+          <small>Use owner-approved rental/event furniture wording only; do not add unsupported availability assertions.</small>
         </label>
         <label htmlFor="new-listing-short-description">
           New listing short description
@@ -491,6 +495,7 @@ export function ListingManagementPanel({
             name="shortDescription"
             rows={2}
           />
+          <small>Short public browsing summary for quote planning; keep unsupported claims out.</small>
         </label>
         <label htmlFor="new-listing-description">
           New listing description
@@ -500,6 +505,7 @@ export function ListingManagementPanel({
             name="description"
             rows={4}
           />
+          <small>Full public description should help enquiry planning without self-service or completion-flow language.</small>
         </label>
         <label htmlFor="new-listing-rental-unit">
           New listing rental unit
@@ -510,6 +516,7 @@ export function ListingManagementPanel({
             name="rentalUnit"
             required
           />
+          <small>Examples include item, set, or piece; this supports quote/request wording and is not stock availability.</small>
         </label>
         <label htmlFor="new-listing-status">
           New listing status
@@ -518,6 +525,7 @@ export function ListingManagementPanel({
             <option value="published">Published</option>
             <option value="archived">Archived</option>
           </select>
+          <small>Draft stays protected, published can appear publicly when readiness checks pass, archived is hidden from active browsing.</small>
         </label>
         <label htmlFor="new-listing-sort-order">
           New listing sort order
@@ -528,6 +536,7 @@ export function ListingManagementPanel({
             name="sortOrder"
             type="number"
           />
+          <small>Lower numbers appear earlier in admin/public grouping where sorting is used.</small>
         </label>
         <button className="button" type="submit">
           Create listing
@@ -592,13 +601,14 @@ export function ListingManagementPanel({
                     id={`listing-category-${product.id}`}
                     name="categoryId"
                   >
-                    <option value="">No category</option>
+                    <option value="">No category - keep as draft until grouped</option>
                     {categories.map((category) => (
                       <option key={category.id} value={category.id}>
                         {category.name}
                       </option>
                     ))}
                   </select>
+                  <small>Public category grouping supports browsing and quote/enquiry recovery.</small>
                 </label>
                 <label htmlFor={`listing-slug-${product.id}`}>
                   Listing slug for {product.name}
@@ -610,6 +620,7 @@ export function ListingManagementPanel({
                     required
                     type="text"
                   />
+                  <small>Slug may be used by public listing routes; keep it stable and factual.</small>
                 </label>
                 <label htmlFor={`listing-name-${product.id}`}>
                   Listing name for {product.name}
@@ -620,6 +631,7 @@ export function ListingManagementPanel({
                     name="name"
                     required
                   />
+                  <small>Public name should describe the rental/event furniture without unsupported assertions.</small>
                 </label>
                 <label htmlFor={`listing-short-description-${product.id}`}>
                   Listing short description for {product.name}
@@ -630,6 +642,7 @@ export function ListingManagementPanel({
                     name="shortDescription"
                     rows={2}
                   />
+                  <small>Short description appears in browsing contexts and should support quote/request planning.</small>
                 </label>
                 <label htmlFor={`listing-description-${product.id}`}>
                   Listing description for {product.name}
@@ -640,9 +653,10 @@ export function ListingManagementPanel({
                     name="description"
                     rows={4}
                   />
+                  <small>Full description remains a public field; avoid self-service or completion-flow wording.</small>
                 </label>
                 <label htmlFor={`listing-rental-unit-${product.id}`}>
-                  Listing rental unit for {product.name}
+                  Rental unit label for {product.name}
                   <input
                     defaultValue={product.rentalUnit}
                     id={`listing-rental-unit-${product.id}`}
@@ -650,6 +664,7 @@ export function ListingManagementPanel({
                     name="rentalUnit"
                     required
                   />
+                  <small>Rental unit helps quote/enquiry wording and does not confirm availability.</small>
                 </label>
                 <label htmlFor={`listing-status-${product.id}`}>
                   Listing status for {product.name}
@@ -662,6 +677,7 @@ export function ListingManagementPanel({
                     <option value="published">Published</option>
                     <option value="archived">Archived</option>
                   </select>
+                  <small>Draft is protected, published can be public when ready, and archived is hidden from active browsing.</small>
                 </label>
                 <label htmlFor={`listing-sort-order-${product.id}`}>
                   Listing sort order for {product.name}
@@ -673,10 +689,10 @@ export function ListingManagementPanel({
                     name="sortOrder"
                     type="number"
                   />
+                  <small>Sort order controls display ordering where listing groups use it.</small>
                 </label>
                 <p className="category-management__hint">
-                  Archive hides this listing from public browsing and active
-                  admin work; it does not delete it.
+                  Protected write boundary: save changes only after checking public-facing fields. Archive hides this listing from public browsing and active admin work; it does not delete it.
                 </p>
                 <div className="category-management__actions">
                   <button className="button" type="submit">

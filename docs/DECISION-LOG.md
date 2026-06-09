@@ -2837,3 +2837,26 @@ checkout, payments, stock reservation, confirmed booking, order fulfilment, or
 online ordering.
 
 Decision: Phase 3W-A/B hardens public catalogue/listing/category/media discovery, protected admin content operations, and local catalogue/listing/media acceptance coverage. It remains repo-local only, does not approve deployment, does not add provider config or evidence, and keeps public/admin wording separated.
+
+
+## Phase 3X-A/B Protected Admin Write-Ops Hardening
+
+Decision: Phase 3X-A/B hardens protected admin listing, category, media, and quote follow-up write operations, content-operation guardrails, and local acceptance coverage. It remains repo-local only, does not approve deployment, does not add provider config or evidence, and keeps protected admin write-ops wording separated from public routes.
+
+Context: PR #145 merged Phase 3W-A/B catalogue listing media hardening at
+`54cd8d5e7b829e56d245da2ca503c9b4058dca76`. Public quote/enquiry and catalogue
+discovery are already hardened, so the next safe lane is protected admin write
+operation clarity and local acceptance coverage.
+
+Implementation: Phase 3X-A/B adds safer protected labels and helper text for
+listing, category, media, image upload, and quote follow-up controls; adds the
+protected admin write-ops checklist; adds the authorised-admin content readiness
+snapshot; and extends local validators and regression tests for the new
+write-ops boundary.
+
+Boundary: Phase 3X-A/B does not deploy, approve deployment, add Vercel config,
+connect Supabase Cloud, add real secrets or env values, add filled evidence,
+invent owner feedback or sign-off, access `website/chat-config.js`, expose
+admin internal notes publicly, add browser Supabase, add service-role runtime
+paths, change n8n/Pinecone/RAG runtime behavior, add provider config, or add
+out-of-scope public visitor self-service workflows.

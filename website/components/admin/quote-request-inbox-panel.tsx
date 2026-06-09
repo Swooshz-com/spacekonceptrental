@@ -86,7 +86,7 @@ const quoteStatuses: AdminQuoteRequestStatus[] = [
   "archived"
 ];
 const genericFailureMessage =
-  "Quote status could not be saved. Try again or refresh the page.";
+  "Quote status could not be saved. Check internal status, keep notes protected, and try again.";
 
 function statusLabel(value: string) {
   return value.replace(/_/g, " ");
@@ -262,7 +262,7 @@ export function QuoteRequestInboxPanel({
   ) {
     setStatus({
       kind: "pending",
-      message: "Saving follow-up..."
+      message: "Saving protected quote follow-up..."
     });
 
     try {
@@ -380,7 +380,7 @@ export function QuoteRequestInboxPanel({
           <h2>Quote request inbox</h2>
           <p>
             Review recent customer quote requests for this workspace and update
-            internal follow-up status only.
+            internal follow-up status only. Notes and status history stay protected and are not public status tracking.
           </p>
         </div>
         <dl className="admin-dashboard__stats" aria-label="Quote request summary">
@@ -479,7 +479,7 @@ export function QuoteRequestInboxPanel({
           <div>
             <dt>Public-facing</dt>
             <dd>
-              Public quote pages only show receipt-style enquiry confirmation.
+              Public quote pages only show receipt-style enquiry confirmation; they do not expose admin status, notes, or tracking.
             </dd>
           </div>
           <div>
@@ -496,8 +496,7 @@ export function QuoteRequestInboxPanel({
       {inbox.data.quoteRequests.length === 0 ? (
         <section className="admin-dashboard__card admin-dashboard__card--summary">
           <p>
-            No quote requests are visible yet. New website enquiries will
-            appear here for internal follow-up.
+            No quote requests are visible yet. New website enquiries will appear here for internal follow-up when available.
           </p>
           <a className="button button--secondary" href="/admin/listings">
             Review listings
@@ -609,7 +608,7 @@ export function QuoteRequestInboxPanel({
                   <p>
                     Internal notes and status history stay inside this
                     protected admin workspace and are not shown on public quote
-                    pages.
+                    pages or public status views.
                   </p>
                   {activity.length === 0 ? (
                     <p>No internal follow-up activity has been recorded yet.</p>
@@ -635,7 +634,7 @@ export function QuoteRequestInboxPanel({
                   }
                 >
                   <label htmlFor={`quote-status-${quoteRequest.id}`}>
-                    Internal status for {quoteRequest.publicReference}
+                    Protected internal status for {quoteRequest.publicReference}
                     <select
                       defaultValue={quoteRequest.status}
                       id={`quote-status-${quoteRequest.id}`}
@@ -647,20 +646,21 @@ export function QuoteRequestInboxPanel({
                         </option>
                       ))}
                     </select>
+                    <small>Status is an admin-only follow-up control and is never shown as a public quote status view.</small>
                   </label>
                   <label htmlFor={`quote-note-${quoteRequest.id}`}>
-                    Internal note for {quoteRequest.publicReference}
+                    Protected internal note for {quoteRequest.publicReference}
                     <textarea
                       id={`quote-note-${quoteRequest.id}`}
                       maxLength={1200}
                       name="internalNote"
-                      placeholder="Add internal follow-up context for the team"
+                      placeholder="Add protected follow-up context for the team"
                       rows={3}
                     />
+                    <small>Internal notes stay protected; do not write public-facing promises, outbound automation or sales-system instructions here.</small>
                   </label>
                   <p className="category-management__hint">
-                    Internal status changes stay inside this admin workspace
-                    and are used for team follow-up.
+                    Protected write boundary: internal status changes and notes stay inside this admin workspace and are used for team follow-up only.
                   </p>
                   <button className="button" type="submit">
                     Save follow-up for {quoteRequest.publicReference}

@@ -41,7 +41,7 @@ type PanelStatus =
 
 const productImageWriteOperation = "productImage.write";
 const genericFailureMessage =
-  "Listing image upload could not be saved. Try again or refresh the page.";
+  "Listing image upload could not be saved. Check the listing, file type, public-safe alt text, and try again.";
 
 function formValue(formData: FormData, name: string) {
   const value = formData.get(name);
@@ -153,7 +153,7 @@ export function ListingImageUploadPanel({
 
     setStatus({
       kind: "pending",
-      message: "Uploading listing image..."
+      message: "Uploading protected listing image..."
     });
 
     try {
@@ -225,11 +225,11 @@ export function ListingImageUploadPanel({
         <h2>Upload listing image</h2>
         <p>
           Upload approved image files for furniture and event-rental listings.
-          The server stores the file and creates the listing image metadata.
+          The protected server stores the file and creates listing image metadata; public users cannot upload files here.
         </p>
         <p className="category-management__hint">
           Use approved listing images only. Primary uploaded images can lead
-          the public catalogue display after the image metadata is active.
+          the public catalogue display after the image metadata is active; this is not an availability assertion.
         </p>
       </div>
 
@@ -256,7 +256,7 @@ export function ListingImageUploadPanel({
             ))}
           </select>
           <small>
-            Create a draft listing before uploading media for that listing.
+            Create a protected draft listing before uploading media for that listing.
           </small>
         </label>
         <label htmlFor="upload-image-file">
@@ -273,8 +273,8 @@ export function ListingImageUploadPanel({
           Upload image alt text
           <input id="upload-image-alt-text" maxLength={240} name="altText" />
           <small>
-            Describe the rental furniture setup shown in the image for public
-            catalogue accessibility.
+            Describe the rental furniture setup shown in the image with public-safe wording for public
+            catalogue accessibility; do not add availability, proof, or policy claims.
           </small>
         </label>
         <label htmlFor="upload-image-sort-order">
@@ -292,7 +292,7 @@ export function ListingImageUploadPanel({
           htmlFor="upload-image-primary"
         >
           <input id="upload-image-primary" name="isPrimary" type="checkbox" />
-          Mark uploaded image as primary
+          Mark uploaded image as primary public browsing image
         </label>
         <button className="button" type="submit">
           Upload listing image

@@ -527,7 +527,8 @@ const contentReadinessSources = [
   "docs/content/LOCAL-ACCEPTANCE-TRIAGE-BOARD.md",
   "docs/content/DEPLOYMENT-DECISION-FIREWALL.md",
   "docs/content/QUOTE-ENQUIRY-WORKFLOW-ACCEPTANCE-CHECKLIST.md",
-  "docs/content/CATALOGUE-LISTING-MEDIA-ACCEPTANCE-CHECKLIST.md"
+  "docs/content/CATALOGUE-LISTING-MEDIA-ACCEPTANCE-CHECKLIST.md",
+  "docs/content/PROTECTED-ADMIN-WRITE-OPS-ACCEPTANCE-CHECKLIST.md"
 ] as const;
 
 const reviewSurfaceGroups = 11;
@@ -700,6 +701,8 @@ const quoteEnquiryWorkflowAcceptanceChecklistPath =
   "docs/content/QUOTE-ENQUIRY-WORKFLOW-ACCEPTANCE-CHECKLIST.md";
 const catalogueListingMediaAcceptanceChecklistPath =
   "docs/content/CATALOGUE-LISTING-MEDIA-ACCEPTANCE-CHECKLIST.md";
+const protectedAdminWriteOpsAcceptanceChecklistPath =
+  "docs/content/PROTECTED-ADMIN-WRITE-OPS-ACCEPTANCE-CHECKLIST.md";
 const quoteEnquiryAcceptanceLastLocalUpdate = "[DATE PLACEHOLDER]";
 const quoteEnquiryAcceptanceSnapshot = [
   ["Quote/enquiry workflow checklist", "Template only"],
@@ -724,6 +727,20 @@ const catalogueListingMediaAcceptanceSnapshot = [
   [publicVisitorUploadsBoundaryLabel, "Not added"],
   ["Deployment approval", closureDeploymentApprovalStatus],
   ["Last local catalogue/media update", catalogueMediaAcceptanceLastLocalUpdate]
+] as const;
+
+
+const protectedAdminWriteOpsLastLocalUpdate = "[DATE PLACEHOLDER]";
+const protectedAdminWriteOpsAcceptanceSnapshot = [
+  ["Protected admin write-ops checklist", "Template only"],
+  ["Listing write operations", "[TEMPLATE ONLY]"],
+  ["Category write operations", "[TEMPLATE ONLY]"],
+  ["Media write operations", "[TEMPLATE ONLY]"],
+  ["Quote follow-up operations", "[TEMPLATE ONLY]"],
+  ["Public exposure boundary", "[TEMPLATE ONLY]"],
+  [`Public ${"uploads/accounts/tracking"}`, "Not added"],
+  ["Deployment approval", closureDeploymentApprovalStatus],
+  ["Last local write-ops update", protectedAdminWriteOpsLastLocalUpdate]
 ] as const;
 
 const contentReadinessGroups = [
@@ -1012,6 +1029,26 @@ function ContentReadinessWorkspace() {
             notes, status history, public tracking, customer-account surfaces,
             outbound alerting, sales-system sync, uploads, or deployment
             approval.
+          </p>
+        </section>
+
+
+        <section className="admin-dashboard__card admin-dashboard__card--summary">
+          <h3>Protected admin write-ops acceptance snapshot</h3>
+          <dl className="quote-inbox__details">
+            {protectedAdminWriteOpsAcceptanceSnapshot.map(([label, value]) => (
+              <div key={label}>
+                <dt>{label}</dt>
+                <dd>{value}</dd>
+              </div>
+            ))}
+          </dl>
+          <p>
+            The protected admin write-ops checklist stays template-only,
+            admin-only, and repo-local. Listing, category, media, and quote
+            follow-up write boundaries remain separated from public routes,
+            public self-service areas, visitor-submitted media, status tracking, provider setup,
+            evidence capture, and deployment approval.
           </p>
         </section>
 

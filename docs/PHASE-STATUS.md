@@ -4,6 +4,47 @@ This is the quick status page for the SKR repo. Use `docs/PHASE-2-READINESS-PLAN
 
 ## Current phase
 
+Current phase: Phase 3X-A/B - protected admin write-ops hardening, content-operation guardrails, and local acceptance coverage.
+
+Latest completed capability: Phase 3W-A/B catalogue listing media hardening, protected admin content-ops polish, and local acceptance coverage.
+
+Last merged capability PR: #145
+
+Merge commit: `54cd8d5e7b829e56d245da2ca503c9b4058dca76`
+
+Phase 3X-A/B hardens protected admin listing, category, media, and quote
+follow-up write operations for the current furniture/event rental website. It
+adds clearer labels, helper text, admin-only validation and recovery copy,
+read/write boundary cues, draft/published/archive/media readiness cues, safer
+operation grouping, and quote follow-up controls where existing protected
+patterns support them.
+
+Phase 3X-A/B adds
+`docs/content/PROTECTED-ADMIN-WRITE-OPS-ACCEPTANCE-CHECKLIST.md` as a
+repo-local, template-only, non-live checklist for listing, category, media, and
+quote follow-up write-operation expectations, protected admin-only wording,
+public exposure boundaries, safe validation and recovery copy, forbidden public
+visitor workflow additions, local acceptance placeholders, and deployment
+boundary.
+
+The protected content readiness workspace now includes an admin-only protected
+admin write-ops acceptance snapshot with template-only listing, category,
+media, quote follow-up, public exposure boundary, public self-service boundary,
+deployment approval, and last local write-ops update values.
+
+No deployment is performed or approved by Phase 3X-A/B. It does not add Vercel
+config, connect Supabase Cloud, add real secrets or env values, add filled
+review evidence, add provider config, add Pinecone runtime code or env reads,
+add browser Supabase, add service-role runtime paths, change n8n runtime
+behavior, wire `/api/chat` to retrieval, expose admin internal notes publicly,
+invent real-world operational details, unsupported business assertions, or add
+out-of-scope public visitor self-service workflows.
+
+Missing real-world operational details and unsupported business assertions must
+remain marked as owner input required and must not be invented.
+
+Previous Current Phase 3W-A/B status:
+
 Current phase: Phase 3W-A/B - catalogue listing media hardening, protected admin content-ops polish, and local acceptance coverage.
 
 Latest completed capability: Phase 3V-A/B quote/enquiry workflow hardening, protected admin triage polish, and local acceptance coverage.
