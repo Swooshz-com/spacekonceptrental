@@ -272,6 +272,67 @@ describe("QuoteRequestForm", () => {
     );
   });
 
+  it("keeps preferred contact prefix within the server customer message limit", async () => {
+    const fetchMock = vi.fn(async () => {
+      return new Response(
+        JSON.stringify({
+          status: "received",
+          quoteRequestId: "70000000-0000-4000-8000-000000000001",
+          publicReference: "QR-20260527-ABC12345"
+        }),
+        {
+          headers: { "content-type": "application/json" },
+          status: 201
+        }
+      );
+    });
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(<QuoteRequestForm />);
+
+    const messageInput = screen.getByLabelText(
+      /customer message/i
+    ) as HTMLTextAreaElement;
+    const preferredContactPrefix =
+      "Preferred contact method: either email or phone\n\n";
+    const allowedMessageLength = 1200 - preferredContactPrefix.length;
+
+    fireEvent.change(screen.getByLabelText(/name/i), {
+      target: { value: "Maya Tan" }
+    });
+    fireEvent.change(screen.getByLabelText(/email address/i), {
+      target: { value: "maya@example.test" }
+    });
+    fireEvent.change(messageInput, {
+      target: { value: "x".repeat(1200) }
+    });
+    fireEvent.change(screen.getByLabelText(/preferred contact method/i), {
+      target: { value: "either email or phone" }
+    });
+
+    expect(messageInput.maxLength).toBe(allowedMessageLength);
+    expect(messageInput.value).toHaveLength(allowedMessageLength);
+
+    fireEvent.click(screen.getByRole("button", { name: /send quote request/i }));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+
+    const request = (fetchMock.mock.calls as unknown as [
+      string,
+      RequestInit
+    ][])[0][1];
+    const payload = JSON.parse(String(request.body));
+
+    expect(payload.customerMessage).toBe(
+      `${preferredContactPrefix}${"x".repeat(allowedMessageLength)}`
+    );
+    expect(payload.customerMessage).toHaveLength(1200);
+    expect(
+      await screen.findByText(/quote request received/i)
+    ).toBeInTheDocument();
+  });
+
   it("does not import Supabase or server-only quote persistence in browser-facing code", () => {
     const source = readFileSync(
       resolve(process.cwd(), "components/QuoteRequestForm.tsx"),

@@ -296,3 +296,16 @@ Phase 3Y-A/B protected admin destructive-action safeguard references: `docs/cont
 - Quote/enquiry public expectation boundary: `docs/content/QUOTE-ENQUIRY-PUBLIC-EXPECTATION-BOUNDARY.md`.
 - Protected admin public-review bridge: `docs/content/PROTECTED-ADMIN-PUBLIC-REVIEW-BRIDGE.md`.
 - Safety: repo-local, template-only, non-live, not evidence, no deployment approval, no provider setup, no ecommerce/payment/order/checkout flow, no fake facts, and no filled owner-review, preview, or production evidence.
+
+## Phase 4A-A/B Local Release-Control References
+
+- Current phase: Phase 4A-A/B local release-control gate, owner-review rehearsal, and deployment approval firewall.
+- Latest completed capability: Phase 3Z-A/B public route readiness closure, protected admin review bridge, and local acceptance coverage.
+- Last merged capability PR: #148.
+- Merge commit: `26792f73f8e7943eac5e421c6d829bde7613b562`.
+- Local release-control gate: `docs/release/PHASE-4A-LOCAL-RELEASE-CONTROL-GATE.md`.
+- Owner-review rehearsal runbook: `docs/content/OWNER-REVIEW-REHEARSAL-RUNBOOK.md`.
+- Deployment approval firewall matrix: `docs/content/DEPLOYMENT-APPROVAL-FIREWALL-MATRIX.md`.
+- Protected admin release-control workspace: `/admin/release-control`.
+
+These references are repo-local, template-only, non-live, and not evidence. No owner feedback is recorded, no owner sign-off is recorded, no preview/production evidence is created, and no deployment approval is granted.

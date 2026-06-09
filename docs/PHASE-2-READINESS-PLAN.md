@@ -1,5 +1,11 @@
 # Phase 2 Readiness Plan
 
+## Current Phase 4A-A/B status
+
+Phase 4A-A/B adds a repo-local release-control gate, owner-review rehearsal runbook, deployment approval firewall matrix, protected admin release-control workspace, deterministic local test coverage, and validator roll-forward. Latest completed capability: Phase 3Z-A/B public route readiness closure, protected admin review bridge, and local acceptance coverage. Last merged capability PR: #148. Merge commit: `26792f73f8e7943eac5e421c6d829bde7613b562`.
+
+Previous Current Phase 3Z-A/B status remains below for continuity.
+
 ## Current Phase 3Z-A/B status
 
 Phase 3Z-A/B adds public route readiness closure docs, a quote/enquiry public expectation boundary, a protected admin public-review bridge, public copy/readiness hardening, protected content-readiness snapshot coverage, and deterministic local acceptance coverage. Latest completed capability: Phase 3Y-A/B protected admin destructive-action safeguards, recovery lanes, and local acceptance coverage. Last merged capability PR: #147. Merge commit: `7f422fd47ffa75cf982bd4f9d859b530a96961ad`.
