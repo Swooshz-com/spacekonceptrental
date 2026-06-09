@@ -279,3 +279,6 @@ for the release-candidate gate and keep the review non-live.
   prepared, but this runbook still remains non-live.
 
 Phase 3W-A/B manual QA should include `docs/content/CATALOGUE-LISTING-MEDIA-ACCEPTANCE-CHECKLIST.md` as template-only local review support for public catalogue, listing detail, category, event-use handoff, protected admin content ops, and media/alt-text boundaries. Do not fill evidence or record owner sign-off.
+
+
+Phase 3X-A/B manual QA should include `docs/content/PROTECTED-ADMIN-WRITE-OPS-ACCEPTANCE-CHECKLIST.md` as template-only local review support for protected admin listing, category, media, and quote follow-up write-operation boundaries. Do not fill evidence, record owner feedback, record owner sign-off, or treat the checklist as deployment approval.

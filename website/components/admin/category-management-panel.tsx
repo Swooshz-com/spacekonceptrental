@@ -46,7 +46,7 @@ type CategoryPayload = {
 
 const categoryWriteOperation = "category.write";
 const genericFailureMessage =
-  "Category change could not be saved. Try again or refresh the page.";
+  "Category change could not be saved. Check public grouping fields and try again.";
 
 function formValue(formData: FormData, name: string) {
   const value = formData.get(name);
@@ -178,7 +178,7 @@ export function CategoryManagementPanel({
   ) {
     setStatus({
       kind: "pending",
-      message: "Saving category change..."
+      message: "Saving protected category write..."
     });
 
     try {
@@ -324,7 +324,8 @@ export function CategoryManagementPanel({
         <p>
           Create, update, and archive categories through the protected admin
           API. Furniture listing edits use their own protected panel, and image
-          file handling stays out of scope.
+          file handling stays out of scope. Categories are public grouping
+          metadata when published.
         </p>
       </div>
 
@@ -346,7 +347,7 @@ export function CategoryManagementPanel({
         </p>
         <p className="category-management__hint">
           Category readiness checks use published listing counts when they are
-          available from the admin dashboard.
+          available from the admin dashboard. Empty published categories are admin-only recovery cues, not public promises.
         </p>
         <p>
           {publishedEmptyCategories.length > 0
@@ -372,10 +373,12 @@ export function CategoryManagementPanel({
             required
             type="text"
           />
+          <small>Use lowercase letters, numbers, and hyphens for public category URLs.</small>
         </label>
         <label htmlFor="new-category-name">
           New category name
           <input id="new-category-name" maxLength={120} name="name" required />
+          <small>Name the rental/event furniture grouping without sales-flow wording.</small>
         </label>
         <label htmlFor="new-category-description">
           New category description
@@ -385,6 +388,7 @@ export function CategoryManagementPanel({
             name="description"
             rows={3}
           />
+          <small>Description helps public browsing and quote/enquiry recovery; keep internal readiness notes out.</small>
         </label>
         <label htmlFor="new-category-sort-order">
           New category sort order
@@ -395,6 +399,7 @@ export function CategoryManagementPanel({
             name="sortOrder"
             type="number"
           />
+          <small>Lower numbers appear earlier where category ordering is used.</small>
         </label>
         <label className="category-management__checkbox" htmlFor="new-category-published">
           <input
@@ -403,7 +408,7 @@ export function CategoryManagementPanel({
             name="isPublished"
             type="checkbox"
           />
-          Publish new category
+          Publish new category for public grouping
         </label>
         <button className="button" type="submit">
           Create category
@@ -414,8 +419,7 @@ export function CategoryManagementPanel({
         {categories.length === 0 ? (
           <section className="admin-dashboard__card admin-dashboard__card--summary">
             <p>
-              No categories are available to update yet. Create a category
-              above before grouping rental listings.
+              No categories are available to update yet. Create a protected draft category before grouping public rental listings or recovering quote/enquiry context.
             </p>
           </section>
         ) : (
@@ -452,6 +456,7 @@ export function CategoryManagementPanel({
                     name="name"
                     required
                   />
+                  <small>Category name appears in public grouping when published.</small>
                 </label>
                 <label htmlFor={`category-description-${category.id}`}>
                   Category description for {category.name}
@@ -462,6 +467,7 @@ export function CategoryManagementPanel({
                     name="description"
                     rows={3}
                   />
+                  <small>Description supports public browsing and quote/enquiry recovery; do not add internal notes.</small>
                 </label>
                 <label htmlFor={`category-sort-order-${category.id}`}>
                   Category sort order for {category.name}
@@ -473,6 +479,7 @@ export function CategoryManagementPanel({
                     name="sortOrder"
                     type="number"
                   />
+                  <small>Sort order affects category grouping only where ordering is used.</small>
                 </label>
                 <label
                   className="category-management__checkbox"
@@ -484,11 +491,10 @@ export function CategoryManagementPanel({
                     name="isPublished"
                     type="checkbox"
                   />
-                  Publish {category.name}
+                  Publish {category.name} for public grouping
                 </label>
                 <p className="category-management__hint">
-                  Archive removes this category from active catalogue grouping;
-                  it does not delete the category record.
+                  Protected write boundary: publish only when grouping and listing-count cues are clear. Archive removes this category from active catalogue grouping; it does not delete the category record.
                 </p>
                 <div className="category-management__actions">
                   <button className="button" type="submit">

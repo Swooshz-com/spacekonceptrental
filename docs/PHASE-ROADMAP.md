@@ -1825,3 +1825,27 @@ legal claims, guarantees, production policies, or add public self-service
 rental completion flows outside the current quote request path.
 
 Phase 3W-A/B hardens the public catalogue/listing/category/media discovery path and protected admin content-ops surfaces while keeping catalogue/listing/media acceptance repo-local and template-only.
+
+
+## Phase 3X: Protected Admin Write-Ops Hardening, Content-Operation Guardrails, And Local Acceptance Coverage
+
+Phase 3X-A/B hardens the protected admin write operations lane for listing,
+category, media, and quote follow-up workflows. It keeps public quote/enquiry
+and catalogue discovery unchanged while making protected admin operations
+safer, clearer, and better covered by local tests and validators.
+
+Phase 3X-A/B improves protected listing, category, media, image upload, and
+quote follow-up copy with clearer public-field labels, helper text,
+validation/recovery language, read/write boundary cues, draft/published/archive
+and media readiness guidance, and admin-only status/note controls.
+
+Phase 3X-A/B adds `docs/content/PROTECTED-ADMIN-WRITE-OPS-ACCEPTANCE-CHECKLIST.md`
+as a repo-local, template-only, non-live checklist and adds a protected admin
+write-ops acceptance snapshot to `/admin/content-readiness` for authorised
+admins only.
+
+Phase 3X-A/B remains repo-local only. It does not deploy, approve deployment,
+add provider config, add real secrets or env values, add filled evidence,
+invent owner feedback or sign-off, add browser Supabase, add service-role
+runtime paths, change n8n/Pinecone/RAG runtime behavior, or add out-of-scope
+public visitor self-service workflows.

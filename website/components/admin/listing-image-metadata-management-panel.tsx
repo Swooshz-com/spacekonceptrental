@@ -62,7 +62,7 @@ type ImagePayload = {
 
 const productImageWriteOperation = "productImage.write";
 const genericFailureMessage =
-  "Image metadata change could not be saved. Try again or refresh the page.";
+  "Image metadata change could not be saved. Check public-safe alt text, primary state, and try again.";
 
 function formValue(formData: FormData, name: string) {
   const value = formData.get(name);
@@ -251,7 +251,7 @@ export function ListingImageMetadataManagementPanel({
   ) {
     setStatus({
       kind: "pending",
-      message: "Saving image metadata change..."
+      message: "Saving protected image metadata write..."
     });
 
     try {
@@ -366,8 +366,8 @@ export function ListingImageMetadataManagementPanel({
         <h2>Listing image metadata management</h2>
         <p>
           Create, update, and archive listing image metadata through the
-          protected admin API. Image files are handled outside this admin
-          area.
+          protected admin API. Alt text and primary state can affect public
+          browsing, but media readiness is not an availability assertion.
         </p>
       </div>
 
@@ -383,8 +383,8 @@ export function ListingImageMetadataManagementPanel({
       <section className="admin-readiness" aria-label="Media readiness">
         <h3>Media readiness</h3>
         <p>
-          Public-ready media needs an active image, useful alt text, and a clear
-          primary image when the listing should lead with that setup.
+          Public-ready media needs an active image, useful public-safe alt text, and a clear
+          primary image when the listing should lead with that setup. These admin-only cues do not prove availability.
         </p>
         <h4>Media readiness by listing</h4>
         <ul className="admin-readiness__list">
@@ -418,6 +418,7 @@ export function ListingImageMetadataManagementPanel({
               </option>
             ))}
           </select>
+          <small>Associate media with the correct rental listing before publishing.</small>
         </label>
         <label htmlFor="new-image-bucket">
           New image bucket
@@ -432,7 +433,7 @@ export function ListingImageMetadataManagementPanel({
           <input id="new-image-alt-text" maxLength={240} name="altText" />
           <small>
             Describe the visible rental furniture setup for public catalogue
-            accessibility.
+            accessibility; do not claim availability assertions.
           </small>
         </label>
         <label htmlFor="new-image-sort-order">
@@ -447,7 +448,7 @@ export function ListingImageMetadataManagementPanel({
         </label>
         <label className="category-management__checkbox" htmlFor="new-image-primary">
           <input id="new-image-primary" name="isPrimary" type="checkbox" />
-          Mark new image as primary
+          Mark new image as primary public browsing image
         </label>
         <button className="button" type="submit">
           Create listing image metadata
@@ -461,8 +462,7 @@ export function ListingImageMetadataManagementPanel({
         {images.length === 0 ? (
           <section className="admin-dashboard__card admin-dashboard__card--summary">
             <p>
-              No listing image metadata records are available to update yet.
-              Add approved listing media before choosing primary images.
+              No listing image metadata records are available to update yet. Add approved listing media metadata before choosing public primary images or publishing media readiness.
             </p>
           </section>
         ) : (
@@ -523,6 +523,7 @@ export function ListingImageMetadataManagementPanel({
                       maxLength={240}
                       name="altText"
                     />
+                    <small>Alt text supports public browsing accessibility only and must not be used as an availability assertion.</small>
                   </label>
                   <label htmlFor={`image-sort-order-${image.id}`}>
                     Image sort order for {label}
@@ -545,11 +546,10 @@ export function ListingImageMetadataManagementPanel({
                       name="isPrimary"
                       type="checkbox"
                     />
-                    Mark {label} as primary
+                    Mark {label} as primary public browsing image
                   </label>
                   <p className="category-management__hint">
-                    Archive removes this image from active listing media; it
-                    does not delete the file from storage.
+                    Protected write boundary: primary and active media choices can affect public browsing. Archive removes this image from active listing media; it does not delete the file from storage.
                   </p>
                   <div className="category-management__actions">
                     <button className="button" type="submit">

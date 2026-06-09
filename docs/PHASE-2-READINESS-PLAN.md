@@ -238,6 +238,40 @@ Suggested first PR:
   Supabase, production evidence, or ecommerce flows. Product language remains
   enquiry/quote/request.
 
+Current Phase 3X-A/B status:
+
+- PR #145 merged Phase 3W-A/B catalogue listing media hardening, protected
+  admin content-ops polish, and local acceptance coverage at
+  `54cd8d5e7b829e56d245da2ca503c9b4058dca76`.
+- Latest completed capability is Phase 3W-A/B catalogue listing media
+  hardening, protected admin content-ops polish, and local acceptance coverage.
+- Phase 3X-A/B is current as protected admin write-ops hardening,
+  content-operation guardrails, and local acceptance coverage.
+- Protected admin listing, category, media, image upload, and quote follow-up
+  controls now use clearer labels, helper text, read/write boundary cues,
+  draft/published/archive/media readiness copy, and admin-only validation or
+  recovery wording.
+- `docs/content/PROTECTED-ADMIN-WRITE-OPS-ACCEPTANCE-CHECKLIST.md` is a
+  repo-local, template-only, non-live checklist for listing, category, media,
+  and quote follow-up write-operation expectations.
+- The protected content readiness workspace includes an authorised-admin-only
+  protected admin write-ops acceptance snapshot with template-only values.
+- Public pages do not show protected admin write-ops, internal notes, content
+  readiness, owner review, local acceptance, handoff, deployment, public status
+  tracking, public visitor self-service, outbound automation, sales-system,
+  visitor-submitted media, or completion-flow wording.
+- Phase 3X-A/B does not deploy, approve deployment, add provider config, add
+  real secrets/env values, add filled evidence, invent owner feedback, invent
+  owner sign-off, invent real business facts, add browser Supabase, add
+  service-role runtime paths, add n8n/Pinecone/RAG runtime changes, or add
+  out-of-scope public visitor self-service workflows.
+
+Previous Current Phase 3W-A/B status:
+
+Current Phase 3X-A/B status: protected admin write-ops hardening and content-operation guardrails are repo-local only, do not approve deployment, do not add provider config, and keep acceptance placeholders template-only.
+
+Previous Current Phase 3W-A/B status remains the latest completed capability from PR #145 at `54cd8d5e7b829e56d245da2ca503c9b4058dca76`.
+
 Current Phase 3V-A/B status:
 
 - PR #143 merged Phase 3U-A/B final local owner handoff pack, acceptance
