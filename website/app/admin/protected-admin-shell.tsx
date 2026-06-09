@@ -770,7 +770,7 @@ const deploymentApprovalFirewallMatrixPath =
 const phase4aReleaseControlSnapshot = [
   ["Current phase", "Phase 4C-A/B"],
   ["Last merged capability PR", "#150"],
-  ["Merge commit", `baa076${"6797567"}${"517a725ea65ac565545c6fe56d76"}`],
+  ["Merge commit", `baa076${"679756"}${"751a725ea65ac565545c6fe56d76"}`],
   [
     "Latest completed capability",
     "Phase 4B-A/B owner-input intake control, local correction queue, and review-ready handoff closure"
