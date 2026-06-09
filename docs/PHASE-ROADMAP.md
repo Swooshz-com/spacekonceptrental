@@ -1,5 +1,13 @@
 # Phase Roadmap
 
+## Phase 4C-A/B Local Owner-Review Rehearsal Pack Blocker Ledger And Acceptance Drill Validator
+
+Phase 4C-A/B turns the Phase 4B-A/B owner-input intake and local correction queue into a deterministic local rehearsal workflow. It adds a template-only local owner-review rehearsal pack, blocker ledger template, local acceptance drill, owner-review rehearsal validator, and protected admin Phase 4C rehearsal snapshot for local review readiness only.
+
+Deployment remains unapproved. Provider setup, Vercel config, Supabase Cloud config, browser Supabase, service-role runtime paths, n8n/Pinecone runtime changes, public tracking, customer accounts, uploads, ecommerce/payment/order/checkout flows, booking/reservation/fulfilment/stock-reservation flows, filled evidence, owner sign-off, owner feedback, owner decisions, and invented business facts remain out of scope.
+
+Last merged capability PR: #150. Merge commit: `baa076679756751a725ea65ac565545c6fe56d76`. Latest completed capability: Phase 4B-A/B owner-input intake control, local correction queue, and review-ready handoff closure. Current phase: Phase 4C-A/B local owner-review rehearsal pack, blocker ledger, and acceptance drill validator.
+
 ## Phase 4B-A/B Owner-Input Intake Control Local Correction Queue And Review-Ready Handoff Closure
 
 Phase 4B-A/B turns the Phase 4A-A/B release-control gate into a deterministic owner-input and local-correction control layer. It adds owner-input intake control, a local correction queue, review-ready handoff closure templates, and a protected admin owner-input/correction snapshot for local review readiness only.

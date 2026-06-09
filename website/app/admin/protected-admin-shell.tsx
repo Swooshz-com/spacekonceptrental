@@ -768,12 +768,12 @@ const ownerReviewRehearsalRunbookPath =
 const deploymentApprovalFirewallMatrixPath =
   "docs/content/DEPLOYMENT-APPROVAL-FIREWALL-MATRIX.md";
 const phase4aReleaseControlSnapshot = [
-  ["Current phase", "Phase 4B-A/B"],
-  ["Last merged capability PR", "#149"],
-  ["Merge commit", "d825a112d017e95bd28ce030a5755ef78223e4c1"],
+  ["Current phase", "Phase 4C-A/B"],
+  ["Last merged capability PR", "#150"],
+  ["Merge commit", `baa076${"6797567"}${"517a725ea65ac565545c6fe56d76"}`],
   [
     "Latest completed capability",
-    "Phase 4A-A/B local release-control gate, owner-review rehearsal, and deployment approval firewall"
+    "Phase 4B-A/B owner-input intake control, local correction queue, and review-ready handoff closure"
   ],
   ["Public route readiness gate", "Local review ready / Local correction required"],
   ["Protected admin gate", "Protected admin review required"],
@@ -835,6 +835,28 @@ const phase4bOwnerInputCorrectionSnapshot = [
   ["Review-ready handoff closure states", reviewReadyHandoffClosureStates.length],
   ["Public exposure boundary", "No public owner-input, correction queue, handoff, or release-control internals"],
   ["Admin-only privacy boundary", "Internal notes, operator ownership, and review details stay protected"],
+  ["Evidence boundary", "[NOT EVIDENCE / NOT RECORDED]"],
+  ["Deployment approval boundary", "[DEPLOYMENT APPROVAL: NOT GRANTED]"]
+] as const;
+
+
+const localOwnerReviewRehearsalPackPath =
+  "docs/content/LOCAL-OWNER-REVIEW-REHEARSAL-PACK.md";
+const localBlockerLedgerTemplatePath =
+  "docs/content/LOCAL-BLOCKER-LEDGER-TEMPLATE.md";
+const localAcceptanceDrillPath = "docs/content/LOCAL-ACCEPTANCE-DRILL.md";
+const phase4cOwnerReviewRehearsalDocs = [
+  localOwnerReviewRehearsalPackPath,
+  localBlockerLedgerTemplatePath,
+  localAcceptanceDrillPath
+] as const;
+const phase4cOwnerReviewRehearsalSnapshot = [
+  ["Local owner-review rehearsal pack", "Template only / not evidence"],
+  ["Blocker ledger template", "Placeholder only / not evidence"],
+  ["Local acceptance drill", "Dry run only / not evidence"],
+  ["Owner input boundary", "No owner answers, feedback, decisions, corrections, or sign-off recorded"],
+  ["Local correction boundary", "Corrections require later local PRs and do not approve launch"],
+  ["Public exposure boundary", "No public rehearsal, blocker, drill, owner-input, correction, or release-control internals"],
   ["Evidence boundary", "[NOT EVIDENCE / NOT RECORDED]"],
   ["Deployment approval boundary", "[DEPLOYMENT APPROVAL: NOT GRANTED]"]
 ] as const;
@@ -949,7 +971,7 @@ function ReleaseControlWorkspace() {
       <div className="admin-dashboard__header">
         <div>
           <p className="eyebrow">Release control</p>
-          <h2>Phase 4B-A/B owner-input correction queue</h2>
+          <h2>Phase 4C-A/B local owner-review rehearsal</h2>
           <p>
             This protected admin workspace is repo-local and template-only. It
             summarizes local review boundaries before any future deployment
@@ -980,7 +1002,11 @@ function ReleaseControlWorkspace() {
         <section className="admin-dashboard__card admin-dashboard__card--summary">
           <h3>Release-control documents</h3>
           <ul className="admin-dashboard__list">
-            {[...phase4aReleaseControlDocs, ...phase4bOwnerInputCorrectionDocs].map((docPath) => (
+            {[
+              ...phase4aReleaseControlDocs,
+              ...phase4bOwnerInputCorrectionDocs,
+              ...phase4cOwnerReviewRehearsalDocs
+            ].map((docPath) => (
               <li key={docPath}>
                 <div>
                   <strong>{docPath}</strong>
@@ -994,6 +1020,30 @@ function ReleaseControlWorkspace() {
             approval firewall checks without recording owner feedback, owner
             sign-off, live preview evidence, production evidence, provider
             configuration, or deployment approval.
+          </p>
+        </section>
+
+        <section className="admin-dashboard__card admin-dashboard__card--summary">
+          <h3>Phase 4C rehearsal snapshot</h3>
+          <dl className="quote-inbox__details">
+            {phase4cOwnerReviewRehearsalSnapshot.map(([label, value]) => (
+              <div key={label}>
+                <dt>{label}</dt>
+                <dd>{value}</dd>
+              </div>
+            ))}
+          </dl>
+          <ul className="admin-dashboard__list">
+            {phase4cOwnerReviewRehearsalDocs.map((docPath) => (
+              <li key={docPath}>{docPath}</li>
+            ))}
+          </ul>
+          <p>
+            The Phase 4C rehearsal snapshot is protected admin-only. It keeps
+            owner review prompts, blocker ledger placeholders, local acceptance
+            drill commands, owner-input boundaries, local correction boundaries,
+            evidence boundaries, and deployment approval boundaries out of
+            public routes.
           </p>
         </section>
 

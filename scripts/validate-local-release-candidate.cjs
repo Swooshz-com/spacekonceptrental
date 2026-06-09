@@ -34,6 +34,9 @@ const phase4aLocalReleaseControlGatePath = 'docs/release/PHASE-4A-LOCAL-RELEASE-
 const ownerInputIntakeControlPath = 'docs/content/OWNER-INPUT-INTAKE-CONTROL.md';
 const localCorrectionQueuePath = 'docs/content/LOCAL-CORRECTION-QUEUE.md';
 const reviewReadyHandoffClosurePath = 'docs/content/REVIEW-READY-HANDOFF-CLOSURE.md';
+const localOwnerReviewRehearsalPackPath = 'docs/content/LOCAL-OWNER-REVIEW-REHEARSAL-PACK.md';
+const localBlockerLedgerTemplatePath = 'docs/content/LOCAL-BLOCKER-LEDGER-TEMPLATE.md';
+const localAcceptanceDrillPath = 'docs/content/LOCAL-ACCEPTANCE-DRILL.md';
 const ownerReviewRehearsalRunbookPath = 'docs/content/OWNER-REVIEW-REHEARSAL-RUNBOOK.md';
 const deploymentApprovalFirewallMatrixPath = 'docs/content/DEPLOYMENT-APPROVAL-FIREWALL-MATRIX.md';
 const phase3rMergeCommit = 'ef18c2357d37fdb613851c427130bb108861de31';
@@ -46,6 +49,7 @@ const phase3xMergeCommit = '50316a5c4052607487ba7409d5dc854889db6e24';
 const phase3yMergeCommit = '7f422fd47ffa75cf982bd4f9d859b530a96961ad';
 const phase3zMergeCommit = '26792f73f8e7943eac5e421c6d829bde7613b562';
 const phase4aMergeCommit = 'd825a112d017e95bd28ce030a5755ef78223e4c1';
+const phase4bMergeCommit = 'baa076679756751a725ea65ac565545c6fe56d76';
 const sourceExtensions = new Set(['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs']);
 const forbiddenCustomerFlowTermPattern = new RegExp(
   `\\b(?:${[
@@ -739,6 +743,111 @@ function assertPhase4aReleaseControl() {
   assertNoMatch(phase4bDocs, filledEvidencePattern, 'Phase 4B owner-input correction docs');
 }
 
+
+function assertPhase4cOwnerReviewRehearsal() {
+  const phase4cDocPaths = [
+    localOwnerReviewRehearsalPackPath,
+    localBlockerLedgerTemplatePath,
+    localAcceptanceDrillPath,
+  ];
+  const docs = phase4cDocPaths.map(readRepoFile).join('\n');
+  const statusDocs = [
+    readRepoFile('docs/PHASE-STATUS.md'),
+    readRepoFile('docs/PHASE-ROADMAP.md'),
+    readRepoFile('docs/PHASE-2-READINESS-PLAN.md'),
+    readRepoFile('docs/DECISION-LOG.md'),
+    readRepoFile('docs/checklists/PHASE-2-ADMIN-OPS.md'),
+    readRepoFile('docs/OWNER-REVIEW-READINESS-PACKAGE.md'),
+    readRepoFile('docs/manual-qa/OWNER-REVIEW-MANUAL-QA.md'),
+    readRepoFile('docs/PREVIEW-DEPLOYMENT-HANDOFF.md'),
+  ].join('\n');
+  const shell = readRepoFile(protectedAdminShellPath);
+  const route = readRepoFile(releaseControlRoutePath);
+  const packageJson = JSON.parse(readRepoFile('package.json'));
+  const publicSource = readTrackedProductionSources([
+    'website/app/layout.tsx',
+    'website/app/page.tsx',
+    'website/app/listings',
+    'website/app/categories',
+    'website/app/catalogue',
+    'website/app/events',
+    'website/app/quote',
+    'website/app/not-found.tsx',
+    'website/components/QuoteRequestForm.tsx',
+  ]);
+  const suiteRunner = readRepoFile(suiteRunnerPath);
+
+  for (const required of [
+    'repo-local, template-only, non-live, and not evidence',
+    '[NOT EVIDENCE / NOT RECORDED]',
+    '[DEPLOYMENT APPROVAL: NOT GRANTED]',
+    '[OWNER INPUT NEEDED:',
+    '[MISSING OWNER INPUT:',
+    '[LOCAL CORRECTION PLACEHOLDER:',
+    'Owner input missing',
+    'Local correction required',
+    'Public visibility blocked',
+    'Protected admin review required',
+    'Fake-fact risk',
+    'Public leakage risk',
+    'Provider/runtime blocked',
+    'Deployment planning blocked',
+    'Requires separate deployment approval',
+    'Confirm public route wording remains rental/enquiry-only',
+    'Confirm quote/enquiry remains request/intake only',
+    'Confirm no public account/tracking/upload/notification/CRM flow exists',
+    'Confirm no ecommerce/cart/checkout/order/payment wording exists',
+    'Confirm admin-only release-control and correction internals are protected',
+    'Confirm fake facts remain absent',
+    'Confirm no provider/runtime/deployment files or env reads were added',
+    'Confirm release-candidate suite was not weakened',
+  ]) {
+    assertIncludes(docs, required, 'Phase 4C owner-review rehearsal docs');
+  }
+
+  for (const required of [
+    'Current phase: Phase 4C-A/B local owner-review rehearsal pack, blocker ledger, and acceptance drill validator',
+    'Latest completed capability: Phase 4B-A/B owner-input intake control, local correction queue, and review-ready handoff closure',
+    'Last merged capability PR: #150',
+    phase4bMergeCommit,
+    localOwnerReviewRehearsalPackPath,
+    localBlockerLedgerTemplatePath,
+    localAcceptanceDrillPath,
+    'validate:owner-review-rehearsal',
+  ]) {
+    assertIncludes(statusDocs, required, 'Phase 4C status docs');
+  }
+
+  for (const required of [
+    'Phase 4C-A/B local owner-review rehearsal',
+    'phase4cOwnerReviewRehearsalSnapshot',
+    localOwnerReviewRehearsalPackPath,
+    localBlockerLedgerTemplatePath,
+    localAcceptanceDrillPath,
+    'Owner input boundary',
+    'Local correction boundary',
+    'Public exposure boundary',
+    'Evidence boundary',
+    'Deployment approval boundary',
+  ]) {
+    assertIncludes(shell, required, 'protected admin shell Phase 4C rehearsal snapshot');
+  }
+  assertIncludes(route, 'view={{ kind: "release-control" }}', 'release-control route');
+  assert(
+    packageJson.scripts['validate:owner-review-rehearsal'] === 'node scripts/validate-owner-review-rehearsal.cjs',
+    'validate:owner-review-rehearsal script is missing.',
+  );
+  assertNoMatch(docs, filledEvidencePattern, 'Phase 4C owner-review rehearsal docs');
+  assertNoMatch(
+    publicSource,
+    /local owner-review rehearsal pack|local blocker ledger template|local acceptance drill|owner-input intake control|local correction queue|review-ready handoff closure|release-control internals|owner-review templates|protected admin urls|internal notes|recovery lane statuses|destructive-action safeguards|status-transition matrix details|\/admin\//i,
+    'public source',
+  );
+  assertNoMatch(publicSource, forbiddenCustomerFlowTermPattern, 'public source');
+  assertNoMatch(publicSource, forbiddenBusinessFactPattern, 'public source');
+  assertNoMatch(suiteRunner, /docker[^\n]*(?:skip|bypass)|(?:skip|bypass)[^\n]*docker/i, suiteRunnerPath);
+}
+
 function assertStatusDocs() {
   const status = readRepoFile('docs/PHASE-STATUS.md');
   const currentStatus = normalizeWhitespace(
@@ -1057,6 +1166,7 @@ assertProtectedAdminWriteOpsChecklist();
 assertProtectedAdminDestructiveActionDocs();
 assertPublicReadinessClosureDocs();
 assertPhase4aReleaseControl();
+assertPhase4cOwnerReviewRehearsal();
 assertStatusDocs();
 assertProtectedAdminShell();
 assertPublicSourceBoundary();
