@@ -523,3 +523,16 @@ and route/action boundaries are implemented and tested.
 - [x] Added deployment approval firewall matrix separating local review/tests/build/sandbox checks from preview planning, actual deployment, production launch, provider config, live preview smoke, and filled evidence.
 - [x] Added protected admin release-control workspace/snapshot for authorised admin review only.
 - [x] Added deterministic local tests and validator coverage for Phase 4A-A/B boundaries.
+
+## Phase 4B-A/B Owner-Input Correction Queue References
+
+- Current phase: Phase 4B-A/B - owner-input intake control, local correction queue, and review-ready handoff closure.
+- Latest completed capability: Phase 4A-A/B local release-control gate, owner-review rehearsal, and deployment approval firewall.
+- Last merged capability PR: #149.
+- Merge commit: `d825a112d017e95bd28ce030a5755ef78223e4c1`.
+- Owner-input intake control: `docs/content/OWNER-INPUT-INTAKE-CONTROL.md`.
+- Local correction queue: `docs/content/LOCAL-CORRECTION-QUEUE.md`.
+- Review-ready handoff closure: `docs/content/REVIEW-READY-HANDOFF-CLOSURE.md`.
+- Protected admin release-control workspace: `/admin/release-control`.
+
+These references are repo-local, template-only, non-live, and not evidence. No owner feedback is recorded, no owner corrections are recorded, no owner sign-off is recorded, no preview evidence is created, no production evidence is created, and no deployment approval is granted.

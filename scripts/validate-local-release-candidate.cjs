@@ -31,6 +31,9 @@ const suiteRunnerPath = 'scripts/validate-release-candidate-suite.cjs';
 const protectedAdminShellPath = 'website/app/admin/protected-admin-shell.tsx';
 const releaseControlRoutePath = 'website/app/admin/release-control/page.tsx';
 const phase4aLocalReleaseControlGatePath = 'docs/release/PHASE-4A-LOCAL-RELEASE-CONTROL-GATE.md';
+const ownerInputIntakeControlPath = 'docs/content/OWNER-INPUT-INTAKE-CONTROL.md';
+const localCorrectionQueuePath = 'docs/content/LOCAL-CORRECTION-QUEUE.md';
+const reviewReadyHandoffClosurePath = 'docs/content/REVIEW-READY-HANDOFF-CLOSURE.md';
 const ownerReviewRehearsalRunbookPath = 'docs/content/OWNER-REVIEW-REHEARSAL-RUNBOOK.md';
 const deploymentApprovalFirewallMatrixPath = 'docs/content/DEPLOYMENT-APPROVAL-FIREWALL-MATRIX.md';
 const phase3rMergeCommit = 'ef18c2357d37fdb613851c427130bb108861de31';
@@ -42,6 +45,7 @@ const phase3wMergeCommit = '54cd8d5e7b829e56d245da2ca503c9b4058dca76';
 const phase3xMergeCommit = '50316a5c4052607487ba7409d5dc854889db6e24';
 const phase3yMergeCommit = '7f422fd47ffa75cf982bd4f9d859b530a96961ad';
 const phase3zMergeCommit = '26792f73f8e7943eac5e421c6d829bde7613b562';
+const phase4aMergeCommit = 'd825a112d017e95bd28ce030a5755ef78223e4c1';
 const sourceExtensions = new Set(['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs']);
 const forbiddenCustomerFlowTermPattern = new RegExp(
   `\\b(?:${[
@@ -61,7 +65,7 @@ const forbiddenCustomerFlowTermPattern = new RegExp(
   'i',
 );
 const publicInternalLeakPattern =
-  /Owner-demo|walkthrough|closure readiness|deployment approval|internal review|admin-only|protected content readiness|owner input required|issue backlog|route decision matrix|\/admin\/content-readiness|release-candidate acceptance matrix|route inventory freeze|acceptance status|local release-candidate|command centre|owner handoff|handoff pack|deployment firewall|acceptance triage|final local owner handoff|quote\/enquiry acceptance snapshot|destructive-action safeguards|recovery lane statuses|status-transition matrix|protected admin destructive-action\/recovery snapshot|internal notes|admin-only readiness|release-control gate|owner-review rehearsal|deployment approval firewall matrix|\/admin\/release-control/i;
+  /Owner-demo|walkthrough|closure readiness|deployment approval|internal review|admin-only|protected content readiness|owner input required|issue backlog|route decision matrix|\/admin\/content-readiness|release-candidate acceptance matrix|route inventory freeze|acceptance status|local release-candidate|command centre|owner handoff|handoff pack|deployment firewall|acceptance triage|final local owner handoff|quote\/enquiry acceptance snapshot|destructive-action safeguards|recovery lane statuses|status-transition matrix|protected admin destructive-action\/recovery snapshot|internal notes|admin-only readiness|release-control gate|owner-review rehearsal|deployment approval firewall matrix|owner-input intake control|local correction queue|review-ready handoff closure|owner-input and local correction snapshot|\/admin\/release-control/i;
 const forbiddenBusinessFactPattern =
   /award-winning|certified partner|trusted by|5-star|guaranteed availability|guaranteed delivery|licensed and insured|testimonial|client logo|case study|legal guarantee|production policy/i;
 const forbiddenContactFactPattern =
@@ -592,17 +596,26 @@ function assertPhase4aReleaseControl() {
       phase4aLocalReleaseControlGatePath,
       ownerReviewRehearsalRunbookPath,
       deploymentApprovalFirewallMatrixPath,
+      ownerInputIntakeControlPath,
+      localCorrectionQueuePath,
+      reviewReadyHandoffClosurePath,
       releaseControlRoutePath,
     ],
-    'Phase 4A release-control docs and route',
+    'Phase 4A/4B release-control docs and route',
   );
 
-  const docs = [
+  const phase4aDocs = [
     readRepoFile(phase4aLocalReleaseControlGatePath),
     readRepoFile(ownerReviewRehearsalRunbookPath),
     readRepoFile(deploymentApprovalFirewallMatrixPath),
   ].join('\n');
-  const normalized = normalizeWhitespace(docs);
+  const phase4bDocs = [
+    readRepoFile(ownerInputIntakeControlPath),
+    readRepoFile(localCorrectionQueuePath),
+    readRepoFile(reviewReadyHandoffClosurePath),
+  ].join('\n');
+  const normalized4a = normalizeWhitespace(phase4aDocs);
+  const normalized4b = normalizeWhitespace(phase4bDocs);
   const statusDocs = normalizeWhitespace(
     [
       readRepoFile('docs/PHASE-STATUS.md'),
@@ -642,33 +655,88 @@ function assertPhase4aReleaseControl() {
     'Production launch',
     '[DEPLOYMENT APPROVAL: NOT GRANTED]',
   ]) {
-    assertIncludes(normalized, required, 'Phase 4A release-control docs');
+    assertIncludes(normalized4a, required, 'Phase 4A release-control docs');
   }
 
   for (const required of [
-    'Current phase: Phase 4A-A/B',
-    'Latest completed capability: Phase 3Z-A/B public route readiness closure, protected admin review bridge, and local acceptance coverage',
-    'Last merged capability PR: #148',
-    phase3zMergeCommit,
-    phase4aLocalReleaseControlGatePath,
-    ownerReviewRehearsalRunbookPath,
-    deploymentApprovalFirewallMatrixPath,
+    'Public homepage wording',
+    'Public listing/category/event-use wording',
+    'Listing detail facts',
+    'Image selection and alt text',
+    'Quote/enquiry expectation wording',
+    'Contact/business-hour/service-area facts',
+    'Legal/policy/guarantee wording',
+    'Protected admin operator ownership',
+    'Deployment approval',
+    'Owner input needed',
+    'Current safe placeholder',
+    'Public exposure boundary',
+    'Admin-only handling',
+    'Local correction lane',
+    'Deployment approval boundary',
+    'Not evaluated',
+    'Owner input required',
+    'Ready for local correction',
+    'Local correction in progress',
+    'Local correction complete',
+    'Blocked before public visibility',
+    'Blocked before deployment planning',
+    'Requires separate deployment approval',
+    'Public copy',
+    'Listing/category content',
+    'Media/alt text',
+    'Quote/enquiry wording',
+    'Protected admin helper text',
+    'Admin workflow privacy',
+    'Fake-fact removal',
+    'Public leakage removal',
+    'Provider/deployment boundary',
+    'Local review ready',
+    'Local correction required',
+    'Protected admin review required',
+    'Public visibility blocked',
+    'Deployment planning blocked',
+    'No owner feedback recorded',
+    'No owner sign-off recorded',
+    'No preview evidence created',
+    'No production evidence created',
+    'No deployment approval granted',
+    '[NOT EVIDENCE / NOT RECORDED]',
   ]) {
-    assertIncludes(statusDocs, required, 'Phase 4A status docs');
+    assertIncludes(normalized4b, required, 'Phase 4B owner-input correction docs');
+  }
+
+  for (const required of [
+    'Current phase: Phase 4B-A/B',
+    'Latest completed capability: Phase 4A-A/B local release-control gate, owner-review rehearsal, and deployment approval firewall',
+    'Last merged capability PR: #149',
+    phase4aMergeCommit,
+    ownerInputIntakeControlPath,
+    localCorrectionQueuePath,
+    reviewReadyHandoffClosurePath,
+  ]) {
+    assertIncludes(statusDocs, required, 'Phase 4B status docs');
   }
 
   for (const required of [
     phase4aLocalReleaseControlGatePath,
     ownerReviewRehearsalRunbookPath,
     deploymentApprovalFirewallMatrixPath,
-    'phase4aReleaseControlSnapshot',
-    'Phase 4A-A/B release-control gate',
+    ownerInputIntakeControlPath,
+    localCorrectionQueuePath,
+    reviewReadyHandoffClosurePath,
+    'phase4bOwnerInputCorrectionSnapshot',
+    'ownerInputIntakeCategories',
+    'localCorrectionQueueStatuses',
+    'reviewReadyHandoffClosureStates',
+    'Owner-input and local correction snapshot',
     '/admin/release-control',
   ]) {
     assertIncludes(shell, required, 'protected admin shell release-control snapshot');
   }
   assertIncludes(route, 'view={{ kind: "release-control" }}', 'release-control route');
-  assertNoMatch(docs, filledEvidencePattern, 'Phase 4A release-control docs');
+  assertNoMatch(phase4aDocs, filledEvidencePattern, 'Phase 4A release-control docs');
+  assertNoMatch(phase4bDocs, filledEvidencePattern, 'Phase 4B owner-input correction docs');
 }
 
 function assertStatusDocs() {
@@ -689,10 +757,10 @@ function assertStatusDocs() {
   );
 
   for (const required of [
-    'Current phase: Phase 4A-A/B - local release-control gate, owner-review rehearsal, and deployment approval firewall.',
-    'Latest completed capability: Phase 3Z-A/B public route readiness closure, protected admin review bridge, and local acceptance coverage.',
-    'Last merged capability PR: #148',
-    `Merge commit: \`${phase3zMergeCommit}\``,
+    'Current phase: Phase 4B-A/B - owner-input intake control, local correction queue, and review-ready handoff closure.',
+    'Latest completed capability: Phase 4A-A/B local release-control gate, owner-review rehearsal, and deployment approval firewall.',
+    'Last merged capability PR: #149',
+    `Merge commit: \`${phase4aMergeCommit}\``,
   ]) {
     assertIncludes(currentStatus, required, 'Phase 4A status');
   }
@@ -834,6 +902,9 @@ function assertStatusDocs() {
   assertIncludes(ownerReviewDocs, publicJourneyReadinessClosurePath, 'owner review docs');
   assertIncludes(ownerReviewDocs, quotePublicExpectationBoundaryPath, 'owner review docs');
   assertIncludes(ownerReviewDocs, protectedAdminPublicReviewBridgePath, 'owner review docs');
+  assertIncludes(ownerReviewDocs, ownerInputIntakeControlPath, 'owner review docs');
+  assertIncludes(ownerReviewDocs, localCorrectionQueuePath, 'owner review docs');
+  assertIncludes(ownerReviewDocs, reviewReadyHandoffClosurePath, 'owner review docs');
   assertIncludes(ownerReviewDocs, 'quote/enquiry workflow acceptance checklist', 'owner review docs');
   assertIncludes(ownerReviewDocs, 'catalogue/listing/media', 'owner review docs');
   assertIncludes(ownerReviewDocs, 'final local owner handoff pack', 'owner review docs');
