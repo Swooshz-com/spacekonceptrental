@@ -2903,3 +2903,23 @@ Safety: This phase is repo-local, template-only, non-live, and not evidence. It 
 - Protected admin release-control workspace: `/admin/release-control`.
 
 These references are repo-local, template-only, non-live, and not evidence. No owner feedback is recorded, no owner corrections are recorded, no owner sign-off is recorded, no preview evidence is created, no production evidence is created, and no deployment approval is granted.
+
+## Phase 4C-A/B Local Owner-Review Rehearsal Pack Blocker Ledger And Acceptance Drill Validator
+
+Decision: Phase 4C-A/B adds a template-only local owner-review rehearsal pack, blocker ledger template, local acceptance drill, protected admin Phase 4C rehearsal snapshot, deterministic tests, and a repo-local owner-review rehearsal validator.
+
+Context: PR #150 merged Phase 4B-A/B owner-input intake control, local correction queue, and review-ready handoff closure at `baa076679756751a725ea65ac565545c6fe56d76`. The next safe repo-local step is to rehearse that handoff deterministically without recording actual owner input or acceptance evidence.
+
+Safety: This phase is repo-local, template-only, non-live, and not evidence. It records PR #150 as the last merged capability PR with merge commit `baa076679756751a725ea65ac565545c6fe56d76`. It does not grant deployment approval, add provider config, add secrets, add browser Supabase, add service-role runtime paths, add n8n/Pinecone runtime changes, expose admin internals publicly, invent business facts, or add ecommerce/cart/checkout/order/payment/purchase flows.
+
+## Phase 4C-A/B Local Owner-Review Rehearsal References
+
+- Current phase: Phase 4C-A/B local owner-review rehearsal pack, blocker ledger, and acceptance drill validator.
+- Latest completed capability: Phase 4B-A/B owner-input intake control, local correction queue, and review-ready handoff closure.
+- Last merged capability PR: #150.
+- Merge commit: `baa076679756751a725ea65ac565545c6fe56d76`.
+- Local owner-review rehearsal pack: `docs/content/LOCAL-OWNER-REVIEW-REHEARSAL-PACK.md`.
+- Local blocker ledger template: `docs/content/LOCAL-BLOCKER-LEDGER-TEMPLATE.md`.
+- Local acceptance drill: `docs/content/LOCAL-ACCEPTANCE-DRILL.md`.
+- Owner-review rehearsal validator: `scripts/validate-owner-review-rehearsal.cjs`.
+- Protected admin release-control workspace: `/admin/release-control`.

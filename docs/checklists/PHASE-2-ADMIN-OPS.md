@@ -536,3 +536,18 @@ and route/action boundaries are implemented and tested.
 - Protected admin release-control workspace: `/admin/release-control`.
 
 These references are repo-local, template-only, non-live, and not evidence. No owner feedback is recorded, no owner corrections are recorded, no owner sign-off is recorded, no preview evidence is created, no production evidence is created, and no deployment approval is granted.
+
+## Phase 4C-A/B Local Owner-Review Rehearsal References
+
+- Current phase: Phase 4C-A/B local owner-review rehearsal pack, blocker ledger, and acceptance drill validator.
+- Latest completed capability: Phase 4B-A/B owner-input intake control, local correction queue, and review-ready handoff closure.
+- Last merged capability PR: #150.
+- Merge commit: `baa076679756751a725ea65ac565545c6fe56d76`.
+- Local owner-review rehearsal pack: `docs/content/LOCAL-OWNER-REVIEW-REHEARSAL-PACK.md`.
+- Local blocker ledger template: `docs/content/LOCAL-BLOCKER-LEDGER-TEMPLATE.md`.
+- Local acceptance drill: `docs/content/LOCAL-ACCEPTANCE-DRILL.md`.
+- Owner-review rehearsal validator: `scripts/validate-owner-review-rehearsal.cjs` and `validate:owner-review-rehearsal`.
+- Protected admin release-control workspace: `/admin/release-control`.
+- Evidence boundary: `[NOT EVIDENCE / NOT RECORDED]`.
+- Deployment approval boundary: `[DEPLOYMENT APPROVAL: NOT GRANTED]`.
+- Safety: no deployment, provider configuration, fake facts, ecommerce/cart/checkout/order/payment/purchase flows, booking/reservation/fulfilment/stock-reservation flows, public uploads, customer accounts, public quote tracking, notifications, CRM, filled owner-review evidence, preview evidence, production evidence, or public admin internals are added.

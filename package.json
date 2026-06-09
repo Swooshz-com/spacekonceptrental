@@ -16,6 +16,7 @@
     "test:supabase-migrations": "node --test scripts/validate-supabase-migrations.test.cjs",
     "validate:supabase-migrations": "node scripts/validate-supabase-migrations.cjs",
     "test:n8n-validation": "node --test scripts/validate-n8n-workflows.test.cjs",
-    "validate:n8n": "node scripts/validate-n8n-workflows.cjs"
+    "validate:n8n": "node scripts/validate-n8n-workflows.cjs",
+    "validate:owner-review-rehearsal": "node scripts/validate-owner-review-rehearsal.cjs"
   }
 }
