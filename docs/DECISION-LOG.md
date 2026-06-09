@@ -2874,3 +2874,11 @@ Decision: Phase 3Z-A/B adds public journey readiness closure docs, a quote/enqui
 Rationale: Public routes must remain rental/enquiry-only and must not imply guaranteed availability, confirmed booking, public tracking, accounts, uploads, ecommerce/payment/order/checkout flows, deployment approval, provider setup, or invented owner facts before any future owner review or deployment discussion.
 
 Safety: The phase is repo-local, template-only, non-live, and not evidence. It does not deploy, add provider config, connect Supabase Cloud, change n8n/Pinecone runtime behaviour, add browser Supabase, add service-role runtime paths, create filled evidence, or expose protected admin details publicly.
+
+## Phase 4A-A/B Local Release-Control Gate Owner-Review Rehearsal And Deployment Approval Firewall
+
+Decision: Phase 4A-A/B adds a repo-local release-control gate, owner-review rehearsal runbook, deployment approval firewall matrix, and protected admin release-control workspace for local review readiness before any future deployment discussion.
+
+Rationale: Phase 3Z-A/B closed public route readiness locally. The next safe step is to keep owner review, protected admin readiness, local acceptance, provider/runtime boundaries, and deployment approval separation deterministic and reviewable without creating filled evidence or live provider changes.
+
+Safety: This phase is template-only, non-live, and not evidence. It records PR #148 as the last merged capability PR with merge commit `26792f73f8e7943eac5e421c6d829bde7613b562`. It does not grant deployment approval, add provider config, add real secrets, add browser Supabase, add service-role runtime paths, add n8n/Pinecone runtime changes, expose admin internals publicly, invent business facts, or add ecommerce/cart/checkout/order/payment/purchase flows.

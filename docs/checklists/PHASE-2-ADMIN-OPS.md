@@ -515,3 +515,11 @@ and route/action boundaries are implemented and tested.
 - [x] Extended protected content readiness with an admin-only public route/readiness closure snapshot.
 - [x] Added deterministic local acceptance coverage and validator checks.
 - [x] Kept deployment, provider setup, ecommerce/payment/order/checkout flows, public tracking, accounts, uploads, fake facts, and filled evidence out of scope.
+
+## Phase 4A-A/B Local Release-Control Gate Owner-Review Rehearsal And Deployment Approval Firewall
+
+- [x] Added repo-local release-control gate documentation for public readiness, protected admin readiness, owner input, local correction, public exposure, fake-fact, provider/runtime, deployment, and local acceptance boundaries.
+- [x] Added owner-review rehearsal runbook as template-only preparation with no owner feedback, sign-off, preview evidence, production evidence, or deployment approval recorded.
+- [x] Added deployment approval firewall matrix separating local review/tests/build/sandbox checks from preview planning, actual deployment, production launch, provider config, live preview smoke, and filled evidence.
+- [x] Added protected admin release-control workspace/snapshot for authorised admin review only.
+- [x] Added deterministic local tests and validator coverage for Phase 4A-A/B boundaries.

@@ -29,6 +29,10 @@ const protectedAdminPublicReviewBridgePath =
   'docs/content/PROTECTED-ADMIN-PUBLIC-REVIEW-BRIDGE.md';
 const suiteRunnerPath = 'scripts/validate-release-candidate-suite.cjs';
 const protectedAdminShellPath = 'website/app/admin/protected-admin-shell.tsx';
+const releaseControlRoutePath = 'website/app/admin/release-control/page.tsx';
+const phase4aLocalReleaseControlGatePath = 'docs/release/PHASE-4A-LOCAL-RELEASE-CONTROL-GATE.md';
+const ownerReviewRehearsalRunbookPath = 'docs/content/OWNER-REVIEW-REHEARSAL-RUNBOOK.md';
+const deploymentApprovalFirewallMatrixPath = 'docs/content/DEPLOYMENT-APPROVAL-FIREWALL-MATRIX.md';
 const phase3rMergeCommit = 'ef18c2357d37fdb613851c427130bb108861de31';
 const phase3sMergeCommit = '7d6af15e09f7603e2107801f3b6417fd4d2d40bc';
 const phase3tMergeCommit = '66840d5d3bb77d39200a864bfcbecc29ee859f76';
@@ -37,6 +41,7 @@ const phase3vMergeCommit = '3904a661aa3d72606d4c48743030406656128b2c';
 const phase3wMergeCommit = '54cd8d5e7b829e56d245da2ca503c9b4058dca76';
 const phase3xMergeCommit = '50316a5c4052607487ba7409d5dc854889db6e24';
 const phase3yMergeCommit = '7f422fd47ffa75cf982bd4f9d859b530a96961ad';
+const phase3zMergeCommit = '26792f73f8e7943eac5e421c6d829bde7613b562';
 const sourceExtensions = new Set(['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs']);
 const forbiddenCustomerFlowTermPattern = new RegExp(
   `\\b(?:${[
@@ -56,7 +61,7 @@ const forbiddenCustomerFlowTermPattern = new RegExp(
   'i',
 );
 const publicInternalLeakPattern =
-  /Owner-demo|walkthrough|closure readiness|deployment approval|internal review|admin-only|protected content readiness|owner input required|issue backlog|route decision matrix|\/admin\/content-readiness|release-candidate acceptance matrix|route inventory freeze|acceptance status|local release-candidate|command centre|owner handoff|handoff pack|deployment firewall|acceptance triage|final local owner handoff|quote\/enquiry acceptance snapshot|destructive-action safeguards|recovery lane statuses|status-transition matrix|protected admin destructive-action\/recovery snapshot|internal notes|admin-only readiness/i;
+  /Owner-demo|walkthrough|closure readiness|deployment approval|internal review|admin-only|protected content readiness|owner input required|issue backlog|route decision matrix|\/admin\/content-readiness|release-candidate acceptance matrix|route inventory freeze|acceptance status|local release-candidate|command centre|owner handoff|handoff pack|deployment firewall|acceptance triage|final local owner handoff|quote\/enquiry acceptance snapshot|destructive-action safeguards|recovery lane statuses|status-transition matrix|protected admin destructive-action\/recovery snapshot|internal notes|admin-only readiness|release-control gate|owner-review rehearsal|deployment approval firewall matrix|\/admin\/release-control/i;
 const forbiddenBusinessFactPattern =
   /award-winning|certified partner|trusted by|5-star|guaranteed availability|guaranteed delivery|licensed and insured|testimonial|client logo|case study|legal guarantee|production policy/i;
 const forbiddenContactFactPattern =
@@ -580,10 +585,96 @@ function assertPublicReadinessClosureDocs() {
   assertNoMatch(combined, forbiddenContactFactPattern, 'Phase 3Z public readiness docs');
 }
 
+
+function assertPhase4aReleaseControl() {
+  assertTracked(
+    [
+      phase4aLocalReleaseControlGatePath,
+      ownerReviewRehearsalRunbookPath,
+      deploymentApprovalFirewallMatrixPath,
+      releaseControlRoutePath,
+    ],
+    'Phase 4A release-control docs and route',
+  );
+
+  const docs = [
+    readRepoFile(phase4aLocalReleaseControlGatePath),
+    readRepoFile(ownerReviewRehearsalRunbookPath),
+    readRepoFile(deploymentApprovalFirewallMatrixPath),
+  ].join('\n');
+  const normalized = normalizeWhitespace(docs);
+  const statusDocs = normalizeWhitespace(
+    [
+      readRepoFile('docs/PHASE-STATUS.md'),
+      readRepoFile('docs/PHASE-ROADMAP.md'),
+      readRepoFile('docs/PHASE-2-READINESS-PLAN.md'),
+      readRepoFile('docs/DECISION-LOG.md'),
+      readRepoFile('docs/checklists/PHASE-2-ADMIN-OPS.md'),
+      readRepoFile('docs/OWNER-REVIEW-READINESS-PACKAGE.md'),
+      readRepoFile('docs/manual-qa/OWNER-REVIEW-MANUAL-QA.md'),
+      readRepoFile('docs/PREVIEW-DEPLOYMENT-HANDOFF.md'),
+    ].join('\n'),
+  );
+  const shell = readRepoFile(protectedAdminShellPath);
+  const route = readRepoFile(releaseControlRoutePath);
+
+  for (const required of [
+    'Local review ready',
+    'Owner input required',
+    'Local correction required',
+    'Protected admin review required',
+    'Blocked before public visibility',
+    'Blocked before deployment planning',
+    'Requires separate deployment approval',
+    'Public route readiness',
+    'Quote/enquiry expectation boundary',
+    'Listing/category/media readiness',
+    'Protected admin write/destructive-action safeguards',
+    'Public leakage boundary',
+    'Fake-fact/business-claim boundary',
+    'Provider/runtime/deployment boundary',
+    'Local acceptance command boundary',
+    'No owner feedback is recorded',
+    'No owner sign-off is recorded',
+    'No deployment approval is granted',
+    'No preview/production evidence is created',
+    'Actual deployment',
+    'Production launch',
+    '[DEPLOYMENT APPROVAL: NOT GRANTED]',
+  ]) {
+    assertIncludes(normalized, required, 'Phase 4A release-control docs');
+  }
+
+  for (const required of [
+    'Current phase: Phase 4A-A/B',
+    'Latest completed capability: Phase 3Z-A/B public route readiness closure, protected admin review bridge, and local acceptance coverage',
+    'Last merged capability PR: #148',
+    phase3zMergeCommit,
+    phase4aLocalReleaseControlGatePath,
+    ownerReviewRehearsalRunbookPath,
+    deploymentApprovalFirewallMatrixPath,
+  ]) {
+    assertIncludes(statusDocs, required, 'Phase 4A status docs');
+  }
+
+  for (const required of [
+    phase4aLocalReleaseControlGatePath,
+    ownerReviewRehearsalRunbookPath,
+    deploymentApprovalFirewallMatrixPath,
+    'phase4aReleaseControlSnapshot',
+    'Phase 4A-A/B release-control gate',
+    '/admin/release-control',
+  ]) {
+    assertIncludes(shell, required, 'protected admin shell release-control snapshot');
+  }
+  assertIncludes(route, 'view={{ kind: "release-control" }}', 'release-control route');
+  assertNoMatch(docs, filledEvidencePattern, 'Phase 4A release-control docs');
+}
+
 function assertStatusDocs() {
   const status = readRepoFile('docs/PHASE-STATUS.md');
   const currentStatus = normalizeWhitespace(
-    status.split('Previous Current Phase 3Y-A/B status:')[0] || status,
+    status.split('Previous Current Phase 3Z-A/B status:')[0] || status,
   );
   const roadmap = normalizeWhitespace(readRepoFile('docs/PHASE-ROADMAP.md'));
   const readiness = readRepoFile('docs/PHASE-2-READINESS-PLAN.md');
@@ -598,14 +689,15 @@ function assertStatusDocs() {
   );
 
   for (const required of [
-    'Current phase: Phase 3Z-A/B - public route readiness closure, protected admin review bridge, and local acceptance coverage.',
-    'Latest completed capability: Phase 3Y-A/B protected admin destructive-action safeguards, recovery lanes, and local acceptance coverage.',
-    'Last merged capability PR: #147',
-    `Merge commit: \`${phase3yMergeCommit}\``,
+    'Current phase: Phase 4A-A/B - local release-control gate, owner-review rehearsal, and deployment approval firewall.',
+    'Latest completed capability: Phase 3Z-A/B public route readiness closure, protected admin review bridge, and local acceptance coverage.',
+    'Last merged capability PR: #148',
+    `Merge commit: \`${phase3zMergeCommit}\``,
   ]) {
-    assertIncludes(currentStatus, required, 'Phase 3Z status');
+    assertIncludes(currentStatus, required, 'Phase 4A status');
   }
 
+  assertIncludes(status, 'Previous Current Phase 3Z-A/B status', 'Phase 4A status');
   assertIncludes(status, 'Previous Current Phase 3Y-A/B status', 'Phase 3Z status');
   assertIncludes(status, `Merge commit: \`${phase3xMergeCommit}\``, 'Phase 3Y history');
   assertIncludes(status, 'Previous Current Phase 3X-A/B status', 'Phase 3Y status');
@@ -893,6 +985,7 @@ assertCatalogueListingMediaChecklist();
 assertProtectedAdminWriteOpsChecklist();
 assertProtectedAdminDestructiveActionDocs();
 assertPublicReadinessClosureDocs();
+assertPhase4aReleaseControl();
 assertStatusDocs();
 assertProtectedAdminShell();
 assertPublicSourceBoundary();

@@ -62,6 +62,9 @@ export type AdminShellView =
       kind: "content-readiness";
     }
   | {
+      kind: "release-control";
+    }
+  | {
       kind: "quote-detail";
       quoteRequestId: string;
     };
@@ -399,7 +402,8 @@ function AdminOperationsNavigation() {
     ["Categories", "/admin/categories"],
     ["Media", "/admin/media"],
     ["Quote requests", "/admin/quotes"],
-    ["Content readiness", "/admin/content-readiness"]
+    ["Content readiness", "/admin/content-readiness"],
+    ["Release control", "/admin/release-control"]
   ] as const;
 
   return (
@@ -757,6 +761,34 @@ const protectedAdminStatusTransitionMatrixPath =
   "docs/content/PROTECTED-ADMIN-STATUS-TRANSITION-MATRIX.md";
 const protectedAdminDestructiveRecoveryLastLocalUpdate = "[DATE PLACEHOLDER]";
 
+const phase4aLocalReleaseControlGatePath =
+  "docs/release/PHASE-4A-LOCAL-RELEASE-CONTROL-GATE.md";
+const ownerReviewRehearsalRunbookPath =
+  "docs/content/OWNER-REVIEW-REHEARSAL-RUNBOOK.md";
+const deploymentApprovalFirewallMatrixPath =
+  "docs/content/DEPLOYMENT-APPROVAL-FIREWALL-MATRIX.md";
+const phase4aReleaseControlSnapshot = [
+  ["Current phase", "Phase 4A-A/B"],
+  ["Last merged capability PR", "#148"],
+  ["Merge commit", "26792f73f8e7943eac5e421c6d829bde7613b562"],
+  [
+    "Latest completed capability",
+    "Phase 3Z-A/B public route readiness closure, protected admin review bridge, and local acceptance coverage"
+  ],
+  ["Public route readiness gate", "Local review ready / Local correction required"],
+  ["Protected admin gate", "Protected admin review required"],
+  ["Owner input gate", "Owner input required"],
+  ["Local correction gate", "Local correction required"],
+  ["Deployment approval firewall", "Requires separate deployment approval"],
+  ["Provider/runtime boundary", "Blocked before deployment planning"],
+  ["Evidence boundary", "No filled owner-review, preview, or production evidence"]
+] as const;
+const phase4aReleaseControlDocs = [
+  phase4aLocalReleaseControlGatePath,
+  ownerReviewRehearsalRunbookPath,
+  deploymentApprovalFirewallMatrixPath
+] as const;
+
 const publicJourneyReadinessClosurePath =
   "docs/content/PUBLIC-JOURNEY-READINESS-CLOSURE.md";
 const quoteEnquiryPublicExpectationBoundaryPath =
@@ -859,6 +891,65 @@ const contentReadinessGroups = [
     ]
   }
 ] as const;
+
+
+function ReleaseControlWorkspace() {
+  return (
+    <section className="admin-dashboard" aria-label="Release-control workspace">
+      <div className="admin-dashboard__header">
+        <div>
+          <p className="eyebrow">Release control</p>
+          <h2>Phase 4A-A/B release-control gate</h2>
+          <p>
+            This protected admin workspace is repo-local and template-only. It
+            summarizes local review boundaries before any future deployment
+            discussion and does not grant deployment approval.
+          </p>
+        </div>
+      </div>
+
+      <div className="admin-dashboard__grid">
+        <section className="admin-dashboard__card admin-dashboard__card--summary">
+          <h3>Release-control snapshot</h3>
+          <dl className="quote-inbox__details">
+            {phase4aReleaseControlSnapshot.map(([label, value]) => (
+              <div key={label}>
+                <dt>{label}</dt>
+                <dd>{value}</dd>
+              </div>
+            ))}
+          </dl>
+          <p>
+            Public route readiness, protected admin readiness, owner input,
+            local corrections, provider/runtime scope, and evidence boundaries
+            remain protected and local until separate explicit approval changes
+            that boundary.
+          </p>
+        </section>
+
+        <section className="admin-dashboard__card admin-dashboard__card--summary">
+          <h3>Release-control documents</h3>
+          <ul className="admin-dashboard__list">
+            {phase4aReleaseControlDocs.map((docPath) => (
+              <li key={docPath}>
+                <div>
+                  <strong>{docPath}</strong>
+                  <span>Template only; not evidence.</span>
+                </div>
+              </li>
+            ))}
+          </ul>
+          <p>
+            These documents prepare local owner-review rehearsal and deployment
+            approval firewall checks without recording owner feedback, owner
+            sign-off, live preview evidence, production evidence, provider
+            configuration, or deployment approval.
+          </p>
+        </section>
+      </div>
+    </section>
+  );
+}
 
 function ContentReadinessWorkspace() {
   const executionSnapshot = [
@@ -1578,6 +1669,10 @@ function AdminOperationsView({
 
   if (view.kind === "content-readiness") {
     return <ContentReadinessWorkspace />;
+  }
+
+  if (view.kind === "release-control") {
+    return <ReleaseControlWorkspace />;
   }
 
   if (view.kind === "quote-detail") {

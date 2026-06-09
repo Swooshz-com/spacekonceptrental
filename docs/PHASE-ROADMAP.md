@@ -1,5 +1,13 @@
 # Phase Roadmap
 
+## Phase 4A-A/B Local Release-Control Gate Owner-Review Rehearsal And Deployment Approval Firewall
+
+Phase 4A-A/B moves from Phase 3Z-A/B public/admin readiness hardening into a protected repo-local release-control layer. It adds a local release-control gate, owner-review rehearsal runbook, deployment approval firewall matrix, and protected admin release-control workspace for local review readiness only.
+
+Deployment remains unapproved. Provider setup, Vercel config, Supabase Cloud config, browser Supabase, service-role runtime paths, n8n/Pinecone runtime changes, public tracking, customer accounts, uploads, ecommerce/payment/order/checkout flows, filled evidence, owner sign-off, and invented business facts remain out of scope.
+
+Last merged capability PR: #148. Merge commit: `26792f73f8e7943eac5e421c6d829bde7613b562`. Latest completed capability: Phase 3Z-A/B public route readiness closure, protected admin review bridge, and local acceptance coverage.
+
 ## Phase 3Z-A/B Public Route Readiness Closure Protected Admin Review Bridge And Local Acceptance Coverage
 
 Phase 3Z-A/B closes the repo-local public journey/readiness gap before future owner review or deployment discussion. It keeps the website a furniture/event rental enquiry site, adds template-only public journey and quote/enquiry expectation boundaries, adds a protected admin public-review bridge, hardens existing public copy without new routes or providers, and extends deterministic local tests and validators.

@@ -176,6 +176,7 @@ const internalRouteAllowlist = [
   /^\/admin\/categories$/,
   /^\/admin\/media$/,
   /^\/admin\/content-readiness$/,
+  /^\/admin\/release-control$/,
   /^\/admin\/quotes$/,
   /^\/admin\/quotes\/[A-Za-z0-9-]+$/
 ];
