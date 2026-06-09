@@ -245,7 +245,7 @@ describe("Phase 3G-A/B quote intake quality, admin triage depth, and enquiry wor
       screen.getAllByText(/selected listing is a starting point only/i).length
     ).toBeGreaterThan(0);
     expect(
-      screen.getAllByText(/does not confirm furniture, dates, or delivery capacity/i)
+      screen.getAllByText(/does not hold furniture, finalise availability/i)
         .length
     ).toBeGreaterThan(0);
     expect(screen.getByLabelText(/requested listings or items/i)).toHaveValue(

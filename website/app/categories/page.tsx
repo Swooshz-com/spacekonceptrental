@@ -46,7 +46,7 @@ export function CategoriesPageContent({
         </div>
         <section className="route-card" aria-label="Category recovery">
           <h2>No public categories available</h2>
-          <p>No public categories are available right now. Browse all listings or send a quote enquiry with the event-use context, quantities, and rental unit notes you have.</p>
+          <p>No public categories are available right now. Browse all listings or send a quote enquiry with the event-use context, quantities, and rental unit notes you have; availability and fit are reviewed directly by the team.</p>
         </section>
         <div className="hero__actions">
           <Link className="button button--secondary" href="/catalogue">
@@ -71,7 +71,8 @@ export function CategoriesPageContent({
         <p>
           Start from seating, lounge, and event setup categories, compare
           listings in each category, then send an enquiry for the rental pieces
-          that suit your event.
+          that may suit your event. Availability and fit are reviewed directly
+          by the team.
         </p>
       </div>
 

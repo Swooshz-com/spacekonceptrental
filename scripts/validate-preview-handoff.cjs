@@ -42,6 +42,12 @@ const protectedAdminDestructiveActionSafeguardsPath =
 const protectedAdminRecoveryLanePath = 'docs/content/PROTECTED-ADMIN-RECOVERY-LANE.md';
 const protectedAdminStatusTransitionMatrixPath =
   'docs/content/PROTECTED-ADMIN-STATUS-TRANSITION-MATRIX.md';
+const publicJourneyReadinessClosurePath =
+  'docs/content/PUBLIC-JOURNEY-READINESS-CLOSURE.md';
+const quotePublicExpectationBoundaryPath =
+  'docs/content/QUOTE-ENQUIRY-PUBLIC-EXPECTATION-BOUNDARY.md';
+const protectedAdminPublicReviewBridgePath =
+  'docs/content/PROTECTED-ADMIN-PUBLIC-REVIEW-BRIDGE.md';
 const contentReadinessRoutePath = 'website/app/admin/content-readiness/page.tsx';
 const protectedAdminShellPath = 'website/app/admin/protected-admin-shell.tsx';
 const handoffValidatorPath = 'scripts/validate-preview-handoff.cjs';
@@ -89,6 +95,7 @@ const phase3uMergeCommit = 'dd2c3c0176c427e69efa01d6e54841637d61548c';
 const phase3vMergeCommit = '3904a661aa3d72606d4c48743030406656128b2c';
 const phase3wMergeCommit = '54cd8d5e7b829e56d245da2ca503c9b4058dca76';
 const phase3xMergeCommit = '50316a5c4052607487ba7409d5dc854889db6e24';
+const phase3yMergeCommit = '7f422fd47ffa75cf982bd4f9d859b530a96961ad';
 
 function fail(message) {
   console.error(message);
@@ -1480,6 +1487,67 @@ function assertLocalReleaseCandidateDocs() {
   assertNoMatch(suiteRunner, /(?:^|[\\/])\.env(?:\.|$)|website\/chat-config\.js/i, 'local release-candidate suite runner');
 }
 
+
+function assertPublicReadinessClosureDocs() {
+  assertTracked(
+    [
+      publicJourneyReadinessClosurePath,
+      quotePublicExpectationBoundaryPath,
+      protectedAdminPublicReviewBridgePath,
+    ],
+    'Phase 3Z public readiness docs',
+  );
+
+  const combined = [
+    readRepoFile(publicJourneyReadinessClosurePath),
+    readRepoFile(quotePublicExpectationBoundaryPath),
+    readRepoFile(protectedAdminPublicReviewBridgePath),
+  ].join('\n');
+  const normalized = normalizeWhitespace(combined);
+
+  for (const required of [
+    'repo-local, template-only, non-live, and not evidence',
+    'Homepage',
+    'Listings route',
+    'Listing detail route',
+    'Catalogue/category routes where present',
+    'Events/event-use route where present',
+    'Quote/enquiry request route',
+    'Public not-found/recovery states',
+    'No guaranteed availability',
+    'No confirmed booking',
+    'No public quote tracking',
+    'No payment/order/checkout wording',
+    'No customer account',
+    'No upload/self-service workflow',
+    'Public confirmation is receipt-style only',
+    'Safe public copy examples',
+    'Unsafe public copy examples',
+    'Public-safe',
+    'Owner input required',
+    'Keep protected',
+    'Needs local correction',
+    'Admin-only detail',
+    'Blocked before public visibility',
+    'Requires separate deployment approval',
+    '[LOCAL ACCEPTANCE: NOT RUN / PASS / NEEDS FOLLOW-UP]',
+    '[DEPLOYMENT APPROVAL: NOT GRANTED]',
+  ]) {
+    assertIncludes(normalized, required, 'Phase 3Z public readiness docs');
+  }
+
+  assertNoMatch(
+    combined,
+    /owner approved|owner sign-?off complete|owner correction recorded|filled owner note|review completed on|signed off by|production evidence captured|preview evidence captured|actual owner decision|actual owner sign-off|manual QA completed|acceptance passed on/i,
+    'Phase 3Z public readiness docs',
+  );
+  assertNoMatch(
+    combined,
+    /\b(?!(?:\d{4}-\d{2}-\d{2})\b)(?:\+?\d[\d\s().-]{7,}|[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}|Mon(?:day)?\s*-\s*Fri|24\/7|123\s+Main|Singapore\s+\d{6})\b/i,
+    'Phase 3Z public readiness docs',
+  );
+}
+
 function assertStatusDocs() {
   const status = readRepoFile('docs/PHASE-STATUS.md');
   const roadmap = readRepoFile('docs/PHASE-ROADMAP.md').replace(/\s+/g, ' ');
@@ -1489,15 +1557,17 @@ function assertStatusDocs() {
 
   assertIncludes(
     status,
-    'Current phase: Phase 3Y-A/B - protected admin destructive-action safeguards, recovery lanes, and local acceptance coverage.',
+    'Current phase: Phase 3Z-A/B - public route readiness closure, protected admin review bridge, and local acceptance coverage.',
     'phase status',
   );
   assertIncludes(
     status,
-    'Latest completed capability: Phase 3X-A/B protected admin write-ops hardening, content-operation guardrails, and local acceptance coverage.',
+    'Latest completed capability: Phase 3Y-A/B protected admin destructive-action safeguards, recovery lanes, and local acceptance coverage.',
     'phase status',
   );
-  assertIncludes(status, 'Last merged capability PR: #146', 'phase status');
+  assertIncludes(status, 'Last merged capability PR: #147', 'phase status');
+  assertIncludes(status, `Merge commit: \`${phase3yMergeCommit}\``, 'phase status');
+  assertIncludes(status, 'Previous Current Phase 3Y-A/B status', 'phase status');
   assertIncludes(status, `Merge commit: \`${phase3xMergeCommit}\``, 'phase status');
   assertIncludes(status, 'Previous Current Phase 3X-A/B status', 'phase status');
   assertIncludes(status, `Merge commit: \`${phase3wMergeCommit}\``, 'phase status');
@@ -1701,6 +1771,11 @@ function assertStatusDocs() {
   );
   assertIncludes(
     roadmap,
+    'Phase 3Z-A/B closes the repo-local public journey/readiness gap',
+    'phase roadmap',
+  );
+  assertIncludes(
+    roadmap,
     'Phase 3Y-A/B hardens protected admin destructive-action safeguards',
     'phase roadmap',
   );
@@ -1875,6 +1950,11 @@ function assertStatusDocs() {
   );
   assertIncludes(
     decisionLog,
+    'Decision: Phase 3Z-A/B adds public journey readiness closure docs, a quote/enquiry public expectation boundary, a protected admin public-review bridge',
+    'decision log',
+  );
+  assertIncludes(
+    decisionLog,
     'Decision: Phase 3Y-A/B adds protected admin destructive-action safeguard docs, recovery lane guidance, a status-transition matrix',
     'decision log',
   );
@@ -1882,6 +1962,11 @@ function assertStatusDocs() {
     decisionLog,
     'Decision: Phase 3V-A/B hardens the quote/enquiry workflow, protected admin triage, and local acceptance coverage.',
     'decision log',
+  );
+  assertIncludes(
+    checklist,
+    '## Phase 3Z-A/B Public Route Readiness Closure Protected Admin Review Bridge And Local Acceptance Coverage',
+    'admin ops checklist',
   );
   assertIncludes(
     checklist,
@@ -2007,12 +2092,18 @@ function assertProtectedContentReadinessWorkspace() {
   assertIncludes(shellSource, protectedAdminDestructiveActionSafeguardsPath, protectedAdminShellPath);
   assertIncludes(shellSource, protectedAdminRecoveryLanePath, protectedAdminShellPath);
   assertIncludes(shellSource, protectedAdminStatusTransitionMatrixPath, protectedAdminShellPath);
+  assertIncludes(shellSource, publicJourneyReadinessClosurePath, protectedAdminShellPath);
+  assertIncludes(shellSource, quotePublicExpectationBoundaryPath, protectedAdminShellPath);
+  assertIncludes(shellSource, protectedAdminPublicReviewBridgePath, protectedAdminShellPath);
   assertIncludes(shellSource, 'Catalogue/listing/media acceptance snapshot', protectedAdminShellPath);
   assertIncludes(shellSource, 'catalogueListingMediaAcceptanceSnapshot', protectedAdminShellPath);
   assertIncludes(shellSource, 'Protected admin write-ops acceptance snapshot', protectedAdminShellPath);
   assertIncludes(shellSource, 'protectedAdminWriteOpsAcceptanceSnapshot', protectedAdminShellPath);
   assertIncludes(shellSource, 'protectedAdminDestructiveRecoverySnapshot', protectedAdminShellPath);
   assertIncludes(shellSource, 'Protected admin destructive-action/recovery snapshot', protectedAdminShellPath);
+  assertIncludes(shellSource, 'publicRouteReadinessClosureSnapshot', protectedAdminShellPath);
+  assertIncludes(shellSource, 'Public route/readiness closure snapshot', protectedAdminShellPath);
+  assertIncludes(shellSource, 'protectedAdminPublicReviewBridgeStatuses', protectedAdminShellPath);
   assertIncludes(shellSource, 'reviewSurfaceGroups', protectedAdminShellPath);
   assertIncludes(shellSource, 'routeFamiliesCovered', protectedAdminShellPath);
   assertIncludes(shellSource, 'ownerDecisionCategories', protectedAdminShellPath);
@@ -2165,6 +2256,7 @@ assertOwnerReviewDeploymentApprovalSeparation();
 assertOwnerDemoWalkthrough();
 assertOwnerDemoIssueBacklog();
 assertLocalReleaseCandidateDocs();
+assertPublicReadinessClosureDocs();
 assertStatusDocs();
 assertProtectedContentReadinessWorkspace();
 assertPublicCopyFactSafety();

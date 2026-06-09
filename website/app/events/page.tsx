@@ -68,7 +68,8 @@ export default function EventsPage() {
           <h2>Plan an event setup</h2>
           <p>
             These routes are starting points for a rental enquiry, not a fixed
-            package. Keep the notes practical and the team can review the fit.
+            package. They do not hold furniture or finalise availability. Keep
+            the notes practical and the team can review the fit.
           </p>
         </div>
         <ul className="journey-list">

@@ -2867,3 +2867,10 @@ invent owner feedback or sign-off, access `website/chat-config.js`, expose
 admin internal notes publicly, add browser Supabase, add service-role runtime
 paths, change n8n/Pinecone/RAG runtime behavior, add provider config, or add
 out-of-scope public visitor self-service workflows.
+## Phase 3Z-A/B Public Route Readiness Closure Protected Admin Review Bridge And Local Acceptance Coverage
+
+Decision: Phase 3Z-A/B adds public journey readiness closure docs, a quote/enquiry public expectation boundary, a protected admin public-review bridge, public route copy/readiness hardening, protected content-readiness snapshot coverage, and deterministic local acceptance coverage.
+
+Rationale: Public routes must remain rental/enquiry-only and must not imply guaranteed availability, confirmed booking, public tracking, accounts, uploads, ecommerce/payment/order/checkout flows, deployment approval, provider setup, or invented owner facts before any future owner review or deployment discussion.
+
+Safety: The phase is repo-local, template-only, non-live, and not evidence. It does not deploy, add provider config, connect Supabase Cloud, change n8n/Pinecone runtime behaviour, add browser Supabase, add service-role runtime paths, create filled evidence, or expose protected admin details publicly.

@@ -531,7 +531,10 @@ const contentReadinessSources = [
   "docs/content/PROTECTED-ADMIN-WRITE-OPS-ACCEPTANCE-CHECKLIST.md",
   "docs/content/PROTECTED-ADMIN-DESTRUCTIVE-ACTION-SAFEGUARDS.md",
   "docs/content/PROTECTED-ADMIN-RECOVERY-LANE.md",
-  "docs/content/PROTECTED-ADMIN-STATUS-TRANSITION-MATRIX.md"
+  "docs/content/PROTECTED-ADMIN-STATUS-TRANSITION-MATRIX.md",
+  "docs/content/PUBLIC-JOURNEY-READINESS-CLOSURE.md",
+  "docs/content/QUOTE-ENQUIRY-PUBLIC-EXPECTATION-BOUNDARY.md",
+  "docs/content/PROTECTED-ADMIN-PUBLIC-REVIEW-BRIDGE.md"
 ] as const;
 
 const reviewSurfaceGroups = 11;
@@ -753,6 +756,43 @@ const protectedAdminRecoveryLanePath =
 const protectedAdminStatusTransitionMatrixPath =
   "docs/content/PROTECTED-ADMIN-STATUS-TRANSITION-MATRIX.md";
 const protectedAdminDestructiveRecoveryLastLocalUpdate = "[DATE PLACEHOLDER]";
+
+const publicJourneyReadinessClosurePath =
+  "docs/content/PUBLIC-JOURNEY-READINESS-CLOSURE.md";
+const quoteEnquiryPublicExpectationBoundaryPath =
+  "docs/content/QUOTE-ENQUIRY-PUBLIC-EXPECTATION-BOUNDARY.md";
+const protectedAdminPublicReviewBridgePath =
+  "docs/content/PROTECTED-ADMIN-PUBLIC-REVIEW-BRIDGE.md";
+const publicRouteReadinessGroups = [
+  "Homepage",
+  "Listings route",
+  "Listing detail route",
+  "Catalogue/category routes",
+  "Events/event-use route",
+  "Quote/enquiry request route",
+  "Public not-found/recovery states"
+] as const;
+const protectedAdminPublicReviewBridgeStatuses = [
+  "Public-safe",
+  "Owner input required",
+  "Keep protected",
+  "Needs local correction",
+  "Admin-only detail",
+  "Blocked before public visibility",
+  "Requires separate deployment approval"
+] as const;
+const publicRouteReadinessClosureLastLocalUpdate = "[DATE PLACEHOLDER]";
+const publicRouteReadinessClosureSnapshot = [
+  ["Public journey readiness closure", publicJourneyReadinessClosurePath],
+  ["Quote/enquiry expectation boundary", quoteEnquiryPublicExpectationBoundaryPath],
+  ["Protected admin public-review bridge", protectedAdminPublicReviewBridgePath],
+  ["Public route groups", publicRouteReadinessGroups.length],
+  ["Bridge statuses", protectedAdminPublicReviewBridgeStatuses.length],
+  ["Public exposure boundary", "Rental/enquiry-only public routes"],
+  ["Missing owner input boundary", "Unsupported real-world facts stay absent"],
+  ["Deployment approval", closureDeploymentApprovalStatus],
+  ["Last local public-readiness update", publicRouteReadinessClosureLastLocalUpdate]
+] as const;
 const protectedAdminDestructiveRecoverySnapshot = [
   [
     "Destructive-action safeguards",
@@ -1085,6 +1125,31 @@ function ContentReadinessWorkspace() {
           </p>
         </section>
 
+
+        <section className="admin-dashboard__card admin-dashboard__card--summary">
+          <h3>Public route/readiness closure snapshot</h3>
+          <dl className="quote-inbox__details">
+            {publicRouteReadinessClosureSnapshot.map(([label, value]) => (
+              <div key={label}>
+                <dt>{label}</dt>
+                <dd>{value}</dd>
+              </div>
+            ))}
+          </dl>
+          <p>
+            The public journey readiness closure, quote/enquiry expectation
+            boundary, and protected admin public-review bridge stay admin-only,
+            repo-local, and template-only. Public routes remain rental/enquiry
+            only and must not expose admin readiness, internal notes, recovery
+            details, destructive-action safeguards, owner-review templates,
+            unsupported owner facts, provider setup, or deployment approval.
+          </p>
+          <ul className="admin-dashboard__list">
+            {protectedAdminPublicReviewBridgeStatuses.map((status) => (
+              <li key={status}>{status}</li>
+            ))}
+          </ul>
+        </section>
 
         <section className="admin-dashboard__card admin-dashboard__card--summary">
           <h3>Protected admin destructive-action/recovery snapshot</h3>

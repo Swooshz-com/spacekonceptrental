@@ -505,3 +505,13 @@ and route/action boundaries are implemented and tested.
 - [x] Add an authorised-admin-only protected admin write-ops acceptance snapshot to the protected content readiness workspace.
 - [x] Static tests and validators cover Phase 3X docs/status roll-forward, protected admin write-ops checklist tracking, authorised-only snapshot rendering, write UI helper text, public leakage boundaries, forbidden tracked config/runtime/evidence paths, and no fake business facts.
 - [x] Phase 3X remains repo-local only and does not add deployment approval, provider config, secrets/env values, filled evidence, owner feedback, owner sign-off, real business facts, public visitor self-service workflows, browser Supabase, service-role runtime paths, n8n/Pinecone/RAG runtime changes, live preview smoke, or evidence-writing commands.
+
+## Phase 3Z-A/B Public Route Readiness Closure Protected Admin Review Bridge And Local Acceptance Coverage
+
+- [x] Added repo-local public journey readiness closure documentation.
+- [x] Added quote/enquiry public expectation boundary documentation.
+- [x] Added protected admin public-review bridge documentation.
+- [x] Hardened existing public route copy for rental/enquiry-only expectations without adding new routes, providers, or runtime flows.
+- [x] Extended protected content readiness with an admin-only public route/readiness closure snapshot.
+- [x] Added deterministic local acceptance coverage and validator checks.
+- [x] Kept deployment, provider setup, ecommerce/payment/order/checkout flows, public tracking, accounts, uploads, fake facts, and filled evidence out of scope.

@@ -237,7 +237,7 @@ describe("Phase 3D-A/B sitewide public journey, trust content, and route polish"
       screen.getByRole("heading", { name: /what happens after you enquire/i })
     ).toBeInTheDocument();
     expect(screen.getByText(/submission starts an enquiry/i)).toBeInTheDocument();
-    expect(screen.getByText(/does not confirm furniture/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/does not hold furniture/i).length).toBeGreaterThan(0);
     expect(screen.getByText(/team reviews fit/i)).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: /track|status/i })).not.toBeInTheDocument();
     expect(quoteMetadata.title).toMatch(/quote request/i);

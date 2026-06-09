@@ -266,7 +266,7 @@ describe("Phase 3I-A/B full-site acceptance SEO accessibility hardening", () => 
     expect(
       screen.getByRole("heading", {
         level: 1,
-        name: /event furniture rental for singapore spaces/i
+        name: /event furniture rental for planned spaces/i
       })
     ).toBeInTheDocument();
     expect(
@@ -308,7 +308,7 @@ describe("Phase 3I-A/B full-site acceptance SEO accessibility hardening", () => 
 
     expect(screen.getByText(/not a confirmed hold or fit confirmation/i)).toBeInTheDocument();
     expect(
-      screen.getAllByText(/does not confirm furniture, dates, or delivery capacity/i)
+      screen.getAllByText(/does not hold furniture, finalise availability/i)
         .length
     ).toBeGreaterThan(0);
     expect(

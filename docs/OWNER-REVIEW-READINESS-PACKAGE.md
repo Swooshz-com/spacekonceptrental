@@ -282,3 +282,14 @@ Phase 3X-A/B adds `docs/content/PROTECTED-ADMIN-WRITE-OPS-ACCEPTANCE-CHECKLIST.m
 
 
 Phase 3Y-A/B protected admin destructive-action safeguard references: `docs/content/PROTECTED-ADMIN-DESTRUCTIVE-ACTION-SAFEGUARDS.md`, `docs/content/PROTECTED-ADMIN-RECOVERY-LANE.md`, and `docs/content/PROTECTED-ADMIN-STATUS-TRANSITION-MATRIX.md`. These are repo-local, template-only, non-live, not evidence, and do not approve deployment. Last merged capability PR: #146. Merge commit: `50316a5c4052607487ba7409d5dc854889db6e24`. Current phase: Phase 3Y-A/B - protected admin destructive-action safeguards, recovery lanes, and local acceptance coverage. Latest completed capability: Phase 3X-A/B protected admin write-ops hardening, content-operation guardrails, and local acceptance coverage.
+
+## Phase 3Z-A/B Public Route Readiness Closure References
+
+- Current phase: Phase 3Z-A/B public route readiness closure, protected admin review bridge, and local acceptance coverage.
+- Latest completed capability: Phase 3Y-A/B protected admin destructive-action safeguards, recovery lanes, and local acceptance coverage.
+- Last merged capability PR: #147.
+- Merge commit: `7f422fd47ffa75cf982bd4f9d859b530a96961ad`.
+- Public journey readiness closure: `docs/content/PUBLIC-JOURNEY-READINESS-CLOSURE.md`.
+- Quote/enquiry public expectation boundary: `docs/content/QUOTE-ENQUIRY-PUBLIC-EXPECTATION-BOUNDARY.md`.
+- Protected admin public-review bridge: `docs/content/PROTECTED-ADMIN-PUBLIC-REVIEW-BRIDGE.md`.
+- Safety: repo-local, template-only, non-live, not evidence, no deployment approval, no provider setup, no ecommerce/payment/order/checkout flow, no fake facts, and no filled owner-review, preview, or production evidence.

@@ -8,7 +8,8 @@ export default function NotFound() {
         <h1>Page unavailable</h1>
         <p>
           This page is not available right now. Browse current rental listings
-          or send a quote enquiry and the team can help.
+          or send a quote enquiry with event details so the team can help.
+          Public recovery only returns you to rental browsing and enquiry routes.
         </p>
       </div>
       <div className="hero__actions">
