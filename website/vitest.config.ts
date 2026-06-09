@@ -11,6 +11,8 @@ export default defineConfig({
   },
   test: {
     environment: "jsdom",
-    setupFiles: ["./test/setup.ts"]
+    setupFiles: ["./test/setup.ts"],
+    // Fork workers avoid the Node worker-thread collection stall seen in the full suite.
+    pool: "forks"
   }
 });

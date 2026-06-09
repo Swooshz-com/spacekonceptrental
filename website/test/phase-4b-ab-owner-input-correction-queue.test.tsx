@@ -189,7 +189,7 @@ describe("Phase 4C-A/B owner-input correction queue", () => {
 
   it("renders the owner-input correction snapshot only for authorised admin state", () => {
     render(<AdminShellContent state={authorisedAdminState} view={{ kind: "release-control" }} />);
-    expect(screen.getByRole("heading", { name: /phase 4c-a\/b local owner-review rehearsal/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /phase 4d-a\/b local release-candidate freeze/i })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: /owner-input and local correction snapshot/i })).toBeInTheDocument();
     expect(screen.getByText("Current phase")).toBeInTheDocument();
     expect(screen.getByText("Phase 4C-A/B")).toBeInTheDocument();

@@ -50,6 +50,23 @@ const phase3yMergeCommit = '7f422fd47ffa75cf982bd4f9d859b530a96961ad';
 const phase3zMergeCommit = '26792f73f8e7943eac5e421c6d829bde7613b562';
 const phase4aMergeCommit = 'd825a112d017e95bd28ce030a5755ef78223e4c1';
 const phase4bMergeCommit = 'baa076679756751a725ea65ac565545c6fe56d76';
+const phase151MergeCommit = '9c7d167f98694f2ffbb1d9a0439c9fbbed4a9336';
+const phase4dLocalFreezeDocs = [
+  'docs/content/LOCAL-RELEASE-CANDIDATE-FREEZE.md',
+  'docs/content/FULL-SUITE-RELIABILITY-GATE.md',
+  'docs/content/DEPLOYMENT-PLANNING-FIREWALL-CLOSURE.md',
+];
+const phase4dStatusDocPaths = [
+  'docs/PHASE-STATUS.md',
+  'docs/PHASE-ROADMAP.md',
+  'docs/PHASE-2-READINESS-PLAN.md',
+  'docs/DECISION-LOG.md',
+  'docs/checklists/PHASE-2-ADMIN-OPS.md',
+  'docs/OWNER-REVIEW-READINESS-PACKAGE.md',
+  'docs/manual-qa/OWNER-REVIEW-MANUAL-QA.md',
+  'docs/PREVIEW-DEPLOYMENT-HANDOFF.md',
+];
+
 const sourceExtensions = new Set(['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs']);
 const forbiddenCustomerFlowTermPattern = new RegExp(
   `\\b(?:${[
@@ -1168,6 +1185,37 @@ assertPublicReadinessClosureDocs();
 assertPhase4aReleaseControl();
 assertPhase4cOwnerReviewRehearsal();
 assertStatusDocs();
+assertPhase4dLocalFreeze();
+function assertPhase4dLocalFreeze() {
+  assertTracked(phase4dLocalFreezeDocs, 'Phase 4D local-freeze docs');
+  const statusDocs = normalizeWhitespace(phase4dStatusDocPaths.map(readRepoFile).join('\n'));
+  for (const required of [
+    'Current phase: Phase 4D-A/B local release-candidate freeze, full-suite reliability gate, and deployment-planning firewall closure',
+    'Latest completed capability: Phase 4C-A/B local owner-review rehearsal pack, blocker ledger, and acceptance drill validator',
+    'Last merged capability PR: #151',
+    phase151MergeCommit,
+    'validate:local-freeze',
+    ...phase4dLocalFreezeDocs,
+  ]) {
+    assertIncludes(statusDocs, required, 'Phase 4D status docs');
+  }
+  const shell = readRepoFile('website/app/admin/protected-admin-shell.tsx');
+  for (const required of ['phase4dLocalFreezeSnapshot', 'phase4dLocalFreezeDocs', ...phase4dLocalFreezeDocs]) {
+    assertIncludes(shell, required, 'protected admin shell Phase 4D snapshot');
+  }
+  const packageJson = JSON.parse(readRepoFile('package.json'));
+  assert(
+    packageJson.scripts['validate:local-freeze'] === 'node scripts/validate-local-freeze.cjs',
+    'validate:local-freeze script is missing.',
+  );
+  const result = spawnSync('node', ['scripts/validate-local-freeze.cjs'], {
+    cwd: repoRoot,
+    encoding: 'utf8',
+    stdio: 'inherit',
+  });
+  assert(result.status === 0, 'validate-local-freeze must pass from existing validators.');
+}
+
 assertProtectedAdminShell();
 assertPublicSourceBoundary();
 assertForbiddenTrackedPathsAbsent();

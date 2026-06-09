@@ -1,5 +1,22 @@
 Phase 4C-A/B adds a repo-local owner-review rehearsal pack, blocker ledger template, local acceptance drill, protected admin Phase 4C rehearsal snapshot, deterministic local test coverage, and owner-review rehearsal validator roll-forward. Latest completed capability: Phase 4B-A/B owner-input intake control, local correction queue, and review-ready handoff closure. Last merged capability PR: #150. Merge commit: `baa076679756751a725ea65ac565545c6fe56d76`. Current phase: Phase 4C-A/B local owner-review rehearsal pack, blocker ledger, and acceptance drill validator.
 
+## Phase 4D-A/B Local Release-Candidate Freeze References
+
+Current phase: Phase 4D-A/B local release-candidate freeze, full-suite reliability gate, and deployment-planning firewall closure.
+
+Latest completed capability: Phase 4C-A/B local owner-review rehearsal pack, blocker ledger, and acceptance drill validator.
+
+Last merged capability PR: #151
+
+Merge commit: `9c7d167f98694f2ffbb1d9a0439c9fbbed4a9336`
+
+Phase 4D-A/B adds a repo-local local release-candidate freeze, full-suite reliability gate, deployment-planning firewall closure, validate:local-freeze validator, full website test-suite reliability hardening, and protected admin Phase 4D local-freeze snapshot. These controls are template-only, non-live, not evidence, and do not record owner feedback, owner decisions, owner corrections, owner sign-off, preview evidence, production evidence, provider approval, or deployment approval.
+
+Phase 4D-A/B references `docs/content/LOCAL-RELEASE-CANDIDATE-FREEZE.md`, `docs/content/FULL-SUITE-RELIABILITY-GATE.md`, `docs/content/DEPLOYMENT-PLANNING-FIREWALL-CLOSURE.md`, and `scripts/validate-local-freeze.cjs`.
+
+No deployment is performed or approved by Phase 4D-A/B. It does not add provider config, Vercel config, Supabase Cloud config, real secrets or env values, filled evidence, browser Supabase, service-role runtime paths, n8n/Pinecone runtime changes, `/api/chat` retrieval wiring, public uploads, customer accounts, public quote tracking, notifications, CRM, invented operational facts, ecommerce flows, payment/order/checkout flows, booking/reservation flows, fulfilment flows, stock-reservation flows, or public admin internals.
+
+
 # Phase 2 Readiness Plan
 
 Phase 4B-A/B adds repo-local owner-input intake control, local correction queue, review-ready handoff closure templates, protected admin owner-input/correction snapshot coverage, deterministic local test coverage, and validator roll-forward. Latest completed capability: Phase 4A-A/B local release-control gate, owner-review rehearsal, and deployment approval firewall. Last merged capability PR: #149. Merge commit: `d825a112d017e95bd28ce030a5755ef78223e4c1`. Current phase: Phase 4B-A/B - owner-input intake control, local correction queue, and review-ready handoff closure.
