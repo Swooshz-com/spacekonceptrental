@@ -309,4 +309,3 @@ Phase 3Y-A/B protected admin destructive-action safeguard references: `docs/cont
 - Protected admin release-control workspace: `/admin/release-control`.
 
 These references are repo-local, template-only, non-live, and not evidence. No owner feedback is recorded, no owner sign-off is recorded, no preview/production evidence is created, and no deployment approval is granted.
-
