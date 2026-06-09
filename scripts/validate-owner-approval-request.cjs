@@ -276,6 +276,18 @@ function assertSuiteAndTestsNotWeakened() {
   assertNoMatch(combinedTests, /fake pass placeholder|placeholder pass|safety assertion removed|broad safety assertion remov/i, 'website tests');
 }
 
+function assertPhase4fOwnerHandoffBundle() {
+  const result = spawnSync(process.execPath, ['scripts/validate-owner-handoff-bundle.cjs'], {
+    cwd: repoRoot,
+    encoding: 'utf8',
+    stdio: 'pipe',
+  });
+  assert(
+    !result.error && result.status === 0,
+    `Phase 4F owner handoff bundle validation failed: ${result.error?.message || result.stderr || result.stdout}`
+  );
+}
+
 function assertPackageScript() {
   const packageJson = JSON.parse(readRepoFile('package.json'));
   assert(
@@ -292,5 +304,6 @@ assertForbiddenTrackedPathsAbsent();
 assertPublicSourceSafe();
 assertSuiteAndTestsNotWeakened();
 assertPackageScript();
+assertPhase4fOwnerHandoffBundle();
 
 console.log('Owner approval request validation passed. No deployment was performed. This does not approve deployment.');

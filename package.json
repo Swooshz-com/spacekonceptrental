@@ -19,6 +19,7 @@
     "validate:n8n": "node scripts/validate-n8n-workflows.cjs",
     "validate:owner-review-rehearsal": "node scripts/validate-owner-review-rehearsal.cjs",
     "validate:local-freeze": "node scripts/validate-local-freeze.cjs",
-    "validate:owner-approval-request": "node scripts/validate-owner-approval-request.cjs"
+    "validate:owner-approval-request": "node scripts/validate-owner-approval-request.cjs",
+    "validate:owner-handoff-bundle": "node scripts/validate-owner-handoff-bundle.cjs"
   }
 }

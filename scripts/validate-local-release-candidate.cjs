@@ -1235,6 +1235,19 @@ function assertOwnerApprovalRequestGate() {
 }
 
 assertPackageAndCi();
+function assertPhase4fOwnerHandoffBundle() {
+  const result = spawnSync(process.execPath, ['scripts/validate-owner-handoff-bundle.cjs'], {
+    cwd: repoRoot,
+    encoding: 'utf8',
+    stdio: 'pipe',
+  });
+  assert(
+    !result.error && result.status === 0,
+    `Phase 4F owner handoff bundle validation failed: ${result.error?.message || result.stderr || result.stdout}`
+  );
+}
+
 assertOwnerApprovalRequestGate();
+assertPhase4fOwnerHandoffBundle();
 
 console.log('Local release-candidate validation passed. No deployment was performed. This does not approve deployment.');

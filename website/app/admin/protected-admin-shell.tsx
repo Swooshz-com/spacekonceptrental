@@ -906,6 +906,31 @@ const phase4eOwnerApprovalRequestSnapshot = [
   ["Deployment approval boundary", "[DEPLOYMENT APPROVAL: NOT GRANTED]"]
 ] as const;
 
+
+const ownerFacingReviewBriefPath =
+  "docs/content/OWNER-FACING-REVIEW-BRIEF.md";
+const ownerApprovalIssueTemplatePath =
+  ".github/ISSUE_TEMPLATE/owner-approval-request.md";
+const noDeployPreflightCommandCenterPath =
+  "docs/content/NO-DEPLOY-PREFLIGHT-COMMAND-CENTER.md";
+const ownerHandoffBundleIndexPath = "docs/OWNER-HANDOFF-BUNDLE.md";
+const phase4fOwnerHandoffBundleDocs = [
+  ownerFacingReviewBriefPath,
+  ownerApprovalIssueTemplatePath,
+  noDeployPreflightCommandCenterPath,
+  ownerHandoffBundleIndexPath
+] as const;
+const phase4fOwnerHandoffBundleSnapshot = [
+  ["Owner-facing review brief", "Template only / not evidence"],
+  ["Owner approval issue template", "Blank future issue template / no boxes ticked"],
+  ["No-deploy preflight command center", "Local commands only / no preview smoke command"],
+  ["Owner handoff bundle index", "Handoff bundle only / records no approval"],
+  ["Approval request boundary", "No owner approval, provider approval, preview approval, or deployment approval recorded"],
+  ["Evidence capture boundary", "[NOT EVIDENCE / NOT RECORDED]"],
+  ["Provider setup boundary", "Provider/environment setup blocked"],
+  ["Deployment approval boundary", "[DEPLOYMENT APPROVAL: NOT GRANTED]"]
+] as const;
+
 const publicJourneyReadinessClosurePath =
   "docs/content/PUBLIC-JOURNEY-READINESS-CLOSURE.md";
 const quoteEnquiryPublicExpectationBoundaryPath =
@@ -1052,7 +1077,8 @@ function ReleaseControlWorkspace() {
               ...phase4bOwnerInputCorrectionDocs,
               ...phase4cOwnerReviewRehearsalDocs,
               ...phase4dLocalFreezeDocs,
-              ...phase4eOwnerApprovalRequestDocs
+              ...phase4eOwnerApprovalRequestDocs,
+              ...phase4fOwnerHandoffBundleDocs
             ].map((docPath) => (
               <li key={docPath}>
                 <div>
@@ -1138,6 +1164,30 @@ function ReleaseControlWorkspace() {
             keeps the owner approval request packet, preview-planning handoff
             template, final no-deploy decision gate, approval request boundary,
             owner sign-off boundary, evidence capture boundary, provider setup
+            boundary, and deployment approval boundary out of public routes.
+          </p>
+        </section>
+
+        <section className="admin-dashboard__card admin-dashboard__card--summary">
+          <h3>Phase 4F handoff-bundle snapshot</h3>
+          <dl className="quote-inbox__details">
+            {phase4fOwnerHandoffBundleSnapshot.map(([label, value]) => (
+              <div key={label}>
+                <dt>{label}</dt>
+                <dd>{value}</dd>
+              </div>
+            ))}
+          </dl>
+          <ul className="admin-dashboard__list">
+            {phase4fOwnerHandoffBundleDocs.map((docPath) => (
+              <li key={docPath}>{docPath}</li>
+            ))}
+          </ul>
+          <p>
+            The Phase 4F handoff-bundle snapshot is protected admin-only. It
+            keeps the owner-facing review brief, owner approval issue template,
+            no-deploy preflight command center, owner handoff bundle index,
+            approval request boundary, evidence capture boundary, provider setup
             boundary, and deployment approval boundary out of public routes.
           </p>
         </section>
