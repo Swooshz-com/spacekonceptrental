@@ -30,6 +30,11 @@ const commandPlan = [
     args: ['run', 'validate:local-freeze'],
   },
   {
+    label: 'Validate owner approval request',
+    cwd: repoRoot,
+    args: ['run', 'validate:owner-approval-request'],
+  },
+  {
     label: 'Validate Supabase migrations',
     cwd: repoRoot,
     args: ['run', 'validate:supabase-migrations'],

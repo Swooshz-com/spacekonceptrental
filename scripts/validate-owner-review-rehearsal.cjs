@@ -1,4 +1,4 @@
-const { execFileSync } = require('node:child_process');
+const { execFileSync, spawnSync } = require('node:child_process');
 const fs = require('node:fs');
 const path = require('node:path');
 
@@ -267,7 +267,23 @@ assertAdminReleaseControl();
 assertNoFilledEvidenceOrForbiddenTrackedFiles();
 assertPublicSourceSafe();
 assertReleaseCandidateSuiteNotWeakened();
+
+function assertOwnerApprovalRequestGate() {
+  const packageJson = JSON.parse(readRepoFile('package.json'));
+  assert(
+    packageJson.scripts['validate:owner-approval-request'] === 'node scripts/validate-owner-approval-request.cjs',
+    'validate:owner-approval-request script is missing.',
+  );
+  const result = spawnSync('node', ['scripts/validate-owner-approval-request.cjs'], {
+    cwd: repoRoot,
+    encoding: 'utf8',
+    stdio: 'inherit',
+  });
+  assert(result.status === 0, 'validate-owner-approval-request must pass from existing validators.');
+}
+
 assertPackageScript();
+assertOwnerApprovalRequestGate();
 assertPhase4dLocalFreeze();
 
 console.log('Owner-review rehearsal validation passed. No deployment was performed. This does not approve deployment.');

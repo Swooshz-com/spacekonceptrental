@@ -1,3 +1,22 @@
+
+## Phase 4E-A/B Owner Approval Request Gate References
+
+Current phase: Phase 4E-A/B owner approval request packet, preview-planning handoff template, and final no-deploy decision gate.
+
+Latest completed capability: Phase 4D-A/B local release-candidate freeze, full-suite reliability gate, and deployment-planning firewall closure.
+
+Last merged capability PR: #152
+
+Merge commit: `10950d11ca6c40580982f35e615b3cf063f58a49`
+
+Phase 4E-A/B adds a repo-local owner approval request packet, preview-planning handoff template, final no-deploy decision gate, validate:owner-approval-request validator, and protected admin Phase 4E approval-request snapshot. These controls are template-only, non-live, not evidence, and do not record owner approval, owner feedback, owner decisions, owner corrections, owner sign-off, preview evidence, production evidence, provider approval, or deployment approval.
+
+Phase 4E-A/B references `docs/content/OWNER-APPROVAL-REQUEST-PACKET.md`, `docs/content/PREVIEW-PLANNING-HANDOFF-TEMPLATE.md`, `docs/content/FINAL-NO-DEPLOY-DECISION-GATE.md`, and `scripts/validate-owner-approval-request.cjs`.
+
+No deployment is performed or approved by Phase 4E-A/B. It does not add provider config, Vercel config, Supabase Cloud config, real secrets or env values, filled evidence, browser Supabase, service-role runtime paths, n8n/Pinecone runtime changes, `/api/chat` retrieval wiring, public uploads, customer accounts, public quote tracking, notifications, CRM, invented operational facts, ecommerce flows, payment/order/checkout flows, booking/reservation flows, fulfilment flows, stock-reservation flows, or public admin internals.
+
+## Previous Current Phase 4D-A/B status:
+
 Phase 4C-A/B adds a repo-local owner-review rehearsal pack, blocker ledger template, local acceptance drill, protected admin Phase 4C rehearsal snapshot, deterministic local test coverage, and owner-review rehearsal validator roll-forward. Latest completed capability: Phase 4B-A/B owner-input intake control, local correction queue, and review-ready handoff closure. Last merged capability PR: #150. Merge commit: `baa076679756751a725ea65ac565545c6fe56d76`. Current phase: Phase 4C-A/B local owner-review rehearsal pack, blocker ledger, and acceptance drill validator.
 
 ## Phase 4D-A/B Local Release-Candidate Freeze References
