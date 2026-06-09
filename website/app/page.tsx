@@ -87,7 +87,7 @@ const rentalAcceptanceChecks = [
   {
     title: "Keep follow-up direct",
     description:
-      "Use the public form to start the enquiry; final quote details stay with the team."
+      "Use the public form to start the enquiry; availability, fit, and final quote details stay with the team."
   }
 ] as const;
 
@@ -99,7 +99,7 @@ export default async function HomePage() {
     <>
       <section className="hero section">
         <div className="hero__copy">
-          <h1>Event furniture rental for Singapore spaces.</h1>
+          <h1>Event furniture rental for planned spaces.</h1>
           <p>
             Browse rental furniture for corporate events, weddings,
             exhibitions, and styled lounge setups, then send one clear enquiry

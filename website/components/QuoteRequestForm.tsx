@@ -178,13 +178,12 @@ export default function QuoteRequestForm({
           <input name="eventDate" type="date" />
           <small>
             Event date helps the team understand timing, delivery windows, and
-            setup priority. Final availability is confirmed directly by the
-            team.
+            setup priority. Availability is reviewed directly by the team.
           </small>
         </label>
         <label>
           Venue or location
-          <input name="venue" placeholder="Singapore venue or event location" type="text" />
+          <input name="venue" placeholder="Venue or event location" type="text" />
           <small>
             Venue or event location helps the team plan delivery, access, and
             layout fit.
@@ -247,7 +246,8 @@ export default function QuoteRequestForm({
       {submitState.status === "success" ? (
         <p className="quote-form__status" role="status">
           Quote request received. This is a receipt only; the team can review
-          your enquiry and follow up directly
+          your enquiry and follow up directly. It does not hold furniture or
+          finalise availability
           {submitState.publicReference
             ? `. Reference: ${submitState.publicReference}`
             : "."}

@@ -122,13 +122,13 @@ function QuoteExpectationCard() {
       <p className="eyebrow">Expectations</p>
       <h2>What happens after you enquire</h2>
       <p>
-        This submission starts an enquiry and does not confirm furniture,
-        dates, or delivery capacity.
+        This submission starts an enquiry and does not hold furniture,
+        finalise availability, or create a completed rental plan.
       </p>
       <ul className="journey-list">
         <li>The team reviews fit against your event details.</li>
         <li>Follow-up happens directly using the contact details you share.</li>
-        <li>Final rental quote details are confirmed outside this public form.</li>
+        <li>Final rental quote details are reviewed outside this public form.</li>
         <li>You can share more details if the team needs clarification.</li>
       </ul>
     </article>
@@ -184,6 +184,8 @@ export default async function QuotePage({
           Share the event details the team will need for an event furniture
           rental follow-up. Include requested listings or items, quantities,
           alternates, setup, access, timing notes, and preferred contact method.
+          The form is enquiry intake only; it does not hold furniture or
+          finalise availability.
         </p>
       </div>
 

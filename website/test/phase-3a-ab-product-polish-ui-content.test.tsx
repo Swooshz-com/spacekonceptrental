@@ -202,7 +202,7 @@ describe("Phase 3A-A/B product polish and rental UI copy", () => {
       />
     );
 
-    expect(screen.getByText(/send a general enquiry/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/send a general enquiry/i).length).toBeGreaterThan(0);
     expect(
       screen.getByRole("link", { name: /send a general enquiry/i })
     ).toHaveAttribute("href", "/quote");

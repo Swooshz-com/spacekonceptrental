@@ -53,7 +53,7 @@ describe("public page shells", () => {
 
     expect(
       screen.getByRole("heading", {
-        name: /event furniture rental for singapore spaces/i
+        name: /event furniture rental for planned spaces/i
       })
     ).toBeInTheDocument();
     expect(
@@ -159,7 +159,7 @@ describe("public page shells", () => {
     );
 
     expect(screen.getByRole("heading", { name: /furniture catalogue/i })).toBeInTheDocument();
-    expect(screen.getByText(/no listings are available right now/i)).toBeInTheDocument();
+    expect(screen.getByText(/no public rental listings are available right now/i)).toBeInTheDocument();
   });
 
   it("renders safe rental listing not-found states", () => {

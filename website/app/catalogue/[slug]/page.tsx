@@ -166,15 +166,17 @@ export function ProductPageContent({
               <dt>Event-use context</dt>
               <dd>
                 Use this listing as a starting point for event furniture rental
-                planning; final fit and styling notes are confirmed by the team.
+                planning; final fit, availability, and styling notes are reviewed
+                directly by the team.
               </dd>
             </div>
             <div>
               <dt>Quote planning</dt>
               <dd>
                 Share timing, venue, preferred quantities, and delivery
-                notes so the team can confirm the right rental fit. Include
-                alternatives and setup notes if helpful.
+                notes so the team can review the right rental fit. Include
+                alternatives and setup notes if helpful; this page does not
+                hold furniture or finalise availability.
               </dd>
             </div>
           </dl>

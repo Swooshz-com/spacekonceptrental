@@ -1,5 +1,11 @@
 # Phase Roadmap
 
+## Phase 3Z-A/B Public Route Readiness Closure Protected Admin Review Bridge And Local Acceptance Coverage
+
+Phase 3Z-A/B closes the repo-local public journey/readiness gap before future owner review or deployment discussion. It keeps the website a furniture/event rental enquiry site, adds template-only public journey and quote/enquiry expectation boundaries, adds a protected admin public-review bridge, hardens existing public copy without new routes or providers, and extends deterministic local tests and validators.
+
+Deployment remains unapproved. Provider setup, Vercel config, Supabase Cloud config, browser Supabase, service-role runtime paths, n8n/Pinecone runtime changes, public tracking, customer accounts, uploads, ecommerce/payment/order/checkout flows, filled evidence, and invented business facts remain out of scope.
+
 ## Roadmap Rules
 
 Phase 0 and Phase 1 are active or near-term. Phase 2 and later are future

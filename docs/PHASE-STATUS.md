@@ -4,6 +4,26 @@ This is the quick status page for the SKR repo. Use `docs/PHASE-2-READINESS-PLAN
 
 ## Current phase
 
+Current phase: Phase 3Z-A/B - public route readiness closure, protected admin review bridge, and local acceptance coverage.
+
+Latest completed capability: Phase 3Y-A/B protected admin destructive-action safeguards, recovery lanes, and local acceptance coverage.
+
+Last merged capability PR: #147
+
+Merge commit: `7f422fd47ffa75cf982bd4f9d859b530a96961ad`
+
+Phase 3Z-A/B closes the repo-local public journey/readiness gap before any future owner review or deployment discussion. It adds public journey readiness closure documentation, a quote/enquiry public expectation boundary, and a protected admin public-review bridge while keeping all materials template-only, non-live, and not evidence.
+
+Phase 3Z-A/B hardens existing public route copy for rental/event furniture browsing, quote/enquiry request expectations, receipt-style confirmation, no guaranteed availability, no confirmed booking, no public status tracking, no payment/order/checkout flow, and missing owner facts staying absent instead of invented.
+
+The protected content readiness workspace now includes an admin-only public route/readiness closure snapshot that references `docs/content/PUBLIC-JOURNEY-READINESS-CLOSURE.md`, `docs/content/QUOTE-ENQUIRY-PUBLIC-EXPECTATION-BOUNDARY.md`, and `docs/content/PROTECTED-ADMIN-PUBLIC-REVIEW-BRIDGE.md`.
+
+No deployment is performed or approved by Phase 3Z-A/B. It does not add Vercel config, connect Supabase Cloud, add real secrets or env values, add filled owner-review evidence, filled preview evidence, production evidence, provider config, Pinecone runtime code or env reads, browser Supabase, service-role runtime paths, n8n workflow/runtime changes, `/api/chat` retrieval wiring, public or customer upload routes, public quote tracking, customer-visible internal notes, notifications, CRM integration, customer accounts, invented real-world operational details, unsupported business assertions, ecommerce flows, payment/order/checkout flows, reservation/booking flows, fulfilment-like flows, retail transaction flows, or customer account flows.
+
+Missing real-world operational details and unsupported business assertions must remain marked as owner input required and must not be invented.
+
+Previous Current Phase 3Y-A/B status:
+
 Current phase: Phase 3Y-A/B - protected admin destructive-action safeguards, recovery lanes, and local acceptance coverage.
 
 Latest completed capability: Phase 3X-A/B protected admin write-ops hardening, content-operation guardrails, and local acceptance coverage.

@@ -113,7 +113,8 @@ function CatalogueCardPlanning({
       <strong>Quote planning</strong>
       <span>
         Share event date, venue, quantities, and setup notes when you request
-        this listing. Include category fit and rental unit notes if helpful.
+        this listing. Include category fit and rental unit notes if helpful;
+        browsing does not hold furniture or finalise availability.
       </span>
     </aside>
   );
@@ -244,7 +245,7 @@ export function CataloguePageContent({
   activeCategorySlug,
   catalogue,
   detailBasePath = "/catalogue",
-  emptyMessage = "No listings are available right now. Please check back soon.",
+  emptyMessage = "No public rental listings are available right now. Send a general enquiry if you need help describing the event setup.",
   intro = "Browse furniture and event-rental listings made for spaces, occasions, and styled setups.",
   listingBasePath = "/listings",
   title = "Furniture catalogue"

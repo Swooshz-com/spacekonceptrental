@@ -1,10 +1,15 @@
 # Phase 2 Readiness Plan
 
+## Current Phase 3Z-A/B status
+
+Phase 3Z-A/B adds public route readiness closure docs, a quote/enquiry public expectation boundary, a protected admin public-review bridge, public copy/readiness hardening, protected content-readiness snapshot coverage, and deterministic local acceptance coverage. Latest completed capability: Phase 3Y-A/B protected admin destructive-action safeguards, recovery lanes, and local acceptance coverage. Last merged capability PR: #147. Merge commit: `7f422fd47ffa75cf982bd4f9d859b530a96961ad`.
+
+Previous Current Phase 3Y-A/B status remains below for continuity.
+
 ## Current Phase 3Y-A/B status
 
-Phase 3Y-A/B adds protected admin destructive-action safeguards, recovery lane guidance, and a status-transition matrix for listing, category, media, and quote operations. Latest completed capability: Phase 3X-A/B protected admin write-ops hardening, content-operation guardrails, and local acceptance coverage. Last merged capability PR: #146. Merge commit: `50316a5c4052607487ba7409d5dc854889db6e24`.
+Phase 3Y-A/B adds protected admin destructive-action safeguards, recovery lane guidance, and a status-transition matrix for listing, category, media, and quote operations. Latest completed capability: Phase 3X-A/B protected admin write-ops hardening, content-operation guardrails, and local acceptance coverage. Last merged capability PR: #146. Merge commit: `50316a5c4052607487ba7409d5dc854889db6e24`. Previous Current Phase 3X-A/B status remains below for continuity.
 
-Previous Current Phase 3X-A/B status remains below for continuity.
 
 
 Phase 2 is not approved by this document. This plan ranks the safest next
