@@ -351,7 +351,10 @@ describe("POST /api/quote", () => {
 
     expect(response.status).toBe(400);
     expect(body.error.code).toBe("VALIDATION_FAILED");
-    expect(body.error.message).toContain("customerEmail");
+    expect(body.error.message).toBe(
+      "Please check the required enquiry details and try again."
+    );
+    expect(JSON.stringify(body)).not.toContain("customerEmail");
     expect(repository).not.toHaveBeenCalled();
   });
 

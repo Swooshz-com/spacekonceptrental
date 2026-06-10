@@ -17,6 +17,8 @@ type SubmitState =
   | { status: "error"; message: string };
 
 const customerMessageMaxLength = 1200;
+const requestedItemsMaxCount = 20;
+const requestedItemMaxLength = 180;
 
 function formatPreferredContactMethod(preferredContactMethod: string) {
   return preferredContactMethod
@@ -38,10 +40,11 @@ function parseRequestedItems(itemsText: string, itemNotesText: string) {
   const itemLines = itemsText
     .split(/\r?\n|\r/)
     .map((line) => line.trim())
-    .filter(Boolean);
+    .filter(Boolean)
+    .slice(0, requestedItemsMaxCount);
 
   return itemLines.map((productName, index) => ({
-    productName,
+    productName: productName.slice(0, requestedItemMaxLength),
     quantity: 1,
     // Item notes are shared form context, so submit them once on the first item.
     ...(index === 0 && itemNotesText ? { notes: itemNotesText } : {})
@@ -126,11 +129,29 @@ export default function QuoteRequestForm({
       items: parseRequestedItems(itemsText, itemNotesText)
     };
 
+    if (!payload.customerName) {
+      setSubmitState({
+        status: "error",
+        message:
+          "Add your name so the team can review this enquiry with the right contact details."
+      });
+      return;
+    }
+
     if (!payload.customerEmail && !payload.customerPhone) {
       setSubmitState({
         status: "error",
         message:
           "Share an email address or phone number so the team can follow up on this enquiry."
+      });
+      return;
+    }
+
+    if (itemsText && payload.items.length === 0) {
+      setSubmitState({
+        status: "error",
+        message:
+          "Use short listing or item lines, or leave requested items blank and explain the setup in the notes."
       });
       return;
     }
@@ -163,28 +184,29 @@ export default function QuoteRequestForm({
   }
 
   return (
-    <form className="quote-form" onSubmit={handleSubmit}>
+    <form className="quote-form" noValidate onSubmit={handleSubmit}>
       <p className="quote-form__intro">
-        Share one reliable contact method, your preferred contact method,
-        event date, venue or location, requested listings or items, quantities,
-        alternates, and setup, access, and timing notes so the team can triage
-        the rental enquiry.
+        Share your name. Share one reliable contact method, event date if known,
+        venue or location, requested listings or items, quantities, alternates,
+        and setup, access, and timing notes so the team can triage the rental
+        enquiry.
       </p>
       {initialItemsText ? (
         <aside className="quote-form__selected" aria-label="Selected listing">
           <strong>Selected listing</strong>
           <span>
             {initialItemsText} starts this rental request. Listing context is
-            a starting point only, not a rental fit confirmation.
-            Add quantities, alternates, dimensions, setup, access, or timing
-            notes before sending; the team can review the request.
+            a starting point only and remains editable request text, not a
+            rental fit confirmation. Add quantities, alternates, dimensions,
+            setup, access, or timing notes before sending; the team can review
+            the request.
           </span>
         </aside>
       ) : null}
       <fieldset>
         <legend>Contact details</legend>
         <label>
-          Your name
+          Your name (required)
           <input autoComplete="name" name="customerName" required type="text" />
         </label>
         <label>
@@ -195,8 +217,8 @@ export default function QuoteRequestForm({
           Phone number
           <input autoComplete="tel" name="customerPhone" type="tel" />
           <small>
-            Share email, phone, or both. The team uses this only for direct
-            quote follow-up.
+            Share email, phone, or both. Email or phone required. The team uses
+            this only for direct quote follow-up.
           </small>
         </label>
         <label>
@@ -220,7 +242,7 @@ export default function QuoteRequestForm({
       <fieldset>
         <legend>Event details</legend>
         <label>
-          Event date
+          Event date (if known)
           <input name="eventDate" type="date" />
           <small>
             Event date helps the team understand timing and setup context.
@@ -228,7 +250,7 @@ export default function QuoteRequestForm({
           </small>
         </label>
         <label>
-          Venue or location
+          Venue or location (if known)
           <input name="venue" placeholder="Venue or event location" type="text" />
           <small>
             Venue or event location helps the team plan delivery, access, and
@@ -247,8 +269,8 @@ export default function QuoteRequestForm({
             rows={4}
           />
           <small>
-            Use one line per requested item. Leave this blank if you need help
-            deciding quantities.
+            Use one line per requested listing or item. This editable text can
+            keep listing, category, event-use, or search context as request notes.
           </small>
         </label>
         <label>
@@ -295,9 +317,9 @@ export default function QuoteRequestForm({
         <p className="quote-form__status" role="status">
           Enquiry received. This is a receipt only; the team can review
           your request and follow up directly. It does not set aside furniture
-          or finish rental details.
+          or finish rental details, and does not finalise rental details.
           {submitState.publicReference
-            ? `. Reference: ${submitState.publicReference}`
+            ? `. Public reference receipt: ${submitState.publicReference}`
             : "."}
         </p>
       ) : null}

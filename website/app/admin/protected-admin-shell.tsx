@@ -552,7 +552,8 @@ const contentReadinessSources = [
   "docs/content/PROTECTED-ADMIN-PUBLIC-REVIEW-BRIDGE.md",
   "docs/content/LOCAL-PUBLIC-JOURNEY-ACCEPTANCE.md",
   "docs/content/LOCAL-DISCOVERY-SEARCH-FILTER-ACCEPTANCE.md",
-  "docs/content/LOCAL-LISTING-DETAIL-READINESS.md"
+  "docs/content/LOCAL-LISTING-DETAIL-READINESS.md",
+  "docs/content/LOCAL-QUOTE-ENQUIRY-INTAKE-READINESS.md"
 ] as const;
 
 const reviewSurfaceGroups = 11;
@@ -1005,12 +1006,15 @@ const phase5cDiscoveryAcceptancePath =
   "docs/content/LOCAL-DISCOVERY-SEARCH-FILTER-ACCEPTANCE.md";
 const phase5dListingDetailReadinessPath =
   "docs/content/LOCAL-LISTING-DETAIL-READINESS.md";
+const phase5eQuoteIntakeReadinessPath =
+  "docs/content/LOCAL-QUOTE-ENQUIRY-INTAKE-READINESS.md";
 const phase5cDiscoveryParityDocs = [
   ownerHandoffBundleIndexPath,
   phase5aLocalContentReadinessCleanupPath,
   phase5bPublicJourneyAcceptancePath,
   phase5cDiscoveryAcceptancePath,
-  phase5dListingDetailReadinessPath
+  phase5dListingDetailReadinessPath,
+  phase5eQuoteIntakeReadinessPath
 ] as const;
 const phase5cDiscoveryParitySnapshot = [
   [
@@ -1071,6 +1075,38 @@ const phase5dListingDetailParitySnapshot = [
   [
     "Claims still blocked",
     "No invented facts, response-time promises, availability promises, completed rental claims, ecommerce language, or public admin internals"
+  ],
+  [
+    "Evidence/deployment boundary",
+    "[NOT EVIDENCE / NOT RECORDED] and [DEPLOYMENT APPROVAL: NOT GRANTED]"
+  ]
+] as const;
+
+
+const phase5eQuoteIntakeParitySnapshot = [
+  [
+    "Public intake fields",
+    "Name, email or phone, event date if known, venue if known, requested listings/items, quantities, alternates, setup/access/timing notes, and contact preference"
+  ],
+  [
+    "Context handoff sources",
+    "Listing, category, event-use, and search context remains editable request text only"
+  ],
+  [
+    "Receipt/reference boundary",
+    "Public reference is receipt-only and not status lookup, acceptance, fit decision, response promise, hold, or final rental detail"
+  ],
+  [
+    "Admin triage expectations",
+    "Review contact, event, venue, requested item, quantity, alternate, setup, access, and timing gaps before direct follow-up"
+  ],
+  [
+    "Owner inputs still missing",
+    "Owner-supplied contact, service-area, legal, policy, operating, content, and launch facts"
+  ],
+  [
+    "Claims still blocked",
+    "No invented facts, fit promises, response promises, public status views, sales flows, provider setup, or deployment evidence"
   ],
   [
     "Evidence/deployment boundary",
@@ -1810,12 +1846,24 @@ function PublicParityReviewWorkspace() {
           </dl>
         </section>
         <section className="admin-dashboard__card admin-dashboard__card--summary">
+          <h3>Phase 5E quote intake parity summary</h3>
+          <dl className="quote-inbox__details">
+            {phase5eQuoteIntakeParitySnapshot.map(([label, value]) => (
+              <div key={label}>
+                <dt>{label}</dt>
+                <dd>{value}</dd>
+              </div>
+            ))}
+          </dl>
+        </section>
+        <section className="admin-dashboard__card admin-dashboard__card--summary">
           <h3>Review references</h3>
           <p>
             These repo-local references keep the owner handoff, local
-            content-readiness cleanup, Phase 5B public journey acceptance, and
-            Phase 5C discovery acceptance templates, and Phase 5D listing
-            detail readiness note together for authorised admin review only.
+            content-readiness cleanup, Phase 5B public journey acceptance,
+            Phase 5C discovery acceptance templates, Phase 5D listing detail
+            readiness, and Phase 5E quote intake readiness notes together for
+            authorised admin review only.
           </p>
           <ul className="admin-dashboard__list">
             {phase5cDiscoveryParityDocs.map((docPath) => (

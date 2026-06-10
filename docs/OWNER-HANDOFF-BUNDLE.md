@@ -12,6 +12,7 @@ This bundle is not evidence. It records no owner approval. It performs no deploy
 - Local public journey acceptance: `docs/content/LOCAL-PUBLIC-JOURNEY-ACCEPTANCE.md`
 - Local discovery search/filter acceptance: `docs/content/LOCAL-DISCOVERY-SEARCH-FILTER-ACCEPTANCE.md`
 - Local listing detail readiness: `docs/content/LOCAL-LISTING-DETAIL-READINESS.md`
+- Local quote/enquiry intake readiness: `docs/content/LOCAL-QUOTE-ENQUIRY-INTAKE-READINESS.md`
 - Owner approval request packet: `docs/content/OWNER-APPROVAL-REQUEST-PACKET.md`
 - Preview-planning handoff template: `docs/content/PREVIEW-PLANNING-HANDOFF-TEMPLATE.md`
 - Final no-deploy decision gate: `docs/content/FINAL-NO-DEPLOY-DECISION-GATE.md`
@@ -59,3 +60,14 @@ Last merged capability PR: #157.
 Last merged capability merge commit: 1f471213c71aa1d3ff979a267ffd1c8b2a39fe6f.
 
 The local listing detail readiness note and protected admin listing-detail parity helper remain repo-local, template-only, non-live, not evidence, and not deployment approval.
+
+## Phase 5E-A/B quote/enquiry intake readiness addendum
+
+Current phase: Phase 5E-A/B quote/enquiry intake reliability, receipt boundary, and protected admin triage parity.
+Latest completed capability: Phase 5D-A/B public listing-detail readiness, media/context polish, and quote-intent review closure.
+Last merged capability PR: #158.
+Last merged capability merge commit: f5f3b23426df052568158ba3cf1c898deb617a93.
+
+The local quote/enquiry intake readiness note and protected admin quote triage parity helper remain repo-local, template-only, non-live, not evidence, and not deployment approval. Phase 5E-A/B references `docs/content/LOCAL-QUOTE-ENQUIRY-INTAKE-READINESS.md`, `docs/content/LOCAL-LISTING-DETAIL-READINESS.md`, `docs/content/LOCAL-PUBLIC-JOURNEY-ACCEPTANCE.md`, `docs/OWNER-HANDOFF-BUNDLE.md`, and `scripts/validate-quote-intake-readiness.cjs`.
+
+No deployment is performed or approved by Phase 5E-A/B. It does not add provider config, Vercel config, Supabase Cloud config, real secrets or env values, filled evidence, browser Supabase, service-role runtime paths, n8n/Pinecone runtime changes, `/api/chat` retrieval wiring, public uploads, customer accounts, public quote tracking, notifications, CRM, invented operational facts, ecommerce flows, payment/order/checkout flows, booking/reservation flows, fulfilment flows, stock-reservation flows, or public admin internals.
