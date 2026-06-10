@@ -46,7 +46,9 @@ type CategoryPayload = {
 
 const categoryWriteOperation = "category.write";
 const genericFailureMessage =
-  "Category change could not be saved. Check public grouping fields and try again.";
+  "Protected admin save could not be completed. Check category name, slug, description, visibility, and sort order before retrying.";
+const phase5hReadinessDoc =
+  "docs/content/LOCAL-CATALOGUE-WRITE-WORKFLOW-READINESS.md";
 
 function formValue(formData: FormData, name: string) {
   const value = formData.get(name);
@@ -57,25 +59,21 @@ function formValue(formData: FormData, name: string) {
 function parseOptionalSortOrder(value: string) {
   if (!value) {
     return {
-      ok: true as const
+      ok: true as const,
     };
   }
 
   const parsed = Number(value);
 
-  if (
-    !Number.isInteger(parsed) ||
-    parsed < 0 ||
-    parsed > 1_000_000
-  ) {
+  if (!Number.isInteger(parsed) || parsed < 0 || parsed > 1_000_000) {
     return {
-      ok: false as const
+      ok: false as const,
     };
   }
 
   return {
     ok: true as const,
-    sortOrder: parsed
+    sortOrder: parsed,
   };
 }
 
@@ -103,13 +101,15 @@ function categoryReadiness(category: CategoryManagementCategory) {
       : "Add listings before this category helps public browsing",
     hasText(category.description)
       ? "Category description present"
-      : "Add a category description for admin clarity"
+      : "Add a category description for admin clarity",
   ];
 }
 
-function categoriesWithoutPublishedListings(categories: CategoryManagementCategory[]) {
+function categoriesWithoutPublishedListings(
+  categories: CategoryManagementCategory[],
+) {
   return categories.filter(
-    (category) => category.isPublished && publishedProductCount(category) === 0
+    (category) => category.isPublished && publishedProductCount(category) === 0,
   );
 }
 
@@ -129,12 +129,12 @@ async function requestCategoryWriteProof(fetcher: typeof fetch) {
   const response = await fetcher("/api/admin/csrf-proof", {
     method: "POST",
     headers: {
-      "Content-Type": "application/json"
+      "Content-Type": "application/json",
     },
     body: JSON.stringify({
       requestedOperation: categoryWriteOperation,
-      operation: categoryWriteOperation
-    })
+      operation: categoryWriteOperation,
+    }),
   });
 
   if (!response.ok) {
@@ -164,21 +164,22 @@ function reloadDashboard() {
 export function CategoryManagementPanel({
   categories,
   fetcher = fetch,
-  onMutationComplete = reloadDashboard
+  onMutationComplete = reloadDashboard,
 }: CategoryManagementPanelProps) {
   const [status, setStatus] = useState<PanelStatus>({
-    kind: "idle"
+    kind: "idle",
   });
-  const publishedEmptyCategories = categoriesWithoutPublishedListings(categories);
+  const publishedEmptyCategories =
+    categoriesWithoutPublishedListings(categories);
 
   async function submitCategoryMutation(
     endpoint: string,
     payload: CategoryPayload,
-    successMessage: string
+    successMessage: string,
   ) {
     setStatus({
       kind: "pending",
-      message: "Saving protected category write..."
+      message: "Protected admin save is checking category metadata...",
     });
 
     try {
@@ -187,7 +188,7 @@ export function CategoryManagementPanel({
       if (!csrfProof) {
         setStatus({
           kind: "error",
-          message: genericFailureMessage
+          message: genericFailureMessage,
         });
         return;
       }
@@ -196,23 +197,23 @@ export function CategoryManagementPanel({
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-csrf-proof": csrfProof
+          "x-csrf-proof": csrfProof,
         },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
       });
       const responseBody = await readSafeJson(response);
 
       if (!response.ok || !isRecord(responseBody) || responseBody.ok !== true) {
         setStatus({
           kind: "error",
-          message: genericFailureMessage
+          message: genericFailureMessage,
         });
         return;
       }
 
       setStatus({
         kind: "success",
-        message: successMessage
+        message: successMessage,
       });
 
       try {
@@ -223,7 +224,7 @@ export function CategoryManagementPanel({
     } catch {
       setStatus({
         kind: "error",
-        message: genericFailureMessage
+        message: genericFailureMessage,
       });
     }
   }
@@ -233,14 +234,12 @@ export function CategoryManagementPanel({
 
     const form = event.currentTarget;
     const formData = new FormData(form);
-    const sortOrder = parseOptionalSortOrder(
-      formValue(formData, "sortOrder")
-    );
+    const sortOrder = parseOptionalSortOrder(formValue(formData, "sortOrder"));
 
     if (!sortOrder.ok) {
       setStatus({
         kind: "error",
-        message: genericFailureMessage
+        message: genericFailureMessage,
       });
       return;
     }
@@ -253,7 +252,7 @@ export function CategoryManagementPanel({
       isPublished:
         isPublishedInput instanceof HTMLInputElement
           ? isPublishedInput.checked
-          : false
+          : false,
     };
 
     if (sortOrder.sortOrder !== undefined) {
@@ -263,26 +262,24 @@ export function CategoryManagementPanel({
     await submitCategoryMutation(
       "/api/admin/categories",
       payload,
-      "Category created. Refreshing dashboard."
+      "Category metadata saved for protected admin review. Refreshing dashboard.",
     );
   }
 
   async function handleUpdate(
     event: FormEvent<HTMLFormElement>,
-    category: CategoryManagementCategory
+    category: CategoryManagementCategory,
   ) {
     event.preventDefault();
 
     const form = event.currentTarget;
     const formData = new FormData(form);
-    const sortOrder = parseOptionalSortOrder(
-      formValue(formData, "sortOrder")
-    );
+    const sortOrder = parseOptionalSortOrder(formValue(formData, "sortOrder"));
 
     if (!sortOrder.ok) {
       setStatus({
         kind: "error",
-        message: genericFailureMessage
+        message: genericFailureMessage,
       });
       return;
     }
@@ -294,7 +291,7 @@ export function CategoryManagementPanel({
       isPublished:
         isPublishedInput instanceof HTMLInputElement
           ? isPublishedInput.checked
-          : false
+          : false,
     };
 
     if (sortOrder.sortOrder !== undefined) {
@@ -304,7 +301,7 @@ export function CategoryManagementPanel({
     await submitCategoryMutation(
       `/api/admin/categories/${encodeURIComponent(category.id)}`,
       payload,
-      "Category updated. Refreshing dashboard."
+      "Category metadata saved for protected admin review. Refreshing dashboard.",
     );
   }
 
@@ -312,20 +309,21 @@ export function CategoryManagementPanel({
     await submitCategoryMutation(
       `/api/admin/categories/${encodeURIComponent(category.id)}/archive`,
       {},
-      "Category archived. Refreshing dashboard."
+      "Category archive state saved for protected admin review. Refreshing dashboard.",
     );
   }
 
   return (
     <section className="category-management" aria-label="Category management">
       <div className="category-management__header">
-        <p className="eyebrow">Category-only writes</p>
+        <p className="eyebrow">Protected admin save</p>
         <h2>Category management</h2>
         <p>
-          Create, update, unpublish, and archive categories through the protected admin
-          API. Furniture listing edits use their own protected panel, and image
-          file handling stays out of scope. Categories are public grouping
-          metadata when published.
+          Create, update, set visibility, and archive categories through the
+          protected admin API. Furniture listing edits use their own protected
+          panel, and image file handling stays out of scope. Categories are
+          public grouping metadata when visible. Phase 5H guidance:{" "}
+          {phase5hReadinessDoc}.
         </p>
       </div>
 
@@ -334,20 +332,37 @@ export function CategoryManagementPanel({
         aria-live="polite"
       >
         {status.kind === "idle"
-          ? "Category write controls are ready."
+          ? "Category write controls are ready for protected admin save."
           : status.message}
       </div>
 
-      <section className="admin-readiness" aria-label="Category readiness">
-        <h3>Category publication readiness</h3>
+      <section
+        className="admin-readiness"
+        aria-label="Category public-safe copy review"
+      >
+        <h3>Public-safe copy review</h3>
         <p>
-          Categories should group rental listings that are ready for public
-          browsing. Unpublished categories stay out of public catalogue
+          Save category metadata only after reviewing category name, slug,
+          description, visibility wording, empty category warnings, and {"sort order"}.
+        </p>
+        <p className="category-management__hint">
+          Protected admin save does not deploy, does not record owner approval,
+          and does not create evidence. Category visibility is not a deployment
+          or public-use approval. See {phase5hReadinessDoc}.
+        </p>
+      </section>
+
+      <section className="admin-readiness" aria-label="Category readiness">
+        <h3>Category visibility readiness</h3>
+        <p>
+          Categories should group rental listings that are ready for public-safe
+          copy review. Non-visible categories stay out of public catalogue
           grouping.
         </p>
         <p className="category-management__hint">
           Category readiness checks use published listing counts when they are
-          available from the admin dashboard. Empty published categories are admin-only recovery cues, not public promises.
+          available from the admin dashboard. Empty published categories are
+          admin-only recovery cues, not public promises.
         </p>
         <p>
           {publishedEmptyCategories.length > 0
@@ -373,12 +388,17 @@ export function CategoryManagementPanel({
             required
             type="text"
           />
-          <small>Use lowercase letters, numbers, and hyphens for public category URLs.</small>
+          <small>
+            Use lowercase letters, numbers, and hyphens for public category
+            URLs.
+          </small>
         </label>
         <label htmlFor="new-category-name">
           New category name
           <input id="new-category-name" maxLength={120} name="name" required />
-          <small>Name the rental/event furniture grouping without sales-flow wording.</small>
+          <small>
+            Name the rental/event furniture grouping without sales-flow wording.
+          </small>
         </label>
         <label htmlFor="new-category-description">
           New category description
@@ -388,7 +408,10 @@ export function CategoryManagementPanel({
             name="description"
             rows={3}
           />
-          <small>Description helps public browsing and quote/enquiry recovery; keep internal readiness notes out.</small>
+          <small>
+            Description helps public browsing and quote/enquiry recovery; keep
+            internal readiness notes out.
+          </small>
         </label>
         <label htmlFor="new-category-sort-order">
           New category sort order
@@ -399,16 +422,21 @@ export function CategoryManagementPanel({
             name="sortOrder"
             type="number"
           />
-          <small>Lower numbers appear earlier where category ordering is used.</small>
+          <small>
+            Lower numbers appear earlier where category ordering is used.
+          </small>
         </label>
-        <label className="category-management__checkbox" htmlFor="new-category-published">
+        <label
+          className="category-management__checkbox"
+          htmlFor="new-category-published"
+        >
           <input
             defaultChecked
             id="new-category-published"
             name="isPublished"
             type="checkbox"
           />
-          Publish new category for public grouping
+          Make new category visible for public grouping after review
         </label>
         <button className="button" type="submit">
           Create category
@@ -419,7 +447,9 @@ export function CategoryManagementPanel({
         {categories.length === 0 ? (
           <section className="admin-dashboard__card admin-dashboard__card--summary">
             <p>
-              No categories are available to update yet. Create a protected draft category before grouping public rental listings or recovering quote/enquiry context.
+              No categories are available to update yet. Create a protected
+              draft category before grouping public rental listings or
+              recovering quote/enquiry context.
             </p>
           </section>
         ) : (
@@ -456,7 +486,9 @@ export function CategoryManagementPanel({
                     name="name"
                     required
                   />
-                  <small>Category name appears in public grouping when published.</small>
+                  <small>
+                    Category name appears in public grouping when published.
+                  </small>
                 </label>
                 <label htmlFor={`category-description-${category.id}`}>
                   Category description for {category.name}
@@ -467,7 +499,10 @@ export function CategoryManagementPanel({
                     name="description"
                     rows={3}
                   />
-                  <small>Description supports public browsing and quote/enquiry recovery; do not add internal notes.</small>
+                  <small>
+                    Description supports public browsing and quote/enquiry
+                    recovery; do not add internal notes.
+                  </small>
                 </label>
                 <label htmlFor={`category-sort-order-${category.id}`}>
                   Category sort order for {category.name}
@@ -479,7 +514,10 @@ export function CategoryManagementPanel({
                     name="sortOrder"
                     type="number"
                   />
-                  <small>Sort order affects category grouping only where ordering is used.</small>
+                  <small>
+                    Sort order affects category grouping only where ordering is
+                    used.
+                  </small>
                 </label>
                 <label
                   className="category-management__checkbox"
@@ -491,14 +529,20 @@ export function CategoryManagementPanel({
                     name="isPublished"
                     type="checkbox"
                   />
-                  Publish {category.name} for public grouping
+                  Make {category.name} visible for public grouping after review
                 </label>
                 <p className="category-management__hint">
-                  Protected write boundary: publish only when grouping and listing-count cues are clear. Check description before saving. Unpublish or archive hides the grouping from public browsing without deleting the category record. If save fails, keep unpublished/protected and retry after admin review.
+                  Protected write boundary: save category metadata only when
+                  grouping and listing-count cues are clear. Check validation
+                  errors and public-safe description before saving. This
+                  protected admin save does not deploy, does not record owner
+                  approval, and does not create evidence. Non-visible or
+                  archived categories stay out of public browsing without
+                  deleting the category record.
                 </p>
                 <div className="category-management__actions">
                   <button className="button" type="submit">
-                    Save category {category.name}
+                    Save category metadata
                   </button>
                   <button
                     className="button button--secondary"

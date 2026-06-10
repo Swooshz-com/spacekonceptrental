@@ -1,3 +1,19 @@
+## Phase 5H-A/B Catalogue Write Workflow Readiness References
+
+Current phase: Phase 5H-A/B protected admin catalogue write workflow polish, validation/error UX, and public parity guard.
+
+Latest completed capability: Phase 5G-A/B protected admin catalogue content-ops readiness, media safety review, and public parity boundary.
+
+Last merged capability PR: #161.
+
+Last merged capability merge commit: e051d98ee50501fccca8e9b55411dee6a6d7cc95.
+
+Phase 5H-A/B adds repo-local protected admin listing, category, and media write workflow polish, validation/error/success boundary hardening, public parity guard coverage, local catalogue write workflow readiness documentation, validate:catalogue-write-workflow-readiness validator coverage, and deterministic Phase 5H catalogue write workflow tests. These controls are template-only, non-live, not evidence, and do not record owner approval, owner feedback, owner decisions, owner corrections, owner sign-off, preview evidence, production evidence, provider approval, response-sent evidence, write-success evidence, or deployment approval.
+
+Phase 5H-A/B references `docs/content/LOCAL-CATALOGUE-WRITE-WORKFLOW-READINESS.md`, `docs/content/LOCAL-CATALOGUE-CONTENT-OPS-READINESS.md`, `docs/content/LOCAL-QUOTE-TRIAGE-READINESS.md`, `docs/content/LOCAL-QUOTE-ENQUIRY-INTAKE-READINESS.md`, `docs/content/LOCAL-LISTING-DETAIL-READINESS.md`, `scripts/validate-catalogue-write-workflow-readiness.cjs`, `scripts/validate-catalogue-content-ops-readiness.cjs`, `scripts/validate-quote-triage-readiness.cjs`, `scripts/validate-quote-intake-readiness.cjs`, `scripts/validate-listing-detail-readiness.cjs`, `scripts/validate-public-discovery-acceptance.cjs`, `scripts/validate-public-journey-acceptance.cjs`, `scripts/validate-public-review-polish.cjs`, and protected admin listing/category/media write workflow helpers.
+
+No deployment is performed or approved by Phase 5H-A/B. It does not add provider config, Vercel config, Supabase Cloud config, real secrets or env values, filled evidence, browser Supabase, service-role runtime paths, n8n/Pinecone runtime changes, `/api/chat` retrieval wiring, public uploads, customer accounts, public quote tracking, notifications, CRM, outbound messaging, invented operational facts, ecommerce flows, payment/order/checkout flows, booking/reservation flows, fulfilment flows, stock-reservation flows, owner-approved media claims, final styling claims, real inventory confirmation, write-success evidence, or public admin internals.
+
 ## Phase 5G-A/B Catalogue Content-Ops Readiness References
 
 Current phase: Phase 5G-A/B protected admin catalogue content-ops readiness, media safety review, and public parity boundary.

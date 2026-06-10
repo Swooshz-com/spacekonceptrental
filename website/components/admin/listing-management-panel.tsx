@@ -62,7 +62,9 @@ type ListingPayload = {
 
 const listingWriteOperation = "product.write";
 const genericFailureMessage =
-  "Listing change could not be saved. Check required fields, keep public fields factual, and try again.";
+  "Protected admin save could not be completed. Check listing title, slug, category, rental unit, descriptions, status, and sort order before retrying.";
+const phase5hReadinessDoc =
+  "docs/content/LOCAL-CATALOGUE-WRITE-WORKFLOW-READINESS.md";
 
 function formValue(formData: FormData, name: string) {
   const value = formData.get(name);
@@ -73,25 +75,21 @@ function formValue(formData: FormData, name: string) {
 function parseOptionalSortOrder(value: string) {
   if (!value) {
     return {
-      ok: true as const
+      ok: true as const,
     };
   }
 
   const parsed = Number(value);
 
-  if (
-    !Number.isInteger(parsed) ||
-    parsed < 0 ||
-    parsed > 1_000_000
-  ) {
+  if (!Number.isInteger(parsed) || parsed < 0 || parsed > 1_000_000) {
     return {
-      ok: false as const
+      ok: false as const,
     };
   }
 
   return {
     ok: true as const,
-    sortOrder: parsed
+    sortOrder: parsed,
   };
 }
 
@@ -112,7 +110,8 @@ function listingReadiness(product: ListingManagementProduct) {
   const hasRentalUnit = hasText(product.rentalUnit);
   const hasImageMetadata = product.imageCount > 0;
   const hasPrimaryImage = hasText(product.primaryImageAltText);
-  const hasQuotePlanning = hasShortDescription && hasDescription && hasRentalUnit;
+  const hasQuotePlanning =
+    hasShortDescription && hasDescription && hasRentalUnit;
   const ready =
     product.status === "published" &&
     hasCategory &&
@@ -128,8 +127,8 @@ function listingReadiness(product: ListingManagementProduct) {
       product.status === "archived"
         ? "Archived from public browsing"
         : ready
-          ? "Ready for public browsing"
-          : "Needs attention before publishing",
+          ? "Ready for owner review"
+          : "Needs public-safe copy review",
     checks: [
       hasCategory ? "Category assigned" : "Missing category assignment",
       hasShortDescription
@@ -145,14 +144,14 @@ function listingReadiness(product: ListingManagementProduct) {
         : "Missing primary public image",
       hasQuotePlanning
         ? "Quote-planning details ready"
-        : "Add quote-planning details before publication"
-    ]
+        : "Add quote-planning details before publication",
+    ],
   };
 }
 
 function listingStatusCount(
   products: ListingManagementProduct[],
-  status: ListingManagementProduct["status"]
+  status: ListingManagementProduct["status"],
 ) {
   return products.filter((product) => product.status === status).length;
 }
@@ -173,12 +172,12 @@ async function requestListingWriteProof(fetcher: typeof fetch) {
   const response = await fetcher("/api/admin/csrf-proof", {
     method: "POST",
     headers: {
-      "Content-Type": "application/json"
+      "Content-Type": "application/json",
     },
     body: JSON.stringify({
       requestedOperation: listingWriteOperation,
-      operation: listingWriteOperation
-    })
+      operation: listingWriteOperation,
+    }),
   });
 
   if (!response.ok) {
@@ -207,7 +206,7 @@ function reloadDashboard() {
 
 function buildPayload(
   formData: FormData,
-  sortOrder: number | undefined
+  sortOrder: number | undefined,
 ): ListingPayload | null {
   const status = parseStatus(formValue(formData, "status"));
 
@@ -224,7 +223,7 @@ function buildPayload(
     description: formValue(formData, "description"),
     rentalUnit: formValue(formData, "rentalUnit"),
     status,
-    ...(sortOrder !== undefined ? { sortOrder } : {})
+    ...(sortOrder !== undefined ? { sortOrder } : {}),
   };
 
   return payload;
@@ -234,32 +233,32 @@ export function ListingManagementPanel({
   categories,
   products,
   fetcher = fetch,
-  onMutationComplete = reloadDashboard
+  onMutationComplete = reloadDashboard,
 }: ListingManagementPanelProps) {
   const [status, setStatus] = useState<PanelStatus>({
-    kind: "idle"
+    kind: "idle",
   });
   const listingReadinessById = new Map(
-    products.map((product) => [product.id, listingReadiness(product)])
+    products.map((product) => [product.id, listingReadiness(product)]),
   );
   const readyListings = products.filter(
-    (product) => listingReadinessById.get(product.id)?.ready
+    (product) => listingReadinessById.get(product.id)?.ready,
   ).length;
   const listingsNeedingAttention = products.length - readyListings;
   const publishedListingsNeedingFixes = products.filter(
     (product) =>
       product.status === "published" &&
-      !listingReadinessById.get(product.id)?.ready
+      !listingReadinessById.get(product.id)?.ready,
   );
 
   async function submitListingMutation(
     endpoint: string,
     payload: ListingPayload,
-    successMessage: string
+    successMessage: string,
   ) {
     setStatus({
       kind: "pending",
-      message: "Saving protected listing write..."
+      message: "Protected admin save is checking listing metadata...",
     });
 
     try {
@@ -268,7 +267,7 @@ export function ListingManagementPanel({
       if (!csrfProof) {
         setStatus({
           kind: "error",
-          message: genericFailureMessage
+          message: genericFailureMessage,
         });
         return;
       }
@@ -277,23 +276,23 @@ export function ListingManagementPanel({
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-csrf-proof": csrfProof
+          "x-csrf-proof": csrfProof,
         },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
       });
       const responseBody = await readSafeJson(response);
 
       if (!response.ok || !isRecord(responseBody) || responseBody.ok !== true) {
         setStatus({
           kind: "error",
-          message: genericFailureMessage
+          message: genericFailureMessage,
         });
         return;
       }
 
       setStatus({
         kind: "success",
-        message: successMessage
+        message: successMessage,
       });
 
       try {
@@ -304,7 +303,7 @@ export function ListingManagementPanel({
     } catch {
       setStatus({
         kind: "error",
-        message: genericFailureMessage
+        message: genericFailureMessage,
       });
     }
   }
@@ -313,14 +312,12 @@ export function ListingManagementPanel({
     event.preventDefault();
 
     const formData = new FormData(event.currentTarget);
-    const sortOrder = parseOptionalSortOrder(
-      formValue(formData, "sortOrder")
-    );
+    const sortOrder = parseOptionalSortOrder(formValue(formData, "sortOrder"));
 
     if (!sortOrder.ok) {
       setStatus({
         kind: "error",
-        message: genericFailureMessage
+        message: genericFailureMessage,
       });
       return;
     }
@@ -330,7 +327,7 @@ export function ListingManagementPanel({
     if (!payload) {
       setStatus({
         kind: "error",
-        message: genericFailureMessage
+        message: genericFailureMessage,
       });
       return;
     }
@@ -338,25 +335,23 @@ export function ListingManagementPanel({
     await submitListingMutation(
       "/api/admin/products",
       payload,
-      "Listing created. Refreshing dashboard."
+      "Listing metadata saved for protected admin review. Refreshing dashboard.",
     );
   }
 
   async function handleUpdate(
     event: FormEvent<HTMLFormElement>,
-    product: ListingManagementProduct
+    product: ListingManagementProduct,
   ) {
     event.preventDefault();
 
     const formData = new FormData(event.currentTarget);
-    const sortOrder = parseOptionalSortOrder(
-      formValue(formData, "sortOrder")
-    );
+    const sortOrder = parseOptionalSortOrder(formValue(formData, "sortOrder"));
 
     if (!sortOrder.ok) {
       setStatus({
         kind: "error",
-        message: genericFailureMessage
+        message: genericFailureMessage,
       });
       return;
     }
@@ -366,7 +361,7 @@ export function ListingManagementPanel({
     if (!payload) {
       setStatus({
         kind: "error",
-        message: genericFailureMessage
+        message: genericFailureMessage,
       });
       return;
     }
@@ -374,20 +369,23 @@ export function ListingManagementPanel({
     await submitListingMutation(
       `/api/admin/products/${encodeURIComponent(product.id)}`,
       payload,
-      "Listing updated. Refreshing dashboard."
+      "Listing metadata saved for protected admin review. Refreshing dashboard.",
     );
   }
 
   async function handleStatusChange(
     product: ListingManagementProduct,
-    nextStatus: Extract<ListingManagementProduct["status"], "draft" | "published">
+    nextStatus: Extract<
+      ListingManagementProduct["status"],
+      "draft" | "published"
+    >,
   ) {
     await submitListingMutation(
       `/api/admin/products/${encodeURIComponent(product.id)}`,
       {
-        status: nextStatus
+        status: nextStatus,
       },
-      "Listing status updated. Refreshing dashboard."
+      "Listing status saved for protected admin review. Refreshing dashboard.",
     );
   }
 
@@ -395,19 +393,20 @@ export function ListingManagementPanel({
     await submitListingMutation(
       `/api/admin/products/${encodeURIComponent(product.id)}/archive`,
       {},
-      "Listing archived. Refreshing dashboard."
+      "Listing archive state saved for protected admin review. Refreshing dashboard.",
     );
   }
 
   return (
     <section className="category-management" aria-label="Listing management">
       <div className="category-management__header">
-        <p className="eyebrow">Metadata-only listing writes</p>
+        <p className="eyebrow">Protected admin save</p>
         <h2>Listing management</h2>
         <p>
-          Create, update, publish, unpublish, and archive furniture listing
-          metadata through the protected admin API. Public-facing fields should
-          describe rental/event furniture only; internal readiness cues stay here.
+          Create, update, set visibility, and archive furniture listing metadata
+          through the protected admin API. Public-facing fields should describe
+          rental/event furniture only; internal readiness cues stay here. Phase
+          5H guidance: {phase5hReadinessDoc}.
         </p>
       </div>
 
@@ -416,27 +415,45 @@ export function ListingManagementPanel({
         aria-live="polite"
       >
         {status.kind === "idle"
-          ? "Listing write controls are ready."
+          ? "Listing write controls are ready for protected admin save."
           : status.message}
       </div>
 
+      <section className="admin-readiness" aria-label="Public-safe copy review">
+        <h3>Public-safe copy review</h3>
+        <p>
+          Save listing metadata only after reviewing listing title, slug,
+          category, rental unit, short description, long description, visibility
+          status, and sort order.
+        </p>
+        <p className="category-management__hint">
+          Protected admin save does not deploy, does not record owner approval,
+          and does not create evidence. Public-facing copy still needs
+          owner-supplied facts before any public-use decision. See{" "}
+          {phase5hReadinessDoc}.
+        </p>
+      </section>
+
       <section className="admin-readiness" aria-label="Publication readiness">
         <h3>Publication readiness</h3>
-        <div className="admin-readiness__summary" aria-label="Listing status summary">
+        <div
+          className="admin-readiness__summary"
+          aria-label="Listing status summary"
+        >
           <p>Published: {listingStatusCount(products, "published")}</p>
           <p>Draft: {listingStatusCount(products, "draft")}</p>
           <p>Archived: {listingStatusCount(products, "archived")}</p>
         </div>
         <p>
-          {readyListings} ready for public browsing.{" "}
-          {listingsNeedingAttention} needing attention.
+          {readyListings} ready for owner review. {listingsNeedingAttention}{" "}
+          needing public-safe copy review.
         </p>
         <p>
           {publishedListingsNeedingFixes.length}{" "}
           {publishedListingsNeedingFixes.length === 1
             ? "published listing needs"
             : "published listings need"}{" "}
-          publication fixes before public browsing.
+          public-safe copy fixes before owner review.
         </p>
         {publishedListingsNeedingFixes.length > 0 ? (
           <p>
@@ -449,7 +466,9 @@ export function ListingManagementPanel({
         <p className="category-management__hint">
           Readiness is derived from existing listing metadata, category,
           descriptions, rental unit, and image metadata already available in
-          this admin workspace. It is an admin-only cue, not a public availability claim.
+          this admin workspace. It is an admin-only cue, not a public
+          availability claim, owner approval record, deployment action, or
+          evidence record.
         </p>
       </section>
 
@@ -469,7 +488,10 @@ export function ListingManagementPanel({
               </option>
             ))}
           </select>
-          <small>Choose the public category grouping used for browsing and quote/enquiry recovery.</small>
+          <small>
+            Choose the public category grouping used for browsing and
+            quote/enquiry recovery.
+          </small>
         </label>
         <label htmlFor="new-listing-slug">
           New listing slug
@@ -480,12 +502,18 @@ export function ListingManagementPanel({
             required
             type="text"
           />
-          <small>Use lowercase letters, numbers, and hyphens; this can become part of the public listing URL.</small>
+          <small>
+            Use lowercase letters, numbers, and hyphens; this can become part of
+            the public listing URL.
+          </small>
         </label>
         <label htmlFor="new-listing-name">
           New listing name
           <input id="new-listing-name" maxLength={160} name="name" required />
-          <small>Use owner-approved rental/event furniture wording only; do not add unsupported availability assertions.</small>
+          <small>
+            Use owner-supplied rental/event furniture wording only; do not add
+            unsupported availability assertions.
+          </small>
         </label>
         <label htmlFor="new-listing-short-description">
           New listing short description
@@ -495,7 +523,10 @@ export function ListingManagementPanel({
             name="shortDescription"
             rows={2}
           />
-          <small>Short public browsing summary for quote planning; keep unsupported claims out.</small>
+          <small>
+            Short public browsing summary for quote planning; keep unsupported
+            claims out.
+          </small>
         </label>
         <label htmlFor="new-listing-description">
           New listing description
@@ -505,7 +536,10 @@ export function ListingManagementPanel({
             name="description"
             rows={4}
           />
-          <small>Full public description should help enquiry planning without self-service or completion-flow language.</small>
+          <small>
+            Full public description should help enquiry planning without
+            self-service or completion-flow language.
+          </small>
         </label>
         <label htmlFor="new-listing-rental-unit">
           New listing rental unit
@@ -516,7 +550,10 @@ export function ListingManagementPanel({
             name="rentalUnit"
             required
           />
-          <small>Examples include item, set, or piece; this supports quote/request wording and is not stock availability.</small>
+          <small>
+            Examples include item, set, or piece; this supports quote/request
+            wording and is not stock availability.
+          </small>
         </label>
         <label htmlFor="new-listing-status">
           New listing status
@@ -525,7 +562,11 @@ export function ListingManagementPanel({
             <option value="published">Published</option>
             <option value="archived">Archived</option>
           </select>
-          <small>Draft stays protected for recovery, published can appear publicly when readiness checks pass, and archived is hidden from active browsing without deleting the record.</small>
+          <small>
+            Draft stays protected for recovery, published can appear publicly
+            when readiness checks pass, and archived is hidden from active
+            browsing without deleting the record.
+          </small>
         </label>
         <label htmlFor="new-listing-sort-order">
           New listing sort order
@@ -536,7 +577,10 @@ export function ListingManagementPanel({
             name="sortOrder"
             type="number"
           />
-          <small>Lower numbers appear earlier in admin/public grouping where sorting is used.</small>
+          <small>
+            Lower numbers appear earlier in admin/public grouping where sorting
+            is used.
+          </small>
         </label>
         <button className="button" type="submit">
           Create listing
@@ -555,7 +599,8 @@ export function ListingManagementPanel({
           products.map((product) => (
             <article className="category-management__item" key={product.id}>
               {(() => {
-                const readiness = listingReadinessById.get(product.id) ??
+                const readiness =
+                  listingReadinessById.get(product.id) ??
                   listingReadiness(product);
 
                 return (
@@ -563,8 +608,8 @@ export function ListingManagementPanel({
                     <div>
                       <h3>{product.name}</h3>
                       <p>
-                        {product.slug} - {product.status} -{" "}
-                        {product.imageCount} image metadata records
+                        {product.slug} - {product.status} - {product.imageCount}{" "}
+                        image metadata records
                       </p>
                     </div>
                     <section
@@ -601,14 +646,19 @@ export function ListingManagementPanel({
                     id={`listing-category-${product.id}`}
                     name="categoryId"
                   >
-                    <option value="">No category - keep as draft until grouped</option>
+                    <option value="">
+                      No category - keep as draft until grouped
+                    </option>
                     {categories.map((category) => (
                       <option key={category.id} value={category.id}>
                         {category.name}
                       </option>
                     ))}
                   </select>
-                  <small>Public category grouping supports browsing and quote/enquiry recovery.</small>
+                  <small>
+                    Public category grouping supports browsing and quote/enquiry
+                    recovery.
+                  </small>
                 </label>
                 <label htmlFor={`listing-slug-${product.id}`}>
                   Listing slug for {product.name}
@@ -620,7 +670,10 @@ export function ListingManagementPanel({
                     required
                     type="text"
                   />
-                  <small>Slug may be used by public listing routes; keep it stable and factual.</small>
+                  <small>
+                    Slug may be used by public listing routes; keep it stable
+                    and factual.
+                  </small>
                 </label>
                 <label htmlFor={`listing-name-${product.id}`}>
                   Listing name for {product.name}
@@ -631,7 +684,10 @@ export function ListingManagementPanel({
                     name="name"
                     required
                   />
-                  <small>Public name should describe the rental/event furniture without unsupported assertions.</small>
+                  <small>
+                    Public name should describe the rental/event furniture
+                    without unsupported assertions.
+                  </small>
                 </label>
                 <label htmlFor={`listing-short-description-${product.id}`}>
                   Listing short description for {product.name}
@@ -642,7 +698,10 @@ export function ListingManagementPanel({
                     name="shortDescription"
                     rows={2}
                   />
-                  <small>Short description appears in browsing contexts and should support quote/request planning.</small>
+                  <small>
+                    Short description appears in browsing contexts and should
+                    support quote/request planning.
+                  </small>
                 </label>
                 <label htmlFor={`listing-description-${product.id}`}>
                   Listing description for {product.name}
@@ -653,7 +712,10 @@ export function ListingManagementPanel({
                     name="description"
                     rows={4}
                   />
-                  <small>Full description remains a public field; avoid self-service or completion-flow wording.</small>
+                  <small>
+                    Full description remains a public field; avoid self-service
+                    or completion-flow wording.
+                  </small>
                 </label>
                 <label htmlFor={`listing-rental-unit-${product.id}`}>
                   Rental unit label for {product.name}
@@ -664,7 +726,10 @@ export function ListingManagementPanel({
                     name="rentalUnit"
                     required
                   />
-                  <small>Rental unit helps quote/enquiry wording and does not confirm availability.</small>
+                  <small>
+                    Rental unit helps quote/enquiry wording and does not confirm
+                    availability.
+                  </small>
                 </label>
                 <label htmlFor={`listing-status-${product.id}`}>
                   Listing status for {product.name}
@@ -677,7 +742,12 @@ export function ListingManagementPanel({
                     <option value="published">Published</option>
                     <option value="archived">Archived</option>
                   </select>
-                  <small>Draft is protected, published can be public when ready, and archived is hidden from active browsing. Draft/unpublish keeps the listing protected until readiness checks pass and archive does not delete it.</small>
+                  <small>
+                    Draft is protected, published is a public visibility state
+                    only after public-safe copy review, and archived is hidden
+                    from active browsing. Draft keeps the listing protected
+                    until readiness checks pass and archive does not delete it.
+                  </small>
                 </label>
                 <label htmlFor={`listing-sort-order-${product.id}`}>
                   Listing sort order for {product.name}
@@ -689,28 +759,36 @@ export function ListingManagementPanel({
                     name="sortOrder"
                     type="number"
                   />
-                  <small>Sort order controls display ordering where listing groups use it.</small>
+                  <small>
+                    Sort order controls display ordering where listing groups
+                    use it.
+                  </small>
                 </label>
                 <p className="category-management__hint">
-                  Protected write boundary: save changes only after checking public-facing fields, category, rental unit, and media readiness. If save fails, keep draft/protected, review the missing field, and retry the protected write locally. Archive hides this listing from public browsing and active admin work; it does not delete it.
+                  Protected write boundary: save listing metadata only after
+                  checking public-facing fields, category, rental unit,
+                  validation errors, and media readiness. This protected admin
+                  save does not deploy, does not record owner approval, and does
+                  not create evidence. Archive hides this listing from public
+                  browsing and active admin work; it does not delete it.
                 </p>
                 <div className="category-management__actions">
                   <button className="button" type="submit">
-                    Save listing {product.name}
+                    Save listing metadata
                   </button>
                   <button
                     className="button button--secondary"
                     onClick={() =>
                       void handleStatusChange(
                         product,
-                        product.status === "published" ? "draft" : "published"
+                        product.status === "published" ? "draft" : "published",
                       )
                     }
                     type="button"
                   >
                     {product.status === "published"
-                      ? `Unpublish listing ${product.name}`
-                      : `Publish listing ${product.name}`}
+                      ? `Set ${product.name} to draft visibility`
+                      : `Set ${product.name} to public visibility`}
                   </button>
                   <button
                     className="button button--secondary"

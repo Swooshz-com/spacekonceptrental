@@ -363,7 +363,7 @@ describe("Phase 3F-A/B catalogue content quality, media readiness, and publicati
     expect(screen.getByText(/draft: 1/i)).toBeInTheDocument();
     expect(screen.getByText(/archived: 1/i)).toBeInTheDocument();
     expect(
-      screen.getByText(/1 published listing needs publication fixes before public browsing/i)
+      screen.getByText(/1 published listing needs public-safe copy fixes before owner review/i)
     ).toBeInTheDocument();
     expect(screen.getByText(/published listings needing fixes: bare plinth/i)).toBeInTheDocument();
     expect(
@@ -375,7 +375,7 @@ describe("Phase 3F-A/B catalogue content quality, media readiness, and publicati
     cleanup();
     render(<CategoryManagementPanel categories={[adminCategory, emptyPublishedCategory]} />);
 
-    expect(screen.getByText(/category publication readiness/i)).toBeInTheDocument();
+    expect(screen.getByText(/category visibility readiness/i)).toBeInTheDocument();
     expect(
       screen.getByText(/published categories without published listings: lighting/i)
     ).toBeInTheDocument();

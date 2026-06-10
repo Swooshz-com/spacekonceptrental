@@ -270,8 +270,8 @@ describe("Phase 3X-A/B protected admin write-ops hardening", () => {
     expect(text).toMatch(/listing short description/i);
     expect(text).toMatch(/listing description/i);
     expect(text).toMatch(/listing status/i);
-    expect(text).toMatch(/draft is protected, published can be public/i);
-    expect(text).toMatch(/Protected write boundary: save changes only after checking public-facing fields/i);
+    expect(text).toMatch(/draft is protected, published is a public visibility state/i);
+    expect(text).toMatch(/Protected write boundary: save listing metadata only after checking public-facing fields/i);
   });
 
   it("shows category write UI labels, helper text, readiness, and protected boundary cues", () => {
@@ -283,7 +283,7 @@ describe("Phase 3X-A/B protected admin write-ops hardening", () => {
     expect(text).toMatch(/category sort order/i);
     expect(text).toMatch(/public grouping/i);
     expect(text).toMatch(/quote\/enquiry recovery/i);
-    expect(text).toMatch(/Protected write boundary: publish only when grouping and listing-count cues are clear/i);
+    expect(text).toMatch(/Protected write boundary: save category metadata only when grouping and listing-count cues are clear/i);
   });
 
   it("shows media write UI labels, public-safe alt text, readiness, and protected boundary cues", () => {

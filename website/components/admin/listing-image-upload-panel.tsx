@@ -41,7 +41,9 @@ type PanelStatus =
 
 const productImageWriteOperation = "productImage.write";
 const genericFailureMessage =
-  "Listing image upload could not be saved. Check the listing, file type, public-safe alt text, and try again.";
+  "Protected admin upload could not be completed. Check selected listing, file type, public-safe alt text, primary label, and sort order before retrying.";
+const phase5hReadinessDoc =
+  "docs/content/LOCAL-CATALOGUE-WRITE-WORKFLOW-READINESS.md";
 
 function formValue(formData: FormData, name: string) {
   const value = formData.get(name);
@@ -65,12 +67,12 @@ async function requestProductImageWriteProof(fetcher: typeof fetch) {
   const response = await fetcher("/api/admin/csrf-proof", {
     method: "POST",
     headers: {
-      "Content-Type": "application/json"
+      "Content-Type": "application/json",
     },
     body: JSON.stringify({
       requestedOperation: productImageWriteOperation,
-      operation: productImageWriteOperation
-    })
+      operation: productImageWriteOperation,
+    }),
   });
 
   if (!response.ok) {
@@ -100,7 +102,7 @@ function reloadDashboard() {
 function parseOptionalSortOrder(value: string) {
   if (!value) {
     return {
-      ok: true as const
+      ok: true as const,
     };
   }
 
@@ -108,13 +110,13 @@ function parseOptionalSortOrder(value: string) {
 
   if (!Number.isInteger(parsed) || parsed < 0 || parsed > 1_000_000) {
     return {
-      ok: false as const
+      ok: false as const,
     };
   }
 
   return {
     ok: true as const,
-    sortOrder: String(parsed)
+    sortOrder: String(parsed),
   };
 }
 
@@ -127,10 +129,10 @@ function appendIfPresent(body: FormData, key: string, value: string) {
 export function ListingImageUploadPanel({
   products,
   fetcher = fetch,
-  onMutationComplete = reloadDashboard
+  onMutationComplete = reloadDashboard,
 }: ListingImageUploadPanelProps) {
   const [status, setStatus] = useState<PanelStatus>({
-    kind: "idle"
+    kind: "idle",
   });
 
   async function handleUpload(event: FormEvent<HTMLFormElement>) {
@@ -146,14 +148,14 @@ export function ListingImageUploadPanel({
     if (!productId || !(imageFile instanceof File) || !sortOrder.ok) {
       setStatus({
         kind: "error",
-        message: genericFailureMessage
+        message: genericFailureMessage,
       });
       return;
     }
 
     setStatus({
       kind: "pending",
-      message: "Uploading protected listing image..."
+      message: "Protected admin upload is checking listing media...",
     });
 
     try {
@@ -162,7 +164,7 @@ export function ListingImageUploadPanel({
       if (!csrfProof) {
         setStatus({
           kind: "error",
-          message: genericFailureMessage
+          message: genericFailureMessage,
         });
         return;
       }
@@ -186,23 +188,24 @@ export function ListingImageUploadPanel({
       const response = await fetcher("/api/admin/product-images", {
         method: "POST",
         headers: {
-          "x-csrf-proof": csrfProof
+          "x-csrf-proof": csrfProof,
         },
-        body: uploadBody
+        body: uploadBody,
       });
       const responseBody = await readSafeJson(response);
 
       if (!response.ok || !isRecord(responseBody) || responseBody.ok !== true) {
         setStatus({
           kind: "error",
-          message: genericFailureMessage
+          message: genericFailureMessage,
         });
         return;
       }
 
       setStatus({
         kind: "success",
-        message: "Listing image uploaded. Refreshing dashboard."
+        message:
+          "Listing image saved for protected admin review. Refreshing dashboard.",
       });
 
       try {
@@ -213,7 +216,7 @@ export function ListingImageUploadPanel({
     } catch {
       setStatus({
         kind: "error",
-        message: genericFailureMessage
+        message: genericFailureMessage,
       });
     }
   }
@@ -221,15 +224,22 @@ export function ListingImageUploadPanel({
   return (
     <section className="category-management" aria-label="Listing image upload">
       <div className="category-management__header">
-        <p className="eyebrow">Listing media</p>
-        <h2>Upload listing image</h2>
+        <p className="eyebrow">Protected admin upload</p>
+        <h2>Upload listing image for review</h2>
         <p>
-          Upload approved image files for furniture and event-rental listings.
-          The protected server stores the file and creates listing image metadata; public users cannot upload files here.
+          Upload reviewed image files for furniture and event-rental listings.
+          The protected server stores the file and creates listing image
+          metadata; public users cannot upload files here. Media metadata is
+          review context only. Phase 5H guidance: {phase5hReadinessDoc}.
         </p>
         <p className="category-management__hint">
-          Use approved listing images only. Primary uploaded images can lead
-          the public catalogue display after the image metadata is active; this is not an availability assertion. If upload fails, keep the listing draft/protected, check file type and public-safe alt text, and retry the protected write locally.
+          Use reviewed listing images only. Primary uploaded images can support
+          public catalogue display after the image metadata is active; this is
+          not an availability, visual outcome, or inventory assertion. Protected
+          admin upload does not deploy, does not record owner approval, and does
+          not create evidence. If upload fails, keep the listing
+          draft/protected, check file type and public-safe alt text, and retry
+          the protected write locally.
         </p>
       </div>
 
@@ -237,7 +247,9 @@ export function ListingImageUploadPanel({
         className={`category-management__status category-management__status--${status.kind}`}
         aria-live="polite"
       >
-        {status.kind === "idle" ? "Listing image upload is ready." : status.message}
+        {status.kind === "idle"
+          ? "Listing image upload is ready for protected admin save."
+          : status.message}
       </div>
 
       <form
@@ -256,7 +268,8 @@ export function ListingImageUploadPanel({
             ))}
           </select>
           <small>
-            Create a protected draft listing before uploading media for that listing.
+            Create a protected draft listing before uploading media for that
+            listing; selected listing context stays admin-only.
           </small>
         </label>
         <label htmlFor="upload-image-file">
@@ -273,8 +286,9 @@ export function ListingImageUploadPanel({
           Upload image alt text
           <input id="upload-image-alt-text" maxLength={240} name="altText" />
           <small>
-            Describe the rental furniture setup shown in the image with public-safe wording for public
-            catalogue accessibility; do not add availability, proof, policy, or owner sign-off claims.
+            Describe the rental furniture setup shown in the image with
+            public-safe wording for public catalogue accessibility; do not add
+            availability, proof, policy, or owner sign-off claims.
           </small>
         </label>
         <label htmlFor="upload-image-sort-order">
@@ -292,10 +306,11 @@ export function ListingImageUploadPanel({
           htmlFor="upload-image-primary"
         >
           <input id="upload-image-primary" name="isPrimary" type="checkbox" />
-          Mark uploaded image as primary public browsing image after alt-text review
+          Mark uploaded image as primary public browsing image after alt-text
+          review
         </label>
         <button className="button" type="submit">
-          Upload listing image
+          Upload listing image for review
         </button>
       </form>
     </section>

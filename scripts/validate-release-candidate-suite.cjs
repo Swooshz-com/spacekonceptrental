@@ -60,6 +60,11 @@ const commandPlan = [
     args: ['run', 'validate:catalogue-content-ops-readiness'],
   },
   {
+    label: 'Validate catalogue write workflow readiness',
+    cwd: repoRoot,
+    args: ['run', 'validate:catalogue-write-workflow-readiness'],
+  },
+  {
     label: 'Validate local freeze',
     cwd: repoRoot,
     args: ['run', 'validate:local-freeze'],

@@ -94,7 +94,7 @@ describe("listing image metadata management panel", () => {
       screen.getByRole("button", { name: /create listing image metadata/i })
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: /save image metadata lounge set/i })
+      screen.getByRole("button", { name: /save image metadata/i })
     ).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: /archive image metadata lounge set/i })
@@ -207,7 +207,7 @@ describe("listing image metadata management panel", () => {
       }
     });
     fireEvent.click(
-      screen.getByRole("button", { name: /save image metadata lounge set/i })
+      screen.getByRole("button", { name: /save image metadata/i })
     );
 
     await waitFor(() => expect(fetcher).toHaveBeenCalledTimes(2));
@@ -301,11 +301,11 @@ describe("listing image metadata management panel", () => {
     );
 
     fireEvent.click(
-      screen.getByRole("button", { name: /save image metadata lounge set/i })
+      screen.getByRole("button", { name: /save image metadata/i })
     );
 
     expect(
-      await screen.findByText(/image metadata change could not be saved/i)
+      await screen.findByText(/protected admin save could not be completed/i)
     ).toBeInTheDocument();
     expect(
       screen.queryByText(/sql|supabase|stack|env|token|cookie|workspace|provider/i)
