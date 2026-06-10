@@ -3,7 +3,10 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import sofaImage from "../../../assets/images/product_sofa.png";
-import { getPublicProductBySlug } from "../../../lib/catalogue/catalogue-repository";
+import {
+  getPublicCatalogue,
+  getPublicProductBySlug
+} from "../../../lib/catalogue/catalogue-repository";
 import { getQuoteHrefForListing } from "../../../lib/catalogue/quote-handoff";
 import type {
   PublicCatalogueImage,
@@ -61,6 +64,24 @@ function imageAltText(
   );
 }
 
+export function getRelatedListings(
+  product: PublicCatalogueProduct,
+  products: PublicCatalogueProduct[]
+) {
+  return products
+    .filter((relatedProduct) => relatedProduct.slug !== product.slug)
+    .filter((relatedProduct) => {
+      if (product.categoryId && relatedProduct.categoryId) {
+        return relatedProduct.categoryId === product.categoryId;
+      }
+
+      return Boolean(
+        product.categoryName && relatedProduct.categoryName === product.categoryName
+      );
+    })
+    .slice(0, 3);
+}
+
 export async function generateMetadata({
   params
 }: ProductPageProps = {}): Promise<Metadata> {
@@ -93,11 +114,13 @@ async function getSlug(params: ProductPageProps["params"]) {
 export function ProductPageContent({
   backHref = "/catalogue",
   backLabel = "Back to catalogue",
-  product
+  product,
+  relatedListings = []
 }: {
   backHref?: string;
   backLabel?: string;
   product: PublicCatalogueProduct;
+  relatedListings?: PublicCatalogueProduct[];
 }) {
   const publicImages = (product.images ?? []).filter((image) => image.publicUrl);
   const galleryImages = publicImages.filter(
@@ -107,7 +130,7 @@ export function ProductPageContent({
   return (
     <section className="section">
       <div className="page-title">
-        <p className="eyebrow">Furniture listing</p>
+        <p className="eyebrow">View rental listing</p>
         <h1>{product.name}</h1>
         <p>{publicListingSummary(product)}</p>
       </div>
@@ -123,24 +146,33 @@ export function ProductPageContent({
             ) : (
               <Image
                 alt={imageAltText(product.primaryImage, product)}
+                height={400}
                 priority
                 src={sofaImage}
+                width={600}
               />
             )}
           <figcaption>
               {product.primaryImage?.publicUrl
-                ? "Listing media is shown with public-safe alt text for rental browsing."
-                : "Representative rental image shown while listing media is reviewed."}
+                ? "Listing media is shown with public-safe alt text for rental browsing; styling and fit stay review context only."
+                : "Representative, review-safe rental image shown while public listing media is still missing."}
             </figcaption>
           </figure>
           {publicImages.length > 1 ? (
-            <div className="detail-gallery" aria-label="Additional public listing images with alt text">
+            <div
+              className="detail-gallery"
+              aria-label="Additional public listing images with public-safe alt text"
+            >
               {galleryImages.map((image) => (
-                <img
-                  alt={imageAltText(image, product)}
-                  key={image.id}
-                  src={image.publicUrl}
-                />
+                <figure key={image.id}>
+                  <img
+                    alt={imageAltText(image, product)}
+                    src={image.publicUrl}
+                  />
+                  <figcaption>
+                    Additional media supports browsing context only.
+                  </figcaption>
+                </figure>
               ))}
             </div>
           ) : null}
@@ -165,18 +197,18 @@ export function ProductPageContent({
             <div>
               <dt>Event-use context</dt>
               <dd>
-                Use this listing as a starting point for event furniture rental
-                planning; final fit and styling notes are reviewed
-                directly by the team.
+                Listing context is a starting point only for event furniture
+                rental planning. The team can review the request against the
+                event notes you share.
               </dd>
             </div>
             <div>
               <dt>Quote planning</dt>
               <dd>
                 Share timing, venue, preferred quantities, and delivery
-                notes so the team can review the right rental fit. Include
-                alternatives and setup notes if helpful; this page does not
-                set aside furniture or finalise rental details.
+                notes so the team can review the request. Include alternatives
+                and setup notes if helpful; this page does not set aside
+                furniture or finish rental details.
               </dd>
             </div>
           </dl>
@@ -196,7 +228,7 @@ export function ProductPageContent({
             <ul className="journey-list">
               <li>Check the listing details and rental unit.</li>
               <li>Compare the category and rental unit for your setup.</li>
-              <li>Use image alt text and fallback media as browsing context, not as a final media claim.</li>
+              <li>Use image alt text and fallback media as accessible browsing context, not as a completed media claim.</li>
               <li>
                 Bring event date, venue, quantities, alternatives, setup,
                 access, and timing notes before sending the listing for
@@ -209,18 +241,49 @@ export function ProductPageContent({
             <Link className="button button--secondary" href={backHref}>
               {backLabel}
             </Link>
+            <Link className="button button--secondary" href="/listings">
+              Browse listings
+            </Link>
             <Link className="button button--secondary" href="/categories">
               Browse categories
             </Link>
             <Link className="button button--secondary" href="/events">
-              Browse event guidance
+              Explore event-use ideas
             </Link>
             <Link className="button" href={getQuoteHrefForListing(product.slug)}>
               Request a quote
             </Link>
+            <Link className="button button--secondary" href={getQuoteHrefForListing(product.slug)}>
+              Send an enquiry
+            </Link>
           </div>
         </article>
       </div>
+
+      <section className="route-card" aria-label="Related rental browsing">
+        <p className="eyebrow">Continue browsing</p>
+        <h2>Related rental listing context</h2>
+        <p>
+          Same-category links are local browsing cues only. They do not imply
+          availability, recommendation logic, or rental fit.
+        </p>
+        {relatedListings.length > 0 ? (
+          <ul className="journey-list">
+            {relatedListings.map((relatedListing) => (
+              <li key={relatedListing.slug}>
+                <Link href={`/listings/${relatedListing.slug}`}>
+                  View rental listing: {relatedListing.name}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p>
+            Browse all listings, browse categories, explore event-use ideas, or
+            start a rental enquiry if you need help shaping the request.
+          </p>
+        )}
+      </section>
     </section>
   );
 }
@@ -233,5 +296,12 @@ export default async function ProductPage({ params }: ProductPageProps = {}) {
     notFound();
   }
 
-  return <ProductPageContent product={product} />;
+  const catalogue = await getPublicCatalogue();
+
+  return (
+    <ProductPageContent
+      product={product}
+      relatedListings={getRelatedListings(product, catalogue.products)}
+    />
+  );
 }

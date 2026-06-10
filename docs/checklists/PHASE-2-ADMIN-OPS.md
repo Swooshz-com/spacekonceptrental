@@ -1,3 +1,19 @@
+## Phase 5D-A/B Listing Detail Readiness References
+
+Current phase: Phase 5D-A/B public listing-detail readiness, media/context polish, and quote-intent review closure.
+
+Latest completed capability: Phase 5C-A/B public discovery search/filter polish, quote-intent context, and admin discovery parity closure.
+
+Last merged capability PR: #157.
+
+Last merged capability merge commit: 1f471213c71aa1d3ff979a267ffd1c8b2a39fe6f.
+
+Phase 5D-A/B adds repo-local public listing detail readiness polish, media/fallback copy hardening, related browsing continuity, quote-intent handoff closure, a protected admin listing-detail parity helper, local listing detail readiness documentation, validate:listing-detail-readiness validator coverage, and deterministic Phase 5D listing detail tests. These controls are template-only, non-live, not evidence, and do not record owner approval, owner feedback, owner decisions, owner corrections, owner sign-off, preview evidence, production evidence, provider approval, or deployment approval.
+
+Phase 5D-A/B references `docs/content/LOCAL-LISTING-DETAIL-READINESS.md`, `docs/content/LOCAL-DISCOVERY-SEARCH-FILTER-ACCEPTANCE.md`, `docs/content/LOCAL-PUBLIC-JOURNEY-ACCEPTANCE.md`, `docs/OWNER-HANDOFF-BUNDLE.md`, `scripts/validate-listing-detail-readiness.cjs`, `scripts/validate-public-discovery-acceptance.cjs`, `scripts/validate-public-journey-acceptance.cjs`, `scripts/validate-public-review-polish.cjs`, and protected admin listing-detail parity helpers.
+
+No deployment is performed or approved by Phase 5D-A/B. It does not add provider config, Vercel config, Supabase Cloud config, real secrets or env values, filled evidence, browser Supabase, service-role runtime paths, n8n/Pinecone runtime changes, `/api/chat` retrieval wiring, public uploads, customer accounts, public quote tracking, notifications, CRM, invented operational facts, ecommerce flows, payment/order/checkout flows, booking/reservation flows, fulfilment flows, stock-reservation flows, or public admin internals.
+
 ## Phase 5C-A/B Public Discovery Acceptance References
 
 Current phase: Phase 5C-A/B public discovery search/filter polish, quote-intent context, and admin discovery parity closure.

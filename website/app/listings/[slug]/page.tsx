@@ -2,9 +2,13 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import {
+  getRelatedListings,
   ProductPageContent
 } from "../../catalogue/[slug]/page";
-import { getPublicProductBySlug } from "../../../lib/catalogue/catalogue-repository";
+import {
+  getPublicCatalogue,
+  getPublicProductBySlug
+} from "../../../lib/catalogue/catalogue-repository";
 
 type ListingPageProps = {
   params?: Promise<{ slug?: string }> | { slug?: string };
@@ -56,11 +60,14 @@ export default async function ListingPage({
     notFound();
   }
 
+  const catalogue = await getPublicCatalogue();
+
   return (
     <ProductPageContent
       backHref="/listings"
       backLabel="Back to listings"
       product={product}
+      relatedListings={getRelatedListings(product, catalogue.products)}
     />
   );
 }

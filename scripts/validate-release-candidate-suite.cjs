@@ -40,6 +40,11 @@ const commandPlan = [
     args: ['run', 'validate:public-discovery-acceptance'],
   },
   {
+    label: 'Validate listing detail readiness',
+    cwd: repoRoot,
+    args: ['run', 'validate:listing-detail-readiness'],
+  },
+  {
     label: 'Validate local freeze',
     cwd: repoRoot,
     args: ['run', 'validate:local-freeze'],

@@ -39,7 +39,7 @@ describe("public page shells", () => {
       screen.getByRole("heading", { name: /lounge sofa package/i })
     ).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: /rental details/i })).toBeInTheDocument();
-    expect(screen.getByText(/furniture listing/i)).toBeInTheDocument();
+    expect(screen.getByText(/view rental listing/i)).toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: /back to catalogue/i })
     ).toHaveAttribute("href", "/catalogue");

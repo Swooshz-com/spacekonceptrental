@@ -174,10 +174,10 @@ export default function QuoteRequestForm({
         <aside className="quote-form__selected" aria-label="Selected listing">
           <strong>Selected listing</strong>
           <span>
-            {initialItemsText} starts this rental request. Selected listing is
+            {initialItemsText} starts this rental request. Listing context is
             a starting point only, not a rental fit confirmation.
             Add quantities, alternates, dimensions, setup, access, or timing
-            notes before sending.
+            notes before sending; the team can review the request.
           </span>
         </aside>
       ) : null}
@@ -295,7 +295,7 @@ export default function QuoteRequestForm({
         <p className="quote-form__status" role="status">
           Enquiry received. This is a receipt only; the team can review
           your request and follow up directly. It does not set aside furniture
-          or finalise rental details.
+          or finish rental details.
           {submitState.publicReference
             ? `. Reference: ${submitState.publicReference}`
             : "."}
