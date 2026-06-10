@@ -6,7 +6,7 @@ import chairImage from "../../assets/images/product_chair.png";
 import sofaImage from "../../assets/images/product_sofa.png";
 import corporateImage from "../../assets/images/event_corporate.png";
 import { getPublicCatalogue } from "../../lib/catalogue/catalogue-repository";
-import { getQuoteHrefForListing } from "../../lib/catalogue/quote-handoff";
+import { getQuoteHrefForDiscoveryContext, getQuoteHrefForListing } from "../../lib/catalogue/quote-handoff";
 import type { PublicCatalogueProduct, PublicCatalogue } from "../../lib/catalogue/types";
 
 export const dynamic = "force-dynamic";
@@ -16,6 +16,54 @@ export const metadata: Metadata = {
   description:
     "Browse public event furniture rental listings and request an enquiry with Space Koncept Rentals."
 };
+
+export const eventUseFilters = [
+  {
+    slug: "reception-lounge",
+    label: "Reception setup",
+    summary:
+      "Soft seating, side tables, and conversation areas for arrival or networking plans.",
+    terms: ["reception", "lounge", "soft", "side", "networking", "vip"]
+  },
+  {
+    slug: "conference-seating",
+    label: "Conference idea",
+    summary:
+      "Seating, cocktail tables, and registration-area pieces for talks or team sessions.",
+    terms: ["conference", "seminar", "chair", "seating", "cocktail", "registration"]
+  },
+  {
+    slug: "brand-activation",
+    label: "Activation idea",
+    summary:
+      "Styled lounge clusters and display-friendly furniture for demos, pop-ups, or photos.",
+    terms: ["brand", "activation", "display", "demo", "pop", "photo", "showcase"]
+  }
+] as const;
+
+export type CatalogueDiscoveryState = {
+  categorySlug?: string;
+  categoryName?: string;
+  eventSlug?: string;
+  eventLabel?: string;
+  search?: string;
+};
+
+function eventUseDisplayLabel(eventUse: (typeof eventUseFilters)[number]) {
+  if (eventUse.slug === "reception-lounge") {
+    return "Reception lounge";
+  }
+
+  if (eventUse.slug === "conference-seating") {
+    return "Conference seating";
+  }
+
+  if (eventUse.slug === "brand-activation") {
+    return "Brand activation setup";
+  }
+
+  return "Event-use idea";
+}
 
 function getProductImage(product: PublicCatalogueProduct) {
   const slug = product.slug.toLowerCase();
@@ -78,12 +126,7 @@ function CatalogueCardImage({
   const altText = publicImageAltText(image, product);
 
   if (image?.publicUrl) {
-    return (
-      <img
-        alt={altText}
-        src={image.publicUrl}
-      />
-    );
+    return <img alt={altText} src={image.publicUrl} />;
   }
 
   return (
@@ -140,12 +183,39 @@ function listingCountText(count: number) {
   return `${count} ${count === 1 ? "listing" : "listings"}`;
 }
 
+function buildListingHref(
+  listingBasePath: string,
+  context: Pick<CatalogueDiscoveryState, "categorySlug" | "eventSlug" | "search">
+) {
+  const params = new URLSearchParams();
+
+  if (context.categorySlug) {
+    params.set("category", context.categorySlug);
+  }
+
+  if (context.eventSlug) {
+    params.set("event", context.eventSlug);
+  }
+
+  if (context.search) {
+    params.set("search", context.search);
+  }
+
+  const query = params.toString();
+
+  return query ? `${listingBasePath}?${query}` : listingBasePath;
+}
+
 function CatalogueDiscovery({
   activeCategorySlug,
+  activeEventSlug,
+  activeSearch,
   catalogue,
   listingBasePath = "/listings"
 }: {
   activeCategorySlug?: string;
+  activeEventSlug?: string;
+  activeSearch?: string;
   catalogue: PublicCatalogue;
   listingBasePath?: string;
 }) {
@@ -161,15 +231,38 @@ function CatalogueDiscovery({
         <p className="eyebrow">Discovery</p>
         <h2>Explore by category</h2>
         <p>
-          Start with the rental grouping closest to your event setup, then send
-          an enquiry for the listings that fit.
+          Filter rental listings by search, category, or event-use ideas. These
+          local filters only shape browsing context before you send an enquiry.
         </p>
       </div>
-      <div className="catalogue-discovery__chips">
+      <form action={listingBasePath} className="catalogue-discovery__search" method="get">
+        {activeCategorySlug ? (
+          <input name="category" type="hidden" value={activeCategorySlug} />
+        ) : null}
+        {activeEventSlug ? (
+          <input name="event" type="hidden" value={activeEventSlug} />
+        ) : null}
+        <label>
+          Search listings
+          <input
+            defaultValue={activeSearch}
+            name="search"
+            placeholder="Search listing, category, or event-use text"
+            type="search"
+          />
+        </label>
+        <button className="button button--secondary" type="submit">
+          Search listings
+        </button>
+      </form>
+      <div className="catalogue-discovery__chips" aria-label="Browse categories">
         <Link
           aria-current={!activeCategorySlug ? "page" : undefined}
           className="catalogue-chip"
-          href={listingBasePath}
+          href={buildListingHref(listingBasePath, {
+            eventSlug: activeEventSlug,
+            search: activeSearch
+          })}
         >
           All rental listings
         </Link>
@@ -182,7 +275,11 @@ function CatalogueDiscovery({
                 activeCategorySlug === category.slug ? "page" : undefined
               }
               className="catalogue-chip"
-              href={`${listingBasePath}?category=${encodeURIComponent(category.slug)}`}
+              href={buildListingHref(listingBasePath, {
+                categorySlug: category.slug,
+                eventSlug: activeEventSlug,
+                search: activeSearch
+              })}
               key={category.id}
             >
               {category.name} {listingCountText(count)}
@@ -190,7 +287,69 @@ function CatalogueDiscovery({
           );
         })}
       </div>
+      <div className="catalogue-discovery__chips" aria-label="Explore event-use ideas">
+        {eventUseFilters.map((eventUse) => (
+          <Link
+            aria-current={activeEventSlug === eventUse.slug ? "page" : undefined}
+            className="catalogue-chip"
+            href={buildListingHref(listingBasePath, {
+              categorySlug: activeCategorySlug,
+              eventSlug: eventUse.slug,
+              search: activeSearch
+            })}
+            key={eventUse.slug}
+          >
+            {eventUse.label}
+          </Link>
+        ))}
+      </div>
     </nav>
+  );
+}
+
+function DiscoveryActiveSummary({
+  discovery,
+  listingBasePath
+}: {
+  discovery?: CatalogueDiscoveryState;
+  listingBasePath: string;
+}) {
+  const activeFilters = [
+    discovery?.categoryName ? `Category: ${discovery.categoryName}` : undefined,
+    discovery?.eventLabel ? `Event-use idea: ${discovery.eventLabel}` : undefined,
+    discovery?.search ? `Search: ${discovery.search}` : undefined
+  ].filter(Boolean);
+
+  if (activeFilters.length === 0) {
+    return null;
+  }
+
+  return (
+    <aside className="catalogue-discovery" aria-label="Active listing filters">
+      <div>
+        <p className="eyebrow">Active filters</p>
+        <h2>Rental listing view</h2>
+        <p>
+          {activeFilters.join("; ")}. This context is editable and only helps
+          shape an enquiry for team review.
+        </p>
+      </div>
+      <div className="hero__actions">
+        <Link className="button button--secondary" href={listingBasePath}>
+          Clear filters
+        </Link>
+        <Link
+          className="button"
+          href={getQuoteHrefForDiscoveryContext({
+            category: discovery?.categorySlug,
+            event: discovery?.eventSlug,
+            search: discovery?.search
+          })}
+        >
+          Start a rental enquiry
+        </Link>
+      </div>
+    </aside>
   );
 }
 
@@ -206,27 +365,12 @@ function EventSetupGuidance() {
         </p>
       </div>
       <div className="catalogue-use-cases__grid">
-        <article className="route-card">
-          <h3>Reception lounge</h3>
-          <p>
-            Soft seating, side tables, and low conversation areas for arrivals,
-            VIP waiting rooms, and post-talk networking.
-          </p>
-        </article>
-        <article className="route-card">
-          <h3>Conference seating</h3>
-          <p>
-            Seminar chairs, cocktail tables, and registration-area pieces for
-            talks, launches, and team sessions.
-          </p>
-        </article>
-        <article className="route-card">
-          <h3>Brand activation setup</h3>
-          <p>
-            Styled lounge clusters and display-friendly furniture for product
-            demos, pop-ups, and photo moments.
-          </p>
-        </article>
+        {eventUseFilters.map((eventUse) => (
+          <article className="route-card" key={eventUse.slug}>
+            <h3>{eventUseDisplayLabel(eventUse)}</h3>
+            <p>{eventUse.summary}</p>
+          </article>
+        ))}
       </div>
       <div className="hero__actions">
         <Link className="button button--secondary" href="/events">
@@ -243,6 +387,9 @@ function EventSetupGuidance() {
 export function CataloguePageContent({
   activeCategoryName,
   activeCategorySlug,
+  activeEventSlug,
+  activeEventLabel,
+  activeSearch,
   catalogue,
   detailBasePath = "/catalogue",
   emptyMessage = "No public rental listings are available right now. Send an enquiry if you need help describing the event setup.",
@@ -252,6 +399,9 @@ export function CataloguePageContent({
 }: {
   activeCategoryName?: string;
   activeCategorySlug?: string;
+  activeEventSlug?: string;
+  activeEventLabel?: string;
+  activeSearch?: string;
   catalogue: PublicCatalogue;
   detailBasePath?: string;
   emptyMessage?: string;
@@ -259,6 +409,14 @@ export function CataloguePageContent({
   listingBasePath?: string;
   title?: string;
 }) {
+  const discovery = {
+    categoryName: activeCategoryName,
+    categorySlug: activeCategorySlug,
+    eventLabel: activeEventLabel,
+    eventSlug: activeEventSlug,
+    search: activeSearch
+  };
+
   if (catalogue.products.length === 0) {
     return (
       <section className="section">
@@ -268,22 +426,24 @@ export function CataloguePageContent({
         </div>
         <CatalogueDiscovery
           activeCategorySlug={activeCategorySlug}
+          activeEventSlug={activeEventSlug}
+          activeSearch={activeSearch}
           catalogue={catalogue}
           listingBasePath={listingBasePath}
         />
+        <DiscoveryActiveSummary discovery={discovery} listingBasePath={listingBasePath} />
         <section className="route-card" aria-label="Public listing recovery">
           <h2>No matching public listings</h2>
           <p>{emptyMessage}</p>
           {activeCategoryName ? (
             <p className="category-management__hint">
-              Browse listings, compare event-use guidance, or send a
-              general enquiry if your rental setup spans more than {activeCategoryName}.
+              Browse listings, compare event-use guidance, or send a general
+              enquiry if your rental setup spans more than {activeCategoryName}.
             </p>
           ) : (
             <p className="category-management__hint">
-              Browse categories or event-use guidance while public listings are
-              being prepared, or use the enquiry form to share the rental setup
-              you need.
+              Browse all listings, browse categories, explore event-use guidance,
+              or send an enquiry with the rental setup you need reviewed.
             </p>
           )}
         </section>
@@ -314,9 +474,12 @@ export function CataloguePageContent({
 
       <CatalogueDiscovery
         activeCategorySlug={activeCategorySlug}
+        activeEventSlug={activeEventSlug}
+        activeSearch={activeSearch}
         catalogue={catalogue}
         listingBasePath={listingBasePath}
       />
+      <DiscoveryActiveSummary discovery={discovery} listingBasePath={listingBasePath} />
 
       <div className="catalogue-grid">
         {catalogue.products.map((product) => (
@@ -352,7 +515,11 @@ export function CataloguePageContent({
       </div>
 
       <div className="hero__actions">
-        <Link className="button" href="/quote">
+        <Link className="button" href={getQuoteHrefForDiscoveryContext({
+          category: activeCategorySlug,
+          event: activeEventSlug,
+          search: activeSearch
+        })}>
           Start a rental enquiry
         </Link>
       </div>

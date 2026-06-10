@@ -1,3 +1,19 @@
+## Phase 5C-A/B Public Discovery Acceptance References
+
+Current phase: Phase 5C-A/B public discovery search/filter polish, quote-intent context, and admin discovery parity closure.
+
+Latest completed capability: Phase 5B-A/B public catalogue-to-enquiry journey hardening, listing continuity, and admin/public parity checks.
+
+Last merged capability PR: #156.
+
+Last merged capability merge commit: adca108ef0b5577fea0078b69f3ad524d9406e77.
+
+Phase 5C-A/B adds repo-local public discovery search/filter polish, category/event-use discovery cleanup, quote-intent context hardening, public empty/fallback UX hardening, a protected admin discovery parity helper, local discovery acceptance documentation, validate:public-discovery-acceptance validator coverage, and deterministic Phase 5C public discovery tests. These controls are template-only, non-live, not evidence, and do not record owner approval, owner feedback, owner decisions, owner corrections, owner sign-off, preview evidence, production evidence, provider approval, or deployment approval.
+
+Phase 5C-A/B references `docs/content/LOCAL-DISCOVERY-SEARCH-FILTER-ACCEPTANCE.md`, `docs/content/LOCAL-PUBLIC-JOURNEY-ACCEPTANCE.md`, `docs/content/LOCAL-CONTENT-READINESS-CLEANUP.md`, `docs/OWNER-HANDOFF-BUNDLE.md`, `scripts/validate-public-discovery-acceptance.cjs`, `scripts/validate-public-journey-acceptance.cjs`, `scripts/validate-public-review-polish.cjs`, and protected admin discovery parity helpers.
+
+No deployment is performed or approved by Phase 5C-A/B. It does not add provider config, Vercel config, Supabase Cloud config, real secrets or env values, filled evidence, browser Supabase, service-role runtime paths, n8n/Pinecone runtime changes, `/api/chat` retrieval wiring, public uploads, customer accounts, public quote tracking, notifications, CRM, invented operational facts, ecommerce flows, payment/order/checkout flows, booking/reservation flows, fulfilment flows, stock-reservation flows, or public admin internals.
+
 ## Phase 5B-A/B Public Journey Acceptance References
 
 Current phase: Phase 5B-A/B public catalogue-to-enquiry journey hardening, listing continuity, and admin/public parity checks.

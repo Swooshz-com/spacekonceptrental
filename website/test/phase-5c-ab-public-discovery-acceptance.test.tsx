@@ -28,7 +28,7 @@ const forbiddenPublicInternalPattern =
   /owner handoff bundle|owner-facing review brief|owner approval issue template|no-deploy preflight command center|owner approval packet|release-control internals|admin urls?|internal notes|recovery lanes?|destructive-action safeguards|status-transition matrix|\/admin\//i;
 const forbiddenPublicScopePattern = /customer account|quote tracking|file upload|public upload|notifications?|\bCRM\b/i;
 const dockerBypassPattern = /docker[^\n]*(?:skip|bypass)|(?:skip|bypass)[^\n]*docker/i;
-const receiptPromisePattern = /guaranteed availability|response time|set aside furniture and finalise|final rental details are ready/i;
+const receiptPromisePattern = /guaranteed availability|response time|set aside furniture and finalise|final rental details are ready|\bhold\b|booking|reservation|fulfilment|fulfillment/i;
 
 const authorisedAdminState = {
   status: "authorised_admin" as const,
@@ -72,13 +72,19 @@ function readPublicProductionSource() {
     .join("\n");
 }
 
-describe("Phase 5B-A/B public journey acceptance", () => {
+describe("Phase 5C-A/B public discovery acceptance", () => {
   afterEach(() => cleanup());
 
-  it("keeps public route source on safe rental listing and enquiry wording", () => {
+  it("keeps public discovery source on safe rental listing and enquiry wording", () => {
     const source = readPublicProductionSource();
 
     for (const required of [
+      /Search listings/i,
+      /Filter rental listings/i,
+      /Browse categories/i,
+      /Explore event-use ideas/i,
+      /Active filters/i,
+      /Clear filters/i,
       /Browse listings/i,
       /View rental listing/i,
       /Request a quote/i,
@@ -98,34 +104,55 @@ describe("Phase 5B-A/B public journey acceptance", () => {
     expect(source).not.toMatch(forbiddenPublicScopePattern);
   });
 
-  it("keeps selected listing context editable, request-only, and non-promissory", () => {
-    render(<QuoteRequestForm initialItemsText="Modular Lounge Set" />);
+  it("keeps search/filter empty states safe for browsing or enquiry recovery", () => {
+    const source = readPublicProductionSource();
+
+    expect(source).toMatch(/No matching public listings/i);
+    expect(source).toMatch(/Browse all listings/i);
+    expect(source).toMatch(/Browse categories/i);
+    expect(source).toMatch(/Explore event-use guidance|Explore event-use ideas/i);
+    expect(source).toMatch(/send an enquiry for team review/i);
+    expect(source).not.toMatch(forbiddenPublicInternalPattern);
+  });
+
+  it("keeps listing, category, event, and search context editable and request-only", () => {
+    render(
+      <QuoteRequestForm
+        initialItemsText={[
+          "Modular Lounge Set",
+          "Category interest: lounge",
+          "Event-use interest: reception-lounge",
+          "Search interest: soft seating"
+        ].join("\n")}
+      />
+    );
 
     expect(screen.getByText(/starts this rental request/i)).toBeInTheDocument();
     expect(screen.getByText(/starting point only/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/Requested listings or items/i)).toHaveValue(
-      "Modular Lounge Set"
+      [
+        "Modular Lounge Set",
+        "Category interest: lounge",
+        "Event-use interest: reception-lounge",
+        "Search interest: soft seating"
+      ].join("\n")
     );
     expect(screen.getByRole("button", { name: /send an enquiry/i })).toBeInTheDocument();
     expect(screen.queryByText(forbiddenPublicFlowPattern)).not.toBeInTheDocument();
     expect(screen.queryByText(forbiddenRentalCompletionPattern)).not.toBeInTheDocument();
   });
 
-  it("keeps receipt and fallback copy safe for browsing or enquiry recovery", () => {
+  it("keeps success and receipt copy non-promissory", () => {
     const source = readPublicProductionSource();
 
     expect(source).toMatch(/Enquiry received/i);
     expect(source).toMatch(/receipt only/i);
     expect(source).toMatch(/review\s+your request/i);
     expect(source).toMatch(/follow up directly/i);
-    expect(source).toMatch(/No matching public listings/i);
-    expect(source).toMatch(/Page unavailable/i);
-    expect(source).toMatch(/Browse listings/i);
-    expect(source).toMatch(/Send an enquiry/i);
     expect(source).not.toMatch(receiptPromisePattern);
   });
 
-  it("renders protected public-parity helper only for authorised admin state", () => {
+  it("renders protected discovery parity helper only for authorised admin state", () => {
     render(
       <AdminShellContent
         state={authorisedAdminState}
@@ -148,12 +175,13 @@ describe("Phase 5B-A/B public journey acceptance", () => {
     expect(
       screen.getByText("docs/content/LOCAL-DISCOVERY-SEARCH-FILTER-ACCEPTANCE.md")
     ).toBeInTheDocument();
+    expect(screen.getByText(/Search listings, category chips/i)).toBeInTheDocument();
   });
 
-  it("does not render protected public-parity helper for blocked admin states", () => {
+  it("does not render protected discovery parity helper for blocked admin states", () => {
     render(
       <AdminShellContent
-        state={{ status: "unauthenticated" }}
+        state={{ status: "authenticated_not_authorised" }}
         view={{ kind: "public-parity" }}
       />
     );
@@ -163,19 +191,17 @@ describe("Phase 5B-A/B public journey acceptance", () => {
         name: /public discovery-to-enquiry parity review/i
       })
     ).not.toBeInTheDocument();
-    expect(
-      screen.queryByText("docs/content/LOCAL-PUBLIC-JOURNEY-ACCEPTANCE.md")
-    ).not.toBeInTheDocument();
+    expect(screen.queryByText("docs/OWNER-HANDOFF-BUNDLE.md")).not.toBeInTheDocument();
   });
 
-  it("registers the public journey validator and keeps the suite free of Docker bypass logic", () => {
+  it("registers the public discovery validator and keeps the release suite strict", () => {
     const packageJson = JSON.parse(readRepoFile("package.json"));
     const suite = readRepoFile("scripts/validate-release-candidate-suite.cjs");
 
-    expect(packageJson.scripts["validate:public-journey-acceptance"]).toBe(
-      "node scripts/validate-public-journey-acceptance.cjs"
+    expect(packageJson.scripts["validate:public-discovery-acceptance"]).toBe(
+      "node scripts/validate-public-discovery-acceptance.cjs"
     );
-    expect(suite).toContain("args: ['run', 'validate:public-journey-acceptance']");
+    expect(suite).toContain("args: ['run', 'validate:public-discovery-acceptance']");
     expect(suite).not.toMatch(dockerBypassPattern);
   });
 });

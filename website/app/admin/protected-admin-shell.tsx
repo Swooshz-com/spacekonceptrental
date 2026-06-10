@@ -550,7 +550,8 @@ const contentReadinessSources = [
   "docs/content/PUBLIC-JOURNEY-READINESS-CLOSURE.md",
   "docs/content/QUOTE-ENQUIRY-PUBLIC-EXPECTATION-BOUNDARY.md",
   "docs/content/PROTECTED-ADMIN-PUBLIC-REVIEW-BRIDGE.md",
-  "docs/content/LOCAL-PUBLIC-JOURNEY-ACCEPTANCE.md"
+  "docs/content/LOCAL-PUBLIC-JOURNEY-ACCEPTANCE.md",
+  "docs/content/LOCAL-DISCOVERY-SEARCH-FILTER-ACCEPTANCE.md"
 ] as const;
 
 const reviewSurfaceGroups = 11;
@@ -991,6 +992,50 @@ const phase5bPublicParitySnapshot = [
   [
     "Claims still blocked",
     "No invented proof claims, response-time promises, or availability promises"
+  ],
+  [
+    "Evidence/deployment boundary",
+    "[NOT EVIDENCE / NOT RECORDED] and [DEPLOYMENT APPROVAL: NOT GRANTED]"
+  ]
+] as const;
+
+
+const phase5cDiscoveryAcceptancePath =
+  "docs/content/LOCAL-DISCOVERY-SEARCH-FILTER-ACCEPTANCE.md";
+const phase5cDiscoveryParityDocs = [
+  ownerHandoffBundleIndexPath,
+  phase5aLocalContentReadinessCleanupPath,
+  phase5bPublicJourneyAcceptancePath,
+  phase5cDiscoveryAcceptancePath
+] as const;
+const phase5cDiscoveryParitySnapshot = [
+  [
+    "Public search/filter controls",
+    "Search listings, category chips, event-use chips, active-filter summary, and clear filters"
+  ],
+  [
+    "Category/event-use discovery coverage",
+    "Browse categories and explore event-use ideas stay local and public-safe"
+  ],
+  [
+    "Listing-to-enquiry handoff coverage",
+    "Listing, category, event-use, and search context can start editable quote intake"
+  ],
+  [
+    "Quote-intent context safety",
+    "Context is request intake only and not a rental fit, availability, or response promise"
+  ],
+  [
+    "Empty-result/not-found recovery",
+    "Visitors can browse all listings, browse categories, explore event-use guidance, or send an enquiry"
+  ],
+  [
+    "Owner inputs still missing",
+    "Contact, service-area, legal, policy, proof-claim, operating, and launch facts"
+  ],
+  [
+    "Claims still blocked",
+    "No invented proof claims, response-time promises, availability promises, or completed rental claims"
   ],
   [
     "Evidence/deployment boundary",
@@ -1696,20 +1741,21 @@ function PublicParityReviewWorkspace() {
       <div className="admin-dashboard__header">
         <div>
           <p className="eyebrow">Protected admin-only</p>
-          <h2>Public catalogue-to-enquiry parity review</h2>
+          <h2>Public discovery-to-enquiry parity review</h2>
           <p>
-            Review the local public browse-to-enquiry journey without exposing
-            owner handoff details, release-control notes, or admin-only workflow
-            context on public routes. This helper records no owner feedback, no
-            evidence, and no deployment approval.
+            Review the local public search/filter/category/event-use discovery
+            path and quote-intent handoff without exposing owner handoff
+            details, release-control notes, or admin-only workflow context on
+            public routes. This helper records no owner feedback, no evidence,
+            and no deployment approval.
           </p>
         </div>
       </div>
       <div className="admin-dashboard__grid">
         <section className="admin-dashboard__card admin-dashboard__card--summary">
-          <h3>Phase 5B public parity summary</h3>
+          <h3>Phase 5C discovery parity summary</h3>
           <dl className="quote-inbox__details">
-            {phase5bPublicParitySnapshot.map(([label, value]) => (
+            {phase5cDiscoveryParitySnapshot.map(([label, value]) => (
               <div key={label}>
                 <dt>{label}</dt>
                 <dd>{value}</dd>
@@ -1721,11 +1767,12 @@ function PublicParityReviewWorkspace() {
           <h3>Review references</h3>
           <p>
             These repo-local references keep the owner handoff, local
-            content-readiness cleanup, and Phase 5B public journey acceptance
-            template together for authorised admin review only.
+            content-readiness cleanup, Phase 5B public journey acceptance, and
+            Phase 5C discovery acceptance templates together for authorised
+            admin review only.
           </p>
           <ul className="admin-dashboard__list">
-            {phase5bPublicParityDocs.map((docPath) => (
+            {phase5cDiscoveryParityDocs.map((docPath) => (
               <li key={docPath}>{docPath}</li>
             ))}
           </ul>
@@ -1734,12 +1781,12 @@ function PublicParityReviewWorkspace() {
           <h3>Review boundaries</h3>
           <ul className="admin-dashboard__list">
             <li>
-              Public visitors only see browsing, listing, quote, and enquiry
-              guidance.
+              Public visitors only see search/filter browsing, listing, quote,
+              and enquiry guidance.
             </li>
             <li>
-              Selected listing context remains editable request intake, not
-              approval or final rental details.
+              Listing, category, event-use, and search context remains editable
+              request intake, not approval or final rental details.
             </li>
             <li>
               Owner-required facts and public claims stay blocked until supplied
