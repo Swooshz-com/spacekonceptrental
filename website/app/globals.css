@@ -1067,3 +1067,34 @@ select {
     width: auto;
   }
 }
+
+.catalogue-discovery__search {
+  align-items: end;
+  display: grid;
+  gap: 12px;
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.catalogue-discovery__search label {
+  color: var(--accent-dark);
+  display: grid;
+  font-size: 0.82rem;
+  font-weight: 900;
+  gap: 6px;
+  text-transform: uppercase;
+}
+
+.catalogue-discovery__search input {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font: inherit;
+  padding: 10px 12px;
+  text-transform: none;
+}
+
+@media (max-width: 720px) {
+  .catalogue-discovery__search {
+    grid-template-columns: 1fr;
+  }
+}

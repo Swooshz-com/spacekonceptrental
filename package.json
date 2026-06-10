@@ -22,6 +22,7 @@
     "validate:owner-approval-request": "node scripts/validate-owner-approval-request.cjs",
     "validate:owner-handoff-bundle": "node scripts/validate-owner-handoff-bundle.cjs",
     "validate:public-review-polish": "node scripts/validate-public-review-polish.cjs",
-    "validate:public-journey-acceptance": "node scripts/validate-public-journey-acceptance.cjs"
+    "validate:public-journey-acceptance": "node scripts/validate-public-journey-acceptance.cjs",
+    "validate:public-discovery-acceptance": "node scripts/validate-public-discovery-acceptance.cjs"
   }
 }

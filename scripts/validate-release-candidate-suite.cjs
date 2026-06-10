@@ -35,6 +35,11 @@ const commandPlan = [
     args: ['run', 'validate:public-journey-acceptance'],
   },
   {
+    label: 'Validate public discovery acceptance',
+    cwd: repoRoot,
+    args: ['run', 'validate:public-discovery-acceptance'],
+  },
+  {
     label: 'Validate local freeze',
     cwd: repoRoot,
     args: ['run', 'validate:local-freeze'],

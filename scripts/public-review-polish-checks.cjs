@@ -5,11 +5,14 @@ const { spawnSync } = require('node:child_process');
 const repoRoot = path.resolve(__dirname, '..');
 const phase154MergeCommit = '85bfc8fb459cfc74db3ff80634ff35302691cb7f';
 const phase155MergeCommit = '00b750ab34f433f1d4ca5567828b73e8ddeb3d05';
+const phase156MergeCommit = 'adca108ef0b5577fea0078b69f3ad524d9406e77';
 const currentPhase5a = 'Phase 5A-A/B public owner-review polish sweep, local content-readiness cleanup, and protected admin review UX closure';
 const currentPhase5b = 'Phase 5B-A/B public catalogue-to-enquiry journey hardening, listing continuity, and admin/public parity checks';
+const currentPhase5c = 'Phase 5C-A/B public discovery search/filter polish, quote-intent context, and admin discovery parity closure';
 const latestCompletedPhase4f = 'Phase 4F-A/B owner-facing review handoff bundle, approval issue template, and no-deploy preflight command center';
 const cleanupDocPath = 'docs/content/LOCAL-CONTENT-READINESS-CLEANUP.md';
 const publicJourneyAcceptanceDocPath = 'docs/content/LOCAL-PUBLIC-JOURNEY-ACCEPTANCE.md';
+const discoveryAcceptanceDocPath = 'docs/content/LOCAL-DISCOVERY-SEARCH-FILTER-ACCEPTANCE.md';
 const publicSourceRoots = [
   'website/app/layout.tsx',
   'website/app/page.tsx',
@@ -214,6 +217,7 @@ function assertPhase5bStatusRollForward() {
     publicJourneyAcceptanceDocPath,
     cleanupDocPath,
     'scripts/validate-public-journey-acceptance.cjs',
+    'scripts/validate-public-discovery-acceptance.cjs',
     'No deployment is performed or approved by Phase 5B-A/B',
   ]) {
     assertIncludes(docs, required, 'Phase 5B status roll-forward docs');
@@ -266,16 +270,94 @@ function assertPublicJourneySources() {
   ]) {
     assert(required.test(source), `public production source missing safe CTA: ${required}`);
   }
+  for (const required of [
+    /Search listings/i,
+    /Filter rental listings/i,
+    /Browse categories/i,
+    /Explore event-use ideas/i,
+    /Active filters/i,
+    /Clear filters/i,
+  ]) {
+    assert(required.test(source), `public production source missing discovery wording: ${required}`);
+  }
   assert(/selected listing/i.test(source), 'Quote/enquiry source must retain selected listing context');
   assert(/starting point only/i.test(source), 'Selected listing context must be a starting point only');
-  assert(/editable request|request text|requested listings or items/i.test(source), 'Selected listing context must remain editable/request intake');
+  assert(/editable request|request text|requested listings or items|request intake only/i.test(source), 'Selected listing context must remain editable/request intake');
+  assert(/Category interest|Event-use interest|Search interest/i.test(source), 'Quote/enquiry source must support discovery context as interest only');
   assertNoMatch(source, /confirmed|reserved|booked|ordered|paid|completed rental|guaranteed availability|response time/i, 'public production source');
 }
 
 function assertReleaseSuiteHasPublicJourney() {
   const suite = readRepoFile('scripts/validate-release-candidate-suite.cjs');
   assertIncludes(suite, "args: ['run', 'validate:public-journey-acceptance']", 'release-candidate suite');
+  assertIncludes(suite, "args: ['run', 'validate:public-discovery-acceptance']", 'release-candidate suite');
   assertNoMatch(suite, /docker[^\n]*(?:skip|bypass)|(?:skip|bypass)[^\n]*docker/i, 'release-candidate suite');
+}
+
+function assertPhase5cStatusRollForward() {
+  const docs = normalizeWhitespace(statusDocPaths.map(readRepoFile).join('\n'));
+  for (const required of [
+    `Current phase: ${currentPhase5c}`,
+    `Latest completed capability: ${currentPhase5b}`,
+    'Last merged capability PR: #156',
+    `Last merged capability merge commit: ${phase156MergeCommit}`,
+    discoveryAcceptanceDocPath,
+    publicJourneyAcceptanceDocPath,
+    cleanupDocPath,
+    'scripts/validate-public-discovery-acceptance.cjs',
+    'No deployment is performed or approved by Phase 5C-A/B',
+  ]) {
+    assertIncludes(docs, required, 'Phase 5C status roll-forward docs');
+  }
+}
+
+function assertPublicDiscoveryAcceptanceDoc() {
+  assertTracked([discoveryAcceptanceDocPath], 'Phase 5C discovery acceptance doc');
+  const doc = normalizeWhitespace(readRepoFile(discoveryAcceptanceDocPath));
+  for (const required of [
+    'repo-local, template-only, non-live discovery search/filter acceptance note',
+    '[NOT EVIDENCE / NOT RECORDED]',
+    '[DEPLOYMENT APPROVAL: NOT GRANTED]',
+    'Public search/filter path',
+    'Category/event-use discovery coverage',
+    'Active filter/search state',
+    'Empty-result recovery',
+    'Quote-intent context boundary',
+    'Protected admin discovery parity helper',
+    'Owner inputs still missing',
+    'Public claims still blocked',
+    'docs/OWNER-HANDOFF-BUNDLE.md',
+    'docs/content/LOCAL-CONTENT-READINESS-CLEANUP.md',
+    'docs/content/LOCAL-PUBLIC-JOURNEY-ACCEPTANCE.md',
+    'docs/content/LOCAL-DISCOVERY-SEARCH-FILTER-ACCEPTANCE.md',
+  ]) {
+    assertIncludes(doc, required, 'Phase 5C discovery acceptance doc');
+  }
+  assertNoMatch(
+    doc,
+    /owner approved|owner sign-?off complete|actual owner decision|accepted by owner|preview evidence captured|production evidence captured|manual qa completed/i,
+    'Phase 5C discovery acceptance doc'
+  );
+}
+
+function assertPublicDiscoveryPackageScript() {
+  const packageJson = JSON.parse(readRepoFile('package.json'));
+  assert(
+    packageJson.scripts?.['validate:public-discovery-acceptance'] === 'node scripts/validate-public-discovery-acceptance.cjs',
+    'package.json must register validate:public-discovery-acceptance'
+  );
+}
+
+function assertPhase5cPublicDiscoveryAcceptance() {
+  assertPublicDiscoveryAcceptanceDoc();
+  assertPhase5cStatusRollForward();
+  assertPublicDiscoveryPackageScript();
+  assertPublicSources();
+  assertPublicJourneySources();
+  assertNoForbiddenTrackedFiles();
+  assertNoFilledEvidence();
+  assertReleaseSuiteHasPublicJourney();
+  assertSuiteAndTests();
 }
 
 function assertPhase5bPublicJourneyAcceptance() {
@@ -288,6 +370,7 @@ function assertPhase5bPublicJourneyAcceptance() {
   assertNoFilledEvidence();
   assertReleaseSuiteHasPublicJourney();
   assertSuiteAndTests();
+  assertPhase5cPublicDiscoveryAcceptance();
 }
 
 function assertPhase5aPublicReviewPolish() {
@@ -304,11 +387,15 @@ function assertPhase5aPublicReviewPolish() {
 module.exports = {
   assertPhase5aPublicReviewPolish,
   assertPhase5bPublicJourneyAcceptance,
+  assertPhase5cPublicDiscoveryAcceptance,
   phase154MergeCommit,
   phase155MergeCommit,
+  phase156MergeCommit,
   currentPhase5a,
   currentPhase5b,
+  currentPhase5c,
   latestCompletedPhase4f,
   cleanupDocPath,
   publicJourneyAcceptanceDocPath,
+  discoveryAcceptanceDocPath,
 };

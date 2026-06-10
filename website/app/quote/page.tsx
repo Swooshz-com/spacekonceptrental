@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 
 import QuoteRequestForm from "../../components/QuoteRequestForm";
 import { getPublicProductBySlug } from "../../lib/catalogue/catalogue-repository";
-import { normalizePublicListingSlug } from "../../lib/catalogue/quote-handoff";
+import { normalizePublicDiscoveryContext, normalizePublicListingSlug } from "../../lib/catalogue/quote-handoff";
 import type { PublicCatalogueProduct } from "../../lib/catalogue/types";
 
 type QuotePageProps = {
@@ -28,7 +28,10 @@ async function resolveQuoteListingContext(
   if (!searchParams) {
     return {
       product: null,
-      requestedSlug: undefined
+      requestedSlug: undefined,
+      category: undefined,
+      event: undefined,
+      search: undefined
     };
   }
 
@@ -39,8 +42,32 @@ async function resolveQuoteListingContext(
 
   return {
     product: slug ? await getPublicProductBySlug(slug) : null,
-    requestedSlug: slug
+    requestedSlug: slug,
+    category: normalizePublicListingSlug(firstSearchParam(resolvedSearchParams.category)),
+    event: normalizePublicListingSlug(firstSearchParam(resolvedSearchParams.event)),
+    search: normalizePublicDiscoveryContext(firstSearchParam(resolvedSearchParams.search))
   };
+}
+
+function buildInitialItemsText({
+  category,
+  event,
+  product,
+  search
+}: {
+  category?: string;
+  event?: string;
+  product: PublicCatalogueProduct | null;
+  search?: string;
+}) {
+  const context = [
+    product?.name,
+    category ? `Category interest: ${category}` : undefined,
+    event ? `Event-use interest: ${event}` : undefined,
+    search ? `Search interest: ${search}` : undefined
+  ].filter(Boolean);
+
+  return context.join("\n");
 }
 
 function QuoteListingContext({
@@ -84,9 +111,15 @@ function QuoteListingContext({
 }
 
 function QuoteGeneralContext({
-  requestedSlug
+  category,
+  event,
+  requestedSlug,
+  search
 }: {
+  category?: string;
+  event?: string;
   requestedSlug?: string;
+  search?: string;
 }) {
   return (
     <article className="route-card quote-context">
@@ -104,6 +137,32 @@ function QuoteGeneralContext({
           event setup you have in mind so the team can follow up.
         </p>
       )}
+      {category || event || search ? (
+        <dl className="quote-context__details">
+          {category ? (
+            <div>
+              <dt>Category interest</dt>
+              <dd>{category}</dd>
+            </div>
+          ) : null}
+          {event ? (
+            <div>
+              <dt>Event-use interest</dt>
+              <dd>{event}</dd>
+            </div>
+          ) : null}
+          {search ? (
+            <div>
+              <dt>Search interest</dt>
+              <dd>{search}</dd>
+            </div>
+          ) : null}
+        </dl>
+      ) : null}
+      <p>
+        Discovery context is editable request intake only. Adjust the requested
+        listings or items before sending if this starting point needs changes.
+      </p>
       <div className="catalogue-card__actions">
         <Link className="card-link" href="/listings">
           Browse listings
@@ -175,6 +234,12 @@ export default async function QuotePage({
 }: QuotePageProps = {}) {
   const listingContext = await resolveQuoteListingContext(searchParams);
   const selectedListing = listingContext.product;
+  const initialItemsText = buildInitialItemsText({
+    category: listingContext.category,
+    event: listingContext.event,
+    product: selectedListing,
+    search: listingContext.search
+  });
 
   return (
     <section className="section">
@@ -192,13 +257,18 @@ export default async function QuotePage({
       <div className="route-grid">
         <article className="quote-panel">
           <h2>Event basics</h2>
-          <QuoteRequestForm initialItemsText={selectedListing?.name} />
+          <QuoteRequestForm initialItemsText={initialItemsText} />
         </article>
 
         {selectedListing ? (
           <QuoteListingContext product={selectedListing} />
         ) : (
-          <QuoteGeneralContext requestedSlug={listingContext.requestedSlug} />
+          <QuoteGeneralContext
+            category={listingContext.category}
+            event={listingContext.event}
+            requestedSlug={listingContext.requestedSlug}
+            search={listingContext.search}
+          />
         )}
 
         <article className="route-card">

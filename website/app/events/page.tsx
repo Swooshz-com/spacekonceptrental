@@ -13,16 +13,19 @@ export const metadata: Metadata = {
 
 const eventUseCases = [
   {
+    slug: "corporate-receptions",
     title: "Corporate receptions",
     description: "Registration zones, lounge corners, and networking layouts.",
     image: corporateImage
   },
   {
+    slug: "exhibitions",
     title: "Exhibitions",
     description: "Booth seating, discussion tables, and showcase spaces.",
     image: exhibitionImage
   },
   {
+    slug: "gala-evenings",
     title: "Gala evenings",
     description: "Arrival lounges, cocktail seating, and polished guest areas.",
     image: galaImage
@@ -57,6 +60,11 @@ export default function EventsPage() {
             <div className="catalogue-card__body">
               <h2>{item.title}</h2>
               <p>{item.description}</p>
+              <div className="catalogue-card__actions">
+                <Link className="card-link" href={`/listings?search=${item.slug}`}>
+                  Search listings
+                </Link>
+              </div>
             </div>
           </article>
         ))}

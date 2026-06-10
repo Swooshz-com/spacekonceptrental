@@ -10,6 +10,7 @@ This bundle is not evidence. It records no owner approval. It performs no deploy
 
 - Local content-readiness cleanup: `docs/content/LOCAL-CONTENT-READINESS-CLEANUP.md`
 - Local public journey acceptance: `docs/content/LOCAL-PUBLIC-JOURNEY-ACCEPTANCE.md`
+- Local discovery search/filter acceptance: `docs/content/LOCAL-DISCOVERY-SEARCH-FILTER-ACCEPTANCE.md`
 - Owner approval request packet: `docs/content/OWNER-APPROVAL-REQUEST-PACKET.md`
 - Preview-planning handoff template: `docs/content/PREVIEW-PLANNING-HANDOFF-TEMPLATE.md`
 - Final no-deploy decision gate: `docs/content/FINAL-NO-DEPLOY-DECISION-GATE.md`
@@ -38,3 +39,13 @@ Last merged capability PR: #155.
 Last merged capability merge commit: 00b750ab34f433f1d4ca5567828b73e8ddeb3d05.
 
 The local public journey acceptance note and protected admin public-parity helper remain repo-local, template-only, non-live, not evidence, and not deployment approval.
+
+
+## Phase 5C-A/B public discovery acceptance addendum
+
+Current phase: Phase 5C-A/B public discovery search/filter polish, quote-intent context, and admin discovery parity closure.
+Latest completed capability: Phase 5B-A/B public catalogue-to-enquiry journey hardening, listing continuity, and admin/public parity checks.
+Last merged capability PR: #156.
+Last merged capability merge commit: adca108ef0b5577fea0078b69f3ad524d9406e77.
+
+The local discovery search/filter acceptance note and protected admin discovery parity helper remain repo-local, template-only, non-live, not evidence, and not deployment approval.
