@@ -1,3 +1,19 @@
+## Phase 5E-A/B Quote/Enquiry Intake Readiness References
+
+Current phase: Phase 5E-A/B quote/enquiry intake reliability, receipt boundary, and protected admin triage parity.
+
+Latest completed capability: Phase 5D-A/B public listing-detail readiness, media/context polish, and quote-intent review closure.
+
+Last merged capability PR: #158.
+
+Last merged capability merge commit: f5f3b23426df052568158ba3cf1c898deb617a93.
+
+Phase 5E-A/B adds repo-local quote/enquiry intake reliability polish, public validation/error boundary hardening, receipt/reference boundary hardening, selected listing/category/event/search context preservation as editable request text, a protected admin quote triage parity helper, local quote/enquiry intake readiness documentation, validate:quote-intake-readiness validator coverage, and deterministic Phase 5E quote intake tests. These controls are template-only, non-live, not evidence, and do not record owner approval, owner feedback, owner decisions, owner corrections, owner sign-off, preview evidence, production evidence, provider approval, or deployment approval.
+
+Phase 5E-A/B references `docs/content/LOCAL-QUOTE-ENQUIRY-INTAKE-READINESS.md`, `docs/content/LOCAL-LISTING-DETAIL-READINESS.md`, `docs/content/LOCAL-PUBLIC-JOURNEY-ACCEPTANCE.md`, `docs/OWNER-HANDOFF-BUNDLE.md`, `scripts/validate-quote-intake-readiness.cjs`, `scripts/validate-listing-detail-readiness.cjs`, `scripts/validate-public-discovery-acceptance.cjs`, `scripts/validate-public-journey-acceptance.cjs`, `scripts/validate-public-review-polish.cjs`, and protected admin quote triage parity helpers.
+
+No deployment is performed or approved by Phase 5E-A/B. It does not add provider config, Vercel config, Supabase Cloud config, real secrets or env values, filled evidence, browser Supabase, service-role runtime paths, n8n/Pinecone runtime changes, `/api/chat` retrieval wiring, public uploads, customer accounts, public quote tracking, notifications, CRM, invented operational facts, ecommerce flows, payment/order/checkout flows, booking/reservation flows, fulfilment flows, stock-reservation flows, or public admin internals.
+
 ## Phase 5D-A/B Listing Detail Readiness References
 
 Current phase: Phase 5D-A/B public listing-detail readiness, media/context polish, and quote-intent review closure.

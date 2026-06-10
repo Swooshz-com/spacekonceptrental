@@ -246,6 +246,83 @@ function reloadDashboard() {
   }
 }
 
+function QuoteIntakeParityHelper() {
+  const references = [
+    "docs/OWNER-HANDOFF-BUNDLE.md",
+    "docs/content/LOCAL-LISTING-DETAIL-READINESS.md",
+    "docs/content/LOCAL-PUBLIC-JOURNEY-ACCEPTANCE.md",
+    "docs/content/LOCAL-QUOTE-ENQUIRY-INTAKE-READINESS.md"
+  ];
+
+  return (
+    <section
+      aria-label="Protected quote intake parity helper"
+      className="admin-dashboard__card admin-dashboard__card--summary"
+    >
+      <h3>Quote intake parity helper</h3>
+      <p>
+        Authorised admins can compare public quote/enquiry intake with protected
+        triage expectations. This helper stays inside the admin workspace and
+        records no owner approval, evidence, provider setup, or deployment
+        approval.
+      </p>
+      <dl className="quote-inbox__details">
+        <div>
+          <dt>Public intake fields</dt>
+          <dd>
+            Name, email or phone, event date if known, venue if known,
+            requested listings or items, quantities, alternates, setup, access,
+            timing notes, and contact preference.
+          </dd>
+        </div>
+        <div>
+          <dt>Context handoff sources</dt>
+          <dd>
+            Listing, category, event-use, and search context may start editable
+            request text only; admins should treat it as customer-submitted
+            context to review.
+          </dd>
+        </div>
+        <div>
+          <dt>Receipt/reference boundary</dt>
+          <dd>
+            Public references are receipt-only. They are not public status
+            lookup, accepted outcomes, rental-fit decisions, or response
+            promises.
+          </dd>
+        </div>
+        <div>
+          <dt>Admin triage expectations</dt>
+          <dd>
+            Review contact, event, venue, requested item, quantity, alternate,
+            setup, access, and timing gaps before direct follow-up.
+          </dd>
+        </div>
+        <div>
+          <dt>Owner inputs still missing</dt>
+          <dd>
+            Owner-supplied contact, service-area, legal, policy, operating,
+            content, and launch facts remain absent until supplied separately.
+          </dd>
+        </div>
+        <div>
+          <dt>Claims still blocked</dt>
+          <dd>
+            No invented facts, fit promises, response promises, public status
+            views, sales flows, sign-in areas, file intake, outbound automation,
+            provider setup, or deployment evidence.
+          </dd>
+        </div>
+      </dl>
+      <ul className="admin-dashboard__list">
+        {references.map((reference) => (
+          <li key={reference}>{reference}</li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
 export function QuoteRequestInboxPanel({
   inbox,
   fetcher = fetch,
@@ -458,6 +535,8 @@ export function QuoteRequestInboxPanel({
           </div>
         </dl>
       </section>
+
+      <QuoteIntakeParityHelper />
 
       <section
         aria-label="Quote request inbox operator guidance"

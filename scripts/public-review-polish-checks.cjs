@@ -7,15 +7,18 @@ const phase154MergeCommit = '85bfc8fb459cfc74db3ff80634ff35302691cb7f';
 const phase155MergeCommit = '00b750ab34f433f1d4ca5567828b73e8ddeb3d05';
 const phase156MergeCommit = 'adca108ef0b5577fea0078b69f3ad524d9406e77';
 const phase157MergeCommit = '1f471213c71aa1d3ff979a267ffd1c8b2a39fe6f';
+const phase158MergeCommit = 'f5f3b23426df052568158ba3cf1c898deb617a93';
 const currentPhase5a = 'Phase 5A-A/B public owner-review polish sweep, local content-readiness cleanup, and protected admin review UX closure';
 const currentPhase5b = 'Phase 5B-A/B public catalogue-to-enquiry journey hardening, listing continuity, and admin/public parity checks';
 const currentPhase5c = 'Phase 5C-A/B public discovery search/filter polish, quote-intent context, and admin discovery parity closure';
 const currentPhase5d = 'Phase 5D-A/B public listing-detail readiness, media/context polish, and quote-intent review closure';
+const currentPhase5e = 'Phase 5E-A/B quote/enquiry intake reliability, receipt boundary, and protected admin triage parity';
 const latestCompletedPhase4f = 'Phase 4F-A/B owner-facing review handoff bundle, approval issue template, and no-deploy preflight command center';
 const cleanupDocPath = 'docs/content/LOCAL-CONTENT-READINESS-CLEANUP.md';
 const publicJourneyAcceptanceDocPath = 'docs/content/LOCAL-PUBLIC-JOURNEY-ACCEPTANCE.md';
 const discoveryAcceptanceDocPath = 'docs/content/LOCAL-DISCOVERY-SEARCH-FILTER-ACCEPTANCE.md';
 const listingDetailReadinessDocPath = 'docs/content/LOCAL-LISTING-DETAIL-READINESS.md';
+const quoteIntakeReadinessDocPath = 'docs/content/LOCAL-QUOTE-ENQUIRY-INTAKE-READINESS.md';
 const publicSourceRoots = [
   'website/app/layout.tsx',
   'website/app/page.tsx',
@@ -398,6 +401,129 @@ function assertPhase5dListingDetailReadiness() {
   assertSuiteAndTests();
 }
 
+function assertPhase5eStatusRollForward() {
+  const docs = normalizeWhitespace(statusDocPaths.map(readRepoFile).join('\n'));
+  for (const required of [
+    `Current phase: ${currentPhase5e}`,
+    `Latest completed capability: ${currentPhase5d}`,
+    'Last merged capability PR: #158',
+    `Last merged capability merge commit: ${phase158MergeCommit}`,
+    quoteIntakeReadinessDocPath,
+    listingDetailReadinessDocPath,
+    'scripts/validate-quote-intake-readiness.cjs',
+    'No deployment is performed or approved by Phase 5E-A/B',
+  ]) {
+    assertIncludes(docs, required, 'Phase 5E status roll-forward docs');
+  }
+}
+
+function assertQuoteIntakeReadinessDoc() {
+  assertTracked([quoteIntakeReadinessDocPath], 'Phase 5E quote intake readiness doc');
+  const doc = normalizeWhitespace(readRepoFile(quoteIntakeReadinessDocPath));
+  for (const required of [
+    'repo-local, template-only, non-live',
+    '[NOT EVIDENCE / NOT RECORDED]',
+    '[DEPLOYMENT APPROVAL: NOT GRANTED]',
+    'Public quote/enquiry form boundary',
+    'Selected context boundary',
+    'Validation/error boundary',
+    'Receipt/reference boundary',
+    'Protected admin triage parity helper',
+    'Owner inputs still missing',
+    'Public claims still blocked',
+    'No-deploy/no-evidence status',
+    'docs/OWNER-HANDOFF-BUNDLE.md',
+    'docs/content/LOCAL-LISTING-DETAIL-READINESS.md',
+    'docs/content/LOCAL-PUBLIC-JOURNEY-ACCEPTANCE.md',
+    'docs/content/LOCAL-QUOTE-ENQUIRY-INTAKE-READINESS.md',
+  ]) {
+    assertIncludes(doc, required, 'Phase 5E quote intake readiness doc');
+  }
+  assertNoMatch(
+    doc,
+    /owner approved|owner sign-?off complete|actual owner decision|accepted by owner|preview evidence captured|production evidence captured|manual qa completed/i,
+    'Phase 5E quote intake readiness doc'
+  );
+}
+
+function assertQuoteIntakePackageScript() {
+  const packageJson = JSON.parse(readRepoFile('package.json'));
+  assert(
+    packageJson.scripts?.['validate:quote-intake-readiness'] === 'node scripts/validate-quote-intake-readiness.cjs',
+    'package.json must register validate:quote-intake-readiness'
+  );
+}
+
+function assertQuoteIntakeSources() {
+  const publicQuoteSource = readTrackedProductionSources([
+    'website/app/quote',
+    'website/components/QuoteRequestForm.tsx',
+  ]);
+  const quoteReceiptSource = readTrackedProductionSources([
+    'website/app/quote',
+    'website/components/QuoteRequestForm.tsx',
+    'website/app/api/quote',
+  ]);
+  const adminSource = readTrackedProductionSources([
+    'website/app/admin',
+    'website/components/admin/quote-request-inbox-panel.tsx',
+  ]);
+
+  for (const required of [
+    /enquiry intake only/i,
+    /requested listings or items/i,
+    /event date/i,
+    /quantities/i,
+    /alternates/i,
+    /setup, access, and timing notes/i,
+    /Email or phone required/i,
+    /editable request text/i,
+    /listing, category, event-use, or search context/i,
+    /received/i,
+    /receipt only/i,
+    /team can review/i,
+    /follow up directly/i,
+    /does not set aside furniture/i,
+    /does not finalise rental details/i,
+  ]) {
+    assert(required.test(publicQuoteSource), `quote intake source missing safe wording: ${required}`);
+  }
+
+  assert(/status:\s*"received"|status: "received"/.test(quoteReceiptSource), 'quote receipt source must keep received status');
+  assert(/Please check the required enquiry details and try again/.test(quoteReceiptSource), 'quote validation response must stay generic');
+  assert(/Quote intake parity helper/.test(adminSource), 'admin quote triage helper must exist');
+  assert(/Protected quote intake parity helper/.test(adminSource), 'admin quote triage helper must be protected');
+  assert(/docs\/content\/LOCAL-QUOTE-ENQUIRY-INTAKE-READINESS\.md/.test(adminSource), 'admin helper must reference Phase 5E doc');
+
+  assertNoMatch(publicQuoteSource, /\b(?:cart|checkout|payment|purchase|online ordering|confirmed order)\b/i, 'quote intake public source');
+  assertNoMatch(publicQuoteSource, /\b(?:booking|reservation|fulfilment|fulfillment|stock reservation|stock-reservation|book now|reserve now)\b/i, 'quote intake public source');
+  assertNoMatch(publicQuoteSource, /award-winning|certified partner|trusted by|5-star|guaranteed availability|guaranteed delivery|licensed and insured|testimonial|client logo|case study|legal guarantee|production policy|service-area claim|Singapore\s+\d{6}|\+?\d[\d\s().-]{7,}|Mon(?:day)?\s*-\s*Fri|24\/7|123\s+Main/i, 'quote intake public source');
+  assertNoMatch(publicQuoteSource, /owner handoff bundle|owner-facing review brief|owner approval issue template|no-deploy preflight command center|owner approval packet|release-control internals|admin urls?|internal notes|recovery lanes?|destructive-action safeguards|status-transition matrix|\/admin\//i, 'quote intake public source');
+  assertNoMatch(publicQuoteSource, /customer account|quote tracking|file upload|public upload|notifications?|\bCRM\b/i, 'quote intake public source');
+  assertNoMatch(quoteReceiptSource, /tracking portal|status lookup|accepted outcome|availability statement|\bhold\b|confirmed|reserved|booked|ordered|paid|completed rental|guaranteed|response time|fulfilment|fulfillment|payment|purchase/i, 'quote receipt/reference source');
+}
+
+function assertReleaseSuiteHasQuoteIntake() {
+  const suite = readRepoFile('scripts/validate-release-candidate-suite.cjs');
+  assertIncludes(suite, "args: ['run', 'validate:quote-intake-readiness']", 'release-candidate suite');
+  assertNoMatch(suite, /docker[^\n]*(?:skip|bypass)|(?:skip|bypass)[^\n]*docker/i, 'release-candidate suite');
+}
+
+function assertPhase5eQuoteIntakeReadiness() {
+  assertQuoteIntakeReadinessDoc();
+  assertPhase5eStatusRollForward();
+  assertQuoteIntakePackageScript();
+  assertPublicSources();
+  assertPublicJourneySources();
+  assertListingDetailSources();
+  assertQuoteIntakeSources();
+  assertNoForbiddenTrackedFiles();
+  assertNoFilledEvidence();
+  assertReleaseSuiteHasPublicJourney();
+  assertReleaseSuiteHasQuoteIntake();
+  assertSuiteAndTests();
+}
+
 function assertPhase5cStatusRollForward() {
   const docs = normalizeWhitespace(statusDocPaths.map(readRepoFile).join('\n'));
   for (const required of [
@@ -463,6 +589,7 @@ function assertPhase5cPublicDiscoveryAcceptance() {
   assertReleaseSuiteHasPublicJourney();
   assertSuiteAndTests();
   assertPhase5dListingDetailReadiness();
+  assertPhase5eQuoteIntakeReadiness();
 }
 
 function assertPhase5bPublicJourneyAcceptance() {
@@ -494,17 +621,21 @@ module.exports = {
   assertPhase5bPublicJourneyAcceptance,
   assertPhase5cPublicDiscoveryAcceptance,
   assertPhase5dListingDetailReadiness,
+  assertPhase5eQuoteIntakeReadiness,
   phase154MergeCommit,
   phase155MergeCommit,
   phase156MergeCommit,
   phase157MergeCommit,
+  phase158MergeCommit,
   currentPhase5a,
   currentPhase5b,
   currentPhase5c,
   currentPhase5d,
+  currentPhase5e,
   latestCompletedPhase4f,
   cleanupDocPath,
   publicJourneyAcceptanceDocPath,
   discoveryAcceptanceDocPath,
   listingDetailReadinessDocPath,
+  quoteIntakeReadinessDocPath,
 };

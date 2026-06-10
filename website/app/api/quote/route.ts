@@ -52,12 +52,13 @@ function isJsonRequest(request: Request) {
   );
 }
 
-function validationError(message: string, requestId: string) {
+function validationError(_message: string, requestId: string) {
   return Response.json(
     {
       error: {
         code: "VALIDATION_FAILED",
-        message
+        message:
+          "Please check the required enquiry details and try again."
       },
       requestId
     },

@@ -45,6 +45,11 @@ const commandPlan = [
     args: ['run', 'validate:listing-detail-readiness'],
   },
   {
+    label: 'Validate quote intake readiness',
+    cwd: repoRoot,
+    args: ['run', 'validate:quote-intake-readiness'],
+  },
+  {
     label: 'Validate local freeze',
     cwd: repoRoot,
     args: ['run', 'validate:local-freeze'],

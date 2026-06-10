@@ -24,6 +24,7 @@
     "validate:public-review-polish": "node scripts/validate-public-review-polish.cjs",
     "validate:public-journey-acceptance": "node scripts/validate-public-journey-acceptance.cjs",
     "validate:public-discovery-acceptance": "node scripts/validate-public-discovery-acceptance.cjs",
-    "validate:listing-detail-readiness": "node scripts/validate-listing-detail-readiness.cjs"
+    "validate:listing-detail-readiness": "node scripts/validate-listing-detail-readiness.cjs",
+    "validate:quote-intake-readiness": "node scripts/validate-quote-intake-readiness.cjs"
   }
 }
