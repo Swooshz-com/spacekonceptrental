@@ -283,14 +283,14 @@ describe("Phase 3F-A/B catalogue content quality, media readiness, and publicati
     expect(screen.getByText(/category to confirm/i)).toBeInTheDocument();
     expect(screen.getByText(/rental unit: confirm with team/i)).toBeInTheDocument();
     expect(
-      screen.getByText(/listing details can be confirmed with the team during quote follow-up/i)
+      screen.getByText(/listing details can be reviewed with the team during quote follow-up/i)
     ).toBeInTheDocument();
     expect(screen.getByAltText(/bare plinth furniture rental setup/i)).toHaveAttribute(
       "src",
       "https://example.test/storage/plinth.jpg"
     );
     expect(
-      screen.getByRole("link", { name: /request this listing/i })
+      screen.getByRole("link", { name: /request a quote/i })
     ).toHaveAttribute("href", "/quote?listing=bare-plinth");
     expect(screen.queryByText(/publication readiness|media readiness/i)).not.toBeInTheDocument();
   });
@@ -308,7 +308,7 @@ describe("Phase 3F-A/B catalogue content quality, media readiness, and publicati
 
     expect(screen.getByText(/0 public listings/i)).toBeInTheDocument();
     expect(
-      screen.getByText(/category description can be confirmed with the team during quote follow-up/i)
+      screen.getByText(/category description can be reviewed with the team during quote follow-up/i)
     ).toBeInTheDocument();
     expect(
       screen.getByText(/no public listings are available in this category yet/i)
@@ -326,7 +326,7 @@ describe("Phase 3F-A/B catalogue content quality, media readiness, and publicati
     );
 
     expect(
-      screen.getAllByText(/listing details can be confirmed with the team during quote follow-up/i)
+      screen.getAllByText(/listing details can be reviewed with the team during quote follow-up/i)
         .length
     ).toBeGreaterThan(0);
     expect(screen.getByText(/category to confirm/i)).toBeInTheDocument();

@@ -20,7 +20,7 @@ function textOrUndefined(value: string | undefined) {
 function categoryDescription(value: string | undefined) {
   return (
     textOrUndefined(value) ??
-    "Category description can be confirmed with the team during quote follow-up."
+    "Category description can be reviewed with the team during quote follow-up."
   );
 }
 
@@ -46,14 +46,14 @@ export function CategoriesPageContent({
         </div>
         <section className="route-card" aria-label="Category recovery">
           <h2>No public categories available</h2>
-          <p>No public categories are available right now. Browse all listings or send a quote enquiry with the event-use context, quantities, and rental unit notes you have; availability and fit are reviewed directly by the team.</p>
+          <p>No public categories are available right now. Browse listings or send a quote enquiry with the event-use context, quantities, and rental unit notes you have; rental fit is reviewed directly by the team.</p>
         </section>
         <div className="hero__actions">
           <Link className="button button--secondary" href="/catalogue">
-            Browse catalogue
+            View catalogue
           </Link>
           <Link className="button button--secondary" href="/listings">
-            Browse all listings
+            Browse listings
           </Link>
           <Link className="button" href="/quote">
             Request a quote
@@ -71,7 +71,7 @@ export function CategoriesPageContent({
         <p>
           Start from seating, lounge, and event setup categories, compare
           listings in each category, then send an enquiry for the rental pieces
-          that may suit your event. Availability and fit are reviewed directly
+          that may suit your event. Rental fit is reviewed directly
           by the team.
         </p>
       </div>
@@ -97,7 +97,7 @@ export function CategoriesPageContent({
                   Compare {category.name} listings
                 </Link>
                 <Link className="card-link" href="/quote">
-                  Send category enquiry
+                  Send an enquiry
                 </Link>
               </div>
               {categoryListings.length > 0 ? (
@@ -117,18 +117,18 @@ export function CategoriesPageContent({
                 <>
                   <p>
                     No public listings are available in this category yet.
-                    Browse all listings, compare event setup guidance, or send a
+                    Browse listings, compare event setup guidance, or send a
                     quote request so the team can suggest a rental direction.
                   </p>
                   <div className="catalogue-card__actions">
                     <Link className="card-link" href="/listings">
-                      Browse all listings
+                      Browse listings
                     </Link>
                     <Link className="card-link" href="/events">
                       Browse event guidance
                     </Link>
                     <Link className="card-link" href="/quote">
-                      Start quote request
+                      Start a rental enquiry
                     </Link>
                   </div>
                 </>
@@ -139,10 +139,10 @@ export function CategoriesPageContent({
       </div>
       <div className="hero__actions">
         <Link className="button button--secondary" href="/listings">
-          Browse all listings
+          Browse listings
         </Link>
         <Link className="button" href="/quote">
-          Send category enquiry
+          Send an enquiry
         </Link>
       </div>
     </section>

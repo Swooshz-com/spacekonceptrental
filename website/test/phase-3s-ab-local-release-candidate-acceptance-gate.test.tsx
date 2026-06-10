@@ -285,7 +285,7 @@ describe("Phase 3S-A/B local release-candidate acceptance gate", () => {
     render(<CataloguePageContent catalogue={emptyCatalogue} />);
     expect(screen.getByRole("link", { name: /browse categories/i })).toHaveAttribute("href", "/categories");
     expect(screen.getByRole("link", { name: /browse event setup guidance/i })).toHaveAttribute("href", "/events");
-    expect(screen.getByRole("link", { name: /send a general enquiry/i })).toHaveAttribute("href", "/quote");
+    expect(screen.getByRole("link", { name: /send an enquiry/i })).toHaveAttribute("href", "/quote");
 
     cleanup();
     render(<CategoriesPageContent catalogue={catalogue} />);
@@ -295,7 +295,7 @@ describe("Phase 3S-A/B local release-candidate acceptance gate", () => {
     render(<ProductPageContent product={loungeProduct} />);
     expect(screen.getByRole("heading", { name: /rental details/i })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: /fit check before enquiry/i })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /request this listing/i })).toHaveAttribute("href", "/quote?listing=modular-lounge-set");
+    expect(screen.getByRole("link", { name: /request a quote/i })).toHaveAttribute("href", "/quote?listing=modular-lounge-set");
 
     cleanup();
     render(<EventsPage />);

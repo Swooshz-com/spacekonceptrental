@@ -45,7 +45,7 @@ function publicListingSummary(product: PublicCatalogueProduct) {
   return (
     textOrUndefined(product.shortDescription) ??
     textOrUndefined(product.description) ??
-    "Listing details can be confirmed with the team during quote follow-up."
+    "Listing details can be reviewed with the team during quote follow-up."
   );
 }
 
@@ -89,7 +89,7 @@ function CatalogueCardImage({
   return (
     <figure className="catalogue-card__fallback-image">
       <Image alt={altText} src={fallbackImage} />
-      <figcaption>Representative rental image; final media can be confirmed during enquiry follow-up.</figcaption>
+      <figcaption>Representative rental image; final media can be reviewed during enquiry follow-up.</figcaption>
     </figure>
   );
 }
@@ -114,7 +114,7 @@ function CatalogueCardPlanning({
       <span>
         Share event date, venue, quantities, and setup notes when you request
         this listing. Include category fit and rental unit notes if helpful;
-        browsing does not hold furniture or finalise availability.
+        browsing does not set aside furniture or finalise rental details.
       </span>
     </aside>
   );
@@ -210,7 +210,7 @@ function EventSetupGuidance() {
           <h3>Reception lounge</h3>
           <p>
             Soft seating, side tables, and low conversation areas for arrivals,
-            VIP holding rooms, and post-talk networking.
+            VIP waiting rooms, and post-talk networking.
           </p>
         </article>
         <article className="route-card">
@@ -233,7 +233,7 @@ function EventSetupGuidance() {
           Compare event setup guidance
         </Link>
         <Link className="button" href="/quote">
-          Send setup notes
+          Send an enquiry
         </Link>
       </div>
     </section>
@@ -245,7 +245,7 @@ export function CataloguePageContent({
   activeCategorySlug,
   catalogue,
   detailBasePath = "/catalogue",
-  emptyMessage = "No public rental listings are available right now. Send a general enquiry if you need help describing the event setup.",
+  emptyMessage = "No public rental listings are available right now. Send an enquiry if you need help describing the event setup.",
   intro = "Browse furniture and event-rental listings made for spaces, occasions, and styled setups.",
   listingBasePath = "/listings",
   title = "Furniture catalogue"
@@ -276,7 +276,7 @@ export function CataloguePageContent({
           <p>{emptyMessage}</p>
           {activeCategoryName ? (
             <p className="category-management__hint">
-              Browse all listings, compare event-use guidance, or send a
+              Browse listings, compare event-use guidance, or send a
               general enquiry if your rental setup spans more than {activeCategoryName}.
             </p>
           ) : (
@@ -289,7 +289,7 @@ export function CataloguePageContent({
         </section>
         <div className="hero__actions">
           <Link className="button button--secondary" href={listingBasePath}>
-            Browse all listings
+            Browse listings
           </Link>
           <Link className="button button--secondary" href="/categories">
             Browse categories
@@ -298,7 +298,7 @@ export function CataloguePageContent({
             Browse event setup guidance
           </Link>
           <Link className="button" href="/quote">
-            Send a general enquiry
+            Send an enquiry
           </Link>
         </div>
       </section>
@@ -337,13 +337,13 @@ export function CataloguePageContent({
                   className="card-link"
                   href={`${detailBasePath}/${product.slug}`}
                 >
-                  View listing
+                  View rental listing
                 </Link>
                 <Link
                   className="card-link"
                   href={getQuoteHrefForListing(product.slug)}
                 >
-                  Request this listing
+                  Request a quote
                 </Link>
               </div>
             </div>
@@ -353,7 +353,7 @@ export function CataloguePageContent({
 
       <div className="hero__actions">
         <Link className="button" href="/quote">
-          Start quote request
+          Start a rental enquiry
         </Link>
       </div>
 

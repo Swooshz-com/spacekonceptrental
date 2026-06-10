@@ -122,18 +122,18 @@ describe("Phase 2L-A/B release-candidate acceptance suite", () => {
     expect(listingDetail).toContain("ProductPageContent");
     expect(listingDetail).toContain("notFound()");
     expect(listingNotFound).toContain("Listing unavailable");
-    expect(listingNotFound).toContain("Send a general enquiry");
+    expect(listingNotFound).toContain("Send an enquiry");
     expect(categoriesPage).toContain("Rental categories");
     expect(categoriesPage).toContain("No public categories are available");
     expect(cataloguePage).toContain("Furniture catalogue");
-    expect(cataloguePage).toContain("Send a general enquiry");
+    expect(cataloguePage).toContain("Send an enquiry");
     expect(cataloguePage).toContain("fallbackImage");
     expect(catalogueDetail).toContain("Furniture listing");
-    expect(catalogueDetail).toContain("Request this listing");
+    expect(catalogueDetail).toContain("Request a quote");
     expect(catalogueNotFound).toContain("Listing unavailable");
     expect(quotePage).toContain("Quote request");
     expect(quotePage).toContain("QuoteRequestForm");
-    expect(eventsPage).toContain("Start quote request");
+    expect(eventsPage).toContain("Start a rental enquiry");
     expect(globalNotFound).toContain("Page unavailable");
     expect(globalNotFound).toContain("Browse listings");
     expect(globalNotFound).toContain("Request a quote");
@@ -163,7 +163,7 @@ describe("Phase 2L-A/B release-candidate acceptance suite", () => {
     expect(quoteForm).toContain('fetch("/api/quote"');
     expect(quoteForm).toContain('status: "success"');
     expect(quoteForm).toContain(
-      "Quote requests are temporarily unavailable. Please try again later."
+      "Quote requests are temporarily unavailable. Please try again later with the same event details."
     );
     expect(quoteFormTest).toContain(
       "posts browser quote requests only to the first-party API route"

@@ -39,7 +39,7 @@ function publicListingSummary(product: PublicCatalogueProduct) {
   return (
     textOrUndefined(product.shortDescription) ??
     textOrUndefined(product.description) ??
-    "Listing details can be confirmed with the team during quote follow-up."
+    "Listing details can be reviewed with the team during quote follow-up."
   );
 }
 
@@ -130,7 +130,7 @@ export function ProductPageContent({
           <figcaption>
               {product.primaryImage?.publicUrl
                 ? "Listing media is shown with public-safe alt text for rental browsing."
-                : "Representative rental image shown while listing media is confirmed."}
+                : "Representative rental image shown while listing media is reviewed."}
             </figcaption>
           </figure>
           {publicImages.length > 1 ? (
@@ -151,7 +151,7 @@ export function ProductPageContent({
           <p>
             {textOrUndefined(product.description) ??
               textOrUndefined(product.shortDescription) ??
-              "Listing details can be confirmed with the team during quote follow-up."}
+              "Listing details can be reviewed with the team during quote follow-up."}
           </p>
           <dl className="detail-list">
             <div>
@@ -166,7 +166,7 @@ export function ProductPageContent({
               <dt>Event-use context</dt>
               <dd>
                 Use this listing as a starting point for event furniture rental
-                planning; final fit, availability, and styling notes are reviewed
+                planning; final fit and styling notes are reviewed
                 directly by the team.
               </dd>
             </div>
@@ -176,7 +176,7 @@ export function ProductPageContent({
                 Share timing, venue, preferred quantities, and delivery
                 notes so the team can review the right rental fit. Include
                 alternatives and setup notes if helpful; this page does not
-                hold furniture or finalise availability.
+                set aside furniture or finalise rental details.
               </dd>
             </div>
           </dl>
@@ -216,7 +216,7 @@ export function ProductPageContent({
               Browse event guidance
             </Link>
             <Link className="button" href={getQuoteHrefForListing(product.slug)}>
-              Request this listing
+              Request a quote
             </Link>
           </div>
         </article>

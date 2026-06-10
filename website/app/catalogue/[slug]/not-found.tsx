@@ -13,13 +13,13 @@ export default function CatalogueListingNotFound() {
       </div>
       <div className="hero__actions">
         <Link className="button button--secondary" href="/catalogue">
-          Browse catalogue
+          View catalogue
         </Link>
         <Link className="button button--secondary" href="/categories">
           Browse categories
         </Link>
         <Link className="button" href="/quote">
-          Send a general enquiry
+          Send an enquiry
         </Link>
       </div>
     </section>

@@ -38,13 +38,13 @@ describe("public page shells", () => {
     expect(
       screen.getByRole("heading", { name: /lounge sofa package/i })
     ).toBeInTheDocument();
-    expect(screen.getByText(/rental details/i)).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /rental details/i })).toBeInTheDocument();
     expect(screen.getByText(/furniture listing/i)).toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: /back to catalogue/i })
     ).toHaveAttribute("href", "/catalogue");
     expect(
-      screen.getByRole("link", { name: /request this listing/i })
+      screen.getByRole("link", { name: /request a quote/i })
     ).toHaveAttribute("href", "/quote?listing=lounge-sofa-package");
   });
 
@@ -57,10 +57,10 @@ describe("public page shells", () => {
       })
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("link", { name: /request a quote/i })
+      screen.getAllByRole("link", { name: /request a quote/i })[0]
     ).toHaveAttribute("href", "/quote");
     expect(
-      screen.getByRole("link", { name: /browse listings/i })
+      screen.getAllByRole("link", { name: /browse listings/i })[0]
     ).toHaveAttribute("href", "/listings");
     for (const useCase of [
       /corporate events/i,
@@ -75,7 +75,7 @@ describe("public page shells", () => {
     ).toBeInTheDocument();
     expect(
       screen
-        .getAllByRole("link", { name: /view listing/i })
+        .getAllByRole("link", { name: /view rental listing/i })
         .map((link) => link.getAttribute("href"))
     ).toContain("/listings/lounge-sofa-package");
     expect(
@@ -99,7 +99,7 @@ describe("public page shells", () => {
       screen.getByRole("link", { name: /compare event setup guidance/i })
     ).toHaveAttribute("href", "/catalogue");
     expect(
-      screen.getByRole("link", { name: /start quote request/i })
+      screen.getByRole("link", { name: /start a rental enquiry/i })
     ).toHaveAttribute("href", "/quote");
   });
 
@@ -133,16 +133,16 @@ describe("public page shells", () => {
     render(await CataloguePage());
 
     expect(
-      screen.queryByRole("link", { name: /view listing shell/i })
+      screen.queryByRole("link", { name: /view rental listing shell/i })
     ).not.toBeInTheDocument();
 
-    const catalogueLinks = screen.getAllByRole("link", { name: /view listing/i });
+    const catalogueLinks = screen.getAllByRole("link", { name: /view rental listing/i });
     expect(
       catalogueLinks.map((link) => link.getAttribute("href"))
     ).toContain("/catalogue/lounge-sofa-package");
     expect(
       screen
-        .getAllByRole("link", { name: /request this listing/i })
+        .getAllByRole("link", { name: /request a quote/i })
         .map((link) => link.getAttribute("href"))
     ).toContain("/quote?listing=lounge-sofa-package");
   });
@@ -169,10 +169,10 @@ describe("public page shells", () => {
       screen.getByRole("heading", { name: /listing unavailable/i })
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("link", { name: /browse catalogue/i })
+      screen.getByRole("link", { name: /view catalogue/i })
     ).toHaveAttribute("href", "/catalogue");
     expect(
-      screen.getByRole("link", { name: /send a general enquiry/i })
+      screen.getByRole("link", { name: /send an enquiry/i })
     ).toHaveAttribute("href", "/quote");
     expect(
       screen.queryByText(/draft|archived|internal note|workflow status/i)
@@ -185,10 +185,10 @@ describe("public page shells", () => {
       screen.getByRole("heading", { name: /listing unavailable/i })
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("link", { name: /browse listings/i })
+      screen.getAllByRole("link", { name: /browse listings/i })[0]
     ).toHaveAttribute("href", "/listings");
     expect(
-      screen.getByRole("link", { name: /send a general enquiry/i })
+      screen.getByRole("link", { name: /send an enquiry/i })
     ).toHaveAttribute("href", "/quote");
   });
 
@@ -314,10 +314,10 @@ describe("public page shells", () => {
         }}
       />
     );
-    expect(screen.getByRole("link", { name: /view listing/i })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /view rental listing/i })).toBeInTheDocument();
     expect(
       screen
-        .getAllByRole("link", { name: /request this listing/i })
+        .getAllByRole("link", { name: /request a quote/i })
         .map((link) => link.getAttribute("href"))
     ).toContain("/quote?listing=compact-chair");
     expect(screen.queryByText(/shell/i)).not.toBeInTheDocument();

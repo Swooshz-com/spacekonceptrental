@@ -20,51 +20,15 @@ const publicSourceRoots = [
   "website/app/not-found.tsx",
   "website/components/QuoteRequestForm.tsx"
 ];
-const forbiddenPublicFlowPattern = new RegExp(
-  `\\b(?:${[
-    "ca" + "rt",
-    "check" + "out",
-    "pay" + "ment",
-    "pur" + "chase",
-    "online ord" + "ering",
-    "confirmed ord" + "er"
-  ].join("|")})\\b`,
-  "i"
-);
-const forbiddenRentalCompletionPattern = new RegExp(
-  `\\b(?:${[
-    "book" + "ing",
-    "reser" + "vation",
-    "fulfil" + "ment",
-    "fulfill" + "ment",
-    "stock reser" + "vation",
-    "stock-reser" + "vation",
-    "book now",
-    "reserve now"
-  ].join("|")})\\b`,
-  "i"
-);
+const forbiddenPublicFlowPattern = /\b(?:cart|checkout|payment|purchase|online ordering|confirmed order)\b/i;
+const forbiddenRentalCompletionPattern = /\b(?:booking|reservation|fulfilment|fulfillment|stock reservation|stock-reservation|book now|reserve now)\b/i;
 const forbiddenFakeFactPattern =
   /award-winning|certified partner|trusted by|5-star|guaranteed availability|guaranteed delivery|licensed and insured|testimonial|client logo|case study|legal guarantee|production policy|service-area claim|Singapore\s+\d{6}|\+?\d[\d\s().-]{7,}|Mon(?:day)?\s*-\s*Fri|24\/7|123\s+Main/i;
-const forbiddenPublicInternalPattern = new RegExp(
-  [
-    "owner handoff bundle",
-    "owner-facing review brief",
-    "owner approval issue template",
-    "no-deploy preflight command center",
-    "owner approval packet",
-    "release-control internals",
-    "admin urls?",
-    "internal notes",
-    "recovery lanes?",
-    "destructive-action safeguards",
-    "status-transition matrix",
-    "\\/admin\\/"
-  ].join("|"),
-  "i"
-);
+const forbiddenPublicInternalPattern =
+  /owner handoff bundle|owner-facing review brief|owner approval issue template|no-deploy preflight command center|owner approval packet|release-control internals|admin urls?|internal notes|recovery lanes?|destructive-action safeguards|status-transition matrix|\/admin\//i;
 const forbiddenPublicScopePattern = /customer account|quote tracking|file upload|public upload|notifications?|\bCRM\b/i;
 const dockerBypassPattern = /docker[^\n]*(?:skip|bypass)|(?:skip|bypass)[^\n]*docker/i;
+const receiptPromisePattern = /guaranteed availability|response time|set aside furniture and finalise|final rental details are ready/i;
 
 const authorisedAdminState = {
   status: "authorised_admin" as const,
@@ -108,15 +72,25 @@ function readPublicProductionSource() {
     .join("\n");
 }
 
-describe("Phase 5A-A/B public review polish", () => {
+describe("Phase 5B-A/B public journey acceptance", () => {
   afterEach(() => cleanup());
 
-  it("keeps public production source rental/enquiry-only for owner review", () => {
+  it("keeps public route source on safe rental listing and enquiry wording", () => {
     const source = readPublicProductionSource();
 
-    expect(source).toMatch(/\b(?:listing|listings)\b/i);
-    expect(source).toMatch(/\b(?:rental|rentals)\b/i);
-    expect(source).toMatch(/\b(?:quote|enquiry|request)\b/i);
+    for (const required of [
+      /Browse listings/i,
+      /View rental listing/i,
+      /Request a quote/i,
+      /Send an enquiry/i,
+      /Start a rental enquiry/i,
+      /rental/i,
+      /listing/i,
+      /quote|enquiry|request/i
+    ]) {
+      expect(source).toMatch(required);
+    }
+
     expect(source).not.toMatch(forbiddenPublicFlowPattern);
     expect(source).not.toMatch(forbiddenRentalCompletionPattern);
     expect(source).not.toMatch(forbiddenFakeFactPattern);
@@ -124,60 +98,81 @@ describe("Phase 5A-A/B public review polish", () => {
     expect(source).not.toMatch(forbiddenPublicScopePattern);
   });
 
-  it("keeps quote/enquiry form copy request-intake only and non-promissory", () => {
+  it("keeps selected listing context editable, request-only, and non-promissory", () => {
     render(<QuoteRequestForm initialItemsText="Modular Lounge Set" />);
 
     expect(screen.getByText(/starts this rental request/i)).toBeInTheDocument();
-    expect(screen.getByText(/not a rental fit confirmation/i)).toBeInTheDocument();
+    expect(screen.getByText(/starting point only/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Requested listings or items/i)).toHaveValue(
+      "Modular Lounge Set"
+    );
     expect(screen.getByRole("button", { name: /send an enquiry/i })).toBeInTheDocument();
-    expect(screen.getByText(/triage the rental enquiry/i)).toBeInTheDocument();
     expect(screen.queryByText(forbiddenPublicFlowPattern)).not.toBeInTheDocument();
     expect(screen.queryByText(forbiddenRentalCompletionPattern)).not.toBeInTheDocument();
   });
 
-  it("renders the owner review checklist summary only for authorised admin state", () => {
+  it("keeps receipt and fallback copy safe for browsing or enquiry recovery", () => {
+    const source = readPublicProductionSource();
+
+    expect(source).toMatch(/Enquiry received/i);
+    expect(source).toMatch(/receipt only/i);
+    expect(source).toMatch(/review\s+your request/i);
+    expect(source).toMatch(/follow up directly/i);
+    expect(source).toMatch(/No matching public listings/i);
+    expect(source).toMatch(/Page unavailable/i);
+    expect(source).toMatch(/Browse listings/i);
+    expect(source).toMatch(/Send an enquiry/i);
+    expect(source).not.toMatch(receiptPromisePattern);
+  });
+
+  it("renders protected public-parity helper only for authorised admin state", () => {
     render(
       <AdminShellContent
         state={authorisedAdminState}
-        view={{ kind: "content-readiness" }}
+        view={{ kind: "public-parity" }}
       />
     );
 
     expect(
-      screen.getByRole("heading", { name: /owner review checklist summary/i })
+      screen.getByRole("heading", {
+        name: /public catalogue-to-enquiry parity review/i
+      })
     ).toBeInTheDocument();
     expect(screen.getByText("docs/OWNER-HANDOFF-BUNDLE.md")).toBeInTheDocument();
-    expect(screen.getByText("docs/content/OWNER-FACING-REVIEW-BRIEF.md")).toBeInTheDocument();
-    expect(screen.getByText(".github/ISSUE_TEMPLATE/owner-approval-request.md")).toBeInTheDocument();
-    expect(screen.getByText("docs/content/NO-DEPLOY-PREFLIGHT-COMMAND-CENTER.md")).toBeInTheDocument();
+    expect(
+      screen.getByText("docs/content/LOCAL-CONTENT-READINESS-CLEANUP.md")
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("docs/content/LOCAL-PUBLIC-JOURNEY-ACCEPTANCE.md")
+    ).toBeInTheDocument();
   });
 
-  it("does not render protected owner review helper for blocked admin states", () => {
+  it("does not render protected public-parity helper for blocked admin states", () => {
     render(
       <AdminShellContent
         state={{ status: "unauthenticated" }}
-        view={{ kind: "content-readiness" }}
+        view={{ kind: "public-parity" }}
       />
     );
 
     expect(
-      screen.queryByRole("heading", { name: /owner review checklist summary/i })
+      screen.queryByRole("heading", {
+        name: /public catalogue-to-enquiry parity review/i
+      })
     ).not.toBeInTheDocument();
-    expect(screen.queryByText("docs/OWNER-HANDOFF-BUNDLE.md")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("docs/content/LOCAL-PUBLIC-JOURNEY-ACCEPTANCE.md")
+    ).not.toBeInTheDocument();
   });
 
-  it("registers the public review polish validator in package.json", () => {
+  it("registers the public journey validator and keeps the suite free of Docker bypass logic", () => {
     const packageJson = JSON.parse(readRepoFile("package.json"));
-
-    expect(packageJson.scripts["validate:public-review-polish"]).toBe(
-      "node scripts/validate-public-review-polish.cjs"
-    );
-  });
-
-  it("keeps release-candidate suite required and free of Docker bypass logic", () => {
     const suite = readRepoFile("scripts/validate-release-candidate-suite.cjs");
 
-    expect(suite).toContain("args: ['run', 'validate:public-review-polish']");
+    expect(packageJson.scripts["validate:public-journey-acceptance"]).toBe(
+      "node scripts/validate-public-journey-acceptance.cjs"
+    );
+    expect(suite).toContain("args: ['run', 'validate:public-journey-acceptance']");
     expect(suite).not.toMatch(dockerBypassPattern);
   });
 });

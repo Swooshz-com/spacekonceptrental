@@ -201,7 +201,7 @@ describe("Phase 3C-A/B public catalogue discovery and quote funnel polish", () =
     expect(screen.getByText(/conference seating/i)).toBeInTheDocument();
     expect(screen.getByText(/brand activation setup/i)).toBeInTheDocument();
     expect(
-      screen.getByRole("link", { name: /send setup notes/i })
+      screen.getByRole("link", { name: /send an enquiry/i })
     ).toHaveAttribute("href", "/quote");
   });
 
@@ -219,10 +219,10 @@ describe("Phase 3C-A/B public catalogue discovery and quote funnel polish", () =
 
     expect(screen.getByText(/no public rental listings match lighting/i)).toBeInTheDocument();
     expect(
-      screen.getAllByRole("link", { name: /browse all listings/i })[0]
+      screen.getAllByRole("link", { name: /browse listings/i })[0]
     ).toHaveAttribute("href", "/listings");
     expect(
-      screen.getByRole("link", { name: /send a general enquiry/i })
+      screen.getByRole("link", { name: /send an enquiry/i })
     ).toHaveAttribute("href", "/quote");
     expect(
       screen.getByRole("link", { name: /lighting 0 listings/i })
@@ -244,10 +244,10 @@ describe("Phase 3C-A/B public catalogue discovery and quote funnel polish", () =
       screen.getByText(/no public listings are available in this category yet/i)
     ).toBeInTheDocument();
     expect(
-      screen.getAllByRole("link", { name: /browse all listings/i })[0]
+      screen.getAllByRole("link", { name: /browse listings/i })[0]
     ).toHaveAttribute("href", "/listings");
     expect(
-      screen.getByRole("link", { name: /start quote request/i })
+      screen.getByRole("link", { name: /start a rental enquiry/i })
     ).toHaveAttribute("href", "/quote");
 
     cleanup();
@@ -259,10 +259,10 @@ describe("Phase 3C-A/B public catalogue discovery and quote funnel polish", () =
 
     expect(screen.getByText(/no public categories are available right now/i)).toBeInTheDocument();
     expect(
-      screen.getByRole("link", { name: /browse all listings/i })
+      screen.getByRole("link", { name: /browse listings/i })
     ).toHaveAttribute("href", "/listings");
     expect(
-      screen.getByRole("link", { name: /start quote request|request a quote/i })
+      screen.getByRole("link", { name: /start a rental enquiry|request a quote/i })
     ).toHaveAttribute("href", "/quote");
   });
 

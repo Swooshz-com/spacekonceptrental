@@ -241,32 +241,32 @@ describe("Phase 3Z-A/B public route readiness closure", () => {
   it("renders safe public rental/enquiry copy without introducing public scope creep", async () => {
     render(await HomePage());
     expect(screen.getByRole("heading", { name: /event furniture rental for planned spaces/i })).toBeInTheDocument();
-    expect(screen.getByText(/availability, fit, and final quote details stay with the team/i)).toBeInTheDocument();
+    expect(screen.getByText(/rental fit and final quote details stay with the team/i)).toBeInTheDocument();
     cleanup();
 
     render(<CataloguePageContent catalogue={sampleCatalogue} />);
-    expect(screen.getByText(/browsing does not hold furniture or finalise availability/i)).toBeInTheDocument();
+    expect(screen.getByText(/browsing does not set aside furniture or finalise rental details/i)).toBeInTheDocument();
     cleanup();
 
     render(<ProductPageContent product={sampleProduct} />);
-    expect(screen.getByText(/does not hold furniture or finalise availability/i)).toBeInTheDocument();
+    expect(screen.getByText(/does not set aside furniture or finalise rental details/i)).toBeInTheDocument();
     cleanup();
 
     render(<CategoriesPageContent catalogue={sampleCatalogue} />);
-    expect(screen.getByText(/availability and fit are reviewed directly by the team/i)).toBeInTheDocument();
+    expect(screen.getByText(/rental fit is reviewed directly by the team/i)).toBeInTheDocument();
     cleanup();
 
     render(<EventsPage />);
-    expect(screen.getByText(/They do not hold furniture or finalise availability/i)).toBeInTheDocument();
+    expect(screen.getByText(/They do not set aside furniture or finalise rental details/i)).toBeInTheDocument();
     cleanup();
 
     render(await QuotePage());
     expect(screen.getByText(/The form is enquiry intake only/i)).toBeInTheDocument();
-    expect(screen.getByText(/does not hold furniture, finalise availability/i)).toBeInTheDocument();
+    expect(screen.getByText(/does not set aside furniture or finalise rental details/i)).toBeInTheDocument();
     cleanup();
 
     render(<QuoteRequestForm />);
-    expect(screen.getByText(/Availability is reviewed directly by the team/i)).toBeInTheDocument();
+    expect(screen.getByText(/Rental fit is reviewed directly by the team/i)).toBeInTheDocument();
     expect(document.body.textContent ?? "").not.toMatch(/checkout|payment|customer account|public tracking/i);
   });
 

@@ -68,7 +68,7 @@ export default function EventsPage() {
           <h2>Plan an event setup</h2>
           <p>
             These routes are starting points for a rental enquiry, not a fixed
-            package. They do not hold furniture or finalise availability. Keep
+            package. They do not set aside furniture or finalise rental details. Keep
             the notes practical and the team can review the fit.
           </p>
         </div>
@@ -82,10 +82,10 @@ export default function EventsPage() {
             Browse rental categories
           </Link>
           <Link className="button button--secondary" href="/listings">
-            Browse rental listings
+            Browse listings
           </Link>
           <Link className="button" href="/quote">
-            Send setup notes
+            Send an enquiry
           </Link>
         </div>
       </section>
@@ -95,7 +95,7 @@ export default function EventsPage() {
           Compare event setup guidance
         </Link>
         <Link className="button" href="/quote">
-          Start quote request
+          Start a rental enquiry
         </Link>
       </div>
     </section>

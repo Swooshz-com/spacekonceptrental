@@ -120,13 +120,13 @@ describe("Phase 2B-AQ furniture listing catalogue direction pivot", () => {
       "Furniture listing edits use their own protected panel, and image"
     );
     expect(categoryPanel).toContain("file handling stays out of scope.");
-    expect(cataloguePage).toContain("View listing");
+    expect(cataloguePage).toContain("View rental listing");
     expect(detailPage).toContain("Furniture listing");
-    expect(detailPage).toContain("Request this listing");
+    expect(detailPage).toContain("Request a quote");
     expect(eventPage).toContain("Event rentals");
     expect(eventPage).toContain("furniture rentals");
     expect(eventPage).toContain("styled setups");
-    expect(eventPage).toContain("Start quote request");
+    expect(eventPage).toContain("Start a rental enquiry");
     expect(eventPage).not.toMatch(/shell|mvp/i);
     expect(combinedVisibleSource).not.toMatch(/cart|checkout|payment|order fulfilment/i);
     expect(combinedVisibleSource).not.toContain("@supabase/");

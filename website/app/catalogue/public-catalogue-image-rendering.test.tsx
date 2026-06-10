@@ -89,12 +89,12 @@ describe("public catalogue image rendering", () => {
     });
 
     expect(image).toHaveAttribute("src", productWithImage.primaryImage?.publicUrl);
-    expect(screen.getByRole("link", { name: /view listing/i })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: /view rental listing/i })).toHaveAttribute(
       "href",
       "/catalogue/modular-lounge"
     );
     expect(
-      screen.getByRole("link", { name: /request this listing/i })
+      screen.getByRole("link", { name: /request a quote/i })
     ).toHaveAttribute("href", "/quote?listing=modular-lounge");
     expect(screen.queryByText(/cart|checkout|payment|online ordering/i)).not.toBeInTheDocument();
   });
@@ -113,7 +113,7 @@ describe("public catalogue image rendering", () => {
       })
     ).toHaveAttribute("src", productWithImage.images?.[1]?.publicUrl);
     expect(
-      screen.getByRole("link", { name: /request this listing/i })
+      screen.getByRole("link", { name: /request a quote/i })
     ).toHaveAttribute("href", "/quote?listing=modular-lounge");
     expect(screen.queryByText(/checkout|payment|reserve|book now/i)).not.toBeInTheDocument();
   });
