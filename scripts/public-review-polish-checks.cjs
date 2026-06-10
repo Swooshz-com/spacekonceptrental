@@ -11,6 +11,7 @@ const phase158MergeCommit = 'f5f3b23426df052568158ba3cf1c898deb617a93';
 const phase159MergeCommit = 'aec1d7e781f3db463aac3079a00ddb7a25564a0c';
 const phase160MergeCommit = 'faa06b3598317699c06ab55a1f987dac831306b6';
 const phase161MergeCommit = 'e051d98ee50501fccca8e9b55411dee6a6d7cc95';
+const phase162MergeCommit = 'fddfce84daa93141a7b353179f906c8827a9d6e7';
 const currentPhase5a = 'Phase 5A-A/B public owner-review polish sweep, local content-readiness cleanup, and protected admin review UX closure';
 const currentPhase5b = 'Phase 5B-A/B public catalogue-to-enquiry journey hardening, listing continuity, and admin/public parity checks';
 const currentPhase5c = 'Phase 5C-A/B public discovery search/filter polish, quote-intent context, and admin discovery parity closure';
@@ -19,6 +20,7 @@ const currentPhase5e = 'Phase 5E-A/B quote/enquiry intake reliability, receipt b
 const currentPhase5f = 'Phase 5F-A/B protected admin quote triage workflow, response-readiness checklist, and public/private boundary hardening';
 const currentPhase5g = 'Phase 5G-A/B protected admin catalogue content-ops readiness, media safety review, and public parity boundary';
 const currentPhase5h = 'Phase 5H-A/B protected admin catalogue write workflow polish, validation/error UX, and public parity guard';
+const currentPhase5i = 'Phase 5I-A/B owner-review walkthrough readiness, full-route acceptance matrix, and no-deploy handoff refresh';
 const latestCompletedPhase4f = 'Phase 4F-A/B owner-facing review handoff bundle, approval issue template, and no-deploy preflight command center';
 const cleanupDocPath = 'docs/content/LOCAL-CONTENT-READINESS-CLEANUP.md';
 const publicJourneyAcceptanceDocPath = 'docs/content/LOCAL-PUBLIC-JOURNEY-ACCEPTANCE.md';
@@ -28,6 +30,8 @@ const quoteIntakeReadinessDocPath = 'docs/content/LOCAL-QUOTE-ENQUIRY-INTAKE-REA
 const quoteTriageReadinessDocPath = 'docs/content/LOCAL-QUOTE-TRIAGE-READINESS.md';
 const catalogueContentOpsReadinessDocPath = 'docs/content/LOCAL-CATALOGUE-CONTENT-OPS-READINESS.md';
 const catalogueWriteWorkflowReadinessDocPath = 'docs/content/LOCAL-CATALOGUE-WRITE-WORKFLOW-READINESS.md';
+const ownerReviewWalkthroughReadinessDocPath = 'docs/content/LOCAL-OWNER-REVIEW-WALKTHROUGH-READINESS.md';
+const fullRouteAcceptanceMatrixDocPath = 'docs/content/LOCAL-FULL-ROUTE-ACCEPTANCE-MATRIX.md';
 const publicSourceRoots = [
   'website/app/layout.tsx',
   'website/app/page.tsx',
@@ -826,6 +830,147 @@ function assertPhase5hCatalogueWriteWorkflowReadiness() {
   assertSuiteAndTests();
 }
 
+function assertPhase5iStatusRollForward() {
+  const docs = normalizeWhitespace(statusDocPaths.map(readRepoFile).join('\n'));
+  for (const required of [
+    `Current phase: ${currentPhase5i}`,
+    `Latest completed capability: ${currentPhase5h}`,
+    'Last merged capability PR: #162',
+    `Last merged capability merge commit: ${phase162MergeCommit}`,
+    ownerReviewWalkthroughReadinessDocPath,
+    fullRouteAcceptanceMatrixDocPath,
+    'scripts/validate-owner-review-walkthrough-readiness.cjs',
+    'No deployment is performed or approved by Phase 5I-A/B',
+  ]) {
+    assertIncludes(docs, required, 'Phase 5I status roll-forward docs');
+  }
+}
+
+function assertOwnerReviewWalkthroughReadinessDocs() {
+  assertTracked(
+    [ownerReviewWalkthroughReadinessDocPath, fullRouteAcceptanceMatrixDocPath],
+    'Phase 5I owner-review walkthrough docs'
+  );
+  const doc = normalizeWhitespace(readRepoFile(ownerReviewWalkthroughReadinessDocPath));
+  for (const required of [
+    'repo-local, template-only, non-live owner-review walkthrough readiness package',
+    '[NOT EVIDENCE / NOT RECORDED]',
+    '[DEPLOYMENT APPROVAL: NOT GRANTED]',
+    'Public homepage walkthrough',
+    'Public catalogue/listings/categories/events walkthrough',
+    'Public listing detail walkthrough',
+    'Public quote/enquiry intake walkthrough',
+    'Public receipt/reference boundary',
+    'Protected admin quote inbox/triage walkthrough',
+    'Protected admin listing/category/media content ops walkthrough',
+    'Protected admin write workflow walkthrough',
+    'Owner input questions still unresolved',
+    'Claims still blocked',
+    'No-deploy/no-evidence/no-provider/no-public-tracking boundary',
+    'Contact details still missing',
+    'Address/business hours still missing',
+    'Service-area wording still missing',
+    'Legal/policy/guarantee/proof claims still blocked',
+  ]) {
+    assertIncludes(doc, required, 'Phase 5I owner-review walkthrough doc');
+  }
+  const matrix = normalizeWhitespace(readRepoFile(fullRouteAcceptanceMatrixDocPath));
+  for (const required of [
+    'local-only full-route acceptance matrix',
+    '[NOT EVIDENCE / NOT RECORDED]',
+    '[DEPLOYMENT APPROVAL: NOT GRANTED]',
+    '`/`',
+    '`/catalogue`',
+    '`/catalogue/[slug]`',
+    '`/listings`',
+    '`/listings/[slug]`',
+    '`/categories`',
+    'Category-specific browsing routes',
+    '`/events`',
+    '`/quote`',
+    '`/admin` protected shell',
+    'Protected admin listings/categories/media views',
+    'Protected admin quotes views',
+    'Not-found route',
+    'Local review only; not evidence',
+  ]) {
+    assertIncludes(matrix, required, 'Phase 5I route acceptance matrix');
+  }
+  assertNoMatch(
+    `${doc}\n${matrix}`,
+    /owner approved|owner sign-?off complete|actual owner decision|actual owner feedback|accepted by owner|preview evidence captured|production evidence captured|smoke evidence captured|route-walkthrough evidence captured|public launch evidence captured|write-success evidence captured|response-sent evidence captured|sign-off evidence captured/i,
+    'Phase 5I docs'
+  );
+}
+
+function assertOwnerReviewWalkthroughPackageScript() {
+  const packageJson = JSON.parse(readRepoFile('package.json'));
+  assert(
+    packageJson.scripts?.['validate:owner-review-walkthrough-readiness'] === 'node scripts/validate-owner-review-walkthrough-readiness.cjs',
+    'package.json must register validate:owner-review-walkthrough-readiness'
+  );
+}
+
+function assertOwnerReviewWalkthroughSources() {
+  const adminSource = readTrackedProductionSources(['website/app/admin/protected-admin-shell.tsx']);
+  const publicSource = readTrackedProductionSources(publicSourceRoots);
+
+  for (const required of [
+    /Phase 5I-A\/B admin-only walkthrough readiness/i,
+    /Owner-review walkthrough readiness helper/i,
+    /Public homepage walkthrough/i,
+    /Public catalogue\/listings\/categories\/events walkthrough/i,
+    /Public quote\/enquiry intake walkthrough/i,
+    /Protected admin quote inbox\/triage walkthrough/i,
+    /Protected admin listing\/category\/media content ops walkthrough/i,
+    /Protected admin write workflow walkthrough/i,
+    /Owner input placeholders/i,
+    /Public claims still blocked/i,
+    /no-deploy\/no-evidence boundary/i,
+    /LOCAL-OWNER-REVIEW-WALKTHROUGH-READINESS\.md/i,
+    /LOCAL-FULL-ROUTE-ACCEPTANCE-MATRIX\.md/i,
+  ]) {
+    assert(required.test(adminSource), `Phase 5I admin source missing safe wording: ${required}`);
+  }
+
+  assertNoMatch(
+    publicSource,
+    /owner-review walkthrough readiness helper|full-route acceptance matrix|route acceptance matrix internals|admin route\/view checklist|owner handoff internals|owner approval issue template|no-deploy preflight command|release-control internals|admin urls?|internal notes|destructive-action safeguards|recovery lanes?|status-transition matrix|public admin status|\/admin\//i,
+    'Phase 5I public source'
+  );
+  assert(/\b(?:listing|listings)\b/i.test(publicSource), 'public source must retain listing wording');
+  assert(/\b(?:rental|rentals)\b/i.test(publicSource), 'public source must retain rental wording');
+  assert(/\b(?:quote|enquiry|request)\b/i.test(publicSource), 'public source must retain quote/enquiry/request wording');
+  assertNoMatch(publicSource, /\b(?:cart|checkout|order|payment|purchase|online ordering)\b/i, 'Phase 5I public source');
+  assertNoMatch(publicSource, /\b(?:booking|reservation|fulfilment|fulfillment|stock reservation|stock-reservation|book now|reserve now)\b/i, 'Phase 5I public source');
+  assertNoMatch(publicSource, /award-winning|certified partner|trusted by|5-star|guaranteed availability|guaranteed delivery|licensed and insured|testimonial|client logo|case study|legal guarantee|production policy|service-area claim|Singapore\s+\d{6}|\+?\d[\d\s().-]{7,}|Mon(?:day)?\s*-\s*Fri|24\/7|123\s+Main/i, 'Phase 5I public source');
+  assertNoMatch(publicSource, /customer account|quote tracking|file upload|public upload|notifications?|\bCRM\b|email sending|sms sending|whatsapp|outbound messaging|public status view/i, 'Phase 5I public source');
+  assertNoMatch(
+    adminSource,
+    /public upload|customer upload|new provider setup|new storage provider|NEXT_PUBLIC_SUPABASE|SUPABASE_SERVICE_ROLE_KEY|service-role browser|Pinecone|\bRAG\b|outbound messaging|email sending|sms sending|whatsapp sending|process\.env\.(?:NEXT_PUBLIC_|SUPABASE|N8N|PINECONE|VERCEL)/i,
+    'Phase 5I admin source'
+  );
+}
+
+function assertReleaseSuiteHasOwnerReviewWalkthrough() {
+  const suite = readRepoFile('scripts/validate-release-candidate-suite.cjs');
+  assertIncludes(suite, "args: ['run', 'validate:owner-review-walkthrough-readiness']", 'release-candidate suite');
+  assertNoMatch(suite, /docker[^\n]*(?:skip|bypass)|(?:skip|bypass)[^\n]*docker/i, 'release-candidate suite');
+}
+
+function assertPhase5iOwnerReviewWalkthroughReadiness() {
+  assertOwnerReviewWalkthroughReadinessDocs();
+  assertPhase5iStatusRollForward();
+  assertOwnerReviewWalkthroughPackageScript();
+  assertOwnerReviewWalkthroughSources();
+  assertNoForbiddenTrackedFiles();
+  assertNoFilledEvidence();
+  assertPhase5hCatalogueWriteWorkflowReadiness();
+  assertReleaseSuiteHasOwnerReviewWalkthrough();
+  assertReleaseSuiteHasCatalogueWriteWorkflow();
+  assertSuiteAndTests();
+}
+
 function assertReleaseSuiteHasCatalogueContentOps() {
   const suite = readRepoFile('scripts/validate-release-candidate-suite.cjs');
   assertIncludes(suite, "args: ['run', 'validate:catalogue-content-ops-readiness']", 'release-candidate suite');
@@ -961,6 +1106,7 @@ function assertPhase5aPublicReviewPolish() {
 }
 
 module.exports = {
+  assertPhase5iOwnerReviewWalkthroughReadiness,
   assertPhase5hCatalogueWriteWorkflowReadiness,
   assertPhase5gCatalogueContentOpsReadiness,
   assertPhase5aPublicReviewPolish,
@@ -977,6 +1123,7 @@ module.exports = {
   phase159MergeCommit,
   phase160MergeCommit,
   phase161MergeCommit,
+  phase162MergeCommit,
   currentPhase5a,
   currentPhase5b,
   currentPhase5c,
@@ -985,6 +1132,7 @@ module.exports = {
   currentPhase5f,
   currentPhase5g,
   currentPhase5h,
+  currentPhase5i,
   latestCompletedPhase4f,
   cleanupDocPath,
   publicJourneyAcceptanceDocPath,
@@ -994,4 +1142,6 @@ module.exports = {
   quoteTriageReadinessDocPath,
   catalogueContentOpsReadinessDocPath,
   catalogueWriteWorkflowReadinessDocPath,
+  ownerReviewWalkthroughReadinessDocPath,
+  fullRouteAcceptanceMatrixDocPath,
 };

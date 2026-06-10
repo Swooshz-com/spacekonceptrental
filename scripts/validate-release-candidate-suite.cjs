@@ -5,6 +5,11 @@ const repoRoot = path.resolve(__dirname, '..');
 
 const commandPlan = [
   {
+    label: 'Validate owner-review walkthrough readiness',
+    cwd: repoRoot,
+    args: ['run', 'validate:owner-review-walkthrough-readiness'],
+  },
+  {
     label: 'Validate preview approval package',
     cwd: repoRoot,
     args: ['run', 'validate:preview-approval-package'],

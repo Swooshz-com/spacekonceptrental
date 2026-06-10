@@ -1,3 +1,19 @@
+## Phase 5I-A/B Owner-Review Walkthrough Readiness References
+
+Current phase: Phase 5I-A/B owner-review walkthrough readiness, full-route acceptance matrix, and no-deploy handoff refresh.
+
+Latest completed capability: Phase 5H-A/B protected admin catalogue write workflow polish, validation/error UX, and public parity guard.
+
+Last merged capability PR: #162.
+
+Last merged capability merge commit: fddfce84daa93141a7b353179f906c8827a9d6e7.
+
+Phase 5I-A/B adds a repo-local owner-review walkthrough readiness package, local full-route acceptance matrix, protected admin owner-review walkthrough helper, public/private route parity guard coverage, owner input question inventory, validate:owner-review-walkthrough-readiness validator coverage, and deterministic Phase 5I owner-review walkthrough tests. These controls are template-only, non-live, not evidence, and do not record owner approval, owner feedback, owner decisions, owner corrections, owner sign-off, preview evidence, production evidence, provider approval, route-walkthrough evidence, response-sent evidence, write-success evidence, acceptance evidence, public launch evidence, or deployment approval.
+
+Phase 5I-A/B references `docs/content/LOCAL-OWNER-REVIEW-WALKTHROUGH-READINESS.md`, `docs/content/LOCAL-FULL-ROUTE-ACCEPTANCE-MATRIX.md`, `docs/content/LOCAL-CATALOGUE-WRITE-WORKFLOW-READINESS.md`, `docs/content/LOCAL-CATALOGUE-CONTENT-OPS-READINESS.md`, `docs/content/LOCAL-QUOTE-TRIAGE-READINESS.md`, `docs/content/LOCAL-QUOTE-ENQUIRY-INTAKE-READINESS.md`, `docs/content/LOCAL-LISTING-DETAIL-READINESS.md`, `scripts/validate-owner-review-walkthrough-readiness.cjs`, `scripts/validate-catalogue-write-workflow-readiness.cjs`, `scripts/validate-catalogue-content-ops-readiness.cjs`, `scripts/validate-quote-triage-readiness.cjs`, `scripts/validate-quote-intake-readiness.cjs`, `scripts/validate-listing-detail-readiness.cjs`, `scripts/validate-public-discovery-acceptance.cjs`, `scripts/validate-public-journey-acceptance.cjs`, `scripts/validate-public-review-polish.cjs`, and protected admin owner-review walkthrough helper coverage.
+
+No deployment is performed or approved by Phase 5I-A/B. It does not add provider config, Vercel config, Supabase Cloud config, real secrets or env values, filled evidence, browser Supabase, service-role runtime paths, n8n/Pinecone runtime changes, `/api/chat` retrieval wiring, public uploads, customer accounts, public quote tracking, notifications, CRM, outbound messaging, invented operational facts, ecommerce flows, payment/order/checkout flows, booking/reservation flows, fulfilment flows, stock-reservation flows, owner-approved media claims, final styling claims, real inventory confirmation, route-walkthrough evidence, write-success evidence, response-sent evidence, public launch evidence, or public admin internals.
+
 ## Phase 5H-A/B Catalogue Write Workflow Readiness References
 
 Current phase: Phase 5H-A/B protected admin catalogue write workflow polish, validation/error UX, and public parity guard.
