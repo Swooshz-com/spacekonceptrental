@@ -9,12 +9,14 @@ const phase156MergeCommit = 'adca108ef0b5577fea0078b69f3ad524d9406e77';
 const phase157MergeCommit = '1f471213c71aa1d3ff979a267ffd1c8b2a39fe6f';
 const phase158MergeCommit = 'f5f3b23426df052568158ba3cf1c898deb617a93';
 const phase159MergeCommit = 'aec1d7e781f3db463aac3079a00ddb7a25564a0c';
+const phase160MergeCommit = 'faa06b3598317699c06ab55a1f987dac831306b6';
 const currentPhase5a = 'Phase 5A-A/B public owner-review polish sweep, local content-readiness cleanup, and protected admin review UX closure';
 const currentPhase5b = 'Phase 5B-A/B public catalogue-to-enquiry journey hardening, listing continuity, and admin/public parity checks';
 const currentPhase5c = 'Phase 5C-A/B public discovery search/filter polish, quote-intent context, and admin discovery parity closure';
 const currentPhase5d = 'Phase 5D-A/B public listing-detail readiness, media/context polish, and quote-intent review closure';
 const currentPhase5e = 'Phase 5E-A/B quote/enquiry intake reliability, receipt boundary, and protected admin triage parity';
 const currentPhase5f = 'Phase 5F-A/B protected admin quote triage workflow, response-readiness checklist, and public/private boundary hardening';
+const currentPhase5g = 'Phase 5G-A/B protected admin catalogue content-ops readiness, media safety review, and public parity boundary';
 const latestCompletedPhase4f = 'Phase 4F-A/B owner-facing review handoff bundle, approval issue template, and no-deploy preflight command center';
 const cleanupDocPath = 'docs/content/LOCAL-CONTENT-READINESS-CLEANUP.md';
 const publicJourneyAcceptanceDocPath = 'docs/content/LOCAL-PUBLIC-JOURNEY-ACCEPTANCE.md';
@@ -22,6 +24,7 @@ const discoveryAcceptanceDocPath = 'docs/content/LOCAL-DISCOVERY-SEARCH-FILTER-A
 const listingDetailReadinessDocPath = 'docs/content/LOCAL-LISTING-DETAIL-READINESS.md';
 const quoteIntakeReadinessDocPath = 'docs/content/LOCAL-QUOTE-ENQUIRY-INTAKE-READINESS.md';
 const quoteTriageReadinessDocPath = 'docs/content/LOCAL-QUOTE-TRIAGE-READINESS.md';
+const catalogueContentOpsReadinessDocPath = 'docs/content/LOCAL-CATALOGUE-CONTENT-OPS-READINESS.md';
 const publicSourceRoots = [
   'website/app/layout.tsx',
   'website/app/page.tsx',
@@ -413,6 +416,7 @@ function assertPhase5eStatusRollForward() {
     `Last merged capability merge commit: ${phase158MergeCommit}`,
     quoteIntakeReadinessDocPath,
   quoteTriageReadinessDocPath,
+  catalogueContentOpsReadinessDocPath,
     listingDetailReadinessDocPath,
     'scripts/validate-quote-intake-readiness.cjs',
     'No deployment is performed or approved by Phase 5E-A/B',
@@ -522,6 +526,7 @@ function assertPhase5fStatusRollForward() {
     'Last merged capability PR: #159',
     `Last merged capability merge commit: ${phase159MergeCommit}`,
     quoteTriageReadinessDocPath,
+  catalogueContentOpsReadinessDocPath,
     quoteIntakeReadinessDocPath,
     'scripts/validate-quote-triage-readiness.cjs',
     'validate:quote-triage-readiness',
@@ -633,6 +638,122 @@ function assertPhase5fQuoteTriageReadiness() {
   assertReleaseSuiteHasPublicJourney();
   assertReleaseSuiteHasQuoteIntake();
   assertReleaseSuiteHasQuoteTriage();
+  assertReleaseSuiteHasCatalogueContentOps();
+  assertSuiteAndTests();
+  assertPhase5gCatalogueContentOpsReadiness();
+}
+
+
+function assertPhase5gStatusRollForward() {
+  const docs = normalizeWhitespace(statusDocPaths.map(readRepoFile).join('\n'));
+  for (const required of [
+    `Current phase: ${currentPhase5g}`,
+    `Latest completed capability: ${currentPhase5f}`,
+    'Last merged capability PR: #160',
+    `Last merged capability merge commit: ${phase160MergeCommit}`,
+    catalogueContentOpsReadinessDocPath,
+    quoteTriageReadinessDocPath,
+    'scripts/validate-catalogue-content-ops-readiness.cjs',
+    'validate:catalogue-content-ops-readiness',
+    'No deployment is performed or approved by Phase 5G-A/B',
+  ]) {
+    assertIncludes(docs, required, 'Phase 5G status roll-forward docs');
+  }
+}
+
+function assertCatalogueContentOpsReadinessDoc() {
+  assertTracked([catalogueContentOpsReadinessDocPath], 'Phase 5G catalogue content-ops readiness doc');
+  const doc = normalizeWhitespace(readRepoFile(catalogueContentOpsReadinessDocPath));
+  for (const required of [
+    'repo-local, template-only, non-live catalogue content-ops readiness note',
+    '[NOT EVIDENCE / NOT RECORDED]',
+    '[DEPLOYMENT APPROVAL: NOT GRANTED]',
+    'Protected admin catalogue content-ops workflow',
+    'Listing/category/media readiness checklist',
+    'Media, fallback, and alt-text boundary',
+    'Public catalogue parity boundary',
+    'Admin write and operation boundary',
+    'Owner inputs still missing',
+    'Public claims still blocked',
+    'No-upload/no-provider/no-deploy/no-evidence status',
+  ]) {
+    assertIncludes(doc, required, 'Phase 5G catalogue content-ops readiness doc');
+  }
+  assertNoMatch(
+    doc,
+    /owner approved|owner sign-?off complete|actual owner decision|accepted by owner|preview evidence captured|production evidence captured|manual qa completed|response sent evidence captured|public launch evidence captured/i,
+    'Phase 5G catalogue content-ops readiness doc'
+  );
+}
+
+function assertCatalogueContentOpsPackageScript() {
+  const packageJson = JSON.parse(readRepoFile('package.json'));
+  assert(
+    packageJson.scripts?.['validate:catalogue-content-ops-readiness'] === 'node scripts/validate-catalogue-content-ops-readiness.cjs',
+    'package.json must register validate:catalogue-content-ops-readiness'
+  );
+}
+
+function assertCatalogueContentOpsSources() {
+  const adminSource = readTrackedProductionSources([
+    'website/app/admin',
+    'website/components/admin/listing-management-panel.tsx',
+    'website/components/admin/category-management-panel.tsx',
+    'website/components/admin/listing-image-metadata-management-panel.tsx',
+    'website/components/admin/listing-image-upload-panel.tsx',
+  ]);
+  const publicSource = readTrackedProductionSources(publicSourceRoots);
+
+  for (const required of [
+    /Catalogue content-ops readiness helper/i,
+    /LOCAL-CATALOGUE-CONTENT-OPS-READINESS\.md/i,
+    /Content completeness/i,
+    /Media readiness/i,
+    /Public-safe copy readiness/i,
+    /Quote\/enquiry handoff readiness/i,
+    /Owner input still missing/i,
+    /Claims still blocked/i,
+    /No-deploy\/no-evidence reminder/i,
+    /Alt text review/i,
+    /Public visibility\/status review/i,
+  ]) {
+    assert(required.test(adminSource), `admin catalogue content-ops source missing safe wording: ${required}`);
+  }
+
+  assert(/\b(?:listing|listings)\b/i.test(publicSource), 'public catalogue source must retain listing wording');
+  assert(/\b(?:rental|rentals)\b/i.test(publicSource), 'public catalogue source must retain rental wording');
+  assert(/\b(?:quote|enquiry|request)\b/i.test(publicSource), 'public catalogue source must retain quote/enquiry/request wording');
+  assertNoMatch(publicSource, /catalogue content-ops readiness helper|admin catalogue readiness helper|media checklist|owner handoff internals|release-control internals|internal notes|admin urls?|destructive-action safeguards|recovery lanes?|status-transition matrix|public admin status|\/admin\//i, 'Phase 5G public source');
+  assertNoMatch(publicSource, /\b(?:cart|checkout|order|payment|purchase|online ordering)\b/i, 'Phase 5G public source');
+  assertNoMatch(publicSource, /\b(?:booking|reservation|fulfilment|fulfillment|stock reservation|stock-reservation|book now|reserve now)\b/i, 'Phase 5G public source');
+  assertNoMatch(publicSource, /award-winning|certified partner|trusted by|5-star|guaranteed availability|guaranteed delivery|licensed and insured|testimonial|client logo|case study|legal guarantee|production policy|service-area claim|Singapore\s+\d{6}|\+?\d[\d\s().-]{7,}|Mon(?:day)?\s*-\s*Fri|24\/7|123\s+Main/i, 'Phase 5G public source');
+  assertNoMatch(publicSource, /customer account|quote tracking|file upload|public upload|notifications?|\bCRM\b|email sending|sms sending|whatsapp|outbound messaging/i, 'Phase 5G public source');
+  assertNoMatch(adminSource, /public upload|customer upload|new storage provider|NEXT_PUBLIC_SUPABASE|SUPABASE_SERVICE_ROLE_KEY|service-role browser|Pinecone|\bRAG\b|outbound messaging|email sending|sms sending|whatsapp sending|process\.env\.(?:NEXT_PUBLIC_|SUPABASE|N8N|PINECONE|VERCEL)/i, 'Phase 5G admin source');
+  assertNoMatch(adminSource, /owner-approved media|final styling|final availability|real inventory confirmation|confirmed owner-approved media/i, 'Phase 5G media/fallback copy');
+}
+
+function assertReleaseSuiteHasCatalogueContentOps() {
+  const suite = readRepoFile('scripts/validate-release-candidate-suite.cjs');
+  assertIncludes(suite, "args: ['run', 'validate:catalogue-content-ops-readiness']", 'release-candidate suite');
+  assertNoMatch(suite, /docker[^\n]*(?:skip|bypass)|(?:skip|bypass)[^\n]*docker/i, 'release-candidate suite');
+}
+
+function assertPhase5gCatalogueContentOpsReadiness() {
+  assertCatalogueContentOpsReadinessDoc();
+  assertPhase5gStatusRollForward();
+  assertCatalogueContentOpsPackageScript();
+  assertPublicSources();
+  assertPublicJourneySources();
+  assertListingDetailSources();
+  assertQuoteIntakeSources();
+  assertQuoteTriageSources();
+  assertCatalogueContentOpsSources();
+  assertNoForbiddenTrackedFiles();
+  assertNoFilledEvidence();
+  assertReleaseSuiteHasPublicJourney();
+  assertReleaseSuiteHasQuoteIntake();
+  assertReleaseSuiteHasQuoteTriage();
+  assertReleaseSuiteHasCatalogueContentOps();
   assertSuiteAndTests();
 }
 
@@ -744,6 +865,7 @@ function assertPhase5aPublicReviewPolish() {
 }
 
 module.exports = {
+  assertPhase5gCatalogueContentOpsReadiness,
   assertPhase5aPublicReviewPolish,
   assertPhase5bPublicJourneyAcceptance,
   assertPhase5cPublicDiscoveryAcceptance,
@@ -756,12 +878,14 @@ module.exports = {
   phase157MergeCommit,
   phase158MergeCommit,
   phase159MergeCommit,
+  phase160MergeCommit,
   currentPhase5a,
   currentPhase5b,
   currentPhase5c,
   currentPhase5d,
   currentPhase5e,
   currentPhase5f,
+  currentPhase5g,
   latestCompletedPhase4f,
   cleanupDocPath,
   publicJourneyAcceptanceDocPath,
@@ -769,4 +893,5 @@ module.exports = {
   listingDetailReadinessDocPath,
   quoteIntakeReadinessDocPath,
   quoteTriageReadinessDocPath,
+  catalogueContentOpsReadinessDocPath,
 };

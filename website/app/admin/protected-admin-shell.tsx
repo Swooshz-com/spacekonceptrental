@@ -553,7 +553,8 @@ const contentReadinessSources = [
   "docs/content/LOCAL-PUBLIC-JOURNEY-ACCEPTANCE.md",
   "docs/content/LOCAL-DISCOVERY-SEARCH-FILTER-ACCEPTANCE.md",
   "docs/content/LOCAL-LISTING-DETAIL-READINESS.md",
-  "docs/content/LOCAL-QUOTE-ENQUIRY-INTAKE-READINESS.md"
+  "docs/content/LOCAL-QUOTE-ENQUIRY-INTAKE-READINESS.md",
+  "docs/content/LOCAL-CATALOGUE-CONTENT-OPS-READINESS.md"
 ] as const;
 
 const reviewSurfaceGroups = 11;
@@ -946,6 +947,19 @@ const phase4fOwnerHandoffBundleSnapshot = [
   ["Deployment approval boundary", "[DEPLOYMENT APPROVAL: NOT GRANTED]"]
 ] as const;
 
+
+const phase5gCatalogueContentOpsReadinessPath =
+  "docs/content/LOCAL-CATALOGUE-CONTENT-OPS-READINESS.md";
+const phase5gCatalogueContentOpsChecklist = [
+  "Content completeness: listing title/name, category, rental unit, short description, long description, and event-use context are checked from existing admin data.",
+  "Media readiness: active media metadata, fallback expectation, primary image state, and alt text are reviewed without claiming owner approval for media or finished styling.",
+  "Public-safe copy readiness: visible listing/category/media copy stays rental/enquiry-only and non-promissory.",
+  "Quote/enquiry handoff readiness: public CTAs remain editable request intake, not approval, availability, or response-time promises.",
+  "Owner input still missing: contact, service area, legal/policy, proof claims, image selections, alt text, and final public wording still require owner-supplied facts.",
+  "Claims still blocked: no invented proof claims, client names, response-time claims, or operational promises.",
+  "No-deploy/no-evidence reminder: repo-local review only; no preview evidence, production evidence, owner approval, provider setup, or deployment approval is recorded."
+] as const;
+
 const phase5aLocalContentReadinessCleanupPath =
   "docs/content/LOCAL-CONTENT-READINESS-CLEANUP.md";
 const phase5aOwnerReviewChecklistDocs = [
@@ -1058,7 +1072,7 @@ const phase5dListingDetailParitySnapshot = [
   ],
   [
     "Media/fallback coverage",
-    "Public-safe alt text, gallery context, and representative review-safe fallback media without owner-approved media claims"
+    "Public-safe alt text, gallery context, and representative review-safe fallback media without owner approval claims"
   ],
   [
     "Related browsing/context coverage",
@@ -1901,6 +1915,91 @@ function PublicParityReviewWorkspace() {
   );
 }
 
+
+function AdminCatalogueContentOpsReadiness({
+  dashboard,
+  scope
+}: {
+  dashboard: AdminProductDashboardReadResult;
+  scope: "listings" | "categories" | "media" | "overview";
+}) {
+  if (dashboard.status === "unavailable") {
+    return null;
+  }
+
+  const products = dashboard.data.products;
+  const categories = dashboard.data.categories;
+  const images = dashboard.data.images;
+  const missingCategory = products.filter((product) => !product.categoryId).length;
+  const missingRentalUnit = products.filter((product) => !product.rentalUnit.trim()).length;
+  const missingPublicDescription = products.filter(
+    (product) => !product.shortDescription?.trim() || !product.description?.trim()
+  ).length;
+  const listingsNeedingMedia = products.filter(
+    (product) => product.status === "published" && product.imageCount === 0
+  ).length;
+  const activeImagesMissingAltText = images.filter(
+    (image) => image.status === "active" && !image.altText?.trim()
+  ).length;
+  const categoriesNeedingOwnerInput = categories.filter(
+    (category) => category.isPublished && category.publishedProductCount === 0
+  ).length;
+
+  const derivedChecks = [
+    `Listing title/name review: ${products.length} listing records are available for protected admin content-ops review.`,
+    `Category review: ${missingCategory} listings are missing category assignment and ${categoriesNeedingOwnerInput} published categories have no published listings.`,
+    `Rental unit review: ${missingRentalUnit} listings are missing rental unit wording for quote/request handoff.`,
+    `Description review: ${missingPublicDescription} listings are missing short or long public-safe description copy.`,
+    `Media/fallback review: ${listingsNeedingMedia} published listings need media metadata or a safe fallback expectation before public browsing.`,
+    `Alt text review: ${activeImagesMissingAltText} active image metadata records are missing public-safe alt text.`,
+    "Public visibility/status review: draft and archived records stay protected or hidden; published records still need readiness checks before any later launch decision.",
+    "Quote/enquiry CTA continuity: listing, category, media, and event-use context remains editable request text only."
+  ];
+
+  return (
+    <section
+      aria-label={`Phase 5G protected admin catalogue content-ops readiness helper for ${scope}`}
+      className="admin-dashboard__card admin-dashboard__card--summary"
+    >
+      <p className="eyebrow">Phase 5G-A/B admin-only catalogue readiness</p>
+      <h3>Catalogue content-ops readiness helper</h3>
+      <p>
+        This protected admin-only checklist derives from existing listing,
+        category, and media metadata. It supports review of public-safe preview
+        expectations and missing owner facts; it does not create evidence,
+        approve launch, perform provider actions, or expose internal notes to
+        public routes.
+      </p>
+      <dl className="quote-inbox__details">
+        <div>
+          <dt>Readiness reference</dt>
+          <dd>{phase5gCatalogueContentOpsReadinessPath}</dd>
+        </div>
+        <div>
+          <dt>Evidence status</dt>
+          <dd>[NOT EVIDENCE / NOT RECORDED]</dd>
+        </div>
+        <div>
+          <dt>Deployment status</dt>
+          <dd>[DEPLOYMENT APPROVAL: NOT GRANTED]</dd>
+        </div>
+      </dl>
+      <h4>Derived listing/category/media checklist</h4>
+      <ul className="admin-readiness__list">
+        {derivedChecks.map((check) => (
+          <li key={check}>{check}</li>
+        ))}
+      </ul>
+      <h4>Content-ops boundaries</h4>
+      <ul className="admin-readiness__list">
+        {phase5gCatalogueContentOpsChecklist.map((check) => (
+          <li key={check}>{check}</li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
 function AdminListingOperations({
   dashboard
 }: {
@@ -1965,6 +2064,7 @@ function AdminListingOperations({
             readOnly="Listing status counts and readiness summaries are read-only operator QA cues."
             writeEnabled="Write-enabled listing metadata."
           />
+          <AdminCatalogueContentOpsReadiness dashboard={dashboard} scope="listings" />
         </div>
       </section>
       <ListingManagementPanel
@@ -2006,6 +2106,7 @@ function AdminCategoryOperations({
             readOnly="Category counts and readiness summaries are read-only operator QA cues."
             writeEnabled="Write-enabled category metadata."
           />
+          <AdminCatalogueContentOpsReadiness dashboard={dashboard} scope="categories" />
         </div>
       </section>
       <CategoryManagementPanel categories={dashboard.data.categories} />
@@ -2044,6 +2145,7 @@ function AdminMediaOperations({
             readOnly="Media readiness by listing is a read-only operator QA summary."
             writeEnabled="Write-enabled image upload and metadata."
           />
+          <AdminCatalogueContentOpsReadiness dashboard={dashboard} scope="media" />
         </div>
       </section>
       <ListingImageUploadPanel products={dashboard.data.products} />
