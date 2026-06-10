@@ -25,6 +25,11 @@ const commandPlan = [
     args: ['run', 'validate:local-release-candidate'],
   },
   {
+    label: 'Validate public review polish',
+    cwd: repoRoot,
+    args: ['run', 'validate:public-review-polish'],
+  },
+  {
     label: 'Validate local freeze',
     cwd: repoRoot,
     args: ['run', 'validate:local-freeze'],

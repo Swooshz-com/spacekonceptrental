@@ -8,7 +8,7 @@ export default function CatalogueListingNotFound() {
         <h1>Listing unavailable</h1>
         <p>
           This rental listing is not available publicly right now. Browse the
-          catalogue or send a general enquiry and the team can help.
+          catalogue or send a general enquiry with the rental details you have in mind.
         </p>
       </div>
       <div className="hero__actions">

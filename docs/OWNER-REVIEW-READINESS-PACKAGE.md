@@ -1,3 +1,19 @@
+## Phase 5A-A/B Public Review Polish References
+
+Current phase: Phase 5A-A/B public owner-review polish sweep, local content-readiness cleanup, and protected admin review UX closure.
+
+Latest completed capability: Phase 4F-A/B owner-facing review handoff bundle, approval issue template, and no-deploy preflight command center.
+
+Last merged capability PR: #154.
+
+Last merged capability merge commit: 85bfc8fb459cfc74db3ff80634ff35302691cb7f.
+
+Phase 5A-A/B adds a repo-local public owner-review polish sweep, quote/enquiry intake copy cleanup, protected admin owner review checklist summary, local content-readiness cleanup note, validate:public-review-polish validator, and deterministic Phase 5A public review polish tests. These controls are template-only, non-live, not evidence, and do not record owner approval, owner feedback, owner decisions, owner corrections, owner sign-off, preview evidence, production evidence, provider approval, or deployment approval.
+
+Phase 5A-A/B references `docs/content/LOCAL-CONTENT-READINESS-CLEANUP.md`, `scripts/validate-public-review-polish.cjs`, `docs/OWNER-HANDOFF-BUNDLE.md`, `docs/content/OWNER-FACING-REVIEW-BRIEF.md`, `.github/ISSUE_TEMPLATE/owner-approval-request.md`, and `docs/content/NO-DEPLOY-PREFLIGHT-COMMAND-CENTER.md`.
+
+No deployment is performed or approved by Phase 5A-A/B. It does not add provider config, Vercel config, Supabase Cloud config, real secrets or env values, filled evidence, browser Supabase, service-role runtime paths, n8n/Pinecone runtime changes, `/api/chat` retrieval wiring, public uploads, customer accounts, public quote tracking, notifications, CRM, invented operational facts, ecommerce flows, payment/order/checkout flows, booking/reservation flows, fulfilment flows, stock-reservation flows, or public admin internals.
+
 ## Phase 4F-A/B Owner Handoff Bundle References
 
 Current phase: Phase 4F-A/B owner-facing review handoff bundle, approval issue template, and no-deploy preflight command center.
