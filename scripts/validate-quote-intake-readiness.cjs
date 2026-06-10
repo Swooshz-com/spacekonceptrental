@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-const { assertPhase5eQuoteIntakeReadiness } = require('./public-review-polish-checks.cjs');
+const { assertPhase5fQuoteTriageReadiness } = require('./public-review-polish-checks.cjs');
 
-assertPhase5eQuoteIntakeReadiness();
+assertPhase5fQuoteTriageReadiness();
 console.log('Quote intake readiness validation passed. No deployment was performed.');
