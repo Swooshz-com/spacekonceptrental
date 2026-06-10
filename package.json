@@ -26,6 +26,7 @@
     "validate:public-discovery-acceptance": "node scripts/validate-public-discovery-acceptance.cjs",
     "validate:listing-detail-readiness": "node scripts/validate-listing-detail-readiness.cjs",
     "validate:quote-intake-readiness": "node scripts/validate-quote-intake-readiness.cjs",
-    "validate:quote-triage-readiness": "node scripts/validate-quote-triage-readiness.cjs"
+    "validate:quote-triage-readiness": "node scripts/validate-quote-triage-readiness.cjs",
+    "validate:catalogue-content-ops-readiness": "node scripts/validate-catalogue-content-ops-readiness.cjs"
   }
 }

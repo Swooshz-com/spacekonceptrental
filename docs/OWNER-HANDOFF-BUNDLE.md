@@ -1,3 +1,19 @@
+## Phase 5G-A/B Catalogue Content-Ops Readiness References
+
+Current phase: Phase 5G-A/B protected admin catalogue content-ops readiness, media safety review, and public parity boundary.
+
+Latest completed capability: Phase 5F-A/B protected admin quote triage workflow, response-readiness checklist, and public/private boundary hardening.
+
+Last merged capability PR: #160.
+
+Last merged capability merge commit: faa06b3598317699c06ab55a1f987dac831306b6.
+
+Phase 5G-A/B adds repo-local protected admin catalogue content-ops UX polish, listing/category/media readiness checklist coverage, media/fallback/alt-text boundary hardening, public catalogue parity checks, local catalogue content-ops readiness documentation, validate:catalogue-content-ops-readiness validator coverage, and deterministic Phase 5G catalogue content-ops tests. These controls are template-only, non-live, not evidence, and do not record owner approval, owner feedback, owner decisions, owner corrections, owner sign-off, preview evidence, production evidence, provider approval, response-sent evidence, or deployment approval.
+
+Phase 5G-A/B references `docs/content/LOCAL-CATALOGUE-CONTENT-OPS-READINESS.md`, `docs/content/LOCAL-QUOTE-TRIAGE-READINESS.md`, `docs/content/LOCAL-QUOTE-ENQUIRY-INTAKE-READINESS.md`, `docs/content/LOCAL-LISTING-DETAIL-READINESS.md`, `docs/content/LOCAL-PUBLIC-JOURNEY-ACCEPTANCE.md`, `docs/OWNER-HANDOFF-BUNDLE.md`, `scripts/validate-catalogue-content-ops-readiness.cjs`, `scripts/validate-quote-triage-readiness.cjs`, `scripts/validate-quote-intake-readiness.cjs`, `scripts/validate-listing-detail-readiness.cjs`, `scripts/validate-public-discovery-acceptance.cjs`, `scripts/validate-public-journey-acceptance.cjs`, `scripts/validate-public-review-polish.cjs`, and protected admin catalogue/listing/media readiness helpers.
+
+No deployment is performed or approved by Phase 5G-A/B. It does not add provider config, Vercel config, Supabase Cloud config, real secrets or env values, filled evidence, browser Supabase, service-role runtime paths, n8n/Pinecone runtime changes, `/api/chat` retrieval wiring, public uploads, customer accounts, public quote tracking, notifications, CRM, outbound messaging, invented operational facts, ecommerce flows, payment/order/checkout flows, booking/reservation flows, fulfilment flows, stock-reservation flows, owner-approved media claims, final styling claims, real inventory confirmation, or public admin internals.
+
 ## Phase 5F-A/B Quote Triage Readiness References
 
 Current phase: Phase 5F-A/B protected admin quote triage workflow, response-readiness checklist, and public/private boundary hardening.
@@ -30,6 +46,7 @@ This bundle is not evidence. It records no owner approval. It performs no deploy
 - Local listing detail readiness: `docs/content/LOCAL-LISTING-DETAIL-READINESS.md`
 - Local quote/enquiry intake readiness: `docs/content/LOCAL-QUOTE-ENQUIRY-INTAKE-READINESS.md`
 - Local quote triage readiness: `docs/content/LOCAL-QUOTE-TRIAGE-READINESS.md`
+- Local catalogue content-ops readiness: `docs/content/LOCAL-CATALOGUE-CONTENT-OPS-READINESS.md`
 - Owner approval request packet: `docs/content/OWNER-APPROVAL-REQUEST-PACKET.md`
 - Preview-planning handoff template: `docs/content/PREVIEW-PLANNING-HANDOFF-TEMPLATE.md`
 - Final no-deploy decision gate: `docs/content/FINAL-NO-DEPLOY-DECISION-GATE.md`
