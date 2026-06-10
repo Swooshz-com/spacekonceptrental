@@ -1128,6 +1128,39 @@ const phase5eQuoteIntakeParitySnapshot = [
   ]
 ] as const;
 
+
+const phase5iOwnerReviewWalkthroughReadinessPath =
+  "docs/content/LOCAL-OWNER-REVIEW-WALKTHROUGH-READINESS.md";
+const phase5iFullRouteAcceptanceMatrixPath =
+  "docs/content/LOCAL-FULL-ROUTE-ACCEPTANCE-MATRIX.md";
+const phase5iWalkthroughGroups = [
+  "Public homepage walkthrough",
+  "Public catalogue/listings/categories/events walkthrough",
+  "Public listing detail walkthrough",
+  "Public quote/enquiry intake walkthrough",
+  "Public receipt/reference boundary",
+  "Protected admin quote inbox/triage walkthrough",
+  "Protected admin listing/category/media content ops walkthrough",
+  "Protected admin write workflow walkthrough"
+] as const;
+const phase5iAdminWalkthroughGroups = [
+  "Quote/enquiry flow",
+  "Catalogue content ops",
+  "Protected write workflow",
+  "Owner inputs still missing",
+  "Public claims still blocked",
+  "No-deploy/no-evidence boundary"
+] as const;
+const phase5iOwnerInputPlaceholders = [
+  "Contact details still missing",
+  "Address/business hours still missing",
+  "Service-area wording still missing",
+  "Final listing/category/media wording still missing",
+  "Image selections/alt-text preferences still missing",
+  "Legal/policy/proof claims still blocked",
+  "Response process expectations still missing"
+] as const;
+
 const publicJourneyReadinessClosurePath =
   "docs/content/PUBLIC-JOURNEY-READINESS-CLOSURE.md";
 const quoteEnquiryPublicExpectationBoundaryPath =
@@ -1916,6 +1949,70 @@ function PublicParityReviewWorkspace() {
 }
 
 
+
+function OwnerReviewWalkthroughReadinessHelper() {
+  return (
+    <section
+      aria-label="Phase 5I owner-review walkthrough readiness helper"
+      className="admin-dashboard__card admin-dashboard__card--summary"
+    >
+      <p className="eyebrow">Phase 5I-A/B admin-only walkthrough readiness</p>
+      <h3>Owner-review walkthrough readiness helper</h3>
+      <p>
+        This protected admin-only helper prepares a future owner walkthrough for
+        public routes, quote/enquiry flow, catalogue content ops, protected
+        write workflow checks, unresolved owner inputs, blocked public claims,
+        and the no-deploy/no-evidence boundary. It records no owner feedback,
+        no owner approval, no evidence, no provider setup, and no deployment
+        approval.
+      </p>
+      <dl className="quote-inbox__details">
+        <div>
+          <dt>Walkthrough package</dt>
+          <dd>{phase5iOwnerReviewWalkthroughReadinessPath}</dd>
+        </div>
+        <div>
+          <dt>Route acceptance matrix</dt>
+          <dd>{phase5iFullRouteAcceptanceMatrixPath}</dd>
+        </div>
+        <div>
+          <dt>Evidence status</dt>
+          <dd>[NOT EVIDENCE / NOT RECORDED]</dd>
+        </div>
+        <div>
+          <dt>Deployment status</dt>
+          <dd>[DEPLOYMENT APPROVAL: NOT GRANTED]</dd>
+        </div>
+      </dl>
+      <h4>Public and admin walkthrough groups</h4>
+      <ul className="admin-readiness__list">
+        {phase5iWalkthroughGroups.map((group) => (
+          <li key={group}>{group}</li>
+        ))}
+      </ul>
+      <h4>Protected admin review areas</h4>
+      <ul className="admin-readiness__list">
+        {phase5iAdminWalkthroughGroups.map((group) => (
+          <li key={group}>{group}</li>
+        ))}
+      </ul>
+      <h4>Owner input placeholders</h4>
+      <ul className="admin-readiness__list">
+        {phase5iOwnerInputPlaceholders.map((input) => (
+          <li key={input}>{input}</li>
+        ))}
+      </ul>
+      <p>
+        Public routes remain rental/enquiry-only and must not expose this
+        admin-only walkthrough helper, route acceptance matrix internals,
+        admin route/view checklist details, internal notes, release-control
+        internals, owner handoff internals, destructive-action safeguards,
+        recovery lanes, or status-transition matrix details.
+      </p>
+    </section>
+  );
+}
+
 function AdminCatalogueContentOpsReadiness({
   dashboard,
   scope
@@ -2393,6 +2490,7 @@ function AdminOperationsView({
   return (
     <>
       <AdminDashboard dashboard={state.dashboard} />
+      <OwnerReviewWalkthroughReadinessHelper />
       <QuoteRequestInboxPanel inbox={state.quoteInbox} />
     </>
   );
