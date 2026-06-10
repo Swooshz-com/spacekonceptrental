@@ -4,6 +4,7 @@ const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 
 const repoRoot = path.resolve(__dirname, '..');
+const { assertPhase5aPublicReviewPolish } = require('./public-review-polish-checks.cjs');
 const phase152MergeCommit = '10950d11ca6c40580982f35e615b3cf063f58a49';
 const currentPhase = 'Phase 4E-A/B owner approval request packet, preview-planning handoff template, and final no-deploy decision gate';
 const latestCompletedCapability = 'Phase 4D-A/B local release-candidate freeze, full-suite reliability gate, and deployment-planning firewall closure';
@@ -305,5 +306,7 @@ assertPublicSourceSafe();
 assertSuiteAndTestsNotWeakened();
 assertPackageScript();
 assertPhase4fOwnerHandoffBundle();
+
+assertPhase5aPublicReviewPolish();
 
 console.log('Owner approval request validation passed. No deployment was performed. This does not approve deployment.');

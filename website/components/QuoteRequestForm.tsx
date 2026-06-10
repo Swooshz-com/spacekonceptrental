@@ -223,8 +223,8 @@ export default function QuoteRequestForm({
           Event date
           <input name="eventDate" type="date" />
           <small>
-            Event date helps the team understand timing, delivery windows, and
-            setup priority. Availability is reviewed directly by the team.
+            Event date helps the team understand timing and setup context.
+            Availability is reviewed directly by the team.
           </small>
         </label>
         <label>
@@ -278,7 +278,7 @@ export default function QuoteRequestForm({
           />
           <small>
             Add quantities, alternates, dimensions, setup, access, and timing
-            notes for the requested items.
+            notes for the requested rental items.
           </small>
         </label>
       </fieldset>
@@ -295,7 +295,7 @@ export default function QuoteRequestForm({
         <p className="quote-form__status" role="status">
           Quote request received. This is a receipt only; the team can review
           your enquiry and follow up directly. It does not hold furniture or
-          finalise availability
+          finalise availability.
           {submitState.publicReference
             ? `. Reference: ${submitState.publicReference}`
             : "."}

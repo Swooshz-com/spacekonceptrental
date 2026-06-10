@@ -8,6 +8,7 @@ This bundle is not evidence. It records no owner approval. It performs no deploy
 
 ## Bundle index
 
+- Local content-readiness cleanup: `docs/content/LOCAL-CONTENT-READINESS-CLEANUP.md`
 - Owner approval request packet: `docs/content/OWNER-APPROVAL-REQUEST-PACKET.md`
 - Preview-planning handoff template: `docs/content/PREVIEW-PLANNING-HANDOFF-TEMPLATE.md`
 - Final no-deploy decision gate: `docs/content/FINAL-NO-DEPLOY-DECISION-GATE.md`

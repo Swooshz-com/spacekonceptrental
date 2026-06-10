@@ -3,6 +3,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const repoRoot = path.resolve(__dirname, '..');
+const { assertPhase5aPublicReviewPolish } = require('./public-review-polish-checks.cjs');
 const acceptanceMatrixPath =
   'docs/content/LOCAL-RELEASE-CANDIDATE-ACCEPTANCE-MATRIX.md';
 const routeInventoryFreezePath = 'docs/content/LOCAL-ROUTE-INVENTORY-FREEZE.md';
@@ -1249,5 +1250,7 @@ function assertPhase4fOwnerHandoffBundle() {
 
 assertOwnerApprovalRequestGate();
 assertPhase4fOwnerHandoffBundle();
+
+assertPhase5aPublicReviewPolish();
 
 console.log('Local release-candidate validation passed. No deployment was performed. This does not approve deployment.');

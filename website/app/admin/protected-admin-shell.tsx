@@ -931,6 +931,23 @@ const phase4fOwnerHandoffBundleSnapshot = [
   ["Deployment approval boundary", "[DEPLOYMENT APPROVAL: NOT GRANTED]"]
 ] as const;
 
+const phase5aLocalContentReadinessCleanupPath =
+  "docs/content/LOCAL-CONTENT-READINESS-CLEANUP.md";
+const phase5aOwnerReviewChecklistDocs = [
+  ownerHandoffBundleIndexPath,
+  ownerFacingReviewBriefPath,
+  ownerApprovalIssueTemplatePath,
+  noDeployPreflightCommandCenterPath,
+  phase5aLocalContentReadinessCleanupPath
+] as const;
+const phase5aOwnerReviewChecklistSnapshot = [
+  ["Public review polish", "Rental/enquiry wording only"],
+  ["Quote/enquiry intake", "Request-only / no hold or availability promise"],
+  ["Admin review helpers", "Protected admin-only"],
+  ["Evidence status", "[NOT EVIDENCE / NOT RECORDED]"],
+  ["Deployment approval", "[DEPLOYMENT APPROVAL: NOT GRANTED]"]
+] as const;
+
 const publicJourneyReadinessClosurePath =
   "docs/content/PUBLIC-JOURNEY-READINESS-CLOSURE.md";
 const quoteEnquiryPublicExpectationBoundaryPath =
@@ -1190,6 +1207,34 @@ function ReleaseControlWorkspace() {
             approval request boundary, evidence capture boundary, provider setup
             boundary, and deployment approval boundary out of public routes.
           </p>
+        </section>
+
+        <section
+          aria-label="Owner review checklist summary"
+          className="admin-dashboard__card admin-dashboard__card--summary"
+        >
+          <h3>Owner review checklist summary</h3>
+          <p>
+            Use the Phase 4F handoff bundle with the Phase 5A local cleanup
+            notes to review public rental wording, quote/enquiry intake copy,
+            and protected admin readiness before any separate deployment
+            decision. This card is protected admin-only and records no owner
+            feedback, evidence, sign-off, provider setup, or deployment
+            approval.
+          </p>
+          <dl className="quote-inbox__details">
+            {phase5aOwnerReviewChecklistSnapshot.map(([label, value]) => (
+              <div key={label}>
+                <dt>{label}</dt>
+                <dd>{value}</dd>
+              </div>
+            ))}
+          </dl>
+          <ul className="admin-dashboard__list">
+            {phase5aOwnerReviewChecklistDocs.map((docPath) => (
+              <li key={docPath}>{docPath}</li>
+            ))}
+          </ul>
         </section>
 
         <section className="admin-dashboard__card admin-dashboard__card--summary">
@@ -1528,6 +1573,34 @@ function ContentReadinessWorkspace() {
             transaction-style public flows.
           </p>
         </section>
+        <section
+          aria-label="Owner review checklist summary"
+          className="admin-dashboard__card admin-dashboard__card--summary"
+        >
+          <h3>Owner review checklist summary</h3>
+          <p>
+            Use the Phase 4F handoff bundle with the Phase 5A local cleanup
+            notes to review public rental wording, quote/enquiry intake copy,
+            and protected admin readiness before any separate deployment
+            decision. This card is protected admin-only and records no owner
+            feedback, evidence, sign-off, provider setup, or deployment
+            approval.
+          </p>
+          <dl className="quote-inbox__details">
+            {phase5aOwnerReviewChecklistSnapshot.map(([label, value]) => (
+              <div key={label}>
+                <dt>{label}</dt>
+                <dd>{value}</dd>
+              </div>
+            ))}
+          </dl>
+          <ul className="admin-dashboard__list">
+            {phase5aOwnerReviewChecklistDocs.map((docPath) => (
+              <li key={docPath}>{docPath}</li>
+            ))}
+          </ul>
+        </section>
+
         <section className="admin-dashboard__card admin-dashboard__card--summary">
           <h3>Review sources</h3>
           <p>
