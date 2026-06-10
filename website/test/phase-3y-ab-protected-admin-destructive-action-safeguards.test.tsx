@@ -332,14 +332,14 @@ describe("Phase 3Y-A/B protected admin destructive-action safeguards", () => {
   it("shows safer helper and recovery text in protected admin panels", () => {
     render(<ListingManagementPanel categories={[sampleCategory]} products={[sampleListing]} />);
     let text = document.body.textContent ?? "";
-    expect(text).toMatch(/Draft\/unpublish keeps the listing protected/i);
-    expect(text).toMatch(/If save fails, keep draft\/protected/i);
+    expect(text).toMatch(/Draft keeps the listing protected/i);
+    expect(text).toMatch(/Protected admin save does not deploy/i);
     cleanup();
 
     render(<CategoryManagementPanel categories={[sampleCategory]} />);
     text = document.body.textContent ?? "";
-    expect(text).toMatch(/Unpublish or archive hides the grouping from public browsing/i);
-    expect(text).toMatch(/keep unpublished\/protected/i);
+    expect(text).toMatch(/Non-visible or archived categories stay out of public browsing/i);
+    expect(text).toMatch(/does not create evidence/i);
     cleanup();
 
     render(<ListingImageUploadPanel products={[sampleListing]} />);

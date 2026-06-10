@@ -187,7 +187,7 @@ describe("listing image upload panel", () => {
     );
 
     expect(
-      await screen.findByText(/listing image upload could not be saved/i)
+      await screen.findByText(/protected admin upload could not be completed/i)
     ).toBeInTheDocument();
     expect(
       screen.queryByText(/sql|supabase|storage|stack|env|token|cookie|workspace|provider/i)

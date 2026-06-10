@@ -62,7 +62,9 @@ type ImagePayload = {
 
 const productImageWriteOperation = "productImage.write";
 const genericFailureMessage =
-  "Image metadata change could not be saved. Check public-safe alt text, primary state, and try again.";
+  "Protected admin save could not be completed. Check selected listing, image context, public-safe alt text, primary label, active or archived status, and sort order before retrying.";
+const phase5hReadinessDoc =
+  "docs/content/LOCAL-CATALOGUE-WRITE-WORKFLOW-READINESS.md";
 
 function formValue(formData: FormData, name: string) {
   const value = formData.get(name);
@@ -73,7 +75,7 @@ function formValue(formData: FormData, name: string) {
 function parseOptionalSortOrder(value: string) {
   if (!value) {
     return {
-      ok: true as const
+      ok: true as const,
     };
   }
 
@@ -81,13 +83,13 @@ function parseOptionalSortOrder(value: string) {
 
   if (!Number.isInteger(parsed) || parsed < 0 || parsed > 1_000_000) {
     return {
-      ok: false as const
+      ok: false as const,
     };
   }
 
   return {
     ok: true as const,
-    sortOrder: parsed
+    sortOrder: parsed,
   };
 }
 
@@ -107,12 +109,12 @@ async function requestProductImageWriteProof(fetcher: typeof fetch) {
   const response = await fetcher("/api/admin/csrf-proof", {
     method: "POST",
     headers: {
-      "Content-Type": "application/json"
+      "Content-Type": "application/json",
     },
     body: JSON.stringify({
       requestedOperation: productImageWriteOperation,
-      operation: productImageWriteOperation
-    })
+      operation: productImageWriteOperation,
+    }),
   });
 
   if (!response.ok) {
@@ -149,7 +151,7 @@ function hasText(value: string | undefined) {
 
 function imageReadiness(
   image: ListingImageMetadataImage,
-  product: ListingImageMetadataProduct | undefined
+  product: ListingImageMetadataProduct | undefined,
 ) {
   return [
     product ? `Matched to listing ${product.name}` : "Unmatched listing",
@@ -160,22 +162,26 @@ function imageReadiness(
       ? "Alt text ready for public accessibility"
       : "Missing alt text for public accessibility",
     image.isPrimary && image.status === "active"
-      ? "Primary active image can lead the public catalogue display"
+      ? "Primary active image is ready for owner review context"
       : image.isPrimary
         ? "Primary selection is inactive while archived"
-        : "Secondary image supports the listing gallery"
+        : "Secondary image supports the listing gallery",
   ];
 }
 
 function mediaReadinessByListing(
   product: ListingImageMetadataProduct,
-  images: ListingImageMetadataImage[]
+  images: ListingImageMetadataImage[],
 ) {
-  const productImages = images.filter((image) => image.productId === product.id);
-  const activeImages = productImages.filter((image) => image.status === "active");
+  const productImages = images.filter(
+    (image) => image.productId === product.id,
+  );
+  const activeImages = productImages.filter(
+    (image) => image.status === "active",
+  );
   const activePrimaryImages = activeImages.filter((image) => image.isPrimary);
   const activeImagesMissingAlt = activeImages.filter(
-    (image) => !hasText(image.altText)
+    (image) => !hasText(image.altText),
   );
   const messages: string[] = [];
 
@@ -189,7 +195,7 @@ function mediaReadinessByListing(
 
   if (activePrimaryImages.length > 1) {
     messages.push(
-      `${product.name} has ${activePrimaryImages.length} active primary images. Keep one active primary image before publication.`
+      `${product.name} has ${activePrimaryImages.length} active primary images. Keep one active primary image before publication.`,
     );
   }
 
@@ -197,31 +203,33 @@ function mediaReadinessByListing(
     messages.push(
       `${product.name} has ${activeImagesMissingAlt.length} active ${
         activeImagesMissingAlt.length === 1 ? "image" : "images"
-      } missing alt text.`
+      } missing alt text.`,
     );
   }
 
   return messages.length > 0
     ? messages
-    : [`${product.name} media readiness is clear for current publication state.`];
+    : [`${product.name} media readiness is clear for current review state.`];
 }
 
 function buildImagePayload(
   form: HTMLFormElement,
   formData: FormData,
   sortOrder: number | undefined,
-  includeProductId: boolean
+  includeProductId: boolean,
 ) {
   const isPrimaryInput = form.elements.namedItem("isPrimary");
   const payload: ImagePayload = {
-    ...(includeProductId ? { productId: formValue(formData, "productId") } : {}),
+    ...(includeProductId
+      ? { productId: formValue(formData, "productId") }
+      : {}),
     storageBucket: formValue(formData, "storageBucket"),
     storagePath: formValue(formData, "storagePath"),
     altText: formValue(formData, "altText"),
     isPrimary:
       isPrimaryInput instanceof HTMLInputElement
         ? isPrimaryInput.checked
-        : false
+        : false,
   };
 
   if (sortOrder !== undefined) {
@@ -235,23 +243,23 @@ export function ListingImageMetadataManagementPanel({
   products,
   images,
   fetcher = fetch,
-  onMutationComplete = reloadDashboard
+  onMutationComplete = reloadDashboard,
 }: ListingImageMetadataManagementPanelProps) {
   const [status, setStatus] = useState<PanelStatus>({
-    kind: "idle"
+    kind: "idle",
   });
   const archivedImageCount = images.filter(
-    (image) => image.status === "archived"
+    (image) => image.status === "archived",
   ).length;
 
   async function submitImageMutation(
     endpoint: string,
     payload: ImagePayload,
-    successMessage: string
+    successMessage: string,
   ) {
     setStatus({
       kind: "pending",
-      message: "Saving protected image metadata write..."
+      message: "Protected admin save is checking image metadata...",
     });
 
     try {
@@ -260,7 +268,7 @@ export function ListingImageMetadataManagementPanel({
       if (!csrfProof) {
         setStatus({
           kind: "error",
-          message: genericFailureMessage
+          message: genericFailureMessage,
         });
         return;
       }
@@ -269,23 +277,23 @@ export function ListingImageMetadataManagementPanel({
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-csrf-proof": csrfProof
+          "x-csrf-proof": csrfProof,
         },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
       });
       const responseBody = await readSafeJson(response);
 
       if (!response.ok || !isRecord(responseBody) || responseBody.ok !== true) {
         setStatus({
           kind: "error",
-          message: genericFailureMessage
+          message: genericFailureMessage,
         });
         return;
       }
 
       setStatus({
         kind: "success",
-        message: successMessage
+        message: successMessage,
       });
 
       try {
@@ -296,7 +304,7 @@ export function ListingImageMetadataManagementPanel({
     } catch {
       setStatus({
         kind: "error",
-        message: genericFailureMessage
+        message: genericFailureMessage,
       });
     }
   }
@@ -311,7 +319,7 @@ export function ListingImageMetadataManagementPanel({
     if (!sortOrder.ok) {
       setStatus({
         kind: "error",
-        message: genericFailureMessage
+        message: genericFailureMessage,
       });
       return;
     }
@@ -319,13 +327,13 @@ export function ListingImageMetadataManagementPanel({
     await submitImageMutation(
       "/api/admin/product-images",
       buildImagePayload(form, formData, sortOrder.sortOrder, true),
-      "Image metadata created. Refreshing dashboard."
+      "Image metadata saved for protected admin review. Refreshing dashboard.",
     );
   }
 
   async function handleUpdate(
     event: FormEvent<HTMLFormElement>,
-    image: ListingImageMetadataImage
+    image: ListingImageMetadataImage,
   ) {
     event.preventDefault();
 
@@ -336,7 +344,7 @@ export function ListingImageMetadataManagementPanel({
     if (!sortOrder.ok) {
       setStatus({
         kind: "error",
-        message: genericFailureMessage
+        message: genericFailureMessage,
       });
       return;
     }
@@ -344,7 +352,7 @@ export function ListingImageMetadataManagementPanel({
     await submitImageMutation(
       `/api/admin/product-images/${encodeURIComponent(image.id)}`,
       buildImagePayload(form, formData, sortOrder.sortOrder, false),
-      "Image metadata updated. Refreshing dashboard."
+      "Image metadata saved for protected admin review. Refreshing dashboard.",
     );
   }
 
@@ -352,7 +360,7 @@ export function ListingImageMetadataManagementPanel({
     await submitImageMutation(
       `/api/admin/product-images/${encodeURIComponent(image.id)}/archive`,
       {},
-      "Image metadata archived. Refreshing dashboard."
+      "Image archive state saved for protected admin review. Refreshing dashboard.",
     );
   }
 
@@ -362,12 +370,16 @@ export function ListingImageMetadataManagementPanel({
       aria-label="Listing image metadata management"
     >
       <div className="category-management__header">
-        <p className="eyebrow">Metadata-only image writes</p>
+        <p className="eyebrow">Protected admin save</p>
         <h2>Listing image metadata management</h2>
         <p>
           Create, update, and archive listing image metadata through the
           protected admin API. Alt text and primary state can affect public
-          browsing, but media readiness is not an availability assertion. If a save fails, keep the prior protected media state, review alt text and primary selection, and retry locally.
+          browsing, but media metadata is review context only and is not an
+          availability assertion. If a save fails, keep the prior protected
+          media state, review selected listing context, public-safe alt text,
+          primary label, and active or archived status, then retry locally.
+          Phase 5H guidance: {phase5hReadinessDoc}.
         </p>
       </div>
 
@@ -376,22 +388,43 @@ export function ListingImageMetadataManagementPanel({
         aria-live="polite"
       >
         {status.kind === "idle"
-          ? "Image metadata write controls are ready."
+          ? "Image metadata write controls are ready for protected admin save."
           : status.message}
       </div>
+
+      <section
+        className="admin-readiness"
+        aria-label="Media public-safe copy review"
+      >
+        <h3>Public-safe copy review</h3>
+        <p>
+          Save image metadata only after checking selected listing context,
+          image path context, public-safe alt text, primary image label,
+          active/archived state, fallback expectation, validation errors, and
+          sort order.
+        </p>
+        <p className="category-management__hint">
+          Protected admin save does not deploy, does not record owner approval,
+          and does not create evidence. Media metadata is review context only
+          and does not confirm visual outcome, availability, or inventory. See{" "}
+          {phase5hReadinessDoc}.
+        </p>
+      </section>
 
       <section className="admin-readiness" aria-label="Media readiness">
         <h3>Media readiness</h3>
         <p>
-          Public-ready media needs an active image, useful public-safe alt text, and a clear
-          primary image when the listing should lead with that setup. These admin-only cues do not prove availability.
+          Review-ready media needs an active image, useful public-safe alt text,
+          and a clear primary image when the listing should lead with that
+          setup. These admin-only cues do not prove availability or owner
+          approval.
         </p>
         <h4>Media readiness by listing</h4>
         <ul className="admin-readiness__list">
           {products.flatMap((product) =>
             mediaReadinessByListing(product, images).map((message) => (
               <li key={`${product.id}-${message}`}>{message}</li>
-            ))
+            )),
           )}
         </ul>
         {archivedImageCount > 0 ? (
@@ -418,15 +451,28 @@ export function ListingImageMetadataManagementPanel({
               </option>
             ))}
           </select>
-          <small>Associate media with the correct rental listing before publishing.</small>
+          <small>
+            Associate media with the correct rental listing before public-safe
+            copy review.
+          </small>
         </label>
         <label htmlFor="new-image-bucket">
           New image bucket
-          <input id="new-image-bucket" maxLength={120} name="storageBucket" required />
+          <input
+            id="new-image-bucket"
+            maxLength={120}
+            name="storageBucket"
+            required
+          />
         </label>
         <label htmlFor="new-image-path">
           New image path
-          <input id="new-image-path" maxLength={512} name="storagePath" required />
+          <input
+            id="new-image-path"
+            maxLength={512}
+            name="storagePath"
+            required
+          />
         </label>
         <label htmlFor="new-image-alt-text">
           New image alt text
@@ -446,7 +492,10 @@ export function ListingImageMetadataManagementPanel({
             type="number"
           />
         </label>
-        <label className="category-management__checkbox" htmlFor="new-image-primary">
+        <label
+          className="category-management__checkbox"
+          htmlFor="new-image-primary"
+        >
           <input id="new-image-primary" name="isPrimary" type="checkbox" />
           Mark new image as primary public browsing image
         </label>
@@ -462,21 +511,24 @@ export function ListingImageMetadataManagementPanel({
         {images.length === 0 ? (
           <section className="admin-dashboard__card admin-dashboard__card--summary">
             <p>
-              No listing image metadata records are available to update yet. Add approved listing media metadata before choosing public primary images or publishing media readiness.
+              No listing image metadata records are available to update yet. Add
+              reviewed listing media metadata before choosing public primary
+              images or completing media readiness review.
             </p>
           </section>
         ) : (
           images.map((image) => {
             const label = imageLabel(image);
-            const product = products.find((item) => item.id === image.productId);
+            const product = products.find(
+              (item) => item.id === image.productId,
+            );
 
             return (
               <article className="category-management__item" key={image.id}>
                 <div>
                   <h3>{label}</h3>
                   <p>
-                    {product?.name ?? "Unmatched listing"} - {image.status} -
-                    {" "}
+                    {product?.name ?? "Unmatched listing"} - {image.status} -{" "}
                     {image.isPrimary ? "primary" : "secondary"}
                   </p>
                 </div>
@@ -523,7 +575,10 @@ export function ListingImageMetadataManagementPanel({
                       maxLength={240}
                       name="altText"
                     />
-                    <small>Alt text supports public browsing accessibility only and must not be used as an availability assertion.</small>
+                    <small>
+                      Alt text supports public browsing accessibility only and
+                      must not be used as an availability assertion.
+                    </small>
                   </label>
                   <label htmlFor={`image-sort-order-${image.id}`}>
                     Image sort order for {label}
@@ -549,11 +604,17 @@ export function ListingImageMetadataManagementPanel({
                     Mark {label} as primary public browsing image
                   </label>
                   <p className="category-management__hint">
-                    Protected write boundary: primary and active media choices can affect public browsing. Archive removes this image from active listing media; it does not delete the file from storage. If save fails, keep the prior media state, review alt text and primary selection, and retry locally.
+                    Protected write boundary: primary and active media choices
+                    can affect public browsing. This protected admin save does
+                    not deploy, does not record owner approval, and does not
+                    create evidence. Archive removes this image from active
+                    listing media; it does not delete the file from storage. If
+                    save fails, keep the prior media state, review alt text and
+                    primary selection, and retry locally.
                   </p>
                   <div className="category-management__actions">
                     <button className="button" type="submit">
-                      Save image metadata {label}
+                      Save image metadata
                     </button>
                     <button
                       className="button button--secondary"

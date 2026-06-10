@@ -266,11 +266,11 @@ describe("Phase 3B-A/B admin operations readiness and quote triage polish", () =
     );
 
     expect(screen.getByText(/publication readiness/i)).toBeInTheDocument();
-    expect(screen.getByText(/1 ready for public browsing/i)).toBeInTheDocument();
-    expect(screen.getByText(/2 needing attention/i)).toBeInTheDocument();
-    expect(screen.getAllByText(/ready for public browsing/i).length).toBeGreaterThan(0);
+    expect(screen.getByText(/1 ready for owner review/i)).toBeInTheDocument();
+    expect(screen.getByText(/2 needing public-safe copy review/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/ready for owner review/i).length).toBeGreaterThan(0);
     expect(
-      screen.getAllByText(/needs attention before publishing/i).length
+      screen.getAllByText(/needs public-safe copy review/i).length
     ).toBeGreaterThan(0);
     expect(screen.getAllByText(/category assigned/i).length).toBeGreaterThan(0);
     expect(screen.getByText(/primary public image available/i)).toBeInTheDocument();
@@ -306,10 +306,10 @@ describe("Phase 3B-A/B admin operations readiness and quote triage polish", () =
     );
 
     expect(
-      screen.getByText(/use approved listing images only/i)
+      screen.getByText(/use reviewed listing images only/i)
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/primary uploaded images can lead the public catalogue display/i)
+      screen.getByText(/primary uploaded images can support public catalogue display/i)
     ).toBeInTheDocument();
 
     cleanup();
@@ -324,7 +324,7 @@ describe("Phase 3B-A/B admin operations readiness and quote triage polish", () =
       screen.getByRole("heading", { name: /^media readiness$/i })
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/primary active image can lead the public catalogue display/i)
+      screen.getByText(/primary active image is ready for owner review context/i)
     ).toBeInTheDocument();
     expect(
       screen.getByText(/missing alt text for public accessibility/i)

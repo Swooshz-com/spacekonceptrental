@@ -90,10 +90,10 @@ describe("listing management panel", () => {
       screen.getByRole("button", { name: /create listing/i })
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: /save listing modular lounge/i })
+      screen.getByRole("button", { name: /save listing metadata/i })
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: /publish listing modular lounge/i })
+      screen.getByRole("button", { name: /set modular lounge to public visibility/i })
     ).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: /archive listing modular lounge/i })
@@ -223,7 +223,7 @@ describe("listing management panel", () => {
       }
     });
     fireEvent.click(
-      screen.getByRole("button", { name: /save listing modular lounge/i })
+      screen.getByRole("button", { name: /save listing metadata/i })
     );
 
     await waitFor(() => expect(fetcher).toHaveBeenCalledTimes(2));
@@ -266,7 +266,7 @@ describe("listing management panel", () => {
     );
 
     fireEvent.click(
-      screen.getByRole("button", { name: /publish listing modular lounge/i })
+      screen.getByRole("button", { name: /set modular lounge to public visibility/i })
     );
     await waitFor(() => expect(publishFetcher).toHaveBeenCalledTimes(2));
     expect(getLastRequestBody(publishFetcher)).toEqual({
@@ -283,7 +283,7 @@ describe("listing management panel", () => {
     );
 
     fireEvent.click(
-      screen.getByRole("button", { name: /unpublish listing modular lounge/i })
+      screen.getByRole("button", { name: /set modular lounge to draft visibility/i })
     );
     await waitFor(() => expect(unpublishFetcher).toHaveBeenCalledTimes(2));
     expect(getLastRequestBody(unpublishFetcher)).toEqual({
@@ -355,11 +355,11 @@ describe("listing management panel", () => {
     );
 
     fireEvent.click(
-      screen.getByRole("button", { name: /save listing modular lounge/i })
+      screen.getByRole("button", { name: /save listing metadata/i })
     );
 
     expect(
-      await screen.findByText(/listing change could not be saved/i)
+      await screen.findByText(/protected admin save could not be completed/i)
     ).toBeInTheDocument();
     expect(screen.queryByText(/sql provider stack token cookie/i)).not.toBeInTheDocument();
     expect(screen.queryByText(rawProof)).not.toBeInTheDocument();

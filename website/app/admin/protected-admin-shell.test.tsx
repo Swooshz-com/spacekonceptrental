@@ -386,7 +386,7 @@ describe("protected admin shell", () => {
       screen.getByRole("button", { name: /create category/i })
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: /save category lounge/i })
+      screen.getByRole("button", { name: /save category metadata/i })
     ).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: /archive category lounge/i })
@@ -395,10 +395,10 @@ describe("protected admin shell", () => {
       screen.getByRole("button", { name: /^create listing$/i })
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: /save listing modular lounge/i })
+      screen.getByRole("button", { name: /save listing metadata/i })
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: /publish listing modular lounge/i })
+      screen.getByRole("button", { name: /set modular lounge to public visibility/i })
     ).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: /archive listing modular lounge/i })
@@ -407,17 +407,17 @@ describe("protected admin shell", () => {
       screen.getByRole("heading", { name: /listing image metadata management/i })
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("heading", { name: /upload listing image/i })
+      screen.getByRole("heading", { name: /upload listing image for review/i })
     ).toBeInTheDocument();
     expect(screen.getByLabelText(/listing image file/i)).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: /upload listing image/i })
+      screen.getByRole("button", { name: /upload listing image for review/i })
     ).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: /create listing image metadata/i })
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: /save image metadata lounge set/i })
+      screen.getByRole("button", { name: /save image metadata/i })
     ).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: /archive image metadata lounge set/i })
@@ -493,7 +493,7 @@ describe("protected admin shell", () => {
         screen.queryByRole("button", { name: /create listing image metadata/i })
       ).not.toBeInTheDocument();
       expect(
-        screen.queryByRole("button", { name: /upload listing image/i })
+        screen.queryByRole("button", { name: /upload listing image for review/i })
       ).not.toBeInTheDocument();
       expect(screen.queryByLabelText(/listing image file/i)).not.toBeInTheDocument();
       expect(screen.queryByLabelText(/listing image metadata management/i)).not.toBeInTheDocument();

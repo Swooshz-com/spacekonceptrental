@@ -61,7 +61,7 @@ describe("category management panel", () => {
       screen.getByRole("button", { name: /create category/i })
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: /save category lounge/i })
+      screen.getByRole("button", { name: /save category metadata/i })
     ).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: /archive category lounge/i })
@@ -156,7 +156,7 @@ describe("category management panel", () => {
       }
     });
     fireEvent.click(
-      screen.getByRole("button", { name: /save category lounge/i })
+      screen.getByRole("button", { name: /save category metadata/i })
     );
 
     await waitFor(() => expect(fetcher).toHaveBeenCalledTimes(2));
@@ -256,7 +256,7 @@ describe("category management panel", () => {
     fireEvent.click(screen.getByRole("button", { name: /create category/i }));
 
     expect(
-      await screen.findByText(/category change could not be saved/i)
+      await screen.findByText(/protected admin save could not be completed/i)
     ).toBeInTheDocument();
     expect(screen.queryByText(/internal proof details/i)).not.toBeInTheDocument();
 
@@ -281,7 +281,7 @@ describe("category management panel", () => {
     fireEvent.click(screen.getByRole("button", { name: /create category/i }));
 
     expect(
-      await screen.findByText(/category change could not be saved/i)
+      await screen.findByText(/protected admin save could not be completed/i)
     ).toBeInTheDocument();
     expect(screen.queryByText(/sql provider stack/i)).not.toBeInTheDocument();
     expect(screen.queryByText(rawProof)).not.toBeInTheDocument();
