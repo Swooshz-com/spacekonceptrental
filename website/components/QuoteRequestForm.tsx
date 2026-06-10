@@ -157,7 +157,7 @@ export default function QuoteRequestForm({
       setSubmitState({
         status: "error",
         message:
-          "Quote requests are temporarily unavailable. Please try again later. You can retry with the same event details."
+          "Quote requests are temporarily unavailable. Please try again later with the same event details."
       });
     }
   }
@@ -175,7 +175,7 @@ export default function QuoteRequestForm({
           <strong>Selected listing</strong>
           <span>
             {initialItemsText} starts this rental request. Selected listing is
-            a starting point only, not a confirmed hold or fit confirmation.
+            a starting point only, not a rental fit confirmation.
             Add quantities, alternates, dimensions, setup, access, or timing
             notes before sending.
           </span>
@@ -224,7 +224,7 @@ export default function QuoteRequestForm({
           <input name="eventDate" type="date" />
           <small>
             Event date helps the team understand timing and setup context.
-            Availability is reviewed directly by the team.
+            Rental fit is reviewed directly by the team.
           </small>
         </label>
         <label>
@@ -289,13 +289,13 @@ export default function QuoteRequestForm({
       >
         {submitState.status === "submitting"
           ? "Sending"
-          : "Send quote request"}
+          : "Send an enquiry"}
       </button>
       {submitState.status === "success" ? (
         <p className="quote-form__status" role="status">
-          Quote request received. This is a receipt only; the team can review
-          your enquiry and follow up directly. It does not hold furniture or
-          finalise availability.
+          Enquiry received. This is a receipt only; the team can review
+          your request and follow up directly. It does not set aside furniture
+          or finalise rental details.
           {submitState.publicReference
             ? `. Reference: ${submitState.publicReference}`
             : "."}

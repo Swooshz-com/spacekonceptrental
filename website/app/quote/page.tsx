@@ -56,7 +56,7 @@ function QuoteListingContext({
         Selected listing is a starting point only for your rental request. It
         helps the team understand the item you are considering. Share event
         dates, quantities, alternates, and setup/access/timing notes so the
-        team can follow up.
+        team can review the request and follow up directly.
       </p>
       <dl className="quote-context__details">
         <div>
@@ -106,7 +106,7 @@ function QuoteGeneralContext({
       )}
       <div className="catalogue-card__actions">
         <Link className="card-link" href="/listings">
-          Browse public listings
+          Browse listings
         </Link>
         <Link className="card-link" href="/categories">
           Browse rental categories
@@ -122,8 +122,8 @@ function QuoteExpectationCard() {
       <p className="eyebrow">Expectations</p>
       <h2>What happens after you enquire</h2>
       <p>
-        This submission starts an enquiry and does not hold furniture,
-        finalise availability, or create a completed rental plan.
+        This submission starts an enquiry for team review. It does not set aside
+        furniture, finalise rental details, or create a finished rental plan.
       </p>
       <ul className="journey-list">
         <li>The team reviews fit against your event details.</li>
@@ -184,8 +184,8 @@ export default async function QuotePage({
           Share the event details the team will need for an event furniture
           rental follow-up. Include requested listings or items, quantities,
           alternates, setup, access, timing notes, and preferred contact method.
-          The form is enquiry intake only; it does not hold furniture or
-          finalise availability.
+          The form is enquiry intake only; it does not set aside furniture or
+          finalise rental details.
         </p>
       </div>
 

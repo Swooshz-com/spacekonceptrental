@@ -219,7 +219,7 @@ describe("Phase 3W-A/B catalogue listing media hardening", () => {
     expect(screen.getByRole("heading", { name: /furniture catalogue/i })).toBeInTheDocument();
     expect(screen.getByText(/rental unit: set/i)).toBeInTheDocument();
     expect(screen.getByText(/quote planning/i)).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /request this listing/i })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /request a quote/i })).toBeInTheDocument();
     cleanup();
 
     render(<ProductPageContent product={sampleProduct} />);
@@ -229,20 +229,20 @@ describe("Phase 3W-A/B catalogue listing media hardening", () => {
     expect(screen.getByText(/event-use context/i)).toBeInTheDocument();
     expect(screen.getByText(/media and fit check before enquiry/i)).toBeInTheDocument();
     expect(screen.getByText(/public-safe alt text/i)).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /request this listing/i })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /request a quote/i })).toBeInTheDocument();
     cleanup();
 
     render(<CategoriesPageContent catalogue={sampleCatalogue} />);
     expect(screen.getByRole("heading", { name: /rental categories/i })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /compare lounge listings/i })).toBeInTheDocument();
-    expect(screen.getAllByRole("link", { name: /send category enquiry/i }).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole("link", { name: /send an enquiry/i }).length).toBeGreaterThan(0);
     cleanup();
 
     render(<EventsPage />);
     expect(screen.getByRole("heading", { name: /plan an event setup/i })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /browse rental categories/i })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /browse rental listings/i })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /start quote request/i })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /browse listings/i })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /start a rental enquiry/i })).toBeInTheDocument();
   });
 
   it("keeps public sources free from internal language, transaction vocabulary, and fake facts", () => {

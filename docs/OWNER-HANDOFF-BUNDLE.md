@@ -9,6 +9,7 @@ This bundle is not evidence. It records no owner approval. It performs no deploy
 ## Bundle index
 
 - Local content-readiness cleanup: `docs/content/LOCAL-CONTENT-READINESS-CLEANUP.md`
+- Local public journey acceptance: `docs/content/LOCAL-PUBLIC-JOURNEY-ACCEPTANCE.md`
 - Owner approval request packet: `docs/content/OWNER-APPROVAL-REQUEST-PACKET.md`
 - Preview-planning handoff template: `docs/content/PREVIEW-PLANNING-HANDOFF-TEMPLATE.md`
 - Final no-deploy decision gate: `docs/content/FINAL-NO-DEPLOY-DECISION-GATE.md`
@@ -28,3 +29,12 @@ This bundle is not evidence. It records no owner approval. It performs no deploy
 - Evidence boundary: [NOT EVIDENCE / NOT RECORDED].
 - Provider boundary: no provider/environment setup is performed or approved.
 - Deployment boundary: [DEPLOYMENT APPROVAL: NOT GRANTED].
+
+## Phase 5B-A/B public journey acceptance addendum
+
+Current phase: Phase 5B-A/B public catalogue-to-enquiry journey hardening, listing continuity, and admin/public parity checks.
+Latest completed capability: Phase 5A-A/B public owner-review polish sweep, local content-readiness cleanup, and protected admin review UX closure.
+Last merged capability PR: #155.
+Last merged capability merge commit: 00b750ab34f433f1d4ca5567828b73e8ddeb3d05.
+
+The local public journey acceptance note and protected admin public-parity helper remain repo-local, template-only, non-live, not evidence, and not deployment approval.

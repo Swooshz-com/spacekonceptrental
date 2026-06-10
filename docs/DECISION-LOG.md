@@ -1,3 +1,19 @@
+## Phase 5B-A/B Public Journey Acceptance References
+
+Current phase: Phase 5B-A/B public catalogue-to-enquiry journey hardening, listing continuity, and admin/public parity checks.
+
+Latest completed capability: Phase 5A-A/B public owner-review polish sweep, local content-readiness cleanup, and protected admin review UX closure.
+
+Last merged capability PR: #155.
+
+Last merged capability merge commit: 00b750ab34f433f1d4ca5567828b73e8ddeb3d05.
+
+Phase 5B-A/B adds repo-local public catalogue-to-enquiry journey hardening, listing continuity, quote/enquiry request UX hardening, a protected admin public-parity review helper, local public journey acceptance documentation, validate:public-journey-acceptance validator coverage, and deterministic Phase 5B public journey tests. These controls are template-only, non-live, not evidence, and do not record owner approval, owner feedback, owner decisions, owner corrections, owner sign-off, preview evidence, production evidence, provider approval, or deployment approval.
+
+Phase 5B-A/B references `docs/content/LOCAL-PUBLIC-JOURNEY-ACCEPTANCE.md`, `docs/content/LOCAL-CONTENT-READINESS-CLEANUP.md`, `docs/OWNER-HANDOFF-BUNDLE.md`, `scripts/validate-public-journey-acceptance.cjs`, `scripts/validate-public-review-polish.cjs`, and protected admin public-parity review helpers.
+
+No deployment is performed or approved by Phase 5B-A/B. It does not add provider config, Vercel config, Supabase Cloud config, real secrets or env values, filled evidence, browser Supabase, service-role runtime paths, n8n/Pinecone runtime changes, `/api/chat` retrieval wiring, public uploads, customer accounts, public quote tracking, notifications, CRM, invented operational facts, ecommerce flows, payment/order/checkout flows, booking/reservation flows, fulfilment flows, stock-reservation flows, or public admin internals.
+
 ## Phase 5A-A/B Public Review Polish References
 
 Current phase: Phase 5A-A/B public owner-review polish sweep, local content-readiness cleanup, and protected admin review UX closure.

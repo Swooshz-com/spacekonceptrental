@@ -176,6 +176,7 @@ const internalRouteAllowlist = [
   /^\/admin\/categories$/,
   /^\/admin\/media$/,
   /^\/admin\/content-readiness$/,
+  /^\/admin\/public-parity$/,
   /^\/admin\/release-control$/,
   /^\/admin\/quotes$/,
   /^\/admin\/quotes\/[A-Za-z0-9-]+$/
@@ -352,6 +353,7 @@ describe("Phase 3E-A/B product readiness, navigation QA, and dead-end polish", (
       "/admin/categories",
       "/admin/media",
       "/admin/content-readiness",
+      "/admin/public-parity",
       "/admin/quotes",
       "/admin/quotes/quote-1"
     ]) {
@@ -369,7 +371,7 @@ describe("Phase 3E-A/B product readiness, navigation QA, and dead-end polish", (
       screen.getByRole("link", { name: /browse categories/i })
     ).toHaveAttribute("href", "/categories");
     expect(
-      screen.getByRole("link", { name: /send a general enquiry/i })
+      screen.getByRole("link", { name: /send an enquiry/i })
     ).toHaveAttribute("href", "/quote");
 
     cleanup();
@@ -383,7 +385,7 @@ describe("Phase 3E-A/B product readiness, navigation QA, and dead-end polish", (
 
     expect(screen.getByText(/spans more than lounge/i)).toBeInTheDocument();
     expect(
-      screen.getByRole("link", { name: /browse all listings/i })
+      screen.getByRole("link", { name: /browse listings/i })
     ).toHaveAttribute("href", "/listings");
 
     cleanup();
@@ -398,7 +400,7 @@ describe("Phase 3E-A/B product readiness, navigation QA, and dead-end polish", (
       screen.getByRole("navigation", { name: /quote request recovery/i })
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("link", { name: /browse listings/i })
+      screen.getAllByRole("link", { name: /browse listings/i })[0]
     ).toHaveAttribute("href", "/listings");
     expect(
       screen.getByRole("link", { name: /plan event setups/i })
@@ -416,7 +418,7 @@ describe("Phase 3E-A/B product readiness, navigation QA, and dead-end polish", (
     expect(
       screen.getByRole("link", { name: /return to admin sign in/i })
     ).toHaveAttribute("href", "/admin/login");
-    expect(screen.queryByRole("link", { name: /browse catalogue|request a quote/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /browse listings|request a quote/i })).not.toBeInTheDocument();
 
     cleanup();
     render(

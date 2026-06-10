@@ -62,6 +62,9 @@ export type AdminShellView =
       kind: "content-readiness";
     }
   | {
+      kind: "public-parity";
+    }
+  | {
       kind: "release-control";
     }
   | {
@@ -403,6 +406,7 @@ function AdminOperationsNavigation() {
     ["Media", "/admin/media"],
     ["Quote requests", "/admin/quotes"],
     ["Content readiness", "/admin/content-readiness"],
+    ["Public parity", "/admin/public-parity"],
     ["Release control", "/admin/release-control"]
   ] as const;
 
@@ -468,6 +472,13 @@ function AdminOperationsHome({
       title: "Content readiness",
       count: 4,
       body: "Review owner-required content gaps before any separate launch decision."
+    },
+    {
+      href: "/admin/public-parity",
+      label: "Open public parity",
+      title: "Public parity",
+      count: 7,
+      body: "Review public browse-to-enquiry continuity without exposing admin-only details."
     }
   ];
 
@@ -538,7 +549,8 @@ const contentReadinessSources = [
   "docs/content/PROTECTED-ADMIN-STATUS-TRANSITION-MATRIX.md",
   "docs/content/PUBLIC-JOURNEY-READINESS-CLOSURE.md",
   "docs/content/QUOTE-ENQUIRY-PUBLIC-EXPECTATION-BOUNDARY.md",
-  "docs/content/PROTECTED-ADMIN-PUBLIC-REVIEW-BRIDGE.md"
+  "docs/content/PROTECTED-ADMIN-PUBLIC-REVIEW-BRIDGE.md",
+  "docs/content/LOCAL-PUBLIC-JOURNEY-ACCEPTANCE.md"
 ] as const;
 
 const reviewSurfaceGroups = 11;
@@ -946,6 +958,44 @@ const phase5aOwnerReviewChecklistSnapshot = [
   ["Admin review helpers", "Protected admin-only"],
   ["Evidence status", "[NOT EVIDENCE / NOT RECORDED]"],
   ["Deployment approval", "[DEPLOYMENT APPROVAL: NOT GRANTED]"]
+] as const;
+
+const phase5bPublicJourneyAcceptancePath =
+  "docs/content/LOCAL-PUBLIC-JOURNEY-ACCEPTANCE.md";
+const phase5bPublicParityDocs = [
+  ownerHandoffBundleIndexPath,
+  phase5aLocalContentReadinessCleanupPath,
+  phase5bPublicJourneyAcceptancePath
+] as const;
+const phase5bPublicParitySnapshot = [
+  [
+    "Public browse entry points",
+    "Homepage, listings, categories, events, and public recovery links"
+  ],
+  [
+    "Route coverage",
+    "Listing index, category filters, event-use guidance, and listing detail routes"
+  ],
+  [
+    "Quote/enquiry continuity",
+    "Selected listing context starts editable request text only"
+  ],
+  [
+    "Fallback coverage",
+    "Empty and not-found states return visitors to browsing or enquiry"
+  ],
+  [
+    "Owner input still missing",
+    "Contact, service-area, legal, policy, proof-claim, and operational facts"
+  ],
+  [
+    "Claims still blocked",
+    "No invented proof claims, response-time promises, or availability promises"
+  ],
+  [
+    "Evidence/deployment boundary",
+    "[NOT EVIDENCE / NOT RECORDED] and [DEPLOYMENT APPROVAL: NOT GRANTED]"
+  ]
 ] as const;
 
 const publicJourneyReadinessClosurePath =
@@ -1637,6 +1687,75 @@ function ContentReadinessWorkspace() {
   );
 }
 
+function PublicParityReviewWorkspace() {
+  return (
+    <section
+      aria-label="Protected public parity review helper"
+      className="admin-dashboard"
+    >
+      <div className="admin-dashboard__header">
+        <div>
+          <p className="eyebrow">Protected admin-only</p>
+          <h2>Public catalogue-to-enquiry parity review</h2>
+          <p>
+            Review the local public browse-to-enquiry journey without exposing
+            owner handoff details, release-control notes, or admin-only workflow
+            context on public routes. This helper records no owner feedback, no
+            evidence, and no deployment approval.
+          </p>
+        </div>
+      </div>
+      <div className="admin-dashboard__grid">
+        <section className="admin-dashboard__card admin-dashboard__card--summary">
+          <h3>Phase 5B public parity summary</h3>
+          <dl className="quote-inbox__details">
+            {phase5bPublicParitySnapshot.map(([label, value]) => (
+              <div key={label}>
+                <dt>{label}</dt>
+                <dd>{value}</dd>
+              </div>
+            ))}
+          </dl>
+        </section>
+        <section className="admin-dashboard__card admin-dashboard__card--summary">
+          <h3>Review references</h3>
+          <p>
+            These repo-local references keep the owner handoff, local
+            content-readiness cleanup, and Phase 5B public journey acceptance
+            template together for authorised admin review only.
+          </p>
+          <ul className="admin-dashboard__list">
+            {phase5bPublicParityDocs.map((docPath) => (
+              <li key={docPath}>{docPath}</li>
+            ))}
+          </ul>
+        </section>
+        <section className="admin-dashboard__card">
+          <h3>Review boundaries</h3>
+          <ul className="admin-dashboard__list">
+            <li>
+              Public visitors only see browsing, listing, quote, and enquiry
+              guidance.
+            </li>
+            <li>
+              Selected listing context remains editable request intake, not
+              approval or final rental details.
+            </li>
+            <li>
+              Owner-required facts and public claims stay blocked until supplied
+              and reviewed separately.
+            </li>
+            <li>
+              No provider setup, deployment, preview evidence, production
+              evidence, or owner sign-off is recorded.
+            </li>
+          </ul>
+        </section>
+      </div>
+    </section>
+  );
+}
+
 function AdminListingOperations({
   dashboard
 }: {
@@ -2010,6 +2129,10 @@ function AdminOperationsView({
 
   if (view.kind === "content-readiness") {
     return <ContentReadinessWorkspace />;
+  }
+
+  if (view.kind === "public-parity") {
+    return <PublicParityReviewWorkspace />;
   }
 
   if (view.kind === "release-control") {

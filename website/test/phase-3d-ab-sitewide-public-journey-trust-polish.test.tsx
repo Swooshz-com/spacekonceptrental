@@ -161,12 +161,12 @@ describe("Phase 3D-A/B sitewide public journey, trust content, and route polish"
       screen.getByRole("heading", { name: /how rental enquiries work/i })
     ).toBeInTheDocument();
     for (const step of [
-      /browse public listings/i,
+      /browse listings/i,
       /share event details/i,
       /team reviews event fit/i,
       /final quote follows directly/i
     ]) {
-      expect(screen.getByText(step)).toBeInTheDocument();
+      expect(screen.getAllByText(step).length).toBeGreaterThan(0);
     }
     expect(
       screen.getByRole("link", { name: /browse categories/i })
@@ -175,7 +175,7 @@ describe("Phase 3D-A/B sitewide public journey, trust content, and route polish"
       screen.getByRole("link", { name: /plan event setups/i })
     ).toHaveAttribute("href", "/events");
     expect(
-      screen.getByRole("link", { name: /start a quote request/i })
+      screen.getAllByRole("link", { name: /start a rental enquiry/i })[0]
     ).toHaveAttribute("href", "/quote");
     expect(homeMetadata.title).toMatch(/event furniture rental/i);
     expect(homeMetadata.description).toMatch(/browse listings/i);
@@ -191,10 +191,10 @@ describe("Phase 3D-A/B sitewide public journey, trust content, and route polish"
     expect(screen.getByText(/capture quantities and placement notes/i)).toBeInTheDocument();
     expect(screen.getByText(/send one quote enquiry/i)).toBeInTheDocument();
     expect(
-      screen.getByRole("link", { name: /browse rental listings/i })
+      screen.getAllByRole("link", { name: /browse listings/i })[0]
     ).toHaveAttribute("href", "/listings");
     expect(
-      screen.getByRole("link", { name: /send setup notes/i })
+      screen.getByRole("link", { name: /send an enquiry/i })
     ).toHaveAttribute("href", "/quote");
     expect(eventsMetadata.title).toMatch(/event setups/i);
     expect(eventsMetadata.description).toMatch(/quote request/i);
@@ -212,7 +212,7 @@ describe("Phase 3D-A/B sitewide public journey, trust content, and route polish"
       screen.getByRole("link", { name: /browse categories/i })
     ).toHaveAttribute("href", "/categories");
     expect(
-      screen.getByRole("link", { name: /send a general enquiry/i })
+      screen.getByRole("link", { name: /send an enquiry/i })
     ).toHaveAttribute("href", "/quote");
 
     cleanup();
@@ -223,10 +223,10 @@ describe("Phase 3D-A/B sitewide public journey, trust content, and route polish"
     );
 
     expect(
-      screen.getByRole("link", { name: /browse catalogue/i })
+      screen.getByRole("link", { name: /view catalogue/i })
     ).toHaveAttribute("href", "/catalogue");
     expect(
-      screen.getByRole("link", { name: /request a quote/i })
+      screen.getAllByRole("link", { name: /request a quote/i })[0]
     ).toHaveAttribute("href", "/quote");
   });
 
@@ -237,7 +237,7 @@ describe("Phase 3D-A/B sitewide public journey, trust content, and route polish"
       screen.getByRole("heading", { name: /what happens after you enquire/i })
     ).toBeInTheDocument();
     expect(screen.getByText(/submission starts an enquiry/i)).toBeInTheDocument();
-    expect(screen.getAllByText(/does not hold furniture/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/does not set aside furniture/i).length).toBeGreaterThan(0);
     expect(screen.getByText(/team reviews fit/i)).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: /track|status/i })).not.toBeInTheDocument();
     expect(quoteMetadata.title).toMatch(/quote request/i);
@@ -259,7 +259,7 @@ describe("Phase 3D-A/B sitewide public journey, trust content, and route polish"
       screen.getByRole("link", { name: /browse categories/i })
     ).toHaveAttribute("href", "/categories");
     expect(
-      screen.getByRole("link", { name: /request this listing/i })
+      screen.getByRole("link", { name: /request a quote/i })
     ).toHaveAttribute("href", "/quote?listing=modular-lounge-set");
   });
 

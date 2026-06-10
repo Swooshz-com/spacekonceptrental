@@ -30,13 +30,13 @@ const eventUseCases = [
   {
     title: "Gala lounges",
     description:
-      "Polished arrival lounges, VIP holding areas, and evening reception setups."
+      "Polished arrival lounges, VIP waiting areas, and evening reception setups."
   }
 ];
 
 const rentalJourneySteps = [
   {
-    title: "Browse public listings",
+    title: "Browse listings",
     description:
       "Start with rental listings, categories, or event setup ideas that match the space you are planning."
   },
@@ -87,7 +87,7 @@ const rentalAcceptanceChecks = [
   {
     title: "Keep follow-up direct",
     description:
-      "Use the public form to start the enquiry; availability, fit, and final quote details stay with the team."
+      "Use the public form to start the enquiry; rental fit and final quote details stay with the team."
   }
 ] as const;
 
@@ -147,7 +147,7 @@ export default async function HomePage() {
             Plan event setups
           </Link>
           <Link className="button" href="/quote">
-            Start a quote request
+            Start a rental enquiry
           </Link>
         </div>
       </section>
@@ -170,13 +170,13 @@ export default async function HomePage() {
         </div>
         <div className="hero__actions">
           <Link className="button button--secondary" href="/listings">
-            Browse rental listings
+            Browse listings
           </Link>
           <Link className="button button--secondary" href="/events">
             Browse event guidance
           </Link>
           <Link className="button" href="/quote">
-            Open quote request
+            Request a quote
           </Link>
         </div>
       </section>
@@ -223,7 +223,7 @@ export default async function HomePage() {
             Browse event guidance
           </Link>
           <Link className="button" href="/quote">
-            Start quote request
+            Start a rental enquiry
           </Link>
         </div>
       </section>
@@ -232,8 +232,8 @@ export default async function HomePage() {
         <div className="section__header">
           <h2>Featured rental listings</h2>
           <p className="section__intro">
-            A quick starting point from public catalogue data. Availability and
-            final setup details are confirmed by the team after your enquiry.
+            A quick starting point from public catalogue data. Final rental fit and setup details are reviewed by the team after your
+            enquiry.
           </p>
         </div>
         {featuredListings.length === 0 ? (
@@ -244,7 +244,7 @@ export default async function HomePage() {
                 Browse categories
               </Link>
               <Link className="button" href="/quote">
-                Send a general enquiry
+                Send an enquiry
               </Link>
             </div>
           </>
@@ -260,13 +260,13 @@ export default async function HomePage() {
                 <p>Rental unit: {listing.rentalUnit}</p>
                 <div className="catalogue-card__actions">
                   <Link className="card-link" href={`/listings/${listing.slug}`}>
-                    View listing
+                    View rental listing
                   </Link>
                   <Link
                     className="card-link"
                     href={getQuoteHrefForListing(listing.slug)}
                   >
-                    Request this listing
+                    Request a quote
                   </Link>
                 </div>
               </article>

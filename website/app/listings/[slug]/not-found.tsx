@@ -19,7 +19,7 @@ export default function ListingNotFound() {
           Browse categories
         </Link>
         <Link className="button" href="/quote">
-          Send a general enquiry
+          Send an enquiry
         </Link>
       </div>
     </section>
