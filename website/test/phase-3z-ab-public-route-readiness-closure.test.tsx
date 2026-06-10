@@ -249,7 +249,7 @@ describe("Phase 3Z-A/B public route readiness closure", () => {
     cleanup();
 
     render(<ProductPageContent product={sampleProduct} />);
-    expect(screen.getByText(/does not set aside furniture or finalise rental details/i)).toBeInTheDocument();
+    expect(screen.getByText(/does not set aside furniture or finish rental details/i)).toBeInTheDocument();
     cleanup();
 
     render(<CategoriesPageContent catalogue={sampleCatalogue} />);
@@ -262,7 +262,7 @@ describe("Phase 3Z-A/B public route readiness closure", () => {
 
     render(await QuotePage());
     expect(screen.getByText(/The form is enquiry intake only/i)).toBeInTheDocument();
-    expect(screen.getByText(/does not set aside furniture or finalise rental details/i)).toBeInTheDocument();
+    expect(screen.getByText(/does not set aside furniture or finish rental details/i)).toBeInTheDocument();
     cleanup();
 
     render(<QuoteRequestForm />);

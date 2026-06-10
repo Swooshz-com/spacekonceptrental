@@ -80,7 +80,7 @@ function QuoteListingContext({
       <p className="eyebrow">Selected listing</p>
       <h2>Enquiry for {product.name}</h2>
       <p>
-        Selected listing is a starting point only for your rental request. It
+        Listing context is a starting point only for your rental request. It
         helps the team understand the item you are considering. Share event
         dates, quantities, alternates, and setup/access/timing notes so the
         team can review the request and follow up directly.
@@ -182,12 +182,12 @@ function QuoteExpectationCard() {
       <h2>What happens after you enquire</h2>
       <p>
         This submission starts an enquiry for team review. It does not set aside
-        furniture, finalise rental details, or create a finished rental plan.
+        furniture, finish rental details, or create a ready rental plan.
       </p>
       <ul className="journey-list">
         <li>The team reviews fit against your event details.</li>
         <li>Follow-up happens directly using the contact details you share.</li>
-        <li>Final rental quote details are reviewed outside this public form.</li>
+        <li>Rental quote details are reviewed outside this public form.</li>
         <li>You can share more details if the team needs clarification.</li>
       </ul>
     </article>
@@ -250,7 +250,7 @@ export default async function QuotePage({
           rental follow-up. Include requested listings or items, quantities,
           alternates, setup, access, timing notes, and preferred contact method.
           The form is enquiry intake only; it does not set aside furniture or
-          finalise rental details.
+          finish rental details.
         </p>
       </div>
 

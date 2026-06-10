@@ -6,13 +6,16 @@ const repoRoot = path.resolve(__dirname, '..');
 const phase154MergeCommit = '85bfc8fb459cfc74db3ff80634ff35302691cb7f';
 const phase155MergeCommit = '00b750ab34f433f1d4ca5567828b73e8ddeb3d05';
 const phase156MergeCommit = 'adca108ef0b5577fea0078b69f3ad524d9406e77';
+const phase157MergeCommit = '1f471213c71aa1d3ff979a267ffd1c8b2a39fe6f';
 const currentPhase5a = 'Phase 5A-A/B public owner-review polish sweep, local content-readiness cleanup, and protected admin review UX closure';
 const currentPhase5b = 'Phase 5B-A/B public catalogue-to-enquiry journey hardening, listing continuity, and admin/public parity checks';
 const currentPhase5c = 'Phase 5C-A/B public discovery search/filter polish, quote-intent context, and admin discovery parity closure';
+const currentPhase5d = 'Phase 5D-A/B public listing-detail readiness, media/context polish, and quote-intent review closure';
 const latestCompletedPhase4f = 'Phase 4F-A/B owner-facing review handoff bundle, approval issue template, and no-deploy preflight command center';
 const cleanupDocPath = 'docs/content/LOCAL-CONTENT-READINESS-CLEANUP.md';
 const publicJourneyAcceptanceDocPath = 'docs/content/LOCAL-PUBLIC-JOURNEY-ACCEPTANCE.md';
 const discoveryAcceptanceDocPath = 'docs/content/LOCAL-DISCOVERY-SEARCH-FILTER-ACCEPTANCE.md';
+const listingDetailReadinessDocPath = 'docs/content/LOCAL-LISTING-DETAIL-READINESS.md';
 const publicSourceRoots = [
   'website/app/layout.tsx',
   'website/app/page.tsx',
@@ -291,7 +294,108 @@ function assertReleaseSuiteHasPublicJourney() {
   const suite = readRepoFile('scripts/validate-release-candidate-suite.cjs');
   assertIncludes(suite, "args: ['run', 'validate:public-journey-acceptance']", 'release-candidate suite');
   assertIncludes(suite, "args: ['run', 'validate:public-discovery-acceptance']", 'release-candidate suite');
+  assertIncludes(suite, "args: ['run', 'validate:listing-detail-readiness']", 'release-candidate suite');
   assertNoMatch(suite, /docker[^\n]*(?:skip|bypass)|(?:skip|bypass)[^\n]*docker/i, 'release-candidate suite');
+}
+
+function assertPhase5dStatusRollForward() {
+  const docs = normalizeWhitespace(statusDocPaths.map(readRepoFile).join('\n'));
+  for (const required of [
+    `Current phase: ${currentPhase5d}`,
+    `Latest completed capability: ${currentPhase5c}`,
+    'Last merged capability PR: #157',
+    `Last merged capability merge commit: ${phase157MergeCommit}`,
+    listingDetailReadinessDocPath,
+    discoveryAcceptanceDocPath,
+    publicJourneyAcceptanceDocPath,
+    'scripts/validate-listing-detail-readiness.cjs',
+    'No deployment is performed or approved by Phase 5D-A/B',
+  ]) {
+    assertIncludes(docs, required, 'Phase 5D status roll-forward docs');
+  }
+}
+
+function assertListingDetailReadinessDoc() {
+  assertTracked([listingDetailReadinessDocPath], 'Phase 5D listing detail readiness doc');
+  const doc = normalizeWhitespace(readRepoFile(listingDetailReadinessDocPath));
+  for (const required of [
+    'repo-local, template-only, non-live listing detail readiness note',
+    '[NOT EVIDENCE / NOT RECORDED]',
+    '[DEPLOYMENT APPROVAL: NOT GRANTED]',
+    'Public listing detail layout',
+    'Media and fallback behavior',
+    'Related browsing continuity',
+    'Quote-intent handoff boundary',
+    'Protected admin listing-detail parity helper',
+    'Owner inputs still missing',
+    'Public claims still blocked',
+    'docs/OWNER-HANDOFF-BUNDLE.md',
+    'docs/content/LOCAL-PUBLIC-JOURNEY-ACCEPTANCE.md',
+    'docs/content/LOCAL-DISCOVERY-SEARCH-FILTER-ACCEPTANCE.md',
+    'docs/content/LOCAL-LISTING-DETAIL-READINESS.md',
+  ]) {
+    assertIncludes(doc, required, 'Phase 5D listing detail readiness doc');
+  }
+  assertNoMatch(
+    doc,
+    /owner approved|owner sign-?off complete|actual owner decision|accepted by owner|preview evidence captured|production evidence captured|manual qa completed/i,
+    'Phase 5D listing detail readiness doc'
+  );
+}
+
+function assertListingDetailPackageScript() {
+  const packageJson = JSON.parse(readRepoFile('package.json'));
+  assert(
+    packageJson.scripts?.['validate:listing-detail-readiness'] === 'node scripts/validate-listing-detail-readiness.cjs',
+    'package.json must register validate:listing-detail-readiness'
+  );
+}
+
+function assertListingDetailSources() {
+  const source = readTrackedProductionSources([
+    'website/app/catalogue/[slug]',
+    'website/app/listings/[slug]',
+    'website/app/quote',
+    'website/components/QuoteRequestForm.tsx',
+  ]);
+  for (const required of [
+    /View rental listing/i,
+    /Request a quote/i,
+    /Send an enquiry/i,
+    /Start a rental enquiry/i,
+    /Listing context is\s+a starting point only/i,
+    /The team can review the request/i,
+    /Browse listings/i,
+    /Browse categories/i,
+    /Explore event-use ideas/i,
+    /representative, review-safe rental image/i,
+    /public-safe alt text/i,
+    /Related rental listing context/i,
+  ]) {
+    assert(required.test(source), `listing detail source missing safe wording: ${required}`);
+  }
+  assert(/requested listings or items/i.test(source), 'quote source must keep selected listing context editable');
+  assert(/receipt only/i.test(source), 'quote source must keep receipt copy non-promissory');
+  assertNoMatch(source, /\b(?:cart|checkout|payment|purchase|online ordering|confirmed order)\b/i, 'listing detail source');
+  assertNoMatch(source, /\b(?:booking|reservation|fulfilment|fulfillment|stock reservation|stock-reservation|book now|reserve now)\b/i, 'listing detail source');
+  assertNoMatch(source, /award-winning|certified partner|trusted by|5-star|guaranteed availability|guaranteed delivery|licensed and insured|testimonial|client logo|case study|legal guarantee|production policy|service-area claim|Singapore\s+\d{6}|\+?\d[\d\s().-]{7,}|Mon(?:day)?\s*-\s*Fri|24\/7|123\s+Main/i, 'listing detail source');
+  assertNoMatch(source, /owner handoff bundle|owner-facing review brief|owner approval issue template|no-deploy preflight command center|owner approval packet|release-control internals|admin urls?|internal notes|recovery lanes?|destructive-action safeguards|status-transition matrix|\/admin\//i, 'listing detail source');
+  assertNoMatch(source, /customer account|quote tracking|file upload|public upload|notifications?|\bCRM\b/i, 'listing detail source');
+  assertNoMatch(source, /owner-approved media|real inventory confirmation|final styling|final availability|guaranteed availability/i, 'listing detail media source');
+  assertNoMatch(source, /confirmed|reserved|booked|ordered|paid|completed rental|response time/i, 'listing detail quote source');
+}
+
+function assertPhase5dListingDetailReadiness() {
+  assertListingDetailReadinessDoc();
+  assertPhase5dStatusRollForward();
+  assertListingDetailPackageScript();
+  assertPublicSources();
+  assertPublicJourneySources();
+  assertListingDetailSources();
+  assertNoForbiddenTrackedFiles();
+  assertNoFilledEvidence();
+  assertReleaseSuiteHasPublicJourney();
+  assertSuiteAndTests();
 }
 
 function assertPhase5cStatusRollForward() {
@@ -358,6 +462,7 @@ function assertPhase5cPublicDiscoveryAcceptance() {
   assertNoFilledEvidence();
   assertReleaseSuiteHasPublicJourney();
   assertSuiteAndTests();
+  assertPhase5dListingDetailReadiness();
 }
 
 function assertPhase5bPublicJourneyAcceptance() {
@@ -388,14 +493,18 @@ module.exports = {
   assertPhase5aPublicReviewPolish,
   assertPhase5bPublicJourneyAcceptance,
   assertPhase5cPublicDiscoveryAcceptance,
+  assertPhase5dListingDetailReadiness,
   phase154MergeCommit,
   phase155MergeCommit,
   phase156MergeCommit,
+  phase157MergeCommit,
   currentPhase5a,
   currentPhase5b,
   currentPhase5c,
+  currentPhase5d,
   latestCompletedPhase4f,
   cleanupDocPath,
   publicJourneyAcceptanceDocPath,
   discoveryAcceptanceDocPath,
+  listingDetailReadinessDocPath,
 };

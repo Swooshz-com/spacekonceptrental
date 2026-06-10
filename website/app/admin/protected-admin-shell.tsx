@@ -551,7 +551,8 @@ const contentReadinessSources = [
   "docs/content/QUOTE-ENQUIRY-PUBLIC-EXPECTATION-BOUNDARY.md",
   "docs/content/PROTECTED-ADMIN-PUBLIC-REVIEW-BRIDGE.md",
   "docs/content/LOCAL-PUBLIC-JOURNEY-ACCEPTANCE.md",
-  "docs/content/LOCAL-DISCOVERY-SEARCH-FILTER-ACCEPTANCE.md"
+  "docs/content/LOCAL-DISCOVERY-SEARCH-FILTER-ACCEPTANCE.md",
+  "docs/content/LOCAL-LISTING-DETAIL-READINESS.md"
 ] as const;
 
 const reviewSurfaceGroups = 11;
@@ -1002,11 +1003,14 @@ const phase5bPublicParitySnapshot = [
 
 const phase5cDiscoveryAcceptancePath =
   "docs/content/LOCAL-DISCOVERY-SEARCH-FILTER-ACCEPTANCE.md";
+const phase5dListingDetailReadinessPath =
+  "docs/content/LOCAL-LISTING-DETAIL-READINESS.md";
 const phase5cDiscoveryParityDocs = [
   ownerHandoffBundleIndexPath,
   phase5aLocalContentReadinessCleanupPath,
   phase5bPublicJourneyAcceptancePath,
-  phase5cDiscoveryAcceptancePath
+  phase5cDiscoveryAcceptancePath,
+  phase5dListingDetailReadinessPath
 ] as const;
 const phase5cDiscoveryParitySnapshot = [
   [
@@ -1036,6 +1040,37 @@ const phase5cDiscoveryParitySnapshot = [
   [
     "Claims still blocked",
     "No invented proof claims, response-time promises, availability promises, or completed rental claims"
+  ],
+  [
+    "Evidence/deployment boundary",
+    "[NOT EVIDENCE / NOT RECORDED] and [DEPLOYMENT APPROVAL: NOT GRANTED]"
+  ]
+] as const;
+
+const phase5dListingDetailParitySnapshot = [
+  [
+    "Listing detail public layout coverage",
+    "Title, category, rental unit, short description, description, event-use context, request guidance, media, and quote/enquiry CTAs"
+  ],
+  [
+    "Media/fallback coverage",
+    "Public-safe alt text, gallery context, and representative review-safe fallback media without owner-approved media claims"
+  ],
+  [
+    "Related browsing/context coverage",
+    "Same-category local links plus browse listings, browse categories, explore event-use ideas, and request a quote"
+  ],
+  [
+    "Quote-intent handoff safety",
+    "Listing context is editable request intake only; the team can review the request without availability or rental-fit promises"
+  ],
+  [
+    "Owner inputs still missing",
+    "Owner-supplied contact, service-area, legal, policy, proof-claim, operating, image, and launch facts"
+  ],
+  [
+    "Claims still blocked",
+    "No invented facts, response-time promises, availability promises, completed rental claims, ecommerce language, or public admin internals"
   ],
   [
     "Evidence/deployment boundary",
@@ -1764,12 +1799,23 @@ function PublicParityReviewWorkspace() {
           </dl>
         </section>
         <section className="admin-dashboard__card admin-dashboard__card--summary">
+          <h3>Phase 5D listing-detail parity summary</h3>
+          <dl className="quote-inbox__details">
+            {phase5dListingDetailParitySnapshot.map(([label, value]) => (
+              <div key={label}>
+                <dt>{label}</dt>
+                <dd>{value}</dd>
+              </div>
+            ))}
+          </dl>
+        </section>
+        <section className="admin-dashboard__card admin-dashboard__card--summary">
           <h3>Review references</h3>
           <p>
             These repo-local references keep the owner handoff, local
             content-readiness cleanup, Phase 5B public journey acceptance, and
-            Phase 5C discovery acceptance templates together for authorised
-            admin review only.
+            Phase 5C discovery acceptance templates, and Phase 5D listing
+            detail readiness note together for authorised admin review only.
           </p>
           <ul className="admin-dashboard__list">
             {phase5cDiscoveryParityDocs.map((docPath) => (
@@ -1787,6 +1833,10 @@ function PublicParityReviewWorkspace() {
             <li>
               Listing, category, event-use, and search context remains editable
               request intake, not approval or final rental details.
+            </li>
+            <li>
+              Listing detail media, related browsing, and quote/enquiry CTAs
+              stay public-safe and non-promissory.
             </li>
             <li>
               Owner-required facts and public claims stay blocked until supplied

@@ -197,7 +197,7 @@ describe("Phase 3G-A/B quote intake quality, admin triage depth, and enquiry wor
       screen.getByText(/share one reliable contact method/i)
     ).toBeInTheDocument();
     expect(
-      screen.getAllByText(/selected listing is a starting point only/i).length
+      screen.getAllByText(/listing context is a starting point only/i).length
     ).toBeGreaterThan(0);
     expect(screen.getByText(/not a rental fit confirmation/i)).toBeInTheDocument();
     expect(
@@ -242,10 +242,10 @@ describe("Phase 3G-A/B quote intake quality, admin triage depth, and enquiry wor
       screen.getByRole("heading", { name: /enquiry for lounge sofa package/i })
     ).toBeInTheDocument();
     expect(
-      screen.getAllByText(/selected listing is a starting point only/i).length
+      screen.getAllByText(/listing context is a starting point only/i).length
     ).toBeGreaterThan(0);
     expect(
-      screen.getAllByText(/does not set aside furniture or finalise rental details/i)
+      screen.getAllByText(/does not set aside furniture or finish rental details/i)
         .length
     ).toBeGreaterThan(0);
     expect(screen.getByLabelText(/requested listings or items/i)).toHaveValue(

@@ -11,6 +11,7 @@ This bundle is not evidence. It records no owner approval. It performs no deploy
 - Local content-readiness cleanup: `docs/content/LOCAL-CONTENT-READINESS-CLEANUP.md`
 - Local public journey acceptance: `docs/content/LOCAL-PUBLIC-JOURNEY-ACCEPTANCE.md`
 - Local discovery search/filter acceptance: `docs/content/LOCAL-DISCOVERY-SEARCH-FILTER-ACCEPTANCE.md`
+- Local listing detail readiness: `docs/content/LOCAL-LISTING-DETAIL-READINESS.md`
 - Owner approval request packet: `docs/content/OWNER-APPROVAL-REQUEST-PACKET.md`
 - Preview-planning handoff template: `docs/content/PREVIEW-PLANNING-HANDOFF-TEMPLATE.md`
 - Final no-deploy decision gate: `docs/content/FINAL-NO-DEPLOY-DECISION-GATE.md`
@@ -49,3 +50,12 @@ Last merged capability PR: #156.
 Last merged capability merge commit: adca108ef0b5577fea0078b69f3ad524d9406e77.
 
 The local discovery search/filter acceptance note and protected admin discovery parity helper remain repo-local, template-only, non-live, not evidence, and not deployment approval.
+
+## Phase 5D-A/B listing detail readiness addendum
+
+Current phase: Phase 5D-A/B public listing-detail readiness, media/context polish, and quote-intent review closure.
+Latest completed capability: Phase 5C-A/B public discovery search/filter polish, quote-intent context, and admin discovery parity closure.
+Last merged capability PR: #157.
+Last merged capability merge commit: 1f471213c71aa1d3ff979a267ffd1c8b2a39fe6f.
+
+The local listing detail readiness note and protected admin listing-detail parity helper remain repo-local, template-only, non-live, not evidence, and not deployment approval.
