@@ -2,4 +2,4 @@
 const { assertPhase5fQuoteTriageReadiness } = require('./public-review-polish-checks.cjs');
 
 assertPhase5fQuoteTriageReadiness();
-console.log('Listing detail readiness validation passed. No deployment was performed.');
+console.log('Quote triage readiness validation passed. No deployment was performed.');

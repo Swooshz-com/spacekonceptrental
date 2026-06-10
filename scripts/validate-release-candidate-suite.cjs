@@ -50,6 +50,11 @@ const commandPlan = [
     args: ['run', 'validate:quote-intake-readiness'],
   },
   {
+    label: 'Validate quote triage readiness',
+    cwd: repoRoot,
+    args: ['run', 'validate:quote-triage-readiness'],
+  },
+  {
     label: 'Validate local freeze',
     cwd: repoRoot,
     args: ['run', 'validate:local-freeze'],

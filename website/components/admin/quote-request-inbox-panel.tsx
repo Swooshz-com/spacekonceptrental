@@ -89,7 +89,15 @@ const genericFailureMessage =
   "Quote status could not be saved. Check internal status, keep notes protected, and try again.";
 
 function statusLabel(value: string) {
-  return value.replace(/_/g, " ");
+  const labels: Record<string, string> = {
+    new: "New enquiry",
+    reviewing: "Reviewing",
+    quoted: "Follow-up prepared",
+    closed: "Closed locally",
+    archived: "Archived locally"
+  };
+
+  return labels[value] ?? value.replace(/_/g, " ");
 }
 
 function hasContactMethod(quoteRequest: AdminQuoteRequestInboxQuoteRequest) {
@@ -135,20 +143,54 @@ function quoteTriageCues(quoteRequest: AdminQuoteRequestInboxQuoteRequest) {
   const hasContact = hasContactMethod(quoteRequest);
 
   return [
-    hasContact ? "Contact method available" : "Missing contact method",
-    quoteRequest.eventDate ? "Event date captured" : "Missing event date",
-    quoteRequest.venue ? "Venue captured" : "Missing venue",
+    quoteRequest.customerName ? "Customer name present" : "Missing customer name",
+    hasContact ? "At least one contact method present" : "Missing contact method",
+    quoteRequest.eventDate ? "Event date known" : "Missing event date",
+    quoteRequest.venue ? "Venue or location known" : "Missing venue or location",
     quoteRequest.items.length > 0
       ? `${quoteRequest.items.length} requested ${
           quoteRequest.items.length === 1 ? "item" : "items"
-        }`
-      : "No requested items captured",
+        } - requested ${
+          quoteRequest.items.length === 1 ? "listing/item" : "listings/items"
+        } present`
+      : "No requested items captured - Missing requested listings or items",
     quoteRequest.customerMessage
-      ? "Customer message captured"
-      : "No customer message",
+      ? "Customer message captured - Submitted notes available"
+      : "No customer message - Missing setup, access, timing, quantity, or alternate notes",
     quoteRequest.activity.length > 0
       ? "Internal activity recorded"
       : "No internal activity yet"
+  ];
+}
+
+function quoteResponseReadinessChecklist(
+  quoteRequest: AdminQuoteRequestInboxQuoteRequest
+) {
+  const itemNotes = quoteRequest.items
+    .map((item) => item.notes ?? "")
+    .join(" ");
+  const submittedContext = `${quoteRequest.customerMessage ?? ""} ${itemNotes}`;
+  const hasSetupContext = /quantity|quantities|alternate|setup|access|timing|time|delivery|collect|pickup/i.test(
+    submittedContext
+  );
+
+  return [
+    quoteRequest.customerName ? "Ready: customer name present" : "Missing: customer name",
+    hasContactMethod(quoteRequest)
+      ? "Ready: email or phone contact present"
+      : "Missing: email or phone contact",
+    quoteRequest.eventDate ? "Ready: event date known" : "Missing: event date",
+    quoteRequest.venue
+      ? "Ready: venue or location known"
+      : "Missing: venue or location",
+    quoteRequest.items.length > 0
+      ? "Ready: requested listings/items present"
+      : "Missing: requested listings/items",
+    hasSetupContext
+      ? "Review: quantities, alternates, setup, access, or timing notes present"
+      : "Missing: quantities, alternates, setup, access, or timing notes",
+    "Missing: owner/business facts still need owner-supplied confirmation",
+    "Reminder: do not promise availability or response time"
   ];
 }
 
@@ -174,11 +216,11 @@ function quoteNextAction(quoteRequest: AdminQuoteRequestInboxQuoteRequest) {
   }
 
   if (quoteRequest.status === "reviewing") {
-    return "Next action: prepare quote response or move to quoted after direct follow-up.";
+    return "Next action: prepare human follow-up and mark follow-up prepared only after admin-local review; legacy cue: prepare quote response or move to quoted after direct follow-up.";
   }
 
   if (quoteRequest.status === "quoted") {
-    return "Next action: monitor direct follow-up and close when the enquiry is resolved.";
+    return "Next action: keep reviewing admin-local context and close locally when no further internal action is needed.";
   }
 
   return "Next action: closed enquiry is retained for admin reference.";
@@ -189,7 +231,7 @@ function activityText(activity: AdminQuoteRequestInboxActivity) {
     return activity.note ?? "Internal note recorded.";
   }
 
-  return `Status changed from ${statusLabel(activity.statusFrom ?? "unknown")} to ${statusLabel(activity.statusTo ?? "unknown")}.`;
+  return `Status changed from ${activity.statusFrom ?? "unknown"} to ${activity.statusTo ?? "unknown"} (${statusLabel(activity.statusFrom ?? "unknown")} to ${statusLabel(activity.statusTo ?? "unknown")}).`;
 }
 
 async function readSafeJson(response: Response) {
@@ -251,7 +293,8 @@ function QuoteIntakeParityHelper() {
     "docs/OWNER-HANDOFF-BUNDLE.md",
     "docs/content/LOCAL-LISTING-DETAIL-READINESS.md",
     "docs/content/LOCAL-PUBLIC-JOURNEY-ACCEPTANCE.md",
-    "docs/content/LOCAL-QUOTE-ENQUIRY-INTAKE-READINESS.md"
+    "docs/content/LOCAL-QUOTE-ENQUIRY-INTAKE-READINESS.md",
+    "docs/content/LOCAL-QUOTE-TRIAGE-READINESS.md"
   ];
 
   return (
@@ -295,7 +338,9 @@ function QuoteIntakeParityHelper() {
           <dt>Admin triage expectations</dt>
           <dd>
             Review contact, event, venue, requested item, quantity, alternate,
-            setup, access, and timing gaps before direct follow-up.
+            setup, access, and timing gaps before direct follow-up. Do not
+            promise availability, and do not treat the public reference as
+            tracking.
           </dd>
         </div>
         <div>
@@ -498,7 +543,7 @@ export function QuoteRequestInboxPanel({
             <dd>{summary.inReview}</dd>
           </div>
           <div>
-            <dt>Quoted/contacted</dt>
+            <dt>Quoted/contacted - Follow-up prepared</dt>
             <dd>{summary.quoted}</dd>
           </div>
           <div>
@@ -592,14 +637,14 @@ export function QuoteRequestInboxPanel({
                   <p className="eyebrow">{quoteRequest.publicReference}</p>
                   <h3>{quoteRequest.customerName ?? "Unnamed customer"}</h3>
                   <p>
-                    {statusLabel(quoteRequest.status)} - {quoteRequest.source}
+                    {quoteRequest.status} - {quoteRequest.source}
                   </p>
                 </div>
           <section
             aria-label={`Requested items summary ${quoteRequest.publicReference}`}
             className="quote-inbox__section"
           >
-                  <h4>Triage cues</h4>
+                  <h4>Intake completeness</h4>
                   <ul className="admin-readiness__list">
                     {quoteTriageCues(quoteRequest).map((cue) => (
                       <li key={cue}>{cue}</li>
@@ -607,11 +652,30 @@ export function QuoteRequestInboxPanel({
                   </ul>
                 </section>
                 <section className="quote-inbox__section">
-                  <h4>Next action</h4>
+                  <h4>Quote/enquiry context summary</h4>
+                  <p>
+                    Public reference {quoteRequest.publicReference} is a receipt
+                    reference only. It is not customer tracking, status lookup,
+                    availability confirmation, or a rental outcome.
+                  </p>
                   <p>{quoteNextAction(quoteRequest)}</p>
                 </section>
                 <section className="quote-inbox__section">
-                  <h4>Contact and follow-up</h4>
+                  <h4>Response-readiness checklist</h4>
+                  <ul className="admin-readiness__list">
+                    {quoteResponseReadinessChecklist(quoteRequest).map((cue) => (
+                      <li key={cue}>{cue}</li>
+                    ))}
+                  </ul>
+                  <p className="category-management__hint">
+                    Admin-only helper: prepare a human response from existing
+                    request fields only. This does not send a response, create
+                    public lookup, create sign-in areas, or start
+                    automated alerts.
+                  </p>
+                </section>
+                <section className="quote-inbox__section">
+                  <h4>Contact and follow-up: customer/contact summary</h4>
                   <dl className="quote-inbox__details">
                     <div>
                       <dt>Submitted</dt>
@@ -623,6 +687,14 @@ export function QuoteRequestInboxPanel({
                         <dd>{quoteRequest.updatedAt}</dd>
                       </div>
                     ) : null}
+                    <div>
+                      <dt>Customer</dt>
+                      <dd>{quoteRequest.customerName ? "Name shown in request heading" : "Missing customer name"}</dd>
+                    </div>
+                    <div>
+                      <dt>Source/status</dt>
+                      <dd>{quoteRequest.source} - {statusLabel(quoteRequest.status)}</dd>
+                    </div>
                     {quoteRequest.customerEmail ? (
                       <div>
                         <dt>Email</dt>
@@ -638,7 +710,7 @@ export function QuoteRequestInboxPanel({
                   </dl>
                 </section>
                 <section className="quote-inbox__section">
-                  <h4>Event and setup details</h4>
+                  <h4>Event and setup details: event date/venue summary and submitted notes</h4>
                   <dl className="quote-inbox__details">
                     {quoteRequest.eventDate ? (
                       <div>
@@ -666,7 +738,7 @@ export function QuoteRequestInboxPanel({
                   Open quote detail {quoteRequest.publicReference}
                 </a>
                 <section className="quote-inbox__section">
-                  <h4>Requested listings and items</h4>
+                  <h4>Requested listings and items: requested listing/item summary</h4>
                   {quoteRequest.items.length === 0 ? (
                     <p>No requested listing or item snapshots were captured.</p>
                   ) : (
