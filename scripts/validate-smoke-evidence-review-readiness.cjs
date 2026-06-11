@@ -1,6 +1,6 @@
 const {
-  assertPhase5qSmokeEvidenceReviewReadiness,
+  assertPhase5rLaunchDecisionResponseReadiness,
 } = require('./public-review-polish-checks.cjs');
 
-assertPhase5qSmokeEvidenceReviewReadiness();
+assertPhase5rLaunchDecisionResponseReadiness();
 console.log('Smoke evidence review readiness validation passed. No deployment was performed. This does not approve deployment.');

@@ -4,7 +4,7 @@ const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 
 const repoRoot = path.resolve(__dirname, '..');
-const { assertPhase5qSmokeEvidenceReviewReadiness } = require('./public-review-polish-checks.cjs');
+const { assertPhase5rLaunchDecisionResponseReadiness } = require('./public-review-polish-checks.cjs');
 const phase153MergeCommit = '0e5379d21edd9ee67b9f929a3ba8e217d51ed17f';
 const currentPhase = 'Phase 4F-A/B owner-facing review handoff bundle, approval issue template, and no-deploy preflight command center';
 const latestCompletedCapability = 'Phase 4E-A/B owner approval request packet, preview-planning handoff template, and final no-deploy decision gate';
@@ -225,6 +225,6 @@ assertPublicSourceSafe();
 assertSuiteAndTestsNotWeakened();
 assertPackageScript();
 
-assertPhase5qSmokeEvidenceReviewReadiness();
+assertPhase5rLaunchDecisionResponseReadiness();
 
 console.log('Owner handoff bundle validation passed. No deployment was performed. This does not approve deployment.');

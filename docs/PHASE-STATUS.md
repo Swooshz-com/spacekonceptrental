@@ -1,3 +1,16 @@
+## Phase 5R-A/B Launch Decision Response Readiness References
+
+Current phase: Phase 5R-A/B launch decision response readiness, release closure packet template, and no-live-change firewall.
+Latest completed capability: Phase 5Q-A/B smoke evidence review readiness, go/no-go decision ledger, and no-launch/no-production firewall.
+Last merged capability PR: #172.
+Last merged capability merge commit: 607196e684649c2ed0fa70a9e530e9a58c7d09ab.
+
+Phase 5R-A/B adds repo-local launch decision response readiness, a local release closure / continuation packet template, protected admin launch decision response readiness helper coverage, no-live-change firewall coverage, release-candidate suite integration, validate:launch-decision-response-readiness validator coverage, and deterministic Phase 5R launch decision response readiness tests. These controls are template-only, non-live, not evidence, and do not send launch decision responses, record go/no-go decisions, complete evidence review, record route verification, record route-walkthrough evidence, record rollback evidence, record preview evidence, record production evidence, record owner approval, record owner sign-off, grant launch clearance, grant deployment permission, claim release closure, or claim production readiness.
+
+Phase 5R-A/B references `docs/content/LOCAL-LAUNCH-DECISION-RESPONSE-READINESS.md`, `docs/content/LOCAL-RELEASE-CLOSURE-PACKET-TEMPLATE.md`, `docs/content/LOCAL-SMOKE-EVIDENCE-REVIEW-READINESS.md`, `docs/content/LOCAL-GO-NOGO-DECISION-LEDGER-TEMPLATE.md`, `scripts/validate-launch-decision-response-readiness.cjs`, `scripts/validate-smoke-evidence-review-readiness.cjs`, and protected admin launch decision response readiness helper coverage.
+
+No deployment is performed or approved by Phase 5R-A/B. It does not add provider config, Vercel config, Supabase Cloud config, DNS/domain/CDN/environment/platform changes, real secrets or env values, filled owner-review evidence, filled preview evidence, filled production evidence, filled smoke evidence, filled rollback evidence, filled route-walkthrough evidence, filled owner decisions, filled approval evidence, filled sign-off evidence, filled launch evidence, filled response-sent evidence, filled launch-response evidence, filled release-closure evidence, filled deployment approval, browser Supabase, service-role runtime paths, n8n/Pinecone runtime changes, `/api/chat` retrieval wiring, public uploads, customer accounts, public quote tracking, notifications, CRM, outbound messaging, invented operational facts, ecommerce flows, payment/order/checkout flows, booking/reservation flows, fulfilment flows, stock-reservation flows, owner-approved media claims, final styling claims, real inventory confirmation, route verification, go/no-go approval, launch response, release closure, launch clearance, provider readiness, environment readiness, preview readiness, production readiness, smoke readiness, rollback readiness, deployment permission, or public admin internals.
+
 ## Phase 5Q-A/B Smoke Evidence Review Readiness References
 
 Current phase: Phase 5Q-A/B smoke evidence review readiness, go/no-go decision ledger, and no-launch/no-production firewall.
