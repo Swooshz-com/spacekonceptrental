@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 const {
-  assertPhase5iOwnerReviewWalkthroughReadiness,
+  assertPhase5jOwnerFeedbackIntakeReadiness,
 } = require("./public-review-polish-checks.cjs");
 
-assertPhase5iOwnerReviewWalkthroughReadiness();
+assertPhase5jOwnerFeedbackIntakeReadiness();
 console.log(
   "Catalogue write workflow readiness validation passed. No deployment was performed.",
 );

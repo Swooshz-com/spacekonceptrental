@@ -12,6 +12,7 @@ const phase159MergeCommit = 'aec1d7e781f3db463aac3079a00ddb7a25564a0c';
 const phase160MergeCommit = 'faa06b3598317699c06ab55a1f987dac831306b6';
 const phase161MergeCommit = 'e051d98ee50501fccca8e9b55411dee6a6d7cc95';
 const phase162MergeCommit = 'fddfce84daa93141a7b353179f906c8827a9d6e7';
+const phase163MergeCommit = '62c8a9aefb15e2bbc420507a1b52bc716f49b670';
 const currentPhase5a = 'Phase 5A-A/B public owner-review polish sweep, local content-readiness cleanup, and protected admin review UX closure';
 const currentPhase5b = 'Phase 5B-A/B public catalogue-to-enquiry journey hardening, listing continuity, and admin/public parity checks';
 const currentPhase5c = 'Phase 5C-A/B public discovery search/filter polish, quote-intent context, and admin discovery parity closure';
@@ -21,6 +22,7 @@ const currentPhase5f = 'Phase 5F-A/B protected admin quote triage workflow, resp
 const currentPhase5g = 'Phase 5G-A/B protected admin catalogue content-ops readiness, media safety review, and public parity boundary';
 const currentPhase5h = 'Phase 5H-A/B protected admin catalogue write workflow polish, validation/error UX, and public parity guard';
 const currentPhase5i = 'Phase 5I-A/B owner-review walkthrough readiness, full-route acceptance matrix, and no-deploy handoff refresh';
+const currentPhase5j = 'Phase 5J-A/B owner-review feedback intake readiness, correction queue reconciliation, and no-approval update guard';
 const latestCompletedPhase4f = 'Phase 4F-A/B owner-facing review handoff bundle, approval issue template, and no-deploy preflight command center';
 const cleanupDocPath = 'docs/content/LOCAL-CONTENT-READINESS-CLEANUP.md';
 const publicJourneyAcceptanceDocPath = 'docs/content/LOCAL-PUBLIC-JOURNEY-ACCEPTANCE.md';
@@ -32,6 +34,8 @@ const catalogueContentOpsReadinessDocPath = 'docs/content/LOCAL-CATALOGUE-CONTEN
 const catalogueWriteWorkflowReadinessDocPath = 'docs/content/LOCAL-CATALOGUE-WRITE-WORKFLOW-READINESS.md';
 const ownerReviewWalkthroughReadinessDocPath = 'docs/content/LOCAL-OWNER-REVIEW-WALKTHROUGH-READINESS.md';
 const fullRouteAcceptanceMatrixDocPath = 'docs/content/LOCAL-FULL-ROUTE-ACCEPTANCE-MATRIX.md';
+const ownerFeedbackIntakeReadinessDocPath = 'docs/content/LOCAL-OWNER-FEEDBACK-INTAKE-READINESS.md';
+const ownerCorrectionQueueReconciliationDocPath = 'docs/content/LOCAL-OWNER-CORRECTION-QUEUE-RECONCILIATION.md';
 const publicSourceRoots = [
   'website/app/layout.tsx',
   'website/app/page.tsx',
@@ -971,6 +975,150 @@ function assertPhase5iOwnerReviewWalkthroughReadiness() {
   assertSuiteAndTests();
 }
 
+
+function assertPhase5jStatusRollForward() {
+  const docs = normalizeWhitespace(statusDocPaths.map(readRepoFile).join('\n'));
+  for (const required of [
+    `Current phase: ${currentPhase5j}`,
+    `Latest completed capability: ${currentPhase5i}`,
+    'Last merged capability PR: #163',
+    `Last merged capability merge commit: ${phase163MergeCommit}`,
+    ownerFeedbackIntakeReadinessDocPath,
+    ownerCorrectionQueueReconciliationDocPath,
+    ownerReviewWalkthroughReadinessDocPath,
+    fullRouteAcceptanceMatrixDocPath,
+    'scripts/validate-owner-feedback-intake-readiness.cjs',
+    'No deployment is performed or approved by Phase 5J-A/B',
+  ]) {
+    assertIncludes(docs, required, 'Phase 5J status roll-forward docs');
+  }
+}
+
+function assertOwnerFeedbackIntakeReadinessDocs() {
+  assertTracked(
+    [ownerFeedbackIntakeReadinessDocPath, ownerCorrectionQueueReconciliationDocPath],
+    'Phase 5J owner feedback intake docs'
+  );
+  const intake = normalizeWhitespace(readRepoFile(ownerFeedbackIntakeReadinessDocPath));
+  for (const required of [
+    'repo-local, template-only, non-live owner feedback intake readiness package',
+    '[NOT EVIDENCE / NOT RECORDED]',
+    '[DEPLOYMENT APPROVAL: NOT GRANTED]',
+    'Public copy correction',
+    'Listing/category/media facts',
+    'Image/alt-text selection',
+    'Quote/enquiry wording',
+    'Admin workflow wording',
+    'Missing contact/service-area/policy details',
+    'Claims blocked until supplied',
+    'Deployment/launch question',
+    'Out-of-scope request',
+    'Casual comments outside a captured owner review record',
+    'Unverified assumptions',
+    'Codex/agent guesses',
+    'Inferred business facts',
+    'Public route tests',
+    'Local screenshots',
+    'Preview/deployment output',
+  ]) {
+    assertIncludes(intake, required, 'Phase 5J owner feedback intake doc');
+  }
+  const queue = normalizeWhitespace(readRepoFile(ownerCorrectionQueueReconciliationDocPath));
+  for (const required of [
+    'repo-local, template-only, non-live correction queue reconciliation package',
+    '[NOT EVIDENCE / NOT RECORDED]',
+    '[DEPLOYMENT APPROVAL: NOT GRANTED]',
+    'Capture raw owner comment separately',
+    'Classify the owner comment into the matching feedback bucket',
+    'Identify the affected route, component, document, validator, or test',
+    'Identify whether an owner fact is supplied or whether the fact is still missing',
+    'Identify whether copy can be safely changed without adding unsupported claims',
+    'Identify whether a claim remains blocked because support is not supplied',
+    'Identify whether a follow-up question is needed before local correction work',
+    'Identify whether deployment approval is still absent',
+    'Not captured',
+    'Needs owner input',
+    'Ready for local correction',
+    'Blocked: claim unsupported',
+    'Blocked: deployment approval missing',
+    'Ready for review PR',
+  ]) {
+    assertIncludes(queue, required, 'Phase 5J correction queue reconciliation doc');
+  }
+  assertNoMatch(
+    `${intake}\n${queue}`,
+    /owner approved|owner sign-?off complete|actual owner decision|actual owner feedback|accepted by owner|rejected by owner|preview evidence captured|production evidence captured|smoke evidence captured|route-walkthrough evidence captured|correction-completed evidence captured|response-sent evidence captured|public launch evidence captured|sign-off evidence captured/i,
+    'Phase 5J docs'
+  );
+}
+
+function assertOwnerFeedbackIntakePackageScript() {
+  const packageJson = JSON.parse(readRepoFile('package.json'));
+  assert(
+    packageJson.scripts?.['validate:owner-feedback-intake-readiness'] === 'node scripts/validate-owner-feedback-intake-readiness.cjs',
+    'package.json must register validate:owner-feedback-intake-readiness'
+  );
+}
+
+function assertOwnerFeedbackIntakeSources() {
+  const adminSource = readTrackedProductionSources(['website/app/admin/protected-admin-shell.tsx']);
+  const publicSource = readTrackedProductionSources(publicSourceRoots);
+
+  for (const required of [
+    /Phase 5J-A\/B admin-only feedback intake readiness/i,
+    /Owner-feedback intake readiness helper/i,
+    /Future feedback intake buckets/i,
+    /Correction queue reconciliation steps/i,
+    /Owner facts can support local copy corrections/i,
+    /unsupported claims remain/i,
+    /deployment\/launch questions remain separate from feedback/i,
+    /LOCAL-OWNER-FEEDBACK-INTAKE-READINESS\.md/i,
+    /LOCAL-OWNER-CORRECTION-QUEUE-RECONCILIATION\.md/i,
+    /LOCAL-OWNER-REVIEW-WALKTHROUGH-READINESS\.md/i,
+    /LOCAL-FULL-ROUTE-ACCEPTANCE-MATRIX\.md/i,
+  ]) {
+    assert(required.test(adminSource), `Phase 5J admin source missing safe wording: ${required}`);
+  }
+
+  assertNoMatch(
+    publicSource,
+    /owner-feedback intake helper|owner feedback intake helper|correction queue reconciliation|owner-review walkthrough helper|owner-review walkthrough internals|full-route acceptance matrix|route acceptance matrix internals|admin route\/view checklist|owner handoff internals|owner approval issue template|no-deploy preflight command|no-deploy command-center|release-control internals|admin urls?|internal notes|destructive-action safeguards|recovery lanes?|status-transition matrix|public admin status|\/admin\//i,
+    'Phase 5J public source'
+  );
+  assert(/\b(?:listing|listings)\b/i.test(publicSource), 'public source must retain listing wording');
+  assert(/\b(?:rental|rentals)\b/i.test(publicSource), 'public source must retain rental wording');
+  assert(/\b(?:quote|enquiry|request)\b/i.test(publicSource), 'public source must retain quote/enquiry/request wording');
+  assertNoMatch(publicSource, /\b(?:cart|checkout|order|payment|purchase|online ordering)\b/i, 'Phase 5J public source');
+  assertNoMatch(publicSource, /\b(?:booking|reservation|fulfilment|fulfillment|stock reservation|stock-reservation|book now|reserve now)\b/i, 'Phase 5J public source');
+  assertNoMatch(publicSource, /award-winning|certified partner|trusted by|5-star|guaranteed availability|guaranteed delivery|licensed and insured|testimonial|client logo|case study|legal guarantee|production policy|service-area claim|Singapore\s+\d{6}|\+?\d[\d\s().-]{7,}|Mon(?:day)?\s*-\s*Fri|24\/7|123\s+Main/i, 'Phase 5J public source');
+  assertNoMatch(publicSource, /customer account|quote tracking|file upload|public upload|notifications?|\bCRM\b|email sending|sms sending|whatsapp|outbound messaging|public status view/i, 'Phase 5J public source');
+  assertNoMatch(
+    adminSource,
+    /public upload|customer upload|new provider setup|new storage provider|NEXT_PUBLIC_SUPABASE|SUPABASE_SERVICE_ROLE_KEY|service-role browser|Pinecone|\bRAG\b|outbound messaging|email sending|sms sending|whatsapp sending|process\.env\.(?:NEXT_PUBLIC_|SUPABASE|N8N|PINECONE|VERCEL)/i,
+    'Phase 5J admin source'
+  );
+}
+
+function assertReleaseSuiteHasOwnerFeedbackIntake() {
+  const suite = readRepoFile('scripts/validate-release-candidate-suite.cjs');
+  assertIncludes(suite, "args: ['run', 'validate:owner-feedback-intake-readiness']", 'release-candidate suite');
+  assertNoMatch(suite, /docker[^\n]*(?:skip|bypass)|(?:skip|bypass)[^\n]*docker/i, 'release-candidate suite');
+}
+
+function assertPhase5jOwnerFeedbackIntakeReadiness() {
+  assertOwnerFeedbackIntakeReadinessDocs();
+  assertPhase5jStatusRollForward();
+  assertOwnerFeedbackIntakePackageScript();
+  assertOwnerFeedbackIntakeSources();
+  assertNoForbiddenTrackedFiles();
+  assertNoFilledEvidence();
+  assertPhase5iOwnerReviewWalkthroughReadiness();
+  assertReleaseSuiteHasOwnerFeedbackIntake();
+  assertReleaseSuiteHasOwnerReviewWalkthrough();
+  assertReleaseSuiteHasCatalogueWriteWorkflow();
+  assertSuiteAndTests();
+}
+
 function assertReleaseSuiteHasCatalogueContentOps() {
   const suite = readRepoFile('scripts/validate-release-candidate-suite.cjs');
   assertIncludes(suite, "args: ['run', 'validate:catalogue-content-ops-readiness']", 'release-candidate suite');
@@ -1106,6 +1254,7 @@ function assertPhase5aPublicReviewPolish() {
 }
 
 module.exports = {
+  assertPhase5jOwnerFeedbackIntakeReadiness,
   assertPhase5iOwnerReviewWalkthroughReadiness,
   assertPhase5hCatalogueWriteWorkflowReadiness,
   assertPhase5gCatalogueContentOpsReadiness,
@@ -1124,6 +1273,7 @@ module.exports = {
   phase160MergeCommit,
   phase161MergeCommit,
   phase162MergeCommit,
+  phase163MergeCommit,
   currentPhase5a,
   currentPhase5b,
   currentPhase5c,
@@ -1133,6 +1283,7 @@ module.exports = {
   currentPhase5g,
   currentPhase5h,
   currentPhase5i,
+  currentPhase5j,
   latestCompletedPhase4f,
   cleanupDocPath,
   publicJourneyAcceptanceDocPath,
