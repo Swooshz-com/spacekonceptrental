@@ -106,8 +106,8 @@ describe("Phase 5O-A/B deployment execution runbook readiness", () => {
       expect(screen.getByRole("heading", { name: heading })).toBeInTheDocument();
     }
 
-    expect(screen.getByText(deploymentExecutionRunbookReadinessDocPath)).toBeInTheDocument();
-    expect(screen.getByText(providerEnvDecisionMatrixTemplateDocPath)).toBeInTheDocument();
+    expect(screen.getAllByText(deploymentExecutionRunbookReadinessDocPath).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(providerEnvDecisionMatrixTemplateDocPath).length).toBeGreaterThan(0);
     expect(screen.getAllByText(deploymentApprovalRequestReadinessDocPath).length).toBeGreaterThan(0);
     expect(screen.getAllByText(preLaunchBlockerLedgerTemplateDocPath).length).toBeGreaterThan(0);
     expect(screen.getByText(/safe future deployment execution runbook sections/i)).toBeInTheDocument();
@@ -124,7 +124,7 @@ describe("Phase 5O-A/B deployment execution runbook readiness", () => {
     expect(screen.getByText(/no preview is published here/i)).toBeInTheDocument();
     expect(screen.getByText(/no production launch is performed here/i)).toBeInTheDocument();
     expect(screen.getByText(/no smoke evidence is captured here/i)).toBeInTheDocument();
-    expect(screen.getByText(/no rollback is executed here/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/no rollback is executed here/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/no deployment approval is granted here/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/\[not evidence \/ not recorded\]/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/\[deployment approval: not granted\]/i).length).toBeGreaterThan(0);

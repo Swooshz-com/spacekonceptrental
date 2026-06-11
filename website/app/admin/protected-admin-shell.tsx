@@ -1418,6 +1418,56 @@ const phase5oNoExecutionBoundaries = [
   "A merged PR is not launch clearance"
 ] as const;
 
+const phase5pSmokeEvidenceIntakeReadinessPath =
+  "docs/content/LOCAL-SMOKE-EVIDENCE-INTAKE-READINESS.md";
+const phase5pRouteVerificationRollbackLedgerTemplatePath =
+  "docs/content/LOCAL-ROUTE-VERIFICATION-ROLLBACK-LEDGER-TEMPLATE.md";
+const phase5pSafeFutureSmokeIntakeSections = [
+  "Deployment execution runbook reference",
+  "Provider/environment decision reference",
+  "Preview URL placeholder",
+  "Production URL placeholder",
+  "Public route smoke checklist",
+  "Protected admin route smoke checklist",
+  "Quote/enquiry request smoke checklist",
+  "Listing/category/media smoke checklist",
+  "Rollback observation placeholder",
+  "Final evidence status"
+] as const;
+const phase5pAllowedFutureSmokeIntakeStatuses = [
+  "Not approved",
+  "Not run",
+  "URL not supplied",
+  "Provider decision pending",
+  "Environment/secrets pending",
+  "Smoke plan drafted only",
+  "Evidence not captured",
+  "Rollback not run",
+  "Blocked: deployment approval missing",
+  "Ready for future approved smoke run"
+] as const;
+const phase5pRouteVerificationRollbackLedgerPlaceholders = [
+  "Check ID: [NOT ASSIGNED]",
+  "Route/surface: [NOT SELECTED]",
+  "Environment target: [NOT SELECTED]",
+  "URL: [NOT SUPPLIED]",
+  "Expected result: [NOT FILLED]",
+  "Actual result: [NOT RUN]",
+  "Smoke status: [NOT RUN]",
+  "Rollback observation: [NOT RUN]",
+  "Owner/business fact dependency: [OWNER INPUT REQUIRED]",
+  "Evidence status: [NOT EVIDENCE / NOT RECORDED]",
+  "Deployment status: [DEPLOYMENT APPROVAL: NOT GRANTED]"
+] as const;
+const phase5pNoEvidenceNoRunBoundaries = [
+  "A smoke intake template is not smoke evidence",
+  "A URL placeholder is not a live URL",
+  "A route checklist is not a route walkthrough",
+  "A rollback observation placeholder is not rollback evidence",
+  "Passing validators is not smoke success",
+  "A merged PR is not production readiness"
+] as const;
+
 const publicJourneyReadinessClosurePath =
   "docs/content/PUBLIC-JOURNEY-READINESS-CLOSURE.md";
 const quoteEnquiryPublicExpectationBoundaryPath =
@@ -2708,6 +2758,83 @@ function DeploymentExecutionRunbookReadinessHelper() {
 }
 
 
+function SmokeEvidenceIntakeReadinessHelper() {
+  return (
+    <section
+      aria-label="Phase 5P smoke evidence intake readiness helper"
+      className="admin-dashboard__card admin-dashboard__card--summary"
+    >
+      <p className="eyebrow">Phase 5P-A/B admin-only smoke evidence intake readiness</p>
+      <h3>Smoke evidence intake readiness helper</h3>
+      <p>
+        This protected admin-only helper prepares future local smoke evidence
+        intake and route verification ledger structure after the deployment
+        execution runbook exists. No smoke check is run here. No route walkthrough is recorded here. No rollback is executed here. No preview evidence is captured here. No production evidence is captured here. No deployment is performed here. No deployment approval is granted here.
+      </p>
+      <dl className="quote-inbox__details">
+        <div>
+          <dt>Smoke evidence intake readiness</dt>
+          <dd>{phase5pSmokeEvidenceIntakeReadinessPath}</dd>
+        </div>
+        <div>
+          <dt>Route verification and rollback ledger template</dt>
+          <dd>{phase5pRouteVerificationRollbackLedgerTemplatePath}</dd>
+        </div>
+        <div>
+          <dt>Deployment execution runbook readiness</dt>
+          <dd>{phase5oDeploymentExecutionRunbookReadinessPath}</dd>
+        </div>
+        <div>
+          <dt>Provider/environment decision matrix template</dt>
+          <dd>{phase5oProviderEnvDecisionMatrixTemplatePath}</dd>
+        </div>
+        <div>
+          <dt>Evidence status</dt>
+          <dd>[NOT EVIDENCE / NOT RECORDED]</dd>
+        </div>
+        <div>
+          <dt>Deployment status</dt>
+          <dd>[DEPLOYMENT APPROVAL: NOT GRANTED]</dd>
+        </div>
+      </dl>
+      <h4>Safe future smoke intake sections</h4>
+      <ul className="admin-readiness__list">
+        {phase5pSafeFutureSmokeIntakeSections.map((section) => (
+          <li key={section}>{section}</li>
+        ))}
+      </ul>
+      <h4>Route verification / rollback ledger placeholders</h4>
+      <ul className="admin-readiness__list">
+        {phase5pRouteVerificationRollbackLedgerPlaceholders.map((placeholder) => (
+          <li key={placeholder}>{placeholder}</li>
+        ))}
+      </ul>
+      <h4>Allowed future smoke intake statuses</h4>
+      <ul className="admin-readiness__list">
+        {phase5pAllowedFutureSmokeIntakeStatuses.map((status) => (
+          <li key={status}>{status}</li>
+        ))}
+      </ul>
+      <h4>No-evidence/no-run boundaries</h4>
+      <ul className="admin-readiness__list">
+        {phase5pNoEvidenceNoRunBoundaries.map((boundary) => (
+          <li key={boundary}>{boundary}</li>
+        ))}
+      </ul>
+      <p>
+        This helper stays protected admin-only and does not expose smoke evidence
+        intake internals, route verification ledger internals, rollback
+        observation internals, deployment execution runbook internals,
+        provider/environment decision matrix internals, provider setup internals,
+        environment/secrets internals, owner handoff internals, release-control
+        internals, or admin route internals to public rental, listing, quote,
+        enquiry, or request routes.
+      </p>
+    </section>
+  );
+}
+
+
 function OwnerReadinessHelpersPanel() {
   return (
     <>
@@ -2718,6 +2845,7 @@ function OwnerReadinessHelpersPanel() {
       <OwnerDecisionIntakeReadinessHelper />
       <DeploymentApprovalRequestReadinessHelper />
       <DeploymentExecutionRunbookReadinessHelper />
+      <SmokeEvidenceIntakeReadinessHelper />
     </>
   );
 }

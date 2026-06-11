@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-const { assertPhase5oDeploymentExecutionRunbookReadiness } = require('./public-review-polish-checks.cjs');
+const { assertPhase5pSmokeEvidenceIntakeReadiness } = require('./public-review-polish-checks.cjs');
 
-assertPhase5oDeploymentExecutionRunbookReadiness();
+assertPhase5pSmokeEvidenceIntakeReadiness();
 console.log('Public review polish validation passed. No deployment was performed.');
