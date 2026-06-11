@@ -1195,6 +1195,40 @@ const phase5jCorrectionStatuses = [
   "Ready for review PR"
 ] as const;
 
+
+const phase5kOwnerCorrectionWorkflowReadinessPath =
+  "docs/content/LOCAL-OWNER-CORRECTION-WORKFLOW-READINESS.md";
+const phase5kPublicContentGapRegisterPath =
+  "docs/content/LOCAL-PUBLIC-CONTENT-GAP-REGISTER.md";
+const phase5kCorrectionStages = [
+  "Not captured",
+  "Needs owner input",
+  "Ready for local correction planning",
+  "Ready for local correction PR",
+  "Blocked: unsupported claim",
+  "Blocked: deployment approval missing",
+  "Ready for owner re-review request"
+] as const;
+const phase5kPublicContentGapGroups = [
+  "Contact details",
+  "Service area",
+  "Operating hours",
+  "Event/rental policies",
+  "Listing-specific dimensions/materials/condition",
+  "Media/alt-text preferences",
+  "Response expectations",
+  "Unsupported public claims"
+] as const;
+const phase5kBlockedCorrectionCategories = [
+  "Contact details missing",
+  "Service area missing",
+  "Operating hours missing",
+  "Policy/legal claim missing",
+  "Unsupported public claim missing owner proof",
+  "Unsupported public self-service flow requested",
+  "Provider/deployment/runtime request made"
+] as const;
+
 const publicJourneyReadinessClosurePath =
   "docs/content/PUBLIC-JOURNEY-READINESS-CLOSURE.md";
 const quoteEnquiryPublicExpectationBoundaryPath =
@@ -2115,6 +2149,76 @@ function OwnerFeedbackIntakeReadinessHelper() {
   );
 }
 
+
+function OwnerCorrectionWorkflowReadinessHelper() {
+  return (
+    <section
+      aria-label="Phase 5K owner correction workflow readiness helper"
+      className="admin-dashboard__card admin-dashboard__card--summary"
+    >
+      <p className="eyebrow">Phase 5K-A/B admin-only correction workflow readiness</p>
+      <h3>Owner correction workflow readiness helper</h3>
+      <p>
+        This protected admin-only helper prepares future local correction
+        planning for owner-supplied facts, public content-gap placeholders, and
+        no-response/no-deploy handoff safety. No owner feedback is recorded here.
+        No owner response is sent here. No correction completion is claimed here.
+        No deployment approval is granted here.
+      </p>
+      <dl className="quote-inbox__details">
+        <div>
+          <dt>Correction workflow readiness</dt>
+          <dd>{phase5kOwnerCorrectionWorkflowReadinessPath}</dd>
+        </div>
+        <div>
+          <dt>Public content-gap register</dt>
+          <dd>{phase5kPublicContentGapRegisterPath}</dd>
+        </div>
+        <div>
+          <dt>Owner feedback intake readiness</dt>
+          <dd>{phase5jOwnerFeedbackIntakeReadinessPath}</dd>
+        </div>
+        <div>
+          <dt>Correction queue reconciliation</dt>
+          <dd>{phase5jOwnerCorrectionQueueReconciliationPath}</dd>
+        </div>
+        <div>
+          <dt>Evidence status</dt>
+          <dd>[NOT EVIDENCE / NOT RECORDED]</dd>
+        </div>
+        <div>
+          <dt>Deployment status</dt>
+          <dd>[DEPLOYMENT APPROVAL: NOT GRANTED]</dd>
+        </div>
+      </dl>
+      <h4>Safe future correction stages</h4>
+      <ul className="admin-readiness__list">
+        {phase5kCorrectionStages.map((stage) => (
+          <li key={stage}>{stage}</li>
+        ))}
+      </ul>
+      <h4>Public content-gap groups</h4>
+      <ul className="admin-readiness__list">
+        {phase5kPublicContentGapGroups.map((group) => (
+          <li key={group}>{group}</li>
+        ))}
+      </ul>
+      <h4>Blocked correction categories</h4>
+      <ul className="admin-readiness__list">
+        {phase5kBlockedCorrectionCategories.map((category) => (
+          <li key={category}>{category}</li>
+        ))}
+      </ul>
+      <p>
+        This helper stays protected admin-only and does not expose correction
+        workflow internals, content-gap register internals, owner handoff
+        internals, release-control internals, or admin route internals to public
+        rental, listing, quote, enquiry, or request routes.
+      </p>
+    </section>
+  );
+}
+
 function AdminCatalogueContentOpsReadiness({
   dashboard,
   scope
@@ -2594,6 +2698,7 @@ function AdminOperationsView({
       <AdminDashboard dashboard={state.dashboard} />
       <OwnerReviewWalkthroughReadinessHelper />
       <OwnerFeedbackIntakeReadinessHelper />
+      <OwnerCorrectionWorkflowReadinessHelper />
       <QuoteRequestInboxPanel inbox={state.quoteInbox} />
     </>
   );

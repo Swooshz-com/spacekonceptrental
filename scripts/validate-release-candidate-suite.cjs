@@ -5,6 +5,11 @@ const repoRoot = path.resolve(__dirname, '..');
 
 const commandPlan = [
   {
+    label: 'Validate owner correction workflow readiness',
+    cwd: repoRoot,
+    args: ['run', 'validate:owner-correction-workflow-readiness'],
+  },
+  {
     label: 'Validate owner feedback intake readiness',
     cwd: repoRoot,
     args: ['run', 'validate:owner-feedback-intake-readiness'],
