@@ -5,5 +5,5 @@ const {
 
 assertPhase5jOwnerFeedbackIntakeReadiness();
 console.log(
-  'Owner-review walkthrough readiness validation passed. No deployment was performed.',
+  'Owner feedback intake readiness validation passed. No deployment was performed.',
 );

@@ -1161,6 +1161,40 @@ const phase5iOwnerInputPlaceholders = [
   "Response process expectations still missing"
 ] as const;
 
+const phase5jOwnerFeedbackIntakeReadinessPath =
+  "docs/content/LOCAL-OWNER-FEEDBACK-INTAKE-READINESS.md";
+const phase5jOwnerCorrectionQueueReconciliationPath =
+  "docs/content/LOCAL-OWNER-CORRECTION-QUEUE-RECONCILIATION.md";
+const phase5jFeedbackBuckets = [
+  "Public copy correction",
+  "Listing/category/media facts",
+  "Image/alt-text selection",
+  "Quote/enquiry wording",
+  "Admin workflow wording",
+  "Missing contact/service-area/policy details",
+  "Claims blocked until supplied",
+  "Deployment/launch question",
+  "Out-of-scope request"
+] as const;
+const phase5jCorrectionReconciliationSteps = [
+  "Capture raw owner comment separately",
+  "Classify the feedback bucket",
+  "Identify affected route/component/doc/test",
+  "Confirm whether an owner fact is supplied or still missing",
+  "Confirm whether copy can be safely changed",
+  "Keep unsupported claims blocked",
+  "Ask a follow-up question when needed",
+  "Confirm deployment approval is still absent"
+] as const;
+const phase5jCorrectionStatuses = [
+  "Not captured",
+  "Needs owner input",
+  "Ready for local correction",
+  "Blocked: claim unsupported",
+  "Blocked: deployment approval missing",
+  "Ready for review PR"
+] as const;
+
 const publicJourneyReadinessClosurePath =
   "docs/content/PUBLIC-JOURNEY-READINESS-CLOSURE.md";
 const quoteEnquiryPublicExpectationBoundaryPath =
@@ -2013,6 +2047,74 @@ function OwnerReviewWalkthroughReadinessHelper() {
   );
 }
 
+function OwnerFeedbackIntakeReadinessHelper() {
+  return (
+    <section
+      aria-label="Phase 5J owner-feedback intake readiness helper"
+      className="admin-dashboard__card admin-dashboard__card--summary"
+    >
+      <p className="eyebrow">Phase 5J-A/B admin-only feedback intake readiness</p>
+      <h3>Owner-feedback intake readiness helper</h3>
+      <p>
+        This protected admin-only helper prepares a future local owner feedback
+        intake and correction queue reconciliation workflow. It creates no
+        owner feedback records, records no owner approval, creates no evidence,
+        grants no launch clearance, and keeps deployment approval missing.
+      </p>
+      <dl className="quote-inbox__details">
+        <div>
+          <dt>Feedback intake package</dt>
+          <dd>{phase5jOwnerFeedbackIntakeReadinessPath}</dd>
+        </div>
+        <div>
+          <dt>Correction queue reconciliation</dt>
+          <dd>{phase5jOwnerCorrectionQueueReconciliationPath}</dd>
+        </div>
+        <div>
+          <dt>Phase 5I walkthrough package</dt>
+          <dd>{phase5iOwnerReviewWalkthroughReadinessPath}</dd>
+        </div>
+        <div>
+          <dt>Phase 5I route matrix</dt>
+          <dd>{phase5iFullRouteAcceptanceMatrixPath}</dd>
+        </div>
+        <div>
+          <dt>Evidence status</dt>
+          <dd>[NOT EVIDENCE / NOT RECORDED]</dd>
+        </div>
+        <div>
+          <dt>Deployment status</dt>
+          <dd>[DEPLOYMENT APPROVAL: NOT GRANTED]</dd>
+        </div>
+      </dl>
+      <h4>Future feedback intake buckets</h4>
+      <ul className="admin-readiness__list">
+        {phase5jFeedbackBuckets.map((bucket) => (
+          <li key={bucket}>{bucket}</li>
+        ))}
+      </ul>
+      <h4>Correction queue reconciliation steps</h4>
+      <ul className="admin-readiness__list">
+        {phase5jCorrectionReconciliationSteps.map((step) => (
+          <li key={step}>{step}</li>
+        ))}
+      </ul>
+      <h4>Safe correction statuses</h4>
+      <ul className="admin-readiness__list">
+        {phase5jCorrectionStatuses.map((status) => (
+          <li key={status}>{status}</li>
+        ))}
+      </ul>
+      <p>
+        Owner facts can support local copy corrections only when supplied by the
+        owner in a separately captured review record. Unsupported claims remain
+        blocked, deployment/launch questions remain separate from feedback, and
+        this helper stays protected admin-only.
+      </p>
+    </section>
+  );
+}
+
 function AdminCatalogueContentOpsReadiness({
   dashboard,
   scope
@@ -2491,6 +2593,7 @@ function AdminOperationsView({
     <>
       <AdminDashboard dashboard={state.dashboard} />
       <OwnerReviewWalkthroughReadinessHelper />
+      <OwnerFeedbackIntakeReadinessHelper />
       <QuoteRequestInboxPanel inbox={state.quoteInbox} />
     </>
   );

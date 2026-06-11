@@ -10,6 +10,10 @@ import {
 } from "../app/admin/protected-admin-shell";
 
 const repoRoot = resolve(process.cwd(), "..");
+const ownerFeedbackIntakeDocPath =
+  "docs/content/LOCAL-OWNER-FEEDBACK-INTAKE-READINESS.md";
+const correctionQueueDocPath =
+  "docs/content/LOCAL-OWNER-CORRECTION-QUEUE-RECONCILIATION.md";
 const ownerWalkthroughDocPath =
   "docs/content/LOCAL-OWNER-REVIEW-WALKTHROUGH-READINESS.md";
 const routeMatrixDocPath =
@@ -89,36 +93,34 @@ const authorisedState: ProtectedAdminShellState = {
   },
 };
 
-describe("Phase 5I-A/B owner-review walkthrough readiness", () => {
+describe("Phase 5J-A/B owner feedback intake readiness", () => {
   afterEach(() => {
     cleanup();
   });
 
-  it("renders the protected owner-review walkthrough helper only for authorised admin state", () => {
+  it("renders the protected owner-feedback readiness helper only for authorised admin state", () => {
     render(<AdminShellContent state={authorisedState} />);
 
     expect(
       screen.getByRole("heading", {
-        name: /owner-review walkthrough readiness helper/i,
+        name: /owner-feedback intake readiness helper/i,
       }),
     ).toBeInTheDocument();
-    expect(
-      screen.getAllByText(ownerWalkthroughDocPath).length,
-    ).toBeGreaterThan(0);
+    expect(screen.getByText(ownerFeedbackIntakeDocPath)).toBeInTheDocument();
+    expect(screen.getByText(correctionQueueDocPath)).toBeInTheDocument();
+    expect(screen.getAllByText(ownerWalkthroughDocPath).length).toBeGreaterThan(0);
     expect(screen.getAllByText(routeMatrixDocPath).length).toBeGreaterThan(0);
-    expect(screen.getByText(/public homepage walkthrough/i)).toBeInTheDocument();
+    expect(screen.getByText(/public copy correction/i)).toBeInTheDocument();
     expect(
-      screen.getByText(/protected admin quote inbox\/triage walkthrough/i),
+      screen.getByText(/capture raw owner comment separately/i),
     ).toBeInTheDocument();
-    expect(
-      screen.getByText(/contact details still missing/i),
-    ).toBeInTheDocument();
+    expect(screen.getByText(/blocked: claim unsupported/i)).toBeInTheDocument();
     expect(
       screen.getAllByText(/\[deployment approval: not granted\]/i).length,
     ).toBeGreaterThan(0);
   });
 
-  it("does not render the protected walkthrough helper for blocked admin states", () => {
+  it("does not render the protected owner-feedback helper for blocked admin states", () => {
     const blockedStates: ProtectedAdminShellState[] = [
       { status: "unauthenticated" },
       { status: "authenticated_not_authorised" },
@@ -130,29 +132,31 @@ describe("Phase 5I-A/B owner-review walkthrough readiness", () => {
 
       expect(
         screen.queryByRole("heading", {
-          name: /owner-review walkthrough readiness helper/i,
+          name: /owner-feedback intake readiness helper/i,
         }),
       ).not.toBeInTheDocument();
-      expect(screen.queryByText(ownerWalkthroughDocPath)).not.toBeInTheDocument();
-      expect(screen.queryByText(routeMatrixDocPath)).not.toBeInTheDocument();
+      expect(screen.queryByText(ownerFeedbackIntakeDocPath)).not.toBeInTheDocument();
+      expect(screen.queryByText(correctionQueueDocPath)).not.toBeInTheDocument();
 
       unmount();
     }
   });
 
-  it("keeps protected admin source wired to the Phase 5I docs", () => {
+  it("keeps protected admin source wired to the Phase 5J and Phase 5I docs", () => {
     const adminSource = readRepoFile("website/app/admin/protected-admin-shell.tsx");
 
+    expect(adminSource).toContain(ownerFeedbackIntakeDocPath);
+    expect(adminSource).toContain(correctionQueueDocPath);
     expect(adminSource).toContain(ownerWalkthroughDocPath);
     expect(adminSource).toContain(routeMatrixDocPath);
-    expect(adminSource).toMatch(/Phase 5I-A\/B admin-only walkthrough readiness/i);
+    expect(adminSource).toMatch(/Phase 5J-A\/B admin-only feedback intake readiness/i);
   });
 
-  it("keeps public source free of owner-review, admin route, handoff, and release-control internals", () => {
+  it("keeps public source free of owner-feedback, correction, admin route, handoff, and release-control internals", () => {
     const publicSource = readTrackedProductionSources(publicSourceRoots);
 
     expect(publicSource).not.toMatch(
-      /owner-review walkthrough helper|full-route acceptance matrix|admin route\/view checklist|internal notes|release-control internals|owner handoff internals|owner approval issue template|no-deploy command-center|admin urls?|public admin status|\/admin\//i,
+      /owner feedback intake helper|owner-feedback intake helper|correction queue reconciliation|owner-review walkthrough helper|full-route acceptance matrix|admin route\/view checklist|internal notes|release-control internals|owner handoff internals|owner approval issue template|no-deploy command-center|admin urls?|public admin status|\/admin\//i,
     );
   });
 
@@ -176,29 +180,29 @@ describe("Phase 5I-A/B owner-review walkthrough readiness", () => {
     );
   });
 
-  it("keeps Phase 5I docs as template-only no-evidence no-deploy materials", () => {
-    const docs = `${readRepoFile(ownerWalkthroughDocPath)}\n${readRepoFile(
-      routeMatrixDocPath,
+  it("keeps Phase 5J docs as template-only no-evidence no-deploy materials", () => {
+    const docs = `${readRepoFile(ownerFeedbackIntakeDocPath)}\n${readRepoFile(
+      correctionQueueDocPath,
     )}`;
 
     expect(docs).toContain("[NOT EVIDENCE / NOT RECORDED]");
     expect(docs).toContain("[DEPLOYMENT APPROVAL: NOT GRANTED]");
     expect(docs).not.toMatch(
-      /owner approved|owner sign-?off complete|actual owner decision|accepted by owner|preview evidence captured|production evidence captured|smoke evidence captured|route-walkthrough evidence captured|public launch evidence captured|sign-off evidence captured/i,
+      /owner approved|owner sign-?off complete|actual owner decision|actual owner feedback|accepted by owner|rejected by owner|preview evidence captured|production evidence captured|smoke evidence captured|route-walkthrough evidence captured|correction-completed evidence captured|public launch evidence captured|sign-off evidence captured/i,
     );
   });
 
-  it("registers the Phase 5I validator and keeps the release suite free of Docker bypass logic", () => {
+  it("registers the Phase 5J validator and keeps the release suite free of Docker bypass logic", () => {
     const packageJson = JSON.parse(readRepoFile("package.json")) as {
       scripts?: Record<string, string>;
     };
     const suite = readRepoFile("scripts/validate-release-candidate-suite.cjs");
 
     expect(
-      packageJson.scripts?.["validate:owner-review-walkthrough-readiness"],
-    ).toBe("node scripts/validate-owner-review-walkthrough-readiness.cjs");
+      packageJson.scripts?.["validate:owner-feedback-intake-readiness"],
+    ).toBe("node scripts/validate-owner-feedback-intake-readiness.cjs");
     expect(suite).toContain(
-      "args: ['run', 'validate:owner-review-walkthrough-readiness']",
+      "args: ['run', 'validate:owner-feedback-intake-readiness']",
     );
     expect(suite).not.toMatch(
       /docker[^\n]*(?:skip|bypass)|(?:skip|bypass)[^\n]*docker/i,
