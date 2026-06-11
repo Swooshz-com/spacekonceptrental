@@ -107,8 +107,8 @@ describe("Phase 5P-A/B smoke evidence intake readiness", () => {
       expect(screen.getByRole("heading", { name: heading })).toBeInTheDocument();
     }
 
-    expect(screen.getByText(smokeEvidenceIntakeReadinessDocPath)).toBeInTheDocument();
-    expect(screen.getByText(routeVerificationRollbackLedgerTemplateDocPath)).toBeInTheDocument();
+    expect(screen.getAllByText(smokeEvidenceIntakeReadinessDocPath).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(routeVerificationRollbackLedgerTemplateDocPath).length).toBeGreaterThan(0);
     expect(screen.getAllByText(deploymentExecutionRunbookReadinessDocPath).length).toBeGreaterThan(0);
     expect(screen.getAllByText(providerEnvDecisionMatrixTemplateDocPath).length).toBeGreaterThan(0);
     expect(screen.getByText(/safe future smoke intake sections/i)).toBeInTheDocument();
@@ -122,7 +122,7 @@ describe("Phase 5P-A/B smoke evidence intake readiness", () => {
     expect(screen.getByText(/no smoke check is run here/i)).toBeInTheDocument();
     expect(screen.getByText(/no route walkthrough is recorded here/i)).toBeInTheDocument();
     expect(screen.getAllByText(/no rollback is executed here/i).length).toBeGreaterThan(0);
-    expect(screen.getByText(/no preview evidence is captured here/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/no preview evidence is captured here/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/no production evidence is captured here/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/no deployment is performed here/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/no deployment approval is granted here/i).length).toBeGreaterThan(0);
