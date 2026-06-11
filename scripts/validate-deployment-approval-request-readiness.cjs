@@ -5,5 +5,5 @@ const {
 
 assertPhase5nDeploymentApprovalRequestReadiness();
 console.log(
-  'Owner correction workflow readiness validation passed. No deployment was performed.',
+  'Deployment approval request readiness validation passed. No deployment was performed and no deployment approval was granted.',
 );
