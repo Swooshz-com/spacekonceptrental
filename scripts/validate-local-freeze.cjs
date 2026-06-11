@@ -4,7 +4,7 @@ const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 
 const repoRoot = path.resolve(__dirname, '..');
-const { assertPhase5qSmokeEvidenceReviewReadiness } = require('./public-review-polish-checks.cjs');
+const { assertPhase5rLaunchDecisionResponseReadiness } = require('./public-review-polish-checks.cjs');
 const phase151MergeCommit = '9c7d167f98694f2ffbb1d9a0439c9fbbed4a9336';
 const phase4dDocs = [
   'docs/content/LOCAL-RELEASE-CANDIDATE-FREEZE.md',
@@ -313,6 +313,6 @@ assertPackageScript();
 assertOwnerApprovalRequestGate();
 assertPhase4fOwnerHandoffBundle();
 
-assertPhase5qSmokeEvidenceReviewReadiness();
+assertPhase5rLaunchDecisionResponseReadiness();
 
 console.log('Local freeze validation passed. No deployment was performed. This does not approve deployment.');

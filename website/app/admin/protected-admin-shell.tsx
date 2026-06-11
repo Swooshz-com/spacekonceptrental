@@ -1519,6 +1519,57 @@ const phase5qNoReviewNoLaunchBoundaries = [
   "A merged PR is not go/no-go approval"
 ] as const;
 
+const phase5rLaunchDecisionResponseReadinessPath =
+  "docs/content/LOCAL-LAUNCH-DECISION-RESPONSE-READINESS.md";
+const phase5rReleaseClosurePacketTemplatePath =
+  "docs/content/LOCAL-RELEASE-CLOSURE-PACKET-TEMPLATE.md";
+const phase5rSafeFutureResponseSections = [
+  "Go/no-go decision ledger reference",
+  "Smoke evidence review reference",
+  "Owner sign-off reference",
+  "Launch decision summary placeholder",
+  "Go response placeholder",
+  "No-go response placeholder",
+  "Blocked launch continuation placeholder",
+  "Follow-up owner questions placeholder",
+  "Public change summary placeholder",
+  "Final response status"
+] as const;
+const phase5rReleaseClosurePacketPlaceholders = [
+  "Packet ID: [NOT ASSIGNED]",
+  "Packet type: [NOT SELECTED]",
+  "Decision source: [NOT SUPPLIED]",
+  "Response recipient/status: [NOT SENT]",
+  "Launch status: [NOT APPROVED]",
+  "Public route impact: [NOT IDENTIFIED]",
+  "Admin workflow impact: [NOT IDENTIFIED]",
+  "Owner follow-up required: [OWNER INPUT REQUIRED]",
+  "Provider/runtime follow-up required: [PROVIDER DECISION REQUIRED]",
+  "Closure status: [NOT CLOSED]",
+  "Evidence status: [NOT EVIDENCE / NOT RECORDED]",
+  "Deployment status: [DEPLOYMENT APPROVAL: NOT GRANTED]"
+] as const;
+const phase5rAllowedFutureResponseStatuses = [
+  "Not prepared",
+  "Decision not recorded",
+  "Evidence review incomplete",
+  "Owner sign-off missing",
+  "Needs owner clarification",
+  "Needs provider clarification",
+  "Draft response only",
+  "Blocked: launch clearance missing",
+  "Blocked: deployment approval missing",
+  "Ready for future approved response"
+] as const;
+const phase5rNoResponseNoLaunchBoundaries = [
+  "A response template is not a sent response",
+  "A launch decision summary is not launch approval",
+  "A go response placeholder is not go approval",
+  "A no-go response placeholder is not a recorded no-go decision",
+  "Passing validators is not launch clearance",
+  "A merged PR is not release closure"
+] as const;
+
 const publicJourneyReadinessClosurePath =
   "docs/content/PUBLIC-JOURNEY-READINESS-CLOSURE.md";
 const quoteEnquiryPublicExpectationBoundaryPath =
@@ -2964,6 +3015,85 @@ function SmokeEvidenceReviewReadinessHelper() {
 }
 
 
+function LaunchDecisionResponseReadinessHelper() {
+  return (
+    <section
+      aria-label="Phase 5R launch decision response readiness helper"
+      className="admin-dashboard__card admin-dashboard__card--summary"
+    >
+      <p className="eyebrow">Phase 5R-A/B admin-only launch decision response readiness</p>
+      <h3>Launch decision response readiness helper</h3>
+      <p>
+        This protected admin-only helper prepares future local launch decision
+        response and release closure / continuation packet structure after a
+        real go/no-go decision is recorded later under separate approval. No launch decision response is sent here. No go/no-go decision is recorded here. No launch clearance is granted here. No release closure is claimed here. No response-sent evidence is captured here. No preview evidence is captured here. No production evidence is captured here. No deployment is performed here. No deployment approval is granted here.
+      </p>
+      <dl className="quote-inbox__details">
+        <div>
+          <dt>Launch decision response readiness</dt>
+          <dd>{phase5rLaunchDecisionResponseReadinessPath}</dd>
+        </div>
+        <div>
+          <dt>Release closure / continuation packet template</dt>
+          <dd>{phase5rReleaseClosurePacketTemplatePath}</dd>
+        </div>
+        <div>
+          <dt>Smoke evidence review readiness</dt>
+          <dd>{phase5qSmokeEvidenceReviewReadinessPath}</dd>
+        </div>
+        <div>
+          <dt>Go/no-go decision ledger template</dt>
+          <dd>{phase5qGoNogoDecisionLedgerTemplatePath}</dd>
+        </div>
+        <div>
+          <dt>Evidence status</dt>
+          <dd>[NOT EVIDENCE / NOT RECORDED]</dd>
+        </div>
+        <div>
+          <dt>Deployment status</dt>
+          <dd>[DEPLOYMENT APPROVAL: NOT GRANTED]</dd>
+        </div>
+      </dl>
+      <h4>Safe future response sections</h4>
+      <ul className="admin-readiness__list">
+        {phase5rSafeFutureResponseSections.map((section) => (
+          <li key={section}>{section}</li>
+        ))}
+      </ul>
+      <h4>Release closure / continuation packet placeholders</h4>
+      <ul className="admin-readiness__list">
+        {phase5rReleaseClosurePacketPlaceholders.map((placeholder) => (
+          <li key={placeholder}>{placeholder}</li>
+        ))}
+      </ul>
+      <h4>Allowed future response statuses</h4>
+      <ul className="admin-readiness__list">
+        {phase5rAllowedFutureResponseStatuses.map((status) => (
+          <li key={status}>{status}</li>
+        ))}
+      </ul>
+      <h4>No-response/no-launch boundaries</h4>
+      <ul className="admin-readiness__list">
+        {phase5rNoResponseNoLaunchBoundaries.map((boundary) => (
+          <li key={boundary}>{boundary}</li>
+        ))}
+      </ul>
+      <p>
+        This helper stays protected admin-only and does not expose launch
+        decision response internals, release closure packet internals, smoke
+        evidence review internals, go/no-go decision ledger internals, smoke
+        evidence intake internals, route verification ledger internals,
+        rollback observation internals, deployment execution runbook internals,
+        provider/environment decision matrix internals, provider setup internals,
+        environment/secrets internals, owner handoff internals, release-control
+        internals, or admin route internals to public rental, listing, quote,
+        enquiry, or request routes.
+      </p>
+    </section>
+  );
+}
+
+
 function OwnerReadinessHelpersPanel() {
   return (
     <>
@@ -2976,6 +3106,7 @@ function OwnerReadinessHelpersPanel() {
       <DeploymentExecutionRunbookReadinessHelper />
       <SmokeEvidenceIntakeReadinessHelper />
       <SmokeEvidenceReviewReadinessHelper />
+      <LaunchDecisionResponseReadinessHelper />
     </>
   );
 }

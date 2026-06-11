@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-const { assertPhase5qSmokeEvidenceReviewReadiness } = require('./public-review-polish-checks.cjs');
+const { assertPhase5rLaunchDecisionResponseReadiness } = require('./public-review-polish-checks.cjs');
 
-assertPhase5qSmokeEvidenceReviewReadiness();
+assertPhase5rLaunchDecisionResponseReadiness();
 console.log('Quote intake readiness validation passed. No deployment was performed.');

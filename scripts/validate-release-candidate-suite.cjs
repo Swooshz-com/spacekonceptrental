@@ -5,6 +5,11 @@ const repoRoot = path.resolve(__dirname, '..');
 
 const commandPlan = [
   {
+    label: 'Validate launch decision response readiness',
+    cwd: repoRoot,
+    args: ['run', 'validate:launch-decision-response-readiness'],
+  },
+  {
     label: 'Validate smoke evidence review readiness',
     cwd: repoRoot,
     args: ['run', 'validate:smoke-evidence-review-readiness'],
