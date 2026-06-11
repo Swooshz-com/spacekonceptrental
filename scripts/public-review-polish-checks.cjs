@@ -14,6 +14,7 @@ const phase161MergeCommit = 'e051d98ee50501fccca8e9b55411dee6a6d7cc95';
 const phase162MergeCommit = 'fddfce84daa93141a7b353179f906c8827a9d6e7';
 const phase163MergeCommit = '62c8a9aefb15e2bbc420507a1b52bc716f49b670';
 const phase164MergeCommit = '68d4a20ac46c2a37abca3a253e0ae11ed713e2e1';
+const phase166MergeCommit = 'fc9eb856143be259e63a31fa8cc9c54426741a97';
 const currentPhase5a = 'Phase 5A-A/B public owner-review polish sweep, local content-readiness cleanup, and protected admin review UX closure';
 const currentPhase5b = 'Phase 5B-A/B public catalogue-to-enquiry journey hardening, listing continuity, and admin/public parity checks';
 const currentPhase5c = 'Phase 5C-A/B public discovery search/filter polish, quote-intent context, and admin discovery parity closure';
@@ -25,6 +26,7 @@ const currentPhase5h = 'Phase 5H-A/B protected admin catalogue write workflow po
 const currentPhase5i = 'Phase 5I-A/B owner-review walkthrough readiness, full-route acceptance matrix, and no-deploy handoff refresh';
 const currentPhase5j = 'Phase 5J-A/B owner-review feedback intake readiness, correction queue reconciliation, and no-approval update guard';
 const currentPhase5k = 'Phase 5K-A/B owner correction workflow readiness, public content-gap guard, and no-response/no-deploy correction handoff';
+const currentPhase5l = 'Phase 5L-A/B owner re-review request readiness, correction delta packet, and no-signoff/no-response guard';
 const latestCompletedPhase4f = 'Phase 4F-A/B owner-facing review handoff bundle, approval issue template, and no-deploy preflight command center';
 const cleanupDocPath = 'docs/content/LOCAL-CONTENT-READINESS-CLEANUP.md';
 const publicJourneyAcceptanceDocPath = 'docs/content/LOCAL-PUBLIC-JOURNEY-ACCEPTANCE.md';
@@ -40,6 +42,8 @@ const ownerFeedbackIntakeReadinessDocPath = 'docs/content/LOCAL-OWNER-FEEDBACK-I
 const ownerCorrectionQueueReconciliationDocPath = 'docs/content/LOCAL-OWNER-CORRECTION-QUEUE-RECONCILIATION.md';
 const ownerCorrectionWorkflowReadinessDocPath = 'docs/content/LOCAL-OWNER-CORRECTION-WORKFLOW-READINESS.md';
 const publicContentGapRegisterDocPath = 'docs/content/LOCAL-PUBLIC-CONTENT-GAP-REGISTER.md';
+const ownerReReviewRequestReadinessDocPath = 'docs/content/LOCAL-OWNER-RE-REVIEW-REQUEST-READINESS.md';
+const correctionDeltaPacketTemplateDocPath = 'docs/content/LOCAL-CORRECTION-DELTA-PACKET-TEMPLATE.md';
 const publicSourceRoots = [
   'website/app/layout.tsx',
   'website/app/page.tsx',
@@ -989,8 +993,6 @@ function assertPhase5jStatusRollForward() {
     `Last merged capability merge commit: ${phase163MergeCommit}`,
     ownerFeedbackIntakeReadinessDocPath,
     ownerCorrectionQueueReconciliationDocPath,
-  ownerCorrectionWorkflowReadinessDocPath,
-  publicContentGapRegisterDocPath,
     ownerReviewWalkthroughReadinessDocPath,
     fullRouteAcceptanceMatrixDocPath,
     'scripts/validate-owner-feedback-intake-readiness.cjs',
@@ -1117,8 +1119,6 @@ function assertPhase5kStatusRollForward() {
     publicContentGapRegisterDocPath,
     ownerFeedbackIntakeReadinessDocPath,
     ownerCorrectionQueueReconciliationDocPath,
-  ownerCorrectionWorkflowReadinessDocPath,
-  publicContentGapRegisterDocPath,
     'scripts/validate-owner-correction-workflow-readiness.cjs',
     'No deployment is performed or approved by Phase 5K-A/B',
   ]) {
@@ -1254,6 +1254,155 @@ function assertPhase5kOwnerCorrectionWorkflowReadiness() {
   assertNoForbiddenTrackedFiles();
   assertNoFilledEvidence();
   assertPhase5jOwnerFeedbackIntakeReadiness();
+  assertReleaseSuiteHasOwnerCorrectionWorkflow();
+  assertReleaseSuiteHasOwnerFeedbackIntake();
+  assertReleaseSuiteHasOwnerReviewWalkthrough();
+  assertReleaseSuiteHasCatalogueWriteWorkflow();
+  assertSuiteAndTests();
+}
+
+
+function assertPhase5lStatusRollForward() {
+  const docs = normalizeWhitespace(statusDocPaths.map(readRepoFile).join('\n'));
+  for (const required of [
+    `Current phase: ${currentPhase5l}`,
+    `Latest completed capability: ${currentPhase5k}`,
+    'Last merged capability PR: #166',
+    `Last merged capability merge commit: ${phase166MergeCommit}`,
+    ownerReReviewRequestReadinessDocPath,
+    correctionDeltaPacketTemplateDocPath,
+    ownerCorrectionWorkflowReadinessDocPath,
+    publicContentGapRegisterDocPath,
+    'scripts/validate-owner-re-review-request-readiness.cjs',
+    'No deployment is performed or approved by Phase 5L-A/B',
+  ]) {
+    assertIncludes(docs, required, 'Phase 5L status roll-forward docs');
+  }
+}
+
+function assertOwnerReReviewRequestReadinessDocs() {
+  assertTracked(
+    [ownerReReviewRequestReadinessDocPath, correctionDeltaPacketTemplateDocPath],
+    'Phase 5L owner re-review request readiness docs'
+  );
+  const readiness = normalizeWhitespace(readRepoFile(ownerReReviewRequestReadinessDocPath));
+  const packet = normalizeWhitespace(readRepoFile(correctionDeltaPacketTemplateDocPath));
+  for (const required of [
+    'repo-local, template-only, non-live',
+    '[NOT EVIDENCE / NOT RECORDED]',
+    '[DEPLOYMENT APPROVAL: NOT GRANTED]',
+    'does not record actual owner feedback, owner re-review, owner response, owner acceptance, owner rejection, owner approval, owner sign-off, correction-completed evidence, response-sent evidence, launch clearance, or deployment permission',
+    'Review purpose',
+    'Changed public copy summary',
+    'Changed listing/category/media summary',
+    'Changed admin-only workflow wording summary',
+    'Unchanged blocked claims',
+    'Public content gaps still requiring owner facts',
+    'Questions requiring owner input',
+    'Deployment approval still absent',
+    'Preparing a request is not sending a response',
+    'Sending a future request must be tracked separately',
+    'A re-review request is not owner approval',
+    'A re-review request is not sign-off evidence',
+    'A correction delta packet is not deployment approval',
+    'A local validation pass is not owner acknowledgement',
+  ]) {
+    assertIncludes(readiness, required, 'Phase 5L owner re-review request readiness doc');
+  }
+  for (const required of [
+    'template-only',
+    '[NOT EVIDENCE / NOT RECORDED]',
+    '[DEPLOYMENT APPROVAL: NOT GRANTED]',
+    'Source owner comment reference: [NOT CAPTURED]',
+    'Correction PR reference: [NOT CREATED]',
+    'Affected route/component/doc/test: [NOT IDENTIFIED]',
+    'Before copy: [NOT FILLED]',
+    'After copy: [NOT FILLED]',
+    'Owner fact supplied: [NOT SUPPLIED]',
+    'Public claim support status: [BLOCKED UNTIL SUPPLIED]',
+    'Follow-up question: [OWNER INPUT REQUIRED]',
+    'Response sent status: [NOT SENT]',
+    'Re-review status: [NOT REQUESTED]',
+    'Deployment status: [DEPLOYMENT APPROVAL: NOT GRANTED]',
+    'not correction-completed evidence, not response-sent evidence, not owner approval, and not deployment approval',
+  ]) {
+    assertIncludes(packet, required, 'Phase 5L correction delta packet template doc');
+  }
+  assertNoMatch(
+    `${readiness}\n${packet}`,
+    /owner approved|owner sign-?off complete|accepted by owner|owner decision recorded|owner feedback recorded|owner re-review recorded|owner corrections completed|owner response sent|preview evidence captured|production evidence captured|smoke evidence captured|route-walkthrough evidence captured|correction-completed evidence captured|response-sent evidence captured|public launch evidence captured|sign-off evidence captured|deployment approval granted|launch approval granted/i,
+    'Phase 5L docs'
+  );
+}
+
+function assertOwnerReReviewRequestPackageScript() {
+  const packageJson = JSON.parse(readRepoFile('package.json'));
+  assert(
+    packageJson.scripts?.['validate:owner-re-review-request-readiness'] === 'node scripts/validate-owner-re-review-request-readiness.cjs',
+    'package.json must register validate:owner-re-review-request-readiness'
+  );
+}
+
+function assertOwnerReReviewRequestSources() {
+  const adminSource = readTrackedProductionSources(['website/app/admin/protected-admin-shell.tsx']);
+  const publicSource = readTrackedProductionSources(publicSourceRoots);
+
+  for (const required of [
+    /Phase 5L-A\/B admin-only owner re-review request readiness/i,
+    /Owner re-review request readiness helper/i,
+    /LOCAL-OWNER-RE-REVIEW-REQUEST-READINESS\.md/i,
+    /LOCAL-CORRECTION-DELTA-PACKET-TEMPLATE\.md/i,
+    /LOCAL-OWNER-CORRECTION-WORKFLOW-READINESS\.md/i,
+    /LOCAL-PUBLIC-CONTENT-GAP-REGISTER\.md/i,
+    /Safe future re-review request sections/i,
+    /Correction delta packet placeholders/i,
+    /No-response\/no-signoff boundaries/i,
+    /No owner re-review is recorded here/i,
+    /No owner response is sent here/i,
+    /No owner sign-off is claimed here/i,
+    /No correction completion is claimed here/i,
+    /No deployment approval is granted here/i,
+    /\[NOT EVIDENCE \/ NOT RECORDED\]/i,
+    /\[DEPLOYMENT APPROVAL: NOT GRANTED\]/i,
+  ]) {
+    assert(required.test(adminSource), `Phase 5L admin source missing safe wording: ${required}`);
+  }
+
+  assertNoMatch(
+    publicSource,
+    /owner re-review request|re-review request readiness|correction delta packet|owner correction workflow|correction workflow readiness|content-gap register|public content-gap|owner-feedback intake helper|owner feedback intake helper|correction queue reconciliation|owner-review walkthrough helper|owner-review walkthrough internals|full-route acceptance matrix|route acceptance matrix internals|admin route\/view checklist|owner handoff internals|owner approval issue template|no-deploy preflight command|no-deploy command-center|release-control internals|admin urls?|internal notes|destructive-action safeguards|recovery lanes?|status-transition matrix|public admin status|\/admin\//i,
+    'Phase 5L public source'
+  );
+  assert(/\b(?:listing|listings)\b/i.test(publicSource), 'public source must retain listing wording');
+  assert(/\b(?:rental|rentals)\b/i.test(publicSource), 'public source must retain rental wording');
+  assert(/\b(?:quote|enquiry|request)\b/i.test(publicSource), 'public source must retain quote/enquiry/request wording');
+  assertNoMatch(publicSource, /\b(?:cart|checkout|order|payment|purchase|online ordering)\b/i, 'Phase 5L public source');
+  assertNoMatch(publicSource, /\b(?:booking|reservation|fulfilment|fulfillment|stock reservation|stock-reservation|book now|reserve now)\b/i, 'Phase 5L public source');
+  assertNoMatch(publicSource, /award-winning|certified partner|trusted by|5-star|guaranteed availability|guaranteed delivery|licensed and insured|testimonial|client logo|case study|legal guarantee|production policy|service-area claim|Singapore\s+\d{6}|\+?\d[\d\s().-]{7,}|Mon(?:day)?\s*-\s*Fri|24\/7|123\s+Main/i, 'Phase 5L public source');
+  assertNoMatch(publicSource, /customer account|quote tracking|file upload|public upload|notifications?|\bCRM\b|email sending|sms sending|whatsapp|outbound messaging|public status view/i, 'Phase 5L public source');
+  assertNoMatch(
+    adminSource,
+    /public upload|customer upload|new provider setup|new storage provider|NEXT_PUBLIC_SUPABASE|SUPABASE_SERVICE_ROLE_KEY|service-role browser|Pinecone|\bRAG\b|n8n runtime|\/api\/chat.*retrieval|outbound messaging|email sending|sms sending|whatsapp sending|process\.env\.(?:NEXT_PUBLIC_|SUPABASE|N8N|PINECONE|VERCEL)/i,
+    'Phase 5L admin source'
+  );
+}
+
+function assertReleaseSuiteHasOwnerReReviewRequestReadiness() {
+  const suite = readRepoFile('scripts/validate-release-candidate-suite.cjs');
+  assertIncludes(suite, "args: ['run', 'validate:owner-re-review-request-readiness']", 'release-candidate suite');
+  assertIncludes(suite, "args: ['run', 'validate:owner-correction-workflow-readiness']", 'release-candidate suite');
+  assertNoMatch(suite, /docker[^\n]*(?:skip|bypass)|(?:skip|bypass)[^\n]*docker/i, 'release-candidate suite');
+}
+
+function assertPhase5lOwnerReReviewRequestReadiness() {
+  assertOwnerReReviewRequestReadinessDocs();
+  assertPhase5lStatusRollForward();
+  assertOwnerReReviewRequestPackageScript();
+  assertOwnerReReviewRequestSources();
+  assertNoForbiddenTrackedFiles();
+  assertNoFilledEvidence();
+  assertPhase5kOwnerCorrectionWorkflowReadiness();
+  assertReleaseSuiteHasOwnerReReviewRequestReadiness();
   assertReleaseSuiteHasOwnerCorrectionWorkflow();
   assertReleaseSuiteHasOwnerFeedbackIntake();
   assertReleaseSuiteHasOwnerReviewWalkthrough();
@@ -1416,6 +1565,7 @@ function assertPhase5aPublicReviewPolish() {
 }
 
 module.exports = {
+  assertPhase5lOwnerReReviewRequestReadiness,
   assertPhase5kOwnerCorrectionWorkflowReadiness,
   assertPhase5jOwnerFeedbackIntakeReadiness,
   assertPhase5iOwnerReviewWalkthroughReadiness,
@@ -1438,6 +1588,7 @@ module.exports = {
   phase162MergeCommit,
   phase163MergeCommit,
   phase164MergeCommit,
+  phase166MergeCommit,
   currentPhase5a,
   currentPhase5b,
   currentPhase5c,
@@ -1449,6 +1600,7 @@ module.exports = {
   currentPhase5i,
   currentPhase5j,
   currentPhase5k,
+  currentPhase5l,
   latestCompletedPhase4f,
   cleanupDocPath,
   publicJourneyAcceptanceDocPath,
