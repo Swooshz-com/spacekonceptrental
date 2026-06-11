@@ -1229,6 +1229,43 @@ const phase5kBlockedCorrectionCategories = [
   "Provider/deployment/runtime request made"
 ] as const;
 
+
+const phase5lOwnerReReviewRequestReadinessPath =
+  "docs/content/LOCAL-OWNER-RE-REVIEW-REQUEST-READINESS.md";
+const phase5lCorrectionDeltaPacketTemplatePath =
+  "docs/content/LOCAL-CORRECTION-DELTA-PACKET-TEMPLATE.md";
+const phase5lSafeReReviewSections = [
+  "Review purpose",
+  "Changed public copy summary",
+  "Changed listing/category/media summary",
+  "Changed admin-only workflow wording summary",
+  "Unchanged blocked claims",
+  "Public content gaps still requiring owner facts",
+  "Questions requiring owner input",
+  "Deployment approval still absent"
+] as const;
+const phase5lCorrectionDeltaPlaceholders = [
+  "Source owner comment reference: [NOT CAPTURED]",
+  "Correction PR reference: [NOT CREATED]",
+  "Affected route/component/doc/test: [NOT IDENTIFIED]",
+  "Before copy: [NOT FILLED]",
+  "After copy: [NOT FILLED]",
+  "Owner fact supplied: [NOT SUPPLIED]",
+  "Public claim support status: [BLOCKED UNTIL SUPPLIED]",
+  "Follow-up question: [OWNER INPUT REQUIRED]",
+  "Response sent status: [NOT SENT]",
+  "Re-review status: [NOT REQUESTED]",
+  "Deployment status: [DEPLOYMENT APPROVAL: NOT GRANTED]"
+] as const;
+const phase5lNoResponseNoSignoffBoundaries = [
+  "Preparing a request is not sending a response",
+  "Sending a future request must be tracked separately",
+  "A re-review request is not owner approval",
+  "A re-review request is not sign-off evidence",
+  "A correction delta packet is not deployment approval",
+  "A local validation pass is not owner acknowledgement"
+] as const;
+
 const publicJourneyReadinessClosurePath =
   "docs/content/PUBLIC-JOURNEY-READINESS-CLOSURE.md";
 const quoteEnquiryPublicExpectationBoundaryPath =
@@ -2219,6 +2256,74 @@ function OwnerCorrectionWorkflowReadinessHelper() {
   );
 }
 
+
+function OwnerReReviewRequestReadinessHelper() {
+  return (
+    <section
+      aria-label="Phase 5L owner re-review request readiness helper"
+      className="admin-dashboard__card admin-dashboard__card--summary"
+    >
+      <p className="eyebrow">Phase 5L-A/B admin-only owner re-review request readiness</p>
+      <h3>Owner re-review request readiness helper</h3>
+      <p>
+        This protected admin-only helper prepares a future local owner re-review
+        request package after separate correction PRs exist. No owner re-review is recorded here. No owner response is sent here. No owner sign-off is claimed here. No correction completion is claimed here. No deployment approval is granted here.
+      </p>
+      <dl className="quote-inbox__details">
+        <div>
+          <dt>Owner re-review request readiness</dt>
+          <dd>{phase5lOwnerReReviewRequestReadinessPath}</dd>
+        </div>
+        <div>
+          <dt>Correction delta packet template</dt>
+          <dd>{phase5lCorrectionDeltaPacketTemplatePath}</dd>
+        </div>
+        <div>
+          <dt>Owner correction workflow readiness</dt>
+          <dd>{phase5kOwnerCorrectionWorkflowReadinessPath}</dd>
+        </div>
+        <div>
+          <dt>Public content-gap register</dt>
+          <dd>{phase5kPublicContentGapRegisterPath}</dd>
+        </div>
+        <div>
+          <dt>Evidence status</dt>
+          <dd>[NOT EVIDENCE / NOT RECORDED]</dd>
+        </div>
+        <div>
+          <dt>Deployment status</dt>
+          <dd>[DEPLOYMENT APPROVAL: NOT GRANTED]</dd>
+        </div>
+      </dl>
+      <h4>Safe future re-review request sections</h4>
+      <ul className="admin-readiness__list">
+        {phase5lSafeReReviewSections.map((section) => (
+          <li key={section}>{section}</li>
+        ))}
+      </ul>
+      <h4>Correction delta packet placeholders</h4>
+      <ul className="admin-readiness__list">
+        {phase5lCorrectionDeltaPlaceholders.map((placeholder) => (
+          <li key={placeholder}>{placeholder}</li>
+        ))}
+      </ul>
+      <h4>No-response/no-signoff boundaries</h4>
+      <ul className="admin-readiness__list">
+        {phase5lNoResponseNoSignoffBoundaries.map((boundary) => (
+          <li key={boundary}>{boundary}</li>
+        ))}
+      </ul>
+      <p>
+        This helper stays protected admin-only and does not expose owner
+        re-review request internals, correction delta packet internals, owner
+        correction workflow internals, content-gap register internals, owner
+        handoff internals, release-control internals, or admin route internals
+        to public rental, listing, quote, enquiry, or request routes.
+      </p>
+    </section>
+  );
+}
+
 function AdminCatalogueContentOpsReadiness({
   dashboard,
   scope
@@ -2699,6 +2804,7 @@ function AdminOperationsView({
       <OwnerReviewWalkthroughReadinessHelper />
       <OwnerFeedbackIntakeReadinessHelper />
       <OwnerCorrectionWorkflowReadinessHelper />
+      <OwnerReReviewRequestReadinessHelper />
       <QuoteRequestInboxPanel inbox={state.quoteInbox} />
     </>
   );

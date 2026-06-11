@@ -5,5 +5,5 @@ const {
 
 assertPhase5lOwnerReReviewRequestReadiness();
 console.log(
-  'Owner feedback intake readiness validation passed. No deployment was performed.',
+  'Owner re-review request readiness validation passed. No deployment was performed.',
 );
