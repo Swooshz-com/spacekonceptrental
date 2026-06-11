@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-const { assertPhase5jOwnerFeedbackIntakeReadiness } = require('./public-review-polish-checks.cjs');
+const { assertPhase5kOwnerCorrectionWorkflowReadiness } = require('./public-review-polish-checks.cjs');
 
-assertPhase5jOwnerFeedbackIntakeReadiness();
+assertPhase5kOwnerCorrectionWorkflowReadiness();
 console.log('Listing detail readiness validation passed. No deployment was performed.');

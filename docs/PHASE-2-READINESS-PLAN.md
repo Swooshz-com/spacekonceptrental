@@ -1,3 +1,19 @@
+## Phase 5K-A/B Owner Correction Workflow Readiness References
+
+Current phase: Phase 5K-A/B owner correction workflow readiness, public content-gap guard, and no-response/no-deploy correction handoff.
+
+Latest completed capability: Phase 5J-A/B owner-review feedback intake readiness, correction queue reconciliation, and no-approval update guard.
+
+Last merged capability PR: #164.
+
+Last merged capability merge commit: 68d4a20ac46c2a37abca3a253e0ae11ed713e2e1.
+
+Phase 5K-A/B adds a repo-local owner correction workflow readiness template, local public content-gap register template, protected admin owner correction workflow helper, public/private route safety guard coverage, no-response/no-evidence/no-deploy correction handoff coverage, validate:owner-correction-workflow-readiness validator coverage, and deterministic Phase 5K owner correction workflow readiness tests. These controls are template-only, non-live, not evidence, and do not record filled owner feedback, owner approval, owner decisions, owner corrections, owner responses, owner answers, owner sign-off, preview evidence, production evidence, provider approval, correction-completed evidence, response-sent evidence, route-walkthrough evidence, acceptance evidence, launch clearance, public launch evidence, or deployment approval.
+
+Phase 5K-A/B references `docs/content/LOCAL-OWNER-CORRECTION-WORKFLOW-READINESS.md`, `docs/content/LOCAL-PUBLIC-CONTENT-GAP-REGISTER.md`, `docs/content/LOCAL-OWNER-FEEDBACK-INTAKE-READINESS.md`, `docs/content/LOCAL-OWNER-CORRECTION-QUEUE-RECONCILIATION.md`, `scripts/validate-owner-correction-workflow-readiness.cjs`, `scripts/validate-owner-feedback-intake-readiness.cjs`, `scripts/validate-owner-review-walkthrough-readiness.cjs`, `scripts/validate-catalogue-write-workflow-readiness.cjs`, `scripts/validate-catalogue-content-ops-readiness.cjs`, `scripts/validate-quote-triage-readiness.cjs`, `scripts/validate-quote-intake-readiness.cjs`, `scripts/validate-listing-detail-readiness.cjs`, `scripts/validate-public-discovery-acceptance.cjs`, `scripts/validate-public-journey-acceptance.cjs`, `scripts/validate-public-review-polish.cjs`, and protected admin owner correction workflow readiness helper coverage.
+
+No deployment is performed or approved by Phase 5K-A/B. It does not add provider config, Vercel config, Supabase Cloud config, real secrets or env values, filled owner feedback, filled public content gaps, filled evidence, browser Supabase, service-role runtime paths, n8n/Pinecone runtime changes, `/api/chat` retrieval wiring, public uploads, customer accounts, public quote tracking, notifications, CRM, outbound messaging, invented operational facts, ecommerce flows, payment/order/checkout flows, booking/reservation flows, fulfilment flows, stock-reservation flows, owner-approved media claims, final styling claims, real inventory confirmation, correction-completed evidence, response-sent evidence, route-walkthrough evidence, public launch evidence, launch clearance, owner approval, owner response, or public admin internals.
+
 ## Phase 5J-A/B Owner Feedback Intake Readiness References
 
 Current phase: Phase 5J-A/B owner-review feedback intake readiness, correction queue reconciliation, and no-approval update guard.

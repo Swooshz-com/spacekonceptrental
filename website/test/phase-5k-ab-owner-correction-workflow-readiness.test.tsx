@@ -10,14 +10,14 @@ import {
 } from "../app/admin/protected-admin-shell";
 
 const repoRoot = resolve(process.cwd(), "..");
+const ownerCorrectionWorkflowDocPath =
+  "docs/content/LOCAL-OWNER-CORRECTION-WORKFLOW-READINESS.md";
+const publicContentGapRegisterDocPath =
+  "docs/content/LOCAL-PUBLIC-CONTENT-GAP-REGISTER.md";
 const ownerFeedbackIntakeDocPath =
   "docs/content/LOCAL-OWNER-FEEDBACK-INTAKE-READINESS.md";
 const correctionQueueDocPath =
   "docs/content/LOCAL-OWNER-CORRECTION-QUEUE-RECONCILIATION.md";
-const ownerWalkthroughDocPath =
-  "docs/content/LOCAL-OWNER-REVIEW-WALKTHROUGH-READINESS.md";
-const routeMatrixDocPath =
-  "docs/content/LOCAL-FULL-ROUTE-ACCEPTANCE-MATRIX.md";
 const publicSourceRoots = [
   "website/app/layout.tsx",
   "website/app/page.tsx",
@@ -93,34 +93,41 @@ const authorisedState: ProtectedAdminShellState = {
   },
 };
 
-describe("Phase 5J-A/B owner feedback intake readiness", () => {
+describe("Phase 5K-A/B owner correction workflow readiness", () => {
   afterEach(() => {
     cleanup();
   });
 
-  it("renders the protected owner-feedback readiness helper only for authorised admin state", () => {
+  it("renders the protected Phase 5K owner correction workflow helper only for authorised admin state", () => {
     render(<AdminShellContent state={authorisedState} />);
 
     expect(
       screen.getByRole("heading", {
-        name: /owner-feedback intake readiness helper/i,
+        name: /owner correction workflow readiness helper/i,
       }),
     ).toBeInTheDocument();
+    expect(screen.getByText(ownerCorrectionWorkflowDocPath)).toBeInTheDocument();
+    expect(screen.getByText(publicContentGapRegisterDocPath)).toBeInTheDocument();
     expect(screen.getAllByText(ownerFeedbackIntakeDocPath).length).toBeGreaterThan(0);
     expect(screen.getAllByText(correctionQueueDocPath).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(ownerWalkthroughDocPath).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(routeMatrixDocPath).length).toBeGreaterThan(0);
-    expect(screen.getByText(/public copy correction/i)).toBeInTheDocument();
+    expect(screen.getByText(/ready for local correction planning/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/contact details/i).length).toBeGreaterThan(0);
     expect(
-      screen.getByText(/capture raw owner comment separately/i),
+      screen.getByText(/provider\/deployment\/runtime request made/i),
     ).toBeInTheDocument();
-    expect(screen.getByText(/blocked: claim unsupported/i)).toBeInTheDocument();
+    expect(screen.getByText(/no owner feedback is recorded here/i)).toBeInTheDocument();
+    expect(screen.getByText(/no owner response is sent here/i)).toBeInTheDocument();
+    expect(screen.getByText(/no correction completion is claimed here/i)).toBeInTheDocument();
+    expect(screen.getByText(/no deployment approval is granted here/i)).toBeInTheDocument();
+    expect(
+      screen.getAllByText(/\[not evidence \/ not recorded\]/i).length,
+    ).toBeGreaterThan(0);
     expect(
       screen.getAllByText(/\[deployment approval: not granted\]/i).length,
     ).toBeGreaterThan(0);
   });
 
-  it("does not render the protected owner-feedback helper for blocked admin states", () => {
+  it("does not render the protected Phase 5K helper for blocked admin states", () => {
     const blockedStates: ProtectedAdminShellState[] = [
       { status: "unauthenticated" },
       { status: "authenticated_not_authorised" },
@@ -132,35 +139,35 @@ describe("Phase 5J-A/B owner feedback intake readiness", () => {
 
       expect(
         screen.queryByRole("heading", {
-          name: /owner-feedback intake readiness helper/i,
+          name: /owner correction workflow readiness helper/i,
         }),
       ).not.toBeInTheDocument();
-      expect(screen.queryByText(ownerFeedbackIntakeDocPath)).not.toBeInTheDocument();
-      expect(screen.queryByText(correctionQueueDocPath)).not.toBeInTheDocument();
+      expect(screen.queryByText(ownerCorrectionWorkflowDocPath)).not.toBeInTheDocument();
+      expect(screen.queryByText(publicContentGapRegisterDocPath)).not.toBeInTheDocument();
 
       unmount();
     }
   });
 
-  it("keeps protected admin source wired to the Phase 5J and Phase 5I docs", () => {
+  it("keeps protected admin source wired to Phase 5K and Phase 5J docs", () => {
     const adminSource = readRepoFile("website/app/admin/protected-admin-shell.tsx");
 
+    expect(adminSource).toContain(ownerCorrectionWorkflowDocPath);
+    expect(adminSource).toContain(publicContentGapRegisterDocPath);
     expect(adminSource).toContain(ownerFeedbackIntakeDocPath);
     expect(adminSource).toContain(correctionQueueDocPath);
-    expect(adminSource).toContain(ownerWalkthroughDocPath);
-    expect(adminSource).toContain(routeMatrixDocPath);
-    expect(adminSource).toMatch(/Phase 5J-A\/B admin-only feedback intake readiness/i);
+    expect(adminSource).toMatch(/Phase 5K-A\/B admin-only correction workflow readiness/i);
   });
 
-  it("keeps public source free of owner-feedback, correction, admin route, handoff, and release-control internals", () => {
+  it("keeps public production source free of internal owner correction, content-gap, admin, handoff, and release-control details", () => {
     const publicSource = readTrackedProductionSources(publicSourceRoots);
 
     expect(publicSource).not.toMatch(
-      /owner feedback intake helper|owner-feedback intake helper|correction queue reconciliation|owner-review walkthrough helper|full-route acceptance matrix|admin route\/view checklist|internal notes|release-control internals|owner handoff internals|owner approval issue template|no-deploy command-center|admin urls?|public admin status|\/admin\//i,
+      /owner correction workflow|correction workflow readiness|content-gap register|public content-gap|owner-feedback intake helper|owner feedback intake helper|correction queue reconciliation|admin route\/view checklist|internal notes|release-control internals|owner handoff internals|owner approval issue template|no-deploy command-center|admin urls?|public admin status|\/admin\//i,
     );
   });
 
-  it("keeps public source rental/enquiry-only, non-promissory, and free of fake facts or customer-flow creep", () => {
+  it("keeps public production source rental/enquiry-only, non-promissory, and free of customer-flow creep", () => {
     const publicSource = readTrackedProductionSources(publicSourceRoots);
 
     expect(publicSource).toMatch(/listing|listings/i);
@@ -180,29 +187,29 @@ describe("Phase 5J-A/B owner feedback intake readiness", () => {
     );
   });
 
-  it("keeps Phase 5J docs as template-only no-evidence no-deploy materials", () => {
-    const docs = `${readRepoFile(ownerFeedbackIntakeDocPath)}\n${readRepoFile(
-      correctionQueueDocPath,
+  it("keeps Phase 5K docs template-only with no evidence and no deployment approval", () => {
+    const docs = `${readRepoFile(ownerCorrectionWorkflowDocPath)}\n${readRepoFile(
+      publicContentGapRegisterDocPath,
     )}`;
 
     expect(docs).toContain("[NOT EVIDENCE / NOT RECORDED]");
     expect(docs).toContain("[DEPLOYMENT APPROVAL: NOT GRANTED]");
     expect(docs).not.toMatch(
-      /owner approved|owner sign-?off complete|actual owner decision|actual owner feedback|accepted by owner|rejected by owner|preview evidence captured|production evidence captured|smoke evidence captured|route-walkthrough evidence captured|correction-completed evidence captured|public launch evidence captured|sign-off evidence captured/i,
+      /owner approved|owner sign-?off complete|accepted by owner|owner decision recorded|owner feedback recorded|owner corrections completed|owner response sent|preview evidence captured|production evidence captured|deployment approval granted|launch approval granted|sign-off evidence captured/i,
     );
   });
 
-  it("registers the Phase 5J validator and keeps the release suite free of Docker bypass logic", () => {
+  it("registers the Phase 5K validator and keeps the release suite free of Docker bypass logic", () => {
     const packageJson = JSON.parse(readRepoFile("package.json")) as {
       scripts?: Record<string, string>;
     };
     const suite = readRepoFile("scripts/validate-release-candidate-suite.cjs");
 
     expect(
-      packageJson.scripts?.["validate:owner-feedback-intake-readiness"],
-    ).toBe("node scripts/validate-owner-feedback-intake-readiness.cjs");
+      packageJson.scripts?.["validate:owner-correction-workflow-readiness"],
+    ).toBe("node scripts/validate-owner-correction-workflow-readiness.cjs");
     expect(suite).toContain(
-      "args: ['run', 'validate:owner-feedback-intake-readiness']",
+      "args: ['run', 'validate:owner-correction-workflow-readiness']",
     );
     expect(suite).not.toMatch(
       /docker[^\n]*(?:skip|bypass)|(?:skip|bypass)[^\n]*docker/i,

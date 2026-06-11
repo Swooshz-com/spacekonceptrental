@@ -3,7 +3,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const repoRoot = path.resolve(__dirname, '..');
-const { assertPhase5jOwnerFeedbackIntakeReadiness } = require('./public-review-polish-checks.cjs');
+const { assertPhase5kOwnerCorrectionWorkflowReadiness } = require('./public-review-polish-checks.cjs');
 const handoffDocPath = 'docs/PREVIEW-DEPLOYMENT-HANDOFF.md';
 const branchFreezeDocPath = 'docs/PREVIEW-DEPLOYMENT-BRANCH-FREEZE.md';
 const ownerReviewPackagePath = 'docs/OWNER-REVIEW-READINESS-PACKAGE.md';
@@ -2627,6 +2627,6 @@ function assertPhase4fOwnerHandoffBundle() {
 assertOwnerApprovalRequestGate();
 assertPhase4fOwnerHandoffBundle();
 
-assertPhase5jOwnerFeedbackIntakeReadiness();
+assertPhase5kOwnerCorrectionWorkflowReadiness();
 
 console.log('Preview handoff validation passed. No deployment was performed. This does not approve deployment.');
