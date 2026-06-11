@@ -99,7 +99,7 @@ describe("Phase 5K-A/B owner correction workflow readiness", () => {
   });
 
   it("renders the protected Phase 5K owner correction workflow helper only for authorised admin state", () => {
-    render(<AdminShellContent state={authorisedState} />);
+    render(<AdminShellContent state={authorisedState} view={{ kind: "home" }} />);
 
     expect(
       screen.getByRole("heading", {
@@ -135,7 +135,7 @@ describe("Phase 5K-A/B owner correction workflow readiness", () => {
     ];
 
     for (const state of blockedStates) {
-      const { unmount } = render(<AdminShellContent state={state} />);
+      const { unmount } = render(<AdminShellContent state={state} view={{ kind: "home" }} />);
 
       expect(
         screen.queryByRole("heading", {

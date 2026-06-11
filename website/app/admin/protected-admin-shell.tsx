@@ -483,38 +483,41 @@ function AdminOperationsHome({
   ];
 
   return (
-    <section className="admin-dashboard" aria-label="Admin operations">
-      <div className="admin-dashboard__header">
-        <div>
-          <p className="eyebrow">Operations</p>
-          <h2>Admin operations</h2>
-          <p>
-            Use these protected work areas for listing management and quote
-            request follow-up.
-          </p>
+    <>
+      <section className="admin-dashboard" aria-label="Admin operations">
+        <div className="admin-dashboard__header">
+          <div>
+            <p className="eyebrow">Operations</p>
+            <h2>Admin operations</h2>
+            <p>
+              Use these protected work areas for listing management and quote
+              request follow-up.
+            </p>
+          </div>
         </div>
-      </div>
-      <div className="admin-dashboard__grid">
-        <AdminOperatorGuidance
-          adminOnly="Admin-only workspace, management summaries, readiness cues, and internal follow-up details."
-          label="Admin overview"
-          nextAction="Next safe action: review listings, categories, media, and quote requests before any separately approved deployment."
-          publicFacing="Public-facing changes are limited to published listing, category, and active media content."
-          readOnly="Overview counts and dashboard summaries are read-only snapshots of the current workspace."
-          writeEnabled="Write-enabled surfaces stay behind protected admin routes."
-        />
-        {cards.map((card) => (
-          <article className="admin-dashboard__card" key={card.href}>
-            <p className="eyebrow">{card.count} records</p>
-            <h3>{card.title}</h3>
-            <p>{card.body}</p>
-            <a className="button button--secondary" href={card.href}>
-              {card.label}
-            </a>
-          </article>
-        ))}
-      </div>
-    </section>
+        <div className="admin-dashboard__grid">
+          <AdminOperatorGuidance
+            adminOnly="Admin-only workspace, management summaries, readiness cues, and internal follow-up details."
+            label="Admin overview"
+            nextAction="Next safe action: review listings, categories, media, and quote requests before any separately approved deployment."
+            publicFacing="Public-facing changes are limited to published listing, category, and active media content."
+            readOnly="Overview counts and dashboard summaries are read-only snapshots of the current workspace."
+            writeEnabled="Write-enabled surfaces stay behind protected admin routes."
+          />
+          {cards.map((card) => (
+            <article className="admin-dashboard__card" key={card.href}>
+              <p className="eyebrow">{card.count} records</p>
+              <h3>{card.title}</h3>
+              <p>{card.body}</p>
+              <a className="button button--secondary" href={card.href}>
+                {card.label}
+              </a>
+            </article>
+          ))}
+        </div>
+      </section>
+      <OwnerReadinessHelpersPanel />
+    </>
   );
 }
 
@@ -2447,6 +2450,19 @@ function OwnerDecisionIntakeReadinessHelper() {
   );
 }
 
+
+function OwnerReadinessHelpersPanel() {
+  return (
+    <>
+      <OwnerReviewWalkthroughReadinessHelper />
+      <OwnerFeedbackIntakeReadinessHelper />
+      <OwnerCorrectionWorkflowReadinessHelper />
+      <OwnerReReviewRequestReadinessHelper />
+      <OwnerDecisionIntakeReadinessHelper />
+    </>
+  );
+}
+
 function AdminCatalogueContentOpsReadiness({
   dashboard,
   scope
@@ -2924,11 +2940,7 @@ function AdminOperationsView({
   return (
     <>
       <AdminDashboard dashboard={state.dashboard} />
-      <OwnerReviewWalkthroughReadinessHelper />
-      <OwnerFeedbackIntakeReadinessHelper />
-      <OwnerCorrectionWorkflowReadinessHelper />
-      <OwnerReReviewRequestReadinessHelper />
-      <OwnerDecisionIntakeReadinessHelper />
+      <OwnerReadinessHelpersPanel />
       <QuoteRequestInboxPanel inbox={state.quoteInbox} />
     </>
   );
