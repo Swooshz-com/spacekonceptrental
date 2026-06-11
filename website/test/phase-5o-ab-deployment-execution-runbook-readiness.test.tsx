@@ -113,7 +113,7 @@ describe("Phase 5O-A/B deployment execution runbook readiness", () => {
     expect(screen.getByText(/safe future deployment execution runbook sections/i)).toBeInTheDocument();
     expect(screen.getByText(/deployment approval source reference/i)).toBeInTheDocument();
     expect(screen.getByText(/provider\/environment decision matrix placeholders/i)).toBeInTheDocument();
-    expect(screen.getByText(/decision id: \[not assigned\]/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/decision id: \[not assigned\]/i).length).toBeGreaterThan(0);
     expect(screen.getByText(/allowed future runbook statuses/i)).toBeInTheDocument();
     expect(screen.getByText(/ready for approved deployment handoff/i)).toBeInTheDocument();
     expect(screen.getByText(/no-execution boundaries/i)).toBeInTheDocument();
