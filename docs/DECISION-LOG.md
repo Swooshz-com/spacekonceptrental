@@ -1,3 +1,16 @@
+## Phase 5O-A/B Deployment Execution Runbook Readiness References
+
+Current phase: Phase 5O-A/B deployment execution runbook readiness, provider/env decision matrix, and rollback rehearsal firewall.
+Latest completed capability: Phase 5N-A/B deployment approval request readiness, pre-launch blocker ledger, and no-provider/no-deploy approval firewall.
+Last merged capability PR: #169.
+Last merged capability merge commit: 0fe53323a6346bb425c9fd66efea00e82ab3cfe6.
+
+Phase 5O-A/B adds repo-local deployment execution runbook readiness, a local provider/environment decision matrix template, protected admin deployment execution runbook readiness helper coverage, rollback rehearsal firewall coverage, release-candidate suite integration, validate:deployment-execution-runbook-readiness validator coverage, and deterministic Phase 5O deployment execution runbook readiness tests. These controls are template-only, non-live, not evidence, and do not record deployment approval, launch clearance, provider readiness, environment readiness, preview readiness, production readiness, smoke readiness, rollback readiness, owner approval, owner sign-off, owner decision evidence, preview evidence, production evidence, smoke evidence, rollback evidence, deployment permission, or filled owner-review evidence.
+
+Phase 5O-A/B references `docs/content/LOCAL-DEPLOYMENT-EXECUTION-RUNBOOK-READINESS.md`, `docs/content/LOCAL-PROVIDER-ENV-DECISION-MATRIX-TEMPLATE.md`, `docs/content/LOCAL-DEPLOYMENT-APPROVAL-REQUEST-READINESS.md`, `docs/content/LOCAL-PRE-LAUNCH-BLOCKER-LEDGER-TEMPLATE.md`, `scripts/validate-deployment-execution-runbook-readiness.cjs`, `scripts/validate-deployment-approval-request-readiness.cjs`, and protected admin deployment execution runbook readiness helper coverage.
+
+No deployment is performed or approved by Phase 5O-A/B. It does not add provider config, Vercel config, Supabase Cloud config, DNS/domain/CDN/environment/platform changes, real secrets or env values, filled owner-review evidence, filled preview evidence, filled production evidence, filled smoke evidence, filled rollback evidence, filled owner decisions, filled approval evidence, filled sign-off evidence, filled launch evidence, filled deployment approval, browser Supabase, service-role runtime paths, n8n/Pinecone runtime changes, `/api/chat` retrieval wiring, public uploads, customer accounts, public quote tracking, notifications, CRM, outbound messaging, invented operational facts, ecommerce flows, payment/order/checkout flows, booking/reservation flows, fulfilment flows, stock-reservation flows, owner-approved media claims, final styling claims, real inventory confirmation, launch clearance, provider readiness, environment readiness, preview readiness, production readiness, smoke readiness, rollback readiness, deployment permission, or public admin internals.
+
 ## Phase 5N-A/B Deployment Approval Request Readiness References
 
 Current phase: Phase 5N-A/B deployment approval request readiness, pre-launch blocker ledger, and no-provider/no-deploy approval firewall.

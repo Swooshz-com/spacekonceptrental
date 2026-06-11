@@ -5,6 +5,11 @@ const repoRoot = path.resolve(__dirname, '..');
 
 const commandPlan = [
   {
+    label: 'Validate deployment execution runbook readiness',
+    cwd: repoRoot,
+    args: ['run', 'validate:deployment-execution-runbook-readiness'],
+  },
+  {
     label: 'Validate deployment approval request readiness',
     cwd: repoRoot,
     args: ['run', 'validate:deployment-approval-request-readiness'],
