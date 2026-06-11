@@ -483,38 +483,41 @@ function AdminOperationsHome({
   ];
 
   return (
-    <section className="admin-dashboard" aria-label="Admin operations">
-      <div className="admin-dashboard__header">
-        <div>
-          <p className="eyebrow">Operations</p>
-          <h2>Admin operations</h2>
-          <p>
-            Use these protected work areas for listing management and quote
-            request follow-up.
-          </p>
+    <>
+      <section className="admin-dashboard" aria-label="Admin operations">
+        <div className="admin-dashboard__header">
+          <div>
+            <p className="eyebrow">Operations</p>
+            <h2>Admin operations</h2>
+            <p>
+              Use these protected work areas for listing management and quote
+              request follow-up.
+            </p>
+          </div>
         </div>
-      </div>
-      <div className="admin-dashboard__grid">
-        <AdminOperatorGuidance
-          adminOnly="Admin-only workspace, management summaries, readiness cues, and internal follow-up details."
-          label="Admin overview"
-          nextAction="Next safe action: review listings, categories, media, and quote requests before any separately approved deployment."
-          publicFacing="Public-facing changes are limited to published listing, category, and active media content."
-          readOnly="Overview counts and dashboard summaries are read-only snapshots of the current workspace."
-          writeEnabled="Write-enabled surfaces stay behind protected admin routes."
-        />
-        {cards.map((card) => (
-          <article className="admin-dashboard__card" key={card.href}>
-            <p className="eyebrow">{card.count} records</p>
-            <h3>{card.title}</h3>
-            <p>{card.body}</p>
-            <a className="button button--secondary" href={card.href}>
-              {card.label}
-            </a>
-          </article>
-        ))}
-      </div>
-    </section>
+        <div className="admin-dashboard__grid">
+          <AdminOperatorGuidance
+            adminOnly="Admin-only workspace, management summaries, readiness cues, and internal follow-up details."
+            label="Admin overview"
+            nextAction="Next safe action: review listings, categories, media, and quote requests before any separately approved deployment."
+            publicFacing="Public-facing changes are limited to published listing, category, and active media content."
+            readOnly="Overview counts and dashboard summaries are read-only snapshots of the current workspace."
+            writeEnabled="Write-enabled surfaces stay behind protected admin routes."
+          />
+          {cards.map((card) => (
+            <article className="admin-dashboard__card" key={card.href}>
+              <p className="eyebrow">{card.count} records</p>
+              <h3>{card.title}</h3>
+              <p>{card.body}</p>
+              <a className="button button--secondary" href={card.href}>
+                {card.label}
+              </a>
+            </article>
+          ))}
+        </div>
+      </section>
+      <OwnerReadinessHelpersPanel />
+    </>
   );
 }
 
@@ -1264,6 +1267,54 @@ const phase5lNoResponseNoSignoffBoundaries = [
   "A re-review request is not sign-off evidence",
   "A correction delta packet is not deployment approval",
   "A local validation pass is not owner acknowledgement"
+] as const;
+
+
+const phase5mOwnerDecisionIntakeReadinessPath =
+  "docs/content/LOCAL-OWNER-DECISION-INTAKE-READINESS.md";
+const phase5mSignoffCriteriaLedgerTemplatePath =
+  "docs/content/LOCAL-SIGNOFF-CRITERIA-LEDGER-TEMPLATE.md";
+const phase5mSafeDecisionIntakeSections = [
+  "Owner decision source reference",
+  "Re-review request reference",
+  "Correction delta packet reference",
+  "Decision scope",
+  "Public copy acceptance",
+  "Listing/category/media acceptance",
+  "Admin-only workflow acceptance",
+  "Blocked claims still unresolved",
+  "Public content gaps still unresolved",
+  "Deployment approval status"
+] as const;
+const phase5mAllowedFutureDecisionStatuses = [
+  "Not requested",
+  "Not received",
+  "Needs owner clarification",
+  "Accepted for local correction scope only",
+  "Rejected / needs revision",
+  "Partially accepted / needs split",
+  "Blocked: unsupported claim",
+  "Blocked: deployment approval missing"
+] as const;
+const phase5mSignoffLedgerPlaceholders = [
+  "Criterion ID: [NOT ASSIGNED]",
+  "Criterion area: [NOT SELECTED]",
+  "Owner input required: [OWNER INPUT REQUIRED]",
+  "Supporting fact/reference: [NOT SUPPLIED]",
+  "Public copy affected: [NOT IDENTIFIED]",
+  "Admin workflow affected: [NOT IDENTIFIED]",
+  "Acceptance status: [NOT REQUESTED]",
+  "Rejection/revision note: [NOT CAPTURED]",
+  "Evidence status: [NOT EVIDENCE / NOT RECORDED]",
+  "Deployment status: [DEPLOYMENT APPROVAL: NOT GRANTED]"
+] as const;
+const phase5mNoLaunchNoDeployBoundaries = [
+  "A future owner decision is not deployment approval unless explicitly separate",
+  "Local correction acceptance is not launch clearance",
+  "Sign-off readiness is not sign-off evidence",
+  "Passing validators is not owner acknowledgement",
+  "A merged PR is not owner approval",
+  "A re-review reply is not production evidence"
 ] as const;
 
 const publicJourneyReadinessClosurePath =
@@ -2324,6 +2375,94 @@ function OwnerReReviewRequestReadinessHelper() {
   );
 }
 
+
+function OwnerDecisionIntakeReadinessHelper() {
+  return (
+    <section
+      aria-label="Phase 5M owner decision intake readiness helper"
+      className="admin-dashboard__card admin-dashboard__card--summary"
+    >
+      <p className="eyebrow">Phase 5M-A/B admin-only owner decision intake readiness</p>
+      <h3>Owner decision intake readiness helper</h3>
+      <p>
+        This protected admin-only helper prepares a future local owner decision
+        intake package after owner re-review and correction delta references
+        exist. No owner decision is recorded here. No owner approval is recorded here. No owner sign-off is claimed here. No launch clearance is granted here. No deployment approval is granted here.
+      </p>
+      <dl className="quote-inbox__details">
+        <div>
+          <dt>Owner decision intake readiness</dt>
+          <dd>{phase5mOwnerDecisionIntakeReadinessPath}</dd>
+        </div>
+        <div>
+          <dt>Sign-off criteria ledger template</dt>
+          <dd>{phase5mSignoffCriteriaLedgerTemplatePath}</dd>
+        </div>
+        <div>
+          <dt>Owner re-review request readiness</dt>
+          <dd>{phase5lOwnerReReviewRequestReadinessPath}</dd>
+        </div>
+        <div>
+          <dt>Correction delta packet template</dt>
+          <dd>{phase5lCorrectionDeltaPacketTemplatePath}</dd>
+        </div>
+        <div>
+          <dt>Evidence status</dt>
+          <dd>[NOT EVIDENCE / NOT RECORDED]</dd>
+        </div>
+        <div>
+          <dt>Deployment status</dt>
+          <dd>[DEPLOYMENT APPROVAL: NOT GRANTED]</dd>
+        </div>
+      </dl>
+      <h4>Safe future decision intake sections</h4>
+      <ul className="admin-readiness__list">
+        {phase5mSafeDecisionIntakeSections.map((section) => (
+          <li key={section}>{section}</li>
+        ))}
+      </ul>
+      <h4>Sign-off criteria ledger placeholders</h4>
+      <ul className="admin-readiness__list">
+        {phase5mSignoffLedgerPlaceholders.map((placeholder) => (
+          <li key={placeholder}>{placeholder}</li>
+        ))}
+      </ul>
+      <h4>Allowed future decision statuses</h4>
+      <ul className="admin-readiness__list">
+        {phase5mAllowedFutureDecisionStatuses.map((status) => (
+          <li key={status}>{status}</li>
+        ))}
+      </ul>
+      <h4>No-launch/no-deploy boundaries</h4>
+      <ul className="admin-readiness__list">
+        {phase5mNoLaunchNoDeployBoundaries.map((boundary) => (
+          <li key={boundary}>{boundary}</li>
+        ))}
+      </ul>
+      <p>
+        This helper stays protected admin-only and does not expose owner
+        decision intake internals, sign-off criteria ledger internals, owner
+        re-review request internals, correction delta packet internals, owner
+        handoff internals, release-control internals, or admin route internals
+        to public rental, listing, quote, enquiry, or request routes.
+      </p>
+    </section>
+  );
+}
+
+
+function OwnerReadinessHelpersPanel() {
+  return (
+    <>
+      <OwnerReviewWalkthroughReadinessHelper />
+      <OwnerFeedbackIntakeReadinessHelper />
+      <OwnerCorrectionWorkflowReadinessHelper />
+      <OwnerReReviewRequestReadinessHelper />
+      <OwnerDecisionIntakeReadinessHelper />
+    </>
+  );
+}
+
 function AdminCatalogueContentOpsReadiness({
   dashboard,
   scope
@@ -2801,10 +2940,7 @@ function AdminOperationsView({
   return (
     <>
       <AdminDashboard dashboard={state.dashboard} />
-      <OwnerReviewWalkthroughReadinessHelper />
-      <OwnerFeedbackIntakeReadinessHelper />
-      <OwnerCorrectionWorkflowReadinessHelper />
-      <OwnerReReviewRequestReadinessHelper />
+      <OwnerReadinessHelpersPanel />
       <QuoteRequestInboxPanel inbox={state.quoteInbox} />
     </>
   );

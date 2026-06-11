@@ -5,5 +5,5 @@ const {
 
 assertPhase5mOwnerDecisionIntakeReadiness();
 console.log(
-  'Owner re-review request readiness validation passed. No deployment was performed.',
+  'Owner decision intake readiness validation passed. No deployment was performed.',
 );
