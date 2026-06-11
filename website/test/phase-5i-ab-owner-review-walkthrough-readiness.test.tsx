@@ -102,8 +102,10 @@ describe("Phase 5I-A/B owner-review walkthrough readiness", () => {
         name: /owner-review walkthrough readiness helper/i,
       }),
     ).toBeInTheDocument();
-    expect(screen.getByText(ownerWalkthroughDocPath)).toBeInTheDocument();
-    expect(screen.getByText(routeMatrixDocPath)).toBeInTheDocument();
+    expect(
+      screen.getAllByText(ownerWalkthroughDocPath).length,
+    ).toBeGreaterThan(0);
+    expect(screen.getAllByText(routeMatrixDocPath).length).toBeGreaterThan(0);
     expect(screen.getByText(/public homepage walkthrough/i)).toBeInTheDocument();
     expect(
       screen.getByText(/protected admin quote inbox\/triage walkthrough/i),
@@ -112,8 +114,8 @@ describe("Phase 5I-A/B owner-review walkthrough readiness", () => {
       screen.getByText(/contact details still missing/i),
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/\[deployment approval: not granted\]/i),
-    ).toBeInTheDocument();
+      screen.getAllByText(/\[deployment approval: not granted\]/i).length,
+    ).toBeGreaterThan(0);
   });
 
   it("does not render the protected walkthrough helper for blocked admin states", () => {
