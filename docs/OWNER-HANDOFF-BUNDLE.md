@@ -1,3 +1,16 @@
+## Phase 5N-A/B Deployment Approval Request Readiness References
+
+Current phase: Phase 5N-A/B deployment approval request readiness, pre-launch blocker ledger, and no-provider/no-deploy approval firewall.
+Latest completed capability: Phase 5M-A/B owner decision intake readiness, sign-off criteria ledger, and no-launch/no-deploy decision guard.
+Last merged capability PR: #168.
+Last merged capability merge commit: 4def227c0da884391a1d1789ed8386b84211c0e8.
+
+Phase 5N-A/B adds repo-local deployment approval request readiness, a local pre-launch blocker ledger template, protected admin deployment approval request readiness helper coverage, no-provider/no-deploy approval firewall coverage, release-candidate suite integration, validate:deployment-approval-request-readiness validator coverage, and deterministic Phase 5N deployment approval request readiness tests. These controls are template-only, non-live, not evidence, and do not record deployment approval, launch clearance, production readiness, provider setup, preview evidence, production evidence, owner approval, owner sign-off, owner decision evidence, smoke evidence, deployment permission, or filled owner-review evidence.
+
+Phase 5N-A/B references `docs/content/LOCAL-DEPLOYMENT-APPROVAL-REQUEST-READINESS.md`, `docs/content/LOCAL-PRE-LAUNCH-BLOCKER-LEDGER-TEMPLATE.md`, `docs/content/LOCAL-OWNER-DECISION-INTAKE-READINESS.md`, `docs/content/LOCAL-SIGNOFF-CRITERIA-LEDGER-TEMPLATE.md`, `scripts/validate-deployment-approval-request-readiness.cjs`, `scripts/validate-owner-decision-intake-readiness.cjs`, and protected admin deployment approval request readiness helper coverage.
+
+No deployment is performed or approved by Phase 5N-A/B. It does not add provider config, Vercel config, Supabase Cloud config, DNS/domain/CDN/environment/platform changes, real secrets or env values, filled owner-review evidence, filled preview evidence, filled production evidence, filled smoke evidence, filled owner decisions, filled approval evidence, filled sign-off evidence, filled launch evidence, filled deployment approval, browser Supabase, service-role runtime paths, n8n/Pinecone runtime changes, `/api/chat` retrieval wiring, public uploads, customer accounts, public quote tracking, notifications, CRM, outbound messaging, invented operational facts, ecommerce flows, payment/order/checkout flows, booking/reservation flows, fulfilment flows, stock-reservation flows, owner-approved media claims, final styling claims, real inventory confirmation, launch clearance, provider readiness, production readiness, deployment permission, or public admin internals.
+
 ## Phase 5M-A/B Owner Decision Intake Readiness References
 
 Current phase: Phase 5M-A/B owner decision intake readiness, sign-off criteria ledger, and no-launch/no-deploy decision guard.

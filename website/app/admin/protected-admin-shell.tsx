@@ -1317,6 +1317,55 @@ const phase5mNoLaunchNoDeployBoundaries = [
   "A re-review reply is not production evidence"
 ] as const;
 
+
+const phase5nDeploymentApprovalRequestReadinessPath =
+  "docs/content/LOCAL-DEPLOYMENT-APPROVAL-REQUEST-READINESS.md";
+const phase5nPreLaunchBlockerLedgerTemplatePath =
+  "docs/content/LOCAL-PRE-LAUNCH-BLOCKER-LEDGER-TEMPLATE.md";
+const phase5nSafeDeploymentApprovalRequestSections = [
+  "Deployment approval request purpose",
+  "Owner decision/sign-off reference",
+  "Sign-off criteria ledger reference",
+  "Pre-launch blocker ledger reference",
+  "Public route readiness summary",
+  "Protected admin readiness summary",
+  "Provider/runtime setup status",
+  "Secrets/env readiness status",
+  "Rollback/recovery readiness status",
+  "Explicit approval status"
+] as const;
+const phase5nAllowedFutureApprovalRequestStatuses = [
+  "Not prepared",
+  "Draft only",
+  "Needs owner decision",
+  "Needs sign-off criteria closure",
+  "Needs provider decision",
+  "Needs environment/secrets decision",
+  "Blocked: unresolved launch blocker",
+  "Blocked: deployment approval missing",
+  "Ready to ask for approval"
+] as const;
+const phase5nPreLaunchBlockerLedgerPlaceholders = [
+  "Blocker ID: [NOT ASSIGNED]",
+  "Blocker area: [NOT SELECTED]",
+  "Public route affected: [NOT IDENTIFIED]",
+  "Admin route affected: [NOT IDENTIFIED]",
+  "Owner input required: [OWNER INPUT REQUIRED]",
+  "Provider/runtime input required: [PROVIDER DECISION REQUIRED]",
+  "Environment/secrets input required: [ENV DECISION REQUIRED]",
+  "Resolution status: [NOT STARTED]",
+  "Evidence status: [NOT EVIDENCE / NOT RECORDED]",
+  "Deployment status: [DEPLOYMENT APPROVAL: NOT GRANTED]"
+] as const;
+const phase5nNoProviderNoDeployBoundaries = [
+  "A deployment approval request is not deployment approval",
+  "Provider setup readiness is not provider setup",
+  "Environment readiness is not secrets/config creation",
+  "Passing validators is not launch clearance",
+  "A merged PR is not deployment permission",
+  "A future owner sign-off is not provider approval unless separately stated"
+] as const;
+
 const publicJourneyReadinessClosurePath =
   "docs/content/PUBLIC-JOURNEY-READINESS-CLOSURE.md";
 const quoteEnquiryPublicExpectationBoundaryPath =
@@ -2451,6 +2500,84 @@ function OwnerDecisionIntakeReadinessHelper() {
 }
 
 
+function DeploymentApprovalRequestReadinessHelper() {
+  return (
+    <section
+      aria-label="Phase 5N deployment approval request readiness helper"
+      className="admin-dashboard__card admin-dashboard__card--summary"
+    >
+      <p className="eyebrow">Phase 5N-A/B admin-only deployment approval request readiness</p>
+      <h3>Deployment approval request readiness helper</h3>
+      <p>
+        This protected admin-only helper prepares a future local deployment approval
+        request package after owner decision and sign-off criteria references exist.
+        No deployment approval is recorded here. No launch clearance is granted here.
+        No provider setup is performed here. No environment/secrets are created here.
+        No production evidence is captured here. No deployment is performed here.
+      </p>
+      <dl className="quote-inbox__details">
+        <div>
+          <dt>Deployment approval request readiness</dt>
+          <dd>{phase5nDeploymentApprovalRequestReadinessPath}</dd>
+        </div>
+        <div>
+          <dt>Pre-launch blocker ledger template</dt>
+          <dd>{phase5nPreLaunchBlockerLedgerTemplatePath}</dd>
+        </div>
+        <div>
+          <dt>Owner decision intake readiness</dt>
+          <dd>{phase5mOwnerDecisionIntakeReadinessPath}</dd>
+        </div>
+        <div>
+          <dt>Sign-off criteria ledger template</dt>
+          <dd>{phase5mSignoffCriteriaLedgerTemplatePath}</dd>
+        </div>
+        <div>
+          <dt>Evidence status</dt>
+          <dd>[NOT EVIDENCE / NOT RECORDED]</dd>
+        </div>
+        <div>
+          <dt>Deployment status</dt>
+          <dd>[DEPLOYMENT APPROVAL: NOT GRANTED]</dd>
+        </div>
+      </dl>
+      <h4>Safe future deployment approval request sections</h4>
+      <ul className="admin-readiness__list">
+        {phase5nSafeDeploymentApprovalRequestSections.map((section) => (
+          <li key={section}>{section}</li>
+        ))}
+      </ul>
+      <h4>Pre-launch blocker ledger placeholders</h4>
+      <ul className="admin-readiness__list">
+        {phase5nPreLaunchBlockerLedgerPlaceholders.map((placeholder) => (
+          <li key={placeholder}>{placeholder}</li>
+        ))}
+      </ul>
+      <h4>Allowed future approval request statuses</h4>
+      <ul className="admin-readiness__list">
+        {phase5nAllowedFutureApprovalRequestStatuses.map((status) => (
+          <li key={status}>{status}</li>
+        ))}
+      </ul>
+      <h4>No-provider/no-deploy boundaries</h4>
+      <ul className="admin-readiness__list">
+        {phase5nNoProviderNoDeployBoundaries.map((boundary) => (
+          <li key={boundary}>{boundary}</li>
+        ))}
+      </ul>
+      <p>
+        This helper stays protected admin-only and does not expose deployment
+        approval request internals, pre-launch blocker ledger internals, owner
+        decision intake internals, sign-off criteria ledger internals, provider
+        setup internals, environment/secrets internals, owner handoff internals,
+        release-control internals, or admin route internals to public rental,
+        listing, quote, enquiry, or request routes.
+      </p>
+    </section>
+  );
+}
+
+
 function OwnerReadinessHelpersPanel() {
   return (
     <>
@@ -2459,6 +2586,7 @@ function OwnerReadinessHelpersPanel() {
       <OwnerCorrectionWorkflowReadinessHelper />
       <OwnerReReviewRequestReadinessHelper />
       <OwnerDecisionIntakeReadinessHelper />
+      <DeploymentApprovalRequestReadinessHelper />
     </>
   );
 }
