@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-const { assertPhase5nDeploymentApprovalRequestReadiness } = require('./public-review-polish-checks.cjs');
+const { assertPhase5oDeploymentExecutionRunbookReadiness } = require('./public-review-polish-checks.cjs');
 
-assertPhase5nDeploymentApprovalRequestReadiness();
+assertPhase5oDeploymentExecutionRunbookReadiness();
 console.log('Listing detail readiness validation passed. No deployment was performed.');

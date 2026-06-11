@@ -32,6 +32,7 @@
     "validate:owner-feedback-intake-readiness": "node scripts/validate-owner-feedback-intake-readiness.cjs",
     "validate:owner-re-review-request-readiness": "node scripts/validate-owner-re-review-request-readiness.cjs",
     "validate:deployment-approval-request-readiness": "node scripts/validate-deployment-approval-request-readiness.cjs",
+    "validate:deployment-execution-runbook-readiness": "node scripts/validate-deployment-execution-runbook-readiness.cjs",
     "validate:owner-decision-intake-readiness": "node scripts/validate-owner-decision-intake-readiness.cjs",
     "validate:owner-correction-workflow-readiness": "node scripts/validate-owner-correction-workflow-readiness.cjs",
     "validate:owner-review-walkthrough-readiness": "node scripts/validate-owner-review-walkthrough-readiness.cjs"

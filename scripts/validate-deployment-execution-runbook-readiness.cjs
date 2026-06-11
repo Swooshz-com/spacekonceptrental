@@ -1,9 +1,7 @@
-#!/usr/bin/env node
 const {
   assertPhase5oDeploymentExecutionRunbookReadiness,
 } = require('./public-review-polish-checks.cjs');
 
 assertPhase5oDeploymentExecutionRunbookReadiness();
-console.log(
-  'Owner feedback intake readiness validation passed. No deployment was performed.',
-);
+
+console.log('Deployment execution runbook readiness validation passed. No deployment was performed and no deployment approval was granted.');

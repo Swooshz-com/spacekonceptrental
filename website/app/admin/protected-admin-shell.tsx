@@ -1366,6 +1366,58 @@ const phase5nNoProviderNoDeployBoundaries = [
   "A future owner sign-off is not provider approval unless separately stated"
 ] as const;
 
+
+const phase5oDeploymentExecutionRunbookReadinessPath =
+  "docs/content/LOCAL-DEPLOYMENT-EXECUTION-RUNBOOK-READINESS.md";
+const phase5oProviderEnvDecisionMatrixTemplatePath =
+  "docs/content/LOCAL-PROVIDER-ENV-DECISION-MATRIX-TEMPLATE.md";
+const phase5oSafeDeploymentExecutionRunbookSections = [
+  "Deployment approval source reference",
+  "Provider decision reference",
+  "Environment/secrets decision reference",
+  "Build command readiness",
+  "Database/migration readiness",
+  "Preview smoke plan readiness",
+  "Production smoke plan readiness",
+  "Rollback/recovery plan readiness",
+  "Post-deploy verification checklist",
+  "Final go/no-go status"
+] as const;
+const phase5oAllowedFutureRunbookStatuses = [
+  "Not approved",
+  "Approval missing",
+  "Provider decision pending",
+  "Environment/secrets pending",
+  "Build verification pending",
+  "Migration verification pending",
+  "Preview smoke plan pending",
+  "Production smoke plan pending",
+  "Rollback plan pending",
+  "Ready for approved deployment handoff"
+] as const;
+const phase5oProviderEnvDecisionMatrixPlaceholders = [
+  "Decision ID: [NOT ASSIGNED]",
+  "Decision area: [NOT SELECTED]",
+  "Provider/platform option: [NOT SELECTED]",
+  "Environment variable name: [NOT FILLED]",
+  "Secret/value status: [NOT CREATED]",
+  "Domain/DNS status: [NOT CONFIGURED]",
+  "Database/provider status: [NOT CONFIGURED]",
+  "Build/deploy command status: [NOT APPROVED]",
+  "Smoke check status: [NOT RUN]",
+  "Rollback status: [NOT RUN]",
+  "Evidence status: [NOT EVIDENCE / NOT RECORDED]",
+  "Deployment status: [DEPLOYMENT APPROVAL: NOT GRANTED]"
+] as const;
+const phase5oNoExecutionBoundaries = [
+  "A runbook is not deployment",
+  "A provider decision placeholder is not provider setup",
+  "An environment placeholder is not secret creation",
+  "A smoke plan is not smoke evidence",
+  "A rollback plan is not rollback execution",
+  "A merged PR is not launch clearance"
+] as const;
+
 const publicJourneyReadinessClosurePath =
   "docs/content/PUBLIC-JOURNEY-READINESS-CLOSURE.md";
 const quoteEnquiryPublicExpectationBoundaryPath =
@@ -2578,6 +2630,84 @@ function DeploymentApprovalRequestReadinessHelper() {
 }
 
 
+function DeploymentExecutionRunbookReadinessHelper() {
+  return (
+    <section
+      aria-label="Phase 5O deployment execution runbook readiness helper"
+      className="admin-dashboard__card admin-dashboard__card--summary"
+    >
+      <p className="eyebrow">Phase 5O-A/B admin-only deployment execution runbook readiness</p>
+      <h3>Deployment execution runbook readiness helper</h3>
+      <p>
+        This protected admin-only helper prepares a future local deployment execution
+        runbook package after deployment approval request and pre-launch blocker
+        references exist. No deployment is performed here. No provider setup is
+        performed here. No environment/secrets are created here. No preview is published here. No production launch is performed here. No smoke evidence is captured here. No rollback is executed here. No deployment approval is granted here.
+      </p>
+      <dl className="quote-inbox__details">
+        <div>
+          <dt>Deployment execution runbook readiness</dt>
+          <dd>{phase5oDeploymentExecutionRunbookReadinessPath}</dd>
+        </div>
+        <div>
+          <dt>Provider/environment decision matrix template</dt>
+          <dd>{phase5oProviderEnvDecisionMatrixTemplatePath}</dd>
+        </div>
+        <div>
+          <dt>Deployment approval request readiness</dt>
+          <dd>{phase5nDeploymentApprovalRequestReadinessPath}</dd>
+        </div>
+        <div>
+          <dt>Pre-launch blocker ledger template</dt>
+          <dd>{phase5nPreLaunchBlockerLedgerTemplatePath}</dd>
+        </div>
+        <div>
+          <dt>Evidence status</dt>
+          <dd>[NOT EVIDENCE / NOT RECORDED]</dd>
+        </div>
+        <div>
+          <dt>Deployment status</dt>
+          <dd>[DEPLOYMENT APPROVAL: NOT GRANTED]</dd>
+        </div>
+      </dl>
+      <h4>Safe future deployment execution runbook sections</h4>
+      <ul className="admin-readiness__list">
+        {phase5oSafeDeploymentExecutionRunbookSections.map((section) => (
+          <li key={section}>{section}</li>
+        ))}
+      </ul>
+      <h4>Provider/environment decision matrix placeholders</h4>
+      <ul className="admin-readiness__list">
+        {phase5oProviderEnvDecisionMatrixPlaceholders.map((placeholder) => (
+          <li key={placeholder}>{placeholder}</li>
+        ))}
+      </ul>
+      <h4>Allowed future runbook statuses</h4>
+      <ul className="admin-readiness__list">
+        {phase5oAllowedFutureRunbookStatuses.map((status) => (
+          <li key={status}>{status}</li>
+        ))}
+      </ul>
+      <h4>No-execution boundaries</h4>
+      <ul className="admin-readiness__list">
+        {phase5oNoExecutionBoundaries.map((boundary) => (
+          <li key={boundary}>{boundary}</li>
+        ))}
+      </ul>
+      <p>
+        This helper stays protected admin-only and does not expose deployment
+        execution runbook internals, provider/environment decision matrix
+        internals, deployment approval request internals, pre-launch blocker
+        ledger internals, provider setup internals, environment/secrets
+        internals, smoke/rollback internals, owner handoff internals,
+        release-control internals, or admin route internals to public rental,
+        listing, quote, enquiry, or request routes.
+      </p>
+    </section>
+  );
+}
+
+
 function OwnerReadinessHelpersPanel() {
   return (
     <>
@@ -2587,6 +2717,7 @@ function OwnerReadinessHelpersPanel() {
       <OwnerReReviewRequestReadinessHelper />
       <OwnerDecisionIntakeReadinessHelper />
       <DeploymentApprovalRequestReadinessHelper />
+      <DeploymentExecutionRunbookReadinessHelper />
     </>
   );
 }

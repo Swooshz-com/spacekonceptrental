@@ -17,6 +17,7 @@ const phase164MergeCommit = '68d4a20ac46c2a37abca3a253e0ae11ed713e2e1';
 const phase166MergeCommit = 'fc9eb856143be259e63a31fa8cc9c54426741a97';
 const phase167MergeCommit = '4fe4b56cf2853517b9998d1d23237b6e1a37d8f4';
 const phase168MergeCommit = '4def227c0da884391a1d1789ed8386b84211c0e8';
+const phase169MergeCommit = '0fe53323a6346bb425c9fd66efea00e82ab3cfe6';
 const currentPhase5a = 'Phase 5A-A/B public owner-review polish sweep, local content-readiness cleanup, and protected admin review UX closure';
 const currentPhase5b = 'Phase 5B-A/B public catalogue-to-enquiry journey hardening, listing continuity, and admin/public parity checks';
 const currentPhase5c = 'Phase 5C-A/B public discovery search/filter polish, quote-intent context, and admin discovery parity closure';
@@ -31,6 +32,7 @@ const currentPhase5k = 'Phase 5K-A/B owner correction workflow readiness, public
 const currentPhase5l = 'Phase 5L-A/B owner re-review request readiness, correction delta packet, and no-signoff/no-response guard';
 const currentPhase5m = 'Phase 5M-A/B owner decision intake readiness, sign-off criteria ledger, and no-launch/no-deploy decision guard';
 const currentPhase5n = 'Phase 5N-A/B deployment approval request readiness, pre-launch blocker ledger, and no-provider/no-deploy approval firewall';
+const currentPhase5o = 'Phase 5O-A/B deployment execution runbook readiness, provider/env decision matrix, and rollback rehearsal firewall';
 const latestCompletedPhase4f = 'Phase 4F-A/B owner-facing review handoff bundle, approval issue template, and no-deploy preflight command center';
 const cleanupDocPath = 'docs/content/LOCAL-CONTENT-READINESS-CLEANUP.md';
 const publicJourneyAcceptanceDocPath = 'docs/content/LOCAL-PUBLIC-JOURNEY-ACCEPTANCE.md';
@@ -52,6 +54,8 @@ const ownerDecisionIntakeReadinessDocPath = 'docs/content/LOCAL-OWNER-DECISION-I
 const signoffCriteriaLedgerTemplateDocPath = 'docs/content/LOCAL-SIGNOFF-CRITERIA-LEDGER-TEMPLATE.md';
 const deploymentApprovalRequestReadinessDocPath = 'docs/content/LOCAL-DEPLOYMENT-APPROVAL-REQUEST-READINESS.md';
 const preLaunchBlockerLedgerTemplateDocPath = 'docs/content/LOCAL-PRE-LAUNCH-BLOCKER-LEDGER-TEMPLATE.md';
+const deploymentExecutionRunbookReadinessDocPath = 'docs/content/LOCAL-DEPLOYMENT-EXECUTION-RUNBOOK-READINESS.md';
+const providerEnvDecisionMatrixTemplateDocPath = 'docs/content/LOCAL-PROVIDER-ENV-DECISION-MATRIX-TEMPLATE.md';
 const publicSourceRoots = [
   'website/app/layout.tsx',
   'website/app/page.tsx',
@@ -1453,6 +1457,194 @@ function assertPhase5nDeploymentApprovalRequestReadiness() {
   assertSuiteAndTests();
 }
 
+
+function assertPhase5oStatusRollForward() {
+  const docs = normalizeWhitespace(statusDocPaths.map(readRepoFile).join('\n'));
+  for (const required of [
+    `Current phase: ${currentPhase5o}`,
+    `Latest completed capability: ${currentPhase5n}`,
+    'Last merged capability PR: #169',
+    `Last merged capability merge commit: ${phase169MergeCommit}`,
+    deploymentExecutionRunbookReadinessDocPath,
+    providerEnvDecisionMatrixTemplateDocPath,
+    deploymentApprovalRequestReadinessDocPath,
+    preLaunchBlockerLedgerTemplateDocPath,
+    'scripts/validate-deployment-execution-runbook-readiness.cjs',
+    'No deployment is performed or approved by Phase 5O-A/B',
+  ]) {
+    assertIncludes(docs, required, 'Phase 5O status roll-forward docs');
+  }
+}
+
+function assertDeploymentExecutionRunbookReadinessDocs() {
+  assertTracked(
+    [deploymentExecutionRunbookReadinessDocPath, providerEnvDecisionMatrixTemplateDocPath],
+    'Phase 5O deployment execution runbook readiness docs'
+  );
+  const runbook = normalizeWhitespace(readRepoFile(deploymentExecutionRunbookReadinessDocPath));
+  const matrix = normalizeWhitespace(readRepoFile(providerEnvDecisionMatrixTemplateDocPath));
+  for (const required of [
+    'repo-local, template-only, non-live',
+    '[NOT EVIDENCE / NOT RECORDED]',
+    '[DEPLOYMENT APPROVAL: NOT GRANTED]',
+    'does not perform deployment, provider setup, preview publication, production launch, environment/secrets creation, smoke testing, rollback execution, owner approval, owner sign-off, launch clearance, production evidence, preview evidence, or deployment permission',
+    'Deployment approval source reference',
+    'Provider decision reference',
+    'Environment/secrets decision reference',
+    'Build command readiness',
+    'Database/migration readiness',
+    'Preview smoke plan readiness',
+    'Production smoke plan readiness',
+    'Rollback/recovery plan readiness',
+    'Post-deploy verification checklist',
+    'Final go/no-go status',
+    'Not approved',
+    'Approval missing',
+    'Provider decision pending',
+    'Environment/secrets pending',
+    'Build verification pending',
+    'Migration verification pending',
+    'Preview smoke plan pending',
+    'Production smoke plan pending',
+    'Rollback plan pending',
+    'Ready for approved deployment handoff',
+    'A runbook is not deployment',
+    'A provider decision placeholder is not provider setup',
+    'An environment placeholder is not secret creation',
+    'A smoke plan is not smoke evidence',
+    'A rollback plan is not rollback execution',
+    'A merged PR is not launch clearance',
+  ]) {
+    assertIncludes(runbook, required, 'Phase 5O deployment execution runbook readiness doc');
+  }
+  for (const required of [
+    '[NOT EVIDENCE / NOT RECORDED]',
+    '[DEPLOYMENT APPROVAL: NOT GRANTED]',
+    'Decision ID: [NOT ASSIGNED]',
+    'Decision area: [NOT SELECTED]',
+    'Provider/platform option: [NOT SELECTED]',
+    'Environment variable name: [NOT FILLED]',
+    'Secret/value status: [NOT CREATED]',
+    'Domain/DNS status: [NOT CONFIGURED]',
+    'Database/provider status: [NOT CONFIGURED]',
+    'Build/deploy command status: [NOT APPROVED]',
+    'Smoke check status: [NOT RUN]',
+    'Rollback status: [NOT RUN]',
+    'Evidence status: [NOT EVIDENCE / NOT RECORDED]',
+    'Deployment status: [DEPLOYMENT APPROVAL: NOT GRANTED]',
+    'Hosting/provider selection',
+    'Environment/secrets inventory',
+    'Domain/DNS routing',
+    'Database/provider runtime',
+    'Build/deploy command',
+    'Preview smoke checks',
+    'Production smoke checks',
+    'Rollback/recovery decision',
+    'Final deployment authorization',
+    'not provider setup, not env/secrets creation, not DNS setup, not smoke evidence, not rollback evidence, not production evidence, and not deployment approval',
+  ]) {
+    assertIncludes(matrix, required, 'Phase 5O provider/env decision matrix template doc');
+  }
+  assertNoMatch(
+    `${runbook}\n${matrix}`,
+    /owner approved|owner sign-?off complete|accepted by owner|rejected by owner|owner decision recorded|owner approval recorded|owner feedback recorded|owner re-review recorded|owner corrections completed|owner response sent|preview evidence captured|production evidence captured|smoke evidence captured|rollback evidence captured|route-walkthrough evidence captured|correction-completed evidence captured|response-sent evidence captured|public launch evidence captured|sign-off evidence captured|deployment approval granted|launch approval granted|launch clearance granted|provider setup completed|secrets created|deployment performed|preview published|production launched/i,
+    'Phase 5O docs'
+  );
+}
+
+function assertDeploymentExecutionRunbookPackageScript() {
+  const packageJson = JSON.parse(readRepoFile('package.json'));
+  assert(
+    packageJson.scripts?.['validate:deployment-execution-runbook-readiness'] === 'node scripts/validate-deployment-execution-runbook-readiness.cjs',
+    'package.json must register validate:deployment-execution-runbook-readiness'
+  );
+}
+
+function assertDeploymentExecutionRunbookSources() {
+  const adminSource = readTrackedProductionSources(['website/app/admin/protected-admin-shell.tsx']);
+  const adminPage = readRepoFile('website/app/admin/page.tsx');
+  const publicSource = readTrackedProductionSources(publicSourceRoots);
+
+  for (const required of [
+    /Phase 5O-A\/B admin-only deployment execution runbook readiness/i,
+    /Deployment execution runbook readiness helper/i,
+    /LOCAL-DEPLOYMENT-EXECUTION-RUNBOOK-READINESS\.md/i,
+    /LOCAL-PROVIDER-ENV-DECISION-MATRIX-TEMPLATE\.md/i,
+    /LOCAL-DEPLOYMENT-APPROVAL-REQUEST-READINESS\.md/i,
+    /LOCAL-PRE-LAUNCH-BLOCKER-LEDGER-TEMPLATE\.md/i,
+    /Safe future deployment execution runbook sections/i,
+    /Provider\/environment decision matrix placeholders/i,
+    /Allowed future runbook statuses/i,
+    /No-execution boundaries/i,
+    /No deployment is performed here/i,
+    /No provider setup is performed here/i,
+    /No environment\/secrets are created here/i,
+    /No preview is published here/i,
+    /No production launch is performed here/i,
+    /No smoke evidence is captured here/i,
+    /No rollback is executed here/i,
+    /No deployment approval is granted here/i,
+    /\[NOT EVIDENCE \/ NOT RECORDED\]/i,
+    /\[DEPLOYMENT APPROVAL: NOT GRANTED\]/i,
+  ]) {
+    assert(required.test(adminSource), `Phase 5O admin source missing safe wording: ${required}`);
+  }
+
+  assertIncludes(adminPage, 'view={{ kind: "home" }}', 'admin page home view');
+  assert(
+    /function AdminOperationsHome[\s\S]*<OwnerReadinessHelpersPanel \/>/.test(adminSource),
+    'Phase 5O admin source must render owner readiness helpers from the real AdminOperationsHome path'
+  );
+  assert(
+    /function OwnerReadinessHelpersPanel[\s\S]*<OwnerReviewWalkthroughReadinessHelper \/>[\s\S]*<OwnerFeedbackIntakeReadinessHelper \/>[\s\S]*<OwnerCorrectionWorkflowReadinessHelper \/>[\s\S]*<OwnerReReviewRequestReadinessHelper \/>[\s\S]*<OwnerDecisionIntakeReadinessHelper \/>[\s\S]*<DeploymentApprovalRequestReadinessHelper \/>[\s\S]*<DeploymentExecutionRunbookReadinessHelper \/>/.test(adminSource),
+    'Phase 5O admin source must keep the complete owner readiness helper chain in the shared panel'
+  );
+
+  assertNoMatch(
+    publicSource,
+    /deployment execution runbook|provider\/environment decision matrix|provider env decision matrix|deployment approval request|pre-launch blocker ledger|provider setup internals|environment\/secrets internals|smoke\/rollback internals|admin route\/view checklist|owner handoff internals|release-control internals|admin urls?|internal notes|destructive-action safeguards|recovery lanes?|status-transition matrix|public admin status|\/admin\//i,
+    'Phase 5O public source'
+  );
+  assert(/\b(?:listing|listings)\b/i.test(publicSource), 'public source must retain listing wording');
+  assert(/\b(?:rental|rentals)\b/i.test(publicSource), 'public source must retain rental wording');
+  assert(/\b(?:quote|enquiry|request)\b/i.test(publicSource), 'public source must retain quote/enquiry/request wording');
+  assertNoMatch(publicSource, /\b(?:cart|checkout|order|payment|purchase|online ordering)\b/i, 'Phase 5O public source');
+  assertNoMatch(publicSource, /\b(?:booking|reservation|fulfilment|fulfillment|stock reservation|stock-reservation|book now|reserve now)\b/i, 'Phase 5O public source');
+  assertNoMatch(publicSource, /award-winning|certified partner|trusted by|5-star|guaranteed availability|guaranteed delivery|licensed and insured|testimonial|client logo|case study|legal guarantee|production policy|service-area claim|Singapore\s+\d{6}|\+?\d[\d\s().-]{7,}|Mon(?:day)?\s*-\s*Fri|24\/7|123\s+Main/i, 'Phase 5O public source');
+  assertNoMatch(publicSource, /customer account|quote tracking|file upload|public upload|notifications?|\bCRM\b|email sending|sms sending|whatsapp|outbound messaging|public status view/i, 'Phase 5O public source');
+  assertNoMatch(
+    adminSource,
+    /public upload|customer upload|new provider setup|new storage provider|NEXT_PUBLIC_SUPABASE|SUPABASE_SERVICE_ROLE_KEY|service-role browser|Pinecone|\bRAG\b|n8n runtime|\/api\/chat.*retrieval|outbound messaging|email sending|sms sending|whatsapp sending|process\.env\.(?:NEXT_PUBLIC_|SUPABASE|N8N|PINECONE|VERCEL)/i,
+    'Phase 5O admin source'
+  );
+}
+
+function assertReleaseSuiteHasDeploymentExecutionRunbookReadiness() {
+  const suite = readRepoFile('scripts/validate-release-candidate-suite.cjs');
+  assertIncludes(suite, "args: ['run', 'validate:deployment-execution-runbook-readiness']", 'release-candidate suite');
+  assertIncludes(suite, "args: ['run', 'validate:deployment-approval-request-readiness']", 'release-candidate suite');
+  assertNoMatch(suite, /docker[^\n]*(?:skip|bypass)|(?:skip|bypass)[^\n]*docker/i, 'release-candidate suite');
+}
+
+function assertPhase5oDeploymentExecutionRunbookReadiness() {
+  assertDeploymentExecutionRunbookReadinessDocs();
+  assertPhase5oStatusRollForward();
+  assertDeploymentExecutionRunbookPackageScript();
+  assertDeploymentExecutionRunbookSources();
+  assertNoForbiddenTrackedFiles();
+  assertNoFilledEvidence();
+  assertPhase5nDeploymentApprovalRequestReadiness();
+  assertReleaseSuiteHasDeploymentExecutionRunbookReadiness();
+  assertReleaseSuiteHasDeploymentApprovalRequestReadiness();
+  assertReleaseSuiteHasOwnerDecisionIntakeReadiness();
+  assertReleaseSuiteHasOwnerReReviewRequestReadiness();
+  assertReleaseSuiteHasOwnerCorrectionWorkflow();
+  assertReleaseSuiteHasOwnerFeedbackIntake();
+  assertReleaseSuiteHasOwnerReviewWalkthrough();
+  assertReleaseSuiteHasCatalogueWriteWorkflow();
+  assertSuiteAndTests();
+}
+
 function assertPhase5mStatusRollForward() {
   const docs = normalizeWhitespace(statusDocPaths.map(readRepoFile).join('\n'));
   for (const required of [
@@ -1931,6 +2123,7 @@ function assertPhase5aPublicReviewPolish() {
 }
 
 module.exports = {
+  assertPhase5oDeploymentExecutionRunbookReadiness,
   assertPhase5nDeploymentApprovalRequestReadiness,
   assertPhase5mOwnerDecisionIntakeReadiness,
   assertPhase5lOwnerReReviewRequestReadiness,
@@ -1959,6 +2152,7 @@ module.exports = {
   phase166MergeCommit,
   phase167MergeCommit,
   phase168MergeCommit,
+  phase169MergeCommit,
   currentPhase5a,
   currentPhase5b,
   currentPhase5c,
@@ -1973,6 +2167,7 @@ module.exports = {
   currentPhase5l,
   currentPhase5m,
   currentPhase5n,
+  currentPhase5o,
   latestCompletedPhase4f,
   cleanupDocPath,
   publicJourneyAcceptanceDocPath,
@@ -1986,4 +2181,8 @@ module.exports = {
   fullRouteAcceptanceMatrixDocPath,
   ownerDecisionIntakeReadinessDocPath,
   signoffCriteriaLedgerTemplateDocPath,
+  deploymentApprovalRequestReadinessDocPath,
+  preLaunchBlockerLedgerTemplateDocPath,
+  deploymentExecutionRunbookReadinessDocPath,
+  providerEnvDecisionMatrixTemplateDocPath,
 };
