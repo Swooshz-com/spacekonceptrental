@@ -10,14 +10,14 @@ import {
 } from "../app/admin/protected-admin-shell";
 
 const repoRoot = resolve(process.cwd(), "..");
-const deploymentApprovalRequestReadinessDocPath =
-  "docs/content/LOCAL-DEPLOYMENT-APPROVAL-REQUEST-READINESS.md";
-const preLaunchBlockerLedgerTemplateDocPath =
-  "docs/content/LOCAL-PRE-LAUNCH-BLOCKER-LEDGER-TEMPLATE.md";
-const ownerDecisionIntakeReadinessDocPath =
-  "docs/content/LOCAL-OWNER-DECISION-INTAKE-READINESS.md";
-const signoffCriteriaLedgerTemplateDocPath =
-  "docs/content/LOCAL-SIGNOFF-CRITERIA-LEDGER-TEMPLATE.md";
+const smokeEvidenceIntakeReadinessDocPath =
+  "docs/content/LOCAL-SMOKE-EVIDENCE-INTAKE-READINESS.md";
+const routeVerificationRollbackLedgerTemplateDocPath =
+  "docs/content/LOCAL-ROUTE-VERIFICATION-ROLLBACK-LEDGER-TEMPLATE.md";
+const deploymentExecutionRunbookReadinessDocPath =
+  "docs/content/LOCAL-DEPLOYMENT-EXECUTION-RUNBOOK-READINESS.md";
+const providerEnvDecisionMatrixTemplateDocPath =
+  "docs/content/LOCAL-PROVIDER-ENV-DECISION-MATRIX-TEMPLATE.md";
 const publicSourceRoots = [
   "website/app/layout.tsx",
   "website/app/page.tsx",
@@ -86,12 +86,12 @@ const authorisedState: ProtectedAdminShellState = {
   },
 };
 
-describe("Phase 5N-A/B deployment approval request readiness", () => {
+describe("Phase 5P-A/B smoke evidence intake readiness", () => {
   afterEach(() => {
     cleanup();
   });
 
-  it("renders the protected Phase 5N helper and full helper chain for authorised admin home state", () => {
+  it("renders the protected Phase 5P helper and full helper chain for authorised admin home state", () => {
     render(<AdminShellContent state={authorisedState} view={{ kind: "home" }} />);
 
     for (const heading of [
@@ -101,33 +101,36 @@ describe("Phase 5N-A/B deployment approval request readiness", () => {
       /owner re-review request readiness helper/i,
       /owner decision intake readiness helper/i,
       /deployment approval request readiness helper/i,
+      /deployment execution runbook readiness helper/i,
+      /smoke evidence intake readiness helper/i,
     ]) {
       expect(screen.getByRole("heading", { name: heading })).toBeInTheDocument();
     }
 
-    expect(screen.getAllByText(deploymentApprovalRequestReadinessDocPath).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(preLaunchBlockerLedgerTemplateDocPath).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(ownerDecisionIntakeReadinessDocPath).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(signoffCriteriaLedgerTemplateDocPath).length).toBeGreaterThan(0);
-    expect(screen.getByText(/safe future deployment approval request sections/i)).toBeInTheDocument();
-    expect(screen.getByText(/deployment approval request purpose/i)).toBeInTheDocument();
-    expect(screen.getByText(/pre-launch blocker ledger placeholders/i)).toBeInTheDocument();
-    expect(screen.getByText(/blocker id: \[not assigned\]/i)).toBeInTheDocument();
-    expect(screen.getByText(/allowed future approval request statuses/i)).toBeInTheDocument();
-    expect(screen.getAllByText(/blocked: deployment approval missing/i).length).toBeGreaterThan(0);
-    expect(screen.getByText(/no-provider\/no-deploy boundaries/i)).toBeInTheDocument();
-    expect(screen.getAllByText(/a deployment approval request is not deployment approval/i).length).toBeGreaterThan(0);
-    expect(screen.getByText(/no deployment approval is recorded here/i)).toBeInTheDocument();
-    expect(screen.getAllByText(/no launch clearance is granted here/i).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/no provider setup is performed here/i).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/no environment\/secrets are created here/i).length).toBeGreaterThan(0);
+    expect(screen.getByText(smokeEvidenceIntakeReadinessDocPath)).toBeInTheDocument();
+    expect(screen.getByText(routeVerificationRollbackLedgerTemplateDocPath)).toBeInTheDocument();
+    expect(screen.getAllByText(deploymentExecutionRunbookReadinessDocPath).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(providerEnvDecisionMatrixTemplateDocPath).length).toBeGreaterThan(0);
+    expect(screen.getByText(/safe future smoke intake sections/i)).toBeInTheDocument();
+    expect(screen.getByText(/public route smoke checklist/i)).toBeInTheDocument();
+    expect(screen.getByText(/route verification \/ rollback ledger placeholders/i)).toBeInTheDocument();
+    expect(screen.getByText(/check id: \[not assigned\]/i)).toBeInTheDocument();
+    expect(screen.getByText(/allowed future smoke intake statuses/i)).toBeInTheDocument();
+    expect(screen.getByText(/ready for future approved smoke run/i)).toBeInTheDocument();
+    expect(screen.getByText(/no-evidence\/no-run boundaries/i)).toBeInTheDocument();
+    expect(screen.getByText(/a smoke intake template is not smoke evidence/i)).toBeInTheDocument();
+    expect(screen.getByText(/no smoke check is run here/i)).toBeInTheDocument();
+    expect(screen.getByText(/no route walkthrough is recorded here/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/no rollback is executed here/i).length).toBeGreaterThan(0);
+    expect(screen.getByText(/no preview evidence is captured here/i)).toBeInTheDocument();
     expect(screen.getAllByText(/no production evidence is captured here/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/no deployment is performed here/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/no deployment approval is granted here/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/\[not evidence \/ not recorded\]/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/\[deployment approval: not granted\]/i).length).toBeGreaterThan(0);
   });
 
-  it("does not render the protected Phase 5N helper for blocked admin states", () => {
+  it("does not render the protected Phase 5P helper for blocked admin states", () => {
     const blockedStates: ProtectedAdminShellState[] = [
       { status: "unauthenticated" },
       { status: "authenticated_not_authorised" },
@@ -139,31 +142,31 @@ describe("Phase 5N-A/B deployment approval request readiness", () => {
 
       expect(
         screen.queryByRole("heading", {
-          name: /deployment approval request readiness helper/i,
+          name: /smoke evidence intake readiness helper/i,
         }),
       ).not.toBeInTheDocument();
-      expect(screen.queryByText(deploymentApprovalRequestReadinessDocPath)).not.toBeInTheDocument();
-      expect(screen.queryByText(preLaunchBlockerLedgerTemplateDocPath)).not.toBeInTheDocument();
+      expect(screen.queryByText(smokeEvidenceIntakeReadinessDocPath)).not.toBeInTheDocument();
+      expect(screen.queryByText(routeVerificationRollbackLedgerTemplateDocPath)).not.toBeInTheDocument();
 
       unmount();
     }
   });
 
-  it("keeps protected admin source wired to Phase 5N and Phase 5M docs", () => {
+  it("keeps protected admin source wired to Phase 5P and Phase 5O docs", () => {
     const adminSource = readRepoFile("website/app/admin/protected-admin-shell.tsx");
 
-    expect(adminSource).toContain(deploymentApprovalRequestReadinessDocPath);
-    expect(adminSource).toContain(preLaunchBlockerLedgerTemplateDocPath);
-    expect(adminSource).toContain(ownerDecisionIntakeReadinessDocPath);
-    expect(adminSource).toContain(signoffCriteriaLedgerTemplateDocPath);
-    expect(adminSource).toMatch(/Phase 5N-A\/B admin-only deployment approval request readiness/i);
+    expect(adminSource).toContain(smokeEvidenceIntakeReadinessDocPath);
+    expect(adminSource).toContain(routeVerificationRollbackLedgerTemplateDocPath);
+    expect(adminSource).toContain(deploymentExecutionRunbookReadinessDocPath);
+    expect(adminSource).toContain(providerEnvDecisionMatrixTemplateDocPath);
+    expect(adminSource).toMatch(/Phase 5P-A\/B admin-only smoke evidence intake readiness/i);
   });
 
-  it("keeps public production source free of deployment, owner-decision, provider, admin, handoff, and release-control internals", () => {
+  it("keeps public production source free of smoke, route ledger, rollback, deployment, provider, admin, handoff, and release-control internals", () => {
     const publicSource = readTrackedProductionSources(publicSourceRoots);
 
     expect(publicSource).not.toMatch(
-      /deployment approval request|pre-launch blocker ledger|owner decision intake|sign-off criteria ledger|provider setup internals|environment\/secrets internals|admin route\/view checklist|internal notes|release-control internals|owner handoff internals|owner approval issue template|no-deploy command-center|admin urls?|public admin status|\/admin\//i,
+      /smoke evidence intake|route verification ledger|rollback observation|deployment execution runbook|provider\/environment decision matrix|provider env decision matrix|provider setup internals|environment\/secrets internals|admin route internals|release-control internals|owner handoff internals|admin urls?|\/admin\//i,
     );
   });
 
@@ -183,28 +186,28 @@ describe("Phase 5N-A/B deployment approval request readiness", () => {
     );
   });
 
-  it("keeps Phase 5N docs template-only with no evidence and no deployment approval claim", () => {
-    const docs = `${readRepoFile(deploymentApprovalRequestReadinessDocPath)}\n${readRepoFile(
-      preLaunchBlockerLedgerTemplateDocPath,
+  it("keeps Phase 5P docs template-only with no evidence and no deployment approval claim", () => {
+    const docs = `${readRepoFile(smokeEvidenceIntakeReadinessDocPath)}\n${readRepoFile(
+      routeVerificationRollbackLedgerTemplateDocPath,
     )}`;
 
     expect(docs).toContain("[NOT EVIDENCE / NOT RECORDED]");
     expect(docs).toContain("[DEPLOYMENT APPROVAL: NOT GRANTED]");
     expect(docs).not.toMatch(
-      /owner approved|owner sign-?off complete|accepted by owner|rejected by owner|owner decision recorded|owner approval recorded|owner sign-off recorded|preview evidence captured|production evidence captured|response-sent evidence captured|correction-completed evidence captured|provider setup completed|secrets created|deployment performed|deployment approval granted|launch approval granted|launch clearance granted/i,
+      /actual deployment|smoke run completed|route walkthrough completed|preview publication completed|production launch completed|provider setup completed|env\/secrets setup completed|owner approved|owner sign-?off complete|launch clearance granted|production evidence captured|preview evidence captured|smoke evidence captured|rollback evidence captured|response-sent evidence captured|correction-completed evidence captured|deployment approval granted/i,
     );
   });
 
-  it("registers the Phase 5N validator and keeps the release suite free of Docker bypass logic", () => {
+  it("registers the Phase 5P validator and keeps the release suite free of Docker bypass logic", () => {
     const packageJson = JSON.parse(readRepoFile("package.json")) as {
       scripts?: Record<string, string>;
     };
     const suite = readRepoFile("scripts/validate-release-candidate-suite.cjs");
 
     expect(
-      packageJson.scripts?.["validate:deployment-approval-request-readiness"],
-    ).toBe("node scripts/validate-deployment-approval-request-readiness.cjs");
-    expect(suite).toContain("args: ['run', 'validate:deployment-approval-request-readiness']");
+      packageJson.scripts?.["validate:smoke-evidence-intake-readiness"],
+    ).toBe("node scripts/validate-smoke-evidence-intake-readiness.cjs");
+    expect(suite).toContain("args: ['run', 'validate:smoke-evidence-intake-readiness']");
     expect(suite).not.toMatch(/docker[^\n]*(?:skip|bypass)|(?:skip|bypass)[^\n]*docker/i);
   });
 });
