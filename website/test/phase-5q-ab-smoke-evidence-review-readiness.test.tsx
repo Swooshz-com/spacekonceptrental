@@ -108,8 +108,8 @@ describe("Phase 5Q-A/B smoke evidence review readiness", () => {
       expect(screen.getByRole("heading", { name: heading })).toBeInTheDocument();
     }
 
-    expect(screen.getByText(smokeEvidenceReviewReadinessDocPath)).toBeInTheDocument();
-    expect(screen.getByText(goNogoDecisionLedgerTemplateDocPath)).toBeInTheDocument();
+    expect(screen.getAllByText(smokeEvidenceReviewReadinessDocPath).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(goNogoDecisionLedgerTemplateDocPath).length).toBeGreaterThan(0);
     expect(screen.getAllByText(smokeEvidenceIntakeReadinessDocPath).length).toBeGreaterThan(0);
     expect(screen.getAllByText(routeVerificationRollbackLedgerTemplateDocPath).length).toBeGreaterThan(0);
     expect(screen.getByText(/safe future evidence review sections/i)).toBeInTheDocument();
@@ -121,7 +121,7 @@ describe("Phase 5Q-A/B smoke evidence review readiness", () => {
     expect(screen.getByText(/no-review\/no-launch boundaries/i)).toBeInTheDocument();
     expect(screen.getByText(/a review template is not completed evidence review/i)).toBeInTheDocument();
     expect(screen.getByText(/no smoke evidence is reviewed here/i)).toBeInTheDocument();
-    expect(screen.getByText(/no go\/no-go decision is recorded here/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/no go\/no-go decision is recorded here/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/no launch clearance is granted here/i).length).toBeGreaterThan(0);
     expect(screen.getByText(/no route verification is recorded here/i)).toBeInTheDocument();
     expect(screen.getByText(/no rollback evidence is captured here/i)).toBeInTheDocument();
