@@ -15,6 +15,7 @@ const phase162MergeCommit = 'fddfce84daa93141a7b353179f906c8827a9d6e7';
 const phase163MergeCommit = '62c8a9aefb15e2bbc420507a1b52bc716f49b670';
 const phase164MergeCommit = '68d4a20ac46c2a37abca3a253e0ae11ed713e2e1';
 const phase166MergeCommit = 'fc9eb856143be259e63a31fa8cc9c54426741a97';
+const phase167MergeCommit = '4fe4b56cf2853517b9998d1d23237b6e1a37d8f4';
 const currentPhase5a = 'Phase 5A-A/B public owner-review polish sweep, local content-readiness cleanup, and protected admin review UX closure';
 const currentPhase5b = 'Phase 5B-A/B public catalogue-to-enquiry journey hardening, listing continuity, and admin/public parity checks';
 const currentPhase5c = 'Phase 5C-A/B public discovery search/filter polish, quote-intent context, and admin discovery parity closure';
@@ -27,6 +28,7 @@ const currentPhase5i = 'Phase 5I-A/B owner-review walkthrough readiness, full-ro
 const currentPhase5j = 'Phase 5J-A/B owner-review feedback intake readiness, correction queue reconciliation, and no-approval update guard';
 const currentPhase5k = 'Phase 5K-A/B owner correction workflow readiness, public content-gap guard, and no-response/no-deploy correction handoff';
 const currentPhase5l = 'Phase 5L-A/B owner re-review request readiness, correction delta packet, and no-signoff/no-response guard';
+const currentPhase5m = 'Phase 5M-A/B owner decision intake readiness, sign-off criteria ledger, and no-launch/no-deploy decision guard';
 const latestCompletedPhase4f = 'Phase 4F-A/B owner-facing review handoff bundle, approval issue template, and no-deploy preflight command center';
 const cleanupDocPath = 'docs/content/LOCAL-CONTENT-READINESS-CLEANUP.md';
 const publicJourneyAcceptanceDocPath = 'docs/content/LOCAL-PUBLIC-JOURNEY-ACCEPTANCE.md';
@@ -44,6 +46,8 @@ const ownerCorrectionWorkflowReadinessDocPath = 'docs/content/LOCAL-OWNER-CORREC
 const publicContentGapRegisterDocPath = 'docs/content/LOCAL-PUBLIC-CONTENT-GAP-REGISTER.md';
 const ownerReReviewRequestReadinessDocPath = 'docs/content/LOCAL-OWNER-RE-REVIEW-REQUEST-READINESS.md';
 const correctionDeltaPacketTemplateDocPath = 'docs/content/LOCAL-CORRECTION-DELTA-PACKET-TEMPLATE.md';
+const ownerDecisionIntakeReadinessDocPath = 'docs/content/LOCAL-OWNER-DECISION-INTAKE-READINESS.md';
+const signoffCriteriaLedgerTemplateDocPath = 'docs/content/LOCAL-SIGNOFF-CRITERIA-LEDGER-TEMPLATE.md';
 const publicSourceRoots = [
   'website/app/layout.tsx',
   'website/app/page.tsx',
@@ -1262,6 +1266,173 @@ function assertPhase5kOwnerCorrectionWorkflowReadiness() {
 }
 
 
+
+function assertPhase5mStatusRollForward() {
+  const docs = normalizeWhitespace(statusDocPaths.map(readRepoFile).join('\n'));
+  for (const required of [
+    `Current phase: ${currentPhase5m}`,
+    `Latest completed capability: ${currentPhase5l}`,
+    'Last merged capability PR: #167',
+    `Last merged capability merge commit: ${phase167MergeCommit}`,
+    ownerDecisionIntakeReadinessDocPath,
+    signoffCriteriaLedgerTemplateDocPath,
+    ownerReReviewRequestReadinessDocPath,
+    correctionDeltaPacketTemplateDocPath,
+    'scripts/validate-owner-decision-intake-readiness.cjs',
+    'No deployment is performed or approved by Phase 5M-A/B',
+  ]) {
+    assertIncludes(docs, required, 'Phase 5M status roll-forward docs');
+  }
+}
+
+function assertOwnerDecisionIntakeReadinessDocs() {
+  assertTracked(
+    [ownerDecisionIntakeReadinessDocPath, signoffCriteriaLedgerTemplateDocPath],
+    'Phase 5M owner decision intake readiness docs'
+  );
+  const readiness = normalizeWhitespace(readRepoFile(ownerDecisionIntakeReadinessDocPath));
+  const ledger = normalizeWhitespace(readRepoFile(signoffCriteriaLedgerTemplateDocPath));
+  for (const required of [
+    'repo-local, template-only, non-live',
+    '[NOT EVIDENCE / NOT RECORDED]',
+    '[DEPLOYMENT APPROVAL: NOT GRANTED]',
+    'does not record actual owner decisions, owner approval, owner acceptance, owner rejection, owner sign-off, launch clearance, production evidence, response-sent evidence, correction-completed evidence, or deployment permission',
+    'Owner decision source reference',
+    'Re-review request reference',
+    'Correction delta packet reference',
+    'Decision scope',
+    'Public copy acceptance',
+    'Listing/category/media acceptance',
+    'Admin-only workflow acceptance',
+    'Blocked claims still unresolved',
+    'Public content gaps still unresolved',
+    'Deployment approval status',
+    'Not requested.',
+    'Not received.',
+    'Needs owner clarification.',
+    'Accepted for local correction scope only.',
+    'Rejected / needs revision.',
+    'Partially accepted / needs split.',
+    'Blocked: unsupported claim.',
+    'Blocked: deployment approval missing.',
+    'A future owner decision is not deployment approval unless explicitly separate',
+    'Local correction acceptance is not launch clearance',
+    'Sign-off readiness is not sign-off evidence',
+    'Passing validators is not owner acknowledgement',
+    'A merged PR is not owner approval',
+    'A re-review reply is not production evidence',
+  ]) {
+    assertIncludes(readiness, required, 'Phase 5M owner decision intake readiness doc');
+  }
+  for (const required of [
+    '[NOT EVIDENCE / NOT RECORDED]',
+    '[DEPLOYMENT APPROVAL: NOT GRANTED]',
+    'Criterion ID: [NOT ASSIGNED]',
+    'Criterion area: [NOT SELECTED]',
+    'Owner input required: [OWNER INPUT REQUIRED]',
+    'Supporting fact/reference: [NOT SUPPLIED]',
+    'Public copy affected: [NOT IDENTIFIED]',
+    'Admin workflow affected: [NOT IDENTIFIED]',
+    'Acceptance status: [NOT REQUESTED]',
+    'Rejection/revision note: [NOT CAPTURED]',
+    'Evidence status: [NOT EVIDENCE / NOT RECORDED]',
+    'Deployment status: [DEPLOYMENT APPROVAL: NOT GRANTED]',
+    'Public homepage/category/listing copy.',
+    'Quote/enquiry request wording.',
+    'Listing/category/media facts.',
+    'Image/alt-text preferences.',
+    'Admin-only workflow wording.',
+    'Public content gaps.',
+    'Blocked business claims.',
+    'Launch/deployment decision.',
+    'not owner sign-off, not owner approval, not response-sent evidence, not production evidence, and not deployment approval',
+  ]) {
+    assertIncludes(ledger, required, 'Phase 5M sign-off criteria ledger template doc');
+  }
+  assertNoMatch(
+    `${readiness}\n${ledger}`,
+    /owner approved|owner sign-?off complete|accepted by owner|rejected by owner|owner decision recorded|owner approval recorded|owner feedback recorded|owner re-review recorded|owner corrections completed|owner response sent|preview evidence captured|production evidence captured|smoke evidence captured|route-walkthrough evidence captured|correction-completed evidence captured|response-sent evidence captured|public launch evidence captured|sign-off evidence captured|deployment approval granted|launch approval granted|launch clearance granted/i,
+    'Phase 5M docs'
+  );
+}
+
+function assertOwnerDecisionIntakePackageScript() {
+  const packageJson = JSON.parse(readRepoFile('package.json'));
+  assert(
+    packageJson.scripts?.['validate:owner-decision-intake-readiness'] === 'node scripts/validate-owner-decision-intake-readiness.cjs',
+    'package.json must register validate:owner-decision-intake-readiness'
+  );
+}
+
+function assertOwnerDecisionIntakeSources() {
+  const adminSource = readTrackedProductionSources(['website/app/admin/protected-admin-shell.tsx']);
+  const publicSource = readTrackedProductionSources(publicSourceRoots);
+
+  for (const required of [
+    /Phase 5M-A\/B admin-only owner decision intake readiness/i,
+    /Owner decision intake readiness helper/i,
+    /LOCAL-OWNER-DECISION-INTAKE-READINESS\.md/i,
+    /LOCAL-SIGNOFF-CRITERIA-LEDGER-TEMPLATE\.md/i,
+    /LOCAL-OWNER-RE-REVIEW-REQUEST-READINESS\.md/i,
+    /LOCAL-CORRECTION-DELTA-PACKET-TEMPLATE\.md/i,
+    /Safe future decision intake sections/i,
+    /Sign-off criteria ledger placeholders/i,
+    /Allowed future decision statuses/i,
+    /No-launch\/no-deploy boundaries/i,
+    /No owner decision is recorded here/i,
+    /No owner approval is recorded here/i,
+    /No owner sign-off is claimed here/i,
+    /No launch clearance is granted here/i,
+    /No deployment approval is granted here/i,
+    /\[NOT EVIDENCE \/ NOT RECORDED\]/i,
+    /\[DEPLOYMENT APPROVAL: NOT GRANTED\]/i,
+  ]) {
+    assert(required.test(adminSource), `Phase 5M admin source missing safe wording: ${required}`);
+  }
+
+  assertNoMatch(
+    publicSource,
+    /owner decision intake|decision intake readiness|sign-off criteria ledger|owner re-review request|re-review request readiness|correction delta packet|owner correction workflow|correction workflow readiness|content-gap register|public content-gap|owner-feedback intake helper|owner feedback intake helper|correction queue reconciliation|owner-review walkthrough helper|owner-review walkthrough internals|full-route acceptance matrix|route acceptance matrix internals|admin route\/view checklist|owner handoff internals|owner approval issue template|no-deploy preflight command|no-deploy command-center|release-control internals|admin urls?|internal notes|destructive-action safeguards|recovery lanes?|status-transition matrix|public admin status|\/admin\//i,
+    'Phase 5M public source'
+  );
+  assert(/\b(?:listing|listings)\b/i.test(publicSource), 'public source must retain listing wording');
+  assert(/\b(?:rental|rentals)\b/i.test(publicSource), 'public source must retain rental wording');
+  assert(/\b(?:quote|enquiry|request)\b/i.test(publicSource), 'public source must retain quote/enquiry/request wording');
+  assertNoMatch(publicSource, /\b(?:cart|checkout|order|payment|purchase|online ordering)\b/i, 'Phase 5M public source');
+  assertNoMatch(publicSource, /\b(?:booking|reservation|fulfilment|fulfillment|stock reservation|stock-reservation|book now|reserve now)\b/i, 'Phase 5M public source');
+  assertNoMatch(publicSource, /award-winning|certified partner|trusted by|5-star|guaranteed availability|guaranteed delivery|licensed and insured|testimonial|client logo|case study|legal guarantee|production policy|service-area claim|Singapore\s+\d{6}|\+?\d[\d\s().-]{7,}|Mon(?:day)?\s*-\s*Fri|24\/7|123\s+Main/i, 'Phase 5M public source');
+  assertNoMatch(publicSource, /customer account|quote tracking|file upload|public upload|notifications?|\bCRM\b|email sending|sms sending|whatsapp|outbound messaging|public status view/i, 'Phase 5M public source');
+  assertNoMatch(
+    adminSource,
+    /public upload|customer upload|new provider setup|new storage provider|NEXT_PUBLIC_SUPABASE|SUPABASE_SERVICE_ROLE_KEY|service-role browser|Pinecone|\bRAG\b|n8n runtime|\/api\/chat.*retrieval|outbound messaging|email sending|sms sending|whatsapp sending|process\.env\.(?:NEXT_PUBLIC_|SUPABASE|N8N|PINECONE|VERCEL)/i,
+    'Phase 5M admin source'
+  );
+}
+
+function assertReleaseSuiteHasOwnerDecisionIntakeReadiness() {
+  const suite = readRepoFile('scripts/validate-release-candidate-suite.cjs');
+  assertIncludes(suite, "args: ['run', 'validate:owner-decision-intake-readiness']", 'release-candidate suite');
+  assertIncludes(suite, "args: ['run', 'validate:owner-re-review-request-readiness']", 'release-candidate suite');
+  assertNoMatch(suite, /docker[^\n]*(?:skip|bypass)|(?:skip|bypass)[^\n]*docker/i, 'release-candidate suite');
+}
+
+function assertPhase5mOwnerDecisionIntakeReadiness() {
+  assertOwnerDecisionIntakeReadinessDocs();
+  assertPhase5mStatusRollForward();
+  assertOwnerDecisionIntakePackageScript();
+  assertOwnerDecisionIntakeSources();
+  assertNoForbiddenTrackedFiles();
+  assertNoFilledEvidence();
+  assertPhase5lOwnerReReviewRequestReadiness();
+  assertReleaseSuiteHasOwnerDecisionIntakeReadiness();
+  assertReleaseSuiteHasOwnerReReviewRequestReadiness();
+  assertReleaseSuiteHasOwnerCorrectionWorkflow();
+  assertReleaseSuiteHasOwnerFeedbackIntake();
+  assertReleaseSuiteHasOwnerReviewWalkthrough();
+  assertReleaseSuiteHasCatalogueWriteWorkflow();
+  assertSuiteAndTests();
+}
+
 function assertPhase5lStatusRollForward() {
   const docs = normalizeWhitespace(statusDocPaths.map(readRepoFile).join('\n'));
   for (const required of [
@@ -1565,6 +1736,7 @@ function assertPhase5aPublicReviewPolish() {
 }
 
 module.exports = {
+  assertPhase5mOwnerDecisionIntakeReadiness,
   assertPhase5lOwnerReReviewRequestReadiness,
   assertPhase5kOwnerCorrectionWorkflowReadiness,
   assertPhase5jOwnerFeedbackIntakeReadiness,
@@ -1589,6 +1761,7 @@ module.exports = {
   phase163MergeCommit,
   phase164MergeCommit,
   phase166MergeCommit,
+  phase167MergeCommit,
   currentPhase5a,
   currentPhase5b,
   currentPhase5c,
@@ -1601,6 +1774,7 @@ module.exports = {
   currentPhase5j,
   currentPhase5k,
   currentPhase5l,
+  currentPhase5m,
   latestCompletedPhase4f,
   cleanupDocPath,
   publicJourneyAcceptanceDocPath,
@@ -1612,4 +1786,6 @@ module.exports = {
   catalogueWriteWorkflowReadinessDocPath,
   ownerReviewWalkthroughReadinessDocPath,
   fullRouteAcceptanceMatrixDocPath,
+  ownerDecisionIntakeReadinessDocPath,
+  signoffCriteriaLedgerTemplateDocPath,
 };

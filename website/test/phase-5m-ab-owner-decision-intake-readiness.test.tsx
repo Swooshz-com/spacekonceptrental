@@ -10,14 +10,14 @@ import {
 } from "../app/admin/protected-admin-shell";
 
 const repoRoot = resolve(process.cwd(), "..");
+const ownerDecisionIntakeReadinessDocPath =
+  "docs/content/LOCAL-OWNER-DECISION-INTAKE-READINESS.md";
+const signoffCriteriaLedgerTemplateDocPath =
+  "docs/content/LOCAL-SIGNOFF-CRITERIA-LEDGER-TEMPLATE.md";
 const ownerReReviewRequestReadinessDocPath =
   "docs/content/LOCAL-OWNER-RE-REVIEW-REQUEST-READINESS.md";
 const correctionDeltaPacketTemplateDocPath =
   "docs/content/LOCAL-CORRECTION-DELTA-PACKET-TEMPLATE.md";
-const ownerCorrectionWorkflowDocPath =
-  "docs/content/LOCAL-OWNER-CORRECTION-WORKFLOW-READINESS.md";
-const publicContentGapRegisterDocPath =
-  "docs/content/LOCAL-PUBLIC-CONTENT-GAP-REGISTER.md";
 const publicSourceRoots = [
   "website/app/layout.tsx",
   "website/app/page.tsx",
@@ -93,39 +93,41 @@ const authorisedState: ProtectedAdminShellState = {
   },
 };
 
-describe("Phase 5L-A/B owner re-review request readiness", () => {
+describe("Phase 5M-A/B owner decision intake readiness", () => {
   afterEach(() => {
     cleanup();
   });
 
-  it("renders the protected Phase 5L owner re-review request readiness helper only for authorised admin state", () => {
+  it("renders the protected Phase 5M owner decision intake readiness helper only for authorised admin state", () => {
     render(<AdminShellContent state={authorisedState} />);
 
     expect(
       screen.getByRole("heading", {
-        name: /owner re-review request readiness helper/i,
+        name: /owner decision intake readiness helper/i,
       }),
     ).toBeInTheDocument();
+    expect(screen.getByText(ownerDecisionIntakeReadinessDocPath)).toBeInTheDocument();
+    expect(screen.getByText(signoffCriteriaLedgerTemplateDocPath)).toBeInTheDocument();
     expect(screen.getAllByText(ownerReReviewRequestReadinessDocPath).length).toBeGreaterThan(0);
     expect(screen.getAllByText(correctionDeltaPacketTemplateDocPath).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(ownerCorrectionWorkflowDocPath).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(publicContentGapRegisterDocPath).length).toBeGreaterThan(0);
-    expect(screen.getByText(/safe future re-review request sections/i)).toBeInTheDocument();
-    expect(screen.getByText(/changed public copy summary/i)).toBeInTheDocument();
-    expect(screen.getByText(/correction delta packet placeholders/i)).toBeInTheDocument();
-    expect(screen.getByText(/source owner comment reference: \[not captured\]/i)).toBeInTheDocument();
-    expect(screen.getByText(/no-response\/no-signoff boundaries/i)).toBeInTheDocument();
-    expect(screen.getByText(/preparing a request is not sending a response/i)).toBeInTheDocument();
-    expect(screen.getByText(/no owner re-review is recorded here/i)).toBeInTheDocument();
-    expect(screen.getAllByText(/no owner response is sent here/i).length).toBeGreaterThan(0);
+    expect(screen.getByText(/safe future decision intake sections/i)).toBeInTheDocument();
+    expect(screen.getByText(/owner decision source reference/i)).toBeInTheDocument();
+    expect(screen.getByText(/sign-off criteria ledger placeholders/i)).toBeInTheDocument();
+    expect(screen.getByText(/criterion id: \[not assigned\]/i)).toBeInTheDocument();
+    expect(screen.getByText(/allowed future decision statuses/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/blocked: deployment approval missing/i).length).toBeGreaterThan(0);
+    expect(screen.getByText(/no-launch\/no-deploy boundaries/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/a future owner decision is not deployment approval unless explicitly separate/i).length).toBeGreaterThan(0);
+    expect(screen.getByText(/no owner decision is recorded here/i)).toBeInTheDocument();
+    expect(screen.getByText(/no owner approval is recorded here/i)).toBeInTheDocument();
     expect(screen.getAllByText(/no owner sign-off is claimed here/i).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/no correction completion is claimed here/i).length).toBeGreaterThan(0);
+    expect(screen.getByText(/no launch clearance is granted here/i)).toBeInTheDocument();
     expect(screen.getAllByText(/no deployment approval is granted here/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/\[not evidence \/ not recorded\]/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/\[deployment approval: not granted\]/i).length).toBeGreaterThan(0);
   });
 
-  it("does not render the protected Phase 5L helper for blocked admin states", () => {
+  it("does not render the protected Phase 5M helper for blocked admin states", () => {
     const blockedStates: ProtectedAdminShellState[] = [
       { status: "unauthenticated" },
       { status: "authenticated_not_authorised" },
@@ -137,31 +139,31 @@ describe("Phase 5L-A/B owner re-review request readiness", () => {
 
       expect(
         screen.queryByRole("heading", {
-          name: /owner re-review request readiness helper/i,
+          name: /owner decision intake readiness helper/i,
         }),
       ).not.toBeInTheDocument();
-      expect(screen.queryByText(ownerReReviewRequestReadinessDocPath)).not.toBeInTheDocument();
-      expect(screen.queryByText(correctionDeltaPacketTemplateDocPath)).not.toBeInTheDocument();
+      expect(screen.queryByText(ownerDecisionIntakeReadinessDocPath)).not.toBeInTheDocument();
+      expect(screen.queryByText(signoffCriteriaLedgerTemplateDocPath)).not.toBeInTheDocument();
 
       unmount();
     }
   });
 
-  it("keeps protected admin source wired to Phase 5L and Phase 5K docs", () => {
+  it("keeps protected admin source wired to Phase 5M and Phase 5L docs", () => {
     const adminSource = readRepoFile("website/app/admin/protected-admin-shell.tsx");
 
+    expect(adminSource).toContain(ownerDecisionIntakeReadinessDocPath);
+    expect(adminSource).toContain(signoffCriteriaLedgerTemplateDocPath);
     expect(adminSource).toContain(ownerReReviewRequestReadinessDocPath);
     expect(adminSource).toContain(correctionDeltaPacketTemplateDocPath);
-    expect(adminSource).toContain(ownerCorrectionWorkflowDocPath);
-    expect(adminSource).toContain(publicContentGapRegisterDocPath);
-    expect(adminSource).toMatch(/Phase 5L-A\/B admin-only owner re-review request readiness/i);
+    expect(adminSource).toMatch(/Phase 5M-A\/B admin-only owner decision intake readiness/i);
   });
 
-  it("keeps public production source free of owner re-review, correction, content-gap, admin, handoff, and release-control internals", () => {
+  it("keeps public production source free of Phase 5M, Phase 5L, admin, handoff, and release-control internals", () => {
     const publicSource = readTrackedProductionSources(publicSourceRoots);
 
     expect(publicSource).not.toMatch(
-      /owner re-review request|re-review request readiness|correction delta packet|owner correction workflow|correction workflow readiness|content-gap register|public content-gap|admin route\/view checklist|internal notes|release-control internals|owner handoff internals|owner approval issue template|no-deploy command-center|admin urls?|public admin status|\/admin\//i,
+      /owner decision intake|decision intake readiness|sign-off criteria ledger|owner re-review request|re-review request readiness|correction delta packet|admin route\/view checklist|internal notes|release-control internals|owner handoff internals|owner approval issue template|no-deploy command-center|admin urls?|public admin status|\/admin\//i,
     );
   });
 
@@ -185,29 +187,29 @@ describe("Phase 5L-A/B owner re-review request readiness", () => {
     );
   });
 
-  it("keeps Phase 5L docs template-only with no evidence and no deployment approval", () => {
-    const docs = `${readRepoFile(ownerReReviewRequestReadinessDocPath)}\n${readRepoFile(
-      correctionDeltaPacketTemplateDocPath,
+  it("keeps Phase 5M docs template-only with no evidence and no deployment approval", () => {
+    const docs = `${readRepoFile(ownerDecisionIntakeReadinessDocPath)}\n${readRepoFile(
+      signoffCriteriaLedgerTemplateDocPath,
     )}`;
 
     expect(docs).toContain("[NOT EVIDENCE / NOT RECORDED]");
     expect(docs).toContain("[DEPLOYMENT APPROVAL: NOT GRANTED]");
     expect(docs).not.toMatch(
-      /owner approved|owner sign-?off complete|accepted by owner|owner decision recorded|owner feedback recorded|owner re-review recorded|owner corrections completed|owner response sent|preview evidence captured|production evidence captured|deployment approval granted|launch approval granted|sign-off evidence captured/i,
+      /owner approved|owner sign-?off complete|accepted by owner|rejected by owner|owner decision recorded|owner approval recorded|owner sign-off recorded|preview evidence captured|production evidence captured|response-sent evidence captured|correction-completed evidence captured|deployment approval granted|launch approval granted|launch clearance granted/i,
     );
   });
 
-  it("registers the Phase 5L validator and keeps the release suite free of Docker bypass logic", () => {
+  it("registers the Phase 5M validator and keeps the release suite free of Docker bypass logic", () => {
     const packageJson = JSON.parse(readRepoFile("package.json")) as {
       scripts?: Record<string, string>;
     };
     const suite = readRepoFile("scripts/validate-release-candidate-suite.cjs");
 
     expect(
-      packageJson.scripts?.["validate:owner-re-review-request-readiness"],
-    ).toBe("node scripts/validate-owner-re-review-request-readiness.cjs");
+      packageJson.scripts?.["validate:owner-decision-intake-readiness"],
+    ).toBe("node scripts/validate-owner-decision-intake-readiness.cjs");
     expect(suite).toContain(
-      "args: ['run', 'validate:owner-re-review-request-readiness']",
+      "args: ['run', 'validate:owner-decision-intake-readiness']",
     );
     expect(suite).not.toMatch(
       /docker[^\n]*(?:skip|bypass)|(?:skip|bypass)[^\n]*docker/i,

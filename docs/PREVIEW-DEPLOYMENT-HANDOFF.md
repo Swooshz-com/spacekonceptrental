@@ -1,3 +1,16 @@
+## Phase 5M-A/B Owner Decision Intake Readiness References
+
+Current phase: Phase 5M-A/B owner decision intake readiness, sign-off criteria ledger, and no-launch/no-deploy decision guard.
+Latest completed capability: Phase 5L-A/B owner re-review request readiness, correction delta packet, and no-signoff/no-response guard.
+Last merged capability PR: #167.
+Last merged capability merge commit: 4fe4b56cf2853517b9998d1d23237b6e1a37d8f4.
+
+Phase 5M-A/B adds repo-local owner decision intake readiness, a local sign-off criteria ledger template, protected admin owner decision intake readiness helper coverage, no-launch/no-deploy decision guard coverage, release-candidate suite integration, validate:owner-decision-intake-readiness validator coverage, and deterministic Phase 5M owner decision intake readiness tests. These controls are template-only, non-live, not evidence, and do not record actual owner decisions, owner approval, owner acceptance, owner rejection, owner sign-off, launch clearance, deployment approval, production evidence, response-sent evidence, correction-completed evidence, or filled owner-review evidence.
+
+Phase 5M-A/B references `docs/content/LOCAL-OWNER-DECISION-INTAKE-READINESS.md`, `docs/content/LOCAL-SIGNOFF-CRITERIA-LEDGER-TEMPLATE.md`, `docs/content/LOCAL-OWNER-RE-REVIEW-REQUEST-READINESS.md`, `docs/content/LOCAL-CORRECTION-DELTA-PACKET-TEMPLATE.md`, `scripts/validate-owner-decision-intake-readiness.cjs`, `scripts/validate-owner-re-review-request-readiness.cjs`, and protected admin owner decision intake readiness helper coverage.
+
+No deployment is performed or approved by Phase 5M-A/B. It does not add provider config, Vercel config, Supabase Cloud config, real secrets or env values, filled owner decisions, filled sign-off criteria, filled owner approval, filled launch facts, filled business facts, filled deployment approval, browser Supabase, service-role runtime paths, n8n/Pinecone runtime changes, `/api/chat` retrieval wiring, public uploads, customer accounts, public quote tracking, notifications, CRM, outbound messaging, invented operational facts, ecommerce flows, payment/order/checkout flows, booking/reservation flows, fulfilment flows, stock-reservation flows, owner-approved media claims, final styling claims, real inventory confirmation, correction-completed evidence, response-sent evidence, route-walkthrough evidence, public launch evidence, launch clearance, owner response, owner sign-off, or public admin internals.
+
 ## Phase 5L-A/B Owner Re-Review Request Readiness References
 
 Current phase: Phase 5L-A/B owner re-review request readiness, correction delta packet, and no-signoff/no-response guard.
