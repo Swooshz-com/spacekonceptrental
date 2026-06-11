@@ -32,6 +32,7 @@
     "validate:owner-feedback-intake-readiness": "node scripts/validate-owner-feedback-intake-readiness.cjs",
     "validate:owner-re-review-request-readiness": "node scripts/validate-owner-re-review-request-readiness.cjs",
     "validate:deployment-approval-request-readiness": "node scripts/validate-deployment-approval-request-readiness.cjs",
+    "validate:smoke-evidence-review-readiness": "node scripts/validate-smoke-evidence-review-readiness.cjs",
     "validate:smoke-evidence-intake-readiness": "node scripts/validate-smoke-evidence-intake-readiness.cjs",
     "validate:deployment-execution-runbook-readiness": "node scripts/validate-deployment-execution-runbook-readiness.cjs",
     "validate:owner-decision-intake-readiness": "node scripts/validate-owner-decision-intake-readiness.cjs",

@@ -1,3 +1,16 @@
+## Phase 5Q-A/B Smoke Evidence Review Readiness References
+
+Current phase: Phase 5Q-A/B smoke evidence review readiness, go/no-go decision ledger, and no-launch/no-production firewall.
+Latest completed capability: Phase 5P-A/B smoke evidence intake readiness, route verification ledger, and rollback observation firewall.
+Last merged capability PR: #171.
+Last merged capability merge commit: 3a1e1e80dfe0f1e21ac58335a7dfafebed829c53.
+
+Phase 5Q-A/B adds repo-local smoke evidence review readiness, a local go/no-go decision ledger template, protected admin smoke evidence review readiness helper coverage, no-launch/no-production firewall coverage, release-candidate suite integration, validate:smoke-evidence-review-readiness validator coverage, and deterministic Phase 5Q smoke evidence review readiness tests. These controls are template-only, non-live, not evidence, and do not review actual smoke evidence, record go/no-go decisions, record route verification, record route-walkthrough evidence, record rollback evidence, record preview evidence, record production evidence, record owner approval, grant launch clearance, grant deployment permission, or claim production readiness.
+
+Phase 5Q-A/B references `docs/content/LOCAL-SMOKE-EVIDENCE-REVIEW-READINESS.md`, `docs/content/LOCAL-GO-NOGO-DECISION-LEDGER-TEMPLATE.md`, `docs/content/LOCAL-SMOKE-EVIDENCE-INTAKE-READINESS.md`, `docs/content/LOCAL-ROUTE-VERIFICATION-ROLLBACK-LEDGER-TEMPLATE.md`, `scripts/validate-smoke-evidence-review-readiness.cjs`, `scripts/validate-smoke-evidence-intake-readiness.cjs`, and protected admin smoke evidence review readiness helper coverage.
+
+No deployment is performed or approved by Phase 5Q-A/B. It does not add provider config, Vercel config, Supabase Cloud config, DNS/domain/CDN/environment/platform changes, real secrets or env values, filled owner-review evidence, filled preview evidence, filled production evidence, filled smoke evidence, filled rollback evidence, filled route-walkthrough evidence, filled owner decisions, filled approval evidence, filled sign-off evidence, filled launch evidence, filled deployment approval, browser Supabase, service-role runtime paths, n8n/Pinecone runtime changes, `/api/chat` retrieval wiring, public uploads, customer accounts, public quote tracking, notifications, CRM, outbound messaging, invented operational facts, ecommerce flows, payment/order/checkout flows, booking/reservation flows, fulfilment flows, stock-reservation flows, owner-approved media claims, final styling claims, real inventory confirmation, route verification, go/no-go approval, launch clearance, provider readiness, environment readiness, preview readiness, production readiness, smoke readiness, rollback readiness, deployment permission, or public admin internals.
+
 ## Phase 5P-A/B Smoke Evidence Intake Readiness References
 
 Current phase: Phase 5P-A/B smoke evidence intake readiness, route verification ledger, and rollback observation firewall.

@@ -19,6 +19,7 @@ const phase167MergeCommit = '4fe4b56cf2853517b9998d1d23237b6e1a37d8f4';
 const phase168MergeCommit = '4def227c0da884391a1d1789ed8386b84211c0e8';
 const phase169MergeCommit = '0fe53323a6346bb425c9fd66efea00e82ab3cfe6';
 const phase170MergeCommit = 'dc2307a3ce2389b5b7b1780b4012e957a2fa49ed';
+const phase171MergeCommit = '3a1e1e80dfe0f1e21ac58335a7dfafebed829c53';
 const currentPhase5a = 'Phase 5A-A/B public owner-review polish sweep, local content-readiness cleanup, and protected admin review UX closure';
 const currentPhase5b = 'Phase 5B-A/B public catalogue-to-enquiry journey hardening, listing continuity, and admin/public parity checks';
 const currentPhase5c = 'Phase 5C-A/B public discovery search/filter polish, quote-intent context, and admin discovery parity closure';
@@ -35,6 +36,7 @@ const currentPhase5m = 'Phase 5M-A/B owner decision intake readiness, sign-off c
 const currentPhase5n = 'Phase 5N-A/B deployment approval request readiness, pre-launch blocker ledger, and no-provider/no-deploy approval firewall';
 const currentPhase5o = 'Phase 5O-A/B deployment execution runbook readiness, provider/env decision matrix, and rollback rehearsal firewall';
 const currentPhase5p = 'Phase 5P-A/B smoke evidence intake readiness, route verification ledger, and rollback observation firewall';
+const currentPhase5q = 'Phase 5Q-A/B smoke evidence review readiness, go/no-go decision ledger, and no-launch/no-production firewall';
 const latestCompletedPhase4f = 'Phase 4F-A/B owner-facing review handoff bundle, approval issue template, and no-deploy preflight command center';
 const cleanupDocPath = 'docs/content/LOCAL-CONTENT-READINESS-CLEANUP.md';
 const publicJourneyAcceptanceDocPath = 'docs/content/LOCAL-PUBLIC-JOURNEY-ACCEPTANCE.md';
@@ -60,6 +62,8 @@ const deploymentExecutionRunbookReadinessDocPath = 'docs/content/LOCAL-DEPLOYMEN
 const providerEnvDecisionMatrixTemplateDocPath = 'docs/content/LOCAL-PROVIDER-ENV-DECISION-MATRIX-TEMPLATE.md';
 const smokeEvidenceIntakeReadinessDocPath = 'docs/content/LOCAL-SMOKE-EVIDENCE-INTAKE-READINESS.md';
 const routeVerificationRollbackLedgerTemplateDocPath = 'docs/content/LOCAL-ROUTE-VERIFICATION-ROLLBACK-LEDGER-TEMPLATE.md';
+const smokeEvidenceReviewReadinessDocPath = 'docs/content/LOCAL-SMOKE-EVIDENCE-REVIEW-READINESS.md';
+const goNogoDecisionLedgerTemplateDocPath = 'docs/content/LOCAL-GO-NOGO-DECISION-LEDGER-TEMPLATE.md';
 const publicSourceRoots = [
   'website/app/layout.tsx',
   'website/app/page.tsx',
@@ -2316,7 +2320,198 @@ function assertPhase5aPublicReviewPolish() {
   assertPhase5bPublicJourneyAcceptance();
 }
 
+function assertPhase5qStatusRollForward() {
+  const docs = normalizeWhitespace(statusDocPaths.map(readRepoFile).join('\n'));
+  for (const required of [
+    `Current phase: ${currentPhase5q}`,
+    `Latest completed capability: ${currentPhase5p}`,
+    'Last merged capability PR: #171',
+    `Last merged capability merge commit: ${phase171MergeCommit}`,
+    smokeEvidenceReviewReadinessDocPath,
+    goNogoDecisionLedgerTemplateDocPath,
+    smokeEvidenceIntakeReadinessDocPath,
+    routeVerificationRollbackLedgerTemplateDocPath,
+    'scripts/validate-smoke-evidence-review-readiness.cjs',
+    'No deployment is performed or approved by Phase 5Q-A/B',
+  ]) {
+    assertIncludes(docs, required, 'Phase 5Q status roll-forward docs');
+  }
+}
+
+function assertSmokeEvidenceReviewReadinessDocs() {
+  assertTracked(
+    [smokeEvidenceReviewReadinessDocPath, goNogoDecisionLedgerTemplateDocPath],
+    'Phase 5Q smoke evidence review readiness docs'
+  );
+  const review = normalizeWhitespace(readRepoFile(smokeEvidenceReviewReadinessDocPath));
+  const ledger = normalizeWhitespace(readRepoFile(goNogoDecisionLedgerTemplateDocPath));
+  for (const required of [
+    'repo-local, template-only, non-live',
+    '[NOT EVIDENCE / NOT RECORDED]',
+    '[DEPLOYMENT APPROVAL: NOT GRANTED]',
+    'does not review actual smoke evidence, approve launch, record go/no-go decisions, record route-walkthrough evidence, capture production evidence, capture preview evidence, execute rollback, perform deployment, record owner approval, or grant deployment permission',
+    'Smoke evidence intake reference',
+    'Route verification ledger reference',
+    'Preview evidence review placeholder',
+    'Production evidence review placeholder',
+    'Public route result review placeholder',
+    'Protected admin route result review placeholder',
+    'Quote/enquiry result review placeholder',
+    'Listing/category/media result review placeholder',
+    'Rollback observation review placeholder',
+    'Final go/no-go review status',
+    'Not started',
+    'Evidence not captured',
+    'Evidence incomplete',
+    'Needs owner clarification',
+    'Needs provider clarification',
+    'Needs route retest',
+    'Needs rollback review',
+    'Blocked: deployment approval missing',
+    'Blocked: production readiness not proven',
+    'Ready for future go/no-go review',
+    'A review template is not completed evidence review',
+    'Evidence placeholders are not evidence',
+    'A route result placeholder is not route verification',
+    'A rollback review placeholder is not rollback evidence',
+    'Passing validators is not smoke success',
+    'A merged PR is not go/no-go approval',
+  ]) {
+    assertIncludes(review, required, 'Phase 5Q smoke evidence review readiness doc');
+  }
+  for (const required of [
+    '[NOT EVIDENCE / NOT RECORDED]',
+    '[DEPLOYMENT APPROVAL: NOT GRANTED]',
+    'Decision ID: [NOT ASSIGNED]',
+    'Decision area: [NOT SELECTED]',
+    'Evidence source: [NOT SUPPLIED]',
+    'Route/surface affected: [NOT SELECTED]',
+    'Owner input status: [OWNER INPUT REQUIRED]',
+    'Provider/runtime status: [PROVIDER DECISION REQUIRED]',
+    'Smoke result status: [NOT RUN]',
+    'Rollback result status: [NOT RUN]',
+    'Go/no-go status: [NOT DECIDED]',
+    'Follow-up required: [NOT CAPTURED]',
+    'Evidence status: [NOT EVIDENCE / NOT RECORDED]',
+    'Deployment status: [DEPLOYMENT APPROVAL: NOT GRANTED]',
+    'Public route smoke review',
+    'Protected admin smoke review',
+    'Quote/enquiry smoke review',
+    'Listing/category/media smoke review',
+    'Provider/runtime review',
+    'Environment/secrets review',
+    'Rollback/recovery review',
+    'Owner sign-off dependency',
+    'Final launch go/no-go',
+    'not go/no-go approval, not launch clearance, not owner approval, not smoke evidence, not rollback evidence, not preview evidence, not production evidence, and not deployment approval',
+  ]) {
+    assertIncludes(ledger, required, 'Phase 5Q go/no-go decision ledger template doc');
+  }
+  assertNoMatch(
+    `${review}\n${ledger}`,
+    /owner approved|owner sign-?off complete|accepted by owner|rejected by owner|owner decision recorded|owner approval recorded|owner feedback recorded|owner re-review recorded|owner corrections completed|owner response sent|preview evidence captured|production evidence captured|smoke evidence captured|rollback evidence captured|route-walkthrough evidence captured|correction-completed evidence captured|response-sent evidence captured|public launch evidence captured|sign-off evidence captured|deployment approval granted|launch approval granted|launch clearance granted|provider setup completed|secrets created|deployment performed|preview published|production launched|actual deployment|smoke run completed|route walkthrough completed/i,
+    'Phase 5Q docs'
+  );
+}
+
+function assertSmokeEvidenceReviewPackageScript() {
+  const packageJson = JSON.parse(readRepoFile('package.json'));
+  assert(
+    packageJson.scripts?.['validate:smoke-evidence-review-readiness'] === 'node scripts/validate-smoke-evidence-review-readiness.cjs',
+    'package.json must register validate:smoke-evidence-review-readiness'
+  );
+}
+
+function assertSmokeEvidenceReviewSources() {
+  const adminSource = readTrackedProductionSources(['website/app/admin/protected-admin-shell.tsx']);
+  const adminPage = readRepoFile('website/app/admin/page.tsx');
+  const publicSource = readTrackedProductionSources(publicSourceRoots);
+
+  for (const required of [
+    /Phase 5Q-A\/B admin-only smoke evidence review readiness/i,
+    /Smoke evidence review readiness helper/i,
+    /LOCAL-SMOKE-EVIDENCE-REVIEW-READINESS\.md/i,
+    /LOCAL-GO-NOGO-DECISION-LEDGER-TEMPLATE\.md/i,
+    /LOCAL-SMOKE-EVIDENCE-INTAKE-READINESS\.md/i,
+    /LOCAL-ROUTE-VERIFICATION-ROLLBACK-LEDGER-TEMPLATE\.md/i,
+    /Safe future evidence review sections/i,
+    /Go\/no-go decision ledger placeholders/i,
+    /Allowed future evidence review statuses/i,
+    /No-review\/no-launch boundaries/i,
+    /No smoke evidence is reviewed here/i,
+    /No go\/no-go decision is recorded here/i,
+    /No launch clearance is granted here/i,
+    /No route verification is recorded here/i,
+    /No rollback evidence is captured here/i,
+    /No preview evidence is captured here/i,
+    /No production evidence is captured here/i,
+    /No deployment is performed here/i,
+    /No deployment approval is granted here/i,
+    /\[NOT EVIDENCE \/ NOT RECORDED\]/i,
+    /\[DEPLOYMENT APPROVAL: NOT GRANTED\]/i,
+  ]) {
+    assert(required.test(adminSource), `Phase 5Q admin source missing safe wording: ${required}`);
+  }
+
+  assertIncludes(adminPage, 'view={{ kind: "home" }}', 'admin page home view');
+  assert(
+    /function AdminOperationsHome[\s\S]*<OwnerReadinessHelpersPanel \/>/.test(adminSource),
+    'Phase 5Q admin source must render owner readiness helpers from the real AdminOperationsHome path'
+  );
+  assert(
+    /function OwnerReadinessHelpersPanel[\s\S]*<OwnerReviewWalkthroughReadinessHelper \/>[\s\S]*<OwnerFeedbackIntakeReadinessHelper \/>[\s\S]*<OwnerCorrectionWorkflowReadinessHelper \/>[\s\S]*<OwnerReReviewRequestReadinessHelper \/>[\s\S]*<OwnerDecisionIntakeReadinessHelper \/>[\s\S]*<DeploymentApprovalRequestReadinessHelper \/>[\s\S]*<DeploymentExecutionRunbookReadinessHelper \/>[\s\S]*<SmokeEvidenceIntakeReadinessHelper \/>[\s\S]*<SmokeEvidenceReviewReadinessHelper \/>/.test(adminSource),
+    'Phase 5Q admin source must keep the complete owner readiness helper chain in the shared panel'
+  );
+
+  assertNoMatch(
+    publicSource,
+    /smoke evidence review|go\/no-go decision ledger|smoke evidence intake|route verification ledger|rollback observation|deployment execution runbook|provider\/environment decision matrix|provider env decision matrix|deployment approval request|provider setup internals|environment\/secrets internals|admin route internals|owner handoff internals|release-control internals|admin urls?|internal notes|public admin status|\/admin\//i,
+    'Phase 5Q public source'
+  );
+  assert(/\b(?:listing|listings)\b/i.test(publicSource), 'public source must retain listing wording');
+  assert(/\b(?:rental|rentals)\b/i.test(publicSource), 'public source must retain rental wording');
+  assert(/\b(?:quote|enquiry|request)\b/i.test(publicSource), 'public source must retain quote/enquiry/request wording');
+  assertNoMatch(publicSource, /\b(?:cart|checkout|order|payment|purchase|online ordering)\b/i, 'Phase 5Q public source');
+  assertNoMatch(publicSource, /\b(?:booking|reservation|fulfilment|fulfillment|stock reservation|stock-reservation|book now|reserve now)\b/i, 'Phase 5Q public source');
+  assertNoMatch(publicSource, /award-winning|certified partner|trusted by|5-star|guaranteed availability|guaranteed delivery|licensed and insured|testimonial|client logo|case study|legal guarantee|production policy|service-area claim|Singapore\s+\d{6}|\+?\d[\d\s().-]{7,}|Mon(?:day)?\s*-\s*Fri|24\/7|123\s+Main/i, 'Phase 5Q public source');
+  assertNoMatch(publicSource, /customer account|quote tracking|file upload|public upload|notifications?|\bCRM\b|email sending|sms sending|whatsapp|outbound messaging|public status view/i, 'Phase 5Q public source');
+  assertNoMatch(
+    adminSource,
+    /public upload|customer upload|new provider setup|new storage provider|NEXT_PUBLIC_SUPABASE|SUPABASE_SERVICE_ROLE_KEY|service-role browser|Pinecone|\bRAG\b|n8n runtime|\/api\/chat.*retrieval|outbound messaging|email sending|sms sending|whatsapp sending|process\.env\.(?:NEXT_PUBLIC_|SUPABASE|N8N|PINECONE|VERCEL)/i,
+    'Phase 5Q admin source'
+  );
+}
+
+function assertReleaseSuiteHasSmokeEvidenceReviewReadiness() {
+  const suite = readRepoFile('scripts/validate-release-candidate-suite.cjs');
+  assertIncludes(suite, "args: ['run', 'validate:smoke-evidence-review-readiness']", 'release-candidate suite');
+  assertIncludes(suite, "args: ['run', 'validate:smoke-evidence-intake-readiness']", 'release-candidate suite');
+  assertNoMatch(suite, /docker[^\n]*(?:skip|bypass)|(?:skip|bypass)[^\n]*docker/i, 'release-candidate suite');
+}
+
+function assertPhase5qSmokeEvidenceReviewReadiness() {
+  assertPhase5pSmokeEvidenceIntakeReadiness();
+  assertSmokeEvidenceReviewReadinessDocs();
+  assertPhase5qStatusRollForward();
+  assertSmokeEvidenceReviewPackageScript();
+  assertSmokeEvidenceReviewSources();
+  assertNoForbiddenTrackedFiles();
+  assertNoFilledEvidence();
+  assertReleaseSuiteHasSmokeEvidenceReviewReadiness();
+  assertReleaseSuiteHasSmokeEvidenceIntakeReadiness();
+  assertReleaseSuiteHasDeploymentExecutionRunbookReadiness();
+  assertReleaseSuiteHasDeploymentApprovalRequestReadiness();
+  assertReleaseSuiteHasOwnerDecisionIntakeReadiness();
+  assertReleaseSuiteHasOwnerReReviewRequestReadiness();
+  assertReleaseSuiteHasOwnerCorrectionWorkflow();
+  assertReleaseSuiteHasOwnerFeedbackIntake();
+  assertReleaseSuiteHasOwnerReviewWalkthrough();
+  assertReleaseSuiteHasCatalogueWriteWorkflow();
+  assertSuiteAndTests();
+}
+
 module.exports = {
+  assertPhase5qSmokeEvidenceReviewReadiness,
   assertPhase5pSmokeEvidenceIntakeReadiness,
   assertPhase5oDeploymentExecutionRunbookReadiness,
   assertPhase5nDeploymentApprovalRequestReadiness,
@@ -2349,6 +2544,7 @@ module.exports = {
   phase168MergeCommit,
   phase169MergeCommit,
   phase170MergeCommit,
+  phase171MergeCommit,
   currentPhase5a,
   currentPhase5b,
   currentPhase5c,
@@ -2365,6 +2561,7 @@ module.exports = {
   currentPhase5n,
   currentPhase5o,
   currentPhase5p,
+  currentPhase5q,
   latestCompletedPhase4f,
   cleanupDocPath,
   publicJourneyAcceptanceDocPath,
@@ -2384,4 +2581,6 @@ module.exports = {
   providerEnvDecisionMatrixTemplateDocPath,
   smokeEvidenceIntakeReadinessDocPath,
   routeVerificationRollbackLedgerTemplateDocPath,
+  smokeEvidenceReviewReadinessDocPath,
+  goNogoDecisionLedgerTemplateDocPath,
 };

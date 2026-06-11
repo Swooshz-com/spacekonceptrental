@@ -1468,6 +1468,57 @@ const phase5pNoEvidenceNoRunBoundaries = [
   "A merged PR is not production readiness"
 ] as const;
 
+const phase5qSmokeEvidenceReviewReadinessPath =
+  "docs/content/LOCAL-SMOKE-EVIDENCE-REVIEW-READINESS.md";
+const phase5qGoNogoDecisionLedgerTemplatePath =
+  "docs/content/LOCAL-GO-NOGO-DECISION-LEDGER-TEMPLATE.md";
+const phase5qSafeFutureEvidenceReviewSections = [
+  "Smoke evidence intake reference",
+  "Route verification ledger reference",
+  "Preview evidence review placeholder",
+  "Production evidence review placeholder",
+  "Public route result review placeholder",
+  "Protected admin route result review placeholder",
+  "Quote/enquiry result review placeholder",
+  "Listing/category/media result review placeholder",
+  "Rollback observation review placeholder",
+  "Final go/no-go review status"
+] as const;
+const phase5qAllowedFutureEvidenceReviewStatuses = [
+  "Not started",
+  "Evidence not captured",
+  "Evidence incomplete",
+  "Needs owner clarification",
+  "Needs provider clarification",
+  "Needs route retest",
+  "Needs rollback review",
+  "Blocked: deployment approval missing",
+  "Blocked: production readiness not proven",
+  "Ready for future go/no-go review"
+] as const;
+const phase5qGoNogoDecisionLedgerPlaceholders = [
+  "Decision ID: [NOT ASSIGNED]",
+  "Decision area: [NOT SELECTED]",
+  "Evidence source: [NOT SUPPLIED]",
+  "Route/surface affected: [NOT SELECTED]",
+  "Owner input status: [OWNER INPUT REQUIRED]",
+  "Provider/runtime status: [PROVIDER DECISION REQUIRED]",
+  "Smoke result status: [NOT RUN]",
+  "Rollback result status: [NOT RUN]",
+  "Go/no-go status: [NOT DECIDED]",
+  "Follow-up required: [NOT CAPTURED]",
+  "Evidence status: [NOT EVIDENCE / NOT RECORDED]",
+  "Deployment status: [DEPLOYMENT APPROVAL: NOT GRANTED]"
+] as const;
+const phase5qNoReviewNoLaunchBoundaries = [
+  "A review template is not completed evidence review",
+  "Evidence placeholders are not evidence",
+  "A route result placeholder is not route verification",
+  "A rollback review placeholder is not rollback evidence",
+  "Passing validators is not smoke success",
+  "A merged PR is not go/no-go approval"
+] as const;
+
 const publicJourneyReadinessClosurePath =
   "docs/content/PUBLIC-JOURNEY-READINESS-CLOSURE.md";
 const quoteEnquiryPublicExpectationBoundaryPath =
@@ -2835,6 +2886,84 @@ function SmokeEvidenceIntakeReadinessHelper() {
 }
 
 
+function SmokeEvidenceReviewReadinessHelper() {
+  return (
+    <section
+      aria-label="Phase 5Q smoke evidence review readiness helper"
+      className="admin-dashboard__card admin-dashboard__card--summary"
+    >
+      <p className="eyebrow">Phase 5Q-A/B admin-only smoke evidence review readiness</p>
+      <h3>Smoke evidence review readiness helper</h3>
+      <p>
+        This protected admin-only helper prepares future local smoke evidence
+        review and go/no-go decision ledger structure after smoke evidence is
+        captured later under separate approval. No smoke evidence is reviewed here. No go/no-go decision is recorded here. No launch clearance is granted here. No route verification is recorded here. No rollback evidence is captured here. No preview evidence is captured here. No production evidence is captured here. No deployment is performed here. No deployment approval is granted here.
+      </p>
+      <dl className="quote-inbox__details">
+        <div>
+          <dt>Smoke evidence review readiness</dt>
+          <dd>{phase5qSmokeEvidenceReviewReadinessPath}</dd>
+        </div>
+        <div>
+          <dt>Go/no-go decision ledger template</dt>
+          <dd>{phase5qGoNogoDecisionLedgerTemplatePath}</dd>
+        </div>
+        <div>
+          <dt>Smoke evidence intake readiness</dt>
+          <dd>{phase5pSmokeEvidenceIntakeReadinessPath}</dd>
+        </div>
+        <div>
+          <dt>Route verification and rollback ledger template</dt>
+          <dd>{phase5pRouteVerificationRollbackLedgerTemplatePath}</dd>
+        </div>
+        <div>
+          <dt>Evidence status</dt>
+          <dd>[NOT EVIDENCE / NOT RECORDED]</dd>
+        </div>
+        <div>
+          <dt>Deployment status</dt>
+          <dd>[DEPLOYMENT APPROVAL: NOT GRANTED]</dd>
+        </div>
+      </dl>
+      <h4>Safe future evidence review sections</h4>
+      <ul className="admin-readiness__list">
+        {phase5qSafeFutureEvidenceReviewSections.map((section) => (
+          <li key={section}>{section}</li>
+        ))}
+      </ul>
+      <h4>Go/no-go decision ledger placeholders</h4>
+      <ul className="admin-readiness__list">
+        {phase5qGoNogoDecisionLedgerPlaceholders.map((placeholder) => (
+          <li key={placeholder}>{placeholder}</li>
+        ))}
+      </ul>
+      <h4>Allowed future evidence review statuses</h4>
+      <ul className="admin-readiness__list">
+        {phase5qAllowedFutureEvidenceReviewStatuses.map((status) => (
+          <li key={status}>{status}</li>
+        ))}
+      </ul>
+      <h4>No-review/no-launch boundaries</h4>
+      <ul className="admin-readiness__list">
+        {phase5qNoReviewNoLaunchBoundaries.map((boundary) => (
+          <li key={boundary}>{boundary}</li>
+        ))}
+      </ul>
+      <p>
+        This helper stays protected admin-only and does not expose smoke evidence
+        review internals, go/no-go decision ledger internals, smoke evidence
+        intake internals, route verification ledger internals, rollback
+        observation internals, deployment execution runbook internals,
+        provider/environment decision matrix internals, provider setup internals,
+        environment/secrets internals, owner handoff internals, release-control
+        internals, or admin route internals to public rental, listing, quote,
+        enquiry, or request routes.
+      </p>
+    </section>
+  );
+}
+
+
 function OwnerReadinessHelpersPanel() {
   return (
     <>
@@ -2846,6 +2975,7 @@ function OwnerReadinessHelpersPanel() {
       <DeploymentApprovalRequestReadinessHelper />
       <DeploymentExecutionRunbookReadinessHelper />
       <SmokeEvidenceIntakeReadinessHelper />
+      <SmokeEvidenceReviewReadinessHelper />
     </>
   );
 }
