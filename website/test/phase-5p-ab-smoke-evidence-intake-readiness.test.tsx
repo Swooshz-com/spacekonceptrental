@@ -119,7 +119,7 @@ describe("Phase 5P-A/B smoke evidence intake readiness", () => {
     expect(screen.getByText(/ready for future approved smoke run/i)).toBeInTheDocument();
     expect(screen.getByText(/no-evidence\/no-run boundaries/i)).toBeInTheDocument();
     expect(screen.getByText(/a smoke intake template is not smoke evidence/i)).toBeInTheDocument();
-    expect(screen.getByText(/no smoke check is run here/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/no smoke check is run here/i).length).toBeGreaterThan(0);
     expect(screen.getByText(/no route walkthrough is recorded here/i)).toBeInTheDocument();
     expect(screen.getAllByText(/no rollback is executed here/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/no preview evidence is captured here/i).length).toBeGreaterThan(0);

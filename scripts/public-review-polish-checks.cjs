@@ -28,6 +28,7 @@ const phase176MergeCommit = 'a1a8161e01d7da67de7512e06f09dc271c269333';
 const phase177MergeCommit = 'c803f30191a1f7264f8f4be2b55c084a7565957a';
 const phase178MergeCommit = 'f88ff02523a8a82db2d6a163717aa53a1e3b7118';
 const phase179MergeCommit = 'e46684f4b216888727993501b0cad465eab31b2d';
+const phase180MergeCommit = '89e18b7919f6251950b9f520ad6c97fc2dfdc660';
 const currentPhase5a = 'Phase 5A-A/B public owner-review polish sweep, local content-readiness cleanup, and protected admin review UX closure';
 const currentPhase5b = 'Phase 5B-A/B public catalogue-to-enquiry journey hardening, listing continuity, and admin/public parity checks';
 const currentPhase5c = 'Phase 5C-A/B public discovery search/filter polish, quote-intent context, and admin discovery parity closure';
@@ -53,6 +54,7 @@ const currentPhase5v = 'Phase 5V-A/B incident resolution response readiness, pos
 const currentPhase5w = 'Phase 5W-A/B preventive maintenance readiness, lessons-to-maintenance backlog, and no-maintenance-change firewall';
 const currentPhase5x = 'Phase 5X-A/B maintenance approval readiness, change-window planning ledger, and no-schedule/no-change firewall';
 const currentPhase5y = 'Phase 5Y-A/B maintenance execution runbook readiness, change-window checklist, and no-execution/no-runtime firewall';
+const currentPhase5z = 'Phase 5Z-A/B maintenance verification closure readiness, change-window outcome ledger, and no-completion/no-production-evidence firewall';
 const latestCompletedPhase4f = 'Phase 4F-A/B owner-facing review handoff bundle, approval issue template, and no-deploy preflight command center';
 const cleanupDocPath = 'docs/content/LOCAL-CONTENT-READINESS-CLEANUP.md';
 const publicJourneyAcceptanceDocPath = 'docs/content/LOCAL-PUBLIC-JOURNEY-ACCEPTANCE.md';
@@ -96,6 +98,8 @@ const maintenanceApprovalReadinessDocPath = 'docs/content/LOCAL-MAINTENANCE-APPR
 const maintenanceChangeWindowPlanningLedgerTemplateDocPath = 'docs/content/LOCAL-MAINTENANCE-CHANGE-WINDOW-PLANNING-LEDGER-TEMPLATE.md';
 const maintenanceExecutionRunbookReadinessDocPath = 'docs/content/LOCAL-MAINTENANCE-EXECUTION-RUNBOOK-READINESS.md';
 const maintenanceChangeWindowExecutionChecklistTemplateDocPath = 'docs/content/LOCAL-MAINTENANCE-CHANGE-WINDOW-EXECUTION-CHECKLIST-TEMPLATE.md';
+const maintenanceVerificationClosureReadinessDocPath = 'docs/content/LOCAL-MAINTENANCE-VERIFICATION-CLOSURE-READINESS.md';
+const maintenanceChangeWindowOutcomeLedgerTemplateDocPath = 'docs/content/LOCAL-MAINTENANCE-CHANGE-WINDOW-OUTCOME-LEDGER-TEMPLATE.md';
 const publicSourceRoots = [
   'website/app/layout.tsx',
   'website/app/page.tsx',
@@ -3460,6 +3464,128 @@ function assertPhase5xMaintenanceApprovalReadiness() {
   assertSuiteAndTests();
 }
 
+
+function assertPhase5zMaintenanceVerificationClosureReadiness() {
+  assertPhase5yMaintenanceExecutionRunbookReadiness();
+  assertTracked(
+    [maintenanceVerificationClosureReadinessDocPath, maintenanceChangeWindowOutcomeLedgerTemplateDocPath],
+    'Phase 5Z maintenance verification closure readiness docs'
+  );
+
+  const readiness = normalizeWhitespace(readRepoFile(maintenanceVerificationClosureReadinessDocPath));
+  const ledger = normalizeWhitespace(readRepoFile(maintenanceChangeWindowOutcomeLedgerTemplateDocPath));
+  const docs = `${readiness}
+${ledger}`;
+
+  for (const required of [
+    'repo-local, template-only, non-live maintenance verification closure readiness package is not evidence',
+    'Phase 5Z-A/B adds maintenance verification closure readiness, a change-window outcome ledger template, closure packet preparation prompts, and a no-completion/no-production-evidence firewall',
+    'It follows Phase 5Y-A/B maintenance execution runbook readiness without executing or verifying anything',
+    '[NOT EVIDENCE / NOT RECORDED]',
+    '[DEPLOYMENT APPROVAL: NOT GRANTED]',
+    'Planned maintenance/change reference: `[NOT SUPPLIED]`',
+    'Intended owner/reviewer: `[OWNER INPUT REQUIRED]`',
+    'Intended window label: `[NOT SCHEDULED]`',
+    'Intended verification owner: `[NOT ASSIGNED]`',
+    'Intended follow-up owner: `[NOT ASSIGNED]`',
+    'Outcome status placeholder: `[PLACEHOLDER ONLY / NOT A RESULT]`',
+    'Smoke check status: `[NOT RUN]`',
+    'Production evidence status: `[NOT EVIDENCE / NOT RECORDED]`',
+    'Closure approval status: `[NOT RECORDED]`',
+    'Maintenance status: `[NOT MARKED COMPLETE]`',
+    'What planned maintenance/change reference would be reviewed?',
+    'Which owner/reviewer would make a future closure recommendation?',
+    'Which unresolved follow-ups must remain open?',
+    'Which rollback/escalation notes would need owner review?',
+    'This checklist does not complete verification, does not close maintenance, does not approve closure, and does not record evidence.',
+    'No production evidence is collected.',
+    'No smoke check is run.',
+    'No provider/runtime check is executed.',
+    'No production readiness claim is made.',
+    'No closure approval is recorded.',
+    'No maintenance is marked complete.',
+    'No real schedule is created.',
+    'No real completion claim is made.',
+    'Use draft, readiness, placeholder, intended, theoretical, and future approved review wording only.',
+    'not completed verification, not support evidence, not response-sent evidence, not customer-contact evidence, not monitoring evidence, not analytics evidence, not smoke evidence, not rollback evidence, not production evidence, not release closure, not maintenance completion, not closure approval, and not deployment approval'
+  ]) {
+    assertIncludes(docs, required, 'Phase 5Z docs');
+  }
+
+  const statusDocs = normalizeWhitespace(statusDocPaths.map(readRepoFile).join('\n'));
+  for (const required of [
+    `Current phase: ${currentPhase5z}`,
+    `Latest completed capability: ${currentPhase5y}`,
+    'Last merged capability PR: #180',
+    `Last merged capability merge commit: ${phase180MergeCommit}`,
+    maintenanceVerificationClosureReadinessDocPath,
+    maintenanceChangeWindowOutcomeLedgerTemplateDocPath,
+    maintenanceExecutionRunbookReadinessDocPath,
+    maintenanceChangeWindowExecutionChecklistTemplateDocPath,
+    'scripts/validate-maintenance-verification-closure-readiness.cjs',
+    'No deployment is performed or approved by Phase 5Z-A/B'
+  ]) {
+    assertIncludes(statusDocs, required, 'Phase 5Z status roll-forward docs');
+  }
+
+  const packageJson = JSON.parse(readRepoFile('package.json'));
+  assert(
+    packageJson.scripts?.['validate:maintenance-verification-closure-readiness'] === 'node scripts/validate-maintenance-verification-closure-readiness.cjs',
+    'package.json must register validate:maintenance-verification-closure-readiness'
+  );
+
+  const adminSource = readRepoFile('website/app/admin/protected-admin-shell.tsx');
+  for (const required of [
+    /Phase 5Z-A\/B admin-only maintenance verification closure readiness/i,
+    /MaintenanceVerificationClosureReadinessHelper/i,
+    /LOCAL-MAINTENANCE-VERIFICATION-CLOSURE-READINESS\.md/i,
+    /LOCAL-MAINTENANCE-CHANGE-WINDOW-OUTCOME-LEDGER-TEMPLATE\.md/i,
+    /LOCAL-MAINTENANCE-EXECUTION-RUNBOOK-READINESS\.md/i,
+    /LOCAL-MAINTENANCE-CHANGE-WINDOW-EXECUTION-CHECKLIST-TEMPLATE\.md/i,
+    /No\s+maintenance\s+task\s+is\s+executed\s+here/i,
+    /No\s+maintenance\s+task\s+is\s+implemented\s+here/i,
+    /No\s+change\s+window\s+is\s+scheduled\s+or\s+opened\s+here/i,
+    /No\s+execution\s+checklist\s+is\s+completed\s+here/i,
+    /No\s+verification\s+checklist\s+is\s+completed\s+here/i,
+    /No\s+maintenance\s+closure\s+is\s+claimed\s+here/i,
+    /No\s+production\s+evidence\s+is\s+collected\s+here/i,
+    /No\s+smoke\s+check\s+is\s+run\s+here/i,
+    /No\s+provider\s+or\s+runtime\s+check\s+is\s+executed\s+here/i,
+    /No\s+production\s+readiness\s+claim\s+is\s+made\s+here/i,
+    /No\s+closure\s+approval\s+is\s+recorded\s+here/i,
+    /No\s+maintenance\s+is\s+marked\s+complete\s+here/i,
+    /No\s+rollback\s+is\s+executed\s+here/i,
+    /No\s+deployment\s+is\s+performed\s+here/i,
+    /No\s+deployment\s+approval\s+is\s+granted\s+here/i,
+    /\[NOT EVIDENCE \/ NOT RECORDED\]/i,
+    /\[DEPLOYMENT APPROVAL: NOT GRANTED\]/i,
+    /Safe handoff language must stay draft, readiness, and placeholder only/i
+  ]) {
+    assert(required.test(adminSource), `Phase 5Z admin source missing safe wording: ${required}`);
+  }
+
+  assertIncludes(readRepoFile('website/app/admin/page.tsx'), 'view={{ kind: "home" }}', 'admin home page');
+  assert(/function AdminOperationsHome[\s\S]*<OwnerReadinessHelpersPanel \/>/.test(adminSource), 'AdminOperationsHome must render shared owner readiness helper panel');
+  assert(/function OwnerReadinessHelpersPanel[\s\S]*<OwnerReviewWalkthroughReadinessHelper \/>[\s\S]*<OwnerFeedbackIntakeReadinessHelper \/>[\s\S]*<OwnerCorrectionWorkflowReadinessHelper \/>[\s\S]*<OwnerReReviewRequestReadinessHelper \/>[\s\S]*<OwnerDecisionIntakeReadinessHelper \/>[\s\S]*<DeploymentApprovalRequestReadinessHelper \/>[\s\S]*<DeploymentExecutionRunbookReadinessHelper \/>[\s\S]*<SmokeEvidenceIntakeReadinessHelper \/>[\s\S]*<SmokeEvidenceReviewReadinessHelper \/>[\s\S]*<LaunchDecisionResponseReadinessHelper \/>[\s\S]*<PostLaunchObservationReadinessHelper \/>[\s\S]*<PostLaunchRemediationReadinessHelper \/>[\s\S]*<RemediationVerificationReadinessHelper \/>[\s\S]*<IncidentResolutionResponseReadinessHelper \/>[\s\S]*<PreventiveMaintenanceReadinessHelper \/>[\s\S]*<MaintenanceApprovalReadinessHelper \/>[\s\S]*<MaintenanceExecutionRunbookReadinessHelper \/>[\s\S]*<MaintenanceVerificationClosureReadinessHelper \/>/.test(adminSource), 'Phase 5Z admin source must keep complete helper chain in shared panel');
+
+  const publicSource = readTrackedProductionSources(publicSourceRoots);
+  assertNoMatch(publicSource, /maintenance verification|change-window outcome ledger|verification closure|maintenance execution|change-window execution checklist|maintenance approval|maintenance change-window planning|preventive maintenance|lessons-to-maintenance|support response|customer follow-up|public notice|maintenance internals|monitoring\/analytics internals|scheduler\/cron internals|provider setup internals|environment\/secrets internals|admin route internals|owner handoff internals|release-control internals|admin urls?|\/admin\//i, 'Phase 5Z public source');
+  assert(/\b(?:listing|listings)\b/i.test(publicSource), 'Phase 5Z public source must retain listing wording');
+  assert(/\b(?:rental|rentals)\b/i.test(publicSource), 'Phase 5Z public source must retain rental wording');
+  assert(/\b(?:quote|enquiry|request)\b/i.test(publicSource), 'Phase 5Z public source must retain quote/enquiry/request wording');
+  assertNoMatch(publicSource, /\b(?:cart|checkout|order|payment|purchase|online ordering)\b/i, 'Phase 5Z public source');
+  assertNoMatch(publicSource, /\b(?:booking|reservation|fulfilment|fulfillment|stock reservation|stock-reservation|book now|reserve now)\b/i, 'Phase 5Z public source');
+  assertNoMatch(publicSource, /customer account|quote tracking|file upload|public upload|notifications?|\bCRM\b|email sending|sms sending|whatsapp|outbound messaging|public status view/i, 'Phase 5Z public source');
+  assertNoMatch(adminSource, /public upload|customer upload|storage provider changes|monitoring provider setup|analytics provider setup|alerting provider setup|scheduler setup|cron setup|process\.env|NEXT_PUBLIC_SUPABASE|SUPABASE_SERVICE_ROLE|service-role browser|Pinecone|\bRAG\b|n8n runtime|\/api\/chat.*retrieval|outbound messaging/i, 'Phase 5Z admin source');
+  assertNoMatch(docs, /actual deployment|maintenance executed|maintenance implemented|maintenance approved|owner approved|provider approved|maintenance scheduled|change window scheduled|opened change window|execution checklist completed|verification checklist completed|maintenance closure claimed|smoke check run|provider check executed|runtime check executed|production readiness claim made|closure approval recorded|maintenance marked complete|precheck completed|cron configured|job configured|monitoring configured|analytics configured|support response sent|customer follow-up sent|public notice published|maintenance completed|live hotfix|remediation performed|correction completed|retest run|live monitoring|analytics capture|route verification|route walkthrough|preview publication|production launch|provider setup completed|env\/secrets setup completed|owner sign-?off complete|launch clearance granted|production evidence captured|production evidence collected|preview evidence captured|smoke evidence captured|rollback evidence captured|response-sent evidence captured|closure evidence captured|resolution evidence captured|maintenance evidence captured|maintenance-execution evidence captured|maintenance-schedule evidence captured|change-window evidence captured|correction-completed evidence captured|remediation evidence captured|hotfix evidence captured|retest evidence captured|monitoring evidence captured|analytics evidence captured|deployment approval granted/i, 'Phase 5Z docs');
+
+  const suite = readRepoFile('scripts/validate-release-candidate-suite.cjs');
+  assertIncludes(suite, "args: ['run', 'validate:maintenance-verification-closure-readiness']", 'release-candidate suite');
+  assertIncludes(suite, "args: ['run', 'validate:maintenance-execution-runbook-readiness']", 'release-candidate suite');
+  assertNoMatch(suite, /docker[^\n]*(?:skip|bypass)|(?:skip|bypass)[^\n]*docker/i, 'release-candidate suite');
+  assertSuiteAndTests();
+}
+
 function assertPhase5yMaintenanceExecutionRunbookReadiness() {
   assertPhase5xMaintenanceApprovalReadiness();
   assertTracked(
@@ -3915,6 +4041,7 @@ function assertPhase5qSmokeEvidenceReviewReadiness() {
 }
 
 module.exports = {
+  assertPhase5zMaintenanceVerificationClosureReadiness,
   assertPhase5yMaintenanceExecutionRunbookReadiness,
   assertPhase5xMaintenanceApprovalReadiness,
   assertPhase5wPreventiveMaintenanceReadiness,
@@ -3982,6 +4109,7 @@ module.exports = {
   currentPhase5w,
   currentPhase5x,
   currentPhase5y,
+  currentPhase5z,
   latestCompletedPhase4f,
   cleanupDocPath,
   publicJourneyAcceptanceDocPath,
@@ -4011,4 +4139,14 @@ module.exports = {
   incidentTriageCorrectionBacklogTemplateDocPath,
   remediationVerificationReadinessDocPath,
   correctionRetestResolutionLedgerTemplateDocPath,
+  incidentResolutionResponseReadinessDocPath,
+  postRemediationClosureLessonsLedgerTemplateDocPath,
+  preventiveMaintenanceReadinessDocPath,
+  lessonsToMaintenanceBacklogTemplateDocPath,
+  maintenanceApprovalReadinessDocPath,
+  maintenanceChangeWindowPlanningLedgerTemplateDocPath,
+  maintenanceExecutionRunbookReadinessDocPath,
+  maintenanceChangeWindowExecutionChecklistTemplateDocPath,
+  maintenanceVerificationClosureReadinessDocPath,
+  maintenanceChangeWindowOutcomeLedgerTemplateDocPath,
 };

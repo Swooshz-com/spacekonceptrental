@@ -45,6 +45,7 @@
     "validate:owner-correction-workflow-readiness": "node scripts/validate-owner-correction-workflow-readiness.cjs",
     "validate:owner-review-walkthrough-readiness": "node scripts/validate-owner-review-walkthrough-readiness.cjs",
     "validate:maintenance-approval-readiness": "node scripts/validate-maintenance-approval-readiness.cjs",
+    "validate:maintenance-verification-closure-readiness": "node scripts/validate-maintenance-verification-closure-readiness.cjs",
     "validate:maintenance-execution-runbook-readiness": "node scripts/validate-maintenance-execution-runbook-readiness.cjs"
   }
 }

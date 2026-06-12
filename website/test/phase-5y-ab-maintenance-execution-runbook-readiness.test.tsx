@@ -112,12 +112,13 @@ describe("Phase 5Y-A/B maintenance execution runbook readiness", () => {
       /preventive maintenance readiness helper/i,
       /maintenance approval readiness helper/i,
       /maintenance execution runbook readiness helper/i,
+      /maintenance verification closure readiness helper/i,
     ]) {
       expect(screen.getByRole("heading", { name: heading })).toBeInTheDocument();
     }
 
-    expect(screen.getByText(maintenanceExecutionRunbookReadinessDocPath)).toBeInTheDocument();
-    expect(screen.getByText(maintenanceChangeWindowExecutionChecklistTemplateDocPath)).toBeInTheDocument();
+    expect(screen.getAllByText(maintenanceExecutionRunbookReadinessDocPath).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(maintenanceChangeWindowExecutionChecklistTemplateDocPath).length).toBeGreaterThan(0);
     expect(screen.getAllByText(maintenanceApprovalReadinessDocPath).length).toBeGreaterThan(0);
     expect(screen.getAllByText(maintenanceChangeWindowPlanningLedgerTemplateDocPath).length).toBeGreaterThan(0);
     expect(screen.getByText(/safe future execution sections/i)).toBeInTheDocument();

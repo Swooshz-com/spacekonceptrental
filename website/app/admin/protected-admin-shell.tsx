@@ -1942,6 +1942,59 @@ const phase5yNoExecutionNoRuntimeBoundaries = [
   "A merged PR is not maintenance execution"
 ] as const;
 
+const phase5zMaintenanceVerificationClosureReadinessPath =
+  "docs/content/LOCAL-MAINTENANCE-VERIFICATION-CLOSURE-READINESS.md";
+const phase5zMaintenanceChangeWindowOutcomeLedgerTemplatePath =
+  "docs/content/LOCAL-MAINTENANCE-CHANGE-WINDOW-OUTCOME-LEDGER-TEMPLATE.md";
+const phase5zSafeFutureClosureSections = [
+  "Maintenance execution runbook readiness reference",
+  "Maintenance change-window execution checklist reference",
+  "Planned maintenance/change reference placeholder",
+  "Intended owner/reviewer placeholder",
+  "Intended window label placeholder",
+  "Intended verification owner placeholder",
+  "Intended follow-up owner placeholder",
+  "Change-window outcome ledger reference",
+  "Closure packet preparation checklist",
+  "Final verification-closure readiness status"
+] as const;
+const phase5zMaintenanceOutcomeLedgerPlaceholders = [
+  "Outcome ledger ID: [NOT ASSIGNED]",
+  "Planned maintenance/change reference: [NOT SUPPLIED]",
+  "Intended owner/reviewer: [OWNER INPUT REQUIRED]",
+  "Intended window label: [NOT SCHEDULED]",
+  "Intended verification owner: [NOT ASSIGNED]",
+  "Intended follow-up owner: [NOT ASSIGNED]",
+  "Affected route/surface: [NOT SELECTED]",
+  "Closure packet status: [NOT PREPARED]",
+  "Outcome status placeholder: [PLACEHOLDER ONLY / NOT A RESULT]",
+  "Smoke check status: [NOT RUN]",
+  "Production evidence status: [NOT EVIDENCE / NOT RECORDED]",
+  "Closure approval status: [NOT RECORDED]",
+  "Maintenance status: [NOT MARKED COMPLETE]",
+  "Deployment status: [DEPLOYMENT APPROVAL: NOT GRANTED]"
+] as const;
+const phase5zAllowedFutureClosureStatuses = [
+  "Not started",
+  "Execution not performed",
+  "Change window not opened",
+  "Verification owner not assigned",
+  "Follow-up owner not assigned",
+  "Needs owner review",
+  "Needs unresolved follow-up review",
+  "Blocked: no verification approval",
+  "Blocked: production evidence is not allowed",
+  "Ready for future approved closure packet review"
+] as const;
+const phase5zNoCompletionNoProductionEvidenceBoundaries = [
+  "An outcome ledger is not a completion record",
+  "A closure packet checklist is not verification closure",
+  "A smoke check placeholder is not a smoke check run",
+  "A production evidence placeholder is not production evidence",
+  "Passing validators is not closure approval",
+  "A merged PR is not maintenance completion"
+] as const;
+
 const publicJourneyReadinessClosurePath =
   "docs/content/PUBLIC-JOURNEY-READINESS-CLOSURE.md";
 const quoteEnquiryPublicExpectationBoundaryPath =
@@ -4060,6 +4113,97 @@ function MaintenanceExecutionRunbookReadinessHelper() {
   );
 }
 
+
+function MaintenanceVerificationClosureReadinessHelper() {
+  return (
+    <section
+      aria-label="Phase 5Z maintenance verification closure readiness helper"
+      className="admin-readiness"
+    >
+      <p className="eyebrow">Phase 5Z-A/B admin-only maintenance verification closure readiness</p>
+      <h3>Maintenance verification closure readiness helper</h3>
+      <p>
+        This protected helper prepares future maintenance verification closure
+        packet review after a theoretical maintenance change window for rental
+        listings, event furniture listings, categories, media, quote, enquiry,
+        and request surfaces. It is readiness-only and placeholder-only. No
+        maintenance task is executed here. No maintenance task is implemented
+        here. No change window is scheduled or opened here. No execution
+        checklist is completed here. No verification checklist is completed
+        here. No maintenance closure is claimed here. No production evidence is
+        collected here. No smoke check is run here. No provider or runtime check
+        is executed here. No production readiness claim is made here. No closure
+        approval is recorded here. No maintenance is marked complete here. No
+        rollback is executed here. No deployment is performed here. No
+        deployment approval is granted here.
+      </p>
+      <dl className="admin-readiness__grid">
+        <div>
+          <dt>Maintenance verification closure readiness</dt>
+          <dd>{phase5zMaintenanceVerificationClosureReadinessPath}</dd>
+        </div>
+        <div>
+          <dt>Maintenance change-window outcome ledger template</dt>
+          <dd>{phase5zMaintenanceChangeWindowOutcomeLedgerTemplatePath}</dd>
+        </div>
+        <div>
+          <dt>Maintenance execution runbook readiness</dt>
+          <dd>{phase5yMaintenanceExecutionRunbookReadinessPath}</dd>
+        </div>
+        <div>
+          <dt>Maintenance change-window execution checklist template</dt>
+          <dd>{phase5yMaintenanceChangeWindowExecutionChecklistTemplatePath}</dd>
+        </div>
+        <div>
+          <dt>Evidence status</dt>
+          <dd>[NOT EVIDENCE / NOT RECORDED]</dd>
+        </div>
+        <div>
+          <dt>Deployment status</dt>
+          <dd>[DEPLOYMENT APPROVAL: NOT GRANTED]</dd>
+        </div>
+      </dl>
+      <h4>Change-window outcome ledger</h4>
+      <ul className="admin-readiness__list">
+        {phase5zMaintenanceOutcomeLedgerPlaceholders.map((placeholder) => (
+          <li key={placeholder}>{placeholder}</li>
+        ))}
+      </ul>
+      <h4>Verification closure packet checklist</h4>
+      <ul className="admin-readiness__list">
+        {phase5zSafeFutureClosureSections.map((section) => (
+          <li key={section}>{section}</li>
+        ))}
+      </ul>
+      <h4>Allowed future closure-review statuses</h4>
+      <ul className="admin-readiness__list">
+        {phase5zAllowedFutureClosureStatuses.map((status) => (
+          <li key={status}>{status}</li>
+        ))}
+      </ul>
+      <h4>No-completion/no-production-evidence firewall</h4>
+      <ul className="admin-readiness__list">
+        {phase5zNoCompletionNoProductionEvidenceBoundaries.map((boundary) => (
+          <li key={boundary}>{boundary}</li>
+        ))}
+      </ul>
+      <p>
+        Safe handoff language must stay draft, readiness, and placeholder only.
+        Do not use finality language such as completed, verified, approved,
+        cleared, evidence recorded, or production checked unless it is clearly
+        negated as not allowed by this readiness helper. This helper stays
+        protected admin-only and does not expose maintenance verification
+        closure internals, change-window outcome ledger internals, closure
+        packet internals, maintenance execution internals, provider/runtime
+        internals, smoke-check internals, production evidence internals,
+        scheduler/cron internals, environment/secrets internals, owner handoff
+        internals, release-control internals, or admin route internals to public
+        rental, listing, quote, enquiry, or request routes.
+      </p>
+    </section>
+  );
+}
+
 function OwnerReadinessHelpersPanel() {
   return (
     <>
@@ -4080,6 +4224,7 @@ function OwnerReadinessHelpersPanel() {
       <PreventiveMaintenanceReadinessHelper />
       <MaintenanceApprovalReadinessHelper />
       <MaintenanceExecutionRunbookReadinessHelper />
+      <MaintenanceVerificationClosureReadinessHelper />
     </>
   );
 }
