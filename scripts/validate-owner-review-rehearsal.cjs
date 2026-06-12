@@ -3,7 +3,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const repoRoot = path.resolve(__dirname, '..');
-const { assertPhase5rLaunchDecisionResponseReadiness } = require('./public-review-polish-checks.cjs');
+const { assertPhase5sPostLaunchObservationReadiness } = require('./public-review-polish-checks.cjs');
 const phase4cDocs = [
   'docs/content/LOCAL-OWNER-REVIEW-REHEARSAL-PACK.md',
   'docs/content/LOCAL-BLOCKER-LEDGER-TEMPLATE.md',
@@ -300,6 +300,6 @@ assertOwnerApprovalRequestGate();
 assertPhase4dLocalFreeze();
 assertPhase4fOwnerHandoffBundle();
 
-assertPhase5rLaunchDecisionResponseReadiness();
+assertPhase5sPostLaunchObservationReadiness();
 
 console.log('Owner-review rehearsal validation passed. No deployment was performed. This does not approve deployment.');

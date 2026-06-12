@@ -1570,6 +1570,57 @@ const phase5rNoResponseNoLaunchBoundaries = [
   "A merged PR is not release closure"
 ] as const;
 
+const phase5sPostLaunchObservationReadinessPath =
+  "docs/content/LOCAL-POST-LAUNCH-OBSERVATION-READINESS.md";
+const phase5sIncidentFollowupLedgerTemplatePath =
+  "docs/content/LOCAL-INCIDENT-FOLLOWUP-LEDGER-TEMPLATE.md";
+const phase5sSafeFutureObservationSections = [
+  "Release closure packet reference",
+  "Launch decision response reference",
+  "Post-launch observation window placeholder",
+  "Public route observation placeholder",
+  "Protected admin route observation placeholder",
+  "Quote/enquiry workflow observation placeholder",
+  "Listing/category/media observation placeholder",
+  "Incident/follow-up ledger reference",
+  "Rollback escalation placeholder",
+  "Final observation status"
+] as const;
+const phase5sIncidentFollowupLedgerPlaceholders = [
+  "Incident ID: [NOT ASSIGNED]",
+  "Incident area: [NOT SELECTED]",
+  "Observation source: [NOT SUPPLIED]",
+  "Route/surface affected: [NOT SELECTED]",
+  "User/customer impact: [NOT CAPTURED]",
+  "Owner input status: [OWNER INPUT REQUIRED]",
+  "Provider/runtime status: [PROVIDER DECISION REQUIRED]",
+  "Follow-up status: [NOT SENT]",
+  "Rollback/escalation status: [NOT RUN]",
+  "Resolution status: [NOT STARTED]",
+  "Evidence status: [NOT EVIDENCE / NOT RECORDED]",
+  "Deployment status: [DEPLOYMENT APPROVAL: NOT GRANTED]"
+] as const;
+const phase5sAllowedFutureObservationStatuses = [
+  "Not started",
+  "Launch not approved",
+  "Release closure missing",
+  "Observation window not opened",
+  "Monitoring not configured",
+  "Incident not recorded",
+  "Needs owner clarification",
+  "Needs provider clarification",
+  "Blocked: production launch missing",
+  "Ready for future approved observation"
+] as const;
+const phase5sNoMonitoringNoIncidentBoundaries = [
+  "An observation template is not monitoring",
+  "An incident placeholder is not an incident record",
+  "A follow-up placeholder is not a sent response",
+  "A rollback escalation placeholder is not rollback execution",
+  "Passing validators is not production health",
+  "A merged PR is not post-launch readiness"
+] as const;
+
 const publicJourneyReadinessClosurePath =
   "docs/content/PUBLIC-JOURNEY-READINESS-CLOSURE.md";
 const quoteEnquiryPublicExpectationBoundaryPath =
@@ -3094,6 +3145,85 @@ function LaunchDecisionResponseReadinessHelper() {
 }
 
 
+function PostLaunchObservationReadinessHelper() {
+  return (
+    <section
+      aria-label="Phase 5S post-launch observation readiness helper"
+      className="admin-dashboard__card admin-dashboard__card--summary"
+    >
+      <p className="eyebrow">Phase 5S-A/B admin-only post-launch observation readiness</p>
+      <h3>Post-launch observation readiness helper</h3>
+      <p>
+        This protected admin-only helper prepares future local post-launch
+        observation and incident/follow-up ledger structure after a real approved
+        launch and release closure happen later under separate approval. No live monitoring is configured here. No incident is recorded here. No support response is sent here. No customer follow-up is sent here. No post-launch evidence is captured here. No monitoring evidence is captured here. No analytics evidence is captured here. No rollback is executed here. No deployment is performed here. No deployment approval is granted here.
+      </p>
+      <dl className="quote-inbox__details">
+        <div>
+          <dt>Post-launch observation readiness</dt>
+          <dd>{phase5sPostLaunchObservationReadinessPath}</dd>
+        </div>
+        <div>
+          <dt>Incident/follow-up ledger template</dt>
+          <dd>{phase5sIncidentFollowupLedgerTemplatePath}</dd>
+        </div>
+        <div>
+          <dt>Launch decision response readiness</dt>
+          <dd>{phase5rLaunchDecisionResponseReadinessPath}</dd>
+        </div>
+        <div>
+          <dt>Release closure / continuation packet template</dt>
+          <dd>{phase5rReleaseClosurePacketTemplatePath}</dd>
+        </div>
+        <div>
+          <dt>Evidence status</dt>
+          <dd>[NOT EVIDENCE / NOT RECORDED]</dd>
+        </div>
+        <div>
+          <dt>Deployment status</dt>
+          <dd>[DEPLOYMENT APPROVAL: NOT GRANTED]</dd>
+        </div>
+      </dl>
+      <h4>Safe future observation sections</h4>
+      <ul className="admin-readiness__list">
+        {phase5sSafeFutureObservationSections.map((section) => (
+          <li key={section}>{section}</li>
+        ))}
+      </ul>
+      <h4>Incident/follow-up ledger placeholders</h4>
+      <ul className="admin-readiness__list">
+        {phase5sIncidentFollowupLedgerPlaceholders.map((placeholder) => (
+          <li key={placeholder}>{placeholder}</li>
+        ))}
+      </ul>
+      <h4>Allowed future observation statuses</h4>
+      <ul className="admin-readiness__list">
+        {phase5sAllowedFutureObservationStatuses.map((status) => (
+          <li key={status}>{status}</li>
+        ))}
+      </ul>
+      <h4>No-monitoring/no-incident boundaries</h4>
+      <ul className="admin-readiness__list">
+        {phase5sNoMonitoringNoIncidentBoundaries.map((boundary) => (
+          <li key={boundary}>{boundary}</li>
+        ))}
+      </ul>
+      <p>
+        This helper stays protected admin-only and does not expose post-launch
+        observation internals, incident/follow-up ledger internals, launch
+        decision response internals, release closure packet internals, smoke
+        evidence review internals, go/no-go decision ledger internals,
+        monitoring/analytics internals, provider setup internals,
+        environment/secrets internals, owner handoff internals, release-control
+        internals, or admin route internals to public rental, listing, quote,
+        enquiry, or request routes.
+      </p>
+    </section>
+  );
+}
+
+
+
 function OwnerReadinessHelpersPanel() {
   return (
     <>
@@ -3107,6 +3237,7 @@ function OwnerReadinessHelpersPanel() {
       <SmokeEvidenceIntakeReadinessHelper />
       <SmokeEvidenceReviewReadinessHelper />
       <LaunchDecisionResponseReadinessHelper />
+      <PostLaunchObservationReadinessHelper />
     </>
   );
 }

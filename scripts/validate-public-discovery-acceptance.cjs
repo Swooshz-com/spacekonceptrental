@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-const { assertPhase5rLaunchDecisionResponseReadiness } = require('./public-review-polish-checks.cjs');
+const { assertPhase5sPostLaunchObservationReadiness } = require('./public-review-polish-checks.cjs');
 
-assertPhase5rLaunchDecisionResponseReadiness();
+assertPhase5sPostLaunchObservationReadiness();
 console.log('Public discovery acceptance validation passed. No deployment was performed.');
