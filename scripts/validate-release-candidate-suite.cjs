@@ -5,6 +5,11 @@ const repoRoot = path.resolve(__dirname, '..');
 
 const commandPlan = [
   {
+    label: 'Validate maintenance execution runbook readiness',
+    cwd: repoRoot,
+    args: ['run', 'validate:maintenance-execution-runbook-readiness'],
+  },
+  {
     label: 'Validate maintenance approval readiness',
     cwd: repoRoot,
     args: ['run', 'validate:maintenance-approval-readiness'],

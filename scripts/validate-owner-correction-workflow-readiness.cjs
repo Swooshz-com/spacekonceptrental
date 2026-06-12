@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 const {
-  assertPhase5xMaintenanceApprovalReadiness,
+  assertPhase5yMaintenanceExecutionRunbookReadiness,
 } = require('./public-review-polish-checks.cjs');
 
-assertPhase5xMaintenanceApprovalReadiness();
+assertPhase5yMaintenanceExecutionRunbookReadiness();
 console.log(
   'Owner correction workflow readiness validation passed. No deployment was performed.',
 );

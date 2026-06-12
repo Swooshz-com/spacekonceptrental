@@ -3,4 +3,5 @@ const {
 } = require('./public-review-polish-checks.cjs');
 
 assertPhase5yMaintenanceExecutionRunbookReadiness();
-console.log('Launch decision response readiness validation passed. No deployment was performed. This does not approve deployment.');
+
+console.log('Phase 5Y maintenance execution runbook readiness checks passed. No deployment was performed. This does not approve deployment.');
