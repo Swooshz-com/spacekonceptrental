@@ -4,4 +4,4 @@ const {
 
 assertPhase5xMaintenanceApprovalReadiness();
 
-console.log('Phase 5W preventive maintenance readiness checks passed. No deployment was performed. This does not approve deployment.');
+console.log('Phase 5X maintenance approval readiness checks passed. No deployment was performed. This does not approve deployment.');

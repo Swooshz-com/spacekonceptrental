@@ -139,7 +139,7 @@ describe("Phase 5M-A/B owner decision intake readiness", () => {
     expect(screen.getByText(/no-launch\/no-deploy boundaries/i)).toBeInTheDocument();
     expect(screen.getAllByText(/a future owner decision is not deployment approval unless explicitly separate/i).length).toBeGreaterThan(0);
     expect(screen.getByText(/no owner decision is recorded here/i)).toBeInTheDocument();
-    expect(screen.getByText(/no owner approval is recorded here/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/no owner approval is recorded here/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/no owner sign-off is claimed here/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/no launch clearance is granted here/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/no deployment approval is granted here/i).length).toBeGreaterThan(0);

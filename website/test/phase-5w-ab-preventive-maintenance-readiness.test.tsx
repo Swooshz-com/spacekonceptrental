@@ -118,8 +118,8 @@ describe("Phase 5W-A/B preventive maintenance readiness", () => {
       expect(screen.getByRole("heading", { name: heading })).toBeInTheDocument();
     }
 
-    expect(screen.getByText(preventiveMaintenanceReadinessDocPath)).toBeInTheDocument();
-    expect(screen.getByText(lessonsToMaintenanceBacklogTemplateDocPath)).toBeInTheDocument();
+    expect(screen.getAllByText(preventiveMaintenanceReadinessDocPath).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(lessonsToMaintenanceBacklogTemplateDocPath).length).toBeGreaterThan(0);
     expect(screen.getAllByText(incidentResolutionResponseReadinessDocPath).length).toBeGreaterThan(0);
     expect(screen.getAllByText(postRemediationClosureLessonsLedgerTemplateDocPath).length).toBeGreaterThan(0);
     expect(screen.getAllByText(remediationVerificationReadinessDocPath).length).toBeGreaterThan(0);
