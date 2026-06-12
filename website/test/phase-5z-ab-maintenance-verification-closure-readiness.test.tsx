@@ -125,19 +125,19 @@ describe("Phase 5Z-A/B maintenance verification closure readiness", () => {
       helperNames.indexOf("Maintenance execution runbook readiness helper"),
     );
 
-    expect(screen.getByText(maintenanceVerificationClosureReadinessDocPath)).toBeInTheDocument();
-    expect(screen.getByText(maintenanceChangeWindowOutcomeLedgerTemplateDocPath)).toBeInTheDocument();
+    expect(screen.getAllByText(maintenanceVerificationClosureReadinessDocPath).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(maintenanceChangeWindowOutcomeLedgerTemplateDocPath).length).toBeGreaterThan(0);
     expect(screen.getAllByText(maintenanceExecutionRunbookReadinessDocPath).length).toBeGreaterThan(0);
     expect(screen.getAllByText(maintenanceChangeWindowExecutionChecklistTemplateDocPath).length).toBeGreaterThan(0);
     expect(screen.getByRole("heading", { name: /change-window outcome ledger/i })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: /verification closure packet checklist/i })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: /no-completion\/no-production-evidence firewall/i })).toBeInTheDocument();
     expect(screen.getByText(/safe handoff language must stay draft, readiness, and placeholder only/i)).toBeInTheDocument();
-    expect(screen.getByText(/planned maintenance\/change reference: \[not supplied\]/i)).toBeInTheDocument();
-    expect(screen.getByText(/intended owner\/reviewer: \[owner input required\]/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/planned maintenance\/change reference: \[not supplied\]/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/intended owner\/reviewer: \[owner input required\]/i).length).toBeGreaterThan(0);
     expect(screen.getByText(/outcome status placeholder: \[placeholder only \/ not a result\]/i)).toBeInTheDocument();
-    expect(screen.getByText(/production evidence status: \[not evidence \/ not recorded\]/i)).toBeInTheDocument();
-    expect(screen.getByText(/maintenance status: \[not marked complete\]/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/production evidence status: \[not evidence \/ not recorded\]/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/maintenance status: \[not marked complete\]/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/no production evidence is collected here/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/no smoke check is run here/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/no provider or runtime check is executed here/i).length).toBeGreaterThan(0);

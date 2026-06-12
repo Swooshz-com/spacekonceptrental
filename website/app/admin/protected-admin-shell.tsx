@@ -1995,6 +1995,45 @@ const phase5zNoCompletionNoProductionEvidenceBoundaries = [
   "A merged PR is not maintenance completion"
 ] as const;
 
+
+const phase6aMaintenanceClosureDecisionReadinessPath =
+  "docs/content/LOCAL-MAINTENANCE-CLOSURE-DECISION-READINESS.md";
+const phase6aMaintenanceClosureRecommendationPacketLedgerTemplatePath =
+  "docs/content/LOCAL-MAINTENANCE-CLOSURE-RECOMMENDATION-PACKET-LEDGER-TEMPLATE.md";
+const phase6aClosureRecommendationPacketLedgerPlaceholders = [
+  "Intended maintenance/change reference: [NOT SUPPLIED]",
+  "Intended verification packet reference: [NOT SUPPLIED]",
+  "Intended owner/reviewer: [OWNER INPUT REQUIRED]",
+  "Intended closure decision owner: [NOT ASSIGNED]",
+  "Intended unresolved-follow-up owner: [NOT ASSIGNED]",
+  "Intended rollback/escalation reviewer: [NOT ASSIGNED]",
+  "Recommendation status placeholder: [PLACEHOLDER ONLY / NOT A RECOMMENDATION]",
+  "Decision status placeholder: [PLACEHOLDER ONLY / NOT A DECISION]",
+  "Closure approval status: [NOT RECORDED]",
+  "Maintenance status: [NOT MARKED COMPLETE]",
+  "Production evidence status: [NOT EVIDENCE / NOT RECORDED]",
+  "Deployment status: [DEPLOYMENT APPROVAL: NOT GRANTED]"
+] as const;
+const phase6aClosureDecisionReadinessChecklist = [
+  "Confirm the intended maintenance/change reference and verification packet reference would be in scope before any future decision review.",
+  "Confirm unresolved follow-ups would block closure until separately reviewed by the intended unresolved-follow-up owner.",
+  "Confirm missing evidence would block closure because this helper does not collect or record production evidence.",
+  "Confirm rollback/escalation notes would stay open until separately reviewed by the intended rollback/escalation reviewer.",
+  "Confirm public/customer actions, support follow-up and external follow-up actions are not allowed from this readiness helper.",
+  "Confirm this helper does not approve closure and does not close maintenance."
+] as const;
+const phase6aNoApprovalNoCompletionFirewall = [
+  "No closure decision is recorded here.",
+  "No closure recommendation is accepted here.",
+  "No closure approval is recorded here.",
+  "No maintenance is marked complete here.",
+  "No production evidence is collected here.",
+  "No smoke check is run here.",
+  "No provider/runtime check is executed here.",
+  "No customer/support follow-up is sent here.",
+  "No production readiness claim is made here."
+] as const;
+
 const publicJourneyReadinessClosurePath =
   "docs/content/PUBLIC-JOURNEY-READINESS-CLOSURE.md";
 const quoteEnquiryPublicExpectationBoundaryPath =
@@ -4204,6 +4243,91 @@ function MaintenanceVerificationClosureReadinessHelper() {
   );
 }
 
+function MaintenanceClosureDecisionReadinessHelper() {
+  return (
+    <section
+      aria-label="Phase 6A maintenance closure decision readiness helper"
+      className="admin-readiness"
+    >
+      <p className="eyebrow">Phase 6A-A/B admin-only maintenance closure decision readiness</p>
+      <h3>Maintenance closure decision readiness helper</h3>
+      <p>
+        This protected helper prepares future owner/admin review of a
+        theoretical maintenance closure recommendation packet after a future
+        maintenance verification packet exists for rental listings, event
+        furniture listings, categories, media, quote, enquiry, and request
+        surfaces. It is readiness-only and placeholder-only. No closure
+        decision is recorded here. No closure recommendation is accepted here.
+        No closure approval is recorded here. No maintenance is marked complete
+        here. No production evidence is collected here. No smoke check is run
+        here. No provider or runtime check is executed here. No customer or
+        support follow-up is sent here. No production readiness claim is made
+        here. No deployment is performed here.
+      </p>
+      <dl className="admin-readiness__grid">
+        <div>
+          <dt>Maintenance closure decision readiness</dt>
+          <dd>{phase6aMaintenanceClosureDecisionReadinessPath}</dd>
+        </div>
+        <div>
+          <dt>Closure recommendation packet ledger template</dt>
+          <dd>{phase6aMaintenanceClosureRecommendationPacketLedgerTemplatePath}</dd>
+        </div>
+        <div>
+          <dt>Maintenance verification closure readiness</dt>
+          <dd>{phase5zMaintenanceVerificationClosureReadinessPath}</dd>
+        </div>
+        <div>
+          <dt>Maintenance change-window outcome ledger template</dt>
+          <dd>{phase5zMaintenanceChangeWindowOutcomeLedgerTemplatePath}</dd>
+        </div>
+        <div>
+          <dt>Recommendation status</dt>
+          <dd>[PLACEHOLDER ONLY / NOT A RECOMMENDATION]</dd>
+        </div>
+        <div>
+          <dt>Decision status</dt>
+          <dd>[PLACEHOLDER ONLY / NOT A DECISION]</dd>
+        </div>
+      </dl>
+      <h4>Closure recommendation packet ledger</h4>
+      <ul className="admin-readiness__list">
+        {phase6aClosureRecommendationPacketLedgerPlaceholders.map((placeholder) => (
+          <li key={placeholder}>{placeholder}</li>
+        ))}
+      </ul>
+      <h4>Closure decision readiness checklist</h4>
+      <ul className="admin-readiness__list">
+        {phase6aClosureDecisionReadinessChecklist.map((item) => (
+          <li key={item}>{item}</li>
+        ))}
+      </ul>
+      <h4>No-approval/no-completion firewall</h4>
+      <ul className="admin-readiness__list">
+        {phase6aNoApprovalNoCompletionFirewall.map((boundary) => (
+          <li key={boundary}>{boundary}</li>
+        ))}
+      </ul>
+      <h4>Safe handoff language</h4>
+      <p>
+        Safe handoff language must stay draft, readiness, placeholder, intended,
+        and theoretical only. Do not use finality language such as approved,
+        accepted, closed, completed, verified, cleared, evidence recorded,
+        production checked, owner signed off, maintenance completed, or closure
+        granted unless it is clearly negated as not allowed by this readiness
+        helper. This helper stays protected admin-only and does not expose
+        maintenance closure decision internals, closure recommendation packet
+        internals, maintenance verification internals, provider/runtime
+        internals, smoke-check internals, production evidence internals,
+        support follow-up internals, scheduler/cron internals,
+        environment/secrets internals, owner handoff internals, release-control
+        internals, or admin route internals to public rental, listing, quote,
+        enquiry, or request routes.
+      </p>
+    </section>
+  );
+}
+
 function OwnerReadinessHelpersPanel() {
   return (
     <>
@@ -4225,6 +4349,7 @@ function OwnerReadinessHelpersPanel() {
       <MaintenanceApprovalReadinessHelper />
       <MaintenanceExecutionRunbookReadinessHelper />
       <MaintenanceVerificationClosureReadinessHelper />
+      <MaintenanceClosureDecisionReadinessHelper />
     </>
   );
 }
