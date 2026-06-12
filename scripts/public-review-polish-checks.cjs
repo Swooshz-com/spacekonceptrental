@@ -27,6 +27,7 @@ const phase175MergeCommit = '92a39f6fa8540a45f9a2369b3ec1fc497e76058e';
 const phase176MergeCommit = 'a1a8161e01d7da67de7512e06f09dc271c269333';
 const phase177MergeCommit = 'c803f30191a1f7264f8f4be2b55c084a7565957a';
 const phase178MergeCommit = 'f88ff02523a8a82db2d6a163717aa53a1e3b7118';
+const phase179MergeCommit = 'e46684f4b216888727993501b0cad465eab31b2d';
 const currentPhase5a = 'Phase 5A-A/B public owner-review polish sweep, local content-readiness cleanup, and protected admin review UX closure';
 const currentPhase5b = 'Phase 5B-A/B public catalogue-to-enquiry journey hardening, listing continuity, and admin/public parity checks';
 const currentPhase5c = 'Phase 5C-A/B public discovery search/filter polish, quote-intent context, and admin discovery parity closure';
@@ -51,6 +52,7 @@ const currentPhase5u = 'Phase 5U-A/B remediation verification readiness, correct
 const currentPhase5v = 'Phase 5V-A/B incident resolution response readiness, post-remediation closure ledger, and no-support-response firewall';
 const currentPhase5w = 'Phase 5W-A/B preventive maintenance readiness, lessons-to-maintenance backlog, and no-maintenance-change firewall';
 const currentPhase5x = 'Phase 5X-A/B maintenance approval readiness, change-window planning ledger, and no-schedule/no-change firewall';
+const currentPhase5y = 'Phase 5Y-A/B maintenance execution runbook readiness, change-window checklist, and no-execution/no-runtime firewall';
 const latestCompletedPhase4f = 'Phase 4F-A/B owner-facing review handoff bundle, approval issue template, and no-deploy preflight command center';
 const cleanupDocPath = 'docs/content/LOCAL-CONTENT-READINESS-CLEANUP.md';
 const publicJourneyAcceptanceDocPath = 'docs/content/LOCAL-PUBLIC-JOURNEY-ACCEPTANCE.md';
@@ -92,6 +94,8 @@ const preventiveMaintenanceReadinessDocPath = 'docs/content/LOCAL-PREVENTIVE-MAI
 const lessonsToMaintenanceBacklogTemplateDocPath = 'docs/content/LOCAL-LESSONS-TO-MAINTENANCE-BACKLOG-TEMPLATE.md';
 const maintenanceApprovalReadinessDocPath = 'docs/content/LOCAL-MAINTENANCE-APPROVAL-READINESS.md';
 const maintenanceChangeWindowPlanningLedgerTemplateDocPath = 'docs/content/LOCAL-MAINTENANCE-CHANGE-WINDOW-PLANNING-LEDGER-TEMPLATE.md';
+const maintenanceExecutionRunbookReadinessDocPath = 'docs/content/LOCAL-MAINTENANCE-EXECUTION-RUNBOOK-READINESS.md';
+const maintenanceChangeWindowExecutionChecklistTemplateDocPath = 'docs/content/LOCAL-MAINTENANCE-CHANGE-WINDOW-EXECUTION-CHECKLIST-TEMPLATE.md';
 const publicSourceRoots = [
   'website/app/layout.tsx',
   'website/app/page.tsx',
@@ -1429,7 +1433,7 @@ function assertDeploymentApprovalRequestSources() {
     /No-provider\/no-deploy boundaries/i,
     /No deployment approval is recorded here/i,
     /No launch clearance is granted here/i,
-    /No provider setup is performed here/i,
+    /No\s+provider\s+setup\s+is\s+performed\s+here/i,
     /No environment\/secrets are created here/i,
     /No production evidence is captured here/i,
     /No\s+deployment\s+is\s+performed\s+here/i,
@@ -1615,7 +1619,7 @@ function assertDeploymentExecutionRunbookSources() {
     /Allowed future runbook statuses/i,
     /No-execution boundaries/i,
     /No\s+deployment\s+is\s+performed\s+here/i,
-    /No provider setup is performed here/i,
+    /No\s+provider\s+setup\s+is\s+performed\s+here/i,
     /No environment\/secrets are created here/i,
     /No preview is published here/i,
     /No production launch is performed here/i,
@@ -3094,6 +3098,8 @@ function assertPhase5vIncidentResolutionResponseReadiness() {
   lessonsToMaintenanceBacklogTemplateDocPath,
   maintenanceApprovalReadinessDocPath,
   maintenanceChangeWindowPlanningLedgerTemplateDocPath,
+  maintenanceExecutionRunbookReadinessDocPath,
+  maintenanceChangeWindowExecutionChecklistTemplateDocPath,
     'scripts/validate-incident-resolution-response-readiness.cjs',
     'No deployment is performed or approved by Phase 5V-A/B'
   ]) {
@@ -3124,9 +3130,9 @@ function assertPhase5vIncidentResolutionResponseReadiness() {
     /No closure evidence is\s+captured here/i,
     /No resolution evidence is captured here/i,
     /No remediation\s+evidence is captured here/i,
-    /No rollback is executed here/i,
-    /No deployment is performed here/i,
-    /No deployment approval is granted here/i
+    /No\s+rollback\s+is\s+executed\s+here/i,
+    /No\s+deployment\s+is\s+performed\s+here/i,
+    /No\s+deployment\s+approval\s+is\s+granted\s+here/i
   ]) {
     assert(required.test(adminSource), `Phase 5V admin source missing safe wording: ${required}`);
   }
@@ -3231,12 +3237,16 @@ function assertPhase5wPreventiveMaintenanceReadiness() {
     lessonsToMaintenanceBacklogTemplateDocPath,
   maintenanceApprovalReadinessDocPath,
   maintenanceChangeWindowPlanningLedgerTemplateDocPath,
+  maintenanceExecutionRunbookReadinessDocPath,
+  maintenanceChangeWindowExecutionChecklistTemplateDocPath,
     incidentResolutionResponseReadinessDocPath,
     postRemediationClosureLessonsLedgerTemplateDocPath,
   preventiveMaintenanceReadinessDocPath,
   lessonsToMaintenanceBacklogTemplateDocPath,
   maintenanceApprovalReadinessDocPath,
   maintenanceChangeWindowPlanningLedgerTemplateDocPath,
+  maintenanceExecutionRunbookReadinessDocPath,
+  maintenanceChangeWindowExecutionChecklistTemplateDocPath,
     'scripts/validate-preventive-maintenance-readiness.cjs',
     'No deployment is performed or approved by Phase 5W-A/B'
   ]) {
@@ -3257,21 +3267,21 @@ function assertPhase5wPreventiveMaintenanceReadiness() {
     /LOCAL-LESSONS-TO-MAINTENANCE-BACKLOG-TEMPLATE\.md/i,
     /LOCAL-INCIDENT-RESOLUTION-RESPONSE-READINESS\.md/i,
     /LOCAL-POST-REMEDIATION-CLOSURE-LESSONS-LEDGER-TEMPLATE\.md/i,
-    /No maintenance task is implemented here/i,
-    /No maintenance schedule is created here/i,
+    /No\s+maintenance\s+task\s+is\s+implemented\s+here/i,
+    /No\s+maintenance\s+schedule\s+is\s+created\s+here/i,
     /No cron or job scheduler is\s+added here/i,
-    /No monitoring is configured here/i,
+    /No\s+monitoring\s+is\s+configured\s+here/i,
     /No analytics is configured\s+here/i,
-    /No provider setup is performed here/i,
+    /No\s+provider\s+setup\s+is\s+performed\s+here/i,
     /No support response is sent\s+here/i,
     /No customer follow-up is sent here/i,
     /No maintenance evidence is\s+captured here/i,
     /No monitoring evidence is captured here/i,
     /No analytics\s+evidence is captured here/i,
-    /No production change is made here/i,
-    /No rollback is executed here/i,
-    /No deployment is performed here/i,
-    /No deployment approval is granted here/i
+    /No\s+production\s+change\s+is\s+made\s+here/i,
+    /No\s+rollback\s+is\s+executed\s+here/i,
+    /No\s+deployment\s+is\s+performed\s+here/i,
+    /No\s+deployment\s+approval\s+is\s+granted\s+here/i
   ]) {
     assert(required.test(adminSource), `Phase 5W admin source missing safe wording: ${required}`);
   }
@@ -3378,10 +3388,14 @@ function assertPhase5xMaintenanceApprovalReadiness() {
     `Last merged capability merge commit: ${phase178MergeCommit}`,
     maintenanceApprovalReadinessDocPath,
     maintenanceChangeWindowPlanningLedgerTemplateDocPath,
+  maintenanceExecutionRunbookReadinessDocPath,
+  maintenanceChangeWindowExecutionChecklistTemplateDocPath,
     preventiveMaintenanceReadinessDocPath,
     lessonsToMaintenanceBacklogTemplateDocPath,
   maintenanceApprovalReadinessDocPath,
   maintenanceChangeWindowPlanningLedgerTemplateDocPath,
+  maintenanceExecutionRunbookReadinessDocPath,
+  maintenanceChangeWindowExecutionChecklistTemplateDocPath,
     'scripts/validate-maintenance-approval-readiness.cjs',
     'No deployment is performed or approved by Phase 5X-A/B'
   ]) {
@@ -3405,20 +3419,20 @@ function assertPhase5xMaintenanceApprovalReadiness() {
     /No owner approval is recorded here/i,
     /No provider approval is recorded here/i,
     /No maintenance approval is\s+granted here/i,
-    /No maintenance schedule is created here/i,
+    /No\s+maintenance\s+schedule\s+is\s+created\s+here/i,
     /No change window\s+is scheduled here/i,
-    /No cron or job scheduler is added here/i,
+    /No\s+cron\s+or\s+job\s+scheduler\s+is\s+added\s+here/i,
     /No monitoring\s+is configured here/i,
-    /No analytics is configured here/i,
+    /No\s+analytics\s+is\s+configured\s+here/i,
     /No provider setup is\s+performed here/i,
-    /No maintenance task is implemented here/i,
+    /No\s+maintenance\s+task\s+is\s+implemented\s+here/i,
     /No maintenance\s+approval evidence is captured here/i,
     /No schedule evidence is captured\s+here/i,
-    /No change-window evidence is captured here/i,
+    /No\s+change-window\s+evidence\s+is\s+captured\s+here/i,
     /No production change\s+is made here/i,
-    /No rollback is executed here/i,
+    /No\s+rollback\s+is\s+executed\s+here/i,
     /No deployment is performed\s+here/i,
-    /No deployment approval is granted here/i
+    /No\s+deployment\s+approval\s+is\s+granted\s+here/i
   ]) {
     assert(required.test(adminSource), `Phase 5X admin source missing safe wording: ${required}`);
   }
@@ -3442,6 +3456,151 @@ function assertPhase5xMaintenanceApprovalReadiness() {
   const suite = readRepoFile('scripts/validate-release-candidate-suite.cjs');
   assertIncludes(suite, "args: ['run', 'validate:maintenance-approval-readiness']", 'release-candidate suite');
   assertIncludes(suite, "args: ['run', 'validate:preventive-maintenance-readiness']", 'release-candidate suite');
+  assertNoMatch(suite, /docker[^\n]*(?:skip|bypass)|(?:skip|bypass)[^\n]*docker/i, 'release-candidate suite');
+  assertSuiteAndTests();
+}
+
+function assertPhase5yMaintenanceExecutionRunbookReadiness() {
+  assertPhase5xMaintenanceApprovalReadiness();
+  assertTracked(
+    [maintenanceExecutionRunbookReadinessDocPath, maintenanceChangeWindowExecutionChecklistTemplateDocPath],
+    'Phase 5Y maintenance execution runbook readiness docs'
+  );
+
+  const runbook = normalizeWhitespace(readRepoFile(maintenanceExecutionRunbookReadinessDocPath));
+  const checklist = normalizeWhitespace(readRepoFile(maintenanceChangeWindowExecutionChecklistTemplateDocPath));
+  const docs = `${runbook}\n${checklist}`;
+
+  for (const required of [
+    'repo-local, template-only, non-live maintenance execution runbook readiness package is not evidence',
+    '[NOT EVIDENCE / NOT RECORDED]',
+    '[DEPLOYMENT APPROVAL: NOT GRANTED]',
+    'does not execute maintenance, open change windows, create schedules, create cron, create jobs, configure monitoring, configure analytics, configure alerts, change production, change public runtime behavior, implement maintenance tasks, send support responses, contact customers, publish public notices, perform remediation, verify corrections, run retests, apply hotfixes, capture maintenance execution evidence, capture schedule evidence, capture change-window evidence, capture production evidence, execute rollback, perform deployment, record owner approval, record provider approval, record release closure, or grant deployment permission',
+    'Maintenance approval readiness reference',
+    'Maintenance change-window planning ledger reference',
+    'Approved maintenance item placeholder',
+    'Change-window precheck placeholder',
+    'Execution owner placeholder',
+    'Provider/runtime dependency placeholder',
+    'Rollback/escalation dependency placeholder',
+    'Maintenance execution checklist reference',
+    'Future verification dependency placeholder',
+    'Final maintenance-execution readiness status',
+    'Not started',
+    'Approval not recorded',
+    'Change window not scheduled',
+    'Execution owner not assigned',
+    'Needs provider clarification',
+    'Needs rollback planning',
+    'Needs future verification planning',
+    'Blocked: no execution approval',
+    'Blocked: deployment approval missing',
+    'Ready for future approved execution review',
+    'An execution runbook is not executed maintenance',
+    'A precheck placeholder is not a completed precheck',
+    'A change-window placeholder is not an opened change window',
+    'A rollback dependency placeholder is not rollback readiness',
+    'Passing validators is not execution approval',
+    'A merged PR is not maintenance execution',
+    'Execution ID: `[NOT ASSIGNED]`',
+    'Execution area: `[NOT SELECTED]`',
+    'Source approval item: `[NOT SUPPLIED]`',
+    'Route/surface affected: `[NOT SELECTED]`',
+    'Proposed maintenance summary: `[NOT CAPTURED]`',
+    'Change-window status: `[NOT OPENED]`',
+    'Precheck status: `[NOT RUN]`',
+    'Execution status: `[NOT STARTED]`',
+    'Owner confirmation status: `[OWNER INPUT REQUIRED]`',
+    'Provider/runtime status: `[PROVIDER DECISION REQUIRED]`',
+    'Rollback readiness status: `[NOT READY]`',
+    'Verification dependency: `[NOT CAPTURED]`',
+    'Evidence status: `[NOT EVIDENCE / NOT RECORDED]`',
+    'Deployment status: `[DEPLOYMENT APPROVAL: NOT GRANTED]`',
+    'Public route maintenance execution review',
+    'Protected admin maintenance execution review',
+    'Quote/enquiry workflow maintenance execution review',
+    'Listing/category/media maintenance execution review',
+    'Provider/runtime execution dependency',
+    'Environment/secrets execution dependency',
+    'Owner confirmation',
+    'Rollback/escalation dependency',
+    'Future verification review',
+    'not executed maintenance, not an opened change window, not scheduled work, not maintenance implementation, not support evidence, not response-sent evidence, not customer-contact evidence, not monitoring evidence, not analytics evidence, not remediation evidence, not correction completion, not hotfix approval, not rollback evidence, not production evidence, not release closure, not maintenance completion, and not deployment approval'
+  ]) {
+    assertIncludes(docs, required, 'Phase 5Y docs');
+  }
+
+  const statusDocs = normalizeWhitespace(statusDocPaths.map(readRepoFile).join('\n'));
+  for (const required of [
+    `Current phase: ${currentPhase5y}`,
+    `Latest completed capability: ${currentPhase5x}`,
+    'Last merged capability PR: #179',
+    `Last merged capability merge commit: ${phase179MergeCommit}`,
+    maintenanceExecutionRunbookReadinessDocPath,
+    maintenanceChangeWindowExecutionChecklistTemplateDocPath,
+    maintenanceApprovalReadinessDocPath,
+    maintenanceChangeWindowPlanningLedgerTemplateDocPath,
+    'scripts/validate-maintenance-execution-runbook-readiness.cjs',
+    'No deployment is performed or approved by Phase 5Y-A/B'
+  ]) {
+    assertIncludes(statusDocs, required, 'Phase 5Y status roll-forward docs');
+  }
+
+  const packageJson = JSON.parse(readRepoFile('package.json'));
+  assert(
+    packageJson.scripts?.['validate:maintenance-execution-runbook-readiness'] === 'node scripts/validate-maintenance-execution-runbook-readiness.cjs',
+    'package.json must register validate:maintenance-execution-runbook-readiness'
+  );
+
+  const adminSource = readRepoFile('website/app/admin/protected-admin-shell.tsx');
+  for (const required of [
+    /Phase 5Y-A\/B admin-only maintenance execution runbook readiness/i,
+    /MaintenanceExecutionRunbookReadinessHelper/i,
+    /LOCAL-MAINTENANCE-EXECUTION-RUNBOOK-READINESS\.md/i,
+    /LOCAL-MAINTENANCE-CHANGE-WINDOW-EXECUTION-CHECKLIST-TEMPLATE\.md/i,
+    /LOCAL-MAINTENANCE-APPROVAL-READINESS\.md/i,
+    /LOCAL-MAINTENANCE-CHANGE-WINDOW-PLANNING-LEDGER-TEMPLATE\.md/i,
+    /No\s+maintenance\s+task\s+is\s+executed\s+here/i,
+    /No\s+maintenance\s+task\s+is\s+implemented\s+here/i,
+    /No\s+change\s+window\s+is\s+opened\s+here/i,
+    /No\s+maintenance\s+schedule\s+is\s+created\s+here/i,
+    /No\s+cron\s+or\s+job\s+scheduler\s+is\s+added\s+here/i,
+    /No\s+monitoring\s+is\s+configured\s+here/i,
+    /No\s+analytics\s+is\s+configured\s+here/i,
+    /No\s+provider\s+setup\s+is\s+performed\s+here/i,
+    /No\s+execution\s+precheck\s+is\s+completed\s+here/i,
+    /No\s+maintenance\s+execution\s+evidence\s+is\s+captured\s+here/i,
+    /No\s+schedule\s+evidence\s+is\s+captured\s+here/i,
+    /No\s+change-window\s+evidence\s+is\s+captured\s+here/i,
+    /No\s+production\s+change\s+is\s+made\s+here/i,
+    /No\s+rollback\s+is\s+executed\s+here/i,
+    /No\s+deployment\s+is\s+performed\s+here/i,
+    /No\s+deployment\s+approval\s+is\s+granted\s+here/i,
+    /\[NOT EVIDENCE \/ NOT RECORDED\]/i,
+    /\[DEPLOYMENT APPROVAL: NOT GRANTED\]/i
+  ]) {
+    assert(required.test(adminSource), `Phase 5Y admin source missing safe wording: ${required}`);
+  }
+
+  assertIncludes(readRepoFile('website/app/admin/page.tsx'), 'view={{ kind: "home" }}', 'admin home page');
+  assert(/function AdminOperationsHome[\s\S]*<OwnerReadinessHelpersPanel \/>/.test(adminSource), 'AdminOperationsHome must render shared owner readiness helper panel');
+  assert(/function OwnerReadinessHelpersPanel[\s\S]*<OwnerReviewWalkthroughReadinessHelper \/>[\s\S]*<OwnerFeedbackIntakeReadinessHelper \/>[\s\S]*<OwnerCorrectionWorkflowReadinessHelper \/>[\s\S]*<OwnerReReviewRequestReadinessHelper \/>[\s\S]*<OwnerDecisionIntakeReadinessHelper \/>[\s\S]*<DeploymentApprovalRequestReadinessHelper \/>[\s\S]*<DeploymentExecutionRunbookReadinessHelper \/>[\s\S]*<SmokeEvidenceIntakeReadinessHelper \/>[\s\S]*<SmokeEvidenceReviewReadinessHelper \/>[\s\S]*<LaunchDecisionResponseReadinessHelper \/>[\s\S]*<PostLaunchObservationReadinessHelper \/>[\s\S]*<PostLaunchRemediationReadinessHelper \/>[\s\S]*<RemediationVerificationReadinessHelper \/>[\s\S]*<IncidentResolutionResponseReadinessHelper \/>[\s\S]*<PreventiveMaintenanceReadinessHelper \/>[\s\S]*<MaintenanceApprovalReadinessHelper \/>[\s\S]*<MaintenanceExecutionRunbookReadinessHelper \/>/.test(adminSource), 'Phase 5Y admin source must keep complete helper chain in shared panel');
+
+  const publicSource = readTrackedProductionSources(publicSourceRoots);
+  assertNoMatch(publicSource, /maintenance execution|change-window execution checklist|maintenance approval|maintenance change-window planning|preventive maintenance|lessons-to-maintenance|support response|customer follow-up|public notice|maintenance internals|monitoring\/analytics internals|scheduler\/cron internals|provider setup internals|environment\/secrets internals|admin route internals|owner handoff internals|release-control internals|admin urls?|\/admin\//i, 'Phase 5Y public source');
+  assert(/\b(?:listing|listings)\b/i.test(publicSource), 'Phase 5Y public source must retain listing wording');
+  assert(/\b(?:rental|rentals)\b/i.test(publicSource), 'Phase 5Y public source must retain rental wording');
+  assert(/\b(?:quote|enquiry|request)\b/i.test(publicSource), 'Phase 5Y public source must retain quote/enquiry/request wording');
+  assertNoMatch(publicSource, /\b(?:cart|checkout|order|payment|purchase|online ordering)\b/i, 'Phase 5Y public source');
+  assertNoMatch(publicSource, /\b(?:booking|reservation|fulfilment|fulfillment|stock reservation|stock-reservation|book now|reserve now)\b/i, 'Phase 5Y public source');
+  assertNoMatch(publicSource, /award-winning|certified partner|trusted by|5-star|guaranteed availability|guaranteed delivery|licensed and insured|testimonial|client logo|case study|legal guarantee|production policy|service-area claim|Singapore\s+\d{6}|\+?\d[\d\s().-]{7,}|Mon(?:day)?\s*-\s*Fri|24\/7|123\s+Main/i, 'Phase 5Y public source');
+  assertNoMatch(publicSource, /customer account|quote tracking|file upload|public upload|notifications?|\bCRM\b|email sending|sms sending|whatsapp|outbound messaging|public status view/i, 'Phase 5Y public source');
+  assertNoMatch(adminSource, /public upload|customer upload|storage provider changes|monitoring provider setup|analytics provider setup|alerting provider setup|scheduler setup|cron setup|process\.env|NEXT_PUBLIC_SUPABASE|SUPABASE_SERVICE_ROLE|service-role browser|Pinecone|\bRAG\b|n8n runtime|\/api\/chat.*retrieval|outbound messaging/i, 'Phase 5Y admin source');
+  assertNoMatch(docs, /actual deployment|maintenance executed|maintenance implemented|maintenance approved|owner approved|provider approved|maintenance scheduled|change window scheduled|precheck completed|cron configured|job configured|monitoring configured|analytics configured|support response sent|customer follow-up sent|public notice published|maintenance completed|live hotfix|remediation performed|correction completed|retest run|live monitoring|analytics capture|route verification|route walkthrough|preview publication|production launch|provider setup completed|env\/secrets setup completed|owner sign-?off complete|launch clearance granted|production evidence captured|preview evidence captured|smoke evidence captured|rollback evidence captured|response-sent evidence captured|closure evidence captured|resolution evidence captured|maintenance evidence captured|maintenance-execution evidence captured|maintenance-schedule evidence captured|change-window evidence captured|correction-completed evidence captured|remediation evidence captured|hotfix evidence captured|retest evidence captured|monitoring evidence captured|analytics evidence captured|deployment approval granted/i, 'Phase 5Y docs');
+
+  const suite = readRepoFile('scripts/validate-release-candidate-suite.cjs');
+  assertIncludes(suite, "args: ['run', 'validate:maintenance-execution-runbook-readiness']", 'release-candidate suite');
+  assertIncludes(suite, "args: ['run', 'validate:maintenance-approval-readiness']", 'release-candidate suite');
   assertNoMatch(suite, /docker[^\n]*(?:skip|bypass)|(?:skip|bypass)[^\n]*docker/i, 'release-candidate suite');
   assertSuiteAndTests();
 }
@@ -3756,6 +3915,7 @@ function assertPhase5qSmokeEvidenceReviewReadiness() {
 }
 
 module.exports = {
+  assertPhase5yMaintenanceExecutionRunbookReadiness,
   assertPhase5xMaintenanceApprovalReadiness,
   assertPhase5wPreventiveMaintenanceReadiness,
   assertPhase5vIncidentResolutionResponseReadiness,
@@ -3821,6 +3981,7 @@ module.exports = {
   currentPhase5v,
   currentPhase5w,
   currentPhase5x,
+  currentPhase5y,
   latestCompletedPhase4f,
   cleanupDocPath,
   publicJourneyAcceptanceDocPath,

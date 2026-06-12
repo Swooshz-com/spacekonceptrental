@@ -1888,6 +1888,60 @@ const phase5xNoApprovalNoScheduleBoundaries = [
   "A merged PR is not scheduled maintenance"
 ] as const;
 
+
+const phase5yMaintenanceExecutionRunbookReadinessPath =
+  "docs/content/LOCAL-MAINTENANCE-EXECUTION-RUNBOOK-READINESS.md";
+const phase5yMaintenanceChangeWindowExecutionChecklistTemplatePath =
+  "docs/content/LOCAL-MAINTENANCE-CHANGE-WINDOW-EXECUTION-CHECKLIST-TEMPLATE.md";
+const phase5ySafeFutureExecutionSections = [
+  "Maintenance approval readiness reference",
+  "Maintenance change-window planning ledger reference",
+  "Approved maintenance item placeholder",
+  "Change-window precheck placeholder",
+  "Execution owner placeholder",
+  "Provider/runtime dependency placeholder",
+  "Rollback/escalation dependency placeholder",
+  "Maintenance execution checklist reference",
+  "Future verification dependency placeholder",
+  "Final maintenance-execution readiness status"
+] as const;
+const phase5yMaintenanceExecutionChecklistPlaceholders = [
+  "Execution ID: [NOT ASSIGNED]",
+  "Execution area: [NOT SELECTED]",
+  "Source approval item: [NOT SUPPLIED]",
+  "Route/surface affected: [NOT SELECTED]",
+  "Proposed maintenance summary: [NOT CAPTURED]",
+  "Change-window status: [NOT OPENED]",
+  "Precheck status: [NOT RUN]",
+  "Execution status: [NOT STARTED]",
+  "Owner confirmation status: [OWNER INPUT REQUIRED]",
+  "Provider/runtime status: [PROVIDER DECISION REQUIRED]",
+  "Rollback readiness status: [NOT READY]",
+  "Verification dependency: [NOT CAPTURED]",
+  "Evidence status: [NOT EVIDENCE / NOT RECORDED]",
+  "Deployment status: [DEPLOYMENT APPROVAL: NOT GRANTED]"
+] as const;
+const phase5yAllowedFutureExecutionStatuses = [
+  "Not started",
+  "Approval not recorded",
+  "Change window not scheduled",
+  "Execution owner not assigned",
+  "Needs provider clarification",
+  "Needs rollback planning",
+  "Needs future verification planning",
+  "Blocked: no execution approval",
+  "Blocked: deployment approval missing",
+  "Ready for future approved execution review"
+] as const;
+const phase5yNoExecutionNoRuntimeBoundaries = [
+  "An execution runbook is not executed maintenance",
+  "A precheck placeholder is not a completed precheck",
+  "A change-window placeholder is not an opened change window",
+  "A rollback dependency placeholder is not rollback readiness",
+  "Passing validators is not execution approval",
+  "A merged PR is not maintenance execution"
+] as const;
+
 const publicJourneyReadinessClosurePath =
   "docs/content/PUBLIC-JOURNEY-READINESS-CLOSURE.md";
 const quoteEnquiryPublicExpectationBoundaryPath =
@@ -3920,6 +3974,92 @@ function MaintenanceApprovalReadinessHelper() {
   );
 }
 
+function MaintenanceExecutionRunbookReadinessHelper() {
+  return (
+    <section
+      aria-label="Phase 5Y maintenance execution runbook readiness helper"
+      className="admin-readiness"
+    >
+      <p className="eyebrow">Phase 5Y-A/B admin-only maintenance execution runbook readiness</p>
+      <h3>Maintenance execution runbook readiness helper</h3>
+      <p>
+        This protected helper prepares future maintenance execution runbook and
+        change-window checklist review for rental listings, event furniture
+        listings, categories, media, quote, enquiry, and request surfaces after
+        maintenance approval and scheduling are separately granted later. No
+        maintenance task is executed here. No maintenance task is implemented
+        here. No change window is opened here. No maintenance schedule is
+        created here. No cron or job scheduler is added here. No monitoring is
+        configured here. No analytics is configured here. No provider setup is
+        performed here. No execution precheck is completed here. No maintenance
+        execution evidence is captured here. No schedule evidence is captured
+        here. No change-window evidence is captured here. No production change
+        is made here. No rollback is executed here. No deployment is performed
+        here. No deployment approval is granted here.
+      </p>
+      <dl className="admin-readiness__grid">
+        <div>
+          <dt>Maintenance execution runbook readiness</dt>
+          <dd>{phase5yMaintenanceExecutionRunbookReadinessPath}</dd>
+        </div>
+        <div>
+          <dt>Maintenance change-window execution checklist template</dt>
+          <dd>{phase5yMaintenanceChangeWindowExecutionChecklistTemplatePath}</dd>
+        </div>
+        <div>
+          <dt>Maintenance approval readiness</dt>
+          <dd>{phase5xMaintenanceApprovalReadinessPath}</dd>
+        </div>
+        <div>
+          <dt>Maintenance change-window planning ledger template</dt>
+          <dd>{phase5xMaintenanceChangeWindowPlanningLedgerTemplatePath}</dd>
+        </div>
+        <div>
+          <dt>Evidence status</dt>
+          <dd>[NOT EVIDENCE / NOT RECORDED]</dd>
+        </div>
+        <div>
+          <dt>Deployment status</dt>
+          <dd>[DEPLOYMENT APPROVAL: NOT GRANTED]</dd>
+        </div>
+      </dl>
+      <h4>Safe future execution sections</h4>
+      <ul className="admin-readiness__list">
+        {phase5ySafeFutureExecutionSections.map((section) => (
+          <li key={section}>{section}</li>
+        ))}
+      </ul>
+      <h4>Maintenance change-window execution checklist placeholders</h4>
+      <ul className="admin-readiness__list">
+        {phase5yMaintenanceExecutionChecklistPlaceholders.map((placeholder) => (
+          <li key={placeholder}>{placeholder}</li>
+        ))}
+      </ul>
+      <h4>Allowed future execution statuses</h4>
+      <ul className="admin-readiness__list">
+        {phase5yAllowedFutureExecutionStatuses.map((status) => (
+          <li key={status}>{status}</li>
+        ))}
+      </ul>
+      <h4>No-execution/no-runtime boundaries</h4>
+      <ul className="admin-readiness__list">
+        {phase5yNoExecutionNoRuntimeBoundaries.map((boundary) => (
+          <li key={boundary}>{boundary}</li>
+        ))}
+      </ul>
+      <p>
+        This helper stays protected admin-only and does not expose maintenance
+        execution internals, change-window execution checklist internals,
+        maintenance approval internals, maintenance change-window planning
+        internals, monitoring/analytics internals, scheduler/cron internals,
+        provider setup internals, environment/secrets internals, owner handoff
+        internals, release-control internals, or admin route internals to public
+        rental, listing, quote, enquiry, or request routes.
+      </p>
+    </section>
+  );
+}
+
 function OwnerReadinessHelpersPanel() {
   return (
     <>
@@ -3939,6 +4079,7 @@ function OwnerReadinessHelpersPanel() {
       <IncidentResolutionResponseReadinessHelper />
       <PreventiveMaintenanceReadinessHelper />
       <MaintenanceApprovalReadinessHelper />
+      <MaintenanceExecutionRunbookReadinessHelper />
     </>
   );
 }

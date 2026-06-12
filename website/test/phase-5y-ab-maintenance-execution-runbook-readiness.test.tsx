@@ -10,14 +10,14 @@ import {
 } from "../app/admin/protected-admin-shell";
 
 const repoRoot = resolve(process.cwd(), "..");
+const maintenanceExecutionRunbookReadinessDocPath =
+  "docs/content/LOCAL-MAINTENANCE-EXECUTION-RUNBOOK-READINESS.md";
+const maintenanceChangeWindowExecutionChecklistTemplateDocPath =
+  "docs/content/LOCAL-MAINTENANCE-CHANGE-WINDOW-EXECUTION-CHECKLIST-TEMPLATE.md";
 const maintenanceApprovalReadinessDocPath =
   "docs/content/LOCAL-MAINTENANCE-APPROVAL-READINESS.md";
 const maintenanceChangeWindowPlanningLedgerTemplateDocPath =
   "docs/content/LOCAL-MAINTENANCE-CHANGE-WINDOW-PLANNING-LEDGER-TEMPLATE.md";
-const preventiveMaintenanceReadinessDocPath =
-  "docs/content/LOCAL-PREVENTIVE-MAINTENANCE-READINESS.md";
-const lessonsToMaintenanceBacklogTemplateDocPath =
-  "docs/content/LOCAL-LESSONS-TO-MAINTENANCE-BACKLOG-TEMPLATE.md";
 const publicSourceRoots = [
   "website/app/layout.tsx",
   "website/app/page.tsx",
@@ -86,12 +86,12 @@ const authorisedState: ProtectedAdminShellState = {
   },
 };
 
-describe("Phase 5X-A/B maintenance approval readiness", () => {
+describe("Phase 5Y-A/B maintenance execution runbook readiness", () => {
   afterEach(() => {
     cleanup();
   });
 
-  it("renders the protected Phase 5X helper and full helper chain for authorised admin home state", () => {
+  it("renders the protected Phase 5Y helper and full helper chain for authorised admin home state", () => {
     render(<AdminShellContent state={authorisedState} view={{ kind: "home" }} />);
 
     for (const heading of [
@@ -111,32 +111,32 @@ describe("Phase 5X-A/B maintenance approval readiness", () => {
       /incident resolution response readiness helper/i,
       /preventive maintenance readiness helper/i,
       /maintenance approval readiness helper/i,
+      /maintenance execution runbook readiness helper/i,
     ]) {
       expect(screen.getByRole("heading", { name: heading })).toBeInTheDocument();
     }
 
+    expect(screen.getByText(maintenanceExecutionRunbookReadinessDocPath)).toBeInTheDocument();
+    expect(screen.getByText(maintenanceChangeWindowExecutionChecklistTemplateDocPath)).toBeInTheDocument();
     expect(screen.getAllByText(maintenanceApprovalReadinessDocPath).length).toBeGreaterThan(0);
     expect(screen.getAllByText(maintenanceChangeWindowPlanningLedgerTemplateDocPath).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(preventiveMaintenanceReadinessDocPath).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(lessonsToMaintenanceBacklogTemplateDocPath).length).toBeGreaterThan(0);
-    expect(screen.getByText(/safe future approval sections/i)).toBeInTheDocument();
-    expect(screen.getByText(/maintenance approval\/change-window ledger placeholders/i)).toBeInTheDocument();
-    expect(screen.getByText(/allowed future approval statuses/i)).toBeInTheDocument();
-    expect(screen.getByText(/no-approval\/no-schedule boundaries/i)).toBeInTheDocument();
-    expect(screen.getByText(/approval id: \[not assigned\]/i)).toBeInTheDocument();
-    expect(screen.getByText(/ready for future approved scheduling review/i)).toBeInTheDocument();
-    expect(screen.getByText(/an approval template is not owner approval/i)).toBeInTheDocument();
-    expect(screen.getAllByText(/no owner approval is recorded here/i).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/no provider approval is recorded here/i).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/no maintenance approval is granted here/i).length).toBeGreaterThan(0);
+    expect(screen.getByText(/safe future execution sections/i)).toBeInTheDocument();
+    expect(screen.getByText(/maintenance change-window execution checklist placeholders/i)).toBeInTheDocument();
+    expect(screen.getByText(/allowed future execution statuses/i)).toBeInTheDocument();
+    expect(screen.getByText(/no-execution\/no-runtime boundaries/i)).toBeInTheDocument();
+    expect(screen.getByText(/execution id: \[not assigned\]/i)).toBeInTheDocument();
+    expect(screen.getByText(/ready for future approved execution review/i)).toBeInTheDocument();
+    expect(screen.getByText(/an execution runbook is not executed maintenance/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/no maintenance task is executed here/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/no maintenance task is implemented here/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/no change window is opened here/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/no maintenance schedule is created here/i).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/no change window is scheduled here/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/no cron or job scheduler is added here/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/no monitoring is configured here/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/no analytics is configured here/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/no provider setup is performed here/i).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/no maintenance task is implemented here/i).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/no maintenance approval evidence is captured here/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/no execution precheck is completed here/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/no maintenance execution evidence is captured here/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/no schedule evidence is captured here/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/no change-window evidence is captured here/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/no production change is made here/i).length).toBeGreaterThan(0);
@@ -147,7 +147,7 @@ describe("Phase 5X-A/B maintenance approval readiness", () => {
     expect(screen.getAllByText(/\[deployment approval: not granted\]/i).length).toBeGreaterThan(0);
   });
 
-  it("does not render the protected Phase 5X helper for blocked admin states", () => {
+  it("does not render the protected Phase 5Y helper for blocked admin states", () => {
     const blockedStates: ProtectedAdminShellState[] = [
       { status: "unauthenticated" },
       { status: "authenticated_not_authorised" },
@@ -159,31 +159,31 @@ describe("Phase 5X-A/B maintenance approval readiness", () => {
 
       expect(
         screen.queryByRole("heading", {
-          name: /maintenance approval readiness helper/i,
+          name: /maintenance execution runbook readiness helper/i,
         }),
       ).not.toBeInTheDocument();
-      expect(screen.queryByText(maintenanceApprovalReadinessDocPath)).not.toBeInTheDocument();
-      expect(screen.queryByText(maintenanceChangeWindowPlanningLedgerTemplateDocPath)).not.toBeInTheDocument();
+      expect(screen.queryByText(maintenanceExecutionRunbookReadinessDocPath)).not.toBeInTheDocument();
+      expect(screen.queryByText(maintenanceChangeWindowExecutionChecklistTemplateDocPath)).not.toBeInTheDocument();
 
       unmount();
     }
   });
 
-  it("keeps protected admin source wired to Phase 5X and Phase 5W docs", () => {
+  it("keeps protected admin source wired to Phase 5Y and Phase 5X docs", () => {
     const adminSource = readRepoFile("website/app/admin/protected-admin-shell.tsx");
 
+    expect(adminSource).toContain(maintenanceExecutionRunbookReadinessDocPath);
+    expect(adminSource).toContain(maintenanceChangeWindowExecutionChecklistTemplateDocPath);
     expect(adminSource).toContain(maintenanceApprovalReadinessDocPath);
     expect(adminSource).toContain(maintenanceChangeWindowPlanningLedgerTemplateDocPath);
-    expect(adminSource).toContain(preventiveMaintenanceReadinessDocPath);
-    expect(adminSource).toContain(lessonsToMaintenanceBacklogTemplateDocPath);
-    expect(adminSource).toMatch(/Phase 5X-A\/B admin-only maintenance approval readiness/i);
+    expect(adminSource).toMatch(/Phase 5Y-A\/B admin-only maintenance execution runbook readiness/i);
   });
 
-  it("keeps public production source free of maintenance approval and release-control internals", () => {
+  it("keeps public production source free of maintenance execution and internal readiness details", () => {
     const publicSource = readTrackedProductionSources(publicSourceRoots);
 
     expect(publicSource).not.toMatch(
-      /maintenance approval|maintenance change-window|preventive maintenance|lessons-to-maintenance|incident resolution response|support response|customer follow-up|public notice|maintenance internals|monitoring\/analytics internals|scheduler\/cron internals|provider setup internals|environment\/secrets internals|admin route internals|release-control internals|owner handoff internals|admin urls?|\/admin\//i,
+      /maintenance execution|change-window execution checklist|maintenance approval|maintenance change-window planning|preventive maintenance|lessons-to-maintenance|support response|customer follow-up|public notice|maintenance internals|monitoring\/analytics internals|scheduler\/cron internals|provider setup internals|environment\/secrets internals|admin route internals|release-control internals|owner handoff internals|admin urls?|\/admin\//i,
     );
   });
 
@@ -203,29 +203,29 @@ describe("Phase 5X-A/B maintenance approval readiness", () => {
     );
   });
 
-  it("keeps Phase 5X docs template-only with no evidence and no deployment approval claim", () => {
-    const docs = `${readRepoFile(maintenanceApprovalReadinessDocPath)}\n${readRepoFile(
-      maintenanceChangeWindowPlanningLedgerTemplateDocPath,
+  it("keeps Phase 5Y docs template-only with no evidence and no deployment approval claim", () => {
+    const docs = `${readRepoFile(maintenanceExecutionRunbookReadinessDocPath)}\n${readRepoFile(
+      maintenanceChangeWindowExecutionChecklistTemplateDocPath,
     )}`;
 
     expect(docs).toContain("[NOT EVIDENCE / NOT RECORDED]");
     expect(docs).toContain("[DEPLOYMENT APPROVAL: NOT GRANTED]");
     expect(docs).not.toMatch(
-      /actual deployment|maintenance approved|owner approved|provider approved|maintenance scheduled|change window scheduled|cron configured|job configured|monitoring configured|analytics configured|support response sent|customer follow-up sent|public notice published|maintenance completed|live hotfix applied|remediation performed|correction completed|retest run completed|live monitoring configured|analytics captured|route verification completed|route walkthrough completed|preview publication completed|production launch completed|provider setup completed|env\/secrets setup completed|owner sign-?off complete|launch clearance granted|production evidence captured|preview evidence captured|smoke evidence captured|rollback evidence captured|response-sent evidence captured|closure evidence captured|resolution evidence captured|maintenance evidence captured|maintenance-approval evidence captured|maintenance-schedule evidence captured|change-window evidence captured|correction-completed evidence captured|remediation evidence captured|hotfix evidence captured|retest evidence captured|monitoring evidence captured|analytics evidence captured|deployment approval granted/i,
+      /actual deployment|maintenance executed|maintenance implemented|change window opened|maintenance scheduled|change window scheduled|precheck completed|cron configured|job configured|monitoring configured|analytics configured|support response sent|customer follow-up sent|public notice published|maintenance completed|live hotfix|remediation performed|correction completed|retest run|live monitoring|analytics capture|route verification|route walkthrough|preview publication|production launch|provider setup completed|env\/secrets setup completed|owner approved|provider approved|owner sign-?off complete|launch clearance granted|production evidence captured|preview evidence captured|smoke evidence captured|rollback evidence captured|response-sent evidence captured|closure evidence captured|resolution evidence captured|maintenance evidence captured|maintenance-execution evidence captured|maintenance-schedule evidence captured|change-window evidence captured|correction-completed evidence captured|remediation evidence captured|hotfix evidence captured|retest evidence captured|monitoring evidence captured|analytics evidence captured|deployment approval granted/i,
     );
   });
 
-  it("registers the Phase 5X validator and keeps the release suite free of Docker bypass logic", () => {
+  it("registers the Phase 5Y validator and keeps the release suite free of Docker bypass logic", () => {
     const packageJson = JSON.parse(readRepoFile("package.json")) as {
       scripts?: Record<string, string>;
     };
     const suite = readRepoFile("scripts/validate-release-candidate-suite.cjs");
 
     expect(
-      packageJson.scripts?.["validate:maintenance-approval-readiness"],
-    ).toBe("node scripts/validate-maintenance-approval-readiness.cjs");
+      packageJson.scripts?.["validate:maintenance-execution-runbook-readiness"],
+    ).toBe("node scripts/validate-maintenance-execution-runbook-readiness.cjs");
+    expect(suite).toContain("args: ['run', 'validate:maintenance-execution-runbook-readiness']");
     expect(suite).toContain("args: ['run', 'validate:maintenance-approval-readiness']");
-    expect(suite).toContain("args: ['run', 'validate:preventive-maintenance-readiness']");
     expect(suite).not.toMatch(/docker[^\n]*(?:skip|bypass)|(?:skip|bypass)[^\n]*docker/i);
   });
 });
