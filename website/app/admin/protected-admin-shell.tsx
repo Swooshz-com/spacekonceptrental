@@ -1780,6 +1780,60 @@ const phase5vNoResponseNoResolutionBoundaries = [
   "A merged PR is not issue closure"
 ] as const;
 
+
+
+const phase5wPreventiveMaintenanceReadinessPath =
+  "docs/content/LOCAL-PREVENTIVE-MAINTENANCE-READINESS.md";
+const phase5wLessonsToMaintenanceBacklogTemplatePath =
+  "docs/content/LOCAL-LESSONS-TO-MAINTENANCE-BACKLOG-TEMPLATE.md";
+const phase5wSafeFutureMaintenanceSections = [
+  "Incident resolution response readiness reference",
+  "Post-remediation closure / lessons ledger reference",
+  "Lesson source placeholder",
+  "Maintenance candidate placeholder",
+  "Affected route/surface placeholder",
+  "Owner priority placeholder",
+  "Provider/runtime dependency placeholder",
+  "Lessons-to-maintenance backlog reference",
+  "Future verification dependency placeholder",
+  "Final maintenance-readiness status"
+] as const;
+const phase5wLessonsToMaintenanceBacklogPlaceholders = [
+  "Maintenance ID: [NOT ASSIGNED]",
+  "Maintenance area: [NOT SELECTED]",
+  "Source closure item: [NOT SUPPLIED]",
+  "Route/surface affected: [NOT SELECTED]",
+  "Lesson summary: [NOT CAPTURED]",
+  "Proposed maintenance item: [NOT CAPTURED]",
+  "Owner priority status: [OWNER INPUT REQUIRED]",
+  "Provider/runtime dependency: [PROVIDER DECISION REQUIRED]",
+  "Schedule status: [NOT SCHEDULED]",
+  "Implementation status: [NOT STARTED]",
+  "Verification dependency: [NOT CAPTURED]",
+  "Evidence status: [NOT EVIDENCE / NOT RECORDED]",
+  "Deployment status: [DEPLOYMENT APPROVAL: NOT GRANTED]"
+] as const;
+const phase5wAllowedFutureMaintenanceStatuses = [
+  "Not started",
+  "Lesson not approved",
+  "Maintenance candidate not captured",
+  "Needs owner prioritisation",
+  "Needs provider clarification",
+  "Needs future correction planning",
+  "Needs future verification planning",
+  "Blocked: no maintenance approval",
+  "Blocked: deployment approval missing",
+  "Ready for future approved maintenance planning"
+] as const;
+const phase5wNoMaintenanceNoScheduleBoundaries = [
+  "A maintenance template is not implemented maintenance",
+  "A backlog placeholder is not scheduled work",
+  "A lesson placeholder is not a real lesson learned",
+  "A provider dependency placeholder is not provider setup",
+  "Passing validators is not maintenance completion",
+  "A merged PR is not preventive maintenance"
+] as const;
+
 const publicJourneyReadinessClosurePath =
   "docs/content/PUBLIC-JOURNEY-READINESS-CLOSURE.md";
 const quoteEnquiryPublicExpectationBoundaryPath =
@@ -3637,6 +3691,94 @@ function IncidentResolutionResponseReadinessHelper() {
   );
 }
 
+
+function PreventiveMaintenanceReadinessHelper() {
+  return (
+    <section
+      aria-label="Phase 5W preventive maintenance readiness helper"
+      className="admin-readiness"
+    >
+      <p className="eyebrow">Phase 5W-A/B admin-only preventive maintenance readiness</p>
+      <h3>Preventive maintenance readiness helper</h3>
+      <p>
+        This protected helper prepares future approved preventive maintenance
+        planning for rental listings, event furniture listings, categories,
+        media, quote, enquiry, and request surfaces after real incident closure
+        and lessons are approved later. No maintenance task is implemented here.
+        No maintenance schedule is created here. No cron or job scheduler is
+        added here. No monitoring is configured here. No analytics is configured
+        here. No provider setup is performed here. No support response is sent
+        here. No customer follow-up is sent here. No maintenance evidence is
+        captured here. No monitoring evidence is captured here. No analytics
+        evidence is captured here. No production change is made here. No
+        rollback is executed here. No deployment is performed here. No
+        deployment approval is granted here.
+      </p>
+      <dl className="admin-readiness__grid">
+        <div>
+          <dt>Preventive maintenance readiness</dt>
+          <dd>{phase5wPreventiveMaintenanceReadinessPath}</dd>
+        </div>
+        <div>
+          <dt>Lessons-to-maintenance backlog template</dt>
+          <dd>{phase5wLessonsToMaintenanceBacklogTemplatePath}</dd>
+        </div>
+        <div>
+          <dt>Incident resolution response readiness</dt>
+          <dd>{phase5vIncidentResolutionResponseReadinessPath}</dd>
+        </div>
+        <div>
+          <dt>Post-remediation closure / lessons ledger template</dt>
+          <dd>{phase5vPostRemediationClosureLessonsLedgerTemplatePath}</dd>
+        </div>
+        <div>
+          <dt>Evidence status</dt>
+          <dd>[NOT EVIDENCE / NOT RECORDED]</dd>
+        </div>
+        <div>
+          <dt>Deployment status</dt>
+          <dd>[DEPLOYMENT APPROVAL: NOT GRANTED]</dd>
+        </div>
+      </dl>
+      <h4>Safe future maintenance sections</h4>
+      <ul className="admin-readiness__list">
+        {phase5wSafeFutureMaintenanceSections.map((section) => (
+          <li key={section}>{section}</li>
+        ))}
+      </ul>
+      <h4>Lessons-to-maintenance backlog placeholders</h4>
+      <ul className="admin-readiness__list">
+        {phase5wLessonsToMaintenanceBacklogPlaceholders.map((placeholder) => (
+          <li key={placeholder}>{placeholder}</li>
+        ))}
+      </ul>
+      <h4>Allowed future maintenance statuses</h4>
+      <ul className="admin-readiness__list">
+        {phase5wAllowedFutureMaintenanceStatuses.map((status) => (
+          <li key={status}>{status}</li>
+        ))}
+      </ul>
+      <h4>No-maintenance/no-schedule boundaries</h4>
+      <ul className="admin-readiness__list">
+        {phase5wNoMaintenanceNoScheduleBoundaries.map((boundary) => (
+          <li key={boundary}>{boundary}</li>
+        ))}
+      </ul>
+      <p>
+        This helper stays protected admin-only and does not expose preventive
+        maintenance internals, lessons-to-maintenance backlog internals,
+        incident resolution response internals, post-remediation closure ledger
+        internals, support response internals, customer follow-up internals,
+        public notice internals, maintenance internals, monitoring/analytics
+        internals, scheduler/cron internals, provider setup internals,
+        environment/secrets internals, owner handoff internals, release-control
+        internals, or admin route internals to public rental, listing, quote,
+        enquiry, or request routes.
+      </p>
+    </section>
+  );
+}
+
 function OwnerReadinessHelpersPanel() {
   return (
     <>
@@ -3654,6 +3796,7 @@ function OwnerReadinessHelpersPanel() {
       <PostLaunchRemediationReadinessHelper />
       <RemediationVerificationReadinessHelper />
       <IncidentResolutionResponseReadinessHelper />
+      <PreventiveMaintenanceReadinessHelper />
     </>
   );
 }
