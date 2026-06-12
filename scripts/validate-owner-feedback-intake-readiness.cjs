@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 const {
-  assertPhase5uRemediationVerificationReadiness,
+  assertPhase5vIncidentResolutionResponseReadiness,
 } = require('./public-review-polish-checks.cjs');
 
-assertPhase5uRemediationVerificationReadiness();
+assertPhase5vIncidentResolutionResponseReadiness();
 console.log(
   'Owner feedback intake readiness validation passed. No deployment was performed.',
 );

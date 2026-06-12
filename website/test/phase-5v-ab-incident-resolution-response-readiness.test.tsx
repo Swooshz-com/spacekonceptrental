@@ -10,14 +10,14 @@ import {
 } from "../app/admin/protected-admin-shell";
 
 const repoRoot = resolve(process.cwd(), "..");
+const incidentResolutionResponseReadinessDocPath =
+  "docs/content/LOCAL-INCIDENT-RESOLUTION-RESPONSE-READINESS.md";
+const postRemediationClosureLessonsLedgerTemplateDocPath =
+  "docs/content/LOCAL-POST-REMEDIATION-CLOSURE-LESSONS-LEDGER-TEMPLATE.md";
 const remediationVerificationReadinessDocPath =
   "docs/content/LOCAL-REMEDIATION-VERIFICATION-READINESS.md";
 const correctionRetestResolutionLedgerTemplateDocPath =
   "docs/content/LOCAL-CORRECTION-RETEST-RESOLUTION-LEDGER-TEMPLATE.md";
-const postLaunchRemediationReadinessDocPath =
-  "docs/content/LOCAL-POST-LAUNCH-REMEDIATION-READINESS.md";
-const incidentTriageCorrectionBacklogTemplateDocPath =
-  "docs/content/LOCAL-INCIDENT-TRIAGE-CORRECTION-BACKLOG-TEMPLATE.md";
 const publicSourceRoots = [
   "website/app/layout.tsx",
   "website/app/page.tsx",
@@ -86,12 +86,12 @@ const authorisedState: ProtectedAdminShellState = {
   },
 };
 
-describe("Phase 5U-A/B remediation verification readiness", () => {
+describe("Phase 5V-A/B incident resolution response readiness", () => {
   afterEach(() => {
     cleanup();
   });
 
-  it("renders the protected Phase 5U helper and full helper chain for authorised admin home state", () => {
+  it("renders the protected Phase 5V helper and full helper chain for authorised admin home state", () => {
     render(<AdminShellContent state={authorisedState} view={{ kind: "home" }} />);
 
     for (const heading of [
@@ -108,31 +108,31 @@ describe("Phase 5U-A/B remediation verification readiness", () => {
       /post-launch observation readiness helper/i,
       /post-launch remediation readiness helper/i,
       /remediation verification readiness helper/i,
+      /incident resolution response readiness helper/i,
     ]) {
       expect(screen.getByRole("heading", { name: heading })).toBeInTheDocument();
     }
 
+    expect(screen.getByText(incidentResolutionResponseReadinessDocPath)).toBeInTheDocument();
+    expect(screen.getByText(postRemediationClosureLessonsLedgerTemplateDocPath)).toBeInTheDocument();
     expect(screen.getAllByText(remediationVerificationReadinessDocPath).length).toBeGreaterThan(0);
     expect(screen.getAllByText(correctionRetestResolutionLedgerTemplateDocPath).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(postLaunchRemediationReadinessDocPath).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(incidentTriageCorrectionBacklogTemplateDocPath).length).toBeGreaterThan(0);
-    expect(screen.getByText(/safe future verification sections/i)).toBeInTheDocument();
-    expect(screen.getByText(/proposed correction source placeholder/i)).toBeInTheDocument();
-    expect(screen.getByText(/correction retest\/resolution ledger placeholders/i)).toBeInTheDocument();
-    expect(screen.getByText(/retest id: \[not assigned\]/i)).toBeInTheDocument();
-    expect(screen.getByText(/allowed future verification statuses/i)).toBeInTheDocument();
-    expect(screen.getByText(/ready for future approved verification/i)).toBeInTheDocument();
-    expect(screen.getByText(/no-retest\/no-resolution boundaries/i)).toBeInTheDocument();
-    expect(screen.getByText(/a verification template is not a retest/i)).toBeInTheDocument();
-    expect(screen.getByText(/no correction retest is run here/i)).toBeInTheDocument();
-    expect(screen.getAllByText(/no incident resolution is recorded here/i).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/no correction completion is claimed here/i).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/no live hotfix is applied here/i).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/no production change is made here/i).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/no remediation is performed here/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/safe future response sections/i).length).toBeGreaterThan(0);
+    expect(screen.getByText(/verified correction summary placeholder/i)).toBeInTheDocument();
+    expect(screen.getByText(/post-remediation closure \/ lessons ledger placeholders/i)).toBeInTheDocument();
+    expect(screen.getByText(/closure id: \[not assigned\]/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/allowed future response statuses/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/ready for future approved response/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/no-response\/no-resolution boundaries/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/a response template is not a sent response/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/no support response is sent here/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/no customer follow-up is sent here/i).length).toBeGreaterThan(0);
-    expect(screen.getByText(/no retest evidence is captured here/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/no incident is closed here/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/no incident resolution is recorded here/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/no public notice is published here/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/no maintenance task is completed here/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/no response-sent evidence is captured here/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/no closure evidence is captured here/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/no resolution evidence is captured here/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/no remediation evidence is captured here/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/no rollback is executed here/i).length).toBeGreaterThan(0);
@@ -142,7 +142,7 @@ describe("Phase 5U-A/B remediation verification readiness", () => {
     expect(screen.getAllByText(/\[deployment approval: not granted\]/i).length).toBeGreaterThan(0);
   });
 
-  it("does not render the protected Phase 5U helper for blocked admin states", () => {
+  it("does not render the protected Phase 5V helper for blocked admin states", () => {
     const blockedStates: ProtectedAdminShellState[] = [
       { status: "unauthenticated" },
       { status: "authenticated_not_authorised" },
@@ -154,31 +154,31 @@ describe("Phase 5U-A/B remediation verification readiness", () => {
 
       expect(
         screen.queryByRole("heading", {
-          name: /remediation verification readiness helper/i,
+          name: /incident resolution response readiness helper/i,
         }),
       ).not.toBeInTheDocument();
-      expect(screen.queryByText(remediationVerificationReadinessDocPath)).not.toBeInTheDocument();
-      expect(screen.queryByText(correctionRetestResolutionLedgerTemplateDocPath)).not.toBeInTheDocument();
+      expect(screen.queryByText(incidentResolutionResponseReadinessDocPath)).not.toBeInTheDocument();
+      expect(screen.queryByText(postRemediationClosureLessonsLedgerTemplateDocPath)).not.toBeInTheDocument();
 
       unmount();
     }
   });
 
-  it("keeps protected admin source wired to Phase 5U and Phase 5T docs", () => {
+  it("keeps protected admin source wired to Phase 5V and Phase 5U docs", () => {
     const adminSource = readRepoFile("website/app/admin/protected-admin-shell.tsx");
 
+    expect(adminSource).toContain(incidentResolutionResponseReadinessDocPath);
+    expect(adminSource).toContain(postRemediationClosureLessonsLedgerTemplateDocPath);
     expect(adminSource).toContain(remediationVerificationReadinessDocPath);
     expect(adminSource).toContain(correctionRetestResolutionLedgerTemplateDocPath);
-    expect(adminSource).toContain(postLaunchRemediationReadinessDocPath);
-    expect(adminSource).toContain(incidentTriageCorrectionBacklogTemplateDocPath);
-    expect(adminSource).toMatch(/Phase 5U-A\/B admin-only remediation verification readiness/i);
+    expect(adminSource).toMatch(/Phase 5V-A\/B admin-only incident resolution response readiness/i);
   });
 
-  it("keeps public production source free of internal remediation verification and release-control internals", () => {
+  it("keeps public production source free of internal response, closure, remediation, and release-control internals", () => {
     const publicSource = readTrackedProductionSources(publicSourceRoots);
 
     expect(publicSource).not.toMatch(
-      /remediation verification|correction retest|resolution ledger|post-launch remediation|incident triage correction backlog|monitoring\/analytics internals|hotfix internals|retest internals|resolution internals|provider setup internals|environment\/secrets internals|admin route internals|release-control internals|owner handoff internals|admin urls?|\/admin\//i,
+      /incident resolution response|post-remediation closure|remediation verification|correction retest|resolution ledger|support response|customer follow-up|public notice|maintenance internals|monitoring\/analytics internals|hotfix internals|retest internals|resolution internals|provider setup internals|environment\/secrets internals|admin route internals|release-control internals|owner handoff internals|admin urls?|\/admin\//i,
     );
   });
 
@@ -198,29 +198,29 @@ describe("Phase 5U-A/B remediation verification readiness", () => {
     );
   });
 
-  it("keeps Phase 5U docs template-only with no evidence and no deployment approval claim", () => {
-    const docs = `${readRepoFile(remediationVerificationReadinessDocPath)}\n${readRepoFile(
-      correctionRetestResolutionLedgerTemplateDocPath,
+  it("keeps Phase 5V docs template-only with no evidence and no deployment approval claim", () => {
+    const docs = `${readRepoFile(incidentResolutionResponseReadinessDocPath)}\n${readRepoFile(
+      postRemediationClosureLessonsLedgerTemplateDocPath,
     )}`;
 
     expect(docs).toContain("[NOT EVIDENCE / NOT RECORDED]");
     expect(docs).toContain("[DEPLOYMENT APPROVAL: NOT GRANTED]");
     expect(docs).not.toMatch(
-      /actual deployment|live hotfix applied|remediation performed|correction completed|retest run completed|incident resolved|support response sent|customer follow-up sent|live monitoring configured|analytics captured|route verification completed|route walkthrough completed|preview publication completed|production launch completed|provider setup completed|env\/secrets setup completed|owner approved|owner sign-?off complete|launch clearance granted|production evidence captured|preview evidence captured|smoke evidence captured|rollback evidence captured|response-sent evidence captured|correction-completed evidence captured|remediation evidence captured|hotfix evidence captured|retest evidence captured|resolution evidence captured|monitoring evidence captured|analytics evidence captured|deployment approval granted/i,
+      /actual deployment|support response sent|customer follow-up sent|incident closed|incident resolved|public notice published|maintenance completed|live hotfix applied|remediation performed|correction completed|retest run completed|live monitoring configured|analytics captured|route verification completed|route walkthrough completed|preview publication completed|production launch completed|provider setup completed|env\/secrets setup completed|owner approved|owner sign-?off complete|launch clearance granted|production evidence captured|preview evidence captured|smoke evidence captured|rollback evidence captured|response-sent evidence captured|closure evidence captured|resolution evidence captured|maintenance evidence captured|correction-completed evidence captured|remediation evidence captured|hotfix evidence captured|retest evidence captured|monitoring evidence captured|analytics evidence captured|deployment approval granted/i,
     );
   });
 
-  it("registers the Phase 5U validator and keeps the release suite free of Docker bypass logic", () => {
+  it("registers the Phase 5V validator and keeps the release suite free of Docker bypass logic", () => {
     const packageJson = JSON.parse(readRepoFile("package.json")) as {
       scripts?: Record<string, string>;
     };
     const suite = readRepoFile("scripts/validate-release-candidate-suite.cjs");
 
     expect(
-      packageJson.scripts?.["validate:remediation-verification-readiness"],
-    ).toBe("node scripts/validate-remediation-verification-readiness.cjs");
+      packageJson.scripts?.["validate:incident-resolution-response-readiness"],
+    ).toBe("node scripts/validate-incident-resolution-response-readiness.cjs");
+    expect(suite).toContain("args: ['run', 'validate:incident-resolution-response-readiness']");
     expect(suite).toContain("args: ['run', 'validate:remediation-verification-readiness']");
-    expect(suite).toContain("args: ['run', 'validate:post-launch-remediation-readiness']");
     expect(suite).not.toMatch(/docker[^\n]*(?:skip|bypass)|(?:skip|bypass)[^\n]*docker/i);
   });
 });

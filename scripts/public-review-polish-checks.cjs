@@ -24,6 +24,7 @@ const phase172MergeCommit = '607196e684649c2ed0fa70a9e530e9a58c7d09ab';
 const phase173MergeCommit = '6d6bcd9ebae98a068a89d062eea8654879ca2019';
 const phase174MergeCommit = '98afaaf7ea94dfd8aac80d2b5dda26c2d57e731d';
 const phase175MergeCommit = '92a39f6fa8540a45f9a2369b3ec1fc497e76058e';
+const phase176MergeCommit = 'a1a8161e01d7da67de7512e06f09dc271c269333';
 const currentPhase5a = 'Phase 5A-A/B public owner-review polish sweep, local content-readiness cleanup, and protected admin review UX closure';
 const currentPhase5b = 'Phase 5B-A/B public catalogue-to-enquiry journey hardening, listing continuity, and admin/public parity checks';
 const currentPhase5c = 'Phase 5C-A/B public discovery search/filter polish, quote-intent context, and admin discovery parity closure';
@@ -45,6 +46,7 @@ const currentPhase5r = 'Phase 5R-A/B launch decision response readiness, release
 const currentPhase5s = 'Phase 5S-A/B post-launch observation readiness, incident/follow-up ledger, and no-live-monitoring firewall';
 const currentPhase5t = 'Phase 5T-A/B post-launch remediation readiness, incident triage correction backlog, and no-live-hotfix firewall';
 const currentPhase5u = 'Phase 5U-A/B remediation verification readiness, correction retest ledger, and no-resolution-claim firewall';
+const currentPhase5v = 'Phase 5V-A/B incident resolution response readiness, post-remediation closure ledger, and no-support-response firewall';
 const latestCompletedPhase4f = 'Phase 4F-A/B owner-facing review handoff bundle, approval issue template, and no-deploy preflight command center';
 const cleanupDocPath = 'docs/content/LOCAL-CONTENT-READINESS-CLEANUP.md';
 const publicJourneyAcceptanceDocPath = 'docs/content/LOCAL-PUBLIC-JOURNEY-ACCEPTANCE.md';
@@ -80,6 +82,8 @@ const postLaunchRemediationReadinessDocPath = 'docs/content/LOCAL-POST-LAUNCH-RE
 const incidentTriageCorrectionBacklogTemplateDocPath = 'docs/content/LOCAL-INCIDENT-TRIAGE-CORRECTION-BACKLOG-TEMPLATE.md';
 const remediationVerificationReadinessDocPath = 'docs/content/LOCAL-REMEDIATION-VERIFICATION-READINESS.md';
 const correctionRetestResolutionLedgerTemplateDocPath = 'docs/content/LOCAL-CORRECTION-RETEST-RESOLUTION-LEDGER-TEMPLATE.md';
+const incidentResolutionResponseReadinessDocPath = 'docs/content/LOCAL-INCIDENT-RESOLUTION-RESPONSE-READINESS.md';
+const postRemediationClosureLessonsLedgerTemplateDocPath = 'docs/content/LOCAL-POST-REMEDIATION-CLOSURE-LESSONS-LEDGER-TEMPLATE.md';
 const publicSourceRoots = [
   'website/app/layout.tsx',
   'website/app/page.tsx',
@@ -3003,6 +3007,140 @@ function assertReleaseSuiteHasRemediationVerificationReadiness() {
   assertNoMatch(suite, /docker[^\n]*(?:skip|bypass)|(?:skip|bypass)[^\n]*docker/i, 'release-candidate suite');
 }
 
+function assertPhase5vIncidentResolutionResponseReadiness() {
+  assertPhase5uRemediationVerificationReadiness();
+  assertTracked(
+    [incidentResolutionResponseReadinessDocPath, postRemediationClosureLessonsLedgerTemplateDocPath],
+    'Phase 5V incident resolution response readiness docs'
+  );
+
+  const readiness = normalizeWhitespace(readRepoFile(incidentResolutionResponseReadinessDocPath));
+  const ledger = normalizeWhitespace(readRepoFile(postRemediationClosureLessonsLedgerTemplateDocPath));
+  const docs = `${readiness}\n${ledger}`;
+
+  for (const required of [
+    'repo-local, template-only, non-live incident resolution response readiness package is not evidence',
+    '[NOT EVIDENCE / NOT RECORDED]',
+    '[DEPLOYMENT APPROVAL: NOT GRANTED]',
+    'does not send support responses, send customer follow-ups, close incidents, record incident resolution, publish public notices, publish changelogs, perform remediation, verify corrections, run retests, apply hotfixes, change production, change public runtime behavior, configure providers, capture resolution evidence, capture response-sent evidence, capture closure evidence, capture production evidence, execute rollback, perform deployment, record owner approval, record release closure, or grant deployment permission',
+    'Remediation verification readiness reference',
+    'Correction retest / resolution ledger reference',
+    'Source triage item placeholder',
+    'Verified correction summary placeholder',
+    'Owner confirmation placeholder',
+    'Provider/runtime confirmation placeholder',
+    'Support response draft placeholder',
+    'Customer follow-up draft placeholder',
+    'Public notice decision placeholder',
+    'Final resolution-response status',
+    'Not started',
+    'Verification not completed',
+    'Retest not run',
+    'Resolution not recorded',
+    'Needs owner confirmation',
+    'Needs provider confirmation',
+    'Draft response only',
+    'Blocked: no support approval',
+    'Blocked: deployment approval missing',
+    'Ready for future approved response',
+    'A response template is not a sent response',
+    'A support draft is not support evidence',
+    'A customer follow-up placeholder is not customer contact',
+    'A resolution summary is not incident resolution',
+    'Passing validators is not verified remediation',
+    'A merged PR is not issue closure',
+    'Closure ID: `[NOT ASSIGNED]`',
+    'Closure area: `[NOT SELECTED]`',
+    'Source retest item: `[NOT SUPPLIED]`',
+    'Route/surface affected: `[NOT SELECTED]`',
+    'Resolution summary: `[NOT CAPTURED]`',
+    'Support response status: `[NOT SENT]`',
+    'Customer follow-up status: `[NOT SENT]`',
+    'Public notice status: `[NOT APPROVED]`',
+    'Owner confirmation status: `[OWNER INPUT REQUIRED]`',
+    'Provider/runtime status: `[PROVIDER DECISION REQUIRED]`',
+    'Lessons learned: `[NOT CAPTURED]`',
+    'Maintenance follow-up status: `[NOT SCHEDULED]`',
+    'Public route closure review',
+    'Protected admin closure review',
+    'Quote/enquiry workflow closure review',
+    'Listing/category/media closure review',
+    'Provider/runtime confirmation',
+    'Environment/secrets confirmation',
+    'Support/customer response draft',
+    'Future maintenance planning',
+    'not incident closure, not issue resolution, not support evidence, not response-sent evidence, not customer-contact evidence, not monitoring evidence, not analytics evidence, not remediation evidence, not correction completion, not hotfix approval, not rollback evidence, not production evidence, not release closure, not maintenance completion, and not deployment approval'
+  ]) {
+    assertIncludes(docs, required, 'Phase 5V docs');
+  }
+
+  const statusDocs = normalizeWhitespace(statusDocPaths.map(readRepoFile).join('\n'));
+  for (const required of [
+    `Current phase: ${currentPhase5v}`,
+    `Latest completed capability: ${currentPhase5u}`,
+    'Last merged capability PR: #176',
+    `Last merged capability merge commit: ${phase176MergeCommit}`,
+    incidentResolutionResponseReadinessDocPath,
+    postRemediationClosureLessonsLedgerTemplateDocPath,
+    'scripts/validate-incident-resolution-response-readiness.cjs',
+    'No deployment is performed or approved by Phase 5V-A/B'
+  ]) {
+    assertIncludes(statusDocs, required, 'Phase 5V status roll-forward docs');
+  }
+
+  const packageJson = JSON.parse(readRepoFile('package.json'));
+  assert(
+    packageJson.scripts?.['validate:incident-resolution-response-readiness'] === 'node scripts/validate-incident-resolution-response-readiness.cjs',
+    'package.json must register validate:incident-resolution-response-readiness'
+  );
+
+  const adminSource = readRepoFile('website/app/admin/protected-admin-shell.tsx');
+  for (const required of [
+    /Phase 5V-A\/B admin-only incident resolution response readiness/i,
+    /IncidentResolutionResponseReadinessHelper/i,
+    /LOCAL-INCIDENT-RESOLUTION-RESPONSE-READINESS\.md/i,
+    /LOCAL-POST-REMEDIATION-CLOSURE-LESSONS-LEDGER-TEMPLATE\.md/i,
+    /LOCAL-REMEDIATION-VERIFICATION-READINESS\.md/i,
+    /LOCAL-CORRECTION-RETEST-RESOLUTION-LEDGER-TEMPLATE\.md/i,
+    /No support\s+response is sent here/i,
+    /No customer follow-up is sent here/i,
+    /No incident\s+is closed here/i,
+    /No incident resolution is recorded here/i,
+    /No public\s+notice is published here/i,
+    /No maintenance\s+task is completed here/i,
+    /No response-sent evidence is captured here/i,
+    /No closure evidence is\s+captured here/i,
+    /No resolution evidence is captured here/i,
+    /No remediation\s+evidence is captured here/i,
+    /No rollback is executed here/i,
+    /No deployment is performed here/i,
+    /No deployment approval is granted here/i
+  ]) {
+    assert(required.test(adminSource), `Phase 5V admin source missing safe wording: ${required}`);
+  }
+
+  assertIncludes(readRepoFile('website/app/admin/page.tsx'), 'view={{ kind: "home" }}', 'admin home page');
+  assert(/function AdminOperationsHome[\s\S]*<OwnerReadinessHelpersPanel \/>/.test(adminSource), 'AdminOperationsHome must render shared owner readiness helper panel');
+  assert(/function OwnerReadinessHelpersPanel[\s\S]*<OwnerReviewWalkthroughReadinessHelper \/>[\s\S]*<OwnerFeedbackIntakeReadinessHelper \/>[\s\S]*<OwnerCorrectionWorkflowReadinessHelper \/>[\s\S]*<OwnerReReviewRequestReadinessHelper \/>[\s\S]*<OwnerDecisionIntakeReadinessHelper \/>[\s\S]*<DeploymentApprovalRequestReadinessHelper \/>[\s\S]*<DeploymentExecutionRunbookReadinessHelper \/>[\s\S]*<SmokeEvidenceIntakeReadinessHelper \/>[\s\S]*<SmokeEvidenceReviewReadinessHelper \/>[\s\S]*<LaunchDecisionResponseReadinessHelper \/>[\s\S]*<PostLaunchObservationReadinessHelper \/>[\s\S]*<PostLaunchRemediationReadinessHelper \/>[\s\S]*<RemediationVerificationReadinessHelper \/>[\s\S]*<IncidentResolutionResponseReadinessHelper \/>/.test(adminSource), 'Phase 5V admin source must keep complete owner readiness helper chain in shared panel');
+
+  const publicSource = readTrackedProductionSources(publicSourceRoots);
+  assertNoMatch(publicSource, /incident resolution response|post-remediation closure|remediation verification|correction retest|resolution ledger|post-launch remediation|incident triage correction backlog|support response|customer follow-up|public notice|maintenance internals|monitoring\/analytics internals|hotfix internals|retest internals|resolution internals|provider setup internals|environment\/secrets internals|admin route internals|owner handoff internals|release-control internals|admin urls?|\/admin\//i, 'Phase 5V public source');
+  assert(/listing|listings/i.test(publicSource), 'Phase 5V public source must retain listing wording');
+  assert(/rental|rentals/i.test(publicSource), 'Phase 5V public source must retain rental wording');
+  assert(/quote|enquiry|request/i.test(publicSource), 'Phase 5V public source must retain quote/enquiry/request wording');
+  assertNoMatch(publicSource, /\b(?:cart|checkout|order|payment|purchase|online ordering)\b/i, 'Phase 5V public source');
+  assertNoMatch(publicSource, /\b(?:booking|reservation|fulfilment|fulfillment|stock reservation|stock-reservation|book now|reserve now)\b/i, 'Phase 5V public source');
+  assertNoMatch(publicSource, /award-winning|certified partner|trusted by|5-star|guaranteed availability|guaranteed delivery|licensed and insured|testimonial|client logo|case study|legal guarantee|production policy|service-area claim|Singapore\s+\d{6}|\+?\d[\d\s().-]{7,}|Mon(?:day)?\s*-\s*Fri|24\/7|123\s+Main/i, 'Phase 5V public source');
+  assertNoMatch(publicSource, /customer account|quote tracking|file upload|public upload|notifications?|\bCRM\b|email sending|sms sending|whatsapp|outbound messaging|public status view/i, 'Phase 5V public source');
+  assertNoMatch(adminSource, /public upload|customer upload|storage provider|monitoring provider setup|analytics provider setup|alerting provider setup|process\.env|NEXT_PUBLIC_SUPABASE|SUPABASE_SERVICE_ROLE|Pinecone|\bRAG\b|n8n runtime|\/api\/chat|outbound messaging/i, 'Phase 5V admin source');
+  assertNoMatch(docs, /actual deployment|support response sent|customer follow-up sent|incident closed|incident resolved|public notice published|maintenance completed|live hotfix|remediation performed|correction completed|retest run completed|live monitoring configured|analytics captured|route verification completed|route walkthrough completed|preview publication completed|production launch completed|provider setup completed|env\/secrets setup completed|owner approved|owner sign-?off complete|launch clearance granted|production evidence captured|preview evidence captured|smoke evidence captured|rollback evidence captured|response-sent evidence captured|closure evidence captured|resolution evidence captured|maintenance evidence captured|correction-completed evidence captured|remediation evidence captured|hotfix evidence captured|retest evidence captured|monitoring evidence captured|analytics evidence captured|deployment approval granted/i, 'Phase 5V docs');
+
+  const suite = readRepoFile('scripts/validate-release-candidate-suite.cjs');
+  assertIncludes(suite, "args: ['run', 'validate:incident-resolution-response-readiness']", 'release-candidate suite');
+  assertIncludes(suite, "args: ['run', 'validate:remediation-verification-readiness']", 'release-candidate suite');
+  assertNoMatch(suite, /docker[^\n]*(?:skip|bypass)|(?:skip|bypass)[^\n]*docker/i, 'release-candidate suite');
+}
+
 function assertPhase5uRemediationVerificationReadiness() {
   assertPhase5tPostLaunchRemediationReadiness();
   assertRemediationVerificationReadinessDocs();
@@ -3313,6 +3451,7 @@ function assertPhase5qSmokeEvidenceReviewReadiness() {
 }
 
 module.exports = {
+  assertPhase5vIncidentResolutionResponseReadiness,
   assertPhase5uRemediationVerificationReadiness,
   assertPhase5tPostLaunchRemediationReadiness,
   assertPhase5sPostLaunchObservationReadiness,

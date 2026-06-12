@@ -1726,6 +1726,60 @@ const phase5uNoRetestNoResolutionBoundaries = [
   "A merged PR is not live issue resolution"
 ] as const;
 
+
+const phase5vIncidentResolutionResponseReadinessPath =
+  "docs/content/LOCAL-INCIDENT-RESOLUTION-RESPONSE-READINESS.md";
+const phase5vPostRemediationClosureLessonsLedgerTemplatePath =
+  "docs/content/LOCAL-POST-REMEDIATION-CLOSURE-LESSONS-LEDGER-TEMPLATE.md";
+const phase5vSafeFutureResponseSections = [
+  "Remediation verification readiness reference",
+  "Correction retest / resolution ledger reference",
+  "Source triage item placeholder",
+  "Verified correction summary placeholder",
+  "Owner confirmation placeholder",
+  "Provider/runtime confirmation placeholder",
+  "Support response draft placeholder",
+  "Customer follow-up draft placeholder",
+  "Public notice decision placeholder",
+  "Final resolution-response status"
+] as const;
+const phase5vClosureLessonsLedgerPlaceholders = [
+  "Closure ID: [NOT ASSIGNED]",
+  "Closure area: [NOT SELECTED]",
+  "Source retest item: [NOT SUPPLIED]",
+  "Route/surface affected: [NOT SELECTED]",
+  "Resolution summary: [NOT CAPTURED]",
+  "Support response status: [NOT SENT]",
+  "Customer follow-up status: [NOT SENT]",
+  "Public notice status: [NOT APPROVED]",
+  "Owner confirmation status: [OWNER INPUT REQUIRED]",
+  "Provider/runtime status: [PROVIDER DECISION REQUIRED]",
+  "Lessons learned: [NOT CAPTURED]",
+  "Maintenance follow-up status: [NOT SCHEDULED]",
+  "Evidence status: [NOT EVIDENCE / NOT RECORDED]",
+  "Deployment status: [DEPLOYMENT APPROVAL: NOT GRANTED]"
+] as const;
+const phase5vAllowedFutureResponseStatuses = [
+  "Not started",
+  "Verification not completed",
+  "Retest not run",
+  "Resolution not recorded",
+  "Needs owner confirmation",
+  "Needs provider confirmation",
+  "Draft response only",
+  "Blocked: no support approval",
+  "Blocked: deployment approval missing",
+  "Ready for future approved response"
+] as const;
+const phase5vNoResponseNoResolutionBoundaries = [
+  "A response template is not a sent response",
+  "A support draft is not support evidence",
+  "A customer follow-up placeholder is not customer contact",
+  "A resolution summary is not incident resolution",
+  "Passing validators is not verified remediation",
+  "A merged PR is not issue closure"
+] as const;
+
 const publicJourneyReadinessClosurePath =
   "docs/content/PUBLIC-JOURNEY-READINESS-CLOSURE.md";
 const quoteEnquiryPublicExpectationBoundaryPath =
@@ -3497,6 +3551,92 @@ function RemediationVerificationReadinessHelper() {
 }
 
 
+
+function IncidentResolutionResponseReadinessHelper() {
+  return (
+    <section
+      aria-label="Phase 5V incident resolution response readiness helper"
+      className="admin-readiness"
+    >
+      <p className="eyebrow">Phase 5V-A/B admin-only incident resolution response readiness</p>
+      <h3>Incident resolution response readiness helper</h3>
+      <p>
+        This protected helper prepares future approved incident resolution
+        response readiness for rental listings, event furniture listings,
+        categories, media, quote, enquiry, and request surfaces. No support
+        response is sent here. No customer follow-up is sent here. No incident
+        is closed here. No incident resolution is recorded here. No public
+        notice is published here. No maintenance task is completed here. No
+        response-sent evidence is captured here. No closure evidence is
+        captured here. No resolution evidence is captured here. No remediation
+        evidence is captured here. No rollback is executed here. No deployment
+        is performed here. No deployment approval is granted here.
+      </p>
+      <dl className="admin-readiness__grid">
+        <div>
+          <dt>Incident resolution response readiness</dt>
+          <dd>{phase5vIncidentResolutionResponseReadinessPath}</dd>
+        </div>
+        <div>
+          <dt>Post-remediation closure / lessons ledger template</dt>
+          <dd>{phase5vPostRemediationClosureLessonsLedgerTemplatePath}</dd>
+        </div>
+        <div>
+          <dt>Remediation verification readiness</dt>
+          <dd>{phase5uRemediationVerificationReadinessPath}</dd>
+        </div>
+        <div>
+          <dt>Correction retest / resolution ledger template</dt>
+          <dd>{phase5uCorrectionRetestResolutionLedgerTemplatePath}</dd>
+        </div>
+        <div>
+          <dt>Evidence status</dt>
+          <dd>[NOT EVIDENCE / NOT RECORDED]</dd>
+        </div>
+        <div>
+          <dt>Deployment status</dt>
+          <dd>[DEPLOYMENT APPROVAL: NOT GRANTED]</dd>
+        </div>
+      </dl>
+      <h4>Safe future response sections</h4>
+      <ul className="admin-readiness__list">
+        {phase5vSafeFutureResponseSections.map((section) => (
+          <li key={section}>{section}</li>
+        ))}
+      </ul>
+      <h4>Post-remediation closure / lessons ledger placeholders</h4>
+      <ul className="admin-readiness__list">
+        {phase5vClosureLessonsLedgerPlaceholders.map((placeholder) => (
+          <li key={placeholder}>{placeholder}</li>
+        ))}
+      </ul>
+      <h4>Allowed future response statuses</h4>
+      <ul className="admin-readiness__list">
+        {phase5vAllowedFutureResponseStatuses.map((status) => (
+          <li key={status}>{status}</li>
+        ))}
+      </ul>
+      <h4>No-response/no-resolution boundaries</h4>
+      <ul className="admin-readiness__list">
+        {phase5vNoResponseNoResolutionBoundaries.map((boundary) => (
+          <li key={boundary}>{boundary}</li>
+        ))}
+      </ul>
+      <p>
+        This helper stays protected admin-only and does not expose incident
+        resolution response internals, post-remediation closure ledger internals,
+        remediation verification internals, correction retest resolution ledger
+        internals, support response internals, customer follow-up internals,
+        public notice internals, maintenance internals, monitoring/analytics
+        internals, hotfix internals, retest internals, resolution internals,
+        provider setup internals, environment/secrets internals, owner handoff
+        internals, release-control internals, or admin route internals to public
+        rental, listing, quote, enquiry, or request routes.
+      </p>
+    </section>
+  );
+}
+
 function OwnerReadinessHelpersPanel() {
   return (
     <>
@@ -3513,6 +3653,7 @@ function OwnerReadinessHelpersPanel() {
       <PostLaunchObservationReadinessHelper />
       <PostLaunchRemediationReadinessHelper />
       <RemediationVerificationReadinessHelper />
+      <IncidentResolutionResponseReadinessHelper />
     </>
   );
 }

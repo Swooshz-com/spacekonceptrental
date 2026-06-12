@@ -4,4 +4,4 @@ const {
 
 assertPhase5vIncidentResolutionResponseReadiness();
 
-console.log('Deployment execution runbook readiness validation passed. No deployment was performed and no deployment approval was granted.');
+console.log('Phase 5V incident resolution response readiness checks passed. No deployment was performed. This does not approve deployment.');
