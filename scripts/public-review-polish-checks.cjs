@@ -23,6 +23,7 @@ const phase171MergeCommit = '3a1e1e80dfe0f1e21ac58335a7dfafebed829c53';
 const phase172MergeCommit = '607196e684649c2ed0fa70a9e530e9a58c7d09ab';
 const phase173MergeCommit = '6d6bcd9ebae98a068a89d062eea8654879ca2019';
 const phase174MergeCommit = '98afaaf7ea94dfd8aac80d2b5dda26c2d57e731d';
+const phase175MergeCommit = '92a39f6fa8540a45f9a2369b3ec1fc497e76058e';
 const currentPhase5a = 'Phase 5A-A/B public owner-review polish sweep, local content-readiness cleanup, and protected admin review UX closure';
 const currentPhase5b = 'Phase 5B-A/B public catalogue-to-enquiry journey hardening, listing continuity, and admin/public parity checks';
 const currentPhase5c = 'Phase 5C-A/B public discovery search/filter polish, quote-intent context, and admin discovery parity closure';
@@ -43,6 +44,7 @@ const currentPhase5q = 'Phase 5Q-A/B smoke evidence review readiness, go/no-go d
 const currentPhase5r = 'Phase 5R-A/B launch decision response readiness, release closure packet template, and no-live-change firewall';
 const currentPhase5s = 'Phase 5S-A/B post-launch observation readiness, incident/follow-up ledger, and no-live-monitoring firewall';
 const currentPhase5t = 'Phase 5T-A/B post-launch remediation readiness, incident triage correction backlog, and no-live-hotfix firewall';
+const currentPhase5u = 'Phase 5U-A/B remediation verification readiness, correction retest ledger, and no-resolution-claim firewall';
 const latestCompletedPhase4f = 'Phase 4F-A/B owner-facing review handoff bundle, approval issue template, and no-deploy preflight command center';
 const cleanupDocPath = 'docs/content/LOCAL-CONTENT-READINESS-CLEANUP.md';
 const publicJourneyAcceptanceDocPath = 'docs/content/LOCAL-PUBLIC-JOURNEY-ACCEPTANCE.md';
@@ -76,6 +78,8 @@ const postLaunchObservationReadinessDocPath = 'docs/content/LOCAL-POST-LAUNCH-OB
 const incidentFollowupLedgerTemplateDocPath = 'docs/content/LOCAL-INCIDENT-FOLLOWUP-LEDGER-TEMPLATE.md';
 const postLaunchRemediationReadinessDocPath = 'docs/content/LOCAL-POST-LAUNCH-REMEDIATION-READINESS.md';
 const incidentTriageCorrectionBacklogTemplateDocPath = 'docs/content/LOCAL-INCIDENT-TRIAGE-CORRECTION-BACKLOG-TEMPLATE.md';
+const remediationVerificationReadinessDocPath = 'docs/content/LOCAL-REMEDIATION-VERIFICATION-READINESS.md';
+const correctionRetestResolutionLedgerTemplateDocPath = 'docs/content/LOCAL-CORRECTION-RETEST-RESOLUTION-LEDGER-TEMPLATE.md';
 const publicSourceRoots = [
   'website/app/layout.tsx',
   'website/app/page.tsx',
@@ -2822,6 +2826,208 @@ function assertPostLaunchObservationSources() {
 }
 
 
+
+function assertPhase5uStatusRollForward() {
+  const docs = normalizeWhitespace(statusDocPaths.map(readRepoFile).join('\n'));
+  for (const required of [
+    `Current phase: ${currentPhase5u}`,
+    `Latest completed capability: ${currentPhase5t}`,
+    'Last merged capability PR: #175',
+    `Last merged capability merge commit: ${phase175MergeCommit}`,
+    remediationVerificationReadinessDocPath,
+    correctionRetestResolutionLedgerTemplateDocPath,
+    postLaunchRemediationReadinessDocPath,
+    incidentTriageCorrectionBacklogTemplateDocPath,
+    'scripts/validate-remediation-verification-readiness.cjs',
+    'No deployment is performed or approved by Phase 5U-A/B',
+  ]) {
+    assertIncludes(docs, required, 'Phase 5U status roll-forward docs');
+  }
+}
+
+function assertRemediationVerificationReadinessDocs() {
+  assertTracked(
+    [remediationVerificationReadinessDocPath, correctionRetestResolutionLedgerTemplateDocPath],
+    'Phase 5U remediation verification readiness docs'
+  );
+  const readiness = normalizeWhitespace(readRepoFile(remediationVerificationReadinessDocPath));
+  const ledger = normalizeWhitespace(readRepoFile(correctionRetestResolutionLedgerTemplateDocPath));
+  for (const required of [
+    'repo-local, template-only, non-live, and not evidence',
+    '[NOT EVIDENCE / NOT RECORDED]',
+    '[DEPLOYMENT APPROVAL: NOT GRANTED]',
+    'does not apply hotfixes, change production, change public runtime behavior, run retests, verify corrections, resolve incidents, perform remediation, complete corrections, send support responses, contact customers, configure providers, capture retest evidence, capture resolution evidence, capture remediation evidence, capture production evidence, execute rollback, perform deployment, record owner approval, record release closure, or grant deployment permission',
+    'Incident triage correction backlog reference',
+    'Post-launch remediation readiness reference',
+    'Proposed correction source placeholder',
+    'Retest route/surface placeholder',
+    'Reproduction comparison placeholder',
+    'Owner verification placeholder',
+    'Provider/runtime verification placeholder',
+    'Correction retest ledger reference',
+    'Rollback/escalation verification placeholder',
+    'Final resolution-readiness status',
+    'Not started',
+    'Correction not implemented',
+    'Retest not run',
+    'Needs owner verification',
+    'Needs provider verification',
+    'Needs reproduction comparison',
+    'Needs correction retest',
+    'Blocked: no live approval',
+    'Blocked: deployment approval missing',
+    'Ready for future approved verification',
+    'A verification template is not a retest',
+    'A retest placeholder is not retest evidence',
+    'A correction verification row is not a completed correction',
+    'A resolution placeholder is not incident resolution',
+    'Passing validators is not remediation success',
+    'A merged PR is not live issue resolution',
+  ]) {
+    assertIncludes(readiness, required, 'Phase 5U remediation verification readiness doc');
+  }
+  for (const required of [
+    '[NOT EVIDENCE / NOT RECORDED]',
+    '[DEPLOYMENT APPROVAL: NOT GRANTED]',
+    'Retest ID: `[NOT ASSIGNED]`',
+    'Retest area: `[NOT SELECTED]`',
+    'Source triage item: `[NOT SUPPLIED]`',
+    'Route/surface affected: `[NOT SELECTED]`',
+    'Proposed correction: `[NOT CAPTURED]`',
+    'Retest status: `[NOT RUN]`',
+    'Expected result: `[NOT FILLED]`',
+    'Actual result: `[NOT RUN]`',
+    'Owner verification status: `[OWNER INPUT REQUIRED]`',
+    'Provider/runtime status: `[PROVIDER DECISION REQUIRED]`',
+    'Resolution status: `[NOT RESOLVED]`',
+    'Release/correction status: `[NOT SCHEDULED]`',
+    'Evidence status: `[NOT EVIDENCE / NOT RECORDED]`',
+    'Deployment status: `[DEPLOYMENT APPROVAL: NOT GRANTED]`',
+    'Public route retest',
+    'Protected admin retest',
+    'Quote/enquiry workflow retest',
+    'Listing/category/media retest',
+    'Provider/runtime verification',
+    'Environment/secrets verification',
+    'Owner verification',
+    'Rollback/escalation verification',
+    'Future resolution planning',
+    'not retest evidence, not incident resolution, not support evidence, not response-sent evidence, not monitoring evidence, not analytics evidence, not remediation evidence, not correction completion, not hotfix approval, not rollback evidence, not production evidence, not release closure, and not deployment approval',
+  ]) {
+    assertIncludes(ledger, required, 'Phase 5U correction retest resolution ledger template doc');
+  }
+  assertNoMatch(
+    `${readiness}\n${ledger}`,
+    /owner approved|owner sign-?off complete|accepted by owner|rejected by owner|owner decision recorded|owner approval recorded|owner feedback recorded|owner re-review recorded|owner corrections completed|owner response sent|launch response sent|support response sent|customer follow-up sent|preview evidence captured|production evidence captured|smoke evidence captured|rollback evidence captured|route-walkthrough evidence captured|correction-completed evidence captured|response-sent evidence captured|monitoring evidence captured|analytics evidence captured|remediation evidence captured|hotfix evidence captured|retest evidence captured|resolution evidence captured|public launch evidence captured|sign-off evidence captured|deployment approval granted|launch approval granted|launch clearance granted|provider setup completed|secrets created|deployment performed|preview published|production launched|actual deployment|live hotfix applied|remediation performed|correction completed|retest run completed|incident resolved|smoke run completed|route walkthrough completed|route verification completed|evidence review completed|release closure completed|incident response sent|incident record completed|live monitoring configured|analytics captured/i,
+    'Phase 5U docs'
+  );
+}
+
+function assertRemediationVerificationPackageScript() {
+  const packageJson = JSON.parse(readRepoFile('package.json'));
+  assert(
+    packageJson.scripts?.['validate:remediation-verification-readiness'] === 'node scripts/validate-remediation-verification-readiness.cjs',
+    'package.json must register validate:remediation-verification-readiness'
+  );
+}
+
+function assertRemediationVerificationSources() {
+  const adminSource = readTrackedProductionSources(['website/app/admin/protected-admin-shell.tsx']);
+  const adminPage = readRepoFile('website/app/admin/page.tsx');
+  const publicSource = readTrackedProductionSources(publicSourceRoots);
+
+  for (const required of [
+    /Phase 5U-A\/B admin-only remediation verification readiness/i,
+    /Remediation verification readiness helper/i,
+    /LOCAL-REMEDIATION-VERIFICATION-READINESS\.md/i,
+    /LOCAL-CORRECTION-RETEST-RESOLUTION-LEDGER-TEMPLATE\.md/i,
+    /LOCAL-POST-LAUNCH-REMEDIATION-READINESS\.md/i,
+    /LOCAL-INCIDENT-TRIAGE-CORRECTION-BACKLOG-TEMPLATE\.md/i,
+    /Safe future verification sections/i,
+    /Correction retest\/resolution ledger placeholders/i,
+    /Allowed future verification statuses/i,
+    /No-retest\/no-resolution boundaries/i,
+    /No\s+correction\s+retest\s+is\s+run\s+here/i,
+    /No\s+incident\s+resolution\s+is\s+recorded\s+here/i,
+    /No\s+correction\s+completion\s+is\s+claimed\s+here/i,
+    /No\s+live\s+hotfix\s+is\s+applied\s+here/i,
+    /No\s+production\s+change\s+is\s+made\s+here/i,
+    /No\s+remediation\s+is\s+performed\s+here/i,
+    /No\s+support\s+response\s+is\s+sent\s+here/i,
+    /No\s+customer\s+follow-up\s+is\s+sent\s+here/i,
+    /No\s+retest\s+evidence\s+is\s+captured\s+here/i,
+    /No\s+resolution\s+evidence\s+is\s+captured\s+here/i,
+    /No\s+remediation\s+evidence\s+is\s+captured\s+here/i,
+    /No\s+rollback\s+is\s+executed\s+here/i,
+    /No\s+deployment\s+is\s+performed\s+here/i,
+    /No\s+deployment\s+approval\s+is\s+granted\s+here/i,
+    /\[NOT EVIDENCE \/ NOT RECORDED\]/i,
+    /\[DEPLOYMENT APPROVAL: NOT GRANTED\]/i,
+  ]) {
+    assert(required.test(adminSource), `Phase 5U admin source missing safe wording: ${required}`);
+  }
+
+  assertIncludes(adminPage, 'view={{ kind: "home" }}', 'admin page home view');
+  assert(
+    /function AdminOperationsHome[\s\S]*<OwnerReadinessHelpersPanel \/>/.test(adminSource),
+    'Phase 5U admin source must render owner readiness helpers from the real AdminOperationsHome path'
+  );
+  assert(
+    /function OwnerReadinessHelpersPanel[\s\S]*<OwnerReviewWalkthroughReadinessHelper \/>[\s\S]*<OwnerFeedbackIntakeReadinessHelper \/>[\s\S]*<OwnerCorrectionWorkflowReadinessHelper \/>[\s\S]*<OwnerReReviewRequestReadinessHelper \/>[\s\S]*<OwnerDecisionIntakeReadinessHelper \/>[\s\S]*<DeploymentApprovalRequestReadinessHelper \/>[\s\S]*<DeploymentExecutionRunbookReadinessHelper \/>[\s\S]*<SmokeEvidenceIntakeReadinessHelper \/>[\s\S]*<SmokeEvidenceReviewReadinessHelper \/>[\s\S]*<LaunchDecisionResponseReadinessHelper \/>[\s\S]*<PostLaunchObservationReadinessHelper \/>[\s\S]*<PostLaunchRemediationReadinessHelper \/>[\s\S]*<RemediationVerificationReadinessHelper \/>/.test(adminSource),
+    'Phase 5U admin source must keep the complete owner readiness helper chain in the shared panel'
+  );
+
+  assertNoMatch(
+    publicSource,
+    /remediation verification|correction retest|resolution ledger|post-launch remediation|incident triage correction backlog|post-launch observation|incident\/follow-up ledger|monitoring\/analytics internals|hotfix internals|retest internals|resolution internals|provider setup internals|environment\/secrets internals|admin route internals|owner handoff internals|release-control internals|admin urls?|internal notes|public admin status|\/admin\//i,
+    'Phase 5U public source'
+  );
+  assert(/\b(?:listing|listings)\b/i.test(publicSource), 'public source must retain listing wording');
+  assert(/\b(?:rental|rentals)\b/i.test(publicSource), 'public source must retain rental wording');
+  assert(/\b(?:quote|enquiry|request)\b/i.test(publicSource), 'public source must retain quote/enquiry/request wording');
+  assertNoMatch(publicSource, /\b(?:cart|checkout|order|payment|purchase|online ordering)\b/i, 'Phase 5U public source');
+  assertNoMatch(publicSource, /\b(?:booking|reservation|fulfilment|fulfillment|stock reservation|stock-reservation|book now|reserve now)\b/i, 'Phase 5U public source');
+  assertNoMatch(publicSource, /award-winning|certified partner|trusted by|5-star|guaranteed availability|guaranteed delivery|licensed and insured|testimonial|client logo|case study|legal guarantee|production policy|service-area claim|Singapore\s+\d{6}|\+?\d[\d\s().-]{7,}|Mon(?:day)?\s*-\s*Fri|24\/7|123\s+Main/i, 'Phase 5U public source');
+  assertNoMatch(publicSource, /customer account|quote tracking|file upload|public upload|notifications?|\bCRM\b|email sending|sms sending|whatsapp|outbound messaging|public status view/i, 'Phase 5U public source');
+  assertNoMatch(
+    adminSource,
+    /public upload|customer upload|new provider setup|new storage provider|storage provider changes|monitoring provider setup|analytics provider setup|alerting provider setup|NEXT_PUBLIC_SUPABASE|SUPABASE_SERVICE_ROLE_KEY|service-role browser|Pinecone|\bRAG\b|n8n runtime|\/api\/chat.*retrieval|outbound messaging|email sending|sms sending|whatsapp sending|process\.env\.(?:NEXT_PUBLIC_|SUPABASE|N8N|PINECONE|VERCEL)/i,
+    'Phase 5U admin source'
+  );
+}
+
+function assertReleaseSuiteHasRemediationVerificationReadiness() {
+  const suite = readRepoFile('scripts/validate-release-candidate-suite.cjs');
+  assertIncludes(suite, "args: ['run', 'validate:remediation-verification-readiness']", 'release-candidate suite');
+  assertIncludes(suite, "args: ['run', 'validate:post-launch-remediation-readiness']", 'release-candidate suite');
+  assertNoMatch(suite, /docker[^\n]*(?:skip|bypass)|(?:skip|bypass)[^\n]*docker/i, 'release-candidate suite');
+}
+
+function assertPhase5uRemediationVerificationReadiness() {
+  assertPhase5tPostLaunchRemediationReadiness();
+  assertRemediationVerificationReadinessDocs();
+  assertPhase5uStatusRollForward();
+  assertRemediationVerificationPackageScript();
+  assertRemediationVerificationSources();
+  assertNoForbiddenTrackedFiles();
+  assertNoFilledEvidence();
+  assertReleaseSuiteHasRemediationVerificationReadiness();
+  assertReleaseSuiteHasPostLaunchRemediationReadiness();
+  assertReleaseSuiteHasPostLaunchObservationReadiness();
+  assertReleaseSuiteHasLaunchDecisionResponseReadiness();
+  assertReleaseSuiteHasSmokeEvidenceReviewReadiness();
+  assertReleaseSuiteHasSmokeEvidenceIntakeReadiness();
+  assertReleaseSuiteHasDeploymentExecutionRunbookReadiness();
+  assertReleaseSuiteHasDeploymentApprovalRequestReadiness();
+  assertReleaseSuiteHasOwnerDecisionIntakeReadiness();
+  assertReleaseSuiteHasOwnerReReviewRequestReadiness();
+  assertReleaseSuiteHasOwnerCorrectionWorkflow();
+  assertReleaseSuiteHasOwnerFeedbackIntake();
+  assertReleaseSuiteHasOwnerReviewWalkthrough();
+  assertReleaseSuiteHasCatalogueWriteWorkflow();
+  assertSuiteAndTests();
+}
+
 function assertPhase5tStatusRollForward() {
   const docs = normalizeWhitespace(statusDocPaths.map(readRepoFile).join('\n'));
   for (const required of [
@@ -3107,6 +3313,7 @@ function assertPhase5qSmokeEvidenceReviewReadiness() {
 }
 
 module.exports = {
+  assertPhase5uRemediationVerificationReadiness,
   assertPhase5tPostLaunchRemediationReadiness,
   assertPhase5sPostLaunchObservationReadiness,
   assertPhase5rLaunchDecisionResponseReadiness,
@@ -3164,6 +3371,7 @@ module.exports = {
   currentPhase5r,
   currentPhase5s,
   currentPhase5t,
+  currentPhase5u,
   latestCompletedPhase4f,
   cleanupDocPath,
   publicJourneyAcceptanceDocPath,
@@ -3191,4 +3399,6 @@ module.exports = {
   incidentFollowupLedgerTemplateDocPath,
   postLaunchRemediationReadinessDocPath,
   incidentTriageCorrectionBacklogTemplateDocPath,
+  remediationVerificationReadinessDocPath,
+  correctionRetestResolutionLedgerTemplateDocPath,
 };

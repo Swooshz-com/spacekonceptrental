@@ -10,6 +10,7 @@
     "validate:preview-handoff": "node scripts/validate-preview-handoff.cjs",
     "validate:local-release-candidate": "node scripts/validate-local-release-candidate.cjs",
     "validate:release-candidate-suite": "node scripts/validate-release-candidate-suite.cjs",
+    "validate:remediation-verification-readiness": "node scripts/validate-remediation-verification-readiness.cjs",
     "validate:post-launch-remediation-readiness": "node scripts/validate-post-launch-remediation-readiness.cjs",
     "validate:post-launch-observation-readiness": "node scripts/validate-post-launch-observation-readiness.cjs",
     "validate:launch-decision-response-readiness": "node scripts/validate-launch-decision-response-readiness.cjs",
