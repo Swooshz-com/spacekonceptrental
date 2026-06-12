@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-const { assertPhase5sPostLaunchObservationReadiness } = require('./public-review-polish-checks.cjs');
+const { assertPhase5tPostLaunchRemediationReadiness } = require('./public-review-polish-checks.cjs');
 
-assertPhase5sPostLaunchObservationReadiness();
+assertPhase5tPostLaunchRemediationReadiness();
 console.log('Quote triage readiness validation passed. No deployment was performed.');

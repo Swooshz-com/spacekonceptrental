@@ -5,6 +5,11 @@ const repoRoot = path.resolve(__dirname, '..');
 
 const commandPlan = [
   {
+    label: 'Validate post-launch remediation readiness',
+    cwd: repoRoot,
+    args: ['run', 'validate:post-launch-remediation-readiness'],
+  },
+  {
     label: 'Validate post-launch observation readiness',
     cwd: repoRoot,
     args: ['run', 'validate:post-launch-observation-readiness'],
