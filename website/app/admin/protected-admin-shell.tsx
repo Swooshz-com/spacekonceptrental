@@ -1673,6 +1673,59 @@ const phase5tNoHotfixNoRemediationBoundaries = [
   "A merged PR is not live incident resolution"
 ] as const;
 
+const phase5uRemediationVerificationReadinessPath =
+  "docs/content/LOCAL-REMEDIATION-VERIFICATION-READINESS.md";
+const phase5uCorrectionRetestResolutionLedgerTemplatePath =
+  "docs/content/LOCAL-CORRECTION-RETEST-RESOLUTION-LEDGER-TEMPLATE.md";
+const phase5uSafeFutureVerificationSections = [
+  "Incident triage correction backlog reference",
+  "Post-launch remediation readiness reference",
+  "Proposed correction source placeholder",
+  "Retest route/surface placeholder",
+  "Reproduction comparison placeholder",
+  "Owner verification placeholder",
+  "Provider/runtime verification placeholder",
+  "Correction retest ledger reference",
+  "Rollback/escalation verification placeholder",
+  "Final resolution-readiness status"
+] as const;
+const phase5uCorrectionRetestResolutionLedgerPlaceholders = [
+  "Retest ID: [NOT ASSIGNED]",
+  "Retest area: [NOT SELECTED]",
+  "Source triage item: [NOT SUPPLIED]",
+  "Route/surface affected: [NOT SELECTED]",
+  "Proposed correction: [NOT CAPTURED]",
+  "Retest status: [NOT RUN]",
+  "Expected result: [NOT FILLED]",
+  "Actual result: [NOT RUN]",
+  "Owner verification status: [OWNER INPUT REQUIRED]",
+  "Provider/runtime status: [PROVIDER DECISION REQUIRED]",
+  "Resolution status: [NOT RESOLVED]",
+  "Release/correction status: [NOT SCHEDULED]",
+  "Evidence status: [NOT EVIDENCE / NOT RECORDED]",
+  "Deployment status: [DEPLOYMENT APPROVAL: NOT GRANTED]"
+] as const;
+const phase5uAllowedFutureVerificationStatuses = [
+  "Not started",
+  "Correction not implemented",
+  "Retest not run",
+  "Needs owner verification",
+  "Needs provider verification",
+  "Needs reproduction comparison",
+  "Needs correction retest",
+  "Blocked: no live approval",
+  "Blocked: deployment approval missing",
+  "Ready for future approved verification"
+] as const;
+const phase5uNoRetestNoResolutionBoundaries = [
+  "A verification template is not a retest",
+  "A retest placeholder is not retest evidence",
+  "A correction verification row is not a completed correction",
+  "A resolution placeholder is not incident resolution",
+  "Passing validators is not remediation success",
+  "A merged PR is not live issue resolution"
+] as const;
+
 const publicJourneyReadinessClosurePath =
   "docs/content/PUBLIC-JOURNEY-READINESS-CLOSURE.md";
 const quoteEnquiryPublicExpectationBoundaryPath =
@@ -3359,6 +3412,91 @@ function PostLaunchRemediationReadinessHelper() {
 }
 
 
+function RemediationVerificationReadinessHelper() {
+  return (
+    <section
+      aria-label="Phase 5U remediation verification readiness helper"
+      className="admin-readiness"
+    >
+      <p className="eyebrow">Phase 5U-A/B admin-only remediation verification readiness</p>
+      <h3>Remediation verification readiness helper</h3>
+      <p>
+        This protected helper prepares future approved remediation verification
+        planning for rental listings, event furniture listings, categories,
+        media, quote, enquiry, and request surfaces. No correction retest is run
+        here. No incident resolution is recorded here. No correction completion
+        is claimed here. No live hotfix is applied here. No production change is
+        made here. No remediation is performed here. No support response is sent
+        here. No customer follow-up is sent here. No retest evidence is captured
+        here. No resolution evidence is captured here. No remediation evidence is
+        captured here. No rollback is executed here. No deployment is performed
+        here. No deployment approval is granted here.
+      </p>
+      <dl className="admin-readiness__grid">
+        <div>
+          <dt>Remediation verification readiness</dt>
+          <dd>{phase5uRemediationVerificationReadinessPath}</dd>
+        </div>
+        <div>
+          <dt>Correction retest / resolution ledger template</dt>
+          <dd>{phase5uCorrectionRetestResolutionLedgerTemplatePath}</dd>
+        </div>
+        <div>
+          <dt>Post-launch remediation readiness</dt>
+          <dd>{phase5tPostLaunchRemediationReadinessPath}</dd>
+        </div>
+        <div>
+          <dt>Incident triage correction backlog template</dt>
+          <dd>{phase5tIncidentTriageCorrectionBacklogTemplatePath}</dd>
+        </div>
+        <div>
+          <dt>Evidence status</dt>
+          <dd>[NOT EVIDENCE / NOT RECORDED]</dd>
+        </div>
+        <div>
+          <dt>Deployment status</dt>
+          <dd>[DEPLOYMENT APPROVAL: NOT GRANTED]</dd>
+        </div>
+      </dl>
+      <h4>Safe future verification sections</h4>
+      <ul className="admin-readiness__list">
+        {phase5uSafeFutureVerificationSections.map((section) => (
+          <li key={section}>{section}</li>
+        ))}
+      </ul>
+      <h4>Correction retest/resolution ledger placeholders</h4>
+      <ul className="admin-readiness__list">
+        {phase5uCorrectionRetestResolutionLedgerPlaceholders.map((placeholder) => (
+          <li key={placeholder}>{placeholder}</li>
+        ))}
+      </ul>
+      <h4>Allowed future verification statuses</h4>
+      <ul className="admin-readiness__list">
+        {phase5uAllowedFutureVerificationStatuses.map((status) => (
+          <li key={status}>{status}</li>
+        ))}
+      </ul>
+      <h4>No-retest/no-resolution boundaries</h4>
+      <ul className="admin-readiness__list">
+        {phase5uNoRetestNoResolutionBoundaries.map((boundary) => (
+          <li key={boundary}>{boundary}</li>
+        ))}
+      </ul>
+      <p>
+        This helper stays protected admin-only and does not expose remediation
+        verification internals, correction retest resolution ledger internals,
+        post-launch remediation internals, incident triage correction backlog
+        internals, monitoring/analytics internals, hotfix internals, retest
+        internals, resolution internals, provider setup internals,
+        environment/secrets internals, owner handoff internals, release-control
+        internals, or admin route internals to public rental, listing, quote,
+        enquiry, or request routes.
+      </p>
+    </section>
+  );
+}
+
+
 function OwnerReadinessHelpersPanel() {
   return (
     <>
@@ -3374,6 +3512,7 @@ function OwnerReadinessHelpersPanel() {
       <LaunchDecisionResponseReadinessHelper />
       <PostLaunchObservationReadinessHelper />
       <PostLaunchRemediationReadinessHelper />
+      <RemediationVerificationReadinessHelper />
     </>
   );
 }
