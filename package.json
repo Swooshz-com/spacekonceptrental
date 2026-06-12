@@ -10,6 +10,7 @@
     "validate:preview-handoff": "node scripts/validate-preview-handoff.cjs",
     "validate:local-release-candidate": "node scripts/validate-local-release-candidate.cjs",
     "validate:release-candidate-suite": "node scripts/validate-release-candidate-suite.cjs",
+    "validate:post-launch-observation-readiness": "node scripts/validate-post-launch-observation-readiness.cjs",
     "validate:launch-decision-response-readiness": "node scripts/validate-launch-decision-response-readiness.cjs",
     "smoke:preview": "node scripts/smoke-preview.cjs",
     "test:supabase-seed": "node scripts/test-supabase-seed.cjs",
