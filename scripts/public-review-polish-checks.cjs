@@ -26,6 +26,7 @@ const phase174MergeCommit = '98afaaf7ea94dfd8aac80d2b5dda26c2d57e731d';
 const phase175MergeCommit = '92a39f6fa8540a45f9a2369b3ec1fc497e76058e';
 const phase176MergeCommit = 'a1a8161e01d7da67de7512e06f09dc271c269333';
 const phase177MergeCommit = 'c803f30191a1f7264f8f4be2b55c084a7565957a';
+const phase178MergeCommit = 'f88ff02523a8a82db2d6a163717aa53a1e3b7118';
 const currentPhase5a = 'Phase 5A-A/B public owner-review polish sweep, local content-readiness cleanup, and protected admin review UX closure';
 const currentPhase5b = 'Phase 5B-A/B public catalogue-to-enquiry journey hardening, listing continuity, and admin/public parity checks';
 const currentPhase5c = 'Phase 5C-A/B public discovery search/filter polish, quote-intent context, and admin discovery parity closure';
@@ -49,6 +50,7 @@ const currentPhase5t = 'Phase 5T-A/B post-launch remediation readiness, incident
 const currentPhase5u = 'Phase 5U-A/B remediation verification readiness, correction retest ledger, and no-resolution-claim firewall';
 const currentPhase5v = 'Phase 5V-A/B incident resolution response readiness, post-remediation closure ledger, and no-support-response firewall';
 const currentPhase5w = 'Phase 5W-A/B preventive maintenance readiness, lessons-to-maintenance backlog, and no-maintenance-change firewall';
+const currentPhase5x = 'Phase 5X-A/B maintenance approval readiness, change-window planning ledger, and no-schedule/no-change firewall';
 const latestCompletedPhase4f = 'Phase 4F-A/B owner-facing review handoff bundle, approval issue template, and no-deploy preflight command center';
 const cleanupDocPath = 'docs/content/LOCAL-CONTENT-READINESS-CLEANUP.md';
 const publicJourneyAcceptanceDocPath = 'docs/content/LOCAL-PUBLIC-JOURNEY-ACCEPTANCE.md';
@@ -88,6 +90,8 @@ const incidentResolutionResponseReadinessDocPath = 'docs/content/LOCAL-INCIDENT-
 const postRemediationClosureLessonsLedgerTemplateDocPath = 'docs/content/LOCAL-POST-REMEDIATION-CLOSURE-LESSONS-LEDGER-TEMPLATE.md';
 const preventiveMaintenanceReadinessDocPath = 'docs/content/LOCAL-PREVENTIVE-MAINTENANCE-READINESS.md';
 const lessonsToMaintenanceBacklogTemplateDocPath = 'docs/content/LOCAL-LESSONS-TO-MAINTENANCE-BACKLOG-TEMPLATE.md';
+const maintenanceApprovalReadinessDocPath = 'docs/content/LOCAL-MAINTENANCE-APPROVAL-READINESS.md';
+const maintenanceChangeWindowPlanningLedgerTemplateDocPath = 'docs/content/LOCAL-MAINTENANCE-CHANGE-WINDOW-PLANNING-LEDGER-TEMPLATE.md';
 const publicSourceRoots = [
   'website/app/layout.tsx',
   'website/app/page.tsx',
@@ -3088,6 +3092,8 @@ function assertPhase5vIncidentResolutionResponseReadiness() {
     postRemediationClosureLessonsLedgerTemplateDocPath,
   preventiveMaintenanceReadinessDocPath,
   lessonsToMaintenanceBacklogTemplateDocPath,
+  maintenanceApprovalReadinessDocPath,
+  maintenanceChangeWindowPlanningLedgerTemplateDocPath,
     'scripts/validate-incident-resolution-response-readiness.cjs',
     'No deployment is performed or approved by Phase 5V-A/B'
   ]) {
@@ -3223,10 +3229,14 @@ function assertPhase5wPreventiveMaintenanceReadiness() {
     `Last merged capability merge commit: ${phase177MergeCommit}`,
     preventiveMaintenanceReadinessDocPath,
     lessonsToMaintenanceBacklogTemplateDocPath,
+  maintenanceApprovalReadinessDocPath,
+  maintenanceChangeWindowPlanningLedgerTemplateDocPath,
     incidentResolutionResponseReadinessDocPath,
     postRemediationClosureLessonsLedgerTemplateDocPath,
   preventiveMaintenanceReadinessDocPath,
   lessonsToMaintenanceBacklogTemplateDocPath,
+  maintenanceApprovalReadinessDocPath,
+  maintenanceChangeWindowPlanningLedgerTemplateDocPath,
     'scripts/validate-preventive-maintenance-readiness.cjs',
     'No deployment is performed or approved by Phase 5W-A/B'
   ]) {
@@ -3285,6 +3295,153 @@ function assertPhase5wPreventiveMaintenanceReadiness() {
   const suite = readRepoFile('scripts/validate-release-candidate-suite.cjs');
   assertIncludes(suite, "args: ['run', 'validate:preventive-maintenance-readiness']", 'release-candidate suite');
   assertIncludes(suite, "args: ['run', 'validate:incident-resolution-response-readiness']", 'release-candidate suite');
+  assertNoMatch(suite, /docker[^\n]*(?:skip|bypass)|(?:skip|bypass)[^\n]*docker/i, 'release-candidate suite');
+  assertSuiteAndTests();
+}
+
+
+function assertPhase5xMaintenanceApprovalReadiness() {
+  assertPhase5wPreventiveMaintenanceReadiness();
+  assertTracked(
+    [maintenanceApprovalReadinessDocPath, maintenanceChangeWindowPlanningLedgerTemplateDocPath],
+    'Phase 5X maintenance approval readiness docs'
+  );
+
+  const readiness = normalizeWhitespace(readRepoFile(maintenanceApprovalReadinessDocPath));
+  const ledger = normalizeWhitespace(readRepoFile(maintenanceChangeWindowPlanningLedgerTemplateDocPath));
+  const docs = `${readiness}\n${ledger}`;
+
+  for (const required of [
+    'repo-local, template-only, non-live maintenance approval readiness package is not evidence',
+    '[NOT EVIDENCE / NOT RECORDED]',
+    '[DEPLOYMENT APPROVAL: NOT GRANTED]',
+    'does not record owner approval, record provider approval, approve maintenance, schedule maintenance, create change windows, create cron, create jobs, configure monitoring, configure analytics, configure alerts, implement maintenance tasks, change production, change public runtime behavior, send support responses, contact customers, publish public notices, perform remediation, verify corrections, run retests, apply hotfixes, capture maintenance approval evidence, capture schedule evidence, capture change-window evidence, capture production evidence, execute rollback, perform deployment, record release closure, or grant deployment permission',
+    'Preventive maintenance readiness reference',
+    'Lessons-to-maintenance backlog reference',
+    'Maintenance candidate source placeholder',
+    'Owner approval placeholder',
+    'Provider/runtime approval placeholder',
+    'Change-window planning placeholder',
+    'Risk/rollback dependency placeholder',
+    'Maintenance change-window ledger reference',
+    'Future verification dependency placeholder',
+    'Final maintenance-approval status',
+    'Not started',
+    'Maintenance candidate not approved',
+    'Needs owner prioritisation',
+    'Needs provider clarification',
+    'Needs rollback planning',
+    'Needs future verification planning',
+    'Draft approval only',
+    'Blocked: no maintenance approval',
+    'Blocked: deployment approval missing',
+    'Ready for future approved scheduling review',
+    'An approval template is not owner approval',
+    'A provider approval placeholder is not provider approval',
+    'A change-window placeholder is not scheduled maintenance',
+    'A rollback dependency placeholder is not rollback readiness',
+    'Passing validators is not maintenance approval',
+    'A merged PR is not scheduled maintenance',
+    'Approval ID: `[NOT ASSIGNED]`',
+    'Approval area: `[NOT SELECTED]`',
+    'Source maintenance item: `[NOT SUPPLIED]`',
+    'Route/surface affected: `[NOT SELECTED]`',
+    'Proposed maintenance summary: `[NOT CAPTURED]`',
+    'Owner approval status: `[OWNER INPUT REQUIRED]`',
+    'Provider/runtime approval status: `[PROVIDER DECISION REQUIRED]`',
+    'Change-window status: `[NOT SCHEDULED]`',
+    'Schedule status: `[NOT SCHEDULED]`',
+    'Rollback dependency: `[NOT CAPTURED]`',
+    'Verification dependency: `[NOT CAPTURED]`',
+    'Implementation status: `[NOT STARTED]`',
+    'Evidence status: `[NOT EVIDENCE / NOT RECORDED]`',
+    'Deployment status: `[DEPLOYMENT APPROVAL: NOT GRANTED]`',
+    'Public route maintenance approval',
+    'Protected admin maintenance approval',
+    'Quote/enquiry workflow maintenance approval',
+    'Listing/category/media maintenance approval',
+    'Provider/runtime approval',
+    'Environment/secrets approval',
+    'Owner prioritisation',
+    'Rollback/change-window planning',
+    'Future scheduling review',
+    'not owner approval, not provider approval, not maintenance approval, not scheduled work, not change-window evidence, not maintenance implementation, not support evidence, not response-sent evidence, not customer-contact evidence, not monitoring evidence, not analytics evidence, not remediation evidence, not correction completion, not hotfix approval, not rollback evidence, not production evidence, not release closure, not maintenance completion, and not deployment approval'
+  ]) {
+    assertIncludes(docs, required, 'Phase 5X docs');
+  }
+
+  const statusDocs = normalizeWhitespace(statusDocPaths.map(readRepoFile).join('\n'));
+  for (const required of [
+    `Current phase: ${currentPhase5x}`,
+    `Latest completed capability: ${currentPhase5w}`,
+    'Last merged capability PR: #178',
+    `Last merged capability merge commit: ${phase178MergeCommit}`,
+    maintenanceApprovalReadinessDocPath,
+    maintenanceChangeWindowPlanningLedgerTemplateDocPath,
+    preventiveMaintenanceReadinessDocPath,
+    lessonsToMaintenanceBacklogTemplateDocPath,
+  maintenanceApprovalReadinessDocPath,
+  maintenanceChangeWindowPlanningLedgerTemplateDocPath,
+    'scripts/validate-maintenance-approval-readiness.cjs',
+    'No deployment is performed or approved by Phase 5X-A/B'
+  ]) {
+    assertIncludes(statusDocs, required, 'Phase 5X status roll-forward docs');
+  }
+
+  const packageJson = JSON.parse(readRepoFile('package.json'));
+  assert(
+    packageJson.scripts?.['validate:maintenance-approval-readiness'] === 'node scripts/validate-maintenance-approval-readiness.cjs',
+    'package.json must register validate:maintenance-approval-readiness'
+  );
+
+  const adminSource = readRepoFile('website/app/admin/protected-admin-shell.tsx');
+  for (const required of [
+    /Phase 5X-A\/B admin-only maintenance approval readiness/i,
+    /MaintenanceApprovalReadinessHelper/i,
+    /LOCAL-MAINTENANCE-APPROVAL-READINESS\.md/i,
+    /LOCAL-MAINTENANCE-CHANGE-WINDOW-PLANNING-LEDGER-TEMPLATE\.md/i,
+    /LOCAL-PREVENTIVE-MAINTENANCE-READINESS\.md/i,
+    /LOCAL-LESSONS-TO-MAINTENANCE-BACKLOG-TEMPLATE\.md/i,
+    /No owner approval is recorded here/i,
+    /No provider approval is recorded here/i,
+    /No maintenance approval is\s+granted here/i,
+    /No maintenance schedule is created here/i,
+    /No change window\s+is scheduled here/i,
+    /No cron or job scheduler is added here/i,
+    /No monitoring\s+is configured here/i,
+    /No analytics is configured here/i,
+    /No provider setup is\s+performed here/i,
+    /No maintenance task is implemented here/i,
+    /No maintenance\s+approval evidence is captured here/i,
+    /No schedule evidence is captured\s+here/i,
+    /No change-window evidence is captured here/i,
+    /No production change\s+is made here/i,
+    /No rollback is executed here/i,
+    /No deployment is performed\s+here/i,
+    /No deployment approval is granted here/i
+  ]) {
+    assert(required.test(adminSource), `Phase 5X admin source missing safe wording: ${required}`);
+  }
+
+  assertIncludes(readRepoFile('website/app/admin/page.tsx'), 'view={{ kind: "home" }}', 'admin home page');
+  assert(/function AdminOperationsHome[\s\S]*<OwnerReadinessHelpersPanel \/>/.test(adminSource), 'AdminOperationsHome must render shared owner readiness helper panel');
+  assert(/function OwnerReadinessHelpersPanel[\s\S]*<OwnerReviewWalkthroughReadinessHelper \/>[\s\S]*<OwnerFeedbackIntakeReadinessHelper \/>[\s\S]*<OwnerCorrectionWorkflowReadinessHelper \/>[\s\S]*<OwnerReReviewRequestReadinessHelper \/>[\s\S]*<OwnerDecisionIntakeReadinessHelper \/>[\s\S]*<DeploymentApprovalRequestReadinessHelper \/>[\s\S]*<DeploymentExecutionRunbookReadinessHelper \/>[\s\S]*<SmokeEvidenceIntakeReadinessHelper \/>[\s\S]*<SmokeEvidenceReviewReadinessHelper \/>[\s\S]*<LaunchDecisionResponseReadinessHelper \/>[\s\S]*<PostLaunchObservationReadinessHelper \/>[\s\S]*<PostLaunchRemediationReadinessHelper \/>[\s\S]*<RemediationVerificationReadinessHelper \/>[\s\S]*<IncidentResolutionResponseReadinessHelper \/>[\s\S]*<PreventiveMaintenanceReadinessHelper \/>[\s\S]*<MaintenanceApprovalReadinessHelper \/>/.test(adminSource), 'Phase 5X admin source must keep complete owner readiness helper chain in shared panel');
+
+  const publicSource = readTrackedProductionSources(publicSourceRoots);
+  assertNoMatch(publicSource, /maintenance approval|maintenance change-window|preventive maintenance|lessons-to-maintenance|incident resolution response|support response|customer follow-up|public notice|maintenance internals|monitoring\/analytics internals|scheduler\/cron internals|provider setup internals|environment\/secrets internals|admin route internals|owner handoff internals|release-control internals|admin urls?|\/admin\//i, 'Phase 5X public source');
+  assert(/listing|listings/i.test(publicSource), 'Phase 5X public source must retain listing wording');
+  assert(/rental|rentals/i.test(publicSource), 'Phase 5X public source must retain rental wording');
+  assert(/quote|enquiry|request/i.test(publicSource), 'Phase 5X public source must retain quote/enquiry/request wording');
+  assertNoMatch(publicSource, /\b(?:cart|checkout|order|payment|purchase|online ordering)\b/i, 'Phase 5X public source');
+  assertNoMatch(publicSource, /\b(?:booking|reservation|fulfilment|fulfillment|stock reservation|stock-reservation|book now|reserve now)\b/i, 'Phase 5X public source');
+  assertNoMatch(publicSource, /award-winning|certified partner|trusted by|5-star|guaranteed availability|guaranteed delivery|licensed and insured|testimonial|client logo|case study|legal guarantee|production policy|service-area claim|Singapore\s+\d{6}|\+?\d[\d\s().-]{7,}|Mon(?:day)?\s*-\s*Fri|24\/7|123\s+Main/i, 'Phase 5X public source');
+  assertNoMatch(publicSource, /customer account|quote tracking|file upload|public upload|notifications?|\bCRM\b|email sending|sms sending|whatsapp|outbound messaging|public status view/i, 'Phase 5X public source');
+  assertNoMatch(adminSource, /public upload|customer upload|storage provider|monitoring provider setup|analytics provider setup|alerting provider setup|scheduler setup|cron setup|process\.env|NEXT_PUBLIC_SUPABASE|SUPABASE_SERVICE_ROLE|Pinecone|\bRAG\b|n8n runtime|\/api\/chat|outbound messaging/i, 'Phase 5X admin source');
+  assertNoMatch(docs, /actual deployment|maintenance approved|owner approved|provider approved|maintenance scheduled|change window scheduled|cron configured|job configured|monitoring configured|analytics configured|support response sent|customer follow-up sent|public notice published|maintenance completed|live hotfix|remediation performed|correction completed|retest run completed|live monitoring|analytics capture|route verification completed|route walkthrough completed|preview publication completed|production launch completed|provider setup completed|env\/secrets setup completed|owner sign-?off complete|launch clearance granted|production evidence captured|preview evidence captured|smoke evidence captured|rollback evidence captured|response-sent evidence captured|closure evidence captured|resolution evidence captured|maintenance evidence captured|maintenance-approval evidence captured|maintenance-schedule evidence captured|change-window evidence captured|correction-completed evidence captured|remediation evidence captured|hotfix evidence captured|retest evidence captured|monitoring evidence captured|analytics evidence captured|deployment approval granted/i, 'Phase 5X docs');
+
+  const suite = readRepoFile('scripts/validate-release-candidate-suite.cjs');
+  assertIncludes(suite, "args: ['run', 'validate:maintenance-approval-readiness']", 'release-candidate suite');
+  assertIncludes(suite, "args: ['run', 'validate:preventive-maintenance-readiness']", 'release-candidate suite');
   assertNoMatch(suite, /docker[^\n]*(?:skip|bypass)|(?:skip|bypass)[^\n]*docker/i, 'release-candidate suite');
   assertSuiteAndTests();
 }
@@ -3599,6 +3756,7 @@ function assertPhase5qSmokeEvidenceReviewReadiness() {
 }
 
 module.exports = {
+  assertPhase5xMaintenanceApprovalReadiness,
   assertPhase5wPreventiveMaintenanceReadiness,
   assertPhase5vIncidentResolutionResponseReadiness,
   assertPhase5uRemediationVerificationReadiness,
@@ -3662,6 +3820,7 @@ module.exports = {
   currentPhase5u,
   currentPhase5v,
   currentPhase5w,
+  currentPhase5x,
   latestCompletedPhase4f,
   cleanupDocPath,
   publicJourneyAcceptanceDocPath,
