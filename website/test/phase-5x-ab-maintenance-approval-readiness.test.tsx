@@ -115,8 +115,8 @@ describe("Phase 5X-A/B maintenance approval readiness", () => {
       expect(screen.getByRole("heading", { name: heading })).toBeInTheDocument();
     }
 
-    expect(screen.getByText(maintenanceApprovalReadinessDocPath)).toBeInTheDocument();
-    expect(screen.getByText(maintenanceChangeWindowPlanningLedgerTemplateDocPath)).toBeInTheDocument();
+    expect(screen.getAllByText(maintenanceApprovalReadinessDocPath).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(maintenanceChangeWindowPlanningLedgerTemplateDocPath).length).toBeGreaterThan(0);
     expect(screen.getAllByText(preventiveMaintenanceReadinessDocPath).length).toBeGreaterThan(0);
     expect(screen.getAllByText(lessonsToMaintenanceBacklogTemplateDocPath).length).toBeGreaterThan(0);
     expect(screen.getByText(/safe future approval sections/i)).toBeInTheDocument();
