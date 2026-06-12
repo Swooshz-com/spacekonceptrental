@@ -112,8 +112,8 @@ describe("Phase 5U-A/B remediation verification readiness", () => {
       expect(screen.getByRole("heading", { name: heading })).toBeInTheDocument();
     }
 
-    expect(screen.getByText(remediationVerificationReadinessDocPath)).toBeInTheDocument();
-    expect(screen.getByText(correctionRetestResolutionLedgerTemplateDocPath)).toBeInTheDocument();
+    expect(screen.getAllByText(remediationVerificationReadinessDocPath).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(correctionRetestResolutionLedgerTemplateDocPath).length).toBeGreaterThan(0);
     expect(screen.getAllByText(postLaunchRemediationReadinessDocPath).length).toBeGreaterThan(0);
     expect(screen.getAllByText(incidentTriageCorrectionBacklogTemplateDocPath).length).toBeGreaterThan(0);
     expect(screen.getByText(/safe future verification sections/i)).toBeInTheDocument();
@@ -125,7 +125,7 @@ describe("Phase 5U-A/B remediation verification readiness", () => {
     expect(screen.getByText(/no-retest\/no-resolution boundaries/i)).toBeInTheDocument();
     expect(screen.getByText(/a verification template is not a retest/i)).toBeInTheDocument();
     expect(screen.getByText(/no correction retest is run here/i)).toBeInTheDocument();
-    expect(screen.getByText(/no incident resolution is recorded here/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/no incident resolution is recorded here/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/no correction completion is claimed here/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/no live hotfix is applied here/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/no production change is made here/i).length).toBeGreaterThan(0);
@@ -133,7 +133,7 @@ describe("Phase 5U-A/B remediation verification readiness", () => {
     expect(screen.getAllByText(/no support response is sent here/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/no customer follow-up is sent here/i).length).toBeGreaterThan(0);
     expect(screen.getByText(/no retest evidence is captured here/i)).toBeInTheDocument();
-    expect(screen.getByText(/no resolution evidence is captured here/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/no resolution evidence is captured here/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/no remediation evidence is captured here/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/no rollback is executed here/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/no deployment is performed here/i).length).toBeGreaterThan(0);
