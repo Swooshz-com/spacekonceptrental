@@ -1,7 +1,7 @@
 const {
-  assertPhase5sPostLaunchObservationReadiness,
+  assertPhase5tPostLaunchRemediationReadiness,
 } = require('./public-review-polish-checks.cjs');
 
-assertPhase5sPostLaunchObservationReadiness();
+assertPhase5tPostLaunchRemediationReadiness();
 
 console.log('Deployment execution runbook readiness validation passed. No deployment was performed and no deployment approval was granted.');

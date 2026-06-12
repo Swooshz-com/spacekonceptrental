@@ -1621,6 +1621,58 @@ const phase5sNoMonitoringNoIncidentBoundaries = [
   "A merged PR is not post-launch readiness"
 ] as const;
 
+const phase5tPostLaunchRemediationReadinessPath =
+  "docs/content/LOCAL-POST-LAUNCH-REMEDIATION-READINESS.md";
+const phase5tIncidentTriageCorrectionBacklogTemplatePath =
+  "docs/content/LOCAL-INCIDENT-TRIAGE-CORRECTION-BACKLOG-TEMPLATE.md";
+const phase5tSafeFutureRemediationSections = [
+  "Incident/follow-up ledger reference",
+  "Post-launch observation reference",
+  "Incident triage source placeholder",
+  "Affected route/surface placeholder",
+  "Severity/impact placeholder",
+  "Owner clarification placeholder",
+  "Provider/runtime clarification placeholder",
+  "Correction backlog reference",
+  "Rollback/escalation review placeholder",
+  "Final remediation planning status"
+] as const;
+const phase5tIncidentTriageCorrectionBacklogPlaceholders = [
+  "Triage ID: [NOT ASSIGNED]",
+  "Triage area: [NOT SELECTED]",
+  "Source incident/follow-up: [NOT SUPPLIED]",
+  "Route/surface affected: [NOT SELECTED]",
+  "Severity/impact: [NOT CAPTURED]",
+  "Reproduction status: [NOT RUN]",
+  "Owner input status: [OWNER INPUT REQUIRED]",
+  "Provider/runtime status: [PROVIDER DECISION REQUIRED]",
+  "Proposed correction: [NOT CAPTURED]",
+  "Hotfix status: [NOT APPROVED]",
+  "Release/correction status: [NOT SCHEDULED]",
+  "Evidence status: [NOT EVIDENCE / NOT RECORDED]",
+  "Deployment status: [DEPLOYMENT APPROVAL: NOT GRANTED]"
+] as const;
+const phase5tAllowedFutureRemediationStatuses = [
+  "Not started",
+  "Incident not recorded",
+  "Observation missing",
+  "Needs owner clarification",
+  "Needs provider clarification",
+  "Needs reproduction",
+  "Needs correction planning",
+  "Blocked: no live approval",
+  "Blocked: deployment approval missing",
+  "Ready for future approved correction planning"
+] as const;
+const phase5tNoHotfixNoRemediationBoundaries = [
+  "A remediation template is not a hotfix",
+  "A triage placeholder is not an incident record",
+  "A correction backlog row is not a completed correction",
+  "A rollback/escalation placeholder is not rollback execution",
+  "Passing validators is not remediation success",
+  "A merged PR is not live incident resolution"
+] as const;
+
 const publicJourneyReadinessClosurePath =
   "docs/content/PUBLIC-JOURNEY-READINESS-CLOSURE.md";
 const quoteEnquiryPublicExpectationBoundaryPath =
@@ -3224,6 +3276,89 @@ function PostLaunchObservationReadinessHelper() {
 
 
 
+function PostLaunchRemediationReadinessHelper() {
+  return (
+    <section
+      aria-label="Phase 5T post-launch remediation readiness helper"
+      className="admin-readiness"
+    >
+      <p className="eyebrow">Phase 5T-A/B admin-only post-launch remediation readiness</p>
+      <h3>Post-launch remediation readiness helper</h3>
+      <p>
+        This protected helper prepares future approved remediation planning for
+        rental listings, event furniture listings, categories, media, quote,
+        enquiry, and request surfaces. No live hotfix is applied here. No
+        production change is made here. No remediation is performed here. No
+        incident is recorded here. No support response is sent here. No customer
+        follow-up is sent here. No remediation evidence is captured here. No
+        monitoring evidence is captured here. No analytics evidence is captured
+        here. No rollback is executed here. No deployment is performed here. No
+        deployment approval is granted here.
+      </p>
+      <dl className="admin-readiness__grid">
+        <div>
+          <dt>Post-launch remediation readiness</dt>
+          <dd>{phase5tPostLaunchRemediationReadinessPath}</dd>
+        </div>
+        <div>
+          <dt>Incident triage correction backlog template</dt>
+          <dd>{phase5tIncidentTriageCorrectionBacklogTemplatePath}</dd>
+        </div>
+        <div>
+          <dt>Post-launch observation readiness</dt>
+          <dd>{phase5sPostLaunchObservationReadinessPath}</dd>
+        </div>
+        <div>
+          <dt>Incident/follow-up ledger template</dt>
+          <dd>{phase5sIncidentFollowupLedgerTemplatePath}</dd>
+        </div>
+        <div>
+          <dt>Evidence status</dt>
+          <dd>[NOT EVIDENCE / NOT RECORDED]</dd>
+        </div>
+        <div>
+          <dt>Deployment status</dt>
+          <dd>[DEPLOYMENT APPROVAL: NOT GRANTED]</dd>
+        </div>
+      </dl>
+      <h4>Safe future remediation sections</h4>
+      <ul className="admin-readiness__list">
+        {phase5tSafeFutureRemediationSections.map((section) => (
+          <li key={section}>{section}</li>
+        ))}
+      </ul>
+      <h4>Incident triage/correction backlog placeholders</h4>
+      <ul className="admin-readiness__list">
+        {phase5tIncidentTriageCorrectionBacklogPlaceholders.map((placeholder) => (
+          <li key={placeholder}>{placeholder}</li>
+        ))}
+      </ul>
+      <h4>Allowed future remediation statuses</h4>
+      <ul className="admin-readiness__list">
+        {phase5tAllowedFutureRemediationStatuses.map((status) => (
+          <li key={status}>{status}</li>
+        ))}
+      </ul>
+      <h4>No-hotfix/no-remediation boundaries</h4>
+      <ul className="admin-readiness__list">
+        {phase5tNoHotfixNoRemediationBoundaries.map((boundary) => (
+          <li key={boundary}>{boundary}</li>
+        ))}
+      </ul>
+      <p>
+        This helper stays protected admin-only and does not expose post-launch
+        remediation internals, incident triage correction backlog internals,
+        post-launch observation internals, incident/follow-up ledger internals,
+        monitoring/analytics internals, hotfix internals, provider setup
+        internals, environment/secrets internals, owner handoff internals,
+        release-control internals, or admin route internals to public rental,
+        listing, quote, enquiry, or request routes.
+      </p>
+    </section>
+  );
+}
+
+
 function OwnerReadinessHelpersPanel() {
   return (
     <>
@@ -3238,6 +3373,7 @@ function OwnerReadinessHelpersPanel() {
       <SmokeEvidenceReviewReadinessHelper />
       <LaunchDecisionResponseReadinessHelper />
       <PostLaunchObservationReadinessHelper />
+      <PostLaunchRemediationReadinessHelper />
     </>
   );
 }
