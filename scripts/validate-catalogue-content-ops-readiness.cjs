@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-const { assertPhase5vIncidentResolutionResponseReadiness } = require('./public-review-polish-checks.cjs');
+const { assertPhase5wPreventiveMaintenanceReadiness } = require('./public-review-polish-checks.cjs');
 
-assertPhase5vIncidentResolutionResponseReadiness();
+assertPhase5wPreventiveMaintenanceReadiness();
 console.log('Catalogue content-ops readiness validation passed. No deployment was performed.');
