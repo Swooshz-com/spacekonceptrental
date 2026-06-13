@@ -49,6 +49,7 @@
     "validate:maintenance-execution-runbook-readiness": "node scripts/validate-maintenance-execution-runbook-readiness.cjs",
     "validate:maintenance-closure-decision-readiness": "node scripts/validate-maintenance-closure-decision-readiness.cjs",
     "validate:maintenance-closure-archive-readiness": "node scripts/validate-maintenance-closure-archive-readiness.cjs",
-    "validate:maintenance-closure-audit-handoff-readiness": "node scripts/validate-maintenance-closure-audit-handoff-readiness.cjs"
+    "validate:maintenance-closure-audit-handoff-readiness": "node scripts/validate-maintenance-closure-audit-handoff-readiness.cjs",
+    "validate:maintenance-closure-audit-follow-up-intake-readiness": "node scripts/validate-maintenance-closure-audit-follow-up-intake-readiness.cjs"
   }
 }
