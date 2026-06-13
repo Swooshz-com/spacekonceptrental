@@ -2008,6 +2008,10 @@ const phase6cMaintenanceClosureAuditHandoffReadinessPath =
   "docs/content/LOCAL-MAINTENANCE-CLOSURE-AUDIT-HANDOFF-READINESS.md";
 const phase6cMaintenanceClosureAuditHandoffRoutingLedgerTemplatePath =
   "docs/content/LOCAL-MAINTENANCE-CLOSURE-AUDIT-HANDOFF-ROUTING-LEDGER-TEMPLATE.md";
+const phase6dMaintenanceClosureAuditFollowUpIntakeReadinessPath =
+  "docs/content/LOCAL-MAINTENANCE-CLOSURE-AUDIT-FOLLOW-UP-INTAKE-READINESS.md";
+const phase6dMaintenanceClosureAuditFindingIntakeLedgerTemplatePath =
+  "docs/content/LOCAL-MAINTENANCE-CLOSURE-AUDIT-FINDING-INTAKE-LEDGER-TEMPLATE.md";
 const phase6aClosureRecommendationPacketLedgerPlaceholders = [
   "Intended maintenance/change reference: [NOT SUPPLIED]",
   "Intended verification packet reference: [NOT SUPPLIED]",
@@ -4507,6 +4511,94 @@ function MaintenanceClosureAuditHandoffReadinessHelper() {
   );
 }
 
+function MaintenanceClosureAuditFollowUpIntakeReadinessHelper() {
+  const findingIntakeLedgerFields = [
+    "Intended audit handoff reference",
+    "Intended archive/retention packet reference",
+    "Intended audit follow-up owner",
+    "Intended internal reviewer",
+    "Intended finding category placeholder",
+    "Intended finding severity placeholder",
+    "Missing evidence blocker placeholder",
+    "Unresolved follow-up blocker placeholder",
+    "Response status placeholder",
+    "Remediation status placeholder",
+    "No real finding received",
+    "No audit response sent",
+    "No remediation assigned"
+  ];
+  const readinessChecklist = [
+    "Confirm the theoretical audit handoff reference would be reviewed before any future audit follow-up intake discussion.",
+    "Confirm missing evidence must block intake because this helper does not collect or record production evidence.",
+    "Confirm unresolved follow-ups must block intake until separately reviewed by the intended internal reviewer.",
+    "Confirm archive/retention gaps must block intake until a separate approved future review resolves them.",
+    "Confirm external response questions remain unapproved and placeholder-only.",
+    "Confirm customer, public, support, external message system, outbound email, SMS, and WhatsApp actions are not allowed.",
+    "Confirm this helper does not receive, record, approve, respond to, or remediate any audit finding."
+  ];
+  const firewall = [
+    "No audit finding is received or recorded here.",
+    "No audit follow-up record is created here.",
+    "No audit response is sent here.",
+    "No remediation is assigned here.",
+    "No external disclosure is made here.",
+    "No audit recipient is contacted here.",
+    "Archive creation is blocked here.",
+    "Archive record writing is blocked here.",
+    "Retention policy application is blocked here.",
+    "Closure decision recording is blocked here.",
+    "Closure approval recording is blocked here.",
+    "Maintenance completion marking is blocked here.",
+    "Production evidence collection is blocked here.",
+    "Smoke check runs are blocked here.",
+    "Provider or runtime check execution is blocked here.",
+    "Customer or support follow-up sending is blocked here.",
+    "No production readiness claim is made here.",
+    "Deployment approval granting is blocked here."
+  ];
+
+  return (
+    <section aria-label="Phase 6D maintenance closure audit follow-up intake readiness helper" className="admin-readiness">
+      <p className="eyebrow">Phase 6D-A/B admin-only maintenance closure audit follow-up intake readiness</p>
+      <h3>Maintenance closure audit follow-up intake readiness helper</h3>
+      <p>
+        This protected helper prepares future owner/admin review of a theoretical
+        audit follow-up or finding intake packet after a theoretical maintenance
+        closure audit handoff exists for rental listings, event furniture
+        listings, categories, media, quote, enquiry, and request surfaces. It is
+        draft, readiness-only, placeholder-only, and internal. No audit finding
+        is received or recorded here. No audit follow-up record is created here.
+        No audit response is sent here. No remediation is assigned here.
+      </p>
+      <dl className="admin-readiness__grid">
+        <div><dt>Maintenance closure audit follow-up intake readiness</dt><dd>{phase6dMaintenanceClosureAuditFollowUpIntakeReadinessPath}</dd></div>
+        <div><dt>Audit finding intake ledger template</dt><dd>{phase6dMaintenanceClosureAuditFindingIntakeLedgerTemplatePath}</dd></div>
+        <div><dt>Intended audit handoff reference</dt><dd>[NOT SUPPLIED]</dd></div>
+        <div><dt>Intended archive/retention packet reference</dt><dd>[NOT SUPPLIED]</dd></div>
+        <div><dt>Intended audit follow-up owner</dt><dd>[NOT ASSIGNED]</dd></div>
+        <div><dt>Intended internal reviewer</dt><dd>[NOT ASSIGNED]</dd></div>
+        <div><dt>Intended finding category</dt><dd>[PLACEHOLDER ONLY / NO REAL FINDING]</dd></div>
+        <div><dt>Intended finding severity</dt><dd>[PLACEHOLDER ONLY / NO SEVERITY ASSIGNED]</dd></div>
+        <div><dt>Missing evidence blocker status</dt><dd>[BLOCKING / NOT EVIDENCE]</dd></div>
+        <div><dt>Unresolved follow-up blocker status</dt><dd>[BLOCKING / NOT REVIEWED]</dd></div>
+        <div><dt>Response status</dt><dd>[NOT SENT]</dd></div>
+        <div><dt>Remediation status</dt><dd>[NOT ASSIGNED]</dd></div>
+      </dl>
+      <h4>Audit finding intake ledger</h4>
+      <ul className="admin-readiness__list">{findingIntakeLedgerFields.map((item) => <li key={item}>{item}</li>)}</ul>
+      <h4>Audit follow-up intake readiness checklist</h4>
+      <ul className="admin-readiness__list">{readinessChecklist.map((item) => <li key={item}>{item}</li>)}</ul>
+      <h4>No-response/no-remediation firewall</h4>
+      <ul className="admin-readiness__list">{firewall.map((item) => <li key={item}>{item}</li>)}</ul>
+      <h4>Safe intake language</h4>
+      <p>
+        Safe intake language uses draft, readiness, placeholder, intended, and theoretical wording only.
+        Avoid finality wording unless it is clearly negated as not allowed.
+      </p>
+    </section>
+  );
+}
+
 function OwnerReadinessHelpersPanel() {
   return (
     <>
@@ -4531,6 +4623,7 @@ function OwnerReadinessHelpersPanel() {
       <MaintenanceClosureDecisionReadinessHelper />
       <MaintenanceClosureArchiveReadinessHelper />
       <MaintenanceClosureAuditHandoffReadinessHelper />
+      <MaintenanceClosureAuditFollowUpIntakeReadinessHelper />
     </>
   );
 }
