@@ -16,7 +16,7 @@ This template-only maintenance closure archive / retention ledger is for future 
 - Intended archive packet contents: `[NOT CAPTURED]`.
 - Missing evidence blocker status: `[BLOCKING / NOT EVIDENCE]`.
 - Unresolved follow-up blocker status: `[NOT REVIEWED]`.
-- Storage/provider dependency: `[PROVIDER DECISION REQUIRED]`.
+- External archive location decision: `[PROVIDER DECISION REQUIRED]`.
 - Archive status: `[NOT CREATED]`.
 - Retention status: `[NOT APPLIED]`.
 - Maintenance status: `[NOT MARKED COMPLETE]`.
@@ -29,7 +29,7 @@ This template-only maintenance closure archive / retention ledger is for future 
 - Protected admin closure archive review.
 - Quote/enquiry workflow closure archive review.
 - Listing/category/media closure archive review.
-- Provider/storage clarification.
+- Future retention location decision.
 - Environment/secrets clarification.
 - Owner archive confirmation.
 - Missing evidence blocker review.

@@ -131,7 +131,7 @@ describe("Phase 6B-A/B maintenance closure archive readiness", () => {
     expect(screen.getByText(/No closure archive is created here/i)).toBeInTheDocument();
     expect(screen.getByText(/No archive record is written here/i)).toBeInTheDocument();
     expect(screen.getByText(/No retention policy is applied here/i)).toBeInTheDocument();
-    expect(screen.getByText(/No storage provider is configured here/i)).toBeInTheDocument();
+    expect(screen.getByText(/No storage configuration is created here/i)).toBeInTheDocument();
     expect(screen.getAllByText(/No deployment approval is granted here/i).length).toBeGreaterThan(0);
   });
 
@@ -193,7 +193,7 @@ describe("Phase 6B-A/B maintenance closure archive readiness", () => {
     expect(docs).toContain("An archive readiness template is not an archive.");
     expect(docs).toContain("This ledger is not an archive, not an archive record, not an applied retention policy");
     expect(docs).not.toMatch(
-      /actual deployment|archive created|archive record written|retention policy applied|storage provider configured|closure decision recorded|closure approval recorded|maintenance marked complete|production evidence collected|smoke check run|provider check executed|runtime check executed|customer follow-up sent|support response sent|public notice published|monitoring configured|analytics configured|cron configured|job configured|maintenance completed|live hotfix|remediation performed|correction completed|retest run|route verification|route walkthrough|preview publication|production launch|provider setup completed|env\/secrets setup completed|owner approved|owner sign-?off complete|launch clearance granted|production evidence captured|preview evidence captured|smoke evidence captured|rollback evidence captured|response-sent evidence captured|closure evidence captured|archive evidence captured|retention evidence captured|resolution evidence captured|maintenance evidence captured|correction-completed evidence captured|remediation evidence captured|hotfix evidence captured|retest evidence captured|monitoring evidence captured|analytics evidence captured|deployment approval granted/i,
+      /actual deployment|archive created|archive record written|retention policy applied|closure decision recorded|closure approval recorded|maintenance marked complete|production evidence collected|smoke check run|provider check executed|runtime check executed|customer follow-up sent|support response sent|public notice published|monitoring configured|analytics configured|cron configured|job configured|maintenance completed|live hotfix|remediation performed|correction completed|retest run|route verification|route walkthrough|preview publication|production launch|provider setup completed|env\/secrets setup completed|owner approved|owner sign-?off complete|launch clearance granted|production evidence captured|preview evidence captured|smoke evidence captured|rollback evidence captured|response-sent evidence captured|closure evidence captured|archive evidence captured|retention evidence captured|resolution evidence captured|maintenance evidence captured|correction-completed evidence captured|remediation evidence captured|hotfix evidence captured|retest evidence captured|monitoring evidence captured|analytics evidence captured|deployment approval granted/i,
     );
   });
 

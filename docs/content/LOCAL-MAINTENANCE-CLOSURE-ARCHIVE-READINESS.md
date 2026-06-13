@@ -6,7 +6,7 @@
 
 This repo-local, template-only, non-live maintenance closure archive readiness package is not evidence and is not an archive. It prepares safe placeholders for a future maintenance closure archive, retention, and audit-handoff review only after a real closure decision is separately approved later. It is for a normal furniture/event rental website where public users browse rental/event furniture listings and submit quote or enquiry requests, and where admin users manage listings, images, categories, media, and quote workflow.
 
-Phase 6B-A/B adds maintenance closure archive readiness, a closure packet retention ledger template, archive readiness prompts, and a no-archive/no-record firewall. It does not create archives, write archive records, apply retention policies, configure storage providers, collect production evidence, accept closure recommendations, record closure decisions, record closure approval, mark maintenance complete, run smoke checks, execute provider checks, execute runtime checks, perform deployment, change public runtime behavior, send support responses, contact customers, publish public notices, create monitoring, create analytics, create alerts, create cron, create jobs, add provider setup, add env/secrets, wire chat/RAG retrieval, or grant launch clearance.
+Phase 6B-A/B adds maintenance closure archive readiness, a closure packet retention ledger template, archive readiness prompts, and a no-archive/no-record firewall. It does not create archives, write archive records, apply retention policies, create storage configuration, collect production evidence, accept closure recommendations, record closure decisions, record closure approval, mark maintenance complete, run smoke checks, execute provider checks, execute runtime checks, perform deployment, change public runtime behavior, send support responses, contact customers, publish public notices, create monitoring, create analytics, create alerts, create cron, create jobs, add provider setup, add env/secrets, wire chat/RAG retrieval, or grant launch clearance.
 
 ## Safe future archive-readiness sections
 
@@ -30,7 +30,7 @@ Phase 6B-A/B adds maintenance closure archive readiness, a closure packet retent
 - Missing evidence blocks archive.
 - Unresolved follow-up blocks archive.
 - Needs owner archive confirmation.
-- Needs provider/storage clarification.
+- Needs external archive location clarification.
 - Blocked: no archive approval.
 - Blocked: deployment approval missing.
 - Ready for future approved archive review.

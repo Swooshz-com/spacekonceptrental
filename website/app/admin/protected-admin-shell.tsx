@@ -4353,7 +4353,7 @@ function MaintenanceClosureArchiveReadinessHelper() {
     "Missing evidence blocks archive",
     "Unresolved follow-up blocks archive",
     "Needs owner archive confirmation",
-    "Needs provider/storage clarification",
+    "Needs external archive location clarification",
     "Blocked: no archive approval",
     "Blocked: deployment approval missing",
     "Ready for future approved archive review"
@@ -4381,7 +4381,7 @@ function MaintenanceClosureArchiveReadinessHelper() {
         listings, categories, media, quote, enquiry, and request surfaces. It is
         readiness-only and placeholder-only. No closure archive is created here.
         No archive record is written here. No retention policy is applied here.
-        No storage provider is configured here. No closure decision is recorded
+        No storage configuration is created here. No closure decision is recorded
         here. No closure approval is recorded here. No maintenance is marked
         complete here. No production evidence is collected here. No smoke check
         is run here. No provider or runtime check is executed here. No customer
@@ -4402,7 +4402,7 @@ function MaintenanceClosureArchiveReadinessHelper() {
         <div><dt>Intended retention category</dt><dd>[NOT SELECTED]</dd></div>
         <div><dt>Intended archive packet contents</dt><dd>[NOT CAPTURED]</dd></div>
         <div><dt>Missing evidence blocker status</dt><dd>[BLOCKING / NOT EVIDENCE]</dd></div>
-        <div><dt>Storage/provider dependency</dt><dd>[PROVIDER DECISION REQUIRED]</dd></div>
+        <div><dt>External archive location decision</dt><dd>[PROVIDER DECISION REQUIRED]</dd></div>
         <div><dt>Archive status</dt><dd>[NOT CREATED]</dd></div>
         <div><dt>Retention status</dt><dd>[NOT APPLIED]</dd></div>
       </dl>
