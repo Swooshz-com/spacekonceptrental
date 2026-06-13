@@ -5,6 +5,11 @@ const repoRoot = path.resolve(__dirname, '..');
 
 const commandPlan = [
   {
+    label: 'Validate maintenance closure archive readiness',
+    cwd: repoRoot,
+    args: ['run', 'validate:maintenance-closure-archive-readiness'],
+  },
+  {
     label: 'Validate maintenance closure decision readiness',
     cwd: repoRoot,
     args: ['run', 'validate:maintenance-closure-decision-readiness'],

@@ -47,6 +47,7 @@
     "validate:maintenance-approval-readiness": "node scripts/validate-maintenance-approval-readiness.cjs",
     "validate:maintenance-verification-closure-readiness": "node scripts/validate-maintenance-verification-closure-readiness.cjs",
     "validate:maintenance-execution-runbook-readiness": "node scripts/validate-maintenance-execution-runbook-readiness.cjs",
-    "validate:maintenance-closure-decision-readiness": "node scripts/validate-maintenance-closure-decision-readiness.cjs"
+    "validate:maintenance-closure-decision-readiness": "node scripts/validate-maintenance-closure-decision-readiness.cjs",
+    "validate:maintenance-closure-archive-readiness": "node scripts/validate-maintenance-closure-archive-readiness.cjs"
   }
 }

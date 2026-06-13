@@ -2000,6 +2000,10 @@ const phase6aMaintenanceClosureDecisionReadinessPath =
   "docs/content/LOCAL-MAINTENANCE-CLOSURE-DECISION-READINESS.md";
 const phase6aMaintenanceClosureRecommendationPacketLedgerTemplatePath =
   "docs/content/LOCAL-MAINTENANCE-CLOSURE-RECOMMENDATION-PACKET-LEDGER-TEMPLATE.md";
+const phase6bMaintenanceClosureArchiveReadinessPath =
+  "docs/content/LOCAL-MAINTENANCE-CLOSURE-ARCHIVE-READINESS.md";
+const phase6bMaintenanceClosureArchiveRetentionLedgerTemplatePath =
+  "docs/content/LOCAL-MAINTENANCE-CLOSURE-ARCHIVE-RETENTION-LEDGER-TEMPLATE.md";
 const phase6aClosureRecommendationPacketLedgerPlaceholders = [
   "Intended maintenance/change reference: [NOT SUPPLIED]",
   "Intended verification packet reference: [NOT SUPPLIED]",
@@ -4328,6 +4332,90 @@ function MaintenanceClosureDecisionReadinessHelper() {
   );
 }
 
+function MaintenanceClosureArchiveReadinessHelper() {
+  const archiveReadinessSections = [
+    "Maintenance closure decision readiness reference",
+    "Closure recommendation packet ledger reference",
+    "Intended closure decision reference placeholder",
+    "Intended archive owner placeholder",
+    "Intended retention category placeholder",
+    "Intended archive packet contents placeholder",
+    "Missing evidence blocker placeholder",
+    "Unresolved follow-up blocker placeholder",
+    "Archive retention ledger reference",
+    "Final archive-readiness status"
+  ];
+  const archiveStatuses = [
+    "Not started",
+    "Closure decision not recorded",
+    "Closure approval not recorded",
+    "Maintenance not marked complete",
+    "Missing evidence blocks archive",
+    "Unresolved follow-up blocks archive",
+    "Needs owner archive confirmation",
+    "Needs provider/storage clarification",
+    "Blocked: no archive approval",
+    "Blocked: deployment approval missing",
+    "Ready for future approved archive review"
+  ];
+  const archiveBoundaries = [
+    "An archive readiness template is not an archive",
+    "An archive packet placeholder is not an archive record",
+    "A retention placeholder is not an applied retention policy",
+    "A missing-evidence blocker is not evidence",
+    "Passing validators is not archive approval",
+    "A merged PR is not maintenance closure archive"
+  ];
+
+  return (
+    <section
+      aria-label="Phase 6B maintenance closure archive readiness helper"
+      className="admin-readiness"
+    >
+      <p className="eyebrow">Phase 6B-A/B admin-only maintenance closure archive readiness</p>
+      <h3>Maintenance closure archive readiness helper</h3>
+      <p>
+        This protected helper prepares future owner/admin review of a theoretical
+        maintenance closure archive and retention packet after a future closure
+        decision is separately approved for rental listings, event furniture
+        listings, categories, media, quote, enquiry, and request surfaces. It is
+        readiness-only and placeholder-only. No closure archive is created here.
+        No archive record is written here. No retention policy is applied here.
+        No storage provider is configured here. No closure decision is recorded
+        here. No closure approval is recorded here. No maintenance is marked
+        complete here. No production evidence is collected here. No smoke check
+        is run here. No provider or runtime check is executed here. No customer
+        or support follow-up is sent here. No deployment is performed here. No
+        deployment approval is granted here.
+      </p>
+      <dl className="admin-readiness__grid">
+        <div><dt>Maintenance closure archive readiness</dt><dd>{phase6bMaintenanceClosureArchiveReadinessPath}</dd></div>
+        <div><dt>Closure archive / retention ledger template</dt><dd>{phase6bMaintenanceClosureArchiveRetentionLedgerTemplatePath}</dd></div>
+        <div><dt>Maintenance closure decision readiness</dt><dd>{phase6aMaintenanceClosureDecisionReadinessPath}</dd></div>
+        <div><dt>Closure recommendation packet ledger template</dt><dd>{phase6aMaintenanceClosureRecommendationPacketLedgerTemplatePath}</dd></div>
+        <div><dt>Evidence status</dt><dd>[NOT EVIDENCE / NOT RECORDED]</dd></div>
+        <div><dt>Deployment status</dt><dd>[DEPLOYMENT APPROVAL: NOT GRANTED]</dd></div>
+        <div><dt>Archive ID</dt><dd>[NOT ASSIGNED]</dd></div>
+        <div><dt>Intended closure decision reference</dt><dd>[NOT SUPPLIED]</dd></div>
+        <div><dt>Intended recommendation packet reference</dt><dd>[NOT SUPPLIED]</dd></div>
+        <div><dt>Intended archive owner</dt><dd>[NOT ASSIGNED]</dd></div>
+        <div><dt>Intended retention category</dt><dd>[NOT SELECTED]</dd></div>
+        <div><dt>Intended archive packet contents</dt><dd>[NOT CAPTURED]</dd></div>
+        <div><dt>Missing evidence blocker status</dt><dd>[BLOCKING / NOT EVIDENCE]</dd></div>
+        <div><dt>Storage/provider dependency</dt><dd>[PROVIDER DECISION REQUIRED]</dd></div>
+        <div><dt>Archive status</dt><dd>[NOT CREATED]</dd></div>
+        <div><dt>Retention status</dt><dd>[NOT APPLIED]</dd></div>
+      </dl>
+      <h4>Safe future archive-readiness sections</h4>
+      <ul className="admin-readiness__list">{archiveReadinessSections.map((item) => <li key={item}>{item}</li>)}</ul>
+      <h4>Allowed future archive-readiness statuses</h4>
+      <ul className="admin-readiness__list">{archiveStatuses.map((item) => <li key={item}>{item}</li>)}</ul>
+      <h4>No-archive/no-record boundaries</h4>
+      <ul className="admin-readiness__list">{archiveBoundaries.map((item) => <li key={item}>{item}</li>)}</ul>
+    </section>
+  );
+}
+
 function OwnerReadinessHelpersPanel() {
   return (
     <>
@@ -4350,6 +4438,7 @@ function OwnerReadinessHelpersPanel() {
       <MaintenanceExecutionRunbookReadinessHelper />
       <MaintenanceVerificationClosureReadinessHelper />
       <MaintenanceClosureDecisionReadinessHelper />
+      <MaintenanceClosureArchiveReadinessHelper />
     </>
   );
 }

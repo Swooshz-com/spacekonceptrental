@@ -30,6 +30,7 @@ const phase178MergeCommit = 'f88ff02523a8a82db2d6a163717aa53a1e3b7118';
 const phase179MergeCommit = 'e46684f4b216888727993501b0cad465eab31b2d';
 const phase180MergeCommit = '89e18b7919f6251950b9f520ad6c97fc2dfdc660';
 const phase181MergeCommit = '65768d6d3b5ad0aeaa213de450e90616d5784e63';
+const phase182MergeCommit = '6710bfd707ab7f7560fc6adc96131c4f972820e4';
 const currentPhase5a = 'Phase 5A-A/B public owner-review polish sweep, local content-readiness cleanup, and protected admin review UX closure';
 const currentPhase5b = 'Phase 5B-A/B public catalogue-to-enquiry journey hardening, listing continuity, and admin/public parity checks';
 const currentPhase5c = 'Phase 5C-A/B public discovery search/filter polish, quote-intent context, and admin discovery parity closure';
@@ -57,6 +58,7 @@ const currentPhase5x = 'Phase 5X-A/B maintenance approval readiness, change-wind
 const currentPhase5y = 'Phase 5Y-A/B maintenance execution runbook readiness, change-window checklist, and no-execution/no-runtime firewall';
 const currentPhase5z = 'Phase 5Z-A/B maintenance verification closure readiness, change-window outcome ledger, and no-completion/no-production-evidence firewall';
 const currentPhase6a = 'Phase 6A-A/B maintenance closure decision readiness, closure recommendation packet ledger, and no-approval/no-completion firewall';
+const currentPhase6b = 'Phase 6B-A/B maintenance closure archive readiness, closure packet retention ledger, and no-archive/no-record firewall';
 const latestCompletedPhase4f = 'Phase 4F-A/B owner-facing review handoff bundle, approval issue template, and no-deploy preflight command center';
 const cleanupDocPath = 'docs/content/LOCAL-CONTENT-READINESS-CLEANUP.md';
 const publicJourneyAcceptanceDocPath = 'docs/content/LOCAL-PUBLIC-JOURNEY-ACCEPTANCE.md';
@@ -104,6 +106,8 @@ const maintenanceVerificationClosureReadinessDocPath = 'docs/content/LOCAL-MAINT
 const maintenanceChangeWindowOutcomeLedgerTemplateDocPath = 'docs/content/LOCAL-MAINTENANCE-CHANGE-WINDOW-OUTCOME-LEDGER-TEMPLATE.md';
 const maintenanceClosureDecisionReadinessDocPath = 'docs/content/LOCAL-MAINTENANCE-CLOSURE-DECISION-READINESS.md';
 const maintenanceClosureRecommendationPacketLedgerTemplateDocPath = 'docs/content/LOCAL-MAINTENANCE-CLOSURE-RECOMMENDATION-PACKET-LEDGER-TEMPLATE.md';
+const maintenanceClosureArchiveReadinessDocPath = 'docs/content/LOCAL-MAINTENANCE-CLOSURE-ARCHIVE-READINESS.md';
+const maintenanceClosureArchiveRetentionLedgerTemplateDocPath = 'docs/content/LOCAL-MAINTENANCE-CLOSURE-ARCHIVE-RETENTION-LEDGER-TEMPLATE.md';
 const publicSourceRoots = [
   'website/app/layout.tsx',
   'website/app/page.tsx',
@@ -3015,7 +3019,7 @@ function assertRemediationVerificationSources() {
   assertNoMatch(publicSource, /customer account|quote tracking|file upload|public upload|notifications?|\bCRM\b|email sending|sms sending|whatsapp|outbound messaging|public status view/i, 'Phase 5U public source');
   assertNoMatch(
     adminSource,
-    /public upload|customer upload|new provider setup|new storage provider|storage provider changes|monitoring provider setup|analytics provider setup|alerting provider setup|NEXT_PUBLIC_SUPABASE|SUPABASE_SERVICE_ROLE_KEY|service-role browser|Pinecone|\bRAG\b|n8n runtime|\/api\/chat.*retrieval|outbound messaging|email sending|sms sending|whatsapp sending|process\.env\.(?:NEXT_PUBLIC_|SUPABASE|N8N|PINECONE|VERCEL)/i,
+    /public upload|customer upload|new provider setup|new storage provider|storage provider setup|monitoring provider setup|analytics provider setup|alerting provider setup|NEXT_PUBLIC_SUPABASE|SUPABASE_SERVICE_ROLE_KEY|service-role browser|Pinecone|\bRAG\b|n8n runtime|\/api\/chat.*retrieval|outbound messaging|email sending|sms sending|whatsapp sending|process\.env\.(?:NEXT_PUBLIC_|SUPABASE|N8N|PINECONE|VERCEL)/i,
     'Phase 5U admin source'
   );
 }
@@ -3158,7 +3162,7 @@ function assertPhase5vIncidentResolutionResponseReadiness() {
   assertNoMatch(publicSource, /\b(?:booking|reservation|fulfilment|fulfillment|stock reservation|stock-reservation|book now|reserve now)\b/i, 'Phase 5V public source');
   assertNoMatch(publicSource, /award-winning|certified partner|trusted by|5-star|guaranteed availability|guaranteed delivery|licensed and insured|testimonial|client logo|case study|legal guarantee|production policy|service-area claim|Singapore\s+\d{6}|\+?\d[\d\s().-]{7,}|Mon(?:day)?\s*-\s*Fri|24\/7|123\s+Main/i, 'Phase 5V public source');
   assertNoMatch(publicSource, /customer account|quote tracking|file upload|public upload|notifications?|\bCRM\b|email sending|sms sending|whatsapp|outbound messaging|public status view/i, 'Phase 5V public source');
-  assertNoMatch(adminSource, /public upload|customer upload|storage provider|monitoring provider setup|analytics provider setup|alerting provider setup|process\.env|NEXT_PUBLIC_SUPABASE|SUPABASE_SERVICE_ROLE|Pinecone|\bRAG\b|n8n runtime|\/api\/chat|outbound messaging/i, 'Phase 5V admin source');
+  assertNoMatch(adminSource, /public upload|customer upload|storage provider setup|monitoring provider setup|analytics provider setup|alerting provider setup|process\.env|NEXT_PUBLIC_SUPABASE|SUPABASE_SERVICE_ROLE|Pinecone|\bRAG\b|n8n runtime|\/api\/chat|outbound messaging/i, 'Phase 5V admin source');
   assertNoMatch(docs, /actual deployment|support response sent|customer follow-up sent|incident closed|incident resolved|public notice published|maintenance completed|live hotfix|remediation performed|correction completed|retest run completed|live monitoring configured|analytics captured|route verification completed|route walkthrough completed|preview publication completed|production launch completed|provider setup completed|env\/secrets setup completed|owner approved|owner sign-?off complete|launch clearance granted|production evidence captured|preview evidence captured|smoke evidence captured|rollback evidence captured|response-sent evidence captured|closure evidence captured|resolution evidence captured|maintenance evidence captured|correction-completed evidence captured|remediation evidence captured|hotfix evidence captured|retest evidence captured|monitoring evidence captured|analytics evidence captured|deployment approval granted/i, 'Phase 5V docs');
 
   const suite = readRepoFile('scripts/validate-release-candidate-suite.cjs');
@@ -3307,7 +3311,7 @@ function assertPhase5wPreventiveMaintenanceReadiness() {
   assertNoMatch(publicSource, /\b(?:booking|reservation|fulfilment|fulfillment|stock reservation|stock-reservation|book now|reserve now)\b/i, 'Phase 5W public source');
   assertNoMatch(publicSource, /award-winning|certified partner|trusted by|5-star|guaranteed availability|guaranteed delivery|licensed and insured|testimonial|client logo|case study|legal guarantee|production policy|service-area claim|Singapore\s+\d{6}|\+?\d[\d\s().-]{7,}|Mon(?:day)?\s*-\s*Fri|24\/7|123\s+Main/i, 'Phase 5W public source');
   assertNoMatch(publicSource, /customer account|quote tracking|file upload|public upload|notifications?|\bCRM\b|email sending|sms sending|whatsapp|outbound messaging|public status view/i, 'Phase 5W public source');
-  assertNoMatch(adminSource, /public upload|customer upload|storage provider|monitoring provider setup|analytics provider setup|alerting provider setup|scheduler setup|cron setup|process\.env|NEXT_PUBLIC_SUPABASE|SUPABASE_SERVICE_ROLE|Pinecone|\bRAG\b|n8n runtime|\/api\/chat|outbound messaging/i, 'Phase 5W admin source');
+  assertNoMatch(adminSource, /public upload|customer upload|storage provider setup|monitoring provider setup|analytics provider setup|alerting provider setup|scheduler setup|cron setup|process\.env|NEXT_PUBLIC_SUPABASE|SUPABASE_SERVICE_ROLE|Pinecone|\bRAG\b|n8n runtime|\/api\/chat|outbound messaging/i, 'Phase 5W admin source');
   assertNoMatch(docs, /actual deployment|maintenance implemented|maintenance scheduled|cron configured|job configured|support response sent|customer follow-up sent|public notice published|maintenance completed|live hotfix|remediation performed|correction completed|retest run completed|live monitoring|analytics capture|route verification completed|route walkthrough completed|preview publication completed|production launch completed|provider setup completed|env\/secrets setup completed|owner approved|owner sign-?off complete|launch clearance granted|production evidence captured|preview evidence captured|smoke evidence captured|rollback evidence captured|response-sent evidence captured|closure evidence captured|resolution evidence captured|maintenance evidence captured|maintenance-schedule evidence captured|correction-completed evidence captured|remediation evidence captured|hotfix evidence captured|retest evidence captured|monitoring evidence captured|analytics evidence captured|deployment approval granted/i, 'Phase 5W docs');
 
   const suite = readRepoFile('scripts/validate-release-candidate-suite.cjs');
@@ -3458,7 +3462,7 @@ function assertPhase5xMaintenanceApprovalReadiness() {
   assertNoMatch(publicSource, /\b(?:booking|reservation|fulfilment|fulfillment|stock reservation|stock-reservation|book now|reserve now)\b/i, 'Phase 5X public source');
   assertNoMatch(publicSource, /award-winning|certified partner|trusted by|5-star|guaranteed availability|guaranteed delivery|licensed and insured|testimonial|client logo|case study|legal guarantee|production policy|service-area claim|Singapore\s+\d{6}|\+?\d[\d\s().-]{7,}|Mon(?:day)?\s*-\s*Fri|24\/7|123\s+Main/i, 'Phase 5X public source');
   assertNoMatch(publicSource, /customer account|quote tracking|file upload|public upload|notifications?|\bCRM\b|email sending|sms sending|whatsapp|outbound messaging|public status view/i, 'Phase 5X public source');
-  assertNoMatch(adminSource, /public upload|customer upload|storage provider|monitoring provider setup|analytics provider setup|alerting provider setup|scheduler setup|cron setup|process\.env|NEXT_PUBLIC_SUPABASE|SUPABASE_SERVICE_ROLE|Pinecone|\bRAG\b|n8n runtime|\/api\/chat|outbound messaging/i, 'Phase 5X admin source');
+  assertNoMatch(adminSource, /public upload|customer upload|storage provider setup|monitoring provider setup|analytics provider setup|alerting provider setup|scheduler setup|cron setup|process\.env|NEXT_PUBLIC_SUPABASE|SUPABASE_SERVICE_ROLE|Pinecone|\bRAG\b|n8n runtime|\/api\/chat|outbound messaging/i, 'Phase 5X admin source');
   assertNoMatch(docs, /actual deployment|maintenance approved|owner approved|provider approved|maintenance scheduled|change window scheduled|cron configured|job configured|monitoring configured|analytics configured|support response sent|customer follow-up sent|public notice published|maintenance completed|live hotfix|remediation performed|correction completed|retest run completed|live monitoring|analytics capture|route verification completed|route walkthrough completed|preview publication completed|production launch completed|provider setup completed|env\/secrets setup completed|owner sign-?off complete|launch clearance granted|production evidence captured|preview evidence captured|smoke evidence captured|rollback evidence captured|response-sent evidence captured|closure evidence captured|resolution evidence captured|maintenance evidence captured|maintenance-approval evidence captured|maintenance-schedule evidence captured|change-window evidence captured|correction-completed evidence captured|remediation evidence captured|hotfix evidence captured|retest evidence captured|monitoring evidence captured|analytics evidence captured|deployment approval granted/i, 'Phase 5X docs');
 
   const suite = readRepoFile('scripts/validate-release-candidate-suite.cjs');
@@ -3580,7 +3584,7 @@ ${ledger}`;
   assertNoMatch(publicSource, /\b(?:cart|checkout|order|payment|purchase|online ordering)\b/i, 'Phase 5Z public source');
   assertNoMatch(publicSource, /\b(?:booking|reservation|fulfilment|fulfillment|stock reservation|stock-reservation|book now|reserve now)\b/i, 'Phase 5Z public source');
   assertNoMatch(publicSource, /customer account|quote tracking|file upload|public upload|notifications?|\bCRM\b|email sending|sms sending|whatsapp|outbound messaging|public status view/i, 'Phase 5Z public source');
-  assertNoMatch(adminSource, /public upload|customer upload|storage provider changes|monitoring provider setup|analytics provider setup|alerting provider setup|scheduler setup|cron setup|process\.env|NEXT_PUBLIC_SUPABASE|SUPABASE_SERVICE_ROLE|service-role browser|Pinecone|\bRAG\b|n8n runtime|\/api\/chat.*retrieval|outbound messaging/i, 'Phase 5Z admin source');
+  assertNoMatch(adminSource, /public upload|customer upload|storage provider setup|monitoring provider setup|analytics provider setup|alerting provider setup|scheduler setup|cron setup|process\.env|NEXT_PUBLIC_SUPABASE|SUPABASE_SERVICE_ROLE|service-role browser|Pinecone|\bRAG\b|n8n runtime|\/api\/chat.*retrieval|outbound messaging/i, 'Phase 5Z admin source');
   assertNoMatch(docs, /actual deployment|maintenance executed|maintenance implemented|maintenance approved|owner approved|provider approved|maintenance scheduled|change window scheduled|opened change window|execution checklist completed|verification checklist completed|maintenance closure claimed|smoke check run|provider check executed|runtime check executed|production readiness claim made|closure approval recorded|maintenance marked complete|precheck completed|cron configured|job configured|monitoring configured|analytics configured|support response sent|customer follow-up sent|public notice published|maintenance completed|live hotfix|remediation performed|correction completed|retest run|live monitoring|analytics capture|route verification|route walkthrough|preview publication|production launch|provider setup completed|env\/secrets setup completed|owner sign-?off complete|launch clearance granted|production evidence captured|production evidence collected|preview evidence captured|smoke evidence captured|rollback evidence captured|response-sent evidence captured|closure evidence captured|resolution evidence captured|maintenance evidence captured|maintenance-execution evidence captured|maintenance-schedule evidence captured|change-window evidence captured|correction-completed evidence captured|remediation evidence captured|hotfix evidence captured|retest evidence captured|monitoring evidence captured|analytics evidence captured|deployment approval granted/i, 'Phase 5Z docs');
 
   const suite = readRepoFile('scripts/validate-release-candidate-suite.cjs');
@@ -3725,7 +3729,7 @@ function assertPhase5yMaintenanceExecutionRunbookReadiness() {
   assertNoMatch(publicSource, /\b(?:booking|reservation|fulfilment|fulfillment|stock reservation|stock-reservation|book now|reserve now)\b/i, 'Phase 5Y public source');
   assertNoMatch(publicSource, /award-winning|certified partner|trusted by|5-star|guaranteed availability|guaranteed delivery|licensed and insured|testimonial|client logo|case study|legal guarantee|production policy|service-area claim|Singapore\s+\d{6}|\+?\d[\d\s().-]{7,}|Mon(?:day)?\s*-\s*Fri|24\/7|123\s+Main/i, 'Phase 5Y public source');
   assertNoMatch(publicSource, /customer account|quote tracking|file upload|public upload|notifications?|\bCRM\b|email sending|sms sending|whatsapp|outbound messaging|public status view/i, 'Phase 5Y public source');
-  assertNoMatch(adminSource, /public upload|customer upload|storage provider changes|monitoring provider setup|analytics provider setup|alerting provider setup|scheduler setup|cron setup|process\.env|NEXT_PUBLIC_SUPABASE|SUPABASE_SERVICE_ROLE|service-role browser|Pinecone|\bRAG\b|n8n runtime|\/api\/chat.*retrieval|outbound messaging/i, 'Phase 5Y admin source');
+  assertNoMatch(adminSource, /public upload|customer upload|storage provider setup|monitoring provider setup|analytics provider setup|alerting provider setup|scheduler setup|cron setup|process\.env|NEXT_PUBLIC_SUPABASE|SUPABASE_SERVICE_ROLE|service-role browser|Pinecone|\bRAG\b|n8n runtime|\/api\/chat.*retrieval|outbound messaging/i, 'Phase 5Y admin source');
   assertNoMatch(docs, /actual deployment|maintenance executed|maintenance implemented|maintenance approved|owner approved|provider approved|maintenance scheduled|change window scheduled|precheck completed|cron configured|job configured|monitoring configured|analytics configured|support response sent|customer follow-up sent|public notice published|maintenance completed|live hotfix|remediation performed|correction completed|retest run|live monitoring|analytics capture|route verification|route walkthrough|preview publication|production launch|provider setup completed|env\/secrets setup completed|owner sign-?off complete|launch clearance granted|production evidence captured|preview evidence captured|smoke evidence captured|rollback evidence captured|response-sent evidence captured|closure evidence captured|resolution evidence captured|maintenance evidence captured|maintenance-execution evidence captured|maintenance-schedule evidence captured|change-window evidence captured|correction-completed evidence captured|remediation evidence captured|hotfix evidence captured|retest evidence captured|monitoring evidence captured|analytics evidence captured|deployment approval granted/i, 'Phase 5Y docs');
 
   const suite = readRepoFile('scripts/validate-release-candidate-suite.cjs');
@@ -3921,7 +3925,7 @@ function assertPostLaunchRemediationSources() {
   assertNoMatch(publicSource, /customer account|quote tracking|file upload|public upload|notifications?|\bCRM\b|email sending|sms sending|whatsapp|outbound messaging|public status view/i, 'Phase 5T public source');
   assertNoMatch(
     adminSource,
-    /public upload|customer upload|new provider setup|new storage provider|storage provider changes|monitoring provider setup|analytics provider setup|alerting provider setup|NEXT_PUBLIC_SUPABASE|SUPABASE_SERVICE_ROLE_KEY|service-role browser|Pinecone|\bRAG\b|n8n runtime|\/api\/chat.*retrieval|outbound messaging|email sending|sms sending|whatsapp sending|process\.env\.(?:NEXT_PUBLIC_|SUPABASE|N8N|PINECONE|VERCEL)/i,
+    /public upload|customer upload|new provider setup|new storage provider|storage provider setup|monitoring provider setup|analytics provider setup|alerting provider setup|NEXT_PUBLIC_SUPABASE|SUPABASE_SERVICE_ROLE_KEY|service-role browser|Pinecone|\bRAG\b|n8n runtime|\/api\/chat.*retrieval|outbound messaging|email sending|sms sending|whatsapp sending|process\.env\.(?:NEXT_PUBLIC_|SUPABASE|N8N|PINECONE|VERCEL)/i,
     'Phase 5T admin source'
   );
 }
@@ -4130,13 +4134,141 @@ function assertPhase6aMaintenanceClosureDecisionReadiness() {
   assertNoMatch(publicSource, /\b(?:cart|checkout|order|payment|purchase|online ordering)\b/i, 'Phase 6A public source');
   assertNoMatch(publicSource, /\b(?:booking|reservation|fulfilment|fulfillment|stock reservation|stock-reservation|book now|reserve now)\b/i, 'Phase 6A public source');
   assertNoMatch(publicSource, /customer account|quote tracking|file upload|public upload|notifications?|\bCRM\b|email sending|sms sending|whatsapp|outbound messaging|public status view/i, 'Phase 6A public source');
-  assertNoMatch(adminSource, /public upload|customer upload|storage provider changes|monitoring provider setup|analytics provider setup|alerting provider setup|scheduler setup|cron setup|process\.env|NEXT_PUBLIC_SUPABASE|SUPABASE_SERVICE_ROLE|service-role browser|Pinecone|\bRAG\b|n8n runtime|\/api\/chat.*retrieval|outbound messaging/i, 'Phase 6A admin source');
+  assertNoMatch(adminSource, /public upload|customer upload|storage provider setup|monitoring provider setup|analytics provider setup|alerting provider setup|scheduler setup|cron setup|process\.env|NEXT_PUBLIC_SUPABASE|SUPABASE_SERVICE_ROLE|service-role browser|Pinecone|\bRAG\b|n8n runtime|\/api\/chat.*retrieval|outbound messaging/i, 'Phase 6A admin source');
   assertNoMatch(docs, /actual deployment|maintenance executed|maintenance implemented|maintenance approved|owner approved|provider approved|maintenance scheduled|change window scheduled|opened change window|execution checklist completed|verification checklist completed|maintenance closure claimed|smoke check run|provider check executed|runtime check executed|production readiness claim made|closure approval recorded|maintenance marked complete|closure decision recorded|closure recommendation accepted|precheck completed|cron configured|job configured|monitoring configured|analytics configured|support response sent|customer follow-up sent|public notice published|live hotfix|remediation performed|correction completed|retest run|live monitoring|analytics capture|route verification|route walkthrough|preview publication|production launch|provider setup completed|env\/secrets setup completed|owner sign-?off complete|launch clearance granted|production evidence captured|production evidence collected|preview evidence captured|smoke evidence captured|rollback evidence captured|response-sent evidence captured|closure evidence captured|resolution evidence captured|maintenance evidence captured|maintenance-execution evidence captured|maintenance-schedule evidence captured|change-window evidence captured|correction-completed evidence captured|remediation evidence captured|hotfix evidence captured|retest evidence captured|monitoring evidence captured|analytics evidence captured|deployment approval granted/i, 'Phase 6A docs');
 
   const suite = readRepoFile('scripts/validate-release-candidate-suite.cjs');
   assertIncludes(suite, "args: ['run', 'validate:maintenance-closure-decision-readiness']", 'Phase 6A release-candidate suite');
   assertIncludes(suite, "args: ['run', 'validate:maintenance-verification-closure-readiness']", 'Phase 6A release-candidate suite');
   assertNoMatch(suite, /docker[^\n]*(?:skip|bypass)|(?:skip|bypass)[^\n]*docker/i, 'Phase 6A release-candidate suite');
+}
+
+
+function assertPhase6bMaintenanceClosureArchiveReadiness() {
+  assertPhase6aMaintenanceClosureDecisionReadiness();
+
+  for (const requiredPath of [
+    maintenanceClosureArchiveReadinessDocPath,
+    maintenanceClosureArchiveRetentionLedgerTemplateDocPath,
+  ]) {
+    assert(fs.existsSync(path.join(repoRoot, requiredPath)), `Phase 6B maintenance closure archive readiness docs missing ${requiredPath}`);
+  }
+
+  const docs = normalizeWhitespace([
+    maintenanceClosureArchiveReadinessDocPath,
+    maintenanceClosureArchiveRetentionLedgerTemplateDocPath,
+  ].map(readRepoFile).join('\n'));
+
+  for (const required of [
+    '[NOT EVIDENCE / NOT RECORDED]',
+    '[DEPLOYMENT APPROVAL: NOT GRANTED]',
+    'repo-local, template-only, non-live maintenance closure archive readiness package',
+    'Phase 6B-A/B adds maintenance closure archive readiness, a closure packet retention ledger template, archive readiness prompts, and a no-archive/no-record firewall',
+    'Maintenance closure decision readiness reference',
+    'Closure recommendation packet ledger reference',
+    'Intended closure decision reference placeholder',
+    'Intended archive owner placeholder',
+    'Intended retention category placeholder',
+    'Intended archive packet contents placeholder',
+    'Missing evidence blocker placeholder',
+    'Unresolved follow-up blocker placeholder',
+    'Archive retention ledger reference',
+    'Final archive-readiness status',
+    'Not started.',
+    'Closure decision not recorded.',
+    'Closure approval not recorded.',
+    'Maintenance not marked complete.',
+    'Missing evidence blocks archive.',
+    'Unresolved follow-up blocks archive.',
+    'Needs owner archive confirmation.',
+    'Needs provider/storage clarification.',
+    'Blocked: no archive approval.',
+    'Blocked: deployment approval missing.',
+    'Ready for future approved archive review.',
+    'Archive ID: `[NOT ASSIGNED]`',
+    'Intended closure decision reference: `[NOT SUPPLIED]`',
+    'Intended recommendation packet reference: `[NOT SUPPLIED]`',
+    'Intended archive owner: `[NOT ASSIGNED]`',
+    'Intended retention category: `[NOT SELECTED]`',
+    'Intended archive packet contents: `[NOT CAPTURED]`',
+    'Missing evidence blocker status: `[BLOCKING / NOT EVIDENCE]`',
+    'Storage/provider dependency: `[PROVIDER DECISION REQUIRED]`',
+    'Archive status: `[NOT CREATED]`',
+    'Retention status: `[NOT APPLIED]`',
+    'Public route closure archive review.',
+    'Protected admin closure archive review.',
+    'Quote/enquiry workflow closure archive review.',
+    'Listing/category/media closure archive review.',
+    'Provider/storage clarification.',
+    'Environment/secrets clarification.',
+    'Owner archive confirmation.',
+    'Missing evidence blocker review.',
+    'Future archive retention review.',
+    'An archive readiness template is not an archive.',
+    'An archive packet placeholder is not an archive record.',
+    'A retention placeholder is not an applied retention policy.',
+    'A missing-evidence blocker is not evidence.',
+    'Passing validators is not archive approval.',
+    'A merged PR is not maintenance closure archive.',
+  ]) {
+    assertIncludes(docs, required, 'Phase 6B docs');
+  }
+
+  const statusDocs = normalizeWhitespace(statusDocPaths.map(readRepoFile).join('\n'));
+  for (const required of [
+    `Current phase: ${currentPhase6b}`,
+    `Latest completed capability: ${currentPhase6a}`,
+    'Last merged capability PR: #182',
+    `Last merged capability merge commit: ${phase182MergeCommit}`,
+    maintenanceClosureArchiveReadinessDocPath,
+    maintenanceClosureArchiveRetentionLedgerTemplateDocPath,
+    'scripts/validate-maintenance-closure-archive-readiness.cjs',
+    'No deployment is performed or approved by Phase 6B-A/B',
+  ]) {
+    assertIncludes(statusDocs, required, 'Phase 6B status roll-forward docs');
+  }
+
+  const packageJson = JSON.parse(readRepoFile('package.json'));
+  assert(packageJson.scripts?.['validate:maintenance-closure-archive-readiness'] === 'node scripts/validate-maintenance-closure-archive-readiness.cjs', 'package.json must register validate:maintenance-closure-archive-readiness');
+
+  const adminSource = readRepoFile('website/app/admin/protected-admin-shell.tsx');
+  for (const required of [
+    /Phase 6B-A\/B admin-only maintenance closure archive readiness/i,
+    /MaintenanceClosureArchiveReadinessHelper/i,
+    /LOCAL-MAINTENANCE-CLOSURE-ARCHIVE-READINESS\.md/i,
+    /LOCAL-MAINTENANCE-CLOSURE-ARCHIVE-RETENTION-LEDGER-TEMPLATE\.md/i,
+    /LOCAL-MAINTENANCE-CLOSURE-DECISION-READINESS\.md/i,
+    /LOCAL-MAINTENANCE-CLOSURE-RECOMMENDATION-PACKET-LEDGER-TEMPLATE\.md/i,
+    /Safe future archive-readiness sections/i,
+    /Allowed future archive-readiness statuses/i,
+    /No-archive\/no-record boundaries/i,
+    /No\s+closure\s+archive\s+is\s+created\s+here/i,
+    /No\s+archive\s+record\s+is\s+written\s+here/i,
+    /No\s+retention\s+policy\s+is\s+applied\s+here/i,
+    /No\s+storage\s+provider\s+is\s+configured\s+here/i,
+    /No\s+deployment\s+approval\s+is\s+granted\s+here/i,
+    /\[NOT EVIDENCE \/ NOT RECORDED\]/i,
+    /\[DEPLOYMENT APPROVAL: NOT GRANTED\]/i,
+  ]) assert(required.test(adminSource), `Phase 6B admin source missing safe wording: ${required}`);
+
+  assert(/function AdminOperationsHome[\s\S]*<OwnerReadinessHelpersPanel \/>/.test(adminSource), 'AdminOperationsHome must render shared owner readiness helper panel');
+  assert(/function OwnerReadinessHelpersPanel[\s\S]*<OwnerReviewWalkthroughReadinessHelper \/>[\s\S]*<OwnerFeedbackIntakeReadinessHelper \/>[\s\S]*<OwnerCorrectionWorkflowReadinessHelper \/>[\s\S]*<OwnerReReviewRequestReadinessHelper \/>[\s\S]*<OwnerDecisionIntakeReadinessHelper \/>[\s\S]*<DeploymentApprovalRequestReadinessHelper \/>[\s\S]*<DeploymentExecutionRunbookReadinessHelper \/>[\s\S]*<SmokeEvidenceIntakeReadinessHelper \/>[\s\S]*<SmokeEvidenceReviewReadinessHelper \/>[\s\S]*<LaunchDecisionResponseReadinessHelper \/>[\s\S]*<PostLaunchObservationReadinessHelper \/>[\s\S]*<PostLaunchRemediationReadinessHelper \/>[\s\S]*<RemediationVerificationReadinessHelper \/>[\s\S]*<IncidentResolutionResponseReadinessHelper \/>[\s\S]*<PreventiveMaintenanceReadinessHelper \/>[\s\S]*<MaintenanceApprovalReadinessHelper \/>[\s\S]*<MaintenanceExecutionRunbookReadinessHelper \/>[\s\S]*<MaintenanceVerificationClosureReadinessHelper \/>[\s\S]*<MaintenanceClosureDecisionReadinessHelper \/>[\s\S]*<MaintenanceClosureArchiveReadinessHelper \/>/.test(adminSource), 'Phase 6B admin source must keep complete helper chain in shared panel');
+  assertIncludes(readRepoFile('website/app/admin/page.tsx'), 'view={{ kind: "home" }}', 'Phase 6B admin home source');
+
+  const publicSource = readTrackedProductionSources(publicSourceRoots);
+  assertNoMatch(publicSource, /maintenance closure archive|archive retention ledger|maintenance closure decision|closure recommendation packet|maintenance verification|change-window outcome ledger|maintenance execution|provider\/runtime|smoke-check|production evidence|support follow-up|storage provider|scheduler\/cron|environment\/secrets|admin route|owner handoff|release-control|\/admin\//i, 'Phase 6B public source');
+  assert(/\b(?:listing|listings)\b/i.test(publicSource), 'Phase 6B public source must retain listing wording');
+  assert(/\b(?:rental|rentals)\b/i.test(publicSource), 'Phase 6B public source must retain rental wording');
+  assert(/\b(?:quote|enquiry|request)\b/i.test(publicSource), 'Phase 6B public source must retain quote/enquiry/request wording');
+  assertNoMatch(publicSource, /\b(?:cart|checkout|order|payment|purchase|online ordering)\b/i, 'Phase 6B public source');
+  assertNoMatch(publicSource, /\b(?:booking|reservation|fulfilment|fulfillment|stock reservation|stock-reservation|book now|reserve now)\b/i, 'Phase 6B public source');
+  assertNoMatch(publicSource, /customer account|quote tracking|file upload|public upload|notifications?|\bCRM\b|email sending|sms sending|whatsapp|outbound messaging|public status view/i, 'Phase 6B public source');
+  assertNoMatch(adminSource, /public upload|customer upload|storage provider setup|monitoring provider setup|analytics provider setup|alerting provider setup|scheduler setup|cron setup|process\.env|NEXT_PUBLIC_SUPABASE|SUPABASE_SERVICE_ROLE|service-role browser|Pinecone|\bRAG\b|n8n runtime|\/api\/chat.*retrieval|outbound messaging|real retention|real storage configuration/i, 'Phase 6B admin source');
+  assertNoMatch(docs, /actual deployment|archive created|archive record written|retention policy applied|storage provider configured|closure decision recorded|closure approval recorded|maintenance marked complete|production evidence collected|smoke check run|provider check executed|runtime check executed|support response sent|customer follow-up sent|public notice published|monitoring configured|analytics configured|cron configured|job configured|maintenance completed|live hotfix|remediation performed|correction completed|retest run|route verification|route walkthrough|preview publication|production launch|provider setup completed|env\/secrets setup completed|owner approved|owner sign-?off complete|launch clearance granted|production evidence captured|preview evidence captured|smoke evidence captured|rollback evidence captured|response-sent evidence captured|closure evidence captured|archive evidence captured|retention evidence captured|resolution evidence captured|maintenance evidence captured|correction-completed evidence captured|deployment approval granted/i, 'Phase 6B docs');
+  const suite = readRepoFile('scripts/validate-release-candidate-suite.cjs');
+  assertIncludes(suite, "args: ['run', 'validate:maintenance-closure-archive-readiness']", 'Phase 6B release-candidate suite');
+  assertIncludes(suite, "args: ['run', 'validate:maintenance-closure-decision-readiness']", 'Phase 6B release-candidate suite');
+  assertNoMatch(suite, /docker[^\n]*(?:skip|bypass)|(?:skip|bypass)[^\n]*docker/i, 'Phase 6B release-candidate suite');
 }
 
 function assertPhase5qSmokeEvidenceReviewReadiness() {
@@ -4161,6 +4293,7 @@ function assertPhase5qSmokeEvidenceReviewReadiness() {
 }
 
 module.exports = {
+  assertPhase6bMaintenanceClosureArchiveReadiness,
   assertPhase6aMaintenanceClosureDecisionReadiness,
   assertPhase5zMaintenanceVerificationClosureReadiness,
   assertPhase5yMaintenanceExecutionRunbookReadiness,
