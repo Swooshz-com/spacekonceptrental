@@ -126,8 +126,8 @@ describe("Phase 6A-A/B maintenance closure decision readiness", () => {
       helperNames.indexOf("Maintenance verification closure readiness helper"),
     );
 
-    expect(screen.getByText(maintenanceClosureDecisionReadinessDocPath)).toBeInTheDocument();
-    expect(screen.getByText(maintenanceClosureRecommendationPacketLedgerTemplateDocPath)).toBeInTheDocument();
+    expect(screen.getAllByText(maintenanceClosureDecisionReadinessDocPath).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(maintenanceClosureRecommendationPacketLedgerTemplateDocPath).length).toBeGreaterThan(0);
     expect(screen.getAllByText(maintenanceVerificationClosureReadinessDocPath).length).toBeGreaterThan(0);
     expect(screen.getAllByText(maintenanceChangeWindowOutcomeLedgerTemplateDocPath).length).toBeGreaterThan(0);
     expect(screen.getByRole("heading", { name: /closure recommendation packet ledger/i })).toBeInTheDocument();
