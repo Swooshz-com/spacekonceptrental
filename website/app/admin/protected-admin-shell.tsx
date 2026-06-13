@@ -2004,6 +2004,10 @@ const phase6bMaintenanceClosureArchiveReadinessPath =
   "docs/content/LOCAL-MAINTENANCE-CLOSURE-ARCHIVE-READINESS.md";
 const phase6bMaintenanceClosureArchiveRetentionLedgerTemplatePath =
   "docs/content/LOCAL-MAINTENANCE-CLOSURE-ARCHIVE-RETENTION-LEDGER-TEMPLATE.md";
+const phase6cMaintenanceClosureAuditHandoffReadinessPath =
+  "docs/content/LOCAL-MAINTENANCE-CLOSURE-AUDIT-HANDOFF-READINESS.md";
+const phase6cMaintenanceClosureAuditHandoffRoutingLedgerTemplatePath =
+  "docs/content/LOCAL-MAINTENANCE-CLOSURE-AUDIT-HANDOFF-ROUTING-LEDGER-TEMPLATE.md";
 const phase6aClosureRecommendationPacketLedgerPlaceholders = [
   "Intended maintenance/change reference: [NOT SUPPLIED]",
   "Intended verification packet reference: [NOT SUPPLIED]",
@@ -4416,6 +4420,93 @@ function MaintenanceClosureArchiveReadinessHelper() {
   );
 }
 
+function MaintenanceClosureAuditHandoffReadinessHelper() {
+  const routingLedgerFields = [
+    "Intended archive/retention packet reference",
+    "Intended closure decision readiness reference",
+    "Intended audit handoff owner",
+    "Intended internal reviewer",
+    "Intended recipient placeholder",
+    "Intended disclosure scope placeholder",
+    "Missing evidence blocker placeholder",
+    "Unresolved follow-up blocker placeholder",
+    "External-disclosure status placeholder",
+    "Handoff status placeholder",
+    "No real handoff",
+    "No external disclosure",
+    "No audit packet sent"
+  ];
+  const readinessChecklist = [
+    "Confirm the theoretical archive/retention packet reference would be reviewed before any future audit handoff discussion.",
+    "Confirm unresolved follow-ups must block handoff until separately reviewed by the intended internal reviewer.",
+    "Confirm missing evidence must block handoff because this helper does not collect or record production evidence.",
+    "Confirm retention/archive readiness gaps must block handoff until a separate approved review resolves them.",
+    "Confirm external disclosure questions remain unapproved and placeholder-only.",
+    "Confirm customer, public, support, external message system, outbound email, SMS, and WhatsApp actions are not allowed.",
+    "Confirm this helper does not create, approve, send, or complete an audit handoff."
+  ];
+  const firewall = [
+    "No audit handoff is created here.",
+    "No audit packet is sent here.",
+    "No audit recipient is contacted here.",
+    "No external disclosure is made here.",
+    "Archive creation is blocked here.",
+    "Archive record writing is blocked here.",
+    "Retention policy application is blocked here.",
+    "Closure decision recording is blocked here.",
+    "Closure approval recording is blocked here.",
+    "Maintenance completion marking is blocked here.",
+    "Production evidence collection is blocked here.",
+    "Smoke check runs are blocked here.",
+    "Provider or runtime check execution is blocked here.",
+    "Customer or support follow-up sending is blocked here.",
+    "No production readiness claim is made here.",
+    "Deployment approval granting is blocked here."
+  ];
+
+  return (
+    <section aria-label="Phase 6C maintenance closure audit handoff readiness helper" className="admin-readiness">
+      <p className="eyebrow">Phase 6C-A/B admin-only maintenance closure audit handoff readiness</p>
+      <h3>Maintenance closure audit handoff readiness helper</h3>
+      <p>
+        This protected helper prepares future owner/admin review of a theoretical
+        audit handoff packet and routing ledger after a theoretical maintenance
+        closure archive and retention packet exists for rental listings, event
+        furniture listings, categories, media, quote, enquiry, and request
+        surfaces. It is draft, readiness-only, placeholder-only, and internal.
+        No audit handoff is created here. No audit packet is sent here. No audit
+        recipient is contacted here. No external disclosure is made here.
+      </p>
+      <dl className="admin-readiness__grid">
+        <div><dt>Maintenance closure audit handoff readiness</dt><dd>{phase6cMaintenanceClosureAuditHandoffReadinessPath}</dd></div>
+        <div><dt>Audit handoff packet routing ledger template</dt><dd>{phase6cMaintenanceClosureAuditHandoffRoutingLedgerTemplatePath}</dd></div>
+        <div><dt>Maintenance closure decision readiness</dt><dd>{phase6aMaintenanceClosureDecisionReadinessPath}</dd></div>
+        <div><dt>Intended archive/retention packet reference</dt><dd>[NOT SUPPLIED]</dd></div>
+        <div><dt>Intended closure decision readiness reference</dt><dd>[NOT SUPPLIED]</dd></div>
+        <div><dt>Intended audit handoff owner</dt><dd>[NOT ASSIGNED]</dd></div>
+        <div><dt>Intended internal reviewer</dt><dd>[NOT ASSIGNED]</dd></div>
+        <div><dt>Intended recipient</dt><dd>[PLACEHOLDER ONLY / NOT CONTACTED]</dd></div>
+        <div><dt>Intended disclosure scope</dt><dd>[PLACEHOLDER ONLY / NOT APPROVED]</dd></div>
+        <div><dt>Missing evidence blocker status</dt><dd>[BLOCKING / NOT EVIDENCE]</dd></div>
+        <div><dt>Unresolved follow-up blocker status</dt><dd>[BLOCKING / NOT REVIEWED]</dd></div>
+        <div><dt>External-disclosure status</dt><dd>[NOT DISCLOSED]</dd></div>
+        <div><dt>Handoff status</dt><dd>[NOT CREATED / NOT SENT]</dd></div>
+      </dl>
+      <h4>Audit handoff packet routing ledger</h4>
+      <ul className="admin-readiness__list">{routingLedgerFields.map((item) => <li key={item}>{item}</li>)}</ul>
+      <h4>Audit handoff readiness checklist</h4>
+      <ul className="admin-readiness__list">{readinessChecklist.map((item) => <li key={item}>{item}</li>)}</ul>
+      <h4>No-handoff/no-external-disclosure firewall</h4>
+      <ul className="admin-readiness__list">{firewall.map((item) => <li key={item}>{item}</li>)}</ul>
+      <h4>Safe audit handoff wording</h4>
+      <p>
+        Safe handoff language uses draft, readiness, placeholder, intended, and theoretical wording only.
+        Avoid finality wording unless it is clearly negated as not allowed.
+      </p>
+    </section>
+  );
+}
+
 function OwnerReadinessHelpersPanel() {
   return (
     <>
@@ -4439,6 +4530,7 @@ function OwnerReadinessHelpersPanel() {
       <MaintenanceVerificationClosureReadinessHelper />
       <MaintenanceClosureDecisionReadinessHelper />
       <MaintenanceClosureArchiveReadinessHelper />
+      <MaintenanceClosureAuditHandoffReadinessHelper />
     </>
   );
 }
