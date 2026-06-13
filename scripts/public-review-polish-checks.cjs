@@ -29,6 +29,7 @@ const phase177MergeCommit = 'c803f30191a1f7264f8f4be2b55c084a7565957a';
 const phase178MergeCommit = 'f88ff02523a8a82db2d6a163717aa53a1e3b7118';
 const phase179MergeCommit = 'e46684f4b216888727993501b0cad465eab31b2d';
 const phase180MergeCommit = '89e18b7919f6251950b9f520ad6c97fc2dfdc660';
+const phase181MergeCommit = '65768d6d3b5ad0aeaa213de450e90616d5784e63';
 const currentPhase5a = 'Phase 5A-A/B public owner-review polish sweep, local content-readiness cleanup, and protected admin review UX closure';
 const currentPhase5b = 'Phase 5B-A/B public catalogue-to-enquiry journey hardening, listing continuity, and admin/public parity checks';
 const currentPhase5c = 'Phase 5C-A/B public discovery search/filter polish, quote-intent context, and admin discovery parity closure';
@@ -55,6 +56,7 @@ const currentPhase5w = 'Phase 5W-A/B preventive maintenance readiness, lessons-t
 const currentPhase5x = 'Phase 5X-A/B maintenance approval readiness, change-window planning ledger, and no-schedule/no-change firewall';
 const currentPhase5y = 'Phase 5Y-A/B maintenance execution runbook readiness, change-window checklist, and no-execution/no-runtime firewall';
 const currentPhase5z = 'Phase 5Z-A/B maintenance verification closure readiness, change-window outcome ledger, and no-completion/no-production-evidence firewall';
+const currentPhase6a = 'Phase 6A-A/B maintenance closure decision readiness, closure recommendation packet ledger, and no-approval/no-completion firewall';
 const latestCompletedPhase4f = 'Phase 4F-A/B owner-facing review handoff bundle, approval issue template, and no-deploy preflight command center';
 const cleanupDocPath = 'docs/content/LOCAL-CONTENT-READINESS-CLEANUP.md';
 const publicJourneyAcceptanceDocPath = 'docs/content/LOCAL-PUBLIC-JOURNEY-ACCEPTANCE.md';
@@ -100,6 +102,8 @@ const maintenanceExecutionRunbookReadinessDocPath = 'docs/content/LOCAL-MAINTENA
 const maintenanceChangeWindowExecutionChecklistTemplateDocPath = 'docs/content/LOCAL-MAINTENANCE-CHANGE-WINDOW-EXECUTION-CHECKLIST-TEMPLATE.md';
 const maintenanceVerificationClosureReadinessDocPath = 'docs/content/LOCAL-MAINTENANCE-VERIFICATION-CLOSURE-READINESS.md';
 const maintenanceChangeWindowOutcomeLedgerTemplateDocPath = 'docs/content/LOCAL-MAINTENANCE-CHANGE-WINDOW-OUTCOME-LEDGER-TEMPLATE.md';
+const maintenanceClosureDecisionReadinessDocPath = 'docs/content/LOCAL-MAINTENANCE-CLOSURE-DECISION-READINESS.md';
+const maintenanceClosureRecommendationPacketLedgerTemplateDocPath = 'docs/content/LOCAL-MAINTENANCE-CLOSURE-RECOMMENDATION-PACKET-LEDGER-TEMPLATE.md';
 const publicSourceRoots = [
   'website/app/layout.tsx',
   'website/app/page.tsx',
@@ -4019,6 +4023,122 @@ function assertReleaseSuiteHasSmokeEvidenceReviewReadiness() {
   assertNoMatch(suite, /docker[^\n]*(?:skip|bypass)|(?:skip|bypass)[^\n]*docker/i, 'release-candidate suite');
 }
 
+
+function assertPhase6aMaintenanceClosureDecisionReadiness() {
+  assertPhase5zMaintenanceVerificationClosureReadiness();
+
+  for (const requiredPath of [
+    maintenanceClosureDecisionReadinessDocPath,
+    maintenanceClosureRecommendationPacketLedgerTemplateDocPath,
+  ]) {
+    assert(fs.existsSync(path.join(repoRoot, requiredPath)), `Phase 6A maintenance closure decision readiness docs missing ${requiredPath}`);
+  }
+
+  const docs = normalizeWhitespace([
+    maintenanceClosureDecisionReadinessDocPath,
+    maintenanceClosureRecommendationPacketLedgerTemplateDocPath,
+  ].map(readRepoFile).join('\n'));
+
+  for (const required of [
+    '[NOT EVIDENCE / NOT RECORDED]',
+    '[DEPLOYMENT APPROVAL: NOT GRANTED]',
+    'repo-local, template-only, non-live maintenance closure decision readiness package',
+    'Phase 6A-A/B adds maintenance closure decision readiness, a closure recommendation packet ledger template, closure decision readiness prompts, and a no-approval/no-completion firewall',
+    'Intended maintenance/change reference: `[NOT SUPPLIED]`',
+    'Intended verification packet reference: `[NOT SUPPLIED]`',
+    'Intended owner/reviewer: `[OWNER INPUT REQUIRED]`',
+    'Intended closure decision owner: `[NOT ASSIGNED]`',
+    'Intended unresolved-follow-up owner: `[NOT ASSIGNED]`',
+    'Intended rollback/escalation reviewer: `[NOT ASSIGNED]`',
+    'Recommendation status placeholder: `[PLACEHOLDER ONLY / NOT A RECOMMENDATION]`',
+    'Decision status placeholder: `[PLACEHOLDER ONLY / NOT A DECISION]`',
+    'No real closure recommendation is made. No real decision is recorded. No approval is granted. No completion is recorded.',
+    'This checklist does not approve closure and does not close maintenance.',
+    'No closure decision is recorded.',
+    'No closure recommendation is accepted.',
+    'No closure approval is recorded.',
+    'No maintenance is marked complete.',
+    'No production evidence is collected.',
+    'No smoke check is run.',
+    'No provider/runtime check is executed.',
+    'No customer/support follow-up is sent.',
+    'No production readiness claim is made.',
+    'Use draft, readiness, placeholder, intended, theoretical, and future approved review wording only.',
+  ]) {
+    assertIncludes(docs, required, 'Phase 6A docs');
+  }
+
+  const statusDocs = normalizeWhitespace(statusDocPaths.map(readRepoFile).join('\n'));
+  for (const required of [
+    `Current phase: ${currentPhase6a}`,
+    `Latest completed capability: ${currentPhase5z}`,
+    'Last merged capability PR: #181',
+    `Last merged capability merge commit: ${phase181MergeCommit}`,
+    maintenanceClosureDecisionReadinessDocPath,
+    maintenanceClosureRecommendationPacketLedgerTemplateDocPath,
+    maintenanceVerificationClosureReadinessDocPath,
+    maintenanceChangeWindowOutcomeLedgerTemplateDocPath,
+    'scripts/validate-maintenance-closure-decision-readiness.cjs',
+    'No deployment is performed or approved by Phase 6A-A/B'
+  ]) {
+    assertIncludes(statusDocs, required, 'Phase 6A status roll-forward docs');
+  }
+
+  const packageJson = JSON.parse(readRepoFile('package.json'));
+  assert(
+    packageJson.scripts?.['validate:maintenance-closure-decision-readiness'] === 'node scripts/validate-maintenance-closure-decision-readiness.cjs',
+    'package.json must register validate:maintenance-closure-decision-readiness'
+  );
+
+  const adminSource = readRepoFile('website/app/admin/protected-admin-shell.tsx');
+  for (const required of [
+    /Phase 6A-A\/B admin-only maintenance closure decision readiness/i,
+    /MaintenanceClosureDecisionReadinessHelper/i,
+    /LOCAL-MAINTENANCE-CLOSURE-DECISION-READINESS\.md/i,
+    /LOCAL-MAINTENANCE-CLOSURE-RECOMMENDATION-PACKET-LEDGER-TEMPLATE\.md/i,
+    /LOCAL-MAINTENANCE-VERIFICATION-CLOSURE-READINESS\.md/i,
+    /LOCAL-MAINTENANCE-CHANGE-WINDOW-OUTCOME-LEDGER-TEMPLATE\.md/i,
+    /Closure recommendation packet ledger/i,
+    /Closure decision readiness checklist/i,
+    /No-approval\/no-completion firewall/i,
+    /No\s+closure\s+decision\s+is\s+recorded\s+here/i,
+    /No\s+closure\s+recommendation\s+is\s+accepted\s+here/i,
+    /No\s+closure\s+approval\s+is\s+recorded\s+here/i,
+    /No\s+maintenance\s+is\s+marked\s+complete\s+here/i,
+    /No\s+production\s+evidence\s+is\s+collected\s+here/i,
+    /No\s+smoke\s+check\s+is\s+run\s+here/i,
+    /No\s+provider\s+or\s+runtime\s+check\s+is\s+executed\s+here/i,
+    /No\s+customer\s+or\s+support\s+follow-up\s+is\s+sent\s+here/i,
+    /No\s+production\s+readiness\s+claim\s+is\s+made\s+here/i,
+    /No\s+deployment\s+is\s+performed\s+here/i,
+    /\[PLACEHOLDER ONLY \/ NOT A RECOMMENDATION\]/i,
+    /\[PLACEHOLDER ONLY \/ NOT A DECISION\]/i,
+  ]) {
+    assert(required.test(adminSource), `Phase 6A admin source missing safe wording: ${required}`);
+  }
+
+  assert(/function OwnerReadinessHelpersPanel[\s\S]*<OwnerReviewWalkthroughReadinessHelper \/>[\s\S]*<OwnerFeedbackIntakeReadinessHelper \/>[\s\S]*<OwnerCorrectionWorkflowReadinessHelper \/>[\s\S]*<OwnerReReviewRequestReadinessHelper \/>[\s\S]*<OwnerDecisionIntakeReadinessHelper \/>[\s\S]*<DeploymentApprovalRequestReadinessHelper \/>[\s\S]*<DeploymentExecutionRunbookReadinessHelper \/>[\s\S]*<SmokeEvidenceIntakeReadinessHelper \/>[\s\S]*<SmokeEvidenceReviewReadinessHelper \/>[\s\S]*<LaunchDecisionResponseReadinessHelper \/>[\s\S]*<PostLaunchObservationReadinessHelper \/>[\s\S]*<PostLaunchRemediationReadinessHelper \/>[\s\S]*<RemediationVerificationReadinessHelper \/>[\s\S]*<IncidentResolutionResponseReadinessHelper \/>[\s\S]*<PreventiveMaintenanceReadinessHelper \/>[\s\S]*<MaintenanceApprovalReadinessHelper \/>[\s\S]*<MaintenanceExecutionRunbookReadinessHelper \/>[\s\S]*<MaintenanceVerificationClosureReadinessHelper \/>[\s\S]*<MaintenanceClosureDecisionReadinessHelper \/>/.test(adminSource), 'Phase 6A admin source must keep complete helper chain in shared panel');
+
+  const adminHomeSource = readRepoFile('website/app/admin/page.tsx');
+  assertIncludes(adminHomeSource, 'view={{ kind: "home" }}', 'Phase 6A admin home source');
+
+  const publicSource = readTrackedProductionSources(publicSourceRoots);
+  assertNoMatch(publicSource, /maintenance closure decision|closure recommendation packet|closure decision readiness|maintenance verification|change-window outcome ledger|verification closure|maintenance execution|change-window execution checklist|maintenance approval|maintenance change-window planning|preventive maintenance|lessons-to-maintenance|support response|customer follow-up|public notice|maintenance internals|monitoring\/analytics internals|scheduler\/cron internals|provider setup internals|environment\/secrets internals|admin route internals|owner handoff internals|release-control internals|admin urls?|\/admin\//i, 'Phase 6A public source');
+  assert(/\b(?:listing|listings)\b/i.test(publicSource), 'Phase 6A public source must retain listing wording');
+  assert(/\b(?:rental|rentals)\b/i.test(publicSource), 'Phase 6A public source must retain rental wording');
+  assert(/\b(?:quote|enquiry|request)\b/i.test(publicSource), 'Phase 6A public source must retain quote/enquiry/request wording');
+  assertNoMatch(publicSource, /\b(?:cart|checkout|order|payment|purchase|online ordering)\b/i, 'Phase 6A public source');
+  assertNoMatch(publicSource, /\b(?:booking|reservation|fulfilment|fulfillment|stock reservation|stock-reservation|book now|reserve now)\b/i, 'Phase 6A public source');
+  assertNoMatch(publicSource, /customer account|quote tracking|file upload|public upload|notifications?|\bCRM\b|email sending|sms sending|whatsapp|outbound messaging|public status view/i, 'Phase 6A public source');
+  assertNoMatch(adminSource, /public upload|customer upload|storage provider changes|monitoring provider setup|analytics provider setup|alerting provider setup|scheduler setup|cron setup|process\.env|NEXT_PUBLIC_SUPABASE|SUPABASE_SERVICE_ROLE|service-role browser|Pinecone|\bRAG\b|n8n runtime|\/api\/chat.*retrieval|outbound messaging/i, 'Phase 6A admin source');
+  assertNoMatch(docs, /actual deployment|maintenance executed|maintenance implemented|maintenance approved|owner approved|provider approved|maintenance scheduled|change window scheduled|opened change window|execution checklist completed|verification checklist completed|maintenance closure claimed|smoke check run|provider check executed|runtime check executed|production readiness claim made|closure approval recorded|maintenance marked complete|closure decision recorded|closure recommendation accepted|precheck completed|cron configured|job configured|monitoring configured|analytics configured|support response sent|customer follow-up sent|public notice published|live hotfix|remediation performed|correction completed|retest run|live monitoring|analytics capture|route verification|route walkthrough|preview publication|production launch|provider setup completed|env\/secrets setup completed|owner sign-?off complete|launch clearance granted|production evidence captured|production evidence collected|preview evidence captured|smoke evidence captured|rollback evidence captured|response-sent evidence captured|closure evidence captured|resolution evidence captured|maintenance evidence captured|maintenance-execution evidence captured|maintenance-schedule evidence captured|change-window evidence captured|correction-completed evidence captured|remediation evidence captured|hotfix evidence captured|retest evidence captured|monitoring evidence captured|analytics evidence captured|deployment approval granted/i, 'Phase 6A docs');
+
+  const suite = readRepoFile('scripts/validate-release-candidate-suite.cjs');
+  assertIncludes(suite, "args: ['run', 'validate:maintenance-closure-decision-readiness']", 'Phase 6A release-candidate suite');
+  assertIncludes(suite, "args: ['run', 'validate:maintenance-verification-closure-readiness']", 'Phase 6A release-candidate suite');
+  assertNoMatch(suite, /docker[^\n]*(?:skip|bypass)|(?:skip|bypass)[^\n]*docker/i, 'Phase 6A release-candidate suite');
+}
+
 function assertPhase5qSmokeEvidenceReviewReadiness() {
   assertPhase5pSmokeEvidenceIntakeReadiness();
   assertSmokeEvidenceReviewReadinessDocs();
@@ -4041,6 +4161,7 @@ function assertPhase5qSmokeEvidenceReviewReadiness() {
 }
 
 module.exports = {
+  assertPhase6aMaintenanceClosureDecisionReadiness,
   assertPhase5zMaintenanceVerificationClosureReadiness,
   assertPhase5yMaintenanceExecutionRunbookReadiness,
   assertPhase5xMaintenanceApprovalReadiness,
