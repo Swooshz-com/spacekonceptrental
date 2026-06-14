@@ -1,3 +1,11 @@
+## Phase 6F-A/B Maintenance Closure Audit Follow-Up Response Planning Readiness References
+
+Current phase: Phase 6F-A/B maintenance closure audit follow-up response planning readiness, audit response option ledger, and no-response/no-remediation firewall.
+
+Phase 6F-A/B keeps the repo readiness-only for owner/admin review of a future theoretical audit response planning packet after Phase 6E-A/B triage/classification readiness. It does not select response options, draft audit responses, approve audit responses, send audit responses, assign remediation, create remediation tasks, disclose externally, contact audit recipients, receive or record audit findings, create audit follow-up records, classify findings, assign severity, assign triage owners, record triage decisions, create archives, write archive records, apply retention policies, record closure decisions, accept closure recommendations, record closure approval, mark maintenance complete, collect production evidence, run smoke checks, execute provider/runtime checks, deploy, change public runtime behavior, send support/customer follow-up, create outbound messaging, or claim production readiness.
+
+Phase 6F-A/B references `docs/content/LOCAL-MAINTENANCE-CLOSURE-AUDIT-FOLLOW-UP-RESPONSE-PLANNING-READINESS.md`, `docs/content/LOCAL-MAINTENANCE-CLOSURE-AUDIT-RESPONSE-OPTION-LEDGER-TEMPLATE.md`, `docs/content/LOCAL-MAINTENANCE-CLOSURE-AUDIT-FOLLOW-UP-TRIAGE-READINESS.md`, `docs/content/LOCAL-MAINTENANCE-CLOSURE-AUDIT-FINDING-CLASSIFICATION-LEDGER-TEMPLATE.md`, `scripts/validate-maintenance-closure-audit-follow-up-response-planning-readiness.cjs`, `scripts/validate-maintenance-closure-audit-follow-up-triage-readiness.cjs`, and protected admin maintenance closure audit follow-up response planning readiness helper coverage. It follows Phase 6E without selecting response options, drafting or sending responses, assigning remediation, disclosing externally, recording closure, approving completion, or collecting evidence.
+
 ## Phase 6E-A/B Maintenance Closure Audit Follow-Up Triage Readiness References
 
 Current phase: Phase 6E-A/B maintenance closure audit follow-up triage readiness, audit finding classification ledger, and no-triage/no-remediation firewall.

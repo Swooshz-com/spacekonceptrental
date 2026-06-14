@@ -131,7 +131,7 @@ describe("Phase 6D-A/B maintenance closure audit follow-up intake readiness", ()
     expect(screen.getAllByText(recommendationPacketLedgerTemplateDocPath).length).toBeGreaterThan(0);
     expect(screen.getByRole("heading", { name: /audit finding intake ledger/i })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: /audit follow-up intake readiness checklist/i })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: /no-response\/no-remediation firewall/i })).toBeInTheDocument();
+    expect(screen.getAllByRole("heading", { name: /no-response\/no-remediation firewall/i }).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/\[not evidence \/ not recorded\]/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/\[deployment approval: not granted\]/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/No audit finding is received or recorded here/i).length).toBeGreaterThan(0);

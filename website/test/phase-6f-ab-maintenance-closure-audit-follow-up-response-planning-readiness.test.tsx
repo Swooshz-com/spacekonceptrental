@@ -1,0 +1,129 @@
+import { readFileSync } from "node:fs";
+import { extname, resolve } from "node:path";
+import { spawnSync } from "node:child_process";
+import { describe, expect, it } from "vitest";
+
+const repoRoot = resolve(process.cwd(), "..");
+const responsePlanningReadinessDocPath =
+  "docs/content/LOCAL-MAINTENANCE-CLOSURE-AUDIT-FOLLOW-UP-RESPONSE-PLANNING-READINESS.md";
+const responseOptionLedgerTemplateDocPath =
+  "docs/content/LOCAL-MAINTENANCE-CLOSURE-AUDIT-RESPONSE-OPTION-LEDGER-TEMPLATE.md";
+const publicSourceRoots = [
+  "website/app/layout.tsx",
+  "website/app/page.tsx",
+  "website/app/listings",
+  "website/app/categories",
+  "website/app/catalogue",
+  "website/app/events",
+  "website/app/quote",
+  "website/app/not-found.tsx",
+  "website/components/QuoteRequestForm.tsx",
+];
+const sourceExtensions = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"]);
+
+function readRepoFile(path: string) {
+  return readFileSync(resolve(repoRoot, path), "utf8");
+}
+
+function gitLsFiles(paths: string[]) {
+  const result = spawnSync("git", ["ls-files", "--", ...paths], {
+    cwd: repoRoot,
+    encoding: "utf8",
+  });
+
+  if (result.status !== 0) {
+    throw new Error(result.stderr || "git ls-files failed");
+  }
+
+  return result.stdout.split(/\r?\n/).filter(Boolean);
+}
+
+function isProductionSource(path: string) {
+  return (
+    sourceExtensions.has(extname(path)) &&
+    !/\.(?:test|spec)\.[cm]?[tj]sx?$/.test(path) &&
+    !path.startsWith("website/test/")
+  );
+}
+
+function readTrackedProductionSources(paths: string[]) {
+  return gitLsFiles(paths)
+    .filter(isProductionSource)
+    .map((path) => `${path}\n${readRepoFile(path)}`)
+    .join("\n");
+}
+
+describe("Phase 6F-A/B maintenance closure audit follow-up response planning readiness", () => {
+  it("keeps protected admin source wired to the Phase 6F helper after Phase 6E on the real home view path", () => {
+    const adminSource = readRepoFile("website/app/admin/protected-admin-shell.tsx");
+    const adminHomeSource = readRepoFile("website/app/admin/page.tsx");
+
+    expect(adminHomeSource).toContain('view={{ kind: "home" }}');
+    expect(adminSource).toContain("function MaintenanceClosureAuditFollowUpResponsePlanningReadinessHelper()");
+    expect(adminSource).toContain(responsePlanningReadinessDocPath);
+    expect(adminSource).toContain(responseOptionLedgerTemplateDocPath);
+    expect(adminSource).toMatch(/Phase 6F-A\/B admin-only maintenance closure audit follow-up response planning readiness/i);
+    expect(adminSource).toMatch(/Maintenance closure audit follow-up response planning readiness helper/i);
+    expect(adminSource).toMatch(/Audit response option ledger/i);
+    expect(adminSource).toMatch(/Audit response planning readiness checklist/i);
+    expect(adminSource).toMatch(/No-response\/no-remediation firewall/i);
+    expect(adminSource).toMatch(/Safe response planning language/i);
+    expect(adminSource).toMatch(/<MaintenanceClosureAuditFollowUpTriageReadinessHelper \/>[\s\S]*<MaintenanceClosureAuditFollowUpResponsePlanningReadinessHelper \/>/);
+  });
+
+  it("keeps Phase 6F docs readiness-only with no response, remediation, evidence, or deployment claim", () => {
+    const docs = `${readRepoFile(responsePlanningReadinessDocPath)}\n${readRepoFile(responseOptionLedgerTemplateDocPath)}`;
+
+    for (const required of [
+      "No response option selected",
+      "No response drafted",
+      "No response approved",
+      "No response sent",
+      "No remediation assigned",
+      "No remediation task is created.",
+      "No external disclosure is made.",
+      "No audit recipient is contacted.",
+      "No production evidence is collected.",
+      "No smoke check is run.",
+      "No provider/runtime check is executed.",
+      "No customer/support follow-up is sent.",
+      "No production readiness claim is made.",
+      "[NOT EVIDENCE / NOT RECORDED]",
+      "[DEPLOYMENT APPROVAL: NOT GRANTED]",
+    ]) {
+      expect(docs).toContain(required);
+    }
+
+    expect(docs).not.toMatch(
+      /actual deployment|audit finding was received|audit finding was recorded|audit follow-up record was created|audit finding was classified|audit severity was assigned|triage owner was assigned|triage decision was recorded|response option was selected|audit response was drafted|audit response was approved|audit response was sent|remediation was assigned|remediation task was created|audit recipient was contacted|external disclosure was made|archive was created|archive record was written|retention policy was applied|closure decision was recorded|closure approval was recorded|maintenance was marked complete|production evidence was collected|smoke check was run|provider check was executed|runtime check was executed|customer follow-up was sent|support response was sent|public notice was published|monitoring configured|analytics configured|cron configured|job configured|maintenance was completed|deployment approval granted/i,
+    );
+  });
+
+  it("keeps public production source free of Phase 6F, admin, response-planning, provider, and customer-flow internals", () => {
+    const publicSource = readTrackedProductionSources(publicSourceRoots);
+
+    expect(publicSource).not.toMatch(
+      /maintenance closure audit follow-up|audit response option ledger|audit finding classification ledger|maintenance closure audit handoff|maintenance closure archive|closure archive retention ledger|maintenance closure decision|closure recommendation packet|support follow-up|storage provider|scheduler\/cron|provider setup|environment\/secrets|admin route|release-control|owner handoff|\/admin\//i,
+    );
+    expect(publicSource).toMatch(/listing|listings/i);
+    expect(publicSource).toMatch(/rental|rentals/i);
+    expect(publicSource).toMatch(/quote|enquiry|request/i);
+    expect(publicSource).not.toMatch(/\b(?:cart|checkout|order|payment|purchase|online ordering)\b/i);
+    expect(publicSource).not.toMatch(/\b(?:booking|reservation|fulfilment|fulfillment|stock reservation|stock-reservation|book now|reserve now)\b/i);
+    expect(publicSource).not.toMatch(/customer account|quote tracking|file upload|public upload|notifications?|\bCRM\b|email sending|sms sending|whatsapp|outbound messaging/i);
+  });
+
+  it("registers the Phase 6F validator and keeps release validation free of Docker bypass logic", () => {
+    const packageJson = JSON.parse(readRepoFile("package.json")) as {
+      scripts?: Record<string, string>;
+    };
+    const suite = readRepoFile("scripts/validate-release-candidate-suite.cjs");
+
+    expect(packageJson.scripts?.["validate:maintenance-closure-audit-follow-up-response-planning-readiness"]).toBe(
+      "node scripts/validate-maintenance-closure-audit-follow-up-response-planning-readiness.cjs",
+    );
+    expect(suite).toContain("args: ['run', 'validate:maintenance-closure-audit-follow-up-response-planning-readiness']");
+    expect(suite).toContain("args: ['run', 'validate:maintenance-closure-audit-follow-up-triage-readiness']");
+    expect(suite).not.toMatch(/docker[^\n]*(?:skip|bypass)|(?:skip|bypass)[^\n]*docker/i);
+  });
+});
