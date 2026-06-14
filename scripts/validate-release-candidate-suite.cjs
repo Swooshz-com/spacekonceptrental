@@ -5,6 +5,11 @@ const repoRoot = path.resolve(__dirname, '..');
 
 const commandPlan = [
   {
+    label: 'Validate maintenance closure audit follow-up response acknowledgement readiness',
+    cwd: repoRoot,
+    args: ['run', 'validate:maintenance-closure-audit-follow-up-response-acknowledgement-readiness'],
+  },
+  {
     label: 'Validate maintenance closure audit follow-up response dispatch readiness',
     cwd: repoRoot,
     args: ['run', 'validate:maintenance-closure-audit-follow-up-response-dispatch-readiness'],
