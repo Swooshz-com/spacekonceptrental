@@ -10,6 +10,10 @@ import {
 } from "../app/admin/protected-admin-shell";
 
 const repoRoot = resolve(process.cwd(), "..");
+const auditFollowUpTriageReadinessDocPath =
+  "docs/content/LOCAL-MAINTENANCE-CLOSURE-AUDIT-FOLLOW-UP-TRIAGE-READINESS.md";
+const auditFindingClassificationLedgerTemplateDocPath =
+  "docs/content/LOCAL-MAINTENANCE-CLOSURE-AUDIT-FINDING-CLASSIFICATION-LEDGER-TEMPLATE.md";
 const archiveReadinessDocPath =
   "docs/content/LOCAL-MAINTENANCE-CLOSURE-ARCHIVE-READINESS.md";
 const archiveRetentionLedgerTemplateDocPath =
@@ -86,12 +90,12 @@ const authorisedState: ProtectedAdminShellState = {
   },
 };
 
-describe("Phase 6B-A/B maintenance closure archive readiness", () => {
+describe("Phase 6E-A/B maintenance closure audit follow-up triage readiness", () => {
   afterEach(() => {
     cleanup();
   });
 
-  it("renders the protected Phase 6B helper for authorised admin on the real home view path", () => {
+  it("renders the protected Phase 6E helper for authorised admin on the real home view path", () => {
     render(<AdminShellContent state={authorisedState} view={{ kind: "home" }} />);
 
     for (const heading of [
@@ -115,27 +119,29 @@ describe("Phase 6B-A/B maintenance closure archive readiness", () => {
       /maintenance verification closure readiness helper/i,
       /maintenance closure decision readiness helper/i,
       /maintenance closure archive readiness helper/i,
+      /maintenance closure audit handoff readiness helper/i,
+      /maintenance closure audit follow-up triage readiness helper/i,
     ]) {
       expect(screen.getByRole("heading", { name: heading })).toBeInTheDocument();
     }
 
-    expect(screen.getByText(archiveReadinessDocPath)).toBeInTheDocument();
-    expect(screen.getAllByText(archiveRetentionLedgerTemplateDocPath).length).toBeGreaterThan(0);
+    expect(screen.getByText(auditFollowUpTriageReadinessDocPath)).toBeInTheDocument();
+    expect(screen.getByText(auditFindingClassificationLedgerTemplateDocPath)).toBeInTheDocument();
     expect(screen.getAllByText(closureDecisionReadinessDocPath).length).toBeGreaterThan(0);
     expect(screen.getAllByText(recommendationPacketLedgerTemplateDocPath).length).toBeGreaterThan(0);
-    expect(screen.getByRole("heading", { name: /safe future archive-readiness sections/i })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: /allowed future archive-readiness statuses/i })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: /no-archive\/no-record boundaries/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /audit finding classification ledger/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /audit follow-up triage readiness checklist/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /no-triage\/no-remediation firewall/i })).toBeInTheDocument();
     expect(screen.getAllByText(/\[not evidence \/ not recorded\]/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/\[deployment approval: not granted\]/i).length).toBeGreaterThan(0);
-    expect(screen.getByText(/No closure archive is created here/i)).toBeInTheDocument();
-    expect(screen.getByText(/No archive record is written here/i)).toBeInTheDocument();
-    expect(screen.getByText(/No retention policy is applied here/i)).toBeInTheDocument();
-    expect(screen.getByText(/No storage configuration is created here/i)).toBeInTheDocument();
-    expect(screen.getAllByText(/No deployment approval is granted here/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/No audit finding is received or recorded here/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/No audit follow-up record is created here/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/No audit finding is classified here/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/No audit severity is assigned here/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/No triage owner is assigned here/i).length).toBeGreaterThan(0);
   });
 
-  it("does not render the protected Phase 6B helper for blocked admin states", () => {
+  it("does not render the protected Phase 6E helper for blocked admin states", () => {
     const blockedStates: ProtectedAdminShellState[] = [
       { status: "unauthenticated" },
       { status: "authenticated_not_authorised" },
@@ -145,32 +151,32 @@ describe("Phase 6B-A/B maintenance closure archive readiness", () => {
     for (const state of blockedStates) {
       const { unmount } = render(<AdminShellContent state={state} view={{ kind: "home" }} />);
 
-      expect(screen.queryByRole("heading", { name: /maintenance closure archive readiness helper/i })).not.toBeInTheDocument();
-      expect(screen.queryByText(archiveReadinessDocPath)).not.toBeInTheDocument();
-      expect(screen.queryByText(archiveRetentionLedgerTemplateDocPath)).not.toBeInTheDocument();
+      expect(screen.queryByRole("heading", { name: /maintenance closure audit follow-up triage readiness helper/i })).not.toBeInTheDocument();
+      expect(screen.queryByText(auditFollowUpTriageReadinessDocPath)).not.toBeInTheDocument();
+      expect(screen.queryByText(auditFindingClassificationLedgerTemplateDocPath)).not.toBeInTheDocument();
 
       unmount();
     }
   });
 
-  it("keeps protected admin source wired to Phase 6B and Phase 6A docs", () => {
+  it("keeps protected admin source wired to Phase 6E, Phase 6D, Phase 6C, Phase 6B, and Phase 6A docs", () => {
     const adminSource = readRepoFile("website/app/admin/protected-admin-shell.tsx");
     const adminHomeSource = readRepoFile("website/app/admin/page.tsx");
 
     expect(adminHomeSource).toContain('view={{ kind: "home" }}');
-    expect(adminSource).toContain(archiveReadinessDocPath);
-    expect(adminSource).toContain(archiveRetentionLedgerTemplateDocPath);
+    expect(adminSource).toContain(auditFollowUpTriageReadinessDocPath);
+    expect(adminSource).toContain(auditFindingClassificationLedgerTemplateDocPath);
     expect(adminSource).toContain(closureDecisionReadinessDocPath);
     expect(adminSource).toContain(recommendationPacketLedgerTemplateDocPath);
-    expect(adminSource).toMatch(/Phase 6B-A\/B admin-only maintenance closure archive readiness/i);
-    expect(adminSource).toMatch(/<MaintenanceClosureDecisionReadinessHelper \/>[\s\S]*<MaintenanceClosureArchiveReadinessHelper \/>/);
+    expect(adminSource).toMatch(/Phase 6E-A\/B admin-only maintenance closure audit follow-up triage readiness/i);
+    expect(adminSource).toMatch(/<MaintenanceClosureAuditFollowUpIntakeReadinessHelper \/>[\s\S]*<MaintenanceClosureAuditFollowUpTriageReadinessHelper \/>/);
   });
 
-  it("keeps public production source free of Phase 6B, Phase 6A, provider, admin, handoff, and release-control internals", () => {
+  it("keeps public production source free of Phase 6E, Phase 6D, Phase 6C, provider, admin, handoff, and release-control internals", () => {
     const publicSource = readTrackedProductionSources(publicSourceRoots);
 
     expect(publicSource).not.toMatch(
-      /maintenance closure archive|closure archive retention ledger|maintenance closure decision|closure recommendation packet|support follow-up|storage provider|scheduler\/cron|provider setup|environment\/secrets|admin route|release-control|owner handoff|\/admin\//i,
+      /maintenance closure audit follow-up|audit finding classification ledger|maintenance closure audit handoff|maintenance closure archive|closure archive retention ledger|maintenance closure decision|closure recommendation packet|support follow-up|storage provider|scheduler\/cron|provider setup|environment\/secrets|admin route|release-control|owner handoff|\/admin\//i,
     );
   });
 
@@ -185,29 +191,29 @@ describe("Phase 6B-A/B maintenance closure archive readiness", () => {
     expect(publicSource).not.toMatch(/customer account|quote tracking|file upload|public upload|notifications?|\bCRM\b|email sending|sms sending|whatsapp|outbound messaging/i);
   });
 
-  it("keeps Phase 6B docs template-only with no archive, record, retention, evidence, or deployment claim", () => {
-    const docs = `${readRepoFile(archiveReadinessDocPath)}\n${readRepoFile(archiveRetentionLedgerTemplateDocPath)}`;
+  it("keeps Phase 6E docs template-only with no classification, response, remediation, evidence, or deployment claim", () => {
+    const docs = `${readRepoFile(auditFollowUpTriageReadinessDocPath)}\n${readRepoFile(auditFindingClassificationLedgerTemplateDocPath)}`;
 
     expect(docs).toContain("[NOT EVIDENCE / NOT RECORDED]");
     expect(docs).toContain("[DEPLOYMENT APPROVAL: NOT GRANTED]");
-    expect(docs).toContain("An archive readiness template is not an archive.");
-    expect(docs).toContain("This ledger is not an archive, not an archive record, not an applied retention policy");
+    expect(docs).toContain("No audit finding is received or recorded.");
+    expect(docs).toContain("This template is a readiness-only placeholder");
     expect(docs).not.toMatch(
-      /actual deployment|archive created|archive record written|retention policy applied|closure decision recorded|closure approval recorded|maintenance marked complete|production evidence collected|smoke check run|provider check executed|runtime check executed|customer follow-up sent|support response sent|public notice published|monitoring configured|analytics configured|cron configured|job configured|maintenance completed|live hotfix|remediation performed|correction completed|retest run|route verification|route walkthrough|preview publication|production launch|provider setup completed|env\/secrets setup completed|owner approved|owner sign-?off complete|launch clearance granted|production evidence captured|preview evidence captured|smoke evidence captured|rollback evidence captured|response-sent evidence captured|closure evidence captured|archive evidence captured|retention evidence captured|resolution evidence captured|maintenance evidence captured|correction-completed evidence captured|remediation evidence captured|hotfix evidence captured|retest evidence captured|monitoring evidence captured|analytics evidence captured|deployment approval granted/i,
+      /actual deployment|audit finding was received|audit finding was recorded|audit follow-up record was created|audit finding was classified|audit severity was assigned|triage owner was assigned|triage decision was recorded|audit response was sent|remediation was assigned|audit handoff was created|audit packet was sent|audit recipient was contacted|external disclosure was made|archive was created|archive record was written|retention policy was applied|closure decision was recorded|closure approval was recorded|maintenance was marked complete|production evidence was collected|smoke check was run|provider check was executed|runtime check was executed|customer follow-up was sent|support response was sent|public notice was published|monitoring configured|analytics configured|cron configured|job configured|maintenance was completed|live hotfix|remediation performed|correction completed|retest run|route verification|route walkthrough|preview publication|production launch|provider setup completed|env\/secrets setup completed|owner approved|owner sign-?off complete|launch clearance granted|production evidence captured|preview evidence captured|smoke evidence captured|rollback evidence captured|response-sent evidence captured|closure evidence captured|archive evidence captured|retention evidence captured|resolution evidence captured|maintenance evidence captured|correction-completed evidence captured|remediation evidence captured|hotfix evidence captured|retest evidence captured|monitoring evidence captured|analytics evidence captured|deployment approval granted/i,
     );
   });
 
-  it("registers the Phase 6B validator and keeps the release suite free of Docker bypass logic", () => {
+  it("registers the Phase 6E validator and keeps the release suite free of Docker bypass logic", () => {
     const packageJson = JSON.parse(readRepoFile("package.json")) as {
       scripts?: Record<string, string>;
     };
     const suite = readRepoFile("scripts/validate-release-candidate-suite.cjs");
 
-    expect(packageJson.scripts?.["validate:maintenance-closure-archive-readiness"]).toBe(
-      "node scripts/validate-maintenance-closure-archive-readiness.cjs",
+    expect(packageJson.scripts?.["validate:maintenance-closure-audit-follow-up-triage-readiness"]).toBe(
+      "node scripts/validate-maintenance-closure-audit-follow-up-triage-readiness.cjs",
     );
+    expect(suite).toContain("args: ['run', 'validate:maintenance-closure-audit-follow-up-triage-readiness']");
     expect(suite).toContain("args: ['run', 'validate:maintenance-closure-archive-readiness']");
-    expect(suite).toContain("args: ['run', 'validate:maintenance-closure-decision-readiness']");
     expect(suite).not.toMatch(/docker[^\n]*(?:skip|bypass)|(?:skip|bypass)[^\n]*docker/i);
   });
 });

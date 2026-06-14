@@ -125,7 +125,7 @@ describe("Phase 6D-A/B maintenance closure audit follow-up intake readiness", ()
       expect(screen.getByRole("heading", { name: heading })).toBeInTheDocument();
     }
 
-    expect(screen.getByText(auditFollowUpIntakeReadinessDocPath)).toBeInTheDocument();
+    expect(screen.getAllByText(auditFollowUpIntakeReadinessDocPath).length).toBeGreaterThan(0);
     expect(screen.getByText(auditFindingIntakeLedgerTemplateDocPath)).toBeInTheDocument();
     expect(screen.getAllByText(closureDecisionReadinessDocPath).length).toBeGreaterThan(0);
     expect(screen.getAllByText(recommendationPacketLedgerTemplateDocPath).length).toBeGreaterThan(0);
