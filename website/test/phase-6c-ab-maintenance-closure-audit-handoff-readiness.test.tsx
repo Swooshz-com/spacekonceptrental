@@ -124,7 +124,7 @@ describe("Phase 6C-A/B maintenance closure audit handoff readiness", () => {
       expect(screen.getByRole("heading", { name: heading })).toBeInTheDocument();
     }
 
-    expect(screen.getByText(auditHandoffReadinessDocPath)).toBeInTheDocument();
+    expect(screen.getAllByText(auditHandoffReadinessDocPath).length).toBeGreaterThan(0);
     expect(screen.getByText(auditHandoffRoutingLedgerTemplateDocPath)).toBeInTheDocument();
     expect(screen.getAllByText(closureDecisionReadinessDocPath).length).toBeGreaterThan(0);
     expect(screen.getAllByText(recommendationPacketLedgerTemplateDocPath).length).toBeGreaterThan(0);
