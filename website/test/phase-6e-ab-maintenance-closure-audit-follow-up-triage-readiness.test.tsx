@@ -126,7 +126,7 @@ describe("Phase 6E-A/B maintenance closure audit follow-up triage readiness", ()
     }
 
     expect(screen.getByText(auditFollowUpTriageReadinessDocPath)).toBeInTheDocument();
-    expect(screen.getByText(auditFindingClassificationLedgerTemplateDocPath)).toBeInTheDocument();
+    expect(screen.getAllByText(auditFindingClassificationLedgerTemplateDocPath).length).toBeGreaterThan(0);
     expect(screen.getAllByText(closureDecisionReadinessDocPath).length).toBeGreaterThan(0);
     expect(screen.getAllByText(recommendationPacketLedgerTemplateDocPath).length).toBeGreaterThan(0);
     expect(screen.getByRole("heading", { name: /audit finding classification ledger/i })).toBeInTheDocument();
