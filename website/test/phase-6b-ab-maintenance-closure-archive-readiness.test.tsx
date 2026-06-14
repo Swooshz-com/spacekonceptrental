@@ -128,10 +128,10 @@ describe("Phase 6B-A/B maintenance closure archive readiness", () => {
     expect(screen.getByRole("heading", { name: /no-archive\/no-record boundaries/i })).toBeInTheDocument();
     expect(screen.getAllByText(/\[not evidence \/ not recorded\]/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/\[deployment approval: not granted\]/i).length).toBeGreaterThan(0);
-    expect(screen.getByText(/No closure archive is created here/i)).toBeInTheDocument();
-    expect(screen.getByText(/No archive record is written here/i)).toBeInTheDocument();
-    expect(screen.getByText(/No retention policy is applied here/i)).toBeInTheDocument();
-    expect(screen.getByText(/No storage configuration is created here/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/No closure archive is created here/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/No archive record is written here/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/No retention policy is applied here/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/No storage configuration is created here/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/No deployment approval is granted here/i).length).toBeGreaterThan(0);
   });
 

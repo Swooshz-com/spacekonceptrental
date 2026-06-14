@@ -2020,6 +2020,10 @@ const phase6fMaintenanceClosureAuditFollowUpResponsePlanningReadinessPath =
   "docs/content/LOCAL-MAINTENANCE-CLOSURE-AUDIT-FOLLOW-UP-RESPONSE-PLANNING-READINESS.md";
 const phase6fMaintenanceClosureAuditResponseOptionLedgerTemplatePath =
   "docs/content/LOCAL-MAINTENANCE-CLOSURE-AUDIT-RESPONSE-OPTION-LEDGER-TEMPLATE.md";
+const phase6gMaintenanceClosureAuditFollowUpResponseApprovalReadinessPath =
+  "docs/content/LOCAL-MAINTENANCE-CLOSURE-AUDIT-FOLLOW-UP-RESPONSE-APPROVAL-READINESS.md";
+const phase6gMaintenanceClosureAuditResponseApprovalPacketLedgerTemplatePath =
+  "docs/content/LOCAL-MAINTENANCE-CLOSURE-AUDIT-RESPONSE-APPROVAL-PACKET-LEDGER-TEMPLATE.md";
 const phase6aClosureRecommendationPacketLedgerPlaceholders = [
   "Intended maintenance/change reference: [NOT SUPPLIED]",
   "Intended verification packet reference: [NOT SUPPLIED]",
@@ -4809,6 +4813,129 @@ function MaintenanceClosureAuditFollowUpResponsePlanningReadinessHelper() {
   );
 }
 
+
+function MaintenanceClosureAuditFollowUpResponseApprovalReadinessHelper() {
+  const approvalPacketLedgerFields = [
+    "Intended response planning reference",
+    "Intended audit triage/classification reference",
+    "Intended audit follow-up intake reference",
+    "Intended audit handoff reference",
+    "Intended response approval owner placeholder",
+    "Intended internal reviewer placeholder",
+    "Intended approver placeholder",
+    "Intended response audience placeholder",
+    "Intended response channel placeholder",
+    "Intended response option placeholder",
+    "Intended approval criteria placeholder",
+    "Intended remediation dependency placeholder",
+    "Missing evidence blocker placeholder",
+    "Unresolved follow-up blocker placeholder",
+    "Response approval status placeholder",
+    "Approval decision status placeholder",
+    "Remediation status placeholder",
+    "No response option selected",
+    "No response drafted",
+    "No response approved",
+    "No approval decision recorded",
+    "No response sent",
+    "No remediation assigned"
+  ];
+  const readinessChecklist = [
+    "Confirm the owner/admin would review the theoretical response planning packet before any future response approval discussion.",
+    "Confirm missing evidence must block approval because this helper does not collect or record production evidence.",
+    "Confirm unresolved follow-ups must block approval until a separate future review resolves them.",
+    "Confirm classification and severity assumptions remain placeholders only, with no real finding classified and no severity assigned.",
+    "Confirm archive and retention gaps must block approval until a separate approved future review resolves them.",
+    "Confirm external disclosure questions remain unapproved and placeholder-only.",
+    "Confirm response channel and audience assumptions remain placeholders only, with no response option selected.",
+    "Confirm approval criteria remain placeholder-only and do not record approval decisions.",
+    "Confirm customer, public, support, external message system, outbound email, SMS, and WhatsApp actions are not allowed.",
+    "Confirm this helper does not select, draft, approve, record, send, disclose, or remediate any audit response."
+  ];
+  const firewall = [
+    "No audit finding is received or recorded here.",
+    "No audit follow-up record is created here.",
+    "No audit finding is classified here.",
+    "No audit severity is assigned here.",
+    "No triage owner is assigned here.",
+    "No triage decision is recorded here.",
+    "No response option is selected here.",
+    "No audit response is drafted here.",
+    "No audit response is approved here.",
+    "No approval decision is recorded here.",
+    "No response approval request is sent here.",
+    "No audit response is sent here.",
+    "No remediation is assigned here.",
+    "No remediation task is created here.",
+    "No external disclosure is made here.",
+    "No audit recipient is contacted here.",
+    "No archive is created here.",
+    "No archive record is written here.",
+    "No retention policy is applied here.",
+    "No closure decision is recorded here.",
+    "No closure approval is recorded here.",
+    "No maintenance is marked complete here.",
+    "No production evidence is collected here.",
+    "No smoke check is run here.",
+    "No provider/runtime check is executed here.",
+    "No customer/support follow-up is sent here.",
+    "No production readiness claim is made here."
+  ];
+
+  return (
+    <section aria-label="Phase 6G maintenance closure audit follow-up response approval readiness helper" className="admin-readiness">
+      <p className="eyebrow">Phase 6G-A/B admin-only maintenance closure audit follow-up response approval readiness</p>
+      <h3>Maintenance closure audit follow-up response approval readiness helper</h3>
+      <p>
+        This protected helper prepares future owner/admin review of a theoretical
+        audit response approval packet after a theoretical response planning
+        packet exists for rental listings, event furniture listings, categories,
+        media, quote, enquiry, and request surfaces. It is draft,
+        readiness-only, placeholder-only, and internal. No response option is
+        selected here. No audit response is drafted here. No audit response is
+        approved here. No approval decision is recorded here. No response
+        approval request is sent here. No audit response is sent here. No
+        remediation is assigned here.
+      </p>
+      <dl className="admin-readiness__grid">
+        <div><dt>Maintenance closure audit follow-up response approval readiness</dt><dd>{phase6gMaintenanceClosureAuditFollowUpResponseApprovalReadinessPath}</dd></div>
+        <div><dt>Audit response approval packet ledger template</dt><dd>{phase6gMaintenanceClosureAuditResponseApprovalPacketLedgerTemplatePath}</dd></div>
+        <div><dt>Intended response planning reference</dt><dd>{phase6fMaintenanceClosureAuditResponseOptionLedgerTemplatePath}</dd></div>
+        <div><dt>Intended audit triage/classification reference</dt><dd>{phase6eMaintenanceClosureAuditFindingClassificationLedgerTemplatePath}</dd></div>
+        <div><dt>Intended audit follow-up intake reference</dt><dd>{phase6dMaintenanceClosureAuditFollowUpIntakeReadinessPath}</dd></div>
+        <div><dt>Intended audit handoff reference</dt><dd>{phase6cMaintenanceClosureAuditHandoffReadinessPath}</dd></div>
+        <div><dt>Intended response approval owner</dt><dd>[NOT ASSIGNED]</dd></div>
+        <div><dt>Intended internal reviewer</dt><dd>[NOT ASSIGNED]</dd></div>
+        <div><dt>Intended approver</dt><dd>[NOT ASSIGNED]</dd></div>
+        <div><dt>Intended response audience</dt><dd>[PLACEHOLDER ONLY / NOT APPROVED]</dd></div>
+        <div><dt>Intended response channel</dt><dd>[PLACEHOLDER ONLY / NOT APPROVED]</dd></div>
+        <div><dt>Intended response option</dt><dd>[PLACEHOLDER ONLY / NOT SELECTED]</dd></div>
+        <div><dt>Intended approval criteria</dt><dd>[PLACEHOLDER ONLY / NOT APPROVED]</dd></div>
+        <div><dt>Intended remediation dependency</dt><dd>[PLACEHOLDER ONLY / NOT ASSIGNED]</dd></div>
+        <div><dt>Missing evidence blocker status</dt><dd>[BLOCKING / NOT EVIDENCE]</dd></div>
+        <div><dt>Unresolved follow-up blocker status</dt><dd>[BLOCKING / NOT REVIEWED]</dd></div>
+        <div><dt>Response approval status</dt><dd>[NOT APPROVED]</dd></div>
+        <div><dt>Approval decision status</dt><dd>[NOT RECORDED]</dd></div>
+        <div><dt>Remediation status</dt><dd>[NOT ASSIGNED]</dd></div>
+      </dl>
+      <h4>Audit response approval packet ledger</h4>
+      <ul className="admin-readiness__list">{approvalPacketLedgerFields.map((item) => <li key={item}>{item}</li>)}</ul>
+      <h4>Audit response approval readiness checklist</h4>
+      <ul className="admin-readiness__list">{readinessChecklist.map((item) => <li key={item}>{item}</li>)}</ul>
+      <h4>No-approval/no-send/no-remediation firewall</h4>
+      <ul className="admin-readiness__list">{firewall.map((item) => <li key={item}>{item}</li>)}</ul>
+      <h4>Safe response approval language</h4>
+      <p>
+        Safe response approval language uses draft, readiness, placeholder, intended, and theoretical wording only.
+        Avoid finality wording such as received, recorded, classified, assigned, prioritised, selected, drafted,
+        approved, approval granted, responded, sent, remediated, resolved, disclosed, accepted, closed, completed,
+        verified, cleared, evidence recorded, production checked, owner signed off, audit delivered, archive created,
+        retention applied, or maintenance completed unless clearly negated as not allowed.
+      </p>
+    </section>
+  );
+}
+
 function OwnerReadinessHelpersPanel() {
   return (
     <>
@@ -4836,6 +4963,7 @@ function OwnerReadinessHelpersPanel() {
       <MaintenanceClosureAuditFollowUpIntakeReadinessHelper />
       <MaintenanceClosureAuditFollowUpTriageReadinessHelper />
       <MaintenanceClosureAuditFollowUpResponsePlanningReadinessHelper />
+      <MaintenanceClosureAuditFollowUpResponseApprovalReadinessHelper />
     </>
   );
 }

@@ -52,6 +52,7 @@
     "validate:maintenance-closure-audit-handoff-readiness": "node scripts/validate-maintenance-closure-audit-handoff-readiness.cjs",
     "validate:maintenance-closure-audit-follow-up-intake-readiness": "node scripts/validate-maintenance-closure-audit-follow-up-intake-readiness.cjs",
     "validate:maintenance-closure-audit-follow-up-triage-readiness": "node scripts/validate-maintenance-closure-audit-follow-up-triage-readiness.cjs",
-    "validate:maintenance-closure-audit-follow-up-response-planning-readiness": "node scripts/validate-maintenance-closure-audit-follow-up-response-planning-readiness.cjs"
+    "validate:maintenance-closure-audit-follow-up-response-planning-readiness": "node scripts/validate-maintenance-closure-audit-follow-up-response-planning-readiness.cjs",
+    "validate:maintenance-closure-audit-follow-up-response-approval-readiness": "node scripts/validate-maintenance-closure-audit-follow-up-response-approval-readiness.cjs"
   }
 }
