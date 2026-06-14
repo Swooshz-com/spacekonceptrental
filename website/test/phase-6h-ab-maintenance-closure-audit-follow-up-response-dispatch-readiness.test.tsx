@@ -64,6 +64,7 @@ describe("Phase 6H-A/B maintenance closure audit follow-up response dispatch rea
     expect(adminSource).toContain(responseDispatchPacketLedgerTemplateDocPath);
     expect(adminSource).toMatch(/Phase 6H-A\/B admin-only maintenance closure audit follow-up response dispatch readiness/i);
     expect(adminSource).toMatch(/Maintenance closure audit follow-up response dispatch readiness helper/i);
+    expect(adminSource).toMatch(/Audit response dispatch checklist ledger/i);
     expect(adminSource).toMatch(/Audit response dispatch packet ledger/i);
     expect(adminSource).toMatch(/Audit response dispatch readiness checklist/i);
     expect(adminSource).toMatch(/No-dispatch\/no-send\/no-remediation firewall/i);
@@ -77,19 +78,31 @@ describe("Phase 6H-A/B maintenance closure audit follow-up response dispatch rea
     for (const required of [
       "No recipient configured",
       "No channel configured",
+      "No dispatch channel configured",
+      "No recipient list configured",
       "No response option selected",
       "No response drafted",
       "No response approved",
+      "No approval decision recorded",
+      "No response approval request sent",
       "No dispatch decision recorded",
+      "No response dispatch checklist completed",
+      "No recipient contacted",
       "No response dispatched",
       "No response sent",
       "No remediation assigned",
       "No remediation task is created.",
       "No external disclosure is made.",
       "No audit recipient is contacted.",
+      "No recipient is contacted.",
       "No production evidence is collected.",
       "No smoke check is run.",
       "No provider/runtime check is executed.",
+      "Intended approver placeholder",
+      "Intended recipient list placeholder",
+      "Intended dispatch timing placeholder",
+      "Intended dispatch criteria placeholder",
+      "Dispatch readiness status placeholder",
       "No customer/support follow-up is sent.",
       "No production readiness claim is made.",
       "[NOT EVIDENCE / NOT RECORDED]",
@@ -99,7 +112,7 @@ describe("Phase 6H-A/B maintenance closure audit follow-up response dispatch rea
     }
 
     expect(docs).not.toMatch(
-      /actual deployment|audit finding was received|audit finding was recorded|audit follow-up record was created|audit finding was classified|audit severity was assigned|triage owner was assigned|triage decision was recorded|response option was selected|audit response was drafted|audit response was approved|approval decision was recorded|dispatch decision was recorded|audit response was dispatched|audit response was sent|remediation was assigned|remediation task was created|audit recipient was contacted|external disclosure was made|archive was created|archive record was written|retention policy was applied|closure decision was recorded|closure approval was recorded|maintenance was marked complete|production evidence was collected|smoke check was run|provider check was executed|runtime check was executed|customer follow-up was sent|support response was sent|public notice was published|monitoring configured|analytics configured|cron configured|job configured|maintenance was completed|deployment approval granted/i,
+      /actual deployment|audit finding was received|audit finding was recorded|audit follow-up record was created|audit finding was classified|audit severity was assigned|triage owner was assigned|triage decision was recorded|response option was selected|audit response was drafted|audit response was approved|approval decision was recorded|response approval request was sent|dispatch decision was recorded|response dispatch checklist was completed|recipient was contacted|audit response was dispatched|audit response was sent|remediation was assigned|remediation task was created|audit recipient was contacted|external disclosure was made|archive was created|archive record was written|retention policy was applied|closure decision was recorded|closure approval was recorded|maintenance was marked complete|production evidence was collected|smoke check was run|provider check was executed|runtime check was executed|customer follow-up was sent|support response was sent|public notice was published|monitoring configured|analytics configured|cron configured|job configured|maintenance was completed|deployment approval granted/i,
     );
   });
 

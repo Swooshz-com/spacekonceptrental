@@ -4559,6 +4559,7 @@ function MaintenanceClosureAuditFollowUpIntakeReadinessHelper() {
     "No remediation is assigned here.",
     "No external disclosure is made here.",
     "No audit recipient is contacted here.",
+    "No recipient is contacted here.",
     "Archive creation is blocked here.",
     "Archive record writing is blocked here.",
     "Retention policy application is blocked here.",
@@ -4655,6 +4656,7 @@ function MaintenanceClosureAuditFollowUpTriageReadinessHelper() {
     "No remediation is assigned here.",
     "No external disclosure is made here.",
     "No audit recipient is contacted here.",
+    "No recipient is contacted here.",
     "Archive creation is blocked here.",
     "Archive record writing is blocked here.",
     "Retention policy application is blocked here.",
@@ -4758,6 +4760,7 @@ function MaintenanceClosureAuditFollowUpResponsePlanningReadinessHelper() {
     "No remediation task is created here.",
     "No external disclosure is made here.",
     "No audit recipient is contacted here.",
+    "No recipient is contacted here.",
     "Archive creation is blocked here.",
     "Archive record writing is blocked here.",
     "Retention policy application is blocked here.",
@@ -4873,6 +4876,7 @@ function MaintenanceClosureAuditFollowUpResponseApprovalReadinessHelper() {
     "No remediation task is created here.",
     "No external disclosure is made here.",
     "No audit recipient is contacted here.",
+    "No recipient is contacted here.",
     "No archive is created here.",
     "No archive record is written here.",
     "No retention policy is applied here.",
@@ -4951,23 +4955,34 @@ function MaintenanceClosureAuditFollowUpResponseDispatchReadinessHelper() {
     "Intended response dispatch owner placeholder",
     "Intended internal reviewer placeholder",
     "Intended dispatch reviewer placeholder",
+    "Intended approver placeholder",
     "Intended response audience placeholder",
+    "Intended recipient list placeholder",
     "Intended response channel placeholder",
     "Intended response option placeholder",
+    "Intended dispatch timing placeholder",
+    "Intended dispatch criteria placeholder",
     "Intended approval dependency placeholder",
     "Intended remediation dependency placeholder",
     "Missing evidence blocker placeholder",
     "Unresolved follow-up blocker placeholder",
     "Response approval status placeholder",
     "Dispatch decision status placeholder",
+    "Dispatch readiness status placeholder",
     "Dispatch status placeholder",
     "Remediation status placeholder",
     "No recipient configured",
     "No channel configured",
+    "No dispatch channel configured",
+    "No recipient list configured",
     "No response option selected",
     "No response drafted",
     "No response approved",
+    "No approval decision recorded",
+    "No response approval request sent",
     "No dispatch decision recorded",
+    "No response dispatch checklist completed",
+    "No recipient contacted",
     "No response dispatched",
     "No response sent",
     "No remediation assigned"
@@ -4979,8 +4994,8 @@ function MaintenanceClosureAuditFollowUpResponseDispatchReadinessHelper() {
     "Confirm classification and severity assumptions remain placeholders only, with no real finding classified and no severity assigned.",
     "Confirm archive and retention gaps must block dispatch until a separate approved future review resolves them.",
     "Confirm external disclosure questions remain unapproved and placeholder-only.",
-    "Confirm response channel and audience assumptions remain placeholders only, with no recipient or channel configured.",
-    "Confirm dispatch criteria remain placeholder-only and do not record dispatch decisions.",
+    "Confirm response channel, recipient list, dispatch timing, and audience assumptions remain placeholders only, with no recipient list or dispatch channel configured.",
+    "Confirm dispatch criteria remain placeholder-only, with no dispatch readiness status completed and no dispatch decisions recorded.",
     "Confirm customer, public, support, external message system, outbound email, SMS, and WhatsApp actions are not allowed.",
     "Confirm this helper does not configure, select, draft, approve, record, dispatch, send, disclose, or remediate any audit response."
   ];
@@ -4993,17 +5008,22 @@ function MaintenanceClosureAuditFollowUpResponseDispatchReadinessHelper() {
     "No triage decision is recorded here.",
     "No recipient is configured here.",
     "No channel is configured here.",
+    "No dispatch channel is configured here.",
+    "No recipient list is configured here.",
     "No response option is selected here.",
     "No audit response is drafted here.",
     "No audit response is approved here.",
     "No approval decision is recorded here.",
+    "No response approval request is sent here.",
     "No dispatch decision is recorded here.",
+    "No response dispatch checklist is completed here.",
     "No audit response is dispatched here.",
     "No audit response is sent here.",
     "No remediation is assigned here.",
     "No remediation task is created here.",
     "No external disclosure is made here.",
     "No audit recipient is contacted here.",
+    "No recipient is contacted here.",
     "No archive is created here.",
     "No archive record is written here.",
     "No retention policy is applied here.",
@@ -5027,14 +5047,18 @@ function MaintenanceClosureAuditFollowUpResponseDispatchReadinessHelper() {
         packet exists for rental listings, event furniture listings, categories,
         media, quote, enquiry, and request surfaces. It is draft,
         readiness-only, placeholder-only, and internal. No recipient is
-        configured here. No channel is configured here. No response option is
+        configured here. No recipient list is configured here. No channel is
+        configured here. No dispatch channel is configured here. No response option is
         selected here. No audit response is drafted here. No audit response is
-        approved here. No dispatch decision is recorded here. No audit response
+        approved here. No approval decision is recorded here. No response
+        approval request is sent here. No dispatch decision is recorded here. No response
+        dispatch checklist is completed here. No recipient is contacted here. No audit response
         is dispatched here. No audit response is sent here. No remediation is
         assigned here.
       </p>
       <dl className="admin-readiness__grid">
         <div><dt>Maintenance closure audit follow-up response dispatch readiness</dt><dd>{phase6hMaintenanceClosureAuditFollowUpResponseDispatchReadinessPath}</dd></div>
+        <div><dt>Audit response dispatch checklist ledger</dt><dd>{phase6hMaintenanceClosureAuditResponseDispatchPacketLedgerTemplatePath}</dd></div>
         <div><dt>Audit response dispatch packet ledger template</dt><dd>{phase6hMaintenanceClosureAuditResponseDispatchPacketLedgerTemplatePath}</dd></div>
         <div><dt>Intended response approval reference</dt><dd>{phase6gMaintenanceClosureAuditResponseApprovalPacketLedgerTemplatePath}</dd></div>
         <div><dt>Intended response planning reference</dt><dd>{phase6fMaintenanceClosureAuditResponseOptionLedgerTemplatePath}</dd></div>
@@ -5044,18 +5068,25 @@ function MaintenanceClosureAuditFollowUpResponseDispatchReadinessHelper() {
         <div><dt>Intended response dispatch owner</dt><dd>[NOT ASSIGNED]</dd></div>
         <div><dt>Intended internal reviewer</dt><dd>[NOT ASSIGNED]</dd></div>
         <div><dt>Intended dispatch reviewer</dt><dd>[NOT ASSIGNED]</dd></div>
+        <div><dt>Intended approver</dt><dd>[NOT ASSIGNED]</dd></div>
         <div><dt>Intended response audience</dt><dd>[PLACEHOLDER ONLY / NOT CONFIGURED]</dd></div>
+        <div><dt>Intended recipient list</dt><dd>[PLACEHOLDER ONLY / NOT CONFIGURED]</dd></div>
         <div><dt>Intended response channel</dt><dd>[PLACEHOLDER ONLY / NOT CONFIGURED]</dd></div>
         <div><dt>Intended response option</dt><dd>[PLACEHOLDER ONLY / NOT SELECTED]</dd></div>
+        <div><dt>Intended dispatch timing</dt><dd>[PLACEHOLDER ONLY / NOT SCHEDULED]</dd></div>
+        <div><dt>Intended dispatch criteria</dt><dd>[PLACEHOLDER ONLY / NOT SATISFIED]</dd></div>
         <div><dt>Intended approval dependency</dt><dd>[PLACEHOLDER ONLY / NOT APPROVED]</dd></div>
         <div><dt>Intended remediation dependency</dt><dd>[PLACEHOLDER ONLY / NOT ASSIGNED]</dd></div>
         <div><dt>Missing evidence blocker status</dt><dd>[BLOCKING / NOT EVIDENCE]</dd></div>
         <div><dt>Unresolved follow-up blocker status</dt><dd>[BLOCKING / NOT REVIEWED]</dd></div>
         <div><dt>Response approval status</dt><dd>[NOT APPROVED]</dd></div>
         <div><dt>Dispatch decision status</dt><dd>[NOT RECORDED]</dd></div>
+        <div><dt>Dispatch readiness status</dt><dd>[NOT READY]</dd></div>
         <div><dt>Dispatch status</dt><dd>[NOT DISPATCHED]</dd></div>
         <div><dt>Remediation status</dt><dd>[NOT ASSIGNED]</dd></div>
       </dl>
+      <h4>Audit response dispatch checklist ledger</h4>
+      <p>This checklist ledger keeps packet-ledger context while explicitly tracking dispatch checklist readiness placeholders.</p>
       <h4>Audit response dispatch packet ledger</h4>
       <ul className="admin-readiness__list">{dispatchPacketLedgerFields.map((item) => <li key={item}>{item}</li>)}</ul>
       <h4>Audit response dispatch readiness checklist</h4>

@@ -1,10 +1,12 @@
 # Local Maintenance Closure Audit Response Dispatch Packet Ledger Template
 
+## Audit response dispatch checklist ledger
+
 [NOT EVIDENCE / NOT RECORDED]
 
 [DEPLOYMENT APPROVAL: NOT GRANTED]
 
-This template is a readiness-only placeholder for a future theoretical audit response dispatch review after a theoretical maintenance closure audit follow-up response approval packet exists. It is not an audit finding, not an audit follow-up record, not an audit classification, not a severity assignment, not a triage decision, not a selected response option, not an audit response draft, not an audit response approval, not an approval decision record, not a dispatch decision record, not an audit response dispatch, not an audit response delivery, and not a remediation assignment.
+This audit response dispatch checklist ledger template is a readiness-only placeholder for a future theoretical audit response dispatch review after a theoretical maintenance closure audit follow-up response approval packet exists. It is not an audit finding, not an audit follow-up record, not an audit classification, not a severity assignment, not a triage decision, not a selected response option, not an audit response draft, not an audit response approval, not an approval decision record, not a dispatch decision record, not an audit response dispatch, not an audit response delivery, and not a remediation assignment.
 
 ## Placeholder fields
 
@@ -16,23 +18,34 @@ This template is a readiness-only placeholder for a future theoretical audit res
 - Intended response dispatch owner placeholder: `[NOT ASSIGNED]`.
 - Intended internal reviewer placeholder: `[NOT ASSIGNED]`.
 - Intended dispatch reviewer placeholder: `[NOT ASSIGNED]`.
+- Intended approver placeholder: `[NOT ASSIGNED]`.
 - Intended response audience placeholder: `[PLACEHOLDER ONLY / NOT CONFIGURED]`.
+- Intended recipient list placeholder: `[PLACEHOLDER ONLY / NOT CONFIGURED]`.
 - Intended response channel placeholder: `[PLACEHOLDER ONLY / NOT CONFIGURED]`.
 - Intended response option placeholder: `[PLACEHOLDER ONLY / NOT SELECTED]`.
+- Intended dispatch timing placeholder: `[PLACEHOLDER ONLY / NOT SCHEDULED]`.
+- Intended dispatch criteria placeholder: `[PLACEHOLDER ONLY / NOT SATISFIED]`.
 - Intended approval dependency placeholder: `[PLACEHOLDER ONLY / NOT APPROVED]`.
 - Intended remediation dependency placeholder: `[PLACEHOLDER ONLY / NOT ASSIGNED]`.
 - Missing evidence blocker placeholder: `[BLOCKING / NOT EVIDENCE]`.
 - Unresolved follow-up blocker placeholder: `[BLOCKING / NOT REVIEWED]`.
 - Response approval status placeholder: `[NOT APPROVED]`.
 - Dispatch decision status placeholder: `[NOT RECORDED]`.
+- Dispatch readiness status placeholder: `[NOT READY]`.
 - Dispatch status placeholder: `[NOT DISPATCHED]`.
 - Remediation status placeholder: `[NOT ASSIGNED]`.
 - No recipient configured.
 - No channel configured.
+- No dispatch channel configured.
+- No recipient list configured.
 - No response option selected.
 - No response drafted.
 - No response approved.
+- No approval decision recorded.
+- No response approval request sent.
 - No dispatch decision recorded.
+- No response dispatch checklist completed.
+- No recipient contacted.
 - No response dispatched.
 - No response sent.
 - No remediation assigned.
@@ -47,17 +60,22 @@ This template is a readiness-only placeholder for a future theoretical audit res
 - No triage decision is recorded.
 - No recipient is configured.
 - No channel is configured.
+- No dispatch channel is configured.
+- No recipient list is configured.
 - No response option is selected.
 - No audit response is drafted.
 - No audit response is approved.
 - No approval decision is recorded.
+- No response approval request is sent.
 - No dispatch decision is recorded.
+- No response dispatch checklist is completed.
 - No audit response is dispatched.
 - No audit response is sent.
 - No remediation is assigned.
 - No remediation task is created.
 - No external disclosure is made.
 - No audit recipient is contacted.
+- No recipient is contacted.
 - No archive is created.
 - No archive record is written.
 - No retention policy is applied.
