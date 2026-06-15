@@ -20,8 +20,8 @@ const trackerPaths = [
   'docs/DECISION-LOG.md',
 ];
 const phase6oHeading = '## Phase 6O-A/B Maintenance Closure Audit Follow-Up Response Acknowledgement Review Outcome Follow-Up Planning Review Outcome Acknowledgement Readiness References';
-const currentPhaseLine = 'Current phase: Phase 6O-A/B maintenance closure audit follow-up response acknowledgement review outcome follow-up planning review outcome acknowledgement readiness, audit response acknowledgement review outcome follow-up planning review outcome acknowledgement ledger, and no-planning-review-outcome-acknowledgement/no-acknowledgement-decision/no-follow-up-action/no-contact/no-remediation firewall.';
-const readinessOnlyBody = 'Phase 6O-A/B keeps the repo readiness-only for owner/admin acknowledgement readiness of future theoretical follow-up planning review outcome materials after Phase 6N-A/B follow-up planning review outcome readiness.';
+const currentPhaseLine = 'Previous current phase: Phase 6O-A/B maintenance closure audit follow-up response acknowledgement review outcome follow-up planning review outcome acknowledgement readiness, audit response acknowledgement review outcome follow-up planning review outcome acknowledgement ledger, and no-planning-review-outcome-acknowledgement/no-acknowledgement-decision/no-follow-up-action/no-contact/no-remediation firewall.';
+const readinessOnlyBody = 'Phase 6O-A/B kept the repo readiness-only for owner/admin acknowledgement readiness of future theoretical follow-up planning review outcome materials after Phase 6N-A/B follow-up planning review outcome readiness.';
 const trackerRequired = [
   phase6oHeading,
   currentPhaseLine,
