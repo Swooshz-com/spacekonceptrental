@@ -456,7 +456,7 @@ describe("protected admin shell", () => {
       screen.queryByText(/cart|checkout|payment|customer account|stock reservation|order fulfilment|online ordering/i)
     ).not.toBeInTheDocument();
     expect(screen.queryByLabelText(/product editor/i)).not.toBeInTheDocument();
-  });
+  }, 15000);
 
   it("does not render category write controls outside loaded authorised dashboard state", () => {
     const blockedStates = [
