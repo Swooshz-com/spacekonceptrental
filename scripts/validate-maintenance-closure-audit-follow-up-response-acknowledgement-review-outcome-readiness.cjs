@@ -7,6 +7,30 @@ const docsPaths = [
   'docs/content/LOCAL-MAINTENANCE-CLOSURE-AUDIT-FOLLOW-UP-RESPONSE-ACKNOWLEDGEMENT-REVIEW-OUTCOME-READINESS.md',
   'docs/content/LOCAL-MAINTENANCE-CLOSURE-AUDIT-RESPONSE-ACKNOWLEDGEMENT-REVIEW-OUTCOME-LEDGER-TEMPLATE.md',
 ];
+
+const trackerPaths = [
+  'docs/PHASE-STATUS.md',
+  'docs/PHASE-ROADMAP.md',
+  'docs/checklists/PHASE-2-ADMIN-OPS.md',
+  'docs/OWNER-REVIEW-READINESS-PACKAGE.md',
+  'docs/DECISION-LOG.md',
+];
+const phase6kHeading = '## Phase 6K-A/B Maintenance Closure Audit Follow-Up Response Acknowledgement Review Outcome Readiness References';
+const phase6kCurrentPhaseLine = 'Current phase: Phase 6K-A/B maintenance closure audit follow-up response acknowledgement review outcome readiness, audit response acknowledgement review outcome ledger, and no-outcome/no-contact/no-remediation firewall.';
+const phase6kReadinessOnlyBody = 'Phase 6K-A/B keeps the repo readiness-only for owner/admin review of a future theoretical audit response acknowledgement review outcome packet after Phase 6J-A/B acknowledgement review readiness. It follows Phase 6J without recording acknowledgement review outcomes, selecting acknowledgement review outcomes, accepting acknowledgement review outcomes, completing acknowledgement reviews, recording acknowledgement review decisions, recording acknowledgement, recording delivery, contacting recipients, configuring recipients or channels, sending acknowledgement requests, recording recipient confirmation, recording recipient acknowledgement, assigning remediation, creating remediation tasks, disclosing externally, receiving or recording audit findings, creating audit follow-up records, classifying findings, assigning severity, assigning triage owners, recording triage decisions, creating archives, writing archive records, applying retention policies, recording closure decisions, accepting closure recommendations, recording closure approval, marking maintenance complete, collecting production evidence, running smoke checks, executing provider/runtime checks, deploying, changing public runtime behavior, sending support/customer follow-up, creating outbound messaging, or claiming production readiness.';
+const phase6kTrackerRequired = [
+  phase6kHeading,
+  phase6kCurrentPhaseLine,
+  phase6kReadinessOnlyBody,
+  'docs/content/LOCAL-MAINTENANCE-CLOSURE-AUDIT-FOLLOW-UP-RESPONSE-ACKNOWLEDGEMENT-REVIEW-OUTCOME-READINESS.md',
+  'docs/content/LOCAL-MAINTENANCE-CLOSURE-AUDIT-RESPONSE-ACKNOWLEDGEMENT-REVIEW-OUTCOME-LEDGER-TEMPLATE.md',
+  'docs/content/LOCAL-MAINTENANCE-CLOSURE-AUDIT-FOLLOW-UP-RESPONSE-ACKNOWLEDGEMENT-REVIEW-READINESS.md',
+  'docs/content/LOCAL-MAINTENANCE-CLOSURE-AUDIT-RESPONSE-ACKNOWLEDGEMENT-REVIEW-LEDGER-TEMPLATE.md',
+  'scripts/validate-maintenance-closure-audit-follow-up-response-acknowledgement-review-outcome-readiness.cjs',
+  'scripts/validate-maintenance-closure-audit-follow-up-response-acknowledgement-review-readiness.cjs',
+  'protected admin maintenance closure audit follow-up response acknowledgement review outcome readiness helper coverage',
+];
+
 const adminPath = 'website/app/admin/protected-admin-shell.tsx';
 const adminPagePath = 'website/app/admin/page.tsx';
 
@@ -23,6 +47,18 @@ function gitLsFiles(paths) {
 for (const requiredPath of docsPaths) {
   assert(fs.existsSync(path.join(repoRoot, requiredPath)), `Phase 6K doc missing ${requiredPath}`);
 }
+
+for (const trackerPath of trackerPaths) {
+  assert(fs.existsSync(path.join(repoRoot, trackerPath)), `Phase 6K tracker doc missing ${trackerPath}`);
+  const tracker = read(trackerPath);
+  for (const required of phase6kTrackerRequired) includes(tracker, required, `${trackerPath} Phase 6K tracker section`);
+  const headingIndex = tracker.indexOf(phase6kHeading);
+  assert(headingIndex >= 0, `${trackerPath} missing Phase 6K heading`);
+  const nextHeadingIndex = tracker.indexOf('\n## ', headingIndex + phase6kHeading.length);
+  const phase6kSection = tracker.slice(headingIndex, nextHeadingIndex === -1 ? tracker.length : nextHeadingIndex);
+  noMatch(phase6kSection, /Current phase: Phase 6[JIF]-A\/B|Phase 6J-A\/B keeps the repo readiness-only|Phase 6I-A\/B keeps the repo readiness-only|Phase 6F-A\/B keeps the repo readiness-only|no-review-decision\/no-contact\/no-remediation firewall|no-acknowledgement\/no-contact\/no-remediation firewall|no-response\/no-remediation firewall/i, `${trackerPath} Phase 6K section`);
+}
+
 const docs = docsPaths.map(read).join('\n');
 const admin = read(adminPath);
 const adminPage = read(adminPagePath);
