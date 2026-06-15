@@ -25,11 +25,11 @@ const trackerPaths = [
   'docs/DECISION-LOG.md',
 ];
 const phase6mHeading = '## Phase 6M-A/B Maintenance Closure Audit Follow-Up Response Acknowledgement Review Outcome Follow-Up Planning Review Readiness References';
-const currentPhaseLine = 'Current phase: Phase 6M-A/B maintenance closure audit follow-up response acknowledgement review outcome follow-up planning review readiness, audit response acknowledgement review outcome follow-up planning review ledger, and no-planning-review-decision/no-follow-up-action/no-contact/no-remediation firewall.';
-const readinessOnlyBody = 'Phase 6M-A/B keeps the repo readiness-only for owner/admin review readiness of future theoretical follow-up planning review materials after Phase 6L-A/B follow-up planning readiness.';
+const previousPhaseLine = 'Previous current phase: Phase 6M-A/B maintenance closure audit follow-up response acknowledgement review outcome follow-up planning review readiness, audit response acknowledgement review outcome follow-up planning review ledger, and no-planning-review-decision/no-follow-up-action/no-contact/no-remediation firewall.';
+const readinessOnlyBody = 'Phase 6M-A/B kept the repo readiness-only for owner/admin review readiness of future theoretical follow-up planning review materials after Phase 6L-A/B follow-up planning readiness.';
 const trackerRequired = [
   phase6mHeading,
-  currentPhaseLine,
+  previousPhaseLine,
   readinessOnlyBody,
   'docs/content/LOCAL-MAINTENANCE-CLOSURE-AUDIT-FOLLOW-UP-RESPONSE-ACKNOWLEDGEMENT-REVIEW-OUTCOME-FOLLOW-UP-PLANNING-REVIEW-READINESS.md',
   'docs/content/LOCAL-MAINTENANCE-CLOSURE-AUDIT-RESPONSE-ACKNOWLEDGEMENT-REVIEW-OUTCOME-FOLLOW-UP-PLANNING-REVIEW-LEDGER-TEMPLATE.md',
@@ -44,7 +44,7 @@ for (const trackerPath of trackerPaths) {
   const headingIndex = tracker.indexOf(phase6mHeading);
   const nextHeadingIndex = tracker.indexOf('\n## ', headingIndex + phase6mHeading.length);
   const section = tracker.slice(headingIndex, nextHeadingIndex === -1 ? tracker.length : nextHeadingIndex);
-  noMatch(section, /Current phase: Phase 6[LKIJ]-A\/B|Phase 6L-A\/B keeps the repo readiness-only for owner\/admin review of a future theoretical acknowledgement review outcome follow-up planning packet/i, `${trackerPath} Phase 6M section`);
+  noMatch(section, /(^|\n)Current phase: Phase 6[MLKIJ]-A\/B|Phase 6M-A\/B keeps the repo readiness-only for owner\/admin review readiness of future theoretical follow-up planning review materials|Phase 6L-A\/B keeps the repo readiness-only for owner\/admin review of a future theoretical acknowledgement review outcome follow-up planning packet/i, `${trackerPath} Phase 6M historical tracker coverage`);
 }
 
 const docs = docsPaths.map(read).join('\n');
