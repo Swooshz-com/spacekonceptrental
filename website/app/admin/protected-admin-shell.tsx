@@ -2044,6 +2044,10 @@ const phase6lMaintenanceClosureAuditFollowUpResponseAcknowledgementReviewOutcome
   "docs/content/LOCAL-MAINTENANCE-CLOSURE-AUDIT-FOLLOW-UP-RESPONSE-ACKNOWLEDGEMENT-REVIEW-OUTCOME-FOLLOW-UP-PLANNING-READINESS.md";
 const phase6lMaintenanceClosureAuditResponseAcknowledgementReviewOutcomeFollowUpPlanningLedgerTemplatePath =
   "docs/content/LOCAL-MAINTENANCE-CLOSURE-AUDIT-RESPONSE-ACKNOWLEDGEMENT-REVIEW-OUTCOME-FOLLOW-UP-PLANNING-LEDGER-TEMPLATE.md";
+const phase6mMaintenanceClosureAuditFollowUpResponseAcknowledgementReviewOutcomeFollowUpPlanningReviewReadinessPath =
+  "docs/content/LOCAL-MAINTENANCE-CLOSURE-AUDIT-FOLLOW-UP-RESPONSE-ACKNOWLEDGEMENT-REVIEW-OUTCOME-FOLLOW-UP-PLANNING-REVIEW-READINESS.md";
+const phase6mMaintenanceClosureAuditResponseAcknowledgementReviewOutcomeFollowUpPlanningReviewLedgerTemplatePath =
+  "docs/content/LOCAL-MAINTENANCE-CLOSURE-AUDIT-RESPONSE-ACKNOWLEDGEMENT-REVIEW-OUTCOME-FOLLOW-UP-PLANNING-REVIEW-LEDGER-TEMPLATE.md";
 const phase6aClosureRecommendationPacketLedgerPlaceholders = [
   "Intended maintenance/change reference: [NOT SUPPLIED]",
   "Intended verification packet reference: [NOT SUPPLIED]",
@@ -5707,6 +5711,96 @@ function MaintenanceClosureAuditFollowUpResponseAcknowledgementReviewOutcomeFoll
   );
 }
 
+
+function MaintenanceClosureAuditFollowUpResponseAcknowledgementReviewOutcomeFollowUpPlanningReviewReadinessHelper() {
+  const followUpPlanningReviewLedgerFields = [
+    "Intended follow-up planning packet reference",
+    "Intended acknowledgement review outcome packet reference",
+    "Intended planning review scope placeholder",
+    "Intended planning review criteria placeholder",
+    "Intended planning review blocker placeholder",
+    "Intended internal reviewer placeholder",
+    "Intended owner readiness placeholder",
+    "Follow-up planning review readiness status placeholder",
+    "Follow-up planning review decision status placeholder",
+    "Follow-up planning decision status placeholder",
+    "Follow-up action status placeholder",
+    "Follow-up owner status placeholder",
+    "Remediation status placeholder",
+    "Recipient contact status placeholder",
+    "Closure decision status placeholder",
+    "Archive status placeholder",
+    "Retention status placeholder",
+    "Production evidence status placeholder",
+    "No follow-up planning review selected",
+    "No follow-up planning review recorded",
+    "No follow-up planning decision selected",
+    "No follow-up planning decision recorded",
+    "No follow-up action selected",
+    "No follow-up action recorded",
+    "No follow-up owner assigned",
+    "No remediation assigned",
+    "No recipient contacted",
+    "No customer/support/outbound/admin contact sent",
+    "No closure decision recorded",
+    "No archive created",
+    "No retention policy applied",
+    "No production evidence recorded"
+  ];
+  const readinessChecklist = [
+    "Confirm Phase 6M follows the Phase 6L follow-up planning readiness helper before any future follow-up planning review readiness work.",
+    "Confirm follow-up planning review materials remain theoretical, placeholder-only, and admin-only.",
+    "Confirm no follow-up planning review or follow-up planning decision is selected or recorded.",
+    "Confirm no follow-up action, follow-up owner, remediation, recipient contact, or customer/support/outbound/admin contact is introduced.",
+    "Confirm no closure, archive, retention, production evidence, runtime, API, provider, environment, scheduler, chat, search-assistant, or public behavior change is introduced.",
+    "Confirm rental listing, event furniture listing, category, media, enquiry, quote, request, admin review, and owner readiness wording remains readiness-only."
+  ];
+  const firewall = [
+    "No follow-up planning review is selected here.",
+    "No follow-up planning review is recorded here.",
+    "No follow-up planning decision is selected here.",
+    "No follow-up planning decision is recorded here.",
+    "No follow-up action is selected here.",
+    "No follow-up action is recorded here.",
+    "No follow-up owner is assigned here.",
+    "No remediation is assigned here.",
+    "No recipient is contacted here.",
+    "No customer, support, outbound, or admin contact is sent here.",
+    "No closure decision is recorded here.",
+    "No archive is created here.",
+    "No retention policy is applied here.",
+    "No production evidence is recorded here.",
+    "No runtime, API, provider, environment, scheduler, chat, search-assistant, or public behavior changes are made here."
+  ];
+
+  return (
+    <section aria-label="Phase 6M maintenance closure audit follow-up response acknowledgement review outcome follow-up planning review readiness helper" className="admin-readiness">
+      <p className="eyebrow">Phase 6M-A/B admin-only maintenance closure audit follow-up response acknowledgement review outcome follow-up planning review readiness</p>
+      <h3>Maintenance closure audit follow-up response acknowledgement review outcome follow-up planning review readiness helper</h3>
+      <p>
+        This protected helper prepares future owner/admin readiness for reviewing theoretical follow-up planning materials after a theoretical Phase 6L follow-up planning packet exists for rental listings, event furniture listings, categories, media, quote, enquiry, and request surfaces. It is draft, readiness-only, placeholder-only, and internal. No follow-up planning review is selected or recorded here. No follow-up planning decision is selected or recorded here. No follow-up action is selected or recorded here. No follow-up owner is assigned here. No recipient is contacted here. No remediation is assigned here.
+      </p>
+      <dl className="admin-readiness__grid">
+        <div><dt>Maintenance closure audit follow-up response acknowledgement review outcome follow-up planning review readiness</dt><dd>{phase6mMaintenanceClosureAuditFollowUpResponseAcknowledgementReviewOutcomeFollowUpPlanningReviewReadinessPath}</dd></div>
+        <div><dt>Audit response acknowledgement review outcome follow-up planning review ledger template</dt><dd>{phase6mMaintenanceClosureAuditResponseAcknowledgementReviewOutcomeFollowUpPlanningReviewLedgerTemplatePath}</dd></div>
+        <div><dt>Intended follow-up planning packet reference</dt><dd>{phase6lMaintenanceClosureAuditResponseAcknowledgementReviewOutcomeFollowUpPlanningLedgerTemplatePath}</dd></div>
+        <div><dt>Follow-up planning review readiness status</dt><dd>[NOT READY]</dd></div>
+        <div><dt>Follow-up planning review decision status</dt><dd>[NOT RECORDED]</dd></div>
+      </dl>
+      <h4>Audit response acknowledgement review outcome follow-up planning review ledger</h4>
+      <ul className="admin-readiness__list">{followUpPlanningReviewLedgerFields.map((item) => <li key={item}>{item}</li>)}</ul>
+      <h4>Audit response acknowledgement review outcome follow-up planning review checklist</h4>
+      <ul className="admin-readiness__list">{readinessChecklist.map((item) => <li key={item}>{item}</li>)}</ul>
+      <h4>No-planning-review-decision/no-follow-up-action/no-contact/no-remediation firewall</h4>
+      <ul className="admin-readiness__list">{firewall.map((item) => <li key={item}>{item}</li>)}</ul>
+      <h4>Safe follow-up planning review language</h4>
+      <p>
+        Safe follow-up planning review language uses draft, readiness-only, placeholder, intended, internal, owner readiness, admin review, and theoretical wording only. Avoid finality wording such as follow-up planning review selected, follow-up planning review recorded, follow-up planning decision selected, follow-up planning decision recorded, follow-up action selected, follow-up action recorded, follow-up owner assigned, recipient contacted, contact sent, remediation assigned, closure decision recorded, archive created, retention applied, production evidence recorded, production checked, external message sent, or public customer-facing behavior changed unless clearly negated as not allowed.
+      </p>
+    </section>
+  );
+}
+
 function OwnerReadinessHelpersPanel() {
   return (
     <>
@@ -5740,6 +5834,7 @@ function OwnerReadinessHelpersPanel() {
       <MaintenanceClosureAuditFollowUpResponseAcknowledgementReviewReadinessHelper />
       <MaintenanceClosureAuditFollowUpResponseAcknowledgementReviewOutcomeReadinessHelper />
       <MaintenanceClosureAuditFollowUpResponseAcknowledgementReviewOutcomeFollowUpPlanningReadinessHelper />
+      <MaintenanceClosureAuditFollowUpResponseAcknowledgementReviewOutcomeFollowUpPlanningReviewReadinessHelper />
     </>
   );
 }
