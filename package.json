@@ -58,6 +58,7 @@
     "validate:maintenance-closure-audit-follow-up-response-acknowledgement-readiness": "node scripts/validate-maintenance-closure-audit-follow-up-response-acknowledgement-readiness.cjs",
     "validate:maintenance-closure-audit-follow-up-response-acknowledgement-review-readiness": "node scripts/validate-maintenance-closure-audit-follow-up-response-acknowledgement-review-readiness.cjs",
     "validate:maintenance-closure-audit-follow-up-response-acknowledgement-review-outcome-readiness": "node scripts/validate-maintenance-closure-audit-follow-up-response-acknowledgement-review-outcome-readiness.cjs",
-    "validate:maintenance-closure-audit-follow-up-response-acknowledgement-review-outcome-follow-up-planning-readiness": "node scripts/validate-maintenance-closure-audit-follow-up-response-acknowledgement-review-outcome-follow-up-planning-readiness.cjs"
+    "validate:maintenance-closure-audit-follow-up-response-acknowledgement-review-outcome-follow-up-planning-readiness": "node scripts/validate-maintenance-closure-audit-follow-up-response-acknowledgement-review-outcome-follow-up-planning-readiness.cjs",
+    "validate:maintenance-closure-audit-follow-up-response-acknowledgement-review-outcome-follow-up-planning-review-readiness": "node scripts/validate-maintenance-closure-audit-follow-up-response-acknowledgement-review-outcome-follow-up-planning-review-readiness.cjs"
   }
 }
