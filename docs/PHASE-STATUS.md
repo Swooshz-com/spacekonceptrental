@@ -1,3 +1,33 @@
+## Protected Admin CRM Handoff Queue Preparation Foundation References
+
+Current implementation-foundation focus: protected admin-only local CRM handoff
+queue preparation for persisted public quote/enquiry submissions.
+
+References: `docs/architecture/PROTECTED-ADMIN-CRM-HANDOFF-QUEUE-PREPARATION-FOUNDATION.md`, `docs/architecture/PROTECTED-ADMIN-ENQUIRY-TRIAGE-STATUS-UPDATE-FOUNDATION.md`, `docs/architecture/PROTECTED-ADMIN-ENQUIRY-INBOX-TRIAGE-FOUNDATION.md`, `docs/architecture/PUBLIC-ENQUIRY-PERSISTENCE-INTEGRATION.md`, `docs/architecture/SUPABASE-ENQUIRY-PERSISTENCE-CRM-HANDOFF-FOUNDATION.md`, `website/components/admin/quote-request-inbox-panel.tsx`, `website/lib/quote/admin-write/admin-quote-request-crm-handoff-write.ts`, `website/lib/quote/admin-write/admin-quote-request-crm-handoff-route.ts`, `website/app/api/admin/quote-requests/[quoteRequestId]/crm-handoff/route.ts`, `supabase/migrations/20260616143000_admin_crm_handoff_queue_preparation_foundation.sql`, and `scripts/validate-protected-admin-crm-handoff-queue-preparation-foundation.cjs`.
+
+Admin users can locally queue enquiries for future CRM handoff. This is not a
+CRM replacement. This does not contact the customer. This does not send email.
+This does not sync to HubSpot. This does not call or queue n8n. This does not
+make provider API calls. This does not create HubSpot contact/deal IDs. HubSpot
+CRM sync is still not implemented. n8n workflows are still not implemented.
+Email sending is still not implemented. Public customer accounts remain
+deferred. Public customer login remains unimplemented. Customer dashboard
+remains unimplemented. Custom CRM remains rejected/deferred. Google
+Workspace/domain email remains human/admin email first. Resend remains optional
+future transactional email only.
+
+Implementation firewall: protected admin-only local CRM handoff queue status
+controls, read-only future CRM payload preview, server-only mutation
+helper/route, docs, tests, and validator only. No HubSpot API calls, HubSpot
+contact/deal creation, CRM sync trigger/job, n8n workflows, n8n webhook calls,
+email sending, Resend integration, Google Workspace integration, customer
+accounts, public login, customer dashboard, custom CRM, sales notes/activity
+timeline, sales reminder engine, assignment workflow, customer notifications,
+credentials, `.env` modifications, service-role exposure, provider tokens,
+runtime provider calls, public enquiry update access, retail/customer-flow
+creep, date-hold/inventory-hold/retail transaction flows, or
+Docker guard weakening is implemented.
+
 ## Protected Admin Enquiry Triage Status Update Foundation References
 
 Current implementation-foundation focus: protected admin-only enquiry triage

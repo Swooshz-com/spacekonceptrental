@@ -925,3 +925,18 @@ These references are repo-local, template-only, non-live, and not evidence. No o
 - Evidence boundary: `[NOT EVIDENCE / NOT RECORDED]`.
 - Deployment approval boundary: `[DEPLOYMENT APPROVAL: NOT GRANTED]`.
 - Safety: no deployment, provider configuration, fake facts, ecommerce/cart/checkout/order/payment/purchase flows, booking/reservation/fulfilment/stock-reservation flows, public uploads, customer accounts, public quote tracking, notifications, CRM, filled owner-review evidence, preview evidence, production evidence, or public admin internals are added.
+## Protected Admin CRM Handoff Queue Preparation Foundation
+
+Owner review can verify the local-only admin CRM handoff queue preparation in
+`docs/architecture/PROTECTED-ADMIN-CRM-HANDOFF-QUEUE-PREPARATION-FOUNDATION.md`.
+
+Admin users can locally queue enquiries for future CRM handoff. This is not a
+CRM replacement. This does not contact the customer. This does not send email.
+This does not sync to HubSpot. This does not call or queue n8n. This does not
+make provider API calls. This does not create HubSpot contact/deal IDs. HubSpot
+CRM sync is still not implemented. n8n workflows are still not implemented.
+Email sending is still not implemented. Public customer accounts remain
+deferred. Public customer login remains unimplemented. Customer dashboard
+remains unimplemented. Custom CRM remains rejected/deferred. Google
+Workspace/domain email remains human/admin email first. Resend remains optional
+future transactional email only.

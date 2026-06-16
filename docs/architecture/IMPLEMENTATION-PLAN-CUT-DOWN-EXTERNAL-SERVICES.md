@@ -221,3 +221,17 @@ Email sending is not implemented in this PR.
 
 Public customer accounts remain deferred. Custom CRM remains
 rejected/deferred.
+# Protected Admin CRM Handoff Queue Preparation Reference
+
+Protected admin local CRM handoff queue preparation is documented in
+`docs/architecture/PROTECTED-ADMIN-CRM-HANDOFF-QUEUE-PREPARATION-FOUNDATION.md`.
+
+Admin users can locally queue enquiries for future CRM handoff. This is not a
+CRM replacement and does not change the cut-down external-services plan:
+HubSpot remains the future CRM/sales workflow owner, n8n remains optional
+future automation glue, Google Workspace/domain email remains human/admin email
+first, and Resend remains optional future transactional email only. HubSpot CRM
+sync is still not implemented. n8n workflows are still not implemented. Email
+sending is still not implemented. Public customer accounts remain deferred.
+Public customer login remains unimplemented. Customer dashboard remains
+unimplemented. Custom CRM remains rejected/deferred.

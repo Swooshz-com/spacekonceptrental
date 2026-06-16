@@ -53,6 +53,7 @@ describe("Phase 2B-AH Admin CSRF Proof Issuer Route Boundary", () => {
       "website/app/api/admin/products/[productId]/publish/route.ts",
       "website/app/api/admin/products/[productId]/route.ts",
       "website/app/api/admin/products/route.ts",
+      "website/app/api/admin/quote-requests/[quoteRequestId]/crm-handoff/route.ts",
       "website/app/api/admin/quote-requests/[quoteRequestId]/status/route.ts"
     ];
     

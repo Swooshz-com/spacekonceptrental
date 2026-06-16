@@ -3542,3 +3542,23 @@ Safety: This phase is repo-local, template-only, non-live, and not evidence. It 
 - Local acceptance drill: `docs/content/LOCAL-ACCEPTANCE-DRILL.md`.
 - Owner-review rehearsal validator: `scripts/validate-owner-review-rehearsal.cjs`.
 - Protected admin release-control workspace: `/admin/release-control`.
+## Protected Admin CRM Handoff Queue Preparation Foundation
+
+Decision: add only a protected admin local CRM handoff queue preparation layer
+for persisted quote/enquiry requests.
+
+Reference:
+`docs/architecture/PROTECTED-ADMIN-CRM-HANDOFF-QUEUE-PREPARATION-FOUNDATION.md`.
+
+Rationale: Supabase remains the SKR app database/auth/backend foundation while
+HubSpot remains the future CRM/sales workflow owner. Admin users can locally
+queue enquiries for future CRM handoff, but this is not a CRM replacement.
+This does not contact the customer. This does not send email. This does not
+sync to HubSpot. This does not call or queue n8n. This does not make provider
+API calls. This does not create HubSpot contact/deal IDs. HubSpot CRM sync is
+still not implemented. n8n workflows are still not implemented. Email sending
+is still not implemented. Public customer accounts remain deferred. Public
+customer login remains unimplemented. Customer dashboard remains unimplemented.
+Custom CRM remains rejected/deferred. Google Workspace/domain email remains
+human/admin email first. Resend remains optional future transactional email
+only.

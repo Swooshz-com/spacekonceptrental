@@ -2526,3 +2526,19 @@ add provider config, add real secrets or env values, add filled evidence,
 invent owner feedback or sign-off, add browser Supabase, add service-role
 runtime paths, change n8n/Pinecone/RAG runtime behavior, or add out-of-scope
 public visitor self-service workflows.
+## Protected Admin CRM Handoff Queue Preparation Foundation
+
+This implementation slice adds protected admin-only local CRM handoff queue
+preparation and is documented in
+`docs/architecture/PROTECTED-ADMIN-CRM-HANDOFF-QUEUE-PREPARATION-FOUNDATION.md`.
+
+Admin users can locally queue enquiries for future CRM handoff. This is not a
+CRM replacement. This does not contact the customer. This does not send email.
+This does not sync to HubSpot. This does not call or queue n8n. HubSpot CRM
+sync is still not implemented. n8n workflows are still not implemented. Email
+sending is still not implemented. Public customer accounts remain deferred.
+Public customer login remains unimplemented. Customer dashboard remains
+unimplemented. Custom CRM remains rejected/deferred. Actual provider sync, n8n
+webhook trigger, retry worker, provider callback/reconciliation, assignment,
+reminders, sales notes/activity timeline, and outbound contact workflows remain
+future work unless explicitly implemented in a later PR.
