@@ -38,6 +38,8 @@ const approvedAdminQuoteStatusRouteBoundaryPath =
   "website/lib/quote/admin-write/admin-quote-request-status-route.ts";
 const approvedAdminQuoteCrmHandoffRouteBoundaryPath =
   "website/lib/quote/admin-write/admin-quote-request-crm-handoff-route.ts";
+const approvedAdminQuoteCrmHandoffPacketRouteBoundaryPath =
+  "website/lib/quote/admin-read/admin-quote-request-crm-handoff-packet-route.ts";
 const approvedMediaUploadRouteBoundaryPath =
   "website/lib/products/media/admin-product-image-upload-route.ts";
 const sourceExtensions = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs"]);
@@ -187,6 +189,7 @@ describe("Phase 2B-AA first admin runtime route gate adapter usage boundary", ()
       .filter(({ filePath }) => filePath.startsWith("website/app/") && filePath !== "website/app/api/admin/auth-check/route.ts" &&
           filePath !== "website/app/api/admin/login/route.ts" &&
           filePath !== "website/app/api/admin/csrf-proof/route.ts" &&
+          filePath !== "website/app/api/admin/quote-requests/crm-handoff-packet/route.ts" &&
           filePath !== "website/app/api/admin/quote-requests/[quoteRequestId]/crm-handoff/route.ts" &&
           filePath !== "website/app/api/admin/quote-requests/[quoteRequestId]/status/route.ts" &&
           filePath !== "website/app/admin/protected-admin-shell.tsx")
@@ -199,10 +202,12 @@ describe("Phase 2B-AA first admin runtime route gate adapter usage boundary", ()
           filePath !== approvedAdminProductWriteRouteBoundaryPath &&
           filePath !== approvedAdminQuoteStatusRouteBoundaryPath &&
           filePath !== approvedAdminQuoteCrmHandoffRouteBoundaryPath &&
+          filePath !== approvedAdminQuoteCrmHandoffPacketRouteBoundaryPath &&
           filePath !== approvedMediaUploadRouteBoundaryPath &&
           filePath !== "website/app/api/admin/auth-check/route.ts" &&
           filePath !== "website/app/api/admin/login/route.ts" &&
           filePath !== "website/app/api/admin/csrf-proof/route.ts" &&
+          filePath !== "website/app/api/admin/quote-requests/crm-handoff-packet/route.ts" &&
           filePath !== "website/app/api/admin/quote-requests/[quoteRequestId]/crm-handoff/route.ts" &&
           filePath !== "website/app/api/admin/quote-requests/[quoteRequestId]/status/route.ts" &&
           filePath !== "website/app/admin/protected-admin-shell.tsx"
@@ -244,7 +249,8 @@ describe("Phase 2B-AA first admin runtime route gate adapter usage boundary", ()
       "website/app/api/admin/products/[productId]/route.ts",
       "website/app/api/admin/products/route.ts",
       "website/app/api/admin/quote-requests/[quoteRequestId]/crm-handoff/route.ts",
-      "website/app/api/admin/quote-requests/[quoteRequestId]/status/route.ts"
+      "website/app/api/admin/quote-requests/[quoteRequestId]/status/route.ts",
+      "website/app/api/admin/quote-requests/crm-handoff-packet/route.ts"
     ]);
     expect(readTrackedFiles(["website/app/api/products"])).toEqual([]);
     expect(readTrackedFiles(["website/app/api/categories"])).toEqual([]);
