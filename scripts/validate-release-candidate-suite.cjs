@@ -5,6 +5,11 @@ const repoRoot = path.resolve(__dirname, '..');
 
 const commandPlan = [
   {
+    label: 'Validate external services auth CRM email enquiry architecture',
+    cwd: repoRoot,
+    args: ['run', 'validate:external-services-auth-crm-email-enquiry-architecture'],
+  },
+  {
     label: 'Validate maintenance closure audit follow-up response acknowledgement review outcome follow-up planning review outcome acknowledgement review readiness',
     cwd: repoRoot,
     args: ['run', 'validate:maintenance-closure-audit-follow-up-response-acknowledgement-review-outcome-follow-up-planning-review-outcome-acknowledgement-review-readiness'],

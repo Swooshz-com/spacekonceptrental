@@ -1,0 +1,152 @@
+# External Services Auth CRM Email Enquiry Architecture
+
+## Purpose
+
+This architecture review cuts down the SKR implementation plan by assigning
+common business capabilities to low-cost/free managed services where they are
+stronger than custom code for MVP.
+
+This is architecture and planning only. It does not implement provider
+integration, credentials, runtime provider calls, CRM sync code, n8n workflows,
+email sending code, public login, public customer accounts, or visitor-facing
+runtime behaviour.
+
+## Recommended Ownership Split
+
+### Supabase Owns
+
+Supabase remains the app database, backend, and admin auth foundation.
+
+- App database.
+- Listings.
+- Categories.
+- Media references.
+- Admin auth.
+- Admin roles/permissions model.
+- Enquiry submission record.
+- CRM sync status.
+- CRM contact/deal IDs.
+- Internal audit/sync metadata.
+
+Supabase is not the CRM replacement. It should keep the app-owned source data
+and integration pointers, but it should not become the primary sales workflow,
+follow-up, notes, or activity timeline system.
+
+### HubSpot Owns
+
+HubSpot becomes the preferred CRM and sales workflow system for MVP planning.
+
+- Contacts.
+- Companies if needed.
+- Leads/deals.
+- Pipeline stages.
+- Sales follow-up tasks.
+- Sales/admin notes.
+- Activity timeline.
+- Sales reporting/dashboard where available.
+- Human follow-up workflow.
+
+HubSpot is not the app database. SKR should sync or link enquiry records to
+HubSpot only after a later approved integration step, while app listing data,
+admin access, audit metadata, and app-local enquiry records stay in Supabase.
+
+### n8n May Own Later
+
+n8n may be used later as optional automation glue, not a required runtime
+dependency for the first implementation.
+
+- Low-cost automation glue.
+- Supabase-to-HubSpot sync.
+- HubSpot-to-Google Workspace notification.
+- Retry workflows.
+- Internal alerts.
+- Non-critical background automations.
+
+n8n should not be required for the public enquiry request path to accept and
+record an enquiry in the app. If added later, it should run behind server-side
+boundaries and never expose webhook URLs or provider details to the browser.
+
+### Google Workspace/Domain Email Owns
+
+Google Workspace/domain email is the first-line human/admin email channel.
+
+- Normal human business email.
+- Manual sales/admin replies.
+- Internal team email.
+- Basic business mailbox handling.
+
+The MVP should use the existing mailbox workflow before adding app-generated
+email. Human replies and team coordination do not need a custom email thread
+system inside SKR.
+
+### Resend Is Optional Later
+
+Resend is an optional future transactional email provider only if app-email
+delivery, logging, webhooks, bounce tracking, retries, or delivery observability
+become necessary.
+
+- Customer confirmation emails.
+- App-generated transactional emails.
+- Delivery logs.
+- Bounce tracking.
+- Webhooks.
+- Retry/error observability.
+
+Resend is not a mandatory MVP dependency. It should not be introduced before a
+real app-email requirement exists.
+
+## MVP Exclusions
+
+SKR must not own at MVP:
+
+- Full public customer accounts.
+- Customer dashboard.
+- Saved customer quotes.
+- Customer profile CRUD.
+- Custom CRM pipeline.
+- Custom contact database as the primary sales source.
+- Custom sales notes/activity timeline.
+- Custom email thread tracking.
+- Custom sales reminders.
+- Custom marketing/email automation.
+- Custom password/session/MFA internals beyond managed auth integration.
+
+Public customer accounts are explicitly deferred from MVP unless a real
+customer portal requirement is later proven. A public visitor can submit an
+enquiry request without receiving an account, saved quote area, or profile
+management surface.
+
+Custom CRM build is explicitly rejected/deferred. SKR should not become a
+custom CRM when HubSpot already supplies contacts, lead/deal tracking, sales
+tasks, notes, activity history, and reporting surfaces.
+
+## Security And Maintenance Risk Reduction
+
+Using managed providers avoids or reduces these custom-build risks:
+
+- Password, session, and MFA internals beyond managed auth integration.
+- CRM data model drift between contacts, deals, notes, tasks, and timelines.
+- Fragile custom sales reminders and follow-up queues.
+- Custom mailbox parsing, thread reconstruction, delivery tracking, and bounce
+  handling before there is a proven need.
+- Browser exposure of provider secrets, webhook URLs, or service credentials.
+- Admin workflow complexity that a mature CRM already covers.
+- Support burden for sales dashboards and pipeline reporting.
+
+## Planning Firewall
+
+This review does not approve runtime integration work. Future implementation
+steps must still be separately scoped, tested, and approved before adding:
+
+- Supabase Auth runtime wiring.
+- HubSpot sync.
+- n8n workflows.
+- Google Workspace SMTP or email sending.
+- Resend email sending.
+- Public customer login.
+- Customer dashboard.
+- Provider clients.
+- Provider webhooks.
+- Background jobs.
+- Scheduler jobs.
+- Runtime/API/provider/env/scheduler/chat/RAG/public behaviour changes.
