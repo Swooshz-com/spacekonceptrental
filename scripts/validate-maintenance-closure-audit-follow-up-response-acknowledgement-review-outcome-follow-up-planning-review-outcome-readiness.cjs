@@ -141,8 +141,12 @@ const approvedFoundationPublicFiles = new Set([
   'website/lib/quote/admin-read/admin-quote-request-dashboard-read.test.ts',
   'website/lib/quote/admin-read/admin-quote-request-detail-read.ts',
   'website/lib/quote/admin-read/admin-quote-request-detail-read.test.ts',
+  'website/lib/quote/admin-write/admin-quote-request-status-route.ts',
+  'website/lib/quote/admin-write/admin-quote-request-status-route.test.ts',
+  'website/lib/quote/admin-write/admin-quote-request-status-write.ts',
+  'website/lib/quote/admin-write/admin-quote-request-status-write.test.ts',
 ]);
 const changedPublicFiles = changedResult.stdout.split(/\r?\n/).filter(Boolean).filter((file) => !file.includes('/admin/') && !approvedFoundationPublicFiles.has(file));
 assert(changedPublicFiles.length === 0, `Phase 6N must not change public source files: ${changedPublicFiles.join(', ')}`);
 
-console.log('Phase 6N maintenance closure audit follow-up response acknowledgement review outcome follow-up planning review outcome readiness checks passed. No follow-up planning review outcome, review decision, planning decision, follow-up action, owner assignment, remediation, contact, closure, archive, retention, production evidence, runtime, API, provider, env, scheduler, chat, RAG, public behavior, ecommerce flow, customer flow, or Docker bypass was added.');
+console.log('Phase 6N maintenance closure audit follow-up response acknowledgement review outcome follow-up planning review outcome readiness checks passed. No follow-up planning review outcome, review decision, planning decision, follow-up action, owner assignment, remediation, contact, closure, archive, retention, production evidence, runtime, API, provider, env, scheduler, chat, RAG, public behavior, ecommerce flow, customer flow, or Docker guard change was added.');

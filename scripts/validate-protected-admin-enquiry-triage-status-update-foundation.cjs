@@ -5,7 +5,9 @@ const { spawnSync } = require('node:child_process');
 
 const repoRoot = path.resolve(__dirname, '..');
 
-const foundationDocPath =
+const statusDocPath =
+  'docs/architecture/PROTECTED-ADMIN-ENQUIRY-TRIAGE-STATUS-UPDATE-FOUNDATION.md';
+const inboxDocPath =
   'docs/architecture/PROTECTED-ADMIN-ENQUIRY-INBOX-TRIAGE-FOUNDATION.md';
 const publicDocPath =
   'docs/architecture/PUBLIC-ENQUIRY-PERSISTENCE-INTEGRATION.md';
@@ -15,26 +17,28 @@ const architectureDocPath =
   'docs/architecture/EXTERNAL-SERVICES-AUTH-CRM-EMAIL-ENQUIRY-ARCHITECTURE.md';
 const cutDownDocPath =
   'docs/architecture/IMPLEMENTATION-PLAN-CUT-DOWN-EXTERNAL-SERVICES.md';
-const protectedShellPath = 'website/app/admin/protected-admin-shell.tsx';
-const quoteInboxPagePath = 'website/app/admin/quotes/page.tsx';
-const quoteDetailPagePath = 'website/app/admin/quotes/[quoteRequestId]/page.tsx';
-const inboxHelperPath =
-  'website/lib/quote/admin-read/admin-quote-request-dashboard-read.ts';
-const detailHelperPath =
-  'website/lib/quote/admin-read/admin-quote-request-detail-read.ts';
-const inboxHelperTestPath =
-  'website/lib/quote/admin-read/admin-quote-request-dashboard-read.test.ts';
-const detailHelperTestPath =
-  'website/lib/quote/admin-read/admin-quote-request-detail-read.test.ts';
 const inboxPanelPath = 'website/components/admin/quote-request-inbox-panel.tsx';
+const statusWritePath =
+  'website/lib/quote/admin-write/admin-quote-request-status-write.ts';
+const statusRoutePath =
+  'website/lib/quote/admin-write/admin-quote-request-status-route.ts';
+const routePath =
+  'website/app/api/admin/quote-requests/[quoteRequestId]/status/route.ts';
+const statusWriteTestPath =
+  'website/lib/quote/admin-write/admin-quote-request-status-write.test.ts';
+const statusRouteTestPath =
+  'website/lib/quote/admin-write/admin-quote-request-status-route.test.ts';
 const inboxPanelTestPath =
   'website/components/admin/quote-request-inbox-panel.test.tsx';
-const protectedShellTestPath = 'website/app/admin/protected-admin-shell.test.tsx';
+const quoteRouteTestPath = 'website/app/api/quote/route.test.ts';
+const quoteFormTestPath = 'website/components/QuoteRequestForm.test.tsx';
+const migrationPath =
+  'supabase/migrations/20260616120000_admin_enquiry_triage_status_update_foundation.sql';
 const suitePath = 'scripts/validate-release-candidate-suite.cjs';
 const packageScriptName =
-  'validate:protected-admin-enquiry-inbox-triage-foundation';
+  'validate:protected-admin-enquiry-triage-status-update-foundation';
 const packageScriptCommand =
-  'node scripts/validate-protected-admin-enquiry-inbox-triage-foundation.cjs';
+  'node scripts/validate-protected-admin-enquiry-triage-status-update-foundation.cjs';
 
 const trackerPaths = [
   'docs/PHASE-STATUS.md',
@@ -157,165 +161,159 @@ function getAddedDiffText(changedFiles) {
   }
 
   for (const file of untrackedFiles) {
-    if (exists(file)) {
-      addedLines.push(read(file));
-    }
+    if (exists(file)) addedLines.push(read(file));
   }
 
   return addedLines.join('\n');
 }
 
 for (const requiredPath of [
-  foundationDocPath,
+  statusDocPath,
+  inboxDocPath,
   publicDocPath,
   supabaseDocPath,
   architectureDocPath,
   cutDownDocPath,
-  protectedShellPath,
-  quoteInboxPagePath,
-  quoteDetailPagePath,
-  inboxHelperPath,
-  detailHelperPath,
-  inboxHelperTestPath,
-  detailHelperTestPath,
   inboxPanelPath,
+  statusWritePath,
+  statusRoutePath,
+  routePath,
+  statusWriteTestPath,
+  statusRouteTestPath,
   inboxPanelTestPath,
-  protectedShellTestPath,
+  quoteRouteTestPath,
+  quoteFormTestPath,
+  migrationPath,
   suitePath,
 ]) {
   assert(exists(requiredPath), `Missing required file: ${requiredPath}`);
 }
 
-const foundationDoc = read(foundationDocPath);
+const statusDoc = read(statusDocPath);
+const inboxDoc = read(inboxDocPath);
 const publicDoc = read(publicDocPath);
 const supabaseDoc = read(supabaseDocPath);
 const architectureDoc = read(architectureDocPath);
 const cutDownDoc = read(cutDownDocPath);
-const protectedShell = read(protectedShellPath);
-const quoteInboxPage = read(quoteInboxPagePath);
-const quoteDetailPage = read(quoteDetailPagePath);
-const inboxHelper = read(inboxHelperPath);
-const detailHelper = read(detailHelperPath);
-const inboxHelperTest = read(inboxHelperTestPath);
-const detailHelperTest = read(detailHelperTestPath);
 const inboxPanel = read(inboxPanelPath);
+const statusWrite = read(statusWritePath);
+const statusRoute = read(statusRoutePath);
+const route = read(routePath);
+const statusWriteTest = read(statusWriteTestPath);
+const statusRouteTest = read(statusRouteTestPath);
 const inboxPanelTest = read(inboxPanelTestPath);
-const protectedShellTest = read(protectedShellTestPath);
+const quoteRouteTest = read(quoteRouteTestPath);
+const quoteFormTest = read(quoteFormTestPath);
+const migration = read(migrationPath);
 const packageJson = JSON.parse(read('package.json'));
 const releaseSuite = read(suitePath);
 
 for (const required of [
-  'Admin users can now view persisted public enquiries in a protected admin inbox foundation.',
+  'Admin users can now update internal enquiry triage status inside protected admin surfaces.',
   'This is not a CRM replacement.',
+  'This does not contact the customer.',
+  'This does not send email.',
+  'This does not sync to HubSpot.',
+  'This does not queue n8n.',
   'HubSpot CRM sync is still not implemented.',
   'n8n workflows are still not implemented.',
   'Email sending is still not implemented.',
   'Public customer accounts remain deferred.',
   'Public customer login remains unimplemented.',
+  'Customer dashboard remains unimplemented.',
   'Custom CRM remains rejected/deferred.',
   'Google Workspace/domain email remains human/admin email first.',
   'Resend remains optional future transactional email only.',
+  'Assignment, reminders, sales notes/activity timeline, and outbound contact workflows remain future work unless explicitly implemented in a later PR.',
 ]) {
-  includes(foundationDoc, required, foundationDocPath);
+  includes(statusDoc, required, statusDocPath);
 }
 
 for (const [docPath, source] of [
+  [inboxDocPath, inboxDoc],
   [publicDocPath, publicDoc],
   [supabaseDocPath, supabaseDoc],
   [architectureDocPath, architectureDoc],
   [cutDownDocPath, cutDownDoc],
 ]) {
-  includes(source, foundationDocPath, docPath);
+  includes(source, statusDocPath, docPath);
   includes(
     source,
-    'Admin users can now view persisted public enquiries in a protected admin inbox foundation',
+    'Admin users can now update internal enquiry triage status inside protected admin surfaces',
     docPath,
   );
+  includes(source, 'HubSpot CRM sync is still not implemented', docPath);
+  includes(source, 'n8n workflows are still not implemented', docPath);
+  includes(source, 'Email sending is still not implemented', docPath);
+  includes(source, 'Public customer accounts remain deferred', docPath);
+  includes(source, 'Public customer login remains unimplemented', docPath);
+  includes(source, 'Customer dashboard remains unimplemented', docPath);
+  includes(source, 'Custom CRM remains rejected/deferred', docPath);
 }
 
 for (const trackerPath of trackerPaths) {
   const tracker = read(trackerPath);
-  includes(tracker, foundationDocPath, trackerPath);
+  includes(tracker, statusDocPath, trackerPath);
   includes(
     tracker,
-    'Admin users can now view persisted public enquiries in a protected admin inbox foundation',
+    'Admin users can now update internal enquiry triage status inside protected admin surfaces',
     trackerPath,
   );
-  includes(tracker, 'HubSpot CRM sync is still not implemented.', trackerPath);
-  includes(tracker, 'n8n workflows are still not implemented.', trackerPath);
-  includes(tracker, 'Email sending is still not implemented.', trackerPath);
-  includes(tracker, 'Public customer accounts remain deferred.', trackerPath);
-  includes(tracker, 'Public customer login remains unimplemented.', trackerPath);
-  includes(tracker, 'Custom CRM remains rejected/deferred.', trackerPath);
+  includes(tracker, 'This does not sync to HubSpot', trackerPath);
+  includes(tracker, 'This does not queue n8n', trackerPath);
+  includes(tracker, 'Customer dashboard remains unimplemented', trackerPath);
 }
 
-matches(protectedShell, /view\.kind === "quotes"[\s\S]*QuoteRequestInboxPanel/, protectedShellPath);
-matches(protectedShell, /view\.kind === "quote-detail"[\s\S]*AdminQuoteDetail/, protectedShellPath);
-matches(quoteInboxPage, /resolveProtectedAdminShellState[\s\S]*kind: "quotes"/, quoteInboxPagePath);
-matches(quoteDetailPage, /resolveProtectedAdminShellState[\s\S]*quoteDetailId[\s\S]*kind: "quote-detail"/, quoteDetailPagePath);
-
-for (const [helperPath, helper] of [
-  [inboxHelperPath, inboxHelper],
-  [detailHelperPath, detailHelper],
-]) {
-  includes(helper, 'import "server-only";', helperPath);
-  includes(helper, 'createSessionBoundSupabaseAdminReadClient', helperPath);
-  includes(helper, 'source_page_path', helperPath);
-  includes(helper, 'source_listing_slug', helperPath);
-  includes(helper, 'crm_provider', helperPath);
-  includes(helper, 'crm_sync_status', helperPath);
-  includes(helper, 'crm_contact_id', helperPath);
-  includes(helper, 'crm_deal_id', helperPath);
-  noMatch(helper, /SUPABASE_SERVICE_ROLE/, helperPath);
-  noMatch(helper, /NEXT_PUBLIC_SUPABASE/, helperPath);
+for (const source of [inboxPanel, statusWrite, statusRoute, migration]) {
+  includes(source, 'follow_up_needed', 'protected admin status update source');
 }
+
+includes(inboxPanel, 'Update internal triage status', inboxPanelPath);
+includes(inboxPanel, 'This does not contact the', inboxPanelPath);
+includes(inboxPanel, 'sync to CRM', inboxPanelPath);
+includes(inboxPanel, 'disabled={status.kind === "pending"}', inboxPanelPath);
+includes(statusWrite, 'import "server-only";', statusWritePath);
+includes(statusWrite, 'createSessionBoundSupabaseAdminReadClient', statusWritePath);
+includes(statusWrite, 'p_internal_note: null', statusWritePath);
+includes(statusRoute, 'hasOnlyKeys(body, ["status"])', statusRoutePath);
+includes(route, 'handleAdminQuoteRequestStatusUpdateRoute', routePath);
 
 for (const requiredTest of [
-  'reads recent quote requests scoped to the trusted workspace newest first',
-  'maps provider errors to a generic unavailable result',
-  'source_page_path',
-  'crm_provider',
+  'persists internal triage status through a single atomic RPC boundary',
+  'follow_up_needed',
+  'does not pass free-form notes through the triage status update foundation',
+  'rejects archive and provider-style statuses',
+  'crm_contact_id',
   'crm_sync_status',
 ]) {
-  includes(inboxHelperTest, requiredTest, inboxHelperTestPath);
+  includes(statusWriteTest, requiredTest, statusWriteTestPath);
 }
 
 for (const requiredTest of [
-  'reads exactly one quote request detail scoped to the trusted workspace',
-  'fails closed for invalid IDs, missing workspace, and provider errors',
-  'source_page_path',
-  'crm_contact_id',
-  'crm_deal_id',
+  'updates quote request workflow after quote.write CSRF and admin gate checks',
+  'follow_up_needed',
+  'request_payload_invalid',
+  'internalNote',
+  'maps provider failures to generic no-store JSON',
 ]) {
-  includes(detailHelperTest, requiredTest, detailHelperTestPath);
+  includes(statusRouteTest, requiredTest, statusRouteTestPath);
 }
 
 for (const requiredTest of [
-  'renders internal quote status controls for authorised inbox data',
-  'does not render status controls for unavailable or empty inbox states',
+  'renders internal enquiry triage status controls for authorised inbox data',
+  'sends status-only triage update POST',
+  'disables the triage status submit button while an update is pending',
+  'shows generic errors without provider details',
   'does not imply ecommerce or customer-facing quote tracking',
-  'CRM handoff placeholder',
-  'No CRM contact ID captured',
-  'No CRM deal ID captured',
 ]) {
   includes(inboxPanelTest, requiredTest, inboxPanelTestPath);
 }
 
 for (const requiredTest of [
-  'maps unauthenticated users to a safe login-required state',
-  'renders an empty quote request inbox state for authorised admins',
-  'renders quote detail from the dedicated detail read state',
-  'Provider - hubspot; Sync status - not_queued',
+  'blocks public CRM overrides',
+  'track|status',
 ]) {
-  includes(protectedShellTest, requiredTest, protectedShellTestPath);
-}
-
-for (const source of [protectedShell, inboxPanel]) {
-  includes(source, 'CRM handoff placeholder', 'protected admin source');
-  includes(source, 'Provider -', 'protected admin source');
-  includes(source, 'Sync status -', 'protected admin source');
-  includes(source, 'No CRM contact ID captured', 'protected admin source');
-  includes(source, 'No CRM deal ID captured', 'protected admin source');
+  includes(quoteRouteTest + quoteFormTest, requiredTest, 'public quote tests');
 }
 
 assert(
@@ -337,8 +335,7 @@ for (const file of changedFiles) {
 
 const addedTextWithoutThisValidator = getAddedDiffText(
   changedFiles.filter(
-    (file) =>
-      !file.startsWith('scripts/validate-'),
+    (file) => file !== 'scripts/validate-protected-admin-enquiry-triage-status-update-foundation.cjs',
   ),
 );
 
@@ -369,10 +366,11 @@ for (const pattern of [
   /public customer account implementation|customer dashboard|public login implementation/i,
   /\bcart\b|\bcheckout\b|\border\b|\bpayment\b|\bpurchase\b/i,
   /\bbooking\b|\breservation\b|\bfulfilment\b|\bfulfillment\b|stock-reservation/i,
+  /notify customer|email sent|hubspot sync started|n8n workflow started/i,
 ]) {
   noMatch(addedRuntimeText, pattern, 'runtime added lines');
 }
 
 console.log(
-  'Protected admin enquiry inbox triage foundation validation passed. Protected admin visibility, source metadata, CRM placeholders, docs, tests, and release-candidate wiring are present without provider calls, credentials, or public customer access; Docker-dependent checks remain intact.',
+  'Protected admin enquiry triage status update foundation validation passed. Admin-only status updates, docs, tests, package script, and release-candidate wiring are present without provider calls, credentials, public customer access, ecommerce/booking/payment/order flow creep, or Docker guard changes.',
 );

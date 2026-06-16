@@ -297,9 +297,9 @@ describe("Phase 3H-A/B admin operator QA readiness polish", () => {
       screen.getByLabelText(/quote request inbox operator guidance/i)
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/write-enabled internal quote follow-up/i)
+      screen.getByText(/write-enabled internal triage status only/i)
     ).toBeInTheDocument();
-    expect(screen.getByText(/admin-only triage/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/admin-only triage/i).length).toBeGreaterThan(0);
     expect(
       screen.getByText(/next safe action: capture contact, event, venue, and requested items before closing follow-up/i)
     ).toBeInTheDocument();

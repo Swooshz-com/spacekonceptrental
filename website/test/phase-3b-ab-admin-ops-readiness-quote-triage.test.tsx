@@ -356,8 +356,9 @@ describe("Phase 3B-A/B admin operations readiness and quote triage polish", () =
 
     expect(screen.getByText(/quote triage summary/i)).toBeInTheDocument();
     expect(screen.getByText(/new requests/i)).toBeInTheDocument();
-    expect(screen.getByText(/in review/i)).toBeInTheDocument();
-    expect(screen.getByText(/quoted\/contacted/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/in review/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/follow-up needed/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/quoted/i).length).toBeGreaterThan(0);
     expect(screen.getByText(/closed requests/i)).toBeInTheDocument();
     expect(screen.getAllByText(/triage cues/i).length).toBeGreaterThan(0);
     expect(screen.getByText(/missing contact method/i)).toBeInTheDocument();

@@ -126,7 +126,8 @@ describe("Phase 2C-D quote workflow atomicity and admin operations hardening", (
     expect(writeSource).not.toContain(".insert(");
     expect(routeSource).toContain("quote.write");
     expect(routeSource).toContain("csrfVerifier");
-    expect(routeSource).toContain("internalNote");
+    expect(routeSource).toContain("hasOnlyKeys");
+    expect(routeSource).toContain("status: payload.status");
   });
 
   it("keeps public quote and admin hardening free of ecommerce, integrations, browser Supabase, service-role, and chat-config paths", () => {

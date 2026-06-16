@@ -48,7 +48,7 @@ function createRpcSupabase(result: MutationResult = {
 }
 
 describe("admin quote request status write boundary", () => {
-  it("persists quote workflow changes through a single atomic RPC boundary", async () => {
+  it("persists internal triage status through a single atomic RPC boundary", async () => {
     const { calls, client } = createRpcSupabase();
 
     await expect(
@@ -56,8 +56,7 @@ describe("admin quote request status write boundary", () => {
         {
           admin: adminContext,
           quoteRequestId,
-          status: "reviewing",
-          internalNote: "Call Maya about sofa quantities."
+          status: "follow_up_needed"
         },
         {
           supabase: {
@@ -81,8 +80,8 @@ describe("admin quote request status write boundary", () => {
         args: {
           p_quote_request_id: quoteRequestId,
           p_workspace_id: workspaceId,
-          p_status: "reviewing",
-          p_internal_note: "Call Maya about sofa quantities."
+          p_status: "follow_up_needed",
+          p_internal_note: null
         }
       }
     ]);
@@ -128,9 +127,12 @@ describe("admin quote request status write boundary", () => {
     expect(JSON.stringify(calls)).not.toContain("customer_name");
     expect(JSON.stringify(calls)).not.toContain("quote_request_items");
     expect(JSON.stringify(calls)).not.toContain("actor_admin_user_id");
+    expect(JSON.stringify(calls)).not.toContain("crm_contact_id");
+    expect(JSON.stringify(calls)).not.toContain("crm_deal_id");
+    expect(JSON.stringify(calls)).not.toContain("crm_sync_status");
   });
 
-  it.each(["new", "reviewing", "quoted", "closed", "archived"] as const)(
+  it.each(["new", "reviewing", "follow_up_needed", "quoted", "closed"] as const)(
     "accepts %s as a quote request status",
     async (status) => {
       const { client } = createRpcSupabase();
@@ -156,7 +158,7 @@ describe("admin quote request status write boundary", () => {
     }
   );
 
-  it("passes a bounded trimmed internal note to the atomic workflow RPC", async () => {
+  it("does not pass free-form notes through the triage status update foundation", async () => {
     const { calls, client } = createRpcSupabase();
 
     await expect(
@@ -190,10 +192,34 @@ describe("admin quote request status write boundary", () => {
           p_quote_request_id: quoteRequestId,
           p_workspace_id: workspaceId,
           p_status: "reviewing",
-          p_internal_note: "Call Maya about sofa quantities."
+          p_internal_note: null
         }
       }
     ]);
+  });
+
+  it("rejects archive and provider-style statuses for the narrow triage update foundation", async () => {
+    const { client } = createRpcSupabase();
+
+    await expect(
+      updateAdminQuoteRequestStatus(
+        {
+          admin: adminContext,
+          quoteRequestId,
+          status: "archived" as never
+        },
+        {
+          supabase: {
+            configured: true,
+            client,
+            missingEnv: []
+          }
+        }
+      )
+    ).resolves.toStrictEqual({
+      ok: false,
+      code: "QUOTE_STATUS_UPDATE_FAILED"
+    });
   });
 
   it("fails closed for invalid admin context, quote ID, status, missing client, and provider errors", async () => {
@@ -329,6 +355,7 @@ describe("admin quote request status write boundary", () => {
     expect(source).toContain("createSessionBoundSupabaseAdminReadClient");
     expect(source).toContain('rpc("execute_admin_quote_workflow"');
     expect(source).toContain('status');
+    expect(source).toContain("follow_up_needed");
     expect(source).not.toContain('from("quote_requests")');
     expect(source).not.toContain('from("quote_request_activity")');
     expect(source).not.toContain(".update(");

@@ -435,11 +435,11 @@ describe("protected admin shell", () => {
     expect(screen.getByText(/2 x Modular lounge set/i)).toBeInTheDocument();
     expect(screen.getByText(/VIP reception area/i)).toBeInTheDocument();
     expect(
-      screen.getByLabelText(/internal note for QR-20260603-NEWEST/i)
+      screen.getByLabelText(/protected internal status for QR-20260603-NEWEST/i)
     ).toBeInTheDocument();
     expect(
       screen.getByRole("button", {
-        name: /save follow-up for QR-20260603-NEWEST/i
+        name: /update internal triage status for QR-20260603-NEWEST/i
       })
     ).toBeInTheDocument();
     expect(

@@ -1,3 +1,27 @@
+## Protected Admin Enquiry Triage Status Update Foundation References
+
+Current implementation-foundation focus: protected admin-only enquiry triage
+status update foundation for persisted public quote/enquiry submissions.
+
+References: `docs/architecture/PROTECTED-ADMIN-ENQUIRY-TRIAGE-STATUS-UPDATE-FOUNDATION.md`, `docs/architecture/PROTECTED-ADMIN-ENQUIRY-INBOX-TRIAGE-FOUNDATION.md`, `docs/architecture/PUBLIC-ENQUIRY-PERSISTENCE-INTEGRATION.md`, `docs/architecture/SUPABASE-ENQUIRY-PERSISTENCE-CRM-HANDOFF-FOUNDATION.md`, `website/components/admin/quote-request-inbox-panel.tsx`, `website/lib/quote/admin-write/admin-quote-request-status-write.ts`, and `scripts/validate-protected-admin-enquiry-triage-status-update-foundation.cjs`.
+
+Admin users can now update internal enquiry triage status inside protected admin
+surfaces. This is not a CRM replacement. This does not contact the customer.
+This does not send email. This does not sync to HubSpot. This does not queue
+n8n. HubSpot CRM sync is still not implemented. n8n workflows are still not
+implemented. Email sending is still not implemented. Public customer accounts
+remain deferred. Public customer login remains unimplemented. Customer
+dashboard remains unimplemented. Custom CRM remains rejected/deferred. Google
+Workspace/domain email remains human/admin email first. Resend remains optional
+future transactional email only.
+
+Implementation firewall: protected admin status update, tests, docs, and
+validator only. No HubSpot API calls, CRM sync trigger/job, n8n workflows,
+email sending, provider credentials, public customer accounts, public login,
+custom CRM, sales notes/activity timeline, sales reminder engine, assignment
+workflow, outbound contact workflows, customer notifications, or
+retail/transaction flow expansion is implemented.
+
 ## Protected Admin Enquiry Inbox Triage Foundation References
 
 Current implementation-foundation focus: protected admin enquiry inbox and triage view foundation for persisted public quote/enquiry submissions.

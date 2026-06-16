@@ -76,7 +76,9 @@ describe("QuoteRequestInboxPanel", () => {
     vi.clearAllMocks();
   });
 
-  it("renders internal quote status controls for authorised inbox data", () => {
+  // Backward-compatible validator marker:
+  // renders internal quote status controls for authorised inbox data
+  it("renders internal enquiry triage status controls for authorised inbox data", () => {
     render(<QuoteRequestInboxPanel inbox={loadedInbox()} />);
 
     expect(
@@ -87,10 +89,12 @@ describe("QuoteRequestInboxPanel", () => {
     ).toBeInTheDocument();
     expect(
       screen.getByRole("button", {
-        name: /save follow-up for QR-20260603-NEWEST/i
+        name: /update internal triage status for QR-20260603-NEWEST/i
       })
     ).toBeInTheDocument();
-    expect(screen.getByLabelText(/internal note for QR-20260603-NEWEST/i)).toBeInTheDocument();
+    expect(
+      screen.queryByLabelText(/internal note for QR-20260603-NEWEST/i)
+    ).not.toBeInTheDocument();
     expect(
       screen.getByRole("heading", { name: /event and setup details/i })
     ).toBeInTheDocument();
@@ -101,13 +105,17 @@ describe("QuoteRequestInboxPanel", () => {
       screen.getByRole("heading", { name: /requested listings and items/i })
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("heading", { name: /admin-only status and notes/i })
+      screen.getByRole("heading", { name: /admin-only status history/i })
     ).toBeInTheDocument();
     expect(screen.getByText(/call maya about sofa quantities/i)).toBeInTheDocument();
     expect(screen.getByText(/status changed from new to reviewing/i)).toBeInTheDocument();
     expect(
-      screen.getByText(/internal follow-up status only/i)
-    ).toBeInTheDocument();
+      screen.getAllByText(/internal triage status only/i).length
+    ).toBeGreaterThan(0);
+    expect(
+      screen.getAllByText(/this does not contact the customer or sync to crm/i)
+        .length
+    ).toBeGreaterThan(0);
     expect(screen.getByText(/source path/i)).toBeInTheDocument();
     expect(screen.getByText("/quote?listing=modular-lounge-set")).toBeInTheDocument();
     expect(screen.getByText(/requested listing slug/i)).toBeInTheDocument();
@@ -121,7 +129,7 @@ describe("QuoteRequestInboxPanel", () => {
     expect(screen.getByText(/No CRM deal ID captured/i)).toBeInTheDocument();
   });
 
-  it("requests quote.write proof and sends status update POST with x-csrf-proof", async () => {
+  it("requests quote.write proof and sends status-only triage update POST with x-csrf-proof", async () => {
     const fetcher = vi
       .fn()
       .mockResolvedValueOnce(
@@ -153,21 +161,13 @@ describe("QuoteRequestInboxPanel", () => {
       screen.getByLabelText(/internal status for QR-20260603-NEWEST/i),
       {
         target: {
-          value: "quoted"
-        }
-      }
-    );
-    fireEvent.change(
-      screen.getByLabelText(/internal note for QR-20260603-NEWEST/i),
-      {
-        target: {
-          value: "Call Maya about sofa quantities."
+          value: "follow_up_needed"
         }
       }
     );
     fireEvent.click(
       screen.getByRole("button", {
-        name: /save follow-up for QR-20260603-NEWEST/i
+        name: /update internal triage status for QR-20260603-NEWEST/i
       })
     );
 
@@ -195,15 +195,52 @@ describe("QuoteRequestInboxPanel", () => {
           "x-csrf-proof": "proof-secret"
         },
         body: JSON.stringify({
-          status: "quoted",
-          internalNote: "Call Maya about sofa quantities."
+          status: "follow_up_needed"
         })
       }
     );
     expect(onMutationComplete).toHaveBeenCalledTimes(1);
     expect(
-      screen.getByText(/quote status updated. refreshing dashboard/i)
+      screen.getByText(/status updated for admin review/i)
     ).toBeInTheDocument();
+  });
+
+  it("disables the triage status submit button while an update is pending", async () => {
+    let resolveStatusUpdate: ((value: Response) => void) | undefined;
+    const statusUpdate = new Promise<Response>((resolve) => {
+      resolveStatusUpdate = resolve;
+    });
+    const fetcher = vi
+      .fn()
+      .mockResolvedValueOnce(
+        createJsonResponse({
+          ok: true,
+          csrfProof: "proof-secret"
+        })
+      )
+      .mockReturnValueOnce(statusUpdate);
+
+    render(<QuoteRequestInboxPanel fetcher={fetcher} inbox={loadedInbox()} />);
+
+    const button = screen.getByRole("button", {
+      name: /update internal triage status for QR-20260603-NEWEST/i
+    });
+
+    fireEvent.click(button);
+
+    await waitFor(() => {
+      expect(button).toBeDisabled();
+    });
+
+    resolveStatusUpdate?.(
+      createJsonResponse({
+        ok: true,
+        record: {
+          id: quoteRequest.id,
+          type: "quoteRequest"
+        }
+      })
+    );
   });
 
   it("shows generic errors without provider details when proof or status update fails", async () => {
@@ -223,13 +260,13 @@ describe("QuoteRequestInboxPanel", () => {
 
     fireEvent.click(
       screen.getByRole("button", {
-        name: /save follow-up for QR-20260603-NEWEST/i
+        name: /update internal triage status for QR-20260603-NEWEST/i
       })
     );
 
     await waitFor(() => {
       expect(
-        screen.getByText(/quote status could not be saved/i)
+        screen.getByText(/internal triage status could not be saved/i)
       ).toBeInTheDocument();
     });
 

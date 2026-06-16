@@ -11,6 +11,8 @@ or a custom CRM surface.
 The implementation builds on
 `docs/architecture/PUBLIC-ENQUIRY-PERSISTENCE-INTEGRATION.md` and
 `docs/architecture/SUPABASE-ENQUIRY-PERSISTENCE-CRM-HANDOFF-FOUNDATION.md`.
+The protected admin internal triage status update foundation is documented in
+`docs/architecture/PROTECTED-ADMIN-ENQUIRY-TRIAGE-STATUS-UPDATE-FOUNDATION.md`.
 
 ## Implemented
 
@@ -69,11 +71,17 @@ Google Workspace/domain email remains human/admin email first.
 
 Resend remains optional future transactional email only.
 
-New status update, assignment, remediation, customer contact, CRM push,
-automation handoff, sales notes, activity timeline, customer account linking,
-and customer portal workflows remain future work unless explicitly implemented
-in a later PR. Existing protected quote follow-up status controls remain
-admin-only and are not public tracking.
+Admin users can now update internal enquiry triage status inside protected
+admin surfaces. This is not a CRM replacement. This does not contact the
+customer. This does not send email. This does not sync to HubSpot. This does
+not queue n8n. HubSpot CRM sync is still not implemented. n8n workflows are
+still not implemented. Email sending is still not implemented. Public customer
+accounts remain deferred. Public customer login remains unimplemented.
+Customer dashboard remains unimplemented. Custom CRM remains rejected/deferred.
+Google Workspace/domain email remains human/admin email first. Resend remains
+optional future transactional email only. Assignment, reminders, sales
+notes/activity timeline, and outbound contact workflows remain future work
+unless explicitly implemented in a later PR.
 
 ## Security Notes
 

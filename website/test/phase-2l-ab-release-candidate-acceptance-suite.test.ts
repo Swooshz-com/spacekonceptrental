@@ -226,7 +226,7 @@ describe("Phase 2L-A/B release-candidate acceptance suite", () => {
     expect(inboxPanel).toContain("genericFailureMessage");
     expect(inboxPanel).toContain("Customer message");
     expect(inboxPanel).toContain("Requested listings and items");
-    expect(inboxPanel).toContain("Admin-only status and notes");
+    expect(inboxPanel).toContain("Admin-only status history");
     expect(inboxPanelTest).toContain("does not imply ecommerce or customer-facing quote tracking");
     expect(`${shell}\n${inboxPanel}`).not.toMatch(forbiddenCommercePattern);
     expect(`${shell}\n${inboxPanel}`).not.toMatch(

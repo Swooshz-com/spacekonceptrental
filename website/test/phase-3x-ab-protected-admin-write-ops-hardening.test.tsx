@@ -303,13 +303,12 @@ describe("Phase 3X-A/B protected admin write-ops hardening", () => {
     expect(text).toMatch(/Protected write boundary: primary and active media choices can affect public browsing/i);
   });
 
-  it("shows quote follow-up labels and protected internal note/status guidance", () => {
+  it("shows quote follow-up labels and protected internal status-only guidance", () => {
     render(<QuoteRequestInboxPanel inbox={sampleQuoteInbox} />);
     expect(screen.getByText(/Protected internal status/i)).toBeInTheDocument();
-    expect(screen.getByText(/Protected internal note/i)).toBeInTheDocument();
     expect(screen.getByText(/never shown as a public quote status view/i)).toBeInTheDocument();
-    expect(screen.getByText(/Internal notes stay protected/i)).toBeInTheDocument();
-    expect(screen.getByText(/Protected write boundary: internal status changes and notes stay inside this admin workspace/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/does not contact the customer or sync to CRM/i).length).toBeGreaterThan(0);
+    expect(screen.getByText(/does not email customers or queue automation/i)).toBeInTheDocument();
   });
 
   it("keeps public source free from protected admin write-ops, completion-flow vocabulary, and fake facts", () => {

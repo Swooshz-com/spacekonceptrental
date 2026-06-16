@@ -113,6 +113,7 @@ const uuidPattern =
 const quoteRequestStatuses = new Set([
   "new",
   "reviewing",
+  "follow_up_needed",
   "quoted",
   "closed",
   "archived"
