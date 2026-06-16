@@ -11,6 +11,17 @@ integration, credentials, runtime provider calls, CRM sync code, n8n workflows,
 email sending code, public login, public customer accounts, or visitor-facing
 runtime behaviour.
 
+Protected admin enquiry inbox and triage foundation is documented in
+`docs/architecture/PROTECTED-ADMIN-ENQUIRY-INBOX-TRIAGE-FOUNDATION.md`.
+Admin users can now view persisted public enquiries in a protected admin inbox
+foundation with source metadata and CRM placeholder visibility only. This is
+not a CRM replacement: HubSpot CRM sync is still not implemented, n8n workflows
+are still not implemented, email sending is still not implemented, public
+customer accounts remain deferred, public customer login remains unimplemented,
+custom CRM remains rejected/deferred, Google Workspace/domain email remains
+human/admin email first, and Resend remains optional future transactional email
+only.
+
 ## Recommended Ownership Split
 
 ### Supabase Owns

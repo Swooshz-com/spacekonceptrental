@@ -6557,6 +6557,45 @@ function AdminQuoteDetail({
           </section>
 
           <section className="admin-dashboard__card">
+            <h3>Source metadata and CRM handoff placeholder</h3>
+            <dl className="quote-inbox__details">
+              <div>
+                <dt>Source path</dt>
+                <dd>
+                  {quoteRequest.sourcePagePath ?? "No safe source path captured"}
+                </dd>
+              </div>
+              <div>
+                <dt>Requested listing slug</dt>
+                <dd>
+                  {quoteRequest.sourceListingSlug ??
+                    "No requested listing slug captured"}
+                </dd>
+              </div>
+              <div>
+                <dt>CRM handoff placeholder</dt>
+                <dd>
+                  Provider - {quoteRequest.crmProvider ?? "hubspot"}; Sync
+                  status - {quoteRequest.crmSyncStatus ?? "not_queued"}
+                </dd>
+              </div>
+              <div>
+                <dt>CRM contact ID</dt>
+                <dd>{quoteRequest.crmContactId ?? "No CRM contact ID captured"}</dd>
+              </div>
+              <div>
+                <dt>CRM deal ID</dt>
+                <dd>{quoteRequest.crmDealId ?? "No CRM deal ID captured"}</dd>
+              </div>
+            </dl>
+            <p>
+              These fields prepare future HubSpot handoff review only. This
+              protected admin detail view does not run CRM sync, queue
+              automation, or deliver outbound messages.
+            </p>
+          </section>
+
+          <section className="admin-dashboard__card">
             <h3>Requested listings and items</h3>
             {quoteRequest.items.length === 0 ? (
               <p>No requested listing or item snapshots were captured.</p>

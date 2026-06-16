@@ -1,3 +1,15 @@
+## Protected Admin Enquiry Inbox Triage Foundation References
+
+Current implementation-foundation focus: protected admin enquiry inbox and triage view foundation for persisted public quote/enquiry submissions.
+
+References: `docs/architecture/PROTECTED-ADMIN-ENQUIRY-INBOX-TRIAGE-FOUNDATION.md`, `docs/architecture/PUBLIC-ENQUIRY-PERSISTENCE-INTEGRATION.md`, `docs/architecture/SUPABASE-ENQUIRY-PERSISTENCE-CRM-HANDOFF-FOUNDATION.md`, `website/app/admin/quotes/page.tsx`, `website/app/admin/quotes/[quoteRequestId]/page.tsx`, `website/components/admin/quote-request-inbox-panel.tsx`, `website/lib/quote/admin-read/admin-quote-request-dashboard-read.ts`, `website/lib/quote/admin-read/admin-quote-request-detail-read.ts`, and `scripts/validate-protected-admin-enquiry-inbox-triage-foundation.cjs`.
+
+Admin users can now view persisted public enquiries in a protected admin inbox foundation, inspect safe source metadata, and see CRM placeholder fields for future triage. This is not a CRM replacement. HubSpot CRM sync is still not implemented. n8n workflows are still not implemented. Email sending is still not implemented. Public customer accounts remain deferred. Public customer login remains unimplemented. Custom CRM remains rejected/deferred. Google Workspace/domain email remains human/admin email first. Resend remains optional future transactional email only.
+
+Implementation firewall: protected admin visibility, read-only triage context, tests, docs, and validator only. No HubSpot API calls, CRM sync trigger/job, n8n workflows, email sending, provider credentials, public customer accounts, public login, custom CRM, or retail/transaction flow expansion is implemented. Status update/assignment/remediation/contact workflows remain future work unless explicitly implemented in a later PR.
+
+- [x] Protected admin enquiry inbox and triage foundation shows persisted public enquiries with safe source metadata and CRM placeholders inside the protected admin shell.
+
 ## Supabase Enquiry Persistence And CRM Handoff Foundation References
 
 Current implementation-foundation focus: public enquiry persistence integration and Supabase enquiry persistence and CRM handoff foundation for public quote/enquiry submissions and future CRM handoff tracking.

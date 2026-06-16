@@ -10,6 +10,9 @@ request path; this PR only extends the local data foundation and contracts.
 The public submission integration is documented in
 `docs/architecture/PUBLIC-ENQUIRY-PERSISTENCE-INTEGRATION.md`.
 
+Protected admin visibility and read-only triage foundation are documented in
+`docs/architecture/PROTECTED-ADMIN-ENQUIRY-INBOX-TRIAGE-FOUNDATION.md`.
+
 ## Implemented Foundation
 
 Supabase owns the canonical SKR enquiry submission record.
@@ -72,6 +75,13 @@ Public users still cannot list, read, update, or remove enquiry records.
 Protected admin review remains behind the existing admin authorization
 boundaries. No provider credentials, provider URLs, provider tokens, env files,
 browser provider calls, or service-role browser exposure are added.
+
+Admin users can now view persisted public enquiries in a protected admin inbox
+foundation and inspect source metadata plus CRM placeholder fields for future
+triage. This is admin visibility only: HubSpot CRM sync is still not
+implemented, n8n workflows are still not implemented, email sending is still
+not implemented, public customer accounts remain deferred, public customer
+login remains unimplemented, and custom CRM remains rejected/deferred.
 
 ## Next Step
 

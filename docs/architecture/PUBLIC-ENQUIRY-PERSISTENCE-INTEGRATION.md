@@ -69,3 +69,12 @@ This integration builds on
 `docs/architecture/SUPABASE-ENQUIRY-PERSISTENCE-CRM-HANDOFF-FOUNDATION.md`.
 Supabase remains the SKR app database, auth, and backend foundation. HubSpot
 remains the future CRM and sales workflow owner, not the app database.
+
+Protected admin visibility is documented in
+`docs/architecture/PROTECTED-ADMIN-ENQUIRY-INBOX-TRIAGE-FOUNDATION.md`.
+Admin users can now view persisted public enquiries in a protected admin inbox
+foundation with safe source metadata and CRM placeholder visibility only.
+This is not a CRM replacement. HubSpot CRM sync is still not implemented, n8n
+workflows are still not implemented, email sending is still not implemented,
+public customer accounts remain deferred, public customer login remains
+unimplemented, and custom CRM remains rejected/deferred.

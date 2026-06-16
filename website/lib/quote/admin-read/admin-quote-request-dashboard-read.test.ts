@@ -111,6 +111,12 @@ describe("admin quote request inbox read boundary", () => {
             venue: "Marina Bay Sands",
             status: "new",
             source: "website",
+            source_page_path: "/quote?listing=modular-lounge-set",
+            source_listing_slug: "modular-lounge-set",
+            crm_provider: "hubspot",
+            crm_sync_status: "not_queued",
+            crm_contact_id: null,
+            crm_deal_id: null,
             created_at: "2026-06-03T10:30:00.000Z"
           },
           {
@@ -158,6 +164,12 @@ describe("admin quote request inbox read boundary", () => {
             venue: "Marina Bay Sands",
             status: "new",
             source: "website",
+            sourcePagePath: "/quote?listing=modular-lounge-set",
+            sourceListingSlug: "modular-lounge-set",
+            crmProvider: "hubspot",
+            crmSyncStatus: "not_queued",
+            crmContactId: undefined,
+            crmDealId: undefined,
             createdAt: "2026-06-03T10:30:00.000Z",
             items: [],
             activity: []
@@ -184,6 +196,12 @@ describe("admin quote request inbox read boundary", () => {
       table: "quote_requests",
       limit: 25
     });
+    expect(calls[0].select).toContain("source_page_path");
+    expect(calls[0].select).toContain("source_listing_slug");
+    expect(calls[0].select).toContain("crm_provider");
+    expect(calls[0].select).toContain("crm_sync_status");
+    expect(calls[0].select).toContain("crm_contact_id");
+    expect(calls[0].select).toContain("crm_deal_id");
     expect(calls[0].filters).toContainEqual({
       column: "workspace_id",
       value: "99999999-9999-4999-8999-999999999999"

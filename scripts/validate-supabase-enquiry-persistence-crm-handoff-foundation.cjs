@@ -31,6 +31,7 @@ const trackerPaths = [
 
 const allowedChangedFiles = new Set([
   foundationDocPath,
+  'docs/architecture/PROTECTED-ADMIN-ENQUIRY-INBOX-TRIAGE-FOUNDATION.md',
   'docs/architecture/PUBLIC-ENQUIRY-PERSISTENCE-INTEGRATION.md',
   architectureDocPath,
   cutDownDocPath,
@@ -50,6 +51,14 @@ const allowedChangedFiles = new Set([
   'website/app/quote/page.tsx',
   'website/components/QuoteRequestForm.tsx',
   'website/components/QuoteRequestForm.test.tsx',
+  'website/app/admin/protected-admin-shell.tsx',
+  'website/app/admin/protected-admin-shell.test.tsx',
+  'website/components/admin/quote-request-inbox-panel.tsx',
+  'website/components/admin/quote-request-inbox-panel.test.tsx',
+  'website/lib/quote/admin-read/admin-quote-request-dashboard-read.ts',
+  'website/lib/quote/admin-read/admin-quote-request-dashboard-read.test.ts',
+  'website/lib/quote/admin-read/admin-quote-request-detail-read.ts',
+  'website/lib/quote/admin-read/admin-quote-request-detail-read.test.ts',
   'website/test/phase-2e-a-conversation-governance.test.ts',
   'website/test/phase-2e-b-conversation-schema-rls.test.ts',
   'website/test/phase-2e-c-transcript-persistence-contract.test.ts',
@@ -71,6 +80,7 @@ const allowedChangedFiles = new Set([
   'package.json',
   'scripts/validate-external-services-auth-crm-email-enquiry-architecture.cjs',
   'scripts/validate-public-enquiry-persistence-integration.cjs',
+  'scripts/validate-protected-admin-enquiry-inbox-triage-foundation.cjs',
   'scripts/validate-maintenance-closure-audit-follow-up-response-acknowledgement-review-outcome-follow-up-planning-review-readiness.cjs',
   'scripts/validate-maintenance-closure-audit-follow-up-response-acknowledgement-review-outcome-follow-up-planning-review-outcome-readiness.cjs',
   'scripts/validate-maintenance-closure-audit-follow-up-response-acknowledgement-review-outcome-follow-up-planning-review-outcome-acknowledgement-readiness.cjs',
@@ -317,6 +327,7 @@ const changedContents = changedFiles
 const validatorFilesExcludedFromAddedText = new Set([
   'scripts/validate-supabase-enquiry-persistence-crm-handoff-foundation.cjs',
   'scripts/validate-public-enquiry-persistence-integration.cjs',
+  'scripts/validate-protected-admin-enquiry-inbox-triage-foundation.cjs',
 ]);
 const changedContentsWithoutValidator = changedFiles
   .filter((file) => !validatorFilesExcludedFromAddedText.has(file))

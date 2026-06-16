@@ -15,6 +15,12 @@ const quoteRequest = {
   venue: "Marina Bay Sands",
   status: "new" as const,
   source: "website" as const,
+  sourcePagePath: "/quote?listing=modular-lounge-set",
+  sourceListingSlug: "modular-lounge-set",
+  crmProvider: "hubspot" as const,
+  crmSyncStatus: "not_queued" as const,
+  crmContactId: undefined,
+  crmDealId: undefined,
   createdAt: "2026-06-03T10:30:00.000Z",
   items: [
     {
@@ -102,6 +108,17 @@ describe("QuoteRequestInboxPanel", () => {
     expect(
       screen.getByText(/internal follow-up status only/i)
     ).toBeInTheDocument();
+    expect(screen.getByText(/source path/i)).toBeInTheDocument();
+    expect(screen.getByText("/quote?listing=modular-lounge-set")).toBeInTheDocument();
+    expect(screen.getByText(/requested listing slug/i)).toBeInTheDocument();
+    expect(screen.getByText("modular-lounge-set")).toBeInTheDocument();
+    expect(
+      screen.getAllByText(/CRM handoff placeholder/i).length
+    ).toBeGreaterThan(0);
+    expect(screen.getByText(/Provider - hubspot/i)).toBeInTheDocument();
+    expect(screen.getByText(/Sync status - not_queued/i)).toBeInTheDocument();
+    expect(screen.getByText(/No CRM contact ID captured/i)).toBeInTheDocument();
+    expect(screen.getByText(/No CRM deal ID captured/i)).toBeInTheDocument();
   });
 
   it("requests quote.write proof and sends status update POST with x-csrf-proof", async () => {
@@ -257,6 +274,9 @@ describe("QuoteRequestInboxPanel", () => {
       screen.queryByText(
         /cart|checkout|payment|customer account|stock reservation|order fulfilment|confirmed booking|online ordering|customer-facing quote status|quote tracking/i
       )
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/hubspot sync started|n8n workflow started|email sent/i)
     ).not.toBeInTheDocument();
     expect(
       screen.queryByRole("button", {
