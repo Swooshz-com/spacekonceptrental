@@ -71,6 +71,18 @@ function createJsonResponse(body: unknown, init: ResponseInit = {}) {
   });
 }
 
+function createCsvResponse(body: string, init: ResponseInit = {}) {
+  return new Response(body, {
+    status: 200,
+    headers: {
+      "Content-Type": "text/csv; charset=utf-8",
+      "Content-Disposition":
+        'attachment; filename="skr-hubspot-import-queued-enquiries-20260617-093045.csv"'
+    },
+    ...init
+  });
+}
+
 describe("QuoteRequestInboxPanel", () => {
   afterEach(() => {
     cleanup();
@@ -449,6 +461,115 @@ describe("QuoteRequestInboxPanel", () => {
     expect(JSON.stringify(fetcher.mock.calls)).not.toContain("crmContactId");
     expect(JSON.stringify(fetcher.mock.calls)).not.toContain("crmDealId");
     expect(JSON.stringify(fetcher.mock.calls)).not.toContain("crmLastSyncAttemptAt");
+  });
+
+  it("downloads a protected HubSpot import CSV after quote.write proof without provider calls", async () => {
+    const queuedInbox = loadedInbox();
+    queuedInbox.data.quoteRequests = [
+      {
+        ...quoteRequest,
+        crmSyncStatus: "queued" as const
+      }
+    ];
+    const originalCreateObjectURL = URL.createObjectURL;
+    const originalRevokeObjectURL = URL.revokeObjectURL;
+    const createObjectURL = vi.fn(() => "blob:hubspot-import-csv");
+    const revokeObjectURL = vi.fn();
+
+    Object.defineProperty(URL, "createObjectURL", {
+      configurable: true,
+      value: createObjectURL
+    });
+    Object.defineProperty(URL, "revokeObjectURL", {
+      configurable: true,
+      value: revokeObjectURL
+    });
+    const click = vi
+      .spyOn(HTMLAnchorElement.prototype, "click")
+      .mockImplementation(() => undefined);
+    const fetcher = vi
+      .fn()
+      .mockResolvedValueOnce(
+        createJsonResponse({
+          ok: true,
+          csrfProof: "proof-secret"
+        })
+      )
+      .mockResolvedValueOnce(
+        createCsvResponse(
+          '"Quote Request ID","Public Reference"\r\n"22222222-2222-4222-8222-222222222222","QR-20260603-NEWEST"\r\n'
+        )
+      );
+
+    render(<QuoteRequestInboxPanel fetcher={fetcher} inbox={queuedInbox} />);
+
+    expect(
+      screen.getByRole("button", {
+        name: /download HubSpot import CSV/i
+      })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/HubSpot import CSV is a protected admin export/i)
+    ).toBeInTheDocument();
+    expect(screen.getAllByText(/Records remain queued/i).length).toBeGreaterThan(0);
+    expect(screen.getByText(/No HubSpot sync occurs/i)).toBeInTheDocument();
+    expect(screen.getByText(/no provider IDs are created/i)).toBeInTheDocument();
+    expect(screen.getByText(/no sync timestamp is set/i)).toBeInTheDocument();
+
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: /download HubSpot import CSV/i
+      })
+    );
+
+    await waitFor(() => {
+      expect(fetcher).toHaveBeenCalledTimes(2);
+    });
+
+    expect(fetcher).toHaveBeenNthCalledWith(1, "/api/admin/csrf-proof", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        requestedOperation: "quote.write",
+        operation: "quote.write"
+      })
+    });
+    expect(fetcher).toHaveBeenNthCalledWith(
+      2,
+      "/api/admin/quote-requests/crm-handoff-packet/hubspot-import-csv?limit=25&status=queued",
+      {
+        method: "POST",
+        headers: {
+          Accept: "text/csv",
+          "x-csrf-proof": "proof-secret"
+        }
+      }
+    );
+    await waitFor(() => {
+      expect(createObjectURL).toHaveBeenCalledTimes(1);
+      expect(click).toHaveBeenCalledTimes(1);
+      expect(revokeObjectURL).toHaveBeenCalledWith("blob:hubspot-import-csv");
+    });
+    expect(
+      screen.getByText(/HubSpot import CSV prepared for manual admin export only/i)
+    ).toBeInTheDocument();
+    expect(JSON.stringify(fetcher.mock.calls)).not.toContain("hubapi");
+    expect(JSON.stringify(fetcher.mock.calls)).not.toContain("webhook");
+    expect(JSON.stringify(fetcher.mock.calls)).not.toContain("crmContactId");
+    expect(JSON.stringify(fetcher.mock.calls)).not.toContain("crmDealId");
+    expect(JSON.stringify(fetcher.mock.calls)).not.toContain("crmLastSyncAttemptAt");
+
+    Object.defineProperty(URL, "createObjectURL", {
+      configurable: true,
+      value: originalCreateObjectURL
+    });
+    Object.defineProperty(URL, "revokeObjectURL", {
+      configurable: true,
+      value: originalRevokeObjectURL
+    });
+    click.mockRestore();
   });
 
   it("disables queued packet review while loading and shows generic failures", async () => {

@@ -14,6 +14,13 @@ does not store full sensitive payload dumps, sync to HubSpot, call or queue
 n8n, send email, contact the customer, create HubSpot contact/deal IDs, mark
 records as synced, or set CRM sync attempt timestamps.
 
+Related HubSpot import CSV slice:
+`docs/architecture/PROTECTED-ADMIN-HUBSPOT-IMPORT-CSV-HANDOFF-FOUNDATION.md`.
+Queued records can be exported as a protected admin HubSpot import CSV for
+manual import/export readiness only. Export does not change queue state, mark
+records as synced, set sync attempt timestamps, or create/update CRM
+contact/deal/provider IDs.
+
 ## Purpose
 
 This slice adds a protected admin-only local queue preparation layer for future

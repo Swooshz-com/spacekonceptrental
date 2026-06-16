@@ -19,6 +19,13 @@ CRM/sales workflow owner. HubSpot CRM sync, n8n workflows, email sending,
 public customer accounts, public customer login, customer dashboard, and custom
 CRM remain unimplemented or deferred.
 
+Related HubSpot import CSV slice:
+`docs/architecture/PROTECTED-ADMIN-HUBSPOT-IMPORT-CSV-HANDOFF-FOUNDATION.md`.
+CSV export is a protected admin-only manual import/export readiness step. It
+does not implement HubSpot sync, n8n runtime, email sending, customer accounts,
+custom CRM, retail transaction, date-hold, inventory-hold, or completion-like
+flows.
+
 # Implementation Plan Cut-Down External Services
 
 ## Public Enquiry Persistence Integration

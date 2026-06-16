@@ -30,6 +30,11 @@ const commandPlan = [
     args: ['run', 'validate:protected-admin-crm-handoff-packet-audit-manifest-foundation'],
   },
   {
+    label: 'Validate protected admin HubSpot import CSV handoff foundation',
+    cwd: repoRoot,
+    args: ['run', 'validate:protected-admin-hubspot-import-csv-handoff-foundation'],
+  },
+  {
     label: 'Validate Supabase enquiry persistence and CRM handoff foundation',
     cwd: repoRoot,
     args: ['run', 'validate:supabase-enquiry-persistence-crm-handoff-foundation'],

@@ -19,6 +19,13 @@ Protected admin internal triage status updates are documented in
 Protected admin local CRM handoff queue preparation is documented in
 `docs/architecture/PROTECTED-ADMIN-CRM-HANDOFF-QUEUE-PREPARATION-FOUNDATION.md`.
 
+Protected admin HubSpot import CSV handoff readiness is documented in
+`docs/architecture/PROTECTED-ADMIN-HUBSPOT-IMPORT-CSV-HANDOFF-FOUNDATION.md`.
+Supabase stores only metadata-only CSV manifest rows for that export; the
+manifest does not store full CSV contents, full packet JSON, full customer
+messages, raw payload dumps, secrets, headers, cookies, sessions, provider
+tokens, CRM API responses, or private Supabase details.
+
 Protected admin CRM handoff packet/export preparation is documented in
 `docs/architecture/PROTECTED-ADMIN-CRM-HANDOFF-EXPORT-REVIEW-PACKET-FOUNDATION.md`.
 Admin users can review/export queued CRM handoff packets for manual

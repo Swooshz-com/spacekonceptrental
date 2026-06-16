@@ -15,6 +15,7 @@
     "validate:protected-admin-crm-handoff-queue-preparation-foundation": "node scripts/validate-protected-admin-crm-handoff-queue-preparation-foundation.cjs",
     "validate:protected-admin-crm-handoff-export-review-packet-foundation": "node scripts/validate-protected-admin-crm-handoff-export-review-packet-foundation.cjs",
     "validate:protected-admin-crm-handoff-packet-audit-manifest-foundation": "node scripts/validate-protected-admin-crm-handoff-packet-audit-manifest-foundation.cjs",
+    "validate:protected-admin-hubspot-import-csv-handoff-foundation": "node scripts/validate-protected-admin-hubspot-import-csv-handoff-foundation.cjs",
     "validate:public-enquiry-persistence-integration": "node scripts/validate-public-enquiry-persistence-integration.cjs",
     "validate:supabase-enquiry-persistence-crm-handoff-foundation": "node scripts/validate-supabase-enquiry-persistence-crm-handoff-foundation.cjs",
     "validate:external-services-auth-crm-email-enquiry-architecture": "node scripts/validate-external-services-auth-crm-email-enquiry-architecture.cjs",

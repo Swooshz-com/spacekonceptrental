@@ -1,5 +1,13 @@
 # Protected Admin CRM Handoff Packet Audit Manifest Foundation
 
+Related next slice:
+`docs/architecture/PROTECTED-ADMIN-HUBSPOT-IMPORT-CSV-HANDOFF-FOUNDATION.md`.
+The HubSpot import CSV export uses this manifest table with
+`packet_kind = hubspot_import_csv` and still stores metadata only. It does not
+store full CSV contents, full packet JSON, full customer messages, raw payload
+dumps, secrets, headers, cookies, sessions, provider tokens, CRM API responses,
+or private Supabase details.
+
 ## Purpose
 
 This slice adds protected admin-only audit/manifest metadata for queued CRM
