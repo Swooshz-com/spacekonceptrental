@@ -320,7 +320,7 @@ describe("Phase 2L-A/B release-candidate acceptance suite", () => {
       /pinecone|retrieval|rerank|vector|embedding|rag|search[_ -]?index/i
     );
     expect(appAndLibSource).not.toMatch(forbiddenCommercePattern);
-    expect(appAndLibSource).not.toMatch(/notification|crm/i);
+    expect(appAndLibSource).not.toMatch(/notification|hubspot api|api\.hubapi|crm sync job|crm integration/i);
     expect(readTrackedFiles(["website/chat-config.js"])).toEqual([]);
     expect(readTrackedFiles(["website/app/api/customer-uploads"])).toEqual([]);
     expect(readTrackedFiles(["website/app/api/public/uploads"])).toEqual([]);

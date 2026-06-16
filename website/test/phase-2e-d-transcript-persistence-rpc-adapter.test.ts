@@ -188,7 +188,7 @@ describe("Phase 2E-D transcript persistence RPC/adapter boundary", () => {
     expect(productionSource).not.toContain("SUPABASE_SERVICE_ROLE");
     expect(productionSource).not.toContain("chat-config");
     expect(productionSource).not.toMatch(
-      /customer account|quote status tracking|admin transcript|crm|notification/i
+      /customer account|quote status tracking|admin transcript|crm integration|crm sync job|hubspot api|api\.hubapi|notification/i
     );
   });
 });

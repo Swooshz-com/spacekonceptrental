@@ -108,3 +108,23 @@ approved phase proves the need.
 Phase 6P-A/B remains the latest completed readiness ladder phase. The current
 planning focus is external-services architecture and implementation-plan
 reduction for auth, CRM, email, and enquiry persistence.
+
+## First Foundation Slice
+
+Supabase enquiry persistence and CRM handoff foundation is the first
+implementation-foundation slice after the external-services architecture
+pivot. It is documented in
+`docs/architecture/SUPABASE-ENQUIRY-PERSISTENCE-CRM-HANDOFF-FOUNDATION.md`.
+
+Supabase owns the canonical SKR enquiry submission record and now stores safe
+source metadata plus CRM handoff placeholders on the existing quote/enquiry
+record. HubSpot remains the future CRM and sales workflow owner.
+
+CRM sync is not implemented in this PR.
+
+n8n workflows are not implemented in this PR.
+
+Email sending is not implemented in this PR.
+
+Public customer accounts remain deferred. Custom CRM remains
+rejected/deferred.

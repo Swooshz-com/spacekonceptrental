@@ -240,7 +240,7 @@ describe("Phase 2M-A/B preview preflight CI gate", () => {
       /pinecone|retrieval|rerank|vector|embedding|rag|search[_ -]?index/i
     );
     expect(appAndLibSource).not.toMatch(forbiddenCommercePattern);
-    expect(appAndLibSource).not.toMatch(/notification|crm/i);
+    expect(appAndLibSource).not.toMatch(/notification|hubspot api|api\.hubapi|crm sync job|crm integration/i);
     expect(docsSource).not.toMatch(/https:\/\/[^\s`<>]+/i);
     expect(docsSource).not.toMatch(/eyJ|secret value|api key value/i);
   });

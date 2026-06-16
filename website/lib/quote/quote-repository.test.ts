@@ -17,6 +17,9 @@ const quoteSubmission: QuoteSubmission = {
     "Please recommend a warm lounge setup for a corporate reception.",
   eventDate: "2026-06-12",
   venue: "Marina Bay Sands",
+  sourcePath: "/catalogue/modular-lounge-set",
+  listingSlug: "modular-lounge-set",
+  requestId: "visitor-submission-20260612-001",
   items: [
     {
       productName: "Modular lounge set",
@@ -120,6 +123,15 @@ describe("quote repository", () => {
         "Please recommend a warm lounge setup for a corporate reception.",
       event_date: "2026-06-12",
       venue: "Marina Bay Sands",
+      source_page_path: "/catalogue/modular-lounge-set",
+      source_listing_slug: "modular-lounge-set",
+      submission_request_id: "visitor-submission-20260612-001",
+      crm_provider: "hubspot",
+      crm_sync_status: "not_queued",
+      crm_contact_id: null,
+      crm_deal_id: null,
+      crm_last_sync_attempt_at: null,
+      crm_sync_error: null,
       status: "new",
       source: "website"
     });

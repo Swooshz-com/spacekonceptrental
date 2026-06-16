@@ -5,6 +5,11 @@ const repoRoot = path.resolve(__dirname, '..');
 
 const commandPlan = [
   {
+    label: 'Validate Supabase enquiry persistence and CRM handoff foundation',
+    cwd: repoRoot,
+    args: ['run', 'validate:supabase-enquiry-persistence-crm-handoff-foundation'],
+  },
+  {
     label: 'Validate external services auth CRM email enquiry architecture',
     cwd: repoRoot,
     args: ['run', 'validate:external-services-auth-crm-email-enquiry-architecture'],

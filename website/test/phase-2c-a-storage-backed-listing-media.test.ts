@@ -174,7 +174,7 @@ describe("Phase 2C-A storage-backed listing media upload and public rendering", 
       /cart|checkout|payment|customer account|stock reservation|order fulfilment|online ordering|book now|confirmed booking/i
     );
     expect(productionSource).not.toMatch(/customer image upload|public upload/i);
-    expect(productionSource).not.toMatch(/notification|crm/i);
+    expect(productionSource).not.toMatch(/notification|hubspot api|api\.hubapi|crm sync job|crm integration/i);
     expect(productionSource).not.toContain("@pinecone-database");
     expect(productionSource).not.toContain("PINECONE_API_KEY");
     expect(productionSource).not.toContain("chat-config");

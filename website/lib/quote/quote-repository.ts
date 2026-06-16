@@ -4,6 +4,7 @@ import { getQuoteWorkspaceId } from "../server-runtime-config";
 import { createServerSupabaseClient } from "../supabase/server";
 import type { SupabaseServerEnvName } from "../supabase/env";
 import type { QuotePersistenceResult, QuoteSubmission } from "./types";
+import { prepareQuoteForPersistence } from "./validation";
 
 type SupabaseMutationResult = {
   data: unknown;
@@ -93,16 +94,26 @@ export async function createQuoteRequest(
   const quoteRequestId = (options.createId ?? defaultCreateId)();
   const publicReference =
     (options.createPublicReference ?? defaultCreatePublicReference)();
+  const quotePayload = prepareQuoteForPersistence(quote);
   const quoteInsert = await supabase.client.from("quote_requests").insert({
     id: quoteRequestId,
     workspace_id: workspaceId,
     public_reference: publicReference,
-    customer_name: quote.customerName,
-    customer_email: quote.customerEmail ?? null,
-    customer_phone: quote.customerPhone ?? null,
-    customer_message: quote.customerMessage ?? null,
-    event_date: quote.eventDate ?? null,
-    venue: quote.venue ?? null,
+    customer_name: quotePayload.customerName,
+    customer_email: quotePayload.customerEmail ?? null,
+    customer_phone: quotePayload.customerPhone ?? null,
+    customer_message: quotePayload.customerMessage ?? null,
+    event_date: quotePayload.eventDate ?? null,
+    venue: quotePayload.venue ?? null,
+    source_page_path: quotePayload.sourcePagePath,
+    source_listing_slug: quotePayload.sourceListingSlug,
+    submission_request_id: quotePayload.submissionRequestId,
+    crm_provider: quotePayload.crmProvider,
+    crm_sync_status: quotePayload.crmSyncStatus,
+    crm_contact_id: quotePayload.crmContactId,
+    crm_deal_id: quotePayload.crmDealId,
+    crm_last_sync_attempt_at: quotePayload.crmLastSyncAttemptAt,
+    crm_sync_error: quotePayload.crmSyncError,
     status: "new",
     source: "website"
   });

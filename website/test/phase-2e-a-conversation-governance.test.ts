@@ -156,7 +156,7 @@ describe("Phase 2E-A conversation privacy and retention governance", () => {
     expect(productionSource).not.toContain("SUPABASE_SERVICE_ROLE");
     expect(productionSource).not.toContain("chat-config");
     expect(productionSource).not.toMatch(
-      /conversation transcript|transcript export|customer account|quote status tracking|crm|notification/i
+      /conversation transcript|transcript export|customer account|quote status tracking|crm integration|crm sync job|hubspot api|api\.hubapi|notification/i
     );
   });
 

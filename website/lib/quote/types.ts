@@ -13,7 +13,30 @@ export type QuoteSubmission = {
   customerMessage?: string;
   eventDate?: string;
   venue?: string;
+  sourcePath?: string;
+  listingSlug?: string;
+  requestId?: string;
   items: QuoteItemSubmission[];
+};
+
+export type CrmProvider = "hubspot";
+
+export type CrmSyncStatus =
+  | "not_queued"
+  | "queued"
+  | "synced"
+  | "failed";
+
+export type QuotePersistencePayload = QuoteSubmission & {
+  sourcePagePath: string | null;
+  sourceListingSlug: string | null;
+  submissionRequestId: string | null;
+  crmProvider: CrmProvider;
+  crmSyncStatus: CrmSyncStatus;
+  crmContactId: string | null;
+  crmDealId: string | null;
+  crmLastSyncAttemptAt: string | null;
+  crmSyncError: string | null;
 };
 
 export type QuotePersistenceResult =
