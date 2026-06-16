@@ -36,20 +36,17 @@ as $$
 declare
   v_actor_id uuid;
   v_current_status text;
-  v_note text;
 begin
   if p_quote_request_id is null or p_workspace_id is null then
     raise exception 'quote_workflow_target_required';
   end if;
 
-  if p_status not in ('new', 'reviewing', 'follow_up_needed', 'quoted', 'closed', 'archived') then
+  if p_status not in ('new', 'reviewing', 'follow_up_needed', 'quoted', 'closed') then
     raise exception 'quote_workflow_status_invalid';
   end if;
 
-  v_note := nullif(btrim(coalesce(p_internal_note, '')), '');
-
-  if v_note is not null and char_length(v_note) > 1200 then
-    raise exception 'quote_workflow_note_too_long';
+  if nullif(btrim(coalesce(p_internal_note, '')), '') is not null then
+    raise exception 'quote_workflow_internal_note_not_supported';
   end if;
 
   v_actor_id := public.current_quote_admin_user_id(p_workspace_id);
@@ -93,27 +90,6 @@ begin
       v_current_status,
       p_status,
       null
-    );
-  end if;
-
-  if v_note is not null then
-    insert into public.quote_request_activity (
-      workspace_id,
-      quote_request_id,
-      actor_admin_user_id,
-      activity_type,
-      status_from,
-      status_to,
-      note
-    )
-    values (
-      p_workspace_id,
-      p_quote_request_id,
-      v_actor_id,
-      'internal_note',
-      null,
-      null,
-      v_note
     );
   end if;
 

@@ -268,6 +268,42 @@ for (const source of [inboxPanel, statusWrite, statusRoute, migration]) {
   includes(source, 'follow_up_needed', 'protected admin status update source');
 }
 
+matches(
+  migration,
+  /quote_requests_status_check[\s\S]*'archived'/,
+  `${migrationPath} quote_requests legacy status constraint`,
+);
+matches(
+  migration,
+  /quote_request_activity_status_from_check[\s\S]*'archived'/,
+  `${migrationPath} activity status_from legacy status constraint`,
+);
+matches(
+  migration,
+  /quote_request_activity_status_to_check[\s\S]*'archived'/,
+  `${migrationPath} activity status_to legacy status constraint`,
+);
+matches(
+  migration,
+  /if p_status not in \('new', 'reviewing', 'follow_up_needed', 'quoted', 'closed'\) then[\s\S]*quote_workflow_status_invalid/,
+  `${migrationPath} RPC status update allowlist`,
+);
+noMatch(
+  migration,
+  /if p_status not in \([^)]*'archived'[^)]*\) then/,
+  `${migrationPath} RPC status update allowlist`,
+);
+matches(
+  migration,
+  /if nullif\(btrim\(coalesce\(p_internal_note, ''\)\), ''\) is not null then[\s\S]*quote_workflow_internal_note_not_supported/,
+  `${migrationPath} p_internal_note compatibility rejection`,
+);
+noMatch(
+  migration,
+  /activity_type,[\s\S]*'internal_note'/,
+  `${migrationPath} status-update foundation activity inserts`,
+);
+
 includes(inboxPanel, 'Update internal triage status', inboxPanelPath);
 includes(inboxPanel, 'This does not contact the', inboxPanelPath);
 includes(inboxPanel, 'sync to CRM', inboxPanelPath);
