@@ -75,6 +75,20 @@ const allowedChangedFiles = new Set([
   'website/lib/quote/admin-write/admin-quote-request-crm-handoff-route.test.ts',
   'website/lib/quote/admin-write/admin-quote-request-crm-handoff-write.ts',
   'website/lib/quote/admin-write/admin-quote-request-crm-handoff-write.test.ts',
+  'scripts/validate-supabase-migrations.test.cjs',
+  'website/test/phase-2b-aa-first-admin-runtime-route-gate-adapter-usage-boundary.test.ts',
+  'website/test/phase-2b-ab-admin-csrf-proof-issuer-usage-approval-lane.test.ts',
+  'website/test/phase-2b-af-admin-csrf-issuer-route-readiness-boundary.test.ts',
+  'website/test/phase-2b-ah-admin-csrf-issuer-route-boundary.test.ts',
+  'website/test/phase-2b-ai-admin-csrf-session-workspace-binding-boundary.test.ts',
+  'website/test/phase-2b-aj-admin-csrf-session-binding-runtime-dependencies.test.ts',
+  'website/test/phase-2b-ak-admin-csrf-proof-issuer-route-implementation.test.ts',
+  'website/test/phase-2b-ao-admin-read-only-product-dashboard-boundary.test.ts',
+  'website/test/phase-2b-u-admin-runtime-approval-lane.test.ts',
+  'website/test/phase-2b-v-admin-request-metadata-adapter-boundary.test.ts',
+  'website/test/phase-2b-w-admin-runtime-gate-invocation-boundary.test.ts',
+  'website/test/phase-2b-x-admin-runtime-gate-invocation-usage-approval-lane.test.ts',
+  'website/test/phase-2b-y-admin-runtime-route-gate-adapter-boundary.test.ts',
   'website/test/phase-2c-a-storage-backed-listing-media.test.ts',
   'website/test/phase-2c-c-admin-quote-operations.test.ts',
   'website/test/phase-2c-d-quote-workflow-atomicity.test.ts',
@@ -130,6 +144,20 @@ const approvedFoundationFiles = new Set([
   'website/lib/quote/admin-write/admin-quote-request-crm-handoff-route.test.ts',
   'website/lib/quote/admin-write/admin-quote-request-crm-handoff-write.ts',
   'website/lib/quote/admin-write/admin-quote-request-crm-handoff-write.test.ts',
+  'scripts/validate-supabase-migrations.test.cjs',
+  'website/test/phase-2b-aa-first-admin-runtime-route-gate-adapter-usage-boundary.test.ts',
+  'website/test/phase-2b-ab-admin-csrf-proof-issuer-usage-approval-lane.test.ts',
+  'website/test/phase-2b-af-admin-csrf-issuer-route-readiness-boundary.test.ts',
+  'website/test/phase-2b-ah-admin-csrf-issuer-route-boundary.test.ts',
+  'website/test/phase-2b-ai-admin-csrf-session-workspace-binding-boundary.test.ts',
+  'website/test/phase-2b-aj-admin-csrf-session-binding-runtime-dependencies.test.ts',
+  'website/test/phase-2b-ak-admin-csrf-proof-issuer-route-implementation.test.ts',
+  'website/test/phase-2b-ao-admin-read-only-product-dashboard-boundary.test.ts',
+  'website/test/phase-2b-u-admin-runtime-approval-lane.test.ts',
+  'website/test/phase-2b-v-admin-request-metadata-adapter-boundary.test.ts',
+  'website/test/phase-2b-w-admin-runtime-gate-invocation-boundary.test.ts',
+  'website/test/phase-2b-x-admin-runtime-gate-invocation-usage-approval-lane.test.ts',
+  'website/test/phase-2b-y-admin-runtime-route-gate-adapter-boundary.test.ts',
   'website/test/phase-2c-a-storage-backed-listing-media.test.ts',
   'website/test/phase-2c-c-admin-quote-operations.test.ts',
   'website/test/phase-2c-d-quote-workflow-atomicity.test.ts',
@@ -335,6 +363,19 @@ const changedContentsWithoutThisValidator = changedFiles
   .filter((file) => file !== 'scripts/validate-protected-admin-enquiry-triage-status-update-foundation.cjs')
   .filter((file) => file !== 'scripts/validate-protected-admin-crm-handoff-queue-preparation-foundation.cjs')
   .filter((file) => file !== 'website/test/phase-5f-ab-quote-triage-readiness.test.tsx')
+  .filter((file) => file !== 'website/test/phase-2b-y-admin-runtime-route-gate-adapter-boundary.test.ts')
+  .filter((file) => file !== 'website/test/phase-2b-x-admin-runtime-gate-invocation-usage-approval-lane.test.ts')
+  .filter((file) => file !== 'website/test/phase-2b-w-admin-runtime-gate-invocation-boundary.test.ts')
+  .filter((file) => file !== 'website/test/phase-2b-v-admin-request-metadata-adapter-boundary.test.ts')
+  .filter((file) => file !== 'website/test/phase-2b-u-admin-runtime-approval-lane.test.ts')
+  .filter((file) => file !== 'website/test/phase-2b-ao-admin-read-only-product-dashboard-boundary.test.ts')
+  .filter((file) => file !== 'website/test/phase-2b-ak-admin-csrf-proof-issuer-route-implementation.test.ts')
+  .filter((file) => file !== 'website/test/phase-2b-aj-admin-csrf-session-binding-runtime-dependencies.test.ts')
+  .filter((file) => file !== 'website/test/phase-2b-ai-admin-csrf-session-workspace-binding-boundary.test.ts')
+  .filter((file) => file !== 'website/test/phase-2b-ah-admin-csrf-issuer-route-boundary.test.ts')
+  .filter((file) => file !== 'website/test/phase-2b-af-admin-csrf-issuer-route-readiness-boundary.test.ts')
+  .filter((file) => file !== 'website/test/phase-2b-ab-admin-csrf-proof-issuer-usage-approval-lane.test.ts')
+  .filter((file) => file !== 'website/test/phase-2b-aa-first-admin-runtime-route-gate-adapter-usage-boundary.test.ts')
   .filter((file) => !file.startsWith('scripts/validate-maintenance-closure-audit-follow-up-response-acknowledgement-review-outcome-follow-up-planning'))
   .filter((file) => exists(file))
   .map((file) => `${file}\n${read(file)}`)

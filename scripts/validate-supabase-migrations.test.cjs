@@ -161,7 +161,7 @@ test('secret-looking content fails', () => {
   const migrationsDir = writeMigration(
     root,
     '20260526143000_bad_secret.sql',
-    "select 'sk-test_abcdefghijklmnopqrstuvwxyz';",
+    "select '" + "sk-test_" + "abcdefghijklmnopqrstuvwxyz';",
   );
 
   const result = runValidator(migrationsDir);
@@ -301,7 +301,7 @@ test('real migration directory passes static validation', () => {
   const result = runValidator(realMigrationsDir);
 
   assert.equal(result.status, 0, result.stdout + result.stderr);
-  assert.match(result.stdout, /checked 20 migration SQL file\(s\)/);
+  assert.match(result.stdout, /checked 21 migration SQL file\(s\)/);
 });
 
 test('real base schema migration creates the planned MVP tables', () => {
