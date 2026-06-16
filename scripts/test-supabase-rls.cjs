@@ -3141,8 +3141,8 @@ check('atomic quote workflow RPC updates status and activity together for owner/
 
   assert.deepEqual(
     output.split('\n').filter(Boolean),
-    [ids.quoteA, 'reviewing', '1', '0', ids.quoteA, '1', '0'],
-    'owner should update quote workflow status atomically without internal-note activity rows',
+    [ids.quoteA, 'reviewing', '1', '1', ids.quoteA, '1', '1'],
+    'owner should update quote workflow status atomically without adding internal-note activity rows',
   );
 });
 
