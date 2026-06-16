@@ -1,5 +1,12 @@
 # Protected Admin CRM Handoff Queue Preparation Foundation
 
+Related next slice:
+`docs/architecture/PROTECTED-ADMIN-CRM-HANDOFF-EXPORT-REVIEW-PACKET-FOUNDATION.md`.
+Admin users can review/export queued CRM handoff packets for manual
+review/export preparation only. This does not sync to HubSpot, call or queue
+n8n, send email, contact the customer, create HubSpot contact/deal IDs, mark
+records as synced, or set CRM sync attempt timestamps.
+
 ## Purpose
 
 This slice adds a protected admin-only local queue preparation layer for future

@@ -85,6 +85,7 @@ type PanelStatus =
     };
 
 const quoteWriteOperation = "quote.write";
+const crmHandoffPacketLimit = 25;
 const quoteStatuses: AdminQuoteRequestStatus[] = [
   "new",
   "reviewing",
@@ -96,6 +97,8 @@ const genericFailureMessage =
   "Internal triage status could not be saved. Keep the existing admin review state and try again.";
 const genericCrmHandoffFailureMessage =
   "CRM handoff readiness could not be saved. Keep the existing local queue state and try again.";
+const genericCrmHandoffPacketFailureMessage =
+  "CRM handoff packet could not be prepared. Keep queued records unchanged and try again.";
 
 function statusLabel(value: string) {
   const labels: Record<string, string> = {
@@ -147,6 +150,16 @@ function quoteStatusSummary(
       (quoteRequest) => quoteRequest.activity.length === 0
     ).length
   };
+}
+
+function queuedCrmHandoffCount(
+  quoteRequests: AdminQuoteRequestInboxQuoteRequest[]
+) {
+  return quoteRequests.filter(
+    (quoteRequest) =>
+      (quoteRequest.crmProvider ?? "hubspot") === "hubspot" &&
+      quoteRequest.crmSyncStatus === "queued"
+  ).length;
 }
 
 function quoteTriageCues(quoteRequest: AdminQuoteRequestInboxQuoteRequest) {
@@ -539,6 +552,9 @@ export function QuoteRequestInboxPanel({
   const [status, setStatus] = useState<PanelStatus>({
     kind: "idle"
   });
+  const [crmHandoffPacketPreview, setCrmHandoffPacketPreview] = useState<
+    string | null
+  >(null);
 
   async function submitStatusChange(
     quoteRequestId: string,
@@ -665,6 +681,54 @@ export function QuoteRequestInboxPanel({
     }
   }
 
+  async function reviewCrmHandoffPacket() {
+    setStatus({
+      kind: "pending",
+      message: "Preparing queued CRM handoff packet..."
+    });
+    setCrmHandoffPacketPreview(null);
+
+    try {
+      const response = await fetcher(
+        `/api/admin/quote-requests/crm-handoff-packet?limit=${crmHandoffPacketLimit}`,
+        {
+          method: "GET",
+          headers: {
+            Accept: "application/json"
+          }
+        }
+      );
+      const responseBody = await readSafeJson(response);
+
+      if (
+        !response.ok ||
+        !isRecord(responseBody) ||
+        responseBody.ok !== true ||
+        !isRecord(responseBody.packet)
+      ) {
+        setStatus({
+          kind: "error",
+          message: genericCrmHandoffPacketFailureMessage
+        });
+        return;
+      }
+
+      setCrmHandoffPacketPreview(
+        JSON.stringify(responseBody.packet, null, 2)
+      );
+      setStatus({
+        kind: "success",
+        message:
+          "Queued CRM handoff packet prepared for manual admin review only."
+      });
+    } catch {
+      setStatus({
+        kind: "error",
+        message: genericCrmHandoffPacketFailureMessage
+      });
+    }
+  }
+
   async function handleStatusSubmit(
     event: FormEvent<HTMLFormElement>,
     quoteRequestId: string
@@ -712,6 +776,9 @@ export function QuoteRequestInboxPanel({
   }
 
   const summary = quoteStatusSummary(inbox.data.quoteRequests);
+  const queuedCrmHandoffRecords = queuedCrmHandoffCount(
+    inbox.data.quoteRequests
+  );
 
   return (
     <section className="admin-dashboard" aria-label="Quote request inbox">
@@ -799,6 +866,49 @@ export function QuoteRequestInboxPanel({
             <dd>{summary.withoutInternalActivity}</dd>
           </div>
         </dl>
+      </section>
+
+      <section
+        aria-label="Queued CRM handoff packet review"
+        className="admin-dashboard__card admin-dashboard__card--summary"
+      >
+        <h3>Queued CRM handoff packet review</h3>
+        <p className="category-management__hint">
+          Manual review/export only. This does not sync to HubSpot or contact
+          customers. This does not call n8n, perform email delivery, create
+          provider IDs, or mark records as synced. Queued records remain queued
+          until a future sync integration is implemented.
+        </p>
+        <dl className="admin-dashboard__stats">
+          <div>
+            <dt>Eligible queued records</dt>
+            <dd>{queuedCrmHandoffRecords}</dd>
+          </div>
+          <div>
+            <dt>Packet limit</dt>
+            <dd>{crmHandoffPacketLimit}</dd>
+          </div>
+        </dl>
+        <button
+          aria-label="Review queued CRM handoff packet"
+          className="button button--secondary"
+          disabled={status.kind === "pending"}
+          onClick={() => void reviewCrmHandoffPacket()}
+          type="button"
+        >
+          {status.kind === "pending"
+            ? "Preparing queued CRM handoff packet"
+            : "Review queued CRM handoff packet"}
+        </button>
+        {crmHandoffPacketPreview ? (
+          <section
+            aria-label="Queued CRM handoff packet JSON preview"
+            className="quote-inbox__section"
+          >
+            <h4>Queued CRM handoff packet JSON preview</h4>
+            <pre>{crmHandoffPacketPreview}</pre>
+          </section>
+        ) : null}
       </section>
 
       <QuoteIntakeParityHelper />

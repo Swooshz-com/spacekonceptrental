@@ -1,3 +1,14 @@
+# Protected Admin CRM Handoff Export Review Packet Foundation Reference
+
+Related implementation slice:
+`docs/architecture/PROTECTED-ADMIN-CRM-HANDOFF-EXPORT-REVIEW-PACKET-FOUNDATION.md`.
+Admin users can review/export queued CRM handoff packets from protected admin
+surfaces only. Public quote/enquiry paths cannot access the packet. HubSpot CRM
+sync is still not implemented. n8n workflows are still not implemented. Email
+sending is still not implemented. Public customer accounts remain deferred.
+Public customer login remains unimplemented. Customer dashboard remains
+unimplemented. Custom CRM remains rejected/deferred.
+
 # Public Enquiry Persistence Integration
 
 ## Purpose

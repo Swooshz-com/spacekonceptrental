@@ -26,6 +26,7 @@ const allowedChangedFiles = new Set([
   'docs/architecture/PROTECTED-ADMIN-ENQUIRY-INBOX-TRIAGE-FOUNDATION.md',
   'docs/architecture/PROTECTED-ADMIN-ENQUIRY-TRIAGE-STATUS-UPDATE-FOUNDATION.md',
   'docs/architecture/PROTECTED-ADMIN-CRM-HANDOFF-QUEUE-PREPARATION-FOUNDATION.md',
+  'docs/architecture/PROTECTED-ADMIN-CRM-HANDOFF-EXPORT-REVIEW-PACKET-FOUNDATION.md',
   'docs/architecture/PUBLIC-ENQUIRY-PERSISTENCE-INTEGRATION.md',
   'docs/architecture/SUPABASE-ENQUIRY-PERSISTENCE-CRM-HANDOFF-FOUNDATION.md',
   'docs/PHASE-STATUS.md',
@@ -39,6 +40,7 @@ const allowedChangedFiles = new Set([
   'scripts/validate-protected-admin-enquiry-inbox-triage-foundation.cjs',
   'scripts/validate-protected-admin-enquiry-triage-status-update-foundation.cjs',
   'scripts/validate-protected-admin-crm-handoff-queue-preparation-foundation.cjs',
+  'scripts/validate-protected-admin-crm-handoff-export-review-packet-foundation.cjs',
   'scripts/validate-maintenance-closure-audit-follow-up-response-acknowledgement-review-outcome-follow-up-planning-review-readiness.cjs',
   'scripts/validate-maintenance-closure-audit-follow-up-response-acknowledgement-review-outcome-follow-up-planning-review-outcome-readiness.cjs',
   'scripts/validate-maintenance-closure-audit-follow-up-response-acknowledgement-review-outcome-follow-up-planning-review-outcome-acknowledgement-readiness.cjs',
@@ -75,6 +77,11 @@ const allowedChangedFiles = new Set([
   'website/lib/quote/admin-write/admin-quote-request-crm-handoff-route.test.ts',
   'website/lib/quote/admin-write/admin-quote-request-crm-handoff-write.ts',
   'website/lib/quote/admin-write/admin-quote-request-crm-handoff-write.test.ts',
+  'website/app/api/admin/quote-requests/crm-handoff-packet/route.ts',
+  'website/lib/quote/admin-read/admin-quote-request-crm-handoff-packet-read.ts',
+  'website/lib/quote/admin-read/admin-quote-request-crm-handoff-packet-read.test.ts',
+  'website/lib/quote/admin-read/admin-quote-request-crm-handoff-packet-route.ts',
+  'website/lib/quote/admin-read/admin-quote-request-crm-handoff-packet-route.test.ts',
   'scripts/validate-supabase-migrations.test.cjs',
   'website/test/phase-2b-aa-first-admin-runtime-route-gate-adapter-usage-boundary.test.ts',
   'website/test/phase-2b-ab-admin-csrf-proof-issuer-usage-approval-lane.test.ts',
@@ -144,6 +151,11 @@ const approvedFoundationFiles = new Set([
   'website/lib/quote/admin-write/admin-quote-request-crm-handoff-route.test.ts',
   'website/lib/quote/admin-write/admin-quote-request-crm-handoff-write.ts',
   'website/lib/quote/admin-write/admin-quote-request-crm-handoff-write.test.ts',
+  'website/app/api/admin/quote-requests/crm-handoff-packet/route.ts',
+  'website/lib/quote/admin-read/admin-quote-request-crm-handoff-packet-read.ts',
+  'website/lib/quote/admin-read/admin-quote-request-crm-handoff-packet-read.test.ts',
+  'website/lib/quote/admin-read/admin-quote-request-crm-handoff-packet-route.ts',
+  'website/lib/quote/admin-read/admin-quote-request-crm-handoff-packet-route.test.ts',
   'scripts/validate-supabase-migrations.test.cjs',
   'website/test/phase-2b-aa-first-admin-runtime-route-gate-adapter-usage-boundary.test.ts',
   'website/test/phase-2b-ab-admin-csrf-proof-issuer-usage-approval-lane.test.ts',
@@ -362,6 +374,7 @@ const changedContentsWithoutThisValidator = changedFiles
   .filter((file) => file !== 'scripts/validate-protected-admin-enquiry-inbox-triage-foundation.cjs')
   .filter((file) => file !== 'scripts/validate-protected-admin-enquiry-triage-status-update-foundation.cjs')
   .filter((file) => file !== 'scripts/validate-protected-admin-crm-handoff-queue-preparation-foundation.cjs')
+  .filter((file) => file !== 'scripts/validate-protected-admin-crm-handoff-export-review-packet-foundation.cjs')
   .filter((file) => file !== 'website/test/phase-5f-ab-quote-triage-readiness.test.tsx')
   .filter((file) => file !== 'website/test/phase-2b-y-admin-runtime-route-gate-adapter-boundary.test.ts')
   .filter((file) => file !== 'website/test/phase-2b-x-admin-runtime-gate-invocation-usage-approval-lane.test.ts')
