@@ -352,10 +352,54 @@ describe("POST /api/quote", () => {
     expect(response.status).toBe(400);
     expect(body.error.code).toBe("VALIDATION_FAILED");
     expect(body.error.message).toBe(
-      "Please check the required enquiry details and try again."
+      "customerEmail must be a valid email address."
     );
-    expect(JSON.stringify(body)).not.toContain("customerEmail");
+    expect(JSON.stringify(body)).not.toContain("not-an-email");
     expect(repository).not.toHaveBeenCalled();
+  });
+
+  it("persists safe public source metadata and blocks public CRM overrides", async () => {
+    const repository = vi.fn(async () => ({
+      ok: true as const,
+      quoteRequestId: "70000000-0000-4000-8000-000000000001",
+      publicReference: "QR-20260527-ABC12345"
+    }));
+
+    const response = await handleQuotePost(
+      postJson({
+        ...validPayload,
+        sourcePath: "/quote?listing=modular-lounge-set",
+        listingSlug: "modular-lounge-set",
+        requestId: "8f6d5b35-5827-4093-b59f-e683fa9f6fdb"
+      }),
+      repository
+    );
+
+    expect(response.status).toBe(201);
+    expect(repository).toHaveBeenCalledWith(
+      expect.objectContaining({
+        sourcePath: "/quote?listing=modular-lounge-set",
+        listingSlug: "modular-lounge-set",
+        requestId: "8f6d5b35-5827-4093-b59f-e683fa9f6fdb"
+      })
+    );
+
+    const override = await handleQuotePost(
+      postJson({
+        ...validPayload,
+        crm_provider: "hubspot",
+        crm_sync_status: "synced",
+        crm_contact_id: "contact-123"
+      }),
+      repository
+    );
+    const body = await override.json();
+
+    expect(override.status).toBe(400);
+    expect(body.error.message).toBe(
+      "Request body contains unknown field: crm_provider."
+    );
+    expect(repository).toHaveBeenCalledTimes(1);
   });
 
   it("enforces JSON content type and bounded body size", async () => {

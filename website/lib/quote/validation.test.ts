@@ -110,6 +110,68 @@ describe("quote request validation", () => {
     });
   });
 
+  it("rejects unsafe source metadata and public CRM handoff field overrides", () => {
+    const cases = [
+      {
+        payload: { ...validPayload, sourcePath: "https://example.test/quote" },
+        field: "sourcePath"
+      },
+      {
+        payload: { ...validPayload, sourcePath: "//example.test/quote" },
+        field: "sourcePath"
+      },
+      {
+        payload: { ...validPayload, sourcePath: "/quote\nx-debug=true" },
+        field: "sourcePath"
+      },
+      {
+        payload: { ...validPayload, listingSlug: "../admin" },
+        field: "listingSlug"
+      },
+      {
+        payload: { ...validPayload, requestId: "x".repeat(129) },
+        field: "requestId"
+      },
+      {
+        payload: { ...validPayload, requestId: "request id with spaces" },
+        field: "requestId"
+      },
+      {
+        payload: { ...validPayload, crm_sync_status: "synced" },
+        field: "unknown"
+      }
+    ];
+
+    for (const testCase of cases) {
+      expect(validateQuoteSubmission(testCase.payload)).toMatchObject({
+        ok: false,
+        message: expect.stringContaining(testCase.field)
+      });
+    }
+  });
+
+  it("always prepares safe initial CRM placeholders regardless of public-like input shape", () => {
+    const validation = validateQuoteSubmission({
+      ...validPayload,
+      sourcePath: "/quote?listing=modular-lounge-set",
+      listingSlug: "modular-lounge-set",
+      requestId: "8f6d5b35-5827-4093-b59f-e683fa9f6fdb"
+    });
+
+    if (!validation.ok) {
+      throw new Error("Expected valid quote submission");
+    }
+
+    expect(prepareQuoteForPersistence(validation.value)).toMatchObject({
+      crmProvider: "hubspot",
+      crmSyncStatus: "not_queued",
+      crmContactId: null,
+      crmDealId: null,
+      crmLastSyncAttemptAt: null,
+      crmSyncError: null
+    });
+  });
+
   it("bounds CRM sync errors before storing future handoff diagnostics", () => {
     const rawError = `  ${"Sensitive customer detail ".repeat(40)}  `;
     const normalized = normalizeCrmSyncError(rawError);

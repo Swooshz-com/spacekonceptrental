@@ -10,6 +10,7 @@
     "validate:preview-handoff": "node scripts/validate-preview-handoff.cjs",
     "validate:local-release-candidate": "node scripts/validate-local-release-candidate.cjs",
     "validate:release-candidate-suite": "node scripts/validate-release-candidate-suite.cjs",
+    "validate:public-enquiry-persistence-integration": "node scripts/validate-public-enquiry-persistence-integration.cjs",
     "validate:supabase-enquiry-persistence-crm-handoff-foundation": "node scripts/validate-supabase-enquiry-persistence-crm-handoff-foundation.cjs",
     "validate:external-services-auth-crm-email-enquiry-architecture": "node scripts/validate-external-services-auth-crm-email-enquiry-architecture.cjs",
     "validate:preventive-maintenance-readiness": "node scripts/validate-preventive-maintenance-readiness.cjs",

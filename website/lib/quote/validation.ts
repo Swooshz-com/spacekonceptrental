@@ -38,6 +38,7 @@ const MAX_ITEM_NOTES_LENGTH = 500;
 const MAX_ITEMS = 20;
 const MAX_QUANTITY = 10_000;
 const listingSlugPattern = /^[a-z0-9][a-z0-9-]*$/;
+const requestIdPattern = /^[A-Za-z0-9._:-]+$/;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
@@ -85,6 +86,15 @@ function isValidDate(value: string) {
   return (
     !Number.isNaN(date.valueOf()) &&
     date.toISOString().slice(0, 10) === value
+  );
+}
+
+function isSafeSiteRelativePath(value: string) {
+  return (
+    value.startsWith("/") &&
+    !value.startsWith("//") &&
+    !value.includes("\\") &&
+    !/[\u0000-\u001f\u007f]/.test(value)
   );
 }
 
@@ -207,12 +217,19 @@ export function validateQuoteSubmission(payload: unknown): ValidationResult {
     return { ok: false, message: "eventDate must use YYYY-MM-DD format." };
   }
 
-  if (sourcePath && !sourcePath.startsWith("/")) {
+  if (sourcePath && !isSafeSiteRelativePath(sourcePath)) {
     return { ok: false, message: "sourcePath must be a site-relative path." };
   }
 
   if (listingSlug && !listingSlugPattern.test(listingSlug)) {
     return { ok: false, message: "listingSlug must be a valid listing slug." };
+  }
+
+  if (requestId && !requestIdPattern.test(requestId)) {
+    return {
+      ok: false,
+      message: "requestId must be a valid submission identifier."
+    };
   }
 
   const rawItems = payload.items;

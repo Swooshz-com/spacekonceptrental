@@ -259,7 +259,10 @@ export default async function QuotePage({
       <div className="route-grid">
         <article className="quote-panel">
           <h2>Event basics</h2>
-          <QuoteRequestForm initialItemsText={initialItemsText} />
+          <QuoteRequestForm
+            initialItemsText={initialItemsText}
+            initialListingSlug={listingContext.requestedSlug}
+          />
         </article>
 
         {selectedListing ? (

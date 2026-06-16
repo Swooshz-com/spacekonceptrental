@@ -4,6 +4,15 @@ import { resolve } from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import QuoteRequestForm from "./QuoteRequestForm";
 
+function getSubmittedPayload(fetchMock: ReturnType<typeof vi.fn>) {
+  const request = (fetchMock.mock.calls as unknown as [
+    string,
+    RequestInit
+  ][])[0][1];
+
+  return JSON.parse(String(request.body));
+}
+
 describe("QuoteRequestForm", () => {
   afterEach(() => {
     cleanup();
@@ -27,7 +36,9 @@ describe("QuoteRequestForm", () => {
 
     vi.stubGlobal("fetch", fetchMock);
 
-    render(<QuoteRequestForm />);
+    window.history.pushState(null, "", "/quote?listing=modular-lounge-set");
+
+    render(<QuoteRequestForm initialListingSlug="modular-lounge-set" />);
 
     fireEvent.change(screen.getByLabelText(/name/i), {
       target: { value: "Maya Tan" }
@@ -68,25 +79,28 @@ describe("QuoteRequestForm", () => {
       "/api/quote",
       expect.objectContaining({
         method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          customerName: "Maya Tan",
-          customerEmail: "maya@example.test",
-          customerPhone: "+65 8123 4567",
-          customerMessage:
-            "Preferred contact method: email\n\nPrefer a warm lounge setup for a corporate reception.",
-          eventDate: "2026-06-12",
-          venue: "Marina Bay Sands",
-          items: [
-            {
-              productName: "2 modular lounge sets",
-              quantity: 1,
-              notes: "Place sofas near the registration zone."
-            }
-          ]
-        })
+        headers: { "content-type": "application/json" }
       })
     );
+    expect(getSubmittedPayload(fetchMock)).toEqual({
+      customerName: "Maya Tan",
+      customerEmail: "maya@example.test",
+      customerPhone: "+65 8123 4567",
+      customerMessage:
+        "Preferred contact method: email\n\nPrefer a warm lounge setup for a corporate reception.",
+      eventDate: "2026-06-12",
+      venue: "Marina Bay Sands",
+      sourcePath: "/quote?listing=modular-lounge-set",
+      listingSlug: "modular-lounge-set",
+      requestId: expect.any(String),
+      items: [
+        {
+          productName: "2 modular lounge sets",
+          quantity: 1,
+          notes: "Place sofas near the registration zone."
+        }
+      ]
+    });
     expect(
       await screen.findByText(/enquiry received/i)
     ).toBeInTheDocument();
@@ -131,19 +145,20 @@ describe("QuoteRequestForm", () => {
       "/api/quote",
       expect.objectContaining({
         method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          customerName: "Maya Tan",
-          customerEmail: "maya@example.test",
-          customerPhone: "",
-          customerMessage:
-            "We need help deciding quantities for a reception setup.",
-          eventDate: "",
-          venue: "",
-          items: []
-        })
+        headers: { "content-type": "application/json" }
       })
     );
+    expect(getSubmittedPayload(fetchMock)).toMatchObject({
+      customerName: "Maya Tan",
+      customerEmail: "maya@example.test",
+      customerPhone: "",
+      customerMessage:
+        "We need help deciding quantities for a reception setup.",
+      eventDate: "",
+      venue: "",
+      items: []
+    });
+    expect(getSubmittedPayload(fetchMock).requestId).toEqual(expect.any(String));
     expect(
       await screen.findByText(/enquiry received/i)
     ).toBeInTheDocument();
@@ -179,24 +194,20 @@ describe("QuoteRequestForm", () => {
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
 
-    expect(fetchMock).toHaveBeenCalledWith(
-      "/api/quote",
-      expect.objectContaining({
-        body: JSON.stringify({
-          customerName: "Maya Tan",
-          customerEmail: "maya@example.test",
-          customerPhone: "",
-          eventDate: "",
-          venue: "",
-          items: [
-            {
-              productName: "Modular Lounge Set",
-              quantity: 1
-            }
-          ]
-        })
-      })
-    );
+    expect(getSubmittedPayload(fetchMock)).toMatchObject({
+      customerName: "Maya Tan",
+      customerEmail: "maya@example.test",
+      customerPhone: "",
+      eventDate: "",
+      venue: "",
+      items: [
+        {
+          productName: "Modular Lounge Set",
+          quantity: 1
+        }
+      ]
+    });
+    expect(getSubmittedPayload(fetchMock).requestId).toEqual(expect.any(String));
     expect(
       await screen.findByText(/enquiry received/i)
     ).toBeInTheDocument();
@@ -243,33 +254,29 @@ describe("QuoteRequestForm", () => {
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
 
-    expect(fetchMock).toHaveBeenCalledWith(
-      "/api/quote",
-      expect.objectContaining({
-        body: JSON.stringify({
-          customerName: "Maya Tan",
-          customerEmail: "maya@example.test",
-          customerPhone: "",
-          eventDate: "",
-          venue: "",
-          items: [
-            {
-              productName: "20 stools",
-              quantity: 1,
-              notes: "Place priority items near the reception zone."
-            },
-            {
-              productName: "4 cocktail tables",
-              quantity: 1
-            },
-            {
-              productName: "Modular lounge setup",
-              quantity: 1
-            }
-          ]
-        })
-      })
-    );
+    expect(getSubmittedPayload(fetchMock)).toMatchObject({
+      customerName: "Maya Tan",
+      customerEmail: "maya@example.test",
+      customerPhone: "",
+      eventDate: "",
+      venue: "",
+      items: [
+        {
+          productName: "20 stools",
+          quantity: 1,
+          notes: "Place priority items near the reception zone."
+        },
+        {
+          productName: "4 cocktail tables",
+          quantity: 1
+        },
+        {
+          productName: "Modular lounge setup",
+          quantity: 1
+        }
+      ]
+    });
+    expect(getSubmittedPayload(fetchMock).requestId).toEqual(expect.any(String));
   });
 
   it("keeps preferred contact prefix within the server customer message limit", async () => {
@@ -345,5 +352,47 @@ describe("QuoteRequestForm", () => {
     expect(source).not.toContain("SUPABASE_URL");
     expect(source).not.toContain("SUPABASE_ANON_KEY");
     expect(source).not.toContain("NEXT_PUBLIC_SUPABASE");
+  });
+
+  it("omits unsafe browser source metadata before submitting", async () => {
+    const fetchMock = vi.fn(async () => {
+      return new Response(
+        JSON.stringify({
+          status: "received",
+          quoteRequestId: "70000000-0000-4000-8000-000000000001",
+          publicReference: "QR-20260527-ABC12345"
+        }),
+        {
+          headers: { "content-type": "application/json" },
+          status: 201
+        }
+      );
+    });
+
+    vi.stubGlobal("fetch", fetchMock);
+    window.history.pushState(null, "", "/quote?listing=modular-lounge-set");
+
+    render(<QuoteRequestForm initialListingSlug="../admin" />);
+
+    fireEvent.change(screen.getByLabelText(/name/i), {
+      target: { value: "Maya Tan" }
+    });
+    fireEvent.change(screen.getByLabelText(/email address/i), {
+      target: { value: "maya@example.test" }
+    });
+    fireEvent.click(screen.getByRole("button", { name: /send an enquiry/i }));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+
+    const request = (fetchMock.mock.calls as unknown as [
+      string,
+      RequestInit
+    ][])[0][1];
+    const payload = JSON.parse(String(request.body));
+
+    expect(payload.sourcePath).toBe("/quote?listing=modular-lounge-set");
+    expect(payload.listingSlug).toBeUndefined();
+    expect(payload.requestId).toEqual(expect.any(String));
+    expect(payload.requestId.split("-")).toHaveLength(5);
   });
 });
