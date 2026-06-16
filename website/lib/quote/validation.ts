@@ -1,6 +1,6 @@
 import "server-only";
 
-import type { QuoteItemSubmission, QuoteSubmission } from "./types";
+import type { QuoteItemSubmission, QuotePersistencePayload, QuoteSubmission } from "./types";
 
 type ValidationResult =
   | { ok: true; value: QuoteSubmission }
@@ -16,6 +16,9 @@ const allowedTopLevelKeys = new Set([
   "customerMessage",
   "eventDate",
   "venue",
+  "sourcePath",
+  "listingSlug",
+  "requestId",
   "items"
 ]);
 const allowedItemKeys = new Set(["productName", "quantity", "notes"]);
@@ -26,10 +29,15 @@ const MAX_EMAIL_LENGTH = 254;
 const MAX_PHONE_LENGTH = 40;
 const MAX_CUSTOMER_MESSAGE_LENGTH = 1200;
 const MAX_VENUE_LENGTH = 180;
+const MAX_SOURCE_PATH_LENGTH = 500;
+const MAX_LISTING_SLUG_LENGTH = 120;
+const MAX_REQUEST_ID_LENGTH = 128;
+const MAX_CRM_SYNC_ERROR_LENGTH = 500;
 const MAX_ITEM_NAME_LENGTH = 180;
 const MAX_ITEM_NOTES_LENGTH = 500;
 const MAX_ITEMS = 20;
 const MAX_QUANTITY = 10_000;
+const listingSlugPattern = /^[a-z0-9][a-z0-9-]*$/;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
@@ -159,6 +167,9 @@ export function validateQuoteSubmission(payload: unknown): ValidationResult {
   const customerMessage = getString(payload, "customerMessage");
   const eventDate = getString(payload, "eventDate");
   const venue = getString(payload, "venue");
+  const sourcePath = getString(payload, "sourcePath");
+  const listingSlug = getString(payload, "listingSlug");
+  const requestId = getString(payload, "requestId");
   const lengthError =
     validateLength(customerName, "customerName", MAX_NAME_LENGTH) ??
     validateLength(customerEmail, "customerEmail", MAX_EMAIL_LENGTH) ??
@@ -168,7 +179,10 @@ export function validateQuoteSubmission(payload: unknown): ValidationResult {
       "customerMessage",
       MAX_CUSTOMER_MESSAGE_LENGTH
     ) ??
-    validateLength(venue, "venue", MAX_VENUE_LENGTH);
+    validateLength(venue, "venue", MAX_VENUE_LENGTH) ??
+    validateLength(sourcePath, "sourcePath", MAX_SOURCE_PATH_LENGTH) ??
+    validateLength(listingSlug, "listingSlug", MAX_LISTING_SLUG_LENGTH) ??
+    validateLength(requestId, "requestId", MAX_REQUEST_ID_LENGTH);
 
   if (!customerName) {
     return { ok: false, message: "customerName is required." };
@@ -191,6 +205,14 @@ export function validateQuoteSubmission(payload: unknown): ValidationResult {
 
   if (eventDate && !isValidDate(eventDate)) {
     return { ok: false, message: "eventDate must use YYYY-MM-DD format." };
+  }
+
+  if (sourcePath && !sourcePath.startsWith("/")) {
+    return { ok: false, message: "sourcePath must be a site-relative path." };
+  }
+
+  if (listingSlug && !listingSlugPattern.test(listingSlug)) {
+    return { ok: false, message: "listingSlug must be a valid listing slug." };
   }
 
   const rawItems = payload.items;
@@ -228,7 +250,41 @@ export function validateQuoteSubmission(payload: unknown): ValidationResult {
       ...(customerMessage ? { customerMessage } : {}),
       ...(eventDate ? { eventDate } : {}),
       ...(venue ? { venue } : {}),
+      ...(sourcePath ? { sourcePath } : {}),
+      ...(listingSlug ? { listingSlug } : {}),
+      ...(requestId ? { requestId } : {}),
       items
     }
+  };
+}
+
+export function normalizeCrmSyncError(value: unknown) {
+  if (typeof value !== "string") {
+    return null;
+  }
+
+  const normalized = value.trim().replace(/\s+/g, " ");
+
+  if (!normalized) {
+    return null;
+  }
+
+  return normalized.slice(0, MAX_CRM_SYNC_ERROR_LENGTH);
+}
+
+export function prepareQuoteForPersistence(
+  quote: QuoteSubmission
+): QuotePersistencePayload {
+  return {
+    ...quote,
+    sourcePagePath: quote.sourcePath ?? null,
+    sourceListingSlug: quote.listingSlug ?? null,
+    submissionRequestId: quote.requestId ?? null,
+    crmProvider: "hubspot",
+    crmSyncStatus: "not_queued",
+    crmContactId: null,
+    crmDealId: null,
+    crmLastSyncAttemptAt: null,
+    crmSyncError: null
   };
 }

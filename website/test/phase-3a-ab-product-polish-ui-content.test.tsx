@@ -332,7 +332,7 @@ describe("Phase 3A-A/B product polish and rental UI copy", () => {
     expect(source).not.toContain("SUPABASE_SERVICE_ROLE");
     expect(source).not.toContain("@pinecone-database");
     expect(source).not.toMatch(/PINECONE_API_KEY|PINECONE_ENV|PINECONE_INDEX/i);
-    expect(source).not.toMatch(/notification|crm/i);
+    expect(source).not.toMatch(/notification|hubspot api|api\.hubapi|crm sync job|crm integration/i);
     expect(readTrackedFiles(["website/chat-config.js"])).toEqual([]);
     expect(readTrackedFiles(["vercel.json", "website/vercel.json", ".vercel"])).toEqual([]);
     expect(readTrackedFiles(["supabase/config.toml", "supabase/.branches"])).toEqual([]);

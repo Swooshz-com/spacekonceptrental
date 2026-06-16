@@ -1,3 +1,13 @@
+## Supabase Enquiry Persistence And CRM Handoff Foundation References
+
+Current implementation-foundation focus: Supabase enquiry persistence and CRM handoff foundation for public quote/enquiry submissions and future CRM handoff tracking.
+
+References: `docs/architecture/SUPABASE-ENQUIRY-PERSISTENCE-CRM-HANDOFF-FOUNDATION.md`, `supabase/migrations/20260616100000_quote_enquiry_crm_handoff_foundation.sql`, `website/lib/quote/types.ts`, `website/lib/quote/validation.ts`, `website/lib/quote/quote-repository.ts`, and `scripts/validate-supabase-enquiry-persistence-crm-handoff-foundation.cjs`.
+
+Supabase enquiry persistence and CRM handoff foundation extends the existing quote/enquiry record with source metadata, safe duplicate-handling support, review metadata, and CRM handoff placeholder fields. Supabase owns the canonical SKR enquiry submission record; HubSpot remains the future CRM and sales workflow owner.
+
+Implementation firewall: schema, contracts, tests, docs, and validator only. No HubSpot API calls, n8n workflows, email sending, public customer accounts, public login, or custom CRM are implemented.
+
 ## External Services Architecture Pivot References
 
 Current planning focus: external-services architecture and implementation-plan reduction for auth, CRM, email, and enquiry persistence.

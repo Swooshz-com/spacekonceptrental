@@ -394,7 +394,7 @@ describe("Phase 3H-A/B admin operator QA readiness polish", () => {
     expect(productionSource).not.toContain("NEXT_PUBLIC_SUPABASE");
     expect(productionSource).not.toContain("SUPABASE_SERVICE_ROLE");
     expect(productionSource).not.toMatch(/service-role/i);
-    expect(productionSource).not.toMatch(/notification|crm/i);
+    expect(productionSource).not.toMatch(/notification|hubspot api|api\.hubapi|crm sync job|crm integration/i);
     expect(packageSource).not.toMatch(/@pinecone-database|pinecone/i);
     expect(productionSource).not.toMatch(/PINECONE_API_KEY|PINECONE_ENV|PINECONE_INDEX/i);
     expect(readTrackedFiles(["website/chat-config.js"])).toEqual([]);

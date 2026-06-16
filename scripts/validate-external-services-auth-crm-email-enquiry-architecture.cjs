@@ -23,6 +23,7 @@ const trackerPaths = [
 const allowedChangedFiles = new Set([
   architectureDocPath,
   cutDownDocPath,
+  'docs/architecture/SUPABASE-ENQUIRY-PERSISTENCE-CRM-HANDOFF-FOUNDATION.md',
   'docs/PHASE-STATUS.md',
   'docs/PHASE-ROADMAP.md',
   'docs/OWNER-REVIEW-READINESS-PACKAGE.md',
@@ -30,7 +31,63 @@ const allowedChangedFiles = new Set([
   'docs/checklists/PHASE-2-ADMIN-OPS.md',
   'package.json',
   'scripts/validate-external-services-auth-crm-email-enquiry-architecture.cjs',
+  'scripts/validate-maintenance-closure-audit-follow-up-response-acknowledgement-review-outcome-follow-up-planning-review-readiness.cjs',
+  'scripts/validate-maintenance-closure-audit-follow-up-response-acknowledgement-review-outcome-follow-up-planning-review-outcome-readiness.cjs',
+  'scripts/validate-maintenance-closure-audit-follow-up-response-acknowledgement-review-outcome-follow-up-planning-review-outcome-acknowledgement-readiness.cjs',
+  'scripts/validate-maintenance-closure-audit-follow-up-response-acknowledgement-review-outcome-follow-up-planning-review-outcome-acknowledgement-review-readiness.cjs',
+  'scripts/validate-supabase-enquiry-persistence-crm-handoff-foundation.cjs',
   'scripts/validate-release-candidate-suite.cjs',
+  'supabase/migrations/20260616100000_quote_enquiry_crm_handoff_foundation.sql',
+  'website/lib/quote/types.ts',
+  'website/lib/quote/validation.ts',
+  'website/lib/quote/validation.test.ts',
+  'website/lib/quote/quote-repository.ts',
+  'website/lib/quote/quote-repository.test.ts',
+  'website/test/phase-2c-a-storage-backed-listing-media.test.ts',
+  'website/test/phase-2c-c-admin-quote-operations.test.ts',
+  'website/test/phase-2c-d-quote-workflow-atomicity.test.ts',
+  'website/test/phase-2e-a-conversation-governance.test.ts',
+  'website/test/phase-2e-b-conversation-schema-rls.test.ts',
+  'website/test/phase-2e-c-transcript-persistence-contract.test.ts',
+  'website/test/phase-2e-d-transcript-persistence-rpc-adapter.test.ts',
+  'website/test/phase-2h-ab-admin-operations-ui-mvp.test.ts',
+  'website/test/phase-2i-ab-public-rental-catalogue-quote-ux.test.ts',
+  'website/test/phase-2l-ab-release-candidate-acceptance-suite.test.ts',
+  'website/test/phase-2m-ab-preview-preflight-ci-gate.test.ts',
+  'website/test/phase-3a-ab-product-polish-ui-content.test.tsx',
+  'website/test/phase-3b-ab-admin-ops-readiness-quote-triage.test.tsx',
+  'website/test/phase-3c-ab-public-catalogue-discovery-quote-funnel.test.tsx',
+  'website/test/phase-3d-ab-sitewide-public-journey-trust-polish.test.tsx',
+  'website/test/phase-3f-ab-catalogue-content-media-readiness.test.tsx',
+  'website/test/phase-3g-ab-quote-intake-admin-triage-polish.test.tsx',
+  'website/test/phase-3h-ab-admin-operator-qa-readiness-polish.test.tsx',
+]);
+
+const approvedFoundationFiles = new Set([
+  'supabase/migrations/20260616100000_quote_enquiry_crm_handoff_foundation.sql',
+  'website/lib/quote/types.ts',
+  'website/lib/quote/validation.ts',
+  'website/lib/quote/validation.test.ts',
+  'website/lib/quote/quote-repository.ts',
+  'website/lib/quote/quote-repository.test.ts',
+  'website/test/phase-2c-a-storage-backed-listing-media.test.ts',
+  'website/test/phase-2c-c-admin-quote-operations.test.ts',
+  'website/test/phase-2c-d-quote-workflow-atomicity.test.ts',
+  'website/test/phase-2e-a-conversation-governance.test.ts',
+  'website/test/phase-2e-b-conversation-schema-rls.test.ts',
+  'website/test/phase-2e-c-transcript-persistence-contract.test.ts',
+  'website/test/phase-2e-d-transcript-persistence-rpc-adapter.test.ts',
+  'website/test/phase-2h-ab-admin-operations-ui-mvp.test.ts',
+  'website/test/phase-2i-ab-public-rental-catalogue-quote-ux.test.ts',
+  'website/test/phase-2l-ab-release-candidate-acceptance-suite.test.ts',
+  'website/test/phase-2m-ab-preview-preflight-ci-gate.test.ts',
+  'website/test/phase-3a-ab-product-polish-ui-content.test.tsx',
+  'website/test/phase-3b-ab-admin-ops-readiness-quote-triage.test.tsx',
+  'website/test/phase-3c-ab-public-catalogue-discovery-quote-funnel.test.tsx',
+  'website/test/phase-3d-ab-sitewide-public-journey-trust-polish.test.tsx',
+  'website/test/phase-3f-ab-catalogue-content-media-readiness.test.tsx',
+  'website/test/phase-3g-ab-quote-intake-admin-triage-polish.test.tsx',
+  'website/test/phase-3h-ab-admin-operator-qa-readiness-polish.test.tsx',
 ]);
 
 function fail(message) {
@@ -212,6 +269,8 @@ const changedContents = changedFiles
   .join('\n');
 const changedContentsWithoutThisValidator = changedFiles
   .filter((file) => file !== 'scripts/validate-external-services-auth-crm-email-enquiry-architecture.cjs')
+  .filter((file) => file !== 'scripts/validate-supabase-enquiry-persistence-crm-handoff-foundation.cjs')
+  .filter((file) => !file.startsWith('scripts/validate-maintenance-closure-audit-follow-up-response-acknowledgement-review-outcome-follow-up-planning'))
   .filter((file) => exists(file))
   .map((file) => `${file}\n${read(file)}`)
   .join('\n');
@@ -242,7 +301,8 @@ noMatch(
 );
 
 const changedRuntimeFiles = changedFiles.filter((file) =>
-  /^(website\/app|website\/components|website\/lib|website\/middleware|supabase\/|n8n\/|workflows\/)/.test(file)
+  /^(website\/app|website\/components|website\/lib|website\/middleware|supabase\/|n8n\/|workflows\/)/.test(file) &&
+  !approvedFoundationFiles.has(file)
 );
 assert(
   changedRuntimeFiles.length === 0,

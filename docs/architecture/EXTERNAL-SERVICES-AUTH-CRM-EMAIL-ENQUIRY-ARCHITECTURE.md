@@ -150,3 +150,21 @@ steps must still be separately scoped, tested, and approved before adding:
 - Background jobs.
 - Scheduler jobs.
 - Runtime/API/provider/env/scheduler/chat/RAG/public behaviour changes.
+
+## Supabase Enquiry Persistence And CRM Handoff Foundation
+
+Supabase enquiry persistence and CRM handoff foundation is documented in
+`docs/architecture/SUPABASE-ENQUIRY-PERSISTENCE-CRM-HANDOFF-FOUNDATION.md`.
+
+Supabase now owns the canonical SKR enquiry submission record in the existing
+quote/enquiry tables with source metadata and CRM handoff placeholder fields.
+HubSpot remains the future CRM and sales workflow owner.
+
+CRM sync is not implemented in this PR.
+
+n8n workflows are not implemented in this PR.
+
+Email sending is not implemented in this PR.
+
+Public customer accounts remain deferred. Custom CRM remains
+rejected/deferred.

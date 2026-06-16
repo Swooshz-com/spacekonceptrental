@@ -145,7 +145,7 @@ describe("Phase 2C-C admin quote operations and enquiry workflow closeout", () =
     expect(adminQuoteSource).not.toMatch(
       /cart|checkout|payment|customer account|stock reservation|order fulfilment|online ordering|book now|confirmed booking/i
     );
-    expect(adminQuoteSource).not.toMatch(/notification|crm/i);
+    expect(adminQuoteSource).not.toMatch(/notification|hubspot api|api\.hubapi|crm sync job|crm integration/i);
     expect(adminQuoteSource).not.toContain("@pinecone-database");
     expect(adminQuoteSource).not.toContain("PINECONE_API_KEY");
     expect(adminQuoteSource).not.toContain("SUPABASE_SERVICE_ROLE");

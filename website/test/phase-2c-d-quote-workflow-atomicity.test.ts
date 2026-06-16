@@ -142,7 +142,7 @@ describe("Phase 2C-D quote workflow atomicity and admin operations hardening", (
     expect(productionSource).not.toMatch(
       /cart|checkout|payment|customer account|stock reservation|order fulfilment|online ordering|book now|confirmed booking/i
     );
-    expect(productionSource).not.toMatch(/notification|crm/i);
+    expect(productionSource).not.toMatch(/notification|hubspot api|api\.hubapi|crm sync job|crm integration/i);
     expect(productionSource).not.toContain("@pinecone-database");
     expect(productionSource).not.toContain("PINECONE_API_KEY");
     expect(productionSource).not.toContain("SUPABASE_SERVICE_ROLE");

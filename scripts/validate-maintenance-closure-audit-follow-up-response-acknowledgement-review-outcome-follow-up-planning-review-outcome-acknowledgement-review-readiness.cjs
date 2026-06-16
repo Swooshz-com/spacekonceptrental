@@ -137,7 +137,14 @@ noMatch(phaseSources, /create(Server)?Client|fetch\(|axios|POST \/api|runtime ha
 
 const changedResult = spawnSync('git', ['diff', '--name-only', '--', 'website/app', 'website/components', 'website/lib'], { cwd: repoRoot, encoding: 'utf8' });
 assert(changedResult.status === 0, changedResult.stderr || 'git diff --name-only failed');
-const changedPublicFiles = changedResult.stdout.split(/\r?\n/).filter(Boolean).filter((file) => !file.includes('/admin/'));
+const approvedFoundationPublicFiles = new Set([
+  'website/lib/quote/types.ts',
+  'website/lib/quote/validation.ts',
+  'website/lib/quote/validation.test.ts',
+  'website/lib/quote/quote-repository.ts',
+  'website/lib/quote/quote-repository.test.ts',
+]);
+const changedPublicFiles = changedResult.stdout.split(/\r?\n/).filter(Boolean).filter((file) => !file.includes('/admin/') && !approvedFoundationPublicFiles.has(file));
 assert(changedPublicFiles.length === 0, `Phase 6P must not change public source files: ${changedPublicFiles.join(', ')}`);
 
 console.log('Phase 6P maintenance closure audit follow-up response acknowledgement review outcome follow-up planning review outcome acknowledgement review readiness checks passed. No follow-up planning review outcome acknowledgement review, acknowledgement review decision, follow-up planning review outcome acknowledgement, acknowledgement decision, follow-up planning review outcome, review decision, planning decision, follow-up action, owner assignment, remediation, contact, closure, archive, retention, production evidence, runtime, API, provider, env, scheduler, chat, RAG, public behavior, ecommerce flow, customer flow, or Docker bypass was added.');

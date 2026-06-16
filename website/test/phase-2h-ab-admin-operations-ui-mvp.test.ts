@@ -173,7 +173,7 @@ describe("Phase 2H-A/B admin operations UI MVP", () => {
     expect(productionSource).not.toMatch(
       /cart|checkout|payments?|customer account|stock reservation|order fulfilment|confirmed booking|online ordering/i
     );
-    expect(productionSource).not.toMatch(/notification|crm/i);
+    expect(productionSource).not.toMatch(/notification|hubspot api|api\.hubapi|crm sync job|crm integration/i);
     expect(readTrackedFiles(["n8n-workflows"]).sort()).toEqual([
       "n8n-workflows/spacekonceptrental-customer-support-agent.workflow.json",
       "n8n-workflows/spacekonceptrental-error-handler.workflow.json",

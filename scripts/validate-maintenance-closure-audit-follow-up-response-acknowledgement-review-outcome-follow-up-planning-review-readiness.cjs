@@ -113,7 +113,14 @@ noMatch(suite, /SKIP_DOCKER|BYPASS_DOCKER|docker.*(skip|bypass)|supabase.*(skip|
 
 const changedResult = spawnSync('git', ['diff', '--name-only', '--', 'website/app', 'website/components', 'website/lib'], { cwd: repoRoot, encoding: 'utf8' });
 assert(changedResult.status === 0, changedResult.stderr || 'git diff --name-only failed');
-const changedPublicFiles = changedResult.stdout.split(/\r?\n/).filter(Boolean).filter((file) => !file.includes('/admin/'));
+const approvedFoundationPublicFiles = new Set([
+  'website/lib/quote/types.ts',
+  'website/lib/quote/validation.ts',
+  'website/lib/quote/validation.test.ts',
+  'website/lib/quote/quote-repository.ts',
+  'website/lib/quote/quote-repository.test.ts',
+]);
+const changedPublicFiles = changedResult.stdout.split(/\r?\n/).filter(Boolean).filter((file) => !file.includes('/admin/') && !approvedFoundationPublicFiles.has(file));
 assert(changedPublicFiles.length === 0, `Phase 6M must not change public source files: ${changedPublicFiles.join(', ')}`);
 
 console.log('Phase 6M maintenance closure audit follow-up response acknowledgement review outcome follow-up planning review readiness checks passed. No follow-up planning review or decision was selected or recorded. No follow-up action, owner assignment, remediation, contact, closure, archive, retention, production evidence, runtime, API, provider, env, scheduler, chat, RAG, public behavior, ecommerce flow, customer flow, or Docker bypass was added.');

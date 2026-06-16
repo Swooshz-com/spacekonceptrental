@@ -301,7 +301,7 @@ test('real migration directory passes static validation', () => {
   const result = runValidator(realMigrationsDir);
 
   assert.equal(result.status, 0, result.stdout + result.stderr);
-  assert.match(result.stdout, /checked 18 migration SQL file\(s\)/);
+  assert.match(result.stdout, /checked 19 migration SQL file\(s\)/);
 });
 
 test('real base schema migration creates the planned MVP tables', () => {
