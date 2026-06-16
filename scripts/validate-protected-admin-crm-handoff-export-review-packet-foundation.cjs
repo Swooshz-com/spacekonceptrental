@@ -5,7 +5,9 @@ const { spawnSync } = require('node:child_process');
 
 const repoRoot = path.resolve(__dirname, '..');
 
-const crmDocPath =
+const packetDocPath =
+  'docs/architecture/PROTECTED-ADMIN-CRM-HANDOFF-EXPORT-REVIEW-PACKET-FOUNDATION.md';
+const queueDocPath =
   'docs/architecture/PROTECTED-ADMIN-CRM-HANDOFF-QUEUE-PREPARATION-FOUNDATION.md';
 const statusDocPath =
   'docs/architecture/PROTECTED-ADMIN-ENQUIRY-TRIAGE-STATUS-UPDATE-FOUNDATION.md';
@@ -20,27 +22,23 @@ const architectureDocPath =
 const cutDownDocPath =
   'docs/architecture/IMPLEMENTATION-PLAN-CUT-DOWN-EXTERNAL-SERVICES.md';
 const inboxPanelPath = 'website/components/admin/quote-request-inbox-panel.tsx';
-const crmWritePath =
-  'website/lib/quote/admin-write/admin-quote-request-crm-handoff-write.ts';
-const crmRoutePath =
-  'website/lib/quote/admin-write/admin-quote-request-crm-handoff-route.ts';
-const routePath =
-  'website/app/api/admin/quote-requests/[quoteRequestId]/crm-handoff/route.ts';
-const crmWriteTestPath =
-  'website/lib/quote/admin-write/admin-quote-request-crm-handoff-write.test.ts';
-const crmRouteTestPath =
-  'website/lib/quote/admin-write/admin-quote-request-crm-handoff-route.test.ts';
+const packetReadPath =
+  'website/lib/quote/admin-read/admin-quote-request-crm-handoff-packet-read.ts';
+const packetRouteHelperPath =
+  'website/lib/quote/admin-read/admin-quote-request-crm-handoff-packet-route.ts';
+const packetRoutePath =
+  'website/app/api/admin/quote-requests/crm-handoff-packet/route.ts';
+const packetReadTestPath =
+  'website/lib/quote/admin-read/admin-quote-request-crm-handoff-packet-read.test.ts';
+const packetRouteTestPath =
+  'website/lib/quote/admin-read/admin-quote-request-crm-handoff-packet-route.test.ts';
 const inboxPanelTestPath =
   'website/components/admin/quote-request-inbox-panel.test.tsx';
-const quoteRouteTestPath = 'website/app/api/quote/route.test.ts';
-const quoteValidationTestPath = 'website/lib/quote/validation.test.ts';
-const migrationPath =
-  'supabase/migrations/20260616143000_admin_crm_handoff_queue_preparation_foundation.sql';
 const suitePath = 'scripts/validate-release-candidate-suite.cjs';
 const packageScriptName =
-  'validate:protected-admin-crm-handoff-queue-preparation-foundation';
+  'validate:protected-admin-crm-handoff-export-review-packet-foundation';
 const packageScriptCommand =
-  'node scripts/validate-protected-admin-crm-handoff-queue-preparation-foundation.cjs';
+  'node scripts/validate-protected-admin-crm-handoff-export-review-packet-foundation.cjs';
 
 const trackerPaths = [
   'docs/PHASE-STATUS.md',
@@ -170,7 +168,8 @@ function getAddedDiffText(changedFiles) {
 }
 
 for (const requiredPath of [
-  crmDocPath,
+  packetDocPath,
+  queueDocPath,
   statusDocPath,
   inboxDocPath,
   publicDocPath,
@@ -178,21 +177,19 @@ for (const requiredPath of [
   architectureDocPath,
   cutDownDocPath,
   inboxPanelPath,
-  crmWritePath,
-  crmRoutePath,
-  routePath,
-  crmWriteTestPath,
-  crmRouteTestPath,
+  packetReadPath,
+  packetRouteHelperPath,
+  packetRoutePath,
+  packetReadTestPath,
+  packetRouteTestPath,
   inboxPanelTestPath,
-  quoteRouteTestPath,
-  quoteValidationTestPath,
-  migrationPath,
   suitePath,
 ]) {
   assert(exists(requiredPath), `Missing required file: ${requiredPath}`);
 }
 
-const crmDoc = read(crmDocPath);
+const packetDoc = read(packetDocPath);
+const queueDoc = read(queueDocPath);
 const statusDoc = read(statusDocPath);
 const inboxDoc = read(inboxDocPath);
 const publicDoc = read(publicDocPath);
@@ -200,20 +197,18 @@ const supabaseDoc = read(supabaseDocPath);
 const architectureDoc = read(architectureDocPath);
 const cutDownDoc = read(cutDownDocPath);
 const inboxPanel = read(inboxPanelPath);
-const crmWrite = read(crmWritePath);
-const crmRoute = read(crmRoutePath);
-const route = read(routePath);
-const crmWriteTest = read(crmWriteTestPath);
-const crmRouteTest = read(crmRouteTestPath);
+const packetRead = read(packetReadPath);
+const packetRouteHelper = read(packetRouteHelperPath);
+const packetRoute = read(packetRoutePath);
+const packetReadTest = read(packetReadTestPath);
+const packetRouteTest = read(packetRouteTestPath);
 const inboxPanelTest = read(inboxPanelTestPath);
-const quoteRouteTest = read(quoteRouteTestPath);
-const quoteValidationTest = read(quoteValidationTestPath);
-const migration = read(migrationPath);
 const packageJson = JSON.parse(read('package.json'));
 const releaseSuite = read(suitePath);
 
 for (const required of [
-  'Admin users can locally queue enquiries for future CRM handoff.',
+  'Admin users can review/export queued CRM handoff packets.',
+  'This is manual review/export preparation only.',
   'This is not a CRM replacement.',
   'This does not contact the customer.',
   'This does not send email.',
@@ -221,6 +216,7 @@ for (const required of [
   'This does not call or queue n8n.',
   'This does not make provider API calls.',
   'This does not create HubSpot contact/deal IDs.',
+  'This does not mark records as synced.',
   'HubSpot CRM sync is still not implemented.',
   'n8n workflows are still not implemented.',
   'Email sending is still not implemented.',
@@ -232,10 +228,11 @@ for (const required of [
   'Resend remains optional future transactional email only.',
   'Actual provider sync, n8n webhook trigger, retry worker, provider callback/reconciliation, assignment, reminders, sales notes/activity timeline, and outbound contact workflows remain future work unless explicitly implemented in a later PR.',
 ]) {
-  includes(crmDoc, required, crmDocPath);
+  includes(packetDoc, required, packetDocPath);
 }
 
 for (const [docPath, source] of [
+  [queueDocPath, queueDoc],
   [statusDocPath, statusDoc],
   [inboxDocPath, inboxDoc],
   [publicDocPath, publicDoc],
@@ -243,8 +240,8 @@ for (const [docPath, source] of [
   [architectureDocPath, architectureDoc],
   [cutDownDocPath, cutDownDoc],
 ]) {
-  includes(source, crmDocPath, docPath);
-  includes(source, 'Admin users can locally queue enquiries for future CRM handoff', docPath);
+  includes(source, packetDocPath, docPath);
+  includes(source, 'Admin users can review/export queued CRM handoff packets', docPath);
   includes(source, 'HubSpot CRM sync is still not implemented', docPath);
   includes(source, 'n8n workflows are still not implemented', docPath);
   includes(source, 'Email sending is still not implemented', docPath);
@@ -255,87 +252,100 @@ for (const [docPath, source] of [
 }
 
 includes(architectureDoc, 'HubSpot is the future CRM/sales workflow owner', architectureDocPath);
+includes(supabaseDoc, 'Supabase remains the SKR app database/auth/backend foundation', supabaseDocPath);
 
 for (const trackerPath of trackerPaths) {
   const tracker = read(trackerPath);
-  includes(tracker, crmDocPath, trackerPath);
-  includes(tracker, 'Admin users can locally queue enquiries for future CRM handoff', trackerPath);
+  includes(tracker, packetDocPath, trackerPath);
+  includes(tracker, 'Admin users can review/export queued CRM handoff packets', trackerPath);
   includes(tracker, 'This does not sync to HubSpot', trackerPath);
-  includes(tracker, 'This does not call or queue n8n', trackerPath);
+  includes(tracker, 'call or queue n8n', trackerPath);
   includes(tracker, 'Customer dashboard remains unimplemented', trackerPath);
 }
 
-includes(inboxPanel, 'Local CRM handoff payload preview', inboxPanelPath);
-includes(inboxPanel, 'Mark ready for CRM handoff', inboxPanelPath);
-includes(inboxPanel, 'Queued locally for future CRM handoff', inboxPanelPath);
-includes(inboxPanel, 'This does not sync to HubSpot or contact the customer', inboxPanelPath);
-includes(inboxPanel, '/crm-handoff', inboxPanelPath);
-includes(inboxPanel, 'disabled={status.kind === "pending"}', inboxPanelPath);
-includes(crmWrite, 'import "server-only";', crmWritePath);
-includes(crmWrite, 'createSessionBoundSupabaseAdminReadClient', crmWritePath);
-includes(crmWrite, 'execute_admin_quote_crm_handoff_queue_update', crmWritePath);
-includes(crmRoute, 'hasOnlyKeys(body, ["crmSyncStatus"])', crmRoutePath);
-includes(route, 'handleAdminQuoteRequestCrmHandoffStatusUpdateRoute', routePath);
+for (const requiredUi of [
+  'Queued CRM handoff packet review',
+  'Eligible queued records',
+  'Review queued CRM handoff packet',
+  'Manual review/export only',
+  'This does not sync to HubSpot or contact customers',
+  'This does not call n8n, perform email delivery, create provider IDs, or mark records as synced',
+  '/api/admin/quote-requests/crm-handoff-packet?limit=',
+]) {
+  includes(inboxPanel, requiredUi, inboxPanelPath);
+}
 
-matches(
-  migration,
-  /p_crm_sync_status not in \('not_queued', 'queued', 'failed'\)/,
-  `${migrationPath} CRM queue status allowlist`,
-);
-matches(
-  migration,
-  /p_crm_provider <> 'hubspot'/,
-  `${migrationPath} CRM provider allowlist`,
-);
-noMatch(
-  migration,
-  /crm_contact_id|crm_deal_id|crm_last_sync_attempt_at/,
-  `${migrationPath} CRM external ID immutability`,
-);
-
-for (const requiredTest of [
-  'marks an enquiry as locally queued for future CRM handoff',
-  'returns an enquiry to not queued',
-  'prepares retry from failed to queued',
-  'rejects invalid CRM handoff status',
-  'fails safely without leaking SQL, internal, or provider errors',
+for (const requiredHelper of [
+  'import "server-only";',
+  'createSessionBoundSupabaseAdminReadClient',
+  '.eq("workspace_id", workspaceId)',
+  '.eq("crm_provider", "hubspot")',
+  '.eq("crm_sync_status", "queued")',
+  '.order("created_at", { ascending: false })',
+  'const defaultLimit = 25',
+  'const maxLimit = 100',
+  'selectColumns',
   'crm_contact_id',
   'crm_deal_id',
   'crm_last_sync_attempt_at',
-  'hubapi',
 ]) {
-  includes(crmWriteTest, requiredTest, crmWriteTestPath);
+  if (requiredHelper.startsWith('crm_')) {
+    noMatch(packetRead, new RegExp(`${requiredHelper}\\s*[:,]`), packetReadPath);
+  } else {
+    includes(packetRead, requiredHelper, packetReadPath);
+  }
+}
+
+for (const requiredRoute of [
+  'requestedOperation: "quote.read"',
+  'requestMethod !== "GET"',
+  'request_filter_invalid',
+  'request_limit_invalid',
+  'quote_crm_handoff_packet_unavailable',
+  'Cache-Control',
+]) {
+  includes(packetRouteHelper, requiredRoute, packetRouteHelperPath);
+}
+includes(packetRoute, 'handleAdminQuoteRequestCrmHandoffPacketRoute', packetRoutePath);
+
+for (const requiredTest of [
+  'generates a bounded newest-first JSON packet for queued HubSpot handoff records',
+  'crm_provider',
+  'crm_sync_status',
+  'not_queued',
+  'failed',
+  'synced',
+  'keeps the JSON packet allowlisted',
+  'does not expose writable provider fields',
+  'without mutating records',
+  'crm_last_sync_attempt_at',
+  'keeps packet generation server-only and separate from public routes',
+]) {
+  includes(packetReadTest, requiredTest, packetReadTestPath);
 }
 
 for (const requiredTest of [
-  'updates local CRM handoff queue status after quote.write CSRF and admin gate checks',
-  'request_payload_invalid',
+  'returns a no-store queued packet after quote.read admin gate checks',
+  'rejects public or unauthorised access before reading packet data',
+  'maps packet read failures to generic errors without leaking provider details',
+  'request_filter_invalid',
+  'request_limit_invalid',
+]) {
+  includes(packetRouteTest, requiredTest, packetRouteTestPath);
+}
+
+for (const requiredTest of [
+  'lets admins review a bounded queued CRM handoff packet without provider calls',
+  'disables queued packet review while loading and shows generic failures',
+  'Manual review\\/export only',
+  'does not sync to HubSpot or contact customers',
+  'does not call n8n, perform email delivery, create provider IDs, or mark records as synced',
+  'hubapi',
   'crmContactId',
   'crmDealId',
   'crmLastSyncAttemptAt',
-  'maps provider failures to generic no-store JSON',
-]) {
-  includes(crmRouteTest, requiredTest, crmRouteTestPath);
-}
-
-for (const requiredTest of [
-  'sends local CRM handoff queue status update POST without contact IDs or provider calls',
-  'lets admins return queued enquiries to not queued and prepare failed retry locally',
-  'shows generic CRM handoff failure without SQL or provider details',
-  'Local CRM handoff payload preview',
-  'This does not sync to HubSpot or contact the customer',
 ]) {
   includes(inboxPanelTest, requiredTest, inboxPanelTestPath);
-}
-
-for (const requiredTest of [
-  'blocks public CRM overrides',
-  'crm_contact_id',
-  'crm_deal_id',
-  'crm_last_sync_attempt_at',
-  'crm_sync_error',
-]) {
-  includes(quoteRouteTest + quoteValidationTest, requiredTest, 'public CRM override tests');
 }
 
 assert(
@@ -357,13 +367,16 @@ for (const file of changedFiles) {
 
 const addedTextWithoutThisValidator = getAddedDiffText(
   changedFiles.filter(
-    (file) => file !== 'scripts/validate-protected-admin-crm-handoff-queue-preparation-foundation.cjs',
+    (file) =>
+      file !==
+      'scripts/validate-protected-admin-crm-handoff-export-review-packet-foundation.cjs',
   ),
 );
 const addedNonTestRuntimeText = getAddedDiffText(
   changedFiles.filter(
     (file) =>
-      file !== 'scripts/validate-protected-admin-crm-handoff-queue-preparation-foundation.cjs' &&
+      file !==
+        'scripts/validate-protected-admin-crm-handoff-export-review-packet-foundation.cjs' &&
       !file.startsWith('docs/') &&
       !file.includes('.test.') &&
       !file.startsWith('scripts/validate-'),
@@ -382,9 +395,10 @@ for (const pattern of [
 for (const pattern of [
   /hubspot\/api-client|api[.]hubapi[.]com|new\s+HubSpot|hubspot\s*Client[.]/i,
   /n8n.*nodes.*base|\/webhook(?:-test)?\/|N8N.*CHAT.*WEBHOOK.*URL/i,
-      /from ['"]resend['"]|new\s+Resend|resend[.]emails[.]send/i,
+  /from ['"]resend['"]|new\s+Resend|resend[.]emails[.]send/i,
   /smtp[.]gmail|google\s*apis|gmail[.]users[.]messages|node\s*mailer/i,
   /NEXT_PUBLIC[_]SUPABASE|SUPABASE[_]SERVICE[_]ROLE[_]KEY/i,
+  /\.update\s*\(|\.insert\s*\(|\.upsert\s*\(|\.delete\s*\(|\.rpc\s*\(/i,
 ]) {
   noMatch(addedNonTestRuntimeText, pattern, 'runtime added lines');
 }
@@ -408,5 +422,5 @@ for (const pattern of [
 }
 
 console.log(
-  'Protected admin CRM handoff queue preparation foundation validation passed. Admin-only local CRM handoff queue controls, read-only preview, docs, tests, package script, and release-candidate wiring are present without provider calls, credentials, public customer access, retail transaction or date-hold flow creep, or Docker guard changes.',
+  'Protected admin CRM handoff export review packet foundation validation passed. Admin-only queued packet preview/export, bounded JSON allowlist, docs, tests, package script, and release-candidate wiring are present without provider calls, credentials, public customer access, synced marking, sync timestamp updates, customer-flow creep, or Docker guard changes.',
 );

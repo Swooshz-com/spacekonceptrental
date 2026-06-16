@@ -107,7 +107,8 @@ describe("Phase 2B-AK admin CSRF proof issuer route implementation", () => {
       "website/app/api/admin/products/[productId]/route.ts",
       "website/app/api/admin/products/route.ts",
       "website/app/api/admin/quote-requests/[quoteRequestId]/crm-handoff/route.ts",
-      "website/app/api/admin/quote-requests/[quoteRequestId]/status/route.ts"
+      "website/app/api/admin/quote-requests/[quoteRequestId]/status/route.ts",
+      "website/app/api/admin/quote-requests/crm-handoff-packet/route.ts"
     ]);
     expect(readTrackedFiles(["website/app/api/products"])).toEqual([]);
     expect(readTrackedFiles(["website/app/api/categories"])).toEqual([]);

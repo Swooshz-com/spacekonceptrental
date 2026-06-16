@@ -19,6 +19,16 @@ Protected admin internal triage status updates are documented in
 Protected admin local CRM handoff queue preparation is documented in
 `docs/architecture/PROTECTED-ADMIN-CRM-HANDOFF-QUEUE-PREPARATION-FOUNDATION.md`.
 
+Protected admin CRM handoff packet/export preparation is documented in
+`docs/architecture/PROTECTED-ADMIN-CRM-HANDOFF-EXPORT-REVIEW-PACKET-FOUNDATION.md`.
+Admin users can review/export queued CRM handoff packets for manual
+review/export preparation only. Supabase remains the SKR app
+database/auth/backend foundation. HubSpot remains the future CRM/sales workflow
+owner. HubSpot CRM sync is still not implemented. n8n workflows are still not
+implemented. Email sending is still not implemented. Public customer accounts
+remain deferred. Public customer login remains unimplemented. Customer
+dashboard remains unimplemented. Custom CRM remains rejected/deferred.
+
 ## Implemented Foundation
 
 Supabase owns the canonical SKR enquiry submission record.

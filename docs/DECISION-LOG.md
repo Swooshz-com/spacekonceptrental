@@ -1,3 +1,18 @@
+## Protected Admin CRM Handoff Export Review Packet Foundation
+
+Decision: Admin users can review/export queued CRM handoff packets inside
+protected admin surfaces for manual review/export preparation only.
+
+References: `docs/architecture/PROTECTED-ADMIN-CRM-HANDOFF-EXPORT-REVIEW-PACKET-FOUNDATION.md`, `website/components/admin/quote-request-inbox-panel.tsx`, `website/lib/quote/admin-read/admin-quote-request-crm-handoff-packet-read.ts`, `website/lib/quote/admin-read/admin-quote-request-crm-handoff-packet-route.ts`, `website/app/api/admin/quote-requests/crm-handoff-packet/route.ts`, and `scripts/validate-protected-admin-crm-handoff-export-review-packet-foundation.cjs`.
+
+This does not sync to HubSpot, call or queue n8n, send email, contact the
+customer, create HubSpot contact/deal IDs, mark records as synced, or set CRM
+sync attempt timestamps. HubSpot CRM sync is still not implemented. n8n
+workflows are still not implemented. Email sending is still not implemented.
+Public customer accounts remain deferred. Public customer login remains
+unimplemented. Customer dashboard remains unimplemented. Custom CRM remains
+rejected/deferred.
+
 ## Protected Admin Enquiry Triage Status Update Foundation References
 
 Current implementation-foundation focus: protected admin-only enquiry triage

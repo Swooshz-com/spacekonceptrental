@@ -13,6 +13,7 @@
     "validate:protected-admin-enquiry-inbox-triage-foundation": "node scripts/validate-protected-admin-enquiry-inbox-triage-foundation.cjs",
     "validate:protected-admin-enquiry-triage-status-update-foundation": "node scripts/validate-protected-admin-enquiry-triage-status-update-foundation.cjs",
     "validate:protected-admin-crm-handoff-queue-preparation-foundation": "node scripts/validate-protected-admin-crm-handoff-queue-preparation-foundation.cjs",
+    "validate:protected-admin-crm-handoff-export-review-packet-foundation": "node scripts/validate-protected-admin-crm-handoff-export-review-packet-foundation.cjs",
     "validate:public-enquiry-persistence-integration": "node scripts/validate-public-enquiry-persistence-integration.cjs",
     "validate:supabase-enquiry-persistence-crm-handoff-foundation": "node scripts/validate-supabase-enquiry-persistence-crm-handoff-foundation.cjs",
     "validate:external-services-auth-crm-email-enquiry-architecture": "node scripts/validate-external-services-auth-crm-email-enquiry-architecture.cjs",

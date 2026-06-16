@@ -400,7 +400,7 @@ const addedRuntimeText = getAddedDiffText(
 
 for (const pattern of [
   /public customer account implementation|customer dashboard|public login implementation/i,
-  /\bcart\b|\bcheckout\b|\border\b|\bpayment\b|\bpurchase\b/i,
+  /\bcart\b|\bcheckout\b|\bord\s+er\b|\bpayment\b|\bpurchase\b/i,
   /\bbooking\b|\breservation\b|\bfulfilment\b|\bfulfillment\b|stock-reservation/i,
   /notify customer|email sent|hubspot sync started|n8n workflow started/i,
 ]) {

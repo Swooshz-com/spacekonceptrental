@@ -285,6 +285,145 @@ describe("QuoteRequestInboxPanel", () => {
     ).toBeInTheDocument();
   });
 
+  it("lets admins review a bounded queued CRM handoff packet without provider calls", async () => {
+    const queuedInbox = loadedInbox();
+    queuedInbox.data.quoteRequests = [
+      {
+        ...quoteRequest,
+        crmSyncStatus: "queued" as const
+      },
+      {
+        ...quoteRequest,
+        id: "66666666-6666-4666-8666-666666666666",
+        publicReference: "QR-20260603-NOT-QUEUED",
+        crmSyncStatus: "not_queued" as const
+      }
+    ];
+    const fetcher = vi.fn().mockResolvedValueOnce(
+      createJsonResponse({
+        ok: true,
+        packet: {
+          generatedAt: "2026-06-16T12:00:00.000Z",
+          provider: "hubspot",
+          localCrmSyncStatus: "queued",
+          limit: 25,
+          recordCount: 1,
+          records: [
+            {
+              id: quoteRequest.id,
+              publicReference: quoteRequest.publicReference,
+              createdAt: quoteRequest.createdAt,
+              status: quoteRequest.status,
+              customerName: quoteRequest.customerName,
+              customerEmail: quoteRequest.customerEmail,
+              customerPhone: quoteRequest.customerPhone,
+              companyOrEventOrganisation: quoteRequest.venue,
+              messageDetails: quoteRequest.customerMessage,
+              sourcePagePath: quoteRequest.sourcePagePath,
+              sourceListingSlug: quoteRequest.sourceListingSlug,
+              futureProvider: "hubspot",
+              localCrmSyncStatus: "queued"
+            }
+          ]
+        }
+      })
+    );
+
+    render(<QuoteRequestInboxPanel fetcher={fetcher} inbox={queuedInbox} />);
+
+    expect(
+      screen.getByRole("heading", {
+        name: /queued CRM handoff packet review/i
+      })
+    ).toBeInTheDocument();
+    expect(screen.getByText(/eligible queued records/i)).toBeInTheDocument();
+    expect(screen.getByText("1")).toBeInTheDocument();
+    expect(
+      screen.getByText(/Manual review\/export only/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/does not sync to HubSpot or contact customers/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/does not call n8n, perform email delivery, create provider IDs, or mark records as synced/i)
+    ).toBeInTheDocument();
+
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: /review queued CRM handoff packet/i
+      })
+    );
+
+    await waitFor(() => {
+      expect(fetcher).toHaveBeenCalledTimes(1);
+    });
+
+    expect(fetcher).toHaveBeenCalledWith(
+      "/api/admin/quote-requests/crm-handoff-packet?limit=25",
+      {
+        method: "GET",
+        headers: {
+          Accept: "application/json"
+        }
+      }
+    );
+    expect(
+      await screen.findByText(/queued CRM handoff packet JSON preview/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getAllByText(/QR-20260603-NEWEST/i).length
+    ).toBeGreaterThan(0);
+    expect(JSON.stringify(fetcher.mock.calls)).not.toContain("hubapi");
+    expect(JSON.stringify(fetcher.mock.calls)).not.toContain("crmContactId");
+    expect(JSON.stringify(fetcher.mock.calls)).not.toContain("crmDealId");
+    expect(JSON.stringify(fetcher.mock.calls)).not.toContain("crmLastSyncAttemptAt");
+  });
+
+  it("disables queued packet review while loading and shows generic failures", async () => {
+    let resolvePacket: ((value: Response) => void) | undefined;
+    const packetRequest = new Promise<Response>((resolve) => {
+      resolvePacket = resolve;
+    });
+    const queuedInbox = loadedInbox();
+    queuedInbox.data.quoteRequests = [
+      {
+        ...quoteRequest,
+        crmSyncStatus: "queued" as const
+      }
+    ];
+    const fetcher = vi.fn().mockReturnValueOnce(packetRequest);
+
+    render(<QuoteRequestInboxPanel fetcher={fetcher} inbox={queuedInbox} />);
+
+    const button = screen.getByRole("button", {
+      name: /review queued CRM handoff packet/i
+    });
+    fireEvent.click(button);
+
+    await waitFor(() => {
+      expect(button).toBeDisabled();
+    });
+
+    resolvePacket?.(
+      createJsonResponse(
+        {
+          ok: false,
+          error: "sql token stack workspace-secret"
+        },
+        {
+          status: 503
+        }
+      )
+    );
+
+    expect(
+      await screen.findByText(
+        /CRM handoff packet could not be prepared\. Keep queued records unchanged and try again\./i
+      )
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/workspace-secret/i)).not.toBeInTheDocument();
+  });
+
   it("lets admins return queued enquiries to not queued and prepare failed retry locally", async () => {
     const queuedInbox = loadedInbox();
     queuedInbox.data.quoteRequests = [

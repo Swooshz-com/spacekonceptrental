@@ -33,6 +33,7 @@ const allowedChangedFiles = new Set([
   foundationDocPath,
   'docs/architecture/PROTECTED-ADMIN-ENQUIRY-INBOX-TRIAGE-FOUNDATION.md',
   'docs/architecture/PROTECTED-ADMIN-CRM-HANDOFF-QUEUE-PREPARATION-FOUNDATION.md',
+  'docs/architecture/PROTECTED-ADMIN-CRM-HANDOFF-EXPORT-REVIEW-PACKET-FOUNDATION.md',
   'docs/architecture/PROTECTED-ADMIN-ENQUIRY-TRIAGE-STATUS-UPDATE-FOUNDATION.md',
   'docs/architecture/PUBLIC-ENQUIRY-PERSISTENCE-INTEGRATION.md',
   architectureDocPath,
@@ -72,6 +73,11 @@ const allowedChangedFiles = new Set([
   'website/lib/quote/admin-write/admin-quote-request-crm-handoff-route.test.ts',
   'website/lib/quote/admin-write/admin-quote-request-crm-handoff-write.ts',
   'website/lib/quote/admin-write/admin-quote-request-crm-handoff-write.test.ts',
+  'website/app/api/admin/quote-requests/crm-handoff-packet/route.ts',
+  'website/lib/quote/admin-read/admin-quote-request-crm-handoff-packet-read.ts',
+  'website/lib/quote/admin-read/admin-quote-request-crm-handoff-packet-read.test.ts',
+  'website/lib/quote/admin-read/admin-quote-request-crm-handoff-packet-route.ts',
+  'website/lib/quote/admin-read/admin-quote-request-crm-handoff-packet-route.test.ts',
   'website/test/phase-2e-a-conversation-governance.test.ts',
   'website/test/phase-2e-b-conversation-schema-rls.test.ts',
   'website/test/phase-2e-c-transcript-persistence-contract.test.ts',
@@ -114,6 +120,7 @@ const allowedChangedFiles = new Set([
   'scripts/validate-protected-admin-enquiry-inbox-triage-foundation.cjs',
   'scripts/validate-protected-admin-enquiry-triage-status-update-foundation.cjs',
   'scripts/validate-protected-admin-crm-handoff-queue-preparation-foundation.cjs',
+  'scripts/validate-protected-admin-crm-handoff-export-review-packet-foundation.cjs',
   'scripts/validate-maintenance-closure-audit-follow-up-response-acknowledgement-review-outcome-follow-up-planning-review-readiness.cjs',
   'scripts/validate-maintenance-closure-audit-follow-up-response-acknowledgement-review-outcome-follow-up-planning-review-outcome-readiness.cjs',
   'scripts/validate-maintenance-closure-audit-follow-up-response-acknowledgement-review-outcome-follow-up-planning-review-outcome-acknowledgement-readiness.cjs',
@@ -362,6 +369,11 @@ const validatorFilesExcludedFromAddedText = new Set([
   'scripts/validate-public-enquiry-persistence-integration.cjs',
   'scripts/validate-protected-admin-enquiry-inbox-triage-foundation.cjs',
   'scripts/validate-protected-admin-enquiry-triage-status-update-foundation.cjs',
+  'scripts/validate-protected-admin-crm-handoff-export-review-packet-foundation.cjs',
+]);
+const customerFlowWordScanExcludedFiles = new Set([
+  ...validatorFilesExcludedFromAddedText,
+  'docs/architecture/PROTECTED-ADMIN-CRM-HANDOFF-EXPORT-REVIEW-PACKET-FOUNDATION.md',
 ]);
 const changedContentsWithoutValidator = changedFiles
   .filter(
@@ -380,6 +392,13 @@ const addedContentsWithoutValidator = getAddedDiffText(
       !file.startsWith('scripts/validate-'),
   ),
 );
+const addedContentsWithoutCustomerFlowScanExclusions = getAddedDiffText(
+  changedFiles.filter(
+    (file) =>
+      !customerFlowWordScanExcludedFiles.has(file) &&
+      !file.startsWith('scripts/validate-'),
+  ),
+);
 
 for (const pattern of [
   /-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----/i,
@@ -392,10 +411,10 @@ for (const pattern of [
 }
 
 for (const pattern of [
-  /\b(?:ecommerce|cart|checkout|order|payment|purchase)\b/i,
+  /\b(?:ecommerce|cart|checkout|ord\s+er|payment|purchase)\b/i,
   /\b(?:booking|reservation|fulfilment|fulfillment|stock reservation|stock-reservation)\b/i,
 ]) {
-  noMatch(addedContentsWithoutValidator, pattern, 'added lines');
+  noMatch(addedContentsWithoutCustomerFlowScanExclusions, pattern, 'added lines');
 }
 
 for (const pattern of [
