@@ -9,6 +9,10 @@ import type {
   AdminQuoteRequestCrmHandoffPacketReadPersistence,
   AdminQuoteRequestCrmHandoffPacketReadResult
 } from "./admin-quote-request-crm-handoff-packet-read";
+import type {
+  AdminQuoteRequestCrmHandoffPacketManifestPersistence,
+  AdminQuoteRequestCrmHandoffPacketManifestRecord
+} from "./admin-quote-request-crm-handoff-packet-manifest";
 
 const env = {
   ADMIN_EXPECTED_ORIGIN: "https://admin.space.test",
@@ -20,6 +24,11 @@ const adminContext = {
   adminUserId: "33333333-3333-4333-8333-333333333333",
   membershipId: "44444444-4444-4444-8444-444444444444",
   resolution: "server-auth-membership" as const
+};
+const csrfRuntimeDependencies = {
+  sessionWorkspaceBindingDependencies: {},
+  issuerDependencies: {},
+  verifierDependencies: {}
 };
 const loadedResult: AdminQuoteRequestCrmHandoffPacketReadResult = {
   status: "loaded",
@@ -48,13 +57,28 @@ const loadedResult: AdminQuoteRequestCrmHandoffPacketReadResult = {
     ]
   }
 };
+const manifest: AdminQuoteRequestCrmHandoffPacketManifestRecord = {
+  id: "55555555-5555-4555-8555-555555555555",
+  workspaceId: env.ADMIN_TRUSTED_WORKSPACE_ID,
+  provider: "hubspot",
+  packetKind: "json_review_packet",
+  statusFilter: "queued",
+  limitRequested: 25,
+  recordCount: 1,
+  requestIds: ["22222222-2222-4222-8222-222222222222"],
+  requestIdCount: 1,
+  generatedByAdminUserId: adminContext.adminUserId,
+  generatedAt: "2026-06-16T12:00:00.000Z",
+  source: "protected_admin"
+};
 
 function request(path = "/api/admin/quote-requests/crm-handoff-packet") {
   return new Request(`https://admin.space.test${path}`, {
-    method: "GET",
+    method: "POST",
     headers: {
       origin: env.ADMIN_EXPECTED_ORIGIN,
-      host: env.ADMIN_EXPECTED_HOST
+      host: env.ADMIN_EXPECTED_HOST,
+      "x-csrf-proof": "proof-secret"
     }
   }) as NextRequest;
 }
@@ -80,19 +104,41 @@ function createPersistence(
   };
 }
 
+function createManifestPersistence(): AdminQuoteRequestCrmHandoffPacketManifestPersistence {
+  return {
+    createManifest: vi.fn(async () => ({
+      status: "created" as const,
+      manifest
+    })),
+    readRecentManifests: vi.fn(async () => ({
+      status: "loaded" as const,
+      manifests: [manifest]
+    }))
+  };
+}
+
 type TestDependencies = AdminQuoteRequestCrmHandoffPacketRouteDependencies & {
   resolveRouteGate: NonNullable<
     AdminQuoteRequestCrmHandoffPacketRouteDependencies["resolveRouteGate"]
   >;
   persistence: AdminQuoteRequestCrmHandoffPacketReadPersistence;
+  manifestPersistence: AdminQuoteRequestCrmHandoffPacketManifestPersistence;
 };
 
 function createDependencies(
-  persistence = createPersistence()
+  persistence = createPersistence(),
+  manifestPersistence = createManifestPersistence()
 ): TestDependencies {
   return {
     env,
     generatedAt: () => "2026-06-16T12:00:00.000Z",
+    now: () => 1_800_000,
+    createRuntimeDependencies: vi.fn(() => csrfRuntimeDependencies),
+    resolveSessionWorkspaceBinding: vi.fn(async () => ({
+      bound: true as const,
+      sessionBinding: "session-binding",
+      adminContext
+    })),
     resolveRouteGate: vi.fn(async () => ({
       allowed: true as const,
       reason: "allowed" as const,
@@ -101,8 +147,9 @@ function createDependencies(
       requestId: "request-1",
       adminContext
     })),
-    persistence
-  } as TestDependencies;
+    persistence,
+    manifestPersistence
+  } as unknown as TestDependencies;
 }
 
 async function json(response: Response) {
@@ -110,9 +157,10 @@ async function json(response: Response) {
 }
 
 describe("admin CRM handoff packet route helper", () => {
-  it("returns a no-store queued packet after quote.read admin gate checks", async () => {
+  it("returns a no-store queued packet and records a safe manifest after quote.write admin gate checks", async () => {
     const persistence = createPersistence();
-    const dependencies = createDependencies(persistence);
+    const manifestPersistence = createManifestPersistence();
+    const dependencies = createDependencies(persistence, manifestPersistence);
 
     const response = await handleAdminQuoteRequestCrmHandoffPacketRoute(
       request("?limit=25"),
@@ -123,8 +171,8 @@ describe("admin CRM handoff packet route helper", () => {
     expect(response.headers.get("cache-control")).toBe("no-store");
     expect(dependencies.resolveRouteGate).toHaveBeenCalledWith(
       {
-        requestedOperation: "quote.read",
-        requestMethod: "GET",
+        requestedOperation: "quote.write",
+        requestMethod: "POST",
         request: expect.any(Request)
       },
       expect.objectContaining({
@@ -133,6 +181,10 @@ describe("admin CRM handoff packet route helper", () => {
           expectedHost: env.ADMIN_EXPECTED_HOST
         },
         gate: expect.objectContaining({
+          csrfVerifier: expect.objectContaining({
+            expectedSessionBinding: "session-binding",
+            currentTimestampMs: 1_800_000
+          }),
           decision: {
             workspace: {
               trustedServerWorkspaceId: env.ADMIN_TRUSTED_WORKSPACE_ID
@@ -148,14 +200,32 @@ describe("admin CRM handoff packet route helper", () => {
         ADMIN_TRUSTED_WORKSPACE_ID: env.ADMIN_TRUSTED_WORKSPACE_ID
       }
     });
-    expect(await json(response)).toStrictEqual({
-      ok: true,
+    expect(manifestPersistence.createManifest).toHaveBeenCalledWith({
+      admin: adminContext,
       packet: loadedResult.packet
     });
+    expect(manifestPersistence.readRecentManifests).toHaveBeenCalledWith({
+      admin: adminContext,
+      limit: 10
+    });
+    const body = await json(response);
+
+    expect(body).toStrictEqual({
+      ok: true,
+      packet: loadedResult.packet,
+      manifest,
+      recentManifests: [manifest]
+    });
+    expect(JSON.stringify(body.manifest)).not.toContain(
+      "Please prepare a lounge setup."
+    );
+    expect(JSON.stringify(body.recentManifests)).not.toContain(
+      "Please prepare a lounge setup."
+    );
   });
 
   it.each([
-    [requestWithMethod("POST"), 405, "request_method_not_allowed"],
+    [requestWithMethod("GET"), 405, "request_method_not_allowed"],
     [request("?limit=0"), 400, "request_limit_invalid"],
     [request("?limit=abc"), 400, "request_limit_invalid"],
     [request("?status=failed"), 400, "request_filter_invalid"]
@@ -178,6 +248,7 @@ describe("admin CRM handoff packet route helper", () => {
       error: expectedError
     });
     expect(dependencies.persistence.readPacket).not.toHaveBeenCalled();
+    expect(dependencies.manifestPersistence.createManifest).not.toHaveBeenCalled();
   });
 
   it("rejects public or unauthorised access before reading packet data", async () => {
@@ -199,6 +270,7 @@ describe("admin CRM handoff packet route helper", () => {
       error: "unauthenticated"
     });
     expect(dependencies.persistence.readPacket).not.toHaveBeenCalled();
+    expect(dependencies.manifestPersistence.createManifest).not.toHaveBeenCalled();
   });
 
   it("maps packet read failures to generic errors without leaking provider details", async () => {
@@ -223,5 +295,39 @@ describe("admin CRM handoff packet route helper", () => {
     expect(JSON.stringify(body)).not.toContain(adminContext.adminUserId);
     expect(JSON.stringify(body)).not.toContain("hubapi");
     expect(JSON.stringify(body)).not.toContain("token");
+  });
+
+  it("maps manifest write/read failures to generic errors after successful packet generation", async () => {
+    const manifestPersistence: AdminQuoteRequestCrmHandoffPacketManifestPersistence = {
+      createManifest: vi.fn(async () => ({
+        status: "unavailable" as const
+      })),
+      readRecentManifests: vi.fn(async () => ({
+        status: "loaded" as const,
+        manifests: []
+      }))
+    };
+    const dependencies = createDependencies(
+      createPersistence(),
+      manifestPersistence
+    );
+
+    const response = await handleAdminQuoteRequestCrmHandoffPacketRoute(
+      request(),
+      dependencies
+    );
+    const body = await json(response);
+
+    expect(response.status).toBe(503);
+    expect(body).toStrictEqual({
+      ok: false,
+      error: "quote_crm_handoff_packet_manifest_unavailable"
+    });
+    expect(dependencies.persistence.readPacket).toHaveBeenCalledTimes(1);
+    expect(manifestPersistence.createManifest).toHaveBeenCalledTimes(1);
+    expect(manifestPersistence.readRecentManifests).not.toHaveBeenCalled();
+    expect(JSON.stringify(body)).not.toContain("sql");
+    expect(JSON.stringify(body)).not.toContain("token");
+    expect(JSON.stringify(body)).not.toContain(adminContext.adminUserId);
   });
 });

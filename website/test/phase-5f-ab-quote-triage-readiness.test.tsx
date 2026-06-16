@@ -32,7 +32,7 @@ const forbiddenPublicScopePattern =
 const forbiddenReceiptPromisePattern =
   /tracking portal|status lookup|accepted outcome|availability statement|\bhold\b|confirmed|reserved|booked|ordered|paid|completed rental|guaranteed|response time|fulfilment|fulfillment|payment|purchase/i;
 const forbiddenAdminOutboundPattern =
-  /send(?:s|ing)?\s+(?:an?\s+)?(?:email|sms|whatsapp)|webhook dispatch|notification sending|CRM integration|Pinecone|\bRAG\b|process\.env\.(?:NEXT_PUBLIC_|SUPABASE|N8N|PINECONE|VERCEL)/i;
+  /(?<!does not )(?<!do not )send(?:s|ing)?\s+(?:an?\s+)?(?:email|sms|whatsapp)|webhook dispatch|notification sending|CRM integration|Pinecone|\bRAG\b|process\.env\.(?:NEXT_PUBLIC_|SUPABASE|N8N|PINECONE|VERCEL)/i;
 const dockerBypassPattern = /docker[^\n]*(?:skip|bypass)|(?:skip|bypass)[^\n]*docker/i;
 
 const quoteRequest = {

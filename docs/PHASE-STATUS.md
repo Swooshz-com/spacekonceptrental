@@ -1,3 +1,19 @@
+## Protected Admin CRM Handoff Packet Audit Manifest Foundation
+
+References: `docs/architecture/PROTECTED-ADMIN-CRM-HANDOFF-PACKET-AUDIT-MANIFEST-FOUNDATION.md`, `docs/architecture/PROTECTED-ADMIN-CRM-HANDOFF-EXPORT-REVIEW-PACKET-FOUNDATION.md`, `website/components/admin/quote-request-inbox-panel.tsx`, `website/lib/quote/admin-read/admin-quote-request-crm-handoff-packet-manifest.ts`, `website/lib/quote/admin-read/admin-quote-request-crm-handoff-packet-route.ts`, `website/app/api/admin/quote-requests/crm-handoff-packet/route.ts`, `supabase/migrations/20260616160000_quote_crm_handoff_packet_manifest_foundation.sql`, and `scripts/validate-protected-admin-crm-handoff-packet-audit-manifest-foundation.cjs`.
+
+Admin users can record protected local CRM handoff packet audit/manifest
+metadata after queued packet generation/export for manual admin review only.
+The manifest stores metadata only and does not store full sensitive payload
+dumps. This does not sync to HubSpot, call or queue n8n, send email, contact
+the customer, create HubSpot contact/deal IDs, mark records as synced, or set
+CRM sync attempt timestamps. HubSpot CRM sync is still not implemented. n8n
+workflows are still not implemented. Email sending is still not implemented.
+Public customer accounts remain deferred. Public customer login remains
+unimplemented. Customer dashboard remains unimplemented. Custom CRM remains
+rejected/deferred. Google Workspace/domain email remains human/admin email
+first. Resend remains optional future transactional email only.
+
 ## Protected Admin CRM Handoff Export Review Packet Foundation
 
 References: `docs/architecture/PROTECTED-ADMIN-CRM-HANDOFF-EXPORT-REVIEW-PACKET-FOUNDATION.md`, `website/components/admin/quote-request-inbox-panel.tsx`, `website/lib/quote/admin-read/admin-quote-request-crm-handoff-packet-read.ts`, `website/lib/quote/admin-read/admin-quote-request-crm-handoff-packet-route.ts`, `website/app/api/admin/quote-requests/crm-handoff-packet/route.ts`, and `scripts/validate-protected-admin-crm-handoff-export-review-packet-foundation.cjs`.

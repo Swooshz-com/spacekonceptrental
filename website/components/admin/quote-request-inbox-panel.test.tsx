@@ -299,10 +299,18 @@ describe("QuoteRequestInboxPanel", () => {
         crmSyncStatus: "not_queued" as const
       }
     ];
-    const fetcher = vi.fn().mockResolvedValueOnce(
-      createJsonResponse({
-        ok: true,
-        packet: {
+    const fetcher = vi
+      .fn()
+      .mockResolvedValueOnce(
+        createJsonResponse({
+          ok: true,
+          csrfProof: "proof-secret"
+        })
+      )
+      .mockResolvedValueOnce(
+        createJsonResponse({
+          ok: true,
+          packet: {
           generatedAt: "2026-06-16T12:00:00.000Z",
           provider: "hubspot",
           localCrmSyncStatus: "queued",
@@ -325,9 +333,39 @@ describe("QuoteRequestInboxPanel", () => {
               localCrmSyncStatus: "queued"
             }
           ]
-        }
-      })
-    );
+          },
+          manifest: {
+            id: "55555555-5555-4555-8555-555555555555",
+            workspaceId: "11111111-1111-4111-8111-111111111111",
+            provider: "hubspot",
+            packetKind: "json_review_packet",
+            statusFilter: "queued",
+            limitRequested: 25,
+            recordCount: 1,
+            requestIds: [quoteRequest.id],
+            requestIdCount: 1,
+            generatedByAdminUserId: "77777777-7777-4777-8777-777777777777",
+            generatedAt: "2026-06-16T12:00:00.000Z",
+            source: "protected_admin"
+          },
+          recentManifests: [
+            {
+              id: "55555555-5555-4555-8555-555555555555",
+              workspaceId: "11111111-1111-4111-8111-111111111111",
+              provider: "hubspot",
+              packetKind: "json_review_packet",
+              statusFilter: "queued",
+              limitRequested: 25,
+              recordCount: 1,
+              requestIds: [quoteRequest.id],
+              requestIdCount: 1,
+              generatedByAdminUserId: "77777777-7777-4777-8777-777777777777",
+              generatedAt: "2026-06-16T12:00:00.000Z",
+              source: "protected_admin"
+            }
+          ]
+        })
+      );
 
     render(<QuoteRequestInboxPanel fetcher={fetcher} inbox={queuedInbox} />);
 
@@ -345,7 +383,13 @@ describe("QuoteRequestInboxPanel", () => {
       screen.getByText(/does not sync to HubSpot or contact customers/i)
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/does not call n8n, perform email delivery, create provider IDs, or mark records as synced/i)
+      screen.getByText(/does not call n8n, does not send email, does not create provider IDs, and does not mark records as synced/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/audit\/manifest only/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/No CRM handoff packet manifests loaded yet/i)
     ).toBeInTheDocument();
 
     fireEvent.click(
@@ -355,15 +399,27 @@ describe("QuoteRequestInboxPanel", () => {
     );
 
     await waitFor(() => {
-      expect(fetcher).toHaveBeenCalledTimes(1);
+      expect(fetcher).toHaveBeenCalledTimes(2);
     });
 
-    expect(fetcher).toHaveBeenCalledWith(
+    expect(fetcher).toHaveBeenNthCalledWith(1, "/api/admin/csrf-proof", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        requestedOperation: "quote.write",
+        operation: "quote.write"
+      })
+    });
+    expect(fetcher).toHaveBeenNthCalledWith(
+      2,
       "/api/admin/quote-requests/crm-handoff-packet?limit=25",
       {
-        method: "GET",
+        method: "POST",
         headers: {
-          Accept: "application/json"
+          Accept: "application/json",
+          "x-csrf-proof": "proof-secret"
         }
       }
     );
@@ -373,6 +429,22 @@ describe("QuoteRequestInboxPanel", () => {
     expect(
       screen.getAllByText(/QR-20260603-NEWEST/i).length
     ).toBeGreaterThan(0);
+    expect(
+      screen.getByRole("heading", {
+        name: /recent CRM handoff packet manifests/i
+      })
+    ).toBeInTheDocument();
+    expect(
+      screen.getAllByText(/2026-06-16T12:00:00.000Z/i).length
+    ).toBeGreaterThan(0);
+    expect(screen.getAllByText(/hubspot/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/queued/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/record count/i).length).toBeGreaterThan(0);
+    expect(screen.getByText(/Request IDs: 1/i)).toBeInTheDocument();
+    expect(screen.getByText(quoteRequest.id)).toBeInTheDocument();
+    expect(screen.getByText(/protected_admin/i)).toBeInTheDocument();
+    expect(screen.getByText(/json_review_packet/i)).toBeInTheDocument();
+    expect(screen.getByText(/Admin: 77777777-7777-4777-8777-777777777777/i)).toBeInTheDocument();
     expect(JSON.stringify(fetcher.mock.calls)).not.toContain("hubapi");
     expect(JSON.stringify(fetcher.mock.calls)).not.toContain("crmContactId");
     expect(JSON.stringify(fetcher.mock.calls)).not.toContain("crmDealId");
@@ -391,7 +463,15 @@ describe("QuoteRequestInboxPanel", () => {
         crmSyncStatus: "queued" as const
       }
     ];
-    const fetcher = vi.fn().mockReturnValueOnce(packetRequest);
+    const fetcher = vi
+      .fn()
+      .mockResolvedValueOnce(
+        createJsonResponse({
+          ok: true,
+          csrfProof: "proof-secret"
+        })
+      )
+      .mockReturnValueOnce(packetRequest);
 
     render(<QuoteRequestInboxPanel fetcher={fetcher} inbox={queuedInbox} />);
 

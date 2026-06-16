@@ -10,15 +10,25 @@ Admin users can review/export queued CRM handoff packets. This is manual
 review/export preparation only. It does not contact HubSpot, n8n, Google
 Workspace, Resend, or customers.
 
+Related audit/manifest slice:
+`docs/architecture/PROTECTED-ADMIN-CRM-HANDOFF-PACKET-AUDIT-MANIFEST-FOUNDATION.md`.
+Admin packet generation/export records safe audit/manifest metadata. Manifests
+are metadata only and do not store full sensitive payload dumps.
+
 ## Implemented
 
 - Protected admin surfaces show an eligible queued-record count.
-- Authorised admins can open a bounded JSON packet preview from the protected
-  admin quote request inbox.
+- Authorised admins can prepare a bounded JSON packet preview from the
+  protected admin quote request inbox through the existing `quote.write`
+  CSRF/session-bound admin action because manifest creation is a local audit
+  write.
 - The server-only packet helper reads only `crm_provider = "hubspot"` and
   `crm_sync_status = "queued"` records by default.
-- The protected packet route requires the existing admin authorization and
-  trusted workspace gate for `quote.read`.
+- The protected packet route requires the existing admin authorization, trusted
+  workspace gate, and CSRF proof checks for `quote.write`.
+- After successful packet generation/export, the protected route records a
+  metadata-only audit/manifest row and returns a bounded recent manifest list
+  for admin visibility.
 - The packet is newest-first, workspace-scoped, and limited to a safe default
   and maximum.
 - The packet uses an explicit allowlist of enquiry/request ID, public
@@ -47,6 +57,8 @@ This does not create HubSpot contact/deal IDs.
 This does not mark records as synced.
 
 This does not set CRM sync attempt timestamps.
+
+This does not store full sensitive payload dumps in manifest storage.
 
 HubSpot CRM sync is still not implemented.
 
