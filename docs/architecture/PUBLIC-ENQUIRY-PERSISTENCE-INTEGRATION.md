@@ -96,3 +96,16 @@ admin surfaces. Public quote/enquiry submission cannot override admin triage
 status beyond the initial safe `new` state and cannot update CRM handoff
 fields. This does not contact the customer, does not send email, does not sync
 to HubSpot, and does not queue n8n.
+# Protected Admin CRM Handoff Queue Preparation Reference
+
+Protected admin local CRM handoff queue preparation is documented in
+`docs/architecture/PROTECTED-ADMIN-CRM-HANDOFF-QUEUE-PREPARATION-FOUNDATION.md`.
+
+Public quote/enquiry submission cannot override CRM handoff status, provider,
+contact ID, deal ID, sync timestamp, or sync error fields. Admin users can
+locally queue enquiries for future CRM handoff only inside protected admin
+surfaces. This does not sync to HubSpot, call or queue n8n, send email, contact
+the customer, make provider API calls, or create HubSpot contact/deal IDs.
+Public customer accounts remain deferred. Public customer login remains
+unimplemented. Customer dashboard remains unimplemented. Custom CRM remains
+rejected/deferred.

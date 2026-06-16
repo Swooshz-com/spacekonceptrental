@@ -1,3 +1,20 @@
+## Protected Admin CRM Handoff Queue Preparation Foundation
+
+References: `docs/architecture/PROTECTED-ADMIN-CRM-HANDOFF-QUEUE-PREPARATION-FOUNDATION.md`, `website/components/admin/quote-request-inbox-panel.tsx`, `website/lib/quote/admin-write/admin-quote-request-crm-handoff-write.ts`, `website/lib/quote/admin-write/admin-quote-request-crm-handoff-route.ts`, and `scripts/validate-protected-admin-crm-handoff-queue-preparation-foundation.cjs`.
+
+Admin users can locally queue enquiries for future CRM handoff. This is not a
+CRM replacement. This does not contact the customer. This does not send email.
+This does not sync to HubSpot. This does not call or queue n8n. HubSpot CRM
+sync is still not implemented. n8n workflows are still not implemented. Email
+sending is still not implemented. Public customer accounts remain deferred.
+Public customer login remains unimplemented. Customer dashboard remains
+unimplemented. Custom CRM remains rejected/deferred.
+
+- [x] Protected admin CRM handoff queue preparation foundation lets authorised
+  admins update local CRM handoff queue status only, without provider sync,
+  n8n, email sending, public customer accounts, public login, customer
+  dashboard, custom CRM, retail/customer-flow creep, or Docker guard weakening.
+
 ## Protected Admin Enquiry Triage Status Update Foundation References
 
 Current implementation-foundation focus: protected admin-only enquiry triage

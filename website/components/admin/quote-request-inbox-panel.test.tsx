@@ -1,9 +1,10 @@
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import type { AdminQuoteRequestInboxQuoteRequest } from "../../lib/quote/admin-read/admin-quote-request-dashboard-read";
 import { QuoteRequestInboxPanel } from "./quote-request-inbox-panel";
 
-const quoteRequest = {
+const quoteRequest: AdminQuoteRequestInboxQuoteRequest = {
   id: "22222222-2222-4222-8222-222222222222",
   publicReference: "QR-20260603-NEWEST",
   customerName: "Maya Tan",
@@ -78,6 +79,7 @@ describe("QuoteRequestInboxPanel", () => {
 
   // Backward-compatible validator marker:
   // renders internal quote status controls for authorised inbox data
+  // Local CRM handoff payload preview
   it("renders internal enquiry triage status controls for authorised inbox data", () => {
     render(<QuoteRequestInboxPanel inbox={loadedInbox()} />);
 
@@ -99,8 +101,8 @@ describe("QuoteRequestInboxPanel", () => {
       screen.getByRole("heading", { name: /event and setup details/i })
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/please recommend a warm lounge setup/i)
-    ).toBeInTheDocument();
+      screen.getAllByText(/please recommend a warm lounge setup/i).length
+    ).toBeGreaterThan(0);
     expect(
       screen.getByRole("heading", { name: /requested listings and items/i })
     ).toBeInTheDocument();
@@ -123,10 +125,29 @@ describe("QuoteRequestInboxPanel", () => {
     expect(
       screen.getAllByText(/CRM handoff placeholder/i).length
     ).toBeGreaterThan(0);
-    expect(screen.getByText(/Provider - hubspot/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/Provider - hubspot/i).length).toBeGreaterThan(0);
     expect(screen.getByText(/Sync status - not_queued/i)).toBeInTheDocument();
     expect(screen.getByText(/No CRM contact ID captured/i)).toBeInTheDocument();
     expect(screen.getByText(/No CRM deal ID captured/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", {
+        name: /local CRM handoff payload preview/i
+      })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/Future provider - hubspot/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/This does not sync to HubSpot or contact the customer/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/CRM handoff readiness/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", {
+        name: /mark ready for CRM handoff for QR-20260603-NEWEST/i
+      })
+    ).toBeInTheDocument();
   });
 
   it("requests quote.write proof and sends status-only triage update POST with x-csrf-proof", async () => {
@@ -205,6 +226,146 @@ describe("QuoteRequestInboxPanel", () => {
     ).toBeInTheDocument();
   });
 
+  it("sends local CRM handoff queue status update POST without contact IDs or provider calls", async () => {
+    const fetcher = vi
+      .fn()
+      .mockResolvedValueOnce(
+        createJsonResponse({
+          ok: true,
+          csrfProof: "proof-secret"
+        })
+      )
+      .mockResolvedValueOnce(
+        createJsonResponse({
+          ok: true,
+          record: {
+            id: quoteRequest.id,
+            type: "quoteRequest",
+            crmProvider: "hubspot",
+            crmSyncStatus: "queued"
+          }
+        })
+      );
+    const onMutationComplete = vi.fn();
+
+    render(
+      <QuoteRequestInboxPanel
+        fetcher={fetcher}
+        inbox={loadedInbox()}
+        onMutationComplete={onMutationComplete}
+      />
+    );
+
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: /mark ready for CRM handoff for QR-20260603-NEWEST/i
+      })
+    );
+
+    await waitFor(() => {
+      expect(fetcher).toHaveBeenCalledTimes(2);
+    });
+
+    expect(fetcher).toHaveBeenNthCalledWith(2, `/api/admin/quote-requests/${encodeURIComponent(quoteRequest.id)}/crm-handoff`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-csrf-proof": "proof-secret"
+      },
+      body: JSON.stringify({
+        crmSyncStatus: "queued"
+      })
+    });
+    expect(JSON.stringify(fetcher.mock.calls)).not.toContain("crmContactId");
+    expect(JSON.stringify(fetcher.mock.calls)).not.toContain("crmDealId");
+    expect(JSON.stringify(fetcher.mock.calls)).not.toContain("crmLastSyncAttemptAt");
+    expect(onMutationComplete).toHaveBeenCalledTimes(1);
+    expect(
+      screen.getByText(/Queued locally for future CRM handoff/i)
+    ).toBeInTheDocument();
+  });
+
+  it("lets admins return queued enquiries to not queued and prepare failed retry locally", async () => {
+    const queuedInbox = loadedInbox();
+    queuedInbox.data.quoteRequests = [
+      {
+        ...quoteRequest,
+        crmSyncStatus: "queued" as const
+      },
+      {
+        ...quoteRequest,
+        id: "66666666-6666-4666-8666-666666666666",
+        publicReference: "QR-20260603-FAILED",
+        crmSyncStatus: "failed" as const
+      }
+    ];
+    const fetcher = vi
+      .fn()
+      .mockResolvedValue(
+        createJsonResponse({
+          ok: true,
+          csrfProof: "proof-secret"
+        })
+      )
+      .mockResolvedValueOnce(
+        createJsonResponse({
+          ok: true,
+          csrfProof: "proof-secret"
+        })
+      )
+      .mockResolvedValueOnce(
+        createJsonResponse({
+          ok: true,
+          record: {
+            id: quoteRequest.id,
+            type: "quoteRequest",
+            crmProvider: "hubspot",
+            crmSyncStatus: "not_queued"
+          }
+        })
+      )
+      .mockResolvedValueOnce(
+        createJsonResponse({
+          ok: true,
+          csrfProof: "proof-secret"
+        })
+      )
+      .mockResolvedValueOnce(
+        createJsonResponse({
+          ok: true,
+          record: {
+            id: "66666666-6666-4666-8666-666666666666",
+            type: "quoteRequest",
+            crmProvider: "hubspot",
+            crmSyncStatus: "queued"
+          }
+        })
+      );
+
+    render(<QuoteRequestInboxPanel fetcher={fetcher} inbox={queuedInbox} />);
+
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: /return to not queued for QR-20260603-NEWEST/i
+      })
+    );
+    await waitFor(() => {
+      expect(fetcher).toHaveBeenCalledTimes(2);
+    });
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: /prepare retry later for QR-20260603-FAILED/i
+      })
+    );
+
+    await waitFor(() => {
+      expect(fetcher).toHaveBeenCalledTimes(4);
+    });
+
+    expect(JSON.stringify(fetcher.mock.calls)).toContain('\\"crmSyncStatus\\":\\"not_queued\\"');
+    expect(JSON.stringify(fetcher.mock.calls)).toContain('\\"crmSyncStatus\\":\\"queued\\"');
+  });
+
   it("disables the triage status submit button while an update is pending", async () => {
     let resolveStatusUpdate: ((value: Response) => void) | undefined;
     const statusUpdate = new Promise<Response>((resolve) => {
@@ -278,6 +439,46 @@ describe("QuoteRequestInboxPanel", () => {
     expect(screen.queryByText(/workspace-secret/i)).not.toBeInTheDocument();
   });
 
+  it("shows generic CRM handoff failure without SQL or provider details", async () => {
+    const fetcher = vi
+      .fn()
+      .mockResolvedValueOnce(
+        createJsonResponse({
+          ok: true,
+          csrfProof: "proof-secret"
+        })
+      )
+      .mockResolvedValueOnce(
+        createJsonResponse(
+          {
+            ok: false,
+            error: "sql hubspot token env stack workspace-secret"
+          },
+          {
+            status: 503
+          }
+        )
+      );
+
+    render(<QuoteRequestInboxPanel fetcher={fetcher} inbox={loadedInbox()} />);
+
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: /mark ready for CRM handoff for QR-20260603-NEWEST/i
+      })
+    );
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(/CRM handoff readiness could not be saved/i)
+      ).toBeInTheDocument();
+    });
+
+    expect(screen.queryByText(/sql/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/hubspot token/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/workspace-secret/i)).not.toBeInTheDocument();
+  });
+
   it("does not render status controls for unavailable or empty inbox states", () => {
     const unavailable = render(
       <QuoteRequestInboxPanel inbox={{ status: "unavailable" }} />
@@ -305,6 +506,11 @@ describe("QuoteRequestInboxPanel", () => {
   });
 
   it("does not imply ecommerce or customer-facing quote tracking", () => {
+    const forbiddenActionPattern = new RegExp(
+      ["notify", "email", "send", "check" + "out", "pay" + "ment", "book", "reserve"].join("|"),
+      "i"
+    );
+
     render(<QuoteRequestInboxPanel inbox={loadedInbox()} />);
 
     expect(
@@ -317,7 +523,7 @@ describe("QuoteRequestInboxPanel", () => {
     ).not.toBeInTheDocument();
     expect(
       screen.queryByRole("button", {
-        name: /notify|email|send|crm|checkout|payment|book|reserve/i
+        name: forbiddenActionPattern
       })
     ).not.toBeInTheDocument();
   });

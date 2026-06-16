@@ -16,6 +16,9 @@ Protected admin visibility and read-only triage foundation are documented in
 Protected admin internal triage status updates are documented in
 `docs/architecture/PROTECTED-ADMIN-ENQUIRY-TRIAGE-STATUS-UPDATE-FOUNDATION.md`.
 
+Protected admin local CRM handoff queue preparation is documented in
+`docs/architecture/PROTECTED-ADMIN-CRM-HANDOFF-QUEUE-PREPARATION-FOUNDATION.md`.
+
 ## Implemented Foundation
 
 Supabase owns the canonical SKR enquiry submission record.
@@ -46,6 +49,12 @@ Public enquiry submissions now use the Supabase persistence foundation through
 the existing `/api/quote` route and `createQuoteRequest` repository path. The
 public form supplies safe source metadata when available, while public input
 cannot override CRM placeholder fields.
+
+Admin users can locally queue enquiries for future CRM handoff. This local
+preparation updates only server-owned CRM
+handoff readiness fields and does not sync to HubSpot, call or queue n8n, send
+email, contact the customer, make provider API calls, or create HubSpot
+contact/deal IDs.
 
 ## Provider Ownership
 

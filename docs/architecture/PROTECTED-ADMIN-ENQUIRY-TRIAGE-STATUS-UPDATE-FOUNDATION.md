@@ -78,4 +78,21 @@ reference fields.
 
 Public quote/enquiry submission still initializes the safe server-owned state.
 Public customer paths cannot update internal triage status and cannot override
-admin-only status beyond the initial safe `new` state.
+CRM handoff queue state or admin-only status beyond the initial safe `new`
+state.
+
+## Next Local CRM Handoff Queue Preparation
+
+Protected admin local CRM handoff queue preparation is documented in
+`docs/architecture/PROTECTED-ADMIN-CRM-HANDOFF-QUEUE-PREPARATION-FOUNDATION.md`.
+
+Admin users can locally queue enquiries for future CRM handoff. This is not a
+CRM replacement. This does not contact the customer. This does not send email.
+This does not sync to HubSpot. This does not call or queue n8n. This does not
+make provider API calls. This does not create HubSpot contact/deal IDs.
+HubSpot CRM sync is still not implemented. n8n workflows are still not
+implemented. Email sending is still not implemented. Public customer accounts
+remain deferred. Public customer login remains unimplemented. Customer
+dashboard remains unimplemented. Custom CRM remains rejected/deferred. Google
+Workspace/domain email remains human/admin email first. Resend remains optional
+future transactional email only.

@@ -91,3 +91,15 @@ calls, or deployment changes are added.
 
 Supabase remains the SKR app database, auth, and backend foundation. HubSpot
 remains the future CRM and sales workflow owner, not SKR's app database.
+# Protected Admin CRM Handoff Queue Preparation Reference
+
+Protected admin local CRM handoff queue preparation is documented in
+`docs/architecture/PROTECTED-ADMIN-CRM-HANDOFF-QUEUE-PREPARATION-FOUNDATION.md`.
+
+Admin users can locally queue enquiries for future CRM handoff from protected
+admin surfaces. This does not sync to HubSpot, call or queue n8n, send email,
+contact the customer, make provider API calls, or create HubSpot contact/deal
+IDs. HubSpot CRM sync is still not implemented. n8n workflows are still not
+implemented. Email sending is still not implemented. Public customer accounts
+remain deferred. Public customer login remains unimplemented. Customer
+dashboard remains unimplemented. Custom CRM remains rejected/deferred.

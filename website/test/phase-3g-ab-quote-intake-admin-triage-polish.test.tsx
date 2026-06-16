@@ -328,11 +328,11 @@ describe("Phase 3G-A/B quote intake quality, admin triage depth, and enquiry wor
     expect(
       screen.getAllByRole("heading", { name: /contact and follow-up/i }).length
     ).toBeGreaterThan(0);
-    expect(screen.getByText("QR-20260607-READY")).toBeInTheDocument();
-    expect(screen.getByText("Darren Lee")).toBeInTheDocument();
-    expect(screen.getByText("darren@example.test")).toBeInTheDocument();
-    expect(screen.getByText("+65 8123 4567")).toBeInTheDocument();
-    expect(screen.getByText("Suntec Singapore")).toBeInTheDocument();
+    expect(screen.getAllByText("QR-20260607-READY").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Darren Lee").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("darren@example.test").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("+65 8123 4567").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Suntec Singapore").length).toBeGreaterThan(0);
     expect(
       screen.getAllByRole("heading", { name: /requested listings and items/i })
         .length

@@ -140,9 +140,9 @@ describe("Phase 5F-A/B quote triage readiness", () => {
 
     expect(screen.getByRole("heading", { name: /customer\/contact summary/i })).toBeInTheDocument();
     expect(screen.getAllByText(/Maya Tan/i).length).toBeGreaterThan(0);
-    expect(screen.getByText(/maya@example\.test/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/maya@example\.test/i).length).toBeGreaterThan(0);
     expect(screen.getByRole("heading", { name: /event date\/venue summary and submitted notes/i })).toBeInTheDocument();
-    expect(screen.getByText(/Event venue placeholder/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/Event venue placeholder/i).length).toBeGreaterThan(0);
     expect(screen.getByRole("heading", { name: /requested listing\/item summary/i })).toBeInTheDocument();
     expect(screen.getByText(/2 x Modular lounge set/i)).toBeInTheDocument();
     expect(screen.getByText(/public reference QR-20260610-LOCAL1 is a receipt reference only/i)).toBeInTheDocument();

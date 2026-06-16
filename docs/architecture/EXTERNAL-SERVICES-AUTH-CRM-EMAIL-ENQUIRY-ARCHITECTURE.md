@@ -197,3 +197,16 @@ Email sending is not implemented in this PR.
 
 Public customer accounts remain deferred. Custom CRM remains
 rejected/deferred.
+# Protected Admin CRM Handoff Queue Preparation Reference
+
+Protected admin local CRM handoff queue preparation is documented in
+`docs/architecture/PROTECTED-ADMIN-CRM-HANDOFF-QUEUE-PREPARATION-FOUNDATION.md`.
+
+Supabase remains the SKR app database/auth/backend foundation. HubSpot is the
+future CRM/sales workflow owner. Admin users can locally queue enquiries for
+future CRM handoff, but HubSpot CRM sync is still not implemented. This does
+not call or queue n8n. n8n workflows are still not implemented. Email sending
+is still not implemented. Google Workspace/domain email remains human/admin
+email first. Resend remains optional future transactional email only. Public
+customer accounts remain deferred. Public customer login remains unimplemented.
+Customer dashboard remains unimplemented. Custom CRM remains rejected/deferred.

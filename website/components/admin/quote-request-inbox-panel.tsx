@@ -94,6 +94,8 @@ const quoteStatuses: AdminQuoteRequestStatus[] = [
 ];
 const genericFailureMessage =
   "Internal triage status could not be saved. Keep the existing admin review state and try again.";
+const genericCrmHandoffFailureMessage =
+  "CRM handoff readiness could not be saved. Keep the existing local queue state and try again.";
 
 function statusLabel(value: string) {
   const labels: Record<string, string> = {
@@ -276,6 +278,122 @@ function SourceAndCrmHandoffDetails({
         <dd>{quoteRequest.crmDealId ?? "No CRM deal ID captured"}</dd>
       </div>
     </dl>
+  );
+}
+
+function crmHandoffStatusLabel(
+  status: AdminQuoteRequestInboxQuoteRequest["crmSyncStatus"]
+) {
+  const labels: Record<string, string> = {
+    not_queued: "Not queued locally",
+    queued: "Queued locally for future CRM handoff",
+    synced: "Synced by a future provider path",
+    failed: "Failed local handoff preparation"
+  };
+
+  return labels[status ?? "not_queued"] ?? "Not queued locally";
+}
+
+function crmHandoffAction(
+  quoteRequest: AdminQuoteRequestInboxQuoteRequest
+): {
+  status: "not_queued" | "queued";
+  label: string;
+} | null {
+  if (quoteRequest.crmSyncStatus === "synced") {
+    return null;
+  }
+
+  if (quoteRequest.crmSyncStatus === "queued") {
+    return {
+      status: "not_queued",
+      label: "Return to not queued"
+    };
+  }
+
+  if (quoteRequest.crmSyncStatus === "failed") {
+    return {
+      status: "queued",
+      label: "Prepare retry later"
+    };
+  }
+
+  return {
+    status: "queued",
+    label: "Mark ready for CRM handoff"
+  };
+}
+
+function LocalCrmHandoffPayloadPreview({
+  quoteRequest
+}: {
+  quoteRequest: AdminQuoteRequestInboxQuoteRequest;
+}) {
+  return (
+    <section
+      aria-label={`Local CRM handoff payload preview ${quoteRequest.publicReference}`}
+      className="quote-inbox__section"
+    >
+      <h4>Local CRM handoff payload preview</h4>
+      <p className="category-management__hint">
+        This preview is read-only and bounded. This does not sync to HubSpot or
+        contact the customer, call n8n, email anyone, or create provider IDs.
+      </p>
+      <dl className="quote-inbox__details">
+        <div>
+          <dt>Future provider</dt>
+          <dd>Future provider - hubspot</dd>
+        </div>
+        <div>
+          <dt>Enquiry/request ID</dt>
+          <dd>{quoteRequest.id}</dd>
+        </div>
+        <div>
+          <dt>Public reference</dt>
+          <dd>{quoteRequest.publicReference}</dd>
+        </div>
+        <div>
+          <dt>Enquiry status</dt>
+          <dd>{statusLabel(quoteRequest.status)}</dd>
+        </div>
+        <div>
+          <dt>CRM handoff state</dt>
+          <dd>{crmHandoffStatusLabel(quoteRequest.crmSyncStatus)}</dd>
+        </div>
+        <div>
+          <dt>Customer name</dt>
+          <dd>{quoteRequest.customerName ?? "No customer name submitted"}</dd>
+        </div>
+        <div>
+          <dt>Customer email</dt>
+          <dd>{quoteRequest.customerEmail ?? "No customer email submitted"}</dd>
+        </div>
+        <div>
+          <dt>Phone</dt>
+          <dd>{quoteRequest.customerPhone ?? "No customer phone submitted"}</dd>
+        </div>
+        <div>
+          <dt>Company/event organisation</dt>
+          <dd>{quoteRequest.venue ?? "No organisation or venue submitted"}</dd>
+        </div>
+        <div>
+          <dt>Requested listing/source metadata</dt>
+          <dd>
+            {quoteRequest.sourcePagePath ?? "No safe source path captured"};{" "}
+            {quoteRequest.sourceListingSlug ??
+              "No requested listing slug captured"}
+          </dd>
+        </div>
+        <div>
+          <dt>Created timestamp</dt>
+          <dd>{quoteRequest.createdAt}</dd>
+        </div>
+      </dl>
+      <p>
+        {quoteRequest.customerMessage ??
+          "No customer message was submitted for the future CRM preview."}
+      </p>
+    </section>
   );
 }
 
@@ -483,6 +601,70 @@ export function QuoteRequestInboxPanel({
     }
   }
 
+  async function submitCrmHandoffStatusChange(
+    quoteRequestId: string,
+    nextCrmSyncStatus: "not_queued" | "queued" | "failed"
+  ) {
+    setStatus({
+      kind: "pending",
+      message: "Updating local CRM handoff readiness..."
+    });
+
+    try {
+      const csrfProof = await requestQuoteWriteProof(fetcher);
+
+      if (!csrfProof) {
+        setStatus({
+          kind: "error",
+          message: genericCrmHandoffFailureMessage
+        });
+        return;
+      }
+
+      const response = await fetcher(
+        `/api/admin/quote-requests/${encodeURIComponent(quoteRequestId)}/crm-handoff`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-csrf-proof": csrfProof
+          },
+          body: JSON.stringify({
+            crmSyncStatus: nextCrmSyncStatus
+          })
+        }
+      );
+      const responseBody = await readSafeJson(response);
+
+      if (!response.ok || !isRecord(responseBody) || responseBody.ok !== true) {
+        setStatus({
+          kind: "error",
+          message: genericCrmHandoffFailureMessage
+        });
+        return;
+      }
+
+      setStatus({
+        kind: "success",
+        message:
+          nextCrmSyncStatus === "queued"
+            ? "Queued locally for future CRM handoff. Refreshing dashboard."
+            : "Returned to not queued for local CRM handoff. Refreshing dashboard."
+      });
+
+      try {
+        await onMutationComplete();
+      } catch {
+        // Keep the rendered result generic even if the refresh hook is unavailable.
+      }
+    } catch {
+      setStatus({
+        kind: "error",
+        message: genericCrmHandoffFailureMessage
+      });
+    }
+  }
+
   async function handleStatusSubmit(
     event: FormEvent<HTMLFormElement>,
     quoteRequestId: string
@@ -669,6 +851,7 @@ export function QuoteRequestInboxPanel({
         <div className="admin-dashboard__grid">
           {inbox.data.quoteRequests.map((quoteRequest) => {
             const activity = quoteRequest.activity ?? [];
+            const crmAction = crmHandoffAction(quoteRequest);
 
             return (
               <article className="admin-dashboard__card" key={quoteRequest.id}>
@@ -708,6 +891,47 @@ export function QuoteRequestInboxPanel({
                     call providers, queue automation, or deliver outbound
                     messages.
                   </p>
+                </section>
+                <LocalCrmHandoffPayloadPreview quoteRequest={quoteRequest} />
+                <section className="quote-inbox__section">
+                  <h4>Local CRM handoff queue preparation</h4>
+                  <p className="category-management__hint">
+                    This marks local readiness for future CRM handoff only. This
+                    does not sync to HubSpot, call n8n, email anyone, contact the
+                    customer, or create CRM contact/deal IDs.
+                  </p>
+                  <dl className="quote-inbox__details">
+                    <div>
+                      <dt>CRM handoff readiness</dt>
+                      <dd>{crmHandoffStatusLabel(quoteRequest.crmSyncStatus)}</dd>
+                    </div>
+                    <div>
+                      <dt>CRM provider</dt>
+                      <dd>{quoteRequest.crmProvider ?? "hubspot"}</dd>
+                    </div>
+                  </dl>
+                  {crmAction ? (
+                    <button
+                      aria-label={`${crmAction.label} for ${quoteRequest.publicReference}`}
+                      className="button button--secondary"
+                      disabled={status.kind === "pending"}
+                      onClick={() =>
+                        void submitCrmHandoffStatusChange(
+                          quoteRequest.id,
+                          crmAction.status
+                        )
+                      }
+                      type="button"
+                    >
+                      {status.kind === "pending"
+                        ? `Updating CRM handoff readiness for ${quoteRequest.publicReference}`
+                        : `${crmAction.label} for ${quoteRequest.publicReference}`}
+                    </button>
+                  ) : (
+                    <p className="category-management__hint">
+                      Synced CRM handoff state is read-only in this foundation.
+                    </p>
+                  )}
                 </section>
                 <section className="quote-inbox__section">
                   <h4>Response-readiness checklist</h4>

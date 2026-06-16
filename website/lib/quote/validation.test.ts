@@ -139,6 +139,29 @@ describe("quote request validation", () => {
       {
         payload: { ...validPayload, crm_sync_status: "synced" },
         field: "unknown"
+      },
+      {
+        payload: { ...validPayload, crm_provider: "hubspot" },
+        field: "unknown"
+      },
+      {
+        payload: { ...validPayload, crm_contact_id: "contact-123" },
+        field: "unknown"
+      },
+      {
+        payload: { ...validPayload, crm_deal_id: "deal-456" },
+        field: "unknown"
+      },
+      {
+        payload: {
+          ...validPayload,
+          crm_last_sync_attempt_at: "2026-06-16T00:00:00.000Z"
+        },
+        field: "unknown"
+      },
+      {
+        payload: { ...validPayload, crm_sync_error: "provider failed" },
+        field: "unknown"
       }
     ];
 
