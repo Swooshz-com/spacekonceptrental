@@ -24,6 +24,36 @@ Google Workspace/domain email remains human/admin email first.
 
 Resend remains optional future transactional email only.
 
+## Protected Admin Enquiry Inbox Triage Foundation
+
+Protected admin enquiry inbox and triage foundation is documented in
+`docs/architecture/PROTECTED-ADMIN-ENQUIRY-INBOX-TRIAGE-FOUNDATION.md`.
+
+Admin users can now view persisted public enquiries in a protected admin inbox
+foundation, inspect safe source metadata, and see CRM handoff placeholder
+fields for future HubSpot review.
+
+This is not a CRM replacement.
+
+HubSpot CRM sync is still not implemented.
+
+n8n workflows are still not implemented.
+
+Email sending is still not implemented.
+
+Public customer accounts remain deferred.
+
+Public customer login remains unimplemented.
+
+Custom CRM remains rejected/deferred.
+
+Google Workspace/domain email remains human/admin email first.
+
+Resend remains optional future transactional email only.
+
+Status update/assignment/remediation/contact workflows remain future work
+unless explicitly implemented in a later PR.
+
 ## Purpose
 
 The Phase 6 readiness ladder is paused after Phase 6P-A/B so SKR can reduce

@@ -286,7 +286,10 @@ for (const file of changedFiles) {
 
 const addedText = getAddedDiffText(
   changedFiles.filter(
-    (file) => file !== 'scripts/validate-public-enquiry-persistence-integration.cjs',
+    (file) =>
+      file !== 'scripts/validate-public-enquiry-persistence-integration.cjs' &&
+      file !==
+        'scripts/validate-protected-admin-enquiry-inbox-triage-foundation.cjs',
   ),
 );
 

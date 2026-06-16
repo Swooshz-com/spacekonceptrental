@@ -124,6 +124,10 @@ const approvedFoundationPublicFiles = new Set([
   'website/app/quote/page.tsx',
   'website/components/QuoteRequestForm.tsx',
   'website/components/QuoteRequestForm.test.tsx',
+  'website/lib/quote/admin-read/admin-quote-request-dashboard-read.ts',
+  'website/lib/quote/admin-read/admin-quote-request-dashboard-read.test.ts',
+  'website/lib/quote/admin-read/admin-quote-request-detail-read.ts',
+  'website/lib/quote/admin-read/admin-quote-request-detail-read.test.ts',
 ]);
 const changedPublicFiles = changedResult.stdout.split(/\r?\n/).filter(Boolean).filter((file) => !file.includes('/admin/') && !approvedFoundationPublicFiles.has(file));
 assert(changedPublicFiles.length === 0, `Phase 6M must not change public source files: ${changedPublicFiles.join(', ')}`);

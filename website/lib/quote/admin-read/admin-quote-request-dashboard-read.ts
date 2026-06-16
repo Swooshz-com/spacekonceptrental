@@ -68,6 +68,12 @@ export type AdminQuoteRequestInboxQuoteRequest = {
   venue?: string;
   status: "new" | "reviewing" | "quoted" | "closed" | "archived";
   source: "website" | "chat" | "admin";
+  sourcePagePath?: string;
+  sourceListingSlug?: string;
+  crmProvider?: "hubspot";
+  crmSyncStatus?: "not_queued" | "queued" | "synced" | "failed";
+  crmContactId?: string;
+  crmDealId?: string;
   createdAt: string;
   updatedAt?: string;
   items: AdminQuoteRequestInboxItem[];
@@ -105,6 +111,12 @@ type QuoteRequestRow = {
   venue?: unknown;
   status?: unknown;
   source?: unknown;
+  source_page_path?: unknown;
+  source_listing_slug?: unknown;
+  crm_provider?: unknown;
+  crm_sync_status?: unknown;
+  crm_contact_id?: unknown;
+  crm_deal_id?: unknown;
   created_at?: unknown;
   updated_at?: unknown;
 };
@@ -139,6 +151,9 @@ const quoteRequestStatuses = new Set([
 ]);
 const quoteRequestSources = new Set(["website", "chat", "admin"]);
 const quoteRequestActivityTypes = new Set(["status_change", "internal_note"]);
+const crmSyncStatuses = new Set(["not_queued", "queued", "synced", "failed"]);
+const safeSourcePathPattern = /^\/[^\r\n]*$/;
+const safeListingSlugPattern = /^[a-z0-9][a-z0-9-]*$/;
 
 function unavailable(): AdminQuoteRequestInboxReadResult {
   return {
@@ -156,6 +171,32 @@ function isUuid(value: unknown): value is string {
 
 function getString(value: unknown) {
   return typeof value === "string" && value.trim() ? value.trim() : undefined;
+}
+
+function getSafeSourcePath(value: unknown) {
+  const sourcePath = getString(value);
+
+  return sourcePath && safeSourcePathPattern.test(sourcePath)
+    ? sourcePath
+    : undefined;
+}
+
+function getSafeListingSlug(value: unknown) {
+  const listingSlug = getString(value);
+
+  return listingSlug && safeListingSlugPattern.test(listingSlug)
+    ? listingSlug
+    : undefined;
+}
+
+function getCrmProvider(value: unknown) {
+  return value === "hubspot" ? value : undefined;
+}
+
+function getCrmSyncStatus(value: unknown) {
+  return typeof value === "string" && crmSyncStatuses.has(value)
+    ? (value as AdminQuoteRequestInboxQuoteRequest["crmSyncStatus"])
+    : undefined;
 }
 
 function getPositiveInteger(value: unknown) {
@@ -209,6 +250,8 @@ function toQuoteRequest(
     typeof row.source === "string" && quoteRequestSources.has(row.source)
       ? row.source
       : null;
+  const crmProvider = getCrmProvider(row.crm_provider);
+  const crmSyncStatus = getCrmSyncStatus(row.crm_sync_status);
   const createdAt = getString(row.created_at);
 
   if (!id || !publicReference || !status || !source || !createdAt) {
@@ -226,6 +269,12 @@ function toQuoteRequest(
     venue: getString(row.venue),
     status: status as AdminQuoteRequestInboxQuoteRequest["status"],
     source: source as AdminQuoteRequestInboxQuoteRequest["source"],
+    sourcePagePath: getSafeSourcePath(row.source_page_path),
+    sourceListingSlug: getSafeListingSlug(row.source_listing_slug),
+    crmProvider,
+    crmSyncStatus,
+    crmContactId: getString(row.crm_contact_id),
+    crmDealId: getString(row.crm_deal_id),
     createdAt,
     updatedAt: getString(row.updated_at),
     items: [],
@@ -349,7 +398,7 @@ export async function resolveAdminQuoteRequestInboxRead(
     const quoteRequestResult = await supabase.client
       .from("quote_requests")
       .select(
-        "id, public_reference, customer_name, customer_email, customer_phone, customer_message, event_date, venue, status, source, created_at, updated_at"
+        "id, public_reference, customer_name, customer_email, customer_phone, customer_message, event_date, venue, status, source, source_page_path, source_listing_slug, crm_provider, crm_sync_status, crm_contact_id, crm_deal_id, created_at, updated_at"
       )
       .eq("workspace_id", workspaceId)
       .order("created_at", { ascending: false })

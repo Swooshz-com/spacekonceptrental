@@ -176,6 +176,8 @@ describe("Phase 5F-A/B quote triage readiness", () => {
     const adminSource = readProductionSource(adminQuoteSourceRoots);
 
     expect(adminSource).toMatch(/Response-readiness checklist/i);
+    expect(adminSource).toMatch(/CRM handoff placeholder/i);
+    expect(adminSource).not.toMatch(/CRM sync trigger|CRM sync job|HubSpot API/i);
     expect(adminSource).not.toMatch(forbiddenAdminOutboundPattern);
   });
 

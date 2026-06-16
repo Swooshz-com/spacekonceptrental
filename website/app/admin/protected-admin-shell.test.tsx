@@ -576,6 +576,10 @@ describe("protected admin shell", () => {
                   "Please recommend a warm lounge setup for a reception.",
                 status: "new",
                 source: "website",
+                sourcePagePath: "/quote?listing=modular-lounge-set",
+                sourceListingSlug: "modular-lounge-set",
+                crmProvider: "hubspot",
+                crmSyncStatus: "not_queued",
                 createdAt: "2026-06-03T10:30:00.000Z",
                 items: [],
                 activity: []
@@ -598,6 +602,15 @@ describe("protected admin shell", () => {
     ).toBeGreaterThan(0);
     expect(
       screen.getAllByText(/please recommend a warm lounge setup/i).length
+    ).toBeGreaterThan(0);
+    expect(screen.getAllByText(/source path/i).length).toBeGreaterThan(0);
+    expect(
+      screen.getAllByText("/quote?listing=modular-lounge-set").length
+    ).toBeGreaterThan(0);
+    expect(screen.getAllByText("modular-lounge-set").length).toBeGreaterThan(0);
+    expect(
+      screen.getAllByText(/Provider - hubspot; Sync status - not_queued/i)
+        .length
     ).toBeGreaterThan(0);
     expect(
       screen.queryByText(/details are temporarily unavailable/i)

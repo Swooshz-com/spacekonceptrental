@@ -37,6 +37,12 @@ type AdminQuoteRequestInboxQuoteRequest = {
   venue?: string;
   status: AdminQuoteRequestStatus;
   source: "website" | "chat" | "admin";
+  sourcePagePath?: string;
+  sourceListingSlug?: string;
+  crmProvider?: "hubspot";
+  crmSyncStatus?: "not_queued" | "queued" | "synced" | "failed";
+  crmContactId?: string;
+  crmDealId?: string;
   createdAt: string;
   updatedAt?: string;
   items: AdminQuoteRequestInboxItem[];
@@ -232,6 +238,43 @@ function activityText(activity: AdminQuoteRequestInboxActivity) {
   }
 
   return `Status changed from ${activity.statusFrom ?? "unknown"} to ${activity.statusTo ?? "unknown"} (${statusLabel(activity.statusFrom ?? "unknown")} to ${statusLabel(activity.statusTo ?? "unknown")}).`;
+}
+
+function SourceAndCrmHandoffDetails({
+  quoteRequest
+}: {
+  quoteRequest: AdminQuoteRequestInboxQuoteRequest;
+}) {
+  return (
+    <dl className="quote-inbox__details">
+      <div>
+        <dt>Source path</dt>
+        <dd>{quoteRequest.sourcePagePath ?? "No safe source path captured"}</dd>
+      </div>
+      <div>
+        <dt>Requested listing slug</dt>
+        <dd>
+          {quoteRequest.sourceListingSlug ??
+            "No requested listing slug captured"}
+        </dd>
+      </div>
+      <div>
+        <dt>CRM handoff placeholder</dt>
+        <dd>
+          Provider - {quoteRequest.crmProvider ?? "hubspot"}; Sync status -{" "}
+          {quoteRequest.crmSyncStatus ?? "not_queued"}
+        </dd>
+      </div>
+      <div>
+        <dt>CRM contact ID</dt>
+        <dd>{quoteRequest.crmContactId ?? "No CRM contact ID captured"}</dd>
+      </div>
+      <div>
+        <dt>CRM deal ID</dt>
+        <dd>{quoteRequest.crmDealId ?? "No CRM deal ID captured"}</dd>
+      </div>
+    </dl>
+  );
 }
 
 async function readSafeJson(response: Response) {
@@ -659,6 +702,16 @@ export function QuoteRequestInboxPanel({
                     availability confirmation, or a rental outcome.
                   </p>
                   <p>{quoteNextAction(quoteRequest)}</p>
+                </section>
+                <section className="quote-inbox__section">
+                  <h4>Source metadata and CRM handoff placeholder</h4>
+                  <SourceAndCrmHandoffDetails quoteRequest={quoteRequest} />
+                  <p className="category-management__hint">
+                    CRM fields are read-only placeholders for future HubSpot
+                    handoff visibility. This admin view does not start sync,
+                    call providers, queue automation, or deliver outbound
+                    messages.
+                  </p>
                 </section>
                 <section className="quote-inbox__section">
                   <h4>Response-readiness checklist</h4>
