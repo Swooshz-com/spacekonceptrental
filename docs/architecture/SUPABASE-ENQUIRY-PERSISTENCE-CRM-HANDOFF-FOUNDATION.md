@@ -13,6 +13,9 @@ The public submission integration is documented in
 Protected admin visibility and read-only triage foundation are documented in
 `docs/architecture/PROTECTED-ADMIN-ENQUIRY-INBOX-TRIAGE-FOUNDATION.md`.
 
+Protected admin internal triage status updates are documented in
+`docs/architecture/PROTECTED-ADMIN-ENQUIRY-TRIAGE-STATUS-UPDATE-FOUNDATION.md`.
+
 ## Implemented Foundation
 
 Supabase owns the canonical SKR enquiry submission record.
@@ -53,13 +56,23 @@ HubSpot should own contacts, sales workflow, follow-up tasks, notes, activity
 history, and sales reporting only after a separately approved integration
 slice.
 
+HubSpot CRM sync is still not implemented.
+
 CRM sync is not implemented in this PR.
 
+n8n workflows are still not implemented.
+
 n8n workflows are not implemented in this PR.
+
+Email sending is still not implemented.
 
 Email sending is not implemented in this PR.
 
 Public customer accounts remain deferred.
+
+Public customer login remains unimplemented.
+
+Customer dashboard remains unimplemented.
 
 Custom CRM remains rejected/deferred.
 
@@ -82,6 +95,17 @@ triage. This is admin visibility only: HubSpot CRM sync is still not
 implemented, n8n workflows are still not implemented, email sending is still
 not implemented, public customer accounts remain deferred, public customer
 login remains unimplemented, and custom CRM remains rejected/deferred.
+
+Admin users can now update internal enquiry triage status inside protected
+admin surfaces. This status update foundation is status-only and cannot alter
+CRM provider/status/contact/deal/sync error fields, customer-submitted contact
+details, customer message, source metadata, requested item snapshots, or public
+reference fields. This does not contact the customer, does not send email, does
+not sync to HubSpot, and does not queue n8n. Customer dashboard remains
+unimplemented. Google Workspace/domain email remains human/admin email first.
+Resend remains optional future transactional email only. Assignment, reminders,
+sales notes/activity timeline, and outbound contact workflows remain future
+work unless explicitly implemented in a later PR.
 
 ## Next Step
 

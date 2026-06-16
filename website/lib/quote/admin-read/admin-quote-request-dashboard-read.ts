@@ -66,7 +66,13 @@ export type AdminQuoteRequestInboxQuoteRequest = {
   customerMessage?: string;
   eventDate?: string;
   venue?: string;
-  status: "new" | "reviewing" | "quoted" | "closed" | "archived";
+  status:
+    | "new"
+    | "reviewing"
+    | "follow_up_needed"
+    | "quoted"
+    | "closed"
+    | "archived";
   source: "website" | "chat" | "admin";
   sourcePagePath?: string;
   sourceListingSlug?: string;
@@ -145,6 +151,7 @@ const uuidPattern =
 const quoteRequestStatuses = new Set([
   "new",
   "reviewing",
+  "follow_up_needed",
   "quoted",
   "closed",
   "archived"

@@ -395,8 +395,8 @@ describe("Phase 3V-A/B quote enquiry workflow hardening", () => {
     expect(screen.getByRole("heading", { name: /contact and follow-up/i })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: /event and setup details/i })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: /requested listings and items/i })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: /admin-only status and notes/i })).toBeInTheDocument();
-    expect(screen.getByText(/internal notes and status history stay inside this protected admin workspace/i)).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /admin-only status history/i })).toBeInTheDocument();
+    expect(screen.getByText(/internal status history stays inside this protected admin workspace/i)).toBeInTheDocument();
 
     const publicSource = readTrackedProductionSources([
       "website/app/layout.tsx",

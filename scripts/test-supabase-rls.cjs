@@ -3102,7 +3102,7 @@ check('atomic quote workflow RPC updates status and activity together for owner/
         '${ids.quoteA}',
         '${ids.workspaceA}',
         'reviewing',
-        ' Follow up on lounge seating quantities. '
+        null
       )::text;
 
       select status from public.quote_requests where id = '${ids.quoteA}';
@@ -3117,8 +3117,7 @@ check('atomic quote workflow RPC updates status and activity together for owner/
       select count(*)::text
       from public.quote_request_activity
       where quote_request_id = '${ids.quoteA}'
-        and activity_type = 'internal_note'
-        and note = 'Follow up on lounge seating quantities.';
+        and activity_type = 'internal_note';
 
       select public.execute_admin_quote_workflow(
         '${ids.quoteA}',
@@ -3136,19 +3135,18 @@ check('atomic quote workflow RPC updates status and activity together for owner/
       select count(*)::text
       from public.quote_request_activity
       where quote_request_id = '${ids.quoteA}'
-        and activity_type = 'internal_note'
-        and note = 'Follow up on lounge seating quantities.';
+        and activity_type = 'internal_note';
     `,
   );
 
   assert.deepEqual(
     output.split('\n').filter(Boolean),
     [ids.quoteA, 'reviewing', '1', '1', ids.quoteA, '1', '1'],
-    'owner should update quote workflow atomically and skip duplicate/blank activity rows',
+    'owner should update quote workflow status atomically without adding internal-note activity rows',
   );
 });
 
-check('atomic quote workflow RPC denies oversized notes, cross-workspace, viewer, no-membership, and anonymous callers', () => {
+check('atomic quote workflow RPC denies notes, archived status, cross-workspace, viewer, no-membership, and anonymous callers', () => {
   statementFailsAs(
     'authenticated',
     ids.authMemberA,
@@ -3157,10 +3155,24 @@ check('atomic quote workflow RPC denies oversized notes, cross-workspace, viewer
         '${ids.quoteA}',
         '${ids.workspaceA}',
         'reviewing',
-        repeat('x', 1201)
+        'Internal notes are not supported by this status-update foundation.'
       )
     `,
-    /quote_workflow_note_too_long/i,
+    /quote_workflow_internal_note_not_supported/i,
+  );
+
+  statementFailsAs(
+    'authenticated',
+    ids.authMemberA,
+    `
+      select public.execute_admin_quote_workflow(
+        '${ids.quoteA}',
+        '${ids.workspaceA}',
+        'archived',
+        null
+      )
+    `,
+    /quote_workflow_status_invalid/i,
   );
 
   statementFailsAs(
@@ -3171,7 +3183,7 @@ check('atomic quote workflow RPC denies oversized notes, cross-workspace, viewer
         '${ids.quoteB}',
         '${ids.workspaceB}',
         'reviewing',
-        'Cross-workspace note should fail.'
+        null
       )
     `,
     /quote_workflow_not_authorized/i,
@@ -3185,7 +3197,7 @@ check('atomic quote workflow RPC denies oversized notes, cross-workspace, viewer
         '${ids.quoteA}',
         '${ids.workspaceA}',
         'reviewing',
-        'Viewer note should fail.'
+        null
       )
     `,
     /quote_workflow_not_authorized/i,
@@ -3199,7 +3211,7 @@ check('atomic quote workflow RPC denies oversized notes, cross-workspace, viewer
         '${ids.quoteA}',
         '${ids.workspaceA}',
         'reviewing',
-        'No-membership note should fail.'
+        null
       )
     `,
     /quote_workflow_not_authorized/i,
@@ -3213,7 +3225,7 @@ check('atomic quote workflow RPC denies oversized notes, cross-workspace, viewer
         '${ids.quoteA}',
         '${ids.workspaceA}',
         'reviewing',
-        'Anonymous note should fail.'
+        null
       )
     `,
   );

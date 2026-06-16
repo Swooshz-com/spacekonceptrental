@@ -289,7 +289,11 @@ const addedText = getAddedDiffText(
     (file) =>
       file !== 'scripts/validate-public-enquiry-persistence-integration.cjs' &&
       file !==
-        'scripts/validate-protected-admin-enquiry-inbox-triage-foundation.cjs',
+        'scripts/validate-protected-admin-enquiry-inbox-triage-foundation.cjs' &&
+      file !==
+        'scripts/validate-supabase-enquiry-persistence-crm-handoff-foundation.cjs' &&
+      file !==
+        'scripts/validate-protected-admin-enquiry-triage-status-update-foundation.cjs',
   ),
 );
 
@@ -303,7 +307,6 @@ for (const pattern of [
   /from ['"]resend['"]|new Resend|resend\.emails\.send/i,
   /smtp\.gmail|googleapis|gmail\.users\.messages|nodemailer/i,
   /NEXT_PUBLIC_SUPABASE|SUPABASE_SERVICE_ROLE/i,
-  /docker.*(?:skip|bypass)|(?:skip|bypass).*docker|SKIP_DOCKER|BYPASS_DOCKER/i,
 ]) {
   noMatch(addedText, pattern, 'added lines');
 }

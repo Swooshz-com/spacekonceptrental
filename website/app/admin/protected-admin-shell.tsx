@@ -2133,7 +2133,7 @@ const publicRouteReadinessClosureSnapshot = [
 const protectedAdminDestructiveRecoverySnapshot = [
   [
     "Destructive-action safeguards",
-    "Listing archive, listing unpublish/draft, category unpublish/archive, media archive/deactivate, primary image changes, quote status transitions, quote internal note updates, failed write recovery"
+    "Listing archive, listing unpublish/draft, category unpublish/archive, media archive/deactivate, primary image changes, quote triage status review, failed write recovery"
   ],
   [
     "Recovery lane statuses",
@@ -2141,7 +2141,7 @@ const protectedAdminDestructiveRecoverySnapshot = [
   ],
   [
     "Status transition groups",
-    "Listing draft/published/archived; category unpublished/published/archived; media active/archived and primary/not-primary; quote request new/reviewing/quoted/closed/archived"
+    "Listing draft/published/archived; category unpublished/published/archived; media active/archived and primary/not-primary; quote request new/reviewing/follow-up needed/quoted/closed"
   ],
   [
     "Public exposure boundary",

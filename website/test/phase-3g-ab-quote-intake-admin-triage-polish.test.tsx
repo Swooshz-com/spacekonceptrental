@@ -275,8 +275,8 @@ describe("Phase 3G-A/B quote intake quality, admin triage depth, and enquiry wor
     renderLoadedQuoteInbox();
 
     expect(screen.getByText(/quote triage summary/i)).toBeInTheDocument();
-    expect(screen.getByText(/archived requests/i)).toBeInTheDocument();
-    expect(screen.getByText(/missing contact method/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/follow-up needed/i).length).toBeGreaterThan(0);
+    expect(screen.getByText(/contact gaps/i)).toBeInTheDocument();
     expect(screen.getByText(/missing event dates/i)).toBeInTheDocument();
     expect(screen.getByText(/missing venues/i)).toBeInTheDocument();
     expect(screen.getByText(/missing requested items/i)).toBeInTheDocument();
@@ -287,10 +287,10 @@ describe("Phase 3G-A/B quote intake quality, admin triage depth, and enquiry wor
       screen.getByText(/capture a contact method before follow-up/i)
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/prepare quote response or move to quoted after direct follow-up/i)
+      screen.getByText(/prepare human follow-up and mark follow-up needed/i)
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/archived enquiry is retained for admin reference/i)
+      screen.getByText(/closed enquiry is retained for admin reference/i)
     ).toBeInTheDocument();
     expect(
       screen.queryByText(/public quote tracking|customer-visible internal notes/i)

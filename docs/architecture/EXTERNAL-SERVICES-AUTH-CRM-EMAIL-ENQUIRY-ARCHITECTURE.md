@@ -22,6 +22,18 @@ custom CRM remains rejected/deferred, Google Workspace/domain email remains
 human/admin email first, and Resend remains optional future transactional email
 only.
 
+Protected admin enquiry triage status update foundation is documented in
+`docs/architecture/PROTECTED-ADMIN-ENQUIRY-TRIAGE-STATUS-UPDATE-FOUNDATION.md`.
+Admin users can now update internal enquiry triage status inside protected
+admin surfaces. This is not a CRM replacement. This does not contact the
+customer. This does not send email. This does not sync to HubSpot. This does
+not queue n8n. HubSpot CRM sync is still not implemented. n8n workflows are
+still not implemented. Email sending is still not implemented. Public customer
+accounts remain deferred. Public customer login remains unimplemented.
+Customer dashboard remains unimplemented. Custom CRM remains rejected/deferred.
+Google Workspace/domain email remains human/admin email first. Resend remains
+optional future transactional email only.
+
 ## Recommended Ownership Split
 
 ### Supabase Owns

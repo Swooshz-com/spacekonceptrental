@@ -5,9 +5,9 @@ import { createSessionBoundSupabaseAdminReadClient } from "../../admin/authoriza
 export type AdminQuoteRequestStatus =
   | "new"
   | "reviewing"
+  | "follow_up_needed"
   | "quoted"
-  | "closed"
-  | "archived";
+  | "closed";
 
 export type TrustedQuoteAdminContext = {
   workspaceId: string;
@@ -87,11 +87,10 @@ const uuidPattern =
 const quoteRequestStatuses = new Set<AdminQuoteRequestStatus>([
   "new",
   "reviewing",
+  "follow_up_needed",
   "quoted",
-  "closed",
-  "archived"
+  "closed"
 ]);
-const maxInternalNoteLength = 1200;
 
 function isUuid(value: unknown): value is string {
   return typeof value === "string" && uuidPattern.test(value.trim());
@@ -172,20 +171,6 @@ function resultRecordId(result: MutationResult) {
   return isUuid(id) ? id.trim() : null;
 }
 
-function normalizeInternalNote(value: string | undefined) {
-  if (value === undefined) {
-    return undefined;
-  }
-
-  const note = value.trim();
-
-  if (!note) {
-    return undefined;
-  }
-
-  return note.length <= maxInternalNoteLength ? note : null;
-}
-
 export async function updateAdminQuoteRequestStatus(
   input: UpdateAdminQuoteRequestStatusInput,
   options: AdminQuoteRequestStatusWriteOptions = {}
@@ -195,12 +180,6 @@ export async function updateAdminQuoteRequestStatus(
   }
 
   if (!isUuid(input.quoteRequestId) || !isQuoteRequestStatus(input.status)) {
-    return failure("QUOTE_STATUS_UPDATE_FAILED");
-  }
-
-  const internalNote = normalizeInternalNote(input.internalNote);
-
-  if (internalNote === null) {
     return failure("QUOTE_STATUS_UPDATE_FAILED");
   }
 
@@ -216,7 +195,7 @@ export async function updateAdminQuoteRequestStatus(
         p_quote_request_id: input.quoteRequestId.trim(),
         p_workspace_id: input.admin.workspaceId,
         p_status: input.status,
-        p_internal_note: internalNote ?? null
+        p_internal_note: null
       })
       .single();
     const id = resultRecordId(result);

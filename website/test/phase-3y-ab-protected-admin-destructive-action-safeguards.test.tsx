@@ -358,7 +358,7 @@ describe("Phase 3Y-A/B protected admin destructive-action safeguards", () => {
     text = document.body.textContent ?? "";
     expect(text).toMatch(/recovery states/i);
     expect(text).toMatch(/confirmed outcome, or public tracking lane/i);
-    expect(text).toMatch(/review note privacy, and retry the protected write locally/i);
+    expect(text).toMatch(/status save fails, keep the prior protected state and retry locally/i);
   });
 
   it("keeps public source free from admin recovery details, forbidden customer flows, and fake facts", () => {

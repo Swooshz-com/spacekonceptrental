@@ -10,6 +10,11 @@ const commandPlan = [
     args: ['run', 'validate:protected-admin-enquiry-inbox-triage-foundation'],
   },
   {
+    label: 'Validate protected admin enquiry triage status update foundation',
+    cwd: repoRoot,
+    args: ['run', 'validate:protected-admin-enquiry-triage-status-update-foundation'],
+  },
+  {
     label: 'Validate Supabase enquiry persistence and CRM handoff foundation',
     cwd: repoRoot,
     args: ['run', 'validate:supabase-enquiry-persistence-crm-handoff-foundation'],

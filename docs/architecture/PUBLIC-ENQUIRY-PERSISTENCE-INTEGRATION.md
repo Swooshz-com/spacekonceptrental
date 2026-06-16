@@ -45,13 +45,23 @@ top-level fields before persistence.
 
 ## Not Implemented
 
+HubSpot CRM sync is still not implemented.
+
 HubSpot CRM sync is not implemented.
 
+n8n workflows are still not implemented.
+
 n8n workflows are not implemented.
+
+Email sending is still not implemented.
 
 Email sending is not implemented.
 
 Public customer accounts remain deferred.
+
+Public customer login remains unimplemented.
+
+Customer dashboard remains unimplemented.
 
 Custom CRM remains rejected/deferred.
 
@@ -78,3 +88,11 @@ This is not a CRM replacement. HubSpot CRM sync is still not implemented, n8n
 workflows are still not implemented, email sending is still not implemented,
 public customer accounts remain deferred, public customer login remains
 unimplemented, and custom CRM remains rejected/deferred.
+
+Protected admin internal triage status updates are documented in
+`docs/architecture/PROTECTED-ADMIN-ENQUIRY-TRIAGE-STATUS-UPDATE-FOUNDATION.md`.
+Admin users can now update internal enquiry triage status inside protected
+admin surfaces. Public quote/enquiry submission cannot override admin triage
+status beyond the initial safe `new` state and cannot update CRM handoff
+fields. This does not contact the customer, does not send email, does not sync
+to HubSpot, and does not queue n8n.

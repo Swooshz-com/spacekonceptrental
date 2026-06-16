@@ -5,6 +5,7 @@ import { useState, type FormEvent } from "react";
 type AdminQuoteRequestStatus =
   | "new"
   | "reviewing"
+  | "follow_up_needed"
   | "quoted"
   | "closed"
   | "archived";
@@ -87,18 +88,19 @@ const quoteWriteOperation = "quote.write";
 const quoteStatuses: AdminQuoteRequestStatus[] = [
   "new",
   "reviewing",
+  "follow_up_needed",
   "quoted",
-  "closed",
-  "archived"
+  "closed"
 ];
 const genericFailureMessage =
-  "Quote status could not be saved. Check internal status, keep notes protected, and try again.";
+  "Internal triage status could not be saved. Keep the existing admin review state and try again.";
 
 function statusLabel(value: string) {
   const labels: Record<string, string> = {
     new: "New enquiry",
     reviewing: "Reviewing",
-    quoted: "Follow-up prepared",
+    follow_up_needed: "Follow-up needed",
+    quoted: "Quoted",
     closed: "Closed locally",
     archived: "Archived locally"
   };
@@ -118,12 +120,12 @@ function quoteStatusSummary(
     inReview: quoteRequests.filter(
       (quoteRequest) => quoteRequest.status === "reviewing"
     ).length,
+    followUpNeeded: quoteRequests.filter(
+      (quoteRequest) => quoteRequest.status === "follow_up_needed"
+    ).length,
     quoted: quoteRequests.filter((quoteRequest) => quoteRequest.status === "quoted").length,
     closed: quoteRequests.filter(
       (quoteRequest) => quoteRequest.status === "closed"
-    ).length,
-    archived: quoteRequests.filter(
-      (quoteRequest) => quoteRequest.status === "archived"
     ).length,
     missingContact: quoteRequests.filter(
       (quoteRequest) => !hasContactMethod(quoteRequest)
@@ -205,10 +207,6 @@ function quoteNextAction(quoteRequest: AdminQuoteRequestInboxQuoteRequest) {
     return "Next action: capture a contact method before follow-up.";
   }
 
-  if (quoteRequest.status === "archived") {
-    return "Next action: archived enquiry is retained for admin reference.";
-  }
-
   if (!quoteRequest.eventDate || !quoteRequest.venue) {
     return "Next action: confirm event date and venue before detailed quote work.";
   }
@@ -222,7 +220,11 @@ function quoteNextAction(quoteRequest: AdminQuoteRequestInboxQuoteRequest) {
   }
 
   if (quoteRequest.status === "reviewing") {
-    return "Next action: prepare human follow-up and mark follow-up prepared only after admin-local review; legacy cue: prepare quote response or move to quoted after direct follow-up.";
+    return "Next action: prepare human follow-up and mark follow-up needed when admin review needs direct contact.";
+  }
+
+  if (quoteRequest.status === "follow_up_needed") {
+    return "Next action: follow up directly outside this app; this status does not contact the customer or sync to CRM.";
   }
 
   if (quoteRequest.status === "quoted") {
@@ -422,12 +424,11 @@ export function QuoteRequestInboxPanel({
 
   async function submitStatusChange(
     quoteRequestId: string,
-    nextStatus: AdminQuoteRequestStatus,
-    internalNote?: string
+    nextStatus: AdminQuoteRequestStatus
   ) {
     setStatus({
       kind: "pending",
-      message: "Saving protected quote follow-up..."
+      message: "Updating internal triage status..."
     });
 
     try {
@@ -450,8 +451,7 @@ export function QuoteRequestInboxPanel({
             "x-csrf-proof": csrfProof
           },
           body: JSON.stringify({
-            status: nextStatus,
-            ...(internalNote ? { internalNote } : {})
+            status: nextStatus
           })
         }
       );
@@ -467,7 +467,7 @@ export function QuoteRequestInboxPanel({
 
       setStatus({
         kind: "success",
-        message: "Quote status updated. Refreshing dashboard."
+        message: "Status updated for admin review. Refreshing dashboard."
       });
 
       try {
@@ -495,12 +495,6 @@ export function QuoteRequestInboxPanel({
       typeof nextStatusValue === "string"
         ? parseQuoteStatus(nextStatusValue)
         : null;
-    const internalNoteValue = formData.get("internalNote");
-    const internalNote =
-      typeof internalNoteValue === "string"
-        ? internalNoteValue.trim()
-        : undefined;
-
     if (!nextStatus) {
       setStatus({
         kind: "error",
@@ -509,7 +503,7 @@ export function QuoteRequestInboxPanel({
       return;
     }
 
-    await submitStatusChange(quoteRequestId, nextStatus, internalNote);
+    await submitStatusChange(quoteRequestId, nextStatus);
   }
 
   if (inbox.status === "unavailable") {
@@ -545,7 +539,8 @@ export function QuoteRequestInboxPanel({
           <h2>Quote request inbox</h2>
           <p>
             Review recent customer quote requests for this workspace and update
-            internal follow-up status only. Notes and status history stay protected and are not public status tracking.
+            internal triage status only. This does not contact the customer or
+            sync to CRM, and it is not public status tracking.
           </p>
         </div>
         <dl className="admin-dashboard__stats" aria-label="Quote request summary">
@@ -586,16 +581,16 @@ export function QuoteRequestInboxPanel({
             <dd>{summary.inReview}</dd>
           </div>
           <div>
-            <dt>Quoted/contacted - Follow-up prepared</dt>
+            <dt>Follow-up needed</dt>
+            <dd>{summary.followUpNeeded}</dd>
+          </div>
+          <div>
+            <dt>Quoted</dt>
             <dd>{summary.quoted}</dd>
           </div>
           <div>
             <dt>Closed requests</dt>
             <dd>{summary.closed}</dd>
-          </div>
-          <div>
-            <dt>Archived requests</dt>
-            <dd>{summary.archived}</dd>
           </div>
           <div>
             <dt>Contact gaps</dt>
@@ -641,7 +636,7 @@ export function QuoteRequestInboxPanel({
           </div>
           <div>
             <dt>Write-enabled</dt>
-            <dd>Write-enabled internal quote follow-up.</dd>
+            <dd>Write-enabled internal triage status only.</dd>
           </div>
           <div>
             <dt>Public-facing</dt>
@@ -656,7 +651,8 @@ export function QuoteRequestInboxPanel({
         </dl>
         <p>
           Next safe action: capture contact, event, venue, and requested items
-          before closing follow-up. If a status or note save fails, keep the prior protected state and retry locally without exposing internal notes.
+          before closing follow-up. If a status save fails, keep the prior
+          protected state and retry locally without exposing internal details.
         </p>
       </section>
 
@@ -808,9 +804,9 @@ export function QuoteRequestInboxPanel({
                   )}
                 </section>
                 <section className="quote-inbox__section">
-                  <h4>Admin-only status and notes</h4>
+                  <h4>Admin-only status history</h4>
                   <p>
-                    Internal notes and status history stay inside this
+                    Internal status history stays inside this
                     protected admin workspace and are not shown on public quote
                     pages or public status views.
                   </p>
@@ -831,7 +827,7 @@ export function QuoteRequestInboxPanel({
                   )}
                 </section>
                 <form
-                  aria-label={`Update quote follow-up ${quoteRequest.publicReference}`}
+                  aria-label={`Update internal triage status ${quoteRequest.publicReference}`}
                   className="category-management__form"
                   onSubmit={(event) =>
                     void handleStatusSubmit(event, quoteRequest.id)
@@ -850,24 +846,21 @@ export function QuoteRequestInboxPanel({
                         </option>
                       ))}
                     </select>
-                    <small>Status is an admin-only follow-up control and is never shown as a public quote status view, confirmed outcome, or public tracking lane.</small>
-                  </label>
-                  <label htmlFor={`quote-note-${quoteRequest.id}`}>
-                    Protected internal note for {quoteRequest.publicReference}
-                    <textarea
-                      id={`quote-note-${quoteRequest.id}`}
-                      maxLength={1200}
-                      name="internalNote"
-                      placeholder="Add protected follow-up context for the team"
-                      rows={3}
-                    />
-                    <small>Internal notes stay protected; do not write public-facing promises, outbound automation, owner sign-off, or sales-system instructions here.</small>
+                    <small>Status is an admin-only triage control and is never shown as a public quote status view, confirmed outcome, or public tracking lane.</small>
                   </label>
                   <p className="category-management__hint">
-                    Protected write boundary: internal status changes and notes stay inside this admin workspace and are used for team follow-up only. If save fails, keep the previous status, review note privacy, and retry the protected write locally.
+                    Update internal triage status. This does not contact the
+                    customer or sync to CRM, and it does not email customers or queue
+                    automation.
                   </p>
-                  <button className="button" type="submit">
-                    Save follow-up for {quoteRequest.publicReference}
+                  <button
+                    className="button"
+                    disabled={status.kind === "pending"}
+                    type="submit"
+                  >
+                    {status.kind === "pending"
+                      ? `Updating internal triage status for ${quoteRequest.publicReference}`
+                      : `Update internal triage status for ${quoteRequest.publicReference}`}
                   </button>
                 </form>
               </article>

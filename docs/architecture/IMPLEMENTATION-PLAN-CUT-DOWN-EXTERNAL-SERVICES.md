@@ -54,6 +54,45 @@ Resend remains optional future transactional email only.
 Status update/assignment/remediation/contact workflows remain future work
 unless explicitly implemented in a later PR.
 
+## Protected Admin Enquiry Triage Status Update Foundation
+
+Protected admin enquiry triage status update foundation is documented in
+`docs/architecture/PROTECTED-ADMIN-ENQUIRY-TRIAGE-STATUS-UPDATE-FOUNDATION.md`.
+
+Admin users can now update internal enquiry triage status inside protected
+admin surfaces.
+
+This is not a CRM replacement.
+
+This does not contact the customer.
+
+This does not send email.
+
+This does not sync to HubSpot.
+
+This does not queue n8n.
+
+HubSpot CRM sync is still not implemented.
+
+n8n workflows are still not implemented.
+
+Email sending is still not implemented.
+
+Public customer accounts remain deferred.
+
+Public customer login remains unimplemented.
+
+Customer dashboard remains unimplemented.
+
+Custom CRM remains rejected/deferred.
+
+Google Workspace/domain email remains human/admin email first.
+
+Resend remains optional future transactional email only.
+
+Assignment, reminders, sales notes/activity timeline, and outbound contact
+workflows remain future work unless explicitly implemented in a later PR.
+
 ## Purpose
 
 The Phase 6 readiness ladder is paused after Phase 6P-A/B so SKR can reduce

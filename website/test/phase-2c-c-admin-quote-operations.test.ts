@@ -90,7 +90,8 @@ describe("Phase 2C-C admin quote operations and enquiry workflow closeout", () =
 
     expect(routeSource).toContain('import "server-only";');
     expect(routeSource).toContain("quote.write");
-    expect(routeSource).toContain("internalNote");
+    expect(routeSource).toContain("hasOnlyKeys");
+    expect(routeSource).toContain("status: payload.status");
     expect(routeSource).toContain("csrfVerifier");
     expect(routeSource).toContain("resolveServerAdminRuntimeRouteGateAdapter");
     expect(writeSource).toContain('import "server-only";');

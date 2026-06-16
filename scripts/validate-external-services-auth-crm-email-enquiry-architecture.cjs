@@ -24,6 +24,7 @@ const allowedChangedFiles = new Set([
   architectureDocPath,
   cutDownDocPath,
   'docs/architecture/PROTECTED-ADMIN-ENQUIRY-INBOX-TRIAGE-FOUNDATION.md',
+  'docs/architecture/PROTECTED-ADMIN-ENQUIRY-TRIAGE-STATUS-UPDATE-FOUNDATION.md',
   'docs/architecture/PUBLIC-ENQUIRY-PERSISTENCE-INTEGRATION.md',
   'docs/architecture/SUPABASE-ENQUIRY-PERSISTENCE-CRM-HANDOFF-FOUNDATION.md',
   'docs/PHASE-STATUS.md',
@@ -35,6 +36,7 @@ const allowedChangedFiles = new Set([
   'scripts/validate-external-services-auth-crm-email-enquiry-architecture.cjs',
   'scripts/validate-public-enquiry-persistence-integration.cjs',
   'scripts/validate-protected-admin-enquiry-inbox-triage-foundation.cjs',
+  'scripts/validate-protected-admin-enquiry-triage-status-update-foundation.cjs',
   'scripts/validate-maintenance-closure-audit-follow-up-response-acknowledgement-review-outcome-follow-up-planning-review-readiness.cjs',
   'scripts/validate-maintenance-closure-audit-follow-up-response-acknowledgement-review-outcome-follow-up-planning-review-outcome-readiness.cjs',
   'scripts/validate-maintenance-closure-audit-follow-up-response-acknowledgement-review-outcome-follow-up-planning-review-outcome-acknowledgement-readiness.cjs',
@@ -42,6 +44,7 @@ const allowedChangedFiles = new Set([
   'scripts/validate-supabase-enquiry-persistence-crm-handoff-foundation.cjs',
   'scripts/validate-release-candidate-suite.cjs',
   'supabase/migrations/20260616100000_quote_enquiry_crm_handoff_foundation.sql',
+  'supabase/migrations/20260616120000_admin_enquiry_triage_status_update_foundation.sql',
   'website/lib/quote/types.ts',
   'website/lib/quote/validation.ts',
   'website/lib/quote/validation.test.ts',
@@ -60,6 +63,10 @@ const allowedChangedFiles = new Set([
   'website/lib/quote/admin-read/admin-quote-request-dashboard-read.test.ts',
   'website/lib/quote/admin-read/admin-quote-request-detail-read.ts',
   'website/lib/quote/admin-read/admin-quote-request-detail-read.test.ts',
+  'website/lib/quote/admin-write/admin-quote-request-status-route.ts',
+  'website/lib/quote/admin-write/admin-quote-request-status-route.test.ts',
+  'website/lib/quote/admin-write/admin-quote-request-status-write.ts',
+  'website/lib/quote/admin-write/admin-quote-request-status-write.test.ts',
   'website/test/phase-2c-a-storage-backed-listing-media.test.ts',
   'website/test/phase-2c-c-admin-quote-operations.test.ts',
   'website/test/phase-2c-d-quote-workflow-atomicity.test.ts',
@@ -78,10 +85,14 @@ const allowedChangedFiles = new Set([
   'website/test/phase-3f-ab-catalogue-content-media-readiness.test.tsx',
   'website/test/phase-3g-ab-quote-intake-admin-triage-polish.test.tsx',
   'website/test/phase-3h-ab-admin-operator-qa-readiness-polish.test.tsx',
+  'website/test/phase-3v-ab-quote-enquiry-workflow-hardening.test.tsx',
+  'website/test/phase-3x-ab-protected-admin-write-ops-hardening.test.tsx',
+  'website/test/phase-3y-ab-protected-admin-destructive-action-safeguards.test.tsx',
 ]);
 
 const approvedFoundationFiles = new Set([
   'supabase/migrations/20260616100000_quote_enquiry_crm_handoff_foundation.sql',
+  'supabase/migrations/20260616120000_admin_enquiry_triage_status_update_foundation.sql',
   'website/lib/quote/types.ts',
   'website/lib/quote/validation.ts',
   'website/lib/quote/validation.test.ts',
@@ -100,6 +111,10 @@ const approvedFoundationFiles = new Set([
   'website/lib/quote/admin-read/admin-quote-request-dashboard-read.test.ts',
   'website/lib/quote/admin-read/admin-quote-request-detail-read.ts',
   'website/lib/quote/admin-read/admin-quote-request-detail-read.test.ts',
+  'website/lib/quote/admin-write/admin-quote-request-status-route.ts',
+  'website/lib/quote/admin-write/admin-quote-request-status-route.test.ts',
+  'website/lib/quote/admin-write/admin-quote-request-status-write.ts',
+  'website/lib/quote/admin-write/admin-quote-request-status-write.test.ts',
   'website/test/phase-2c-a-storage-backed-listing-media.test.ts',
   'website/test/phase-2c-c-admin-quote-operations.test.ts',
   'website/test/phase-2c-d-quote-workflow-atomicity.test.ts',
@@ -302,6 +317,7 @@ const changedContentsWithoutThisValidator = changedFiles
   .filter((file) => file !== 'scripts/validate-supabase-enquiry-persistence-crm-handoff-foundation.cjs')
   .filter((file) => file !== 'scripts/validate-public-enquiry-persistence-integration.cjs')
   .filter((file) => file !== 'scripts/validate-protected-admin-enquiry-inbox-triage-foundation.cjs')
+  .filter((file) => file !== 'scripts/validate-protected-admin-enquiry-triage-status-update-foundation.cjs')
   .filter((file) => !file.startsWith('scripts/validate-maintenance-closure-audit-follow-up-response-acknowledgement-review-outcome-follow-up-planning'))
   .filter((file) => exists(file))
   .map((file) => `${file}\n${read(file)}`)
@@ -342,5 +358,5 @@ assert(
 );
 
 console.log(
-  'External services auth/CRM/email/enquiry architecture validation passed. Architecture/planning only: no provider integration, credentials/secrets, runtime provider calls, CRM sync code, n8n workflow implementation, email sending implementation, public customer account implementation, public login, runtime/API/provider/env/scheduler/chat/RAG/public behaviour change, retail/transaction flow expansion, or Docker skip/bypass was added.'
+  'External services auth/CRM/email/enquiry architecture validation passed. Architecture/planning only: no provider integration, credentials/secrets, runtime provider calls, CRM sync code, n8n workflow implementation, email sending implementation, public customer account implementation, public login, runtime/API/provider/env/scheduler/chat/RAG/public behaviour change, retail/transaction flow expansion, or Docker guard changes were added.'
 );
