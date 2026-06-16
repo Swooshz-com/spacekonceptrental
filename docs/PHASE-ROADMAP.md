@@ -1,3 +1,17 @@
+## External Services Architecture Pivot References
+
+Current planning focus: external-services architecture and implementation-plan reduction for auth, CRM, email, and enquiry persistence.
+
+Latest completed readiness ladder phase remains Phase 6P-A/B maintenance closure audit follow-up response acknowledgement review outcome follow-up planning review outcome acknowledgement review readiness.
+
+This pivot pauses additional readiness-only Phase 6Q/6R work and reviews where low-cost/free external services reduce custom SKR build work, security risk, maintenance burden, and admin workflow complexity.
+
+References: `docs/architecture/EXTERNAL-SERVICES-AUTH-CRM-EMAIL-ENQUIRY-ARCHITECTURE.md`, `docs/architecture/IMPLEMENTATION-PLAN-CUT-DOWN-EXTERNAL-SERVICES.md`, and `scripts/validate-external-services-auth-crm-email-enquiry-architecture.cjs`.
+
+MVP decisions: Supabase remains the app database/auth/backend foundation; HubSpot is the preferred CRM; n8n is optional automation glue and not required for the first implementation; Google Workspace/domain email is first-line human/admin email; Resend is optional future transactional email only; public customer accounts are deferred; custom CRM is rejected/deferred.
+
+Planning firewall: architecture/planning only. No provider integration, credentials/secrets, runtime provider calls, CRM sync code, n8n workflows, email sending code, public login, customer dashboard, runtime/API/provider/env/scheduler/chat/RAG/public visitor-facing behaviour changes, or retail/transaction flow expansion is implemented.
+
 ## Phase 6P-A/B Maintenance Closure Audit Follow-Up Response Acknowledgement Review Outcome Follow-Up Planning Review Outcome Acknowledgement Review Readiness References
 
 Phase 6P-A/B references `docs/content/LOCAL-MAINTENANCE-CLOSURE-AUDIT-FOLLOW-UP-RESPONSE-ACKNOWLEDGEMENT-REVIEW-OUTCOME-FOLLOW-UP-PLANNING-REVIEW-OUTCOME-ACKNOWLEDGEMENT-REVIEW-READINESS.md`, `docs/content/LOCAL-MAINTENANCE-CLOSURE-AUDIT-RESPONSE-ACKNOWLEDGEMENT-REVIEW-OUTCOME-FOLLOW-UP-PLANNING-REVIEW-OUTCOME-ACKNOWLEDGEMENT-REVIEW-LEDGER-TEMPLATE.md`, `docs/content/LOCAL-MAINTENANCE-CLOSURE-AUDIT-FOLLOW-UP-RESPONSE-ACKNOWLEDGEMENT-REVIEW-OUTCOME-FOLLOW-UP-PLANNING-REVIEW-OUTCOME-ACKNOWLEDGEMENT-READINESS.md`, `docs/content/LOCAL-MAINTENANCE-CLOSURE-AUDIT-RESPONSE-ACKNOWLEDGEMENT-REVIEW-OUTCOME-FOLLOW-UP-PLANNING-REVIEW-OUTCOME-ACKNOWLEDGEMENT-LEDGER-TEMPLATE.md`, `docs/content/LOCAL-MAINTENANCE-CLOSURE-AUDIT-FOLLOW-UP-RESPONSE-ACKNOWLEDGEMENT-REVIEW-OUTCOME-FOLLOW-UP-PLANNING-REVIEW-OUTCOME-READINESS.md`, `docs/content/LOCAL-MAINTENANCE-CLOSURE-AUDIT-RESPONSE-ACKNOWLEDGEMENT-REVIEW-OUTCOME-FOLLOW-UP-PLANNING-REVIEW-OUTCOME-LEDGER-TEMPLATE.md`, `scripts/validate-maintenance-closure-audit-follow-up-response-acknowledgement-review-outcome-follow-up-planning-review-outcome-acknowledgement-review-readiness.cjs`, `scripts/validate-maintenance-closure-audit-follow-up-response-acknowledgement-review-outcome-follow-up-planning-review-outcome-acknowledgement-readiness.cjs`, and protected admin maintenance closure audit follow-up response acknowledgement review outcome follow-up planning review outcome acknowledgement review readiness helper coverage.
