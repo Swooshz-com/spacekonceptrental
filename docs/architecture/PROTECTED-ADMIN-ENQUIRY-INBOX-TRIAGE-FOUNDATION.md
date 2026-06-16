@@ -9,6 +9,13 @@ still not implemented. Public customer accounts remain deferred. Public
 customer login remains unimplemented. Customer dashboard remains unimplemented.
 Custom CRM remains rejected/deferred.
 
+Related audit/manifest slice:
+`docs/architecture/PROTECTED-ADMIN-CRM-HANDOFF-PACKET-AUDIT-MANIFEST-FOUNDATION.md`.
+Admin packet generation/export records safe audit/manifest metadata only. This
+does not store full sensitive payload dumps, sync to HubSpot, call or queue
+n8n, send email, contact the customer, create HubSpot contact/deal IDs, mark
+records as synced, or set CRM sync attempt timestamps.
+
 # Protected Admin Enquiry Inbox Triage Foundation
 
 ## Purpose

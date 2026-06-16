@@ -61,6 +61,20 @@ type AdminQuoteRequestInboxReadResult =
       status: "unavailable";
     };
 
+type AdminQuoteRequestCrmHandoffPacketManifest = {
+  id: string;
+  provider: "hubspot";
+  packetKind: "json_review_packet";
+  statusFilter: "queued";
+  limitRequested: number;
+  recordCount: number;
+  requestIds: string[];
+  requestIdCount: number;
+  generatedByAdminUserId?: string;
+  generatedAt: string;
+  source: "protected_admin";
+};
+
 type QuoteRequestInboxPanelProps = {
   inbox: AdminQuoteRequestInboxReadResult;
   fetcher?: typeof fetch;
@@ -99,6 +113,8 @@ const genericCrmHandoffFailureMessage =
   "CRM handoff readiness could not be saved. Keep the existing local queue state and try again.";
 const genericCrmHandoffPacketFailureMessage =
   "CRM handoff packet could not be prepared. Keep queued records unchanged and try again.";
+const uuidPattern =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 function statusLabel(value: string) {
   const labels: Record<string, string> = {
@@ -422,6 +438,74 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
 
+function isUuid(value: unknown): value is string {
+  return typeof value === "string" && uuidPattern.test(value.trim());
+}
+
+function parseManifestRecord(
+  value: unknown
+): AdminQuoteRequestCrmHandoffPacketManifest | null {
+  if (!isRecord(value)) {
+    return null;
+  }
+
+  const requestIds = Array.isArray(value.requestIds)
+    ? value.requestIds.filter(isUuid).map((requestId) => requestId.trim())
+    : null;
+
+  if (
+    !isUuid(value.id) ||
+    value.provider !== "hubspot" ||
+    value.packetKind !== "json_review_packet" ||
+    value.statusFilter !== "queued" ||
+    !Number.isInteger(value.limitRequested) ||
+    Number(value.limitRequested) <= 0 ||
+    !Number.isInteger(value.recordCount) ||
+    Number(value.recordCount) < 0 ||
+    !requestIds ||
+    !Number.isInteger(value.requestIdCount) ||
+    Number(value.requestIdCount) !== requestIds.length ||
+    typeof value.generatedAt !== "string" ||
+    !value.generatedAt.trim() ||
+    value.source !== "protected_admin" ||
+    (value.generatedByAdminUserId !== undefined &&
+      !isUuid(value.generatedByAdminUserId))
+  ) {
+    return null;
+  }
+
+  return {
+    id: value.id.trim(),
+    provider: "hubspot",
+    packetKind: "json_review_packet",
+    statusFilter: "queued",
+    limitRequested: Number(value.limitRequested),
+    recordCount: Number(value.recordCount),
+    requestIds,
+    requestIdCount: requestIds.length,
+    generatedByAdminUserId:
+      typeof value.generatedByAdminUserId === "string"
+        ? value.generatedByAdminUserId.trim()
+        : undefined,
+    generatedAt: value.generatedAt.trim(),
+    source: "protected_admin"
+  };
+}
+
+function parseManifestRecords(
+  value: unknown
+): AdminQuoteRequestCrmHandoffPacketManifest[] | null {
+  if (!Array.isArray(value)) {
+    return null;
+  }
+
+  const manifests = value.map(parseManifestRecord);
+
+  return manifests.every(Boolean)
+    ? (manifests as AdminQuoteRequestCrmHandoffPacketManifest[])
+    : null;
+}
+
 function parseQuoteStatus(value: string): AdminQuoteRequestStatus | null {
   return quoteStatuses.includes(value as AdminQuoteRequestStatus)
     ? (value as AdminQuoteRequestStatus)
@@ -544,6 +628,82 @@ function QuoteIntakeParityHelper() {
   );
 }
 
+function CrmHandoffPacketManifestList({
+  manifests
+}: {
+  manifests: AdminQuoteRequestCrmHandoffPacketManifest[];
+}) {
+  return (
+    <section
+      aria-label="Recent CRM handoff packet manifests"
+      className="quote-inbox__section"
+    >
+      <h4>Recent CRM handoff packet manifests</h4>
+      <p className="category-management__hint">
+        Audit/manifest only. These records describe prepared packet metadata
+        and do not store full customer messages. They do not sync to HubSpot,
+        do not call n8n, do not send email, do not contact customers, do not
+        create provider IDs, and do not mark records as synced.
+      </p>
+      {manifests.length === 0 ? (
+        <p>No CRM handoff packet manifests loaded yet.</p>
+      ) : (
+        <ul className="admin-dashboard__list">
+          {manifests.map((manifest) => (
+            <li key={manifest.id}>
+              <dl className="quote-inbox__details">
+                <div>
+                  <dt>Generated timestamp</dt>
+                  <dd>{manifest.generatedAt}</dd>
+                </div>
+                <div>
+                  <dt>Provider</dt>
+                  <dd>{manifest.provider}</dd>
+                </div>
+                <div>
+                  <dt>Status filter</dt>
+                  <dd>{manifest.statusFilter}</dd>
+                </div>
+                <div>
+                  <dt>Record count</dt>
+                  <dd>{manifest.recordCount}</dd>
+                </div>
+                <div>
+                  <dt>Limit</dt>
+                  <dd>{manifest.limitRequested}</dd>
+                </div>
+                <div>
+                  <dt>Source/kind</dt>
+                  <dd>
+                    {manifest.source}; {manifest.packetKind}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Request IDs</dt>
+                  <dd>
+                    Request IDs: {manifest.requestIdCount}
+                    {manifest.requestIds.length > 0
+                      ? ` - ${manifest.requestIds.join(", ")}`
+                      : ""}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Admin identity</dt>
+                  <dd>
+                    {manifest.generatedByAdminUserId
+                      ? `Admin: ${manifest.generatedByAdminUserId}`
+                      : "Admin identity unavailable"}
+                  </dd>
+                </div>
+              </dl>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}
+
 export function QuoteRequestInboxPanel({
   inbox,
   fetcher = fetch,
@@ -555,6 +715,9 @@ export function QuoteRequestInboxPanel({
   const [crmHandoffPacketPreview, setCrmHandoffPacketPreview] = useState<
     string | null
   >(null);
+  const [crmHandoffPacketManifests, setCrmHandoffPacketManifests] = useState<
+    AdminQuoteRequestCrmHandoffPacketManifest[]
+  >([]);
 
   async function submitStatusChange(
     quoteRequestId: string,
@@ -689,22 +852,38 @@ export function QuoteRequestInboxPanel({
     setCrmHandoffPacketPreview(null);
 
     try {
+      const csrfProof = await requestQuoteWriteProof(fetcher);
+
+      if (!csrfProof) {
+        setStatus({
+          kind: "error",
+          message: genericCrmHandoffPacketFailureMessage
+        });
+        return;
+      }
+
       const response = await fetcher(
         `/api/admin/quote-requests/crm-handoff-packet?limit=${crmHandoffPacketLimit}`,
         {
-          method: "GET",
+          method: "POST",
           headers: {
-            Accept: "application/json"
+            Accept: "application/json",
+            "x-csrf-proof": csrfProof
           }
         }
       );
       const responseBody = await readSafeJson(response);
+      const recentManifests = isRecord(responseBody)
+        ? parseManifestRecords(responseBody.recentManifests)
+        : null;
 
       if (
         !response.ok ||
         !isRecord(responseBody) ||
         responseBody.ok !== true ||
-        !isRecord(responseBody.packet)
+        !isRecord(responseBody.packet) ||
+        !parseManifestRecord(responseBody.manifest) ||
+        !recentManifests
       ) {
         setStatus({
           kind: "error",
@@ -716,10 +895,11 @@ export function QuoteRequestInboxPanel({
       setCrmHandoffPacketPreview(
         JSON.stringify(responseBody.packet, null, 2)
       );
+      setCrmHandoffPacketManifests(recentManifests);
       setStatus({
         kind: "success",
         message:
-          "Queued CRM handoff packet prepared for manual admin review only."
+          "Queued CRM handoff packet prepared and manifest recorded for manual admin review only."
       });
     } catch {
       setStatus({
@@ -875,9 +1055,9 @@ export function QuoteRequestInboxPanel({
         <h3>Queued CRM handoff packet review</h3>
         <p className="category-management__hint">
           Manual review/export only. This does not sync to HubSpot or contact
-          customers. This does not call n8n, perform email delivery, create
-          provider IDs, or mark records as synced. Queued records remain queued
-          until a future sync integration is implemented.
+          customers. This does not call n8n, does not send email, does not
+          create provider IDs, and does not mark records as synced. Queued
+          records remain queued until a future sync integration is implemented.
         </p>
         <dl className="admin-dashboard__stats">
           <div>
@@ -900,6 +1080,9 @@ export function QuoteRequestInboxPanel({
             ? "Preparing queued CRM handoff packet"
             : "Review queued CRM handoff packet"}
         </button>
+        <CrmHandoffPacketManifestList
+          manifests={crmHandoffPacketManifests}
+        />
         {crmHandoffPacketPreview ? (
           <section
             aria-label="Queued CRM handoff packet JSON preview"

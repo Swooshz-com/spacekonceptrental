@@ -2,6 +2,15 @@ import "server-only";
 
 import { NextResponse, type NextRequest } from "next/server";
 import {
+  createServerAdminCsrfProofRuntimeDependencies,
+  type ServerAdminCsrfProofRuntimeDependencies
+} from "../../admin/authorization/server-admin-csrf-proof-runtime-dependencies";
+import {
+  resolveServerAdminCsrfProofSessionWorkspaceBinding,
+  type ServerAdminCsrfProofSessionWorkspaceBindingDependencies,
+  type ServerAdminCsrfProofSessionWorkspaceBindingResult
+} from "../../admin/authorization/server-admin-csrf-proof-session-workspace-binding";
+import {
   resolveServerAdminRuntimeRouteGateAdapter,
   type ServerAdminRuntimeRouteGateAdapterResult
 } from "../../admin/authorization/server-admin-runtime-route-gate-adapter";
@@ -11,6 +20,11 @@ import {
   type AdminQuoteRequestCrmHandoffPacketReadPersistence,
   type AdminQuoteRequestCrmHandoffPacketReadResult
 } from "./admin-quote-request-crm-handoff-packet-read";
+import {
+  adminQuoteRequestCrmHandoffPacketManifestPersistence,
+  type AdminQuoteRequestCrmHandoffPacketManifestPersistence,
+  type AdminQuoteRequestCrmHandoffPacketManifestReadResult
+} from "./admin-quote-request-crm-handoff-packet-manifest";
 
 type AdminQuoteRequestCrmHandoffPacketRouteEnv = {
   ADMIN_EXPECTED_ORIGIN?: string | null;
@@ -21,13 +35,24 @@ type AdminQuoteRequestCrmHandoffPacketRouteEnv = {
 export type AdminQuoteRequestCrmHandoffPacketRouteDependencies = {
   env?: AdminQuoteRequestCrmHandoffPacketRouteEnv;
   generatedAt?: () => string;
+  now?: () => number;
+  proofMaxAgeMs?: number;
   persistence?: AdminQuoteRequestCrmHandoffPacketReadPersistence;
+  manifestPersistence?: AdminQuoteRequestCrmHandoffPacketManifestPersistence;
+  createRuntimeDependencies?: CreateRuntimeDependencies;
+  resolveSessionWorkspaceBinding?: typeof resolveServerAdminCsrfProofSessionWorkspaceBinding;
+  bindingDependencies?: ServerAdminCsrfProofSessionWorkspaceBindingDependencies;
   resolveRouteGate?: typeof resolveServerAdminRuntimeRouteGateAdapter;
 };
 
 const noStoreHeaders = {
   "Cache-Control": "no-store"
 };
+const defaultProofMaxAgeMs = 5 * 60_000;
+
+type CreateRuntimeDependencies = (
+  verifierContext?: Parameters<typeof createServerAdminCsrfProofRuntimeDependencies>[0]
+) => ServerAdminCsrfProofRuntimeDependencies;
 
 function normalizeRequired(value: string | null | undefined) {
   const normalized = value?.trim();
@@ -48,15 +73,31 @@ function errorJson(error: string, status: number): NextResponse {
   );
 }
 
-function successJson(result: AdminQuoteRequestCrmHandoffPacketReadResult) {
+function successJson(
+  result: AdminQuoteRequestCrmHandoffPacketReadResult,
+  manifestResult: Awaited<
+    ReturnType<AdminQuoteRequestCrmHandoffPacketManifestPersistence["createManifest"]>
+  >,
+  recentManifestResult: AdminQuoteRequestCrmHandoffPacketManifestReadResult
+) {
   if (!("status" in result) || result.status !== "loaded") {
     return errorJson("quote_crm_handoff_packet_unavailable", 503);
+  }
+
+  if (manifestResult.status !== "created") {
+    return errorJson("quote_crm_handoff_packet_manifest_unavailable", 503);
+  }
+
+  if (recentManifestResult.status !== "loaded") {
+    return errorJson("quote_crm_handoff_packet_manifest_unavailable", 503);
   }
 
   return NextResponse.json(
     {
       ok: true,
-      packet: result.packet
+      packet: result.packet,
+      manifest: manifestResult.manifest,
+      recentManifests: recentManifestResult.manifests
     },
     {
       status: 200,
@@ -97,6 +138,24 @@ function getRouteEnv(
   return getAdminRouteRuntimeConfig(dependencies.env ?? process.env);
 }
 
+function getProofMaxAgeMs(
+  dependencies: AdminQuoteRequestCrmHandoffPacketRouteDependencies
+) {
+  return typeof dependencies.proofMaxAgeMs === "number" &&
+    Number.isFinite(dependencies.proofMaxAgeMs) &&
+    dependencies.proofMaxAgeMs > 0
+    ? dependencies.proofMaxAgeMs
+    : defaultProofMaxAgeMs;
+}
+
+function getTimestampMs(
+  dependencies: AdminQuoteRequestCrmHandoffPacketRouteDependencies
+) {
+  const now = dependencies.now?.() ?? Date.now();
+
+  return Number.isFinite(now) && now >= 0 ? now : null;
+}
+
 function persistenceError(result: AdminQuoteRequestCrmHandoffPacketReadResult) {
   switch (result.status) {
     case "invalid_limit":
@@ -119,7 +178,7 @@ export async function handleAdminQuoteRequestCrmHandoffPacketRoute(
 ): Promise<NextResponse> {
   const requestMethod = normalizeRequired(request.method)?.toUpperCase();
 
-  if (requestMethod !== "GET") {
+  if (requestMethod !== "POST") {
     return errorJson("request_method_not_allowed", 405);
   }
 
@@ -134,14 +193,57 @@ export async function handleAdminQuoteRequestCrmHandoffPacketRoute(
   }
 
   const routeEnv = getRouteEnv(dependencies);
+  const createRuntimeDependencies =
+    dependencies.createRuntimeDependencies ??
+    createServerAdminCsrfProofRuntimeDependencies;
+  const runtimeDependencies = createRuntimeDependencies();
+  const resolveSessionWorkspaceBinding =
+    dependencies.resolveSessionWorkspaceBinding ??
+    resolveServerAdminCsrfProofSessionWorkspaceBinding;
+  let binding: ServerAdminCsrfProofSessionWorkspaceBindingResult;
+
+  try {
+    binding = await resolveSessionWorkspaceBinding(
+      {
+        requestedOperation: "quote.write"
+      },
+      {
+        ...(dependencies.bindingDependencies ?? {}),
+        workspace: {
+          trustedServerWorkspaceId: routeEnv.trustedServerWorkspaceId
+        },
+        ...runtimeDependencies.sessionWorkspaceBindingDependencies
+      }
+    );
+  } catch {
+    return errorJson("admin_csrf_session_workspace_binding_unavailable", 503);
+  }
+
+  if (!binding.bound) {
+    return errorJson(binding.reason, binding.statusCode);
+  }
+
+  const timestampMs = getTimestampMs(dependencies);
+
+  if (timestampMs === null) {
+    return errorJson("csrf_verification_failed", 403);
+  }
+
   const resolveRouteGate =
     dependencies.resolveRouteGate ?? resolveServerAdminRuntimeRouteGateAdapter;
+  const verifierContext = {
+    expectedSessionBinding: binding.sessionBinding,
+    currentTimestampMs: timestampMs,
+    maxProofAgeMs: getProofMaxAgeMs(dependencies)
+  };
+  const verifierRuntimeDependencies =
+    createRuntimeDependencies(verifierContext);
   let routeGate: ServerAdminRuntimeRouteGateAdapterResult;
 
   try {
     routeGate = await resolveRouteGate(
       {
-        requestedOperation: "quote.read",
+        requestedOperation: "quote.write",
         requestMethod,
         request
       },
@@ -151,6 +253,10 @@ export async function handleAdminQuoteRequestCrmHandoffPacketRoute(
           expectedHost: routeEnv.expectedHost
         },
         gate: {
+          csrfVerifier: {
+            ...verifierContext,
+            ...verifierRuntimeDependencies.verifierDependencies
+          },
           decision: {
             workspace: {
               trustedServerWorkspaceId: routeEnv.trustedServerWorkspaceId
@@ -183,5 +289,22 @@ export async function handleAdminQuoteRequestCrmHandoffPacketRoute(
     return errorJson(mapped.error, mapped.status);
   }
 
-  return successJson(result);
+  const manifestPersistence =
+    dependencies.manifestPersistence ??
+    adminQuoteRequestCrmHandoffPacketManifestPersistence;
+  const manifestResult = await manifestPersistence.createManifest({
+    admin: binding.adminContext,
+    packet: result.packet
+  });
+
+  if (manifestResult.status !== "created") {
+    return errorJson("quote_crm_handoff_packet_manifest_unavailable", 503);
+  }
+
+  const recentManifestResult = await manifestPersistence.readRecentManifests({
+    admin: binding.adminContext,
+    limit: 10
+  });
+
+  return successJson(result, manifestResult, recentManifestResult);
 }

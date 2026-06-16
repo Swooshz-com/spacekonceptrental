@@ -9,6 +9,16 @@ Public customer accounts remain deferred. Public customer login remains
 unimplemented. Customer dashboard remains unimplemented. Custom CRM remains
 rejected/deferred.
 
+Related audit/manifest slice:
+`docs/architecture/PROTECTED-ADMIN-CRM-HANDOFF-PACKET-AUDIT-MANIFEST-FOUNDATION.md`.
+Admin packet generation/export records safe audit/manifest metadata only. This
+does not store full sensitive payload dumps, sync to HubSpot, call or queue
+n8n, send email, contact the customer, create HubSpot contact/deal IDs, mark
+records as synced, or set CRM sync attempt timestamps. HubSpot is the future
+CRM/sales workflow owner. HubSpot CRM sync, n8n workflows, email sending,
+public customer accounts, public customer login, customer dashboard, and custom
+CRM remain unimplemented or deferred.
+
 # Implementation Plan Cut-Down External Services
 
 ## Public Enquiry Persistence Integration

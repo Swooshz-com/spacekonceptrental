@@ -149,6 +149,12 @@ const approvedFoundationPublicFiles = new Set([
   'website/lib/quote/admin-write/admin-quote-request-status-route.test.ts',
   'website/lib/quote/admin-write/admin-quote-request-status-write.ts',
   'website/lib/quote/admin-write/admin-quote-request-status-write.test.ts',
+  'website/lib/quote/admin-read/admin-quote-request-crm-handoff-packet-read.ts',
+  'website/lib/quote/admin-read/admin-quote-request-crm-handoff-packet-read.test.ts',
+  'website/lib/quote/admin-read/admin-quote-request-crm-handoff-packet-route.ts',
+  'website/lib/quote/admin-read/admin-quote-request-crm-handoff-packet-route.test.ts',
+  'website/lib/quote/admin-read/admin-quote-request-crm-handoff-packet-manifest.ts',
+  'website/lib/quote/admin-read/admin-quote-request-crm-handoff-packet-manifest.test.ts',
 ]);
 const changedPublicFiles = changedResult.stdout.split(/\r?\n/).filter(Boolean).filter((file) => !file.includes('/admin/') && !approvedFoundationPublicFiles.has(file));
 assert(changedPublicFiles.length === 0, `Phase 6O must not change public source files: ${changedPublicFiles.join(', ')}`);

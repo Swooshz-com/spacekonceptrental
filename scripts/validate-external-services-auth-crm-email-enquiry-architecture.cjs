@@ -27,6 +27,7 @@ const allowedChangedFiles = new Set([
   'docs/architecture/PROTECTED-ADMIN-ENQUIRY-TRIAGE-STATUS-UPDATE-FOUNDATION.md',
   'docs/architecture/PROTECTED-ADMIN-CRM-HANDOFF-QUEUE-PREPARATION-FOUNDATION.md',
   'docs/architecture/PROTECTED-ADMIN-CRM-HANDOFF-EXPORT-REVIEW-PACKET-FOUNDATION.md',
+  'docs/architecture/PROTECTED-ADMIN-CRM-HANDOFF-PACKET-AUDIT-MANIFEST-FOUNDATION.md',
   'docs/architecture/PUBLIC-ENQUIRY-PERSISTENCE-INTEGRATION.md',
   'docs/architecture/SUPABASE-ENQUIRY-PERSISTENCE-CRM-HANDOFF-FOUNDATION.md',
   'docs/PHASE-STATUS.md',
@@ -41,6 +42,7 @@ const allowedChangedFiles = new Set([
   'scripts/validate-protected-admin-enquiry-triage-status-update-foundation.cjs',
   'scripts/validate-protected-admin-crm-handoff-queue-preparation-foundation.cjs',
   'scripts/validate-protected-admin-crm-handoff-export-review-packet-foundation.cjs',
+  'scripts/validate-protected-admin-crm-handoff-packet-audit-manifest-foundation.cjs',
   'scripts/validate-maintenance-closure-audit-follow-up-response-acknowledgement-review-outcome-follow-up-planning-review-readiness.cjs',
   'scripts/validate-maintenance-closure-audit-follow-up-response-acknowledgement-review-outcome-follow-up-planning-review-outcome-readiness.cjs',
   'scripts/validate-maintenance-closure-audit-follow-up-response-acknowledgement-review-outcome-follow-up-planning-review-outcome-acknowledgement-readiness.cjs',
@@ -50,6 +52,7 @@ const allowedChangedFiles = new Set([
   'supabase/migrations/20260616100000_quote_enquiry_crm_handoff_foundation.sql',
   'supabase/migrations/20260616120000_admin_enquiry_triage_status_update_foundation.sql',
   'supabase/migrations/20260616143000_admin_crm_handoff_queue_preparation_foundation.sql',
+  'supabase/migrations/20260616160000_quote_crm_handoff_packet_manifest_foundation.sql',
   'website/lib/quote/types.ts',
   'website/lib/quote/validation.ts',
   'website/lib/quote/validation.test.ts',
@@ -80,6 +83,8 @@ const allowedChangedFiles = new Set([
   'website/app/api/admin/quote-requests/crm-handoff-packet/route.ts',
   'website/lib/quote/admin-read/admin-quote-request-crm-handoff-packet-read.ts',
   'website/lib/quote/admin-read/admin-quote-request-crm-handoff-packet-read.test.ts',
+  'website/lib/quote/admin-read/admin-quote-request-crm-handoff-packet-manifest.ts',
+  'website/lib/quote/admin-read/admin-quote-request-crm-handoff-packet-manifest.test.ts',
   'website/lib/quote/admin-read/admin-quote-request-crm-handoff-packet-route.ts',
   'website/lib/quote/admin-read/admin-quote-request-crm-handoff-packet-route.test.ts',
   'scripts/validate-supabase-migrations.test.cjs',
@@ -124,6 +129,7 @@ const approvedFoundationFiles = new Set([
   'supabase/migrations/20260616100000_quote_enquiry_crm_handoff_foundation.sql',
   'supabase/migrations/20260616120000_admin_enquiry_triage_status_update_foundation.sql',
   'supabase/migrations/20260616143000_admin_crm_handoff_queue_preparation_foundation.sql',
+  'supabase/migrations/20260616160000_quote_crm_handoff_packet_manifest_foundation.sql',
   'website/lib/quote/types.ts',
   'website/lib/quote/validation.ts',
   'website/lib/quote/validation.test.ts',
@@ -154,6 +160,8 @@ const approvedFoundationFiles = new Set([
   'website/app/api/admin/quote-requests/crm-handoff-packet/route.ts',
   'website/lib/quote/admin-read/admin-quote-request-crm-handoff-packet-read.ts',
   'website/lib/quote/admin-read/admin-quote-request-crm-handoff-packet-read.test.ts',
+  'website/lib/quote/admin-read/admin-quote-request-crm-handoff-packet-manifest.ts',
+  'website/lib/quote/admin-read/admin-quote-request-crm-handoff-packet-manifest.test.ts',
   'website/lib/quote/admin-read/admin-quote-request-crm-handoff-packet-route.ts',
   'website/lib/quote/admin-read/admin-quote-request-crm-handoff-packet-route.test.ts',
   'scripts/validate-supabase-migrations.test.cjs',
@@ -375,6 +383,7 @@ const changedContentsWithoutThisValidator = changedFiles
   .filter((file) => file !== 'scripts/validate-protected-admin-enquiry-triage-status-update-foundation.cjs')
   .filter((file) => file !== 'scripts/validate-protected-admin-crm-handoff-queue-preparation-foundation.cjs')
   .filter((file) => file !== 'scripts/validate-protected-admin-crm-handoff-export-review-packet-foundation.cjs')
+  .filter((file) => file !== 'scripts/validate-protected-admin-crm-handoff-packet-audit-manifest-foundation.cjs')
   .filter((file) => file !== 'website/test/phase-5f-ab-quote-triage-readiness.test.tsx')
   .filter((file) => file !== 'website/test/phase-2b-y-admin-runtime-route-gate-adapter-boundary.test.ts')
   .filter((file) => file !== 'website/test/phase-2b-x-admin-runtime-gate-invocation-usage-approval-lane.test.ts')

@@ -1,3 +1,22 @@
+## Protected Admin CRM Handoff Packet Audit Manifest Foundation
+
+References: `docs/architecture/PROTECTED-ADMIN-CRM-HANDOFF-PACKET-AUDIT-MANIFEST-FOUNDATION.md`, `website/components/admin/quote-request-inbox-panel.tsx`, `website/lib/quote/admin-read/admin-quote-request-crm-handoff-packet-manifest.ts`, `website/lib/quote/admin-read/admin-quote-request-crm-handoff-packet-route.ts`, `supabase/migrations/20260616160000_quote_crm_handoff_packet_manifest_foundation.sql`, and `scripts/validate-protected-admin-crm-handoff-packet-audit-manifest-foundation.cjs`.
+
+Admin users can record protected local CRM handoff packet audit/manifest
+metadata after queued packet generation/export for manual admin review only.
+The manifest stores metadata only and does not store full sensitive payload
+dumps. This does not sync to HubSpot, call or queue n8n, send email, contact
+the customer, create HubSpot contact/deal IDs, mark records as synced, or set
+CRM sync attempt timestamps. Public customer accounts remain deferred. Public
+customer login remains unimplemented. Customer dashboard remains unimplemented.
+Custom CRM remains rejected/deferred.
+
+- [x] Protected admin CRM handoff packet audit/manifest foundation records
+  metadata-only packet manifests after protected queued packet review/export,
+  without full payload dumps, provider sync, n8n, email sending, customer
+  contact, provider IDs, synced marking, sync timestamp updates, customer
+  dashboard, custom CRM, retail/customer-flow creep, or Docker guard weakening.
+
 ## Protected Admin CRM Handoff Export Review Packet Foundation
 
 References: `docs/architecture/PROTECTED-ADMIN-CRM-HANDOFF-EXPORT-REVIEW-PACKET-FOUNDATION.md`, `website/components/admin/quote-request-inbox-panel.tsx`, `website/lib/quote/admin-read/admin-quote-request-crm-handoff-packet-read.ts`, `website/lib/quote/admin-read/admin-quote-request-crm-handoff-packet-route.ts`, `website/app/api/admin/quote-requests/crm-handoff-packet/route.ts`, and `scripts/validate-protected-admin-crm-handoff-export-review-packet-foundation.cjs`.
