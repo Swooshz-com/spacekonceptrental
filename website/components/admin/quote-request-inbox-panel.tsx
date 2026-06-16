@@ -64,7 +64,7 @@ type AdminQuoteRequestInboxReadResult =
 type AdminQuoteRequestCrmHandoffPacketManifest = {
   id: string;
   provider: "hubspot";
-  packetKind: "json_review_packet";
+  packetKind: "json_review_packet" | "hubspot_import_csv";
   statusFilter: "queued";
   limitRequested: number;
   recordCount: number;
@@ -113,6 +113,8 @@ const genericCrmHandoffFailureMessage =
   "CRM handoff readiness could not be saved. Keep the existing local queue state and try again.";
 const genericCrmHandoffPacketFailureMessage =
   "CRM handoff packet could not be prepared. Keep queued records unchanged and try again.";
+const genericHubSpotImportCsvFailureMessage =
+  "HubSpot import CSV could not be prepared. Keep queued records unchanged and try again.";
 const uuidPattern =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -456,7 +458,8 @@ function parseManifestRecord(
   if (
     !isUuid(value.id) ||
     value.provider !== "hubspot" ||
-    value.packetKind !== "json_review_packet" ||
+    (value.packetKind !== "json_review_packet" &&
+      value.packetKind !== "hubspot_import_csv") ||
     value.statusFilter !== "queued" ||
     !Number.isInteger(value.limitRequested) ||
     Number(value.limitRequested) <= 0 ||
@@ -477,7 +480,7 @@ function parseManifestRecord(
   return {
     id: value.id.trim(),
     provider: "hubspot",
-    packetKind: "json_review_packet",
+    packetKind: value.packetKind,
     statusFilter: "queued",
     limitRequested: Number(value.limitRequested),
     recordCount: Number(value.recordCount),
@@ -546,6 +549,35 @@ function reloadDashboard() {
   if (typeof window !== "undefined") {
     window.location.reload();
   }
+}
+
+async function triggerCsvDownload(response: Response) {
+  const csvText = await response.text();
+  const contentDisposition = response.headers.get("content-disposition") ?? "";
+  const filenameMatch = contentDisposition.match(/filename="([^"]+)"/i);
+  const filename =
+    filenameMatch?.[1] ?? "skr-hubspot-import-queued-enquiries.csv";
+
+  if (
+    typeof window === "undefined" ||
+    typeof document === "undefined" ||
+    typeof URL.createObjectURL !== "function"
+  ) {
+    return;
+  }
+
+  const href = URL.createObjectURL(
+    new Blob([csvText], {
+      type: "text/csv;charset=utf-8"
+    })
+  );
+  const anchor = document.createElement("a");
+
+  anchor.href = href;
+  anchor.download = filename;
+  anchor.rel = "noopener";
+  anchor.click();
+  URL.revokeObjectURL(href);
 }
 
 function QuoteIntakeParityHelper() {
@@ -643,7 +675,8 @@ function CrmHandoffPacketManifestList({
         Audit/manifest only. These records describe prepared packet metadata
         and do not store full customer messages. They do not sync to HubSpot,
         do not call n8n, do not send email, do not contact customers, do not
-        create provider IDs, and do not mark records as synced.
+        create provider IDs, do not mark records as synced, and do not set sync
+        timestamps.
       </p>
       {manifests.length === 0 ? (
         <p>No CRM handoff packet manifests loaded yet.</p>
@@ -909,6 +942,56 @@ export function QuoteRequestInboxPanel({
     }
   }
 
+  async function downloadHubSpotImportCsv() {
+    setStatus({
+      kind: "pending",
+      message: "Preparing HubSpot import CSV..."
+    });
+
+    try {
+      const csrfProof = await requestQuoteWriteProof(fetcher);
+
+      if (!csrfProof) {
+        setStatus({
+          kind: "error",
+          message: genericHubSpotImportCsvFailureMessage
+        });
+        return;
+      }
+
+      const response = await fetcher(
+        `/api/admin/quote-requests/crm-handoff-packet/hubspot-import-csv?limit=${crmHandoffPacketLimit}&status=queued`,
+        {
+          method: "POST",
+          headers: {
+            Accept: "text/csv",
+            "x-csrf-proof": csrfProof
+          }
+        }
+      );
+
+      if (!response.ok) {
+        setStatus({
+          kind: "error",
+          message: genericHubSpotImportCsvFailureMessage
+        });
+        return;
+      }
+
+      await triggerCsvDownload(response);
+      setStatus({
+        kind: "success",
+        message:
+          "HubSpot import CSV prepared for manual admin export only. Queued records remain queued."
+      });
+    } catch {
+      setStatus({
+        kind: "error",
+        message: genericHubSpotImportCsvFailureMessage
+      });
+    }
+  }
+
   async function handleStatusSubmit(
     event: FormEvent<HTMLFormElement>,
     quoteRequestId: string
@@ -1059,6 +1142,11 @@ export function QuoteRequestInboxPanel({
           create provider IDs, and does not mark records as synced. Queued
           records remain queued until a future sync integration is implemented.
         </p>
+        <p className="category-management__hint">
+          HubSpot import CSV is a protected admin export for manual import
+          review only. Records remain queued. No HubSpot sync occurs, no
+          provider IDs are created, and no sync timestamp is set.
+        </p>
         <dl className="admin-dashboard__stats">
           <div>
             <dt>Eligible queued records</dt>
@@ -1079,6 +1167,17 @@ export function QuoteRequestInboxPanel({
           {status.kind === "pending"
             ? "Preparing queued CRM handoff packet"
             : "Review queued CRM handoff packet"}
+        </button>
+        <button
+          aria-label="Download HubSpot import CSV"
+          className="button button--secondary"
+          disabled={status.kind === "pending"}
+          onClick={() => void downloadHubSpotImportCsv()}
+          type="button"
+        >
+          {status.kind === "pending"
+            ? "Preparing HubSpot import CSV"
+            : "Download HubSpot import CSV"}
         </button>
         <CrmHandoffPacketManifestList
           manifests={crmHandoffPacketManifests}

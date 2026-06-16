@@ -1,3 +1,16 @@
+## Protected Admin HubSpot Import CSV Handoff Foundation
+
+References: `docs/architecture/PROTECTED-ADMIN-HUBSPOT-IMPORT-CSV-HANDOFF-FOUNDATION.md`, `docs/architecture/PROTECTED-ADMIN-CRM-HANDOFF-PACKET-AUDIT-MANIFEST-FOUNDATION.md`, `docs/architecture/PROTECTED-ADMIN-CRM-HANDOFF-EXPORT-REVIEW-PACKET-FOUNDATION.md`, `website/lib/quote/admin-read/admin-quote-request-hubspot-import-csv.ts`, `website/lib/quote/admin-read/admin-quote-request-hubspot-import-csv-route.ts`, `website/app/api/admin/quote-requests/crm-handoff-packet/hubspot-import-csv/route.ts`, `website/components/admin/quote-request-inbox-panel.tsx`, `supabase/migrations/20260617090000_hubspot_import_csv_handoff_manifest_kind.sql`, and `scripts/validate-protected-admin-hubspot-import-csv-handoff-foundation.cjs`.
+
+Admin users can download a protected HubSpot import CSV for queued CRM handoff
+records as manual import/export readiness only. Records remain queued. The CSV
+export does not call HubSpot, call or queue n8n, send email, contact customers,
+mutate quote/enquiry rows, mark records as synced, set sync attempt timestamps,
+or create/update CRM contact/deal/provider IDs. The manifest stores metadata
+only and does not store full CSV contents, full packet JSON, full customer
+messages, raw payload dumps, secrets, headers, cookies, sessions, provider
+tokens, CRM API responses, or private Supabase details.
+
 ## Protected Admin CRM Handoff Packet Audit Manifest Foundation
 
 References: `docs/architecture/PROTECTED-ADMIN-CRM-HANDOFF-PACKET-AUDIT-MANIFEST-FOUNDATION.md`, `docs/architecture/PROTECTED-ADMIN-CRM-HANDOFF-EXPORT-REVIEW-PACKET-FOUNDATION.md`, `website/components/admin/quote-request-inbox-panel.tsx`, `website/lib/quote/admin-read/admin-quote-request-crm-handoff-packet-manifest.ts`, `website/lib/quote/admin-read/admin-quote-request-crm-handoff-packet-route.ts`, `website/app/api/admin/quote-requests/crm-handoff-packet/route.ts`, `supabase/migrations/20260616160000_quote_crm_handoff_packet_manifest_foundation.sql`, and `scripts/validate-protected-admin-crm-handoff-packet-audit-manifest-foundation.cjs`.

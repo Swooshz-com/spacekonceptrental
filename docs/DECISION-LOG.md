@@ -1,3 +1,18 @@
+## Protected Admin HubSpot Import CSV Handoff Foundation
+
+Decision: Admin users can download a protected HubSpot import CSV for queued
+CRM handoff records as manual import/export readiness only.
+
+Reference: `docs/architecture/PROTECTED-ADMIN-HUBSPOT-IMPORT-CSV-HANDOFF-FOUNDATION.md`.
+
+Records remain queued. The CSV export does not call HubSpot, call or queue n8n,
+send email, contact customers, mutate quote/enquiry rows, mark records as
+synced, set sync attempt timestamps, or create/update CRM contact/deal/provider
+IDs. The manifest stores metadata only and does not store full CSV contents,
+full packet JSON, full customer messages, raw payload dumps, secrets, headers,
+cookies, sessions, provider tokens, CRM API responses, or private Supabase
+details.
+
 ## Protected Admin CRM Handoff Packet Audit Manifest Foundation
 
 Decision: Admin users can record metadata-only local audit/manifest rows after

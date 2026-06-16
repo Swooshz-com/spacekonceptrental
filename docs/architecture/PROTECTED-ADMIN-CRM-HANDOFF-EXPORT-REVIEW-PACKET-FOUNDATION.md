@@ -1,5 +1,12 @@
 # Protected Admin CRM Handoff Export Review Packet Foundation
 
+Related CSV handoff slice:
+`docs/architecture/PROTECTED-ADMIN-HUBSPOT-IMPORT-CSV-HANDOFF-FOUNDATION.md`.
+The CSV export is protected admin-only manual HubSpot import readiness. Records
+remain queued; it does not call HubSpot, call or queue n8n, send email, mutate
+quote/enquiry rows, mark records as synced, set sync attempt timestamps, or
+create/update CRM contact/deal/provider IDs.
+
 ## Purpose
 
 This slice adds a protected admin-only CRM handoff packet preview/export
@@ -90,9 +97,9 @@ n8n webhook call, Resend integration, Google Workspace SMTP/API integration,
 provider credentials, `.env` changes, service-role browser exposure, public
 customer account/login implementation, customer dashboard, custom CRM, sales
 activity timeline, reminder engine, assignment workflow, outbound customer
-notification, ecommerce flow, cart flow, checkout flow, order flow, payment
-flow, purchase flow, booking flow, reservation flow, fulfilment flow,
-stock-reservation flow, or Docker guard weakening is added.
+notification, retail transaction flow, self-service completion flow,
+date-hold flow, inventory-hold flow, completion-like flow, or Docker guard
+weakening is added.
 
 Public quote submission remains unable to override CRM provider, CRM sync
 status, CRM contact ID, CRM deal ID, CRM last sync attempt timestamp, or CRM

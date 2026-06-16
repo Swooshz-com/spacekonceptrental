@@ -322,6 +322,7 @@ describe("Phase 2B-AJ - admin CSRF session/workspace binding runtime dependencie
       "website/app/api/admin/products/route.ts",
       "website/app/api/admin/quote-requests/[quoteRequestId]/crm-handoff/route.ts",
       "website/app/api/admin/quote-requests/[quoteRequestId]/status/route.ts",
+      "website/app/api/admin/quote-requests/crm-handoff-packet/hubspot-import-csv/route.ts",
       "website/app/api/admin/quote-requests/crm-handoff-packet/route.ts"
     ]);
     expect(readTrackedFiles(["website/app/api/products"])).toEqual([]);

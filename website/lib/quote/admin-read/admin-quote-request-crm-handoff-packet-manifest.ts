@@ -12,7 +12,7 @@ type QueryResult = {
 type ManifestInsert = {
   workspace_id: string;
   provider: "hubspot";
-  packet_kind: "json_review_packet";
+  packet_kind: AdminQuoteRequestCrmHandoffPacketManifestKind;
   status_filter: "queued";
   limit_requested: number;
   record_count: number;
@@ -62,7 +62,7 @@ export type AdminQuoteRequestCrmHandoffPacketManifestRecord = {
   id: string;
   workspaceId: string;
   provider: "hubspot";
-  packetKind: "json_review_packet";
+  packetKind: AdminQuoteRequestCrmHandoffPacketManifestKind;
   statusFilter: "queued";
   limitRequested: number;
   recordCount: number;
@@ -94,6 +94,7 @@ export type AdminQuoteRequestCrmHandoffPacketManifestReadResult =
 export type CreateAdminQuoteRequestCrmHandoffPacketManifestInput = {
   admin: TrustedQuoteAdminContext;
   packet: AdminQuoteRequestCrmHandoffPacket;
+  packetKind?: AdminQuoteRequestCrmHandoffPacketManifestKind;
 };
 
 export type ReadRecentAdminQuoteRequestCrmHandoffPacketManifestsInput = {
@@ -135,6 +136,18 @@ const selectColumns =
 const defaultRecentLimit = 10;
 const maxRecentLimit = 25;
 const maxPacketLimit = 100;
+
+export type AdminQuoteRequestCrmHandoffPacketManifestKind =
+  | "json_review_packet"
+  | "hubspot_import_csv";
+
+function getPacketKind(
+  value: unknown
+): AdminQuoteRequestCrmHandoffPacketManifestKind | null {
+  return value === "json_review_packet" || value === "hubspot_import_csv"
+    ? value
+    : null;
+}
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
@@ -215,7 +228,7 @@ function packetToManifestInsert(
   return {
     workspace_id: input.admin.workspaceId,
     provider: "hubspot",
-    packet_kind: "json_review_packet",
+    packet_kind: input.packetKind ?? "json_review_packet",
     status_filter: "queued",
     limit_requested: limit,
     record_count: requestIds.length,
@@ -236,12 +249,13 @@ function toManifestRecord(
   const requestIds = getRequestIds(row.request_ids);
   const generatedAt = getGeneratedAt(row.generated_at);
   const generatedByAdminUserId = getOptionalUuid(row.generated_by_admin_user_id);
+  const packetKind = getPacketKind(row.packet_kind);
 
   if (
     !id ||
     !workspaceId ||
     row.provider !== "hubspot" ||
-    row.packet_kind !== "json_review_packet" ||
+    !packetKind ||
     row.status_filter !== "queued" ||
     !limitRequested ||
     recordCount === null ||
@@ -258,7 +272,7 @@ function toManifestRecord(
     id,
     workspaceId,
     provider: "hubspot",
-    packetKind: "json_review_packet",
+    packetKind,
     statusFilter: "queued",
     limitRequested,
     recordCount,

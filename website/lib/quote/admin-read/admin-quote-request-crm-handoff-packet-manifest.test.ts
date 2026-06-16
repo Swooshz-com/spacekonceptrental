@@ -272,6 +272,76 @@ describe("admin CRM handoff packet manifest boundary", () => {
     });
   });
 
+  it("creates a metadata-only HubSpot import CSV manifest without storing CSV contents", async () => {
+    const { calls, supabase } = createMockSupabase({
+      insertResult: {
+        data: {
+          id: "66666666-6666-4666-8666-666666666666",
+          workspace_id: admin.workspaceId,
+          provider: "hubspot",
+          packet_kind: "hubspot_import_csv",
+          status_filter: "queued",
+          limit_requested: 25,
+          record_count: 1,
+          request_ids: ["44444444-4444-4444-8444-444444444444"],
+          generated_by_admin_user_id: admin.adminUserId,
+          generated_at: packet.generatedAt,
+          source: "protected_admin"
+        },
+        error: null
+      }
+    });
+
+    const result = await createAdminQuoteRequestCrmHandoffPacketManifest(
+      {
+        admin,
+        packet,
+        packetKind: "hubspot_import_csv"
+      },
+      {
+        supabase
+      }
+    );
+
+    expect(result).toStrictEqual({
+      status: "created",
+      manifest: {
+        id: "66666666-6666-4666-8666-666666666666",
+        workspaceId: admin.workspaceId,
+        provider: "hubspot",
+        packetKind: "hubspot_import_csv",
+        statusFilter: "queued",
+        limitRequested: 25,
+        recordCount: 1,
+        requestIds: ["44444444-4444-4444-8444-444444444444"],
+        requestIdCount: 1,
+        generatedByAdminUserId: admin.adminUserId,
+        generatedAt: packet.generatedAt,
+        source: "protected_admin"
+      }
+    });
+    expect(calls[0].insert).toStrictEqual({
+      workspace_id: admin.workspaceId,
+      provider: "hubspot",
+      packet_kind: "hubspot_import_csv",
+      status_filter: "queued",
+      limit_requested: 25,
+      record_count: 1,
+      request_ids: ["44444444-4444-4444-8444-444444444444"],
+      generated_by_admin_user_id: admin.adminUserId,
+      generated_at: packet.generatedAt,
+      source: "protected_admin"
+    });
+    const serialized = JSON.stringify(calls[0].insert);
+    expect(serialized).not.toContain("Quote Request ID");
+    expect(serialized).not.toContain("Maya Tan");
+    expect(serialized).not.toContain("maya@example.test");
+    expect(serialized).not.toContain("Please prepare");
+    expect(serialized).not.toContain("crm_contact_id");
+    expect(serialized).not.toContain("crm_deal_id");
+    expect(serialized).not.toContain("crm_last_sync_attempt_at");
+  });
+
   it("fails closed on invalid admin context, invalid limits, and persistence errors", async () => {
     const { calls, supabase } = createMockSupabase({
       insertResult: {

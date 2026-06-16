@@ -19,6 +19,13 @@ Public customer accounts remain deferred, public customer login remains
 unimplemented, customer dashboard remains unimplemented, and custom CRM remains
 rejected/deferred.
 
+Related HubSpot import CSV slice:
+`docs/architecture/PROTECTED-ADMIN-HUBSPOT-IMPORT-CSV-HANDOFF-FOUNDATION.md`.
+The protected CSV export is manual HubSpot import readiness only. It does not
+call HubSpot APIs, n8n, or email providers; it does not mutate quote/enquiry
+rows, mark records as synced, set sync attempt timestamps, or create/update CRM
+contact/deal/provider IDs.
+
 # External Services Auth CRM Email Enquiry Architecture
 
 ## Purpose
