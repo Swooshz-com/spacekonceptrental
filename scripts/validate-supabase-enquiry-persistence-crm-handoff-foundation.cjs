@@ -31,6 +31,7 @@ const trackerPaths = [
 
 const allowedChangedFiles = new Set([
   foundationDocPath,
+  'docs/architecture/PUBLIC-ENQUIRY-PERSISTENCE-INTEGRATION.md',
   architectureDocPath,
   cutDownDocPath,
   'docs/PHASE-STATUS.md',
@@ -44,6 +45,11 @@ const allowedChangedFiles = new Set([
   'website/lib/quote/validation.test.ts',
   quoteRepositoryPath,
   'website/lib/quote/quote-repository.test.ts',
+  'website/app/api/quote/route.ts',
+  'website/app/api/quote/route.test.ts',
+  'website/app/quote/page.tsx',
+  'website/components/QuoteRequestForm.tsx',
+  'website/components/QuoteRequestForm.test.tsx',
   'website/test/phase-2e-a-conversation-governance.test.ts',
   'website/test/phase-2e-b-conversation-schema-rls.test.ts',
   'website/test/phase-2e-c-transcript-persistence-contract.test.ts',
@@ -64,6 +70,7 @@ const allowedChangedFiles = new Set([
   'website/test/phase-3h-ab-admin-operator-qa-readiness-polish.test.tsx',
   'package.json',
   'scripts/validate-external-services-auth-crm-email-enquiry-architecture.cjs',
+  'scripts/validate-public-enquiry-persistence-integration.cjs',
   'scripts/validate-maintenance-closure-audit-follow-up-response-acknowledgement-review-outcome-follow-up-planning-review-readiness.cjs',
   'scripts/validate-maintenance-closure-audit-follow-up-response-acknowledgement-review-outcome-follow-up-planning-review-outcome-readiness.cjs',
   'scripts/validate-maintenance-closure-audit-follow-up-response-acknowledgement-review-outcome-follow-up-planning-review-outcome-acknowledgement-readiness.cjs',
@@ -307,18 +314,18 @@ const changedContents = changedFiles
   .map((file) => `${file}\n${read(file)}`)
   .join('\n');
 
+const validatorFilesExcludedFromAddedText = new Set([
+  'scripts/validate-supabase-enquiry-persistence-crm-handoff-foundation.cjs',
+  'scripts/validate-public-enquiry-persistence-integration.cjs',
+]);
 const changedContentsWithoutValidator = changedFiles
-  .filter((file) => file !== 'scripts/validate-supabase-enquiry-persistence-crm-handoff-foundation.cjs')
+  .filter((file) => !validatorFilesExcludedFromAddedText.has(file))
   .filter((file) => exists(file))
   .map((file) => `${file}\n${read(file)}`)
   .join('\n');
 const addedContents = getAddedDiffText(changedFiles);
 const addedContentsWithoutValidator = getAddedDiffText(
-  changedFiles.filter(
-    (file) =>
-      file !==
-      'scripts/validate-supabase-enquiry-persistence-crm-handoff-foundation.cjs',
-  ),
+  changedFiles.filter((file) => !validatorFilesExcludedFromAddedText.has(file)),
 );
 
 for (const pattern of [

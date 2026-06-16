@@ -1,5 +1,29 @@
 # Implementation Plan Cut-Down External Services
 
+## Public Enquiry Persistence Integration
+
+Public enquiry persistence integration is documented in
+`docs/architecture/PUBLIC-ENQUIRY-PERSISTENCE-INTEGRATION.md`.
+
+Public enquiry submissions now use the Supabase persistence foundation through
+the first-party quote route and existing quote repository. Safe source metadata
+is captured when available, CRM placeholder defaults remain server-owned, and
+public input cannot override CRM handoff fields.
+
+HubSpot CRM sync is not implemented.
+
+n8n workflows are not implemented.
+
+Email sending is not implemented.
+
+Public customer accounts remain deferred.
+
+Custom CRM remains rejected/deferred.
+
+Google Workspace/domain email remains human/admin email first.
+
+Resend remains optional future transactional email only.
+
 ## Purpose
 
 The Phase 6 readiness ladder is paused after Phase 6P-A/B so SKR can reduce

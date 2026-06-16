@@ -7,6 +7,9 @@ later CRM handoff without adding any provider integration. Public visitors can
 continue to submit furniture/event rental enquiries through the existing quote
 request path; this PR only extends the local data foundation and contracts.
 
+The public submission integration is documented in
+`docs/architecture/PUBLIC-ENQUIRY-PERSISTENCE-INTEGRATION.md`.
+
 ## Implemented Foundation
 
 Supabase owns the canonical SKR enquiry submission record.
@@ -32,6 +35,11 @@ The TypeScript quote validation and repository contracts now normalize safe
 source metadata and default CRM handoff status to `hubspot` /
 `not_queued`. The repository still writes only to the approved quote tables and
 does not call any external provider.
+
+Public enquiry submissions now use the Supabase persistence foundation through
+the existing `/api/quote` route and `createQuoteRequest` repository path. The
+public form supplies safe source metadata when available, while public input
+cannot override CRM placeholder fields.
 
 ## Provider Ownership
 

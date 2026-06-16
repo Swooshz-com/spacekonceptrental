@@ -19,6 +19,11 @@ type SubmitState =
 const customerMessageMaxLength = 1200;
 const requestedItemsMaxCount = 20;
 const requestedItemMaxLength = 180;
+const sourcePathMaxLength = 500;
+const requestIdMaxLength = 128;
+const requestIdFallbackRadix = 36;
+const listingSlugPattern = /^[a-z0-9][a-z0-9-]*$/;
+const requestIdPattern = /^[A-Za-z0-9._:-]+$/;
 
 function formatPreferredContactMethod(preferredContactMethod: string) {
   return preferredContactMethod
@@ -63,14 +68,58 @@ function combineCustomerMessage(
   return details.join("\n\n").trim();
 }
 
+function createSubmissionRequestId() {
+  const requestId =
+    globalThis.crypto?.randomUUID?.() ??
+    `quote-${Date.now().toString(requestIdFallbackRadix)}-${Math.random()
+      .toString(requestIdFallbackRadix)
+      .slice(2, 12)}`;
+
+  return requestIdPattern.test(requestId) &&
+    requestId.length <= requestIdMaxLength
+    ? requestId
+    : undefined;
+}
+
+function getSafeSourcePath() {
+  if (typeof window === "undefined") {
+    return undefined;
+  }
+
+  const sourcePath = `${window.location.pathname}${window.location.search}`;
+
+  if (
+    sourcePath.length > sourcePathMaxLength ||
+    !sourcePath.startsWith("/") ||
+    sourcePath.startsWith("//") ||
+    sourcePath.includes("\\") ||
+    /[\u0000-\u001f\u007f]/.test(sourcePath)
+  ) {
+    return undefined;
+  }
+
+  return sourcePath;
+}
+
+function getSafeListingSlug(listingSlug: string | undefined) {
+  const normalized = listingSlug?.trim().toLowerCase();
+
+  return normalized && listingSlugPattern.test(normalized)
+    ? normalized
+    : undefined;
+}
+
 export default function QuoteRequestForm({
-  initialItemsText = ""
+  initialItemsText = "",
+  initialListingSlug
 }: {
   initialItemsText?: string;
+  initialListingSlug?: string;
 }) {
   const [submitState, setSubmitState] = useState<SubmitState>({
     status: "idle"
   });
+  const [submissionRequestId] = useState(createSubmissionRequestId);
   const [preferredContactMethod, setPreferredContactMethod] = useState("");
   const [customerMessageText, setCustomerMessageText] = useState("");
   const customerMessageInputMaxLength = getCustomerMessageMaxLength(
@@ -113,6 +162,8 @@ export default function QuoteRequestForm({
     const submittedCustomerMessageText = customerMessageText.trim();
     const submittedPreferredContactMethod = preferredContactMethod.trim();
     const itemNotesText = String(formData.get("itemNotes") ?? "").trim();
+    const sourcePath = getSafeSourcePath();
+    const listingSlug = getSafeListingSlug(initialListingSlug);
     const combinedCustomerMessage = combineCustomerMessage(
       submittedCustomerMessageText,
       submittedPreferredContactMethod
@@ -126,6 +177,9 @@ export default function QuoteRequestForm({
         : {}),
       eventDate: String(formData.get("eventDate") ?? "").trim(),
       venue: String(formData.get("venue") ?? "").trim(),
+      ...(sourcePath ? { sourcePath } : {}),
+      ...(listingSlug ? { listingSlug } : {}),
+      ...(submissionRequestId ? { requestId: submissionRequestId } : {}),
       items: parseRequestedItems(itemsText, itemNotesText)
     };
 

@@ -23,6 +23,7 @@ const trackerPaths = [
 const allowedChangedFiles = new Set([
   architectureDocPath,
   cutDownDocPath,
+  'docs/architecture/PUBLIC-ENQUIRY-PERSISTENCE-INTEGRATION.md',
   'docs/architecture/SUPABASE-ENQUIRY-PERSISTENCE-CRM-HANDOFF-FOUNDATION.md',
   'docs/PHASE-STATUS.md',
   'docs/PHASE-ROADMAP.md',
@@ -31,6 +32,7 @@ const allowedChangedFiles = new Set([
   'docs/checklists/PHASE-2-ADMIN-OPS.md',
   'package.json',
   'scripts/validate-external-services-auth-crm-email-enquiry-architecture.cjs',
+  'scripts/validate-public-enquiry-persistence-integration.cjs',
   'scripts/validate-maintenance-closure-audit-follow-up-response-acknowledgement-review-outcome-follow-up-planning-review-readiness.cjs',
   'scripts/validate-maintenance-closure-audit-follow-up-response-acknowledgement-review-outcome-follow-up-planning-review-outcome-readiness.cjs',
   'scripts/validate-maintenance-closure-audit-follow-up-response-acknowledgement-review-outcome-follow-up-planning-review-outcome-acknowledgement-readiness.cjs',
@@ -43,6 +45,11 @@ const allowedChangedFiles = new Set([
   'website/lib/quote/validation.test.ts',
   'website/lib/quote/quote-repository.ts',
   'website/lib/quote/quote-repository.test.ts',
+  'website/app/api/quote/route.ts',
+  'website/app/api/quote/route.test.ts',
+  'website/app/quote/page.tsx',
+  'website/components/QuoteRequestForm.tsx',
+  'website/components/QuoteRequestForm.test.tsx',
   'website/test/phase-2c-a-storage-backed-listing-media.test.ts',
   'website/test/phase-2c-c-admin-quote-operations.test.ts',
   'website/test/phase-2c-d-quote-workflow-atomicity.test.ts',
@@ -70,6 +77,11 @@ const approvedFoundationFiles = new Set([
   'website/lib/quote/validation.test.ts',
   'website/lib/quote/quote-repository.ts',
   'website/lib/quote/quote-repository.test.ts',
+  'website/app/api/quote/route.ts',
+  'website/app/api/quote/route.test.ts',
+  'website/app/quote/page.tsx',
+  'website/components/QuoteRequestForm.tsx',
+  'website/components/QuoteRequestForm.test.tsx',
   'website/test/phase-2c-a-storage-backed-listing-media.test.ts',
   'website/test/phase-2c-c-admin-quote-operations.test.ts',
   'website/test/phase-2c-d-quote-workflow-atomicity.test.ts',
@@ -270,6 +282,7 @@ const changedContents = changedFiles
 const changedContentsWithoutThisValidator = changedFiles
   .filter((file) => file !== 'scripts/validate-external-services-auth-crm-email-enquiry-architecture.cjs')
   .filter((file) => file !== 'scripts/validate-supabase-enquiry-persistence-crm-handoff-foundation.cjs')
+  .filter((file) => file !== 'scripts/validate-public-enquiry-persistence-integration.cjs')
   .filter((file) => !file.startsWith('scripts/validate-maintenance-closure-audit-follow-up-response-acknowledgement-review-outcome-follow-up-planning'))
   .filter((file) => exists(file))
   .map((file) => `${file}\n${read(file)}`)

@@ -155,10 +155,16 @@ steps must still be separately scoped, tested, and approved before adding:
 
 Supabase enquiry persistence and CRM handoff foundation is documented in
 `docs/architecture/SUPABASE-ENQUIRY-PERSISTENCE-CRM-HANDOFF-FOUNDATION.md`.
+Public enquiry persistence integration is documented in
+`docs/architecture/PUBLIC-ENQUIRY-PERSISTENCE-INTEGRATION.md`.
 
 Supabase now owns the canonical SKR enquiry submission record in the existing
 quote/enquiry tables with source metadata and CRM handoff placeholder fields.
 HubSpot remains the future CRM and sales workflow owner.
+
+Public enquiry submissions now use the Supabase persistence foundation through
+the first-party quote route. Safe source metadata is captured when available,
+and CRM placeholder defaults remain server-owned.
 
 CRM sync is not implemented in this PR.
 
