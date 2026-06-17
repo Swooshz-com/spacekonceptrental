@@ -242,7 +242,7 @@ export default function QuoteRequestForm({
       <p className="quote-form__intro">
         Share your name. Share one reliable contact method, event date if known,
         venue or location, requested listings or items, quantities, alternates,
-        and setup, access, and timing notes so the team can triage the rental
+        setup, access, and timing notes so the team can triage the rental
         enquiry.
       </p>
       {initialItemsText ? (
@@ -369,9 +369,9 @@ export default function QuoteRequestForm({
       </button>
       {submitState.status === "success" ? (
         <p className="quote-form__status" role="status">
-          Enquiry received. This is a receipt only; the team can review
-          your request and follow up directly. It does not set aside furniture
-          or finish rental details, and does not finalise rental details.
+          Enquiry received. This is a receipt only; the team can review your request
+          and follow up directly. It does not set aside furniture and does not
+          finalise rental details or create an online follow-up page.
           {submitState.publicReference
             ? `. Public reference receipt: ${submitState.publicReference}`
             : "."}

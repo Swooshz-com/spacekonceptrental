@@ -106,6 +106,14 @@ describe("QuoteRequestInboxPanel", () => {
       screen.getByRole("heading", { name: /quote request inbox/i })
     ).toBeInTheDocument();
     expect(
+      screen.getByRole("heading", {
+        name: /triage submitted rental enquiries/i
+      })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/start with new enquiries, contact details, event basics, requested listings, source context, and protected admin status/i)
+    ).toBeInTheDocument();
+    expect(
       screen.getByLabelText(/internal status for QR-20260603-NEWEST/i)
     ).toBeInTheDocument();
     expect(
@@ -167,6 +175,10 @@ describe("QuoteRequestInboxPanel", () => {
         name: /mark ready for CRM handoff for QR-20260603-NEWEST/i
       })
     ).toBeInTheDocument();
+
+    const pageText = document.body.textContent ?? "";
+    expect(pageText.indexOf("Update internal triage status for QR-20260603-NEWEST"))
+      .toBeLessThan(pageText.indexOf("Future CRM handoff readiness"));
   });
 
   it("requests quote.write proof and sends status-only triage update POST with x-csrf-proof", async () => {

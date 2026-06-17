@@ -2680,6 +2680,139 @@ export function QuoteRequestInboxPanel({
   const queuedCrmHandoffRecords = queuedCrmHandoffCount(
     inbox.data.quoteRequests
   );
+  const crmHandoffReadinessPanel = (
+    <section
+      aria-label="Future CRM handoff readiness"
+      className="admin-dashboard__card admin-dashboard__card--summary"
+    >
+      <h3>Future CRM handoff readiness</h3>
+      <p className="category-management__hint">
+        Secondary admin tooling only. Use the enquiry cards above first for
+        visitor follow-up triage. This does not sync to HubSpot or contact
+        customers. This does not call n8n, does not send email, does not create
+        provider IDs, and does not mark records as synced.
+      </p>
+      <h4>Queued CRM handoff packet review</h4>
+      <p className="category-management__hint">
+        Manual review/export only. Queued records remain queued until a future
+        sync integration is implemented.
+      </p>
+      <p className="category-management__hint">
+        HubSpot import CSV is a protected admin export for manual import review
+        only. Records remain queued. No HubSpot sync occurs, no provider IDs
+        are created, and no sync timestamp is set.
+      </p>
+      <p className="category-management__hint">
+        Manual import/export readiness only. Run CSV preflight before manual
+        import review when possible. No provider IDs are created. No sync
+        timestamp is set. CSV formula-risk cells are sanitised during export.
+      </p>
+      <dl className="admin-dashboard__stats">
+        <div>
+          <dt>Eligible queued records</dt>
+          <dd>{queuedCrmHandoffRecords}</dd>
+        </div>
+        <div>
+          <dt>Packet limit</dt>
+          <dd>{crmHandoffPacketLimit}</dd>
+        </div>
+      </dl>
+      <button
+        aria-label="Review queued CRM handoff packet"
+        className="button button--secondary"
+        disabled={status.kind === "pending"}
+        onClick={() => void reviewCrmHandoffPacket()}
+        type="button"
+      >
+        {status.kind === "pending"
+          ? "Preparing queued CRM handoff packet"
+          : "Review queued CRM handoff packet"}
+      </button>
+      <button
+        aria-label="Run CSV import preflight"
+        className="button button--secondary"
+        disabled={status.kind === "pending"}
+        onClick={() => void runHubSpotImportCsvPreflight()}
+        type="button"
+      >
+        {status.kind === "pending"
+          ? "Preparing CSV import preflight"
+          : "Run CSV import preflight"}
+      </button>
+      <button
+        aria-label="Run CRM handoff reconciliation"
+        className="button button--secondary"
+        disabled={status.kind === "pending"}
+        onClick={() => void runCrmHandoffLifecycleReconciliation()}
+        type="button"
+      >
+        {status.kind === "pending"
+          ? "Preparing CRM handoff reconciliation"
+          : "Run CRM handoff reconciliation"}
+      </button>
+      <button
+        aria-label="Run HubSpot sync dry-run"
+        className="button button--secondary"
+        disabled={status.kind === "pending"}
+        onClick={() => void runHubSpotSyncDryRunContract()}
+        type="button"
+      >
+        {status.kind === "pending"
+          ? "Preparing HubSpot sync dry-run"
+          : "Run HubSpot sync dry-run"}
+      </button>
+      <button
+        aria-label="Download HubSpot import CSV"
+        className="button button--secondary"
+        disabled={status.kind === "pending"}
+        onClick={() => void downloadHubSpotImportCsv()}
+        type="button"
+      >
+        {status.kind === "pending"
+          ? "Preparing HubSpot import CSV"
+          : "Download HubSpot import CSV"}
+      </button>
+      {hubSpotImportCsvPreflightReport?.needsReviewRecordCount ? (
+        <p className="category-management__hint">
+          Latest CSV import preflight found records needing admin review.
+          Download remains available for manual export review, and queued
+          records remain queued.
+        </p>
+      ) : null}
+      <CrmHandoffPacketManifestList
+        manifests={crmHandoffPacketManifests}
+        onRecordManualImportOutcome={(manifestId, outcomeStatus) =>
+          void recordHubSpotManualImportOutcome(manifestId, outcomeStatus)
+        }
+        pending={status.kind === "pending"}
+      />
+      <HubSpotManualImportOutcomeLedger outcomes={hubSpotManualImportOutcomes} />
+      {hubSpotImportCsvPreflightReport ? (
+        <HubSpotImportCsvPreflightSummary
+          report={hubSpotImportCsvPreflightReport}
+        />
+      ) : null}
+      {crmHandoffLifecycleReconciliationReport ? (
+        <CrmHandoffLifecycleReconciliationSummary
+          report={crmHandoffLifecycleReconciliationReport}
+        />
+      ) : null}
+      {hubSpotSyncDryRunContractReport ? (
+        <HubSpotSyncDryRunContractSummary
+          report={hubSpotSyncDryRunContractReport}
+        />
+      ) : null}
+      {crmHandoffPacketPreview ? (
+        <section
+          aria-label="Queued CRM handoff packet JSON preview"
+          className="quote-inbox__section"
+        >
+          <h4>Queued CRM handoff packet JSON preview</h4>
+          <pre>{crmHandoffPacketPreview}</pre>
+        </section>
+      ) : null}
+    </section>
+  );
 
   return (
     <section className="admin-dashboard" aria-label="Quote request inbox">
@@ -2709,6 +2842,19 @@ export function QuoteRequestInboxPanel({
           ? "Quote status controls are ready."
           : status.message}
       </div>
+
+      <section
+        aria-label="Triage submitted rental enquiries"
+        className="admin-dashboard__card admin-dashboard__card--summary"
+      >
+        <h3>Triage submitted rental enquiries</h3>
+        <p>
+          Start with new enquiries, contact details, event basics, requested
+          listings, source context, and protected admin status. Use the
+          customer-submitted details to decide whether the next admin action is
+          review, follow-up needed, quoted, or closed locally.
+        </p>
+      </section>
 
       <section
         className="quote-inbox__triage-summary"
@@ -2767,135 +2913,6 @@ export function QuoteRequestInboxPanel({
             <dd>{summary.withoutInternalActivity}</dd>
           </div>
         </dl>
-      </section>
-
-      <section
-        aria-label="Queued CRM handoff packet review"
-        className="admin-dashboard__card admin-dashboard__card--summary"
-      >
-        <h3>Queued CRM handoff packet review</h3>
-        <p className="category-management__hint">
-          Manual review/export only. This does not sync to HubSpot or contact
-          customers. This does not call n8n, does not send email, does not
-          create provider IDs, and does not mark records as synced. Queued
-          records remain queued until a future sync integration is implemented.
-        </p>
-        <p className="category-management__hint">
-          HubSpot import CSV is a protected admin export for manual import
-          review only. Records remain queued. No HubSpot sync occurs, no
-          provider IDs are created, and no sync timestamp is set.
-        </p>
-        <p className="category-management__hint">
-          Manual import/export readiness only. Run CSV preflight before manual
-          import review when possible. No provider IDs are created. No sync
-          timestamp is set. CSV formula-risk cells are sanitised during export.
-        </p>
-        <dl className="admin-dashboard__stats">
-          <div>
-            <dt>Eligible queued records</dt>
-            <dd>{queuedCrmHandoffRecords}</dd>
-          </div>
-          <div>
-            <dt>Packet limit</dt>
-            <dd>{crmHandoffPacketLimit}</dd>
-          </div>
-        </dl>
-        <button
-          aria-label="Review queued CRM handoff packet"
-          className="button button--secondary"
-          disabled={status.kind === "pending"}
-          onClick={() => void reviewCrmHandoffPacket()}
-          type="button"
-        >
-          {status.kind === "pending"
-            ? "Preparing queued CRM handoff packet"
-            : "Review queued CRM handoff packet"}
-        </button>
-        <button
-          aria-label="Run CSV import preflight"
-          className="button button--secondary"
-          disabled={status.kind === "pending"}
-          onClick={() => void runHubSpotImportCsvPreflight()}
-          type="button"
-        >
-          {status.kind === "pending"
-            ? "Preparing CSV import preflight"
-            : "Run CSV import preflight"}
-        </button>
-        <button
-          aria-label="Run CRM handoff reconciliation"
-          className="button button--secondary"
-          disabled={status.kind === "pending"}
-          onClick={() => void runCrmHandoffLifecycleReconciliation()}
-          type="button"
-        >
-          {status.kind === "pending"
-            ? "Preparing CRM handoff reconciliation"
-            : "Run CRM handoff reconciliation"}
-        </button>
-        <button
-          aria-label="Run HubSpot sync dry-run"
-          className="button button--secondary"
-          disabled={status.kind === "pending"}
-          onClick={() => void runHubSpotSyncDryRunContract()}
-          type="button"
-        >
-          {status.kind === "pending"
-            ? "Preparing HubSpot sync dry-run"
-            : "Run HubSpot sync dry-run"}
-        </button>
-        <button
-          aria-label="Download HubSpot import CSV"
-          className="button button--secondary"
-          disabled={status.kind === "pending"}
-          onClick={() => void downloadHubSpotImportCsv()}
-          type="button"
-        >
-          {status.kind === "pending"
-            ? "Preparing HubSpot import CSV"
-            : "Download HubSpot import CSV"}
-        </button>
-        {hubSpotImportCsvPreflightReport?.needsReviewRecordCount ? (
-          <p className="category-management__hint">
-            Latest CSV import preflight found records needing admin review.
-            Download remains available for manual export review, and queued
-            records remain queued.
-          </p>
-        ) : null}
-        <CrmHandoffPacketManifestList
-          manifests={crmHandoffPacketManifests}
-          onRecordManualImportOutcome={(manifestId, outcomeStatus) =>
-            void recordHubSpotManualImportOutcome(manifestId, outcomeStatus)
-          }
-          pending={status.kind === "pending"}
-        />
-        <HubSpotManualImportOutcomeLedger
-          outcomes={hubSpotManualImportOutcomes}
-        />
-        {hubSpotImportCsvPreflightReport ? (
-          <HubSpotImportCsvPreflightSummary
-            report={hubSpotImportCsvPreflightReport}
-          />
-        ) : null}
-        {crmHandoffLifecycleReconciliationReport ? (
-          <CrmHandoffLifecycleReconciliationSummary
-            report={crmHandoffLifecycleReconciliationReport}
-          />
-        ) : null}
-        {hubSpotSyncDryRunContractReport ? (
-          <HubSpotSyncDryRunContractSummary
-            report={hubSpotSyncDryRunContractReport}
-          />
-        ) : null}
-        {crmHandoffPacketPreview ? (
-          <section
-            aria-label="Queued CRM handoff packet JSON preview"
-            className="quote-inbox__section"
-          >
-            <h4>Queued CRM handoff packet JSON preview</h4>
-            <pre>{crmHandoffPacketPreview}</pre>
-          </section>
-        ) : null}
       </section>
 
       <QuoteIntakeParityHelper />
@@ -2980,6 +2997,53 @@ export function QuoteRequestInboxPanel({
                   <p>{quoteNextAction(quoteRequest)}</p>
                 </section>
                 <section className="quote-inbox__section">
+                  <h4>Submitted enquiry triage details</h4>
+                  <dl className="quote-inbox__details">
+                    <div>
+                      <dt>Contact</dt>
+                      <dd>
+                        {[
+                          quoteRequest.customerEmail,
+                          quoteRequest.customerPhone
+                        ]
+                          .filter(Boolean)
+                          .join(" / ") || "No contact method captured"}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>Event basics</dt>
+                      <dd>
+                        {[
+                          quoteRequest.eventDate ?? "No event date",
+                          quoteRequest.venue ?? "No venue or location"
+                        ].join(" / ")}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>Requested listings/items</dt>
+                      <dd>
+                        {quoteRequest.items.length > 0
+                          ? `${quoteRequest.items.length} submitted`
+                          : "No requested listing or item snapshots captured"}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>Source context</dt>
+                      <dd>
+                        {quoteRequest.sourcePagePath ??
+                          "No safe source path captured"}
+                        {quoteRequest.sourceListingSlug
+                          ? ` / ${quoteRequest.sourceListingSlug}`
+                          : ""}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>Current internal status</dt>
+                      <dd>{statusLabel(quoteRequest.status)}</dd>
+                    </div>
+                  </dl>
+                </section>
+                <section className="quote-inbox__section">
                   <h4>Source metadata and CRM handoff placeholder</h4>
                   <SourceAndCrmHandoffDetails quoteRequest={quoteRequest} />
                   <p className="category-management__hint">
@@ -2999,7 +3063,7 @@ export function QuoteRequestInboxPanel({
                   </p>
                   <dl className="quote-inbox__details">
                     <div>
-                      <dt>CRM handoff readiness</dt>
+                      <dt>CRM handoff state</dt>
                       <dd>{crmHandoffStatusLabel(quoteRequest.crmSyncStatus)}</dd>
                     </div>
                     <div>
@@ -3189,6 +3253,8 @@ export function QuoteRequestInboxPanel({
           })}
         </div>
       )}
+
+      {crmHandoffReadinessPanel}
     </section>
   );
 }

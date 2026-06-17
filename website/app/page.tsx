@@ -6,9 +6,9 @@ import { getPublicCatalogue } from "../lib/catalogue/catalogue-repository";
 import { getQuoteHrefForListing } from "../lib/catalogue/quote-handoff";
 
 export const metadata: Metadata = {
-  title: "Event furniture rental listings | Space Koncept Rentals",
+  title: "Event furniture rental catalogue | Space Koncept Rentals",
   description:
-    "Browse listings, categories, and event setup ideas before sending a public quote enquiry to Space Koncept Rentals."
+    "Browse listings for furniture and event rental enquiries before sending a public quote enquiry to Space Koncept Rentals."
 };
 
 const eventUseCases = [
@@ -38,7 +38,7 @@ const rentalJourneySteps = [
   {
     title: "Browse listings",
     description:
-      "Start with rental listings, categories, or event setup ideas that match the space you are planning."
+      "Start with catalogue cards, listing details, categories, and event setup ideas."
   },
   {
     title: "Share event details",
@@ -48,12 +48,12 @@ const rentalJourneySteps = [
   {
     title: "Team reviews event fit",
     description:
-      "The team checks whether the requested furniture and setup notes fit the event context."
+      "The team reviews your submitted rental enquiry and prepares direct follow-up."
   },
   {
     title: "Final quote follows directly",
     description:
-      "The submitted form is a quote request. Final follow-up and quote details happen directly with the team."
+      "The public form starts the enquiry. Quote details are handled directly by the team."
   }
 ];
 
@@ -101,9 +101,8 @@ export default async function HomePage() {
         <div className="hero__copy">
           <h1>Event furniture rental for planned spaces.</h1>
           <p>
-            Browse rental furniture for corporate events, weddings,
-            exhibitions, and styled lounge setups, then send one clear enquiry
-            for the pieces you need.
+            Browse rental listings, choose useful catalogue details, and send
+            one enquiry for team follow-up.
           </p>
           <div className="hero__actions">
             <Link className="button" href="/quote">

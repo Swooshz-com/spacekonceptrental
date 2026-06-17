@@ -198,7 +198,7 @@ export function ProductPageContent({
               <dt>Event-use context</dt>
               <dd>
                 Listing context is a starting point only for event furniture
-                rental planning. The team can review the request against the
+                rental planning. The team reviews the enquiry against the
                 event notes you share.
               </dd>
             </div>
@@ -228,7 +228,7 @@ export function ProductPageContent({
             <ul className="journey-list">
               <li>Check the listing details and rental unit.</li>
               <li>Compare the category and rental unit for your setup.</li>
-              <li>Use image alt text and fallback media as accessible browsing context, not as a completed media claim.</li>
+              <li>Use image alt text and fallback media as accessible browsing context.</li>
               <li>
                 Bring event date, venue, quantities, alternatives, setup,
                 access, and timing notes before sending the listing for
@@ -265,7 +265,7 @@ export function ProductPageContent({
         <h2>Related rental listing context</h2>
         <p>
           Same-category links are local browsing cues only. They do not imply
-          availability, recommendation logic, or rental fit.
+          availability or rental fit.
         </p>
         {relatedListings.length > 0 ? (
           <ul className="journey-list">
