@@ -513,8 +513,8 @@ describe("QuoteRequestInboxPanel", () => {
     ).toBeInTheDocument();
     expect(screen.getAllByText(/Records remain queued/i).length).toBeGreaterThan(0);
     expect(screen.getByText(/No HubSpot sync occurs/i)).toBeInTheDocument();
-    expect(screen.getByText(/no provider IDs are created/i)).toBeInTheDocument();
-    expect(screen.getByText(/no sync timestamp is set/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/no provider IDs are created/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/no sync timestamp is set/i).length).toBeGreaterThan(0);
 
     fireEvent.click(
       screen.getByRole("button", {
@@ -570,6 +570,189 @@ describe("QuoteRequestInboxPanel", () => {
       value: originalRevokeObjectURL
     });
     click.mockRestore();
+  });
+
+  it("runs protected HubSpot import CSV preflight and shows bounded readiness issues without provider calls", async () => {
+    const queuedInbox = loadedInbox();
+    queuedInbox.data.quoteRequests = [
+      {
+        ...quoteRequest,
+        crmSyncStatus: "queued" as const
+      }
+    ];
+    const fetcher = vi
+      .fn()
+      .mockResolvedValueOnce(
+        createJsonResponse({
+          ok: true,
+          csrfProof: "proof-secret"
+        })
+      )
+      .mockResolvedValueOnce(
+        createJsonResponse({
+          ok: true,
+          preflight: {
+            generatedAt: "2026-06-17T10:00:00.000Z",
+            provider: "hubspot",
+            localCrmSyncStatus: "queued",
+            limit: 25,
+            totalRecordCount: 2,
+            exportableRecordCount: 1,
+            needsReviewRecordCount: 1,
+            duplicateEmailCount: 1,
+            duplicatePhoneCount: 0,
+            formulaRiskCellCount: 1,
+            issueCountsByType: {
+              missing_customer_name: 1,
+              missing_customer_email: 0,
+              invalid_customer_email: 1,
+              missing_customer_phone: 0,
+              duplicate_customer_email_in_batch: 1,
+              duplicate_customer_phone_in_batch: 0,
+              missing_message_details: 0,
+              message_details_too_long: 0,
+              missing_public_reference: 0,
+              missing_created_at: 0,
+              csv_formula_risk_sanitised: 1,
+              missing_source_context: 0
+            },
+            rowIssues: [
+              {
+                quoteRequestId: "55555555-5555-4555-8555-555555555555",
+                publicReference: "QR-NEEDS-REVIEW",
+                issueTypes: [
+                  "missing_customer_name",
+                  "invalid_customer_email",
+                  "duplicate_customer_email_in_batch",
+                  "csv_formula_risk_sanitised"
+                ],
+                issueCount: 4,
+                exportable: false,
+                formulaRiskCellCount: 1
+              }
+            ]
+          }
+        })
+      );
+
+    render(<QuoteRequestInboxPanel fetcher={fetcher} inbox={queuedInbox} />);
+
+    expect(
+      screen.getByRole("button", {
+        name: /run CSV import preflight/i
+      })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/Manual import\/export readiness only/i)
+    ).toBeInTheDocument();
+    expect(screen.getAllByText(/Records remain queued/i).length).toBeGreaterThan(0);
+    expect(screen.getByText(/No HubSpot sync occurs/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/No provider IDs are created/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/No sync timestamp is set/i).length).toBeGreaterThan(0);
+    expect(
+      screen.getByText(/CSV formula-risk cells are sanitised during export/i)
+    ).toBeInTheDocument();
+
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: /run CSV import preflight/i
+      })
+    );
+
+    await waitFor(() => {
+      expect(fetcher).toHaveBeenCalledTimes(2);
+    });
+
+    expect(fetcher).toHaveBeenNthCalledWith(1, "/api/admin/csrf-proof", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        requestedOperation: "quote.write",
+        operation: "quote.write"
+      })
+    });
+    expect(fetcher).toHaveBeenNthCalledWith(
+      2,
+      "/api/admin/quote-requests/crm-handoff-packet/hubspot-import-csv/preflight?limit=25&status=queued",
+      {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "x-csrf-proof": "proof-secret"
+        }
+      }
+    );
+    expect(
+      await screen.findByRole("heading", {
+        name: /HubSpot import CSV preflight summary/i
+      })
+    ).toBeInTheDocument();
+    expect(screen.getByText(/Total queued records checked/i)).toBeInTheDocument();
+    expect(screen.getByText(/Exportable records/i)).toBeInTheDocument();
+    expect(screen.getByText(/Needs review records/i)).toBeInTheDocument();
+    expect(screen.getByText(/Duplicate emails/i)).toBeInTheDocument();
+    expect(screen.getByText(/Duplicate phones/i)).toBeInTheDocument();
+    expect(screen.getByText(/Formula-risk cells sanitised/i)).toBeInTheDocument();
+    expect(screen.getByText(/QR-NEEDS-REVIEW/i)).toBeInTheDocument();
+    expect(screen.getByText(/Missing customer name/i)).toBeInTheDocument();
+    expect(screen.getByText(/Invalid customer email/i)).toBeInTheDocument();
+    expect(screen.getByText(/Duplicate customer email in batch/i)).toBeInTheDocument();
+    expect(screen.getByText(/CSV formula-risk sanitised/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Latest CSV import preflight found records needing admin review/i)
+    ).toBeInTheDocument();
+    expect(JSON.stringify(fetcher.mock.calls)).not.toContain("hubapi");
+    expect(JSON.stringify(fetcher.mock.calls)).not.toContain("webhook");
+    expect(JSON.stringify(fetcher.mock.calls)).not.toContain("crmContactId");
+    expect(JSON.stringify(fetcher.mock.calls)).not.toContain("crmDealId");
+    expect(JSON.stringify(fetcher.mock.calls)).not.toContain("crmLastSyncAttemptAt");
+  });
+
+  it("handles protected HubSpot import CSV preflight failures generically", async () => {
+    const queuedInbox = loadedInbox();
+    queuedInbox.data.quoteRequests = [
+      {
+        ...quoteRequest,
+        crmSyncStatus: "queued" as const
+      }
+    ];
+    const fetcher = vi
+      .fn()
+      .mockResolvedValueOnce(
+        createJsonResponse({
+          ok: true,
+          csrfProof: "proof-secret"
+        })
+      )
+      .mockResolvedValueOnce(
+        createJsonResponse(
+          {
+            ok: false,
+            error: "sql token session header provider stack"
+          },
+          {
+            status: 503
+          }
+        )
+      );
+
+    render(<QuoteRequestInboxPanel fetcher={fetcher} inbox={queuedInbox} />);
+
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: /run CSV import preflight/i
+      })
+    );
+
+    expect(
+      await screen.findByText(
+        /HubSpot import CSV preflight could not be prepared\. Keep queued records unchanged and try again\./i
+      )
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/sql token session/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/provider stack/i)).not.toBeInTheDocument();
   });
 
   it("disables queued packet review while loading and shows generic failures", async () => {

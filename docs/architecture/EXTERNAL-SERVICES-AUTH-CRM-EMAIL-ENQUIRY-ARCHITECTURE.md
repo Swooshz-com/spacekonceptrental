@@ -26,6 +26,15 @@ call HubSpot APIs, n8n, or email providers; it does not mutate quote/enquiry
 rows, mark records as synced, set sync attempt timestamps, or create/update CRM
 contact/deal/provider IDs.
 
+Related HubSpot import CSV preflight slice:
+`docs/architecture/PROTECTED-ADMIN-HUBSPOT-IMPORT-CSV-PREFLIGHT-QUALITY-FOUNDATION.md`.
+The protected preflight report is manual HubSpot import readiness only. It is
+bounded and allowlisted, creates no manifest by default, and leaves records
+queued. Records remain queued. It does not call HubSpot, n8n, or email
+providers, does not mutate quote/enquiry rows, does not mark records synced,
+does not set sync attempt timestamps, and does not create/update CRM
+contact/deal/provider IDs.
+
 # External Services Auth CRM Email Enquiry Architecture
 
 ## Purpose

@@ -7,6 +7,14 @@ remain queued; it does not call HubSpot, call or queue n8n, send email, mutate
 quote/enquiry rows, mark records as synced, set sync attempt timestamps, or
 create/update CRM contact/deal/provider IDs.
 
+Related CSV preflight quality slice:
+`docs/architecture/PROTECTED-ADMIN-HUBSPOT-IMPORT-CSV-PREFLIGHT-QUALITY-FOUNDATION.md`.
+Admins can run a protected, bounded, allowlisted manual import readiness
+preflight before downloading CSV. The preflight report is bounded and
+allowlisted. It creates no manifest by default, leaves records queued, does not
+mutate quote/enquiry rows, does not mark records synced, does not set sync
+attempt timestamps, and does not create/update CRM contact/deal/provider IDs.
+
 ## Purpose
 
 This slice adds a protected admin-only CRM handoff packet preview/export

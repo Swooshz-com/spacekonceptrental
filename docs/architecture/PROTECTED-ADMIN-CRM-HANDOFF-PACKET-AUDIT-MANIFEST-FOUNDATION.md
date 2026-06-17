@@ -8,6 +8,14 @@ store full CSV contents, full packet JSON, full customer messages, raw payload
 dumps, secrets, headers, cookies, sessions, provider tokens, CRM API responses,
 or private Supabase details.
 
+Related preflight quality slice:
+`docs/architecture/PROTECTED-ADMIN-HUBSPOT-IMPORT-CSV-PREFLIGHT-QUALITY-FOUNDATION.md`.
+The HubSpot import CSV preflight report is protected admin-only manual import
+readiness. It is bounded and allowlisted, creates no audit/manifest row by
+default, and leaves records queued. Records remain queued. It does not mutate
+quote/enquiry rows, does not mark records synced, does not set sync attempt
+timestamps, and does not create/update CRM contact/deal/provider IDs.
+
 ## Purpose
 
 This slice adds protected admin-only audit/manifest metadata for queued CRM

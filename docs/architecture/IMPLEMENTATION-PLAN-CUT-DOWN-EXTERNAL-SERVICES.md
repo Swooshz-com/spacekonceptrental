@@ -26,6 +26,15 @@ does not implement HubSpot sync, n8n runtime, email sending, customer accounts,
 custom CRM, retail transaction, date-hold, inventory-hold, or completion-like
 flows.
 
+Related HubSpot import CSV preflight slice:
+`docs/architecture/PROTECTED-ADMIN-HUBSPOT-IMPORT-CSV-PREFLIGHT-QUALITY-FOUNDATION.md`.
+Preflight is a protected admin-only manual import readiness report. It is
+bounded and allowlisted, creates no manifest by default, and leaves records
+queued. Records remain queued. It does not implement HubSpot sync, n8n runtime,
+email sending, customer accounts, custom CRM, retail transaction, date-hold,
+inventory-hold, or completion-like flows, and does not mutate quote/enquiry
+rows or create/update CRM IDs.
+
 # Implementation Plan Cut-Down External Services
 
 ## Public Enquiry Persistence Integration

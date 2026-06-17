@@ -1,3 +1,15 @@
+## Protected Admin HubSpot Import CSV Preflight Quality Foundation
+
+References: `docs/architecture/PROTECTED-ADMIN-HUBSPOT-IMPORT-CSV-PREFLIGHT-QUALITY-FOUNDATION.md`, `docs/architecture/PROTECTED-ADMIN-HUBSPOT-IMPORT-CSV-HANDOFF-FOUNDATION.md`, `website/lib/quote/admin-read/admin-quote-request-hubspot-import-csv-preflight.ts`, `website/lib/quote/admin-read/admin-quote-request-hubspot-import-csv-preflight-route.ts`, `website/app/api/admin/quote-requests/crm-handoff-packet/hubspot-import-csv/preflight/route.ts`, `website/components/admin/quote-request-inbox-panel.tsx`, and `scripts/validate-protected-admin-hubspot-import-csv-preflight-quality-foundation.cjs`.
+
+Admin users can run a protected HubSpot import CSV preflight quality report for
+queued CRM handoff records as manual import readiness only. Records remain
+queued. Preflight is bounded and allowlisted, creates no manifest by default,
+does not call HubSpot, call or queue n8n, send email, contact customers, mutate
+quote/enquiry rows, mark records as synced, set sync attempt timestamps, or
+create/update CRM contact/deal/provider IDs. CSV export remains
+formula-injection protected.
+
 ## Protected Admin HubSpot Import CSV Handoff Foundation
 
 References: `docs/architecture/PROTECTED-ADMIN-HUBSPOT-IMPORT-CSV-HANDOFF-FOUNDATION.md`, `docs/architecture/PROTECTED-ADMIN-CRM-HANDOFF-PACKET-AUDIT-MANIFEST-FOUNDATION.md`, `docs/architecture/PROTECTED-ADMIN-CRM-HANDOFF-EXPORT-REVIEW-PACKET-FOUNDATION.md`, `website/lib/quote/admin-read/admin-quote-request-hubspot-import-csv.ts`, `website/lib/quote/admin-read/admin-quote-request-hubspot-import-csv-route.ts`, `website/app/api/admin/quote-requests/crm-handoff-packet/hubspot-import-csv/route.ts`, `website/components/admin/quote-request-inbox-panel.tsx`, `supabase/migrations/20260617090000_hubspot_import_csv_handoff_manifest_kind.sql`, and `scripts/validate-protected-admin-hubspot-import-csv-handoff-foundation.cjs`.

@@ -33,10 +33,20 @@ const csvHeaders = [
 ] as const;
 
 const formulaInjectionPattern = /^[=+\-@\t\r]/;
+export const adminQuoteRequestHubSpotImportCsvFormulaInjectionPattern =
+  formulaInjectionPattern;
+
+export function isAdminQuoteRequestHubSpotImportCsvFormulaRisk(
+  value: string | undefined
+) {
+  return adminQuoteRequestHubSpotImportCsvFormulaInjectionPattern.test(
+    value ?? ""
+  );
+}
 
 function safeCell(value: string | undefined) {
   const cell = value ?? "";
-  const formulaSafeCell = formulaInjectionPattern.test(cell)
+  const formulaSafeCell = isAdminQuoteRequestHubSpotImportCsvFormulaRisk(cell)
     ? `'${cell}`
     : cell;
 
