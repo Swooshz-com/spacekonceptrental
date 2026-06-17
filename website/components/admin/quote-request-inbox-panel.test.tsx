@@ -1,4 +1,11 @@
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within
+} from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import type { AdminQuoteRequestInboxQuoteRequest } from "../../lib/quote/admin-read/admin-quote-request-dashboard-read";
@@ -753,6 +760,166 @@ describe("QuoteRequestInboxPanel", () => {
     ).toBeInTheDocument();
     expect(screen.queryByText(/sql token session/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/provider stack/i)).not.toBeInTheDocument();
+  });
+
+  it("runs protected CRM handoff lifecycle reconciliation and shows safe bounded rows without provider calls", async () => {
+    const queuedInbox = loadedInbox();
+    queuedInbox.data.quoteRequests = [
+      {
+        ...quoteRequest,
+        crmSyncStatus: "queued" as const
+      }
+    ];
+    const fetcher = vi
+      .fn()
+      .mockResolvedValueOnce(
+        createJsonResponse({
+          ok: true,
+          csrfProof: "proof-secret"
+        })
+      )
+      .mockResolvedValueOnce(
+        createJsonResponse({
+          ok: true,
+          reconciliation: {
+            generatedAt: "2026-06-17T12:45:00.000Z",
+            provider: "hubspot",
+            localCrmSyncStatus: "queued",
+            limit: 25,
+            queuedRecordCount: 2,
+            jsonReviewPacketManifestCount: 1,
+            hubspotCsvManifestCount: 1,
+            manualOutcomeCount: 1,
+            queuedNeverExportedCount: 1,
+            csvExportedNoOutcomeCount: 0,
+            csvExportedReviewedCount: 1,
+            csvCompletedOutsideSkrCount: 0,
+            csvRejectedNeedsCorrectionCount: 0,
+            csvPartialNeedsFollowUpCount: 0,
+            preflightNeedsReviewCount: 0,
+            staleManifestCount: 0,
+            mismatchedManifestCount: 0,
+            recommendedNextAction: "run_preflight",
+            rows: [
+              {
+                quoteRequestId: quoteRequest.id,
+                publicReference: quoteRequest.publicReference,
+                createdAt: quoteRequest.createdAt,
+                localCrmSyncStatus: "queued",
+                lifecycleState: "queued_never_exported",
+                relatedManifestId:
+                  "66666666-6666-4666-8666-666666666666",
+                latestOutcomeStatus: undefined,
+                safeIssueCount: 0,
+                recommendedNextAction: "run_preflight"
+              }
+            ]
+          }
+        })
+      );
+
+    render(<QuoteRequestInboxPanel fetcher={fetcher} inbox={queuedInbox} />);
+
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: /Run CRM handoff reconciliation/i
+      })
+    );
+
+    await waitFor(() => {
+      expect(fetcher).toHaveBeenCalledTimes(2);
+    });
+    expect(fetcher).toHaveBeenNthCalledWith(
+      2,
+      "/api/admin/quote-requests/crm-handoff-packet/lifecycle-reconciliation?limit=25&status=queued",
+      {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "x-csrf-proof": "proof-secret"
+        }
+      }
+    );
+    expect(
+      screen.getByText(
+        /CRM handoff lifecycle reconciliation prepared locally\. Queued records remain queued\./i
+      )
+    ).toBeInTheDocument();
+
+    const panel = await screen.findByRole("region", {
+      name: /CRM handoff lifecycle reconciliation summary/i
+    });
+
+    expect(within(panel).getByText(/Local reconciliation only/i)).toBeInTheDocument();
+    expect(within(panel).getByText(/Records remain queued/i)).toBeInTheDocument();
+    expect(within(panel).getByText(/No HubSpot sync occurs/i)).toBeInTheDocument();
+    expect(within(panel).getByText(/No provider IDs are created/i)).toBeInTheDocument();
+    expect(within(panel).getByText(/No sync timestamp is set/i)).toBeInTheDocument();
+    expect(within(panel).getByText(/This does not mutate enquiry records/i)).toBeInTheDocument();
+    expect(
+      within(panel).getAllByText(/Run CSV preflight/i).length
+    ).toBeGreaterThan(0);
+    expect(within(panel).getByText(/QR-20260603-NEWEST/i)).toBeInTheDocument();
+    expect(
+      within(panel).getByText(/Queued - never exported/i)
+    ).toBeInTheDocument();
+    expect(within(panel).queryByText(/Maya Tan/i)).not.toBeInTheDocument();
+    expect(within(panel).queryByText(/maya@example\.test/i)).not.toBeInTheDocument();
+    expect(
+      within(panel).queryByText(/Please recommend a warm lounge setup/i)
+    ).not.toBeInTheDocument();
+    expect(JSON.stringify(fetcher.mock.calls)).not.toContain("hubapi");
+    expect(JSON.stringify(fetcher.mock.calls)).not.toContain("webhook");
+    expect(JSON.stringify(fetcher.mock.calls)).not.toContain("crmContactId");
+    expect(JSON.stringify(fetcher.mock.calls)).not.toContain("crmDealId");
+    expect(JSON.stringify(fetcher.mock.calls)).not.toContain(
+      "crmLastSyncAttemptAt"
+    );
+  });
+
+  it("handles CRM handoff lifecycle reconciliation failures generically", async () => {
+    const queuedInbox = loadedInbox();
+    queuedInbox.data.quoteRequests = [
+      {
+        ...quoteRequest,
+        crmSyncStatus: "queued" as const
+      }
+    ];
+    const fetcher = vi
+      .fn()
+      .mockResolvedValueOnce(
+        createJsonResponse({
+          ok: true,
+          csrfProof: "proof-secret"
+        })
+      )
+      .mockResolvedValueOnce(
+        createJsonResponse(
+          {
+            ok: false,
+            error: "sql hubspot token session header stack"
+          },
+          {
+            status: 503
+          }
+        )
+      );
+
+    render(<QuoteRequestInboxPanel fetcher={fetcher} inbox={queuedInbox} />);
+
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: /Run CRM handoff reconciliation/i
+      })
+    );
+
+    expect(
+      await screen.findByText(
+        /CRM handoff lifecycle reconciliation could not be prepared\. Keep queued records unchanged and try again\./i
+      )
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/sql hubspot token/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/session header stack/i)).not.toBeInTheDocument();
   });
 
   it("posts controlled HubSpot manual import outcomes only for CSV manifests after quote.write proof", async () => {

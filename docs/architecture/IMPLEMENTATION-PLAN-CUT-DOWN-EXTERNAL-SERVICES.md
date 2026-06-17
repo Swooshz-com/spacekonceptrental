@@ -282,3 +282,19 @@ sync is still not implemented. n8n workflows are still not implemented. Email
 sending is still not implemented. Public customer accounts remain deferred.
 Public customer login remains unimplemented. Customer dashboard remains
 unimplemented. Custom CRM remains rejected/deferred.
+
+# Protected Admin CRM Handoff Lifecycle Reconciliation Reference
+
+Protected admin-only local CRM handoff lifecycle reconciliation is documented
+in
+`docs/architecture/PROTECTED-ADMIN-CRM-HANDOFF-LIFECYCLE-RECONCILIATION-FOUNDATION.md`.
+
+Admin users can locally reconcile queued CRM handoff records with
+metadata-only packet and CSV manifests, bounded CSV preflight quality metadata,
+and metadata-only manual import outcome ledger rows. This is local
+visibility/readiness only. Records remain queued. No HubSpot sync occurs. No
+n8n workflow/runtime or email sending is implemented. This does not mutate
+quote/enquiry rows, mark records synced, set sync attempt timestamps, create
+provider IDs, store freeform notes, add customer accounts, build a dashboard,
+or implement custom CRM. CSV export remains formula-injection protected.
+Preflight remains bounded and allowlisted.

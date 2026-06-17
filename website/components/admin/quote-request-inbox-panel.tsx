@@ -142,6 +142,67 @@ type HubSpotImportCsvPreflightReport = {
   rowIssues: HubSpotImportCsvPreflightRowIssue[];
 };
 
+const crmHandoffLifecycleStates = [
+  "queued_never_exported",
+  "queued_preflight_needs_review",
+  "queued_csv_exported_no_outcome",
+  "queued_manual_import_reviewed",
+  "queued_manual_import_completed_outside_skr",
+  "queued_manual_import_rejected_needs_correction",
+  "queued_manual_import_partial_needs_follow_up",
+  "stale_manifest_record_missing",
+  "manifest_metadata_mismatch"
+] as const;
+
+type CrmHandoffLifecycleState = (typeof crmHandoffLifecycleStates)[number];
+
+const crmHandoffLifecycleRecommendedActions = [
+  "run_preflight",
+  "download_csv",
+  "record_manual_outcome",
+  "review_corrections",
+  "follow_up_partial_import",
+  "ready_for_future_sync_design",
+  "no_queued_records"
+] as const;
+
+type CrmHandoffLifecycleRecommendedAction =
+  (typeof crmHandoffLifecycleRecommendedActions)[number];
+
+type CrmHandoffLifecycleReconciliationRow = {
+  quoteRequestId: string;
+  publicReference?: string;
+  createdAt?: string;
+  localCrmSyncStatus: "queued";
+  lifecycleState: CrmHandoffLifecycleState;
+  relatedManifestId?: string;
+  latestOutcomeStatus?: HubSpotManualImportOutcomeStatus;
+  safeIssueCount: number;
+  recommendedNextAction: CrmHandoffLifecycleRecommendedAction;
+};
+
+type CrmHandoffLifecycleReconciliationReport = {
+  generatedAt: string;
+  provider: "hubspot";
+  localCrmSyncStatus: "queued";
+  limit: number;
+  queuedRecordCount: number;
+  jsonReviewPacketManifestCount: number;
+  hubspotCsvManifestCount: number;
+  manualOutcomeCount: number;
+  queuedNeverExportedCount: number;
+  csvExportedNoOutcomeCount: number;
+  csvExportedReviewedCount: number;
+  csvCompletedOutsideSkrCount: number;
+  csvRejectedNeedsCorrectionCount: number;
+  csvPartialNeedsFollowUpCount: number;
+  preflightNeedsReviewCount: number;
+  staleManifestCount: number;
+  mismatchedManifestCount: number;
+  recommendedNextAction: CrmHandoffLifecycleRecommendedAction;
+  rows: CrmHandoffLifecycleReconciliationRow[];
+};
+
 type QuoteRequestInboxPanelProps = {
   inbox: AdminQuoteRequestInboxReadResult;
   fetcher?: typeof fetch;
@@ -186,6 +247,8 @@ const genericHubSpotImportCsvPreflightFailureMessage =
   "HubSpot import CSV preflight could not be prepared. Keep queued records unchanged and try again.";
 const genericHubSpotManualImportOutcomeFailureMessage =
   "HubSpot manual import outcome could not be recorded. Records remain queued and unchanged.";
+const genericCrmHandoffLifecycleReconciliationFailureMessage =
+  "CRM handoff lifecycle reconciliation could not be prepared. Keep queued records unchanged and try again.";
 const uuidPattern =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -797,6 +860,178 @@ function parseHubSpotImportCsvPreflightReport(
   };
 }
 
+function isCrmHandoffLifecycleState(
+  value: unknown
+): value is CrmHandoffLifecycleState {
+  return crmHandoffLifecycleStates.includes(
+    value as CrmHandoffLifecycleState
+  );
+}
+
+function isCrmHandoffLifecycleRecommendedAction(
+  value: unknown
+): value is CrmHandoffLifecycleRecommendedAction {
+  return crmHandoffLifecycleRecommendedActions.includes(
+    value as CrmHandoffLifecycleRecommendedAction
+  );
+}
+
+function parseOptionalString(value: unknown) {
+  return typeof value === "string" && value.trim() ? value.trim() : undefined;
+}
+
+type ParsedCrmHandoffLifecycleCounts = Pick<
+  CrmHandoffLifecycleReconciliationReport,
+  | "queuedRecordCount"
+  | "jsonReviewPacketManifestCount"
+  | "hubspotCsvManifestCount"
+  | "manualOutcomeCount"
+  | "queuedNeverExportedCount"
+  | "csvExportedNoOutcomeCount"
+  | "csvExportedReviewedCount"
+  | "csvCompletedOutsideSkrCount"
+  | "csvRejectedNeedsCorrectionCount"
+  | "csvPartialNeedsFollowUpCount"
+  | "preflightNeedsReviewCount"
+  | "staleManifestCount"
+  | "mismatchedManifestCount"
+>;
+
+function hasParsedCrmHandoffLifecycleCounts(
+  counts: Record<keyof ParsedCrmHandoffLifecycleCounts, number | null>
+): counts is ParsedCrmHandoffLifecycleCounts {
+  return Object.values(counts).every((count) => count !== null);
+}
+
+function parseCrmHandoffLifecycleReconciliationRow(
+  value: unknown
+): CrmHandoffLifecycleReconciliationRow | null {
+  if (!isRecord(value)) {
+    return null;
+  }
+
+  const safeIssueCount = parseNonNegativeInteger(value.safeIssueCount);
+
+  if (
+    !isUuid(value.quoteRequestId) ||
+    value.localCrmSyncStatus !== "queued" ||
+    !isCrmHandoffLifecycleState(value.lifecycleState) ||
+    safeIssueCount === null ||
+    !isCrmHandoffLifecycleRecommendedAction(value.recommendedNextAction) ||
+    (value.relatedManifestId !== undefined &&
+      !isUuid(value.relatedManifestId)) ||
+    (value.latestOutcomeStatus !== undefined &&
+      !isHubSpotManualImportOutcomeStatus(value.latestOutcomeStatus))
+  ) {
+    return null;
+  }
+
+  return {
+    quoteRequestId: value.quoteRequestId.trim(),
+    ...(parseOptionalString(value.publicReference)
+      ? { publicReference: parseOptionalString(value.publicReference) }
+      : {}),
+    ...(parseOptionalString(value.createdAt)
+      ? { createdAt: parseOptionalString(value.createdAt) }
+      : {}),
+    localCrmSyncStatus: "queued",
+    lifecycleState: value.lifecycleState,
+    ...(typeof value.relatedManifestId === "string"
+      ? { relatedManifestId: value.relatedManifestId.trim() }
+      : {}),
+    ...(isHubSpotManualImportOutcomeStatus(value.latestOutcomeStatus)
+      ? { latestOutcomeStatus: value.latestOutcomeStatus }
+      : {}),
+    safeIssueCount,
+    recommendedNextAction: value.recommendedNextAction
+  };
+}
+
+function parseCrmHandoffLifecycleReconciliationReport(
+  value: unknown
+): CrmHandoffLifecycleReconciliationReport | null {
+  if (!isRecord(value)) {
+    return null;
+  }
+
+  const limit = parsePositiveInteger(value.limit);
+  const rows = Array.isArray(value.rows)
+    ? value.rows.map(parseCrmHandoffLifecycleReconciliationRow)
+    : null;
+  const counts = {
+    queuedRecordCount: parseNonNegativeInteger(value.queuedRecordCount),
+    jsonReviewPacketManifestCount: parseNonNegativeInteger(
+      value.jsonReviewPacketManifestCount
+    ),
+    hubspotCsvManifestCount: parseNonNegativeInteger(
+      value.hubspotCsvManifestCount
+    ),
+    manualOutcomeCount: parseNonNegativeInteger(value.manualOutcomeCount),
+    queuedNeverExportedCount: parseNonNegativeInteger(
+      value.queuedNeverExportedCount
+    ),
+    csvExportedNoOutcomeCount: parseNonNegativeInteger(
+      value.csvExportedNoOutcomeCount
+    ),
+    csvExportedReviewedCount: parseNonNegativeInteger(
+      value.csvExportedReviewedCount
+    ),
+    csvCompletedOutsideSkrCount: parseNonNegativeInteger(
+      value.csvCompletedOutsideSkrCount
+    ),
+    csvRejectedNeedsCorrectionCount: parseNonNegativeInteger(
+      value.csvRejectedNeedsCorrectionCount
+    ),
+    csvPartialNeedsFollowUpCount: parseNonNegativeInteger(
+      value.csvPartialNeedsFollowUpCount
+    ),
+    preflightNeedsReviewCount: parseNonNegativeInteger(
+      value.preflightNeedsReviewCount
+    ),
+    staleManifestCount: parseNonNegativeInteger(value.staleManifestCount),
+    mismatchedManifestCount: parseNonNegativeInteger(
+      value.mismatchedManifestCount
+    )
+  };
+
+  if (
+    typeof value.generatedAt !== "string" ||
+    !value.generatedAt.trim() ||
+    value.provider !== "hubspot" ||
+    value.localCrmSyncStatus !== "queued" ||
+    limit === null ||
+    !rows ||
+    rows.some((row) => !row) ||
+    rows.length > limit ||
+    !isCrmHandoffLifecycleRecommendedAction(value.recommendedNextAction) ||
+    !hasParsedCrmHandoffLifecycleCounts(counts)
+  ) {
+    return null;
+  }
+
+  return {
+    generatedAt: value.generatedAt.trim(),
+    provider: "hubspot",
+    localCrmSyncStatus: "queued",
+    limit,
+    queuedRecordCount: counts.queuedRecordCount,
+    jsonReviewPacketManifestCount: counts.jsonReviewPacketManifestCount,
+    hubspotCsvManifestCount: counts.hubspotCsvManifestCount,
+    manualOutcomeCount: counts.manualOutcomeCount,
+    queuedNeverExportedCount: counts.queuedNeverExportedCount,
+    csvExportedNoOutcomeCount: counts.csvExportedNoOutcomeCount,
+    csvExportedReviewedCount: counts.csvExportedReviewedCount,
+    csvCompletedOutsideSkrCount: counts.csvCompletedOutsideSkrCount,
+    csvRejectedNeedsCorrectionCount: counts.csvRejectedNeedsCorrectionCount,
+    csvPartialNeedsFollowUpCount: counts.csvPartialNeedsFollowUpCount,
+    preflightNeedsReviewCount: counts.preflightNeedsReviewCount,
+    staleManifestCount: counts.staleManifestCount,
+    mismatchedManifestCount: counts.mismatchedManifestCount,
+    recommendedNextAction: value.recommendedNextAction,
+    rows: rows as CrmHandoffLifecycleReconciliationRow[]
+  };
+}
+
 function preflightIssueLabel(
   issueType: HubSpotImportCsvPreflightIssueType
 ) {
@@ -830,6 +1065,41 @@ function manualImportOutcomeLabel(status: HubSpotManualImportOutcomeStatus) {
   };
 
   return labels[status];
+}
+
+function crmHandoffLifecycleStateLabel(state: CrmHandoffLifecycleState) {
+  const labels: Record<CrmHandoffLifecycleState, string> = {
+    queued_never_exported: "Queued - never exported",
+    queued_preflight_needs_review: "Queued - preflight needs review",
+    queued_csv_exported_no_outcome: "Queued - CSV exported, no outcome",
+    queued_manual_import_reviewed: "Queued - manual import reviewed",
+    queued_manual_import_completed_outside_skr:
+      "Queued - completed outside SKR",
+    queued_manual_import_rejected_needs_correction:
+      "Queued - rejected / needs correction",
+    queued_manual_import_partial_needs_follow_up:
+      "Queued - partial / needs follow-up",
+    stale_manifest_record_missing: "Stale manifest record missing",
+    manifest_metadata_mismatch: "Manifest metadata mismatch"
+  };
+
+  return labels[state];
+}
+
+function crmHandoffLifecycleActionLabel(
+  action: CrmHandoffLifecycleRecommendedAction
+) {
+  const labels: Record<CrmHandoffLifecycleRecommendedAction, string> = {
+    run_preflight: "Run CSV preflight",
+    download_csv: "Download CSV",
+    record_manual_outcome: "Record manual outcome",
+    review_corrections: "Review corrections",
+    follow_up_partial_import: "Follow up partial import",
+    ready_for_future_sync_design: "Ready for future sync design",
+    no_queued_records: "No queued records"
+  };
+
+  return labels[action];
 }
 
 function parseQuoteStatus(value: string): AdminQuoteRequestStatus | null {
@@ -1263,6 +1533,123 @@ function HubSpotImportCsvPreflightSummary({
   );
 }
 
+function CrmHandoffLifecycleReconciliationSummary({
+  report
+}: {
+  report: CrmHandoffLifecycleReconciliationReport;
+}) {
+  return (
+    <section
+      aria-label="CRM handoff lifecycle reconciliation summary"
+      className="quote-inbox__section"
+    >
+      <h4>CRM handoff lifecycle reconciliation summary</h4>
+      <p className="category-management__hint">
+        Local reconciliation only. Records remain queued. No HubSpot sync
+        occurs. No provider IDs are created. No sync timestamp is set. This
+        does not mutate enquiry records.
+      </p>
+      <dl className="admin-dashboard__stats">
+        <div>
+          <dt>Queued records checked</dt>
+          <dd>{report.queuedRecordCount}</dd>
+        </div>
+        <div>
+          <dt>JSON packet manifests</dt>
+          <dd>{report.jsonReviewPacketManifestCount}</dd>
+        </div>
+        <div>
+          <dt>HubSpot CSV manifests</dt>
+          <dd>{report.hubspotCsvManifestCount}</dd>
+        </div>
+        <div>
+          <dt>Manual outcomes</dt>
+          <dd>{report.manualOutcomeCount}</dd>
+        </div>
+        <div>
+          <dt>Never exported</dt>
+          <dd>{report.queuedNeverExportedCount}</dd>
+        </div>
+        <div>
+          <dt>CSV exported, no outcome</dt>
+          <dd>{report.csvExportedNoOutcomeCount}</dd>
+        </div>
+        <div>
+          <dt>Reviewed/completed</dt>
+          <dd>
+            {report.csvExportedReviewedCount +
+              report.csvCompletedOutsideSkrCount}
+          </dd>
+        </div>
+        <div>
+          <dt>Needs correction/follow-up</dt>
+          <dd>
+            {report.csvRejectedNeedsCorrectionCount +
+              report.csvPartialNeedsFollowUpCount +
+              report.preflightNeedsReviewCount}
+          </dd>
+        </div>
+        <div>
+          <dt>Stale/mismatched metadata</dt>
+          <dd>
+            {report.staleManifestCount + report.mismatchedManifestCount}
+          </dd>
+        </div>
+        <div>
+          <dt>Recommended next action</dt>
+          <dd>
+            {crmHandoffLifecycleActionLabel(report.recommendedNextAction)}
+          </dd>
+        </div>
+      </dl>
+      {report.rows.length === 0 ? (
+        <p>No queued lifecycle rows need admin review.</p>
+      ) : (
+        <ul className="admin-dashboard__list">
+          {report.rows.map((row) => (
+            <li key={`${row.quoteRequestId}-${row.lifecycleState}`}>
+              <strong>
+                {row.publicReference ?? `Quote request ${row.quoteRequestId}`}
+              </strong>
+              <span>
+                {" "}
+                - {crmHandoffLifecycleStateLabel(row.lifecycleState)}; action:{" "}
+                {crmHandoffLifecycleActionLabel(row.recommendedNextAction)}
+              </span>
+              <dl className="quote-inbox__details">
+                <div>
+                  <dt>Created at</dt>
+                  <dd>{row.createdAt ?? "Not available in current queue"}</dd>
+                </div>
+                <div>
+                  <dt>Local CRM sync status</dt>
+                  <dd>{row.localCrmSyncStatus}</dd>
+                </div>
+                <div>
+                  <dt>Related manifest</dt>
+                  <dd>{row.relatedManifestId ?? "No manifest yet"}</dd>
+                </div>
+                <div>
+                  <dt>Latest outcome</dt>
+                  <dd>
+                    {row.latestOutcomeStatus
+                      ? manualImportOutcomeLabel(row.latestOutcomeStatus)
+                      : "No manual outcome recorded"}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Safe issue count</dt>
+                  <dd>{row.safeIssueCount}</dd>
+                </div>
+              </dl>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}
+
 export function QuoteRequestInboxPanel({
   inbox,
   fetcher = fetch,
@@ -1281,6 +1668,10 @@ export function QuoteRequestInboxPanel({
     hubSpotImportCsvPreflightReport,
     setHubSpotImportCsvPreflightReport
   ] = useState<HubSpotImportCsvPreflightReport | null>(null);
+  const [
+    crmHandoffLifecycleReconciliationReport,
+    setCrmHandoffLifecycleReconciliationReport
+  ] = useState<CrmHandoffLifecycleReconciliationReport | null>(null);
   const [
     hubSpotManualImportOutcomes,
     setHubSpotManualImportOutcomes
@@ -1586,6 +1977,68 @@ export function QuoteRequestInboxPanel({
     }
   }
 
+  async function runCrmHandoffLifecycleReconciliation() {
+    setStatus({
+      kind: "pending",
+      message: "Preparing CRM handoff lifecycle reconciliation..."
+    });
+    setCrmHandoffLifecycleReconciliationReport(null);
+
+    try {
+      const csrfProof = await requestQuoteWriteProof(fetcher);
+
+      if (!csrfProof) {
+        setStatus({
+          kind: "error",
+          message: genericCrmHandoffLifecycleReconciliationFailureMessage
+        });
+        return;
+      }
+
+      const response = await fetcher(
+        `/api/admin/quote-requests/crm-handoff-packet/lifecycle-reconciliation?limit=${crmHandoffPacketLimit}&status=queued`,
+        {
+          method: "POST",
+          headers: {
+            Accept: "application/json",
+            "x-csrf-proof": csrfProof
+          }
+        }
+      );
+      const responseBody = await readSafeJson(response);
+      const reconciliation = isRecord(responseBody)
+        ? parseCrmHandoffLifecycleReconciliationReport(
+            responseBody.reconciliation
+          )
+        : null;
+
+      if (
+        !response.ok ||
+        !isRecord(responseBody) ||
+        responseBody.ok !== true ||
+        !reconciliation
+      ) {
+        setStatus({
+          kind: "error",
+          message: genericCrmHandoffLifecycleReconciliationFailureMessage
+        });
+        return;
+      }
+
+      setCrmHandoffLifecycleReconciliationReport(reconciliation);
+      setStatus({
+        kind: "success",
+        message:
+          "CRM handoff lifecycle reconciliation prepared locally. Queued records remain queued."
+      });
+    } catch {
+      setStatus({
+        kind: "error",
+        message: genericCrmHandoffLifecycleReconciliationFailureMessage
+      });
+    }
+  }
+
   async function recordHubSpotManualImportOutcome(
     manifestId: string,
     outcomeStatus: HubSpotManualImportOutcomeStatus
@@ -1850,6 +2303,17 @@ export function QuoteRequestInboxPanel({
             : "Run CSV import preflight"}
         </button>
         <button
+          aria-label="Run CRM handoff reconciliation"
+          className="button button--secondary"
+          disabled={status.kind === "pending"}
+          onClick={() => void runCrmHandoffLifecycleReconciliation()}
+          type="button"
+        >
+          {status.kind === "pending"
+            ? "Preparing CRM handoff reconciliation"
+            : "Run CRM handoff reconciliation"}
+        </button>
+        <button
           aria-label="Download HubSpot import CSV"
           className="button button--secondary"
           disabled={status.kind === "pending"}
@@ -1880,6 +2344,11 @@ export function QuoteRequestInboxPanel({
         {hubSpotImportCsvPreflightReport ? (
           <HubSpotImportCsvPreflightSummary
             report={hubSpotImportCsvPreflightReport}
+          />
+        ) : null}
+        {crmHandoffLifecycleReconciliationReport ? (
+          <CrmHandoffLifecycleReconciliationSummary
+            report={crmHandoffLifecycleReconciliationReport}
           />
         ) : null}
         {crmHandoffPacketPreview ? (

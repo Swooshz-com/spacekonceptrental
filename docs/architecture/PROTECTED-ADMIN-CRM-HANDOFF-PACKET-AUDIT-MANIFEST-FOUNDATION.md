@@ -131,3 +131,16 @@ workflow, customer notification, credentials, `.env` modification,
 service-role browser exposure, provider token, runtime provider call, public
 manifest access, synced marking, sync timestamp update, full payload/customer
 message dump, or Docker guard weakening is added.
+
+## Related Lifecycle Reconciliation Foundation
+
+`docs/architecture/PROTECTED-ADMIN-CRM-HANDOFF-LIFECYCLE-RECONCILIATION-FOUNDATION.md`
+connects queued records, metadata-only packet and CSV manifests, CSV preflight
+quality metadata, and manual outcome ledger rows for protected admin-only local
+visibility/readiness only. Records remain queued. No HubSpot sync occurs. No
+n8n workflow/runtime or email sending is implemented. The reconciliation does
+not mutate quote/enquiry rows, mark records synced, set sync attempt
+timestamps, create provider IDs, or store freeform notes. Report rows are
+bounded and allowlisted. The manual outcome ledger remains metadata-only. CSV
+export remains formula-injection protected, and preflight remains bounded and
+allowlisted.

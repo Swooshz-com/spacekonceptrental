@@ -18,6 +18,7 @@
     "validate:protected-admin-hubspot-import-csv-handoff-foundation": "node scripts/validate-protected-admin-hubspot-import-csv-handoff-foundation.cjs",
     "validate:protected-admin-hubspot-import-csv-preflight-quality-foundation": "node scripts/validate-protected-admin-hubspot-import-csv-preflight-quality-foundation.cjs",
     "validate:protected-admin-hubspot-manual-import-outcome-ledger-foundation": "node scripts/validate-protected-admin-hubspot-manual-import-outcome-ledger-foundation.cjs",
+    "validate:protected-admin-crm-handoff-lifecycle-reconciliation-foundation": "node scripts/validate-protected-admin-crm-handoff-lifecycle-reconciliation-foundation.cjs",
     "validate:public-enquiry-persistence-integration": "node scripts/validate-public-enquiry-persistence-integration.cjs",
     "validate:supabase-enquiry-persistence-crm-handoff-foundation": "node scripts/validate-supabase-enquiry-persistence-crm-handoff-foundation.cjs",
     "validate:external-services-auth-crm-email-enquiry-architecture": "node scripts/validate-external-services-auth-crm-email-enquiry-architecture.cjs",

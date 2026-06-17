@@ -162,3 +162,16 @@ A later approved slice can add a protected server-side CRM handoff worker or
 automation boundary that reads eligible Supabase enquiry records, creates or
 links HubSpot records, and updates only the bounded CRM handoff columns with
 sanitized status.
+
+## Related Lifecycle Reconciliation Foundation
+
+`docs/architecture/PROTECTED-ADMIN-CRM-HANDOFF-LIFECYCLE-RECONCILIATION-FOUNDATION.md`
+connects queued CRM handoff records, metadata-only packet and CSV manifests,
+CSV preflight quality metadata, and manual outcome ledger rows for protected
+admin-only local visibility/readiness only. Records remain queued. No HubSpot
+sync occurs. No n8n workflow/runtime or email sending is implemented. The
+reconciliation does not mutate quote/enquiry rows, mark records synced, set
+sync attempt timestamps, create provider IDs, or store freeform notes. Report
+rows are bounded and allowlisted. The manual outcome ledger remains
+metadata-only. CSV export remains formula-injection protected, and preflight
+remains bounded and allowlisted.

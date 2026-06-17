@@ -108,3 +108,16 @@ controlled statuses, append-only RLS shape, metadata-only storage, route-gate
 usage, and hard boundaries. It also checks that this slice does not weaken the
 existing CRM handoff queue, packet manifest, CSV export, preflight, Supabase
 migration, Docker-dependent, public access, or release validators.
+
+## Related Lifecycle Reconciliation Foundation
+
+`docs/architecture/PROTECTED-ADMIN-CRM-HANDOFF-LIFECYCLE-RECONCILIATION-FOUNDATION.md`
+connects queued records, metadata-only packet and CSV manifests, CSV preflight
+quality metadata, and manual outcome ledger rows for protected admin-only local
+visibility/readiness only. Records remain queued. No HubSpot sync occurs. No
+n8n workflow/runtime or email sending is implemented. The reconciliation does
+not mutate quote/enquiry rows, mark records synced, set sync attempt
+timestamps, create provider IDs, or store freeform notes. Report rows are
+bounded and allowlisted. The manual outcome ledger remains metadata-only. CSV
+export remains formula-injection protected, and preflight remains bounded and
+allowlisted.

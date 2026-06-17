@@ -1,3 +1,21 @@
+## Protected Admin CRM Handoff Lifecycle Reconciliation Foundation
+
+Decision: Admin users can run protected local CRM handoff lifecycle
+reconciliation for queued CRM handoff records.
+
+Reference: `docs/architecture/PROTECTED-ADMIN-CRM-HANDOFF-LIFECYCLE-RECONCILIATION-FOUNDATION.md`.
+
+The reconciliation is protected admin-only, local visibility/readiness only,
+bounded and allowlisted. It reads queued records, metadata-only packet and CSV
+manifests, bounded CSV preflight quality metadata, and metadata-only manual
+import outcome ledger rows. Records remain queued. It does not mutate
+quote/enquiry rows, mark records synced, set sync attempt timestamps, create
+provider IDs, call HubSpot APIs, run n8n workflow/runtime, send email, store
+freeform notes, add customer accounts, build a dashboard, implement custom
+CRM, or add retail/customer-flow expansion. CSV export remains
+formula-injection protected. Preflight remains
+bounded and allowlisted.
+
 ## Protected Admin HubSpot Manual Import Outcome Ledger Foundation
 
 Decision: Admin users can append protected local HubSpot manual import outcomes
