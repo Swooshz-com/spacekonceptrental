@@ -1,3 +1,15 @@
+## Protected Admin HubSpot Import CSV Preflight Quality Foundation
+
+Reference: `docs/architecture/PROTECTED-ADMIN-HUBSPOT-IMPORT-CSV-PREFLIGHT-QUALITY-FOUNDATION.md`.
+
+Owner review can include the protected admin HubSpot import CSV preflight
+quality foundation as manual import readiness only. Records remain queued. The
+preflight report is bounded and allowlisted, creates no manifest by default,
+does not call HubSpot, call or queue n8n, send email, contact customers, mutate
+quote/enquiry rows, mark records as synced, set sync attempt timestamps, or
+create/update CRM contact/deal/provider IDs. CSV export remains
+formula-injection protected.
+
 ## Protected Admin HubSpot Import CSV Handoff Foundation
 
 Reference: `docs/architecture/PROTECTED-ADMIN-HUBSPOT-IMPORT-CSV-HANDOFF-FOUNDATION.md`.

@@ -26,6 +26,14 @@ manifest does not store full CSV contents, full packet JSON, full customer
 messages, raw payload dumps, secrets, headers, cookies, sessions, provider
 tokens, CRM API responses, or private Supabase details.
 
+Protected admin HubSpot import CSV preflight quality readiness is documented in
+`docs/architecture/PROTECTED-ADMIN-HUBSPOT-IMPORT-CSV-PREFLIGHT-QUALITY-FOUNDATION.md`.
+The preflight report is bounded and allowlisted. It is manual import readiness
+only, creates no manifest by default, and leaves records queued. Records remain
+queued. It does not mutate quote/enquiry rows, does not mark records synced,
+does not set sync attempt timestamps, and does not create/update CRM
+contact/deal/provider IDs.
+
 Protected admin CRM handoff packet/export preparation is documented in
 `docs/architecture/PROTECTED-ADMIN-CRM-HANDOFF-EXPORT-REVIEW-PACKET-FOUNDATION.md`.
 Admin users can review/export queued CRM handoff packets for manual

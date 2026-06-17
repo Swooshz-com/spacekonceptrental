@@ -34,6 +34,8 @@ const approvedRuntimeRouteGateAdapterBoundaryPath =
   "website/lib/admin/authorization/server-admin-runtime-route-gate-adapter.ts";
 const approvedAdminQuoteHubSpotImportCsvRouteBoundaryPath =
   "website/lib/quote/admin-read/admin-quote-request-hubspot-import-csv-route.ts";
+const approvedAdminQuoteHubSpotImportCsvPreflightRouteBoundaryPath =
+  "website/lib/quote/admin-read/admin-quote-request-hubspot-import-csv-preflight-route.ts";
 const sourceExtensions = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs"]);
 
 function readRepoFile(relativePath: string) {
@@ -232,6 +234,7 @@ describe("Phase 2B-X admin runtime gate invocation usage approval lane", () => {
       "website/app/api/admin/products/route.ts",
       "website/app/api/admin/quote-requests/[quoteRequestId]/crm-handoff/route.ts",
       "website/app/api/admin/quote-requests/[quoteRequestId]/status/route.ts",
+      "website/app/api/admin/quote-requests/crm-handoff-packet/hubspot-import-csv/preflight/route.ts",
       "website/app/api/admin/quote-requests/crm-handoff-packet/hubspot-import-csv/route.ts",
       "website/app/api/admin/quote-requests/crm-handoff-packet/route.ts"
     ]);
@@ -247,7 +250,8 @@ describe("Phase 2B-X admin runtime gate invocation usage approval lane", () => {
     expect(combinedOutside([
         approvedRuntimeGateInvocationBoundaryPath,
         approvedRuntimeRouteGateAdapterBoundaryPath,
-        approvedAdminQuoteHubSpotImportCsvRouteBoundaryPath
+        approvedAdminQuoteHubSpotImportCsvRouteBoundaryPath,
+        approvedAdminQuoteHubSpotImportCsvPreflightRouteBoundaryPath
       ])).not.toContain(
       "resolveServerAdminRuntimeGateInvocation"
     );

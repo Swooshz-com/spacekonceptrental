@@ -21,6 +21,15 @@ manual import/export readiness only. Export does not change queue state, mark
 records as synced, set sync attempt timestamps, or create/update CRM
 contact/deal/provider IDs.
 
+Related HubSpot import CSV preflight slice:
+`docs/architecture/PROTECTED-ADMIN-HUBSPOT-IMPORT-CSV-PREFLIGHT-QUALITY-FOUNDATION.md`.
+Queued records can be checked through a protected, bounded, allowlisted manual
+import readiness report before CSV download. The preflight report is bounded
+and allowlisted. Records remain queued. Preflight does not mutate quote/enquiry
+rows, does not mark records synced, does not set sync attempt timestamps, does
+not create/update CRM contact/deal/provider IDs, and creates no manifest by
+default.
+
 ## Purpose
 
 This slice adds a protected admin-only local queue preparation layer for future

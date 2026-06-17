@@ -230,6 +230,7 @@ describe("Phase 2B-U admin runtime wiring approval lane", () => {
       "website/app/api/admin/products/route.ts",
       "website/app/api/admin/quote-requests/[quoteRequestId]/crm-handoff/route.ts",
       "website/app/api/admin/quote-requests/[quoteRequestId]/status/route.ts",
+      "website/app/api/admin/quote-requests/crm-handoff-packet/hubspot-import-csv/preflight/route.ts",
       "website/app/api/admin/quote-requests/crm-handoff-packet/hubspot-import-csv/route.ts",
       "website/app/api/admin/quote-requests/crm-handoff-packet/route.ts"
     ]);

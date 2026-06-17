@@ -75,6 +75,48 @@ type AdminQuoteRequestCrmHandoffPacketManifest = {
   source: "protected_admin";
 };
 
+const hubSpotImportCsvPreflightIssueTypes = [
+  "missing_customer_name",
+  "missing_customer_email",
+  "invalid_customer_email",
+  "missing_customer_phone",
+  "duplicate_customer_email_in_batch",
+  "duplicate_customer_phone_in_batch",
+  "missing_message_details",
+  "message_details_too_long",
+  "missing_public_reference",
+  "missing_created_at",
+  "csv_formula_risk_sanitised",
+  "missing_source_context"
+] as const;
+
+type HubSpotImportCsvPreflightIssueType =
+  (typeof hubSpotImportCsvPreflightIssueTypes)[number];
+
+type HubSpotImportCsvPreflightRowIssue = {
+  quoteRequestId: string;
+  publicReference?: string;
+  issueTypes: HubSpotImportCsvPreflightIssueType[];
+  issueCount: number;
+  exportable: boolean;
+  formulaRiskCellCount: number;
+};
+
+type HubSpotImportCsvPreflightReport = {
+  generatedAt: string;
+  provider: "hubspot";
+  localCrmSyncStatus: "queued";
+  limit: number;
+  totalRecordCount: number;
+  exportableRecordCount: number;
+  needsReviewRecordCount: number;
+  duplicateEmailCount: number;
+  duplicatePhoneCount: number;
+  formulaRiskCellCount: number;
+  issueCountsByType: Record<HubSpotImportCsvPreflightIssueType, number>;
+  rowIssues: HubSpotImportCsvPreflightRowIssue[];
+};
+
 type QuoteRequestInboxPanelProps = {
   inbox: AdminQuoteRequestInboxReadResult;
   fetcher?: typeof fetch;
@@ -115,6 +157,8 @@ const genericCrmHandoffPacketFailureMessage =
   "CRM handoff packet could not be prepared. Keep queued records unchanged and try again.";
 const genericHubSpotImportCsvFailureMessage =
   "HubSpot import CSV could not be prepared. Keep queued records unchanged and try again.";
+const genericHubSpotImportCsvPreflightFailureMessage =
+  "HubSpot import CSV preflight could not be prepared. Keep queued records unchanged and try again.";
 const uuidPattern =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -509,6 +553,175 @@ function parseManifestRecords(
     : null;
 }
 
+function isHubSpotImportCsvPreflightIssueType(
+  value: unknown
+): value is HubSpotImportCsvPreflightIssueType {
+  return hubSpotImportCsvPreflightIssueTypes.includes(
+    value as HubSpotImportCsvPreflightIssueType
+  );
+}
+
+function parseNonNegativeInteger(value: unknown) {
+  return Number.isInteger(value) && Number(value) >= 0 ? Number(value) : null;
+}
+
+function parsePositiveInteger(value: unknown) {
+  return Number.isInteger(value) && Number(value) > 0 ? Number(value) : null;
+}
+
+function parseIssueCounts(
+  value: unknown
+): Record<HubSpotImportCsvPreflightIssueType, number> | null {
+  if (!isRecord(value)) {
+    return null;
+  }
+
+  const counts = {} as Record<HubSpotImportCsvPreflightIssueType, number>;
+
+  for (const issueType of hubSpotImportCsvPreflightIssueTypes) {
+    const count = parseNonNegativeInteger(value[issueType]);
+
+    if (count === null) {
+      return null;
+    }
+
+    counts[issueType] = count;
+  }
+
+  return counts;
+}
+
+function parsePreflightRowIssue(
+  value: unknown
+): HubSpotImportCsvPreflightRowIssue | null {
+  if (!isRecord(value) || !isUuid(value.quoteRequestId)) {
+    return null;
+  }
+
+  const rawIssueTypes = Array.isArray(value.issueTypes)
+    ? value.issueTypes
+    : null;
+  const issueTypes = rawIssueTypes
+    ? rawIssueTypes.filter(isHubSpotImportCsvPreflightIssueType)
+    : null;
+  const issueCount = parseNonNegativeInteger(value.issueCount);
+  const formulaRiskCellCount = parseNonNegativeInteger(
+    value.formulaRiskCellCount
+  );
+
+  if (
+    !issueTypes ||
+    issueTypes.length === 0 ||
+    !rawIssueTypes ||
+    issueTypes.length !== rawIssueTypes.length ||
+    issueCount === null ||
+    formulaRiskCellCount === null ||
+    typeof value.exportable !== "boolean" ||
+    (value.publicReference !== undefined &&
+      (typeof value.publicReference !== "string" ||
+        !value.publicReference.trim()))
+  ) {
+    return null;
+  }
+
+  return {
+    quoteRequestId: value.quoteRequestId.trim(),
+    ...(typeof value.publicReference === "string"
+      ? { publicReference: value.publicReference.trim() }
+      : {}),
+    issueTypes,
+    issueCount,
+    exportable: value.exportable,
+    formulaRiskCellCount
+  };
+}
+
+function parseHubSpotImportCsvPreflightReport(
+  value: unknown
+): HubSpotImportCsvPreflightReport | null {
+  if (!isRecord(value)) {
+    return null;
+  }
+
+  const limit = parsePositiveInteger(value.limit);
+  const totalRecordCount = parseNonNegativeInteger(value.totalRecordCount);
+  const exportableRecordCount = parseNonNegativeInteger(
+    value.exportableRecordCount
+  );
+  const needsReviewRecordCount = parseNonNegativeInteger(
+    value.needsReviewRecordCount
+  );
+  const duplicateEmailCount = parseNonNegativeInteger(
+    value.duplicateEmailCount
+  );
+  const duplicatePhoneCount = parseNonNegativeInteger(
+    value.duplicatePhoneCount
+  );
+  const formulaRiskCellCount = parseNonNegativeInteger(
+    value.formulaRiskCellCount
+  );
+  const issueCountsByType = parseIssueCounts(value.issueCountsByType);
+  const rowIssues = Array.isArray(value.rowIssues)
+    ? value.rowIssues.map(parsePreflightRowIssue)
+    : null;
+
+  if (
+    typeof value.generatedAt !== "string" ||
+    !value.generatedAt.trim() ||
+    value.provider !== "hubspot" ||
+    value.localCrmSyncStatus !== "queued" ||
+    limit === null ||
+    totalRecordCount === null ||
+    exportableRecordCount === null ||
+    needsReviewRecordCount === null ||
+    duplicateEmailCount === null ||
+    duplicatePhoneCount === null ||
+    formulaRiskCellCount === null ||
+    !issueCountsByType ||
+    !rowIssues ||
+    rowIssues.some((rowIssue) => !rowIssue) ||
+    rowIssues.length > limit
+  ) {
+    return null;
+  }
+
+  return {
+    generatedAt: value.generatedAt.trim(),
+    provider: "hubspot",
+    localCrmSyncStatus: "queued",
+    limit,
+    totalRecordCount,
+    exportableRecordCount,
+    needsReviewRecordCount,
+    duplicateEmailCount,
+    duplicatePhoneCount,
+    formulaRiskCellCount,
+    issueCountsByType,
+    rowIssues: rowIssues as HubSpotImportCsvPreflightRowIssue[]
+  };
+}
+
+function preflightIssueLabel(
+  issueType: HubSpotImportCsvPreflightIssueType
+) {
+  const labels: Record<HubSpotImportCsvPreflightIssueType, string> = {
+    missing_customer_name: "Missing customer name",
+    missing_customer_email: "Missing customer email",
+    invalid_customer_email: "Invalid customer email",
+    missing_customer_phone: "Missing customer phone",
+    duplicate_customer_email_in_batch: "Duplicate customer email in batch",
+    duplicate_customer_phone_in_batch: "Duplicate customer phone in batch",
+    missing_message_details: "Missing message details",
+    message_details_too_long: "Message details too long",
+    missing_public_reference: "Missing public reference",
+    missing_created_at: "Missing created at",
+    csv_formula_risk_sanitised: "CSV formula-risk sanitised",
+    missing_source_context: "Missing source context"
+  };
+
+  return labels[issueType];
+}
+
 function parseQuoteStatus(value: string): AdminQuoteRequestStatus | null {
   return quoteStatuses.includes(value as AdminQuoteRequestStatus)
     ? (value as AdminQuoteRequestStatus)
@@ -737,6 +950,71 @@ function CrmHandoffPacketManifestList({
   );
 }
 
+function HubSpotImportCsvPreflightSummary({
+  report
+}: {
+  report: HubSpotImportCsvPreflightReport;
+}) {
+  return (
+    <section
+      aria-label="HubSpot import CSV preflight summary"
+      className="quote-inbox__section"
+    >
+      <h4>HubSpot import CSV preflight summary</h4>
+      <p className="category-management__hint">
+        Manual import/export readiness only. Records remain queued. No HubSpot
+        sync occurs. No provider IDs are created. No sync timestamp is set. CSV
+        formula-risk cells are sanitised during export.
+      </p>
+      <dl className="admin-dashboard__stats">
+        <div>
+          <dt>Total queued records checked</dt>
+          <dd>{report.totalRecordCount}</dd>
+        </div>
+        <div>
+          <dt>Exportable records</dt>
+          <dd>{report.exportableRecordCount}</dd>
+        </div>
+        <div>
+          <dt>Needs review records</dt>
+          <dd>{report.needsReviewRecordCount}</dd>
+        </div>
+        <div>
+          <dt>Duplicate emails</dt>
+          <dd>{report.duplicateEmailCount}</dd>
+        </div>
+        <div>
+          <dt>Duplicate phones</dt>
+          <dd>{report.duplicatePhoneCount}</dd>
+        </div>
+        <div>
+          <dt>Formula-risk cells sanitised</dt>
+          <dd>{report.formulaRiskCellCount}</dd>
+        </div>
+      </dl>
+      {report.rowIssues.length === 0 ? (
+        <p>No CSV preflight issues found for the checked queued records.</p>
+      ) : (
+        <ul className="admin-dashboard__list">
+          {report.rowIssues.map((rowIssue) => (
+            <li key={rowIssue.quoteRequestId}>
+              <strong>
+                {rowIssue.publicReference ??
+                  `Quote request ${rowIssue.quoteRequestId}`}
+              </strong>
+              <span>
+                {" "}
+                - {rowIssue.exportable ? "Exportable with review" : "Needs admin review"}; issues:{" "}
+                {rowIssue.issueTypes.map(preflightIssueLabel).join(", ")}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}
+
 export function QuoteRequestInboxPanel({
   inbox,
   fetcher = fetch,
@@ -751,6 +1029,10 @@ export function QuoteRequestInboxPanel({
   const [crmHandoffPacketManifests, setCrmHandoffPacketManifests] = useState<
     AdminQuoteRequestCrmHandoffPacketManifest[]
   >([]);
+  const [
+    hubSpotImportCsvPreflightReport,
+    setHubSpotImportCsvPreflightReport
+  ] = useState<HubSpotImportCsvPreflightReport | null>(null);
 
   async function submitStatusChange(
     quoteRequestId: string,
@@ -992,6 +1274,66 @@ export function QuoteRequestInboxPanel({
     }
   }
 
+  async function runHubSpotImportCsvPreflight() {
+    setStatus({
+      kind: "pending",
+      message: "Preparing HubSpot import CSV preflight..."
+    });
+    setHubSpotImportCsvPreflightReport(null);
+
+    try {
+      const csrfProof = await requestQuoteWriteProof(fetcher);
+
+      if (!csrfProof) {
+        setStatus({
+          kind: "error",
+          message: genericHubSpotImportCsvPreflightFailureMessage
+        });
+        return;
+      }
+
+      const response = await fetcher(
+        `/api/admin/quote-requests/crm-handoff-packet/hubspot-import-csv/preflight?limit=${crmHandoffPacketLimit}&status=queued`,
+        {
+          method: "POST",
+          headers: {
+            Accept: "application/json",
+            "x-csrf-proof": csrfProof
+          }
+        }
+      );
+      const responseBody = await readSafeJson(response);
+      const preflight = isRecord(responseBody)
+        ? parseHubSpotImportCsvPreflightReport(responseBody.preflight)
+        : null;
+
+      if (
+        !response.ok ||
+        !isRecord(responseBody) ||
+        responseBody.ok !== true ||
+        !preflight
+      ) {
+        setStatus({
+          kind: "error",
+          message: genericHubSpotImportCsvPreflightFailureMessage
+        });
+        return;
+      }
+
+      setHubSpotImportCsvPreflightReport(preflight);
+      setStatus({
+        kind: "success",
+        message:
+          "HubSpot import CSV preflight prepared for manual admin review only. Queued records remain queued."
+      });
+    } catch {
+      setStatus({
+        kind: "error",
+        message: genericHubSpotImportCsvPreflightFailureMessage
+      });
+    }
+  }
+
   async function handleStatusSubmit(
     event: FormEvent<HTMLFormElement>,
     quoteRequestId: string
@@ -1147,6 +1489,11 @@ export function QuoteRequestInboxPanel({
           review only. Records remain queued. No HubSpot sync occurs, no
           provider IDs are created, and no sync timestamp is set.
         </p>
+        <p className="category-management__hint">
+          Manual import/export readiness only. Run CSV preflight before manual
+          import review when possible. No provider IDs are created. No sync
+          timestamp is set. CSV formula-risk cells are sanitised during export.
+        </p>
         <dl className="admin-dashboard__stats">
           <div>
             <dt>Eligible queued records</dt>
@@ -1169,6 +1516,17 @@ export function QuoteRequestInboxPanel({
             : "Review queued CRM handoff packet"}
         </button>
         <button
+          aria-label="Run CSV import preflight"
+          className="button button--secondary"
+          disabled={status.kind === "pending"}
+          onClick={() => void runHubSpotImportCsvPreflight()}
+          type="button"
+        >
+          {status.kind === "pending"
+            ? "Preparing CSV import preflight"
+            : "Run CSV import preflight"}
+        </button>
+        <button
           aria-label="Download HubSpot import CSV"
           className="button button--secondary"
           disabled={status.kind === "pending"}
@@ -1179,9 +1537,21 @@ export function QuoteRequestInboxPanel({
             ? "Preparing HubSpot import CSV"
             : "Download HubSpot import CSV"}
         </button>
+        {hubSpotImportCsvPreflightReport?.needsReviewRecordCount ? (
+          <p className="category-management__hint">
+            Latest CSV import preflight found records needing admin review.
+            Download remains available for manual export review, and queued
+            records remain queued.
+          </p>
+        ) : null}
         <CrmHandoffPacketManifestList
           manifests={crmHandoffPacketManifests}
         />
+        {hubSpotImportCsvPreflightReport ? (
+          <HubSpotImportCsvPreflightSummary
+            report={hubSpotImportCsvPreflightReport}
+          />
+        ) : null}
         {crmHandoffPacketPreview ? (
           <section
             aria-label="Queued CRM handoff packet JSON preview"
