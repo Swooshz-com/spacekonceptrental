@@ -50,6 +50,11 @@ const commandPlan = [
     args: ['run', 'validate:protected-admin-crm-handoff-lifecycle-reconciliation-foundation'],
   },
   {
+    label: 'Validate protected admin HubSpot sync dry-run contract foundation',
+    cwd: repoRoot,
+    args: ['run', 'validate:protected-admin-hubspot-sync-dry-run-contract-foundation'],
+  },
+  {
     label: 'Validate Supabase enquiry persistence and CRM handoff foundation',
     cwd: repoRoot,
     args: ['run', 'validate:supabase-enquiry-persistence-crm-handoff-foundation'],

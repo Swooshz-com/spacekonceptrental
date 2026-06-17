@@ -36,6 +36,8 @@ const approvedAdminQuoteHubSpotImportCsvRouteBoundaryPath =
   "website/lib/quote/admin-read/admin-quote-request-hubspot-import-csv-route.ts";
 const approvedAdminQuoteHubSpotImportCsvPreflightRouteBoundaryPath =
   "website/lib/quote/admin-read/admin-quote-request-hubspot-import-csv-preflight-route.ts";
+const approvedAdminQuoteHubSpotSyncDryRunContractRouteBoundaryPath =
+  "website/lib/quote/admin-read/admin-quote-request-hubspot-sync-dry-run-contract-route.ts";
 const approvedAdminQuoteHubSpotManualImportOutcomeRouteBoundaryPath =
   "website/lib/quote/admin-read/admin-quote-request-hubspot-manual-import-outcome-route.ts";
 const sourceExtensions = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs"]);
@@ -277,6 +279,7 @@ describe("Phase 2B-Y server-only admin runtime route gate adapter boundary", () 
         approvedRuntimeRouteGateAdapterBoundaryPath,
         approvedAdminQuoteHubSpotImportCsvRouteBoundaryPath,
         approvedAdminQuoteHubSpotImportCsvPreflightRouteBoundaryPath,
+        approvedAdminQuoteHubSpotSyncDryRunContractRouteBoundaryPath,
         approvedAdminQuoteHubSpotManualImportOutcomeRouteBoundaryPath
       ])
     ).not.toContain("resolveServerAdminRuntimeGateInvocation");
@@ -357,6 +360,7 @@ describe("Phase 2B-Y server-only admin runtime route gate adapter boundary", () 
       "website/app/api/admin/quote-requests/crm-handoff-packet/hubspot-import-csv/manual-import-outcome/route.ts",
       "website/app/api/admin/quote-requests/crm-handoff-packet/hubspot-import-csv/preflight/route.ts",
       "website/app/api/admin/quote-requests/crm-handoff-packet/hubspot-import-csv/route.ts",
+      "website/app/api/admin/quote-requests/crm-handoff-packet/hubspot-sync-dry-run-contract/route.ts",
       "website/app/api/admin/quote-requests/crm-handoff-packet/lifecycle-reconciliation/route.ts",
       "website/app/api/admin/quote-requests/crm-handoff-packet/route.ts"
     ]);

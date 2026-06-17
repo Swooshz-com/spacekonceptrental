@@ -121,3 +121,14 @@ states/actions, no-store JSON route behavior, no provider calls, no writes,
 bounded row output, and hard boundaries. It also checks that Docker-dependent
 release checks and existing CRM handoff, CSV, preflight, manifest, and manual
 outcome validators are not weakened.
+
+## Related HubSpot Sync Dry-Run Contract Foundation
+
+`docs/architecture/PROTECTED-ADMIN-HUBSPOT-SYNC-DRY-RUN-CONTRACT-FOUNDATION.md`
+uses this lifecycle reconciliation as one local input to a protected
+admin-only sync dry-run contract. The dry-run is local design/readiness only.
+No HubSpot API sync, SDK, OAuth, webhook, n8n workflow/runtime, or email
+sending is implemented. Records remain queued. The dry-run does not mutate
+quote/enquiry rows, mark records synced, set sync attempt timestamps, create
+provider IDs, or create/update CRM contact/deal IDs. Dry-run rows are bounded
+and allowlisted, and raw customer data is not exposed in row summaries.

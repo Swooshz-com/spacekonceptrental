@@ -1,3 +1,24 @@
+## Protected Admin HubSpot Sync Dry-Run Contract Foundation
+
+References: `docs/architecture/PROTECTED-ADMIN-HUBSPOT-SYNC-DRY-RUN-CONTRACT-FOUNDATION.md`, `website/lib/quote/admin-read/admin-quote-request-hubspot-sync-dry-run-contract.ts`, `website/lib/quote/admin-read/admin-quote-request-hubspot-sync-dry-run-contract-route.ts`, `website/app/api/admin/quote-requests/crm-handoff-packet/hubspot-sync-dry-run-contract/route.ts`, `website/components/admin/quote-request-inbox-panel.tsx`, and `scripts/validate-protected-admin-hubspot-sync-dry-run-contract-foundation.cjs`.
+
+Admin users can run a protected admin-only local HubSpot sync dry-run contract
+for queued CRM handoff records as local design/readiness only. Records remain
+queued. No HubSpot API sync, SDK, OAuth, webhook, n8n workflow/runtime, email
+sending, provider credentials, customer account/dashboard, custom CRM,
+retail/customer-flow creep, quote/enquiry row mutation, synced marking, sync
+timestamp updates, provider IDs, or CRM contact/deal ID writes are
+implemented. Dry-run rows are bounded and allowlisted, and raw customer data is
+not exposed in row summaries. CSV export remains formula-injection protected.
+Preflight remains bounded and allowlisted.
+
+- [x] Protected admin HubSpot sync dry-run contract foundation provides a
+  bounded local readiness report and safe future payload-shape preview without
+  provider sync, n8n, email sending, provider credentials, quote/enquiry row
+  mutation, synced marking, sync timestamp updates, CRM IDs, raw customer data
+  in row summaries, customer dashboard, custom CRM, retail/customer-flow creep,
+  or Docker guard weakening.
+
 ## Protected Admin CRM Handoff Lifecycle Reconciliation Foundation
 
 References: `docs/architecture/PROTECTED-ADMIN-CRM-HANDOFF-LIFECYCLE-RECONCILIATION-FOUNDATION.md`, `website/lib/quote/admin-read/admin-quote-request-crm-handoff-lifecycle-reconciliation.ts`, `website/lib/quote/admin-read/admin-quote-request-crm-handoff-lifecycle-reconciliation-route.ts`, `website/app/api/admin/quote-requests/crm-handoff-packet/lifecycle-reconciliation/route.ts`, `website/components/admin/quote-request-inbox-panel.tsx`, and `scripts/validate-protected-admin-crm-handoff-lifecycle-reconciliation-foundation.cjs`.

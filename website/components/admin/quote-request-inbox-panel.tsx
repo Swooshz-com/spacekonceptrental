@@ -203,6 +203,71 @@ type CrmHandoffLifecycleReconciliationReport = {
   rows: CrmHandoffLifecycleReconciliationRow[];
 };
 
+const hubSpotSyncDryRunStates = [
+  "eligible_for_future_sync",
+  "blocked_preflight_needs_review",
+  "blocked_missing_required_contact_field",
+  "blocked_rejected_needs_correction",
+  "blocked_partial_needs_follow_up",
+  "blocked_no_manual_outcome",
+  "blocked_stale_manifest",
+  "blocked_manifest_metadata_mismatch"
+] as const;
+
+type HubSpotSyncDryRunState = (typeof hubSpotSyncDryRunStates)[number];
+
+const hubSpotSyncDryRunRecommendedActions = [
+  "fix_preflight_issues",
+  "record_manual_outcome",
+  "review_reconciliation",
+  "review_dry_run_payload",
+  "ready_for_provider_credentials_design",
+  "no_eligible_records"
+] as const;
+
+type HubSpotSyncDryRunRecommendedAction =
+  (typeof hubSpotSyncDryRunRecommendedActions)[number];
+
+type HubSpotSyncDryRunPayloadPreview = {
+  futureContactProperties: Record<string, string>;
+  futureDealProperties: Record<string, string>;
+  futureAssociations: string[];
+  futureIdempotencyKey: string;
+};
+
+type HubSpotSyncDryRunRow = {
+  quoteRequestId: string;
+  publicReference?: string;
+  createdAt?: string;
+  localCrmSyncStatus: "queued";
+  lifecycleState: CrmHandoffLifecycleState;
+  dryRunState: HubSpotSyncDryRunState;
+  relatedManifestId?: string;
+  latestOutcomeStatus?: HubSpotManualImportOutcomeStatus;
+  safeIssueCount: number;
+  futureIdempotencyKey: string;
+  recommendedNextAction: HubSpotSyncDryRunRecommendedAction;
+  payloadPreview?: HubSpotSyncDryRunPayloadPreview;
+};
+
+type HubSpotSyncDryRunContractReport = {
+  generatedAt: string;
+  provider: "hubspot";
+  mode: "dry_run_only";
+  localCrmSyncStatus: "queued";
+  limit: number;
+  totalCandidateCount: number;
+  eligibleForFutureSyncCount: number;
+  blockedCandidateCount: number;
+  needsManualReviewCount: number;
+  wouldCreateOrUpdateContactCount: number;
+  wouldCreateOrUpdateDealCount: number;
+  wouldAssociateDealToContactCount: number;
+  idempotencyKeyCount: number;
+  recommendedNextAction: HubSpotSyncDryRunRecommendedAction;
+  rows: HubSpotSyncDryRunRow[];
+};
+
 type QuoteRequestInboxPanelProps = {
   inbox: AdminQuoteRequestInboxReadResult;
   fetcher?: typeof fetch;
@@ -249,6 +314,8 @@ const genericHubSpotManualImportOutcomeFailureMessage =
   "HubSpot manual import outcome could not be recorded. Records remain queued and unchanged.";
 const genericCrmHandoffLifecycleReconciliationFailureMessage =
   "CRM handoff lifecycle reconciliation could not be prepared. Keep queued records unchanged and try again.";
+const genericHubSpotSyncDryRunFailureMessage =
+  "HubSpot sync dry-run could not be prepared. Keep queued records unchanged and try again.";
 const uuidPattern =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -1032,6 +1099,229 @@ function parseCrmHandoffLifecycleReconciliationReport(
   };
 }
 
+function isHubSpotSyncDryRunState(
+  value: unknown
+): value is HubSpotSyncDryRunState {
+  return hubSpotSyncDryRunStates.includes(value as HubSpotSyncDryRunState);
+}
+
+function isHubSpotSyncDryRunRecommendedAction(
+  value: unknown
+): value is HubSpotSyncDryRunRecommendedAction {
+  return hubSpotSyncDryRunRecommendedActions.includes(
+    value as HubSpotSyncDryRunRecommendedAction
+  );
+}
+
+function parseStringRecord(value: unknown) {
+  if (!isRecord(value)) {
+    return null;
+  }
+
+  const entries = Object.entries(value);
+  const parsed: Record<string, string> = {};
+
+  if (entries.length > 20) {
+    return null;
+  }
+
+  for (const [key, entryValue] of entries) {
+    if (
+      !key.trim() ||
+      key.length > 80 ||
+      typeof entryValue !== "string" ||
+      !entryValue.trim() ||
+      entryValue.length > 80
+    ) {
+      return null;
+    }
+
+    parsed[key.trim()] = entryValue.trim();
+  }
+
+  return parsed;
+}
+
+function parseHubSpotSyncDryRunPayloadPreview(
+  value: unknown
+): HubSpotSyncDryRunPayloadPreview | null {
+  if (!isRecord(value)) {
+    return null;
+  }
+
+  const futureContactProperties = parseStringRecord(
+    value.futureContactProperties
+  );
+  const futureDealProperties = parseStringRecord(value.futureDealProperties);
+  const futureAssociations = Array.isArray(value.futureAssociations)
+    ? value.futureAssociations
+        .map(parseOptionalString)
+        .filter((association): association is string => Boolean(association))
+        .slice(0, 5)
+    : null;
+  const futureIdempotencyKey = parseOptionalString(value.futureIdempotencyKey);
+
+  if (
+    !futureContactProperties ||
+    !futureDealProperties ||
+    !futureAssociations ||
+    futureAssociations.length === 0 ||
+    !futureIdempotencyKey
+  ) {
+    return null;
+  }
+
+  return {
+    futureContactProperties,
+    futureDealProperties,
+    futureAssociations,
+    futureIdempotencyKey
+  };
+}
+
+function parseHubSpotSyncDryRunRow(
+  value: unknown
+): HubSpotSyncDryRunRow | null {
+  if (!isRecord(value)) {
+    return null;
+  }
+
+  const safeIssueCount = parseNonNegativeInteger(value.safeIssueCount);
+  const futureIdempotencyKey = parseOptionalString(value.futureIdempotencyKey);
+  const payloadPreview =
+    value.payloadPreview === undefined
+      ? undefined
+      : parseHubSpotSyncDryRunPayloadPreview(value.payloadPreview);
+
+  if (
+    !isUuid(value.quoteRequestId) ||
+    value.localCrmSyncStatus !== "queued" ||
+    !isCrmHandoffLifecycleState(value.lifecycleState) ||
+    !isHubSpotSyncDryRunState(value.dryRunState) ||
+    safeIssueCount === null ||
+    !futureIdempotencyKey ||
+    !isHubSpotSyncDryRunRecommendedAction(value.recommendedNextAction) ||
+    (value.relatedManifestId !== undefined &&
+      !isUuid(value.relatedManifestId)) ||
+    (value.latestOutcomeStatus !== undefined &&
+      !isHubSpotManualImportOutcomeStatus(value.latestOutcomeStatus)) ||
+    (value.payloadPreview !== undefined && !payloadPreview)
+  ) {
+    return null;
+  }
+
+  return {
+    quoteRequestId: value.quoteRequestId.trim(),
+    ...(parseOptionalString(value.publicReference)
+      ? { publicReference: parseOptionalString(value.publicReference) }
+      : {}),
+    ...(parseOptionalString(value.createdAt)
+      ? { createdAt: parseOptionalString(value.createdAt) }
+      : {}),
+    localCrmSyncStatus: "queued",
+    lifecycleState: value.lifecycleState,
+    dryRunState: value.dryRunState,
+    ...(typeof value.relatedManifestId === "string"
+      ? { relatedManifestId: value.relatedManifestId.trim() }
+      : {}),
+    ...(isHubSpotManualImportOutcomeStatus(value.latestOutcomeStatus)
+      ? { latestOutcomeStatus: value.latestOutcomeStatus }
+      : {}),
+    safeIssueCount,
+    futureIdempotencyKey,
+    recommendedNextAction: value.recommendedNextAction,
+    ...(payloadPreview ? { payloadPreview } : {})
+  };
+}
+
+type ParsedHubSpotSyncDryRunCounts = Pick<
+  HubSpotSyncDryRunContractReport,
+  | "totalCandidateCount"
+  | "eligibleForFutureSyncCount"
+  | "blockedCandidateCount"
+  | "needsManualReviewCount"
+  | "wouldCreateOrUpdateContactCount"
+  | "wouldCreateOrUpdateDealCount"
+  | "wouldAssociateDealToContactCount"
+  | "idempotencyKeyCount"
+>;
+
+function hasParsedHubSpotSyncDryRunCounts(
+  counts: Record<keyof ParsedHubSpotSyncDryRunCounts, number | null>
+): counts is ParsedHubSpotSyncDryRunCounts {
+  return Object.values(counts).every((count) => count !== null);
+}
+
+function parseHubSpotSyncDryRunContractReport(
+  value: unknown
+): HubSpotSyncDryRunContractReport | null {
+  if (!isRecord(value)) {
+    return null;
+  }
+
+  const limit = parsePositiveInteger(value.limit);
+  const rows = Array.isArray(value.rows)
+    ? value.rows.map(parseHubSpotSyncDryRunRow)
+    : null;
+  const counts = {
+    totalCandidateCount: parseNonNegativeInteger(value.totalCandidateCount),
+    eligibleForFutureSyncCount: parseNonNegativeInteger(
+      value.eligibleForFutureSyncCount
+    ),
+    blockedCandidateCount: parseNonNegativeInteger(
+      value.blockedCandidateCount
+    ),
+    needsManualReviewCount: parseNonNegativeInteger(
+      value.needsManualReviewCount
+    ),
+    wouldCreateOrUpdateContactCount: parseNonNegativeInteger(
+      value.wouldCreateOrUpdateContactCount
+    ),
+    wouldCreateOrUpdateDealCount: parseNonNegativeInteger(
+      value.wouldCreateOrUpdateDealCount
+    ),
+    wouldAssociateDealToContactCount: parseNonNegativeInteger(
+      value.wouldAssociateDealToContactCount
+    ),
+    idempotencyKeyCount: parseNonNegativeInteger(value.idempotencyKeyCount)
+  };
+
+  if (
+    typeof value.generatedAt !== "string" ||
+    !value.generatedAt.trim() ||
+    value.provider !== "hubspot" ||
+    value.mode !== "dry_run_only" ||
+    value.localCrmSyncStatus !== "queued" ||
+    limit === null ||
+    !rows ||
+    rows.some((row) => !row) ||
+    rows.length > limit ||
+    !isHubSpotSyncDryRunRecommendedAction(value.recommendedNextAction) ||
+    !hasParsedHubSpotSyncDryRunCounts(counts)
+  ) {
+    return null;
+  }
+
+  return {
+    generatedAt: value.generatedAt.trim(),
+    provider: "hubspot",
+    mode: "dry_run_only",
+    localCrmSyncStatus: "queued",
+    limit,
+    totalCandidateCount: counts.totalCandidateCount,
+    eligibleForFutureSyncCount: counts.eligibleForFutureSyncCount,
+    blockedCandidateCount: counts.blockedCandidateCount,
+    needsManualReviewCount: counts.needsManualReviewCount,
+    wouldCreateOrUpdateContactCount: counts.wouldCreateOrUpdateContactCount,
+    wouldCreateOrUpdateDealCount: counts.wouldCreateOrUpdateDealCount,
+    wouldAssociateDealToContactCount:
+      counts.wouldAssociateDealToContactCount,
+    idempotencyKeyCount: counts.idempotencyKeyCount,
+    recommendedNextAction: value.recommendedNextAction,
+    rows: rows as HubSpotSyncDryRunRow[]
+  };
+}
+
 function preflightIssueLabel(
   issueType: HubSpotImportCsvPreflightIssueType
 ) {
@@ -1097,6 +1387,40 @@ function crmHandoffLifecycleActionLabel(
     follow_up_partial_import: "Follow up partial import",
     ready_for_future_sync_design: "Ready for future sync design",
     no_queued_records: "No queued records"
+  };
+
+  return labels[action];
+}
+
+function hubSpotSyncDryRunStateLabel(state: HubSpotSyncDryRunState) {
+  const labels: Record<HubSpotSyncDryRunState, string> = {
+    eligible_for_future_sync: "Ready for future sync payload",
+    blocked_preflight_needs_review: "Blocked - preflight needs review",
+    blocked_missing_required_contact_field:
+      "Blocked - missing required contact field",
+    blocked_rejected_needs_correction:
+      "Blocked - rejected / needs correction",
+    blocked_partial_needs_follow_up: "Blocked - partial / needs follow-up",
+    blocked_no_manual_outcome: "Blocked - no manual outcome",
+    blocked_stale_manifest: "Blocked - stale manifest",
+    blocked_manifest_metadata_mismatch:
+      "Blocked - manifest metadata mismatch"
+  };
+
+  return labels[state];
+}
+
+function hubSpotSyncDryRunActionLabel(
+  action: HubSpotSyncDryRunRecommendedAction
+) {
+  const labels: Record<HubSpotSyncDryRunRecommendedAction, string> = {
+    fix_preflight_issues: "Fix preflight issues",
+    record_manual_outcome: "Record manual outcome",
+    review_reconciliation: "Review reconciliation",
+    review_dry_run_payload: "Review dry-run payload",
+    ready_for_provider_credentials_design:
+      "Ready for provider credentials design",
+    no_eligible_records: "No eligible records"
   };
 
   return labels[action];
@@ -1650,6 +1974,138 @@ function CrmHandoffLifecycleReconciliationSummary({
   );
 }
 
+function HubSpotSyncDryRunContractSummary({
+  report
+}: {
+  report: HubSpotSyncDryRunContractReport;
+}) {
+  return (
+    <section
+      aria-label="HubSpot sync dry-run contract summary"
+      className="quote-inbox__section"
+    >
+      <h4>HubSpot sync dry-run contract summary</h4>
+      <p className="category-management__hint">
+        Dry-run only. No HubSpot sync occurs. No provider call occurs. Records
+        remain queued. No provider IDs are created. No sync timestamp is set.
+        This does not mutate enquiry records.
+      </p>
+      <dl className="admin-dashboard__stats">
+        <div>
+          <dt>Total candidates</dt>
+          <dd>{report.totalCandidateCount}</dd>
+        </div>
+        <div>
+          <dt>Eligible for future sync</dt>
+          <dd>{report.eligibleForFutureSyncCount}</dd>
+        </div>
+        <div>
+          <dt>Blocked candidates</dt>
+          <dd>{report.blockedCandidateCount}</dd>
+        </div>
+        <div>
+          <dt>Needs manual review</dt>
+          <dd>{report.needsManualReviewCount}</dd>
+        </div>
+        <div>
+          <dt>Would prepare contact payloads</dt>
+          <dd>{report.wouldCreateOrUpdateContactCount}</dd>
+        </div>
+        <div>
+          <dt>Would prepare deal payloads</dt>
+          <dd>{report.wouldCreateOrUpdateDealCount}</dd>
+        </div>
+        <div>
+          <dt>Would prepare association payloads</dt>
+          <dd>{report.wouldAssociateDealToContactCount}</dd>
+        </div>
+        <div>
+          <dt>Recommended next action</dt>
+          <dd>{hubSpotSyncDryRunActionLabel(report.recommendedNextAction)}</dd>
+        </div>
+      </dl>
+      {report.rows.length === 0 ? (
+        <p>No queued records are eligible for the current dry-run contract.</p>
+      ) : (
+        <ul className="admin-dashboard__list">
+          {report.rows.map((row) => (
+            <li key={`${row.quoteRequestId}-${row.dryRunState}`}>
+              <strong>
+                {row.publicReference ?? `Quote request ${row.quoteRequestId}`}
+              </strong>
+              <span>
+                {" "}
+                - {hubSpotSyncDryRunStateLabel(row.dryRunState)}; action:{" "}
+                {hubSpotSyncDryRunActionLabel(row.recommendedNextAction)}
+              </span>
+              <dl className="quote-inbox__details">
+                <div>
+                  <dt>Created at</dt>
+                  <dd>{row.createdAt ?? "Not available in current queue"}</dd>
+                </div>
+                <div>
+                  <dt>Lifecycle state</dt>
+                  <dd>{crmHandoffLifecycleStateLabel(row.lifecycleState)}</dd>
+                </div>
+                <div>
+                  <dt>Local CRM sync status</dt>
+                  <dd>{row.localCrmSyncStatus}</dd>
+                </div>
+                <div>
+                  <dt>Related manifest</dt>
+                  <dd>{row.relatedManifestId ?? "No manifest yet"}</dd>
+                </div>
+                <div>
+                  <dt>Latest outcome</dt>
+                  <dd>
+                    {row.latestOutcomeStatus
+                      ? manualImportOutcomeLabel(row.latestOutcomeStatus)
+                      : "No manual outcome recorded"}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Safe issue count</dt>
+                  <dd>{row.safeIssueCount}</dd>
+                </div>
+                <div>
+                  <dt>Future idempotency key</dt>
+                  <dd>{row.futureIdempotencyKey}</dd>
+                </div>
+                {row.payloadPreview ? (
+                  <>
+                    <div>
+                      <dt>Future contact fields</dt>
+                      <dd>
+                        {Object.keys(
+                          row.payloadPreview.futureContactProperties
+                        ).join(", ")}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>Future deal fields</dt>
+                      <dd>
+                        {Object.keys(
+                          row.payloadPreview.futureDealProperties
+                        ).join(", ")}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>Future associations</dt>
+                      <dd>
+                        {row.payloadPreview.futureAssociations.join(", ")}
+                      </dd>
+                    </div>
+                  </>
+                ) : null}
+              </dl>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}
+
 export function QuoteRequestInboxPanel({
   inbox,
   fetcher = fetch,
@@ -1672,6 +2128,10 @@ export function QuoteRequestInboxPanel({
     crmHandoffLifecycleReconciliationReport,
     setCrmHandoffLifecycleReconciliationReport
   ] = useState<CrmHandoffLifecycleReconciliationReport | null>(null);
+  const [
+    hubSpotSyncDryRunContractReport,
+    setHubSpotSyncDryRunContractReport
+  ] = useState<HubSpotSyncDryRunContractReport | null>(null);
   const [
     hubSpotManualImportOutcomes,
     setHubSpotManualImportOutcomes
@@ -2039,6 +2499,66 @@ export function QuoteRequestInboxPanel({
     }
   }
 
+  async function runHubSpotSyncDryRunContract() {
+    setStatus({
+      kind: "pending",
+      message: "Preparing HubSpot sync dry-run..."
+    });
+    setHubSpotSyncDryRunContractReport(null);
+
+    try {
+      const csrfProof = await requestQuoteWriteProof(fetcher);
+
+      if (!csrfProof) {
+        setStatus({
+          kind: "error",
+          message: genericHubSpotSyncDryRunFailureMessage
+        });
+        return;
+      }
+
+      const response = await fetcher(
+        `/api/admin/quote-requests/crm-handoff-packet/hubspot-sync-dry-run-contract?limit=${crmHandoffPacketLimit}&status=queued`,
+        {
+          method: "POST",
+          headers: {
+            Accept: "application/json",
+            "x-csrf-proof": csrfProof
+          }
+        }
+      );
+      const responseBody = await readSafeJson(response);
+      const dryRunContract = isRecord(responseBody)
+        ? parseHubSpotSyncDryRunContractReport(responseBody.dryRunContract)
+        : null;
+
+      if (
+        !response.ok ||
+        !isRecord(responseBody) ||
+        responseBody.ok !== true ||
+        !dryRunContract
+      ) {
+        setStatus({
+          kind: "error",
+          message: genericHubSpotSyncDryRunFailureMessage
+        });
+        return;
+      }
+
+      setHubSpotSyncDryRunContractReport(dryRunContract);
+      setStatus({
+        kind: "success",
+        message:
+          "HubSpot sync dry-run prepared locally. No provider call occurred and queued records remain unchanged."
+      });
+    } catch {
+      setStatus({
+        kind: "error",
+        message: genericHubSpotSyncDryRunFailureMessage
+      });
+    }
+  }
+
   async function recordHubSpotManualImportOutcome(
     manifestId: string,
     outcomeStatus: HubSpotManualImportOutcomeStatus
@@ -2314,6 +2834,17 @@ export function QuoteRequestInboxPanel({
             : "Run CRM handoff reconciliation"}
         </button>
         <button
+          aria-label="Run HubSpot sync dry-run"
+          className="button button--secondary"
+          disabled={status.kind === "pending"}
+          onClick={() => void runHubSpotSyncDryRunContract()}
+          type="button"
+        >
+          {status.kind === "pending"
+            ? "Preparing HubSpot sync dry-run"
+            : "Run HubSpot sync dry-run"}
+        </button>
+        <button
           aria-label="Download HubSpot import CSV"
           className="button button--secondary"
           disabled={status.kind === "pending"}
@@ -2349,6 +2880,11 @@ export function QuoteRequestInboxPanel({
         {crmHandoffLifecycleReconciliationReport ? (
           <CrmHandoffLifecycleReconciliationSummary
             report={crmHandoffLifecycleReconciliationReport}
+          />
+        ) : null}
+        {hubSpotSyncDryRunContractReport ? (
+          <HubSpotSyncDryRunContractSummary
+            report={hubSpotSyncDryRunContractReport}
           />
         ) : null}
         {crmHandoffPacketPreview ? (

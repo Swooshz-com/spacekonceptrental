@@ -46,6 +46,8 @@ const approvedAdminQuoteHubSpotImportCsvRouteBoundaryPath =
   "website/lib/quote/admin-read/admin-quote-request-hubspot-import-csv-route.ts";
 const approvedAdminQuoteHubSpotImportCsvPreflightRouteBoundaryPath =
   "website/lib/quote/admin-read/admin-quote-request-hubspot-import-csv-preflight-route.ts";
+const approvedAdminQuoteHubSpotSyncDryRunContractRouteBoundaryPath =
+  "website/lib/quote/admin-read/admin-quote-request-hubspot-sync-dry-run-contract-route.ts";
 const approvedAdminQuoteHubSpotManualImportOutcomeRouteBoundaryPath =
   "website/lib/quote/admin-read/admin-quote-request-hubspot-manual-import-outcome-route.ts";
 const approvedMediaUploadRouteBoundaryPath =
@@ -202,6 +204,7 @@ describe("Phase 2B-AA first admin runtime route gate adapter usage boundary", ()
           filePath !== "website/app/api/admin/quote-requests/crm-handoff-packet/hubspot-import-csv/manual-import-outcome/route.ts" &&
           filePath !== "website/app/api/admin/quote-requests/crm-handoff-packet/hubspot-import-csv/preflight/route.ts" &&
           filePath !== "website/app/api/admin/quote-requests/crm-handoff-packet/hubspot-import-csv/route.ts" &&
+          filePath !== "website/app/api/admin/quote-requests/crm-handoff-packet/hubspot-sync-dry-run-contract/route.ts" &&
           filePath !== "website/app/api/admin/quote-requests/[quoteRequestId]/crm-handoff/route.ts" &&
           filePath !== "website/app/api/admin/quote-requests/[quoteRequestId]/status/route.ts" &&
           filePath !== "website/app/admin/protected-admin-shell.tsx")
@@ -218,6 +221,7 @@ describe("Phase 2B-AA first admin runtime route gate adapter usage boundary", ()
           filePath !== approvedAdminQuoteCrmHandoffLifecycleReconciliationRouteBoundaryPath &&
           filePath !== approvedAdminQuoteHubSpotImportCsvRouteBoundaryPath &&
           filePath !== approvedAdminQuoteHubSpotImportCsvPreflightRouteBoundaryPath &&
+          filePath !== approvedAdminQuoteHubSpotSyncDryRunContractRouteBoundaryPath &&
           filePath !== approvedAdminQuoteHubSpotManualImportOutcomeRouteBoundaryPath &&
           filePath !== approvedMediaUploadRouteBoundaryPath &&
           filePath !== "website/app/api/admin/auth-check/route.ts" &&
@@ -228,6 +232,7 @@ describe("Phase 2B-AA first admin runtime route gate adapter usage boundary", ()
           filePath !== "website/app/api/admin/quote-requests/crm-handoff-packet/hubspot-import-csv/manual-import-outcome/route.ts" &&
           filePath !== "website/app/api/admin/quote-requests/crm-handoff-packet/hubspot-import-csv/preflight/route.ts" &&
           filePath !== "website/app/api/admin/quote-requests/crm-handoff-packet/hubspot-import-csv/route.ts" &&
+          filePath !== "website/app/api/admin/quote-requests/crm-handoff-packet/hubspot-sync-dry-run-contract/route.ts" &&
           filePath !== "website/app/api/admin/quote-requests/[quoteRequestId]/crm-handoff/route.ts" &&
           filePath !== "website/app/api/admin/quote-requests/[quoteRequestId]/status/route.ts" &&
           filePath !== "website/app/admin/protected-admin-shell.tsx"
@@ -273,6 +278,7 @@ describe("Phase 2B-AA first admin runtime route gate adapter usage boundary", ()
       "website/app/api/admin/quote-requests/crm-handoff-packet/hubspot-import-csv/manual-import-outcome/route.ts",
       "website/app/api/admin/quote-requests/crm-handoff-packet/hubspot-import-csv/preflight/route.ts",
       "website/app/api/admin/quote-requests/crm-handoff-packet/hubspot-import-csv/route.ts",
+      "website/app/api/admin/quote-requests/crm-handoff-packet/hubspot-sync-dry-run-contract/route.ts",
       "website/app/api/admin/quote-requests/crm-handoff-packet/lifecycle-reconciliation/route.ts",
       "website/app/api/admin/quote-requests/crm-handoff-packet/route.ts"
     ]);

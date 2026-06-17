@@ -1,3 +1,19 @@
+## Protected Admin HubSpot Sync Dry-Run Contract Foundation
+
+References: `docs/architecture/PROTECTED-ADMIN-HUBSPOT-SYNC-DRY-RUN-CONTRACT-FOUNDATION.md`, `website/lib/quote/admin-read/admin-quote-request-hubspot-sync-dry-run-contract.ts`, `website/lib/quote/admin-read/admin-quote-request-hubspot-sync-dry-run-contract-route.ts`, `website/app/api/admin/quote-requests/crm-handoff-packet/hubspot-sync-dry-run-contract/route.ts`, `website/components/admin/quote-request-inbox-panel.tsx`, and `scripts/validate-protected-admin-hubspot-sync-dry-run-contract-foundation.cjs`.
+
+Admin users can run a protected admin-only local HubSpot sync dry-run contract
+for queued CRM handoff records. This is local design/readiness only. Records
+remain queued. No HubSpot API sync, SDK, OAuth, webhook, n8n workflow/runtime,
+email sending, provider credentials, customer account, dashboard, or custom
+CRM is implemented. The dry-run does not mutate quote/enquiry rows, mark
+records synced, set sync attempt timestamps, create provider IDs, or
+create/update CRM contact/deal IDs. Dry-run rows are bounded and allowlisted,
+and raw customer data is not exposed in row summaries. Manual outcome ledger
+remains metadata-only. Lifecycle reconciliation remains local visibility only.
+CSV export remains formula-injection protected. Preflight remains bounded and
+allowlisted.
+
 ## Protected Admin CRM Handoff Lifecycle Reconciliation Foundation
 
 References: `docs/architecture/PROTECTED-ADMIN-CRM-HANDOFF-LIFECYCLE-RECONCILIATION-FOUNDATION.md`, `website/lib/quote/admin-read/admin-quote-request-crm-handoff-lifecycle-reconciliation.ts`, `website/lib/quote/admin-read/admin-quote-request-crm-handoff-lifecycle-reconciliation-route.ts`, `website/app/api/admin/quote-requests/crm-handoff-packet/lifecycle-reconciliation/route.ts`, `website/components/admin/quote-request-inbox-panel.tsx`, and `scripts/validate-protected-admin-crm-handoff-lifecycle-reconciliation-foundation.cjs`.
