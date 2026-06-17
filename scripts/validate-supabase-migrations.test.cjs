@@ -1573,8 +1573,15 @@ test('real migrations add protected admin HubSpot manual import outcome ledger a
   assert.match(sql, /source = 'protected_admin'/);
   assert.match(
     sql,
-    /exists \( select 1 from public\.quote_crm_handoff_packet_manifests manifest where manifest\.id = manifest_id and manifest\.workspace_id = workspace_id and manifest\.provider = 'hubspot' and manifest\.packet_kind = 'hubspot_import_csv' and manifest\.status_filter = 'queued'/,
+    /exists \( select 1 from public\.quote_crm_handoff_packet_manifests manifest where manifest\.id = public\.quote_crm_handoff_manual_import_outcomes\.manifest_id and manifest\.workspace_id = public\.quote_crm_handoff_manual_import_outcomes\.workspace_id and manifest\.provider = 'hubspot' and manifest\.packet_kind = 'hubspot_import_csv' and manifest\.status_filter = 'queued' and manifest\.record_count = public\.quote_crm_handoff_manual_import_outcomes\.record_count and manifest\.request_ids = public\.quote_crm_handoff_manual_import_outcomes\.request_ids \)/,
   );
+  for (const ambiguousManifestComparison of [
+    /manifest\.workspace_id = workspace_id/,
+    /manifest\.record_count = record_count/,
+    /manifest\.request_ids = request_ids/,
+  ]) {
+    assert.doesNotMatch(sql, ambiguousManifestComparison);
+  }
   assert.doesNotMatch(
     sql,
     /on public\.quote_crm_handoff_manual_import_outcomes for update to authenticated/,

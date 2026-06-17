@@ -233,8 +233,10 @@ for (const required of [
   "source = 'protected_admin'",
   'quote_crm_handoff_packet_manifests',
   'status_filter = \'queued\'',
-  'manifest.record_count = record_count',
-  'manifest.request_ids = request_ids',
+  'manifest.id = public.quote_crm_handoff_manual_import_outcomes.manifest_id',
+  'manifest.workspace_id = public.quote_crm_handoff_manual_import_outcomes.workspace_id',
+  'manifest.record_count = public.quote_crm_handoff_manual_import_outcomes.record_count',
+  'manifest.request_ids = public.quote_crm_handoff_manual_import_outcomes.request_ids',
 ]) {
   includes(migration, required, 'migration');
 }
@@ -254,6 +256,9 @@ for (const forbidden of [
   /crm_last_sync_attempt_at/i,
   /\bupdate\s+public\.quote_/i,
   /\bdelete\s+from\b/i,
+  /manifest\.workspace_id = workspace_id/i,
+  /manifest\.record_count = record_count/i,
+  /manifest\.request_ids = request_ids/i,
 ]) {
   noMatch(migration, forbidden, 'migration');
 }
