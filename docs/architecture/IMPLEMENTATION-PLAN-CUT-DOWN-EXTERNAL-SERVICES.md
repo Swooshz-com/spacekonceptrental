@@ -35,6 +35,16 @@ email sending, customer accounts, custom CRM, retail transaction, date-hold,
 inventory-hold, or completion-like flows, and does not mutate quote/enquiry
 rows or create/update CRM IDs.
 
+Related HubSpot manual import outcome ledger slice:
+`docs/architecture/PROTECTED-ADMIN-HUBSPOT-MANUAL-IMPORT-OUTCOME-LEDGER-FOUNDATION.md`.
+The outcome ledger is a protected admin-only local audit/readiness step after
+manual HubSpot CSV handling outside SKR. It stores controlled, metadata-only
+and bounded outcomes. No freeform notes are stored. Records remain queued.
+Outcome logging does not implement HubSpot sync, n8n runtime, email sending,
+customer accounts, custom CRM, retail transaction, date-hold, inventory-hold,
+or completion-like flows, and does not mutate quote/enquiry rows, mark records
+synced, set sync attempt timestamps, or create provider IDs.
+
 # Implementation Plan Cut-Down External Services
 
 ## Public Enquiry Persistence Integration

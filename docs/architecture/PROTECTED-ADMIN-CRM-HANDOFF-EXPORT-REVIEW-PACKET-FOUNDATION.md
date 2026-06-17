@@ -15,6 +15,15 @@ allowlisted. It creates no manifest by default, leaves records queued, does not
 mutate quote/enquiry rows, does not mark records synced, does not set sync
 attempt timestamps, and does not create/update CRM contact/deal/provider IDs.
 
+Related manual import outcome ledger slice:
+`docs/architecture/PROTECTED-ADMIN-HUBSPOT-MANUAL-IMPORT-OUTCOME-LEDGER-FOUNDATION.md`.
+Admins can record controlled local outcomes for HubSpot import CSV manifests
+after manual import handling outside SKR. The ledger is protected admin-only,
+local audit/readiness only, metadata-only and bounded. No freeform notes are
+stored. Records remain queued, and outcome logging does not mutate
+quote/enquiry rows, mark records synced, set sync attempt timestamps, or create
+provider IDs.
+
 ## Purpose
 
 This slice adds a protected admin-only CRM handoff packet preview/export

@@ -75,6 +75,31 @@ type AdminQuoteRequestCrmHandoffPacketManifest = {
   source: "protected_admin";
 };
 
+const hubSpotManualImportOutcomeStatuses = [
+  "manual_import_reviewed",
+  "manual_import_completed_outside_skr",
+  "manual_import_rejected_needs_correction",
+  "manual_import_partial_needs_follow_up"
+] as const;
+
+type HubSpotManualImportOutcomeStatus =
+  (typeof hubSpotManualImportOutcomeStatuses)[number];
+
+type HubSpotManualImportOutcomeRecord = {
+  id: string;
+  workspaceId: string;
+  manifestId: string;
+  provider: "hubspot";
+  packetKind: "hubspot_import_csv";
+  outcomeStatus: HubSpotManualImportOutcomeStatus;
+  recordCount: number;
+  requestIds: string[];
+  requestIdCount: number;
+  recordedByAdminUserId: string;
+  recordedAt: string;
+  source: "protected_admin";
+};
+
 const hubSpotImportCsvPreflightIssueTypes = [
   "missing_customer_name",
   "missing_customer_email",
@@ -159,6 +184,8 @@ const genericHubSpotImportCsvFailureMessage =
   "HubSpot import CSV could not be prepared. Keep queued records unchanged and try again.";
 const genericHubSpotImportCsvPreflightFailureMessage =
   "HubSpot import CSV preflight could not be prepared. Keep queued records unchanged and try again.";
+const genericHubSpotManualImportOutcomeFailureMessage =
+  "HubSpot manual import outcome could not be recorded. Records remain queued and unchanged.";
 const uuidPattern =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -553,6 +580,75 @@ function parseManifestRecords(
     : null;
 }
 
+function isHubSpotManualImportOutcomeStatus(
+  value: unknown
+): value is HubSpotManualImportOutcomeStatus {
+  return hubSpotManualImportOutcomeStatuses.includes(
+    value as HubSpotManualImportOutcomeStatus
+  );
+}
+
+function parseHubSpotManualImportOutcomeRecord(
+  value: unknown
+): HubSpotManualImportOutcomeRecord | null {
+  if (!isRecord(value)) {
+    return null;
+  }
+
+  const requestIds = Array.isArray(value.requestIds)
+    ? value.requestIds.filter(isUuid).map((requestId) => requestId.trim())
+    : null;
+
+  if (
+    !isUuid(value.id) ||
+    !isUuid(value.workspaceId) ||
+    !isUuid(value.manifestId) ||
+    value.provider !== "hubspot" ||
+    value.packetKind !== "hubspot_import_csv" ||
+    !isHubSpotManualImportOutcomeStatus(value.outcomeStatus) ||
+    !Number.isInteger(value.recordCount) ||
+    Number(value.recordCount) < 0 ||
+    !requestIds ||
+    !Number.isInteger(value.requestIdCount) ||
+    Number(value.requestIdCount) < requestIds.length ||
+    !isUuid(value.recordedByAdminUserId) ||
+    typeof value.recordedAt !== "string" ||
+    !value.recordedAt.trim() ||
+    value.source !== "protected_admin"
+  ) {
+    return null;
+  }
+
+  return {
+    id: value.id.trim(),
+    workspaceId: value.workspaceId.trim(),
+    manifestId: value.manifestId.trim(),
+    provider: "hubspot",
+    packetKind: "hubspot_import_csv",
+    outcomeStatus: value.outcomeStatus,
+    recordCount: Number(value.recordCount),
+    requestIds,
+    requestIdCount: Number(value.requestIdCount),
+    recordedByAdminUserId: value.recordedByAdminUserId.trim(),
+    recordedAt: value.recordedAt.trim(),
+    source: "protected_admin"
+  };
+}
+
+function parseHubSpotManualImportOutcomeRecords(
+  value: unknown
+): HubSpotManualImportOutcomeRecord[] | null {
+  if (!Array.isArray(value)) {
+    return null;
+  }
+
+  const outcomes = value.map(parseHubSpotManualImportOutcomeRecord);
+
+  return outcomes.every(Boolean)
+    ? (outcomes as HubSpotManualImportOutcomeRecord[])
+    : null;
+}
+
 function isHubSpotImportCsvPreflightIssueType(
   value: unknown
 ): value is HubSpotImportCsvPreflightIssueType {
@@ -722,6 +818,20 @@ function preflightIssueLabel(
   return labels[issueType];
 }
 
+function manualImportOutcomeLabel(status: HubSpotManualImportOutcomeStatus) {
+  const labels: Record<HubSpotManualImportOutcomeStatus, string> = {
+    manual_import_reviewed: "Manual import reviewed",
+    manual_import_completed_outside_skr:
+      "Manual import completed outside SKR",
+    manual_import_rejected_needs_correction:
+      "Manual import rejected / needs correction",
+    manual_import_partial_needs_follow_up:
+      "Partial import / needs follow-up"
+  };
+
+  return labels[status];
+}
+
 function parseQuoteStatus(value: string): AdminQuoteRequestStatus | null {
   return quoteStatuses.includes(value as AdminQuoteRequestStatus)
     ? (value as AdminQuoteRequestStatus)
@@ -874,9 +984,16 @@ function QuoteIntakeParityHelper() {
 }
 
 function CrmHandoffPacketManifestList({
-  manifests
+  manifests,
+  onRecordManualImportOutcome,
+  pending
 }: {
   manifests: AdminQuoteRequestCrmHandoffPacketManifest[];
+  onRecordManualImportOutcome: (
+    manifestId: string,
+    outcomeStatus: HubSpotManualImportOutcomeStatus
+  ) => void;
+  pending: boolean;
 }) {
   return (
     <section
@@ -940,6 +1057,137 @@ function CrmHandoffPacketManifestList({
                       ? `Admin: ${manifest.generatedByAdminUserId}`
                       : "Admin identity unavailable"}
                   </dd>
+                </div>
+              </dl>
+              {manifest.packetKind === "hubspot_import_csv" ? (
+                <div className="hero__actions">
+                  <button
+                    aria-label={`Mark manual import reviewed for manifest ${manifest.id}`}
+                    className="button button--secondary"
+                    disabled={pending}
+                    onClick={() =>
+                      onRecordManualImportOutcome(
+                        manifest.id,
+                        "manual_import_reviewed"
+                      )
+                    }
+                    type="button"
+                  >
+                    Mark manual import reviewed
+                  </button>
+                  <button
+                    aria-label={`Mark manual import completed outside SKR for manifest ${manifest.id}`}
+                    className="button button--secondary"
+                    disabled={pending}
+                    onClick={() =>
+                      onRecordManualImportOutcome(
+                        manifest.id,
+                        "manual_import_completed_outside_skr"
+                      )
+                    }
+                    type="button"
+                  >
+                    Mark manual import completed outside SKR
+                  </button>
+                  <button
+                    aria-label={`Mark manual import rejected needs correction for manifest ${manifest.id}`}
+                    className="button button--secondary"
+                    disabled={pending}
+                    onClick={() =>
+                      onRecordManualImportOutcome(
+                        manifest.id,
+                        "manual_import_rejected_needs_correction"
+                      )
+                    }
+                    type="button"
+                  >
+                    Mark manual import rejected / needs correction
+                  </button>
+                  <button
+                    aria-label={`Mark partial import needs follow-up for manifest ${manifest.id}`}
+                    className="button button--secondary"
+                    disabled={pending}
+                    onClick={() =>
+                      onRecordManualImportOutcome(
+                        manifest.id,
+                        "manual_import_partial_needs_follow_up"
+                      )
+                    }
+                    type="button"
+                  >
+                    Mark partial import / needs follow-up
+                  </button>
+                </div>
+              ) : null}
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}
+
+function HubSpotManualImportOutcomeLedger({
+  outcomes
+}: {
+  outcomes: HubSpotManualImportOutcomeRecord[];
+}) {
+  return (
+    <section
+      aria-label="Recent HubSpot manual import outcomes"
+      className="quote-inbox__section"
+    >
+      <h4>Recent HubSpot manual import outcomes</h4>
+      <p className="category-management__hint">
+        Local audit only. Records remain queued. No HubSpot sync occurs. No
+        provider IDs are created. No sync timestamp is set. This does not
+        mutate enquiry records. No freeform notes are stored.
+      </p>
+      {outcomes.length === 0 ? (
+        <p>No HubSpot manual import outcomes recorded yet.</p>
+      ) : (
+        <ul className="admin-dashboard__list">
+          {outcomes.map((outcome) => (
+            <li key={outcome.id}>
+              <dl className="quote-inbox__details">
+                <div>
+                  <dt>Recorded timestamp</dt>
+                  <dd>{outcome.recordedAt}</dd>
+                </div>
+                <div>
+                  <dt>Outcome status</dt>
+                  <dd>{manualImportOutcomeLabel(outcome.outcomeStatus)}</dd>
+                </div>
+                <div>
+                  <dt>Provider/kind</dt>
+                  <dd>
+                    {outcome.provider}; {outcome.packetKind}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Record count</dt>
+                  <dd>{outcome.recordCount}</dd>
+                </div>
+                <div>
+                  <dt>Request IDs</dt>
+                  <dd>
+                    Request IDs: {outcome.requestIdCount}
+                    {outcome.requestIds.length > 0
+                      ? ` - ${outcome.requestIds.join(", ")}`
+                      : ""}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Manifest</dt>
+                  <dd>{outcome.manifestId}</dd>
+                </div>
+                <div>
+                  <dt>Recorded by</dt>
+                  <dd>Admin: {outcome.recordedByAdminUserId}</dd>
+                </div>
+                <div>
+                  <dt>Source</dt>
+                  <dd>{outcome.source}</dd>
                 </div>
               </dl>
             </li>
@@ -1033,6 +1281,10 @@ export function QuoteRequestInboxPanel({
     hubSpotImportCsvPreflightReport,
     setHubSpotImportCsvPreflightReport
   ] = useState<HubSpotImportCsvPreflightReport | null>(null);
+  const [
+    hubSpotManualImportOutcomes,
+    setHubSpotManualImportOutcomes
+  ] = useState<HubSpotManualImportOutcomeRecord[]>([]);
 
   async function submitStatusChange(
     quoteRequestId: string,
@@ -1334,6 +1586,77 @@ export function QuoteRequestInboxPanel({
     }
   }
 
+  async function recordHubSpotManualImportOutcome(
+    manifestId: string,
+    outcomeStatus: HubSpotManualImportOutcomeStatus
+  ) {
+    setStatus({
+      kind: "pending",
+      message: "Recording HubSpot manual import outcome..."
+    });
+
+    try {
+      const csrfProof = await requestQuoteWriteProof(fetcher);
+
+      if (!csrfProof) {
+        setStatus({
+          kind: "error",
+          message: genericHubSpotManualImportOutcomeFailureMessage
+        });
+        return;
+      }
+
+      const response = await fetcher(
+        "/api/admin/quote-requests/crm-handoff-packet/hubspot-import-csv/manual-import-outcome",
+        {
+          method: "POST",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+            "x-csrf-proof": csrfProof
+          },
+          body: JSON.stringify({
+            manifestId,
+            outcomeStatus
+          })
+        }
+      );
+      const responseBody = await readSafeJson(response);
+      const outcome = isRecord(responseBody)
+        ? parseHubSpotManualImportOutcomeRecord(responseBody.outcome)
+        : null;
+      const recentOutcomes = isRecord(responseBody)
+        ? parseHubSpotManualImportOutcomeRecords(responseBody.recentOutcomes)
+        : null;
+
+      if (
+        !response.ok ||
+        !isRecord(responseBody) ||
+        responseBody.ok !== true ||
+        !outcome ||
+        !recentOutcomes
+      ) {
+        setStatus({
+          kind: "error",
+          message: genericHubSpotManualImportOutcomeFailureMessage
+        });
+        return;
+      }
+
+      setHubSpotManualImportOutcomes(recentOutcomes);
+      setStatus({
+        kind: "success",
+        message:
+          "HubSpot manual import outcome recorded locally. Queued records remain queued."
+      });
+    } catch {
+      setStatus({
+        kind: "error",
+        message: genericHubSpotManualImportOutcomeFailureMessage
+      });
+    }
+  }
+
   async function handleStatusSubmit(
     event: FormEvent<HTMLFormElement>,
     quoteRequestId: string
@@ -1546,6 +1869,13 @@ export function QuoteRequestInboxPanel({
         ) : null}
         <CrmHandoffPacketManifestList
           manifests={crmHandoffPacketManifests}
+          onRecordManualImportOutcome={(manifestId, outcomeStatus) =>
+            void recordHubSpotManualImportOutcome(manifestId, outcomeStatus)
+          }
+          pending={status.kind === "pending"}
+        />
+        <HubSpotManualImportOutcomeLedger
+          outcomes={hubSpotManualImportOutcomes}
         />
         {hubSpotImportCsvPreflightReport ? (
           <HubSpotImportCsvPreflightSummary

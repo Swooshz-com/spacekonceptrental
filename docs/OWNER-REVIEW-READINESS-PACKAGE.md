@@ -1,3 +1,18 @@
+## Protected Admin HubSpot Manual Import Outcome Ledger Foundation
+
+Reference: `docs/architecture/PROTECTED-ADMIN-HUBSPOT-MANUAL-IMPORT-OUTCOME-LEDGER-FOUNDATION.md`.
+
+Owner review can include the protected admin HubSpot manual import outcome
+ledger as local audit/readiness only after admins manually handle CSV outside
+SKR. Records remain queued. The ledger records controlled, metadata-only and
+bounded outcome status only. No freeform notes are stored. Outcome logging does
+not mutate quote/enquiry rows, mark records synced, set sync attempt
+timestamps, create provider IDs, call HubSpot APIs, run n8n workflow/runtime,
+send email, add customer accounts, build a dashboard, implement custom CRM, or
+add ecommerce, booking, payment, reservation, or stock-reservation flows. CSV
+export remains formula-injection protected. Preflight remains bounded and
+allowlisted.
+
 ## Protected Admin HubSpot Import CSV Preflight Quality Foundation
 
 Reference: `docs/architecture/PROTECTED-ADMIN-HUBSPOT-IMPORT-CSV-PREFLIGHT-QUALITY-FOUNDATION.md`.

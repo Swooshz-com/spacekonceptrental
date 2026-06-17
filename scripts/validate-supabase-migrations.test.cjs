@@ -301,7 +301,7 @@ test('real migration directory passes static validation', () => {
   const result = runValidator(realMigrationsDir);
 
   assert.equal(result.status, 0, result.stdout + result.stderr);
-  assert.match(result.stdout, /checked 23 migration SQL file\(s\)/);
+  assert.match(result.stdout, /checked 24 migration SQL file\(s\)/);
 });
 
 test('real base schema migration creates the planned MVP tables', () => {
@@ -1456,6 +1456,135 @@ test('real migrations add the Phase 2G-C/D local search-index enqueue RPC withou
 
   assert.doesNotMatch(migration, /@pinecone-database|pinecone_api_key|process\.env|n8n|chat-config/i);
   assert.doesNotMatch(migration, /embedding|rerank|vector[_ -]?(upsert|delete)|retrieval/i);
+});
+
+test('real migrations add protected admin HubSpot manual import outcome ledger append-only metadata', () => {
+  const migrationFileName =
+    '20260617113000_hubspot_manual_import_outcome_ledger_foundation.sql';
+  const migration = readRealMigration(migrationFileName);
+  const sql = normalizeSql(migration);
+
+  assert.match(
+    sql,
+    /create table if not exists public\.quote_crm_handoff_manual_import_outcomes \(/,
+  );
+  for (const column of [
+    'id uuid primary key default gen_random_uuid()',
+    'workspace_id uuid not null',
+    'manifest_id uuid not null',
+    "provider text not null default 'hubspot'",
+    "packet_kind text not null default 'hubspot_import_csv'",
+    'outcome_status text not null',
+    'record_count integer not null',
+    "request_ids uuid[] not null default '{}'::uuid[]",
+    'recorded_by_admin_user_id uuid not null',
+    'recorded_at timestamptz not null default now()',
+    "source text not null default 'protected_admin'",
+    'created_at timestamptz not null default now()',
+  ]) {
+    assert.ok(sql.includes(column), `Missing metadata-only column: ${column}`);
+  }
+  for (const forbidden of [
+    'customer_name',
+    'customer_email',
+    'customer_phone',
+    'customer_message',
+    'message_details',
+    'internal_notes',
+    'freeform_notes',
+    'operator_notes',
+    'notes text',
+    'csv_content',
+    'packet_json',
+    'raw_payload',
+    'hubspot_contact_id',
+    'hubspot_deal_id',
+    'hubspot_import_job_id',
+    'provider_response',
+    'provider_token',
+    'authorization',
+    'auth_session',
+    'session_id',
+    'session text',
+    'headers json',
+    'headers jsonb',
+    'cookies json',
+    'cookies jsonb',
+    'crm_last_sync_attempt_at',
+  ]) {
+    assert.doesNotMatch(sql, new RegExp(forbidden));
+  }
+
+  assert.match(
+    sql,
+    /constraint quote_crm_handoff_manual_import_outcomes_manifest_workspace_fkey foreign key \(manifest_id, workspace_id\) references public\.quote_crm_handoff_packet_manifests \(id, workspace_id\) on delete cascade/,
+  );
+  assert.match(
+    sql,
+    /constraint quote_crm_handoff_manual_import_outcomes_provider_check check \(provider = 'hubspot'\)/,
+  );
+  assert.match(
+    sql,
+    /constraint quote_crm_handoff_manual_import_outcomes_packet_kind_check check \(packet_kind = 'hubspot_import_csv'\)/,
+  );
+  for (const status of [
+    'manual_import_reviewed',
+    'manual_import_completed_outside_skr',
+    'manual_import_rejected_needs_correction',
+    'manual_import_partial_needs_follow_up',
+  ]) {
+    assert.match(sql, new RegExp(`'${status}'`));
+  }
+  assert.match(
+    sql,
+    /alter table public\.quote_crm_handoff_manual_import_outcomes enable row level security;/,
+  );
+  assert.match(
+    sql,
+    /revoke all on table public\.quote_crm_handoff_manual_import_outcomes from public;/,
+  );
+  assert.match(
+    sql,
+    /revoke all on table public\.quote_crm_handoff_manual_import_outcomes from anon;/,
+  );
+  assert.match(
+    sql,
+    /revoke update, delete on table public\.quote_crm_handoff_manual_import_outcomes from authenticated;/,
+  );
+  assert.match(
+    sql,
+    /grant select, insert on public\.quote_crm_handoff_manual_import_outcomes to authenticated;/,
+  );
+  assert.match(
+    sql,
+    /create policy quote_crm_handoff_manual_import_outcomes_quote_admin_select on public\.quote_crm_handoff_manual_import_outcomes for select to authenticated using \(public\.is_workspace_quote_manager\(workspace_id\)\);/,
+  );
+  assert.match(
+    sql,
+    /create policy quote_crm_handoff_manual_import_outcomes_quote_admin_insert on public\.quote_crm_handoff_manual_import_outcomes for insert to authenticated with check/,
+  );
+  assert.match(sql, /public\.is_workspace_quote_manager\(workspace_id\)/);
+  assert.match(
+    sql,
+    /recorded_by_admin_user_id = public\.current_quote_admin_user_id\(workspace_id\)/,
+  );
+  assert.match(sql, /provider = 'hubspot'/);
+  assert.match(sql, /packet_kind = 'hubspot_import_csv'/);
+  assert.match(sql, /source = 'protected_admin'/);
+  assert.match(
+    sql,
+    /exists \( select 1 from public\.quote_crm_handoff_packet_manifests manifest where manifest\.id = manifest_id and manifest\.workspace_id = workspace_id and manifest\.provider = 'hubspot' and manifest\.packet_kind = 'hubspot_import_csv' and manifest\.status_filter = 'queued'/,
+  );
+  assert.doesNotMatch(
+    sql,
+    /on public\.quote_crm_handoff_manual_import_outcomes for update to authenticated/,
+  );
+  assert.doesNotMatch(
+    sql,
+    /on public\.quote_crm_handoff_manual_import_outcomes for delete to authenticated/,
+  );
+  assert.doesNotMatch(migration, /hubapi|hubspot api|n8n|webhook|smtp|resend|google workspace/i);
+  assert.doesNotMatch(migration, /checkout|payment|purchase|booking|reservation|order/i);
 });
 
 test('real RLS policy migration scopes admin reads through workspace membership', () => {
