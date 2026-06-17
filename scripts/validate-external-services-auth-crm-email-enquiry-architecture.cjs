@@ -31,6 +31,7 @@ const allowedChangedFiles = new Set([
   'docs/architecture/PROTECTED-ADMIN-HUBSPOT-IMPORT-CSV-HANDOFF-FOUNDATION.md',
   'docs/architecture/PROTECTED-ADMIN-HUBSPOT-IMPORT-CSV-PREFLIGHT-QUALITY-FOUNDATION.md',
   'docs/architecture/PROTECTED-ADMIN-HUBSPOT-MANUAL-IMPORT-OUTCOME-LEDGER-FOUNDATION.md',
+  'docs/architecture/PROTECTED-ADMIN-CRM-HANDOFF-LIFECYCLE-RECONCILIATION-FOUNDATION.md',
   'docs/architecture/PUBLIC-ENQUIRY-PERSISTENCE-INTEGRATION.md',
   'docs/architecture/SUPABASE-ENQUIRY-PERSISTENCE-CRM-HANDOFF-FOUNDATION.md',
   'docs/PHASE-STATUS.md',
@@ -49,6 +50,7 @@ const allowedChangedFiles = new Set([
   'scripts/validate-protected-admin-hubspot-import-csv-handoff-foundation.cjs',
   'scripts/validate-protected-admin-hubspot-import-csv-preflight-quality-foundation.cjs',
   'scripts/validate-protected-admin-hubspot-manual-import-outcome-ledger-foundation.cjs',
+  'scripts/validate-protected-admin-crm-handoff-lifecycle-reconciliation-foundation.cjs',
   'scripts/validate-maintenance-closure-audit-follow-up-response-acknowledgement-review-outcome-follow-up-planning-review-readiness.cjs',
   'scripts/validate-maintenance-closure-audit-follow-up-response-acknowledgement-review-outcome-follow-up-planning-review-outcome-readiness.cjs',
   'scripts/validate-maintenance-closure-audit-follow-up-response-acknowledgement-review-outcome-follow-up-planning-review-outcome-acknowledgement-readiness.cjs',
@@ -105,6 +107,11 @@ const allowedChangedFiles = new Set([
   'website/lib/quote/admin-read/admin-quote-request-hubspot-manual-import-outcome-route.ts',
   'website/lib/quote/admin-read/admin-quote-request-hubspot-manual-import-outcome-route.test.ts',
   'website/app/api/admin/quote-requests/crm-handoff-packet/hubspot-import-csv/manual-import-outcome/route.ts',
+  'website/lib/quote/admin-read/admin-quote-request-crm-handoff-lifecycle-reconciliation.ts',
+  'website/lib/quote/admin-read/admin-quote-request-crm-handoff-lifecycle-reconciliation.test.ts',
+  'website/lib/quote/admin-read/admin-quote-request-crm-handoff-lifecycle-reconciliation-route.ts',
+  'website/lib/quote/admin-read/admin-quote-request-crm-handoff-lifecycle-reconciliation-route.test.ts',
+  'website/app/api/admin/quote-requests/crm-handoff-packet/lifecycle-reconciliation/route.ts',
   'website/app/api/admin/quote-requests/crm-handoff-packet/hubspot-import-csv/route.ts',
   'website/lib/quote/admin-read/admin-quote-request-hubspot-import-csv.ts',
   'website/lib/quote/admin-read/admin-quote-request-hubspot-import-csv.test.ts',
@@ -209,6 +216,11 @@ const approvedFoundationFiles = new Set([
   'website/lib/quote/admin-read/admin-quote-request-hubspot-manual-import-outcome-route.ts',
   'website/lib/quote/admin-read/admin-quote-request-hubspot-manual-import-outcome-route.test.ts',
   'website/app/api/admin/quote-requests/crm-handoff-packet/hubspot-import-csv/manual-import-outcome/route.ts',
+  'website/lib/quote/admin-read/admin-quote-request-crm-handoff-lifecycle-reconciliation.ts',
+  'website/lib/quote/admin-read/admin-quote-request-crm-handoff-lifecycle-reconciliation.test.ts',
+  'website/lib/quote/admin-read/admin-quote-request-crm-handoff-lifecycle-reconciliation-route.ts',
+  'website/lib/quote/admin-read/admin-quote-request-crm-handoff-lifecycle-reconciliation-route.test.ts',
+  'website/app/api/admin/quote-requests/crm-handoff-packet/lifecycle-reconciliation/route.ts',
   'scripts/validate-supabase-migrations.test.cjs',
   'website/test/phase-2b-aa-first-admin-runtime-route-gate-adapter-usage-boundary.test.ts',
   'website/test/phase-2b-ab-admin-csrf-proof-issuer-usage-approval-lane.test.ts',
@@ -432,6 +444,7 @@ const changedContentsWithoutThisValidator = changedFiles
   .filter((file) => file !== 'scripts/validate-protected-admin-hubspot-import-csv-handoff-foundation.cjs')
   .filter((file) => file !== 'scripts/validate-protected-admin-hubspot-import-csv-preflight-quality-foundation.cjs')
   .filter((file) => file !== 'scripts/validate-protected-admin-hubspot-manual-import-outcome-ledger-foundation.cjs')
+  .filter((file) => file !== 'scripts/validate-protected-admin-crm-handoff-lifecycle-reconciliation-foundation.cjs')
   .filter((file) => file !== 'website/test/phase-5f-ab-quote-triage-readiness.test.tsx')
   .filter((file) => file !== 'website/test/phase-2b-y-admin-runtime-route-gate-adapter-boundary.test.ts')
   .filter((file) => file !== 'website/test/phase-2b-x-admin-runtime-gate-invocation-usage-approval-lane.test.ts')

@@ -1,3 +1,24 @@
+## Protected Admin CRM Handoff Lifecycle Reconciliation Foundation
+
+References: `docs/architecture/PROTECTED-ADMIN-CRM-HANDOFF-LIFECYCLE-RECONCILIATION-FOUNDATION.md`, `website/lib/quote/admin-read/admin-quote-request-crm-handoff-lifecycle-reconciliation.ts`, `website/lib/quote/admin-read/admin-quote-request-crm-handoff-lifecycle-reconciliation-route.ts`, `website/app/api/admin/quote-requests/crm-handoff-packet/lifecycle-reconciliation/route.ts`, `website/components/admin/quote-request-inbox-panel.tsx`, and `scripts/validate-protected-admin-crm-handoff-lifecycle-reconciliation-foundation.cjs`.
+
+Admin users can run protected admin-only local CRM handoff lifecycle
+reconciliation across queued records, metadata-only packet and CSV manifests,
+bounded CSV preflight quality metadata, and metadata-only manual import
+outcome ledger rows as local visibility/readiness only. Records remain queued.
+No HubSpot sync occurs. No n8n workflow/runtime or email sending is
+implemented. The report does not mutate quote/enquiry rows, mark records
+synced, set sync attempt timestamps, create provider IDs, or store freeform
+notes. Report rows are bounded and allowlisted. CSV export remains
+formula-injection protected. Preflight remains bounded and allowlisted.
+
+- [x] Protected admin CRM handoff lifecycle reconciliation foundation provides
+  a bounded local readiness view across queue, packet manifest, CSV manifest,
+  CSV preflight, and manual outcome ledger metadata without provider sync,
+  n8n, email sending, quote/enquiry row mutation, synced marking, sync
+  timestamp updates, provider IDs, freeform notes, customer dashboard, custom
+  CRM, retail/customer-flow creep, or Docker guard weakening.
+
 ## Protected Admin HubSpot Manual Import Outcome Ledger Foundation
 
 References: `docs/architecture/PROTECTED-ADMIN-HUBSPOT-MANUAL-IMPORT-OUTCOME-LEDGER-FOUNDATION.md`, `supabase/migrations/20260617113000_hubspot_manual_import_outcome_ledger_foundation.sql`, `website/lib/quote/admin-read/admin-quote-request-hubspot-manual-import-outcome-ledger.ts`, `website/lib/quote/admin-read/admin-quote-request-hubspot-manual-import-outcome-route.ts`, `website/app/api/admin/quote-requests/crm-handoff-packet/hubspot-import-csv/manual-import-outcome/route.ts`, `website/components/admin/quote-request-inbox-panel.tsx`, and `scripts/validate-protected-admin-hubspot-manual-import-outcome-ledger-foundation.cjs`.

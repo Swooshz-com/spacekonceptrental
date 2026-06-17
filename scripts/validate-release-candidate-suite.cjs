@@ -45,6 +45,11 @@ const commandPlan = [
     args: ['run', 'validate:protected-admin-hubspot-manual-import-outcome-ledger-foundation'],
   },
   {
+    label: 'Validate protected admin CRM handoff lifecycle reconciliation foundation',
+    cwd: repoRoot,
+    args: ['run', 'validate:protected-admin-crm-handoff-lifecycle-reconciliation-foundation'],
+  },
+  {
     label: 'Validate Supabase enquiry persistence and CRM handoff foundation',
     cwd: repoRoot,
     args: ['run', 'validate:supabase-enquiry-persistence-crm-handoff-foundation'],
