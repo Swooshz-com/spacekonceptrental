@@ -1,3 +1,22 @@
+## Protected Admin HubSpot Sync Dry-Run Contract Foundation
+
+Decision: Admin users can run a protected local HubSpot sync dry-run contract
+for queued CRM handoff records.
+
+Reference: `docs/architecture/PROTECTED-ADMIN-HUBSPOT-SYNC-DRY-RUN-CONTRACT-FOUNDATION.md`.
+
+The dry-run contract is protected admin-only, local design/readiness only,
+bounded and allowlisted. It reads queued records, lifecycle reconciliation,
+bounded CSV preflight metadata, metadata-only packet/CSV manifests, and
+metadata-only manual import outcome ledger rows. Records remain queued. It
+does not mutate quote/enquiry rows, mark records synced, set sync attempt
+timestamps, create provider IDs, create/update CRM contact/deal IDs, call
+HubSpot APIs, run n8n workflow/runtime, send email, introduce provider
+credentials, add customer accounts, build a dashboard, implement custom CRM,
+or add retail/customer-flow expansion. Raw customer data is not exposed in
+dry-run row summaries. CSV export remains formula-injection protected.
+Preflight remains bounded and allowlisted.
+
 ## Protected Admin CRM Handoff Lifecycle Reconciliation Foundation
 
 Decision: Admin users can run protected local CRM handoff lifecycle

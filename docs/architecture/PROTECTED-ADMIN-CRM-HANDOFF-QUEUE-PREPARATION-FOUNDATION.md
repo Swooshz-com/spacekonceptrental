@@ -135,3 +135,14 @@ timestamps, create provider IDs, or store freeform notes. Report rows are
 bounded and allowlisted. The manual outcome ledger remains metadata-only. CSV
 export remains formula-injection protected, and preflight remains bounded and
 allowlisted.
+
+## Related HubSpot Sync Dry-Run Contract Foundation
+
+`docs/architecture/PROTECTED-ADMIN-HUBSPOT-SYNC-DRY-RUN-CONTRACT-FOUNDATION.md`
+adds a protected admin-only local sync dry-run contract for records already
+queued for CRM handoff. The dry-run is local design/readiness only. No HubSpot
+API sync, SDK, OAuth, webhook, n8n workflow/runtime, or email sending is
+implemented. Records remain queued. The dry-run does not mutate quote/enquiry
+rows, mark records synced, set sync attempt timestamps, create provider IDs,
+or create/update CRM contact/deal IDs. Dry-run rows are bounded and
+allowlisted, and raw customer data is not exposed in row summaries.

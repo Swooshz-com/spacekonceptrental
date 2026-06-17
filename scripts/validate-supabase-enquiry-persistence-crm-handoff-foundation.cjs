@@ -39,6 +39,7 @@ const allowedChangedFiles = new Set([
   'docs/architecture/PROTECTED-ADMIN-HUBSPOT-IMPORT-CSV-PREFLIGHT-QUALITY-FOUNDATION.md',
   'docs/architecture/PROTECTED-ADMIN-HUBSPOT-MANUAL-IMPORT-OUTCOME-LEDGER-FOUNDATION.md',
   'docs/architecture/PROTECTED-ADMIN-CRM-HANDOFF-LIFECYCLE-RECONCILIATION-FOUNDATION.md',
+  'docs/architecture/PROTECTED-ADMIN-HUBSPOT-SYNC-DRY-RUN-CONTRACT-FOUNDATION.md',
   'docs/architecture/PROTECTED-ADMIN-ENQUIRY-TRIAGE-STATUS-UPDATE-FOUNDATION.md',
   'docs/architecture/PUBLIC-ENQUIRY-PERSISTENCE-INTEGRATION.md',
   architectureDocPath,
@@ -103,6 +104,11 @@ const allowedChangedFiles = new Set([
   'website/lib/quote/admin-read/admin-quote-request-crm-handoff-lifecycle-reconciliation-route.ts',
   'website/lib/quote/admin-read/admin-quote-request-crm-handoff-lifecycle-reconciliation-route.test.ts',
   'website/app/api/admin/quote-requests/crm-handoff-packet/lifecycle-reconciliation/route.ts',
+  'website/lib/quote/admin-read/admin-quote-request-hubspot-sync-dry-run-contract.ts',
+  'website/lib/quote/admin-read/admin-quote-request-hubspot-sync-dry-run-contract.test.ts',
+  'website/lib/quote/admin-read/admin-quote-request-hubspot-sync-dry-run-contract-route.ts',
+  'website/lib/quote/admin-read/admin-quote-request-hubspot-sync-dry-run-contract-route.test.ts',
+  'website/app/api/admin/quote-requests/crm-handoff-packet/hubspot-sync-dry-run-contract/route.ts',
   'website/test/phase-2e-a-conversation-governance.test.ts',
   'website/test/phase-2e-b-conversation-schema-rls.test.ts',
   'website/test/phase-2e-c-transcript-persistence-contract.test.ts',
@@ -151,6 +157,7 @@ const allowedChangedFiles = new Set([
   'scripts/validate-protected-admin-hubspot-import-csv-preflight-quality-foundation.cjs',
   'scripts/validate-protected-admin-hubspot-manual-import-outcome-ledger-foundation.cjs',
   'scripts/validate-protected-admin-crm-handoff-lifecycle-reconciliation-foundation.cjs',
+  'scripts/validate-protected-admin-hubspot-sync-dry-run-contract-foundation.cjs',
   'scripts/validate-maintenance-closure-audit-follow-up-response-acknowledgement-review-outcome-follow-up-planning-review-readiness.cjs',
   'scripts/validate-maintenance-closure-audit-follow-up-response-acknowledgement-review-outcome-follow-up-planning-review-outcome-readiness.cjs',
   'scripts/validate-maintenance-closure-audit-follow-up-response-acknowledgement-review-outcome-follow-up-planning-review-outcome-acknowledgement-readiness.cjs',
@@ -406,6 +413,7 @@ const validatorFilesExcludedFromAddedText = new Set([
 const customerFlowWordScanExcludedFiles = new Set([
   ...validatorFilesExcludedFromAddedText,
   'docs/architecture/PROTECTED-ADMIN-CRM-HANDOFF-EXPORT-REVIEW-PACKET-FOUNDATION.md',
+  'docs/architecture/PROTECTED-ADMIN-HUBSPOT-SYNC-DRY-RUN-CONTRACT-FOUNDATION.md',
 ]);
 const changedContentsWithoutValidator = changedFiles
   .filter(

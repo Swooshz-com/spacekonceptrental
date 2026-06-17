@@ -922,6 +922,204 @@ describe("QuoteRequestInboxPanel", () => {
     expect(screen.queryByText(/session header stack/i)).not.toBeInTheDocument();
   });
 
+  it("runs protected HubSpot sync dry-run and shows safe bounded rows without provider calls", async () => {
+    const queuedInbox = loadedInbox();
+    queuedInbox.data.quoteRequests = [
+      {
+        ...quoteRequest,
+        crmSyncStatus: "queued" as const
+      }
+    ];
+    const fetcher = vi
+      .fn()
+      .mockResolvedValueOnce(
+        createJsonResponse({
+          ok: true,
+          csrfProof: "proof-secret"
+        })
+      )
+      .mockResolvedValueOnce(
+        createJsonResponse({
+          ok: true,
+          dryRunContract: {
+            generatedAt: "2026-06-17T12:45:00.000Z",
+            provider: "hubspot",
+            mode: "dry_run_only",
+            localCrmSyncStatus: "queued",
+            limit: 25,
+            totalCandidateCount: 2,
+            eligibleForFutureSyncCount: 1,
+            blockedCandidateCount: 1,
+            needsManualReviewCount: 1,
+            wouldCreateOrUpdateContactCount: 1,
+            wouldCreateOrUpdateDealCount: 1,
+            wouldAssociateDealToContactCount: 1,
+            idempotencyKeyCount: 2,
+            recommendedNextAction: "review_dry_run_payload",
+            rows: [
+              {
+                quoteRequestId: quoteRequest.id,
+                publicReference: quoteRequest.publicReference,
+                createdAt: quoteRequest.createdAt,
+                localCrmSyncStatus: "queued",
+                lifecycleState: "queued_manual_import_reviewed",
+                dryRunState: "eligible_for_future_sync",
+                relatedManifestId:
+                  "66666666-6666-4666-8666-666666666666",
+                latestOutcomeStatus: "manual_import_reviewed",
+                safeIssueCount: 0,
+                futureIdempotencyKey:
+                  `skr_quote_request:11111111-1111-4111-8111-111111111111:${quoteRequest.id}:hubspot`,
+                recommendedNextAction: "review_dry_run_payload",
+                payloadPreview: {
+                  futureContactProperties: {
+                    email: "presence_only",
+                    phone: "presence_only",
+                    company: "presence_only"
+                  },
+                  futureDealProperties: {
+                    dealname: "mapped_without_value",
+                    pipeline: "future_credentials_design",
+                    dealstage: "future_credentials_design",
+                    skr_quote_reference: "presence_only"
+                  },
+                  futureAssociations: ["contact_to_deal"],
+                  futureIdempotencyKey:
+                    `skr_quote_request:11111111-1111-4111-8111-111111111111:${quoteRequest.id}:hubspot`
+                }
+              },
+              {
+                quoteRequestId: "77777777-7777-4777-8777-777777777777",
+                publicReference: "QR-BLOCKED",
+                createdAt: "2026-06-17T09:30:00.000Z",
+                localCrmSyncStatus: "queued",
+                lifecycleState: "queued_preflight_needs_review",
+                dryRunState: "blocked_missing_required_contact_field",
+                safeIssueCount: 1,
+                futureIdempotencyKey:
+                  "skr_quote_request:11111111-1111-4111-8111-111111111111:77777777-7777-4777-8777-777777777777:hubspot",
+                recommendedNextAction: "fix_preflight_issues"
+              }
+            ]
+          }
+        })
+      );
+
+    render(<QuoteRequestInboxPanel fetcher={fetcher} inbox={queuedInbox} />);
+
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: /Run HubSpot sync dry-run/i
+      })
+    );
+
+    await waitFor(() => {
+      expect(fetcher).toHaveBeenCalledTimes(2);
+    });
+    expect(fetcher).toHaveBeenNthCalledWith(
+      2,
+      "/api/admin/quote-requests/crm-handoff-packet/hubspot-sync-dry-run-contract?limit=25&status=queued",
+      {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "x-csrf-proof": "proof-secret"
+        }
+      }
+    );
+    expect(
+      screen.getByText(
+        /HubSpot sync dry-run prepared locally\. No provider call occurred and queued records remain unchanged\./i
+      )
+    ).toBeInTheDocument();
+
+    const panel = await screen.findByRole("region", {
+      name: /HubSpot sync dry-run contract summary/i
+    });
+
+    expect(within(panel).getByText(/Dry-run only/i)).toBeInTheDocument();
+    expect(within(panel).getByText(/No HubSpot sync occurs/i)).toBeInTheDocument();
+    expect(within(panel).getByText(/No provider call occurs/i)).toBeInTheDocument();
+    expect(within(panel).getByText(/Records remain queued/i)).toBeInTheDocument();
+    expect(within(panel).getByText(/No provider IDs are created/i)).toBeInTheDocument();
+    expect(within(panel).getByText(/No sync timestamp is set/i)).toBeInTheDocument();
+    expect(within(panel).getByText(/This does not mutate enquiry records/i)).toBeInTheDocument();
+    expect(within(panel).getByText("Total candidates")).toBeInTheDocument();
+    expect(within(panel).getByText("Eligible for future sync")).toBeInTheDocument();
+    expect(within(panel).getByText("Blocked candidates")).toBeInTheDocument();
+    expect(within(panel).getByText("Needs manual review")).toBeInTheDocument();
+    expect(within(panel).getByText("Would prepare contact payloads")).toBeInTheDocument();
+    expect(within(panel).getByText("Would prepare deal payloads")).toBeInTheDocument();
+    expect(within(panel).getByText("Would prepare association payloads")).toBeInTheDocument();
+    expect(within(panel).getAllByText(/Review dry-run payload/i).length)
+      .toBeGreaterThan(0);
+    expect(within(panel).getByText(/QR-20260603-NEWEST/i)).toBeInTheDocument();
+    expect(within(panel).getByText(/QR-BLOCKED/i)).toBeInTheDocument();
+    expect(within(panel).getByText(/Eligible for future sync/i)).toBeInTheDocument();
+    expect(within(panel).getByText(/Blocked - missing required contact field/i))
+      .toBeInTheDocument();
+    expect(within(panel).getByText(/contact_to_deal/i)).toBeInTheDocument();
+    expect(within(panel).queryByText(/Maya Tan/i)).not.toBeInTheDocument();
+    expect(within(panel).queryByText(/maya@example\.test/i)).not.toBeInTheDocument();
+    expect(
+      within(panel).queryByText(/Please recommend a warm lounge setup/i)
+    ).not.toBeInTheDocument();
+    expect(JSON.stringify(fetcher.mock.calls)).not.toContain("hubapi");
+    expect(JSON.stringify(fetcher.mock.calls)).not.toContain("webhook");
+    expect(JSON.stringify(fetcher.mock.calls)).not.toContain("smtp");
+    expect(JSON.stringify(fetcher.mock.calls)).not.toContain("crmContactId");
+    expect(JSON.stringify(fetcher.mock.calls)).not.toContain("crmDealId");
+    expect(JSON.stringify(fetcher.mock.calls)).not.toContain(
+      "crmLastSyncAttemptAt"
+    );
+  });
+
+  it("handles HubSpot sync dry-run failures generically without showing provider details", async () => {
+    const queuedInbox = loadedInbox();
+    queuedInbox.data.quoteRequests = [
+      {
+        ...quoteRequest,
+        crmSyncStatus: "queued" as const
+      }
+    ];
+    const fetcher = vi
+      .fn()
+      .mockResolvedValueOnce(
+        createJsonResponse({
+          ok: true,
+          csrfProof: "proof-secret"
+        })
+      )
+      .mockResolvedValueOnce(
+        createJsonResponse(
+          {
+            ok: false,
+            error: "sql hubspot token session header provider stack"
+          },
+          {
+            status: 503
+          }
+        )
+      );
+
+    render(<QuoteRequestInboxPanel fetcher={fetcher} inbox={queuedInbox} />);
+
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: /Run HubSpot sync dry-run/i
+      })
+    );
+
+    expect(
+      await screen.findByText(
+        /HubSpot sync dry-run could not be prepared\. Keep queued records unchanged and try again\./i
+      )
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/sql hubspot token/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/session header provider stack/i))
+      .not.toBeInTheDocument();
+  });
+
   it("posts controlled HubSpot manual import outcomes only for CSV manifests after quote.write proof", async () => {
     const queuedInbox = loadedInbox();
     queuedInbox.data.quoteRequests = [
