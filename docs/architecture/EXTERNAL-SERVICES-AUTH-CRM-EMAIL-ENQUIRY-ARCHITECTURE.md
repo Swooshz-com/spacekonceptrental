@@ -35,6 +35,15 @@ providers, does not mutate quote/enquiry rows, does not mark records synced,
 does not set sync attempt timestamps, and does not create/update CRM
 contact/deal/provider IDs.
 
+Related HubSpot manual import outcome ledger slice:
+`docs/architecture/PROTECTED-ADMIN-HUBSPOT-MANUAL-IMPORT-OUTCOME-LEDGER-FOUNDATION.md`.
+The protected outcome ledger records controlled local outcome metadata after
+admins manually handle HubSpot CSV outside SKR. It is protected admin-only,
+local audit/readiness only, metadata-only and bounded. No freeform notes are
+stored. Records remain queued; outcome logging does not call HubSpot, n8n, or
+email providers, mutate quote/enquiry rows, mark records synced, set sync
+attempt timestamps, or create provider IDs.
+
 # External Services Auth CRM Email Enquiry Architecture
 
 ## Purpose

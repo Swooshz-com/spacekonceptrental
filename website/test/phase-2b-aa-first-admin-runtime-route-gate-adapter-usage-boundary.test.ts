@@ -44,6 +44,8 @@ const approvedAdminQuoteHubSpotImportCsvRouteBoundaryPath =
   "website/lib/quote/admin-read/admin-quote-request-hubspot-import-csv-route.ts";
 const approvedAdminQuoteHubSpotImportCsvPreflightRouteBoundaryPath =
   "website/lib/quote/admin-read/admin-quote-request-hubspot-import-csv-preflight-route.ts";
+const approvedAdminQuoteHubSpotManualImportOutcomeRouteBoundaryPath =
+  "website/lib/quote/admin-read/admin-quote-request-hubspot-manual-import-outcome-route.ts";
 const approvedMediaUploadRouteBoundaryPath =
   "website/lib/products/media/admin-product-image-upload-route.ts";
 const sourceExtensions = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs"]);
@@ -194,6 +196,7 @@ describe("Phase 2B-AA first admin runtime route gate adapter usage boundary", ()
           filePath !== "website/app/api/admin/login/route.ts" &&
           filePath !== "website/app/api/admin/csrf-proof/route.ts" &&
           filePath !== "website/app/api/admin/quote-requests/crm-handoff-packet/route.ts" &&
+          filePath !== "website/app/api/admin/quote-requests/crm-handoff-packet/hubspot-import-csv/manual-import-outcome/route.ts" &&
           filePath !== "website/app/api/admin/quote-requests/crm-handoff-packet/hubspot-import-csv/preflight/route.ts" &&
           filePath !== "website/app/api/admin/quote-requests/crm-handoff-packet/hubspot-import-csv/route.ts" &&
           filePath !== "website/app/api/admin/quote-requests/[quoteRequestId]/crm-handoff/route.ts" &&
@@ -211,11 +214,13 @@ describe("Phase 2B-AA first admin runtime route gate adapter usage boundary", ()
           filePath !== approvedAdminQuoteCrmHandoffPacketRouteBoundaryPath &&
           filePath !== approvedAdminQuoteHubSpotImportCsvRouteBoundaryPath &&
           filePath !== approvedAdminQuoteHubSpotImportCsvPreflightRouteBoundaryPath &&
+          filePath !== approvedAdminQuoteHubSpotManualImportOutcomeRouteBoundaryPath &&
           filePath !== approvedMediaUploadRouteBoundaryPath &&
           filePath !== "website/app/api/admin/auth-check/route.ts" &&
           filePath !== "website/app/api/admin/login/route.ts" &&
           filePath !== "website/app/api/admin/csrf-proof/route.ts" &&
           filePath !== "website/app/api/admin/quote-requests/crm-handoff-packet/route.ts" &&
+          filePath !== "website/app/api/admin/quote-requests/crm-handoff-packet/hubspot-import-csv/manual-import-outcome/route.ts" &&
           filePath !== "website/app/api/admin/quote-requests/crm-handoff-packet/hubspot-import-csv/preflight/route.ts" &&
           filePath !== "website/app/api/admin/quote-requests/crm-handoff-packet/hubspot-import-csv/route.ts" &&
           filePath !== "website/app/api/admin/quote-requests/[quoteRequestId]/crm-handoff/route.ts" &&
@@ -260,6 +265,7 @@ describe("Phase 2B-AA first admin runtime route gate adapter usage boundary", ()
       "website/app/api/admin/products/route.ts",
       "website/app/api/admin/quote-requests/[quoteRequestId]/crm-handoff/route.ts",
       "website/app/api/admin/quote-requests/[quoteRequestId]/status/route.ts",
+      "website/app/api/admin/quote-requests/crm-handoff-packet/hubspot-import-csv/manual-import-outcome/route.ts",
       "website/app/api/admin/quote-requests/crm-handoff-packet/hubspot-import-csv/preflight/route.ts",
       "website/app/api/admin/quote-requests/crm-handoff-packet/hubspot-import-csv/route.ts",
       "website/app/api/admin/quote-requests/crm-handoff-packet/route.ts"
@@ -320,6 +326,7 @@ describe("Phase 2B-AA first admin runtime route gate adapter usage boundary", ()
           filePath !== approvedRuntimeRouteGateAdapterBoundaryPath &&
           filePath !== approvedAdminQuoteHubSpotImportCsvRouteBoundaryPath &&
           filePath !== approvedAdminQuoteHubSpotImportCsvPreflightRouteBoundaryPath &&
+          filePath !== approvedAdminQuoteHubSpotManualImportOutcomeRouteBoundaryPath &&
           filePath !== approvedMediaUploadRouteBoundaryPath
       )
       .map(({ source }) => source)
@@ -385,7 +392,8 @@ describe("Phase 2B-AA first admin runtime route gate adapter usage boundary", ()
         approvedRuntimeGateInvocationBoundaryPath,
         approvedRuntimeRouteGateAdapterBoundaryPath,
         approvedAdminQuoteHubSpotImportCsvRouteBoundaryPath,
-        approvedAdminQuoteHubSpotImportCsvPreflightRouteBoundaryPath
+        approvedAdminQuoteHubSpotImportCsvPreflightRouteBoundaryPath,
+        approvedAdminQuoteHubSpotManualImportOutcomeRouteBoundaryPath
       ])
     ).not.toContain("resolveServerAdminRuntimeGateInvocation");
 

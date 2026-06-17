@@ -29,6 +29,8 @@ const allowedChangedFiles = new Set([
   'docs/architecture/PROTECTED-ADMIN-CRM-HANDOFF-EXPORT-REVIEW-PACKET-FOUNDATION.md',
   'docs/architecture/PROTECTED-ADMIN-CRM-HANDOFF-PACKET-AUDIT-MANIFEST-FOUNDATION.md',
   'docs/architecture/PROTECTED-ADMIN-HUBSPOT-IMPORT-CSV-HANDOFF-FOUNDATION.md',
+  'docs/architecture/PROTECTED-ADMIN-HUBSPOT-IMPORT-CSV-PREFLIGHT-QUALITY-FOUNDATION.md',
+  'docs/architecture/PROTECTED-ADMIN-HUBSPOT-MANUAL-IMPORT-OUTCOME-LEDGER-FOUNDATION.md',
   'docs/architecture/PUBLIC-ENQUIRY-PERSISTENCE-INTEGRATION.md',
   'docs/architecture/SUPABASE-ENQUIRY-PERSISTENCE-CRM-HANDOFF-FOUNDATION.md',
   'docs/PHASE-STATUS.md',
@@ -45,6 +47,8 @@ const allowedChangedFiles = new Set([
   'scripts/validate-protected-admin-crm-handoff-export-review-packet-foundation.cjs',
   'scripts/validate-protected-admin-crm-handoff-packet-audit-manifest-foundation.cjs',
   'scripts/validate-protected-admin-hubspot-import-csv-handoff-foundation.cjs',
+  'scripts/validate-protected-admin-hubspot-import-csv-preflight-quality-foundation.cjs',
+  'scripts/validate-protected-admin-hubspot-manual-import-outcome-ledger-foundation.cjs',
   'scripts/validate-maintenance-closure-audit-follow-up-response-acknowledgement-review-outcome-follow-up-planning-review-readiness.cjs',
   'scripts/validate-maintenance-closure-audit-follow-up-response-acknowledgement-review-outcome-follow-up-planning-review-outcome-readiness.cjs',
   'scripts/validate-maintenance-closure-audit-follow-up-response-acknowledgement-review-outcome-follow-up-planning-review-outcome-acknowledgement-readiness.cjs',
@@ -56,6 +60,7 @@ const allowedChangedFiles = new Set([
   'supabase/migrations/20260616143000_admin_crm_handoff_queue_preparation_foundation.sql',
   'supabase/migrations/20260616160000_quote_crm_handoff_packet_manifest_foundation.sql',
   'supabase/migrations/20260617090000_hubspot_import_csv_handoff_manifest_kind.sql',
+  'supabase/migrations/20260617113000_hubspot_manual_import_outcome_ledger_foundation.sql',
   'website/lib/quote/types.ts',
   'website/lib/quote/validation.ts',
   'website/lib/quote/validation.test.ts',
@@ -95,6 +100,11 @@ const allowedChangedFiles = new Set([
   'website/lib/quote/admin-read/admin-quote-request-hubspot-import-csv.test.ts',
   'website/lib/quote/admin-read/admin-quote-request-hubspot-import-csv-route.ts',
   'website/lib/quote/admin-read/admin-quote-request-hubspot-import-csv-route.test.ts',
+  'website/lib/quote/admin-read/admin-quote-request-hubspot-manual-import-outcome-ledger.ts',
+  'website/lib/quote/admin-read/admin-quote-request-hubspot-manual-import-outcome-ledger.test.ts',
+  'website/lib/quote/admin-read/admin-quote-request-hubspot-manual-import-outcome-route.ts',
+  'website/lib/quote/admin-read/admin-quote-request-hubspot-manual-import-outcome-route.test.ts',
+  'website/app/api/admin/quote-requests/crm-handoff-packet/hubspot-import-csv/manual-import-outcome/route.ts',
   'website/app/api/admin/quote-requests/crm-handoff-packet/hubspot-import-csv/route.ts',
   'website/lib/quote/admin-read/admin-quote-request-hubspot-import-csv.ts',
   'website/lib/quote/admin-read/admin-quote-request-hubspot-import-csv.test.ts',
@@ -154,6 +164,7 @@ const approvedFoundationFiles = new Set([
   'supabase/migrations/20260616143000_admin_crm_handoff_queue_preparation_foundation.sql',
   'supabase/migrations/20260616160000_quote_crm_handoff_packet_manifest_foundation.sql',
   'supabase/migrations/20260617090000_hubspot_import_csv_handoff_manifest_kind.sql',
+  'supabase/migrations/20260617113000_hubspot_manual_import_outcome_ledger_foundation.sql',
   'website/lib/quote/types.ts',
   'website/lib/quote/validation.ts',
   'website/lib/quote/validation.test.ts',
@@ -193,6 +204,11 @@ const approvedFoundationFiles = new Set([
   'website/lib/quote/admin-read/admin-quote-request-hubspot-import-csv.test.ts',
   'website/lib/quote/admin-read/admin-quote-request-hubspot-import-csv-route.ts',
   'website/lib/quote/admin-read/admin-quote-request-hubspot-import-csv-route.test.ts',
+  'website/lib/quote/admin-read/admin-quote-request-hubspot-manual-import-outcome-ledger.ts',
+  'website/lib/quote/admin-read/admin-quote-request-hubspot-manual-import-outcome-ledger.test.ts',
+  'website/lib/quote/admin-read/admin-quote-request-hubspot-manual-import-outcome-route.ts',
+  'website/lib/quote/admin-read/admin-quote-request-hubspot-manual-import-outcome-route.test.ts',
+  'website/app/api/admin/quote-requests/crm-handoff-packet/hubspot-import-csv/manual-import-outcome/route.ts',
   'scripts/validate-supabase-migrations.test.cjs',
   'website/test/phase-2b-aa-first-admin-runtime-route-gate-adapter-usage-boundary.test.ts',
   'website/test/phase-2b-ab-admin-csrf-proof-issuer-usage-approval-lane.test.ts',
@@ -414,6 +430,8 @@ const changedContentsWithoutThisValidator = changedFiles
   .filter((file) => file !== 'scripts/validate-protected-admin-crm-handoff-export-review-packet-foundation.cjs')
   .filter((file) => file !== 'scripts/validate-protected-admin-crm-handoff-packet-audit-manifest-foundation.cjs')
   .filter((file) => file !== 'scripts/validate-protected-admin-hubspot-import-csv-handoff-foundation.cjs')
+  .filter((file) => file !== 'scripts/validate-protected-admin-hubspot-import-csv-preflight-quality-foundation.cjs')
+  .filter((file) => file !== 'scripts/validate-protected-admin-hubspot-manual-import-outcome-ledger-foundation.cjs')
   .filter((file) => file !== 'website/test/phase-5f-ab-quote-triage-readiness.test.tsx')
   .filter((file) => file !== 'website/test/phase-2b-y-admin-runtime-route-gate-adapter-boundary.test.ts')
   .filter((file) => file !== 'website/test/phase-2b-x-admin-runtime-gate-invocation-usage-approval-lane.test.ts')

@@ -512,7 +512,7 @@ describe("QuoteRequestInboxPanel", () => {
       screen.getByText(/HubSpot import CSV is a protected admin export/i)
     ).toBeInTheDocument();
     expect(screen.getAllByText(/Records remain queued/i).length).toBeGreaterThan(0);
-    expect(screen.getByText(/No HubSpot sync occurs/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/No HubSpot sync occurs/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/no provider IDs are created/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/no sync timestamp is set/i).length).toBeGreaterThan(0);
 
@@ -646,7 +646,7 @@ describe("QuoteRequestInboxPanel", () => {
       screen.getByText(/Manual import\/export readiness only/i)
     ).toBeInTheDocument();
     expect(screen.getAllByText(/Records remain queued/i).length).toBeGreaterThan(0);
-    expect(screen.getByText(/No HubSpot sync occurs/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/No HubSpot sync occurs/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/No provider IDs are created/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/No sync timestamp is set/i).length).toBeGreaterThan(0);
     expect(
@@ -749,6 +749,251 @@ describe("QuoteRequestInboxPanel", () => {
     expect(
       await screen.findByText(
         /HubSpot import CSV preflight could not be prepared\. Keep queued records unchanged and try again\./i
+      )
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/sql token session/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/provider stack/i)).not.toBeInTheDocument();
+  });
+
+  it("posts controlled HubSpot manual import outcomes only for CSV manifests after quote.write proof", async () => {
+    const queuedInbox = loadedInbox();
+    queuedInbox.data.quoteRequests = [
+      {
+        ...quoteRequest,
+        crmSyncStatus: "queued" as const
+      }
+    ];
+    const jsonManifest = {
+      id: "66666666-6666-4666-8666-666666666666",
+      provider: "hubspot",
+      packetKind: "json_review_packet",
+      statusFilter: "queued",
+      limitRequested: 25,
+      recordCount: 1,
+      requestIds: [quoteRequest.id],
+      requestIdCount: 1,
+      generatedByAdminUserId: "77777777-7777-4777-8777-777777777777",
+      generatedAt: "2026-06-17T10:00:00.000Z",
+      source: "protected_admin"
+    };
+    const csvManifest = {
+      ...jsonManifest,
+      id: "88888888-8888-4888-8888-888888888888",
+      packetKind: "hubspot_import_csv"
+    };
+    const outcome = {
+      id: "99999999-9999-4999-8999-999999999999",
+      workspaceId: "11111111-1111-4111-8111-111111111111",
+      manifestId: csvManifest.id,
+      provider: "hubspot",
+      packetKind: "hubspot_import_csv",
+      outcomeStatus: "manual_import_completed_outside_skr",
+      recordCount: 1,
+      requestIds: [quoteRequest.id],
+      requestIdCount: 1,
+      recordedByAdminUserId: "77777777-7777-4777-8777-777777777777",
+      recordedAt: "2026-06-17T11:00:00.000Z",
+      source: "protected_admin",
+      customerName: "Leaked Customer",
+      customerEmail: "leak@example.test",
+      customerPhone: "+65 9999 0000",
+      messageDetails: "Do not show this message",
+      internalNotes: "Do not show this note",
+      crmContactId: "contact-secret",
+      crmDealId: "deal-secret",
+      crmLastSyncAttemptAt: "2026-06-17T11:30:00.000Z"
+    };
+    const fetcher = vi
+      .fn()
+      .mockResolvedValueOnce(
+        createJsonResponse({
+          ok: true,
+          csrfProof: "proof-secret"
+        })
+      )
+      .mockResolvedValueOnce(
+        createJsonResponse({
+          ok: true,
+          packet: {
+            provider: "hubspot"
+          },
+          manifest: jsonManifest,
+          recentManifests: [jsonManifest, csvManifest]
+        })
+      )
+      .mockResolvedValueOnce(
+        createJsonResponse({
+          ok: true,
+          csrfProof: "proof-secret"
+        })
+      )
+      .mockResolvedValueOnce(
+        createJsonResponse({
+          ok: true,
+          outcome,
+          recentOutcomes: [outcome]
+        })
+      );
+
+    render(<QuoteRequestInboxPanel fetcher={fetcher} inbox={queuedInbox} />);
+
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: /review queued CRM handoff packet/i
+      })
+    );
+
+    expect(
+      await screen.findByText(/hubspot_import_csv/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", {
+        name: new RegExp(`Mark manual import reviewed for manifest ${jsonManifest.id}`, "i")
+      })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("button", {
+        name: new RegExp(`Mark manual import reviewed for manifest ${csvManifest.id}`, "i")
+      })
+    ).toBeInTheDocument();
+
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: new RegExp(`Mark manual import completed outside SKR for manifest ${csvManifest.id}`, "i")
+      })
+    );
+
+    await waitFor(() => {
+      expect(fetcher).toHaveBeenCalledTimes(4);
+    });
+    expect(fetcher).toHaveBeenNthCalledWith(3, "/api/admin/csrf-proof", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        requestedOperation: "quote.write",
+        operation: "quote.write"
+      })
+    });
+    expect(fetcher).toHaveBeenNthCalledWith(
+      4,
+      "/api/admin/quote-requests/crm-handoff-packet/hubspot-import-csv/manual-import-outcome",
+      {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          "x-csrf-proof": "proof-secret"
+        },
+        body: JSON.stringify({
+          manifestId: csvManifest.id,
+          outcomeStatus: "manual_import_completed_outside_skr"
+        })
+      }
+    );
+    expect(
+      await screen.findByRole("heading", {
+        name: /recent HubSpot manual import outcomes/i
+      })
+    ).toBeInTheDocument();
+    expect(
+      screen.getAllByText(/Manual import completed outside SKR/i).length
+    ).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Request IDs: 1/i).length).toBeGreaterThan(0);
+    expect(screen.getByText(/Local audit only/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/Records remain queued/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/No HubSpot sync occurs/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/No provider IDs are created/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/No sync timestamp is set/i).length).toBeGreaterThan(0);
+    expect(screen.getByText(/This does not mutate enquiry records/i)).toBeInTheDocument();
+    expect(screen.getByText(/No freeform notes are stored/i)).toBeInTheDocument();
+    expect(screen.queryByText(/Leaked Customer/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/leak@example\.test/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Do not show this message/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/contact-secret/i)).not.toBeInTheDocument();
+    expect(JSON.stringify(fetcher.mock.calls[3])).not.toContain("Leaked Customer");
+    expect(JSON.stringify(fetcher.mock.calls[3])).not.toContain("crmContactId");
+    expect(JSON.stringify(fetcher.mock.calls[3])).not.toContain("crmDealId");
+    expect(JSON.stringify(fetcher.mock.calls[3])).not.toContain("crmLastSyncAttemptAt");
+    expect(JSON.stringify(fetcher.mock.calls)).not.toContain("hubapi");
+    expect(JSON.stringify(fetcher.mock.calls)).not.toContain("webhook");
+    expect(JSON.stringify(fetcher.mock.calls)).not.toContain("smtp");
+  });
+
+  it("handles HubSpot manual import outcome failures generically without showing provider details", async () => {
+    const queuedInbox = loadedInbox();
+    queuedInbox.data.quoteRequests = [
+      {
+        ...quoteRequest,
+        crmSyncStatus: "queued" as const
+      }
+    ];
+    const csvManifest = {
+      id: "88888888-8888-4888-8888-888888888888",
+      provider: "hubspot",
+      packetKind: "hubspot_import_csv",
+      statusFilter: "queued",
+      limitRequested: 25,
+      recordCount: 1,
+      requestIds: [quoteRequest.id],
+      requestIdCount: 1,
+      generatedByAdminUserId: "77777777-7777-4777-8777-777777777777",
+      generatedAt: "2026-06-17T10:00:00.000Z",
+      source: "protected_admin"
+    };
+    const fetcher = vi
+      .fn()
+      .mockResolvedValueOnce(
+        createJsonResponse({
+          ok: true,
+          csrfProof: "proof-secret"
+        })
+      )
+      .mockResolvedValueOnce(
+        createJsonResponse({
+          ok: true,
+          packet: {
+            provider: "hubspot"
+          },
+          manifest: csvManifest,
+          recentManifests: [csvManifest]
+        })
+      )
+      .mockResolvedValueOnce(
+        createJsonResponse({
+          ok: true,
+          csrfProof: "proof-secret"
+        })
+      )
+      .mockResolvedValueOnce(
+        createJsonResponse(
+          {
+            ok: false,
+            error: "sql token session header hubapi provider stack"
+          },
+          {
+            status: 503
+          }
+        )
+      );
+
+    render(<QuoteRequestInboxPanel fetcher={fetcher} inbox={queuedInbox} />);
+
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: /review queued CRM handoff packet/i
+      })
+    );
+    fireEvent.click(
+      await screen.findByRole("button", {
+        name: new RegExp(`Mark manual import reviewed for manifest ${csvManifest.id}`, "i")
+      })
+    );
+
+    expect(
+      await screen.findByText(
+        /HubSpot manual import outcome could not be recorded\. Records remain queued and unchanged\./i
       )
     ).toBeInTheDocument();
     expect(screen.queryByText(/sql token session/i)).not.toBeInTheDocument();

@@ -1,3 +1,18 @@
+## Protected Admin HubSpot Manual Import Outcome Ledger Foundation
+
+References: `docs/architecture/PROTECTED-ADMIN-HUBSPOT-MANUAL-IMPORT-OUTCOME-LEDGER-FOUNDATION.md`, `supabase/migrations/20260617113000_hubspot_manual_import_outcome_ledger_foundation.sql`, `website/lib/quote/admin-read/admin-quote-request-hubspot-manual-import-outcome-ledger.ts`, `website/lib/quote/admin-read/admin-quote-request-hubspot-manual-import-outcome-route.ts`, `website/app/api/admin/quote-requests/crm-handoff-packet/hubspot-import-csv/manual-import-outcome/route.ts`, `website/components/admin/quote-request-inbox-panel.tsx`, and `scripts/validate-protected-admin-hubspot-manual-import-outcome-ledger-foundation.cjs`.
+
+Admin users can append protected local HubSpot manual import outcomes for CSV
+manifests after handling the CSV outside SKR. The ledger is protected
+admin-only, local audit/readiness only, controlled outcome status only,
+metadata-only and bounded. No freeform notes are stored. Records remain queued.
+Outcome logging does not mutate quote/enquiry rows, mark records synced, set
+sync attempt timestamps, or create provider IDs. No HubSpot API sync, n8n
+workflow/runtime, email sending, customer account, dashboard, custom CRM,
+ecommerce, cart, checkout, order, payment, purchase, booking, reservation, or
+stock-reservation flow is implemented. CSV export remains formula-injection
+protected. Preflight remains bounded and allowlisted.
+
 ## Protected Admin HubSpot Import CSV Preflight Quality Foundation
 
 References: `docs/architecture/PROTECTED-ADMIN-HUBSPOT-IMPORT-CSV-PREFLIGHT-QUALITY-FOUNDATION.md`, `docs/architecture/PROTECTED-ADMIN-HUBSPOT-IMPORT-CSV-HANDOFF-FOUNDATION.md`, `website/lib/quote/admin-read/admin-quote-request-hubspot-import-csv-preflight.ts`, `website/lib/quote/admin-read/admin-quote-request-hubspot-import-csv-preflight-route.ts`, `website/app/api/admin/quote-requests/crm-handoff-packet/hubspot-import-csv/preflight/route.ts`, `website/components/admin/quote-request-inbox-panel.tsx`, and `scripts/validate-protected-admin-hubspot-import-csv-preflight-quality-foundation.cjs`.

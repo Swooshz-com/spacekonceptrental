@@ -9,6 +9,14 @@ The preflight report helps authorised admins review whether queued CRM handoff
 records look ready for manual HubSpot import CSV export and manual import
 review. This is local admin review/readiness only.
 
+Related manual import outcome ledger:
+`docs/architecture/PROTECTED-ADMIN-HUBSPOT-MANUAL-IMPORT-OUTCOME-LEDGER-FOUNDATION.md`.
+Admins can record controlled local outcomes after manually handling HubSpot CSV
+outside SKR. The ledger is protected admin-only, local audit/readiness only,
+metadata-only and bounded. No freeform notes are stored. Records remain
+queued, and outcome logging does not mutate quote/enquiry rows, mark records
+synced, set sync attempt timestamps, or create provider IDs.
+
 ## Implemented
 
 - A server-only preflight helper reads the existing queued CRM handoff packet

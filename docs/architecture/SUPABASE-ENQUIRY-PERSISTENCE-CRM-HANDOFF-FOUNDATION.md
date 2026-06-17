@@ -34,6 +34,13 @@ queued. It does not mutate quote/enquiry rows, does not mark records synced,
 does not set sync attempt timestamps, and does not create/update CRM
 contact/deal/provider IDs.
 
+Protected admin HubSpot manual import outcome ledger readiness is documented in
+`docs/architecture/PROTECTED-ADMIN-HUBSPOT-MANUAL-IMPORT-OUTCOME-LEDGER-FOUNDATION.md`.
+The outcome ledger is protected admin-only, local audit/readiness only,
+metadata-only and bounded. No freeform notes are stored. Records remain
+queued, and outcome logging does not mutate quote/enquiry rows, mark records
+synced, set sync attempt timestamps, or create provider IDs.
+
 Protected admin CRM handoff packet/export preparation is documented in
 `docs/architecture/PROTECTED-ADMIN-CRM-HANDOFF-EXPORT-REVIEW-PACKET-FOUNDATION.md`.
 Admin users can review/export queued CRM handoff packets for manual

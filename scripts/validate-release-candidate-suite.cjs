@@ -40,6 +40,11 @@ const commandPlan = [
     args: ['run', 'validate:protected-admin-hubspot-import-csv-preflight-quality-foundation'],
   },
   {
+    label: 'Validate protected admin HubSpot manual import outcome ledger foundation',
+    cwd: repoRoot,
+    args: ['run', 'validate:protected-admin-hubspot-manual-import-outcome-ledger-foundation'],
+  },
+  {
     label: 'Validate Supabase enquiry persistence and CRM handoff foundation',
     cwd: repoRoot,
     args: ['run', 'validate:supabase-enquiry-persistence-crm-handoff-foundation'],
