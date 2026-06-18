@@ -288,7 +288,7 @@ describe("Phase 3P-A/B owner review closure package", () => {
     expect(screen.getByText(/\[CONTINUE \/ BLOCKED \/ READY TO CLOSE\]/i)).toBeInTheDocument();
     expect(screen.getByText(/open blockers/i)).toBeInTheDocument();
     expect(screen.getAllByText(/\[TEMPLATE ONLY\]/i).length).toBeGreaterThan(1);
-    expect(screen.getByText(/deployment approval status/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/deployment approval status/i).length).toBeGreaterThan(0);
     expect(
       screen.getAllByText(/not approved \/ separate explicit approval required/i)
         .length
