@@ -41,24 +41,57 @@ const eventUseCases = [
 
 const rentalJourneySteps = [
   {
-    title: "Browse listings",
+    title: "Browse catalogue and listings",
     description:
-      "Start with catalogue cards, listing details, categories, and event setup ideas."
+      "Start with public catalogue cards, categories, event-use ideas, and rental listing summaries."
   },
   {
-    title: "Share event details",
+    title: "View rental listing details",
     description:
-      "Prepare the event date, venue, requested quantities, alternates, and setup notes before sending an enquiry."
+      "Open a listing to check the name, category, rental unit, image, description, and quote request action."
   },
   {
-    title: "Team reviews event fit",
+    title: "Submit an editable quote request",
     description:
-      "The team reviews your submitted rental enquiry and prepares direct follow-up."
+      "Carry a selected listing into the form, then edit requested items, quantities, alternates, and event notes before sending."
   },
   {
-    title: "Final quote follows directly",
+    title: "Team reviews event details",
     description:
-      "The public form starts the enquiry. Quote details are handled directly by the team."
+      "The team follows up directly using the contact details you share after reviewing the submitted event details."
+  }
+];
+
+const quotePreparationItems = [
+  {
+    title: "Event date if known",
+    description:
+      "Share the planned date or note when the date is still flexible."
+  },
+  {
+    title: "Venue or location",
+    description:
+      "Add the venue, area, or delivery location so the team has practical event context."
+  },
+  {
+    title: "Requested rental listings or items",
+    description:
+      "Use listing names, short item descriptions, or a selected listing carried from the catalogue."
+  },
+  {
+    title: "Approximate quantities",
+    description:
+      "Include counts, sets, or rough ranges so the team can understand the scale."
+  },
+  {
+    title: "Setup, access, and timing notes",
+    description:
+      "Mention placement, lift or loading access, setup timing, and any on-site constraints."
+  },
+  {
+    title: "Alternates if flexible",
+    description:
+      "Add acceptable substitutes when colour, size, or exact listing choice can change."
   }
 ];
 
@@ -220,11 +253,37 @@ export default async function HomePage() {
           ))}
         </div>
         <div className="hero__actions">
-          <Link className="button button--secondary" href="/events">
-            Plan event setups
+          <Link className="button button--secondary" href="/listings">
+            Browse rental listings
           </Link>
           <Link className="button" href="/quote">
-            Start a rental enquiry
+            Start a quote request
+          </Link>
+        </div>
+      </section>
+
+      <section className="section">
+        <div className="section__header">
+          <h2>What to prepare before you enquire</h2>
+          <p className="section__intro">
+            A quote request is the starting point for manual team review. It
+            does not set aside furniture or finalise rental details.
+          </p>
+        </div>
+        <div className="route-grid">
+          {quotePreparationItems.map((item) => (
+            <article className="route-card" key={item.title}>
+              <h2>{item.title}</h2>
+              <p>{item.description}</p>
+            </article>
+          ))}
+        </div>
+        <div className="hero__actions">
+          <Link className="button button--secondary" href="/listings">
+            Browse rental listings
+          </Link>
+          <Link className="button" href="/quote">
+            Start a quote request
           </Link>
         </div>
       </section>

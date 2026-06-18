@@ -55,6 +55,8 @@ describe("public page shells", () => {
   it("renders a conversion-focused rental homepage with quote and listing CTAs", async () => {
     render(await HomePage());
 
+    const homepageSource = readFileSync(resolve(process.cwd(), "app/page.tsx"), "utf8");
+
     expect(
       screen.getByRole("heading", {
         name: /event furniture rental for planned spaces/i
@@ -69,6 +71,46 @@ describe("public page shells", () => {
     expect(
       screen.getAllByRole("link", { name: /browse listings/i })[0]
     ).toHaveAttribute("href", "/listings");
+    expect(
+      screen.getByRole("heading", { name: /how rental enquiries work/i })
+    ).toBeInTheDocument();
+    for (const step of [
+      /browse catalogue and listings/i,
+      /view rental listing details/i,
+      /submit an editable quote request/i,
+      /team reviews event details/i
+    ]) {
+      expect(screen.getByRole("heading", { name: step })).toBeInTheDocument();
+    }
+    expect(
+      screen.getByText(/team follows up directly using the contact details you share/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: /what to prepare before you enquire/i })
+    ).toBeInTheDocument();
+    for (const guidance of [
+      /event date if known/i,
+      /venue or location/i,
+      /requested rental listings or items/i,
+      /approximate quantities/i,
+      /setup, access, and timing notes/i,
+      /alternates if flexible/i
+    ]) {
+      expect(screen.getByText(guidance)).toBeInTheDocument();
+    }
+    expect(
+      screen
+        .getAllByRole("link", { name: /browse rental listings/i })
+        .map((link) => link.getAttribute("href"))
+    ).toContain("/listings");
+    expect(
+      screen
+        .getAllByRole("link", { name: /start a quote request/i })
+        .map((link) => link.getAttribute("href"))
+    ).toContain("/quote");
+    expect(homepageSource).not.toMatch(
+      /cart|checkout|payment|purchase|customer account|customer dashboard|booking|reservation|stock reservation|order fulfilment|online ordering/i
+    );
     for (const useCase of [
       /corporate events/i,
       /weddings/i,
@@ -401,6 +443,9 @@ describe("public page shells", () => {
 
     for (const requiredStep of [
       "Open the homepage",
+      "Confirm the homepage explains the enquiry path: browse catalogue/listings, view listing details, submit an editable quote request, and team follow-up",
+      "Confirm quote-prep guidance names event date, venue or location, requested rental listings/items, approximate quantities, setup/access/timing notes, and alternates",
+      "Confirm homepage guidance CTAs reach rental listings and the quote request",
       "Browse catalogue/listing cards",
       "Submit a quote/enquiry request",
       "Confirm the success receipt",
