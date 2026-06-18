@@ -62,6 +62,22 @@ const rentalJourneySteps = [
   }
 ];
 
+const publicReviewPrompts = [
+  {
+    title: "Find suitable rental pieces",
+    description: "Browse listing details before requesting a quote."
+  },
+  {
+    title: "Plan by event setup",
+    description:
+      "Use categories and event guidance to describe your setup."
+  },
+  {
+    title: "Send a quote request",
+    description: "Add event details so the team can follow up."
+  }
+];
+
 const rentalAcceptanceChecks = [
   {
     title: "Confirm the rental fit",
@@ -233,10 +249,39 @@ export default async function HomePage() {
 
       <section className="section">
         <div className="section__header">
-          <h2>Before you send a rental enquiry</h2>
+          <h2>Plan your rental journey</h2>
           <p className="section__intro">
-            Keep the request practical: pick the listings you want reviewed and
-            add the event context the team needs for follow-up.
+            Listings, categories, event-use guidance, and quote requests help
+            you describe the setup you need.
+          </p>
+        </div>
+        <div className="route-grid">
+          {publicReviewPrompts.map((prompt) => (
+            <article className="route-card" key={prompt.title}>
+              <h2>{prompt.title}</h2>
+              <p>{prompt.description}</p>
+            </article>
+          ))}
+        </div>
+        <div className="hero__actions">
+          <Link className="button button--secondary" href="/listings">
+            Browse listings
+          </Link>
+          <Link className="button button--secondary" href="/events">
+            Browse event guidance
+          </Link>
+          <Link className="button" href="/quote">
+            Request a quote
+          </Link>
+        </div>
+      </section>
+
+      <section className="section">
+        <div className="section__header">
+          <h2>Ready to request a rental quote</h2>
+          <p className="section__intro">
+            Compare listings, categories, event setup notes, and quote details
+            before sending the enquiry.
           </p>
         </div>
         <div className="route-grid">

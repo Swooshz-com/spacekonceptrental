@@ -199,7 +199,7 @@ function QuoteReviewChecklistCard() {
   return (
     <article className="route-card">
       <p className="eyebrow">Before you send</p>
-      <h2>Check your editable enquiry details</h2>
+      <h2>Check your enquiry details</h2>
       <p>
         Check event date, venue or location, requested listings or items,
         quantities, alternates, setup, access, and timing notes before sending

@@ -181,10 +181,10 @@ describe("Phase 3A-A/B product polish and rental UI copy", () => {
         name: /modular lounge set furniture rental setup/i
       })
     ).toBeInTheDocument();
-    expect(screen.getByText(/quote request starting point/i)).toBeInTheDocument();
+    expect(screen.getByText(/quote planning/i)).toBeInTheDocument();
     expect(screen.getByText(/rental unit: set/i)).toBeInTheDocument();
     expect(
-      screen.getByText(/add event date, venue, quantities, alternates, and setup notes/i)
+      screen.getByText(/share event date, venue, quantities, and setup notes/i)
     ).toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: /request a quote/i })

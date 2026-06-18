@@ -245,7 +245,7 @@ describe("Phase 3Z-A/B public route readiness closure", () => {
     cleanup();
 
     render(<CataloguePageContent catalogue={sampleCatalogue} />);
-    expect(screen.getByText(/browsing does not set aside furniture/i)).toBeInTheDocument();
+    expect(screen.getByText(/browsing does not set aside furniture or finalise rental details/i)).toBeInTheDocument();
     cleanup();
 
     render(<ProductPageContent product={sampleProduct} />);

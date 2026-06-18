@@ -153,11 +153,11 @@ function CatalogueCardPlanning({
 }) {
   return (
     <aside className="catalogue-card__planning" aria-label={`Quote planning for ${product.name}`}>
-      <strong>Quote request starting point</strong>
+      <strong>Quote planning</strong>
       <span>
-        Use this listing to start editable enquiry text. Add event date, venue,
-        quantities, alternates, and setup notes so the team can review the
-        request; browsing does not set aside furniture.
+        Share event date, venue, quantities, and setup notes when you request
+        this listing. Browsing does not set aside furniture or finalise rental
+        details; it only helps the team understand the enquiry.
       </span>
     </aside>
   );
