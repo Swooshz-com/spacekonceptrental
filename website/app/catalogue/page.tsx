@@ -224,6 +224,9 @@ function CatalogueDiscovery({
   }
 
   const categoryCounts = getCategoryCounts(catalogue);
+  const hasActiveFilters = Boolean(
+    activeCategorySlug || activeEventSlug || activeSearch
+  );
 
   return (
     <nav className="catalogue-discovery" aria-label="Catalogue discovery">
@@ -254,6 +257,11 @@ function CatalogueDiscovery({
         <button className="button button--secondary" type="submit">
           Search listings
         </button>
+        {hasActiveFilters ? (
+          <Link className="button button--secondary" href={listingBasePath}>
+            Reset filters
+          </Link>
+        ) : null}
       </form>
       <div className="catalogue-discovery__chips" aria-label="Browse categories">
         <Link
@@ -304,6 +312,60 @@ function CatalogueDiscovery({
         ))}
       </div>
     </nav>
+  );
+}
+
+function CatalogueResultsSummary({
+  discovery,
+  listingBasePath,
+  listingCount
+}: {
+  discovery?: CatalogueDiscoveryState;
+  listingBasePath: string;
+  listingCount: number;
+}) {
+  const hasActiveFilters = Boolean(
+    discovery?.categoryName ||
+      discovery?.categorySlug ||
+      discovery?.eventLabel ||
+      discovery?.eventSlug ||
+      discovery?.search
+  );
+
+  return (
+    <section
+      aria-label="Rental listing results summary"
+      className="catalogue-results-summary"
+    >
+      <div>
+        <p className="eyebrow">Showing listings</p>
+        <h2>{listingCountText(listingCount)}</h2>
+        <p>
+          {hasActiveFilters
+            ? "Current filters shape this browsing view only. The same context can carry into an editable quote request."
+            : "Browse the public rental listings, compare details, and choose a listing to start an editable quote request."}
+        </p>
+      </div>
+      <dl>
+        <div>
+          <dt>Category</dt>
+          <dd>{discovery?.categoryName ?? "All categories"}</dd>
+        </div>
+        <div>
+          <dt>Event-use idea</dt>
+          <dd>{discovery?.eventLabel ?? "All event-use ideas"}</dd>
+        </div>
+        <div>
+          <dt>Search</dt>
+          <dd>{discovery?.search ?? "No search term"}</dd>
+        </div>
+      </dl>
+      {hasActiveFilters ? (
+        <Link className="card-link" href={listingBasePath}>
+          Reset filters
+        </Link>
+      ) : null}
+    </section>
   );
 }
 
@@ -432,6 +494,11 @@ export function CataloguePageContent({
           listingBasePath={listingBasePath}
         />
         <DiscoveryActiveSummary discovery={discovery} listingBasePath={listingBasePath} />
+        <CatalogueResultsSummary
+          discovery={discovery}
+          listingBasePath={listingBasePath}
+          listingCount={catalogue.products.length}
+        />
         <section className="route-card" aria-label="Public listing recovery">
           <h2>No matching public listings</h2>
           <p>{emptyMessage}</p>
@@ -480,6 +547,11 @@ export function CataloguePageContent({
         listingBasePath={listingBasePath}
       />
       <DiscoveryActiveSummary discovery={discovery} listingBasePath={listingBasePath} />
+      <CatalogueResultsSummary
+        discovery={discovery}
+        listingBasePath={listingBasePath}
+        listingCount={catalogue.products.length}
+      />
 
       <div className="catalogue-grid">
         {catalogue.products.map((product) => (
@@ -492,6 +564,9 @@ export function CataloguePageContent({
             </div>
             <div className="catalogue-card__body">
               <CatalogueCardMeta product={product} />
+              <p className="catalogue-card__reference">
+                Listing reference: {product.slug}
+              </p>
               <h2>{product.name}</h2>
               <p>{publicListingSummary(product)}</p>
               <CatalogueCardPlanning product={product} />
@@ -500,13 +575,13 @@ export function CataloguePageContent({
                   className="card-link card-link--primary"
                   href={getQuoteHrefForListing(product.slug)}
                 >
-                  Request a quote
+                  Request a quote for {product.name}
                 </Link>
                 <Link
                   className="card-link"
                   href={`${detailBasePath}/${product.slug}`}
                 >
-                  View rental listing
+                  View rental listing details
                 </Link>
               </div>
             </div>

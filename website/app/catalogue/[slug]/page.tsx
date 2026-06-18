@@ -196,8 +196,29 @@ export function ProductPageContent({
               requested-items text. Add quantities, alternates, venue, access,
               and timing notes before sending the enquiry.
             </p>
+            <dl className="listing-enquiry-panel__facts">
+              <div>
+                <dt>Listing reference</dt>
+                <dd>{product.slug}</dd>
+              </div>
+              <div>
+                <dt>Quote form starting text</dt>
+                <dd>{product.name}</dd>
+              </div>
+              <div>
+                <dt>Continue browsing</dt>
+                <dd>
+                  Compare details here, then request a quote or return to the
+                  catalogue/listings view.
+                </dd>
+              </div>
+            </dl>
           </section>
           <dl className="detail-list">
+            <div>
+              <dt>Listing reference</dt>
+              <dd>{product.slug}</dd>
+            </div>
             <div>
               <dt>Category</dt>
               <dd>{publicCategoryLabel(product)}</dd>
