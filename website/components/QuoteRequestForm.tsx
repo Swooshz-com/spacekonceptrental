@@ -284,11 +284,12 @@ export default function QuoteRequestForm({
           <strong>Selected listing</strong>
           <span>
             {initialItemsText} starts this rental request. Listing context is
-            a starting point only and remains editable request text. Keep this
-            listing, change it, or add more rental items before sending. Add
-            quantities in the requested listings box or item notes along with
-            alternates, dimensions, setup, access, rental period, or timing
-            notes before sending; the team can review the request.
+            a starting point only and remains editable request text, not a
+            rental fit confirmation. Keep this listing, change it, or add more
+            rental items before sending. Add quantities in the requested
+            listings box or item notes along with alternates, dimensions,
+            setup, access, rental period, or timing notes before sending; the
+            team can review the request.
           </span>
         </aside>
       ) : null}
