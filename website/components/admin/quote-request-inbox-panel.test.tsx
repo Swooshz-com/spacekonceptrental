@@ -326,6 +326,21 @@ describe("QuoteRequestInboxPanel", () => {
     expect(
       priorityView.getByText(/source context: \/quote\?listing=modular-lounge-set \/ modular-lounge-set/i)
     ).toBeInTheDocument();
+    expect(
+      quoteCardView.getByRole("link", {
+        name: /view public listing modular-lounge-set/i
+      })
+    ).toHaveAttribute("href", "/listings/modular-lounge-set");
+    expect(
+      quoteCardView.getByRole("link", {
+        name: /review listing management for modular-lounge-set/i
+      })
+    ).toHaveAttribute("href", "/admin/listings");
+    expect(
+      quoteCardView.getByRole("link", {
+        name: /manage listing images for modular-lounge-set/i
+      })
+    ).toHaveAttribute("href", "/admin/media#update-listing-image-metadata");
   });
 
   it("surfaces missing information cues for manual quote follow-up without forbidden flow wording", () => {

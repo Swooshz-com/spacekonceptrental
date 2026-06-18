@@ -665,6 +665,41 @@ function SourceContextDetails({
   );
 }
 
+function SourceContextActions({
+  quoteRequest
+}: {
+  quoteRequest: AdminQuoteRequestInboxQuoteRequest;
+}) {
+  if (!quoteRequest.sourceListingSlug) {
+    return null;
+  }
+
+  const listingSlug = quoteRequest.sourceListingSlug;
+
+  return (
+    <nav
+      aria-label={`Listing context actions ${quoteRequest.publicReference}`}
+      className="category-management__actions"
+    >
+      <a
+        className="button button--secondary"
+        href={`/listings/${encodeURIComponent(listingSlug)}`}
+      >
+        View public listing {listingSlug}
+      </a>
+      <a className="button button--secondary" href="/admin/listings">
+        Review listing management for {listingSlug}
+      </a>
+      <a
+        className="button button--secondary"
+        href="/admin/media#update-listing-image-metadata"
+      >
+        Manage listing images for {listingSlug}
+      </a>
+    </nav>
+  );
+}
+
 function ManualFollowUpChecklist({
   quoteRequest
 }: {
@@ -3143,6 +3178,7 @@ export function QuoteRequestInboxPanel({
                 <section className="quote-inbox__section quote-inbox__section--secondary">
                   <h4>Source context</h4>
                   <SourceContextDetails quoteRequest={quoteRequest} />
+                  <SourceContextActions quoteRequest={quoteRequest} />
                   <p className="category-management__hint">
                     Source context helps an admin understand where the enquiry
                     started. It is not a public status view and does not change

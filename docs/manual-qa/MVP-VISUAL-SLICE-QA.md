@@ -26,7 +26,7 @@ admin triage flow. It is a local/preview QA path, not a launch sign-off.
 19. Submit the form without name or contact details and confirm inline required-field guidance appears while entered rental details remain in the form.
 20. Submit a quote/enquiry request with name, email or phone, event date if known, venue or location, requested listings/items, quantities, setup/access notes, timing notes, and alternates if relevant.
 21. Confirm the submit button uses a clear sending state and cannot be accidentally submitted twice while the request is in progress.
-22. Confirm the success receipt appears with a public receipt reference when returned, a next team action, manual follow-up copy, requested listing/item context language, and browsing/another-enquiry actions.
+22. Confirm the success receipt appears with a public receipt reference when returned, a next team action, manual follow-up copy, requested listing/item context language, a selected-listing detail link when the enquiry started from a listing, and browsing/another-enquiry actions.
 23. Confirm the success receipt does not expose admin status, tracking, provider, database IDs, or internal workflow details.
 
 ## Persistence And Admin Triage
@@ -39,11 +39,12 @@ admin triage flow. It is a local/preview QA path, not a launch sign-off.
 6. Confirm each quote card shows admin follow-up priorities for confirming requested listing/item, quantity, event/rental timing, venue/access details, contact method, and source listing/path.
 7. Confirm the main quote card shows source context and a manual follow-up checklist using the submitted public reference, visitor name, email/phone, event date, venue/location, requested rental listings/items, setup/access/timing notes, and source listing/path.
 8. Confirm quote cards with missing details clearly cue manual follow-up for missing requested listing/item, quantity, event/rental timing, venue/access details, contact method, and source listing context.
-9. Confirm the main quote card does not show old CRM handoff placeholder, provider, contact ID, deal ID, or per-enquiry queue-prep controls.
-10. Confirm admins are guided to review requested rental details, check event date/venue/quantities/setup/access notes, contact the visitor manually, and update protected triage status after review.
-11. Update internal triage status.
-12. Confirm the admin status banner names the submitted enquiry reference and the saved triage status.
-13. Confirm the status update remains protected admin-only and does not contact the customer, sync to CRM, send email, call n8n, or expose a public tracking page.
+9. Confirm quote cards with a source listing slug provide safe next-step links to view the public listing, review protected listing management, and manage listing images.
+10. Confirm the main quote card does not show old CRM handoff placeholder, provider, contact ID, deal ID, or per-enquiry queue-prep controls.
+11. Confirm admins are guided to review requested rental details, check event date/venue/quantities/setup/access notes, contact the visitor manually, and update protected triage status after review.
+12. Update internal triage status.
+13. Confirm the admin status banner names the submitted enquiry reference and the saved triage status.
+14. Confirm the status update remains protected admin-only and does not contact the customer, sync to CRM, send email, call n8n, or expose a public tracking page.
 
 ## Protected Admin Catalogue Content
 
