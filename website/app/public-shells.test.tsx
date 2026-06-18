@@ -66,11 +66,26 @@ describe("public page shells", () => {
       screen.getByText(/browse rental listings, choose useful catalogue details, and send one enquiry for team follow-up/i)
     ).toBeInTheDocument();
     expect(
+      screen.getByText(/furniture rental and event rental catalogue for browsing real listings/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/view listing details before requesting a quote/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/manual follow-up after reviewing your event details/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/no instant rental confirmation happens on this site/i)
+    ).toBeInTheDocument();
+    expect(
       screen.getAllByRole("link", { name: /request a quote/i })[0]
     ).toHaveAttribute("href", "/quote");
     expect(
       screen.getAllByRole("link", { name: /browse listings/i })[0]
     ).toHaveAttribute("href", "/listings");
+    expect(
+      screen.getAllByRole("link", { name: /browse catalogue/i })[0]
+    ).toHaveAttribute("href", "/catalogue");
     expect(
       screen.getByRole("heading", { name: /how rental enquiries work/i })
     ).toBeInTheDocument();
@@ -445,9 +460,10 @@ describe("public page shells", () => {
 
     for (const requiredStep of [
       "Open the homepage",
-      "Confirm the homepage explains the enquiry path: browse catalogue/listings, view listing details, submit an editable quote request, and team follow-up",
+      "Confirm the homepage explains the enquiry path: browse catalogue/listings, view listing details before requesting a quote, submit an editable quote request, and team manual follow-up",
       "Confirm quote-prep guidance names event date, venue or location, requested rental listings/items, approximate quantities, setup/access/timing notes, and alternates",
-      "Confirm homepage guidance CTAs reach rental listings and the quote request",
+      "Confirm homepage trust cues explain that visitors share event/rental details for manual follow-up and that the site does not create an instant rental confirmation",
+      "Confirm homepage guidance CTAs reach the catalogue, rental listings, and the quote request",
       "Browse catalogue/listing cards",
       "Submit a quote/enquiry request",
       "Confirm the success receipt",

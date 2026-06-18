@@ -215,9 +215,27 @@ export default async function HomePage() {
             Browse rental listings, choose useful catalogue details, and send
             one enquiry for team follow-up.
           </p>
+          <p>
+            Furniture rental and event rental catalogue for browsing real
+            listings.
+          </p>
+          <ul className="journey-list">
+            <li>View listing details before requesting a quote.</li>
+            <li>
+              Share event/rental details for manual follow-up after reviewing
+              your event details.
+            </li>
+            <li>
+              No instant rental confirmation happens on this site; the team
+              reviews each enquiry manually.
+            </li>
+          </ul>
           <div className="hero__actions">
             <Link className="button" href="/quote">
               Request a quote
+            </Link>
+            <Link className="button button--secondary" href="/catalogue">
+              Browse catalogue
             </Link>
             <Link className="button button--secondary" href="/listings">
               Browse listings
