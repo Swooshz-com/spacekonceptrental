@@ -161,21 +161,30 @@ describe("Phase 3D-A/B sitewide public journey, trust content, and route polish"
       screen.getByRole("heading", { name: /how rental enquiries work/i })
     ).toBeInTheDocument();
     for (const step of [
-      /browse listings/i,
-      /share event details/i,
-      /team reviews event fit/i,
-      /final quote follows directly/i
+      /browse catalogue and listings/i,
+      /view rental listing details/i,
+      /submit an editable quote request/i,
+      /team reviews event details/i
     ]) {
       expect(screen.getAllByText(step).length).toBeGreaterThan(0);
     }
     expect(
+      screen.getByRole("heading", { name: /what to prepare before you enquire/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/does not set aside furniture or finalise rental details/i)
+    ).toBeInTheDocument();
+    expect(
       screen.getByRole("link", { name: /browse categories/i })
     ).toHaveAttribute("href", "/categories");
     expect(
-      screen.getByRole("link", { name: /plan event setups/i })
+      screen.getAllByRole("link", { name: /browse rental listings/i })[0]
+    ).toHaveAttribute("href", "/listings");
+    expect(
+      screen.getAllByRole("link", { name: /browse event guidance/i })[0]
     ).toHaveAttribute("href", "/events");
     expect(
-      screen.getAllByRole("link", { name: /start a rental enquiry/i })[0]
+      screen.getAllByRole("link", { name: /start a quote request/i })[0]
     ).toHaveAttribute("href", "/quote");
     expect(homeMetadata.title).toMatch(/event furniture rental/i);
     expect(homeMetadata.description).toMatch(/browse listings/i);
