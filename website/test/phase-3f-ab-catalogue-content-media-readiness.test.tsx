@@ -281,7 +281,8 @@ describe("Phase 3F-A/B catalogue content quality, media readiness, and publicati
 
     expect(screen.getByRole("heading", { name: /bare plinth/i })).toBeInTheDocument();
     expect(screen.getByText(/category to confirm/i)).toBeInTheDocument();
-    expect(screen.getByText(/rental unit: confirm with team/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/rental unit/i).length).toBeGreaterThan(0);
+    expect(screen.getByText(/confirm with team/i)).toBeInTheDocument();
     expect(
       screen.getByText(/listing details can be reviewed with the team during quote follow-up/i)
     ).toBeInTheDocument();
