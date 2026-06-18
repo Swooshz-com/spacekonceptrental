@@ -586,6 +586,28 @@ select {
   gap: 12px;
 }
 
+.quote-selected-listing {
+  align-items: start;
+  background: #eef5f2;
+  border: 1px solid #bfd8cb;
+  border-radius: 8px;
+  display: grid;
+  gap: 16px;
+  grid-template-columns: minmax(0, 1.2fr) minmax(220px, 0.8fr) auto;
+  margin-bottom: 20px;
+  padding: 18px;
+}
+
+.quote-selected-listing h2,
+.quote-selected-listing p {
+  margin: 0;
+}
+
+.quote-selected-listing p:not(.eyebrow) {
+  color: var(--muted);
+  line-height: 1.55;
+}
+
 .quote-context__details {
   color: var(--muted);
   display: grid;
@@ -672,6 +694,17 @@ select {
   color: var(--text);
   min-height: 44px;
   padding: 12px 14px;
+}
+
+.quote-form input[aria-invalid="true"],
+.quote-form textarea[aria-invalid="true"] {
+  border-color: #a84d21;
+  box-shadow: 0 0 0 2px rgba(168, 77, 33, 0.14);
+}
+
+.quote-form__field-error {
+  color: #7b3418 !important;
+  font-weight: 900 !important;
 }
 
 .quote-form textarea {
@@ -1287,6 +1320,7 @@ select {
   .catalogue-use-cases__grid,
   .detail-layout,
   .route-grid,
+  .quote-selected-listing,
   .admin-dashboard__header,
   .admin-dashboard__grid,
   .quote-inbox__triage-summary {

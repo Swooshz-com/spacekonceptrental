@@ -476,6 +476,99 @@ function activityText(activity: AdminQuoteRequestInboxActivity) {
   return `Status changed from ${activity.statusFrom ?? "unknown"} to ${activity.statusTo ?? "unknown"} (${statusLabel(activity.statusFrom ?? "unknown")} to ${statusLabel(activity.statusTo ?? "unknown")}).`;
 }
 
+function compactContactDetails(
+  quoteRequest: AdminQuoteRequestInboxQuoteRequest
+) {
+  const contact = [quoteRequest.customerEmail, quoteRequest.customerPhone]
+    .filter(Boolean)
+    .join(" / ");
+
+  return [quoteRequest.customerName, contact]
+    .filter(Boolean)
+    .join(" - ") || "No visitor/contact details captured";
+}
+
+function compactEventDetails(quoteRequest: AdminQuoteRequestInboxQuoteRequest) {
+  return [
+    quoteRequest.eventDate ?? "No event date",
+    quoteRequest.venue ?? "No venue or location"
+  ].join(" / ");
+}
+
+function compactRentalDetails(
+  quoteRequest: AdminQuoteRequestInboxQuoteRequest
+) {
+  if (quoteRequest.items.length === 0) {
+    return "No requested rental listings/items captured";
+  }
+
+  return quoteRequest.items
+    .map((item) => `${item.productNameSnapshot} (quantity ${item.quantity})`)
+    .join("; ");
+}
+
+function compactSetupNotes(quoteRequest: AdminQuoteRequestInboxQuoteRequest) {
+  const itemNoteCount = quoteRequest.items.filter((item) => item.notes).length;
+  const notes = [
+    quoteRequest.customerMessage,
+    itemNoteCount > 0
+      ? `${itemNoteCount} item ${itemNoteCount === 1 ? "note" : "notes"} submitted`
+      : undefined
+  ]
+    .filter(Boolean)
+    .join(" / ");
+
+  return notes || "No setup/access notes submitted";
+}
+
+function AdminTriageSnapshot({
+  quoteRequest
+}: {
+  quoteRequest: AdminQuoteRequestInboxQuoteRequest;
+}) {
+  return (
+    <section
+      aria-label={`Admin triage snapshot ${quoteRequest.publicReference}`}
+      className="quote-inbox__section quote-inbox__section--primary quote-inbox__snapshot"
+    >
+      <h4>Admin triage snapshot</h4>
+      <dl className="quote-inbox__details">
+        <div>
+          <dt>Public reference</dt>
+          <dd>{quoteRequest.publicReference}</dd>
+        </div>
+        <div>
+          <dt>Visitor/contact details</dt>
+          <dd>{compactContactDetails(quoteRequest)}</dd>
+        </div>
+        <div>
+          <dt>Event details</dt>
+          <dd>{compactEventDetails(quoteRequest)}</dd>
+        </div>
+        <div>
+          <dt>Rental details</dt>
+          <dd>{compactRentalDetails(quoteRequest)}</dd>
+        </div>
+        <div>
+          <dt>Setup/access notes</dt>
+          <dd>{compactSetupNotes(quoteRequest)}</dd>
+        </div>
+        <div>
+          <dt>Source listing</dt>
+          <dd>
+            {quoteRequest.sourceListingSlug ??
+              "No requested listing slug captured"}
+          </dd>
+        </div>
+        <div>
+          <dt>Current status</dt>
+          <dd>{statusLabel(quoteRequest.status)}</dd>
+        </div>
+      </dl>
+    </section>
+  );
+}
+
 function SourceAndCrmHandoffDetails({
   quoteRequest
 }: {
@@ -2983,6 +3076,7 @@ export function QuoteRequestInboxPanel({
                     Current status: {statusLabel(quoteRequest.status)}
                   </p>
                 </div>
+                <AdminTriageSnapshot quoteRequest={quoteRequest} />
                 <section className="quote-inbox__section quote-inbox__section--primary">
                   <h4>Submitted enquiry triage details</h4>
                   <dl className="quote-inbox__details">

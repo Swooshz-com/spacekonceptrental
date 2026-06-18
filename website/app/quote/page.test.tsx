@@ -21,16 +21,29 @@ describe("QuotePage", () => {
       screen.getByRole("heading", { name: /enquiry for lounge sofa package/i })
     ).toBeInTheDocument();
     expect(
+      screen.getByRole("heading", {
+        name: /selected rental listing: lounge sofa package/i
+      })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/this listing starts the editable requested listings text/i)
+    ).toBeInTheDocument();
+    expect(
       screen.getByText(/the selected listing starts the request, but you can edit quantities, alternates, and event notes before sending/i)
     ).toBeInTheDocument();
     expect(
       screen.getByText(/complete the required contact point first/i)
     ).toBeInTheDocument();
-    expect(screen.getByText("Lounge", { selector: "dd" })).toBeInTheDocument();
-    expect(screen.getByText("set", { selector: "dd" })).toBeInTheDocument();
+    expect(screen.getAllByText("Lounge", { selector: "dd" }).length)
+      .toBeGreaterThan(0);
+    expect(screen.getAllByText("set", { selector: "dd" }).length)
+      .toBeGreaterThan(0);
     expect(screen.getByLabelText(/requested listings or items/i)).toHaveValue(
       "Lounge sofa package"
     );
+    const pageText = document.body.textContent ?? "";
+    expect(pageText.indexOf("Selected rental listing: Lounge sofa package"))
+      .toBeLessThan(pageText.indexOf("Contact details"));
     expect(
       screen.queryByText(/cart|checkout|payment|book now|online ordering/i)
     ).not.toBeInTheDocument();

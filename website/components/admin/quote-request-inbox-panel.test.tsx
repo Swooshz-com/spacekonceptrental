@@ -120,6 +120,37 @@ describe("QuoteRequestInboxPanel", () => {
       screen.getByText(/current status: new enquiry/i)
     ).toBeInTheDocument();
     expect(
+      screen.getByRole("heading", { name: /admin triage snapshot/i })
+    ).toBeInTheDocument();
+    const triageSnapshot = screen.getByLabelText(
+      /admin triage snapshot QR-20260603-NEWEST/i
+    );
+    expect(within(triageSnapshot).getByText(/public reference/i))
+      .toBeInTheDocument();
+    expect(within(triageSnapshot).getByText("QR-20260603-NEWEST"))
+      .toBeInTheDocument();
+    expect(within(triageSnapshot).getByText(/visitor\/contact details/i))
+      .toBeInTheDocument();
+    expect(
+      within(triageSnapshot).getByText(/Maya Tan - maya@example\.test \/ \+65 8123 4567/i)
+    ).toBeInTheDocument();
+    expect(within(triageSnapshot).getByText(/event details/i))
+      .toBeInTheDocument();
+    expect(
+      within(triageSnapshot).getByText(/2026-06-20 \/ Marina Bay Sands/i)
+    ).toBeInTheDocument();
+    expect(within(triageSnapshot).getByText(/rental details/i))
+      .toBeInTheDocument();
+    expect(
+      within(triageSnapshot).getByText(/Modular lounge set \(quantity 2\)/i)
+    ).toBeInTheDocument();
+    expect(within(triageSnapshot).getByText(/setup\/access notes/i))
+      .toBeInTheDocument();
+    expect(within(triageSnapshot).getByText(/1 item note submitted/i))
+      .toBeInTheDocument();
+    expect(within(triageSnapshot).getByText(/source listing/i))
+      .toBeInTheDocument();
+    expect(
       screen.getByRole("heading", { name: /update protected triage status/i })
     ).toBeInTheDocument();
     expect(
@@ -157,7 +188,8 @@ describe("QuoteRequestInboxPanel", () => {
     expect(screen.getByText(/source path/i)).toBeInTheDocument();
     expect(screen.getByText("/quote?listing=modular-lounge-set")).toBeInTheDocument();
     expect(screen.getByText(/requested listing slug/i)).toBeInTheDocument();
-    expect(screen.getByText("modular-lounge-set")).toBeInTheDocument();
+    expect(screen.getAllByText("modular-lounge-set").length)
+      .toBeGreaterThan(0);
     expect(
       screen.getAllByText(/CRM handoff placeholder/i).length
     ).toBeGreaterThan(0);
@@ -186,6 +218,8 @@ describe("QuoteRequestInboxPanel", () => {
     ).toBeInTheDocument();
 
     const pageText = document.body.textContent ?? "";
+    expect(pageText.indexOf("Admin triage snapshot"))
+      .toBeLessThan(pageText.indexOf("Update protected triage status"));
     expect(pageText.indexOf("Submitted enquiry triage details"))
       .toBeLessThan(pageText.indexOf("Update internal triage status for QR-20260603-NEWEST"));
     expect(pageText.indexOf("Update internal triage status for QR-20260603-NEWEST"))

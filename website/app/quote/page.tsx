@@ -70,6 +70,48 @@ function buildInitialItemsText({
   return context.join("\n");
 }
 
+function QuoteSelectedListingBanner({
+  product
+}: {
+  product: PublicCatalogueProduct;
+}) {
+  return (
+    <aside
+      aria-label="Selected rental listing context"
+      className="quote-selected-listing"
+    >
+      <div>
+        <p className="eyebrow">Selected rental listing</p>
+        <h2>Selected rental listing: {product.name}</h2>
+        <p>
+          This listing starts the editable requested listings text. You can
+          change quantities, add alternates, or remove it before sending the
+          enquiry.
+        </p>
+      </div>
+      <dl className="quote-context__details">
+        <div>
+          <dt>Listing reference</dt>
+          <dd>{product.slug}</dd>
+        </div>
+        {product.categoryName ? (
+          <div>
+            <dt>Category</dt>
+            <dd>{product.categoryName}</dd>
+          </div>
+        ) : null}
+        <div>
+          <dt>Rental unit</dt>
+          <dd>{product.rentalUnit}</dd>
+        </div>
+      </dl>
+      <Link className="card-link" href={`/listings/${product.slug}`}>
+        Review selected listing details
+      </Link>
+    </aside>
+  );
+}
+
 function QuoteListingContext({
   product
 }: {
@@ -253,6 +295,10 @@ export default async function QuotePage({
           create an online follow-up page.
         </p>
       </div>
+
+      {selectedListing ? (
+        <QuoteSelectedListingBanner product={selectedListing} />
+      ) : null}
 
       <div className="route-grid quote-page-grid">
         <article className="quote-panel quote-panel--primary">
