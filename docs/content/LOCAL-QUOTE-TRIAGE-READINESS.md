@@ -19,9 +19,9 @@ This document is not evidence, does not record owner approval or owner feedback,
 - Status labels are not public status, public tracking, accepted outcomes, availability statements, or rental completion records.
 - Existing protected write paths may store admin-local status and internal notes, but they remain protected admin workspace data only.
 
-## Response-readiness checklist boundary
+## Manual response checklist boundary
 
-- The response-readiness checklist is derived only from existing request fields.
+- The manual response checklist is derived only from existing request fields.
 - The checklist helps admins review customer name, email or phone, event date, venue/location, requested listings/items, quantities, alternates, setup/access/timing notes, missing owner/business facts, and no-promise reminders.
 - The checklist does not generate an email, SMS, WhatsApp message, webhook, notification, CRM update, AI/RAG output, or provider request.
 - The checklist does not claim that a response was sent, accepted, approved, booked, reserved, paid, or completed.
@@ -29,7 +29,7 @@ This document is not evidence, does not record owner approval or owner feedback,
 ## Public/private quote boundary
 
 - Public quote/enquiry pages remain request intake and receipt-only confirmation.
-- Public users must not see admin triage helpers, admin status lifecycle, response-readiness checklist details, internal notes, admin URLs, release-control internals, or owner handoff internals.
+- Public users must not see admin triage helpers, admin status lifecycle, manual response checklist details, internal notes, admin URLs, release-control internals, or owner handoff internals.
 - Public receipts may show the public reference as a receipt reference only.
 
 ## Receipt/reference boundary

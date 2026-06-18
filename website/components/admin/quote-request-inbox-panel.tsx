@@ -272,6 +272,7 @@ type QuoteRequestInboxPanelProps = {
   inbox: AdminQuoteRequestInboxReadResult;
   fetcher?: typeof fetch;
   onMutationComplete?: () => void | Promise<void>;
+  showFutureCrmHandoffReadiness?: boolean;
 };
 
 type PanelStatus =
@@ -2136,7 +2137,8 @@ function HubSpotSyncDryRunContractSummary({
 export function QuoteRequestInboxPanel({
   inbox,
   fetcher = fetch,
-  onMutationComplete = reloadDashboard
+  onMutationComplete = reloadDashboard,
+  showFutureCrmHandoffReadiness = false
 }: QuoteRequestInboxPanelProps) {
   const [status, setStatus] = useState<PanelStatus>({
     kind: "idle"
@@ -3073,7 +3075,7 @@ export function QuoteRequestInboxPanel({
                 </section>
                 <ManualFollowUpChecklist quoteRequest={quoteRequest} />
                 <section className="quote-inbox__section">
-                  <h4>Response-readiness checklist</h4>
+                  <h4>Manual response checklist</h4>
                   <ul className="admin-readiness__list">
                     {quoteResponseReadinessChecklist(quoteRequest).map((cue) => (
                       <li key={cue}>{cue}</li>
@@ -3195,7 +3197,7 @@ export function QuoteRequestInboxPanel({
         </div>
       )}
 
-      {crmHandoffReadinessPanel}
+      {showFutureCrmHandoffReadiness ? crmHandoffReadinessPanel : null}
     </section>
   );
 }

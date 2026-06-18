@@ -90,6 +90,14 @@ function createCsvResponse(body: string, init: ResponseInit = {}) {
   });
 }
 
+function renderWithFutureCrmHandoffReadiness(
+  props: Parameters<typeof QuoteRequestInboxPanel>[0]
+) {
+  return render(
+    <QuoteRequestInboxPanel {...props} showFutureCrmHandoffReadiness />
+  );
+}
+
 describe("QuoteRequestInboxPanel", () => {
   afterEach(() => {
     cleanup();
@@ -227,6 +235,29 @@ describe("QuoteRequestInboxPanel", () => {
     expect(
       quoteCardView.queryByText(/Future provider - hubspot/i)
     ).not.toBeInTheDocument();
+    expect(
+      quoteCardView.queryByRole("heading", { name: /manual response checklist/i })
+    ).toBeInTheDocument();
+    expect(
+      quoteCardView.queryByRole("heading", { name: /response-readiness checklist/i })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("heading", { name: /Future CRM handoff readiness/i })
+    ).not.toBeInTheDocument();
+    for (const hiddenCrmAction of [
+      /Review queued CRM handoff packet/i,
+      /Run CSV import preflight/i,
+      /Run CRM handoff reconciliation/i,
+      /Run HubSpot sync dry-run/i,
+      /Download HubSpot import CSV/i
+    ]) {
+      expect(
+        screen.queryByRole("button", { name: hiddenCrmAction })
+      ).not.toBeInTheDocument();
+    }
+    expect(screen.queryByText(/HubSpot/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/provider IDs/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/readiness only/i)).not.toBeInTheDocument();
 
     const pageText = document.body.textContent ?? "";
     expect(pageText.indexOf("Admin triage snapshot"))
@@ -429,7 +460,7 @@ describe("QuoteRequestInboxPanel", () => {
         })
       );
 
-    render(<QuoteRequestInboxPanel fetcher={fetcher} inbox={queuedInbox} />);
+    renderWithFutureCrmHandoffReadiness({ fetcher, inbox: queuedInbox });
 
     expect(
       screen.getByRole("heading", {
@@ -551,7 +582,7 @@ describe("QuoteRequestInboxPanel", () => {
         )
       );
 
-    render(<QuoteRequestInboxPanel fetcher={fetcher} inbox={queuedInbox} />);
+    renderWithFutureCrmHandoffReadiness({ fetcher, inbox: queuedInbox });
 
     expect(
       screen.getByRole("button", {
@@ -685,7 +716,7 @@ describe("QuoteRequestInboxPanel", () => {
         })
       );
 
-    render(<QuoteRequestInboxPanel fetcher={fetcher} inbox={queuedInbox} />);
+    renderWithFutureCrmHandoffReadiness({ fetcher, inbox: queuedInbox });
 
     expect(
       screen.getByRole("button", {
@@ -788,7 +819,7 @@ describe("QuoteRequestInboxPanel", () => {
         )
       );
 
-    render(<QuoteRequestInboxPanel fetcher={fetcher} inbox={queuedInbox} />);
+    renderWithFutureCrmHandoffReadiness({ fetcher, inbox: queuedInbox });
 
     fireEvent.click(
       screen.getByRole("button", {
@@ -861,7 +892,7 @@ describe("QuoteRequestInboxPanel", () => {
         })
       );
 
-    render(<QuoteRequestInboxPanel fetcher={fetcher} inbox={queuedInbox} />);
+    renderWithFutureCrmHandoffReadiness({ fetcher, inbox: queuedInbox });
 
     fireEvent.click(
       screen.getByRole("button", {
@@ -948,7 +979,7 @@ describe("QuoteRequestInboxPanel", () => {
         )
       );
 
-    render(<QuoteRequestInboxPanel fetcher={fetcher} inbox={queuedInbox} />);
+    renderWithFutureCrmHandoffReadiness({ fetcher, inbox: queuedInbox });
 
     fireEvent.click(
       screen.getByRole("button", {
@@ -1048,7 +1079,7 @@ describe("QuoteRequestInboxPanel", () => {
         })
       );
 
-    render(<QuoteRequestInboxPanel fetcher={fetcher} inbox={queuedInbox} />);
+    renderWithFutureCrmHandoffReadiness({ fetcher, inbox: queuedInbox });
 
     fireEvent.click(
       screen.getByRole("button", {
@@ -1145,7 +1176,7 @@ describe("QuoteRequestInboxPanel", () => {
         )
       );
 
-    render(<QuoteRequestInboxPanel fetcher={fetcher} inbox={queuedInbox} />);
+    renderWithFutureCrmHandoffReadiness({ fetcher, inbox: queuedInbox });
 
     fireEvent.click(
       screen.getByRole("button", {
@@ -1243,7 +1274,7 @@ describe("QuoteRequestInboxPanel", () => {
         })
       );
 
-    render(<QuoteRequestInboxPanel fetcher={fetcher} inbox={queuedInbox} />);
+    renderWithFutureCrmHandoffReadiness({ fetcher, inbox: queuedInbox });
 
     fireEvent.click(
       screen.getByRole("button", {
@@ -1386,7 +1417,7 @@ describe("QuoteRequestInboxPanel", () => {
         )
       );
 
-    render(<QuoteRequestInboxPanel fetcher={fetcher} inbox={queuedInbox} />);
+    renderWithFutureCrmHandoffReadiness({ fetcher, inbox: queuedInbox });
 
     fireEvent.click(
       screen.getByRole("button", {
@@ -1430,7 +1461,7 @@ describe("QuoteRequestInboxPanel", () => {
       )
       .mockReturnValueOnce(packetRequest);
 
-    render(<QuoteRequestInboxPanel fetcher={fetcher} inbox={queuedInbox} />);
+    renderWithFutureCrmHandoffReadiness({ fetcher, inbox: queuedInbox });
 
     const button = screen.getByRole("button", {
       name: /review queued CRM handoff packet/i
@@ -1507,10 +1538,10 @@ describe("QuoteRequestInboxPanel", () => {
     }
 
     expect(
-      screen.getByRole("button", {
+      screen.queryByRole("button", {
         name: /review queued CRM handoff packet/i
       })
-    ).toBeInTheDocument();
+    ).not.toBeInTheDocument();
   });
 
   it("does not expose per-card CRM handoff failure actions on the manual triage surface", () => {
