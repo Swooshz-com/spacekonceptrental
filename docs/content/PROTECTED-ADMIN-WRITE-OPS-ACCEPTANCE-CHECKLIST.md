@@ -62,6 +62,12 @@ Expected protected media checks:
 - Image listing association, alt text, primary image, active/archive state,
 storage metadata, and sort order labels explain which values can aid public
 browsing.
+- Media coverage review shows the listing name, listing slug, visibility state,
+image count, primary image text state, missing alt text, fallback/archived media
+state, and draft-with-image cues before an admin changes image metadata.
+- Admin media actions link back to the public listing preview, the listing edit
+form, and the image metadata management area so a business owner can move
+between public listing quality checks and protected media updates.
 - Alt text remains public-safe and cannot be used as an availability, legal,
 certification, policy, guarantee, proof, or business fact claim.
 - Missing media and fallback media recovery copy stays protected and does not add
