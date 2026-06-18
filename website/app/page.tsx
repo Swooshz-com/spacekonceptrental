@@ -1,9 +1,14 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
+import type { StaticImageData } from "next/image";
 import heroImage from "../assets/images/hero_homepage.png";
+import chairImage from "../assets/images/product_chair.png";
+import sofaImage from "../assets/images/product_sofa.png";
+import corporateImage from "../assets/images/event_corporate.png";
 import { getPublicCatalogue } from "../lib/catalogue/catalogue-repository";
 import { getQuoteHrefForListing } from "../lib/catalogue/quote-handoff";
+import type { PublicCatalogueProduct } from "../lib/catalogue/types";
 
 export const metadata: Metadata = {
   title: "Event furniture rental catalogue | Space Koncept Rentals",
@@ -57,22 +62,6 @@ const rentalJourneySteps = [
   }
 ];
 
-const publicReviewPrompts = [
-  {
-    title: "Find suitable rental pieces",
-    description: "Browse listing details before requesting a quote."
-  },
-  {
-    title: "Plan by event setup",
-    description:
-      "Use categories and event guidance to describe your setup."
-  },
-  {
-    title: "Send a quote request",
-    description: "Add event details so the team can follow up."
-  }
-];
-
 const rentalAcceptanceChecks = [
   {
     title: "Confirm the rental fit",
@@ -90,6 +79,79 @@ const rentalAcceptanceChecks = [
       "Use the public form to start the enquiry; rental fit and final quote details stay with the team."
   }
 ] as const;
+
+function textOrUndefined(value: string | undefined) {
+  return value?.trim() || undefined;
+}
+
+function featuredListingImage(listing: PublicCatalogueProduct): StaticImageData {
+  const slug = listing.slug.toLowerCase();
+  const categoryName = listing.categoryName?.toLowerCase() ?? "";
+
+  if (slug.includes("chair") || categoryName.includes("seating")) {
+    return chairImage;
+  }
+
+  if (
+    slug.includes("table") ||
+    slug.includes("corporate") ||
+    slug.includes("garden") ||
+    categoryName.includes("event")
+  ) {
+    return corporateImage;
+  }
+
+  return sofaImage;
+}
+
+function featuredListingSummary(listing: PublicCatalogueProduct) {
+  return (
+    textOrUndefined(listing.shortDescription) ??
+    textOrUndefined(listing.description) ??
+    "Share this listing in a quote request so the team can review the event fit."
+  );
+}
+
+function FeaturedListingCard({
+  listing
+}: {
+  listing: PublicCatalogueProduct;
+}) {
+  const imageAltText =
+    textOrUndefined(listing.primaryImage?.altText) ??
+    `${listing.name} furniture rental setup`;
+
+  return (
+    <article className="catalogue-card home-featured-card">
+      <div className="catalogue-card__image">
+        {listing.primaryImage?.publicUrl ? (
+          <img alt={imageAltText} src={listing.primaryImage.publicUrl} />
+        ) : (
+          <Image alt={imageAltText} src={featuredListingImage(listing)} />
+        )}
+      </div>
+      <div className="catalogue-card__body">
+        <div className="catalogue-card__meta">
+          <span>{listing.categoryName ?? "Rental listing"}</span>
+          <span>Rental unit: {listing.rentalUnit}</span>
+        </div>
+        <h2>{listing.name}</h2>
+        <p>{featuredListingSummary(listing)}</p>
+        <div className="catalogue-card__actions">
+          <Link
+            className="card-link card-link--primary"
+            href={getQuoteHrefForListing(listing.slug)}
+          >
+            Request a quote
+          </Link>
+          <Link className="card-link" href={`/listings/${listing.slug}`}>
+            View rental listing
+          </Link>
+        </div>
+      </div>
+    </article>
+  );
+}
 
 export default async function HomePage() {
   const catalogue = await getPublicCatalogue();
@@ -153,35 +215,6 @@ export default async function HomePage() {
 
       <section className="section">
         <div className="section__header">
-          <h2>Plan your rental journey</h2>
-          <p className="section__intro">
-            Listings, categories, event-use guidance, and quote requests help
-            you describe the setup you need.
-          </p>
-        </div>
-        <div className="route-grid">
-          {publicReviewPrompts.map((prompt) => (
-            <article className="route-card" key={prompt.title}>
-              <h2>{prompt.title}</h2>
-              <p>{prompt.description}</p>
-            </article>
-          ))}
-        </div>
-        <div className="hero__actions">
-          <Link className="button button--secondary" href="/listings">
-            Browse listings
-          </Link>
-          <Link className="button button--secondary" href="/events">
-            Browse event guidance
-          </Link>
-          <Link className="button" href="/quote">
-            Request a quote
-          </Link>
-        </div>
-      </section>
-
-      <section className="section">
-        <div className="section__header">
           <h2>Plan by event type</h2>
           <p className="section__intro">
             Start with the setting, then shortlist the furniture and notes the
@@ -200,10 +233,10 @@ export default async function HomePage() {
 
       <section className="section">
         <div className="section__header">
-          <h2>Ready to request a rental quote</h2>
+          <h2>Before you send a rental enquiry</h2>
           <p className="section__intro">
-            Compare listings, categories, event setup notes, and quote details
-            before sending the enquiry.
+            Keep the request practical: pick the listings you want reviewed and
+            add the event context the team needs for follow-up.
           </p>
         </div>
         <div className="route-grid">
@@ -250,25 +283,7 @@ export default async function HomePage() {
         ) : (
           <div className="catalogue-grid">
             {featuredListings.map((listing) => (
-              <article className="route-card" key={listing.id}>
-                {listing.categoryName ? (
-                  <p className="eyebrow">{listing.categoryName}</p>
-                ) : null}
-                <h2>{listing.name}</h2>
-                <p>{listing.shortDescription ?? listing.description}</p>
-                <p>Rental unit: {listing.rentalUnit}</p>
-                <div className="catalogue-card__actions">
-                  <Link className="card-link" href={`/listings/${listing.slug}`}>
-                    View rental listing
-                  </Link>
-                  <Link
-                    className="card-link"
-                    href={getQuoteHrefForListing(listing.slug)}
-                  >
-                    Request a quote
-                  </Link>
-                </div>
-              </article>
+              <FeaturedListingCard key={listing.id} listing={listing} />
             ))}
           </div>
         )}

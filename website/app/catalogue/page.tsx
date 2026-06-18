@@ -153,11 +153,11 @@ function CatalogueCardPlanning({
 }) {
   return (
     <aside className="catalogue-card__planning" aria-label={`Quote planning for ${product.name}`}>
-      <strong>Quote planning</strong>
+      <strong>Quote request starting point</strong>
       <span>
-        Share event date, venue, quantities, and setup notes when you request
-        this listing. Browsing does not set aside furniture or finalise rental
-        details; it only helps the team understand the enquiry.
+        Use this listing to start editable enquiry text. Add event date, venue,
+        quantities, alternates, and setup notes so the team can review the
+        request; browsing does not set aside furniture.
       </span>
     </aside>
   );
@@ -497,16 +497,16 @@ export function CataloguePageContent({
               <CatalogueCardPlanning product={product} />
               <div className="catalogue-card__actions">
                 <Link
+                  className="card-link card-link--primary"
+                  href={getQuoteHrefForListing(product.slug)}
+                >
+                  Request a quote
+                </Link>
+                <Link
                   className="card-link"
                   href={`${detailBasePath}/${product.slug}`}
                 >
                   View rental listing
-                </Link>
-                <Link
-                  className="card-link"
-                  href={getQuoteHrefForListing(product.slug)}
-                >
-                  Request a quote
                 </Link>
               </div>
             </div>

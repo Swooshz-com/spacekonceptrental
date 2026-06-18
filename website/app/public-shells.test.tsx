@@ -41,6 +41,9 @@ describe("public page shells", () => {
     expect(screen.getByRole("heading", { name: /rental details/i })).toBeInTheDocument();
     expect(screen.getByText(/view rental listing/i)).toBeInTheDocument();
     expect(
+      screen.getByText(/this listing carries into the enquiry form/i)
+    ).toBeInTheDocument();
+    expect(
       screen.getByRole("link", { name: /back to catalogue/i })
     ).toHaveAttribute("href", "/catalogue");
     expect(
@@ -75,6 +78,9 @@ describe("public page shells", () => {
     }
     expect(
       screen.getByRole("heading", { name: /featured rental listings/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByAltText(/lounge sofa package furniture rental setup/i)
     ).toBeInTheDocument();
     expect(
       screen
@@ -143,11 +149,13 @@ describe("public page shells", () => {
     expect(
       catalogueLinks.map((link) => link.getAttribute("href"))
     ).toContain("/catalogue/lounge-sofa-package");
+    const quoteLinks = screen.getAllByRole("link", { name: /request a quote/i });
+    expect(quoteLinks.map((link) => link.getAttribute("href"))).toContain(
+      "/quote?listing=lounge-sofa-package"
+    );
     expect(
-      screen
-        .getAllByRole("link", { name: /request a quote/i })
-        .map((link) => link.getAttribute("href"))
-    ).toContain("/quote?listing=lounge-sofa-package");
+      quoteLinks.some((link) => link.classList.contains("card-link--primary"))
+    ).toBe(true);
   });
 
   it("renders a clean empty state when no public listings are available", () => {

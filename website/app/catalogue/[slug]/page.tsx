@@ -185,6 +185,18 @@ export function ProductPageContent({
               textOrUndefined(product.shortDescription) ??
               "Listing details can be reviewed with the team during quote follow-up."}
           </p>
+          <section
+            aria-label="Selected listing enquiry handoff"
+            className="listing-enquiry-panel"
+          >
+            <p className="eyebrow">Quote request</p>
+            <h3>This listing carries into the enquiry form</h3>
+            <p>
+              Use the quote action below to send the listing slug into editable
+              requested-items text. Add quantities, alternates, venue, access,
+              and timing notes before sending the enquiry.
+            </p>
+          </section>
           <dl className="detail-list">
             <div>
               <dt>Category</dt>
@@ -238,6 +250,9 @@ export function ProductPageContent({
           </section>
 
           <div className="hero__actions">
+            <Link className="button" href={getQuoteHrefForListing(product.slug)}>
+              Request a quote
+            </Link>
             <Link className="button button--secondary" href={backHref}>
               {backLabel}
             </Link>
@@ -249,9 +264,6 @@ export function ProductPageContent({
             </Link>
             <Link className="button button--secondary" href="/events">
               Explore event-use ideas
-            </Link>
-            <Link className="button" href={getQuoteHrefForListing(product.slug)}>
-              Request a quote
             </Link>
             <Link className="button button--secondary" href={getQuoteHrefForListing(product.slug)}>
               Send an enquiry

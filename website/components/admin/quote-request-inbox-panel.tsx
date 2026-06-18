@@ -564,7 +564,7 @@ function LocalCrmHandoffPayloadPreview({
   return (
     <section
       aria-label={`Local CRM handoff payload preview ${quoteRequest.publicReference}`}
-      className="quote-inbox__section"
+      className="quote-inbox__section quote-inbox__section--secondary"
     >
       <h4>Local CRM handoff payload preview</h4>
       <p className="category-management__hint">
@@ -2683,7 +2683,7 @@ export function QuoteRequestInboxPanel({
   const crmHandoffReadinessPanel = (
     <section
       aria-label="Future CRM handoff readiness"
-      className="admin-dashboard__card admin-dashboard__card--summary"
+      className="admin-dashboard__card admin-dashboard__card--summary quote-inbox__section--secondary"
     >
       <h3>Future CRM handoff readiness</h3>
       <p className="category-management__hint">
@@ -2976,27 +2976,7 @@ export function QuoteRequestInboxPanel({
                     {quoteRequest.status} - {quoteRequest.source}
                   </p>
                 </div>
-          <section
-            aria-label={`Requested items summary ${quoteRequest.publicReference}`}
-            className="quote-inbox__section"
-          >
-                  <h4>Intake completeness</h4>
-                  <ul className="admin-readiness__list">
-                    {quoteTriageCues(quoteRequest).map((cue) => (
-                      <li key={cue}>{cue}</li>
-                    ))}
-                  </ul>
-                </section>
-                <section className="quote-inbox__section">
-                  <h4>Quote/enquiry context summary</h4>
-                  <p>
-                    Public reference {quoteRequest.publicReference} is a receipt
-                    reference only. It is not customer tracking, status lookup,
-                    availability confirmation, or a rental outcome.
-                  </p>
-                  <p>{quoteNextAction(quoteRequest)}</p>
-                </section>
-                <section className="quote-inbox__section">
+                <section className="quote-inbox__section quote-inbox__section--primary">
                   <h4>Submitted enquiry triage details</h4>
                   <dl className="quote-inbox__details">
                     <div>
@@ -3043,7 +3023,64 @@ export function QuoteRequestInboxPanel({
                     </div>
                   </dl>
                 </section>
+                <form
+                  aria-label={`Update internal triage status ${quoteRequest.publicReference}`}
+                  className="category-management__form quote-inbox__status-form"
+                  onSubmit={(event) =>
+                    void handleStatusSubmit(event, quoteRequest.id)
+                  }
+                >
+                  <label htmlFor={`quote-status-${quoteRequest.id}`}>
+                    Protected internal status for {quoteRequest.publicReference}
+                    <select
+                      defaultValue={quoteRequest.status}
+                      id={`quote-status-${quoteRequest.id}`}
+                      name="status"
+                    >
+                      {quoteStatuses.map((quoteStatus) => (
+                        <option key={quoteStatus} value={quoteStatus}>
+                          {statusLabel(quoteStatus)}
+                        </option>
+                      ))}
+                    </select>
+                    <small>Status is an admin-only triage control and is never shown as a public quote status view, confirmed outcome, or public tracking lane.</small>
+                  </label>
+                  <p className="category-management__hint">
+                    Update internal triage status. This does not contact the
+                    customer or sync to CRM, and it does not email customers or queue
+                    automation.
+                  </p>
+                  <button
+                    className="button"
+                    disabled={status.kind === "pending"}
+                    type="submit"
+                  >
+                    {status.kind === "pending"
+                      ? `Updating internal triage status for ${quoteRequest.publicReference}`
+                      : `Update internal triage status for ${quoteRequest.publicReference}`}
+                  </button>
+                </form>
+                <section
+                  aria-label={`Requested items summary ${quoteRequest.publicReference}`}
+                  className="quote-inbox__section"
+                >
+                  <h4>Intake completeness</h4>
+                  <ul className="admin-readiness__list">
+                    {quoteTriageCues(quoteRequest).map((cue) => (
+                      <li key={cue}>{cue}</li>
+                    ))}
+                  </ul>
+                </section>
                 <section className="quote-inbox__section">
+                  <h4>Quote/enquiry context summary</h4>
+                  <p>
+                    Public reference {quoteRequest.publicReference} is a receipt
+                    reference only. It is not customer tracking, status lookup,
+                    availability confirmation, or a rental outcome.
+                  </p>
+                  <p>{quoteNextAction(quoteRequest)}</p>
+                </section>
+                <section className="quote-inbox__section quote-inbox__section--secondary">
                   <h4>Source metadata and CRM handoff placeholder</h4>
                   <SourceAndCrmHandoffDetails quoteRequest={quoteRequest} />
                   <p className="category-management__hint">
@@ -3054,7 +3091,7 @@ export function QuoteRequestInboxPanel({
                   </p>
                 </section>
                 <LocalCrmHandoffPayloadPreview quoteRequest={quoteRequest} />
-                <section className="quote-inbox__section">
+                <section className="quote-inbox__section quote-inbox__section--secondary">
                   <h4>Local CRM handoff queue preparation</h4>
                   <p className="category-management__hint">
                     This marks local readiness for future CRM handoff only. This
@@ -3211,43 +3248,6 @@ export function QuoteRequestInboxPanel({
                     </ul>
                   )}
                 </section>
-                <form
-                  aria-label={`Update internal triage status ${quoteRequest.publicReference}`}
-                  className="category-management__form"
-                  onSubmit={(event) =>
-                    void handleStatusSubmit(event, quoteRequest.id)
-                  }
-                >
-                  <label htmlFor={`quote-status-${quoteRequest.id}`}>
-                    Protected internal status for {quoteRequest.publicReference}
-                    <select
-                      defaultValue={quoteRequest.status}
-                      id={`quote-status-${quoteRequest.id}`}
-                      name="status"
-                    >
-                      {quoteStatuses.map((quoteStatus) => (
-                        <option key={quoteStatus} value={quoteStatus}>
-                          {statusLabel(quoteStatus)}
-                        </option>
-                      ))}
-                    </select>
-                    <small>Status is an admin-only triage control and is never shown as a public quote status view, confirmed outcome, or public tracking lane.</small>
-                  </label>
-                  <p className="category-management__hint">
-                    Update internal triage status. This does not contact the
-                    customer or sync to CRM, and it does not email customers or queue
-                    automation.
-                  </p>
-                  <button
-                    className="button"
-                    disabled={status.kind === "pending"}
-                    type="submit"
-                  >
-                    {status.kind === "pending"
-                      ? `Updating internal triage status for ${quoteRequest.publicReference}`
-                      : `Update internal triage status for ${quoteRequest.publicReference}`}
-                  </button>
-                </form>
               </article>
             );
           })}

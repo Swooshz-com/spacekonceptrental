@@ -23,6 +23,9 @@ describe("QuotePage", () => {
     expect(
       screen.getByText(/the selected listing starts the request, but you can edit quantities, alternates, and event notes before sending/i)
     ).toBeInTheDocument();
+    expect(
+      screen.getByText(/complete the required contact point first/i)
+    ).toBeInTheDocument();
     expect(screen.getByText("Lounge", { selector: "dd" })).toBeInTheDocument();
     expect(screen.getByText("set", { selector: "dd" })).toBeInTheDocument();
     expect(screen.getByLabelText(/requested listings or items/i)).toHaveValue(
