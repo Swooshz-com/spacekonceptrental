@@ -7,21 +7,24 @@ admin triage flow. It is a local/preview QA path, not deployment approval.
 
 1. Open the homepage.
 2. Confirm the first screen clearly says this is a furniture/event rental website.
-3. Use the homepage CTA to browse rental listings or the catalogue.
-4. Browse catalogue/listing cards.
-5. Use listing search, category filters, event-use filters, and reset filters if available.
-6. Confirm the listing results summary updates the shown count and active browsing context.
-7. Confirm featured and catalogue listing cards show useful rental details from existing catalogue data: name, category when available, description, rental unit, listing reference, image or fallback image, and quote/enquiry CTA.
-8. Confirm the primary card action starts a quote request and the secondary action opens rental details.
-9. Open a listing detail page or use a card CTA to start the enquiry flow.
-10. Confirm the listing detail page explains that the selected listing carries into editable enquiry text and shows the listing reference.
-11. Confirm the quote page shows a selected rental listing panel near the top when a listing is carried in.
-12. Confirm the selected listing starts editable requested-listings text only and can be changed before submit.
-13. Submit the form without name or contact details and confirm inline required-field guidance appears while entered rental details remain in the form.
-14. Submit a quote/enquiry request with name, email or phone, event date if known, venue or location, requested listings/items, quantities, setup/access notes, timing notes, and alternates if relevant.
-15. Confirm the submit button uses a clear sending state and cannot be accidentally submitted twice while the request is in progress.
-16. Confirm the success receipt appears with a public receipt reference when returned, a next team action, and browsing/another-enquiry actions.
-17. Confirm the success receipt does not expose admin status, tracking, provider, database IDs, or internal workflow details.
+3. Confirm the homepage explains the enquiry path: browse catalogue/listings, view listing details, submit an editable quote request, and team follow-up.
+4. Confirm quote-prep guidance names event date, venue or location, requested rental listings/items, approximate quantities, setup/access/timing notes, and alternates.
+5. Confirm homepage guidance CTAs reach rental listings and the quote request.
+6. Use the homepage CTA to browse rental listings or the catalogue.
+7. Browse catalogue/listing cards.
+8. Use listing search, category filters, event-use filters, and reset filters if available.
+9. Confirm the listing results summary updates the shown count and active browsing context.
+10. Confirm featured and catalogue listing cards show useful rental details from existing catalogue data: name, category when available, description, rental unit, listing reference, image or fallback image, and quote/enquiry CTA.
+11. Confirm the primary card action starts a quote request and the secondary action opens rental details.
+12. Open a listing detail page or use a card CTA to start the enquiry flow.
+13. Confirm the listing detail page explains that the selected listing carries into editable enquiry text and shows the listing reference.
+14. Confirm the quote page shows a selected rental listing panel near the top when a listing is carried in.
+15. Confirm the selected listing starts editable requested-listings text only and can be changed before submit.
+16. Submit the form without name or contact details and confirm inline required-field guidance appears while entered rental details remain in the form.
+17. Submit a quote/enquiry request with name, email or phone, event date if known, venue or location, requested listings/items, quantities, setup/access notes, timing notes, and alternates if relevant.
+18. Confirm the submit button uses a clear sending state and cannot be accidentally submitted twice while the request is in progress.
+19. Confirm the success receipt appears with a public receipt reference when returned, a next team action, and browsing/another-enquiry actions.
+20. Confirm the success receipt does not expose admin status, tracking, provider, database IDs, or internal workflow details.
 
 ## Persistence And Admin Triage
 
