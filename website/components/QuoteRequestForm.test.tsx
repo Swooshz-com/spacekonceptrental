@@ -260,6 +260,109 @@ describe("QuoteRequestForm", () => {
     expect(alert).not.toHaveTextContent(/secret/i);
   });
 
+  it("shows inline required guidance and preserves entered rental details", async () => {
+    const fetchMock = vi.fn();
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(<QuoteRequestForm initialItemsText="Lounge sofa package" />);
+
+    fireEvent.change(screen.getByLabelText(/venue/i), {
+      target: { value: "National Gallery Singapore" }
+    });
+    fireEvent.change(screen.getByLabelText(/requested listings or items/i), {
+      target: { value: "Lounge sofa package\n4 cocktail tables" }
+    });
+    fireEvent.change(screen.getByLabelText(/customer message/i), {
+      target: {
+        value: "Warm reception setup with alternates if the sofa colour changes."
+      }
+    });
+
+    fireEvent.click(
+      screen.getByRole("button", { name: /review and send an enquiry/i })
+    );
+
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      /review the highlighted required fields/i
+    );
+    expect(screen.getByText(/name is required/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/email address or phone number is required/i)
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText(/name/i)).toHaveAttribute(
+      "aria-invalid",
+      "true"
+    );
+    expect(screen.getByRole("textbox", { name: /^email address$/i }))
+      .toHaveAttribute(
+      "aria-invalid",
+      "true"
+    );
+    expect(screen.getByRole("textbox", { name: /^phone number/i }))
+      .toHaveAttribute(
+      "aria-invalid",
+      "true"
+    );
+    expect(screen.getByLabelText(/venue/i)).toHaveValue(
+      "National Gallery Singapore"
+    );
+    expect(screen.getByLabelText(/requested listings or items/i)).toHaveValue(
+      "Lounge sofa package\n4 cocktail tables"
+    );
+    expect(screen.getByLabelText(/customer message/i)).toHaveValue(
+      "Warm reception setup with alternates if the sofa colour changes."
+    );
+  });
+
+  it("uses a clear submitting state and prevents duplicate submits", async () => {
+    let resolveSubmit: ((value: Response) => void) | undefined;
+    const submitPromise = new Promise<Response>((resolve) => {
+      resolveSubmit = resolve;
+    });
+    const fetchMock = vi.fn().mockReturnValue(submitPromise);
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(<QuoteRequestForm />);
+
+    fireEvent.change(screen.getByLabelText(/name/i), {
+      target: { value: "Maya Tan" }
+    });
+    fireEvent.change(screen.getByLabelText(/email address/i), {
+      target: { value: "maya@example.test" }
+    });
+    fireEvent.click(
+      screen.getByRole("button", { name: /review and send an enquiry/i })
+    );
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", { name: /sending enquiry/i })
+      ).toBeDisabled();
+    });
+    fireEvent.click(screen.getByRole("button", { name: /sending enquiry/i }));
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+
+    resolveSubmit?.(
+      new Response(
+        JSON.stringify({
+          status: "received",
+          quoteRequestId: "70000000-0000-4000-8000-000000000001",
+          publicReference: "QR-20260527-ABC12345"
+        }),
+        {
+          headers: { "content-type": "application/json" },
+          status: 201
+        }
+      )
+    );
+
+    expect(await screen.findByText(/enquiry received/i)).toBeInTheDocument();
+  });
+
   it("submits a selected listing as one quote item and keeps success receipt-only", async () => {
     const fetchMock = vi.fn(async () => {
       return new Response(

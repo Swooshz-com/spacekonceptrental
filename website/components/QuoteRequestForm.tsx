@@ -17,6 +17,11 @@ type SubmitState =
   | { status: "success"; publicReference?: string; requestId?: string }
   | { status: "error"; message: string };
 
+type FieldErrors = {
+  customerName?: string;
+  contact?: string;
+};
+
 const customerMessageMaxLength = 1200;
 const requestedItemsMaxCount = 20;
 const requestedItemMaxLength = 180;
@@ -120,6 +125,7 @@ export default function QuoteRequestForm({
   const [submitState, setSubmitState] = useState<SubmitState>({
     status: "idle"
   });
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [submissionRequestId] = useState(createSubmissionRequestId);
   const [preferredContactMethod, setPreferredContactMethod] = useState("");
   const [customerMessageText, setCustomerMessageText] = useState("");
@@ -188,20 +194,30 @@ export default function QuoteRequestForm({
       items: parseRequestedItems(itemsText, itemNotesText)
     };
 
+    const nextFieldErrors: FieldErrors = {};
+
     if (!payload.customerName) {
-      setSubmitState({
-        status: "error",
-        message:
-          "Add your name so the team can review this enquiry with the right contact details."
-      });
-      return;
+      nextFieldErrors.customerName =
+        "Name is required so the team knows who sent the enquiry.";
     }
 
     if (!payload.customerEmail && !payload.customerPhone) {
+      nextFieldErrors.contact =
+        "Email address or phone number is required for direct quote follow-up.";
+    }
+
+    if (nextFieldErrors.customerName || nextFieldErrors.contact) {
+      const missingFieldSummary =
+        nextFieldErrors.customerName && nextFieldErrors.contact
+          ? "Add your name and share an email address or phone number."
+          : nextFieldErrors.customerName
+            ? "Add your name so the team can review this enquiry."
+            : "Share an email address or phone number so the team can follow up on this enquiry.";
+
+      setFieldErrors(nextFieldErrors);
       setSubmitState({
         status: "error",
-        message:
-          "Share an email address or phone number so the team can follow up on this enquiry."
+        message: `${missingFieldSummary} Review the highlighted required fields before sending the enquiry.`
       });
       return;
     }
@@ -215,6 +231,7 @@ export default function QuoteRequestForm({
       return;
     }
 
+    setFieldErrors({});
     setSubmitState({ status: "submitting" });
 
     try {
@@ -249,7 +266,12 @@ export default function QuoteRequestForm({
       : undefined;
 
   return (
-    <form className="quote-form" noValidate onSubmit={handleSubmit}>
+    <form
+      aria-busy={submitState.status === "submitting"}
+      className="quote-form"
+      noValidate
+      onSubmit={handleSubmit}
+    >
       <p className="quote-form__intro">
         Share your name. Share one reliable contact method, event date if known,
         venue or location, requested listings or items, quantities, alternates,
@@ -272,20 +294,63 @@ export default function QuoteRequestForm({
         <legend>Contact details</legend>
         <label>
           Your name (required)
-          <input autoComplete="name" name="customerName" required type="text" />
+          <input
+            aria-describedby={
+              fieldErrors.customerName ? "quote-customer-name-error" : undefined
+            }
+            aria-invalid={fieldErrors.customerName ? "true" : undefined}
+            autoComplete="name"
+            name="customerName"
+            required
+            type="text"
+          />
+          {fieldErrors.customerName ? (
+            <small
+              className="quote-form__field-error"
+              id="quote-customer-name-error"
+            >
+              {fieldErrors.customerName}
+            </small>
+          ) : null}
         </label>
         <label>
           Email address
-          <input autoComplete="email" name="customerEmail" type="email" />
+          <input
+            aria-describedby={
+              fieldErrors.contact ? "quote-contact-error" : undefined
+            }
+            aria-invalid={fieldErrors.contact ? "true" : undefined}
+            autoComplete="email"
+            name="customerEmail"
+            type="email"
+          />
         </label>
         <label>
           Phone number
-          <input autoComplete="tel" name="customerPhone" type="tel" />
-          <small>
+          <input
+            aria-describedby={
+              fieldErrors.contact
+                ? "quote-contact-helper quote-contact-error"
+                : "quote-contact-helper"
+            }
+            aria-invalid={fieldErrors.contact ? "true" : undefined}
+            autoComplete="tel"
+            name="customerPhone"
+            type="tel"
+          />
+          <small id="quote-contact-helper">
             Share email, phone, or both. Email or phone required. The team uses
             this only for direct quote follow-up.
           </small>
         </label>
+        {fieldErrors.contact ? (
+          <small
+            className="quote-form__field-error quote-form__full-width"
+            id="quote-contact-error"
+          >
+            {fieldErrors.contact}
+          </small>
+        ) : null}
         <label>
           Preferred contact method
           <select
@@ -324,7 +389,7 @@ export default function QuoteRequestForm({
         </label>
       </fieldset>
       <fieldset className="quote-form__field-grid">
-        <legend>Requested items</legend>
+        <legend>Rental details</legend>
         <label className="quote-form__full-width">
           Requested listings or items
           <textarea
@@ -334,10 +399,14 @@ export default function QuoteRequestForm({
             rows={4}
           />
           <small>
-            Use one line per requested listing or item. This editable text can
-            keep listing, category, event-use, or search context as request notes.
+            Use one line per requested listing or item. Add quantities here
+            when you know them; this editable text can keep listing, category,
+            event-use, or search context as request notes.
           </small>
         </label>
+      </fieldset>
+      <fieldset className="quote-form__field-grid">
+        <legend>Setup/access notes</legend>
         <label className="quote-form__full-width">
           Event goals or customer message
           <textarea
@@ -350,8 +419,8 @@ export default function QuoteRequestForm({
             value={customerMessageText}
           />
           <small>
-            Use this area to share more details, alternates, and practical
-            setup/access/timing notes.
+            Share the event style, setup/access/timing notes, rental alternates,
+            placement needs, or what the team should help you decide.
           </small>
         </label>
         <label className="quote-form__full-width">
@@ -365,7 +434,7 @@ export default function QuoteRequestForm({
           />
           <small>
             Add quantities, alternates, dimensions, setup, access, and timing
-            notes for the requested rental items.
+            notes for the requested rental listings/items.
           </small>
         </label>
       </fieldset>
@@ -375,8 +444,8 @@ export default function QuoteRequestForm({
         type="submit"
       >
         {submitState.status === "submitting"
-          ? "Sending"
-          : "Send an enquiry"}
+          ? "Sending enquiry..."
+          : "Review and send an enquiry"}
       </button>
       {submitState.status === "success" ? (
         <section
