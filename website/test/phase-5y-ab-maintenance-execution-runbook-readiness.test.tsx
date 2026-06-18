@@ -92,7 +92,7 @@ describe("Phase 5Y-A/B maintenance execution runbook readiness", () => {
   });
 
   it("renders the protected Phase 5Y helper and full helper chain for authorised admin home state", () => {
-    render(<AdminShellContent state={authorisedState} view={{ kind: "home" }} />);
+    render(<AdminShellContent state={authorisedState} view={{ kind: "content-readiness" }} />);
 
     for (const heading of [
       /owner-review walkthrough readiness helper/i,
@@ -156,7 +156,7 @@ describe("Phase 5Y-A/B maintenance execution runbook readiness", () => {
     ];
 
     for (const state of blockedStates) {
-      const { unmount } = render(<AdminShellContent state={state} view={{ kind: "home" }} />);
+      const { unmount } = render(<AdminShellContent state={state} view={{ kind: "content-readiness" }} />);
 
       expect(
         screen.queryByRole("heading", {

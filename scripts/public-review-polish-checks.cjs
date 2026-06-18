@@ -140,16 +140,21 @@ function assert(condition, message) {
   if (!condition) fail(message);
 }
 function assertVisibleMvpAdminHome(adminSource, label) {
+  const start = adminSource.indexOf('function AdminOperationsHome');
+  const end = adminSource.indexOf('const contentReadinessSources', start);
+  assert(start !== -1 && end !== -1, `${label} must include the normal admin home source block`);
+  const adminHomeSource = adminSource.slice(start, end);
+
   assert(
-    /function AdminOperationsHome[\s\S]*href: "\/admin\/listings"[\s\S]*href: "\/admin\/categories"[\s\S]*href: "\/admin\/media"[\s\S]*href: "\/admin\/quotes"/.test(adminSource),
+    /href: "\/admin\/listings"[\s\S]*href: "\/admin\/categories"[\s\S]*href: "\/admin\/media"[\s\S]*href: "\/admin\/quotes"/.test(adminHomeSource),
     `${label} must keep normal admin home focused on listings, categories, media, and quote requests`
   );
   assert(
-    !/function AdminOperationsHome[\s\S]*<OwnerReadinessHelpersPanel \/>/.test(adminSource),
+    !/<OwnerReadinessHelpersPanel \/>/.test(adminHomeSource),
     `${label} must not render owner-readiness helpers from the normal visible MVP admin home`
   );
   assert(
-    !/function AdminOperationsHome[\s\S]*href: "\/admin\/(?:content-readiness|public-parity|release-control)"/.test(adminSource),
+    !/href: "\/admin\/(?:content-readiness|public-parity|release-control)"/.test(adminHomeSource),
     `${label} must not advertise old internal admin routes from the normal visible MVP admin home`
   );
 }

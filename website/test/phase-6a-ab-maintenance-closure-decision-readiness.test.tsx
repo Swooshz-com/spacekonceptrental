@@ -92,7 +92,7 @@ describe("Phase 6A-A/B maintenance closure decision readiness", () => {
   });
 
   it("renders the protected Phase 6A helper after Phase 5Z in the full helper chain", () => {
-    render(<AdminShellContent state={authorisedState} view={{ kind: "home" }} />);
+    render(<AdminShellContent state={authorisedState} view={{ kind: "content-readiness" }} />);
 
     const expectedHeadings = [
       /owner-review walkthrough readiness helper/i,

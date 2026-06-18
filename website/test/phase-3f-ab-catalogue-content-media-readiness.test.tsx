@@ -375,12 +375,12 @@ describe("Phase 3F-A/B catalogue content quality, media readiness, and publicati
     cleanup();
     render(<CategoryManagementPanel categories={[adminCategory, emptyPublishedCategory]} />);
 
-    expect(screen.getByText(/category visibility readiness/i)).toBeInTheDocument();
+    expect(screen.getByText(/category visibility review/i)).toBeInTheDocument();
     expect(
       screen.getByText(/published categories without published listings: lighting/i)
     ).toBeInTheDocument();
     expect(
-      within(screen.getByLabelText(/category readiness lighting/i)).getByText(
+      within(screen.getByLabelText(/category visibility review lighting/i)).getByText(
         /published category has no published listings/i
       )
     ).toBeInTheDocument();
@@ -394,7 +394,7 @@ describe("Phase 3F-A/B catalogue content quality, media readiness, and publicati
       />
     );
 
-    expect(screen.getByText(/media readiness by listing/i)).toBeInTheDocument();
+    expect(screen.getByText(/media coverage by listing/i)).toBeInTheDocument();
     expect(
       screen.getByText(/modular lounge has 2 active primary images/i)
     ).toBeInTheDocument();

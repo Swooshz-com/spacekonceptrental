@@ -212,7 +212,7 @@ describe("Phase 4A-A/B local release-control gate", () => {
     expect(shell).toContain(firewallMatrixPath);
     expect(shell).toContain("phase4aReleaseControlSnapshot");
     expect(shell).toContain("Release control");
-    expect(shell).toContain("/admin/release-control");
+    expect(shell).toContain('view.kind === "release-control"');
     expect(route).toContain('view={{ kind: "release-control" }}');
   });
 

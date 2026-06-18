@@ -293,7 +293,7 @@ describe("Phase 3B-A/B admin operations readiness and quote triage polish", () =
   it("shows category and media readiness guidance without destructive flows", () => {
     render(<CategoryManagementPanel categories={[category, emptyCategory]} />);
 
-    expect(screen.getByText(/category readiness/i)).toBeInTheDocument();
+    expect(screen.getByText(/category visibility review/i)).toBeInTheDocument();
     expect(screen.getByText(/published grouping with 1 listing/i)).toBeInTheDocument();
     expect(
       screen.getByText(/add listings before this category helps public browsing/i)
@@ -321,10 +321,10 @@ describe("Phase 3B-A/B admin operations readiness and quote triage polish", () =
     );
 
     expect(
-      screen.getByRole("heading", { name: /^media readiness$/i })
+      screen.getByRole("heading", { name: /^media coverage$/i })
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/primary active image is ready for owner review context/i)
+      screen.getByText(/primary active image can lead the public listing gallery/i)
     ).toBeInTheDocument();
     expect(
       screen.getByText(/missing alt text for public accessibility/i)

@@ -297,7 +297,7 @@ describe("Phase 3X-A/B protected admin write-ops hardening", () => {
     render(<ListingImageMetadataManagementPanel images={[sampleImage]} products={[sampleListing]} />);
     text = document.body.textContent ?? "";
     expect(text).toMatch(/public-safe alt text/i);
-    expect(text).toMatch(/Media readiness/i);
+    expect(text).toMatch(/Media coverage/i);
     expect(text).toMatch(/primary public browsing image/i);
     expect(text).toMatch(/availability assertion/i);
     expect(text).toMatch(/Protected write boundary: primary and active media choices can affect public browsing/i);

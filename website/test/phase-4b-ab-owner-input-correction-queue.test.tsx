@@ -227,7 +227,7 @@ describe("Phase 4C-A/B owner-input correction queue", () => {
     expect(shell).toContain("ownerInputIntakeCategories");
     expect(shell).toContain("localCorrectionQueueStatuses");
     expect(shell).toContain("reviewReadyHandoffClosureStates");
-    expect(shell).toContain("/admin/release-control");
+    expect(shell).toContain('view.kind === "release-control"');
     expect(route).toContain('view={{ kind: "release-control" }}');
   });
 

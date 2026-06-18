@@ -2384,8 +2384,8 @@ function ReleaseControlWorkspace() {
             boundaries without recording owner feedback or sign-off.
           </p>
         </section>
-      </div>
-    </section>
+        </div>
+      </section>
   );
 }
 
@@ -2427,35 +2427,36 @@ function ContentReadinessWorkspace() {
   ] as const;
 
   return (
-    <section className="admin-dashboard" aria-label="Content readiness workspace">
-      <div className="admin-dashboard__header">
-        <div>
-          <p className="eyebrow">Owner review</p>
-          <h2>Content readiness</h2>
-          <p>
-            Missing facts remain Owner input required. This protected admin
-            workspace summarizes the repo-local content intake and gap register
-            without publishing owner-review details to public routes.
-          </p>
+    <>
+      <section className="admin-dashboard" aria-label="Content readiness workspace">
+        <div className="admin-dashboard__header">
+          <div>
+            <p className="eyebrow">Owner review</p>
+            <h2>Content readiness</h2>
+            <p>
+              Missing facts remain Owner input required. This protected admin
+              workspace summarizes the repo-local content intake and gap register
+              without publishing owner-review details to public routes.
+            </p>
+          </div>
         </div>
-      </div>
 
-      <div className="admin-dashboard__grid">
-        <section className="admin-dashboard__card admin-dashboard__card--summary">
-          <h3>Owner-review execution snapshot</h3>
-          <dl className="quote-inbox__details">
-            {executionSnapshot.map(([label, value]) => (
-              <div key={label}>
-                <dt>{label}</dt>
-                <dd>{value}</dd>
-              </div>
-            ))}
-          </dl>
-          <p>
-            Review decisions stay repo-local and protected until the owner
-            supplies missing facts and separately approves any launch step.
-          </p>
-        </section>
+        <div className="admin-dashboard__grid">
+          <section className="admin-dashboard__card admin-dashboard__card--summary">
+            <h3>Owner-review execution snapshot</h3>
+            <dl className="quote-inbox__details">
+              {executionSnapshot.map(([label, value]) => (
+                <div key={label}>
+                  <dt>{label}</dt>
+                  <dd>{value}</dd>
+                </div>
+              ))}
+            </dl>
+            <p>
+              Review decisions stay repo-local and protected until the owner
+              supplies missing facts and separately approves any launch step.
+            </p>
+          </section>
 
         <section className="admin-dashboard__card admin-dashboard__card--summary">
           <h3>Dry-run review snapshot</h3>
@@ -2757,8 +2758,10 @@ function ContentReadinessWorkspace() {
             </ul>
           </section>
         ))}
-      </div>
-    </section>
+        </div>
+      </section>
+      <OwnerReadinessHelpersPanel />
+    </>
   );
 }
 
@@ -6670,6 +6673,7 @@ function AdminOperationsView({
   return (
     <>
       <AdminDashboard dashboard={state.dashboard} />
+      <OwnerReadinessHelpersPanel />
       <QuoteRequestInboxPanel inbox={state.quoteInbox} />
     </>
   );

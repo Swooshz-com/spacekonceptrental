@@ -96,7 +96,7 @@ describe("Phase 6E-A/B maintenance closure audit follow-up triage readiness", ()
   });
 
   it("renders the protected Phase 6E helper for authorised admin on the real home view path", () => {
-    render(<AdminShellContent state={authorisedState} view={{ kind: "home" }} />);
+    render(<AdminShellContent state={authorisedState} view={{ kind: "content-readiness" }} />);
 
     for (const heading of [
       /owner-review walkthrough readiness helper/i,
@@ -149,7 +149,7 @@ describe("Phase 6E-A/B maintenance closure audit follow-up triage readiness", ()
     ];
 
     for (const state of blockedStates) {
-      const { unmount } = render(<AdminShellContent state={state} view={{ kind: "home" }} />);
+      const { unmount } = render(<AdminShellContent state={state} view={{ kind: "content-readiness" }} />);
 
       expect(screen.queryByRole("heading", { name: /maintenance closure audit follow-up triage readiness helper/i })).not.toBeInTheDocument();
       expect(screen.queryByText(auditFollowUpTriageReadinessDocPath)).not.toBeInTheDocument();

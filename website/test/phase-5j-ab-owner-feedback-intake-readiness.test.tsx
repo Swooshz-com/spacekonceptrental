@@ -99,7 +99,7 @@ describe("Phase 5J-A/B owner feedback intake readiness", () => {
   });
 
   it("renders the protected owner-feedback readiness helper only for authorised admin state", () => {
-    render(<AdminShellContent state={authorisedState} view={{ kind: "home" }} />);
+    render(<AdminShellContent state={authorisedState} view={{ kind: "content-readiness" }} />);
 
     expect(
       screen.getByRole("heading", {
@@ -128,7 +128,7 @@ describe("Phase 5J-A/B owner feedback intake readiness", () => {
     ];
 
     for (const state of blockedStates) {
-      const { unmount } = render(<AdminShellContent state={state} view={{ kind: "home" }} />);
+      const { unmount } = render(<AdminShellContent state={state} view={{ kind: "content-readiness" }} />);
 
       expect(
         screen.queryByRole("heading", {
