@@ -57,6 +57,9 @@ describe("public page shells", () => {
       })
     ).toBeInTheDocument();
     expect(
+      screen.getByText(/browse rental listings, choose useful catalogue details, and send one enquiry for team follow-up/i)
+    ).toBeInTheDocument();
+    expect(
       screen.getAllByRole("link", { name: /request a quote/i })[0]
     ).toHaveAttribute("href", "/quote");
     expect(
@@ -114,7 +117,7 @@ describe("public page shells", () => {
     render(await QuotePage());
 
     expect(screen.getByRole("heading", { name: /request a rental quote/i })).toBeInTheDocument();
-    expect(screen.getByText(/furniture rental follow-up/i)).toBeInTheDocument();
+    expect(screen.getByText(/share contact details, event date, venue, requested listings, quantities, and setup notes/i)).toBeInTheDocument();
     expect(screen.queryByText(/shell|mvp/i)).not.toBeInTheDocument();
     expect(
       screen.queryByText(
@@ -158,7 +161,11 @@ describe("public page shells", () => {
       />
     );
 
-    expect(screen.getByRole("heading", { name: /furniture catalogue/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", {
+        name: /furniture catalogue for event rentals/i
+      })
+    ).toBeInTheDocument();
     expect(screen.getByText(/no public rental listings are available right now/i)).toBeInTheDocument();
   });
 
@@ -326,5 +333,26 @@ describe("public page shells", () => {
         /cart|checkout|payment|customer account|stock reservation|order fulfilment|online ordering/i
       )
     ).not.toBeInTheDocument();
+  });
+
+  it("documents a concise manual QA path for the visible public catalogue enquiry slice", () => {
+    const manualQaSource = readFileSync(
+      resolve(process.cwd(), "../docs/manual-qa/MVP-VISUAL-SLICE-QA.md"),
+      "utf8"
+    );
+
+    for (const requiredStep of [
+      "Open the homepage",
+      "Browse catalogue/listing cards",
+      "Submit a quote/enquiry request",
+      "Confirm the success receipt",
+      "Open protected admin quote requests",
+      "Update internal triage status",
+      "Confirm no cart, checkout, payment, order, booking, reservation, customer account, or provider-sync flow appears"
+    ]) {
+      expect(manualQaSource).toContain(requiredStep);
+    }
+    expect(manualQaSource).toContain("Supabase-backed quote persistence");
+    expect(manualQaSource).not.toMatch(/owner-review|governance ladder|HubSpot sync/i);
   });
 });

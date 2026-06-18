@@ -13,9 +13,9 @@ type QuotePageProps = {
 };
 
 export const metadata: Metadata = {
-  title: "Quote request | Space Koncept Rentals",
+  title: "Quote request for furniture rental enquiries | Space Koncept Rentals",
   description:
-    "Send an event furniture rental quote request with event date, venue, requested items, quantities, and setup notes."
+    "Submit an event furniture rental enquiry with event date, venue, requested listings, quantities, and setup notes."
 };
 
 function firstSearchParam(value: string | string[] | undefined) {
@@ -80,10 +80,9 @@ function QuoteListingContext({
       <p className="eyebrow">Selected listing</p>
       <h2>Enquiry for {product.name}</h2>
       <p>
-        Listing context is a starting point only for your rental request and
-        remains editable request text. It helps the team understand the item
-        you are considering. Share event dates, quantities, alternates, and
-        setup/access/timing notes so the team can review the request and
+        The selected listing starts the request, but you can edit quantities,
+        alternates, and event notes before sending. Share date, venue, setup,
+        access, and timing details so the team can review the enquiry and
         follow up directly.
       </p>
       <dl className="quote-context__details">
@@ -248,11 +247,10 @@ export default async function QuotePage({
       <div className="page-title">
         <h1>Request a rental quote</h1>
         <p>
-          Share the event details the team will need for an event furniture
-          rental follow-up. Include requested listings or items, quantities,
-          alternates, setup, access, timing notes, and preferred contact method.
-          The form is enquiry intake only; it does not set aside furniture or
-          finish rental details, and does not finalise rental details.
+          Share contact details, event date, venue, requested listings,
+          quantities, and setup notes. The form is enquiry intake only; it does
+          not set aside furniture or finish rental details, and it does not
+          create an online follow-up page.
         </p>
       </div>
 

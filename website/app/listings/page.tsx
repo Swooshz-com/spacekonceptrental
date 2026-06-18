@@ -134,13 +134,13 @@ export default async function ListingsPage({
       intro={
         activeCategory || activeEventUse || filters.search
           ? "Browse filtered public-safe rental/event furniture listings. Search, category, and event-use context stays editable before you send an enquiry."
-          : "Browse public-safe rental/event furniture listings, then send an enquiry for the pieces that fit your event."
+          : "Browse public furniture and event rental listings, then send an enquiry for the pieces that fit your event."
       }
       listingBasePath="/listings"
       title={
         activeCategory
           ? `${activeCategory.name} rental listings`
-          : "Rental listings"
+          : "Furniture rental listings"
       }
     />
   );

@@ -15,7 +15,13 @@ describe("QuotePage", () => {
     );
 
     expect(
+      screen.getByRole("heading", { name: /request a rental quote/i })
+    ).toBeInTheDocument();
+    expect(
       screen.getByRole("heading", { name: /enquiry for lounge sofa package/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/the selected listing starts the request, but you can edit quantities, alternates, and event notes before sending/i)
     ).toBeInTheDocument();
     expect(screen.getByText("Lounge", { selector: "dd" })).toBeInTheDocument();
     expect(screen.getByText("set", { selector: "dd" })).toBeInTheDocument();

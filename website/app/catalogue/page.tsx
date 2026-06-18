@@ -156,8 +156,8 @@ function CatalogueCardPlanning({
       <strong>Quote planning</strong>
       <span>
         Share event date, venue, quantities, and setup notes when you request
-        this listing. Include category fit and rental unit notes if helpful;
-        browsing does not set aside furniture or finalise rental details.
+        this listing. Browsing does not set aside furniture or finalise rental
+        details; it only helps the team understand the enquiry.
       </span>
     </aside>
   );
@@ -393,9 +393,9 @@ export function CataloguePageContent({
   catalogue,
   detailBasePath = "/catalogue",
   emptyMessage = "No public rental listings are available right now. Send an enquiry if you need help describing the event setup.",
-  intro = "Browse furniture and event-rental listings made for spaces, occasions, and styled setups.",
+  intro = "Browse furniture and event rental listings, compare useful details, and send an enquiry for team follow-up.",
   listingBasePath = "/listings",
-  title = "Furniture catalogue"
+  title = "Furniture catalogue for event rentals"
 }: {
   activeCategoryName?: string;
   activeCategorySlug?: string;
