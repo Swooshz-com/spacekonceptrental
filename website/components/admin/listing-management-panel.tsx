@@ -63,8 +63,6 @@ type ListingPayload = {
 const listingWriteOperation = "product.write";
 const genericFailureMessage =
   "Protected admin save could not be completed. Check listing title, slug, category, rental unit, descriptions, status, and sort order before retrying.";
-const phase5hReadinessDoc =
-  "docs/content/LOCAL-CATALOGUE-WRITE-WORKFLOW-READINESS.md";
 
 function formValue(formData: FormData, name: string) {
   const value = formData.get(name);
@@ -442,8 +440,8 @@ export function ListingManagementPanel({
         <p>
           Create, update, set visibility, and archive furniture listing metadata
           through the protected admin API. Public-facing fields should describe
-          rental/event furniture only; internal readiness cues stay here. Phase
-          5H guidance: {phase5hReadinessDoc}.
+          rental/event furniture only. Public-ready listing cues stay in this
+          protected admin workspace for business owner review.
         </p>
       </div>
 
@@ -464,10 +462,9 @@ export function ListingManagementPanel({
           status, and sort order.
         </p>
         <p className="category-management__hint">
-          Protected admin save does not deploy, does not record owner approval,
-          and does not create evidence. Public-facing copy still needs
-          owner-supplied facts before any public-use decision. See{" "}
-          {phase5hReadinessDoc}.
+          Protected admin save only updates listing metadata. Public-facing copy
+          should use owner-supplied facts and help visitors prepare a quote
+          request.
         </p>
       </section>
 
@@ -501,11 +498,10 @@ export function ListingManagementPanel({
           </p>
         ) : null}
         <p className="category-management__hint">
-          Readiness is derived from existing listing metadata, category,
+          This summary is based on existing listing metadata, category,
           descriptions, rental unit, and image metadata already available in
-          this admin workspace. It is an admin-only cue, not a public
-          availability claim, owner approval record, deployment action, or
-          evidence record.
+          this protected admin workspace. It is an admin cue, not a public
+          availability claim.
         </p>
       </section>
 
@@ -601,7 +597,7 @@ export function ListingManagementPanel({
           </select>
           <small>
             Draft stays protected for recovery, published can appear publicly
-            when readiness checks pass, and archived is hidden from active
+            when public-ready checks pass, and archived is hidden from active
             browsing without deleting the record.
           </small>
         </label>
@@ -828,7 +824,7 @@ export function ListingManagementPanel({
                     Draft is protected, published is a public visibility state
                     only after public-safe copy review, and archived is hidden
                     from active browsing. Draft keeps the listing protected
-                    until readiness checks pass and archive does not delete it.
+                    until public-ready checks pass and archive does not delete it.
                   </small>
                 </label>
                 <label htmlFor={`listing-sort-order-${product.id}`}>
@@ -849,10 +845,9 @@ export function ListingManagementPanel({
                 <p className="category-management__hint">
                   Protected write boundary: save listing metadata only after
                   checking public-facing fields, category, rental unit,
-                  validation errors, and media readiness. This protected admin
-                  save does not deploy, does not record owner approval, and does
-                  not create evidence. Archive hides this listing from public
-                  browsing and active admin work; it does not delete it.
+                  validation errors, and media checks. Archive hides this
+                  listing from public browsing and active admin work; it does
+                  not delete it.
                 </p>
                 <div className="category-management__actions">
                   <button className="button" type="submit">

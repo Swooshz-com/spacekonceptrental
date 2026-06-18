@@ -752,11 +752,15 @@ function assertPhase4aReleaseControl() {
     'localCorrectionQueueStatuses',
     'reviewReadyHandoffClosureStates',
     'Owner-input and local correction snapshot',
-    '/admin/release-control',
   ]) {
     assertIncludes(shell, required, 'protected admin shell release-control snapshot');
   }
   assertIncludes(route, 'view={{ kind: "release-control" }}', 'release-control route');
+  assertNoMatch(
+    shell,
+    /\["Release control",\s*"\/admin\/release-control"\]/,
+    'normal protected admin operations navigation',
+  );
   assertNoMatch(phase4aDocs, filledEvidencePattern, 'Phase 4A release-control docs');
   assertNoMatch(phase4bDocs, filledEvidencePattern, 'Phase 4B owner-input correction docs');
 }

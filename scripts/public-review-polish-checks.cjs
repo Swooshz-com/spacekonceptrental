@@ -139,6 +139,20 @@ function fail(message) {
 function assert(condition, message) {
   if (!condition) fail(message);
 }
+function assertVisibleMvpAdminHome(adminSource, label) {
+  assert(
+    /function AdminOperationsHome[\s\S]*href: "\/admin\/listings"[\s\S]*href: "\/admin\/categories"[\s\S]*href: "\/admin\/media"[\s\S]*href: "\/admin\/quotes"/.test(adminSource),
+    `${label} must keep normal admin home focused on listings, categories, media, and quote requests`
+  );
+  assert(
+    !/function AdminOperationsHome[\s\S]*<OwnerReadinessHelpersPanel \/>/.test(adminSource),
+    `${label} must not render owner-readiness helpers from the normal visible MVP admin home`
+  );
+  assert(
+    !/function AdminOperationsHome[\s\S]*href: "\/admin\/(?:content-readiness|public-parity|release-control)"/.test(adminSource),
+    `${label} must not advertise old internal admin routes from the normal visible MVP admin home`
+  );
+}
 function readRepoFile(relativePath) {
   return fs.readFileSync(path.join(repoRoot, relativePath), 'utf8');
 }
@@ -866,12 +880,12 @@ function assertCatalogueWriteWorkflowSources() {
     /Save category metadata/i,
     /Save image metadata/i,
     /Public-safe copy review/i,
-    /Ready for owner review/i,
+    /Public-ready listing/i,
+    /Category visibility review/i,
+    /Media coverage/i,
     /validation errors/i,
-    /does not deploy/i,
-    /does not record owner approval/i,
-    /does not create evidence/i,
-    /LOCAL-CATALOGUE-WRITE-WORKFLOW-READINESS\.md/i,
+    /only updates listing metadata/i,
+    /business owner review/i,
   ]) {
     assert(required.test(adminSource), `admin catalogue write workflow source missing safe wording: ${required}`);
   }
@@ -1456,10 +1470,7 @@ function assertDeploymentApprovalRequestSources() {
   }
 
   assertIncludes(adminPage, 'view={{ kind: "home" }}', 'admin page home view');
-  assert(
-    /function AdminOperationsHome[\s\S]*<OwnerReadinessHelpersPanel \/>/.test(adminSource),
-    'Phase 5N admin source must render owner readiness helpers from the real AdminOperationsHome path'
-  );
+  assertVisibleMvpAdminHome(adminSource, 'Phase 5N admin source must render owner readiness helpers from the real AdminOperationsHome path');
   assert(
     /function OwnerReadinessHelpersPanel[\s\S]*<OwnerReviewWalkthroughReadinessHelper \/>[\s\S]*<OwnerFeedbackIntakeReadinessHelper \/>[\s\S]*<OwnerCorrectionWorkflowReadinessHelper \/>[\s\S]*<OwnerReReviewRequestReadinessHelper \/>[\s\S]*<OwnerDecisionIntakeReadinessHelper \/>[\s\S]*<DeploymentApprovalRequestReadinessHelper \/>/.test(adminSource),
     'Phase 5N admin source must keep the complete owner readiness helper chain in the shared panel'
@@ -1645,10 +1656,7 @@ function assertDeploymentExecutionRunbookSources() {
   }
 
   assertIncludes(adminPage, 'view={{ kind: "home" }}', 'admin page home view');
-  assert(
-    /function AdminOperationsHome[\s\S]*<OwnerReadinessHelpersPanel \/>/.test(adminSource),
-    'Phase 5O admin source must render owner readiness helpers from the real AdminOperationsHome path'
-  );
+  assertVisibleMvpAdminHome(adminSource, 'Phase 5O admin source must render owner readiness helpers from the real AdminOperationsHome path');
   assert(
     /function OwnerReadinessHelpersPanel[\s\S]*<OwnerReviewWalkthroughReadinessHelper \/>[\s\S]*<OwnerFeedbackIntakeReadinessHelper \/>[\s\S]*<OwnerCorrectionWorkflowReadinessHelper \/>[\s\S]*<OwnerReReviewRequestReadinessHelper \/>[\s\S]*<OwnerDecisionIntakeReadinessHelper \/>[\s\S]*<DeploymentApprovalRequestReadinessHelper \/>[\s\S]*<DeploymentExecutionRunbookReadinessHelper \/>/.test(adminSource),
     'Phase 5O admin source must keep the complete owner readiness helper chain in the shared panel'
@@ -1832,10 +1840,7 @@ function assertSmokeEvidenceIntakeSources() {
   }
 
   assertIncludes(adminPage, 'view={{ kind: "home" }}', 'admin page home view');
-  assert(
-    /function AdminOperationsHome[\s\S]*<OwnerReadinessHelpersPanel \/>/.test(adminSource),
-    'Phase 5P admin source must render owner readiness helpers from the real AdminOperationsHome path'
-  );
+  assertVisibleMvpAdminHome(adminSource, 'Phase 5P admin source must render owner readiness helpers from the real AdminOperationsHome path');
   assert(
     /function OwnerReadinessHelpersPanel[\s\S]*<OwnerReviewWalkthroughReadinessHelper \/>[\s\S]*<OwnerFeedbackIntakeReadinessHelper \/>[\s\S]*<OwnerCorrectionWorkflowReadinessHelper \/>[\s\S]*<OwnerReReviewRequestReadinessHelper \/>[\s\S]*<OwnerDecisionIntakeReadinessHelper \/>[\s\S]*<DeploymentApprovalRequestReadinessHelper \/>[\s\S]*<DeploymentExecutionRunbookReadinessHelper \/>[\s\S]*<SmokeEvidenceIntakeReadinessHelper \/>/.test(adminSource),
     'Phase 5P admin source must keep the complete owner readiness helper chain in the shared panel'
@@ -2010,10 +2015,7 @@ function assertOwnerDecisionIntakeSources() {
     assert(required.test(adminSource), `Phase 5M admin source missing safe wording: ${required}`);
   }
 
-  assert(
-    /function AdminOperationsHome[\s\S]*<OwnerReadinessHelpersPanel \/>/.test(adminSource),
-    'Phase 5M admin source must render owner readiness helpers from the real AdminOperationsHome path'
-  );
+  assertVisibleMvpAdminHome(adminSource, 'Phase 5M admin source must render owner readiness helpers from the real AdminOperationsHome path');
   assert(
     /function OwnerReadinessHelpersPanel[\s\S]*<OwnerReviewWalkthroughReadinessHelper \/>[\s\S]*<OwnerFeedbackIntakeReadinessHelper \/>[\s\S]*<OwnerCorrectionWorkflowReadinessHelper \/>[\s\S]*<OwnerReReviewRequestReadinessHelper \/>[\s\S]*<OwnerDecisionIntakeReadinessHelper \/>/.test(adminSource),
     'Phase 5M admin source must keep the full owner readiness helper chain in the shared panel'
@@ -2498,10 +2500,7 @@ function assertSmokeEvidenceReviewSources() {
   }
 
   assertIncludes(adminPage, 'view={{ kind: "home" }}', 'admin page home view');
-  assert(
-    /function AdminOperationsHome[\s\S]*<OwnerReadinessHelpersPanel \/>/.test(adminSource),
-    'Phase 5Q admin source must render owner readiness helpers from the real AdminOperationsHome path'
-  );
+  assertVisibleMvpAdminHome(adminSource, 'Phase 5Q admin source must render owner readiness helpers from the real AdminOperationsHome path');
   assert(
     /function OwnerReadinessHelpersPanel[\s\S]*<OwnerReviewWalkthroughReadinessHelper \/>[\s\S]*<OwnerFeedbackIntakeReadinessHelper \/>[\s\S]*<OwnerCorrectionWorkflowReadinessHelper \/>[\s\S]*<OwnerReReviewRequestReadinessHelper \/>[\s\S]*<OwnerDecisionIntakeReadinessHelper \/>[\s\S]*<DeploymentApprovalRequestReadinessHelper \/>[\s\S]*<DeploymentExecutionRunbookReadinessHelper \/>[\s\S]*<SmokeEvidenceIntakeReadinessHelper \/>[\s\S]*<SmokeEvidenceReviewReadinessHelper \/>/.test(adminSource),
     'Phase 5Q admin source must keep the complete owner readiness helper chain in the shared panel'
@@ -2661,10 +2660,7 @@ function assertLaunchDecisionResponseSources() {
   }
 
   assertIncludes(adminPage, 'view={{ kind: "home" }}', 'admin page home view');
-  assert(
-    /function AdminOperationsHome[\s\S]*<OwnerReadinessHelpersPanel \/>/.test(adminSource),
-    'Phase 5R admin source must render owner readiness helpers from the real AdminOperationsHome path'
-  );
+  assertVisibleMvpAdminHome(adminSource, 'Phase 5R admin source must render owner readiness helpers from the real AdminOperationsHome path');
   assert(
     /function OwnerReadinessHelpersPanel[\s\S]*<OwnerReviewWalkthroughReadinessHelper \/>[\s\S]*<OwnerFeedbackIntakeReadinessHelper \/>[\s\S]*<OwnerCorrectionWorkflowReadinessHelper \/>[\s\S]*<OwnerReReviewRequestReadinessHelper \/>[\s\S]*<OwnerDecisionIntakeReadinessHelper \/>[\s\S]*<DeploymentApprovalRequestReadinessHelper \/>[\s\S]*<DeploymentExecutionRunbookReadinessHelper \/>[\s\S]*<SmokeEvidenceIntakeReadinessHelper \/>[\s\S]*<SmokeEvidenceReviewReadinessHelper \/>[\s\S]*<LaunchDecisionResponseReadinessHelper \/>/.test(adminSource),
     'Phase 5R admin source must keep the complete owner readiness helper chain in the shared panel'
@@ -2825,10 +2821,7 @@ function assertPostLaunchObservationSources() {
   }
 
   assertIncludes(adminPage, 'view={{ kind: "home" }}', 'admin page home view');
-  assert(
-    /function AdminOperationsHome[\s\S]*<OwnerReadinessHelpersPanel \/>/.test(adminSource),
-    'Phase 5S admin source must render owner readiness helpers from the real AdminOperationsHome path'
-  );
+  assertVisibleMvpAdminHome(adminSource, 'Phase 5S admin source must render owner readiness helpers from the real AdminOperationsHome path');
   assert(
     /function OwnerReadinessHelpersPanel[\s\S]*<OwnerReviewWalkthroughReadinessHelper \/>[\s\S]*<OwnerFeedbackIntakeReadinessHelper \/>[\s\S]*<OwnerCorrectionWorkflowReadinessHelper \/>[\s\S]*<OwnerReReviewRequestReadinessHelper \/>[\s\S]*<OwnerDecisionIntakeReadinessHelper \/>[\s\S]*<DeploymentApprovalRequestReadinessHelper \/>[\s\S]*<DeploymentExecutionRunbookReadinessHelper \/>[\s\S]*<SmokeEvidenceIntakeReadinessHelper \/>[\s\S]*<SmokeEvidenceReviewReadinessHelper \/>[\s\S]*<LaunchDecisionResponseReadinessHelper \/>[\s\S]*<PostLaunchObservationReadinessHelper \/>/.test(adminSource),
     'Phase 5S admin source must keep the complete owner readiness helper chain in the shared panel'
@@ -2996,10 +2989,7 @@ function assertRemediationVerificationSources() {
   }
 
   assertIncludes(adminPage, 'view={{ kind: "home" }}', 'admin page home view');
-  assert(
-    /function AdminOperationsHome[\s\S]*<OwnerReadinessHelpersPanel \/>/.test(adminSource),
-    'Phase 5U admin source must render owner readiness helpers from the real AdminOperationsHome path'
-  );
+  assertVisibleMvpAdminHome(adminSource, 'Phase 5U admin source must render owner readiness helpers from the real AdminOperationsHome path');
   assert(
     /function OwnerReadinessHelpersPanel[\s\S]*<OwnerReviewWalkthroughReadinessHelper \/>[\s\S]*<OwnerFeedbackIntakeReadinessHelper \/>[\s\S]*<OwnerCorrectionWorkflowReadinessHelper \/>[\s\S]*<OwnerReReviewRequestReadinessHelper \/>[\s\S]*<OwnerDecisionIntakeReadinessHelper \/>[\s\S]*<DeploymentApprovalRequestReadinessHelper \/>[\s\S]*<DeploymentExecutionRunbookReadinessHelper \/>[\s\S]*<SmokeEvidenceIntakeReadinessHelper \/>[\s\S]*<SmokeEvidenceReviewReadinessHelper \/>[\s\S]*<LaunchDecisionResponseReadinessHelper \/>[\s\S]*<PostLaunchObservationReadinessHelper \/>[\s\S]*<PostLaunchRemediationReadinessHelper \/>[\s\S]*<RemediationVerificationReadinessHelper \/>/.test(adminSource),
     'Phase 5U admin source must keep the complete owner readiness helper chain in the shared panel'
@@ -3150,7 +3140,7 @@ function assertPhase5vIncidentResolutionResponseReadiness() {
   }
 
   assertIncludes(readRepoFile('website/app/admin/page.tsx'), 'view={{ kind: "home" }}', 'admin home page');
-  assert(/function AdminOperationsHome[\s\S]*<OwnerReadinessHelpersPanel \/>/.test(adminSource), 'AdminOperationsHome must render shared owner readiness helper panel');
+  assertVisibleMvpAdminHome(adminSource, 'AdminOperationsHome must render shared owner readiness helper panel');
   assert(/function OwnerReadinessHelpersPanel[\s\S]*<OwnerReviewWalkthroughReadinessHelper \/>[\s\S]*<OwnerFeedbackIntakeReadinessHelper \/>[\s\S]*<OwnerCorrectionWorkflowReadinessHelper \/>[\s\S]*<OwnerReReviewRequestReadinessHelper \/>[\s\S]*<OwnerDecisionIntakeReadinessHelper \/>[\s\S]*<DeploymentApprovalRequestReadinessHelper \/>[\s\S]*<DeploymentExecutionRunbookReadinessHelper \/>[\s\S]*<SmokeEvidenceIntakeReadinessHelper \/>[\s\S]*<SmokeEvidenceReviewReadinessHelper \/>[\s\S]*<LaunchDecisionResponseReadinessHelper \/>[\s\S]*<PostLaunchObservationReadinessHelper \/>[\s\S]*<PostLaunchRemediationReadinessHelper \/>[\s\S]*<RemediationVerificationReadinessHelper \/>[\s\S]*<IncidentResolutionResponseReadinessHelper \/>/.test(adminSource), 'Phase 5V admin source must keep complete owner readiness helper chain in shared panel');
 
   const publicSource = readTrackedProductionSources(publicSourceRoots);
@@ -3299,7 +3289,7 @@ function assertPhase5wPreventiveMaintenanceReadiness() {
   }
 
   assertIncludes(readRepoFile('website/app/admin/page.tsx'), 'view={{ kind: "home" }}', 'admin home page');
-  assert(/function AdminOperationsHome[\s\S]*<OwnerReadinessHelpersPanel \/>/.test(adminSource), 'AdminOperationsHome must render shared owner readiness helper panel');
+  assertVisibleMvpAdminHome(adminSource, 'AdminOperationsHome must render shared owner readiness helper panel');
   assert(/function OwnerReadinessHelpersPanel[\s\S]*<OwnerReviewWalkthroughReadinessHelper \/>[\s\S]*<OwnerFeedbackIntakeReadinessHelper \/>[\s\S]*<OwnerCorrectionWorkflowReadinessHelper \/>[\s\S]*<OwnerReReviewRequestReadinessHelper \/>[\s\S]*<OwnerDecisionIntakeReadinessHelper \/>[\s\S]*<DeploymentApprovalRequestReadinessHelper \/>[\s\S]*<DeploymentExecutionRunbookReadinessHelper \/>[\s\S]*<SmokeEvidenceIntakeReadinessHelper \/>[\s\S]*<SmokeEvidenceReviewReadinessHelper \/>[\s\S]*<LaunchDecisionResponseReadinessHelper \/>[\s\S]*<PostLaunchObservationReadinessHelper \/>[\s\S]*<PostLaunchRemediationReadinessHelper \/>[\s\S]*<RemediationVerificationReadinessHelper \/>[\s\S]*<IncidentResolutionResponseReadinessHelper \/>[\s\S]*<PreventiveMaintenanceReadinessHelper \/>/.test(adminSource), 'Phase 5W admin source must keep complete owner readiness helper chain in shared panel');
 
   const publicSource = readTrackedProductionSources(publicSourceRoots);
@@ -3450,7 +3440,7 @@ function assertPhase5xMaintenanceApprovalReadiness() {
   }
 
   assertIncludes(readRepoFile('website/app/admin/page.tsx'), 'view={{ kind: "home" }}', 'admin home page');
-  assert(/function AdminOperationsHome[\s\S]*<OwnerReadinessHelpersPanel \/>/.test(adminSource), 'AdminOperationsHome must render shared owner readiness helper panel');
+  assertVisibleMvpAdminHome(adminSource, 'AdminOperationsHome must render shared owner readiness helper panel');
   assert(/function OwnerReadinessHelpersPanel[\s\S]*<OwnerReviewWalkthroughReadinessHelper \/>[\s\S]*<OwnerFeedbackIntakeReadinessHelper \/>[\s\S]*<OwnerCorrectionWorkflowReadinessHelper \/>[\s\S]*<OwnerReReviewRequestReadinessHelper \/>[\s\S]*<OwnerDecisionIntakeReadinessHelper \/>[\s\S]*<DeploymentApprovalRequestReadinessHelper \/>[\s\S]*<DeploymentExecutionRunbookReadinessHelper \/>[\s\S]*<SmokeEvidenceIntakeReadinessHelper \/>[\s\S]*<SmokeEvidenceReviewReadinessHelper \/>[\s\S]*<LaunchDecisionResponseReadinessHelper \/>[\s\S]*<PostLaunchObservationReadinessHelper \/>[\s\S]*<PostLaunchRemediationReadinessHelper \/>[\s\S]*<RemediationVerificationReadinessHelper \/>[\s\S]*<IncidentResolutionResponseReadinessHelper \/>[\s\S]*<PreventiveMaintenanceReadinessHelper \/>[\s\S]*<MaintenanceApprovalReadinessHelper \/>/.test(adminSource), 'Phase 5X admin source must keep complete owner readiness helper chain in shared panel');
 
   const publicSource = readTrackedProductionSources(publicSourceRoots);
@@ -3573,7 +3563,7 @@ ${ledger}`;
   }
 
   assertIncludes(readRepoFile('website/app/admin/page.tsx'), 'view={{ kind: "home" }}', 'admin home page');
-  assert(/function AdminOperationsHome[\s\S]*<OwnerReadinessHelpersPanel \/>/.test(adminSource), 'AdminOperationsHome must render shared owner readiness helper panel');
+  assertVisibleMvpAdminHome(adminSource, 'AdminOperationsHome must render shared owner readiness helper panel');
   assert(/function OwnerReadinessHelpersPanel[\s\S]*<OwnerReviewWalkthroughReadinessHelper \/>[\s\S]*<OwnerFeedbackIntakeReadinessHelper \/>[\s\S]*<OwnerCorrectionWorkflowReadinessHelper \/>[\s\S]*<OwnerReReviewRequestReadinessHelper \/>[\s\S]*<OwnerDecisionIntakeReadinessHelper \/>[\s\S]*<DeploymentApprovalRequestReadinessHelper \/>[\s\S]*<DeploymentExecutionRunbookReadinessHelper \/>[\s\S]*<SmokeEvidenceIntakeReadinessHelper \/>[\s\S]*<SmokeEvidenceReviewReadinessHelper \/>[\s\S]*<LaunchDecisionResponseReadinessHelper \/>[\s\S]*<PostLaunchObservationReadinessHelper \/>[\s\S]*<PostLaunchRemediationReadinessHelper \/>[\s\S]*<RemediationVerificationReadinessHelper \/>[\s\S]*<IncidentResolutionResponseReadinessHelper \/>[\s\S]*<PreventiveMaintenanceReadinessHelper \/>[\s\S]*<MaintenanceApprovalReadinessHelper \/>[\s\S]*<MaintenanceExecutionRunbookReadinessHelper \/>[\s\S]*<MaintenanceVerificationClosureReadinessHelper \/>/.test(adminSource), 'Phase 5Z admin source must keep complete helper chain in shared panel');
 
   const publicSource = readTrackedProductionSources(publicSourceRoots);
@@ -3717,7 +3707,7 @@ function assertPhase5yMaintenanceExecutionRunbookReadiness() {
   }
 
   assertIncludes(readRepoFile('website/app/admin/page.tsx'), 'view={{ kind: "home" }}', 'admin home page');
-  assert(/function AdminOperationsHome[\s\S]*<OwnerReadinessHelpersPanel \/>/.test(adminSource), 'AdminOperationsHome must render shared owner readiness helper panel');
+  assertVisibleMvpAdminHome(adminSource, 'AdminOperationsHome must render shared owner readiness helper panel');
   assert(/function OwnerReadinessHelpersPanel[\s\S]*<OwnerReviewWalkthroughReadinessHelper \/>[\s\S]*<OwnerFeedbackIntakeReadinessHelper \/>[\s\S]*<OwnerCorrectionWorkflowReadinessHelper \/>[\s\S]*<OwnerReReviewRequestReadinessHelper \/>[\s\S]*<OwnerDecisionIntakeReadinessHelper \/>[\s\S]*<DeploymentApprovalRequestReadinessHelper \/>[\s\S]*<DeploymentExecutionRunbookReadinessHelper \/>[\s\S]*<SmokeEvidenceIntakeReadinessHelper \/>[\s\S]*<SmokeEvidenceReviewReadinessHelper \/>[\s\S]*<LaunchDecisionResponseReadinessHelper \/>[\s\S]*<PostLaunchObservationReadinessHelper \/>[\s\S]*<PostLaunchRemediationReadinessHelper \/>[\s\S]*<RemediationVerificationReadinessHelper \/>[\s\S]*<IncidentResolutionResponseReadinessHelper \/>[\s\S]*<PreventiveMaintenanceReadinessHelper \/>[\s\S]*<MaintenanceApprovalReadinessHelper \/>[\s\S]*<MaintenanceExecutionRunbookReadinessHelper \/>/.test(adminSource), 'Phase 5Y admin source must keep complete helper chain in shared panel');
 
   const publicSource = readTrackedProductionSources(publicSourceRoots);
@@ -3902,10 +3892,7 @@ function assertPostLaunchRemediationSources() {
   }
 
   assertIncludes(adminPage, 'view={{ kind: "home" }}', 'admin page home view');
-  assert(
-    /function AdminOperationsHome[\s\S]*<OwnerReadinessHelpersPanel \/>/.test(adminSource),
-    'Phase 5T admin source must render owner readiness helpers from the real AdminOperationsHome path'
-  );
+  assertVisibleMvpAdminHome(adminSource, 'Phase 5T admin source must render owner readiness helpers from the real AdminOperationsHome path');
   assert(
     /function OwnerReadinessHelpersPanel[\s\S]*<OwnerReviewWalkthroughReadinessHelper \/>[\s\S]*<OwnerFeedbackIntakeReadinessHelper \/>[\s\S]*<OwnerCorrectionWorkflowReadinessHelper \/>[\s\S]*<OwnerReReviewRequestReadinessHelper \/>[\s\S]*<OwnerDecisionIntakeReadinessHelper \/>[\s\S]*<DeploymentApprovalRequestReadinessHelper \/>[\s\S]*<DeploymentExecutionRunbookReadinessHelper \/>[\s\S]*<SmokeEvidenceIntakeReadinessHelper \/>[\s\S]*<SmokeEvidenceReviewReadinessHelper \/>[\s\S]*<LaunchDecisionResponseReadinessHelper \/>[\s\S]*<PostLaunchObservationReadinessHelper \/>[\s\S]*<PostLaunchRemediationReadinessHelper \/>/.test(adminSource),
     'Phase 5T admin source must keep the complete owner readiness helper chain in the shared panel'
@@ -4251,7 +4238,7 @@ function assertPhase6bMaintenanceClosureArchiveReadiness() {
     /\[DEPLOYMENT APPROVAL: NOT GRANTED\]/i,
   ]) assert(required.test(adminSource), `Phase 6B admin source missing safe wording: ${required}`);
 
-  assert(/function AdminOperationsHome[\s\S]*<OwnerReadinessHelpersPanel \/>/.test(adminSource), 'AdminOperationsHome must render shared owner readiness helper panel');
+  assertVisibleMvpAdminHome(adminSource, 'AdminOperationsHome must render shared owner readiness helper panel');
   assert(/function OwnerReadinessHelpersPanel[\s\S]*<OwnerReviewWalkthroughReadinessHelper \/>[\s\S]*<OwnerFeedbackIntakeReadinessHelper \/>[\s\S]*<OwnerCorrectionWorkflowReadinessHelper \/>[\s\S]*<OwnerReReviewRequestReadinessHelper \/>[\s\S]*<OwnerDecisionIntakeReadinessHelper \/>[\s\S]*<DeploymentApprovalRequestReadinessHelper \/>[\s\S]*<DeploymentExecutionRunbookReadinessHelper \/>[\s\S]*<SmokeEvidenceIntakeReadinessHelper \/>[\s\S]*<SmokeEvidenceReviewReadinessHelper \/>[\s\S]*<LaunchDecisionResponseReadinessHelper \/>[\s\S]*<PostLaunchObservationReadinessHelper \/>[\s\S]*<PostLaunchRemediationReadinessHelper \/>[\s\S]*<RemediationVerificationReadinessHelper \/>[\s\S]*<IncidentResolutionResponseReadinessHelper \/>[\s\S]*<PreventiveMaintenanceReadinessHelper \/>[\s\S]*<MaintenanceApprovalReadinessHelper \/>[\s\S]*<MaintenanceExecutionRunbookReadinessHelper \/>[\s\S]*<MaintenanceVerificationClosureReadinessHelper \/>[\s\S]*<MaintenanceClosureDecisionReadinessHelper \/>[\s\S]*<MaintenanceClosureArchiveReadinessHelper \/>/.test(adminSource), 'Phase 6B admin source must keep complete helper chain in shared panel');
   assertIncludes(readRepoFile('website/app/admin/page.tsx'), 'view={{ kind: "home" }}', 'Phase 6B admin home source');
 

@@ -10,8 +10,6 @@ import {
 } from "../app/admin/protected-admin-shell";
 
 const repoRoot = resolve(process.cwd(), "..");
-const phase5hDocPath =
-  "docs/content/LOCAL-CATALOGUE-WRITE-WORKFLOW-READINESS.md";
 const publicSourceRoots = [
   "website/app/layout.tsx",
   "website/app/page.tsx",
@@ -155,12 +153,11 @@ describe("Phase 5H-A/B catalogue write workflow readiness", () => {
     expect(
       screen.getByRole("button", { name: /upload listing image for review/i }),
     ).toBeInTheDocument();
-    expect(screen.getAllByText(/does not deploy/i).length).toBeGreaterThan(0);
     expect(
-      screen.getAllByText(/does not record owner approval/i).length,
+      screen.getAllByText(/only updates listing metadata/i).length,
     ).toBeGreaterThan(0);
     expect(
-      screen.getAllByText(/does not create evidence/i).length,
+      screen.getAllByText(/media coverage/i).length,
     ).toBeGreaterThan(0);
   });
 
@@ -194,7 +191,7 @@ describe("Phase 5H-A/B catalogue write workflow readiness", () => {
     }
   });
 
-  it("keeps protected admin source focused on safe write workflow, validation, save, and public-parity wording", () => {
+  it("keeps protected admin source focused on safe write controls, validation, save, and visible MVP wording", () => {
     const adminSource = readTrackedProductionSources(adminSourcePaths);
 
     for (const required of [
@@ -204,11 +201,10 @@ describe("Phase 5H-A/B catalogue write workflow readiness", () => {
       /Save image metadata/i,
       /public-safe copy review/i,
       /Public-ready listing helper/i,
+      /Category visibility review/i,
+      /Media coverage/i,
       /validation errors/i,
-      /does not deploy/i,
-      /does not record owner approval/i,
-      /does not create evidence/i,
-      new RegExp(phase5hDocPath.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")),
+      /only updates listing metadata/i,
     ]) {
       expect(adminSource).toMatch(required);
     }

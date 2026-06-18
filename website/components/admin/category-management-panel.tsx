@@ -47,8 +47,6 @@ type CategoryPayload = {
 const categoryWriteOperation = "category.write";
 const genericFailureMessage =
   "Protected admin save could not be completed. Check category name, slug, description, visibility, and sort order before retrying.";
-const phase5hReadinessDoc =
-  "docs/content/LOCAL-CATALOGUE-WRITE-WORKFLOW-READINESS.md";
 
 function formValue(formData: FormData, name: string) {
   const value = formData.get(name);
@@ -85,7 +83,7 @@ function publishedProductCount(category: CategoryManagementCategory) {
   return category.publishedProductCount ?? category.productCount;
 }
 
-function categoryReadiness(category: CategoryManagementCategory) {
+function categoryVisibilityChecks(category: CategoryManagementCategory) {
   const publicListingCount = publishedProductCount(category);
 
   return [
@@ -322,8 +320,7 @@ export function CategoryManagementPanel({
           Create, update, set visibility, and archive categories through the
           protected admin API. Furniture listing edits use their own protected
           panel, and image file handling stays out of scope. Categories are
-          public grouping metadata when visible. Phase 5H guidance:{" "}
-          {phase5hReadinessDoc}.
+          public grouping metadata when visible.
         </p>
       </div>
 
@@ -346,23 +343,23 @@ export function CategoryManagementPanel({
           description, visibility wording, empty category warnings, and {"sort order"}.
         </p>
         <p className="category-management__hint">
-          Protected admin save does not deploy, does not record owner approval,
-          and does not create evidence. Category visibility is not a deployment
-          or public-use approval. See {phase5hReadinessDoc}.
+          Protected admin save only updates category metadata. Use these notes
+          to keep public catalogue grouping clear for visitors and business
+          owners.
         </p>
       </section>
 
-      <section className="admin-readiness" aria-label="Category readiness">
-        <h3>Category visibility readiness</h3>
+      <section className="admin-readiness" aria-label="Category visibility review">
+        <h3>Category visibility review</h3>
         <p>
           Categories should group rental listings that are ready for public-safe
           copy review. Non-visible categories stay out of public catalogue
           grouping.
         </p>
         <p className="category-management__hint">
-          Category readiness checks use published listing counts when they are
+          Category visibility checks use published listing counts when they are
           available from the admin dashboard. Empty published categories are
-          admin-only recovery cues, not public promises.
+          protected admin recovery cues, not public promises.
         </p>
         <p>
           {publishedEmptyCategories.length > 0
@@ -410,7 +407,7 @@ export function CategoryManagementPanel({
           />
           <small>
             Description helps public browsing and quote/enquiry recovery; keep
-            internal readiness notes out.
+            internal notes out.
           </small>
         </label>
         <label htmlFor="new-category-sort-order">
@@ -464,10 +461,10 @@ export function CategoryManagementPanel({
               </div>
               <section
                 className="admin-readiness admin-readiness--inline"
-                aria-label={`Category readiness ${category.name}`}
+                aria-label={`Category visibility review ${category.name}`}
               >
                 <ul className="admin-readiness__list">
-                  {categoryReadiness(category).map((item) => (
+                  {categoryVisibilityChecks(category).map((item) => (
                     <li key={item}>{item}</li>
                   ))}
                 </ul>
@@ -534,10 +531,8 @@ export function CategoryManagementPanel({
                 <p className="category-management__hint">
                   Protected write boundary: save category metadata only when
                   grouping and listing-count cues are clear. Check validation
-                  errors and public-safe description before saving. This
-                  protected admin save does not deploy, does not record owner
-                  approval, and does not create evidence. Non-visible or
-                  archived categories stay out of public browsing without
+                  errors and public-safe description before saving. Non-visible
+                  or archived categories stay out of public browsing without
                   deleting the category record.
                 </p>
                 <div className="category-management__actions">

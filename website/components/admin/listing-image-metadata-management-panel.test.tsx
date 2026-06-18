@@ -105,6 +105,25 @@ describe("listing image metadata management panel", () => {
     ).not.toBeInTheDocument();
   });
 
+  it("uses visible MVP media guidance without old internal ladder wording", () => {
+    render(
+      <ListingImageMetadataManagementPanel
+        images={[image]}
+        products={[product]}
+      />
+    );
+
+    expect(
+      screen.getByRole("heading", { name: /^media coverage$/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/Public-ready media needs an active image/i)
+    ).toBeInTheDocument();
+    expect(document.body.textContent).not.toMatch(
+      /readiness|phase|governance|provider handoff|CRM handoff|sync readiness|workflow readiness|future sync|future integration|provider sync|automation handoff|owner approval|evidence|deployment/i
+    );
+  });
+
   it("requests a productImage CSRF proof and creates image metadata with approved fields only", async () => {
     const fetcher = createSuccessfulFetchMock();
     const onMutationComplete = vi.fn();

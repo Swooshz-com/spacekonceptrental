@@ -73,6 +73,20 @@ describe("category management panel", () => {
     ).not.toBeInTheDocument();
   });
 
+  it("uses visible MVP category guidance without old internal ladder wording", () => {
+    render(<CategoryManagementPanel categories={[category]} />);
+
+    expect(
+      screen.getByRole("heading", { name: /category visibility review/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/Categories should group rental listings/i)
+    ).toBeInTheDocument();
+    expect(document.body.textContent).not.toMatch(
+      /readiness|phase|governance|provider handoff|CRM handoff|sync readiness|workflow readiness|future sync|future integration|provider sync|automation handoff|owner approval|evidence|deployment/i
+    );
+  });
+
   it("requests a category CSRF proof and sends create category writes with the proof header", async () => {
     const fetcher = createSuccessfulFetchMock();
     const onMutationComplete = vi.fn();
