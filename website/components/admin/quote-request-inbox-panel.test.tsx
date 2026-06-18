@@ -177,6 +177,10 @@ describe("QuoteRequestInboxPanel", () => {
     ).toBeInTheDocument();
 
     const pageText = document.body.textContent ?? "";
+    expect(pageText.indexOf("Submitted enquiry triage details"))
+      .toBeLessThan(pageText.indexOf("Update internal triage status for QR-20260603-NEWEST"));
+    expect(pageText.indexOf("Update internal triage status for QR-20260603-NEWEST"))
+      .toBeLessThan(pageText.indexOf("Source metadata and CRM handoff placeholder"));
     expect(pageText.indexOf("Update internal triage status for QR-20260603-NEWEST"))
       .toBeLessThan(pageText.indexOf("Future CRM handoff readiness"));
   });

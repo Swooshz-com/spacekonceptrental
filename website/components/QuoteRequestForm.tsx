@@ -257,7 +257,7 @@ export default function QuoteRequestForm({
           </span>
         </aside>
       ) : null}
-      <fieldset>
+      <fieldset className="quote-form__field-grid">
         <legend>Contact details</legend>
         <label>
           Your name (required)
@@ -293,7 +293,7 @@ export default function QuoteRequestForm({
           </small>
         </label>
       </fieldset>
-      <fieldset>
+      <fieldset className="quote-form__field-grid">
         <legend>Event details</legend>
         <label>
           Event date (if known)
@@ -312,9 +312,9 @@ export default function QuoteRequestForm({
           </small>
         </label>
       </fieldset>
-      <fieldset>
+      <fieldset className="quote-form__field-grid">
         <legend>Requested items</legend>
-        <label>
+        <label className="quote-form__full-width">
           Requested listings or items
           <textarea
             defaultValue={initialItemsText}
@@ -327,7 +327,7 @@ export default function QuoteRequestForm({
             keep listing, category, event-use, or search context as request notes.
           </small>
         </label>
-        <label>
+        <label className="quote-form__full-width">
           Event goals or customer message
           <textarea
             aria-label="Customer message / event notes for the team"
@@ -343,7 +343,7 @@ export default function QuoteRequestForm({
             setup/access/timing notes.
           </small>
         </label>
-        <label>
+        <label className="quote-form__full-width">
           Quantity, setup, access, and timing notes
           <textarea
             aria-label="Item-specific notes / quantity or setup notes"
@@ -368,7 +368,10 @@ export default function QuoteRequestForm({
           : "Send an enquiry"}
       </button>
       {submitState.status === "success" ? (
-        <p className="quote-form__status" role="status">
+        <p
+          className="quote-form__status quote-form__status--success"
+          role="status"
+        >
           Enquiry received. This is a receipt only; the team can review your request
           and follow up directly. It does not set aside furniture and does not
           finalise rental details or create an online follow-up page.
@@ -378,7 +381,10 @@ export default function QuoteRequestForm({
         </p>
       ) : null}
       {submitState.status === "error" ? (
-        <p className="quote-form__status" role="alert">
+        <p
+          className="quote-form__status quote-form__status--error"
+          role="alert"
+        >
           {submitState.message}
         </p>
       ) : null}

@@ -497,16 +497,16 @@ export function CataloguePageContent({
               <CatalogueCardPlanning product={product} />
               <div className="catalogue-card__actions">
                 <Link
+                  className="card-link card-link--primary"
+                  href={getQuoteHrefForListing(product.slug)}
+                >
+                  Request a quote
+                </Link>
+                <Link
                   className="card-link"
                   href={`${detailBasePath}/${product.slug}`}
                 >
                   View rental listing
-                </Link>
-                <Link
-                  className="card-link"
-                  href={getQuoteHrefForListing(product.slug)}
-                >
-                  Request a quote
                 </Link>
               </div>
             </div>

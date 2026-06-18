@@ -101,9 +101,9 @@ describe("QuoteRequestForm", () => {
         }
       ]
     });
-    expect(
-      await screen.findByText(/enquiry received/i)
-    ).toBeInTheDocument();
+    const receipt = await screen.findByText(/enquiry received/i);
+    expect(receipt).toBeInTheDocument();
+    expect(receipt).toHaveClass("quote-form__status--success");
     expect(screen.queryByRole("link", { name: /track|status/i })).not.toBeInTheDocument();
   });
 

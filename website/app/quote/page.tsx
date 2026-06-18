@@ -254,9 +254,13 @@ export default async function QuotePage({
         </p>
       </div>
 
-      <div className="route-grid">
-        <article className="quote-panel">
+      <div className="route-grid quote-page-grid">
+        <article className="quote-panel quote-panel--primary">
           <h2>Event basics</h2>
+          <p>
+            Complete the required contact point first, then add the practical
+            event details that help the team triage the rental enquiry.
+          </p>
           <QuoteRequestForm
             initialItemsText={initialItemsText}
             initialListingSlug={listingContext.requestedSlug}

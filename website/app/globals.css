@@ -203,6 +203,15 @@ select {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
+.quote-page-grid {
+  align-items: start;
+  grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr);
+}
+
+.quote-panel--primary {
+  grid-row: span 4;
+}
+
 .catalogue-card,
 .route-card,
 .quote-panel {
@@ -274,6 +283,10 @@ select {
 
 .catalogue-card__planning span {
   color: var(--text);
+}
+
+.home-featured-card .catalogue-card__image {
+  aspect-ratio: 5 / 3;
 }
 
 .catalogue-discovery,
@@ -349,6 +362,16 @@ select {
   font-weight: 800;
 }
 
+.card-link--primary {
+  align-items: center;
+  background: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  color: #ffffff;
+  min-height: 38px;
+  padding: 0 12px;
+}
+
 .category-listings {
   display: grid;
   gap: 8px;
@@ -391,6 +414,21 @@ select {
 }
 
 .listing-checklist h3 {
+  margin: 0;
+}
+
+.listing-enquiry-panel {
+  background: #eef5f2;
+  border: 1px solid #bfd8cb;
+  border-radius: 8px;
+  display: grid;
+  gap: 8px;
+  margin-top: 18px;
+  padding: 14px;
+}
+
+.listing-enquiry-panel h3,
+.listing-enquiry-panel p {
   margin: 0;
 }
 
@@ -529,6 +567,15 @@ select {
   padding: 16px;
 }
 
+.quote-form__field-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.quote-form__field-grid legend,
+.quote-form__full-width {
+  grid-column: 1 / -1;
+}
+
 .quote-form legend {
   color: var(--accent-dark);
   font-weight: 900;
@@ -550,6 +597,7 @@ select {
 }
 
 .quote-form input,
+.quote-form select,
 .quote-form textarea,
 .admin-login__form input {
   background: #fbfaf7;
@@ -558,6 +606,30 @@ select {
   color: var(--text);
   min-height: 44px;
   padding: 12px 14px;
+}
+
+.quote-form textarea {
+  min-height: 116px;
+  resize: vertical;
+}
+
+.quote-form__status {
+  border-radius: 8px;
+  font-weight: 800;
+  line-height: 1.55;
+  padding: 12px 14px;
+}
+
+.quote-form__status--success {
+  background: #eef5f2;
+  border: 1px solid #bfd8cb;
+  color: var(--accent-dark) !important;
+}
+
+.quote-form__status--error {
+  background: #fff4ee;
+  border: 1px solid #efc6aa;
+  color: #7b3418 !important;
 }
 
 .admin-login,
@@ -815,6 +887,30 @@ select {
   gap: 8px;
 }
 
+.quote-inbox__section--primary {
+  background: #ffffff;
+  border: 1px solid #bfd8cb;
+  border-left: 4px solid var(--accent);
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.quote-inbox__section--secondary {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-left: 4px solid #c9c3b8;
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.quote-inbox__status-form {
+  background: #eef5f2;
+  border: 1px solid #bfd8cb;
+  border-radius: 8px;
+  margin: 0;
+  padding: 12px;
+}
+
 .quote-inbox__section h4,
 .quote-inbox__section p {
   margin: 0;
@@ -1049,6 +1145,14 @@ select {
   .admin-dashboard__grid,
   .quote-inbox__triage-summary {
     grid-template-columns: 1fr;
+  }
+
+  .quote-form__field-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .quote-panel--primary {
+    grid-row: auto;
   }
 
   .chat-widget {
