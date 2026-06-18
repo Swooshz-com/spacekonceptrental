@@ -178,6 +178,7 @@ const internalRouteAllowlist = [
   /^\/admin$/,
   /^\/admin\/login$/,
   /^\/admin\/listings$/,
+  /^\/admin\/listings#listing-form-[A-Za-z0-9-]+$/,
   /^\/admin\/categories$/,
   /^\/admin\/media$/,
   /^\/admin\/content-readiness$/,
