@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
@@ -122,6 +122,68 @@ describe("listing image metadata management panel", () => {
     expect(document.body.textContent).not.toMatch(
       /readiness|phase|governance|provider handoff|CRM handoff|sync readiness|workflow readiness|future sync|future integration|provider sync|automation handoff|owner approval|evidence|deployment/i
     );
+  });
+
+  it("shows scan-friendly listing media coverage and navigation actions", () => {
+    const draftWithoutAlt: ListingImageMetadataProduct = {
+      ...product,
+      id: "44444444-4444-4444-8444-444444444444",
+      slug: "draft-banquet-chair",
+      name: "Draft Banquet Chair",
+      status: "draft",
+      imageCount: 1
+    };
+    const imageWithoutAlt: ListingImageMetadataImage = {
+      id: "55555555-5555-4555-8555-555555555555",
+      productId: draftWithoutAlt.id,
+      storageBucket: "catalogue-metadata",
+      storagePath: "fixtures/chair-side.jpg",
+      sortOrder: 2,
+      isPrimary: false,
+      status: "active"
+    };
+
+    render(
+      <ListingImageMetadataManagementPanel
+        images={[image, imageWithoutAlt]}
+        products={[product, draftWithoutAlt]}
+      />
+    );
+
+    const coverage = screen.getByRole("region", {
+      name: /listing media coverage checklist/i
+    });
+    const productCard = within(
+      within(coverage).getByRole("article", {
+        name: /media coverage modular lounge/i
+      })
+    );
+    const draftCard = within(
+      within(coverage).getByRole("article", {
+        name: /media coverage draft banquet chair/i
+      })
+    );
+
+    expect(productCard.getByText(/listing slug/i)).toBeInTheDocument();
+    expect(productCard.getByText("modular-lounge")).toBeInTheDocument();
+    expect(productCard.getByText(/published - visible in public catalogue/i)).toBeInTheDocument();
+    expect(productCard.getByText(/1 active image/i)).toBeInTheDocument();
+    expect(productCard.getByText(/primary public image selected/i)).toBeInTheDocument();
+    expect(productCard.getByText(/public image text is present/i)).toBeInTheDocument();
+    expect(
+      productCard.getByRole("link", { name: /view public listing modular lounge/i })
+    ).toHaveAttribute("href", "/listings/modular-lounge");
+    expect(
+      productCard.getByRole("link", { name: /edit listing modular lounge/i })
+    ).toHaveAttribute("href", "/admin/listings#listing-form-22222222-2222-4222-8222-222222222222");
+    expect(
+      productCard.getByRole("link", { name: /manage images modular lounge/i })
+    ).toHaveAttribute("href", "#update-listing-image-metadata");
+
+    expect(draftCard.getByText(/draft - protected/i)).toBeInTheDocument();
+    expect(draftCard.getAllByText(/missing primary public image/i).length).toBeGreaterThan(0);
+    expect(draftCard.getByText(/missing alt text/i)).toBeInTheDocument();
+    expect(draftCard.getByText(/image exists while listing is draft/i)).toBeInTheDocument();
   });
 
   it("requests a productImage CSRF proof and creates image metadata with approved fields only", async () => {

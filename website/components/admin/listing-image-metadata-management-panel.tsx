@@ -167,6 +167,66 @@ function imageReadiness(
   ];
 }
 
+function listingVisibilityLabel(status: ListingImageMetadataProduct["status"]) {
+  if (status === "published") {
+    return "Published - visible in public catalogue";
+  }
+
+  if (status === "archived") {
+    return "Archived - hidden from active browsing";
+  }
+
+  return "Draft - protected";
+}
+
+function pluralize(count: number, singular: string, plural = `${singular}s`) {
+  return `${count} ${count === 1 ? singular : plural}`;
+}
+
+function mediaCoverageChecks(
+  product: ListingImageMetadataProduct,
+  images: ListingImageMetadataImage[],
+) {
+  const productImages = images.filter(
+    (image) => image.productId === product.id,
+  );
+  const activeImages = productImages.filter(
+    (image) => image.status === "active",
+  );
+  const activePrimaryImages = activeImages.filter((image) => image.isPrimary);
+  const activeImagesMissingAlt = activeImages.filter(
+    (image) => !hasText(image.altText),
+  );
+  const checks = [
+    productImages.length > 0
+      ? `${pluralize(productImages.length, "image")} linked to this listing`
+      : "No public image",
+    activeImages.length > 0
+      ? `${pluralize(activeImages.length, "active image")}`
+      : productImages.length > 0
+        ? "Only fallback image or archived media needs review"
+        : "No active public image",
+    activePrimaryImages.length > 0
+      ? "Primary public image selected"
+      : "Missing primary public image",
+    activeImagesMissingAlt.length > 0
+      ? "Missing alt text"
+      : activeImages.length > 0
+        ? "Public image text is present"
+        : "Add public image text when media is selected",
+  ];
+
+  if (product.status !== "published" && activeImages.length > 0) {
+    checks.push("Image exists while listing is draft");
+  }
+
+  if (product.status === "published" && activeImages.length === 0) {
+    checks.push("Published listing has no active public image");
+  }
+
+  return checks;
+}
+
 function mediaReadinessByListing(
   product: ListingImageMetadataProduct,
   images: ListingImageMetadataImage[],
@@ -414,6 +474,11 @@ export function ListingImageMetadataManagementPanel({
           and a clear primary image when the listing should lead with that
           setup. These protected admin cues do not prove availability.
         </p>
+        <p className="category-management__hint">
+          Strong listing images help visitors compare rental options before
+          requesting a quote. Image text should describe the furniture or event
+          rental item shown, not internal file names or source details.
+        </p>
         <h4>Media coverage by listing</h4>
         <ul className="admin-readiness__list">
           {products.flatMap((product) =>
@@ -428,6 +493,87 @@ export function ListingImageMetadataManagementPanel({
             listing galleries.
           </p>
         ) : null}
+      </section>
+
+      <section
+        className="admin-readiness"
+        aria-label="Listing media coverage checklist"
+      >
+        <h3>Listing media coverage checklist</h3>
+        <p>
+          Scan each rental listing before editing image metadata. Use these cues
+          to spot listings with no public image, only fallback or archived media,
+          missing alt text, or images attached while the listing is still draft.
+        </p>
+        <div className="category-management__list">
+          {products.map((product) => (
+            <article
+              aria-label={`Media coverage ${product.name}`}
+              className="category-management__item"
+              key={product.id}
+            >
+              <div>
+                <h4>{product.name}</h4>
+                <dl className="quote-inbox__details">
+                  <div>
+                    <dt>Listing slug</dt>
+                    <dd>{product.slug}</dd>
+                  </div>
+                  <div>
+                    <dt>Visibility</dt>
+                    <dd>{listingVisibilityLabel(product.status)}</dd>
+                  </div>
+                  <div>
+                    <dt>Image records</dt>
+                    <dd>{pluralize(product.imageCount, "image")}</dd>
+                  </div>
+                  <div>
+                    <dt>Primary image text</dt>
+                    <dd>
+                      {hasText(product.primaryImageAltText)
+                        ? "Primary public image text is present"
+                        : "Missing primary public image text"}
+                    </dd>
+                  </div>
+                </dl>
+                <nav
+                  aria-label={`Media actions ${product.name}`}
+                  className="category-management__actions"
+                >
+                  <a
+                    className="button button--secondary"
+                    href={`/listings/${encodeURIComponent(product.slug)}`}
+                  >
+                    View public listing {product.name}
+                  </a>
+                  <a
+                    className="button button--secondary"
+                    href={`/admin/listings#listing-form-${product.id}`}
+                  >
+                    Edit listing {product.name}
+                  </a>
+                  <a
+                    className="button button--secondary"
+                    href="#update-listing-image-metadata"
+                  >
+                    Manage images {product.name}
+                  </a>
+                </nav>
+              </div>
+              <section
+                className="admin-readiness admin-readiness--inline"
+                aria-label={`Public image helper ${product.name}`}
+              >
+                <h5>Public image helper</h5>
+                <ul className="admin-readiness__list">
+                  {mediaCoverageChecks(product, images).map((check) => (
+                    <li key={check}>{check}</li>
+                  ))}
+                </ul>
+              </section>
+            </article>
+          ))}
+        </div>
       </section>
 
       <form
@@ -501,6 +647,7 @@ export function ListingImageMetadataManagementPanel({
 
       <div
         className="category-management__list"
+        id="update-listing-image-metadata"
         aria-label="Update listing image metadata"
       >
         {images.length === 0 ? (
