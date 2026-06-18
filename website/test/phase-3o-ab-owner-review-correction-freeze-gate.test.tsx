@@ -274,10 +274,10 @@ describe("Phase 3O-A/B owner review correction freeze gate", () => {
     expect(
       screen.getByRole("heading", { name: /correction\/freeze snapshot/i })
     ).toBeInTheDocument();
-    expect(screen.getByText(/correction categories/i)).toBeInTheDocument();
-    expect(screen.getByText(/correction statuses/i)).toBeInTheDocument();
-    expect(screen.getByText(/freeze states/i)).toBeInTheDocument();
-    expect(screen.getByText(/future correction PR types/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/correction categories/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/correction statuses/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/freeze states/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/future correction PR types/i).length).toBeGreaterThan(0);
     expect(screen.getByText(/correction freeze boundary/i)).toBeInTheDocument();
     expect(screen.getByText(correctionIntakePath)).toBeInTheDocument();
     expect(screen.getByText(launchBlockerFreezeGatePath)).toBeInTheDocument();

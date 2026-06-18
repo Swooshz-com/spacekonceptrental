@@ -63,8 +63,6 @@ type ImagePayload = {
 const productImageWriteOperation = "productImage.write";
 const genericFailureMessage =
   "Protected admin save could not be completed. Check selected listing, image context, public-safe alt text, primary label, active or archived status, and sort order before retrying.";
-const phase5hReadinessDoc =
-  "docs/content/LOCAL-CATALOGUE-WRITE-WORKFLOW-READINESS.md";
 
 function formValue(formData: FormData, name: string) {
   const value = formData.get(name);
@@ -162,7 +160,7 @@ function imageReadiness(
       ? "Alt text ready for public accessibility"
       : "Missing alt text for public accessibility",
     image.isPrimary && image.status === "active"
-      ? "Primary active image is ready for owner review context"
+      ? "Primary active image can lead the public listing gallery"
       : image.isPrimary
         ? "Primary selection is inactive while archived"
         : "Secondary image supports the listing gallery",
@@ -209,7 +207,7 @@ function mediaReadinessByListing(
 
   return messages.length > 0
     ? messages
-    : [`${product.name} media readiness is clear for current review state.`];
+    : [`${product.name} media coverage is clear for current review state.`];
 }
 
 function buildImagePayload(
@@ -379,7 +377,6 @@ export function ListingImageMetadataManagementPanel({
           availability assertion. If a save fails, keep the prior protected
           media state, review selected listing context, public-safe alt text,
           primary label, and active or archived status, then retry locally.
-          Phase 5H guidance: {phase5hReadinessDoc}.
         </p>
       </div>
 
@@ -404,22 +401,20 @@ export function ListingImageMetadataManagementPanel({
           sort order.
         </p>
         <p className="category-management__hint">
-          Protected admin save does not deploy, does not record owner approval,
-          and does not create evidence. Media metadata is review context only
-          and does not confirm visual outcome, availability, or inventory. See{" "}
-          {phase5hReadinessDoc}.
+          Protected admin save only updates image metadata. Media metadata is
+          review context only and does not confirm visual outcome, availability,
+          or inventory.
         </p>
       </section>
 
-      <section className="admin-readiness" aria-label="Media readiness">
-        <h3>Media readiness</h3>
+      <section className="admin-readiness" aria-label="Media coverage">
+        <h3>Media coverage</h3>
         <p>
-          Review-ready media needs an active image, useful public-safe alt text,
+          Public-ready media needs an active image, useful public-safe alt text,
           and a clear primary image when the listing should lead with that
-          setup. These admin-only cues do not prove availability or owner
-          approval.
+          setup. These protected admin cues do not prove availability.
         </p>
-        <h4>Media readiness by listing</h4>
+        <h4>Media coverage by listing</h4>
         <ul className="admin-readiness__list">
           {products.flatMap((product) =>
             mediaReadinessByListing(product, images).map((message) => (
@@ -513,7 +508,7 @@ export function ListingImageMetadataManagementPanel({
             <p>
               No listing image metadata records are available to update yet. Add
               reviewed listing media metadata before choosing public primary
-              images or completing media readiness review.
+              images or completing media coverage review.
             </p>
           </section>
         ) : (
@@ -534,7 +529,7 @@ export function ListingImageMetadataManagementPanel({
                 </div>
                 <section
                   className="admin-readiness admin-readiness--inline"
-                  aria-label={`Media readiness ${label}`}
+                  aria-label={`Media coverage ${label}`}
                 >
                   <ul className="admin-readiness__list">
                     {imageReadiness(image, product).map((item) => (
@@ -605,12 +600,10 @@ export function ListingImageMetadataManagementPanel({
                   </label>
                   <p className="category-management__hint">
                     Protected write boundary: primary and active media choices
-                    can affect public browsing. This protected admin save does
-                    not deploy, does not record owner approval, and does not
-                    create evidence. Archive removes this image from active
-                    listing media; it does not delete the file from storage. If
-                    save fails, keep the prior media state, review alt text and
-                    primary selection, and retry locally.
+                    can affect public browsing. Archive removes this image from
+                    active listing media; it does not delete the file from
+                    storage. If save fails, keep the prior media state, review
+                    alt text and primary selection, and retry locally.
                   </p>
                   <div className="category-management__actions">
                     <button className="button" type="submit">

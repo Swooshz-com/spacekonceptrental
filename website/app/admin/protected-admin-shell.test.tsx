@@ -458,6 +458,55 @@ describe("protected admin shell", () => {
     expect(screen.queryByLabelText(/product editor/i)).not.toBeInTheDocument();
   }, 15000);
 
+  it("keeps normal admin operations navigation focused on visible MVP work areas", () => {
+    render(
+      <AdminShellContent
+        view={{ kind: "home" }}
+        state={{
+          status: "authorised_admin",
+          dashboard: {
+            status: "loaded",
+            data: {
+              categories: [],
+              products: [],
+              images: [],
+              imageSummary: {
+                totalImages: 0,
+                activeImages: 0,
+                primaryImages: 0
+              }
+            }
+          },
+          quoteInbox: {
+            status: "loaded",
+            data: {
+              quoteRequests: []
+            }
+          }
+        }}
+      />
+    );
+
+    expect(
+      screen.getByRole("link", { name: /open listings/i })
+    ).toHaveAttribute("href", "/admin/listings");
+    expect(
+      screen.getByRole("link", { name: /open categories/i })
+    ).toHaveAttribute("href", "/admin/categories");
+    expect(
+      screen.getByRole("link", { name: /open media/i })
+    ).toHaveAttribute("href", "/admin/media");
+    expect(
+      screen.getByRole("link", { name: /open quote requests/i })
+    ).toHaveAttribute("href", "/admin/quotes");
+    expect(
+      screen.queryByRole("link", { name: /content readiness|public parity|release control/i })
+    ).not.toBeInTheDocument();
+    expect(document.body.textContent).not.toMatch(
+      /readiness|phase|governance|provider handoff|CRM handoff|sync readiness|workflow readiness|future sync|future integration|provider sync|automation handoff/i
+    );
+  });
+
   it("does not render category write controls outside loaded authorised dashboard state", () => {
     const blockedStates = [
       {

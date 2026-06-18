@@ -116,21 +116,21 @@ function readProductionSource(paths: string[]) {
     .join("\n");
 }
 
-describe("Phase 5G-A/B catalogue content-ops readiness", () => {
+describe("Phase 5G-A/B catalogue content review", () => {
   afterEach(() => {
     cleanup();
   });
 
-  it("renders the protected admin catalogue readiness helper only for authorised admin state", () => {
+  it("renders the protected admin catalogue content review only for authorised admin state", () => {
     render(<AdminShellContent state={authorisedAdminState} view={{ kind: "listings" }} />);
 
-    expect(screen.getByRole("heading", { name: /catalogue content-ops readiness helper/i })).toBeInTheDocument();
-    expect(screen.getByText(/docs\/content\/LOCAL-CATALOGUE-CONTENT-OPS-READINESS\.md/i)).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /catalogue content review/i })).toBeInTheDocument();
+    expect(screen.getByText(/Listings, categories, media, quote request handoff/i)).toBeInTheDocument();
     expect(screen.getByText(/Content completeness:/i)).toBeInTheDocument();
-    expect(screen.getByText(/Media readiness:/i)).toBeInTheDocument();
-    expect(screen.getByText(/Public-safe copy readiness:/i)).toBeInTheDocument();
-    expect(screen.getByText(/Quote\/enquiry handoff readiness:/i)).toBeInTheDocument();
-    expect(screen.getByText(/No-deploy\/no-evidence reminder:/i)).toBeInTheDocument();
+    expect(screen.getByText(/Media coverage:/i)).toBeInTheDocument();
+    expect(screen.getByText(/Public-safe copy:/i)).toBeInTheDocument();
+    expect(screen.getByText(/Quote\/enquiry handoff:/i)).toBeInTheDocument();
+    expect(screen.getByText(/Visible MVP boundary:/i)).toBeInTheDocument();
   });
 
   it("does not render the helper for blocked admin states", () => {
@@ -141,21 +141,20 @@ describe("Phase 5G-A/B catalogue content-ops readiness", () => {
     ]) {
       const view = render(<AdminShellContent state={state} view={{ kind: "listings" }} />);
 
-      expect(screen.queryByRole("heading", { name: /catalogue content-ops readiness helper/i })).not.toBeInTheDocument();
+      expect(screen.queryByRole("heading", { name: /catalogue content review/i })).not.toBeInTheDocument();
       view.unmount();
     }
   });
 
-  it("keeps admin source explicit about safe readiness, media, and public parity wording", () => {
+  it("keeps admin source explicit about safe catalogue, media, and quote request wording", () => {
     const adminSource = readProductionSource(adminCatalogueSourceRoots);
 
-    expect(adminSource).toMatch(/Catalogue content-ops readiness helper/i);
-    expect(adminSource).toMatch(/LOCAL-CATALOGUE-CONTENT-OPS-READINESS\.md/i);
+    expect(adminSource).toMatch(/Catalogue content review/i);
     expect(adminSource).toMatch(/Content completeness/i);
-    expect(adminSource).toMatch(/Media readiness/i);
-    expect(adminSource).toMatch(/Public-safe copy readiness/i);
-    expect(adminSource).toMatch(/Quote\/enquiry handoff readiness/i);
-    expect(adminSource).toMatch(/Owner input still missing/i);
+    expect(adminSource).toMatch(/Media coverage/i);
+    expect(adminSource).toMatch(/Public-safe copy/i);
+    expect(adminSource).toMatch(/Quote\/enquiry handoff/i);
+    expect(adminSource).toMatch(/Business input to confirm/i);
     expect(adminSource).toMatch(/Claims still blocked/i);
     expect(adminSource).toMatch(/Public visibility\/status review/i);
   });

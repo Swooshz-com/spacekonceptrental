@@ -333,13 +333,13 @@ describe("Phase 3Y-A/B protected admin destructive-action safeguards", () => {
     render(<ListingManagementPanel categories={[sampleCategory]} products={[sampleListing]} />);
     let text = document.body.textContent ?? "";
     expect(text).toMatch(/Draft keeps the listing protected/i);
-    expect(text).toMatch(/Protected admin save does not deploy/i);
+    expect(text).toMatch(/Protected write boundary: save listing metadata only/i);
     cleanup();
 
     render(<CategoryManagementPanel categories={[sampleCategory]} />);
     text = document.body.textContent ?? "";
     expect(text).toMatch(/Non-visible or archived categories stay out of public browsing/i);
-    expect(text).toMatch(/does not create evidence/i);
+    expect(text).toMatch(/Protected write boundary: save category metadata only/i);
     cleanup();
 
     render(<ListingImageUploadPanel products={[sampleListing]} />);

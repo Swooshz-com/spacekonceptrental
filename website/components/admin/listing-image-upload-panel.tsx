@@ -42,8 +42,6 @@ type PanelStatus =
 const productImageWriteOperation = "productImage.write";
 const genericFailureMessage =
   "Protected admin upload could not be completed. Check selected listing, file type, public-safe alt text, primary label, and sort order before retrying.";
-const phase5hReadinessDoc =
-  "docs/content/LOCAL-CATALOGUE-WRITE-WORKFLOW-READINESS.md";
 
 function formValue(formData: FormData, name: string) {
   const value = formData.get(name);
@@ -230,16 +228,15 @@ export function ListingImageUploadPanel({
           Upload reviewed image files for furniture and event-rental listings.
           The protected server stores the file and creates listing image
           metadata; public users cannot upload files here. Media metadata is
-          review context only. Phase 5H guidance: {phase5hReadinessDoc}.
+          protected admin review context only.
         </p>
         <p className="category-management__hint">
           Use reviewed listing images only. Primary uploaded images can support
           public catalogue display after the image metadata is active; this is
           not an availability, visual outcome, or inventory assertion. Protected
-          admin upload does not deploy, does not record owner approval, and does
-          not create evidence. If upload fails, keep the listing
-          draft/protected, check file type and public-safe alt text, and retry
-          the protected write locally.
+          admin upload stores media metadata for business owner review. If
+          upload fails, keep the listing draft/protected, check file type and
+          public-safe alt text, and retry the protected write locally.
         </p>
       </div>
 

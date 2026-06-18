@@ -244,7 +244,7 @@ describe("Phase 3H-A/B admin operator QA readiness polish", () => {
       screen.getByText(/public-facing changes are limited to published listing, category, and active media content/i)
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/next safe action: review listings, categories, media, and quote requests before any separately approved deployment/i)
+      screen.getByText(/next safe action: review listings, categories, media, and quote requests for the visible rental enquiry journey/i)
     ).toBeInTheDocument();
   });
 
@@ -317,7 +317,7 @@ describe("Phase 3H-A/B admin operator QA readiness polish", () => {
       screen.getByText(/read-only customer submission snapshot/i)
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/write-enabled follow-up controls remain below via the protected quote workflow panel/i)
+      screen.getByText(/write-enabled follow-up controls remain below via the protected quote request panel/i)
     ).toBeInTheDocument();
     expect(
       screen.getByText(/next safe action: review details, then record an internal note or status change inside the protected workspace/i)

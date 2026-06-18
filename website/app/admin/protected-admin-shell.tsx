@@ -392,9 +392,6 @@ function AdminRecoveryLinks({
       <a className="button button--secondary" href="/admin/quotes">
         Open quote requests
       </a>
-      <a className="button button--secondary" href="/admin/content-readiness">
-        Open content readiness
-      </a>
     </nav>
   );
 }
@@ -404,10 +401,7 @@ function AdminOperationsNavigation() {
     ["Listings", "/admin/listings"],
     ["Categories", "/admin/categories"],
     ["Media", "/admin/media"],
-    ["Quote requests", "/admin/quotes"],
-    ["Content readiness", "/admin/content-readiness"],
-    ["Public parity", "/admin/public-parity"],
-    ["Release control", "/admin/release-control"]
+    ["Quote requests", "/admin/quotes"]
   ] as const;
 
   return (
@@ -465,20 +459,6 @@ function AdminOperationsHome({
       title: "Quote requests",
       count: quoteCount,
       body: "Review enquiries and record admin-only follow-up notes."
-    },
-    {
-      href: "/admin/content-readiness",
-      label: "Open content readiness",
-      title: "Content readiness",
-      count: 4,
-      body: "Review owner-required content gaps before any separate launch decision."
-    },
-    {
-      href: "/admin/public-parity",
-      label: "Open public parity",
-      title: "Public parity",
-      count: 7,
-      body: "Review public browse-to-enquiry continuity without exposing admin-only details."
     }
   ];
 
@@ -497,9 +477,9 @@ function AdminOperationsHome({
         </div>
         <div className="admin-dashboard__grid">
           <AdminOperatorGuidance
-            adminOnly="Admin-only workspace, management summaries, readiness cues, and internal follow-up details."
+            adminOnly="Admin-only workspace, management summaries, public-ready listing cues, and internal follow-up details."
             label="Admin overview"
-            nextAction="Next safe action: review listings, categories, media, and quote requests before any separately approved deployment."
+            nextAction="Next safe action: review listings, categories, media, and quote requests for the visible rental enquiry journey."
             publicFacing="Public-facing changes are limited to published listing, category, and active media content."
             readOnly="Overview counts and dashboard summaries are read-only snapshots of the current workspace."
             writeEnabled="Write-enabled surfaces stay behind protected admin routes."
@@ -516,7 +496,6 @@ function AdminOperationsHome({
           ))}
         </div>
       </section>
-      <OwnerReadinessHelpersPanel />
     </>
   );
 }
@@ -955,12 +934,12 @@ const phase5gCatalogueContentOpsReadinessPath =
   "docs/content/LOCAL-CATALOGUE-CONTENT-OPS-READINESS.md";
 const phase5gCatalogueContentOpsChecklist = [
   "Content completeness: listing title/name, category, rental unit, short description, long description, and event-use context are checked from existing admin data.",
-  "Media readiness: active media metadata, fallback expectation, primary image state, and alt text are reviewed without claiming owner approval for media or finished styling.",
-  "Public-safe copy readiness: visible listing/category/media copy stays rental/enquiry-only and non-promissory.",
-  "Quote/enquiry handoff readiness: public CTAs remain editable request intake, not approval, availability, or response-time promises.",
-  "Owner input still missing: contact, service area, legal/policy, proof claims, image selections, alt text, and final public wording still require owner-supplied facts.",
+  "Media coverage: active media metadata, fallback expectation, primary image state, and alt text are reviewed without claiming finished styling.",
+  "Public-safe copy: visible listing/category/media copy stays rental/enquiry-only and non-promissory.",
+  "Quote/enquiry handoff: public CTAs remain editable request intake, not availability or response-time promises.",
+  "Business input to confirm: contact, service area, legal/policy, image selections, alt text, and final public wording should use supplied facts.",
   "Claims still blocked: no invented proof claims, client names, response-time claims, or operational promises.",
-  "No-deploy/no-evidence reminder: repo-local review only; no preview evidence, production evidence, owner approval, provider setup, or deployment approval is recorded."
+  "Visible MVP boundary: this admin review supports catalogue quality and manual follow-up only."
 ] as const;
 
 const phase5aLocalContentReadinessCleanupPath =
@@ -2405,8 +2384,8 @@ function ReleaseControlWorkspace() {
             boundaries without recording owner feedback or sign-off.
           </p>
         </section>
-      </div>
-    </section>
+        </div>
+      </section>
   );
 }
 
@@ -2448,35 +2427,36 @@ function ContentReadinessWorkspace() {
   ] as const;
 
   return (
-    <section className="admin-dashboard" aria-label="Content readiness workspace">
-      <div className="admin-dashboard__header">
-        <div>
-          <p className="eyebrow">Owner review</p>
-          <h2>Content readiness</h2>
-          <p>
-            Missing facts remain Owner input required. This protected admin
-            workspace summarizes the repo-local content intake and gap register
-            without publishing owner-review details to public routes.
-          </p>
+    <>
+      <section className="admin-dashboard" aria-label="Content readiness workspace">
+        <div className="admin-dashboard__header">
+          <div>
+            <p className="eyebrow">Owner review</p>
+            <h2>Content readiness</h2>
+            <p>
+              Missing facts remain Owner input required. This protected admin
+              workspace summarizes the repo-local content intake and gap register
+              without publishing owner-review details to public routes.
+            </p>
+          </div>
         </div>
-      </div>
 
-      <div className="admin-dashboard__grid">
-        <section className="admin-dashboard__card admin-dashboard__card--summary">
-          <h3>Owner-review execution snapshot</h3>
-          <dl className="quote-inbox__details">
-            {executionSnapshot.map(([label, value]) => (
-              <div key={label}>
-                <dt>{label}</dt>
-                <dd>{value}</dd>
-              </div>
-            ))}
-          </dl>
-          <p>
-            Review decisions stay repo-local and protected until the owner
-            supplies missing facts and separately approves any launch step.
-          </p>
-        </section>
+        <div className="admin-dashboard__grid">
+          <section className="admin-dashboard__card admin-dashboard__card--summary">
+            <h3>Owner-review execution snapshot</h3>
+            <dl className="quote-inbox__details">
+              {executionSnapshot.map(([label, value]) => (
+                <div key={label}>
+                  <dt>{label}</dt>
+                  <dd>{value}</dd>
+                </div>
+              ))}
+            </dl>
+            <p>
+              Review decisions stay repo-local and protected until the owner
+              supplies missing facts and separately approves any launch step.
+            </p>
+          </section>
 
         <section className="admin-dashboard__card admin-dashboard__card--summary">
           <h3>Dry-run review snapshot</h3>
@@ -2778,8 +2758,10 @@ function ContentReadinessWorkspace() {
             </ul>
           </section>
         ))}
-      </div>
-    </section>
+        </div>
+      </section>
+      <OwnerReadinessHelpersPanel />
+    </>
   );
 }
 
@@ -6213,42 +6195,41 @@ function AdminCatalogueContentOpsReadiness({
   ).length;
 
   const derivedChecks = [
-    `Listing title/name review: ${products.length} listing records are available for protected admin content-ops review.`,
+    `Listing title/name review: ${products.length} listing records are available for protected admin content review.`,
     `Category review: ${missingCategory} listings are missing category assignment and ${categoriesNeedingOwnerInput} published categories have no published listings.`,
     `Rental unit review: ${missingRentalUnit} listings are missing rental unit wording for quote/request handoff.`,
     `Description review: ${missingPublicDescription} listings are missing short or long public-safe description copy.`,
     `Media/fallback review: ${listingsNeedingMedia} published listings need media metadata or a safe fallback expectation before public browsing.`,
     `Alt text review: ${activeImagesMissingAltText} active image metadata records are missing public-safe alt text.`,
-    "Public visibility/status review: draft and archived records stay protected or hidden; published records still need readiness checks before any later launch decision.",
+    "Public visibility/status review: draft and archived records stay protected or hidden; published records still need public-ready listing checks before visitor browsing.",
     "Quote/enquiry CTA continuity: listing, category, media, and event-use context remains editable request text only."
   ];
 
   return (
     <section
-      aria-label={`Phase 5G protected admin catalogue content-ops readiness helper for ${scope}`}
+      aria-label={`Protected admin catalogue content review for ${scope}`}
       className="admin-dashboard__card admin-dashboard__card--summary"
     >
-      <p className="eyebrow">Phase 5G-A/B admin-only catalogue readiness</p>
-      <h3>Catalogue content-ops readiness helper</h3>
+      <p className="eyebrow">Protected admin catalogue review</p>
+      <h3>Catalogue content review</h3>
       <p>
         This protected admin-only checklist derives from existing listing,
         category, and media metadata. It supports review of public-safe preview
-        expectations and missing owner facts; it does not create evidence,
-        approve launch, perform provider actions, or expose internal notes to
-        public routes.
+        expectations and missing business facts for the visible rental enquiry
+        journey. It does not expose internal notes to public routes.
       </p>
       <dl className="quote-inbox__details">
         <div>
-          <dt>Readiness reference</dt>
-          <dd>{phase5gCatalogueContentOpsReadinessPath}</dd>
+          <dt>Review focus</dt>
+          <dd>Listings, categories, media, quote request handoff</dd>
         </div>
         <div>
-          <dt>Evidence status</dt>
-          <dd>[NOT EVIDENCE / NOT RECORDED]</dd>
+          <dt>Visitor path</dt>
+          <dd>Catalogue to listing detail to quote request</dd>
         </div>
         <div>
-          <dt>Deployment status</dt>
-          <dd>[DEPLOYMENT APPROVAL: NOT GRANTED]</dd>
+          <dt>Admin path</dt>
+          <dd>Protected admin listing management and enquiry triage</dd>
         </div>
       </dl>
       <h4>Derived listing/category/media checklist</h4>
@@ -6257,7 +6238,7 @@ function AdminCatalogueContentOpsReadiness({
           <li key={check}>{check}</li>
         ))}
       </ul>
-      <h4>Content-ops boundaries</h4>
+      <h4>Public catalogue boundaries</h4>
       <ul className="admin-readiness__list">
         {phase5gCatalogueContentOpsChecklist.map((check) => (
           <li key={check}>{check}</li>
@@ -6285,7 +6266,7 @@ function AdminListingOperations({
             <h2>Listing operations</h2>
             <p>
               Review listing metadata by status, category, rental unit, content
-              readiness, and media readiness before changing records through the
+              quality, and media coverage before changing records through the
               protected write boundary.
             </p>
           </div>
@@ -6324,11 +6305,11 @@ function AdminListingOperations({
         </div>
         <div className="admin-dashboard__grid">
           <AdminOperatorGuidance
-            adminOnly="Admin-only readiness checks, draft state, archive context, and protected write controls."
+            adminOnly="Admin-only public-ready listing checks, draft state, archive context, and protected write controls."
             label="Listing operations"
             nextAction="Next safe action: fix missing category, descriptions, rental unit, and media before publishing."
             publicFacing="Public-facing after publication: published listing name, category, rental unit, public description, and active media only."
-            readOnly="Listing status counts and readiness summaries are read-only operator QA cues."
+            readOnly="Listing status counts and public-ready summaries are read-only operator QA cues."
             writeEnabled="Write-enabled listing metadata."
           />
           <AdminCatalogueContentOpsReadiness dashboard={dashboard} scope="listings" />
@@ -6366,11 +6347,11 @@ function AdminCategoryOperations({
         </div>
         <div className="admin-dashboard__grid">
           <AdminOperatorGuidance
-            adminOnly="Admin-only grouping readiness, empty published category warnings, and protected category controls."
+            adminOnly="Admin-only grouping checks, empty published category warnings, and protected category controls."
             label="Category operations"
             nextAction="Next safe action: keep empty published categories unpublished or add published listings."
             publicFacing="Public-facing category grouping."
-            readOnly="Category counts and readiness summaries are read-only operator QA cues."
+            readOnly="Category counts and visibility summaries are read-only operator QA cues."
             writeEnabled="Write-enabled category metadata."
           />
           <AdminCatalogueContentOpsReadiness dashboard={dashboard} scope="categories" />
@@ -6398,18 +6379,18 @@ function AdminMediaOperations({
             <p className="eyebrow">Media</p>
             <h2>Media operations</h2>
             <p>
-              Review listing media readiness, primary image state, and alt text
+              Review listing media coverage, primary image state, and alt text
               before media appears in public catalogue or listing galleries.
             </p>
           </div>
         </div>
         <div className="admin-dashboard__grid">
           <AdminOperatorGuidance
-            adminOnly="Admin-only media readiness, upload controls, archive context, and metadata checks."
+            adminOnly="Admin-only media coverage, upload controls, archive context, and metadata checks."
             label="Media operations"
             nextAction="Next safe action: add alt text and keep one active primary image per listing."
             publicFacing="Public-facing active media."
-            readOnly="Media readiness by listing is a read-only operator QA summary."
+            readOnly="Media coverage by listing is a read-only operator QA summary."
             writeEnabled="Write-enabled image upload and metadata."
           />
           <AdminCatalogueContentOpsReadiness dashboard={dashboard} scope="media" />
@@ -6480,12 +6461,12 @@ function AdminQuoteDetail({
         </div>
         <div className="admin-dashboard__grid">
           <AdminOperatorGuidance
-            adminOnly="Admin-only internal notes, status history, and protected quote workflow recovery."
+            adminOnly="Admin-only internal notes, status history, and protected quote request recovery."
             label="Quote detail"
             nextAction="Next safe action: review details, then record an internal note or status change inside the protected workspace."
             publicFacing="Public-facing quote pages do not show this detail view, internal activity, or status history."
             readOnly="Read-only customer submission snapshot."
-            writeEnabled="Write-enabled follow-up controls remain below via the protected quote workflow panel."
+            writeEnabled="Write-enabled follow-up controls remain below via the protected quote request panel."
           />
           <section className="admin-dashboard__card">
             <h3>Contact and follow-up</h3>

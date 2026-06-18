@@ -145,6 +145,22 @@ describe("listing management panel", () => {
     ).toHaveAttribute("href", "/admin/listings");
   });
 
+  it("uses visible MVP listing guidance without old internal ladder wording", () => {
+    render(
+      <ListingManagementPanel categories={[category]} products={[listing]} />
+    );
+
+    expect(
+      screen.getByRole("heading", { name: /public-ready listing summary/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/This summary is based on existing listing metadata/i)
+    ).toBeInTheDocument();
+    expect(document.body.textContent).not.toMatch(
+      /readiness|phase|governance|provider handoff|CRM handoff|sync readiness|workflow readiness|future sync|future integration|provider sync|automation handoff|owner approval|evidence|deployment/i
+    );
+  });
+
   it("requests a product CSRF proof and creates listings through the product route with approved payload fields only", async () => {
     const fetcher = createSuccessfulFetchMock();
     const onMutationComplete = vi.fn();

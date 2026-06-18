@@ -357,8 +357,6 @@ describe("Phase 3E-A/B product readiness, navigation QA, and dead-end polish", (
       "/admin/listings",
       "/admin/categories",
       "/admin/media",
-      "/admin/content-readiness",
-      "/admin/public-parity",
       "/admin/quotes",
       "/admin/quotes/quote-1",
       "/listings/modular-lounge-set"

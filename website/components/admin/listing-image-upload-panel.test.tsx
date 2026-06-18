@@ -63,6 +63,20 @@ describe("listing image upload panel", () => {
     ).not.toBeInTheDocument();
   });
 
+  it("uses visible MVP image upload guidance without old internal ladder wording", () => {
+    render(<ListingImageUploadPanel products={[product]} />);
+
+    expect(
+      screen.getByText(/Upload reviewed image files for furniture and event-rental listings/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/public catalogue display/i)
+    ).toBeInTheDocument();
+    expect(document.body.textContent).not.toMatch(
+      /readiness|phase|governance|provider handoff|CRM handoff|sync readiness|workflow readiness|future sync|future integration|provider sync|automation handoff|owner approval|evidence|deployment/i
+    );
+  });
+
   it("requests a productImage CSRF proof and uploads multipart form data with the proof", async () => {
     const fetcher = vi
       .fn()
