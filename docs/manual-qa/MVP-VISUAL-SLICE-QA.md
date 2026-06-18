@@ -33,10 +33,12 @@ admin triage flow. It is a local/preview QA path, not deployment approval.
 3. Open protected admin quote requests.
 4. Confirm the submitted enquiry appears with public reference, created time, customer contact, event date, venue/location, requested listing/item details, source path/listing context, current internal status, and submitted notes.
 5. Confirm each quote card starts with an admin triage snapshot that groups public reference, visitor/contact details, event details, rental details, setup/access notes, source listing, and current status.
-6. Confirm submitted enquiry details, the triage snapshot, and the protected internal status control appear before secondary future CRM handoff readiness sections.
-7. Update internal triage status.
-8. Confirm the admin status banner names the submitted enquiry reference and the saved triage status.
-9. Confirm the status update remains protected admin-only and does not contact the customer, sync to CRM, send email, call n8n, or expose a public tracking page.
+6. Confirm the main quote card shows source context and a manual follow-up checklist using the submitted public reference, visitor name, email/phone, event date, venue/location, requested rental listings/items, setup/access/timing notes, and source listing/path.
+7. Confirm the main quote card does not show old CRM handoff placeholder, provider, contact ID, deal ID, or per-enquiry queue-prep controls.
+8. Confirm admins are guided to review requested rental details, check event date/venue/quantities/setup/access notes, contact the visitor manually, and update protected triage status after review.
+9. Update internal triage status.
+10. Confirm the admin status banner names the submitted enquiry reference and the saved triage status.
+11. Confirm the status update remains protected admin-only and does not contact the customer, sync to CRM, send email, call n8n, or expose a public tracking page.
 
 ## Scope Guard
 

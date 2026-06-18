@@ -117,8 +117,19 @@ describe("Phase 5F-A/B quote triage readiness", () => {
 
     expect(screen.getByRole("heading", { name: /quote intake parity helper/i })).toBeInTheDocument();
     expect(screen.getByText(/docs\/content\/LOCAL-QUOTE-TRIAGE-READINESS\.md/i)).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: /response-readiness checklist/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /manual follow-up checklist/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /manual response checklist/i })).toBeInTheDocument();
     expect(screen.getByText(/do not promise availability or response time/i)).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: /Future CRM handoff readiness/i })).not.toBeInTheDocument();
+    for (const hiddenCrmAction of [
+      /Review queued CRM handoff packet/i,
+      /Run CSV import preflight/i,
+      /Run CRM handoff reconciliation/i,
+      /Run HubSpot sync dry-run/i,
+      /Download HubSpot import CSV/i
+    ]) {
+      expect(screen.queryByRole("button", { name: hiddenCrmAction })).not.toBeInTheDocument();
+    }
   });
 
   it("does not render the protected helper for blocked admin states", () => {
@@ -130,7 +141,7 @@ describe("Phase 5F-A/B quote triage readiness", () => {
       const view = render(<AdminShellContent state={state} view={{ kind: "quotes" }} />);
 
       expect(screen.queryByRole("heading", { name: /quote intake parity helper/i })).not.toBeInTheDocument();
-      expect(screen.queryByRole("heading", { name: /response-readiness checklist/i })).not.toBeInTheDocument();
+      expect(screen.queryByRole("heading", { name: /manual response checklist/i })).not.toBeInTheDocument();
       view.unmount();
     }
   });
@@ -145,6 +156,8 @@ describe("Phase 5F-A/B quote triage readiness", () => {
     expect(screen.getAllByText(/Event venue placeholder/i).length).toBeGreaterThan(0);
     expect(screen.getByRole("heading", { name: /requested listing\/item summary/i })).toBeInTheDocument();
     expect(screen.getByText(/2 x Modular lounge set/i)).toBeInTheDocument();
+    expect(screen.getByText(/review requested rental details/i)).toBeInTheDocument();
+    expect(screen.getByText(/contact the visitor using the submitted email or phone/i)).toBeInTheDocument();
     expect(screen.getByText(/public reference QR-20260610-LOCAL1 is a receipt reference only/i)).toBeInTheDocument();
     expect(screen.getByText(/Ready: customer name present/i)).toBeInTheDocument();
     expect(screen.getByText(/Ready: email or phone contact present/i)).toBeInTheDocument();
@@ -175,8 +188,9 @@ describe("Phase 5F-A/B quote triage readiness", () => {
   it("keeps admin source free of outbound/provider runtime integrations", () => {
     const adminSource = readProductionSource(adminQuoteSourceRoots);
 
-    expect(adminSource).toMatch(/Response-readiness checklist/i);
-    expect(adminSource).toMatch(/CRM handoff placeholder/i);
+    expect(adminSource).toMatch(/Manual response checklist/i);
+    expect(adminSource).toMatch(/Manual follow-up checklist/i);
+    expect(adminSource).not.toMatch(/CRM handoff placeholder/i);
     expect(adminSource).not.toMatch(/CRM sync trigger|CRM sync job|HubSpot API/i);
     expect(adminSource).not.toMatch(forbiddenAdminOutboundPattern);
   });

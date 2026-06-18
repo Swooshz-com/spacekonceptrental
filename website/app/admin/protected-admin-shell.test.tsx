@@ -609,9 +609,16 @@ describe("protected admin shell", () => {
     ).toBeGreaterThan(0);
     expect(screen.getAllByText("modular-lounge-set").length).toBeGreaterThan(0);
     expect(
-      screen.getAllByText(/Provider - hubspot; Sync status - not_queued/i)
-        .length
-    ).toBeGreaterThan(0);
+      screen.getByRole("heading", {
+        name: /source context and manual follow-up prep/i
+      })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/review requested rental details, event date, venue, quantities, setup\/access notes, and submitted contact details before direct follow-up/i)
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/Provider - hubspot/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/CRM contact ID/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/CRM deal ID/i)).not.toBeInTheDocument();
     expect(
       screen.queryByText(/details are temporarily unavailable/i)
     ).not.toBeInTheDocument();

@@ -450,6 +450,8 @@ describe("public page shells", () => {
       "Submit a quote/enquiry request",
       "Confirm the success receipt",
       "Open protected admin quote requests",
+      "Confirm the main quote card shows source context and a manual follow-up checklist",
+      "Confirm the main quote card does not show old CRM handoff placeholder, provider, contact ID, deal ID, or per-enquiry queue-prep controls",
       "Update internal triage status",
       "Confirm no cart, checkout, payment, order, booking, reservation, customer account, or provider-sync flow appears"
     ]) {

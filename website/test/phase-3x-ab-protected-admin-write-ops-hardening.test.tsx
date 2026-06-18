@@ -307,8 +307,8 @@ describe("Phase 3X-A/B protected admin write-ops hardening", () => {
     render(<QuoteRequestInboxPanel inbox={sampleQuoteInbox} />);
     expect(screen.getByText(/Protected internal status/i)).toBeInTheDocument();
     expect(screen.getByText(/never shown as a public quote status view/i)).toBeInTheDocument();
-    expect(screen.getAllByText(/does not contact the customer or sync to CRM/i).length).toBeGreaterThan(0);
-    expect(screen.getByText(/does not email customers or queue automation/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/does not contact the visitor or start an external process/i).length).toBeGreaterThan(0);
+    expect(screen.getByText(/does not send messages/i)).toBeInTheDocument();
   });
 
   it("keeps public source free from protected admin write-ops, completion-flow vocabulary, and fake facts", () => {
