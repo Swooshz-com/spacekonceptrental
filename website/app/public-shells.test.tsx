@@ -17,6 +17,7 @@ import {
 import CatalogueListingNotFound from "./catalogue/[slug]/not-found";
 import EventsPage from "./events/page";
 import ListingNotFound from "./listings/[slug]/not-found";
+import ListingsPage from "./listings/page";
 import { metadata } from "./layout";
 import HomePage from "./page";
 import QuotePage from "./quote/page";
@@ -248,8 +249,54 @@ describe("public page shells", () => {
     expect(
       screen.getByRole("heading", { name: /modular lounge set/i })
     ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: /1 listing/i })
+    ).toBeInTheDocument();
     expect(screen.getByText(/published lounge set/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/listing reference: modular-lounge-set/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", {
+        name: /request a quote for modular lounge set/i
+      })
+    ).toHaveAttribute("href", "/quote?listing=modular-lounge-set");
+    expect(
+      screen.getByRole("link", { name: /view rental listing details/i })
+    ).toHaveAttribute("href", "/catalogue/modular-lounge-set");
     expect(screen.queryByText(/draft/i)).not.toBeInTheDocument();
+  });
+
+  it("renders listing search results with summary and reset affordances", async () => {
+    render(
+      await ListingsPage({
+        searchParams: Promise.resolve({ search: "seminar" })
+      })
+    );
+
+    expect(
+      screen.getByRole("heading", { name: /furniture rental listings/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: /1 listing/i })
+    ).toBeInTheDocument();
+    expect(screen.getByText("seminar", { selector: "dd" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: /dining and seminar chairs/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("heading", { name: /lounge sofa package/i })
+    ).not.toBeInTheDocument();
+    expect(
+      screen
+        .getAllByRole("link", { name: /reset filters/i })
+        .map((link) => link.getAttribute("href"))
+    ).toContain("/listings");
+    expect(
+      screen.getByRole("link", {
+        name: /request a quote for dining and seminar chairs/i
+      })
+    ).toHaveAttribute("href", "/quote?listing=dining-and-seminar-chairs");
   });
 
   it("renders published product detail data supplied by the server read layer", () => {
@@ -280,6 +327,9 @@ describe("public page shells", () => {
       screen.getByRole("heading", { name: /modular lounge set/i })
     ).toBeInTheDocument();
     expect(screen.getByText(/published details for a lounge set/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/listing reference/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText("modular-lounge-set").length).toBeGreaterThan(0);
+    expect(screen.getByText(/quote form starting text/i)).toBeInTheDocument();
     expect(screen.queryByText(/concept backdrop frame/i)).not.toBeInTheDocument();
   });
 

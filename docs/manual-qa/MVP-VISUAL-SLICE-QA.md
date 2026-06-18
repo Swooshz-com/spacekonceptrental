@@ -9,14 +9,16 @@ admin triage flow. It is a local/preview QA path, not deployment approval.
 2. Confirm the first screen clearly says this is a furniture/event rental website.
 3. Use the homepage CTA to browse rental listings or the catalogue.
 4. Browse catalogue/listing cards.
-5. Confirm featured and catalogue listing cards show useful rental details from existing catalogue data: name, category when available, description, rental unit, image or fallback image, and quote/enquiry CTA.
-6. Confirm the primary card action starts a quote request and the secondary action opens rental details.
-7. Open a listing detail page or use a card CTA to start the enquiry flow.
-8. Confirm the listing detail page explains that the selected listing carries into editable enquiry text.
-9. Confirm the quote page carries the selected listing context into editable requested-items text and keeps the form as the primary surface.
-10. Submit a quote/enquiry request with name, email or phone, event date if known, venue or location, requested listings/items, quantities, and setup notes.
-11. Confirm the success receipt appears with a public receipt reference when returned, a next team action, and browsing/another-enquiry actions.
-12. Confirm the success receipt does not expose admin status, tracking, provider, database IDs, or internal workflow details.
+5. Use listing search, category filters, event-use filters, and reset filters if available.
+6. Confirm the listing results summary updates the shown count and active browsing context.
+7. Confirm featured and catalogue listing cards show useful rental details from existing catalogue data: name, category when available, description, rental unit, listing reference, image or fallback image, and quote/enquiry CTA.
+8. Confirm the primary card action starts a quote request and the secondary action opens rental details.
+9. Open a listing detail page or use a card CTA to start the enquiry flow.
+10. Confirm the listing detail page explains that the selected listing carries into editable enquiry text and shows the listing reference.
+11. Confirm the quote page carries the selected listing context into editable requested-items text and keeps the form as the primary surface.
+12. Submit a quote/enquiry request with name, email or phone, event date if known, venue or location, requested listings/items, quantities, and setup notes.
+13. Confirm the success receipt appears with a public receipt reference when returned, a next team action, and browsing/another-enquiry actions.
+14. Confirm the success receipt does not expose admin status, tracking, provider, database IDs, or internal workflow details.
 
 ## Persistence And Admin Triage
 

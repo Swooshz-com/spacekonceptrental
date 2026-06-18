@@ -285,6 +285,14 @@ select {
   color: var(--text);
 }
 
+.catalogue-card__reference {
+  color: var(--accent-dark) !important;
+  font-size: 0.76rem;
+  font-weight: 800;
+  margin: 0;
+  text-transform: uppercase;
+}
+
 .home-featured-card .catalogue-card__image {
   aspect-ratio: 5 / 3;
 }
@@ -340,6 +348,48 @@ select {
   background: var(--accent-dark);
   border-color: var(--accent-dark);
   color: #ffffff;
+}
+
+.catalogue-results-summary {
+  align-items: start;
+  background: #fbfaf7;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  display: grid;
+  gap: 14px;
+  grid-template-columns: minmax(0, 1.2fr) minmax(240px, 0.8fr) auto;
+  margin-bottom: 24px;
+  padding: 16px;
+}
+
+.catalogue-results-summary h2,
+.catalogue-results-summary p,
+.catalogue-results-summary dl {
+  margin: 0;
+}
+
+.catalogue-results-summary dl {
+  color: var(--muted);
+  display: grid;
+  gap: 8px;
+}
+
+.catalogue-results-summary div {
+  display: grid;
+  gap: 4px;
+}
+
+.catalogue-results-summary dt,
+.listing-enquiry-panel__facts dt {
+  color: var(--accent-dark);
+  font-size: 0.76rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.catalogue-results-summary dd,
+.listing-enquiry-panel__facts dd {
+  margin: 0;
 }
 
 .catalogue-use-cases {
@@ -430,6 +480,22 @@ select {
 .listing-enquiry-panel h3,
 .listing-enquiry-panel p {
   margin: 0;
+}
+
+.listing-enquiry-panel__facts {
+  background: #ffffff;
+  border: 1px solid #bfd8cb;
+  border-radius: 8px;
+  color: var(--muted);
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 12px;
+}
+
+.listing-enquiry-panel__facts div {
+  display: grid;
+  gap: 3px;
 }
 
 .page-title {
@@ -1217,6 +1283,7 @@ select {
 
   .hero,
   .catalogue-grid,
+  .catalogue-results-summary,
   .catalogue-use-cases__grid,
   .detail-layout,
   .route-grid,
