@@ -15,7 +15,8 @@ admin triage flow. It is a local/preview QA path, not deployment approval.
 8. Confirm the listing detail page explains that the selected listing carries into editable enquiry text.
 9. Confirm the quote page carries the selected listing context into editable requested-items text and keeps the form as the primary surface.
 10. Submit a quote/enquiry request with name, email or phone, event date if known, venue or location, requested listings/items, quantities, and setup notes.
-11. Confirm the success receipt appears and does not expose admin status, tracking, provider, or internal workflow details.
+11. Confirm the success receipt appears with a public receipt reference when returned, a next team action, and browsing/another-enquiry actions.
+12. Confirm the success receipt does not expose admin status, tracking, provider, database IDs, or internal workflow details.
 
 ## Persistence And Admin Triage
 
@@ -25,7 +26,8 @@ admin triage flow. It is a local/preview QA path, not deployment approval.
 4. Confirm the submitted enquiry appears with public reference, created time, customer contact, event date, venue/location, requested listing/item details, source path/listing context, current internal status, and submitted notes.
 5. Confirm submitted enquiry details and the protected internal status control appear before secondary future CRM handoff readiness sections.
 6. Update internal triage status.
-7. Confirm the status update remains protected admin-only and does not contact the customer, sync to CRM, send email, call n8n, or expose a public tracking page.
+7. Confirm the admin status banner names the submitted enquiry reference and the saved triage status.
+8. Confirm the status update remains protected admin-only and does not contact the customer, sync to CRM, send email, call n8n, or expose a public tracking page.
 
 ## Scope Guard
 

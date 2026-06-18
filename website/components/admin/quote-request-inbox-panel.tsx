@@ -2139,7 +2139,8 @@ export function QuoteRequestInboxPanel({
 
   async function submitStatusChange(
     quoteRequestId: string,
-    nextStatus: AdminQuoteRequestStatus
+    nextStatus: AdminQuoteRequestStatus,
+    publicReference: string
   ) {
     setStatus({
       kind: "pending",
@@ -2182,7 +2183,7 @@ export function QuoteRequestInboxPanel({
 
       setStatus({
         kind: "success",
-        message: "Status updated for admin review. Refreshing dashboard."
+        message: `Status updated for admin review: ${publicReference} is now ${statusLabel(nextStatus)}. Refreshing dashboard.`
       });
 
       try {
@@ -2632,7 +2633,8 @@ export function QuoteRequestInboxPanel({
 
   async function handleStatusSubmit(
     event: FormEvent<HTMLFormElement>,
-    quoteRequestId: string
+    quoteRequestId: string,
+    publicReference: string
   ) {
     event.preventDefault();
 
@@ -2650,7 +2652,7 @@ export function QuoteRequestInboxPanel({
       return;
     }
 
-    await submitStatusChange(quoteRequestId, nextStatus);
+    await submitStatusChange(quoteRequestId, nextStatus, publicReference);
   }
 
   if (inbox.status === "unavailable") {
@@ -2969,11 +2971,16 @@ export function QuoteRequestInboxPanel({
 
             return (
               <article className="admin-dashboard__card" key={quoteRequest.id}>
-                <div>
-                  <p className="eyebrow">{quoteRequest.publicReference}</p>
-                  <h3>{quoteRequest.customerName ?? "Unnamed customer"}</h3>
-                  <p>
-                    {quoteRequest.status} - {quoteRequest.source}
+                <div className="quote-inbox__card-header">
+                  <div>
+                    <p className="eyebrow">{quoteRequest.publicReference}</p>
+                    <h3>{quoteRequest.customerName ?? "Unnamed customer"}</h3>
+                    <p>
+                      {quoteRequest.status} - {quoteRequest.source}
+                    </p>
+                  </div>
+                  <p className="quote-inbox__status-pill">
+                    Current status: {statusLabel(quoteRequest.status)}
                   </p>
                 </div>
                 <section className="quote-inbox__section quote-inbox__section--primary">
@@ -3027,9 +3034,21 @@ export function QuoteRequestInboxPanel({
                   aria-label={`Update internal triage status ${quoteRequest.publicReference}`}
                   className="category-management__form quote-inbox__status-form"
                   onSubmit={(event) =>
-                    void handleStatusSubmit(event, quoteRequest.id)
+                    void handleStatusSubmit(
+                      event,
+                      quoteRequest.id,
+                      quoteRequest.publicReference
+                    )
                   }
                 >
+                  <div className="quote-inbox__status-form-header">
+                    <h4>Update protected triage status</h4>
+                    <p className="category-management__hint">
+                      Save the next admin-only follow-through step for{" "}
+                      {quoteRequest.publicReference}. Submitted enquiry details
+                      stay unchanged.
+                    </p>
+                  </div>
                   <label htmlFor={`quote-status-${quoteRequest.id}`}>
                     Protected internal status for {quoteRequest.publicReference}
                     <select
