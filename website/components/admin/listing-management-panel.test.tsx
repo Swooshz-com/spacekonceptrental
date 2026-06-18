@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
@@ -103,6 +103,46 @@ describe("listing management panel", () => {
     ).not.toBeInTheDocument();
     expect(screen.queryByLabelText(/image upload|storage path/i)).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /delete/i })).not.toBeInTheDocument();
+  });
+
+  it("shows scan-friendly public-ready listing cues and navigation links", () => {
+    render(
+      <ListingManagementPanel categories={[category]} products={[listing]} />
+    );
+
+    const listingCard = screen.getByRole("article", {
+      name: /listing content modular lounge/i
+    });
+    const card = within(listingCard);
+
+    expect(
+      card.getByRole("heading", { name: /modular lounge/i })
+    ).toBeInTheDocument();
+    expect(card.getByText(/category\/type/i)).toBeInTheDocument();
+    expect(card.getByText(/Lounge category/i)).toBeInTheDocument();
+    expect(card.getByText(/public slug/i)).toBeInTheDocument();
+    expect(card.getByText("modular-lounge")).toBeInTheDocument();
+    expect(card.getByText(/^Visibility$/)).toBeInTheDocument();
+    expect(card.getByText(/draft - protected/i)).toBeInTheDocument();
+    expect(card.getByText(/^Rental unit$/)).toBeInTheDocument();
+    expect(card.getByText("set")).toBeInTheDocument();
+    expect(card.getByText(/image\/fallback/i)).toBeInTheDocument();
+    expect(card.getAllByText(/missing image or fallback image/i).length)
+      .toBeGreaterThan(0);
+    expect(
+      card.getByRole("heading", { name: /public-ready listing helper/i })
+    ).toBeInTheDocument();
+    expect(card.getByText(/missing primary public image/i)).toBeInTheDocument();
+    expect(card.getByText(/short description present/i)).toBeInTheDocument();
+    expect(
+      card.getByRole("link", { name: /view public listing modular lounge/i })
+    ).toHaveAttribute("href", "/listings/modular-lounge");
+    expect(
+      card.getByRole("link", { name: /edit listing modular lounge/i })
+    ).toHaveAttribute("href", "#listing-form-22222222-2222-4222-8222-222222222222");
+    expect(
+      card.getByRole("link", { name: /return to catalogue admin/i })
+    ).toHaveAttribute("href", "/admin/listings");
   });
 
   it("requests a product CSRF proof and creates listings through the product route with approved payload fields only", async () => {

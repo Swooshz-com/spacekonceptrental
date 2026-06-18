@@ -10,7 +10,7 @@ This Phase 5H-A/B note documents protected admin catalogue write workflow polish
 
 - Existing protected listing write routes remain the only listing metadata write path.
 - Listing title/name, slug, category, rental unit, short description, long description, visibility state, sort order, validation errors, and save result copy are reviewed in the protected admin listing panel.
-- The admin panel labels the action as "Save listing metadata", "Protected admin save", "Public-safe copy review", and "Ready for owner review" so operators do not mistake metadata saves for owner approval or live release activity.
+- The admin panel labels the action as "Save listing metadata", "Protected admin save", "Public-ready listing summary", and "Public-ready listing helper" so operators can scan listing quality without mistaking metadata saves for owner approval or live release activity.
 - Listing save success and failure copy stays generic enough to avoid SQL details, provider internals, workspace identifiers, stack traces, token details, cookie details, session details, or secret material.
 
 ## Protected admin category write workflow
