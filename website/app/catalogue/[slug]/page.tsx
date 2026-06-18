@@ -64,6 +64,19 @@ function imageAltText(
   );
 }
 
+function imageCaption(
+  image: PublicCatalogueImage | undefined,
+  product: PublicCatalogueProduct
+) {
+  const altText = textOrUndefined(image?.altText);
+
+  if (altText) {
+    return `${altText}. Use this photo to compare style, scale, and event fit before sending a quote request.`;
+  }
+
+  return `Photo to confirm for this listing. You can still send a quote request with quantities, venue, and event details for ${product.name}.`;
+}
+
 export function getRelatedListings(
   product: PublicCatalogueProduct,
   products: PublicCatalogueProduct[]
@@ -152,16 +165,17 @@ export function ProductPageContent({
                 width={600}
               />
             )}
-          <figcaption>
-              {product.primaryImage?.publicUrl
-                ? "Listing media is shown with public-safe alt text for rental browsing; styling and fit stay review context only."
-                : "Representative, review-safe rental image shown while public listing media is still missing."}
+            <figcaption>
+              {imageCaption(
+                product.primaryImage?.publicUrl ? product.primaryImage : undefined,
+                product
+              )}
             </figcaption>
           </figure>
           {publicImages.length > 1 ? (
             <div
               className="detail-gallery"
-              aria-label="Additional public listing images with public-safe alt text"
+              aria-label="Additional listing photos"
             >
               {galleryImages.map((image) => (
                 <figure key={image.id}>
@@ -169,9 +183,7 @@ export function ProductPageContent({
                     alt={imageAltText(image, product)}
                     src={image.publicUrl}
                   />
-                  <figcaption>
-                    Additional media supports browsing context only.
-                  </figcaption>
+                  <figcaption>{imageCaption(image, product)}</figcaption>
                 </figure>
               ))}
             </div>
@@ -261,7 +273,7 @@ export function ProductPageContent({
             <ul className="journey-list">
               <li>Check the listing details and rental unit.</li>
               <li>Compare the category and rental unit for your setup.</li>
-              <li>Use image alt text and fallback media as accessible browsing context.</li>
+              <li>Use listing photos or the fallback image as browsing context.</li>
               <li>
                 Bring event date, venue, quantities, alternatives, setup,
                 access, and timing notes before sending the listing for
@@ -272,7 +284,7 @@ export function ProductPageContent({
 
           <div className="hero__actions">
             <Link className="button" href={getQuoteHrefForListing(product.slug)}>
-              Request a quote
+              Request a quote for {product.name}
             </Link>
             <Link className="button button--secondary" href={backHref}>
               {backLabel}
@@ -287,7 +299,7 @@ export function ProductPageContent({
               Explore event-use ideas
             </Link>
             <Link className="button button--secondary" href={getQuoteHrefForListing(product.slug)}>
-              Send an enquiry
+              Start enquiry for {product.name}
             </Link>
           </div>
         </article>

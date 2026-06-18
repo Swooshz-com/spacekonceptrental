@@ -115,6 +115,15 @@ describe("public catalogue image rendering", () => {
     expect(
       screen.getByRole("link", { name: /request a quote/i })
     ).toHaveAttribute("href", "/quote?listing=modular-lounge");
+    expect(
+      screen.getByRole("link", { name: /request a quote for modular lounge/i })
+    ).toHaveAttribute("href", "/quote?listing=modular-lounge");
+    expect(
+      screen.getAllByText(/modular lounge furniture rental setup/i).length
+    ).toBeGreaterThan(0);
+    expect(
+      screen.getAllByText(/use this photo to compare style, scale, and event fit/i).length
+    ).toBeGreaterThan(0);
     expect(screen.queryByText(/checkout|payment|reserve|book now/i)).not.toBeInTheDocument();
   });
 
@@ -155,6 +164,15 @@ describe("public catalogue image rendering", () => {
       "src",
       "/assets/images/product_sofa.png"
     );
+    expect(
+      screen.getByText(/photo to confirm for this listing/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/send a quote request with quantities, venue, and event details/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText(/public-safe|review-safe|admin|draft/i)
+    ).not.toBeInTheDocument();
   });
 
   it("generates safe listing metadata from public catalogue data", async () => {

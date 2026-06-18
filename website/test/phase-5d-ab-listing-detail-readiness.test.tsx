@@ -116,10 +116,10 @@ describe("Phase 5D-A/B listing detail readiness", () => {
       /Rental unit/i,
       /Event-use context/i,
       /Quote request checklist/i,
-      /public-safe alt text/i,
-      /representative, review-safe rental image/i,
-      /Request a quote/i,
-      /Send an enquiry/i,
+      /Use this photo to compare style, scale, and event fit/i,
+      /Photo to confirm for this listing/i,
+      /Request a quote for/i,
+      /Start enquiry for/i,
       /Start a rental enquiry/i,
       /Listing context is\s+a starting point only/i,
       /The team can review the request/i
@@ -140,8 +140,8 @@ describe("Phase 5D-A/B listing detail readiness", () => {
     expect(screen.getByRole("link", { name: /Browse listings/i })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Browse categories/i })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Explore event-use ideas/i })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /Request a quote/i })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /Send an enquiry/i })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Request a quote for Lounge sofa package/i })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Start enquiry for Lounge sofa package/i })).toBeInTheDocument();
     expect(screen.getByText(/Same-category links are local browsing cues only/i)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /View rental listing: Modular lounge set/i })).toBeInTheDocument();
   });
@@ -150,8 +150,9 @@ describe("Phase 5D-A/B listing detail readiness", () => {
     render(<ProductPageContent product={fallbackProduct} />);
 
     expect(screen.getByAltText(/Lounge sofa package furniture rental setup/i)).toBeInTheDocument();
-    expect(screen.getByText(/Representative, review-safe rental image/i)).toBeInTheDocument();
-    expect(screen.getByText(/accessible browsing context/i)).toBeInTheDocument();
+    expect(screen.getByText(/Photo to confirm for this listing/i)).toBeInTheDocument();
+    expect(screen.getByText(/send a quote request with quantities, venue, and event details/i)).toBeInTheDocument();
+    expect(screen.queryByText(/public-safe|review-safe|admin|draft/i)).not.toBeInTheDocument();
     expect(readProductionSource(listingDetailSourceRoots)).not.toMatch(mediaPromisePattern);
   });
 

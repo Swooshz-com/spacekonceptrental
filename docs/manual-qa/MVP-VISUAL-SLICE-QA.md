@@ -17,14 +17,16 @@ admin triage flow. It is a local/preview QA path, not a launch sign-off.
 10. Confirm featured and catalogue listing cards show useful rental details from existing catalogue data: name, category when available, description, rental unit, listing reference, image or fallback image, and quote/enquiry CTA.
 11. Confirm the primary card action starts a quote request and the secondary action opens rental details.
 12. Open a listing detail page or use a card CTA to start the enquiry flow.
-13. Confirm the listing detail page explains that the selected listing carries into editable enquiry text and shows the listing reference.
-14. Confirm the quote page shows a selected rental listing panel near the top when a listing is carried in.
-15. Confirm the selected listing starts editable requested-listings text only and can be changed before submit.
-16. Submit the form without name or contact details and confirm inline required-field guidance appears while entered rental details remain in the form.
-17. Submit a quote/enquiry request with name, email or phone, event date if known, venue or location, requested listings/items, quantities, setup/access notes, timing notes, and alternates if relevant.
-18. Confirm the submit button uses a clear sending state and cannot be accidentally submitted twice while the request is in progress.
-19. Confirm the success receipt appears with a public receipt reference when returned, a next team action, and browsing/another-enquiry actions.
-20. Confirm the success receipt does not expose admin status, tracking, provider, database IDs, or internal workflow details.
+13. Confirm the listing detail page shows the primary public image when available, shows visitor-friendly photo fallback copy when no image is available, and keeps internal media/source details hidden.
+14. Confirm the listing detail page explains that the selected listing carries into editable enquiry text and shows the listing reference, category/type, rental unit, and quote-request decision cues.
+15. Confirm the listing detail quote CTA names the selected listing and opens `/quote?listing=<listing-slug>`.
+16. Confirm the quote page shows a selected rental listing panel near the top when a listing is carried in.
+17. Confirm the selected listing starts editable requested-listings text only and can be changed before submit.
+18. Submit the form without name or contact details and confirm inline required-field guidance appears while entered rental details remain in the form.
+19. Submit a quote/enquiry request with name, email or phone, event date if known, venue or location, requested listings/items, quantities, setup/access notes, timing notes, and alternates if relevant.
+20. Confirm the submit button uses a clear sending state and cannot be accidentally submitted twice while the request is in progress.
+21. Confirm the success receipt appears with a public receipt reference when returned, a next team action, and browsing/another-enquiry actions.
+22. Confirm the success receipt does not expose admin status, tracking, provider, database IDs, or internal workflow details.
 
 ## Persistence And Admin Triage
 

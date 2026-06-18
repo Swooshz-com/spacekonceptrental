@@ -528,8 +528,9 @@ select {
 }
 
 .detail-primary-image {
-  aspect-ratio: 4 / 3;
   background: var(--accent-soft);
+  display: grid;
+  margin: 0;
 }
 
 .detail-visual img,
@@ -538,6 +539,20 @@ select {
   height: 100%;
   object-fit: cover;
   width: 100%;
+}
+
+.detail-primary-image img {
+  aspect-ratio: 4 / 3;
+  height: auto;
+}
+
+.detail-primary-image figcaption,
+.detail-gallery figcaption {
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  padding: 12px;
 }
 
 .detail-gallery {
@@ -551,7 +566,15 @@ select {
 .detail-gallery img {
   aspect-ratio: 4 / 3;
   border-radius: 6px;
+  height: auto;
   object-fit: cover;
+  width: 100%;
+}
+
+.detail-gallery figure {
+  display: grid;
+  gap: 6px;
+  margin: 0;
 }
 
 .detail-list {
