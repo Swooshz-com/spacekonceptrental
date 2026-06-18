@@ -33,6 +33,30 @@ const listing: ListingManagementProduct = {
   sortOrder: 10,
   imageCount: 0
 };
+const weakListing: ListingManagementProduct = {
+  id: "33333333-3333-4333-8333-333333333333",
+  slug: "draft-banquet-chair",
+  name: "Draft Banquet Chair",
+  rentalUnit: "",
+  status: "draft",
+  sortOrder: 20,
+  imageCount: 0
+};
+const publishedImageWithoutAlt: ListingManagementProduct = {
+  ...listing,
+  status: "published",
+  imageCount: 1,
+  primaryImageAltText: ""
+};
+const publicReadyListing: ListingManagementProduct = {
+  ...listing,
+  id: "44444444-4444-4444-8444-444444444444",
+  slug: "public-ready-lounge",
+  name: "Public Ready Lounge",
+  status: "published",
+  imageCount: 2,
+  primaryImageAltText: "Modular lounge arranged for an event rental setup"
+};
 const rawProof = "raw-product-proof-that-must-not-render";
 
 function readSource() {
@@ -143,6 +167,63 @@ describe("listing management panel", () => {
     expect(
       card.getByRole("link", { name: /return to catalogue admin/i })
     ).toHaveAttribute("href", "/admin/listings");
+  });
+
+  it("summarises missing public-ready content and the next admin action for weak listings", () => {
+    render(
+      <ListingManagementPanel categories={[category]} products={[weakListing]} />
+    );
+
+    const listingCard = screen.getByRole("article", {
+      name: /listing content draft banquet chair/i
+    });
+    const card = within(listingCard);
+
+    expect(card.getByText(/public-ready status/i)).toBeInTheDocument();
+    expect(card.getByText(/needs admin fixes before public listing review/i)).toBeInTheDocument();
+    expect(card.getByText(/listing is draft and not publicly visible/i)).toBeInTheDocument();
+    expect(card.getByText(/missing category assignment/i)).toBeInTheDocument();
+    expect(card.getByText(/missing short description/i)).toBeInTheDocument();
+    expect(card.getByText(/missing rental details/i)).toBeInTheDocument();
+    expect(card.getByText(/missing active public image/i)).toBeInTheDocument();
+    expect(card.getByText(/missing primary public image/i)).toBeInTheDocument();
+    expect(card.getByText(/missing primary image alt text/i)).toBeInTheDocument();
+    expect(
+      card.getByText(/next admin action: add public listing copy and public image coverage before setting public visibility/i)
+    ).toBeInTheDocument();
+    expect(
+      card.getByRole("link", { name: /manage images draft banquet chair/i })
+    ).toHaveAttribute("href", "/admin/media#update-listing-image-metadata");
+  });
+
+  it("separates active image coverage from primary alt-text gaps for published listings", () => {
+    render(
+      <ListingManagementPanel
+        categories={[category]}
+        products={[publishedImageWithoutAlt, publicReadyListing]}
+      />
+    );
+
+    const needsAltCard = within(
+      screen.getAllByRole("article", {
+        name: /listing content modular lounge/i
+      })[0]
+    );
+    const readyCard = within(
+      screen.getByRole("article", {
+        name: /listing content public ready lounge/i
+      })
+    );
+
+    expect(needsAltCard.getByText(/active public image present/i)).toBeInTheDocument();
+    expect(needsAltCard.getByText(/missing primary public image/i)).toBeInTheDocument();
+    expect(needsAltCard.getByText(/missing primary image alt text/i)).toBeInTheDocument();
+    expect(
+      needsAltCard.getByText(/next admin action: choose a primary public image and add public image alt text/i)
+    ).toBeInTheDocument();
+    expect(readyCard.getByText(/public-ready status/i)).toBeInTheDocument();
+    expect(readyCard.getByText(/ready for public listing review/i)).toBeInTheDocument();
+    expect(readyCard.getByText(/primary image alt text present/i)).toBeInTheDocument();
   });
 
   it("uses visible MVP listing guidance without old internal ladder wording", () => {

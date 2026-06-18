@@ -106,8 +106,8 @@ function listingReadiness(product: ListingManagementProduct) {
   const hasShortDescription = hasText(product.shortDescription);
   const hasDescription = hasText(product.description);
   const hasRentalUnit = hasText(product.rentalUnit);
-  const hasImageMetadata = product.imageCount > 0;
-  const hasPrimaryImage = hasText(product.primaryImageAltText);
+  const hasActivePublicImage = product.imageCount > 0;
+  const hasPrimaryImageAltText = hasText(product.primaryImageAltText);
   const hasQuotePlanning =
     hasShortDescription && hasDescription && hasRentalUnit;
   const ready =
@@ -116,8 +116,26 @@ function listingReadiness(product: ListingManagementProduct) {
     hasShortDescription &&
     hasDescription &&
     hasRentalUnit &&
-    hasImageMetadata &&
-    hasPrimaryImage;
+    hasActivePublicImage &&
+    hasPrimaryImageAltText;
+  const statusCheck =
+    product.status === "published"
+      ? "Published - visible in public catalogue"
+      : product.status === "archived"
+        ? "Listing is archived and hidden from active browsing"
+        : "Listing is draft and not publicly visible";
+  const nextAction =
+    ready
+      ? "Next admin action: preview the public listing and keep quote request details accurate."
+      : !hasCategory ||
+          !hasShortDescription ||
+          !hasDescription ||
+          !hasRentalUnit ||
+          !hasActivePublicImage
+        ? "Next admin action: add public listing copy and public image coverage before setting public visibility."
+        : !hasPrimaryImageAltText
+          ? "Next admin action: choose a primary public image and add public image alt text."
+          : "Next admin action: review visibility before publishing.";
 
   return {
     ready,
@@ -127,19 +145,33 @@ function listingReadiness(product: ListingManagementProduct) {
         : ready
           ? "Public-ready listing"
           : "Needs public-ready listing review",
+    statusLabel:
+      product.status === "archived"
+        ? "Archived from public listing review"
+        : ready
+          ? "Ready for public listing review"
+          : "Needs admin fixes before public listing review",
+    nextAction,
     checks: [
+      statusCheck,
       hasCategory ? "Category assigned" : "Missing category assignment",
       hasShortDescription
         ? "Short description present"
         : "Missing short description",
       hasDescription ? "Full description present" : "Missing full description",
-      hasRentalUnit ? "Rental unit present" : "Missing rental unit",
-      hasImageMetadata
+      hasRentalUnit ? "Rental details present" : "Missing rental details",
+      hasActivePublicImage
+        ? "Active public image present"
+        : "Missing active public image",
+      hasActivePublicImage
         ? `${product.imageCount} image metadata records`
         : "Missing image or fallback image",
-      hasPrimaryImage
+      hasPrimaryImageAltText
         ? "Primary public image available"
         : "Missing primary public image",
+      hasPrimaryImageAltText
+        ? "Primary image alt text present"
+        : "Missing primary image alt text",
       hasQuotePlanning
         ? "Quote-planning details ready"
         : "Add quote-planning details before publication",
@@ -181,7 +213,7 @@ function imagePresenceLabel(product: ListingManagementProduct) {
   }
 
   if (!hasText(product.primaryImageAltText)) {
-    return `${product.imageCount} image metadata records; missing primary public image`;
+    return `${product.imageCount} image metadata records; primary image needs alt text`;
   }
 
   return `${product.imageCount} image metadata records; primary public image ready`;
@@ -659,6 +691,10 @@ export function ListingManagementPanel({
                           <dd>{visibilityLabel(product.status)}</dd>
                         </div>
                         <div>
+                          <dt>Public-ready status</dt>
+                          <dd>{readiness.statusLabel}</dd>
+                        </div>
+                        <div>
                           <dt>Rental unit</dt>
                           <dd>{product.rentalUnit || "Missing rental unit"}</dd>
                         </div>
@@ -683,6 +719,12 @@ export function ListingManagementPanel({
                         >
                           Edit listing {product.name}
                         </a>
+                        <a
+                          className="button button--secondary"
+                          href="/admin/media#update-listing-image-metadata"
+                        >
+                          Manage images {product.name}
+                        </a>
                         <a className="button button--secondary" href="/admin/listings">
                           Return to catalogue admin
                         </a>
@@ -701,6 +743,9 @@ export function ListingManagementPanel({
                         }`}
                       >
                         {readiness.label}
+                      </p>
+                      <p className="category-management__hint">
+                        {readiness.nextAction}
                       </p>
                       <ul className="admin-readiness__list">
                         {readiness.checks.map((check) => (
