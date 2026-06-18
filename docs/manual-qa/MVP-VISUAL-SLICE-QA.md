@@ -48,9 +48,9 @@ admin triage flow. It is a local/preview QA path, not a launch sign-off.
 2. Confirm normal admin navigation focuses on listings, categories, media, and quote requests.
 3. Confirm normal admin navigation does not present content-readiness, public-parity, release-control, CRM/provider, governance, or phase work as a visible admin workflow.
 4. Open protected admin listings.
-5. Confirm each listing card is easy to scan for listing name, category/type, public slug, visibility status, rental unit, and image/fallback presence.
-6. Confirm the public-ready listing helper uses existing listing fields only and calls out missing category, short description, full description, rental unit, image/fallback, primary public image, and quote/enquiry-friendly detail copy where relevant.
-7. Confirm each listing card includes links to view the public listing, jump to the edit form, and return to catalogue admin.
+5. Confirm each listing card is easy to scan for listing name, category/type, public slug, visibility status, public-ready status, rental unit, and image/fallback presence.
+6. Confirm the public-ready listing helper uses existing listing fields only and calls out draft/not-public status, missing category, short description, full description, rental details, active public image, primary public image, and primary image alt text where relevant.
+7. Confirm each listing card includes links to view the public listing, jump to the edit form, manage images, and return to catalogue admin.
 8. Confirm draft/published/archived visibility cues stay protected-admin guidance and do not imply availability, reservation, payment, or completed rental.
 9. Confirm save, public visibility, draft visibility, and archive actions continue to use the existing protected admin listing paths.
 10. Open protected admin categories and media; confirm visible helper copy uses category visibility, media coverage, public-ready listing, quote request, enquiry, and manual follow-up language instead of old internal ladder wording.
