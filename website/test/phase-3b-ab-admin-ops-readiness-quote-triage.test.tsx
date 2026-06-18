@@ -257,7 +257,7 @@ describe("Phase 3B-A/B admin operations readiness and quote triage polish", () =
     );
   });
 
-  it("shows listing publication readiness from existing admin listing data", () => {
+  it("shows public-ready listing guidance from existing admin listing data", () => {
     render(
       <ListingManagementPanel
         categories={[category]}
@@ -265,29 +265,29 @@ describe("Phase 3B-A/B admin operations readiness and quote triage polish", () =
       />
     );
 
-    expect(screen.getByText(/publication readiness/i)).toBeInTheDocument();
-    expect(screen.getByText(/1 ready for owner review/i)).toBeInTheDocument();
-    expect(screen.getByText(/2 needing public-safe copy review/i)).toBeInTheDocument();
-    expect(screen.getAllByText(/ready for owner review/i).length).toBeGreaterThan(0);
+    expect(screen.getByText(/public-ready listing summary/i)).toBeInTheDocument();
+    expect(screen.getByText(/1 public-ready listings/i)).toBeInTheDocument();
+    expect(screen.getByText(/2 needing public-ready listing review/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/public-ready listing/i).length).toBeGreaterThan(0);
     expect(
-      screen.getAllByText(/needs public-safe copy review/i).length
+      screen.getAllByText(/needs public-ready listing review/i).length
     ).toBeGreaterThan(0);
     expect(screen.getAllByText(/category assigned/i).length).toBeGreaterThan(0);
     expect(screen.getByText(/primary public image available/i)).toBeInTheDocument();
     expect(
       within(
-        screen.getByLabelText(/publication readiness archived primary lounge/i)
+        screen.getByLabelText(/public-ready listing helper archived primary lounge/i)
       ).queryByText(/primary public image available/i)
     ).not.toBeInTheDocument();
     expect(
       within(
-        screen.getByLabelText(/publication readiness archived primary lounge/i)
+        screen.getByLabelText(/public-ready listing helper archived primary lounge/i)
       ).getByText(/missing primary public image/i)
     ).toBeInTheDocument();
     expect(screen.getByText(/missing category assignment/i)).toBeInTheDocument();
-    expect(screen.getByText(/add image metadata before publishing/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/missing image or fallback image/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/missing primary public image/i).length).toBeGreaterThan(0);
-    expect(screen.getByText(/missing rental unit/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/missing rental unit/i).length).toBeGreaterThan(0);
   });
 
   it("shows category and media readiness guidance without destructive flows", () => {
