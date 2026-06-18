@@ -122,6 +122,9 @@ describe("QuoteRequestForm", () => {
       screen.getByRole("link", { name: /browse rental listings/i })
     ).toHaveAttribute("href", "/listings");
     expect(
+      screen.getByRole("link", { name: /review selected listing details/i })
+    ).toHaveAttribute("href", "/catalogue/modular-lounge-set");
+    expect(
       screen.getByRole("link", { name: /browse catalogue/i })
     ).toHaveAttribute("href", "/catalogue");
     expect(screen.queryByRole("link", { name: /track|status/i })).not.toBeInTheDocument();

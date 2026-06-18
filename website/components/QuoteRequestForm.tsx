@@ -132,6 +132,7 @@ export default function QuoteRequestForm({
   const customerMessageInputMaxLength = getCustomerMessageMaxLength(
     preferredContactMethod
   );
+  const safeInitialListingSlug = getSafeListingSlug(initialListingSlug);
 
   function handlePreferredContactMethodChange(
     event: ChangeEvent<HTMLSelectElement>
@@ -174,7 +175,7 @@ export default function QuoteRequestForm({
     const submittedPreferredContactMethod = preferredContactMethod.trim();
     const itemNotesText = String(formData.get("itemNotes") ?? "").trim();
     const sourcePath = getSafeSourcePath();
-    const listingSlug = getSafeListingSlug(initialListingSlug);
+    const listingSlug = safeInitialListingSlug;
     const combinedCustomerMessage = combineCustomerMessage(
       submittedCustomerMessageText,
       submittedPreferredContactMethod
@@ -264,6 +265,9 @@ export default function QuoteRequestForm({
     submitState.status === "success"
       ? submitState.publicReference ?? submitState.requestId
       : undefined;
+  const selectedListingDetailHref = safeInitialListingSlug
+    ? `/catalogue/${encodeURIComponent(safeInitialListingSlug)}`
+    : undefined;
 
   return (
     <form
@@ -490,6 +494,14 @@ export default function QuoteRequestForm({
             <a className="button button--secondary" href="/listings">
               Browse rental listings
             </a>
+            {selectedListingDetailHref ? (
+              <a
+                className="button button--secondary"
+                href={selectedListingDetailHref}
+              >
+                Review selected listing details
+              </a>
+            ) : null}
             <a className="button button--secondary" href="/catalogue">
               Browse catalogue
             </a>
