@@ -127,8 +127,8 @@ function listingReadiness(product: ListingManagementProduct) {
       product.status === "archived"
         ? "Archived from public browsing"
         : ready
-          ? "Ready for owner review"
-          : "Needs public-safe copy review",
+          ? "Public-ready listing"
+          : "Needs public-ready listing review",
     checks: [
       hasCategory ? "Category assigned" : "Missing category assignment",
       hasShortDescription
@@ -138,7 +138,7 @@ function listingReadiness(product: ListingManagementProduct) {
       hasRentalUnit ? "Rental unit present" : "Missing rental unit",
       hasImageMetadata
         ? `${product.imageCount} image metadata records`
-        : "Add image metadata before publishing",
+        : "Missing image or fallback image",
       hasPrimaryImage
         ? "Primary public image available"
         : "Missing primary public image",
@@ -154,6 +154,43 @@ function listingStatusCount(
   status: ListingManagementProduct["status"],
 ) {
   return products.filter((product) => product.status === status).length;
+}
+
+function categoryLabel(
+  product: ListingManagementProduct,
+  categories: ListingManagementCategory[],
+) {
+  const category = categories.find((item) => item.id === product.categoryId);
+
+  return category ? `${category.name} category` : "No category assigned";
+}
+
+function visibilityLabel(status: ListingManagementProduct["status"]) {
+  if (status === "published") {
+    return "Published - visible in public catalogue";
+  }
+
+  if (status === "archived") {
+    return "Archived - hidden from active browsing";
+  }
+
+  return "Draft - protected";
+}
+
+function imagePresenceLabel(product: ListingManagementProduct) {
+  if (product.imageCount <= 0) {
+    return "Missing image or fallback image";
+  }
+
+  if (!hasText(product.primaryImageAltText)) {
+    return `${product.imageCount} image metadata records; missing primary public image`;
+  }
+
+  return `${product.imageCount} image metadata records; primary public image ready`;
+}
+
+function listingFormId(product: ListingManagementProduct) {
+  return `listing-form-${product.id}`;
 }
 
 async function readSafeJson(response: Response) {
@@ -434,8 +471,8 @@ export function ListingManagementPanel({
         </p>
       </section>
 
-      <section className="admin-readiness" aria-label="Publication readiness">
-        <h3>Publication readiness</h3>
+      <section className="admin-readiness" aria-label="Public-ready listing summary">
+        <h3>Public-ready listing summary</h3>
         <div
           className="admin-readiness__summary"
           aria-label="Listing status summary"
@@ -445,15 +482,15 @@ export function ListingManagementPanel({
           <p>Archived: {listingStatusCount(products, "archived")}</p>
         </div>
         <p>
-          {readyListings} ready for owner review. {listingsNeedingAttention}{" "}
-          needing public-safe copy review.
+          {readyListings} public-ready listings. {listingsNeedingAttention}{" "}
+          needing public-ready listing review.
         </p>
         <p>
           {publishedListingsNeedingFixes.length}{" "}
           {publishedListingsNeedingFixes.length === 1
             ? "published listing needs"
             : "published listings need"}{" "}
-          public-safe copy fixes before owner review.
+          public-ready listing fixes before visitor browsing review.
         </p>
         {publishedListingsNeedingFixes.length > 0 ? (
           <p>
@@ -597,25 +634,69 @@ export function ListingManagementPanel({
           </section>
         ) : (
           products.map((product) => (
-            <article className="category-management__item" key={product.id}>
+            <article
+              aria-label={`Listing content ${product.name}`}
+              className="category-management__item"
+              key={product.id}
+            >
               {(() => {
                 const readiness =
                   listingReadinessById.get(product.id) ??
                   listingReadiness(product);
+                const formId = listingFormId(product);
 
                 return (
                   <>
                     <div>
                       <h3>{product.name}</h3>
-                      <p>
-                        {product.slug} - {product.status} - {product.imageCount}{" "}
-                        image metadata records
-                      </p>
+                      <dl className="quote-inbox__details">
+                        <div>
+                          <dt>Category/type</dt>
+                          <dd>{categoryLabel(product, categories)}</dd>
+                        </div>
+                        <div>
+                          <dt>Public slug</dt>
+                          <dd>{product.slug}</dd>
+                        </div>
+                        <div>
+                          <dt>Visibility</dt>
+                          <dd>{visibilityLabel(product.status)}</dd>
+                        </div>
+                        <div>
+                          <dt>Rental unit</dt>
+                          <dd>{product.rentalUnit || "Missing rental unit"}</dd>
+                        </div>
+                        <div>
+                          <dt>Image/fallback</dt>
+                          <dd>{imagePresenceLabel(product)}</dd>
+                        </div>
+                      </dl>
+                      <nav
+                        aria-label={`Listing actions ${product.name}`}
+                        className="category-management__actions"
+                      >
+                        <a
+                          className="button button--secondary"
+                          href={`/listings/${encodeURIComponent(product.slug)}`}
+                        >
+                          View public listing {product.name}
+                        </a>
+                        <a
+                          className="button button--secondary"
+                          href={`#${formId}`}
+                        >
+                          Edit listing {product.name}
+                        </a>
+                        <a className="button button--secondary" href="/admin/listings">
+                          Return to catalogue admin
+                        </a>
+                      </nav>
                     </div>
                     <section
                       className="admin-readiness admin-readiness--inline"
-                      aria-label={`Publication readiness ${product.name}`}
+                      aria-label={`Public-ready listing helper ${product.name}`}
                     >
+                      <h4>Public-ready listing helper</h4>
                       <p
                         className={`admin-readiness__badge ${
                           readiness.ready
@@ -635,6 +716,7 @@ export function ListingManagementPanel({
                 );
               })()}
               <form
+                id={listingFormId(product)}
                 aria-label={`Update listing ${product.name}`}
                 className="category-management__form"
                 onSubmit={(event) => void handleUpdate(event, product)}

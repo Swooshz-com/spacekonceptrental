@@ -203,7 +203,7 @@ describe("Phase 5H-A/B catalogue write workflow readiness", () => {
       /Save category metadata/i,
       /Save image metadata/i,
       /public-safe copy review/i,
-      /Ready for owner review/i,
+      /Public-ready listing helper/i,
       /validation errors/i,
       /does not deploy/i,
       /does not record owner approval/i,

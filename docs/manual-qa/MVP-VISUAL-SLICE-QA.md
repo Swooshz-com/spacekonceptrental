@@ -40,6 +40,15 @@ admin triage flow. It is a local/preview QA path, not deployment approval.
 10. Confirm the admin status banner names the submitted enquiry reference and the saved triage status.
 11. Confirm the status update remains protected admin-only and does not contact the customer, sync to CRM, send email, call n8n, or expose a public tracking page.
 
+## Protected Admin Catalogue Content
+
+1. Open protected admin listings.
+2. Confirm each listing card is easy to scan for listing name, category/type, public slug, visibility status, rental unit, and image/fallback presence.
+3. Confirm the public-ready listing helper uses existing listing fields only and calls out missing category, short description, full description, rental unit, image/fallback, primary public image, and quote/enquiry-friendly detail copy where relevant.
+4. Confirm each listing card includes links to view the public listing, jump to the edit form, and return to catalogue admin.
+5. Confirm draft/published/archived visibility cues stay protected-admin guidance and do not imply availability, reservation, payment, or completed rental.
+6. Confirm save, public visibility, draft visibility, and archive actions continue to use the existing protected admin listing paths.
+
 ## Scope Guard
 
 1. Confirm no cart, checkout, payment, order, booking, reservation, customer account, or provider-sync flow appears.

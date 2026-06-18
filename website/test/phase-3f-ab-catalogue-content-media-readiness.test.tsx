@@ -363,11 +363,11 @@ describe("Phase 3F-A/B catalogue content quality, media readiness, and publicati
     expect(screen.getByText(/draft: 1/i)).toBeInTheDocument();
     expect(screen.getByText(/archived: 1/i)).toBeInTheDocument();
     expect(
-      screen.getByText(/1 published listing needs public-safe copy fixes before owner review/i)
+      screen.getByText(/1 published listing needs public-ready listing fixes before visitor browsing review/i)
     ).toBeInTheDocument();
     expect(screen.getByText(/published listings needing fixes: bare plinth/i)).toBeInTheDocument();
     expect(
-      within(screen.getByLabelText(/publication readiness bare plinth/i)).getByText(
+      within(screen.getByLabelText(/public-ready listing helper bare plinth/i)).getByText(
         /add quote-planning details before publication/i
       )
     ).toBeInTheDocument();
