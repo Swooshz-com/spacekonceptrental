@@ -351,7 +351,7 @@ describe("Phase 3E-A/B product readiness, navigation QA, and dead-end polish", (
     }
 
     expectAllowedInternalRoutes(hrefs);
-    expect(hrefs.some((href) => /^\/(?:catalogue|listings|categories|events|quote)\b/.test(href))).toBe(false);
+    expect(hrefs.some((href) => /^\/(?:catalogue|categories|events|quote)\b/.test(href))).toBe(false);
     for (const requiredRoute of [
       "/admin",
       "/admin/listings",
@@ -360,7 +360,8 @@ describe("Phase 3E-A/B product readiness, navigation QA, and dead-end polish", (
       "/admin/content-readiness",
       "/admin/public-parity",
       "/admin/quotes",
-      "/admin/quotes/quote-1"
+      "/admin/quotes/quote-1",
+      "/listings/modular-lounge-set"
     ]) {
       expect(hrefs).toContain(requiredRoute);
     }
