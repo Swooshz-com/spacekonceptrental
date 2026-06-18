@@ -228,7 +228,7 @@ describe("Phase 3W-A/B catalogue listing media hardening", () => {
     expect(screen.getAllByText(/rental unit/i).length).toBeGreaterThan(0);
     expect(screen.getByText(/event-use context/i)).toBeInTheDocument();
     expect(screen.getByText(/media and fit check before enquiry/i)).toBeInTheDocument();
-    expect(screen.getByText(/public-safe alt text/i)).toBeInTheDocument();
+    expect(screen.getByText(/use this photo to compare style, scale, and event fit/i)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /request a quote/i })).toBeInTheDocument();
     cleanup();
 
