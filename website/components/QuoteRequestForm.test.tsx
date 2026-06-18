@@ -1,4 +1,11 @@
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within
+} from "@testing-library/react";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -25,7 +32,8 @@ describe("QuoteRequestForm", () => {
         JSON.stringify({
           status: "received",
           quoteRequestId: "70000000-0000-4000-8000-000000000001",
-          publicReference: "QR-20260527-ABC12345"
+          publicReference: "QR-20260527-ABC12345",
+          requestId: "browser-safe-request-001"
         }),
         {
           headers: { "content-type": "application/json" },
@@ -101,9 +109,21 @@ describe("QuoteRequestForm", () => {
         }
       ]
     });
-    const receipt = await screen.findByText(/enquiry received/i);
+    const receipt = await screen.findByRole("status");
     expect(receipt).toBeInTheDocument();
     expect(receipt).toHaveClass("quote-form__status--success");
+    expect(receipt).toHaveClass("quote-form__receipt");
+    expect(
+      within(receipt).getByRole("heading", { name: /quote request received/i })
+    ).toBeInTheDocument();
+    expect(within(receipt).getByText("QR-20260527-ABC12345")).toBeInTheDocument();
+    expect(within(receipt).getByText(/next team action/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: /browse rental listings/i })
+    ).toHaveAttribute("href", "/listings");
+    expect(
+      screen.getByRole("link", { name: /browse catalogue/i })
+    ).toHaveAttribute("href", "/catalogue");
     expect(screen.queryByRole("link", { name: /track|status/i })).not.toBeInTheDocument();
   });
 
@@ -163,6 +183,81 @@ describe("QuoteRequestForm", () => {
       await screen.findByText(/enquiry received/i)
     ).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: /track|status/i })).not.toBeInTheDocument();
+  });
+
+  it("shows the safe request id receipt fallback without exposing the internal quote id", async () => {
+    const fetchMock = vi.fn(async () => {
+      return new Response(
+        JSON.stringify({
+          status: "received",
+          quoteRequestId: "70000000-0000-4000-8000-000000000001",
+          requestId: "safe-public-request-123"
+        }),
+        {
+          headers: { "content-type": "application/json" },
+          status: 201
+        }
+      );
+    });
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(<QuoteRequestForm />);
+
+    fireEvent.change(screen.getByLabelText(/name/i), {
+      target: { value: "Maya Tan" }
+    });
+    fireEvent.change(screen.getByLabelText(/email address/i), {
+      target: { value: "maya@example.test" }
+    });
+    fireEvent.click(screen.getByRole("button", { name: /send an enquiry/i }));
+
+    const receipt = await screen.findByRole("status");
+
+    expect(within(receipt).getByText("safe-public-request-123")).toBeInTheDocument();
+    expect(receipt).not.toHaveTextContent(
+      "70000000-0000-4000-8000-000000000001"
+    );
+    expect(screen.queryByRole("link", { name: /track|status/i })).not.toBeInTheDocument();
+  });
+
+  it("shows a generic submit failure without leaking server details", async () => {
+    const fetchMock = vi.fn(async () => {
+      return new Response(
+        JSON.stringify({
+          error: {
+            message: "sql supabase stack token cookie provider secret"
+          }
+        }),
+        {
+          headers: { "content-type": "application/json" },
+          status: 500
+        }
+      );
+    });
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(<QuoteRequestForm />);
+
+    fireEvent.change(screen.getByLabelText(/name/i), {
+      target: { value: "Maya Tan" }
+    });
+    fireEvent.change(screen.getByLabelText(/email address/i), {
+      target: { value: "maya@example.test" }
+    });
+    fireEvent.click(screen.getByRole("button", { name: /send an enquiry/i }));
+
+    const alert = await screen.findByRole("alert");
+
+    expect(alert).toHaveTextContent(/quote requests are temporarily unavailable/i);
+    expect(alert).not.toHaveTextContent(/sql/i);
+    expect(alert).not.toHaveTextContent(/supabase/i);
+    expect(alert).not.toHaveTextContent(/stack/i);
+    expect(alert).not.toHaveTextContent(/token/i);
+    expect(alert).not.toHaveTextContent(/cookie/i);
+    expect(alert).not.toHaveTextContent(/provider/i);
+    expect(alert).not.toHaveTextContent(/secret/i);
   });
 
   it("submits a selected listing as one quote item and keeps success receipt-only", async () => {

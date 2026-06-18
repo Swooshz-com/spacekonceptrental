@@ -5,6 +5,7 @@ import type { ChangeEvent, FormEvent } from "react";
 
 type QuoteApiResponse = {
   publicReference?: string;
+  requestId?: string;
   error?: {
     message: string;
   };
@@ -13,7 +14,7 @@ type QuoteApiResponse = {
 type SubmitState =
   | { status: "idle" }
   | { status: "submitting" }
-  | { status: "success"; publicReference?: string }
+  | { status: "success"; publicReference?: string; requestId?: string }
   | { status: "error"; message: string };
 
 const customerMessageMaxLength = 1200;
@@ -150,6 +151,10 @@ export default function QuoteRequestForm({
     );
   }
 
+  function handleStartAnotherEnquiry() {
+    setSubmitState({ status: "idle" });
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
@@ -226,7 +231,8 @@ export default function QuoteRequestForm({
 
       setSubmitState({
         status: "success",
-        publicReference: body.publicReference
+        publicReference: body.publicReference,
+        requestId: body.requestId
       });
     } catch {
       setSubmitState({
@@ -236,6 +242,11 @@ export default function QuoteRequestForm({
       });
     }
   }
+
+  const receiptReference =
+    submitState.status === "success"
+      ? submitState.publicReference ?? submitState.requestId
+      : undefined;
 
   return (
     <form className="quote-form" noValidate onSubmit={handleSubmit}>
@@ -368,17 +379,56 @@ export default function QuoteRequestForm({
           : "Send an enquiry"}
       </button>
       {submitState.status === "success" ? (
-        <p
-          className="quote-form__status quote-form__status--success"
+        <section
+          aria-label="Quote enquiry receipt"
+          className="quote-form__status quote-form__status--success quote-form__receipt"
           role="status"
         >
-          Enquiry received. This is a receipt only; the team can review your request
-          and follow up directly. It does not set aside furniture and does not
-          finalise rental details or create an online follow-up page.
-          {submitState.publicReference
-            ? `. Public reference receipt: ${submitState.publicReference}`
-            : "."}
-        </p>
+          <p className="eyebrow">Enquiry received</p>
+          <h3>Quote request received</h3>
+          <p>
+            The team can review your request and follow up directly with next
+            questions or quote details.
+          </p>
+          <dl className="quote-form__receipt-details">
+            <div>
+              <dt>Public reference receipt</dt>
+              <dd>
+                {receiptReference ??
+                  "Reference will be shared during follow-up"}
+              </dd>
+            </div>
+            <div>
+              <dt>Next team action</dt>
+              <dd>
+                Review contact details, event timing, venue or location,
+                requested listings, and setup notes.
+              </dd>
+            </div>
+          </dl>
+          <p>
+            This is a receipt only. It does not set aside furniture and does not
+            finalise rental details or create an online follow-up page.
+          </p>
+          <div
+            aria-label="After quote request"
+            className="quote-form__receipt-actions"
+          >
+            <a className="button button--secondary" href="/listings">
+              Browse rental listings
+            </a>
+            <a className="button button--secondary" href="/catalogue">
+              Browse catalogue
+            </a>
+            <button
+              className="button button--secondary"
+              onClick={handleStartAnotherEnquiry}
+              type="button"
+            >
+              Submit another enquiry
+            </button>
+          </div>
+        </section>
       ) : null}
       {submitState.status === "error" ? (
         <p

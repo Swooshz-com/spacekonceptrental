@@ -117,6 +117,15 @@ describe("QuoteRequestInboxPanel", () => {
       screen.getByLabelText(/internal status for QR-20260603-NEWEST/i)
     ).toBeInTheDocument();
     expect(
+      screen.getByText(/current status: new enquiry/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: /update protected triage status/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/save the next admin-only follow-through step/i)
+    ).toBeInTheDocument();
+    expect(
       screen.getByRole("button", {
         name: /update internal triage status for QR-20260603-NEWEST/i
       })
@@ -257,7 +266,9 @@ describe("QuoteRequestInboxPanel", () => {
     );
     expect(onMutationComplete).toHaveBeenCalledTimes(1);
     expect(
-      screen.getByText(/status updated for admin review/i)
+      screen.getByText(
+        /status updated for admin review: QR-20260603-NEWEST is now Follow-up needed/i
+      )
     ).toBeInTheDocument();
   });
 
