@@ -520,6 +520,81 @@ function compactSetupNotes(quoteRequest: AdminQuoteRequestInboxQuoteRequest) {
   return notes || "No setup/access notes submitted";
 }
 
+function itemNotesSummary(quoteRequest: AdminQuoteRequestInboxQuoteRequest) {
+  return quoteRequest.items
+    .map((item) => item.notes?.trim())
+    .filter(Boolean)
+    .join("; ");
+}
+
+function sourceContextSummary(quoteRequest: AdminQuoteRequestInboxQuoteRequest) {
+  return [quoteRequest.sourcePagePath, quoteRequest.sourceListingSlug]
+    .filter(Boolean)
+    .join(" / ");
+}
+
+function adminFollowUpPriorityCues(
+  quoteRequest: AdminQuoteRequestInboxQuoteRequest
+) {
+  const itemNotes = itemNotesSummary(quoteRequest);
+  const sourceContext = sourceContextSummary(quoteRequest);
+  const totalQuantity = quoteRequest.items.reduce(
+    (total, item) => total + item.quantity,
+    0
+  );
+  const venueAccessDetails = [quoteRequest.venue, itemNotes]
+    .filter(Boolean)
+    .join(" / ");
+  const cues = [
+    quoteRequest.items.length > 0
+      ? `Confirm requested listing/item: ${compactRentalDetails(quoteRequest)}`
+      : "Missing requested listing/item - ask visitor what furniture or event setup they need",
+    totalQuantity > 0
+      ? `Confirm quantity: Quantity ${totalQuantity} submitted${
+          itemNotes ? `; item notes: ${itemNotes}` : ""
+        }`
+      : "Missing quantity - ask visitor for approximate counts",
+    quoteRequest.eventDate
+      ? `Confirm event/rental timing: ${quoteRequest.eventDate}`
+      : "Missing event/rental timing - ask visitor for event date or rental period",
+    venueAccessDetails
+      ? `Confirm venue/access details: ${venueAccessDetails}`
+      : "Missing venue/access details - ask visitor for venue, access, setup, and timing notes",
+    hasContactMethod(quoteRequest)
+      ? `Follow up manually: ${compactContactDetails(quoteRequest)}`
+      : "Missing contact method - ask visitor for email or phone",
+    sourceContext
+      ? `Source context: ${sourceContext}`
+      : "Missing source listing context - ask which listing or catalogue item started the enquiry"
+  ];
+
+  return [
+    ...cues,
+    "Manual follow-up: use protected admin triage to collect missing rental details before changing status"
+  ];
+}
+
+function AdminFollowUpPriorities({
+  quoteRequest
+}: {
+  quoteRequest: AdminQuoteRequestInboxQuoteRequest;
+}) {
+  return (
+    <section className="quote-inbox__section quote-inbox__section--primary">
+      <h4>Admin follow-up priorities</h4>
+      <p>
+        Confirm the submitted listing context, quantities, event details, and
+        contact path before manual follow-up.
+      </p>
+      <ul className="admin-readiness__list">
+        {adminFollowUpPriorityCues(quoteRequest).map((cue) => (
+          <li key={cue}>{cue}</li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
 function AdminTriageSnapshot({
   quoteRequest
 }: {
@@ -2948,6 +3023,7 @@ export function QuoteRequestInboxPanel({
                   </p>
                 </div>
                 <AdminTriageSnapshot quoteRequest={quoteRequest} />
+                <AdminFollowUpPriorities quoteRequest={quoteRequest} />
                 <section className="quote-inbox__section quote-inbox__section--primary">
                   <h4>Submitted enquiry triage details</h4>
                   <dl className="quote-inbox__details">

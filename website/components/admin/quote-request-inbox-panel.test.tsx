@@ -59,6 +59,19 @@ const quoteRequest: AdminQuoteRequestInboxQuoteRequest = {
   ]
 };
 
+const sparseQuoteRequest: AdminQuoteRequestInboxQuoteRequest = {
+  id: "77777777-7777-4777-8777-777777777777",
+  publicReference: "QR-20260603-MISSING",
+  customerName: "Jordan Lee",
+  status: "new" as const,
+  source: "website" as const,
+  crmProvider: "hubspot" as const,
+  crmSyncStatus: "not_queued" as const,
+  createdAt: "2026-06-03T11:30:00.000Z",
+  items: [],
+  activity: []
+};
+
 function loadedInbox() {
   return {
     status: "loaded" as const,
@@ -266,6 +279,96 @@ describe("QuoteRequestInboxPanel", () => {
       .toBeLessThan(pageText.indexOf("Update internal triage status for QR-20260603-NEWEST"));
     expect(pageText.indexOf("Update internal triage status for QR-20260603-NEWEST"))
       .toBeLessThan(pageText.indexOf("Manual follow-up checklist"));
+  });
+
+  it("shows listing context, quantity, event details, and manual follow-up priorities for admin review", () => {
+    render(<QuoteRequestInboxPanel inbox={loadedInbox()} />);
+
+    const quoteCard = screen
+      .getAllByText("QR-20260603-NEWEST")[0]
+      .closest("article");
+    expect(quoteCard).not.toBeNull();
+    const quoteCardView = within(quoteCard as HTMLElement);
+
+    const priorities = quoteCardView.getByRole("heading", {
+      name: /admin follow-up priorities/i
+    }).closest("section");
+    expect(priorities).not.toBeNull();
+    const priorityView = within(priorities as HTMLElement);
+
+    expect(
+      priorityView.getByText(/confirm requested listing\/item/i)
+    ).toBeInTheDocument();
+    expect(
+      priorityView.getByText(/modular lounge set \(quantity 2\)/i)
+    ).toBeInTheDocument();
+    expect(
+      priorityView.getByText(/confirm quantity/i)
+    ).toBeInTheDocument();
+    expect(
+      priorityView.getByText(/quantity 2 submitted; item notes: VIP reception area/i)
+    ).toBeInTheDocument();
+    expect(
+      priorityView.getByText(/confirm event\/rental timing/i)
+    ).toBeInTheDocument();
+    expect(priorityView.getByText(/confirm event\/rental timing: 2026-06-20/i))
+      .toBeInTheDocument();
+    expect(
+      priorityView.getByText(/confirm venue\/access details/i)
+    ).toBeInTheDocument();
+    expect(
+      priorityView.getByText(/Marina Bay Sands \/ VIP reception area/i)
+    ).toBeInTheDocument();
+    expect(priorityView.getByText(/follow up manually/i)).toBeInTheDocument();
+    expect(
+      priorityView.getByText(/Maya Tan - maya@example\.test \/ \+65 8123 4567/i)
+    ).toBeInTheDocument();
+    expect(
+      priorityView.getByText(/source context: \/quote\?listing=modular-lounge-set \/ modular-lounge-set/i)
+    ).toBeInTheDocument();
+  });
+
+  it("surfaces missing information cues for manual quote follow-up without forbidden flow wording", () => {
+    render(
+      <QuoteRequestInboxPanel
+        inbox={{
+          status: "loaded",
+          data: {
+            quoteRequests: [sparseQuoteRequest]
+          }
+        }}
+      />
+    );
+
+    const quoteCard = screen
+      .getAllByText("QR-20260603-MISSING")[0]
+      .closest("article");
+    expect(quoteCard).not.toBeNull();
+    const quoteCardView = within(quoteCard as HTMLElement);
+
+    const priorities = quoteCardView.getByRole("heading", {
+      name: /admin follow-up priorities/i
+    }).closest("section");
+    expect(priorities).not.toBeNull();
+    const priorityView = within(priorities as HTMLElement);
+
+    for (const missingCue of [
+      /missing requested listing\/item - ask visitor what furniture or event setup they need/i,
+      /missing quantity - ask visitor for approximate counts/i,
+      /missing event\/rental timing - ask visitor for event date or rental period/i,
+      /missing venue\/access details - ask visitor for venue, access, setup, and timing notes/i,
+      /missing contact method - ask visitor for email or phone/i,
+      /missing source listing context - ask which listing or catalogue item started the enquiry/i
+    ]) {
+      expect(priorityView.getByText(missingCue)).toBeInTheDocument();
+    }
+
+    expect(
+      priorityView.getByText(/manual follow-up: use protected admin triage to collect missing rental details before changing status/i)
+    ).toBeInTheDocument();
+    expect(document.body.textContent).not.toMatch(
+      /cart|checkout|order|payment|purchase|booking|reservation|fulfilment|fulfillment|stock reservation|customer account|dashboard/i
+    );
   });
 
   it("requests quote.write proof and sends status-only triage update POST with x-csrf-proof", async () => {
