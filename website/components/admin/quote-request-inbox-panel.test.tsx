@@ -98,7 +98,7 @@ describe("QuoteRequestInboxPanel", () => {
 
   // Backward-compatible validator marker:
   // renders internal quote status controls for authorised inbox data
-  // Local CRM handoff payload preview
+  // Manual follow-up checklist for authorised inbox data
   it("renders internal enquiry triage status controls for authorised inbox data", () => {
     render(<QuoteRequestInboxPanel inbox={loadedInbox()} />);
 
@@ -182,7 +182,7 @@ describe("QuoteRequestInboxPanel", () => {
       screen.getAllByText(/internal triage status only/i).length
     ).toBeGreaterThan(0);
     expect(
-      screen.getAllByText(/this does not contact the customer or sync to crm/i)
+      screen.getAllByText(/this does not contact the visitor or start an external process/i)
         .length
     ).toBeGreaterThan(0);
     expect(screen.getByText(/source path/i)).toBeInTheDocument();
@@ -190,32 +190,43 @@ describe("QuoteRequestInboxPanel", () => {
     expect(screen.getByText(/requested listing slug/i)).toBeInTheDocument();
     expect(screen.getAllByText("modular-lounge-set").length)
       .toBeGreaterThan(0);
+    const quoteCard = screen
+      .getAllByText("QR-20260603-NEWEST")[0]
+      .closest("article");
+    expect(quoteCard).not.toBeNull();
+    const quoteCardView = within(quoteCard as HTMLElement);
     expect(
-      screen.getAllByText(/CRM handoff placeholder/i).length
-    ).toBeGreaterThan(0);
-    expect(screen.getAllByText(/Provider - hubspot/i).length).toBeGreaterThan(0);
-    expect(screen.getByText(/Sync status - not_queued/i)).toBeInTheDocument();
-    expect(screen.getByText(/No CRM contact ID captured/i)).toBeInTheDocument();
-    expect(screen.getByText(/No CRM deal ID captured/i)).toBeInTheDocument();
+      quoteCardView.getByRole("heading", { name: /manual follow-up checklist/i })
+    ).toBeInTheDocument();
+    for (const manualStep of [
+      /review requested rental details/i,
+      /check event date, venue, quantities, and setup\/access notes/i,
+      /contact the visitor using the submitted email or phone/i,
+      /update protected triage status after review/i
+    ]) {
+      expect(quoteCardView.getByText(manualStep)).toBeInTheDocument();
+    }
     expect(
-      screen.getByRole("heading", {
-        name: /local CRM handoff payload preview/i
-      })
+      quoteCardView.getByText(/use QR-20260603-NEWEST when preparing manual follow-up/i)
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/Future provider - hubspot/i)
-    ).toBeInTheDocument();
+      quoteCardView.queryByText(/CRM handoff placeholder/i)
+    ).not.toBeInTheDocument();
     expect(
-      screen.getByText(/This does not sync to HubSpot or contact the customer/i)
-    ).toBeInTheDocument();
+      quoteCardView.queryByText(/local CRM handoff payload preview/i)
+    ).not.toBeInTheDocument();
     expect(
-      screen.getByText(/CRM handoff readiness/i)
-    ).toBeInTheDocument();
+      quoteCardView.queryByText(/Provider - hubspot/i)
+    ).not.toBeInTheDocument();
     expect(
-      screen.getByRole("button", {
-        name: /mark ready for CRM handoff for QR-20260603-NEWEST/i
-      })
-    ).toBeInTheDocument();
+      quoteCardView.queryByText(/Sync status - not_queued/i)
+    ).not.toBeInTheDocument();
+    expect(
+      quoteCardView.queryByText(/No CRM contact ID captured/i)
+    ).not.toBeInTheDocument();
+    expect(
+      quoteCardView.queryByText(/Future provider - hubspot/i)
+    ).not.toBeInTheDocument();
 
     const pageText = document.body.textContent ?? "";
     expect(pageText.indexOf("Admin triage snapshot"))
@@ -223,9 +234,7 @@ describe("QuoteRequestInboxPanel", () => {
     expect(pageText.indexOf("Submitted enquiry triage details"))
       .toBeLessThan(pageText.indexOf("Update internal triage status for QR-20260603-NEWEST"));
     expect(pageText.indexOf("Update internal triage status for QR-20260603-NEWEST"))
-      .toBeLessThan(pageText.indexOf("Source metadata and CRM handoff placeholder"));
-    expect(pageText.indexOf("Update internal triage status for QR-20260603-NEWEST"))
-      .toBeLessThan(pageText.indexOf("Future CRM handoff readiness"));
+      .toBeLessThan(pageText.indexOf("Manual follow-up checklist"));
   });
 
   it("requests quote.write proof and sends status-only triage update POST with x-csrf-proof", async () => {
@@ -306,62 +315,35 @@ describe("QuoteRequestInboxPanel", () => {
     ).toBeInTheDocument();
   });
 
-  it("sends local CRM handoff queue status update POST without contact IDs or provider calls", async () => {
-    const fetcher = vi
-      .fn()
-      .mockResolvedValueOnce(
-        createJsonResponse({
-          ok: true,
-          csrfProof: "proof-secret"
-        })
-      )
-      .mockResolvedValueOnce(
-        createJsonResponse({
-          ok: true,
-          record: {
-            id: quoteRequest.id,
-            type: "quoteRequest",
-            crmProvider: "hubspot",
-            crmSyncStatus: "queued"
-          }
-        })
-      );
-    const onMutationComplete = vi.fn();
+  it("does not show per-enquiry CRM handoff queue controls in the manual triage card", () => {
+    render(<QuoteRequestInboxPanel inbox={loadedInbox()} />);
 
-    render(
-      <QuoteRequestInboxPanel
-        fetcher={fetcher}
-        inbox={loadedInbox()}
-        onMutationComplete={onMutationComplete}
-      />
-    );
+    const quoteCard = screen
+      .getAllByText("QR-20260603-NEWEST")[0]
+      .closest("article");
+    expect(quoteCard).not.toBeNull();
+    const quoteCardView = within(quoteCard as HTMLElement);
 
-    fireEvent.click(
-      screen.getByRole("button", {
-        name: /mark ready for CRM handoff for QR-20260603-NEWEST/i
-      })
-    );
-
-    await waitFor(() => {
-      expect(fetcher).toHaveBeenCalledTimes(2);
-    });
-
-    expect(fetcher).toHaveBeenNthCalledWith(2, `/api/admin/quote-requests/${encodeURIComponent(quoteRequest.id)}/crm-handoff`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-csrf-proof": "proof-secret"
-      },
-      body: JSON.stringify({
-        crmSyncStatus: "queued"
-      })
-    });
-    expect(JSON.stringify(fetcher.mock.calls)).not.toContain("crmContactId");
-    expect(JSON.stringify(fetcher.mock.calls)).not.toContain("crmDealId");
-    expect(JSON.stringify(fetcher.mock.calls)).not.toContain("crmLastSyncAttemptAt");
-    expect(onMutationComplete).toHaveBeenCalledTimes(1);
     expect(
-      screen.getByText(/Queued locally for future CRM handoff/i)
+      quoteCardView.queryByRole("button", {
+        name: /mark ready for CRM handoff/i
+      })
+    ).not.toBeInTheDocument();
+    expect(
+      quoteCardView.queryByRole("button", {
+        name: /return to not queued/i
+      })
+    ).not.toBeInTheDocument();
+    expect(
+      quoteCardView.queryByRole("button", {
+        name: /prepare retry later/i
+      })
+    ).not.toBeInTheDocument();
+    expect(
+      quoteCardView.queryByText(/CRM handoff readiness/i)
+    ).not.toBeInTheDocument();
+    expect(
+      quoteCardView.getByRole("heading", { name: /manual follow-up checklist/i })
     ).toBeInTheDocument();
   });
 
@@ -521,7 +503,7 @@ describe("QuoteRequestInboxPanel", () => {
     expect(screen.getAllByText(/queued/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/record count/i).length).toBeGreaterThan(0);
     expect(screen.getByText(/Request IDs: 1/i)).toBeInTheDocument();
-    expect(screen.getByText(quoteRequest.id)).toBeInTheDocument();
+    expect(document.body.textContent).toContain(quoteRequest.id);
     expect(screen.getByText(/protected_admin/i)).toBeInTheDocument();
     expect(screen.getByText(/json_review_packet/i)).toBeInTheDocument();
     expect(screen.getByText(/Admin: 77777777-7777-4777-8777-777777777777/i)).toBeInTheDocument();
@@ -1479,7 +1461,7 @@ describe("QuoteRequestInboxPanel", () => {
     expect(screen.queryByText(/workspace-secret/i)).not.toBeInTheDocument();
   });
 
-  it("lets admins return queued enquiries to not queued and prepare failed retry locally", async () => {
+  it("keeps queued and failed CRM readiness controls out of the manual quote cards", () => {
     const queuedInbox = loadedInbox();
     queuedInbox.data.quoteRequests = [
       {
@@ -1493,71 +1475,92 @@ describe("QuoteRequestInboxPanel", () => {
         crmSyncStatus: "failed" as const
       }
     ];
-    const fetcher = vi
-      .fn()
-      .mockResolvedValue(
-        createJsonResponse({
-          ok: true,
-          csrfProof: "proof-secret"
-        })
-      )
-      .mockResolvedValueOnce(
-        createJsonResponse({
-          ok: true,
-          csrfProof: "proof-secret"
-        })
-      )
-      .mockResolvedValueOnce(
-        createJsonResponse({
-          ok: true,
-          record: {
-            id: quoteRequest.id,
-            type: "quoteRequest",
-            crmProvider: "hubspot",
-            crmSyncStatus: "not_queued"
-          }
-        })
-      )
-      .mockResolvedValueOnce(
-        createJsonResponse({
-          ok: true,
-          csrfProof: "proof-secret"
-        })
-      )
-      .mockResolvedValueOnce(
-        createJsonResponse({
-          ok: true,
-          record: {
-            id: "66666666-6666-4666-8666-666666666666",
-            type: "quoteRequest",
-            crmProvider: "hubspot",
-            crmSyncStatus: "queued"
-          }
-        })
-      );
 
-    render(<QuoteRequestInboxPanel fetcher={fetcher} inbox={queuedInbox} />);
+    render(<QuoteRequestInboxPanel inbox={queuedInbox} />);
 
-    fireEvent.click(
+    for (const publicReference of [
+      "QR-20260603-NEWEST",
+      "QR-20260603-FAILED"
+    ]) {
+      const quoteCard = screen.getAllByText(publicReference)[0].closest("article");
+      expect(quoteCard).not.toBeNull();
+      const quoteCardView = within(quoteCard as HTMLElement);
+
+      expect(
+        quoteCardView.queryByRole("button", {
+          name: /return to not queued/i
+        })
+      ).not.toBeInTheDocument();
+      expect(
+        quoteCardView.queryByRole("button", {
+          name: /prepare retry later/i
+        })
+      ).not.toBeInTheDocument();
+      expect(
+        quoteCardView.queryByText(/CRM handoff state/i)
+      ).not.toBeInTheDocument();
+      expect(
+        quoteCardView.getByRole("heading", {
+          name: /manual follow-up checklist/i
+        })
+      ).toBeInTheDocument();
+    }
+
+    expect(
       screen.getByRole("button", {
-        name: /return to not queued for QR-20260603-NEWEST/i
+        name: /review queued CRM handoff packet/i
       })
-    );
-    await waitFor(() => {
-      expect(fetcher).toHaveBeenCalledTimes(2);
-    });
-    fireEvent.click(
-      screen.getByRole("button", {
-        name: /prepare retry later for QR-20260603-FAILED/i
+    ).toBeInTheDocument();
+  });
+
+  it("does not expose per-card CRM handoff failure actions on the manual triage surface", () => {
+    render(<QuoteRequestInboxPanel inbox={loadedInbox()} />);
+
+    const quoteCard = screen
+      .getAllByText("QR-20260603-NEWEST")[0]
+      .closest("article");
+    expect(quoteCard).not.toBeNull();
+    const quoteCardView = within(quoteCard as HTMLElement);
+
+    expect(
+      quoteCardView.queryByRole("button", {
+        name: /mark ready for CRM handoff/i
       })
+    ).not.toBeInTheDocument();
+    expect(
+      quoteCardView.queryByText(/CRM handoff readiness could not be saved/i)
+    ).not.toBeInTheDocument();
+    expect(
+      quoteCardView.getByRole("heading", {
+        name: /manual follow-up checklist/i
+      })
+    ).toBeInTheDocument();
+  });
+
+  it("does not render status controls for unavailable or empty inbox states", () => {
+    const unavailable = render(
+      <QuoteRequestInboxPanel inbox={{ status: "unavailable" }} />
     );
 
-    await waitFor(() => {
-      expect(fetcher).toHaveBeenCalledTimes(4);
-    });
+    expect(
+      screen.queryByRole("button", { name: /save status/i })
+    ).not.toBeInTheDocument();
+    unavailable.unmount();
 
-    expect(JSON.stringify(fetcher.mock.calls)).toContain('\\"crmSyncStatus\\":\\"not_queued\\"');
-    expect(JSON.stringify(fetcher.mock.calls)).toContain('\\"crmSyncStatus\\":\\"queued\\"');
+    render(
+      <QuoteRequestInboxPanel
+        inbox={{
+          status: "loaded",
+          data: {
+            quoteRequests: []
+          }
+        }}
+      />
+    );
+
+    expect(
+      screen.queryByRole("button", { name: /save status/i })
+    ).not.toBeInTheDocument();
   });
 
   it("disables the triage status submit button while an update is pending", async () => {
@@ -1631,72 +1634,6 @@ describe("QuoteRequestInboxPanel", () => {
     expect(screen.queryByText(/token/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/cookie/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/workspace-secret/i)).not.toBeInTheDocument();
-  });
-
-  it("shows generic CRM handoff failure without SQL or provider details", async () => {
-    const fetcher = vi
-      .fn()
-      .mockResolvedValueOnce(
-        createJsonResponse({
-          ok: true,
-          csrfProof: "proof-secret"
-        })
-      )
-      .mockResolvedValueOnce(
-        createJsonResponse(
-          {
-            ok: false,
-            error: "sql hubspot token env stack workspace-secret"
-          },
-          {
-            status: 503
-          }
-        )
-      );
-
-    render(<QuoteRequestInboxPanel fetcher={fetcher} inbox={loadedInbox()} />);
-
-    fireEvent.click(
-      screen.getByRole("button", {
-        name: /mark ready for CRM handoff for QR-20260603-NEWEST/i
-      })
-    );
-
-    await waitFor(() => {
-      expect(
-        screen.getByText(/CRM handoff readiness could not be saved/i)
-      ).toBeInTheDocument();
-    });
-
-    expect(screen.queryByText(/sql/i)).not.toBeInTheDocument();
-    expect(screen.queryByText(/hubspot token/i)).not.toBeInTheDocument();
-    expect(screen.queryByText(/workspace-secret/i)).not.toBeInTheDocument();
-  });
-
-  it("does not render status controls for unavailable or empty inbox states", () => {
-    const unavailable = render(
-      <QuoteRequestInboxPanel inbox={{ status: "unavailable" }} />
-    );
-
-    expect(
-      screen.queryByRole("button", { name: /save status/i })
-    ).not.toBeInTheDocument();
-    unavailable.unmount();
-
-    render(
-      <QuoteRequestInboxPanel
-        inbox={{
-          status: "loaded",
-          data: {
-            quoteRequests: []
-          }
-        }}
-      />
-    );
-
-    expect(
-      screen.queryByRole("button", { name: /save status/i })
-    ).not.toBeInTheDocument();
   });
 
   it("does not imply ecommerce or customer-facing quote tracking", () => {

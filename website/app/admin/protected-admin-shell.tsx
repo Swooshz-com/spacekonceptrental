@@ -6557,7 +6557,7 @@ function AdminQuoteDetail({
           </section>
 
           <section className="admin-dashboard__card">
-            <h3>Source metadata and CRM handoff placeholder</h3>
+            <h3>Source context and manual follow-up prep</h3>
             <dl className="quote-inbox__details">
               <div>
                 <dt>Source path</dt>
@@ -6573,25 +6573,18 @@ function AdminQuoteDetail({
                 </dd>
               </div>
               <div>
-                <dt>CRM handoff placeholder</dt>
+                <dt>Manual follow-up prep</dt>
                 <dd>
-                  Provider - {quoteRequest.crmProvider ?? "hubspot"}; Sync
-                  status - {quoteRequest.crmSyncStatus ?? "not_queued"}
+                  Review requested rental details, event date, venue, quantities,
+                  setup/access notes, and submitted contact details before
+                  direct follow-up.
                 </dd>
-              </div>
-              <div>
-                <dt>CRM contact ID</dt>
-                <dd>{quoteRequest.crmContactId ?? "No CRM contact ID captured"}</dd>
-              </div>
-              <div>
-                <dt>CRM deal ID</dt>
-                <dd>{quoteRequest.crmDealId ?? "No CRM deal ID captured"}</dd>
               </div>
             </dl>
             <p>
-              These fields prepare future HubSpot handoff review only. This
-              protected admin detail view does not run CRM sync, queue
-              automation, or deliver outbound messages.
+              Source context is protected admin guidance only. It does not
+              contact the visitor, expose a public status view, or change
+              submitted enquiry details.
             </p>
           </section>
 
