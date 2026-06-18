@@ -433,7 +433,7 @@ describe("protected admin shell", () => {
     expect(screen.getAllByText("Marina Bay Sands").length).toBeGreaterThan(0);
     expect(screen.getByText("new - website")).toBeInTheDocument();
     expect(screen.getByText(/2 x Modular lounge set/i)).toBeInTheDocument();
-    expect(screen.getByText(/VIP reception area/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/VIP reception area/i).length).toBeGreaterThan(0);
     expect(
       screen.getByLabelText(/protected internal status for QR-20260603-NEWEST/i)
     ).toBeInTheDocument();
