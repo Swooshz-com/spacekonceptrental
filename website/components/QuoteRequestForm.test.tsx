@@ -412,6 +412,98 @@ describe("QuoteRequestForm", () => {
     expect(screen.queryByRole("link", { name: /track|status/i })).not.toBeInTheDocument();
   });
 
+  it("explains editable listing context and submits adjusted requested items for admin triage", async () => {
+    const fetchMock = vi.fn(async () => {
+      return new Response(
+        JSON.stringify({
+          status: "received",
+          quoteRequestId: "70000000-0000-4000-8000-000000000001",
+          publicReference: "QR-20260527-ABC12345"
+        }),
+        {
+          headers: { "content-type": "application/json" },
+          status: 201
+        }
+      );
+    });
+
+    vi.stubGlobal("fetch", fetchMock);
+    window.history.pushState(null, "", "/quote?listing=modular-lounge-set");
+
+    render(
+      <QuoteRequestForm
+        initialItemsText="Modular Lounge Set"
+        initialListingSlug="modular-lounge-set"
+      />
+    );
+
+    const selectedListing = screen.getByLabelText(/selected listing/i);
+
+    expect(selectedListing).toHaveTextContent(
+      /keep this listing, change it, or add more rental items before sending/i
+    );
+    expect(selectedListing).toHaveTextContent(
+      /add quantities in the requested listings box or item notes/i
+    );
+    expect(
+      screen.getByText(/the team will use the requested listing\/item context for manual follow-up/i)
+    ).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText(/name/i), {
+      target: { value: "Maya Tan" }
+    });
+    fireEvent.change(screen.getByLabelText(/email address/i), {
+      target: { value: "maya@example.test" }
+    });
+    fireEvent.change(screen.getByLabelText(/event date/i), {
+      target: { value: "2026-07-18" }
+    });
+    fireEvent.change(screen.getByLabelText(/venue/i), {
+      target: { value: "National Gallery Singapore" }
+    });
+    fireEvent.change(screen.getByLabelText(/requested listings or items/i), {
+      target: {
+        value: "Modular Lounge Set - 2 sets\nCocktail tables - 4 pieces"
+      }
+    });
+    fireEvent.change(screen.getByLabelText(/item-specific notes/i), {
+      target: {
+        value: "Need rental period guidance for a same-day event setup."
+      }
+    });
+    fireEvent.click(screen.getByRole("button", { name: /send an enquiry/i }));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+
+    expect(getSubmittedPayload(fetchMock)).toMatchObject({
+      customerName: "Maya Tan",
+      customerEmail: "maya@example.test",
+      eventDate: "2026-07-18",
+      venue: "National Gallery Singapore",
+      sourcePath: "/quote?listing=modular-lounge-set",
+      listingSlug: "modular-lounge-set",
+      items: [
+        {
+          productName: "Modular Lounge Set - 2 sets",
+          quantity: 1,
+          notes: "Need rental period guidance for a same-day event setup."
+        },
+        {
+          productName: "Cocktail tables - 4 pieces",
+          quantity: 1
+        }
+      ]
+    });
+
+    const receipt = await screen.findByRole("status");
+
+    expect(receipt).toHaveTextContent(/manual follow-up/i);
+    expect(receipt).toHaveTextContent(/requested listing\/item context/i);
+    expect(document.body.textContent).not.toMatch(
+      /cart|checkout|order|payment|purchase|booking|reservation|fulfilment|fulfillment|stock reservation|customer account|dashboard/i
+    );
+  });
+
   it("splits requested item lines, trims them, and ignores blanks", async () => {
     const fetchMock = vi.fn(async () => {
       return new Response(

@@ -29,6 +29,12 @@ describe("QuotePage", () => {
       screen.getByText(/this listing starts the editable requested listings text/i)
     ).toBeInTheDocument();
     expect(
+      screen.getByText(/use this selected listing as a starting point/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/adjust quantities, alternates, event date or rental period notes, and venue details in the form/i)
+    ).toBeInTheDocument();
+    expect(
       screen.getByText(/the selected listing starts the request, but you can edit quantities, alternates, and event notes before sending/i)
     ).toBeInTheDocument();
     expect(
@@ -47,6 +53,9 @@ describe("QuotePage", () => {
     expect(
       screen.queryByText(/cart|checkout|payment|book now|online ordering/i)
     ).not.toBeInTheDocument();
+    expect(document.body.textContent).not.toMatch(
+      /customer account|dashboard|reservation|stock reservation|fulfilment|fulfillment|purchase/i
+    );
   });
 
   it("ignores unsafe or unknown listing context without changing the quote route contract", async () => {

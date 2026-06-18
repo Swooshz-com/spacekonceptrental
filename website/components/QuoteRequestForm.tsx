@@ -276,17 +276,19 @@ export default function QuoteRequestForm({
         Share your name. Share one reliable contact method, event date if known,
         venue or location, requested listings or items, quantities, alternates,
         setup, access, and timing notes so the team can triage the rental
-        enquiry.
+        enquiry. The team will use the requested listing/item context for
+        manual follow-up.
       </p>
       {initialItemsText ? (
         <aside className="quote-form__selected" aria-label="Selected listing">
           <strong>Selected listing</strong>
           <span>
             {initialItemsText} starts this rental request. Listing context is
-            a starting point only and remains editable request text, not a
-            rental fit confirmation. Add quantities, alternates, dimensions,
-            setup, access, or timing notes before sending; the team can review
-            the request.
+            a starting point only and remains editable request text. Keep this
+            listing, change it, or add more rental items before sending. Add
+            quantities in the requested listings box or item notes along with
+            alternates, dimensions, setup, access, rental period, or timing
+            notes before sending; the team can review the request.
           </span>
         </aside>
       ) : null}
@@ -457,7 +459,8 @@ export default function QuoteRequestForm({
           <h3>Quote request received</h3>
           <p>
             The team can review your request and follow up directly with next
-            questions or quote details.
+            questions or quote details. Manual follow-up uses your contact
+            details, event details, and requested listing/item context.
           </p>
           <dl className="quote-form__receipt-details">
             <div>
