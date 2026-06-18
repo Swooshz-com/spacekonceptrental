@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("next/image", () => ({
@@ -89,14 +89,54 @@ describe("public catalogue image rendering", () => {
     });
 
     expect(image).toHaveAttribute("src", productWithImage.primaryImage?.publicUrl);
-    expect(screen.getByRole("link", { name: /view rental listing/i })).toHaveAttribute(
-      "href",
-      "/catalogue/modular-lounge"
-    );
+    expect(
+      screen.getByRole("link", { name: /view details for modular lounge/i })
+    ).toHaveAttribute("href", "/catalogue/modular-lounge");
     expect(
       screen.getByRole("link", { name: /request a quote/i })
     ).toHaveAttribute("href", "/quote?listing=modular-lounge");
     expect(screen.queryByText(/cart|checkout|payment|online ordering/i)).not.toBeInTheDocument();
+  });
+
+  it("shows scan-friendly catalogue card cues and detail-first quote navigation", () => {
+    render(<CataloguePageContent catalogue={catalogue} />);
+
+    expect(
+      screen.getByRole("heading", { name: /how to choose a rental listing/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/open the listing details before sending a quote request/i)
+    ).toBeInTheDocument();
+
+    const listingCard = screen.getByLabelText(/rental listing card for modular lounge/i);
+    const cardView = within(listingCard);
+
+    expect(
+      cardView.getByText(/public rental listing/i)
+    ).toBeInTheDocument();
+    expect(cardView.getByText(/category\/type/i)).toBeInTheDocument();
+    expect(cardView.getByText("Lounge")).toBeInTheDocument();
+    expect(cardView.getByText(/rental unit/i)).toBeInTheDocument();
+    expect(cardView.getByText("set")).toBeInTheDocument();
+    expect(cardView.getByText(/public image available/i)).toBeInTheDocument();
+    expect(
+      cardView.getByText(/styled lounge setup for receptions/i)
+    ).toBeInTheDocument();
+
+    const detailLink = cardView.getByRole("link", {
+      name: /view details for modular lounge/i
+    });
+    const quoteLink = cardView.getByRole("link", {
+      name: /request a quote for modular lounge/i
+    });
+
+    expect(detailLink).toHaveAttribute("href", "/catalogue/modular-lounge");
+    expect(quoteLink).toHaveAttribute("href", "/quote?listing=modular-lounge");
+    expect(
+      (detailLink.compareDocumentPosition(quoteLink) &
+        Node.DOCUMENT_POSITION_FOLLOWING) !==
+        0
+    ).toBe(true);
   });
 
   it("renders listing detail primary image and additional image when available", () => {
@@ -146,6 +186,34 @@ describe("public catalogue image rendering", () => {
     expect(container.querySelector(".catalogue-card__image img")).toHaveAttribute(
       "src",
       "/assets/images/product_sofa.png"
+    );
+    expect(screen.getByText(/representative image shown/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/no public image is available for this listing yet/i)
+    ).toBeInTheDocument();
+  });
+
+  it("keeps empty catalogue recovery visitor-facing and free of forbidden flows", () => {
+    render(
+      <CataloguePageContent
+        catalogue={{
+          ...catalogue,
+          products: []
+        }}
+      />
+    );
+
+    expect(
+      screen.getByRole("heading", { name: /no matching public listings/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/browse all listings, browse categories, explore event-use guidance/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: /send an enquiry/i })
+    ).toHaveAttribute("href", "/quote");
+    expect(document.body.textContent).not.toMatch(
+      /cart|checkout|order|payment|purchase|booking|reservation|customer account|dashboard/i
     );
   });
 

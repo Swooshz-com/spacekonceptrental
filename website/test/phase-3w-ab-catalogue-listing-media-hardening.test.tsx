@@ -217,7 +217,8 @@ describe("Phase 3W-A/B catalogue listing media hardening", () => {
   it("keeps catalogue, listing, category, and event routes customer-facing", () => {
     render(<CataloguePageContent catalogue={sampleCatalogue} />);
     expect(screen.getByRole("heading", { name: /furniture catalogue/i })).toBeInTheDocument();
-    expect(screen.getByText(/rental unit: set/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/rental unit/i).length).toBeGreaterThan(0);
+    expect(screen.getByText("set")).toBeInTheDocument();
     expect(screen.getByText(/quote planning/i)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /request a quote/i })).toBeInTheDocument();
     cleanup();

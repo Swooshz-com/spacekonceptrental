@@ -265,6 +265,20 @@ select {
   text-transform: uppercase;
 }
 
+.catalogue-card__meta div {
+  display: grid;
+  gap: 2px;
+}
+
+.catalogue-card__meta dt {
+  color: var(--muted);
+  font-size: 0.68rem;
+}
+
+.catalogue-card__meta dd {
+  margin: 0;
+}
+
 .catalogue-card__planning {
   background: var(--accent-soft);
   border: 1px solid #c9e1d2;
@@ -299,6 +313,7 @@ select {
 
 .catalogue-discovery,
 .catalogue-use-cases,
+.catalogue-selection-guide,
 .quote-form__selected {
   background: var(--accent-soft);
   border: 1px solid #c9e1d2;
@@ -307,7 +322,8 @@ select {
 }
 
 .catalogue-discovery,
-.catalogue-use-cases {
+.catalogue-use-cases,
+.catalogue-selection-guide {
   display: grid;
   gap: 16px;
   margin-bottom: 24px;
@@ -315,12 +331,14 @@ select {
 }
 
 .catalogue-discovery h2,
+.catalogue-selection-guide h2,
 .catalogue-use-cases h2,
 .catalogue-use-cases h3 {
   margin: 0;
 }
 
 .catalogue-discovery p,
+.catalogue-selection-guide p,
 .catalogue-use-cases p {
   color: var(--text);
   line-height: 1.6;

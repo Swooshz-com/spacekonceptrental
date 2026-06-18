@@ -182,7 +182,8 @@ describe("Phase 3A-A/B product polish and rental UI copy", () => {
       })
     ).toBeInTheDocument();
     expect(screen.getByText(/quote planning/i)).toBeInTheDocument();
-    expect(screen.getByText(/rental unit: set/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/rental unit/i).length).toBeGreaterThan(0);
+    expect(screen.getByText("set")).toBeInTheDocument();
     expect(
       screen.getByText(/share event date, venue, quantities, and setup notes/i)
     ).toBeInTheDocument();

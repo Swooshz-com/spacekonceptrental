@@ -105,6 +105,12 @@ function publicRentalUnit(product: PublicCatalogueProduct) {
   return textOrUndefined(product.rentalUnit) ?? "confirm with team";
 }
 
+function publicImageStatus(product: PublicCatalogueProduct) {
+  return product.primaryImage?.publicUrl
+    ? "Public image available"
+    : "Representative image shown";
+}
+
 function publicImageAltText(
   image: PublicCatalogueProduct["primaryImage"],
   product: PublicCatalogueProduct
@@ -132,17 +138,30 @@ function CatalogueCardImage({
   return (
     <figure className="catalogue-card__fallback-image">
       <Image alt={altText} src={fallbackImage} />
-      <figcaption>Representative rental image; final media can be reviewed during enquiry follow-up.</figcaption>
+      <figcaption>
+        No public image is available for this listing yet; use the
+        representative rental image while requesting details.
+      </figcaption>
     </figure>
   );
 }
 
 function CatalogueCardMeta({ product }: { product: PublicCatalogueProduct }) {
   return (
-    <div className="catalogue-card__meta">
-      <span>{publicCategoryLabel(product)}</span>
-      <span>Rental unit: {publicRentalUnit(product)}</span>
-    </div>
+    <dl className="catalogue-card__meta" aria-label={`Browse cues for ${product.name}`}>
+      <div>
+        <dt>Category/type</dt>
+        <dd>{publicCategoryLabel(product)}</dd>
+      </div>
+      <div>
+        <dt>Rental unit</dt>
+        <dd>{publicRentalUnit(product)}</dd>
+      </div>
+      <div>
+        <dt>Image</dt>
+        <dd>{publicImageStatus(product)}</dd>
+      </div>
+    </dl>
   );
 }
 
@@ -446,6 +465,29 @@ function EventSetupGuidance() {
   );
 }
 
+function CatalogueSelectionGuide() {
+  return (
+    <section
+      aria-label="How to choose a rental listing"
+      className="catalogue-selection-guide"
+    >
+      <div>
+        <p className="eyebrow">Browse helper</p>
+        <h2>How to choose a rental listing</h2>
+        <p>
+          Start with category/type, compare the short description and rental
+          unit, then open the listing details before sending a quote request.
+        </p>
+      </div>
+      <ul className="journey-list">
+        <li>Use category and event-use filters to narrow the browsing view.</li>
+        <li>Check whether the card shows a public image or a representative image.</li>
+        <li>Request a quote after adding event details, quantities, and venue notes.</li>
+      </ul>
+    </section>
+  );
+}
+
 export function CataloguePageContent({
   activeCategoryName,
   activeCategorySlug,
@@ -552,10 +594,15 @@ export function CataloguePageContent({
         listingBasePath={listingBasePath}
         listingCount={catalogue.products.length}
       />
+      <CatalogueSelectionGuide />
 
       <div className="catalogue-grid">
         {catalogue.products.map((product) => (
-          <article className="catalogue-card" key={product.slug}>
+          <article
+            aria-label={`Rental listing card for ${product.name}`}
+            className="catalogue-card"
+            key={product.slug}
+          >
             <div className="catalogue-card__image">
               <CatalogueCardImage
                 fallbackImage={getProductImage(product)}
@@ -564,6 +611,7 @@ export function CataloguePageContent({
             </div>
             <div className="catalogue-card__body">
               <CatalogueCardMeta product={product} />
+              <p className="catalogue-card__reference">Public rental listing</p>
               <p className="catalogue-card__reference">
                 Listing reference: {product.slug}
               </p>
@@ -573,15 +621,15 @@ export function CataloguePageContent({
               <div className="catalogue-card__actions">
                 <Link
                   className="card-link card-link--primary"
-                  href={getQuoteHrefForListing(product.slug)}
+                  href={`${detailBasePath}/${product.slug}`}
                 >
-                  Request a quote for {product.name}
+                  View details for {product.name}
                 </Link>
                 <Link
                   className="card-link"
-                  href={`${detailBasePath}/${product.slug}`}
+                  href={getQuoteHrefForListing(product.slug)}
                 >
-                  View rental listing details
+                  Request a quote for {product.name}
                 </Link>
               </div>
             </div>
