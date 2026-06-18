@@ -181,6 +181,7 @@ const internalRouteAllowlist = [
   /^\/admin\/listings#listing-form-[A-Za-z0-9-]+$/,
   /^\/admin\/categories$/,
   /^\/admin\/media$/,
+  /^\/admin\/media#update-listing-image-metadata$/,
   /^\/admin\/content-readiness$/,
   /^\/admin\/public-parity$/,
   /^\/admin\/release-control$/,
@@ -358,6 +359,7 @@ describe("Phase 3E-A/B product readiness, navigation QA, and dead-end polish", (
       "/admin/listings",
       "/admin/categories",
       "/admin/media",
+      "/admin/media#update-listing-image-metadata",
       "/admin/quotes",
       "/admin/quotes/quote-1",
       "/listings/modular-lounge-set"
