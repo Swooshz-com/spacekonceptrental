@@ -84,9 +84,10 @@ function QuoteSelectedListingBanner({
         <p className="eyebrow">Selected rental listing</p>
         <h2>Selected rental listing: {product.name}</h2>
         <p>
-          This listing starts the editable requested listings text. You can
-          change quantities, add alternates, or remove it before sending the
-          enquiry.
+          This listing starts the editable requested listings text. Use this
+          selected listing as a starting point, then adjust quantities,
+          alternates, event date or rental period notes, and venue details in
+          the form before sending the enquiry.
         </p>
       </div>
       <dl className="quote-context__details">
