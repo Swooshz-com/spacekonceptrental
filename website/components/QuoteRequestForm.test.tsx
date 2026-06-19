@@ -253,7 +253,8 @@ describe("QuoteRequestForm", () => {
 
     const alert = await screen.findByRole("alert");
 
-    expect(alert).toHaveTextContent(/quote requests are temporarily unavailable/i);
+    expect(alert).toHaveTextContent(/quote request was not sent/i);
+    expect(alert).toHaveTextContent(/review your details and try again/i);
     expect(alert).not.toHaveTextContent(/sql/i);
     expect(alert).not.toHaveTextContent(/supabase/i);
     expect(alert).not.toHaveTextContent(/stack/i);
@@ -261,6 +262,105 @@ describe("QuoteRequestForm", () => {
     expect(alert).not.toHaveTextContent(/cookie/i);
     expect(alert).not.toHaveTextContent(/provider/i);
     expect(alert).not.toHaveTextContent(/secret/i);
+  });
+
+  it("explains failed-submit recovery while preserving entered details and listing context", async () => {
+    const fetchMock = vi.fn(async () => {
+      return new Response(
+        JSON.stringify({
+          error: {
+            message: "database unavailable for Maya Tan"
+          }
+        }),
+        {
+          headers: { "content-type": "application/json" },
+          status: 503
+        }
+      );
+    });
+
+    vi.stubGlobal("fetch", fetchMock);
+    window.history.pushState(null, "", "/quote?listing=modular-lounge-set");
+
+    render(
+      <QuoteRequestForm
+        initialItemsText="Modular Lounge Set"
+        initialListingSlug="modular-lounge-set"
+      />
+    );
+
+    fireEvent.change(screen.getByLabelText(/name/i), {
+      target: { value: "Maya Tan" }
+    });
+    fireEvent.change(screen.getByLabelText(/email address/i), {
+      target: { value: "maya@example.test" }
+    });
+    fireEvent.change(screen.getByLabelText(/phone/i), {
+      target: { value: "+65 8123 4567" }
+    });
+    fireEvent.change(screen.getByLabelText(/event date/i), {
+      target: { value: "2026-07-18" }
+    });
+    fireEvent.change(screen.getByLabelText(/venue/i), {
+      target: { value: "National Gallery Singapore" }
+    });
+    fireEvent.change(screen.getByLabelText(/requested listings or items/i), {
+      target: { value: "Modular Lounge Set\n4 cocktail tables" }
+    });
+    fireEvent.change(screen.getByLabelText(/customer message/i), {
+      target: {
+        value: "Warm reception setup with alternates if the sofa colour changes."
+      }
+    });
+    fireEvent.change(screen.getByLabelText(/item-specific notes/i), {
+      target: {
+        value: "Use the lounge set near the registration area."
+      }
+    });
+    fireEvent.click(screen.getByRole("button", { name: /send an enquiry/i }));
+
+    const alert = await screen.findByRole("alert");
+
+    expect(alert).toHaveTextContent(/quote request was not sent/i);
+    expect(alert).toHaveTextContent(/review your details and try again/i);
+    expect(alert).toHaveTextContent(/your entered details should still be here/i);
+    expect(alert).not.toHaveTextContent(/database|maya tan/i);
+    expect(screen.getByLabelText(/selected listing/i)).toHaveTextContent(
+      /modular lounge set/i
+    );
+    expect(screen.getByLabelText(/name/i)).toHaveValue("Maya Tan");
+    expect(screen.getByLabelText(/email address/i)).toHaveValue(
+      "maya@example.test"
+    );
+    expect(screen.getByLabelText(/phone/i)).toHaveValue("+65 8123 4567");
+    expect(screen.getByLabelText(/event date/i)).toHaveValue("2026-07-18");
+    expect(screen.getByLabelText(/venue/i)).toHaveValue(
+      "National Gallery Singapore"
+    );
+    expect(screen.getByLabelText(/requested listings or items/i)).toHaveValue(
+      "Modular Lounge Set\n4 cocktail tables"
+    );
+    expect(screen.getByLabelText(/customer message/i)).toHaveValue(
+      "Warm reception setup with alternates if the sofa colour changes."
+    );
+    expect(screen.getByLabelText(/item-specific notes/i)).toHaveValue(
+      "Use the lounge set near the registration area."
+    );
+    expect(getSubmittedPayload(fetchMock)).toMatchObject({
+      sourcePath: "/quote?listing=modular-lounge-set",
+      listingSlug: "modular-lounge-set",
+      items: [
+        {
+          productName: "Modular Lounge Set",
+          quantity: 1,
+          notes: "Use the lounge set near the registration area."
+        },
+        {
+          productName: "4 cocktail tables",
+          quantity: 1
+        }
+      ]
+    });
   });
 
   it("shows inline required guidance and preserves entered rental details", async () => {
@@ -342,10 +442,12 @@ describe("QuoteRequestForm", () => {
 
     await waitFor(() => {
       expect(
-        screen.getByRole("button", { name: /sending enquiry/i })
+        screen.getByRole("button", { name: /sending quote request/i })
       ).toBeDisabled();
     });
-    fireEvent.click(screen.getByRole("button", { name: /sending enquiry/i }));
+    fireEvent.click(
+      screen.getByRole("button", { name: /sending quote request/i })
+    );
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
 

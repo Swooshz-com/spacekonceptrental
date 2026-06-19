@@ -608,6 +608,13 @@ for the release-candidate gate and keep the review non-live.
   setup notes.
 - Confirm the quote form asks for preferred contact method, quantities,
   alternatives, setup/access/timing notes, and receipt-like follow-up copy.
+- Confirm required-field validation keeps entered rental details and selected
+  listing context in the form.
+- Confirm failed submit recovery says the quote request was not sent, asks the
+  visitor to review details and try again, and keeps entered details where
+  browser state allows.
+- Confirm successful submit shows receipt-like manual follow-up copy and keeps
+  requested listing/item context available for protected admin triage.
 - Confirm selected listing context is prefilled only when a valid listing is
   supplied.
 - Confirm invalid or missing selected listing context falls back to a general

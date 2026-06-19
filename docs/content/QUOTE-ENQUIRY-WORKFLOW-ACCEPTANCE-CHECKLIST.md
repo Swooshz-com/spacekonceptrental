@@ -28,6 +28,13 @@ publication, production launch, provider configuration, or deployment approval.
   contact method.
 - Response copy stays receipt-like: request received, the team can follow up,
   and the user can share more details if needed.
+- Validation errors keep entered rental details and selected listing context
+  available for review.
+- Failed submit recovery says the quote request was not sent, asks the visitor
+  to review details and try again, and keeps entered details where browser
+  state allows.
+- Successful submit keeps receipt copy manual-follow-up focused and preserves
+  requested listing/item context for protected admin triage.
 - Invalid or missing listing handoff recovers to a general rental enquiry
   without exposing admin or internal listing details.
 

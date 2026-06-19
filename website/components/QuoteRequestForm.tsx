@@ -199,12 +199,12 @@ export default function QuoteRequestForm({
 
     if (!payload.customerName) {
       nextFieldErrors.customerName =
-        "Name is required so the team knows who sent the enquiry.";
+        "Name is required so the team knows who sent this quote request.";
     }
 
     if (!payload.customerEmail && !payload.customerPhone) {
       nextFieldErrors.contact =
-        "Email address or phone number is required for direct quote follow-up.";
+        "Email address or phone number is required so the team can follow up directly about this quote request.";
     }
 
     if (nextFieldErrors.customerName || nextFieldErrors.contact) {
@@ -256,7 +256,7 @@ export default function QuoteRequestForm({
       setSubmitState({
         status: "error",
         message:
-          "Quote requests are temporarily unavailable. Please try again later with the same event details."
+          "Your quote request was not sent. Review your details and try again; your entered details should still be here, including any selected listing context."
       });
     }
   }
@@ -451,7 +451,7 @@ export default function QuoteRequestForm({
         type="submit"
       >
         {submitState.status === "submitting"
-          ? "Sending enquiry..."
+          ? "Sending quote request..."
           : "Review and send an enquiry"}
       </button>
       {submitState.status === "success" ? (
