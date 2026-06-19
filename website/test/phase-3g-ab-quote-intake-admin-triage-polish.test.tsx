@@ -284,10 +284,10 @@ describe("Phase 3G-A/B quote intake quality, admin triage depth, and enquiry wor
     expect(screen.getByText(/without internal activity/i)).toBeInTheDocument();
     expect(screen.getAllByText(/next action/i).length).toBeGreaterThan(0);
     expect(
-      screen.getByText(/capture a contact method before follow-up/i)
+      screen.getByText(/review submitted details for a contact method before manual follow-up/i)
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/prepare human follow-up and mark follow-up needed/i)
+      screen.getByText(/continue manual review, contact the visitor manually if details need confirmation/i)
     ).toBeInTheDocument();
     expect(
       screen.getByText(/closed enquiry is retained for admin reference/i)
