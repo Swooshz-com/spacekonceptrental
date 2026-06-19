@@ -1,7 +1,6 @@
 import "server-only";
 
 import { getN8nChatRuntimeConfig } from "../server-runtime-config";
-import { PlaceholderChatProvider } from "./placeholder-provider";
 import {
   ChatProviderError,
   type ChatProvider,
@@ -21,7 +20,6 @@ type N8nChatProviderOptions = {
   fetch?: FetchLike;
   webhookUrl?: string;
   timeoutMs?: number;
-  fallbackProvider?: ChatProvider;
 };
 
 function createId() {
@@ -158,14 +156,11 @@ function normalizeN8nResponse(
 }
 
 export class N8nChatProvider implements ChatProvider {
-  private readonly fallbackProvider: ChatProvider;
   private readonly fetch: FetchLike;
   private readonly timeoutMs: number;
   private readonly webhookUrl?: string;
 
   constructor(options: N8nChatProviderOptions = {}) {
-    this.fallbackProvider =
-      options.fallbackProvider ?? new PlaceholderChatProvider();
     this.fetch = options.fetch ?? globalThis.fetch.bind(globalThis);
     const runtimeOptions = getDefaultN8nRuntimeOptions();
 
@@ -181,7 +176,10 @@ export class N8nChatProvider implements ChatProvider {
     request: ChatProviderRequest
   ): Promise<ChatProviderResponse> {
     if (!this.webhookUrl) {
-      return this.fallbackProvider.sendMessage(request);
+      throw new ChatProviderError(
+        "PROVIDER_UNAVAILABLE",
+        "Chat provider is not configured."
+      );
     }
 
     const controller = new AbortController();

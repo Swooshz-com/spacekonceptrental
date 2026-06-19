@@ -209,23 +209,16 @@ describe("N8nChatProvider", () => {
     });
   });
 
-  it("uses a safe placeholder response when server-side n8n config is missing", async () => {
+  it("returns a provider error instead of a placeholder response when server-side n8n config is missing", async () => {
     delete process.env.N8N_CHAT_WEBHOOK_URL;
     const fetchMock = vi.fn();
     const provider = new N8nChatProvider({ fetch: fetchMock });
 
-    const response = await provider.sendMessage(providerRequest);
+    await expect(provider.sendMessage(providerRequest)).rejects.toMatchObject({
+      code: "PROVIDER_UNAVAILABLE"
+    });
 
     expect(fetchMock).not.toHaveBeenCalled();
-    expect(response).toMatchObject({
-      conversationId: "conversation-1",
-      status: "completed",
-      reply: {
-        role: "assistant",
-        content:
-          "Thanks. Could you share the event date, venue, rental duration, and the items or quantities you need?"
-      }
-    });
   });
 
   it("does not introduce browser-public n8n environment names", () => {

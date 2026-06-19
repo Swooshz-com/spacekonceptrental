@@ -9,8 +9,8 @@ import {
   type ChatProviderRequest
 } from "../../../lib/chat/provider";
 
-const FALLBACK_MESSAGE =
-  "The assistant is temporarily unavailable. Please leave your contact details and the team will follow up.";
+const CHAT_ERROR_MESSAGE =
+  "An error occurred while sending the chat message. Please try again.";
 const MAX_REQUEST_BODY_BYTES = 64 * 1024;
 const MAX_ID_LENGTH = 128;
 const MAX_MESSAGE_CONTENT_LENGTH = 4_000;
@@ -339,7 +339,7 @@ function providerError(error: unknown, requestId: string) {
     {
       error: {
         code,
-        message: FALLBACK_MESSAGE
+        message: CHAT_ERROR_MESSAGE
       },
       requestId
     },

@@ -176,7 +176,6 @@ describe("server Supabase runtime wiring", () => {
       "lib/chat/persistence/index.ts",
       "lib/chat/persistence/types.ts",
       "lib/chat/n8n-provider.ts",
-      "lib/chat/placeholder-provider.ts",
       "lib/chat/provider.ts",
       "lib/chat/provider-factory.ts"
     ]

@@ -65,7 +65,7 @@ describe("POST /api/chat", () => {
     vi.restoreAllMocks();
   });
 
-  it("continues to serve POST requests through the configured provider boundary", async () => {
+  it("returns an error instead of a fallback response when the provider is not configured", async () => {
     delete process.env.N8N_CHAT_WEBHOOK_URL;
 
     const response = await POST(
@@ -77,13 +77,11 @@ describe("POST /api/chat", () => {
     );
     const body = await response.json();
 
-    expect(response.status).toBe(200);
+    expect(response.status).toBe(503);
     expect(body).toMatchObject({
-      status: "completed",
-      reply: {
-        role: "assistant",
-        content:
-          "Thanks. Could you share the event date, venue, rental duration, and the items or quantities you need?"
+      error: {
+        code: "PROVIDER_UNAVAILABLE",
+        message: "An error occurred while sending the chat message. Please try again."
       }
     });
   });
@@ -244,7 +242,7 @@ describe("POST /api/chat", () => {
     expect(response.status).toBe(503);
     expect(body.error.code).toBe("PROVIDER_UNAVAILABLE");
     expect(body.error.message).toBe(
-      "The assistant is temporarily unavailable. Please leave your contact details and the team will follow up."
+      "An error occurred while sending the chat message. Please try again."
     );
     expect(body.requestId).toEqual(expect.any(String));
     expect(serialized).not.toContain("example.invalid");

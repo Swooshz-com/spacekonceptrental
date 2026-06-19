@@ -1301,6 +1301,17 @@ select {
   max-width: 86%;
 }
 
+.chat-widget__error {
+  background: #fff4ee;
+  border: 1px solid #efc6aa;
+  border-radius: 8px;
+  color: #7b3418;
+  font-weight: 800;
+  line-height: 1.45;
+  margin: 0;
+  padding: 10px 12px;
+}
+
 .chat-widget__form {
   display: grid;
   gap: 10px;
