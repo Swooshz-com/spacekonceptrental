@@ -1,20 +1,7 @@
 import type { Metadata } from "next";
-import { Inter, Montserrat } from "next/font/google";
 import Link from "next/link";
 import ChatWidget from "../components/ChatWidget";
 import "./globals.css";
-
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
-  display: "swap"
-});
-
-const montserrat = Montserrat({
-  subsets: ["latin"],
-  variable: "--font-montserrat",
-  display: "swap"
-});
 
 export const metadata: Metadata = {
   title: "Space Koncept Rentals | Event furniture rental",
@@ -49,7 +36,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en-SG" className={`${inter.variable} ${montserrat.variable}`}>
+    <html lang="en-SG">
       <body>
         <div className="site-shell">
           <SiteHeader />
