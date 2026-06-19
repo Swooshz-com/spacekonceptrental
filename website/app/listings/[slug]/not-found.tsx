@@ -10,6 +10,10 @@ export default function ListingNotFound() {
           This rental listing is not available publicly right now. Browse
           current listings or send a general enquiry with the rental details you have in mind.
         </p>
+        <p>
+          Use current listings or categories to keep browsing public rental
+          options, then send a quote request when your event details are ready.
+        </p>
       </div>
       <div className="hero__actions">
         <Link className="button button--secondary" href="/listings">

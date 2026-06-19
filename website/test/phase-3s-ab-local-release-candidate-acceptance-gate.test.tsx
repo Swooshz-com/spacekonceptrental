@@ -285,7 +285,7 @@ describe("Phase 3S-A/B local release-candidate acceptance gate", () => {
     render(<CataloguePageContent catalogue={emptyCatalogue} />);
     expect(screen.getByRole("link", { name: /browse categories/i })).toHaveAttribute("href", "/categories");
     expect(screen.getByRole("link", { name: /browse event setup guidance/i })).toHaveAttribute("href", "/events");
-    expect(screen.getByRole("link", { name: /send an enquiry/i })).toHaveAttribute("href", "/quote");
+    expect(screen.getByRole("link", { name: /start a general quote request/i })).toHaveAttribute("href", "/quote");
 
     cleanup();
     render(<CategoriesPageContent catalogue={catalogue} />);

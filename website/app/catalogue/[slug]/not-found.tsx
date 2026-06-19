@@ -10,6 +10,10 @@ export default function CatalogueListingNotFound() {
           This rental listing is not available publicly right now. Browse the
           catalogue or send a general enquiry with the rental details you have in mind.
         </p>
+        <p>
+          Use the catalogue or listings to keep browsing public rental options,
+          then send a quote request when you have enough event details to share.
+        </p>
       </div>
       <div className="hero__actions">
         <Link className="button button--secondary" href="/catalogue">

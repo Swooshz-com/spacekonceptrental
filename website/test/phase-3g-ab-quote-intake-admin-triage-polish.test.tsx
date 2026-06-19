@@ -266,7 +266,7 @@ describe("Phase 3G-A/B quote intake quality, admin triage depth, and enquiry wor
       screen.getByRole("heading", { name: /general rental enquiry/i })
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/selected listing could not be loaded/i)
+      screen.getByText(/the listing link may be old or unavailable/i)
     ).toBeInTheDocument();
     expect(screen.getByLabelText(/requested listings or items/i)).toHaveValue("");
   });

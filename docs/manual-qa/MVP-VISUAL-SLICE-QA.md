@@ -1,7 +1,19 @@
 # MVP Visual Slice Manual QA
 
 Use this checklist for the visible public catalogue -> enquiry -> protected
-admin triage flow. It is a local/preview QA path, not a launch sign-off.
+admin triage flow. This checklist is for final MVP acceptance, not launch governance or provider readiness.
+
+## Final Visible-MVP Acceptance
+
+1. Confirm the homepage -> catalogue path makes the furniture/event rental catalogue understandable before a visitor asks for help.
+2. Confirm catalogue -> listing detail -> quote request preserves selected listing context where the public listing is available.
+3. Confirm quote validation and failed-submit recovery explain that the quote request was not sent, keep entered details where possible, and invite the visitor to review details and try again.
+4. Confirm quote success/receipt copy explains manual follow-up and does not imply an instant rental confirmation.
+5. Confirm chat unavailable/error behavior shows an error message and does not show a fake/canned assistant response.
+6. Confirm protected admin quote triage shows the submitted quote request context, missing-information cues, manual next actions, and protected status update controls.
+7. Confirm protected admin listing/media management still focuses on public-ready listing details and public image metadata using existing admin paths.
+8. Confirm fallback and empty states for homepage listings, catalogue filters, listing unavailable pages, no public image, quote selected-listing context, failed submit, and protected admin unavailable states provide useful next steps.
+9. Run a basic mobile smoke pass across homepage, catalogue cards, listing detail media, quote form, quote receipt, admin quote inbox, and admin listing/media management.
 
 ## Public Visitor Flow
 

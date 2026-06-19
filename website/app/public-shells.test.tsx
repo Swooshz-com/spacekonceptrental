@@ -8,19 +8,22 @@ import type {
 } from "../lib/catalogue/types";
 import {
   CataloguePageContent,
-  default as CataloguePage
+  default as CataloguePage,
+  metadata as catalogueMetadata
 } from "./catalogue/page";
 import {
+  generateMetadata as generateCatalogueListingMetadata,
   ProductPageContent,
   default as ProductPage
 } from "./catalogue/[slug]/page";
 import CatalogueListingNotFound from "./catalogue/[slug]/not-found";
 import EventsPage from "./events/page";
 import ListingNotFound from "./listings/[slug]/not-found";
+import { generateMetadata as generatePublicListingMetadata } from "./listings/[slug]/page";
 import ListingsPage from "./listings/page";
-import { metadata } from "./layout";
-import HomePage from "./page";
-import QuotePage from "./quote/page";
+import { metadata as rootMetadata } from "./layout";
+import HomePage, { metadata as homeMetadata } from "./page";
+import QuotePage, { metadata as quoteMetadata } from "./quote/page";
 
 vi.mock("next/image", () => ({
   default: ({ alt, src }: { alt: string; src: string | { src: string } }) => (
@@ -188,8 +191,48 @@ describe("public page shells", () => {
         /cart|checkout|payment|customer account|stock reservation|order fulfilment|online ordering|confirmed order/i
       )
     ).not.toBeInTheDocument();
-    expect(metadata.description).toMatch(/event furniture rental catalogue/i);
-    expect(metadata.description).not.toMatch(/shell|mvp|checkout|payment|online ordering/i);
+    expect(rootMetadata.description).toMatch(/event furniture rental catalogue/i);
+    expect(rootMetadata.description).not.toMatch(/shell|mvp|checkout|payment|online ordering/i);
+  });
+
+  it("defines truthful public metadata for catalogue browsing and quote enquiries", async () => {
+    const listingMetadata = await generateCatalogueListingMetadata({
+      params: Promise.resolve({ slug: "lounge-sofa-package" })
+    });
+    const fallbackListingMetadata = await generateCatalogueListingMetadata({
+      params: Promise.resolve({ slug: "missing-listing" })
+    });
+    const publicListingMetadata = await generatePublicListingMetadata({
+      params: Promise.resolve({ slug: "lounge-sofa-package" })
+    });
+    const metadataPayload = JSON.stringify({
+      homeMetadata,
+      catalogueMetadata,
+      listingMetadata,
+      fallbackListingMetadata,
+      publicListingMetadata,
+      quoteMetadata
+    });
+
+    expect(homeMetadata.description).toMatch(/manual follow-up/i);
+    expect(homeMetadata.openGraph?.title).toMatch(/event furniture rental catalogue/i);
+    expect(homeMetadata.openGraph?.description).toMatch(/quote request/i);
+    expect(catalogueMetadata.openGraph?.url).toBe("/catalogue");
+    expect(catalogueMetadata.openGraph?.description).toMatch(
+      /public rental listings/i
+    );
+    expect(listingMetadata.openGraph?.title).toMatch(/lounge sofa package/i);
+    expect(listingMetadata.openGraph?.description).toMatch(/quote request/i);
+    expect(fallbackListingMetadata.openGraph?.description).toMatch(
+      /event furniture rental/i
+    );
+    expect(publicListingMetadata.openGraph?.title).toMatch(/rental listing/i);
+    expect(publicListingMetadata.openGraph?.description).toMatch(/quote request/i);
+    expect(quoteMetadata.openGraph?.title).toMatch(/quote request/i);
+    expect(quoteMetadata.openGraph?.description).toMatch(/manual follow-up/i);
+    expect(metadataPayload).not.toMatch(
+      /cart|checkout|payment|purchase|customer account|customer dashboard|booking|reservation|stock reservation|order fulfilment|online ordering|readiness|governance|phase/i
+    );
   });
 
   it("keeps the new public pages reachable from navigation and catalogue", async () => {
@@ -233,6 +276,15 @@ describe("public page shells", () => {
       })
     ).toBeInTheDocument();
     expect(screen.getByText(/no public rental listings are available right now/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/clear filters, review current rental listings, or send a general quote request/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: /review current rental listings/i })
+    ).toHaveAttribute("href", "/listings");
+    expect(
+      screen.getByRole("link", { name: /start a general quote request/i })
+    ).toHaveAttribute("href", "/quote");
   });
 
   it("renders safe rental listing not-found states", () => {
@@ -244,6 +296,9 @@ describe("public page shells", () => {
     expect(
       screen.getByRole("link", { name: /view catalogue/i })
     ).toHaveAttribute("href", "/catalogue");
+    expect(
+      screen.getByText(/Use the catalogue or listings to keep browsing public rental options/i)
+    ).toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: /send an enquiry/i })
     ).toHaveAttribute("href", "/quote");
@@ -260,6 +315,9 @@ describe("public page shells", () => {
     expect(
       screen.getAllByRole("link", { name: /browse listings/i })[0]
     ).toHaveAttribute("href", "/listings");
+    expect(
+      screen.getByText(/Use current listings or categories to keep browsing public rental options/i)
+    ).toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: /send an enquiry/i })
     ).toHaveAttribute("href", "/quote");
@@ -467,15 +525,59 @@ describe("public page shells", () => {
       "Browse catalogue/listing cards",
       "Submit a quote/enquiry request",
       "Confirm the success receipt",
+      "Confirm chat unavailable/error behavior shows an error message and does not show a fake/canned assistant response",
       "Open protected admin quote requests",
       "Confirm the main quote card shows source context and a manual follow-up checklist",
       "Confirm the main quote card does not show old CRM handoff placeholder, provider, contact ID, deal ID, or per-enquiry queue-prep controls",
       "Update internal triage status",
+      "Run a basic mobile smoke pass across homepage, catalogue cards, listing detail media, quote form, quote receipt, admin quote inbox, and admin listing/media management",
+      "This checklist is for final MVP acceptance, not launch governance or provider readiness",
       "Confirm no cart, checkout, payment, order, booking, reservation, customer account, or provider-sync flow appears"
     ]) {
       expect(manualQaSource).toContain(requiredStep);
     }
     expect(manualQaSource).toContain("Supabase-backed quote persistence");
     expect(manualQaSource).not.toMatch(/owner-review|governance ladder|HubSpot sync/i);
+  });
+
+  it("keeps responsive smoke CSS safeguards for compact MVP screens", () => {
+    const styles = readFileSync(resolve(process.cwd(), "app/globals.css"), "utf8");
+
+    expect(styles).toMatch(/overflow-wrap:\s*anywhere/i);
+    expect(styles).toMatch(
+      /@media\s*\(max-width:\s*560px\)[\s\S]*\.hero__actions[\s\S]*grid-template-columns:\s*1fr/i
+    );
+    expect(styles).toMatch(
+      /@media\s*\(max-width:\s*560px\)[\s\S]*\.button[\s\S]*width:\s*100%/i
+    );
+    expect(styles).toMatch(
+      /@media\s*\(max-width:\s*560px\)[\s\S]*\.chat-widget[\s\S]*max-height:\s*calc\(100vh - 24px\)/i
+    );
+  });
+
+  it("keeps the chatbot fallback response removed from source and manual QA", () => {
+    const chatWidgetSource = readFileSync(
+      resolve(process.cwd(), "components/ChatWidget.tsx"),
+      "utf8"
+    );
+    const chatRouteSource = readFileSync(
+      resolve(process.cwd(), "app/api/chat/route.ts"),
+      "utf8"
+    );
+    const manualQaSource = readFileSync(
+      resolve(process.cwd(), "../docs/manual-qa/MVP-VISUAL-SLICE-QA.md"),
+      "utf8"
+    );
+
+    expect(chatWidgetSource).toContain(
+      "An error occurred while sending the chat message. Please try again."
+    );
+    expect(chatWidgetSource).not.toMatch(
+      /Please leave your contact details|placeholder chatbot|fallback response/i
+    );
+    expect(chatRouteSource).not.toMatch(
+      /PlaceholderChatProvider|Please leave your contact details|fake assistant|canned assistant/i
+    );
+    expect(manualQaSource).toContain("chat unavailable/error behavior");
   });
 });

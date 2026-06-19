@@ -207,10 +207,10 @@ describe("public catalogue image rendering", () => {
       screen.getByRole("heading", { name: /no matching public listings/i })
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/browse all listings, browse categories, explore event-use guidance/i)
+      screen.getByText(/clear filters, review current rental listings, browse categories/i)
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("link", { name: /send an enquiry/i })
+      screen.getByRole("link", { name: /start a general quote request/i })
     ).toHaveAttribute("href", "/quote");
     expect(document.body.textContent).not.toMatch(
       /cart|checkout|order|payment|purchase|booking|reservation|customer account|dashboard/i

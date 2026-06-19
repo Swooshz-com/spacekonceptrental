@@ -13,7 +13,15 @@ import type { PublicCatalogueProduct } from "../lib/catalogue/types";
 export const metadata: Metadata = {
   title: "Event furniture rental catalogue | Space Koncept Rentals",
   description:
-    "Browse listings for furniture and event rental enquiries before sending a public quote enquiry to Space Koncept Rentals."
+    "Browse listings for event furniture rental and send a quote request for manual follow-up with Space Koncept Rentals.",
+  openGraph: {
+    title: "Event furniture rental catalogue | Space Koncept Rentals",
+    description:
+      "Browse public rental listings, compare event furniture, and send a quote request for manual follow-up.",
+    siteName: "Space Koncept Rentals",
+    type: "website",
+    url: "/"
+  }
 };
 
 const eventUseCases = [

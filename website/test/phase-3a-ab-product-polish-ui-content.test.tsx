@@ -203,9 +203,9 @@ describe("Phase 3A-A/B product polish and rental UI copy", () => {
       />
     );
 
-    expect(screen.getAllByText(/send an enquiry/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/general quote request/i).length).toBeGreaterThan(0);
     expect(
-      screen.getByRole("link", { name: /send an enquiry/i })
+      screen.getByRole("link", { name: /start a general quote request/i })
     ).toHaveAttribute("href", "/quote");
   });
 

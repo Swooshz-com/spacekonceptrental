@@ -286,7 +286,7 @@ describe("Phase 3V-A/B quote enquiry workflow hardening", () => {
     expect(screen.getByLabelText(/preferred contact method/i)).toBeInTheDocument();
     expect(readRepoFile("website/components/QuoteRequestForm.tsx")).toContain("Enquiry received");
     expect(screen.getAllByText(/share more details/i).length).toBeGreaterThan(0);
-    expect(screen.getByText(/selected listing could not be loaded/i)).toBeInTheDocument();
+    expect(screen.getByText(/the listing link may be old or unavailable/i)).toBeInTheDocument();
 
     const quotePageSource = readRepoFile("website/app/quote/page.tsx");
     const formSource = readRepoFile("website/components/QuoteRequestForm.tsx");
