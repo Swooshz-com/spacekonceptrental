@@ -274,9 +274,11 @@ describe("Phase 3C-A/B public catalogue discovery and quote funnel polish", () =
     );
 
     expect(screen.getAllByText(/selected listing/i).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/requested item/i).length).toBeGreaterThan(0);
     expect(
-      screen.getByText(/lounge sofa package starts this rental request/i)
+      screen.getAllByText(/selected listing reference/i).length
+    ).toBeGreaterThan(0);
+    expect(
+      screen.getByText(/listing reference: lounge-sofa-package starts this rental request/i)
     ).toBeInTheDocument();
     expect(
       screen.getByText(/event date helps the team understand timing/i)

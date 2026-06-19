@@ -92,7 +92,7 @@ describe("Phase 1O-A deployment environment readiness", () => {
     expect(doc).toContain("server-only Supabase");
     expect(doc).toContain("temporary server-side n8n provider");
     expect(doc).toContain("catalogue_public_workspace_config");
-    expect(doc).toContain("safe fallback to shell catalogue data");
+    expect(doc).toContain("empty recovery states instead of sample listings");
     expect(doc).toContain("Quote route fails safely");
     expect(doc).toContain("Chat route fails safely");
     expect(doc).toContain("Future deployment preflight checklist");

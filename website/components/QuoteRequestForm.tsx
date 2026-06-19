@@ -8,6 +8,7 @@ type QuoteApiResponse = {
   requestId?: string;
   error?: {
     message: string;
+    reference?: string;
   };
 };
 
@@ -113,6 +114,13 @@ function getSafeListingSlug(listingSlug: string | undefined) {
   return normalized && listingSlugPattern.test(normalized)
     ? normalized
     : undefined;
+}
+
+function formatQuoteSubmitError(reference: string | undefined) {
+  const message =
+    "Your quote request was not sent. Review your details and try again; your entered details should still be here, including any selected listing context.";
+
+  return reference ? `${message} Support reference: ${reference}.` : message;
 }
 
 export default function QuoteRequestForm({
@@ -235,6 +243,8 @@ export default function QuoteRequestForm({
     setFieldErrors({});
     setSubmitState({ status: "submitting" });
 
+    let failedSubmitReference: string | undefined;
+
     try {
       const response = await fetch("/api/quote", {
         method: "POST",
@@ -244,6 +254,7 @@ export default function QuoteRequestForm({
       const body = (await response.json()) as QuoteApiResponse;
 
       if (!response.ok) {
+        failedSubmitReference = body.error?.reference ?? body.requestId;
         throw new Error(body.error?.message ?? "Quote request failed");
       }
 
@@ -255,8 +266,7 @@ export default function QuoteRequestForm({
     } catch {
       setSubmitState({
         status: "error",
-        message:
-          "Your quote request was not sent. Review your details and try again; your entered details should still be here, including any selected listing context."
+        message: formatQuoteSubmitError(failedSubmitReference)
       });
     }
   }
@@ -454,6 +464,12 @@ export default function QuoteRequestForm({
           ? "Sending quote request..."
           : "Review and send an enquiry"}
       </button>
+      <p className="quote-form__legal">
+        By sending an enquiry, review the{" "}
+        <a href="/privacy">Privacy Policy</a> and{" "}
+        <a href="/terms">Terms of Use</a>. The team uses your details for
+        manual follow-up.
+      </p>
       {submitState.status === "success" ? (
         <section
           aria-label="Quote enquiry receipt"

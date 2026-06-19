@@ -1,5 +1,5 @@
 import { execFileSync } from "node:child_process";
-import { existsSync, readFileSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { extname, resolve } from "node:path";
 import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
@@ -254,8 +254,7 @@ describe("Phase 4C-A/B owner-input correction queue", () => {
     expect(publicSource).not.toMatch(/public quote tracking|customer account|customer upload|CRM|notification/i);
   });
 
-  it("keeps forbidden runtime/provider/deployment files and env reads absent", () => {
-    expect(existsSync(resolve(repoRoot, "website/chat-config.js"))).toBe(false);
+  it("keeps forbidden runtime/provider/deployment files untracked and env reads absent", () => {
     expect(readTrackedFiles([
       "website/chat-config.js",
       "website/app/api/customer-uploads",

@@ -56,8 +56,14 @@ export default function RootLayout({
           <main className="site-main">{children}</main>
           <ChatWidget />
           <footer className="site-footer">
-            <p>SpaceKonceptRental</p>
-            <p>Singapore event furniture rental</p>
+            <div>
+              <p>SpaceKonceptRental</p>
+              <p>Singapore event furniture rental</p>
+            </div>
+            <nav aria-label="Legal links" className="site-footer__links">
+              <Link href="/privacy">Privacy Policy</Link>
+              <Link href="/terms">Terms of Use</Link>
+            </nav>
           </footer>
         </div>
       </body>

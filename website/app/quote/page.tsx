@@ -61,15 +61,18 @@ function buildInitialItemsText({
   category,
   event,
   product,
+  requestedSlug,
   search
 }: {
   category?: string;
   event?: string;
   product: PublicCatalogueProduct | null;
+  requestedSlug?: string;
   search?: string;
 }) {
   const context = [
-    product?.name,
+    product?.name ??
+      (requestedSlug ? `Listing reference: ${requestedSlug}` : undefined),
     category ? `Category interest: ${category}` : undefined,
     event ? `Event-use interest: ${event}` : undefined,
     search ? `Search interest: ${search}` : undefined
@@ -172,10 +175,20 @@ function QuoteGeneralContext({
   requestedSlug?: string;
   search?: string;
 }) {
+  const hasSelectedListingReference = Boolean(requestedSlug);
+
   return (
     <article className="route-card quote-context">
-      <p className="eyebrow">Listing context</p>
-      <h2>General rental enquiry</h2>
+      <p className="eyebrow">
+        {hasSelectedListingReference
+          ? "Selected listing reference"
+          : "Listing context"}
+      </p>
+      <h2>
+        {hasSelectedListingReference
+          ? "Selected listing unavailable"
+          : "General rental enquiry"}
+      </h2>
       {requestedSlug ? (
         <p>
           The listing link may be old or unavailable. Review current rental
@@ -188,8 +201,14 @@ function QuoteGeneralContext({
           event setup you have in mind so the team can follow up.
         </p>
       )}
-      {category || event || search ? (
+      {requestedSlug || category || event || search ? (
         <dl className="quote-context__details">
+          {requestedSlug ? (
+            <div>
+              <dt>Selected listing reference</dt>
+              <dd>{requestedSlug}</dd>
+            </div>
+          ) : null}
           {category ? (
             <div>
               <dt>Category interest</dt>
@@ -293,6 +312,7 @@ export default async function QuotePage({
     category: listingContext.category,
     event: listingContext.event,
     product: selectedListing,
+    requestedSlug: listingContext.requestedSlug,
     search: listingContext.search
   });
 

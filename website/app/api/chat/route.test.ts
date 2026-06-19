@@ -226,6 +226,7 @@ describe("POST /api/chat", () => {
   });
 
   it("normalizes provider errors without exposing internals", async () => {
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
     const provider: ChatProvider = {
       sendMessage: async () => {
         throw new ChatProviderError(
@@ -245,8 +246,25 @@ describe("POST /api/chat", () => {
       "An error occurred while sending the chat message. Please try again."
     );
     expect(body.requestId).toEqual(expect.any(String));
+    expect(body.error.reference).toBe(body.requestId);
+    expect(errorSpy).toHaveBeenCalledWith(
+      "application_error",
+      expect.objectContaining({
+        category: "PROVIDER_UNAVAILABLE",
+        errorReference: body.requestId,
+        method: "POST",
+        path: "/api/chat",
+        route: "POST /api/chat",
+        statusCode: 503,
+        timestamp: expect.any(String)
+      })
+    );
+    const serializedLog = JSON.stringify(errorSpy.mock.calls);
     expect(serialized).not.toContain("example.invalid");
     expect(serialized).not.toContain("upstream failed");
+    expect(serializedLog).not.toContain("example.invalid");
+    expect(serializedLog).not.toContain("upstream failed");
+    expect(serializedLog).not.toContain("I need 20 stools");
   });
 
   it("rejects oversized request bodies before calling a provider", async () => {

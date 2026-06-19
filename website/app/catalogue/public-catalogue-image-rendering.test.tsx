@@ -243,12 +243,12 @@ describe("public catalogue image rendering", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("generates safe listing metadata from public catalogue data", async () => {
+  it("generates safe generic listing metadata when public catalogue data is unavailable", async () => {
     const metadata = await generateMetadata({
       params: Promise.resolve({ slug: "lounge-sofa-package" })
     });
 
-    expect(metadata.title).toMatch(/lounge sofa package/i);
+    expect(metadata.title).toMatch(/furniture listing/i);
     expect(metadata.description).toMatch(/event furniture rental/i);
     expect(JSON.stringify(metadata)).not.toMatch(
       /workspace|storagePath|storage\/v1|admin|draft|checkout|payment/i

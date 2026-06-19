@@ -38,7 +38,7 @@ function createMockSupabase(
 }
 
 describe("public catalogue repository", () => {
-  it("falls back safely when Supabase server env is missing", async () => {
+  it("returns an empty recovery catalogue when Supabase server env is missing", async () => {
     const supabase = {
       configured: false as const,
       client: null,
@@ -54,13 +54,9 @@ describe("public catalogue repository", () => {
     });
 
     expect(catalogue.source).toBe("fallback");
-    expect(catalogue.products).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ slug: "lounge-sofa-package" })
-      ])
-    );
-    expect(product?.source).toBe("fallback");
-    expect(product?.slug).toBe("lounge-sofa-package");
+    expect(catalogue.categories).toEqual([]);
+    expect(catalogue.products).toEqual([]);
+    expect(product).toBeNull();
   });
 
   it("falls back safely without querying when the catalogue workspace is missing", async () => {
@@ -215,7 +211,7 @@ describe("public catalogue repository", () => {
     expect(serializedCatalogue).not.toContain("sample-fixtures/draft");
   });
 
-  it("returns fallback data when the trusted active-workspace surface is unavailable", async () => {
+  it("returns an empty recovery catalogue when the trusted active-workspace surface is unavailable", async () => {
     const { calls, supabase } = createMockSupabase({
       get_public_catalogue: {
         data: null,
@@ -238,11 +234,8 @@ describe("public catalogue repository", () => {
       }
     ]);
     expect(catalogue.source).toBe("fallback");
-    expect(catalogue.products).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ slug: "lounge-sofa-package" })
-      ])
-    );
+    expect(catalogue.categories).toEqual([]);
+    expect(catalogue.products).toEqual([]);
   });
 
   it("requests product details by slug through the trusted active-workspace read surface", async () => {

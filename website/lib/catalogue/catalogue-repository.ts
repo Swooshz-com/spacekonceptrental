@@ -83,82 +83,10 @@ type CatalogueRpcPayload = {
   products?: unknown;
 };
 
-const fallbackCategories: PublicCatalogueCategory[] = [
-  {
-    id: "fallback-seating",
-    slug: "seating",
-    name: "Seating",
-    description: "Clean seating options for conferences, dinners, and launches.",
-    sortOrder: 10
-  },
-  {
-    id: "fallback-lounge",
-    slug: "lounge",
-    name: "Lounge",
-    description: "Soft seating for receptions, VIP areas, and activations.",
-    sortOrder: 20
-  },
-  {
-    id: "fallback-event-sets",
-    slug: "event-sets",
-    name: "Event Sets",
-    description: "Prepared event looks that can be translated into quote items.",
-    sortOrder: 30
-  }
-];
-
-const fallbackProducts: PublicCatalogueProduct[] = [
-  {
-    id: "fallback-chair",
-    slug: "dining-and-seminar-chairs",
-    name: "Dining and seminar chairs",
-    shortDescription:
-      "Clean seating options for conferences, dinners, and launches.",
-    description:
-      "Clean seating options for conferences, dinners, and launches.",
-    rentalUnit: "item",
-    sortOrder: 10,
-    categoryId: "fallback-seating",
-    categoryName: "Seating",
-    images: [],
-    source: "fallback"
-  },
-  {
-    id: "fallback-lounge-sofa-package",
-    slug: "lounge-sofa-package",
-    name: "Lounge sofa package",
-    shortDescription:
-      "Soft seating for receptions, VIP areas, and brand activations.",
-    description:
-      "Sample lounge package for receptions, launches, and VIP holding areas.",
-    rentalUnit: "set",
-    sortOrder: 20,
-    categoryId: "fallback-lounge",
-    categoryName: "Lounge",
-    images: [],
-    source: "fallback"
-  },
-  {
-    id: "fallback-corporate-event-sets",
-    slug: "corporate-event-sets",
-    name: "Corporate event sets",
-    shortDescription:
-      "Prepared event looks that can be translated into quote items.",
-    description:
-      "Prepared event looks that can be translated into quote items.",
-    rentalUnit: "set",
-    sortOrder: 30,
-    categoryId: "fallback-event-sets",
-    categoryName: "Event Sets",
-    images: [],
-    source: "fallback"
-  }
-];
-
 const fallbackCatalogue: PublicCatalogue = {
   source: "fallback",
-  categories: fallbackCategories,
-  products: fallbackProducts
+  categories: [],
+  products: []
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -367,8 +295,8 @@ export function getFallbackCatalogue(): PublicCatalogue {
   return fallbackCatalogue;
 }
 
-export function getFallbackProductBySlug(slug: string) {
-  return fallbackProducts.find((product) => product.slug === slug) ?? null;
+export function getFallbackProductBySlug(_slug: string) {
+  return null;
 }
 
 export async function getPublicCatalogue(
@@ -399,29 +327,25 @@ export async function getPublicProductBySlug(
   slug: string,
   options: PublicCatalogueRepositoryOptions = {}
 ): Promise<PublicCatalogueProduct | null> {
-  const fallbackProduct = getFallbackProductBySlug(slug);
   const supabase = getSupabase(options);
 
   if (!supabase.configured) {
-    return fallbackProduct;
+    return null;
   }
 
   const workspaceId = readCatalogueWorkspaceId(options);
 
   if (!workspaceId) {
-    return fallbackProduct;
+    return null;
   }
 
   const payload = await readCatalogueRpcPayload(supabase.client, workspaceId, slug);
 
   if (!payload) {
-    return fallbackProduct;
+    return null;
   }
 
   const catalogue = mapCataloguePayload(payload, options);
 
-  return (
-    catalogue.products.find((product) => product.slug === slug) ??
-    fallbackProduct
-  );
+  return catalogue.products.find((product) => product.slug === slug) ?? null;
 }

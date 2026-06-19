@@ -1,5 +1,6 @@
 import "server-only";
 
+import { logApplicationError } from "../../../lib/application-error-logging";
 import { getTrustedClientIpHeader as getConfiguredTrustedClientIpHeader } from "../../../lib/server-runtime-config";
 import { getChatProvider } from "../../../lib/chat/provider-factory";
 import {
@@ -330,16 +331,25 @@ function idempotencyConflictError(
   );
 }
 
-function providerError(error: unknown, requestId: string) {
+function providerError(error: unknown, requestId: string, request?: Request) {
   const code =
     error instanceof ChatProviderError ? error.code : "CHAT_ERROR";
   const status = code === "PROVIDER_TIMEOUT" ? 504 : 503;
+
+  logApplicationError({
+    category: code,
+    reference: requestId,
+    request,
+    route: "POST /api/chat",
+    statusCode: status
+  });
 
   return Response.json(
     {
       error: {
         code,
-        message: CHAT_ERROR_MESSAGE
+        message: CHAT_ERROR_MESSAGE,
+        reference: requestId
       },
       requestId
     },
@@ -666,7 +676,8 @@ export async function handleChatPost(
     if (!providerResponse) {
       return providerError(
         new Error("Missing idempotent chat response."),
-        requestId
+        requestId,
+        request
       );
     }
 
@@ -694,7 +705,7 @@ export async function handleChatPost(
 
     return chatResponse(providerResponse, rateLimitMetadata);
   } catch (error) {
-    return providerError(error, requestId);
+    return providerError(error, requestId, request);
   }
 }
 
@@ -702,6 +713,6 @@ export async function POST(request: Request) {
   try {
     return await handleChatPost(request, getChatProvider());
   } catch (error) {
-    return providerError(error, createRequestId());
+    return providerError(error, createRequestId(), request);
   }
 }

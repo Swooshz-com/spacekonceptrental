@@ -67,8 +67,10 @@ describe("ChatWidget", () => {
         JSON.stringify({
           error: {
             code: "PROVIDER_UNAVAILABLE",
+            reference: "chat-error-ref-123",
             message: "An error occurred while sending the chat message."
-          }
+          },
+          requestId: "chat-error-ref-123"
         }),
         {
           headers: { "content-type": "application/json" },
@@ -90,12 +92,25 @@ describe("ChatWidget", () => {
 
     expect(alert).toHaveTextContent(/an error occurred while sending the chat message/i);
     expect(alert).toHaveTextContent(/please try again/i);
+    expect(alert).toHaveTextContent(/support reference: chat-error-ref-123/i);
     expect(
       screen.queryByText(/please leave your contact details and the team will follow up/i)
     ).not.toBeInTheDocument();
     expect(
       screen.queryByText(/could you share your event date and venue/i)
     ).not.toBeInTheDocument();
+  });
+
+  it("shows legal links near chat guidance without exposing provider details", () => {
+    render(<ChatWidget />);
+
+    expect(
+      screen.getByRole("link", { name: /Privacy Policy/i })
+    ).toHaveAttribute("href", "/privacy");
+    expect(
+      screen.getByRole("link", { name: /Terms of Use/i })
+    ).toHaveAttribute("href", "/terms");
+    expect(document.body.textContent).not.toMatch(/n8n|webhook|provider url/i);
   });
 
   it("does not render server-only webhook configuration into the client", () => {

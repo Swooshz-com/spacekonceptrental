@@ -13,17 +13,17 @@ import {
 } from "./catalogue/page";
 import {
   generateMetadata as generateCatalogueListingMetadata,
-  ProductPageContent,
-  default as ProductPage
+  ProductPageContent
 } from "./catalogue/[slug]/page";
 import CatalogueListingNotFound from "./catalogue/[slug]/not-found";
 import EventsPage from "./events/page";
 import ListingNotFound from "./listings/[slug]/not-found";
 import { generateMetadata as generatePublicListingMetadata } from "./listings/[slug]/page";
-import ListingsPage from "./listings/page";
 import { metadata as rootMetadata } from "./layout";
 import HomePage, { metadata as homeMetadata } from "./page";
+import PrivacyPage, { metadata as privacyMetadata } from "./privacy/page";
 import QuotePage, { metadata as quoteMetadata } from "./quote/page";
+import TermsPage, { metadata as termsMetadata } from "./terms/page";
 
 vi.mock("next/image", () => ({
   default: ({ alt, src }: { alt: string; src: string | { src: string } }) => (
@@ -36,23 +36,26 @@ describe("public page shells", () => {
     cleanup();
   });
 
-  it("renders the static product detail copy when Supabase env is missing", async () => {
-    render(await ProductPage());
+  it("renders honest catalogue recovery when Supabase data is unavailable", async () => {
+    render(await CataloguePage());
 
     expect(
-      screen.getByRole("heading", { name: /lounge sofa package/i })
-    ).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: /rental details/i })).toBeInTheDocument();
-    expect(screen.getByText(/view rental listing/i)).toBeInTheDocument();
-    expect(
-      screen.getByText(/this listing carries into the enquiry form/i)
+      screen.getByRole("heading", {
+        name: /furniture catalogue for event rentals/i
+      })
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("link", { name: /back to catalogue/i })
-    ).toHaveAttribute("href", "/catalogue");
+      screen.getByText(/no public rental listings are available right now/i)
+    ).toBeInTheDocument();
     expect(
-      screen.getByRole("link", { name: /request a quote/i })
-    ).toHaveAttribute("href", "/quote?listing=lounge-sofa-package");
+      screen.getByRole("link", { name: /review current rental listings/i })
+    ).toHaveAttribute("href", "/listings");
+    expect(
+      screen.getByRole("link", { name: /start a general quote request/i })
+    ).toHaveAttribute("href", "/quote");
+    expect(
+      screen.queryByRole("heading", { name: /lounge sofa package/i })
+    ).not.toBeInTheDocument();
   });
 
   it("renders a conversion-focused rental homepage with quote and listing CTAs", async () => {
@@ -141,13 +144,14 @@ describe("public page shells", () => {
       screen.getByRole("heading", { name: /featured rental listings/i })
     ).toBeInTheDocument();
     expect(
-      screen.getByAltText(/lounge sofa package furniture rental setup/i)
+      screen.getByText(/no public rental listings are available right now/i)
     ).toBeInTheDocument();
     expect(
-      screen
-        .getAllByRole("link", { name: /view rental listing/i })
-        .map((link) => link.getAttribute("href"))
-    ).toContain("/listings/lounge-sofa-package");
+      screen.getByRole("link", { name: /send an enquiry/i })
+    ).toHaveAttribute("href", "/quote");
+    expect(
+      screen.queryByAltText(/lounge sofa package furniture rental setup/i)
+    ).not.toBeInTheDocument();
     expect(
       screen.queryByText(
         /cart|checkout|payment|customer account|stock reservation|order fulfilment|online ordering/i
@@ -195,6 +199,44 @@ describe("public page shells", () => {
     expect(rootMetadata.description).not.toMatch(/shell|mvp|checkout|payment|online ordering/i);
   });
 
+  it("renders practical public Privacy Policy and Terms of Use pages", () => {
+    const layoutSource = readFileSync(resolve(process.cwd(), "app/layout.tsx"), "utf8");
+
+    expect(layoutSource).toContain('href="/privacy"');
+    expect(layoutSource).toContain('href="/terms"');
+    expect(privacyMetadata.title).toMatch(/Privacy Policy/i);
+    expect(termsMetadata.title).toMatch(/Terms of Use/i);
+
+    render(<PrivacyPage />);
+
+    expect(
+      screen.getByRole("heading", { name: /Privacy Policy/i })
+    ).toBeInTheDocument();
+    expect(screen.getByText(/manual follow-up/i)).toBeInTheDocument();
+    expect(screen.getByText(/configured chat provider/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: /Terms of Use/i })
+    ).toHaveAttribute("href", "/terms");
+    expect(document.body.textContent).not.toMatch(
+      /cart|checkout|payment|purchase|booking|reservation|fulfilment|fulfillment|stock reservation|customer account|dashboard/i
+    );
+
+    cleanup();
+    render(<TermsPage />);
+
+    expect(
+      screen.getByRole("heading", { name: /Terms of Use/i })
+    ).toBeInTheDocument();
+    expect(screen.getByText(/manual follow-up/i)).toBeInTheDocument();
+    expect(screen.getByText(/does not finalise rental details online/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: /Privacy Policy/i })
+    ).toHaveAttribute("href", "/privacy");
+    expect(document.body.textContent).not.toMatch(
+      /cart|checkout|payment|purchase|booking|reservation|fulfilment|fulfillment|stock reservation|customer account|dashboard/i
+    );
+  });
+
   it("defines truthful public metadata for catalogue browsing and quote enquiries", async () => {
     const listingMetadata = await generateCatalogueListingMetadata({
       params: Promise.resolve({ slug: "lounge-sofa-package" })
@@ -221,8 +263,8 @@ describe("public page shells", () => {
     expect(catalogueMetadata.openGraph?.description).toMatch(
       /public rental listings/i
     );
-    expect(listingMetadata.openGraph?.title).toMatch(/lounge sofa package/i);
-    expect(listingMetadata.openGraph?.description).toMatch(/quote request/i);
+    expect(listingMetadata.openGraph?.title).toMatch(/furniture listing/i);
+    expect(listingMetadata.openGraph?.description).toMatch(/request an enquiry/i);
     expect(fallbackListingMetadata.openGraph?.description).toMatch(
       /event furniture rental/i
     );
@@ -239,8 +281,37 @@ describe("public page shells", () => {
     const layoutSource = readFileSync(resolve(process.cwd(), "app/layout.tsx"), "utf8");
 
     expect(layoutSource).toContain('href="/events"');
+    expect(layoutSource).toContain('href="/privacy"');
+    expect(layoutSource).toContain('href="/terms"');
 
-    render(await CataloguePage());
+    render(
+      <CataloguePageContent
+        catalogue={{
+          source: "supabase",
+          categories: [
+            {
+              id: "category-lounge",
+              slug: "lounge",
+              name: "Lounge",
+              sortOrder: 10
+            }
+          ],
+          products: [
+            {
+              id: "listing-lounge-sofa-package",
+              slug: "lounge-sofa-package",
+              name: "Lounge Sofa Package",
+              shortDescription: "Soft seating for receptions.",
+              rentalUnit: "set",
+              sortOrder: 10,
+              categoryId: "category-lounge",
+              categoryName: "Lounge",
+              source: "supabase"
+            }
+          ]
+        }}
+      />
+    );
 
     expect(
       screen.queryByRole("link", { name: /view rental listing shell/i })
@@ -384,9 +455,27 @@ describe("public page shells", () => {
 
   it("renders listing search results with summary and reset affordances", async () => {
     render(
-      await ListingsPage({
-        searchParams: Promise.resolve({ search: "seminar" })
-      })
+      <CataloguePageContent
+        activeSearch="seminar"
+        catalogue={{
+          source: "supabase",
+          categories: [],
+          products: [
+            {
+              id: "listing-seminar-chair",
+              slug: "dining-and-seminar-chairs",
+              name: "Dining and seminar chairs",
+              shortDescription: "Clean seating for seminars.",
+              rentalUnit: "item",
+              sortOrder: 10,
+              source: "supabase"
+            }
+          ]
+        }}
+        detailBasePath="/listings"
+        listingBasePath="/listings"
+        title="Furniture rental listings"
+      />
     );
 
     expect(
@@ -465,7 +554,20 @@ describe("public page shells", () => {
     expect(catalogueSource).not.toMatch(/createBrowserClient|supabaseBrowserClient/i);
     expect(detailSource).not.toMatch(/createBrowserClient|supabaseBrowserClient/i);
 
-    render(await ProductPage());
+    render(
+      <ProductPageContent
+        product={{
+          id: "product-published",
+          slug: "modular-lounge-set",
+          name: "Modular Lounge Set",
+          shortDescription: "Published lounge set.",
+          description: "Published details for a lounge set.",
+          rentalUnit: "set",
+          sortOrder: 10,
+          source: "supabase"
+        }}
+      />
+    );
     expect(
       screen.queryByText(/shell/i)
     ).not.toBeInTheDocument();

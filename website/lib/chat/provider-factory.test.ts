@@ -113,6 +113,7 @@ describe("getChatProvider", () => {
 
   it("normalizes unknown provider errors through the chat route", async () => {
     process.env.CHAT_PROVIDER = "legacy-browser-n8n";
+    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
     const response = await POST(postJson(validPayload));
     const body = await response.json();
@@ -121,8 +122,21 @@ describe("getChatProvider", () => {
     expect(response.status).toBe(503);
     expect(body.error).toEqual({
       code: "PROVIDER_UNAVAILABLE",
-      message: "An error occurred while sending the chat message. Please try again."
+      message: "An error occurred while sending the chat message. Please try again.",
+      reference: body.requestId
     });
+    expect(body.error.reference).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+    );
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      "application_error",
+      expect.objectContaining({
+        category: "PROVIDER_UNAVAILABLE",
+        errorReference: body.requestId,
+        route: "POST /api/chat",
+        statusCode: 503
+      })
+    );
     expect(serialized).not.toContain("legacy-browser-n8n");
   });
 

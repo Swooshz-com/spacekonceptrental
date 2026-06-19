@@ -175,7 +175,7 @@ describe("Phase 3D-A/B sitewide public journey, trust content, and route polish"
       screen.getByText(/does not set aside furniture or finalise rental details/i)
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("link", { name: /browse categories/i })
+      screen.getAllByRole("link", { name: /browse categories/i })[0]
     ).toHaveAttribute("href", "/categories");
     expect(
       screen.getAllByRole("link", { name: /browse rental listings/i })[0]

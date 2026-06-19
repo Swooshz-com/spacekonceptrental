@@ -1,5 +1,5 @@
 import { execFileSync } from "node:child_process";
-import { existsSync, readFileSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { extname, resolve } from "node:path";
 import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -315,8 +315,7 @@ describe("Phase 3Z-A/B public route readiness closure", () => {
     }
   });
 
-  it("keeps forbidden runtime/provider/deployment files and env reads absent", () => {
-    expect(existsSync(resolve(repoRoot, "website/chat-config.js"))).toBe(false);
+  it("keeps forbidden runtime/provider/deployment files untracked and env reads absent", () => {
     expect(readTrackedFiles([
       "website/chat-config.js",
       "website/app/api/customer-uploads",

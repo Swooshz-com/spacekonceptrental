@@ -425,6 +425,7 @@ describe("POST /api/quote", () => {
   });
 
   it("fails safely when quote persistence is not configured", async () => {
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
     const repository = vi.fn(async () => ({
       ok: false as const,
       code: "SUPABASE_NOT_CONFIGURED" as const,
@@ -437,10 +438,28 @@ describe("POST /api/quote", () => {
 
     expect(response.status).toBe(503);
     expect(body.error.code).toBe("QUOTE_PERSISTENCE_UNAVAILABLE");
+    expect(body.error.reference).toBe(body.requestId);
+    expect(errorSpy).toHaveBeenCalledWith(
+      "application_error",
+      expect.objectContaining({
+        category: "QUOTE_PERSISTENCE_UNAVAILABLE",
+        errorReference: body.requestId,
+        method: "POST",
+        path: "/api/quote",
+        route: "POST /api/quote",
+        statusCode: 503,
+        timestamp: expect.any(String)
+      })
+    );
+    const serializedLog = JSON.stringify(errorSpy.mock.calls);
     expect(serialized).not.toContain("SUPABASE_URL");
     expect(serialized).not.toContain("SUPABASE_ANON_KEY");
     expect(serialized).not.toContain("Maya");
     expect(serialized).not.toContain("example.test");
+    expect(serializedLog).not.toContain("SUPABASE_URL");
+    expect(serializedLog).not.toContain("SUPABASE_ANON_KEY");
+    expect(serializedLog).not.toContain("Maya");
+    expect(serializedLog).not.toContain("example.test");
   });
 
   it("fails safely from the real route when Supabase server env is missing", async () => {

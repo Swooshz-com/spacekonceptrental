@@ -172,6 +172,8 @@ const internalRouteAllowlist = [
   /^\/listings\?event=[a-z0-9-]+&search=[a-z0-9-+]+$/,
   /^\/categories$/,
   /^\/events$/,
+  /^\/privacy$/,
+  /^\/terms$/,
   /^\/quote$/,
   /^\/quote\?listing=[a-z0-9-]+$/,
   /^\/quote\?(?:category|event|search)=[a-z0-9-+]+(?:&(?:category|event|search)=[a-z0-9-+]+)*$/,

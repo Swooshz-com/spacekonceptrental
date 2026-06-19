@@ -21,9 +21,11 @@ package work.
 
 The future target shape remains a Vercel-hosted `website/` Next.js app with
 server-only Supabase and a temporary server-side n8n provider behind
-first-party routes. Catalogue missing-env behaviour keeps safe fallback to shell catalogue data. Quote route fails safely, and Chat route fails safely,
-when required runtime configuration is absent. The future deployment preflight
-checklist now lives in the required pre-deployment review below. Future deployment preflight checklist coverage is preserved.
+first-party routes. Catalogue missing-env behaviour renders safe unavailable or
+empty recovery states instead of sample listings. Quote route fails safely, and
+Chat route fails safely, when required runtime configuration is absent. The
+future deployment preflight checklist now lives in the required pre-deployment
+review below. Future deployment preflight checklist coverage is preserved.
 
 The machine-readable companion contract is:
 
@@ -36,8 +38,9 @@ It does not contain values.
 
 The server runtime parser in `website/lib/server-runtime-config.ts` is the
 code-level contract for the existing server-only app settings. It normalizes
-missing or invalid values into safe unavailable/fallback behavior and exposes
-only public-safe issue names/reasons for local review.
+missing or invalid values into safe unavailable, empty-recovery, or
+provider-unavailable behaviour and exposes only public-safe issue names/reasons
+for local review.
 
 ## Public-safe client env
 
@@ -162,13 +165,13 @@ Service-role key prohibition in runtime paths remains active. never put service-
 
 ## Safe missing-env behaviour
 
-- Catalogue: uses safe fallback catalogue data when Supabase env,
-  `CATALOGUE_WORKSPACE_ID`, the RPC response, or the active workspace config
-  row is missing.
+- Catalogue: renders safe unavailable or empty recovery states when Supabase
+  env, `CATALOGUE_WORKSPACE_ID`, the RPC response, or the active workspace
+  config row is missing; sample listings must not be shown as real data.
 - Quote: returns a safe persistence-unavailable response when required
   persistence env is missing or persistence fails.
-- Chat: returns or delegates to safe fallback behaviour when provider or
-  webhook config is missing.
+- Chat: returns an explicit safe unavailable response when provider or webhook
+  config is missing.
 - Admin: protected admin paths fail closed or render generic unavailable states
   when admin auth, workspace, request-security, CSRF, Supabase, or RLS
   dependencies are missing.
