@@ -217,6 +217,15 @@ describe("Phase 3V-A/B quote enquiry workflow hardening", () => {
 
     const combinedOwnerDocs = normalizeWhitespace([ownerReview, manualQa, handoff].join("\n"));
     expect(combinedOwnerDocs).toContain(quoteWorkflowChecklistPath);
+    expect(normalizeWhitespace(manualQa)).toContain(
+      "Confirm required-field validation keeps entered rental details and selected listing context in the form."
+    );
+    expect(normalizeWhitespace(manualQa)).toContain(
+      "Confirm failed submit recovery says the quote request was not sent, asks the visitor to review details and try again, and keeps entered details where browser state allows."
+    );
+    expect(normalizeWhitespace(manualQa)).toContain(
+      "Confirm successful submit shows receipt-like manual follow-up copy and keeps requested listing/item context available for protected admin triage."
+    );
     expect(localValidator).toContain(quoteWorkflowChecklistPath);
     expect(previewValidator).toContain(quoteWorkflowChecklistPath);
   });
@@ -247,6 +256,14 @@ describe("Phase 3V-A/B quote enquiry workflow hardening", () => {
       "[OWNER INPUT REQUIRED]",
       "[LOCAL FOLLOW-UP]",
       "[DEPLOYMENT APPROVAL: NOT GRANTED]"
+    ]) {
+      expect(normalized).toContain(required);
+    }
+
+    for (const required of [
+      "Validation errors keep entered rental details and selected listing context available for review.",
+      "Failed submit recovery says the quote request was not sent, asks the visitor to review details and try again, and keeps entered details where browser state allows.",
+      "Successful submit keeps receipt copy manual-follow-up focused and preserves requested listing/item context for protected admin triage."
     ]) {
       expect(normalized).toContain(required);
     }

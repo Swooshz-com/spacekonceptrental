@@ -163,13 +163,17 @@ describe("Phase 2L-A/B release-candidate acceptance suite", () => {
     expect(quoteForm).toContain('fetch("/api/quote"');
     expect(quoteForm).toContain('status: "success"');
     expect(quoteForm).toContain(
-      "Quote requests are temporarily unavailable. Please try again later with the same event details."
+      "Your quote request was not sent. Review your details and try again; your entered details should still be here, including any selected listing context."
     );
+    expect(quoteForm).toContain("Sending quote request...");
     expect(quoteFormTest).toContain(
       "posts browser quote requests only to the first-party API route"
     );
     expect(quoteFormTest).toContain(
       "preserves a customer message when no item snapshots are provided"
+    );
+    expect(quoteFormTest).toContain(
+      "explains failed-submit recovery while preserving entered details and listing context"
     );
     expect(quoteFormTest).toContain("item-specific notes");
     expect(quoteFormTest).toContain("queryByRole(\"link\", { name: /track|status/i })");
