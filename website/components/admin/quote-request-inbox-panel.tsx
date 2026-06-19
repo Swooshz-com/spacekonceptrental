@@ -320,10 +320,10 @@ const uuidPattern =
 
 function statusLabel(value: string) {
   const labels: Record<string, string> = {
-    new: "New enquiry",
-    reviewing: "Reviewing",
-    follow_up_needed: "Follow-up needed",
-    quoted: "Quoted",
+    new: "New / received quote request",
+    reviewing: "Manual review in progress",
+    follow_up_needed: "Manual follow-up needed",
+    quoted: "Quoted locally",
     closed: "Closed locally",
     archived: "Archived locally"
   };
@@ -437,31 +437,31 @@ function quoteResponseReadinessChecklist(
 
 function quoteNextAction(quoteRequest: AdminQuoteRequestInboxQuoteRequest) {
   if (!hasContactMethod(quoteRequest)) {
-    return "Next action: capture a contact method before follow-up.";
+    return "Next action: review submitted details for a contact method before manual follow-up; keep the protected triage status unchanged if no contact path is available.";
   }
 
   if (!quoteRequest.eventDate || !quoteRequest.venue) {
-    return "Next action: confirm event date and venue before detailed quote work.";
+    return "Next action: confirm event/rental timing and venue/access details before manual quote preparation.";
   }
 
   if (quoteRequest.items.length === 0) {
-    return "Next action: clarify requested items or setup needs with the customer.";
+    return "Next action: confirm requested listing/item plus quantity or item notes before manual quote preparation.";
   }
 
   if (quoteRequest.status === "new") {
-    return "Next action: confirm event basics and move to reviewing when triage starts.";
+    return "Next action: confirm requested listing/item, quantity or item notes, event/rental timing, and venue/access details; contact the visitor manually; then update protected triage status after follow-up if the admin action changes.";
   }
 
   if (quoteRequest.status === "reviewing") {
-    return "Next action: prepare human follow-up and mark follow-up needed when admin review needs direct contact.";
+    return "Next action: continue manual review, contact the visitor manually if details need confirmation, and mark manual follow-up needed when direct contact is the next admin action.";
   }
 
   if (quoteRequest.status === "follow_up_needed") {
-    return "Next action: follow up directly outside this app; this status does not contact the visitor or start an external process.";
+    return "Next action: contact the visitor manually outside this app, then update protected triage status after follow-up if the admin action changes.";
   }
 
   if (quoteRequest.status === "quoted") {
-    return "Next action: keep reviewing admin-local context and close locally when no further internal action is needed.";
+    return "Next action: keep reviewing admin-local context and close locally when no further manual follow-up is needed.";
   }
 
   return "Next action: closed enquiry is retained for admin reference.";
@@ -527,10 +527,99 @@ function itemNotesSummary(quoteRequest: AdminQuoteRequestInboxQuoteRequest) {
     .join("; ");
 }
 
+function hasItemNotes(quoteRequest: AdminQuoteRequestInboxQuoteRequest) {
+  return quoteRequest.items.some((item) => item.notes?.trim());
+}
+
 function sourceContextSummary(quoteRequest: AdminQuoteRequestInboxQuoteRequest) {
   return [quoteRequest.sourcePagePath, quoteRequest.sourceListingSlug]
     .filter(Boolean)
     .join(" / ");
+}
+
+function hasListingSourceContext(
+  quoteRequest: AdminQuoteRequestInboxQuoteRequest
+) {
+  return Boolean(quoteRequest.sourcePagePath || quoteRequest.sourceListingSlug);
+}
+
+function missingInformationLabels(
+  quoteRequest: AdminQuoteRequestInboxQuoteRequest
+) {
+  const missing: string[] = [];
+
+  if (!hasContactMethod(quoteRequest)) {
+    missing.push("visitor contact method");
+  }
+
+  if (quoteRequest.items.length === 0) {
+    missing.push("requested listing/item");
+  }
+
+  if (quoteRequest.items.length === 0 || !hasItemNotes(quoteRequest)) {
+    missing.push("quantity or item notes");
+  }
+
+  if (!quoteRequest.eventDate) {
+    missing.push("event/rental timing");
+  }
+
+  if (!quoteRequest.venue) {
+    missing.push("venue/access details");
+  }
+
+  if (!hasListingSourceContext(quoteRequest)) {
+    missing.push("listing/source context");
+  }
+
+  return missing;
+}
+
+function formatList(items: string[]) {
+  if (items.length === 0) {
+    return "";
+  }
+
+  if (items.length === 1) {
+    return items[0];
+  }
+
+  return `${items.slice(0, -1).join(", ")}, and ${items[items.length - 1]}`;
+}
+
+function quoteManualPreparationCue(
+  quoteRequest: AdminQuoteRequestInboxQuoteRequest
+) {
+  const missing = missingInformationLabels(quoteRequest);
+
+  if (missing.length === 0) {
+    return "Ready for manual quote preparation: contact, requested listing/item, quantity or item notes, event/rental timing, venue/access details, and listing/source context are present.";
+  }
+
+  return `Missing-information cue: ${formatList(
+    missing
+  )} need admin review before manual quote preparation.`;
+}
+
+function quoteAdminStatusDetail(
+  quoteRequest: AdminQuoteRequestInboxQuoteRequest
+) {
+  const details: Record<AdminQuoteRequestStatus, string> = {
+    new:
+      "Admin status: New / received quote request - start protected admin triage from submitted contact, rental details, event details, and listing/source context.",
+    reviewing:
+      "Admin status: Manual review in progress - confirm requested listing/item, quantity or item notes, event/rental timing, and venue/access details before manual follow-up.",
+    follow_up_needed:
+      "Admin status: Manual follow-up needed - contact the visitor manually, then update protected triage status after follow-up if the admin action changes.",
+    quoted:
+      "Admin status: Quoted locally - keep manual follow-up visible and close locally when no further admin action is needed.",
+    closed:
+      "Admin status: Closed locally - retained for protected admin reference.",
+    archived:
+      "Admin status: Archived locally - retained for protected admin reference."
+  };
+
+  return details[quoteRequest.status];
 }
 
 function adminFollowUpPriorityCues(
@@ -547,31 +636,47 @@ function adminFollowUpPriorityCues(
     .join(" / ");
   const cues = [
     quoteRequest.items.length > 0
-      ? `Confirm requested listing/item: ${compactRentalDetails(quoteRequest)}`
-      : "Missing requested listing/item - ask visitor what furniture or event setup they need",
+      ? `Confirm requested listing/item before manual follow-up: ${compactRentalDetails(quoteRequest)}`
+      : "Missing requested listing/item - ask what furniture or event setup they need before manual follow-up",
     totalQuantity > 0
-      ? `Confirm quantity: Quantity ${totalQuantity} submitted${
+      ? `Confirm quantity or item notes before manual follow-up: Quantity ${totalQuantity} submitted${
           itemNotes ? `; item notes: ${itemNotes}` : ""
         }`
-      : "Missing quantity - ask visitor for approximate counts",
+      : "Missing quantity or item notes - ask for approximate counts and setup notes",
     quoteRequest.eventDate
-      ? `Confirm event/rental timing: ${quoteRequest.eventDate}`
-      : "Missing event/rental timing - ask visitor for event date or rental period",
+      ? `Confirm event/rental timing before manual follow-up: ${quoteRequest.eventDate}`
+      : "Missing event/rental timing - ask for event date or rental period",
     venueAccessDetails
-      ? `Confirm venue/access details: ${venueAccessDetails}`
-      : "Missing venue/access details - ask visitor for venue, access, setup, and timing notes",
+      ? `Confirm venue/access details before manual follow-up: ${venueAccessDetails}`
+      : "Missing venue/access details - ask for venue, access, setup, and timing notes",
     hasContactMethod(quoteRequest)
-      ? `Follow up manually: ${compactContactDetails(quoteRequest)}`
-      : "Missing contact method - ask visitor for email or phone",
+      ? `Contact visitor manually using submitted contact details: ${compactContactDetails(quoteRequest)}`
+      : "Missing visitor contact method - ask for email or phone before manual follow-up",
     sourceContext
       ? `Source context: ${sourceContext}`
-      : "Missing source listing context - ask which listing or catalogue item started the enquiry"
+      : "Missing listing/source context - ask which listing or catalogue item started the enquiry"
   ];
 
   return [
     ...cues,
-    "Manual follow-up: use protected admin triage to collect missing rental details before changing status"
+    "Update protected triage status after manual follow-up if the admin action changes.",
+    "Manual follow-up: use protected admin triage to collect missing rental details, then update status after manual follow-up if the admin action changes"
   ];
+}
+
+function AdminStatusActionSummary({
+  quoteRequest
+}: {
+  quoteRequest: AdminQuoteRequestInboxQuoteRequest;
+}) {
+  return (
+    <section className="quote-inbox__section quote-inbox__section--primary">
+      <h4>Admin status and next action</h4>
+      <p>{quoteAdminStatusDetail(quoteRequest)}</p>
+      <p>{quoteManualPreparationCue(quoteRequest)}</p>
+      <p>{quoteNextAction(quoteRequest)}</p>
+    </section>
+  );
 }
 
 function AdminFollowUpPriorities({
@@ -3058,6 +3163,7 @@ export function QuoteRequestInboxPanel({
                   </p>
                 </div>
                 <AdminTriageSnapshot quoteRequest={quoteRequest} />
+                <AdminStatusActionSummary quoteRequest={quoteRequest} />
                 <AdminFollowUpPriorities quoteRequest={quoteRequest} />
                 <section className="quote-inbox__section quote-inbox__section--primary">
                   <h4>Submitted enquiry triage details</h4>
@@ -3173,7 +3279,6 @@ export function QuoteRequestInboxPanel({
                     reference only. It is not customer tracking, status lookup,
                     availability confirmation, or a rental outcome.
                   </p>
-                  <p>{quoteNextAction(quoteRequest)}</p>
                 </section>
                 <section className="quote-inbox__section quote-inbox__section--secondary">
                   <h4>Source context</h4>

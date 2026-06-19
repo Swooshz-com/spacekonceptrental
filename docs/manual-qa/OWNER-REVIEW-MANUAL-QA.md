@@ -667,6 +667,20 @@ for the release-candidate gate and keep the review non-live.
 
 - Confirm quote inbox shows status buckets, missing-info summaries, customer
   message/activity cues, and admin-only next actions.
+- Confirm each quote card shows the current protected admin status in plain
+  manual triage language, such as new / received quote request, manual review
+  in progress, manual follow-up needed, quoted locally, or closed locally.
+- Confirm the admin status and next-action helper tells the operator whether
+  contact, requested listing/item, quantity or item notes, event/rental timing,
+  venue/access details, and listing/source context are present before manual
+  quote preparation.
+- Confirm missing-information cues tell the admin what to collect next without
+  adding new fields, workflow engines, public tracking, or self-service areas.
+- Confirm listing/source context remains visible when submitted from a listing
+  flow so the admin can review the requested rental listing before manual
+  follow-up.
+- Confirm the status update control explains that changing protected triage
+  status does not contact the visitor or start any external process.
 - Confirm internal notes and activity remain admin-only.
 - Confirm public users cannot see admin triage details.
 

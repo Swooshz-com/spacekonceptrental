@@ -138,7 +138,7 @@ describe("QuoteRequestInboxPanel", () => {
       screen.getByLabelText(/internal status for QR-20260603-NEWEST/i)
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/current status: new enquiry/i)
+      screen.getByText(/current status: new \/ received quote request/i)
     ).toBeInTheDocument();
     expect(
       screen.getByRole("heading", { name: /admin triage snapshot/i })
@@ -300,31 +300,57 @@ describe("QuoteRequestInboxPanel", () => {
       priorityView.getByText(/confirm requested listing\/item/i)
     ).toBeInTheDocument();
     expect(
+      priorityView.getByText(/confirm requested listing\/item before manual follow-up/i)
+    ).toBeInTheDocument();
+    expect(
       priorityView.getByText(/modular lounge set \(quantity 2\)/i)
     ).toBeInTheDocument();
     expect(
-      priorityView.getByText(/confirm quantity/i)
+      priorityView.getByText(/confirm quantity or item notes before manual follow-up/i)
     ).toBeInTheDocument();
     expect(
       priorityView.getByText(/quantity 2 submitted; item notes: VIP reception area/i)
     ).toBeInTheDocument();
     expect(
-      priorityView.getByText(/confirm event\/rental timing/i)
+      priorityView.getByText(/confirm event\/rental timing before manual follow-up/i)
     ).toBeInTheDocument();
-    expect(priorityView.getByText(/confirm event\/rental timing: 2026-06-20/i))
+    expect(
+      priorityView.getByText(
+        /confirm event\/rental timing before manual follow-up: 2026-06-20/i
+      )
+    )
       .toBeInTheDocument();
     expect(
-      priorityView.getByText(/confirm venue\/access details/i)
+      priorityView.getByText(/confirm venue\/access details before manual follow-up/i)
     ).toBeInTheDocument();
     expect(
       priorityView.getByText(/Marina Bay Sands \/ VIP reception area/i)
     ).toBeInTheDocument();
-    expect(priorityView.getByText(/follow up manually/i)).toBeInTheDocument();
+    expect(
+      priorityView.getByText(/contact visitor manually using submitted contact details/i)
+    ).toBeInTheDocument();
     expect(
       priorityView.getByText(/Maya Tan - maya@example\.test \/ \+65 8123 4567/i)
     ).toBeInTheDocument();
     expect(
       priorityView.getByText(/source context: \/quote\?listing=modular-lounge-set \/ modular-lounge-set/i)
+    ).toBeInTheDocument();
+    expect(
+      priorityView.getByText(/update protected triage status after manual follow-up if the admin action changes/i)
+    ).toBeInTheDocument();
+    expect(
+      quoteCardView.getByRole("heading", {
+        name: /admin status and next action/i
+      })
+    ).toBeInTheDocument();
+    expect(
+      quoteCardView.getByText(/admin status: new \/ received quote request/i)
+    ).toBeInTheDocument();
+    expect(
+      quoteCardView.getByText(/ready for manual quote preparation: contact, requested listing\/item, quantity or item notes, event\/rental timing, venue\/access details, and listing\/source context are present/i)
+    ).toBeInTheDocument();
+    expect(
+      quoteCardView.getByText(/next action: confirm requested listing\/item, quantity or item notes, event\/rental timing, and venue\/access details; contact the visitor manually; then update protected triage status after follow-up if the admin action changes/i)
     ).toBeInTheDocument();
     expect(
       quoteCardView.getByRole("link", {
@@ -368,18 +394,21 @@ describe("QuoteRequestInboxPanel", () => {
     const priorityView = within(priorities as HTMLElement);
 
     for (const missingCue of [
-      /missing requested listing\/item - ask visitor what furniture or event setup they need/i,
-      /missing quantity - ask visitor for approximate counts/i,
-      /missing event\/rental timing - ask visitor for event date or rental period/i,
-      /missing venue\/access details - ask visitor for venue, access, setup, and timing notes/i,
-      /missing contact method - ask visitor for email or phone/i,
-      /missing source listing context - ask which listing or catalogue item started the enquiry/i
+      /missing requested listing\/item - ask what furniture or event setup they need before manual follow-up/i,
+      /missing quantity or item notes - ask for approximate counts and setup notes/i,
+      /missing event\/rental timing - ask for event date or rental period/i,
+      /missing venue\/access details - ask for venue, access, setup, and timing notes/i,
+      /missing visitor contact method - ask for email or phone before manual follow-up/i,
+      /missing listing\/source context - ask which listing or catalogue item started the enquiry/i
     ]) {
       expect(priorityView.getByText(missingCue)).toBeInTheDocument();
     }
 
     expect(
-      priorityView.getByText(/manual follow-up: use protected admin triage to collect missing rental details before changing status/i)
+      priorityView.getByText(/manual follow-up: use protected admin triage to collect missing rental details, then update status after manual follow-up if the admin action changes/i)
+    ).toBeInTheDocument();
+    expect(
+      quoteCardView.getByText(/missing-information cue: visitor contact method, requested listing\/item, quantity or item notes, event\/rental timing, venue\/access details, and listing\/source context need admin review before manual quote preparation/i)
     ).toBeInTheDocument();
     expect(document.body.textContent).not.toMatch(
       /cart|checkout|order|payment|purchase|booking|reservation|fulfilment|fulfillment|stock reservation|customer account|dashboard/i
@@ -459,7 +488,7 @@ describe("QuoteRequestInboxPanel", () => {
     expect(onMutationComplete).toHaveBeenCalledTimes(1);
     expect(
       screen.getByText(
-        /status updated for admin review: QR-20260603-NEWEST is now Follow-up needed/i
+        /status updated for admin review: QR-20260603-NEWEST is now Manual follow-up needed/i
       )
     ).toBeInTheDocument();
   });
