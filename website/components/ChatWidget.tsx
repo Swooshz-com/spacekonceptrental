@@ -19,6 +19,9 @@ type ChatApiResponse = {
   };
 };
 
+const chatErrorMessage =
+  "An error occurred while sending the chat message. Please try again.";
+
 const initialMessages: ChatMessage[] = [
   {
     id: "welcome",
@@ -42,6 +45,7 @@ export default function ChatWidget() {
   const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
   const [draft, setDraft] = useState("");
   const [isSending, setIsSending] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string>();
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -59,6 +63,7 @@ export default function ChatWidget() {
 
     setMessages((current) => [...current, userMessage]);
     setDraft("");
+    setErrorMessage(undefined);
     setIsSending(true);
 
     try {
@@ -103,15 +108,7 @@ export default function ChatWidget() {
         }
       ]);
     } catch {
-      setMessages((current) => [
-        ...current,
-        {
-          id: createBrowserId("assistant-error"),
-          role: "assistant",
-          content:
-            "The assistant is temporarily unavailable. Please leave your contact details and the team will follow up."
-        }
-      ]);
+      setErrorMessage(chatErrorMessage);
     } finally {
       setIsSending(false);
     }
@@ -133,6 +130,11 @@ export default function ChatWidget() {
           </p>
         ))}
       </div>
+      {errorMessage ? (
+        <p className="chat-widget__error" role="alert">
+          {errorMessage}
+        </p>
+      ) : null}
       <form className="chat-widget__form" onSubmit={handleSubmit}>
         <label className="sr-only" htmlFor="chat-message">
           Message

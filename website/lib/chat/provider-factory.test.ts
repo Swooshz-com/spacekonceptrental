@@ -121,8 +121,7 @@ describe("getChatProvider", () => {
     expect(response.status).toBe(503);
     expect(body.error).toEqual({
       code: "PROVIDER_UNAVAILABLE",
-      message:
-        "The assistant is temporarily unavailable. Please leave your contact details and the team will follow up."
+      message: "An error occurred while sending the chat message. Please try again."
     });
     expect(serialized).not.toContain("legacy-browser-n8n");
   });
