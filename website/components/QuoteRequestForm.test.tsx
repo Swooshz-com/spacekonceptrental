@@ -229,8 +229,10 @@ describe("QuoteRequestForm", () => {
       return new Response(
         JSON.stringify({
           error: {
+            reference: "quote-error-ref-123",
             message: "sql supabase stack token cookie provider secret"
-          }
+          },
+          requestId: "quote-error-ref-123"
         }),
         {
           headers: { "content-type": "application/json" },
@@ -255,6 +257,7 @@ describe("QuoteRequestForm", () => {
 
     expect(alert).toHaveTextContent(/quote request was not sent/i);
     expect(alert).toHaveTextContent(/review your details and try again/i);
+    expect(alert).toHaveTextContent(/support reference: quote-error-ref-123/i);
     expect(alert).not.toHaveTextContent(/sql/i);
     expect(alert).not.toHaveTextContent(/supabase/i);
     expect(alert).not.toHaveTextContent(/stack/i);
@@ -262,6 +265,17 @@ describe("QuoteRequestForm", () => {
     expect(alert).not.toHaveTextContent(/cookie/i);
     expect(alert).not.toHaveTextContent(/provider/i);
     expect(alert).not.toHaveTextContent(/secret/i);
+  });
+
+  it("shows legal links near the quote request data-handling flow", () => {
+    render(<QuoteRequestForm />);
+
+    expect(
+      screen.getByRole("link", { name: /Privacy Policy/i })
+    ).toHaveAttribute("href", "/privacy");
+    expect(
+      screen.getByRole("link", { name: /Terms of Use/i })
+    ).toHaveAttribute("href", "/terms");
   });
 
   it("explains failed-submit recovery while preserving entered details and listing context", async () => {

@@ -239,18 +239,21 @@ describe("Phase 3G-A/B quote intake quality, admin triage depth, and enquiry wor
     );
 
     expect(
-      screen.getByRole("heading", { name: /enquiry for lounge sofa package/i })
+      screen.getByRole("heading", { name: /selected listing unavailable/i })
     ).toBeInTheDocument();
     expect(
       screen.getAllByText(/listing context is a starting point only/i).length
     ).toBeGreaterThan(0);
     expect(
       screen.getAllByText(/does not set aside furniture or finish rental details/i)
-        .length
+      .length
     ).toBeGreaterThan(0);
     expect(screen.getByLabelText(/requested listings or items/i)).toHaveValue(
-      "Lounge sofa package"
+      "Listing reference: lounge-sofa-package"
     );
+    expect(
+      screen.getByText("lounge-sofa-package", { selector: "dd" })
+    ).toBeInTheDocument();
     expect(
       screen.queryByText(/publication readiness|media readiness|internal note|admin-only/i)
     ).not.toBeInTheDocument();
@@ -263,12 +266,14 @@ describe("Phase 3G-A/B quote intake quality, admin triage depth, and enquiry wor
     );
 
     expect(
-      screen.getByRole("heading", { name: /general rental enquiry/i })
+      screen.getByRole("heading", { name: /selected listing unavailable/i })
     ).toBeInTheDocument();
     expect(
       screen.getByText(/the listing link may be old or unavailable/i)
     ).toBeInTheDocument();
-    expect(screen.getByLabelText(/requested listings or items/i)).toHaveValue("");
+    expect(screen.getByLabelText(/requested listings or items/i)).toHaveValue(
+      "Listing reference: unpublished-draft-listing"
+    );
   });
 
   it("shows deeper admin-only quote triage summaries and next-action cues", () => {

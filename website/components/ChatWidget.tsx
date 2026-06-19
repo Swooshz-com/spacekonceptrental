@@ -16,11 +16,19 @@ type ChatApiResponse = {
   };
   error?: {
     message: string;
+    reference?: string;
   };
+  requestId?: string;
 };
 
 const chatErrorMessage =
   "An error occurred while sending the chat message. Please try again.";
+
+function formatChatErrorMessage(reference: string | undefined) {
+  return reference
+    ? `${chatErrorMessage} Support reference: ${reference}.`
+    : chatErrorMessage;
+}
 
 function createBrowserId(prefix: string) {
   if (globalThis.crypto?.randomUUID) {
@@ -57,6 +65,8 @@ export default function ChatWidget() {
     setErrorMessage(undefined);
     setIsSending(true);
 
+    let failedChatReference: string | undefined;
+
     try {
       const response = await fetch("/api/chat", {
         method: "POST",
@@ -85,6 +95,7 @@ export default function ChatWidget() {
       const body = (await response.json()) as ChatApiResponse;
 
       if (!response.ok || !body.reply) {
+        failedChatReference = body.error?.reference ?? body.requestId;
         throw new Error(body.error?.message ?? "Chat request failed");
       }
 
@@ -99,7 +110,7 @@ export default function ChatWidget() {
         }
       ]);
     } catch {
-      setErrorMessage(chatErrorMessage);
+      setErrorMessage(formatChatErrorMessage(failedChatReference));
     } finally {
       setIsSending(false);
     }
@@ -142,6 +153,11 @@ export default function ChatWidget() {
           {isSending ? "Sending" : "Send"}
         </button>
       </form>
+      <p className="chat-widget__legal">
+        Chat availability depends on the configured chat provider. Review the{" "}
+        <a href="/privacy">Privacy Policy</a> and{" "}
+        <a href="/terms">Terms of Use</a>.
+      </p>
     </aside>
   );
 }

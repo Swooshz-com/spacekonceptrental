@@ -77,9 +77,9 @@ variables such as `N8N_CHAT_WEBHOOK_URL`.
   `website/chat-config.js`.
 - Trusted client IP header env must name only a header overwritten by the
   deployment proxy or CDN.
-- Missing env must continue to fail safely: catalogue fallback, quote
-  persistence-unavailable response, and chat provider fallback or safe
-  unavailable response.
+- Missing env must continue to fail safely: catalogue unavailable or empty
+  recovery state, quote persistence-unavailable response, and chat provider
+  safe unavailable response.
 
 ## Catalogue RLS Hardening Rules
 

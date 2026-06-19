@@ -1,5 +1,6 @@
 import "server-only";
 
+import { logApplicationError } from "../../../lib/application-error-logging";
 import { getTrustedClientIpHeader as getConfiguredTrustedClientIpHeader } from "../../../lib/server-runtime-config";
 import { createQuoteRequest } from "../../../lib/quote/quote-repository";
 import type {
@@ -91,12 +92,21 @@ function requestTooLargeError(requestId: string) {
   );
 }
 
-function persistenceError(requestId: string) {
+function persistenceError(requestId: string, request: Request) {
+  logApplicationError({
+    category: "QUOTE_PERSISTENCE_UNAVAILABLE",
+    reference: requestId,
+    request,
+    route: "POST /api/quote",
+    statusCode: 503
+  });
+
   return Response.json(
     {
       error: {
         code: "QUOTE_PERSISTENCE_UNAVAILABLE",
-        message: FALLBACK_MESSAGE
+        message: FALLBACK_MESSAGE,
+        reference: requestId
       },
       requestId
     },
@@ -382,7 +392,7 @@ export async function handleQuotePost(
     const result = await repository(validation.value);
 
     if (!result.ok) {
-      return persistenceError(requestId);
+      return persistenceError(requestId, request);
     }
 
     return Response.json(
@@ -395,7 +405,7 @@ export async function handleQuotePost(
       { status: 201 }
     );
   } catch {
-    return persistenceError(requestId);
+    return persistenceError(requestId, request);
   }
 }
 
