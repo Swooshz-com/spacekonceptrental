@@ -6,7 +6,6 @@ export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
-      "next/font/google": resolve(__dirname, "test/next-font-google.ts"),
       "server-only": resolve(__dirname, "test/server-only.ts")
     }
   },
