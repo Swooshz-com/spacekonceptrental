@@ -15,7 +15,15 @@ type QuotePageProps = {
 export const metadata: Metadata = {
   title: "Quote request for furniture rental enquiries | Space Koncept Rentals",
   description:
-    "Submit an event furniture rental enquiry with event date, venue, requested listings, quantities, and setup notes."
+    "Submit an event furniture rental quote request with event date, venue, requested listings, quantities, and setup notes for manual follow-up.",
+  openGraph: {
+    title: "Quote request | Space Koncept Rentals",
+    description:
+      "Share event furniture rental details and requested listings for manual follow-up.",
+    siteName: "Space Koncept Rentals",
+    type: "website",
+    url: "/quote"
+  }
 };
 
 function firstSearchParam(value: string | string[] | undefined) {
@@ -170,9 +178,9 @@ function QuoteGeneralContext({
       <h2>General rental enquiry</h2>
       {requestedSlug ? (
         <p>
-          Selected listing could not be loaded. You can still send a general
-          rental request with the requested listings or items, quantities,
-          alternates, and event setup you have in mind.
+          The listing link may be old or unavailable. Review current rental
+          listings or keep typing the requested items, quantities, alternates,
+          and event setup you have in mind.
         </p>
       ) : (
         <p>
@@ -208,7 +216,10 @@ function QuoteGeneralContext({
       </p>
       <div className="catalogue-card__actions">
         <Link className="card-link" href="/listings">
-          Browse listings
+          Review current rental listings
+        </Link>
+        <Link className="card-link" href="/catalogue">
+          Start from the catalogue
         </Link>
         <Link className="card-link" href="/categories">
           Browse rental categories
@@ -328,8 +339,9 @@ export default async function QuotePage({
         <article className="route-card">
           <h2>Need guidance?</h2>
           <p>
-            The rental assistant can help clarify quantities, event dates, and
-            product categories before the team follows up.
+            Use the catalogue, listing details, and event setup guidance to
+            clarify quantities, event dates, and product categories before the
+            team follows up.
           </p>
         </article>
 

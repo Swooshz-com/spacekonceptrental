@@ -22,6 +22,17 @@ describe("ChatWidget", () => {
     vi.restoreAllMocks();
   });
 
+  it("starts without a canned assistant response before a provider reply", () => {
+    render(<ChatWidget />);
+
+    expect(screen.getByLabelText(/message/i)).toBeInTheDocument();
+    expect(screen.getByText(/ask here/i)).toBeInTheDocument();
+    expect(
+      screen.queryByText(/hi, i can help with event furniture availability/i)
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText(/online/i)).not.toBeInTheDocument();
+  });
+
   it("posts browser chat messages only to the first-party API route", async () => {
     const fetchMock = vi.fn(async () => {
       return new Response(JSON.stringify(assistantResponse), {

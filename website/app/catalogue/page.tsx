@@ -14,7 +14,15 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "Furniture catalogue | Space Koncept Rentals",
   description:
-    "Browse public event furniture rental listings and request an enquiry with Space Koncept Rentals."
+    "Browse public event furniture rental listings and send a quote request for manual follow-up with Space Koncept Rentals.",
+  openGraph: {
+    title: "Furniture catalogue | Space Koncept Rentals",
+    description:
+      "Browse public rental listings, compare event furniture details, and start a quote request.",
+    siteName: "Space Koncept Rentals",
+    type: "website",
+    url: "/catalogue"
+  }
 };
 
 export const eventUseFilters = [
@@ -496,7 +504,7 @@ export function CataloguePageContent({
   activeSearch,
   catalogue,
   detailBasePath = "/catalogue",
-  emptyMessage = "No public rental listings are available right now. Send an enquiry if you need help describing the event setup.",
+  emptyMessage = "No public rental listings are available right now. Clear filters, review current rental listings, or send a general quote request with the rental setup you need reviewed.",
   intro = "Browse furniture and event rental listings, compare useful details, and send an enquiry for team follow-up.",
   listingBasePath = "/listings",
   title = "Furniture catalogue for event rentals"
@@ -551,14 +559,15 @@ export function CataloguePageContent({
             </p>
           ) : (
             <p className="category-management__hint">
-              Browse all listings, browse categories, explore event-use guidance,
-              or send an enquiry with the rental setup you need reviewed.
+              Clear filters, review current rental listings, browse categories,
+              or send a general quote request with the rental setup you need
+              reviewed.
             </p>
           )}
         </section>
         <div className="hero__actions">
           <Link className="button button--secondary" href={listingBasePath}>
-            Browse listings
+            Review current rental listings
           </Link>
           <Link className="button button--secondary" href="/categories">
             Browse categories
@@ -567,7 +576,7 @@ export function CataloguePageContent({
             Browse event setup guidance
           </Link>
           <Link className="button" href="/quote">
-            Send an enquiry
+            Start a general quote request
           </Link>
         </div>
       </section>

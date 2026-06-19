@@ -30,7 +30,7 @@ function getMetadataDescription(product: PublicCatalogueProduct | null) {
     textOrUndefined(product?.description);
 
   return productDescription
-    ? `${productDescription} Request an event furniture rental quote with Space Koncept Rentals.`
+    ? `${productDescription} Send an event furniture rental quote request with Space Koncept Rentals.`
     : "Browse event furniture rental listing details and request an enquiry with Space Koncept Rentals.";
 }
 
@@ -102,15 +102,33 @@ export async function generateMetadata({
   const product = await getPublicProductBySlug(slug);
 
   if (!product) {
+    const description = getMetadataDescription(null);
+
     return {
       title: "Furniture listing | Space Koncept Rentals",
-      description: getMetadataDescription(null)
+      description,
+      openGraph: {
+        title: "Furniture listing | Space Koncept Rentals",
+        description,
+        siteName: "Space Koncept Rentals",
+        type: "website",
+        url: "/catalogue"
+      }
     };
   }
 
+  const description = getMetadataDescription(product);
+
   return {
     title: `${product.name} | Space Koncept Rentals`,
-    description: getMetadataDescription(product)
+    description,
+    openGraph: {
+      title: `${product.name} rental listing | Space Koncept Rentals`,
+      description,
+      siteName: "Space Koncept Rentals",
+      type: "website",
+      url: `/catalogue/${product.slug}`
+    }
   };
 }
 

@@ -221,7 +221,7 @@ describe("Phase 3D-A/B sitewide public journey, trust content, and route polish"
       screen.getByRole("link", { name: /browse categories/i })
     ).toHaveAttribute("href", "/categories");
     expect(
-      screen.getByRole("link", { name: /send an enquiry/i })
+      screen.getByRole("link", { name: /start a general quote request/i })
     ).toHaveAttribute("href", "/quote");
 
     cleanup();

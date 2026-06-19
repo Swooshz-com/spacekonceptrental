@@ -22,15 +22,6 @@ type ChatApiResponse = {
 const chatErrorMessage =
   "An error occurred while sending the chat message. Please try again.";
 
-const initialMessages: ChatMessage[] = [
-  {
-    id: "welcome",
-    role: "assistant",
-    content:
-      "Hi, I can help with event furniture availability and quote details."
-  }
-];
-
 function createBrowserId(prefix: string) {
   if (globalThis.crypto?.randomUUID) {
     return `${prefix}-${globalThis.crypto.randomUUID()}`;
@@ -42,7 +33,7 @@ function createBrowserId(prefix: string) {
 export default function ChatWidget() {
   const clientSessionId = useMemo(() => createBrowserId("session"), []);
   const [conversationId, setConversationId] = useState<string>();
-  const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [draft, setDraft] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string>();
@@ -115,10 +106,10 @@ export default function ChatWidget() {
   }
 
   return (
-    <aside className="chat-widget" aria-label="Rental assistant">
+    <aside className="chat-widget" aria-label="Rental questions">
       <div className="chat-widget__header">
-        <span>Rental assistant</span>
-        <span className="chat-widget__status">Online</span>
+        <span>Rental questions</span>
+        <span className="chat-widget__status">Ask here</span>
       </div>
       <div className="chat-widget__messages" aria-live="polite">
         {messages.map((message) => (

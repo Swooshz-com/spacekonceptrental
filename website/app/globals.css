@@ -218,6 +218,8 @@ select {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 8px;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .catalogue-card {
@@ -1398,8 +1400,21 @@ select {
     padding-bottom: 340px;
   }
 
+  .hero__actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .button,
+  .card-link {
+    justify-content: center;
+    text-align: center;
+    width: 100%;
+  }
+
   .chat-widget {
     left: 12px;
+    max-height: calc(100vh - 24px);
     width: auto;
   }
 }

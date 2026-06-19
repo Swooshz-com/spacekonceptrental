@@ -378,7 +378,7 @@ describe("Phase 3E-A/B product readiness, navigation QA, and dead-end polish", (
       screen.getByRole("link", { name: /browse categories/i })
     ).toHaveAttribute("href", "/categories");
     expect(
-      screen.getByRole("link", { name: /send an enquiry/i })
+      screen.getByRole("link", { name: /start a general quote request/i })
     ).toHaveAttribute("href", "/quote");
 
     cleanup();
@@ -392,7 +392,7 @@ describe("Phase 3E-A/B product readiness, navigation QA, and dead-end polish", (
 
     expect(screen.getByText(/spans more than lounge/i)).toBeInTheDocument();
     expect(
-      screen.getByRole("link", { name: /browse listings/i })
+      screen.getByRole("link", { name: /review current rental listings/i })
     ).toHaveAttribute("href", "/listings");
 
     cleanup();
