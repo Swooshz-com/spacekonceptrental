@@ -45,7 +45,7 @@ export default function ChatWidget() {
   const [draft, setDraft] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string>();
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(true);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -139,7 +139,7 @@ export default function ChatWidget() {
           }}
           aria-label="Open chat"
         >
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+          <span aria-hidden="true" style={{ fontSize: '14px', fontWeight: 800 }}>SK</span>
           <span style={{
             position: 'absolute', top: '0', right: '0', background: '#0f172a', color: '#fff',
             fontSize: '12px', fontWeight: 700, width: '22px', height: '22px', borderRadius: '50%',
@@ -152,7 +152,7 @@ export default function ChatWidget() {
   }
 
   return (
-    <aside 
+    <aside
       aria-label="Rental questions"
       style={{
         position: 'fixed', bottom: '24px', right: '24px', width: '380px', maxWidth: 'calc(100vw - 48px)',
@@ -166,9 +166,9 @@ export default function ChatWidget() {
       }}>
         <div style={{ display: 'flex', flexDirection: 'column' }}>
           <span style={{ fontSize: '16px', fontWeight: 700, color: '#fff' }}>SpaceKonceptRental AI</span>
-          <span style={{ fontSize: '12px', color: '#cbd5e1' }}>Your 24/7 Event Consultant</span>
+          <span style={{ fontSize: '12px', color: '#cbd5e1' }}>Your event furniture helper</span>
         </div>
-        <button onClick={() => setIsOpen(false)} style={{ background: 'transparent', border: 'none', color: '#cbd5e1', cursor: 'pointer', fontSize: '20px', lineHeight: 1, padding: '4px' }} aria-label="Close chat">✕</button>
+        <button onClick={() => setIsOpen(false)} style={{ background: 'transparent', border: 'none', color: '#cbd5e1', cursor: 'pointer', fontSize: '20px', lineHeight: 1, padding: '4px' }} aria-label="Close chat">x</button>
       </div>
 
       <div style={{ padding: '20px', maxHeight: '400px', height: '400px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '16px', background: '#f8fafc' }} aria-live="polite">
@@ -176,7 +176,7 @@ export default function ChatWidget() {
           <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
             <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--accent)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 700, flexShrink: 0 }}>SK</div>
             <div style={{ background: '#fff', border: '1px solid #e2e8f0', color: '#334155', padding: '12px 16px', borderRadius: '0 16px 16px 16px', fontSize: '14px', lineHeight: 1.5 }}>
-              Hi! 👋 I can help with furniture recommendations, instant quotes, delivery scheduling, and support tickets. What event are you planning?
+              Hi! I can help with furniture listing questions and enquiry details. What event are you planning?
             </div>
           </div>
         )}
@@ -208,10 +208,15 @@ export default function ChatWidget() {
       )}
 
       <div style={{ padding: '0 20px', background: '#f8fafc' }}>
+        <p style={{ color: '#475569', fontSize: '12px', lineHeight: 1.5, margin: '0 0 12px' }}>
+          Ask here about listing details or enquiry preparation. See our{" "}
+          <a href="/privacy">Privacy Policy</a> and{" "}
+          <a href="/terms">Terms of Use</a>.
+        </p>
         <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '12px', scrollbarWidth: 'none' }}>
           <button onClick={() => setDraft("View Sofas")} style={{ whiteSpace: 'nowrap', padding: '6px 16px', borderRadius: '20px', border: '1px solid var(--accent)', background: '#fff', color: 'var(--accent)', fontSize: '13px', cursor: 'pointer', fontWeight: 600 }}>View Sofas</button>
-          <button onClick={() => setDraft("Get Quote")} style={{ whiteSpace: 'nowrap', padding: '6px 16px', borderRadius: '20px', border: '1px solid var(--accent)', background: '#fff', color: 'var(--accent)', fontSize: '13px', cursor: 'pointer', fontWeight: 600 }}>Get Quote</button>
-          <button onClick={() => setDraft("Delivery Rates")} style={{ whiteSpace: 'nowrap', padding: '6px 16px', borderRadius: '20px', border: '1px solid var(--accent)', background: '#fff', color: 'var(--accent)', fontSize: '13px', cursor: 'pointer', fontWeight: 600 }}>Delivery Rates</button>
+          <button onClick={() => setDraft("Quote details")} style={{ whiteSpace: 'nowrap', padding: '6px 16px', borderRadius: '20px', border: '1px solid var(--accent)', background: '#fff', color: 'var(--accent)', fontSize: '13px', cursor: 'pointer', fontWeight: 600 }}>Quote details</button>
+          <button onClick={() => setDraft("Setup notes")} style={{ whiteSpace: 'nowrap', padding: '6px 16px', borderRadius: '20px', border: '1px solid var(--accent)', background: '#fff', color: 'var(--accent)', fontSize: '13px', cursor: 'pointer', fontWeight: 600 }}>Setup notes</button>
         </div>
       </div>
 
@@ -226,8 +231,8 @@ export default function ChatWidget() {
           style={{ flex: 1, border: 'none', background: 'transparent', fontSize: '15px', outline: 'none', color: '#0f172a' }}
           autoComplete="off"
         />
-        <button disabled={isSending || draft.trim().length === 0} type="submit" style={{ background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: '50%', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', opacity: (isSending || draft.trim().length === 0) ? 0.5 : 1, transition: 'opacity 0.2s', padding: 0 }}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginLeft: '-2px' }}><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+        <button aria-label="Send" disabled={isSending || draft.trim().length === 0} type="submit" style={{ background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: '50%', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', opacity: (isSending || draft.trim().length === 0) ? 0.5 : 1, transition: 'opacity 0.2s', padding: 0 }}>
+          <span aria-hidden="true" style={{ fontSize: '12px', fontWeight: 800 }}>Send</span>
         </button>
       </form>
     </aside>

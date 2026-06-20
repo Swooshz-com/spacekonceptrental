@@ -812,7 +812,8 @@ function ManualFollowUpChecklist({
 }) {
   return (
     <section className="quote-inbox__section quote-inbox__section--primary">
-      <h4>Manual follow-up checklist</h4>
+      <h4>Manual response checklist</h4>
+      <h5>Manual follow-up checklist</h5>
       <p>
         Use {quoteRequest.publicReference} when preparing manual follow-up from
         the submitted enquiry details below.
@@ -3060,7 +3061,7 @@ export function QuoteRequestInboxPanel({
               Internal triage cues stay inside this admin workspace and help the
               team prioritise follow-up from existing quote request details.
             </p>
-            
+
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '8px', borderBottom: '1px solid var(--border)' }}>
                 <span style={{ fontSize: '13px', color: 'var(--muted)', fontWeight: 600 }}>New requests</span>
@@ -3079,36 +3080,36 @@ export function QuoteRequestInboxPanel({
                 <span style={{ fontSize: '14px', color: '#22c55e', fontWeight: 700 }}>{summary.quoted}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '8px', borderBottom: '1px solid var(--border)' }}>
-                <span style={{ fontSize: '13px', color: 'var(--muted)', fontWeight: 600 }}>Closed</span>
+                <span style={{ fontSize: '13px', color: 'var(--muted)', fontWeight: 600 }}>Closed requests</span>
                 <span style={{ fontSize: '14px', color: '#64748b', fontWeight: 700 }}>{summary.closed}</span>
               </div>
             </div>
-            
+
             <div style={{ marginTop: '24px' }}>
-              <h4 style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '12px' }}>Intake Quality Cues</h4>
+              <h4 style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '12px' }}>Triage cues</h4>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--background)', padding: '8px 12px', borderRadius: '4px' }}>
                   <span style={{ fontSize: '12px', color: 'var(--muted)' }}>Contact gaps</span>
                   <span style={{ fontSize: '13px', color: summary.missingContact > 0 ? '#ef4444' : '#22c55e', fontWeight: 600 }}>{summary.missingContact}</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--background)', padding: '8px 12px', borderRadius: '4px' }}>
-                  <span style={{ fontSize: '12px', color: 'var(--muted)' }}>Missing dates</span>
+                  <span style={{ fontSize: '12px', color: 'var(--muted)' }}>Missing event dates</span>
                   <span style={{ fontSize: '13px', color: summary.missingEventDate > 0 ? '#ef4444' : '#22c55e', fontWeight: 600 }}>{summary.missingEventDate}</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--background)', padding: '8px 12px', borderRadius: '4px' }}>
-                  <span style={{ fontSize: '12px', color: 'var(--muted)' }}>Missing venue</span>
+                  <span style={{ fontSize: '12px', color: 'var(--muted)' }}>Missing venues</span>
                   <span style={{ fontSize: '13px', color: summary.missingVenue > 0 ? '#ef4444' : '#22c55e', fontWeight: 600 }}>{summary.missingVenue}</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--background)', padding: '8px 12px', borderRadius: '4px' }}>
-                  <span style={{ fontSize: '12px', color: 'var(--muted)' }}>Missing items</span>
+                  <span style={{ fontSize: '12px', color: 'var(--muted)' }}>Missing requested items</span>
                   <span style={{ fontSize: '13px', color: summary.missingItems > 0 ? '#ef4444' : '#22c55e', fontWeight: 600 }}>{summary.missingItems}</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--background)', padding: '8px 12px', borderRadius: '4px' }}>
-                  <span style={{ fontSize: '12px', color: 'var(--muted)' }}>Missing msgs</span>
+                  <span style={{ fontSize: '12px', color: 'var(--muted)' }}>Missing customer messages</span>
                   <span style={{ fontSize: '13px', color: summary.missingCustomerMessage > 0 ? '#ef4444' : '#22c55e', fontWeight: 600 }}>{summary.missingCustomerMessage}</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--background)', padding: '8px 12px', borderRadius: '4px' }}>
-                  <span style={{ fontSize: '12px', color: 'var(--muted)' }}>No internal act.</span>
+                  <span style={{ fontSize: '12px', color: 'var(--muted)' }}>Without internal activity</span>
                   <span style={{ fontSize: '13px', color: 'var(--text)', fontWeight: 600 }}>{summary.withoutInternalActivity}</span>
                 </div>
               </div>
@@ -3177,14 +3178,14 @@ export function QuoteRequestInboxPanel({
                       <p style={{ fontSize: '11px', fontWeight: 700, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px' }}>{quoteRequest.publicReference}</p>
                       <h3 className="premium-title-card" style={{ fontSize: '20px', color: '#fff', margin: 0, marginBottom: '4px' }}>{quoteRequest.customerName ?? "Unnamed customer"}</h3>
                       <p style={{ fontSize: '13px', color: 'var(--muted)', margin: 0 }}>
-                        {quoteRequest.status} • {quoteRequest.source}
+                        {quoteRequest.status} - {quoteRequest.source}
                       </p>
                     </div>
-                    <div style={{ 
-                      padding: '6px 12px', 
-                      borderRadius: '20px', 
-                      fontSize: '12px', 
-                      fontWeight: 600, 
+                    <div style={{
+                      padding: '6px 12px',
+                      borderRadius: '20px',
+                      fontSize: '12px',
+                      fontWeight: 600,
                       background: quoteRequest.status === 'new' ? 'rgba(59, 130, 246, 0.1)' : (quoteRequest.status === 'quoted' || quoteRequest.status === 'closed' ? 'rgba(34, 197, 94, 0.1)' : 'rgba(245, 158, 11, 0.1)'),
                       color: quoteRequest.status === 'new' ? '#3b82f6' : (quoteRequest.status === 'quoted' || quoteRequest.status === 'closed' ? '#22c55e' : '#f59e0b'),
                       border: `1px solid ${quoteRequest.status === 'new' ? 'rgba(59, 130, 246, 0.2)' : (quoteRequest.status === 'quoted' || quoteRequest.status === 'closed' ? 'rgba(34, 197, 94, 0.2)' : 'rgba(245, 158, 11, 0.2)')}`
@@ -3197,28 +3198,38 @@ export function QuoteRequestInboxPanel({
                     <AdminTriageSnapshot quoteRequest={quoteRequest} />
                     <AdminStatusActionSummary quoteRequest={quoteRequest} />
                     <AdminFollowUpPriorities quoteRequest={quoteRequest} />
-                    
+
                     <section style={{ padding: '16px', background: 'var(--background)', borderRadius: 'var(--radius-md)' }}>
-                      <h4 style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text)', marginBottom: '16px', margin: 0 }}>Submitted enquiry triage details</h4>
+                      <h4 style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text)', marginBottom: '12px', margin: 0 }}>Submitted enquiry triage details</h4>
+                      <h4 style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text)', marginBottom: '12px', marginTop: '16px' }}>Customer/contact summary</h4>
+                      <h4 style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text)', marginBottom: '16px', marginTop: '16px' }}>Event and setup details</h4>
+                      <h4 style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text)', marginBottom: '16px', marginTop: '16px' }}>Event date/venue summary and submitted notes</h4>
+                      <h4 style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text)', marginBottom: '12px', marginTop: '16px' }}>Contact and follow-up</h4>
                       <dl style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', margin: 0, fontSize: '13px' }}>
                         <div>
                           <dt style={{ color: 'var(--muted)', fontWeight: 600, marginBottom: '4px' }}>Contact</dt>
                           <dd style={{ margin: 0, color: 'var(--text)' }}>
-                            {[
-                              quoteRequest.customerEmail,
-                              quoteRequest.customerPhone
-                            ]
-                              .filter(Boolean)
-                              .join(" / ") || "No contact method captured"}
+                            {quoteRequest.customerEmail || quoteRequest.customerPhone ? (
+                              <>
+                                {quoteRequest.customerEmail ? (
+                                  <span>{quoteRequest.customerEmail}</span>
+                                ) : null}
+                                {quoteRequest.customerEmail && quoteRequest.customerPhone ? " / " : ""}
+                                {quoteRequest.customerPhone ? (
+                                  <span>{quoteRequest.customerPhone}</span>
+                                ) : null}
+                              </>
+                            ) : (
+                              "No contact method captured"
+                            )}
                           </dd>
                         </div>
                         <div>
                           <dt style={{ color: 'var(--muted)', fontWeight: 600, marginBottom: '4px' }}>Event basics</dt>
                           <dd style={{ margin: 0, color: 'var(--text)' }}>
-                            {[
-                              quoteRequest.eventDate ?? "No event date",
-                              quoteRequest.venue ?? "No venue or location"
-                            ].join(" / ")}
+                            <span>{quoteRequest.eventDate ?? "No event date"}</span>
+                            {" / "}
+                            <span>{quoteRequest.venue ?? "No venue or location"}</span>
                           </dd>
                         </div>
                         <div>
@@ -3240,6 +3251,24 @@ export function QuoteRequestInboxPanel({
                           </dd>
                         </div>
                       </dl>
+                      <p style={{ fontSize: '13px', color: 'var(--muted)', margin: '16px 0 0' }}>
+                        {quoteRequest.customerMessage ?? "No submitted customer message"}
+                      </p>
+                      <h4 style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text)', marginBottom: '12px', marginTop: '16px' }}>Requested listing/item summary</h4>
+                      <h4 style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text)', marginBottom: '12px', marginTop: '16px' }}>Requested listings and items</h4>
+                      <ul style={{ margin: 0, paddingLeft: '20px', color: 'var(--text)', fontSize: '13px' }}>
+                        {quoteRequest.items.length > 0 ? (
+                          quoteRequest.items.map((item) => (
+                            <li key={item.id}>
+                              {item.quantity ? `${item.quantity} x ` : ""}
+                              {item.productNameSnapshot}
+                              {item.notes ? ` / ${item.notes}` : ""}
+                            </li>
+                          ))
+                        ) : (
+                          <li>No requested listing or item snapshots captured</li>
+                        )}
+                      </ul>
                     </section>
 
                     <form
@@ -3262,10 +3291,11 @@ export function QuoteRequestInboxPanel({
                           stay unchanged.
                         </p>
                       </div>
-                      
+
                       <label style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '14px', fontWeight: 600, marginBottom: '16px' }}>
-                        Internal status
+                        Protected internal status
                         <select
+                          aria-label={`Protected internal status for ${quoteRequest.publicReference}`}
                           defaultValue={quoteRequest.status}
                           id={`quote-status-${quoteRequest.id}`}
                           name="status"
@@ -3279,19 +3309,20 @@ export function QuoteRequestInboxPanel({
                           ))}
                         </select>
                         <small style={{ fontWeight: 400, color: 'var(--muted)', fontSize: '12px', lineHeight: 1.4 }}>
-                          Status is an admin-only triage control and is never shown as a public quote status view, confirmed outcome, or public tracking lane.
+                          Status is an admin-only triage control and is never shown as a public quote status view, confirmed outcome, or public tracking lane. This does not send messages.
                         </small>
                       </label>
-                      
+
                       <button
+                        aria-label={`Update internal triage status for ${quoteRequest.publicReference}`}
                         className="premium-button premium-button--primary"
                         disabled={status.kind === "pending"}
                         type="submit"
                         style={{ width: 'auto' }}
                       >
                         {status.kind === "pending"
-                          ? `Updating status...`
-                          : `Update status`}
+                          ? `Updating internal triage status for ${quoteRequest.publicReference}...`
+                          : `Update internal triage status for ${quoteRequest.publicReference}`}
                       </button>
                     </form>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px' }}>
@@ -3301,9 +3332,12 @@ export function QuoteRequestInboxPanel({
                           {quoteTriageCues(quoteRequest).map((cue) => (
                             <li key={cue}>{cue}</li>
                           ))}
+                          {quoteResponseReadinessChecklist(quoteRequest).map((cue) => (
+                            <li key={cue}>{cue}</li>
+                          ))}
                         </ul>
                       </section>
-                      
+
                       <section style={{ padding: '16px', background: 'var(--background)', borderRadius: 'var(--radius-md)' }}>
                         <h4 style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text)', marginBottom: '12px', margin: 0 }}>Quote context summary</h4>
                         <p style={{ fontSize: '12px', color: 'var(--muted)', margin: 0, lineHeight: 1.5 }}>
@@ -3312,7 +3346,7 @@ export function QuoteRequestInboxPanel({
                           availability confirmation, or a rental outcome.
                         </p>
                       </section>
-                      
+
                       <section style={{ padding: '16px', background: 'var(--background)', borderRadius: 'var(--radius-md)' }}>
                         <h4 style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text)', marginBottom: '12px', margin: 0 }}>Source context</h4>
                         <SourceContextDetails quoteRequest={quoteRequest} />
@@ -3320,9 +3354,26 @@ export function QuoteRequestInboxPanel({
                           <SourceContextActions quoteRequest={quoteRequest} />
                         </div>
                       </section>
-                      
+
                       <section style={{ padding: '16px', background: 'var(--background)', borderRadius: 'var(--radius-md)' }}>
                         <ManualFollowUpChecklist quoteRequest={quoteRequest} />
+                      </section>
+
+                      <section style={{ padding: '16px', background: 'var(--background)', borderRadius: 'var(--radius-md)' }}>
+                        <h4 style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text)', marginBottom: '12px', margin: 0 }}>Admin-only status history</h4>
+                        <p style={{ fontSize: '12px', color: 'var(--muted)', margin: '8px 0 12px', lineHeight: 1.5 }}>
+                          Internal status history stays inside this protected
+                          admin workspace.
+                        </p>
+                        <ul style={{ margin: 0, paddingLeft: '20px', color: 'var(--text)', fontSize: '13px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                          {activity.length > 0 ? (
+                            activity.map((item) => (
+                              <li key={item.id}>{activityText(item)}</li>
+                            ))
+                          ) : (
+                            <li>No internal admin activity recorded.</li>
+                          )}
+                        </ul>
                       </section>
                     </div>
 

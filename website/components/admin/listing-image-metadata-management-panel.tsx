@@ -551,6 +551,7 @@ export function ListingImageMetadataManagementPanel({
                     style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginTop: '20px' }}
                   >
                     <a
+                      aria-label={`View public listing ${product.name}`}
                       className="premium-button premium-button--secondary"
                       style={{ padding: '6px 12px', fontSize: '12px', height: 'auto' }}
                       href={`/listings/${encodeURIComponent(product.slug)}`}
@@ -558,6 +559,7 @@ export function ListingImageMetadataManagementPanel({
                       View public listing
                     </a>
                     <a
+                      aria-label={`Edit listing ${product.name}`}
                       className="premium-button premium-button--secondary"
                       style={{ padding: '6px 12px', fontSize: '12px', height: 'auto' }}
                       href={`/admin/listings#listing-form-${product.id}`}
@@ -565,6 +567,7 @@ export function ListingImageMetadataManagementPanel({
                       Edit listing
                     </a>
                     <a
+                      aria-label={`Manage images ${product.name}`}
                       className="premium-button premium-button--secondary"
                       style={{ padding: '6px 12px', fontSize: '12px', height: 'auto' }}
                       href="#update-listing-image-metadata"
@@ -596,7 +599,7 @@ export function ListingImageMetadataManagementPanel({
           onSubmit={handleCreate}
         >
           <h3 className="premium-title-section" style={{ fontSize: '20px', marginBottom: '24px' }}>Create listing image metadata</h3>
-          
+
           <div style={{ display: 'grid', gap: '20px' }}>
             <label style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '14px', fontWeight: 600 }}>
               New image listing
@@ -612,7 +615,7 @@ export function ListingImageMetadataManagementPanel({
                 Associate media with the correct rental listing before public-safe copy review.
               </small>
             </label>
-            
+
             <label style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '14px', fontWeight: 600 }}>
               New image bucket
               <input
@@ -623,7 +626,7 @@ export function ListingImageMetadataManagementPanel({
                 className="premium-input"
               />
             </label>
-            
+
             <label style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '14px', fontWeight: 600 }}>
               New image path
               <input
@@ -634,7 +637,7 @@ export function ListingImageMetadataManagementPanel({
                 className="premium-input"
               />
             </label>
-            
+
             <label style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '14px', fontWeight: 600 }}>
               New image alt text
               <input id="new-image-alt-text" maxLength={240} name="altText" className="premium-input" />
@@ -642,7 +645,7 @@ export function ListingImageMetadataManagementPanel({
                 Describe the visible rental furniture setup for public catalogue accessibility; do not claim availability assertions.
               </small>
             </label>
-            
+
             <label style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '14px', fontWeight: 600 }}>
               New image sort order
               <input
@@ -654,12 +657,12 @@ export function ListingImageMetadataManagementPanel({
                 className="premium-input"
               />
             </label>
-            
+
             <label style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', fontWeight: 500, padding: '16px', background: 'var(--background)', borderRadius: 'var(--radius-md)' }}>
               <input id="new-image-primary" name="isPrimary" type="checkbox" style={{ width: '18px', height: '18px', accentColor: 'var(--accent)' }} />
               Mark new image as primary public browsing image
             </label>
-            
+
             <button className="premium-button premium-button--primary" type="submit" style={{ marginTop: '12px' }}>
               Create listing image metadata
             </button>
@@ -698,7 +701,7 @@ export function ListingImageMetadataManagementPanel({
                         </p>
                       </div>
                     </div>
-                    
+
                     <div style={{ padding: '24px' }}>
                       <section
                         aria-label={`Media coverage ${label}`}
@@ -710,7 +713,7 @@ export function ListingImageMetadataManagementPanel({
                           ))}
                         </ul>
                       </section>
-                      
+
                       <form
                         aria-label={`Update image metadata ${label}`}
                         onSubmit={(event) => void handleUpdate(event, image)}
@@ -727,9 +730,9 @@ export function ListingImageMetadataManagementPanel({
                             className="premium-input"
                           />
                         </label>
-                        
+
                         <label style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '14px', fontWeight: 600 }}>
-                          Image path
+                          Image path for {label}
                           <input
                             defaultValue={image.storagePath}
                             id={`image-path-${image.id}`}
@@ -739,9 +742,9 @@ export function ListingImageMetadataManagementPanel({
                             className="premium-input"
                           />
                         </label>
-                        
+
                         <label style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '14px', fontWeight: 600 }}>
-                          Image alt text
+                          Image alt text for {label}
                           <input
                             defaultValue={image.altText ?? ""}
                             id={`image-alt-text-${image.id}`}
@@ -754,7 +757,7 @@ export function ListingImageMetadataManagementPanel({
                             must not be used as an availability assertion.
                           </small>
                         </label>
-                        
+
                         <label style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '14px', fontWeight: 600 }}>
                           Image sort order
                           <input
@@ -767,7 +770,7 @@ export function ListingImageMetadataManagementPanel({
                             className="premium-input"
                           />
                         </label>
-                        
+
                         <label style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', fontWeight: 500, padding: '16px', background: 'var(--background)', borderRadius: 'var(--radius-md)' }}>
                           <input
                             defaultChecked={image.isPrimary}
@@ -778,7 +781,7 @@ export function ListingImageMetadataManagementPanel({
                           />
                           Mark {label} as primary public browsing image
                         </label>
-                        
+
                         <p style={{ fontSize: '12px', color: 'var(--muted)', lineHeight: 1.5, margin: 0 }}>
                           Protected write boundary: primary and active media choices
                           can affect public browsing. Archive removes this image from
@@ -786,12 +789,13 @@ export function ListingImageMetadataManagementPanel({
                           storage. If save fails, keep the prior media state, review
                           alt text and primary selection, and retry locally.
                         </p>
-                        
+
                         <div style={{ display: 'flex', gap: '16px', marginTop: '8px' }}>
                           <button className="premium-button premium-button--primary" type="submit" style={{ flex: 1 }}>
                             Save image metadata
                           </button>
                           <button
+                            aria-label={`Archive image metadata ${label}`}
                             className="premium-button premium-button--secondary"
                             onClick={() => void handleArchive(image)}
                             type="button"

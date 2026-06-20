@@ -532,8 +532,21 @@ export function ListingManagementPanel({
             </div>
             <div style={{ fontSize: '13px', color: 'var(--text)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
               <p style={{ margin: 0 }}>
+                Published: {listingStatusCount(products, "published")}. Draft: {listingStatusCount(products, "draft")}. Archived: {listingStatusCount(products, "archived")}.
+              </p>
+              <p style={{ margin: 0 }}>
+                {readyListings} public-ready listings. {listingsNeedingAttention} needing public-ready listing review.
+              </p>
+              <p style={{ margin: 0 }}>
                 <strong>{readyListings}</strong> public-ready listings. <strong>{listingsNeedingAttention}</strong>{" "}
                 needing public-ready listing review.
+              </p>
+              <p style={{ margin: 0 }}>
+                {publishedListingsNeedingFixes.length}{" "}
+                {publishedListingsNeedingFixes.length === 1
+                  ? "published listing needs"
+                  : "published listings need"}{" "}
+                public-ready listing fixes before visitor browsing review.
               </p>
               <p style={{ margin: 0, color: publishedListingsNeedingFixes.length > 0 ? '#ef4444' : 'inherit' }}>
                 <strong>{publishedListingsNeedingFixes.length}</strong>{" "}
@@ -543,12 +556,17 @@ export function ListingManagementPanel({
                 public-ready listing fixes before visitor browsing review.
               </p>
               {publishedListingsNeedingFixes.length > 0 && (
-                <p style={{ margin: 0, padding: '8px', background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', borderRadius: '4px' }}>
-                  <strong>Fixes needed:</strong>{" "}
-                  {publishedListingsNeedingFixes
-                    .map((product) => product.name)
-                    .join(", ")}
-                </p>
+                <>
+                  <p style={{ margin: 0 }}>
+                    Published listings needing fixes: {publishedListingsNeedingFixes.map((product) => product.name).join(", ")}.
+                  </p>
+                  <p style={{ margin: 0, padding: '8px', background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', borderRadius: '4px' }}>
+                    <strong>Fixes needed:</strong>{" "}
+                    {publishedListingsNeedingFixes
+                      .map((product) => product.name)
+                      .join(", ")}
+                  </p>
+                </>
               )}
               <p style={{ margin: 0, fontSize: '12px', color: 'var(--muted)', marginTop: '8px', fontStyle: 'italic' }}>
                 This summary is based on existing listing metadata, category,
@@ -567,7 +585,7 @@ export function ListingManagementPanel({
           onSubmit={handleCreate}
         >
           <h3 className="premium-title-section" style={{ fontSize: '20px', marginBottom: '24px' }}>Create listing</h3>
-          
+
           <div style={{ display: 'grid', gap: '20px' }}>
             <label style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '14px', fontWeight: 600 }}>
               New listing category
@@ -584,7 +602,7 @@ export function ListingManagementPanel({
                 quote/enquiry recovery.
               </small>
             </label>
-            
+
             <label style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '14px', fontWeight: 600 }}>
               New listing slug
               <input
@@ -600,7 +618,7 @@ export function ListingManagementPanel({
                 the public listing URL.
               </small>
             </label>
-            
+
             <label style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '14px', fontWeight: 600 }}>
               New listing name
               <input id="new-listing-name" maxLength={160} name="name" required className="premium-input" />
@@ -609,7 +627,7 @@ export function ListingManagementPanel({
                 unsupported availability assertions.
               </small>
             </label>
-            
+
             <label style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '14px', fontWeight: 600 }}>
               New listing short description
               <textarea
@@ -625,7 +643,7 @@ export function ListingManagementPanel({
                 claims out.
               </small>
             </label>
-            
+
             <label style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '14px', fontWeight: 600 }}>
               New listing description
               <textarea
@@ -641,7 +659,7 @@ export function ListingManagementPanel({
                 self-service or completion-flow language.
               </small>
             </label>
-            
+
             <label style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '14px', fontWeight: 600 }}>
               New listing rental unit
               <input
@@ -657,7 +675,7 @@ export function ListingManagementPanel({
                 wording and is not stock availability.
               </small>
             </label>
-            
+
             <label style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '14px', fontWeight: 600 }}>
               New listing status
               <select defaultValue="draft" id="new-listing-status" name="status" className="premium-input" style={{ width: '100%', height: '48px', appearance: 'auto' }}>
@@ -671,7 +689,7 @@ export function ListingManagementPanel({
                 browsing without deleting the record.
               </small>
             </label>
-            
+
             <label style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '14px', fontWeight: 600 }}>
               New listing sort order
               <input
@@ -687,7 +705,7 @@ export function ListingManagementPanel({
                 is used.
               </small>
             </label>
-            
+
             <button className="premium-button premium-button--primary" type="submit" style={{ marginTop: '12px' }}>
               Create listing
             </button>
@@ -755,6 +773,7 @@ export function ListingManagementPanel({
                             style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}
                           >
                             <a
+                              aria-label={`View public listing ${product.name}`}
                               className="premium-button premium-button--secondary"
                               style={{ padding: '6px 12px', fontSize: '12px', height: 'auto' }}
                               href={`/listings/${encodeURIComponent(product.slug)}`}
@@ -762,6 +781,7 @@ export function ListingManagementPanel({
                               View public listing
                             </a>
                             <a
+                              aria-label={`Edit listing ${product.name}`}
                               className="premium-button premium-button--secondary"
                               style={{ padding: '6px 12px', fontSize: '12px', height: 'auto' }}
                               href={`#${formId}`}
@@ -769,14 +789,16 @@ export function ListingManagementPanel({
                               Edit listing details
                             </a>
                             <a
+                              aria-label={`Manage images ${product.name}`}
                               className="premium-button premium-button--secondary"
                               style={{ padding: '6px 12px', fontSize: '12px', height: 'auto' }}
                               href="/admin/media#update-listing-image-metadata"
                             >
                               Manage images
                             </a>
-                            <a 
-                              className="premium-button premium-button--secondary" 
+                            <a
+                              aria-label="Return to catalogue admin"
+                              className="premium-button premium-button--secondary"
                               style={{ padding: '6px 12px', fontSize: '12px', height: 'auto' }}
                               href="/admin/listings"
                             >
@@ -790,13 +812,13 @@ export function ListingManagementPanel({
                         >
                           <h4 style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text)', marginBottom: '12px', margin: 0 }}>Public-ready listing helper</h4>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                            <span style={{ 
-                              display: 'inline-block', 
-                              padding: '4px 10px', 
-                              borderRadius: '20px', 
-                              fontSize: '11px', 
-                              fontWeight: 700, 
-                              textTransform: 'uppercase', 
+                            <span style={{
+                              display: 'inline-block',
+                              padding: '4px 10px',
+                              borderRadius: '20px',
+                              fontSize: '11px',
+                              fontWeight: 700,
+                              textTransform: 'uppercase',
                               letterSpacing: '0.5px',
                               background: readiness.ready ? 'rgba(34, 197, 94, 0.1)' : 'rgba(245, 158, 11, 0.1)',
                               color: readiness.ready ? '#22c55e' : '#f59e0b',
@@ -866,6 +888,7 @@ export function ListingManagementPanel({
                       <label style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '14px', fontWeight: 600 }}>
                         Listing name
                         <input
+                          aria-label={`Listing name for ${product.name}`}
                           defaultValue={product.name}
                           id={`listing-name-${product.id}`}
                           maxLength={160}
@@ -973,6 +996,11 @@ export function ListingManagementPanel({
                           Save listing metadata
                         </button>
                         <button
+                          aria-label={
+                            product.status === "published"
+                              ? `Set ${product.name} to draft visibility`
+                              : `Set ${product.name} to public visibility`
+                          }
                           className="premium-button premium-button--secondary"
                           onClick={() =>
                             void handleStatusChange(
@@ -988,6 +1016,7 @@ export function ListingManagementPanel({
                             : `Set to published`}
                         </button>
                         <button
+                          aria-label={`Archive listing ${product.name}`}
                           className="premium-button premium-button--secondary"
                           onClick={() => void handleArchive(product)}
                           type="button"

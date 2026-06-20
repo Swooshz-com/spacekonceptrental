@@ -160,6 +160,11 @@ export function ProductPageContent({
           <p className="premium-subtitle" style={{ color: '#cbd5e1', maxWidth: '800px', margin: '0 auto' }}>
             {publicListingSummary(product)}
           </p>
+          {product.description && product.description !== publicListingSummary(product) ? (
+            <p className="premium-subtitle" style={{ color: '#cbd5e1', maxWidth: '800px', margin: '16px auto 0' }}>
+              {product.description}
+            </p>
+          ) : null}
         </div>
       </section>
 
@@ -168,7 +173,7 @@ export function ProductPageContent({
           <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '48px', alignItems: 'start' }}>
             {/* Visuals */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-              <div style={{ borderRadius: 'var(--radius-lg)', overflow: 'hidden', boxShadow: 'var(--shadow-md)', background: 'var(--background)', position: 'relative', aspectRatio: '4/3' }}>
+              <div className="detail-primary-image" style={{ borderRadius: 'var(--radius-lg)', overflow: 'hidden', boxShadow: 'var(--shadow-md)', background: 'var(--background)', position: 'relative', aspectRatio: '4/3' }}>
                 {product.primaryImage?.publicUrl ? (
                   <img
                     alt={imageAltText(product.primaryImage, product)}
@@ -178,9 +183,11 @@ export function ProductPageContent({
                 ) : (
                   <Image
                     alt={imageAltText(product.primaryImage, product)}
+                    height={900}
                     priority
                     src={sofaImage}
                     style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    width={1200}
                   />
                 )}
               </div>
@@ -204,11 +211,14 @@ export function ProductPageContent({
             {/* Quote Panel */}
             <div className="premium-form-card" style={{ position: 'sticky', top: '100px' }}>
               <div style={{ fontSize: '12px', fontWeight: 800, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px' }}>Rental Details</div>
-              <h2 className="premium-title-section" style={{ fontSize: '28px', marginBottom: '24px' }}>Request a Quote</h2>
-              
+              <p style={{ color: 'var(--muted)', fontSize: '14px', margin: '0 0 8px' }}>
+                View rental listing
+              </p>
+              <h2 className="premium-title-section" style={{ fontSize: '28px', marginBottom: '24px' }}>Rental details</h2>
+
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '16px', borderBottom: '1px solid var(--border)' }}>
-                  <span style={{ color: 'var(--muted)', fontWeight: 600 }}>Reference</span>
+                  <span style={{ color: 'var(--muted)', fontWeight: 600 }}>Listing reference</span>
                   <span style={{ fontWeight: 700, color: 'var(--surface-strong)' }}>{product.slug}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '16px', borderBottom: '1px solid var(--border)' }}>
@@ -222,16 +232,70 @@ export function ProductPageContent({
               </div>
 
               <div style={{ background: 'var(--background)', padding: '24px', borderRadius: 'var(--radius-md)', marginBottom: '32px' }}>
-                <h3 className="premium-title-card" style={{ fontSize: '16px' }}>Preparing your enquiry</h3>
+                <h3 className="premium-title-card" style={{ fontSize: '16px' }}>Fit check before enquiry</h3>
+                <p style={{ color: 'var(--muted)', fontSize: '15px', lineHeight: 1.6 }}>
+                  Media and fit check before enquiry. Listing context is a
+                  starting point only; event-use context is a starting point
+                  only. The team can review the request; this page does not set
+                  aside furniture or finish rental details.
+                </p>
+                <p style={{ color: 'var(--muted)', fontSize: '15px', lineHeight: 1.6 }}>
+                  Quote form starting text includes this listing reference so
+                  visitors can keep editing requested items before sending.
+                </p>
                 <ul style={{ margin: 0, paddingLeft: '20px', color: 'var(--muted)', fontSize: '15px', lineHeight: 1.6 }}>
-                  <li style={{ marginBottom: '8px' }}>Share timing, venue, and delivery notes.</li>
-                  <li style={{ marginBottom: '8px' }}>Add desired quantities and acceptable alternatives.</li>
-                  <li>Our team will manually review and respond to confirm the fit.</li>
+                  <li className="sr-only">Bring event date, venue, quantities, alternatives, setup, access, and timing notes before sending.</li>
+                  <li style={{ marginBottom: '8px' }}>Bring event details such as date, venue, and timing window.</li>
+                  <li style={{ marginBottom: '8px' }}>Add quantities and alternatives for the requested listing.</li>
+                  <li>Share setup, access, and timing notes for the team.</li>
                 </ul>
               </div>
 
-              <Link className="premium-button premium-button--primary" style={{ width: '100%', marginBottom: '16px' }} href={getQuoteHrefForListing(product.slug)}>
-                Start Enquiry for {product.name}
+              <section
+                aria-labelledby="quote-request-checklist-heading"
+                style={{ background: 'var(--background)', padding: '24px', borderRadius: 'var(--radius-md)', marginBottom: '32px' }}
+              >
+                <h3 id="quote-request-checklist-heading" className="premium-title-card" style={{ fontSize: '16px' }}>
+                  Quote request checklist
+                </h3>
+                <p style={{ color: 'var(--muted)', fontSize: '15px', lineHeight: 1.6 }}>
+                  Quote planning: share timing, venue, preferred quantities, and delivery notes before sending.
+                </p>
+                <ul style={{ margin: 0, paddingLeft: '20px', color: 'var(--muted)', fontSize: '15px', lineHeight: 1.6 }}>
+                  <li style={{ marginBottom: '8px' }}>Event details such as date, schedule, and rental window.</li>
+                  <li style={{ marginBottom: '8px' }}>Venue or event location for access review.</li>
+                  <li style={{ marginBottom: '8px' }}>Quantities and alternatives for the requested listing.</li>
+                  <li>Setup, access, and timing notes for manual follow-up.</li>
+                </ul>
+              </section>
+
+              <Link
+                aria-label={`Request a quote for ${product.name}`}
+                className="premium-button premium-button--primary"
+                style={{ width: '100%', marginBottom: '16px' }}
+                href={getQuoteHrefForListing(product.slug)}
+              >
+                Request a quote
+              </Link>
+              <Link
+                aria-label={`Start enquiry for ${product.name}`}
+                className="premium-button premium-button--secondary"
+                style={{ width: '100%', marginBottom: '16px' }}
+                href={getQuoteHrefForListing(product.slug)}
+              >
+                Send an enquiry
+              </Link>
+              <Link className="premium-button premium-button--secondary" style={{ width: '100%' }} href={getQuoteHrefForListing(product.slug)}>
+                Start a rental enquiry
+              </Link>
+              <Link className="premium-button premium-button--secondary" style={{ width: '100%', marginTop: '16px' }} href="/listings">
+                Browse listings
+              </Link>
+              <Link className="premium-button premium-button--secondary" style={{ width: '100%', marginTop: '16px' }} href="/categories">
+                Browse categories
+              </Link>
+              <Link className="premium-button premium-button--secondary" style={{ width: '100%', marginTop: '16px' }} href="/events">
+                Explore event-use ideas
               </Link>
             </div>
           </div>
@@ -244,12 +308,15 @@ export function ProductPageContent({
             <div style={{ textAlign: 'center', marginBottom: '48px' }}>
               <div style={{ fontSize: '13px', fontWeight: 800, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px' }}>Related</div>
               <h2 className="premium-title-section">More like this</h2>
+              <p style={{ color: 'var(--muted)', margin: '8px 0 0' }}>
+                Same-category links are local browsing cues only.
+              </p>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '32px' }}>
               {relatedListings.map((related) => (
-                <Link key={related.slug} href={`/listings/${related.slug}`} style={{ display: 'block', background: 'var(--surface)', borderRadius: 'var(--radius-lg)', overflow: 'hidden', border: '1px solid var(--border)', transition: 'transform 0.2s', padding: '24px' }}>
+                <Link aria-label={`View rental listing: ${related.name}`} key={related.slug} href={`/listings/${related.slug}`} style={{ display: 'block', background: 'var(--surface)', borderRadius: 'var(--radius-lg)', overflow: 'hidden', border: '1px solid var(--border)', transition: 'transform 0.2s', padding: '24px' }}>
                   <h3 className="premium-title-card" style={{ fontSize: '18px', marginBottom: '8px' }}>{related.name}</h3>
-                  <p style={{ color: 'var(--muted)', fontSize: '14px', margin: 0 }}>View listing details</p>
+                  <p style={{ color: 'var(--muted)', fontSize: '14px', margin: 0 }}>View rental listing</p>
                 </Link>
               ))}
             </div>

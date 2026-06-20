@@ -280,7 +280,7 @@ export function ListingImageUploadPanel({
                 listing; selected listing context stays admin-only.
               </small>
             </label>
-            
+
             <label style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '14px', fontWeight: 600 }}>
               Listing image file
               <input
@@ -293,7 +293,7 @@ export function ListingImageUploadPanel({
                 style={{ padding: '10px' }}
               />
             </label>
-            
+
             <label style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '14px', fontWeight: 600 }}>
               Upload image alt text
               <input id="upload-image-alt-text" maxLength={240} name="altText" className="premium-input" />
@@ -303,7 +303,7 @@ export function ListingImageUploadPanel({
                 availability, proof, policy, or owner sign-off claims.
               </small>
             </label>
-            
+
             <label style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '14px', fontWeight: 600 }}>
               Upload image sort order
               <input
@@ -315,12 +315,12 @@ export function ListingImageUploadPanel({
                 className="premium-input"
               />
             </label>
-            
+
             <label style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', fontWeight: 500, padding: '16px', background: 'var(--background)', borderRadius: 'var(--radius-md)' }}>
               <input id="upload-image-primary" name="isPrimary" type="checkbox" style={{ width: '18px', height: '18px', accentColor: 'var(--accent)' }} />
               Mark uploaded image as primary public browsing image after alt-text review
             </label>
-            
+
             <button className="premium-button premium-button--primary" type="submit" style={{ marginTop: '8px' }}>
               Upload listing image for review
             </button>

@@ -62,9 +62,11 @@ export default function EventsPage() {
     <>
       <section className="premium-page-header">
         <div className="premium-container">
-          <h1 className="premium-title-hero">Event Setups</h1>
+          <h1 className="premium-title-hero">Events</h1>
           <p className="premium-subtitle" style={{ color: '#cbd5e1' }}>
-            Explore furniture rentals and styled setups for common event formats. Compare guidance with our catalogue before sending a quote request.
+            Event rentals, furniture rentals, and styled setups for
+            common event formats. Compare guidance with our catalogue before
+            sending a quote request.
           </p>
         </div>
       </section>
@@ -79,7 +81,7 @@ export default function EventsPage() {
                   <h2 className="premium-event-card__title">{item.title}</h2>
                   <p style={{ color: '#e2e8f0', margin: '0 0 16px 0', fontSize: '15px' }}>{item.description}</p>
                   <div className="premium-event-card__arrow">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                    <span aria-hidden="true">Open</span>
                   </div>
                 </div>
               </Link>
@@ -97,6 +99,9 @@ export default function EventsPage() {
               <p className="premium-subtitle" style={{ marginBottom: '40px' }}>
                 These routes are starting points for a rental enquiry, not a fixed package. They do not set aside furniture or finalise rental details. Keep the notes practical and our team will review the fit.
               </p>
+              <p className="sr-only">
+                Compare the setup guidance with catalogue listings before sending a quote request.
+              </p>
 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '24px', textAlign: 'left', marginBottom: '48px' }}>
                 {setupSteps.map((step, i) => (
@@ -111,13 +116,19 @@ export default function EventsPage() {
 
               <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
                 <Link className="premium-button premium-button--secondary" href="/categories">
-                  Browse categories
+                  Browse rental categories
                 </Link>
                 <Link className="premium-button premium-button--secondary" href="/listings">
                   Browse listings
                 </Link>
-                <Link className="premium-button premium-button--primary" href="/quote">
+                <Link className="premium-button premium-button--secondary" href="/catalogue">
+                  Compare event setup guidance
+                </Link>
+                <Link className="premium-button premium-button--secondary" href="/quote">
                   Send an enquiry
+                </Link>
+                <Link className="premium-button premium-button--primary" href="/quote">
+                  Start a rental enquiry
                 </Link>
               </div>
             </div>

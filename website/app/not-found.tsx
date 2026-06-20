@@ -10,7 +10,7 @@ export default function NotFound() {
           This page is not available right now. Browse current rental listings
           or send a quote enquiry with event details so the team can help.
         </p>
-        
+
         <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', justifyContent: 'center' }}>
           <Link className="premium-button premium-button--secondary" href="/listings">
             Browse listings

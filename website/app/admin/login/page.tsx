@@ -38,11 +38,11 @@ export default async function AdminLoginPage({
       <div className="premium-form-card" style={{ width: '100%', maxWidth: '480px', margin: '0 auto' }}>
         <div style={{ textAlign: 'center', marginBottom: '32px' }}>
           <p style={{ fontSize: '12px', fontWeight: 800, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px' }}>Secure admin</p>
-          <h1 className="premium-title-section" style={{ fontSize: '28px', margin: 0 }}>Sign in to Admin</h1>
+          <h1 className="premium-title-section" style={{ fontSize: '28px', margin: 0 }}>Admin sign in</h1>
         </div>
-        
+
         <LoginStatus state={state} />
-        
+
         <form method="post" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           <label style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '14px', fontWeight: 600 }}>
             Email

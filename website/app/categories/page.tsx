@@ -2,7 +2,6 @@ import Link from "next/link";
 import type { Metadata } from "next";
 
 import { getPublicCatalogue } from "../../lib/catalogue/catalogue-repository";
-import { getQuoteHrefForListing } from "../../lib/catalogue/quote-handoff";
 import type { PublicCatalogue } from "../../lib/catalogue/types";
 
 export const dynamic = "force-dynamic";
@@ -28,6 +27,11 @@ function publicListingCountText(count: number) {
   return `${count} ${count === 1 ? "listing" : "listings"}`;
 }
 
+function publicListingCountScreenReaderText(count: number) {
+  return `${count} public ${count === 1 ? "listing" : "listings"}`;
+}
+
+// Category-page enquiry CTAs stay general; listing detail pages still use getQuoteHrefForListing.
 export function CategoriesPageContent({
   catalogue
 }: {
@@ -55,6 +59,9 @@ export function CategoriesPageContent({
                 <Link className="premium-button premium-button--secondary" href="/catalogue">
                   View catalogue
                 </Link>
+                <Link className="premium-button premium-button--secondary" href="/listings">
+                  Browse listings
+                </Link>
                 <Link className="premium-button premium-button--primary" href="/quote">
                   Request a quote
                 </Link>
@@ -74,6 +81,9 @@ export function CategoriesPageContent({
           <p className="premium-subtitle" style={{ color: '#cbd5e1' }}>
             Explore our curated collections. Compare listings across seating, lounges, and event setups, then send an enquiry for the pieces that suit your vision.
           </p>
+          <p className="premium-subtitle" style={{ color: '#cbd5e1' }}>
+            Rental fit is reviewed directly by the team.
+          </p>
         </div>
       </section>
 
@@ -90,12 +100,16 @@ export function CategoriesPageContent({
                   <div style={{ padding: '40px', flex: 1, display: 'flex', flexDirection: 'column' }}>
                     <div style={{ fontSize: '13px', fontWeight: 800, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px' }}>
                       {publicListingCountText(categoryListings.length)}
+                      <span className="sr-only">
+                        {publicListingCountScreenReaderText(categoryListings.length)}
+                      </span>
                     </div>
                     <h2 className="premium-title-card" style={{ fontSize: '24px', marginBottom: '12px' }}>{category.name}</h2>
                     <p style={{ color: 'var(--muted)', lineHeight: 1.6, marginBottom: '24px' }}>{categoryDescription(category.description)}</p>
-                    
+
                     <div style={{ marginTop: 'auto', display: 'flex', gap: '12px', marginBottom: '24px' }}>
                       <Link
+                        aria-label={`Compare ${category.name} listings`}
                         className="premium-button premium-button--secondary"
                         style={{ flex: 1, padding: '0 16px', fontSize: '13px', height: '36px' }}
                         href={`/listings?category=${encodeURIComponent(category.slug)}`}
@@ -107,7 +121,7 @@ export function CategoriesPageContent({
                         style={{ flex: 1, padding: '0 16px', fontSize: '13px', height: '36px' }}
                         href="/quote"
                       >
-                        Enquire
+                        Send an enquiry
                       </Link>
                     </div>
 
@@ -118,17 +132,17 @@ export function CategoriesPageContent({
                           <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '12px' }}>
                             {categoryListings.slice(0, 3).map((product) => (
                               <li key={product.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <Link 
+                                <Link
                                   href={`/listings/${product.slug}`}
                                   style={{ color: 'var(--text)', textDecoration: 'none', fontSize: '14px', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginRight: '16px' }}
                                 >
                                   {product.name}
                                 </Link>
-                                <Link 
-                                  href={getQuoteHrefForListing(product.slug)}
+                                <Link
+                                  href="/quote"
                                   style={{ fontSize: '12px', fontWeight: 600, color: 'var(--accent)', textDecoration: 'none', flexShrink: 0 }}
                                 >
-                                  Request
+                                  Send an enquiry
                                 </Link>
                               </li>
                             ))}
@@ -136,7 +150,7 @@ export function CategoriesPageContent({
                         </>
                       ) : (
                         <p style={{ fontSize: '14px', color: 'var(--muted)', margin: 0 }}>
-                          No public listings available in this category. Browse all listings to find options.
+                          No public listings are available in this category yet. Browse all listings to find options.
                         </p>
                       )}
                     </div>
@@ -148,7 +162,10 @@ export function CategoriesPageContent({
 
           <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', marginTop: '64px' }}>
             <Link className="premium-button premium-button--secondary" href="/listings">
-              Browse all listings
+              Browse listings
+            </Link>
+            <Link className="premium-button premium-button--secondary" href="/quote">
+              Start a rental enquiry
             </Link>
             <Link className="premium-button premium-button--primary" href="/quote">
               Send an enquiry

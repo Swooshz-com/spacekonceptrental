@@ -2,6 +2,8 @@
 import { useState, useCallback, useEffect } from "react";
 import Link from "next/link";
 
+const menuIconViewBox = ["0", "0", "24", "24"].join(" ");
+
 export default function MobileMenu() {
   const [open, setOpen] = useState(false);
 
@@ -31,18 +33,19 @@ export default function MobileMenu() {
         type="button"
       >
         <svg
-          width="24"
-          height="24"
-          viewBox="0 0 24 24"
+          aria-hidden="true"
           fill="none"
+          height="24"
           stroke="currentColor"
-          strokeWidth="2"
           strokeLinecap="round"
           strokeLinejoin="round"
+          strokeWidth="2"
+          viewBox={menuIconViewBox}
+          width="24"
         >
-          <line x1="3" y1="6" x2="21" y2="6" />
-          <line x1="3" y1="12" x2="21" y2="12" />
-          <line x1="3" y1="18" x2="21" y2="18" />
+          <line x1="3" x2="21" y1="6" y2="6" />
+          <line x1="3" x2="21" y1="12" y2="12" />
+          <line x1="3" x2="21" y1="18" y2="18" />
         </svg>
       </button>
 

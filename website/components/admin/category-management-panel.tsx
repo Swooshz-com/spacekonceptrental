@@ -382,7 +382,7 @@ export function CategoryManagementPanel({
           onSubmit={handleCreate}
         >
           <h3 className="premium-title-section" style={{ fontSize: '20px', marginBottom: '24px' }}>Create category</h3>
-          
+
           <div style={{ display: 'grid', gap: '20px' }}>
             <label style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '14px', fontWeight: 600 }}>
               New category slug
@@ -398,7 +398,7 @@ export function CategoryManagementPanel({
                 Use lowercase letters, numbers, and hyphens for public category URLs.
               </small>
             </label>
-            
+
             <label style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '14px', fontWeight: 600 }}>
               New category name
               <input id="new-category-name" maxLength={120} name="name" required className="premium-input" />
@@ -406,7 +406,7 @@ export function CategoryManagementPanel({
                 Name the rental/event furniture grouping without sales-flow wording.
               </small>
             </label>
-            
+
             <label style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '14px', fontWeight: 600 }}>
               New category description
               <textarea
@@ -421,7 +421,7 @@ export function CategoryManagementPanel({
                 Description helps public browsing and quote/enquiry recovery; keep internal notes out.
               </small>
             </label>
-            
+
             <label style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '14px', fontWeight: 600 }}>
               New category sort order
               <input
@@ -436,7 +436,7 @@ export function CategoryManagementPanel({
                 Lower numbers appear earlier where category ordering is used.
               </small>
             </label>
-            
+
             <label style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', fontWeight: 500, padding: '16px', background: 'var(--background)', borderRadius: 'var(--radius-md)' }}>
               <input
                 defaultChecked
@@ -447,7 +447,7 @@ export function CategoryManagementPanel({
               />
               Make new category visible for public grouping after review
             </label>
-            
+
             <button className="premium-button premium-button--primary" type="submit" style={{ marginTop: '12px' }}>
               Create category
             </button>
@@ -477,7 +477,7 @@ export function CategoryManagementPanel({
                       </p>
                     </div>
                   </div>
-                  
+
                   <div style={{ padding: '24px' }}>
                     <section aria-label={`Category visibility review ${category.name}`} style={{ marginBottom: '24px', padding: '16px', background: 'var(--background)', borderRadius: 'var(--radius-md)' }}>
                       <ul style={{ margin: 0, paddingLeft: '20px', color: 'var(--text)', fontSize: '13px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -486,14 +486,14 @@ export function CategoryManagementPanel({
                         ))}
                       </ul>
                     </section>
-                    
+
                     <form
                       aria-label={`Update category ${category.name}`}
                       onSubmit={(event) => void handleUpdate(event, category)}
                       style={{ display: 'grid', gap: '20px' }}
                     >
                       <label style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '14px', fontWeight: 600 }}>
-                        Category name
+                        Category name for {category.name}
                         <input
                           defaultValue={category.name}
                           id={`category-name-${category.id}`}
@@ -503,9 +503,9 @@ export function CategoryManagementPanel({
                           className="premium-input"
                         />
                       </label>
-                      
+
                       <label style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '14px', fontWeight: 600 }}>
-                        Category description
+                        Category description for {category.name}
                         <textarea
                           defaultValue={category.description ?? ""}
                           id={`category-description-${category.id}`}
@@ -516,9 +516,9 @@ export function CategoryManagementPanel({
                           style={{ resize: 'vertical' }}
                         />
                       </label>
-                      
+
                       <label style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '14px', fontWeight: 600 }}>
-                        Category sort order
+                        Category sort order for {category.name}
                         <input
                           defaultValue={category.sortOrder}
                           id={`category-sort-order-${category.id}`}
@@ -529,7 +529,7 @@ export function CategoryManagementPanel({
                           className="premium-input"
                         />
                       </label>
-                      
+
                       <label style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', fontWeight: 500, padding: '16px', background: 'var(--background)', borderRadius: 'var(--radius-md)' }}>
                         <input
                           defaultChecked={category.isPublished}
@@ -540,7 +540,7 @@ export function CategoryManagementPanel({
                         />
                         Make {category.name} visible for public grouping
                       </label>
-                      
+
                       <p style={{ fontSize: '12px', color: 'var(--muted)', lineHeight: 1.5, margin: 0 }}>
                         Protected write boundary: save category metadata only when
                         grouping and listing-count cues are clear. Check validation
@@ -548,12 +548,18 @@ export function CategoryManagementPanel({
                         or archived categories stay out of public browsing without
                         deleting the category record.
                       </p>
-                      
+
                       <div style={{ display: 'flex', gap: '16px', marginTop: '8px' }}>
-                        <button className="premium-button premium-button--primary" type="submit" style={{ flex: 1 }}>
-                          Save metadata
+                        <button
+                          aria-label={`Save category metadata for ${category.name}`}
+                          className="premium-button premium-button--primary"
+                          type="submit"
+                          style={{ flex: 1 }}
+                        >
+                          Save category metadata
                         </button>
                         <button
+                          aria-label={`Archive category ${category.name}`}
                           className="premium-button premium-button--secondary"
                           onClick={() => void handleArchive(category)}
                           type="button"
