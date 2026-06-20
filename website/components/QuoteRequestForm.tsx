@@ -287,23 +287,13 @@ export default function QuoteRequestForm({
       onSubmit={handleSubmit}
     >
       <p className="quote-form__intro">
-        Share your name. Share one reliable contact method, event date if known,
-        venue or location, requested listings or items, quantities, alternates,
-        setup, access, and timing notes so the team can triage the rental
-        enquiry. The team will use the requested listing/item context for
-        manual follow-up.
+        Let us know what you need for your event. Share the date, venue, and requested items—our team will review the details and get back to you with a custom quote.
       </p>
       {initialItemsText ? (
         <aside className="quote-form__selected" aria-label="Selected listing">
           <strong>Selected listing</strong>
           <span>
-            {initialItemsText} starts this rental request. Listing context is
-            a starting point only and remains editable request text, not a
-            rental fit confirmation. Keep this listing, change it, or add more
-            rental items before sending. Add quantities in the requested
-            listings box or item notes along with alternates, dimensions,
-            setup, access, rental period, or timing notes before sending; the
-            team can review the request.
+            You've added <strong>{initialItemsText}</strong> to your request. Feel free to adjust the quantities or add more items before submitting.
           </span>
         </aside>
       ) : null}

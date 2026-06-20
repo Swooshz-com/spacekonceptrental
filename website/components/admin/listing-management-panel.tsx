@@ -465,465 +465,544 @@ export function ListingManagementPanel({
   }
 
   return (
-    <section className="category-management" aria-label="Listing management">
-      <div className="category-management__header">
-        <p className="eyebrow">Protected admin save</p>
-        <h2>Listing management</h2>
-        <p>
-          Create, update, set visibility, and archive furniture listing metadata
-          through the protected admin API. Public-facing fields should describe
-          rental/event furniture only. Public-ready listing cues stay in this
-          protected admin workspace for business owner review.
-        </p>
-      </div>
-
-      <div
-        className={`category-management__status category-management__status--${status.kind}`}
-        aria-live="polite"
-      >
-        {status.kind === "idle"
-          ? "Listing write controls are ready for protected admin save."
-          : status.message}
-      </div>
-
-      <section className="admin-readiness" aria-label="Public-safe copy review">
-        <h3>Public-safe copy review</h3>
-        <p>
-          Save listing metadata only after reviewing listing title, slug,
-          category, rental unit, short description, long description, visibility
-          status, and sort order.
-        </p>
-        <p className="category-management__hint">
-          Protected admin save only updates listing metadata. Public-facing copy
-          should use owner-supplied facts and help visitors prepare a quote
-          request.
-        </p>
-      </section>
-
-      <section className="admin-readiness" aria-label="Public-ready listing summary">
-        <h3>Public-ready listing summary</h3>
-        <div
-          className="admin-readiness__summary"
-          aria-label="Listing status summary"
-        >
-          <p>Published: {listingStatusCount(products, "published")}</p>
-          <p>Draft: {listingStatusCount(products, "draft")}</p>
-          <p>Archived: {listingStatusCount(products, "archived")}</p>
-        </div>
-        <p>
-          {readyListings} public-ready listings. {listingsNeedingAttention}{" "}
-          needing public-ready listing review.
-        </p>
-        <p>
-          {publishedListingsNeedingFixes.length}{" "}
-          {publishedListingsNeedingFixes.length === 1
-            ? "published listing needs"
-            : "published listings need"}{" "}
-          public-ready listing fixes before visitor browsing review.
-        </p>
-        {publishedListingsNeedingFixes.length > 0 ? (
-          <p>
-            Published listings needing fixes:{" "}
-            {publishedListingsNeedingFixes
-              .map((product) => product.name)
-              .join(", ")}
+    <section className="premium-section" aria-label="Listing management">
+      <div className="premium-container" style={{ maxWidth: '1000px' }}>
+        <div style={{ marginBottom: '40px' }}>
+          <p style={{ fontSize: '12px', fontWeight: 800, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px' }}>Protected admin save</p>
+          <h2 className="premium-title-section" style={{ fontSize: '28px', marginBottom: '16px' }}>Listing management</h2>
+          <p style={{ color: 'var(--muted)', lineHeight: 1.6 }}>
+            Create, update, set visibility, and archive furniture listing metadata
+            through the protected admin API. Public-facing fields should describe
+            rental/event furniture only. Public-ready listing cues stay in this
+            protected admin workspace for business owner review.
           </p>
-        ) : null}
-        <p className="category-management__hint">
-          This summary is based on existing listing metadata, category,
-          descriptions, rental unit, and image metadata already available in
-          this protected admin workspace. It is an admin cue, not a public
-          availability claim.
-        </p>
-      </section>
+        </div>
 
-      <form
-        aria-label="Create listing"
-        className="category-management__form"
-        onSubmit={handleCreate}
-      >
-        <h3>Create listing</h3>
-        <label htmlFor="new-listing-category">
-          New listing category
-          <select id="new-listing-category" name="categoryId">
-            <option value="">No category - keep as draft until grouped</option>
-            {categories.map((category) => (
-              <option key={category.id} value={category.id}>
-                {category.name}
-              </option>
-            ))}
-          </select>
-          <small>
-            Choose the public category grouping used for browsing and
-            quote/enquiry recovery.
-          </small>
-        </label>
-        <label htmlFor="new-listing-slug">
-          New listing slug
-          <input
-            id="new-listing-slug"
-            name="slug"
-            pattern="[a-z0-9][a-z0-9-]{1,98}[a-z0-9]"
-            required
-            type="text"
-          />
-          <small>
-            Use lowercase letters, numbers, and hyphens; this can become part of
-            the public listing URL.
-          </small>
-        </label>
-        <label htmlFor="new-listing-name">
-          New listing name
-          <input id="new-listing-name" maxLength={160} name="name" required />
-          <small>
-            Use owner-supplied rental/event furniture wording only; do not add
-            unsupported availability assertions.
-          </small>
-        </label>
-        <label htmlFor="new-listing-short-description">
-          New listing short description
-          <textarea
-            id="new-listing-short-description"
-            maxLength={240}
-            name="shortDescription"
-            rows={2}
-          />
-          <small>
-            Short public browsing summary for quote planning; keep unsupported
-            claims out.
-          </small>
-        </label>
-        <label htmlFor="new-listing-description">
-          New listing description
-          <textarea
-            id="new-listing-description"
-            maxLength={2000}
-            name="description"
-            rows={4}
-          />
-          <small>
-            Full public description should help enquiry planning without
-            self-service or completion-flow language.
-          </small>
-        </label>
-        <label htmlFor="new-listing-rental-unit">
-          New listing rental unit
-          <input
-            defaultValue="item"
-            id="new-listing-rental-unit"
-            maxLength={80}
-            name="rentalUnit"
-            required
-          />
-          <small>
-            Examples include item, set, or piece; this supports quote/request
-            wording and is not stock availability.
-          </small>
-        </label>
-        <label htmlFor="new-listing-status">
-          New listing status
-          <select defaultValue="draft" id="new-listing-status" name="status">
-            <option value="draft">Draft</option>
-            <option value="published">Published</option>
-            <option value="archived">Archived</option>
-          </select>
-          <small>
-            Draft stays protected for recovery, published can appear publicly
-            when public-ready checks pass, and archived is hidden from active
-            browsing without deleting the record.
-          </small>
-        </label>
-        <label htmlFor="new-listing-sort-order">
-          New listing sort order
-          <input
-            id="new-listing-sort-order"
-            max={1000000}
-            min={0}
-            name="sortOrder"
-            type="number"
-          />
-          <small>
-            Lower numbers appear earlier in admin/public grouping where sorting
-            is used.
-          </small>
-        </label>
-        <button className="button" type="submit">
-          Create listing
-        </button>
-      </form>
+        {status.kind !== "idle" && (
+          <div
+            style={{
+              padding: '16px',
+              borderRadius: 'var(--radius-md)',
+              marginBottom: '32px',
+              fontSize: '14px',
+              fontWeight: 500,
+              ...(status.kind === "success" ? { background: 'rgba(34, 197, 94, 0.1)', color: '#22c55e', border: '1px solid rgba(34, 197, 94, 0.2)' } :
+                  status.kind === "error" ? { background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.2)' } :
+                  { background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6', border: '1px solid rgba(59, 130, 246, 0.2)' })
+            }}
+            aria-live="polite"
+          >
+            {status.message}
+          </div>
+        )}
 
-      <div className="category-management__list" aria-label="Update listings">
-        {products.length === 0 ? (
-          <section className="admin-dashboard__card admin-dashboard__card--summary">
-            <p>
-              No furniture listings are available to update yet. Create a draft
-              listing above before adding media or publishing.
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '32px', marginBottom: '48px' }}>
+          <section className="premium-card" style={{ padding: '24px' }} aria-label="Public-safe copy review">
+            <h3 className="premium-title-card" style={{ fontSize: '18px', marginBottom: '12px' }}>Public-safe copy review</h3>
+            <p style={{ fontSize: '14px', color: 'var(--text)', lineHeight: 1.6, marginBottom: '16px' }}>
+              Save listing metadata only after reviewing listing title, slug,
+              category, rental unit, short description, long description, visibility
+              status, and sort order.
+            </p>
+            <p style={{ fontSize: '13px', color: 'var(--muted)', background: 'var(--background)', padding: '12px', borderRadius: 'var(--radius-md)', margin: 0 }}>
+              Protected admin save only updates listing metadata. Public-facing copy
+              should use owner-supplied facts and help visitors prepare a quote
+              request.
             </p>
           </section>
-        ) : (
-          products.map((product) => (
-            <article
-              aria-label={`Listing content ${product.name}`}
-              className="category-management__item"
-              key={product.id}
-            >
-              {(() => {
-                const readiness =
-                  listingReadinessById.get(product.id) ??
-                  listingReadiness(product);
-                const formId = listingFormId(product);
 
-                return (
-                  <>
-                    <div>
-                      <h3>{product.name}</h3>
-                      <dl className="quote-inbox__details">
-                        <div>
-                          <dt>Category/type</dt>
-                          <dd>{categoryLabel(product, categories)}</dd>
+          <section className="premium-card" style={{ padding: '24px' }} aria-label="Public-ready listing summary">
+            <h3 className="premium-title-card" style={{ fontSize: '18px', marginBottom: '16px' }}>Public-ready listing summary</h3>
+            <div
+              style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', marginBottom: '20px' }}
+              aria-label="Listing status summary"
+            >
+              <div style={{ background: 'var(--background)', padding: '12px', borderRadius: 'var(--radius-md)', flex: 1, minWidth: '100px', textAlign: 'center' }}>
+                <div style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text)', marginBottom: '4px' }}>{listingStatusCount(products, "published")}</div>
+                <div style={{ fontSize: '12px', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Published</div>
+              </div>
+              <div style={{ background: 'var(--background)', padding: '12px', borderRadius: 'var(--radius-md)', flex: 1, minWidth: '100px', textAlign: 'center' }}>
+                <div style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text)', marginBottom: '4px' }}>{listingStatusCount(products, "draft")}</div>
+                <div style={{ fontSize: '12px', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Draft</div>
+              </div>
+              <div style={{ background: 'var(--background)', padding: '12px', borderRadius: 'var(--radius-md)', flex: 1, minWidth: '100px', textAlign: 'center' }}>
+                <div style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text)', marginBottom: '4px' }}>{listingStatusCount(products, "archived")}</div>
+                <div style={{ fontSize: '12px', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Archived</div>
+              </div>
+            </div>
+            <div style={{ fontSize: '13px', color: 'var(--text)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <p style={{ margin: 0 }}>
+                <strong>{readyListings}</strong> public-ready listings. <strong>{listingsNeedingAttention}</strong>{" "}
+                needing public-ready listing review.
+              </p>
+              <p style={{ margin: 0, color: publishedListingsNeedingFixes.length > 0 ? '#ef4444' : 'inherit' }}>
+                <strong>{publishedListingsNeedingFixes.length}</strong>{" "}
+                {publishedListingsNeedingFixes.length === 1
+                  ? "published listing needs"
+                  : "published listings need"}{" "}
+                public-ready listing fixes before visitor browsing review.
+              </p>
+              {publishedListingsNeedingFixes.length > 0 && (
+                <p style={{ margin: 0, padding: '8px', background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', borderRadius: '4px' }}>
+                  <strong>Fixes needed:</strong>{" "}
+                  {publishedListingsNeedingFixes
+                    .map((product) => product.name)
+                    .join(", ")}
+                </p>
+              )}
+              <p style={{ margin: 0, fontSize: '12px', color: 'var(--muted)', marginTop: '8px', fontStyle: 'italic' }}>
+                This summary is based on existing listing metadata, category,
+                descriptions, rental unit, and image metadata already available in
+                this protected admin workspace. It is an admin cue, not a public
+                availability claim.
+              </p>
+            </div>
+          </section>
+        </div>
+
+        <form
+          aria-label="Create listing"
+          className="premium-form-card"
+          style={{ marginBottom: '64px' }}
+          onSubmit={handleCreate}
+        >
+          <h3 className="premium-title-section" style={{ fontSize: '20px', marginBottom: '24px' }}>Create listing</h3>
+          
+          <div style={{ display: 'grid', gap: '20px' }}>
+            <label style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '14px', fontWeight: 600 }}>
+              New listing category
+              <select id="new-listing-category" name="categoryId" className="premium-input" style={{ width: '100%', height: '48px', appearance: 'auto' }}>
+                <option value="">No category - keep as draft until grouped</option>
+                {categories.map((category) => (
+                  <option key={category.id} value={category.id}>
+                    {category.name}
+                  </option>
+                ))}
+              </select>
+              <small style={{ fontWeight: 400, color: 'var(--muted)', fontSize: '12px' }}>
+                Choose the public category grouping used for browsing and
+                quote/enquiry recovery.
+              </small>
+            </label>
+            
+            <label style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '14px', fontWeight: 600 }}>
+              New listing slug
+              <input
+                id="new-listing-slug"
+                name="slug"
+                pattern="[a-z0-9][a-z0-9-]{1,98}[a-z0-9]"
+                required
+                type="text"
+                className="premium-input"
+              />
+              <small style={{ fontWeight: 400, color: 'var(--muted)', fontSize: '12px' }}>
+                Use lowercase letters, numbers, and hyphens; this can become part of
+                the public listing URL.
+              </small>
+            </label>
+            
+            <label style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '14px', fontWeight: 600 }}>
+              New listing name
+              <input id="new-listing-name" maxLength={160} name="name" required className="premium-input" />
+              <small style={{ fontWeight: 400, color: 'var(--muted)', fontSize: '12px' }}>
+                Use owner-supplied rental/event furniture wording only; do not add
+                unsupported availability assertions.
+              </small>
+            </label>
+            
+            <label style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '14px', fontWeight: 600 }}>
+              New listing short description
+              <textarea
+                id="new-listing-short-description"
+                maxLength={240}
+                name="shortDescription"
+                rows={2}
+                className="premium-input"
+                style={{ height: 'auto', resize: 'vertical' }}
+              />
+              <small style={{ fontWeight: 400, color: 'var(--muted)', fontSize: '12px' }}>
+                Short public browsing summary for quote planning; keep unsupported
+                claims out.
+              </small>
+            </label>
+            
+            <label style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '14px', fontWeight: 600 }}>
+              New listing description
+              <textarea
+                id="new-listing-description"
+                maxLength={2000}
+                name="description"
+                rows={4}
+                className="premium-input"
+                style={{ height: 'auto', resize: 'vertical' }}
+              />
+              <small style={{ fontWeight: 400, color: 'var(--muted)', fontSize: '12px' }}>
+                Full public description should help enquiry planning without
+                self-service or completion-flow language.
+              </small>
+            </label>
+            
+            <label style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '14px', fontWeight: 600 }}>
+              New listing rental unit
+              <input
+                defaultValue="item"
+                id="new-listing-rental-unit"
+                maxLength={80}
+                name="rentalUnit"
+                required
+                className="premium-input"
+              />
+              <small style={{ fontWeight: 400, color: 'var(--muted)', fontSize: '12px' }}>
+                Examples include item, set, or piece; this supports quote/request
+                wording and is not stock availability.
+              </small>
+            </label>
+            
+            <label style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '14px', fontWeight: 600 }}>
+              New listing status
+              <select defaultValue="draft" id="new-listing-status" name="status" className="premium-input" style={{ width: '100%', height: '48px', appearance: 'auto' }}>
+                <option value="draft">Draft</option>
+                <option value="published">Published</option>
+                <option value="archived">Archived</option>
+              </select>
+              <small style={{ fontWeight: 400, color: 'var(--muted)', fontSize: '12px' }}>
+                Draft stays protected for recovery, published can appear publicly
+                when public-ready checks pass, and archived is hidden from active
+                browsing without deleting the record.
+              </small>
+            </label>
+            
+            <label style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '14px', fontWeight: 600 }}>
+              New listing sort order
+              <input
+                id="new-listing-sort-order"
+                max={1000000}
+                min={0}
+                name="sortOrder"
+                type="number"
+                className="premium-input"
+              />
+              <small style={{ fontWeight: 400, color: 'var(--muted)', fontSize: '12px' }}>
+                Lower numbers appear earlier in admin/public grouping where sorting
+                is used.
+              </small>
+            </label>
+            
+            <button className="premium-button premium-button--primary" type="submit" style={{ marginTop: '12px' }}>
+              Create listing
+            </button>
+          </div>
+        </form>
+
+        <div aria-label="Update listings">
+          <h3 className="premium-title-section" style={{ fontSize: '24px', marginBottom: '24px' }}>Existing Listings</h3>
+          {products.length === 0 ? (
+            <div className="premium-card" style={{ padding: '32px', textAlign: 'center' }}>
+              <p style={{ color: 'var(--muted)', margin: 0 }}>
+                No furniture listings are available to update yet. Create a draft
+                listing above before adding media or publishing.
+              </p>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+              {products.map((product) => (
+                <article
+                  aria-label={`Listing content ${product.name}`}
+                  className="premium-card"
+                  key={product.id}
+                  style={{ overflow: 'hidden' }}
+                >
+                  {(() => {
+                    const readiness =
+                      listingReadinessById.get(product.id) ??
+                      listingReadiness(product);
+                    const formId = listingFormId(product);
+
+                    return (
+                      <>
+                        <div style={{ padding: '24px', background: 'var(--surface-strong)', borderBottom: '1px solid var(--border)' }}>
+                          <h3 className="premium-title-card" style={{ fontSize: '20px', color: '#fff', margin: 0, marginBottom: '16px' }}>{product.name}</h3>
+                          <dl style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px', margin: 0, fontSize: '13px', marginBottom: '24px' }}>
+                            <div>
+                              <dt style={{ color: 'var(--muted)', fontWeight: 600, marginBottom: '4px' }}>Category/type</dt>
+                              <dd style={{ margin: 0, color: 'var(--text)' }}>{categoryLabel(product, categories)}</dd>
+                            </div>
+                            <div>
+                              <dt style={{ color: 'var(--muted)', fontWeight: 600, marginBottom: '4px' }}>Public slug</dt>
+                              <dd style={{ margin: 0, color: 'var(--text)' }}>{product.slug}</dd>
+                            </div>
+                            <div>
+                              <dt style={{ color: 'var(--muted)', fontWeight: 600, marginBottom: '4px' }}>Visibility</dt>
+                              <dd style={{ margin: 0, color: product.status === 'published' ? '#22c55e' : (product.status === 'draft' ? '#64748b' : '#f59e0b'), fontWeight: 500 }}>
+                                {visibilityLabel(product.status)}
+                              </dd>
+                            </div>
+                            <div>
+                              <dt style={{ color: 'var(--muted)', fontWeight: 600, marginBottom: '4px' }}>Public-ready status</dt>
+                              <dd style={{ margin: 0, color: readiness.ready ? '#22c55e' : '#ef4444', fontWeight: 500 }}>{readiness.statusLabel}</dd>
+                            </div>
+                            <div>
+                              <dt style={{ color: 'var(--muted)', fontWeight: 600, marginBottom: '4px' }}>Rental unit</dt>
+                              <dd style={{ margin: 0, color: 'var(--text)' }}>{product.rentalUnit || "Missing rental unit"}</dd>
+                            </div>
+                            <div>
+                              <dt style={{ color: 'var(--muted)', fontWeight: 600, marginBottom: '4px' }}>Image/fallback</dt>
+                              <dd style={{ margin: 0, color: 'var(--text)' }}>{imagePresenceLabel(product)}</dd>
+                            </div>
+                          </dl>
+                          <nav
+                            aria-label={`Listing actions ${product.name}`}
+                            style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}
+                          >
+                            <a
+                              className="premium-button premium-button--secondary"
+                              style={{ padding: '6px 12px', fontSize: '12px', height: 'auto' }}
+                              href={`/listings/${encodeURIComponent(product.slug)}`}
+                            >
+                              View public listing
+                            </a>
+                            <a
+                              className="premium-button premium-button--secondary"
+                              style={{ padding: '6px 12px', fontSize: '12px', height: 'auto' }}
+                              href={`#${formId}`}
+                            >
+                              Edit listing details
+                            </a>
+                            <a
+                              className="premium-button premium-button--secondary"
+                              style={{ padding: '6px 12px', fontSize: '12px', height: 'auto' }}
+                              href="/admin/media#update-listing-image-metadata"
+                            >
+                              Manage images
+                            </a>
+                            <a 
+                              className="premium-button premium-button--secondary" 
+                              style={{ padding: '6px 12px', fontSize: '12px', height: 'auto' }}
+                              href="/admin/listings"
+                            >
+                              Return to top
+                            </a>
+                          </nav>
                         </div>
-                        <div>
-                          <dt>Public slug</dt>
-                          <dd>{product.slug}</dd>
-                        </div>
-                        <div>
-                          <dt>Visibility</dt>
-                          <dd>{visibilityLabel(product.status)}</dd>
-                        </div>
-                        <div>
-                          <dt>Public-ready status</dt>
-                          <dd>{readiness.statusLabel}</dd>
-                        </div>
-                        <div>
-                          <dt>Rental unit</dt>
-                          <dd>{product.rentalUnit || "Missing rental unit"}</dd>
-                        </div>
-                        <div>
-                          <dt>Image/fallback</dt>
-                          <dd>{imagePresenceLabel(product)}</dd>
-                        </div>
-                      </dl>
-                      <nav
-                        aria-label={`Listing actions ${product.name}`}
-                        className="category-management__actions"
-                      >
-                        <a
-                          className="button button--secondary"
-                          href={`/listings/${encodeURIComponent(product.slug)}`}
+                        <section
+                          aria-label={`Public-ready listing helper ${product.name}`}
+                          style={{ padding: '24px', background: 'var(--background)', borderBottom: '1px solid var(--border)' }}
                         >
-                          View public listing {product.name}
-                        </a>
-                        <a
-                          className="button button--secondary"
-                          href={`#${formId}`}
-                        >
-                          Edit listing {product.name}
-                        </a>
-                        <a
-                          className="button button--secondary"
-                          href="/admin/media#update-listing-image-metadata"
-                        >
-                          Manage images {product.name}
-                        </a>
-                        <a className="button button--secondary" href="/admin/listings">
-                          Return to catalogue admin
-                        </a>
-                      </nav>
-                    </div>
-                    <section
-                      className="admin-readiness admin-readiness--inline"
-                      aria-label={`Public-ready listing helper ${product.name}`}
-                    >
-                      <h4>Public-ready listing helper</h4>
-                      <p
-                        className={`admin-readiness__badge ${
-                          readiness.ready
-                            ? "admin-readiness__badge--ready"
-                            : "admin-readiness__badge--attention"
-                        }`}
-                      >
-                        {readiness.label}
-                      </p>
-                      <p className="category-management__hint">
-                        {readiness.nextAction}
-                      </p>
-                      <ul className="admin-readiness__list">
-                        {readiness.checks.map((check) => (
-                          <li key={check}>{check}</li>
-                        ))}
-                      </ul>
-                    </section>
-                  </>
+                          <h4 style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text)', marginBottom: '12px', margin: 0 }}>Public-ready listing helper</h4>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                            <span style={{ 
+                              display: 'inline-block', 
+                              padding: '4px 10px', 
+                              borderRadius: '20px', 
+                              fontSize: '11px', 
+                              fontWeight: 700, 
+                              textTransform: 'uppercase', 
+                              letterSpacing: '0.5px',
+                              background: readiness.ready ? 'rgba(34, 197, 94, 0.1)' : 'rgba(245, 158, 11, 0.1)',
+                              color: readiness.ready ? '#22c55e' : '#f59e0b',
+                              border: `1px solid ${readiness.ready ? 'rgba(34, 197, 94, 0.2)' : 'rgba(245, 158, 11, 0.2)'}`
+                            }}>
+                              {readiness.label}
+                            </span>
+                            <span style={{ fontSize: '13px', color: 'var(--muted)' }}>{readiness.nextAction}</span>
+                          </div>
+                          <ul style={{ margin: 0, paddingLeft: '20px', color: 'var(--text)', fontSize: '13px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '8px' }}>
+                            {readiness.checks.map((check) => (
+                              <li key={check} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                {check}
+                              </li>
+                            ))}
+                          </ul>
+                        </section>
+                      </>
                 );
               })()}
-              <form
-                id={listingFormId(product)}
-                aria-label={`Update listing ${product.name}`}
-                className="category-management__form"
-                onSubmit={(event) => void handleUpdate(event, product)}
-              >
-                <label htmlFor={`listing-category-${product.id}`}>
-                  Listing category for {product.name}
-                  <select
-                    defaultValue={product.categoryId ?? ""}
-                    id={`listing-category-${product.id}`}
-                    name="categoryId"
-                  >
-                    <option value="">
-                      No category - keep as draft until grouped
-                    </option>
-                    {categories.map((category) => (
-                      <option key={category.id} value={category.id}>
-                        {category.name}
-                      </option>
-                    ))}
-                  </select>
-                  <small>
-                    Public category grouping supports browsing and quote/enquiry
-                    recovery.
-                  </small>
-                </label>
-                <label htmlFor={`listing-slug-${product.id}`}>
-                  Listing slug for {product.name}
-                  <input
-                    defaultValue={product.slug}
-                    id={`listing-slug-${product.id}`}
-                    name="slug"
-                    pattern="[a-z0-9][a-z0-9-]{1,98}[a-z0-9]"
-                    required
-                    type="text"
-                  />
-                  <small>
-                    Slug may be used by public listing routes; keep it stable
-                    and factual.
-                  </small>
-                </label>
-                <label htmlFor={`listing-name-${product.id}`}>
-                  Listing name for {product.name}
-                  <input
-                    defaultValue={product.name}
-                    id={`listing-name-${product.id}`}
-                    maxLength={160}
-                    name="name"
-                    required
-                  />
-                  <small>
-                    Public name should describe the rental/event furniture
-                    without unsupported assertions.
-                  </small>
-                </label>
-                <label htmlFor={`listing-short-description-${product.id}`}>
-                  Listing short description for {product.name}
-                  <textarea
-                    defaultValue={product.shortDescription ?? ""}
-                    id={`listing-short-description-${product.id}`}
-                    maxLength={240}
-                    name="shortDescription"
-                    rows={2}
-                  />
-                  <small>
-                    Short description appears in browsing contexts and should
-                    support quote/request planning.
-                  </small>
-                </label>
-                <label htmlFor={`listing-description-${product.id}`}>
-                  Listing description for {product.name}
-                  <textarea
-                    defaultValue={product.description ?? ""}
-                    id={`listing-description-${product.id}`}
-                    maxLength={2000}
-                    name="description"
-                    rows={4}
-                  />
-                  <small>
-                    Full description remains a public field; avoid self-service
-                    or completion-flow wording.
-                  </small>
-                </label>
-                <label htmlFor={`listing-rental-unit-${product.id}`}>
-                  Rental unit label for {product.name}
-                  <input
-                    defaultValue={product.rentalUnit}
-                    id={`listing-rental-unit-${product.id}`}
-                    maxLength={80}
-                    name="rentalUnit"
-                    required
-                  />
-                  <small>
-                    Rental unit helps quote/enquiry wording and does not confirm
-                    availability.
-                  </small>
-                </label>
-                <label htmlFor={`listing-status-${product.id}`}>
-                  Listing status for {product.name}
-                  <select
-                    defaultValue={product.status}
-                    id={`listing-status-${product.id}`}
-                    name="status"
-                  >
-                    <option value="draft">Draft</option>
-                    <option value="published">Published</option>
-                    <option value="archived">Archived</option>
-                  </select>
-                  <small>
-                    Draft is protected, published is a public visibility state
-                    only after public-safe copy review, and archived is hidden
-                    from active browsing. Draft keeps the listing protected
-                    until public-ready checks pass and archive does not delete it.
-                  </small>
-                </label>
-                <label htmlFor={`listing-sort-order-${product.id}`}>
-                  Listing sort order for {product.name}
-                  <input
-                    defaultValue={product.sortOrder}
-                    id={`listing-sort-order-${product.id}`}
-                    max={1000000}
-                    min={0}
-                    name="sortOrder"
-                    type="number"
-                  />
-                  <small>
-                    Sort order controls display ordering where listing groups
-                    use it.
-                  </small>
-                </label>
-                <p className="category-management__hint">
-                  Protected write boundary: save listing metadata only after
-                  checking public-facing fields, category, rental unit,
-                  validation errors, and media checks. Archive hides this
-                  listing from public browsing and active admin work; it does
-                  not delete it.
-                </p>
-                <div className="category-management__actions">
-                  <button className="button" type="submit">
-                    Save listing metadata
-                  </button>
-                  <button
-                    className="button button--secondary"
-                    onClick={() =>
-                      void handleStatusChange(
-                        product,
-                        product.status === "published" ? "draft" : "published",
-                      )
-                    }
-                    type="button"
-                  >
-                    {product.status === "published"
-                      ? `Set ${product.name} to draft visibility`
-                      : `Set ${product.name} to public visibility`}
-                  </button>
-                  <button
-                    className="button button--secondary"
-                    onClick={() => void handleArchive(product)}
-                    type="button"
-                  >
-                    Archive listing {product.name}
-                  </button>
-                </div>
-              </form>
-            </article>
-          ))
-        )}
+                  <div style={{ padding: '24px' }}>
+                    <form
+                      id={listingFormId(product)}
+                      aria-label={`Update listing ${product.name}`}
+                      onSubmit={(event) => void handleUpdate(event, product)}
+                      style={{ display: 'grid', gap: '20px' }}
+                    >
+                      <label style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '14px', fontWeight: 600 }}>
+                        Listing category
+                        <select
+                          defaultValue={product.categoryId ?? ""}
+                          id={`listing-category-${product.id}`}
+                          name="categoryId"
+                          className="premium-input"
+                          style={{ width: '100%', height: '48px', appearance: 'auto' }}
+                        >
+                          <option value="">
+                            No category - keep as draft until grouped
+                          </option>
+                          {categories.map((category) => (
+                            <option key={category.id} value={category.id}>
+                              {category.name}
+                            </option>
+                          ))}
+                        </select>
+                        <small style={{ fontWeight: 400, color: 'var(--muted)', fontSize: '12px' }}>
+                          Public category grouping supports browsing and quote/enquiry
+                          recovery.
+                        </small>
+                      </label>
+                      <label style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '14px', fontWeight: 600 }}>
+                        Listing slug
+                        <input
+                          defaultValue={product.slug}
+                          id={`listing-slug-${product.id}`}
+                          name="slug"
+                          pattern="[a-z0-9][a-z0-9-]{1,98}[a-z0-9]"
+                          required
+                          type="text"
+                          className="premium-input"
+                        />
+                        <small style={{ fontWeight: 400, color: 'var(--muted)', fontSize: '12px' }}>
+                          Slug may be used by public listing routes; keep it stable
+                          and factual.
+                        </small>
+                      </label>
+                      <label style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '14px', fontWeight: 600 }}>
+                        Listing name
+                        <input
+                          defaultValue={product.name}
+                          id={`listing-name-${product.id}`}
+                          maxLength={160}
+                          name="name"
+                          required
+                          className="premium-input"
+                        />
+                        <small style={{ fontWeight: 400, color: 'var(--muted)', fontSize: '12px' }}>
+                          Public name should describe the rental/event furniture
+                          without unsupported assertions.
+                        </small>
+                      </label>
+                      <label style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '14px', fontWeight: 600 }}>
+                        Listing short description
+                        <textarea
+                          defaultValue={product.shortDescription ?? ""}
+                          id={`listing-short-description-${product.id}`}
+                          maxLength={240}
+                          name="shortDescription"
+                          rows={2}
+                          className="premium-input"
+                          style={{ height: 'auto', resize: 'vertical' }}
+                        />
+                        <small style={{ fontWeight: 400, color: 'var(--muted)', fontSize: '12px' }}>
+                          Short description appears in browsing contexts and should
+                          support quote/request planning.
+                        </small>
+                      </label>
+                      <label style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '14px', fontWeight: 600 }}>
+                        Listing description
+                        <textarea
+                          defaultValue={product.description ?? ""}
+                          id={`listing-description-${product.id}`}
+                          maxLength={2000}
+                          name="description"
+                          rows={4}
+                          className="premium-input"
+                          style={{ height: 'auto', resize: 'vertical' }}
+                        />
+                        <small style={{ fontWeight: 400, color: 'var(--muted)', fontSize: '12px' }}>
+                          Full description remains a public field; avoid self-service
+                          or completion-flow wording.
+                        </small>
+                      </label>
+                      <label style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '14px', fontWeight: 600 }}>
+                        Rental unit label
+                        <input
+                          defaultValue={product.rentalUnit}
+                          id={`listing-rental-unit-${product.id}`}
+                          maxLength={80}
+                          name="rentalUnit"
+                          required
+                          className="premium-input"
+                        />
+                        <small style={{ fontWeight: 400, color: 'var(--muted)', fontSize: '12px' }}>
+                          Rental unit helps quote/enquiry wording and does not confirm
+                          availability.
+                        </small>
+                      </label>
+                      <label style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '14px', fontWeight: 600 }}>
+                        Listing status
+                        <select
+                          defaultValue={product.status}
+                          id={`listing-status-${product.id}`}
+                          name="status"
+                          className="premium-input"
+                          style={{ width: '100%', height: '48px', appearance: 'auto' }}
+                        >
+                          <option value="draft">Draft</option>
+                          <option value="published">Published</option>
+                          <option value="archived">Archived</option>
+                        </select>
+                        <small style={{ fontWeight: 400, color: 'var(--muted)', fontSize: '12px' }}>
+                          Draft is protected, published is a public visibility state
+                          only after public-safe copy review, and archived is hidden
+                          from active browsing. Draft keeps the listing protected
+                          until public-ready checks pass and archive does not delete it.
+                        </small>
+                      </label>
+                      <label style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '14px', fontWeight: 600 }}>
+                        Listing sort order
+                        <input
+                          defaultValue={product.sortOrder}
+                          id={`listing-sort-order-${product.id}`}
+                          max={1000000}
+                          min={0}
+                          name="sortOrder"
+                          type="number"
+                          className="premium-input"
+                        />
+                        <small style={{ fontWeight: 400, color: 'var(--muted)', fontSize: '12px' }}>
+                          Sort order controls display ordering where listing groups
+                          use it.
+                        </small>
+                      </label>
+                      <p style={{ fontSize: '12px', color: 'var(--muted)', lineHeight: 1.5, margin: 0, padding: '12px', background: 'var(--background)', borderRadius: 'var(--radius-md)' }}>
+                        Protected write boundary: save listing metadata only after
+                        checking public-facing fields, category, rental unit,
+                        validation errors, and media checks. Archive hides this
+                        listing from public browsing and active admin work; it does
+                        not delete it.
+                      </p>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', marginTop: '12px' }}>
+                        <button className="premium-button premium-button--primary" type="submit" style={{ flex: '1 1 auto' }}>
+                          Save listing metadata
+                        </button>
+                        <button
+                          className="premium-button premium-button--secondary"
+                          onClick={() =>
+                            void handleStatusChange(
+                              product,
+                              product.status === "published" ? "draft" : "published",
+                            )
+                          }
+                          type="button"
+                          style={{ flex: '1 1 auto' }}
+                        >
+                          {product.status === "published"
+                            ? `Set to draft`
+                            : `Set to published`}
+                        </button>
+                        <button
+                          className="premium-button premium-button--secondary"
+                          onClick={() => void handleArchive(product)}
+                          type="button"
+                          style={{ flex: '1 1 auto' }}
+                        >
+                          Archive listing
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </section>
   );

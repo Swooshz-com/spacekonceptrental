@@ -58,18 +58,9 @@ export type CatalogueDiscoveryState = {
 };
 
 function eventUseDisplayLabel(eventUse: (typeof eventUseFilters)[number]) {
-  if (eventUse.slug === "reception-lounge") {
-    return "Reception lounge";
-  }
-
-  if (eventUse.slug === "conference-seating") {
-    return "Conference seating";
-  }
-
-  if (eventUse.slug === "brand-activation") {
-    return "Brand activation setup";
-  }
-
+  if (eventUse.slug === "reception-lounge") return "Reception lounge";
+  if (eventUse.slug === "conference-seating") return "Conference seating";
+  if (eventUse.slug === "brand-activation") return "Brand activation setup";
   return "Event-use idea";
 }
 
@@ -77,10 +68,7 @@ function getProductImage(product: PublicCatalogueProduct) {
   const slug = product.slug.toLowerCase();
   const categoryName = product.categoryName?.toLowerCase() ?? "";
 
-  if (slug.includes("chair") || categoryName.includes("seating")) {
-    return chairImage;
-  }
-
+  if (slug.includes("chair") || categoryName.includes("seating")) return chairImage;
   if (
     slug.includes("table") ||
     slug.includes("corporate") ||
@@ -89,7 +77,6 @@ function getProductImage(product: PublicCatalogueProduct) {
   ) {
     return corporateImage;
   }
-
   return sofaImage;
 }
 
@@ -107,16 +94,6 @@ function publicListingSummary(product: PublicCatalogueProduct) {
 
 function publicCategoryLabel(product: PublicCatalogueProduct) {
   return textOrUndefined(product.categoryName) ?? "Category to confirm";
-}
-
-function publicRentalUnit(product: PublicCatalogueProduct) {
-  return textOrUndefined(product.rentalUnit) ?? "confirm with team";
-}
-
-function publicImageStatus(product: PublicCatalogueProduct) {
-  return product.primaryImage?.publicUrl
-    ? "Public image available"
-    : "Representative image shown";
 }
 
 function publicImageAltText(
@@ -144,65 +121,20 @@ function CatalogueCardImage({
   }
 
   return (
-    <figure className="catalogue-card__fallback-image">
-      <Image alt={altText} src={fallbackImage} />
-      <figcaption>
-        No public image is available for this listing yet; use the
-        representative rental image while requesting details.
-      </figcaption>
-    </figure>
-  );
-}
-
-function CatalogueCardMeta({ product }: { product: PublicCatalogueProduct }) {
-  return (
-    <dl className="catalogue-card__meta" aria-label={`Browse cues for ${product.name}`}>
-      <div>
-        <dt>Category/type</dt>
-        <dd>{publicCategoryLabel(product)}</dd>
-      </div>
-      <div>
-        <dt>Rental unit</dt>
-        <dd>{publicRentalUnit(product)}</dd>
-      </div>
-      <div>
-        <dt>Image</dt>
-        <dd>{publicImageStatus(product)}</dd>
-      </div>
-    </dl>
-  );
-}
-
-function CatalogueCardPlanning({
-  product
-}: {
-  product: PublicCatalogueProduct;
-}) {
-  return (
-    <aside className="catalogue-card__planning" aria-label={`Quote planning for ${product.name}`}>
-      <strong>Quote planning</strong>
-      <span>
-        Share event date, venue, quantities, and setup notes when you request
-        this listing. Browsing does not set aside furniture or finalise rental
-        details; it only helps the team understand the enquiry.
-      </span>
-    </aside>
+    <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+      <Image alt={altText} src={fallbackImage} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+    </div>
   );
 }
 
 function getCategoryCounts(catalogue: PublicCatalogue) {
   const counts = new Map<string, number>();
-
-  for (const category of catalogue.categories) {
-    counts.set(category.id, 0);
-  }
-
+  for (const category of catalogue.categories) counts.set(category.id, 0);
   for (const product of catalogue.products) {
     if (product.categoryId) {
       counts.set(product.categoryId, (counts.get(product.categoryId) ?? 0) + 1);
     }
   }
-
   return counts;
 }
 
@@ -215,21 +147,10 @@ function buildListingHref(
   context: Pick<CatalogueDiscoveryState, "categorySlug" | "eventSlug" | "search">
 ) {
   const params = new URLSearchParams();
-
-  if (context.categorySlug) {
-    params.set("category", context.categorySlug);
-  }
-
-  if (context.eventSlug) {
-    params.set("event", context.eventSlug);
-  }
-
-  if (context.search) {
-    params.set("search", context.search);
-  }
-
+  if (context.categorySlug) params.set("category", context.categorySlug);
+  if (context.eventSlug) params.set("event", context.eventSlug);
+  if (context.search) params.set("search", context.search);
   const query = params.toString();
-
   return query ? `${listingBasePath}?${query}` : listingBasePath;
 }
 
@@ -246,253 +167,113 @@ function CatalogueDiscovery({
   catalogue: PublicCatalogue;
   listingBasePath?: string;
 }) {
-  if (catalogue.categories.length === 0) {
-    return null;
-  }
-
+  if (catalogue.categories.length === 0) return null;
   const categoryCounts = getCategoryCounts(catalogue);
-  const hasActiveFilters = Boolean(
-    activeCategorySlug || activeEventSlug || activeSearch
-  );
+  const hasActiveFilters = Boolean(activeCategorySlug || activeEventSlug || activeSearch);
 
   return (
-    <nav className="catalogue-discovery" aria-label="Catalogue discovery">
-      <div>
-        <p className="eyebrow">Discovery</p>
-        <h2>Explore by category</h2>
-        <p>
-          Filter rental listings by search, category, or event-use ideas. These
-          local filters only shape browsing context before you send an enquiry.
+    <div className="premium-card" style={{ padding: '32px', marginBottom: '32px' }}>
+      <div style={{ marginBottom: '24px' }}>
+        <h2 className="premium-title-card">Explore Catalogue</h2>
+        <p className="premium-subtitle" style={{ fontSize: '15px' }}>
+          Filter rental listings by search, category, or event-use ideas.
         </p>
       </div>
-      <form action={listingBasePath} className="catalogue-discovery__search" method="get">
-        {activeCategorySlug ? (
-          <input name="category" type="hidden" value={activeCategorySlug} />
-        ) : null}
-        {activeEventSlug ? (
-          <input name="event" type="hidden" value={activeEventSlug} />
-        ) : null}
-        <label>
-          Search listings
+      <form action={listingBasePath} method="get" style={{ display: 'flex', gap: '16px', marginBottom: '24px', flexWrap: 'wrap' }}>
+        {activeCategorySlug && <input name="category" type="hidden" value={activeCategorySlug} />}
+        {activeEventSlug && <input name="event" type="hidden" value={activeEventSlug} />}
+        <div style={{ flex: 1, minWidth: '240px' }}>
           <input
             defaultValue={activeSearch}
             name="search"
-            placeholder="Search listing, category, or event-use text"
+            placeholder="Search listings..."
             type="search"
+            className="premium-input"
           />
-        </label>
-        <button className="button button--secondary" type="submit">
-          Search listings
+        </div>
+        <button className="premium-button premium-button--secondary" type="submit">
+          Search
         </button>
-        {hasActiveFilters ? (
-          <Link className="button button--secondary" href={listingBasePath}>
-            Reset filters
+        {hasActiveFilters && (
+          <Link className="premium-button premium-button--secondary" style={{ borderStyle: 'dashed' }} href={listingBasePath}>
+            Clear filters
           </Link>
-        ) : null}
+        )}
       </form>
-      <div className="catalogue-discovery__chips" aria-label="Browse categories">
-        <Link
-          aria-current={!activeCategorySlug ? "page" : undefined}
-          className="catalogue-chip"
-          href={buildListingHref(listingBasePath, {
-            eventSlug: activeEventSlug,
-            search: activeSearch
-          })}
-        >
-          All rental listings
-        </Link>
-        {catalogue.categories.map((category) => {
-          const count = categoryCounts.get(category.id) ?? 0;
-
-          return (
-            <Link
-              aria-current={
-                activeCategorySlug === category.slug ? "page" : undefined
-              }
-              className="catalogue-chip"
-              href={buildListingHref(listingBasePath, {
-                categorySlug: category.slug,
-                eventSlug: activeEventSlug,
-                search: activeSearch
-              })}
-              key={category.id}
-            >
-              {category.name} {listingCountText(count)}
-            </Link>
-          );
-        })}
-      </div>
-      <div className="catalogue-discovery__chips" aria-label="Explore event-use ideas">
-        {eventUseFilters.map((eventUse) => (
+      
+      <div style={{ marginBottom: '16px' }}>
+        <div style={{ fontSize: '13px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '12px' }}>Categories</div>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
           <Link
-            aria-current={activeEventSlug === eventUse.slug ? "page" : undefined}
-            className="catalogue-chip"
-            href={buildListingHref(listingBasePath, {
-              categorySlug: activeCategorySlug,
-              eventSlug: eventUse.slug,
-              search: activeSearch
-            })}
-            key={eventUse.slug}
+            aria-current={!activeCategorySlug ? "page" : undefined}
+            style={{ padding: '6px 16px', borderRadius: '99px', fontSize: '14px', fontWeight: 600, border: '1px solid var(--border)', background: !activeCategorySlug ? 'var(--surface-strong)' : 'transparent', color: !activeCategorySlug ? '#fff' : 'var(--text)' }}
+            href={buildListingHref(listingBasePath, { eventSlug: activeEventSlug, search: activeSearch })}
           >
-            {eventUse.label}
+            All
           </Link>
-        ))}
+          {catalogue.categories.map((category) => {
+            const count = categoryCounts.get(category.id) ?? 0;
+            const isActive = activeCategorySlug === category.slug;
+            return (
+              <Link
+                aria-current={isActive ? "page" : undefined}
+                key={category.id}
+                style={{ padding: '6px 16px', borderRadius: '99px', fontSize: '14px', fontWeight: 600, border: '1px solid var(--border)', background: isActive ? 'var(--surface-strong)' : 'transparent', color: isActive ? '#fff' : 'var(--text)' }}
+                href={buildListingHref(listingBasePath, { categorySlug: category.slug, eventSlug: activeEventSlug, search: activeSearch })}
+              >
+                {category.name} <span style={{ opacity: 0.6, fontSize: '12px', marginLeft: '4px' }}>{count}</span>
+              </Link>
+            );
+          })}
+        </div>
       </div>
-    </nav>
+
+      <div>
+        <div style={{ fontSize: '13px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '12px' }}>Event Inspiration</div>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+          {eventUseFilters.map((eventUse) => {
+            const isActive = activeEventSlug === eventUse.slug;
+            return (
+              <Link
+                aria-current={isActive ? "page" : undefined}
+                key={eventUse.slug}
+                style={{ padding: '6px 16px', borderRadius: '99px', fontSize: '14px', fontWeight: 600, border: '1px solid var(--border)', background: isActive ? 'var(--surface-strong)' : 'transparent', color: isActive ? '#fff' : 'var(--text)' }}
+                href={buildListingHref(listingBasePath, { categorySlug: activeCategorySlug, eventSlug: eventUse.slug, search: activeSearch })}
+              >
+                {eventUse.label}
+              </Link>
+            );
+          })}
+        </div>
+      </div>
+    </div>
   );
 }
 
 function CatalogueResultsSummary({
   discovery,
-  listingBasePath,
   listingCount
 }: {
   discovery?: CatalogueDiscoveryState;
-  listingBasePath: string;
   listingCount: number;
 }) {
   const hasActiveFilters = Boolean(
-    discovery?.categoryName ||
-      discovery?.categorySlug ||
-      discovery?.eventLabel ||
-      discovery?.eventSlug ||
-      discovery?.search
+    discovery?.categoryName || discovery?.eventLabel || discovery?.search
   );
 
   return (
-    <section
-      aria-label="Rental listing results summary"
-      className="catalogue-results-summary"
-    >
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '32px', paddingBottom: '16px', borderBottom: '1px solid var(--border)' }}>
       <div>
-        <p className="eyebrow">Showing listings</p>
-        <h2>{listingCountText(listingCount)}</h2>
-        <p>
-          {hasActiveFilters
-            ? "Current filters shape this browsing view only. The same context can carry into an editable quote request."
-            : "Browse the public rental listings, compare details, and choose a listing to start an editable quote request."}
-        </p>
+        <h2 className="premium-title-section" style={{ fontSize: '24px', margin: 0 }}>
+          {listingCountText(listingCount)}
+        </h2>
+        {hasActiveFilters && (
+          <p style={{ color: 'var(--muted)', fontSize: '14px', marginTop: '8px' }}>
+            Filtered by: {[discovery?.categoryName, discovery?.eventLabel, discovery?.search].filter(Boolean).join(" · ")}
+          </p>
+        )}
       </div>
-      <dl>
-        <div>
-          <dt>Category</dt>
-          <dd>{discovery?.categoryName ?? "All categories"}</dd>
-        </div>
-        <div>
-          <dt>Event-use idea</dt>
-          <dd>{discovery?.eventLabel ?? "All event-use ideas"}</dd>
-        </div>
-        <div>
-          <dt>Search</dt>
-          <dd>{discovery?.search ?? "No search term"}</dd>
-        </div>
-      </dl>
-      {hasActiveFilters ? (
-        <Link className="card-link" href={listingBasePath}>
-          Reset filters
-        </Link>
-      ) : null}
-    </section>
-  );
-}
-
-function DiscoveryActiveSummary({
-  discovery,
-  listingBasePath
-}: {
-  discovery?: CatalogueDiscoveryState;
-  listingBasePath: string;
-}) {
-  const activeFilters = [
-    discovery?.categoryName ? `Category: ${discovery.categoryName}` : undefined,
-    discovery?.eventLabel ? `Event-use idea: ${discovery.eventLabel}` : undefined,
-    discovery?.search ? `Search: ${discovery.search}` : undefined
-  ].filter(Boolean);
-
-  if (activeFilters.length === 0) {
-    return null;
-  }
-
-  return (
-    <aside className="catalogue-discovery" aria-label="Active listing filters">
-      <div>
-        <p className="eyebrow">Active filters</p>
-        <h2>Rental listing view</h2>
-        <p>
-          {activeFilters.join("; ")}. This context is editable and only helps
-          shape an enquiry for team review.
-        </p>
-      </div>
-      <div className="hero__actions">
-        <Link className="button button--secondary" href={listingBasePath}>
-          Clear filters
-        </Link>
-        <Link
-          className="button"
-          href={getQuoteHrefForDiscoveryContext({
-            category: discovery?.categorySlug,
-            event: discovery?.eventSlug,
-            search: discovery?.search
-          })}
-        >
-          Start a rental enquiry
-        </Link>
-      </div>
-    </aside>
-  );
-}
-
-function EventSetupGuidance() {
-  return (
-    <section className="catalogue-use-cases" aria-label="Event setup guidance">
-      <div>
-        <p className="eyebrow">Planning shortcuts</p>
-        <h2>Popular event setups</h2>
-        <p>
-          Use these starting points to shape a rental request when you are still
-          comparing furniture combinations.
-        </p>
-      </div>
-      <div className="catalogue-use-cases__grid">
-        {eventUseFilters.map((eventUse) => (
-          <article className="route-card" key={eventUse.slug}>
-            <h3>{eventUseDisplayLabel(eventUse)}</h3>
-            <p>{eventUse.summary}</p>
-          </article>
-        ))}
-      </div>
-      <div className="hero__actions">
-        <Link className="button button--secondary" href="/events">
-          Compare event setup guidance
-        </Link>
-        <Link className="button" href="/quote">
-          Send an enquiry
-        </Link>
-      </div>
-    </section>
-  );
-}
-
-function CatalogueSelectionGuide() {
-  return (
-    <section
-      aria-label="How to choose a rental listing"
-      className="catalogue-selection-guide"
-    >
-      <div>
-        <p className="eyebrow">Browse helper</p>
-        <h2>How to choose a rental listing</h2>
-        <p>
-          Start with category/type, compare the short description and rental
-          unit, then open the listing details before sending a quote request.
-        </p>
-      </div>
-      <ul className="journey-list">
-        <li>Use category and event-use filters to narrow the browsing view.</li>
-        <li>Check whether the card shows a public image or a representative image.</li>
-        <li>Request a quote after adding event details, quantities, and venue notes.</li>
-      </ul>
-    </section>
+    </div>
   );
 }
 
@@ -504,10 +285,8 @@ export function CataloguePageContent({
   activeSearch,
   catalogue,
   detailBasePath = "/catalogue",
-  emptyMessage = "No public rental listings are available right now. Clear filters, review current rental listings, or send a general quote request with the rental setup you need reviewed.",
-  intro = "Browse furniture and event rental listings, compare useful details, and send an enquiry for team follow-up.",
   listingBasePath = "/listings",
-  title = "Furniture catalogue for event rentals"
+  title = "Furniture Catalogue"
 }: {
   activeCategoryName?: string;
   activeCategorySlug?: string;
@@ -529,140 +308,195 @@ export function CataloguePageContent({
     search: activeSearch
   };
 
-  if (catalogue.products.length === 0) {
-    return (
-      <section className="section">
-        <div className="page-title">
-          <h1>{title}</h1>
-          <p>{intro}</p>
-        </div>
-        <CatalogueDiscovery
-          activeCategorySlug={activeCategorySlug}
-          activeEventSlug={activeEventSlug}
-          activeSearch={activeSearch}
-          catalogue={catalogue}
-          listingBasePath={listingBasePath}
-        />
-        <DiscoveryActiveSummary discovery={discovery} listingBasePath={listingBasePath} />
-        <CatalogueResultsSummary
-          discovery={discovery}
-          listingBasePath={listingBasePath}
-          listingCount={catalogue.products.length}
-        />
-        <section className="route-card" aria-label="Public listing recovery">
-          <h2>No matching public listings</h2>
-          <p>{emptyMessage}</p>
-          {activeCategoryName ? (
-            <p className="category-management__hint">
-              Browse listings, compare event-use guidance, or send a general
-              enquiry if your rental setup spans more than {activeCategoryName}.
-            </p>
-          ) : (
-            <p className="category-management__hint">
-              Clear filters, review current rental listings, browse categories,
-              or send a general quote request with the rental setup you need
-              reviewed.
-            </p>
-          )}
-        </section>
-        <div className="hero__actions">
-          <Link className="button button--secondary" href={listingBasePath}>
-            Review current rental listings
-          </Link>
-          <Link className="button button--secondary" href="/categories">
-            Browse categories
-          </Link>
-          <Link className="button button--secondary" href="/events">
-            Browse event setup guidance
-          </Link>
-          <Link className="button" href="/quote">
-            Start a general quote request
-          </Link>
-        </div>
-      </section>
-    );
-  }
+  const categoryCounts = getCategoryCounts(catalogue);
+  const hasActiveFilters = Boolean(activeCategorySlug || activeEventSlug || activeSearch);
 
   return (
-    <section className="section">
-      <div className="page-title">
-        <h1>{title}</h1>
-        <p>{intro}</p>
-      </div>
+    <>
+      <section className="premium-page-header">
+        <div className="premium-container">
+          <h1 className="premium-title-hero">{title}</h1>
+          <p className="premium-subtitle" style={{ color: '#cbd5e1' }}>
+            Browse furniture and event rental listings, compare useful details, and send an enquiry for team follow-up.
+          </p>
+        </div>
+      </section>
 
-      <CatalogueDiscovery
-        activeCategorySlug={activeCategorySlug}
-        activeEventSlug={activeEventSlug}
-        activeSearch={activeSearch}
-        catalogue={catalogue}
-        listingBasePath={listingBasePath}
-      />
-      <DiscoveryActiveSummary discovery={discovery} listingBasePath={listingBasePath} />
-      <CatalogueResultsSummary
-        discovery={discovery}
-        listingBasePath={listingBasePath}
-        listingCount={catalogue.products.length}
-      />
-      <CatalogueSelectionGuide />
+      <section className="premium-section" style={{ paddingTop: '40px' }}>
+        <div className="premium-container">
+          <div className="premium-catalogue-layout">
+            {/* LEFT: Filter sidebar */}
+            <aside className="premium-sidebar">
+              <h3 style={{ fontSize: '18px', fontWeight: 700, marginBottom: '24px' }}>Filter Products</h3>
 
-      <div className="catalogue-grid">
-        {catalogue.products.map((product) => (
-          <article
-            aria-label={`Rental listing card for ${product.name}`}
-            className="catalogue-card"
-            key={product.slug}
-          >
-            <div className="catalogue-card__image">
-              <CatalogueCardImage
-                fallbackImage={getProductImage(product)}
-                product={product}
-              />
-            </div>
-            <div className="catalogue-card__body">
-              <CatalogueCardMeta product={product} />
-              <p className="catalogue-card__reference">Public rental listing</p>
-              <p className="catalogue-card__reference">
-                Listing reference: {product.slug}
-              </p>
-              <h2>{product.name}</h2>
-              <p>{publicListingSummary(product)}</p>
-              <CatalogueCardPlanning product={product} />
-              <div className="catalogue-card__actions">
-                <Link
-                  className="card-link card-link--primary"
-                  href={`${detailBasePath}/${product.slug}`}
-                >
-                  View details for {product.name}
-                </Link>
-                <Link
-                  className="card-link"
-                  href={getQuoteHrefForListing(product.slug)}
-                >
-                  Request a quote for {product.name}
-                </Link>
+              <div style={{ marginBottom: '24px' }}>
+                <div style={{ fontSize: '13px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '12px' }}>Categories</div>
+                <ul className="premium-checkbox-list">
+                  {catalogue.categories.map((category) => {
+                    const count = categoryCounts.get(category.id) ?? 0;
+                    const isActive = activeCategorySlug === category.slug;
+                    return (
+                      <li key={category.id}>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '15px' }}>
+                          <input
+                            type="checkbox"
+                            checked={isActive}
+                            readOnly
+                            style={{ accentColor: 'var(--accent)' }}
+                          />
+                          <Link
+                            href={buildListingHref(listingBasePath, {
+                              categorySlug: isActive ? undefined : category.slug,
+                              eventSlug: activeEventSlug,
+                              search: activeSearch
+                            })}
+                            style={{ color: 'inherit', textDecoration: 'none', flex: 1 }}
+                          >
+                            {category.name}
+                            <span style={{ opacity: 0.5, fontSize: '13px', marginLeft: '6px' }}>({count})</span>
+                          </Link>
+                        </label>
+                      </li>
+                    );
+                  })}
+                </ul>
               </div>
+
+              <div style={{ marginBottom: '24px' }}>
+                <div style={{ fontSize: '13px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '12px' }}>Event Inspiration</div>
+                <ul className="premium-checkbox-list">
+                  {eventUseFilters.map((eventUse) => {
+                    const isActive = activeEventSlug === eventUse.slug;
+                    return (
+                      <li key={eventUse.slug}>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '15px' }}>
+                          <input
+                            type="checkbox"
+                            checked={isActive}
+                            readOnly
+                            style={{ accentColor: 'var(--accent)' }}
+                          />
+                          <Link
+                            href={buildListingHref(listingBasePath, {
+                              categorySlug: activeCategorySlug,
+                              eventSlug: isActive ? undefined : eventUse.slug,
+                              search: activeSearch
+                            })}
+                            style={{ color: 'inherit', textDecoration: 'none', flex: 1 }}
+                          >
+                            {eventUse.label}
+                          </Link>
+                        </label>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+
+              {hasActiveFilters && (
+                <Link
+                  className="premium-button premium-button--secondary"
+                  style={{ width: '100%', fontSize: '14px', borderStyle: 'dashed' }}
+                  href={listingBasePath}
+                >
+                  Clear Filters
+                </Link>
+              )}
+            </aside>
+
+            {/* RIGHT: Toolbar + Grid */}
+            <div>
+              <div className="premium-catalogue-toolbar">
+                <div style={{ position: 'relative', flex: 1, minWidth: '200px' }}>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--muted)', pointerEvents: 'none' }}
+                  >
+                    <circle cx="11" cy="11" r="8" />
+                    <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                  </svg>
+                  <input
+                    type="search"
+                    placeholder="Search products..."
+                    className="premium-input"
+                    style={{ paddingLeft: '40px', width: '100%' }}
+                    readOnly
+                  />
+                </div>
+
+                <select
+                  className="premium-input"
+                  style={{ width: 'auto', minWidth: '160px' }}
+                  defaultValue=""
+                  aria-label="Sort products"
+                >
+                  <option value="">Sort by: Default</option>
+                  <option value="name-asc">Name: A-Z</option>
+                  <option value="name-desc">Name: Z-A</option>
+                  <option value="category">Category</option>
+                </select>
+
+                <div style={{ fontSize: '14px', color: 'var(--muted)', whiteSpace: 'nowrap', alignSelf: 'center' }}>
+                  {listingCountText(catalogue.products.length)}
+                </div>
+              </div>
+
+              {catalogue.products.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '64px 0' }}>
+                  <p style={{ fontSize: '18px', color: 'var(--muted)', marginBottom: '24px' }}>No public rental listings match your filters.</p>
+                  <Link className="premium-button premium-button--secondary" href={listingBasePath}>
+                    Clear all filters
+                  </Link>
+                </div>
+              ) : (
+                <div className="premium-grid">
+                  {catalogue.products.map((product) => (
+                    <article className="premium-card" key={product.slug}>
+                      <div className="premium-card__image">
+                        <CatalogueCardImage fallbackImage={getProductImage(product)} product={product} />
+                      </div>
+                      <div className="premium-card__content">
+                        <div className="premium-card__meta">{publicCategoryLabel(product)}</div>
+                        <h2 className="premium-title-card">{product.name}</h2>
+                        <p className="premium-card__desc">{publicListingSummary(product)}</p>
+                        <div style={{ display: 'flex', gap: '12px', marginTop: 'auto' }}>
+                          <Link
+                            className="premium-button premium-button--secondary"
+                            style={{ flex: 1, padding: '0 16px', fontSize: '14px', height: '40px' }}
+                            href={`${detailBasePath}/${product.slug}`}
+                          >
+                            Details
+                          </Link>
+                          <Link
+                            className="premium-button premium-button--primary"
+                            style={{ flex: 1, padding: '0 16px', fontSize: '14px', height: '40px' }}
+                            href={getQuoteHrefForListing(product.slug)}
+                          >
+                            Quote
+                          </Link>
+                        </div>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              )}
             </div>
-          </article>
-        ))}
-      </div>
-
-      <div className="hero__actions">
-        <Link className="button" href={getQuoteHrefForDiscoveryContext({
-          category: activeCategorySlug,
-          event: activeEventSlug,
-          search: activeSearch
-        })}>
-          Start a rental enquiry
-        </Link>
-      </div>
-
-      <EventSetupGuidance />
-    </section>
+          </div>
+        </div>
+      </section>
+    </>
   );
 }
 
 export default async function CataloguePage() {
   const catalogue = await getPublicCatalogue();
-
   return <CataloguePageContent catalogue={catalogue} />;
 }

@@ -2997,424 +2997,357 @@ export function QuoteRequestInboxPanel({
   );
 
   return (
-    <section className="admin-dashboard" aria-label="Quote request inbox">
-      <div className="admin-dashboard__header">
-        <div>
-          <p className="eyebrow">Admin follow-up</p>
-          <h2>Quote request inbox</h2>
-          <p>
-            Review recent visitor quote requests for this workspace and update
-            internal triage status only. This does not contact the visitor or
-            start an external process, and it is not public status tracking.
-          </p>
+    <section className="premium-section" aria-label="Quote request inbox">
+      <div className="premium-container" style={{ maxWidth: '1200px' }}>
+        <div style={{ marginBottom: '40px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '24px' }}>
+            <div>
+              <p style={{ fontSize: '12px', fontWeight: 800, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px' }}>Admin follow-up</p>
+              <h2 className="premium-title-section" style={{ fontSize: '28px', marginBottom: '16px' }}>Quote request inbox</h2>
+              <p style={{ color: 'var(--muted)', lineHeight: 1.6, maxWidth: '600px' }}>
+                Review recent visitor quote requests for this workspace and update
+                internal triage status only. This does not contact the visitor or
+                start an external process, and it is not public status tracking.
+              </p>
+            </div>
+            <div style={{ background: 'var(--surface-strong)', padding: '16px 24px', borderRadius: 'var(--radius-lg)', textAlign: 'center', minWidth: '150px' }}>
+              <div style={{ fontSize: '12px', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>Recent requests</div>
+              <div style={{ fontSize: '36px', fontWeight: 700, color: '#fff', lineHeight: 1 }}>{inbox.data.quoteRequests.length}</div>
+            </div>
+          </div>
         </div>
-        <dl className="admin-dashboard__stats" aria-label="Quote request summary">
-          <div>
-            <dt>Recent requests</dt>
-            <dd>{inbox.data.quoteRequests.length}</dd>
-          </div>
-        </dl>
-      </div>
 
-      <div
-        className={`category-management__status category-management__status--${status.kind}`}
-        aria-live="polite"
-      >
-        {status.kind === "idle"
-          ? "Quote status controls are ready."
-          : status.message}
-      </div>
+        {status.kind !== "idle" && (
+          <div
+            style={{
+              padding: '16px',
+              borderRadius: 'var(--radius-md)',
+              marginBottom: '32px',
+              fontSize: '14px',
+              fontWeight: 500,
+              ...(status.kind === "success" ? { background: 'rgba(34, 197, 94, 0.1)', color: '#22c55e', border: '1px solid rgba(34, 197, 94, 0.2)' } :
+                  status.kind === "error" ? { background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.2)' } :
+                  { background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6', border: '1px solid rgba(59, 130, 246, 0.2)' })
+            }}
+            aria-live="polite"
+          >
+            {status.message}
+          </div>
+        )}
 
-      <section
-        aria-label="Triage submitted rental enquiries"
-        className="admin-dashboard__card admin-dashboard__card--summary"
-      >
-        <h3>Triage submitted rental enquiries</h3>
-        <p>
-          Start with new enquiries, contact details, event basics, requested
-          listings, source context, and protected admin status. Use the
-          customer-submitted details to decide whether the next admin action is
-          review, follow-up needed, quoted, or closed locally.
-        </p>
-      </section>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '32px', marginBottom: '48px' }}>
+          <section
+            aria-label="Triage submitted rental enquiries"
+            className="premium-card"
+            style={{ padding: '24px' }}
+          >
+            <h3 className="premium-title-card" style={{ fontSize: '18px', marginBottom: '12px' }}>Triage submitted rental enquiries</h3>
+            <p style={{ fontSize: '14px', color: 'var(--text)', lineHeight: 1.6, margin: 0 }}>
+              Start with new enquiries, contact details, event basics, requested
+              listings, source context, and protected admin status. Use the
+              customer-submitted details to decide whether the next admin action is
+              review, follow-up needed, quoted, or closed locally.
+            </p>
+          </section>
 
-      <section
-        className="quote-inbox__triage-summary"
-        aria-label="Quote triage summary"
-      >
-        <div>
-          <h3>Quote triage summary</h3>
-          <p className="category-management__hint">
-            Internal triage cues stay inside this admin workspace and help the
-            team prioritise follow-up from existing quote request details.
-          </p>
-        </div>
-        <dl className="admin-dashboard__stats">
-          <div>
-            <dt>New requests</dt>
-            <dd>{summary.newRequests}</dd>
-          </div>
-          <div>
-            <dt>In review</dt>
-            <dd>{summary.inReview}</dd>
-          </div>
-          <div>
-            <dt>Follow-up needed</dt>
-            <dd>{summary.followUpNeeded}</dd>
-          </div>
-          <div>
-            <dt>Quoted</dt>
-            <dd>{summary.quoted}</dd>
-          </div>
-          <div>
-            <dt>Closed requests</dt>
-            <dd>{summary.closed}</dd>
-          </div>
-          <div>
-            <dt>Contact gaps</dt>
-            <dd>{summary.missingContact}</dd>
-          </div>
-          <div>
-            <dt>Missing event dates</dt>
-            <dd>{summary.missingEventDate}</dd>
-          </div>
-          <div>
-            <dt>Missing venues</dt>
-            <dd>{summary.missingVenue}</dd>
-          </div>
-          <div>
-            <dt>Missing requested items</dt>
-            <dd>{summary.missingItems}</dd>
-          </div>
-          <div>
-            <dt>Missing customer messages</dt>
-            <dd>{summary.missingCustomerMessage}</dd>
-          </div>
-          <div>
-            <dt>Without internal activity</dt>
-            <dd>{summary.withoutInternalActivity}</dd>
-          </div>
-        </dl>
-      </section>
-
-      <QuoteIntakeParityHelper />
-
-      <section
-        aria-label="Quote request inbox operator guidance"
-        className="admin-dashboard__card admin-dashboard__card--summary"
-      >
-        <h3>Operator QA summary</h3>
-        <dl className="quote-inbox__details">
-          <div>
-            <dt>Read-only</dt>
-            <dd>
-              Quote request summaries, customer-submitted details, and triage
-              counts are read-only operator QA cues.
-            </dd>
-          </div>
-          <div>
-            <dt>Write-enabled</dt>
-            <dd>Write-enabled internal triage status only.</dd>
-          </div>
-          <div>
-            <dt>Public-facing</dt>
-            <dd>
-              Public quote pages only show receipt-style enquiry confirmation; they do not expose admin status, notes, recovery states, or tracking.
-            </dd>
-          </div>
-          <div>
-            <dt>Admin-only</dt>
-            <dd>Admin-only triage.</dd>
-          </div>
-        </dl>
-        <p>
-          Next safe action: capture contact, event, venue, and requested items
-          before closing follow-up. If a status save fails, keep the prior
-          protected state and retry locally without exposing internal details.
-        </p>
-      </section>
-
-      {inbox.data.quoteRequests.length === 0 ? (
-        <section className="admin-dashboard__card admin-dashboard__card--summary">
-          <p>
-            No quote requests are visible yet. New website enquiries will appear here for internal follow-up when available.
-          </p>
-          <a className="button button--secondary" href="/admin/listings">
-            Review listings
-          </a>
-        </section>
-      ) : (
-        <div className="admin-dashboard__grid">
-          {inbox.data.quoteRequests.map((quoteRequest) => {
-            const activity = quoteRequest.activity ?? [];
-
-            return (
-              <article className="admin-dashboard__card" key={quoteRequest.id}>
-                <div className="quote-inbox__card-header">
-                  <div>
-                    <p className="eyebrow">{quoteRequest.publicReference}</p>
-                    <h3>{quoteRequest.customerName ?? "Unnamed customer"}</h3>
-                    <p>
-                      {quoteRequest.status} - {quoteRequest.source}
-                    </p>
-                  </div>
-                  <p className="quote-inbox__status-pill">
-                    Current status: {statusLabel(quoteRequest.status)}
-                  </p>
+          <section
+            aria-label="Quote triage summary"
+            className="premium-card"
+            style={{ padding: '24px' }}
+          >
+            <h3 className="premium-title-card" style={{ fontSize: '18px', marginBottom: '8px' }}>Quote triage summary</h3>
+            <p style={{ fontSize: '13px', color: 'var(--muted)', marginBottom: '24px' }}>
+              Internal triage cues stay inside this admin workspace and help the
+              team prioritise follow-up from existing quote request details.
+            </p>
+            
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '8px', borderBottom: '1px solid var(--border)' }}>
+                <span style={{ fontSize: '13px', color: 'var(--muted)', fontWeight: 600 }}>New requests</span>
+                <span style={{ fontSize: '14px', color: '#fff', fontWeight: 700 }}>{summary.newRequests}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '8px', borderBottom: '1px solid var(--border)' }}>
+                <span style={{ fontSize: '13px', color: 'var(--muted)', fontWeight: 600 }}>In review</span>
+                <span style={{ fontSize: '14px', color: '#fff', fontWeight: 700 }}>{summary.inReview}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '8px', borderBottom: '1px solid var(--border)' }}>
+                <span style={{ fontSize: '13px', color: 'var(--muted)', fontWeight: 600 }}>Follow-up needed</span>
+                <span style={{ fontSize: '14px', color: '#f59e0b', fontWeight: 700 }}>{summary.followUpNeeded}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '8px', borderBottom: '1px solid var(--border)' }}>
+                <span style={{ fontSize: '13px', color: 'var(--muted)', fontWeight: 600 }}>Quoted</span>
+                <span style={{ fontSize: '14px', color: '#22c55e', fontWeight: 700 }}>{summary.quoted}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '8px', borderBottom: '1px solid var(--border)' }}>
+                <span style={{ fontSize: '13px', color: 'var(--muted)', fontWeight: 600 }}>Closed</span>
+                <span style={{ fontSize: '14px', color: '#64748b', fontWeight: 700 }}>{summary.closed}</span>
+              </div>
+            </div>
+            
+            <div style={{ marginTop: '24px' }}>
+              <h4 style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '12px' }}>Intake Quality Cues</h4>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--background)', padding: '8px 12px', borderRadius: '4px' }}>
+                  <span style={{ fontSize: '12px', color: 'var(--muted)' }}>Contact gaps</span>
+                  <span style={{ fontSize: '13px', color: summary.missingContact > 0 ? '#ef4444' : '#22c55e', fontWeight: 600 }}>{summary.missingContact}</span>
                 </div>
-                <AdminTriageSnapshot quoteRequest={quoteRequest} />
-                <AdminStatusActionSummary quoteRequest={quoteRequest} />
-                <AdminFollowUpPriorities quoteRequest={quoteRequest} />
-                <section className="quote-inbox__section quote-inbox__section--primary">
-                  <h4>Submitted enquiry triage details</h4>
-                  <dl className="quote-inbox__details">
-                    <div>
-                      <dt>Contact</dt>
-                      <dd>
-                        {[
-                          quoteRequest.customerEmail,
-                          quoteRequest.customerPhone
-                        ]
-                          .filter(Boolean)
-                          .join(" / ") || "No contact method captured"}
-                      </dd>
-                    </div>
-                    <div>
-                      <dt>Event basics</dt>
-                      <dd>
-                        {[
-                          quoteRequest.eventDate ?? "No event date",
-                          quoteRequest.venue ?? "No venue or location"
-                        ].join(" / ")}
-                      </dd>
-                    </div>
-                    <div>
-                      <dt>Requested listings/items</dt>
-                      <dd>
-                        {quoteRequest.items.length > 0
-                          ? `${quoteRequest.items.length} submitted`
-                          : "No requested listing or item snapshots captured"}
-                      </dd>
-                    </div>
-                    <div>
-                      <dt>Source context</dt>
-                      <dd>
-                        {quoteRequest.sourcePagePath ??
-                          "No safe source path captured"}
-                        {quoteRequest.sourceListingSlug
-                          ? ` / ${quoteRequest.sourceListingSlug}`
-                          : ""}
-                      </dd>
-                    </div>
-                    <div>
-                      <dt>Current internal status</dt>
-                      <dd>{statusLabel(quoteRequest.status)}</dd>
-                    </div>
-                  </dl>
-                </section>
-                <form
-                  aria-label={`Update internal triage status ${quoteRequest.publicReference}`}
-                  className="category-management__form quote-inbox__status-form"
-                  onSubmit={(event) =>
-                    void handleStatusSubmit(
-                      event,
-                      quoteRequest.id,
-                      quoteRequest.publicReference
-                    )
-                  }
-                >
-                  <div className="quote-inbox__status-form-header">
-                    <h4>Update protected triage status</h4>
-                    <p className="category-management__hint">
-                      Save the next admin-only follow-through step for{" "}
-                      {quoteRequest.publicReference}. Submitted enquiry details
-                      stay unchanged.
-                    </p>
-                  </div>
-                  <label htmlFor={`quote-status-${quoteRequest.id}`}>
-                    Protected internal status for {quoteRequest.publicReference}
-                    <select
-                      defaultValue={quoteRequest.status}
-                      id={`quote-status-${quoteRequest.id}`}
-                      name="status"
-                    >
-                      {quoteStatuses.map((quoteStatus) => (
-                        <option key={quoteStatus} value={quoteStatus}>
-                          {statusLabel(quoteStatus)}
-                        </option>
-                      ))}
-                    </select>
-                    <small>Status is an admin-only triage control and is never shown as a public quote status view, confirmed outcome, or public tracking lane.</small>
-                  </label>
-                  <p className="category-management__hint">
-                    Update internal triage status. This does not contact the
-                    visitor or start an external process, and it does not send
-                    messages.
-                  </p>
-                  <button
-                    className="button"
-                    disabled={status.kind === "pending"}
-                    type="submit"
-                  >
-                    {status.kind === "pending"
-                      ? `Updating internal triage status for ${quoteRequest.publicReference}`
-                      : `Update internal triage status for ${quoteRequest.publicReference}`}
-                  </button>
-                </form>
-                <section
-                  aria-label={`Requested items summary ${quoteRequest.publicReference}`}
-                  className="quote-inbox__section"
-                >
-                  <h4>Intake completeness</h4>
-                  <ul className="admin-readiness__list">
-                    {quoteTriageCues(quoteRequest).map((cue) => (
-                      <li key={cue}>{cue}</li>
-                    ))}
-                  </ul>
-                </section>
-                <section className="quote-inbox__section">
-                  <h4>Quote/enquiry context summary</h4>
-                  <p>
-                    Public reference {quoteRequest.publicReference} is a receipt
-                    reference only. It is not customer tracking, status lookup,
-                    availability confirmation, or a rental outcome.
-                  </p>
-                </section>
-                <section className="quote-inbox__section quote-inbox__section--secondary">
-                  <h4>Source context</h4>
-                  <SourceContextDetails quoteRequest={quoteRequest} />
-                  <SourceContextActions quoteRequest={quoteRequest} />
-                  <p className="category-management__hint">
-                    Source context helps an admin understand where the enquiry
-                    started. It is not a public status view and does not change
-                    the submitted rental details.
-                  </p>
-                </section>
-                <ManualFollowUpChecklist quoteRequest={quoteRequest} />
-                <section className="quote-inbox__section">
-                  <h4>Manual response checklist</h4>
-                  <ul className="admin-readiness__list">
-                    {quoteResponseReadinessChecklist(quoteRequest).map((cue) => (
-                      <li key={cue}>{cue}</li>
-                    ))}
-                  </ul>
-                  <p className="category-management__hint">
-                    Admin-only helper: prepare a human response from existing
-                    request fields only. This does not send a response, create
-                    public lookup, create sign-in areas, or start
-                    automated alerts.
-                  </p>
-                </section>
-                <section className="quote-inbox__section">
-                  <h4>Contact and follow-up: customer/contact summary</h4>
-                  <dl className="quote-inbox__details">
-                    <div>
-                      <dt>Submitted</dt>
-                      <dd>{quoteRequest.createdAt}</dd>
-                    </div>
-                    {quoteRequest.updatedAt ? (
-                      <div>
-                        <dt>Updated</dt>
-                        <dd>{quoteRequest.updatedAt}</dd>
-                      </div>
-                    ) : null}
-                    <div>
-                      <dt>Customer</dt>
-                      <dd>{quoteRequest.customerName ? "Name shown in request heading" : "Missing customer name"}</dd>
-                    </div>
-                    <div>
-                      <dt>Source/status</dt>
-                      <dd>{quoteRequest.source} - {statusLabel(quoteRequest.status)}</dd>
-                    </div>
-                    {quoteRequest.customerEmail ? (
-                      <div>
-                        <dt>Email</dt>
-                        <dd>{quoteRequest.customerEmail}</dd>
-                      </div>
-                    ) : null}
-                    {quoteRequest.customerPhone ? (
-                      <div>
-                        <dt>Phone</dt>
-                        <dd>{quoteRequest.customerPhone}</dd>
-                      </div>
-                    ) : null}
-                  </dl>
-                </section>
-                <section className="quote-inbox__section">
-                  <h4>Event and setup details: event date/venue summary and submitted notes</h4>
-                  <dl className="quote-inbox__details">
-                    {quoteRequest.eventDate ? (
-                      <div>
-                        <dt>Event date</dt>
-                        <dd>{quoteRequest.eventDate}</dd>
-                      </div>
-                    ) : null}
-                    {quoteRequest.venue ? (
-                      <div>
-                        <dt>Venue</dt>
-                        <dd>{quoteRequest.venue}</dd>
-                      </div>
-                    ) : null}
-                  </dl>
-                  {quoteRequest.customerMessage ? (
-                    <p>{quoteRequest.customerMessage}</p>
-                  ) : (
-                    <p>No customer message was submitted.</p>
-                  )}
-                </section>
-                <a
-                  className="button button--secondary"
-                  href={`/admin/quotes/${encodeURIComponent(quoteRequest.id)}`}
-                >
-                  Open quote detail {quoteRequest.publicReference}
-                </a>
-                <section className="quote-inbox__section">
-                  <h4>Requested listings and items: requested listing/item summary</h4>
-                  {quoteRequest.items.length === 0 ? (
-                    <p>No requested listing or item snapshots were captured.</p>
-                  ) : (
-                    <ul className="admin-dashboard__list">
-                      {quoteRequest.items.map((item) => (
-                        <li key={item.id}>
-                          <strong>
-                            {item.quantity} x {item.productNameSnapshot}
-                          </strong>
-                          {item.notes ? <small>{item.notes}</small> : null}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </section>
-                <section className="quote-inbox__section">
-                  <h4>Admin-only status history</h4>
-                  <p>
-                    Internal status history stays inside this
-                    protected admin workspace and are not shown on public quote
-                    pages or public status views.
-                  </p>
-                  {activity.length === 0 ? (
-                    <p>No internal follow-up activity has been recorded yet.</p>
-                  ) : (
-                    <ul
-                      className="admin-dashboard__list"
-                      aria-label={`Internal activity ${quoteRequest.publicReference}`}
-                    >
-                      {activity.map((activityItem) => (
-                        <li key={activityItem.id}>
-                          <strong>{activityText(activityItem)}</strong>
-                          <small>{activityItem.createdAt}</small>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </section>
-              </article>
-            );
-          })}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--background)', padding: '8px 12px', borderRadius: '4px' }}>
+                  <span style={{ fontSize: '12px', color: 'var(--muted)' }}>Missing dates</span>
+                  <span style={{ fontSize: '13px', color: summary.missingEventDate > 0 ? '#ef4444' : '#22c55e', fontWeight: 600 }}>{summary.missingEventDate}</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--background)', padding: '8px 12px', borderRadius: '4px' }}>
+                  <span style={{ fontSize: '12px', color: 'var(--muted)' }}>Missing venue</span>
+                  <span style={{ fontSize: '13px', color: summary.missingVenue > 0 ? '#ef4444' : '#22c55e', fontWeight: 600 }}>{summary.missingVenue}</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--background)', padding: '8px 12px', borderRadius: '4px' }}>
+                  <span style={{ fontSize: '12px', color: 'var(--muted)' }}>Missing items</span>
+                  <span style={{ fontSize: '13px', color: summary.missingItems > 0 ? '#ef4444' : '#22c55e', fontWeight: 600 }}>{summary.missingItems}</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--background)', padding: '8px 12px', borderRadius: '4px' }}>
+                  <span style={{ fontSize: '12px', color: 'var(--muted)' }}>Missing msgs</span>
+                  <span style={{ fontSize: '13px', color: summary.missingCustomerMessage > 0 ? '#ef4444' : '#22c55e', fontWeight: 600 }}>{summary.missingCustomerMessage}</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--background)', padding: '8px 12px', borderRadius: '4px' }}>
+                  <span style={{ fontSize: '12px', color: 'var(--muted)' }}>No internal act.</span>
+                  <span style={{ fontSize: '13px', color: 'var(--text)', fontWeight: 600 }}>{summary.withoutInternalActivity}</span>
+                </div>
+              </div>
+            </div>
+          </section>
         </div>
-      )}
 
-      {showFutureCrmHandoffReadiness ? crmHandoffReadinessPanel : null}
+        <div style={{ marginBottom: '48px' }}>
+          <QuoteIntakeParityHelper />
+        </div>
+
+        <section
+          aria-label="Quote request inbox operator guidance"
+          className="premium-card"
+          style={{ padding: '24px', marginBottom: '64px' }}
+        >
+          <h3 className="premium-title-card" style={{ fontSize: '18px', marginBottom: '20px' }}>Operator QA summary</h3>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '20px' }}>
+            <div>
+              <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', marginBottom: '6px' }}>Read-only</div>
+              <div style={{ fontSize: '13px', color: 'var(--text)', lineHeight: 1.5 }}>
+                Quote request summaries, customer-submitted details, and triage
+                counts are read-only operator QA cues.
+              </div>
+            </div>
+            <div>
+              <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', marginBottom: '6px' }}>Write-enabled</div>
+              <div style={{ fontSize: '13px', color: 'var(--text)', lineHeight: 1.5 }}>Write-enabled internal triage status only.</div>
+            </div>
+            <div>
+              <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', marginBottom: '6px' }}>Public-facing</div>
+              <div style={{ fontSize: '13px', color: 'var(--text)', lineHeight: 1.5 }}>
+                Public quote pages only show receipt-style enquiry confirmation; they do not expose admin status, notes, recovery states, or tracking.
+              </div>
+            </div>
+            <div>
+              <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', marginBottom: '6px' }}>Admin-only</div>
+              <div style={{ fontSize: '13px', color: 'var(--text)', lineHeight: 1.5 }}>Admin-only triage.</div>
+            </div>
+          </div>
+          <p style={{ fontSize: '13px', color: 'var(--muted)', background: 'var(--background)', padding: '12px', borderRadius: 'var(--radius-md)', margin: 0 }}>
+            Next safe action: capture contact, event, venue, and requested items
+            before closing follow-up. If a status save fails, keep the prior
+            protected state and retry locally without exposing internal details.
+          </p>
+        </section>
+
+        {inbox.data.quoteRequests.length === 0 ? (
+          <div className="premium-card" style={{ padding: '40px', textAlign: 'center' }}>
+            <p style={{ color: 'var(--muted)', marginBottom: '24px', fontSize: '15px' }}>
+              No quote requests are visible yet. New website enquiries will appear here for internal follow-up when available.
+            </p>
+            <a className="premium-button premium-button--secondary" href="/admin/listings" style={{ display: 'inline-block' }}>
+              Review listings
+            </a>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+            {inbox.data.quoteRequests.map((quoteRequest) => {
+              const activity = quoteRequest.activity ?? [];
+
+              return (
+                <article className="premium-card" key={quoteRequest.id} style={{ overflow: 'hidden' }}>
+                  <div style={{ padding: '24px', background: 'var(--surface-strong)', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
+                    <div>
+                      <p style={{ fontSize: '11px', fontWeight: 700, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px' }}>{quoteRequest.publicReference}</p>
+                      <h3 className="premium-title-card" style={{ fontSize: '20px', color: '#fff', margin: 0, marginBottom: '4px' }}>{quoteRequest.customerName ?? "Unnamed customer"}</h3>
+                      <p style={{ fontSize: '13px', color: 'var(--muted)', margin: 0 }}>
+                        {quoteRequest.status} • {quoteRequest.source}
+                      </p>
+                    </div>
+                    <div style={{ 
+                      padding: '6px 12px', 
+                      borderRadius: '20px', 
+                      fontSize: '12px', 
+                      fontWeight: 600, 
+                      background: quoteRequest.status === 'new' ? 'rgba(59, 130, 246, 0.1)' : (quoteRequest.status === 'quoted' || quoteRequest.status === 'closed' ? 'rgba(34, 197, 94, 0.1)' : 'rgba(245, 158, 11, 0.1)'),
+                      color: quoteRequest.status === 'new' ? '#3b82f6' : (quoteRequest.status === 'quoted' || quoteRequest.status === 'closed' ? '#22c55e' : '#f59e0b'),
+                      border: `1px solid ${quoteRequest.status === 'new' ? 'rgba(59, 130, 246, 0.2)' : (quoteRequest.status === 'quoted' || quoteRequest.status === 'closed' ? 'rgba(34, 197, 94, 0.2)' : 'rgba(245, 158, 11, 0.2)')}`
+                    }}>
+                      Current status: {statusLabel(quoteRequest.status)}
+                    </div>
+                  </div>
+
+                  <div style={{ padding: '24px', display: 'grid', gap: '24px' }}>
+                    <AdminTriageSnapshot quoteRequest={quoteRequest} />
+                    <AdminStatusActionSummary quoteRequest={quoteRequest} />
+                    <AdminFollowUpPriorities quoteRequest={quoteRequest} />
+                    
+                    <section style={{ padding: '16px', background: 'var(--background)', borderRadius: 'var(--radius-md)' }}>
+                      <h4 style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text)', marginBottom: '16px', margin: 0 }}>Submitted enquiry triage details</h4>
+                      <dl style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', margin: 0, fontSize: '13px' }}>
+                        <div>
+                          <dt style={{ color: 'var(--muted)', fontWeight: 600, marginBottom: '4px' }}>Contact</dt>
+                          <dd style={{ margin: 0, color: 'var(--text)' }}>
+                            {[
+                              quoteRequest.customerEmail,
+                              quoteRequest.customerPhone
+                            ]
+                              .filter(Boolean)
+                              .join(" / ") || "No contact method captured"}
+                          </dd>
+                        </div>
+                        <div>
+                          <dt style={{ color: 'var(--muted)', fontWeight: 600, marginBottom: '4px' }}>Event basics</dt>
+                          <dd style={{ margin: 0, color: 'var(--text)' }}>
+                            {[
+                              quoteRequest.eventDate ?? "No event date",
+                              quoteRequest.venue ?? "No venue or location"
+                            ].join(" / ")}
+                          </dd>
+                        </div>
+                        <div>
+                          <dt style={{ color: 'var(--muted)', fontWeight: 600, marginBottom: '4px' }}>Requested listings/items</dt>
+                          <dd style={{ margin: 0, color: 'var(--text)' }}>
+                            {quoteRequest.items.length > 0
+                              ? `${quoteRequest.items.length} submitted`
+                              : "No requested listing or item snapshots captured"}
+                          </dd>
+                        </div>
+                        <div>
+                          <dt style={{ color: 'var(--muted)', fontWeight: 600, marginBottom: '4px' }}>Source context</dt>
+                          <dd style={{ margin: 0, color: 'var(--text)' }}>
+                            {quoteRequest.sourcePagePath ??
+                              "No safe source path captured"}
+                            {quoteRequest.sourceListingSlug
+                              ? ` / ${quoteRequest.sourceListingSlug}`
+                              : ""}
+                          </dd>
+                        </div>
+                      </dl>
+                    </section>
+
+                    <form
+                      aria-label={`Update internal triage status ${quoteRequest.publicReference}`}
+                      className="premium-form-card"
+                      style={{ padding: '20px', background: 'var(--surface-light)', borderRadius: 'var(--radius-md)' }}
+                      onSubmit={(event) =>
+                        void handleStatusSubmit(
+                          event,
+                          quoteRequest.id,
+                          quoteRequest.publicReference
+                        )
+                      }
+                    >
+                      <div style={{ marginBottom: '16px' }}>
+                        <h4 style={{ fontSize: '16px', fontWeight: 600, color: 'var(--text)', margin: 0, marginBottom: '4px' }}>Update protected triage status</h4>
+                        <p style={{ fontSize: '12px', color: 'var(--muted)', margin: 0 }}>
+                          Save the next admin-only follow-through step for{" "}
+                          {quoteRequest.publicReference}. Submitted enquiry details
+                          stay unchanged.
+                        </p>
+                      </div>
+                      
+                      <label style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '14px', fontWeight: 600, marginBottom: '16px' }}>
+                        Internal status
+                        <select
+                          defaultValue={quoteRequest.status}
+                          id={`quote-status-${quoteRequest.id}`}
+                          name="status"
+                          className="premium-input"
+                          style={{ width: '100%', height: '48px', appearance: 'auto' }}
+                        >
+                          {quoteStatuses.map((quoteStatus) => (
+                            <option key={quoteStatus} value={quoteStatus}>
+                              {statusLabel(quoteStatus)}
+                            </option>
+                          ))}
+                        </select>
+                        <small style={{ fontWeight: 400, color: 'var(--muted)', fontSize: '12px', lineHeight: 1.4 }}>
+                          Status is an admin-only triage control and is never shown as a public quote status view, confirmed outcome, or public tracking lane.
+                        </small>
+                      </label>
+                      
+                      <button
+                        className="premium-button premium-button--primary"
+                        disabled={status.kind === "pending"}
+                        type="submit"
+                        style={{ width: 'auto' }}
+                      >
+                        {status.kind === "pending"
+                          ? `Updating status...`
+                          : `Update status`}
+                      </button>
+                    </form>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px' }}>
+                      <section style={{ padding: '16px', background: 'var(--background)', borderRadius: 'var(--radius-md)' }}>
+                        <h4 style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text)', marginBottom: '12px', margin: 0 }}>Intake completeness</h4>
+                        <ul style={{ margin: 0, paddingLeft: '20px', color: 'var(--text)', fontSize: '13px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                          {quoteTriageCues(quoteRequest).map((cue) => (
+                            <li key={cue}>{cue}</li>
+                          ))}
+                        </ul>
+                      </section>
+                      
+                      <section style={{ padding: '16px', background: 'var(--background)', borderRadius: 'var(--radius-md)' }}>
+                        <h4 style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text)', marginBottom: '12px', margin: 0 }}>Quote context summary</h4>
+                        <p style={{ fontSize: '12px', color: 'var(--muted)', margin: 0, lineHeight: 1.5 }}>
+                          Public reference {quoteRequest.publicReference} is a receipt
+                          reference only. It is not customer tracking, status lookup,
+                          availability confirmation, or a rental outcome.
+                        </p>
+                      </section>
+                      
+                      <section style={{ padding: '16px', background: 'var(--background)', borderRadius: 'var(--radius-md)' }}>
+                        <h4 style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text)', marginBottom: '12px', margin: 0 }}>Source context</h4>
+                        <SourceContextDetails quoteRequest={quoteRequest} />
+                        <div style={{ marginTop: '12px' }}>
+                          <SourceContextActions quoteRequest={quoteRequest} />
+                        </div>
+                      </section>
+                      
+                      <section style={{ padding: '16px', background: 'var(--background)', borderRadius: 'var(--radius-md)' }}>
+                        <ManualFollowUpChecklist quoteRequest={quoteRequest} />
+                      </section>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', marginTop: '16px' }}>
+                      <a
+                        className="premium-button premium-button--secondary"
+                        style={{ height: 'auto', padding: '8px 16px', fontSize: '13px' }}
+                        href={`/admin/quotes/${encodeURIComponent(quoteRequest.id)}`}
+                      >
+                        Open quote detail {quoteRequest.publicReference}
+                      </a>
+                    </div>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        )}
+
+        {showFutureCrmHandoffReadiness ? (
+          <div style={{ marginTop: '64px' }}>
+            {crmHandoffReadinessPanel}
+          </div>
+        ) : null}
+      </div>
     </section>
   );
 }

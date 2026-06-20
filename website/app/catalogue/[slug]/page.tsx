@@ -69,11 +69,9 @@ function imageCaption(
   product: PublicCatalogueProduct
 ) {
   const altText = textOrUndefined(image?.altText);
-
   if (altText) {
     return `${altText}. Use this photo to compare style, scale, and event fit before sending a quote request.`;
   }
-
   return `Photo to confirm for this listing. You can still send a quote request with quantities, venue, and event details for ${product.name}.`;
 }
 
@@ -87,7 +85,6 @@ export function getRelatedListings(
       if (product.categoryId && relatedProduct.categoryId) {
         return relatedProduct.categoryId === product.categoryId;
       }
-
       return Boolean(
         product.categoryName && relatedProduct.categoryName === product.categoryName
       );
@@ -103,7 +100,6 @@ export async function generateMetadata({
 
   if (!product) {
     const description = getMetadataDescription(null);
-
     return {
       title: "Furniture listing | Space Koncept Rentals",
       description,
@@ -118,7 +114,6 @@ export async function generateMetadata({
   }
 
   const description = getMetadataDescription(product);
-
   return {
     title: `${product.name} | Space Koncept Rentals`,
     description,
@@ -133,12 +128,8 @@ export async function generateMetadata({
 }
 
 async function getSlug(params: ProductPageProps["params"]) {
-  if (!params) {
-    return "lounge-sofa-package";
-  }
-
+  if (!params) return "lounge-sofa-package";
   const resolvedParams = await params;
-
   return resolvedParams.slug ?? "lounge-sofa-package";
 }
 
@@ -159,195 +150,113 @@ export function ProductPageContent({
   );
 
   return (
-    <section className="section">
-      <div className="page-title">
-        <p className="eyebrow">View rental listing</p>
-        <h1>{product.name}</h1>
-        <p>{publicListingSummary(product)}</p>
-      </div>
+    <>
+      <section className="premium-page-header">
+        <div className="premium-container">
+          <Link href={backHref} style={{ color: 'var(--accent)', fontWeight: 700, textTransform: 'uppercase', fontSize: '13px', letterSpacing: '0.5px', textDecoration: 'none', marginBottom: '16px', display: 'inline-block' }}>
+            &larr; {backLabel}
+          </Link>
+          <h1 className="premium-title-hero">{product.name}</h1>
+          <p className="premium-subtitle" style={{ color: '#cbd5e1', maxWidth: '800px', margin: '0 auto' }}>
+            {publicListingSummary(product)}
+          </p>
+        </div>
+      </section>
 
-      <div className="detail-layout">
-        <div className="detail-visual">
-          <figure className="detail-primary-image">
-            {product.primaryImage?.publicUrl ? (
-              <img
-                alt={imageAltText(product.primaryImage, product)}
-                src={product.primaryImage.publicUrl}
-              />
-            ) : (
-              <Image
-                alt={imageAltText(product.primaryImage, product)}
-                height={400}
-                priority
-                src={sofaImage}
-                width={600}
-              />
-            )}
-            <figcaption>
-              {imageCaption(
-                product.primaryImage?.publicUrl ? product.primaryImage : undefined,
-                product
-              )}
-            </figcaption>
-          </figure>
-          {publicImages.length > 1 ? (
-            <div
-              className="detail-gallery"
-              aria-label="Additional listing photos"
-            >
-              {galleryImages.map((image) => (
-                <figure key={image.id}>
+      <section className="premium-section">
+        <div className="premium-container">
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '48px', alignItems: 'start' }}>
+            {/* Visuals */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+              <div style={{ borderRadius: 'var(--radius-lg)', overflow: 'hidden', boxShadow: 'var(--shadow-md)', background: 'var(--background)', position: 'relative', aspectRatio: '4/3' }}>
+                {product.primaryImage?.publicUrl ? (
                   <img
-                    alt={imageAltText(image, product)}
-                    src={image.publicUrl}
+                    alt={imageAltText(product.primaryImage, product)}
+                    src={product.primaryImage.publicUrl}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                   />
-                  <figcaption>{imageCaption(image, product)}</figcaption>
-                </figure>
+                ) : (
+                  <Image
+                    alt={imageAltText(product.primaryImage, product)}
+                    priority
+                    src={sofaImage}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  />
+                )}
+              </div>
+              <div style={{ fontSize: '14px', color: 'var(--muted)', fontStyle: 'italic', padding: '0 8px' }}>
+                {imageCaption(product.primaryImage?.publicUrl ? product.primaryImage : undefined, product)}
+              </div>
+
+              {publicImages.length > 1 && (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '16px' }}>
+                  {galleryImages.map((image) => (
+                    <div key={image.id} style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      <div style={{ borderRadius: 'var(--radius-md)', overflow: 'hidden', aspectRatio: '4/3', border: '1px solid var(--border)' }}>
+                        <img alt={imageAltText(image, product)} src={image.publicUrl} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Quote Panel */}
+            <div className="premium-form-card" style={{ position: 'sticky', top: '100px' }}>
+              <div style={{ fontSize: '12px', fontWeight: 800, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px' }}>Rental Details</div>
+              <h2 className="premium-title-section" style={{ fontSize: '28px', marginBottom: '24px' }}>Request a Quote</h2>
+              
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '16px', borderBottom: '1px solid var(--border)' }}>
+                  <span style={{ color: 'var(--muted)', fontWeight: 600 }}>Reference</span>
+                  <span style={{ fontWeight: 700, color: 'var(--surface-strong)' }}>{product.slug}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '16px', borderBottom: '1px solid var(--border)' }}>
+                  <span style={{ color: 'var(--muted)', fontWeight: 600 }}>Category</span>
+                  <span style={{ fontWeight: 700, color: 'var(--surface-strong)' }}>{publicCategoryLabel(product)}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '16px', borderBottom: '1px solid var(--border)' }}>
+                  <span style={{ color: 'var(--muted)', fontWeight: 600 }}>Rental Unit</span>
+                  <span style={{ fontWeight: 700, color: 'var(--surface-strong)' }}>{publicRentalUnit(product)}</span>
+                </div>
+              </div>
+
+              <div style={{ background: 'var(--background)', padding: '24px', borderRadius: 'var(--radius-md)', marginBottom: '32px' }}>
+                <h3 className="premium-title-card" style={{ fontSize: '16px' }}>Preparing your enquiry</h3>
+                <ul style={{ margin: 0, paddingLeft: '20px', color: 'var(--muted)', fontSize: '15px', lineHeight: 1.6 }}>
+                  <li style={{ marginBottom: '8px' }}>Share timing, venue, and delivery notes.</li>
+                  <li style={{ marginBottom: '8px' }}>Add desired quantities and acceptable alternatives.</li>
+                  <li>Our team will manually review and respond to confirm the fit.</li>
+                </ul>
+              </div>
+
+              <Link className="premium-button premium-button--primary" style={{ width: '100%', marginBottom: '16px' }} href={getQuoteHrefForListing(product.slug)}>
+                Start Enquiry for {product.name}
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {relatedListings.length > 0 && (
+        <section className="premium-section premium-section--alternate">
+          <div className="premium-container">
+            <div style={{ textAlign: 'center', marginBottom: '48px' }}>
+              <div style={{ fontSize: '13px', fontWeight: 800, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px' }}>Related</div>
+              <h2 className="premium-title-section">More like this</h2>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '32px' }}>
+              {relatedListings.map((related) => (
+                <Link key={related.slug} href={`/listings/${related.slug}`} style={{ display: 'block', background: 'var(--surface)', borderRadius: 'var(--radius-lg)', overflow: 'hidden', border: '1px solid var(--border)', transition: 'transform 0.2s', padding: '24px' }}>
+                  <h3 className="premium-title-card" style={{ fontSize: '18px', marginBottom: '8px' }}>{related.name}</h3>
+                  <p style={{ color: 'var(--muted)', fontSize: '14px', margin: 0 }}>View listing details</p>
+                </Link>
               ))}
             </div>
-          ) : null}
-        </div>
-
-        <article className="quote-panel">
-          <h2>Rental details</h2>
-          <p>
-            {textOrUndefined(product.description) ??
-              textOrUndefined(product.shortDescription) ??
-              "Listing details can be reviewed with the team during quote follow-up."}
-          </p>
-          <section
-            aria-label="Selected listing enquiry handoff"
-            className="listing-enquiry-panel"
-          >
-            <p className="eyebrow">Quote request</p>
-            <h3>This listing carries into the enquiry form</h3>
-            <p>
-              Use the quote action below to send the listing slug into editable
-              requested-items text. Add quantities, alternates, venue, access,
-              and timing notes before sending the enquiry.
-            </p>
-            <dl className="listing-enquiry-panel__facts">
-              <div>
-                <dt>Listing reference</dt>
-                <dd>{product.slug}</dd>
-              </div>
-              <div>
-                <dt>Quote form starting text</dt>
-                <dd>{product.name}</dd>
-              </div>
-              <div>
-                <dt>Continue browsing</dt>
-                <dd>
-                  Compare details here, then request a quote or return to the
-                  catalogue/listings view.
-                </dd>
-              </div>
-            </dl>
-          </section>
-          <dl className="detail-list">
-            <div>
-              <dt>Listing reference</dt>
-              <dd>{product.slug}</dd>
-            </div>
-            <div>
-              <dt>Category</dt>
-              <dd>{publicCategoryLabel(product)}</dd>
-            </div>
-            <div>
-              <dt>Rental unit</dt>
-              <dd>{publicRentalUnit(product)}</dd>
-            </div>
-            <div>
-              <dt>Event-use context</dt>
-              <dd>
-                Listing context is a starting point only for event furniture
-                rental planning. The team reviews the enquiry against the
-                event notes you share.
-              </dd>
-            </div>
-            <div>
-              <dt>Quote planning</dt>
-              <dd>
-                Share timing, venue, preferred quantities, and delivery
-                notes so the team can review the request. Include alternatives
-                and setup notes if helpful; this page does not set aside
-                furniture or finish rental details.
-              </dd>
-            </div>
-          </dl>
-
-          <section className="listing-checklist" aria-label="Quote request checklist">
-            <h3>Quote request checklist</h3>
-            <ul className="journey-list">
-              <li>Bring event details such as date, venue, and timing window.</li>
-              <li>Venue or event location.</li>
-              <li>Add quantities and alternatives for the requested listing.</li>
-              <li>Share setup, access, and timing notes for the team.</li>
-            </ul>
-          </section>
-
-          <section className="listing-checklist" aria-label="Media and quote request preparation">
-            <h3>Media and fit check before enquiry</h3>
-            <ul className="journey-list">
-              <li>Check the listing details and rental unit.</li>
-              <li>Compare the category and rental unit for your setup.</li>
-              <li>Use listing photos or the fallback image as browsing context.</li>
-              <li>
-                Bring event date, venue, quantities, alternatives, setup,
-                access, and timing notes before sending the listing for
-                follow-up.
-              </li>
-            </ul>
-          </section>
-
-          <div className="hero__actions">
-            <Link className="button" href={getQuoteHrefForListing(product.slug)}>
-              Request a quote for {product.name}
-            </Link>
-            <Link className="button button--secondary" href={backHref}>
-              {backLabel}
-            </Link>
-            <Link className="button button--secondary" href="/listings">
-              Browse listings
-            </Link>
-            <Link className="button button--secondary" href="/categories">
-              Browse categories
-            </Link>
-            <Link className="button button--secondary" href="/events">
-              Explore event-use ideas
-            </Link>
-            <Link className="button button--secondary" href={getQuoteHrefForListing(product.slug)}>
-              Start enquiry for {product.name}
-            </Link>
           </div>
-        </article>
-      </div>
-
-      <section className="route-card" aria-label="Related rental browsing">
-        <p className="eyebrow">Continue browsing</p>
-        <h2>Related rental listing context</h2>
-        <p>
-          Same-category links are local browsing cues only. They do not imply
-          availability or rental fit.
-        </p>
-        {relatedListings.length > 0 ? (
-          <ul className="journey-list">
-            {relatedListings.map((relatedListing) => (
-              <li key={relatedListing.slug}>
-                <Link href={`/listings/${relatedListing.slug}`}>
-                  View rental listing: {relatedListing.name}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p>
-            Browse all listings, browse categories, explore event-use ideas, or
-            start a rental enquiry if you need help shaping the request.
-          </p>
-        )}
-      </section>
-    </section>
+        </section>
+      )}
+    </>
   );
 }
 
