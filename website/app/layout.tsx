@@ -83,6 +83,8 @@ function SiteHeader() {
         </div>
 
         <nav aria-label="Public route shortcuts" className="sr-only">
+          <Link href="/listings">Listings</Link>
+          <Link href="/categories">Categories</Link>
           <Link href="/quote">Quote enquiry</Link>
         </nav>
       </div>
