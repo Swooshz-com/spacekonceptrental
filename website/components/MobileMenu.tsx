@@ -80,11 +80,11 @@ export default function MobileMenu() {
           <Link href="/catalogue" onClick={close}>
             Catalogue
           </Link>
-          <Link href="/events" onClick={close}>
-            Hire By Events
+          <Link href="/listings" onClick={close}>
+            Setups
           </Link>
-          <Link href="#" onClick={close}>
-            Portfolio
+          <Link href="/quote" onClick={close}>
+            Quote List
           </Link>
           <Link href="#" onClick={close}>
             About

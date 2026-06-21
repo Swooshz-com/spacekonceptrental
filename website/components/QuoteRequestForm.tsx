@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import type { ChangeEvent, FormEvent } from "react";
+import { useQuoteList } from "./QuoteListContext";
 
 type QuoteApiResponse = {
   publicReference?: string;
@@ -141,6 +142,28 @@ export default function QuoteRequestForm({
     preferredContactMethod
   );
   const safeInitialListingSlug = getSafeListingSlug(initialListingSlug);
+
+  const { items } = useQuoteList();
+  const [itemsText, setItemsText] = useState(initialItemsText);
+  const [hasMergedList, setHasMergedList] = useState(false);
+
+  useEffect(() => {
+    if (!hasMergedList && items.length > 0) {
+      // Append items to itemsText if they are not already in it
+      const newItemsText = [
+        itemsText,
+        itemsText ? "\n--- From Quote List ---" : "",
+        ...items.map(item => `1x ${item.name} (${item.slug})`)
+      ].filter(Boolean).join('\n');
+
+      setItemsText(newItemsText);
+      setHasMergedList(true);
+    }
+  }, [items, hasMergedList, itemsText]);
+
+  function handleItemsTextChange(event: ChangeEvent<HTMLTextAreaElement>) {
+    setItemsText(event.target.value);
+  }
 
   function handlePreferredContactMethodChange(
     event: ChangeEvent<HTMLSelectElement>
@@ -416,7 +439,8 @@ export default function QuoteRequestForm({
         <label className="quote-form__full-width">
           Requested listings or items
           <textarea
-            defaultValue={initialItemsText}
+            value={itemsText}
+            onChange={handleItemsTextChange}
             name="items"
             placeholder="Example: 20 stools, 4 cocktail tables, or a lounge setup"
             rows={4}

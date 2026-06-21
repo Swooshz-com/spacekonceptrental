@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Aura Studio - Enquiry Received</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;500;600;700&amp;family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-surface": "#1e1b18",
+                        "inverse-surface": "#34302c",
+                        "secondary-fixed": "#ffdbc8",
+                        "surface-bright": "#fff8f5",
+                        "surface-tint": "#62612e",
+                        "secondary-fixed-dim": "#f7b994",
+                        "on-tertiary-fixed-variant": "#49473d",
+                        "outline-variant": "#cac7b7",
+                        "on-surface-variant": "#48473b",
+                        "tertiary-fixed-dim": "#cbc6ba",
+                        "surface-variant": "#e9e1dc",
+                        "error": "#ba1a1a",
+                        "on-primary-container": "#dad899",
+                        "secondary-container": "#fdbf99",
+                        "on-tertiary-container": "#dad5c8",
+                        "surface-container-highest": "#e9e1dc",
+                        "on-secondary-container": "#794b2e",
+                        "surface": "#fff8f5",
+                        "on-tertiary-fixed": "#1d1c14",
+                        "inverse-on-surface": "#f8efea",
+                        "primary-fixed-dim": "#ccc98d",
+                        "surface-container-low": "#fbf2ed",
+                        "on-primary-fixed-variant": "#4a4919",
+                        "on-primary": "#ffffff",
+                        "surface-container-high": "#efe6e2",
+                        "on-error": "#ffffff",
+                        "error-container": "#ffdad6",
+                        "on-tertiary": "#ffffff",
+                        "surface-container-lowest": "#ffffff",
+                        "tertiary": "#47453b",
+                        "primary-fixed": "#e8e6a6",
+                        "tertiary-fixed": "#e8e2d5",
+                        "secondary": "#825335",
+                        "primary": "#474617",
+                        "on-background": "#1e1b18",
+                        "on-primary-fixed": "#1d1d00",
+                        "background": "#fff8f5",
+                        "tertiary-container": "#5f5c52",
+                        "on-secondary-fixed-variant": "#673c20",
+                        "outline": "#79776a",
+                        "surface-dim": "#e1d8d4",
+                        "surface-container": "#f5ece7",
+                        "inverse-primary": "#ccc98d",
+                        "on-secondary-fixed": "#321300",
+                        "on-secondary": "#ffffff",
+                        "on-error-container": "#93000a",
+                        "primary-container": "#5f5e2c"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "unit": "8px",
+                        "section-padding": "96px",
+                        "margin-mobile": "16px",
+                        "gutter": "24px",
+                        "container-max": "1200px",
+                        "margin-desktop": "48px"
+                    },
+                    "fontFamily": {
+                        "label-md": ["Plus Jakarta Sans"],
+                        "headline-sm": ["Literata"],
+                        "headline-md": ["Literata"],
+                        "display-lg": ["Literata"],
+                        "display-lg-mobile": ["Literata"],
+                        "body-lg": ["Plus Jakarta Sans"],
+                        "body-md": ["Plus Jakarta Sans"]
+                    },
+                    "fontSize": {
+                        "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "headline-sm": ["24px", { "lineHeight": "32px", "fontWeight": "500" }],
+                        "headline-md": ["32px", { "lineHeight": "40px", "fontWeight": "500" }],
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "display-lg-mobile": ["36px", { "lineHeight": "44px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+        }
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-up {
+            animation: fadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .delay-100 { animation-delay: 100ms; opacity: 0; }
+        .delay-200 { animation-delay: 200ms; opacity: 0; }
+        .delay-300 { animation-delay: 300ms; opacity: 0; }
+    </style>
+</head>
+<body class="bg-surface text-on-surface min-h-screen flex items-center justify-center p-margin-mobile md:p-margin-desktop antialiased overflow-x-hidden">
+<main class="max-w-container-max w-full mx-auto grid grid-cols-1 md:grid-cols-12 gap-y-16 md:gap-gutter items-center">
+<div class="col-span-1 md:col-span-5 flex flex-col justify-center animate-fade-up pr-0 md:pr-12">
+<div class="mb-16">
+<span class="font-headline-sm text-headline-sm text-primary tracking-tight font-medium">Aura Studio</span>
+</div>
+<div class="w-16 h-16 rounded-full bg-primary-fixed flex items-center justify-center mb-8">
+<span class="material-symbols-outlined text-primary text-3xl" style="font-variation-settings: 'wght' 400;">mark_email_read</span>
+</div>
+<h1 class="font-display-lg text-display-lg-mobile md:text-display-lg text-primary mb-6">Enquiry Received.</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant mb-12 max-w-md">
+                Our curation team is reviewing your requested setups. We will follow up manually within 24 hours to discuss material availability, precise logistics, and final quoting.
+            </p>
+<div>
+<a class="inline-flex items-center justify-center bg-primary text-on-primary font-label-md text-label-md px-8 py-4 rounded-DEFAULT hover:bg-tertiary transition-colors duration-300" href="#">
+                    Return to Catalogue
+                </a>
+</div>
+</div>
+<div class="col-span-1 md:col-span-6 md:col-start-7 animate-fade-up delay-200">
+<div class="bg-surface-container-low border border-outline-variant/30 rounded-xl p-8 md:p-12 shadow-sm shadow-primary/5">
+<h2 class="font-headline-sm text-headline-sm text-primary mb-8 border-b border-outline-variant/20 pb-4">Requested Curation</h2>
+<ul class="space-y-6">
+<li class="flex items-start gap-6 group">
+<div class="w-24 h-24 rounded-lg overflow-hidden shrink-0 bg-surface-container-highest">
+<img class="w-full h-full object-cover mix-blend-multiply group-hover:scale-105 transition-transform duration-700" data-alt="A close-up, highly textured editorial photograph of a minimalist lounge chair upholstered in neutral linen. The setting is a warm, sunlit studio with tactile, earth-toned walls. Soft, ambient shadows highlight the artisanal craftsmanship of the wooden frame. The aesthetic is high-end, calm, and grounded." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA18ajmocUII9ctMTzBhrXeM6_gNm69Q1gHtL36Jy85d6GbxWwhQE3PUItLy3OxL9HBUCPeu1JTBZaxrP96_PL539VEXZwf56dmWkPEearVcjrHzlC4tcEK9L7vPaFxv9KORTZHanmBQN509_VZGVCEYVJ6ZtxPHFIRFKsut6Q0c3hj6zd-qMtRs8BJ6SYQGvAieYY1MxVtSYCIR3anAi0StLee41X9ltediAfLqB_41283M2_gsoGUsbohK30_PjfApsi6rq1MVpgw"/>
+</div>
+<div class="flex-1 pt-2">
+<h3 class="font-body-lg text-body-lg text-on-surface mb-1">Lounge Setup A — Neutral Linen</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">Qty 1</p>
+</div>
+</li>
+<li class="flex items-start gap-6 group">
+<div class="w-24 h-24 rounded-lg overflow-hidden shrink-0 bg-surface-container-highest">
+<img class="w-full h-full object-cover mix-blend-multiply group-hover:scale-105 transition-transform duration-700" data-alt="A detailed, top-down shot of a raw oak coffee table with organic, uneven edges, resting on a textured woven rug. Soft, natural light spills across the surface, emphasizing the natural wood grain and a small, handmade ceramic vase placed off-center. High-end intentional living aesthetic, warm and tactile." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC26zMIDnXBNdHQKXu5Fgp1O9vKKfykfpECZmcn9xrSX9BLBspm_s_efK2lXn8ZeMteLr4YpU7gME5IcptyvjP4jP9XUuebItgL6givjYfcVPSSFu8CQ_djynd_z_qCJTQscxq6a8HwPF1ob1qukLTUvGRQZxkCWylS0WpPrPbsSo6Ic1nmCeV7VKwe30RBkms9dPd7C9Yyes6IZF2p-AJmKL2SOwy8SGMxvUdcwRwRwk6pBEYDjU7zpjSPl6L9JBCyaiM6L_LMj0oA"/>
+</div>
+<div class="flex-1 pt-2">
+<h3 class="font-body-lg text-body-lg text-on-surface mb-1">Artisanal Coffee Table — Raw Oak</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">Qty 1</p>
+</div>
+</li>
+</ul>
+<div class="mt-10 pt-6 border-t border-outline-variant/20">
+<p class="font-body-md text-body-md text-outline italic">
+                        Note: This is not a binding commitment. A formal proposal including dedicated white-glove delivery will be provided by our team.
+                    </p>
+</div>
+</div>
+</div>
+</main>
+</body></html>

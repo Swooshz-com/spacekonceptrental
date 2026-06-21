@@ -7,15 +7,9 @@ import chairImage from "../assets/images/product_chair.png";
 import sofaImage from "../assets/images/product_sofa.png";
 import corporateImage from "../assets/images/event_corporate.png";
 import { getPublicCatalogue } from "../lib/catalogue/catalogue-repository";
-import { getQuoteHrefForListing } from "../lib/catalogue/quote-handoff";
 import type { PublicCatalogueProduct } from "../lib/catalogue/types";
+import AddToQuoteButton from "../components/AddToQuoteButton";
 
-const iconViewBox = ["0", "0", "24", "24"].join(" ");
-const heroOverlayBackground = [
-  "linear-gradient(to bottom,",
-  `rgba(${["13", "19", "33", "0.7"].join(",")}) 0%,`,
-  `rgba(${["13", "19", "33", "0.9"].join(",")}) 100%)`
-].join(" ");
 export const metadata: Metadata = {
   title: "Event furniture rental catalogue | Space Koncept Rentals",
   description:
@@ -31,12 +25,9 @@ export const metadata: Metadata = {
 };
 
 const advantages = [
-  { title: "Superior Quality & Safety", desc: "Improve and ensure quality and safety for your events.", icon: <g><rect x="6" y="5" width="12" height="14" rx="2" /><line x1="9" x2="15" y1="11" y2="11" /><line x1="10" x2="14" y1="15" y2="15" /></g> },
-  { title: "Expert Setup & Support", desc: "Expert setup teams for delivery, setup and tear down support.", icon: <g><rect x="4" y="7" width="16" height="10" rx="2" /><line x1="8" x2="16" y1="11" y2="11" /><line x1="8" x2="14" y1="14" y2="14" /></g> },
-  { title: "Customizable Solutions", desc: "Customizable solutions designed to fit your unique vision.", icon: <g><circle cx="12" cy="12" r="4" /><line x1="12" x2="12" y1="4" y2="7" /><line x1="12" x2="12" y1="17" y2="20" /><line x1="4" x2="7" y1="12" y2="12" /><line x1="17" x2="20" y1="12" y2="12" /></g> },
-  { title: "Transparent Pricing", desc: "Our intuitive customs are built in transparent pricing structures.", icon: <g><rect x="5" y="6" width="14" height="12" rx="2" /><line x1="8" x2="16" y1="10" y2="10" /><line x1="8" x2="13" y1="14" y2="14" /></g> },
-  { title: "Quality Assurance", desc: ["Recognised quality assurance offering guaran", "tee on our workflows."].join(""), icon: <g><rect x="6" y="4" width="12" height="16" rx="2" /><line x1="9" x2="15" y1="10" y2="10" /><line x1="9" x2="15" y1="14" y2="14" /></g> },
-  { title: "Quick Quotations", desc: "Quick quotations mean winning quick quotes for your clients.", icon: <g><line x1="13" x2="7" y1="4" y2="14" /><line x1="7" x2="13" y1="14" y2="14" /><line x1="11" x2="17" y1="20" y2="10" /><line x1="11" x2="17" y1="10" y2="10" /></g> }
+  { title: "Curated event-ready furniture", desc: "Browse our catalogue for individual pieces tailored to your needs.", icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /> },
+  { title: "Prebuilt setups", desc: "Discover cohesive layouts designed for events, exhibitions, and corporate setups.", icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /> },
+  { title: "Manual team follow-up", desc: "The team reviews enquiry details and follows up directly.", icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" /> }
 ];
 
 function textOrUndefined(value: string | undefined) {
@@ -52,214 +43,129 @@ function featuredListingImage(listing: PublicCatalogueProduct): StaticImageData 
   return sofaImage;
 }
 
-function featuredListingSummary(listing: PublicCatalogueProduct) {
-  return (
-    textOrUndefined(listing.shortDescription) ??
-    textOrUndefined(listing.description) ??
-    "Share this listing in a quote request so the team can review the event fit."
-  );
-}
-
-function getCategoryIcon(name: string) {
-  const n = name.toLowerCase();
-
-  if (n.includes("bar stool") || n.includes("stool")) {
-    return (
-      <svg width="40" height="40" viewBox={iconViewBox} fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="8" y="2" width="8" height="3" rx="1" /><line x1="12" y1="5" x2="12" y2="14" /><line x1="8" y1="14" x2="16" y2="14" /><line x1="9" y1="14" x2="7" y2="22" /><line x1="15" y1="14" x2="17" y2="22" />
-      </svg>
-    );
-  }
-  if (n.includes("chair") || n.includes("seating")) {
-    return (
-      <svg width="40" height="40" viewBox={iconViewBox} fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="5" y="4" width="14" height="8" rx="2" /><rect x="3" y="11" width="18" height="5" rx="1" /><line x1="6" y1="16" x2="6" y2="22" /><line x1="18" y1="16" x2="18" y2="22" />
-      </svg>
-    );
-  }
-  if (n.includes("table")) {
-    return (
-      <svg width="40" height="40" viewBox={iconViewBox} fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="2" y="8" width="20" height="3" rx="1" /><line x1="6" y1="11" x2="6" y2="21" /><line x1="18" y1="11" x2="18" y2="21" />
-      </svg>
-    );
-  }
-  if (n.includes("sofa") || n.includes("couch") || n.includes("lounge")) {
-    return (
-      <svg width="40" height="40" viewBox={iconViewBox} fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="5" y="5" width="14" height="8" rx="2" /><rect x="2" y="11" width="20" height="6" rx="2" /><line x1="5" y1="17" x2="5" y2="20" /><line x1="19" y1="17" x2="19" y2="20" />
-      </svg>
-    );
-  }
-  if (n.includes("counter") || n.includes("desk")) {
-    return (
-      <svg width="40" height="40" viewBox={iconViewBox} fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="2" y="6" width="20" height="4" rx="1" /><line x1="5" y1="10" x2="5" y2="20" /><line x1="19" y1="10" x2="19" y2="20" /><line x1="5" y1="15" x2="19" y2="15" />
-      </svg>
-    );
-  }
-  if (n.includes("coffee") || n.includes("machine")) {
-    return (
-      <svg width="40" height="40" viewBox={iconViewBox} fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="3" y="8" width="15" height="10" rx="2" /><circle cx="20" cy="13" r="2" /><line x1="6" y1="1" x2="6" y2="4" /><line x1="10" y1="1" x2="10" y2="4" /><line x1="14" y1="1" x2="14" y2="4" />
-      </svg>
-    );
-  }
-  if (n.includes("stand") || n.includes("display")) {
-    return (
-      <svg width="40" height="40" viewBox={iconViewBox} fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="4" y="2" width="16" height="14" rx="2" /><line x1="12" y1="16" x2="12" y2="20" /><line x1="8" y1="20" x2="16" y2="20" />
-      </svg>
-    );
-  }
-  if (n.includes("fridge") || n.includes("refriger") || n.includes("cooler")) {
-    return (
-      <svg width="40" height="40" viewBox={iconViewBox} fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="4" y="2" width="16" height="20" rx="2" /><line x1="4" y1="10" x2="20" y2="10" /><line x1="17" y1="5" x2="17" y2="8" /><line x1="17" y1="13" x2="17" y2="16" />
-      </svg>
-    );
-  }
-  if (n.includes("av") || n.includes("audio") || n.includes("video") || n.includes("equipment") || n.includes("screen")) {
-    return (
-      <svg width="40" height="40" viewBox={iconViewBox} fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="2" y="3" width="20" height="14" rx="2" /><line x1="8" y1="21" x2="16" y2="21" /><line x1="12" y1="17" x2="12" y2="21" />
-      </svg>
-    );
-  }
-  if (n.includes("plant") || n.includes("green") || n.includes("leaf")) {
-    return (
-      <svg width="40" height="40" viewBox={iconViewBox} fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-        <line x1="7" y1="21" x2="12" y2="9" /><ellipse cx="15" cy="8" rx="5" ry="3" /><ellipse cx="9" cy="13" rx="4" ry="2" />
-      </svg>
-    );
-  }
-  // Default fallback - generic box
-  return (
-      <svg width="40" height="40" viewBox={iconViewBox} fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="4" y="10" width="16" height="10" rx="2" /><rect x="8" y="5" width="8" height="5" rx="1" /><line x1="12" y1="14" x2="12" y2="18" />
-    </svg>
-  );
-}
-
-function FeaturedListingCard({ listing }: { listing: PublicCatalogueProduct }) {
+function FeaturedListingCard({ listing, index }: { listing: PublicCatalogueProduct, index: number }) {
   const imageAltText = textOrUndefined(listing.primaryImage?.altText) ?? `${listing.name} furniture rental setup`;
+  const isLarge = index === 0;
 
   return (
-    <article className="premium-card">
-      <div className="premium-card__image">
-        {listing.primaryImage?.publicUrl ? (
-          <img alt={imageAltText} src={listing.primaryImage.publicUrl} />
-        ) : (
-          <Image alt={imageAltText} src={featuredListingImage(listing)} />
-        )}
-      </div>
-      <div className="premium-card__content">
-        <div className="premium-card__meta" style={{ color: 'var(--accent)', background: 'var(--surface)', display: 'inline-block', padding: '4px 12px', borderRadius: '50px', fontSize: '12px', border: '1px solid var(--border)', marginBottom: '12px' }}>
-          {listing.categoryName ?? "Rental listing"}
+    <div className={`v3-masonry-item ${isLarge ? 'v3-masonry-item--large' : ''}`}>
+      {listing.primaryImage?.publicUrl ? (
+        <img alt={imageAltText} src={listing.primaryImage.publicUrl} />
+      ) : (
+        <Image alt={imageAltText} src={featuredListingImage(listing)} />
+      )}
+      <div className="v3-masonry-item__content">
+        <div>
+          <span className="v3-masonry-item__category">{listing.categoryName ?? "Rental listing"}</span>
+          <h3>{listing.name}</h3>
         </div>
-        <h2 className="premium-title-card">{listing.name}</h2>
-        <p className="premium-card__desc">{featuredListingSummary(listing)}</p>
-        <div style={{ display: 'flex', gap: '12px', marginTop: 'auto', alignItems: 'center' }}>
-          <Link className="premium-button premium-button--secondary" style={{ flex: 1, padding: '0 16px', fontSize: '14px', height: '40px' }} href={`/listings/${listing.slug}`}>
-            Details
-          </Link>
-          <Link href={getQuoteHrefForListing(listing.slug)} style={{ background: 'none', border: 'none', color: 'var(--accent)', fontWeight: 600, cursor: 'pointer', fontSize: '14px' }}>
-            Add to Quote &rarr;
-          </Link>
-        </div>
+        <Link href={`/catalogue/${listing.slug}`} className="v3-masonry-item__btn" aria-label={`View ${listing.name}`}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M5 12h14M12 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </Link>
       </div>
-    </article>
+    </div>
   );
 }
 
 export default async function HomePage() {
   const catalogue = await getPublicCatalogue();
-  const featuredListings = catalogue.products.slice(0, 3);
-  const categories = catalogue.categories.slice(0, 6);
+  const featuredListings = catalogue.products.slice(0, 3); // Take exactly 3 for the masonry grid
 
   return (
     <>
-      <section className="premium-hero-dark" style={{ position: 'relative', overflow: 'hidden', minHeight: '600px' }}>
-        <div style={{ position: 'absolute', inset: 0, zIndex: 0 }}>
-          <Image alt="Styled event lounge" priority src={heroImage} fill style={{ objectFit: 'cover' }} />
-          <div style={{ position: 'absolute', inset: 0, background: heroOverlayBackground }} />
-        </div>
-        <div className="premium-container" style={{ position: 'relative', zIndex: 1, padding: '120px 24px', textAlign: 'center' }}>
-          <h1 className="premium-title-massive">
-            Furnish Your <span>Vision.</span><br />Elevate Every Space.
-          </h1>
-          <p className="premium-hero-subtitle">
-            Singapore event furniture rental company with attractive modern furniture and dedicated event support.
-          </p>
-          <div className="premium-hero-actions">
-            <Link className="premium-button premium-button--primary" href="/catalogue">
-              Browse Catalogue
-            </Link>
-            <Link className="premium-button premium-button--secondary" style={{ color: '#0f172a', backgroundColor: '#fff', borderColor: '#fff' }} href="/quote">
-              Get A Free Quote
-            </Link>
-          </div>
-          <div style={{ marginTop: '64px', fontSize: '14px', fontWeight: 600, color: '#cbd5e1', letterSpacing: '0.5px' }}>
-            500+ Events Furnished &nbsp;|&nbsp; Trusted Since 2015 &nbsp;|&nbsp; Same-Day Response
+      <section className="section-padding">
+        <div className="container">
+          <div className="v3-home-hero">
+            <div className="v3-home-hero__content">
+              <h1>Setting the scene for unforgettable events.</h1>
+              <p>Curated event-ready furniture and flexible rental selection for corporate and private occasions.</p>
+              <div className="v3-home-hero__actions">
+                <Link href="/catalogue" className="v3-btn v3-btn--primary">
+                  Browse Catalogue
+                </Link>
+                <Link href="/listings" className="v3-btn v3-btn--outline">
+                  View Setups
+                </Link>
+              </div>
+            </div>
+            <div className="v3-home-hero__image">
+              <Image alt="Styled event lounge" priority src={heroImage} style={{ objectFit: 'cover' }} />
+            </div>
           </div>
         </div>
       </section>
 
-      <section className="premium-section" style={{ background: '#f8fafc', padding: '80px 0' }}>
-        <div className="premium-container">
-          <h2 className="premium-title-section" style={{ textAlign: 'center', marginBottom: '40px' }}>Browse By Category</h2>
-          <div className="premium-category-icon-container">
-            {categories.map((cat) => (
-              <Link key={cat.id} href={`/listings?category=${encodeURIComponent(cat.slug)}`} className="premium-category-icon">
-                <div className="premium-category-icon-circle">
-                  {getCategoryIcon(cat.name)}
-                </div>
-                <span className="premium-category-icon-label">{cat.name}</span>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="premium-section" style={{ padding: '80px 0' }}>
-        <div className="premium-container">
-          <h2 className="premium-title-section" style={{ textAlign: 'center', marginBottom: '64px' }}>The SpaceKoncept Advantage</h2>
-          <div className="premium-advantage-grid">
-            {advantages.map((adv) => (
-              <div key={adv.title} className="premium-advantage-card">
-                <div className="premium-icon-circle">
-                  <svg viewBox={iconViewBox} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <section className="v3-advantage section-padding">
+        <div className="container">
+          <div className="v3-advantage__grid">
+            <div className="v3-advantage__header">
+              <h2>The SpaceKoncept Advantage</h2>
+            </div>
+            <div className="v3-advantage__items">
+              {advantages.map((adv) => (
+                <div key={adv.title} className="v3-advantage__item">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
                     {adv.icon}
                   </svg>
+                  <h3>{adv.title}</h3>
+                  <p>{adv.desc}</p>
                 </div>
-                <h3>{adv.title}</h3>
-                <p>{adv.desc}</p>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
-      <section className="premium-section" style={{ background: '#f8fafc', padding: '80px 0' }}>
-        <div className="premium-container">
-          <h2 className="premium-title-section" style={{ textAlign: 'center', marginBottom: '40px' }}>Featured Rentals</h2>
+      <section className="section-padding">
+        <div className="container">
+          <div className="v3-how-it-works">
+            <h2>Quote-led rental planning</h2>
+            <div className="v3-steps">
+              <div className="v3-step">
+                <div className="v3-step__number">1</div>
+                <h3>Browse & Select</h3>
+                <p>Explore our catalogue and add desired pieces or curated setups to your Quote List.</p>
+              </div>
+              <div className="v3-step">
+                <div className="v3-step__number">2</div>
+                <h3>Submit Enquiry</h3>
+                <p>Submit your event details and selected items for the team to review.</p>
+              </div>
+              <div className="v3-step">
+                <div className="v3-step__number">3</div>
+                <h3>Manual Follow-up</h3>
+                <p>The team reviews your enquiry details and follows up directly to help plan your rental.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="section-padding" style={{ background: 'var(--surface-strong)' }}>
+        <div className="container">
+          <div className="v3-featured-header">
+            <h2>Featured Pieces</h2>
+            <Link href="/catalogue" className="v3-featured-link">
+              View full catalogue
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M5 12h14M12 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </Link>
+          </div>
 
           {featuredListings.length === 0 ? (
-            <div style={{ textAlign: 'center' }}>
+            <div style={{ textAlign: 'center', padding: '64px' }}>
               <p>No public rental listings are available right now.</p>
             </div>
           ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '32px' }}>
-              {featuredListings.map((listing) => (
-                <FeaturedListingCard key={listing.id} listing={listing} />
+            <div className="v3-masonry">
+              {featuredListings.map((listing, index) => (
+                <FeaturedListingCard key={listing.id} listing={listing} index={index} />
               ))}
             </div>
           )}
-          <div style={{ display: 'flex', justifyContent: 'center', marginTop: '48px' }}>
-            <Link className="premium-button premium-button--secondary" href="/catalogue">
-              View All Products
-            </Link>
-          </div>
         </div>
       </section>
 

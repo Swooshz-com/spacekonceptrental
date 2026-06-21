@@ -1,140 +1,62 @@
-import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
-import corporateImage from "../../assets/images/event_corporate.png";
-import exhibitionImage from "../../assets/images/event_exhibition.png";
-import galaImage from "../../assets/images/event_gala.png";
-import weddingImage from "../../assets/images/event_wedding.png";
 
 export const metadata: Metadata = {
-  title: "Event setups and rental use cases | Space Koncept Rentals",
+  title: "Event Setup Planning | Space Koncept Rentals",
   description:
-    "Explore event setup guidance, browse rental listings, and send a quote request with setup notes."
+    "Explore our setups and catalogue to plan your next corporate event, exhibition, gala, or wedding."
 };
-
-const eventUseCases = [
-  {
-    slug: "corporate-receptions",
-    title: "Corporate receptions",
-    description: "Registration zones, lounge corners, and networking layouts.",
-    image: corporateImage
-  },
-  {
-    slug: "exhibitions",
-    title: "Exhibitions",
-    description: "Booth seating, discussion tables, and showcase spaces.",
-    image: exhibitionImage
-  },
-  {
-    slug: "gala-evenings",
-    title: "Gala evenings",
-    description: "Arrival lounges, cocktail seating, and polished guest areas.",
-    image: galaImage
-  },
-  {
-    slug: "weddings",
-    title: "Weddings",
-    description: "Elegant reception seating, ceremony staging, and bridal lounge setups.",
-    image: weddingImage
-  },
-  {
-    slug: "vip-lounges",
-    title: "VIP Lounges",
-    description: "Exclusive lounge furniture, premium seating, and intimate gathering areas.",
-    image: galaImage
-  },
-  {
-    slug: "product-launches",
-    title: "Product Launches",
-    description: "Display counters, presentation staging, and branded event furniture.",
-    image: corporateImage
-  }
-];
-
-const setupSteps = [
-  "Match the setup type to the event format and guest flow.",
-  "Capture quantities and placement notes for the requested furniture.",
-  "Send one quote enquiry with listing, category, quantity, and setup notes so the team can review the event context."
-];
 
 export default function EventsPage() {
   return (
-    <>
-      <section className="premium-page-header">
-        <div className="premium-container">
-          <h1 className="premium-title-hero">Events</h1>
-          <p className="premium-subtitle" style={{ color: '#cbd5e1' }}>
-            Event rentals, furniture rentals, and styled setups for
-            common event formats. Compare guidance with our catalogue before
-            sending a quote request.
+    <div className="section-padding">
+      <div className="container" style={{ maxWidth: '800px', textAlign: 'center' }}>
+        <div className="v3-page-header" style={{ marginBottom: '64px' }}>
+          <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '16px' }}>Event Planning</div>
+          <h1>Setting the scene for your event</h1>
+          <p style={{ margin: '0 auto' }}>
+            Whether you are planning a corporate reception, an exhibition booth, a gala evening, or a wedding, our curated inventory is designed to adapt to your specific venue and guest flow.
           </p>
         </div>
-      </section>
 
-      <section className="premium-section" style={{ paddingTop: '40px' }}>
-        <div className="premium-container">
-          <div className="premium-grid-2col">
-            {eventUseCases.map((item) => (
-              <Link href={`/listings?search=${item.slug}`} className="premium-event-card" key={item.title}>
-                <Image alt={`${item.title} event furniture setup`} src={item.image} style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0 }} />
-                <div className="premium-event-card__overlay">
-                  <h2 className="premium-event-card__title">{item.title}</h2>
-                  <p style={{ color: '#e2e8f0', margin: '0 0 16px 0', fontSize: '15px' }}>{item.description}</p>
-                  <div className="premium-event-card__arrow">
-                    <span aria-hidden="true">Open</span>
-                  </div>
-                </div>
+        <div className="v3-info-card" style={{ textAlign: 'left', marginBottom: '48px' }}>
+          <h2 style={{ fontSize: '1.5rem', marginBottom: '16px', color: 'var(--accent-dark)' }}>How to plan your rental</h2>
+          <p style={{ fontSize: '1.125rem', color: 'var(--muted)', marginBottom: '32px' }}>
+            We organize our inventory to help you find exactly what you need quickly. Start by browsing our prebuilt event stacks or search for individual pieces.
+          </p>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '32px' }}>
+            <div>
+              <h3 style={{ fontSize: '1.125rem', marginBottom: '8px' }}>Setups</h3>
+              <p style={{ color: 'var(--muted)', fontSize: '0.875rem', marginBottom: '16px' }}>
+                Prebuilt furniture stacks designed for common event zones like lounges, reception areas, and dining.
+              </p>
+              <Link href="/listings" className="v3-btn v3-btn--outline" style={{ width: '100%' }}>
+                Browse Setups
               </Link>
-            ))}
-          </div>
-        </div>
-      </section>
+            </div>
 
-      <section className="premium-section premium-section--alternate">
-        <div className="premium-container">
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '32px', alignItems: 'start' }}>
-            <div style={{ textAlign: 'center', maxWidth: '700px', margin: '0 auto' }}>
-              <div style={{ fontSize: '13px', fontWeight: 800, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '12px' }}>Use-case planning</div>
-              <h2 className="premium-title-section" style={{ marginBottom: '16px' }}>Plan an event setup</h2>
-              <p className="premium-subtitle" style={{ marginBottom: '40px' }}>
-                These routes are starting points for a rental enquiry, not a fixed package. They do not set aside furniture or finalise rental details. Keep the notes practical and our team will review the fit.
+            <div>
+              <h3 style={{ fontSize: '1.125rem', marginBottom: '8px' }}>Catalogue</h3>
+              <p style={{ color: 'var(--muted)', fontSize: '0.875rem', marginBottom: '16px' }}>
+                Individual rental items. Add chairs, tables, and decor to your Quote List to build your own layout.
               </p>
-              <p className="sr-only">
-                Compare the setup guidance with catalogue listings before sending a quote request.
-              </p>
-
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '24px', textAlign: 'left', marginBottom: '48px' }}>
-                {setupSteps.map((step, i) => (
-                  <div key={step} className="premium-card" style={{ padding: '24px' }}>
-                    <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--accent)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '14px', marginBottom: '16px' }}>
-                      {i + 1}
-                    </div>
-                    <p style={{ margin: 0, color: 'var(--text)', lineHeight: 1.6 }}>{step}</p>
-                  </div>
-                ))}
-              </div>
-
-              <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
-                <Link className="premium-button premium-button--secondary" href="/categories">
-                  Browse rental categories
-                </Link>
-                <Link className="premium-button premium-button--secondary" href="/listings">
-                  Browse listings
-                </Link>
-                <Link className="premium-button premium-button--secondary" href="/catalogue">
-                  Compare event setup guidance
-                </Link>
-                <Link className="premium-button premium-button--secondary" href="/quote">
-                  Send an enquiry
-                </Link>
-                <Link className="premium-button premium-button--primary" href="/quote">
-                  Start a rental enquiry
-                </Link>
-              </div>
+              <Link href="/catalogue" className="v3-btn v3-btn--outline" style={{ width: '100%' }}>
+                Browse Catalogue
+              </Link>
             </div>
           </div>
         </div>
-      </section>
-    </>
+
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
+          <p style={{ color: 'var(--muted)', fontSize: '0.875rem' }}>
+            Already know what you need or want the team's advice?
+          </p>
+          <Link href="/quote" className="v3-btn v3-btn--primary">
+            Request a Quote
+          </Link>
+        </div>
+      </div>
+    </div>
   );
 }
