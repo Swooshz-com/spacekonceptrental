@@ -7,15 +7,10 @@ import chairImage from "../assets/images/product_chair.png";
 import sofaImage from "../assets/images/product_sofa.png";
 import corporateImage from "../assets/images/event_corporate.png";
 import { getPublicCatalogue } from "../lib/catalogue/catalogue-repository";
-import { getQuoteHrefForListing } from "../lib/catalogue/quote-handoff";
 import type { PublicCatalogueProduct } from "../lib/catalogue/types";
 
 const iconViewBox = ["0", "0", "24", "24"].join(" ");
-const heroOverlayBackground = [
-  "linear-gradient(to bottom,",
-  `rgba(${["13", "19", "33", "0.7"].join(",")}) 0%,`,
-  `rgba(${["13", "19", "33", "0.9"].join(",")}) 100%)`
-].join(" ");
+
 export const metadata: Metadata = {
   title: "Event furniture rental catalogue | Space Koncept Rentals",
   description:
@@ -30,13 +25,22 @@ export const metadata: Metadata = {
   }
 };
 
-const advantages = [
-  { title: "Superior Quality & Safety", desc: "Improve and ensure quality and safety for your events.", icon: <g><rect x="6" y="5" width="12" height="14" rx="2" /><line x1="9" x2="15" y1="11" y2="11" /><line x1="10" x2="14" y1="15" y2="15" /></g> },
-  { title: "Expert Setup & Support", desc: "Expert setup teams for delivery, setup and tear down support.", icon: <g><rect x="4" y="7" width="16" height="10" rx="2" /><line x1="8" x2="16" y1="11" y2="11" /><line x1="8" x2="14" y1="14" y2="14" /></g> },
-  { title: "Customizable Solutions", desc: "Customizable solutions designed to fit your unique vision.", icon: <g><circle cx="12" cy="12" r="4" /><line x1="12" x2="12" y1="4" y2="7" /><line x1="12" x2="12" y1="17" y2="20" /><line x1="4" x2="7" y1="12" y2="12" /><line x1="17" x2="20" y1="12" y2="12" /></g> },
-  { title: "Transparent Pricing", desc: "Our intuitive customs are built in transparent pricing structures.", icon: <g><rect x="5" y="6" width="14" height="12" rx="2" /><line x1="8" x2="16" y1="10" y2="10" /><line x1="8" x2="13" y1="14" y2="14" /></g> },
-  { title: "Quality Assurance", desc: ["Recognised quality assurance offering guaran", "tee on our workflows."].join(""), icon: <g><rect x="6" y="4" width="12" height="16" rx="2" /><line x1="9" x2="15" y1="10" y2="10" /><line x1="9" x2="15" y1="14" y2="14" /></g> },
-  { title: "Quick Quotations", desc: "Quick quotations mean winning quick quotes for your clients.", icon: <g><line x1="13" x2="7" y1="4" y2="14" /><line x1="7" x2="13" y1="14" y2="14" /><line x1="11" x2="17" y1="20" y2="10" /><line x1="11" x2="17" y1="10" y2="10" /></g> }
+const enquirySteps = [
+  {
+    title: "Browse rental items",
+    body:
+      "Start with published catalogue listings, category context, and useful item details."
+  },
+  {
+    title: "Share event details",
+    body:
+      "Send the date, venue, requested listings, quantities, and setup notes through the quote route."
+  },
+  {
+    title: "Team review follows",
+    body:
+      "The enquiry stays manual so the team can check event fit before follow-up."
+  }
 ];
 
 function textOrUndefined(value: string | undefined) {
@@ -48,7 +52,14 @@ function featuredListingImage(listing: PublicCatalogueProduct): StaticImageData 
   const categoryName = listing.categoryName?.toLowerCase() ?? "";
 
   if (slug.includes("chair") || categoryName.includes("seating")) return chairImage;
-  if (slug.includes("table") || slug.includes("corporate") || slug.includes("garden") || categoryName.includes("event")) return corporateImage;
+  if (
+    slug.includes("table") ||
+    slug.includes("corporate") ||
+    slug.includes("garden") ||
+    categoryName.includes("event")
+  ) {
+    return corporateImage;
+  }
   return sofaImage;
 }
 
@@ -56,7 +67,7 @@ function featuredListingSummary(listing: PublicCatalogueProduct) {
   return (
     textOrUndefined(listing.shortDescription) ??
     textOrUndefined(listing.description) ??
-    "Share this listing in a quote request so the team can review the event fit."
+    "Open the listing detail page and share it with the team during quote follow-up."
   );
 }
 
@@ -133,19 +144,20 @@ function getCategoryIcon(name: string) {
       </svg>
     );
   }
-  // Default fallback - generic box
   return (
-      <svg width="40" height="40" viewBox={iconViewBox} fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="40" height="40" viewBox={iconViewBox} fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
       <rect x="4" y="10" width="16" height="10" rx="2" /><rect x="8" y="5" width="8" height="5" rx="1" /><line x1="12" y1="14" x2="12" y2="18" />
     </svg>
   );
 }
 
 function FeaturedListingCard({ listing }: { listing: PublicCatalogueProduct }) {
-  const imageAltText = textOrUndefined(listing.primaryImage?.altText) ?? `${listing.name} furniture rental setup`;
+  const imageAltText =
+    textOrUndefined(listing.primaryImage?.altText) ??
+    `${listing.name} furniture rental setup`;
 
   return (
-    <article className="premium-card">
+    <article className="premium-card premium-listing-card">
       <div className="premium-card__image">
         {listing.primaryImage?.publicUrl ? (
           <img alt={imageAltText} src={listing.primaryImage.publicUrl} />
@@ -154,21 +166,41 @@ function FeaturedListingCard({ listing }: { listing: PublicCatalogueProduct }) {
         )}
       </div>
       <div className="premium-card__content">
-        <div className="premium-card__meta" style={{ color: 'var(--accent)', background: 'var(--surface)', display: 'inline-block', padding: '4px 12px', borderRadius: '50px', fontSize: '12px', border: '1px solid var(--border)', marginBottom: '12px' }}>
+        <div className="premium-card__meta">
           {listing.categoryName ?? "Rental listing"}
         </div>
         <h2 className="premium-title-card">{listing.name}</h2>
         <p className="premium-card__desc">{featuredListingSummary(listing)}</p>
-        <div style={{ display: 'flex', gap: '12px', marginTop: 'auto', alignItems: 'center' }}>
-          <Link className="premium-button premium-button--secondary" style={{ flex: 1, padding: '0 16px', fontSize: '14px', height: '40px' }} href={`/listings/${listing.slug}`}>
-            Details
-          </Link>
-          <Link href={getQuoteHrefForListing(listing.slug)} style={{ background: 'none', border: 'none', color: 'var(--accent)', fontWeight: 600, cursor: 'pointer', fontSize: '14px' }}>
-            Add to Quote &rarr;
-          </Link>
-        </div>
+        <Link
+          aria-label={`View details for ${listing.name}`}
+          className="premium-button premium-button--secondary card-link--primary"
+          href={`/listings/${listing.slug}`}
+        >
+          View Details
+        </Link>
       </div>
     </article>
+  );
+}
+
+function EmptyFeaturedListings() {
+  return (
+    <div className="premium-empty-state">
+      <p className="premium-eyebrow">Catalogue update</p>
+      <h2>No public rental listings are available right now.</h2>
+      <p>
+        Browse the catalogue again later or send a general quote request with
+        your event details.
+      </p>
+      <div className="premium-empty-state__actions">
+        <Link className="premium-button premium-button--secondary" href="/catalogue">
+          Browse Catalogue
+        </Link>
+        <Link className="premium-button premium-button--primary" href="/quote">
+          Request a quote
+        </Link>
+      </div>
+    </div>
   );
 }
 
@@ -179,92 +211,114 @@ export default async function HomePage() {
 
   return (
     <>
-      <section className="premium-hero-dark" style={{ position: 'relative', overflow: 'hidden', minHeight: '600px' }}>
-        <div style={{ position: 'absolute', inset: 0, zIndex: 0 }}>
-          <Image alt="Styled event lounge" priority src={heroImage} fill style={{ objectFit: 'cover' }} />
-          <div style={{ position: 'absolute', inset: 0, background: heroOverlayBackground }} />
-        </div>
-        <div className="premium-container" style={{ position: 'relative', zIndex: 1, padding: '120px 24px', textAlign: 'center' }}>
-          <h1 className="premium-title-massive">
-            Furnish Your <span>Vision.</span><br />Elevate Every Space.
+      <section className="premium-home-hero">
+        <Image
+          alt="Styled event lounge"
+          className="premium-home-hero__image"
+          fill
+          priority
+          src={heroImage}
+        />
+        <div className="premium-home-hero__overlay" />
+        <div className="premium-container premium-home-hero__content">
+          <p className="premium-eyebrow">Furniture and event rental catalogue</p>
+          <h1 aria-label="Event furniture rental for planned spaces" className="premium-title-massive">
+            Warm furniture settings for planned events.
           </h1>
           <p className="premium-hero-subtitle">
-            Singapore event furniture rental company with attractive modern furniture and dedicated event support.
+            Browse curated event furniture rental items, compare listing
+            details, and submit event details for manual follow-up.
           </p>
           <div className="premium-hero-actions">
             <Link className="premium-button premium-button--primary" href="/catalogue">
               Browse Catalogue
             </Link>
-            <Link className="premium-button premium-button--secondary" style={{ color: '#0f172a', backgroundColor: '#fff', borderColor: '#fff' }} href="/quote">
-              Get A Free Quote
+            <Link className="premium-button premium-button--secondary" href="/quote">
+              Request a quote
             </Link>
           </div>
-          <div style={{ marginTop: '64px', fontSize: '14px', fontWeight: 600, color: '#cbd5e1', letterSpacing: '0.5px' }}>
-            500+ Events Furnished &nbsp;|&nbsp; Trusted Since 2015 &nbsp;|&nbsp; Same-Day Response
-          </div>
         </div>
       </section>
 
-      <section className="premium-section" style={{ background: '#f8fafc', padding: '80px 0' }}>
+      {categories.length > 0 ? (
+        <section className="premium-section premium-section--warm">
+          <div className="premium-container">
+            <div className="premium-section-heading">
+              <p className="premium-eyebrow">Browse by category</p>
+              <h2 className="premium-title-section">Find a starting point.</h2>
+            </div>
+            <div className="premium-category-icon-container">
+              {categories.map((cat) => (
+                <Link
+                  key={cat.id}
+                  href={`/listings?category=${encodeURIComponent(cat.slug)}`}
+                  className="premium-category-icon"
+                >
+                  <div className="premium-category-icon-circle">
+                    {getCategoryIcon(cat.name)}
+                  </div>
+                  <span className="premium-category-icon-label">{cat.name}</span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      ) : null}
+
+      <section className="premium-section">
         <div className="premium-container">
-          <h2 className="premium-title-section" style={{ textAlign: 'center', marginBottom: '40px' }}>Browse By Category</h2>
-          <div className="premium-category-icon-container">
-            {categories.map((cat) => (
-              <Link key={cat.id} href={`/listings?category=${encodeURIComponent(cat.slug)}`} className="premium-category-icon">
-                <div className="premium-category-icon-circle">
-                  {getCategoryIcon(cat.name)}
-                </div>
-                <span className="premium-category-icon-label">{cat.name}</span>
-              </Link>
+          <div className="premium-section-heading">
+            <p className="premium-eyebrow">Enquiry-led planning</p>
+            <h2 className="premium-title-section">From catalogue to enquiry.</h2>
+          </div>
+          <div className="premium-process-grid">
+            {enquirySteps.map((step) => (
+              <article className="premium-process-card" key={step.title}>
+                <h3>{step.title}</h3>
+                <p>{step.body}</p>
+              </article>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="premium-section" style={{ padding: '80px 0' }}>
+      <section className="premium-section premium-section--warm">
         <div className="premium-container">
-          <h2 className="premium-title-section" style={{ textAlign: 'center', marginBottom: '64px' }}>The SpaceKoncept Advantage</h2>
-          <div className="premium-advantage-grid">
-            {advantages.map((adv) => (
-              <div key={adv.title} className="premium-advantage-card">
-                <div className="premium-icon-circle">
-                  <svg viewBox={iconViewBox} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    {adv.icon}
-                  </svg>
-                </div>
-                <h3>{adv.title}</h3>
-                <p>{adv.desc}</p>
-              </div>
-            ))}
+          <div className="premium-section-heading premium-section-heading--split">
+            <div>
+              <p className="premium-eyebrow">Featured rental listings</p>
+              <h2 className="premium-title-section">Editorial pieces from the catalogue.</h2>
+            </div>
+            <Link className="premium-button premium-button--secondary" href="/catalogue">
+              Browse All Listings
+            </Link>
           </div>
-        </div>
-      </section>
-
-      <section className="premium-section" style={{ background: '#f8fafc', padding: '80px 0' }}>
-        <div className="premium-container">
-          <h2 className="premium-title-section" style={{ textAlign: 'center', marginBottom: '40px' }}>Featured Rentals</h2>
 
           {featuredListings.length === 0 ? (
-            <div style={{ textAlign: 'center' }}>
-              <p>No public rental listings are available right now.</p>
-            </div>
+            <EmptyFeaturedListings />
           ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '32px' }}>
+            <div className="premium-grid">
               {featuredListings.map((listing) => (
                 <FeaturedListingCard key={listing.id} listing={listing} />
               ))}
             </div>
           )}
-          <div style={{ display: 'flex', justifyContent: 'center', marginTop: '48px' }}>
-            <Link className="premium-button premium-button--secondary" href="/catalogue">
-              View All Products
-            </Link>
+        </div>
+      </section>
+
+      <section className="premium-section premium-closing-band">
+        <div className="premium-container premium-closing-band__inner">
+          <div>
+            <p className="premium-eyebrow">Ready to share event details?</p>
+            <h2 className="premium-title-section">Send a quote request for team review.</h2>
           </div>
+          <Link className="premium-button premium-button--primary" href="/quote">
+            Request a quote
+          </Link>
         </div>
       </section>
 
       <section className="sr-only" aria-label="Rental enquiry journey">
-        <h1 aria-label="Event furniture rental for planned spaces." />
         <p>
           Browse rental listings, choose useful catalogue details, and send one
           enquiry for team follow-up.
@@ -299,7 +353,7 @@ export default async function HomePage() {
         </p>
 
         <h2>What to prepare before you enquire</h2>
-        <h3>Send a quote request</h3>
+        <h3>Prepare a quote request</h3>
         <p>
           A quote request is the starting point for manual team review. It does
           not set aside furniture or finalise rental details.

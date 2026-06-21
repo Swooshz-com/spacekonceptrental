@@ -22,9 +22,18 @@ describe("ChatWidget", () => {
     vi.restoreAllMocks();
   });
 
-  it("starts without a canned assistant response before a provider reply", () => {
+  function openChat() {
+    render(<ChatWidget />);
+    fireEvent.click(screen.getByRole("button", { name: /open chat/i }));
+  }
+
+  it("starts closed without a canned assistant response before a provider reply", () => {
     render(<ChatWidget />);
 
+    expect(screen.getByRole("button", { name: /open chat/i })).toBeInTheDocument();
+    expect(screen.queryByLabelText(/message/i)).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /open chat/i }));
     expect(screen.getByLabelText(/message/i)).toBeInTheDocument();
     expect(screen.getByText(/ask here/i)).toBeInTheDocument();
     expect(
@@ -43,7 +52,7 @@ describe("ChatWidget", () => {
 
     vi.stubGlobal("fetch", fetchMock);
 
-    render(<ChatWidget />);
+    openChat();
 
     fireEvent.change(screen.getByLabelText(/message/i), {
       target: { value: "I need 20 stools for a conference" }
@@ -81,7 +90,7 @@ describe("ChatWidget", () => {
 
     vi.stubGlobal("fetch", fetchMock);
 
-    render(<ChatWidget />);
+    openChat();
 
     fireEvent.change(screen.getByLabelText(/message/i), {
       target: { value: "Do you have lounge seating?" }
@@ -102,7 +111,7 @@ describe("ChatWidget", () => {
   });
 
   it("shows legal links near chat guidance without exposing provider details", () => {
-    render(<ChatWidget />);
+    openChat();
 
     expect(
       screen.getByRole("link", { name: /Privacy Policy/i })

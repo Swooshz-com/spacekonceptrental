@@ -202,8 +202,8 @@ describe("public page shells", () => {
   it("renders practical public Privacy Policy and Terms of Use pages", () => {
     const layoutSource = readFileSync(resolve(process.cwd(), "app/layout.tsx"), "utf8");
 
-    expect(layoutSource).toContain('href="/privacy"');
-    expect(layoutSource).toContain('href="/terms"');
+    expect(layoutSource).toContain('href: "/privacy"');
+    expect(layoutSource).toContain('href: "/terms"');
     expect(privacyMetadata.title).toMatch(/Privacy Policy/i);
     expect(termsMetadata.title).toMatch(/Terms of Use/i);
 
@@ -280,9 +280,9 @@ describe("public page shells", () => {
   it("keeps the new public pages reachable from navigation and catalogue", async () => {
     const layoutSource = readFileSync(resolve(process.cwd(), "app/layout.tsx"), "utf8");
 
-    expect(layoutSource).toContain('href="/events"');
-    expect(layoutSource).toContain('href="/privacy"');
-    expect(layoutSource).toContain('href="/terms"');
+    expect(layoutSource).toContain('href: "/events"');
+    expect(layoutSource).toContain('href: "/privacy"');
+    expect(layoutSource).toContain('href: "/terms"');
 
     render(
       <CataloguePageContent
@@ -321,10 +321,9 @@ describe("public page shells", () => {
     expect(
       catalogueLinks.map((link) => link.getAttribute("href"))
     ).toContain("/catalogue/lounge-sofa-package");
-    const quoteLinks = screen.getAllByRole("link", { name: /request a quote/i });
-    expect(quoteLinks.map((link) => link.getAttribute("href"))).toContain(
-      "/quote?listing=lounge-sofa-package"
-    );
+    expect(
+      screen.queryByRole("link", { name: /request a quote for lounge sofa package/i })
+    ).not.toBeInTheDocument();
     expect(
       catalogueLinks.some((link) => link.classList.contains("card-link--primary"))
     ).toBe(true);
@@ -443,13 +442,13 @@ describe("public page shells", () => {
       screen.getByText(/listing reference: modular-lounge-set/i)
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("link", {
-        name: /request a quote for modular lounge set/i
-      })
-    ).toHaveAttribute("href", "/quote?listing=modular-lounge-set");
-    expect(
       screen.getByRole("link", { name: /view details for modular lounge set/i })
     ).toHaveAttribute("href", "/catalogue/modular-lounge-set");
+    expect(
+      screen.queryByRole("link", {
+        name: /request a quote for modular lounge set/i
+      })
+    ).not.toBeInTheDocument();
     expect(screen.queryByText(/draft/i)).not.toBeInTheDocument();
   });
 
@@ -498,9 +497,14 @@ describe("public page shells", () => {
     ).toContain("/listings");
     expect(
       screen.getByRole("link", {
+        name: /view details for dining and seminar chairs/i
+      })
+    ).toHaveAttribute("href", "/listings/dining-and-seminar-chairs");
+    expect(
+      screen.queryByRole("link", {
         name: /request a quote for dining and seminar chairs/i
       })
-    ).toHaveAttribute("href", "/quote?listing=dining-and-seminar-chairs");
+    ).not.toBeInTheDocument();
   });
 
   it("renders published product detail data supplied by the server read layer", () => {
@@ -600,10 +604,8 @@ describe("public page shells", () => {
       screen.getByRole("link", { name: /view details for compact chair/i })
     ).toBeInTheDocument();
     expect(
-      screen
-        .getAllByRole("link", { name: /request a quote/i })
-        .map((link) => link.getAttribute("href"))
-    ).toContain("/quote?listing=compact-chair");
+      screen.queryByRole("link", { name: /request a quote for compact chair/i })
+    ).not.toBeInTheDocument();
     expect(screen.queryByText(/shell/i)).not.toBeInTheDocument();
     expect(
       screen.queryByText(

@@ -93,12 +93,12 @@ describe("public catalogue image rendering", () => {
       screen.getByRole("link", { name: /view details for modular lounge/i })
     ).toHaveAttribute("href", "/catalogue/modular-lounge");
     expect(
-      screen.getByRole("link", { name: /request a quote/i })
-    ).toHaveAttribute("href", "/quote?listing=modular-lounge");
+      screen.queryByRole("link", { name: /request a quote for modular lounge/i })
+    ).not.toBeInTheDocument();
     expect(screen.queryByText(/cart|checkout|payment|online ordering/i)).not.toBeInTheDocument();
   });
 
-  it("shows scan-friendly catalogue card cues and detail-first quote navigation", () => {
+  it("shows scan-friendly catalogue card cues and detail-first navigation", () => {
     render(<CataloguePageContent catalogue={catalogue} />);
 
     expect(
@@ -126,17 +126,13 @@ describe("public catalogue image rendering", () => {
     const detailLink = cardView.getByRole("link", {
       name: /view details for modular lounge/i
     });
-    const quoteLink = cardView.getByRole("link", {
-      name: /request a quote for modular lounge/i
-    });
 
     expect(detailLink).toHaveAttribute("href", "/catalogue/modular-lounge");
-    expect(quoteLink).toHaveAttribute("href", "/quote?listing=modular-lounge");
     expect(
-      (detailLink.compareDocumentPosition(quoteLink) &
-        Node.DOCUMENT_POSITION_FOLLOWING) !==
-        0
-    ).toBe(true);
+      cardView.queryByRole("link", {
+        name: /request a quote for modular lounge/i
+      })
+    ).not.toBeInTheDocument();
   });
 
   it("renders listing detail primary image and additional image when available", () => {

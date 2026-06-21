@@ -188,8 +188,11 @@ describe("Phase 3A-A/B product polish and rental UI copy", () => {
       screen.getByText(/share event date, venue, quantities, and setup notes/i)
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("link", { name: /request a quote/i })
-    ).toHaveAttribute("href", "/quote?listing=modular-lounge-set");
+      screen.getByRole("link", { name: /view details for modular lounge set/i })
+    ).toHaveAttribute("href", "/catalogue/modular-lounge-set");
+    expect(
+      screen.queryByRole("link", { name: /request a quote for modular lounge set/i })
+    ).not.toBeInTheDocument();
   });
 
   it("gives empty public catalogue states a safe enquiry recovery path", () => {

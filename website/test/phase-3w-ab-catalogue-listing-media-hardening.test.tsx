@@ -220,7 +220,13 @@ describe("Phase 3W-A/B catalogue listing media hardening", () => {
     expect(screen.getAllByText(/rental unit/i).length).toBeGreaterThan(0);
     expect(screen.getByText("set")).toBeInTheDocument();
     expect(screen.getByText(/quote planning/i)).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /request a quote/i })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /view details for modular lounge set/i })).toHaveAttribute(
+      "href",
+      "/catalogue/modular-lounge-set"
+    );
+    expect(
+      screen.queryByRole("link", { name: /request a quote for modular lounge set/i })
+    ).not.toBeInTheDocument();
     cleanup();
 
     render(<ProductPageContent product={sampleProduct} />);

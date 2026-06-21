@@ -1,34 +1,57 @@
 "use client";
-import { useState, useCallback, useEffect } from "react";
+
+import { useCallback, useEffect, useId, useState } from "react";
 import Link from "next/link";
+
+type MobileMenuLink = {
+  href: string;
+  label: string;
+};
+
+const defaultLinks: MobileMenuLink[] = [
+  { href: "/catalogue", label: "Catalogue" },
+  { href: "/events", label: "Event Setups / Hire by Events" }
+];
 
 const menuIconViewBox = ["0", "0", "24", "24"].join(" ");
 
-export default function MobileMenu() {
+export default function MobileMenu({
+  links = defaultLinks
+}: {
+  links?: MobileMenuLink[];
+}) {
   const [open, setOpen] = useState(false);
+  const titleId = useId();
 
   const toggle = useCallback(() => setOpen((prev) => !prev), []);
   const close = useCallback(() => setOpen(false), []);
 
-  /* Lock body scroll while the drawer is open */
   useEffect(() => {
-    if (open) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
+    document.body.style.overflow = open ? "hidden" : "";
+
     return () => {
       document.body.style.overflow = "";
     };
   }, [open]);
 
+  useEffect(() => {
+    if (!open) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") close();
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [close, open]);
+
   return (
     <>
-      {/* Hamburger button */}
       <button
         className="premium-hamburger"
-        aria-label="Open menu"
+        aria-label={open ? "Close menu" : "Open menu"}
         aria-expanded={open}
+        aria-controls="mobile-navigation"
         onClick={toggle}
         type="button"
       >
@@ -43,54 +66,59 @@ export default function MobileMenu() {
           viewBox={menuIconViewBox}
           width="24"
         >
-          <line x1="3" x2="21" y1="6" y2="6" />
-          <line x1="3" x2="21" y1="12" y2="12" />
-          <line x1="3" x2="21" y1="18" y2="18" />
+          {open ? (
+            <>
+              <line x1="6" x2="18" y1="6" y2="18" />
+              <line x1="18" x2="6" y1="6" y2="18" />
+            </>
+          ) : (
+            <>
+              <line x1="3" x2="21" y1="6" y2="6" />
+              <line x1="3" x2="21" y1="12" y2="12" />
+              <line x1="3" x2="21" y1="18" y2="18" />
+            </>
+          )}
         </svg>
       </button>
 
-      {/* Overlay */}
-      {open && (
+      {open ? (
         <div
-          className="premium-mobile-overlay"
+          className="premium-mobile-overlay premium-mobile-overlay--open"
           onClick={close}
           aria-hidden="true"
         />
-      )}
+      ) : null}
 
-      {/* Drawer */}
       <div
         className={`premium-mobile-drawer${open ? " premium-mobile-drawer--open" : ""}`}
+        id="mobile-navigation"
         role="dialog"
         aria-modal={open}
-        aria-label="Mobile navigation"
+        aria-labelledby={titleId}
+        aria-hidden={!open}
       >
         <div className="premium-mobile-drawer__header">
+          <span className="premium-mobile-drawer__title" id={titleId}>
+            Menu
+          </span>
           <button
             className="premium-mobile-drawer__close"
             aria-label="Close menu"
             onClick={close}
             type="button"
           >
-            &#x2715;
+            Close
           </button>
         </div>
 
         <nav className="premium-mobile-drawer__nav" aria-label="Mobile navigation">
-          <Link href="/catalogue" onClick={close}>
-            Catalogue
-          </Link>
-          <Link href="/events" onClick={close}>
-            Hire By Events
-          </Link>
-          <Link href="#" onClick={close}>
-            Portfolio
-          </Link>
-          <Link href="#" onClick={close}>
-            About
-          </Link>
-          <Link href="/quote" onClick={close}>
-            Contact
+          {links.map((link) => (
+            <Link href={link.href} key={link.href} onClick={close}>
+              {link.label}
+            </Link>
+          ))}
+          <Link href="/listings" onClick={close}>
+            Listings
           </Link>
         </nav>
 
@@ -100,7 +128,7 @@ export default function MobileMenu() {
             href="/quote"
             onClick={close}
           >
-            Request Quote
+            Request a quote
           </Link>
         </div>
       </div>

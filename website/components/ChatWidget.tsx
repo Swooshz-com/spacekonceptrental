@@ -45,7 +45,7 @@ export default function ChatWidget() {
   const [draft, setDraft] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string>();
-  const [isOpen, setIsOpen] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -140,11 +140,6 @@ export default function ChatWidget() {
           aria-label="Open chat"
         >
           <span aria-hidden="true" style={{ fontSize: '14px', fontWeight: 800 }}>SK</span>
-          <span style={{
-            position: 'absolute', top: '0', right: '0', background: '#0f172a', color: '#fff',
-            fontSize: '12px', fontWeight: 700, width: '22px', height: '22px', borderRadius: '50%',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid var(--surface)'
-          }}>1</span>
         </button>
         <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text)' }}>Chat with us</span>
       </div>

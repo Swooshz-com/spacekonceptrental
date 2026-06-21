@@ -320,10 +320,13 @@ describe("Phase 3V-A/B quote enquiry workflow hardening", () => {
       "href",
       "/quote"
     );
-    expect(screen.getByRole("link", { name: /request a quote/i })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: /view details for modular lounge set/i })).toHaveAttribute(
       "href",
-      "/quote?listing=modular-lounge-set"
+      "/catalogue/modular-lounge-set"
     );
+    expect(
+      screen.queryByRole("link", { name: /request a quote for modular lounge set/i })
+    ).not.toBeInTheDocument();
 
     cleanup();
     render(<CategoriesPageContent catalogue={sampleCatalogue} />);

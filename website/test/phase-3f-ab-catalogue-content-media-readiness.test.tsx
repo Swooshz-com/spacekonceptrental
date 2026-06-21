@@ -291,8 +291,11 @@ describe("Phase 3F-A/B catalogue content quality, media readiness, and publicati
       "https://example.test/storage/plinth.jpg"
     );
     expect(
-      screen.getByRole("link", { name: /request a quote/i })
-    ).toHaveAttribute("href", "/quote?listing=bare-plinth");
+      screen.getByRole("link", { name: /view details for bare plinth/i })
+    ).toHaveAttribute("href", "/listings/bare-plinth");
+    expect(
+      screen.queryByRole("link", { name: /request a quote for bare plinth/i })
+    ).not.toBeInTheDocument();
     expect(screen.queryByText(/publication readiness|media readiness/i)).not.toBeInTheDocument();
   });
 
