@@ -16,18 +16,18 @@ export default function AboutPage() {
         <div className="v3-page-header" style={{ maxWidth: '800px', margin: '0 auto 80px', textAlign: 'center' }}>
           <h1>Elevating Event Spaces</h1>
           <p>
-            Space Koncept Rentals provides premium furniture rental solutions designed to transform any venue into a cohesive, stylish, and comfortable environment for your guests.
+            Space Koncept Rentals provides curated event-ready furniture designed for events, exhibitions, launches, activations, styling, weddings, and corporate setups.
           </p>
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '64px', alignItems: 'center', marginBottom: '96px' }}>
           <div>
-            <h2 style={{ fontSize: '2rem', marginBottom: '24px' }}>Curated Collections</h2>
+            <h2 style={{ fontSize: '2rem', marginBottom: '24px' }}>Flexible Rental Selection</h2>
             <p style={{ color: 'var(--muted)', fontSize: '1.125rem', lineHeight: 1.8, marginBottom: '24px' }}>
-              We believe that furniture is more than just functional—it sets the tone for your entire event. Our catalogue is carefully curated to ensure that every piece meets our high standards for design, quality, and comfort.
+              We offer both individual items and prebuilt setups to help you build your ideal space. Whether you need a single statement piece or a complete cohesive look, our catalogue is designed to support your vision.
             </p>
             <p style={{ color: 'var(--muted)', fontSize: '1.125rem', lineHeight: 1.8 }}>
-              From sleek corporate setups to inviting lounge areas, our inventory is versatile enough to suit any aesthetic while maintaining a cohesive look.
+              Browse our selection online and add items to your Quote List to start planning.
             </p>
             <Link href="/catalogue" className="v3-btn v3-btn--outline" style={{ marginTop: '32px' }}>
               Explore Catalogue
@@ -46,17 +46,17 @@ export default function AboutPage() {
           <div style={{ borderRadius: 'var(--radius-lg)', overflow: 'hidden', aspectRatio: '4/5', position: 'relative', order: -1 }}>
             <Image 
               src={sofaImage} 
-              alt="Premium lounge furniture" 
+              alt="Event lounge furniture" 
               style={{ width: '100%', height: '100%', objectFit: 'cover' }}
             />
           </div>
           <div>
-            <h2 style={{ fontSize: '2rem', marginBottom: '24px' }}>Seamless Service</h2>
+            <h2 style={{ fontSize: '2rem', marginBottom: '24px' }}>Quote-Led Rental Planning</h2>
             <p style={{ color: 'var(--muted)', fontSize: '1.125rem', lineHeight: 1.8, marginBottom: '24px' }}>
-              Planning an event is complex enough. We aim to make the furniture rental process as smooth and straightforward as possible.
+              To ensure we meet your specific event requirements, we operate a quote-led enquiry process. Submit your selected items along with your event details, and our team will provide a tailored proposal.
             </p>
             <p style={{ color: 'var(--muted)', fontSize: '1.125rem', lineHeight: 1.8 }}>
-              Our team works closely with event planners, producers, and venues to ensure timely delivery, professional setup, and efficient collection, so you can focus on the event itself.
+              Every enquiry receives manual team follow-up to discuss your setup and ensure all practical details are covered.
             </p>
             <Link href="/contact" className="v3-btn v3-btn--outline" style={{ marginTop: '32px' }}>
               Contact Our Team

@@ -225,33 +225,12 @@ export default async function QuotePage({
 
         {selectedListing && <QuoteSelectedListingBanner product={selectedListing} />}
 
-        <div className="v3-quote-split">
-          {/* Main Form Area */}
-          <div className="v3-quote-main">
+        <div className="v3-quote-layout">
+          {/* Left Column: Your Selection */}
+          <div className="v3-quote-selection" style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
             <QuoteListDisplay />
-
-            <div style={{ background: 'var(--surface)', padding: '32px', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)' }}>
-              <h2 style={{ fontSize: '1.25rem', marginBottom: '24px' }}>Event Details</h2>
-              <QuoteRequestForm
-                initialItemsText={initialItemsText}
-                initialListingSlug={listingContext.requestedSlug}
-              />
-            </div>
-          </div>
-
-          {/* Sidebar Area */}
-          <div className="v3-quote-sidebar">
-            <div className="v3-quote-sidebar-card">
-              <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>Support</div>
-              <h3>Practical Details Help</h3>
-              <p style={{ color: 'var(--muted)', margin: 0 }}>
-                Include listing names, quantities, venue access notes, and timing constraints to help us provide an accurate proposal faster.
-              </p>
-            </div>
-
-            {selectedListing ? (
-              <QuoteListingContext product={selectedListing} />
-            ) : (
+            {selectedListing && <QuoteListingContext product={selectedListing} />}
+            {!selectedListing && (
               <QuoteGeneralContext
                 category={listingContext.category}
                 event={listingContext.event}
@@ -259,13 +238,23 @@ export default async function QuotePage({
                 search={listingContext.search}
               />
             )}
+          </div>
+
+          {/* Right Column: Main Form */}
+          <div className="v3-quote-form" style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+            <div style={{ background: 'var(--surface)', padding: '40px', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)' }}>
+              <h2 style={{ fontSize: '1.5rem', marginBottom: '32px', fontFamily: 'var(--font-serif)' }}>Event Details</h2>
+              <QuoteRequestForm
+                initialItemsText={initialItemsText}
+                initialListingSlug={listingContext.requestedSlug}
+              />
+            </div>
 
             <div className="v3-quote-sidebar-card">
               <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>What to Expect</div>
-              <h3>After you enquire</h3>
-              <ul style={{ margin: 0, paddingLeft: '20px', color: 'var(--muted)' }}>
+              <ul style={{ margin: 0, paddingLeft: '20px', color: 'var(--muted)', fontSize: '0.875rem', lineHeight: 1.6 }}>
                 <li style={{ marginBottom: '8px' }}>Your request will be manually reviewed by our team.</li>
-                <li style={{ marginBottom: '8px' }}>This submission does not confirm a booking or guarantee stock.</li>
+                <li style={{ marginBottom: '8px' }}>This submission does not finalise a rental or hold items.</li>
                 <li>We will follow up directly using the contact details provided.</li>
               </ul>
             </div>

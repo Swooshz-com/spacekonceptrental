@@ -206,7 +206,7 @@ export function ProductPageContent({
 
               <div className="v3-detail__note">
                 <h3>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <svg width="20" height="20" viewBox={["0","0","24","24"].join(" ")} fill="none" stroke="currentColor" strokeWidth="2">
                     <circle cx="12" cy="12" r="10"/>
                     <line x1="12" y1="16" x2="12" y2="12"/>
                     <line x1="12" y1="8" x2="12.01" y2="8"/>
@@ -247,7 +247,7 @@ export function ProductPageContent({
                   <div className="v3-catalogue-card__footer" style={{ marginTop: 'auto' }}>
                     <Link href={`/catalogue/${related.slug}`} className="v3-catalogue-card__link">
                       View details
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <svg width="16" height="16" viewBox={["0","0","24","24"].join(" ")} fill="none" stroke="currentColor" strokeWidth="2">
                         <path d="M5 12h14M12 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round"/>
                       </svg>
                     </Link>

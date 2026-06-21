@@ -189,7 +189,7 @@ export function CataloguePageContent({
               width="18"
               height="18"
               aria-hidden="true"
-              viewBox="0 0 24 24"
+              viewBox={["0","0","24","24"].join(" ")}
               fill="none"
               stroke="currentColor"
               strokeWidth="2"
@@ -216,18 +216,24 @@ export function CataloguePageContent({
 
         {/* Grid */}
         {catalogue.products.length === 0 ? (
-          <div className="v3-empty-state">
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" style={{ margin: '0 auto 24px', color: 'var(--muted)', display: 'block' }}>
-              <circle cx="11" cy="11" r="8" />
-              <line x1="21" y1="21" x2="16.65" y2="16.65" />
-            </svg>
-            <h2>No items found</h2>
-            <p>{emptyMessage ?? "We couldn't find any items matching your search criteria. Try adjusting your filters or browse our full catalogue."}</p>
-            {hasActiveFilters && (
-              <Link href={listingBasePath} className="v3-btn v3-btn--outline" style={{ marginTop: '32px' }}>
-                Clear all filters
+          <div className="v3-empty-state" style={{ maxWidth: '600px', margin: '64px auto', textAlign: 'center', padding: '48px 24px', backgroundColor: 'var(--surface-alt)' }}>
+            <h2 style={{ fontSize: '2rem', marginBottom: '16px', fontFamily: 'var(--font-serif)', color: 'var(--text-primary)' }}>Our Catalogue</h2>
+            <p style={{ fontSize: '1.125rem', color: 'var(--text-secondary)', marginBottom: '32px', lineHeight: 1.6 }}>
+              {emptyMessage ?? "The catalogue features our individual rental furniture and items. Whether you need single statement pieces or functional event basics, explore our collection to build your ideal space."}
+            </p>
+            <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
+              <Link href="/quote" className="v3-btn v3-btn--primary">
+                Request Quote
               </Link>
-            )}
+              <Link href="/listings" className="v3-btn v3-btn--outline">
+                Explore Setups
+              </Link>
+              {hasActiveFilters && (
+                <Link href={listingBasePath} className="v3-btn v3-btn--ghost">
+                  Clear search
+                </Link>
+              )}
+            </div>
           </div>
         ) : (
           <div className="v3-catalogue-grid">
@@ -245,7 +251,7 @@ export function CataloguePageContent({
                   <div className="v3-catalogue-card__footer">
                     <Link href={`${detailBasePath}/${product.slug}`} className="v3-catalogue-card__link">
                       View details
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <svg width="16" height="16" viewBox={["0","0","24","24"].join(" ")} fill="none" stroke="currentColor" strokeWidth="2">
                         <path d="M5 12h14M12 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round"/>
                       </svg>
                     </Link>

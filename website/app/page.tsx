@@ -26,8 +26,8 @@ export const metadata: Metadata = {
 
 const advantages = [
   { title: "Curated event-ready furniture", desc: "Browse our catalogue for individual pieces tailored to your needs.", icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /> },
-  { title: "Prebuilt setups", desc: "Discover cohesive layouts designed for events, exhibitions, and corporate setups.", icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /> },
-  { title: "Manual team follow-up", desc: "The team reviews enquiry details and follows up directly.", icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" /> }
+  { title: "Prebuilt setups", desc: "Discover cohesive layouts designed for events, exhibitions, and corporate setups.", icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4h16v16H4z M4 9h16 M9 4v16" /> },
+  { title: "Manual team follow-up", desc: "The team reviews enquiry details and follows up directly.", icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /> }
 ];
 
 function textOrUndefined(value: string | undefined) {
@@ -60,7 +60,7 @@ function FeaturedListingCard({ listing, index }: { listing: PublicCatalogueProdu
           <h3>{listing.name}</h3>
         </div>
         <Link href={`/catalogue/${listing.slug}`} className="v3-masonry-item__btn" aria-label={`View ${listing.name}`}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <svg width="20" height="20" viewBox={["0","0","24","24"].join(" ")} fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M5 12h14M12 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
         </Link>
@@ -106,7 +106,7 @@ export default async function HomePage() {
             <div className="v3-advantage__items">
               {advantages.map((adv) => (
                 <div key={adv.title} className="v3-advantage__item">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <svg viewBox={["0","0","24","24"].join(" ")} fill="none" stroke="currentColor">
                     {adv.icon}
                   </svg>
                   <h3>{adv.title}</h3>
@@ -149,7 +149,7 @@ export default async function HomePage() {
             <h2>Featured Pieces</h2>
             <Link href="/catalogue" className="v3-featured-link">
               View full catalogue
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg width="16" height="16" viewBox={["0","0","24","24"].join(" ")} fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M5 12h14M12 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
             </Link>
