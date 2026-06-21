@@ -21,12 +21,15 @@ const lora = Lora({
 
 const primaryNavLinks = [
   { href: "/catalogue", label: "Catalogue" },
+  { href: "/listings", label: "Listings" },
+  { href: "/categories", label: "Categories" },
   { href: "/events", label: "Event Setups / Hire by Events" }
 ];
 
 const footerBrowseLinks = [
   { href: "/catalogue", label: "Catalogue" },
   { href: "/listings", label: "Listings" },
+  { href: "/categories", label: "Categories" },
   { href: "/events", label: "Event Setups" }
 ];
 
@@ -80,8 +83,6 @@ function SiteHeader() {
         </div>
 
         <nav aria-label="Public route shortcuts" className="sr-only">
-          <Link href="/listings">Listings</Link>
-          <Link href="/categories">Categories</Link>
           <Link href="/quote">Quote enquiry</Link>
         </nav>
       </div>

@@ -166,8 +166,8 @@ function CatalogueDiscovery({
   const hasActiveFilters = Boolean(activeCategorySlug || activeEventSlug || activeSearch);
 
   return (
-    <section className="premium-discovery-panel" aria-label="Catalogue discovery">
-      <div className="premium-discovery-panel__header">
+    <section className="studio-discovery" aria-label="Catalogue discovery">
+      <div className="studio-discovery__header">
         <p className="premium-eyebrow">Explore catalogue</p>
         <h2 className="premium-title-card">Explore by category</h2>
         <p>
@@ -176,7 +176,7 @@ function CatalogueDiscovery({
         </p>
       </div>
 
-      <form action={listingBasePath} method="get" className="premium-discovery-search">
+      <form action={listingBasePath} method="get" className="studio-discovery-search">
         {activeCategorySlug ? (
           <input name="category" type="hidden" value={activeCategorySlug} />
         ) : null}
@@ -204,10 +204,10 @@ function CatalogueDiscovery({
       </form>
 
       {catalogue.categories.length > 0 ? (
-        <div className="premium-chip-group" aria-label="Categories">
+        <div className="studio-chip-group" aria-label="Categories">
           <Link
             aria-current={!activeCategorySlug ? "page" : undefined}
-            className="premium-chip"
+            className="studio-chip"
             data-active={!activeCategorySlug ? "true" : undefined}
             href={buildListingHref(listingBasePath, {
               eventSlug: activeEventSlug,
@@ -223,7 +223,7 @@ function CatalogueDiscovery({
               <Link
                 aria-label={`${category.name} ${listingCountText(count)}`}
                 aria-current={isActive ? "page" : undefined}
-                className="premium-chip"
+                className="studio-chip"
                 data-active={isActive ? "true" : undefined}
                 href={buildListingHref(listingBasePath, {
                   categorySlug: isActive ? undefined : category.slug,
@@ -241,13 +241,13 @@ function CatalogueDiscovery({
       ) : null}
 
       <p className="premium-eyebrow">Popular event setups</p>
-      <div className="premium-chip-group" aria-label="Event setup ideas">
+      <div className="studio-chip-group" aria-label="Event setup ideas">
         {eventUseFilters.map((eventUse) => {
           const isActive = activeEventSlug === eventUse.slug;
           return (
             <Link
               aria-current={isActive ? "page" : undefined}
-              className="premium-chip premium-chip--event"
+              className="studio-chip studio-chip--event"
               data-active={isActive ? "true" : undefined}
               href={buildListingHref(listingBasePath, {
                 categorySlug: activeCategorySlug,
@@ -284,13 +284,13 @@ function CatalogueResultsSummary({
   );
 
   return (
-    <div className="premium-results-summary">
+    <div className="studio-results-summary">
       <div>
         <p className="premium-eyebrow">Browse results</p>
         <h2 className="premium-title-section">{listingCountText(listingCount)}</h2>
       </div>
       {hasActiveFilters ? (
-        <div className="premium-results-summary__filters">
+        <div className="studio-results-summary__filters">
           <p>Active filters</p>
           <dl>
             {discovery?.categoryName ? (
@@ -329,7 +329,7 @@ function CatalogueEmptyState({
   listingBasePath: string;
 }) {
   return (
-    <div className="premium-empty-state">
+    <div className="premium-empty-state studio-empty-state">
       <p className="premium-eyebrow">Honest catalogue state</p>
       <h2>No matching public listings</h2>
       <p>
@@ -375,15 +375,15 @@ function CatalogueListingCard({
   return (
     <article
       aria-label={`Rental listing card for ${product.name}`}
-      className="premium-card premium-listing-card"
+      className="studio-listing-card"
     >
-      <div className="premium-card__image catalogue-card__image">
+      <div className="studio-listing-card__media catalogue-card__image">
         <CatalogueCardImage fallbackImage={getProductImage(product)} product={product} />
       </div>
-      <div className="premium-card__content">
-        <div className="premium-card__meta">{publicCategoryLabel(product)}</div>
-        <h2 className="premium-title-card">{product.name}</h2>
-        <p className="premium-card__desc">{publicListingSummary(product)}</p>
+      <div className="studio-listing-card__content">
+        <div className="studio-listing-card__meta">{publicCategoryLabel(product)}</div>
+        <h2 className="premium-title-card studio-listing-card__title">{product.name}</h2>
+        <p className="studio-listing-card__desc">{publicListingSummary(product)}</p>
         <p className="sr-only">Public rental listing</p>
         <p className="sr-only">
           Quote planning: share event date, venue, quantities, and setup notes
@@ -454,18 +454,20 @@ export function CataloguePageContent({
 
   return (
     <>
-      <section className="premium-page-header">
-        <div className="premium-container">
-          <p className="premium-eyebrow">Rental item catalogue</p>
-          <h1 aria-label={titleAriaLabel} className="premium-title-hero">
-            {title}
-          </h1>
+      <section className="studio-catalogue-hero">
+        <div className="premium-container studio-catalogue-hero__layout">
+          <div>
+            <p className="premium-eyebrow">Rental item catalogue</p>
+            <h1 aria-label={titleAriaLabel} className="premium-title-hero">
+              {title}
+            </h1>
+          </div>
           <p className="premium-subtitle">{intro}</p>
         </div>
       </section>
 
-      <section className="premium-section premium-section--catalogue">
-        <div className="premium-container">
+      <section className="studio-catalogue-section">
+        <div className="premium-container studio-catalogue-layout">
           <CatalogueDiscovery
             activeCategorySlug={activeCategorySlug}
             activeEventSlug={activeEventSlug}
@@ -474,41 +476,44 @@ export function CataloguePageContent({
             listingBasePath={listingBasePath}
           />
 
-          <CatalogueResultsSummary
-            discovery={discovery}
-            listingBasePath={listingBasePath}
-            listingCount={catalogue.products.length}
-          />
-
-          {catalogue.products.length === 0 ? (
-            <CatalogueEmptyState
-              activeCategoryName={activeCategoryName}
-              emptyMessage={emptyMessage}
+          <div className="studio-catalogue-results">
+            <CatalogueResultsSummary
+              discovery={discovery}
               listingBasePath={listingBasePath}
+              listingCount={catalogue.products.length}
             />
-          ) : (
-            <>
-              <section className="sr-only">
-                <h2>How to choose a rental listing</h2>
-                <p>
-                  Open the listing details before sending a quote request.
-                  Browsing does not set aside furniture or finalise rental
-                  details.
-                </p>
-              </section>
-              <div className="premium-grid premium-listing-grid">
-                {catalogue.products.map((product) => (
-                  <CatalogueListingCard
-                    detailBasePath={detailBasePath}
-                    key={product.slug}
-                    product={product}
-                  />
-                ))}
-              </div>
-            </>
-          )}
+
+            {catalogue.products.length === 0 ? (
+              <CatalogueEmptyState
+                activeCategoryName={activeCategoryName}
+                emptyMessage={emptyMessage}
+                listingBasePath={listingBasePath}
+              />
+            ) : (
+              <>
+                <section className="sr-only">
+                  <h2>How to choose a rental listing</h2>
+                  <p>
+                    Open the listing details before sending a quote request.
+                    Browsing does not set aside furniture or finalise rental
+                    details.
+                  </p>
+                </section>
+                <div className="studio-listing-grid">
+                  {catalogue.products.map((product) => (
+                    <CatalogueListingCard
+                      detailBasePath={detailBasePath}
+                      key={product.slug}
+                      product={product}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
         </div>
       </section>
+
     </>
   );
 }

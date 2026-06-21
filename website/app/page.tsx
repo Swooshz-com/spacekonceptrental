@@ -9,8 +9,6 @@ import corporateImage from "../assets/images/event_corporate.png";
 import { getPublicCatalogue } from "../lib/catalogue/catalogue-repository";
 import type { PublicCatalogueProduct } from "../lib/catalogue/types";
 
-const iconViewBox = ["0", "0", "24", "24"].join(" ");
-
 export const metadata: Metadata = {
   title: "Event furniture rental catalogue | Space Koncept Rentals",
   description:
@@ -43,6 +41,12 @@ const enquirySteps = [
   }
 ];
 
+const planningNotes = [
+  "Event date, venue, and setup timing",
+  "Listings or item types that suit the setting",
+  "Quantities, alternates, and access notes"
+];
+
 function textOrUndefined(value: string | undefined) {
   return value?.trim() || undefined;
 }
@@ -71,106 +75,26 @@ function featuredListingSummary(listing: PublicCatalogueProduct) {
   );
 }
 
-function getCategoryIcon(name: string) {
-  const n = name.toLowerCase();
-
-  if (n.includes("bar stool") || n.includes("stool")) {
-    return (
-      <svg width="40" height="40" viewBox={iconViewBox} fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="8" y="2" width="8" height="3" rx="1" /><line x1="12" y1="5" x2="12" y2="14" /><line x1="8" y1="14" x2="16" y2="14" /><line x1="9" y1="14" x2="7" y2="22" /><line x1="15" y1="14" x2="17" y2="22" />
-      </svg>
-    );
-  }
-  if (n.includes("chair") || n.includes("seating")) {
-    return (
-      <svg width="40" height="40" viewBox={iconViewBox} fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="5" y="4" width="14" height="8" rx="2" /><rect x="3" y="11" width="18" height="5" rx="1" /><line x1="6" y1="16" x2="6" y2="22" /><line x1="18" y1="16" x2="18" y2="22" />
-      </svg>
-    );
-  }
-  if (n.includes("table")) {
-    return (
-      <svg width="40" height="40" viewBox={iconViewBox} fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="2" y="8" width="20" height="3" rx="1" /><line x1="6" y1="11" x2="6" y2="21" /><line x1="18" y1="11" x2="18" y2="21" />
-      </svg>
-    );
-  }
-  if (n.includes("sofa") || n.includes("couch") || n.includes("lounge")) {
-    return (
-      <svg width="40" height="40" viewBox={iconViewBox} fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="5" y="5" width="14" height="8" rx="2" /><rect x="2" y="11" width="20" height="6" rx="2" /><line x1="5" y1="17" x2="5" y2="20" /><line x1="19" y1="17" x2="19" y2="20" />
-      </svg>
-    );
-  }
-  if (n.includes("counter") || n.includes("desk")) {
-    return (
-      <svg width="40" height="40" viewBox={iconViewBox} fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="2" y="6" width="20" height="4" rx="1" /><line x1="5" y1="10" x2="5" y2="20" /><line x1="19" y1="10" x2="19" y2="20" /><line x1="5" y1="15" x2="19" y2="15" />
-      </svg>
-    );
-  }
-  if (n.includes("coffee") || n.includes("machine")) {
-    return (
-      <svg width="40" height="40" viewBox={iconViewBox} fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="3" y="8" width="15" height="10" rx="2" /><circle cx="20" cy="13" r="2" /><line x1="6" y1="1" x2="6" y2="4" /><line x1="10" y1="1" x2="10" y2="4" /><line x1="14" y1="1" x2="14" y2="4" />
-      </svg>
-    );
-  }
-  if (n.includes("stand") || n.includes("display")) {
-    return (
-      <svg width="40" height="40" viewBox={iconViewBox} fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="4" y="2" width="16" height="14" rx="2" /><line x1="12" y1="16" x2="12" y2="20" /><line x1="8" y1="20" x2="16" y2="20" />
-      </svg>
-    );
-  }
-  if (n.includes("fridge") || n.includes("refriger") || n.includes("cooler")) {
-    return (
-      <svg width="40" height="40" viewBox={iconViewBox} fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="4" y="2" width="16" height="20" rx="2" /><line x1="4" y1="10" x2="20" y2="10" /><line x1="17" y1="5" x2="17" y2="8" /><line x1="17" y1="13" x2="17" y2="16" />
-      </svg>
-    );
-  }
-  if (n.includes("av") || n.includes("audio") || n.includes("video") || n.includes("equipment") || n.includes("screen")) {
-    return (
-      <svg width="40" height="40" viewBox={iconViewBox} fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="2" y="3" width="20" height="14" rx="2" /><line x1="8" y1="21" x2="16" y2="21" /><line x1="12" y1="17" x2="12" y2="21" />
-      </svg>
-    );
-  }
-  if (n.includes("plant") || n.includes("green") || n.includes("leaf")) {
-    return (
-      <svg width="40" height="40" viewBox={iconViewBox} fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-        <line x1="7" y1="21" x2="12" y2="9" /><ellipse cx="15" cy="8" rx="5" ry="3" /><ellipse cx="9" cy="13" rx="4" ry="2" />
-      </svg>
-    );
-  }
-  return (
-    <svg width="40" height="40" viewBox={iconViewBox} fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="4" y="10" width="16" height="10" rx="2" /><rect x="8" y="5" width="8" height="5" rx="1" /><line x1="12" y1="14" x2="12" y2="18" />
-    </svg>
-  );
-}
-
 function FeaturedListingCard({ listing }: { listing: PublicCatalogueProduct }) {
   const imageAltText =
     textOrUndefined(listing.primaryImage?.altText) ??
     `${listing.name} furniture rental setup`;
 
   return (
-    <article className="premium-card premium-listing-card">
-      <div className="premium-card__image">
+    <article className="studio-listing-card studio-listing-card--featured">
+      <div className="studio-listing-card__media">
         {listing.primaryImage?.publicUrl ? (
           <img alt={imageAltText} src={listing.primaryImage.publicUrl} />
         ) : (
           <Image alt={imageAltText} src={featuredListingImage(listing)} />
         )}
       </div>
-      <div className="premium-card__content">
-        <div className="premium-card__meta">
+      <div className="studio-listing-card__content">
+        <div className="studio-listing-card__meta">
           {listing.categoryName ?? "Rental listing"}
         </div>
-        <h2 className="premium-title-card">{listing.name}</h2>
-        <p className="premium-card__desc">{featuredListingSummary(listing)}</p>
+        <h2 className="premium-title-card studio-listing-card__title">{listing.name}</h2>
+        <p className="studio-listing-card__desc">{featuredListingSummary(listing)}</p>
         <Link
           aria-label={`View details for ${listing.name}`}
           className="premium-button premium-button--secondary card-link--primary"
@@ -185,7 +109,7 @@ function FeaturedListingCard({ listing }: { listing: PublicCatalogueProduct }) {
 
 function EmptyFeaturedListings() {
   return (
-    <div className="premium-empty-state">
+    <div className="premium-empty-state studio-empty-state">
       <p className="premium-eyebrow">Catalogue update</p>
       <h2>No public rental listings are available right now.</h2>
       <p>
@@ -211,112 +135,136 @@ export default async function HomePage() {
 
   return (
     <>
-      <section className="premium-home-hero">
-        <Image
-          alt="Styled event lounge"
-          className="premium-home-hero__image"
-          fill
-          priority
-          src={heroImage}
-        />
-        <div className="premium-home-hero__overlay" />
-        <div className="premium-container premium-home-hero__content">
-          <p className="premium-eyebrow">Furniture and event rental catalogue</p>
-          <h1 aria-label="Event furniture rental for planned spaces" className="premium-title-massive">
-            Warm furniture settings for planned events.
-          </h1>
-          <p className="premium-hero-subtitle">
-            Browse curated event furniture rental items, compare listing
-            details, and submit event details for manual follow-up.
-          </p>
-          <div className="premium-hero-actions">
-            <Link className="premium-button premium-button--primary" href="/catalogue">
-              Browse Catalogue
-            </Link>
-            <Link className="premium-button premium-button--secondary" href="/quote">
-              Request a quote
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {categories.length > 0 ? (
-        <section className="premium-section premium-section--warm">
-          <div className="premium-container">
-            <div className="premium-section-heading">
-              <p className="premium-eyebrow">Browse by category</p>
-              <h2 className="premium-title-section">Find a starting point.</h2>
-            </div>
-            <div className="premium-category-icon-container">
-              {categories.map((cat) => (
-                <Link
-                  key={cat.id}
-                  href={`/listings?category=${encodeURIComponent(cat.slug)}`}
-                  className="premium-category-icon"
-                >
-                  <div className="premium-category-icon-circle">
-                    {getCategoryIcon(cat.name)}
-                  </div>
-                  <span className="premium-category-icon-label">{cat.name}</span>
+      <div className="studio-home">
+        <section className="studio-hero">
+          <div className="premium-container studio-hero__layout">
+            <div className="studio-hero__copy">
+              <h1 aria-label="Event furniture rental for planned spaces" className="premium-title-massive">
+                Warm furniture settings for planned events.
+              </h1>
+              <p className="premium-hero-subtitle">
+                Browse curated event furniture rental items, compare listing
+                details, and submit event details for manual follow-up.
+              </p>
+              <div className="premium-hero-actions">
+                <Link className="premium-button premium-button--primary" href="/catalogue">
+                  Browse Catalogue
                 </Link>
+                <Link className="premium-button premium-button--secondary" href="/quote">
+                  Request a quote
+                </Link>
+              </div>
+            </div>
+
+            <figure className="studio-hero__media">
+              <Image
+                alt="Styled event lounge"
+                fill
+                priority
+                sizes="(max-width: 900px) 100vw, 50vw"
+                src={heroImage}
+              />
+              <figcaption>Furniture-led setups for event spaces.</figcaption>
+            </figure>
+          </div>
+        </section>
+
+        <section className="studio-pathway">
+          <div className="premium-container studio-pathway__layout">
+            <div className="studio-section-intro">
+              <p className="premium-eyebrow">Enquiry-led planning</p>
+              <h2 className="premium-title-section">Start with the furniture, then shape the setting.</h2>
+            </div>
+            <div className="studio-pathway__steps">
+              {enquirySteps.map((step, index) => (
+                <article className="studio-pathway__step" key={step.title}>
+                  <span>{String(index + 1).padStart(2, "0")}</span>
+                  <div>
+                    <h3>{step.title}</h3>
+                    <p>{step.body}</p>
+                  </div>
+                </article>
               ))}
             </div>
           </div>
         </section>
-      ) : null}
 
-      <section className="premium-section">
-        <div className="premium-container">
-          <div className="premium-section-heading">
-            <p className="premium-eyebrow">Enquiry-led planning</p>
-            <h2 className="premium-title-section">From catalogue to enquiry.</h2>
-          </div>
-          <div className="premium-process-grid">
-            {enquirySteps.map((step) => (
-              <article className="premium-process-card" key={step.title}>
-                <h3>{step.title}</h3>
-                <p>{step.body}</p>
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="premium-section premium-section--warm">
-        <div className="premium-container">
-          <div className="premium-section-heading premium-section-heading--split">
-            <div>
-              <p className="premium-eyebrow">Featured rental listings</p>
-              <h2 className="premium-title-section">Editorial pieces from the catalogue.</h2>
+        {categories.length > 0 ? (
+          <section className="studio-category-rail">
+            <div className="premium-container studio-category-rail__layout">
+              <div className="studio-section-intro">
+                <p className="premium-eyebrow">Catalogue paths</p>
+                <h2 className="premium-title-section">Find a starting point.</h2>
+              </div>
+              <div className="studio-category-rail__links" aria-label="Browse by category">
+                {categories.map((cat) => (
+                  <Link
+                    key={cat.id}
+                    href={`/listings?category=${encodeURIComponent(cat.slug)}`}
+                  >
+                    <span>{cat.name}</span>
+                    <span>View listings</span>
+                  </Link>
+                ))}
+              </div>
             </div>
-            <Link className="premium-button premium-button--secondary" href="/catalogue">
-              Browse All Listings
+          </section>
+        ) : null}
+
+        <section className="studio-featured-section">
+          <div className="premium-container">
+            <div className="studio-featured-heading">
+              <div className="studio-section-intro">
+                <p className="premium-eyebrow">Featured rental listings</p>
+                <h2 className="premium-title-section">Editorial pieces from the catalogue.</h2>
+              </div>
+              <Link className="premium-button premium-button--secondary" href="/catalogue">
+                Browse All Listings
+              </Link>
+            </div>
+
+            {featuredListings.length === 0 ? (
+              <EmptyFeaturedListings />
+            ) : (
+              <div className="studio-featured-grid">
+                {featuredListings.map((listing) => (
+                  <FeaturedListingCard key={listing.id} listing={listing} />
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
+
+        <section className="studio-prep-section">
+          <div className="premium-container studio-prep-section__layout">
+            <Image alt="Corporate event furniture setting" src={corporateImage} />
+            <div>
+              <p className="premium-eyebrow">Before you enquire</p>
+              <h2 className="premium-title-section">Prepare the details the team will review.</h2>
+              <ul>
+                {planningNotes.map((note) => (
+                  <li key={note}>{note}</li>
+                ))}
+              </ul>
+              <Link className="premium-button premium-button--secondary" href="/quote">
+                Start a rental enquiry
+              </Link>
+            </div>
+          </div>
+        </section>
+
+        <section className="studio-quote-band">
+          <div className="premium-container studio-quote-band__inner">
+            <div>
+              <p className="premium-eyebrow">Ready to share event details?</p>
+              <h2 className="premium-title-section">Send a quote request for team review.</h2>
+            </div>
+            <Link className="premium-button premium-button--primary" href="/quote">
+              Request a quote
             </Link>
           </div>
-
-          {featuredListings.length === 0 ? (
-            <EmptyFeaturedListings />
-          ) : (
-            <div className="premium-grid">
-              {featuredListings.map((listing) => (
-                <FeaturedListingCard key={listing.id} listing={listing} />
-              ))}
-            </div>
-          )}
-        </div>
-      </section>
-
-      <section className="premium-section premium-closing-band">
-        <div className="premium-container premium-closing-band__inner">
-          <div>
-            <p className="premium-eyebrow">Ready to share event details?</p>
-            <h2 className="premium-title-section">Send a quote request for team review.</h2>
-          </div>
-          <Link className="premium-button premium-button--primary" href="/quote">
-            Request a quote
-          </Link>
-        </div>
-      </section>
+        </section>
+      </div>
 
       <section className="sr-only" aria-label="Rental enquiry journey">
         <p>

@@ -10,6 +10,8 @@ type MobileMenuLink = {
 
 const defaultLinks: MobileMenuLink[] = [
   { href: "/catalogue", label: "Catalogue" },
+  { href: "/listings", label: "Listings" },
+  { href: "/categories", label: "Categories" },
   { href: "/events", label: "Event Setups / Hire by Events" }
 ];
 
@@ -117,9 +119,6 @@ export default function MobileMenu({
               {link.label}
             </Link>
           ))}
-          <Link href="/listings" onClick={close}>
-            Listings
-          </Link>
         </nav>
 
         <div className="premium-mobile-drawer__cta">
