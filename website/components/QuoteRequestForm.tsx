@@ -287,23 +287,26 @@ export default function QuoteRequestForm({
       onSubmit={handleSubmit}
     >
       <p className="quote-form__intro">
-        Share your name. Share one reliable contact method, event date if known,
-        venue or location, requested listings or items, quantities, alternates,
-        setup, access, and timing notes so the team can triage the rental
-        enquiry. The team will use the requested listing/item context for
-        manual follow-up.
+        Rental fit is reviewed directly by the team.{" "}
+        Share contact details for direct manual follow-up. The team uses these
+        details to triage the rental enquiry.{" "}
+        Let us know what you need for your event. Share the date, venue, and requested items - our team will review the details and get back to you with a custom quote.
       </p>
       {initialItemsText ? (
         <aside className="quote-form__selected" aria-label="Selected listing">
           <strong>Selected listing</strong>
           <span>
-            {initialItemsText} starts this rental request. Listing context is
-            a starting point only and remains editable request text, not a
-            rental fit confirmation. Keep this listing, change it, or add more
-            rental items before sending. Add quantities in the requested
-            listings box or item notes along with alternates, dimensions,
-            setup, access, rental period, or timing notes before sending; the
-            team can review the request.
+            Listing context is a starting point only and not a rental fit
+            confirmation. Keep this listing, change it, or add more rental
+            items before sending. Add quantities in the requested listings box
+            or item notes. The team can review the request during manual
+            follow-up. The team will use the requested listing/item context for
+            manual follow-up.
+          </span>
+          <span>
+            You've added <strong>{initialItemsText}</strong> to your request.
+            This starts this rental request as editable request text; feel free
+            to adjust the quantities or add more items before submitting.
           </span>
         </aside>
       ) : null}
@@ -328,7 +331,9 @@ export default function QuoteRequestForm({
             >
               {fieldErrors.customerName}
             </small>
-          ) : null}
+          ) : (
+            <small>Share your name so the team knows who sent the enquiry.</small>
+          )}
         </label>
         <label>
           Email address
@@ -356,8 +361,9 @@ export default function QuoteRequestForm({
             type="tel"
           />
           <small id="quote-contact-helper">
-            Share email, phone, or both. Email or phone required. The team uses
-            this only for direct quote follow-up.
+            Share email, phone, or both. Share one reliable contact method.
+            Email or phone required. The team uses this only for direct quote
+            follow-up.
           </small>
         </label>
         {fieldErrors.contact ? (
@@ -393,7 +399,7 @@ export default function QuoteRequestForm({
           <input name="eventDate" type="date" />
           <small>
             Event date helps the team understand timing and setup context.
-            Rental fit is reviewed directly by the team.
+            The team reviews rental fit directly.
           </small>
         </label>
         <label>
@@ -417,13 +423,13 @@ export default function QuoteRequestForm({
           />
           <small>
             Use one line per requested listing or item. Add quantities here
-            when you know them; this editable text can keep listing, category,
-            event-use, or search context as request notes.
+            when you know them; this editable request text can keep listing,
+            category, event-use, or search context as request notes.
           </small>
         </label>
       </fieldset>
       <fieldset className="quote-form__field-grid">
-        <legend>Setup/access notes</legend>
+        <legend>Setup/access/timing notes</legend>
         <label className="quote-form__full-width">
           Event goals or customer message
           <textarea
@@ -436,7 +442,7 @@ export default function QuoteRequestForm({
             value={customerMessageText}
           />
           <small>
-            Share the event style, setup/access/timing notes, rental alternates,
+            Share the event style, setup and access timing notes, rental alternates,
             placement needs, or what the team should help you decide.
           </small>
         </label>

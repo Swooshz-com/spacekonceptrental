@@ -371,25 +371,25 @@ function AdminRecoveryLinks({
   includeSignIn?: boolean;
 }) {
   return (
-    <nav className="hero__actions" aria-label="Admin recovery">
+    <nav style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginTop: '24px' }} aria-label="Admin recovery">
       {includeSignIn ? (
-        <a className="button" href="/admin/login">
+        <a className="premium-button premium-button--primary" href="/admin/login">
           Return to admin sign in
         </a>
       ) : null}
-      <a className="button button--secondary" href="/admin">
+      <a className="premium-button premium-button--secondary" href="/admin">
         Open admin overview
       </a>
-      <a className="button button--secondary" href="/admin/listings">
+      <a className="premium-button premium-button--secondary" href="/admin/listings">
         Open listings
       </a>
-      <a className="button button--secondary" href="/admin/categories">
+      <a className="premium-button premium-button--secondary" href="/admin/categories">
         Open categories
       </a>
-      <a className="button button--secondary" href="/admin/media">
+      <a className="premium-button premium-button--secondary" href="/admin/media">
         Open media
       </a>
-      <a className="button button--secondary" href="/admin/quotes">
+      <a className="premium-button premium-button--secondary" href="/admin/quotes">
         Open quote requests
       </a>
     </nav>
@@ -405,10 +405,10 @@ function AdminOperationsNavigation() {
   ] as const;
 
   return (
-    <nav className="admin-ops-nav" aria-label="Admin operations">
-      <a href="/admin">Overview</a>
+    <nav style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', paddingBottom: '16px', borderBottom: '1px solid var(--border)', marginBottom: '32px' }} aria-label="Admin operations">
+      <a href="/admin" className="premium-button premium-button--secondary" style={{ padding: '8px 16px', fontSize: '13px', height: 'auto', borderStyle: 'dashed' }}>Overview</a>
       {links.map(([label, href]) => (
-        <a href={href} key={href}>
+        <a href={href} key={href} className="premium-button premium-button--secondary" style={{ padding: '8px 16px', fontSize: '13px', height: 'auto' }}>
           {label}
         </a>
       ))}
@@ -6688,48 +6688,54 @@ function AdminStatusMessage({
 }) {
   if (state.status === "unauthenticated") {
     return (
-      <>
-        <h1>Admin sign in required</h1>
-        <p>Sign in to continue.</p>
-        <a className="button" href="/admin/login">
+      <div className="premium-card" style={{ padding: '32px', textAlign: 'center', maxWidth: '400px', margin: '40px auto' }}>
+        <h1 className="premium-title-card" style={{ fontSize: '24px', marginBottom: '16px' }}>Admin sign in required</h1>
+        <p style={{ color: 'var(--muted)', marginBottom: '24px' }}>Sign in to continue.</p>
+        <a className="premium-button premium-button--primary" href="/admin/login" style={{ width: '100%' }}>
           Sign in
         </a>
-      </>
+      </div>
     );
   }
 
   if (state.status === "authenticated_not_authorised") {
     return (
-      <>
-        <h1>Admin access unavailable</h1>
-        <p>Your account is authenticated but not authorised for this workspace.</p>
+      <div className="premium-card" style={{ padding: '32px', textAlign: 'center', maxWidth: '400px', margin: '40px auto', borderColor: 'var(--accent)', background: 'var(--surface-strong)' }}>
+        <h1 className="premium-title-card" style={{ fontSize: '24px', marginBottom: '16px', color: '#fff' }}>Access denied</h1>
+        <p style={{ color: '#cbd5e1', marginBottom: '24px' }}>Your account is authenticated but not authorised for this workspace.</p>
         <AdminRecoveryLinks includeSignIn />
-      </>
+      </div>
     );
   }
 
   if (state.status === "unavailable") {
     return (
-      <>
-        <h1>Admin access unavailable</h1>
-        <p>Admin access is temporarily unavailable.</p>
+      <div className="premium-card" style={{ padding: '32px', textAlign: 'center', maxWidth: '400px', margin: '40px auto' }}>
+        <h1 className="premium-title-card" style={{ fontSize: '24px', marginBottom: '16px' }}>Admin access unavailable</h1>
+        <p style={{ color: 'var(--muted)', marginBottom: '24px' }}>Admin access is temporarily unavailable.</p>
         <AdminRecoveryLinks includeSignIn />
-      </>
+      </div>
     );
   }
 
   return (
-    <>
-      <h1>Admin workspace</h1>
-      <p>Access is authorised for this admin workspace.</p>
-      <form action="/admin/logout" method="post">
-        <button className="button" type="submit">
-          Sign out
-        </button>
-      </form>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '32px', width: '100%' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px', background: 'var(--surface-strong)', padding: '24px', borderRadius: 'var(--radius-lg)' }}>
+        <div>
+          <h1 className="premium-title-section" style={{ color: '#fff', fontSize: '24px', margin: 0, marginBottom: '8px' }}>Admin workspace</h1>
+          <p style={{ color: '#cbd5e1', margin: 0, fontSize: '14px' }}>Access is authorised for this admin workspace.</p>
+        </div>
+        <form action="/admin/logout" method="post">
+          <button className="premium-button premium-button--secondary" style={{ background: 'rgba(255,255,255,0.1)', color: '#fff', border: 'none', padding: '8px 16px', fontSize: '13px', height: 'auto' }} type="submit">
+            Sign out
+          </button>
+        </form>
+      </div>
       <AdminOperationsNavigation />
-      <AdminOperationsView state={state} view={view} />
-    </>
+      <div style={{ background: 'var(--background)' }}>
+        <AdminOperationsView state={state} view={view} />
+      </div>
+    </div>
   );
 }
 
@@ -6743,9 +6749,9 @@ export function AdminShellContent({
   view?: AdminShellView;
 }) {
   return (
-    <section className="section admin-shell" aria-live="polite">
-      <div className="admin-shell__panel">
-        <p className="eyebrow">Secure admin</p>
+    <section className="premium-section" style={{ minHeight: 'calc(100vh - 200px)', display: 'flex', flexDirection: 'column' }} aria-live="polite">
+      <div className="premium-container" style={{ flex: 1, display: 'flex', flexDirection: 'column', maxWidth: '1200px' }}>
+        <p style={{ fontSize: '12px', fontWeight: 800, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '24px' }}>Secure admin</p>
         <AdminStatusMessage state={state} view={view} />
       </div>
     </section>

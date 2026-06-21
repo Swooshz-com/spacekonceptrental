@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import corporateImage from "../../assets/images/event_corporate.png";
 import exhibitionImage from "../../assets/images/event_exhibition.png";
 import galaImage from "../../assets/images/event_gala.png";
+import weddingImage from "../../assets/images/event_wedding.png";
 
 export const metadata: Metadata = {
   title: "Event setups and rental use cases | Space Koncept Rentals",
@@ -29,6 +30,24 @@ const eventUseCases = [
     title: "Gala evenings",
     description: "Arrival lounges, cocktail seating, and polished guest areas.",
     image: galaImage
+  },
+  {
+    slug: "weddings",
+    title: "Weddings",
+    description: "Elegant reception seating, ceremony staging, and bridal lounge setups.",
+    image: weddingImage
+  },
+  {
+    slug: "vip-lounges",
+    title: "VIP Lounges",
+    description: "Exclusive lounge furniture, premium seating, and intimate gathering areas.",
+    image: galaImage
+  },
+  {
+    slug: "product-launches",
+    title: "Product Launches",
+    description: "Display counters, presentation staging, and branded event furniture.",
+    image: corporateImage
   }
 ];
 
@@ -40,72 +59,82 @@ const setupSteps = [
 
 export default function EventsPage() {
   return (
-    <section className="section">
-      <div className="page-title">
-        <p className="eyebrow">Event rentals</p>
-        <h1>Events</h1>
-        <p>
-          Explore furniture rentals and styled setups for common event formats.
-          Compare the setup guidance with catalogue listings before sending a
-          quote request.
-        </p>
-      </div>
-
-      <div className="catalogue-grid">
-        {eventUseCases.map((item) => (
-          <article className="catalogue-card" key={item.title}>
-            <div className="catalogue-card__image">
-              <Image alt={`${item.title} event furniture setup`} src={item.image} />
-            </div>
-            <div className="catalogue-card__body">
-              <h2>{item.title}</h2>
-              <p>{item.description}</p>
-              <div className="catalogue-card__actions">
-                <Link className="card-link" href={`/listings?search=${item.slug}`}>
-                  Search listings
-                </Link>
-              </div>
-            </div>
-          </article>
-        ))}
-      </div>
-
-      <section className="catalogue-use-cases" aria-label="Event setup enquiry guidance">
-        <div>
-          <p className="eyebrow">Use-case planning</p>
-          <h2>Plan an event setup</h2>
-          <p>
-            These routes are starting points for a rental enquiry, not a fixed
-            package. They do not set aside furniture or finalise rental details. Keep
-            the notes practical and the team can review the fit.
+    <>
+      <section className="premium-page-header">
+        <div className="premium-container">
+          <h1 className="premium-title-hero">Events</h1>
+          <p className="premium-subtitle" style={{ color: '#cbd5e1' }}>
+            Event rentals, furniture rentals, and styled setups for
+            common event formats. Compare guidance with our catalogue before
+            sending a quote request.
           </p>
-        </div>
-        <ul className="journey-list">
-          {setupSteps.map((step) => (
-            <li key={step}>{step}</li>
-          ))}
-        </ul>
-        <div className="hero__actions">
-          <Link className="button button--secondary" href="/categories">
-            Browse rental categories
-          </Link>
-          <Link className="button button--secondary" href="/listings">
-            Browse listings
-          </Link>
-          <Link className="button" href="/quote">
-            Send an enquiry
-          </Link>
         </div>
       </section>
 
-      <div className="hero__actions">
-        <Link className="button button--secondary" href="/catalogue">
-          Compare event setup guidance
-        </Link>
-        <Link className="button" href="/quote">
-          Start a rental enquiry
-        </Link>
-      </div>
-    </section>
+      <section className="premium-section" style={{ paddingTop: '40px' }}>
+        <div className="premium-container">
+          <div className="premium-grid-2col">
+            {eventUseCases.map((item) => (
+              <Link href={`/listings?search=${item.slug}`} className="premium-event-card" key={item.title}>
+                <Image alt={`${item.title} event furniture setup`} src={item.image} style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0 }} />
+                <div className="premium-event-card__overlay">
+                  <h2 className="premium-event-card__title">{item.title}</h2>
+                  <p style={{ color: '#e2e8f0', margin: '0 0 16px 0', fontSize: '15px' }}>{item.description}</p>
+                  <div className="premium-event-card__arrow">
+                    <span aria-hidden="true">Open</span>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="premium-section premium-section--alternate">
+        <div className="premium-container">
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '32px', alignItems: 'start' }}>
+            <div style={{ textAlign: 'center', maxWidth: '700px', margin: '0 auto' }}>
+              <div style={{ fontSize: '13px', fontWeight: 800, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '12px' }}>Use-case planning</div>
+              <h2 className="premium-title-section" style={{ marginBottom: '16px' }}>Plan an event setup</h2>
+              <p className="premium-subtitle" style={{ marginBottom: '40px' }}>
+                These routes are starting points for a rental enquiry, not a fixed package. They do not set aside furniture or finalise rental details. Keep the notes practical and our team will review the fit.
+              </p>
+              <p className="sr-only">
+                Compare the setup guidance with catalogue listings before sending a quote request.
+              </p>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '24px', textAlign: 'left', marginBottom: '48px' }}>
+                {setupSteps.map((step, i) => (
+                  <div key={step} className="premium-card" style={{ padding: '24px' }}>
+                    <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--accent)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '14px', marginBottom: '16px' }}>
+                      {i + 1}
+                    </div>
+                    <p style={{ margin: 0, color: 'var(--text)', lineHeight: 1.6 }}>{step}</p>
+                  </div>
+                ))}
+              </div>
+
+              <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
+                <Link className="premium-button premium-button--secondary" href="/categories">
+                  Browse rental categories
+                </Link>
+                <Link className="premium-button premium-button--secondary" href="/listings">
+                  Browse listings
+                </Link>
+                <Link className="premium-button premium-button--secondary" href="/catalogue">
+                  Compare event setup guidance
+                </Link>
+                <Link className="premium-button premium-button--secondary" href="/quote">
+                  Send an enquiry
+                </Link>
+                <Link className="premium-button premium-button--primary" href="/quote">
+                  Start a rental enquiry
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </>
   );
 }

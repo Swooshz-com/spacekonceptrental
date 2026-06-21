@@ -424,351 +424,394 @@ export function ListingImageMetadataManagementPanel({
 
   return (
     <section
-      className="category-management"
+      className="premium-section"
       aria-label="Listing image metadata management"
     >
-      <div className="category-management__header">
-        <p className="eyebrow">Protected admin save</p>
-        <h2>Listing image metadata management</h2>
-        <p>
-          Create, update, and archive listing image metadata through the
-          protected admin API. Alt text and primary state can affect public
-          browsing, but media metadata is review context only and is not an
-          availability assertion. If a save fails, keep the prior protected
-          media state, review selected listing context, public-safe alt text,
-          primary label, and active or archived status, then retry locally.
-        </p>
-      </div>
-
-      <div
-        className={`category-management__status category-management__status--${status.kind}`}
-        aria-live="polite"
-      >
-        {status.kind === "idle"
-          ? "Image metadata write controls are ready for protected admin save."
-          : status.message}
-      </div>
-
-      <section
-        className="admin-readiness"
-        aria-label="Media public-safe copy review"
-      >
-        <h3>Public-safe copy review</h3>
-        <p>
-          Save image metadata only after checking selected listing context,
-          image path context, public-safe alt text, primary image label,
-          active/archived state, fallback expectation, validation errors, and
-          sort order.
-        </p>
-        <p className="category-management__hint">
-          Protected admin save only updates image metadata. Media metadata is
-          review context only and does not confirm visual outcome, availability,
-          or inventory.
-        </p>
-      </section>
-
-      <section className="admin-readiness" aria-label="Media coverage">
-        <h3>Media coverage</h3>
-        <p>
-          Public-ready media needs an active image, useful public-safe alt text,
-          and a clear primary image when the listing should lead with that
-          setup. These protected admin cues do not prove availability.
-        </p>
-        <p className="category-management__hint">
-          Strong listing images help visitors compare rental options before
-          requesting a quote. Image text should describe the furniture or event
-          rental item shown, not internal file names or source details.
-        </p>
-        <h4>Media coverage by listing</h4>
-        <ul className="admin-readiness__list">
-          {products.flatMap((product) =>
-            mediaReadinessByListing(product, images).map((message) => (
-              <li key={`${product.id}-${message}`}>{message}</li>
-            )),
-          )}
-        </ul>
-        {archivedImageCount > 0 ? (
-          <p className="category-management__hint">
-            Archived image metadata stays hidden from public catalogue and
-            listing galleries.
+      <div className="premium-container" style={{ maxWidth: '1000px' }}>
+        <div style={{ marginBottom: '40px' }}>
+          <p style={{ fontSize: '12px', fontWeight: 800, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px' }}>Protected admin save</p>
+          <h2 className="premium-title-section" style={{ fontSize: '28px', marginBottom: '16px' }}>Listing image metadata management</h2>
+          <p style={{ color: 'var(--muted)', lineHeight: 1.6 }}>
+            Create, update, and archive listing image metadata through the
+            protected admin API. Alt text and primary state can affect public
+            browsing, but media metadata is review context only and is not an
+            availability assertion. If a save fails, keep the prior protected
+            media state, review selected listing context, public-safe alt text,
+            primary label, and active or archived status, then retry locally.
           </p>
-        ) : null}
-      </section>
-
-      <section
-        className="admin-readiness"
-        aria-label="Listing media coverage checklist"
-      >
-        <h3>Listing media coverage checklist</h3>
-        <p>
-          Scan each rental listing before editing image metadata. Use these cues
-          to spot listings with no public image, only fallback or archived media,
-          missing alt text, or images attached while the listing is still draft.
-        </p>
-        <div className="category-management__list">
-          {products.map((product) => (
-            <article
-              aria-label={`Media coverage ${product.name}`}
-              className="category-management__item"
-              key={product.id}
-            >
-              <div>
-                <h4>{product.name}</h4>
-                <dl className="quote-inbox__details">
-                  <div>
-                    <dt>Listing slug</dt>
-                    <dd>{product.slug}</dd>
-                  </div>
-                  <div>
-                    <dt>Visibility</dt>
-                    <dd>{listingVisibilityLabel(product.status)}</dd>
-                  </div>
-                  <div>
-                    <dt>Image records</dt>
-                    <dd>{pluralize(product.imageCount, "image")}</dd>
-                  </div>
-                  <div>
-                    <dt>Primary image text</dt>
-                    <dd>
-                      {hasText(product.primaryImageAltText)
-                        ? "Primary public image text is present"
-                        : "Missing primary public image text"}
-                    </dd>
-                  </div>
-                </dl>
-                <nav
-                  aria-label={`Media actions ${product.name}`}
-                  className="category-management__actions"
-                >
-                  <a
-                    className="button button--secondary"
-                    href={`/listings/${encodeURIComponent(product.slug)}`}
-                  >
-                    View public listing {product.name}
-                  </a>
-                  <a
-                    className="button button--secondary"
-                    href={`/admin/listings#listing-form-${product.id}`}
-                  >
-                    Edit listing {product.name}
-                  </a>
-                  <a
-                    className="button button--secondary"
-                    href="#update-listing-image-metadata"
-                  >
-                    Manage images {product.name}
-                  </a>
-                </nav>
-              </div>
-              <section
-                className="admin-readiness admin-readiness--inline"
-                aria-label={`Public image helper ${product.name}`}
-              >
-                <h5>Public image helper</h5>
-                <ul className="admin-readiness__list">
-                  {mediaCoverageChecks(product, images).map((check) => (
-                    <li key={check}>{check}</li>
-                  ))}
-                </ul>
-              </section>
-            </article>
-          ))}
         </div>
-      </section>
 
-      <form
-        aria-label="Create listing image metadata"
-        className="category-management__form"
-        onSubmit={handleCreate}
-      >
-        <h3>Create listing image metadata</h3>
-        <label htmlFor="new-image-product">
-          New image listing
-          <select id="new-image-product" name="productId" required>
-            <option value="">Choose listing</option>
-            {products.map((product) => (
-              <option key={product.id} value={product.id}>
-                {product.name}
-              </option>
-            ))}
-          </select>
-          <small>
-            Associate media with the correct rental listing before public-safe
-            copy review.
-          </small>
-        </label>
-        <label htmlFor="new-image-bucket">
-          New image bucket
-          <input
-            id="new-image-bucket"
-            maxLength={120}
-            name="storageBucket"
-            required
-          />
-        </label>
-        <label htmlFor="new-image-path">
-          New image path
-          <input
-            id="new-image-path"
-            maxLength={512}
-            name="storagePath"
-            required
-          />
-        </label>
-        <label htmlFor="new-image-alt-text">
-          New image alt text
-          <input id="new-image-alt-text" maxLength={240} name="altText" />
-          <small>
-            Describe the visible rental furniture setup for public catalogue
-            accessibility; do not claim availability assertions.
-          </small>
-        </label>
-        <label htmlFor="new-image-sort-order">
-          New image sort order
-          <input
-            id="new-image-sort-order"
-            max={1000000}
-            min={0}
-            name="sortOrder"
-            type="number"
-          />
-        </label>
-        <label
-          className="category-management__checkbox"
-          htmlFor="new-image-primary"
-        >
-          <input id="new-image-primary" name="isPrimary" type="checkbox" />
-          Mark new image as primary public browsing image
-        </label>
-        <button className="button" type="submit">
-          Create listing image metadata
-        </button>
-      </form>
+        {status.kind !== "idle" && (
+          <div
+            style={{
+              padding: '16px',
+              borderRadius: 'var(--radius-md)',
+              marginBottom: '32px',
+              fontSize: '14px',
+              fontWeight: 500,
+              ...(status.kind === "success" ? { background: 'rgba(34, 197, 94, 0.1)', color: '#22c55e', border: '1px solid rgba(34, 197, 94, 0.2)' } :
+                  status.kind === "error" ? { background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.2)' } :
+                  { background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6', border: '1px solid rgba(59, 130, 246, 0.2)' })
+            }}
+            aria-live="polite"
+          >
+            {status.message}
+          </div>
+        )}
 
-      <div
-        className="category-management__list"
-        id="update-listing-image-metadata"
-        aria-label="Update listing image metadata"
-      >
-        {images.length === 0 ? (
-          <section className="admin-dashboard__card admin-dashboard__card--summary">
-            <p>
-              No listing image metadata records are available to update yet. Add
-              reviewed listing media metadata before choosing public primary
-              images or completing media coverage review.
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '32px', marginBottom: '48px' }}>
+          <section className="premium-card" style={{ padding: '24px' }} aria-label="Media public-safe copy review">
+            <h3 className="premium-title-card" style={{ fontSize: '18px', marginBottom: '12px' }}>Public-safe copy review</h3>
+            <p style={{ fontSize: '14px', color: 'var(--text)', lineHeight: 1.6, marginBottom: '16px' }}>
+              Save image metadata only after checking selected listing context,
+              image path context, public-safe alt text, primary image label,
+              active/archived state, fallback expectation, validation errors, and
+              sort order.
+            </p>
+            <p style={{ fontSize: '13px', color: 'var(--muted)', background: 'var(--background)', padding: '12px', borderRadius: 'var(--radius-md)', margin: 0 }}>
+              Protected admin save only updates image metadata. Media metadata is
+              review context only and does not confirm visual outcome, availability,
+              or inventory.
             </p>
           </section>
-        ) : (
-          images.map((image) => {
-            const label = imageLabel(image);
-            const product = products.find(
-              (item) => item.id === image.productId,
-            );
 
-            return (
-              <article className="category-management__item" key={image.id}>
-                <div>
-                  <h3>{label}</h3>
-                  <p>
-                    {product?.name ?? "Unmatched listing"} - {image.status} -{" "}
-                    {image.isPrimary ? "primary" : "secondary"}
-                  </p>
+          <section className="premium-card" style={{ padding: '24px' }} aria-label="Media coverage">
+            <h3 className="premium-title-card" style={{ fontSize: '18px', marginBottom: '12px' }}>Media coverage</h3>
+            <p style={{ fontSize: '14px', color: 'var(--text)', lineHeight: 1.6, marginBottom: '16px' }}>
+              Public-ready media needs an active image, useful public-safe alt text,
+              and a clear primary image when the listing should lead with that
+              setup. These protected admin cues do not prove availability.
+            </p>
+            <p style={{ fontSize: '13px', color: 'var(--muted)', background: 'var(--background)', padding: '12px', borderRadius: 'var(--radius-md)', marginBottom: '16px' }}>
+              Strong listing images help visitors compare rental options before
+              requesting a quote. Image text should describe the furniture or event
+              rental item shown, not internal file names or source details.
+            </p>
+            <h4 style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text)', marginBottom: '12px' }}>Media coverage by listing</h4>
+            <ul style={{ margin: 0, paddingLeft: '20px', color: 'var(--text)', fontSize: '13px', display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
+              {products.flatMap((product) =>
+                mediaReadinessByListing(product, images).map((message) => (
+                  <li key={`${product.id}-${message}`}>{message}</li>
+                )),
+              )}
+            </ul>
+            {archivedImageCount > 0 ? (
+              <p style={{ fontSize: '13px', color: 'var(--muted)', fontStyle: 'italic', margin: 0 }}>
+                Archived image metadata stays hidden from public catalogue and
+                listing galleries.
+              </p>
+            ) : null}
+          </section>
+        </div>
+
+        <section
+          className="premium-card"
+          style={{ padding: '24px', marginBottom: '48px' }}
+          aria-label="Listing media coverage checklist"
+        >
+          <h3 className="premium-title-card" style={{ fontSize: '18px', marginBottom: '12px' }}>Listing media coverage checklist</h3>
+          <p style={{ fontSize: '14px', color: 'var(--text)', lineHeight: 1.6, marginBottom: '24px' }}>
+            Scan each rental listing before editing image metadata. Use these cues
+            to spot listings with no public image, only fallback or archived media,
+            missing alt text, or images attached while the listing is still draft.
+          </p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            {products.map((product) => (
+              <article
+                aria-label={`Media coverage ${product.name}`}
+                key={product.id}
+                style={{ padding: '20px', background: 'var(--surface-strong)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)' }}
+              >
+                <div style={{ marginBottom: '16px' }}>
+                  <h4 style={{ fontSize: '16px', color: '#fff', margin: 0, marginBottom: '12px' }}>{product.name}</h4>
+                  <dl style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px', margin: 0, fontSize: '13px' }}>
+                    <div>
+                      <dt style={{ color: 'var(--muted)', fontWeight: 600, marginBottom: '4px' }}>Listing slug</dt>
+                      <dd style={{ margin: 0, color: 'var(--text)' }}>{product.slug}</dd>
+                    </div>
+                    <div>
+                      <dt style={{ color: 'var(--muted)', fontWeight: 600, marginBottom: '4px' }}>Visibility</dt>
+                      <dd style={{ margin: 0, color: 'var(--text)' }}>{listingVisibilityLabel(product.status)}</dd>
+                    </div>
+                    <div>
+                      <dt style={{ color: 'var(--muted)', fontWeight: 600, marginBottom: '4px' }}>Image records</dt>
+                      <dd style={{ margin: 0, color: 'var(--text)' }}>{pluralize(product.imageCount, "image")}</dd>
+                    </div>
+                    <div>
+                      <dt style={{ color: 'var(--muted)', fontWeight: 600, marginBottom: '4px' }}>Primary image text</dt>
+                      <dd style={{ margin: 0, color: 'var(--text)' }}>
+                        {hasText(product.primaryImageAltText)
+                          ? "Primary public image text is present"
+                          : "Missing primary public image text"}
+                      </dd>
+                    </div>
+                  </dl>
+                  <nav
+                    aria-label={`Media actions ${product.name}`}
+                    style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginTop: '20px' }}
+                  >
+                    <a
+                      aria-label={`View public listing ${product.name}`}
+                      className="premium-button premium-button--secondary"
+                      style={{ padding: '6px 12px', fontSize: '12px', height: 'auto' }}
+                      href={`/listings/${encodeURIComponent(product.slug)}`}
+                    >
+                      View public listing
+                    </a>
+                    <a
+                      aria-label={`Edit listing ${product.name}`}
+                      className="premium-button premium-button--secondary"
+                      style={{ padding: '6px 12px', fontSize: '12px', height: 'auto' }}
+                      href={`/admin/listings#listing-form-${product.id}`}
+                    >
+                      Edit listing
+                    </a>
+                    <a
+                      aria-label={`Manage images ${product.name}`}
+                      className="premium-button premium-button--secondary"
+                      style={{ padding: '6px 12px', fontSize: '12px', height: 'auto' }}
+                      href="#update-listing-image-metadata"
+                    >
+                      Manage images
+                    </a>
+                  </nav>
                 </div>
                 <section
-                  className="admin-readiness admin-readiness--inline"
-                  aria-label={`Media coverage ${label}`}
+                  aria-label={`Public image helper ${product.name}`}
+                  style={{ padding: '16px', background: 'var(--background)', borderRadius: 'var(--radius-md)' }}
                 >
-                  <ul className="admin-readiness__list">
-                    {imageReadiness(image, product).map((item) => (
-                      <li key={item}>{item}</li>
+                  <h5 style={{ fontSize: '13px', fontWeight: 800, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '1px', margin: 0, marginBottom: '8px' }}>Public image helper</h5>
+                  <ul style={{ margin: 0, paddingLeft: '20px', color: 'var(--text)', fontSize: '13px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {mediaCoverageChecks(product, images).map((check) => (
+                      <li key={check}>{check}</li>
                     ))}
                   </ul>
                 </section>
-                <form
-                  aria-label={`Update image metadata ${label}`}
-                  className="category-management__form"
-                  onSubmit={(event) => void handleUpdate(event, image)}
-                >
-                  <label htmlFor={`image-bucket-${image.id}`}>
-                    Image bucket for {label}
-                    <input
-                      defaultValue={image.storageBucket}
-                      id={`image-bucket-${image.id}`}
-                      maxLength={120}
-                      name="storageBucket"
-                      required
-                    />
-                  </label>
-                  <label htmlFor={`image-path-${image.id}`}>
-                    Image path for {label}
-                    <input
-                      defaultValue={image.storagePath}
-                      id={`image-path-${image.id}`}
-                      maxLength={512}
-                      name="storagePath"
-                      required
-                    />
-                  </label>
-                  <label htmlFor={`image-alt-text-${image.id}`}>
-                    Image alt text for {label}
-                    <input
-                      defaultValue={image.altText ?? ""}
-                      id={`image-alt-text-${image.id}`}
-                      maxLength={240}
-                      name="altText"
-                    />
-                    <small>
-                      Alt text supports public browsing accessibility only and
-                      must not be used as an availability assertion.
-                    </small>
-                  </label>
-                  <label htmlFor={`image-sort-order-${image.id}`}>
-                    Image sort order for {label}
-                    <input
-                      defaultValue={image.sortOrder}
-                      id={`image-sort-order-${image.id}`}
-                      max={1000000}
-                      min={0}
-                      name="sortOrder"
-                      type="number"
-                    />
-                  </label>
-                  <label
-                    className="category-management__checkbox"
-                    htmlFor={`image-primary-${image.id}`}
-                  >
-                    <input
-                      defaultChecked={image.isPrimary}
-                      id={`image-primary-${image.id}`}
-                      name="isPrimary"
-                      type="checkbox"
-                    />
-                    Mark {label} as primary public browsing image
-                  </label>
-                  <p className="category-management__hint">
-                    Protected write boundary: primary and active media choices
-                    can affect public browsing. Archive removes this image from
-                    active listing media; it does not delete the file from
-                    storage. If save fails, keep the prior media state, review
-                    alt text and primary selection, and retry locally.
-                  </p>
-                  <div className="category-management__actions">
-                    <button className="button" type="submit">
-                      Save image metadata
-                    </button>
-                    <button
-                      className="button button--secondary"
-                      onClick={() => void handleArchive(image)}
-                      type="button"
-                    >
-                      Archive image metadata {label}
-                    </button>
-                  </div>
-                </form>
               </article>
-            );
-          })
-        )}
+            ))}
+          </div>
+        </section>
+
+        <form
+          aria-label="Create listing image metadata"
+          className="premium-form-card"
+          style={{ marginBottom: '64px' }}
+          onSubmit={handleCreate}
+        >
+          <h3 className="premium-title-section" style={{ fontSize: '20px', marginBottom: '24px' }}>Create listing image metadata</h3>
+
+          <div style={{ display: 'grid', gap: '20px' }}>
+            <label style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '14px', fontWeight: 600 }}>
+              New image listing
+              <select id="new-image-product" name="productId" required className="premium-input" style={{ width: '100%', height: '48px', appearance: 'auto' }}>
+                <option value="">Choose listing</option>
+                {products.map((product) => (
+                  <option key={product.id} value={product.id}>
+                    {product.name}
+                  </option>
+                ))}
+              </select>
+              <small style={{ fontWeight: 400, color: 'var(--muted)', fontSize: '12px' }}>
+                Associate media with the correct rental listing before public-safe copy review.
+              </small>
+            </label>
+
+            <label style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '14px', fontWeight: 600 }}>
+              New image bucket
+              <input
+                id="new-image-bucket"
+                maxLength={120}
+                name="storageBucket"
+                required
+                className="premium-input"
+              />
+            </label>
+
+            <label style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '14px', fontWeight: 600 }}>
+              New image path
+              <input
+                id="new-image-path"
+                maxLength={512}
+                name="storagePath"
+                required
+                className="premium-input"
+              />
+            </label>
+
+            <label style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '14px', fontWeight: 600 }}>
+              New image alt text
+              <input id="new-image-alt-text" maxLength={240} name="altText" className="premium-input" />
+              <small style={{ fontWeight: 400, color: 'var(--muted)', fontSize: '12px' }}>
+                Describe the visible rental furniture setup for public catalogue accessibility; do not claim availability assertions.
+              </small>
+            </label>
+
+            <label style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '14px', fontWeight: 600 }}>
+              New image sort order
+              <input
+                id="new-image-sort-order"
+                max={1000000}
+                min={0}
+                name="sortOrder"
+                type="number"
+                className="premium-input"
+              />
+            </label>
+
+            <label style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', fontWeight: 500, padding: '16px', background: 'var(--background)', borderRadius: 'var(--radius-md)' }}>
+              <input id="new-image-primary" name="isPrimary" type="checkbox" style={{ width: '18px', height: '18px', accentColor: 'var(--accent)' }} />
+              Mark new image as primary public browsing image
+            </label>
+
+            <button className="premium-button premium-button--primary" type="submit" style={{ marginTop: '12px' }}>
+              Create listing image metadata
+            </button>
+          </div>
+        </form>
+
+        <div
+          id="update-listing-image-metadata"
+          aria-label="Update listing image metadata"
+        >
+          <h3 className="premium-title-section" style={{ fontSize: '24px', marginBottom: '24px' }}>Existing Listing Images</h3>
+          {images.length === 0 ? (
+            <div className="premium-card" style={{ padding: '32px', textAlign: 'center' }}>
+              <p style={{ color: 'var(--muted)', margin: 0 }}>
+                No listing image metadata records are available to update yet. Add
+                reviewed listing media metadata before choosing public primary
+                images or completing media coverage review.
+              </p>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+              {images.map((image) => {
+                const label = imageLabel(image);
+                const product = products.find(
+                  (item) => item.id === image.productId,
+                );
+
+                return (
+                  <article className="premium-card" key={image.id} style={{ overflow: 'hidden' }}>
+                    <div style={{ padding: '24px', background: 'var(--surface-strong)', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
+                      <div>
+                        <h3 className="premium-title-card" style={{ fontSize: '20px', color: '#fff', margin: 0, marginBottom: '4px' }}>{label}</h3>
+                        <p style={{ color: '#cbd5e1', fontSize: '13px', margin: 0 }}>
+                          {product?.name ?? "Unmatched listing"} • <span style={{ color: image.status === 'active' ? '#22c55e' : '#f59e0b', fontWeight: 600 }}>{image.status}</span> •{" "}
+                          <span style={{ fontWeight: image.isPrimary ? 700 : 400 }}>{image.isPrimary ? "Primary" : "Secondary"}</span>
+                        </p>
+                      </div>
+                    </div>
+
+                    <div style={{ padding: '24px' }}>
+                      <section
+                        aria-label={`Media coverage ${label}`}
+                        style={{ marginBottom: '24px', padding: '16px', background: 'var(--background)', borderRadius: 'var(--radius-md)' }}
+                      >
+                        <ul style={{ margin: 0, paddingLeft: '20px', color: 'var(--text)', fontSize: '13px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                          {imageReadiness(image, product).map((item) => (
+                            <li key={item}>{item}</li>
+                          ))}
+                        </ul>
+                      </section>
+
+                      <form
+                        aria-label={`Update image metadata ${label}`}
+                        onSubmit={(event) => void handleUpdate(event, image)}
+                        style={{ display: 'grid', gap: '20px' }}
+                      >
+                        <label style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '14px', fontWeight: 600 }}>
+                          Image bucket
+                          <input
+                            defaultValue={image.storageBucket}
+                            id={`image-bucket-${image.id}`}
+                            maxLength={120}
+                            name="storageBucket"
+                            required
+                            className="premium-input"
+                          />
+                        </label>
+
+                        <label style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '14px', fontWeight: 600 }}>
+                          Image path for {label}
+                          <input
+                            defaultValue={image.storagePath}
+                            id={`image-path-${image.id}`}
+                            maxLength={512}
+                            name="storagePath"
+                            required
+                            className="premium-input"
+                          />
+                        </label>
+
+                        <label style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '14px', fontWeight: 600 }}>
+                          Image alt text for {label}
+                          <input
+                            defaultValue={image.altText ?? ""}
+                            id={`image-alt-text-${image.id}`}
+                            maxLength={240}
+                            name="altText"
+                            className="premium-input"
+                          />
+                          <small style={{ fontWeight: 400, color: 'var(--muted)', fontSize: '12px' }}>
+                            Alt text supports public browsing accessibility only and
+                            must not be used as an availability assertion.
+                          </small>
+                        </label>
+
+                        <label style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '14px', fontWeight: 600 }}>
+                          Image sort order
+                          <input
+                            defaultValue={image.sortOrder}
+                            id={`image-sort-order-${image.id}`}
+                            max={1000000}
+                            min={0}
+                            name="sortOrder"
+                            type="number"
+                            className="premium-input"
+                          />
+                        </label>
+
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', fontWeight: 500, padding: '16px', background: 'var(--background)', borderRadius: 'var(--radius-md)' }}>
+                          <input
+                            defaultChecked={image.isPrimary}
+                            id={`image-primary-${image.id}`}
+                            name="isPrimary"
+                            type="checkbox"
+                            style={{ width: '18px', height: '18px', accentColor: 'var(--accent)' }}
+                          />
+                          Mark {label} as primary public browsing image
+                        </label>
+
+                        <p style={{ fontSize: '12px', color: 'var(--muted)', lineHeight: 1.5, margin: 0 }}>
+                          Protected write boundary: primary and active media choices
+                          can affect public browsing. Archive removes this image from
+                          active listing media; it does not delete the file from
+                          storage. If save fails, keep the prior media state, review
+                          alt text and primary selection, and retry locally.
+                        </p>
+
+                        <div style={{ display: 'flex', gap: '16px', marginTop: '8px' }}>
+                          <button className="premium-button premium-button--primary" type="submit" style={{ flex: 1 }}>
+                            Save image metadata
+                          </button>
+                          <button
+                            aria-label={`Archive image metadata ${label}`}
+                            className="premium-button premium-button--secondary"
+                            onClick={() => void handleArchive(image)}
+                            type="button"
+                            style={{ flex: 1 }}
+                          >
+                            Archive image metadata
+                          </button>
+                        </div>
+                      </form>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          )}
+        </div>
       </div>
     </section>
   );

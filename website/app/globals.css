@@ -1,15 +1,26 @@
 :root {
-  --background: #f8f6f1;
+  --background: #f6f8fb;
   --surface: #ffffff;
-  --surface-strong: #111827;
-  --text: #1e211d;
-  --muted: #60695d;
-  --border: #ddd8cc;
-  --accent: #2f6f57;
-  --accent-dark: #204c3c;
-  --accent-soft: #e3efe8;
-  --warm: #c98548;
-  --shadow: 0 18px 50px rgba(31, 41, 55, 0.14);
+  --surface-strong: #0d1321;
+  --text: #0d1321;
+  --muted: #5a6675;
+  --border: #d9dee6;
+  --accent: #d72f45;
+  --accent-dark: #b82638;
+  --accent-soft: rgba(215, 47, 69, 0.08);
+  --warm: #d72f45;
+  --shadow: 0 12px 40px rgba(13, 19, 33, 0.08);
+
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.10);
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-full: 9999px;
+  --font-inter: Inter;
+  --font-montserrat: Montserrat;
+  --font-heading: var(--font-montserrat), ui-sans-serif, system-ui, sans-serif;
 }
 
 * {
@@ -23,10 +34,13 @@ html {
 body {
   background: var(--background);
   color: var(--text);
-  font-family:
-    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
-    "Segoe UI", sans-serif;
+  font-family: var(--font-inter), ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   margin: 0;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, h5, h6, .brand__name, .premium-brand__name {
+  font-family: var(--font-montserrat), ui-sans-serif, system-ui, sans-serif;
 }
 
 a {
@@ -103,7 +117,7 @@ select {
   align-items: center;
   background: var(--accent);
   border: 1px solid var(--accent);
-  border-radius: 8px;
+  border-radius: var(--radius-full);
   color: #ffffff;
   display: inline-flex;
   font-weight: 800;
