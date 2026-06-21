@@ -11,14 +11,14 @@ import type { PublicCatalogueProduct } from "../lib/catalogue/types";
 import AddToQuoteButton from "../components/AddToQuoteButton";
 
 export const metadata: Metadata = {
-  title: "Event furniture rental catalogue | Space Koncept Rentals",
+  title: "Event furniture rental catalogue | Space Koncept Rental",
   description:
-    "Browse listings for event furniture rental and send a quote request for manual follow-up with Space Koncept Rentals.",
+    "Browse listings for event furniture rental and send a quote request for manual follow-up with Space Koncept Rental.",
   openGraph: {
-    title: "Event furniture rental catalogue | Space Koncept Rentals",
+    title: "Event furniture rental catalogue | Space Koncept Rental",
     description:
       "Browse public rental listings, compare event furniture, and send a quote request for manual follow-up.",
-    siteName: "Space Koncept Rentals",
+    siteName: "Space Koncept Rental",
     type: "website",
     url: "/"
   }
@@ -80,13 +80,16 @@ export default async function HomePage() {
           <div className="v3-home-hero">
             <div className="v3-home-hero__content">
               <h1>Setting the scene for unforgettable events.</h1>
-              <p>Curated event-ready furniture and flexible rental selection for corporate and private occasions.</p>
+              <p>Curated event-ready furniture and flexible rental selection for corporate and private occasions. Add items to your quote list for manual team follow-up.</p>
               <div className="v3-home-hero__actions">
-                <Link href="/catalogue" className="v3-btn v3-btn--primary">
+                <Link href="/quote" className="v3-btn v3-btn--primary">
+                  Request Quote
+                </Link>
+                <Link href="/catalogue" className="v3-btn v3-btn--outline">
                   Browse Catalogue
                 </Link>
-                <Link href="/listings" className="v3-btn v3-btn--outline">
-                  View Setups
+                <Link href="/listings" className="v3-btn v3-btn--ghost">
+                  Explore Setups
                 </Link>
               </div>
             </div>

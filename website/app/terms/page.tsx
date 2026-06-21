@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Terms of Use | Space Koncept Rentals",
+  title: "Terms of Use | Space Koncept Rental",
   description:
     "Simple Terms of Use for browsing rental listings and sending quote enquiries."
 };

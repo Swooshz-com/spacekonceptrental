@@ -7,9 +7,9 @@ import type { PublicCatalogue } from "../../lib/catalogue/types";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Rental categories | Space Koncept Rentals",
+  title: "Rental categories | Space Koncept Rental",
   description:
-    "Browse public furniture and event rental categories and send a quote enquiry to Space Koncept Rentals."
+    "Browse public furniture and event rental categories and send a quote enquiry to Space Koncept Rental."
 };
 
 function textOrUndefined(value: string | undefined) {

@@ -5,8 +5,8 @@ import corporateImage from "../../assets/images/event_corporate.png";
 import sofaImage from "../../assets/images/product_sofa.png";
 
 export const metadata: Metadata = {
-  title: "About Us | Space Koncept Rentals",
-  description: "Learn more about Space Koncept Rentals, a premium event furniture rental service providing curated setups for corporate and private events.",
+  title: "About Us | Space Koncept Rental",
+  description: "Learn more about Space Koncept Rental, a premium event furniture rental service providing curated setups for corporate and private events.",
 };
 
 export default function AboutPage() {
@@ -16,7 +16,7 @@ export default function AboutPage() {
         <div className="v3-page-header" style={{ maxWidth: '800px', margin: '0 auto 80px', textAlign: 'center' }}>
           <h1>Elevating Event Spaces</h1>
           <p>
-            Space Koncept Rentals provides curated event-ready furniture designed for events, exhibitions, launches, activations, styling, weddings, and corporate setups.
+            Space Koncept Rental provides curated event-ready furniture designed for events, exhibitions, launches, activations, styling, weddings, and corporate setups.
           </p>
         </div>
 

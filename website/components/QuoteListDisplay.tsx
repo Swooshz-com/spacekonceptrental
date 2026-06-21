@@ -8,10 +8,10 @@ export default function QuoteListDisplay() {
 
   if (items.length === 0) {
     return (
-      <div style={{ background: 'var(--surface-alt)', padding: '48px 32px', borderRadius: 'var(--radius-lg)', textAlign: 'center', marginBottom: '32px' }}>
+      <div className="premium-card" style={{ padding: '48px 32px', textAlign: 'center', marginBottom: '32px' }}>
         <h3 style={{ fontSize: '1.5rem', marginBottom: '16px', fontFamily: 'var(--font-serif)', color: 'var(--text-primary)' }}>Your Quote List is empty.</h3>
         <p style={{ color: 'var(--text-secondary)', marginBottom: '32px', lineHeight: 1.6 }}>
-          You can add individual rental items or prebuilt setups to your Quote List to enquire about availability and receive a proposal.
+          You can add individual rental items or prebuilt setups to your Quote List to request a comprehensive rental proposal.
         </p>
         <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
           <Link href="/catalogue" className="v3-btn v3-btn--outline">

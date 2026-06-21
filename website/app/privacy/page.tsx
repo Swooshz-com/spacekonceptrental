@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy | Space Koncept Rentals",
+  title: "Privacy Policy | Space Koncept Rental",
   description:
-    "How Space Koncept Rentals handles quote enquiry and chat details for manual follow-up."
+    "How Space Koncept Rental handles quote enquiry and chat details for manual follow-up."
 };
 
 export default function PrivacyPage() {

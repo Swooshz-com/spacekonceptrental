@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Contact Us | Space Koncept Rentals",
-  description: "Get in touch with Space Koncept Rentals for general enquiries or to discuss your upcoming event.",
+  title: "Contact Us | Space Koncept Rental",
+  description: "Get in touch with Space Koncept Rental for general enquiries or to discuss your upcoming event.",
 };
 
 export default function ContactPage() {
@@ -35,22 +35,22 @@ export default function ContactPage() {
 
           {/* Context Sidebar */}
           <div className="v3-quote-sidebar">
-            <div className="v3-quote-sidebar-card">
+            <div className="premium-card" style={{ padding: '24px', marginBottom: '24px' }}>
               <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>Rental Quotes</div>
               <h3>Need a quote?</h3>
               <p style={{ color: 'var(--muted)', marginBottom: '24px' }}>
                 For event furniture proposals, please use our quote request system. Add items to your Quote List while browsing.
               </p>
-              <a href="/catalogue" className="v3-btn v3-btn--outline" style={{ width: '100%' }}>
-                Browse Catalogue
+              <a href="/quote" className="v3-btn v3-btn--outline" style={{ width: '100%' }}>
+                Request Quote
               </a>
             </div>
             
-            <div className="v3-quote-sidebar-card">
-              <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>Response Time</div>
-              <h3>Manual Follow-up</h3>
+            <div className="premium-card" style={{ padding: '24px' }}>
+              <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>Manual Follow-up</div>
+              <h3>Enquiry Review</h3>
               <p style={{ color: 'var(--muted)', margin: 0 }}>
-                Our team typically reviews general enquiries and quote requests manually to triage rental fit. We will follow up using the contact details provided in your request.
+                Our team manually reviews general enquiries and quote requests to determine rental fit. We will follow up using the contact details provided in your request.
               </p>
             </div>
           </div>

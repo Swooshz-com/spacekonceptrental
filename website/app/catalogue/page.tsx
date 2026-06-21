@@ -12,14 +12,14 @@ import AddToQuoteButton from "../../components/AddToQuoteButton";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Furniture catalogue | Space Koncept Rentals",
+  title: "Furniture catalogue | Space Koncept Rental",
   description:
-    "Browse public event furniture rental listings and send a quote request for manual follow-up with Space Koncept Rentals.",
+    "Browse public event furniture rental listings and send a quote request for manual follow-up with Space Koncept Rental.",
   openGraph: {
-    title: "Furniture catalogue | Space Koncept Rentals",
+    title: "Furniture catalogue | Space Koncept Rental",
     description:
       "Browse public rental listings, compare event furniture details, and start a quote request.",
-    siteName: "Space Koncept Rentals",
+    siteName: "Space Koncept Rental",
     type: "website",
     url: "/catalogue"
   }
@@ -216,23 +216,33 @@ export function CataloguePageContent({
 
         {/* Grid */}
         {catalogue.products.length === 0 ? (
-          <div className="v3-empty-state" style={{ maxWidth: '600px', margin: '64px auto', textAlign: 'center', padding: '48px 24px', backgroundColor: 'var(--surface-alt)' }}>
-            <h2 style={{ fontSize: '2rem', marginBottom: '16px', fontFamily: 'var(--font-serif)', color: 'var(--text-primary)' }}>Our Catalogue</h2>
-            <p style={{ fontSize: '1.125rem', color: 'var(--text-secondary)', marginBottom: '32px', lineHeight: 1.6 }}>
-              {emptyMessage ?? "The catalogue features our individual rental furniture and items. Whether you need single statement pieces or functional event basics, explore our collection to build your ideal space."}
-            </p>
-            <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
-              <Link href="/quote" className="v3-btn v3-btn--primary">
-                Request Quote
-              </Link>
-              <Link href="/listings" className="v3-btn v3-btn--outline">
-                Explore Setups
-              </Link>
-              {hasActiveFilters && (
-                <Link href={listingBasePath} className="v3-btn v3-btn--ghost">
-                  Clear search
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '64px', alignItems: 'center', margin: '64px 0 96px', padding: '48px', backgroundColor: 'var(--surface-alt)', borderRadius: 'var(--radius-lg)' }}>
+            <div>
+              <h2 style={{ fontSize: '2rem', marginBottom: '16px', fontFamily: 'var(--font-serif)', color: 'var(--text-primary)' }}>Our Catalogue</h2>
+              <p style={{ fontSize: '1.125rem', color: 'var(--text-secondary)', marginBottom: '32px', lineHeight: 1.6 }}>
+                {emptyMessage ?? "The catalogue features our individual rental furniture and items. Whether you need single statement pieces or functional event basics, explore our collection to build your ideal space."}
+              </p>
+              <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+                <Link href="/quote" className="v3-btn v3-btn--primary">
+                  Request Quote
                 </Link>
-              )}
+                <Link href="/listings" className="v3-btn v3-btn--outline">
+                  Explore Setups
+                </Link>
+                {hasActiveFilters && (
+                  <Link href={listingBasePath} className="v3-btn v3-btn--ghost">
+                    Clear search
+                  </Link>
+                )}
+              </div>
+            </div>
+            <div style={{ borderRadius: 'var(--radius-md)', overflow: 'hidden', aspectRatio: '4/3', position: 'relative' }}>
+              <div style={{ position: 'absolute', inset: 0, backgroundColor: 'var(--border)', opacity: 0.1 }}></div>
+              <Image 
+                src={chairImage} 
+                alt="Catalogue selection" 
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+              />
             </div>
           </div>
         ) : (

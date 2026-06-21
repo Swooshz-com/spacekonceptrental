@@ -30,8 +30,8 @@ function getMetadataDescription(product: PublicCatalogueProduct | null) {
     textOrUndefined(product?.description);
 
   return productDescription
-    ? `${productDescription} Send an event furniture rental quote request with Space Koncept Rentals.`
-    : "Browse event furniture rental listing details and request an enquiry with Space Koncept Rentals.";
+    ? `${productDescription} Send an event furniture rental quote request with Space Koncept Rental.`
+    : "Browse event furniture rental listing details and request an enquiry with Space Koncept Rental.";
 }
 
 function textOrUndefined(value: string | undefined) {
@@ -90,12 +90,12 @@ export async function generateMetadata({
   if (!product) {
     const description = getMetadataDescription(null);
     return {
-      title: "Furniture listing | Space Koncept Rentals",
+      title: "Furniture listing | Space Koncept Rental",
       description,
       openGraph: {
-        title: "Furniture listing | Space Koncept Rentals",
+        title: "Furniture listing | Space Koncept Rental",
         description,
-        siteName: "Space Koncept Rentals",
+        siteName: "Space Koncept Rental",
         type: "website",
         url: "/catalogue"
       }
@@ -104,12 +104,12 @@ export async function generateMetadata({
 
   const description = getMetadataDescription(product);
   return {
-    title: `${product.name} | Space Koncept Rentals`,
+    title: `${product.name} | Space Koncept Rental`,
     description,
     openGraph: {
-      title: `${product.name} rental listing | Space Koncept Rentals`,
+      title: `${product.name} rental listing | Space Koncept Rental`,
       description,
-      siteName: "Space Koncept Rentals",
+      siteName: "Space Koncept Rental",
       type: "website",
       url: `/catalogue/${product.slug}`
     }
@@ -214,7 +214,7 @@ export function ProductPageContent({
                   Quote Request Guide
                 </h3>
                 <p>
-                  This item is available for event rental. Add it to your Quote List to submit an enquiry. Our team will review your event details, location, and dates to ensure availability and provide a comprehensive proposal including delivery and setup.
+                  This item is available for event rental. Add it to your Quote List to submit an enquiry. Our team will review your event details, location, and dates to review your request and provide a comprehensive proposal including delivery and setup.
                 </p>
               </div>
 

@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Event Setup Planning | Space Koncept Rentals",
+  title: "Event Setup Planning | Space Koncept Rental",
   description:
     "Explore our setups and catalogue to plan your next corporate event, exhibition, gala, or wedding."
 };

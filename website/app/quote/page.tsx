@@ -14,14 +14,14 @@ type QuotePageProps = {
 };
 
 export const metadata: Metadata = {
-  title: "Quote request for furniture rental enquiries | Space Koncept Rentals",
+  title: "Quote request for furniture rental enquiries | Space Koncept Rental",
   description:
     "Submit an event furniture rental quote request with event date, venue, requested listings, quantities, and setup notes for manual follow-up.",
   openGraph: {
-    title: "Quote request | Space Koncept Rentals",
+    title: "Quote request | Space Koncept Rental",
     description:
       "Share event furniture rental details and requested listings for manual follow-up.",
-    siteName: "Space Koncept Rentals",
+    siteName: "Space Koncept Rental",
     type: "website",
     url: "/quote"
   }
@@ -88,7 +88,7 @@ function QuoteSelectedListingBanner({
   product: PublicCatalogueProduct;
 }) {
   return (
-    <div style={{ background: 'var(--surface-strong)', borderRadius: 'var(--radius-lg)', padding: '32px', marginBottom: '40px', border: '1px solid var(--border)' }}>
+    <div className="premium-card" style={{ padding: '32px', marginBottom: '40px' }}>
       <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>Selected Listing</div>
       <h2 style={{ fontSize: '1.5rem', marginBottom: '16px' }}>{product.name}</h2>
       <p style={{ color: 'var(--muted)', marginBottom: '24px' }}>
@@ -123,11 +123,11 @@ function QuoteListingContext({
   product: PublicCatalogueProduct;
 }) {
   return (
-    <div className="v3-quote-sidebar-card">
+    <div className="premium-card" style={{ padding: '24px' }}>
       <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>Enquiry Context</div>
       <h3>{product.name}</h3>
       <p style={{ color: 'var(--muted)', marginBottom: '24px' }}>
-        Your request includes this listing. Please provide event details below to help us confirm availability.
+        Your request includes this listing. Please provide event details below to help us prepare a proposal.
       </p>
       <Link href={`/catalogue/${product.slug}`} className="v3-btn v3-btn--outline" style={{ width: '100%' }}>
         Review listing
@@ -150,7 +150,7 @@ function QuoteGeneralContext({
   const hasContext = requestedSlug || category || event || search;
 
   return (
-    <div className="v3-quote-sidebar-card">
+    <div className="premium-card" style={{ padding: '24px' }}>
       <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>
         Enquiry Context
       </div>
@@ -242,7 +242,7 @@ export default async function QuotePage({
 
           {/* Right Column: Main Form */}
           <div className="v3-quote-form" style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
-            <div style={{ background: 'var(--surface)', padding: '40px', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)' }}>
+            <div className="premium-card" style={{ padding: '40px' }}>
               <h2 style={{ fontSize: '1.5rem', marginBottom: '32px', fontFamily: 'var(--font-serif)' }}>Event Details</h2>
               <QuoteRequestForm
                 initialItemsText={initialItemsText}
@@ -250,7 +250,7 @@ export default async function QuotePage({
               />
             </div>
 
-            <div className="v3-quote-sidebar-card">
+            <div className="premium-card" style={{ padding: '24px' }}>
               <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>What to Expect</div>
               <ul style={{ margin: 0, paddingLeft: '20px', color: 'var(--muted)', fontSize: '0.875rem', lineHeight: 1.6 }}>
                 <li style={{ marginBottom: '8px' }}>Your request will be manually reviewed by our team.</li>

@@ -9,7 +9,7 @@ import "./globals-premium.css";
 import MobileMenu from "../components/MobileMenu";
 
 export const metadata: Metadata = {
-  title: "Space Koncept Rentals | Event furniture rental",
+  title: "Space Koncept Rental | Event furniture rental",
   description:
     "Browse our premium event furniture rental catalogue and send a quote enquiry."
 };
@@ -63,7 +63,7 @@ function SiteFooter() {
       <div className="v3-footer__grid">
         {/* Brand column */}
         <div className="v3-footer__brand">
-          <h2>SpaceKonceptRental</h2>
+          <h2>Space Koncept Rental</h2>
           <p>Curated event-ready furniture and setups. Quote-led rental planning.</p>
         </div>
 

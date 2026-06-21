@@ -22,9 +22,9 @@ type ListingsPageProps = {
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Rental listings | Space Koncept Rentals",
+  title: "Rental listings | Space Koncept Rental",
   description:
-    "Browse public furniture and event rental listings, then send a quote enquiry to Space Koncept Rentals."
+    "Browse public furniture and event rental listings, then send a quote enquiry to Space Koncept Rental."
 };
 
 function firstSearchParam(value: string | string[] | undefined) {
@@ -176,21 +176,31 @@ export default async function ListingsPage({
         </div>
 
         {filteredCatalogue.products.length === 0 ? (
-          <div className="v3-empty-state" style={{ maxWidth: '600px', margin: '64px auto', textAlign: 'center', padding: '48px 24px', backgroundColor: 'var(--surface-alt)' }}>
-            <h2 style={{ fontSize: '2rem', marginBottom: '16px', fontFamily: 'var(--font-serif)', color: 'var(--text-primary)' }}>Prebuilt Setups</h2>
-            <p style={{ fontSize: '1.125rem', color: 'var(--text-secondary)', marginBottom: '32px', lineHeight: 1.6 }}>
-              Setups are prebuilt event stacks curated for weddings, launches, exhibitions, lounges, and corporate events. Explore these cohesive looks to simplify your rental planning.
-            </p>
-            <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
-              <Link href="/quote" className="v3-btn v3-btn--primary">
-                Request Quote
-              </Link>
-              <Link href="/catalogue" className="v3-btn v3-btn--outline">
-                Browse Catalogue
-              </Link>
-              <Link href="/listings" className="v3-btn v3-btn--ghost">
-                View all setups
-              </Link>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '64px', alignItems: 'center', margin: '64px 0 96px', padding: '48px', backgroundColor: 'var(--surface-alt)', borderRadius: 'var(--radius-lg)' }}>
+            <div style={{ borderRadius: 'var(--radius-md)', overflow: 'hidden', aspectRatio: '4/3', position: 'relative', order: -1 }}>
+              <div style={{ position: 'absolute', inset: 0, backgroundColor: 'var(--border)', opacity: 0.1 }}></div>
+              <Image 
+                src={corporateImage} 
+                alt="Curated setups" 
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+              />
+            </div>
+            <div>
+              <h2 style={{ fontSize: '2rem', marginBottom: '16px', fontFamily: 'var(--font-serif)', color: 'var(--text-primary)' }}>Prebuilt Setups</h2>
+              <p style={{ fontSize: '1.125rem', color: 'var(--text-secondary)', marginBottom: '32px', lineHeight: 1.6 }}>
+                Setups are prebuilt event stacks curated for weddings, launches, exhibitions, lounges, and corporate events. Explore these cohesive looks to simplify your rental planning.
+              </p>
+              <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+                <Link href="/quote" className="v3-btn v3-btn--primary">
+                  Request Quote
+                </Link>
+                <Link href="/catalogue" className="v3-btn v3-btn--outline">
+                  Browse Catalogue
+                </Link>
+                <Link href="/listings" className="v3-btn v3-btn--ghost">
+                  View all setups
+                </Link>
+              </div>
             </div>
           </div>
         ) : (
