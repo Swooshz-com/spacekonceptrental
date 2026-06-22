@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Aura Studio - Intentional Living</title>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Literata:wght@100..900&family=Plus+Jakarta+Sans:wght@100..900&display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Theme Configuration -->
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-surface": "#1e1b18",
+                        "inverse-surface": "#34302c",
+                        "secondary-fixed": "#ffdbc8",
+                        "surface-bright": "#fff8f5",
+                        "surface-tint": "#62612e",
+                        "secondary-fixed-dim": "#f7b994",
+                        "on-tertiary-fixed-variant": "#49473d",
+                        "outline-variant": "#cac7b7",
+                        "on-surface-variant": "#48473b",
+                        "tertiary-fixed-dim": "#cbc6ba",
+                        "surface-variant": "#e9e1dc",
+                        "error": "#ba1a1a",
+                        "on-primary-container": "#dad899",
+                        "secondary-container": "#fdbf99",
+                        "on-tertiary-container": "#dad5c8",
+                        "surface-container-highest": "#e9e1dc",
+                        "on-secondary-container": "#794b2e",
+                        "surface": "#fff8f5",
+                        "on-tertiary-fixed": "#1d1c14",
+                        "inverse-on-surface": "#f8efea",
+                        "primary-fixed-dim": "#ccc98d",
+                        "surface-container-low": "#fbf2ed",
+                        "on-primary-fixed-variant": "#4a4919",
+                        "on-primary": "#ffffff",
+                        "surface-container-high": "#efe6e2",
+                        "on-error": "#ffffff",
+                        "error-container": "#ffdad6",
+                        "on-tertiary": "#ffffff",
+                        "surface-container-lowest": "#ffffff",
+                        "tertiary": "#47453b",
+                        "primary-fixed": "#e8e6a6",
+                        "tertiary-fixed": "#e8e2d5",
+                        "secondary": "#825335",
+                        "primary": "#474617",
+                        "on-background": "#1e1b18",
+                        "on-primary-fixed": "#1d1d00",
+                        "background": "#fff8f5",
+                        "tertiary-container": "#5f5c52",
+                        "on-secondary-fixed-variant": "#673c20",
+                        "outline": "#79776a",
+                        "surface-dim": "#e1d8d4",
+                        "surface-container": "#f5ece7",
+                        "inverse-primary": "#ccc98d",
+                        "on-secondary-fixed": "#321300",
+                        "on-secondary": "#ffffff",
+                        "on-error-container": "#93000a",
+                        "primary-container": "#5f5e2c"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "unit": "8px",
+                        "section-padding": "96px",
+                        "margin-mobile": "16px",
+                        "gutter": "24px",
+                        "container-max": "1200px",
+                        "margin-desktop": "48px"
+                    },
+                    "fontFamily": {
+                        "label-md": ["Plus Jakarta Sans"],
+                        "headline-sm": ["Literata"],
+                        "headline-md": ["Literata"],
+                        "display-lg": ["Literata"],
+                        "display-lg-mobile": ["Literata"],
+                        "body-lg": ["Plus Jakarta Sans"],
+                        "body-md": ["Plus Jakarta Sans"]
+                    },
+                    "fontSize": {
+                        "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "headline-sm": ["24px", { "lineHeight": "32px", "fontWeight": "500" }],
+                        "headline-md": ["32px", { "lineHeight": "40px", "fontWeight": "500" }],
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "display-lg-mobile": ["36px", { "lineHeight": "44px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        /* Ambient shadow utility for tactile minimalism */
+        .ambient-shadow {
+            box-shadow: 0 8px 32px -8px rgba(71, 70, 23, 0.08); /* Using primary color for shadow tint */
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface font-body-md antialiased min-h-screen relative selection:bg-primary/20">
+<!-- Top Navigation (Mobile adapted) -->
+<nav class="fixed top-0 w-full z-40 bg-surface/80 dark:bg-surface/80 backdrop-blur-md shadow-sm shadow-primary/5 border-b border-outline-variant/30 transition-transform duration-300">
+<div class="flex justify-between items-center max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop h-20">
+<a class="font-headline-sm text-headline-sm font-medium text-primary dark:text-inverse-primary tracking-tight" href="#">Aura Studio</a>
+<button aria-label="Open menu" class="text-primary p-2 hover:opacity-80 transition-opacity" id="menu-trigger">
+<span class="material-symbols-outlined text-[28px]" style="font-variation-settings: 'wght' 300;">menu</span>
+</button>
+</div>
+</nav>
+<!-- Full Screen Menu Overlay -->
+<div class="fixed inset-0 bg-surface z-50 flex-col hidden opacity-0 transition-opacity duration-300" id="mobile-menu">
+<div class="flex justify-between items-center px-margin-mobile h-20 border-b border-outline-variant/20 bg-surface">
+<span class="font-headline-sm text-headline-sm font-medium text-primary tracking-tight">Aura Studio</span>
+<button aria-label="Close menu" class="text-primary p-2 hover:opacity-80 transition-opacity" id="menu-close">
+<span class="material-symbols-outlined text-[28px]" style="font-variation-settings: 'wght' 300;">close</span>
+</button>
+</div>
+<div class="flex-1 flex flex-col px-margin-mobile py-8 overflow-y-auto">
+<nav class="flex flex-col gap-6 mb-12">
+<a class="font-headline-md text-headline-md text-on-surface hover:text-primary transition-colors" href="#">Catalogue</a>
+<a class="font-headline-md text-headline-md text-on-surface hover:text-primary transition-colors" href="#">Setups</a>
+<a class="font-headline-md text-headline-md text-on-surface hover:text-primary transition-colors" href="#">Quote List</a>
+<a class="font-headline-md text-headline-md text-on-surface hover:text-primary transition-colors" href="#">Our Story</a>
+<a class="font-headline-md text-headline-md text-on-surface hover:text-primary transition-colors" href="#">Contact</a>
+</nav>
+<div class="mt-auto pb-8">
+<button class="w-full bg-primary text-on-primary font-label-md text-label-md px-6 py-4 rounded-DEFAULT ambient-shadow hover:opacity-90 transition-opacity">
+                    Request Quote
+                </button>
+</div>
+</div>
+</div>
+<!-- Main Content Canvas -->
+<main class="pt-24 pb-16 flex flex-col gap-16">
+<!-- Editorial Vertical Hero -->
+<section class="px-margin-mobile flex flex-col gap-6 max-w-container-max mx-auto w-full">
+<div class="flex flex-col gap-4 max-w-md">
+<h1 class="font-display-lg-mobile text-display-lg-mobile text-primary tracking-tight">Curated Spaces for Intentional Living.</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant">We source and style artisanal, sustainable pieces to create environments that evoke calm, warmth, and groundedness.</p>
+</div>
+<div class="w-full aspect-[3/4] relative rounded-lg overflow-hidden mt-4 ambient-shadow bg-surface-container-high">
+<img class="w-full h-full object-cover mix-blend-multiply opacity-90" data-alt="A vertical, highly detailed editorial photograph of a minimalist interior space. The room features warm cream walls, a single sculptural wooden chair crafted from dark olive wood, and a heavily textured linen rug. Soft, diffused natural light pours in, creating gentle ambient shadows that highlight the tactile quality of the materials. The overall mood is calm, luxurious, and grounded, evoking high-end artisanal design and intentional living." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCQTQyl4k-KsOFsWrhx_7HEYKI1L5od5qoZlv954klDWN4V3H6OSEqB42pMT-o0XqkgzdzPwW24DtxmDZrDMqp8H8CntYKSA8VwKMPTERi3DHx2jbdD48luSymMBO4F-ZDdYb5rrTvv9YVmEafnDisGbro98JfMEjEzfnDDD_vYfvZCo51-ZduBmStwrkpb4LUHRQpv7NG59FQJA0c1US6PF89N8HlrFqux24sCxcLTu-luNQujAzMlMEmOIc1DypNBEtWTWCRwQ2TI"/>
+</div>
+<div class="mt-2 w-full">
+<button class="w-full bg-primary text-on-primary font-label-md text-label-md px-8 py-4 rounded-DEFAULT ambient-shadow flex justify-center items-center gap-2 hover:bg-primary-container hover:text-on-primary-container transition-colors duration-300">
+                    Request Quote
+                    <span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'wght' 300;">arrow_forward</span>
+</button>
+</div>
+</section>
+<!-- Asymmetric Content Blocks (Tactile Minimalism) -->
+<section class="px-margin-mobile flex flex-col gap-16 max-w-container-max mx-auto w-full">
+<!-- Block 1: Right-aligned image -->
+<div class="flex flex-col gap-6">
+<div class="w-[85%] aspect-square rounded-lg overflow-hidden ml-auto ambient-shadow bg-surface-container-high relative">
+<img class="w-full h-full object-cover" data-alt="A close-up, high-quality macro photograph focusing on the rich texture of natural materials. The image shows a detail of hand-carved, dark earthy wood seamlessly meeting a rough-hewn, light cream stone surface. The lighting is warm and directional, emphasizing the grain of the wood and the porous tactile quality of the stone. A minimalist, luxurious aesthetic fitting an artisanal design studio." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBm3BMDVfcoT-l4v1-hegNl5TK1Yt72yyg5uf7yZjVPePzI4dMXBrXJiVmYsS537DhrCkL67MnpstIAKPXxI7m96WNMABj8dOiVT3zlR5r1JxQN8_M8K5_0YBKuqWgRKyqc-xsHOiRzfAkm6xtT3j78S3F29DA3ov4HfO_wOwh2ZOKgFApTvHwSzt1GL2T12NzzHDBuRxvRsFs5xMTJmqPqFa364nqtNWOGIm83-XMWKPi8FI6YWIJBFb7-37gYBl_MFOuT2OG9jwZK"/>
+</div>
+<div class="pr-8 max-w-sm">
+<h2 class="font-headline-sm text-headline-sm text-primary mb-3">Tactile Minimalism</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">We believe in the profound emotional resonance of physical materials. Our approach moves away from cold, automated spaces toward environments curated for human connection and warmth.</p>
+</div>
+</div>
+<!-- Block 2: Left-aligned image -->
+<div class="flex flex-col gap-6">
+<div class="w-[85%] aspect-[4/5] rounded-lg overflow-hidden ambient-shadow bg-surface-container-high relative">
+<img class="w-full h-full object-cover" data-alt="An airy, sophisticated living area shot from a slightly low angle to emphasize space. The scene features a low-profile linen sofa in off-white against a backdrop of warm, earthy toned plaster walls. A large, abstract textured canvas hangs subtly in the background. The space feels highly curated, calm, and embodies a tactile, minimalist luxury aesthetic with very soft, warm ambient shadows." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCYtUA1u-g0fgQurSJS1ByYcDqObrzlu_P_udTNGwP-D84zi1A6RyA0NZ-lI_c-NbgB4fnQ40UdNOZykSUPY9KiqPGItqEuPBvQjD9cfuUdKUXaLCes7TvwN_Bi5WmJFJUdNE8sdw-S-lcqtqrP5ATLt6TG7Y_s4UBAIRbr66fWLOWA5snl42jUPCrQIj6UieFJBWUBsEwW1rzG35bLUjaCP84NzuX92oh12OOtQ9vK3H4gdniNyFkF7LouqZlQ2gM6IQx4KpSEtuL5"/>
+</div>
+<div class="pl-8 text-right self-end max-w-sm">
+<h2 class="font-headline-sm text-headline-sm text-primary mb-3">Curated Settings</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">Every element, from the grain of the wood to the drape of the linen, is intentionally selected to foster a sense of professional intimacy and quiet luxury.</p>
+</div>
+</div>
+</section>
+<!-- The Koncept Advantage -->
+<section class="py-16 px-margin-mobile bg-surface-container-low border-y border-outline-variant/20 w-full">
+<div class="max-w-container-max mx-auto w-full">
+<h2 class="font-headline-md text-headline-md text-primary mb-10 text-center">The Koncept Advantage</h2>
+<div class="flex flex-col gap-10">
+<!-- Advantage Item -->
+<div class="flex gap-4 items-start">
+<div class="p-3 rounded-full bg-surface-container flex-shrink-0 text-secondary">
+<span class="material-symbols-outlined text-[24px]" style="font-variation-settings: 'FILL' 1, 'wght' 300;">handyman</span>
+</div>
+<div>
+<h3 class="font-label-md text-label-md text-primary mb-2 text-lg">Artisanal Craftsmanship</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">Hand-selected materials worked by master craftspeople, ensuring each piece possesses unique character and exceptional quality.</p>
+</div>
+</div>
+<!-- Advantage Item -->
+<div class="flex gap-4 items-start">
+<div class="p-3 rounded-full bg-surface-container flex-shrink-0 text-secondary">
+<span class="material-symbols-outlined text-[24px]" style="font-variation-settings: 'FILL' 1, 'wght' 300;">eco</span>
+</div>
+<div>
+<h3 class="font-label-md text-label-md text-primary mb-2 text-lg">Sustainable Sourcing</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">Materials procured with profound respect for the environment, prioritizing longevity, ethical practices, and natural finishes.</p>
+</div>
+</div>
+<!-- Advantage Item -->
+<div class="flex gap-4 items-start">
+<div class="p-3 rounded-full bg-surface-container flex-shrink-0 text-secondary">
+<span class="material-symbols-outlined text-[24px]" style="font-variation-settings: 'FILL' 1, 'wght' 300;">self_improvement</span>
+</div>
+<div>
+<h3 class="font-label-md text-label-md text-primary mb-2 text-lg">Emotional Resonance</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">Spaces meticulously designed to evoke a profound sense of calm, warmth, and grounded presence in daily life.</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer (Shared Component) -->
+<footer class="w-full py-section-padding bg-surface-container-low border-t border-outline-variant/20">
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-gutter max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop">
+<div class="mb-6 md:mb-0">
+<span class="font-headline-sm text-headline-sm text-primary dark:text-inverse-primary tracking-tight">Aura Studio</span>
+</div>
+<div class="flex flex-col gap-4">
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors" href="#">Catalogue</a>
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors" href="#">Setups</a>
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors" href="#">Quote List</a>
+</div>
+<div class="flex flex-col gap-4 mt-4 md:mt-0">
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors" href="#">Privacy Policy</a>
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors" href="#">Terms of Service</a>
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors" href="#">Sustainability</a>
+</div>
+<div class="mt-8 lg:mt-0 col-span-1 md:col-span-2 lg:col-span-4">
+<p class="font-body-md text-body-md text-on-surface-variant opacity-80 pt-8 border-t border-outline-variant/10">© 2024 Aura Studio. All rights reserved. Crafted for intentional spaces.</p>
+</div>
+</div>
+</footer>
+<!-- Interactive Scripts -->
+<script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const menuTrigger = document.getElementById('menu-trigger');
+            const menuClose = document.getElementById('menu-close');
+            const mobileMenu = document.getElementById('mobile-menu');
+            const body = document.body;
+
+            function openMenu() {
+                mobileMenu.classList.remove('hidden');
+                // Small delay to allow display:block to apply before animating opacity
+                setTimeout(() => {
+                    mobileMenu.classList.remove('opacity-0');
+                    mobileMenu.classList.add('opacity-100');
+                }, 10);
+                body.style.overflow = 'hidden'; // Prevent scrolling on body
+            }
+
+            function closeMenu() {
+                mobileMenu.classList.remove('opacity-100');
+                mobileMenu.classList.add('opacity-0');
+                setTimeout(() => {
+                    mobileMenu.classList.add('hidden');
+                }, 300); // Match transition duration
+                body.style.overflow = '';
+            }
+
+            menuTrigger.addEventListener('click', openMenu);
+            menuClose.addEventListener('click', closeMenu);
+        });
+    </script>
+</body></html>

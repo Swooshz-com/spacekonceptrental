@@ -1,0 +1,448 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Aura Studio - Intentional Spaces</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,200..900;1,7..72,200..900&amp;family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-surface": "#1e1b18",
+                    "inverse-surface": "#34302c",
+                    "secondary-fixed": "#ffdbc8",
+                    "surface-bright": "#fff8f5",
+                    "surface-tint": "#62612e",
+                    "secondary-fixed-dim": "#f7b994",
+                    "on-tertiary-fixed-variant": "#49473d",
+                    "outline-variant": "#cac7b7",
+                    "on-surface-variant": "#48473b",
+                    "tertiary-fixed-dim": "#cbc6ba",
+                    "surface-variant": "#e9e1dc",
+                    "error": "#ba1a1a",
+                    "on-primary-container": "#dad899",
+                    "secondary-container": "#fdbf99",
+                    "on-tertiary-container": "#dad5c8",
+                    "surface-container-highest": "#e9e1dc",
+                    "on-secondary-container": "#794b2e",
+                    "surface": "#fff8f5",
+                    "on-tertiary-fixed": "#1d1c14",
+                    "inverse-on-surface": "#f8efea",
+                    "primary-fixed-dim": "#ccc98d",
+                    "surface-container-low": "#fbf2ed",
+                    "on-primary-fixed-variant": "#4a4919",
+                    "on-primary": "#ffffff",
+                    "surface-container-high": "#efe6e2",
+                    "on-error": "#ffffff",
+                    "error-container": "#ffdad6",
+                    "on-tertiary": "#ffffff",
+                    "surface-container-lowest": "#ffffff",
+                    "tertiary": "#47453b",
+                    "primary-fixed": "#e8e6a6",
+                    "tertiary-fixed": "#e8e2d5",
+                    "secondary": "#825335",
+                    "primary": "#474617",
+                    "on-background": "#1e1b18",
+                    "on-primary-fixed": "#1d1d00",
+                    "background": "#fff8f5",
+                    "tertiary-container": "#5f5c52",
+                    "on-secondary-fixed-variant": "#673c20",
+                    "outline": "#79776a",
+                    "surface-dim": "#e1d8d4",
+                    "surface-container": "#f5ece7",
+                    "inverse-primary": "#ccc98d",
+                    "on-secondary-fixed": "#321300",
+                    "on-secondary": "#ffffff",
+                    "on-error-container": "#93000a",
+                    "primary-container": "#5f5e2c"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "unit": "8px",
+                    "section-padding": "96px",
+                    "margin-mobile": "16px",
+                    "gutter": "24px",
+                    "container-max": "1200px",
+                    "margin-desktop": "48px"
+            },
+            "fontFamily": {
+                    "label-md": [
+                            "Plus Jakarta Sans"
+                    ],
+                    "headline-sm": [
+                            "Literata"
+                    ],
+                    "headline-md": [
+                            "Literata"
+                    ],
+                    "display-lg": [
+                            "Literata"
+                    ],
+                    "display-lg-mobile": [
+                            "Literata"
+                    ],
+                    "body-lg": [
+                            "Plus Jakarta Sans"
+                    ],
+                    "body-md": [
+                            "Plus Jakarta Sans"
+                    ]
+            },
+            "fontSize": {
+                    "label-md": [
+                            "14px",
+                            {
+                                    "lineHeight": "20px",
+                                    "letterSpacing": "0.05em",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "headline-sm": [
+                            "24px",
+                            {
+                                    "lineHeight": "32px",
+                                    "fontWeight": "500"
+                            }
+                    ],
+                    "headline-md": [
+                            "32px",
+                            {
+                                    "lineHeight": "40px",
+                                    "fontWeight": "500"
+                            }
+                    ],
+                    "display-lg": [
+                            "48px",
+                            {
+                                    "lineHeight": "56px",
+                                    "letterSpacing": "-0.02em",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "display-lg-mobile": [
+                            "36px",
+                            {
+                                    "lineHeight": "44px",
+                                    "letterSpacing": "-0.01em",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "body-lg": [
+                            "18px",
+                            {
+                                    "lineHeight": "28px",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "body-md": [
+                            "16px",
+                            {
+                                    "lineHeight": "24px",
+                                    "fontWeight": "400"
+                            }
+                    ]
+            }
+          },
+        }
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        /* Film grain texture */
+        .noise-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 9999;
+            opacity: 0.04;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+        }
+        /* Custom subtle shadow for images to create depth without muddiness */
+        .ambient-shadow {
+            box-shadow: 0 24px 48px -12px rgba(71, 70, 23, 0.08); /* Primary color tinted shadow */
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface font-body-md text-body-md overflow-x-hidden relative min-h-screen flex flex-col antialiased">
+<div class="noise-overlay"></div>
+<!-- TopNavBar Component -->
+<nav class="fixed top-0 w-full z-50 bg-surface/80 dark:bg-surface/80 backdrop-blur-md border-b border-outline-variant/30 dark:border-outline-variant/10 shadow-sm shadow-primary/5">
+<div class="flex justify-between items-center max-w-container-max mx-auto px-margin-desktop h-20">
+<!-- Brand -->
+<div class="font-headline-sm text-headline-sm font-medium text-primary dark:text-inverse-primary tracking-tight">
+                Aura Studio
+            </div>
+<!-- Navigation Links -->
+<div class="hidden md:flex items-center space-x-8 font-body-md text-body-md">
+<a class="text-on-surface-variant dark:text-surface-variant hover:text-primary transition-colors dark:hover:text-inverse-primary transition-all duration-300" href="#">Catalogue</a>
+<a class="text-on-surface-variant dark:text-surface-variant hover:text-primary transition-colors dark:hover:text-inverse-primary transition-all duration-300" href="#">Setups</a>
+<a class="text-on-surface-variant dark:text-surface-variant hover:text-primary transition-colors dark:hover:text-inverse-primary transition-all duration-300" href="#">Our Story</a>
+</div>
+<!-- Actions -->
+<div class="flex items-center space-x-6">
+<!-- Search Icon (on right as per spec) -->
+<button aria-label="Search" class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="search">search</span>
+</button>
+<a class="hidden lg:block text-on-surface-variant hover:text-primary transition-colors font-label-md text-label-md" href="#">Quote List</a>
+<a class="bg-primary text-on-primary font-label-md text-label-md px-6 py-2.5 rounded hover:opacity-90 transition-opacity Active: opacity-80 scale-[0.99] transition-transform" href="#">
+                    Request Quote
+                </a>
+</div>
+</div>
+</nav>
+<!-- Main Content -->
+<main class="flex-grow pt-[140px]">
+<!-- Hero Section (Asymmetric) -->
+<section class="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-section-padding">
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter items-center">
+<!-- Text Content -->
+<div class="lg:col-span-5 z-10 lg:pr-12">
+<h1 class="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg text-primary mb-8 text-balance">
+                        Crafting spaces with intent and purpose.
+                    </h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant mb-10 text-pretty max-w-md">
+                        Curated artisanal rentals for events that demand a sophisticated, tactile aesthetic. We provide the pieces; you provide the moment.
+                    </p>
+<div class="flex flex-wrap gap-4">
+<button class="bg-primary text-on-primary font-label-md text-label-md px-8 py-3 rounded hover:opacity-90 transition-opacity">
+                            Request Quote
+                        </button>
+<button class="border-[1.5px] border-primary text-primary font-label-md text-label-md px-8 py-3 rounded hover:bg-primary/5 transition-colors">
+                            Browse Catalogue
+                        </button>
+</div>
+</div>
+<!-- Hero Image -->
+<div class="lg:col-span-7 relative mt-12 lg:mt-0 lg:-mr-12">
+<div class="aspect-[4/3] w-full overflow-hidden rounded ambient-shadow relative">
+<img class="w-full h-full object-cover" data-alt="A serene, high-end editorial photograph of a minimalist living space bathed in soft, natural morning light. The setting features tactile, organic materials with warm off-white textured walls and curated artisanal furniture pieces. Accents of deep olive green are present in the form of a ceramic vase and subtle textiles. The mood is calm, luxurious, and grounded, evoking a sense of intentional living. The lighting highlights the fine grain of the wooden floor and the smooth curves of a modern sculptural chair." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAo8pMW_kq71H1emVeG7w5b-K1zH7eRTHZPfTNVKYLMBZukvueXAg3DkkiXv-4Gvg2S2WGL-BsZsQPFr72483yMsktf6Wyakoskc_mgIuDnf_B4pgcBOK8t8R4JBtg5CzbvQ0vfJ9o0LMAYkLznzX-_m8bz7nks-E_pRkdEeoGumO_8b1cHFY8Y7KsdzjnepU7Z60fFlT1qRyFAtZTItxX5C4F8L7cafvBXWxeIpUK8i2LEHkNcEtbS9Vh4Ao2_qeqE0QRHTqJFklfG">
+</div>
+<!-- Decorative element -->
+<div class="absolute -bottom-8 -left-8 w-48 h-48 bg-surface-container-highest rounded-full blur-3xl opacity-50 z-[-1]"></div>
+</div>
+</div>
+</section>
+<!-- The Aura Advantage Section -->
+<section class="bg-surface-container-low py-section-padding mt-24">
+<div class="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop">
+<div class="grid grid-cols-1 lg:grid-cols-4 gap-gutter mb-16">
+<div class="lg:col-span-1">
+<h2 class="font-headline-md text-headline-md text-primary">The Aura Advantage</h2>
+</div>
+<div class="lg:col-span-3 lg:pl-12">
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl">
+                            Moving away from automation, we believe in manual, curated human interaction to ensure every detail of your space resonates emotionally.
+                        </p>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-12 lg:gap-gutter pt-8">
+<!-- Feature 1 -->
+<div class="flex flex-col">
+<span class="material-symbols-outlined text-primary mb-6 text-4xl" data-icon="chair">chair</span>
+<h3 class="font-headline-sm text-headline-sm text-on-surface mb-3">Curated Selection</h3>
+<p class="text-on-surface-variant font-body-md text-body-md leading-relaxed">
+                            Every piece in our catalogue is hand-selected for its artisanal craftsmanship, sustainable materials, and ability to ground a room.
+                        </p>
+</div>
+<!-- Feature 2 -->
+<div class="flex flex-col md:mt-12">
+<span class="material-symbols-outlined text-primary mb-6 text-4xl" data-icon="view_cozy">view_cozy</span>
+<h3 class="font-headline-sm text-headline-sm text-on-surface mb-3">Flexible Setups</h3>
+<p class="text-on-surface-variant font-body-md text-body-md leading-relaxed">
+                            From intimate gatherings to large-scale editorial shoots, our collection adapts to your specific spatial requirements and aesthetic vision.
+                        </p>
+</div>
+<!-- Feature 3 -->
+<div class="flex flex-col md:mt-24">
+<span class="material-symbols-outlined text-primary mb-6 text-4xl" data-icon="handshake">handshake</span>
+<h3 class="font-headline-sm text-headline-sm text-on-surface mb-3">Team Follow-up</h3>
+<p class="text-on-surface-variant font-body-md text-body-md leading-relaxed">
+                            A dedicated design consultant reviews every quote manually, ensuring inventory cohesion and offering tailored logistical support.
+                        </p>
+</div>
+</div>
+</div>
+</section>
+<!-- Process Section -->
+<section class="py-section-padding max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop">
+<h2 class="font-headline-md text-headline-md text-primary text-center mb-20">How It Works</h2>
+<div class="grid grid-cols-1 md:grid-cols-3 relative">
+<!-- Connecting Line (Desktop) -->
+<div class="hidden md:block absolute top-6 left-[16%] right-[16%] h-px bg-outline-variant/50"></div>
+<!-- Step 1 -->
+<div class="flex flex-col items-center text-center relative z-10 px-6 mb-12 md:mb-0">
+<div class="w-12 h-12 rounded-full bg-surface-container-highest flex items-center justify-center text-primary font-headline-sm text-headline-sm mb-6 shadow-sm shadow-primary/5">1</div>
+<h4 class="font-label-md text-label-md text-on-surface uppercase tracking-widest mb-4">Browse</h4>
+<p class="text-on-surface-variant font-body-md text-body-md text-balance">
+                        Explore our tactile collection of individual pieces and prebuilt event stacks.
+                    </p>
+</div>
+<!-- Step 2 -->
+<div class="flex flex-col items-center text-center relative z-10 px-6 mb-12 md:mb-0">
+<div class="w-12 h-12 rounded-full bg-surface-container-highest flex items-center justify-center text-primary font-headline-sm text-headline-sm mb-6 shadow-sm shadow-primary/5">2</div>
+<h4 class="font-label-md text-label-md text-on-surface uppercase tracking-widest mb-4">Add to Quote</h4>
+<p class="text-on-surface-variant font-body-md text-body-md text-balance">
+                        Compile your desired items into a digital list. No immediate payment or commitment required.
+                    </p>
+</div>
+<!-- Step 3 -->
+<div class="flex flex-col items-center text-center relative z-10 px-6">
+<div class="w-12 h-12 rounded-full bg-surface-container-highest flex items-center justify-center text-primary font-headline-sm text-headline-sm mb-6 shadow-sm shadow-primary/5">3</div>
+<h4 class="font-label-md text-label-md text-on-surface uppercase tracking-widest mb-4">Manual Review</h4>
+<p class="text-on-surface-variant font-body-md text-body-md text-balance">
+                        Our team reviews your request for availability and aesthetic flow, then reaches out personally to finalize details.
+                    </p>
+</div>
+</div>
+</section>
+<!-- Catalogue Teaser (Bento Grid) -->
+<section class="py-section-padding bg-surface-container">
+<div class="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop">
+<div class="flex justify-between items-end mb-12">
+<h2 class="font-headline-md text-headline-md text-primary">Featured Pieces</h2>
+<a class="text-primary hover:text-secondary transition-colors font-label-md text-label-md flex items-center group" href="#">
+                        View Catalogue 
+                        <span class="material-symbols-outlined ml-2 group-hover:translate-x-1 transition-transform" data-icon="arrow_forward">arrow_forward</span>
+</a>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-12 gap-gutter auto-rows-[300px]">
+<!-- Bento Item 1 (Large) -->
+<div class="md:col-span-8 row-span-2 relative rounded overflow-hidden group ambient-shadow cursor-pointer">
+<img class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" data-alt="A wide, highly textured editorial shot of an artisanal curved sofa upholstered in a coarse, natural linen fabric. The sofa sits in a spacious room with warm, off-white plaster walls and a polished concrete floor. Gentle, diffused sunlight streams from an unseen window, highlighting the organic shape of the furniture. In the foreground, out of focus, is the edge of a raw wooden side table. The palette relies on earthy neutrals and a subtle olive undertone." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC6PBOyoNf6UYell0u9bH6yAMZYhuWBCXkbJjRveod2prqiJBNV-dKSCG2HXmgarjDfeWXRdSWv2ywjc-P_ZRiFNbNql31_6GfwJ4KodmVL-jwSfuV1tcn7pZI20ossbH22l9bMBSyuykAmibY5T0LIH5ZDkL27uJtMejFrOCUEtyjdbytaTaY91g5glGfZ-9YuvFuiWlAi2kiwI7GA2JFXZZTdwTG0Q1a-cS66WEA0RMQzSBGVPkPZPR1cozacOIARxP6KSvKzQ1Rh">
+<div class="absolute inset-0 bg-gradient-to-t from-on-surface/80 via-transparent to-transparent opacity-80"></div>
+<div class="absolute bottom-0 left-0 p-8 w-full flex justify-between items-end">
+<div>
+<span class="font-label-md text-label-md text-surface-variant uppercase tracking-widest block mb-2">Seating</span>
+<h3 class="font-headline-sm text-headline-sm text-surface">The Petra Curved Sofa</h3>
+</div>
+<button class="w-10 h-10 rounded-full bg-surface/20 backdrop-blur flex items-center justify-center text-surface hover:bg-surface hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="add">add</span>
+</button>
+</div>
+</div>
+<!-- Bento Item 2 -->
+<div class="md:col-span-4 row-span-1 relative rounded overflow-hidden group ambient-shadow cursor-pointer">
+<img class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" data-alt="A close-up, top-down editorial photograph of a rustic, handcrafted wooden dining chair paired with a minimalist ceramic vase. The lighting is dramatic yet soft, creating strong but diffused shadows on the warm off-white surface beneath. The wood grain of the chair is deeply textured, showing signs of artisanal carving. The overall mood is grounded, focusing purely on material and form without distraction." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDSFBxhxj2Jyw-FPbKeKLw91sFyGVuYGhNA7IrfqklLimLOedyDxi0dY8Bjtvi9ZaHdDSor_DRc01F7U-XBH_3LqfVEpp89IYd8Nthi7yf8w4gZIXwKV00F0wE_MEtyUCZAQ86A4i15R6FAmb8HMnYSbYU_7K-vskXEo9wqnKBu89YQBT6-_Bjvfr5isovd3GHRxMjLOm2aApJtgSGkal03HohT2u17DUpesIIyyZBDcHgKrL9ee1b_av-Q8l3H4Misd8ZX_d0UD8V2">
+<div class="absolute inset-0 bg-gradient-to-t from-on-surface/70 via-transparent to-transparent opacity-80"></div>
+<div class="absolute bottom-0 left-0 p-6 w-full flex justify-between items-end">
+<div>
+<h3 class="font-headline-sm text-headline-sm text-surface">Oak Dining Chair</h3>
+</div>
+<button class="w-8 h-8 rounded-full bg-surface/20 backdrop-blur flex items-center justify-center text-surface hover:bg-surface hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-sm" data-icon="add">add</span>
+</button>
+</div>
+</div>
+<!-- Bento Item 3 -->
+<div class="md:col-span-4 row-span-1 relative rounded overflow-hidden group ambient-shadow cursor-pointer">
+<img class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" data-alt="An editorial still life photograph featuring a cluster of textured ceramic vases in varying shades of olive green and muted terracotta. They rest on a raw stone plinth against a seamless off-white background. The lighting is soft and directional, creating a calm, gallery-like atmosphere. The composition emphasizes tactility, minimalism, and intentional design." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB8K-dJ9ZcrkQlnTYoVP7CKDy6T3fbzvPZ2-lv9GKEl2O-DN2ojMemqFcgqsv9bj5ZyODOvsydP_a3LQ8DV_RRAPX7LbKZVtZeDdbmMMhY53EKX4qoCK1lZLkALLeWLmgHzNR8oLU7VnIWbVXbeBhljm-tYhQKaCO3bC3saim6FkoMR0C14wE6da4mGedLijXAb6Dv0xKvcfnk_OtTwhb_NTuVI_HLW8e2r4XzTBQzcExDQfJIu5GrWox-P2YMAmvWomWm9jWQk8zKf">
+<div class="absolute inset-0 bg-gradient-to-t from-on-surface/70 via-transparent to-transparent opacity-80"></div>
+<div class="absolute bottom-0 left-0 p-6 w-full flex justify-between items-end">
+<div>
+<h3 class="font-headline-sm text-headline-sm text-surface">Ceramic Accents</h3>
+</div>
+<button class="w-8 h-8 rounded-full bg-surface/20 backdrop-blur flex items-center justify-center text-surface hover:bg-surface hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-sm" data-icon="add">add</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer Component -->
+<footer class="w-full py-section-padding bg-surface-container-low dark:bg-inverse-surface border-t border-outline-variant/20">
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-gutter max-w-container-max mx-auto px-margin-desktop">
+<!-- Brand & Copyright -->
+<div class="lg:col-span-1 flex flex-col justify-between h-full">
+<div class="font-headline-sm text-headline-sm text-primary dark:text-inverse-primary mb-6">
+                    Aura Studio
+                </div>
+<p class="font-body-md text-body-md text-on-surface-variant dark:text-inverse-on-surface mt-auto">
+                    © 2024 Aura Studio. All rights reserved. Crafted for intentional spaces.
+                </p>
+</div>
+<!-- Links Column 1 -->
+<div class="flex flex-col space-y-4">
+<h4 class="font-label-md text-label-md text-on-surface dark:text-inverse-on-surface uppercase tracking-widest mb-2">Explore</h4>
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary dark:text-inverse-on-surface dark:hover:text-inverse-primary transition-colors" href="#">Catalogue</a>
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary dark:text-inverse-on-surface dark:hover:text-inverse-primary transition-colors" href="#">Setups</a>
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary dark:text-inverse-on-surface dark:hover:text-inverse-primary transition-colors" href="#">Quote List</a>
+</div>
+<!-- Links Column 2 -->
+<div class="flex flex-col space-y-4">
+<h4 class="font-label-md text-label-md text-on-surface dark:text-inverse-on-surface uppercase tracking-widest mb-2">Legal</h4>
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary dark:text-inverse-on-surface dark:hover:text-inverse-primary transition-colors" href="#">Privacy Policy</a>
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary dark:text-inverse-on-surface dark:hover:text-inverse-primary transition-colors" href="#">Terms of Service</a>
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary dark:text-inverse-on-surface dark:hover:text-inverse-primary transition-colors" href="#">Sustainability</a>
+</div>
+<!-- Newsletter / Contact Placeholder -->
+<div class="flex flex-col">
+<h4 class="font-label-md text-label-md text-on-surface dark:text-inverse-on-surface uppercase tracking-widest mb-4">Connect</h4>
+<p class="font-body-md text-body-md text-on-surface-variant dark:text-inverse-on-surface mb-6">
+                    Inquire about custom setups or design consultations.
+                </p>
+<a class="inline-flex items-center text-primary dark:text-inverse-primary font-label-md text-label-md hover:opacity-80 transition-opacity" href="#">
+                    hello@aurastudio.com <span class="material-symbols-outlined ml-2 text-sm" data-icon="arrow_outward">arrow_outward</span>
+</a>
+</div>
+</div>
+</footer>
+
+
+<div id="studio-assistant-widget" class="fixed bottom-6 right-6 z-50 w-80 md:w-96 bg-surface border border-outline-variant/30 rounded-xl shadow-2xl overflow-hidden flex flex-col animate-in fade-in slide-in-from-bottom-4 duration-300">
+    <!-- Header -->
+    <div class="bg-primary-container p-4 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-on-primary font-label-md text-[10px]">SA</div>
+            <span class="font-headline-sm text-body-md font-medium text-on-primary-container">Studio Assistant</span>
+        </div>
+        <button class="text-on-primary-container/70 hover:text-on-primary-container transition-colors">
+            <span class="material-symbols-outlined text-body-md">close</span>
+        </button>
+    </div>
+    
+    <!-- Chat Area -->
+    <div class="p-4 h-80 overflow-y-auto bg-surface-container-lowest flex flex-col gap-4">
+        <div class="flex flex-col gap-1 max-w-[85%]">
+            <div class="bg-surface-container-high p-3 rounded-lg rounded-tl-none text-on-surface font-body-md text-sm">
+                Hi! I can help with furniture listing questions and enquiry details. What event are you planning?
+            </div>
+            <span class="text-[10px] text-on-surface-variant uppercase tracking-widest ml-1">Just now</span>
+        </div>
+        
+        <!-- Quick Actions -->
+        <div class="flex flex-wrap gap-2 mt-2">
+            <button class="px-3 py-1.5 rounded-full border border-primary text-primary font-label-md text-xs hover:bg-primary/5 transition-colors">View Sofas</button>
+            <button class="px-3 py-1.5 rounded-full border border-primary text-primary font-label-md text-xs hover:bg-primary/5 transition-colors">Quote details</button>
+            <button class="px-3 py-1.5 rounded-full border border-primary text-primary font-label-md text-xs hover:bg-primary/5 transition-colors">Setup notes</button>
+        </div>
+    </div>
+
+    <!-- Input Area -->
+    <div class="p-4 bg-surface border-t border-outline-variant/20">
+        <div class="relative flex items-center">
+            <input type="text" placeholder="Type your message..." class="w-full bg-surface-container-low border-none rounded-full py-2.5 pl-4 pr-12 text-sm focus:ring-1 focus:ring-primary text-on-surface placeholder:text-on-surface-variant/50">
+            <button class="absolute right-2 w-8 h-8 bg-primary text-on-primary rounded-full flex items-center justify-center hover:opacity-90 transition-opacity">
+                <span class="material-symbols-outlined text-sm">send</span>
+            </button>
+        </div>
+    </div>
+</div></body></html>

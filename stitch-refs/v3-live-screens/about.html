@@ -1,0 +1,261 @@
+<!DOCTYPE html><html class="light" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Our Story - Aura Studio</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,200..900;1,7..72,200..900&amp;family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-surface": "#1e1b18",
+                        "inverse-surface": "#34302c",
+                        "secondary-fixed": "#ffdbc8",
+                        "surface-bright": "#fff8f5",
+                        "surface-tint": "#62612e",
+                        "secondary-fixed-dim": "#f7b994",
+                        "on-tertiary-fixed-variant": "#49473d",
+                        "outline-variant": "#cac7b7",
+                        "on-surface-variant": "#48473b",
+                        "tertiary-fixed-dim": "#cbc6ba",
+                        "surface-variant": "#e9e1dc",
+                        "error": "#ba1a1a",
+                        "on-primary-container": "#dad899",
+                        "secondary-container": "#fdbf99",
+                        "on-tertiary-container": "#dad5c8",
+                        "surface-container-highest": "#e9e1dc",
+                        "on-secondary-container": "#794b2e",
+                        "surface": "#fff8f5",
+                        "on-tertiary-fixed": "#1d1c14",
+                        "inverse-on-surface": "#f8efea",
+                        "primary-fixed-dim": "#ccc98d",
+                        "surface-container-low": "#fbf2ed",
+                        "on-primary-fixed-variant": "#4a4919",
+                        "on-primary": "#ffffff",
+                        "surface-container-high": "#efe6e2",
+                        "on-error": "#ffffff",
+                        "error-container": "#ffdad6",
+                        "on-tertiary": "#ffffff",
+                        "surface-container-lowest": "#ffffff",
+                        "tertiary": "#47453b",
+                        "primary-fixed": "#e8e6a6",
+                        "tertiary-fixed": "#e8e2d5",
+                        "secondary": "#825335",
+                        "primary": "#474617",
+                        "on-background": "#1e1b18",
+                        "on-primary-fixed": "#1d1d00",
+                        "background": "#fff8f5",
+                        "tertiary-container": "#5f5c52",
+                        "on-secondary-fixed-variant": "#673c20",
+                        "outline": "#79776a",
+                        "surface-dim": "#e1d8d4",
+                        "surface-container": "#f5ece7",
+                        "inverse-primary": "#ccc98d",
+                        "on-secondary-fixed": "#321300",
+                        "on-secondary": "#ffffff",
+                        "on-error-container": "#93000a",
+                        "primary-container": "#5f5e2c"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "unit": "8px",
+                        "section-padding": "96px",
+                        "margin-mobile": "16px",
+                        "gutter": "24px",
+                        "container-max": "1200px",
+                        "margin-desktop": "48px"
+                    },
+                    "fontFamily": {
+                        "label-md": ["Plus Jakarta Sans"],
+                        "headline-sm": ["Literata"],
+                        "headline-md": ["Literata"],
+                        "display-lg": ["Literata"],
+                        "display-lg-mobile": ["Literata"],
+                        "body-lg": ["Plus Jakarta Sans"],
+                        "body-md": ["Plus Jakarta Sans"]
+                    },
+                    "fontSize": {
+                        "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "headline-sm": ["24px", { "lineHeight": "32px", "fontWeight": "500" }],
+                        "headline-md": ["32px", { "lineHeight": "40px", "fontWeight": "500" }],
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "display-lg-mobile": ["36px", { "lineHeight": "44px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .texture-overlay {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            opacity: 0.05;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+        }
+        .ambient-shadow {
+            box-shadow: 0 24px 48px -12px rgba(95, 94, 44, 0.08);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md relative antialiased selection:bg-primary-container selection:text-on-primary-container min-h-screen flex flex-col">
+<div class="texture-overlay z-0 fixed"></div>
+<!-- TopNavBar -->
+<nav class="fixed top-0 w-full z-50 bg-surface/80 border-b border-outline-variant/30 dark:border-outline-variant/10 shadow-sm shadow-primary/5 backdrop-blur-md">
+<div class="flex justify-between items-center max-w-container-max mx-auto px-margin-desktop h-20">
+<a class="font-headline-sm text-headline-sm font-medium text-primary dark:text-inverse-primary tracking-tight" href="#">Aura Studio</a>
+<div class="hidden md:flex items-center gap-gutter">
+<a class="text-on-surface-variant hover:text-primary transition-colors font-body-md text-body-md" href="#">Catalogue</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors font-body-md text-body-md" href="#">Setups</a>
+<a class="text-primary dark:text-inverse-primary font-semibold border-b-2 border-primary pb-1 font-body-md text-body-md active opacity-80 scale-[0.99] transition-transform" href="#">Our Story</a>
+</div>
+<div class="flex items-center gap-4">
+<button class="hidden md:block font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors">Quote List</button>
+<button class="bg-primary text-on-primary font-label-md text-label-md px-6 py-3 rounded hover:opacity-90 transition-opacity">Request Quote</button>
+</div>
+</div>
+</nav>
+<main class="flex-grow pt-32 pb-section-padding z-10 relative">
+<!-- Hero Section -->
+<section class="max-w-container-max mx-auto px-margin-desktop mb-section-padding">
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter items-center">
+<div class="lg:col-span-5 flex flex-col gap-8">
+<h1 class="font-display-lg text-display-lg text-primary">Intentional Spaces, Curated for You.</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-md">We believe that the furniture you choose shapes the experience of your event. Aura Studio offers a meticulously curated collection designed to elevate any environment, from intimate gatherings to grand productions.</p>
+</div>
+<div class="lg:col-span-7 relative h-[600px] w-full rounded-xl overflow-hidden ambient-shadow">
+<img class="w-full h-full object-cover" data-alt="A wide, beautifully composed shot of a high-end event space, featuring an elegant lounge area with an organic-shaped olive green velvet sofa, two ribbed cream armchairs, and a low travertine coffee table. The setting is a bright, minimalist gallery with polished concrete floors and large arched windows pouring in soft natural daylight. The overall aesthetic is tactile minimalism, emphasizing warm earth tones, sophisticated materials, and a serene, luxurious atmosphere." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDTwBYKOGU1uPW024D0gaCqQqDUN5TWErOTWqHtPVeBZLwGhiTVjb2PrTEW02V3QdS1YYT80lAtzfZf7HqUUc6N5TkOWLhwdDh5OjbYB3Ig5WZPtL-VpfvZKamJD_XWSubVYVEUhDLCblDqD2XFnaohEy5ssQpdIqmypGCDBAZ3WQlaJtmX_eB2nG5nhj_gA3SqMzmX_hOnNMG-NoN0k9l_EWd74oOB1EzwlzbgIps6E9WTHdeV-pPArecerWnwA7EjLWh67mDBdZuR">
+<div class="absolute inset-0 bg-surface/10 mix-blend-overlay"></div>
+</div>
+</div>
+</section>
+<!-- Catalogue vs Setups (Bento Flow) -->
+<section class="max-w-container-max mx-auto px-margin-desktop mb-section-padding">
+<div class="mb-16 text-center max-w-2xl mx-auto">
+<h2 class="font-headline-md text-headline-md text-primary mb-4">How We Work</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant">Two paths to perfection. Whether you know exactly what you need or want a complete vision delivered, we provide the tools to make it happen.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-gutter">
+<!-- Catalogue -->
+<div class="bg-surface-container-low rounded-xl overflow-hidden ambient-shadow flex flex-col group cursor-pointer transition-transform duration-300 hover:-translate-y-1">
+<div class="h-80 relative overflow-hidden">
+<img class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" data-alt="A close-up, highly detailed shot of a single, beautifully crafted mid-century modern wooden armchair with woven cane backrest and cream linen seating. It sits alone against a textured off-white plaster wall in soft, diffused lighting that highlights the wood grain and fabric texture. The image evokes artisanal craftsmanship and intentional design, fitting a high-end furniture catalogue." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCvEE9nikwhXQw1N4NVK28nAEnS5mrcsnewN3WaneR9j6TJ8N8wF8e27Ptm-Mg4BhbpDVkqfZQxYDV1h1vjPwQK5KKHotMYLdfaYtzyRkfw4v-XLY5IciAcwcXIxotT4B2yANCaQCVy-rfHyUzIi7rFSeUZHtYiTsiLDKD-QOI1BPESdL0wsCyh20hnnOyznPHPqjcIUGr9mXgq53nmCR5tgDGCVitxdF5lW-qwBOl-GNd_HPCz87kFNgjBJCzZPJ5ZJYehvif5PBsp">
+</div>
+<div class="p-8 flex flex-col gap-4 flex-grow">
+<h3 class="font-headline-sm text-headline-sm text-primary flex items-center gap-2">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">chair</span>
+                            Catalogue
+                        </h3>
+<p class="font-body-md text-body-md text-on-surface-variant flex-grow">Browse our extensive inventory of individual pieces. Perfect for planners and designers who want to handpick every detail and build their own unique environments from the ground up.</p>
+<button class="font-label-md text-label-md text-primary border border-primary px-6 py-3 rounded self-start hover:bg-primary/5 transition-colors mt-4">Explore Catalogue</button>
+</div>
+</div>
+<!-- Setups -->
+<div class="bg-surface-container-low rounded-xl overflow-hidden ambient-shadow flex flex-col group cursor-pointer transition-transform duration-300 hover:-translate-y-1">
+<div class="h-80 relative overflow-hidden">
+<img class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" data-alt="A meticulously arranged lounge setup in a bright, airy studio space. It features a cohesive collection of furniture: a modular bouclé sofa, a solid oak side table with a minimalist ceramic lamp, and a textured jute rug anchoring the space. The lighting is soft and directional, creating gentle shadows that emphasize depth and the 'tactile minimalism' aesthetic. The scene feels complete, cohesive, and ready for an exclusive event." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCTTZXVLLbDqpBXOpPwh4XP0S3xUaLngKpYj0Yjal-ge1RGS9Ja5nhQQkAkHapaudoVndp1ZIVm92kmhDxDjKALkT3RihdQk6E-EFDLZFayirnR8rW3d_pS-AB1_FsOZ9uK-OKG-HG-de8saWH7URxMBI5T3CuSUWE5j86s_X8w0pUYvoI9tNP-ewGFUr87CMWqhEDcWhC47XKWDDjWFVfn7iN66m_dwNCC7h1Cq_vF2Hr54AqAXLBzlYe5Ru0cDSE7IpQO8HT0Sdhn">
+</div>
+<div class="p-8 flex flex-col gap-4 flex-grow">
+<h3 class="font-headline-sm text-headline-sm text-primary flex items-center gap-2">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">view_cozy</span>
+                            Setups
+                        </h3>
+<p class="font-body-md text-body-md text-on-surface-variant flex-grow">Pre-designed, cohesive furniture collections curated by our in-house styling team. Ideal for those who want a guaranteed beautiful look with minimal planning effort.</p>
+<button class="font-label-md text-label-md text-primary border border-primary px-6 py-3 rounded self-start hover:bg-primary/5 transition-colors mt-4">View Setups</button>
+</div>
+</div>
+</div>
+</section>
+<!-- The Koncept Advantage -->
+<section class="bg-surface-container py-section-padding my-section-padding border-y border-outline-variant/20">
+<div class="max-w-container-max mx-auto px-margin-desktop">
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter items-center">
+<div class="lg:col-span-4 pr-8">
+<h2 class="font-display-lg text-display-lg text-primary mb-6">The Koncept Advantage</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant mb-8">We replace automated indifference with professional intimacy. Every quote is reviewed by a human expert to ensure your vision is realized flawlessly.</p>
+<button class="bg-primary text-on-primary font-label-md text-label-md px-6 py-3 rounded hover:opacity-90 transition-opacity">Request Quote</button>
+</div>
+<div class="lg:col-span-8 grid grid-cols-1 md:grid-cols-2 gap-8">
+<div class="flex flex-col gap-3">
+<div class="w-12 h-12 rounded-full bg-primary-container flex items-center justify-center text-on-primary-container mb-2">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">weekend</span>
+</div>
+<h4 class="font-headline-sm text-headline-sm text-on-surface">Curated Event-Ready Furniture</h4>
+<p class="font-body-md text-body-md text-on-surface-variant">Only the highest quality, impeccably maintained pieces make it into our inventory, ensuring a premium feel for every guest.</p>
+</div>
+<div class="flex flex-col gap-3">
+<div class="w-12 h-12 rounded-full bg-primary-container flex items-center justify-center text-on-primary-container mb-2">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">category</span>
+</div>
+<h4 class="font-headline-sm text-headline-sm text-on-surface">Individual Items or Prebuilt Setups</h4>
+<p class="font-body-md text-body-md text-on-surface-variant">Total flexibility to design from scratch or leverage our expertly styled vignettes for guaranteed cohesion.</p>
+</div>
+<div class="flex flex-col gap-3">
+<div class="w-12 h-12 rounded-full bg-primary-container flex items-center justify-center text-on-primary-container mb-2">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">request_quote</span>
+</div>
+<h4 class="font-headline-sm text-headline-sm text-on-surface">Quote-Led Rental Planning</h4>
+<p class="font-body-md text-body-md text-on-surface-variant">Build your wishlist without commitment. We review your needs, check availability, and provide comprehensive pricing.</p>
+</div>
+<div class="flex flex-col gap-3">
+<div class="w-12 h-12 rounded-full bg-primary-container flex items-center justify-center text-on-primary-container mb-2">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">handshake</span>
+</div>
+<h4 class="font-headline-sm text-headline-sm text-on-surface">Manual Team Follow-Up</h4>
+<p class="font-body-md text-body-md text-on-surface-variant">A dedicated design consultant reviews every request, offering suggestions and ensuring logistical viability before finalizing.</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="w-full py-section-padding bg-surface-container-low border-t border-outline-variant/20 z-10 relative">
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-gutter max-w-container-max mx-auto px-margin-desktop">
+<div class="flex flex-col gap-4">
+<span class="font-headline-sm text-headline-sm text-primary dark:text-inverse-primary">Aura Studio</span>
+<p class="font-body-md text-body-md text-on-surface dark:text-inverse-on-surface opacity-80 mt-2">© 2024 Aura Studio. All rights reserved. Crafted for intentional spaces.</p>
+</div>
+<div class="flex flex-col gap-3">
+<span class="font-label-md text-label-md text-primary uppercase tracking-wider mb-2">Explore</span>
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors" href="#">Catalogue</a>
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors" href="#">Setups</a>
+</div>
+<div class="flex flex-col gap-3">
+<span class="font-label-md text-label-md text-primary uppercase tracking-wider mb-2">Services</span>
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors" href="#">Quote List</a>
+</div>
+<div class="flex flex-col gap-3">
+<span class="font-label-md text-label-md text-primary uppercase tracking-wider mb-2">Legal</span>
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors" href="#">Privacy Policy</a>
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors" href="#">Terms of Service</a>
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors" href="#">Sustainability</a>
+</div>
+</div>
+</footer>
+
+
+<!-- Floating Chatbot Widget -->
+<div class="fixed bottom-8 right-8 z-50 flex flex-col items-end gap-4">
+    <!-- Chat Bubble (Hidden by default, shown on hover/click in real app) -->
+    <div class="bg-surface-container-highest border border-outline-variant/30 p-4 rounded-xl shadow-lg max-w-xs mb-2 hidden md:block ambient-shadow">
+        <p class="text-body-md text-on-surface-variant">Hi there! Need help curating your event space? I'm here to assist.</p>
+    </div>
+    <!-- Chat Toggle Button -->
+    <button class="w-16 h-16 bg-primary text-on-primary rounded-full flex items-center justify-center shadow-lg hover:scale-105 transition-transform duration-300 group">
+        <span class="material-symbols-outlined text-3xl group-hover:rotate-12 transition-transform">chat_bubble</span>
+    </button>
+</div></body></html>

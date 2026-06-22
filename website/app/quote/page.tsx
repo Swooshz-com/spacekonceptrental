@@ -219,7 +219,7 @@ export default async function QuotePage({
         <div className="v3-page-header" style={{ textAlign: 'center', maxWidth: '800px', margin: '0 auto 48px' }}>
           <h1 style={{ fontSize: 'clamp(2.25rem, 5vw, 3rem)', color: 'var(--accent-dark)', marginBottom: '16px', letterSpacing: '-0.02em' }}>Request Quote</h1>
           <p style={{ fontSize: '1.125rem', color: 'var(--muted)' }}>
-            Submit your selection for a tailored proposal. Our studio team manually reviews every inquiry to ensure intentional curation and availability for your requested dates.
+            Submit your selection for a tailored proposal. Our studio team manually reviews every enquiry to confirm event fit, rental details, and next-step follow-up.
           </p>
         </div>
 

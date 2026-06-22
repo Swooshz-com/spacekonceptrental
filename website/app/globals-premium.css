@@ -149,6 +149,11 @@
   border-color: var(--muted);
 }
 
+.premium-button--full {
+  width: 100%;
+  display: flex;
+}
+
 /* Footer */
 .premium-footer {
   background: var(--surface-strong);
@@ -677,19 +682,25 @@
 }
 
 /* Mobile Menu */
+/* Hamburger: visible on mobile by default, hidden on desktop */
 .premium-hamburger {
-  display: none;
+  display: flex;
   background: none;
   border: none;
   color: var(--text);
   cursor: pointer;
   padding: 8px;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (min-width: 900px) {
+  .premium-hamburger {
+    display: none;
+  }
 }
 
 @media (max-width: 900px) {
-  .premium-hamburger {
-    display: flex;
-  }
   .premium-header__icon-actions .premium-header__icon-btn:not(.premium-hamburger) {
     display: none;
   }

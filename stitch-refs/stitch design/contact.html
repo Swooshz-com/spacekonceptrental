@@ -1,0 +1,369 @@
+<!DOCTYPE html><html class="light" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Contact - Aura Studio</title>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<!-- Google Fonts for Design System -->
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,200..900;1,7..72,200..900&amp;family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Configuration -->
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-surface": "#1e1b18",
+                    "inverse-surface": "#34302c",
+                    "secondary-fixed": "#ffdbc8",
+                    "surface-bright": "#fff8f5",
+                    "surface-tint": "#62612e",
+                    "secondary-fixed-dim": "#f7b994",
+                    "on-tertiary-fixed-variant": "#49473d",
+                    "outline-variant": "#cac7b7",
+                    "on-surface-variant": "#48473b",
+                    "tertiary-fixed-dim": "#cbc6ba",
+                    "surface-variant": "#e9e1dc",
+                    "error": "#ba1a1a",
+                    "on-primary-container": "#dad899",
+                    "secondary-container": "#fdbf99",
+                    "on-tertiary-container": "#dad5c8",
+                    "surface-container-highest": "#e9e1dc",
+                    "on-secondary-container": "#794b2e",
+                    "surface": "#fff8f5",
+                    "on-tertiary-fixed": "#1d1c14",
+                    "inverse-on-surface": "#f8efea",
+                    "primary-fixed-dim": "#ccc98d",
+                    "surface-container-low": "#fbf2ed",
+                    "on-primary-fixed-variant": "#4a4919",
+                    "on-primary": "#ffffff",
+                    "surface-container-high": "#efe6e2",
+                    "on-error": "#ffffff",
+                    "error-container": "#ffdad6",
+                    "on-tertiary": "#ffffff",
+                    "surface-container-lowest": "#ffffff",
+                    "tertiary": "#47453b",
+                    "primary-fixed": "#e8e6a6",
+                    "tertiary-fixed": "#e8e2d5",
+                    "secondary": "#825335",
+                    "primary": "#474617",
+                    "on-background": "#1e1b18",
+                    "on-primary-fixed": "#1d1d00",
+                    "background": "#fff8f5",
+                    "tertiary-container": "#5f5c52",
+                    "on-secondary-fixed-variant": "#673c20",
+                    "outline": "#79776a",
+                    "surface-dim": "#e1d8d4",
+                    "surface-container": "#f5ece7",
+                    "inverse-primary": "#ccc98d",
+                    "on-secondary-fixed": "#321300",
+                    "on-secondary": "#ffffff",
+                    "on-error-container": "#93000a",
+                    "primary-container": "#5f5e2c"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "unit": "8px",
+                    "section-padding": "96px",
+                    "margin-mobile": "16px",
+                    "gutter": "24px",
+                    "container-max": "1200px",
+                    "margin-desktop": "48px"
+            },
+            "fontFamily": {
+                    "label-md": [
+                            "Plus Jakarta Sans"
+                    ],
+                    "headline-sm": [
+                            "Literata"
+                    ],
+                    "headline-md": [
+                            "Literata"
+                    ],
+                    "display-lg": [
+                            "Literata"
+                    ],
+                    "display-lg-mobile": [
+                            "Literata"
+                    ],
+                    "body-lg": [
+                            "Plus Jakarta Sans"
+                    ],
+                    "body-md": [
+                            "Plus Jakarta Sans"
+                    ]
+            },
+            "fontSize": {
+                    "label-md": [
+                            "14px",
+                            {
+                                    "lineHeight": "20px",
+                                    "letterSpacing": "0.05em",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "headline-sm": [
+                            "24px",
+                            {
+                                    "lineHeight": "32px",
+                                    "fontWeight": "500"
+                            }
+                    ],
+                    "headline-md": [
+                            "32px",
+                            {
+                                    "lineHeight": "40px",
+                                    "fontWeight": "500"
+                            }
+                    ],
+                    "display-lg": [
+                            "48px",
+                            {
+                                    "lineHeight": "56px",
+                                    "letterSpacing": "-0.02em",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "display-lg-mobile": [
+                            "36px",
+                            {
+                                    "lineHeight": "44px",
+                                    "letterSpacing": "-0.01em",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "body-lg": [
+                            "18px",
+                            {
+                                    "lineHeight": "28px",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "body-md": [
+                            "16px",
+                            {
+                                    "lineHeight": "24px",
+                                    "fontWeight": "400"
+                            }
+                    ]
+            }
+          }
+        }
+      }
+    </script>
+<style>
+        /* Base styles to enforce tactile minimalism */
+        body {
+            background-color: theme('colors.background');
+            color: theme('colors.on-background');
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        
+        /* Subtle ambient noise overlay for tactile feel */
+        .tactile-noise {
+            position: relative;
+        }
+        .tactile-noise::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-image: repeating-radial-gradient(circle at 10% 20%, transparent 0, transparent 2px, rgba(95, 94, 44, 0.01) 3px, transparent 4px);
+            background-size: 8px 8px;
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.5;
+        }
+        
+        /* Hide scrollbar for cleaner bento areas if needed */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="font-body-md text-body-md min-h-screen flex flex-col tactile-noise">
+<!-- TopNavBar (Shared Component) -->
+<nav class="fixed top-0 w-full z-50 bg-surface/80 border-b border-outline-variant/30 dark:border-outline-variant/10 shadow-sm shadow-primary/5 backdrop-blur-md">
+<div class="flex justify-between items-center max-w-container-max mx-auto px-margin-desktop h-20">
+<!-- Brand Logo -->
+<a class="font-headline-sm text-headline-sm font-medium text-primary dark:text-inverse-primary tracking-tight" href="#">
+                Aura Studio
+            </a>
+<!-- Navigation Links -->
+<div class="hidden md:flex items-center gap-8 font-body-md text-body-md">
+<a class="text-on-surface-variant dark:text-surface-variant hover:text-primary transition-colors dark:hover:text-inverse-primary transition-all duration-300" href="#">Catalogue</a>
+<a class="text-on-surface-variant dark:text-surface-variant hover:text-primary transition-colors dark:hover:text-inverse-primary transition-all duration-300" href="#">Setups</a>
+<a class="text-on-surface-variant dark:text-surface-variant hover:text-primary transition-colors dark:hover:text-inverse-primary transition-all duration-300" href="#">Our Story</a>
+</div>
+<!-- Actions -->
+<div class="hidden md:flex items-center gap-4">
+<a class="font-label-md text-label-md text-primary hover:text-primary/80 transition-colors" href="#">
+                    Quote List
+                </a>
+<a class="font-label-md text-label-md bg-primary text-on-primary px-6 py-3 rounded-DEFAULT hover:opacity-90 transition-opacity" href="/quote">
+                    Request Quote
+                </a>
+</div>
+<!-- Mobile Menu Toggle (Visual only for structural completeness) -->
+<button class="md:hidden text-primary">
+<span class="material-symbols-outlined">menu</span>
+</button>
+</div>
+</nav>
+<!-- Main Content Canvas -->
+<main class="flex-grow pt-32 pb-section-padding z-10 relative">
+<!-- Hero Section -->
+<header class="max-w-container-max mx-auto px-margin-desktop mb-16">
+<h1 class="font-display-lg text-display-lg text-primary max-w-2xl">
+                Let's start a conversation.
+            </h1>
+<p class="mt-6 font-body-lg text-body-lg text-on-surface-variant max-w-xl">
+                Whether you have a simple question or are ready to curate your space, we're here to assist. Choose the path that best suits your needs below.
+            </p>
+</header>
+<!-- Bento Grid Layout -->
+<div class="max-w-container-max mx-auto px-margin-desktop grid grid-cols-1 md:grid-cols-12 gap-gutter">
+<!-- Main Column: General Contact Form (Col Span 7) -->
+<div class="md:col-span-7 flex flex-col">
+<div class="bg-surface-container-low rounded-xl p-8 md:p-12 h-full border border-outline-variant/20 shadow-sm shadow-primary/5">
+<h2 class="font-headline-sm text-headline-sm text-primary mb-2">General Inquiries</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mb-10">
+                        For product questions, order updates, or press inquiries, please use the form below. We typically respond within one business day.
+                    </p>
+<form action="#" class="flex flex-col gap-8" method="POST">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+<!-- Input Field: First Name -->
+<div class="flex flex-col relative group">
+<input class="peer w-full bg-surface-container-highest border-b border-outline-variant text-on-surface font-body-md text-body-md px-4 py-3 pt-6 rounded-t-DEFAULT focus:border-primary focus:outline-none focus:ring-0 transition-colors" id="firstName" name="firstName" placeholder=" " required="" type="text">
+<label class="absolute left-4 top-4 text-on-surface-variant font-body-md text-body-md transition-all peer-focus:-translate-y-3 peer-focus:text-xs peer-focus:text-primary peer-[:not(:placeholder-shown)]:-translate-y-3 peer-[:not(:placeholder-shown)]:text-xs pointer-events-none" for="firstName">First Name</label>
+</div>
+<!-- Input Field: Last Name -->
+<div class="flex flex-col relative group">
+<input class="peer w-full bg-surface-container-highest border-b border-outline-variant text-on-surface font-body-md text-body-md px-4 py-3 pt-6 rounded-t-DEFAULT focus:border-primary focus:outline-none focus:ring-0 transition-colors" id="lastName" name="lastName" placeholder=" " required="" type="text">
+<label class="absolute left-4 top-4 text-on-surface-variant font-body-md text-body-md transition-all peer-focus:-translate-y-3 peer-focus:text-xs peer-focus:text-primary peer-[:not(:placeholder-shown)]:-translate-y-3 peer-[:not(:placeholder-shown)]:text-xs pointer-events-none" for="lastName">Last Name</label>
+</div>
+</div>
+<!-- Input Field: Email -->
+<div class="flex flex-col relative group">
+<input class="peer w-full bg-surface-container-highest border-b border-outline-variant text-on-surface font-body-md text-body-md px-4 py-3 pt-6 rounded-t-DEFAULT focus:border-primary focus:outline-none focus:ring-0 transition-colors" id="email" name="email" placeholder=" " required="" type="email">
+<label class="absolute left-4 top-4 text-on-surface-variant font-body-md text-body-md transition-all peer-focus:-translate-y-3 peer-focus:text-xs peer-focus:text-primary peer-[:not(:placeholder-shown)]:-translate-y-3 peer-[:not(:placeholder-shown)]:text-xs pointer-events-none" for="email">Email Address</label>
+</div>
+<!-- Input Field: Subject -->
+<div class="flex flex-col relative group">
+<select class="peer w-full bg-surface-container-highest border-b border-outline-variant text-on-surface font-body-md text-body-md px-4 py-3 pt-6 rounded-t-DEFAULT focus:border-primary focus:outline-none focus:ring-0 transition-colors appearance-none cursor-pointer" id="subject" name="subject" required="">
+<option disabled="" hidden="" selected="" value=""></option>
+<option value="product">Product Information</option>
+<option value="order">Order Status</option>
+<option value="press">Press &amp; Media</option>
+<option value="other">Other</option>
+</select>
+<label class="absolute left-4 top-4 text-on-surface-variant font-body-md text-body-md transition-all peer-focus:-translate-y-3 peer-focus:text-xs peer-focus:text-primary peer-[:not(:placeholder-shown)]:-translate-y-3 peer-[:not(:placeholder-shown)]:text-xs pointer-events-none" for="subject">Subject</label>
+<span class="material-symbols-outlined absolute right-4 top-4 text-on-surface-variant pointer-events-none">expand_more</span>
+</div>
+<!-- Input Field: Message -->
+<div class="flex flex-col relative group">
+<textarea class="peer w-full bg-surface-container-highest border-b border-outline-variant text-on-surface font-body-md text-body-md px-4 py-3 pt-6 rounded-t-DEFAULT focus:border-primary focus:outline-none focus:ring-0 transition-colors resize-none" id="message" name="message" placeholder=" " required="" rows="4"></textarea>
+<label class="absolute left-4 top-4 text-on-surface-variant font-body-md text-body-md transition-all peer-focus:-translate-y-3 peer-focus:text-xs peer-focus:text-primary peer-[:not(:placeholder-shown)]:-translate-y-3 peer-[:not(:placeholder-shown)]:text-xs pointer-events-none" for="message">Your Message</label>
+</div>
+<div class="pt-4">
+<button class="font-label-md text-label-md bg-primary text-on-primary px-8 py-4 rounded-DEFAULT hover:opacity-90 transition-opacity flex items-center justify-center gap-2 w-full md:w-auto" type="submit">
+                                Send Message
+                                <span class="material-symbols-outlined text-[18px]">arrow_right_alt</span>
+</button>
+</div>
+</form>
+</div>
+</div>
+<!-- Side Column: Specialized Routing (Col Span 5) -->
+<div class="md:col-span-5 flex flex-col gap-gutter">
+<!-- Project Enquiries Block -->
+<div class="bg-surface-container-highest rounded-xl overflow-hidden flex flex-col h-full border border-outline-variant/10 group relative">
+<div class="h-48 overflow-hidden relative">
+<!-- Decorative Image to anchor the "Studio" feel -->
+<div class="bg-cover bg-center w-full h-full transform group-hover:scale-105 transition-transform duration-700 ease-in-out opacity-90" data-alt="A meticulously curated interior design studio workspace. Warm natural light spills across a large oak table scattered with fabric swatches, architectural blueprints, and minimalist ceramic material samples. The aesthetic is tactile minimalism, utilizing a sophisticated palette of earth tones, deep olive greens, and warm creams. Soft ambient shadows provide depth, conveying a sense of high-end craftsmanship and intentional design." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBFbdBKyIzlnNpbFao35qY0b8q5SWSjVmOel_Veo2GUb3K6WgkMT8qmyM0ip6EQW_plQiMpbrc5uJTKDyJwufCsDkcEVDJTpBa-Q5PrNHJQH0HOP-2Xe-edeNtu9xW4OzsDSDcO3URGOQI5eDh1EfOuN2b4nd4nQrsKr90jNcx-BtYPQ1APfq8o00E9L5kUDGinpwSe0GArsnYAtLEWewl7Hexk7uuziNoE_Z7zpJwsbudSuIYjOGtu53QqzUIYaHU479UQISEeNOsG')"></div>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container-highest to-transparent opacity-80"></div>
+</div>
+<div class="p-8 flex-grow flex flex-col justify-end z-10 -mt-12 relative">
+<div class="bg-surface/60 backdrop-blur-sm p-2 w-fit rounded-DEFAULT mb-4 text-primary">
+<span class="material-symbols-outlined">architecture</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-primary mb-3">Project Enquiries</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mb-8 flex-grow">
+                            Planning a comprehensive setup or outfitting an intentional space? Skip the general queue and let us prepare a tailored proposal for your specific requirements.
+                        </p>
+<a class="font-label-md text-label-md border-1.5 border-primary text-primary px-6 py-4 rounded-DEFAULT hover:bg-primary/5 transition-colors text-center w-full inline-block" href="/quote">
+                            Begin Quote Request
+                        </a>
+</div>
+</div>
+<!-- Chatbot Support Block -->
+<div class="bg-surface-container-low rounded-xl p-8 border border-outline-variant/20 flex flex-col justify-between items-start gap-6">
+<div>
+<div class="flex items-center gap-3 mb-4">
+<span class="material-symbols-outlined text-secondary">forum</span>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Immediate Support</h3>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant">
+                            Need a quick answer about materials, sizing, or lead times? Our studio assistant is available to provide immediate clarity on common queries.
+                        </p>
+</div>
+<button class="font-label-md text-label-md text-secondary flex items-center gap-2 hover:text-secondary/80 transition-colors pb-1 border-b border-secondary/30 hover:border-secondary">
+                        Open Studio Chat
+                        <span class="material-symbols-outlined text-[16px]">chat_bubble</span>
+</button>
+</div>
+</div>
+</div>
+</main>
+<!-- Footer (Shared Component) -->
+<footer class="w-full py-section-padding bg-surface-container-low dark:bg-inverse-surface border-t border-outline-variant/20 z-10 relative">
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-gutter max-w-container-max mx-auto px-margin-desktop">
+<!-- Brand Column -->
+<div class="flex flex-col gap-4">
+<span class="font-headline-sm text-headline-sm text-primary dark:text-inverse-primary">Aura Studio</span>
+<p class="font-body-md text-body-md text-on-surface-variant dark:text-inverse-on-surface opacity-80">
+                    © 2024 Aura Studio. All rights reserved. Crafted for intentional spaces.
+                </p>
+</div>
+<!-- Navigation Links -->
+<div class="flex flex-col gap-3">
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary dark:hover:text-inverse-primary transition-colors ease-in-out" href="#">Catalogue</a>
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary dark:hover:text-inverse-primary transition-colors ease-in-out" href="#">Setups</a>
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary dark:hover:text-inverse-primary transition-colors ease-in-out" href="/quote">Quote List</a>
+</div>
+<!-- Legal Links -->
+<div class="flex flex-col gap-3">
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary dark:hover:text-inverse-primary transition-colors ease-in-out" href="#">Privacy Policy</a>
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary dark:hover:text-inverse-primary transition-colors ease-in-out" href="#">Terms of Service</a>
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary dark:hover:text-inverse-primary transition-colors ease-in-out" href="#">Sustainability</a>
+</div>
+<!-- Empty column for layout balance as per JSON 4-col grid -->
+<div></div>
+</div>
+</footer>
+
+
+<div class="fixed bottom-8 right-8 z-50 flex flex-col items-end gap-4">
+    <div class="bg-surface-container-lowest border border-outline-variant/30 shadow-xl rounded-xl p-4 max-w-[280px] hidden md:block animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <p class="font-body-md text-body-md text-on-surface-variant">
+            Hi there! I'm the Aura Studio assistant. How can I help you today?
+        </p>
+    </div>
+    <button class="w-14 h-14 bg-primary text-on-primary rounded-full shadow-lg flex items-center justify-center hover:scale-105 transition-transform duration-300 group">
+        <span class="material-symbols-outlined text-[28px] group-hover:rotate-12 transition-transform">chat_bubble</span>
+    </button>
+</div></body></html>

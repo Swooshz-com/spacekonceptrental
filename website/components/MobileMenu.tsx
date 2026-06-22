@@ -24,10 +24,10 @@ export default function MobileMenu() {
 
   return (
     <>
-      {/* Hamburger button */}
+      {/* Hamburger button -- always visible on mobile, hidden on desktop */}
       <button
         className="premium-hamburger"
-        aria-label="Open menu"
+        aria-label="Open navigation menu"
         aria-expanded={open}
         onClick={toggle}
         type="button"
@@ -52,7 +52,7 @@ export default function MobileMenu() {
       {/* Overlay */}
       {open && (
         <div
-          className="premium-mobile-overlay"
+          className="premium-mobile-overlay premium-mobile-overlay--open"
           onClick={close}
           aria-hidden="true"
         />
@@ -66,9 +66,19 @@ export default function MobileMenu() {
         aria-label="Mobile navigation"
       >
         <div className="premium-mobile-drawer__header">
+          <span
+            style={{
+              fontFamily: "var(--font-serif)",
+              fontSize: "1rem",
+              fontWeight: 500,
+              color: "var(--accent)"
+            }}
+          >
+            Space Koncept Rental
+          </span>
           <button
             className="premium-mobile-drawer__close"
-            aria-label="Close menu"
+            aria-label="Close navigation menu"
             onClick={close}
             type="button"
           >
@@ -77,21 +87,13 @@ export default function MobileMenu() {
         </div>
 
         <nav className="premium-mobile-drawer__nav" aria-label="Mobile navigation">
-          <Link href="/" onClick={close}>
-            Home
-          </Link>
-          <Link href="/catalogue" onClick={close}>
-            Catalogue
-          </Link>
-          <Link href="/listings" onClick={close}>
-            Setups
-          </Link>
-          <Link href="/about" onClick={close}>
-            About
-          </Link>
-          <Link href="/contact" onClick={close}>
-            Contact
-          </Link>
+          <Link href="/" onClick={close}>Home</Link>
+          <Link href="/catalogue" onClick={close}>Catalogue</Link>
+          <Link href="/listings" onClick={close}>Setups</Link>
+          <Link href="/about" onClick={close}>About</Link>
+          <Link href="/contact" onClick={close}>Contact</Link>
+          <Link href="/privacy" onClick={close}>Privacy</Link>
+          <Link href="/terms" onClick={close}>Terms</Link>
         </nav>
 
         <div className="premium-mobile-drawer__cta">

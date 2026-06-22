@@ -1,0 +1,311 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Setups - Aura Studio</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;family=Literata:opsz,wght@7..72,400;7..72,500;7..72,600;7..72,700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-surface": "#1e1b18",
+                        "inverse-surface": "#34302c",
+                        "secondary-fixed": "#ffdbc8",
+                        "surface-bright": "#fff8f5",
+                        "surface-tint": "#62612e",
+                        "secondary-fixed-dim": "#f7b994",
+                        "on-tertiary-fixed-variant": "#49473d",
+                        "outline-variant": "#cac7b7",
+                        "on-surface-variant": "#48473b",
+                        "tertiary-fixed-dim": "#cbc6ba",
+                        "surface-variant": "#e9e1dc",
+                        "error": "#ba1a1a",
+                        "on-primary-container": "#dad899",
+                        "secondary-container": "#fdbf99",
+                        "on-tertiary-container": "#dad5c8",
+                        "surface-container-highest": "#e9e1dc",
+                        "on-secondary-container": "#794b2e",
+                        "surface": "#fff8f5",
+                        "on-tertiary-fixed": "#1d1c14",
+                        "inverse-on-surface": "#f8efea",
+                        "primary-fixed-dim": "#ccc98d",
+                        "surface-container-low": "#fbf2ed",
+                        "on-primary-fixed-variant": "#4a4919",
+                        "on-primary": "#ffffff",
+                        "surface-container-high": "#efe6e2",
+                        "on-error": "#ffffff",
+                        "error-container": "#ffdad6",
+                        "on-tertiary": "#ffffff",
+                        "surface-container-lowest": "#ffffff",
+                        "tertiary": "#47453b",
+                        "primary-fixed": "#e8e6a6",
+                        "tertiary-fixed": "#e8e2d5",
+                        "secondary": "#825335",
+                        "primary": "#474617",
+                        "on-background": "#1e1b18",
+                        "on-primary-fixed": "#1d1d00",
+                        "background": "#fff8f5",
+                        "tertiary-container": "#5f5c52",
+                        "on-secondary-fixed-variant": "#673c20",
+                        "outline": "#79776a",
+                        "surface-dim": "#e1d8d4",
+                        "surface-container": "#f5ece7",
+                        "inverse-primary": "#ccc98d",
+                        "on-secondary-fixed": "#321300",
+                        "on-secondary": "#ffffff",
+                        "on-error-container": "#93000a",
+                        "primary-container": "#5f5e2c"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "unit": "8px",
+                        "section-padding": "96px",
+                        "margin-mobile": "16px",
+                        "gutter": "24px",
+                        "container-max": "1200px",
+                        "margin-desktop": "48px"
+                    },
+                    "fontFamily": {
+                        "label-md": ["Plus Jakarta Sans"],
+                        "headline-sm": ["Literata"],
+                        "headline-md": ["Literata"],
+                        "display-lg": ["Literata"],
+                        "display-lg-mobile": ["Literata"],
+                        "body-lg": ["Plus Jakarta Sans"],
+                        "body-md": ["Plus Jakarta Sans"]
+                    },
+                    "fontSize": {
+                        "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "headline-sm": ["24px", { "lineHeight": "32px", "fontWeight": "500" }],
+                        "headline-md": ["32px", { "lineHeight": "40px", "fontWeight": "500" }],
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "display-lg-mobile": ["36px", { "lineHeight": "44px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .noise-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 9999;
+            opacity: 0.05;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .text-balance {
+            text-wrap: balance;
+        }
+        .ambient-shadow {
+            box-shadow: 0 20px 40px rgba(95, 94, 44, 0.08);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md antialiased overflow-x-hidden">
+<div class="noise-overlay"></div>
+<!-- TopNavBar -->
+<nav class="fixed top-0 w-full z-50 bg-surface/80 dark:bg-surface/80 backdrop-blur-md border-b border-outline-variant/30 dark:border-outline-variant/10 shadow-sm shadow-primary/5">
+<div class="flex justify-between items-center max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop h-20">
+<!-- Brand -->
+<a class="font-headline-sm text-headline-sm font-medium text-primary dark:text-inverse-primary tracking-tight" href="#">
+                Aura Studio
+            </a>
+<!-- Nav Links (Desktop) -->
+<div class="hidden md:flex space-x-8 items-center font-body-md text-body-md">
+<a class="text-on-surface-variant dark:text-surface-variant hover:text-primary transition-colors dark:hover:text-inverse-primary transition-all duration-300" href="#">Catalogue</a>
+<a class="text-primary dark:text-inverse-primary font-semibold border-b-2 border-primary pb-1 hover:text-primary dark:hover:text-inverse-primary transition-all duration-300" href="#">Setups</a>
+<a class="text-on-surface-variant dark:text-surface-variant hover:text-primary transition-colors dark:hover:text-inverse-primary transition-all duration-300" href="#">Our Story</a>
+</div>
+<!-- Actions -->
+<div class="flex items-center space-x-4">
+<button class="hidden md:flex items-center space-x-2 text-primary dark:text-inverse-primary hover:text-primary dark:hover:text-inverse-primary transition-all duration-300 font-label-md text-label-md">
+<span class="material-symbols-outlined" style="font-size: 20px;">receipt_long</span>
+<span class="">Quote List</span>
+</button>
+<button class="bg-primary text-on-primary px-6 py-2 rounded-full font-label-md text-label-md hover:bg-primary-container hover:text-on-primary-container transition-colors duration-300">
+                    Request Quote
+                </button>
+<button class="md:hidden text-primary">
+<span class="material-symbols-outlined">menu</span>
+</button>
+</div>
+</div>
+</nav>
+<!-- Main Content -->
+<main class="pt-32 pb-section-padding">
+<!-- Header Section -->
+<section class="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop mb-24 text-center md:text-left">
+<h1 class="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg text-primary mb-6 text-balance">Curated Setups. Intentional Spaces.</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl text-balance">
+                Explore our prebuilt event stacks designed for cohesive aesthetic impact. These setups serve as curated starting points—foundations of tactile minimalism that can be tailored to the specific emotional resonance of your gathering.
+            </p>
+</section>
+<!-- Listings Grid (Bento/Asymmetric style) -->
+<section class="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop">
+<div class="grid grid-cols-1 md:grid-cols-12 gap-gutter">
+<!-- Setup Card 1: Large Span -->
+<div class="md:col-span-8 group relative bg-surface-container-lowest rounded-xl overflow-hidden ambient-shadow flex flex-col md:flex-row">
+<div class="w-full md:w-3/5 h-80 md:h-full relative overflow-hidden">
+<div class="absolute inset-0 bg-gradient-to-r from-surface-container-lowest/20 to-transparent z-10 pointer-events-none"></div>
+<img class="object-cover w-full h-full transform group-hover:scale-105 transition-transform duration-700 ease-in-out" data-alt="A luxurious, high-end wedding lounge setup in a minimalist gallery space. The arrangement features organic linen sofas, raw timber coffee tables, and subtle ambient lighting casting soft, diffused shadows. The color palette emphasizes warm earth tones, deep creams, and muted clay, reflecting a tactile minimalism aesthetic. High-quality editorial photography style, capturing the sophisticated and calming atmosphere." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC93W0jYUBbmoZ6cGtTuxbXiAc88zhC1i3cdI_g0Uhi_edBrv_34CtTl6xi9XaVs_GVNwtia07HH4IhnrTYgji92CAK1cfQCPjawAUOwPGZ6Wd0_t-a8uo8SDaz8KwoUzSbo7ozZD-NVh_Au_uhf4bOZhhgFtPL07ZYbg41H3LEzURRc91rhpYW8HDharCq2ThYKhzO3CRS6BwtXApq1UvgOqEvcOdYE1UjNPEjQ5SbE_huxvd1XOOOVyDtL5jjJM8n_8BTKV3wTA2g">
+</div>
+<div class="w-full md:w-2/5 p-8 flex flex-col justify-center bg-surface-container-lowest z-20">
+<div class="inline-flex items-center space-x-2 text-secondary mb-4">
+<span class="material-symbols-outlined" style="font-size: 18px;">favorite</span>
+<span class="font-label-md text-label-md uppercase tracking-wider">Wedding Lounge</span>
+</div>
+<h2 class="font-headline-md text-headline-md text-primary mb-3">The Earth &amp; Air Suite</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mb-8">
+                            A grounded, airy composition designed for intimate conversations. Featuring raw linen textures, low-profile oak seating, and diffused ambient lighting.
+                        </p>
+<div class="flex flex-col space-y-3 mt-auto">
+<button class="w-full border-1.5 border-primary text-primary py-3 rounded-full font-label-md text-label-md hover:bg-surface-container-highest transition-colors">
+                                View Details
+                            </button>
+<button class="w-full bg-primary text-on-primary py-3 rounded-full font-label-md text-label-md hover:bg-primary-container hover:text-on-primary-container transition-colors flex justify-center items-center space-x-2">
+<span class="material-symbols-outlined" style="font-size: 18px;">add</span>
+<span class="">Add to Quote</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Setup Card 2: Vertical Stack -->
+<div class="md:col-span-4 group relative bg-surface-container-lowest rounded-xl overflow-hidden ambient-shadow flex flex-col">
+<div class="w-full h-64 relative overflow-hidden">
+<img class="object-cover w-full h-full transform group-hover:scale-105 transition-transform duration-700 ease-in-out" data-alt="A sleek, modern exhibition booth setup designed with tactile minimalism. The scene includes minimalist display plinths made of textured concrete, a backdrop of soft, translucent fabric, and warm directional lighting that creates inviting, ambient shadows. The overall aesthetic is professional, architectural, and serene, using a palette of soft greys, muted taupes, and warm whites." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC_0mo12BkCx_FAUw9GRxUGxjQY7_EfpUpafl-OFXfd-0kbJQFD0iFgKFCHWIYoyNRQBMkvOt3nOd2fuxbvq1i9GiOk6uiAV5JDLpjJNq-02EwP0XpWJ3OxaZNi2laLJ-VabwOagvknsMTLTENIHei8q5EACeghmH6FLz48jPFMvbudIKtHLt2ArWDZo7Zty6QyPbmEl38m_ZuCKP-XbxSNIs9OtbyfCfSEkDTs0IwAHkVGrqRDtc8BEHBmsZG6nHR47BV_1nk4PghU">
+</div>
+<div class="p-8 flex flex-col flex-grow bg-surface-container-lowest z-20">
+<div class="inline-flex items-center space-x-2 text-secondary mb-4">
+<span class="material-symbols-outlined" style="font-size: 18px;">storefront</span>
+<span class="font-label-md text-label-md uppercase tracking-wider">Exhibition Booth</span>
+</div>
+<h2 class="font-headline-sm text-headline-sm text-primary mb-3">Minimalist Showcase</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mb-8 flex-grow">
+                            Architectural plinths and translucent fabric backdrops that frame your product without overwhelming it.
+                        </p>
+<div class="flex flex-col space-y-3">
+<button class="w-full border-1.5 border-primary text-primary py-3 rounded-full font-label-md text-label-md hover:bg-surface-container-highest transition-colors">
+                                View Details
+                            </button>
+<button class="w-full bg-primary text-on-primary py-3 rounded-full font-label-md text-label-md hover:bg-primary-container hover:text-on-primary-container transition-colors flex justify-center items-center space-x-2">
+<span class="material-symbols-outlined" style="font-size: 18px;">add</span>
+<span class="">Add to Quote</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Setup Card 3: Standard Size -->
+<div class="md:col-span-4 group relative bg-surface-container-lowest rounded-xl overflow-hidden ambient-shadow flex flex-col mt-8 md:mt-0">
+<div class="w-full h-64 relative overflow-hidden">
+<img class="object-cover w-full h-full transform group-hover:scale-105 transition-transform duration-700 ease-in-out" data-alt="An intimate corporate retreat setup centered around a large, raw-edge wooden table. The surrounding seating consists of sculpted, ergonomic chairs in deep olive tones. Soft, natural light filters through sheer curtains, illuminating the textured, paper-like surfaces and creating a calm, focused environment. The style embodies high-end tactile minimalism, focusing on premium materials and earthy colors." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDm_aHvhKm1odUOpUYIaEHrbHnx0LORKz8LR7B98DWcV3K6H-Q1J5ihgmdLPRxkgiolZmnz3Q7jC7m93qULMe8dQ_G0Lztc2h6i8zQ4WkB4U5v3ut46X-C4O4euo8re6SEJqzBwiEiSkUckgvaSF0kx4TTe8jrzHSOV9syh0tV_uKRFZr4CfF7Y3aS2JXdagWk0nFNfQkMmho7cqNoOOMZl1b36gTzJcXb1Y1HzEZ-g0-iiStRz6lTWAFyqvkxR4qCKF2C6kIVO23Hs">
+</div>
+<div class="p-8 flex flex-col flex-grow bg-surface-container-lowest z-20">
+<div class="inline-flex items-center space-x-2 text-secondary mb-4">
+<span class="material-symbols-outlined" style="font-size: 18px;">groups</span>
+<span class="font-label-md text-label-md uppercase tracking-wider">Corporate Retreat</span>
+</div>
+<h2 class="font-headline-sm text-headline-sm text-primary mb-3">The Focus Assembly</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mb-8 flex-grow">
+                            A tactile, distraction-free environment encouraging collaborative depth. Features heavy timber tables and ergonomic clay-toned seating.
+                        </p>
+<div class="flex flex-col space-y-3">
+<button class="w-full border-1.5 border-primary text-primary py-3 rounded-full font-label-md text-label-md hover:bg-surface-container-highest transition-colors">
+                                View Details
+                            </button>
+<button class="w-full bg-primary text-on-primary py-3 rounded-full font-label-md text-label-md hover:bg-primary-container hover:text-on-primary-container transition-colors flex justify-center items-center space-x-2">
+<span class="material-symbols-outlined" style="font-size: 18px;">add</span>
+<span class="">Add to Quote</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Setup Card 4: Large Span Flipped -->
+<div class="md:col-span-8 group relative bg-surface-container-lowest rounded-xl overflow-hidden ambient-shadow flex flex-col md:flex-row-reverse mt-8 md:mt-0">
+<div class="w-full md:w-3/5 h-80 md:h-full relative overflow-hidden">
+<div class="absolute inset-0 bg-gradient-to-l from-surface-container-lowest/20 to-transparent z-10 pointer-events-none"></div>
+<img class="object-cover w-full h-full transform group-hover:scale-105 transition-transform duration-700 ease-in-out" data-alt="A sophisticated dining setup for an evening gala, arranged with meticulous attention to detail. The long tables are adorned with matte ceramic dinnerware, woven linen runners, and delicate, sculptural floral centerpieces. Low, warm ambient lighting casts gentle shadows across the setup, enhancing the luxurious, tactile minimalism. The color scheme features muted terracottas, charcoal greys, and soft ivory." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC9Cr2-zKS0FMAWDUDQnrgz-FIbYZ1c8fJhAgXWuog07_nhYscMhfNii8nRpb_7kzA-jry8-e1VKTnR6YwaT9_vND-J-A2KbEllwAJjUcHOLprUaJI6mqgm6ppz5fd8oULEiPWgKmnKLL1jMv-Sr9KmN5a78CmgOnCAUW8jfvSz85HtUgXNe3CuDEN4yIUvFywPi4yryXmOg9UQ_hAAwXMcm630w4gIhgrAq_P3_7HNWx1x52on2u0etXwCefw-XWLp1GW_QyIFTStx">
+</div>
+<div class="w-full md:w-2/5 p-8 flex flex-col justify-center bg-surface-container-lowest z-20">
+<div class="inline-flex items-center space-x-2 text-secondary mb-4">
+<span class="material-symbols-outlined" style="font-size: 18px;">restaurant</span>
+<span class="font-label-md text-label-md uppercase tracking-wider">Dining Experience</span>
+</div>
+<h2 class="font-headline-md text-headline-md text-primary mb-3">The Tactile Banquet</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mb-8">
+                            A multi-sensory dining arrangement focusing on matte ceramics, heavy linens, and low-level ambient illumination to foster connection.
+                        </p>
+<div class="flex flex-col space-y-3 mt-auto">
+<button class="w-full border-1.5 border-primary text-primary py-3 rounded-full font-label-md text-label-md hover:bg-surface-container-highest transition-colors">
+                                View Details
+                            </button>
+<button class="w-full bg-primary text-on-primary py-3 rounded-full font-label-md text-label-md hover:bg-primary-container hover:text-on-primary-container transition-colors flex justify-center items-center space-x-2">
+<span class="material-symbols-outlined" style="font-size: 18px;">add</span>
+<span class="">Add to Quote</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="bg-surface-container-low dark:bg-inverse-surface border-t border-outline-variant/20 w-full py-section-padding text-on-surface dark:text-inverse-on-surface font-body-md text-body-md">
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-gutter max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop">
+<div class="col-span-1 lg:col-span-1 mb-8 lg:mb-0">
+<span class="font-headline-sm text-headline-sm text-primary dark:text-inverse-primary block mb-4">Aura Studio</span>
+<p class="text-on-surface-variant text-sm pr-4">Crafted for intentional spaces.</p>
+</div>
+<div class="col-span-1">
+<h3 class="font-label-md text-label-md mb-4 text-primary">Explore</h3>
+<ul class="space-y-3">
+<li class=""><a class="text-on-surface-variant hover:text-primary transition-colors" href="#">Catalogue</a></li>
+<li class=""><a class="text-primary underline hover:text-primary transition-colors" href="#">Setups</a></li>
+<li class=""><a class="text-on-surface-variant hover:text-primary transition-colors" href="#">Quote List</a></li>
+</ul>
+</div>
+<div class="col-span-1">
+<h3 class="font-label-md text-label-md mb-4 text-primary">Legal &amp; Ethics</h3>
+<ul class="space-y-3">
+<li class=""><a class="text-on-surface-variant hover:text-primary transition-colors" href="#">Privacy Policy</a></li>
+<li class=""><a class="text-on-surface-variant hover:text-primary transition-colors" href="#">Terms of Service</a></li>
+<li class=""><a class="text-on-surface-variant hover:text-primary transition-colors" href="#">Sustainability</a></li>
+</ul>
+</div>
+<div class="col-span-1 md:col-span-2 lg:col-span-1 mt-8 lg:mt-0">
+<p class="text-sm text-on-surface-variant mt-auto pt-4 lg:pt-0">
+                    © 2024 Aura Studio. All rights reserved. Crafted for intentional spaces.
+                </p>
+</div>
+</div>
+</footer>
+
+
+<div class="fixed bottom-8 right-8 z-50 flex flex-col items-end space-y-4">
+    <div class="bg-surface-container-lowest ambient-shadow rounded-xl p-4 max-w-xs border border-outline-variant/30 hidden md:block transform transition-all duration-300 scale-95 opacity-0 group-hover:scale-100 group-hover:opacity-100 pointer-events-none">
+        <p class="text-sm text-on-surface-variant">Need help finding the perfect setup? I'm here to assist.</p>
+    </div>
+    <button class="bg-primary text-on-primary w-14 h-14 rounded-full flex items-center justify-center shadow-lg hover:bg-primary-container hover:text-on-primary-container transition-all duration-300 group">
+        <span class="material-symbols-outlined" style="font-size: 28px;">chat_bubble</span>
+        <div class="absolute -top-12 right-0 bg-surface-container-lowest text-on-surface text-xs py-1 px-3 rounded-full border border-outline-variant/30 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+            Studio Assistant
+        </div>
+    </button>
+</div></body></html>
