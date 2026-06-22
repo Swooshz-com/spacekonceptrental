@@ -223,6 +223,9 @@ export function ProductPageContent({
                   listing={product}
                   className="v3-btn v3-btn--primary"
                 />
+                <Link href="/quote" className="v3-btn v3-btn--outline">
+                  Request Quote
+                </Link>
               </div>
             </div>
           </div>

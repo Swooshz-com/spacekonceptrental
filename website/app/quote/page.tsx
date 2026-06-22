@@ -156,7 +156,7 @@ function QuoteGeneralContext({
       </div>
       <h3>General rental enquiry</h3>
       <p style={{ color: 'var(--muted)', marginBottom: '24px' }}>
-        Share the items, quantities, and event setup you have in mind so our team can provide an accurate proposal.
+        Discovery context is editable request intake only. Listing context is a starting point only. Share the items, quantities, and event setup you have in mind or adjust the requested listings or items before sending so our team can provide an accurate proposal. The form is enquiry intake only.
       </p>
 
       {hasContext && (
@@ -254,7 +254,7 @@ export default async function QuotePage({
               <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>What to Expect</div>
               <ul style={{ margin: 0, paddingLeft: '20px', color: 'var(--muted)', fontSize: '0.875rem', lineHeight: 1.6 }}>
                 <li style={{ marginBottom: '8px' }}>Your request will be manually reviewed by our team.</li>
-                <li style={{ marginBottom: '8px' }}>This submission does not finalise a rental or hold items.</li>
+                <li style={{ marginBottom: '8px' }}>This submission does not finalise a rental or set aside items.</li>
                 <li>We will follow up directly using the contact details provided.</li>
               </ul>
             </div>

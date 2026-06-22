@@ -102,7 +102,19 @@ function readProductionSource(paths: string[]) {
     .join("\n");
 }
 
+import { QuoteListProvider } from "../components/QuoteListContext";
+
+// Test wrapper to provide QuoteList context
+function QuoteRequestFormWrapper(props: any) {
+  return (
+    <QuoteListProvider>
+      <QuoteRequestForm {...props} />
+    </QuoteListProvider>
+  );
+}
+
 describe("Phase 5E-A/B quote/enquiry intake readiness", () => {
+
   afterEach(() => {
     cleanup();
     vi.restoreAllMocks();
@@ -119,7 +131,7 @@ describe("Phase 5E-A/B quote/enquiry intake readiness", () => {
       )
     );
 
-    render(<QuoteRequestForm initialItemsText="Modular lounge set" />);
+    render(<QuoteRequestFormWrapper initialItemsText="Modular lounge set" />);
 
     expect(screen.getByText(/share your name/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/your name \(required\)/i)).toBeInTheDocument();
@@ -162,7 +174,7 @@ describe("Phase 5E-A/B quote/enquiry intake readiness", () => {
       }
     });
 
-    render(page);
+    render(<QuoteListProvider>{page}</QuoteListProvider>);
 
     expect(screen.getByText(/Discovery context is editable request intake only/i)).toBeInTheDocument();
     const items = screen.getByLabelText(/requested listings or items/i);
@@ -176,7 +188,7 @@ describe("Phase 5E-A/B quote/enquiry intake readiness", () => {
   it("shows public-safe validation errors without internal details", async () => {
     const fetcher = vi.spyOn(globalThis, "fetch");
 
-    render(<QuoteRequestForm />);
+    render(<QuoteRequestFormWrapper />);
     fireEvent.click(screen.getByRole("button", { name: /send an enquiry/i }));
 
     expect(screen.getByRole("alert")).toHaveTextContent(/add your name/i);

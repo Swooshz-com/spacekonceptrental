@@ -1,4 +1,5 @@
 import "server-only";
+import { getDemoCatalogue, getDemoProductBySlug } from "../demo-content";
 
 import {
   getCatalogueWorkspaceId,
@@ -302,6 +303,10 @@ export function getFallbackProductBySlug(_slug: string) {
 export async function getPublicCatalogue(
   options: PublicCatalogueRepositoryOptions = {}
 ): Promise<PublicCatalogue> {
+  console.log("DEMO MODE:", process.env.NEXT_PUBLIC_SKR_DEMO_CONTENT);
+  if (process.env.NEXT_PUBLIC_SKR_DEMO_CONTENT === "true") {
+    return getDemoCatalogue();
+  }
   const supabase = getSupabase(options);
 
   if (!supabase.configured) {
@@ -327,6 +332,9 @@ export async function getPublicProductBySlug(
   slug: string,
   options: PublicCatalogueRepositoryOptions = {}
 ): Promise<PublicCatalogueProduct | null> {
+  if (process.env.NEXT_PUBLIC_SKR_DEMO_CONTENT === "true") {
+    return getDemoProductBySlug(slug);
+  }
   const supabase = getSupabase(options);
 
   if (!supabase.configured) {
