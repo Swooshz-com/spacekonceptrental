@@ -4,6 +4,7 @@ import {
   CataloguePageContent
 } from "../catalogue/page";
 import { getPublicCatalogue } from "../../lib/catalogue/catalogue-repository";
+import { withDemoPublicCatalogue } from "../../lib/catalogue/demo-public-catalogue";
 import { normalizePublicDiscoveryContext, normalizePublicListingSlug } from "../../lib/catalogue/quote-handoff";
 import { eventUseFilters } from "../catalogue/page";
 import type { PublicCatalogue } from "../../lib/catalogue/types";
@@ -17,9 +18,9 @@ type ListingsPageProps = {
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Rental listings | Space Koncept Rentals",
+  title: "Setups | Space Koncept Rental",
   description:
-    "Browse public furniture and event rental listings, then send a quote enquiry to Space Koncept Rentals."
+    "Browse curated event setup ideas, then send a quote enquiry to Space Koncept Rental."
 };
 
 function firstSearchParam(value: string | string[] | undefined) {
@@ -106,7 +107,7 @@ export default async function ListingsPage({
   searchParams
 }: ListingsPageProps = {}) {
   const [catalogue, filters] = await Promise.all([
-    getPublicCatalogue(),
+    getPublicCatalogue().then((data) => withDemoPublicCatalogue(data, "setups")),
     resolveDiscoveryFilters(searchParams)
   ]);
   const activeCategory = filters.categorySlug
@@ -128,19 +129,19 @@ export default async function ListingsPage({
       detailBasePath="/listings"
       emptyMessage={
         activeCategory || activeEventUse || filters.search
-          ? "No public rental listings match these local filters right now. Browse all listings, adjust the search/filter context, or send an enquiry for team review."
-          : "No public rental listings match this view right now. Browse categories, explore event-use ideas, or send an enquiry for team review."
+          ? "No public setups match these local filters right now. Browse all setups, adjust the search context, or send an enquiry for team review."
+          : "No public setups match this view right now. Browse event-use ideas or send an enquiry for team review."
       }
       intro={
         activeCategory || activeEventUse || filters.search
-          ? "Browse filtered public-safe rental/event furniture listings. Search, category, and event-use context stays editable before you send an enquiry."
-          : "Browse public furniture and event rental listings, then send an enquiry for the pieces that fit your event."
+          ? "Browse filtered setup ideas. Search, category, and event-use context stays editable before you send an enquiry."
+          : "Browse curated setups, then send an enquiry for the pieces that fit your event."
       }
       listingBasePath="/listings"
       title={
         activeCategory
-          ? `${activeCategory.name} rental listings`
-          : "Furniture rental listings"
+          ? `${activeCategory.name} Setups`
+          : "Curated Setups"
       }
     />
   );

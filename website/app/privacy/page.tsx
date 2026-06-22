@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy | Space Koncept Rentals",
+  title: "Privacy Policy | Space Koncept Rental",
   description:
-    "How Space Koncept Rentals handles quote enquiry and chat details for manual follow-up."
+    "How Space Koncept Rental handles quote enquiry and chat details for manual follow-up."
 };
 
 export default function PrivacyPage() {
@@ -14,7 +14,7 @@ export default function PrivacyPage() {
         <div className="premium-container">
           <h1 className="premium-title-hero">Privacy Policy</h1>
           <p className="premium-subtitle" style={{ color: '#cbd5e1' }}>
-            This page explains the practical MVP privacy posture for browsing rental listings, sending quote requests, and using the chat widget.
+            This page explains the practical privacy posture for browsing rental listings, sending quote requests, and using the chat widget.
           </p>
         </div>
       </section>
@@ -34,7 +34,7 @@ export default function PrivacyPage() {
               <div style={{ fontSize: '13px', fontWeight: 800, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '12px' }}>Data usage</div>
               <h2 className="premium-title-card" style={{ fontSize: '20px', marginBottom: '16px' }}>How details are used</h2>
               <p style={{ color: 'var(--muted)', lineHeight: 1.6, margin: 0 }}>
-                The team uses quote request details for manual follow-up about the rental enquiry. Chat availability depends on the configured chat provider, and chat responses are for browsing guidance only.
+                The team uses quote request details for manual follow-up about the rental enquiry. Chat depends on the configured chat provider, and chat responses are for browsing guidance only.
               </p>
             </article>
 

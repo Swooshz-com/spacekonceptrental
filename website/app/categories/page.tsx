@@ -7,9 +7,9 @@ import type { PublicCatalogue } from "../../lib/catalogue/types";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Rental categories | Space Koncept Rentals",
+  title: "Rental categories | Space Koncept Rental",
   description:
-    "Browse public furniture and event rental categories and send a quote enquiry to Space Koncept Rentals."
+    "Browse public furniture and event rental categories and send a quote enquiry to Space Koncept Rental."
 };
 
 function textOrUndefined(value: string | undefined) {
@@ -126,7 +126,7 @@ export function CategoriesPageContent({
                     </div>
 
                     <div style={{ borderTop: '1px solid var(--border)', paddingTop: '24px' }}>
-                      {categoryListings.length > 0 ? (
+                      {categoryListings.length ? (
                         <>
                           <div style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '12px' }}>Featured Items</div>
                           <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '12px' }}>

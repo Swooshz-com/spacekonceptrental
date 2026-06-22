@@ -287,10 +287,9 @@ export default function QuoteRequestForm({
       onSubmit={handleSubmit}
     >
       <p className="quote-form__intro">
-        Rental fit is reviewed directly by the team.{" "}
-        Share contact details for direct manual follow-up. The team uses these
-        details to triage the rental enquiry.{" "}
-        Let us know what you need for your event. Share the date, venue, and requested items - our team will review the details and get back to you with a custom quote.
+        Rental fit is reviewed directly by the team. Share contact details,
+        event context, and requested rental items so Space Koncept Rental can
+        follow up manually.
       </p>
       {initialItemsText ? (
         <aside className="quote-form__selected" aria-label="Selected listing">
@@ -467,8 +466,8 @@ export default function QuoteRequestForm({
         type="submit"
       >
         {submitState.status === "submitting"
-          ? "Sending quote request..."
-          : "Review and send an enquiry"}
+          ? "Submitting enquiry..."
+          : "Submit Enquiry"}
       </button>
       <p className="quote-form__legal">
         By sending an enquiry, review the{" "}
@@ -483,11 +482,11 @@ export default function QuoteRequestForm({
           role="status"
         >
           <p className="eyebrow">Enquiry received</p>
-          <h3>Quote request received</h3>
+          <h3>Enquiry Received.</h3>
           <p>
             The team can review your request and follow up directly with next
-            questions or quote details. Manual follow-up uses your contact
-            details, event details, and requested listing/item context.
+            questions or proposal details. Manual follow-up uses your contact
+            details, event details, and requested rental context.
           </p>
           <dl className="quote-form__receipt-details">
             <div>

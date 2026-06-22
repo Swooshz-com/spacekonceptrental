@@ -79,7 +79,7 @@ describe("QuoteRequestForm", () => {
         value: "Place sofas near the registration zone."
       }
     });
-    fireEvent.click(screen.getByRole("button", { name: /send an enquiry/i }));
+    fireEvent.click(screen.getByRole("button", { name: /submit enquiry/i }));
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
 
@@ -114,7 +114,7 @@ describe("QuoteRequestForm", () => {
     expect(receipt).toHaveClass("quote-form__status--success");
     expect(receipt).toHaveClass("quote-form__receipt");
     expect(
-      within(receipt).getByRole("heading", { name: /quote request received/i })
+      within(receipt).getByRole("heading", { name: /enquiry received/i })
     ).toBeInTheDocument();
     expect(within(receipt).getByText("QR-20260527-ABC12345")).toBeInTheDocument();
     expect(within(receipt).getByText(/next team action/i)).toBeInTheDocument();
@@ -160,7 +160,7 @@ describe("QuoteRequestForm", () => {
         value: "We need help deciding quantities for a reception setup."
       }
     });
-    fireEvent.click(screen.getByRole("button", { name: /send an enquiry/i }));
+    fireEvent.click(screen.getByRole("button", { name: /submit enquiry/i }));
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
 
@@ -182,9 +182,9 @@ describe("QuoteRequestForm", () => {
       items: []
     });
     expect(getSubmittedPayload(fetchMock).requestId).toEqual(expect.any(String));
-    expect(
-      await screen.findByText(/enquiry received/i)
-    ).toBeInTheDocument();
+    expect(await screen.findByRole("status")).toHaveTextContent(
+      /enquiry received/i
+    );
     expect(screen.queryByRole("link", { name: /track|status/i })).not.toBeInTheDocument();
   });
 
@@ -213,7 +213,7 @@ describe("QuoteRequestForm", () => {
     fireEvent.change(screen.getByLabelText(/email address/i), {
       target: { value: "maya@example.test" }
     });
-    fireEvent.click(screen.getByRole("button", { name: /send an enquiry/i }));
+    fireEvent.click(screen.getByRole("button", { name: /submit enquiry/i }));
 
     const receipt = await screen.findByRole("status");
 
@@ -251,7 +251,7 @@ describe("QuoteRequestForm", () => {
     fireEvent.change(screen.getByLabelText(/email address/i), {
       target: { value: "maya@example.test" }
     });
-    fireEvent.click(screen.getByRole("button", { name: /send an enquiry/i }));
+    fireEvent.click(screen.getByRole("button", { name: /submit enquiry/i }));
 
     const alert = await screen.findByRole("alert");
 
@@ -331,7 +331,7 @@ describe("QuoteRequestForm", () => {
         value: "Use the lounge set near the registration area."
       }
     });
-    fireEvent.click(screen.getByRole("button", { name: /send an enquiry/i }));
+    fireEvent.click(screen.getByRole("button", { name: /submit enquiry/i }));
 
     const alert = await screen.findByRole("alert");
 
@@ -397,7 +397,7 @@ describe("QuoteRequestForm", () => {
     });
 
     fireEvent.click(
-      screen.getByRole("button", { name: /review and send an enquiry/i })
+      screen.getByRole("button", { name: /submit enquiry/i })
     );
 
     expect(fetchMock).not.toHaveBeenCalled();
@@ -451,16 +451,16 @@ describe("QuoteRequestForm", () => {
       target: { value: "maya@example.test" }
     });
     fireEvent.click(
-      screen.getByRole("button", { name: /review and send an enquiry/i })
+      screen.getByRole("button", { name: /submit enquiry/i })
     );
 
     await waitFor(() => {
       expect(
-        screen.getByRole("button", { name: /sending quote request/i })
+        screen.getByRole("button", { name: /submitting enquiry/i })
       ).toBeDisabled();
     });
     fireEvent.click(
-      screen.getByRole("button", { name: /sending quote request/i })
+      screen.getByRole("button", { name: /submitting enquiry/i })
     );
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
@@ -479,7 +479,9 @@ describe("QuoteRequestForm", () => {
       )
     );
 
-    expect(await screen.findByText(/enquiry received/i)).toBeInTheDocument();
+    expect(await screen.findByRole("status")).toHaveTextContent(
+      /enquiry received/i
+    );
   });
 
   it("submits a selected listing as one quote item and keeps success receipt-only", async () => {
@@ -507,7 +509,7 @@ describe("QuoteRequestForm", () => {
     fireEvent.change(screen.getByLabelText(/email address/i), {
       target: { value: "maya@example.test" }
     });
-    fireEvent.click(screen.getByRole("button", { name: /send an enquiry/i }));
+    fireEvent.click(screen.getByRole("button", { name: /submit enquiry/i }));
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
 
@@ -525,9 +527,9 @@ describe("QuoteRequestForm", () => {
       ]
     });
     expect(getSubmittedPayload(fetchMock).requestId).toEqual(expect.any(String));
-    expect(
-      await screen.findByText(/enquiry received/i)
-    ).toBeInTheDocument();
+    expect(await screen.findByRole("status")).toHaveTextContent(
+      /enquiry received/i
+    );
     expect(screen.queryByRole("link", { name: /track|status/i })).not.toBeInTheDocument();
   });
 
@@ -590,7 +592,7 @@ describe("QuoteRequestForm", () => {
         value: "Need rental period guidance for a same-day event setup."
       }
     });
-    fireEvent.click(screen.getByRole("button", { name: /send an enquiry/i }));
+    fireEvent.click(screen.getByRole("button", { name: /submit enquiry/i }));
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
 
@@ -617,7 +619,7 @@ describe("QuoteRequestForm", () => {
     const receipt = await screen.findByRole("status");
 
     expect(receipt).toHaveTextContent(/manual follow-up/i);
-    expect(receipt).toHaveTextContent(/requested listing\/item context/i);
+    expect(receipt).toHaveTextContent(/requested rental context/i);
     expect(document.body.textContent).not.toMatch(
       /cart|checkout|order|payment|purchase|booking|reservation|fulfilment|fulfillment|stock reservation|customer account|dashboard/i
     );
@@ -659,7 +661,7 @@ describe("QuoteRequestForm", () => {
         value: "Place priority items near the reception zone."
       }
     });
-    fireEvent.click(screen.getByRole("button", { name: /send an enquiry/i }));
+    fireEvent.click(screen.getByRole("button", { name: /submit enquiry/i }));
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
 
@@ -730,7 +732,7 @@ describe("QuoteRequestForm", () => {
     expect(messageInput.maxLength).toBe(allowedMessageLength);
     expect(messageInput.value).toHaveLength(allowedMessageLength);
 
-    fireEvent.click(screen.getByRole("button", { name: /send an enquiry/i }));
+    fireEvent.click(screen.getByRole("button", { name: /submit enquiry/i }));
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
 
@@ -744,9 +746,9 @@ describe("QuoteRequestForm", () => {
       `${preferredContactPrefix}${"x".repeat(allowedMessageLength)}`
     );
     expect(payload.customerMessage).toHaveLength(1200);
-    expect(
-      await screen.findByText(/enquiry received/i)
-    ).toBeInTheDocument();
+    expect(await screen.findByRole("status")).toHaveTextContent(
+      /enquiry received/i
+    );
   });
 
   it("does not import Supabase or server-only quote persistence in browser-facing code", () => {
@@ -789,7 +791,7 @@ describe("QuoteRequestForm", () => {
     fireEvent.change(screen.getByLabelText(/email address/i), {
       target: { value: "maya@example.test" }
     });
-    fireEvent.click(screen.getByRole("button", { name: /send an enquiry/i }));
+    fireEvent.click(screen.getByRole("button", { name: /submit enquiry/i }));
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
 

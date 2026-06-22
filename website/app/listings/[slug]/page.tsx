@@ -9,6 +9,7 @@ import {
   getPublicCatalogue,
   getPublicProductBySlug
 } from "../../../lib/catalogue/catalogue-repository";
+import { getDemoPublicProductBySlug } from "../../../lib/catalogue/demo-public-catalogue";
 
 type ListingPageProps = {
   params?: Promise<{ slug?: string }> | { slug?: string };
@@ -31,19 +32,21 @@ export async function generateMetadata({
   params
 }: ListingPageProps = {}): Promise<Metadata> {
   const slug = await getSlug(params);
-  const product = await getPublicProductBySlug(slug);
+  const product =
+    (await getPublicProductBySlug(slug)) ??
+    getDemoPublicProductBySlug(slug, "setups");
 
   if (!product) {
     const description =
       "Browse public furniture and event rental listing details and send a quote request.";
 
     return {
-      title: "Rental listing | Space Koncept Rentals",
+      title: "Rental setup | Space Koncept Rental",
       description,
       openGraph: {
-        title: "Rental listing | Space Koncept Rentals",
+        title: "Rental setup | Space Koncept Rental",
         description,
-        siteName: "Space Koncept Rentals",
+        siteName: "Space Koncept Rental",
         type: "website",
         url: "/listings"
       }
@@ -54,15 +57,15 @@ export async function generateMetadata({
     product.shortDescription ??
     product.description ??
     "Browse public furniture and event rental listing details and send a quote request.";
-  const description = `${listingDescription} Send a quote request for manual follow-up with Space Koncept Rentals.`;
+  const description = `${listingDescription} Send a quote request for manual follow-up with Space Koncept Rental.`;
 
   return {
-    title: `${product.name} rental listing | Space Koncept Rentals`,
+    title: `${product.name} setup | Space Koncept Rental`,
     description,
     openGraph: {
-      title: `${product.name} rental listing | Space Koncept Rentals`,
+      title: `${product.name} setup | Space Koncept Rental`,
       description,
-      siteName: "Space Koncept Rentals",
+      siteName: "Space Koncept Rental",
       type: "website",
       url: `/listings/${product.slug}`
     }
@@ -73,7 +76,9 @@ export default async function ListingPage({
   params
 }: ListingPageProps = {}) {
   const slug = await getSlug(params);
-  const product = await getPublicProductBySlug(slug);
+  const product =
+    (await getPublicProductBySlug(slug)) ??
+    getDemoPublicProductBySlug(slug, "setups");
 
   if (!product) {
     notFound();

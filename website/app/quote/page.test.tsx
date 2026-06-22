@@ -15,28 +15,16 @@ describe("QuotePage", () => {
     );
 
     expect(
-      screen.getByRole("heading", { name: /request a rental quote/i })
+      screen.getByRole("heading", { name: /shape your rental enquiry/i })
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("heading", { name: /selected listing unavailable/i })
+      screen.getByRole("heading", { name: /review the request context/i })
     ).toBeInTheDocument();
     expect(
-      screen.getAllByText(/selected listing reference/i).length
+      screen.getAllByText(/listing reference/i).length
     ).toBeGreaterThan(0);
     expect(
-      screen.getByText(/listing reference: lounge-sofa-package starts this rental request/i)
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText(/the listing link may be old or unavailable/i)
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText(/review current rental listings or keep typing the requested items/i)
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText("lounge-sofa-package", { selector: "dd" })
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText(/complete the required contact point first/i)
+      screen.getByText("lounge-sofa-package")
     ).toBeInTheDocument();
     expect(screen.getByLabelText(/requested listings or items/i)).toHaveValue(
       "Listing reference: lounge-sofa-package"
@@ -79,23 +67,23 @@ describe("QuotePage", () => {
       screen.queryByRole("heading", { name: /enquiry for/i })
     ).not.toBeInTheDocument();
     expect(
-      screen.getByText(/The listing link may be old or unavailable/i)
+      screen.getByRole("heading", { name: /review the request context/i })
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/Review current rental listings or keep typing the requested items/i)
+      screen.getByText("missing-listing")
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("link", { name: /review current rental listings/i })
-    ).toHaveAttribute("href", "/listings");
-    expect(
-      screen.getByRole("link", { name: /start from the catalogue/i })
+      screen.getByRole("link", { name: /add rental items/i })
     ).toHaveAttribute("href", "/catalogue");
+    expect(
+      screen.getByRole("link", { name: /add setups/i })
+    ).toHaveAttribute("href", "/listings");
     expect(screen.getByLabelText(/requested listings or items/i)).toHaveValue(
       "Listing reference: missing-listing"
     );
     expect(screen.queryByText(/rental assistant/i)).not.toBeInTheDocument();
     expect(
-      screen.getByText(/Use the catalogue, listing details, and event setup guidance/i)
+      screen.getByText(/manual team follow-up/i)
     ).toBeInTheDocument();
     expect(
       screen.queryByText(/cart|checkout|payment|book now|online ordering/i)

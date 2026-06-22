@@ -4,7 +4,7 @@ export default function NotFound() {
   return (
     <section className="premium-section" style={{ minHeight: 'calc(100vh - 200px)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <div className="premium-container" style={{ textAlign: 'center', maxWidth: '600px' }}>
-        <p style={{ fontSize: '12px', fontWeight: 800, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '16px' }}>Space Koncept Rentals</p>
+        <p style={{ fontSize: '12px', fontWeight: 800, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: 0, marginBottom: '16px' }}>Space Koncept Rental</p>
         <h1 className="premium-title" style={{ fontSize: '48px', marginBottom: '24px' }}>Page unavailable</h1>
         <p style={{ color: 'var(--muted)', fontSize: '18px', lineHeight: 1.6, marginBottom: '40px' }}>
           This page is not available right now. Browse current rental listings

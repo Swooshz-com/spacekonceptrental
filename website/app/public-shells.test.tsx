@@ -45,13 +45,10 @@ describe("public page shells", () => {
       })
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/no public rental listings are available right now/i)
+      screen.getByText(/no public rental items are available right now/i)
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("link", { name: /review current rental listings/i })
-    ).toHaveAttribute("href", "/listings");
-    expect(
-      screen.getByRole("link", { name: /start a general quote request/i })
+      screen.getByRole("link", { name: /submit enquiry/i })
     ).toHaveAttribute("href", "/quote");
     expect(
       screen.queryByRole("heading", { name: /lounge sofa package/i })
@@ -65,89 +62,44 @@ describe("public page shells", () => {
 
     expect(
       screen.getByRole("heading", {
-        name: /event furniture rental for planned spaces/i
+        name: /curated rental pieces for intentional event spaces/i
       })
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/browse rental listings, choose useful catalogue details, and send one enquiry for team follow-up/i)
+      screen.getByText(/browse individual furniture rentals or styled setups/i)
     ).toBeInTheDocument();
-    expect(
-      screen.getByText(/furniture rental and event rental catalogue for browsing real listings/i)
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText(/view listing details before requesting a quote/i)
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText(/manual follow-up after reviewing your event details/i)
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText(/no instant rental confirmation happens on this site/i)
-    ).toBeInTheDocument();
-    expect(
-      screen.getAllByRole("link", { name: /request a quote/i })[0]
-    ).toHaveAttribute("href", "/quote");
-    expect(
-      screen.getAllByRole("link", { name: /browse listings/i })[0]
-    ).toHaveAttribute("href", "/listings");
     expect(
       screen.getAllByRole("link", { name: /browse catalogue/i })[0]
     ).toHaveAttribute("href", "/catalogue");
     expect(
-      screen.getByRole("heading", { name: /how rental enquiries work/i })
+      screen.getAllByRole("link", { name: /view setups/i })[0]
+    ).toHaveAttribute("href", "/listings");
+    expect(
+      screen.getByRole("link", { name: /your selection/i })
+    ).toHaveAttribute("href", "/quote");
+    expect(
+      screen.getByRole("heading", { name: /start with pieces or a complete setup/i })
     ).toBeInTheDocument();
-    for (const step of [
-      /browse catalogue and listings/i,
-      /view rental listing details/i,
-      /submit an editable quote request/i,
-      /team reviews event details/i
-    ]) {
+    expect(
+      screen.getByRole("heading", { name: /a quote request, then direct team review/i })
+    ).toBeInTheDocument();
+    for (const step of [/browse the catalogue/i, /share event details/i, /team follow-up/i]) {
       expect(screen.getByRole("heading", { name: step })).toBeInTheDocument();
     }
     expect(
-      screen.getByText(/team follows up directly using the contact details you share/i)
+      screen.getByText(/follows up directly to shape the proposal/i)
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("heading", { name: /what to prepare before you enquire/i })
+      screen.getByRole("heading", { name: /quiet anchors for high-touch event environments/i })
     ).toBeInTheDocument();
-    for (const guidance of [
-      /event date if known/i,
-      /venue or location/i,
-      /requested rental listings or items/i,
-      /approximate quantities/i,
-      /setup, access, and timing notes/i,
-      /alternates if flexible/i
-    ]) {
-      expect(screen.getByText(guidance)).toBeInTheDocument();
-    }
-    expect(
-      screen
-        .getAllByRole("link", { name: /browse rental listings/i })
-        .map((link) => link.getAttribute("href"))
-    ).toContain("/listings");
-    expect(
-      screen
-        .getAllByRole("link", { name: /start a quote request/i })
-        .map((link) => link.getAttribute("href"))
-    ).toContain("/quote");
     expect(homepageSource).not.toMatch(
       /cart|checkout|payment|purchase|customer account|customer dashboard|booking|reservation|stock reservation|order fulfilment|online ordering/i
     );
-    for (const useCase of [
-      /corporate events/i,
-      /weddings/i,
-      /exhibitions/i,
-      /gala lounges/i
-    ]) {
-      expect(screen.getByRole("heading", { name: useCase })).toBeInTheDocument();
-    }
-    expect(
-      screen.getByRole("heading", { name: /featured rental listings/i })
-    ).toBeInTheDocument();
     expect(
       screen.getByText(/no public rental listings are available right now/i)
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("link", { name: /send an enquiry/i })
+      screen.getByRole("link", { name: /submit enquiry/i })
     ).toHaveAttribute("href", "/quote");
     expect(
       screen.queryByAltText(/lounge sofa package furniture rental setup/i)
@@ -187,15 +139,16 @@ describe("public page shells", () => {
   it("keeps public quote copy from implying ecommerce or online ordering", async () => {
     render(await QuotePage());
 
-    expect(screen.getByRole("heading", { name: /request a rental quote/i })).toBeInTheDocument();
-    expect(screen.getByText(/share contact details, event date, venue, requested listings, quantities, and setup notes/i)).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /shape your rental enquiry/i })).toBeInTheDocument();
+    expect(screen.getByText(/review your selection, add contact and event details/i)).toBeInTheDocument();
     expect(screen.queryByText(/shell|mvp/i)).not.toBeInTheDocument();
     expect(
       screen.queryByText(
         /cart|checkout|payment|customer account|stock reservation|order fulfilment|online ordering|confirmed order/i
       )
     ).not.toBeInTheDocument();
-    expect(rootMetadata.description).toMatch(/event furniture rental catalogue/i);
+    expect(rootMetadata.description).toMatch(/space koncept rental catalogue/i);
+    expect(rootMetadata.description).toMatch(/manual team follow-up/i);
     expect(rootMetadata.description).not.toMatch(/shell|mvp|checkout|payment|online ordering/i);
   });
 
@@ -256,21 +209,21 @@ describe("public page shells", () => {
       quoteMetadata
     });
 
-    expect(homeMetadata.description).toMatch(/manual follow-up/i);
+    expect(homeMetadata.description).toMatch(/manual team follow-up/i);
     expect(homeMetadata.openGraph?.title).toMatch(/event furniture rental catalogue/i);
     expect(homeMetadata.openGraph?.description).toMatch(/quote request/i);
     expect(catalogueMetadata.openGraph?.url).toBe("/catalogue");
     expect(catalogueMetadata.openGraph?.description).toMatch(
-      /public rental listings/i
+      /public rental items/i
     );
     expect(listingMetadata.openGraph?.title).toMatch(/furniture listing/i);
-    expect(listingMetadata.openGraph?.description).toMatch(/request an enquiry/i);
+    expect(listingMetadata.openGraph?.description).toMatch(/submit a rental enquiry/i);
     expect(fallbackListingMetadata.openGraph?.description).toMatch(
       /event furniture rental/i
     );
-    expect(publicListingMetadata.openGraph?.title).toMatch(/rental listing/i);
+    expect(publicListingMetadata.openGraph?.title).toMatch(/rental setup/i);
     expect(publicListingMetadata.openGraph?.description).toMatch(/quote request/i);
-    expect(quoteMetadata.openGraph?.title).toMatch(/quote request/i);
+    expect(quoteMetadata.openGraph?.title).toMatch(/request quote/i);
     expect(quoteMetadata.openGraph?.description).toMatch(/manual follow-up/i);
     expect(metadataPayload).not.toMatch(
       /cart|checkout|payment|purchase|customer account|customer dashboard|booking|reservation|stock reservation|order fulfilment|online ordering|readiness|governance|phase/i
@@ -321,7 +274,7 @@ describe("public page shells", () => {
     expect(
       catalogueLinks.map((link) => link.getAttribute("href"))
     ).toContain("/catalogue/lounge-sofa-package");
-    const quoteLinks = screen.getAllByRole("link", { name: /request a quote/i });
+    const quoteLinks = screen.getAllByRole("link", { name: /add lounge sofa package to quote/i });
     expect(quoteLinks.map((link) => link.getAttribute("href"))).toContain(
       "/quote?listing=lounge-sofa-package"
     );
@@ -346,15 +299,12 @@ describe("public page shells", () => {
         name: /furniture catalogue for event rentals/i
       })
     ).toBeInTheDocument();
-    expect(screen.getByText(/no public rental listings are available right now/i)).toBeInTheDocument();
+    expect(screen.getByText(/no public rental items are available right now/i)).toBeInTheDocument();
     expect(
-      screen.getByText(/clear filters, review current rental listings, or send a general quote request/i)
+      screen.getByText(/real published records will appear here when catalogue data is configured/i)
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("link", { name: /review current rental listings/i })
-    ).toHaveAttribute("href", "/listings");
-    expect(
-      screen.getByRole("link", { name: /start a general quote request/i })
+      screen.getByRole("link", { name: /submit enquiry/i })
     ).toHaveAttribute("href", "/quote");
   });
 
@@ -436,15 +386,15 @@ describe("public page shells", () => {
       screen.getByRole("heading", { name: /modular lounge set/i })
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("heading", { name: /1 listing/i })
+      screen.getByText(/1 item/i)
     ).toBeInTheDocument();
     expect(screen.getByText(/published lounge set/i)).toBeInTheDocument();
     expect(
-      screen.getByText(/listing reference: modular-lounge-set/i)
+      screen.getByText("modular-lounge-set")
     ).toBeInTheDocument();
     expect(
       screen.getByRole("link", {
-        name: /request a quote for modular lounge set/i
+        name: /add modular lounge set to quote/i
       })
     ).toHaveAttribute("href", "/quote?listing=modular-lounge-set");
     expect(
@@ -482,9 +432,9 @@ describe("public page shells", () => {
       screen.getByRole("heading", { name: /furniture rental listings/i })
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("heading", { name: /1 listing/i })
+      screen.getByText(/1 setup/i)
     ).toBeInTheDocument();
-    expect(screen.getByText("seminar", { selector: "dd" })).toBeInTheDocument();
+    expect(screen.getByText(/showing results for seminar/i)).toBeInTheDocument();
     expect(
       screen.getByRole("heading", { name: /dining and seminar chairs/i })
     ).toBeInTheDocument();
@@ -493,12 +443,12 @@ describe("public page shells", () => {
     ).not.toBeInTheDocument();
     expect(
       screen
-        .getAllByRole("link", { name: /reset filters/i })
+        .getAllByRole("link", { name: /all pieces/i })
         .map((link) => link.getAttribute("href"))
     ).toContain("/listings");
     expect(
       screen.getByRole("link", {
-        name: /request a quote for dining and seminar chairs/i
+        name: /add dining and seminar chairs to quote/i
       })
     ).toHaveAttribute("href", "/quote?listing=dining-and-seminar-chairs");
   });
@@ -531,9 +481,9 @@ describe("public page shells", () => {
       screen.getByRole("heading", { name: /modular lounge set/i })
     ).toBeInTheDocument();
     expect(screen.getByText(/published details for a lounge set/i)).toBeInTheDocument();
-    expect(screen.getAllByText(/listing reference/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/reference/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText("modular-lounge-set").length).toBeGreaterThan(0);
-    expect(screen.getByText(/quote form starting text/i)).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /before you enquire/i })).toBeInTheDocument();
     expect(screen.queryByText(/concept backdrop frame/i)).not.toBeInTheDocument();
   });
 
@@ -601,7 +551,7 @@ describe("public page shells", () => {
     ).toBeInTheDocument();
     expect(
       screen
-        .getAllByRole("link", { name: /request a quote/i })
+        .getAllByRole("link", { name: /add compact chair to quote/i })
         .map((link) => link.getAttribute("href"))
     ).toContain("/quote?listing=compact-chair");
     expect(screen.queryByText(/shell/i)).not.toBeInTheDocument();

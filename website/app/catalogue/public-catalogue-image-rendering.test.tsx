@@ -93,7 +93,7 @@ describe("public catalogue image rendering", () => {
       screen.getByRole("link", { name: /view details for modular lounge/i })
     ).toHaveAttribute("href", "/catalogue/modular-lounge");
     expect(
-      screen.getByRole("link", { name: /request a quote/i })
+      screen.getByRole("link", { name: /add modular lounge to quote/i })
     ).toHaveAttribute("href", "/quote?listing=modular-lounge");
     expect(screen.queryByText(/cart|checkout|payment|online ordering/i)).not.toBeInTheDocument();
   });
@@ -108,17 +108,14 @@ describe("public catalogue image rendering", () => {
       screen.getByText(/open the listing details before sending a quote request/i)
     ).toBeInTheDocument();
 
-    const listingCard = screen.getByLabelText(/rental listing card for modular lounge/i);
+    const listingCard = screen.getByLabelText(/rental item card for modular lounge/i);
     const cardView = within(listingCard);
 
-    expect(
-      cardView.getByText(/public rental listing/i)
-    ).toBeInTheDocument();
-    expect(cardView.getByText(/category\/type/i)).toBeInTheDocument();
     expect(cardView.getByText("Lounge")).toBeInTheDocument();
     expect(cardView.getByText(/rental unit/i)).toBeInTheDocument();
     expect(cardView.getByText("set")).toBeInTheDocument();
-    expect(cardView.getByText(/public image available/i)).toBeInTheDocument();
+    expect(cardView.getByText(/reference/i)).toBeInTheDocument();
+    expect(cardView.getByText("modular-lounge")).toBeInTheDocument();
     expect(
       cardView.getByText(/styled lounge setup for receptions/i)
     ).toBeInTheDocument();
@@ -127,7 +124,7 @@ describe("public catalogue image rendering", () => {
       name: /view details for modular lounge/i
     });
     const quoteLink = cardView.getByRole("link", {
-      name: /request a quote for modular lounge/i
+      name: /add modular lounge to quote/i
     });
 
     expect(detailLink).toHaveAttribute("href", "/catalogue/modular-lounge");
@@ -153,17 +150,19 @@ describe("public catalogue image rendering", () => {
       })
     ).toHaveAttribute("src", productWithImage.images?.[1]?.publicUrl);
     expect(
-      screen.getByRole("link", { name: /request a quote/i })
+      screen.getByRole("link", { name: /request quote/i })
     ).toHaveAttribute("href", "/quote?listing=modular-lounge");
     expect(
-      screen.getByRole("link", { name: /request a quote for modular lounge/i })
+      screen.getByRole("link", { name: /add modular lounge to quote/i })
     ).toHaveAttribute("href", "/quote?listing=modular-lounge");
     expect(
-      screen.getAllByText(/modular lounge furniture rental setup/i).length
+      screen.getAllByRole("img", {
+        name: /modular lounge furniture rental setup/i
+      }).length
     ).toBeGreaterThan(0);
     expect(
-      screen.getAllByText(/use this photo to compare style, scale, and event fit/i).length
-    ).toBeGreaterThan(0);
+      screen.getByText(/add quantities, event date, venue, access notes, and any alternates/i)
+    ).toBeInTheDocument();
     expect(screen.queryByText(/checkout|payment|reserve|book now/i)).not.toBeInTheDocument();
   });
 
@@ -183,13 +182,12 @@ describe("public catalogue image rendering", () => {
       />
     );
 
-    expect(container.querySelector(".catalogue-card__image img")).toHaveAttribute(
+    expect(container.querySelector(".skr-card__image img")).toHaveAttribute(
       "src",
       "/assets/images/product_sofa.png"
     );
-    expect(screen.getByText(/representative image shown/i)).toBeInTheDocument();
     expect(
-      screen.getByText(/no public image is available for this listing yet/i)
+      screen.getByRole("img", { name: /modular lounge rental furniture/i })
     ).toBeInTheDocument();
   });
 
@@ -204,13 +202,13 @@ describe("public catalogue image rendering", () => {
     );
 
     expect(
-      screen.getByRole("heading", { name: /no matching public listings/i })
+      screen.getByRole("heading", { name: /no public rental items are available right now/i })
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/clear filters, review current rental listings, browse categories/i)
+      screen.getByText(/real published records will appear here when catalogue data is configured/i)
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("link", { name: /start a general quote request/i })
+      screen.getByRole("link", { name: /submit enquiry/i })
     ).toHaveAttribute("href", "/quote");
     expect(document.body.textContent).not.toMatch(
       /cart|checkout|order|payment|purchase|booking|reservation|customer account|dashboard/i
@@ -233,10 +231,10 @@ describe("public catalogue image rendering", () => {
       "/assets/images/product_sofa.png"
     );
     expect(
-      screen.getByText(/photo to confirm for this listing/i)
+      screen.getByRole("heading", { name: /before you enquire/i })
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/send a quote request with quantities, venue, and event details/i)
+      screen.getByText(/add quantities, event date, venue, access notes, and any alternates/i)
     ).toBeInTheDocument();
     expect(
       screen.queryByText(/public-safe|review-safe|admin|draft/i)

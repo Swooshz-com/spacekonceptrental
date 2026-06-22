@@ -7,7 +7,7 @@ import galaImage from "../../assets/images/event_gala.png";
 import weddingImage from "../../assets/images/event_wedding.png";
 
 export const metadata: Metadata = {
-  title: "Event setups and rental use cases | Space Koncept Rentals",
+  title: "Event setups and rental use cases | Space Koncept Rental",
   description:
     "Explore event setup guidance, browse rental listings, and send a quote request with setup notes."
 };

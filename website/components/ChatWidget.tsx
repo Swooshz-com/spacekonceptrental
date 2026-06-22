@@ -165,7 +165,7 @@ export default function ChatWidget() {
         background: '#0f172a', padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center'
       }}>
         <div style={{ display: 'flex', flexDirection: 'column' }}>
-          <span style={{ fontSize: '16px', fontWeight: 700, color: '#fff' }}>SpaceKonceptRental AI</span>
+          <span style={{ fontSize: '16px', fontWeight: 700, color: '#fff' }}>Space Koncept Rental</span>
           <span style={{ fontSize: '12px', color: '#cbd5e1' }}>Your event furniture helper</span>
         </div>
         <button onClick={() => setIsOpen(false)} style={{ background: 'transparent', border: 'none', color: '#cbd5e1', cursor: 'pointer', fontSize: '20px', lineHeight: 1, padding: '4px' }} aria-label="Close chat">x</button>

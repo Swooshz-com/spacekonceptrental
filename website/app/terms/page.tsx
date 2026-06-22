@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Terms of Use | Space Koncept Rentals",
+  title: "Terms of Use | Space Koncept Rental",
   description:
     "Simple Terms of Use for browsing rental listings and sending quote enquiries."
 };
@@ -14,7 +14,7 @@ export default function TermsPage() {
         <div className="premium-container">
           <h1 className="premium-title-hero">Terms of Use</h1>
           <p className="premium-subtitle" style={{ color: '#cbd5e1' }}>
-            These terms describe the current MVP website experience for browsing furniture rental listings and sending quote enquiries.
+            These terms describe the current website experience for browsing furniture rental listings and sending quote enquiries.
           </p>
         </div>
       </section>
@@ -42,7 +42,7 @@ export default function TermsPage() {
               <div style={{ fontSize: '13px', fontWeight: 800, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '12px' }}>Support</div>
               <h2 className="premium-title-card" style={{ fontSize: '20px', marginBottom: '16px' }}>Chat guidance</h2>
               <p style={{ color: 'var(--muted)', lineHeight: 1.6, margin: 0 }}>
-                Chat availability depends on the configured chat provider. Chat replies are guidance for browsing and preparing an enquiry, not a final rental decision.
+                Chat depends on the configured chat provider. Chat replies are guidance for browsing and preparing an enquiry, not a final rental decision.
               </p>
             </article>
 
@@ -67,7 +67,7 @@ export default function TermsPage() {
               <h2 className="premium-title-card" style={{ fontSize: '20px', marginBottom: '16px' }}>Privacy</h2>
               <p style={{ color: 'var(--muted)', lineHeight: 1.6, margin: 0 }}>
                 The{" "}
-                <Link href="/privacy" style={{ color: 'var(--accent)', textDecoration: 'none', fontWeight: 600 }}>Privacy Policy</Link> explains how enquiry and chat details are handled for this MVP website.
+                <Link href="/privacy" style={{ color: 'var(--accent)', textDecoration: 'none', fontWeight: 600 }}>Privacy Policy</Link> explains how enquiry and chat details are handled for this website.
               </p>
             </article>
           </div>
