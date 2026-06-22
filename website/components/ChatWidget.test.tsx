@@ -16,14 +16,38 @@ const assistantResponse = {
   }
 };
 
+function renderOpenChatWidget() {
+  render(<ChatWidget />);
+
+  const openButton = screen.queryByRole("button", { name: /open chat/i });
+  if (openButton) {
+    fireEvent.click(openButton);
+  }
+}
+
 describe("ChatWidget", () => {
   afterEach(() => {
     cleanup();
     vi.restoreAllMocks();
   });
 
-  it("starts without a canned assistant response before a provider reply", () => {
+  it("starts collapsed until the visitor opens chat", () => {
     render(<ChatWidget />);
+
+    expect(
+      screen.getByRole("button", { name: /open chat/i })
+    ).toBeInTheDocument();
+    expect(screen.getByText(/chat with us/i)).toBeInTheDocument();
+    expect(screen.queryByLabelText(/message/i)).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /open chat/i }));
+
+    expect(screen.getByLabelText(/message/i)).toBeInTheDocument();
+    expect(screen.getByText(/ask here/i)).toBeInTheDocument();
+  });
+
+  it("starts without a canned assistant response before a provider reply", () => {
+    renderOpenChatWidget();
 
     expect(screen.getByLabelText(/message/i)).toBeInTheDocument();
     expect(screen.getByText(/ask here/i)).toBeInTheDocument();
@@ -43,7 +67,7 @@ describe("ChatWidget", () => {
 
     vi.stubGlobal("fetch", fetchMock);
 
-    render(<ChatWidget />);
+    renderOpenChatWidget();
 
     fireEvent.change(screen.getByLabelText(/message/i), {
       target: { value: "I need 20 stools for a conference" }
@@ -81,7 +105,7 @@ describe("ChatWidget", () => {
 
     vi.stubGlobal("fetch", fetchMock);
 
-    render(<ChatWidget />);
+    renderOpenChatWidget();
 
     fireEvent.change(screen.getByLabelText(/message/i), {
       target: { value: "Do you have lounge seating?" }
@@ -102,7 +126,7 @@ describe("ChatWidget", () => {
   });
 
   it("shows legal links near chat guidance without exposing provider details", () => {
-    render(<ChatWidget />);
+    renderOpenChatWidget();
 
     expect(
       screen.getByRole("link", { name: /Privacy Policy/i })
