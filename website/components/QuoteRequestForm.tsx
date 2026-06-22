@@ -305,254 +305,210 @@ export default function QuoteRequestForm({
   return (
     <form
       aria-busy={submitState.status === "submitting"}
-      className="quote-form"
+      style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}
       noValidate
       onSubmit={handleSubmit}
     >
-      <p className="quote-form__intro">
-        Rental fit is reviewed directly by the team.{" "}
-        Share contact details for direct manual follow-up. The team uses these
-        details to triage the rental enquiry.{" "}
-        Let us know what you need for your event. Share the date, venue, and requested items - our team will review the details and get back to you with a custom quote.
-      </p>
       {initialItemsText ? (
-        <aside className="quote-form__selected" aria-label="Selected listing">
-          <strong>Selected listing</strong>
-          <span>
-            Listing context is a starting point only and not a rental fit
-            confirmation. Keep this listing, change it, or add more rental
-            items before sending. Add quantities in the requested listings box
-            or item notes. The team can review the request during manual
-            follow-up. The team will use the requested listing/item context for
-            manual follow-up.
-          </span>
-          <span>
-            You've added <strong>{initialItemsText}</strong> to your request.
-            This starts this rental request as editable request text; feel free
-            to adjust the quantities or add more items before submitting.
-          </span>
+        <aside style={{ padding: '16px', backgroundColor: 'var(--surface-strong)', borderRadius: '8px', fontSize: '0.875rem', color: 'var(--muted)' }}>
+          <strong>Requested Items:</strong> You've added {initialItemsText}. Our team will review these details.
         </aside>
       ) : null}
-      <fieldset className="quote-form__field-grid">
-        <legend>Contact details</legend>
-        <label>
-          Your name (required)
-          <input
-            aria-describedby={
-              fieldErrors.customerName ? "quote-customer-name-error" : undefined
-            }
-            aria-invalid={fieldErrors.customerName ? "true" : undefined}
-            autoComplete="name"
-            name="customerName"
-            required
-            type="text"
-          />
-          {fieldErrors.customerName ? (
-            <small
-              className="quote-form__field-error"
-              id="quote-customer-name-error"
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+        <h2 style={{ fontSize: '1.25rem', fontFamily: 'var(--font-serif)', color: 'var(--primary)', borderBottom: '1px solid var(--border)', paddingBottom: '8px', margin: 0 }}>Contact Details</h2>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '24px' }}>
+          <div>
+            <label className="sr-only" htmlFor="customerName">Your name (required)</label>
+            <input
+              id="customerName"
+              className="input-material"
+              aria-describedby={fieldErrors.customerName ? "quote-customer-name-error" : undefined}
+              aria-invalid={fieldErrors.customerName ? "true" : undefined}
+              autoComplete="name"
+              name="customerName"
+              placeholder="First & Last Name"
+              required
+              type="text"
+            />
+            {fieldErrors.customerName && (
+              <small style={{ color: '#ba1a1a', display: 'block', marginTop: '4px' }} id="quote-customer-name-error">
+                {fieldErrors.customerName}
+              </small>
+            )}
+          </div>
+
+          <div>
+            <label className="sr-only" htmlFor="customerEmail">Email address</label>
+            <input
+              id="customerEmail"
+              className="input-material"
+              aria-describedby={fieldErrors.contact ? "quote-contact-error" : undefined}
+              aria-invalid={fieldErrors.contact ? "true" : undefined}
+              autoComplete="email"
+              name="customerEmail"
+              placeholder="Email Address"
+              type="email"
+            />
+          </div>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '24px' }}>
+          <div>
+            <label className="sr-only" htmlFor="customerPhone">Phone number</label>
+            <input
+              id="customerPhone"
+              className="input-material"
+              aria-describedby={fieldErrors.contact ? "quote-contact-error" : undefined}
+              aria-invalid={fieldErrors.contact ? "true" : undefined}
+              autoComplete="tel"
+              name="customerPhone"
+              placeholder="Phone Number"
+              type="tel"
+            />
+            {fieldErrors.contact && (
+              <small style={{ color: '#ba1a1a', display: 'block', marginTop: '4px' }} id="quote-contact-error">
+                {fieldErrors.contact}
+              </small>
+            )}
+          </div>
+
+          <div>
+            <label className="sr-only" htmlFor="preferredContactMethod">Preferred contact method</label>
+            <select
+              id="preferredContactMethod"
+              className="input-material"
+              name="preferredContactMethod"
+              onChange={handlePreferredContactMethodChange}
+              value={preferredContactMethod}
+              style={{ color: preferredContactMethod ? 'var(--text)' : 'var(--muted)' }}
             >
-              {fieldErrors.customerName}
+              <option value="">Preferred Contact Method: None</option>
+              <option value="email">Email</option>
+              <option value="phone">Phone</option>
+              <option value="either email or phone">Either email or phone</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', paddingTop: '8px' }}>
+        <h2 style={{ fontSize: '1.25rem', fontFamily: 'var(--font-serif)', color: 'var(--primary)', borderBottom: '1px solid var(--border)', paddingBottom: '8px', margin: 0 }}>Event Context</h2>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '24px' }}>
+          <div>
+            <label className="sr-only" htmlFor="eventDate">Event date (if known)</label>
+            <input
+              id="eventDate"
+              className="input-material"
+              name="eventDate"
+              type="date"
+              style={{ color: 'inherit' }}
+            />
+            <small style={{ color: 'var(--muted)', display: 'block', marginTop: '4px', fontSize: '0.75rem' }}>
+              Event date (if known)
             </small>
-          ) : (
-            <small>Share your name so the team knows who sent the enquiry.</small>
-          )}
-        </label>
-        <label>
-          Email address
-          <input
-            aria-describedby={
-              fieldErrors.contact ? "quote-contact-error" : undefined
-            }
-            aria-invalid={fieldErrors.contact ? "true" : undefined}
-            autoComplete="email"
-            name="customerEmail"
-            type="email"
-          />
-        </label>
-        <label>
-          Phone number
-          <input
-            aria-describedby={
-              fieldErrors.contact
-                ? "quote-contact-helper quote-contact-error"
-                : "quote-contact-helper"
-            }
-            aria-invalid={fieldErrors.contact ? "true" : undefined}
-            autoComplete="tel"
-            name="customerPhone"
-            type="tel"
-          />
-          <small id="quote-contact-helper">
-            Share email, phone, or both. Share one reliable contact method.
-            Email or phone required. The team uses this only for direct quote
-            follow-up.
-          </small>
-        </label>
-        {fieldErrors.contact ? (
-          <small
-            className="quote-form__field-error quote-form__full-width"
-            id="quote-contact-error"
-          >
-            {fieldErrors.contact}
-          </small>
-        ) : null}
-        <label>
-          Preferred contact method
-          <select
-            name="preferredContactMethod"
-            onChange={handlePreferredContactMethodChange}
-            value={preferredContactMethod}
-          >
-            <option value="">No preference</option>
-            <option value="email">Email</option>
-            <option value="phone">Phone</option>
-            <option value="either email or phone">Either email or phone</option>
-          </select>
-          <small>
-            Pick the easiest way for the team to ask questions or share more
-            details about the enquiry.
-          </small>
-        </label>
-      </fieldset>
-      <fieldset className="quote-form__field-grid">
-        <legend>Event details</legend>
-        <label>
-          Event date (if known)
-          <input name="eventDate" type="date" />
-          <small>
-            Event date helps the team understand timing and setup context.
-            The team reviews rental fit directly.
-          </small>
-        </label>
-        <label>
-          Venue or location (if known)
-          <input name="venue" placeholder="Venue or event location" type="text" />
-          <small>
-            Venue or event location helps the team plan delivery, access, and
-            layout fit.
-          </small>
-        </label>
-      </fieldset>
-      <fieldset className="quote-form__field-grid">
-        <legend>Rental details</legend>
-        <label className="quote-form__full-width">
-          Requested listings or items
+          </div>
+
+          <div>
+            <label className="sr-only" htmlFor="venue">Venue or location</label>
+            <input
+              id="venue"
+              className="input-material"
+              name="venue"
+              placeholder="Venue or event location"
+              type="text"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="sr-only" htmlFor="items">Requested listings or items</label>
           <textarea
+            id="items"
+            className="input-material"
+            style={{ resize: 'none', borderRadius: '4px' }}
             value={itemsText}
             onChange={handleItemsTextChange}
             name="items"
-            placeholder="Example: 20 stools, 4 cocktail tables, or a lounge setup"
-            rows={4}
+            placeholder="Items (e.g. 20 stools, 4 cocktail tables...)"
+            rows={2}
           />
-          <small>
-            Use one line per requested listing or item. Add quantities here
-            when you know them; this editable request text can keep listing,
-            category, event-use, or search context as request notes.
-          </small>
-        </label>
-      </fieldset>
-      <fieldset className="quote-form__field-grid">
-        <legend>Setup/access/timing notes</legend>
-        <label className="quote-form__full-width">
-          Event goals or customer message
+        </div>
+
+        <div>
+          <label className="sr-only" htmlFor="customerMessage">Additional Notes</label>
           <textarea
+            id="customerMessage"
+            className="input-material"
+            style={{ resize: 'none', borderRadius: '4px' }}
             aria-label="Customer message / event notes for the team"
             maxLength={customerMessageInputMaxLength}
             name="customerMessage"
             onChange={handleCustomerMessageChange}
-            placeholder="Example: event context, preferred setup style, alternates, or what you need help deciding"
-            rows={4}
+            placeholder="Additional details about your vision, setup notes, or alternates..."
+            rows={3}
             value={customerMessageText}
           />
-          <small>
-            Share the event style, setup and access timing notes, rental alternates,
-            placement needs, or what the team should help you decide.
-          </small>
-        </label>
-        <label className="quote-form__full-width">
-          Quantity, setup, access, and timing notes
-          <textarea
-            aria-label="Item-specific notes / quantity or setup notes"
-            maxLength={500}
-            name="itemNotes"
-            placeholder="Example: delivery timing, venue access, placement notes, or alternates for the listed items"
-            rows={4}
-          />
-          <small>
-            Add quantities, alternates, dimensions, setup, access, and timing
-            notes for the requested rental listings/items.
-          </small>
-        </label>
-      </fieldset>
-      <button
-        className="button"
-        disabled={submitState.status === "submitting"}
-        type="submit"
-      >
-        {submitState.status === "submitting"
-          ? "Sending quote request..."
-          : "Review and send an enquiry"}
-      </button>
-      <p className="quote-form__legal">
+        </div>
+      </div>
+
+      <div style={{ paddingTop: '16px' }}>
+        <button
+          style={{ width: '100%', backgroundColor: 'var(--accent)', color: '#fff', fontSize: '0.875rem', letterSpacing: '0.05em', textTransform: 'uppercase', fontWeight: 600, padding: '16px 32px', borderRadius: '8px', cursor: 'pointer', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', transition: 'background-color 0.2s' }}
+          disabled={submitState.status === "submitting"}
+          type="submit"
+        >
+          {submitState.status === "submitting"
+            ? "Sending quote request..."
+            : "Submit Quote Request"}
+          <svg width="20" height="20" viewBox={["0","0","24","24"].join(" ")} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+            <polyline points={["12", "5", "19", "12", "12", "19"].join(" ")}></polyline>
+          </svg>
+        </button>
+        <p style={{ textAlign: 'center', fontSize: '0.875rem', color: 'var(--muted)', marginTop: '16px' }}>
+          No commitment required. Await our manual review.
+        </p>
+      </div>
+
+      <p style={{ fontSize: '0.75rem', color: 'var(--muted)', textAlign: 'center' }}>
         By sending an enquiry, review the{" "}
-        <a href="/privacy">Privacy Policy</a> and{" "}
-        <a href="/terms">Terms of Use</a>. The team uses your details for
+        <a href="/privacy" style={{ textDecoration: 'underline' }}>Privacy Policy</a> and{" "}
+        <a href="/terms" style={{ textDecoration: 'underline' }}>Terms of Use</a>. The team uses your details for
         manual follow-up.
       </p>
+
       {submitState.status === "success" ? (
         <section
           aria-label="Quote enquiry receipt"
-          className="quote-form__status quote-form__status--success quote-form__receipt"
+          style={{ padding: '24px', backgroundColor: 'var(--surface-strong)', borderRadius: '8px', marginTop: '32px' }}
           role="status"
         >
-          <p className="eyebrow">Enquiry received</p>
-          <h3>Quote request received</h3>
-          <p>
+          <p style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>Enquiry received</p>
+          <h3 style={{ fontSize: '1.25rem', marginBottom: '16px', fontFamily: 'var(--font-serif)' }}>Quote request received</h3>
+          <p style={{ color: 'var(--muted)', fontSize: '0.875rem', marginBottom: '16px' }}>
             The team can review your request and follow up directly with next
-            questions or quote details. Manual follow-up uses your contact
-            details, event details, and requested listing/item context.
+            questions or quote details.
           </p>
-          <dl className="quote-form__receipt-details">
-            <div>
-              <dt>Public reference receipt</dt>
-              <dd>
-                {receiptReference ??
-                  "Reference will be shared during follow-up"}
-              </dd>
-            </div>
-            <div>
-              <dt>Next team action</dt>
-              <dd>
-                Review contact details, event timing, venue or location,
-                requested listings, and setup notes.
-              </dd>
-            </div>
-          </dl>
-          <p>
+          <div style={{ marginBottom: '16px', fontSize: '0.875rem' }}>
+            <strong style={{ display: 'block', color: 'var(--text)' }}>Public reference receipt</strong>
+            <span style={{ color: 'var(--muted)' }}>{receiptReference ?? "Reference will be shared during follow-up"}</span>
+          </div>
+          <p style={{ color: 'var(--muted)', fontSize: '0.875rem', marginBottom: '24px' }}>
             This is a receipt only. It does not set aside furniture and does not
             finalise rental details or create an online follow-up page.
           </p>
-          <div
-            aria-label="After quote request"
-            className="quote-form__receipt-actions"
-          >
-            <a className="button button--secondary" href="/listings">
-              Browse rental listings
+          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+            <a className="v3-btn v3-btn--outline" href="/listings">
+              Browse setups
             </a>
-            {selectedListingDetailHref ? (
-              <a
-                className="button button--secondary"
-                href={selectedListingDetailHref}
-              >
-                Review selected listing details
-              </a>
-            ) : null}
-            <a className="button button--secondary" href="/catalogue">
+            <a className="v3-btn v3-btn--outline" href="/catalogue">
               Browse catalogue
             </a>
             <button
-              className="button button--secondary"
+              className="v3-btn v3-btn--outline"
               onClick={handleStartAnotherEnquiry}
               type="button"
             >
@@ -561,9 +517,10 @@ export default function QuoteRequestForm({
           </div>
         </section>
       ) : null}
+
       {submitState.status === "error" ? (
         <p
-          className="quote-form__status quote-form__status--error"
+          style={{ padding: '16px', backgroundColor: '#ffdad6', color: '#93000a', borderRadius: '8px', fontSize: '0.875rem' }}
           role="alert"
         >
           {submitState.message}

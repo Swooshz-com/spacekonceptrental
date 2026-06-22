@@ -159,8 +159,22 @@ export default async function HomePage() {
           </div>
 
           {featuredListings.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '64px' }}>
-              <p>No public rental listings are available right now.</p>
+            <div style={{ padding: '64px 32px', textAlign: 'center', backgroundColor: 'var(--surface-strong)', borderRadius: '16px', margin: '48px auto', maxWidth: '800px' }}>
+              <h2 style={{ fontSize: '2rem', marginBottom: '16px', fontFamily: 'var(--font-serif)', color: 'var(--text-primary)' }}>Start with a rental brief</h2>
+              <p style={{ fontSize: '1.125rem', color: 'var(--text-secondary)', marginBottom: '32px', lineHeight: 1.6, maxWidth: '600px', margin: '0 auto 32px' }}>
+                Explore our curated catalogue items or request a general quote. Our team will help you build a comprehensive proposal tailored to your event.
+              </p>
+              <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
+                <Link href="/quote" className="v3-btn v3-btn--primary">
+                  Request Quote
+                </Link>
+                <Link href="/catalogue" className="v3-btn v3-btn--outline">
+                  Browse Catalogue
+                </Link>
+                <Link href="/listings" className="v3-btn v3-btn--ghost">
+                  Explore Setups
+                </Link>
+              </div>
             </div>
           ) : (
             <div className="v3-masonry">

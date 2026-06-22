@@ -28,7 +28,7 @@ function SiteHeader() {
       <div className="v3-header__container">
         {/* Brand */}
         <Link className="v3-header__brand" href="/">
-          SpaceKoncept<span style={{ fontWeight: 400, color: "var(--muted)" }}>Rental</span>
+          Space Koncept Rental
         </Link>
 
         {/* Primary navigation */}

@@ -216,41 +216,29 @@ export default async function QuotePage({
   return (
     <div className="section-padding">
       <div className="container">
-        <div className="v3-page-header">
-          <h1>Request a quote</h1>
-          <p>
-            Share your event details and requested items below. Our team will review your enquiry and provide a comprehensive proposal.
+        <div className="v3-page-header" style={{ textAlign: 'center', maxWidth: '800px', margin: '0 auto 48px' }}>
+          <h1 style={{ fontSize: 'clamp(2.25rem, 5vw, 3rem)', color: 'var(--accent-dark)', marginBottom: '16px', letterSpacing: '-0.02em' }}>Request Quote</h1>
+          <p style={{ fontSize: '1.125rem', color: 'var(--muted)' }}>
+            Submit your selection for a tailored proposal. Our studio team manually reviews every inquiry to ensure intentional curation and availability for your requested dates.
           </p>
         </div>
 
-        {selectedListing && <QuoteSelectedListingBanner product={selectedListing} />}
-
         <div className="v3-quote-layout">
           {/* Left Column: Your Selection */}
-          <div className="v3-quote-selection" style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+          <div className="v3-quote-selection">
             <QuoteListDisplay />
-            {selectedListing && <QuoteListingContext product={selectedListing} />}
-            {!selectedListing && (
-              <QuoteGeneralContext
-                category={listingContext.category}
-                event={listingContext.event}
-                requestedSlug={listingContext.requestedSlug}
-                search={listingContext.search}
-              />
-            )}
           </div>
 
           {/* Right Column: Main Form */}
-          <div className="v3-quote-form" style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
-            <div className="premium-card" style={{ padding: '40px' }}>
-              <h2 style={{ fontSize: '1.5rem', marginBottom: '32px', fontFamily: 'var(--font-serif)' }}>Event Details</h2>
+          <div className="v3-quote-form">
+            <div style={{ backgroundColor: 'var(--surface-container-lowest, #fff)', padding: 'clamp(24px, 4vw, 48px)', borderRadius: '16px', boxShadow: '0 10px 40px -10px rgba(95, 94, 44, 0.08)' }}>
               <QuoteRequestForm
                 initialItemsText={initialItemsText}
                 initialListingSlug={listingContext.requestedSlug}
               />
             </div>
 
-            <div className="premium-card" style={{ padding: '24px' }}>
+            <div style={{ padding: '24px', backgroundColor: 'transparent' }}>
               <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>What to Expect</div>
               <ul style={{ margin: 0, paddingLeft: '20px', color: 'var(--muted)', fontSize: '0.875rem', lineHeight: 1.6 }}>
                 <li style={{ marginBottom: '8px' }}>Your request will be manually reviewed by our team.</li>

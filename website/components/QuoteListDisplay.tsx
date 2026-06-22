@@ -2,22 +2,24 @@
 
 import { useQuoteList } from "./QuoteListContext";
 import Link from "next/link";
+import Image from "next/image";
+import chairImage from "../assets/images/product_chair.png";
 
 export default function QuoteListDisplay() {
   const { items, removeItem } = useQuoteList();
 
   if (items.length === 0) {
     return (
-      <div className="premium-card" style={{ padding: '48px 32px', textAlign: 'center', marginBottom: '32px' }}>
-        <h3 style={{ fontSize: '1.5rem', marginBottom: '16px', fontFamily: 'var(--font-serif)', color: 'var(--text-primary)' }}>Your Quote List is empty.</h3>
-        <p style={{ color: 'var(--text-secondary)', marginBottom: '32px', lineHeight: 1.6 }}>
-          You can add individual rental items or prebuilt setups to your Quote List to request a comprehensive rental proposal.
+      <div style={{ padding: '32px', textAlign: 'center', backgroundColor: 'var(--surface-strong)', borderRadius: '16px' }}>
+        <h3 style={{ fontSize: '1.25rem', marginBottom: '8px', fontFamily: 'var(--font-serif)', color: 'var(--accent-dark)' }}>Your Quote List is empty</h3>
+        <p style={{ color: 'var(--muted)', fontSize: '0.875rem', marginBottom: '24px', lineHeight: 1.6 }}>
+          Add individual rental items or curated setups to request a comprehensive proposal.
         </p>
         <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
-          <Link href="/catalogue" className="v3-btn v3-btn--outline">
+          <Link href="/catalogue" className="v3-btn v3-btn--outline" style={{ fontSize: '0.875rem', padding: '8px 16px' }}>
             Browse Catalogue
           </Link>
-          <Link href="/listings" className="v3-btn v3-btn--outline">
+          <Link href="/listings" className="v3-btn v3-btn--outline" style={{ fontSize: '0.875rem', padding: '8px 16px' }}>
             Explore Setups
           </Link>
         </div>
@@ -26,43 +28,58 @@ export default function QuoteListDisplay() {
   }
 
   return (
-    <div className="premium-card" style={{ padding: '32px', marginBottom: '32px' }}>
-      <div style={{ fontSize: '12px', fontWeight: 800, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px' }}>
-        Quote List ({items.length})
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', paddingBottom: '16px' }}>
+        <h2 style={{ fontSize: '1.5rem', margin: 0, color: 'var(--accent)', fontFamily: 'var(--font-serif)' }}>Your Selection</h2>
+        <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--outline)', backgroundColor: 'var(--surface-strong)', padding: '4px 12px', borderRadius: '9999px' }}>
+          {items.length} {items.length === 1 ? 'Item' : 'Items'}
+        </span>
       </div>
-      <h3 className="premium-title-card" style={{ marginBottom: '24px' }}>Selected items for enquiry</h3>
-      
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-        {items.map(item => (
-          <div key={item.slug} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', paddingBottom: '16px', borderBottom: '1px solid var(--border)' }}>
-            <div>
-              <div style={{ fontWeight: 600, color: 'var(--surface-strong)', fontSize: '15px' }}>{item.name}</div>
-              <div style={{ color: 'var(--muted)', fontSize: '13px', marginTop: '4px' }}>
-                Ref: {item.slug}
-                {item.categoryName && ` • ${item.categoryName}`}
-                {item.rentalUnit && ` • ${item.rentalUnit}`}
+
+      {items.map(item => {
+        const image = (item as any).primaryImage?.publicUrl || (item as any).images?.[0]?.publicUrl;
+        return (
+          <article key={item.slug} className="v3-quote-item-card">
+            <div className="v3-quote-item-card__image">
+              {image ? (
+                <img src={image} alt={item.name} />
+              ) : (
+                <Image src={chairImage} alt={item.name} />
+              )}
+            </div>
+            <div className="v3-quote-item-card__content">
+              <div className="v3-quote-item-card__header">
+                <div>
+                  <h3 className="v3-quote-item-card__title">{item.name}</h3>
+                  <p className="v3-quote-item-card__subtitle">{item.categoryName || (item.rentalUnit === "setup" ? "Setup" : "Catalogue item")}</p>
+                </div>
+                <button
+                  type="button"
+                  aria-label="Remove item"
+                  className="v3-quote-item-card__remove"
+                  onClick={() => removeItem(item.slug)}
+                >
+                  <svg width="20" height="20" viewBox={["0","0","24","24"].join(" ")} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                  </svg>
+                </button>
+              </div>
+              <div style={{ marginTop: 'auto', paddingTop: '8px', textAlign: 'right' }}>
+                <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--outline)' }}>Ref: {item.slug}</span>
               </div>
             </div>
-            <button 
-              type="button" 
-              onClick={() => removeItem(item.slug)}
-              style={{ background: 'none', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', color: 'var(--muted)', fontSize: '12px', fontWeight: 600, cursor: 'pointer', padding: '6px 12px', transition: 'all 0.2s' }}
-              onMouseOver={e => {
-                e.currentTarget.style.color = '#ef4444';
-                e.currentTarget.style.borderColor = '#ef4444';
-              }}
-              onMouseOut={e => {
-                e.currentTarget.style.color = 'var(--muted)';
-                e.currentTarget.style.borderColor = 'var(--border)';
-              }}
-            >
-              Remove
-            </button>
-          </div>
-        ))}
-      </div>
-      <div style={{ marginTop: '24px', fontSize: '14px', color: 'var(--muted)', fontStyle: 'italic' }}>
-        These items have been added to your request form below. Feel free to adjust quantities or remove items before submitting.
+          </article>
+        );
+      })}
+      <div style={{ paddingTop: '16px', borderTop: '1px solid var(--border)', textAlign: 'center' }}>
+        <Link href="/catalogue" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', color: 'var(--accent)', fontSize: '0.875rem', fontWeight: 600 }}>
+          <svg width="20" height="20" viewBox={["0","0","24","24"].join(" ")} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          Add more items
+        </Link>
       </div>
     </div>
   );

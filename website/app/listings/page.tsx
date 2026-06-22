@@ -166,6 +166,9 @@ export default async function ListingsPage({
   ]);
 
   const filteredCatalogue = filterCatalogueByDiscovery(catalogue, filters);
+  filteredCatalogue.products = filteredCatalogue.products.filter(p =>
+    p.rentalUnit === "setup" || p.categoryName?.toLowerCase().includes("setup")
+  );
 
   return (
     <div className="section-padding">
@@ -176,31 +179,21 @@ export default async function ListingsPage({
         </div>
 
         {filteredCatalogue.products.length === 0 ? (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '64px', alignItems: 'center', margin: '64px 0 96px', padding: '48px', backgroundColor: 'var(--surface-alt)', borderRadius: 'var(--radius-lg)' }}>
-            <div style={{ borderRadius: 'var(--radius-md)', overflow: 'hidden', aspectRatio: '4/3', position: 'relative' }}>
-              <div style={{ position: 'absolute', inset: 0, backgroundColor: 'var(--border)', opacity: 0.1 }}></div>
-              <Image 
-                src={corporateImage} 
-                alt="Curated setups" 
-                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-              />
-            </div>
-            <div>
-              <h2 style={{ fontSize: '2rem', marginBottom: '16px', fontFamily: 'var(--font-serif)', color: 'var(--text-primary)' }}>Prebuilt Setups</h2>
-              <p style={{ fontSize: '1.125rem', color: 'var(--text-secondary)', marginBottom: '32px', lineHeight: 1.6 }}>
-                Setups are prebuilt event stacks curated for weddings, launches, exhibitions, lounges, and corporate events. Explore these cohesive looks to simplify your rental planning.
-              </p>
-              <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
-                <Link href="/quote" className="v3-btn v3-btn--primary">
-                  Request Quote
-                </Link>
-                <Link href="/catalogue" className="v3-btn v3-btn--outline">
-                  Browse Catalogue
-                </Link>
-                <Link href="/listings" className="v3-btn v3-btn--ghost">
-                  View all setups
-                </Link>
-              </div>
+          <div style={{ padding: '64px 32px', textAlign: 'center', backgroundColor: 'var(--surface-strong)', borderRadius: '16px', margin: '48px auto', maxWidth: '800px' }}>
+            <h2 style={{ fontSize: '2rem', marginBottom: '16px', fontFamily: 'var(--font-serif)', color: 'var(--text-primary)' }}>Start with a rental brief</h2>
+            <p style={{ fontSize: '1.125rem', color: 'var(--text-secondary)', marginBottom: '32px', lineHeight: 1.6, maxWidth: '600px', margin: '0 auto 32px' }}>
+              Explore our curated catalogue items or request a general quote. Our team will help you build a comprehensive proposal tailored to your event.
+            </p>
+            <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
+              <Link href="/quote" className="v3-btn v3-btn--primary">
+                Request Quote
+              </Link>
+              <Link href="/catalogue" className="v3-btn v3-btn--outline">
+                Browse Catalogue
+              </Link>
+              <Link href="/listings" className="v3-btn v3-btn--ghost">
+                View all setups
+              </Link>
             </div>
           </div>
         ) : (
