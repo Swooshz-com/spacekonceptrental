@@ -77,19 +77,19 @@ export default function MobileMenu() {
         </div>
 
         <nav className="premium-mobile-drawer__nav" aria-label="Mobile navigation">
+          <Link href="/" onClick={close}>
+            Home
+          </Link>
           <Link href="/catalogue" onClick={close}>
             Catalogue
           </Link>
           <Link href="/listings" onClick={close}>
             Setups
           </Link>
-          <Link href="/quote" onClick={close}>
-            Quote List
-          </Link>
-          <Link href="#" onClick={close}>
+          <Link href="/about" onClick={close}>
             About
           </Link>
-          <Link href="/quote" onClick={close}>
+          <Link href="/contact" onClick={close}>
             Contact
           </Link>
         </nav>

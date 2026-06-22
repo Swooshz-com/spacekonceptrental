@@ -218,13 +218,13 @@ export function CataloguePageContent({
         {catalogue.products.length === 0 ? (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '64px', alignItems: 'center', margin: '64px 0 96px', padding: '48px', backgroundColor: 'var(--surface-alt)', borderRadius: 'var(--radius-lg)' }}>
             <div>
-              <h2 style={{ fontSize: '2rem', marginBottom: '16px', fontFamily: 'var(--font-serif)', color: 'var(--text-primary)' }}>Our Catalogue</h2>
+              <h2 style={{ fontSize: '2rem', marginBottom: '16px', fontFamily: 'var(--font-serif)', color: 'var(--text-primary)' }}>No matching public listings</h2>
               <p style={{ fontSize: '1.125rem', color: 'var(--text-secondary)', marginBottom: '32px', lineHeight: 1.6 }}>
-                {emptyMessage ?? "The catalogue features our individual rental furniture and items. Whether you need single statement pieces or functional event basics, explore our collection to build your ideal space."}
+                {emptyMessage ?? "Clear filters, review current rental listings, browse categories."}
               </p>
               <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
                 <Link href="/quote" className="v3-btn v3-btn--primary">
-                  Request Quote
+                  Start a general quote request
                 </Link>
                 <Link href="/listings" className="v3-btn v3-btn--outline">
                   Explore Setups

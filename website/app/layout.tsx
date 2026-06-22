@@ -16,42 +16,40 @@ export const metadata: Metadata = {
 
 function SiteHeader() {
   const primaryNavLinks = [
+    { href: "/", label: "Home" },
     { href: "/catalogue", label: "Catalogue" },
     { href: "/listings", label: "Setups" },
+    { href: "/about", label: "About" },
+    { href: "/contact", label: "Contact" },
   ];
 
   return (
     <header className="v3-header">
-      {/* Brand */}
-      <Link className="v3-header__brand" href="/">
-        SpaceKoncept<span style={{ fontWeight: 400, color: "var(--muted)" }}>Rental</span>
-      </Link>
+      <div className="v3-header__container">
+        {/* Brand */}
+        <Link className="v3-header__brand" href="/">
+          SpaceKoncept<span style={{ fontWeight: 400, color: "var(--muted)" }}>Rental</span>
+        </Link>
 
-      {/* Primary navigation */}
-      <nav aria-label="Primary navigation" className="v3-header__nav">
-        {primaryNavLinks.map((link) => (
-          <Link key={link.href} href={link.href} className="v3-header__link">
-            {link.label}
+        {/* Primary navigation */}
+        <nav aria-label="Primary navigation" className="v3-header__nav">
+          {primaryNavLinks.map((link) => (
+            <Link key={link.href} href={link.href} className="v3-header__link">
+              {link.label}
+            </Link>
+          ))}
+        </nav>
+
+        {/* Actions */}
+        <div className="v3-header__actions">
+          <Link
+            href="/quote"
+            className="v3-btn v3-btn--primary v3-header__cta"
+          >
+            Request Quote<QuoteBadge />
           </Link>
-        ))}
-
-        <Link href="/quote" className="v3-header__link" style={{ display: "inline-flex", gap: "8px", alignItems: "center" }}>
-          Quote List
-          <QuoteBadge />
-        </Link>
-
-        <Link
-          href="/quote"
-          className="v3-btn v3-btn--primary"
-          style={{ padding: "8px 16px" }}
-        >
-          Request Quote
-        </Link>
-      </nav>
-
-      <div style={{ display: "none" }}>
-        {/* Mobile menu (client component) */}
-        <MobileMenu />
+          <MobileMenu />
+        </div>
       </div>
     </header>
   );
@@ -60,7 +58,7 @@ function SiteHeader() {
 function SiteFooter() {
   return (
     <footer className="v3-footer">
-      <div className="v3-footer__grid">
+      <div className="v3-footer__grid container">
         {/* Brand column */}
         <div className="v3-footer__brand">
           <h2>Space Koncept Rental</h2>
@@ -72,7 +70,6 @@ function SiteFooter() {
           <ul className="v3-footer__links">
             <li><Link href="/catalogue">Catalogue</Link></li>
             <li><Link href="/listings">Setups</Link></li>
-            <li><Link href="/quote">Quote List</Link></li>
             <li><Link href="/quote">Request Quote</Link></li>
           </ul>
         </div>

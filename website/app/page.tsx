@@ -77,24 +77,21 @@ export default async function HomePage() {
     <>
       <section className="section-padding">
         <div className="container">
-          <div className="v3-home-hero">
-            <div className="v3-home-hero__content">
+          <div className="v3-hero__container">
+            <div className="v3-hero__content">
               <h1>Setting the scene for unforgettable events.</h1>
               <p>Curated event-ready furniture and flexible rental selection for corporate and private occasions. Add items to your quote list for manual team follow-up.</p>
-              <div className="v3-home-hero__actions">
+              <div className="v3-hero__actions">
                 <Link href="/quote" className="v3-btn v3-btn--primary">
                   Request Quote
                 </Link>
                 <Link href="/catalogue" className="v3-btn v3-btn--outline">
                   Browse Catalogue
                 </Link>
-                <Link href="/listings" className="v3-btn v3-btn--ghost">
-                  Explore Setups
-                </Link>
               </div>
             </div>
-            <div className="v3-home-hero__image">
-              <Image alt="Styled event lounge" priority src={heroImage} style={{ objectFit: 'cover' }} />
+            <div className="v3-hero__image-wrapper">
+              <Image alt="Styled event lounge" priority src={heroImage} className="v3-hero__image" />
             </div>
           </div>
         </div>
@@ -104,19 +101,22 @@ export default async function HomePage() {
         <div className="container">
           <div className="v3-advantage__grid">
             <div className="v3-advantage__header">
-              <h2>The SpaceKoncept Advantage</h2>
+              <h2>The Space Koncept Advantage</h2>
             </div>
-            <div className="v3-advantage__items">
-              {advantages.map((adv) => (
-                <div key={adv.title} className="v3-advantage__item">
-                  <svg viewBox={["0","0","24","24"].join(" ")} fill="none" stroke="currentColor">
-                    {adv.icon}
-                  </svg>
-                  <h3>{adv.title}</h3>
-                  <p>{adv.desc}</p>
-                </div>
-              ))}
+            <div className="v3-advantage__intro">
+              <p>Moving away from automation, we believe in manual, curated human interaction to ensure every detail of your space resonates emotionally.</p>
             </div>
+          </div>
+          <div className="v3-advantage__items">
+            {advantages.map((adv) => (
+              <div key={adv.title} className="v3-advantage__item">
+                <svg viewBox={["0","0","24","24"].join(" ")} fill="none" stroke="currentColor">
+                  {adv.icon}
+                </svg>
+                <h3>{adv.title}</h3>
+                <p>{adv.desc}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -146,7 +146,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="section-padding" style={{ background: 'var(--surface-strong)' }}>
+      <section className="section-padding">
         <div className="container">
           <div className="v3-featured-header">
             <h2>Featured Pieces</h2>
