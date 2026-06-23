@@ -291,7 +291,7 @@ describe("Phase 3F-A/B catalogue content quality, media readiness, and publicati
       "https://example.test/storage/plinth.jpg"
     );
     expect(
-      screen.getByRole("link", { name: /request a quote/i })
+      screen.getByRole("link", { name: /add to quote for bare plinth/i })
     ).toHaveAttribute("href", "/quote?listing=bare-plinth");
     expect(screen.queryByText(/publication readiness|media readiness/i)).not.toBeInTheDocument();
   });
@@ -344,9 +344,9 @@ describe("Phase 3F-A/B catalogue content quality, media readiness, and publicati
       })
     );
 
-    expect(screen.getByRole("heading", { name: /general rental enquiry/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /no rental items selected yet/i })).toBeInTheDocument();
     expect(
-      screen.getByText(/share the requested listings or items/i)
+      screen.getByText(/share requested rental listings or items/i)
     ).toBeInTheDocument();
     expect(screen.getByLabelText(/requested listings or items/i)).toHaveValue("");
     expect(screen.queryByRole("link", { name: /track|status/i })).not.toBeInTheDocument();

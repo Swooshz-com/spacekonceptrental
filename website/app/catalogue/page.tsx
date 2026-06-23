@@ -14,14 +14,14 @@ export const dynamic = "force-dynamic";
 const iconViewBox = ["0", "0", "24", "24"].join(" ");
 
 export const metadata: Metadata = {
-  title: "Furniture catalogue | Space Koncept Rentals",
+  title: "Furniture catalogue | Space Koncept Rental",
   description:
-    "Browse public event furniture rental listings and send a quote request for manual follow-up with Space Koncept Rentals.",
+    "Browse public event furniture rental listings and send a quote request for manual follow-up with Space Koncept Rental.",
   openGraph: {
-    title: "Furniture catalogue | Space Koncept Rentals",
+    title: "Furniture catalogue | Space Koncept Rental",
     description:
       "Browse public rental listings, compare event furniture details, and start a quote request.",
-    siteName: "Space Koncept Rentals",
+    siteName: "Space Koncept Rental",
     type: "website",
     url: "/catalogue"
   }
@@ -325,7 +325,7 @@ export function CataloguePageContent({
             {title}
           </h1>
           <p className="premium-subtitle" style={{ color: '#cbd5e1' }}>
-            Browse furniture and event rental listings, compare useful details, and send an enquiry for team follow-up.
+            Browse furniture and event rental listings, compare useful details, and prepare a quote request for team follow-up.
           </p>
         </div>
       </section>
@@ -335,7 +335,7 @@ export function CataloguePageContent({
           <div className="premium-catalogue-layout">
             {/* LEFT: Filter sidebar */}
             <aside aria-label="Catalogue discovery" className="premium-sidebar">
-              <h3 style={{ fontSize: '18px', fontWeight: 700, marginBottom: '24px' }}>Filter Products</h3>
+              <h3 style={{ fontSize: '18px', fontWeight: 700, marginBottom: '24px' }}>Filter listings</h3>
               <h2 className="sr-only">Explore by category</h2>
 
               <div style={{ marginBottom: '24px' }}>
@@ -419,7 +419,7 @@ export function CataloguePageContent({
                 </Link>
               )}
               <div className="sr-only">
-                <Link href="/quote">Start a rental enquiry</Link>
+                <Link href="/quote">Request Quote</Link>
               </div>
             </aside>
 
@@ -445,7 +445,7 @@ export function CataloguePageContent({
                   </svg>
                   <input
                     type="search"
-                    placeholder="Search products..."
+                    placeholder="Search listings..."
                     className="premium-input"
                     style={{ paddingLeft: '40px', width: '100%' }}
                     readOnly
@@ -456,7 +456,7 @@ export function CataloguePageContent({
                   className="premium-input"
                   style={{ width: 'auto', minWidth: '160px' }}
                   defaultValue=""
-                  aria-label="Sort products"
+                  aria-label="Sort listings"
                 >
                   <option value="">Sort by: Default</option>
                   <option value="name-asc">Name: A-Z</option>
@@ -493,8 +493,7 @@ export function CataloguePageContent({
                     <h2>No matching public listings</h2>
                     <p>
                       No public rental listings are available right now. Clear
-                      filters, review current rental listings, browse
-                      categories, or send a general quote request.
+                      filters, review current rental listings, browse catalogue filters, or send a general quote request.
                     </p>
                     <p>
                       Clear filters, review current rental listings, or send a
@@ -505,12 +504,12 @@ export function CataloguePageContent({
                     ) : null}
                     <Link href={listingBasePath}>Review current rental listings</Link>
                     <Link href={listingBasePath}>Browse all listings</Link>
-                    <Link href="/categories">Browse categories</Link>
-                    <Link href="/events">Explore event-use ideas</Link>
-                    <Link href="/events">Browse event setup guidance</Link>
+                    <Link href="/catalogue">Browse Catalogue</Link>
+                    <Link href="/listings">Explore Setups</Link>
+                    <Link href="/listings">Browse Setups</Link>
                     <Link href="/quote">Start a general quote request</Link>
-                    <Link href="/quote">Send an enquiry</Link>
-                    <p>Send an enquiry for team review.</p>
+                    <Link href="/quote">Request Quote</Link>
+                    <p>The team reviews submitted enquiries.</p>
                   </div>
                   <Link className="premium-button premium-button--secondary" href={listingBasePath}>
                     Clear all filters
@@ -566,15 +565,15 @@ export function CataloguePageContent({
                               style={{ background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text)', flex: 1, padding: '0 16px', fontSize: '14px', height: '40px' }}
                               href={`${detailBasePath}/${product.slug}`}
                             >
-                              Details
+                              View Details
                             </Link>
                             <Link
-                              aria-label={`Request a quote for ${product.name}`}
+                              aria-label={`Add to Quote for ${product.name}`}
                               className="premium-button premium-button--primary"
                               style={{ flex: 1, padding: '0 16px', fontSize: '14px', height: '40px' }}
                               href={getQuoteHrefForListing(product.slug)}
                             >
-                              Quote
+                              Add to Quote
                             </Link>
                           </div>
                         </div>

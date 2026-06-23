@@ -122,11 +122,11 @@ describe("Phase 2B-AQ furniture listing catalogue direction pivot", () => {
     expect(categoryPanel).toContain("file handling stays out of scope.");
     expect(cataloguePage).toContain("View details for");
     expect(detailPage).toContain("Furniture listing");
-    expect(detailPage).toContain("Request a quote");
+    expect(detailPage).toContain("Request Quote");
     expect(eventPage).toContain("Event rentals");
     expect(eventPage).toContain("furniture rentals");
     expect(eventPage).toContain("styled setups");
-    expect(eventPage).toContain("Start a rental enquiry");
+    expect(eventPage).toContain("Request Quote");
     expect(eventPage).not.toMatch(/shell|mvp/i);
     expect(combinedVisibleSource).not.toMatch(/cart|checkout|payment|order fulfilment/i);
     expect(combinedVisibleSource).not.toContain("@supabase/");

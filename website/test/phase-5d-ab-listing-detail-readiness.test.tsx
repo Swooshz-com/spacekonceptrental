@@ -118,9 +118,9 @@ describe("Phase 5D-A/B listing detail readiness", () => {
       /Quote request checklist/i,
       /Use this photo to compare style, scale, and event fit/i,
       /Photo to confirm for this listing/i,
-      /Request a quote for/i,
-      /Start enquiry for/i,
-      /Start a rental enquiry/i,
+      /Request Quote for/i,
+      /Add to Quote for/i,
+      /Request Quote/i,
       /Listing context is\s+a starting point only/i,
       /The team can review the request/i
     ]) {
@@ -137,11 +137,9 @@ describe("Phase 5D-A/B listing detail readiness", () => {
     );
 
     expect(screen.getAllByText(/View rental listing/i).length).toBeGreaterThan(0);
-    expect(screen.getByRole("link", { name: /Browse listings/i })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /Browse categories/i })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /Explore event-use ideas/i })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /Request a quote for Lounge sofa package/i })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /Start enquiry for Lounge sofa package/i })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Browse Setups/i })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Request Quote for Lounge sofa package/i })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Add to Quote for Lounge sofa package/i })).toBeInTheDocument();
     expect(screen.getByText(/Same-category links are local browsing cues only/i)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /View rental listing: Modular lounge set/i })).toBeInTheDocument();
   });
@@ -178,7 +176,7 @@ describe("Phase 5D-A/B listing detail readiness", () => {
         "Search interest: soft seating"
       ].join("\n")
     );
-    expect(screen.getByRole("button", { name: /send an enquiry/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /submit enquiry/i })).toBeInTheDocument();
   });
 
   it("keeps success and receipt copy free of availability, hold, booking, response-time, or fulfilment promises", () => {

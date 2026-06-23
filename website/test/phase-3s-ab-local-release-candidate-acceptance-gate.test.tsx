@@ -278,14 +278,14 @@ describe("Phase 3S-A/B local release-candidate acceptance gate", () => {
   it("keeps public route copy customer-facing for the rental website candidate", async () => {
     render(await HomePage());
     expect(screen.getByRole("heading", { name: /event furniture rental/i })).toBeInTheDocument();
-    expect(screen.getByText(/request a rental quote/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/request quote/i).length).toBeGreaterThan(0);
     expect(screen.getByText(/event furniture/i)).toBeInTheDocument();
 
     cleanup();
     render(<CataloguePageContent catalogue={emptyCatalogue} />);
-    expect(screen.getByRole("link", { name: /browse categories/i })).toHaveAttribute("href", "/categories");
-    expect(screen.getByRole("link", { name: /browse event setup guidance/i })).toHaveAttribute("href", "/events");
-    expect(screen.getByRole("link", { name: /start a general quote request/i })).toHaveAttribute("href", "/quote");
+    expect(screen.getByRole("link", { name: /browse catalogue/i })).toHaveAttribute("href", "/catalogue");
+    expect(screen.getByRole("link", { name: /explore setups/i })).toHaveAttribute("href", "/listings");
+    expect(screen.getAllByRole("link", { name: /request quote/i })[0]).toHaveAttribute("href", "/quote");
 
     cleanup();
     render(<CategoriesPageContent catalogue={catalogue} />);
@@ -295,7 +295,7 @@ describe("Phase 3S-A/B local release-candidate acceptance gate", () => {
     render(<ProductPageContent product={loungeProduct} />);
     expect(screen.getByRole("heading", { name: /rental details/i })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: /fit check before enquiry/i })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /request a quote/i })).toHaveAttribute("href", "/quote?listing=modular-lounge-set");
+    expect(screen.getByRole("link", { name: /add to quote for modular lounge set/i })).toHaveAttribute("href", "/quote?listing=modular-lounge-set");
 
     cleanup();
     render(<EventsPage />);
@@ -304,13 +304,13 @@ describe("Phase 3S-A/B local release-candidate acceptance gate", () => {
 
     cleanup();
     render(await QuotePage());
-    expect(screen.getByRole("heading", { name: /request a rental quote/i })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: /check your enquiry details/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /request quote/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /quote request form/i })).toBeInTheDocument();
 
     cleanup();
     render(<NotFound />);
-    expect(screen.getByRole("link", { name: /browse categories/i })).toHaveAttribute("href", "/categories");
-    expect(screen.getByRole("link", { name: /request a quote/i })).toHaveAttribute("href", "/quote");
+    expect(screen.getByRole("link", { name: /browse catalogue/i })).toHaveAttribute("href", "/catalogue");
+    expect(screen.getAllByRole("link", { name: /request quote/i })[0]).toHaveAttribute("href", "/quote");
   });
 
   it("renders an admin-only local acceptance snapshot for authorised admins", () => {

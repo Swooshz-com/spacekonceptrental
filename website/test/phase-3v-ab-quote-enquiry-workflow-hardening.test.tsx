@@ -276,7 +276,7 @@ describe("Phase 3V-A/B quote enquiry workflow hardening", () => {
   it("hardens the public quote/enquiry page guidance with customer-facing rental wording", async () => {
     render(await QuotePage({ searchParams: { listing: "missing-listing" } }));
 
-    expect(screen.getByRole("heading", { name: /request a rental quote/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /request quote/i })).toBeInTheDocument();
     expect(screen.getByLabelText(/event date/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/venue or location/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/requested listings or items/i)).toBeInTheDocument();
@@ -306,7 +306,7 @@ describe("Phase 3V-A/B quote enquiry workflow hardening", () => {
 
   it("keeps listing, category, and event handoff links public-safe", () => {
     render(<ProductPageContent product={sampleProduct} />);
-    expect(screen.getByRole("link", { name: /request a quote/i })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: /add to quote for modular lounge set/i })).toHaveAttribute(
       "href",
       "/quote?listing=modular-lounge-set"
     );
@@ -316,11 +316,11 @@ describe("Phase 3V-A/B quote enquiry workflow hardening", () => {
 
     cleanup();
     render(<CataloguePageContent catalogue={sampleCatalogue} />);
-    expect(screen.getByRole("link", { name: /start a rental enquiry/i })).toHaveAttribute(
+    expect(screen.getAllByRole("link", { name: /request quote/i })[0]).toHaveAttribute(
       "href",
       "/quote"
     );
-    expect(screen.getByRole("link", { name: /request a quote/i })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: /add to quote for modular lounge set/i })).toHaveAttribute(
       "href",
       "/quote?listing=modular-lounge-set"
     );
@@ -329,7 +329,7 @@ describe("Phase 3V-A/B quote enquiry workflow hardening", () => {
     render(<CategoriesPageContent catalogue={sampleCatalogue} />);
     expect(
       screen
-        .getAllByRole("link", { name: /send an enquiry/i })
+        .getAllByRole("link", { name: /request quote/i })
         .every((link) => link.getAttribute("href") === "/quote")
     ).toBe(true);
 
@@ -339,7 +339,7 @@ describe("Phase 3V-A/B quote enquiry workflow hardening", () => {
       "href",
       "/catalogue"
     );
-    expect(screen.getByRole("link", { name: /start a rental enquiry/i })).toHaveAttribute(
+    expect(screen.getAllByRole("link", { name: /request quote/i })[0]).toHaveAttribute(
       "href",
       "/quote"
     );

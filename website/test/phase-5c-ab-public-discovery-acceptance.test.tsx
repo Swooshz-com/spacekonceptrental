@@ -81,15 +81,15 @@ describe("Phase 5C-A/B public discovery acceptance", () => {
     for (const required of [
       /Search listings/i,
       /Filter rental listings/i,
-      /Browse categories/i,
-      /Explore event-use ideas/i,
+      /Browse Catalogue/i,
+      /Explore Setups/i,
       /Active filters/i,
       /Clear filters/i,
       /Browse listings/i,
       /View rental listing/i,
-      /Request a quote/i,
-      /Send an enquiry/i,
-      /Start a rental enquiry/i,
+      /Request Quote/i,
+      /Request Quote/i,
+      /Request Quote/i,
       /rental/i,
       /listing/i,
       /quote|enquiry|request/i
@@ -109,9 +109,9 @@ describe("Phase 5C-A/B public discovery acceptance", () => {
 
     expect(source).toMatch(/No matching public listings/i);
     expect(source).toMatch(/Browse all listings/i);
-    expect(source).toMatch(/Browse categories/i);
-    expect(source).toMatch(/Explore event-use guidance|Explore event-use ideas/i);
-    expect(source).toMatch(/send an enquiry for team review/i);
+    expect(source).toMatch(/Browse Catalogue/i);
+    expect(source).toMatch(/Explore event-use guidance|Explore Setups/i);
+    expect(source).toMatch(/quote request for team review/i);
     expect(source).not.toMatch(forbiddenPublicInternalPattern);
   });
 
@@ -137,7 +137,7 @@ describe("Phase 5C-A/B public discovery acceptance", () => {
         "Search interest: soft seating"
       ].join("\n")
     );
-    expect(screen.getByRole("button", { name: /send an enquiry/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /submit enquiry/i })).toBeInTheDocument();
     expect(screen.queryByText(forbiddenPublicFlowPattern)).not.toBeInTheDocument();
     expect(screen.queryByText(forbiddenRentalCompletionPattern)).not.toBeInTheDocument();
   });

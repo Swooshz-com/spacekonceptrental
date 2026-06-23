@@ -201,7 +201,7 @@ describe("Phase 3C-A/B public catalogue discovery and quote funnel polish", () =
     expect(screen.getByText(/conference seating/i)).toBeInTheDocument();
     expect(screen.getByText(/brand activation setup/i)).toBeInTheDocument();
     expect(
-      screen.getByRole("link", { name: /start a rental enquiry/i })
+      screen.getAllByRole("link", { name: /request quote/i })[0]
     ).toHaveAttribute("href", "/quote");
   });
 
@@ -247,7 +247,7 @@ describe("Phase 3C-A/B public catalogue discovery and quote funnel polish", () =
       screen.getAllByRole("link", { name: /browse listings/i })[0]
     ).toHaveAttribute("href", "/listings");
     expect(
-      screen.getByRole("link", { name: /start a rental enquiry/i })
+      screen.getAllByRole("link", { name: /request quote/i })[0]
     ).toHaveAttribute("href", "/quote");
 
     cleanup();
@@ -262,7 +262,7 @@ describe("Phase 3C-A/B public catalogue discovery and quote funnel polish", () =
       screen.getByRole("link", { name: /browse listings/i })
     ).toHaveAttribute("href", "/listings");
     expect(
-      screen.getByRole("link", { name: /start a rental enquiry|request a quote/i })
+      screen.getByRole("link", { name: /request quote|request quote/i })
     ).toHaveAttribute("href", "/quote");
   });
 

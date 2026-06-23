@@ -165,7 +165,7 @@ export default function ChatWidget() {
         background: '#0f172a', padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center'
       }}>
         <div style={{ display: 'flex', flexDirection: 'column' }}>
-          <span style={{ fontSize: '16px', fontWeight: 700, color: '#fff' }}>SpaceKonceptRental AI</span>
+          <span style={{ fontSize: '16px', fontWeight: 700, color: '#fff' }}>Space Koncept Rental AI</span>
           <span style={{ fontSize: '12px', color: '#cbd5e1' }}>Your event furniture helper</span>
         </div>
         <button onClick={() => setIsOpen(false)} style={{ background: 'transparent', border: 'none', color: '#cbd5e1', cursor: 'pointer', fontSize: '20px', lineHeight: 1, padding: '4px' }} aria-label="Close chat">x</button>
@@ -228,7 +228,7 @@ export default function ChatWidget() {
           onChange={(event) => setDraft(event.target.value)}
           placeholder="Type your question..."
           value={draft}
-          style={{ flex: 1, border: 'none', background: 'transparent', fontSize: '15px', outline: 'none', color: '#0f172a' }}
+          className="premium-chat-input"
           autoComplete="off"
         />
         <button aria-label="Send" disabled={isSending || draft.trim().length === 0} type="submit" style={{ background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: '50%', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', opacity: (isSending || draft.trim().length === 0) ? 0.5 : 1, transition: 'opacity 0.2s', padding: 0 }}>

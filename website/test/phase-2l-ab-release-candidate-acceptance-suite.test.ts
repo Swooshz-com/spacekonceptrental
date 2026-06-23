@@ -114,29 +114,29 @@ describe("Phase 2L-A/B release-candidate acceptance suite", () => {
       globalNotFound
     ].join("\n");
 
-    expect(homepage).toContain("Request a quote");
+    expect(homepage).toContain("Request Quote");
     expect(homepage).toContain("Browse listings");
-    expect(listingsPage).toContain("Rental listings");
+    expect(listingsPage).toContain("Setups");
     expect(listingsPage).toContain("No public rental listings match this view");
     expect(listingsPage).toContain('detailBasePath="/listings"');
     expect(listingDetail).toContain("ProductPageContent");
     expect(listingDetail).toContain("notFound()");
     expect(listingNotFound).toContain("Listing unavailable");
-    expect(listingNotFound).toContain("Send an enquiry");
+    expect(listingNotFound).toContain("Request Quote");
     expect(categoriesPage).toContain("Rental categories");
     expect(categoriesPage).toContain("No public categories are available");
     expect(cataloguePage).toContain("Furniture catalogue");
-    expect(cataloguePage).toContain("Send an enquiry");
+    expect(cataloguePage).toContain("Request Quote");
     expect(cataloguePage).toContain("fallbackImage");
     expect(catalogueDetail).toContain("Furniture listing");
-    expect(catalogueDetail).toContain("Request a quote");
+    expect(catalogueDetail).toContain("Request Quote");
     expect(catalogueNotFound).toContain("Listing unavailable");
     expect(quotePage).toContain("Quote request");
     expect(quotePage).toContain("QuoteRequestForm");
-    expect(eventsPage).toContain("Start a rental enquiry");
+    expect(eventsPage).toContain("Request Quote");
     expect(globalNotFound).toContain("Page unavailable");
     expect(globalNotFound).toContain("Browse listings");
-    expect(globalNotFound).toContain("Request a quote");
+    expect(globalNotFound).toContain("Request Quote");
 
     expect(publicSource).not.toMatch(forbiddenCommercePattern);
     expect(publicSource).not.toMatch(

@@ -93,7 +93,7 @@ describe("public catalogue image rendering", () => {
       screen.getByRole("link", { name: /view details for modular lounge/i })
     ).toHaveAttribute("href", "/catalogue/modular-lounge");
     expect(
-      screen.getByRole("link", { name: /request a quote/i })
+      screen.getByRole("link", { name: /add to quote for modular lounge/i })
     ).toHaveAttribute("href", "/quote?listing=modular-lounge");
     expect(screen.queryByText(/cart|checkout|payment|online ordering/i)).not.toBeInTheDocument();
   });
@@ -127,7 +127,7 @@ describe("public catalogue image rendering", () => {
       name: /view details for modular lounge/i
     });
     const quoteLink = cardView.getByRole("link", {
-      name: /request a quote for modular lounge/i
+      name: /add to quote for modular lounge/i
     });
 
     expect(detailLink).toHaveAttribute("href", "/catalogue/modular-lounge");
@@ -153,10 +153,10 @@ describe("public catalogue image rendering", () => {
       })
     ).toHaveAttribute("src", productWithImage.images?.[1]?.publicUrl);
     expect(
-      screen.getByRole("link", { name: /request a quote/i })
+      screen.getByRole("link", { name: /request quote/i })
     ).toHaveAttribute("href", "/quote?listing=modular-lounge");
     expect(
-      screen.getByRole("link", { name: /request a quote for modular lounge/i })
+      screen.getByRole("link", { name: /add to quote for modular lounge/i })
     ).toHaveAttribute("href", "/quote?listing=modular-lounge");
     expect(
       screen.getAllByText(/modular lounge furniture rental setup/i).length
@@ -207,7 +207,7 @@ describe("public catalogue image rendering", () => {
       screen.getByRole("heading", { name: /no matching public listings/i })
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/clear filters, review current rental listings, browse categories/i)
+      screen.getByText(/clear filters, review current rental listings, browse catalogue filters/i)
     ).toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: /start a general quote request/i })

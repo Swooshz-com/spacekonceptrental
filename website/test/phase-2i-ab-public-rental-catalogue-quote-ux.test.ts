@@ -91,7 +91,7 @@ describe("Phase 2I-A/B public rental catalogue and quote request UX MVP", () => 
     expect(categoriesPage).toContain("getPublicCatalogue");
     expect(categoriesPage).toContain("getQuoteHrefForListing");
     expect(layoutSource).toContain('href="/listings"');
-    expect(layoutSource).toContain('href="/categories"');
+    expect(layoutSource).toContain('href="/about"');
 
     for (const source of [listingsPage, listingDetailPage, categoriesPage]) {
       expect(source).toContain('dynamic = "force-dynamic"');

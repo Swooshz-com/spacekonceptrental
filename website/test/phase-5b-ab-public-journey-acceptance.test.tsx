@@ -81,9 +81,9 @@ describe("Phase 5B-A/B public journey acceptance", () => {
     for (const required of [
       /Browse listings/i,
       /View rental listing/i,
-      /Request a quote/i,
-      /Send an enquiry/i,
-      /Start a rental enquiry/i,
+      /Request Quote/i,
+      /Request Quote/i,
+      /Request Quote/i,
       /rental/i,
       /listing/i,
       /quote|enquiry|request/i
@@ -106,7 +106,7 @@ describe("Phase 5B-A/B public journey acceptance", () => {
     expect(screen.getByLabelText(/Requested listings or items/i)).toHaveValue(
       "Modular Lounge Set"
     );
-    expect(screen.getByRole("button", { name: /send an enquiry/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /submit enquiry/i })).toBeInTheDocument();
     expect(screen.queryByText(forbiddenPublicFlowPattern)).not.toBeInTheDocument();
     expect(screen.queryByText(forbiddenRentalCompletionPattern)).not.toBeInTheDocument();
   });
@@ -121,7 +121,7 @@ describe("Phase 5B-A/B public journey acceptance", () => {
     expect(source).toMatch(/No matching public listings/i);
     expect(source).toMatch(/Page unavailable/i);
     expect(source).toMatch(/Browse listings/i);
-    expect(source).toMatch(/Send an enquiry/i);
+    expect(source).toMatch(/Request Quote/i);
     expect(source).not.toMatch(receiptPromisePattern);
   });
 

@@ -276,12 +276,12 @@ describe("Phase 3T-A/B local RC command centre", () => {
   it("keeps public source customer-facing and free of command-centre leakage", async () => {
     render(await HomePage());
     expect(screen.getByRole("heading", { name: /event furniture rental/i })).toBeInTheDocument();
-    expect(screen.getByText(/request a rental quote/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/request quote/i).length).toBeGreaterThan(0);
 
     cleanup();
     render(await QuotePage());
-    expect(screen.getByRole("heading", { name: /request a rental quote/i })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: /check your enquiry details/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /request quote/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /quote request form/i })).toBeInTheDocument();
 
     const publicSource = readTrackedProductionSources([
       "website/app/layout.tsx",

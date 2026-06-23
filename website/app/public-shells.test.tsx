@@ -16,6 +16,8 @@ import {
   ProductPageContent
 } from "./catalogue/[slug]/page";
 import CatalogueListingNotFound from "./catalogue/[slug]/not-found";
+import AboutPage, { metadata as aboutMetadata } from "./about/page";
+import ContactPage, { metadata as contactMetadata } from "./contact/page";
 import EventsPage from "./events/page";
 import ListingNotFound from "./listings/[slug]/not-found";
 import { generateMetadata as generatePublicListingMetadata } from "./listings/[slug]/page";
@@ -34,6 +36,76 @@ vi.mock("next/image", () => ({
 describe("public page shells", () => {
   afterEach(() => {
     cleanup();
+  });
+  it("keeps the refreshed public shell aligned to the rental catalogue IA", () => {
+    const layoutSource = readFileSync(resolve(process.cwd(), "app/layout.tsx"), "utf8");
+    const mobileMenuSource = readFileSync(
+      resolve(process.cwd(), "components/MobileMenu.tsx"),
+      "utf8"
+    );
+    const shellSource = `${layoutSource}\n${mobileMenuSource}`;
+
+    for (const required of [
+      "Space Koncept Rental",
+      'href="/"',
+      'href="/catalogue"',
+      'href="/listings"',
+      'href="/about"',
+      'href="/contact"',
+      'href="/quote"',
+      'href="/privacy"',
+      'href="/terms"',
+      "Home",
+      "Catalogue",
+      "Setups",
+      "About",
+      "Contact",
+      "Request Quote",
+      "Privacy",
+      "Terms"
+    ]) {
+      expect(shellSource).toContain(required);
+    }
+
+    expect(shellSource).not.toMatch(
+      /SpaceKoncept|Space Koncept Rentals|Curated Sanctuary|Portfolio|Hire By Events|Quote List|Cart|Bag|Basket|Checkout|Payment|Purchase|Booking|Reservation|Availability|Stock|Inventory|Price|Pricing|Total|Subtotal/i
+    );
+    expect(layoutSource).not.toContain('href="/events"');
+  });
+
+  it("renders about and contact as truthful enquiry-led public pages", () => {
+    expect(aboutMetadata.title).toMatch(/About \| Space Koncept Rental/i);
+    expect(contactMetadata.title).toMatch(/Contact \| Space Koncept Rental/i);
+
+    render(<AboutPage />);
+    expect(
+      screen.getByRole("heading", { name: /about space koncept rental/i })
+    ).toBeInTheDocument();
+    expect(screen.getByText(/furniture and event rental/i)).toBeInTheDocument();
+    expect(screen.getByText(/manual team follow-up/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: /browse catalogue/i })
+    ).toHaveAttribute("href", "/catalogue");
+    expect(
+      screen.getAllByRole("link", { name: /request quote/i })[0]
+    ).toHaveAttribute("href", "/quote");
+    expect(document.body.textContent).not.toMatch(
+      /fake|testimonial|client logo|award|123 Rental Plaza|New York|within 24 hours|cart|checkout|payment|price|pricing|booking|reservation/i
+    );
+
+    cleanup();
+    render(<ContactPage />);
+    expect(
+      screen.getByRole("heading", { name: /contact space koncept rental/i })
+    ).toBeInTheDocument();
+    expect(screen.getByText(/rental enquiry/i)).toBeInTheDocument();
+    expect(screen.getByText(/quote request/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: /submit enquiry/i })
+    ).toHaveAttribute("href", "/quote");
+    expect(document.body.textContent).not.toMatch(
+      /fake address|fake phone|New York|123 Rental Plaza|operating hours|cart|checkout|payment|price|pricing|booking|reservation/i
+    );
   });
 
   it("renders honest catalogue recovery when Supabase data is unavailable", async () => {
@@ -84,7 +156,7 @@ describe("public page shells", () => {
       screen.getByText(/no instant rental confirmation happens on this site/i)
     ).toBeInTheDocument();
     expect(
-      screen.getAllByRole("link", { name: /request a quote/i })[0]
+      screen.getAllByRole("link", { name: /request quote/i })[0]
     ).toHaveAttribute("href", "/quote");
     expect(
       screen.getAllByRole("link", { name: /browse listings/i })[0]
@@ -126,7 +198,7 @@ describe("public page shells", () => {
     ).toContain("/listings");
     expect(
       screen
-        .getAllByRole("link", { name: /start a quote request/i })
+        .getAllByRole("link", { name: /request quote/i })
         .map((link) => link.getAttribute("href"))
     ).toContain("/quote");
     expect(homepageSource).not.toMatch(
@@ -144,10 +216,13 @@ describe("public page shells", () => {
       screen.getByRole("heading", { name: /featured rental listings/i })
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/no public rental listings are available right now/i)
+      screen.getByRole("heading", { name: /start with a rental brief/i })
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("link", { name: /send an enquiry/i })
+      screen.getByText(/share the event style, venue context, and rental pieces/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getAllByRole("link", { name: /request quote/i })[0]
     ).toHaveAttribute("href", "/quote");
     expect(
       screen.queryByAltText(/lounge sofa package furniture rental setup/i)
@@ -173,7 +248,7 @@ describe("public page shells", () => {
       screen.getByRole("link", { name: /compare event setup guidance/i })
     ).toHaveAttribute("href", "/catalogue");
     expect(
-      screen.getByRole("link", { name: /start a rental enquiry/i })
+      screen.getAllByRole("link", { name: /request quote/i })[0]
     ).toHaveAttribute("href", "/quote");
   });
 
@@ -187,7 +262,7 @@ describe("public page shells", () => {
   it("keeps public quote copy from implying ecommerce or online ordering", async () => {
     render(await QuotePage());
 
-    expect(screen.getByRole("heading", { name: /request a rental quote/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /request quote/i })).toBeInTheDocument();
     expect(screen.getByText(/share contact details, event date, venue, requested listings, quantities, and setup notes/i)).toBeInTheDocument();
     expect(screen.queryByText(/shell|mvp/i)).not.toBeInTheDocument();
     expect(
@@ -264,7 +339,7 @@ describe("public page shells", () => {
       /public rental listings/i
     );
     expect(listingMetadata.openGraph?.title).toMatch(/furniture listing/i);
-    expect(listingMetadata.openGraph?.description).toMatch(/request an enquiry/i);
+    expect(listingMetadata.openGraph?.description).toMatch(/send a quote request/i);
     expect(fallbackListingMetadata.openGraph?.description).toMatch(
       /event furniture rental/i
     );
@@ -280,7 +355,10 @@ describe("public page shells", () => {
   it("keeps the new public pages reachable from navigation and catalogue", async () => {
     const layoutSource = readFileSync(resolve(process.cwd(), "app/layout.tsx"), "utf8");
 
-    expect(layoutSource).toContain('href="/events"');
+    expect(layoutSource).toContain('href="/about"');
+    expect(layoutSource).toContain('href="/contact"');
+    expect(layoutSource).toContain('href="/listings"');
+    expect(layoutSource).toContain('href="/quote"');
     expect(layoutSource).toContain('href="/privacy"');
     expect(layoutSource).toContain('href="/terms"');
 
@@ -321,7 +399,7 @@ describe("public page shells", () => {
     expect(
       catalogueLinks.map((link) => link.getAttribute("href"))
     ).toContain("/catalogue/lounge-sofa-package");
-    const quoteLinks = screen.getAllByRole("link", { name: /request a quote/i });
+    const quoteLinks = screen.getAllByRole("link", { name: /add to quote/i });
     expect(quoteLinks.map((link) => link.getAttribute("href"))).toContain(
       "/quote?listing=lounge-sofa-package"
     );
@@ -371,7 +449,7 @@ describe("public page shells", () => {
       screen.getByText(/Use the catalogue or listings to keep browsing public rental options/i)
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("link", { name: /send an enquiry/i })
+      screen.getAllByRole("link", { name: /request quote/i })[0]
     ).toHaveAttribute("href", "/quote");
     expect(
       screen.queryByText(/draft|archived|internal note|workflow status/i)
@@ -390,7 +468,7 @@ describe("public page shells", () => {
       screen.getByText(/Use current listings or categories to keep browsing public rental options/i)
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("link", { name: /send an enquiry/i })
+      screen.getAllByRole("link", { name: /request quote/i })[0]
     ).toHaveAttribute("href", "/quote");
   });
 
@@ -444,7 +522,7 @@ describe("public page shells", () => {
     ).toBeInTheDocument();
     expect(
       screen.getByRole("link", {
-        name: /request a quote for modular lounge set/i
+        name: /add to quote for modular lounge set/i
       })
     ).toHaveAttribute("href", "/quote?listing=modular-lounge-set");
     expect(
@@ -498,7 +576,7 @@ describe("public page shells", () => {
     ).toContain("/listings");
     expect(
       screen.getByRole("link", {
-        name: /request a quote for dining and seminar chairs/i
+        name: /add to quote for dining and seminar chairs/i
       })
     ).toHaveAttribute("href", "/quote?listing=dining-and-seminar-chairs");
   });
@@ -601,7 +679,7 @@ describe("public page shells", () => {
     ).toBeInTheDocument();
     expect(
       screen
-        .getAllByRole("link", { name: /request a quote/i })
+        .getAllByRole("link", { name: /add to quote/i })
         .map((link) => link.getAttribute("href"))
     ).toContain("/quote?listing=compact-chair");
     expect(screen.queryByText(/shell/i)).not.toBeInTheDocument();

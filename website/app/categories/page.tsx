@@ -7,9 +7,9 @@ import type { PublicCatalogue } from "../../lib/catalogue/types";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Rental categories | Space Koncept Rentals",
+  title: "Rental categories | Space Koncept Rental",
   description:
-    "Browse public furniture and event rental categories and send a quote enquiry to Space Koncept Rentals."
+    "Browse public furniture and event rental categories and send a quote enquiry to Space Koncept Rental."
 };
 
 function textOrUndefined(value: string | undefined) {
@@ -44,7 +44,7 @@ export function CategoriesPageContent({
           <div className="premium-container">
             <h1 className="premium-title-hero">Rental Categories</h1>
             <p className="premium-subtitle" style={{ color: '#cbd5e1' }}>
-              Browse public furniture and event rental categories or send an enquiry with your setup context.
+              Browse public furniture and event rental categories or submit a rental enquiry with your setup context.
             </p>
           </div>
         </section>
@@ -63,7 +63,7 @@ export function CategoriesPageContent({
                   Browse listings
                 </Link>
                 <Link className="premium-button premium-button--primary" href="/quote">
-                  Request a quote
+                  Request Quote
                 </Link>
               </div>
             </div>
@@ -79,7 +79,7 @@ export function CategoriesPageContent({
         <div className="premium-container">
           <h1 className="premium-title-hero">Rental Categories</h1>
           <p className="premium-subtitle" style={{ color: '#cbd5e1' }}>
-            Explore our curated collections. Compare listings across seating, lounges, and event setups, then send an enquiry for the pieces that suit your vision.
+            Explore our curated collections. Compare listings across seating, lounges, and event setups, then submit a rental enquiry for the pieces that suit your vision.
           </p>
           <p className="premium-subtitle" style={{ color: '#cbd5e1' }}>
             Rental fit is reviewed directly by the team.
@@ -121,7 +121,7 @@ export function CategoriesPageContent({
                         style={{ flex: 1, padding: '0 16px', fontSize: '13px', height: '36px' }}
                         href="/quote"
                       >
-                        Send an enquiry
+                        Request Quote
                       </Link>
                     </div>
 
@@ -142,7 +142,7 @@ export function CategoriesPageContent({
                                   href="/quote"
                                   style={{ fontSize: '12px', fontWeight: 600, color: 'var(--accent)', textDecoration: 'none', flexShrink: 0 }}
                                 >
-                                  Send an enquiry
+                                  Request Quote
                                 </Link>
                               </li>
                             ))}
@@ -165,10 +165,10 @@ export function CategoriesPageContent({
               Browse listings
             </Link>
             <Link className="premium-button premium-button--secondary" href="/quote">
-              Start a rental enquiry
+              Request Quote
             </Link>
             <Link className="premium-button premium-button--primary" href="/quote">
-              Send an enquiry
+              Request Quote
             </Link>
           </div>
         </div>

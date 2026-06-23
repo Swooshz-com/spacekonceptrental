@@ -7,7 +7,7 @@ import galaImage from "../../assets/images/event_gala.png";
 import weddingImage from "../../assets/images/event_wedding.png";
 
 export const metadata: Metadata = {
-  title: "Event setups and rental use cases | Space Koncept Rentals",
+  title: "Event setups and rental use cases | Space Koncept Rental",
   description:
     "Explore event setup guidance, browse rental listings, and send a quote request with setup notes."
 };
@@ -115,8 +115,8 @@ export default function EventsPage() {
               </div>
 
               <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
-                <Link className="premium-button premium-button--secondary" href="/categories">
-                  Browse rental categories
+                <Link className="premium-button premium-button--secondary" href="/catalogue">
+                  Browse Catalogue
                 </Link>
                 <Link className="premium-button premium-button--secondary" href="/listings">
                   Browse listings
@@ -125,10 +125,10 @@ export default function EventsPage() {
                   Compare event setup guidance
                 </Link>
                 <Link className="premium-button premium-button--secondary" href="/quote">
-                  Send an enquiry
+                  Request Quote
                 </Link>
                 <Link className="premium-button premium-button--primary" href="/quote">
-                  Start a rental enquiry
+                  Request Quote
                 </Link>
               </div>
             </div>

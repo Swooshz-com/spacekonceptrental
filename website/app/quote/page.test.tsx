@@ -15,7 +15,7 @@ describe("QuotePage", () => {
     );
 
     expect(
-      screen.getByRole("heading", { name: /request a rental quote/i })
+      screen.getByRole("heading", { name: /request quote/i })
     ).toBeInTheDocument();
     expect(
       screen.getByRole("heading", { name: /selected listing unavailable/i })
@@ -49,6 +49,27 @@ describe("QuotePage", () => {
     ).not.toBeInTheDocument();
     expect(document.body.textContent).not.toMatch(
       /customer account|dashboard|reservation|stock reservation|fulfilment|fulfillment|purchase/i
+    );
+  });
+
+
+  it("renders the refreshed quote review flow in the required reading order", async () => {
+    render(await QuotePage());
+
+    const pageText = document.body.textContent ?? "";
+
+    expect(screen.getByRole("heading", { name: /request quote/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /your selection/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /selected rental items/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /selected setups/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /quote request form/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /what happens next/i })).toBeInTheDocument();
+
+    expect(pageText.indexOf("Request Quote")).toBeLessThan(pageText.indexOf("Your Selection"));
+    expect(pageText.indexOf("Your Selection")).toBeLessThan(pageText.indexOf("Quote request form"));
+    expect(pageText.indexOf("Quote request form")).toBeLessThan(pageText.indexOf("What happens next"));
+    expect(document.body.textContent).not.toMatch(
+      /cart|checkout|payment|order|purchase|booking|reservation|availability|stock|inventory|price|pricing|total|subtotal/i
     );
   });
 

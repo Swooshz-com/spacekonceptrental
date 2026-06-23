@@ -38,12 +38,12 @@ export async function generateMetadata({
       "Browse public furniture and event rental listing details and send a quote request.";
 
     return {
-      title: "Rental listing | Space Koncept Rentals",
+      title: "Rental listing | Space Koncept Rental",
       description,
       openGraph: {
-        title: "Rental listing | Space Koncept Rentals",
+        title: "Rental listing | Space Koncept Rental",
         description,
-        siteName: "Space Koncept Rentals",
+        siteName: "Space Koncept Rental",
         type: "website",
         url: "/listings"
       }
@@ -54,15 +54,15 @@ export async function generateMetadata({
     product.shortDescription ??
     product.description ??
     "Browse public furniture and event rental listing details and send a quote request.";
-  const description = `${listingDescription} Send a quote request for manual follow-up with Space Koncept Rentals.`;
+  const description = `${listingDescription} Send a quote request for manual follow-up with Space Koncept Rental.`;
 
   return {
-    title: `${product.name} rental listing | Space Koncept Rentals`,
+    title: `${product.name} rental listing | Space Koncept Rental`,
     description,
     openGraph: {
-      title: `${product.name} rental listing | Space Koncept Rentals`,
+      title: `${product.name} rental listing | Space Koncept Rental`,
       description,
-      siteName: "Space Koncept Rentals",
+      siteName: "Space Koncept Rental",
       type: "website",
       url: `/listings/${product.slug}`
     }
@@ -84,7 +84,7 @@ export default async function ListingPage({
   return (
     <ProductPageContent
       backHref="/listings"
-      backLabel="Back to listings"
+      backLabel="Back to Setups"
       product={product}
       relatedListings={getRelatedListings(product, catalogue.products)}
     />

@@ -219,7 +219,7 @@ describe("Phase 3I-A/B full-site acceptance SEO accessibility hardening", () => 
     });
 
     expect(metadataTitle(rootMetadata)).toBe(
-      "Space Koncept Rentals | Event furniture rental"
+      "Space Koncept Rental | Event furniture rental"
     );
     expect(metadataDescription(rootMetadata)).toContain("quote enquiry");
 
@@ -276,7 +276,7 @@ describe("Phase 3I-A/B full-site acceptance SEO accessibility hardening", () => 
     cleanup();
     render(await QuotePage());
     expect(
-      screen.getByRole("heading", { level: 1, name: /request a rental quote/i })
+      screen.getByRole("heading", { level: 1, name: /request quote/i })
     ).toBeInTheDocument();
     expect(
       screen.getByRole("navigation", { name: /quote request recovery/i })
@@ -286,7 +286,6 @@ describe("Phase 3I-A/B full-site acceptance SEO accessibility hardening", () => 
     for (const requiredRoute of [
       "/catalogue",
       "/listings",
-      "/categories",
       "/events",
       "/quote",
       "/quote?listing=modular-lounge-set"
@@ -295,7 +294,7 @@ describe("Phase 3I-A/B full-site acceptance SEO accessibility hardening", () => 
     }
 
     expect(readRepoFile("website/app/layout.tsx")).toMatch(
-      />\s*Quote enquiry\s*</
+      />\s*Request Quote\s*</
     );
   });
 

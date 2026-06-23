@@ -188,7 +188,7 @@ describe("Phase 3A-A/B product polish and rental UI copy", () => {
       screen.getByText(/share event date, venue, quantities, and setup notes/i)
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("link", { name: /request a quote/i })
+      screen.getByRole("link", { name: /add to quote for modular lounge set/i })
     ).toHaveAttribute("href", "/quote?listing=modular-lounge-set");
   });
 
@@ -217,7 +217,7 @@ describe("Phase 3A-A/B product polish and rental UI copy", () => {
       screen.getByText(/share timing, venue, preferred quantities, and delivery notes/i)
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("link", { name: /request a quote/i })
+      screen.getByRole("link", { name: /add to quote for modular lounge set/i })
     ).toHaveAttribute("href", "/quote?listing=modular-lounge-set");
 
     cleanup();
@@ -261,7 +261,7 @@ describe("Phase 3A-A/B product polish and rental UI copy", () => {
     fireEvent.change(screen.getByLabelText(/your name/i), {
       target: { value: "Maya Tan" }
     });
-    fireEvent.click(screen.getByRole("button", { name: /send an enquiry/i }));
+    fireEvent.click(screen.getByRole("button", { name: /submit enquiry/i }));
 
     expect(fetchMock).not.toHaveBeenCalled();
     expect(
@@ -276,7 +276,7 @@ describe("Phase 3A-A/B product polish and rental UI copy", () => {
         value: "Reception lounge near the entrance."
       }
     });
-    fireEvent.click(screen.getByRole("button", { name: /send an enquiry/i }));
+    fireEvent.click(screen.getByRole("button", { name: /submit enquiry/i }));
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
     expect(

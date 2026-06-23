@@ -243,9 +243,9 @@ describe("Phase 3Q-A/B owner-demo polish", () => {
 
     cleanup();
     render(await QuotePage());
-    expect(screen.getByText(/before you send/i)).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /what happens next/i })).toBeInTheDocument();
     expect(
-      screen.getByRole("heading", { name: /check your enquiry details/i })
+      screen.getByRole("heading", { name: /quote request form/i })
     ).toBeInTheDocument();
     expect(
       screen.getByText(/event date, venue or location, requested listings or items, quantities, alternates, setup, access, and timing notes/i)
@@ -254,8 +254,8 @@ describe("Phase 3Q-A/B owner-demo polish", () => {
     cleanup();
     render(<NotFound />);
     expect(
-      screen.getByRole("link", { name: /plan event setups/i })
-    ).toHaveAttribute("href", "/events");
+      screen.getByRole("link", { name: /explore setups/i })
+    ).toHaveAttribute("href", "/listings");
   });
 
   it("renders an admin-only owner-demo snapshot inside the protected content readiness workspace", () => {

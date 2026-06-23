@@ -246,8 +246,8 @@ describe("Phase 3R-A/B product acceptance hardening", () => {
       />
     );
     expect(
-      screen.getByRole("link", { name: /browse event setup guidance/i })
-    ).toHaveAttribute("href", "/events");
+      screen.getByRole("link", { name: /explore setups/i })
+    ).toHaveAttribute("href", "/listings");
 
     cleanup();
     render(<CategoriesPageContent catalogue={catalogue} />);
@@ -273,14 +273,14 @@ describe("Phase 3R-A/B product acceptance hardening", () => {
     cleanup();
     render(await QuotePage());
     expect(
-      screen.getByRole("heading", { name: /check your enquiry details/i })
+      screen.getByRole("heading", { name: /quote request form/i })
     ).toBeInTheDocument();
 
     cleanup();
     render(<NotFound />);
     expect(
-      screen.getByRole("link", { name: /browse categories/i })
-    ).toHaveAttribute("href", "/categories");
+      screen.getByRole("link", { name: /browse catalogue/i })
+    ).toHaveAttribute("href", "/catalogue");
   });
 
   it("renders an admin-only owner-demo issue backlog snapshot for authorised admins", () => {

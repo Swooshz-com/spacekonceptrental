@@ -468,7 +468,7 @@ export default function QuoteRequestForm({
       >
         {submitState.status === "submitting"
           ? "Sending quote request..."
-          : "Review and send an enquiry"}
+          : "Submit Enquiry"}
       </button>
       <p className="quote-form__legal">
         By sending an enquiry, review the{" "}

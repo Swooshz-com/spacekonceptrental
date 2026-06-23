@@ -79,7 +79,7 @@ describe("QuoteRequestForm", () => {
         value: "Place sofas near the registration zone."
       }
     });
-    fireEvent.click(screen.getByRole("button", { name: /send an enquiry/i }));
+    fireEvent.click(screen.getByRole("button", { name: /submit enquiry/i }));
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
 
@@ -160,7 +160,7 @@ describe("QuoteRequestForm", () => {
         value: "We need help deciding quantities for a reception setup."
       }
     });
-    fireEvent.click(screen.getByRole("button", { name: /send an enquiry/i }));
+    fireEvent.click(screen.getByRole("button", { name: /submit enquiry/i }));
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
 
@@ -213,7 +213,7 @@ describe("QuoteRequestForm", () => {
     fireEvent.change(screen.getByLabelText(/email address/i), {
       target: { value: "maya@example.test" }
     });
-    fireEvent.click(screen.getByRole("button", { name: /send an enquiry/i }));
+    fireEvent.click(screen.getByRole("button", { name: /submit enquiry/i }));
 
     const receipt = await screen.findByRole("status");
 
@@ -251,7 +251,7 @@ describe("QuoteRequestForm", () => {
     fireEvent.change(screen.getByLabelText(/email address/i), {
       target: { value: "maya@example.test" }
     });
-    fireEvent.click(screen.getByRole("button", { name: /send an enquiry/i }));
+    fireEvent.click(screen.getByRole("button", { name: /submit enquiry/i }));
 
     const alert = await screen.findByRole("alert");
 
@@ -331,7 +331,7 @@ describe("QuoteRequestForm", () => {
         value: "Use the lounge set near the registration area."
       }
     });
-    fireEvent.click(screen.getByRole("button", { name: /send an enquiry/i }));
+    fireEvent.click(screen.getByRole("button", { name: /submit enquiry/i }));
 
     const alert = await screen.findByRole("alert");
 
@@ -397,7 +397,7 @@ describe("QuoteRequestForm", () => {
     });
 
     fireEvent.click(
-      screen.getByRole("button", { name: /review and send an enquiry/i })
+      screen.getByRole("button", { name: /submit enquiry/i })
     );
 
     expect(fetchMock).not.toHaveBeenCalled();
@@ -451,7 +451,7 @@ describe("QuoteRequestForm", () => {
       target: { value: "maya@example.test" }
     });
     fireEvent.click(
-      screen.getByRole("button", { name: /review and send an enquiry/i })
+      screen.getByRole("button", { name: /submit enquiry/i })
     );
 
     await waitFor(() => {
@@ -507,7 +507,7 @@ describe("QuoteRequestForm", () => {
     fireEvent.change(screen.getByLabelText(/email address/i), {
       target: { value: "maya@example.test" }
     });
-    fireEvent.click(screen.getByRole("button", { name: /send an enquiry/i }));
+    fireEvent.click(screen.getByRole("button", { name: /submit enquiry/i }));
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
 
@@ -590,7 +590,7 @@ describe("QuoteRequestForm", () => {
         value: "Need rental period guidance for a same-day event setup."
       }
     });
-    fireEvent.click(screen.getByRole("button", { name: /send an enquiry/i }));
+    fireEvent.click(screen.getByRole("button", { name: /submit enquiry/i }));
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
 
@@ -659,7 +659,7 @@ describe("QuoteRequestForm", () => {
         value: "Place priority items near the reception zone."
       }
     });
-    fireEvent.click(screen.getByRole("button", { name: /send an enquiry/i }));
+    fireEvent.click(screen.getByRole("button", { name: /submit enquiry/i }));
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
 
@@ -730,7 +730,7 @@ describe("QuoteRequestForm", () => {
     expect(messageInput.maxLength).toBe(allowedMessageLength);
     expect(messageInput.value).toHaveLength(allowedMessageLength);
 
-    fireEvent.click(screen.getByRole("button", { name: /send an enquiry/i }));
+    fireEvent.click(screen.getByRole("button", { name: /submit enquiry/i }));
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
 
@@ -789,7 +789,7 @@ describe("QuoteRequestForm", () => {
     fireEvent.change(screen.getByLabelText(/email address/i), {
       target: { value: "maya@example.test" }
     });
-    fireEvent.click(screen.getByRole("button", { name: /send an enquiry/i }));
+    fireEvent.click(screen.getByRole("button", { name: /submit enquiry/i }));
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
 

@@ -17,9 +17,9 @@ type ListingsPageProps = {
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Rental listings | Space Koncept Rentals",
+  title: "Setups | Space Koncept Rental",
   description:
-    "Browse public furniture and event rental listings, then send a quote enquiry to Space Koncept Rentals."
+    "Browse public furniture and event rental setups, then send a quote enquiry to Space Koncept Rental."
 };
 
 function firstSearchParam(value: string | string[] | undefined) {
@@ -128,19 +128,19 @@ export default async function ListingsPage({
       detailBasePath="/listings"
       emptyMessage={
         activeCategory || activeEventUse || filters.search
-          ? "No public rental listings match these local filters right now. Browse all listings, adjust the search/filter context, or send an enquiry for team review."
-          : "No public rental listings match this view right now. Browse categories, explore event-use ideas, or send an enquiry for team review."
+          ? "No public rental listings match these local filters right now. Browse all setups, adjust the search/filter context, or send a quote request for team review."
+          : "No public rental listings match this view right now. Browse catalogue filters, explore setup ideas, or send a quote request for team review."
       }
       intro={
         activeCategory || activeEventUse || filters.search
-          ? "Browse filtered public-safe rental/event furniture listings. Search, category, and event-use context stays editable before you send an enquiry."
-          : "Browse public furniture and event rental listings, then send an enquiry for the pieces that fit your event."
+          ? "Browse filtered public-safe rental/event furniture setups. Search, category, and event-use context stays editable before you send a quote request."
+          : "Browse public furniture and event rental setups, then send a quote request for the pieces that fit your event."
       }
       listingBasePath="/listings"
       title={
         activeCategory
-          ? `${activeCategory.name} rental listings`
-          : "Furniture rental listings"
+          ? `${activeCategory.name} setups`
+          : "Setups"
       }
     />
   );

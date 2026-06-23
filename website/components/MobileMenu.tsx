@@ -1,6 +1,18 @@
 "use client";
-import { useState, useCallback, useEffect } from "react";
+
 import Link from "next/link";
+import { useCallback, useEffect, useState } from "react";
+
+const menuLinks = [
+  { href: "/", label: "Home" },
+  { href: "/catalogue", label: "Catalogue" },
+  { href: "/listings", label: "Setups" },
+  { href: "/about", label: "About" },
+  { href: "/contact", label: "Contact" },
+  { href: "/quote", label: "Request Quote" },
+  { href: "/privacy", label: "Privacy" },
+  { href: "/terms", label: "Terms" }
+] as const;
 
 const menuIconViewBox = ["0", "0", "24", "24"].join(" ");
 
@@ -10,13 +22,9 @@ export default function MobileMenu() {
   const toggle = useCallback(() => setOpen((prev) => !prev), []);
   const close = useCallback(() => setOpen(false), []);
 
-  /* Lock body scroll while the drawer is open */
   useEffect(() => {
-    if (open) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
+    document.body.style.overflow = open ? "hidden" : "";
+
     return () => {
       document.body.style.overflow = "";
     };
@@ -24,7 +32,6 @@ export default function MobileMenu() {
 
   return (
     <>
-      {/* Hamburger button */}
       <button
         className="premium-hamburger"
         aria-label="Open menu"
@@ -49,16 +56,15 @@ export default function MobileMenu() {
         </svg>
       </button>
 
-      {/* Overlay */}
-      {open && (
-        <div
-          className="premium-mobile-overlay"
+      {open ? (
+        <button
+          className="premium-mobile-overlay premium-mobile-overlay--open"
           onClick={close}
-          aria-hidden="true"
+          aria-label="Close menu overlay"
+          type="button"
         />
-      )}
+      ) : null}
 
-      {/* Drawer */}
       <div
         className={`premium-mobile-drawer${open ? " premium-mobile-drawer--open" : ""}`}
         role="dialog"
@@ -66,43 +72,24 @@ export default function MobileMenu() {
         aria-label="Mobile navigation"
       >
         <div className="premium-mobile-drawer__header">
+          <span className="premium-mobile-drawer__brand">Space Koncept Rental</span>
           <button
             className="premium-mobile-drawer__close"
             aria-label="Close menu"
             onClick={close}
             type="button"
           >
-            &#x2715;
+            X
           </button>
         </div>
 
         <nav className="premium-mobile-drawer__nav" aria-label="Mobile navigation">
-          <Link href="/catalogue" onClick={close}>
-            Catalogue
-          </Link>
-          <Link href="/events" onClick={close}>
-            Hire By Events
-          </Link>
-          <Link href="#" onClick={close}>
-            Portfolio
-          </Link>
-          <Link href="#" onClick={close}>
-            About
-          </Link>
-          <Link href="/quote" onClick={close}>
-            Contact
-          </Link>
+          {menuLinks.map((link) => (
+            <Link href={link.href} key={link.href} onClick={close}>
+              {link.label}
+            </Link>
+          ))}
         </nav>
-
-        <div className="premium-mobile-drawer__cta">
-          <Link
-            className="premium-button premium-button--primary premium-button--full"
-            href="/quote"
-            onClick={close}
-          >
-            Request Quote
-          </Link>
-        </div>
       </div>
     </>
   );

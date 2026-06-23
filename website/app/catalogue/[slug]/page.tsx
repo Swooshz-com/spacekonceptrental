@@ -30,8 +30,8 @@ function getMetadataDescription(product: PublicCatalogueProduct | null) {
     textOrUndefined(product?.description);
 
   return productDescription
-    ? `${productDescription} Send an event furniture rental quote request with Space Koncept Rentals.`
-    : "Browse event furniture rental listing details and request an enquiry with Space Koncept Rentals.";
+    ? `${productDescription} Send an event furniture rental quote request with Space Koncept Rental.`
+    : "Browse event furniture rental listing details and send a quote request with Space Koncept Rental.";
 }
 
 function textOrUndefined(value: string | undefined) {
@@ -101,12 +101,12 @@ export async function generateMetadata({
   if (!product) {
     const description = getMetadataDescription(null);
     return {
-      title: "Furniture listing | Space Koncept Rentals",
+      title: "Furniture listing | Space Koncept Rental",
       description,
       openGraph: {
-        title: "Furniture listing | Space Koncept Rentals",
+        title: "Furniture listing | Space Koncept Rental",
         description,
-        siteName: "Space Koncept Rentals",
+        siteName: "Space Koncept Rental",
         type: "website",
         url: "/catalogue"
       }
@@ -115,12 +115,12 @@ export async function generateMetadata({
 
   const description = getMetadataDescription(product);
   return {
-    title: `${product.name} | Space Koncept Rentals`,
+    title: `${product.name} | Space Koncept Rental`,
     description,
     openGraph: {
-      title: `${product.name} rental listing | Space Koncept Rentals`,
+      title: `${product.name} rental listing | Space Koncept Rental`,
       description,
-      siteName: "Space Koncept Rentals",
+      siteName: "Space Koncept Rental",
       type: "website",
       url: `/catalogue/${product.slug}`
     }
@@ -135,7 +135,7 @@ async function getSlug(params: ProductPageProps["params"]) {
 
 export function ProductPageContent({
   backHref = "/catalogue",
-  backLabel = "Back to catalogue",
+  backLabel = "Back to Catalogue",
   product,
   relatedListings = []
 }: {
@@ -269,34 +269,25 @@ export function ProductPageContent({
                 </ul>
               </section>
 
-              <Link
-                aria-label={`Request a quote for ${product.name}`}
-                className="premium-button premium-button--primary"
-                style={{ width: '100%', marginBottom: '16px' }}
-                href={getQuoteHrefForListing(product.slug)}
-              >
-                Request a quote
-              </Link>
-              <Link
-                aria-label={`Start enquiry for ${product.name}`}
-                className="premium-button premium-button--secondary"
-                style={{ width: '100%', marginBottom: '16px' }}
-                href={getQuoteHrefForListing(product.slug)}
-              >
-                Send an enquiry
-              </Link>
-              <Link className="premium-button premium-button--secondary" style={{ width: '100%' }} href={getQuoteHrefForListing(product.slug)}>
-                Start a rental enquiry
-              </Link>
-              <Link className="premium-button premium-button--secondary" style={{ width: '100%', marginTop: '16px' }} href="/listings">
-                Browse listings
-              </Link>
-              <Link className="premium-button premium-button--secondary" style={{ width: '100%', marginTop: '16px' }} href="/categories">
-                Browse categories
-              </Link>
-              <Link className="premium-button premium-button--secondary" style={{ width: '100%', marginTop: '16px' }} href="/events">
-                Explore event-use ideas
-              </Link>
+              <div className="premium-detail-actions">
+                <Link
+                  aria-label={`Add to Quote for ${product.name}`}
+                  className="premium-button premium-button--primary"
+                  href={getQuoteHrefForListing(product.slug)}
+                >
+                  Add to Quote
+                </Link>
+                <Link
+                  aria-label={`Request Quote for ${product.name}`}
+                  className="premium-button premium-button--secondary"
+                  href={getQuoteHrefForListing(product.slug)}
+                >
+                  Request Quote
+                </Link>
+                <Link className="premium-button premium-button--secondary" href="/listings">
+                  Browse Setups
+                </Link>
+              </div>
             </div>
           </div>
         </div>

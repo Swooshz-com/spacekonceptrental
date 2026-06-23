@@ -323,7 +323,6 @@ describe("Phase 3E-A/B product readiness, navigation QA, and dead-end polish", (
       "/catalogue/modular-lounge-set",
       "/listings",
       "/listings/modular-lounge-set",
-      "/categories",
       "/events",
       "/quote",
       "/quote?listing=modular-lounge-set"
@@ -377,8 +376,8 @@ describe("Phase 3E-A/B product readiness, navigation QA, and dead-end polish", (
       screen.getByRole("heading", { name: /no matching public listings/i })
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("link", { name: /browse categories/i })
-    ).toHaveAttribute("href", "/categories");
+      screen.getByRole("link", { name: /browse catalogue/i })
+    ).toHaveAttribute("href", "/catalogue");
     expect(
       screen.getByRole("link", { name: /start a general quote request/i })
     ).toHaveAttribute("href", "/quote");
@@ -400,8 +399,8 @@ describe("Phase 3E-A/B product readiness, navigation QA, and dead-end polish", (
     cleanup();
     render(<ListingNotFound />);
     expect(
-      screen.getByRole("link", { name: /browse categories/i })
-    ).toHaveAttribute("href", "/categories");
+      screen.getByRole("link", { name: /browse catalogue/i })
+    ).toHaveAttribute("href", "/catalogue");
 
     cleanup();
     render(await QuotePage());
@@ -427,7 +426,7 @@ describe("Phase 3E-A/B product readiness, navigation QA, and dead-end polish", (
     expect(
       screen.getByRole("link", { name: /return to admin sign in/i })
     ).toHaveAttribute("href", "/admin/login");
-    expect(screen.queryByRole("link", { name: /browse listings|request a quote/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /browse listings|request quote/i })).not.toBeInTheDocument();
 
     cleanup();
     render(
