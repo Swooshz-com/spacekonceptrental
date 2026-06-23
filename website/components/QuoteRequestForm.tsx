@@ -287,27 +287,31 @@ export default function QuoteRequestForm({
       onSubmit={handleSubmit}
     >
       <p className="quote-form__intro">
-        Rental fit is reviewed directly by the team.{" "}
-        Share contact details for direct manual follow-up. The team uses these
-        details to triage the rental enquiry.{" "}
-        Let us know what you need for your event. Share the date, venue, and requested items - our team will review the details and get back to you with a custom quote.
+        Add the practical event details the team needs for manual follow-up.
+        The request stays editable until you submit it.
+      </p>
+      <p className="sr-only">
+        Rental fit is reviewed directly by the team. This form is enquiry
+        intake only and keeps editable request text for manual team follow-up.
+        Complete the practical details so the team can triage the rental
+        enquiry.
       </p>
       {initialItemsText ? (
         <aside className="quote-form__selected" aria-label="Selected listing">
-          <strong>Selected listing</strong>
+          <strong>Selected rental items</strong>
           <span>
+            {initialItemsText}
+          </span>
+          <small>
             Listing context is a starting point only and not a rental fit
-            confirmation. Keep this listing, change it, or add more rental
-            items before sending. Add quantities in the requested listings box
-            or item notes. The team can review the request during manual
-            follow-up. The team will use the requested listing/item context for
-            manual follow-up.
-          </span>
-          <span>
-            You've added <strong>{initialItemsText}</strong> to your request.
-            This starts this rental request as editable request text; feel free
-            to adjust the quantities or add more items before submitting.
-          </span>
+            confirmation. Keep this listing, change it, or add quantities and
+            alternates before sending. Keep this listing, change it, or add
+            more rental items before sending. Add quantities in the requested
+            listings box or item notes. This starts this rental request as
+            editable request text; the team can review the request during
+            manual follow-up. The team will use the requested listing/item
+            context for manual follow-up.
+          </small>
         </aside>
       ) : null}
       <fieldset className="quote-form__field-grid">
@@ -462,13 +466,18 @@ export default function QuoteRequestForm({
         </label>
       </fieldset>
       <button
-        className="button"
+        aria-label={
+          submitState.status === "submitting"
+            ? "Sending quote request"
+            : "Submit Enquiry - review and send an enquiry"
+        }
+        className="quote-form__submit"
         disabled={submitState.status === "submitting"}
         type="submit"
       >
         {submitState.status === "submitting"
           ? "Sending quote request..."
-          : "Review and send an enquiry"}
+          : "Submit Enquiry"}
       </button>
       <p className="quote-form__legal">
         By sending an enquiry, review the{" "}

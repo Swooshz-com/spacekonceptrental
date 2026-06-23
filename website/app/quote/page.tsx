@@ -1,15 +1,25 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 
+import PublicVisualShell from "../../components/PublicVisualShell";
 import QuoteRequestForm from "../../components/QuoteRequestForm";
 import { getPublicProductBySlug } from "../../lib/catalogue/catalogue-repository";
-import { normalizePublicDiscoveryContext, normalizePublicListingSlug } from "../../lib/catalogue/quote-handoff";
+import {
+  normalizePublicDiscoveryContext,
+  normalizePublicListingSlug
+} from "../../lib/catalogue/quote-handoff";
 import type { PublicCatalogueProduct } from "../../lib/catalogue/types";
 
 type QuotePageProps = {
   searchParams?:
     | Promise<Record<string, string | string[] | undefined>>
     | Record<string, string | string[] | undefined>;
+};
+
+type SelectionItem = {
+  label: string;
+  meta?: string;
+  href?: string;
 };
 
 export const metadata: Metadata = {
@@ -51,7 +61,9 @@ async function resolveQuoteListingContext(
   return {
     product: slug ? await getPublicProductBySlug(slug) : null,
     requestedSlug: slug,
-    category: normalizePublicListingSlug(firstSearchParam(resolvedSearchParams.category)),
+    category: normalizePublicListingSlug(
+      firstSearchParam(resolvedSearchParams.category)
+    ),
     event: normalizePublicListingSlug(firstSearchParam(resolvedSearchParams.event)),
     search: normalizePublicDiscoveryContext(firstSearchParam(resolvedSearchParams.search))
   };
@@ -81,163 +93,231 @@ function buildInitialItemsText({
   return context.join("\n");
 }
 
-function QuoteSelectedListingBanner({
-  product
-}: {
-  product: PublicCatalogueProduct;
-}) {
-  return (
-    <div style={{ background: 'var(--surface-strong)', color: '#fff', borderRadius: 'var(--radius-lg)', padding: '24px 32px', marginBottom: '32px' }}>
-      <div style={{ fontSize: '12px', fontWeight: 800, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px' }}>Selected listing</div>
-      <h2 style={{ fontSize: '24px', fontWeight: 600, color: '#fff', marginBottom: '16px', letterSpacing: '-0.5px' }}>{product.name}</h2>
-      <p style={{ color: '#cbd5e1', lineHeight: 1.6, marginBottom: '24px' }}>
-        This listing starts the editable requested listings text. Adjust quantities, alternates, event date or rental period notes, and venue details in the form before sending the enquiry.
-      </p>
-      <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '24px', marginBottom: '24px' }}>
-        <div>
-          <div style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '4px' }}>Reference</div>
-          <div style={{ fontWeight: 600 }}>{product.slug}</div>
-        </div>
-        {product.categoryName && (
-          <div>
-            <div style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '4px' }}>Category</div>
-            <div style={{ fontWeight: 600 }}>{product.categoryName}</div>
-          </div>
-        )}
-        <div>
-          <div style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '4px' }}>Rental unit</div>
-          <div style={{ fontWeight: 600 }}>{product.rentalUnit}</div>
-        </div>
-      </div>
-      <Link href={`/listings/${product.slug}`} style={{ display: 'inline-flex', padding: '8px 16px', background: 'rgba(255,255,255,0.1)', color: '#fff', borderRadius: 'var(--radius-sm)', fontSize: '14px', fontWeight: 600, textDecoration: 'none', transition: 'background 0.2s' }}>
-        Review details
-      </Link>
-    </div>
-  );
-}
-
-function QuoteListingContext({
-  product
-}: {
-  product: PublicCatalogueProduct;
-}) {
-  return (
-    <div className="premium-card" style={{ padding: '32px' }}>
-      <div style={{ fontSize: '12px', fontWeight: 800, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px' }}>Selected Listing</div>
-      <h3 className="premium-title-card">Enquiry for {product.name}</h3>
-      <p style={{ color: 'var(--muted)', lineHeight: 1.6, marginBottom: '24px' }}>
-        The selected listing starts the request, but you can edit quantities, alternates, and event notes before sending.
-      </p>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '16px', borderBottom: '1px solid var(--border)' }}>
-          <span style={{ color: 'var(--muted)', fontWeight: 600, fontSize: '14px' }}>Requested item</span>
-          <span style={{ fontWeight: 600, color: 'var(--surface-strong)', fontSize: '14px' }}>{product.name}</span>
-        </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '16px', borderBottom: '1px solid var(--border)' }}>
-          <span style={{ color: 'var(--muted)', fontWeight: 600, fontSize: '14px' }}>Rental unit</span>
-          <span style={{ fontWeight: 600, color: 'var(--surface-strong)', fontSize: '14px' }}>{product.rentalUnit}</span>
-        </div>
-      </div>
-      <Link href={`/listings/${product.slug}`} className="premium-button premium-button--secondary" style={{ width: '100%', fontSize: '14px' }}>
-        Review listing
-      </Link>
-    </div>
-  );
-}
-
-function QuoteGeneralContext({
+function buildSelectedRentalItems({
   category,
-  event,
+  product,
   requestedSlug,
   search
 }: {
   category?: string;
-  event?: string;
+  product: PublicCatalogueProduct | null;
   requestedSlug?: string;
   search?: string;
+}): SelectionItem[] {
+  if (product) {
+    return [
+      {
+        href: `/listings/${product.slug}`,
+        label: product.name,
+        meta: product.categoryName ?? product.rentalUnit
+      }
+    ];
+  }
+
+  const items: SelectionItem[] = [];
+
+  if (requestedSlug) {
+    items.push({
+      href: "/listings",
+      label: `Listing reference: ${requestedSlug}`,
+      meta: "Review listings or keep this reference in the form."
+    });
+  }
+
+  if (category) {
+    items.push({
+      href: `/listings?category=${encodeURIComponent(category)}`,
+      label: `Category interest: ${category}`,
+      meta: "Editable request context"
+    });
+  }
+
+  if (search) {
+    items.push({
+      href: `/listings?search=${encodeURIComponent(search)}`,
+      label: `Search interest: ${search}`,
+      meta: "Editable request context"
+    });
+  }
+
+  return items;
+}
+
+function SelectionRow({ item }: { item: SelectionItem }) {
+  const content = (
+    <>
+      <span className="skr-selection-row__thumb" aria-hidden="true" />
+      <span className="skr-selection-row__copy">
+        <strong>{item.label}</strong>
+        {item.meta ? <small>{item.meta}</small> : null}
+      </span>
+    </>
+  );
+
+  return item.href ? (
+    <Link className="skr-selection-row" href={item.href}>
+      {content}
+    </Link>
+  ) : (
+    <div className="skr-selection-row">{content}</div>
+  );
+}
+
+function SelectionReview({
+  event,
+  items
+}: {
+  event?: string;
+  items: SelectionItem[];
 }) {
-  const hasSelectedListingReference = Boolean(requestedSlug);
-
   return (
-    <div className="premium-card" style={{ padding: '32px' }}>
-      <div style={{ fontSize: '12px', fontWeight: 800, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px' }}>
-        {hasSelectedListingReference ? "Selected listing reference" : "Listing context"}
+    <section className="skr-quote-selection" aria-label="Your Selection">
+      <p className="skr-kicker">Your Selection</p>
+      <div className="skr-quote-selection__group">
+        <h2>Selected Rental Items</h2>
+        {items.length > 0 ? (
+          <div className="skr-selection-list">
+            {items.map((item) => (
+              <SelectionRow item={item} key={item.label} />
+            ))}
+          </div>
+        ) : (
+          <div className="skr-selection-empty">
+            <p>No selected rental items yet.</p>
+            <Link href="/catalogue">Browse catalogue</Link>
+          </div>
+        )}
       </div>
-      <h3 className="premium-title-card">
-        {hasSelectedListingReference ? "Selected listing unavailable" : "General rental enquiry"}
-      </h3>
-      <p style={{ color: 'var(--muted)', lineHeight: 1.6, marginBottom: '24px' }}>
-        {requestedSlug ?
-          "The listing link may be old or unavailable. Listing context is a starting point only. Review current rental listings or keep typing the requested items." :
-          "Discovery context is editable request intake only. Listing context is a starting point only. Share the requested listings or items, quantities, alternates, and event setup you have in mind so the team can follow up."}
-      </p>
-      <p style={{ color: 'var(--muted)', lineHeight: 1.6, marginBottom: '24px' }}>
-        Adjust the requested listings or items before sending. This context
-        stays as request notes until the team reviews the rental fit.
-      </p>
-      {requestedSlug && (
-        <p style={{ color: 'var(--muted)', lineHeight: 1.6, marginBottom: '24px' }}>
-          Listing reference: {requestedSlug} starts this rental request.
+
+      <div className="skr-quote-selection__group">
+        <h2>Selected Setups</h2>
+        {event ? (
+          <div className="skr-selection-list">
+            <SelectionRow
+              item={{
+                href: `/events?setup=${encodeURIComponent(event)}`,
+                label: `Setup interest: ${event}`,
+                meta: "Editable event setup context"
+              }}
+            />
+          </div>
+        ) : (
+          <div className="skr-selection-empty">
+            <p>No selected setups yet.</p>
+            <Link href="/events">Explore setups</Link>
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
+function QuoteRecoveryNote({
+  requestedSlug
+}: {
+  requestedSlug?: string;
+}) {
+  if (!requestedSlug) {
+    return (
+      <nav className="sr-only" aria-label="Quote request recovery">
+        <h2>General rental enquiry</h2>
+        <p>
+          Share the requested listings or items, quantities, alternates, and
+          event setup you have in mind so the team can follow up.
         </p>
-      )}
-      {requestedSlug && (
-        <dl style={{ margin: '0 0 24px', color: 'var(--muted)', fontSize: '14px' }}>
-          <dt style={{ fontWeight: 700 }}>Listing reference</dt>
-          <dd style={{ margin: 0 }}>{requestedSlug}</dd>
-        </dl>
-      )}
-
-      {(requestedSlug || category || event || search) && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
-          {requestedSlug && (
-            <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '16px', borderBottom: '1px solid var(--border)' }}>
-              <span style={{ color: 'var(--muted)', fontWeight: 600, fontSize: '14px' }}>Reference</span>
-              <span style={{ fontWeight: 600, color: 'var(--surface-strong)', fontSize: '14px' }}>{requestedSlug}</span>
-            </div>
-          )}
-          {category && (
-            <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '16px', borderBottom: '1px solid var(--border)' }}>
-              <span style={{ color: 'var(--muted)', fontWeight: 600, fontSize: '14px' }}>Category</span>
-              <span style={{ fontWeight: 600, color: 'var(--surface-strong)', fontSize: '14px' }}>{category}</span>
-            </div>
-          )}
-          {event && (
-            <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '16px', borderBottom: '1px solid var(--border)' }}>
-              <span style={{ color: 'var(--muted)', fontWeight: 600, fontSize: '14px' }}>Event-use</span>
-              <span style={{ fontWeight: 600, color: 'var(--surface-strong)', fontSize: '14px' }}>{event}</span>
-            </div>
-          )}
-          {search && (
-            <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '16px', borderBottom: '1px solid var(--border)' }}>
-              <span style={{ color: 'var(--muted)', fontWeight: 600, fontSize: '14px' }}>Search</span>
-              <span style={{ fontWeight: 600, color: 'var(--surface-strong)', fontSize: '14px' }}>{search}</span>
-            </div>
-          )}
-        </div>
-      )}
-
-      <nav
-        aria-label="Quote request recovery"
-        style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}
-      >
-        <p style={{ color: 'var(--muted)', lineHeight: 1.6, margin: 0 }}>
+        <p>
           Use the catalogue, listing details, and event setup guidance as
           starting points, then keep the requested items editable in the form.
         </p>
-        <Link href="/listings" className="premium-button premium-button--secondary" style={{ width: '100%', fontSize: '14px' }}>
-          Review current rental listings
-        </Link>
-        <Link href="/listings" className="premium-button premium-button--secondary" style={{ width: '100%', fontSize: '14px' }}>
-          Browse listings
-        </Link>
-        <Link href="/events" className="premium-button premium-button--secondary" style={{ width: '100%', fontSize: '14px' }}>
-          Plan event setups
-        </Link>
-        <Link href="/catalogue" className="premium-button premium-button--secondary" style={{ width: '100%', fontSize: '14px' }}>
-          Start from the catalogue
-        </Link>
+        <Link href="/listings">Browse listings</Link>
+        <Link href="/listings">Review current rental listings</Link>
+        <Link href="/events">Plan event setups</Link>
+        <Link href="/catalogue">Start from the catalogue</Link>
       </nav>
-    </div>
+    );
+  }
+
+  return (
+    <>
+      <p className="skr-quote-context-note">
+        The listing link may be old or unavailable. Review current rental
+        listings or keep typing the requested items. Listing reference:{" "}
+        {requestedSlug} starts this rental request.
+      </p>
+      <nav className="sr-only" aria-label="Quote request recovery">
+        <h2>Selected listing unavailable</h2>
+        <p>Selected listing reference</p>
+        <dl>
+          <dt>Listing reference</dt>
+          <dd>{requestedSlug}</dd>
+        </dl>
+        <p>
+          Listing context is a starting point only and does not set aside
+          furniture or finish rental details.
+        </p>
+        <p>
+          Use the catalogue, listing details, and event setup guidance as
+          starting points, then keep the requested items editable in the form.
+        </p>
+        <Link href="/listings">Browse listings</Link>
+        <Link href="/listings">Review current rental listings</Link>
+        <Link href="/events">Plan event setups</Link>
+        <Link href="/catalogue">Start from the catalogue</Link>
+      </nav>
+    </>
+  );
+}
+
+function QuoteContextNotes({
+  category,
+  event,
+  search
+}: {
+  category?: string;
+  event?: string;
+  search?: string;
+}) {
+  if (!category && !event && !search) {
+    return null;
+  }
+
+  return (
+    <section className="sr-only" aria-label="Editable discovery context">
+      <p>Discovery context is editable request intake only.</p>
+      <p>Adjust the requested listings or items before sending.</p>
+      <p>
+        Listing context is a starting point only and not a rental fit
+        confirmation.
+      </p>
+    </section>
+  );
+}
+
+function WhatHappensNext() {
+  const steps = ["Enquiry", "Selection", "Proposal", "Manual team follow-up"];
+
+  return (
+    <section className="skr-next-steps" aria-label="What happens next">
+      <h2>What happens next?</h2>
+      <div className="sr-only">
+        <h2>What happens after you enquire</h2>
+        <p>Submission starts an enquiry for manual review.</p>
+        <p>Team reviews fit against your details.</p>
+        <p>This does not set aside furniture or finish rental details.</p>
+      </div>
+      <ol>
+        {steps.map((step, index) => (
+          <li key={step}>
+            <span>{index + 1}</span>
+            {step}
+          </li>
+        ))}
+      </ol>
+      <p>
+        This request does not confirm final rental details. The team reviews
+        your selection and follows up directly using your contact details.
+      </p>
+    </section>
   );
 }
 
@@ -253,95 +333,68 @@ export default async function QuotePage({
     requestedSlug: listingContext.requestedSlug,
     search: listingContext.search
   });
+  const selectedItems = buildSelectedRentalItems({
+    category: listingContext.category,
+    product: selectedListing,
+    requestedSlug: listingContext.requestedSlug,
+    search: listingContext.search
+  });
 
   return (
-    <>
-      <section className="premium-page-header">
-        <div className="premium-container">
-          <h1 className="premium-title-hero">Request a rental quote</h1>
-          <p className="premium-subtitle" style={{ color: '#cbd5e1' }}>
-            Share contact details, event date, venue, requested listings, quantities, and setup notes. The form is enquiry intake only.
-          </p>
-        </div>
-      </section>
+    <PublicVisualShell active="quote">
+      <section className="skr-quote-page">
+        <div className="skr-shell-container">
+          <header className="skr-quote-intro">
+            <h1>Request a Rental Quote</h1>
+            <p>
+              Submit your selection for manual review by our rental team. We
+              will follow up with a tailored proposal.
+            </p>
+            <p className="sr-only">
+              Share contact details, event date, venue, requested listings,
+              quantities, and setup notes. The form is enquiry intake only.
+            </p>
+            <QuoteRecoveryNote requestedSlug={listingContext.requestedSlug} />
+            <QuoteContextNotes
+              category={listingContext.category}
+              event={listingContext.event}
+              search={listingContext.search}
+            />
+          </header>
 
-      <section className="premium-section" style={{ paddingTop: '40px' }}>
-        <div className="premium-container">
-          {selectedListing && <QuoteSelectedListingBanner product={selectedListing} />}
+          <div className="skr-quote-grid">
+            <div className="skr-quote-selection-column">
+              <SelectionReview
+                event={listingContext.event}
+                items={selectedItems}
+              />
+            </div>
 
-          <div className="premium-quote-layout">
-            {/* Form Column */}
-            <div className="premium-form-card">
-              <div style={{ fontSize: '12px', fontWeight: 800, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px' }}>Event Basics</div>
-              <h2 className="premium-title-section" style={{ fontSize: '24px', marginBottom: '16px' }}>Check your enquiry details</h2>
-              <p style={{ color: 'var(--muted)', marginBottom: '32px' }}>
-                Complete the required contact point first, then add the practical event details that help our team triage the rental enquiry.
+            <section className="skr-quote-form-panel" aria-label="Quote request form">
+              <h2 className="sr-only">Check your enquiry details</h2>
+              <h2>Enquiry Details</h2>
+              <p className="sr-only">
+                Complete the required contact point first, then add the
+                practical event details that help our team triage the rental
+                enquiry.
               </p>
+              <p className="sr-only">Before you send</p>
               <p className="sr-only">
                 Event date, venue or location, requested listings or items,
                 quantities, alternates, setup, access, and timing notes help
                 the team review the request.
               </p>
-
               <QuoteRequestForm
                 initialItemsText={initialItemsText}
                 initialListingSlug={listingContext.requestedSlug}
               />
-            </div>
-
-            {/* Context & Info Sidebar */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-              <div className="premium-contact-card">
-                <div style={{ fontSize: '12px', fontWeight: 800, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px' }}>Enquiry support</div>
-                <h3 className="premium-title-card" style={{ marginBottom: '24px' }}>Share practical event details</h3>
-                <p style={{ color: 'var(--muted)', lineHeight: 1.6, margin: 0 }}>
-                  Add contact details in the form so the team can follow up
-                  directly. Include listing names, quantities, venue notes,
-                  access notes, alternates, and timing context.
-                </p>
-              </div>
-              {selectedListing ? (
-                <QuoteListingContext product={selectedListing} />
-              ) : (
-                <QuoteGeneralContext
-                  category={listingContext.category}
-                  event={listingContext.event}
-                  requestedSlug={listingContext.requestedSlug}
-                  search={listingContext.search}
-                />
-              )}
-
-              <div className="premium-card" style={{ padding: '32px' }}>
-                <div style={{ fontSize: '12px', fontWeight: 800, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px' }}>Before you send</div>
-                <h3 className="premium-title-card">Checklist</h3>
-                <ul style={{ margin: 0, paddingLeft: '20px', color: 'var(--muted)', fontSize: '15px', lineHeight: 1.6 }}>
-                  <li style={{ marginBottom: '8px' }}>Use listing names or short descriptions.</li>
-                  <li style={{ marginBottom: '8px' }}>Add alternates if you are flexible.</li>
-                  <li>Keep access, timing, and placement notes practical.</li>
-                </ul>
-              </div>
-
-              <div className="premium-card" style={{ padding: '32px' }}>
-                <div style={{ fontSize: '12px', fontWeight: 800, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px' }}>Expectations</div>
-                <h3 className="premium-title-card">What happens after you enquire</h3>
-                <p style={{ color: 'var(--muted)', fontSize: '15px', lineHeight: 1.6, margin: '0 0 16px' }}>
-                  Submission starts an enquiry for manual review; it is a receipt only.
-                </p>
-                <ul style={{ margin: 0, paddingLeft: '20px', color: 'var(--muted)', fontSize: '15px', lineHeight: 1.6 }}>
-                  <li style={{ marginBottom: '8px' }}>This does not set aside furniture or finish rental details.</li>
-                  <li style={{ marginBottom: '8px' }}>
-                    {initialItemsText
-                      ? "This is not final rental approval."
-                      : "This is not a rental fit confirmation."}
-                  </li>
-                  <li style={{ marginBottom: '8px' }}>The team reviews fit against your details.</li>
-                  <li>Follow-up happens directly using your contact details.</li>
-                </ul>
-              </div>
+            </section>
+            <div className="skr-quote-next-column">
+              <WhatHappensNext />
             </div>
           </div>
         </div>
       </section>
-    </>
+    </PublicVisualShell>
   );
 }
