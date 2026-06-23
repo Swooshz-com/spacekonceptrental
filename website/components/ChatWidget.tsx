@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 
 type ChatMessage = {
   id: string;
@@ -46,6 +46,16 @@ export default function ChatWidget() {
   const [isSending, setIsSending] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string>();
   const [isOpen, setIsOpen] = useState(true);
+
+  useEffect(() => {
+    const isPublicVisualShell =
+      typeof document !== "undefined" &&
+      document.querySelector(".skr-public-visual-shell");
+
+    if (isPublicVisualShell) {
+      setIsOpen(false);
+    }
+  }, []);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -119,9 +129,9 @@ export default function ChatWidget() {
 
   if (!isOpen) {
     return (
-      <div style={{ position: 'fixed', bottom: '24px', right: '24px', zIndex: 50, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+      <div className="chat-widget__launcher" style={{ position: 'fixed', bottom: '24px', right: '24px', zIndex: 50, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
         <button
-          className="premium-chat-pulse"
+          className="premium-chat-pulse chat-widget__launcher-button"
           onClick={() => setIsOpen(true)}
           style={{
             background: 'var(--accent)',
@@ -140,13 +150,13 @@ export default function ChatWidget() {
           aria-label="Open chat"
         >
           <span aria-hidden="true" style={{ fontSize: '14px', fontWeight: 800 }}>SK</span>
-          <span style={{
+          <span className="chat-widget__launcher-badge" style={{
             position: 'absolute', top: '0', right: '0', background: '#0f172a', color: '#fff',
             fontSize: '12px', fontWeight: 700, width: '22px', height: '22px', borderRadius: '50%',
             display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid var(--surface)'
           }}>1</span>
         </button>
-        <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text)' }}>Chat with us</span>
+        <span className="chat-widget__launcher-label" style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text)' }}>Chat with us</span>
       </div>
     );
   }

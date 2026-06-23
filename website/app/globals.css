@@ -1524,6 +1524,7 @@ body:has(.skr-public-visual-shell) aside[aria-label="Rental questions"] {
   max-width: 52px !important;
   overflow: hidden !important;
   padding: 0 !important;
+  pointer-events: none !important;
   right: 18px !important;
   width: 52px !important;
   z-index: 45 !important;
@@ -1537,6 +1538,30 @@ body:has(.skr-public-visual-shell) aside[aria-label="Rental questions"]::after {
   content: "SK";
   font-size: 0.78rem;
   font-weight: 800;
+}
+
+body:has(.skr-public-visual-shell) .chat-widget__launcher {
+  bottom: max(14px, env(safe-area-inset-bottom)) !important;
+  gap: 0 !important;
+  right: 14px !important;
+  z-index: 34 !important;
+}
+
+body:has(.skr-public-visual-shell) .chat-widget__launcher-button {
+  border-radius: 50% !important;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.22) !important;
+  height: 46px !important;
+  width: 46px !important;
+}
+
+body:has(.skr-public-visual-shell) .chat-widget__launcher-badge,
+body:has(.skr-public-visual-shell) .chat-widget__launcher-label {
+  display: none !important;
+}
+
+body:has(.skr-quote-page) aside[aria-label="Rental questions"],
+body:has(.skr-quote-page) .chat-widget__launcher {
+  display: none !important;
 }
 
 .skr-public-visual-shell {
@@ -2394,7 +2419,7 @@ body:has(.skr-public-visual-shell) aside[aria-label="Rental questions"]::after {
   }
 
   .skr-quote-page {
-    padding-bottom: 220px;
+    padding-bottom: 260px;
   }
 
   .skr-quote-intro {
