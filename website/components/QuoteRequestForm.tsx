@@ -290,7 +290,7 @@ export default function QuoteRequestForm({
         Rental fit is reviewed directly by the team.{" "}
         Share contact details for direct manual follow-up. The team uses these
         details to triage the rental enquiry.{" "}
-        Let us know what you need for your event. Share the date, venue, and requested items - our team will review the details and get back to you with a custom quote.
+        Let us know what you need for your event. Share the date, venue, and requested items - our team will review the details and follow up with a tailored proposal.
       </p>
       {initialItemsText ? (
         <aside className="quote-form__selected" aria-label="Selected listing">
@@ -467,8 +467,8 @@ export default function QuoteRequestForm({
         type="submit"
       >
         {submitState.status === "submitting"
-          ? "Sending quote request..."
-          : "Review and send an enquiry"}
+          ? "Sending enquiry..."
+          : "Submit Enquiry"}
       </button>
       <p className="quote-form__legal">
         By sending an enquiry, review the{" "}
@@ -483,11 +483,9 @@ export default function QuoteRequestForm({
           role="status"
         >
           <p className="eyebrow">Enquiry received</p>
-          <h3>Quote request received</h3>
+          <h3>We received your rental enquiry</h3>
           <p>
-            The team can review your request and follow up directly with next
-            questions or quote details. Manual follow-up uses your contact
-            details, event details, and requested listing/item context.
+            Our team will review your selection and follow up with a tailored proposal. Manual follow-up uses your contact details, event details, and requested listing/item context.
           </p>
           <dl className="quote-form__receipt-details">
             <div>
@@ -514,7 +512,7 @@ export default function QuoteRequestForm({
             className="quote-form__receipt-actions"
           >
             <a className="button button--secondary" href="/listings">
-              Browse rental listings
+              Explore Setups
             </a>
             {selectedListingDetailHref ? (
               <a

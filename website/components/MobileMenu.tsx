@@ -1,109 +1,32 @@
 "use client";
-import { useState, useCallback, useEffect } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 
-const menuIconViewBox = ["0", "0", "24", "24"].join(" ");
+const links = [
+  ["Home", "/"],
+  ["Catalogue", "/catalogue"],
+  ["Setups", "/listings"],
+  ["About", "/about"],
+  ["Contact", "/contact"],
+  ["Request Quote", "/quote"],
+  ["Privacy", "/privacy"],
+  ["Terms", "/terms"]
+] as const;
 
 export default function MobileMenu() {
   const [open, setOpen] = useState(false);
-
-  const toggle = useCallback(() => setOpen((prev) => !prev), []);
-  const close = useCallback(() => setOpen(false), []);
-
-  /* Lock body scroll while the drawer is open */
   useEffect(() => {
-    if (open) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
-    return () => {
-      document.body.style.overflow = "";
-    };
+    document.body.style.overflow = open ? "hidden" : "";
+    return () => { document.body.style.overflow = ""; };
   }, [open]);
-
   return (
     <>
-      {/* Hamburger button */}
-      <button
-        className="premium-hamburger"
-        aria-label="Open menu"
-        aria-expanded={open}
-        onClick={toggle}
-        type="button"
-      >
-        <svg
-          aria-hidden="true"
-          fill="none"
-          height="24"
-          stroke="currentColor"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth="2"
-          viewBox={menuIconViewBox}
-          width="24"
-        >
-          <line x1="3" x2="21" y1="6" y2="6" />
-          <line x1="3" x2="21" y1="12" y2="12" />
-          <line x1="3" x2="21" y1="18" y2="18" />
-        </svg>
-      </button>
-
-      {/* Overlay */}
-      {open && (
-        <div
-          className="premium-mobile-overlay"
-          onClick={close}
-          aria-hidden="true"
-        />
-      )}
-
-      {/* Drawer */}
-      <div
-        className={`premium-mobile-drawer${open ? " premium-mobile-drawer--open" : ""}`}
-        role="dialog"
-        aria-modal={open}
-        aria-label="Mobile navigation"
-      >
-        <div className="premium-mobile-drawer__header">
-          <button
-            className="premium-mobile-drawer__close"
-            aria-label="Close menu"
-            onClick={close}
-            type="button"
-          >
-            &#x2715;
-          </button>
-        </div>
-
-        <nav className="premium-mobile-drawer__nav" aria-label="Mobile navigation">
-          <Link href="/catalogue" onClick={close}>
-            Catalogue
-          </Link>
-          <Link href="/events" onClick={close}>
-            Hire By Events
-          </Link>
-          <Link href="#" onClick={close}>
-            Portfolio
-          </Link>
-          <Link href="#" onClick={close}>
-            About
-          </Link>
-          <Link href="/quote" onClick={close}>
-            Contact
-          </Link>
-        </nav>
-
-        <div className="premium-mobile-drawer__cta">
-          <Link
-            className="premium-button premium-button--primary premium-button--full"
-            href="/quote"
-            onClick={close}
-          >
-            Request Quote
-          </Link>
-        </div>
-      </div>
+      <button className="stitch-menu-trigger" aria-expanded={open} aria-label="Open menu" onClick={() => setOpen(true)} type="button"><span /><span /><span /></button>
+      {open ? <button className="stitch-menu-scrim" aria-label="Close menu" onClick={() => setOpen(false)} type="button" /> : null}
+      <aside className={`stitch-mobile-menu${open ? " stitch-mobile-menu--open" : ""}`} aria-hidden={!open}>
+        <div className="stitch-mobile-menu__top"><strong>SpaceKonceptRental</strong><button aria-label="Close menu" onClick={() => setOpen(false)} type="button">Close</button></div>
+        <nav aria-label="Mobile navigation">{links.map(([label, href]) => <Link key={href} href={href} onClick={() => setOpen(false)}>{label}</Link>)}</nav>
+      </aside>
     </>
   );
 }
