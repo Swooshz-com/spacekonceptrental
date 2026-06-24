@@ -467,8 +467,8 @@ export default function QuoteRequestForm({
         type="submit"
       >
         {submitState.status === "submitting"
-          ? "Sending enquiry..."
-          : "Submit Enquiry"}
+          ? "Sending quote request..."
+          : "Review and send an enquiry"}
       </button>
       <p className="quote-form__legal">
         By sending an enquiry, review the{" "}
@@ -483,9 +483,9 @@ export default function QuoteRequestForm({
           role="status"
         >
           <p className="eyebrow">Enquiry received</p>
-          <h3>We received your rental enquiry</h3>
+          <h3>Quote request received</h3>
           <p>
-            Our team will review your selection and follow up with a tailored proposal. Manual follow-up uses your contact details, event details, and requested listing/item context.
+            The team can review your request and follow up directly with next questions or quote details. Manual follow-up uses your contact details, event details, and requested listing/item context.
           </p>
           <dl className="quote-form__receipt-details">
             <div>
@@ -512,7 +512,7 @@ export default function QuoteRequestForm({
             className="quote-form__receipt-actions"
           >
             <a className="button button--secondary" href="/listings">
-              Explore Setups
+              Browse rental listings
             </a>
             {selectedListingDetailHref ? (
               <a

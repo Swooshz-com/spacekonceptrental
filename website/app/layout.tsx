@@ -6,8 +6,8 @@ import "./globals.css";
 import "./globals-premium.css";
 
 export const metadata: Metadata = {
-  title: "SpaceKonceptRental | Furniture and event rental catalogue",
-  description: "Browse rental furniture, explore setups, and submit a rental enquiry for manual team follow-up."
+  title: "Space Koncept Rentals | Event furniture rental",
+  description: "Browse the event furniture rental catalogue and submit a quote enquiry for manual team follow-up."
 };
 
 function SiteHeader() {
@@ -18,7 +18,7 @@ function SiteHeader() {
         <nav className="stitch-desktop-nav" aria-label="Primary navigation">
           <Link href="/">Home</Link><Link href="/catalogue">Catalogue</Link><Link href="/listings">Setups</Link><Link href="/about">About</Link><Link href="/contact">Contact</Link>
         </nav>
-        <div className="stitch-header-actions"><Link className="stitch-button stitch-button--primary" href="/quote">Request Quote</Link><MobileMenu /></div>
+        <div className="stitch-header-actions"><Link className="stitch-button stitch-button--primary" href="/quote">Request Quote</Link><MobileMenu /></div><nav className="sr-only" aria-label="Supporting public routes"><Link href="/events">Events</Link><Link href="/quote">Quote enquiry</Link></nav>
       </div>
     </header>
   );

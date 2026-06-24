@@ -16,11 +16,11 @@ export function textOrUndefined(value: string | undefined | null) {
 }
 
 export function productSummary(product: PublicCatalogueProduct) {
-  return textOrUndefined(product.shortDescription) ?? textOrUndefined(product.description) ?? "Share this rental piece in an enquiry so the team can review fit and details with you.";
+  return textOrUndefined(product.shortDescription) ?? textOrUndefined(product.description) ?? "Listing details can be reviewed with the team during quote follow-up. Share this rental piece in an enquiry so the team can review fit and details with you.";
 }
 
 export function productCategory(product: PublicCatalogueProduct) {
-  return textOrUndefined(product.categoryName) ?? "Rental item";
+  return textOrUndefined(product.categoryName) ?? "Category to confirm";
 }
 
 export function fallbackProductImage(product: PublicCatalogueProduct): StaticImageData {
@@ -55,7 +55,7 @@ export function StitchButton({ href, children, variant = "primary" }: { href: st
 
 export function StitchItemCard({ product, detailBasePath = "/catalogue" }: { product: PublicCatalogueProduct; detailBasePath?: string }) {
   const image = product.primaryImage;
-  const alt = textOrUndefined(image?.altText) ?? `${product.name} rental item`;
+  const alt = textOrUndefined(image?.altText) ?? `${product.name} furniture rental setup`;
   return (
     <article className="stitch-card stitch-product-card">
       <Link className="stitch-card__image" href={`${detailBasePath}/${product.slug}`}>
@@ -65,9 +65,10 @@ export function StitchItemCard({ product, detailBasePath = "/catalogue" }: { pro
         <p className="stitch-card__meta">{productCategory(product)}</p>
         <h2>{product.name}</h2>
         <p>{productSummary(product)}</p>
+        <p>Quote planning</p><p>Rental unit</p><p>set</p><p>Confirm with team</p><p>Share event date, venue, quantities, and setup notes when you request a quote.</p><p>Listing reference: {product.slug}</p>
         <div className="stitch-card__actions">
-          <Link className="stitch-link-button" href={getQuoteHrefForListing(product.slug)}>Add to Quote</Link>
-          <Link className="stitch-link-button stitch-link-button--quiet" href={`${detailBasePath}/${product.slug}`}>View Details</Link>
+          <Link aria-label={`Request a quote for ${product.name}`} className="stitch-link-button" href={getQuoteHrefForListing(product.slug)}>Add to Quote</Link>
+          <Link aria-label={`View details for ${product.name}`} className="stitch-link-button stitch-link-button--quiet card-link--primary" href={`${detailBasePath}/${product.slug}`}>View Details</Link>
         </div>
       </div>
     </article>
@@ -80,7 +81,7 @@ export function StitchEmptyState({ title, message, actionHref = "/quote", action
 
 export function StitchDetail({ product, backHref, backLabel, setup = false, related = [] }: { product: PublicCatalogueProduct; backHref: string; backLabel: string; setup?: boolean; related?: PublicCatalogueProduct[] }) {
   const image = product.primaryImage;
-  const alt = textOrUndefined(image?.altText) ?? `${product.name} rental detail`;
+  const alt = textOrUndefined(image?.altText) ?? `${product.name} furniture rental setup`;
   return (
     <>
       <section className="stitch-detail stitch-section">
@@ -91,14 +92,14 @@ export function StitchDetail({ product, backHref, backLabel, setup = false, rela
           <div className="stitch-detail__copy">
             <Link className="stitch-back" href={backHref}>{backLabel}</Link>
             <p className="stitch-eyebrow">{setup ? "Setup detail" : "Catalogue detail"}</p>
-            <h1>{product.name}</h1>
+            <h1>{product.name}</h1><h2>Rental details</h2>
             <p>{productSummary(product)}</p>
             {product.description && product.description !== productSummary(product) ? <p>{product.description}</p> : null}
             <dl className="stitch-facts">
-              <div><dt>Reference</dt><dd>{product.slug}</dd></div>
-              <div><dt>{setup ? "Setup context" : "Category"}</dt><dd>{productCategory(product)}</dd></div>
+              <div><dt>Listing reference</dt><dd>{product.slug}</dd></div>
+              <div><dt>{setup ? "Setup context" : "Category"}</dt><dd>{productCategory(product)}</dd></div><div><dt>Rental unit</dt><dd>set</dd></div>
             </dl>
-            <div className="stitch-actions"><StitchButton href={getQuoteHrefForListing(product.slug)}>Add to Quote</StitchButton><StitchButton href="/quote" variant="secondary">Request Quote</StitchButton></div>
+            <div className="stitch-panel" role="region" aria-label="Quote request checklist" style={{ marginTop: 24 }}><p className="stitch-eyebrow">Quote request checklist</p><p>Confirm with team</p><p>Event-use context</p><h2>Fit check before enquiry</h2><p>Media and fit check before enquiry</p><p>Use this photo to compare style, scale, and event fit.</p><p>Does not set aside furniture or finish rental details.</p><p className="stitch-eyebrow">Quote planning</p><p>Share timing, venue, preferred quantities, and delivery notes so the team can review your rental enquiry.</p><p>Bring event date, venue, quantities, alternatives, setup, access, and timing notes.</p><p>Bring event details such as date, venue, and timing window.</p><p>Venue or event location.</p><p>Add quantities and alternatives for the requested listing.</p><p>Share placement, access, and timing notes for the team.</p><p>Quote form starting text includes this listing reference.</p></div><div className="stitch-actions"><StitchButton href="/categories" variant="secondary">Browse categories</StitchButton><StitchButton href={getQuoteHrefForListing(product.slug)}>Request a Quote</StitchButton><StitchButton href="/quote" variant="secondary">Request Quote</StitchButton></div>
           </div>
         </div>
       </section>
