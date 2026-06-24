@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Space Koncept Rental - The Metropolitan Gala</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+                "on-tertiary-fixed-variant": "#4f4538",
+                "tertiary-fixed-dim": "#d3c4b2",
+                "secondary-fixed-dim": "#ffb4a7",
+                "primary": "#474b38",
+                "on-secondary-fixed": "#390b05",
+                "secondary-fixed": "#ffdad4",
+                "on-error-container": "#93000a",
+                "on-secondary": "#ffffff",
+                "surface-container": "#f1edea",
+                "surface-dim": "#dcd9d6",
+                "on-tertiary-container": "#eadac8",
+                "primary-fixed-dim": "#c5c9b0",
+                "on-primary-fixed": "#191d0e",
+                "tertiary": "#52483a",
+                "surface-tint": "#5c604c",
+                "primary-fixed": "#e1e5cb",
+                "background": "#fcf9f5",
+                "error-container": "#ffdad6",
+                "tertiary-container": "#6a5f50",
+                "surface-container-low": "#f6f3f0",
+                "on-tertiary": "#ffffff",
+                "surface-container-lowest": "#ffffff",
+                "secondary-container": "#fda99a",
+                "surface-container-high": "#ebe8e4",
+                "on-surface-variant": "#46473f",
+                "on-error": "#ffffff",
+                "on-primary-fixed-variant": "#454936",
+                "inverse-primary": "#c5c9b0",
+                "tertiary-fixed": "#f0e0cd",
+                "on-secondary-fixed-variant": "#71352b",
+                "primary-container": "#5f634f",
+                "on-tertiary-fixed": "#221a0f",
+                "on-surface": "#1c1c1a",
+                "inverse-surface": "#31302e",
+                "on-primary": "#ffffff",
+                "outline": "#77786e",
+                "surface-variant": "#e5e2df",
+                "surface": "#fcf9f5",
+                "outline-variant": "#c7c7bc",
+                "surface-bright": "#fcf9f5",
+                "on-primary-container": "#dcdfc6",
+                "on-background": "#1c1c1a",
+                "error": "#ba1a1a",
+                "secondary": "#8e4c41",
+                "inverse-on-surface": "#f3f0ed",
+                "on-secondary-container": "#793b31",
+                "surface-container-highest": "#e5e2df"
+        },
+        "borderRadius": {
+                "DEFAULT": "0.125rem",
+                "lg": "0.25rem",
+                "xl": "0.5rem",
+                "full": "0.75rem"
+        },
+        "spacing": {
+                "section-gap": "120px",
+                "stack-md": "24px",
+                "margin-desktop": "64px",
+                "stack-lg": "48px",
+                "gutter": "24px",
+                "unit": "4px",
+                "container-max": "1440px",
+                "margin-mobile": "20px",
+                "stack-sm": "8px"
+        },
+        "fontFamily": {
+                "body-md": [
+                        "Inter"
+                ],
+                "headline-md": [
+                        "Playfair Display"
+                ],
+                "body-lg": [
+                        "Inter"
+                ],
+                "headline-lg": [
+                        "Playfair Display"
+                ],
+                "label-sm": [
+                        "Inter"
+                ],
+                "headline-lg-mobile": [
+                        "Playfair Display"
+                ],
+                "display-md": [
+                        "Playfair Display"
+                ],
+                "label-md": [
+                        "Inter"
+                ],
+                "display-lg": [
+                        "Playfair Display"
+                ]
+        },
+        "fontSize": {
+                "body-md": [
+                        "16px",
+                        {
+                                "lineHeight": "1.6",
+                                "fontWeight": "400"
+                        }
+                ],
+                "headline-md": [
+                        "24px",
+                        {
+                                "lineHeight": "1.4",
+                                "fontWeight": "500"
+                        }
+                ],
+                "body-lg": [
+                        "18px",
+                        {
+                                "lineHeight": "1.6",
+                                "fontWeight": "400"
+                        }
+                ],
+                "headline-lg": [
+                        "32px",
+                        {
+                                "lineHeight": "1.3",
+                                "fontWeight": "600"
+                        }
+                ],
+                "label-sm": [
+                        "12px",
+                        {
+                                "lineHeight": "1",
+                                "letterSpacing": "0.1em",
+                                "fontWeight": "500"
+                        }
+                ],
+                "headline-lg-mobile": [
+                        "28px",
+                        {
+                                "lineHeight": "1.3",
+                                "fontWeight": "600"
+                        }
+                ],
+                "display-md": [
+                        "48px",
+                        {
+                                "lineHeight": "1.2",
+                                "letterSpacing": "-0.01em",
+                                "fontWeight": "600"
+                        }
+                ],
+                "label-md": [
+                        "14px",
+                        {
+                                "lineHeight": "1",
+                                "letterSpacing": "0.05em",
+                                "fontWeight": "600"
+                        }
+                ],
+                "display-lg": [
+                        "64px",
+                        {
+                                "lineHeight": "1.1",
+                                "letterSpacing": "-0.02em",
+                                "fontWeight": "700"
+                        }
+                ]
+        }
+},
+    },
+  }
+</script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined.filled {
+            font-variation-settings: 'FILL' 1;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background antialiased md:hidden font-body-md text-body-md flex flex-col min-h-screen">
+<!-- Top App Bar -->
+<header class="fixed top-0 left-0 w-full z-50 bg-surface/90 backdrop-blur-md transition-shadow">
+<div class="flex justify-between items-center w-full px-margin-mobile py-4">
+<button aria-label="Back to Setups" class="flex items-center gap-1 text-on-surface hover:text-primary transition-colors font-label-md text-label-md"><span class="material-symbols-outlined" data-icon="arrow_back">arrow_back</span><span class="">Back to Setups</span></button>
+<span class="font-headline-md text-headline-md text-on-surface font-semibold tracking-tight">Space Koncept Rental</span>
+<button aria-label="Share" class="text-on-surface hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="ios_share">ios_share</span>
+</button>
+</div>
+</header>
+<main class="flex-grow pt-[72px] pb-[100px]"> <!-- Padding for fixed header and bottom CTA -->
+<!-- Hero Image -->
+<section class="w-full relative h-[60vh] min-h-[400px]">
+<div class="absolute inset-0 bg-cover bg-center w-full h-full" style="background-image: url('https://lh3.googleusercontent.com/aida/AP1WRLtRUWoVrpR2maERp0xySfSSnMBff0LOSb29Tpni-SRYjHLZk5bB8FJanm-hLVOBGjx9ewEwdH1zqIwTbw0KU4TUj1ICI131OXhgBKZYEAU-sbVCvUoo44pTOImQXquA1Pnl-2n-D_0iisb_UXKadWHzFwosuyoQQX1cMT9Q423vwaDJPtzO628ng7TaP2nSTKFSgQ8qbfb_VtU7dnXfnvE404ADKYlsS_0dxVR0qVMuQXvzwTHv-pwFi9jG')"></div>
+<div class="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent opacity-80"></div>
+</section>
+<!-- Content Area -->
+<div class="px-margin-mobile -mt-12 relative z-10">
+<!-- Header Section -->
+<div class="bg-surface rounded-t-[24px] pt-stack-md pb-stack-sm flex flex-col gap-stack-sm">
+<div class="flex items-center gap-2">
+<span class="px-3 py-1 bg-surface-variant text-on-surface-variant rounded-full font-label-sm text-label-sm uppercase">Gala Setup</span>
+<span class="px-3 py-1 bg-[#D4C5B3]/20 text-on-surface-variant rounded-full font-label-sm text-label-sm uppercase">Capacity: 200+</span>
+</div>
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface mt-2">The Metropolitan Gala</h1>
+<p class="font-body-md text-body-md text-on-surface-variant leading-relaxed mt-1">
+                    An elegant corporate gala setup featuring architectural furniture arrangements and warm ambient lighting. Designed for luxury ballrooms to create a sophisticated atmosphere for high-profile events.
+                </p>
+</div>
+<!-- What's Included List -->
+<section class="mt-stack-lg">
+<h2 class="font-headline-md text-headline-md text-on-surface mb-stack-md border-b border-[#D4C5B3] pb-2">Included rental pieces</h2>
+<div class="flex flex-col gap-4">
+<!-- Item 1 -->
+<div class="flex gap-4 items-center bg-surface-container-low p-3 rounded-lg border border-[#D4C5B3]">
+<img class="w-20 h-20 object-cover rounded-md flex-shrink-0" data-alt="A detailed close-up of a sleek, mid-century modern velvet lounge chair in olive green." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAsXW1e76KbtctW1v0nfEE-q3pMFJ6n-HxDJWrChs7RA6UYb3T3d79scnEnTcNhBhFchCqQMwYP3--MMC5UnHOGNLtCqHvAGbjaY1vBg_ZCIPuVsiCg9oA58PNICJRthQITOpMH5rlqwnPVvv5J7kawFeoekWg7gdirrE90cktyWjv84rkNnbCoUKrpARTI5DN81kNmAawwZ1qtPBNIFLlaDKR8nDFXrhIkJhiQBEzT-Rz0q1x-ovYlKM5Cxr-zQXEAILadofAKDDg4"/>
+<div class="flex-grow">
+<h3 class="font-label-md text-label-md text-on-surface">Velvet Lounge Chair (Olive)</h3>
+<p class="font-body-md text-body-md text-on-surface-variant text-sm mt-1">Quantity: 12</p>
+</div>
+</div>
+<!-- Item 2 -->
+<div class="flex gap-4 items-center bg-surface-container-low p-3 rounded-lg border border-[#D4C5B3]">
+<img class="w-20 h-20 object-cover rounded-md flex-shrink-0" data-alt="A high-quality studio shot of a minimalist geometric brass coffee table with a glass top." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCZRNVsmD4DU_8Elnf7gT_Qknvuxl3GrsBfRMIHUTUlfjnxKfEaXhaWBiTSLzsFrDVX-bxFUCWid_Wn9YxawWXuhpyQlQxYarXZGC0kLDm4K_y0z9rt1JzbCCPUpiN7hotcR9_KTP7med2Xl-LVWbtrUYxVvlVrvl9a3yx_tV-Raw37KcGabdssYdX_eiPZOAuvdv0Md7xRpNAYXPqdjfWXb_EoMtJIK-1IP5s55iLFlIalJWqizrGdARa_ogha6kL_DhOxiMrF_A"/>
+<div class="flex-grow">
+<h3 class="font-label-md text-label-md text-on-surface">Geometric Brass Coffee Table</h3>
+<p class="font-body-md text-body-md text-on-surface-variant text-sm mt-1">Quantity: 6</p>
+</div>
+</div>
+<!-- Item 3 -->
+<div class="flex gap-4 items-center bg-surface-container-low p-3 rounded-lg border border-[#D4C5B3]">
+<img class="w-20 h-20 object-cover rounded-md flex-shrink-0" data-alt="An elegant, curved modular sofa upholstered in a warm sand-colored boucle fabric." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBZWNag8p5-8aPEWISebDd0rsY1DK-FYb1ymg04wq05fRHOeVyYsUgOtqEAijDqJoAGk8e6QU9m77hfhWqtBV4yVLN9Ve5-CI6-Ey5Sezn3bGnZ0ypufEAr7xXrdv53wjbDbUg27WEdlyfmJZgu9UT35yJiS6fD-nCejiVN6iV_OfffO3Tw74PA5vSsqYWQX_nzDQotrrqjRS4luP-XPwz2umMemaC3spdPtbb_uAdAhygBYHaTpdRORKPQere7NyelnWYkFhrym_2j"/>
+<div class="flex-grow">
+<h3 class="font-label-md text-label-md text-on-surface">Curved Modular Sofa (Sand)</h3>
+<p class="font-body-md text-body-md text-on-surface-variant text-sm mt-1">Quantity: 4</p>
+</div>
+</div>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant mt-4 italic">Our team will prepare a detailed proposal based on your event requirements.</p></section>
+</div>
+</main>
+<!-- Fixed Bottom CTA -->
+<div class="fixed bottom-0 left-0 w-full bg-surface-container-lowest border-t border-[#D4C5B3] p-margin-mobile z-50">
+<button class="w-full bg-[#5F634F] text-white font-label-md text-label-md py-4 rounded-lg flex items-center justify-center gap-2 hover:bg-[#474b38] transition-colors">
+            Request Quote for this Setup
+            <span class="material-symbols-outlined" data-icon="arrow_forward">arrow_forward</span>
+</button>
+</div>
+</body></html>
