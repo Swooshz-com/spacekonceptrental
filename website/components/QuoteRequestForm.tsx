@@ -290,7 +290,7 @@ export default function QuoteRequestForm({
         Rental fit is reviewed directly by the team.{" "}
         Share contact details for direct manual follow-up. The team uses these
         details to triage the rental enquiry.{" "}
-        Let us know what you need for your event. Share the date, venue, and requested items - our team will review the details and follow up with a tailored proposal.
+        Complete the required contact point first. Let us know what you need for your event. Share the date, venue, and requested items - our team will review the details and follow up with a tailored proposal.
       </p>
       {initialItemsText ? (
         <aside className="quote-form__selected" aria-label="Selected listing">
@@ -306,7 +306,7 @@ export default function QuoteRequestForm({
           <span>
             You've added <strong>{initialItemsText}</strong> to your request.
             This starts this rental request as editable request text; feel free
-            to adjust the quantities or add more items before submitting.
+            to adjust quantities or add more items before submitting.
           </span>
         </aside>
       ) : null}

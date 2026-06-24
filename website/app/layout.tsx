@@ -18,7 +18,7 @@ function SiteHeader() {
         <nav className="stitch-desktop-nav" aria-label="Primary navigation">
           <Link href="/">Home</Link><Link href="/catalogue">Catalogue</Link><Link href="/listings">Setups</Link><Link href="/about">About</Link><Link href="/contact">Contact</Link>
         </nav>
-        <div className="stitch-header-actions"><Link className="stitch-button stitch-button--primary" href="/quote">Request Quote</Link><MobileMenu /></div><nav className="sr-only" aria-label="Supporting public routes"><Link href="/events">Events</Link><Link href="/quote">Quote enquiry</Link></nav>
+        <div className="stitch-header-actions"><Link className="stitch-button stitch-button--primary" href="/quote">Request Quote</Link><MobileMenu /></div><nav className="sr-only" aria-label="Supporting public routes"><Link href="/events">Events</Link><Link href="/categories">Categories</Link><Link href="/quote">Quote enquiry</Link></nav>
       </div>
     </header>
   );
