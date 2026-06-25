@@ -4020,6 +4020,22 @@ h3,
   letter-spacing: 0;
 }
 
+.stitch-desktop-nav a {
+  border-bottom: 2px solid transparent;
+}
+
+.stitch-desktop-nav a[aria-current="page"],
+.stitch-desktop-nav a.stitch-nav-link--active {
+  border-bottom-color: var(--stitch-secondary, #8e4c41);
+  color: var(--stitch-secondary, #8e4c41);
+}
+
+.stitch-bottom-nav a[aria-current="page"],
+.stitch-bottom-nav a.stitch-nav-link--active {
+  color: var(--stitch-primary);
+  font-weight: 700;
+}
+
 .stitch-button,
 .stitch-link-button,
 .button,

@@ -2,6 +2,7 @@
 import Link from "next/link";
 import ChatWidget from "../components/ChatWidget";
 import MobileMenu from "../components/MobileMenu";
+import { MobileBottomNav, SiteDesktopNav } from "../components/SiteNav";
 import "./globals.css";
 import "./globals-premium.css";
 
@@ -11,15 +12,11 @@ export const metadata: Metadata = {
 };
 
 function SiteHeader() {
-  return <header className="stitch-site-header"><div className="stitch-site-header__inner"><Link className="stitch-brand" href="/">SpaceKonceptRental</Link><nav className="stitch-desktop-nav" aria-label="Primary navigation"><Link href="/">Home</Link><Link href="/catalogue">Catalogue</Link><Link href="/listings">Setups</Link><Link href="/about">About</Link><Link href="/contact">Contact</Link></nav><div className="stitch-header-actions"><Link className="stitch-button stitch-button--primary" href="/quote">Request Quote</Link><MobileMenu /></div></div></header>;
+  return <header className="stitch-site-header"><div className="stitch-site-header__inner"><Link className="stitch-brand" href="/">SpaceKonceptRental</Link><SiteDesktopNav /><div className="stitch-header-actions"><Link className="stitch-button stitch-button--primary" href="/quote">Request Quote</Link><MobileMenu /></div></div></header>;
 }
 
 function SiteFooter() {
   return <footer className="stitch-footer"><div className="stitch-container stitch-footer__grid"><div><h2>SpaceKonceptRental</h2><p>Furniture and event rental enquiries supported by manual team follow-up.</p></div><div><h3>Explore</h3><nav><Link href="/catalogue">Catalogue</Link><Link href="/listings">Setups</Link><Link href="/quote">Request Quote</Link></nav></div><div><h3>Company</h3><nav><Link href="/about">About</Link><Link href="/contact">Contact</Link></nav></div><div><h3>Legal</h3><nav><Link href="/privacy">Privacy Policy</Link><Link href="/terms">Terms of Service</Link></nav></div></div><div className="stitch-footer__bottom">&copy; 2026 SpaceKonceptRental.</div></footer>;
-}
-
-function MobileBottomNav() {
-  return <nav className="stitch-bottom-nav" aria-label="Mobile quick navigation"><Link href="/"><span aria-hidden="true">⌂</span>Home</Link><Link href="/catalogue"><span aria-hidden="true">▦</span>Catalogue</Link><Link href="/listings"><span aria-hidden="true">✦</span>Setups</Link><Link href="/contact"><span aria-hidden="true">✉</span>Contact</Link></nav>;
 }
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
