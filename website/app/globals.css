@@ -6771,6 +6771,72 @@ h3,
   }
 }
 
+/* Quote validation final pass: collapse the noisy submit feedback stack into one calm card. */
+.stitch-quote-form-panel .quote-form:has(.quote-form__status--error)::before,
+.stitch-quote-form-panel .quote-form:has(.quote-form__status--error) .quote-form__status--info {
+  display: none !important;
+}
+
+.stitch-quote-form-panel .quote-form__status--error {
+  display: grid !important;
+  grid-template-columns: auto 1fr !important;
+  column-gap: 13px !important;
+  align-items: start !important;
+  margin: 4px 0 0 !important;
+  padding: 16px 18px !important;
+  border: 1px solid rgba(95, 99, 79, 0.24) !important;
+  border-left: 0 !important;
+  border-radius: 12px !important;
+  background: linear-gradient(135deg, rgba(252, 249, 245, 0.96), rgba(244, 236, 224, 0.58)) !important;
+  box-shadow: 0 12px 28px rgba(26, 26, 26, 0.06) !important;
+  color: #4b382c !important;
+  font-family: var(--stitch-sans) !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.01em !important;
+  line-height: 1.58 !important;
+}
+
+.stitch-quote-form-panel .quote-form__status--error::before {
+  content: "!" !important;
+  display: inline-grid !important;
+  place-items: center !important;
+  width: 24px !important;
+  height: 24px !important;
+  margin: 0 !important;
+  border: 1px solid rgba(95, 99, 79, 0.32) !important;
+  border-radius: 999px !important;
+  background: #5f634f !important;
+  color: #fcf9f5 !important;
+  font-family: var(--stitch-sans) !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0 !important;
+  line-height: 1 !important;
+  text-transform: none !important;
+}
+
+.stitch-quote-form-panel .quote-form__legal {
+  margin-top: -2px !important;
+}
+
+@media (max-width: 900px) {
+  .stitch-quote-form-panel .quote-form__status--error {
+    grid-template-columns: 22px 1fr !important;
+    column-gap: 11px !important;
+    padding: 14px 15px !important;
+    border-radius: 10px !important;
+    font-size: 13px !important;
+    line-height: 1.55 !important;
+  }
+
+  .stitch-quote-form-panel .quote-form__status--error::before {
+    width: 22px !important;
+    height: 22px !important;
+    font-size: 12px !important;
+  }
+}
+
 /* Catalogue mobile parity: compact cards so the listing reads like Stitch's dense mobile stack. */
 @media (max-width: 900px) {
   body:has(.stitch-catalogue-section) .stitch-catalogue-section {
