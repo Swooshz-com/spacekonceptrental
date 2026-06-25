@@ -6852,3 +6852,52 @@ h3,
     object-fit: cover !important;
   }
 }
+
+/* Home mobile parity: tighten the first-screen rhythm toward the Stitch reference. */
+@media (max-width: 900px) {
+  .stitch-home-hero {
+    padding-bottom: 30px !important;
+  }
+
+  .stitch-home-hero__media {
+    aspect-ratio: 390 / 225 !important;
+  }
+
+  .stitch-home-hero__copy {
+    padding: 18px 22px 0 !important;
+  }
+
+  .stitch-home-hero__copy h1 {
+    font-size: 25px !important;
+    line-height: 1.08 !important;
+    margin-bottom: 14px !important;
+    max-width: 270px !important;
+  }
+
+  .stitch-home-hero__copy .stitch-button {
+    min-height: 38px !important;
+    padding: 0 16px !important;
+  }
+
+  .stitch-home-advantages {
+    padding-top: 24px !important;
+  }
+
+  .stitch-home-advantages .stitch-section-heading {
+    margin-bottom: 14px !important;
+  }
+
+  .stitch-home-advantages .stitch-section-heading h2 {
+    font-size: 1.15rem !important;
+    line-height: 1.24 !important;
+  }
+
+  .stitch-home-advantages .stitch-feature {
+    padding: 16px !important;
+  }
+
+  .stitch-home-advantages .stitch-feature p {
+    font-size: 0.82rem !important;
+    line-height: 1.55 !important;
+  }
+}
