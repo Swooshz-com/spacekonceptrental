@@ -71,8 +71,7 @@ export function runStitchPublicParitySuite(label: string) {
 
       render(<StitchSetupsPage catalogue={sampleCatalogue} />);
       expect(screen.getByRole("heading", { name: /curated scapes/i })).toBeInTheDocument();
-      expect(screen.getAllByRole("link", { name: /request quote/i })[0]).toHaveAttribute("href", "/quote");
-      expect(screen.getAllByRole("link", { name: /browse catalogue/i })[0]).toHaveAttribute("href", "/catalogue");
+      expect(screen.getByRole("link", { name: /explore collection/i })).toHaveAttribute("href", "/listings/modular-lounge-set");
       expect(visibleText()).not.toMatch(forbiddenPublicTerms);
     });
 
@@ -102,9 +101,9 @@ export function runStitchPublicParitySuite(label: string) {
       cleanup();
 
       render(await QuotePage());
-      expect(screen.getByRole("heading", { name: /request a rental quote/i })).toBeInTheDocument();
+      expect(screen.getByRole("heading", { name: /curate your event/i })).toBeInTheDocument();
       expect(screen.getByRole("heading", { name: /enquiry details/i })).toBeInTheDocument();
-      expect(visibleText()).toMatch(/enquiry intake only/i);
+      expect(visibleText()).toMatch(/does not confirm final rental details/i);
       expect(visibleText()).not.toMatch(forbiddenPublicTerms);
     });
 
