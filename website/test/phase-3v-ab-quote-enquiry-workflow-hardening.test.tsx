@@ -316,13 +316,13 @@ describe("Phase 3V-A/B quote enquiry workflow hardening", () => {
 
     cleanup();
     render(<CataloguePageContent catalogue={sampleCatalogue} />);
-    expect(screen.getByRole("link", { name: /start a rental enquiry/i })).toHaveAttribute(
-      "href",
-      "/quote"
-    );
-    expect(screen.getByRole("link", { name: /request a quote/i })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: /add modular lounge set to quote/i })).toHaveAttribute(
       "href",
       "/quote?listing=modular-lounge-set"
+    );
+    expect(screen.getByRole("link", { name: /view details for modular lounge set/i })).toHaveAttribute(
+      "href",
+      "/catalogue/modular-lounge-set"
     );
 
     cleanup();
@@ -335,9 +335,9 @@ describe("Phase 3V-A/B quote enquiry workflow hardening", () => {
 
     cleanup();
     render(<EventsPage />);
-    expect(screen.getByRole("link", { name: /compare event setup guidance/i })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: /browse setups/i })).toHaveAttribute(
       "href",
-      "/catalogue"
+      "/listings"
     );
     expect(screen.getByRole("link", { name: /start a rental enquiry/i })).toHaveAttribute(
       "href",

@@ -118,7 +118,7 @@ describe("public page shells", () => {
     expect(screen.getAllByText(/this request does not confirm final rental details/i).length).toBeGreaterThan(0);
     expect(screen.getByLabelText(/your name/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/email address/i)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /review and send an enquiry/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /submit enquiry/i })).toBeInTheDocument();
     expect(document.body.textContent).not.toMatch(/confirmed order|online ordering|checkout|payment/i);
     expect(JSON.stringify(rootMetadata)).toMatch(/SpaceKonceptRental/);
     expect(JSON.stringify(rootMetadata)).not.toMatch(/Space Koncept Rentals|shell|mvp|checkout|payment|online ordering/i);
@@ -235,7 +235,7 @@ describe("public page shells", () => {
     expect(screen.getByText(/published lounge set/i)).toBeInTheDocument();
     expect(screen.getByText(/listing reference/i)).toBeInTheDocument();
     expect(screen.getByText("modular-lounge-set")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /add to quote/i })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: /request a quote/i })).toHaveAttribute(
       "href",
       "/quote?listing=modular-lounge-set"
     );

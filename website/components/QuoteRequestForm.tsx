@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import type { ChangeEvent, FormEvent } from "react";
@@ -166,10 +166,6 @@ export default function QuoteRequestForm({
     );
   }
 
-  function handleStartAnotherEnquiry() {
-    setSubmitState({ status: "idle" });
-  }
-
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
@@ -275,14 +271,11 @@ export default function QuoteRequestForm({
     submitState.status === "success"
       ? submitState.publicReference ?? submitState.requestId
       : undefined;
-  const selectedListingDetailHref = safeInitialListingSlug
-    ? `/catalogue/${encodeURIComponent(safeInitialListingSlug)}`
-    : undefined;
 
   return (
     <form
       aria-busy={submitState.status === "submitting"}
-      className="quote-form"
+      className={`quote-form${submitState.status === "success" ? " quote-form--success" : ""}`}
       noValidate
       onSubmit={handleSubmit}
     >
@@ -313,7 +306,7 @@ export default function QuoteRequestForm({
       <fieldset className="quote-form__field-grid">
         <legend>Contact details</legend>
         <label>
-          Your name (required)
+          Name
           <input
             aria-describedby={
               fieldErrors.customerName ? "quote-customer-name-error" : undefined
@@ -431,13 +424,13 @@ export default function QuoteRequestForm({
       <fieldset className="quote-form__field-grid">
         <legend>Setup/access/timing notes</legend>
         <label className="quote-form__full-width">
-          Event goals or customer message
+          Event Vision
           <textarea
-            aria-label="Customer message / event notes for the team"
+            aria-label="Customer message and event notes for the team"
             maxLength={customerMessageInputMaxLength}
             name="customerMessage"
             onChange={handleCustomerMessageChange}
-            placeholder="Example: event context, preferred setup style, alternates, or what you need help deciding"
+            placeholder="Tell us about the atmosphere, theme, or specific requirements for your event..."
             rows={4}
             value={customerMessageText}
           />
@@ -461,77 +454,51 @@ export default function QuoteRequestForm({
           </small>
         </label>
       </fieldset>
-      <button
-        className="button"
-        disabled={submitState.status === "submitting"}
-        type="submit"
-      >
-        {submitState.status === "submitting"
-          ? "Sending quote request..."
-          : "Review and send an enquiry"}
-      </button>
-      <p className="quote-form__legal">
-        By sending an enquiry, review the{" "}
-        <a href="/privacy">Privacy Policy</a> and{" "}
-        <a href="/terms">Terms of Use</a>. The team uses your details for
-        manual follow-up.
-      </p>
+      {submitState.status !== "success" ? (
+        <>
+          <button
+            className="button"
+            disabled={submitState.status === "submitting"}
+            type="submit"
+          >
+            {submitState.status === "submitting"
+              ? "Sending enquiry..."
+              : "Submit Enquiry"}
+          </button>
+          <p className="quote-form__legal">
+            By sending an enquiry, review the{" "}
+            <a href="/privacy">Privacy Policy</a> and{" "}
+            <a href="/terms">Terms of Use</a>. The team uses your details for
+            manual follow-up.
+          </p>
+        </>
+      ) : null}
       {submitState.status === "success" ? (
         <section
           aria-label="Quote enquiry receipt"
           className="quote-form__status quote-form__status--success quote-form__receipt"
           role="status"
         >
-          <p className="eyebrow">Enquiry received</p>
-          <h3>Quote request received</h3>
+          <h3>Enquiry Received</h3>
+          {receiptReference ? (
+            <p className="quote-form__receipt-reference">
+              Ref: {receiptReference}
+            </p>
+          ) : null}
           <p>
-            The team can review your request and follow up directly with next questions or quote details. Manual follow-up uses your contact details, event details, and requested listing/item context.
-          </p>
-          <dl className="quote-form__receipt-details">
-            <div>
-              <dt>Public reference receipt</dt>
-              <dd>
-                {receiptReference ??
-                  "Reference will be shared during follow-up"}
-              </dd>
-            </div>
-            <div>
-              <dt>Next team action</dt>
-              <dd>
-                Review contact details, event timing, venue or location,
-                requested listings, and setup notes.
-              </dd>
-            </div>
-          </dl>
-          <p>
-            This is a receipt only. It does not set aside furniture and does not
-            finalise rental details or create an online follow-up page.
+            This request does not confirm final rental details. Our team will
+            review your selection and follow up with a tailored proposal.
           </p>
           <div
             aria-label="After quote request"
             className="quote-form__receipt-actions"
           >
+            <a className="button quote-form__receipt-primary" href="/">
+              Return to Home
+            </a>
             <a className="button button--secondary" href="/listings">
-              Browse rental listings
+              Explore More Setups
             </a>
-            {selectedListingDetailHref ? (
-              <a
-                className="button button--secondary"
-                href={selectedListingDetailHref}
-              >
-                Review selected listing details
-              </a>
-            ) : null}
-            <a className="button button--secondary" href="/catalogue">
-              Browse catalogue
-            </a>
-            <button
-              className="button button--secondary"
-              onClick={handleStartAnotherEnquiry}
-              type="button"
-            >
-              Submit another enquiry
-            </button>
           </div>
         </section>
       ) : null}
