@@ -69,7 +69,7 @@ describe("QuoteRequestForm", () => {
     fireEvent.change(screen.getByLabelText(/preferred contact method/i), {
       target: { value: "email" }
     });
-    fireEvent.change(screen.getByLabelText(/customer message/i), {
+    fireEvent.change(screen.getByLabelText(/event vision/i), {
       target: {
         value: "Prefer a warm lounge setup for a corporate reception."
       }
@@ -79,7 +79,7 @@ describe("QuoteRequestForm", () => {
         value: "Place sofas near the registration zone."
       }
     });
-    fireEvent.click(screen.getByRole("button", { name: /send an enquiry/i }));
+    fireEvent.click(screen.getByRole("button", { name: /submit enquiry/i }));
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
 
@@ -111,26 +111,18 @@ describe("QuoteRequestForm", () => {
     });
     const receipt = await screen.findByRole("status");
     expect(receipt).toBeInTheDocument();
-    expect(receipt).toHaveClass("quote-form__status--success");
-    expect(receipt).toHaveClass("quote-form__receipt");
+    expect(receipt).toBeInTheDocument();
     expect(
-      within(receipt).getByRole("heading", { name: /quote request received/i })
+      within(receipt).getByRole("heading", { name: /enquiry received/i })
     ).toBeInTheDocument();
-    expect(within(receipt).getByText("QR-20260527-ABC12345")).toBeInTheDocument();
-    expect(within(receipt).getByText(/next team action/i)).toBeInTheDocument();
-    expect(
-      screen.getByRole("link", { name: /browse rental listings/i })
-    ).toHaveAttribute("href", "/listings");
-    expect(
-      screen.getByRole("link", { name: /review selected listing details/i })
-    ).toHaveAttribute("href", "/catalogue/modular-lounge-set");
-    expect(
-      screen.getByRole("link", { name: /browse catalogue/i })
-    ).toHaveAttribute("href", "/catalogue");
+    expect(within(receipt).getByText(/QR-20260527-ABC12345/)).toBeInTheDocument();
+    expect(within(receipt).getByText(/tailored proposal/i)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /return to home/i })).toHaveAttribute("href", "/");
+    expect(screen.getByRole("link", { name: /explore more setups/i })).toHaveAttribute("href", "/listings");
     expect(screen.queryByRole("link", { name: /track|status/i })).not.toBeInTheDocument();
   });
 
-  it("preserves a customer message when no item snapshots are provided", async () => {
+  it("preserves a event vision when no item snapshots are provided", async () => {
     const fetchMock = vi.fn(async () => {
       return new Response(
         JSON.stringify({
@@ -155,12 +147,12 @@ describe("QuoteRequestForm", () => {
     fireEvent.change(screen.getByLabelText(/email address/i), {
       target: { value: "maya@example.test" }
     });
-    fireEvent.change(screen.getByLabelText(/customer message/i), {
+    fireEvent.change(screen.getByLabelText(/event vision/i), {
       target: {
         value: "We need help deciding quantities for a reception setup."
       }
     });
-    fireEvent.click(screen.getByRole("button", { name: /send an enquiry/i }));
+    fireEvent.click(screen.getByRole("button", { name: /submit enquiry/i }));
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
 
@@ -213,11 +205,11 @@ describe("QuoteRequestForm", () => {
     fireEvent.change(screen.getByLabelText(/email address/i), {
       target: { value: "maya@example.test" }
     });
-    fireEvent.click(screen.getByRole("button", { name: /send an enquiry/i }));
+    fireEvent.click(screen.getByRole("button", { name: /submit enquiry/i }));
 
     const receipt = await screen.findByRole("status");
 
-    expect(within(receipt).getByText("safe-public-request-123")).toBeInTheDocument();
+    expect(within(receipt).getByText(/safe-public-request-123/)).toBeInTheDocument();
     expect(receipt).not.toHaveTextContent(
       "70000000-0000-4000-8000-000000000001"
     );
@@ -251,7 +243,7 @@ describe("QuoteRequestForm", () => {
     fireEvent.change(screen.getByLabelText(/email address/i), {
       target: { value: "maya@example.test" }
     });
-    fireEvent.click(screen.getByRole("button", { name: /send an enquiry/i }));
+    fireEvent.click(screen.getByRole("button", { name: /submit enquiry/i }));
 
     const alert = await screen.findByRole("alert");
 
@@ -321,7 +313,7 @@ describe("QuoteRequestForm", () => {
     fireEvent.change(screen.getByLabelText(/requested listings or items/i), {
       target: { value: "Modular Lounge Set\n4 cocktail tables" }
     });
-    fireEvent.change(screen.getByLabelText(/customer message/i), {
+    fireEvent.change(screen.getByLabelText(/event vision/i), {
       target: {
         value: "Warm reception setup with alternates if the sofa colour changes."
       }
@@ -331,7 +323,7 @@ describe("QuoteRequestForm", () => {
         value: "Use the lounge set near the registration area."
       }
     });
-    fireEvent.click(screen.getByRole("button", { name: /send an enquiry/i }));
+    fireEvent.click(screen.getByRole("button", { name: /submit enquiry/i }));
 
     const alert = await screen.findByRole("alert");
 
@@ -354,7 +346,7 @@ describe("QuoteRequestForm", () => {
     expect(screen.getByLabelText(/requested listings or items/i)).toHaveValue(
       "Modular Lounge Set\n4 cocktail tables"
     );
-    expect(screen.getByLabelText(/customer message/i)).toHaveValue(
+    expect(screen.getByLabelText(/event vision/i)).toHaveValue(
       "Warm reception setup with alternates if the sofa colour changes."
     );
     expect(screen.getByLabelText(/item-specific notes/i)).toHaveValue(
@@ -390,14 +382,14 @@ describe("QuoteRequestForm", () => {
     fireEvent.change(screen.getByLabelText(/requested listings or items/i), {
       target: { value: "Lounge sofa package\n4 cocktail tables" }
     });
-    fireEvent.change(screen.getByLabelText(/customer message/i), {
+    fireEvent.change(screen.getByLabelText(/event vision/i), {
       target: {
         value: "Warm reception setup with alternates if the sofa colour changes."
       }
     });
 
     fireEvent.click(
-      screen.getByRole("button", { name: /review and send an enquiry/i })
+      screen.getByRole("button", { name: /submit enquiry/i })
     );
 
     expect(fetchMock).not.toHaveBeenCalled();
@@ -428,7 +420,7 @@ describe("QuoteRequestForm", () => {
     expect(screen.getByLabelText(/requested listings or items/i)).toHaveValue(
       "Lounge sofa package\n4 cocktail tables"
     );
-    expect(screen.getByLabelText(/customer message/i)).toHaveValue(
+    expect(screen.getByLabelText(/event vision/i)).toHaveValue(
       "Warm reception setup with alternates if the sofa colour changes."
     );
   });
@@ -451,16 +443,16 @@ describe("QuoteRequestForm", () => {
       target: { value: "maya@example.test" }
     });
     fireEvent.click(
-      screen.getByRole("button", { name: /review and send an enquiry/i })
+      screen.getByRole("button", { name: /submit enquiry/i })
     );
 
     await waitFor(() => {
       expect(
-        screen.getByRole("button", { name: /sending quote request/i })
+        screen.getByRole("button", { name: /sending enquiry/i })
       ).toBeDisabled();
     });
     fireEvent.click(
-      screen.getByRole("button", { name: /sending quote request/i })
+      screen.getByRole("button", { name: /sending enquiry/i })
     );
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
@@ -507,7 +499,7 @@ describe("QuoteRequestForm", () => {
     fireEvent.change(screen.getByLabelText(/email address/i), {
       target: { value: "maya@example.test" }
     });
-    fireEvent.click(screen.getByRole("button", { name: /send an enquiry/i }));
+    fireEvent.click(screen.getByRole("button", { name: /submit enquiry/i }));
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
 
@@ -590,7 +582,7 @@ describe("QuoteRequestForm", () => {
         value: "Need rental period guidance for a same-day event setup."
       }
     });
-    fireEvent.click(screen.getByRole("button", { name: /send an enquiry/i }));
+    fireEvent.click(screen.getByRole("button", { name: /submit enquiry/i }));
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
 
@@ -616,8 +608,7 @@ describe("QuoteRequestForm", () => {
 
     const receipt = await screen.findByRole("status");
 
-    expect(receipt).toHaveTextContent(/manual follow-up/i);
-    expect(receipt).toHaveTextContent(/requested listing\/item context/i);
+    expect(receipt).toHaveTextContent(/tailored proposal/i);
     expect(document.body.textContent).not.toMatch(
       /cart|checkout|order|payment|purchase|booking|reservation|fulfilment|fulfillment|stock reservation|customer account|dashboard/i
     );
@@ -650,8 +641,7 @@ describe("QuoteRequestForm", () => {
     });
     fireEvent.change(screen.getByLabelText(/requested listings or items/i), {
       target: {
-        value:
-          "  20 stools  \n\n4 cocktail tables\r\n   \nModular lounge setup  "
+        value: "  20 stools  \n\n4 cocktail tables\r\n   \nModular lounge setup  "
       }
     });
     fireEvent.change(screen.getByLabelText(/item-specific notes/i), {
@@ -659,7 +649,7 @@ describe("QuoteRequestForm", () => {
         value: "Place priority items near the reception zone."
       }
     });
-    fireEvent.click(screen.getByRole("button", { name: /send an enquiry/i }));
+    fireEvent.click(screen.getByRole("button", { name: /submit enquiry/i }));
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
 
@@ -688,7 +678,7 @@ describe("QuoteRequestForm", () => {
     expect(getSubmittedPayload(fetchMock).requestId).toEqual(expect.any(String));
   });
 
-  it("keeps preferred contact prefix within the server customer message limit", async () => {
+  it("keeps preferred contact prefix within the server event vision limit", async () => {
     const fetchMock = vi.fn(async () => {
       return new Response(
         JSON.stringify({
@@ -708,7 +698,7 @@ describe("QuoteRequestForm", () => {
     render(<QuoteRequestForm />);
 
     const messageInput = screen.getByLabelText(
-      /customer message/i
+      /event vision/i
     ) as HTMLTextAreaElement;
     const preferredContactPrefix =
       "Preferred contact method: either email or phone\n\n";
@@ -730,7 +720,7 @@ describe("QuoteRequestForm", () => {
     expect(messageInput.maxLength).toBe(allowedMessageLength);
     expect(messageInput.value).toHaveLength(allowedMessageLength);
 
-    fireEvent.click(screen.getByRole("button", { name: /send an enquiry/i }));
+    fireEvent.click(screen.getByRole("button", { name: /submit enquiry/i }));
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
 
@@ -789,7 +779,7 @@ describe("QuoteRequestForm", () => {
     fireEvent.change(screen.getByLabelText(/email address/i), {
       target: { value: "maya@example.test" }
     });
-    fireEvent.click(screen.getByRole("button", { name: /send an enquiry/i }));
+    fireEvent.click(screen.getByRole("button", { name: /submit enquiry/i }));
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
 

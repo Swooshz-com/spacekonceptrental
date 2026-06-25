@@ -204,13 +204,13 @@ describe("Phase 3G-A/B quote intake quality, admin triage depth, and enquiry wor
       screen.getByText(/the team uses this only for direct quote follow-up/i)
     ).toBeInTheDocument();
     expect(
-      screen.getByLabelText(/event goals or customer message/i)
+      screen.getByLabelText(/event vision/i)
     ).toBeInTheDocument();
 
     fireEvent.change(screen.getByLabelText(/your name/i), {
       target: { value: "Maya Tan" }
     });
-    fireEvent.click(screen.getByRole("button", { name: /send an enquiry/i }));
+    fireEvent.click(screen.getByRole("button", { name: /submit enquiry/i }));
 
     expect(
       screen.getByRole("alert")
@@ -220,11 +220,11 @@ describe("Phase 3G-A/B quote intake quality, admin triage depth, and enquiry wor
     fireEvent.change(screen.getByLabelText(/email address/i), {
       target: { value: "maya@example.test" }
     });
-    fireEvent.click(screen.getByRole("button", { name: /send an enquiry/i }));
+    fireEvent.click(screen.getByRole("button", { name: /submit enquiry/i }));
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
     expect(
-      await screen.findByText(/this is a receipt only/i)
+      await screen.findByText(/enquiry received/i)
     ).toBeInTheDocument();
     expect(
       screen.queryByRole("link", { name: /track|status/i })

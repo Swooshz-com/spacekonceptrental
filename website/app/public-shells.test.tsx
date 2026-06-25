@@ -114,7 +114,7 @@ describe("public page shells", () => {
   it("keeps public quote copy request-only and preserves the real form entry point", async () => {
     render(await QuotePage());
 
-    expect(screen.getByRole("heading", { name: /request a rental quote/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /curate your event/i })).toBeInTheDocument();
     expect(screen.getAllByText(/this request does not confirm final rental details/i).length).toBeGreaterThan(0);
     expect(screen.getByLabelText(/your name/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/email address/i)).toBeInTheDocument();

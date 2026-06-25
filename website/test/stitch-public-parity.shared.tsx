@@ -1,4 +1,4 @@
-﻿import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { cleanup, render, screen } from "@testing-library/react";
 import HomePage from "../app/page";
 import { CataloguePageContent } from "../app/catalogue/page";
@@ -123,5 +123,3 @@ export function runStitchPublicParitySuite(label: string) {
     });
   });
 }
-
-

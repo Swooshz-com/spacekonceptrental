@@ -17,7 +17,7 @@ describe("QuotePage", () => {
       })
     );
 
-    expect(screen.getByRole("heading", { name: /request a rental quote/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /curate your event/i })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: /selected listing unavailable/i })).toBeInTheDocument();
     expect(screen.getAllByText(/selected listing reference/i).length).toBeGreaterThan(0);
     expect(screen.getByText("lounge-sofa-package", { selector: "dd" })).toBeInTheDocument();
