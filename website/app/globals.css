@@ -6947,6 +6947,76 @@ body:has(.stitch-contact-hero) .stitch-contact-section {
   }
 }
 
+/* Setups Stitch structure pass: restore the 12-column editorial split and 3-card grid rhythm. */
+@media (min-width: 901px) {
+  .stitch-setups-hero .stitch-container,
+  .stitch-setups-feature-section .stitch-container,
+  .stitch-setups-filter-section .stitch-container,
+  .stitch-setups-grid-section .stitch-container {
+    width: min(calc(100% - 128px), 1312px) !important;
+    max-width: 1312px !important;
+  }
+
+  .stitch-setups-hero__copy {
+    max-width: 690px !important;
+  }
+
+  .stitch-setups-feature-section {
+    margin-bottom: clamp(76px, 8.5vw, 120px) !important;
+  }
+
+  .stitch-setups-feature-section .stitch-container.stitch-setups-feature-split {
+    grid-template-columns: repeat(12, minmax(0, 1fr)) !important;
+    gap: 24px !important;
+    width: min(calc(100% - 128px), 1312px) !important;
+    max-width: 1312px !important;
+  }
+
+  .stitch-setups-feature__image {
+    grid-column: 1 / span 5 !important;
+    aspect-ratio: auto !important;
+    height: clamp(560px, 56vw, 800px) !important;
+    max-height: 800px !important;
+  }
+
+  .stitch-setups-feature__copy {
+    grid-column: 7 / span 6 !important;
+    max-width: 430px !important;
+  }
+
+  .stitch-setups-filter-section {
+    padding-top: 0 !important;
+    margin-bottom: 48px !important;
+  }
+
+  .stitch-setups-grid {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    column-gap: 24px !important;
+    row-gap: 64px !important;
+  }
+
+  .stitch-setup-tile,
+  .stitch-setup-tile--wide {
+    display: flex !important;
+    flex-direction: column !important;
+    grid-column: auto !important;
+  }
+
+  .stitch-setup-tile--wide {
+    grid-column: span 2 !important;
+  }
+
+  .stitch-setup-tile__image {
+    aspect-ratio: 4 / 5 !important;
+    margin-bottom: 24px !important;
+  }
+
+  .stitch-setup-tile--wide .stitch-setup-tile__image {
+    aspect-ratio: 2 / 1 !important;
+  }
+}
+
 @media (max-width: 900px) {
   .stitch-setups-feature-split {
     gap: 18px !important;

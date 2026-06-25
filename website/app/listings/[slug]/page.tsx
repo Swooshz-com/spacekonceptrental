@@ -25,10 +25,20 @@ function demoSetupForSlug(slug: string): PublicCatalogueProduct | null {
       summary: "Structured furniture groupings for focused sessions, reception points, and calm networking areas.",
       sortOrder: 3
     },
+    "intimate-nocturne": {
+      name: "Intimate Nocturne",
+      summary: "Warm low-light dining cues with layered surfaces, soft seating, and enclosed atmosphere.",
+      sortOrder: 4
+    },
+    "terrace-lounge": {
+      name: "Terrace Lounge",
+      summary: "Low-profile lounge references for alfresco mingling, relaxed conversation, and sculptural accents.",
+      sortOrder: 5
+    },
     "gallery-exhibition": {
       name: "Gallery Exhibition",
       summary: "Minimal display-friendly layouts that leave room for launches, galleries, and product showcases.",
-      sortOrder: 4
+      sortOrder: 6
     }
   };
   const setup = demoSetups[slug];

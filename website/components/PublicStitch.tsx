@@ -26,7 +26,9 @@ const demoSetups = [
   { slug: "the-metropolitan-gala", title: "The Metropolitan Gala", image: galaImage, summary: "Tonal layers, sculptural surfaces, and lounge pieces for elevated evening event settings." },
   { slug: "botanical-wedding", title: "Botanical Wedding", image: sofaImage, summary: "Organic silhouettes and soft seating cues for daylight celebrations and garden-led spaces." },
   { slug: "executive-summit", title: "Executive Summit", image: corporateImage, summary: "Structured furniture groupings for focused sessions, reception points, and calm networking areas." },
-  { slug: "gallery-exhibition", title: "Gallery Exhibition", image: exhibitionImage, summary: "Minimal display-friendly layouts that leave room for launches, galleries, and product showcases." }
+  { slug: "intimate-nocturne", title: "Intimate Nocturne", image: galaImage, summary: "Warm low-light dining cues with layered surfaces, soft seating, and enclosed atmosphere." },
+  { slug: "terrace-lounge", title: "Terrace Lounge", image: exhibitionImage, summary: "Low-profile lounge references for alfresco mingling, relaxed conversation, and sculptural accents." },
+  { slug: "gallery-exhibition", title: "Gallery Exhibition", image: corporateImage, summary: "Minimal display-friendly layouts that leave room for launches, galleries, and product showcases." }
 ];
 
 export function isDemoContentEnabled() {
