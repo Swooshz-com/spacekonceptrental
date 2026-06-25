@@ -6731,10 +6731,29 @@ h3,
 
 /* Chat launcher parity polish: preserve the original launcher while reducing content overlap. */
 .chat-widget-launcher {
-  bottom: 16px !important;
-  right: 14px !important;
-  transform: scale(0.84) !important;
+  bottom: 10px !important;
+  right: 8px !important;
+  transform: scale(0.74) !important;
   transform-origin: right bottom !important;
+}
+
+/* Setup detail parity: keep the editorial title from overpowering the detail layout. */
+.stitch-detail-page--setup .stitch-detail-open-copy h1 {
+  font-size: clamp(2rem, 3.6vw, 3.35rem) !important;
+  line-height: 1.02 !important;
+}
+
+@media (min-width: 901px) {
+  .stitch-detail-page--setup .stitch-detail-open-media {
+    max-height: min(340px, 46vh) !important;
+    overflow: hidden !important;
+  }
+
+  .stitch-detail-page--setup .stitch-detail-open-media img {
+    height: 100% !important;
+    object-fit: cover !important;
+    width: 100% !important;
+  }
 }
 
 @media (max-width: 900px) {
