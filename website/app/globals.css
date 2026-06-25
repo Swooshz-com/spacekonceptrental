@@ -6826,3 +6826,29 @@ h3,
     width: 100% !important;
   }
 }
+
+/* About desktop parity: remove the oversized hero-to-story gap. */
+@media (min-width: 901px) {
+  .stitch-about-hero {
+    padding: clamp(46px, 7vh, 72px) 0 clamp(36px, 6vh, 56px) !important;
+  }
+
+  .stitch-about-story {
+    padding: clamp(38px, 6vh, 64px) 0 !important;
+  }
+
+  .stitch-about-story .stitch-story-grid {
+    align-items: center !important;
+    gap: clamp(42px, 7vw, 92px) !important;
+  }
+
+  .stitch-about-story .stitch-about-image {
+    max-height: min(360px, 48vh) !important;
+    overflow: hidden !important;
+  }
+
+  .stitch-about-story .stitch-about-image img {
+    height: 100% !important;
+    object-fit: cover !important;
+  }
+}
