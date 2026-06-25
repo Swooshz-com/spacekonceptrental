@@ -42,7 +42,7 @@ export default function TermsPage() {
               <div style={{ fontSize: '13px', fontWeight: 800, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '12px' }}>Support</div>
               <h2 className="premium-title-card" style={{ fontSize: '20px', marginBottom: '16px' }}>Chat guidance</h2>
               <p style={{ color: 'var(--muted)', lineHeight: 1.6, margin: 0 }}>
-                Chat availability depends on the configured chat provider. Chat replies are guidance for browsing and preparing an enquiry, not a final rental decision.
+                Chat access depends on the configured chat provider. Chat replies are guidance for browsing and preparing an enquiry, not a final rental decision.
               </p>
             </article>
 

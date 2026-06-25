@@ -34,7 +34,7 @@ export default function PrivacyPage() {
               <div style={{ fontSize: '13px', fontWeight: 800, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '12px' }}>Data usage</div>
               <h2 className="premium-title-card" style={{ fontSize: '20px', marginBottom: '16px' }}>How details are used</h2>
               <p style={{ color: 'var(--muted)', lineHeight: 1.6, margin: 0 }}>
-                The team uses quote request details for manual follow-up about the rental enquiry. Chat availability depends on the configured chat provider, and chat responses are for browsing guidance only.
+                The team uses quote request details for manual follow-up about the rental enquiry. Chat access depends on the configured chat provider, and chat responses are for browsing guidance only.
               </p>
             </article>
 
