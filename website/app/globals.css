@@ -6837,6 +6837,150 @@ h3,
   }
 }
 
+/* Contact hero position pass: keep the intro close to the header and bring the form into the first fold. */
+body:has(.stitch-contact-hero) .stitch-contact-hero {
+  min-height: 0 !important;
+  padding: clamp(42px, 6vh, 58px) 0 clamp(24px, 3.8vh, 36px) !important;
+}
+
+body:has(.stitch-contact-hero) .stitch-contact-hero .stitch-page-intro {
+  margin: 0 auto !important;
+  max-width: 760px !important;
+  text-align: center !important;
+}
+
+body:has(.stitch-contact-hero) .stitch-contact-hero .stitch-eyebrow {
+  margin-bottom: 14px !important;
+}
+
+body:has(.stitch-contact-hero) .stitch-contact-hero h1 {
+  margin: 0 !important;
+}
+
+body:has(.stitch-contact-hero) .stitch-contact-hero p:not(.stitch-eyebrow) {
+  margin: 24px auto 0 !important;
+  max-width: 700px !important;
+}
+
+body:has(.stitch-contact-hero) .stitch-contact-section {
+  padding-top: clamp(32px, 4.5vh, 46px) !important;
+}
+
+@media (max-width: 900px) {
+  body:has(.stitch-contact-hero) .stitch-contact-hero {
+    padding: 32px 0 20px !important;
+  }
+
+  body:has(.stitch-contact-hero) .stitch-contact-hero .stitch-page-intro {
+    max-width: 100% !important;
+    text-align: left !important;
+  }
+
+  body:has(.stitch-contact-hero) .stitch-contact-hero p:not(.stitch-eyebrow) {
+    margin-top: 16px !important;
+  }
+
+  body:has(.stitch-contact-hero) .stitch-contact-section {
+    padding-top: 24px !important;
+  }
+}
+
+/* Setups composition pass: make the featured editorial block read as one intentional module. */
+@media (min-width: 901px) {
+  .stitch-setups-hero .stitch-container,
+  .stitch-setups-feature-section .stitch-container,
+  .stitch-setups-filter-section .stitch-container,
+  .stitch-setups-grid-section .stitch-container {
+    max-width: 980px !important;
+  }
+
+  .stitch-setups-hero {
+    padding: clamp(38px, 5.2vh, 56px) 0 clamp(18px, 2.6vh, 26px) !important;
+  }
+
+  .stitch-setups-hero__copy {
+    max-width: 620px !important;
+  }
+
+  .stitch-setups-feature-split {
+    align-items: center !important;
+    display: grid !important;
+    grid-template-columns: minmax(260px, 0.82fr) minmax(300px, 1fr) !important;
+    gap: clamp(34px, 5vw, 68px) !important;
+    margin: 0 !important;
+  }
+
+  .stitch-setups-feature__image {
+    aspect-ratio: 4 / 5 !important;
+    max-height: 430px !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+  }
+
+  .stitch-setups-feature__image img {
+    height: 100% !important;
+    object-fit: cover !important;
+    object-position: center 54% !important;
+    width: 100% !important;
+  }
+
+  .stitch-setups-feature__copy {
+    align-self: center !important;
+    max-width: 390px !important;
+    padding: 0 !important;
+  }
+
+  .stitch-setups-filter-section {
+    padding-top: clamp(18px, 2.8vh, 28px) !important;
+  }
+}
+
+@media (max-width: 900px) {
+  .stitch-setups-feature-split {
+    gap: 18px !important;
+  }
+
+  .stitch-setups-feature__image {
+    aspect-ratio: 1 / 1.08 !important;
+    max-height: 380px !important;
+  }
+}
+
+/* Home hero crop pass: restore image presence without returning to the oversized hero. */
+@media (min-width: 901px) {
+  .stitch-home-hero {
+    padding: clamp(20px, 2.8vh, 30px) 0 clamp(18px, 2.6vh, 30px) !important;
+  }
+
+  .stitch-home-hero__media {
+    aspect-ratio: 16 / 7.4 !important;
+    max-height: min(520px, calc(100vh - 205px)) !important;
+    min-height: 420px !important;
+  }
+
+  .stitch-home-hero__media img {
+    height: 100% !important;
+    object-fit: cover !important;
+    object-position: center 46% !important;
+    width: 100% !important;
+  }
+
+  .stitch-home-hero + .stitch-section {
+    padding-top: clamp(42px, 5.5vh, 62px) !important;
+  }
+}
+
+@media (max-width: 900px) {
+  .stitch-home-hero__media {
+    aspect-ratio: 4 / 4.6 !important;
+    max-height: 540px !important;
+  }
+
+  .stitch-home-hero__media img {
+    object-position: center 48% !important;
+  }
+}
+
 /* Catalogue mobile parity: compact cards so the listing reads like Stitch's dense mobile stack. */
 @media (max-width: 900px) {
   body:has(.stitch-catalogue-section) .stitch-catalogue-section {
