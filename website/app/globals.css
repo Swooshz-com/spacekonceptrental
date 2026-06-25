@@ -6648,6 +6648,26 @@ h3,
   display: none !important;
 }
 
+/* Home desktop parity: keep the hero inside the first-fold Stitch rhythm. */
+@media (min-width: 901px) {
+  .stitch-home-hero {
+    padding: clamp(18px, 2.6vh, 28px) 0 clamp(28px, 4vh, 42px) !important;
+  }
+
+  .stitch-home-hero__media {
+    aspect-ratio: 16 / 6.4 !important;
+    max-height: min(430px, calc(100vh - 250px)) !important;
+  }
+
+  .stitch-home-hero__copy {
+    gap: 12px !important;
+  }
+
+  .stitch-home-hero__copy .stitch-actions {
+    margin-top: 2px !important;
+  }
+}
+
 @media (max-width: 900px) {
   .stitch-quote-form-panel .quote-form__status--error {
     margin-top: 10px !important;
