@@ -6935,6 +6935,18 @@ body:has(.stitch-contact-hero) .stitch-contact-section {
   }
 }
 
+/* Setups containment correction: prevent the feature module from escaping to the viewport edge. */
+@media (min-width: 901px) {
+  .stitch-setups-feature-section .stitch-container.stitch-setups-feature-split {
+    width: min(calc(100% - 96px), 980px) !important;
+    max-width: 980px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+}
+
 @media (max-width: 900px) {
   .stitch-setups-feature-split {
     gap: 18px !important;
