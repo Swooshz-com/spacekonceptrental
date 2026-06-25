@@ -6587,16 +6587,16 @@ h3,
 
 /* Quote validation polish: keep required-field feedback aligned with the Stitch form rhythm. */
 .stitch-quote-form-panel .quote-form__status--error {
-  margin: 14px 0 0 !important;
-  padding: 14px 16px 15px !important;
-  border: 1px solid #d8cbb8 !important;
-  border-left: 4px solid var(--stitch-primary) !important;
-  border-radius: 6px !important;
-  background: rgba(252, 249, 245, 0.82) !important;
+  margin: 10px 0 0 !important;
+  padding: 13px 15px 14px !important;
+  border: 1px solid rgba(95, 99, 79, 0.22) !important;
+  border-left: 3px solid var(--stitch-primary) !important;
+  border-radius: 4px !important;
+  background: linear-gradient(135deg, rgba(252, 249, 245, 0.9), rgba(244, 236, 224, 0.72)) !important;
   box-shadow: none !important;
-  color: #4b3526 !important;
+  color: #3a332a !important;
   font-family: var(--stitch-sans) !important;
-  font-size: 14px !important;
+  font-size: 13px !important;
   font-weight: 500 !important;
   letter-spacing: 0 !important;
   line-height: 1.55 !important;
@@ -6608,14 +6608,14 @@ h3,
   display: block !important;
   width: auto !important;
   height: auto !important;
-  margin: 0 0 6px !important;
+  margin: 0 0 5px !important;
   border-radius: 0 !important;
   background: transparent !important;
   color: var(--stitch-primary) !important;
   font-family: "JetBrains Mono", monospace !important;
-  font-size: 11px !important;
-  font-weight: 700 !important;
-  letter-spacing: .07em !important;
+  font-size: 10px !important;
+  font-weight: 600 !important;
+  letter-spacing: .1em !important;
   line-height: 1.2 !important;
   text-transform: uppercase !important;
 }
@@ -6644,11 +6644,15 @@ h3,
   box-shadow: none !important;
 }
 
+.stitch-quote-form-panel .quote-form:has(.quote-form__status--error)::before {
+  display: none !important;
+}
+
 @media (max-width: 900px) {
   .stitch-quote-form-panel .quote-form__status--error {
-    margin-top: 12px !important;
-    padding: 13px 14px !important;
-    font-size: 13px !important;
+    margin-top: 10px !important;
+    padding: 12px 13px !important;
+    font-size: 12.5px !important;
   }
 
   .stitch-quote-form-panel .quote-form::before,
