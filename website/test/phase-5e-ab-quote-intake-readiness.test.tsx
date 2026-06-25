@@ -122,7 +122,7 @@ describe("Phase 5E-A/B quote/enquiry intake readiness", () => {
     render(<QuoteRequestForm initialItemsText="Modular lounge set" />);
 
     expect(screen.getByText(/share your name/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/your name \(required\)/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/name/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/email address/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/phone number/i)).toBeInTheDocument();
     expect(screen.getByText(/event date helps the team understand timing/i)).toBeInTheDocument();
@@ -130,7 +130,7 @@ describe("Phase 5E-A/B quote/enquiry intake readiness", () => {
     expect(screen.getByText(/requested listing or item/i)).toBeInTheDocument();
     expect(screen.getByText(/setup\/access\/timing notes/i)).toBeInTheDocument();
 
-    fireEvent.change(screen.getByLabelText(/your name/i), {
+    fireEvent.change(screen.getByLabelText(/name/i), {
       target: { value: "Maya Tan" }
     });
     fireEvent.change(screen.getByLabelText(/email address/i), {
@@ -139,18 +139,16 @@ describe("Phase 5E-A/B quote/enquiry intake readiness", () => {
     fireEvent.change(screen.getByLabelText(/requested listings or items/i), {
       target: { value: "Modular lounge set\nCategory interest: lounge" }
     });
-    fireEvent.click(screen.getByRole("button", { name: /send an enquiry/i }));
+    fireEvent.click(screen.getByRole("button", { name: /submit enquiry/i }));
 
     await waitFor(() => {
       expect(screen.getByRole("status")).toHaveTextContent(/enquiry received/i);
     });
 
-    expect(screen.getByRole("status")).toHaveTextContent(/receipt only/i);
-    expect(screen.getByRole("status")).toHaveTextContent(/team can review/i);
-    expect(screen.getByRole("status")).toHaveTextContent(/follow up directly/i);
-    expect(screen.getByRole("status")).toHaveTextContent(/does not set aside furniture/i);
-    expect(screen.getByRole("status")).toHaveTextContent(/does not finalise rental details/i);
-    expect(screen.getByRole("status")).toHaveTextContent(/public reference receipt/i);
+    expect(screen.getByRole("status")).toHaveTextContent(/enquiry received/i);
+    expect(screen.getByRole("status")).toHaveTextContent(/team will review/i);
+    expect(screen.getByRole("status")).toHaveTextContent(/tailored proposal/i);
+    expect(screen.getByRole("status")).toHaveTextContent(/does not confirm final rental details/i);
   });
 
   it("keeps selected listing, category, event, and search context editable and request-only", async () => {
@@ -177,16 +175,16 @@ describe("Phase 5E-A/B quote/enquiry intake readiness", () => {
     const fetcher = vi.spyOn(globalThis, "fetch");
 
     render(<QuoteRequestForm />);
-    fireEvent.click(screen.getByRole("button", { name: /send an enquiry/i }));
+    fireEvent.click(screen.getByRole("button", { name: /submit enquiry/i }));
 
     expect(screen.getByRole("alert")).toHaveTextContent(/add your name/i);
     expect(screen.getByRole("alert")).not.toHaveTextContent(/schema|sql|supabase|stack|token|cookie|workspace|customerName|items\[/i);
     expect(fetcher).not.toHaveBeenCalled();
 
-    fireEvent.change(screen.getByLabelText(/your name/i), {
+    fireEvent.change(screen.getByLabelText(/name/i), {
       target: { value: "Maya Tan" }
     });
-    fireEvent.click(screen.getByRole("button", { name: /send an enquiry/i }));
+    fireEvent.click(screen.getByRole("button", { name: /submit enquiry/i }));
 
     expect(screen.getByRole("alert")).toHaveTextContent(/email address or phone number/i);
     expect(screen.getByRole("alert")).not.toHaveTextContent(/schema|sql|supabase|stack|token|cookie|workspace|customerEmail/i);
@@ -196,9 +194,9 @@ describe("Phase 5E-A/B quote/enquiry intake readiness", () => {
     const publicQuoteSource = readProductionSource(publicQuoteSourceRoots);
     const quoteReceiptSource = readProductionSource(quoteReceiptSourceRoots);
 
-    expect(publicQuoteSource).toMatch(/enquiry intake only/i);
+    expect(publicQuoteSource).toMatch(/manual team follow-up/i);
     expect(publicQuoteSource).toMatch(/editable request text/i);
-    expect(publicQuoteSource).toMatch(/receipt only/i);
+    expect(publicQuoteSource).toMatch(/does not confirm final rental details/i);
     expect(publicQuoteSource).not.toMatch(forbiddenPublicFlowPattern);
     expect(publicQuoteSource).not.toMatch(forbiddenRentalCompletionPattern);
     expect(publicQuoteSource).not.toMatch(forbiddenFakeFactPattern);
