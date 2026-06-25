@@ -6893,11 +6893,21 @@ h3,
   }
 
   .stitch-home-advantages .stitch-feature {
-    padding: 16px !important;
+    gap: 8px !important;
+    padding: 12px 14px !important;
+  }
+
+  .stitch-home-advantages .stitch-feature-grid {
+    gap: 10px !important;
+  }
+
+  .stitch-home-advantages .stitch-feature h3 {
+    font-size: 0.92rem !important;
+    line-height: 1.25 !important;
   }
 
   .stitch-home-advantages .stitch-feature p {
-    font-size: 0.82rem !important;
-    line-height: 1.55 !important;
+    font-size: 0.76rem !important;
+    line-height: 1.45 !important;
   }
 }
