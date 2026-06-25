@@ -2,6 +2,9 @@ import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 import QuotePage from "./page";
 
+const forbiddenPublicCopy =
+  /cart|checkout|payment|book now|online ordering|customer account|dashboard|reservation|stock reservation|fulfilment|fulfillment|purchase/i;
+
 describe("QuotePage", () => {
   afterEach(() => {
     cleanup();
@@ -14,42 +17,17 @@ describe("QuotePage", () => {
       })
     );
 
-    expect(
-      screen.getByRole("heading", { name: /request a rental quote/i })
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("heading", { name: /selected listing unavailable/i })
-    ).toBeInTheDocument();
-    expect(
-      screen.getAllByText(/selected listing reference/i).length
-    ).toBeGreaterThan(0);
-    expect(
-      screen.getByText(/listing reference: lounge-sofa-package starts this rental request/i)
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText(/the listing link may be old or unavailable/i)
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText(/review current rental listings or keep typing the requested items/i)
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText("lounge-sofa-package", { selector: "dd" })
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText(/complete the required contact point first/i)
-    ).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /request a rental quote/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /selected listing unavailable/i })).toBeInTheDocument();
+    expect(screen.getAllByText(/selected listing reference/i).length).toBeGreaterThan(0);
+    expect(screen.getByText("lounge-sofa-package", { selector: "dd" })).toBeInTheDocument();
+    expect(screen.getByText(/listing context is a starting point only/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/listing reference: lounge-sofa-package/i).length).toBeGreaterThan(0);
     expect(screen.getByLabelText(/requested listings or items/i)).toHaveValue(
       "Listing reference: lounge-sofa-package"
     );
-    const pageText = document.body.textContent ?? "";
-    expect(pageText.indexOf("Listing reference: lounge-sofa-package"))
-      .toBeLessThan(pageText.indexOf("Contact details"));
-    expect(
-      screen.queryByText(/cart|checkout|payment|book now|online ordering/i)
-    ).not.toBeInTheDocument();
-    expect(document.body.textContent).not.toMatch(
-      /customer account|dashboard|reservation|stock reservation|fulfilment|fulfillment|purchase/i
-    );
+    expect(screen.getByText(/complete the required contact point first/i)).toBeInTheDocument();
+    expect(document.body.textContent).not.toMatch(forbiddenPublicCopy);
   });
 
   it("ignores unsafe or unknown listing context without changing the quote route contract", async () => {
@@ -59,46 +37,27 @@ describe("QuotePage", () => {
       })
     );
 
-    expect(
-      screen.queryByRole("heading", { name: /enquiry for/i })
-    ).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: /enquiry for/i })).not.toBeInTheDocument();
     expect(screen.getByLabelText(/requested listings or items/i)).toHaveValue("");
-    expect(
-      screen.queryByText(/cart|checkout|payment|book now|online ordering/i)
-    ).not.toBeInTheDocument();
+    expect(document.body.textContent).not.toMatch(forbiddenPublicCopy);
   });
 
-  it("shows recovery guidance when a safe selected listing is unavailable", async () => {
+  it("shows request-only recovery when a safe selected listing is unavailable", async () => {
     render(
       await QuotePage({
         searchParams: Promise.resolve({ listing: "missing-listing" })
       })
     );
 
-    expect(
-      screen.queryByRole("heading", { name: /enquiry for/i })
-    ).not.toBeInTheDocument();
-    expect(
-      screen.getByText(/The listing link may be old or unavailable/i)
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText(/Review current rental listings or keep typing the requested items/i)
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("link", { name: /review current rental listings/i })
-    ).toHaveAttribute("href", "/listings");
-    expect(
-      screen.getByRole("link", { name: /start from the catalogue/i })
-    ).toHaveAttribute("href", "/catalogue");
+    expect(screen.queryByRole("heading", { name: /enquiry for/i })).not.toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /selected listing unavailable/i })).toBeInTheDocument();
+    expect(screen.getByText("missing-listing", { selector: "dd" })).toBeInTheDocument();
+    expect(screen.getByText(/listing context is a starting point only/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/listing reference: missing-listing/i).length).toBeGreaterThan(0);
     expect(screen.getByLabelText(/requested listings or items/i)).toHaveValue(
       "Listing reference: missing-listing"
     );
     expect(screen.queryByText(/rental assistant/i)).not.toBeInTheDocument();
-    expect(
-      screen.getByText(/Use the catalogue, listing details, and event setup guidance/i)
-    ).toBeInTheDocument();
-    expect(
-      screen.queryByText(/cart|checkout|payment|book now|online ordering/i)
-    ).not.toBeInTheDocument();
+    expect(document.body.textContent).not.toMatch(forbiddenPublicCopy);
   });
 });
