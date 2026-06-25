@@ -1,4 +1,8 @@
-import type { Metadata } from "next";
-import { StitchButton, StitchPageHero } from "../../components/PublicStitch";
+﻿import type { Metadata } from "next";
+import { StitchContactPage } from "../../components/PublicStitch";
+
 export const metadata: Metadata = { title: "Contact | SpaceKonceptRental", description: "Contact guidance for rental enquiries." };
-export default function ContactPage() { return <><StitchPageHero eyebrow="Contact" title="Start with a rental enquiry." intro="Share your event details, requested rental items, setup notes, and contact preference through the quote form so the team can follow up." actions={<><StitchButton href="/quote">Request Quote</StitchButton><StitchButton href="/catalogue" variant="secondary">Browse Catalogue</StitchButton></>} /><section className="stitch-section"><div className="stitch-container stitch-feature-grid"><div className="stitch-feature"><h3>What to include</h3><p>Event details, venue context, requested rental items, quantities, alternates, and timing notes.</p></div><div className="stitch-feature"><h3>What happens next</h3><p>Our team will review your selection and follow up with a tailored proposal.</p></div><div className="stitch-feature"><h3>Important note</h3><p>This request does not confirm final rental details.</p></div></div></section></>; }
+
+export default function ContactPage() {
+  return <StitchContactPage />;
+}

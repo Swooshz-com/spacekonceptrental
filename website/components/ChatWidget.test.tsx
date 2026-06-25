@@ -25,8 +25,8 @@ describe("ChatWidget", () => {
   it("starts without a canned assistant response before a provider reply", () => {
     render(<ChatWidget />);
 
-    expect(screen.getByLabelText(/message/i)).toBeInTheDocument();
-    expect(screen.getByText(/ask here/i)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /open chat/i })).toBeInTheDocument();
+    expect(screen.queryByLabelText(/message/i)).not.toBeInTheDocument();
     expect(
       screen.queryByText(/hi, i can help with event furniture availability/i)
     ).not.toBeInTheDocument();
@@ -44,6 +44,7 @@ describe("ChatWidget", () => {
     vi.stubGlobal("fetch", fetchMock);
 
     render(<ChatWidget />);
+    fireEvent.click(screen.getByRole("button", { name: /open chat/i }));
 
     fireEvent.change(screen.getByLabelText(/message/i), {
       target: { value: "I need 20 stools for a conference" }
@@ -82,6 +83,7 @@ describe("ChatWidget", () => {
     vi.stubGlobal("fetch", fetchMock);
 
     render(<ChatWidget />);
+    fireEvent.click(screen.getByRole("button", { name: /open chat/i }));
 
     fireEvent.change(screen.getByLabelText(/message/i), {
       target: { value: "Do you have lounge seating?" }
@@ -103,6 +105,7 @@ describe("ChatWidget", () => {
 
   it("shows legal links near chat guidance without exposing provider details", () => {
     render(<ChatWidget />);
+    fireEvent.click(screen.getByRole("button", { name: /open chat/i }));
 
     expect(
       screen.getByRole("link", { name: /Privacy Policy/i })
@@ -117,6 +120,7 @@ describe("ChatWidget", () => {
     process.env.N8N_CHAT_WEBHOOK_URL = "https://example.invalid/internal-only";
 
     const { container } = render(<ChatWidget />);
+    fireEvent.click(screen.getByRole("button", { name: /open chat/i }));
 
     expect(container).not.toHaveTextContent("example.invalid");
     expect(container.innerHTML).not.toContain("N8N_CHAT_WEBHOOK_URL");
