@@ -6911,3 +6911,41 @@ h3,
     line-height: 1.45 !important;
   }
 }
+
+/* Setups mobile parity: keep setup cards compact enough to read image and copy together. */
+@media (max-width: 900px) {
+  .stitch-setups-filter-section {
+    padding: 18px 0 8px !important;
+  }
+
+  .stitch-setups-grid-section {
+    padding-top: 12px !important;
+  }
+
+  .stitch-setups-grid {
+    gap: 22px !important;
+  }
+
+  .stitch-setup-tile,
+  .stitch-setup-tile--wide {
+    display: grid !important;
+    gap: 10px !important;
+  }
+
+  .stitch-setup-tile img {
+    aspect-ratio: 4 / 2.55 !important;
+    max-height: 220px !important;
+    object-fit: cover !important;
+    width: 100% !important;
+  }
+
+  .stitch-setup-tile h2 {
+    font-size: 1.35rem !important;
+    line-height: 1.15 !important;
+  }
+
+  .stitch-setup-tile p {
+    font-size: 0.9rem !important;
+    line-height: 1.5 !important;
+  }
+}
