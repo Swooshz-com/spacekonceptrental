@@ -11293,12 +11293,12 @@ body:has(.stitch-quote-page) .stitch-quote-form-panel .quote-form .button {
   body:has(.stitch-setups-hero) .stitch-setups-hero .stitch-container,
   body:has(.stitch-setups-hero) .stitch-setups-feature-section .stitch-container,
   body:has(.stitch-setups-hero) .stitch-setups-grid-section .stitch-container {
-    width: min(calc(100% - 6rem), 560px) !important;
-    max-width: 560px !important;
+    width: min(calc(100% - 4.5rem), 690px) !important;
+    max-width: 690px !important;
   }
 
   body:has(.stitch-setups-hero) .stitch-setups-hero {
-    padding: 3.9rem 0 3.2rem !important;
+    padding: 5rem 0 4rem !important;
     text-align: center !important;
   }
 
@@ -11308,21 +11308,21 @@ body:has(.stitch-quote-page) .stitch-quote-form-panel .quote-form .button {
   }
 
   body:has(.stitch-setups-hero) .stitch-setups-hero h1 {
-    margin: 0 0 0.75rem !important;
-    font-size: 2.75rem !important;
+    margin: 0 0 1rem !important;
+    font-size: 3.15rem !important;
     letter-spacing: -0.045em !important;
     line-height: 1.08 !important;
   }
 
   body:has(.stitch-setups-hero) .stitch-setups-hero p:not(.stitch-eyebrow) {
-    max-width: 420px !important;
+    max-width: 455px !important;
     margin: 0 auto !important;
-    font-size: 1.22rem !important;
-    line-height: 1.45 !important;
+    font-size: 1.32rem !important;
+    line-height: 1.5 !important;
   }
 
   body:has(.stitch-setups-hero) .stitch-setups-feature-section {
-    padding: 0 0 5.3rem !important;
+    padding: 0 0 4.6rem !important;
   }
 
   body:has(.stitch-setups-hero) .stitch-setups-feature-split {
@@ -11333,7 +11333,7 @@ body:has(.stitch-quote-page) .stitch-quote-form-panel .quote-form .button {
     display: block !important;
     position: relative !important;
     width: 100% !important;
-    height: 31.5rem !important;
+    height: min(36.5rem, 76vw) !important;
     min-height: 0 !important;
     border: 0 !important;
     border-radius: 0 !important;
@@ -11372,16 +11372,16 @@ body:has(.stitch-quote-page) .stitch-quote-form-panel .quote-form .button {
 
   body:has(.stitch-setups-hero) .stitch-setups-feature__copy h2 {
     color: #fff !important;
-    font-size: 2rem !important;
+    font-size: 2.45rem !important;
     line-height: 1.05 !important;
   }
 
   body:has(.stitch-setups-hero) .stitch-setups-feature__copy p {
     max-width: 430px !important;
-    margin: 0.4rem 0 0.9rem !important;
+    margin: 0.55rem 0 1rem !important;
     color: rgba(255,255,255,0.86) !important;
-    font-size: 1.18rem !important;
-    line-height: 1.35 !important;
+    font-size: 1.28rem !important;
+    line-height: 1.4 !important;
   }
 
   body:has(.stitch-setups-hero) .stitch-setups-feature__copy .stitch-link-button {
@@ -11391,13 +11391,17 @@ body:has(.stitch-quote-page) .stitch-quote-form-panel .quote-form .button {
   }
 
   body:has(.stitch-setups-hero) .stitch-setups-grid-section {
-    padding: 0 0 5.2rem !important;
+    padding: 0 0 4.8rem !important;
   }
 
   body:has(.stitch-setups-hero) .stitch-setups-grid {
     display: grid !important;
     grid-template-columns: 1fr !important;
-    gap: 4.25rem !important;
+    gap: 5.35rem !important;
+  }
+
+  body:has(.stitch-setups-hero) .stitch-setups-grid .stitch-setup-tile:nth-child(n + 3) {
+    display: none !important;
   }
 
   body:has(.stitch-setups-hero) .stitch-setup-tile,
@@ -11410,7 +11414,7 @@ body:has(.stitch-quote-page) .stitch-quote-form-panel .quote-form .button {
   }
 
   body:has(.stitch-setups-hero) .stitch-setup-tile__image {
-    aspect-ratio: 1.35 / 1 !important;
+    aspect-ratio: 4 / 3 !important;
     border: 0 !important;
     background: var(--stitch-container) !important;
   }
@@ -11422,23 +11426,23 @@ body:has(.stitch-quote-page) .stitch-quote-form-panel .quote-form .button {
   body:has(.stitch-setups-hero) .stitch-setup-tile__body strong {
     color: var(--stitch-ink) !important;
     font-family: var(--stitch-serif) !important;
-    font-size: 2.15rem !important;
+    font-size: 2.65rem !important;
     font-weight: 500 !important;
     letter-spacing: -0.035em !important;
     line-height: 1.08 !important;
   }
 
   body:has(.stitch-setups-hero) .stitch-setup-tile__body small {
-    margin-top: 0.55rem !important;
+    margin-top: 0.75rem !important;
     color: var(--stitch-muted) !important;
-    font-size: 1.22rem !important;
-    line-height: 1.5 !important;
+    font-size: 1.45rem !important;
+    line-height: 1.55 !important;
   }
 
   body:has(.stitch-setups-hero) .stitch-setup-tile__body em {
-    margin-top: 0.9rem !important;
+    margin-top: 1.15rem !important;
     color: #8e4c41 !important;
-    font-size: 1.05rem !important;
+    font-size: 1.16rem !important;
     letter-spacing: 0 !important;
     text-transform: none !important;
   }
