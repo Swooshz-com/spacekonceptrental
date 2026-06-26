@@ -16565,3 +16565,13 @@ body:has(.stitch-quote-page):not(:has(.quote-form--success)) .stitch-quote-form-
     text-transform: none !important;
   }
 }
+
+/* Stitch parity final override: the home hero should render the local event
+   image element, not the earlier remote background fallback. */
+body:has(.stitch-home-hero) .stitch-home-hero__media {
+  background-image: none !important;
+}
+
+body:has(.stitch-home-hero) .stitch-home-hero__media img {
+  opacity: 1 !important;
+}
