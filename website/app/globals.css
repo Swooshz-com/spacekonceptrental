@@ -8217,3 +8217,163 @@ body:has(.stitch-catalogue-section) .stitch-card__actions .stitch-link-button--q
     grid-template-columns: 1fr !important;
   }
 }
+
+
+/* Quote Stitch parity: compact 12-column selection plus warm enquiry panel. */
+body:has(.stitch-quote-page) .stitch-quote-page {
+  background: var(--stitch-bg) !important;
+}
+
+body:has(.stitch-quote-page) .stitch-quote-page .stitch-container {
+  width: min(100% - 6rem, 90rem) !important;
+}
+
+body:has(.stitch-quote-page) .stitch-quote-intro {
+  margin: 0 0 clamp(2.5rem, 4vw, 3.75rem) !important;
+  max-width: 44rem !important;
+  text-align: left !important;
+}
+
+body:has(.stitch-quote-page) .stitch-quote-intro h1 {
+  font-family: var(--stitch-serif) !important;
+  font-size: clamp(3.1rem, 5vw, 5rem) !important;
+  font-weight: 500 !important;
+  letter-spacing: -0.055em !important;
+  line-height: 0.98 !important;
+}
+
+body:has(.stitch-quote-page) .stitch-quote-intro p {
+  max-width: 40rem !important;
+}
+
+body:has(.stitch-quote-page) .stitch-quote-layout {
+  align-items: start !important;
+  display: grid !important;
+  gap: clamp(2rem, 3vw, 3rem) !important;
+  grid-template-columns: repeat(12, minmax(0, 1fr)) !important;
+}
+
+body:has(.stitch-quote-page) .stitch-quote-left {
+  display: grid !important;
+  gap: 1.5rem !important;
+  grid-column: 1 / span 5 !important;
+}
+
+body:has(.stitch-quote-page) .stitch-quote-form-panel {
+  background: color-mix(in srgb, #d4c5b3 38%, var(--stitch-bg)) !important;
+  border: 1px solid color-mix(in srgb, var(--stitch-line) 70%, #b9aa96) !important;
+  border-radius: 0.5rem !important;
+  box-shadow: none !important;
+  grid-column: 7 / span 6 !important;
+  padding: clamp(1.5rem, 2.4vw, 2rem) !important;
+}
+
+body:has(.stitch-quote-page) .stitch-quote-selection,
+body:has(.stitch-quote-page) .stitch-quote-next {
+  background: transparent !important;
+  border: 1px solid var(--stitch-line) !important;
+  border-radius: 0.5rem !important;
+  box-shadow: none !important;
+  padding: 1.5rem !important;
+}
+
+body:has(.stitch-quote-page) .stitch-quote-selection > h2,
+body:has(.stitch-quote-page) .stitch-quote-next h2,
+body:has(.stitch-quote-page) .stitch-quote-form-panel h2 {
+  font-family: var(--stitch-serif) !important;
+  font-size: clamp(1.55rem, 2vw, 2.05rem) !important;
+  font-weight: 500 !important;
+  letter-spacing: -0.03em !important;
+  line-height: 1.05 !important;
+}
+
+body:has(.stitch-quote-page) .stitch-selection-row {
+  background: var(--stitch-bg) !important;
+  border: 1px solid var(--stitch-line) !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+body:has(.stitch-quote-page) .stitch-quote-next ol {
+  gap: 0.85rem !important;
+}
+
+body:has(.stitch-quote-page) .stitch-quote-form-panel .quote-form {
+  gap: 1.25rem !important;
+}
+
+body:has(.stitch-quote-page) .stitch-quote-form-panel .quote-form fieldset {
+  gap: 1rem !important;
+}
+
+body:has(.stitch-quote-page) .stitch-quote-form-panel .quote-form__field-grid {
+  gap: 1rem 1.25rem !important;
+}
+
+body:has(.stitch-quote-page) .stitch-quote-form-panel .quote-form label,
+body:has(.stitch-quote-page) .stitch-quote-form-panel .quote-form legend {
+  color: var(--stitch-ink) !important;
+  font-family: var(--font-mono) !important;
+  font-size: 0.72rem !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.12em !important;
+  text-transform: uppercase !important;
+}
+
+body:has(.stitch-quote-page) .stitch-quote-form-panel .quote-form input,
+body:has(.stitch-quote-page) .stitch-quote-form-panel .quote-form select,
+body:has(.stitch-quote-page) .stitch-quote-form-panel .quote-form textarea {
+  background: var(--stitch-surface) !important;
+  border: 1px solid var(--stitch-line) !important;
+  border-radius: 0 !important;
+  min-height: 2.85rem !important;
+  padding: 0.75rem 0.9rem !important;
+}
+
+body:has(.stitch-quote-page) .stitch-quote-form-panel .quote-form textarea {
+  min-height: 7rem !important;
+}
+
+body:has(.stitch-quote-page) .stitch-quote-form-panel .quote-form .button {
+  border-radius: 0.25rem !important;
+  min-height: 3.25rem !important;
+  width: 100% !important;
+}
+
+@media (max-width: 900px) {
+  body:has(.stitch-quote-page) .stitch-quote-page .stitch-container {
+    width: min(100% - 2rem, 34rem) !important;
+  }
+
+  body:has(.stitch-quote-page) .stitch-quote-intro {
+    margin: 0 auto 2rem !important;
+    max-width: 22rem !important;
+    text-align: center !important;
+  }
+
+  body:has(.stitch-quote-page) .stitch-quote-intro h1 {
+    font-size: clamp(2.05rem, 9vw, 2.85rem) !important;
+  }
+
+  body:has(.stitch-quote-page) .stitch-quote-layout {
+    display: grid !important;
+    gap: 2rem !important;
+    grid-template-columns: 1fr !important;
+  }
+
+  body:has(.stitch-quote-page) .stitch-quote-left,
+  body:has(.stitch-quote-page) .stitch-quote-form-panel {
+    grid-column: auto !important;
+  }
+
+  body:has(.stitch-quote-page) .stitch-quote-form-panel {
+    background: transparent !important;
+    border: 0 !important;
+    padding: 0 !important;
+  }
+
+  body:has(.stitch-quote-page) .stitch-quote-selection,
+  body:has(.stitch-quote-page) .stitch-quote-next {
+    padding: 0 !important;
+  }
+}
