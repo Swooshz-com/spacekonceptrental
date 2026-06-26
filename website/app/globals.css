@@ -16590,3 +16590,14 @@ body:has(.stitch-about-hero) .stitch-about-story__image img {
   object-fit: cover !important;
   object-position: center !important;
 }
+
+/* Stitch parity final override: catalogue detail product photography should
+   show the listed piece, not crop into a partial close-up. */
+body:has(.stitch-detail-page:not(.stitch-detail-page--setup)) .stitch-detail-open-media {
+  background: var(--stitch-container) !important;
+}
+
+body:has(.stitch-detail-page:not(.stitch-detail-page--setup)) .stitch-detail-open-media img {
+  object-fit: contain !important;
+  object-position: center !important;
+}
