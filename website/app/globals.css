@@ -7498,3 +7498,161 @@ body:has(.stitch-contact-hero) .stitch-contact-section {
     grid-column: 7 / span 5 !important;
   }
 }
+
+
+/* Setup detail Stitch parity: full-bleed hero image followed by copy/included grid. */
+.stitch-detail-page--setup .stitch-detail-open-grid {
+  display: block !important;
+}
+
+.stitch-detail-page--setup .stitch-detail-open-media {
+  aspect-ratio: auto !important;
+  border: 1px solid var(--stitch-line) !important;
+  border-radius: 0.25rem !important;
+  height: min(70vh, 46rem) !important;
+  margin-bottom: clamp(2.5rem, 5vw, 4rem) !important;
+  overflow: hidden !important;
+  width: 100% !important;
+}
+
+.stitch-detail-page--setup .stitch-detail-open-media img {
+  height: 100% !important;
+  object-fit: cover !important;
+  object-position: center !important;
+  width: 100% !important;
+}
+
+.stitch-detail-page--setup .stitch-detail-open-copy {
+  display: none !important;
+}
+
+.stitch-detail-page--setup .stitch-setup-lower {
+  display: grid !important;
+  grid-template-columns: repeat(12, minmax(0, 1fr)) !important;
+  gap: clamp(2rem, 4vw, 4rem) !important;
+  margin-top: 0 !important;
+}
+
+.stitch-detail-page--setup .stitch-setup-lower > div:first-child {
+  grid-column: 1 / span 5 !important;
+}
+
+.stitch-detail-page--setup .stitch-included-open {
+  grid-column: 7 / span 6 !important;
+}
+
+.stitch-detail-page--setup .stitch-setup-lower > div:first-child h2 {
+  font-family: var(--stitch-serif) !important;
+  font-size: clamp(2.5rem, 5vw, 4.75rem) !important;
+  font-weight: 500 !important;
+  letter-spacing: -0.04em !important;
+  line-height: 0.98 !important;
+  margin: 0 0 1.25rem !important;
+}
+
+.stitch-detail-page--setup .stitch-setup-lower > div:first-child > p {
+  color: var(--stitch-muted) !important;
+  font-size: 1rem !important;
+  line-height: 1.75 !important;
+  margin: 0 0 2rem !important;
+  max-width: 34rem !important;
+}
+
+.stitch-detail-page--setup .stitch-detail-context {
+  border: 0 !important;
+  margin: 0 0 2rem !important;
+  padding: 0 !important;
+}
+
+.stitch-detail-page--setup .stitch-detail-context h2 {
+  font-family: var(--stitch-serif) !important;
+  font-size: clamp(1.55rem, 2.4vw, 2.35rem) !important;
+  font-weight: 500 !important;
+  letter-spacing: -0.025em !important;
+  line-height: 1.12 !important;
+}
+
+.stitch-detail-page--setup .stitch-included-open > h2 {
+  border-bottom: 1px solid var(--stitch-line) !important;
+  font-family: var(--stitch-serif) !important;
+  font-size: clamp(1.7rem, 2.5vw, 2.35rem) !important;
+  font-weight: 500 !important;
+  margin: 0 0 1.5rem !important;
+  padding-bottom: 1rem !important;
+}
+
+.stitch-detail-page--setup .stitch-included-open > div {
+  display: grid !important;
+  gap: 1.25rem !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+}
+
+.stitch-detail-page--setup .stitch-included-open article {
+  border: 0 !important;
+  display: grid !important;
+  gap: 0.85rem !important;
+  padding: 0 !important;
+}
+
+.stitch-detail-page--setup .stitch-included-open article img {
+  aspect-ratio: 1 / 1 !important;
+  border-radius: 0.25rem !important;
+  height: auto !important;
+  object-fit: cover !important;
+  width: 100% !important;
+}
+
+@media (max-width: 900px) {
+  .stitch-detail-page--setup {
+    padding-top: 0 !important;
+  }
+
+  .stitch-detail-page--setup .stitch-container {
+    width: 100% !important;
+  }
+
+  .stitch-detail-page--setup .stitch-detail-breadcrumb {
+    margin: 1rem 1.5rem !important;
+  }
+
+  .stitch-detail-page--setup .stitch-detail-open-media {
+    border-left: 0 !important;
+    border-radius: 0 !important;
+    border-right: 0 !important;
+    height: min(60vh, 31rem) !important;
+    margin-bottom: 1.75rem !important;
+  }
+
+  .stitch-detail-page--setup .stitch-setup-lower {
+    display: grid !important;
+    gap: 2rem !important;
+    grid-template-columns: 1fr !important;
+    padding: 0 1.5rem !important;
+  }
+
+  .stitch-detail-page--setup .stitch-setup-lower > div:first-child,
+  .stitch-detail-page--setup .stitch-included-open {
+    grid-column: auto !important;
+  }
+
+  .stitch-detail-page--setup .stitch-setup-lower > div:first-child h2 {
+    font-size: clamp(2.1rem, 10vw, 3rem) !important;
+  }
+
+  .stitch-detail-page--setup .stitch-included-open > div {
+    gap: 1rem !important;
+    grid-template-columns: 1fr !important;
+  }
+
+  .stitch-detail-page--setup .stitch-included-open article {
+    align-items: center !important;
+    display: grid !important;
+    gap: 1rem !important;
+    grid-template-columns: 5rem 1fr !important;
+  }
+
+  .stitch-detail-page--setup .stitch-included-open article img {
+    height: 5rem !important;
+    width: 5rem !important;
+  }
+}
