@@ -14265,3 +14265,57 @@ body:has(.stitch-catalogue-hero) .stitch-filter-panel a:first-of-type {
   background: var(--stitch-primary) !important;
   color: #fff !important;
 }
+
+/* Stitch parity correction: product detail specs use flat divider rows, not a boxed admin-style card. */
+body:has(.stitch-detail-page:not(.stitch-detail-page--setup)) .stitch-detail-safe-note,
+body:has(.stitch-detail-page:not(.stitch-detail-page--setup)) .stitch-detail-quantity-row,
+body:has(.stitch-detail-page:not(.stitch-detail-page--setup)) .stitch-detail-spec-card h2 {
+  display: none !important;
+}
+
+body:has(.stitch-detail-page:not(.stitch-detail-page--setup)) .stitch-detail-spec-card {
+  margin: 2rem 0 2.4rem !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+body:has(.stitch-detail-page:not(.stitch-detail-page--setup)) .stitch-detail-spec-card dl {
+  display: grid !important;
+  margin: 0 !important;
+  border-top: 1px solid var(--stitch-line) !important;
+}
+
+body:has(.stitch-detail-page:not(.stitch-detail-page--setup)) .stitch-detail-spec-card dl > div {
+  display: grid !important;
+  grid-template-columns: minmax(8rem, 0.42fr) minmax(0, 1fr) !important;
+  align-items: center !important;
+  gap: 1rem !important;
+  min-height: 3.35rem !important;
+  padding: 0.9rem 0 !important;
+  border-bottom: 1px solid var(--stitch-line) !important;
+}
+
+body:has(.stitch-detail-page:not(.stitch-detail-page--setup)) .stitch-detail-spec-card dt,
+body:has(.stitch-detail-page:not(.stitch-detail-page--setup)) .stitch-detail-spec-card dd {
+  margin: 0 !important;
+  color: var(--stitch-ink) !important;
+  font-family: var(--font-body) !important;
+  line-height: 1.3 !important;
+}
+
+body:has(.stitch-detail-page:not(.stitch-detail-page--setup)) .stitch-detail-spec-card dt {
+  color: var(--stitch-muted) !important;
+  font-size: 0.72rem !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.16em !important;
+  text-transform: uppercase !important;
+}
+
+body:has(.stitch-detail-page:not(.stitch-detail-page--setup)) .stitch-detail-spec-card dd {
+  text-align: right !important;
+  font-size: 0.96rem !important;
+  font-weight: 500 !important;
+}
