@@ -8377,3 +8377,59 @@ body:has(.stitch-quote-page) .stitch-quote-form-panel .quote-form .button {
     padding: 0 !important;
   }
 }
+
+
+/* Contact mobile parity: honest studio card density without fake map/location. */
+@media (max-width: 900px) {
+  body:has(.stitch-contact-hero) .stitch-contact-support-card {
+    position: relative !important;
+    overflow: hidden !important;
+  }
+
+  body:has(.stitch-contact-hero) .stitch-contact-support-card::before {
+    content: "" !important;
+    position: absolute !important;
+    inset: 0 !important;
+    background: #d4c5b3 !important;
+    opacity: 0.1 !important;
+    pointer-events: none !important;
+  }
+
+  body:has(.stitch-contact-hero) .stitch-contact-support-card > * {
+    position: relative !important;
+    z-index: 1 !important;
+  }
+
+  body:has(.stitch-contact-hero) .stitch-contact-support-card::after {
+    content: "" !important;
+    display: block !important;
+    position: relative !important;
+    z-index: 1 !important;
+    min-height: 9.5rem !important;
+    border: 1px solid color-mix(in srgb, var(--stitch-line) 70%, #d4c5b3) !important;
+    border-radius: 0.6rem !important;
+    background:
+      linear-gradient(135deg, rgba(95, 99, 79, 0.2) 0 1px, transparent 1px 22px),
+      linear-gradient(45deg, rgba(95, 99, 79, 0.14) 0 1px, transparent 1px 26px),
+      radial-gradient(circle at 68% 38%, rgba(95, 99, 79, 0.45) 0 0.42rem, transparent 0.45rem),
+      color-mix(in srgb, #d4c5b3 16%, var(--stitch-bg)) !important;
+    background-size: 22px 22px, 26px 26px, auto, auto !important;
+  }
+
+  body:has(.stitch-contact-hero) .stitch-contact-select legend {
+    font-size: 0 !important;
+  }
+
+  body:has(.stitch-contact-hero) .stitch-contact-select legend::after {
+    content: "EVENT TYPE" !important;
+    color: #77786e !important;
+    font-size: 12px !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.1em !important;
+  }
+
+  body:has(.stitch-contact-hero) .stitch-contact-chip-row {
+    gap: 0.5rem !important;
+    margin-bottom: 0 !important;
+  }
+}
