@@ -8433,3 +8433,51 @@ body:has(.stitch-quote-page) .stitch-quote-form-panel .quote-form .button {
     margin-bottom: 0 !important;
   }
 }
+
+/* Home hero final fit pass: keep Stitch's image-led card while reducing dead first-fold space. */
+@media (min-width: 901px) {
+  .stitch-home-hero {
+    padding: clamp(1.25rem, 2.5vh, 2rem) 0 clamp(2rem, 4vh, 3rem) !important;
+  }
+
+  .stitch-home-hero .stitch-container {
+    width: min(100% - 8rem, 90rem) !important;
+  }
+
+  .stitch-home-hero__grid {
+    height: clamp(30rem, 62vh, 39.5rem) !important;
+    min-height: 0 !important;
+  }
+
+  .stitch-home-hero__media {
+    height: 100% !important;
+    min-height: 0 !important;
+    max-height: none !important;
+  }
+
+  .stitch-home-hero__media img {
+    max-height: none !important;
+    object-position: center 47% !important;
+  }
+
+  .stitch-home-hero__copy {
+    bottom: clamp(2.6rem, 6vh, 4.25rem) !important;
+  }
+
+  .stitch-home-hero__copy h1 {
+    font-size: clamp(3rem, 4.45vw, 4.5rem) !important;
+    line-height: 1.02 !important;
+  }
+
+  .stitch-home-hero__copy p:not(.stitch-eyebrow) {
+    margin-top: 1rem !important;
+  }
+
+  .stitch-home-hero__copy .stitch-actions {
+    margin-top: 1.25rem !important;
+  }
+
+  .stitch-home-hero + .stitch-section {
+    padding-top: clamp(2.25rem, 4vh, 3.25rem) !important;
+  }
+}
