@@ -21,6 +21,12 @@
   --font-inter: Inter;
   --font-montserrat: Montserrat;
   --font-heading: var(--font-montserrat), ui-sans-serif, system-ui, sans-serif;
+  --font-body: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-montserrat), ui-sans-serif, system-ui, sans-serif;
+  --skr-surface: #fcf9f5;
+  --skr-on-surface: #1a1a1a;
+  --skr-primary: #5f634f;
+  --skr-outline: #dcd9d6;
 }
 
 * {
