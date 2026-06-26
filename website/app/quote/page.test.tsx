@@ -18,7 +18,7 @@ describe("QuotePage", () => {
     );
 
     expect(screen.getByRole("heading", { name: /request a rental quote/i })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: /selected listing unavailable/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /your selection/i })).toBeInTheDocument();
     expect(screen.getAllByText(/selected listing reference/i).length).toBeGreaterThan(0);
     expect(screen.getByText("lounge-sofa-package", { selector: "dd" })).toBeInTheDocument();
     expect(screen.getByText(/listing context is a starting point only/i)).toBeInTheDocument();
@@ -50,7 +50,7 @@ describe("QuotePage", () => {
     );
 
     expect(screen.queryByRole("heading", { name: /enquiry for/i })).not.toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: /selected listing unavailable/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /your selection/i })).toBeInTheDocument();
     expect(screen.getByText("missing-listing", { selector: "dd" })).toBeInTheDocument();
     expect(screen.getByText(/listing context is a starting point only/i)).toBeInTheDocument();
     expect(screen.getAllByText(/listing reference: missing-listing/i).length).toBeGreaterThan(0);
