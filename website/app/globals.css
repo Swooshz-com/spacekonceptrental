@@ -16347,3 +16347,221 @@ body:has(.stitch-quote-page):not(:has(.quote-form--success)) .stitch-quote-form-
     padding: 1.55rem 0 4.5rem !important;
   }
 }
+
+/* Stitch parity final override: setups tablet reference keeps the editorial
+   mobile composition instead of collapsing into compact SKR cards. */
+@media (min-width: 640px) and (max-width: 900px) {
+  body:has(.stitch-setups-hero) {
+    background: var(--stitch-surface) !important;
+  }
+
+  body:has(.stitch-setups-hero) .stitch-bottom-nav {
+    display: none !important;
+  }
+
+  body:has(.stitch-setups-hero) .stitch-setups-hero {
+    padding: 96px 0 64px !important;
+    background: var(--stitch-surface) !important;
+  }
+
+  body:has(.stitch-setups-hero) .stitch-setups-hero .stitch-container,
+  body:has(.stitch-setups-hero) .stitch-setups-feature-section .stitch-container,
+  body:has(.stitch-setups-hero) .stitch-setups-grid-section .stitch-container,
+  body:has(.stitch-setups-hero) .stitch-footer__grid {
+    width: min(calc(100% - 56px), 680px) !important;
+    max-width: 680px !important;
+  }
+
+  body:has(.stitch-setups-hero) .stitch-setups-hero__copy {
+    max-width: 560px !important;
+    margin: 0 auto !important;
+    text-align: center !important;
+  }
+
+  body:has(.stitch-setups-hero) .stitch-setups-hero__copy .stitch-eyebrow {
+    display: none !important;
+  }
+
+  body:has(.stitch-setups-hero) .stitch-setups-hero__copy h1 {
+    margin: 0 0 18px !important;
+    color: var(--stitch-ink) !important;
+    font-family: var(--stitch-serif) !important;
+    font-size: 48px !important;
+    font-weight: 600 !important;
+    letter-spacing: -0.045em !important;
+    line-height: 1.04 !important;
+  }
+
+  body:has(.stitch-setups-hero) .stitch-setups-hero__copy p {
+    max-width: 480px !important;
+    margin: 0 auto !important;
+    color: var(--stitch-muted) !important;
+    font-size: 20px !important;
+    line-height: 1.52 !important;
+  }
+
+  body:has(.stitch-setups-hero) .stitch-setups-feature-section {
+    padding: 0 0 96px !important;
+    background: var(--stitch-surface) !important;
+  }
+
+  body:has(.stitch-setups-hero) .stitch-setups-feature-split {
+    position: relative !important;
+    display: block !important;
+  }
+
+  body:has(.stitch-setups-hero) .stitch-setups-feature__image {
+    position: relative !important;
+    display: block !important;
+    width: 100% !important;
+    height: 650px !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+    border-radius: 0 !important;
+    background: #1a1a1a !important;
+  }
+
+  body:has(.stitch-setups-hero) .stitch-setups-feature__image::after {
+    content: "" !important;
+    position: absolute !important;
+    inset: 0 !important;
+    background: linear-gradient(180deg, rgba(26, 26, 26, 0.08), rgba(26, 26, 26, 0.72)) !important;
+    pointer-events: none !important;
+  }
+
+  body:has(.stitch-setups-hero) .stitch-setups-feature__image img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    object-position: center !important;
+    filter: brightness(0.78) saturate(0.94) !important;
+  }
+
+  body:has(.stitch-setups-hero) .stitch-setups-feature__copy {
+    position: absolute !important;
+    left: 44px !important;
+    right: 44px !important;
+    bottom: 48px !important;
+    z-index: 2 !important;
+    max-width: 440px !important;
+    padding: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+    color: #fff !important;
+    box-shadow: none !important;
+  }
+
+  body:has(.stitch-setups-hero) .stitch-setups-feature__copy span {
+    display: inline-flex !important;
+    margin-bottom: 18px !important;
+    padding: 8px 14px !important;
+    border-radius: 999px !important;
+    background: rgba(255, 255, 255, 0.24) !important;
+    color: rgba(255, 255, 255, 0.9) !important;
+    font-size: 13px !important;
+    letter-spacing: 0.08em !important;
+  }
+
+  body:has(.stitch-setups-hero) .stitch-setups-feature__copy h2 {
+    margin: 0 0 16px !important;
+    color: #fff !important;
+    font-size: 44px !important;
+    line-height: 1.04 !important;
+  }
+
+  body:has(.stitch-setups-hero) .stitch-setups-feature__copy p {
+    max-width: 400px !important;
+    color: rgba(255, 255, 255, 0.86) !important;
+    font-size: 18px !important;
+    line-height: 1.48 !important;
+  }
+
+  body:has(.stitch-setups-hero) .stitch-setups-feature__copy .stitch-link-button {
+    margin-top: 22px !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    color: #fff !important;
+    font-size: 18px !important;
+    letter-spacing: 0.01em !important;
+    text-transform: none !important;
+  }
+
+  body:has(.stitch-setups-hero) .stitch-setups-filter-section {
+    display: none !important;
+  }
+
+  body:has(.stitch-setups-hero) .stitch-setups-grid-section {
+    padding: 0 0 104px !important;
+    background: var(--stitch-surface) !important;
+  }
+
+  body:has(.stitch-setups-hero) .stitch-setups-grid {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 104px !important;
+  }
+
+  body:has(.stitch-setups-hero) .stitch-setup-tile {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 40px !important;
+    color: var(--stitch-ink) !important;
+    text-decoration: none !important;
+  }
+
+  body:has(.stitch-setups-hero) .stitch-setup-tile:nth-child(n + 3) {
+    display: none !important;
+  }
+
+  body:has(.stitch-setups-hero) .stitch-setup-tile__image {
+    display: block !important;
+    width: 100% !important;
+    height: 420px !important;
+    overflow: hidden !important;
+    border-radius: 0 !important;
+    background: var(--stitch-container) !important;
+  }
+
+  body:has(.stitch-setups-hero) .stitch-setup-tile__image img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    object-position: center !important;
+  }
+
+  body:has(.stitch-setups-hero) .stitch-setup-tile__body {
+    display: block !important;
+    padding: 0 !important;
+  }
+
+  body:has(.stitch-setups-hero) .stitch-setup-tile__body strong {
+    display: block !important;
+    margin: 0 0 18px !important;
+    color: var(--stitch-ink) !important;
+    font-family: var(--stitch-serif) !important;
+    font-size: 42px !important;
+    font-weight: 500 !important;
+    letter-spacing: -0.035em !important;
+    line-height: 1.08 !important;
+  }
+
+  body:has(.stitch-setups-hero) .stitch-setup-tile__body small {
+    display: block !important;
+    max-width: 540px !important;
+    color: var(--stitch-muted) !important;
+    font-size: 20px !important;
+    line-height: 1.55 !important;
+  }
+
+  body:has(.stitch-setups-hero) .stitch-setup-tile__body em {
+    display: inline-flex !important;
+    margin-top: 28px !important;
+    color: #9f5d52 !important;
+    font-size: 18px !important;
+    font-style: normal !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.01em !important;
+    text-transform: none !important;
+  }
+}
