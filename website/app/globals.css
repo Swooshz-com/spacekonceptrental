@@ -14407,7 +14407,7 @@ body:has(.stitch-quote-page .quote-form--success) .quote-form__receipt {
 body:has(.stitch-quote-page .quote-form--success) .quote-form__receipt h3 {
   max-width: 9em !important;
   margin: 0 !important;
-  font-family: var(--font-heading) !important;
+  font-family: var(--stitch-serif) !important;
   font-size: clamp(3.6rem, 6vw, 5.3rem) !important;
   line-height: 0.96 !important;
   letter-spacing: -0.055em !important;
@@ -14454,10 +14454,66 @@ body:has(.stitch-quote-page .quote-form--success) .quote-form__receipt-actions {
   body:has(.stitch-quote-page .quote-form--success) .stitch-quote-form-panel {
     width: 100% !important;
     max-width: 100% !important;
-    padding: 0.8rem !important;
+    padding: 0.75rem !important;
+    border: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+
+  body:has(.stitch-quote-page .quote-form--success) .quote-form__receipt {
+    min-height: calc(100dvh - 2rem) !important;
+    align-content: center !important;
+    gap: 0.95rem !important;
+    padding: 2rem 1.05rem !important;
+    border: 0 !important;
+    background: transparent !important;
+    overflow: hidden !important;
+  }
+
+  body:has(.stitch-quote-page .quote-form--success) .quote-form__receipt::before {
+    width: 5.25rem !important;
+    height: 5.25rem !important;
+    margin-bottom: 0.8rem !important;
   }
 
   body:has(.stitch-quote-page .quote-form--success) .quote-form__receipt h3 {
-    font-size: clamp(2.7rem, 14vw, 4.1rem) !important;
+    max-width: 18rem !important;
+    font-family: var(--stitch-serif) !important;
+    font-size: clamp(2.2rem, 9.8vw, 2.6rem) !important;
+    font-weight: 500 !important;
+    line-height: 1.05 !important;
+    letter-spacing: -0.015em !important;
+    overflow-wrap: anywhere !important;
+  }
+
+  body:has(.stitch-quote-page .quote-form--success) .quote-form__receipt-reference {
+    display: block !important;
+    margin: -0.25rem 0 0 !important;
+    font-family: var(--stitch-sans) !important;
+    font-size: 1.12rem !important;
+    letter-spacing: 0.02em !important;
+  }
+
+  body:has(.stitch-quote-page .quote-form--success) .quote-form__receipt > p {
+    max-width: 18rem !important;
+    font-size: 1rem !important;
+    line-height: 1.55 !important;
+  }
+
+  body:has(.stitch-quote-page .quote-form--success) .quote-form__receipt-details {
+    display: none !important;
+  }
+
+  body:has(.stitch-quote-page .quote-form--success) .quote-form__receipt-actions {
+    width: 100% !important;
+    gap: 0.75rem !important;
+  }
+
+  body:has(.stitch-quote-page .quote-form--success) .quote-form__receipt-actions .button {
+    min-height: 3.25rem !important;
+    width: 100% !important;
+    font-family: var(--stitch-sans) !important;
+    font-size: 1rem !important;
+    letter-spacing: 0.02em !important;
   }
 }

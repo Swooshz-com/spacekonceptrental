@@ -482,7 +482,7 @@ export default function QuoteRequestForm({
           <h3>Enquiry Received</h3>
           {receiptReference ? (
             <p className="quote-form__receipt-reference">
-              Ref: {receiptReference}
+              {receiptReference}
             </p>
           ) : null}
           <p>
