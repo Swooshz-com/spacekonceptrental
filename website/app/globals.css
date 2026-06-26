@@ -8974,3 +8974,27 @@ body:has(.stitch-quote-page) .stitch-quote-form-panel .quote-form .button {
     border-color: var(--stitch-ink) !important;
   }
 }
+
+/* Quote mobile required order: intro, selection, form, next steps, footer. */
+@media (max-width: 900px) {
+  body:has(.stitch-quote-page) .stitch-quote-layout {
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  body:has(.stitch-quote-page) .stitch-quote-left {
+    display: contents !important;
+  }
+
+  body:has(.stitch-quote-page) .stitch-quote-selection {
+    order: 1 !important;
+  }
+
+  body:has(.stitch-quote-page) .stitch-quote-form-panel {
+    order: 2 !important;
+  }
+
+  body:has(.stitch-quote-page) .stitch-quote-next {
+    order: 3 !important;
+  }
+}
