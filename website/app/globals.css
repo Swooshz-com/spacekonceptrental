@@ -9201,3 +9201,140 @@ body:has(.stitch-quote-page) .stitch-quote-form-panel .quote-form .button {
     margin: 0 !important;
   }
 }
+
+/* Home desktop lower sections: match Stitch bento and featured-card density. */
+@media (min-width: 901px) {
+  .stitch-home-categories {
+    padding: 42px 0 56px !important;
+    background: #fcf9f5 !important;
+  }
+
+  .stitch-home-categories .stitch-section-heading--row {
+    align-items: center !important;
+    margin-bottom: 24px !important;
+  }
+
+  .stitch-home-categories .stitch-section-heading h2 {
+    font-family: var(--stitch-sans) !important;
+    font-size: 1.22rem !important;
+    font-weight: 400 !important;
+    line-height: 1.35 !important;
+    letter-spacing: -0.01em !important;
+  }
+
+  .stitch-home-categories .stitch-button {
+    min-width: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+    color: #66665f !important;
+    font-size: 0.72rem !important;
+    letter-spacing: 0.04em !important;
+    box-shadow: none !important;
+  }
+
+  .stitch-home-category-mosaic {
+    display: grid !important;
+    grid-template-columns: 2fr 1fr 1fr !important;
+    grid-template-rows: 172px 172px !important;
+    gap: 8px !important;
+    height: auto !important;
+  }
+
+  .stitch-home-category-card {
+    min-height: 0 !important;
+    border-radius: 3px !important;
+  }
+
+  .stitch-home-category-card--1 {
+    grid-column: 1 / span 1 !important;
+    grid-row: 1 / span 2 !important;
+  }
+
+  .stitch-home-category-card--2 {
+    grid-column: 2 / span 1 !important;
+    grid-row: 1 / span 1 !important;
+  }
+
+  .stitch-home-category-card--3 {
+    grid-column: 3 / span 1 !important;
+    grid-row: 1 / span 1 !important;
+  }
+
+  .stitch-home-category-card--4 {
+    grid-column: 2 / span 2 !important;
+    grid-row: 2 / span 1 !important;
+  }
+
+  .stitch-home-category-card span {
+    bottom: 18px !important;
+    left: 18px !important;
+    font-family: var(--font-mono) !important;
+    font-size: 0.78rem !important;
+    font-weight: 700 !important;
+    letter-spacing: 0 !important;
+    text-transform: none !important;
+  }
+
+  .stitch-home-featured {
+    padding: 42px 0 70px !important;
+    background: #fcf9f5 !important;
+  }
+
+  .stitch-home-featured .stitch-section-heading {
+    margin-bottom: 24px !important;
+  }
+
+  .stitch-home-featured .stitch-section-heading h2 {
+    font-family: var(--stitch-sans) !important;
+    font-size: 1.24rem !important;
+    font-weight: 400 !important;
+    line-height: 1.35 !important;
+    letter-spacing: -0.01em !important;
+  }
+
+  .stitch-home-featured-grid {
+    max-width: 650px !important;
+    margin: 0 auto !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 12px !important;
+  }
+
+  .stitch-home-feature-card {
+    padding: 8px !important;
+    border-radius: 3px !important;
+    background: #f1edea !important;
+  }
+
+  .stitch-home-feature-card img {
+    aspect-ratio: 1 / 1 !important;
+    border-radius: 2px !important;
+  }
+
+  .stitch-home-feature-card strong {
+    margin-top: 10px !important;
+    font-family: var(--font-mono) !important;
+    font-size: 0.72rem !important;
+    line-height: 1.25 !important;
+  }
+
+  .stitch-home-feature-card small {
+    margin-top: 4px !important;
+    font-family: var(--font-mono) !important;
+    font-size: 0.66rem !important;
+    line-height: 1.25 !important;
+    letter-spacing: 0.04em !important;
+  }
+
+  .stitch-home-featured-action {
+    margin-top: 20px !important;
+  }
+
+  .stitch-home-featured-action .stitch-button {
+    min-width: 0 !important;
+    padding: 10px 22px !important;
+    border-radius: 3px !important;
+    background: transparent !important;
+    color: #1a1a1a !important;
+  }
+}
