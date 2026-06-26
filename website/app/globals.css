@@ -9392,6 +9392,41 @@ body:has(.stitch-quote-page) .stitch-quote-form-panel .quote-form .button {
   }
 }
 
+/* Quote mobile Stitch parity: bottom-anchored submit CTA with reserved scroll room. */
+@media (max-width: 900px) {
+  body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main {
+    padding-bottom: 6.25rem !important;
+  }
+
+  body:has(.stitch-quote-page):not(:has(.quote-form--success)) .stitch-quote-form-panel .quote-form .button[type="submit"] {
+    position: fixed !important;
+    left: 1.25rem !important;
+    right: 1.25rem !important;
+    bottom: 1rem !important;
+    z-index: 60 !important;
+    width: auto !important;
+    min-height: 3.75rem !important;
+    border-radius: 999px !important;
+    border-color: #050505 !important;
+    background: #050505 !important;
+    color: #fff !important;
+    box-shadow: 0 1rem 2.5rem rgba(26, 26, 26, 0.18) !important;
+  }
+
+  body:has(.stitch-quote-page):not(:has(.quote-form--success)) .stitch-footer {
+    margin-bottom: 5.75rem !important;
+  }
+
+  body:has(.stitch-quote-page):not(:has(.quote-form--success)) .stitch-bottom-nav {
+    display: none !important;
+  }
+
+  body:has(.stitch-quote-page):not(:has(.quote-form--success)) .chat-widget-launcher,
+  body:has(.stitch-quote-page):not(:has(.quote-form--success)) .chat-widget-panel {
+    display: none !important;
+  }
+}
+
 /* Home desktop Stitch parity: lounge hero and compact advantage rhythm. */
 @media (min-width: 901px) {
   .stitch-home-hero {
