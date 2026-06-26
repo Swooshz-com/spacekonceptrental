@@ -14345,3 +14345,119 @@ body:has(.stitch-about-hero) .stitch-about-story__image img {
     border-radius: 0.35rem !important;
   }
 }
+
+/* Stitch parity correction: quote confirmation is a centered success state, not the split quote form. */
+body:has(.stitch-quote-page .quote-form--success) .stitch-quote-page {
+  min-height: calc(100vh - 5rem) !important;
+  padding: clamp(2rem, 4vw, 4rem) 0 clamp(4rem, 7vw, 6rem) !important;
+  background:
+    radial-gradient(circle at center, rgba(252, 249, 245, 0.95) 0 24%, rgba(232, 221, 207, 0.78) 25% 58%, rgba(252, 249, 245, 0.92) 59% 100%),
+    repeating-radial-gradient(circle at center, rgba(95, 99, 79, 0.16) 0 1px, transparent 2px 10px) !important;
+}
+
+body:has(.stitch-quote-page .quote-form--success) .stitch-quote-intro,
+body:has(.stitch-quote-page .quote-form--success) .stitch-quote-left,
+body:has(.stitch-quote-page .quote-form--success) .stitch-quote-form-panel > h2,
+body:has(.stitch-quote-page .quote-form--success) .quote-form > :not(.quote-form__receipt) {
+  display: none !important;
+}
+
+body:has(.stitch-quote-page .quote-form--success) .stitch-quote-page .stitch-container,
+body:has(.stitch-quote-page .quote-form--success) .stitch-quote-layout {
+  display: flex !important;
+  width: min(calc(100% - 2rem), 70rem) !important;
+  max-width: 70rem !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin-inline: auto !important;
+  padding: 0 !important;
+}
+
+body:has(.stitch-quote-page .quote-form--success) .stitch-quote-form-panel {
+  grid-column: auto !important;
+  width: min(100%, 38rem) !important;
+  max-width: 38rem !important;
+  min-height: 0 !important;
+  margin: 0 auto !important;
+  padding: clamp(2rem, 4vw, 3rem) !important;
+  border: 0 !important;
+  border-radius: 0.45rem !important;
+  background: rgba(252, 249, 245, 0.88) !important;
+  box-shadow: 0 1.4rem 3.5rem rgba(26, 26, 26, 0.12) !important;
+}
+
+body:has(.stitch-quote-page .quote-form--success) .stitch-quote-form-panel .quote-form {
+  display: block !important;
+  margin: 0 !important;
+}
+
+body:has(.stitch-quote-page .quote-form--success) .quote-form__receipt {
+  display: grid !important;
+  justify-items: center !important;
+  gap: 1.4rem !important;
+  margin: 0 !important;
+  padding: clamp(2.4rem, 5vw, 4.8rem) clamp(1.2rem, 3vw, 2rem) !important;
+  border: 1px solid color-mix(in srgb, var(--stitch-line) 78%, #fff) !important;
+  border-radius: 0.1rem !important;
+  background: rgba(252, 249, 245, 0.9) !important;
+  color: var(--stitch-ink) !important;
+  text-align: center !important;
+}
+
+body:has(.stitch-quote-page .quote-form--success) .quote-form__receipt h3 {
+  max-width: 9em !important;
+  margin: 0 !important;
+  font-family: var(--font-heading) !important;
+  font-size: clamp(3.6rem, 6vw, 5.3rem) !important;
+  line-height: 0.96 !important;
+  letter-spacing: -0.055em !important;
+}
+
+body:has(.stitch-quote-page .quote-form--success) .quote-form__receipt-details {
+  width: min(100%, 28rem) !important;
+  margin: 0 !important;
+  border: 1px solid var(--stitch-line) !important;
+  background: rgba(255, 255, 255, 0.62) !important;
+}
+
+body:has(.stitch-quote-page .quote-form--success) .quote-form__receipt-actions {
+  display: grid !important;
+  width: min(100%, 22rem) !important;
+  gap: 0.9rem !important;
+  margin: 0 !important;
+}
+
+@media (max-width: 639px) {
+  body:has(.stitch-quote-page .quote-form--success) .stitch-site-header,
+  body:has(.stitch-quote-page .quote-form--success) .stitch-footer,
+  body:has(.stitch-quote-page .quote-form--success) .stitch-bottom-nav,
+  body:has(.stitch-quote-page .quote-form--success) .chat-widget-launcher,
+  body:has(.stitch-quote-page .quote-form--success) .chat-widget-panel {
+    display: none !important;
+  }
+
+  body:has(.stitch-quote-page .quote-form--success) .site-main {
+    padding: 0 !important;
+  }
+
+  body:has(.stitch-quote-page .quote-form--success) .stitch-quote-page {
+    min-height: 100dvh !important;
+    padding: 1rem !important;
+  }
+
+  body:has(.stitch-quote-page .quote-form--success) .stitch-quote-page .stitch-container,
+  body:has(.stitch-quote-page .quote-form--success) .stitch-quote-layout {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  body:has(.stitch-quote-page .quote-form--success) .stitch-quote-form-panel {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0.8rem !important;
+  }
+
+  body:has(.stitch-quote-page .quote-form--success) .quote-form__receipt h3 {
+    font-size: clamp(2.7rem, 14vw, 4.1rem) !important;
+  }
+}
