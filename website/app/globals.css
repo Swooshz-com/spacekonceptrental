@@ -16576,3 +16576,17 @@ body:has(.stitch-home-hero) .stitch-home-hero__media img {
   opacity: 1 !important;
   filter: brightness(0.58) saturate(0.92) contrast(1.02) !important;
 }
+
+/* Stitch parity final override: About story image should read as an editorial
+   environment, not an isolated product thumbnail inside a blank frame. */
+body:has(.stitch-about-hero) .stitch-about-story__image {
+  overflow: hidden !important;
+  background: var(--stitch-container) !important;
+}
+
+body:has(.stitch-about-hero) .stitch-about-story__image img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  object-position: center !important;
+}
