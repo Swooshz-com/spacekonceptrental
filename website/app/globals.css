@@ -4078,9 +4078,10 @@ h3,
   .stitch-mobile-menu.stitch-mobile-menu--open {
     display: block;
     box-sizing: border-box;
-    max-width: min(88vw, 380px);
+    max-width: min(82vw, 320px);
     overflow-x: hidden;
-    right: 0;
+    left: 0;
+    right: auto;
   }
 }
 
@@ -4090,6 +4091,136 @@ h3,
     body {
       overflow-x: clip;
     }
+  }
+}
+
+/* Shared mobile menu parity: Stitch-like left navigation shell. */
+@media (max-width: 900px) {
+  .stitch-menu-scrim {
+    background: rgba(28, 28, 26, 0.28) !important;
+  }
+
+  .stitch-mobile-menu {
+    left: 0 !important;
+    right: auto !important;
+    width: min(82vw, 320px) !important;
+    padding: 1.25rem 1rem !important;
+    border-right: 1px solid var(--stitch-line) !important;
+    border-left: 0 !important;
+    background: var(--stitch-surface-low) !important;
+    box-shadow: 18px 0 52px rgba(31, 32, 28, 0.14) !important;
+    transform: translateX(-100%) !important;
+  }
+
+  .stitch-mobile-menu.stitch-mobile-menu--open {
+    transform: translateX(0) !important;
+  }
+
+  .stitch-mobile-menu__top {
+    align-items: flex-start !important;
+    gap: 1rem !important;
+    margin: 0 0 1.8rem !important;
+    padding-bottom: 1.35rem !important;
+    border-bottom: 1px solid color-mix(in srgb, var(--stitch-line) 75%, transparent) !important;
+  }
+
+  .stitch-mobile-menu__top div {
+    display: grid !important;
+    gap: 0.25rem !important;
+  }
+
+  .stitch-mobile-menu__top strong {
+    color: var(--stitch-ink) !important;
+    font-family: var(--stitch-sans) !important;
+    font-size: 1.15rem !important;
+    font-weight: 800 !important;
+    letter-spacing: -0.045em !important;
+    line-height: 1.05 !important;
+  }
+
+  .stitch-mobile-menu__top span {
+    color: var(--stitch-muted) !important;
+    font-family: var(--stitch-sans) !important;
+    font-size: 0.78rem !important;
+    line-height: 1.35 !important;
+  }
+
+  .stitch-mobile-menu__top button {
+    min-height: 2rem !important;
+    padding: 0.4rem 0.55rem !important;
+    border: 1px solid var(--stitch-line) !important;
+    border-radius: var(--stitch-radius) !important;
+    background: var(--stitch-surface) !important;
+    color: var(--stitch-ink) !important;
+    font-family: var(--stitch-sans) !important;
+    font-size: 0.68rem !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.04em !important;
+    text-transform: uppercase !important;
+  }
+
+  .stitch-mobile-menu nav {
+    display: grid !important;
+  }
+
+  .stitch-mobile-menu__primary {
+    gap: 0.1rem !important;
+  }
+
+  .stitch-mobile-menu__primary a {
+    padding: 0.95rem 0.35rem !important;
+    border-bottom: 1px solid color-mix(in srgb, var(--stitch-line) 72%, transparent) !important;
+    color: var(--stitch-ink) !important;
+    font-family: var(--stitch-sans) !important;
+    font-size: 1rem !important;
+    font-weight: 600 !important;
+    letter-spacing: 0 !important;
+    line-height: 1.1 !important;
+  }
+
+  .stitch-mobile-menu__actions {
+    margin-top: 1.35rem !important;
+  }
+
+  .stitch-mobile-menu__actions a {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-height: 3rem !important;
+    padding: 0 1rem !important;
+    border: 1px solid var(--stitch-primary) !important;
+    border-radius: var(--stitch-radius) !important;
+    background: var(--stitch-primary) !important;
+    color: var(--stitch-primary-ink) !important;
+    font-family: var(--stitch-sans) !important;
+    font-size: 0.78rem !important;
+    font-weight: 900 !important;
+    letter-spacing: 0.08em !important;
+    text-transform: uppercase !important;
+  }
+
+  .stitch-mobile-menu__legal {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 0.75rem !important;
+    margin-top: 1.35rem !important;
+    padding-top: 1.1rem !important;
+    border-top: 1px solid color-mix(in srgb, var(--stitch-line) 75%, transparent) !important;
+  }
+
+  .stitch-mobile-menu__legal a {
+    color: var(--stitch-muted) !important;
+    font-family: var(--stitch-sans) !important;
+    font-size: 0.78rem !important;
+    font-weight: 600 !important;
+    letter-spacing: 0 !important;
+    line-height: 1.2 !important;
+  }
+
+  body:has(.stitch-mobile-menu--open) .stitch-menu-trigger,
+  body:has(.stitch-mobile-menu--open) .stitch-bottom-nav,
+  body:has(.stitch-mobile-menu--open) .chat-widget-launcher,
+  body:has(.stitch-mobile-menu--open) .chat-widget-panel {
+    display: none !important;
   }
 }
 
