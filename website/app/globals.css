@@ -5145,6 +5145,24 @@ h3,
   grid-column: 5 / span 8 !important;
 }
 
+@media (min-width: 901px) {
+  body:has(.stitch-contact-hero) .stitch-contact-section .stitch-container.stitch-contact-grid {
+    gap: clamp(4.75rem, 6vw, 5.75rem) !important;
+    grid-template-columns: minmax(300px, 360px) minmax(0, 1fr) !important;
+  }
+
+  body:has(.stitch-contact-hero) .stitch-contact-section .stitch-container.stitch-contact-grid > .stitch-contact-copy,
+  body:has(.stitch-contact-hero) .stitch-contact-section .stitch-container.stitch-contact-grid > .stitch-contact-form-panel {
+    grid-column: auto !important;
+    min-width: 0 !important;
+  }
+
+  body:has(.stitch-contact-hero) .stitch-contact-form-panel {
+    box-sizing: border-box !important;
+    max-width: 100% !important;
+  }
+}
+
 .chat-widget-launcher,
 .chat-widget-panel {
   right: 32px !important;
@@ -8444,6 +8462,160 @@ body:has(.stitch-quote-page) .stitch-quote-form-panel .quote-form .button {
   body:has(.stitch-contact-hero) .stitch-contact-chip-row {
     gap: 0.5rem !important;
     margin-bottom: 0 !important;
+  }
+}
+
+/* Contact mobile parity correction: remove the faux map block and match Stitch's compact form rhythm. */
+@media (max-width: 900px) {
+  body:has(.stitch-contact-hero) .stitch-contact-hero {
+    padding: 2.2rem 0 1rem !important;
+  }
+
+  body:has(.stitch-contact-hero) .stitch-contact-hero .stitch-page-intro {
+    text-align: center !important;
+  }
+
+  body:has(.stitch-contact-hero) .stitch-contact-hero p:not(.stitch-eyebrow) {
+    max-width: 16.5rem !important;
+    margin: 0 auto !important;
+  }
+
+  body:has(.stitch-contact-hero) .stitch-contact-section .stitch-container.stitch-contact-grid {
+    gap: 2.15rem !important;
+  }
+
+  body:has(.stitch-contact-hero) .stitch-contact-support-card {
+    gap: 0.85rem !important;
+    padding: 1.25rem 1.15rem !important;
+  }
+
+  body:has(.stitch-contact-hero) .stitch-contact-support-card::after {
+    content: none !important;
+    display: none !important;
+  }
+
+  body:has(.stitch-contact-hero) .stitch-contact-support-card h2 {
+    font-size: 1.38rem !important;
+  }
+
+  body:has(.stitch-contact-hero) .stitch-contact-support-card p,
+  body:has(.stitch-contact-hero) .stitch-contact-support-card span {
+    font-size: 0.9rem !important;
+    line-height: 1.46 !important;
+  }
+
+  body:has(.stitch-contact-hero) .stitch-contact-support-card div {
+    gap: 0.35rem !important;
+    padding-top: 0.95rem !important;
+  }
+
+  body:has(.stitch-contact-hero) .stitch-contact-support-card a {
+    display: grid !important;
+    gap: 0.25rem !important;
+    min-height: 4.5rem !important;
+    line-height: 1.25 !important;
+  }
+
+  body:has(.stitch-contact-hero) .stitch-contact-support-card a::after {
+    content: "We will follow up";
+    color: var(--stitch-muted);
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0;
+  }
+
+  body:has(.stitch-contact-hero) .stitch-contact-form-panel h2 {
+    margin: 0 0 1.05rem !important;
+  }
+
+  body:has(.stitch-contact-hero) .stitch-contact-form-grid {
+    display: grid !important;
+    gap: 1rem !important;
+    margin-bottom: 1rem !important;
+  }
+
+  body:has(.stitch-contact-hero) .stitch-contact-form-grid label > span,
+  body:has(.stitch-contact-hero) .stitch-contact-message > span {
+    display: block !important;
+    margin-bottom: 0.45rem !important;
+    color: #77786e !important;
+    font-size: 0 !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.11em !important;
+    line-height: 1.15 !important;
+    min-height: 0 !important;
+    text-transform: uppercase !important;
+  }
+
+  body:has(.stitch-contact-hero) .stitch-contact-form-grid label > span::after,
+  body:has(.stitch-contact-hero) .stitch-contact-message > span::after {
+    font-size: 0.68rem !important;
+  }
+
+  body:has(.stitch-contact-hero) .stitch-contact-form-grid label:has(input[name="firstName"]) > span::after {
+    content: "FULL NAME" !important;
+  }
+
+  body:has(.stitch-contact-hero) .stitch-contact-form-grid label:has(input[name="email"]) > span::after {
+    content: "EMAIL ADDRESS" !important;
+  }
+
+  body:has(.stitch-contact-hero) .stitch-contact-message > span::after {
+    content: "MESSAGE" !important;
+  }
+
+  body:has(.stitch-contact-hero) .stitch-contact-form-panel input {
+    border: 0 !important;
+    border-bottom: 1px solid #d3c4b2 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    min-height: 2rem !important;
+    padding: 0 0 0.35rem !important;
+  }
+
+  body:has(.stitch-contact-hero) .stitch-contact-select {
+    margin: 0 0 1rem !important;
+    padding: 0 !important;
+    border: 0 !important;
+  }
+
+  body:has(.stitch-contact-hero) .stitch-contact-select legend {
+    margin-bottom: 0.45rem !important;
+  }
+
+  body:has(.stitch-contact-hero) .stitch-contact-chip-row {
+    position: relative !important;
+    display: block !important;
+    min-height: 2.35rem !important;
+    border-bottom: 1px solid #d3c4b2 !important;
+  }
+
+  body:has(.stitch-contact-hero) .stitch-contact-chip-row label {
+    display: none !important;
+  }
+
+  body:has(.stitch-contact-hero) .stitch-contact-chip-row::before {
+    content: "Select an option";
+    color: var(--stitch-ink);
+    font-size: 0.95rem;
+    line-height: 2.35rem;
+  }
+
+  body:has(.stitch-contact-hero) .stitch-contact-chip-row::after {
+    content: "";
+    position: absolute;
+    right: 0.3rem;
+    top: 0.78rem;
+    width: 0.65rem;
+    height: 0.65rem;
+    border-right: 2px solid var(--stitch-muted);
+    border-bottom: 2px solid var(--stitch-muted);
+    transform: rotate(45deg);
+  }
+
+  body:has(.stitch-contact-hero) .stitch-contact-form-panel textarea {
+    min-height: 6rem !important;
+    padding: 0.75rem !important;
   }
 }
 
