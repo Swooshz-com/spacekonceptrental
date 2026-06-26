@@ -5349,10 +5349,15 @@ h3,
   }
 
   body:has(.stitch-contact-section) .chat-widget-launcher,
+  body:has(.stitch-contact-section) .chat-widget-panel,
   body:has(.stitch-quote-page) .chat-widget-launcher,
+  body:has(.stitch-quote-page) .chat-widget-panel,
   body:has(.stitch-detail-page) .chat-widget-launcher,
+  body:has(.stitch-detail-page) .chat-widget-panel,
   body:has(.stitch-catalogue-section) .chat-widget-launcher,
-  body:has(.stitch-setups-grid-section) .chat-widget-launcher {
+  body:has(.stitch-catalogue-section) .chat-widget-panel,
+  body:has(.stitch-setups-grid-section) .chat-widget-launcher,
+  body:has(.stitch-setups-grid-section) .chat-widget-panel {
     display: none !important;
   }
 }
