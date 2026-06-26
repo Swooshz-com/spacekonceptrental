@@ -39,6 +39,10 @@ export function getDemoProducts() {
   return isDemoContentEnabled() ? demoProducts : [];
 }
 
+export function getDemoSetupImageSrc(slug: string) {
+  return demoSetups.find((setup) => setup.slug === slug)?.image;
+}
+
 export function textOrUndefined(value: string | undefined | null) {
   return value?.trim() || undefined;
 }
