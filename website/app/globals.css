@@ -12730,6 +12730,41 @@ body:has(.stitch-quote-page) .stitch-quote-form-panel .quote-form .button {
   }
 }
 
+/* Stitch parity correction: contact desktop vertical rhythm */
+@media (min-width: 901px) {
+  body:has(.stitch-contact-hero) .stitch-contact-hero {
+    padding-top: clamp(4.15rem, 6vw, 5.15rem) !important;
+    padding-bottom: 1.65rem !important;
+  }
+
+  body:has(.stitch-contact-hero) .stitch-contact-section {
+    padding-top: 2.15rem !important;
+    padding-bottom: 6.3rem !important;
+  }
+
+  body:has(.stitch-contact-hero) .stitch-contact-form-panel {
+    min-height: 650px !important;
+    padding: clamp(3.15rem, 4vw, 4.05rem) clamp(3.7rem, 4.8vw, 5.05rem) !important;
+  }
+
+  body:has(.stitch-contact-hero) .stitch-contact-form-panel h2 {
+    margin-bottom: 2.55rem !important;
+  }
+
+  body:has(.stitch-contact-hero) .stitch-contact-form-grid {
+    gap: 2.1rem 3.15rem !important;
+    margin-bottom: 2.35rem !important;
+  }
+
+  body:has(.stitch-contact-hero) .stitch-contact-select {
+    margin-bottom: 2.6rem !important;
+  }
+
+  body:has(.stitch-contact-hero) .stitch-contact-form-panel textarea {
+    min-height: 145px !important;
+  }
+}
+
 /* Stitch parity: About page compact editorial composition */
 @media (min-width: 901px) {
   body:has(.stitch-about-hero) .stitch-about-hero {
