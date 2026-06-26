@@ -13692,3 +13692,77 @@ body:has(.stitch-quote-page) .stitch-quote-form-panel .quote-form .button {
     height: 0.72rem !important;
   }
 }
+
+/* Stitch parity correction: catalogue mobile should not clip or overfill the reference export */
+@media (max-width: 639px) {
+  body:has(.stitch-catalogue-hero) .stitch-catalogue-hero {
+    padding: 1.05rem 0 0.8rem !important;
+  }
+
+  body:has(.stitch-catalogue-hero) .stitch-page-intro h1 {
+    max-width: 100% !important;
+    margin: 0 0 0.35rem !important;
+    overflow: visible !important;
+    font-size: clamp(1.05rem, 7.4vw, 1.55rem) !important;
+    letter-spacing: -0.055em !important;
+    line-height: 1.02 !important;
+    white-space: normal !important;
+    text-overflow: clip !important;
+  }
+
+  body:has(.stitch-catalogue-hero) .stitch-page-intro p:not(.stitch-eyebrow) {
+    max-width: 18rem !important;
+    -webkit-line-clamp: 2 !important;
+    font-size: clamp(0.48rem, 3.45vw, 0.72rem) !important;
+    line-height: 1.38 !important;
+  }
+
+  body:has(.stitch-catalogue-hero) .stitch-filter-panel {
+    gap: 0.24rem !important;
+    margin: 0 0 0.75rem !important;
+    padding: 0.1rem 0 0.15rem !important;
+  }
+
+  body:has(.stitch-catalogue-hero) .stitch-filter-panel a {
+    min-height: 1.05rem !important;
+    padding: 0 0.48rem !important;
+    font-size: clamp(0.33rem, 2.8vw, 0.52rem) !important;
+  }
+
+  body:has(.stitch-catalogue-hero) .stitch-card-grid {
+    gap: 0.75rem !important;
+  }
+
+  body:has(.stitch-catalogue-hero) .stitch-product-card .stitch-card__image {
+    aspect-ratio: 1 / 1.08 !important;
+    padding: 0.14rem !important;
+  }
+
+  body:has(.stitch-catalogue-hero) .stitch-product-card .stitch-card__body {
+    gap: 0.24rem !important;
+    padding: 0.48rem !important;
+  }
+
+  body:has(.stitch-catalogue-hero) .stitch-product-card h2 {
+    font-size: clamp(0.42rem, 3.55vw, 0.68rem) !important;
+  }
+
+  body:has(.stitch-catalogue-hero) .stitch-product-card .stitch-card__meta {
+    font-size: clamp(0.3rem, 2.55vw, 0.46rem) !important;
+  }
+
+  body:has(.stitch-catalogue-hero) .stitch-product-card .stitch-card__actions {
+    gap: 0.22rem !important;
+    margin-top: 0.28rem !important;
+  }
+
+  body:has(.stitch-catalogue-hero) .stitch-product-card .stitch-link-button {
+    min-height: 1.32rem !important;
+    font-size: clamp(0.31rem, 2.65vw, 0.46rem) !important;
+  }
+
+  body:has(.stitch-catalogue-hero) .chat-widget-launcher,
+  body:has(.stitch-catalogue-hero) .chat-widget-panel {
+    display: none !important;
+  }
+}
