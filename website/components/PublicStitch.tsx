@@ -77,7 +77,7 @@ export function StitchPageIntro({ eyebrow, title, intro, actions }: { eyebrow?: 
 }
 
 export function StitchHomeHero() {
-  return <section className="stitch-home-hero"><div className="stitch-container stitch-home-hero__grid"><div className="stitch-home-hero__copy"><p className="stitch-eyebrow">Furniture and event rentals</p><h1>Furnish Your Vision. Elevate Every Space.</h1><p>Browse rental pieces, explore setup directions, and send an enquiry for manual team review.</p><StitchActions><StitchButton href="/quote">Request Quote</StitchButton><StitchButton href="/catalogue" variant="secondary">Browse Catalogue</StitchButton><StitchButton href="/listings" variant="secondary">Explore Setups</StitchButton></StitchActions></div><div className="stitch-home-hero__media"><Image src={heroImage} alt="Styled rental furniture setting" priority /></div></div></section>;
+  return <section className="stitch-home-hero"><div className="stitch-container stitch-home-hero__grid"><div className="stitch-home-hero__copy"><p className="stitch-eyebrow">Furniture and event rentals</p><h1>Furnish Your Vision. Elevate Every Space.</h1><p>Browse rental pieces, explore setup directions, and send an enquiry for manual team review.</p><StitchActions><StitchButton href="/quote">Request Quote</StitchButton><StitchButton href="/catalogue" variant="secondary">Browse Catalogue</StitchButton><StitchButton href="/listings" variant="secondary">Explore Setups</StitchButton></StitchActions></div><div className="stitch-home-hero__media"><Image src={sofaImage} alt="Styled rental furniture setting" priority /></div></div></section>;
 }
 
 export function StitchAdvantageCards() {
@@ -96,7 +96,7 @@ export function StitchCategoryPreview({ catalogue }: { catalogue: PublicCatalogu
     { id: "lighting", slug: "lighting", name: "Lighting", description: "Ambient pieces to support the overall setting.", sortOrder: 3 },
     { id: "accents", slug: "accents", name: "Decor and accents", description: "Texture, shape, and finishing details for the room.", sortOrder: 4 }
   ];
-  const imageMap = [chairImage, corporateImage, exhibitionImage, galaImage];
+  const imageMap = [chairImage, sofaImage, exhibitionImage, galaImage];
   return <section className="stitch-section stitch-section--tonal stitch-home-categories"><div className="stitch-container"><div className="stitch-section-heading stitch-section-heading--row"><h2>Browse By Category</h2><StitchButton href="/categories" variant="secondary">View All</StitchButton></div><div className="stitch-home-category-mosaic">{categories.map((category, index) => <Link className={`stitch-home-category-card stitch-home-category-card--${index + 1}`} href="/categories" key={category.id}><Image src={imageMap[index % imageMap.length]} alt={`${category.name} rental category`} /><span>{category.name}</span></Link>)}</div></div></section>;
 }
 

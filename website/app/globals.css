@@ -12831,6 +12831,306 @@ body:has(.stitch-quote-page) .stitch-quote-form-panel .quote-form .button {
   }
 }
 
+/* Stitch parity correction: Home desktop should read as one editorial image card */
+@media (min-width: 901px) {
+  body:has(.stitch-home-hero) .stitch-home-hero {
+    padding: 1.65rem 0 3.25rem !important;
+    background: var(--stitch-surface) !important;
+  }
+
+  body:has(.stitch-home-hero) .stitch-home-hero .stitch-container,
+  body:has(.stitch-home-hero) .stitch-home-advantage .stitch-container,
+  body:has(.stitch-home-hero) .stitch-home-categories .stitch-container,
+  body:has(.stitch-home-hero) .stitch-home-featured .stitch-container {
+    width: min(calc(100% - 8rem), 997px) !important;
+    max-width: 997px !important;
+  }
+
+  body:has(.stitch-home-hero) .stitch-home-hero__grid {
+    position: relative !important;
+    display: block !important;
+    height: clamp(430px, 37vw, 535px) !important;
+    min-height: 430px !important;
+    overflow: hidden !important;
+    border: 1px solid var(--stitch-line) !important;
+    border-radius: 0.18rem !important;
+    background: #1b1a18 !important;
+  }
+
+  body:has(.stitch-home-hero) .stitch-home-hero__media {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+  }
+
+  body:has(.stitch-home-hero) .stitch-home-hero__media::before,
+  body:has(.stitch-home-hero) .stitch-home-hero__media::after {
+    display: none !important;
+  }
+
+  body:has(.stitch-home-hero) .stitch-home-hero__media img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    object-position: center 54% !important;
+    filter: brightness(0.48) saturate(0.86) contrast(1.04) !important;
+  }
+
+  body:has(.stitch-home-hero) .stitch-home-hero__copy {
+    position: absolute !important;
+    inset: 0 !important;
+    z-index: 2 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100% !important;
+    max-width: none !important;
+    min-height: 0 !important;
+    padding: 2rem clamp(2rem, 8vw, 7rem) !important;
+    border: 0 !important;
+    background: transparent !important;
+    color: #fff !important;
+    text-align: center !important;
+    box-shadow: none !important;
+  }
+
+  body:has(.stitch-home-hero) .stitch-home-hero__copy .stitch-eyebrow {
+    display: none !important;
+  }
+
+  body:has(.stitch-home-hero) .stitch-home-hero__copy h1 {
+    max-width: 760px !important;
+    margin: 0 auto 1.35rem !important;
+    color: #fff !important;
+    font-family: var(--stitch-sans) !important;
+    font-size: clamp(3.15rem, 4.65vw, 4.9rem) !important;
+    font-weight: 300 !important;
+    letter-spacing: -0.075em !important;
+    line-height: 0.98 !important;
+    text-shadow: 0 0.2rem 1rem rgba(0, 0, 0, 0.34) !important;
+  }
+
+  body:has(.stitch-home-hero) .stitch-home-hero__copy p:not(.stitch-eyebrow) {
+    display: block !important;
+    max-width: 640px !important;
+    margin: 0 auto 2rem !important;
+    color: rgba(255, 255, 255, 0.92) !important;
+    font-size: 0.92rem !important;
+    line-height: 1.55 !important;
+  }
+
+  body:has(.stitch-home-hero) .stitch-home-hero__copy .stitch-actions {
+    display: flex !important;
+    justify-content: center !important;
+    gap: 0.8rem !important;
+    flex-wrap: nowrap !important;
+  }
+
+  body:has(.stitch-home-hero) .stitch-home-hero__copy .stitch-button {
+    display: inline-flex !important;
+    min-height: 2.55rem !important;
+    min-width: 8.7rem !important;
+    padding: 0 1.35rem !important;
+    border-radius: 0.08rem !important;
+    border-color: rgba(255, 255, 255, 0.82) !important;
+    color: #fff !important;
+    font-size: 0.62rem !important;
+    letter-spacing: 0.08em !important;
+  }
+
+  body:has(.stitch-home-hero) .stitch-home-hero__copy .stitch-button--primary {
+    border-color: #1a1a1a !important;
+    background: #1a1a1a !important;
+  }
+
+  body:has(.stitch-home-hero) .stitch-home-hero__copy .stitch-button--secondary {
+    background: transparent !important;
+  }
+
+  body:has(.stitch-home-hero) .stitch-home-advantage {
+    padding: 0 0 3.2rem !important;
+  }
+
+  body:has(.stitch-home-hero) .stitch-home-advantage .stitch-section-heading h2,
+  body:has(.stitch-home-hero) .stitch-home-categories .stitch-section-heading h2,
+  body:has(.stitch-home-hero) .stitch-home-featured .stitch-section-heading h2 {
+    font-family: var(--stitch-sans) !important;
+    font-weight: 300 !important;
+    letter-spacing: -0.055em !important;
+  }
+
+  body:has(.stitch-home-hero) .stitch-home-advantage .stitch-section-heading h2 {
+    font-size: 1.8rem !important;
+  }
+
+  body:has(.stitch-home-hero) .stitch-home-advantage .stitch-feature {
+    min-height: 145px !important;
+    padding: 2rem 1.6rem !important;
+    border-radius: 0.08rem !important;
+    background: #f1f1ef !important;
+    text-align: center !important;
+    box-shadow: none !important;
+  }
+
+  body:has(.stitch-home-hero) .stitch-home-advantage .stitch-feature h3 {
+    margin: 0 0 0.75rem !important;
+    font-size: 1rem !important;
+  }
+
+  body:has(.stitch-home-hero) .stitch-home-advantage .stitch-feature p {
+    color: var(--stitch-muted) !important;
+    font-size: 0.78rem !important;
+    line-height: 1.48 !important;
+  }
+
+  body:has(.stitch-home-hero) .stitch-home-categories {
+    padding: 0 0 3.6rem !important;
+    background: var(--stitch-surface) !important;
+  }
+
+  body:has(.stitch-home-hero) .stitch-home-category-mosaic {
+    grid-template-rows: 255px 255px !important;
+    gap: 0.9rem !important;
+  }
+
+  body:has(.stitch-home-hero) .stitch-home-category-card {
+    border-radius: 0.08rem !important;
+  }
+
+  body:has(.stitch-home-hero) .stitch-home-featured {
+    padding: 0 0 4.2rem !important;
+    background: var(--stitch-surface) !important;
+  }
+}
+
+/* Stitch parity correction: Home mobile hero stays image-led */
+@media (max-width: 639px) {
+  body:has(.stitch-home-hero) .stitch-home-hero {
+    padding: 0.85rem 0 2.3rem !important;
+    background: var(--stitch-surface) !important;
+  }
+
+  body:has(.stitch-home-hero) .stitch-home-hero .stitch-container {
+    width: min(calc(100% - 2rem), 390px) !important;
+    max-width: 390px !important;
+  }
+
+  body:has(.stitch-home-hero) .stitch-home-hero__grid {
+    position: relative !important;
+    display: block !important;
+    width: 100% !important;
+    height: min(78vh, 540px) !important;
+    min-height: 390px !important;
+    overflow: hidden !important;
+    border: 1px solid var(--stitch-line) !important;
+    border-radius: 0.25rem !important;
+    background: #1b1a18 !important;
+  }
+
+  body:has(.stitch-home-hero) .stitch-home-hero__media {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+  }
+
+  body:has(.stitch-home-hero) .stitch-home-hero__media::before,
+  body:has(.stitch-home-hero) .stitch-home-hero__media::after {
+    display: none !important;
+  }
+
+  body:has(.stitch-home-hero) .stitch-home-hero__media img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    object-position: center bottom !important;
+    filter: brightness(0.56) saturate(0.86) contrast(1.04) !important;
+  }
+
+  body:has(.stitch-home-hero) .stitch-home-hero__copy {
+    position: absolute !important;
+    inset: 0 !important;
+    z-index: 2 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100% !important;
+    max-width: none !important;
+    min-height: 0 !important;
+    padding: 2rem 1.35rem !important;
+    border: 0 !important;
+    background: transparent !important;
+    color: #fff !important;
+    text-align: center !important;
+    box-shadow: none !important;
+  }
+
+  body:has(.stitch-home-hero) .stitch-home-hero__copy .stitch-eyebrow {
+    display: none !important;
+  }
+
+  body:has(.stitch-home-hero) .stitch-home-hero__copy h1 {
+    max-width: 20rem !important;
+    margin: 0 auto 0.9rem !important;
+    color: #fff !important;
+    font-family: var(--stitch-sans) !important;
+    font-size: clamp(2rem, 10.2vw, 3.05rem) !important;
+    font-weight: 300 !important;
+    letter-spacing: -0.072em !important;
+    line-height: 1.02 !important;
+    text-shadow: 0 0.18rem 0.9rem rgba(0, 0, 0, 0.34) !important;
+  }
+
+  body:has(.stitch-home-hero) .stitch-home-hero__copy p:not(.stitch-eyebrow) {
+    max-width: 18.5rem !important;
+    margin: 0 auto 1.45rem !important;
+    color: rgba(255, 255, 255, 0.92) !important;
+    font-size: 0.78rem !important;
+    line-height: 1.45 !important;
+  }
+
+  body:has(.stitch-home-hero) .stitch-home-hero__copy .stitch-actions {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 0.65rem !important;
+  }
+
+  body:has(.stitch-home-hero) .stitch-home-hero__copy .stitch-button {
+    min-height: 2.65rem !important;
+    min-width: 11.5rem !important;
+    border-radius: 999px !important;
+    color: #fff !important;
+    font-size: 0.66rem !important;
+  }
+
+  body:has(.stitch-home-hero) .stitch-home-hero__copy .stitch-button--primary {
+    border-color: #1a1a1a !important;
+    background: #1a1a1a !important;
+  }
+
+  body:has(.stitch-home-hero) .stitch-home-hero__copy .stitch-button--secondary {
+    background: transparent !important;
+    border-color: rgba(255, 255, 255, 0.82) !important;
+  }
+
+  body:has(.stitch-home-hero) .chat-widget-launcher,
+  body:has(.stitch-home-hero) .chat-widget-panel {
+    display: none !important;
+  }
+}
+
 /* Stitch parity: Catalogue desktop/reference composition */
 @media (min-width: 901px) {
   body:has(.stitch-catalogue-hero) {
