@@ -16574,4 +16574,5 @@ body:has(.stitch-home-hero) .stitch-home-hero__media {
 
 body:has(.stitch-home-hero) .stitch-home-hero__media img {
   opacity: 1 !important;
+  filter: brightness(0.58) saturate(0.92) contrast(1.02) !important;
 }
