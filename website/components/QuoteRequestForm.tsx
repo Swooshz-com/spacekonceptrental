@@ -489,6 +489,20 @@ export default function QuoteRequestForm({
             This request does not confirm final rental details. Our team will
             review your selection and follow up with a tailored proposal.
           </p>
+          <div className="quote-form__receipt-details">
+            <div>
+              <span>Rental enquiry</span>
+              <strong>We received your rental enquiry.</strong>
+            </div>
+            <div>
+              <span>Manual review</span>
+              <strong>Our team will review your selection.</strong>
+            </div>
+            <div>
+              <span>Follow-up</span>
+              <strong>We will follow up with a tailored proposal.</strong>
+            </div>
+          </div>
           <div
             aria-label="After quote request"
             className="quote-form__receipt-actions"
