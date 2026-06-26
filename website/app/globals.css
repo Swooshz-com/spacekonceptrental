@@ -8481,3 +8481,82 @@ body:has(.stitch-quote-page) .stitch-quote-form-panel .quote-form .button {
     padding-top: clamp(2.25rem, 4vh, 3.25rem) !important;
   }
 }
+
+/* Setups final positioning pass: align the editorial route to the Stitch 1440px canvas. */
+@media (min-width: 901px) {
+  .stitch-setups-hero .stitch-container,
+  .stitch-setups-feature-section .stitch-container,
+  .stitch-setups-filter-section .stitch-container,
+  .stitch-setups-grid-section .stitch-container {
+    width: min(calc(100% - 8rem), 82rem) !important;
+    max-width: 82rem !important;
+  }
+
+  .stitch-setups-hero {
+    padding: clamp(4rem, 6.5vw, 6rem) 0 clamp(3rem, 4vw, 4rem) !important;
+  }
+
+  .stitch-setups-hero__copy {
+    margin-left: 0 !important;
+    max-width: 43rem !important;
+  }
+
+  .stitch-setups-hero h1 {
+    font-size: clamp(3.2rem, 5vw, 4.4rem) !important;
+    line-height: 1.08 !important;
+    margin-bottom: 1.35rem !important;
+  }
+
+  .stitch-setups-feature-section {
+    padding: 0 0 clamp(5rem, 8vw, 7.5rem) !important;
+    margin-bottom: 0 !important;
+  }
+
+  .stitch-setups-feature-section .stitch-container.stitch-setups-feature-split {
+    display: grid !important;
+    grid-template-columns: repeat(12, minmax(0, 1fr)) !important;
+    gap: 1.5rem !important;
+    align-items: center !important;
+  }
+
+  .stitch-setups-feature__image {
+    grid-column: 1 / span 5 !important;
+    height: clamp(34rem, 56vw, 50rem) !important;
+    min-height: 34rem !important;
+    max-height: none !important;
+    width: 100% !important;
+  }
+
+  .stitch-setups-feature__copy {
+    grid-column: 7 / span 5 !important;
+    max-width: 28rem !important;
+    padding: 0 !important;
+  }
+
+  .stitch-setups-feature__copy h2 {
+    font-size: clamp(1.85rem, 2.2vw, 2.25rem) !important;
+    line-height: 1.25 !important;
+  }
+
+  .stitch-setups-filter-section {
+    padding: 0 0 3rem !important;
+  }
+
+  .stitch-setups-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    column-gap: 1.5rem !important;
+    row-gap: 4rem !important;
+  }
+
+  .stitch-setup-tile__image {
+    aspect-ratio: 4 / 5 !important;
+  }
+
+  .stitch-setup-tile--wide {
+    grid-column: span 2 !important;
+  }
+
+  .stitch-setup-tile--wide .stitch-setup-tile__image {
+    aspect-ratio: 2 / 1 !important;
+  }
+}
