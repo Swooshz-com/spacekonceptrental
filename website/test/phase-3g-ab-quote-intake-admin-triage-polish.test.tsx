@@ -210,7 +210,7 @@ describe("Phase 3G-A/B quote intake quality, admin triage depth, and enquiry wor
     fireEvent.change(screen.getByLabelText(/your name/i), {
       target: { value: "Maya Tan" }
     });
-    fireEvent.click(screen.getByRole("button", { name: /submit enquiry/i }));
+    fireEvent.click(screen.getByRole("button", { name: /review and send an enquiry/i }));
 
     expect(
       screen.getByRole("alert")
@@ -220,7 +220,7 @@ describe("Phase 3G-A/B quote intake quality, admin triage depth, and enquiry wor
     fireEvent.change(screen.getByLabelText(/email address/i), {
       target: { value: "maya@example.test" }
     });
-    fireEvent.click(screen.getByRole("button", { name: /submit enquiry/i }));
+    fireEvent.click(screen.getByRole("button", { name: /review and send an enquiry/i }));
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
     expect(

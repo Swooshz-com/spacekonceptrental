@@ -129,7 +129,7 @@ describe("Phase 5A-A/B public review polish", () => {
 
     expect(screen.getByText(/starts this rental request/i)).toBeInTheDocument();
     expect(screen.getByText(/not a rental fit confirmation/i)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /submit enquiry/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /review and send an enquiry/i })).toBeInTheDocument();
     expect(screen.getByText(/triage the rental enquiry/i)).toBeInTheDocument();
     expect(screen.queryByText(forbiddenPublicFlowPattern)).not.toBeInTheDocument();
     expect(screen.queryByText(forbiddenRentalCompletionPattern)).not.toBeInTheDocument();

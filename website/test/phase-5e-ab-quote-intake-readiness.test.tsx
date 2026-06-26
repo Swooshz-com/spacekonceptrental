@@ -139,7 +139,7 @@ describe("Phase 5E-A/B quote/enquiry intake readiness", () => {
     fireEvent.change(screen.getByLabelText(/requested listings or items/i), {
       target: { value: "Modular lounge set\nCategory interest: lounge" }
     });
-    fireEvent.click(screen.getByRole("button", { name: /submit enquiry/i }));
+    fireEvent.click(screen.getByRole("button", { name: /review and send an enquiry/i }));
 
     await waitFor(() => {
       expect(screen.getByRole("status")).toHaveTextContent(/enquiry received/i);
@@ -175,7 +175,7 @@ describe("Phase 5E-A/B quote/enquiry intake readiness", () => {
     const fetcher = vi.spyOn(globalThis, "fetch");
 
     render(<QuoteRequestForm />);
-    fireEvent.click(screen.getByRole("button", { name: /submit enquiry/i }));
+    fireEvent.click(screen.getByRole("button", { name: /review and send an enquiry/i }));
 
     expect(screen.getByRole("alert")).toHaveTextContent(/add your name/i);
     expect(screen.getByRole("alert")).not.toHaveTextContent(/schema|sql|supabase|stack|token|cookie|workspace|customerName|items\[/i);
@@ -184,7 +184,7 @@ describe("Phase 5E-A/B quote/enquiry intake readiness", () => {
     fireEvent.change(screen.getByLabelText(/name/i), {
       target: { value: "Maya Tan" }
     });
-    fireEvent.click(screen.getByRole("button", { name: /submit enquiry/i }));
+    fireEvent.click(screen.getByRole("button", { name: /review and send an enquiry/i }));
 
     expect(screen.getByRole("alert")).toHaveTextContent(/email address or phone number/i);
     expect(screen.getByRole("alert")).not.toHaveTextContent(/schema|sql|supabase|stack|token|cookie|workspace|customerEmail/i);
