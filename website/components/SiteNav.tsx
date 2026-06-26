@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -11,11 +11,10 @@ const navItems = [
   ["Contact", "/contact"]
 ] as const;
 
-const bottomNavItems = [
+const baseBottomNavItems = [
   ["Home", "/", "⌂"],
   ["Catalogue", "/catalogue", "▦"],
-  ["Setups", "/listings", "✦"],
-  ["Contact", "/contact", "✉"]
+  ["Setups", "/listings", "✦"]
 ] as const;
 
 function isActivePath(pathname: string, href: string) {
@@ -48,6 +47,10 @@ export function SiteDesktopNav() {
 
 export function MobileBottomNav() {
   const pathname = usePathname() || "/";
+  const finalItem = pathname.startsWith("/about")
+    ? (["About", "/about", "ⓘ"] as const)
+    : (["Contact", "/contact", "✉"] as const);
+  const bottomNavItems = [...baseBottomNavItems, finalItem] as const;
 
   return (
     <nav className="stitch-bottom-nav" aria-label="Mobile quick navigation">

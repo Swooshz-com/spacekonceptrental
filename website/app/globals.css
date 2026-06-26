@@ -14319,3 +14319,29 @@ body:has(.stitch-detail-page:not(.stitch-detail-page--setup)) .stitch-detail-spe
   font-size: 0.96rem !important;
   font-weight: 500 !important;
 }
+
+/* Stitch parity correction: About story image should read as a calm framed piece, not a cropped product close-up. */
+body:has(.stitch-about-hero) .stitch-about-story__image {
+  display: grid !important;
+  place-items: center !important;
+  overflow: hidden !important;
+  padding: clamp(1.75rem, 4vw, 3.25rem) !important;
+  border: 1px solid var(--stitch-line) !important;
+  border-radius: 0.1rem !important;
+  background: #f2f1ee !important;
+}
+
+body:has(.stitch-about-hero) .stitch-about-story__image img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+  object-position: center !important;
+}
+
+@media (max-width: 639px) {
+  body:has(.stitch-about-hero) .stitch-about-story__image {
+    aspect-ratio: 1 / 1.18 !important;
+    padding: 1.2rem !important;
+    border-radius: 0.35rem !important;
+  }
+}
