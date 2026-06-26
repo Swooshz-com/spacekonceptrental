@@ -16601,3 +16601,9 @@ body:has(.stitch-detail-page:not(.stitch-detail-page--setup)) .stitch-detail-ope
   object-fit: contain !important;
   object-position: center !important;
 }
+
+/* Stitch parity final override: setup detail CTAs should not render the older
+   ASCII arrow suffix in the button label. */
+body:has(.stitch-detail-page--setup) .stitch-detail-button--primary::after {
+  content: none !important;
+}
