@@ -8998,3 +8998,49 @@ body:has(.stitch-quote-page) .stitch-quote-form-panel .quote-form .button {
     order: 3 !important;
   }
 }
+
+/* Quote mobile next-step card: compact info treatment to match Stitch mobile. */
+@media (max-width: 900px) {
+  body:has(.stitch-quote-page) .stitch-quote-next {
+    margin-top: 22px !important;
+    padding: 22px 22px 24px !important;
+    border: 1px solid #dcd9d6 !important;
+    border-radius: 10px !important;
+    background: #f6f3ef !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+  }
+
+  body:has(.stitch-quote-page) .stitch-quote-next .stitch-eyebrow {
+    display: block !important;
+    margin: 0 0 12px !important;
+    color: #1a1a1a !important;
+    font-family: var(--font-mono) !important;
+    font-size: 0.84rem !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.04em !important;
+    text-transform: none !important;
+  }
+
+  body:has(.stitch-quote-page) .stitch-quote-next h2,
+  body:has(.stitch-quote-page) .stitch-quote-next ol {
+    display: none !important;
+  }
+
+  body:has(.stitch-quote-page) .stitch-quote-next p:last-child {
+    margin: 0 !important;
+    max-width: none !important;
+    color: #1a1a1a !important;
+    font-family: var(--font-body) !important;
+    font-size: 1rem !important;
+    line-height: 1.65 !important;
+    letter-spacing: 0 !important;
+  }
+}
+
+/* Quote mobile next-step card: restore the explanatory copy after hiding desktop-only process details. */
+@media (max-width: 900px) {
+  body:has(.stitch-quote-page) .stitch-quote-next > p:last-of-type {
+    display: block !important;
+  }
+}
