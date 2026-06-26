@@ -8018,3 +8018,202 @@ body:has(.stitch-catalogue-section) .stitch-card__actions .stitch-link-button--q
     aspect-ratio: 4 / 3 !important;
   }
 }
+
+
+/* Item detail Stitch parity: image-led product split with open copy and related pieces. */
+.stitch-detail-page:not(.stitch-detail-page--setup) {
+  padding: clamp(4rem, 7vw, 7.5rem) 0 0 !important;
+}
+
+.stitch-detail-page:not(.stitch-detail-page--setup) .stitch-container {
+  width: min(100% - 6rem, 90rem) !important;
+}
+
+.stitch-detail-page:not(.stitch-detail-page--setup) .stitch-detail-open-grid {
+  align-items: start !important;
+  display: grid !important;
+  gap: clamp(2.5rem, 4vw, 4rem) !important;
+  grid-template-columns: repeat(12, minmax(0, 1fr)) !important;
+}
+
+.stitch-detail-page:not(.stitch-detail-page--setup) .stitch-detail-open-media {
+  aspect-ratio: auto !important;
+  background: var(--stitch-surface-2) !important;
+  border: 1px solid var(--stitch-line) !important;
+  border-radius: 0 !important;
+  grid-column: 1 / span 7 !important;
+  height: min(70vh, 46rem) !important;
+  min-height: 34rem !important;
+  overflow: hidden !important;
+}
+
+.stitch-detail-page:not(.stitch-detail-page--setup) .stitch-detail-open-media img {
+  height: 100% !important;
+  mix-blend-mode: multiply !important;
+  object-fit: cover !important;
+  object-position: center !important;
+  width: 100% !important;
+}
+
+.stitch-detail-page:not(.stitch-detail-page--setup) .stitch-detail-open-copy {
+  align-self: center !important;
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  grid-column: 8 / span 5 !important;
+  padding: 0 !important;
+}
+
+.stitch-detail-page:not(.stitch-detail-page--setup) .stitch-detail-open-copy .stitch-back {
+  color: var(--stitch-muted) !important;
+  display: inline-flex !important;
+  font-size: 0.85rem !important;
+  margin-bottom: 2rem !important;
+}
+
+.stitch-detail-page:not(.stitch-detail-page--setup) .stitch-detail-open-copy h1 {
+  font-family: var(--stitch-serif) !important;
+  font-size: clamp(3rem, 5vw, 5rem) !important;
+  font-weight: 500 !important;
+  letter-spacing: -0.055em !important;
+  line-height: 0.98 !important;
+  margin-bottom: 1.25rem !important;
+}
+
+.stitch-detail-page:not(.stitch-detail-page--setup) .stitch-detail-open-copy > p {
+  color: var(--stitch-muted) !important;
+  font-size: 1rem !important;
+  line-height: 1.75 !important;
+  margin-bottom: 1.75rem !important;
+  max-width: 37rem !important;
+}
+
+.stitch-detail-page:not(.stitch-detail-page--setup) .stitch-detail-rows {
+  border-block: 1px solid var(--stitch-line) !important;
+  border-inline: 0 !important;
+  display: grid !important;
+  gap: 0 !important;
+  margin: 2rem 0 !important;
+}
+
+.stitch-detail-page:not(.stitch-detail-page--setup) .stitch-detail-rows div {
+  align-items: center !important;
+  border-bottom: 1px solid var(--stitch-line) !important;
+  display: flex !important;
+  gap: 1.5rem !important;
+  justify-content: space-between !important;
+  padding: 1rem 0 !important;
+}
+
+.stitch-detail-page:not(.stitch-detail-page--setup) .stitch-detail-rows div:last-child {
+  border-bottom: 0 !important;
+}
+
+.stitch-detail-page:not(.stitch-detail-page--setup) .stitch-detail-actions {
+  display: flex !important;
+  gap: 0.75rem !important;
+  margin-top: 2rem !important;
+}
+
+.stitch-detail-page:not(.stitch-detail-page--setup) .stitch-detail-actions .stitch-detail-button {
+  border-radius: 0 !important;
+  min-height: 3rem !important;
+}
+
+.stitch-detail-page:not(.stitch-detail-page--setup) .stitch-detail-related {
+  border-top: 1px solid var(--stitch-line) !important;
+  margin-top: clamp(4rem, 7vw, 7.5rem) !important;
+  padding: clamp(3rem, 6vw, 6rem) 0 clamp(5rem, 8vw, 8rem) !important;
+}
+
+.stitch-detail-page:not(.stitch-detail-page--setup) .stitch-detail-related .stitch-container {
+  width: min(100% - 6rem, 90rem) !important;
+}
+
+.stitch-detail-page:not(.stitch-detail-page--setup) .stitch-detail-related .stitch-section-heading {
+  margin-bottom: 3rem !important;
+  text-align: center !important;
+}
+
+.stitch-detail-page:not(.stitch-detail-page--setup) .stitch-detail-related h2 {
+  font-family: var(--stitch-serif) !important;
+  font-size: clamp(2.3rem, 4vw, 4rem) !important;
+  font-weight: 500 !important;
+  letter-spacing: -0.04em !important;
+}
+
+.stitch-detail-page:not(.stitch-detail-page--setup) .stitch-detail-related-grid {
+  display: grid !important;
+  gap: clamp(1.5rem, 2vw, 2rem) !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+}
+
+.stitch-detail-page:not(.stitch-detail-page--setup) .stitch-detail-related-card {
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+}
+
+.stitch-detail-page:not(.stitch-detail-page--setup) .stitch-detail-related-card img {
+  aspect-ratio: 1 / 1 !important;
+  border: 1px solid var(--stitch-line) !important;
+  border-radius: 0 !important;
+  height: auto !important;
+  mix-blend-mode: multiply !important;
+  object-fit: cover !important;
+  width: 100% !important;
+}
+
+@media (max-width: 900px) {
+  .stitch-detail-page:not(.stitch-detail-page--setup) {
+    padding-top: 0 !important;
+  }
+
+  .stitch-detail-page:not(.stitch-detail-page--setup) .stitch-container {
+    width: 100% !important;
+  }
+
+  .stitch-detail-page:not(.stitch-detail-page--setup) .stitch-detail-open-grid {
+    display: grid !important;
+    gap: 0 !important;
+    grid-template-columns: 1fr !important;
+  }
+
+  .stitch-detail-page:not(.stitch-detail-page--setup) .stitch-detail-open-media {
+    border-left: 0 !important;
+    border-right: 0 !important;
+    grid-column: auto !important;
+    height: auto !important;
+    min-height: 0 !important;
+    aspect-ratio: 1 / 1.2 !important;
+  }
+
+  .stitch-detail-page:not(.stitch-detail-page--setup) .stitch-detail-open-copy {
+    grid-column: auto !important;
+    padding: 2rem 1.5rem 0 !important;
+  }
+
+  .stitch-detail-page:not(.stitch-detail-page--setup) .stitch-detail-open-copy h1 {
+    font-size: clamp(2.2rem, 10vw, 3.25rem) !important;
+  }
+
+  .stitch-detail-page:not(.stitch-detail-page--setup) .stitch-detail-actions {
+    display: grid !important;
+    gap: 0.75rem !important;
+  }
+
+  .stitch-detail-page:not(.stitch-detail-page--setup) .stitch-detail-related {
+    margin-top: 3rem !important;
+    padding: 3rem 0 5rem !important;
+  }
+
+  .stitch-detail-page:not(.stitch-detail-page--setup) .stitch-detail-related .stitch-container {
+    width: min(100% - 2rem, 36rem) !important;
+  }
+
+  .stitch-detail-page:not(.stitch-detail-page--setup) .stitch-detail-related-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
