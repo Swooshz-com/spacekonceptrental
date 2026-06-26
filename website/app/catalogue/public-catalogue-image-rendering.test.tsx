@@ -116,7 +116,7 @@ describe("public catalogue image rendering", () => {
     const image = screen.getByRole("img", { name: /modular lounge furniture rental setup/i });
 
     expect(image).toHaveAttribute("src", productWithImage.primaryImage?.publicUrl);
-    expect(screen.getByRole("link", { name: /request a quote/i })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: /add to quote/i })).toHaveAttribute(
       "href",
       "/quote?listing=modular-lounge"
     );

@@ -78,7 +78,7 @@ export function runStitchPublicParitySuite(label: string) {
     it("keeps detail, category, event, and quote paths public-safe", async () => {
       render(<ProductPageContent product={sampleProduct} relatedListings={[sampleProduct]} />);
       expect(screen.getByRole("heading", { name: /modular lounge set/i })).toBeInTheDocument();
-      expect(screen.getByRole("link", { name: /request a quote/i })).toHaveAttribute("href", "/quote?listing=modular-lounge-set");
+      expect(screen.getByRole("link", { name: /add to quote/i })).toHaveAttribute("href", "/quote?listing=modular-lounge-set");
       expect(screen.getByRole("link", { name: /back to catalogue/i })).toHaveAttribute("href", "/catalogue");
       expect(visibleText()).toMatch(/add quantities and alternatives/i);
       expect(visibleText()).toMatch(/does not set aside furniture or finish rental details/i);

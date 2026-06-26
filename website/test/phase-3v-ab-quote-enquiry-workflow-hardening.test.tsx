@@ -306,7 +306,7 @@ describe("Phase 3V-A/B quote enquiry workflow hardening", () => {
 
   it("keeps listing, category, and event handoff links public-safe", () => {
     render(<ProductPageContent product={sampleProduct} />);
-    expect(screen.getByRole("link", { name: /request a quote/i })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: /add to quote/i })).toHaveAttribute(
       "href",
       "/quote?listing=modular-lounge-set"
     );

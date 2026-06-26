@@ -235,7 +235,7 @@ describe("public page shells", () => {
     expect(screen.getByText(/published lounge set/i)).toBeInTheDocument();
     expect(screen.getByText(/listing reference/i)).toBeInTheDocument();
     expect(screen.getByText("modular-lounge-set")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /request a quote/i })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: /add to quote/i })).toHaveAttribute(
       "href",
       "/quote?listing=modular-lounge-set"
     );
