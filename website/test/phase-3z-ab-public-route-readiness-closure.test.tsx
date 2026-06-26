@@ -261,7 +261,8 @@ describe("Phase 3Z-A/B public route readiness closure", () => {
     cleanup();
 
     render(await QuotePage());
-    expect(screen.getByText(/review your enquiry and follow up with a tailored proposal/i)).toBeInTheDocument();
+    expect(screen.getByText(/form is enquiry intake only/i)).toBeInTheDocument();
+    expect(screen.getByText(/review your details and follow up with a tailored proposal/i)).toBeInTheDocument();
     expect(screen.getByText(/does not set aside furniture or finish rental details/i)).toBeInTheDocument();
     cleanup();
 

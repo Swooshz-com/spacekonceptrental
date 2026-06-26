@@ -239,7 +239,7 @@ describe("Phase 3G-A/B quote intake quality, admin triage depth, and enquiry wor
     );
 
     expect(
-      screen.getByRole("heading", { name: /selected listing unavailable/i })
+      screen.getByRole("heading", { name: /your selection/i })
     ).toBeInTheDocument();
     expect(
       screen.getAllByText(/listing context is a starting point only/i).length
@@ -266,7 +266,7 @@ describe("Phase 3G-A/B quote intake quality, admin triage depth, and enquiry wor
     );
 
     expect(
-      screen.getByRole("heading", { name: /selected listing unavailable/i })
+      screen.getByRole("heading", { name: /your selection/i })
     ).toBeInTheDocument();
     expect(
       screen.getByText(/the listing link may be old or unavailable/i)
