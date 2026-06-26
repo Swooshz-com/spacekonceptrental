@@ -64,7 +64,7 @@ function demoSetupForSlug(slug: string): PublicCatalogueProduct | null {
           sortOrder: 1,
           isPrimary: true
         }
-      : null,
+      : undefined,
     source: "fallback"
   };
 }
