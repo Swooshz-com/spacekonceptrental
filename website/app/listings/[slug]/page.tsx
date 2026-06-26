@@ -9,6 +9,10 @@ export const dynamic = "force-dynamic"; export const dynamicParams = true;
 async function getSlug(params: ListingPageProps["params"]) { const resolved = params ? await params : undefined; return resolved?.slug ?? "the-metropolitan-gala"; }
 function demoSetupForSlug(slug: string): PublicCatalogueProduct | null {
   if (!isDemoContentEnabled()) return null;
+  const demoSetupImages: Record<string, string> = {
+    "the-metropolitan-gala":
+      "https://lh3.googleusercontent.com/aida-public/AB6AXuDTX7SO5TNNQtDk2W9OqnTv0KbU7nuLqI7Sry2KOUIpPkcOXT5Aj39HvEUHSINH1Uj1Q419Hhdm9axGFDeKJPUzvBlYsyt9xf_lFlRpWF7dLZ1HxdrQjqKYMMJznVMdEE54KFuU6DyjrlRq031Nn08_hsqQzF4f4C_TTD1EhFwwMfEhCitIlltVrSaqKsNA774EROa0DKj213wM8ewD520JuASYWyBuj7pn9FvnOb5S06fyF0fZqi5gL89qvDeTWgP3Lw5Tmu1I-6GU"
+  };
   const demoSetups: Record<string, { name: string; summary: string; sortOrder: number }> = {
     "the-metropolitan-gala": {
       name: "The Metropolitan Gala",
@@ -43,6 +47,7 @@ function demoSetupForSlug(slug: string): PublicCatalogueProduct | null {
   };
   const setup = demoSetups[slug];
   if (!setup) return null;
+  const imageUrl = demoSetupImages[slug];
   return {
     id: `demo-${slug}`,
     slug,
@@ -53,6 +58,13 @@ function demoSetupForSlug(slug: string): PublicCatalogueProduct | null {
     sortOrder: setup.sortOrder,
     categoryId: "setups",
     categoryName: "Setups",
+    primaryImage: imageUrl
+      ? {
+          publicUrl: imageUrl,
+          alt: `${setup.name} event setup`,
+          sortOrder: 0
+        }
+      : null,
     source: "fallback"
   };
 }

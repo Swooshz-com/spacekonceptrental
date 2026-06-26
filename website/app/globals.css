@@ -11641,6 +11641,73 @@ body:has(.stitch-quote-page) .stitch-quote-form-panel .quote-form .button {
   }
 }
 
+/* Stitch parity correction: setup detail mobile overlap and row scale. */
+@media (max-width: 639px) {
+  body:has(.stitch-detail-page--setup) .stitch-detail-page--setup .stitch-detail-open-media {
+    height: 35rem !important;
+  }
+
+  body:has(.stitch-detail-page--setup) .stitch-detail-page--setup .stitch-detail-open-media img {
+    object-position: 50% 50% !important;
+  }
+
+  body:has(.stitch-detail-page--setup) .stitch-detail-page--setup .stitch-setup-lower {
+    gap: 1.65rem !important;
+    width: calc(100% - 2rem) !important;
+    margin-top: -6.05rem !important;
+    padding-top: 1.2rem !important;
+    border-radius: 1rem 1rem 0 0 !important;
+  }
+
+  body:has(.stitch-detail-page--setup) .stitch-detail-page--setup .stitch-setup-lower > div:first-child {
+    gap: 0.9rem !important;
+  }
+
+  body:has(.stitch-detail-page--setup) .stitch-detail-page--setup .stitch-setup-lower > div:first-child > h2:first-of-type {
+    font-size: 2.05rem !important;
+    letter-spacing: -0.04em !important;
+    line-height: 1.04 !important;
+  }
+
+  body:has(.stitch-detail-page--setup) .stitch-detail-page--setup .stitch-setup-lower > div:first-child > p:not(.stitch-eyebrow) {
+    font-size: 0.98rem !important;
+    line-height: 1.55 !important;
+  }
+
+  body:has(.stitch-detail-page--setup) .stitch-detail-page--setup .stitch-included-open h2 {
+    margin-bottom: 0.9rem !important;
+    font-size: 1.65rem !important;
+  }
+
+  body:has(.stitch-detail-page--setup) .stitch-detail-page--setup .stitch-included-open > div {
+    gap: 0.75rem !important;
+  }
+
+  body:has(.stitch-detail-page--setup) .stitch-detail-page--setup .stitch-included-open article {
+    grid-template-columns: 4.5rem minmax(0, 1fr) !important;
+    gap: 0.95rem !important;
+    min-height: 5.6rem !important;
+    padding: 0.65rem !important;
+  }
+
+  body:has(.stitch-detail-page--setup) .stitch-detail-page--setup .stitch-included-open article img {
+    width: 4.5rem !important;
+    height: 4.5rem !important;
+  }
+
+  body:has(.stitch-detail-page--setup) .stitch-detail-page--setup .stitch-included-open article strong {
+    font-size: 0.9rem !important;
+  }
+
+  body:has(.stitch-detail-page--setup) .stitch-detail-page--setup .stitch-included-open article small {
+    font-size: 0.8rem !important;
+  }
+
+  body:has(.stitch-detail-page--setup) .stitch-detail-page--setup .stitch-detail-context h2 {
+    font-size: 1.18rem !important;
+  }
+}
+
 /* Stitch parity: Setups desktop export at narrow reference width (635px). */
 @media (min-width: 600px) and (max-width: 700px) {
   body:has(.stitch-setups-hero) .stitch-site-header__inner {
