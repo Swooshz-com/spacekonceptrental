@@ -82,11 +82,11 @@ export function StitchHomeHero() {
 
 export function StitchAdvantageCards() {
   const items = [
-    ["Superior quality", "Curated rental pieces selected for considered event spaces and visual cohesion."],
-    ["Setup-aware planning", "Share venue, timing, quantities, and access notes so the team can review fit."],
-    ["Flexible enquiry path", "Use catalogue records, setup references, or a general request to start the conversation."]
+    ["Superior Quality", "Curated rental pieces selected for considered event spaces and visual cohesion."],
+    ["Setup-aware Planning", "Share venue, timing, quantities, and access notes so the team can review fit."],
+    ["Flexible Enquiry Path", "Use catalogue records, setup references, or a general request to start the conversation."]
   ];
-  return <section className="stitch-section"><div className="stitch-container"><div className="stitch-section-heading"><p className="stitch-eyebrow">The SpaceKonceptRental advantage</p><h2>Furniture that shapes the room before the event begins.</h2></div><div className="stitch-feature-grid">{items.map(([title, text]) => <article className="stitch-feature" key={title}><h3>{title}</h3><p>{text}</p></article>)}</div></div></section>;
+  return <section className="stitch-section stitch-home-advantage"><div className="stitch-container"><div className="stitch-section-heading stitch-section-heading--center"><h2>The SpaceKonceptRental Advantage</h2></div><div className="stitch-feature-grid">{items.map(([title, text]) => <article className="stitch-feature" key={title}><h3>{title}</h3><p>{text}</p></article>)}</div></div></section>;
 }
 
 export function StitchCategoryPreview({ catalogue }: { catalogue: PublicCatalogue }) {
