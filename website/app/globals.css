@@ -16607,3 +16607,42 @@ body:has(.stitch-detail-page:not(.stitch-detail-page--setup)) .stitch-detail-ope
 body:has(.stitch-detail-page--setup) .stitch-detail-button--primary::after {
   content: none !important;
 }
+
+/* Stitch parity final override: setup detail included pieces should read as a
+   tidy editorial list instead of cramped thumbnail tiles. */
+@media (min-width: 901px) {
+  body:has(.stitch-detail-page--setup) .stitch-included-open > div {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 0.7rem !important;
+  }
+
+  body:has(.stitch-detail-page--setup) .stitch-included-open article {
+    display: grid !important;
+    grid-template-columns: 4.25rem minmax(0, 1fr) !important;
+    gap: 0.85rem !important;
+    align-items: center !important;
+    min-height: 4.85rem !important;
+    padding: 0.6rem !important;
+  }
+
+  body:has(.stitch-detail-page--setup) .stitch-included-open article img {
+    width: 4.25rem !important;
+    height: 3.65rem !important;
+    object-fit: cover !important;
+  }
+
+  body:has(.stitch-detail-page--setup) .stitch-included-open article strong {
+    display: block !important;
+    max-width: none !important;
+    font-size: 0.82rem !important;
+    line-height: 1.18 !important;
+  }
+
+  body:has(.stitch-detail-page--setup) .stitch-included-open article small {
+    display: block !important;
+    margin-top: 0.22rem !important;
+    font-size: 0.72rem !important;
+    line-height: 1.2 !important;
+  }
+}
