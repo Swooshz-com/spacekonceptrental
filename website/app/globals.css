@@ -9338,3 +9338,209 @@ body:has(.stitch-quote-page) .stitch-quote-form-panel .quote-form .button {
     color: #1a1a1a !important;
   }
 }
+
+/* Catalogue desktop parity: compact Stitch cards with hover/focus actions. */
+@media (min-width: 901px) {
+  body:has(.stitch-catalogue-section) .stitch-catalogue-hero {
+    padding: 90px 0 70px !important;
+    background: #fcf9f5 !important;
+  }
+
+  body:has(.stitch-catalogue-section) .stitch-catalogue-hero .stitch-page-intro {
+    max-width: 720px !important;
+  }
+
+  body:has(.stitch-catalogue-section) .stitch-catalogue-hero .stitch-page-intro h1 {
+    font-size: clamp(3rem, 4.5vw, 4rem) !important;
+    line-height: 1.1 !important;
+  }
+
+  body:has(.stitch-catalogue-section) .stitch-catalogue-section {
+    padding: 0 0 92px !important;
+    background: #fcf9f5 !important;
+  }
+
+  body:has(.stitch-catalogue-section) .stitch-catalogue-layout {
+    grid-template-columns: 140px minmax(0, 1fr) !important;
+    gap: 28px !important;
+    align-items: start !important;
+  }
+
+  body:has(.stitch-catalogue-section) .stitch-filter-panel {
+    position: sticky !important;
+    top: 100px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 8px !important;
+    padding: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+  }
+
+  body:has(.stitch-catalogue-section) .stitch-filter-panel h2 {
+    margin: 18px 0 2px !important;
+    color: #46473f !important;
+    font-family: var(--font-mono) !important;
+    font-size: 0.72rem !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.08em !important;
+    text-transform: uppercase !important;
+  }
+
+  body:has(.stitch-catalogue-section) .stitch-filter-panel h2:first-child {
+    margin-top: 0 !important;
+  }
+
+  body:has(.stitch-catalogue-section) .stitch-filter-panel a,
+  body:has(.stitch-catalogue-section) .stitch-filter-panel span {
+    width: fit-content !important;
+    min-height: 24px !important;
+    padding: 6px 13px !important;
+    border: 0 !important;
+    border-radius: 999px !important;
+    background: #e5e2df !important;
+    color: #46473f !important;
+    font-family: var(--font-mono) !important;
+    font-size: 0.68rem !important;
+    font-weight: 700 !important;
+    line-height: 1 !important;
+    letter-spacing: 0.02em !important;
+    text-transform: none !important;
+  }
+
+  body:has(.stitch-catalogue-section) .stitch-filter-panel a:first-of-type {
+    background: #5f634f !important;
+    color: #ffffff !important;
+  }
+
+  body:has(.stitch-catalogue-section) .stitch-card-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 24px !important;
+  }
+
+  body:has(.stitch-catalogue-section) .stitch-product-card {
+    position: relative !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+    border: 1px solid #c7c7bc !important;
+    border-radius: 2px !important;
+    background: #ffffff !important;
+    box-shadow: none !important;
+  }
+
+  body:has(.stitch-catalogue-section) .stitch-product-card .stitch-card__image {
+    position: relative !important;
+    aspect-ratio: 4 / 5 !important;
+    margin: 0 !important;
+    padding: 4px !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: #e5e2df !important;
+  }
+
+  body:has(.stitch-catalogue-section) .stitch-product-card .stitch-card__image img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+  }
+
+  body:has(.stitch-catalogue-section) .stitch-product-card .stitch-card__body {
+    position: static !important;
+    z-index: 2 !important;
+    display: block !important;
+    min-height: 76px !important;
+    padding: 13px 12px 12px !important;
+    border-top: 1px solid #c7c7bc !important;
+    background: #ffffff !important;
+  }
+
+  body:has(.stitch-catalogue-section) .stitch-product-card h2 {
+    margin: 0 0 5px !important;
+    color: #1c1c1a !important;
+    font-family: var(--stitch-sans) !important;
+    font-size: 1.02rem !important;
+    font-weight: 400 !important;
+    line-height: 1.28 !important;
+    letter-spacing: 0 !important;
+  }
+
+  body:has(.stitch-catalogue-section) .stitch-product-card .stitch-card__meta {
+    margin: 0 !important;
+    color: #46473f !important;
+    font-family: var(--font-mono) !important;
+    font-size: 0.68rem !important;
+    font-weight: 700 !important;
+    line-height: 1 !important;
+    letter-spacing: 0.08em !important;
+    text-transform: uppercase !important;
+  }
+
+  body:has(.stitch-catalogue-section) .stitch-product-card p:not(.stitch-card__meta) {
+    display: none !important;
+  }
+
+  body:has(.stitch-catalogue-section) .stitch-card__actions {
+    position: absolute !important;
+    left: 12px !important;
+    right: 12px !important;
+    bottom: 88px !important;
+    z-index: 4 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+    padding: 0 !important;
+    opacity: 0 !important;
+    transform: translateY(14px) !important;
+    transition: opacity 180ms ease, transform 180ms ease !important;
+    pointer-events: none !important;
+  }
+
+  body:has(.stitch-catalogue-section) .stitch-product-card:hover .stitch-card__actions,
+  body:has(.stitch-catalogue-section) .stitch-product-card:focus-within .stitch-card__actions {
+    opacity: 1 !important;
+    transform: translateY(0) !important;
+    pointer-events: auto !important;
+  }
+
+  body:has(.stitch-catalogue-section) .stitch-card__actions .stitch-link-button {
+    order: 2 !important;
+    justify-content: center !important;
+    min-height: 36px !important;
+    width: 100% !important;
+    border-radius: 2px !important;
+    background: #ffffff !important;
+    color: #1c1c1a !important;
+    font-family: var(--font-mono) !important;
+    font-size: 0.72rem !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.05em !important;
+  }
+
+  body:has(.stitch-catalogue-section) .stitch-card__actions .stitch-link-button:first-child {
+    order: 1 !important;
+    border-color: #5f634f !important;
+    background: #5f634f !important;
+    color: #ffffff !important;
+  }
+}
+
+/* Catalogue desktop parity: constrain result rail to Stitch width. */
+@media (min-width: 901px) {
+  body:has(.stitch-catalogue-section) .stitch-catalogue-results {
+    max-width: 930px !important;
+  }
+
+  body:has(.stitch-catalogue-section) .stitch-card-grid {
+    max-width: 930px !important;
+  }
+}
+
+/* Catalogue desktop parity: keep constrained result rail aligned beside filters. */
+@media (min-width: 901px) {
+  body:has(.stitch-catalogue-section) .stitch-catalogue-results {
+    justify-self: start !important;
+    margin: 0 !important;
+  }
+}

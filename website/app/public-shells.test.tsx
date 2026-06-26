@@ -96,9 +96,9 @@ describe("public page shells", () => {
     expect(hrefsFor(/request quote/i)).toContain("/quote");
     expect(hrefsFor(/browse catalogue/i)).toContain("/catalogue");
     expect(hrefsFor(/explore setups/i)).toContain("/listings");
-    expect(screen.getByRole("heading", { name: /furniture that shapes the room/i })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: /start with the furniture type/i })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: /rental pieces with room to adapt/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /the spacekonceptrental advantage/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /browse by category/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /featured pieces/i })).toBeInTheDocument();
     expect(document.body.textContent).not.toMatch(forbiddenPublicCopy);
   });
 
