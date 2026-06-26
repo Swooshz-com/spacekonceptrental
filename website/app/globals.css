@@ -10090,3 +10090,250 @@ body:has(.stitch-quote-page) .stitch-quote-form-panel .quote-form .button {
     line-height: 1.2 !important;
   }
 }
+
+/* Stitch parity: contact desktop layout and form shell */
+@media (min-width: 901px) {
+  body:has(.stitch-contact-hero) .stitch-contact-hero {
+    padding: clamp(4.4rem, 7vw, 6.2rem) 0 1.9rem !important;
+    background: var(--stitch-surface) !important;
+  }
+
+  body:has(.stitch-contact-hero) .stitch-contact-hero .stitch-container,
+  body:has(.stitch-contact-hero) .stitch-contact-section > .stitch-container {
+    width: min(calc(100% - 7rem), 1280px) !important;
+    max-width: 1280px !important;
+  }
+
+  body:has(.stitch-contact-hero) .stitch-contact-hero .stitch-page-intro {
+    max-width: 610px !important;
+    margin: 0 !important;
+    text-align: left !important;
+  }
+
+  body:has(.stitch-contact-hero) .stitch-contact-hero .stitch-eyebrow {
+    display: none !important;
+  }
+
+  body:has(.stitch-contact-hero) .stitch-contact-hero h1 {
+    margin: 0 0 1.55rem !important;
+    font-size: clamp(4.35rem, 5.2vw, 5.9rem) !important;
+    line-height: 0.98 !important;
+    letter-spacing: -0.055em !important;
+  }
+
+  body:has(.stitch-contact-hero) .stitch-contact-hero p:not(.stitch-eyebrow) {
+    max-width: 600px !important;
+    margin: 0 !important;
+    color: var(--stitch-muted) !important;
+    font-size: 1.08rem !important;
+    line-height: 1.58 !important;
+    text-align: left !important;
+  }
+
+  body:has(.stitch-contact-hero) .stitch-contact-section {
+    padding: 2.8rem 0 8rem !important;
+    background: var(--stitch-surface) !important;
+  }
+
+  body:has(.stitch-contact-hero) .stitch-contact-section .stitch-container.stitch-contact-grid {
+    display: grid !important;
+    grid-template-columns: minmax(260px, 0.42fr) minmax(680px, 0.92fr) !important;
+    gap: clamp(4rem, 6vw, 6.5rem) !important;
+    align-items: start !important;
+  }
+
+  body:has(.stitch-contact-hero) .stitch-contact-copy {
+    padding: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+  }
+
+  body:has(.stitch-contact-hero) .stitch-contact-copy > h2 {
+    margin: 0 0 2.25rem !important;
+    font-size: clamp(1.55rem, 1.75vw, 2rem) !important;
+    line-height: 1.12 !important;
+    letter-spacing: -0.035em !important;
+  }
+
+  body:has(.stitch-contact-hero) .stitch-contact-copy > p {
+    max-width: 330px !important;
+    margin: 0 0 4.1rem !important;
+    color: var(--stitch-muted) !important;
+    font-size: 0.98rem !important;
+    line-height: 1.68 !important;
+  }
+
+  body:has(.stitch-contact-hero) .stitch-contact-support-card {
+    display: none !important;
+  }
+
+  body:has(.stitch-contact-hero) .stitch-contact-copy dl {
+    display: grid !important;
+    gap: 1.4rem !important;
+    margin: 0 !important;
+  }
+
+  body:has(.stitch-contact-hero) .stitch-contact-copy dt {
+    margin: 0 0 0.35rem !important;
+    color: var(--stitch-muted) !important;
+    font-family: var(--stitch-sans) !important;
+    font-size: 0.74rem !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.13em !important;
+    line-height: 1.2 !important;
+    text-transform: uppercase !important;
+  }
+
+  body:has(.stitch-contact-hero) .stitch-contact-copy dd {
+    margin: 0 !important;
+    color: var(--stitch-ink) !important;
+    font-family: var(--stitch-sans) !important;
+    font-size: 0.98rem !important;
+    font-weight: 800 !important;
+    line-height: 1.3 !important;
+  }
+
+  body:has(.stitch-contact-hero) .stitch-contact-form-panel {
+    display: flex !important;
+    flex-direction: column !important;
+    min-height: 710px !important;
+    padding: clamp(3.6rem, 5vw, 5rem) clamp(4rem, 5vw, 5.25rem) !important;
+    border: 1px solid #d7cabb !important;
+    border-radius: 0 !important;
+    background: #f3eee8 !important;
+    box-shadow: none !important;
+  }
+
+  body:has(.stitch-contact-hero) .stitch-contact-form-panel h2 {
+    margin: 0 0 3.1rem !important;
+    font-size: clamp(1.7rem, 1.9vw, 2.25rem) !important;
+    line-height: 1.1 !important;
+    letter-spacing: -0.04em !important;
+  }
+
+  body:has(.stitch-contact-hero) .stitch-contact-form-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 2.4rem 3.1rem !important;
+    margin: 0 0 2.7rem !important;
+  }
+
+  body:has(.stitch-contact-hero) .stitch-contact-form-panel label {
+    position: relative !important;
+    display: block !important;
+    margin: 0 !important;
+  }
+
+  body:has(.stitch-contact-hero) .stitch-contact-form-grid label > span,
+  body:has(.stitch-contact-hero) .stitch-contact-message > span {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    overflow: hidden !important;
+    clip: rect(0 0 0 0) !important;
+    white-space: nowrap !important;
+  }
+
+  body:has(.stitch-contact-hero) .stitch-contact-form-panel input {
+    height: 45px !important;
+    padding: 0 1rem !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: #fff !important;
+    color: var(--stitch-ink) !important;
+    font-size: 0.96rem !important;
+  }
+
+  body:has(.stitch-contact-hero) .stitch-contact-select {
+    margin: 0 0 3.15rem !important;
+    padding: 0 !important;
+    border: 0 !important;
+  }
+
+  body:has(.stitch-contact-hero) .stitch-contact-select legend {
+    margin: 0 0 0.8rem !important;
+    color: var(--stitch-muted) !important;
+    font-size: 0.72rem !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.13em !important;
+    line-height: 1.2 !important;
+    text-transform: uppercase !important;
+  }
+
+  body:has(.stitch-contact-hero) .stitch-contact-chip-row {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 0.55rem !important;
+    margin: 0 !important;
+  }
+
+  body:has(.stitch-contact-hero) .stitch-contact-chip-row label {
+    display: inline-flex !important;
+  }
+
+  body:has(.stitch-contact-hero) .stitch-contact-chip-row span {
+    min-height: 34px !important;
+    padding: 0.55rem 1.1rem !important;
+    border: 1px solid #d7cabb !important;
+    border-radius: 999px !important;
+    background: transparent !important;
+    color: var(--stitch-ink) !important;
+    font-size: 0.82rem !important;
+    font-weight: 800 !important;
+    line-height: 1 !important;
+  }
+
+  body:has(.stitch-contact-hero) .stitch-contact-message {
+    margin: 0 !important;
+  }
+
+  body:has(.stitch-contact-hero) .stitch-contact-form-panel textarea {
+    min-height: 190px !important;
+    padding: 0.95rem 1rem !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    color: var(--stitch-ink) !important;
+    font-size: 0.96rem !important;
+    resize: vertical !important;
+  }
+
+  body:has(.stitch-contact-hero) .stitch-contact-form-panel button.stitch-link-button {
+    align-self: flex-end !important;
+    min-width: 150px !important;
+    min-height: 44px !important;
+    margin-top: auto !important;
+    padding: 0 1.9rem !important;
+    border-radius: 0.12rem !important;
+    font-size: 0.78rem !important;
+    letter-spacing: 0.08em !important;
+  }
+}
+
+/* Stitch parity correction: contact desktop grid proportions */
+@media (min-width: 901px) {
+  body:has(.stitch-contact-hero) .stitch-contact-hero {
+    padding-top: clamp(5.4rem, 8vw, 7.1rem) !important;
+    padding-bottom: 2.25rem !important;
+  }
+
+  body:has(.stitch-contact-hero) .stitch-contact-section .stitch-container.stitch-contact-grid {
+    grid-template-columns: minmax(300px, 360px) minmax(0, 1fr) !important;
+    gap: clamp(5rem, 7vw, 6.25rem) !important;
+  }
+
+  body:has(.stitch-contact-hero) .stitch-contact-form-panel {
+    width: 100% !important;
+    min-height: 720px !important;
+    padding: clamp(3.7rem, 4.7vw, 4.8rem) clamp(4.2rem, 5.5vw, 5.8rem) !important;
+  }
+
+  body:has(.stitch-contact-hero) .stitch-contact-form-grid {
+    gap: 2.5rem 3.6rem !important;
+  }
+
+  body:has(.stitch-contact-hero) .stitch-contact-form-panel textarea {
+    min-height: 205px !important;
+    background: transparent !important;
+  }
+}
