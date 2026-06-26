@@ -162,6 +162,200 @@ select {
   max-width: 850px;
 }
 
+/* Stitch parity correction: setup detail mobile story-card order */
+@media (max-width: 639px) {
+  body:has(.stitch-detail-page--setup) .chat-widget-launcher,
+  body:has(.stitch-detail-page--setup) .chat-widget-panel,
+  body:has(.stitch-detail-page--setup) .stitch-footer,
+  body:has(.stitch-detail-page--setup) .stitch-bottom-nav {
+    display: none !important;
+  }
+
+  body:has(.stitch-detail-page--setup) .stitch-detail-page--setup {
+    padding: 0 !important;
+    background: var(--stitch-surface) !important;
+  }
+
+  body:has(.stitch-detail-page--setup) .stitch-detail-page--setup > .stitch-container {
+    width: 100% !important;
+    max-width: none !important;
+  }
+
+  body:has(.stitch-detail-page--setup) .stitch-detail-breadcrumb,
+  body:has(.stitch-detail-page--setup) .stitch-detail-page--setup .stitch-detail-open-copy {
+    display: none !important;
+  }
+
+  body:has(.stitch-detail-page--setup) .stitch-detail-page--setup .stitch-detail-open-grid {
+    display: block !important;
+  }
+
+  body:has(.stitch-detail-page--setup) .stitch-detail-page--setup .stitch-detail-open-media {
+    width: 100% !important;
+    min-height: 0 !important;
+    border: 0 !important;
+    background: var(--stitch-container) !important;
+  }
+
+  body:has(.stitch-detail-page--setup) .stitch-detail-page--setup .stitch-detail-open-media img {
+    width: 100% !important;
+    height: auto !important;
+    aspect-ratio: 1 / 1.35 !important;
+    object-fit: cover !important;
+    object-position: center !important;
+  }
+
+  body:has(.stitch-detail-page--setup) .stitch-detail-page--setup .stitch-setup-lower {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 1.35rem !important;
+    width: calc(100% - 2rem) !important;
+    max-width: 24rem !important;
+    margin: -3.2rem auto 0 !important;
+    padding: 1.25rem 1.1rem 2rem !important;
+    position: relative !important;
+    z-index: 2 !important;
+    border: 1px solid color-mix(in srgb, var(--stitch-line) 72%, #d4c5b3) !important;
+    border-radius: 1.1rem 1.1rem 0 0 !important;
+    background: var(--stitch-surface) !important;
+  }
+
+  body:has(.stitch-detail-page--setup) .stitch-detail-page--setup .stitch-setup-lower > div:first-child {
+    display: contents !important;
+  }
+
+  body:has(.stitch-detail-page--setup) .stitch-detail-page--setup .stitch-setup-lower > div:first-child::before {
+    content: "Gala setup" !important;
+    order: 1 !important;
+    justify-self: start !important;
+    border-radius: 999px !important;
+    background: var(--stitch-container) !important;
+    color: var(--stitch-muted) !important;
+    font-family: var(--font-body) !important;
+    font-size: 0.66rem !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.18em !important;
+    line-height: 1 !important;
+    padding: 0.42rem 0.7rem !important;
+    text-transform: uppercase !important;
+  }
+
+  body:has(.stitch-detail-page--setup) .stitch-detail-page--setup .stitch-setup-lower > div:first-child > h2:first-of-type {
+    display: block !important;
+    order: 2 !important;
+    margin: 0 !important;
+    color: var(--stitch-ink) !important;
+    font-family: var(--stitch-serif) !important;
+    font-size: clamp(2rem, 10vw, 2.55rem) !important;
+    font-weight: 500 !important;
+    letter-spacing: -0.05em !important;
+    line-height: 1.02 !important;
+  }
+
+  body:has(.stitch-detail-page--setup) .stitch-detail-page--setup .stitch-setup-lower > div:first-child > p:not(.stitch-eyebrow) {
+    display: block !important;
+    order: 3 !important;
+    margin: 0 !important;
+    color: var(--stitch-ink) !important;
+    font-size: 1rem !important;
+    line-height: 1.55 !important;
+  }
+
+  body:has(.stitch-detail-page--setup) .stitch-detail-page--setup .stitch-included-open {
+    order: 4 !important;
+    margin: 0.4rem 0 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+  }
+
+  body:has(.stitch-detail-page--setup) .stitch-detail-page--setup .stitch-included-open h2 {
+    margin: 0 0 1rem !important;
+    padding: 0 0 0.65rem !important;
+    border-bottom: 1px solid var(--stitch-line) !important;
+    color: var(--stitch-ink) !important;
+    font-family: var(--stitch-serif) !important;
+    font-size: 1.8rem !important;
+    font-weight: 500 !important;
+    letter-spacing: -0.04em !important;
+    line-height: 1.08 !important;
+  }
+
+  body:has(.stitch-detail-page--setup) .stitch-detail-page--setup .stitch-included-open > div {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 0.85rem !important;
+  }
+
+  body:has(.stitch-detail-page--setup) .stitch-detail-page--setup .stitch-included-open article {
+    display: grid !important;
+    grid-template-columns: 5rem minmax(0, 1fr) !important;
+    gap: 1rem !important;
+    align-items: center !important;
+    min-height: 6rem !important;
+    padding: 0.75rem !important;
+    border: 1px solid color-mix(in srgb, var(--stitch-line) 72%, #d4c5b3) !important;
+    border-radius: 0.25rem !important;
+    background: #fffdfa !important;
+  }
+
+  body:has(.stitch-detail-page--setup) .stitch-detail-page--setup .stitch-included-open article img {
+    width: 5rem !important;
+    height: 5rem !important;
+    border-radius: 0.15rem !important;
+    object-fit: cover !important;
+  }
+
+  body:has(.stitch-detail-page--setup) .stitch-detail-page--setup .stitch-included-open article strong {
+    display: block !important;
+    color: var(--stitch-ink) !important;
+    font-size: 0.98rem !important;
+    line-height: 1.2 !important;
+  }
+
+  body:has(.stitch-detail-page--setup) .stitch-detail-page--setup .stitch-included-open article small {
+    display: block !important;
+    margin-top: 0.2rem !important;
+    color: var(--stitch-muted) !important;
+    font-size: 0.88rem !important;
+  }
+
+  body:has(.stitch-detail-page--setup) .stitch-detail-page--setup .stitch-detail-context {
+    order: 5 !important;
+    margin: 0 !important;
+    padding: 0.35rem 0 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+  }
+
+  body:has(.stitch-detail-page--setup) .stitch-detail-page--setup .stitch-detail-context .stitch-eyebrow {
+    display: none !important;
+  }
+
+  body:has(.stitch-detail-page--setup) .stitch-detail-page--setup .stitch-detail-context h2 {
+    margin: 0 !important;
+    color: var(--stitch-ink) !important;
+    font-family: var(--stitch-serif) !important;
+    font-size: 1.35rem !important;
+    font-style: italic !important;
+    font-weight: 400 !important;
+    letter-spacing: -0.035em !important;
+    line-height: 1.25 !important;
+  }
+
+  body:has(.stitch-detail-page--setup) .stitch-detail-page--setup .stitch-detail-button--compact {
+    order: 6 !important;
+    width: 100% !important;
+    min-height: 3.35rem !important;
+    margin: 0 !important;
+    border-radius: 0.2rem !important;
+    background: var(--stitch-primary) !important;
+    color: #fff !important;
+    font-size: 0.76rem !important;
+    letter-spacing: 0.08em !important;
+  }
+}
+
 /* Quote form feedback polish: make validation and safety notes feel intentional. */
 .stitch-quote-form-panel .quote-form__status {
   border-radius: 14px;
@@ -13887,5 +14081,74 @@ body:has(.stitch-quote-page) .stitch-quote-form-panel .quote-form .button {
   body:has(.stitch-catalogue-hero) .chat-widget-launcher,
   body:has(.stitch-catalogue-hero) .chat-widget-panel {
     display: none !important;
+  }
+}
+
+/* Stitch parity correction: final setup-detail mobile ordering override */
+@media (max-width: 639px) {
+  body:has(.stitch-detail-page--setup) .chat-widget-launcher,
+  body:has(.stitch-detail-page--setup) .chat-widget-panel,
+  body:has(.stitch-detail-page--setup) .stitch-footer,
+  body:has(.stitch-detail-page--setup) .stitch-bottom-nav {
+    display: none !important;
+  }
+
+  body:has(.stitch-detail-page--setup) .stitch-detail-page--setup .stitch-setup-lower {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 1.25rem !important;
+    width: calc(100% - 2rem) !important;
+    max-width: 24rem !important;
+    margin: -3.2rem auto 0 !important;
+    padding: 1.25rem 1.1rem 2rem !important;
+    border: 1px solid color-mix(in srgb, var(--stitch-line) 72%, #d4c5b3) !important;
+    border-radius: 1.1rem 1.1rem 0 0 !important;
+    background: var(--stitch-surface) !important;
+  }
+
+  body:has(.stitch-detail-page--setup) .stitch-detail-page--setup .stitch-setup-lower > div:first-child {
+    display: contents !important;
+  }
+
+  body:has(.stitch-detail-page--setup) .stitch-detail-page--setup .stitch-setup-lower > div:first-child::before {
+    content: "Gala setup" !important;
+    order: 1 !important;
+  }
+
+  body:has(.stitch-detail-page--setup) .stitch-detail-page--setup .stitch-setup-lower > div:first-child > h2:first-of-type {
+    display: block !important;
+    order: 2 !important;
+    margin: 0 !important;
+  }
+
+  body:has(.stitch-detail-page--setup) .stitch-detail-page--setup .stitch-setup-lower > div:first-child > p:not(.stitch-eyebrow) {
+    display: block !important;
+    order: 3 !important;
+    margin: 0 !important;
+  }
+
+  body:has(.stitch-detail-page--setup) .stitch-detail-page--setup .stitch-included-open {
+    display: block !important;
+    order: 4 !important;
+    margin: 0.2rem 0 0 !important;
+    padding: 0 !important;
+  }
+
+  body:has(.stitch-detail-page--setup) .stitch-detail-page--setup .stitch-detail-context {
+    display: block !important;
+    order: 5 !important;
+    margin: 0 !important;
+    padding: 0.25rem 0 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+  }
+
+  body:has(.stitch-detail-page--setup) .stitch-detail-page--setup .stitch-detail-button--compact {
+    display: inline-flex !important;
+    order: 6 !important;
+    width: 100% !important;
+    min-height: 3.35rem !important;
+    margin: 0 !important;
+    border-radius: 0.2rem !important;
   }
 }
