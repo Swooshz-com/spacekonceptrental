@@ -500,7 +500,7 @@ export default function QuoteRequestForm({
             </div>
             <div>
               <span>Follow-up</span>
-              <strong>We will follow up with a tailored proposal.</strong>
+              <strong>We will follow up after review.</strong>
             </div>
           </div>
           <div
