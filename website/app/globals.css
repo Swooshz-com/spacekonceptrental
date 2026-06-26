@@ -12765,6 +12765,38 @@ body:has(.stitch-quote-page) .stitch-quote-form-panel .quote-form .button {
   }
 }
 
+/* Stitch parity correction: About reference-width service and story media. */
+@media (min-width: 640px) and (max-width: 900px) {
+  body:has(.stitch-about-hero) .stitch-about-story__grid {
+    grid-template-columns: minmax(0, 0.82fr) minmax(240px, 0.78fr) !important;
+    gap: 4.4rem !important;
+  }
+
+  body:has(.stitch-about-hero) .stitch-about-story__image {
+    min-height: 24rem !important;
+    padding: 0 !important;
+  }
+
+  body:has(.stitch-about-hero) .stitch-about-story__image::after {
+    right: -0.7rem !important;
+    bottom: -0.7rem !important;
+  }
+
+  body:has(.stitch-about-hero) .stitch-about-service .stitch-feature-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 0.9rem !important;
+  }
+
+  body:has(.stitch-about-hero) .stitch-about-service .stitch-about-card:nth-child(3) {
+    display: block !important;
+  }
+
+  body:has(.stitch-about-hero) .stitch-about-service .stitch-about-card:nth-child(n + 4),
+  body:has(.stitch-about-hero) .stitch-about-service + .stitch-section--tonal {
+    display: none !important;
+  }
+}
+
 /* Stitch parity: About page compact editorial composition */
 @media (min-width: 901px) {
   body:has(.stitch-about-hero) .stitch-about-hero {
@@ -15148,4 +15180,29 @@ body:has(.stitch-quote-page .quote-form--success) .quote-form__receipt-actions {
   body:has(.stitch-home-hero) .stitch-home-feature-card img { height: 86px !important; }
   body:has(.stitch-home-hero) .stitch-home-featured-action { margin-top: 1.55rem !important; }
   body:has(.stitch-home-hero) .stitch-footer { padding: 2.95rem 0 2.5rem !important; }
+}
+
+/* Stitch parity final override: About reference-width composition. */
+@media (min-width: 640px) and (max-width: 900px) {
+  body:has(.stitch-about-hero) .stitch-about-story__image img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    object-position: center !important;
+  }
+
+  body:has(.stitch-about-hero) .stitch-about-service .stitch-feature-grid {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 0.9rem !important;
+  }
+
+  body:has(.stitch-about-hero) .stitch-about-service .stitch-about-card:nth-child(3) {
+    display: block !important;
+  }
+
+  body:has(.stitch-about-hero) .stitch-about-service .stitch-about-card:nth-child(n + 4),
+  body:has(.stitch-about-hero) .stitch-about-service + .stitch-section--tonal {
+    display: none !important;
+  }
 }
