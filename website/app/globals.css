@@ -1,4 +1,4 @@
-﻿:root {
+:root {
   --background: #f6f8fb;
   --surface: #ffffff;
   --surface-strong: #0d1321;
@@ -4716,7 +4716,7 @@ h3,
   border: 1px solid var(--stitch-line);
   border-radius: 12px;
   color: var(--stitch-primary);
-  content: "✓";
+  content: "?";
   display: flex;
   font-family: var(--stitch-sans);
   font-size: 36px;
@@ -6498,7 +6498,7 @@ h3,
   }
 
   body:has(.stitch-detail-page) .stitch-menu-trigger::before {
-    content: "↗";
+    content: "?";
     color: var(--skr-on-surface);
     font-family: var(--font-body);
     font-size: 1.35rem;
@@ -7427,39 +7427,39 @@ body:has(.stitch-contact-hero) .stitch-contact-section {
   .stitch-setups-feature-section .stitch-container,
   .stitch-setups-filter-section .stitch-container,
   .stitch-setups-grid-section .stitch-container {
-    width: min(100% - 6rem, 78rem) !important;
+    width: min(100% - 8rem, 90rem) !important;
   }
 
   .stitch-setups-hero {
-    padding: clamp(4.5rem, 7vw, 6rem) 0 3.25rem !important;
+    padding: clamp(4rem, 6.6vw, 6rem) 0 4rem !important;
   }
 
   .stitch-setups-hero__copy {
     max-width: 42rem !important;
-    margin-left: 6.25rem !important;
+    margin-left: 0 !important;
   }
 
   .stitch-setups-feature-section {
-    padding: 0 0 clamp(4rem, 7vw, 7.5rem) !important;
+    padding: 0 0 clamp(5rem, 8vw, 7.5rem) !important;
   }
 
   .stitch-setups-feature-section .stitch-container.stitch-setups-feature-split {
     display: grid !important;
     grid-template-columns: repeat(12, minmax(0, 1fr)) !important;
     align-items: center !important;
-    gap: clamp(1.5rem, 2.5vw, 2rem) !important;
+    gap: 1.5rem !important;
   }
 
   .stitch-setups-feature__image {
-    grid-column: 3 / span 4 !important;
-    height: min(52vw, 48rem) !important;
-    min-height: 36rem !important;
+    grid-column: 1 / span 5 !important;
+    height: clamp(37.5rem, 55vw, 50rem) !important;
+    min-height: 0 !important;
   }
 
   .stitch-setups-feature__copy {
-    grid-column: 7 / span 4 !important;
+    grid-column: 7 / span 6 !important;
     align-self: center !important;
-    max-width: 26rem !important;
+    max-width: 32rem !important;
     padding: 0 !important;
   }
 
@@ -7473,7 +7473,19 @@ body:has(.stitch-contact-hero) .stitch-contact-section {
 
   .stitch-setups-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-    gap: 4rem 2rem !important;
+    gap: 4rem 1.5rem !important;
+  }
+
+  .stitch-setup-tile__image {
+    aspect-ratio: 4 / 5 !important;
+  }
+
+  .stitch-setup-tile--wide {
+    grid-column: span 2 !important;
+  }
+
+  .stitch-setup-tile--wide .stitch-setup-tile__image {
+    aspect-ratio: 2 / 1 !important;
   }
 }
 
@@ -7492,6 +7504,7 @@ body:has(.stitch-contact-hero) .stitch-contact-section {
 
   .stitch-setups-feature__image {
     grid-column: 1 / span 5 !important;
+    height: clamp(32rem, 58vw, 42rem) !important;
   }
 
   .stitch-setups-feature__copy {
