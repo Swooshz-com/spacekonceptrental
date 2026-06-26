@@ -15206,3 +15206,59 @@ body:has(.stitch-quote-page .quote-form--success) .quote-form__receipt-actions {
     display: none !important;
   }
 }
+
+/* Stitch parity final override: Setups reference-width footer. */
+@media (min-width: 600px) and (max-width: 700px) {
+  body:has(.stitch-setups-hero) .stitch-footer {
+    margin-top: 0 !important;
+    padding: 2.2rem 0 1.55rem !important;
+    background: #f3eee8 !important;
+    color: var(--stitch-ink) !important;
+  }
+
+  body:has(.stitch-setups-hero) .stitch-footer__grid {
+    width: min(calc(100% - 3.75rem), 575px) !important;
+    max-width: 575px !important;
+    display: grid !important;
+    grid-template-columns: 1.35fr 0.7fr 0.72fr 0.8fr !important;
+    gap: 1.35rem !important;
+    align-items: start !important;
+  }
+
+  body:has(.stitch-setups-hero) .stitch-footer h2 {
+    margin: 0 0 0.55rem !important;
+    color: var(--stitch-ink) !important;
+    font-family: var(--stitch-serif) !important;
+    font-size: 0.62rem !important;
+    font-weight: 500 !important;
+    line-height: 1.15 !important;
+    letter-spacing: -0.02em !important;
+  }
+
+  body:has(.stitch-setups-hero) .stitch-footer h3 {
+    margin: 0 0 0.45rem !important;
+    color: var(--stitch-muted) !important;
+    font-family: var(--stitch-sans) !important;
+    font-size: 0.34rem !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.08em !important;
+    line-height: 1.2 !important;
+    text-transform: uppercase !important;
+  }
+
+  body:has(.stitch-setups-hero) .stitch-footer p,
+  body:has(.stitch-setups-hero) .stitch-footer a {
+    color: var(--stitch-muted) !important;
+    font-family: var(--stitch-sans) !important;
+    font-size: 0.35rem !important;
+    line-height: 1.45 !important;
+  }
+
+  body:has(.stitch-setups-hero) .stitch-footer nav {
+    gap: 0.28rem !important;
+  }
+
+  body:has(.stitch-setups-hero) .stitch-footer__bottom {
+    display: none !important;
+  }
+}
