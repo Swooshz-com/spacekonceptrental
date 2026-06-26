@@ -7656,3 +7656,156 @@ body:has(.stitch-contact-hero) .stitch-contact-section {
     width: 5rem !important;
   }
 }
+
+
+/* About Stitch parity: centered editorial hero, story split, tonal principles, service grid. */
+.stitch-about-hero {
+  padding: clamp(5rem, 8vw, 7.5rem) 0 clamp(2.75rem, 5vw, 4rem) !important;
+}
+
+.stitch-about-hero .stitch-container {
+  margin-inline: auto !important;
+  max-width: 58rem !important;
+  text-align: center !important;
+}
+
+.stitch-about-hero h1 {
+  font-family: var(--stitch-serif) !important;
+  font-size: clamp(3rem, 6vw, 6rem) !important;
+  font-weight: 500 !important;
+  letter-spacing: -0.055em !important;
+  line-height: 0.98 !important;
+}
+
+.stitch-about-hero p:not(.stitch-eyebrow) {
+  margin: 1.35rem auto 0 !important;
+  max-width: 42rem !important;
+}
+
+.stitch-about-story {
+  border-top: 1px solid var(--stitch-line) !important;
+  padding: clamp(4rem, 7vw, 7.5rem) 0 !important;
+}
+
+.stitch-about-story__grid {
+  align-items: center !important;
+  display: grid !important;
+  gap: clamp(2rem, 4vw, 4rem) !important;
+  grid-template-columns: repeat(12, minmax(0, 1fr)) !important;
+}
+
+.stitch-about-story__grid > div:first-child {
+  grid-column: 1 / span 5 !important;
+}
+
+.stitch-about-story__image {
+  grid-column: 7 / span 6 !important;
+  min-height: clamp(28rem, 48vw, 42rem) !important;
+}
+
+.stitch-about-story h2 {
+  font-family: var(--stitch-serif) !important;
+  font-size: clamp(2.2rem, 4vw, 4.25rem) !important;
+  font-weight: 500 !important;
+  letter-spacing: -0.04em !important;
+  line-height: 1 !important;
+}
+
+.stitch-about-principles {
+  background: color-mix(in srgb, #d4c5b3 12%, var(--stitch-bg)) !important;
+  border-block: 1px solid var(--stitch-line) !important;
+}
+
+.stitch-about-principles .stitch-section-heading {
+  margin-inline: auto !important;
+  text-align: center !important;
+}
+
+.stitch-about-service .stitch-section-heading {
+  align-items: end !important;
+  border-bottom: 1px solid var(--stitch-line) !important;
+  display: flex !important;
+  gap: 2rem !important;
+  justify-content: space-between !important;
+  max-width: none !important;
+  padding-bottom: 1rem !important;
+}
+
+.stitch-about-service .stitch-section-heading h2 {
+  font-family: var(--stitch-serif) !important;
+  font-size: clamp(2.2rem, 4vw, 4.2rem) !important;
+  font-weight: 500 !important;
+  letter-spacing: -0.04em !important;
+}
+
+.stitch-about-service .stitch-feature-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+}
+
+.stitch-about-service .stitch-about-card {
+  min-height: 18rem !important;
+}
+
+.stitch-about-service .stitch-about-card:last-child {
+  align-content: center !important;
+  border-style: dashed !important;
+  text-align: center !important;
+}
+
+@media (max-width: 900px) {
+  .stitch-about-hero {
+    padding: 3rem 0 2rem !important;
+  }
+
+  .stitch-about-hero .stitch-container {
+    width: min(100% - 2rem, 34rem) !important;
+  }
+
+  .stitch-about-hero h1 {
+    font-size: clamp(2.15rem, 10vw, 3.2rem) !important;
+  }
+
+  .stitch-about-story {
+    padding: 0 0 3rem !important;
+    border-top: 0 !important;
+  }
+
+  .stitch-about-story__grid {
+    display: flex !important;
+    flex-direction: column-reverse !important;
+    gap: 2rem !important;
+  }
+
+  .stitch-about-story__grid > div:first-child,
+  .stitch-about-story__image {
+    grid-column: auto !important;
+    width: 100% !important;
+  }
+
+  .stitch-about-story__image {
+    min-height: 22rem !important;
+  }
+
+  .stitch-about-story h2 {
+    font-size: clamp(1.8rem, 8vw, 2.4rem) !important;
+  }
+
+  .stitch-about-principles,
+  .stitch-about-service {
+    padding-block: 3rem !important;
+  }
+
+  .stitch-about-service .stitch-section-heading {
+    align-items: start !important;
+    display: grid !important;
+    gap: 1rem !important;
+  }
+
+  .stitch-about-service .stitch-feature-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .stitch-about-service .stitch-about-card {
+    min-height: auto !important;
+  }
+}
