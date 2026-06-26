@@ -10337,3 +10337,450 @@ body:has(.stitch-quote-page) .stitch-quote-form-panel .quote-form .button {
     background: transparent !important;
   }
 }
+
+/* Stitch parity: About page compact editorial composition */
+@media (min-width: 901px) {
+  body:has(.stitch-about-hero) .stitch-about-hero {
+    padding: clamp(3.25rem, 5.2vw, 4.8rem) 0 clamp(2.4rem, 3.6vw, 3.4rem) !important;
+    border-bottom: 1px solid var(--stitch-line) !important;
+    background: var(--stitch-surface) !important;
+  }
+
+  body:has(.stitch-about-hero) .stitch-about-hero .stitch-container {
+    width: min(calc(100% - 7rem), 1280px) !important;
+    max-width: 1280px !important;
+    text-align: center !important;
+  }
+
+  body:has(.stitch-about-hero) .stitch-about-hero .stitch-eyebrow {
+    display: none !important;
+  }
+
+  body:has(.stitch-about-hero) .stitch-about-hero h1 {
+    max-width: 660px !important;
+    margin: 0 auto 1.3rem !important;
+    font-size: clamp(2.9rem, 4vw, 4.2rem) !important;
+    letter-spacing: -0.052em !important;
+    line-height: 0.98 !important;
+  }
+
+  body:has(.stitch-about-hero) .stitch-about-hero p:not(.stitch-eyebrow) {
+    max-width: 630px !important;
+    margin: 0 auto !important;
+    color: var(--stitch-muted) !important;
+    font-size: 0.95rem !important;
+    line-height: 1.55 !important;
+  }
+
+  body:has(.stitch-about-hero) .stitch-about-story {
+    padding: clamp(4.4rem, 6.2vw, 6rem) 0 clamp(4.2rem, 5.8vw, 5.6rem) !important;
+    background: var(--stitch-surface) !important;
+  }
+
+  body:has(.stitch-about-hero) .stitch-about-story .stitch-container {
+    width: min(calc(100% - 7rem), 1180px) !important;
+    max-width: 1180px !important;
+  }
+
+  body:has(.stitch-about-hero) .stitch-about-story__grid {
+    display: grid !important;
+    grid-template-columns: minmax(320px, 0.82fr) minmax(360px, 0.78fr) !important;
+    gap: clamp(5rem, 8vw, 7.2rem) !important;
+    align-items: center !important;
+  }
+
+  body:has(.stitch-about-hero) .stitch-about-story__grid > div:first-child {
+    max-width: 430px !important;
+  }
+
+  body:has(.stitch-about-hero) .stitch-about-story .stitch-eyebrow {
+    display: none !important;
+  }
+
+  body:has(.stitch-about-hero) .stitch-about-story h2 {
+    margin: 0 0 1.35rem !important;
+    font-size: clamp(1.7rem, 2vw, 2.35rem) !important;
+    letter-spacing: -0.04em !important;
+    line-height: 1.1 !important;
+  }
+
+  body:has(.stitch-about-hero) .stitch-about-story p {
+    margin: 0 0 1rem !important;
+    color: var(--stitch-muted) !important;
+    font-size: 0.84rem !important;
+    line-height: 1.58 !important;
+  }
+
+  body:has(.stitch-about-hero) .stitch-about-story__image {
+    position: relative !important;
+    width: min(100%, 430px) !important;
+    justify-self: center !important;
+    padding: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+  }
+
+  body:has(.stitch-about-hero) .stitch-about-story__image::after {
+    content: "" !important;
+    position: absolute !important;
+    left: -1.45rem !important;
+    bottom: -1.45rem !important;
+    z-index: -1 !important;
+    width: 72% !important;
+    height: 72% !important;
+    border: 1px solid var(--stitch-line) !important;
+    background: rgba(212, 197, 179, 0.12) !important;
+  }
+
+  body:has(.stitch-about-hero) .stitch-about-story__image img {
+    width: 100% !important;
+    aspect-ratio: 4 / 5 !important;
+    height: auto !important;
+    border: 1px solid var(--stitch-line) !important;
+    border-radius: 0.08rem !important;
+    object-fit: cover !important;
+  }
+
+  body:has(.stitch-about-hero) .stitch-about-principles {
+    padding: clamp(3.8rem, 5vw, 4.8rem) 0 !important;
+    border-block: 1px solid var(--stitch-line) !important;
+    background: rgba(212, 197, 179, 0.12) !important;
+  }
+
+  body:has(.stitch-about-hero) .stitch-about-principles .stitch-container,
+  body:has(.stitch-about-hero) .stitch-about-service .stitch-container {
+    width: min(calc(100% - 7rem), 1180px) !important;
+    max-width: 1180px !important;
+  }
+
+  body:has(.stitch-about-hero) .stitch-about-principles .stitch-section-heading {
+    margin: 0 0 2.5rem !important;
+    text-align: center !important;
+  }
+
+  body:has(.stitch-about-hero) .stitch-about-principles .stitch-section-heading h2,
+  body:has(.stitch-about-hero) .stitch-about-service .stitch-section-heading h2 {
+    font-size: clamp(1.55rem, 1.85vw, 2.15rem) !important;
+    letter-spacing: -0.035em !important;
+    line-height: 1.1 !important;
+  }
+
+  body:has(.stitch-about-hero) .stitch-feature-grid {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 1rem !important;
+  }
+
+  body:has(.stitch-about-hero) .stitch-about-card {
+    min-height: 132px !important;
+    padding: 1.55rem 1.45rem !important;
+    border: 1px solid var(--stitch-line) !important;
+    border-radius: 0 !important;
+    background: #fffdfa !important;
+    box-shadow: none !important;
+    text-align: center !important;
+  }
+
+  body:has(.stitch-about-hero) .stitch-about-card h3 {
+    margin: 0 0 0.8rem !important;
+    font-size: 1.05rem !important;
+    letter-spacing: -0.025em !important;
+    line-height: 1.12 !important;
+  }
+
+  body:has(.stitch-about-hero) .stitch-about-card p {
+    margin: 0 !important;
+    color: var(--stitch-muted) !important;
+    font-size: 0.76rem !important;
+    line-height: 1.48 !important;
+  }
+
+  body:has(.stitch-about-hero) .stitch-about-service {
+    padding: clamp(4rem, 5.8vw, 5.6rem) 0 clamp(5.8rem, 7vw, 7.2rem) !important;
+    background: var(--stitch-surface) !important;
+  }
+
+  body:has(.stitch-about-hero) .stitch-about-service .stitch-section-heading {
+    display: block !important;
+    margin: 0 0 2.4rem !important;
+    padding: 0 !important;
+    border: 0 !important;
+    text-align: left !important;
+  }
+
+  body:has(.stitch-about-hero) .stitch-about-service .stitch-section-heading p {
+    max-width: 560px !important;
+    margin: 0.45rem 0 0 !important;
+    color: var(--stitch-muted) !important;
+    font-size: 0.86rem !important;
+    line-height: 1.55 !important;
+  }
+
+  body:has(.stitch-about-hero) .stitch-about-service .stitch-feature-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+
+  body:has(.stitch-about-hero) .stitch-about-service .stitch-about-card:nth-child(n + 4) {
+    display: none !important;
+  }
+
+  body:has(.stitch-about-hero) .stitch-about-card--large {
+    min-height: 136px !important;
+    text-align: left !important;
+  }
+
+  body:has(.stitch-about-hero) .stitch-about-service + .stitch-section--tonal {
+    display: none !important;
+  }
+}
+
+/* Stitch parity: About tablet reference width (678px export) */
+@media (min-width: 640px) and (max-width: 900px) {
+  body:has(.stitch-about-hero) .stitch-about-hero {
+    padding: 3.25rem 0 2rem !important;
+    border-bottom: 1px solid var(--stitch-line) !important;
+    background: var(--stitch-surface) !important;
+  }
+
+  body:has(.stitch-about-hero) .stitch-about-hero .stitch-container,
+  body:has(.stitch-about-hero) .stitch-about-story .stitch-container,
+  body:has(.stitch-about-hero) .stitch-about-principles .stitch-container,
+  body:has(.stitch-about-hero) .stitch-about-service .stitch-container {
+    width: min(calc(100% - 3rem), 620px) !important;
+    max-width: 620px !important;
+  }
+
+  body:has(.stitch-about-hero) .stitch-about-hero .stitch-eyebrow {
+    display: none !important;
+  }
+
+  body:has(.stitch-about-hero) .stitch-about-hero h1 {
+    max-width: 430px !important;
+    margin: 0 auto 1rem !important;
+    font-size: 2.25rem !important;
+    letter-spacing: -0.052em !important;
+    line-height: 1 !important;
+    text-align: center !important;
+  }
+
+  body:has(.stitch-about-hero) .stitch-about-hero p:not(.stitch-eyebrow) {
+    max-width: 430px !important;
+    margin: 0 auto !important;
+    color: var(--stitch-muted) !important;
+    font-size: 0.62rem !important;
+    line-height: 1.48 !important;
+    text-align: center !important;
+  }
+
+  body:has(.stitch-about-hero) .stitch-about-story {
+    padding: 3.5rem 0 3.4rem !important;
+    background: var(--stitch-surface) !important;
+  }
+
+  body:has(.stitch-about-hero) .stitch-about-story__grid {
+    display: grid !important;
+    grid-template-columns: minmax(0, 0.9fr) minmax(220px, 0.9fr) !important;
+    gap: 3.25rem !important;
+    align-items: center !important;
+  }
+
+  body:has(.stitch-about-hero) .stitch-about-story__grid > div:first-child {
+    order: 1 !important;
+    max-width: 220px !important;
+  }
+
+  body:has(.stitch-about-hero) .stitch-about-story__image {
+    order: 2 !important;
+    width: 220px !important;
+    justify-self: end !important;
+    padding: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+  }
+
+  body:has(.stitch-about-hero) .stitch-about-story .stitch-eyebrow {
+    display: none !important;
+  }
+
+  body:has(.stitch-about-hero) .stitch-about-story h2 {
+    margin: 0 0 0.85rem !important;
+    font-size: 0.98rem !important;
+    letter-spacing: -0.03em !important;
+    line-height: 1.12 !important;
+  }
+
+  body:has(.stitch-about-hero) .stitch-about-story p {
+    margin: 0 0 0.58rem !important;
+    color: var(--stitch-muted) !important;
+    font-size: 0.48rem !important;
+    line-height: 1.48 !important;
+  }
+
+  body:has(.stitch-about-hero) .stitch-about-story__image::after {
+    content: "" !important;
+    position: absolute !important;
+    left: -0.7rem !important;
+    bottom: -0.7rem !important;
+    z-index: -1 !important;
+    width: 72% !important;
+    height: 72% !important;
+    border: 1px solid var(--stitch-line) !important;
+    background: rgba(212, 197, 179, 0.12) !important;
+  }
+
+  body:has(.stitch-about-hero) .stitch-about-story__image img {
+    width: 220px !important;
+    height: 264px !important;
+    border: 1px solid var(--stitch-line) !important;
+    border-radius: 0 !important;
+    object-fit: cover !important;
+  }
+
+  body:has(.stitch-about-hero) .stitch-about-principles {
+    padding: 2.8rem 0 !important;
+    border-block: 1px solid var(--stitch-line) !important;
+    background: rgba(212, 197, 179, 0.12) !important;
+  }
+
+  body:has(.stitch-about-hero) .stitch-about-principles .stitch-section-heading,
+  body:has(.stitch-about-hero) .stitch-about-service .stitch-section-heading {
+    margin: 0 0 1.45rem !important;
+    padding: 0 !important;
+    border: 0 !important;
+  }
+
+  body:has(.stitch-about-hero) .stitch-about-principles .stitch-section-heading {
+    text-align: center !important;
+  }
+
+  body:has(.stitch-about-hero) .stitch-about-principles .stitch-section-heading h2,
+  body:has(.stitch-about-hero) .stitch-about-service .stitch-section-heading h2 {
+    font-size: 1rem !important;
+    line-height: 1.12 !important;
+  }
+
+  body:has(.stitch-about-hero) .stitch-feature-grid,
+  body:has(.stitch-about-hero) .stitch-about-service .stitch-feature-grid {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 0.5rem !important;
+  }
+
+  body:has(.stitch-about-hero) .stitch-about-card,
+  body:has(.stitch-about-hero) .stitch-about-card--large {
+    min-height: 78px !important;
+    padding: 0.8rem 0.7rem !important;
+    border: 1px solid var(--stitch-line) !important;
+    border-radius: 0 !important;
+    background: #fffdfa !important;
+    box-shadow: none !important;
+    text-align: center !important;
+  }
+
+  body:has(.stitch-about-hero) .stitch-about-card h3 {
+    margin: 0 0 0.42rem !important;
+    font-size: 0.66rem !important;
+    line-height: 1.12 !important;
+  }
+
+  body:has(.stitch-about-hero) .stitch-about-card p {
+    margin: 0 !important;
+    color: var(--stitch-muted) !important;
+    font-size: 0.45rem !important;
+    line-height: 1.42 !important;
+  }
+
+  body:has(.stitch-about-hero) .stitch-about-service {
+    padding: 3.1rem 0 4rem !important;
+    background: var(--stitch-surface) !important;
+  }
+
+  body:has(.stitch-about-hero) .stitch-about-service .stitch-section-heading {
+    text-align: left !important;
+  }
+
+  body:has(.stitch-about-hero) .stitch-about-service .stitch-section-heading p {
+    margin: 0.25rem 0 0 !important;
+    color: var(--stitch-muted) !important;
+    font-size: 0.48rem !important;
+    line-height: 1.42 !important;
+  }
+
+  body:has(.stitch-about-hero) .stitch-about-service .stitch-about-card:nth-child(n + 4),
+  body:has(.stitch-about-hero) .stitch-about-service + .stitch-section--tonal {
+    display: none !important;
+  }
+}
+
+/* Stitch parity: About tablet keeps reference desktop chrome */
+@media (min-width: 640px) and (max-width: 900px) {
+  body:has(.stitch-about-hero) .stitch-site-header__inner {
+    width: min(calc(100% - 3rem), 620px) !important;
+    min-height: 52px !important;
+    gap: 1rem !important;
+  }
+
+  body:has(.stitch-about-hero) .stitch-logo {
+    font-size: 0.82rem !important;
+    letter-spacing: -0.02em !important;
+  }
+
+  body:has(.stitch-about-hero) .stitch-desktop-nav {
+    display: flex !important;
+    gap: 1rem !important;
+    align-items: center !important;
+  }
+
+  body:has(.stitch-about-hero) .stitch-desktop-nav a {
+    font-size: 0.5rem !important;
+    line-height: 1 !important;
+  }
+
+  body:has(.stitch-about-hero) .stitch-header-actions > .stitch-button {
+    display: inline-flex !important;
+    min-height: 24px !important;
+    padding: 0 0.7rem !important;
+    border-radius: 0 !important;
+    font-size: 0.46rem !important;
+    letter-spacing: 0.06em !important;
+  }
+
+  body:has(.stitch-about-hero) .stitch-menu-trigger,
+  body:has(.stitch-about-hero) .stitch-bottom-nav {
+    display: none !important;
+  }
+
+  body:has(.stitch-about-hero) .stitch-footer {
+    padding: 2rem 0 !important;
+    background: #f1ede8 !important;
+  }
+
+  body:has(.stitch-about-hero) .stitch-footer__grid {
+    width: min(calc(100% - 3rem), 620px) !important;
+    display: grid !important;
+    grid-template-columns: 1.35fr 0.72fr 0.72fr 0.72fr !important;
+    gap: 1.6rem !important;
+    align-items: start !important;
+    text-align: left !important;
+  }
+
+  body:has(.stitch-about-hero) .stitch-footer__brand {
+    font-size: 0.72rem !important;
+    line-height: 1.15 !important;
+  }
+
+  body:has(.stitch-about-hero) .stitch-footer p,
+  body:has(.stitch-about-hero) .stitch-footer a,
+  body:has(.stitch-about-hero) .stitch-footer span {
+    font-size: 0.46rem !important;
+    line-height: 1.55 !important;
+  }
+
+  body:has(.stitch-about-hero) .stitch-footer nav {
+    gap: 0.35rem !important;
+  }
+
+  body:has(.stitch-about-hero) .stitch-footer__bottom {
+    display: none !important;
+  }
+}
