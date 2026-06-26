@@ -14253,3 +14253,15 @@ body:has(.stitch-quote-page) .stitch-quote-form-panel .quote-form .button {
     border-radius: 0.2rem !important;
   }
 }
+
+/* Stitch parity correction: keep catalogue filter rail as soft filled chips. */
+body:has(.stitch-catalogue-hero) .stitch-filter-panel a:not(:first-of-type),
+body:has(.stitch-catalogue-hero) .stitch-filter-panel span {
+  background: #e8e4df !important;
+  color: var(--stitch-ink) !important;
+}
+
+body:has(.stitch-catalogue-hero) .stitch-filter-panel a:first-of-type {
+  background: var(--stitch-primary) !important;
+  color: #fff !important;
+}
