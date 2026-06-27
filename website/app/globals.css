@@ -17738,6 +17738,77 @@ body:has(.stitch-detail-page--setup) .stitch-detail-button--primary::after {
 
 /* Home desktop parity: restore the wider Stitch editorial canvas for hero,
    category mosaic, and featured-card rhythm. */
+.stitch-feature__icon {
+  display: block;
+  height: 1.45rem;
+  margin: 0 auto 1rem;
+  position: relative;
+  width: 1.45rem;
+}
+
+.stitch-feature__icon::before,
+.stitch-feature__icon::after {
+  content: "";
+  display: block;
+  position: absolute;
+}
+
+.stitch-feature__icon--diamond {
+  border: 2px solid var(--stitch-ink);
+  height: 1rem;
+  transform: rotate(45deg);
+  width: 1rem;
+}
+
+.stitch-feature__icon--diamond::before {
+  border-left: 2px solid var(--stitch-ink);
+  height: 1.1rem;
+  left: 0.35rem;
+  top: -0.15rem;
+  transform: rotate(-45deg);
+}
+
+.stitch-feature__icon--tools::before,
+.stitch-feature__icon--tools::after {
+  background: var(--stitch-ink);
+  border-radius: 999px;
+  height: 1.55rem;
+  left: 0.65rem;
+  top: -0.05rem;
+  width: 0.16rem;
+}
+
+.stitch-feature__icon--tools::before {
+  transform: rotate(45deg);
+}
+
+.stitch-feature__icon--tools::after {
+  transform: rotate(-45deg);
+}
+
+.stitch-feature__icon--layout {
+  border: 2px solid var(--stitch-ink);
+  height: 1.05rem;
+  margin-top: 0.2rem;
+  width: 1.35rem;
+}
+
+.stitch-feature__icon--layout::before {
+  background: var(--stitch-ink);
+  bottom: 0;
+  left: 0.38rem;
+  top: 0;
+  width: 2px;
+}
+
+.stitch-feature__icon--layout::after {
+  background: var(--stitch-ink);
+  height: 2px;
+  left: 0;
+  right: 0;
+  top: 0.38rem;
+}
+
 @media (min-width: 901px) {
   body:has(.stitch-home-hero) .stitch-home-hero .stitch-container,
   body:has(.stitch-home-hero) .stitch-home-categories .stitch-container {
