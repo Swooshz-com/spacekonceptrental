@@ -17591,3 +17591,147 @@ body:has(.stitch-detail-page--setup) .stitch-detail-button--primary::after {
     height: 4.8rem !important;
   }
 }
+
+/* Catalogue detail desktop parity: flatten SKR listing metadata into the
+   Stitch product-detail rhythm instead of a heavy boxed spec panel. */
+@media (min-width: 901px) {
+  body:has(.stitch-detail-page:not(.stitch-detail-page--setup)) .stitch-detail-page {
+    padding-top: 5.25rem !important;
+  }
+
+  body:has(.stitch-detail-page:not(.stitch-detail-page--setup)) .stitch-detail-page > .stitch-container,
+  body:has(.stitch-detail-page:not(.stitch-detail-page--setup)) .stitch-detail-open-grid {
+    width: min(calc(100% - 7.25rem), 1300px) !important;
+    max-width: 1300px !important;
+    margin-inline: auto !important;
+  }
+
+  body:has(.stitch-detail-page:not(.stitch-detail-page--setup)) .stitch-detail-open-grid {
+    gap: clamp(3rem, 5.8vw, 5.6rem) !important;
+  }
+
+  body:has(.stitch-detail-page:not(.stitch-detail-page--setup)) .stitch-detail-open-media {
+    flex-basis: 36.9rem !important;
+    max-width: 36.9rem !important;
+  }
+
+  body:has(.stitch-detail-page:not(.stitch-detail-page--setup)) .stitch-detail-open-media img {
+    height: 36.8rem !important;
+  }
+
+  body:has(.stitch-detail-page:not(.stitch-detail-page--setup)) .stitch-detail-open-copy {
+    flex-basis: 28.4rem !important;
+    width: 28.4rem !important;
+    max-width: 28.4rem !important;
+  }
+
+  body:has(.stitch-detail-page:not(.stitch-detail-page--setup)) .stitch-detail-open-copy .stitch-back {
+    display: inline-block !important;
+    margin: 0 0 1.05rem !important;
+    color: var(--stitch-muted) !important;
+    font-size: 0.68rem !important;
+    letter-spacing: 0.18em !important;
+    pointer-events: none !important;
+  }
+
+  body:has(.stitch-detail-page:not(.stitch-detail-page--setup)) .stitch-detail-open-copy .stitch-back::before {
+    content: "Catalogue / " !important;
+  }
+
+  body:has(.stitch-detail-page:not(.stitch-detail-page--setup)) .stitch-detail-open-copy h1 {
+    font-size: clamp(4.25rem, 5.3vw, 5.75rem) !important;
+    font-weight: 400 !important;
+    letter-spacing: -0.075em !important;
+    line-height: 0.95 !important;
+    margin-bottom: 1.15rem !important;
+  }
+
+  body:has(.stitch-detail-page:not(.stitch-detail-page--setup)) .stitch-detail-open-copy > p:not(.stitch-detail-safe-note) {
+    color: var(--stitch-muted) !important;
+    font-size: 1.02rem !important;
+    line-height: 1.62 !important;
+    margin: 0 0 1.65rem !important;
+    max-width: 27rem !important;
+  }
+
+  body:has(.stitch-detail-page:not(.stitch-detail-page--setup)) .stitch-detail-safe-note,
+  body:has(.stitch-detail-page:not(.stitch-detail-page--setup)) .stitch-detail-spec-card h2,
+  body:has(.stitch-detail-page:not(.stitch-detail-page--setup)) .stitch-detail-spec-card dl > div:nth-child(n + 2),
+  body:has(.stitch-detail-page:not(.stitch-detail-page--setup)) .stitch-detail-quantity-row {
+    display: none !important;
+  }
+
+  body:has(.stitch-detail-page:not(.stitch-detail-page--setup)) .stitch-detail-spec-card {
+    margin: 0 0 6rem !important;
+    padding: 1.6rem 0 0 !important;
+    border: 0 !important;
+    border-top: 1px solid var(--stitch-line) !important;
+    border-bottom: 1px solid var(--stitch-line) !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+  }
+
+  body:has(.stitch-detail-page:not(.stitch-detail-page--setup)) .stitch-detail-spec-card dl {
+    display: block !important;
+    margin: 0 !important;
+  }
+
+  body:has(.stitch-detail-page:not(.stitch-detail-page--setup)) .stitch-detail-spec-card dl > div:first-child {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 1.5rem !important;
+    padding: 0 0 1.45rem !important;
+    border: 0 !important;
+  }
+
+  body:has(.stitch-detail-page:not(.stitch-detail-page--setup)) .stitch-detail-spec-card dt {
+    color: var(--stitch-muted) !important;
+    font-size: 0.68rem !important;
+    letter-spacing: 0.18em !important;
+    text-transform: uppercase !important;
+  }
+
+  body:has(.stitch-detail-page:not(.stitch-detail-page--setup)) .stitch-detail-spec-card dd {
+    color: var(--stitch-ink) !important;
+    font-size: 0.98rem !important;
+    font-weight: 400 !important;
+    text-align: right !important;
+  }
+
+  body:has(.stitch-detail-page:not(.stitch-detail-page--setup)) .stitch-detail-actions {
+    display: grid !important;
+    gap: 0.65rem !important;
+    grid-template-columns: 1fr !important;
+    margin-top: 0 !important;
+  }
+
+  body:has(.stitch-detail-page:not(.stitch-detail-page--setup)) .stitch-detail-actions .stitch-detail-button {
+    min-height: 2.9rem !important;
+    border-radius: 0 !important;
+    font-size: 0.68rem !important;
+    letter-spacing: 0.18em !important;
+  }
+
+  body:has(.stitch-detail-page:not(.stitch-detail-page--setup)) .stitch-detail-button--primary {
+    order: 1 !important;
+    background: var(--stitch-ink) !important;
+    border-color: var(--stitch-ink) !important;
+    color: var(--stitch-surface) !important;
+  }
+
+  body:has(.stitch-detail-page:not(.stitch-detail-page--setup)) .stitch-detail-button--back {
+    order: 2 !important;
+    background: transparent !important;
+    border: 1px solid var(--stitch-ink) !important;
+    color: var(--stitch-ink) !important;
+  }
+
+  body:has(.stitch-detail-page:not(.stitch-detail-page--setup)) .stitch-detail-button--request {
+    order: 3 !important;
+    min-height: 2.35rem !important;
+    border: 0 !important;
+    background: transparent !important;
+    color: var(--stitch-muted) !important;
+  }
+}
