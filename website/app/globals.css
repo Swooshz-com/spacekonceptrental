@@ -17898,3 +17898,357 @@ body:has(.stitch-detail-page--setup) .stitch-detail-button--primary::after {
     height: 11.4rem !important;
   }
 }
+
+/* Quote parity refinement: final cascade guard for the Stitch two-column
+   request screen while preserving the existing form state and submit logic. */
+body:has(.stitch-quote-page):not(:has(.quote-form--success)) .stitch-quote-page {
+  background: var(--stitch-surface) !important;
+  padding: 4.7rem 0 6.2rem !important;
+}
+
+body:has(.stitch-quote-page):not(:has(.quote-form--success)) .stitch-quote-page .stitch-container {
+  width: min(calc(100% - 8rem), 1280px) !important;
+  max-width: 1280px !important;
+}
+
+body:has(.stitch-quote-page):not(:has(.quote-form--success)) .stitch-quote-intro {
+  max-width: 43rem !important;
+  margin: 0 0 2.05rem !important;
+  text-align: left !important;
+}
+
+body:has(.stitch-quote-page):not(:has(.quote-form--success)) .stitch-quote-intro h1 {
+  margin: 0.7rem 0 0.9rem !important;
+  color: var(--stitch-ink) !important;
+  font-family: var(--font-body) !important;
+  font-size: clamp(2.9rem, 5.1vw, 4rem) !important;
+  font-weight: 300 !important;
+  letter-spacing: -0.065em !important;
+  line-height: 1.04 !important;
+}
+
+body:has(.stitch-quote-page):not(:has(.quote-form--success)) .stitch-quote-intro p:not(.stitch-eyebrow) {
+  max-width: 40rem !important;
+  color: var(--stitch-muted) !important;
+  font-size: 1rem !important;
+  line-height: 1.65 !important;
+}
+
+body:has(.stitch-quote-page):not(:has(.quote-form--success)) .stitch-quote-layout {
+  display: grid !important;
+  grid-template-columns: minmax(0, 34rem) minmax(0, 42rem) !important;
+  justify-content: space-between !important;
+  align-items: start !important;
+  gap: clamp(4rem, 8vw, 7.25rem) !important;
+}
+
+body:has(.stitch-quote-page):not(:has(.quote-form--success)) .stitch-quote-left {
+  display: grid !important;
+  gap: 1.55rem !important;
+  width: 100% !important;
+}
+
+body:has(.stitch-quote-page):not(:has(.quote-form--success)) .stitch-quote-card {
+  display: grid !important;
+  gap: 1.2rem !important;
+  margin: 0 !important;
+  padding: 1.55rem 1.5rem !important;
+  border: 1px solid var(--stitch-line) !important;
+  border-radius: 0.42rem !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+body:has(.stitch-quote-page):not(:has(.quote-form--success)) .stitch-quote-selection > .stitch-eyebrow {
+  margin: 0 0 0.65rem !important;
+}
+
+body:has(.stitch-quote-page):not(:has(.quote-form--success)) .stitch-quote-selection > h2,
+body:has(.stitch-quote-page):not(:has(.quote-form--success)) .stitch-quote-next h2,
+body:has(.stitch-quote-page):not(:has(.quote-form--success)) .stitch-quote-form-panel > h2 {
+  margin: 0 !important;
+  color: var(--stitch-ink) !important;
+  font-family: var(--font-body) !important;
+  font-size: 1.32rem !important;
+  font-weight: 400 !important;
+  letter-spacing: -0.035em !important;
+  line-height: 1.25 !important;
+}
+
+body:has(.stitch-quote-page):not(:has(.quote-form--success)) .stitch-selection-group {
+  display: grid !important;
+  gap: 0.6rem !important;
+}
+
+body:has(.stitch-quote-page):not(:has(.quote-form--success)) .stitch-selection-group h3 {
+  margin: 0 0 0.15rem !important;
+  padding-bottom: 0.55rem !important;
+  border-bottom: 1px solid var(--stitch-line) !important;
+  color: var(--stitch-ink) !important;
+  font-family: var(--font-body) !important;
+  font-size: 1rem !important;
+  font-weight: 400 !important;
+  letter-spacing: -0.02em !important;
+  text-transform: none !important;
+}
+
+body:has(.stitch-quote-page):not(:has(.quote-form--success)) .stitch-selection-row {
+  display: grid !important;
+  grid-template-columns: 4.2rem minmax(0, 1fr) auto !important;
+  align-items: center !important;
+  gap: 1rem !important;
+  min-height: 4.85rem !important;
+  padding: 0.7rem !important;
+  border: 1px solid var(--stitch-line) !important;
+  border-radius: 0.16rem !important;
+  background: var(--stitch-surface) !important;
+  box-shadow: none !important;
+}
+
+body:has(.stitch-quote-page):not(:has(.quote-form--success)) .stitch-selection-row img,
+body:has(.stitch-quote-page):not(:has(.quote-form--success)) .stitch-selection-row__icon {
+  width: 4.2rem !important;
+  height: 4.2rem !important;
+  border-radius: 0.12rem !important;
+  object-fit: cover !important;
+}
+
+body:has(.stitch-quote-page):not(:has(.quote-form--success)) .stitch-selection-row strong,
+body:has(.stitch-quote-page):not(:has(.quote-form--success)) .stitch-selection-row small {
+  display: block !important;
+  font-family: var(--font-body) !important;
+}
+
+body:has(.stitch-quote-page):not(:has(.quote-form--success)) .stitch-selection-row strong {
+  color: var(--stitch-ink) !important;
+  font-size: 0.8rem !important;
+  font-weight: 800 !important;
+  line-height: 1.2 !important;
+}
+
+body:has(.stitch-quote-page):not(:has(.quote-form--success)) .stitch-selection-row small {
+  margin-top: 0.18rem !important;
+  color: var(--stitch-muted) !important;
+  font-size: 0.72rem !important;
+}
+
+body:has(.stitch-quote-page):not(:has(.quote-form--success)) .stitch-quote-next {
+  padding: 1.55rem 1.5rem 1.8rem !important;
+}
+
+body:has(.stitch-quote-page):not(:has(.quote-form--success)) .stitch-quote-next ol {
+  display: grid !important;
+  gap: 0.82rem !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  list-style: none !important;
+}
+
+body:has(.stitch-quote-page):not(:has(.quote-form--success)) .stitch-quote-next li {
+  display: grid !important;
+  grid-template-columns: 1.25rem minmax(0, 1fr) !important;
+  align-items: center !important;
+  gap: 0.72rem !important;
+  color: var(--stitch-ink) !important;
+  font-size: 0.82rem !important;
+  font-weight: 800 !important;
+}
+
+body:has(.stitch-quote-page):not(:has(.quote-form--success)) .stitch-quote-next li::before {
+  width: 1.25rem !important;
+  height: 1.25rem !important;
+  border-radius: 999px !important;
+  background: var(--stitch-ink) !important;
+  color: var(--stitch-surface) !important;
+  font-size: 0.66rem !important;
+}
+
+body:has(.stitch-quote-page):not(:has(.quote-form--success)) .stitch-quote-form-panel {
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 2rem !important;
+  border: 1px solid color-mix(in srgb, var(--stitch-line) 74%, #cabda8) !important;
+  border-radius: 0.48rem !important;
+  background: #ece1d2 !important;
+  box-shadow: none !important;
+}
+
+body:has(.stitch-quote-page):not(:has(.quote-form--success)) .stitch-quote-form-panel .quote-form {
+  display: grid !important;
+  gap: 1.2rem !important;
+  margin-top: 1.65rem !important;
+}
+
+body:has(.stitch-quote-page):not(:has(.quote-form--success)) .stitch-quote-form-panel .quote-form__intro,
+body:has(.stitch-quote-page):not(:has(.quote-form--success)) .stitch-quote-form-panel .quote-form__selected,
+body:has(.stitch-quote-page):not(:has(.quote-form--success)) .stitch-quote-form-panel .quote-form__status {
+  margin: 0 !important;
+  padding: 0.95rem 1rem !important;
+  border: 1px solid rgba(95, 99, 79, 0.2) !important;
+  border-radius: 0.18rem !important;
+  background: rgba(252, 249, 245, 0.72) !important;
+  color: var(--stitch-ink) !important;
+  box-shadow: none !important;
+  font-size: 0.78rem !important;
+  font-weight: 600 !important;
+  line-height: 1.52 !important;
+}
+
+body:has(.stitch-quote-page):not(:has(.quote-form--success)) .stitch-quote-form-panel .quote-form__intro,
+body:has(.stitch-quote-page):not(:has(.quote-form--success)) .stitch-quote-form-panel .quote-form__selected {
+  display: none !important;
+}
+
+body:has(.stitch-quote-page):not(:has(.quote-form--success)) .stitch-quote-form-panel .quote-form__selected {
+  display: grid !important;
+  gap: 0.45rem !important;
+  color: var(--stitch-muted) !important;
+  font-size: 0.78rem !important;
+  font-weight: 400 !important;
+}
+
+body:has(.stitch-quote-page):not(:has(.quote-form--success)) .stitch-quote-form-panel .quote-form__selected {
+  display: none !important;
+}
+
+body:has(.stitch-quote-page):not(:has(.quote-form--success)) .stitch-quote-form-panel .quote-form fieldset {
+  display: grid !important;
+  gap: 0.78rem 1rem !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+}
+
+body:has(.stitch-quote-page):not(:has(.quote-form--success)) .stitch-quote-form-panel .quote-form__field-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+}
+
+body:has(.stitch-quote-page):not(:has(.quote-form--success)) .stitch-quote-form-panel .quote-form fieldset legend {
+  margin: 0 0 0.35rem !important;
+  padding: 0 !important;
+  color: var(--stitch-ink) !important;
+  font-family: var(--font-body) !important;
+  font-size: 0.72rem !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.12em !important;
+  text-transform: uppercase !important;
+}
+
+body:has(.stitch-quote-page):not(:has(.quote-form--success)) .stitch-quote-form-panel .quote-form label,
+body:has(.stitch-quote-page):not(:has(.quote-form--success)) .stitch-quote-form-panel .quote-form .quote-form__full-width {
+  display: grid !important;
+  gap: 0.42rem !important;
+  color: var(--stitch-ink) !important;
+  font-family: var(--font-body) !important;
+  font-size: 0.68rem !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.11em !important;
+  line-height: 1.25 !important;
+  text-transform: uppercase !important;
+}
+
+body:has(.stitch-quote-page):not(:has(.quote-form--success)) .stitch-quote-form-panel .quote-form input,
+body:has(.stitch-quote-page):not(:has(.quote-form--success)) .stitch-quote-form-panel .quote-form select,
+body:has(.stitch-quote-page):not(:has(.quote-form--success)) .stitch-quote-form-panel .quote-form textarea {
+  min-height: 2.8rem !important;
+  border: 1px solid var(--stitch-line) !important;
+  border-radius: 0 !important;
+  background: var(--stitch-surface) !important;
+  color: var(--stitch-ink) !important;
+  font-size: 0.86rem !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+}
+
+body:has(.stitch-quote-page):not(:has(.quote-form--success)) .stitch-quote-form-panel .quote-form textarea {
+  min-height: 6.2rem !important;
+}
+
+body:has(.stitch-quote-page):not(:has(.quote-form--success)) .stitch-quote-form-panel .quote-form small,
+body:has(.stitch-quote-page):not(:has(.quote-form--success)) .stitch-quote-form-panel .quote-form__legal {
+  color: var(--stitch-muted) !important;
+  font-size: 0.64rem !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.04em !important;
+  line-height: 1.45 !important;
+  text-transform: uppercase !important;
+}
+
+body:has(.stitch-quote-page):not(:has(.quote-form--success)) .stitch-quote-form-panel .quote-form small:not(.quote-form__field-error) {
+  display: none !important;
+}
+
+body:has(.stitch-quote-page):not(:has(.quote-form--success)) .stitch-quote-form-panel .quote-form__status--error {
+  padding: 1rem 1.1rem !important;
+  border-color: rgba(142, 76, 65, 0.35) !important;
+  background: rgba(252, 249, 245, 0.8) !important;
+  color: #71352b !important;
+  font-size: 0.95rem !important;
+  font-weight: 800 !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+}
+
+body:has(.stitch-quote-page):not(:has(.quote-form--success)) .stitch-quote-form-panel .quote-form__status--error::before {
+  display: none !important;
+}
+
+body:has(.stitch-quote-page):not(:has(.quote-form--success)) .stitch-quote-form-panel .quote-form .button {
+  min-height: 3rem !important;
+  border-radius: 0.12rem !important;
+  background: var(--stitch-ink) !important;
+  border-color: var(--stitch-ink) !important;
+  color: var(--stitch-surface) !important;
+  font-size: 0.76rem !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.12em !important;
+}
+
+@media (max-width: 900px) {
+  body:has(.stitch-quote-page):not(:has(.quote-form--success)) .stitch-quote-page {
+    padding: 2.5rem 0 4.5rem !important;
+  }
+
+  body:has(.stitch-quote-page):not(:has(.quote-form--success)) .stitch-quote-page .stitch-container {
+    width: min(calc(100% - 2rem), 42rem) !important;
+  }
+
+  body:has(.stitch-quote-page):not(:has(.quote-form--success)) .stitch-quote-intro h1 {
+    font-size: clamp(2.25rem, 11vw, 3rem) !important;
+  }
+
+  body:has(.stitch-quote-page):not(:has(.quote-form--success)) .stitch-quote-layout,
+  body:has(.stitch-quote-page):not(:has(.quote-form--success)) .stitch-quote-left {
+    grid-template-columns: 1fr !important;
+    gap: 1.25rem !important;
+  }
+
+  body:has(.stitch-quote-page):not(:has(.quote-form--success)) .stitch-quote-layout {
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  body:has(.stitch-quote-page):not(:has(.quote-form--success)) .stitch-quote-left {
+    display: contents !important;
+  }
+
+  body:has(.stitch-quote-page):not(:has(.quote-form--success)) .stitch-quote-selection {
+    order: 1 !important;
+  }
+
+  body:has(.stitch-quote-page):not(:has(.quote-form--success)) .stitch-quote-form-panel {
+    order: 2 !important;
+  }
+
+  body:has(.stitch-quote-page):not(:has(.quote-form--success)) .stitch-quote-next {
+    order: 3 !important;
+  }
+
+  body:has(.stitch-quote-page):not(:has(.quote-form--success)) .stitch-quote-form-panel {
+    padding: 1.35rem !important;
+  }
+
+  body:has(.stitch-quote-page):not(:has(.quote-form--success)) .stitch-quote-form-panel .quote-form__field-grid {
+    grid-template-columns: 1fr !important;
+  }
+}

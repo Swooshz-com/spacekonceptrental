@@ -29,7 +29,7 @@ function SelectionPanel({ product, requestedSlug, category, event, search }: { p
 }
 
 function NextStepsPanel() {
-  return <section className="stitch-quote-card stitch-quote-next"><p className="stitch-eyebrow">What happens next?</p><h2>What happens next?</h2><ol><li>Enquiry</li><li>Selection</li><li>Proposal</li><li>Follow-up</li></ol><p>This request does not confirm final rental details. It does not set aside furniture or finish rental details.</p></section>;
+  return <section className="stitch-quote-card stitch-quote-next"><p className="stitch-eyebrow">What happens next?</p><h2>What happens next?</h2><ol><li>Enquiry</li><li>Selection review</li><li>Tailored proposal</li><li>Direct team follow-up</li></ol><p>This request does not confirm final rental details. It does not set aside furniture or finish rental details.</p></section>;
 }
 
 export default async function QuotePage({ searchParams }: QuotePageProps = {}) {
