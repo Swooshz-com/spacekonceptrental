@@ -17453,3 +17453,55 @@ body:has(.stitch-detail-page--setup) .stitch-detail-button--primary::after {
     white-space: nowrap !important;
   }
 }
+
+/* Product detail parity pass: restore the Stitch image-led opening proportions. */
+@media (min-width: 901px) {
+  body:has(.stitch-detail-page:not(.stitch-detail-page--setup)) .stitch-detail-page {
+    padding: 5.8rem 0 0 !important;
+  }
+
+  body:has(.stitch-detail-page:not(.stitch-detail-page--setup)) .stitch-detail-open-grid {
+    gap: clamp(3.5rem, 5.5vw, 5.25rem) !important;
+    align-items: flex-start !important;
+  }
+
+  body:has(.stitch-detail-page:not(.stitch-detail-page--setup)) .stitch-detail-open-media {
+    flex-basis: 46rem !important;
+    max-width: 46rem !important;
+  }
+
+  body:has(.stitch-detail-page:not(.stitch-detail-page--setup)) .stitch-detail-open-media img {
+    height: 47rem !important;
+    object-fit: cover !important;
+    object-position: center !important;
+  }
+
+  body:has(.stitch-detail-page:not(.stitch-detail-page--setup)) .stitch-detail-open-copy {
+    flex-basis: 31rem !important;
+    width: 31rem !important;
+    max-width: 31rem !important;
+    padding-top: 0.3rem !important;
+  }
+
+  body:has(.stitch-detail-page:not(.stitch-detail-page--setup)) .stitch-detail-open-copy h1 {
+    font-size: clamp(4rem, 4.9vw, 5.05rem) !important;
+    line-height: 0.98 !important;
+    letter-spacing: -0.06em !important;
+    margin-bottom: 1.6rem !important;
+  }
+
+  body:has(.stitch-detail-page:not(.stitch-detail-page--setup)) .stitch-detail-open-copy > p:not(.stitch-detail-safe-note) {
+    font-size: 1.18rem !important;
+    line-height: 1.58 !important;
+    margin-bottom: 1.7rem !important;
+  }
+
+  body:has(.stitch-detail-page:not(.stitch-detail-page--setup)) .stitch-detail-spec-card {
+    padding: 1.75rem 1.85rem !important;
+    border-radius: 0 !important;
+  }
+
+  body:has(.stitch-detail-page:not(.stitch-detail-page--setup)) .stitch-detail-actions {
+    margin-top: 2rem !important;
+  }
+}
