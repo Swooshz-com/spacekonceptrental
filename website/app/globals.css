@@ -17063,3 +17063,96 @@ body:has(.stitch-detail-page--setup) .stitch-detail-button--primary::after {
     max-width: 32.5rem !important;
   }
 }
+
+/* Final about parity correction: tighten desktop story rhythm and remove excess vertical drift. */
+@media (min-width: 901px) {
+  body:has(.stitch-about-hero) .stitch-about-hero {
+    padding: 4.2rem 0 3.2rem !important;
+  }
+
+  body:has(.stitch-about-hero) .stitch-about-story {
+    padding: 4.6rem 0 4.8rem !important;
+    border-top: 1px solid var(--stitch-line) !important;
+    border-bottom: 1px solid var(--stitch-line) !important;
+  }
+
+  body:has(.stitch-about-hero) .stitch-about-story__grid {
+    display: grid !important;
+    grid-template-columns: minmax(0, 0.86fr) minmax(20rem, 0.74fr) !important;
+    gap: clamp(3rem, 7vw, 6.25rem) !important;
+    align-items: center !important;
+    width: min(calc(100% - 6rem), 62rem) !important;
+    max-width: 62rem !important;
+    margin-inline: auto !important;
+    min-height: 0 !important;
+  }
+
+  body:has(.stitch-about-hero) .stitch-about-story__grid > div:first-child {
+    max-width: 28rem !important;
+    align-self: center !important;
+  }
+
+  body:has(.stitch-about-hero) .stitch-about-story__grid > div:first-child h2 {
+    margin: 0 0 1.35rem !important;
+    font-size: clamp(1.9rem, 2.7vw, 2.65rem) !important;
+    line-height: 1.06 !important;
+  }
+
+  body:has(.stitch-about-hero) .stitch-about-story__grid > div:first-child p:not(.stitch-eyebrow) {
+    max-width: 25rem !important;
+    margin: 0 0 1rem !important;
+    font-size: 0.98rem !important;
+    line-height: 1.7 !important;
+  }
+
+  body:has(.stitch-about-hero) .stitch-about-story__image {
+    width: 100% !important;
+    max-width: 24rem !important;
+    justify-self: end !important;
+    padding: 2.25rem !important;
+    border: 1px solid var(--stitch-line) !important;
+    background: #fffdfa !important;
+  }
+
+  body:has(.stitch-about-hero) .stitch-about-story__image img {
+    width: 100% !important;
+    height: 31rem !important;
+    object-fit: cover !important;
+    object-position: center !important;
+  }
+
+  body:has(.stitch-about-hero) .stitch-about-principles {
+    padding: 4.6rem 0 4.8rem !important;
+  }
+
+  body:has(.stitch-about-hero) .stitch-about-service {
+    padding: 4.8rem 0 5.2rem !important;
+  }
+}
+
+/* About desktop layout safety: avoid legacy grid tracks pushing story copy off-canvas. */
+@media (min-width: 901px) {
+  body:has(.stitch-about-hero) .stitch-about-story__grid {
+    display: flex !important;
+    grid-template-columns: none !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    gap: clamp(4rem, 8vw, 7rem) !important;
+    width: min(calc(100% - 10rem), 72rem) !important;
+    max-width: 72rem !important;
+    margin-inline: auto !important;
+  }
+
+  body:has(.stitch-about-hero) .stitch-about-story__grid > div:first-child {
+    flex: 0 1 28rem !important;
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: 28rem !important;
+  }
+
+  body:has(.stitch-about-hero) .stitch-about-story__image {
+    flex: 0 0 24rem !important;
+    width: 24rem !important;
+    max-width: 24rem !important;
+  }
+}
