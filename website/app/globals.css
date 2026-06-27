@@ -17209,3 +17209,72 @@ body:has(.stitch-detail-page--setup) .stitch-detail-button--primary::after {
     grid-column: 1 / -1 !important;
   }
 }
+
+/* Stitch parity final override: keep quote mobile on the shared footer rhythm. */
+@media (max-width: 899px) {
+  body:has(.stitch-quote-page):not(:has(.quote-form--success)) .stitch-footer {
+    margin-bottom: 5.75rem !important;
+    padding: 56px 0 32px !important;
+    text-align: center !important;
+    border-top: 1px solid var(--skr-outline) !important;
+  }
+
+  body:has(.stitch-quote-page):not(:has(.quote-form--success)) .stitch-footer__grid {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 18px !important;
+    justify-items: center !important;
+  }
+
+  body:has(.stitch-quote-page):not(:has(.quote-form--success)) .stitch-footer h2 {
+    font-family: var(--stitch-serif) !important;
+    font-size: 24px !important;
+    letter-spacing: -0.03em !important;
+    margin-bottom: 18px !important;
+  }
+
+  body:has(.stitch-quote-page):not(:has(.quote-form--success)) .stitch-footer h3,
+  body:has(.stitch-quote-page):not(:has(.quote-form--success)) .stitch-footer p {
+    display: none !important;
+  }
+
+  body:has(.stitch-quote-page):not(:has(.quote-form--success)) .stitch-footer nav {
+    display: grid !important;
+    gap: 8px !important;
+    justify-items: center !important;
+  }
+
+  body:has(.stitch-quote-page):not(:has(.quote-form--success)) .stitch-footer__bottom {
+    width: min(100% - 48px, 360px) !important;
+    margin: 24px auto 0 !important;
+    padding-top: 24px !important;
+    border-top: 1px solid var(--skr-outline) !important;
+    text-align: center !important;
+    font-family: var(--font-body) !important;
+    font-size: 0.9rem !important;
+    letter-spacing: 0 !important;
+  }
+}
+
+/* Stitch parity final override: reduce catalogue detail mobile hero drift. */
+@media (max-width: 899px) {
+  body:has(.stitch-detail-page:not(.stitch-detail-page--setup)) .stitch-detail-page {
+    padding-top: 0 !important;
+  }
+
+  body:has(.stitch-detail-page:not(.stitch-detail-page--setup)) .stitch-detail-page > .stitch-container {
+    width: 100% !important;
+    padding-top: 24px !important;
+  }
+
+  body:has(.stitch-detail-page:not(.stitch-detail-page--setup)) .stitch-detail-open-grid {
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+    gap: 3.6rem !important;
+  }
+
+  body:has(.stitch-detail-page:not(.stitch-detail-page--setup)) .stitch-detail-open-media {
+    width: 100% !important;
+    margin-top: -5.25rem !important;
+  }
+}
