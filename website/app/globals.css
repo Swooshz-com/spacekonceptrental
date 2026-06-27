@@ -17735,3 +17735,95 @@ body:has(.stitch-detail-page--setup) .stitch-detail-button--primary::after {
     color: var(--stitch-muted) !important;
   }
 }
+
+/* Home desktop parity: restore the wider Stitch editorial canvas for hero,
+   category mosaic, and featured-card rhythm. */
+@media (min-width: 901px) {
+  body:has(.stitch-home-hero) .stitch-home-hero .stitch-container,
+  body:has(.stitch-home-hero) .stitch-home-categories .stitch-container {
+    width: min(calc(100% - 6.25rem), 1288px) !important;
+    max-width: 1288px !important;
+  }
+
+  body:has(.stitch-home-hero) .stitch-home-hero {
+    padding: 1.9rem 0 3.35rem !important;
+  }
+
+  body:has(.stitch-home-hero) .stitch-home-hero__grid {
+    display: block !important;
+  }
+
+  body:has(.stitch-home-hero) .stitch-home-hero__media {
+    height: clamp(30.5rem, 41vw, 34.9rem) !important;
+    min-height: 0 !important;
+    border-radius: 0.28rem !important;
+    overflow: hidden !important;
+  }
+
+  body:has(.stitch-home-hero) .stitch-home-hero__media img {
+    height: 100% !important;
+    object-fit: cover !important;
+    object-position: center !important;
+  }
+
+  body:has(.stitch-home-hero) .stitch-home-hero__copy {
+    width: min(100%, 54rem) !important;
+    max-width: 54rem !important;
+  }
+
+  body:has(.stitch-home-hero) .stitch-home-hero__copy h1 {
+    font-size: clamp(3.45rem, 5.05vw, 5.05rem) !important;
+    line-height: 1.02 !important;
+  }
+
+  body:has(.stitch-home-hero) .stitch-home-advantage {
+    padding-top: 1.25rem !important;
+  }
+
+  body:has(.stitch-home-hero) .stitch-home-advantage .stitch-container {
+    width: min(calc(100% - 11rem), 1032px) !important;
+  }
+
+  body:has(.stitch-home-hero) .stitch-home-categories {
+    padding-top: 2.25rem !important;
+  }
+
+  body:has(.stitch-home-hero) .stitch-home-category-mosaic {
+    gap: 1.45rem !important;
+  }
+
+  body:has(.stitch-home-hero) .stitch-home-category-card--1 {
+    min-height: 36.4rem !important;
+  }
+
+  body:has(.stitch-home-hero) .stitch-home-category-card--2,
+  body:has(.stitch-home-hero) .stitch-home-category-card--3 {
+    min-height: 16.25rem !important;
+  }
+
+  body:has(.stitch-home-hero) .stitch-home-category-card--4 {
+    min-height: 18.65rem !important;
+  }
+
+  body:has(.stitch-home-hero) .stitch-home-featured {
+    padding-top: 3.2rem !important;
+  }
+
+  body:has(.stitch-home-hero) .stitch-home-featured .stitch-container {
+    width: min(calc(100% - 11rem), 1040px) !important;
+  }
+
+  body:has(.stitch-home-hero) .stitch-home-featured-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 1.5rem !important;
+  }
+
+  body:has(.stitch-home-hero) .stitch-home-feature-card {
+    min-height: 16.8rem !important;
+    padding: 0.55rem !important;
+  }
+
+  body:has(.stitch-home-hero) .stitch-home-feature-card img {
+    height: 11.4rem !important;
+  }
+}
