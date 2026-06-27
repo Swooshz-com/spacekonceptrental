@@ -17351,3 +17351,105 @@ body:has(.stitch-detail-page--setup) .stitch-detail-button--primary::after {
     background: #f8f8f6 !important;
   }
 }
+
+/* Final setups parity pass: pull the editorial composition back to the Stitch left rail. */
+@media (min-width: 901px) {
+  body:has(.stitch-setups-hero) .stitch-setups-hero {
+    padding: 4.2rem 0 2.7rem !important;
+  }
+
+  body:has(.stitch-setups-hero) .stitch-setups-hero .stitch-container,
+  body:has(.stitch-setups-hero) .stitch-setups-feature-section .stitch-container,
+  body:has(.stitch-setups-hero) .stitch-setups-filter-section .stitch-container,
+  body:has(.stitch-setups-hero) .stitch-setups-grid-section .stitch-container {
+    width: min(calc(100% - 6rem), 82rem) !important;
+    max-width: 82rem !important;
+  }
+
+  body:has(.stitch-setups-hero) .stitch-setups-hero__copy {
+    margin: 0 !important;
+    max-width: 38rem !important;
+    text-align: left !important;
+  }
+
+  body:has(.stitch-setups-hero) .stitch-setups-hero__copy h1 {
+    margin-top: 0.55rem !important;
+    font-size: clamp(3.8rem, 5.8vw, 5.35rem) !important;
+    line-height: 0.98 !important;
+  }
+
+  body:has(.stitch-setups-hero) .stitch-setups-hero__copy p:not(.stitch-eyebrow) {
+    max-width: 34rem !important;
+    font-size: 1rem !important;
+    line-height: 1.65 !important;
+  }
+
+  body:has(.stitch-setups-hero) .stitch-setups-feature-section {
+    padding: 1.2rem 0 3.8rem !important;
+  }
+
+  body:has(.stitch-setups-hero) .stitch-setups-feature-split {
+    display: grid !important;
+    grid-template-columns: 20rem minmax(0, 24rem) !important;
+    justify-content: start !important;
+    align-items: center !important;
+    gap: clamp(5rem, 9vw, 7.6rem) !important;
+    margin: 0 !important;
+  }
+
+  body:has(.stitch-setups-hero) .stitch-setups-feature__image {
+    width: 20rem !important;
+    height: 31rem !important;
+  }
+
+  body:has(.stitch-setups-hero) .stitch-setups-feature__image img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+  }
+
+  body:has(.stitch-setups-hero) .stitch-setups-feature__copy {
+    max-width: 23rem !important;
+    padding-top: 2rem !important;
+  }
+
+  body:has(.stitch-setups-hero) .stitch-setups-feature__copy h2 {
+    font-size: 2rem !important;
+    line-height: 1.08 !important;
+    margin: 0.7rem 0 1.05rem !important;
+  }
+
+  body:has(.stitch-setups-hero) .stitch-setups-feature__copy .stitch-link-button {
+    width: auto !important;
+    min-height: 0 !important;
+    padding: 0 0 0.35rem !important;
+    background: transparent !important;
+    color: var(--stitch-ink) !important;
+    border: 0 !important;
+    border-bottom: 1px solid currentColor !important;
+    letter-spacing: 0.06em !important;
+  }
+
+  body:has(.stitch-setups-hero) .stitch-setups-filter-section {
+    padding: 0.6rem 0 2.35rem !important;
+  }
+
+  body:has(.stitch-setups-hero) .stitch-setups-grid-section {
+    padding-top: 0 !important;
+  }
+}
+
+/* Setups desktop rail safety: preserve Stitch-like left alignment without escaping the container. */
+@media (min-width: 901px) {
+  body:has(.stitch-setups-hero) .stitch-setups-hero__copy {
+    width: min(calc(100% - 6rem), 82rem) !important;
+    max-width: 82rem !important;
+    margin-inline: auto !important;
+  }
+
+  body:has(.stitch-setups-hero) .stitch-setups-hero__copy h1 {
+    max-width: 48rem !important;
+    font-size: clamp(3.4rem, 4.7vw, 4.45rem) !important;
+    white-space: nowrap !important;
+  }
+}
