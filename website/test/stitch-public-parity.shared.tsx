@@ -86,9 +86,16 @@ export function runStitchPublicParitySuite(label: string) {
       cleanup();
 
       render(<CategoriesPageContent catalogue={sampleCatalogue} />);
-      expect(screen.getByRole("heading", { name: /browse by category/i })).toBeInTheDocument();
-      expect(screen.getByRole("link", { name: /compare/i })).toHaveAttribute("href", "/listings?category=lounge");
-      expect(screen.getByRole("link", { name: /send an enquiry/i })).toHaveAttribute("href", "/quote");
+      expect(screen.getByRole("heading", { name: /furniture catalogue/i })).toBeInTheDocument();
+      expect(screen.getByRole("link", { name: /add modular lounge set to quote/i })).toHaveAttribute(
+        "href",
+        "/quote?listing=modular-lounge-set"
+      );
+      expect(screen.getByRole("link", { name: /view details for modular lounge set/i })).toHaveAttribute(
+        "href",
+        "/catalogue/modular-lounge-set"
+      );
+      expect(visibleText()).toMatch(/browsing does not set aside furniture/i);
       expect(visibleText()).not.toMatch(forbiddenPublicTerms);
       cleanup();
 
@@ -110,7 +117,8 @@ export function runStitchPublicParitySuite(label: string) {
     it("preserves empty-state recovery and quote receipt safety", () => {
       render(<CataloguePageContent catalogue={{ source: "fallback", categories: [], products: [] } as any} />);
       expect(screen.getByRole("heading", { name: /no public rental listings are available right now/i })).toBeInTheDocument();
-      expect(screen.getAllByRole("link", { name: /request quote/i })[0]).toHaveAttribute("href", "/quote");
+      expect(visibleText()).toMatch(/public catalogue will show real rental records/i);
+      expect(visibleText()).toMatch(/send an enquiry with the pieces or setup you have in mind/i);
       expect(visibleText()).not.toMatch(forbiddenPublicTerms);
       cleanup();
 

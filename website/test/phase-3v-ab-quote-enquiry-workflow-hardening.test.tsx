@@ -327,11 +327,15 @@ describe("Phase 3V-A/B quote enquiry workflow hardening", () => {
 
     cleanup();
     render(<CategoriesPageContent catalogue={sampleCatalogue} />);
-    expect(
-      screen
-        .getAllByRole("link", { name: /send an enquiry/i })
-        .every((link) => link.getAttribute("href") === "/quote")
-    ).toBe(true);
+    expect(screen.getByRole("heading", { name: /furniture catalogue/i })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /add modular lounge set to quote/i })).toHaveAttribute(
+      "href",
+      "/quote?listing=modular-lounge-set"
+    );
+    expect(screen.getByRole("link", { name: /view details for modular lounge set/i })).toHaveAttribute(
+      "href",
+      "/catalogue/modular-lounge-set"
+    );
 
     cleanup();
     render(<EventsPage />);
