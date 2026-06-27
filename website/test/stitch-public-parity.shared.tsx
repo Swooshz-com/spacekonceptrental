@@ -117,8 +117,8 @@ export function runStitchPublicParitySuite(label: string) {
     it("preserves empty-state recovery and quote receipt safety", () => {
       render(<CataloguePageContent catalogue={{ source: "fallback", categories: [], products: [] } as any} />);
       expect(screen.getByRole("heading", { name: /no public rental listings are available right now/i })).toBeInTheDocument();
-      expect(visibleText()).toMatch(/public catalogue will show real rental records/i);
-      expect(visibleText()).toMatch(/send an enquiry with the pieces or setup you have in mind/i);
+      expect(visibleText()).toMatch(/real catalogue records will appear here once published/i);
+      expect(visibleText()).toMatch(/send a rental enquiry if you already know the pieces or setup direction/i);
       expect(visibleText()).not.toMatch(forbiddenPublicTerms);
       cleanup();
 
