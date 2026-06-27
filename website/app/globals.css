@@ -16019,6 +16019,162 @@ body:has(.stitch-quote-page):not(:has(.quote-form--success)) .stitch-quote-form-
   }
 }
 
+/* Final production polish: contact is guidance + CTA, not a second quote form. */
+body:has(.stitch-contact-hero) .stitch-contact-section .stitch-container.stitch-contact-grid {
+  align-items: start !important;
+}
+
+body:has(.stitch-contact-hero) .stitch-contact-brief-panel {
+  display: grid !important;
+  gap: 1.25rem !important;
+  align-self: start !important;
+  margin: 0 !important;
+  padding: clamp(1.65rem, 2.8vw, 2.35rem) !important;
+  border: 1px solid color-mix(in srgb, var(--stitch-line) 70%, #cbbca7) !important;
+  border-radius: 0.56rem !important;
+  background:
+    linear-gradient(145deg, rgba(252, 249, 245, 0.82), rgba(235, 224, 209, 0.94)),
+    #ece1d2 !important;
+  box-shadow: 0 1.1rem 2.8rem rgba(26, 26, 26, 0.06) !important;
+  color: var(--stitch-ink) !important;
+}
+
+body:has(.stitch-contact-hero) .stitch-contact-brief-panel h2 {
+  margin: 0 !important;
+  max-width: 11ch !important;
+  color: var(--stitch-ink) !important;
+  font-family: var(--font-display) !important;
+  font-size: clamp(2.05rem, 3.2vw, 3.05rem) !important;
+  font-weight: 400 !important;
+  letter-spacing: -0.055em !important;
+  line-height: 0.98 !important;
+}
+
+body:has(.stitch-contact-hero) .stitch-contact-brief-panel > p:not(.stitch-eyebrow):not(.stitch-contact-brief-note) {
+  max-width: 34rem !important;
+  margin: 0 !important;
+  color: var(--stitch-muted) !important;
+  font-size: 1rem !important;
+  line-height: 1.65 !important;
+}
+
+body:has(.stitch-contact-hero) .stitch-contact-brief-actions {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 0.7rem !important;
+  margin: 0.2rem 0 0.15rem !important;
+}
+
+body:has(.stitch-contact-hero) .stitch-contact-brief-actions .stitch-button {
+  min-height: 2.9rem !important;
+  padding: 0.85rem 1.15rem !important;
+  border-radius: 0.18rem !important;
+  font-size: 0.72rem !important;
+  letter-spacing: 0.12em !important;
+}
+
+body:has(.stitch-contact-hero) .stitch-contact-brief-actions .stitch-button--primary {
+  flex-basis: 100% !important;
+  justify-content: center !important;
+}
+
+body:has(.stitch-contact-hero) .stitch-contact-brief-list {
+  display: grid !important;
+  gap: 0.75rem !important;
+  margin-top: 0.25rem !important;
+}
+
+body:has(.stitch-contact-hero) .stitch-contact-brief-list article {
+  display: grid !important;
+  grid-template-columns: 1.65rem minmax(0, 1fr) !important;
+  gap: 0.8rem !important;
+  align-items: start !important;
+  padding: 0.92rem 0 !important;
+  border-top: 1px solid rgba(95, 99, 79, 0.16) !important;
+}
+
+body:has(.stitch-contact-hero) .stitch-contact-brief-list article:last-child {
+  border-bottom: 1px solid rgba(95, 99, 79, 0.16) !important;
+}
+
+body:has(.stitch-contact-hero) .stitch-contact-brief-list article > span {
+  display: block !important;
+  width: 1.55rem !important;
+  height: 1.55rem !important;
+  margin-top: 0.1rem !important;
+  border: 1px solid var(--stitch-ink) !important;
+  border-radius: 999px !important;
+  position: relative !important;
+}
+
+body:has(.stitch-contact-hero) .stitch-contact-brief-list article > span::after {
+  content: "" !important;
+  position: absolute !important;
+  inset: 0.42rem !important;
+  border-top: 1px solid var(--stitch-ink) !important;
+  border-right: 1px solid var(--stitch-ink) !important;
+  transform: rotate(45deg) translate(-0.08rem, 0.08rem) !important;
+}
+
+body:has(.stitch-contact-hero) .stitch-contact-brief-list h3 {
+  margin: 0 0 0.22rem !important;
+  color: var(--stitch-ink) !important;
+  font-family: var(--font-body) !important;
+  font-size: 0.84rem !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.08em !important;
+  line-height: 1.25 !important;
+  text-transform: uppercase !important;
+}
+
+body:has(.stitch-contact-hero) .stitch-contact-brief-list p,
+body:has(.stitch-contact-hero) .stitch-contact-brief-note {
+  margin: 0 !important;
+  color: var(--stitch-muted) !important;
+  font-size: 0.88rem !important;
+  line-height: 1.55 !important;
+}
+
+body:has(.stitch-contact-hero) .stitch-contact-brief-note {
+  padding: 0.95rem 1rem !important;
+  border: 1px solid rgba(95, 99, 79, 0.16) !important;
+  border-radius: 0.22rem !important;
+  background: rgba(252, 249, 245, 0.58) !important;
+  font-size: 0.8rem !important;
+}
+
+@media (min-width: 901px) {
+  body:has(.stitch-contact-hero) .stitch-contact-section .stitch-container.stitch-contact-grid {
+    grid-template-columns: minmax(0, 31rem) minmax(24rem, 35rem) !important;
+    gap: clamp(4rem, 8vw, 7rem) !important;
+  }
+
+  body:has(.stitch-contact-hero) .stitch-contact-copy {
+    padding-top: 0.25rem !important;
+  }
+}
+
+@media (max-width: 900px) {
+  body:has(.stitch-contact-hero) .stitch-contact-section .stitch-container.stitch-contact-grid {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 1.35rem !important;
+  }
+
+  body:has(.stitch-contact-hero) .stitch-contact-brief-panel {
+    padding: 1.35rem !important;
+  }
+
+  body:has(.stitch-contact-hero) .stitch-contact-brief-actions {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+  }
+
+  body:has(.stitch-contact-hero) .stitch-contact-brief-actions .stitch-button {
+    width: 100% !important;
+  }
+}
+
 /* Stitch parity final override: setup detail desktop needs the roomier
    editorial image/detail rhythm from the reference screen. */
 @media (min-width: 640px) {
