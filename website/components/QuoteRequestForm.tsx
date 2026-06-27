@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { ChangeEvent, FormEvent } from "react";
 
 type QuoteApiResponse = {
@@ -271,6 +271,14 @@ export default function QuoteRequestForm({
     submitState.status === "success"
       ? submitState.publicReference ?? submitState.requestId
       : undefined;
+
+  useEffect(() => {
+    if (submitState.status !== "success") {
+      return;
+    }
+
+    window.scrollTo({ top: 0 });
+  }, [submitState.status]);
 
   return (
     <form
