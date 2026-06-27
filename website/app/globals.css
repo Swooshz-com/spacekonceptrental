@@ -17505,3 +17505,12 @@ body:has(.stitch-detail-page--setup) .stitch-detail-button--primary::after {
     margin-top: 2rem !important;
   }
 }
+
+/* Product detail mobile containment: prevent the copy column from adding gutter width. */
+@media (max-width: 899px) {
+  body:has(.stitch-detail-page:not(.stitch-detail-page--setup)) .stitch-detail-open-copy {
+    width: calc(100% - 2rem) !important;
+    max-width: calc(100% - 2rem) !important;
+    margin-inline: 1rem !important;
+  }
+}
