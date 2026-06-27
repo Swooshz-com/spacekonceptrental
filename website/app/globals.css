@@ -17278,3 +17278,76 @@ body:has(.stitch-detail-page--setup) .stitch-detail-button--primary::after {
     margin-top: -5.25rem !important;
   }
 }
+
+/* Final about parity pass: match the Stitch product-story composition more closely. */
+@media (min-width: 901px) {
+  body:has(.stitch-about-hero) .stitch-about-story {
+    padding: 4.4rem 0 4.2rem !important;
+  }
+
+  body:has(.stitch-about-hero) .stitch-about-story__grid {
+    width: min(calc(100% - 4.5rem), 74rem) !important;
+    max-width: 74rem !important;
+    gap: clamp(4.5rem, 10vw, 8rem) !important;
+  }
+
+  body:has(.stitch-about-hero) .stitch-about-story__grid > div:first-child {
+    flex: 0 1 26rem !important;
+    max-width: 26rem !important;
+  }
+
+  body:has(.stitch-about-hero) .stitch-about-story__image {
+    flex: 0 0 32rem !important;
+    width: 32rem !important;
+    max-width: 32rem !important;
+    padding: 0 !important;
+    background: #f8f8f6 !important;
+    border: 1px solid var(--stitch-line) !important;
+    box-shadow: -1.45rem 1.45rem 0 rgba(221, 217, 210, 0.28) !important;
+  }
+
+  body:has(.stitch-about-hero) .stitch-about-story__image img {
+    height: 27rem !important;
+    object-fit: contain !important;
+    object-position: center !important;
+    padding: 3rem !important;
+    background: #f8f8f6 !important;
+  }
+
+  body:has(.stitch-about-hero) .stitch-about-principles {
+    padding: 4.8rem 0 4.6rem !important;
+  }
+
+  body:has(.stitch-about-hero) .stitch-about-principles .stitch-feature-grid,
+  body:has(.stitch-about-hero) .stitch-about-service .stitch-feature-grid {
+    gap: 1.5rem !important;
+  }
+
+  body:has(.stitch-about-hero) .stitch-about-card {
+    min-height: 8.4rem !important;
+    padding: 2rem 1.7rem !important;
+  }
+
+  body:has(.stitch-about-hero) .stitch-about-card--large {
+    min-height: 10.75rem !important;
+    align-items: flex-start !important;
+    text-align: left !important;
+  }
+
+  body:has(.stitch-about-hero) .stitch-about-card--large h3,
+  body:has(.stitch-about-hero) .stitch-about-card--large p {
+    text-align: left !important;
+  }
+}
+
+@media (max-width: 899px) {
+  body:has(.stitch-about-hero) .stitch-about-story__image {
+    background: #f8f8f6 !important;
+  }
+
+  body:has(.stitch-about-hero) .stitch-about-story__image img {
+    object-fit: contain !important;
+    padding: 2rem !important;
+    background: #f8f8f6 !important;
+  }
+}
