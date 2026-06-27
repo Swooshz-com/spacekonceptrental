@@ -16841,3 +16841,49 @@ body:has(.stitch-detail-page--setup) .stitch-detail-button--primary::after {
     justify-content: center !important;
   }
 }
+
+/* Final visual-parity correction: prevent desktop Setups from clipping against the viewport edge. */
+@media (min-width: 901px) {
+  body:has(.stitch-setups-hero) .stitch-setups-hero {
+    padding: 3.9rem 0 2.2rem !important;
+  }
+
+  body:has(.stitch-setups-hero) .stitch-setups-hero__copy {
+    width: min(calc(100% - 6.5rem), 58rem) !important;
+    max-width: 58rem !important;
+    margin-inline: auto !important;
+    padding: 0 !important;
+    text-align: left !important;
+  }
+
+  body:has(.stitch-setups-hero) .stitch-setups-hero__copy h1 {
+    max-width: 38rem !important;
+    font-size: clamp(3rem, 4.8vw, 5.3rem) !important;
+    line-height: 0.98 !important;
+  }
+
+  body:has(.stitch-setups-hero) .stitch-setups-hero__copy p:not(.stitch-eyebrow) {
+    max-width: 34rem !important;
+  }
+
+  body:has(.stitch-setups-hero) .stitch-setups-feature-split,
+  body:has(.stitch-setups-hero) .stitch-setups-filter-section .stitch-container,
+  body:has(.stitch-setups-hero) .stitch-setups-grid-section .stitch-container {
+    width: min(calc(100% - 6.5rem), 58rem) !important;
+    max-width: 58rem !important;
+    margin-inline: auto !important;
+  }
+
+  body:has(.stitch-setups-hero) .stitch-setups-feature-split {
+    grid-template-columns: minmax(13rem, 0.44fr) minmax(0, 0.7fr) !important;
+    gap: clamp(3.5rem, 8vw, 9rem) !important;
+  }
+
+  body:has(.stitch-setups-hero) .stitch-setups-feature__image {
+    aspect-ratio: 0.68 / 1 !important;
+  }
+
+  body:has(.stitch-setups-hero) .stitch-setups-feature__copy {
+    max-width: 25rem !important;
+  }
+}
