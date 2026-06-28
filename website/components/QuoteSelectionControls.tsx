@@ -11,6 +11,8 @@ export type QuoteSelectionItem = {
   slug: string;
 };
 
+type QuoteSelectionSummaryItem = QuoteSelectionItem & { imageSrc?: string };
+
 const quoteSelectionStorageKey = "skr.quoteSelection.v1";
 const quoteSelectionChangeEvent = "skr:quote-selection-change";
 const maxStoredQuoteItems = 20;
@@ -85,6 +87,85 @@ export function formatQuoteSelectionItems(items: QuoteSelectionItem[]) {
       item.quantity > 1 ? `${item.name} x ${item.quantity}` : item.name
     )
     .join("\n");
+}
+
+export function QuoteSelectionSummary({
+  category,
+  event,
+  fallbackItems = [],
+  requestedSlug,
+  search
+}: {
+  category?: string;
+  event?: string;
+  fallbackItems?: QuoteSelectionSummaryItem[];
+  requestedSlug?: string;
+  search?: string;
+}) {
+  const [items, setItems] = useState<QuoteSelectionItem[]>([]);
+  const visibleItems: QuoteSelectionSummaryItem[] = items.length ? items : fallbackItems;
+  const hasDiscoveryContext = Boolean(requestedSlug || category || event || search);
+
+  useEffect(() => {
+    function syncSelection() {
+      setItems(readQuoteSelection());
+    }
+
+    syncSelection();
+    window.addEventListener(quoteSelectionChangeEvent, syncSelection);
+    window.addEventListener("storage", syncSelection);
+
+    return () => {
+      window.removeEventListener(quoteSelectionChangeEvent, syncSelection);
+      window.removeEventListener("storage", syncSelection);
+    };
+  }, []);
+
+  return (
+    <section className="stitch-quote-card stitch-quote-selection">
+      <p className="stitch-eyebrow">Your Selection</p>
+      <h2>Your Selection</h2>
+      {visibleItems.length ? (
+        <div className="stitch-selection-group">
+          <h3>Selected Rental Items</h3>
+          {visibleItems.map((item) => (
+            <article className="stitch-selection-row" key={item.slug}>
+              {item.imageSrc ? (
+                <img alt={`${item.name} thumbnail`} src={item.imageSrc} />
+              ) : (
+                <span className="stitch-selection-row__icon" aria-hidden="true">SK</span>
+              )}
+              <div>
+                <strong>{item.name}</strong>
+                <small>Qty: {item.quantity}</small>
+                {item.category ? <small>{item.category}</small> : null}
+              </div>
+              <Link href={`/catalogue/${item.slug}`}>Details</Link>
+            </article>
+          ))}
+        </div>
+      ) : (
+        <>
+          <p>
+            {requestedSlug
+              ? "The listing link may be old or unavailable. Keep this reference as editable request text if it still describes what you need."
+              : "Share the requested pieces or setup direction you have in mind. The team can review your event context and follow up directly."}
+          </p>
+          {hasDiscoveryContext ? (
+            <>
+              <p>Discovery context is editable request intake only. Adjust the requested listings or items before sending.</p>
+              <dl className="stitch-facts">
+                {requestedSlug ? <div><dt>Selected listing reference</dt><dd>{requestedSlug}</dd></div> : null}
+                {category ? <div><dt>Category</dt><dd>{category}</dd></div> : null}
+                {event ? <div><dt>Event details</dt><dd>{event}</dd></div> : null}
+                {search ? <div><dt>Search</dt><dd>{search}</dd></div> : null}
+              </dl>
+            </>
+          ) : null}
+        </>
+      )}
+    </section>
+  );
 }
 
 export function QuoteSelectionButton({ ariaLabel, item }: { ariaLabel?: string; item: QuoteSelectionItem }) {

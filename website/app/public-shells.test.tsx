@@ -282,6 +282,26 @@ describe("public page shells", () => {
     expect(styles).toMatch(/@media\s*\(max-width:/i);
   });
 
+  it("keeps public hero titles on the thin Furniture Catalogue serif weight", () => {
+    const styles = readFileSync(resolve(process.cwd(), "app/globals.css"), "utf8");
+    const finalCorrectionBlock = styles.slice(
+      styles.indexOf("/* Final correction: keep public title rails and quote columns stable. */")
+    );
+    const publicHeroTitleRule = finalCorrectionBlock.match(
+      /body:has\(\.stitch-site-header\)\s+\.site-main\s+:is\([\s\S]*?\.stitch-quote-intro h1[\s\S]*?\)\s*\{[\s\S]*?\}/
+    )?.[0];
+
+    expect(finalCorrectionBlock).toContain("Final correction");
+    expect(publicHeroTitleRule).toBeDefined();
+    expect(publicHeroTitleRule).toMatch(/\.stitch-catalogue-hero \.stitch-page-intro h1/);
+    expect(publicHeroTitleRule).toMatch(/\.stitch-about-hero h1/);
+    expect(publicHeroTitleRule).toMatch(/\.stitch-setups-hero h1/);
+    expect(publicHeroTitleRule).toMatch(/\.stitch-quote-intro h1/);
+    expect(publicHeroTitleRule).toMatch(/font-family:\s*var\(--stitch-serif\)\s*!important;/);
+    expect(publicHeroTitleRule).toMatch(/font-weight:\s*400\s*!important;/);
+    expect(publicHeroTitleRule).not.toMatch(/font-weight:\s*700\s*!important;/);
+  });
+
   it("keeps the chatbot fallback response removed from source and manual QA", () => {
     const chatWidgetSource = readFileSync(resolve(process.cwd(), "components/ChatWidget.tsx"), "utf8");
     const chatRouteSource = readFileSync(resolve(process.cwd(), "app/api/chat/route.ts"), "utf8");

@@ -1,6 +1,6 @@
 ﻿import type { Metadata } from "next";
-import Link from "next/link";
 import QuoteRequestForm from "../../components/QuoteRequestForm";
+import { QuoteSelectionSummary } from "../../components/QuoteSelectionControls";
 import { getPublicProductBySlug } from "../../lib/catalogue/catalogue-repository";
 import { normalizePublicDiscoveryContext, normalizePublicListingSlug } from "../../lib/catalogue/quote-handoff";
 import type { PublicCatalogueProduct } from "../../lib/catalogue/types";
@@ -24,7 +24,8 @@ function buildInitialItemsText({ category, event, product, requestedSlug, search
 function quoteProductImageSrc(product: QuoteSelectionProduct) { const image = "images" in product ? product.images?.[0]?.publicUrl : undefined; return image ?? stitchImageSrc(fallbackProductImage(product)); }
 
 function SelectionPanel({ product, requestedSlug, category, event, search }: { product: QuoteSelectionProduct | null; requestedSlug?: string; category?: string; event?: string; search?: string }) {
-  return <section className="stitch-quote-card stitch-quote-selection"><p className="stitch-eyebrow">Your Selection</p><h2>Your Selection</h2>{product ? <div className="stitch-selection-group"><h3>Selected Rental Items</h3><article className="stitch-selection-row"><img alt={`${product.name} thumbnail`} src={quoteProductImageSrc(product)} /><div><strong>{product.name}</strong><small>Qty: 1</small><small>{productCategory(product)}</small></div><Link href={`/catalogue/${product.slug}`}>Details</Link></article></div> : <><p>{requestedSlug ? "The listing link may be old or unavailable. Keep this reference as editable request text if it still describes what you need." : "Share the requested pieces or setup direction you have in mind. The team can review your event context and follow up directly."}</p>{(category || event || search) ? <p>Discovery context is editable request intake only. Adjust the requested listings or items before sending.</p> : null}{(requestedSlug || category || event || search) ? <dl className="stitch-facts">{requestedSlug ? <div><dt>Selected listing reference</dt><dd>{requestedSlug}</dd></div> : null}{category ? <div><dt>Category</dt><dd>{category}</dd></div> : null}{event ? <div><dt>Event details</dt><dd>{event}</dd></div> : null}{search ? <div><dt>Search</dt><dd>{search}</dd></div> : null}</dl> : null}</>}</section>;
+  const fallbackItems = product ? [{ slug: product.slug, name: product.name, category: productCategory(product), quantity: 1, imageSrc: quoteProductImageSrc(product) }] : [];
+  return <QuoteSelectionSummary fallbackItems={fallbackItems} requestedSlug={requestedSlug} category={category} event={event} search={search} />;
 }
 
 function NextStepsPanel() {
