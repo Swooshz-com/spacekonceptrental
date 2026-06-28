@@ -20472,8 +20472,11 @@ body:has(.stitch-setups-hero) .site-main .stitch-setup-tile__body em {
 }
 
 .stitch-quote-quantity-button:disabled {
-  cursor: not-allowed;
-  opacity: 0.42;
+  background: rgba(255, 255, 255, 0.9) !important;
+  border-color: rgba(95, 99, 79, 0.28) !important;
+  color: rgba(95, 99, 79, 0.48) !important;
+  cursor: default;
+  opacity: 1;
 }
 
 .stitch-quote-quantity-value {
@@ -20522,6 +20525,27 @@ body:has(.stitch-catalogue-hero) .stitch-product-card .stitch-quote-select-contr
 
 body:has(.stitch-catalogue-hero) .stitch-product-card .stitch-quote-select-controls {
   width: 100% !important;
+}
+
+@media (min-width: 901px) {
+  body:has(.stitch-catalogue-hero) .stitch-product-card .stitch-card__actions {
+    top: calc(100% - 11rem) !important;
+  }
+
+  body:has(.stitch-catalogue-hero) .stitch-product-card:not(:hover):not(:has(.stitch-card__actions :focus-visible)) .stitch-card__actions {
+    opacity: 0 !important;
+    transform: translateY(1.25rem) !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+  }
+
+  body:has(.stitch-catalogue-hero) .stitch-product-card:hover .stitch-card__actions,
+  body:has(.stitch-catalogue-hero) .stitch-product-card:has(.stitch-card__actions :focus-visible) .stitch-card__actions {
+    opacity: 1 !important;
+    transform: translateY(0) !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+  }
 }
 
 @media (max-width: 900px) {
