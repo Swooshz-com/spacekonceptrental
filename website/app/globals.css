@@ -19681,3 +19681,22 @@ body:has(.stitch-contact-hero) .site-main .stitch-contact-support-card h2 {
     font-size: clamp(1.65rem, 7.5vw, 2.25rem) !important;
   }
 }
+
+/* Catalogue filter polish: preserve a steady browsing rail while the results change. */
+@media (min-width: 901px) {
+  body:has(.stitch-catalogue-hero) .site-main .stitch-catalogue-layout {
+    min-height: calc(100vh - 1rem) !important;
+  }
+
+  body:has(.stitch-catalogue-hero) .site-main .stitch-filter-panel {
+    align-self: flex-start !important;
+    max-height: calc(100vh - 6.5rem) !important;
+    overflow-y: auto !important;
+    position: sticky !important;
+    top: 5.5rem !important;
+  }
+
+  body:has(.stitch-home-hero) .site-main .stitch-home-hero__media {
+    height: clamp(33rem, 44vw, 38rem) !important;
+  }
+}
