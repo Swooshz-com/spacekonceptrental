@@ -20263,3 +20263,25 @@ body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-
     width: 100% !important;
   }
 }
+
+/* Home advantage readability: restore comfortable card text after global card-title guards. */
+body:has(.stitch-home-hero) .site-main .stitch-home-advantage .stitch-feature h3 {
+  font-size: clamp(1.35rem, 1.85vw, 1.7rem) !important;
+  line-height: 1.08 !important;
+}
+
+body:has(.stitch-home-hero) .site-main .stitch-home-advantage .stitch-feature p {
+  font-size: clamp(0.98rem, 1.05vw, 1.08rem) !important;
+  line-height: 1.55 !important;
+  max-width: 20rem !important;
+}
+
+@media (max-width: 900px) {
+  body:has(.stitch-home-hero) .site-main .stitch-home-advantage .stitch-feature h3 {
+    font-size: clamp(1.35rem, 6vw, 1.65rem) !important;
+  }
+
+  body:has(.stitch-home-hero) .site-main .stitch-home-advantage .stitch-feature p {
+    font-size: 0.98rem !important;
+  }
+}
