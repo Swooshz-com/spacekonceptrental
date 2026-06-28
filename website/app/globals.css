@@ -18020,11 +18020,11 @@ body:has(.stitch-quote-page):not(:has(.quote-form--success)) .stitch-quote-intro
 body:has(.stitch-quote-page):not(:has(.quote-form--success)) .stitch-quote-intro h1 {
   margin: 0.7rem 0 0.9rem !important;
   color: var(--stitch-ink) !important;
-  font-family: var(--font-body) !important;
-  font-size: clamp(2.9rem, 5.1vw, 4rem) !important;
-  font-weight: 300 !important;
-  letter-spacing: -0.065em !important;
-  line-height: 1.04 !important;
+  font-family: var(--stitch-serif) !important;
+  font-size: clamp(3rem, 4.45vw, 4rem) !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.042em !important;
+  line-height: 1.02 !important;
 }
 
 body:has(.stitch-quote-page):not(:has(.quote-form--success)) .stitch-quote-intro p:not(.stitch-eyebrow) {
