@@ -20850,3 +20850,35 @@ body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-
     max-width: none !important;
   }
 }
+
+/* Final public rhythm guard: do not vertically center the home hero against the
+   viewport, which creates huge blank space when users zoom out. Keep non-home
+   public sections on the same calm spacing cadence without touching the home
+   page's tuned section rhythm. */
+@media (min-width: 901px) {
+  body:has(.stitch-home-hero) .site-main .stitch-home-hero {
+    align-items: initial !important;
+    display: block !important;
+    min-height: 0 !important;
+    padding: 1.65rem 0 3.25rem !important;
+  }
+
+  body:has(.stitch-site-header):not(:has(.stitch-home-hero)) .site-main :is(
+    .stitch-section,
+    .stitch-contact-menu-section,
+    .stitch-about-story,
+    .stitch-about-principles,
+    .stitch-about-service,
+    .stitch-setups-feature-section,
+    .stitch-legal-section,
+    .stitch-detail-related
+  ) {
+    padding-bottom: clamp(3.75rem, 5vw, 5rem) !important;
+    padding-top: clamp(3.75rem, 5vw, 5rem) !important;
+  }
+
+  body:has(.stitch-setups-hero) .site-main .stitch-setups-grid-section {
+    padding-bottom: clamp(3.75rem, 5vw, 5rem) !important;
+    padding-top: 1.6rem !important;
+  }
+}
