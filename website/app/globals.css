@@ -19590,3 +19590,94 @@ body:has(.stitch-contact-hero) .site-main .stitch-contact-brief-panel h2 {
   line-height: 0.96 !important;
   text-transform: none !important;
 }
+
+/* Public heading scale refinement: keep Furniture Catalogue as the page-title ceiling. */
+body:has(.stitch-site-header) .site-main :is(
+  .stitch-home-hero__copy h1,
+  .stitch-page-intro h1,
+  .stitch-setups-hero h1,
+  .stitch-about-hero h1,
+  .stitch-detail-open-copy h1,
+  .stitch-quote-intro h1
+) {
+  font-size: clamp(3rem, 4.45vw, 4rem) !important;
+  letter-spacing: -0.042em !important;
+  line-height: 1.02 !important;
+}
+
+body:has(.stitch-home-hero) .site-main .stitch-section-heading h2 {
+  font-size: clamp(1.9rem, 2.65vw, 2.45rem) !important;
+  letter-spacing: -0.035em !important;
+  line-height: 1.06 !important;
+}
+
+body:has(.stitch-detail-page:not(.stitch-detail-page--setup)) .site-main .stitch-detail-related-heading h2,
+body:has(.stitch-detail-page--setup) .site-main .stitch-included-open > h2,
+body:has(.stitch-about-hero) .site-main .stitch-about-story h2,
+body:has(.stitch-about-hero) .site-main .stitch-cta-band h2 {
+  font-size: clamp(1.75rem, 2.35vw, 2.2rem) !important;
+  letter-spacing: -0.03em !important;
+  line-height: 1.08 !important;
+}
+
+body:has(.stitch-detail-page--setup) .site-main .stitch-detail-page--setup .stitch-setup-lower > div > h2 {
+  font-size: clamp(3rem, 4.45vw, 4rem) !important;
+  letter-spacing: -0.042em !important;
+  line-height: 1.02 !important;
+  max-width: 34rem !important;
+}
+
+body:has(.stitch-detail-page--setup) .site-main .stitch-detail-context h2 {
+  font-size: clamp(1.18rem, 1.65vw, 1.45rem) !important;
+  letter-spacing: -0.02em !important;
+  line-height: 1.15 !important;
+}
+
+body:has(.stitch-setups-hero) .site-main .stitch-setups-feature__copy h2 {
+  font-size: clamp(2.25rem, 3.15vw, 2.85rem) !important;
+  letter-spacing: -0.035em !important;
+  line-height: 1.02 !important;
+}
+
+body:has(.stitch-contact-hero) .site-main .stitch-contact-copy > h2,
+body:has(.stitch-contact-hero) .site-main .stitch-contact-brief-panel h2 {
+  font-family: var(--stitch-serif) !important;
+  font-size: clamp(1.85rem, 2.55vw, 2.3rem) !important;
+  font-weight: 400 !important;
+  letter-spacing: -0.035em !important;
+  line-height: 1.05 !important;
+  text-transform: none !important;
+}
+
+body:has(.stitch-contact-hero) .site-main .stitch-contact-support-card h2 {
+  font-family: var(--font-body) !important;
+  font-size: 0.78rem !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.1em !important;
+  line-height: 1.15 !important;
+  text-transform: uppercase !important;
+}
+
+@media (max-width: 900px) {
+  body:has(.stitch-site-header) .site-main :is(
+    .stitch-home-hero__copy h1,
+    .stitch-page-intro h1,
+    .stitch-setups-hero h1,
+    .stitch-about-hero h1,
+    .stitch-detail-open-copy h1,
+    .stitch-quote-intro h1
+  ),
+  body:has(.stitch-detail-page--setup) .site-main .stitch-setup-lower > div > h2 {
+    font-size: clamp(2.6rem, 11vw, 3.45rem) !important;
+  }
+
+  body:has(.stitch-home-hero) .site-main .stitch-section-heading h2,
+  body:has(.stitch-detail-page:not(.stitch-detail-page--setup)) .site-main .stitch-detail-related-heading h2,
+  body:has(.stitch-detail-page--setup) .site-main .stitch-included-open > h2,
+  body:has(.stitch-about-hero) .site-main .stitch-about-story h2,
+  body:has(.stitch-about-hero) .site-main .stitch-cta-band h2,
+  body:has(.stitch-contact-hero) .site-main .stitch-contact-copy > h2,
+  body:has(.stitch-contact-hero) .site-main .stitch-contact-brief-panel h2 {
+    font-size: clamp(1.65rem, 7.5vw, 2.25rem) !important;
+  }
+}
