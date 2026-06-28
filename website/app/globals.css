@@ -20881,4 +20881,12 @@ body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-
     padding-bottom: clamp(3.75rem, 5vw, 5rem) !important;
     padding-top: 1.6rem !important;
   }
+
+  body:has(.stitch-home-hero) .site-main .stitch-home-hero__copy {
+    gap: 1.05rem !important;
+  }
+
+  body:has(.stitch-home-hero) .site-main .stitch-home-hero .stitch-actions {
+    margin-top: 0 !important;
+  }
 }
