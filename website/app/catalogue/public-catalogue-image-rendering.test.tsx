@@ -84,10 +84,7 @@ describe("public catalogue image rendering", () => {
       "href",
       "/catalogue/modular-lounge"
     );
-    expect(screen.getByRole("link", { name: /add modular lounge to quote/i })).toHaveAttribute(
-      "href",
-      "/quote?listing=modular-lounge"
-    );
+    expect(screen.getByRole("button", { name: /add modular lounge to quote selection/i })).toBeInTheDocument();
     expect(document.body.textContent).not.toMatch(forbiddenPublicCopy);
   });
 
@@ -103,10 +100,10 @@ describe("public catalogue image rendering", () => {
     expect(cardView.getByText("Lounge")).toBeInTheDocument();
     expect(cardView.getByText(/styled lounge setup for receptions/i)).toBeInTheDocument();
 
-    const quoteLink = cardView.getByRole("link", { name: /add modular lounge to quote/i });
+    const quoteButton = cardView.getByRole("button", { name: /add modular lounge to quote selection/i });
     const detailLink = cardView.getByRole("link", { name: /view details for modular lounge/i });
 
-    expect(quoteLink).toHaveAttribute("href", "/quote?listing=modular-lounge");
+    expect(quoteButton).toHaveAttribute("type", "button");
     expect(detailLink).toHaveAttribute("href", "/catalogue/modular-lounge");
   });
 
@@ -116,10 +113,7 @@ describe("public catalogue image rendering", () => {
     const image = screen.getByRole("img", { name: /modular lounge furniture rental setup/i });
 
     expect(image).toHaveAttribute("src", productWithImage.primaryImage?.publicUrl);
-    expect(screen.getByRole("link", { name: /add to quote/i })).toHaveAttribute(
-      "href",
-      "/quote?listing=modular-lounge"
-    );
+    expect(screen.getByRole("button", { name: /add modular lounge to quote selection/i })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /back to catalogue/i })).toHaveAttribute("href", "/catalogue");
     expect(document.body.textContent).not.toMatch(/checkout|payment|reserve|book now/i);
   });
