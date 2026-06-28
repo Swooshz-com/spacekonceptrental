@@ -19481,7 +19481,7 @@ body:has(.stitch-home-hero) .stitch-home-hero__copy > * {
 }
 
 body:has(.stitch-home-hero) .stitch-home-hero__copy h1 {
-  max-width: 36rem !important;
+  max-width: 48rem !important;
   text-align: center !important;
 }
 
@@ -19591,18 +19591,19 @@ body:has(.stitch-contact-hero) .site-main .stitch-contact-brief-panel h2 {
   text-transform: none !important;
 }
 
-/* Public heading scale refinement: keep Furniture Catalogue as the page-title ceiling. */
+/* Public heading scale refinement: page titles follow the home hero title rhythm. */
 body:has(.stitch-site-header) .site-main :is(
   .stitch-home-hero__copy h1,
   .stitch-page-intro h1,
   .stitch-setups-hero h1,
   .stitch-about-hero h1,
+  .stitch-legal-intro h1,
   .stitch-detail-open-copy h1,
   .stitch-quote-intro h1
 ) {
-  font-size: clamp(3rem, 4.45vw, 4rem) !important;
-  letter-spacing: -0.042em !important;
-  line-height: 1.02 !important;
+  font-size: clamp(3.6rem, 5.35vw, 4.85rem) !important;
+  letter-spacing: -0.045em !important;
+  line-height: 0.98 !important;
 }
 
 body:has(.stitch-home-hero) .site-main .stitch-section-heading h2 {
@@ -19664,11 +19665,12 @@ body:has(.stitch-contact-hero) .site-main .stitch-contact-support-card h2 {
     .stitch-page-intro h1,
     .stitch-setups-hero h1,
     .stitch-about-hero h1,
+    .stitch-legal-intro h1,
     .stitch-detail-open-copy h1,
     .stitch-quote-intro h1
   ),
   body:has(.stitch-detail-page--setup) .site-main .stitch-setup-lower > div > h2 {
-    font-size: clamp(2.6rem, 11vw, 3.45rem) !important;
+    font-size: clamp(2.85rem, 12.5vw, 4rem) !important;
   }
 
   body:has(.stitch-home-hero) .site-main .stitch-section-heading h2,
@@ -19788,10 +19790,7 @@ body:has(.stitch-quote-page):not(:has(.stitch-home-hero)) .stitch-quote-intro::a
 /* Legal pages match the Furniture Catalogue page title; card headings stay compact. */
 body:has(.stitch-legal-hero) .site-main .stitch-legal-intro h1 {
   font-family: var(--stitch-serif) !important;
-  font-size: clamp(3rem, 4.45vw, 4rem) !important;
   font-weight: 400 !important;
-  letter-spacing: -0.042em !important;
-  line-height: 1.02 !important;
 }
 
 body:has(.stitch-legal-hero) .site-main .stitch-legal-card h2 {
