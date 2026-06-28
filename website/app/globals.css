@@ -20355,3 +20355,45 @@ body:has(.stitch-setups-hero) .site-main .stitch-setup-tile__body em {
     height: clamp(15rem, 62vw, 22rem) !important;
   }
 }
+
+/* Setups featured composition: reduce the empty gap between the image and copy. */
+@media (min-width: 901px) {
+  body:has(.stitch-setups-hero) .site-main .stitch-setups-feature-section {
+    padding: clamp(2.5rem, 4.5vw, 4.75rem) 0 clamp(3.25rem, 5vw, 5.5rem) !important;
+  }
+
+  body:has(.stitch-setups-hero) .site-main .stitch-setups-feature-section .stitch-container,
+  body:has(.stitch-setups-hero) .site-main .stitch-setups-feature-section .stitch-container.stitch-setups-feature-split {
+    width: min(calc(100% - 5rem), 1080px) !important;
+    max-width: 1080px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+
+  body:has(.stitch-setups-hero) .site-main .stitch-setups-feature-split {
+    display: grid !important;
+    grid-template-columns: minmax(18rem, 22rem) minmax(0, 34rem) !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: clamp(3rem, 5vw, 4.75rem) !important;
+    min-height: 0 !important;
+  }
+
+  body:has(.stitch-setups-hero) .site-main .stitch-setups-feature__image {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    justify-self: end !important;
+    width: 100% !important;
+    max-width: 22rem !important;
+    height: clamp(28rem, 38vw, 34rem) !important;
+  }
+
+  body:has(.stitch-setups-hero) .site-main .stitch-setups-feature__copy {
+    display: block !important;
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    justify-self: start !important;
+    max-width: 34rem !important;
+    width: 100% !important;
+  }
+}
