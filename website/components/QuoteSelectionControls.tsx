@@ -6,22 +6,25 @@ import type { MouseEvent } from "react";
 
 export type QuoteSelectionItem = {
   category?: string;
+  imageSrc?: string;
   name: string;
   quantity: number;
   slug: string;
 };
 
-type QuoteSelectionSummaryItem = QuoteSelectionItem & { imageSrc?: string };
+type QuoteSelectionSummaryItem = QuoteSelectionItem;
 
 const quoteSelectionStorageKey = "skr.quoteSelection.v1";
 const quoteSelectionChangeEvent = "skr:quote-selection-change";
 const maxStoredQuoteItems = 20;
 const publicSlugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+const publicImageSrcPattern = /^(?:https?:\/\/|\/(?!\/))[^\s"'<>]+$/i;
 
 function normalizeQuoteItem(item: QuoteSelectionItem) {
   const slug = item.slug.trim().toLowerCase();
   const name = item.name.trim();
   const category = item.category?.trim();
+  const imageSrc = item.imageSrc?.trim();
   const quantity = Number.isFinite(item.quantity)
     ? Math.max(1, Math.min(99, Math.floor(item.quantity)))
     : 1;
@@ -34,7 +37,10 @@ function normalizeQuoteItem(item: QuoteSelectionItem) {
     slug,
     name: name.slice(0, 120),
     quantity,
-    ...(category ? { category: category.slice(0, 80) } : {})
+    ...(category ? { category: category.slice(0, 80) } : {}),
+    ...(imageSrc && publicImageSrcPattern.test(imageSrc)
+      ? { imageSrc: imageSrc.slice(0, 500) }
+      : {})
   };
 }
 
@@ -168,7 +174,7 @@ export function QuoteSelectionSummary({
   );
 }
 
-export function QuoteSelectionButton({ ariaLabel, item }: { ariaLabel?: string; item: QuoteSelectionItem }) {
+export function QuoteSelectionButton({ item }: { item: QuoteSelectionItem }) {
   const [items, setItems] = useState<QuoteSelectionItem[]>([]);
   const selectedItem = items.find((selected) => selected.slug === item.slug);
 
@@ -187,7 +193,7 @@ export function QuoteSelectionButton({ ariaLabel, item }: { ariaLabel?: string; 
     };
   }, []);
 
-  function handleAddToQuote(event: MouseEvent<HTMLAnchorElement>) {
+  function handleIncrementQuantity(event: MouseEvent<HTMLButtonElement>) {
     event.preventDefault();
 
     const normalizedItem = normalizeQuoteItem(item);
@@ -215,7 +221,7 @@ export function QuoteSelectionButton({ ariaLabel, item }: { ariaLabel?: string; 
     setItems(nextItems);
   }
 
-  function handleRemoveFromQuote(event: MouseEvent<HTMLButtonElement>) {
+  function handleDecrementQuantity(event: MouseEvent<HTMLButtonElement>) {
     event.preventDefault();
 
     const normalizedItem = normalizeQuoteItem(item);
@@ -224,9 +230,16 @@ export function QuoteSelectionButton({ ariaLabel, item }: { ariaLabel?: string; 
       return;
     }
 
-    const nextItems = readQuoteSelection().filter(
-      (selected) => selected.slug !== normalizedItem.slug
-    );
+    const nextItems = readQuoteSelection()
+      .map((selected) =>
+        selected.slug === normalizedItem.slug
+          ? {
+              ...selected,
+              quantity: selected.quantity - 1
+            }
+          : selected
+      )
+      .filter((selected) => selected.quantity > 0);
 
     writeQuoteSelection(nextItems);
     setItems(nextItems);
@@ -237,24 +250,62 @@ export function QuoteSelectionButton({ ariaLabel, item }: { ariaLabel?: string; 
       className="stitch-quote-select-controls"
       data-selected={selectedItem ? "true" : "false"}
     >
-      <a
-        aria-label={ariaLabel}
-        className="stitch-link-button stitch-quote-select-button"
-        href={`/quote?listing=${encodeURIComponent(item.slug)}`}
-        onClick={handleAddToQuote}
+      <button
+        aria-label={`Decrease ${item.name} quantity`}
+        className="stitch-quote-quantity-button"
+        disabled={!selectedItem}
+        onClick={handleDecrementQuantity}
+        type="button"
       >
-        {selectedItem ? `Added (${selectedItem.quantity})` : "Add to Quote"}
-      </a>
-      {selectedItem ? (
-        <button
-          aria-label={`Remove ${item.name} from quote`}
-          className="stitch-link-button stitch-quote-remove-button"
-          onClick={handleRemoveFromQuote}
-          type="button"
-        >
-          Remove
-        </button>
-      ) : null}
+        -
+      </button>
+      <output
+        aria-label={`${item.name} quantity selected`}
+        className="stitch-quote-quantity-value"
+      >
+        Qty {selectedItem?.quantity ?? 0}
+      </output>
+      <button
+        aria-label={`Increase ${item.name} quantity`}
+        className="stitch-quote-quantity-button"
+        onClick={handleIncrementQuantity}
+        type="button"
+      >
+        +
+      </button>
+    </span>
+  );
+}
+
+export function QuoteSelectionBadge({ item }: { item: QuoteSelectionItem }) {
+  const [items, setItems] = useState<QuoteSelectionItem[]>([]);
+  const selectedItem = items.find((selected) => selected.slug === item.slug);
+
+  useEffect(() => {
+    function syncSelection() {
+      setItems(readQuoteSelection());
+    }
+
+    syncSelection();
+    window.addEventListener(quoteSelectionChangeEvent, syncSelection);
+    window.addEventListener("storage", syncSelection);
+
+    return () => {
+      window.removeEventListener(quoteSelectionChangeEvent, syncSelection);
+      window.removeEventListener("storage", syncSelection);
+    };
+  }, []);
+
+  if (!selectedItem) {
+    return null;
+  }
+
+  return (
+    <span
+      aria-label={`${item.name}: ${selectedItem.quantity} selected`}
+      className="stitch-quote-card-badge"
+    >
+      Qty {selectedItem.quantity}
     </span>
   );
 }

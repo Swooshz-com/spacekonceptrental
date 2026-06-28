@@ -20422,52 +20422,101 @@ body:has(.stitch-setups-hero) .site-main .stitch-setup-tile__body em {
   padding-inline: 0.35rem;
 }
 
-.stitch-quote-select-button {
-  cursor: pointer;
-}
-
 .stitch-quote-select-controls {
+  align-items: stretch;
   display: grid;
-  gap: 0.55rem;
-  grid-template-columns: 1fr;
+  gap: 0;
+  grid-template-columns: 2.7rem minmax(3.8rem, 1fr) 2.7rem;
+  min-height: 2.7rem;
   width: 100%;
 }
 
 .stitch-quote-select-controls[data-selected="true"] {
-  grid-template-columns: minmax(0, 1fr) minmax(5.75rem, auto);
+  grid-template-columns: 2.7rem minmax(3.8rem, 1fr) 2.7rem;
 }
 
-.stitch-quote-remove-button {
+.stitch-quote-quantity-button,
+.stitch-quote-quantity-value {
   align-items: center;
-  background: var(--stitch-surface) !important;
+  background: var(--stitch-primary) !important;
   border: 1px solid rgba(95, 99, 79, 0.36) !important;
-  color: var(--stitch-primary) !important;
-  cursor: pointer;
+  color: var(--stitch-primary-ink) !important;
   display: inline-flex;
-  font-family: var(--font-body);
+  font-family: var(--stitch-sans);
+  font-size: 0.82rem;
+  font-weight: 800;
   justify-content: center;
-  min-height: 2.6rem;
-  padding-inline: 0.9rem !important;
+  letter-spacing: 0.06em;
+  line-height: 1;
+  min-height: 2.7rem;
+  padding: 0 0.75rem !important;
+  text-transform: uppercase;
 }
 
-.stitch-quote-remove-button:hover,
-.stitch-quote-remove-button:focus-visible {
-  background: #fffdf9 !important;
+.stitch-quote-quantity-button {
+  cursor: pointer;
+}
+
+.stitch-quote-quantity-button:first-child {
+  border-radius: 3px 0 0 3px;
+}
+
+.stitch-quote-quantity-button:last-child {
+  border-radius: 0 3px 3px 0;
+}
+
+.stitch-quote-quantity-button:hover,
+.stitch-quote-quantity-button:focus-visible {
+  background: #3f4333 !important;
   border-color: var(--stitch-primary) !important;
-  color: var(--stitch-ink) !important;
 }
 
-.stitch-card__actions .stitch-quote-select-button {
+.stitch-quote-quantity-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.42;
+}
+
+.stitch-quote-quantity-value {
+  border-left: 0 !important;
+  border-right: 0 !important;
+}
+
+.stitch-card__image {
+  position: relative;
+}
+
+.stitch-quote-card-badge {
+  align-items: center;
+  background: rgba(71, 75, 56, 0.94);
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  border-radius: 999px;
+  bottom: 0.8rem;
+  color: #fff;
+  display: inline-flex;
+  font-family: var(--stitch-sans);
+  font-size: 0.72rem;
+  font-weight: 800;
+  left: 0.8rem;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  min-height: 1.8rem;
+  padding: 0 0.75rem;
+  position: absolute;
+  text-transform: uppercase;
+  z-index: 2;
+}
+
+.stitch-card__actions .stitch-quote-select-controls {
   flex: 1 1 150px;
 }
 
-.stitch-detail-actions .stitch-quote-select-button,
-.stitch-setup-lower .stitch-quote-select-button {
+.stitch-detail-actions .stitch-quote-select-controls,
+.stitch-setup-lower .stitch-quote-select-controls {
   min-height: 52px;
   width: 100%;
 }
 
-body:has(.stitch-catalogue-hero) .stitch-product-card .stitch-quote-select-button {
+body:has(.stitch-catalogue-hero) .stitch-product-card .stitch-quote-select-controls {
   width: 100% !important;
 }
 

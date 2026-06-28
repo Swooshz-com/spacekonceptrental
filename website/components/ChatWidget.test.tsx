@@ -125,6 +125,21 @@ describe("ChatWidget", () => {
     expect(screen.queryByRole("button", { name: /Setup notes/i })).not.toBeInTheDocument();
   });
 
+  it("keeps chat body copy at the contact panel body text size", () => {
+    render(<ChatWidget />);
+    fireEvent.click(screen.getByRole("button", { name: /open chat/i }));
+
+    expect(screen.getByText(/Hi! I can help with furniture listing questions/i)).toHaveStyle({
+      fontSize: "1rem"
+    });
+    expect(screen.getByText(/Ask here about listing details/i)).toHaveStyle({
+      fontSize: "1rem"
+    });
+    expect(screen.getByLabelText(/message/i)).toHaveStyle({
+      fontSize: "1rem"
+    });
+  });
+
   it("does not render server-only webhook configuration into the client", () => {
     process.env.N8N_CHAT_WEBHOOK_URL = "https://example.invalid/internal-only";
 

@@ -23,7 +23,7 @@ type ChatApiResponse = {
 
 const chatErrorMessage =
   "An error occurred while sending the chat message. Please try again.";
-const chatBodyFontSize = "clamp(1rem, 1.25vw, 1.12rem)";
+const chatBodyFontSize = "1rem";
 const chatBodyLineHeight = 1.55;
 
 function formatChatErrorMessage(reference: string | undefined) {
