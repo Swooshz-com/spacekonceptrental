@@ -17128,8 +17128,8 @@ body:has(.stitch-detail-page--setup) .stitch-detail-button--primary::after {
   }
 
   body:has(.stitch-quote-page):not(:has(.quote-form--success)) .chat-widget-panel {
-    right: auto !important;
-    left: 1.6rem !important;
+    right: 1.6rem !important;
+    left: auto !important;
     bottom: 5.6rem !important;
     width: min(22rem, calc(100vw - 3.2rem)) !important;
     max-height: min(34rem, calc(100vh - 7rem)) !important;
