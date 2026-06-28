@@ -116,6 +116,15 @@ describe("ChatWidget", () => {
     expect(document.body.textContent).not.toMatch(/n8n|webhook|provider url/i);
   });
 
+  it("does not show suggested prompt buttons in the chat panel", () => {
+    render(<ChatWidget />);
+    fireEvent.click(screen.getByRole("button", { name: /open chat/i }));
+
+    expect(screen.queryByRole("button", { name: /View Sofas/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Quote details/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Setup notes/i })).not.toBeInTheDocument();
+  });
+
   it("does not render server-only webhook configuration into the client", () => {
     process.env.N8N_CHAT_WEBHOOK_URL = "https://example.invalid/internal-only";
 

@@ -23,6 +23,8 @@ type ChatApiResponse = {
 
 const chatErrorMessage =
   "An error occurred while sending the chat message. Please try again.";
+const chatBodyFontSize = "clamp(1rem, 1.25vw, 1.12rem)";
+const chatBodyLineHeight = 1.55;
 
 function formatChatErrorMessage(reference: string | undefined) {
   return reference
@@ -167,7 +169,7 @@ export default function ChatWidget() {
       }}>
         <div style={{ display: 'flex', flexDirection: 'column' }}>
           <span style={{ fontSize: '16px', fontWeight: 700, color: '#1a1a1a' }}>SpaceKonceptRental AI</span>
-          <span style={{ fontSize: '12px', color: '#5f634f' }}>Your event furniture helper</span>
+          <span style={{ fontSize: '14px', color: '#5f634f', lineHeight: 1.35 }}>Your event furniture helper</span>
         </div>
         <button onClick={() => setIsOpen(false)} style={{ background: 'transparent', border: 'none', color: '#5f634f', cursor: 'pointer', fontSize: '20px', lineHeight: 1, padding: '4px' }} aria-label="Close chat">x</button>
       </div>
@@ -176,7 +178,7 @@ export default function ChatWidget() {
         {messages.length === 0 && (
           <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
             <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#5f634f', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 700, flexShrink: 0 }}>SK</div>
-            <div style={{ background: '#fcf9f5', border: '1px solid #dcd9d6', color: '#1a1a1a', padding: '12px 16px', borderRadius: '0 12px 12px 12px', fontSize: '14px', lineHeight: 1.5 }}>
+            <div style={{ background: '#fcf9f5', border: '1px solid #dcd9d6', color: '#1a1a1a', padding: '12px 16px', borderRadius: '0 12px 12px 12px', fontSize: chatBodyFontSize, lineHeight: chatBodyLineHeight }}>
               Hi! I can help with furniture listing questions and enquiry details. What event are you planning?
             </div>
           </div>
@@ -192,8 +194,8 @@ export default function ChatWidget() {
                 padding: '12px 16px',
                 borderRadius: message.role === 'user' ? '12px 0 12px 12px' : '0 12px 12px 12px',
                 maxWidth: '85%',
-                fontSize: '14px',
-                lineHeight: 1.5
+                fontSize: chatBodyFontSize,
+                lineHeight: chatBodyLineHeight
               }}
             >
               {message.content}
@@ -203,22 +205,17 @@ export default function ChatWidget() {
       </div>
 
       {errorMessage && (
-        <div style={{ padding: '12px 20px', background: '#fff4f0', color: '#9b4f45', fontSize: '12px', borderTop: '1px solid #d8c7bd' }} role="alert">
+        <div style={{ padding: '12px 20px', background: '#fff4f0', color: '#9b4f45', fontSize: chatBodyFontSize, lineHeight: chatBodyLineHeight, borderTop: '1px solid #d8c7bd' }} role="alert">
           {errorMessage}
         </div>
       )}
 
       <div style={{ padding: '0 20px', background: '#f6f3f0' }}>
-        <p style={{ color: '#46473f', fontSize: '12px', lineHeight: 1.5, margin: '0 0 12px' }}>
+        <p style={{ color: '#46473f', fontSize: chatBodyFontSize, lineHeight: chatBodyLineHeight, margin: 0 }}>
           Ask here about listing details or enquiry preparation. See our{" "}
           <a href="/privacy">Privacy Policy</a> and{" "}
           <a href="/terms">Terms of Use</a>.
         </p>
-        <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '12px', scrollbarWidth: 'none' }}>
-          <button onClick={() => setDraft("View Sofas")} style={{ whiteSpace: 'nowrap', padding: '6px 16px', borderRadius: '20px', border: '1px solid #dcd9d6', background: '#fcf9f5', color: '#5f634f', fontSize: '13px', cursor: 'pointer', fontWeight: 600 }}>View Sofas</button>
-          <button onClick={() => setDraft("Quote details")} style={{ whiteSpace: 'nowrap', padding: '6px 16px', borderRadius: '20px', border: '1px solid #dcd9d6', background: '#fcf9f5', color: '#5f634f', fontSize: '13px', cursor: 'pointer', fontWeight: 600 }}>Quote details</button>
-          <button onClick={() => setDraft("Setup notes")} style={{ whiteSpace: 'nowrap', padding: '6px 16px', borderRadius: '20px', border: '1px solid #dcd9d6', background: '#fcf9f5', color: '#5f634f', fontSize: '13px', cursor: 'pointer', fontWeight: 600 }}>Setup notes</button>
-        </div>
       </div>
 
       <form onSubmit={handleSubmit} style={{ padding: '16px 20px', background: '#fcf9f5', borderTop: '1px solid #dcd9d6', display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -229,7 +226,7 @@ export default function ChatWidget() {
           onChange={(event) => setDraft(event.target.value)}
           placeholder="Type your question..."
           value={draft}
-          style={{ flex: 1, border: 'none', background: 'transparent', fontSize: '15px', outline: 'none', color: '#1a1a1a' }}
+          style={{ flex: 1, border: 'none', background: 'transparent', fontSize: chatBodyFontSize, lineHeight: chatBodyLineHeight, outline: 'none', color: '#1a1a1a' }}
           autoComplete="off"
         />
         <button aria-label="Send" disabled={isSending || draft.trim().length === 0} type="submit" style={{ background: '#5f634f', color: '#fff', border: 'none', borderRadius: '50%', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', opacity: (isSending || draft.trim().length === 0) ? 0.5 : 1, transition: 'opacity 0.2s', padding: 0 }}>
