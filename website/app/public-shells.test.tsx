@@ -88,7 +88,7 @@ describe("public page shells", () => {
     render(await HomePage());
 
     expect(
-      screen.getByRole("heading", { name: /furnish your vision\. elevate every space/i })
+      screen.getByRole("heading", { name: /furnish your vision, elevate every space/i })
     ).toBeInTheDocument();
     expect(
       screen.getByText(/browse rental pieces, explore setup directions, and send an enquiry/i)
