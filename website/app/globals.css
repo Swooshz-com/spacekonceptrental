@@ -19697,6 +19697,6 @@ body:has(.stitch-contact-hero) .site-main .stitch-contact-support-card h2 {
   }
 
   body:has(.stitch-home-hero) .site-main .stitch-home-hero__media {
-    height: clamp(33rem, 44vw, 38rem) !important;
+    height: clamp(37rem, 52vw, 43rem) !important;
   }
 }
