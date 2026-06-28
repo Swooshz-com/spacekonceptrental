@@ -19745,3 +19745,15 @@ body:has(.stitch-detail-page:not(.stitch-detail-page--setup)) .site-main .stitch
     font-size: clamp(2.2rem, 9vw, 3rem) !important;
   }
 }
+
+body:has(.stitch-quote-page):not(:has(.quote-form--success)) .stitch-selection-row a {
+  color: var(--stitch-ink) !important;
+  font-family: var(--font-body) !important;
+  font-size: 0.72rem !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.08em !important;
+  line-height: 1 !important;
+  text-decoration: underline !important;
+  text-transform: uppercase !important;
+  text-underline-offset: 0.24em !important;
+}
