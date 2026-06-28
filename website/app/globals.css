@@ -20889,4 +20889,58 @@ body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-
   body:has(.stitch-home-hero) .site-main .stitch-home-hero .stitch-actions {
     margin-top: 0 !important;
   }
+
+  body:has(.stitch-catalogue-hero) .site-main .stitch-catalogue-section .stitch-container {
+    max-width: 1440px !important;
+    width: min(calc(100% - clamp(3rem, 8vw, 8rem)), 1440px) !important;
+  }
+
+  body:has(.stitch-catalogue-hero) .site-main .stitch-catalogue-layout {
+    gap: clamp(1.25rem, 2vw, 2rem) !important;
+    grid-template-columns: minmax(14rem, 16rem) minmax(0, 1fr) !important;
+  }
+
+  body:has(.stitch-catalogue-hero) .site-main .stitch-catalogue-results {
+    max-width: none !important;
+    width: 100% !important;
+  }
+
+  body:has(.stitch-catalogue-hero) .site-main .stitch-filter-panel {
+    padding-right: 0 !important;
+  }
+
+  body:has(.stitch-catalogue-hero) .site-main .stitch-filter-panel a,
+  body:has(.stitch-catalogue-hero) .site-main .stitch-filter-panel span {
+    align-items: center !important;
+    background: rgba(232, 228, 223, 0.58) !important;
+    border: 1px solid rgba(95, 99, 79, 0.16) !important;
+    border-radius: 4px !important;
+    color: var(--stitch-ink) !important;
+    display: flex !important;
+    font-size: 0.74rem !important;
+    justify-content: flex-start !important;
+    letter-spacing: 0.075em !important;
+    min-height: 2.25rem !important;
+    padding: 0 0.8rem !important;
+    width: min(100%, 14.5rem) !important;
+  }
+
+  body:has(.stitch-catalogue-hero) .site-main .stitch-filter-panel a:first-of-type,
+  body:has(.stitch-catalogue-hero) .site-main .stitch-filter-panel a.is-active,
+  body:has(.stitch-catalogue-hero) .site-main .stitch-filter-panel [aria-current="page"] {
+    background: var(--stitch-primary) !important;
+    border-color: var(--stitch-primary) !important;
+    color: #fff !important;
+  }
+
+  body:has(.stitch-catalogue-hero) .site-main .stitch-card-grid {
+    gap: clamp(1.15rem, 1.8vw, 1.65rem) !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+
+  body:has(.stitch-catalogue-hero) .site-main .stitch-product-card .stitch-card__image {
+    aspect-ratio: 1 / 1.08 !important;
+    height: auto !important;
+    min-height: 0 !important;
+  }
 }
