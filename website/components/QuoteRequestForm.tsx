@@ -370,7 +370,7 @@ export default function QuoteRequestForm({
         <small
           aria-hidden={fieldErrors.contact ? undefined : true}
           className={`quote-form__field-error quote-form__full-width quote-form__contact-error${
-            fieldErrors.contact ? "" : " quote-form__field-error--reserved"
+            fieldErrors.contact ? "" : " quote-form__field-error--ghost"
           }`}
           id={fieldErrors.contact ? "quote-contact-error" : undefined}
         >
@@ -482,7 +482,7 @@ export default function QuoteRequestForm({
             ) : (
               <p
                 aria-hidden="true"
-                className="quote-form__status quote-form__status--error quote-form__status--reserved"
+                className="quote-form__status quote-form__status--error quote-form__status--ghost"
               >
                 Quote form feedback message space.
               </p>

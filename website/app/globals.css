@@ -20149,7 +20149,7 @@ body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-
   text-transform: none !important;
 }
 
-body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-quote-form-panel .quote-form__field-error--reserved {
+body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-quote-form-panel .quote-form__field-error--ghost {
   visibility: hidden !important;
 }
 
@@ -20175,7 +20175,7 @@ body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-
   padding: 0.9rem 1rem !important;
 }
 
-body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-quote-form-panel .quote-form__status--reserved {
+body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-quote-form-panel .quote-form__status--ghost {
   visibility: hidden !important;
 }
 
