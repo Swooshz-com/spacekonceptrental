@@ -306,20 +306,17 @@ describe("Phase 3V-A/B quote enquiry workflow hardening", () => {
 
   it("keeps listing, category, and event handoff links public-safe", () => {
     render(<ProductPageContent product={sampleProduct} />);
-    expect(screen.getByRole("link", { name: /add to quote/i })).toHaveAttribute(
-      "href",
-      "/quote?listing=modular-lounge-set"
-    );
+    expect(screen.getByRole("button", { name: /increase modular lounge set quantity/i })).toBeInTheDocument();
+    expect(screen.getByLabelText(/modular lounge set quantity selected/i)).toHaveTextContent("Qty 0");
+    expect(screen.getByRole("link", { name: /request quote/i })).toHaveAttribute("href", "/quote");
     expect(screen.getByText(/bring event details/i)).toBeInTheDocument();
     expect(screen.getByText(/add quantities and alternatives/i)).toBeInTheDocument();
     expect(screen.getByText(/share setup, access, and timing notes/i)).toBeInTheDocument();
 
     cleanup();
     render(<CataloguePageContent catalogue={sampleCatalogue} />);
-    expect(screen.getByRole("link", { name: /add modular lounge set to quote/i })).toHaveAttribute(
-      "href",
-      "/quote?listing=modular-lounge-set"
-    );
+    expect(screen.getByRole("button", { name: /increase modular lounge set quantity/i })).toBeInTheDocument();
+    expect(screen.getByLabelText(/modular lounge set quantity selected/i)).toHaveTextContent("Qty 0");
     expect(screen.getByRole("link", { name: /view details for modular lounge set/i })).toHaveAttribute(
       "href",
       "/catalogue/modular-lounge-set"
@@ -328,10 +325,8 @@ describe("Phase 3V-A/B quote enquiry workflow hardening", () => {
     cleanup();
     render(<CategoriesPageContent catalogue={sampleCatalogue} />);
     expect(screen.getByRole("heading", { name: /furniture catalogue/i })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /add modular lounge set to quote/i })).toHaveAttribute(
-      "href",
-      "/quote?listing=modular-lounge-set"
-    );
+    expect(screen.getByRole("button", { name: /increase modular lounge set quantity/i })).toBeInTheDocument();
+    expect(screen.getByLabelText(/modular lounge set quantity selected/i)).toHaveTextContent("Qty 0");
     expect(screen.getByRole("link", { name: /view details for modular lounge set/i })).toHaveAttribute(
       "href",
       "/catalogue/modular-lounge-set"

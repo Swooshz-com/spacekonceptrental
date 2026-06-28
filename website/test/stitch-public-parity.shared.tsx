@@ -63,7 +63,8 @@ export function runStitchPublicParitySuite(label: string) {
 
       render(<CataloguePageContent catalogue={sampleCatalogue} />);
       expect(screen.getByRole("heading", { name: /furniture catalogue/i })).toBeInTheDocument();
-      expect(screen.getByRole("link", { name: /add modular lounge set to quote/i })).toHaveAttribute("href", "/quote?listing=modular-lounge-set");
+      expect(screen.getByRole("button", { name: /increase modular lounge set quantity/i })).toBeInTheDocument();
+      expect(screen.getByLabelText(/modular lounge set quantity selected/i)).toHaveTextContent("Qty 0");
       expect(screen.getByRole("link", { name: /view details for modular lounge set/i })).toHaveAttribute("href", "/catalogue/modular-lounge-set");
       expect(visibleText()).toMatch(/browsing does not set aside furniture/i);
       expect(visibleText()).not.toMatch(forbiddenPublicTerms);
@@ -78,7 +79,9 @@ export function runStitchPublicParitySuite(label: string) {
     it("keeps detail, category, event, and quote paths public-safe", async () => {
       render(<ProductPageContent product={sampleProduct} relatedListings={[sampleProduct]} />);
       expect(screen.getByRole("heading", { name: /modular lounge set/i })).toBeInTheDocument();
-      expect(screen.getByRole("link", { name: /add to quote/i })).toHaveAttribute("href", "/quote?listing=modular-lounge-set");
+      expect(screen.getByRole("button", { name: /increase modular lounge set quantity/i })).toBeInTheDocument();
+      expect(screen.getByLabelText(/modular lounge set quantity selected/i)).toHaveTextContent("Qty 0");
+      expect(screen.getByRole("link", { name: /request quote/i })).toHaveAttribute("href", "/quote");
       expect(screen.getByRole("link", { name: /back to catalogue/i })).toHaveAttribute("href", "/catalogue");
       expect(visibleText()).toMatch(/add quantities and alternatives/i);
       expect(visibleText()).toMatch(/does not set aside furniture or finish rental details/i);
@@ -87,10 +90,8 @@ export function runStitchPublicParitySuite(label: string) {
 
       render(<CategoriesPageContent catalogue={sampleCatalogue} />);
       expect(screen.getByRole("heading", { name: /furniture catalogue/i })).toBeInTheDocument();
-      expect(screen.getByRole("link", { name: /add modular lounge set to quote/i })).toHaveAttribute(
-        "href",
-        "/quote?listing=modular-lounge-set"
-      );
+      expect(screen.getByRole("button", { name: /increase modular lounge set quantity/i })).toBeInTheDocument();
+      expect(screen.getByLabelText(/modular lounge set quantity selected/i)).toHaveTextContent("Qty 0");
       expect(screen.getByRole("link", { name: /view details for modular lounge set/i })).toHaveAttribute(
         "href",
         "/catalogue/modular-lounge-set"

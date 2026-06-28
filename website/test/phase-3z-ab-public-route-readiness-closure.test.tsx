@@ -254,10 +254,8 @@ describe("Phase 3Z-A/B public route readiness closure", () => {
 
     render(<CategoriesPageContent catalogue={sampleCatalogue} />);
     expect(screen.getByRole("heading", { name: /furniture catalogue/i })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /add modular lounge set to quote/i })).toHaveAttribute(
-      "href",
-      "/quote?listing=modular-lounge-set"
-    );
+    expect(screen.getByRole("button", { name: /increase modular lounge set quantity/i })).toBeInTheDocument();
+    expect(screen.getByLabelText(/modular lounge set quantity selected/i)).toHaveTextContent("Qty 0");
     expect(screen.getByRole("link", { name: /view details for modular lounge set/i })).toHaveAttribute(
       "href",
       "/catalogue/modular-lounge-set"

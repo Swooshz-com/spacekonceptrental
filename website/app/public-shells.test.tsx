@@ -185,10 +185,8 @@ describe("public page shells", () => {
 
     expect(screen.getByRole("heading", { name: /modular lounge set/i })).toBeInTheDocument();
     expect(screen.getByText(/published lounge set/i)).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /add modular lounge set to quote/i })).toHaveAttribute(
-      "href",
-      "/quote?listing=modular-lounge-set"
-    );
+    expect(screen.getByRole("button", { name: /increase modular lounge set quantity/i })).toBeInTheDocument();
+    expect(screen.getByLabelText(/modular lounge set quantity selected/i)).toHaveTextContent("Qty 0");
     expect(screen.getByRole("link", { name: /view details for modular lounge set/i })).toHaveAttribute(
       "href",
       "/catalogue/modular-lounge-set"
@@ -235,10 +233,9 @@ describe("public page shells", () => {
     expect(screen.getByText(/published lounge set/i)).toBeInTheDocument();
     expect(screen.getByText(/listing reference/i)).toBeInTheDocument();
     expect(screen.getByText("modular-lounge-set")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /add to quote/i })).toHaveAttribute(
-      "href",
-      "/quote?listing=modular-lounge-set"
-    );
+    expect(screen.getByRole("button", { name: /increase modular lounge set quantity/i })).toBeInTheDocument();
+    expect(screen.getByLabelText(/modular lounge set quantity selected/i)).toHaveTextContent("Qty 0");
+    expect(screen.getByRole("link", { name: /request quote/i })).toHaveAttribute("href", "/quote");
     expect(screen.getByRole("link", { name: /back to catalogue/i })).toHaveAttribute("href", "/catalogue");
   });
 
