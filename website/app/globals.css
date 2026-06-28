@@ -20757,6 +20757,33 @@ body:has(.stitch-setups-hero) .site-main .stitch-setups-hero h1 {
 }
 
 @media (min-width: 901px) {
+  body:has(.stitch-about-hero) .site-main .stitch-about-story {
+    padding: clamp(2.5rem, 4vw, 3.4rem) 0 !important;
+  }
+
+  body:has(.stitch-about-hero) .site-main .stitch-about-story__grid {
+    align-items: center !important;
+    gap: clamp(3.25rem, 6vw, 5.5rem) !important;
+    width: min(calc(100% - clamp(2rem, 7vw, 6rem)), 1312px) !important;
+    max-width: 1312px !important;
+  }
+
+  body:has(.stitch-about-hero) .site-main .stitch-about-story__image {
+    flex: 0 0 min(48vw, 44rem) !important;
+    height: clamp(26.875rem, 37vw, 33.4375rem) !important;
+    max-width: 44rem !important;
+    padding: 0 !important;
+  }
+
+  body:has(.stitch-about-hero) .site-main .stitch-about-story__image img {
+    display: block !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    object-position: center !important;
+    padding: 0 !important;
+    width: 100% !important;
+  }
+
   body:has(.stitch-setups-hero) .site-main .stitch-setups-filter-section {
     background: color-mix(in srgb, var(--stitch-surface) 92%, transparent) !important;
     border-bottom: 1px solid rgba(95, 99, 79, 0.1) !important;
