@@ -19401,3 +19401,192 @@ body:has(.stitch-home-hero) .stitch-home-advantage .stitch-section-heading h2 {
     text-align: center !important;
   }
 }
+
+/* Final public display hierarchy: Furniture Catalogue is the source heading style. */
+body:has(.stitch-site-header) .site-main :is(h1, h2, h3, h4, h5, h6) {
+  font-family: var(--stitch-serif) !important;
+  font-weight: 400 !important;
+  letter-spacing: -0.035em !important;
+  line-height: 1.05 !important;
+}
+
+body:has(.stitch-site-header) .site-main h1 {
+  font-size: clamp(3.25rem, 5.35vw, 5.05rem) !important;
+  letter-spacing: -0.045em !important;
+  line-height: 1.02 !important;
+}
+
+body:has(.stitch-site-header) .site-main h2 {
+  font-size: clamp(2.1rem, 3.55vw, 3.35rem) !important;
+}
+
+body:has(.stitch-site-header) .site-main h3 {
+  font-size: clamp(1.45rem, 2.25vw, 2.15rem) !important;
+}
+
+body:has(.stitch-site-header) .site-main h4 {
+  font-size: clamp(1.18rem, 1.7vw, 1.55rem) !important;
+}
+
+body:has(.stitch-site-header) .site-main h5 {
+  font-size: clamp(1rem, 1.35vw, 1.25rem) !important;
+}
+
+body:has(.stitch-site-header) .site-main h6 {
+  font-size: 0.95rem !important;
+}
+
+body:has(.stitch-site-header) .site-main :is(
+  .stitch-product-card h2,
+  .stitch-product-card h3,
+  .stitch-card__body h2,
+  .stitch-card__body h3,
+  .stitch-home-feature-card strong,
+  .stitch-setup-card h2,
+  .stitch-setup-card h3,
+  .stitch-setup-tile__body strong,
+  .stitch-about-card h3,
+  .stitch-feature h3
+) {
+  font-family: var(--stitch-serif) !important;
+  font-weight: 400 !important;
+  letter-spacing: -0.03em !important;
+  line-height: 1.08 !important;
+}
+
+body:has(.stitch-home-hero) .stitch-home-hero__grid {
+  position: relative !important;
+}
+
+body:has(.stitch-home-hero) .stitch-home-hero__copy {
+  position: absolute !important;
+  inset: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
+  padding: clamp(1.25rem, 4vw, 4rem) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+  transform: none !important;
+}
+
+body:has(.stitch-home-hero) .stitch-home-hero__copy > * {
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+body:has(.stitch-home-hero) .stitch-home-hero__copy h1 {
+  max-width: 36rem !important;
+  text-align: center !important;
+}
+
+body:has(.stitch-home-hero) .stitch-home-hero__copy p:not(.stitch-eyebrow) {
+  max-width: 38rem !important;
+  text-align: center !important;
+}
+
+body:has(.stitch-home-hero) .stitch-home-hero .stitch-actions {
+  width: 100% !important;
+  justify-content: center !important;
+}
+
+body:has(.stitch-home-hero) .stitch-home-advantage .stitch-section-heading,
+body:has(.stitch-home-hero) .stitch-home-advantage .stitch-section-heading h2 {
+  margin-left: auto !important;
+  margin-right: auto !important;
+  text-align: center !important;
+}
+
+@media (max-width: 900px) {
+  body:has(.stitch-site-header) .site-main h1 {
+    font-size: clamp(2.65rem, 12vw, 3.9rem) !important;
+  }
+
+  body:has(.stitch-site-header) .site-main h2 {
+    font-size: clamp(2rem, 9vw, 3rem) !important;
+  }
+
+  body:has(.stitch-site-header) .site-main h3 {
+    font-size: clamp(1.45rem, 7vw, 2.05rem) !important;
+  }
+}
+
+/* Display hierarchy guardrails: keep UI labels and card titles scaled, not billboard-sized. */
+body:has(.stitch-site-header) .site-main :is(
+  .stitch-product-card h2,
+  .stitch-product-card h3,
+  .stitch-card__body h2,
+  .stitch-card__body h3
+) {
+  font-family: var(--stitch-serif) !important;
+  font-size: clamp(1.35rem, 1.85vw, 1.82rem) !important;
+  font-weight: 400 !important;
+  letter-spacing: -0.03em !important;
+  line-height: 1.08 !important;
+}
+
+body:has(.stitch-site-header) .site-main :is(
+  .stitch-home-feature-card strong,
+  .stitch-setup-tile__body strong,
+  .stitch-about-card h3,
+  .stitch-feature h3
+) {
+  font-family: var(--stitch-serif) !important;
+  font-size: clamp(1.05rem, 1.45vw, 1.35rem) !important;
+  font-weight: 400 !important;
+  letter-spacing: -0.025em !important;
+  line-height: 1.1 !important;
+}
+
+body:has(.stitch-site-header) .site-main :is(
+  .stitch-filter-panel h2,
+  .stitch-filter-panel h3,
+  .stitch-filter-panel h4,
+  .stitch-filter-panel h5,
+  .stitch-filter-panel h6,
+  .stitch-filter-panel legend,
+  .stitch-contact-brief-support strong,
+  .stitch-contact-support-row strong
+) {
+  font-family: var(--font-body) !important;
+  font-size: 0.78rem !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.1em !important;
+  line-height: 1.15 !important;
+  text-transform: uppercase !important;
+}
+
+body:has(.stitch-contact-hero) .stitch-contact-brief-support p,
+body:has(.stitch-contact-hero) .stitch-contact-support-row p {
+  text-transform: none !important;
+}
+
+/* Contact CTA support rows are compact UI labels, not page headings. */
+body:has(.stitch-contact-hero) .site-main .stitch-contact-brief-panel :is(h3, h4, h5, h6, strong, dt) {
+  font-family: var(--font-body) !important;
+  font-size: 0.78rem !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.1em !important;
+  line-height: 1.15 !important;
+  text-transform: uppercase !important;
+}
+
+body:has(.stitch-contact-hero) .site-main .stitch-contact-brief-panel p {
+  font-family: var(--font-body) !important;
+  letter-spacing: normal !important;
+  text-transform: none !important;
+}
+
+body:has(.stitch-contact-hero) .site-main .stitch-contact-brief-panel h2 {
+  font-family: var(--font-display) !important;
+  font-size: clamp(2.1rem, 3.2vw, 3rem) !important;
+  font-weight: 400 !important;
+  letter-spacing: -0.035em !important;
+  line-height: 0.96 !important;
+  text-transform: none !important;
+}
