@@ -194,6 +194,26 @@ describe("public page shells", () => {
     expect(document.body.textContent).not.toMatch(forbiddenPublicCopy);
   });
 
+  it("keeps catalogue category and style all filters independent", () => {
+    render(
+      <CataloguePageContent
+        activeCategorySlug="lounge-seating"
+        activeStyleSlug="brutalist"
+        catalogue={catalogueWithProduct}
+      />
+    );
+
+    const allCategoriesLink = screen.getByRole("link", { name: /all categories/i });
+    const allStylesLink = screen.getByRole("link", { name: /all styles/i });
+
+    expect(allCategoriesLink).toHaveAttribute("href", "/catalogue?style=brutalist");
+    expect(allCategoriesLink).not.toHaveClass("is-active");
+    expect(allStylesLink).toHaveAttribute("href", "/catalogue?category=lounge-seating");
+    expect(allStylesLink).not.toHaveClass("is-active");
+    expect(screen.getByRole("link", { name: /lounge seating/i })).toHaveClass("is-active");
+    expect(screen.getByRole("link", { name: /brutalist/i })).toHaveClass("is-active");
+  });
+
   it("renders a clean empty catalogue state inside the Stitch catalogue shell", () => {
     render(
       <CataloguePageContent
