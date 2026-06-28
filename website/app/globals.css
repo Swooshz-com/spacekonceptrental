@@ -20943,4 +20943,51 @@ body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-
     height: auto !important;
     min-height: 0 !important;
   }
+
+  body:has(.stitch-home-hero) .site-main :is(
+    .stitch-home-hero,
+    .stitch-home-advantage,
+    .stitch-home-categories,
+    .stitch-home-featured
+  ) .stitch-container {
+    max-width: 1448px !important;
+    width: min(calc(100% - clamp(3rem, 8vw, 8rem)), 1448px) !important;
+  }
+
+  body:has(.stitch-home-hero) .site-main :is(
+    .stitch-home-advantage,
+    .stitch-home-categories,
+    .stitch-home-featured
+  ) .stitch-section-heading h2 {
+    font-family: var(--stitch-serif) !important;
+    font-size: clamp(2.25rem, 2.8vw, 2.9rem) !important;
+    font-weight: 400 !important;
+    letter-spacing: -0.035em !important;
+    line-height: 1.04 !important;
+  }
+
+  body:has(.stitch-home-hero) .site-main .stitch-home-advantage .stitch-feature-grid {
+    gap: clamp(1rem, 1.6vw, 1.35rem) !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+
+  body:has(.stitch-home-hero) .site-main .stitch-home-advantage .stitch-feature {
+    min-height: 15.4rem !important;
+    padding: clamp(1.8rem, 2.4vw, 2.35rem) !important;
+  }
+
+  body:has(.stitch-home-hero) .site-main .stitch-home-featured-grid {
+    gap: clamp(1rem, 1.6vw, 1.35rem) !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  }
+
+  body:has(.stitch-home-hero) .site-main .stitch-home-feature-card {
+    min-height: 33rem !important;
+    padding: 0.55rem !important;
+  }
+
+  body:has(.stitch-home-hero) .site-main .stitch-home-feature-card img {
+    height: 25.4rem !important;
+    min-height: 0 !important;
+  }
 }
