@@ -19784,3 +19784,21 @@ body:has(.stitch-quote-page):not(:has(.stitch-home-hero)) .stitch-quote-intro::a
   border-bottom: 1px solid var(--stitch-line) !important;
   pointer-events: none !important;
 }
+
+/* Legal pages share the public page-title scale; card headings stay compact. */
+body:has(.stitch-legal-hero) .site-main .stitch-legal-intro h1 {
+  font-family: var(--stitch-serif) !important;
+  font-size: clamp(3rem, 4.45vw, 4rem) !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.042em !important;
+  line-height: 1.02 !important;
+}
+
+body:has(.stitch-legal-hero) .site-main .stitch-legal-card h2 {
+  color: var(--stitch-ink) !important;
+  font-family: var(--stitch-serif) !important;
+  font-size: clamp(1.35rem, 1.9vw, 1.75rem) !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.025em !important;
+  line-height: 1.08 !important;
+}
