@@ -21032,3 +21032,124 @@ body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-
     max-width: 43rem !important;
   }
 }
+
+/* Final setup/about density pass: shorter intro bands and calmer setup detail layout. */
+body:has(.stitch-about-hero) .stitch-about-hero,
+body:has(.stitch-setups-hero) .stitch-setups-hero,
+body:has(.stitch-about-hero) .site-main .stitch-about-hero,
+body:has(.stitch-setups-hero) .site-main .stitch-setups-hero {
+  box-sizing: border-box !important;
+  padding: clamp(2.3rem, 4.5vw, 3.9rem) 0 clamp(1.65rem, 3vw, 2.4rem) !important;
+  padding-inline: clamp(3rem, 8vw, 8rem) !important;
+}
+
+body:has(.stitch-about-hero) .stitch-about-hero > .stitch-container,
+body:has(.stitch-setups-hero) .stitch-setups-hero > .stitch-container,
+body:has(.stitch-about-hero) .site-main .stitch-about-hero > .stitch-container,
+body:has(.stitch-setups-hero) .site-main .stitch-setups-hero > .stitch-container {
+  margin-inline: auto !important;
+  max-width: 1312px !important;
+  width: min(calc(100% - clamp(3rem, 8vw, 8rem)), 1312px) !important;
+}
+
+body:has(.stitch-about-hero) .stitch-about-hero > .stitch-container > :is(.stitch-eyebrow, h1, p),
+body:has(.stitch-setups-hero) .stitch-setups-hero > .stitch-container > :is(.stitch-eyebrow, h1, p) {
+  margin-left: clamp(3rem, 8vw, 8rem) !important;
+  margin-right: 0 !important;
+  max-width: min(72rem, calc(100vw - clamp(6rem, 16vw, 16rem))) !important;
+}
+
+@media (min-width: 901px) {
+  body:has(.stitch-detail-page--setup) .site-main .stitch-detail-page--setup > .stitch-container {
+    max-width: 1312px !important;
+    width: min(calc(100% - clamp(3rem, 8vw, 8rem)), 1312px) !important;
+  }
+
+  body:has(.stitch-detail-page--setup) .site-main .stitch-detail-open-media {
+    height: clamp(18rem, 27vw, 24rem) !important;
+    margin-inline: auto !important;
+    max-width: 1080px !important;
+    overflow: hidden !important;
+  }
+
+  body:has(.stitch-detail-page--setup) .site-main .stitch-detail-page--setup .stitch-detail-open-media {
+    aspect-ratio: auto !important;
+    height: clamp(18rem, 27vw, 24rem) !important;
+    max-height: 24rem !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+  }
+
+  body:has(.stitch-detail-page--setup) .site-main .stitch-detail-page--setup .stitch-detail-open-media img,
+  body:has(.stitch-detail-page--setup) .site-main .stitch-detail-page--setup .stitch-detail-open-media .stitch-detail-image {
+    aspect-ratio: auto !important;
+    max-height: none !important;
+    min-height: 0 !important;
+  }
+
+  body:has(.stitch-detail-page--setup) .site-main .stitch-detail-page--setup .stitch-detail-open-media img,
+  body:has(.stitch-detail-page--setup) .site-main .stitch-detail-open-media img {
+    height: 100% !important;
+    object-fit: cover !important;
+    object-position: center !important;
+    width: 100% !important;
+  }
+
+  body:has(.stitch-detail-page--setup) .site-main .stitch-setup-lower {
+    align-items: start !important;
+    gap: clamp(2rem, 3.4vw, 3.25rem) !important;
+    grid-template-columns: minmax(0, 34rem) minmax(0, 1fr) !important;
+    justify-content: stretch !important;
+    margin-top: clamp(3rem, 4.5vw, 4.4rem) !important;
+    width: 100% !important;
+  }
+
+  body:has(.stitch-detail-page--setup) .site-main .stitch-setup-lower > div:first-child {
+    gap: 1.25rem !important;
+    max-width: 34rem !important;
+  }
+
+  body:has(.stitch-detail-page--setup) .site-main .stitch-setup-lower > div:first-child > h2:first-of-type {
+    font-size: clamp(2.7rem, 4.4vw, 4.1rem) !important;
+    line-height: 1 !important;
+    max-width: 10em !important;
+  }
+
+  body:has(.stitch-detail-page--setup) .site-main .stitch-detail-context h2 {
+    max-width: 24rem !important;
+  }
+
+  body:has(.stitch-detail-page--setup) .site-main .stitch-setup-lower .stitch-quote-select-controls {
+    grid-template-columns: 3.15rem minmax(9rem, 1fr) 3.15rem !important;
+    min-height: 3.1rem !important;
+    width: min(100%, 31rem) !important;
+  }
+
+  body:has(.stitch-detail-page--setup) .site-main .stitch-setup-lower .stitch-quote-quantity-button,
+  body:has(.stitch-detail-page--setup) .site-main .stitch-setup-lower .stitch-quote-quantity-value {
+    min-height: 3.1rem !important;
+  }
+
+  body:has(.stitch-detail-page--setup) .site-main .stitch-included-open > div {
+    gap: 1rem 1.35rem !important;
+    grid-template-columns: repeat(2, minmax(15rem, 1fr)) !important;
+  }
+
+  body:has(.stitch-detail-page--setup) .site-main .stitch-included-open {
+    justify-self: stretch !important;
+    max-width: none !important;
+    width: 100% !important;
+  }
+
+  body:has(.stitch-detail-page--setup) .site-main .stitch-included-open article {
+    align-items: center !important;
+    display: grid !important;
+    grid-template-columns: 6rem minmax(0, 1fr) !important;
+    min-height: 6.25rem !important;
+  }
+
+  body:has(.stitch-detail-page--setup) .site-main .stitch-included-open article img {
+    height: 4.8rem !important;
+    width: 6rem !important;
+  }
+}
