@@ -19785,11 +19785,11 @@ body:has(.stitch-quote-page):not(:has(.stitch-home-hero)) .stitch-quote-intro::a
   pointer-events: none !important;
 }
 
-/* Legal pages share the public page-title scale; card headings stay compact. */
+/* Legal pages match the Furniture Catalogue page title; card headings stay compact. */
 body:has(.stitch-legal-hero) .site-main .stitch-legal-intro h1 {
   font-family: var(--stitch-serif) !important;
   font-size: clamp(3rem, 4.45vw, 4rem) !important;
-  font-weight: 700 !important;
+  font-weight: 400 !important;
   letter-spacing: -0.042em !important;
   line-height: 1.02 !important;
 }
