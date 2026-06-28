@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 import {
   QuoteSelectionBadge,
@@ -127,5 +127,46 @@ describe("QuoteSelectionControls", () => {
     expect(screen.getByLabelText("Kinetic Dining Table: 5 selected")).toHaveTextContent(
       "Qty 5"
     );
+  });
+
+  it("refreshes stored selection thumbnails from listing cards", async () => {
+    window.localStorage.setItem(
+      "skr.quoteSelection.v1",
+      JSON.stringify([
+        {
+          slug: "kinetic-dining-table",
+          name: "Kinetic Dining Table",
+          category: "Tables",
+          quantity: 5
+        }
+      ])
+    );
+
+    render(
+      <QuoteSelectionBadge
+        item={{
+          slug: "kinetic-dining-table",
+          name: "Kinetic Dining Table",
+          category: "Tables",
+          imageSrc: "/images/kinetic-dining-table.jpg",
+          quantity: 1
+        }}
+      />
+    );
+
+    await waitFor(() =>
+      expect(window.localStorage.getItem("skr.quoteSelection.v1")).toContain(
+        "/images/kinetic-dining-table.jpg"
+      )
+    );
+
+    cleanup();
+    render(<QuoteSelectionSummary />);
+
+    expect(await screen.findByAltText("Kinetic Dining Table thumbnail")).toHaveAttribute(
+      "src",
+      "/images/kinetic-dining-table.jpg"
+    );
+    expect(screen.getByText("Qty: 5")).toBeInTheDocument();
   });
 });

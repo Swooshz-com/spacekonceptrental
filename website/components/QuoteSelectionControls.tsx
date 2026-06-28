@@ -79,6 +79,52 @@ function writeQuoteSelection(items: QuoteSelectionItem[]) {
   window.dispatchEvent(new Event(quoteSelectionChangeEvent));
 }
 
+function mergeQuoteItemMetadata(
+  storedItem: QuoteSelectionItem,
+  sourceItem: QuoteSelectionItem,
+  quantity = storedItem.quantity
+) {
+  return {
+    ...storedItem,
+    name: sourceItem.name,
+    quantity,
+    ...(sourceItem.category ? { category: sourceItem.category } : {}),
+    ...(sourceItem.imageSrc ? { imageSrc: sourceItem.imageSrc } : {})
+  };
+}
+
+function refreshStoredQuoteItem(
+  item: QuoteSelectionItem,
+  setItems: (items: QuoteSelectionItem[]) => void
+) {
+  const normalizedItem = normalizeQuoteItem(item);
+
+  if (!normalizedItem) {
+    return;
+  }
+
+  let changed = false;
+  const nextItems = readQuoteSelection().map((selected) => {
+    if (selected.slug !== normalizedItem.slug) {
+      return selected;
+    }
+
+    const refreshedItem = mergeQuoteItemMetadata(selected, normalizedItem);
+    changed =
+      changed ||
+      refreshedItem.name !== selected.name ||
+      refreshedItem.category !== selected.category ||
+      refreshedItem.imageSrc !== selected.imageSrc;
+
+    return refreshedItem;
+  });
+
+  if (changed) {
+    writeQuoteSelection(nextItems);
+    setItems(nextItems);
+  }
+}
+
 export function getStoredQuoteSelection() {
   return readQuoteSelection();
 }
@@ -193,6 +239,10 @@ export function QuoteSelectionButton({ item }: { item: QuoteSelectionItem }) {
     };
   }, []);
 
+  useEffect(() => {
+    refreshStoredQuoteItem(item, setItems);
+  }, [item.category, item.imageSrc, item.name, item.slug]);
+
   function handleIncrementQuantity(event: MouseEvent<HTMLButtonElement>) {
     event.preventDefault();
 
@@ -209,10 +259,11 @@ export function QuoteSelectionButton({ item }: { item: QuoteSelectionItem }) {
     const nextItems = existingItem
       ? currentItems.map((selected) =>
           selected.slug === normalizedItem.slug
-            ? {
-                ...selected,
-                quantity: Math.min(99, selected.quantity + 1)
-              }
+            ? mergeQuoteItemMetadata(
+                selected,
+                normalizedItem,
+                Math.min(99, selected.quantity + 1)
+              )
             : selected
         )
       : [...currentItems, normalizedItem].slice(0, maxStoredQuoteItems);
@@ -233,10 +284,11 @@ export function QuoteSelectionButton({ item }: { item: QuoteSelectionItem }) {
     const nextItems = readQuoteSelection()
       .map((selected) =>
         selected.slug === normalizedItem.slug
-          ? {
-              ...selected,
-              quantity: selected.quantity - 1
-            }
+          ? mergeQuoteItemMetadata(
+              selected,
+              normalizedItem,
+              selected.quantity - 1
+            )
           : selected
       )
       .filter((selected) => selected.quantity > 0);
@@ -295,6 +347,10 @@ export function QuoteSelectionBadge({ item }: { item: QuoteSelectionItem }) {
       window.removeEventListener("storage", syncSelection);
     };
   }, []);
+
+  useEffect(() => {
+    refreshStoredQuoteItem(item, setItems);
+  }, [item.category, item.imageSrc, item.name, item.slug]);
 
   if (!selectedItem) {
     return null;
