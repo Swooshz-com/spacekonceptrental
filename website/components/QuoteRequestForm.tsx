@@ -367,14 +367,15 @@ export default function QuoteRequestForm({
             follow-up.
           </small>
         </label>
-        {fieldErrors.contact ? (
-          <small
-            className="quote-form__field-error quote-form__full-width"
-            id="quote-contact-error"
-          >
-            {fieldErrors.contact}
-          </small>
-        ) : null}
+        <small
+          aria-hidden={fieldErrors.contact ? undefined : true}
+          className={`quote-form__field-error quote-form__full-width quote-form__contact-error${
+            fieldErrors.contact ? "" : " quote-form__field-error--reserved"
+          }`}
+          id={fieldErrors.contact ? "quote-contact-error" : undefined}
+        >
+          {fieldErrors.contact ?? "Contact validation message space."}
+        </small>
         <label>
           Preferred contact method
           <select
@@ -464,6 +465,29 @@ export default function QuoteRequestForm({
       </fieldset>
       {submitState.status !== "success" ? (
         <>
+          <div
+            className={`quote-form__feedback-slot${
+              submitState.status === "error"
+                ? " quote-form__feedback-slot--active"
+                : ""
+            }`}
+          >
+            {submitState.status === "error" ? (
+              <p
+                className="quote-form__status quote-form__status--error"
+                role="alert"
+              >
+                {submitState.message}
+              </p>
+            ) : (
+              <p
+                aria-hidden="true"
+                className="quote-form__status quote-form__status--error quote-form__status--reserved"
+              >
+                Quote form feedback message space.
+              </p>
+            )}
+          </div>
           <button
             className="button"
             disabled={submitState.status === "submitting"}
@@ -523,14 +547,6 @@ export default function QuoteRequestForm({
             </a>
           </div>
         </section>
-      ) : null}
-      {submitState.status === "error" ? (
-        <p
-          className="quote-form__status quote-form__status--error"
-          role="alert"
-        >
-          {submitState.message}
-        </p>
       ) : null}
     </form>
   );
