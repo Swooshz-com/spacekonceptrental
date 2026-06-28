@@ -20285,3 +20285,73 @@ body:has(.stitch-home-hero) .site-main .stitch-home-advantage .stitch-feature p 
     font-size: 0.98rem !important;
   }
 }
+
+/* Setups listing grid: keep every object card on the same visual rhythm. */
+body:has(.stitch-setups-hero) .site-main .stitch-setups-grid {
+  align-items: stretch !important;
+  gap: clamp(1.35rem, 2.2vw, 2.15rem) !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+}
+
+body:has(.stitch-setups-hero) .site-main .stitch-setup-tile,
+body:has(.stitch-setups-hero) .site-main .stitch-setup-tile--wide {
+  display: flex !important;
+  flex-direction: column !important;
+  grid-column: auto !important;
+  gap: 1.25rem !important;
+  height: 100% !important;
+  margin-top: 0 !important;
+  min-height: 0 !important;
+}
+
+body:has(.stitch-setups-hero) .site-main .stitch-setup-tile:nth-child(even),
+body:has(.stitch-setups-hero) .site-main .stitch-setups-grid .stitch-setup-tile:nth-child(n + 3) {
+  display: flex !important;
+  margin-top: 0 !important;
+}
+
+body:has(.stitch-setups-hero) .site-main .stitch-setup-tile__image,
+body:has(.stitch-setups-hero) .site-main .stitch-setup-tile--wide .stitch-setup-tile__image {
+  aspect-ratio: auto !important;
+  flex: 0 0 auto !important;
+  height: clamp(16.5rem, 20vw, 21.5rem) !important;
+  margin-bottom: 0 !important;
+  width: 100% !important;
+}
+
+body:has(.stitch-setups-hero) .site-main .stitch-setup-tile__image img {
+  display: block !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  object-position: center !important;
+  width: 100% !important;
+}
+
+body:has(.stitch-setups-hero) .site-main .stitch-setup-tile__body {
+  display: flex !important;
+  flex: 1 1 auto !important;
+  flex-direction: column !important;
+  gap: 0.7rem !important;
+  min-height: 8.75rem !important;
+  padding: 0 !important;
+}
+
+body:has(.stitch-setups-hero) .site-main .stitch-setup-tile__body strong,
+body:has(.stitch-setups-hero) .site-main .stitch-setup-tile__body small {
+  margin: 0 !important;
+}
+
+body:has(.stitch-setups-hero) .site-main .stitch-setup-tile__body em {
+  margin-top: auto !important;
+}
+
+@media (max-width: 900px) {
+  body:has(.stitch-setups-hero) .site-main .stitch-setups-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  body:has(.stitch-setups-hero) .site-main .stitch-setup-tile__image,
+  body:has(.stitch-setups-hero) .site-main .stitch-setup-tile--wide .stitch-setup-tile__image {
+    height: clamp(15rem, 62vw, 22rem) !important;
+  }
+}
