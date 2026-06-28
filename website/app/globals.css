@@ -20399,3 +20399,49 @@ body:has(.stitch-setups-hero) .site-main .stitch-setup-tile__body em {
     width: 100% !important;
   }
 }
+
+/* Quote selection tray: enquiry-only selection count and add buttons */
+.stitch-quote-indicator {
+  gap: 0.65rem;
+  padding-inline: 1.1rem 0.7rem;
+}
+
+.stitch-quote-indicator strong {
+  align-items: center;
+  background: var(--stitch-primary-ink);
+  border-radius: 999px;
+  color: var(--stitch-primary);
+  display: inline-flex;
+  font-family: var(--stitch-sans);
+  font-size: 0.74rem;
+  font-weight: 800;
+  height: 1.55rem;
+  justify-content: center;
+  letter-spacing: 0;
+  min-width: 1.55rem;
+  padding-inline: 0.35rem;
+}
+
+.stitch-quote-select-button {
+  cursor: pointer;
+}
+
+.stitch-card__actions .stitch-quote-select-button {
+  flex: 1 1 150px;
+}
+
+.stitch-detail-actions .stitch-quote-select-button,
+.stitch-setup-lower .stitch-quote-select-button {
+  min-height: 52px;
+  width: 100%;
+}
+
+body:has(.stitch-catalogue-hero) .stitch-product-card .stitch-quote-select-button {
+  width: 100% !important;
+}
+
+@media (max-width: 900px) {
+  .stitch-header-actions > .stitch-quote-indicator {
+    display: none;
+  }
+}

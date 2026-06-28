@@ -23,6 +23,7 @@ function getSubmittedPayload(fetchMock: ReturnType<typeof vi.fn>) {
 describe("QuoteRequestForm", () => {
   afterEach(() => {
     cleanup();
+    window.localStorage.clear();
     vi.restoreAllMocks();
   });
 
@@ -521,6 +522,77 @@ describe("QuoteRequestForm", () => {
       await screen.findByText(/enquiry received/i)
     ).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: /track|status/i })).not.toBeInTheDocument();
+  });
+
+  it("loads stored quote selections into editable request text and clears them after success", async () => {
+    const fetchMock = vi.fn(async () => {
+      return new Response(
+        JSON.stringify({
+          status: "received",
+          quoteRequestId: "70000000-0000-4000-8000-000000000001",
+          publicReference: "QR-20260527-ABC12345"
+        }),
+        {
+          headers: { "content-type": "application/json" },
+          status: 201
+        }
+      );
+    });
+
+    vi.stubGlobal("fetch", fetchMock);
+    window.localStorage.setItem(
+      "skr.quoteSelection.v1",
+      JSON.stringify([
+        {
+          slug: "aura-lounge-chair",
+          name: "Aura Lounge Chair",
+          category: "Seating",
+          quantity: 1
+        },
+        {
+          slug: "kinetic-dining-table",
+          name: "Kinetic Dining Table",
+          category: "Tables",
+          quantity: 2
+        }
+      ])
+    );
+
+    render(<QuoteRequestForm />);
+
+    await waitFor(() =>
+      expect(screen.getByLabelText(/requested listings or items/i)).toHaveValue(
+        "Aura Lounge Chair\nKinetic Dining Table x 2"
+      )
+    );
+    expect(screen.getByLabelText(/selected listings/i)).toHaveTextContent(
+      /Aura Lounge Chair/i
+    );
+
+    fireEvent.change(screen.getByLabelText(/name/i), {
+      target: { value: "Maya Tan" }
+    });
+    fireEvent.change(screen.getByLabelText(/email address/i), {
+      target: { value: "maya@example.test" }
+    });
+    fireEvent.click(screen.getByRole("button", { name: /review and send an enquiry/i }));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+
+    expect(getSubmittedPayload(fetchMock).items).toEqual([
+      {
+        productName: "Aura Lounge Chair",
+        quantity: 1
+      },
+      {
+        productName: "Kinetic Dining Table x 2",
+        quantity: 1
+      }
+    ]);
+    expect(
+      await screen.findByText(/enquiry received/i)
+    ).toBeInTheDocument();
+    expect(window.localStorage.getItem("skr.quoteSelection.v1")).toBe("[]");
   });
 
   it("explains editable listing context and submits adjusted requested items for admin triage", async () => {

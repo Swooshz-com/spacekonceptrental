@@ -2,6 +2,11 @@
 
 import { useEffect, useState } from "react";
 import type { ChangeEvent, FormEvent } from "react";
+import {
+  clearStoredQuoteSelection,
+  formatQuoteSelectionItems,
+  getStoredQuoteSelection
+} from "./QuoteSelectionControls";
 
 type QuoteApiResponse = {
   publicReference?: string;
@@ -137,6 +142,8 @@ export default function QuoteRequestForm({
   const [submissionRequestId] = useState(createSubmissionRequestId);
   const [preferredContactMethod, setPreferredContactMethod] = useState("");
   const [customerMessageText, setCustomerMessageText] = useState("");
+  const [itemsText, setItemsText] = useState(initialItemsText);
+  const [showSelectedItemsSummary, setShowSelectedItemsSummary] = useState(Boolean(initialItemsText));
   const customerMessageInputMaxLength = getCustomerMessageMaxLength(
     preferredContactMethod
   );
@@ -166,6 +173,10 @@ export default function QuoteRequestForm({
     );
   }
 
+  function handleItemsTextChange(event: ChangeEvent<HTMLTextAreaElement>) {
+    setItemsText(event.target.value);
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
@@ -174,7 +185,7 @@ export default function QuoteRequestForm({
     }
 
     const formData = new FormData(event.currentTarget);
-    const itemsText = String(formData.get("items") ?? "").trim();
+    const submittedItemsText = itemsText.trim();
     const submittedCustomerMessageText = customerMessageText.trim();
     const submittedPreferredContactMethod = preferredContactMethod.trim();
     const itemNotesText = String(formData.get("itemNotes") ?? "").trim();
@@ -196,7 +207,7 @@ export default function QuoteRequestForm({
       ...(sourcePath ? { sourcePath } : {}),
       ...(listingSlug ? { listingSlug } : {}),
       ...(submissionRequestId ? { requestId: submissionRequestId } : {}),
-      items: parseRequestedItems(itemsText, itemNotesText)
+      items: parseRequestedItems(submittedItemsText, itemNotesText)
     };
 
     const nextFieldErrors: FieldErrors = {};
@@ -227,7 +238,7 @@ export default function QuoteRequestForm({
       return;
     }
 
-    if (itemsText && payload.items.length === 0) {
+    if (submittedItemsText && payload.items.length === 0) {
       setSubmitState({
         status: "error",
         message:
@@ -259,6 +270,7 @@ export default function QuoteRequestForm({
         publicReference: body.publicReference,
         requestId: body.requestId
       });
+      clearStoredQuoteSelection();
     } catch {
       setSubmitState({
         status: "error",
@@ -280,6 +292,29 @@ export default function QuoteRequestForm({
     window.scrollTo({ top: 0 });
   }, [submitState.status]);
 
+  useEffect(() => {
+    const storedItemsText = formatQuoteSelectionItems(getStoredQuoteSelection());
+
+    if (!storedItemsText) {
+      return;
+    }
+
+    setShowSelectedItemsSummary(true);
+    setItemsText((currentItemsText) => {
+      const currentLines = currentItemsText
+        .split(/\r?\n|\r/)
+        .map((line) => line.trim())
+        .filter(Boolean);
+      const storedLines = storedItemsText
+        .split(/\r?\n|\r/)
+        .map((line) => line.trim())
+        .filter(Boolean);
+      const mergedLines = Array.from(new Set([...currentLines, ...storedLines]));
+
+      return mergedLines.join("\n");
+    });
+  }, []);
+
   return (
     <form
       aria-busy={submitState.status === "submitting"}
@@ -293,9 +328,9 @@ export default function QuoteRequestForm({
         details to triage the rental enquiry.{" "}
         Complete the required contact point first. Let us know what you need for your event. Share the date, venue, and requested items - our team will review the details and follow up with a tailored proposal.
       </p>
-      {initialItemsText ? (
-        <aside className="quote-form__selected" aria-label="Selected listing">
-          <strong>Selected listing</strong>
+      {showSelectedItemsSummary && itemsText.trim() ? (
+        <aside className="quote-form__selected" aria-label="Selected listings">
+          <strong>Selected listings</strong>
           <span>
             Listing context is a starting point only and not a rental fit
             confirmation. Keep this listing, change it, or add more rental
@@ -305,7 +340,7 @@ export default function QuoteRequestForm({
             manual follow-up.
           </span>
           <span>
-            You've added <strong>{initialItemsText}</strong> to your request.
+            You've added <strong>{itemsText}</strong> to your request.
             This starts this rental request as editable request text; feel free
             to adjust quantities or add more items before submitting.
           </span>
@@ -418,10 +453,11 @@ export default function QuoteRequestForm({
         <label className="quote-form__full-width">
           Requested listings or items
           <textarea
-            defaultValue={initialItemsText}
             name="items"
+            onChange={handleItemsTextChange}
             placeholder="Example: 20 stools, 4 cocktail tables, or a lounge setup"
             rows={4}
+            value={itemsText}
           />
           <small>
             Use one line per requested listing or item. Add quantities here

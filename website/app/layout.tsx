@@ -2,6 +2,7 @@
 import Link from "next/link";
 import ChatWidget from "../components/ChatWidget";
 import MobileMenu from "../components/MobileMenu";
+import { QuoteSelectionIndicator } from "../components/QuoteSelectionControls";
 import { MobileBottomNav, SiteDesktopNav } from "../components/SiteNav";
 import "./globals.css";
 import "./globals-premium.css";
@@ -12,7 +13,7 @@ export const metadata: Metadata = {
 };
 
 function SiteHeader() {
-  return <header className="stitch-site-header"><div className="stitch-site-header__inner"><Link className="stitch-brand" href="/">SpaceKonceptRental</Link><SiteDesktopNav /><div className="stitch-header-actions"><Link className="stitch-button stitch-button--primary" href="/quote">Request Quote</Link><MobileMenu /></div></div></header>;
+  return <header className="stitch-site-header"><div className="stitch-site-header__inner"><Link className="stitch-brand" href="/">SpaceKonceptRental</Link><SiteDesktopNav /><div className="stitch-header-actions"><QuoteSelectionIndicator /><MobileMenu /></div></div></header>;
 }
 
 function SiteFooter() {
