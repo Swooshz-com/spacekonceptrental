@@ -307,7 +307,25 @@ describe("public page shells", () => {
     expect(finalRhythmBlock).toContain("Final public page rhythm");
     expect(finalHeroTitleRule).toBeDefined();
     expect(finalHeroTitleRule).toMatch(/font-weight:\s*400\s*!important;/);
+    expect(finalHeroTitleRule).toMatch(/font-size:\s*clamp\(2\.55rem,\s*3\.15vw,\s*3\.1rem\)\s*!important;/);
     expect(finalHeroTitleRule).not.toMatch(/font-weight:\s*700\s*!important;/);
+    expect(finalHeroTitleRule).not.toMatch(/font-size:\s*clamp\(3\.05rem,\s*4\.2vw,\s*3\.95rem\)\s*!important;/);
+  });
+
+  it("keeps catalogue filter filled styling scoped to selected links only", () => {
+    const styles = readFileSync(resolve(process.cwd(), "app/globals.css"), "utf8");
+    const finalDesktopFilterBlock = styles.slice(
+      styles.indexOf("body:has(.stitch-catalogue-hero) .site-main .stitch-filter-panel a,")
+    );
+    const activeFilterRule = finalDesktopFilterBlock.match(
+      /body:has\(\.stitch-catalogue-hero\)\s+\.site-main\s+\.stitch-filter-panel\s+a\.is-active,[\s\S]*?body:has\(\.stitch-catalogue-hero\)\s+\.site-main\s+\.stitch-filter-panel\s+\[aria-current="page"\]\s*\{[\s\S]*?\}/
+    )?.[0];
+
+    expect(activeFilterRule).toBeDefined();
+    expect(activeFilterRule).toMatch(/background:\s*var\(--stitch-primary\)\s*!important;/);
+    expect(finalDesktopFilterBlock).not.toMatch(
+      /body:has\(\.stitch-catalogue-hero\)\s+\.site-main\s+\.stitch-filter-panel\s+a:first-of-type,[\s\S]*?background:\s*var\(--stitch-primary\)\s*!important;/
+    );
   });
 
   it("keeps the chatbot fallback response removed from source and manual QA", () => {

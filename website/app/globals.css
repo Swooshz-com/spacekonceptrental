@@ -14823,7 +14823,8 @@ body:has(.stitch-catalogue-hero) .stitch-filter-panel span {
   color: var(--stitch-ink) !important;
 }
 
-body:has(.stitch-catalogue-hero) .stitch-filter-panel a:first-of-type {
+body:has(.stitch-catalogue-hero) .stitch-filter-panel a.is-active,
+body:has(.stitch-catalogue-hero) .stitch-filter-panel [aria-current="page"] {
   background: var(--stitch-primary) !important;
   color: #fff !important;
 }
@@ -20629,7 +20630,7 @@ body:has(.stitch-site-header) .site-main :is(
 ) {
   color: var(--stitch-ink) !important;
   font-family: var(--stitch-serif) !important;
-  font-size: clamp(3.05rem, 4.2vw, 3.95rem) !important;
+  font-size: clamp(2.55rem, 3.15vw, 3.1rem) !important;
   font-weight: 400 !important;
   letter-spacing: 0 !important;
   line-height: 1.02 !important;
@@ -20717,7 +20718,7 @@ body:has(.stitch-legal-hero) .site-main .stitch-legal-card h2 {
     .stitch-legal-intro h1,
     .stitch-quote-intro h1
   ) {
-    font-size: clamp(2.2rem, 9vw, 2.65rem) !important;
+    font-size: clamp(2.05rem, 8vw, 2.35rem) !important;
     line-height: 1.02 !important;
   }
 
@@ -20957,7 +20958,6 @@ body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-
     width: min(100%, 14.5rem) !important;
   }
 
-  body:has(.stitch-catalogue-hero) .site-main .stitch-filter-panel a:first-of-type,
   body:has(.stitch-catalogue-hero) .site-main .stitch-filter-panel a.is-active,
   body:has(.stitch-catalogue-hero) .site-main .stitch-filter-panel [aria-current="page"] {
     background: var(--stitch-primary) !important;
