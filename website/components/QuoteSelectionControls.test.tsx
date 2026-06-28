@@ -1,6 +1,7 @@
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 import {
+  formatQuoteSelectionItems,
   QuoteSelectionBadge,
   QuoteSelectionButton,
   QuoteSelectionIndicator,
@@ -97,6 +98,161 @@ describe("QuoteSelectionControls", () => {
     expect(screen.getByRole("link", { name: /details/i })).toHaveAttribute(
       "href",
       "/catalogue/aura-lounge-chair"
+    );
+  });
+
+  it("separates setup directions from their included rental pieces", () => {
+    window.localStorage.setItem(
+      "skr.quoteSelection.v1",
+      JSON.stringify([
+        {
+          slug: "botanical-wedding",
+          name: "Botanical Wedding",
+          category: "Setups",
+          kind: "setup",
+          imageSrc: "/images/botanical-wedding.jpg",
+          quantity: 1
+        },
+        {
+          slug: "aura-lounge-chair",
+          name: "Aura Lounge Chair",
+          category: "Seating",
+          kind: "setup-included",
+          imageSrc: "/images/aura-lounge-chair.jpg",
+          quantity: 120,
+          setupName: "Botanical Wedding",
+          setupSlug: "botanical-wedding"
+        }
+      ])
+    );
+
+    render(<QuoteSelectionSummary />);
+
+    expect(screen.queryByText("Selected Rental Items")).not.toBeInTheDocument();
+    expect(screen.getByText("Setup Included Rental Pieces")).toBeInTheDocument();
+    expect(screen.getByText("Selected Setup Directions")).toBeInTheDocument();
+    expect(screen.getByText("Aura Lounge Chair")).toBeInTheDocument();
+    expect(screen.getByText("Qty: 120")).toBeInTheDocument();
+    expect(screen.getAllByText("Botanical Wedding").length).toBeGreaterThan(0);
+    expect(screen.getAllByRole("link", { name: /details/i })[0]).toHaveAttribute(
+      "href",
+      "/catalogue/aura-lounge-chair"
+    );
+  });
+
+  it("lets quote page selection rows adjust item quantities", () => {
+    window.localStorage.setItem(
+      "skr.quoteSelection.v1",
+      JSON.stringify([
+        {
+          slug: "slender-arch-floor-lamp",
+          name: "Slender Arch Floor Lamp",
+          category: "Lighting",
+          kind: "rental",
+          quantity: 3
+        }
+      ])
+    );
+
+    render(<QuoteSelectionSummary />);
+
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: /decrease slender arch floor lamp quantity/i
+      })
+    );
+
+    expect(screen.getByText("Qty: 2")).toBeInTheDocument();
+
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: /increase slender arch floor lamp quantity/i
+      })
+    );
+
+    expect(screen.getByText("Qty: 3")).toBeInTheDocument();
+  });
+
+  it("adjusts setup included selection rows one piece at a time", () => {
+    window.localStorage.setItem(
+      "skr.quoteSelection.v1",
+      JSON.stringify([
+        {
+          slug: "botanical-wedding",
+          name: "Botanical Wedding",
+          category: "Setups",
+          kind: "setup",
+          quantity: 1
+        },
+        {
+          slug: "aura-lounge-chair",
+          name: "Aura Lounge Chair",
+          category: "Seating",
+          kind: "setup-included",
+          quantity: 120,
+          setupName: "Botanical Wedding",
+          setupSlug: "botanical-wedding"
+        }
+      ])
+    );
+
+    render(<QuoteSelectionSummary />);
+
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: /decrease aura lounge chair quantity/i
+      })
+    );
+
+    expect(screen.getByText("Qty: 119")).toBeInTheDocument();
+
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: /increase aura lounge chair quantity/i
+      })
+    );
+
+    expect(screen.getByText("Qty: 120")).toBeInTheDocument();
+  });
+
+  it("formats setup selections separately from direct rental selections", () => {
+    expect(
+      formatQuoteSelectionItems([
+        {
+          slug: "aura-lounge-chair",
+          name: "Aura Lounge Chair",
+          category: "Seating",
+          kind: "rental",
+          quantity: 2
+        },
+        {
+          slug: "kinetic-dining-table",
+          name: "Kinetic Dining Table",
+          category: "Tables",
+          kind: "setup-included",
+          quantity: 15,
+          setupName: "Botanical Wedding",
+          setupSlug: "botanical-wedding"
+        },
+        {
+          slug: "botanical-wedding",
+          name: "Botanical Wedding",
+          category: "Setups",
+          kind: "setup",
+          quantity: 1
+        }
+      ])
+    ).toBe(
+      [
+        "Selected rental items:",
+        "Aura Lounge Chair x 2",
+        "",
+        "Setup included rental pieces:",
+        "Kinetic Dining Table x 15",
+        "",
+        "Selected setup directions:",
+        "Botanical Wedding"
+      ].join("\n")
     );
   });
 

@@ -297,6 +297,17 @@ describe("public page shells", () => {
     expect(publicHeroTitleRule).toMatch(/font-family:\s*var\(--stitch-serif\)\s*!important;/);
     expect(publicHeroTitleRule).toMatch(/font-weight:\s*400\s*!important;/);
     expect(publicHeroTitleRule).not.toMatch(/font-weight:\s*700\s*!important;/);
+    const finalRhythmBlock = styles.slice(
+      styles.indexOf("/* Final public page rhythm: shared interior-title padding and calmer H1 scale. */")
+    );
+    const finalHeroTitleRule = finalRhythmBlock.match(
+      /body:has\(\.stitch-site-header\)\s+\.site-main\s+:is\([\s\S]*?\.stitch-catalogue-hero \.stitch-page-intro h1[\s\S]*?\.stitch-quote-intro h1[\s\S]*?\)\s*\{[\s\S]*?\}/
+    )?.[0];
+
+    expect(finalRhythmBlock).toContain("Final public page rhythm");
+    expect(finalHeroTitleRule).toBeDefined();
+    expect(finalHeroTitleRule).toMatch(/font-weight:\s*400\s*!important;/);
+    expect(finalHeroTitleRule).not.toMatch(/font-weight:\s*700\s*!important;/);
   });
 
   it("keeps the chatbot fallback response removed from source and manual QA", () => {

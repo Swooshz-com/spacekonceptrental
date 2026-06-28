@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { ChangeEvent, FormEvent } from "react";
 import {
   clearStoredQuoteSelection,
@@ -36,6 +36,7 @@ const requestIdMaxLength = 128;
 const requestIdFallbackRadix = 36;
 const listingSlugPattern = /^[a-z0-9][a-z0-9-]*$/;
 const requestIdPattern = /^[A-Za-z0-9._:-]+$/;
+const quoteSelectionChangeEvent = "skr:quote-selection-change";
 
 function formatPreferredContactMethod(preferredContactMethod: string) {
   return preferredContactMethod
@@ -144,6 +145,7 @@ export default function QuoteRequestForm({
   const [customerMessageText, setCustomerMessageText] = useState("");
   const [itemsText, setItemsText] = useState(initialItemsText);
   const [showSelectedItemsSummary, setShowSelectedItemsSummary] = useState(Boolean(initialItemsText));
+  const lastSyncedSelectionText = useRef("");
   const customerMessageInputMaxLength = getCustomerMessageMaxLength(
     preferredContactMethod
   );
@@ -293,26 +295,50 @@ export default function QuoteRequestForm({
   }, [submitState.status]);
 
   useEffect(() => {
-    const storedItemsText = formatQuoteSelectionItems(getStoredQuoteSelection());
+    function syncStoredItemsText() {
+      const storedItemsText = formatQuoteSelectionItems(getStoredQuoteSelection());
+      const previousSelectionText = lastSyncedSelectionText.current;
 
-    if (!storedItemsText) {
-      return;
+      if (!storedItemsText) {
+        if (previousSelectionText) {
+          setItemsText((currentItemsText) =>
+            currentItemsText.replace(previousSelectionText, "").trim()
+          );
+          lastSyncedSelectionText.current = "";
+        }
+        return;
+      }
+
+      setShowSelectedItemsSummary(true);
+      setItemsText((currentItemsText) => {
+        if (previousSelectionText && currentItemsText.includes(previousSelectionText)) {
+          lastSyncedSelectionText.current = storedItemsText;
+          return currentItemsText.replace(previousSelectionText, storedItemsText).trim();
+        }
+
+        const currentLines = currentItemsText
+          .split(/\r?\n|\r/)
+          .map((line) => line.trim())
+          .filter(Boolean);
+        const storedLines = storedItemsText
+          .split(/\r?\n|\r/)
+          .map((line) => line.trim())
+          .filter(Boolean);
+        const mergedLines = Array.from(new Set([...currentLines, ...storedLines]));
+
+        lastSyncedSelectionText.current = storedItemsText;
+        return mergedLines.join("\n");
+      });
     }
 
-    setShowSelectedItemsSummary(true);
-    setItemsText((currentItemsText) => {
-      const currentLines = currentItemsText
-        .split(/\r?\n|\r/)
-        .map((line) => line.trim())
-        .filter(Boolean);
-      const storedLines = storedItemsText
-        .split(/\r?\n|\r/)
-        .map((line) => line.trim())
-        .filter(Boolean);
-      const mergedLines = Array.from(new Set([...currentLines, ...storedLines]));
+    syncStoredItemsText();
+    window.addEventListener(quoteSelectionChangeEvent, syncStoredItemsText);
+    window.addEventListener("storage", syncStoredItemsText);
 
-      return mergedLines.join("\n");
-    });
+    return () => {
+      window.removeEventListener(quoteSelectionChangeEvent, syncStoredItemsText);
+      window.removeEventListener("storage", syncStoredItemsText);
+    };
   }, []);
 
   return (

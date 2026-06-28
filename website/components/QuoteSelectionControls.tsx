@@ -7,12 +7,19 @@ import type { MouseEvent } from "react";
 export type QuoteSelectionItem = {
   category?: string;
   imageSrc?: string;
+  includedItems?: QuoteSelectionItem[];
+  kind?: "rental" | "setup" | "setup-included";
   name: string;
   quantity: number;
+  setupName?: string;
+  setupSlug?: string;
   slug: string;
 };
 
 type QuoteSelectionSummaryItem = QuoteSelectionItem;
+type NormalizedQuoteSelectionItem = QuoteSelectionItem & {
+  kind: NonNullable<QuoteSelectionItem["kind"]>;
+};
 
 const quoteSelectionStorageKey = "skr.quoteSelection.v1";
 const quoteSelectionChangeEvent = "skr:quote-selection-change";
@@ -20,28 +27,76 @@ const maxStoredQuoteItems = 20;
 const publicSlugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const publicImageSrcPattern = /^(?:https?:\/\/|\/(?!\/))[^\s"'<>]+$/i;
 
-function normalizeQuoteItem(item: QuoteSelectionItem) {
+function normalizeQuoteItem(
+  item: QuoteSelectionItem
+): NormalizedQuoteSelectionItem | undefined {
   const slug = item.slug.trim().toLowerCase();
   const name = item.name.trim();
   const category = item.category?.trim();
+  const setupName = item.setupName?.trim();
+  const setupSlug = item.setupSlug?.trim().toLowerCase();
+  const kind =
+    item.kind === "setup" ||
+    item.kind === "setup-included" ||
+    item.kind === "rental"
+      ? item.kind
+      : category?.toLowerCase() === "setups"
+        ? "setup"
+        : "rental";
   const imageSrc = item.imageSrc?.trim();
   const quantity = Number.isFinite(item.quantity)
-    ? Math.max(1, Math.min(99, Math.floor(item.quantity)))
+    ? Math.max(1, Math.min(999, Math.floor(item.quantity)))
     : 1;
 
-  if (!slug || !name || !publicSlugPattern.test(slug)) {
+  if (
+    !slug ||
+    !name ||
+    !publicSlugPattern.test(slug) ||
+    (setupSlug && !publicSlugPattern.test(setupSlug))
+  ) {
     return undefined;
   }
 
   return {
     slug,
     name: name.slice(0, 120),
+    kind,
     quantity,
     ...(category ? { category: category.slice(0, 80) } : {}),
+    ...(setupName ? { setupName: setupName.slice(0, 120) } : {}),
+    ...(setupSlug ? { setupSlug } : {}),
     ...(imageSrc && publicImageSrcPattern.test(imageSrc)
       ? { imageSrc: imageSrc.slice(0, 500) }
       : {})
   };
+}
+
+function quoteSelectionItemKey(item: QuoteSelectionItem) {
+  return `${item.kind ?? "rental"}:${item.setupSlug ?? ""}:${item.slug}`;
+}
+
+function normalizeIncludedItems(item: QuoteSelectionItem) {
+  return (item.includedItems ?? [])
+    .map((includedItem) =>
+      normalizeQuoteItem({
+        ...includedItem,
+        kind: "setup-included",
+        setupName: includedItem.setupName ?? item.name,
+        setupSlug: includedItem.setupSlug ?? item.slug
+      })
+    )
+    .filter((includedItem): includedItem is NormalizedQuoteSelectionItem =>
+      Boolean(includedItem)
+    );
+}
+
+function selectionQuantityStep(
+  sourceItem: QuoteSelectionItem,
+  buttonItem: QuoteSelectionItem
+) {
+  return sourceItem.kind === "setup-included" && buttonItem.includedItems?.length
+    ? sourceItem.quantity
+    : 1;
 }
 
 function readQuoteSelection() {
@@ -60,7 +115,7 @@ function readQuoteSelection() {
 
     return parsed
       .map((item) => normalizeQuoteItem(item as QuoteSelectionItem))
-      .filter((item): item is QuoteSelectionItem => Boolean(item))
+      .filter((item): item is NormalizedQuoteSelectionItem => Boolean(item))
       .slice(0, maxStoredQuoteItems);
   } catch {
     return [];
@@ -87,9 +142,12 @@ function mergeQuoteItemMetadata(
   return {
     ...storedItem,
     name: sourceItem.name,
+    kind: sourceItem.kind ?? storedItem.kind,
     quantity,
     ...(sourceItem.category ? { category: sourceItem.category } : {}),
-    ...(sourceItem.imageSrc ? { imageSrc: sourceItem.imageSrc } : {})
+    ...(sourceItem.imageSrc ? { imageSrc: sourceItem.imageSrc } : {}),
+    ...(sourceItem.setupName ? { setupName: sourceItem.setupName } : {}),
+    ...(sourceItem.setupSlug ? { setupSlug: sourceItem.setupSlug } : {})
   };
 }
 
@@ -105,16 +163,19 @@ function refreshStoredQuoteItem(
 
   let changed = false;
   const nextItems = readQuoteSelection().map((selected) => {
-    if (selected.slug !== normalizedItem.slug) {
+    if (quoteSelectionItemKey(selected) !== quoteSelectionItemKey(normalizedItem)) {
       return selected;
     }
 
     const refreshedItem = mergeQuoteItemMetadata(selected, normalizedItem);
     changed =
       changed ||
+      refreshedItem.kind !== selected.kind ||
       refreshedItem.name !== selected.name ||
       refreshedItem.category !== selected.category ||
-      refreshedItem.imageSrc !== selected.imageSrc;
+      refreshedItem.imageSrc !== selected.imageSrc ||
+      refreshedItem.setupName !== selected.setupName ||
+      refreshedItem.setupSlug !== selected.setupSlug;
 
     return refreshedItem;
   });
@@ -134,11 +195,84 @@ export function clearStoredQuoteSelection() {
 }
 
 export function formatQuoteSelectionItems(items: QuoteSelectionItem[]) {
-  return items
-    .map((item) =>
-      item.quantity > 1 ? `${item.name} x ${item.quantity}` : item.name
-    )
-    .join("\n");
+  const normalizedItems = items
+    .map((item) => normalizeQuoteItem(item))
+    .filter((item): item is NormalizedQuoteSelectionItem => Boolean(item));
+  const rentalItems = normalizedItems.filter((item) => item.kind === "rental");
+  const setupIncludedItems = normalizedItems.filter(
+    (item) => item.kind === "setup-included"
+  );
+  const setupItems = normalizedItems.filter((item) => item.kind === "setup");
+  const formatLine = (item: QuoteSelectionItem) =>
+    item.quantity > 1 ? `${item.name} x ${item.quantity}` : item.name;
+
+  if (!setupIncludedItems.length && !setupItems.length) {
+    return rentalItems.map(formatLine).join("\n");
+  }
+
+  return [
+    rentalItems.length
+      ? ["Selected rental items:", ...rentalItems.map(formatLine)].join("\n")
+      : "",
+    setupIncludedItems.length
+      ? ["Setup included rental pieces:", ...setupIncludedItems.map(formatLine)].join("\n")
+      : "",
+    setupItems.length
+      ? ["Selected setup directions:", ...setupItems.map(formatLine)].join("\n")
+      : ""
+  ]
+    .filter(Boolean)
+    .join("\n\n");
+}
+
+function getGroupedSelectionItems(items: QuoteSelectionSummaryItem[]) {
+  return {
+    rentalItems: items.filter((item) => item.kind === "rental" || !item.kind),
+    setupIncludedItems: items.filter((item) => item.kind === "setup-included"),
+    setupItems: items.filter((item) => item.kind === "setup")
+  };
+}
+
+function SelectionGroup({
+  detailBasePath,
+  items,
+  title
+}: {
+  detailBasePath: "/catalogue" | "/listings";
+  items: QuoteSelectionSummaryItem[];
+  title: string;
+}) {
+  if (!items.length) {
+    return null;
+  }
+
+  return (
+    <div className="stitch-selection-group">
+      <h3>{title}</h3>
+      {items.map((item) => (
+        <article
+          className="stitch-selection-row"
+          key={quoteSelectionItemKey(item)}
+        >
+          {item.imageSrc ? (
+            <img alt={`${item.name} thumbnail`} src={item.imageSrc} />
+          ) : (
+            <span className="stitch-selection-row__icon" aria-hidden="true">
+              SK
+            </span>
+          )}
+          <div>
+            <strong>{item.name}</strong>
+            <small>Qty: {item.quantity}</small>
+            {item.setupName ? <small>{item.setupName}</small> : null}
+            {item.category ? <small>{item.category}</small> : null}
+          </div>
+          <QuoteSelectionButton item={item} />
+          <Link href={`${detailBasePath}/${item.slug}`}>Details</Link>
+        </article>
+      ))}
+    </div>
+  );
 }
 
 export function QuoteSelectionSummary({
@@ -157,6 +291,7 @@ export function QuoteSelectionSummary({
   const [items, setItems] = useState<QuoteSelectionItem[]>([]);
   const visibleItems: QuoteSelectionSummaryItem[] = items.length ? items : fallbackItems;
   const hasDiscoveryContext = Boolean(requestedSlug || category || event || search);
+  const groupedItems = getGroupedSelectionItems(visibleItems);
 
   useEffect(() => {
     function syncSelection() {
@@ -178,24 +313,23 @@ export function QuoteSelectionSummary({
       <p className="stitch-eyebrow">Your Selection</p>
       <h2>Your Selection</h2>
       {visibleItems.length ? (
-        <div className="stitch-selection-group">
-          <h3>Selected Rental Items</h3>
-          {visibleItems.map((item) => (
-            <article className="stitch-selection-row" key={item.slug}>
-              {item.imageSrc ? (
-                <img alt={`${item.name} thumbnail`} src={item.imageSrc} />
-              ) : (
-                <span className="stitch-selection-row__icon" aria-hidden="true">SK</span>
-              )}
-              <div>
-                <strong>{item.name}</strong>
-                <small>Qty: {item.quantity}</small>
-                {item.category ? <small>{item.category}</small> : null}
-              </div>
-              <Link href={`/catalogue/${item.slug}`}>Details</Link>
-            </article>
-          ))}
-        </div>
+        <>
+          <SelectionGroup
+            detailBasePath="/catalogue"
+            items={groupedItems.rentalItems}
+            title="Selected Rental Items"
+          />
+          <SelectionGroup
+            detailBasePath="/catalogue"
+            items={groupedItems.setupIncludedItems}
+            title="Setup Included Rental Pieces"
+          />
+          <SelectionGroup
+            detailBasePath="/listings"
+            items={groupedItems.setupItems}
+            title="Selected Setup Directions"
+          />
+        </>
       ) : (
         <>
           <p>
@@ -222,7 +356,14 @@ export function QuoteSelectionSummary({
 
 export function QuoteSelectionButton({ item }: { item: QuoteSelectionItem }) {
   const [items, setItems] = useState<QuoteSelectionItem[]>([]);
-  const selectedItem = items.find((selected) => selected.slug === item.slug);
+  const normalizedButtonItem = normalizeQuoteItem(item);
+  const selectedItem = normalizedButtonItem
+    ? items.find(
+        (selected) =>
+          quoteSelectionItemKey(selected) ===
+          quoteSelectionItemKey(normalizedButtonItem)
+      )
+    : undefined;
 
   useEffect(() => {
     function syncSelection() {
@@ -253,20 +394,45 @@ export function QuoteSelectionButton({ item }: { item: QuoteSelectionItem }) {
     }
 
     const currentItems = readQuoteSelection();
+    const includedItems = normalizeIncludedItems(item);
+    const itemsToUpsert = [normalizedItem, ...includedItems];
     const existingItem = currentItems.find(
-      (selected) => selected.slug === normalizedItem.slug
+      (selected) =>
+        quoteSelectionItemKey(selected) === quoteSelectionItemKey(normalizedItem)
     );
-    const nextItems = existingItem
-      ? currentItems.map((selected) =>
-          selected.slug === normalizedItem.slug
-            ? mergeQuoteItemMetadata(
-                selected,
-                normalizedItem,
-                Math.min(99, selected.quantity + 1)
-              )
-            : selected
+    let nextItems = currentItems.map((selected) => {
+      const sourceItem = itemsToUpsert.find(
+        (upsertItem) =>
+          quoteSelectionItemKey(upsertItem) === quoteSelectionItemKey(selected)
+      );
+
+      if (!sourceItem) {
+        return selected;
+      }
+
+      return mergeQuoteItemMetadata(
+        selected,
+        sourceItem,
+        Math.min(999, selected.quantity + selectionQuantityStep(sourceItem, item))
+      );
+    });
+
+    if (!existingItem) {
+      nextItems = [...nextItems, normalizedItem];
+    }
+
+    includedItems.forEach((includedItem) => {
+      if (
+        !nextItems.some(
+          (selected) =>
+            quoteSelectionItemKey(selected) === quoteSelectionItemKey(includedItem)
         )
-      : [...currentItems, normalizedItem].slice(0, maxStoredQuoteItems);
+      ) {
+        nextItems.push(includedItem);
+      }
+    });
+
+    nextItems = nextItems.slice(0, maxStoredQuoteItems);
 
     writeQuoteSelection(nextItems);
     setItems(nextItems);
@@ -281,16 +447,25 @@ export function QuoteSelectionButton({ item }: { item: QuoteSelectionItem }) {
       return;
     }
 
+    const includedItems = normalizeIncludedItems(item);
+    const itemsToUpdate = [normalizedItem, ...includedItems];
     const nextItems = readQuoteSelection()
-      .map((selected) =>
-        selected.slug === normalizedItem.slug
-          ? mergeQuoteItemMetadata(
-              selected,
-              normalizedItem,
-              selected.quantity - 1
-            )
-          : selected
-      )
+      .map((selected) => {
+        const sourceItem = itemsToUpdate.find(
+          (updateItem) =>
+            quoteSelectionItemKey(updateItem) === quoteSelectionItemKey(selected)
+        );
+
+        if (!sourceItem) {
+          return selected;
+        }
+
+        return mergeQuoteItemMetadata(
+          selected,
+          sourceItem,
+          selected.quantity - selectionQuantityStep(sourceItem, item)
+        );
+      })
       .filter((selected) => selected.quantity > 0);
 
     writeQuoteSelection(nextItems);
@@ -331,7 +506,14 @@ export function QuoteSelectionButton({ item }: { item: QuoteSelectionItem }) {
 
 export function QuoteSelectionBadge({ item }: { item: QuoteSelectionItem }) {
   const [items, setItems] = useState<QuoteSelectionItem[]>([]);
-  const selectedItem = items.find((selected) => selected.slug === item.slug);
+  const normalizedBadgeItem = normalizeQuoteItem(item);
+  const selectedItem = normalizedBadgeItem
+    ? items.find(
+        (selected) =>
+          quoteSelectionItemKey(selected) ===
+          quoteSelectionItemKey(normalizedBadgeItem)
+      )
+    : undefined;
 
   useEffect(() => {
     function syncSelection() {
