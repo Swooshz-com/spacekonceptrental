@@ -27,15 +27,16 @@ describe("QuoteSelectionControls", () => {
     );
 
     expect(screen.getByLabelText("0 selected")).toBeInTheDocument();
+    const addLink = screen.getByRole("link", { name: /add to quote/i });
 
-    fireEvent.click(screen.getByRole("button", { name: /add aura lounge chair/i }));
+    fireEvent.click(addLink);
 
-    expect(screen.getByRole("button", { name: /add aura lounge chair/i })).toHaveTextContent("Added (1)");
+    expect(addLink).toHaveTextContent("Added (1)");
     expect(screen.getByLabelText("1 selected")).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: /add aura lounge chair/i }));
+    fireEvent.click(addLink);
 
-    expect(screen.getByRole("button", { name: /add aura lounge chair/i })).toHaveTextContent("Added (2)");
+    expect(addLink).toHaveTextContent("Added (2)");
     expect(screen.getByLabelText("2 selected")).toBeInTheDocument();
     expect(window.localStorage.getItem("skr.quoteSelection.v1")).toContain(
       "aura-lounge-chair"

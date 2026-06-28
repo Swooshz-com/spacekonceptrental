@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import type { MouseEvent } from "react";
 
 export type QuoteSelectionItem = {
   category?: string;
@@ -86,7 +87,7 @@ export function formatQuoteSelectionItems(items: QuoteSelectionItem[]) {
     .join("\n");
 }
 
-export function QuoteSelectionButton({ item }: { item: QuoteSelectionItem }) {
+export function QuoteSelectionButton({ ariaLabel, item }: { ariaLabel?: string; item: QuoteSelectionItem }) {
   const [items, setItems] = useState<QuoteSelectionItem[]>([]);
   const selectedItem = items.find((selected) => selected.slug === item.slug);
 
@@ -105,7 +106,9 @@ export function QuoteSelectionButton({ item }: { item: QuoteSelectionItem }) {
     };
   }, []);
 
-  function handleAddToQuote() {
+  function handleAddToQuote(event: MouseEvent<HTMLAnchorElement>) {
+    event.preventDefault();
+
     const normalizedItem = normalizeQuoteItem(item);
 
     if (!normalizedItem) {
@@ -132,14 +135,14 @@ export function QuoteSelectionButton({ item }: { item: QuoteSelectionItem }) {
   }
 
   return (
-    <button
-      aria-label={`Add ${item.name} to quote selection`}
+    <a
+      aria-label={ariaLabel}
       className="stitch-link-button stitch-quote-select-button"
+      href={`/quote?listing=${encodeURIComponent(item.slug)}`}
       onClick={handleAddToQuote}
-      type="button"
     >
       {selectedItem ? `Added (${selectedItem.quantity})` : "Add to Quote"}
-    </button>
+    </a>
   );
 }
 
