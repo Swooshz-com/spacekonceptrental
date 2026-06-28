@@ -20426,6 +20426,37 @@ body:has(.stitch-setups-hero) .site-main .stitch-setup-tile__body em {
   cursor: pointer;
 }
 
+.stitch-quote-select-controls {
+  display: grid;
+  gap: 0.55rem;
+  grid-template-columns: 1fr;
+  width: 100%;
+}
+
+.stitch-quote-select-controls[data-selected="true"] {
+  grid-template-columns: minmax(0, 1fr) minmax(5.75rem, auto);
+}
+
+.stitch-quote-remove-button {
+  align-items: center;
+  background: var(--stitch-surface) !important;
+  border: 1px solid rgba(95, 99, 79, 0.36) !important;
+  color: var(--stitch-primary) !important;
+  cursor: pointer;
+  display: inline-flex;
+  font-family: var(--font-body);
+  justify-content: center;
+  min-height: 2.6rem;
+  padding-inline: 0.9rem !important;
+}
+
+.stitch-quote-remove-button:hover,
+.stitch-quote-remove-button:focus-visible {
+  background: #fffdf9 !important;
+  border-color: var(--stitch-primary) !important;
+  color: var(--stitch-ink) !important;
+}
+
 .stitch-card__actions .stitch-quote-select-button {
   flex: 1 1 150px;
 }
@@ -20440,9 +20471,17 @@ body:has(.stitch-catalogue-hero) .stitch-product-card .stitch-quote-select-butto
   width: 100% !important;
 }
 
+body:has(.stitch-catalogue-hero) .stitch-product-card .stitch-quote-select-controls {
+  width: 100% !important;
+}
+
 @media (max-width: 900px) {
   .stitch-header-actions > .stitch-quote-indicator {
     display: none;
+  }
+
+  .stitch-quote-select-controls[data-selected="true"] {
+    grid-template-columns: 1fr;
   }
 }
 

@@ -215,15 +215,47 @@ export function QuoteSelectionButton({ ariaLabel, item }: { ariaLabel?: string; 
     setItems(nextItems);
   }
 
+  function handleRemoveFromQuote(event: MouseEvent<HTMLButtonElement>) {
+    event.preventDefault();
+
+    const normalizedItem = normalizeQuoteItem(item);
+
+    if (!normalizedItem) {
+      return;
+    }
+
+    const nextItems = readQuoteSelection().filter(
+      (selected) => selected.slug !== normalizedItem.slug
+    );
+
+    writeQuoteSelection(nextItems);
+    setItems(nextItems);
+  }
+
   return (
-    <a
-      aria-label={ariaLabel}
-      className="stitch-link-button stitch-quote-select-button"
-      href={`/quote?listing=${encodeURIComponent(item.slug)}`}
-      onClick={handleAddToQuote}
+    <span
+      className="stitch-quote-select-controls"
+      data-selected={selectedItem ? "true" : "false"}
     >
-      {selectedItem ? `Added (${selectedItem.quantity})` : "Add to Quote"}
-    </a>
+      <a
+        aria-label={ariaLabel}
+        className="stitch-link-button stitch-quote-select-button"
+        href={`/quote?listing=${encodeURIComponent(item.slug)}`}
+        onClick={handleAddToQuote}
+      >
+        {selectedItem ? `Added (${selectedItem.quantity})` : "Add to Quote"}
+      </a>
+      {selectedItem ? (
+        <button
+          aria-label={`Remove ${item.name} from quote`}
+          className="stitch-link-button stitch-quote-remove-button"
+          onClick={handleRemoveFromQuote}
+          type="button"
+        >
+          Remove
+        </button>
+      ) : null}
+    </span>
   );
 }
 

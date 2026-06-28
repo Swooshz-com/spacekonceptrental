@@ -42,6 +42,14 @@ describe("QuoteSelectionControls", () => {
     expect(window.localStorage.getItem("skr.quoteSelection.v1")).toContain(
       "aura-lounge-chair"
     );
+
+    fireEvent.click(
+      screen.getByRole("button", { name: /remove aura lounge chair from quote/i })
+    );
+
+    expect(addLink).toHaveTextContent("Add to Quote");
+    expect(screen.getByLabelText("0 selected")).toBeInTheDocument();
+    expect(window.localStorage.getItem("skr.quoteSelection.v1")).toBe("[]");
   });
 
   it("renders stored selections in the quote page selection summary", () => {
