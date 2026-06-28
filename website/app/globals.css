@@ -2483,7 +2483,7 @@ body { background: var(--stitch-bg); color: var(--stitch-ink); font-family: var(
 
 .stitch-filter-panel a,
 .stitch-filter-panel span,
-.stitch-pill-row span {
+.stitch-pill-row :is(a, span) {
   border-bottom: 1px solid var(--stitch-line);
   color: var(--stitch-muted);
   padding: 8px 0;
@@ -2493,10 +2493,11 @@ body { background: var(--stitch-bg); color: var(--stitch-ink); font-family: var(
   margin-bottom: 28px;
 }
 
-.stitch-pill-row span {
+.stitch-pill-row :is(a, span) {
   border: 1px solid var(--stitch-line);
   border-radius: 999px;
   padding: 9px 14px;
+  text-decoration: none;
 }
 
 .stitch-setups-hero__grid {
@@ -5112,7 +5113,7 @@ h3,
   justify-content: flex-start;
 }
 
-.stitch-setups-filter-section .stitch-pill-row span {
+.stitch-setups-filter-section .stitch-pill-row :is(a, span) {
   background: var(--stitch-bg);
   border: 1px solid var(--stitch-line);
   border-radius: 999px;
@@ -5125,7 +5126,8 @@ h3,
   text-transform: uppercase;
 }
 
-.stitch-setups-filter-section .stitch-pill-row span:first-child {
+.stitch-setups-filter-section .stitch-pill-row :is(a, span)[aria-current="page"],
+.stitch-setups-filter-section .stitch-pill-row :is(a, span):first-child {
   background: var(--stitch-primary);
   border-color: var(--stitch-primary);
   color: var(--stitch-primary-ink);
@@ -11844,7 +11846,7 @@ body:has(.stitch-quote-page) .stitch-quote-form-panel .quote-form .button {
     flex-wrap: wrap !important;
   }
 
-  body:has(.stitch-setups-hero) .stitch-pill-row span {
+  body:has(.stitch-setups-hero) .stitch-pill-row :is(a, span) {
     min-height: 1rem !important;
     border-radius: 999px !important;
     font-size: 0.32rem !important;
@@ -12360,7 +12362,7 @@ body:has(.stitch-quote-page) .stitch-quote-form-panel .quote-form .button {
     gap: 0.45rem !important;
   }
 
-  body:has(.stitch-setups-hero) .stitch-pill-row span {
+  body:has(.stitch-setups-hero) .stitch-pill-row :is(a, span) {
     padding: 0.35rem 0.65rem !important;
     border-radius: 999px !important;
     font-size: 0.45rem !important;

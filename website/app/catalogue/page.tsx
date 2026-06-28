@@ -12,12 +12,12 @@ function firstParam(value: string | string[] | undefined) {
   return Array.isArray(value) ? value[0] : value;
 }
 
-export function CataloguePageContent({ catalogue, detailBasePath = "/catalogue", emptyMessage, title, intro, activeCategorySlug }: { catalogue: PublicCatalogue; detailBasePath?: string; emptyMessage?: string; title?: string; intro?: string; activeCategoryName?: string; activeCategorySlug?: string; activeEventLabel?: string; activeEventSlug?: string; activeSearch?: string; listingBasePath?: string }) {
-  return <StitchCatalogueShell catalogue={catalogue} detailBasePath={detailBasePath} emptyMessage={emptyMessage} title={title} intro={intro} activeCategorySlug={activeCategorySlug} />;
+export function CataloguePageContent({ catalogue, detailBasePath = "/catalogue", emptyMessage, title, intro, activeCategorySlug, activeStyleSlug }: { catalogue: PublicCatalogue; detailBasePath?: string; emptyMessage?: string; title?: string; intro?: string; activeCategoryName?: string; activeCategorySlug?: string; activeEventLabel?: string; activeEventSlug?: string; activeSearch?: string; activeStyleSlug?: string; listingBasePath?: string }) {
+  return <StitchCatalogueShell catalogue={catalogue} detailBasePath={detailBasePath} emptyMessage={emptyMessage} title={title} intro={intro} activeCategorySlug={activeCategorySlug} activeStyleSlug={activeStyleSlug} />;
 }
 
 export default async function CataloguePage({ searchParams }: CataloguePageProps = {}) {
   const catalogue = await getPublicCatalogue();
   const params = searchParams ? await searchParams : {};
-  return <CataloguePageContent catalogue={catalogue} activeCategorySlug={firstParam(params.category)} />;
+  return <CataloguePageContent catalogue={catalogue} activeCategorySlug={firstParam(params.category)} activeStyleSlug={firstParam(params.style)} />;
 }
