@@ -17643,9 +17643,9 @@ body:has(.stitch-detail-page--setup) .stitch-detail-button--primary::after {
   }
 
   body:has(.stitch-detail-page--setup) .stitch-setup-lower {
-    grid-template-columns: minmax(0, 32rem) minmax(0, 40rem) !important;
-    justify-content: space-between !important;
-    column-gap: clamp(5rem, 8.8vw, 8.5rem) !important;
+    grid-template-columns: minmax(0, 31rem) minmax(0, 45rem) !important;
+    justify-content: start !important;
+    column-gap: clamp(2rem, 3.8vw, 4rem) !important;
     margin-top: 3.7rem !important;
   }
 
@@ -17679,7 +17679,7 @@ body:has(.stitch-detail-page--setup) .stitch-detail-button--primary::after {
 
   body:has(.stitch-detail-page--setup) .stitch-included-open > div {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    gap: 1.35rem 1.6rem !important;
+    gap: 1.35rem 1.35rem !important;
   }
 
   body:has(.stitch-detail-page--setup) .stitch-included-open article {
