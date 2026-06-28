@@ -19801,3 +19801,215 @@ body:has(.stitch-legal-hero) .site-main .stitch-legal-card h2 {
   letter-spacing: -0.025em !important;
   line-height: 1.08 !important;
 }
+
+/* Contact page hub: clear contact paths with the quote flow as the primary route. */
+body:has(.stitch-contact-hero) .site-main .stitch-contact-menu-section {
+  background: var(--stitch-surface) !important;
+  padding: clamp(3.25rem, 6vw, 5.5rem) 0 clamp(4rem, 7vw, 6rem) !important;
+}
+
+body:has(.stitch-contact-hero) .site-main .stitch-contact-menu-grid {
+  align-items: start !important;
+  display: grid !important;
+  gap: clamp(3rem, 7vw, 7rem) !important;
+  grid-template-columns: minmax(0, 0.9fr) minmax(22rem, 0.82fr) !important;
+}
+
+body:has(.stitch-contact-hero) .site-main .stitch-contact-menu-copy {
+  display: grid !important;
+  gap: 1.35rem !important;
+  max-width: 35rem !important;
+}
+
+body:has(.stitch-contact-hero) .site-main .stitch-contact-menu-copy h2 {
+  color: var(--stitch-ink) !important;
+  font-family: var(--stitch-serif) !important;
+  font-size: clamp(2.45rem, 3.8vw, 3.55rem) !important;
+  font-weight: 400 !important;
+  letter-spacing: -0.04em !important;
+  line-height: 1 !important;
+  margin: 0 !important;
+}
+
+body:has(.stitch-contact-hero) .site-main .stitch-contact-menu-copy > p:not(.stitch-eyebrow) {
+  color: var(--stitch-muted) !important;
+  font-size: clamp(1rem, 1.25vw, 1.15rem) !important;
+  line-height: 1.75 !important;
+  margin: 0 !important;
+  max-width: 30rem !important;
+}
+
+body:has(.stitch-contact-hero) .site-main .stitch-contact-menu-list {
+  border-top: 1px solid var(--stitch-line) !important;
+  display: grid !important;
+  margin-top: 1rem !important;
+}
+
+body:has(.stitch-contact-hero) .site-main .stitch-contact-menu-item {
+  align-items: center !important;
+  border-bottom: 1px solid var(--stitch-line) !important;
+  color: var(--stitch-ink) !important;
+  display: grid !important;
+  gap: 1.25rem !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  padding: 1.25rem 0 !important;
+  text-decoration: none !important;
+}
+
+body:has(.stitch-contact-hero) .site-main .stitch-contact-menu-item span {
+  display: grid !important;
+  gap: 0.35rem !important;
+}
+
+body:has(.stitch-contact-hero) .site-main .stitch-contact-menu-item strong,
+body:has(.stitch-contact-hero) .site-main .stitch-contact-enquiry-note strong {
+  color: var(--stitch-ink) !important;
+  font-family: var(--font-body) !important;
+  font-size: 0.78rem !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.1em !important;
+  line-height: 1.15 !important;
+  text-transform: uppercase !important;
+}
+
+body:has(.stitch-contact-hero) .site-main .stitch-contact-menu-item small,
+body:has(.stitch-contact-hero) .site-main .stitch-contact-enquiry-note span {
+  color: var(--stitch-muted) !important;
+  font-family: var(--font-body) !important;
+  font-size: 0.95rem !important;
+  letter-spacing: 0 !important;
+  line-height: 1.55 !important;
+  text-transform: none !important;
+}
+
+body:has(.stitch-contact-hero) .site-main .stitch-contact-menu-item em {
+  color: var(--stitch-primary) !important;
+  font-family: var(--font-body) !important;
+  font-size: 0.74rem !important;
+  font-style: normal !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.09em !important;
+  line-height: 1 !important;
+  text-transform: uppercase !important;
+}
+
+body:has(.stitch-contact-hero) .site-main .stitch-contact-enquiry-panel {
+  background: var(--stitch-sand) !important;
+  border: 1px solid rgba(95, 99, 79, 0.2) !important;
+  border-radius: 0.4rem !important;
+  display: grid !important;
+  gap: 1.25rem !important;
+  padding: clamp(1.6rem, 3vw, 2.4rem) !important;
+}
+
+body:has(.stitch-contact-hero) .site-main .stitch-contact-enquiry-panel h2 {
+  color: var(--stitch-ink) !important;
+  font-family: var(--stitch-serif) !important;
+  font-size: clamp(2rem, 3vw, 2.75rem) !important;
+  font-weight: 400 !important;
+  letter-spacing: -0.04em !important;
+  line-height: 1 !important;
+  margin: 0 !important;
+  max-width: 22rem !important;
+}
+
+body:has(.stitch-contact-hero) .site-main .stitch-contact-enquiry-panel > p:not(.stitch-eyebrow) {
+  color: var(--stitch-muted) !important;
+  font-size: 1rem !important;
+  line-height: 1.65 !important;
+  margin: 0 !important;
+}
+
+body:has(.stitch-contact-hero) .site-main .stitch-contact-enquiry-actions {
+  display: grid !important;
+  gap: 0.8rem !important;
+  grid-template-columns: 1fr 1fr !important;
+  margin-top: 0.4rem !important;
+}
+
+body:has(.stitch-contact-hero) .site-main .stitch-contact-enquiry-actions .stitch-button {
+  min-height: 3.2rem !important;
+  width: 100% !important;
+}
+
+body:has(.stitch-contact-hero) .site-main .stitch-contact-enquiry-note {
+  border-top: 1px solid rgba(95, 99, 79, 0.22) !important;
+  display: grid !important;
+  gap: 0.45rem !important;
+  margin-top: 0.2rem !important;
+  padding-top: 1.15rem !important;
+}
+
+body:has(.stitch-contact-hero) .site-main .stitch-contact-process {
+  border-top: 1px solid var(--stitch-line) !important;
+  display: grid !important;
+  gap: 0 !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  margin-top: clamp(3rem, 6vw, 5.5rem) !important;
+}
+
+body:has(.stitch-contact-hero) .site-main .stitch-contact-process article {
+  display: grid !important;
+  gap: 0.55rem !important;
+  padding: 1.35rem clamp(1rem, 2.4vw, 1.8rem) 0 !important;
+}
+
+body:has(.stitch-contact-hero) .site-main .stitch-contact-process article + article {
+  border-left: 1px solid var(--stitch-line) !important;
+}
+
+body:has(.stitch-contact-hero) .site-main .stitch-contact-process span {
+  color: var(--stitch-primary) !important;
+  font-size: 0.78rem !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.1em !important;
+}
+
+body:has(.stitch-contact-hero) .site-main .stitch-contact-process h3 {
+  color: var(--stitch-ink) !important;
+  font-family: var(--stitch-serif) !important;
+  font-size: clamp(1.25rem, 1.8vw, 1.6rem) !important;
+  font-weight: 400 !important;
+  letter-spacing: -0.03em !important;
+  line-height: 1.08 !important;
+  margin: 0 !important;
+}
+
+body:has(.stitch-contact-hero) .site-main .stitch-contact-process p {
+  color: var(--stitch-muted) !important;
+  font-size: 0.95rem !important;
+  line-height: 1.55 !important;
+  margin: 0 !important;
+}
+
+@media (max-width: 900px) {
+  body:has(.stitch-contact-hero) .site-main .stitch-contact-menu-grid,
+  body:has(.stitch-contact-hero) .site-main .stitch-contact-process {
+    grid-template-columns: 1fr !important;
+  }
+
+  body:has(.stitch-contact-hero) .site-main .stitch-contact-menu-copy {
+    max-width: none !important;
+  }
+
+  body:has(.stitch-contact-hero) .site-main .stitch-contact-menu-item {
+    grid-template-columns: 1fr !important;
+  }
+
+  body:has(.stitch-contact-hero) .site-main .stitch-contact-menu-item em {
+    justify-self: start !important;
+  }
+
+  body:has(.stitch-contact-hero) .site-main .stitch-contact-enquiry-actions {
+    grid-template-columns: 1fr !important;
+  }
+
+  body:has(.stitch-contact-hero) .site-main .stitch-contact-process article {
+    padding: 1.15rem 0 !important;
+  }
+
+  body:has(.stitch-contact-hero) .site-main .stitch-contact-process article + article {
+    border-left: 0 !important;
+    border-top: 1px solid var(--stitch-line) !important;
+  }
+}

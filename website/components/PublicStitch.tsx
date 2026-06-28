@@ -170,11 +170,66 @@ export function StitchAboutPage() {
 }
 
 export function StitchContactPage() {
-  const supportRows = [
-    ["Catalogue guidance", "Start from selected pieces, categories, or listing links."],
-    ["Setup planning", "Share the setup direction and room context you have in mind."],
-    ["Event rental details", "Include event timing, venue notes, quantities, and access context."]
+  const contactLinks = [
+    ["Rental enquiries", "Share selected pieces, quantities, venue context, and timing notes.", "/quote", "Start enquiry"],
+    ["Catalogue support", "Browse furniture categories and add the listings you want reviewed.", "/catalogue", "Browse catalogue"],
+    ["Setup planning", "Use styled setup directions when you already know the event mood.", "/listings", "Explore setups"]
+  ];
+  const reviewSteps = [
+    ["01", "Select pieces", "Choose catalogue items or a setup direction."],
+    ["02", "Add context", "Include date, venue, access, quantities, and alternates."],
+    ["03", "Team follow-up", "The rental team reviews details before preparing next steps."]
   ];
 
-  return <><section className="stitch-contact-hero"><div className="stitch-container"><StitchPageIntro eyebrow="Contact" title="Get in Touch" intro="Share rental catalogue questions, setup context, or event notes through the enquiry path so the team can review everything in one place." /></div></section><section className="stitch-section stitch-contact-section"><div className="stitch-container stitch-contact-grid"><aside className="stitch-contact-panel stitch-contact-copy"><h2>Contact Us</h2><p>Have a question about the rental catalogue or need a custom setup direction? Use the rental brief path to share the pieces, context, and event notes the team should review.</p><div className="stitch-contact-support-card"><h2>Enquiry guidance</h2><p>The Contact page is here to point you toward the real rental enquiry flow, not to create a second submission form.</p><div><strong>Best next step</strong><span>Open the quote enquiry and include the event details you already know.</span></div></div><dl><div><dt>Enquiry support</dt><dd>Use the quote flow</dd></div><div><dt>Catalogue review</dt><dd>Share selected rental pieces</dd></div></dl></aside><aside className="stitch-contact-brief-panel" aria-label="Rental brief guidance"><p className="stitch-eyebrow">Rental enquiry path</p><h2>Start with a rental brief.</h2><p>Share your selected items, setup direction, event details, and our rental team will review the enquiry.</p><div className="stitch-contact-brief-actions"><Link className="stitch-button stitch-button--primary" href="/quote">Request Quote</Link><Link className="stitch-button stitch-button--secondary" href="/catalogue">Browse Catalogue</Link></div><Link className="stitch-contact-brief-inline-link" href="/listings">Explore Setups</Link><div className="stitch-contact-brief-list">{supportRows.map(([title, text]) => <article key={title}><span aria-hidden="true" /><div><h3>{title}</h3><p>{text}</p></div></article>)}</div><p className="stitch-contact-brief-note">This page does not collect a separate contact message. Rental enquiries should start through the quote flow.</p></aside></div></section></>;
+  return (
+    <>
+      <section className="stitch-contact-hero">
+        <div className="stitch-container">
+          <StitchPageIntro eyebrow="Contact" title="Get in Touch" intro="Share rental catalogue questions, setup context, or event notes through the enquiry path so the team can review everything in one place." />
+        </div>
+      </section>
+      <section className="stitch-section stitch-contact-section stitch-contact-menu-section">
+        <div className="stitch-container stitch-contact-menu-grid">
+          <div className="stitch-contact-menu-copy">
+            <p className="stitch-eyebrow">Contact menu</p>
+            <h2>Contact Us</h2>
+            <p>For rental pieces, setup direction, and event planning notes, start with the enquiry path below so the team receives the details in one place.</p>
+            <div className="stitch-contact-menu-list" aria-label="Contact options">
+              {contactLinks.map(([title, text, href, action]) => (
+                <Link className="stitch-contact-menu-item" href={href} key={title}>
+                  <span>
+                    <strong>{title}</strong>
+                    <small>{text}</small>
+                  </span>
+                  <em>{action}</em>
+                </Link>
+              ))}
+            </div>
+          </div>
+          <aside className="stitch-contact-enquiry-panel" aria-label="Rental enquiry path">
+            <p className="stitch-eyebrow">Rental enquiry path</p>
+            <h2>Start with a rental brief.</h2>
+            <p>Share your selected items, setup direction, event details, and the rental team will review the enquiry before follow-up.</p>
+            <div className="stitch-contact-enquiry-actions">
+              <Link className="stitch-button stitch-button--primary" href="/quote">Request Quote</Link>
+              <Link className="stitch-button stitch-button--secondary" href="/catalogue">Browse Catalogue</Link>
+            </div>
+            <div className="stitch-contact-enquiry-note">
+              <strong>Best next step</strong>
+              <span>Open the quote enquiry and include the event details you already know.</span>
+            </div>
+          </aside>
+        </div>
+        <div className="stitch-container stitch-contact-process" aria-label="Enquiry review steps">
+          {reviewSteps.map(([number, title, text]) => (
+            <article key={number}>
+              <span>{number}</span>
+              <h3>{title}</h3>
+              <p>{text}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+    </>
+  );
 }
