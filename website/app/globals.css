@@ -20883,7 +20883,7 @@ body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-
   }
 
   body:has(.stitch-home-hero) .site-main .stitch-home-hero__copy {
-    gap: 1.05rem !important;
+    gap: 0.525rem !important;
   }
 
   body:has(.stitch-home-hero) .site-main .stitch-home-hero .stitch-actions {
