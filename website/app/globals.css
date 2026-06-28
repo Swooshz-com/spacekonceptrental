@@ -19757,3 +19757,30 @@ body:has(.stitch-quote-page):not(:has(.quote-form--success)) .stitch-selection-r
   text-transform: uppercase !important;
   text-underline-offset: 0.24em !important;
 }
+
+/* Non-home page intros use a consistent section divider. */
+body:has(.stitch-site-header):not(:has(.stitch-home-hero)) .site-main > :is(
+  .stitch-catalogue-hero,
+  .stitch-contact-hero,
+  .stitch-about-hero,
+  .stitch-setups-hero,
+  .stitch-editorial-hero,
+  .stitch-legal-hero,
+  .stitch-detail-page
+) {
+  border-bottom: 1px solid var(--stitch-line) !important;
+}
+
+body:has(.stitch-quote-page):not(:has(.stitch-home-hero)) .stitch-quote-intro {
+  position: relative !important;
+}
+
+body:has(.stitch-quote-page):not(:has(.stitch-home-hero)) .stitch-quote-intro::after {
+  content: "" !important;
+  position: absolute !important;
+  left: calc(50% - 50vw) !important;
+  right: calc(50% - 50vw) !important;
+  bottom: -1.05rem !important;
+  border-bottom: 1px solid var(--stitch-line) !important;
+  pointer-events: none !important;
+}
