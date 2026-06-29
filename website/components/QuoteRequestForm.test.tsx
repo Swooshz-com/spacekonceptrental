@@ -69,9 +69,6 @@ describe("QuoteRequestForm", () => {
     fireEvent.change(screen.getByLabelText(/venue/i), {
       target: { value: "Marina Bay Sands" }
     });
-    fireEvent.change(screen.getByLabelText(/preferred contact method/i), {
-      target: { value: "email" }
-    });
     fireEvent.change(screen.getByLabelText(/event vision/i), {
       target: {
         value: "Prefer a warm lounge setup for a corporate reception."
@@ -173,7 +170,7 @@ describe("QuoteRequestForm", () => {
       customerEmail: "maya@example.test",
       customerPhone: "",
       customerMessage:
-        "We need help deciding quantities for a reception setup.",
+        "Preferred contact method: email\n\nWe need help deciding quantities for a reception setup.",
       eventDate: "",
       venue: "",
       items: []
@@ -808,8 +805,7 @@ describe("QuoteRequestForm", () => {
     const messageInput = screen.getByLabelText(
       /event vision/i
     ) as HTMLTextAreaElement;
-    const preferredContactPrefix =
-      "Preferred contact method: either email or phone\n\n";
+    const preferredContactPrefix = "Preferred contact method: phone\n\n";
     const allowedMessageLength = 1200 - preferredContactPrefix.length;
 
     fireEvent.change(screen.getByLabelText(/name/i), {
@@ -822,7 +818,7 @@ describe("QuoteRequestForm", () => {
       target: { value: "x".repeat(1200) }
     });
     fireEvent.change(screen.getByLabelText(/preferred contact method/i), {
-      target: { value: "either email or phone" }
+      target: { value: "phone" }
     });
 
     expect(messageInput.maxLength).toBe(allowedMessageLength);
@@ -845,6 +841,20 @@ describe("QuoteRequestForm", () => {
     expect(
       await screen.findByText(/enquiry received/i)
     ).toBeInTheDocument();
+  });
+
+  it("defaults preferred contact method to email and only offers direct contact options", () => {
+    render(<QuoteRequestForm />);
+
+    const preferredContactSelect = screen.getByLabelText(
+      /preferred contact method/i
+    ) as HTMLSelectElement;
+
+    expect(preferredContactSelect).toHaveValue("email");
+    expect(screen.getByRole("option", { name: "Email" })).toHaveValue("email");
+    expect(screen.getByRole("option", { name: "Phone" })).toHaveValue("phone");
+    expect(screen.queryByRole("option", { name: /no preference/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("option", { name: /either email or phone/i })).not.toBeInTheDocument();
   });
 
   it("does not import Supabase or server-only quote persistence in browser-facing code", () => {

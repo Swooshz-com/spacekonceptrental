@@ -157,7 +157,7 @@ export default function QuoteRequestForm({
   });
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [submissionRequestId] = useState(createSubmissionRequestId);
-  const [preferredContactMethod, setPreferredContactMethod] = useState("");
+  const [preferredContactMethod, setPreferredContactMethod] = useState("email");
   const [customerMessageText, setCustomerMessageText] = useState("");
   const [itemsText, setItemsText] = useState(initialItemsText);
   const [showSelectedItemsSummary, setShowSelectedItemsSummary] = useState(Boolean(initialItemsText));
@@ -449,10 +449,8 @@ export default function QuoteRequestForm({
             onChange={handlePreferredContactMethodChange}
             value={preferredContactMethod}
           >
-            <option value="">No preference</option>
             <option value="email">Email</option>
             <option value="phone">Phone</option>
-            <option value="either email or phone">Either email or phone</option>
           </select>
           <small>
             Pick the easiest way for the team to ask questions or share more
