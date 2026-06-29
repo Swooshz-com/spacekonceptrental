@@ -127,7 +127,7 @@ describe("Phase 5A-A/B public review polish", () => {
   it("keeps quote/enquiry form copy request-intake only and non-promissory", () => {
     render(<QuoteRequestForm initialItemsText="Modular Lounge Set" />);
 
-    expect(screen.getByText(/starts this rental request/i)).toBeInTheDocument();
+    expect(screen.getByText(/included automatically when you submit/i)).toBeInTheDocument();
     expect(screen.getByText(/not a rental fit confirmation/i)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /review and send an enquiry/i })).toBeInTheDocument();
     expect(screen.getByText(/triage the rental enquiry/i)).toBeInTheDocument();

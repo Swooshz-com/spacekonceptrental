@@ -274,12 +274,15 @@ describe("Phase 3V-A/B quote enquiry workflow hardening", () => {
   });
 
   it("hardens the public quote/enquiry page guidance with customer-facing rental wording", async () => {
-    render(await QuotePage({ searchParams: { listing: "missing-listing" } }));
+    const { container } = render(await QuotePage({ searchParams: { listing: "missing-listing" } }));
 
     expect(screen.getByRole("heading", { name: /request a rental quote/i })).toBeInTheDocument();
     expect(screen.getByLabelText(/event date/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/venue or location/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/requested listings or items/i)).toBeInTheDocument();
+    expect(container.querySelector<HTMLInputElement>('input[name="items"]')).toHaveValue(
+      "Listing reference: missing-listing"
+    );
+    expect(screen.queryByLabelText(/requested listings or items/i)).not.toBeInTheDocument();
     expect(screen.getAllByText(/quantities/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/alternates/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/setup, access, and timing notes/i).length).toBeGreaterThan(0);

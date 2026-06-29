@@ -338,12 +338,12 @@ export function QuoteSelectionSummary({
         <>
           <p>
             {requestedSlug
-              ? "The listing link may be old or unavailable. Keep this reference as editable request text if it still describes what you need."
+              ? "The listing link may be old or unavailable. Keep this reference as synced request context if it still describes what you need."
               : "Share the requested pieces or setup direction you have in mind. The team can review your event context and follow up directly."}
           </p>
           {hasDiscoveryContext ? (
             <>
-              <p>Discovery context is editable request intake only. Adjust the requested listings or items before sending.</p>
+              <p>Discovery context is synced into the request automatically. Use setup, access, and timing notes for alternates before sending.</p>
               <dl className="stitch-facts">
                 {requestedSlug ? <div><dt>Selected listing reference</dt><dd>{requestedSlug}</dd></div> : null}
                 {category ? <div><dt>Category</dt><dd>{category}</dd></div> : null}

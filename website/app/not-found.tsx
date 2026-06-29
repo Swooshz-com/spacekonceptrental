@@ -6,7 +6,7 @@ export default function NotFound() {
       <div className="stitch-container">
         <div className="stitch-empty">
           <p className="stitch-section-eyebrow">SpaceKonceptRental</p>
-          <h1>Page unavailable</h1>
+          <h2>Page unavailable</h2>
           <p>
           This page is not available right now. Browse current rental listings
           or send a quote enquiry with event details so the team can help.

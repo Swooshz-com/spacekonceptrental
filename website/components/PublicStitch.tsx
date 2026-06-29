@@ -146,6 +146,10 @@ export function StitchPageIntro({ eyebrow, title, intro, actions }: { eyebrow?: 
   return <div className="stitch-page-intro">{eyebrow ? <p className="stitch-eyebrow">{eyebrow}</p> : null}<h1>{title}</h1><p>{intro}</p>{actions ? <StitchActions>{actions}</StitchActions> : null}</div>;
 }
 
+function StitchHomeCatalogueAction({ featured = false }: { featured?: boolean }) {
+  return <div className={`stitch-home-section-action${featured ? " stitch-home-featured-action" : ""}`}><StitchButton href="/catalogue" variant="secondary">View Full Catalogue</StitchButton></div>;
+}
+
 export function StitchHomeHero() {
   return <section className="stitch-home-hero"><div className="stitch-container stitch-home-hero__grid"><div className="stitch-home-hero__copy"><p className="stitch-eyebrow">Furniture and event rentals</p><h1>Furnish Your Vision, Elevate Every Space</h1><p>Browse rental pieces, explore setup directions, and send an enquiry for manual team review.</p><StitchActions><StitchButton href="/quote">Request Quote</StitchButton><StitchButton href="/catalogue" variant="secondary">Browse Catalogue</StitchButton><StitchButton href="/listings" variant="secondary">Explore Setups</StitchButton></StitchActions></div><div className="stitch-home-hero__media"><picture><source media="(max-width: 639px)" srcSet={homeHeroImageUrl} /><img src={homeHeroImageUrl} alt="Styled rental furniture event setting" /></picture></div></div></section>;
 }
@@ -167,7 +171,7 @@ export function StitchCategoryPreview({ catalogue }: { catalogue: PublicCatalogu
     { id: "accents", slug: "accents", name: "Decor and accents", description: "Texture, shape, and finishing details for the room.", sortOrder: 4 }
   ];
   const imageMap = homeCategoryImageUrls;
-  return <section className="stitch-section stitch-section--tonal stitch-home-categories"><div className="stitch-container"><div className="stitch-section-heading"><h2>Browse By Category</h2></div><div className="stitch-home-category-mosaic">{categories.map((category, index) => <Link className={`stitch-home-category-card stitch-home-category-card--${index + 1}`} href={`/catalogue?category=${encodeURIComponent(category.slug)}`} key={category.id}><img src={imageMap[index % imageMap.length]} alt={`${category.name} rental category`} /><span>{category.name}</span></Link>)}</div><div className="stitch-home-section-action"><StitchButton href="/catalogue" variant="secondary">View Full Catalogue</StitchButton></div></div></section>;
+  return <section className="stitch-section stitch-section--tonal stitch-home-categories"><div className="stitch-container"><div className="stitch-section-heading"><h2>Browse By Category</h2></div><div className="stitch-home-category-mosaic">{categories.map((category, index) => <Link className={`stitch-home-category-card stitch-home-category-card--${index + 1}`} href={`/catalogue?category=${encodeURIComponent(category.slug)}`} key={category.id}><img src={imageMap[index % imageMap.length]} alt={`${category.name} rental category`} /><span>{category.name}</span></Link>)}</div><StitchHomeCatalogueAction /></div></section>;
 }
 
 export function StitchItemCard({ product, detailBasePath = "/catalogue" }: { product: PublicCatalogueProduct | DemoProduct; detailBasePath?: string }) {
@@ -180,7 +184,7 @@ export function StitchItemCard({ product, detailBasePath = "/catalogue" }: { pro
 
 export function StitchFeaturedPieces({ catalogue }: { catalogue: PublicCatalogue }) {
   const products = catalogue.products.length ? catalogue.products.slice(0, 4) : getDemoProducts().slice(0, 4);
-  return <section className="stitch-section stitch-home-featured"><div className="stitch-container"><div className="stitch-section-heading"><h2>Featured Pieces</h2></div>{products.length ? <><div className="stitch-home-featured-grid">{products.map((product) => <Link className="stitch-home-feature-card" href={`/catalogue/${product.slug}`} key={product.id}><img alt={`${product.name} rental piece`} src={stitchImageSrc(fallbackProductImage(product))} /><strong>{product.name}</strong><small>{productCategory(product)}</small></Link>)}</div><div className="stitch-home-section-action stitch-home-featured-action"><StitchButton href="/catalogue" variant="secondary">View Full Catalogue</StitchButton></div></> : <StitchEmptyState title="Catalogue records are not published yet." message="The public catalogue will show real rental records when they are available. You can still send an enquiry with the pieces or setup you have in mind." />}</div></section>;
+  return <section className="stitch-section stitch-home-featured"><div className="stitch-container"><div className="stitch-section-heading"><h2>Featured Pieces</h2></div>{products.length ? <><div className="stitch-home-featured-grid">{products.map((product) => <Link className="stitch-home-feature-card" href={`/catalogue/${product.slug}`} key={product.id}><img alt={`${product.name} rental piece`} src={stitchImageSrc(fallbackProductImage(product))} /><strong>{product.name}</strong><small>{productCategory(product)}</small></Link>)}</div><StitchHomeCatalogueAction featured /></> : <StitchEmptyState title="Catalogue records are not published yet." message="The public catalogue will show real rental records when they are available. You can still send an enquiry with the pieces or setup you have in mind." />}</div></section>;
 }
 
 export function StitchSetupCard({ setup }: { setup: typeof demoSetups[number] }) {

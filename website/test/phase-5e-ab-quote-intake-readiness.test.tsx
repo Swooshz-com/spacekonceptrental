@@ -119,7 +119,7 @@ describe("Phase 5E-A/B quote/enquiry intake readiness", () => {
       )
     );
 
-    render(<QuoteRequestForm initialItemsText="Modular lounge set" />);
+    const { container } = render(<QuoteRequestForm initialItemsText="Modular lounge set" />);
 
     expect(screen.getByText(/share your name/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/name/i)).toBeInTheDocument();
@@ -127,17 +127,18 @@ describe("Phase 5E-A/B quote/enquiry intake readiness", () => {
     expect(screen.getByLabelText(/phone number/i)).toBeInTheDocument();
     expect(screen.getByText(/event date helps the team understand timing/i)).toBeInTheDocument();
     expect(screen.getByText(/email or phone required/i)).toBeInTheDocument();
-    expect(screen.getByText(/requested listing or item/i)).toBeInTheDocument();
-    expect(screen.getByText(/setup\/access\/timing notes/i)).toBeInTheDocument();
+    expect(screen.getByText(/included automatically when you submit/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/setup, access, and timing notes/i).length).toBeGreaterThan(0);
+    expect(container.querySelector<HTMLInputElement>('input[name="items"]')).toHaveValue(
+      "Modular lounge set"
+    );
+    expect(screen.queryByLabelText(/requested listings or items/i)).not.toBeInTheDocument();
 
     fireEvent.change(screen.getByLabelText(/name/i), {
       target: { value: "Maya Tan" }
     });
     fireEvent.change(screen.getByLabelText(/email address/i), {
       target: { value: "maya@example.test" }
-    });
-    fireEvent.change(screen.getByLabelText(/requested listings or items/i), {
-      target: { value: "Modular lounge set\nCategory interest: lounge" }
     });
     fireEvent.click(screen.getByRole("button", { name: /review and send an enquiry/i }));
 
@@ -162,12 +163,13 @@ describe("Phase 5E-A/B quote/enquiry intake readiness", () => {
 
     render(page);
 
-    expect(screen.getByText(/Discovery context is editable request intake only/i)).toBeInTheDocument();
-    const items = screen.getByLabelText(/requested listings or items/i);
+    expect(screen.getByText(/Discovery context is synced into the request automatically/i)).toBeInTheDocument();
+    const items = document.querySelector<HTMLInputElement>('input[name="items"]');
     expect(items).toHaveValue(
       "Category interest: lounge\nEvent-use interest: gala\nSearch interest: sofa"
     );
-    expect(screen.getByText(/adjust the requested listings or items before sending/i)).toBeInTheDocument();
+    expect(screen.queryByLabelText(/requested listings or items/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/use setup, access, and timing notes for alternates before sending/i)).toBeInTheDocument();
     expect(screen.queryByText(forbiddenReceiptPromisePattern)).not.toBeInTheDocument();
   });
 
@@ -177,8 +179,9 @@ describe("Phase 5E-A/B quote/enquiry intake readiness", () => {
     render(<QuoteRequestForm />);
     fireEvent.click(screen.getByRole("button", { name: /review and send an enquiry/i }));
 
-    expect(screen.getByRole("alert")).toHaveTextContent(/add your name/i);
-    expect(screen.getByRole("alert")).not.toHaveTextContent(/schema|sql|supabase|stack|token|cookie|workspace|customerName|items\[/i);
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    expect(screen.getByText(/name is required/i)).not.toHaveTextContent(/schema|sql|supabase|stack|token|cookie|workspace|customerName|items\[/i);
+    expect(screen.getByText(/email address or phone number is required/i)).not.toHaveTextContent(/schema|sql|supabase|stack|token|cookie|workspace|customerEmail/i);
     expect(fetcher).not.toHaveBeenCalled();
 
     fireEvent.change(screen.getByLabelText(/name/i), {
@@ -186,8 +189,8 @@ describe("Phase 5E-A/B quote/enquiry intake readiness", () => {
     });
     fireEvent.click(screen.getByRole("button", { name: /review and send an enquiry/i }));
 
-    expect(screen.getByRole("alert")).toHaveTextContent(/email address or phone number/i);
-    expect(screen.getByRole("alert")).not.toHaveTextContent(/schema|sql|supabase|stack|token|cookie|workspace|customerEmail/i);
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    expect(screen.getByText(/email address or phone number/i)).not.toHaveTextContent(/schema|sql|supabase|stack|token|cookie|workspace|customerEmail/i);
   });
 
   it("keeps quote/enquiry source free of forbidden public scope and receipt promises", () => {
@@ -195,7 +198,7 @@ describe("Phase 5E-A/B quote/enquiry intake readiness", () => {
     const quoteReceiptSource = readProductionSource(quoteReceiptSourceRoots);
 
     expect(publicQuoteSource).toMatch(/manual team follow-up/i);
-    expect(publicQuoteSource).toMatch(/editable request text/i);
+    expect(publicQuoteSource).toContain('readOnly type="hidden"');
     expect(publicQuoteSource).toMatch(/does not confirm final rental details/i);
     expect(publicQuoteSource).not.toMatch(forbiddenPublicFlowPattern);
     expect(publicQuoteSource).not.toMatch(forbiddenRentalCompletionPattern);
