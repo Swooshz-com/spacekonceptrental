@@ -550,6 +550,29 @@ describe("public page shells", () => {
     expect(nonHomeSectionRule).toMatch(/padding-top:\s*var\(--stitch-public-section-y\)\s*!important;/);
   });
 
+  it("keeps catalogue card quantity and details controls on the same height", () => {
+    const styles = readFileSync(resolve(process.cwd(), "app/globals.css"), "utf8");
+    const actionSizingBlock = styles.slice(
+      styles.indexOf("/* Final catalogue card action sizing: align quantity and details controls. */")
+    );
+    const quantityControlsRule = actionSizingBlock.match(
+      /body:has\(\.stitch-catalogue-hero\)\s+\.site-main\s+\.stitch-product-card\s+\.stitch-card__actions\s+\.stitch-quote-select-controls\s*\{[\s\S]*?\}/
+    )?.[0];
+    const detailsButtonRule = actionSizingBlock.match(
+      /body:has\(\.stitch-catalogue-hero\)\s+\.site-main\s+\.stitch-product-card\s+\.stitch-card__actions\s+\.stitch-link-button--quiet\s*\{[\s\S]*?\}/
+    )?.[0];
+
+    expect(actionSizingBlock).toContain("Final catalogue card action sizing");
+    expect(actionSizingBlock).toMatch(/--stitch-catalogue-card-action-height:\s*2\.95rem;/);
+    expect(quantityControlsRule).toBeDefined();
+    expect(quantityControlsRule).toMatch(/height:\s*var\(--stitch-catalogue-card-action-height\)\s*!important;/);
+    expect(quantityControlsRule).toMatch(/order:\s*1\s*!important;/);
+    expect(detailsButtonRule).toBeDefined();
+    expect(detailsButtonRule).toMatch(/height:\s*var\(--stitch-catalogue-card-action-height\)\s*!important;/);
+    expect(detailsButtonRule).toMatch(/order:\s*2\s*!important;/);
+    expect(detailsButtonRule).toMatch(/padding:\s*0\.72rem\s*0\.9rem\s*0\.88rem\s*!important;/);
+  });
+
   it("keeps public hero intros complete and aligned to the Furniture Catalogue rail", () => {
     const styles = readFileSync(resolve(process.cwd(), "app/globals.css"), "utf8");
     const finalHeroRailBlock = styles.slice(

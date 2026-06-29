@@ -21793,6 +21793,37 @@ body:has(.stitch-site-header) .site-main > :is(
   padding-top: var(--stitch-public-section-y) !important;
 }
 
+/* Final catalogue card action sizing: align quantity and details controls. */
+body:has(.stitch-catalogue-hero) {
+  --stitch-catalogue-card-action-height: 2.95rem;
+}
+
+body:has(.stitch-catalogue-hero) .site-main .stitch-product-card .stitch-card__actions {
+  gap: 0.46rem !important;
+}
+
+body:has(.stitch-catalogue-hero) .site-main .stitch-product-card .stitch-card__actions .stitch-quote-select-controls {
+  height: var(--stitch-catalogue-card-action-height) !important;
+  min-height: var(--stitch-catalogue-card-action-height) !important;
+  order: 1 !important;
+}
+
+body:has(.stitch-catalogue-hero) .site-main .stitch-product-card .stitch-card__actions :is(
+  .stitch-quote-quantity-button,
+  .stitch-quote-quantity-value
+) {
+  height: var(--stitch-catalogue-card-action-height) !important;
+  min-height: var(--stitch-catalogue-card-action-height) !important;
+}
+
+body:has(.stitch-catalogue-hero) .site-main .stitch-product-card .stitch-card__actions .stitch-link-button--quiet {
+  box-sizing: border-box !important;
+  height: var(--stitch-catalogue-card-action-height) !important;
+  min-height: var(--stitch-catalogue-card-action-height) !important;
+  order: 2 !important;
+  padding: 0.72rem 0.9rem 0.88rem !important;
+}
+
 body:has(.stitch-home-hero) .site-main > .stitch-home-hero {
   padding-bottom: var(--stitch-public-section-y) !important;
 }
