@@ -873,6 +873,9 @@ describe("public page shells", () => {
     const buttonRule = interactionBlock.match(
       /body:has\(\.stitch-site-header\)\s+:is\([\s\S]*?\.stitch-link-button[\s\S]*?\.site-main \.stitch-filter-panel a[\s\S]*?\)\s*\{[\s\S]*?\}/
     )?.[0];
+    const cardMetaRule = interactionBlock.match(
+      /body:has\(\.stitch-catalogue-hero\)\s+\.site-main\s+\.stitch-product-card\s+\.stitch-card__meta\s*\{[\s\S]*?\}/
+    )?.[0];
     const toolsIconRule = interactionBlock.match(
       /\.stitch-feature__icon--tools::before\s*\{[\s\S]*?\}/
     )?.[0];
@@ -884,6 +887,9 @@ describe("public page shells", () => {
     )?.[0];
     const homeActionRule = interactionBlock.match(
       /body:has\(\.stitch-home-hero\)\s+\.site-main\s+\.stitch-home-categories\s+\.stitch-home-section-action,[\s\S]*?\.stitch-home-featured\s+\.stitch-home-featured-action\s*\{[\s\S]*?\}/
+    )?.[0];
+    const homeActionButtonRule = interactionBlock.match(
+      /body:has\(\.stitch-home-hero\)\s+\.site-main\s+\.stitch-home-categories\s+\.stitch-home-section-action\s+\.stitch-button,[\s\S]*?\.stitch-home-featured\s+\.stitch-home-featured-action\s+\.stitch-button\s*\{[\s\S]*?\}/
     )?.[0];
 
     render(<ContactPage />);
@@ -901,6 +907,8 @@ describe("public page shells", () => {
     expect(actionFontRule).toBeDefined();
     expect(buttonRule).toBeDefined();
     expect(buttonRule).toMatch(/font-size:\s*var\(--stitch-action-font-size\)\s*!important;/);
+    expect(cardMetaRule).toBeDefined();
+    expect(cardMetaRule).toMatch(/font-size:\s*var\(--stitch-action-font-size\)\s*!important;/);
     expect(detailActionRule).toBeDefined();
     expect(detailActionRule).toMatch(/font-size:\s*var\(--stitch-action-font-size\)\s*!important;/);
     expect(toolsIconRule).toBeDefined();
@@ -910,6 +918,9 @@ describe("public page shells", () => {
     expect(homeActionRule).toBeDefined();
     expect(homeActionRule).toMatch(/position:\s*static\s*!important;/);
     expect(homeActionRule).toMatch(/margin:\s*clamp\(2rem,\s*3vw,\s*2\.7rem\)\s*0\s*0\s*!important;/);
+    expect(homeActionButtonRule).toBeDefined();
+    expect(homeActionButtonRule).toMatch(/border:\s*1px\s+solid\s+var\(--stitch-line\)\s*!important;/);
+    expect(homeActionButtonRule).toMatch(/min-height:\s*3\.05rem\s*!important;/);
   });
 
   it("keeps catalogue filter filled styling scoped to selected links only", () => {

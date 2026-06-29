@@ -22496,6 +22496,16 @@ body:has(.stitch-site-header) :is(
   text-transform: uppercase !important;
 }
 
+body:has(.stitch-catalogue-hero) .site-main .stitch-product-card .stitch-card__meta {
+  color: var(--stitch-muted) !important;
+  font-family: var(--stitch-sans) !important;
+  font-size: var(--stitch-action-font-size) !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.08em !important;
+  line-height: 1.1 !important;
+  text-transform: uppercase !important;
+}
+
 body:has(.stitch-catalogue-hero) .site-main .stitch-filter-panel a {
   font-size: var(--stitch-action-font-size) !important;
   letter-spacing: 0.08em !important;
@@ -22551,7 +22561,13 @@ body:has(.stitch-home-hero) .site-main .stitch-home-featured .stitch-home-featur
 
 body:has(.stitch-home-hero) .site-main .stitch-home-categories .stitch-home-section-action .stitch-button,
 body:has(.stitch-home-hero) .site-main .stitch-home-featured .stitch-home-featured-action .stitch-button {
+  background: transparent !important;
+  border: 1px solid var(--stitch-line) !important;
+  border-radius: var(--stitch-radius) !important;
+  color: var(--stitch-ink) !important;
+  min-height: 3.05rem !important;
   margin: 0 auto !important;
+  padding: 0 1.55rem !important;
   position: relative !important;
 }
 
