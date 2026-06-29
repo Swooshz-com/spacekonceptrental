@@ -21608,3 +21608,15 @@ body:has(.stitch-catalogue-hero) .site-main .stitch-filter-group {
     max-height: none !important;
   }
 }
+
+/* Final homepage category CTA clearance: keep the catalogue action below the mosaic. */
+body:has(.stitch-home-hero) .stitch-home-categories .stitch-home-category-mosaic {
+  margin-bottom: clamp(1.5rem, 2.5vw, 2.15rem) !important;
+}
+
+body:has(.stitch-home-hero) .stitch-home-categories .stitch-home-section-action {
+  clear: both !important;
+  margin-top: 0 !important;
+  position: relative !important;
+  z-index: 2 !important;
+}

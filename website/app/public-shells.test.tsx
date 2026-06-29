@@ -393,6 +393,18 @@ describe("public page shells", () => {
     expect(styles).toMatch(/\.stitch-mobile-menu/i);
     expect(styles).toMatch(/\.stitch-quote-layout/i);
     expect(styles).toMatch(/\.stitch-home-category-mosaic/i);
+    const categoryCtaClearanceBlock = styles.slice(
+      styles.indexOf("/* Final homepage category CTA clearance: keep the catalogue action below the mosaic. */")
+    );
+    const categoryActionRule = categoryCtaClearanceBlock.match(
+      /body:has\(\.stitch-home-hero\)\s+\.stitch-home-categories\s+\.stitch-home-section-action\s*\{[\s\S]*?\}/
+    )?.[0];
+
+    expect(categoryCtaClearanceBlock).toContain("Final homepage category CTA clearance");
+    expect(categoryActionRule).toBeDefined();
+    expect(categoryActionRule).toMatch(/clear:\s*both\s*!important;/);
+    expect(categoryActionRule).toMatch(/margin-top:\s*0\s*!important;/);
+    expect(categoryActionRule).toMatch(/position:\s*relative\s*!important;/);
     expect(styles).toMatch(/@media\s*\(max-width:/i);
   });
 
