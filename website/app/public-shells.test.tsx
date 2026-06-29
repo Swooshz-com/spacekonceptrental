@@ -611,10 +611,11 @@ describe("public page shells", () => {
     expect(openMenuRule).toMatch(/height:\s*100dvh\s*!important;/);
   });
 
-  it("keeps the chat launcher larger and the open panel on the same right edge", () => {
+  it("keeps the chat launcher and collapse controls on the IC-style right edge", () => {
     const styles = readFileSync(resolve(process.cwd(), "app/globals.css"), "utf8");
+    const chatWidgetSource = readFileSync(resolve(process.cwd(), "components/ChatWidget.tsx"), "utf8");
     const chatSizingBlock = styles.slice(
-      styles.indexOf("/* Final chat sizing: larger closed launcher and a shared right edge for the open panel. */")
+      styles.indexOf("/* Final chat sizing: IC-style launcher, collapse controls, and shared right edge. */")
     );
     const launcherRule = chatSizingBlock.match(
       /\.chat-widget-launcher\s*\{[\s\S]*?\}/
@@ -628,21 +629,40 @@ describe("public page shells", () => {
     const panelMessagesRule = chatSizingBlock.match(
       /\.chat-widget-panel\s+>\s+div\[aria-live="polite"\]\s*\{[\s\S]*?\}/
     )?.[0];
+    const floatingCollapseRule = chatSizingBlock.match(
+      /\.chat-widget-collapse-button--floating\s*\{[\s\S]*?\}/
+    )?.[0];
+    const chevronRule = chatSizingBlock.match(
+      /\.chat-widget-chevron\s*\{[\s\S]*?\}/
+    )?.[0];
 
     expect(chatSizingBlock).toContain("Final chat sizing");
+    expect(chatWidgetSource).toContain("chat-widget-collapse-button--header");
+    expect(chatWidgetSource).toContain("chat-widget-collapse-button--floating");
+    expect(chatWidgetSource).toContain("chat-widget-chevron");
     expect(launcherRule).toBeDefined();
     expect(launcherRule).toMatch(/bottom:\s*18px\s*!important;/);
-    expect(launcherRule).toMatch(/right:\s*16px\s*!important;/);
+    expect(launcherRule).toMatch(/--chat-edge:\s*clamp\(14px,\s*4\.4vw,\s*22px\);/);
+    expect(launcherRule).toMatch(/right:\s*var\(--chat-edge\)\s*!important;/);
     expect(launcherRule).toMatch(/transform:\s*none\s*!important;/);
     expect(launcherButtonRule).toBeDefined();
-    expect(launcherButtonRule).toMatch(/height:\s*72px\s*!important;/);
-    expect(launcherButtonRule).toMatch(/width:\s*72px\s*!important;/);
+    expect(launcherButtonRule).toMatch(/background:\s*#050505\s*!important;/);
+    expect(launcherButtonRule).toMatch(/height:\s*64px\s*!important;/);
+    expect(launcherButtonRule).toMatch(/width:\s*64px\s*!important;/);
     expect(panelRule).toBeDefined();
-    expect(panelRule).toMatch(/bottom:\s*16px\s*!important;/);
-    expect(panelRule).toMatch(/right:\s*16px\s*!important;/);
-    expect(panelRule).toMatch(/width:\s*min\(380px,\s*calc\(100vw\s*-\s*32px\)\)\s*!important;/);
+    expect(panelRule).toMatch(/bottom:\s*94px\s*!important;/);
+    expect(panelRule).toMatch(/right:\s*var\(--chat-edge\)\s*!important;/);
+    expect(panelRule).toMatch(/width:\s*min\(464px,\s*calc\(100vw\s*-\s*32px\)\)\s*!important;/);
+    expect(floatingCollapseRule).toBeDefined();
+    expect(floatingCollapseRule).toMatch(/background:\s*#050505\s*!important;/);
+    expect(floatingCollapseRule).toMatch(/bottom:\s*18px\s*!important;/);
+    expect(floatingCollapseRule).toMatch(/right:\s*var\(--chat-edge\)\s*!important;/);
+    expect(floatingCollapseRule).toMatch(/height:\s*64px\s*!important;/);
+    expect(floatingCollapseRule).toMatch(/width:\s*64px\s*!important;/);
+    expect(chevronRule).toBeDefined();
+    expect(chevronRule).toMatch(/transform:\s*translateY\(-2px\)\s*rotate\(45deg\)\s*!important;/);
     expect(panelMessagesRule).toBeDefined();
-    expect(panelMessagesRule).toMatch(/height:\s*clamp\(240px,\s*38dvh,\s*300px\)\s*!important;/);
+    expect(panelMessagesRule).toMatch(/height:\s*auto\s*!important;/);
   });
 
   it("keeps the chatbot fallback response removed from source and manual QA", () => {

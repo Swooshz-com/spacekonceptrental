@@ -21501,29 +21501,89 @@ body:has(.stitch-catalogue-hero) .site-main .stitch-filter-group {
   }
 }
 
-/* Final chat sizing: larger closed launcher and a shared right edge for the open panel. */
+/* Final chat sizing: IC-style launcher, collapse controls, and shared right edge. */
 .chat-widget-launcher {
+  --chat-edge: clamp(14px, 4.4vw, 22px);
   bottom: 18px !important;
-  gap: 6px !important;
-  right: 16px !important;
+  gap: 0 !important;
+  right: var(--chat-edge) !important;
   transform: none !important;
   transform-origin: right bottom !important;
 }
 
 .chat-widget-launcher .premium-chat-pulse {
-  height: 72px !important;
-  width: 72px !important;
+  background: #050505 !important;
+  box-shadow: 0 18px 38px rgba(0, 0, 0, 0.24) !important;
+  height: 64px !important;
+  width: 64px !important;
+}
+
+.chat-widget-launcher-mark {
+  color: #fff !important;
+  font-size: 0.9rem !important;
+  letter-spacing: 0 !important;
 }
 
 .chat-widget-panel {
-  bottom: 16px !important;
-  right: 16px !important;
-  width: min(380px, calc(100vw - 32px)) !important;
+  --chat-edge: clamp(14px, 4.4vw, 22px);
+  border: 0 !important;
+  border-radius: 18px !important;
+  bottom: 94px !important;
+  box-shadow: 0 22px 58px rgba(0, 0, 0, 0.2) !important;
+  max-height: min(784px, calc(100dvh - 112px)) !important;
+  max-width: none !important;
+  right: var(--chat-edge) !important;
+  width: min(464px, calc(100vw - 32px)) !important;
+}
+
+.chat-widget-panel > div:first-child {
+  min-height: 78px !important;
+  padding: 18px 26px !important;
+}
+
+.chat-widget-collapse-button {
+  align-items: center !important;
+  border: 0 !important;
+  cursor: pointer !important;
+  display: inline-flex !important;
+  justify-content: center !important;
+  padding: 0 !important;
+}
+
+.chat-widget-collapse-button--header {
+  background: transparent !important;
+  color: #6f7488 !important;
+  height: 40px !important;
+  width: 40px !important;
+}
+
+.chat-widget-collapse-button--floating {
+  --chat-edge: clamp(14px, 4.4vw, 22px);
+  background: #050505 !important;
+  border-radius: 50% !important;
+  bottom: 18px !important;
+  box-shadow: 0 18px 38px rgba(0, 0, 0, 0.24) !important;
+  color: #fff !important;
+  height: 64px !important;
+  position: fixed !important;
+  right: var(--chat-edge) !important;
+  width: 64px !important;
+  z-index: 51 !important;
+}
+
+.chat-widget-chevron {
+  border-bottom: 2px solid currentColor !important;
+  border-right: 2px solid currentColor !important;
+  display: block !important;
+  height: 12px !important;
+  transform: translateY(-2px) rotate(45deg) !important;
+  width: 12px !important;
 }
 
 @media (max-width: 900px) {
   .chat-widget-panel > div[aria-live="polite"] {
-    height: clamp(240px, 38dvh, 300px) !important;
-    max-height: clamp(240px, 38dvh, 300px) !important;
+    flex: 1 1 auto !important;
+    height: auto !important;
+    max-height: none !important;
   }
 }
