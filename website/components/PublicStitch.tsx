@@ -277,7 +277,7 @@ export function StitchDetail({ product, backHref, backLabel, setup = false, rela
     setupIncludedItems
   );
   const relatedItems = related.length ? related : fallbackRelated;
-  return <><section className={setup ? "stitch-detail-page stitch-detail-page--setup" : "stitch-detail-page"}><div className="stitch-container">{setup ? <p className="stitch-detail-breadcrumb">Setups / {product.name}</p> : null}<div className="stitch-detail-open-grid"><div className="stitch-detail-open-media"><img alt={alt} src={imgSrc} /></div><div className="stitch-detail-open-copy"><Link className="stitch-back" href={backHref}>{setup ? "Setups" : productCategory(product)}</Link><h2 className="stitch-detail-title">{product.name}</h2><p>{productSummary(product)}</p>{setup ? <div className="stitch-detail-context"><p className="stitch-eyebrow">Setup context</p><h2>Our team will prepare a custom proposal based on your event requirements.</h2></div> : <><p className="stitch-detail-safe-note">Bring event details. Add quantities and alternatives in the enquiry notes. Share setup, access, and timing notes. This request does not set aside furniture or finish rental details.</p><div className="stitch-detail-spec-card"><h2>Listing details</h2><dl><div><dt>Category</dt><dd>{productCategory(product)}</dd></div><div><dt>Style</dt><dd>{productStyleContext(product)}</dd></div><div><dt>Rental unit</dt><dd>{product.rentalUnit}</dd></div><div><dt>Listing reference</dt><dd>{product.slug}</dd></div><div><dt>Review path</dt><dd>Manual proposal</dd></div></dl></div><div className="stitch-detail-quantity-row"><span>Quantity to share</span><span>Use enquiry notes</span></div></>}<div className="stitch-detail-actions"><Link className="stitch-detail-button stitch-detail-button--request" href="/quote">Request Quote</Link><QuoteSelectionButton item={quoteItem} /><Link className="stitch-detail-button stitch-detail-button--back" href={backHref}>{setup ? "Back to Setups" : "Back to Catalogue"}</Link></div></div></div>{setup ? <div className="stitch-setup-lower"><div><h2>{product.name}</h2><p>{productSummary(product)}</p><div className="stitch-detail-context"><p className="stitch-eyebrow">Setup context</p><h2>Our team will prepare a custom proposal based on your event requirements.</h2></div><QuoteSelectionButton item={quoteItem} /></div><section className="stitch-included-open"><h2>Included rental pieces</h2><div>{fallbackRelated.map((item, index) => <article key={item.id}><img alt={`${item.name} rental piece`} src={stitchImageSrc(fallbackProductImage(item))} /><div><strong>{item.name}</strong><small>Qty: {index === 0 ? "120" : index === 1 ? "15" : "6"}</small></div></article>)}</div></section></div> : null}</div></section>{!setup && relatedItems.length ? <section className="stitch-section stitch-detail-related"><div className="stitch-container"><div className="stitch-detail-related-heading"><div><h2>Complementary Pieces</h2><p>Curated pairings for {product.name}</p></div><Link href="/catalogue">See All</Link></div><div className="stitch-detail-related-grid">{relatedItems.map((item) => <Link className="stitch-detail-related-card" href={`/catalogue/${item.slug}`} key={item.id}><img alt={`${item.name} rental piece`} src={stitchImageSrc(fallbackProductImage(item))} /><strong>{item.name}</strong></Link>)}</div></div></section> : null}</>;
+  return <><section className={setup ? "stitch-detail-page stitch-detail-page--setup" : "stitch-detail-page"}><div className="stitch-container">{setup ? <p className="stitch-detail-breadcrumb">Setups / {product.name}</p> : null}<div className="stitch-detail-open-grid"><div className="stitch-detail-open-media"><img alt={alt} src={imgSrc} /></div><div className="stitch-detail-open-copy"><Link className="stitch-back" href={backHref}>{setup ? "Setups" : productCategory(product)}</Link><h2 className="stitch-detail-title">{product.name}</h2><p>{productSummary(product)}</p>{setup ? <div className="stitch-detail-context"><p className="stitch-eyebrow">Setup context</p><h2>Our team will prepare a custom proposal based on your event requirements.</h2></div> : <><p className="stitch-detail-safe-note">Bring event details. Add quantities and alternatives in the enquiry notes. Share setup, access, and timing notes. This request does not set aside furniture or finish rental details.</p><div className="stitch-detail-spec-card"><h2>Listing details</h2><dl><div><dt>Category</dt><dd>{productCategory(product)}</dd></div><div><dt>Style</dt><dd>{productStyleContext(product)}</dd></div><div><dt>Rental unit</dt><dd>{product.rentalUnit}</dd></div></dl></div><div className="stitch-detail-quantity-row"><span>Quantity to share</span><span>Use enquiry notes</span></div></>}<div className="stitch-detail-actions"><Link className="stitch-detail-button stitch-detail-button--request" href="/quote">Request Quote</Link><QuoteSelectionButton item={quoteItem} /><Link className="stitch-detail-button stitch-detail-button--back" href={backHref}>{setup ? "Back to Setups" : "Back to Catalogue"}</Link></div></div></div>{setup ? <div className="stitch-setup-lower"><div><h2>{product.name}</h2><p>{productSummary(product)}</p><div className="stitch-detail-context"><p className="stitch-eyebrow">Setup context</p><h2>Our team will prepare a custom proposal based on your event requirements.</h2></div><QuoteSelectionButton item={quoteItem} /></div><section className="stitch-included-open"><h2>Included rental pieces</h2><div>{fallbackRelated.map((item, index) => <article key={item.id}><img alt={`${item.name} rental piece`} src={stitchImageSrc(fallbackProductImage(item))} /><div><strong>{item.name}</strong><small>Qty: {index === 0 ? "120" : index === 1 ? "15" : "6"}</small></div></article>)}</div></section></div> : null}</div></section>{!setup && relatedItems.length ? <section className="stitch-section stitch-detail-related"><div className="stitch-container"><div className="stitch-detail-related-heading"><div><h2>Complementary Pieces</h2><p>Curated pairings for {product.name}</p></div><Link href="/catalogue">See All</Link></div><div className="stitch-detail-related-grid">{relatedItems.map((item) => <Link className="stitch-detail-related-card" href={`/catalogue/${item.slug}`} key={item.id}><img alt={`${item.name} rental piece`} src={stitchImageSrc(fallbackProductImage(item))} /><strong>{item.name}</strong></Link>)}</div></div></section> : null}</>;
 }
 
 export function StitchAboutPage() {
@@ -288,9 +288,9 @@ export function StitchAboutPage() {
 
 export function StitchContactPage() {
   const contactLinks = [
-    ["Rental enquiries", "Share selected pieces, quantities, venue context, and timing notes.", "/quote", "Start enquiry"],
-    ["Catalogue support", "Browse furniture categories and add the listings you want reviewed.", "/catalogue", "Browse catalogue"],
-    ["Setup planning", "Use styled setup directions when you already know the event mood.", "/listings", "Explore setups"]
+    ["Rental enquiries", "Share selected pieces, quantities, venue context, and timing notes.", "/quote", "Start enquiry", "diamond"],
+    ["Catalogue support", "Browse furniture categories and add the listings you want reviewed.", "/catalogue", "Browse catalogue", "layout"],
+    ["Setup planning", "Use styled setup directions when you already know the event mood.", "/listings", "Explore setups", "tools"]
   ];
   const reviewSteps = [
     ["01", "Select pieces", "Choose catalogue items or a setup direction."],
@@ -305,46 +305,49 @@ export function StitchContactPage() {
           <StitchPageIntro eyebrow="Contact" title="Get in Touch" intro="Share rental catalogue questions, setup context, or event notes through the enquiry path so the team can review everything in one place." />
         </div>
       </section>
-      <section className="stitch-section stitch-contact-section stitch-contact-menu-section">
-        <div className="stitch-container stitch-contact-menu-grid">
-          <div className="stitch-contact-menu-copy">
-            <p className="stitch-eyebrow">Contact menu</p>
-            <h2>Contact Us</h2>
-            <p>For rental pieces, setup direction, and event planning notes, start with the enquiry path below so the team receives the details in one place.</p>
-            <div className="stitch-contact-menu-list" aria-label="Contact options">
-              {contactLinks.map(([title, text, href, action]) => (
-                <Link className="stitch-contact-menu-item" href={href} key={title}>
-                  <span>
-                    <strong>{title}</strong>
-                    <small>{text}</small>
-                  </span>
-                  <em>{action}</em>
-                </Link>
-              ))}
-            </div>
+      <section className="stitch-section stitch-section--tonal stitch-contact-section stitch-contact-options-section">
+        <div className="stitch-container">
+          <div className="stitch-section-heading stitch-section-heading--center">
+            <h2>Contact menu</h2>
+            <p>Use the enquiry path that best matches what you already know.</p>
           </div>
-          <aside className="stitch-contact-enquiry-panel" aria-label="Rental enquiry path">
-            <p className="stitch-eyebrow">Rental enquiry path</p>
-            <h2>Start with a rental brief</h2>
-            <p>Share your selected items, setup direction, event details, and the rental team will review the enquiry before follow-up.</p>
-            <div className="stitch-contact-enquiry-actions">
-              <Link className="stitch-button stitch-button--primary" href="/quote">Request Quote</Link>
-              <Link className="stitch-button stitch-button--secondary" href="/catalogue">Browse Catalogue</Link>
-            </div>
-            <div className="stitch-contact-enquiry-note">
-              <strong>Best next step</strong>
-              <span>Open the quote enquiry and include the event details you already know.</span>
-            </div>
-          </aside>
+          <div className="stitch-feature-grid stitch-contact-option-grid" aria-label="Contact options">
+            {contactLinks.map(([title, text, href, action, icon]) => (
+              <article className="stitch-feature stitch-contact-option-card" key={title}>
+                <span className={`stitch-feature__icon stitch-feature__icon--${icon}`} aria-hidden="true" />
+                <h3>{title}</h3>
+                <p>{text}</p>
+                <Link className="stitch-link-button stitch-link-button--quiet" href={href}>{action}</Link>
+              </article>
+            ))}
+          </div>
         </div>
-        <div className="stitch-container stitch-contact-process" aria-label="Enquiry review steps">
-          {reviewSteps.map(([number, title, text]) => (
-            <article key={number}>
-              <span>{number}</span>
-              <h3>{title}</h3>
-              <p>{text}</p>
-            </article>
-          ))}
+      </section>
+      <section className="stitch-section stitch-contact-section stitch-contact-brief-section">
+        <div className="stitch-container stitch-cta-band stitch-contact-brief-band">
+          <p className="stitch-eyebrow">Rental enquiry path</p>
+          <h2>Start with a rental brief</h2>
+          <p>Share selected items, setup direction, event details, and timing notes so the rental team can review everything before follow-up.</p>
+          <StitchActions>
+            <StitchButton href="/quote">Request Quote</StitchButton>
+            <StitchButton href="/catalogue" variant="secondary">Browse Catalogue</StitchButton>
+          </StitchActions>
+        </div>
+      </section>
+      <section className="stitch-section stitch-section--tonal stitch-contact-section stitch-contact-process-section">
+        <div className="stitch-container">
+          <div className="stitch-section-heading stitch-section-heading--center">
+            <h2>Enquiry review steps</h2>
+          </div>
+          <div className="stitch-feature-grid stitch-contact-step-grid" aria-label="Enquiry review steps">
+            {reviewSteps.map(([number, title, text]) => (
+              <article className="stitch-feature stitch-contact-step-card" key={number}>
+                <span>{number}</span>
+                <h3>{title}</h3>
+                <p>{text}</p>
+              </article>
+            ))}
+          </div>
         </div>
       </section>
     </>

@@ -22470,3 +22470,217 @@ body:has(.stitch-detail-page--setup) .site-main .stitch-setup-lower :is(.stitch-
     width: 5.35rem !important;
   }
 }
+
+/* Final interaction and contact architecture pass: shared buttons, contact cards, and non-overlapping home CTAs. */
+body:has(.stitch-site-header) {
+  --stitch-action-font-size: 0.72rem;
+}
+
+body:has(.stitch-site-header) :is(
+  .stitch-button,
+  .stitch-button > span,
+  .stitch-button > strong,
+  .stitch-link-button,
+  .stitch-detail-button,
+  .button,
+  .quote-form button[type="submit"],
+  .stitch-quote-quantity-button,
+  .stitch-quote-quantity-value,
+  .site-main .stitch-filter-panel a
+) {
+  font-family: var(--stitch-sans) !important;
+  font-size: var(--stitch-action-font-size) !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.08em !important;
+  line-height: 1.1 !important;
+  text-transform: uppercase !important;
+}
+
+body:has(.stitch-catalogue-hero) .site-main .stitch-filter-panel a {
+  font-size: var(--stitch-action-font-size) !important;
+  letter-spacing: 0.08em !important;
+}
+
+body:has(.stitch-catalogue-hero) .site-main .stitch-product-card .stitch-card__actions .stitch-link-button--quiet {
+  font-size: var(--stitch-action-font-size) !important;
+}
+
+body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-quote-form-panel .quote-form .button[type="submit"] {
+  font-size: var(--stitch-action-font-size) !important;
+  letter-spacing: 0.08em !important;
+}
+
+body:has(.stitch-detail-page) .site-main .stitch-detail-actions .stitch-detail-button {
+  font-family: var(--stitch-sans) !important;
+  font-size: var(--stitch-action-font-size) !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.08em !important;
+  line-height: 1.1 !important;
+  text-transform: uppercase !important;
+}
+
+.stitch-feature__icon--tools::before {
+  background: none !important;
+  color: var(--stitch-ink) !important;
+  content: "+" !important;
+  font-family: var(--stitch-sans) !important;
+  font-size: 1.45rem !important;
+  font-weight: 400 !important;
+  height: auto !important;
+  line-height: 1 !important;
+  transform: none !important;
+  width: auto !important;
+}
+
+.stitch-feature__icon--tools::after {
+  content: none !important;
+  display: none !important;
+}
+
+body:has(.stitch-home-hero) .site-main .stitch-home-categories .stitch-home-section-action,
+body:has(.stitch-home-hero) .site-main .stitch-home-featured .stitch-home-featured-action {
+  clear: both !important;
+  display: flex !important;
+  justify-content: center !important;
+  margin: clamp(2rem, 3vw, 2.7rem) 0 0 !important;
+  padding: 0 !important;
+  position: static !important;
+  transform: none !important;
+  z-index: auto !important;
+}
+
+body:has(.stitch-home-hero) .site-main .stitch-home-categories .stitch-home-section-action .stitch-button,
+body:has(.stitch-home-hero) .site-main .stitch-home-featured .stitch-home-featured-action .stitch-button {
+  margin: 0 auto !important;
+  position: relative !important;
+}
+
+body:has(.stitch-contact-hero) .site-main :is(
+  .stitch-contact-options-section,
+  .stitch-contact-process-section
+) {
+  background: var(--stitch-surface) !important;
+  border: 0 !important;
+}
+
+body:has(.stitch-contact-hero) .site-main .stitch-contact-brief-section {
+  background: var(--stitch-surface) !important;
+}
+
+body:has(.stitch-contact-hero) .site-main :is(
+  .stitch-contact-options-section,
+  .stitch-contact-process-section
+) .stitch-section-heading {
+  align-items: center !important;
+  display: flex !important;
+  flex-direction: column !important;
+  margin: 0 auto clamp(1.15rem, 1.7vw, 1.55rem) !important;
+  text-align: center !important;
+}
+
+body:has(.stitch-contact-hero) .site-main :is(
+  .stitch-contact-options-section,
+  .stitch-contact-brief-section,
+  .stitch-contact-process-section
+) :is(.stitch-section-heading h2, .stitch-contact-brief-band h2) {
+  color: var(--stitch-ink) !important;
+  font-family: var(--stitch-serif) !important;
+  font-size: clamp(1.7rem, 2.05vw, 2.2rem) !important;
+  font-weight: 400 !important;
+  letter-spacing: 0 !important;
+  line-height: 1.08 !important;
+  margin: 0 !important;
+  text-align: center !important;
+}
+
+body:has(.stitch-contact-hero) .site-main :is(
+  .stitch-contact-options-section,
+  .stitch-contact-process-section
+) .stitch-section-heading p {
+  margin: 0.75rem auto 0 !important;
+  max-width: 34rem !important;
+}
+
+body:has(.stitch-contact-hero) .site-main :is(
+  .stitch-contact-option-grid,
+  .stitch-contact-step-grid
+) {
+  gap: clamp(1.1rem, 1.9vw, 1.5rem) !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+}
+
+body:has(.stitch-contact-hero) .site-main :is(
+  .stitch-contact-option-card,
+  .stitch-contact-step-card
+) {
+  align-items: center !important;
+  background: var(--stitch-surface) !important;
+  border: 1px solid var(--stitch-line) !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  min-height: clamp(12.4rem, 14vw, 15.4rem) !important;
+  padding: clamp(1.45rem, 2.3vw, 2rem) !important;
+  text-align: center !important;
+}
+
+body:has(.stitch-contact-hero) .site-main .stitch-contact-option-card p,
+body:has(.stitch-contact-hero) .site-main .stitch-contact-step-card p {
+  margin: 0 !important;
+  max-width: 18rem !important;
+}
+
+body:has(.stitch-contact-hero) .site-main .stitch-contact-option-card .stitch-link-button {
+  margin-top: 1.05rem !important;
+}
+
+body:has(.stitch-contact-hero) .site-main .stitch-contact-step-card > span {
+  color: var(--stitch-primary) !important;
+  font-family: var(--stitch-sans) !important;
+  font-size: var(--stitch-action-font-size) !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.08em !important;
+  line-height: 1.1 !important;
+}
+
+body:has(.stitch-contact-hero) .site-main .stitch-contact-brief-band {
+  align-items: center !important;
+  background: var(--stitch-surface) !important;
+  border: 1px solid var(--stitch-line) !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  display: flex !important;
+  flex-direction: column !important;
+  margin-inline: auto !important;
+  max-width: 52rem !important;
+  padding: clamp(2rem, 4vw, 3.25rem) !important;
+  text-align: center !important;
+}
+
+body:has(.stitch-contact-hero) .site-main .stitch-contact-brief-band > p:not(.stitch-eyebrow) {
+  margin: 0.9rem auto 0 !important;
+  max-width: 36rem !important;
+}
+
+body:has(.stitch-contact-hero) .site-main .stitch-contact-brief-band .stitch-actions {
+  justify-content: center !important;
+  margin-top: 1.25rem !important;
+}
+
+@media (max-width: 900px) {
+  body:has(.stitch-contact-hero) .site-main :is(
+    .stitch-contact-option-grid,
+    .stitch-contact-step-grid
+  ) {
+    grid-template-columns: 1fr !important;
+  }
+
+  body:has(.stitch-contact-hero) .site-main :is(
+    .stitch-contact-option-card,
+    .stitch-contact-step-card
+  ) {
+    min-height: 11.5rem !important;
+  }
+}

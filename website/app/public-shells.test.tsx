@@ -387,8 +387,9 @@ describe("public page shells", () => {
     expect(screen.getByText(/published lounge set/i)).toBeInTheDocument();
     expect(screen.getByText("Style")).toBeInTheDocument();
     expect(screen.getByText(/style to confirm/i)).toBeInTheDocument();
-    expect(screen.getByText(/listing reference/i)).toBeInTheDocument();
-    expect(screen.getByText("modular-lounge-set")).toBeInTheDocument();
+    expect(screen.queryByText(/listing reference/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/review path/i)).not.toBeInTheDocument();
+    expect(screen.queryByText("modular-lounge-set")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: /increase modular lounge set quantity/i })).toBeInTheDocument();
     expect(screen.getByLabelText(/modular lounge set quantity selected/i)).toHaveTextContent("Qty 0");
     expect(screen.getByRole("link", { name: /request quote/i })).toHaveAttribute("href", "/quote");
@@ -626,6 +627,7 @@ describe("public page shells", () => {
     expect(document.querySelector(".stitch-contact-hero")?.textContent).toMatch(
       /Contact.*Get in Touch.*Share rental catalogue questions/s
     );
+    expect(screen.getAllByRole("heading", { level: 1 })).toHaveLength(1);
 
     cleanup();
     render(<AboutPage />);
@@ -857,6 +859,57 @@ describe("public page shells", () => {
     expect(formErrorRule).toMatch(/background:\s*transparent\s*!important;/);
     expect(formErrorRule).toMatch(/border:\s*0\s*!important;/);
     expect(formErrorRule).toMatch(/font-size:\s*0\.86rem\s*!important;/);
+  });
+
+  it("keeps contact content on shared card architecture and shared action font sizing", () => {
+    const styles = readFileSync(resolve(process.cwd(), "app/globals.css"), "utf8");
+    const publicStitchSource = readFileSync(resolve(process.cwd(), "components/PublicStitch.tsx"), "utf8");
+    const interactionBlock = styles.slice(
+      styles.indexOf("/* Final interaction and contact architecture pass:")
+    );
+    const actionFontRule = interactionBlock.match(
+      /body:has\(\.stitch-site-header\)\s*\{[\s\S]*?--stitch-action-font-size:\s*0\.72rem;[\s\S]*?\}/
+    )?.[0];
+    const buttonRule = interactionBlock.match(
+      /body:has\(\.stitch-site-header\)\s+:is\([\s\S]*?\.stitch-link-button[\s\S]*?\.site-main \.stitch-filter-panel a[\s\S]*?\)\s*\{[\s\S]*?\}/
+    )?.[0];
+    const toolsIconRule = interactionBlock.match(
+      /\.stitch-feature__icon--tools::before\s*\{[\s\S]*?\}/
+    )?.[0];
+    const detailActionRule = interactionBlock.match(
+      /body:has\(\.stitch-detail-page\)\s+\.site-main\s+\.stitch-detail-actions\s+\.stitch-detail-button\s*\{[\s\S]*?\}/
+    )?.[0];
+    const contactCardRule = interactionBlock.match(
+      /body:has\(\.stitch-contact-hero\)\s+\.site-main\s+:is\([\s\S]*?\.stitch-contact-step-card[\s\S]*?\)\s*\{[\s\S]*?\}/
+    )?.[0];
+    const homeActionRule = interactionBlock.match(
+      /body:has\(\.stitch-home-hero\)\s+\.site-main\s+\.stitch-home-categories\s+\.stitch-home-section-action,[\s\S]*?\.stitch-home-featured\s+\.stitch-home-featured-action\s*\{[\s\S]*?\}/
+    )?.[0];
+
+    render(<ContactPage />);
+
+    expect(screen.getAllByRole("heading", { level: 1 })).toHaveLength(1);
+    expect(screen.getByRole("heading", { level: 2, name: /contact menu/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 2, name: /start with a rental brief/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 2, name: /enquiry review steps/i })).toBeInTheDocument();
+    expect(document.querySelector(".stitch-contact-menu-copy")).toBeNull();
+    expect(document.querySelector(".stitch-contact-enquiry-panel")).toBeNull();
+    expect(document.querySelectorAll(".stitch-contact-option-card")).toHaveLength(3);
+    expect(document.querySelectorAll(".stitch-contact-step-card")).toHaveLength(3);
+    expect(publicStitchSource).toContain("stitch-contact-option-card");
+    expect(publicStitchSource).toContain("stitch-contact-brief-band");
+    expect(actionFontRule).toBeDefined();
+    expect(buttonRule).toBeDefined();
+    expect(buttonRule).toMatch(/font-size:\s*var\(--stitch-action-font-size\)\s*!important;/);
+    expect(detailActionRule).toBeDefined();
+    expect(detailActionRule).toMatch(/font-size:\s*var\(--stitch-action-font-size\)\s*!important;/);
+    expect(toolsIconRule).toBeDefined();
+    expect(toolsIconRule).toMatch(/content:\s*"\+"\s*!important;/);
+    expect(contactCardRule).toBeDefined();
+    expect(contactCardRule).toMatch(/border-radius:\s*0\s*!important;/);
+    expect(homeActionRule).toBeDefined();
+    expect(homeActionRule).toMatch(/position:\s*static\s*!important;/);
+    expect(homeActionRule).toMatch(/margin:\s*clamp\(2rem,\s*3vw,\s*2\.7rem\)\s*0\s*0\s*!important;/);
   });
 
   it("keeps catalogue filter filled styling scoped to selected links only", () => {
