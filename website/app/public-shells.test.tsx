@@ -892,6 +892,12 @@ describe("public page shells", () => {
     const aboutHeadingRule = aboutParityBlock.match(
       /body:has\(\.stitch-about-hero\)\s+\.site-main\s+:is\([\s\S]*?\.stitch-about-service[\s\S]*?\)\s+\.stitch-section-heading h2\s*\{[\s\S]*?\}/
     )?.[0];
+    const aboutRhythmRule = aboutParityBlock.match(
+      /body:has\(\.stitch-about-hero\)\s+\.site-main\s+:is\([\s\S]*?\.stitch-about-story[\s\S]*?\.stitch-about-service[\s\S]*?\)\s*\{[\s\S]*?\}/
+    )?.[0];
+    const aboutStoryImageRule = aboutParityBlock.match(
+      /body:has\(\.stitch-about-hero\)\s+\.site-main\s+\.stitch-about-story__image\s*\{[\s\S]*?\}/
+    )?.[0];
 
     expect(aboutParityBlock).toContain("Final About parity");
     expect(publicStitchSource).toContain("stitch-feature stitch-about-card");
@@ -904,6 +910,12 @@ describe("public page shells", () => {
     expect(aboutCardRule).toMatch(/border-radius:\s*0\s*!important;/);
     expect(aboutCardRule).toMatch(/min-height:\s*clamp\(12\.4rem,\s*14vw,\s*15\.4rem\)\s*!important;/);
     expect(aboutCardRule).toMatch(/text-align:\s*center\s*!important;/);
+    expect(aboutRhythmRule).toBeDefined();
+    expect(aboutRhythmRule).toMatch(/padding-bottom:\s*var\(--stitch-public-section-y\)\s*!important;/);
+    expect(aboutRhythmRule).toMatch(/padding-top:\s*var\(--stitch-public-section-y\)\s*!important;/);
+    expect(aboutStoryImageRule).toBeDefined();
+    expect(aboutStoryImageRule).toMatch(/flex:\s*0 0 min\(36vw,\s*33rem\)\s*!important;/);
+    expect(aboutStoryImageRule).toMatch(/max-width:\s*33rem\s*!important;/);
   });
 
   it("keeps catalogue results inside the shared public container width", () => {
