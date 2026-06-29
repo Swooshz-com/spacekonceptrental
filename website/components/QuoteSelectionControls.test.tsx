@@ -130,7 +130,7 @@ describe("QuoteSelectionControls", () => {
 
     fireEvent.click(
       screen.getByRole("button", {
-        name: /clear monumental oak table from selection/i
+        name: /remove monumental oak table from selection/i
       })
     );
 

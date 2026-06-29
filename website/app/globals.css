@@ -21449,7 +21449,7 @@ body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-
 body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-selection-row__actions {
   align-self: center !important;
   display: grid !important;
-  gap: 0.5rem !important;
+  gap: 0.55rem !important;
   grid-area: actions !important;
   justify-self: end !important;
   justify-items: end !important;
@@ -21463,7 +21463,8 @@ body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-
 body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-selection-row__clear {
   appearance: none !important;
   background: transparent !important;
-  border: 0 !important;
+  border: 1px solid var(--stitch-line) !important;
+  border-radius: 999px !important;
   color: var(--stitch-muted) !important;
   cursor: pointer !important;
   font-family: var(--stitch-sans) !important;
@@ -21471,16 +21472,18 @@ body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-
   font-weight: 700 !important;
   letter-spacing: 0.04em !important;
   line-height: 1.1 !important;
-  opacity: 0.78 !important;
-  padding: 0 !important;
+  min-height: 2rem !important;
+  opacity: 0.9 !important;
+  padding: 0 0.78rem !important;
   text-decoration: none !important;
   text-transform: uppercase !important;
 }
 
 body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-selection-row__clear:hover,
 body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-selection-row__clear:focus-visible {
+  border-color: var(--stitch-primary) !important;
+  color: var(--stitch-primary) !important;
   opacity: 1 !important;
-  text-decoration: underline !important;
 }
 
 @media (max-width: 900px) {
@@ -22164,7 +22167,7 @@ body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-
 body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-selection-row__actions {
   align-self: center !important;
   display: grid !important;
-  gap: 0.5rem !important;
+  gap: 0.55rem !important;
   grid-area: actions !important;
   justify-items: end !important;
 }

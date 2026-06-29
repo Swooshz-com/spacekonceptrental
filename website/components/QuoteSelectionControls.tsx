@@ -288,12 +288,12 @@ function SelectionGroup({
                 <div className="stitch-selection-row__actions">
                   <Link href={`${detailBasePath}/${item.slug}`}>Details</Link>
                   <button
-                    aria-label={`Clear ${item.name} from selection`}
+                    aria-label={`Remove ${item.name} from selection`}
                     className="stitch-selection-row__clear"
                     onClick={handleClearSelection}
                     type="button"
                   >
-                    Clear
+                    Remove item
                   </button>
                 </div>
               </div>
