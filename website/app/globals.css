@@ -21340,6 +21340,24 @@ body:has(.stitch-site-header):not(:has(.stitch-home-hero)) .site-main :is(
   text-align: left !important;
 }
 
+/* Final page eyebrow restoration: keep page names visible above non-home hero titles. */
+body:has(.stitch-site-header):not(:has(.stitch-home-hero)) .site-main :is(
+  .stitch-catalogue-hero,
+  .stitch-about-hero,
+  .stitch-contact-hero
+) .stitch-eyebrow {
+  color: var(--stitch-primary) !important;
+  display: block !important;
+  font-family: var(--font-body) !important;
+  font-size: 0.76rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.14em !important;
+  line-height: 1.2 !important;
+  margin: 0 0 14px !important;
+  text-transform: uppercase !important;
+  visibility: visible !important;
+}
+
 /* Final Advantage card centering: keep card contents centered top-to-bottom. */
 body:has(.stitch-home-hero) .site-main .stitch-home-advantage .stitch-feature {
   align-items: center !important;

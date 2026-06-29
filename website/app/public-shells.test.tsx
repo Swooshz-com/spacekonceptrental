@@ -444,7 +444,7 @@ describe("public page shells", () => {
     cleanup();
     render(<AboutPage />);
     expect(document.querySelector(".stitch-about-hero")?.textContent).toMatch(
-      /Our Ethos.*Curating spaces that breathe, inspire, and endure.*Furniture is the quiet architecture/s
+      /About.*Curating spaces that breathe, inspire, and endure.*Furniture is the quiet architecture/s
     );
 
     cleanup();
@@ -458,6 +458,28 @@ describe("public page shells", () => {
     expect(document.querySelector(".stitch-legal-hero")?.textContent).toMatch(
       /Legal.*Terms of Use.*current MVP website experience/s
     );
+  });
+
+  it("keeps Catalogue, About, and Contact page-name eyebrows visible above hero titles", () => {
+    const styles = readFileSync(resolve(process.cwd(), "app/globals.css"), "utf8");
+    const publicStitchSource = readFileSync(resolve(process.cwd(), "components/PublicStitch.tsx"), "utf8");
+    const eyebrowBlock = styles.slice(
+      styles.indexOf("/* Final page eyebrow restoration: keep page names visible above non-home hero titles. */")
+    );
+    const eyebrowRule = eyebrowBlock.match(
+      /body:has\(\.stitch-site-header\):not\(:has\(\.stitch-home-hero\)\)\s+\.site-main\s+:is\([\s\S]*?\.stitch-contact-hero[\s\S]*?\)\s+\.stitch-eyebrow\s*\{[\s\S]*?\}/
+    )?.[0];
+
+    expect(publicStitchSource).toContain('eyebrow={detailBasePath === "/listings" ? "Setups" : "Catalogue"}');
+    expect(publicStitchSource).toContain('<p className="stitch-eyebrow">About</p>');
+    expect(publicStitchSource).toContain('StitchPageIntro eyebrow="Contact"');
+    expect(eyebrowRule).toBeDefined();
+    expect(eyebrowRule).toMatch(/\.stitch-catalogue-hero/);
+    expect(eyebrowRule).toMatch(/\.stitch-about-hero/);
+    expect(eyebrowRule).toMatch(/\.stitch-contact-hero/);
+    expect(eyebrowRule).toMatch(/display:\s*block\s*!important;/);
+    expect(eyebrowRule).toMatch(/visibility:\s*visible\s*!important;/);
+    expect(eyebrowRule).toMatch(/text-transform:\s*uppercase\s*!important;/);
   });
 
   it("keeps public section headings compact enough to avoid premature wrapping", () => {
