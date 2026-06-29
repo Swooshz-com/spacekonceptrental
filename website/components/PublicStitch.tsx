@@ -68,6 +68,25 @@ export function productCategory(product: PublicCatalogueProduct | DemoProduct) {
   return textOrUndefined(product.categoryName) ?? "Category to confirm";
 }
 
+export const stitchStyleFilters = [
+  { slug: "mid-century-modern", label: "Mid-Century Modern", matchers: ["aura", "asymmetric", "velvet", "lounge chair"] },
+  { slug: "minimalist", label: "Minimalist", matchers: ["kinetic", "monumental", "slender", "table", "lamp"] },
+  { slug: "brutalist", label: "Brutalist", matchers: ["ribbed", "walnut", "credenza", "storage"] }
+];
+
+function productStyleHaystack(product: PublicCatalogueProduct | DemoProduct) {
+  return `${product.slug} ${product.name} ${productCategory(product)} ${productSummary(product)}`.toLowerCase();
+}
+
+function productMatchesStyleContext(product: PublicCatalogueProduct | DemoProduct, style: typeof stitchStyleFilters[number]) {
+  const haystack = productStyleHaystack(product);
+  return style.matchers.some((matcher) => haystack.includes(matcher));
+}
+
+export function productStyleContext(product: PublicCatalogueProduct | DemoProduct) {
+  return stitchStyleFilters.find((style) => productMatchesStyleContext(product, style))?.label ?? "Style to confirm";
+}
+
 export function stitchImageSrc(image: StaticImageData | string) {
   return typeof image === "string" ? image : image.src;
 }
@@ -176,20 +195,13 @@ export function StitchCatalogueShell({ catalogue, detailBasePath = "/catalogue",
   const demo = getDemoProducts();
   const allProducts = catalogue.products.length ? catalogue.products : demo;
   const categoryFilters = catalogue.categories.length ? catalogue.categories : Array.from(new Map(allProducts.map((product) => [productCategory(product).toLowerCase(), { id: product.categoryId ?? productCategory(product), slug: product.categoryId ?? productCategory(product).toLowerCase().replaceAll(" ", "-"), name: productCategory(product) }])).values());
-  const styleFilters = [
-    { slug: "mid-century-modern", label: "Mid-Century Modern", matchers: ["aura", "asymmetric", "velvet", "lounge chair"] },
-    { slug: "minimalist", label: "Minimalist", matchers: ["kinetic", "monumental", "slender", "table", "lamp"] },
-    { slug: "brutalist", label: "Brutalist", matchers: ["ribbed", "walnut", "credenza", "storage"] }
-  ];
+  const styleFilters = stitchStyleFilters;
   const normalizedActiveCategorySlug = activeCategorySlug?.trim().toLowerCase();
   const normalizedActiveStyleSlug = activeStyleSlug?.trim().toLowerCase();
   const activeCategory = normalizedActiveCategorySlug ? categoryFilters.find((category) => category.slug.toLowerCase() === normalizedActiveCategorySlug) : undefined;
   const activeStyle = normalizedActiveStyleSlug ? styleFilters.find((style) => style.slug === normalizedActiveStyleSlug) : undefined;
   const categoryProducts = activeCategory ? allProducts.filter((product) => product.categoryId === activeCategory.id || productCategory(product) === activeCategory.name) : allProducts;
-  const products = activeStyle ? categoryProducts.filter((product) => {
-    const haystack = `${product.slug} ${product.name} ${productCategory(product)} ${productSummary(product)}`.toLowerCase();
-    return activeStyle.matchers.some((matcher) => haystack.includes(matcher));
-  }) : categoryProducts;
+  const products = activeStyle ? categoryProducts.filter((product) => productMatchesStyleContext(product, activeStyle)) : categoryProducts;
   const activeFilterLabel = [activeCategory?.name, activeStyle?.label].filter(Boolean).join(" and ");
   const hasActiveFilter = Boolean(activeCategory || activeStyle);
   const activeEmptyTitle = hasActiveFilter ? `No ${activeFilterLabel.toLowerCase()} listings are available right now` : emptyTitle;
@@ -261,7 +273,7 @@ export function StitchDetail({ product, backHref, backLabel, setup = false, rela
     setupIncludedItems
   );
   const relatedItems = related.length ? related : fallbackRelated;
-  return <><section className={setup ? "stitch-detail-page stitch-detail-page--setup" : "stitch-detail-page"}><div className="stitch-container">{setup ? <p className="stitch-detail-breadcrumb">Setups / {product.name}</p> : null}<div className="stitch-detail-open-grid"><div className="stitch-detail-open-media"><img alt={alt} src={imgSrc} /></div><div className="stitch-detail-open-copy"><Link className="stitch-back" href={backHref}>{setup ? "Setups" : productCategory(product)}</Link><h1>{product.name}</h1><p>{productSummary(product)}</p>{setup ? <div className="stitch-detail-context"><p className="stitch-eyebrow">Setup context</p><h2>Our team will prepare a custom proposal based on your event requirements.</h2></div> : <><p className="stitch-detail-safe-note">Bring event details. Add quantities and alternatives in the enquiry notes. Share setup, access, and timing notes. This request does not set aside furniture or finish rental details.</p><div className="stitch-detail-spec-card"><h2>Listing details</h2><dl><div><dt>Category</dt><dd>{productCategory(product)}</dd></div><div><dt>Rental unit</dt><dd>{product.rentalUnit}</dd></div><div><dt>Listing reference</dt><dd>{product.slug}</dd></div><div><dt>Review path</dt><dd>Manual proposal</dd></div></dl></div><div className="stitch-detail-quantity-row"><span>Quantity to share</span><span>Use enquiry notes</span></div></>}<div className="stitch-detail-actions"><Link className="stitch-detail-button stitch-detail-button--request" href="/quote">Request Quote</Link><QuoteSelectionButton item={quoteItem} /><Link className="stitch-detail-button stitch-detail-button--back" href={backHref}>{setup ? "Back to Setups" : "Back to Catalogue"}</Link></div></div></div>{setup ? <div className="stitch-setup-lower"><div><h2>{product.name}</h2><p>{productSummary(product)}</p><div className="stitch-detail-context"><p className="stitch-eyebrow">Setup context</p><h2>Our team will prepare a custom proposal based on your event requirements.</h2></div><QuoteSelectionButton item={quoteItem} /></div><section className="stitch-included-open"><h2>Included rental pieces</h2><div>{fallbackRelated.map((item, index) => <article key={item.id}><img alt={`${item.name} rental piece`} src={stitchImageSrc(fallbackProductImage(item))} /><div><strong>{item.name}</strong><small>Qty: {index === 0 ? "120" : index === 1 ? "15" : "6"}</small></div></article>)}</div></section></div> : null}</div></section>{!setup && relatedItems.length ? <section className="stitch-section stitch-detail-related"><div className="stitch-container"><div className="stitch-detail-related-heading"><div><h2>Complementary Pieces</h2><p>Curated pairings for {product.name}</p></div><Link href="/catalogue">See All</Link></div><div className="stitch-detail-related-grid">{relatedItems.map((item) => <Link className="stitch-detail-related-card" href={`/catalogue/${item.slug}`} key={item.id}><img alt={`${item.name} rental piece`} src={stitchImageSrc(fallbackProductImage(item))} /><strong>{item.name}</strong></Link>)}</div></div></section> : null}</>;
+  return <><section className={setup ? "stitch-detail-page stitch-detail-page--setup" : "stitch-detail-page"}><div className="stitch-container">{setup ? <p className="stitch-detail-breadcrumb">Setups / {product.name}</p> : null}<div className="stitch-detail-open-grid"><div className="stitch-detail-open-media"><img alt={alt} src={imgSrc} /></div><div className="stitch-detail-open-copy"><Link className="stitch-back" href={backHref}>{setup ? "Setups" : productCategory(product)}</Link><h1>{product.name}</h1><p>{productSummary(product)}</p>{setup ? <div className="stitch-detail-context"><p className="stitch-eyebrow">Setup context</p><h2>Our team will prepare a custom proposal based on your event requirements.</h2></div> : <><p className="stitch-detail-safe-note">Bring event details. Add quantities and alternatives in the enquiry notes. Share setup, access, and timing notes. This request does not set aside furniture or finish rental details.</p><div className="stitch-detail-spec-card"><h2>Listing details</h2><dl><div><dt>Category</dt><dd>{productCategory(product)}</dd></div><div><dt>Style</dt><dd>{productStyleContext(product)}</dd></div><div><dt>Rental unit</dt><dd>{product.rentalUnit}</dd></div><div><dt>Listing reference</dt><dd>{product.slug}</dd></div><div><dt>Review path</dt><dd>Manual proposal</dd></div></dl></div><div className="stitch-detail-quantity-row"><span>Quantity to share</span><span>Use enquiry notes</span></div></>}<div className="stitch-detail-actions"><Link className="stitch-detail-button stitch-detail-button--request" href="/quote">Request Quote</Link><QuoteSelectionButton item={quoteItem} /><Link className="stitch-detail-button stitch-detail-button--back" href={backHref}>{setup ? "Back to Setups" : "Back to Catalogue"}</Link></div></div></div>{setup ? <div className="stitch-setup-lower"><div><h2>{product.name}</h2><p>{productSummary(product)}</p><div className="stitch-detail-context"><p className="stitch-eyebrow">Setup context</p><h2>Our team will prepare a custom proposal based on your event requirements.</h2></div><QuoteSelectionButton item={quoteItem} /></div><section className="stitch-included-open"><h2>Included rental pieces</h2><div>{fallbackRelated.map((item, index) => <article key={item.id}><img alt={`${item.name} rental piece`} src={stitchImageSrc(fallbackProductImage(item))} /><div><strong>{item.name}</strong><small>Qty: {index === 0 ? "120" : index === 1 ? "15" : "6"}</small></div></article>)}</div></section></div> : null}</div></section>{!setup && relatedItems.length ? <section className="stitch-section stitch-detail-related"><div className="stitch-container"><div className="stitch-detail-related-heading"><div><h2>Complementary Pieces</h2><p>Curated pairings for {product.name}</p></div><Link href="/catalogue">See All</Link></div><div className="stitch-detail-related-grid">{relatedItems.map((item) => <Link className="stitch-detail-related-card" href={`/catalogue/${item.slug}`} key={item.id}><img alt={`${item.name} rental piece`} src={stitchImageSrc(fallbackProductImage(item))} /><strong>{item.name}</strong></Link>)}</div></div></section> : null}</>;
 }
 
 export function StitchAboutPage() {

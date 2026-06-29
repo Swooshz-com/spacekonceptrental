@@ -21793,6 +21793,160 @@ body:has(.stitch-site-header) .site-main > :is(
   padding-top: var(--stitch-public-section-y) !important;
 }
 
+/* Final listing detail and mobile catalogue correction: keep metadata visible,
+   remove the extra detail divider, and make mobile card actions part of the
+   card instead of an image overlay. */
+body:has(.stitch-detail-page:not(.stitch-detail-page--setup)) .site-main .stitch-detail-safe-note,
+body:has(.stitch-detail-page:not(.stitch-detail-page--setup)) .site-main .stitch-detail-quantity-row,
+body:has(.stitch-detail-page:not(.stitch-detail-page--setup)) .site-main .stitch-detail-spec-card h2 {
+  display: none !important;
+}
+
+body:has(.stitch-detail-page:not(.stitch-detail-page--setup)) .site-main .stitch-detail-spec-card {
+  background: transparent !important;
+  border: 0 !important;
+  border-bottom: 1px solid var(--stitch-line) !important;
+  border-radius: 0 !important;
+  margin: 0 0 clamp(1rem, 2vw, 1.45rem) !important;
+  padding: 0 !important;
+}
+
+body:has(.stitch-detail-page:not(.stitch-detail-page--setup)) .site-main .stitch-detail-spec-card dl {
+  display: block !important;
+  margin: 0 !important;
+}
+
+body:has(.stitch-detail-page:not(.stitch-detail-page--setup)) .site-main .stitch-detail-spec-card dl > div {
+  align-items: center !important;
+  border-top: 1px solid var(--stitch-line) !important;
+  display: flex !important;
+  gap: 1.25rem !important;
+  justify-content: space-between !important;
+  padding: 1.05rem 0 !important;
+}
+
+body:has(.stitch-detail-page:not(.stitch-detail-page--setup)) .site-main .stitch-detail-spec-card dl > div:first-child {
+  border-top: 0 !important;
+}
+
+body:has(.stitch-detail-page:not(.stitch-detail-page--setup)) .site-main .stitch-detail-spec-card dt {
+  color: var(--stitch-muted) !important;
+  font-family: var(--stitch-sans) !important;
+  font-size: 0.68rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.18em !important;
+  text-transform: uppercase !important;
+}
+
+body:has(.stitch-detail-page:not(.stitch-detail-page--setup)) .site-main .stitch-detail-spec-card dd {
+  color: var(--stitch-ink) !important;
+  font-family: var(--stitch-sans) !important;
+  font-size: 0.96rem !important;
+  font-weight: 500 !important;
+  margin: 0 !important;
+  text-align: right !important;
+}
+
+body:has(.stitch-detail-page:not(.stitch-detail-page--setup)) .site-main .stitch-detail-actions {
+  margin-top: 0 !important;
+}
+
+@media (max-width: 900px) {
+  body:has(.stitch-catalogue-hero) .site-main .stitch-filter-panel {
+    align-items: stretch !important;
+    display: grid !important;
+    gap: 1.05rem !important;
+    overflow: visible !important;
+    padding: 0 !important;
+    white-space: normal !important;
+  }
+
+  body:has(.stitch-catalogue-hero) .site-main .stitch-filter-group {
+    background: transparent !important;
+    border: 0 !important;
+    display: grid !important;
+    gap: 0.5rem !important;
+    overflow: visible !important;
+    width: 100% !important;
+  }
+
+  body:has(.stitch-catalogue-hero) .site-main .stitch-filter-group--styles {
+    border-top: 1px solid var(--stitch-line) !important;
+    padding-top: 1rem !important;
+  }
+
+  body:has(.stitch-catalogue-hero) .site-main .stitch-filter-panel h2 {
+    color: var(--stitch-muted) !important;
+    display: block !important;
+    font-family: var(--stitch-sans) !important;
+    font-size: 0.7rem !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.12em !important;
+    margin: 0 !important;
+    text-transform: uppercase !important;
+  }
+
+  body:has(.stitch-catalogue-hero) .site-main .stitch-filter-group a {
+    align-items: center !important;
+    background: rgba(232, 228, 223, 0.64) !important;
+    border: 1px solid rgba(95, 99, 79, 0.16) !important;
+    border-radius: 4px !important;
+    color: var(--stitch-ink) !important;
+    display: flex !important;
+    font-size: 0.72rem !important;
+    justify-content: flex-start !important;
+    letter-spacing: 0.06em !important;
+    min-height: 2.25rem !important;
+    padding: 0 0.85rem !important;
+    width: 100% !important;
+  }
+
+  body:has(.stitch-catalogue-hero) .site-main .stitch-filter-group a.is-active,
+  body:has(.stitch-catalogue-hero) .site-main .stitch-filter-group a[aria-current="page"] {
+    background: var(--stitch-primary) !important;
+    border-color: var(--stitch-primary) !important;
+    color: #fff !important;
+  }
+
+  body:has(.stitch-catalogue-hero) .site-main .stitch-product-card .stitch-card__image {
+    aspect-ratio: 1 / 1.08 !important;
+  }
+
+  body:has(.stitch-catalogue-hero) .site-main .stitch-product-card .stitch-card__body {
+    display: grid !important;
+    gap: 0.28rem !important;
+    padding: 0.78rem !important;
+  }
+
+  body:has(.stitch-catalogue-hero) .site-main .stitch-product-card .stitch-card__actions {
+    display: grid !important;
+    gap: 0.48rem !important;
+    grid-template-columns: 1fr !important;
+    left: auto !important;
+    margin-top: 0.55rem !important;
+    opacity: 1 !important;
+    order: 3 !important;
+    pointer-events: auto !important;
+    position: static !important;
+    right: auto !important;
+    transform: none !important;
+    visibility: visible !important;
+    width: 100% !important;
+  }
+
+  body:has(.stitch-catalogue-hero) .site-main .stitch-product-card .stitch-quote-select-controls,
+  body:has(.stitch-catalogue-hero) .site-main .stitch-product-card .stitch-quote-select-controls[data-selected="true"],
+  body:has(.stitch-catalogue-hero) .site-main .stitch-product-card .stitch-quote-select-controls[data-selected="false"] {
+    display: grid !important;
+    grid-template-columns: 2.6rem minmax(0, 1fr) 2.6rem !important;
+    width: 100% !important;
+  }
+
+  body:has(.stitch-catalogue-hero) .site-main .stitch-product-card .stitch-card__actions .stitch-link-button--quiet {
+    width: 100% !important;
+  }
+}
+
 /* Final catalogue card action sizing: align quantity and details controls. */
 body:has(.stitch-catalogue-hero) {
   --stitch-catalogue-card-action-height: 2.95rem;

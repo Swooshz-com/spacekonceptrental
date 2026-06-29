@@ -372,6 +372,8 @@ describe("public page shells", () => {
 
     expect(screen.getByRole("heading", { name: /modular lounge set/i })).toBeInTheDocument();
     expect(screen.getByText(/published lounge set/i)).toBeInTheDocument();
+    expect(screen.getByText("Style")).toBeInTheDocument();
+    expect(screen.getByText(/style to confirm/i)).toBeInTheDocument();
     expect(screen.getByText(/listing reference/i)).toBeInTheDocument();
     expect(screen.getByText("modular-lounge-set")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /increase modular lounge set quantity/i })).toBeInTheDocument();
@@ -768,35 +770,36 @@ describe("public page shells", () => {
   it("keeps mobile catalogue filter groups split and the menu drawer unclipped", () => {
     const styles = readFileSync(resolve(process.cwd(), "app/globals.css"), "utf8");
     const mobileCorrectionBlock = styles.slice(
+      styles.indexOf("/* Final listing detail and mobile catalogue correction: keep metadata visible,")
+    );
+    const menuCorrectionBlock = styles.slice(
       styles.indexOf("/* Final mobile catalogue/menu correction: keep filter groups and drawer chrome distinct. */")
     );
     const publicStitchSource = readFileSync(resolve(process.cwd(), "components/PublicStitch.tsx"), "utf8");
     const filterPanelRule = mobileCorrectionBlock.match(
       /body:has\(\.stitch-catalogue-hero\)\s+\.site-main\s+\.stitch-filter-panel\s*\{[\s\S]*?\}/
     )?.[0];
-    const filterGroupRule = Array.from(
-      mobileCorrectionBlock.matchAll(
-        /body:has\(\.stitch-catalogue-hero\)\s+\.site-main\s+\.stitch-filter-group\s*\{[\s\S]*?\}/g
-      ),
-      (match) => match[0]
-    ).find((rule) => rule.includes("overflow-x"));
-    const menuOverflowRule = mobileCorrectionBlock.match(
+    const filterGroupRule = mobileCorrectionBlock.match(
+      /body:has\(\.stitch-catalogue-hero\)\s+\.site-main\s+\.stitch-filter-group\s*\{[\s\S]*?\}/
+    )?.[0];
+    const menuOverflowRule = menuCorrectionBlock.match(
       /body:has\(\.stitch-mobile-menu--open\)\s+\.stitch-site-header,[\s\S]*?body:has\(\.stitch-mobile-menu--open\)\s+\.stitch-header-actions\s*\{[\s\S]*?\}/
     )?.[0];
-    const openMenuRule = mobileCorrectionBlock.match(
+    const openMenuRule = menuCorrectionBlock.match(
       /body:has\(\.stitch-mobile-menu--open\)\s+\.stitch-mobile-menu\s*\{[\s\S]*?\}/
     )?.[0];
 
-    expect(mobileCorrectionBlock).toContain("Final mobile catalogue/menu correction");
+    expect(mobileCorrectionBlock).toContain("Final listing detail and mobile catalogue correction");
     expect(publicStitchSource).toContain("stitch-filter-group--categories");
     expect(publicStitchSource).toContain("stitch-filter-group--styles");
     expect(filterPanelRule).toBeDefined();
     expect(filterPanelRule).toMatch(/display:\s*grid\s*!important;/);
-    expect(filterPanelRule).toMatch(/gap:\s*0\.55rem\s*!important;/);
+    expect(filterPanelRule).toMatch(/gap:\s*1\.05rem\s*!important;/);
     expect(filterGroupRule).toBeDefined();
-    expect(filterGroupRule).toMatch(/display:\s*flex\s*!important;/);
-    expect(filterGroupRule).toMatch(/flex-wrap:\s*nowrap\s*!important;/);
-    expect(filterGroupRule).toMatch(/overflow-x:\s*auto\s*!important;/);
+    expect(filterGroupRule).toMatch(/display:\s*grid\s*!important;/);
+    expect(filterGroupRule).toMatch(/gap:\s*0\.5rem\s*!important;/);
+    expect(mobileCorrectionBlock).toMatch(/stitch-filter-group--styles[\s\S]*?border-top:\s*1px\s+solid\s+var\(--stitch-line\)\s*!important;/);
+    expect(mobileCorrectionBlock).toMatch(/stitch-filter-panel h2[\s\S]*?display:\s*block\s*!important;/);
     expect(menuOverflowRule).toBeDefined();
     expect(menuOverflowRule).toMatch(/overflow:\s*visible\s*!important;/);
     expect(openMenuRule).toBeDefined();
@@ -804,6 +807,48 @@ describe("public page shells", () => {
     expect(openMenuRule).toMatch(/left:\s*auto\s*!important;/);
     expect(openMenuRule).toMatch(/right:\s*0\s*!important;/);
     expect(openMenuRule).toMatch(/height:\s*100dvh\s*!important;/);
+  });
+
+  it("keeps mobile catalogue card actions inline instead of overlaying images", () => {
+    const styles = readFileSync(resolve(process.cwd(), "app/globals.css"), "utf8");
+    const mobileCorrectionBlock = styles.slice(
+      styles.indexOf("/* Final listing detail and mobile catalogue correction: keep metadata visible,")
+    );
+    const cardActionsRule = mobileCorrectionBlock.match(
+      /body:has\(\.stitch-catalogue-hero\)\s+\.site-main\s+\.stitch-product-card\s+\.stitch-card__actions\s*\{[\s\S]*?\}/
+    )?.[0];
+    const quantityRule = mobileCorrectionBlock.match(
+      /body:has\(\.stitch-catalogue-hero\)\s+\.site-main\s+\.stitch-product-card\s+\.stitch-quote-select-controls,[\s\S]*?body:has\(\.stitch-catalogue-hero\)\s+\.site-main\s+\.stitch-product-card\s+\.stitch-quote-select-controls\[data-selected="false"\]\s*\{[\s\S]*?\}/
+    )?.[0];
+
+    expect(cardActionsRule).toBeDefined();
+    expect(cardActionsRule).toMatch(/position:\s*static\s*!important;/);
+    expect(cardActionsRule).toMatch(/opacity:\s*1\s*!important;/);
+    expect(cardActionsRule).toMatch(/transform:\s*none\s*!important;/);
+    expect(cardActionsRule).toMatch(/margin-top:\s*0\.55rem\s*!important;/);
+    expect(quantityRule).toBeDefined();
+    expect(quantityRule).toMatch(/grid-template-columns:\s*2\.6rem\s+minmax\(0,\s*1fr\)\s+2\.6rem\s*!important;/);
+  });
+
+  it("shows style metadata on listing details without the doubled category divider", () => {
+    const styles = readFileSync(resolve(process.cwd(), "app/globals.css"), "utf8");
+    const detailCorrectionBlock = styles.slice(
+      styles.indexOf("/* Final listing detail and mobile catalogue correction: keep metadata visible,")
+    );
+    const specCardRule = detailCorrectionBlock.match(
+      /body:has\(\.stitch-detail-page:not\(\.stitch-detail-page--setup\)\)\s+\.site-main\s+\.stitch-detail-spec-card\s*\{[\s\S]*?\}/
+    )?.[0];
+    const firstRowRule = detailCorrectionBlock.match(
+      /body:has\(\.stitch-detail-page:not\(\.stitch-detail-page--setup\)\)\s+\.site-main\s+\.stitch-detail-spec-card\s+dl\s+>\s+div:first-child\s*\{[\s\S]*?\}/
+    )?.[0];
+
+    expect(detailCorrectionBlock).toMatch(/stitch-detail-spec-card dl > div\s*\{[\s\S]*?display:\s*flex\s*!important;/);
+    expect(detailCorrectionBlock).not.toMatch(/stitch-detail-spec-card dl > div:nth-child\(n \+ 2\)[\s\S]*?display:\s*none\s*!important;/);
+    expect(specCardRule).toBeDefined();
+    expect(specCardRule).toMatch(/margin:\s*0\s+0\s+clamp\(1rem,\s*2vw,\s*1\.45rem\)\s*!important;/);
+    expect(specCardRule).not.toMatch(/border-top/);
+    expect(firstRowRule).toBeDefined();
+    expect(firstRowRule).toMatch(/border-top:\s*0\s*!important;/);
   });
 
   it("keeps the chat launcher and collapse controls on the IC-style right edge", () => {
