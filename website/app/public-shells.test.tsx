@@ -406,10 +406,10 @@ describe("public page shells", () => {
       styles.indexOf("/* Final public hero rail lock: every non-home intro follows the Furniture Catalogue container. */")
     );
     const heroContainerRule = finalHeroRailBlock.match(
-      /body:has\(\.stitch-site-header\):not\(:has\(\.stitch-home-hero\)\)\s+\.site-main\s+>\s+:is\([\s\S]*?\.stitch-legal-hero[\s\S]*?\)\s+>\s+\.stitch-container\s*\{[\s\S]*?\}/
+      /body:has\(\.stitch-site-header\):not\(:has\(\.stitch-home-hero\)\)\s+\.site-main\s+>\s+:is\([\s\S]*?\.stitch-legal-hero[\s\S]*?\.stitch-quote-page[\s\S]*?\)\s+>\s+\.stitch-container\s*\{[\s\S]*?\}/
     )?.[0];
     const wrappedHeroCopyRule = finalHeroRailBlock.match(
-      /body:has\(\.stitch-site-header\):not\(:has\(\.stitch-home-hero\)\)\s+\.site-main\s+:is\([\s\S]*?\.stitch-contact-hero \.stitch-page-intro[\s\S]*?\)\s*\{[\s\S]*?\}/
+      /body:has\(\.stitch-site-header\):not\(:has\(\.stitch-home-hero\)\)\s+\.site-main\s+:is\([\s\S]*?\.stitch-contact-hero \.stitch-page-intro[\s\S]*?\.stitch-quote-intro[\s\S]*?\)\s*\{[\s\S]*?\}/
     )?.[0];
     const directHeroCopyRule = finalHeroRailBlock.match(
       /body:has\(\.stitch-site-header\):not\(:has\(\.stitch-home-hero\)\)\s+\.site-main\s+:is\([\s\S]*?\.stitch-legal-hero > \.stitch-container[\s\S]*?\)\s+>\s+:is\(\.stitch-eyebrow,\s*h1,\s*p\)\s*\{[\s\S]*?\}/
@@ -421,9 +421,11 @@ describe("public page shells", () => {
     expect(heroContainerRule).toMatch(/width:\s*min\(calc\(100%\s*-\s*clamp\(2rem,\s*7vw,\s*6rem\)\),\s*1312px\)\s*!important;/);
     expect(heroContainerRule).toMatch(/padding-inline:\s*0\s*!important;/);
     expect(heroContainerRule).not.toMatch(/max-width:\s*48rem\s*!important;/);
+    expect(heroContainerRule).toMatch(/\.stitch-quote-page/);
     expect(wrappedHeroCopyRule).toBeDefined();
     expect(wrappedHeroCopyRule).toMatch(/max-width:\s*48rem\s*!important;/);
     expect(wrappedHeroCopyRule).toMatch(/text-align:\s*left\s*!important;/);
+    expect(wrappedHeroCopyRule).toMatch(/\.stitch-quote-intro/);
     expect(directHeroCopyRule).toBeDefined();
     expect(directHeroCopyRule).toMatch(/max-width:\s*48rem\s*!important;/);
     expect(directHeroCopyRule).toMatch(/text-align:\s*left\s*!important;/);
@@ -566,6 +568,47 @@ describe("public page shells", () => {
     expect(finalDesktopFilterBlock).not.toMatch(
       /body:has\(\.stitch-catalogue-hero\)\s+\.site-main\s+\.stitch-filter-panel\s+a:first-of-type,[\s\S]*?background:\s*var\(--stitch-primary\)\s*!important;/
     );
+  });
+
+  it("keeps mobile catalogue filter groups split and the menu drawer unclipped", () => {
+    const styles = readFileSync(resolve(process.cwd(), "app/globals.css"), "utf8");
+    const mobileCorrectionBlock = styles.slice(
+      styles.indexOf("/* Final mobile catalogue/menu correction: keep filter groups and drawer chrome distinct. */")
+    );
+    const publicStitchSource = readFileSync(resolve(process.cwd(), "components/PublicStitch.tsx"), "utf8");
+    const filterPanelRule = mobileCorrectionBlock.match(
+      /body:has\(\.stitch-catalogue-hero\)\s+\.site-main\s+\.stitch-filter-panel\s*\{[\s\S]*?\}/
+    )?.[0];
+    const filterGroupRule = Array.from(
+      mobileCorrectionBlock.matchAll(
+        /body:has\(\.stitch-catalogue-hero\)\s+\.site-main\s+\.stitch-filter-group\s*\{[\s\S]*?\}/g
+      ),
+      (match) => match[0]
+    ).find((rule) => rule.includes("overflow-x"));
+    const menuOverflowRule = mobileCorrectionBlock.match(
+      /body:has\(\.stitch-mobile-menu--open\)\s+\.stitch-site-header,[\s\S]*?body:has\(\.stitch-mobile-menu--open\)\s+\.stitch-header-actions\s*\{[\s\S]*?\}/
+    )?.[0];
+    const openMenuRule = mobileCorrectionBlock.match(
+      /body:has\(\.stitch-mobile-menu--open\)\s+\.stitch-mobile-menu\s*\{[\s\S]*?\}/
+    )?.[0];
+
+    expect(mobileCorrectionBlock).toContain("Final mobile catalogue/menu correction");
+    expect(publicStitchSource).toContain("stitch-filter-group--categories");
+    expect(publicStitchSource).toContain("stitch-filter-group--styles");
+    expect(filterPanelRule).toBeDefined();
+    expect(filterPanelRule).toMatch(/display:\s*grid\s*!important;/);
+    expect(filterPanelRule).toMatch(/gap:\s*0\.55rem\s*!important;/);
+    expect(filterGroupRule).toBeDefined();
+    expect(filterGroupRule).toMatch(/display:\s*flex\s*!important;/);
+    expect(filterGroupRule).toMatch(/flex-wrap:\s*nowrap\s*!important;/);
+    expect(filterGroupRule).toMatch(/overflow-x:\s*auto\s*!important;/);
+    expect(menuOverflowRule).toBeDefined();
+    expect(menuOverflowRule).toMatch(/overflow:\s*visible\s*!important;/);
+    expect(openMenuRule).toBeDefined();
+    expect(openMenuRule).toMatch(/position:\s*fixed\s*!important;/);
+    expect(openMenuRule).toMatch(/left:\s*auto\s*!important;/);
+    expect(openMenuRule).toMatch(/right:\s*0\s*!important;/);
+    expect(openMenuRule).toMatch(/height:\s*100dvh\s*!important;/);
   });
 
   it("keeps the chatbot fallback response removed from source and manual QA", () => {

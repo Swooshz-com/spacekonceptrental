@@ -21298,7 +21298,8 @@ body:has(.stitch-site-header):not(:has(.stitch-home-hero)) .site-main > :is(
   .stitch-contact-hero,
   .stitch-about-hero,
   .stitch-setups-hero,
-  .stitch-legal-hero
+  .stitch-legal-hero,
+  .stitch-quote-page
 ) {
   padding-inline: 0 !important;
 }
@@ -21308,7 +21309,8 @@ body:has(.stitch-site-header):not(:has(.stitch-home-hero)) .site-main > :is(
   .stitch-contact-hero,
   .stitch-about-hero,
   .stitch-setups-hero,
-  .stitch-legal-hero
+  .stitch-legal-hero,
+  .stitch-quote-page
 ) > .stitch-container {
   margin-inline: auto !important;
   max-width: 1312px !important;
@@ -21318,7 +21320,8 @@ body:has(.stitch-site-header):not(:has(.stitch-home-hero)) .site-main > :is(
 
 body:has(.stitch-site-header):not(:has(.stitch-home-hero)) .site-main :is(
   .stitch-catalogue-hero .stitch-page-intro,
-  .stitch-contact-hero .stitch-page-intro
+  .stitch-contact-hero .stitch-page-intro,
+  .stitch-quote-intro
 ) {
   margin-left: 0 !important;
   margin-right: 0 !important;
@@ -21425,5 +21428,75 @@ body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-
 
   body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-selection-row__body {
     grid-template-columns: minmax(0, 1fr) auto !important;
+  }
+}
+
+/* Final mobile catalogue/menu correction: keep filter groups and drawer chrome distinct. */
+body:has(.stitch-catalogue-hero) .site-main .stitch-filter-group {
+  display: contents !important;
+}
+
+@media (max-width: 900px) {
+  body:has(.stitch-catalogue-hero) .site-main .stitch-filter-panel {
+    align-items: stretch !important;
+    display: grid !important;
+    gap: 0.55rem !important;
+    overflow: visible !important;
+    white-space: normal !important;
+  }
+
+  body:has(.stitch-catalogue-hero) .site-main .stitch-filter-group {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    gap: 0.35rem !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    scrollbar-width: none !important;
+    touch-action: pan-x !important;
+    width: 100% !important;
+  }
+
+  body:has(.stitch-catalogue-hero) .site-main .stitch-filter-group::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  body:has(.stitch-catalogue-hero) .site-main .stitch-filter-panel h2 {
+    display: none !important;
+  }
+
+  body:has(.stitch-catalogue-hero) .site-main .stitch-filter-panel a {
+    flex: 0 0 auto !important;
+  }
+
+  body:has(.stitch-mobile-menu--open) .stitch-site-header,
+  body:has(.stitch-mobile-menu--open) .stitch-site-header__inner,
+  body:has(.stitch-mobile-menu--open) .stitch-header-actions {
+    overflow: visible !important;
+  }
+
+  body:has(.stitch-mobile-menu--open) .stitch-site-header {
+    z-index: 1000 !important;
+  }
+
+  body:has(.stitch-mobile-menu--open) .stitch-menu-scrim {
+    display: block !important;
+    inset: 0 !important;
+    position: fixed !important;
+    z-index: 1001 !important;
+  }
+
+  body:has(.stitch-mobile-menu--open) .stitch-mobile-menu {
+    border-left: 1px solid var(--stitch-line) !important;
+    border-right: 0 !important;
+    display: block !important;
+    height: 100dvh !important;
+    left: auto !important;
+    max-height: 100dvh !important;
+    overflow-y: auto !important;
+    position: fixed !important;
+    right: 0 !important;
+    top: 0 !important;
+    transform: translateX(0) !important;
+    z-index: 1002 !important;
   }
 }
