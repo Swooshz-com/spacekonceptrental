@@ -22596,7 +22596,8 @@ body:has(.stitch-site-header) :is(
   .stitch-quote-quantity-button,
   .stitch-quote-quantity-value,
   .stitch-quote-card-badge,
-  .site-main .stitch-filter-panel a
+  .site-main .stitch-filter-panel a,
+  .site-main .stitch-setups-filter-section .stitch-pill-row :is(a, span)
 ) {
   font-family: var(--stitch-sans) !important;
   font-size: var(--stitch-action-font-size) !important;

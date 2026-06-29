@@ -1018,6 +1018,7 @@ describe("public page shells", () => {
     expect(publicStitchSource).toContain("stitch-contact-brief-band");
     expect(actionFontRule).toBeDefined();
     expect(buttonRule).toBeDefined();
+    expect(buttonRule).toMatch(/\.stitch-setups-filter-section \.stitch-pill-row :is\(a, span\)/);
     expect(buttonRule).toMatch(/font-size:\s*var\(--stitch-action-font-size\)\s*!important;/);
     expect(cardMetaRule).toBeDefined();
     expect(cardMetaRule).toMatch(/font-size:\s*var\(--stitch-action-font-size\)\s*!important;/);
