@@ -861,8 +861,8 @@ describe("public page shells", () => {
     const rowActionsRule = quoteSelectionBlock.match(
       /body:has\(\.stitch-quote-page\):not\(:has\(\.quote-form--success\)\)\s+\.site-main\s+\.stitch-selection-row__actions\s*\{[\s\S]*?\}/
     )?.[0];
-    const clearActionRule = styles.match(
-      /body:has\(\.stitch-quote-page\):not\(:has\(\.quote-form--success\)\)\s+\.site-main\s+\.stitch-selection-row__clear\s*\{[\s\S]*?appearance:\s*none\s*!important;[\s\S]*?\}/
+    const detailActionRule = styles.match(
+      /body:has\(\.stitch-quote-page\):not\(:has\(\.quote-form--success\)\)\s+\.site-main\s+\.stitch-selection-row__detail,\s*body:has\(\.stitch-quote-page\):not\(:has\(\.quote-form--success\)\)\s+\.site-main\s+\.stitch-selection-row__clear\s*\{[\s\S]*?appearance:\s*none\s*!important;[\s\S]*?\}/
     )?.[0];
 
     expect(quoteSelectionBlock).toContain("Final public design-system consolidation");
@@ -875,9 +875,10 @@ describe("public page shells", () => {
     expect(controlsRule).toMatch(/max-width:\s*10\.75rem\s*!important;/);
     expect(rowActionsRule).toBeDefined();
     expect(rowActionsRule).toMatch(/grid-area:\s*actions\s*!important;/);
-    expect(clearActionRule).toBeDefined();
-    expect(clearActionRule).toMatch(/border:\s*1px solid var\(--stitch-line\)\s*!important;/);
-    expect(clearActionRule).toMatch(/min-height:\s*2rem\s*!important;/);
+    expect(detailActionRule).toBeDefined();
+    expect(detailActionRule).toMatch(/border:\s*1px solid var\(--stitch-line\)\s*!important;/);
+    expect(detailActionRule).toMatch(/font-size:\s*var\(--stitch-action-font-size\)\s*!important;/);
+    expect(detailActionRule).toMatch(/min-height:\s*2rem\s*!important;/);
   });
 
   it("keeps About page feature sections aligned to the Advantage card system", () => {
@@ -914,8 +915,8 @@ describe("public page shells", () => {
     expect(aboutRhythmRule).toMatch(/padding-bottom:\s*var\(--stitch-public-section-y\)\s*!important;/);
     expect(aboutRhythmRule).toMatch(/padding-top:\s*var\(--stitch-public-section-y\)\s*!important;/);
     expect(aboutStoryImageRule).toBeDefined();
-    expect(aboutStoryImageRule).toMatch(/flex:\s*0 0 min\(36vw,\s*33rem\)\s*!important;/);
-    expect(aboutStoryImageRule).toMatch(/max-width:\s*33rem\s*!important;/);
+    expect(aboutStoryImageRule).toMatch(/flex:\s*0 0 min\(27vw,\s*24\.75rem\)\s*!important;/);
+    expect(aboutStoryImageRule).toMatch(/max-width:\s*24\.75rem\s*!important;/);
   });
 
   it("keeps catalogue results inside the shared public container width", () => {

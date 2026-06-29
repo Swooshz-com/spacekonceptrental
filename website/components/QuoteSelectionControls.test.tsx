@@ -99,6 +99,9 @@ describe("QuoteSelectionControls", () => {
       "href",
       "/catalogue/aura-lounge-chair"
     );
+    expect(screen.getByRole("link", { name: /details/i })).toHaveClass(
+      "stitch-selection-row__detail"
+    );
     expect(container.querySelector(".stitch-selection-row__body")).toBeInTheDocument();
     expect(container.querySelector(".stitch-selection-row__main")).toBeInTheDocument();
     expect(container.querySelector(".stitch-selection-row__actions")).toBeInTheDocument();

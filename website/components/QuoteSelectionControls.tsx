@@ -286,7 +286,12 @@ function SelectionGroup({
               <div className="stitch-selection-row__main">
                 <strong>{item.name}</strong>
                 <div className="stitch-selection-row__actions">
-                  <Link href={`${detailBasePath}/${item.slug}`}>Details</Link>
+                  <Link
+                    className="stitch-selection-row__detail"
+                    href={`${detailBasePath}/${item.slug}`}
+                  >
+                    Details
+                  </Link>
                   <button
                     aria-label={`Remove ${item.name} from selection`}
                     className="stitch-selection-row__clear"

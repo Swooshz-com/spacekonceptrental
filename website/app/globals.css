@@ -21455,11 +21455,12 @@ body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-
   justify-items: end !important;
 }
 
-body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-selection-row a,
+body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-selection-row__detail,
 body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-selection-row__clear {
   white-space: nowrap !important;
 }
 
+body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-selection-row__detail,
 body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-selection-row__clear {
   appearance: none !important;
   background: transparent !important;
@@ -21479,6 +21480,12 @@ body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-
   text-transform: uppercase !important;
 }
 
+body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-selection-row__detail {
+  color: var(--stitch-ink) !important;
+}
+
+body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-selection-row__detail:hover,
+body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-selection-row__detail:focus-visible,
 body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-selection-row__clear:hover,
 body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-selection-row__clear:focus-visible {
   border-color: var(--stitch-primary) !important;
@@ -22563,9 +22570,9 @@ body:has(.stitch-about-hero) .site-main :is(.stitch-about-principles, .stitch-ab
   }
 
   body:has(.stitch-about-hero) .site-main .stitch-about-story__image {
-    flex: 0 0 min(36vw, 33rem) !important;
-    height: clamp(20.15625rem, 27.75vw, 25.078125rem) !important;
-    max-width: 33rem !important;
+    flex: 0 0 min(27vw, 24.75rem) !important;
+    height: clamp(15.1171875rem, 20.8125vw, 18.80859375rem) !important;
+    max-width: 24.75rem !important;
   }
 }
 
@@ -22814,7 +22821,11 @@ body:has(.stitch-contact-hero) .site-main :is(
 body:has(.stitch-contact-hero) .site-main .stitch-contact-brief-section {
   background: var(--stitch-surface) !important;
   padding-bottom: var(--stitch-public-section-y) !important;
-  padding-top: var(--stitch-public-section-y) !important;
+  padding-top: calc(var(--stitch-public-section-y) * 0.5) !important;
+}
+
+body:has(.stitch-contact-hero) .site-main .stitch-contact-process-section {
+  padding-bottom: calc(var(--stitch-public-section-y) * 0.5) !important;
 }
 
 body:has(.stitch-contact-hero) .site-main :is(
