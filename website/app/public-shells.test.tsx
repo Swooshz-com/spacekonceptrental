@@ -471,8 +471,14 @@ describe("public page shells", () => {
     const finalHeroTitleRule = finalRhythmBlock.match(
       /body:has\(\.stitch-site-header\)\s+\.site-main\s+:is\([\s\S]*?\.stitch-catalogue-hero \.stitch-page-intro h1[\s\S]*?\.stitch-quote-hero \.stitch-page-intro h1[\s\S]*?\)\s*\{[\s\S]*?\}/
     )?.[0];
+    const finalHeroPaddingRule = finalRhythmBlock.match(
+      /body:has\(\.stitch-site-header\):not\(:has\(\.stitch-home-hero\)\)\s+\.site-main\s+>\s+:is\([\s\S]*?\.stitch-catalogue-hero[\s\S]*?\.stitch-quote-hero[\s\S]*?\)\s*\{[\s\S]*?\}/
+    )?.[0];
 
     expect(finalRhythmBlock).toContain("Final public page rhythm");
+    expect(finalHeroPaddingRule).toBeDefined();
+    expect(finalHeroPaddingRule).toMatch(/\.stitch-quote-hero/);
+    expect(finalHeroPaddingRule).toMatch(/padding:\s*6\.2rem\s+0\s+4rem\s*!important;/);
     expect(finalHeroTitleRule).toBeDefined();
     expect(finalHeroTitleRule).toMatch(/font-weight:\s*400\s*!important;/);
     expect(finalHeroTitleRule).toMatch(/font-size:\s*clamp\(2\.55rem,\s*3\.15vw,\s*3\.1rem\)\s*!important;/);
@@ -691,6 +697,8 @@ describe("public page shells", () => {
     expect(pageIntroEyebrowRule).toMatch(/\.stitch-legal-hero/);
     expect(pageIntroEyebrowRule).toMatch(/font-size:\s*0\.76rem\s*!important;/);
     expect(pageIntroEyebrowRule).toMatch(/font-weight:\s*500\s*!important;/);
+    expect(pageIntroEyebrowRule).toMatch(/line-height:\s*1\.2\s*!important;/);
+    expect(pageIntroEyebrowRule).toMatch(/margin:\s*0\s+0\s+14px\s*!important;/);
     expect(pageIntroEyebrowRule).not.toMatch(/font-weight:\s*800\s*!important;/);
   });
 
@@ -892,6 +900,8 @@ describe("public page shells", () => {
     expect(filterGroupRule).toMatch(/gap:\s*0\.5rem\s*!important;/);
     expect(filterLinkRule).toBeDefined();
     expect(filterLinkRule).toMatch(/font-size:\s*0\.68rem\s*!important;/);
+    expect(filterLinkRule).toMatch(/font-weight:\s*700\s*!important;/);
+    expect(filterLinkRule).toMatch(/letter-spacing:\s*0\.04em\s*!important;/);
     expect(mobileCorrectionBlock).toMatch(/stitch-filter-group--styles[\s\S]*?border-top:\s*1px\s+solid\s+var\(--stitch-line\)\s*!important;/);
     expect(mobileCorrectionBlock).toMatch(/stitch-filter-panel h2[\s\S]*?display:\s*block\s*!important;/);
     expect(menuOverflowRule).toBeDefined();

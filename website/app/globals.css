@@ -20601,7 +20601,8 @@ body:has(.stitch-site-header):not(:has(.stitch-home-hero)) .site-main > :is(
   .stitch-about-hero,
   .stitch-setups-hero,
   .stitch-editorial-hero,
-  .stitch-legal-hero
+  .stitch-legal-hero,
+  .stitch-quote-hero
 ) {
   background: var(--stitch-surface) !important;
   border-bottom: 1px solid var(--stitch-line) !important;
@@ -21873,8 +21874,19 @@ body:has(.stitch-site-header) .site-main > :is(
   .stitch-legal-hero,
   .stitch-quote-hero
 ) .stitch-page-intro > .stitch-eyebrow {
+  display: block !important;
   font-size: 0.76rem !important;
   font-weight: 500 !important;
+  line-height: 1.2 !important;
+  margin: 0 0 14px !important;
+  visibility: visible !important;
+}
+
+body:has(.stitch-catalogue-hero) .site-main .stitch-filter-panel a,
+body:has(.stitch-catalogue-hero) .site-main .stitch-filter-panel span {
+  font-size: 0.68rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.04em !important;
 }
 
 body:has(.stitch-home-hero) .site-main .stitch-home-category-mosaic {
@@ -22143,8 +22155,9 @@ body:has(.stitch-quote-hero) .site-main .stitch-quote-intro::after {
     color: var(--stitch-ink) !important;
     display: flex !important;
     font-size: 0.68rem !important;
+    font-weight: 700 !important;
     justify-content: flex-start !important;
-    letter-spacing: 0.06em !important;
+    letter-spacing: 0.04em !important;
     min-height: 2.25rem !important;
     padding: 0 0.85rem !important;
     width: 100% !important;
