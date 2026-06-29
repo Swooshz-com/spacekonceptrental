@@ -871,6 +871,9 @@ describe("public page shells", () => {
     const filterGroupRule = mobileCorrectionBlock.match(
       /body:has\(\.stitch-catalogue-hero\)\s+\.site-main\s+\.stitch-filter-group\s*\{[\s\S]*?\}/
     )?.[0];
+    const filterLinkRule = mobileCorrectionBlock.match(
+      /body:has\(\.stitch-catalogue-hero\)\s+\.site-main\s+\.stitch-filter-group\s+a\s*\{[\s\S]*?\}/
+    )?.[0];
     const menuOverflowRule = menuCorrectionBlock.match(
       /body:has\(\.stitch-mobile-menu--open\)\s+\.stitch-site-header,[\s\S]*?body:has\(\.stitch-mobile-menu--open\)\s+\.stitch-header-actions\s*\{[\s\S]*?\}/
     )?.[0];
@@ -887,6 +890,8 @@ describe("public page shells", () => {
     expect(filterGroupRule).toBeDefined();
     expect(filterGroupRule).toMatch(/display:\s*grid\s*!important;/);
     expect(filterGroupRule).toMatch(/gap:\s*0\.5rem\s*!important;/);
+    expect(filterLinkRule).toBeDefined();
+    expect(filterLinkRule).toMatch(/font-size:\s*0\.68rem\s*!important;/);
     expect(mobileCorrectionBlock).toMatch(/stitch-filter-group--styles[\s\S]*?border-top:\s*1px\s+solid\s+var\(--stitch-line\)\s*!important;/);
     expect(mobileCorrectionBlock).toMatch(/stitch-filter-panel h2[\s\S]*?display:\s*block\s*!important;/);
     expect(menuOverflowRule).toBeDefined();

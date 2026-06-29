@@ -22142,7 +22142,7 @@ body:has(.stitch-quote-hero) .site-main .stitch-quote-intro::after {
     border-radius: 4px !important;
     color: var(--stitch-ink) !important;
     display: flex !important;
-    font-size: 0.86rem !important;
+    font-size: 0.68rem !important;
     justify-content: flex-start !important;
     letter-spacing: 0.06em !important;
     min-height: 2.25rem !important;
