@@ -21754,7 +21754,6 @@ body:has(.stitch-site-header) .site-main :is(
   .stitch-section-heading h2,
   .stitch-cta-band h2,
   .stitch-empty h2,
-  .stitch-legal-card h2,
   .stitch-quote-card h2,
   .stitch-quote-form-panel h2,
   .stitch-detail-context h2,
@@ -21773,6 +21772,7 @@ body:has(.stitch-site-header) .site-main :is(
 body:has(.stitch-site-header) .site-main :is(
   .stitch-feature h3,
   .stitch-about-card h3,
+  .stitch-legal-card h3,
   .stitch-setup-card h2
 ) {
   color: var(--stitch-ink) !important;
@@ -21873,6 +21873,7 @@ body:has(.stitch-site-header) .site-main > :is(
   .stitch-legal-hero,
   .stitch-quote-hero
 ) .stitch-page-intro > .stitch-eyebrow {
+  font-size: 0.76rem !important;
   font-weight: 500 !important;
 }
 

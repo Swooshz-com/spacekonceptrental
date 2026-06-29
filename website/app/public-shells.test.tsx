@@ -174,6 +174,8 @@ describe("public page shells", () => {
     render(<PrivacyPage />);
 
     expect(screen.getByRole("heading", { name: /Privacy Policy/i })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { level: 2, name: /What you share/i })).not.toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 3, name: /What you share/i })).toBeInTheDocument();
     expect(screen.getByText(/manual follow-up/i)).toBeInTheDocument();
     expect(screen.getByText(/configured chat provider/i)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Terms of Use/i })).toHaveAttribute("href", "/terms");
@@ -183,6 +185,8 @@ describe("public page shells", () => {
     render(<TermsPage />);
 
     expect(screen.getByRole("heading", { name: /Terms of Use/i })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { level: 2, name: /Browsing listings/i })).not.toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 3, name: /Browsing listings/i })).toBeInTheDocument();
     expect(screen.getByText(/manual follow-up/i)).toBeInTheDocument();
     expect(screen.getByText(/does not finalise rental details online/i)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Privacy Policy/i })).toHaveAttribute("href", "/privacy");
@@ -486,10 +490,10 @@ describe("public page shells", () => {
       /body:has\(\.stitch-site-header\)\s+\.site-main\s+:is\([\s\S]*?\.stitch-page-intro h1[\s\S]*?\)\s*\{[\s\S]*?\}/
     )?.[0];
     const h2Rule = typographyBlock.match(
-      /body:has\(\.stitch-site-header\)\s+\.site-main\s+:is\([\s\S]*?\.stitch-section-heading h2[\s\S]*?\.stitch-legal-card h2[\s\S]*?\)\s*\{[\s\S]*?\}/
+      /body:has\(\.stitch-site-header\)\s+\.site-main\s+:is\([\s\S]*?\.stitch-section-heading h2[\s\S]*?\.stitch-quote-card h2[\s\S]*?\)\s*\{[\s\S]*?\}/
     )?.[0];
     const h3Rule = typographyBlock.match(
-      /body:has\(\.stitch-site-header\)\s+\.site-main\s+:is\([\s\S]*?\.stitch-feature h3[\s\S]*?\.stitch-setup-card h2[\s\S]*?\)\s*\{[\s\S]*?\}/
+      /body:has\(\.stitch-site-header\)\s+\.site-main\s+:is\([\s\S]*?\.stitch-feature h3[\s\S]*?\.stitch-legal-card h3[\s\S]*?\.stitch-setup-card h2[\s\S]*?\)\s*\{[\s\S]*?\}/
     )?.[0];
     const itemNameRule = typographyBlock.match(
       /body:has\(\.stitch-site-header\)\s+\.site-main\s+:is\([\s\S]*?\.stitch-card__body h2[\s\S]*?\.stitch-home-feature-card strong[\s\S]*?\)\s*\{[\s\S]*?\}/
@@ -506,7 +510,9 @@ describe("public page shells", () => {
     expect(h1Rule).toMatch(/font-weight:\s*400\s*!important;/);
     expect(h2Rule).toBeDefined();
     expect(h2Rule).toMatch(/font-size:\s*clamp\(1\.7rem,\s*2\.05vw,\s*2\.2rem\)\s*!important;/);
+    expect(h2Rule).not.toMatch(/\.stitch-legal-card h2/);
     expect(h3Rule).toBeDefined();
+    expect(h3Rule).toMatch(/\.stitch-legal-card h3/);
     expect(h3Rule).toMatch(/font-size:\s*clamp\(1\.15rem,\s*1\.45vw,\s*1\.42rem\)\s*!important;/);
     expect(itemNameRule).toBeDefined();
     expect(itemNameRule).toMatch(/font-size:\s*clamp\(0\.98rem,\s*1\.05vw,\s*1\.12rem\)\s*!important;/);
@@ -683,6 +689,7 @@ describe("public page shells", () => {
     expect(pageIntroEyebrowRule).toBeDefined();
     expect(pageIntroEyebrowRule).toMatch(/\.stitch-setups-hero/);
     expect(pageIntroEyebrowRule).toMatch(/\.stitch-legal-hero/);
+    expect(pageIntroEyebrowRule).toMatch(/font-size:\s*0\.76rem\s*!important;/);
     expect(pageIntroEyebrowRule).toMatch(/font-weight:\s*500\s*!important;/);
     expect(pageIntroEyebrowRule).not.toMatch(/font-weight:\s*800\s*!important;/);
   });
