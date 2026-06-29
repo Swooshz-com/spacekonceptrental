@@ -21500,3 +21500,30 @@ body:has(.stitch-catalogue-hero) .site-main .stitch-filter-group {
     z-index: 1002 !important;
   }
 }
+
+/* Final chat sizing: larger closed launcher and a shared right edge for the open panel. */
+.chat-widget-launcher {
+  bottom: 18px !important;
+  gap: 6px !important;
+  right: 16px !important;
+  transform: none !important;
+  transform-origin: right bottom !important;
+}
+
+.chat-widget-launcher .premium-chat-pulse {
+  height: 72px !important;
+  width: 72px !important;
+}
+
+.chat-widget-panel {
+  bottom: 16px !important;
+  right: 16px !important;
+  width: min(380px, calc(100vw - 32px)) !important;
+}
+
+@media (max-width: 900px) {
+  .chat-widget-panel > div[aria-live="polite"] {
+    height: clamp(240px, 38dvh, 300px) !important;
+    max-height: clamp(240px, 38dvh, 300px) !important;
+  }
+}

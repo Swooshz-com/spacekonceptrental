@@ -611,6 +611,40 @@ describe("public page shells", () => {
     expect(openMenuRule).toMatch(/height:\s*100dvh\s*!important;/);
   });
 
+  it("keeps the chat launcher larger and the open panel on the same right edge", () => {
+    const styles = readFileSync(resolve(process.cwd(), "app/globals.css"), "utf8");
+    const chatSizingBlock = styles.slice(
+      styles.indexOf("/* Final chat sizing: larger closed launcher and a shared right edge for the open panel. */")
+    );
+    const launcherRule = chatSizingBlock.match(
+      /\.chat-widget-launcher\s*\{[\s\S]*?\}/
+    )?.[0];
+    const launcherButtonRule = chatSizingBlock.match(
+      /\.chat-widget-launcher\s+\.premium-chat-pulse\s*\{[\s\S]*?\}/
+    )?.[0];
+    const panelRule = chatSizingBlock.match(
+      /\.chat-widget-panel\s*\{[\s\S]*?\}/
+    )?.[0];
+    const panelMessagesRule = chatSizingBlock.match(
+      /\.chat-widget-panel\s+>\s+div\[aria-live="polite"\]\s*\{[\s\S]*?\}/
+    )?.[0];
+
+    expect(chatSizingBlock).toContain("Final chat sizing");
+    expect(launcherRule).toBeDefined();
+    expect(launcherRule).toMatch(/bottom:\s*18px\s*!important;/);
+    expect(launcherRule).toMatch(/right:\s*16px\s*!important;/);
+    expect(launcherRule).toMatch(/transform:\s*none\s*!important;/);
+    expect(launcherButtonRule).toBeDefined();
+    expect(launcherButtonRule).toMatch(/height:\s*72px\s*!important;/);
+    expect(launcherButtonRule).toMatch(/width:\s*72px\s*!important;/);
+    expect(panelRule).toBeDefined();
+    expect(panelRule).toMatch(/bottom:\s*16px\s*!important;/);
+    expect(panelRule).toMatch(/right:\s*16px\s*!important;/);
+    expect(panelRule).toMatch(/width:\s*min\(380px,\s*calc\(100vw\s*-\s*32px\)\)\s*!important;/);
+    expect(panelMessagesRule).toBeDefined();
+    expect(panelMessagesRule).toMatch(/height:\s*clamp\(240px,\s*38dvh,\s*300px\)\s*!important;/);
+  });
+
   it("keeps the chatbot fallback response removed from source and manual QA", () => {
     const chatWidgetSource = readFileSync(resolve(process.cwd(), "components/ChatWidget.tsx"), "utf8");
     const chatRouteSource = readFileSync(resolve(process.cwd(), "app/api/chat/route.ts"), "utf8");
