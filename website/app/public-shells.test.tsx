@@ -915,8 +915,9 @@ describe("public page shells", () => {
     expect(aboutRhythmRule).toMatch(/padding-bottom:\s*var\(--stitch-public-section-y\)\s*!important;/);
     expect(aboutRhythmRule).toMatch(/padding-top:\s*var\(--stitch-public-section-y\)\s*!important;/);
     expect(aboutStoryImageRule).toBeDefined();
-    expect(aboutStoryImageRule).toMatch(/flex:\s*0 0 min\(27vw,\s*24\.75rem\)\s*!important;/);
-    expect(aboutStoryImageRule).toMatch(/max-width:\s*24\.75rem\s*!important;/);
+    expect(aboutStoryImageRule).toMatch(/flex:\s*0 0 min\(36vw,\s*33rem\)\s*!important;/);
+    expect(aboutStoryImageRule).toMatch(/height:\s*clamp\(15\.1171875rem,\s*20\.8125vw,\s*18\.80859375rem\)\s*!important;/);
+    expect(aboutStoryImageRule).toMatch(/max-width:\s*33rem\s*!important;/);
   });
 
   it("keeps catalogue results inside the shared public container width", () => {
