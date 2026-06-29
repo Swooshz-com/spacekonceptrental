@@ -25,7 +25,8 @@ type SubmitState =
 
 type FieldErrors = {
   customerName?: string;
-  contact?: string;
+  customerEmail?: string;
+  customerPhone?: string;
   submit?: string;
 };
 
@@ -232,17 +233,30 @@ export default function QuoteRequestForm({
         "Name is required so the team knows who sent this quote request.";
     }
 
-    if (!payload.customerEmail && !payload.customerPhone) {
-      nextFieldErrors.contact =
-        "Email address or phone number is required so the team can follow up directly about this quote request.";
+    if (submittedPreferredContactMethod === "phone") {
+      if (!payload.customerPhone) {
+        nextFieldErrors.customerPhone =
+          "Phone number is required so the team can follow up directly about this quote request.";
+      }
+    } else if (!payload.customerEmail) {
+      nextFieldErrors.customerEmail =
+        "Email address is required so the team can follow up directly about this quote request.";
     }
 
-    if (nextFieldErrors.customerName || nextFieldErrors.contact) {
+    if (
+      nextFieldErrors.customerName ||
+      nextFieldErrors.customerEmail ||
+      nextFieldErrors.customerPhone
+    ) {
       setFieldErrors(nextFieldErrors);
       setSubmitState({ status: "idle" });
       scrollToFormControl(
         form,
-        nextFieldErrors.customerName ? "customerName" : "customerEmail"
+        nextFieldErrors.customerName
+          ? "customerName"
+          : nextFieldErrors.customerEmail
+            ? "customerEmail"
+            : "customerPhone"
       );
       return;
     }
@@ -406,42 +420,49 @@ export default function QuoteRequestForm({
           Email address
           <input
             aria-describedby={
-              fieldErrors.contact ? "quote-contact-error" : undefined
+              fieldErrors.customerEmail ? "quote-customer-email-error" : undefined
             }
-            aria-invalid={fieldErrors.contact ? "true" : undefined}
+            aria-invalid={fieldErrors.customerEmail ? "true" : undefined}
             autoComplete="email"
             name="customerEmail"
             type="email"
           />
+          {fieldErrors.customerEmail ? (
+            <small
+              className="quote-form__field-error"
+              id="quote-customer-email-error"
+            >
+              {fieldErrors.customerEmail}
+            </small>
+          ) : (
+            <small>Email is the default contact method for quote follow-up.</small>
+          )}
         </label>
         <label>
           Phone number
           <input
             aria-describedby={
-              fieldErrors.contact
-                ? "quote-contact-helper quote-contact-error"
+              fieldErrors.customerPhone
+                ? "quote-contact-helper quote-customer-phone-error"
                 : "quote-contact-helper"
             }
-            aria-invalid={fieldErrors.contact ? "true" : undefined}
+            aria-invalid={fieldErrors.customerPhone ? "true" : undefined}
             autoComplete="tel"
             name="customerPhone"
             type="tel"
           />
           <small id="quote-contact-helper">
-            Share email, phone, or both. Share one reliable contact method.
-            Email or phone required. The team uses this only for direct quote
-            follow-up.
+            Share a phone number if you prefer phone follow-up.
           </small>
+          {fieldErrors.customerPhone ? (
+            <small
+              className="quote-form__field-error"
+              id="quote-customer-phone-error"
+            >
+              {fieldErrors.customerPhone}
+            </small>
+          ) : null}
         </label>
-        <small
-          aria-hidden={fieldErrors.contact ? undefined : true}
-          className={`quote-form__field-error quote-form__full-width quote-form__contact-error${
-            fieldErrors.contact ? "" : " quote-form__field-error--ghost"
-          }`}
-          id={fieldErrors.contact ? "quote-contact-error" : undefined}
-        >
-          {fieldErrors.contact ?? "Contact validation message space."}
-        </small>
         <label>
           Preferred contact method
           <select

@@ -899,6 +899,15 @@ describe("public page shells", () => {
     const aboutStoryImageRule = aboutParityBlock.match(
       /body:has\(\.stitch-about-hero\)\s+\.site-main\s+\.stitch-about-story__image\s*\{[\s\S]*?\}/
     )?.[0];
+    const aboutRhythmCorrectionBlock = styles.slice(
+      styles.indexOf("/* Final About rhythm correction: reuse the home section cadence and reduce story scale. */")
+    );
+    const aboutPrinciplesGapRule = aboutRhythmCorrectionBlock.match(
+      /body:has\(\.stitch-about-hero\)\s+\.site-main\s+\.stitch-about-principles\s*\{[\s\S]*?\}/
+    )?.[0];
+    const aboutServiceGapRule = aboutRhythmCorrectionBlock.match(
+      /body:has\(\.stitch-about-hero\)\s+\.site-main\s+\.stitch-about-service\s*\{[\s\S]*?\}/
+    )?.[0];
 
     expect(aboutParityBlock).toContain("Final About parity");
     expect(publicStitchSource).toContain("stitch-feature stitch-about-card");
@@ -915,9 +924,19 @@ describe("public page shells", () => {
     expect(aboutRhythmRule).toMatch(/padding-bottom:\s*var\(--stitch-public-section-y\)\s*!important;/);
     expect(aboutRhythmRule).toMatch(/padding-top:\s*var\(--stitch-public-section-y\)\s*!important;/);
     expect(aboutStoryImageRule).toBeDefined();
-    expect(aboutStoryImageRule).toMatch(/flex:\s*0 0 min\(36vw,\s*33rem\)\s*!important;/);
-    expect(aboutStoryImageRule).toMatch(/height:\s*clamp\(15\.1171875rem,\s*20\.8125vw,\s*18\.80859375rem\)\s*!important;/);
-    expect(aboutStoryImageRule).toMatch(/max-width:\s*33rem\s*!important;/);
+    expect(aboutStoryImageRule).toMatch(/flex:\s*0 0 min\(45vw,\s*41\.25rem\)\s*!important;/);
+    expect(aboutStoryImageRule).toMatch(
+      /height:\s*clamp\(7\.55859375rem,\s*10\.40625vw,\s*9\.404296875rem\)\s*!important;/
+    );
+    expect(aboutStoryImageRule).toMatch(/max-width:\s*41\.25rem\s*!important;/);
+    expect(aboutPrinciplesGapRule).toBeDefined();
+    expect(aboutPrinciplesGapRule).toMatch(
+      /padding-bottom:\s*calc\(var\(--stitch-public-section-y\)\s*\*\s*0\.175\)\s*!important;/
+    );
+    expect(aboutServiceGapRule).toBeDefined();
+    expect(aboutServiceGapRule).toMatch(
+      /padding-top:\s*calc\(var\(--stitch-public-section-y\)\s*\*\s*0\.175\)\s*!important;/
+    );
   });
 
   it("keeps catalogue results inside the shared public container width", () => {
@@ -1022,6 +1041,12 @@ describe("public page shells", () => {
     const contactCardRule = interactionBlock.match(
       /body:has\(\.stitch-contact-hero\)\s+\.site-main\s+:is\([\s\S]*?\.stitch-contact-step-card[\s\S]*?\)\s*\{[\s\S]*?\}/
     )?.[0];
+    const contactProcessRule = interactionBlock.match(
+      /body:has\(\.stitch-contact-hero\)\s+\.site-main\s+\.stitch-contact-process-section\s*\{[\s\S]*?\}/
+    )?.[0];
+    const contactBriefRule = interactionBlock.match(
+      /body:has\(\.stitch-contact-hero\)\s+\.site-main\s+\.stitch-contact-brief-section\s*\{[\s\S]*?\}/
+    )?.[0];
     const homeActionRule = interactionBlock.match(
       /body:has\(\.stitch-home-hero\)\s+\.site-main\s+\.stitch-home-categories\s+\.stitch-home-section-action,[\s\S]*?\.stitch-home-featured\s+\.stitch-home-featured-action\s*\{[\s\S]*?\}/
     )?.[0];
@@ -1053,6 +1078,17 @@ describe("public page shells", () => {
     expect(toolsIconRule).toMatch(/content:\s*"\+"\s*!important;/);
     expect(contactCardRule).toBeDefined();
     expect(contactCardRule).toMatch(/border-radius:\s*0\s*!important;/);
+    expect(contactProcessRule).toBeDefined();
+    expect(contactProcessRule).toMatch(
+      /padding-bottom:\s*calc\(var\(--stitch-public-section-y\)\s*\*\s*0\.125\)\s*!important;/
+    );
+    expect(contactProcessRule).toMatch(
+      /padding-top:\s*calc\(var\(--stitch-public-section-y\)\s*\*\s*0\.175\)\s*!important;/
+    );
+    expect(contactBriefRule).toBeDefined();
+    expect(contactBriefRule).toMatch(
+      /padding-top:\s*calc\(var\(--stitch-public-section-y\)\s*\*\s*0\.125\)\s*!important;/
+    );
     expect(homeActionRule).toBeDefined();
     expect(homeActionRule).toMatch(/position:\s*static\s*!important;/);
     expect(homeActionRule).toMatch(/margin:\s*clamp\(2rem,\s*3vw,\s*2\.7rem\)\s*0\s*0\s*!important;/);

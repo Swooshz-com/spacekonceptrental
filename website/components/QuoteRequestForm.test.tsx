@@ -364,6 +364,9 @@ describe("QuoteRequestForm", () => {
 
   it("shows inline required guidance and preserves entered event details", async () => {
     const fetchMock = vi.fn();
+    const scrollIntoView = vi.fn();
+
+    window.HTMLElement.prototype.scrollIntoView = scrollIntoView;
 
     vi.stubGlobal("fetch", fetchMock);
 
@@ -386,28 +389,65 @@ describe("QuoteRequestForm", () => {
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
     expect(screen.getByText(/name is required/i)).toBeInTheDocument();
     expect(
-      screen.getByText(/email address or phone number is required/i)
+      screen.getByText(/email address is required/i)
     ).toBeInTheDocument();
+    expect(scrollIntoView).toHaveBeenCalledWith({
+      behavior: "smooth",
+      block: "center"
+    });
+    expect(document.activeElement).toBe(screen.getByLabelText(/name/i));
     expect(screen.getByLabelText(/name/i)).toHaveAttribute(
       "aria-invalid",
       "true"
     );
-    expect(screen.getByRole("textbox", { name: /^email address$/i }))
+    expect(screen.getByLabelText(/email address/i))
       .toHaveAttribute(
       "aria-invalid",
       "true"
     );
-    expect(screen.getByRole("textbox", { name: /^phone number/i }))
-      .toHaveAttribute(
-      "aria-invalid",
-      "true"
-    );
+    expect(screen.getByLabelText(/phone number/i))
+      .not.toHaveAttribute("aria-invalid");
     expect(screen.getByLabelText(/venue/i)).toHaveValue(
       "National Gallery Singapore"
     );
     expect(screen.queryByLabelText(/requested listings or items/i)).not.toBeInTheDocument();
     expect(screen.getByLabelText(/event vision/i)).toHaveValue(
       "Warm reception setup with alternates if the sofa colour changes."
+    );
+  });
+
+  it("blocks the selected preferred contact method before submitting", async () => {
+    const fetchMock = vi.fn();
+    const scrollIntoView = vi.fn();
+
+    window.HTMLElement.prototype.scrollIntoView = scrollIntoView;
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(<QuoteRequestForm />);
+
+    fireEvent.change(screen.getByLabelText(/name/i), {
+      target: { value: "Maya Tan" }
+    });
+    fireEvent.change(screen.getByLabelText(/preferred contact method/i), {
+      target: { value: "phone" }
+    });
+    fireEvent.click(
+      screen.getByRole("button", { name: /review and send an enquiry/i })
+    );
+
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    expect(screen.getByText(/phone number is required/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/email address/i))
+      .not.toHaveAttribute("aria-invalid");
+    expect(screen.getByLabelText(/phone number/i))
+      .toHaveAttribute("aria-invalid", "true");
+    expect(scrollIntoView).toHaveBeenCalledWith({
+      behavior: "smooth",
+      block: "center"
+    });
+    expect(document.activeElement).toBe(
+      screen.getByLabelText(/phone number/i)
     );
   });
 
@@ -819,6 +859,9 @@ describe("QuoteRequestForm", () => {
     });
     fireEvent.change(screen.getByLabelText(/preferred contact method/i), {
       target: { value: "phone" }
+    });
+    fireEvent.change(screen.getByLabelText(/phone number/i), {
+      target: { value: "+65 8123 4567" }
     });
 
     expect(messageInput.maxLength).toBe(allowedMessageLength);

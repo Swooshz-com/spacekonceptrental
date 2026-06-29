@@ -126,7 +126,7 @@ describe("Phase 5E-A/B quote/enquiry intake readiness", () => {
     expect(screen.getByLabelText(/email address/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/phone number/i)).toBeInTheDocument();
     expect(screen.getByText(/event date helps the team understand timing/i)).toBeInTheDocument();
-    expect(screen.getByText(/email or phone required/i)).toBeInTheDocument();
+    expect(screen.getByText(/email is the default contact method/i)).toBeInTheDocument();
     expect(screen.getByText(/included automatically when you submit/i)).toBeInTheDocument();
     expect(screen.getAllByText(/setup, access, and timing notes/i).length).toBeGreaterThan(0);
     expect(container.querySelector<HTMLInputElement>('input[name="items"]')).toHaveValue(
@@ -181,7 +181,7 @@ describe("Phase 5E-A/B quote/enquiry intake readiness", () => {
 
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
     expect(screen.getByText(/name is required/i)).not.toHaveTextContent(/schema|sql|supabase|stack|token|cookie|workspace|customerName|items\[/i);
-    expect(screen.getByText(/email address or phone number is required/i)).not.toHaveTextContent(/schema|sql|supabase|stack|token|cookie|workspace|customerEmail/i);
+    expect(screen.getByText(/email address is required/i)).not.toHaveTextContent(/schema|sql|supabase|stack|token|cookie|workspace|customerEmail/i);
     expect(fetcher).not.toHaveBeenCalled();
 
     fireEvent.change(screen.getByLabelText(/name/i), {
@@ -190,7 +190,7 @@ describe("Phase 5E-A/B quote/enquiry intake readiness", () => {
     fireEvent.click(screen.getByRole("button", { name: /review and send an enquiry/i }));
 
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
-    expect(screen.getByText(/email address or phone number/i)).not.toHaveTextContent(/schema|sql|supabase|stack|token|cookie|workspace|customerEmail/i);
+    expect(screen.getByText(/email address is required/i)).not.toHaveTextContent(/schema|sql|supabase|stack|token|cookie|workspace|customerEmail/i);
   });
 
   it("keeps quote/enquiry source free of forbidden public scope and receipt promises", () => {

@@ -194,14 +194,14 @@ describe("Phase 3G-A/B quote intake quality, admin triage depth, and enquiry wor
     render(<QuoteRequestForm initialItemsText="Modular Lounge Set" />);
 
     expect(
-      screen.getByText(/share one reliable contact method/i)
+      screen.getByText(/email is the default contact method/i)
     ).toBeInTheDocument();
     expect(
       screen.getAllByText(/listing context is a starting point only/i).length
     ).toBeGreaterThan(0);
     expect(screen.getByText(/not a rental fit confirmation/i)).toBeInTheDocument();
     expect(
-      screen.getByText(/the team uses this only for direct quote follow-up/i)
+      screen.getByText(/share a phone number if you prefer phone follow-up/i)
     ).toBeInTheDocument();
     expect(
       screen.getByLabelText(/event vision/i)
@@ -213,9 +213,7 @@ describe("Phase 3G-A/B quote intake quality, admin triage depth, and enquiry wor
     fireEvent.click(screen.getByRole("button", { name: /review and send an enquiry/i }));
 
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
-    expect(
-      screen.getByText(/email address or phone number is required/i)
-    ).toBeInTheDocument();
+    expect(screen.getByText(/email address is required/i)).toBeInTheDocument();
     expect(fetchMock).not.toHaveBeenCalled();
 
     fireEvent.change(screen.getByLabelText(/email address/i), {
