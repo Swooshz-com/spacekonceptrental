@@ -348,6 +348,28 @@ describe("public page shells", () => {
     expect(homeSectionHeadingRule).not.toMatch(/font-size:\s*clamp\(2\.25rem,\s*2\.8vw,\s*2\.9rem\)\s*!important;/);
   });
 
+  it("keeps About page feature sections aligned to the Advantage card system", () => {
+    const styles = readFileSync(resolve(process.cwd(), "app/globals.css"), "utf8");
+    const aboutParityBlock = styles.slice(
+      styles.indexOf("/* Final About parity: match the SpaceKonceptRental Advantage section system. */")
+    );
+    const aboutCardRule = aboutParityBlock.match(
+      /body:has\(\.stitch-about-hero\)\s+\.site-main\s+:is\([\s\S]*?\.stitch-about-service[\s\S]*?\)\s+\.stitch-about-card\s*\{[\s\S]*?\}/
+    )?.[0];
+    const aboutHeadingRule = aboutParityBlock.match(
+      /body:has\(\.stitch-about-hero\)\s+\.site-main\s+:is\([\s\S]*?\.stitch-about-service[\s\S]*?\)\s+\.stitch-section-heading h2\s*\{[\s\S]*?\}/
+    )?.[0];
+
+    expect(aboutParityBlock).toContain("Final About parity");
+    expect(aboutHeadingRule).toBeDefined();
+    expect(aboutHeadingRule).toMatch(/font-size:\s*clamp\(1\.7rem,\s*2\.05vw,\s*2\.2rem\)\s*!important;/);
+    expect(aboutHeadingRule).toMatch(/text-align:\s*center\s*!important;/);
+    expect(aboutCardRule).toBeDefined();
+    expect(aboutCardRule).toMatch(/background:\s*var\(--stitch-surface\)\s*!important;/);
+    expect(aboutCardRule).toMatch(/min-height:\s*15\.4rem\s*!important;/);
+    expect(aboutCardRule).toMatch(/text-align:\s*center\s*!important;/);
+  });
+
   it("keeps catalogue results inside the shared public container width", () => {
     const styles = readFileSync(resolve(process.cwd(), "app/globals.css"), "utf8");
     const finalCatalogueBlock = styles.slice(

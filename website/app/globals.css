@@ -21191,3 +21191,103 @@ body:has(.stitch-setups-hero) .stitch-setups-hero > .stitch-container > :is(.sti
     width: 6rem !important;
   }
 }
+
+/* Final About parity: match the SpaceKonceptRental Advantage section system. */
+body:has(.stitch-about-hero) .site-main :is(
+  .stitch-about-principles,
+  .stitch-about-service
+) .stitch-section-heading {
+  align-items: center !important;
+  display: flex !important;
+  flex-direction: column !important;
+  margin: 0 auto 1.65rem !important;
+  max-width: 1120px !important;
+  text-align: center !important;
+  width: min(100%, 1120px) !important;
+}
+
+body:has(.stitch-about-hero) .site-main .stitch-about-service .stitch-section-heading .stitch-eyebrow,
+body:has(.stitch-about-hero) .site-main .stitch-about-service .stitch-section-heading p:not(.stitch-eyebrow) {
+  display: none !important;
+}
+
+body:has(.stitch-about-hero) .site-main :is(
+  .stitch-about-principles,
+  .stitch-about-service
+) .stitch-section-heading h2 {
+  color: var(--stitch-ink) !important;
+  font-family: var(--stitch-serif) !important;
+  font-size: clamp(1.7rem, 2.05vw, 2.2rem) !important;
+  font-weight: 400 !important;
+  letter-spacing: 0 !important;
+  line-height: 1.08 !important;
+  margin: 0 !important;
+  max-width: 48rem !important;
+  text-align: center !important;
+}
+
+body:has(.stitch-about-hero) .site-main :is(
+  .stitch-about-principles,
+  .stitch-about-service
+) .stitch-feature-grid {
+  display: grid !important;
+  gap: clamp(1rem, 1.6vw, 1.35rem) !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+}
+
+body:has(.stitch-about-hero) .site-main :is(
+  .stitch-about-principles,
+  .stitch-about-service
+) .stitch-about-card {
+  align-items: center !important;
+  background: var(--stitch-surface) !important;
+  border: 1px solid var(--stitch-line) !important;
+  border-radius: var(--stitch-radius) !important;
+  box-shadow: none !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  min-height: 15.4rem !important;
+  padding: clamp(1.8rem, 2.4vw, 2.35rem) !important;
+  text-align: center !important;
+}
+
+body:has(.stitch-about-hero) .site-main :is(
+  .stitch-about-principles,
+  .stitch-about-service
+) .stitch-about-card h3 {
+  color: var(--stitch-ink) !important;
+  font-family: var(--stitch-serif) !important;
+  font-size: clamp(1.15rem, 1.45vw, 1.42rem) !important;
+  font-weight: 400 !important;
+  letter-spacing: 0 !important;
+  line-height: 1.08 !important;
+  margin: 0 0 0.85rem !important;
+}
+
+body:has(.stitch-about-hero) .site-main :is(
+  .stitch-about-principles,
+  .stitch-about-service
+) .stitch-about-card p {
+  color: var(--stitch-muted) !important;
+  font-size: clamp(0.86rem, 0.92vw, 0.96rem) !important;
+  line-height: 1.55 !important;
+  margin: 0 !important;
+  max-width: 18rem !important;
+}
+
+@media (max-width: 900px) {
+  body:has(.stitch-about-hero) .site-main :is(
+    .stitch-about-principles,
+    .stitch-about-service
+  ) .stitch-feature-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  body:has(.stitch-about-hero) .site-main :is(
+    .stitch-about-principles,
+    .stitch-about-service
+  ) .stitch-about-card {
+    min-height: 11rem !important;
+  }
+}
