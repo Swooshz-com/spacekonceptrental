@@ -439,12 +439,39 @@ describe("public page shells", () => {
     const categoryActionRule = categoryCtaClearanceBlock.match(
       /body:has\(\.stitch-home-hero\)\s+\.site-main\s+:is\([\s\S]*?\.stitch-home-section-action[\s\S]*?\.stitch-home-featured-action[\s\S]*?\)\s*\{[\s\S]*?\}/
     )?.[0];
+    const categoryMosaicRule = categoryCtaClearanceBlock.match(
+      /body:has\(\.stitch-home-hero\)\s+\.site-main\s+\.stitch-home-category-mosaic\s*\{[\s\S]*?grid-template-rows:[\s\S]*?\}/
+    )?.[0];
+    const categoryCardFrameRule = categoryCtaClearanceBlock.match(
+      /body:has\(\.stitch-home-hero\)\s+\.site-main\s+\.stitch-home-category-card,[\s\S]*?\.stitch-home-category-card--4\s*\{[\s\S]*?\}/
+    )?.[0];
+    const featuredCardRule = categoryCtaClearanceBlock.match(
+      /body:has\(\.stitch-home-hero\)\s+\.site-main\s+\.stitch-home-feature-card\s*\{[\s\S]*?\}/
+    )?.[0];
+    const featuredCardImageRule = categoryCtaClearanceBlock.match(
+      /body:has\(\.stitch-home-hero\)\s+\.site-main\s+\.stitch-home-feature-card\s+img\s*\{[\s\S]*?\}/
+    )?.[0];
+    const featuredCardHoverRule = categoryCtaClearanceBlock.match(
+      /body:has\(\.stitch-home-hero\)\s+\.site-main\s+\.stitch-home-feature-card:hover\s+img,[\s\S]*?\.stitch-home-feature-card:focus-visible\s+img\s*\{[\s\S]*?\}/
+    )?.[0];
 
     expect(categoryCtaClearanceBlock).toContain("Final public design-system consolidation");
     expect(categoryActionRule).toBeDefined();
     expect(categoryActionRule).toMatch(/justify-content:\s*center\s*!important;/);
     expect(categoryActionRule).toMatch(/margin:\s*clamp\(1rem,\s*1\.6vw,\s*1\.35rem\)\s+0\s+0\s*!important;/);
     expect(categoryActionRule).toMatch(/position:\s*relative\s*!important;/);
+    expect(categoryMosaicRule).toBeDefined();
+    expect(categoryMosaicRule).toMatch(/grid-template-rows:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\)\s*!important;/);
+    expect(categoryMosaicRule).toMatch(/height:\s*clamp\(34\.5rem,\s*45vw,\s*36\.4rem\)\s*!important;/);
+    expect(categoryCardFrameRule).toBeDefined();
+    expect(categoryCardFrameRule).toMatch(/height:\s*100%\s*!important;/);
+    expect(categoryCardFrameRule).toMatch(/min-height:\s*0\s*!important;/);
+    expect(featuredCardRule).toBeDefined();
+    expect(featuredCardRule).toMatch(/overflow:\s*hidden\s*!important;/);
+    expect(featuredCardImageRule).toBeDefined();
+    expect(featuredCardImageRule).toMatch(/transition:\s*transform\s+0\.35s\s+ease\s*!important;/);
+    expect(featuredCardHoverRule).toBeDefined();
+    expect(featuredCardHoverRule).toMatch(/transform:\s*scale\(1\.035\)\s*!important;/);
     expect(styles).toMatch(/@media\s*\(max-width:/i);
   });
 
@@ -578,16 +605,21 @@ describe("public page shells", () => {
     const detailsButtonRule = actionSizingBlock.match(
       /body:has\(\.stitch-catalogue-hero\)\s+\.site-main\s+\.stitch-product-card\s+\.stitch-card__actions\s+\.stitch-link-button--quiet\s*\{[\s\S]*?\}/
     )?.[0];
+    const desktopActionRule = actionSizingBlock.match(
+      /@media\s+\(min-width:\s*901px\)\s*\{[\s\S]*?body:has\(\.stitch-catalogue-hero\)\s+\.site-main\s+\.stitch-product-card\s+\.stitch-card__actions\s*\{[\s\S]*?\}[\s\S]*?\}/
+    )?.[0];
 
     expect(actionSizingBlock).toContain("Final public design-system consolidation");
-    expect(actionSizingBlock).toMatch(/--stitch-catalogue-card-action-height:\s*2\.95rem;/);
+    expect(actionSizingBlock).toMatch(/--stitch-catalogue-card-action-height:\s*2\.25rem;/);
     expect(quantityControlsRule).toBeDefined();
     expect(quantityControlsRule).toMatch(/height:\s*var\(--stitch-catalogue-card-action-height\)\s*!important;/);
     expect(quantityControlsRule).toMatch(/order:\s*1\s*!important;/);
     expect(detailsButtonRule).toBeDefined();
     expect(detailsButtonRule).toMatch(/height:\s*var\(--stitch-catalogue-card-action-height\)\s*!important;/);
     expect(detailsButtonRule).toMatch(/order:\s*2\s*!important;/);
-    expect(detailsButtonRule).toMatch(/padding:\s*0\.72rem\s*0\.9rem\s*0\.88rem\s*!important;/);
+    expect(detailsButtonRule).toMatch(/padding:\s*0\s*0\.9rem\s*!important;/);
+    expect(desktopActionRule).toBeDefined();
+    expect(desktopActionRule).toMatch(/top:\s*calc\(100%\s*-\s*10\.675rem\)\s*!important;/);
   });
 
   it("keeps public hero intros complete and aligned to the Furniture Catalogue rail", () => {
@@ -656,6 +688,29 @@ describe("public page shells", () => {
     expect(document.querySelector(".stitch-setups-hero")?.textContent).toMatch(
       /Setups.*Curated Scapes.*Explore styled environment directions/s
     );
+  });
+
+  it("keeps setup listing images clipped with the shared hover zoom", () => {
+    const styles = readFileSync(resolve(process.cwd(), "app/globals.css"), "utf8");
+    const setupGridBlock = styles.slice(
+      styles.indexOf("/* Setups listing grid: keep every object card on the same visual rhythm. */")
+    );
+    const setupImageFrameRule = setupGridBlock.match(
+      /body:has\(\.stitch-setups-hero\)\s+\.site-main\s+\.stitch-setup-tile__image,[\s\S]*?\.stitch-setup-tile--wide\s+\.stitch-setup-tile__image\s*\{[\s\S]*?\}/
+    )?.[0];
+    const setupImageRule = setupGridBlock.match(
+      /body:has\(\.stitch-setups-hero\)\s+\.site-main\s+\.stitch-setup-tile__image\s+img\s*\{[\s\S]*?\}/
+    )?.[0];
+    const setupHoverRule = setupGridBlock.match(
+      /body:has\(\.stitch-setups-hero\)\s+\.site-main\s+\.stitch-setup-tile:hover\s+\.stitch-setup-tile__image\s+img,[\s\S]*?\.stitch-setup-tile:focus-visible\s+\.stitch-setup-tile__image\s+img\s*\{[\s\S]*?\}/
+    )?.[0];
+
+    expect(setupImageFrameRule).toBeDefined();
+    expect(setupImageFrameRule).toMatch(/overflow:\s*hidden\s*!important;/);
+    expect(setupImageRule).toBeDefined();
+    expect(setupImageRule).toMatch(/transition:\s*transform\s+0\.35s\s+ease\s*!important;/);
+    expect(setupHoverRule).toBeDefined();
+    expect(setupHoverRule).toMatch(/transform:\s*scale\(1\.035\)\s*!important;/);
   });
 
   it("keeps Catalogue, About, and Contact page-name eyebrows visible above hero titles", () => {
@@ -871,7 +926,7 @@ describe("public page shells", () => {
       /body:has\(\.stitch-site-header\)\s*\{[\s\S]*?--stitch-action-font-size:\s*0\.72rem;[\s\S]*?\}/
     )?.[0];
     const buttonRule = interactionBlock.match(
-      /body:has\(\.stitch-site-header\)\s+:is\([\s\S]*?\.stitch-link-button[\s\S]*?\.site-main \.stitch-filter-panel a[\s\S]*?\)\s*\{[\s\S]*?\}/
+      /body:has\(\.stitch-site-header\)\s+:is\([\s\S]*?\.stitch-link-button[\s\S]*?\.stitch-quote-card-badge[\s\S]*?\.site-main \.stitch-filter-panel a[\s\S]*?\)\s*\{[\s\S]*?\}/
     )?.[0];
     const cardMetaRule = interactionBlock.match(
       /body:has\(\.stitch-catalogue-hero\)\s+\.site-main\s+\.stitch-product-card\s+\.stitch-card__meta\s*\{[\s\S]*?\}/
@@ -890,9 +945,6 @@ describe("public page shells", () => {
     )?.[0];
     const homeActionButtonRule = interactionBlock.match(
       /body:has\(\.stitch-home-hero\)\s+\.site-main\s+\.stitch-home-categories\s+\.stitch-home-section-action\s+\.stitch-button,[\s\S]*?\.stitch-home-featured\s+\.stitch-home-featured-action\s+\.stitch-button\s*\{[\s\S]*?\}/
-    )?.[0];
-    const homeCategoryOffsetRule = interactionBlock.match(
-      /body:has\(\.stitch-home-hero\)\s+\.site-main\s+\.stitch-home-categories\s+\.stitch-home-section-action\s*\{[\s\S]*?\}/
     )?.[0];
 
     render(<ContactPage />);
@@ -924,10 +976,6 @@ describe("public page shells", () => {
     expect(homeActionButtonRule).toBeDefined();
     expect(homeActionButtonRule).toMatch(/border:\s*1px\s+solid\s+var\(--stitch-line\)\s*!important;/);
     expect(homeActionButtonRule).toMatch(/min-height:\s*3\.05rem\s*!important;/);
-    expect(homeCategoryOffsetRule).toBeDefined();
-    expect(homeCategoryOffsetRule).toMatch(
-      /margin-top:\s*calc\(clamp\(2rem,\s*3vw,\s*2\.7rem\)\s*\+\s*3\.1rem\)\s*!important;/
-    );
   });
 
   it("keeps catalogue filter filled styling scoped to selected links only", () => {
@@ -935,12 +983,46 @@ describe("public page shells", () => {
     const finalDesktopFilterBlock = styles.slice(
       styles.indexOf("body:has(.stitch-catalogue-hero) .site-main .stitch-filter-panel a,")
     );
+    const finalConsolidationBlock = styles.slice(
+      styles.indexOf("/* Final public design-system consolidation:")
+    );
     const activeFilterRule = finalDesktopFilterBlock.match(
       /body:has\(\.stitch-catalogue-hero\)\s+\.site-main\s+\.stitch-filter-panel\s+a\.is-active,[\s\S]*?body:has\(\.stitch-catalogue-hero\)\s+\.site-main\s+\.stitch-filter-panel\s+\[aria-current="page"\]\s*\{[\s\S]*?\}/
+    )?.[0];
+    const desktopFilterGroupRule = finalConsolidationBlock.match(
+      /@media\s+\(min-width:\s*901px\)\s*\{[\s\S]*?body:has\(\.stitch-catalogue-hero\)\s+\.site-main\s+\.stitch-filter-group\s*\{[\s\S]*?\}/
+    )?.[0];
+    const desktopStyleGroupRule = finalConsolidationBlock.match(
+      /@media\s+\(min-width:\s*901px\)\s*\{[\s\S]*?body:has\(\.stitch-catalogue-hero\)\s+\.site-main\s+\.stitch-filter-group--styles\s*\{[\s\S]*?\}/
+    )?.[0];
+    const desktopFilterLinkRule = finalConsolidationBlock.match(
+      /@media\s+\(min-width:\s*901px\)\s*\{[\s\S]*?body:has\(\.stitch-catalogue-hero\)\s+\.site-main\s+\.stitch-filter-group\s+a\s*\{[\s\S]*?\}/
+    )?.[0];
+    const desktopResultsRule = finalConsolidationBlock.match(
+      /@media\s+\(min-width:\s*901px\)\s*\{[\s\S]*?body:has\(\.stitch-catalogue-hero\)\s+\.site-main\s+\.stitch-catalogue-results\s*\{[\s\S]*?\}/
+    )?.[0];
+    const desktopActiveFilterRule = finalConsolidationBlock.match(
+      /@media\s+\(min-width:\s*901px\)\s*\{[\s\S]*?body:has\(\.stitch-catalogue-hero\)\s+\.site-main\s+\.stitch-active-filter\s*\{[\s\S]*?\}/
     )?.[0];
 
     expect(activeFilterRule).toBeDefined();
     expect(activeFilterRule).toMatch(/background:\s*var\(--stitch-primary\)\s*!important;/);
+    expect(desktopFilterGroupRule).toBeDefined();
+    expect(desktopFilterGroupRule).toMatch(/display:\s*grid\s*!important;/);
+    expect(desktopFilterGroupRule).toMatch(/gap:\s*0\.62rem\s*!important;/);
+    expect(desktopStyleGroupRule).toBeDefined();
+    expect(desktopStyleGroupRule).toMatch(/border-top:\s*1px\s+solid\s+var\(--stitch-line\)\s*!important;/);
+    expect(desktopStyleGroupRule).toMatch(/margin-top:\s*0\.9rem\s*!important;/);
+    expect(desktopStyleGroupRule).toMatch(/padding-top:\s*1\.45rem\s*!important;/);
+    expect(desktopFilterLinkRule).toBeDefined();
+    expect(desktopFilterLinkRule).toMatch(/min-height:\s*2\.48rem\s*!important;/);
+    expect(desktopFilterLinkRule).toMatch(/width:\s*100%\s*!important;/);
+    expect(desktopResultsRule).toBeDefined();
+    expect(desktopResultsRule).toMatch(/padding-top:\s*1\.75rem\s*!important;/);
+    expect(desktopResultsRule).toMatch(/position:\s*relative\s*!important;/);
+    expect(desktopActiveFilterRule).toBeDefined();
+    expect(desktopActiveFilterRule).toMatch(/position:\s*absolute\s*!important;/);
+    expect(desktopActiveFilterRule).toMatch(/top:\s*-2\.25rem\s*!important;/);
     expect(finalDesktopFilterBlock).not.toMatch(
       /body:has\(\.stitch-catalogue-hero\)\s+\.site-main\s+\.stitch-filter-panel\s+a:first-of-type,[\s\S]*?background:\s*var\(--stitch-primary\)\s*!important;/
     );
@@ -998,7 +1080,7 @@ describe("public page shells", () => {
     expect(openMenuRule).toMatch(/height:\s*100dvh\s*!important;/);
   });
 
-  it("keeps mobile catalogue card actions raised before the listing text", () => {
+  it("keeps mobile catalogue card actions in the original listing flow", () => {
     const styles = readFileSync(resolve(process.cwd(), "app/globals.css"), "utf8");
     const consolidationIndex = styles.indexOf("/* Final public design-system consolidation:");
     const mobileCorrectionBlock = styles.slice(
@@ -1012,17 +1094,16 @@ describe("public page shells", () => {
     )?.[0];
 
     expect(cardActionsRule).toBeDefined();
-    expect(cardActionsRule).toMatch(/position:\s*relative\s*!important;/);
+    expect(cardActionsRule).toMatch(/position:\s*static\s*!important;/);
     expect(cardActionsRule).toMatch(/opacity:\s*1\s*!important;/);
     expect(cardActionsRule).toMatch(/transform:\s*none\s*!important;/);
-    expect(cardActionsRule).toMatch(/margin-top:\s*-4rem\s*!important;/);
-    expect(cardActionsRule).toMatch(/order:\s*1\s*!important;/);
-    expect(cardActionsRule).toMatch(/z-index:\s*2\s*!important;/);
+    expect(cardActionsRule).toMatch(/margin-top:\s*0\.55rem\s*!important;/);
+    expect(cardActionsRule).toMatch(/order:\s*3\s*!important;/);
     expect(mobileCorrectionBlock).toMatch(
-      /body:has\(\.stitch-catalogue-hero\)\s+\.site-main\s+\.stitch-product-card\s+h2\s*\{[\s\S]*?order:\s*2\s*!important;[\s\S]*?\}/
+      /body:has\(\.stitch-catalogue-hero\)\s+\.site-main\s+\.stitch-product-card\s+h2\s*\{[\s\S]*?order:\s*1\s*!important;[\s\S]*?\}/
     );
     expect(mobileCorrectionBlock).toMatch(
-      /body:has\(\.stitch-catalogue-hero\)\s+\.site-main\s+\.stitch-product-card\s+\.stitch-card__meta\s*\{[\s\S]*?display:\s*block\s*!important;[\s\S]*?order:\s*3\s*!important;[\s\S]*?\}/
+      /body:has\(\.stitch-catalogue-hero\)\s+\.site-main\s+\.stitch-product-card\s+\.stitch-card__meta\s*\{[\s\S]*?display:\s*block\s*!important;[\s\S]*?order:\s*2\s*!important;[\s\S]*?\}/
     );
     expect(quantityRule).toBeDefined();
     expect(quantityRule).toMatch(/grid-template-columns:\s*2\.6rem\s+minmax\(0,\s*1fr\)\s+2\.6rem\s*!important;/);
