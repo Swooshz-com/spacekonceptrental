@@ -22803,19 +22803,21 @@ body:has(.stitch-home-hero) .site-main .stitch-home-featured .stitch-home-featur
 }
 
 body:has(.stitch-contact-hero) .site-main :is(
-  .stitch-contact-options-section,
   .stitch-contact-process-section
 ) {
   background: var(--stitch-surface) !important;
   border: 0 !important;
+  padding-bottom: var(--stitch-public-section-y) !important;
+  padding-top: var(--stitch-public-section-y) !important;
 }
 
 body:has(.stitch-contact-hero) .site-main .stitch-contact-brief-section {
   background: var(--stitch-surface) !important;
+  padding-bottom: var(--stitch-public-section-y) !important;
+  padding-top: var(--stitch-public-section-y) !important;
 }
 
 body:has(.stitch-contact-hero) .site-main :is(
-  .stitch-contact-options-section,
   .stitch-contact-process-section
 ) .stitch-section-heading {
   align-items: center !important;
@@ -22826,7 +22828,6 @@ body:has(.stitch-contact-hero) .site-main :is(
 }
 
 body:has(.stitch-contact-hero) .site-main :is(
-  .stitch-contact-options-section,
   .stitch-contact-brief-section,
   .stitch-contact-process-section
 ) :is(.stitch-section-heading h2, .stitch-contact-brief-band h2) {
@@ -22841,7 +22842,6 @@ body:has(.stitch-contact-hero) .site-main :is(
 }
 
 body:has(.stitch-contact-hero) .site-main :is(
-  .stitch-contact-options-section,
   .stitch-contact-process-section
 ) .stitch-section-heading p {
   margin: 0.75rem auto 0 !important;
@@ -22849,7 +22849,6 @@ body:has(.stitch-contact-hero) .site-main :is(
 }
 
 body:has(.stitch-contact-hero) .site-main :is(
-  .stitch-contact-option-grid,
   .stitch-contact-step-grid
 ) {
   gap: clamp(1.1rem, 1.9vw, 1.5rem) !important;
@@ -22857,7 +22856,6 @@ body:has(.stitch-contact-hero) .site-main :is(
 }
 
 body:has(.stitch-contact-hero) .site-main :is(
-  .stitch-contact-option-card,
   .stitch-contact-step-card
 ) {
   align-items: center !important;
@@ -22873,14 +22871,9 @@ body:has(.stitch-contact-hero) .site-main :is(
   text-align: center !important;
 }
 
-body:has(.stitch-contact-hero) .site-main .stitch-contact-option-card p,
 body:has(.stitch-contact-hero) .site-main .stitch-contact-step-card p {
   margin: 0 !important;
   max-width: 18rem !important;
-}
-
-body:has(.stitch-contact-hero) .site-main .stitch-contact-option-card .stitch-link-button {
-  margin-top: 1.05rem !important;
 }
 
 body:has(.stitch-contact-hero) .site-main .stitch-contact-step-card > span {
@@ -22918,14 +22911,12 @@ body:has(.stitch-contact-hero) .site-main .stitch-contact-brief-band .stitch-act
 
 @media (max-width: 900px) {
   body:has(.stitch-contact-hero) .site-main :is(
-    .stitch-contact-option-grid,
     .stitch-contact-step-grid
   ) {
     grid-template-columns: 1fr !important;
   }
 
   body:has(.stitch-contact-hero) .site-main :is(
-    .stitch-contact-option-card,
     .stitch-contact-step-card
   ) {
     min-height: 11.5rem !important;

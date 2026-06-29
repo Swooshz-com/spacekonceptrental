@@ -287,11 +287,6 @@ export function StitchAboutPage() {
 }
 
 export function StitchContactPage() {
-  const contactLinks = [
-    ["Rental enquiries", "Share selected pieces, quantities, venue context, and timing notes.", "/quote", "Start enquiry", "diamond"],
-    ["Catalogue support", "Browse furniture categories and add the listings you want reviewed.", "/catalogue", "Browse catalogue", "layout"],
-    ["Setup planning", "Use styled setup directions when you already know the event mood.", "/listings", "Explore setups", "tools"]
-  ];
   const reviewSteps = [
     ["01", "Select pieces", "Choose catalogue items or a setup direction."],
     ["02", "Add context", "Include date, venue, access, quantities, and alternates."],
@@ -303,35 +298,6 @@ export function StitchContactPage() {
       <section className="stitch-contact-hero">
         <div className="stitch-container">
           <StitchPageIntro eyebrow="Contact" title="Get in Touch" intro="Share rental catalogue questions, setup context, or event notes through the enquiry path so the team can review everything in one place." />
-        </div>
-      </section>
-      <section className="stitch-section stitch-section--tonal stitch-contact-section stitch-contact-options-section">
-        <div className="stitch-container">
-          <div className="stitch-section-heading stitch-section-heading--center">
-            <h2>Contact menu</h2>
-            <p>Use the enquiry path that best matches what you already know.</p>
-          </div>
-          <div className="stitch-feature-grid stitch-contact-option-grid" aria-label="Contact options">
-            {contactLinks.map(([title, text, href, action, icon]) => (
-              <article className="stitch-feature stitch-contact-option-card" key={title}>
-                <span className={`stitch-feature__icon stitch-feature__icon--${icon}`} aria-hidden="true" />
-                <h3>{title}</h3>
-                <p>{text}</p>
-                <Link className="stitch-link-button stitch-link-button--quiet" href={href}>{action}</Link>
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
-      <section className="stitch-section stitch-contact-section stitch-contact-brief-section">
-        <div className="stitch-container stitch-cta-band stitch-contact-brief-band">
-          <p className="stitch-eyebrow">Rental enquiry path</p>
-          <h2>Start with a rental brief</h2>
-          <p>Share selected items, setup direction, event details, and timing notes so the rental team can review everything before follow-up.</p>
-          <StitchActions>
-            <StitchButton href="/quote">Request Quote</StitchButton>
-            <StitchButton href="/catalogue" variant="secondary">Browse Catalogue</StitchButton>
-          </StitchActions>
         </div>
       </section>
       <section className="stitch-section stitch-section--tonal stitch-contact-section stitch-contact-process-section">
@@ -348,6 +314,17 @@ export function StitchContactPage() {
               </article>
             ))}
           </div>
+        </div>
+      </section>
+      <section className="stitch-section stitch-contact-section stitch-contact-brief-section">
+        <div className="stitch-container stitch-cta-band stitch-contact-brief-band">
+          <p className="stitch-eyebrow">Rental enquiry path</p>
+          <h2>Start with a rental brief</h2>
+          <p>Share selected items, setup direction, event details, and timing notes so the rental team can review everything before follow-up.</p>
+          <StitchActions>
+            <StitchButton href="/quote">Request Quote</StitchButton>
+            <StitchButton href="/catalogue" variant="secondary">Browse Catalogue</StitchButton>
+          </StitchActions>
         </div>
       </section>
     </>

@@ -1030,14 +1030,14 @@ describe("public page shells", () => {
     render(<ContactPage />);
 
     expect(screen.getAllByRole("heading", { level: 1 })).toHaveLength(1);
-    expect(screen.getByRole("heading", { level: 2, name: /contact menu/i })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { level: 2, name: /start with a rental brief/i })).toBeInTheDocument();
     expect(screen.getByRole("heading", { level: 2, name: /enquiry review steps/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 2, name: /start with a rental brief/i })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { level: 2, name: /contact menu/i })).not.toBeInTheDocument();
     expect(document.querySelector(".stitch-contact-menu-copy")).toBeNull();
     expect(document.querySelector(".stitch-contact-enquiry-panel")).toBeNull();
-    expect(document.querySelectorAll(".stitch-contact-option-card")).toHaveLength(3);
+    expect(document.querySelectorAll(".stitch-contact-option-card")).toHaveLength(0);
     expect(document.querySelectorAll(".stitch-contact-step-card")).toHaveLength(3);
-    expect(publicStitchSource).toContain("stitch-contact-option-card");
+    expect(publicStitchSource).not.toContain("stitch-contact-option-card");
     expect(publicStitchSource).toContain("stitch-contact-brief-band");
     expect(actionFontRule).toBeDefined();
     expect(buttonRule).toBeDefined();
