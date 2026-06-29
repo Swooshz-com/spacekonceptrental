@@ -408,6 +408,24 @@ describe("public page shells", () => {
     expect(homeSectionHeadingRule).not.toMatch(/font-size:\s*clamp\(2\.25rem,\s*2\.8vw,\s*2\.9rem\)\s*!important;/);
   });
 
+  it("keeps SpaceKonceptRental Advantage card content vertically centered", () => {
+    const styles = readFileSync(resolve(process.cwd(), "app/globals.css"), "utf8");
+    const advantageCenteringBlock = styles.slice(
+      styles.indexOf("/* Final Advantage card centering: keep card contents centered top-to-bottom. */")
+    );
+    const advantageCardRule = advantageCenteringBlock.match(
+      /body:has\(\.stitch-home-hero\)\s+\.site-main\s+\.stitch-home-advantage\s+\.stitch-feature\s*\{[\s\S]*?\}/
+    )?.[0];
+
+    expect(advantageCenteringBlock).toContain("Final Advantage card centering");
+    expect(advantageCardRule).toBeDefined();
+    expect(advantageCardRule).toMatch(/display:\s*flex\s*!important;/);
+    expect(advantageCardRule).toMatch(/flex-direction:\s*column\s*!important;/);
+    expect(advantageCardRule).toMatch(/align-items:\s*center\s*!important;/);
+    expect(advantageCardRule).toMatch(/justify-content:\s*center\s*!important;/);
+    expect(advantageCardRule).toMatch(/text-align:\s*center\s*!important;/);
+  });
+
   it("keeps About page feature sections aligned to the Advantage card system", () => {
     const styles = readFileSync(resolve(process.cwd(), "app/globals.css"), "utf8");
     const aboutParityBlock = styles.slice(

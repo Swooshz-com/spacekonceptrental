@@ -21336,3 +21336,12 @@ body:has(.stitch-site-header):not(:has(.stitch-home-hero)) .site-main :is(
   max-width: 48rem !important;
   text-align: left !important;
 }
+
+/* Final Advantage card centering: keep card contents centered top-to-bottom. */
+body:has(.stitch-home-hero) .site-main .stitch-home-advantage .stitch-feature {
+  align-items: center !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  text-align: center !important;
+}
