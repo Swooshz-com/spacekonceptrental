@@ -20286,7 +20286,7 @@ body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-
   }
 
   body:has(.stitch-quote-page):not(:has(.quote-form--success)) .stitch-selection-row .stitch-quote-select-controls,
-  body:has(.stitch-quote-page):not(:has(.quote-form--success)) .stitch-selection-row a {
+  body:has(.stitch-quote-page):not(:has(.quote-form--success)) .stitch-selection-row__actions {
     grid-column: 2 !important;
   }
 
@@ -21409,9 +21409,9 @@ body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-
   display: grid !important;
   grid-template-columns: minmax(0, 1fr) auto !important;
   grid-template-areas:
-    "title details"
-    "meta details"
-    "controls details" !important;
+    "title actions"
+    "meta actions"
+    "controls actions" !important;
   min-width: 0 !important;
   row-gap: 0.34rem !important;
 }
@@ -21446,11 +21446,34 @@ body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-
   width: min(100%, 9rem) !important;
 }
 
-body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-selection-row a {
+body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-selection-row__actions {
   align-self: center !important;
-  grid-area: details !important;
+  display: grid !important;
+  gap: 0.35rem !important;
+  grid-area: actions !important;
   justify-self: end !important;
+  justify-items: end !important;
+}
+
+body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-selection-row a,
+body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-selection-row__clear {
   white-space: nowrap !important;
+}
+
+body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-selection-row__clear {
+  appearance: none !important;
+  background: transparent !important;
+  border: 0 !important;
+  color: var(--stitch-muted) !important;
+  cursor: pointer !important;
+  font-family: var(--stitch-sans) !important;
+  font-size: var(--stitch-action-font-size) !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.08em !important;
+  line-height: 1.1 !important;
+  padding: 0 !important;
+  text-decoration: underline !important;
+  text-transform: uppercase !important;
 }
 
 @media (max-width: 900px) {
@@ -22129,6 +22152,14 @@ body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-
 body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-selection-row__body {
   column-gap: 1.05rem !important;
   row-gap: 0.5rem !important;
+}
+
+body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-selection-row__actions {
+  align-self: center !important;
+  display: grid !important;
+  gap: 0.35rem !important;
+  grid-area: actions !important;
+  justify-items: end !important;
 }
 
 body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-selection-row .stitch-quote-select-controls {

@@ -194,6 +194,21 @@ export function clearStoredQuoteSelection() {
   writeQuoteSelection([]);
 }
 
+function removeStoredQuoteSelectionItem(item: QuoteSelectionItem) {
+  const normalizedItem = normalizeQuoteItem(item);
+
+  if (!normalizedItem) {
+    return;
+  }
+
+  writeQuoteSelection(
+    readQuoteSelection().filter(
+      (selected) =>
+        quoteSelectionItemKey(selected) !== quoteSelectionItemKey(normalizedItem)
+    )
+  );
+}
+
 export function formatQuoteSelectionItems(items: QuoteSelectionItem[]) {
   const normalizedItems = items
     .map((item) => normalizeQuoteItem(item))
@@ -249,32 +264,49 @@ function SelectionGroup({
   return (
     <div className="stitch-selection-group">
       <h3>{title}</h3>
-      {items.map((item) => (
-        <article
-          className="stitch-selection-row"
-          key={quoteSelectionItemKey(item)}
-        >
-          {item.imageSrc ? (
-            <img alt={`${item.name} thumbnail`} src={item.imageSrc} />
-          ) : (
-            <span className="stitch-selection-row__icon" aria-hidden="true">
-              SK
-            </span>
-          )}
-          <div className="stitch-selection-row__body">
-            <div className="stitch-selection-row__main">
-              <strong>{item.name}</strong>
-              <Link href={`${detailBasePath}/${item.slug}`}>Details</Link>
+      {items.map((item) => {
+        function handleClearSelection(event: MouseEvent<HTMLButtonElement>) {
+          event.preventDefault();
+          removeStoredQuoteSelectionItem(item);
+        }
+
+        return (
+          <article
+            className="stitch-selection-row"
+            key={quoteSelectionItemKey(item)}
+          >
+            {item.imageSrc ? (
+              <img alt={`${item.name} thumbnail`} src={item.imageSrc} />
+            ) : (
+              <span className="stitch-selection-row__icon" aria-hidden="true">
+                SK
+              </span>
+            )}
+            <div className="stitch-selection-row__body">
+              <div className="stitch-selection-row__main">
+                <strong>{item.name}</strong>
+                <div className="stitch-selection-row__actions">
+                  <Link href={`${detailBasePath}/${item.slug}`}>Details</Link>
+                  <button
+                    aria-label={`Clear ${item.name} from selection`}
+                    className="stitch-selection-row__clear"
+                    onClick={handleClearSelection}
+                    type="button"
+                  >
+                    Clear
+                  </button>
+                </div>
+              </div>
+              <div className="stitch-selection-row__meta">
+                <small>Qty: {item.quantity}</small>
+                {item.setupName ? <small>{item.setupName}</small> : null}
+                {item.category ? <small>{item.category}</small> : null}
+              </div>
+              <QuoteSelectionButton item={item} />
             </div>
-            <div className="stitch-selection-row__meta">
-              <small>Qty: {item.quantity}</small>
-              {item.setupName ? <small>{item.setupName}</small> : null}
-              {item.category ? <small>{item.category}</small> : null}
-            </div>
-            <QuoteSelectionButton item={item} />
-          </div>
-        </article>
-      ))}
+          </article>
+        );
+      })}
     </div>
   );
 }

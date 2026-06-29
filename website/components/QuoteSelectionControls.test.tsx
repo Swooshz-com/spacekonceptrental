@@ -101,7 +101,47 @@ describe("QuoteSelectionControls", () => {
     );
     expect(container.querySelector(".stitch-selection-row__body")).toBeInTheDocument();
     expect(container.querySelector(".stitch-selection-row__main")).toBeInTheDocument();
+    expect(container.querySelector(".stitch-selection-row__actions")).toBeInTheDocument();
     expect(container.querySelector(".stitch-selection-row__meta")).toBeInTheDocument();
+  });
+
+  it("lets each quote page selection row clear only that item", () => {
+    window.localStorage.setItem(
+      "skr.quoteSelection.v1",
+      JSON.stringify([
+        {
+          slug: "monumental-oak-table",
+          name: "Monumental Oak Table",
+          category: "Tables",
+          imageSrc: "/images/monumental-oak-table.jpg",
+          quantity: 2
+        },
+        {
+          slug: "asymmetric-velvet-chair",
+          name: "Asymmetric Velvet Chair",
+          category: "Seating",
+          imageSrc: "/images/asymmetric-velvet-chair.jpg",
+          quantity: 1
+        }
+      ])
+    );
+
+    render(<QuoteSelectionSummary />);
+
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: /clear monumental oak table from selection/i
+      })
+    );
+
+    expect(screen.queryByText("Monumental Oak Table")).not.toBeInTheDocument();
+    expect(screen.getByText("Asymmetric Velvet Chair")).toBeInTheDocument();
+    expect(window.localStorage.getItem("skr.quoteSelection.v1")).not.toContain(
+      "monumental-oak-table"
+    );
+    expect(window.localStorage.getItem("skr.quoteSelection.v1")).toContain(
+      "asymmetric-velvet-chair"
+    );
   });
 
   it("separates setup directions from their included rental pieces", () => {

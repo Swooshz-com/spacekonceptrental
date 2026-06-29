@@ -858,6 +858,9 @@ describe("public page shells", () => {
     const controlsRule = quoteSelectionBlock.match(
       /body:has\(\.stitch-quote-page\):not\(:has\(\.quote-form--success\)\)\s+\.site-main\s+\.stitch-selection-row\s+\.stitch-quote-select-controls\s*\{[\s\S]*?\}/
     )?.[0];
+    const rowActionsRule = quoteSelectionBlock.match(
+      /body:has\(\.stitch-quote-page\):not\(:has\(\.quote-form--success\)\)\s+\.site-main\s+\.stitch-selection-row__actions\s*\{[\s\S]*?\}/
+    )?.[0];
 
     expect(quoteSelectionBlock).toContain("Final public design-system consolidation");
     expect(rowRule).toBeDefined();
@@ -867,6 +870,8 @@ describe("public page shells", () => {
     expect(bodyRule).toMatch(/row-gap:\s*0\.5rem\s*!important;/);
     expect(controlsRule).toBeDefined();
     expect(controlsRule).toMatch(/max-width:\s*10\.75rem\s*!important;/);
+    expect(rowActionsRule).toBeDefined();
+    expect(rowActionsRule).toMatch(/grid-area:\s*actions\s*!important;/);
   });
 
   it("keeps About page feature sections aligned to the Advantage card system", () => {
