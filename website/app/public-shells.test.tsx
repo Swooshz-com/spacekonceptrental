@@ -426,6 +426,30 @@ describe("public page shells", () => {
     expect(advantageCardRule).toMatch(/text-align:\s*center\s*!important;/);
   });
 
+  it("keeps quote selection rows readable in the side panel", () => {
+    const styles = readFileSync(resolve(process.cwd(), "app/globals.css"), "utf8");
+    const quoteSelectionBlock = styles.slice(
+      styles.indexOf("/* Final quote selection row layout: keep selected items readable in the side panel. */")
+    );
+    const rowRule = quoteSelectionBlock.match(
+      /body:has\(\.stitch-quote-page\):not\(:has\(\.quote-form--success\)\)\s+\.site-main\s+\.stitch-selection-row\s*\{[\s\S]*?\}/
+    )?.[0];
+    const bodyRule = quoteSelectionBlock.match(
+      /body:has\(\.stitch-quote-page\):not\(:has\(\.quote-form--success\)\)\s+\.site-main\s+\.stitch-selection-row__body\s*\{[\s\S]*?\}/
+    )?.[0];
+    const controlsRule = quoteSelectionBlock.match(
+      /body:has\(\.stitch-quote-page\):not\(:has\(\.quote-form--success\)\)\s+\.site-main\s+\.stitch-selection-row\s+\.stitch-quote-select-controls\s*\{[\s\S]*?\}/
+    )?.[0];
+
+    expect(quoteSelectionBlock).toContain("Final quote selection row layout");
+    expect(rowRule).toBeDefined();
+    expect(rowRule).toMatch(/grid-template-columns:\s*4\.75rem minmax\(0,\s*1fr\)\s*!important;/);
+    expect(bodyRule).toBeDefined();
+    expect(bodyRule).toMatch(/grid-template-areas:[\s\S]*"title details"[\s\S]*"meta details"[\s\S]*"controls details"[\s\S]*!important;/);
+    expect(controlsRule).toBeDefined();
+    expect(controlsRule).toMatch(/max-width:\s*9rem\s*!important;/);
+  });
+
   it("keeps About page feature sections aligned to the Advantage card system", () => {
     const styles = readFileSync(resolve(process.cwd(), "app/globals.css"), "utf8");
     const aboutParityBlock = styles.slice(

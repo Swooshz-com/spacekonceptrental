@@ -261,14 +261,18 @@ function SelectionGroup({
               SK
             </span>
           )}
-          <div>
-            <strong>{item.name}</strong>
-            <small>Qty: {item.quantity}</small>
-            {item.setupName ? <small>{item.setupName}</small> : null}
-            {item.category ? <small>{item.category}</small> : null}
+          <div className="stitch-selection-row__body">
+            <div className="stitch-selection-row__main">
+              <strong>{item.name}</strong>
+              <Link href={`${detailBasePath}/${item.slug}`}>Details</Link>
+            </div>
+            <div className="stitch-selection-row__meta">
+              <small>Qty: {item.quantity}</small>
+              {item.setupName ? <small>{item.setupName}</small> : null}
+              {item.category ? <small>{item.category}</small> : null}
+            </div>
+            <QuoteSelectionButton item={item} />
           </div>
-          <QuoteSelectionButton item={item} />
-          <Link href={`${detailBasePath}/${item.slug}`}>Details</Link>
         </article>
       ))}
     </div>

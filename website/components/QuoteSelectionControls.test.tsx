@@ -85,7 +85,7 @@ describe("QuoteSelectionControls", () => {
       ])
     );
 
-    render(<QuoteSelectionSummary />);
+    const { container } = render(<QuoteSelectionSummary />);
 
     expect(screen.getByText("Selected Rental Items")).toBeInTheDocument();
     expect(screen.getByText("Aura Lounge Chair")).toBeInTheDocument();
@@ -99,6 +99,9 @@ describe("QuoteSelectionControls", () => {
       "href",
       "/catalogue/aura-lounge-chair"
     );
+    expect(container.querySelector(".stitch-selection-row__body")).toBeInTheDocument();
+    expect(container.querySelector(".stitch-selection-row__main")).toBeInTheDocument();
+    expect(container.querySelector(".stitch-selection-row__meta")).toBeInTheDocument();
   });
 
   it("separates setup directions from their included rental pieces", () => {
