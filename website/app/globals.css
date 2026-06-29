@@ -21259,7 +21259,7 @@ body:has(.stitch-about-hero) .site-main :is(
   .stitch-about-service
 ) .stitch-about-card {
   align-items: center !important;
-  background: var(--stitch-surface) !important;
+  background: transparent !important;
   border: 1px solid var(--stitch-line) !important;
   border-radius: 0 !important;
   box-shadow: none !important;
@@ -21380,6 +21380,7 @@ body:has(.stitch-site-header):not(:has(.stitch-home-hero)) .site-main :is(
 /* Final Advantage card centering: keep card contents centered top-to-bottom. */
 body:has(.stitch-home-hero) .site-main .stitch-home-advantage .stitch-feature {
   align-items: center !important;
+  background: transparent !important;
   display: flex !important;
   flex-direction: column !important;
   justify-content: center !important;
@@ -22452,7 +22453,7 @@ body:has(.stitch-about-hero) .site-main :is(.stitch-about-principles, .stitch-ab
 
 body:has(.stitch-about-hero) .site-main :is(.stitch-about-principles, .stitch-about-service) .stitch-about-card {
   align-items: center !important;
-  background: var(--stitch-surface) !important;
+  background: transparent !important;
   border: 1px solid var(--stitch-line) !important;
   border-radius: 0 !important;
   box-shadow: none !important;

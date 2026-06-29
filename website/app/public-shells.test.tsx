@@ -836,6 +836,7 @@ describe("public page shells", () => {
 
     expect(advantageCenteringBlock).toContain("Final Advantage card centering");
     expect(advantageCardRule).toBeDefined();
+    expect(advantageCardRule).toMatch(/background:\s*transparent\s*!important;/);
     expect(advantageCardRule).toMatch(/display:\s*flex\s*!important;/);
     expect(advantageCardRule).toMatch(/flex-direction:\s*column\s*!important;/);
     expect(advantageCardRule).toMatch(/align-items:\s*center\s*!important;/);
@@ -888,7 +889,7 @@ describe("public page shells", () => {
     expect(aboutHeadingRule).toMatch(/font-size:\s*clamp\(1\.7rem,\s*2\.05vw,\s*2\.2rem\)\s*!important;/);
     expect(aboutHeadingRule).toMatch(/text-align:\s*center\s*!important;/);
     expect(aboutCardRule).toBeDefined();
-    expect(aboutCardRule).toMatch(/background:\s*var\(--stitch-surface\)\s*!important;/);
+    expect(aboutCardRule).toMatch(/background:\s*transparent\s*!important;/);
     expect(aboutCardRule).toMatch(/border-radius:\s*0\s*!important;/);
     expect(aboutCardRule).toMatch(/min-height:\s*clamp\(12\.4rem,\s*14vw,\s*15\.4rem\)\s*!important;/);
     expect(aboutCardRule).toMatch(/text-align:\s*center\s*!important;/);
