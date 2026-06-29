@@ -1285,11 +1285,13 @@ describe("public page shells", () => {
     expect(launcherPulseRingRule).toMatch(/inset:\s*-10px\s*!important;/);
     expect(launcherPulseBeforeRule).toBeDefined();
     expect(launcherPulseBeforeRule).toMatch(/animation:\s*chat-launcher-pulse\s+2\.35s\s+ease-out\s+infinite\s*!important;/);
+    expect(launcherPulseBeforeRule).toMatch(/background:\s*rgba\(5,\s*5,\s*5,\s*0\.18\)\s*!important;/);
     expect(chatSizingBlock).toMatch(
       /\.chat-widget-launcher\s+\.premium-chat-pulse::after\s*\{[^}]*animation:\s*chat-launcher-pulse\s+2\.35s\s+ease-out\s+1\.1s\s+infinite\s*!important;[^}]*\}/
     );
+    expect(chatSizingBlock).toMatch(/border:\s*1px\s+solid\s+rgba\(5,\s*5,\s*5,\s*0\.32\)\s*!important;/);
     expect(launcherPulseKeyframes).toBeDefined();
-    expect(launcherPulseKeyframes).toMatch(/opacity:\s*0\.6;/);
+    expect(launcherPulseKeyframes).toMatch(/opacity:\s*0\.72;/);
     expect(launcherPulseKeyframes).toMatch(/transform:\s*scale\(1\.45\);/);
     expect(panelRule).toBeDefined();
     expect(panelRule).toMatch(/bottom:\s*94px\s*!important;/);
