@@ -21556,6 +21556,38 @@ body:has(.stitch-catalogue-hero) .site-main .stitch-filter-group {
   width: 64px !important;
 }
 
+.chat-widget-launcher .premium-chat-pulse::before,
+.chat-widget-launcher .premium-chat-pulse::after {
+  border-radius: 999px !important;
+  content: "" !important;
+  inset: -10px !important;
+  pointer-events: none !important;
+  position: absolute !important;
+}
+
+.chat-widget-launcher .premium-chat-pulse::before {
+  animation: chat-launcher-pulse 2.35s ease-out infinite !important;
+  background: rgba(5, 5, 5, 0.1) !important;
+}
+
+.chat-widget-launcher .premium-chat-pulse::after {
+  animation: chat-launcher-pulse 2.35s ease-out 1.1s infinite !important;
+  border: 1px solid rgba(5, 5, 5, 0.18) !important;
+}
+
+@keyframes chat-launcher-pulse {
+  0% {
+    opacity: 0.6;
+    transform: scale(0.88);
+  }
+
+  72%,
+  100% {
+    opacity: 0;
+    transform: scale(1.45);
+  }
+}
+
 .chat-widget-launcher-mark {
   color: #fff !important;
   font-size: 0.9rem !important;

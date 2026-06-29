@@ -1245,6 +1245,15 @@ describe("public page shells", () => {
     const launcherButtonRule = chatSizingBlock.match(
       /\.chat-widget-launcher\s+\.premium-chat-pulse\s*\{[\s\S]*?\}/
     )?.[0];
+    const launcherPulseRingRule = chatSizingBlock.match(
+      /\.chat-widget-launcher\s+\.premium-chat-pulse::before,[\s\S]*?\.chat-widget-launcher\s+\.premium-chat-pulse::after\s*\{[\s\S]*?\}/
+    )?.[0];
+    const launcherPulseBeforeRule = chatSizingBlock.match(
+      /\.chat-widget-launcher\s+\.premium-chat-pulse::before\s*\{[\s\S]*?\}/
+    )?.[0];
+    const launcherPulseKeyframes = chatSizingBlock.match(
+      /@keyframes\s+chat-launcher-pulse\s*\{[\s\S]*?transform:\s*scale\(1\.45\);[\s\S]*?\}/
+    )?.[0];
     const panelRule = chatSizingBlock.match(
       /\.chat-widget-panel\s*\{[\s\S]*?\}/
     )?.[0];
@@ -1271,6 +1280,17 @@ describe("public page shells", () => {
     expect(launcherButtonRule).toMatch(/background:\s*#050505\s*!important;/);
     expect(launcherButtonRule).toMatch(/height:\s*64px\s*!important;/);
     expect(launcherButtonRule).toMatch(/width:\s*64px\s*!important;/);
+    expect(launcherPulseRingRule).toBeDefined();
+    expect(launcherPulseRingRule).toMatch(/content:\s*""\s*!important;/);
+    expect(launcherPulseRingRule).toMatch(/inset:\s*-10px\s*!important;/);
+    expect(launcherPulseBeforeRule).toBeDefined();
+    expect(launcherPulseBeforeRule).toMatch(/animation:\s*chat-launcher-pulse\s+2\.35s\s+ease-out\s+infinite\s*!important;/);
+    expect(chatSizingBlock).toMatch(
+      /\.chat-widget-launcher\s+\.premium-chat-pulse::after\s*\{[^}]*animation:\s*chat-launcher-pulse\s+2\.35s\s+ease-out\s+1\.1s\s+infinite\s*!important;[^}]*\}/
+    );
+    expect(launcherPulseKeyframes).toBeDefined();
+    expect(launcherPulseKeyframes).toMatch(/opacity:\s*0\.6;/);
+    expect(launcherPulseKeyframes).toMatch(/transform:\s*scale\(1\.45\);/);
     expect(panelRule).toBeDefined();
     expect(panelRule).toMatch(/bottom:\s*94px\s*!important;/);
     expect(panelRule).toMatch(/right:\s*var\(--chat-edge\)\s*!important;/);
