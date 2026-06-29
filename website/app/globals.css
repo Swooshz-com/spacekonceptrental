@@ -21923,6 +21923,8 @@ body:has(.stitch-catalogue-hero) .site-main .stitch-catalogue-layout {
   display: grid !important;
   gap: clamp(0.9rem, 1.25vw, 1.35rem) !important;
   grid-template-columns: minmax(15.5rem, 16.5rem) minmax(0, 1fr) !important;
+  justify-content: stretch !important;
+  width: 100% !important;
 }
 
 body:has(.stitch-catalogue-hero) .site-main .stitch-catalogue-results,
@@ -22698,5 +22700,87 @@ body:has(.stitch-contact-hero) .site-main .stitch-contact-brief-band .stitch-act
     .stitch-contact-step-card
   ) {
     min-height: 11.5rem !important;
+  }
+}
+
+/* Final catalogue rail correction: keep populated and empty result states on the same rail. */
+@media (min-width: 901px) {
+  body:has(.stitch-catalogue-hero) .site-main .stitch-catalogue-section .stitch-catalogue-layout {
+    align-items: start !important;
+    display: grid !important;
+    gap: clamp(0.9rem, 1.25vw, 1.35rem) !important;
+    grid-template-columns: minmax(15.5rem, 16.5rem) minmax(0, 1fr) !important;
+    width: 100% !important;
+  }
+
+  body:has(.stitch-catalogue-hero) .site-main .stitch-catalogue-section .stitch-filter-panel {
+    grid-column: 1 / 2 !important;
+  }
+
+  body:has(.stitch-catalogue-hero) .site-main .stitch-catalogue-section .stitch-catalogue-results {
+    grid-column: 2 / 3 !important;
+    justify-self: stretch !important;
+    margin: 0 !important;
+    max-width: none !important;
+    width: 100% !important;
+  }
+
+  body:has(.stitch-catalogue-hero) .site-main .stitch-catalogue-section .stitch-active-filter,
+  body:has(.stitch-catalogue-hero) .site-main .stitch-catalogue-section .stitch-empty,
+  body:has(.stitch-catalogue-hero) .site-main .stitch-catalogue-section .stitch-card-grid {
+    max-width: none !important;
+    width: 100% !important;
+  }
+}
+
+@media (min-width: 1201px) {
+  body:has(.stitch-catalogue-hero) .site-main .stitch-catalogue-section .stitch-card-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (min-width: 901px) and (max-width: 1200px) {
+  body:has(.stitch-catalogue-hero) .site-main .stitch-catalogue-section .stitch-card-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 900px) {
+  body:has(.stitch-catalogue-hero) .site-main .stitch-catalogue-section .stitch-catalogue-layout {
+    grid-template-columns: 1fr !important;
+  }
+
+  body:has(.stitch-catalogue-hero) .site-main .stitch-catalogue-section .stitch-filter-panel,
+  body:has(.stitch-catalogue-hero) .site-main .stitch-catalogue-section .stitch-catalogue-results {
+    grid-column: 1 / -1 !important;
+  }
+}
+
+/* Final public eyebrow correction: align Setups/Quote/Legal labels to Catalogue/About/Contact. */
+body:has(.stitch-site-header) .site-main :is(
+  .stitch-page-intro > .stitch-eyebrow,
+  .stitch-legal-intro > .stitch-eyebrow,
+  .stitch-quote-intro > .stitch-eyebrow
+) {
+  font-family: var(--font-body) !important;
+  font-size: 0.76rem !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.14em !important;
+  line-height: 1.2 !important;
+  text-transform: uppercase !important;
+}
+
+@media (max-width: 900px) {
+  body:has(.stitch-home-hero):not(:has(.stitch-mobile-menu--open)) .chat-widget-launcher {
+    display: flex !important;
+  }
+
+  body:has(.stitch-home-hero):not(:has(.stitch-mobile-menu--open)) .chat-widget-panel {
+    display: flex !important;
+  }
+
+  body:has(.stitch-mobile-menu--open) .chat-widget-launcher,
+  body:has(.stitch-mobile-menu--open) .chat-widget-panel {
+    display: none !important;
   }
 }
