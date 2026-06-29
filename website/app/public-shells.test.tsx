@@ -986,6 +986,8 @@ describe("public page shells", () => {
     expect(filterLinkRule).toMatch(/font-weight:\s*700\s*!important;/);
     expect(filterLinkRule).toMatch(/letter-spacing:\s*0\.04em\s*!important;/);
     expect(mobileCorrectionBlock).toMatch(/stitch-filter-group--styles[\s\S]*?border-top:\s*1px\s+solid\s+var\(--stitch-line\)\s*!important;/);
+    expect(mobileCorrectionBlock).toMatch(/stitch-filter-group--styles[\s\S]*?margin-top:\s*0\.45rem\s*!important;/);
+    expect(mobileCorrectionBlock).toMatch(/stitch-filter-group--styles[\s\S]*?padding-top:\s*1\.25rem\s*!important;/);
     expect(mobileCorrectionBlock).toMatch(/stitch-filter-panel h2[\s\S]*?display:\s*block\s*!important;/);
     expect(menuOverflowRule).toBeDefined();
     expect(menuOverflowRule).toMatch(/overflow:\s*visible\s*!important;/);

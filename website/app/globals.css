@@ -22135,7 +22135,8 @@ body:has(.stitch-quote-hero) .site-main .stitch-quote-intro::after {
 
   body:has(.stitch-catalogue-hero) .site-main .stitch-filter-group--styles {
     border-top: 1px solid var(--stitch-line) !important;
-    padding-top: 1rem !important;
+    margin-top: 0.45rem !important;
+    padding-top: 1.25rem !important;
   }
 
   body:has(.stitch-catalogue-hero) .site-main .stitch-filter-panel h2 {
