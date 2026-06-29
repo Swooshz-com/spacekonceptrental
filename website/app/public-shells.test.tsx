@@ -926,6 +926,12 @@ describe("public page shells", () => {
     const mobileHeroCopyRule = parityBlock.match(
       /body:has\(\.stitch-home-hero\)\s+\.site-main\s+\.stitch-home-hero__copy\s*\{[\s\S]*?\}/
     )?.[0];
+    const mobileHeroGridRule = parityBlock.match(
+      /body:has\(\.stitch-home-hero\)\s+\.site-main\s+\.stitch-home-hero__grid\s*\{[\s\S]*?\}/
+    )?.[0];
+    const mobileHeroMediaRule = parityBlock.match(
+      /body:has\(\.stitch-home-hero\)\s+\.site-main\s+\.stitch-home-hero__media\s*\{[\s\S]*?border-radius:[\s\S]*?\}/
+    )?.[0];
     const mobileHeroSubtextRule = parityBlock.match(
       /body:has\(\.stitch-home-hero\)\s+\.site-main\s+\.stitch-home-hero__copy p:not\(\.stitch-eyebrow\)\s*\{[\s\S]*?\}/
     )?.[0];
@@ -947,6 +953,13 @@ describe("public page shells", () => {
     expect(catalogueResultRule).toMatch(/width:\s*100%\s*!important;/);
     expect(catalogueGridRule).toBeDefined();
     expect(catalogueGridRule).toMatch(/grid-template-columns:\s*repeat\(4,\s*minmax\(0,\s*1fr\)\)\s*!important;/);
+    expect(mobileHeroGridRule).toBeDefined();
+    expect(mobileHeroGridRule).toMatch(/min-height:\s*clamp\(36rem,\s*132vw,\s*46rem\)\s*!important;/);
+    expect(mobileHeroGridRule).toMatch(/overflow:\s*hidden\s*!important;/);
+    expect(mobileHeroMediaRule).toBeDefined();
+    expect(mobileHeroMediaRule).toMatch(/position:\s*absolute\s*!important;/);
+    expect(mobileHeroMediaRule).toMatch(/inset:\s*0\s*!important;/);
+    expect(mobileHeroMediaRule).toMatch(/height:\s*100%\s*!important;/);
     expect(mobileHeroCopyRule).toBeDefined();
     expect(mobileHeroCopyRule).toMatch(/flex-direction:\s*column\s*!important;/);
     expect(mobileHeroSubtextRule).toBeDefined();

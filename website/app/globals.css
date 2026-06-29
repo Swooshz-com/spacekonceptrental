@@ -22284,7 +22284,8 @@ body:has(.stitch-quote-hero) .site-main .stitch-quote-intro::after {
 
   body:has(.stitch-home-hero) .site-main .stitch-home-hero__grid {
     display: grid !important;
-    min-height: clamp(31rem, 118vw, 42rem) !important;
+    min-height: clamp(36rem, 132vw, 46rem) !important;
+    overflow: hidden !important;
     position: relative !important;
   }
 
@@ -22295,10 +22296,11 @@ body:has(.stitch-quote-hero) .site-main .stitch-quote-intro::after {
 
   body:has(.stitch-home-hero) .site-main .stitch-home-hero__media {
     border-radius: 0.18rem !important;
-    height: auto !important;
-    min-height: 100% !important;
+    height: 100% !important;
+    inset: 0 !important;
+    min-height: 0 !important;
     overflow: hidden !important;
-    position: relative !important;
+    position: absolute !important;
     width: 100% !important;
   }
 
