@@ -22914,3 +22914,128 @@ body:has(.stitch-site-header) .site-main :is(
     display: none !important;
   }
 }
+
+/* Final mobile public-page parity: Legal and Quote use the shared public hero/header system. */
+@media (max-width: 900px) {
+  body:has(.stitch-quote-page) .stitch-site-header__inner {
+    display: flex !important;
+    gap: 1rem !important;
+    grid-template-columns: none !important;
+    justify-content: space-between !important;
+    min-height: 64px !important;
+    padding: 0 !important;
+  }
+
+  body:has(.stitch-quote-page) .stitch-site-header__inner::before,
+  body:has(.stitch-quote-page) .stitch-site-header__inner::after {
+    content: none !important;
+    display: none !important;
+  }
+
+  body:has(.stitch-quote-page) .stitch-brand {
+    color: var(--stitch-ink) !important;
+    display: block !important;
+    font-size: clamp(1.15rem, 4.8vw, 1.45rem) !important;
+    grid-column: auto !important;
+    justify-self: auto !important;
+  }
+
+  body:has(.stitch-quote-page) .stitch-brand::after {
+    content: none !important;
+    display: none !important;
+  }
+
+  body:has(.stitch-site-header) .stitch-site-header .stitch-menu-trigger {
+    align-items: center !important;
+    background: transparent !important;
+    border: 1px solid var(--stitch-line) !important;
+    border-radius: 4px !important;
+    box-sizing: border-box !important;
+    display: grid !important;
+    flex: 0 0 44px !important;
+    gap: 4px !important;
+    height: 40px !important;
+    justify-content: center !important;
+    padding: 9px !important;
+    width: 44px !important;
+  }
+
+  body:has(.stitch-site-header) .stitch-site-header .stitch-menu-trigger span {
+    background: var(--stitch-ink) !important;
+    display: block !important;
+    height: 2px !important;
+    margin: 0 !important;
+    width: 24px !important;
+  }
+
+  body:has(.stitch-site-header) .stitch-mobile-menu.stitch-mobile-menu--open {
+    display: flex !important;
+    flex-direction: column !important;
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+    overflow-y: auto !important;
+  }
+
+  body:has(.stitch-site-header) .stitch-mobile-menu.stitch-mobile-menu--open .stitch-mobile-menu__primary a {
+    color: var(--stitch-ink) !important;
+    font-family: var(--stitch-sans) !important;
+    font-size: clamp(1rem, 3.1vw, 1.14rem) !important;
+    font-weight: 500 !important;
+    letter-spacing: 0 !important;
+    line-height: 1.25 !important;
+    text-transform: none !important;
+  }
+
+  body:has(.stitch-site-header) .stitch-mobile-menu.stitch-mobile-menu--open .stitch-mobile-menu__legal a {
+    color: var(--stitch-muted) !important;
+    font-family: var(--stitch-sans) !important;
+    font-size: 0.86rem !important;
+    font-weight: 500 !important;
+    letter-spacing: 0 !important;
+    text-transform: none !important;
+  }
+
+  body:has(.stitch-site-header) .stitch-mobile-menu.stitch-mobile-menu--open .stitch-mobile-menu__legal {
+    margin-top: auto !important;
+    padding-bottom: max(1.25rem, env(safe-area-inset-bottom)) !important;
+  }
+
+  body:has(.stitch-site-header) .site-main > :is(.stitch-legal-hero, .stitch-quote-hero) {
+    margin-inline: 0 !important;
+    max-width: none !important;
+    padding: clamp(2.65rem, 12vw, 4.25rem) 0 clamp(2.75rem, 11vw, 4rem) !important;
+    text-align: left !important;
+    width: 100% !important;
+  }
+
+  body:has(.stitch-site-header) .site-main > :is(.stitch-legal-hero, .stitch-quote-hero) > .stitch-container {
+    margin-inline: auto !important;
+    max-width: 1312px !important;
+    width: var(--stitch-public-container-mobile) !important;
+  }
+
+  body:has(.stitch-site-header) .site-main > :is(.stitch-legal-hero, .stitch-quote-hero) > .stitch-container > .stitch-page-intro {
+    margin: 0 !important;
+    max-width: 48rem !important;
+    text-align: left !important;
+    width: 100% !important;
+  }
+
+  body:has(.stitch-site-header) .site-main > :is(.stitch-legal-hero, .stitch-quote-hero) > .stitch-container > .stitch-page-intro h1 {
+    font-family: var(--stitch-serif) !important;
+    font-size: clamp(2.45rem, 10.5vw, 3rem) !important;
+    font-weight: 400 !important;
+    letter-spacing: 0 !important;
+    line-height: 1.06 !important;
+    margin: 0 !important;
+    max-width: 11em !important;
+    text-wrap: balance !important;
+  }
+
+  body:has(.stitch-site-header) .site-main > :is(.stitch-legal-hero, .stitch-quote-hero) > .stitch-container > .stitch-page-intro p:not(.stitch-eyebrow) {
+    font-size: clamp(0.95rem, 2.3vw, 1rem) !important;
+    line-height: 1.55 !important;
+    margin: 1.1rem 0 0 !important;
+    max-width: 38rem !important;
+  }
+}

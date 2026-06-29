@@ -193,6 +193,49 @@ describe("public page shells", () => {
     expect(document.body.textContent).not.toMatch(forbiddenPublicCopy);
   });
 
+  it("keeps Legal and Quote mobile heroes on the shared public rail", () => {
+    const styles = readFileSync(resolve(process.cwd(), "app/globals.css"), "utf8");
+    const finalMobileParityBlock = styles.slice(
+      styles.indexOf("/* Final mobile public-page parity:")
+    );
+    const quoteHeaderRule = finalMobileParityBlock.match(
+      /body:has\(\.stitch-quote-page\)\s+\.stitch-site-header__inner\s*\{[\s\S]*?\}/
+    )?.[0];
+    const quoteBrandRule = finalMobileParityBlock.match(
+      /body:has\(\.stitch-quote-page\)\s+\.stitch-brand\s*\{[\s\S]*?\}/
+    )?.[0];
+    const publicHeroRule = finalMobileParityBlock.match(
+      /body:has\(\.stitch-site-header\)\s+\.site-main\s+>\s+:is\(\.stitch-legal-hero,\s*\.stitch-quote-hero\)\s*\{[\s\S]*?\}/
+    )?.[0];
+    const publicHeroContainerRule = finalMobileParityBlock.match(
+      /body:has\(\.stitch-site-header\)\s+\.site-main\s+>\s+:is\(\.stitch-legal-hero,\s*\.stitch-quote-hero\)\s+>\s+\.stitch-container\s*\{[\s\S]*?\}/
+    )?.[0];
+    const publicHeroIntroRule = finalMobileParityBlock.match(
+      /body:has\(\.stitch-site-header\)\s+\.site-main\s+>\s+:is\(\.stitch-legal-hero,\s*\.stitch-quote-hero\)\s+>\s+\.stitch-container\s+>\s+\.stitch-page-intro\s*\{[\s\S]*?\}/
+    )?.[0];
+    const publicHeroTitleRule = finalMobileParityBlock.match(
+      /body:has\(\.stitch-site-header\)\s+\.site-main\s+>\s+:is\(\.stitch-legal-hero,\s*\.stitch-quote-hero\)\s+>\s+\.stitch-container\s+>\s+\.stitch-page-intro\s+h1\s*\{[\s\S]*?\}/
+    )?.[0];
+
+    expect(finalMobileParityBlock).toContain("Final mobile public-page parity");
+    expect(quoteHeaderRule).toBeDefined();
+    expect(quoteHeaderRule).toMatch(/display:\s*flex\s*!important;/);
+    expect(quoteHeaderRule).toMatch(/grid-template-columns:\s*none\s*!important;/);
+    expect(quoteBrandRule).toBeDefined();
+    expect(quoteBrandRule).toMatch(/color:\s*var\(--stitch-ink\)\s*!important;/);
+    expect(quoteBrandRule).toMatch(/font-size:\s*clamp\(1\.15rem,\s*4\.8vw,\s*1\.45rem\)\s*!important;/);
+    expect(publicHeroRule).toBeDefined();
+    expect(publicHeroRule).toMatch(/max-width:\s*none\s*!important;/);
+    expect(publicHeroRule).toMatch(/width:\s*100%\s*!important;/);
+    expect(publicHeroContainerRule).toBeDefined();
+    expect(publicHeroContainerRule).toMatch(/width:\s*var\(--stitch-public-container-mobile\)\s*!important;/);
+    expect(publicHeroIntroRule).toBeDefined();
+    expect(publicHeroIntroRule).toMatch(/text-align:\s*left\s*!important;/);
+    expect(publicHeroIntroRule).toMatch(/width:\s*100%\s*!important;/);
+    expect(publicHeroTitleRule).toBeDefined();
+    expect(publicHeroTitleRule).toMatch(/font-size:\s*clamp\(2\.45rem,\s*10\.5vw,\s*3rem\)\s*!important;/);
+  });
+
   it("defines truthful public metadata for catalogue browsing and quote enquiries", async () => {
     const listingMetadata = await generateCatalogueListingMetadata({
       params: Promise.resolve({ slug: "lounge-sofa-package" })
@@ -1037,7 +1080,11 @@ describe("public page shells", () => {
     const menuCorrectionBlock = styles.slice(
       styles.indexOf("/* Final mobile catalogue/menu correction: keep filter groups and drawer chrome distinct. */")
     );
+    const finalMobileParityBlock = styles.slice(
+      styles.indexOf("/* Final mobile public-page parity:")
+    );
     const publicStitchSource = readFileSync(resolve(process.cwd(), "components/PublicStitch.tsx"), "utf8");
+    const mobileMenuSource = readFileSync(resolve(process.cwd(), "components/MobileMenu.tsx"), "utf8");
     const filterPanelRule = mobileCorrectionBlock.match(
       /body:has\(\.stitch-catalogue-hero\)\s+\.site-main\s+\.stitch-filter-panel\s*\{[\s\S]*?\}/
     )?.[0];
@@ -1053,10 +1100,31 @@ describe("public page shells", () => {
     const openMenuRule = menuCorrectionBlock.match(
       /body:has\(\.stitch-mobile-menu--open\)\s+\.stitch-mobile-menu\s*\{[\s\S]*?\}/
     )?.[0];
+    const menuTriggerRule = finalMobileParityBlock.match(
+      /body:has\(\.stitch-site-header\)\s+\.stitch-site-header\s+\.stitch-menu-trigger\s*\{[\s\S]*?\}/
+    )?.[0];
+    const menuTriggerLineRule = finalMobileParityBlock.match(
+      /body:has\(\.stitch-site-header\)\s+\.stitch-site-header\s+\.stitch-menu-trigger\s+span\s*\{[\s\S]*?\}/
+    )?.[0];
+    const finalOpenMenuRule = finalMobileParityBlock.match(
+      /body:has\(\.stitch-site-header\)\s+\.stitch-mobile-menu\.stitch-mobile-menu--open\s*\{[\s\S]*?\}/
+    )?.[0];
+    const primaryDrawerLinkRule = finalMobileParityBlock.match(
+      /body:has\(\.stitch-site-header\)\s+\.stitch-mobile-menu\.stitch-mobile-menu--open\s+\.stitch-mobile-menu__primary\s+a\s*\{[\s\S]*?\}/
+    )?.[0];
+    const legalDrawerLinkRule = finalMobileParityBlock.match(
+      /body:has\(\.stitch-site-header\)\s+\.stitch-mobile-menu\.stitch-mobile-menu--open\s+\.stitch-mobile-menu__legal\s+a\s*\{[\s\S]*?\}/
+    )?.[0];
+    const legalDrawerRule = finalMobileParityBlock.match(
+      /body:has\(\.stitch-site-header\)\s+\.stitch-mobile-menu\.stitch-mobile-menu--open\s+\.stitch-mobile-menu__legal\s*\{[\s\S]*?\}/
+    )?.[0];
 
     expect(styles.slice(consolidationIndex)).toContain("Final public design-system consolidation");
     expect(publicStitchSource).toContain("stitch-filter-group--categories");
     expect(publicStitchSource).toContain("stitch-filter-group--styles");
+    expect(mobileMenuSource).toContain('import { createPortal } from "react-dom";');
+    expect(mobileMenuSource).toContain("createPortal(drawer, document.body)");
+    expect(mobileMenuSource).toContain("document.documentElement.style.overflow");
     expect(filterPanelRule).toBeDefined();
     expect(filterPanelRule).toMatch(/display:\s*grid\s*!important;/);
     expect(filterPanelRule).toMatch(/gap:\s*1\.05rem\s*!important;/);
@@ -1078,6 +1146,27 @@ describe("public page shells", () => {
     expect(openMenuRule).toMatch(/left:\s*auto\s*!important;/);
     expect(openMenuRule).toMatch(/right:\s*0\s*!important;/);
     expect(openMenuRule).toMatch(/height:\s*100dvh\s*!important;/);
+    expect(menuTriggerRule).toBeDefined();
+    expect(menuTriggerRule).toMatch(/display:\s*grid\s*!important;/);
+    expect(menuTriggerRule).toMatch(/width:\s*44px\s*!important;/);
+    expect(menuTriggerRule).toMatch(/height:\s*40px\s*!important;/);
+    expect(menuTriggerLineRule).toBeDefined();
+    expect(menuTriggerLineRule).toMatch(/width:\s*24px\s*!important;/);
+    expect(menuTriggerLineRule).toMatch(/height:\s*2px\s*!important;/);
+    expect(finalOpenMenuRule).toBeDefined();
+    expect(finalOpenMenuRule).toMatch(/display:\s*flex\s*!important;/);
+    expect(finalOpenMenuRule).toMatch(/flex-direction:\s*column\s*!important;/);
+    expect(finalOpenMenuRule).toMatch(/height:\s*100dvh\s*!important;/);
+    expect(primaryDrawerLinkRule).toBeDefined();
+    expect(primaryDrawerLinkRule).toMatch(/font-weight:\s*500\s*!important;/);
+    expect(primaryDrawerLinkRule).toMatch(/letter-spacing:\s*0\s*!important;/);
+    expect(primaryDrawerLinkRule).toMatch(/text-transform:\s*none\s*!important;/);
+    expect(legalDrawerLinkRule).toBeDefined();
+    expect(legalDrawerLinkRule).toMatch(/font-weight:\s*500\s*!important;/);
+    expect(legalDrawerLinkRule).toMatch(/text-transform:\s*none\s*!important;/);
+    expect(legalDrawerRule).toBeDefined();
+    expect(legalDrawerRule).toMatch(/margin-top:\s*auto\s*!important;/);
+    expect(legalDrawerRule).toMatch(/padding-bottom:\s*max\(1\.25rem,\s*env\(safe-area-inset-bottom\)\)\s*!important;/);
   });
 
   it("keeps mobile catalogue card actions in the original listing flow", () => {
