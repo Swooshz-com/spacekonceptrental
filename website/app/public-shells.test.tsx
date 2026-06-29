@@ -659,6 +659,34 @@ describe("public page shells", () => {
     expect(eyebrowRule).toMatch(/text-transform:\s*uppercase\s*!important;/);
   });
 
+  it("keeps page intro eyebrows lighter than button and filter labels", () => {
+    const styles = readFileSync(resolve(process.cwd(), "app/globals.css"), "utf8");
+    const typographyBlock = styles.slice(
+      styles.indexOf("/* Final public design-system consolidation:")
+    );
+    const labelRule = typographyBlock.match(
+      /body:has\(\.stitch-site-header\)\s+:is\([\s\S]*?\.site-main \.stitch-eyebrow[\s\S]*?\.stitch-mobile-menu a[\s\S]*?\)\s*\{[\s\S]*?\}/
+    )?.[0];
+    const pageIntroEyebrowSelectorIndex = typographyBlock.indexOf(") .stitch-page-intro > .stitch-eyebrow");
+    const pageIntroEyebrowRuleStart = typographyBlock.lastIndexOf(
+      "body:has(.stitch-site-header)",
+      pageIntroEyebrowSelectorIndex
+    );
+    const pageIntroEyebrowRuleEnd = typographyBlock.indexOf("}", pageIntroEyebrowSelectorIndex);
+    const pageIntroEyebrowRule =
+      pageIntroEyebrowSelectorIndex >= 0 && pageIntroEyebrowRuleStart >= 0 && pageIntroEyebrowRuleEnd >= 0
+        ? typographyBlock.slice(pageIntroEyebrowRuleStart, pageIntroEyebrowRuleEnd + 1)
+        : undefined;
+
+    expect(labelRule).toBeDefined();
+    expect(labelRule).toMatch(/font-weight:\s*800\s*!important;/);
+    expect(pageIntroEyebrowRule).toBeDefined();
+    expect(pageIntroEyebrowRule).toMatch(/\.stitch-setups-hero/);
+    expect(pageIntroEyebrowRule).toMatch(/\.stitch-legal-hero/);
+    expect(pageIntroEyebrowRule).toMatch(/font-weight:\s*500\s*!important;/);
+    expect(pageIntroEyebrowRule).not.toMatch(/font-weight:\s*800\s*!important;/);
+  });
+
   it("keeps public section headings compact enough to avoid premature wrapping", () => {
     const styles = readFileSync(resolve(process.cwd(), "app/globals.css"), "utf8");
     const finalDesktopBlock = styles.slice(

@@ -21865,6 +21865,17 @@ body:has(.stitch-site-header) :is(
   text-transform: uppercase !important;
 }
 
+body:has(.stitch-site-header) .site-main > :is(
+  .stitch-catalogue-hero,
+  .stitch-about-hero,
+  .stitch-contact-hero,
+  .stitch-setups-hero,
+  .stitch-legal-hero,
+  .stitch-quote-hero
+) .stitch-page-intro > .stitch-eyebrow {
+  font-weight: 500 !important;
+}
+
 body:has(.stitch-home-hero) .site-main .stitch-home-category-mosaic {
   margin-bottom: 0 !important;
 }
