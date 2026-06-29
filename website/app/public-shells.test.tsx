@@ -247,7 +247,7 @@ describe("public page shells", () => {
     expect(screen.getByRole("link", { name: /brutalist/i })).toHaveClass("is-active");
   });
 
-  it("keeps setup pills as filters and includes the featured editorial in the setup listings", () => {
+  it("keeps setup pills as grouped filters and includes the featured editorial in the setup listings", () => {
     const previousDemoContentFlag = process.env.NEXT_PUBLIC_SKR_DEMO_CONTENT;
     process.env.NEXT_PUBLIC_SKR_DEMO_CONTENT = "true";
 
@@ -255,17 +255,14 @@ describe("public page shells", () => {
       render(<StitchSetupsPage catalogue={{ source: "fallback", categories: [], products: [] }} />);
 
       expect(screen.getByRole("link", { name: /all setups/i })).toHaveAttribute("href", "/listings");
-      expect(screen.getByRole("link", { name: /featured editorial/i })).toHaveAttribute(
-        "href",
-        "/listings?setup=the-metropolitan-gala"
-      );
+      expect(screen.queryByRole("link", { name: /featured editorial/i })).not.toBeInTheDocument();
       expect(screen.getByRole("link", { name: /weddings/i })).toHaveAttribute(
         "href",
-        "/listings?setup=botanical-wedding"
+        "/listings?setup=weddings"
       );
       expect(screen.getByRole("link", { name: /corporate summits/i })).toHaveAttribute(
         "href",
-        "/listings?setup=executive-summit"
+        "/listings?setup=corporate-summits"
       );
       expect(screen.getAllByText("The Metropolitan Gala").length).toBeGreaterThan(1);
       expect(screen.getAllByRole("link", { name: /view setup details/i }).length).toBeGreaterThan(1);
@@ -294,7 +291,7 @@ describe("public page shells", () => {
       expect(screen.getByRole("link", { name: /weddings/i })).toHaveAttribute("aria-current", "page");
       expect(screen.getByRole("link", { name: /weddings/i })).toHaveAttribute(
         "href",
-        "/listings?setup=botanical-wedding"
+        "/listings?setup=weddings"
       );
       expect(screen.getByText("Botanical Wedding")).toBeInTheDocument();
       expect(screen.queryByText("Executive Summit")).not.toBeInTheDocument();
@@ -302,6 +299,33 @@ describe("public page shells", () => {
         "href",
         "/listings/botanical-wedding"
       );
+    } finally {
+      if (previousDemoContentFlag === undefined) {
+        delete process.env.NEXT_PUBLIC_SKR_DEMO_CONTENT;
+      } else {
+        process.env.NEXT_PUBLIC_SKR_DEMO_CONTENT = previousDemoContentFlag;
+      }
+    }
+  });
+
+  it("assigns the Metropolitan Gala editorial listing to Corporate Summits instead of a Featured Editorial filter", () => {
+    const previousDemoContentFlag = process.env.NEXT_PUBLIC_SKR_DEMO_CONTENT;
+    process.env.NEXT_PUBLIC_SKR_DEMO_CONTENT = "true";
+
+    try {
+      render(
+        <StitchSetupsPage
+          activeSetupSlug="corporate-summits"
+          catalogue={{ source: "fallback", categories: [], products: [] }}
+        />
+      );
+
+      expect(screen.getByRole("link", { name: /all setups/i })).not.toHaveAttribute("aria-current", "page");
+      expect(screen.getByRole("link", { name: /corporate summits/i })).toHaveAttribute("aria-current", "page");
+      expect(screen.queryByRole("link", { name: /featured editorial/i })).not.toBeInTheDocument();
+      expect(screen.getAllByText("The Metropolitan Gala").length).toBeGreaterThan(1);
+      expect(screen.getByText("Executive Summit")).toBeInTheDocument();
+      expect(screen.queryByText("Botanical Wedding")).not.toBeInTheDocument();
     } finally {
       if (previousDemoContentFlag === undefined) {
         delete process.env.NEXT_PUBLIC_SKR_DEMO_CONTENT;
@@ -440,6 +464,90 @@ describe("public page shells", () => {
     expect(finalHeroTitleRule).not.toMatch(/font-weight:\s*700\s*!important;/);
     expect(finalHeroTitleRule).not.toMatch(/font-size:\s*clamp\(3\.05rem,\s*4\.2vw,\s*3\.95rem\)\s*!important;/);
     expect(finalRhythmBlock).not.toMatch(/font-size:\s*clamp\(3\.45rem,\s*5vw,\s*4\.55rem\)\s*!important;/);
+  });
+
+  it("keeps the public typography system on the approved Advantage-inspired scale", () => {
+    const styles = readFileSync(resolve(process.cwd(), "app/globals.css"), "utf8");
+    const typographyBlock = styles.slice(
+      styles.indexOf("/* Final public typography system: Advantage-inspired scale across public pages. */")
+    );
+    const h1Rule = typographyBlock.match(
+      /body:has\(\.stitch-site-header\)\s+\.site-main\s+:is\([\s\S]*?\.stitch-quote-intro h1[\s\S]*?\)\s*\{[\s\S]*?\}/
+    )?.[0];
+    const h2Rule = typographyBlock.match(
+      /body:has\(\.stitch-site-header\)\s+\.site-main\s+:is\([\s\S]*?\.stitch-section-heading h2[\s\S]*?\.stitch-legal-card h2[\s\S]*?\)\s*\{[\s\S]*?\}/
+    )?.[0];
+    const h3Rule = typographyBlock.match(
+      /body:has\(\.stitch-site-header\)\s+\.site-main\s+:is\([\s\S]*?\.stitch-feature h3[\s\S]*?\.stitch-detail-related h2[\s\S]*?\)\s*\{[\s\S]*?\}/
+    )?.[0];
+    const itemNameRule = typographyBlock.match(
+      /body:has\(\.stitch-site-header\)\s+\.site-main\s+:is\([\s\S]*?\.stitch-card__body h2[\s\S]*?\.stitch-home-feature-card strong[\s\S]*?\)\s*\{[\s\S]*?\}/
+    )?.[0];
+    const labelRule = typographyBlock.match(
+      /body:has\(\.stitch-site-header\)\s+:is\([\s\S]*?\.stitch-button[\s\S]*?\.stitch-mobile-menu a[\s\S]*?\)\s*\{[\s\S]*?\}/
+    )?.[0];
+
+    expect(typographyBlock).toContain("Final public typography system");
+    expect(h1Rule).toBeDefined();
+    expect(h1Rule).toMatch(/font-family:\s*var\(--stitch-serif\)\s*!important;/);
+    expect(h1Rule).toMatch(/font-size:\s*clamp\(2\.55rem,\s*3\.15vw,\s*3\.1rem\)\s*!important;/);
+    expect(h1Rule).toMatch(/font-weight:\s*400\s*!important;/);
+    expect(h2Rule).toBeDefined();
+    expect(h2Rule).toMatch(/font-size:\s*clamp\(1\.7rem,\s*2\.05vw,\s*2\.2rem\)\s*!important;/);
+    expect(h3Rule).toBeDefined();
+    expect(h3Rule).toMatch(/font-size:\s*clamp\(1\.15rem,\s*1\.45vw,\s*1\.42rem\)\s*!important;/);
+    expect(itemNameRule).toBeDefined();
+    expect(itemNameRule).toMatch(/font-size:\s*clamp\(0\.98rem,\s*1\.05vw,\s*1\.12rem\)\s*!important;/);
+    expect(itemNameRule).toMatch(/line-height:\s*1\.16\s*!important;/);
+    expect(labelRule).toBeDefined();
+    expect(labelRule).toMatch(/font-size:\s*clamp\(0\.72rem,\s*0\.18vw \+ 0\.68rem,\s*0\.78rem\)\s*!important;/);
+    expect(labelRule).toMatch(/text-transform:\s*uppercase\s*!important;/);
+
+    const quoteSelectionBlock = typographyBlock.slice(
+      typographyBlock.indexOf("/* Final quote selection readability: keep selected item rows legible. */")
+    );
+    const quoteSelectionNameRule = quoteSelectionBlock.match(
+      /body:has\(\.stitch-quote-page\):not\(:has\(\.quote-form--success\)\)\s+\.site-main\s+\.stitch-selection-row strong\s*\{[\s\S]*?\}/
+    )?.[0];
+    const quoteSelectionMetaRule = quoteSelectionBlock.match(
+      /body:has\(\.stitch-quote-page\):not\(:has\(\.quote-form--success\)\)\s+\.site-main\s+\.stitch-selection-row__meta small\s*\{[\s\S]*?\}/
+    )?.[0];
+
+    expect(quoteSelectionBlock).toContain("Final quote selection readability");
+    expect(quoteSelectionNameRule).toBeDefined();
+    expect(quoteSelectionNameRule).toMatch(/font-family:\s*var\(--stitch-sans\)\s*!important;/);
+    expect(quoteSelectionNameRule).toMatch(/font-size:\s*0\.98rem\s*!important;/);
+    expect(quoteSelectionMetaRule).toBeDefined();
+    expect(quoteSelectionMetaRule).toMatch(/font-size:\s*0\.86rem\s*!important;/);
+    expect(quoteSelectionMetaRule).toMatch(/letter-spacing:\s*0\s*!important;/);
+  });
+
+  it("keeps public section padding on the shared Category-to-Featured rhythm", () => {
+    const styles = readFileSync(resolve(process.cwd(), "app/globals.css"), "utf8");
+    const rhythmBlock = styles.slice(
+      styles.indexOf("/* Final public section rhythm: match the Category-to-Featured vertical padding. */")
+    );
+    const sectionRule = rhythmBlock.match(
+      /body:has\(\.stitch-site-header\)\s+\.site-main\s+>\s+:is\([\s\S]*?\.stitch-home-categories[\s\S]*?\.stitch-home-featured[\s\S]*?\.stitch-detail-related[\s\S]*?\)\s*\{[\s\S]*?\}/
+    )?.[0];
+    const quoteIntroRule = rhythmBlock.match(
+      /body:has\(\.stitch-quote-page\):not\(:has\(\.quote-form--success\)\)\s+\.site-main\s+\.stitch-quote-intro\s*\{[\s\S]*?\}/
+    )?.[0];
+    const nonHomeSectionRule = rhythmBlock.match(
+      /body:has\(\.stitch-site-header\):not\(:has\(\.stitch-home-hero\)\)\s+\.site-main\s+>\s+:is\([\s\S]*?\.stitch-catalogue-hero[\s\S]*?\.stitch-catalogue-section[\s\S]*?\.stitch-detail-related[\s\S]*?\)\s*\{[\s\S]*?\}/
+    )?.[0];
+
+    expect(rhythmBlock).toContain("Final public section rhythm");
+    expect(rhythmBlock).toMatch(/--stitch-public-section-y:\s*clamp\(3\.5rem,\s*6\.25vw,\s*5rem\);/);
+    expect(sectionRule).toBeDefined();
+    expect(sectionRule).toMatch(/padding-bottom:\s*var\(--stitch-public-section-y\)\s*!important;/);
+    expect(sectionRule).toMatch(/padding-top:\s*var\(--stitch-public-section-y\)\s*!important;/);
+    expect(quoteIntroRule).toBeDefined();
+    expect(quoteIntroRule).toMatch(/padding-bottom:\s*var\(--stitch-public-section-y\)\s*!important;/);
+    expect(quoteIntroRule).toMatch(/padding-top:\s*var\(--stitch-public-section-y\)\s*!important;/);
+    expect(nonHomeSectionRule).toBeDefined();
+    expect(nonHomeSectionRule).toMatch(/padding-bottom:\s*var\(--stitch-public-section-y\)\s*!important;/);
+    expect(nonHomeSectionRule).toMatch(/padding-top:\s*var\(--stitch-public-section-y\)\s*!important;/);
   });
 
   it("keeps public hero intros complete and aligned to the Furniture Catalogue rail", () => {

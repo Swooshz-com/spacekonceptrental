@@ -209,22 +209,31 @@ export function StitchSetupsPage({ catalogue, activeSetupSlug }: { catalogue: Pu
   const realSetups = catalogue.products.slice(0, 5).map((product, index) => ({ slug: product.slug, title: product.name, image: fallbackProductImage(product), summary: productSummary(product), featured: index === 0 }));
   const setupCards = realSetups.length ? realSetups : isDemoContentEnabled() ? demoSetups.map((setup, index) => ({ ...setup, featured: index === 0 })) : [];
   const featuredSetup = setupCards[0];
-  const setupPillLabelsBySlug = new Map([
-    ["the-metropolitan-gala", "Featured Editorial"],
-    ["botanical-wedding", "Weddings"],
-    ["executive-summit", "Corporate Summits"],
-    ["intimate-nocturne", "Intimate Dining"],
-    ["terrace-lounge", "Lounges"]
-  ]);
+  const setupFilters = [
+    { slug: "weddings", label: "Weddings", setupSlugs: ["botanical-wedding"] },
+    { slug: "corporate-summits", label: "Corporate Summits", setupSlugs: ["the-metropolitan-gala", "executive-summit", "gallery-exhibition"] },
+    { slug: "intimate-dining", label: "Intimate Dining", setupSlugs: ["intimate-nocturne"] },
+    { slug: "lounges", label: "Lounges", setupSlugs: ["terrace-lounge"] }
+  ];
+  const fallbackSetupFilterSlugs = ["corporate-summits", "weddings", "corporate-summits", "intimate-dining", "lounges"];
+  const setupFilterSlugBySetupSlug = new Map<string, string>();
+  setupCards.forEach((setup, index) => {
+    const matchedFilter = setupFilters.find((filter) => filter.setupSlugs.includes(setup.slug));
+    setupFilterSlugBySetupSlug.set(setup.slug, matchedFilter?.slug ?? fallbackSetupFilterSlugs[index % fallbackSetupFilterSlugs.length]);
+  });
   const normalizedActiveSetupSlug = activeSetupSlug?.trim().toLowerCase();
-  const activeSetup = normalizedActiveSetupSlug ? setupCards.find((setup) => setup.slug === normalizedActiveSetupSlug) : undefined;
-  const visibleSetups = activeSetup ? [activeSetup] : setupCards;
+  const activeFilterSlug = normalizedActiveSetupSlug
+    ? setupFilters.some((filter) => filter.slug === normalizedActiveSetupSlug)
+      ? normalizedActiveSetupSlug
+      : setupFilterSlugBySetupSlug.get(normalizedActiveSetupSlug)
+    : undefined;
+  const visibleSetups = activeFilterSlug ? setupCards.filter((setup) => setupFilterSlugBySetupSlug.get(setup.slug) === activeFilterSlug) : setupCards;
   const setupPillLinks = [
-    { label: "All Setups", href: "/listings", active: !activeSetup },
-    ...setupCards.slice(0, 5).map((setup) => ({
-      label: setupPillLabelsBySlug.get(setup.slug) ?? setup.title,
-      href: `/listings?setup=${encodeURIComponent(setup.slug)}`,
-      active: activeSetup?.slug === setup.slug
+    { label: "All Setups", href: "/listings", active: !activeFilterSlug },
+    ...setupFilters.map((filter) => ({
+      label: filter.label,
+      href: `/listings?setup=${encodeURIComponent(filter.slug)}`,
+      active: activeFilterSlug === filter.slug
     }))
   ];
 
