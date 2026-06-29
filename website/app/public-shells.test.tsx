@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { PublicCatalogue, PublicCatalogueProduct } from "../lib/catalogue/types";
+import AboutPage from "./about/page";
 import {
   CataloguePageContent,
   default as CataloguePage,
@@ -13,6 +14,7 @@ import {
   ProductPageContent
 } from "./catalogue/[slug]/page";
 import CatalogueListingNotFound from "./catalogue/[slug]/not-found";
+import ContactPage from "./contact/page";
 import EventsPage from "./events/page";
 import ListingNotFound from "./listings/[slug]/not-found";
 import { generateMetadata as generatePublicListingMetadata } from "./listings/[slug]/page";
@@ -331,6 +333,64 @@ describe("public page shells", () => {
     expect(finalHeroTitleRule).not.toMatch(/font-weight:\s*700\s*!important;/);
     expect(finalHeroTitleRule).not.toMatch(/font-size:\s*clamp\(3\.05rem,\s*4\.2vw,\s*3\.95rem\)\s*!important;/);
     expect(finalRhythmBlock).not.toMatch(/font-size:\s*clamp\(3\.45rem,\s*5vw,\s*4\.55rem\)\s*!important;/);
+  });
+
+  it("keeps public hero intros complete and aligned to the Furniture Catalogue rail", () => {
+    const styles = readFileSync(resolve(process.cwd(), "app/globals.css"), "utf8");
+    const finalHeroRailBlock = styles.slice(
+      styles.indexOf("/* Final public hero rail lock: every non-home intro follows the Furniture Catalogue container. */")
+    );
+    const heroContainerRule = finalHeroRailBlock.match(
+      /body:has\(\.stitch-site-header\):not\(:has\(\.stitch-home-hero\)\)\s+\.site-main\s+>\s+:is\([\s\S]*?\.stitch-legal-hero[\s\S]*?\)\s+>\s+\.stitch-container\s*\{[\s\S]*?\}/
+    )?.[0];
+    const wrappedHeroCopyRule = finalHeroRailBlock.match(
+      /body:has\(\.stitch-site-header\):not\(:has\(\.stitch-home-hero\)\)\s+\.site-main\s+:is\([\s\S]*?\.stitch-contact-hero \.stitch-page-intro[\s\S]*?\)\s*\{[\s\S]*?\}/
+    )?.[0];
+    const directHeroCopyRule = finalHeroRailBlock.match(
+      /body:has\(\.stitch-site-header\):not\(:has\(\.stitch-home-hero\)\)\s+\.site-main\s+:is\([\s\S]*?\.stitch-legal-hero > \.stitch-container[\s\S]*?\)\s+>\s+:is\(\.stitch-eyebrow,\s*h1,\s*p\)\s*\{[\s\S]*?\}/
+    )?.[0];
+
+    expect(finalHeroRailBlock).toContain("Final public hero rail lock");
+    expect(heroContainerRule).toBeDefined();
+    expect(heroContainerRule).toMatch(/max-width:\s*1312px\s*!important;/);
+    expect(heroContainerRule).toMatch(/width:\s*min\(calc\(100%\s*-\s*clamp\(2rem,\s*7vw,\s*6rem\)\),\s*1312px\)\s*!important;/);
+    expect(heroContainerRule).toMatch(/padding-inline:\s*0\s*!important;/);
+    expect(heroContainerRule).not.toMatch(/max-width:\s*48rem\s*!important;/);
+    expect(wrappedHeroCopyRule).toBeDefined();
+    expect(wrappedHeroCopyRule).toMatch(/max-width:\s*48rem\s*!important;/);
+    expect(wrappedHeroCopyRule).toMatch(/text-align:\s*left\s*!important;/);
+    expect(directHeroCopyRule).toBeDefined();
+    expect(directHeroCopyRule).toMatch(/max-width:\s*48rem\s*!important;/);
+    expect(directHeroCopyRule).toMatch(/text-align:\s*left\s*!important;/);
+
+    render(<CataloguePageContent catalogue={catalogueWithProduct} />);
+    expect(document.querySelector(".stitch-catalogue-hero")?.textContent).toMatch(
+      /Catalogue.*Furniture Catalogue.*Curated rental pieces/s
+    );
+
+    cleanup();
+    render(<ContactPage />);
+    expect(document.querySelector(".stitch-contact-hero")?.textContent).toMatch(
+      /Contact.*Get in Touch.*Share rental catalogue questions/s
+    );
+
+    cleanup();
+    render(<AboutPage />);
+    expect(document.querySelector(".stitch-about-hero")?.textContent).toMatch(
+      /Our Ethos.*Curating spaces that breathe, inspire, and endure.*Furniture is the quiet architecture/s
+    );
+
+    cleanup();
+    render(<PrivacyPage />);
+    expect(document.querySelector(".stitch-legal-hero")?.textContent).toMatch(
+      /Legal.*Privacy Policy.*practical MVP privacy posture/s
+    );
+
+    cleanup();
+    render(<TermsPage />);
+    expect(document.querySelector(".stitch-legal-hero")?.textContent).toMatch(
+      /Legal.*Terms of Use.*current MVP website experience/s
+    );
   });
 
   it("keeps public section headings compact enough to avoid premature wrapping", () => {

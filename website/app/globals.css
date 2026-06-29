@@ -21291,3 +21291,48 @@ body:has(.stitch-about-hero) .site-main :is(
     min-height: 11rem !important;
   }
 }
+
+/* Final public hero rail lock: every non-home intro follows the Furniture Catalogue container. */
+body:has(.stitch-site-header):not(:has(.stitch-home-hero)) .site-main > :is(
+  .stitch-catalogue-hero,
+  .stitch-contact-hero,
+  .stitch-about-hero,
+  .stitch-setups-hero,
+  .stitch-legal-hero
+) {
+  padding-inline: 0 !important;
+}
+
+body:has(.stitch-site-header):not(:has(.stitch-home-hero)) .site-main > :is(
+  .stitch-catalogue-hero,
+  .stitch-contact-hero,
+  .stitch-about-hero,
+  .stitch-setups-hero,
+  .stitch-legal-hero
+) > .stitch-container {
+  margin-inline: auto !important;
+  max-width: 1312px !important;
+  padding-inline: 0 !important;
+  width: min(calc(100% - clamp(2rem, 7vw, 6rem)), 1312px) !important;
+}
+
+body:has(.stitch-site-header):not(:has(.stitch-home-hero)) .site-main :is(
+  .stitch-catalogue-hero .stitch-page-intro,
+  .stitch-contact-hero .stitch-page-intro
+) {
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  max-width: 48rem !important;
+  text-align: left !important;
+}
+
+body:has(.stitch-site-header):not(:has(.stitch-home-hero)) .site-main :is(
+  .stitch-about-hero > .stitch-container,
+  .stitch-setups-hero > .stitch-container,
+  .stitch-legal-hero > .stitch-container
+) > :is(.stitch-eyebrow, h1, p) {
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  max-width: 48rem !important;
+  text-align: left !important;
+}
