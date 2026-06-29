@@ -19100,7 +19100,8 @@ body:has(.stitch-site-header) :is(
   .stitch-about-hero,
   .stitch-setups-hero,
   .stitch-editorial-hero,
-  .stitch-legal-hero
+  .stitch-legal-hero,
+  .stitch-quote-hero
 ) {
   padding-top: clamp(4.25rem, 7vw, 6.5rem) !important;
   padding-bottom: clamp(3rem, 5.5vw, 5rem) !important;
@@ -20613,6 +20614,7 @@ body:has(.stitch-site-header):not(:has(.stitch-home-hero)) .site-main :is(
   .stitch-about-hero > .stitch-container,
   .stitch-setups-hero__copy,
   .stitch-legal-intro,
+  .stitch-quote-hero .stitch-page-intro,
   .stitch-quote-intro
 ) {
   margin-left: 0 !important;
@@ -20628,6 +20630,7 @@ body:has(.stitch-site-header) .site-main :is(
   .stitch-setups-hero h1,
   .stitch-editorial-hero h1,
   .stitch-legal-intro h1,
+  .stitch-quote-hero .stitch-page-intro h1,
   .stitch-quote-intro h1
 ) {
   color: var(--stitch-ink) !important;
@@ -20645,6 +20648,7 @@ body:has(.stitch-site-header) .site-main :is(
   .stitch-setups-hero p:not(.stitch-eyebrow),
   .stitch-editorial-hero p:not(.stitch-eyebrow),
   .stitch-legal-intro p:not(.stitch-eyebrow),
+  .stitch-quote-hero .stitch-page-intro p:not(.stitch-eyebrow),
   .stitch-quote-intro p:not(.stitch-eyebrow)
 ) {
   font-size: 1.12rem !important;
@@ -20706,7 +20710,8 @@ body:has(.stitch-legal-hero) .site-main .stitch-legal-card h2 {
     .stitch-about-hero,
     .stitch-setups-hero,
     .stitch-editorial-hero,
-    .stitch-legal-hero
+    .stitch-legal-hero,
+    .stitch-quote-hero
   ) {
     padding: 4.25rem 0 3rem !important;
   }
@@ -20718,6 +20723,7 @@ body:has(.stitch-legal-hero) .site-main .stitch-legal-card h2 {
     .stitch-setups-hero h1,
     .stitch-editorial-hero h1,
     .stitch-legal-intro h1,
+    .stitch-quote-hero .stitch-page-intro h1,
     .stitch-quote-intro h1
   ) {
     font-size: clamp(2.05rem, 8vw, 2.35rem) !important;
@@ -20763,6 +20769,7 @@ body:has(.stitch-site-header) .site-main :is(
   .stitch-catalogue-hero .stitch-page-intro,
   .stitch-contact-hero .stitch-page-intro,
   .stitch-legal-intro,
+  .stitch-quote-hero .stitch-page-intro,
   .stitch-quote-intro
 ) {
   margin-left: 0 !important;
@@ -20777,6 +20784,7 @@ body:has(.stitch-site-header) .site-main :is(
   .stitch-setups-hero h1,
   .stitch-editorial-hero h1,
   .stitch-legal-intro h1,
+  .stitch-quote-hero .stitch-page-intro h1,
   .stitch-quote-intro h1
 ) {
   font-family: var(--stitch-serif) !important;
@@ -20871,6 +20879,7 @@ body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-
     .stitch-setups-hero h1,
     .stitch-editorial-hero h1,
     .stitch-legal-intro h1,
+    .stitch-quote-hero .stitch-page-intro h1,
     .stitch-quote-intro h1
   ) {
     font-size: clamp(2.65rem, 12vw, 3.35rem) !important;
@@ -21773,6 +21782,7 @@ body:has(.stitch-site-header) .site-main > :is(
   .stitch-setups-hero,
   .stitch-editorial-hero,
   .stitch-legal-hero,
+  .stitch-quote-hero,
   .stitch-home-advantage,
   .stitch-home-categories,
   .stitch-home-featured,
@@ -21791,6 +21801,285 @@ body:has(.stitch-site-header) .site-main > :is(
 ) {
   padding-bottom: var(--stitch-public-section-y) !important;
   padding-top: var(--stitch-public-section-y) !important;
+}
+
+/* Final public layout consolidation: this must stay at the end so standard
+   public pages, home sections, and repeated CTAs share one winning rhythm. */
+body:has(.stitch-site-header) {
+  --stitch-public-section-y: clamp(2.35rem, 4.15vw, 3.35rem);
+}
+
+body:has(.stitch-site-header) .site-main > :is(
+  .stitch-catalogue-hero,
+  .stitch-about-hero,
+  .stitch-contact-hero,
+  .stitch-setups-hero,
+  .stitch-legal-hero,
+  .stitch-quote-hero,
+  .stitch-home-advantage,
+  .stitch-home-categories,
+  .stitch-home-featured,
+  .stitch-section,
+  .stitch-catalogue-section,
+  .stitch-contact-menu-section,
+  .stitch-about-story,
+  .stitch-about-principles,
+  .stitch-about-service,
+  .stitch-setups-feature-section,
+  .stitch-setups-grid-section,
+  .stitch-legal-section,
+  .stitch-detail-page,
+  .stitch-detail-related
+) {
+  padding-bottom: var(--stitch-public-section-y) !important;
+  padding-top: var(--stitch-public-section-y) !important;
+}
+
+body:has(.stitch-site-header) .site-main > :is(
+  .stitch-catalogue-hero,
+  .stitch-about-hero,
+  .stitch-contact-hero,
+  .stitch-setups-hero,
+  .stitch-legal-hero,
+  .stitch-quote-hero
+) > .stitch-container,
+body:has(.stitch-home-hero) .site-main > :is(
+  .stitch-home-advantage,
+  .stitch-home-categories,
+  .stitch-home-featured
+) > .stitch-container {
+  margin-inline: auto !important;
+  max-width: 1312px !important;
+  width: min(calc(100% - clamp(3rem, 8vw, 8rem)), 1312px) !important;
+}
+
+body:has(.stitch-site-header) .site-main > :is(
+  .stitch-catalogue-hero,
+  .stitch-about-hero,
+  .stitch-contact-hero,
+  .stitch-setups-hero,
+  .stitch-legal-hero,
+  .stitch-quote-hero
+) > .stitch-container > .stitch-page-intro {
+  margin: 0 !important;
+  max-width: 48rem !important;
+  text-align: left !important;
+}
+
+body:has(.stitch-site-header) .site-main > :is(
+  .stitch-catalogue-hero,
+  .stitch-about-hero,
+  .stitch-contact-hero,
+  .stitch-setups-hero,
+  .stitch-legal-hero,
+  .stitch-quote-hero
+) > .stitch-container > .stitch-page-intro p:not(.stitch-eyebrow) {
+  max-width: 43rem !important;
+}
+
+body:has(.stitch-home-hero) .site-main :is(
+  .stitch-home-section-action,
+  .stitch-home-featured-action
+) {
+  align-items: center !important;
+  clear: none !important;
+  display: flex !important;
+  justify-content: center !important;
+  margin: clamp(1.1rem, 1.9vw, 1.6rem) 0 0 !important;
+  min-height: auto !important;
+  padding: 0 !important;
+  position: static !important;
+  transform: none !important;
+  width: 100% !important;
+}
+
+@media (max-width: 900px) {
+  body:has(.stitch-site-header) .site-main > :is(
+    .stitch-catalogue-hero,
+    .stitch-about-hero,
+    .stitch-contact-hero,
+    .stitch-setups-hero,
+    .stitch-legal-hero,
+    .stitch-quote-hero
+  ) > .stitch-container,
+  body:has(.stitch-home-hero) .site-main > :is(
+    .stitch-home-advantage,
+    .stitch-home-categories,
+    .stitch-home-featured
+  ) > .stitch-container {
+    width: min(calc(100% - 2rem), 1312px) !important;
+  }
+}
+
+/* Final frontend rhythm and action rail: one compact section cadence and one
+   normal flow treatment for repeated public CTAs. */
+body:has(.stitch-site-header) {
+  --stitch-public-section-y: clamp(2.35rem, 4.15vw, 3.35rem);
+}
+
+body:has(.stitch-site-header) .site-main > :is(
+  .stitch-catalogue-hero,
+  .stitch-about-hero,
+  .stitch-contact-hero,
+  .stitch-setups-hero,
+  .stitch-legal-hero,
+  .stitch-quote-hero,
+  .stitch-home-advantage,
+  .stitch-home-categories,
+  .stitch-home-featured,
+  .stitch-section,
+  .stitch-catalogue-section,
+  .stitch-contact-menu-section,
+  .stitch-about-story,
+  .stitch-about-principles,
+  .stitch-about-service,
+  .stitch-setups-feature-section,
+  .stitch-setups-grid-section,
+  .stitch-legal-section,
+  .stitch-detail-page,
+  .stitch-detail-related
+) {
+  padding-bottom: var(--stitch-public-section-y) !important;
+  padding-top: var(--stitch-public-section-y) !important;
+}
+
+body:has(.stitch-site-header) .site-main > :is(
+  .stitch-catalogue-hero,
+  .stitch-about-hero,
+  .stitch-contact-hero,
+  .stitch-setups-hero,
+  .stitch-legal-hero,
+  .stitch-quote-hero
+) > .stitch-container {
+  margin-inline: auto !important;
+  max-width: 1312px !important;
+  width: min(calc(100% - clamp(3rem, 8vw, 8rem)), 1312px) !important;
+}
+
+body:has(.stitch-site-header) .site-main > :is(
+  .stitch-catalogue-hero,
+  .stitch-about-hero,
+  .stitch-contact-hero,
+  .stitch-setups-hero,
+  .stitch-legal-hero,
+  .stitch-quote-hero
+) > .stitch-container > .stitch-page-intro {
+  margin: 0 !important;
+  max-width: 48rem !important;
+  text-align: left !important;
+}
+
+body:has(.stitch-site-header) .site-main > :is(
+  .stitch-catalogue-hero,
+  .stitch-about-hero,
+  .stitch-contact-hero,
+  .stitch-setups-hero,
+  .stitch-legal-hero,
+  .stitch-quote-hero
+) > .stitch-container > .stitch-page-intro p:not(.stitch-eyebrow) {
+  max-width: 43rem !important;
+}
+
+body:has(.stitch-home-hero) .site-main > :is(
+  .stitch-home-advantage,
+  .stitch-home-categories,
+  .stitch-home-featured
+) > .stitch-container {
+  margin-inline: auto !important;
+  max-width: 1312px !important;
+  width: min(calc(100% - clamp(3rem, 8vw, 8rem)), 1312px) !important;
+}
+
+body:has(.stitch-home-hero) .site-main .stitch-home-category-mosaic {
+  margin-bottom: 0 !important;
+}
+
+body:has(.stitch-home-hero) .site-main :is(
+  .stitch-home-section-action,
+  .stitch-home-featured-action
+) {
+  align-items: center !important;
+  clear: none !important;
+  display: flex !important;
+  justify-content: center !important;
+  margin: clamp(1.1rem, 1.9vw, 1.6rem) 0 0 !important;
+  min-height: auto !important;
+  padding: 0 !important;
+  position: static !important;
+  transform: none !important;
+  width: 100% !important;
+}
+
+body:has(.stitch-home-hero) .site-main :is(
+  .stitch-home-section-action,
+  .stitch-home-featured-action
+) .stitch-button {
+  margin: 0 auto !important;
+}
+
+/* Final public hero rail override: keep every standard non-home hero on the
+   same page-intro structure and horizontal rail after legacy overrides. */
+body:has(.stitch-site-header) .site-main > :is(
+  .stitch-catalogue-hero,
+  .stitch-about-hero,
+  .stitch-contact-hero,
+  .stitch-setups-hero,
+  .stitch-legal-hero,
+  .stitch-quote-hero
+) {
+  background: var(--stitch-surface) !important;
+  border-bottom: 1px solid var(--stitch-line) !important;
+  padding: var(--stitch-public-section-y) 0 !important;
+}
+
+body:has(.stitch-site-header) .site-main > :is(
+  .stitch-catalogue-hero,
+  .stitch-about-hero,
+  .stitch-contact-hero,
+  .stitch-setups-hero,
+  .stitch-legal-hero,
+  .stitch-quote-hero
+) > .stitch-container {
+  margin-inline: auto !important;
+  max-width: 1312px !important;
+  width: min(calc(100% - clamp(3rem, 8vw, 8rem)), 1312px) !important;
+}
+
+body:has(.stitch-site-header) .site-main > :is(
+  .stitch-catalogue-hero,
+  .stitch-about-hero,
+  .stitch-contact-hero,
+  .stitch-setups-hero,
+  .stitch-legal-hero,
+  .stitch-quote-hero
+) > .stitch-container > .stitch-page-intro {
+  margin: 0 !important;
+  max-width: 48rem !important;
+  text-align: left !important;
+}
+
+body:has(.stitch-site-header) .site-main > :is(
+  .stitch-catalogue-hero,
+  .stitch-about-hero,
+  .stitch-contact-hero,
+  .stitch-setups-hero,
+  .stitch-legal-hero,
+  .stitch-quote-hero
+) > .stitch-container > .stitch-page-intro p:not(.stitch-eyebrow) {
+  max-width: 43rem !important;
+}
+
+@media (max-width: 900px) {
+  body:has(.stitch-site-header) .site-main > :is(
+    .stitch-catalogue-hero,
+    .stitch-about-hero,
+    .stitch-contact-hero,
+    .stitch-setups-hero,
+    .stitch-legal-hero,
+    .stitch-quote-hero
+  ) > .stitch-container {
+    width: min(calc(100% - 2rem), 1312px) !important;
+  }
 }
 
 /* Final listing detail and mobile catalogue correction: keep metadata visible,
@@ -21978,6 +22267,158 @@ body:has(.stitch-catalogue-hero) .site-main .stitch-product-card .stitch-card__a
   padding: 0.72rem 0.9rem 0.88rem !important;
 }
 
+/* Final public hero structure rail: all standard public page titles use the
+   same section, container, and StitchPageIntro alignment. */
+body:has(.stitch-site-header) .site-main > :is(
+  .stitch-catalogue-hero,
+  .stitch-about-hero,
+  .stitch-contact-hero,
+  .stitch-setups-hero,
+  .stitch-legal-hero,
+  .stitch-quote-hero
+) {
+  background: var(--stitch-surface) !important;
+  border-bottom: 1px solid var(--stitch-line) !important;
+  padding: var(--stitch-public-section-y) 0 !important;
+}
+
+body:has(.stitch-site-header) .site-main > :is(
+  .stitch-catalogue-hero,
+  .stitch-about-hero,
+  .stitch-contact-hero,
+  .stitch-setups-hero,
+  .stitch-legal-hero,
+  .stitch-quote-hero
+) > .stitch-container {
+  margin-inline: auto !important;
+  max-width: 1312px !important;
+  width: min(calc(100% - clamp(3rem, 8vw, 8rem)), 1312px) !important;
+}
+
+body:has(.stitch-site-header) .site-main > :is(
+  .stitch-catalogue-hero,
+  .stitch-about-hero,
+  .stitch-contact-hero,
+  .stitch-setups-hero,
+  .stitch-legal-hero,
+  .stitch-quote-hero
+) > .stitch-container > .stitch-page-intro {
+  margin: 0 !important;
+  max-width: 48rem !important;
+  text-align: left !important;
+}
+
+body:has(.stitch-site-header) .site-main > :is(
+  .stitch-catalogue-hero,
+  .stitch-about-hero,
+  .stitch-contact-hero,
+  .stitch-setups-hero,
+  .stitch-legal-hero,
+  .stitch-quote-hero
+) > .stitch-container > .stitch-page-intro p:not(.stitch-eyebrow) {
+  max-width: 43rem !important;
+}
+
+@media (max-width: 900px) {
+  body:has(.stitch-site-header) .site-main > :is(
+    .stitch-catalogue-hero,
+    .stitch-about-hero,
+    .stitch-contact-hero,
+    .stitch-setups-hero,
+    .stitch-legal-hero,
+    .stitch-quote-hero
+  ) > .stitch-container {
+    width: min(calc(100% - 2rem), 1312px) !important;
+  }
+}
+
+/* Final quote/detail structure correction: quote uses the shared hero rail,
+   and non-hero listing titles start at h2 while keeping the display treatment. */
+body:has(.stitch-quote-hero) .site-main > .stitch-quote-hero {
+  background: var(--stitch-surface) !important;
+  border-bottom: 1px solid var(--stitch-line) !important;
+  padding: var(--stitch-public-section-y) 0 !important;
+}
+
+body:has(.stitch-quote-hero) .site-main > .stitch-quote-hero > .stitch-container,
+body:has(.stitch-quote-hero) .site-main > .stitch-quote-page > .stitch-container {
+  margin-inline: auto !important;
+  max-width: 1312px !important;
+  width: min(calc(100% - clamp(3rem, 8vw, 8rem)), 1312px) !important;
+}
+
+body:has(.stitch-quote-hero) .site-main .stitch-quote-hero .stitch-page-intro {
+  margin: 0 !important;
+  max-width: 48rem !important;
+}
+
+body:has(.stitch-quote-hero) .site-main .stitch-quote-hero .stitch-page-intro p:not(.stitch-eyebrow) {
+  max-width: 43rem !important;
+}
+
+body:has(.stitch-quote-hero) .site-main > .stitch-quote-page {
+  padding-bottom: var(--stitch-public-section-y) !important;
+  padding-top: var(--stitch-public-section-y) !important;
+}
+
+body:has(.stitch-quote-hero) .site-main .stitch-quote-intro,
+body:has(.stitch-quote-hero) .site-main .stitch-quote-intro::after {
+  display: none !important;
+}
+
+body:has(.stitch-site-header) .site-main .stitch-detail-open-copy .stitch-detail-title {
+  color: var(--stitch-ink) !important;
+  font-family: var(--stitch-serif) !important;
+  font-size: clamp(2.55rem, 3.15vw, 3.1rem) !important;
+  font-weight: 400 !important;
+  letter-spacing: 0 !important;
+  line-height: 1.04 !important;
+  margin: 0 0 1.15rem !important;
+}
+
+body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-selection-row {
+  gap: 1.15rem !important;
+  grid-template-columns: 6.25rem minmax(0, 1fr) !important;
+  min-height: 8rem !important;
+  padding: 1.15rem !important;
+}
+
+body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-selection-row img,
+body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-selection-row__icon {
+  height: 6.25rem !important;
+  width: 6.25rem !important;
+}
+
+body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-selection-row__body {
+  column-gap: 1.05rem !important;
+  row-gap: 0.5rem !important;
+}
+
+body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-selection-row .stitch-quote-select-controls {
+  max-width: 10.75rem !important;
+  width: min(100%, 10.75rem) !important;
+}
+
+@media (max-width: 900px) {
+  body:has(.stitch-quote-hero) .site-main > .stitch-quote-hero > .stitch-container,
+  body:has(.stitch-quote-hero) .site-main > .stitch-quote-page > .stitch-container {
+    width: min(calc(100% - 2rem), 1312px) !important;
+  }
+
+  body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-selection-row {
+    gap: 0.9rem !important;
+    grid-template-columns: 5.35rem minmax(0, 1fr) !important;
+    min-height: 7rem !important;
+    padding: 1rem !important;
+  }
+
+  body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-selection-row img,
+  body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-selection-row__icon {
+    height: 5.35rem !important;
+    width: 5.35rem !important;
+  }
+}
+
 body:has(.stitch-home-hero) .site-main > .stitch-home-hero {
   padding-bottom: var(--stitch-public-section-y) !important;
 }
@@ -22008,4 +22449,312 @@ body:has(.stitch-site-header):not(:has(.stitch-home-hero)) .site-main > :is(
 ) {
   padding-bottom: var(--stitch-public-section-y) !important;
   padding-top: var(--stitch-public-section-y) !important;
+}
+
+/* Final public layout consolidation v2: keep this as the last public layout
+   block so legacy page-specific rules cannot split rails or section rhythm. */
+body:has(.stitch-site-header) {
+  --stitch-public-section-y: clamp(2.35rem, 4.15vw, 3.35rem);
+}
+
+body:has(.stitch-site-header) .site-main > :is(
+  .stitch-catalogue-hero,
+  .stitch-about-hero,
+  .stitch-contact-hero,
+  .stitch-setups-hero,
+  .stitch-legal-hero,
+  .stitch-quote-hero,
+  .stitch-home-advantage,
+  .stitch-home-categories,
+  .stitch-home-featured,
+  .stitch-section,
+  .stitch-catalogue-section,
+  .stitch-contact-menu-section,
+  .stitch-about-story,
+  .stitch-about-principles,
+  .stitch-about-service,
+  .stitch-setups-feature-section,
+  .stitch-setups-grid-section,
+  .stitch-legal-section,
+  .stitch-detail-page,
+  .stitch-detail-related
+) {
+  padding-bottom: var(--stitch-public-section-y) !important;
+  padding-top: var(--stitch-public-section-y) !important;
+}
+
+body:has(.stitch-site-header) .site-main > :is(
+  .stitch-catalogue-hero,
+  .stitch-about-hero,
+  .stitch-contact-hero,
+  .stitch-setups-hero,
+  .stitch-legal-hero,
+  .stitch-quote-hero
+) > .stitch-container,
+body:has(.stitch-home-hero) .site-main > :is(
+  .stitch-home-advantage,
+  .stitch-home-categories,
+  .stitch-home-featured
+) > .stitch-container {
+  margin-inline: auto !important;
+  max-width: 1312px !important;
+  width: min(calc(100% - clamp(3rem, 8vw, 8rem)), 1312px) !important;
+}
+
+body:has(.stitch-site-header) .site-main > :is(
+  .stitch-catalogue-hero,
+  .stitch-about-hero,
+  .stitch-contact-hero,
+  .stitch-setups-hero,
+  .stitch-legal-hero,
+  .stitch-quote-hero
+) > .stitch-container > .stitch-page-intro {
+  margin: 0 !important;
+  max-width: 48rem !important;
+  text-align: left !important;
+}
+
+body:has(.stitch-site-header) .site-main > :is(
+  .stitch-catalogue-hero,
+  .stitch-about-hero,
+  .stitch-contact-hero,
+  .stitch-setups-hero,
+  .stitch-legal-hero,
+  .stitch-quote-hero
+) > .stitch-container > .stitch-page-intro p:not(.stitch-eyebrow) {
+  max-width: 43rem !important;
+}
+
+body:has(.stitch-home-hero) .site-main :is(
+  .stitch-home-section-action,
+  .stitch-home-featured-action
+) {
+  align-items: center !important;
+  clear: none !important;
+  display: flex !important;
+  justify-content: center !important;
+  margin: clamp(1.1rem, 1.9vw, 1.6rem) 0 0 !important;
+  min-height: auto !important;
+  padding: 0 !important;
+  position: static !important;
+  transform: none !important;
+  width: 100% !important;
+}
+
+@media (max-width: 900px) {
+  body:has(.stitch-site-header) .site-main > :is(
+    .stitch-catalogue-hero,
+    .stitch-about-hero,
+    .stitch-contact-hero,
+    .stitch-setups-hero,
+    .stitch-legal-hero,
+    .stitch-quote-hero
+  ) > .stitch-container,
+  body:has(.stitch-home-hero) .site-main > :is(
+    .stitch-home-advantage,
+    .stitch-home-categories,
+    .stitch-home-featured
+  ) > .stitch-container {
+    width: min(calc(100% - 2rem), 1312px) !important;
+  }
+}
+
+/* Final public UI parity pass v3: true tail override for mobile/desktop
+   content order, catalogue result rails, and form error typography. */
+body:has(.stitch-site-header) .site-main :is(
+  p,
+  li,
+  a,
+  button,
+  input,
+  select,
+  textarea,
+  label,
+  small,
+  span,
+  strong,
+  em,
+  dt,
+  dd
+) {
+  font-size: max(0.86rem, 1em) !important;
+}
+
+body:has(.stitch-site-header) :is(
+  .stitch-button,
+  .stitch-link-button,
+  .button,
+  .stitch-quote-quantity-button,
+  .stitch-quote-quantity-value,
+  .quote-form button[type="submit"]
+) {
+  font-family: var(--stitch-sans) !important;
+  font-size: clamp(0.86rem, 0.18vw + 0.82rem, 0.94rem) !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.08em !important;
+  text-transform: uppercase !important;
+}
+
+body:has(.stitch-catalogue-hero) .site-main .stitch-catalogue-layout {
+  align-items: start !important;
+  display: grid !important;
+  gap: clamp(0.9rem, 1.25vw, 1.35rem) !important;
+  grid-template-columns: minmax(15.5rem, 16.5rem) minmax(0, 1fr) !important;
+}
+
+body:has(.stitch-catalogue-hero) .site-main .stitch-catalogue-results,
+body:has(.stitch-catalogue-hero) .site-main .stitch-active-filter,
+body:has(.stitch-catalogue-hero) .site-main .stitch-empty {
+  box-sizing: border-box !important;
+  max-width: none !important;
+  width: 100% !important;
+}
+
+body:has(.stitch-catalogue-hero) .site-main .stitch-card-grid {
+  display: grid !important;
+  gap: clamp(1rem, 1.4vw, 1.35rem) !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+}
+
+body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-quote-form-panel .quote-form__field-error {
+  background: transparent !important;
+  border: 0 !important;
+  color: #7f1d12 !important;
+  display: block !important;
+  font-family: var(--stitch-sans) !important;
+  font-size: 0.86rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0 !important;
+  line-height: 1.45 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-quote-form-panel .quote-form__submit-error {
+  margin-top: 0.15rem !important;
+}
+
+body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-quote-form-panel .quote-form__feedback-slot,
+body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-quote-form-panel .quote-form__status--ghost {
+  display: none !important;
+}
+
+@media (max-width: 1200px) {
+  body:has(.stitch-catalogue-hero) .site-main .stitch-card-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 900px) {
+  body:has(.stitch-catalogue-hero) .site-main .stitch-catalogue-layout {
+    gap: 1.3rem !important;
+    grid-template-columns: 1fr !important;
+  }
+
+  body:has(.stitch-catalogue-hero) .site-main .stitch-card-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  body:has(.stitch-home-hero) .site-main > .stitch-home-hero {
+    padding: var(--stitch-public-section-y) 0 !important;
+  }
+
+  body:has(.stitch-home-hero) .site-main .stitch-home-hero__grid {
+    display: grid !important;
+    min-height: clamp(31rem, 118vw, 42rem) !important;
+    position: relative !important;
+  }
+
+  body:has(.stitch-home-hero) .site-main .stitch-home-hero__copy,
+  body:has(.stitch-home-hero) .site-main .stitch-home-hero__media {
+    grid-area: 1 / 1 !important;
+  }
+
+  body:has(.stitch-home-hero) .site-main .stitch-home-hero__media {
+    border-radius: 0.18rem !important;
+    height: auto !important;
+    min-height: 100% !important;
+    overflow: hidden !important;
+    position: relative !important;
+    width: 100% !important;
+  }
+
+  body:has(.stitch-home-hero) .site-main .stitch-home-hero__media img {
+    filter: brightness(0.54) saturate(0.9) !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    object-position: center !important;
+    width: 100% !important;
+  }
+
+  body:has(.stitch-home-hero) .site-main .stitch-home-hero__copy {
+    align-items: center !important;
+    color: #fff !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: clamp(1rem, 3.5vw, 1.45rem) !important;
+    justify-content: center !important;
+    max-width: none !important;
+    padding: clamp(2rem, 8vw, 4.5rem) !important;
+    position: relative !important;
+    text-align: center !important;
+    width: 100% !important;
+    z-index: 2 !important;
+  }
+
+  body:has(.stitch-home-hero) .site-main .stitch-home-hero__copy .stitch-eyebrow {
+    display: none !important;
+  }
+
+  body:has(.stitch-home-hero) .site-main .stitch-home-hero__copy h1 {
+    color: #fff !important;
+    font-size: clamp(2.35rem, 8.5vw, 3.55rem) !important;
+    letter-spacing: 0 !important;
+    line-height: 1.02 !important;
+    margin: 0 !important;
+    max-width: 11.2em !important;
+  }
+
+  body:has(.stitch-home-hero) .site-main .stitch-home-hero__copy p:not(.stitch-eyebrow) {
+    color: rgba(255, 255, 255, 0.92) !important;
+    display: block !important;
+    font-size: clamp(0.86rem, 1.2vw + 0.68rem, 1rem) !important;
+    line-height: 1.55 !important;
+    margin: 0 !important;
+    max-width: 31rem !important;
+  }
+
+  body:has(.stitch-home-hero) .site-main .stitch-home-hero .stitch-actions {
+    align-items: center !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 0.75rem !important;
+    justify-content: center !important;
+    margin-top: 0.15rem !important;
+    width: min(100%, 36rem) !important;
+  }
+
+  body:has(.stitch-home-hero) .site-main .stitch-home-hero .stitch-button,
+  body:has(.stitch-home-hero) .site-main .stitch-home-hero .stitch-button--secondary {
+    display: inline-flex !important;
+    height: auto !important;
+    min-height: 2.85rem !important;
+    min-width: min(100%, 11rem) !important;
+    padding: 0 1.1rem !important;
+    width: auto !important;
+  }
+}
+
+@media (max-width: 560px) {
+  body:has(.stitch-catalogue-hero) .site-main .stitch-card-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  body:has(.stitch-home-hero) .site-main .stitch-home-hero .stitch-actions {
+    flex-direction: column !important;
+  }
+
+  body:has(.stitch-home-hero) .site-main .stitch-home-hero .stitch-button {
+    width: min(100%, 15rem) !important;
+  }
 }

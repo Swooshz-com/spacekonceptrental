@@ -26,6 +26,7 @@ type SubmitState =
 type FieldErrors = {
   customerName?: string;
   contact?: string;
+  submit?: string;
 };
 
 const customerMessageMaxLength = 1200;
@@ -37,6 +38,8 @@ const requestIdFallbackRadix = 36;
 const listingSlugPattern = /^[a-z0-9][a-z0-9-]*$/;
 const requestIdPattern = /^[A-Za-z0-9._:-]+$/;
 const quoteSelectionChangeEvent = "skr:quote-selection-change";
+const quoteSelectionGroupHeadingPattern =
+  /^(selected rental items|setup included rental pieces|selected setup directions):$/i;
 
 function formatPreferredContactMethod(preferredContactMethod: string) {
   return preferredContactMethod
@@ -58,7 +61,7 @@ function parseRequestedItems(itemsText: string, itemNotesText: string) {
   const itemLines = itemsText
     .split(/\r?\n|\r/)
     .map((line) => line.trim())
-    .filter(Boolean)
+    .filter((line) => line && !quoteSelectionGroupHeadingPattern.test(line))
     .slice(0, requestedItemsMaxCount);
 
   return itemLines.map((productName, index) => ({
@@ -129,6 +132,19 @@ function formatQuoteSubmitError(reference: string | undefined) {
   return reference ? `${message} Support reference: ${reference}.` : message;
 }
 
+function scrollToFormControl(form: HTMLFormElement, fieldName: string) {
+  const control = form.elements.namedItem(fieldName);
+
+  if (!(control instanceof HTMLElement)) {
+    return;
+  }
+
+  const scrollTarget = control.closest("label") ?? control;
+
+  scrollTarget.scrollIntoView?.({ behavior: "smooth", block: "center" });
+  control.focus({ preventScroll: true });
+}
+
 export default function QuoteRequestForm({
   initialItemsText = "",
   initialListingSlug
@@ -175,10 +191,6 @@ export default function QuoteRequestForm({
     );
   }
 
-  function handleItemsTextChange(event: ChangeEvent<HTMLTextAreaElement>) {
-    setItemsText(event.target.value);
-  }
-
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
@@ -186,7 +198,8 @@ export default function QuoteRequestForm({
       return;
     }
 
-    const formData = new FormData(event.currentTarget);
+    const form = event.currentTarget;
+    const formData = new FormData(form);
     const submittedItemsText = itemsText.trim();
     const submittedCustomerMessageText = customerMessageText.trim();
     const submittedPreferredContactMethod = preferredContactMethod.trim();
@@ -225,27 +238,21 @@ export default function QuoteRequestForm({
     }
 
     if (nextFieldErrors.customerName || nextFieldErrors.contact) {
-      const missingFieldSummary =
-        nextFieldErrors.customerName && nextFieldErrors.contact
-          ? "Add your name and share an email address or phone number."
-          : nextFieldErrors.customerName
-            ? "Add your name so the team can review this enquiry."
-            : "Share an email address or phone number so the team can follow up on this enquiry.";
-
       setFieldErrors(nextFieldErrors);
-      setSubmitState({
-        status: "error",
-        message: `${missingFieldSummary} Review the highlighted required fields before sending the enquiry.`
-      });
+      setSubmitState({ status: "idle" });
+      scrollToFormControl(
+        form,
+        nextFieldErrors.customerName ? "customerName" : "customerEmail"
+      );
       return;
     }
 
     if (submittedItemsText && payload.items.length === 0) {
-      setSubmitState({
-        status: "error",
-        message:
+      setFieldErrors({
+        submit:
           "Use short listing or item lines, or leave requested items blank and explain the setup in the notes."
       });
+      setSubmitState({ status: "idle" });
       return;
     }
 
@@ -274,10 +281,10 @@ export default function QuoteRequestForm({
       });
       clearStoredQuoteSelection();
     } catch {
-      setSubmitState({
-        status: "error",
-        message: formatQuoteSubmitError(failedSubmitReference)
-      });
+      const submitError = formatQuoteSubmitError(failedSubmitReference);
+
+      setFieldErrors({ submit: submitError });
+      setSubmitState({ status: "error", message: submitError });
     }
   }
 
@@ -354,21 +361,19 @@ export default function QuoteRequestForm({
         details to triage the rental enquiry.{" "}
         Complete the required contact point first. Let us know what you need for your event. Share the date, venue, and requested items - our team will review the details and follow up with a tailored proposal.
       </p>
+      <input name="items" readOnly type="hidden" value={itemsText} />
       {showSelectedItemsSummary && itemsText.trim() ? (
         <aside className="quote-form__selected" aria-label="Selected listings">
           <strong>Selected listings</strong>
           <span>
             Listing context is a starting point only and not a rental fit
-            confirmation. Keep this listing, change it, or add more rental
-            items before sending. Add quantities in the requested listings box
-            or item notes. The team can review the request during manual
-            follow-up. The team will use the requested listing/item context for
-            manual follow-up.
+            confirmation. The selected listings and quantities are synced from
+            the selection panel. Add alternates, access, setup, or timing notes
+            below for manual follow-up.
           </span>
           <span>
             You've added <strong>{itemsText}</strong> to your request.
-            This starts this rental request as editable request text; feel free
-            to adjust quantities or add more items before submitting.
+            This listing context will be included automatically when you submit.
           </span>
         </aside>
       ) : null}
@@ -475,24 +480,6 @@ export default function QuoteRequestForm({
         </label>
       </fieldset>
       <fieldset className="quote-form__field-grid">
-        <legend>Rental details</legend>
-        <label className="quote-form__full-width">
-          Requested listings or items
-          <textarea
-            name="items"
-            onChange={handleItemsTextChange}
-            placeholder="Example: 20 stools, 4 cocktail tables, or a lounge setup"
-            rows={4}
-            value={itemsText}
-          />
-          <small>
-            Use one line per requested listing or item. Add quantities here
-            when you know them; this editable request text can keep listing,
-            category, event-use, or search context as request notes.
-          </small>
-        </label>
-      </fieldset>
-      <fieldset className="quote-form__field-grid">
         <legend>Setup/access/timing notes</legend>
         <label className="quote-form__full-width">
           Event Vision
@@ -511,45 +498,30 @@ export default function QuoteRequestForm({
           </small>
         </label>
         <label className="quote-form__full-width">
-          Quantity, setup, access, and timing notes
+          Setup, access, and timing notes
           <textarea
-            aria-label="Item-specific notes / quantity or setup notes"
+            aria-label="Item-specific notes / setup, access, or timing notes"
             maxLength={500}
             name="itemNotes"
             placeholder="Example: delivery timing, venue access, placement notes, or alternates for the listed items"
             rows={4}
           />
           <small>
-            Add quantities, alternates, dimensions, setup, access, and timing
-            notes for the requested rental listings/items.
+            Add alternates, dimensions, setup, access, and timing notes for the
+            requested rental listings/items.
           </small>
         </label>
       </fieldset>
       {submitState.status !== "success" ? (
         <>
-          <div
-            className={`quote-form__feedback-slot${
-              submitState.status === "error"
-                ? " quote-form__feedback-slot--active"
-                : ""
-            }`}
-          >
-            {submitState.status === "error" ? (
-              <p
-                className="quote-form__status quote-form__status--error"
-                role="alert"
-              >
-                {submitState.message}
-              </p>
-            ) : (
-              <p
-                aria-hidden="true"
-                className="quote-form__status quote-form__status--error quote-form__status--ghost"
-              >
-                Quote form feedback message space.
-              </p>
-            )}
-          </div>
+          {fieldErrors.submit ? (
+            <small
+              className="quote-form__field-error quote-form__submit-error"
+              role="alert"
+            >
+              {fieldErrors.submit}
+            </small>
+          ) : null}
           <button
             className="button"
             disabled={submitState.status === "submitting"}

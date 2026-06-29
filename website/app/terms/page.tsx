@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { StitchPageIntro } from "../../components/PublicStitch";
 
 export const metadata: Metadata = {
   title: "Terms of Use | SpaceKonceptRental",
@@ -11,12 +12,12 @@ export default function TermsPage() {
   return (
     <>
       <section className="stitch-legal-hero">
-        <div className="stitch-container stitch-legal-intro">
-          <p className="stitch-eyebrow">Legal</p>
-          <h1>Terms of Use</h1>
-          <p>
-            These terms describe the current MVP website experience for browsing furniture rental listings and sending quote enquiries.
-          </p>
+        <div className="stitch-container">
+          <StitchPageIntro
+            eyebrow="Legal"
+            title="Terms of Use"
+            intro="These terms describe the current MVP website experience for browsing furniture rental listings and sending quote enquiries."
+          />
         </div>
       </section>
 

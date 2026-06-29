@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { StitchPageIntro } from "../../components/PublicStitch";
 
 export const metadata: Metadata = {
   title: "Privacy Policy | SpaceKonceptRental",
@@ -11,12 +12,12 @@ export default function PrivacyPage() {
   return (
     <>
       <section className="stitch-legal-hero">
-        <div className="stitch-container stitch-legal-intro">
-          <p className="stitch-eyebrow">Legal</p>
-          <h1>Privacy Policy</h1>
-          <p>
-            This page explains the practical MVP privacy posture for browsing rental listings, sending quote requests, and using the chat widget.
-          </p>
+        <div className="stitch-container">
+          <StitchPageIntro
+            eyebrow="Legal"
+            title="Privacy Policy"
+            intro="This page explains the practical MVP privacy posture for browsing rental listings, sending quote requests, and using the chat widget."
+          />
         </div>
       </section>
 

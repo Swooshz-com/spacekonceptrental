@@ -4,7 +4,7 @@ import { QuoteSelectionSummary } from "../../components/QuoteSelectionControls";
 import { getPublicProductBySlug } from "../../lib/catalogue/catalogue-repository";
 import { normalizePublicDiscoveryContext, normalizePublicListingSlug } from "../../lib/catalogue/quote-handoff";
 import type { PublicCatalogueProduct } from "../../lib/catalogue/types";
-import { fallbackProductImage, getDemoProducts, isDemoContentEnabled, productCategory, stitchImageSrc } from "../../components/PublicStitch";
+import { fallbackProductImage, getDemoProducts, isDemoContentEnabled, productCategory, StitchPageIntro, stitchImageSrc } from "../../components/PublicStitch";
 
 type QuotePageProps = { searchParams?: Promise<Record<string, string | string[] | undefined>> | Record<string, string | string[] | undefined> };
 type QuoteSelectionProduct = PublicCatalogueProduct | ReturnType<typeof getDemoProducts>[number];
@@ -35,5 +35,5 @@ function NextStepsPanel() {
 export default async function QuotePage({ searchParams }: QuotePageProps = {}) {
   const context = await resolveQuoteListingContext(searchParams);
   const initialItemsText = buildInitialItemsText({ category: context.category, event: context.event, product: context.product, requestedSlug: context.requestedSlug, search: context.search });
-  return <section className="stitch-quote-page"><div className="stitch-container"><div className="stitch-quote-intro"><p className="stitch-eyebrow">Request Quote</p><h1>Request a Rental Quote</h1><p>The form is enquiry intake only. Submit your selection for manual review. The team will review your details and follow up with a tailored proposal.</p></div><div className="stitch-quote-layout"><div className="stitch-quote-left"><SelectionPanel product={context.product} requestedSlug={context.requestedSlug} category={context.category} event={context.event} search={context.search} /><NextStepsPanel /></div><section className="stitch-quote-form-panel"><h2>Enquiry Details</h2><QuoteRequestForm initialItemsText={initialItemsText} initialListingSlug={context.requestedSlug} /></section></div></div></section>;
+  return <><section className="stitch-quote-hero"><div className="stitch-container"><StitchPageIntro eyebrow="Request Quote" title="Request a Rental Quote" intro="The form is enquiry intake only. Submit your selection for manual review. The team will review your details and follow up with a tailored proposal." /></div></section><section className="stitch-section stitch-quote-page"><div className="stitch-container"><div className="stitch-quote-layout"><div className="stitch-quote-left"><SelectionPanel product={context.product} requestedSlug={context.requestedSlug} category={context.category} event={context.event} search={context.search} /><NextStepsPanel /></div><section className="stitch-quote-form-panel"><h2>Enquiry Details</h2><QuoteRequestForm initialItemsText={initialItemsText} initialListingSlug={context.requestedSlug} /></section></div></div></section></>;
 }

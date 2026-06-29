@@ -47,7 +47,12 @@ describe("QuoteRequestForm", () => {
 
     window.history.pushState(null, "", "/quote?listing=modular-lounge-set");
 
-    render(<QuoteRequestForm initialListingSlug="modular-lounge-set" />);
+    render(
+      <QuoteRequestForm
+        initialItemsText="2 modular lounge sets"
+        initialListingSlug="modular-lounge-set"
+      />
+    );
 
     fireEvent.change(screen.getByLabelText(/name/i), {
       target: { value: "Maya Tan" }
@@ -63,9 +68,6 @@ describe("QuoteRequestForm", () => {
     });
     fireEvent.change(screen.getByLabelText(/venue/i), {
       target: { value: "Marina Bay Sands" }
-    });
-    fireEvent.change(screen.getByLabelText(/requested listings or items/i), {
-      target: { value: "2 modular lounge sets" }
     });
     fireEvent.change(screen.getByLabelText(/preferred contact method/i), {
       target: { value: "email" }
@@ -311,9 +313,6 @@ describe("QuoteRequestForm", () => {
     fireEvent.change(screen.getByLabelText(/venue/i), {
       target: { value: "National Gallery Singapore" }
     });
-    fireEvent.change(screen.getByLabelText(/requested listings or items/i), {
-      target: { value: "Modular Lounge Set\n4 cocktail tables" }
-    });
     fireEvent.change(screen.getByLabelText(/event vision/i), {
       target: {
         value: "Warm reception setup with alternates if the sofa colour changes."
@@ -344,9 +343,7 @@ describe("QuoteRequestForm", () => {
     expect(screen.getByLabelText(/venue/i)).toHaveValue(
       "National Gallery Singapore"
     );
-    expect(screen.getByLabelText(/requested listings or items/i)).toHaveValue(
-      "Modular Lounge Set\n4 cocktail tables"
-    );
+    expect(screen.queryByLabelText(/requested listings or items/i)).not.toBeInTheDocument();
     expect(screen.getByLabelText(/event vision/i)).toHaveValue(
       "Warm reception setup with alternates if the sofa colour changes."
     );
@@ -361,16 +358,12 @@ describe("QuoteRequestForm", () => {
           productName: "Modular Lounge Set",
           quantity: 1,
           notes: "Use the lounge set near the registration area."
-        },
-        {
-          productName: "4 cocktail tables",
-          quantity: 1
         }
       ]
     });
   });
 
-  it("shows inline required guidance and preserves entered rental details", async () => {
+  it("shows inline required guidance and preserves entered event details", async () => {
     const fetchMock = vi.fn();
 
     vi.stubGlobal("fetch", fetchMock);
@@ -379,9 +372,6 @@ describe("QuoteRequestForm", () => {
 
     fireEvent.change(screen.getByLabelText(/venue/i), {
       target: { value: "National Gallery Singapore" }
-    });
-    fireEvent.change(screen.getByLabelText(/requested listings or items/i), {
-      target: { value: "Lounge sofa package\n4 cocktail tables" }
     });
     fireEvent.change(screen.getByLabelText(/event vision/i), {
       target: {
@@ -394,9 +384,7 @@ describe("QuoteRequestForm", () => {
     );
 
     expect(fetchMock).not.toHaveBeenCalled();
-    expect(screen.getByRole("alert")).toHaveTextContent(
-      /review the highlighted required fields/i
-    );
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
     expect(screen.getByText(/name is required/i)).toBeInTheDocument();
     expect(
       screen.getByText(/email address or phone number is required/i)
@@ -418,9 +406,7 @@ describe("QuoteRequestForm", () => {
     expect(screen.getByLabelText(/venue/i)).toHaveValue(
       "National Gallery Singapore"
     );
-    expect(screen.getByLabelText(/requested listings or items/i)).toHaveValue(
-      "Lounge sofa package\n4 cocktail tables"
-    );
+    expect(screen.queryByLabelText(/requested listings or items/i)).not.toBeInTheDocument();
     expect(screen.getByLabelText(/event vision/i)).toHaveValue(
       "Warm reception setup with alternates if the sofa colour changes."
     );
@@ -524,7 +510,7 @@ describe("QuoteRequestForm", () => {
     expect(screen.queryByRole("link", { name: /track|status/i })).not.toBeInTheDocument();
   });
 
-  it("loads stored quote selections into editable request text and clears them after success", async () => {
+  it("loads stored quote selections into hidden request text and clears them after success", async () => {
     const fetchMock = vi.fn(async () => {
       return new Response(
         JSON.stringify({
@@ -558,13 +544,14 @@ describe("QuoteRequestForm", () => {
       ])
     );
 
-    render(<QuoteRequestForm />);
+    const { container } = render(<QuoteRequestForm />);
 
     await waitFor(() =>
-      expect(screen.getByLabelText(/requested listings or items/i)).toHaveValue(
+      expect(container.querySelector<HTMLInputElement>('input[name="items"]')).toHaveValue(
         "Aura Lounge Chair\nKinetic Dining Table x 2"
       )
     );
+    expect(screen.queryByLabelText(/requested listings or items/i)).not.toBeInTheDocument();
     expect(screen.getByLabelText(/selected listings/i)).toHaveTextContent(
       /Aura Lounge Chair/i
     );
@@ -595,7 +582,7 @@ describe("QuoteRequestForm", () => {
     expect(window.localStorage.getItem("skr.quoteSelection.v1")).toBe("[]");
   });
 
-  it("explains editable listing context and submits adjusted requested items for admin triage", async () => {
+  it("explains automatic listing context and submits selected items for admin triage", async () => {
     const fetchMock = vi.fn(async () => {
       return new Response(
         JSON.stringify({
@@ -623,13 +610,10 @@ describe("QuoteRequestForm", () => {
     const selectedListing = screen.getByLabelText(/selected listing/i);
 
     expect(selectedListing).toHaveTextContent(
-      /keep this listing, change it, or add more rental items before sending/i
-    );
-    expect(selectedListing).toHaveTextContent(
-      /add quantities in the requested listings box or item notes/i
+      /selected listings and quantities are synced from the selection panel/i
     );
     expect(
-      screen.getByText(/the team will use the requested listing\/item context for manual follow-up/i)
+      screen.getByText(/this listing context will be included automatically when you submit/i)
     ).toBeInTheDocument();
 
     fireEvent.change(screen.getByLabelText(/name/i), {
@@ -643,11 +627,6 @@ describe("QuoteRequestForm", () => {
     });
     fireEvent.change(screen.getByLabelText(/venue/i), {
       target: { value: "National Gallery Singapore" }
-    });
-    fireEvent.change(screen.getByLabelText(/requested listings or items/i), {
-      target: {
-        value: "Modular Lounge Set - 2 sets\nCocktail tables - 4 pieces"
-      }
     });
     fireEvent.change(screen.getByLabelText(/item-specific notes/i), {
       target: {
@@ -667,13 +646,9 @@ describe("QuoteRequestForm", () => {
       listingSlug: "modular-lounge-set",
       items: [
         {
-          productName: "Modular Lounge Set - 2 sets",
+          productName: "Modular Lounge Set",
           quantity: 1,
           notes: "Need rental period guidance for a same-day event setup."
-        },
-        {
-          productName: "Cocktail tables - 4 pieces",
-          quantity: 1
         }
       ]
     });
@@ -703,18 +678,17 @@ describe("QuoteRequestForm", () => {
 
     vi.stubGlobal("fetch", fetchMock);
 
-    render(<QuoteRequestForm />);
+    render(
+      <QuoteRequestForm
+        initialItemsText={"  20 stools  \n\n4 cocktail tables\r\n   \nModular lounge setup  "}
+      />
+    );
 
     fireEvent.change(screen.getByLabelText(/name/i), {
       target: { value: "Maya Tan" }
     });
     fireEvent.change(screen.getByLabelText(/email address/i), {
       target: { value: "maya@example.test" }
-    });
-    fireEvent.change(screen.getByLabelText(/requested listings or items/i), {
-      target: {
-        value: "  20 stools  \n\n4 cocktail tables\r\n   \nModular lounge setup  "
-      }
     });
     fireEvent.change(screen.getByLabelText(/item-specific notes/i), {
       target: {
@@ -748,6 +722,64 @@ describe("QuoteRequestForm", () => {
       ]
     });
     expect(getSubmittedPayload(fetchMock).requestId).toEqual(expect.any(String));
+  });
+
+  it("does not submit synced quote selection group headings as requested items", async () => {
+    const fetchMock = vi.fn(async () => {
+      return new Response(
+        JSON.stringify({
+          status: "received",
+          quoteRequestId: "70000000-0000-4000-8000-000000000001",
+          publicReference: "QR-20260527-ABC12345"
+        }),
+        {
+          headers: { "content-type": "application/json" },
+          status: 201
+        }
+      );
+    });
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(
+      <QuoteRequestForm
+        initialItemsText={[
+          "Selected rental items:",
+          "Aura Lounge Chair",
+          "",
+          "Setup included rental pieces:",
+          "Slender Arch Floor Lamp x 2",
+          "",
+          "Selected setup directions:",
+          "Botanical Wedding"
+        ].join("\n")}
+      />
+    );
+
+    fireEvent.change(screen.getByLabelText(/name/i), {
+      target: { value: "Maya Tan" }
+    });
+    fireEvent.change(screen.getByLabelText(/email address/i), {
+      target: { value: "maya@example.test" }
+    });
+    fireEvent.click(screen.getByRole("button", { name: /review and send an enquiry/i }));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+
+    expect(getSubmittedPayload(fetchMock).items).toEqual([
+      {
+        productName: "Aura Lounge Chair",
+        quantity: 1
+      },
+      {
+        productName: "Slender Arch Floor Lamp x 2",
+        quantity: 1
+      },
+      {
+        productName: "Botanical Wedding",
+        quantity: 1
+      }
+    ]);
   });
 
   it("keeps preferred contact prefix within the server event vision limit", async () => {

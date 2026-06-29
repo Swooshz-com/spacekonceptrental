@@ -145,12 +145,17 @@ describe("public page shells", () => {
   });
 
   it("keeps public quote copy request-only and preserves the real form entry point", async () => {
-    render(await QuotePage());
+    const { container } = render(await QuotePage());
 
     expect(screen.getByRole("heading", { name: /request a rental quote/i })).toBeInTheDocument();
+    expect(container.querySelector(".stitch-quote-hero .stitch-page-intro h1")).toHaveTextContent(
+      /request a rental quote/i
+    );
+    expect(container.querySelector(".stitch-quote-intro")).toBeNull();
     expect(screen.getAllByText(/this request does not confirm final rental details/i).length).toBeGreaterThan(0);
     expect(screen.getByLabelText(/your name/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/email address/i)).toBeInTheDocument();
+    expect(screen.queryByLabelText(/requested listings or items/i)).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: /review and send an enquiry/i })).toBeInTheDocument();
     expect(document.body.textContent).not.toMatch(/confirmed order|online ordering|checkout|payment/i);
     expect(JSON.stringify(rootMetadata)).toMatch(/SpaceKonceptRental/);
@@ -249,6 +254,7 @@ describe("public page shells", () => {
 
   it("keeps setup pills as grouped filters and includes the featured editorial in the setup listings", () => {
     const previousDemoContentFlag = process.env.NEXT_PUBLIC_SKR_DEMO_CONTENT;
+    const publicStitchSource = readFileSync(resolve(process.cwd(), "components/PublicStitch.tsx"), "utf8");
     process.env.NEXT_PUBLIC_SKR_DEMO_CONTENT = "true";
 
     try {
@@ -264,6 +270,7 @@ describe("public page shells", () => {
         "href",
         "/listings?setup=corporate-summits"
       );
+      expect(publicStitchSource).toContain('href={item.href} key={item.href} scroll={false}');
       expect(screen.getAllByText("The Metropolitan Gala").length).toBeGreaterThan(1);
       expect(screen.getAllByRole("link", { name: /view setup details/i }).length).toBeGreaterThan(1);
     } finally {
@@ -370,7 +377,8 @@ describe("public page shells", () => {
   it("renders published product detail data supplied by the server read layer", () => {
     render(<ProductPageContent product={modularLounge} />);
 
-    expect(screen.getByRole("heading", { name: /modular lounge set/i })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { level: 1, name: /modular lounge set/i })).not.toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 2, name: /modular lounge set/i })).toBeInTheDocument();
     expect(screen.getByText(/published lounge set/i)).toBeInTheDocument();
     expect(screen.getByText("Style")).toBeInTheDocument();
     expect(screen.getByText(/style to confirm/i)).toBeInTheDocument();
@@ -420,17 +428,18 @@ describe("public page shells", () => {
     expect(styles).toMatch(/\.stitch-quote-layout/i);
     expect(styles).toMatch(/\.stitch-home-category-mosaic/i);
     const categoryCtaClearanceBlock = styles.slice(
-      styles.indexOf("/* Final homepage category CTA clearance: keep the catalogue action below the mosaic. */")
+      styles.indexOf("/* Final public layout consolidation v2: keep this as the last public layout")
     );
     const categoryActionRule = categoryCtaClearanceBlock.match(
-      /body:has\(\.stitch-home-hero\)\s+\.stitch-home-categories\s+\.stitch-home-section-action\s*\{[\s\S]*?\}/
+      /body:has\(\.stitch-home-hero\)\s+\.site-main\s+:is\([\s\S]*?\.stitch-home-section-action[\s\S]*?\.stitch-home-featured-action[\s\S]*?\)\s*\{[\s\S]*?\}/
     )?.[0];
 
-    expect(categoryCtaClearanceBlock).toContain("Final homepage category CTA clearance");
+    expect(categoryCtaClearanceBlock).toContain("Final public layout consolidation v2");
+    expect(categoryCtaClearanceBlock).toContain("Final public UI parity pass v3");
     expect(categoryActionRule).toBeDefined();
-    expect(categoryActionRule).toMatch(/clear:\s*both\s*!important;/);
-    expect(categoryActionRule).toMatch(/margin-top:\s*0\s*!important;/);
-    expect(categoryActionRule).toMatch(/position:\s*relative\s*!important;/);
+    expect(categoryActionRule).toMatch(/justify-content:\s*center\s*!important;/);
+    expect(categoryActionRule).toMatch(/margin:\s*clamp\(1\.1rem,\s*1\.9vw,\s*1\.6rem\)\s+0\s+0\s*!important;/);
+    expect(categoryActionRule).toMatch(/position:\s*static\s*!important;/);
     expect(styles).toMatch(/@media\s*\(max-width:/i);
   });
 
@@ -440,7 +449,7 @@ describe("public page shells", () => {
       styles.indexOf("/* Final correction: keep public title rails and quote columns stable. */")
     );
     const publicHeroTitleRule = finalCorrectionBlock.match(
-      /body:has\(\.stitch-site-header\)\s+\.site-main\s+:is\([\s\S]*?\.stitch-quote-intro h1[\s\S]*?\)\s*\{[\s\S]*?\}/
+      /body:has\(\.stitch-site-header\)\s+\.site-main\s+:is\([\s\S]*?\.stitch-page-intro h1[\s\S]*?\)\s*\{[\s\S]*?\}/
     )?.[0];
 
     expect(finalCorrectionBlock).toContain("Final correction");
@@ -448,7 +457,7 @@ describe("public page shells", () => {
     expect(publicHeroTitleRule).toMatch(/\.stitch-catalogue-hero \.stitch-page-intro h1/);
     expect(publicHeroTitleRule).toMatch(/\.stitch-about-hero h1/);
     expect(publicHeroTitleRule).toMatch(/\.stitch-setups-hero h1/);
-    expect(publicHeroTitleRule).toMatch(/\.stitch-quote-intro h1/);
+    expect(publicHeroTitleRule).toMatch(/\.stitch-page-intro h1/);
     expect(publicHeroTitleRule).toMatch(/font-family:\s*var\(--stitch-serif\)\s*!important;/);
     expect(publicHeroTitleRule).toMatch(/font-weight:\s*400\s*!important;/);
     expect(publicHeroTitleRule).not.toMatch(/font-weight:\s*700\s*!important;/);
@@ -456,7 +465,7 @@ describe("public page shells", () => {
       styles.indexOf("/* Final public page rhythm: shared interior-title padding and calmer H1 scale. */")
     );
     const finalHeroTitleRule = finalRhythmBlock.match(
-      /body:has\(\.stitch-site-header\)\s+\.site-main\s+:is\([\s\S]*?\.stitch-catalogue-hero \.stitch-page-intro h1[\s\S]*?\.stitch-quote-intro h1[\s\S]*?\)\s*\{[\s\S]*?\}/
+      /body:has\(\.stitch-site-header\)\s+\.site-main\s+:is\([\s\S]*?\.stitch-catalogue-hero \.stitch-page-intro h1[\s\S]*?\.stitch-quote-hero \.stitch-page-intro h1[\s\S]*?\)\s*\{[\s\S]*?\}/
     )?.[0];
 
     expect(finalRhythmBlock).toContain("Final public page rhythm");
@@ -474,7 +483,7 @@ describe("public page shells", () => {
       styles.indexOf("/* Final public typography system: Advantage-inspired scale across public pages. */")
     );
     const h1Rule = typographyBlock.match(
-      /body:has\(\.stitch-site-header\)\s+\.site-main\s+:is\([\s\S]*?\.stitch-quote-intro h1[\s\S]*?\)\s*\{[\s\S]*?\}/
+      /body:has\(\.stitch-site-header\)\s+\.site-main\s+:is\([\s\S]*?\.stitch-page-intro h1[\s\S]*?\)\s*\{[\s\S]*?\}/
     )?.[0];
     const h2Rule = typographyBlock.match(
       /body:has\(\.stitch-site-header\)\s+\.site-main\s+:is\([\s\S]*?\.stitch-section-heading h2[\s\S]*?\.stitch-legal-card h2[\s\S]*?\)\s*\{[\s\S]*?\}/
@@ -491,6 +500,7 @@ describe("public page shells", () => {
 
     expect(typographyBlock).toContain("Final public typography system");
     expect(h1Rule).toBeDefined();
+    expect(h1Rule).toMatch(/\.stitch-page-intro h1/);
     expect(h1Rule).toMatch(/font-family:\s*var\(--stitch-serif\)\s*!important;/);
     expect(h1Rule).toMatch(/font-size:\s*clamp\(2\.55rem,\s*3\.15vw,\s*3\.1rem\)\s*!important;/);
     expect(h1Rule).toMatch(/font-weight:\s*400\s*!important;/);
@@ -532,21 +542,20 @@ describe("public page shells", () => {
     const sectionRule = rhythmBlock.match(
       /body:has\(\.stitch-site-header\)\s+\.site-main\s+>\s+:is\([\s\S]*?\.stitch-home-categories[\s\S]*?\.stitch-home-featured[\s\S]*?\.stitch-detail-related[\s\S]*?\)\s*\{[\s\S]*?\}/
     )?.[0];
-    const quoteIntroRule = rhythmBlock.match(
-      /body:has\(\.stitch-quote-page\):not\(:has\(\.quote-form--success\)\)\s+\.site-main\s+\.stitch-quote-intro\s*\{[\s\S]*?\}/
+    const quoteHeroRule = rhythmBlock.match(
+      /body:has\(\.stitch-quote-hero\)\s+\.site-main\s+>\s+\.stitch-quote-hero\s*\{[\s\S]*?\}/
     )?.[0];
     const nonHomeSectionRule = rhythmBlock.match(
       /body:has\(\.stitch-site-header\):not\(:has\(\.stitch-home-hero\)\)\s+\.site-main\s+>\s+:is\([\s\S]*?\.stitch-catalogue-hero[\s\S]*?\.stitch-catalogue-section[\s\S]*?\.stitch-detail-related[\s\S]*?\)\s*\{[\s\S]*?\}/
     )?.[0];
 
     expect(rhythmBlock).toContain("Final public section rhythm");
-    expect(rhythmBlock).toMatch(/--stitch-public-section-y:\s*clamp\(3\.5rem,\s*6\.25vw,\s*5rem\);/);
+    expect(rhythmBlock).toMatch(/--stitch-public-section-y:\s*clamp\(2\.35rem,\s*4\.15vw,\s*3\.35rem\);/);
     expect(sectionRule).toBeDefined();
     expect(sectionRule).toMatch(/padding-bottom:\s*var\(--stitch-public-section-y\)\s*!important;/);
     expect(sectionRule).toMatch(/padding-top:\s*var\(--stitch-public-section-y\)\s*!important;/);
-    expect(quoteIntroRule).toBeDefined();
-    expect(quoteIntroRule).toMatch(/padding-bottom:\s*var\(--stitch-public-section-y\)\s*!important;/);
-    expect(quoteIntroRule).toMatch(/padding-top:\s*var\(--stitch-public-section-y\)\s*!important;/);
+    expect(quoteHeroRule).toBeDefined();
+    expect(quoteHeroRule).toMatch(/padding:\s*var\(--stitch-public-section-y\)\s+0\s*!important;/);
     expect(nonHomeSectionRule).toBeDefined();
     expect(nonHomeSectionRule).toMatch(/padding-bottom:\s*var\(--stitch-public-section-y\)\s*!important;/);
     expect(nonHomeSectionRule).toMatch(/padding-top:\s*var\(--stitch-public-section-y\)\s*!important;/);
@@ -578,60 +587,67 @@ describe("public page shells", () => {
   it("keeps public hero intros complete and aligned to the Furniture Catalogue rail", () => {
     const styles = readFileSync(resolve(process.cwd(), "app/globals.css"), "utf8");
     const finalHeroRailBlock = styles.slice(
-      styles.indexOf("/* Final public hero rail lock: every non-home intro follows the Furniture Catalogue container. */")
+      styles.indexOf("/* Final public layout consolidation v2: keep this as the last public layout")
     );
     const heroContainerRule = finalHeroRailBlock.match(
-      /body:has\(\.stitch-site-header\):not\(:has\(\.stitch-home-hero\)\)\s+\.site-main\s+>\s+:is\([\s\S]*?\.stitch-legal-hero[\s\S]*?\.stitch-quote-page[\s\S]*?\)\s+>\s+\.stitch-container\s*\{[\s\S]*?\}/
+      /body:has\(\.stitch-site-header\)\s+\.site-main\s+>\s+:is\([\s\S]*?\.stitch-catalogue-hero[\s\S]*?\.stitch-quote-hero[\s\S]*?\)\s+>\s+\.stitch-container\s*\{[\s\S]*?\}/
     )?.[0];
     const wrappedHeroCopyRule = finalHeroRailBlock.match(
-      /body:has\(\.stitch-site-header\):not\(:has\(\.stitch-home-hero\)\)\s+\.site-main\s+:is\([\s\S]*?\.stitch-contact-hero \.stitch-page-intro[\s\S]*?\.stitch-quote-intro[\s\S]*?\)\s*\{[\s\S]*?\}/
+      /body:has\(\.stitch-site-header\)\s+\.site-main\s+>\s+:is\([\s\S]*?\.stitch-catalogue-hero[\s\S]*?\.stitch-quote-hero[\s\S]*?\)\s+>\s+\.stitch-container\s+>\s+\.stitch-page-intro\s*\{[\s\S]*?\}/
     )?.[0];
-    const directHeroCopyRule = finalHeroRailBlock.match(
-      /body:has\(\.stitch-site-header\):not\(:has\(\.stitch-home-hero\)\)\s+\.site-main\s+:is\([\s\S]*?\.stitch-legal-hero > \.stitch-container[\s\S]*?\)\s+>\s+:is\(\.stitch-eyebrow,\s*h1,\s*p\)\s*\{[\s\S]*?\}/
-    )?.[0];
-
-    expect(finalHeroRailBlock).toContain("Final public hero rail lock");
+    expect(finalHeroRailBlock).toContain("Final public layout consolidation v2");
     expect(heroContainerRule).toBeDefined();
     expect(heroContainerRule).toMatch(/max-width:\s*1312px\s*!important;/);
-    expect(heroContainerRule).toMatch(/width:\s*min\(calc\(100%\s*-\s*clamp\(2rem,\s*7vw,\s*6rem\)\),\s*1312px\)\s*!important;/);
-    expect(heroContainerRule).toMatch(/padding-inline:\s*0\s*!important;/);
+    expect(heroContainerRule).toMatch(/width:\s*min\(calc\(100%\s*-\s*clamp\(3rem,\s*8vw,\s*8rem\)\),\s*1312px\)\s*!important;/);
     expect(heroContainerRule).not.toMatch(/max-width:\s*48rem\s*!important;/);
-    expect(heroContainerRule).toMatch(/\.stitch-quote-page/);
+    expect(heroContainerRule).toMatch(/\.stitch-catalogue-hero/);
+    expect(heroContainerRule).toMatch(/\.stitch-about-hero/);
+    expect(heroContainerRule).toMatch(/\.stitch-contact-hero/);
+    expect(heroContainerRule).toMatch(/\.stitch-setups-hero/);
+    expect(heroContainerRule).toMatch(/\.stitch-legal-hero/);
+    expect(heroContainerRule).toMatch(/\.stitch-quote-hero/);
     expect(wrappedHeroCopyRule).toBeDefined();
     expect(wrappedHeroCopyRule).toMatch(/max-width:\s*48rem\s*!important;/);
     expect(wrappedHeroCopyRule).toMatch(/text-align:\s*left\s*!important;/);
-    expect(wrappedHeroCopyRule).toMatch(/\.stitch-quote-intro/);
-    expect(directHeroCopyRule).toBeDefined();
-    expect(directHeroCopyRule).toMatch(/max-width:\s*48rem\s*!important;/);
-    expect(directHeroCopyRule).toMatch(/text-align:\s*left\s*!important;/);
-
     render(<CataloguePageContent catalogue={catalogueWithProduct} />);
+    expect(document.querySelector(".stitch-catalogue-hero > .stitch-container > .stitch-page-intro")).not.toBeNull();
     expect(document.querySelector(".stitch-catalogue-hero")?.textContent).toMatch(
       /Catalogue.*Furniture Catalogue.*Curated rental pieces/s
     );
 
     cleanup();
     render(<ContactPage />);
+    expect(document.querySelector(".stitch-contact-hero > .stitch-container > .stitch-page-intro")).not.toBeNull();
     expect(document.querySelector(".stitch-contact-hero")?.textContent).toMatch(
       /Contact.*Get in Touch.*Share rental catalogue questions/s
     );
 
     cleanup();
     render(<AboutPage />);
+    expect(document.querySelector(".stitch-about-hero > .stitch-container > .stitch-page-intro")).not.toBeNull();
     expect(document.querySelector(".stitch-about-hero")?.textContent).toMatch(
       /About.*Curating spaces that breathe, inspire, and endure.*Furniture is the quiet architecture/s
     );
 
     cleanup();
     render(<PrivacyPage />);
+    expect(document.querySelector(".stitch-legal-hero > .stitch-container > .stitch-page-intro")).not.toBeNull();
     expect(document.querySelector(".stitch-legal-hero")?.textContent).toMatch(
       /Legal.*Privacy Policy.*practical MVP privacy posture/s
     );
 
     cleanup();
     render(<TermsPage />);
+    expect(document.querySelector(".stitch-legal-hero > .stitch-container > .stitch-page-intro")).not.toBeNull();
     expect(document.querySelector(".stitch-legal-hero")?.textContent).toMatch(
       /Legal.*Terms of Use.*current MVP website experience/s
+    );
+
+    cleanup();
+    render(<StitchSetupsPage catalogue={{ source: "fallback", categories: [], products: [] }} />);
+    expect(document.querySelector(".stitch-setups-hero > .stitch-container > .stitch-page-intro")).not.toBeNull();
+    expect(document.querySelector(".stitch-setups-hero")?.textContent).toMatch(
+      /Setups.*Curated Scapes.*Explore styled environment directions/s
     );
   });
 
@@ -646,8 +662,9 @@ describe("public page shells", () => {
     )?.[0];
 
     expect(publicStitchSource).toContain('eyebrow={detailBasePath === "/listings" ? "Setups" : "Catalogue"}');
-    expect(publicStitchSource).toContain('<p className="stitch-eyebrow">About</p>');
+    expect(publicStitchSource).toContain('StitchPageIntro eyebrow="About"');
     expect(publicStitchSource).toContain('StitchPageIntro eyebrow="Contact"');
+    expect(publicStitchSource).toContain('StitchPageIntro eyebrow="Setups"');
     expect(eyebrowRule).toBeDefined();
     expect(eyebrowRule).toMatch(/\.stitch-catalogue-hero/);
     expect(eyebrowRule).toMatch(/\.stitch-about-hero/);
@@ -693,7 +710,7 @@ describe("public page shells", () => {
   it("keeps quote selection rows readable in the side panel", () => {
     const styles = readFileSync(resolve(process.cwd(), "app/globals.css"), "utf8");
     const quoteSelectionBlock = styles.slice(
-      styles.indexOf("/* Final quote selection row layout: keep selected items readable in the side panel. */")
+      styles.indexOf("/* Final quote/detail structure correction: quote uses the shared hero rail,")
     );
     const rowRule = quoteSelectionBlock.match(
       /body:has\(\.stitch-quote-page\):not\(:has\(\.quote-form--success\)\)\s+\.site-main\s+\.stitch-selection-row\s*\{[\s\S]*?\}/
@@ -705,13 +722,14 @@ describe("public page shells", () => {
       /body:has\(\.stitch-quote-page\):not\(:has\(\.quote-form--success\)\)\s+\.site-main\s+\.stitch-selection-row\s+\.stitch-quote-select-controls\s*\{[\s\S]*?\}/
     )?.[0];
 
-    expect(quoteSelectionBlock).toContain("Final quote selection row layout");
+    expect(quoteSelectionBlock).toContain("Final quote/detail structure correction");
     expect(rowRule).toBeDefined();
-    expect(rowRule).toMatch(/grid-template-columns:\s*4\.75rem minmax\(0,\s*1fr\)\s*!important;/);
+    expect(rowRule).toMatch(/grid-template-columns:\s*6\.25rem minmax\(0,\s*1fr\)\s*!important;/);
     expect(bodyRule).toBeDefined();
-    expect(bodyRule).toMatch(/grid-template-areas:[\s\S]*"title details"[\s\S]*"meta details"[\s\S]*"controls details"[\s\S]*!important;/);
+    expect(bodyRule).toMatch(/column-gap:\s*1\.05rem\s*!important;/);
+    expect(bodyRule).toMatch(/row-gap:\s*0\.5rem\s*!important;/);
     expect(controlsRule).toBeDefined();
-    expect(controlsRule).toMatch(/max-width:\s*9rem\s*!important;/);
+    expect(controlsRule).toMatch(/max-width:\s*10\.75rem\s*!important;/);
   });
 
   it("keeps About page feature sections aligned to the Advantage card system", () => {
@@ -749,6 +767,56 @@ describe("public page shells", () => {
     expect(catalogueContainerRule).toMatch(/max-width:\s*1312px\s*!important;/);
     expect(catalogueContainerRule).toMatch(/width:\s*min\(calc\(100%\s*-\s*clamp\(2rem,\s*7vw,\s*6rem\)\),\s*1312px\)\s*!important;/);
     expect(catalogueContainerRule).not.toMatch(/1440px/);
+  });
+
+  it("keeps final public UI parity for catalogue rails, mobile hero CTAs, and form errors", () => {
+    const styles = readFileSync(resolve(process.cwd(), "app/globals.css"), "utf8");
+    const parityBlock = styles.slice(
+      styles.lastIndexOf("/* Final public UI parity pass v3: true tail override")
+    );
+    const catalogueLayoutRule = parityBlock.match(
+      /body:has\(\.stitch-catalogue-hero\)\s+\.site-main\s+\.stitch-catalogue-layout\s*\{[\s\S]*?\}/
+    )?.[0];
+    const catalogueResultRule = parityBlock.match(
+      /body:has\(\.stitch-catalogue-hero\)\s+\.site-main\s+\.stitch-catalogue-results,[\s\S]*?body:has\(\.stitch-catalogue-hero\)\s+\.site-main\s+\.stitch-empty\s*\{[\s\S]*?\}/
+    )?.[0];
+    const catalogueGridRule = parityBlock.match(
+      /body:has\(\.stitch-catalogue-hero\)\s+\.site-main\s+\.stitch-card-grid\s*\{[\s\S]*?\}/
+    )?.[0];
+    const mobileHeroCopyRule = parityBlock.match(
+      /body:has\(\.stitch-home-hero\)\s+\.site-main\s+\.stitch-home-hero__copy\s*\{[\s\S]*?\}/
+    )?.[0];
+    const mobileHeroSubtextRule = parityBlock.match(
+      /body:has\(\.stitch-home-hero\)\s+\.site-main\s+\.stitch-home-hero__copy p:not\(\.stitch-eyebrow\)\s*\{[\s\S]*?\}/
+    )?.[0];
+    const mobileHeroButtonRule = parityBlock.match(
+      /body:has\(\.stitch-home-hero\)\s+\.site-main\s+\.stitch-home-hero\s+\.stitch-button,[\s\S]*?body:has\(\.stitch-home-hero\)\s+\.site-main\s+\.stitch-home-hero\s+\.stitch-button--secondary\s*\{[\s\S]*?\}/
+    )?.[0];
+    const formErrorRule = parityBlock.match(
+      /body:has\(\.stitch-quote-page\):not\(:has\(\.quote-form--success\)\)\s+\.site-main\s+\.stitch-quote-form-panel\s+\.quote-form__field-error\s*\{[\s\S]*?\}/
+    )?.[0];
+
+    expect(parityBlock).toContain("Final public UI parity pass v3");
+    expect(parityBlock).toMatch(/font-size:\s*max\(0\.86rem,\s*1em\)\s*!important;/);
+    expect(parityBlock).toMatch(/font-family:\s*var\(--stitch-sans\)\s*!important;/);
+    expect(catalogueLayoutRule).toBeDefined();
+    expect(catalogueLayoutRule).toMatch(/gap:\s*clamp\(0\.9rem,\s*1\.25vw,\s*1\.35rem\)\s*!important;/);
+    expect(catalogueLayoutRule).toMatch(/grid-template-columns:\s*minmax\(15\.5rem,\s*16\.5rem\)\s+minmax\(0,\s*1fr\)\s*!important;/);
+    expect(catalogueResultRule).toBeDefined();
+    expect(catalogueResultRule).toMatch(/max-width:\s*none\s*!important;/);
+    expect(catalogueResultRule).toMatch(/width:\s*100%\s*!important;/);
+    expect(catalogueGridRule).toBeDefined();
+    expect(catalogueGridRule).toMatch(/grid-template-columns:\s*repeat\(4,\s*minmax\(0,\s*1fr\)\)\s*!important;/);
+    expect(mobileHeroCopyRule).toBeDefined();
+    expect(mobileHeroCopyRule).toMatch(/flex-direction:\s*column\s*!important;/);
+    expect(mobileHeroSubtextRule).toBeDefined();
+    expect(mobileHeroSubtextRule).toMatch(/display:\s*block\s*!important;/);
+    expect(mobileHeroButtonRule).toBeDefined();
+    expect(mobileHeroButtonRule).toMatch(/display:\s*inline-flex\s*!important;/);
+    expect(formErrorRule).toBeDefined();
+    expect(formErrorRule).toMatch(/background:\s*transparent\s*!important;/);
+    expect(formErrorRule).toMatch(/border:\s*0\s*!important;/);
+    expect(formErrorRule).toMatch(/font-size:\s*0\.86rem\s*!important;/);
   });
 
   it("keeps catalogue filter filled styling scoped to selected links only", () => {
