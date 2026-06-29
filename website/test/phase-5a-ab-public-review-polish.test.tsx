@@ -51,7 +51,7 @@ const forbiddenPublicInternalPattern = new RegExp(
     "owner handoff bundle",
     "owner-facing review brief",
     "owner approval issue template",
-    "no-deploy preflight command center",
+    "no-deploy preflight command centre",
     "owner approval packet",
     "release-control internals",
     "admin urls?",

@@ -119,7 +119,9 @@ describe("QuoteRequestForm", () => {
       within(receipt).getByRole("heading", { name: /enquiry received/i })
     ).toBeInTheDocument();
     expect(within(receipt).getByText(/QR-20260527-ABC12345/)).toBeInTheDocument();
-    expect(within(receipt).getByText(/tailored proposal/i)).toBeInTheDocument();
+    expect(within(receipt).getByText(/we received your rental enquiry/i)).toBeInTheDocument();
+    expect(within(receipt).getByText(/our team will review your selection/i)).toBeInTheDocument();
+    expect(receipt).not.toHaveTextContent(/this request does not confirm final rental details/i);
     expect(screen.getByRole("link", { name: /return to home/i })).toHaveAttribute("href", "/");
     expect(screen.getByRole("link", { name: /explore more setups/i })).toHaveAttribute("href", "/listings");
     expect(screen.queryByRole("link", { name: /track|status/i })).not.toBeInTheDocument();
@@ -655,7 +657,9 @@ describe("QuoteRequestForm", () => {
 
     const receipt = await screen.findByRole("status");
 
-    expect(receipt).toHaveTextContent(/tailored proposal/i);
+    expect(receipt).toHaveTextContent(/enquiry received/i);
+    expect(receipt).toHaveTextContent(/manual review/i);
+    expect(receipt).not.toHaveTextContent(/this request does not confirm final rental details/i);
     expect(document.body.textContent).not.toMatch(
       /cart|checkout|order|payment|purchase|booking|reservation|fulfilment|fulfillment|stock reservation|customer account|dashboard/i
     );

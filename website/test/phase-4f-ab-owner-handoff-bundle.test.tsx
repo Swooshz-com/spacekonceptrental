@@ -113,7 +113,7 @@ describe("Phase 4F-A/B owner handoff bundle", () => {
     ).toBeInTheDocument();
     expect(screen.getByText("Owner-facing review brief")).toBeInTheDocument();
     expect(screen.getByText("Owner approval issue template")).toBeInTheDocument();
-    expect(screen.getByText("No-deploy preflight command center")).toBeInTheDocument();
+    expect(screen.getByText("No-deploy preflight command centre")).toBeInTheDocument();
     expect(screen.getByText("Owner handoff bundle index")).toBeInTheDocument();
   });
 
@@ -144,7 +144,7 @@ describe("Phase 4F-A/B owner handoff bundle", () => {
     const publicSource = publicSourceFiles.map(readRepoFile).join("\n");
 
     expect(publicSource).not.toMatch(
-      /owner-facing review brief|owner approval issue template|no-deploy preflight command center|owner handoff bundle|owner approval request packet|preview-planning handoff template|final no-deploy decision gate|local release-candidate freeze|full-suite reliability gate|deployment-planning firewall closure|local owner-review rehearsal pack|local blocker ledger|local acceptance drill|release-control internals|owner-review templates|protected admin urls|admin urls|internal notes|recovery lane statuses|destructive-action safeguards|status-transition matrix details|\/admin\//i
+      /owner-facing review brief|owner approval issue template|no-deploy preflight command centre|owner handoff bundle|owner approval request packet|preview-planning handoff template|final no-deploy decision gate|local release-candidate freeze|full-suite reliability gate|deployment-planning firewall closure|local owner-review rehearsal pack|local blocker ledger|local acceptance drill|release-control internals|owner-review templates|protected admin urls|admin urls|internal notes|recovery lane statuses|destructive-action safeguards|status-transition matrix details|\/admin\//i
     );
   });
 

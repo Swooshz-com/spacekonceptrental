@@ -24,7 +24,7 @@ const forbiddenRentalCompletionPattern = /\b(?:booking|reservation|fulfilment|fu
 const forbiddenFakeFactPattern =
   /award-winning|certified partner|trusted by|5-star|guaranteed availability|guaranteed delivery|licensed and insured|testimonial|client logo|case study|legal guarantee|production policy|service-area claim|Singapore\s+\d{6}|\+?\d[\d\s().-]{7,}|Mon(?:day)?\s*-\s*Fri|24\/7|123\s+Main/i;
 const forbiddenInternalLeakPattern =
-  /owner handoff bundle|owner-facing review brief|owner approval issue template|no-deploy preflight command center|owner approval packet|release-control internals|admin urls?|internal notes|recovery lanes?|destructive-action safeguards|status-transition matrix|\/admin\//i;
+  /owner handoff bundle|owner-facing review brief|owner approval issue template|no-deploy preflight command centre|owner approval packet|release-control internals|admin urls?|internal notes|recovery lanes?|destructive-action safeguards|status-transition matrix|\/admin\//i;
 const forbiddenScopePattern = /customer account|quote tracking|file upload|public upload|notifications?|\bCRM\b/i;
 const forbiddenReceiptPromisePattern =
   /tracking portal|status lookup|accepted outcome|availability statement|\bhold\b|confirmed|reserved|booked|ordered|paid|completed rental|guaranteed|response time|fulfilment|fulfillment|payment|purchase/i;

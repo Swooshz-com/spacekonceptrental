@@ -153,7 +153,7 @@ describe("public page shells", () => {
       /request a rental quote/i
     );
     expect(container.querySelector(".stitch-quote-intro")).toBeNull();
-    expect(screen.getAllByText(/this request does not confirm final rental details/i).length).toBeGreaterThan(0);
+    expect(document.body.textContent).not.toMatch(/this request does not confirm final rental details/i);
     expect(screen.getByLabelText(/your name/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/email address/i)).toBeInTheDocument();
     expect(screen.queryByLabelText(/requested listings or items/i)).not.toBeInTheDocument();
@@ -520,6 +520,14 @@ describe("public page shells", () => {
     expect(h3Rule).toBeDefined();
     expect(h3Rule).toMatch(/\.stitch-legal-card h3/);
     expect(h3Rule).toMatch(/font-size:\s*clamp\(1\.15rem,\s*1\.45vw,\s*1\.42rem\)\s*!important;/);
+    const requestedRefinementsBlock = styles.slice(
+      styles.indexOf("/* Final requested refinements:")
+    );
+    const legalCardOverrideRule = requestedRefinementsBlock.match(
+      /body:has\(\.stitch-legal-hero\)\s+\.site-main\s+\.stitch-legal-card h3\s*\{[\s\S]*?\}/
+    )?.[0];
+    expect(legalCardOverrideRule).toBeDefined();
+    expect(legalCardOverrideRule).toMatch(/font-size:\s*clamp\(1\.35rem,\s*1\.75vw,\s*1\.65rem\)\s*!important;/);
     expect(itemNameRule).toBeDefined();
     expect(itemNameRule).toMatch(/font-size:\s*clamp\(0\.98rem,\s*1\.05vw,\s*1\.12rem\)\s*!important;/);
     expect(itemNameRule).toMatch(/line-height:\s*1\.16\s*!important;/);
@@ -765,6 +773,7 @@ describe("public page shells", () => {
     const aboutParityBlock = styles.slice(
       styles.indexOf("/* Final About parity: match the SpaceKonceptRental Advantage section system. */")
     );
+    const publicStitchSource = readFileSync(resolve(process.cwd(), "components/PublicStitch.tsx"), "utf8");
     const aboutCardRule = aboutParityBlock.match(
       /body:has\(\.stitch-about-hero\)\s+\.site-main\s+:is\([\s\S]*?\.stitch-about-service[\s\S]*?\)\s+\.stitch-about-card\s*\{[\s\S]*?\}/
     )?.[0];
@@ -773,12 +782,15 @@ describe("public page shells", () => {
     )?.[0];
 
     expect(aboutParityBlock).toContain("Final About parity");
+    expect(publicStitchSource).toContain("stitch-feature stitch-about-card");
+    expect(publicStitchSource).toContain("stitch-feature__icon--");
     expect(aboutHeadingRule).toBeDefined();
     expect(aboutHeadingRule).toMatch(/font-size:\s*clamp\(1\.7rem,\s*2\.05vw,\s*2\.2rem\)\s*!important;/);
     expect(aboutHeadingRule).toMatch(/text-align:\s*center\s*!important;/);
     expect(aboutCardRule).toBeDefined();
     expect(aboutCardRule).toMatch(/background:\s*var\(--stitch-surface\)\s*!important;/);
-    expect(aboutCardRule).toMatch(/min-height:\s*15\.4rem\s*!important;/);
+    expect(aboutCardRule).toMatch(/border-radius:\s*0\s*!important;/);
+    expect(aboutCardRule).toMatch(/min-height:\s*clamp\(12\.4rem,\s*14vw,\s*15\.4rem\)\s*!important;/);
     expect(aboutCardRule).toMatch(/text-align:\s*center\s*!important;/);
   });
 

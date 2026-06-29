@@ -359,7 +359,7 @@ export default function QuoteRequestForm({
         Rental fit is reviewed directly by the team.{" "}
         Share contact details for direct manual follow-up. The team uses these
         details to triage the rental enquiry.{" "}
-        Complete the required contact point first. Let us know what you need for your event. Share the date, venue, and requested items - our team will review the details and follow up with a tailored proposal.
+        Submitting does not confirm final rental details and does not set aside furniture or finish rental details. Complete the required contact point first. Let us know what you need for your event. Share the date, venue, and requested items - our team will review the details and follow up with a tailored proposal.
       </p>
       <input name="items" readOnly type="hidden" value={itemsText} />
       {showSelectedItemsSummary && itemsText.trim() ? (
@@ -551,10 +551,6 @@ export default function QuoteRequestForm({
               {receiptReference}
             </p>
           ) : null}
-          <p>
-            This request does not confirm final rental details. Our team will
-            review your selection and follow up with a tailored proposal.
-          </p>
           <div className="quote-form__receipt-details">
             <div>
               <span>Rental enquiry</span>
@@ -566,7 +562,10 @@ export default function QuoteRequestForm({
             </div>
             <div>
               <span>Follow-up</span>
-              <strong>We will follow up after review.</strong>
+              <strong>
+                We will follow up with a tailored proposal after review.
+                Submitting does not confirm final rental details.
+              </strong>
             </div>
           </div>
           <div
