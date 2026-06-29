@@ -22187,15 +22187,29 @@ body:has(.stitch-quote-hero) .site-main .stitch-quote-intro::after {
     gap: 0.48rem !important;
     grid-template-columns: 1fr !important;
     left: auto !important;
-    margin-top: 0.55rem !important;
+    margin-top: -4rem !important;
     opacity: 1 !important;
-    order: 3 !important;
+    order: 1 !important;
     pointer-events: auto !important;
-    position: static !important;
+    position: relative !important;
     right: auto !important;
     transform: none !important;
     visibility: visible !important;
     width: 100% !important;
+    z-index: 2 !important;
+  }
+
+  body:has(.stitch-catalogue-hero) .site-main .stitch-product-card h2 {
+    order: 2 !important;
+  }
+
+  body:has(.stitch-catalogue-hero) .site-main .stitch-product-card .stitch-card__meta {
+    display: block !important;
+    order: 3 !important;
+  }
+
+  body:has(.stitch-catalogue-hero) .site-main .stitch-product-card .stitch-card__body > p:not(.stitch-card__meta) {
+    order: 4 !important;
   }
 
   body:has(.stitch-catalogue-hero) .site-main .stitch-product-card .stitch-quote-select-controls,

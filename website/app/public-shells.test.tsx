@@ -996,7 +996,7 @@ describe("public page shells", () => {
     expect(openMenuRule).toMatch(/height:\s*100dvh\s*!important;/);
   });
 
-  it("keeps mobile catalogue card actions inline instead of overlaying images", () => {
+  it("keeps mobile catalogue card actions raised before the listing text", () => {
     const styles = readFileSync(resolve(process.cwd(), "app/globals.css"), "utf8");
     const consolidationIndex = styles.indexOf("/* Final public design-system consolidation:");
     const mobileCorrectionBlock = styles.slice(
@@ -1010,10 +1010,18 @@ describe("public page shells", () => {
     )?.[0];
 
     expect(cardActionsRule).toBeDefined();
-    expect(cardActionsRule).toMatch(/position:\s*static\s*!important;/);
+    expect(cardActionsRule).toMatch(/position:\s*relative\s*!important;/);
     expect(cardActionsRule).toMatch(/opacity:\s*1\s*!important;/);
     expect(cardActionsRule).toMatch(/transform:\s*none\s*!important;/);
-    expect(cardActionsRule).toMatch(/margin-top:\s*0\.55rem\s*!important;/);
+    expect(cardActionsRule).toMatch(/margin-top:\s*-4rem\s*!important;/);
+    expect(cardActionsRule).toMatch(/order:\s*1\s*!important;/);
+    expect(cardActionsRule).toMatch(/z-index:\s*2\s*!important;/);
+    expect(mobileCorrectionBlock).toMatch(
+      /body:has\(\.stitch-catalogue-hero\)\s+\.site-main\s+\.stitch-product-card\s+h2\s*\{[\s\S]*?order:\s*2\s*!important;[\s\S]*?\}/
+    );
+    expect(mobileCorrectionBlock).toMatch(
+      /body:has\(\.stitch-catalogue-hero\)\s+\.site-main\s+\.stitch-product-card\s+\.stitch-card__meta\s*\{[\s\S]*?display:\s*block\s*!important;[\s\S]*?order:\s*3\s*!important;[\s\S]*?\}/
+    );
     expect(quantityRule).toBeDefined();
     expect(quantityRule).toMatch(/grid-template-columns:\s*2\.6rem\s+minmax\(0,\s*1fr\)\s+2\.6rem\s*!important;/);
   });
