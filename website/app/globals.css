@@ -22573,6 +22573,10 @@ body:has(.stitch-home-hero) .site-main .stitch-home-featured .stitch-home-featur
   position: relative !important;
 }
 
+body:has(.stitch-home-hero) .site-main .stitch-home-categories .stitch-home-section-action {
+  margin-top: calc(clamp(2rem, 3vw, 2.7rem) + 3.1rem) !important;
+}
+
 body:has(.stitch-contact-hero) .site-main :is(
   .stitch-contact-options-section,
   .stitch-contact-process-section
