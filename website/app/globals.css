@@ -19050,10 +19050,10 @@ body:has(.stitch-site-header) .stitch-cta-band h2 {
   margin: 0 !important;
   color: var(--stitch-ink) !important;
   font-family: var(--stitch-serif) !important;
-  font-size: clamp(2rem, 4.1vw, 3.35rem) !important;
-  font-weight: 700 !important;
-  letter-spacing: -0.045em !important;
-  line-height: 0.98 !important;
+  font-size: clamp(1.7rem, 2.05vw, 2.2rem) !important;
+  font-weight: 400 !important;
+  letter-spacing: 0 !important;
+  line-height: 1.08 !important;
   text-align: left !important;
 }
 
@@ -19076,10 +19076,10 @@ body:has(.stitch-home-hero) .stitch-home-advantage .stitch-section-heading h2,
 body:has(.stitch-home-hero) .stitch-home-categories .stitch-section-heading h2,
 body:has(.stitch-home-hero) .stitch-home-featured .stitch-section-heading h2 {
   font-family: var(--stitch-serif) !important;
-  font-size: clamp(2rem, 3.9vw, 3.15rem) !important;
-  font-weight: 700 !important;
-  letter-spacing: -0.045em !important;
-  line-height: 1 !important;
+  font-size: clamp(1.7rem, 2.05vw, 2.2rem) !important;
+  font-weight: 400 !important;
+  letter-spacing: 0 !important;
+  line-height: 1.08 !important;
 }
 
 body:has(.stitch-home-hero) .stitch-home-categories .stitch-section-heading--row .stitch-button {
@@ -19435,7 +19435,7 @@ body:has(.stitch-site-header) .site-main h1 {
 }
 
 body:has(.stitch-site-header) .site-main h2 {
-  font-size: clamp(2.1rem, 3.55vw, 3.35rem) !important;
+  font-size: clamp(1.85rem, 2.65vw, 2.55rem) !important;
 }
 
 body:has(.stitch-site-header) .site-main h3 {
@@ -20778,10 +20778,10 @@ body:has(.stitch-site-header) .site-main :is(
   .stitch-quote-intro h1
 ) {
   font-family: var(--stitch-serif) !important;
-  font-size: clamp(3.45rem, 5vw, 4.55rem) !important;
+  font-size: clamp(2.55rem, 3.15vw, 3.1rem) !important;
   font-weight: 400 !important;
-  letter-spacing: -0.035em !important;
-  line-height: 1 !important;
+  letter-spacing: 0 !important;
+  line-height: 1.02 !important;
 }
 
 body:has(.stitch-about-hero) .site-main .stitch-about-hero h1,
@@ -20924,8 +20924,8 @@ body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-
   }
 
   body:has(.stitch-catalogue-hero) .site-main .stitch-catalogue-section .stitch-container {
-    max-width: 1440px !important;
-    width: min(calc(100% - clamp(3rem, 8vw, 8rem)), 1440px) !important;
+    max-width: 1312px !important;
+    width: min(calc(100% - clamp(2rem, 7vw, 6rem)), 1312px) !important;
   }
 
   body:has(.stitch-catalogue-hero) .site-main .stitch-catalogue-layout {
@@ -20992,10 +20992,19 @@ body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-
     .stitch-home-featured
   ) .stitch-section-heading h2 {
     font-family: var(--stitch-serif) !important;
-    font-size: clamp(2.25rem, 2.8vw, 2.9rem) !important;
+    font-size: clamp(1.7rem, 2.05vw, 2.2rem) !important;
     font-weight: 400 !important;
-    letter-spacing: -0.035em !important;
-    line-height: 1.04 !important;
+    letter-spacing: 0 !important;
+    line-height: 1.08 !important;
+  }
+
+  body:has(.stitch-catalogue-hero) .site-main .stitch-catalogue-results .stitch-empty {
+    padding: 1.35rem !important;
+  }
+
+  body:has(.stitch-catalogue-hero) .site-main .stitch-catalogue-results .stitch-empty h2 {
+    font-size: clamp(1.7rem, 2.05vw, 2.2rem) !important;
+    line-height: 1.08 !important;
   }
 
   body:has(.stitch-home-hero) .site-main .stitch-home-advantage .stitch-feature-grid {

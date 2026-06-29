@@ -330,6 +330,37 @@ describe("public page shells", () => {
     expect(finalHeroTitleRule).toMatch(/font-size:\s*clamp\(2\.55rem,\s*3\.15vw,\s*3\.1rem\)\s*!important;/);
     expect(finalHeroTitleRule).not.toMatch(/font-weight:\s*700\s*!important;/);
     expect(finalHeroTitleRule).not.toMatch(/font-size:\s*clamp\(3\.05rem,\s*4\.2vw,\s*3\.95rem\)\s*!important;/);
+    expect(finalRhythmBlock).not.toMatch(/font-size:\s*clamp\(3\.45rem,\s*5vw,\s*4\.55rem\)\s*!important;/);
+  });
+
+  it("keeps public section headings compact enough to avoid premature wrapping", () => {
+    const styles = readFileSync(resolve(process.cwd(), "app/globals.css"), "utf8");
+    const finalDesktopBlock = styles.slice(
+      styles.indexOf("@media (min-width: 901px)")
+    );
+    const homeSectionHeadingRule = finalDesktopBlock.match(
+      /body:has\(\.stitch-home-hero\)\s+\.site-main\s+:is\([\s\S]*?\.stitch-home-featured[\s\S]*?\)\s+\.stitch-section-heading h2\s*\{[\s\S]*?\}/
+    )?.[0];
+
+    expect(homeSectionHeadingRule).toBeDefined();
+    expect(homeSectionHeadingRule).toMatch(/font-size:\s*clamp\(1\.7rem,\s*2\.05vw,\s*2\.2rem\)\s*!important;/);
+    expect(homeSectionHeadingRule).toMatch(/font-weight:\s*400\s*!important;/);
+    expect(homeSectionHeadingRule).not.toMatch(/font-size:\s*clamp\(2\.25rem,\s*2\.8vw,\s*2\.9rem\)\s*!important;/);
+  });
+
+  it("keeps catalogue results inside the shared public container width", () => {
+    const styles = readFileSync(resolve(process.cwd(), "app/globals.css"), "utf8");
+    const finalCatalogueBlock = styles.slice(
+      styles.indexOf("body:has(.stitch-catalogue-hero) .site-main .stitch-catalogue-section .stitch-container")
+    );
+    const catalogueContainerRule = finalCatalogueBlock.match(
+      /body:has\(\.stitch-catalogue-hero\)\s+\.site-main\s+\.stitch-catalogue-section\s+\.stitch-container\s*\{[\s\S]*?\}/
+    )?.[0];
+
+    expect(catalogueContainerRule).toBeDefined();
+    expect(catalogueContainerRule).toMatch(/max-width:\s*1312px\s*!important;/);
+    expect(catalogueContainerRule).toMatch(/width:\s*min\(calc\(100%\s*-\s*clamp\(2rem,\s*7vw,\s*6rem\)\),\s*1312px\)\s*!important;/);
+    expect(catalogueContainerRule).not.toMatch(/1440px/);
   });
 
   it("keeps catalogue filter filled styling scoped to selected links only", () => {
