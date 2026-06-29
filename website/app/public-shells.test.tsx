@@ -23,6 +23,7 @@ import HomePage, { metadata as homeMetadata } from "./page";
 import PrivacyPage, { metadata as privacyMetadata } from "./privacy/page";
 import QuotePage, { metadata as quoteMetadata } from "./quote/page";
 import TermsPage, { metadata as termsMetadata } from "./terms/page";
+import { StitchSetupsPage } from "../components/PublicStitch";
 
 vi.mock("next/image", () => ({
   default: ({ alt, src }: { alt: string; src: string | { src: string } }) => (
@@ -214,6 +215,70 @@ describe("public page shells", () => {
     expect(allStylesLink).not.toHaveClass("is-active");
     expect(screen.getByRole("link", { name: /lounge seating/i })).toHaveClass("is-active");
     expect(screen.getByRole("link", { name: /brutalist/i })).toHaveClass("is-active");
+  });
+
+  it("keeps setup pills as filters and includes the featured editorial in the setup listings", () => {
+    const previousDemoContentFlag = process.env.NEXT_PUBLIC_SKR_DEMO_CONTENT;
+    process.env.NEXT_PUBLIC_SKR_DEMO_CONTENT = "true";
+
+    try {
+      render(<StitchSetupsPage catalogue={{ source: "fallback", categories: [], products: [] }} />);
+
+      expect(screen.getByRole("link", { name: /all setups/i })).toHaveAttribute("href", "/listings");
+      expect(screen.getByRole("link", { name: /featured editorial/i })).toHaveAttribute(
+        "href",
+        "/listings?setup=the-metropolitan-gala"
+      );
+      expect(screen.getByRole("link", { name: /weddings/i })).toHaveAttribute(
+        "href",
+        "/listings?setup=botanical-wedding"
+      );
+      expect(screen.getByRole("link", { name: /corporate summits/i })).toHaveAttribute(
+        "href",
+        "/listings?setup=executive-summit"
+      );
+      expect(screen.getAllByText("The Metropolitan Gala").length).toBeGreaterThan(1);
+      expect(screen.getAllByRole("link", { name: /view setup details/i }).length).toBeGreaterThan(1);
+    } finally {
+      if (previousDemoContentFlag === undefined) {
+        delete process.env.NEXT_PUBLIC_SKR_DEMO_CONTENT;
+      } else {
+        process.env.NEXT_PUBLIC_SKR_DEMO_CONTENT = previousDemoContentFlag;
+      }
+    }
+  });
+
+  it("filters setup listings from the pill query without turning pills into detail links", () => {
+    const previousDemoContentFlag = process.env.NEXT_PUBLIC_SKR_DEMO_CONTENT;
+    process.env.NEXT_PUBLIC_SKR_DEMO_CONTENT = "true";
+
+    try {
+      render(
+        <StitchSetupsPage
+          activeSetupSlug="botanical-wedding"
+          catalogue={{ source: "fallback", categories: [], products: [] }}
+        />
+      );
+
+      expect(screen.getByRole("link", { name: /all setups/i })).not.toHaveAttribute("aria-current", "page");
+      expect(screen.getByRole("link", { name: /weddings/i })).toHaveAttribute("aria-current", "page");
+      expect(screen.getByRole("link", { name: /weddings/i })).toHaveAttribute(
+        "href",
+        "/listings?setup=botanical-wedding"
+      );
+      expect(screen.getByText("Botanical Wedding")).toBeInTheDocument();
+      expect(screen.queryByText("Executive Summit")).not.toBeInTheDocument();
+      expect(screen.getByRole("link", { name: /view setup details/i })).toHaveAttribute(
+        "href",
+        "/listings/botanical-wedding"
+      );
+    } finally {
+      if (previousDemoContentFlag === undefined) {
+        delete process.env.NEXT_PUBLIC_SKR_DEMO_CONTENT;
+      } else {
+        process.env.NEXT_PUBLIC_SKR_DEMO_CONTENT = previousDemoContentFlag;
+      }
+    }
   });
 
   it("renders a clean empty catalogue state inside the Stitch catalogue shell", () => {
