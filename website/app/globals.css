@@ -334,6 +334,7 @@ select {
     height: 86px !important;
   }
 
+  body:has(.stitch-home-hero) .stitch-home-section-action,
   body:has(.stitch-home-hero) .stitch-home-featured-action {
     margin-top: 1.55rem !important;
   }
@@ -3468,6 +3469,7 @@ body { background: var(--stitch-bg); color: var(--stitch-ink); font-family: var(
   text-transform: uppercase;
 }
 
+.stitch-home-section-action,
 .stitch-home-featured-action {
   display: flex;
   justify-content: center;
@@ -10130,10 +10132,12 @@ body:has(.stitch-quote-page) .stitch-quote-form-panel .quote-form .button {
     letter-spacing: 0.04em !important;
   }
 
+  .stitch-home-section-action,
   .stitch-home-featured-action {
     margin-top: 20px !important;
   }
 
+  .stitch-home-section-action .stitch-button,
   .stitch-home-featured-action .stitch-button {
     min-width: 0 !important;
     padding: 10px 22px !important;
@@ -12107,6 +12111,7 @@ body:has(.stitch-quote-page) .stitch-quote-form-panel .quote-form .button {
     height: 86px !important;
   }
 
+  body:has(.stitch-home-hero) .stitch-home-section-action,
   body:has(.stitch-home-hero) .stitch-home-featured-action {
     margin-top: 1.55rem !important;
   }
@@ -13713,11 +13718,13 @@ body:has(.stitch-quote-page) .stitch-quote-form-panel .quote-form .button {
     line-height: 1.15 !important;
   }
 
+  body:has(.stitch-home-hero) .stitch-home-section-action,
   body:has(.stitch-home-hero) .stitch-home-featured-action {
     margin-top: 0.9rem !important;
     text-align: center !important;
   }
 
+  body:has(.stitch-home-hero) .stitch-home-section-action .stitch-button,
   body:has(.stitch-home-hero) .stitch-home-featured-action .stitch-button {
     min-height: 24px !important;
     padding: 0 0.9rem !important;
@@ -15125,6 +15132,7 @@ body:has(.stitch-quote-page .quote-form--success) .quote-form__receipt-actions {
   body:has(.stitch-home-hero) .stitch-home-featured-grid { grid-template-columns: repeat(4, 1fr) !important; gap: 0.9rem !important; }
   body:has(.stitch-home-hero) .stitch-home-feature-card { min-height: 143px !important; padding: 0.45rem !important; }
   body:has(.stitch-home-hero) .stitch-home-feature-card img { height: 86px !important; }
+  body:has(.stitch-home-hero) .stitch-home-section-action,
   body:has(.stitch-home-hero) .stitch-home-featured-action { margin-top: 1.55rem !important; }
   body:has(.stitch-home-hero) .stitch-footer { padding: 2.95rem 0 2.5rem !important; }
 }
@@ -19080,11 +19088,6 @@ body:has(.stitch-home-hero) .stitch-home-featured .stitch-section-heading h2 {
   font-weight: 400 !important;
   letter-spacing: 0 !important;
   line-height: 1.08 !important;
-}
-
-body:has(.stitch-home-hero) .stitch-home-categories .stitch-section-heading--row .stitch-button {
-  flex: 0 0 auto !important;
-  margin-bottom: 0.25rem !important;
 }
 
 body:has(.stitch-home-hero) .stitch-home-advantage .stitch-feature-grid {

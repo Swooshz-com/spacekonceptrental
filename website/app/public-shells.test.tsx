@@ -23,7 +23,11 @@ import HomePage, { metadata as homeMetadata } from "./page";
 import PrivacyPage, { metadata as privacyMetadata } from "./privacy/page";
 import QuotePage, { metadata as quoteMetadata } from "./quote/page";
 import TermsPage, { metadata as termsMetadata } from "./terms/page";
-import { StitchSetupsPage } from "../components/PublicStitch";
+import {
+  StitchCategoryPreview,
+  StitchFeaturedPieces,
+  StitchSetupsPage
+} from "../components/PublicStitch";
 
 vi.mock("next/image", () => ({
   default: ({ alt, src }: { alt: string; src: string | { src: string } }) => (
@@ -103,6 +107,32 @@ describe("public page shells", () => {
     expect(screen.getByRole("heading", { name: /browse by category/i })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: /featured pieces/i })).toBeInTheDocument();
     expect(document.body.textContent).not.toMatch(forbiddenPublicCopy);
+  });
+
+  it("uses the same catalogue CTA treatment for category and featured homepage sections", async () => {
+    render(
+      <>
+        <StitchCategoryPreview catalogue={catalogueWithProduct} />
+        <StitchFeaturedPieces catalogue={catalogueWithProduct} />
+      </>
+    );
+
+    const categorySection = document.querySelector(".stitch-home-categories");
+    const featuredSection = document.querySelector(".stitch-home-featured");
+    const categoryHeading = categorySection?.querySelector(".stitch-section-heading");
+    const categoryAction = categorySection?.querySelector(".stitch-home-section-action");
+    const featuredAction = featuredSection?.querySelector(".stitch-home-section-action");
+    const viewFullCatalogueLinks = screen.getAllByRole("link", {
+      name: /view full catalogue/i
+    });
+
+    expect(categorySection).not.toBeNull();
+    expect(featuredSection).not.toBeNull();
+    expect(categoryHeading?.querySelector("a")).toBeNull();
+    expect(categoryAction?.querySelector("a")?.getAttribute("href")).toBe("/catalogue");
+    expect(featuredAction?.querySelector("a")?.getAttribute("href")).toBe("/catalogue");
+    expect(viewFullCatalogueLinks).toHaveLength(2);
+    expect(viewFullCatalogueLinks.every((link) => link.closest(".stitch-home-section-action"))).toBe(true);
   });
 
   it("renders public events guidance without shell or MVP wording", () => {
