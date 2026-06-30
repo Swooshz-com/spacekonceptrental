@@ -147,7 +147,7 @@ describe("QuoteSelectionControls", () => {
     );
   });
 
-  it("separates setup directions from their included rental pieces", () => {
+  it("wraps setup included rental pieces under the selected setup direction", () => {
     window.localStorage.setItem(
       "skr.quoteSelection.v1",
       JSON.stringify([
@@ -166,6 +166,7 @@ describe("QuoteSelectionControls", () => {
           kind: "setup-included",
           imageSrc: "/images/aura-lounge-chair.jpg",
           quantity: 120,
+          setupBaseQuantity: 120,
           setupName: "Botanical Wedding",
           setupSlug: "botanical-wedding"
         }
@@ -175,12 +176,16 @@ describe("QuoteSelectionControls", () => {
     render(<QuoteSelectionSummary />);
 
     expect(screen.queryByText("Selected Rental Items")).not.toBeInTheDocument();
-    expect(screen.getByText("Setup Included Rental Pieces")).toBeInTheDocument();
     expect(screen.getByText("Selected Setup Directions")).toBeInTheDocument();
+    expect(screen.getByText("Included rental pieces")).toBeInTheDocument();
     expect(screen.getByText("Aura Lounge Chair")).toBeInTheDocument();
     expect(screen.getByText("Qty: 120")).toBeInTheDocument();
     expect(screen.getAllByText("Botanical Wedding").length).toBeGreaterThan(0);
     expect(screen.getAllByRole("link", { name: /details/i })[0]).toHaveAttribute(
+      "href",
+      "/listings/botanical-wedding"
+    );
+    expect(screen.getAllByRole("link", { name: /details/i })[1]).toHaveAttribute(
       "href",
       "/catalogue/aura-lounge-chair"
     );
@@ -236,6 +241,7 @@ describe("QuoteSelectionControls", () => {
           category: "Seating",
           kind: "setup-included",
           quantity: 120,
+          setupBaseQuantity: 120,
           setupName: "Botanical Wedding",
           setupSlug: "botanical-wedding"
         }
@@ -258,6 +264,51 @@ describe("QuoteSelectionControls", () => {
       })
     );
 
+    expect(screen.getByText("Qty: 120")).toBeInTheDocument();
+  });
+
+  it("adjusts setup children by their original quantities when setup quantity changes", () => {
+    window.localStorage.setItem(
+      "skr.quoteSelection.v1",
+      JSON.stringify([
+        {
+          slug: "botanical-wedding",
+          name: "Botanical Wedding",
+          category: "Setups",
+          kind: "setup",
+          quantity: 2
+        },
+        {
+          slug: "aura-lounge-chair",
+          name: "Aura Lounge Chair",
+          category: "Seating",
+          kind: "setup-included",
+          quantity: 100,
+          setupBaseQuantity: 120,
+          setupName: "Botanical Wedding",
+          setupSlug: "botanical-wedding"
+        }
+      ])
+    );
+
+    render(<QuoteSelectionSummary />);
+
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: /decrease botanical wedding quantity/i
+      })
+    );
+
+    expect(screen.getByText("Qty: 1")).toBeInTheDocument();
+    expect(screen.getByText("Qty: 0")).toBeInTheDocument();
+
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: /increase botanical wedding quantity/i
+      })
+    );
+
+    expect(screen.getByText("Qty: 2")).toBeInTheDocument();
     expect(screen.getByText("Qty: 120")).toBeInTheDocument();
   });
 

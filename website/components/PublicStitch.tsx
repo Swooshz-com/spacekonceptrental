@@ -129,6 +129,7 @@ function setupIncludedQuoteItem(
     kind: "setup-included",
     imageSrc: stitchImageSrc(fallbackProductImage(product)),
     quantity,
+    setupBaseQuantity: quantity,
     setupName: setup.name,
     setupSlug: setup.slug
   };
@@ -261,8 +262,9 @@ export function StitchDetail({ product, backHref, backLabel, setup = false, rela
   const alt = textOrUndefined(image?.altText) ?? `${product.name} furniture rental setup`;
   const imgSrc = image?.publicUrl ?? stitchImageSrc(setup ? galaImage : fallbackProductImage(product));
   const fallbackRelated = setup ? getDemoProducts().slice(0, 4) : getDemoProducts().filter((item) => item.slug !== product.slug).slice(0, 3);
+  const setupRelatedItems = setup && related.length ? related : fallbackRelated;
   const setupIncludedItems = setup
-    ? fallbackRelated.map((item, index) =>
+    ? setupRelatedItems.map((item, index) =>
         setupIncludedQuoteItem(
           item,
           product,
@@ -277,7 +279,64 @@ export function StitchDetail({ product, backHref, backLabel, setup = false, rela
     setupIncludedItems
   );
   const relatedItems = related.length ? related : fallbackRelated;
-  return <><section className={setup ? "stitch-detail-page stitch-detail-page--setup" : "stitch-detail-page"}><div className="stitch-container">{setup ? <p className="stitch-detail-breadcrumb">Setups / {product.name}</p> : null}<div className="stitch-detail-open-grid"><div className="stitch-detail-open-media"><img alt={alt} src={imgSrc} /></div><div className="stitch-detail-open-copy"><Link className="stitch-back" href={backHref}>{setup ? "Setups" : productCategory(product)}</Link><h2 className="stitch-detail-title">{product.name}</h2><p>{productSummary(product)}</p>{setup ? <div className="stitch-detail-context"><p className="stitch-eyebrow">Setup context</p><h2>Our team will prepare a custom proposal based on your event requirements.</h2></div> : <><p className="stitch-detail-safe-note">Bring event details. Add quantities and alternatives in the enquiry notes. Share setup, access, and timing notes. This request does not set aside furniture or finish rental details.</p><div className="stitch-detail-spec-card"><h2>Listing details</h2><dl><div><dt>Category</dt><dd>{productCategory(product)}</dd></div><div><dt>Style</dt><dd>{productStyleContext(product)}</dd></div><div><dt>Rental unit</dt><dd>{product.rentalUnit}</dd></div></dl></div><div className="stitch-detail-quantity-row"><span>Quantity to share</span><span>Use enquiry notes</span></div></>}<div className="stitch-detail-actions"><Link className="stitch-detail-button stitch-detail-button--request" href="/quote">Request Quote</Link><QuoteSelectionButton item={quoteItem} /><Link className="stitch-detail-button stitch-detail-button--back" href={backHref}>{setup ? "Back to Setups" : "Back to Catalogue"}</Link></div></div></div>{setup ? <div className="stitch-setup-lower"><div><h2>{product.name}</h2><p>{productSummary(product)}</p><div className="stitch-detail-context"><p className="stitch-eyebrow">Setup context</p><h2>Our team will prepare a custom proposal based on your event requirements.</h2></div><QuoteSelectionButton item={quoteItem} /></div><section className="stitch-included-open"><h2>Included rental pieces</h2><div>{fallbackRelated.map((item, index) => <article key={item.id}><img alt={`${item.name} rental piece`} src={stitchImageSrc(fallbackProductImage(item))} /><div><strong>{item.name}</strong><small>Qty: {index === 0 ? "120" : index === 1 ? "15" : "6"}</small></div></article>)}</div></section></div> : null}</div></section>{!setup && relatedItems.length ? <section className="stitch-section stitch-detail-related"><div className="stitch-container"><div className="stitch-detail-related-heading"><div><h2>Complementary Pieces</h2><p>Curated pairings for {product.name}</p></div><Link href="/catalogue">See All</Link></div><div className="stitch-detail-related-grid">{relatedItems.map((item) => <Link className="stitch-detail-related-card" href={`/catalogue/${item.slug}`} key={item.id}><img alt={`${item.name} rental piece`} src={stitchImageSrc(fallbackProductImage(item))} /><strong>{item.name}</strong></Link>)}</div></div></section> : null}</>;
+  const setupCarouselImages = setup
+    ? [
+        { alt, src: imgSrc },
+        ...setupRelatedItems.map((item) => ({
+          alt: `${item.name} rental piece`,
+          src: stitchImageSrc(fallbackProductImage(item))
+        }))
+      ]
+    : [{ alt, src: imgSrc }];
+
+  if (setup) {
+    return (
+      <section className="stitch-detail-page stitch-detail-page--setup">
+        <div className="stitch-container">
+          <div className="stitch-detail-carousel" aria-label={`${product.name} setup images`}>
+            {setupCarouselImages.map((carouselImage, index) => (
+              <figure className="stitch-detail-carousel__slide" key={`${carouselImage.src}-${index}`}>
+                <img alt={carouselImage.alt} src={carouselImage.src} />
+              </figure>
+            ))}
+          </div>
+          <div className="stitch-setup-lower">
+            <div className="stitch-setup-summary">
+              <Link className="stitch-back" href={backHref}>
+                {backLabel}
+              </Link>
+              <h2 className="stitch-detail-title">{product.name}</h2>
+              <p>{productSummary(product)}</p>
+              <QuoteSelectionButton item={quoteItem} />
+              <div className="stitch-detail-context">
+                <p className="stitch-eyebrow">Setup context</p>
+                <p>Our team will prepare a custom proposal based on your event requirements.</p>
+              </div>
+            </div>
+            <section className="stitch-included-open">
+              <h3>Included rental pieces</h3>
+              <div>
+                {setupRelatedItems.map((item, index) => (
+                  <article key={item.id}>
+                    <img
+                      alt={`${item.name} rental piece`}
+                      src={stitchImageSrc(fallbackProductImage(item))}
+                    />
+                    <div>
+                      <strong>{item.name}</strong>
+                      <small>Qty: {index === 0 ? "120" : index === 1 ? "15" : "6"}</small>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </section>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  return <><section className="stitch-detail-page"><div className="stitch-container"><div className="stitch-detail-open-grid"><div className="stitch-detail-open-media"><img alt={alt} src={imgSrc} /></div><div className="stitch-detail-open-copy"><Link className="stitch-back" href={backHref}>{productCategory(product)}</Link><h2 className="stitch-detail-title">{product.name}</h2><p>{productSummary(product)}</p><p className="stitch-detail-safe-note">Bring event details. Add quantities and alternatives in the enquiry notes. Share setup, access, and timing notes. This request does not set aside furniture or finish rental details.</p><div className="stitch-detail-spec-card"><h2>Listing details</h2><dl><div><dt>Category</dt><dd>{productCategory(product)}</dd></div><div><dt>Style</dt><dd>{productStyleContext(product)}</dd></div><div><dt>Rental unit</dt><dd>{product.rentalUnit}</dd></div></dl></div><div className="stitch-detail-quantity-row"><span>Quantity to share</span><span>Use enquiry notes</span></div><div className="stitch-detail-actions"><Link className="stitch-detail-button stitch-detail-button--request" href="/quote">Request Quote</Link><QuoteSelectionButton item={quoteItem} /><Link className="stitch-detail-button stitch-detail-button--back" href={backHref}>Back to Catalogue</Link></div></div></div></div></section>{relatedItems.length ? <section className="stitch-section stitch-detail-related"><div className="stitch-container"><div className="stitch-detail-related-heading"><div><h2>Complementary Pieces</h2><p>Curated pairings for {product.name}</p></div><Link href="/catalogue">See All</Link></div><div className="stitch-detail-related-grid">{relatedItems.map((item) => <Link className="stitch-detail-related-card" href={`/catalogue/${item.slug}`} key={item.id}><img alt={`${item.name} rental piece`} src={stitchImageSrc(fallbackProductImage(item))} /><strong>{item.name}</strong></Link>)}</div></div></section> : null}</>;
 }
 
 export function StitchAboutPage() {

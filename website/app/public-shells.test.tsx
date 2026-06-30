@@ -25,6 +25,7 @@ import QuotePage, { metadata as quoteMetadata } from "./quote/page";
 import TermsPage, { metadata as termsMetadata } from "./terms/page";
 import {
   StitchCategoryPreview,
+  StitchDetail,
   StitchFeaturedPieces,
   StitchSetupsPage
 } from "../components/PublicStitch";
@@ -310,6 +311,7 @@ describe("public page shells", () => {
 
       expect(screen.getByRole("link", { name: /all setups/i })).toHaveAttribute("href", "/listings");
       expect(screen.queryByRole("link", { name: /featured editorial/i })).not.toBeInTheDocument();
+      expect(screen.getByRole("heading", { level: 2, name: /the metropolitan gala/i })).toBeInTheDocument();
       expect(screen.getByRole("link", { name: /weddings/i })).toHaveAttribute(
         "href",
         "/listings?setup=weddings"
@@ -437,6 +439,42 @@ describe("public page shells", () => {
     expect(screen.getByLabelText(/modular lounge set quantity selected/i)).toHaveTextContent("Qty 0");
     expect(screen.getByRole("link", { name: /request quote/i })).toHaveAttribute("href", "/quote");
     expect(screen.getByRole("link", { name: /back to catalogue/i })).toHaveAttribute("href", "/catalogue");
+  });
+
+  it("keeps setup detail pages on a carousel-led h2/h3 hierarchy", () => {
+    const setupProduct: PublicCatalogueProduct = {
+      ...modularLounge,
+      id: "setup-metropolitan-gala",
+      slug: "the-metropolitan-gala",
+      name: "The Metropolitan Gala",
+      shortDescription:
+        "Tonal layering, sculptural surfaces, and lounge pieces for elevated evening event settings."
+    };
+    const styles = readFileSync(resolve(process.cwd(), "app/globals.css"), "utf8");
+    const setupDetailBlock = styles.slice(
+      styles.indexOf("/* Final setup detail rebuild, grouped setup selections, and home rhythm pass. */")
+    );
+
+    render(
+      <StitchDetail
+        backHref="/listings"
+        backLabel="Setups"
+        product={setupProduct}
+        related={[modularLounge]}
+        setup
+      />
+    );
+
+    expect(screen.queryByRole("heading", { level: 1, name: /the metropolitan gala/i })).not.toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 2, name: /the metropolitan gala/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 3, name: /included rental pieces/i })).toBeInTheDocument();
+    expect(screen.getByText(/our team will prepare a custom proposal/i).tagName).toBe("P");
+    expect(document.querySelector(".stitch-detail-carousel")).not.toBeNull();
+    expect(document.querySelectorAll(".stitch-detail-carousel__slide").length).toBeGreaterThan(1);
+    expect(setupDetailBlock).toContain("stitch-detail-carousel");
+    expect(setupDetailBlock).toMatch(/scroll-snap-type:\s*x mandatory\s*!important;/);
+    expect(setupDetailBlock).toMatch(/\.stitch-included-open h3\s*\{[\s\S]*?font-size:\s*clamp\(1\.7rem,\s*2\.05vw,\s*2\.2rem\)\s*!important;/);
+    expect(setupDetailBlock).toMatch(/\.stitch-detail-context \.stitch-eyebrow\s*\{[\s\S]*?font-size:\s*var\(--stitch-action-font-size\)\s*!important;/);
   });
 
   it("keeps public listing source free from shell, ecommerce-only copy, and browser Supabase", () => {

@@ -11,6 +11,7 @@ export type QuoteSelectionItem = {
   kind?: "rental" | "setup" | "setup-included";
   name: string;
   quantity: number;
+  setupBaseQuantity?: number;
   setupName?: string;
   setupSlug?: string;
   slug: string;
@@ -44,9 +45,15 @@ function normalizeQuoteItem(
         ? "setup"
         : "rental";
   const imageSrc = item.imageSrc?.trim();
+  const minimumQuantity = kind === "setup-included" ? 0 : 1;
   const quantity = Number.isFinite(item.quantity)
-    ? Math.max(1, Math.min(999, Math.floor(item.quantity)))
+    ? Math.max(minimumQuantity, Math.min(999, Math.floor(item.quantity)))
     : 1;
+  const setupBaseQuantity =
+    typeof item.setupBaseQuantity === "number" &&
+    Number.isFinite(item.setupBaseQuantity)
+    ? Math.max(0, Math.min(999, Math.floor(item.setupBaseQuantity)))
+    : undefined;
 
   if (
     !slug ||
@@ -65,6 +72,7 @@ function normalizeQuoteItem(
     ...(category ? { category: category.slice(0, 80) } : {}),
     ...(setupName ? { setupName: setupName.slice(0, 120) } : {}),
     ...(setupSlug ? { setupSlug } : {}),
+    ...(setupBaseQuantity !== undefined ? { setupBaseQuantity } : {}),
     ...(imageSrc && publicImageSrcPattern.test(imageSrc)
       ? { imageSrc: imageSrc.slice(0, 500) }
       : {})
@@ -95,7 +103,7 @@ function selectionQuantityStep(
   buttonItem: QuoteSelectionItem
 ) {
   return sourceItem.kind === "setup-included" && buttonItem.includedItems?.length
-    ? sourceItem.quantity
+    ? (sourceItem.setupBaseQuantity ?? sourceItem.quantity)
     : 1;
 }
 
@@ -146,6 +154,9 @@ function mergeQuoteItemMetadata(
     quantity,
     ...(sourceItem.category ? { category: sourceItem.category } : {}),
     ...(sourceItem.imageSrc ? { imageSrc: sourceItem.imageSrc } : {}),
+    ...(sourceItem.setupBaseQuantity !== undefined
+      ? { setupBaseQuantity: sourceItem.setupBaseQuantity }
+      : {}),
     ...(sourceItem.setupName ? { setupName: sourceItem.setupName } : {}),
     ...(sourceItem.setupSlug ? { setupSlug: sourceItem.setupSlug } : {})
   };
@@ -204,7 +215,12 @@ function removeStoredQuoteSelectionItem(item: QuoteSelectionItem) {
   writeQuoteSelection(
     readQuoteSelection().filter(
       (selected) =>
-        quoteSelectionItemKey(selected) !== quoteSelectionItemKey(normalizedItem)
+        quoteSelectionItemKey(selected) !== quoteSelectionItemKey(normalizedItem) &&
+        !(
+          normalizedItem.kind === "setup" &&
+          selected.kind === "setup-included" &&
+          selected.setupSlug === normalizedItem.slug
+        )
     )
   );
 }
@@ -219,7 +235,7 @@ export function formatQuoteSelectionItems(items: QuoteSelectionItem[]) {
   );
   const setupItems = normalizedItems.filter((item) => item.kind === "setup");
   const formatLine = (item: QuoteSelectionItem) =>
-    item.quantity > 1 ? `${item.name} x ${item.quantity}` : item.name;
+    item.quantity !== 1 ? `${item.name} x ${item.quantity}` : item.name;
 
   if (!setupIncludedItems.length && !setupItems.length) {
     return rentalItems.map(formatLine).join("\n");
@@ -241,11 +257,99 @@ export function formatQuoteSelectionItems(items: QuoteSelectionItem[]) {
 }
 
 function getGroupedSelectionItems(items: QuoteSelectionSummaryItem[]) {
+  const setupItems = items.filter((item) => item.kind === "setup");
+  const setupIncludedItems = items.filter(
+    (item) => item.kind === "setup-included"
+  );
+  const orphanSetupSlugs = Array.from(
+    new Set(
+      setupIncludedItems
+        .map((item) => item.setupSlug)
+        .filter((setupSlug): setupSlug is string => Boolean(setupSlug))
+    )
+  ).filter(
+    (setupSlug) => !setupItems.some((setupItem) => setupItem.slug === setupSlug)
+  );
+
   return {
     rentalItems: items.filter((item) => item.kind === "rental" || !item.kind),
-    setupIncludedItems: items.filter((item) => item.kind === "setup-included"),
-    setupItems: items.filter((item) => item.kind === "setup")
+    setupGroups: [
+      ...setupItems.map((setupItem) => ({
+        includedItems: setupIncludedItems.filter(
+          (item) => item.setupSlug === setupItem.slug
+        ),
+        setupItem,
+        setupName: undefined
+      })),
+      ...orphanSetupSlugs.map((setupSlug) => {
+        const includedItems = setupIncludedItems.filter(
+          (item) => item.setupSlug === setupSlug
+        );
+        return {
+          includedItems,
+          setupItem: undefined,
+          setupName: includedItems[0]?.setupName ?? setupSlug
+        };
+      })
+    ]
   };
+}
+
+function SelectionRow({
+  detailBasePath,
+  item,
+  quantityItem
+}: {
+  detailBasePath: "/catalogue" | "/listings";
+  item: QuoteSelectionSummaryItem;
+  quantityItem?: QuoteSelectionSummaryItem;
+}) {
+  function handleClearSelection(event: MouseEvent<HTMLButtonElement>) {
+    event.preventDefault();
+    removeStoredQuoteSelectionItem(item);
+  }
+
+  return (
+    <article
+      className="stitch-selection-row"
+      key={quoteSelectionItemKey(item)}
+    >
+      {item.imageSrc ? (
+        <img alt={`${item.name} thumbnail`} src={item.imageSrc} />
+      ) : (
+        <span className="stitch-selection-row__icon" aria-hidden="true">
+          SK
+        </span>
+      )}
+      <div className="stitch-selection-row__body">
+        <div className="stitch-selection-row__main">
+          <strong>{item.name}</strong>
+          <div className="stitch-selection-row__actions">
+            <Link
+              className="stitch-selection-row__detail"
+              href={`${detailBasePath}/${item.slug}`}
+            >
+              Details
+            </Link>
+            <button
+              aria-label={`Remove ${item.name} from selection`}
+              className="stitch-selection-row__clear"
+              onClick={handleClearSelection}
+              type="button"
+            >
+              Remove item
+            </button>
+          </div>
+        </div>
+        <div className="stitch-selection-row__meta">
+          <small>Qty: {item.quantity}</small>
+          {item.setupName ? <small>{item.setupName}</small> : null}
+          {item.category ? <small>{item.category}</small> : null}
+        </div>
+        <QuoteSelectionButton item={quantityItem ?? item} />
+      </div>
+    </article>
+  );
 }
 
 function SelectionGroup({
@@ -264,54 +368,64 @@ function SelectionGroup({
   return (
     <div className="stitch-selection-group">
       <h3>{title}</h3>
-      {items.map((item) => {
-        function handleClearSelection(event: MouseEvent<HTMLButtonElement>) {
-          event.preventDefault();
-          removeStoredQuoteSelectionItem(item);
-        }
+      {items.map((item) => (
+        <SelectionRow
+          detailBasePath={detailBasePath}
+          item={item}
+          key={quoteSelectionItemKey(item)}
+        />
+      ))}
+    </div>
+  );
+}
 
-        return (
-          <article
-            className="stitch-selection-row"
-            key={quoteSelectionItemKey(item)}
-          >
-            {item.imageSrc ? (
-              <img alt={`${item.name} thumbnail`} src={item.imageSrc} />
-            ) : (
-              <span className="stitch-selection-row__icon" aria-hidden="true">
-                SK
-              </span>
-            )}
-            <div className="stitch-selection-row__body">
-              <div className="stitch-selection-row__main">
-                <strong>{item.name}</strong>
-                <div className="stitch-selection-row__actions">
-                  <Link
-                    className="stitch-selection-row__detail"
-                    href={`${detailBasePath}/${item.slug}`}
-                  >
-                    Details
-                  </Link>
-                  <button
-                    aria-label={`Remove ${item.name} from selection`}
-                    className="stitch-selection-row__clear"
-                    onClick={handleClearSelection}
-                    type="button"
-                  >
-                    Remove item
-                  </button>
-                </div>
-              </div>
-              <div className="stitch-selection-row__meta">
-                <small>Qty: {item.quantity}</small>
-                {item.setupName ? <small>{item.setupName}</small> : null}
-                {item.category ? <small>{item.category}</small> : null}
-              </div>
-              <QuoteSelectionButton item={item} />
-            </div>
-          </article>
-        );
-      })}
+function SetupSelectionGroup({
+  includedItems,
+  setupItem,
+  setupName
+}: {
+  includedItems: QuoteSelectionSummaryItem[];
+  setupItem?: QuoteSelectionSummaryItem;
+  setupName?: string;
+}) {
+  if (!setupItem && !includedItems.length) {
+    return null;
+  }
+
+  const normalizedIncludedItems = includedItems.map((includedItem) => ({
+    ...includedItem,
+    quantity: includedItem.setupBaseQuantity ?? includedItem.quantity
+  }));
+  const setupQuantityItem = setupItem
+    ? {
+        ...setupItem,
+        includedItems: normalizedIncludedItems
+      }
+    : undefined;
+
+  return (
+    <div className="stitch-selection-setup-group">
+      {setupItem ? (
+        <SelectionRow
+          detailBasePath="/listings"
+          item={setupItem}
+          quantityItem={setupQuantityItem}
+        />
+      ) : (
+        <h4>{setupName}</h4>
+      )}
+      {includedItems.length ? (
+        <div className="stitch-selection-included-group">
+          <h4>Included rental pieces</h4>
+          {includedItems.map((item) => (
+            <SelectionRow
+              detailBasePath="/catalogue"
+              item={item}
+              key={quoteSelectionItemKey(item)}
+            />
+          ))}
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -360,16 +474,19 @@ export function QuoteSelectionSummary({
             items={groupedItems.rentalItems}
             title="Selected Rental Items"
           />
-          <SelectionGroup
-            detailBasePath="/catalogue"
-            items={groupedItems.setupIncludedItems}
-            title="Setup Included Rental Pieces"
-          />
-          <SelectionGroup
-            detailBasePath="/listings"
-            items={groupedItems.setupItems}
-            title="Selected Setup Directions"
-          />
+          {groupedItems.setupGroups.length ? (
+            <div className="stitch-selection-group stitch-selection-group--setups">
+              <h3>Selected Setup Directions</h3>
+              {groupedItems.setupGroups.map((group) => (
+                <SetupSelectionGroup
+                  includedItems={group.includedItems}
+                  key={group.setupItem?.slug ?? group.setupName}
+                  setupItem={group.setupItem}
+                  setupName={group.setupName}
+                />
+              ))}
+            </div>
+          ) : null}
         </>
       ) : (
         <>
@@ -504,10 +621,26 @@ export function QuoteSelectionButton({ item }: { item: QuoteSelectionItem }) {
         return mergeQuoteItemMetadata(
           selected,
           sourceItem,
-          selected.quantity - selectionQuantityStep(sourceItem, item)
+          sourceItem.kind === "setup-included"
+            ? Math.max(
+                0,
+                selected.quantity - selectionQuantityStep(sourceItem, item)
+              )
+            : selected.quantity - selectionQuantityStep(sourceItem, item)
         );
       })
-      .filter((selected) => selected.quantity > 0);
+      .filter((selected, _index, selectedItems) => {
+        if (selected.kind === "setup-included") {
+          return selectedItems.some(
+            (candidate) =>
+              candidate.kind === "setup" &&
+              candidate.slug === selected.setupSlug &&
+              candidate.quantity > 0
+          );
+        }
+
+        return selected.quantity > 0;
+      });
 
     writeQuoteSelection(nextItems);
     setItems(nextItems);
