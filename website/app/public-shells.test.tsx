@@ -794,6 +794,30 @@ describe("public page shells", () => {
     expect(setupHoverRule).toMatch(/transform:\s*scale\(1\.035\)\s*!important;/);
   });
 
+  it("keeps setup listing filters centred and setup quantity badges over images", () => {
+    const styles = readFileSync(resolve(process.cwd(), "app/globals.css"), "utf8");
+    const publicStitchSource = readFileSync(resolve(process.cwd(), "components/PublicStitch.tsx"), "utf8");
+    const setupPolishBlock = styles.slice(
+      styles.indexOf("/* Final setup listing/quote balance polish:")
+    );
+    const setupFilterRule = setupPolishBlock.match(
+      /body:has\(\.stitch-setups-hero\)\s+\.site-main\s+\.stitch-setups-filter-section\s*\{[\s\S]*?\}/
+    )?.[0];
+    const setupPillRule = setupPolishBlock.match(
+      /body:has\(\.stitch-setups-hero\)\s+\.site-main\s+\.stitch-setups-filter-section\s+\.stitch-pill-row\s+\:is\(a,\s*span\)\s*\{[\s\S]*?\}/
+    )?.[0];
+
+    expect(publicStitchSource).toContain("<QuoteSelectionBadge item={setupQuoteSelectionItem(setup)} />");
+    expect(setupFilterRule).toBeDefined();
+    expect(setupFilterRule).toMatch(/align-items:\s*center\s*!important;/);
+    expect(setupFilterRule).toMatch(/background:\s*var\(--stitch-surface\)\s*!important;/);
+    expect(setupFilterRule).toMatch(/min-height:\s*4\.9rem\s*!important;/);
+    expect(setupPillRule).toBeDefined();
+    expect(setupPillRule).toMatch(/align-items:\s*center\s*!important;/);
+    expect(setupPillRule).toMatch(/min-height:\s*2\.35rem\s*!important;/);
+    expect(setupPolishBlock).toMatch(/\.stitch-setup-tile__image\s+\.stitch-quote-card-badge/);
+  });
+
   it("keeps Catalogue, About, and Contact page-name eyebrows visible above hero titles", () => {
     const styles = readFileSync(resolve(process.cwd(), "app/globals.css"), "utf8");
     const publicStitchSource = readFileSync(resolve(process.cwd(), "components/PublicStitch.tsx"), "utf8");

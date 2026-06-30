@@ -23423,3 +23423,74 @@ body:has(.stitch-contact-hero) .site-main .stitch-contact-brief-band {
     grid-template-columns: 1fr !important;
   }
 }
+
+/* Final setup listing/quote balance polish: centre sticky filters and surface selected setup quantities. */
+@media (min-width: 901px) {
+  body:has(.stitch-setups-hero) .site-main .stitch-setups-filter-section {
+    align-items: center !important;
+    background: var(--stitch-surface) !important;
+    border-bottom: 1px solid rgba(95, 99, 79, 0.08) !important;
+    border-top: 1px solid rgba(95, 99, 79, 0.06) !important;
+    display: flex !important;
+    min-height: 4.9rem !important;
+    padding: 0 !important;
+    position: sticky !important;
+    top: 4.55rem !important;
+    z-index: 18 !important;
+  }
+
+  body:has(.stitch-setups-hero) .site-main .stitch-setups-filter-section .stitch-container {
+    align-items: center !important;
+    display: flex !important;
+    min-height: 4.9rem !important;
+  }
+
+  body:has(.stitch-setups-hero) .site-main .stitch-setups-filter-section .stitch-pill-row {
+    align-items: center !important;
+    display: flex !important;
+    margin: 0 !important;
+    min-height: 2.35rem !important;
+  }
+
+  body:has(.stitch-setups-hero) .site-main .stitch-setups-filter-section .stitch-pill-row :is(a, span) {
+    align-items: center !important;
+    display: inline-flex !important;
+    min-height: 2.35rem !important;
+    padding-block: 0 !important;
+  }
+
+  body:has(.stitch-setups-hero) .site-main .stitch-setups-grid-section {
+    padding-top: clamp(2.2rem, 3.5vw, 3.4rem) !important;
+  }
+
+  body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-quote-layout {
+    gap: clamp(1.1rem, 1.8vw, 1.7rem) !important;
+    grid-template-columns: minmax(0, 38rem) minmax(0, 40.5rem) !important;
+  }
+
+  body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-quote-left {
+    max-width: 38rem !important;
+  }
+
+  body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-quote-form-panel {
+    max-width: 40.5rem !important;
+  }
+
+  body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-selection-row strong {
+    max-width: 20rem !important;
+  }
+
+  body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-selection-row .stitch-quote-select-controls {
+    max-width: 10.5rem !important;
+    width: min(100%, 10.5rem) !important;
+  }
+}
+
+body:has(.stitch-setups-hero) .site-main .stitch-setup-tile__image {
+  position: relative !important;
+}
+
+body:has(.stitch-setups-hero) .site-main .stitch-setup-tile__image .stitch-quote-card-badge {
+  bottom: 0.9rem !important;
+  left: 0.9rem !important;
+}
