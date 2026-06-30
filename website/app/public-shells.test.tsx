@@ -439,6 +439,18 @@ describe("public page shells", () => {
     expect(screen.getByLabelText(/modular lounge set quantity selected/i)).toHaveTextContent("Qty 0");
     expect(screen.getByRole("link", { name: /request quote/i })).toHaveAttribute("href", "/quote");
     expect(screen.getByRole("link", { name: /back to catalogue/i })).toHaveAttribute("href", "/catalogue");
+    expect(screen.getByText("Catalogue / Lounge Seating")).toBeInTheDocument();
+    expect(screen.queryByText("Setups / Direction")).not.toBeInTheDocument();
+    expect(screen.queryByText("Styled setup")).not.toBeInTheDocument();
+    expect(document.querySelector(".stitch-detail-page--setup")).not.toBeNull();
+    expect(document.querySelector(".stitch-detail-page--catalogue-item")).not.toBeNull();
+    expect(document.querySelector(".stitch-detail-open-grid--setup")).not.toBeNull();
+    expect(document.querySelector(".stitch-detail-open-media--carousel.stitch-setup-media")).not.toBeNull();
+    expect(document.querySelector(".stitch-detail-open-copy.stitch-setup-summary")).not.toBeNull();
+    expect(document.querySelector(".stitch-detail-actions--setup")).not.toBeNull();
+    expect(document.querySelector(".stitch-detail-safe-note")).toBeNull();
+    expect(document.querySelector(".stitch-detail-quantity-row")).toBeNull();
+    expect(document.querySelector(".stitch-back")).toBeNull();
   });
 
   it("keeps setup detail pages on a carousel-led h2/h3 hierarchy", () => {
