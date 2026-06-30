@@ -25627,3 +25627,184 @@ body:has(.stitch-detail-page--setup) .site-main .stitch-included-open article st
     text-transform: uppercase !important;
   }
 }
+
+/* Final phone drawer reset: keep the tablet font fix from flattening the mobile menu style. */
+@media (max-width: 600px) {
+  body:has(.stitch-site-header) .stitch-mobile-menu.stitch-mobile-menu--open .stitch-mobile-menu__primary a,
+  body:has(.stitch-site-header) .stitch-mobile-menu.stitch-mobile-menu--open nav a {
+    color: var(--stitch-ink) !important;
+    font-family: var(--stitch-sans) !important;
+    font-size: 16px !important;
+    font-weight: 500 !important;
+    letter-spacing: 0 !important;
+    line-height: 1.25 !important;
+    text-transform: none !important;
+  }
+
+  body:has(.stitch-site-header) .stitch-mobile-menu__actions a {
+    font-family: var(--stitch-sans) !important;
+    font-size: 13.8px !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.08em !important;
+    line-height: 1 !important;
+    text-transform: uppercase !important;
+  }
+
+  body:has(.stitch-site-header) .stitch-mobile-menu__legal a {
+    color: var(--stitch-muted) !important;
+    font-family: var(--stitch-sans) !important;
+    font-size: 13.75px !important;
+    font-weight: 500 !important;
+    letter-spacing: 0 !important;
+    line-height: 1.2 !important;
+    text-transform: none !important;
+  }
+}
+
+/* Final phone drawer action specificity lock: keep Request Quote styled as an action button. */
+@media (max-width: 600px) {
+  body:has(.stitch-site-header) .stitch-mobile-menu.stitch-mobile-menu--open .stitch-mobile-menu__actions a {
+    font-family: var(--stitch-sans) !important;
+    font-size: 13.8px !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.08em !important;
+    line-height: 1 !important;
+    text-transform: uppercase !important;
+  }
+}
+
+/* Final all mobile-header drawer reset: tablet and phone use the same readable menu type. */
+@media (max-width: 1080px) {
+  body:has(.stitch-site-header) .stitch-mobile-menu.stitch-mobile-menu--open .stitch-mobile-menu__primary a,
+  body:has(.stitch-site-header) .stitch-mobile-menu.stitch-mobile-menu--open nav a {
+    color: var(--stitch-ink) !important;
+    font-family: var(--stitch-sans) !important;
+    font-size: 16px !important;
+    font-weight: 500 !important;
+    letter-spacing: 0 !important;
+    line-height: 1.25 !important;
+    text-transform: none !important;
+  }
+
+  body:has(.stitch-site-header) .stitch-mobile-menu.stitch-mobile-menu--open .stitch-mobile-menu__actions a {
+    font-family: var(--stitch-sans) !important;
+    font-size: 13.8px !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.08em !important;
+    line-height: 1 !important;
+    text-transform: uppercase !important;
+  }
+
+  body:has(.stitch-site-header) .stitch-mobile-menu.stitch-mobile-menu--open .stitch-mobile-menu__legal a {
+    color: var(--stitch-muted) !important;
+    font-family: var(--stitch-sans) !important;
+    font-size: 13.75px !important;
+    font-weight: 500 !important;
+    letter-spacing: 0 !important;
+    line-height: 1.2 !important;
+    text-transform: none !important;
+  }
+}
+
+/* Final drawer typography system: keep header, links, and buttons consistent on tablet and phone. */
+@media (max-width: 1080px) {
+  body:has(.stitch-site-header) .stitch-mobile-menu.stitch-mobile-menu--open {
+    gap: 0 !important;
+  }
+
+  body:has(.stitch-site-header) .stitch-mobile-menu.stitch-mobile-menu--open .stitch-mobile-menu__top {
+    align-items: flex-start !important;
+    gap: 0.85rem !important;
+    margin: 0 0 1.35rem !important;
+    padding-bottom: 1rem !important;
+  }
+
+  body:has(.stitch-site-header) .stitch-mobile-menu.stitch-mobile-menu--open .stitch-mobile-menu__top strong {
+    color: var(--stitch-ink) !important;
+    font-family: var(--stitch-sans) !important;
+    font-size: clamp(16px, 1.6vw, 18px) !important;
+    font-weight: 750 !important;
+    letter-spacing: 0 !important;
+    line-height: 1.08 !important;
+    overflow-wrap: anywhere !important;
+  }
+
+  body:has(.stitch-site-header) .stitch-mobile-menu.stitch-mobile-menu--open .stitch-mobile-menu__top span {
+    color: var(--stitch-muted) !important;
+    font-family: var(--stitch-sans) !important;
+    font-size: 13px !important;
+    font-weight: 400 !important;
+    letter-spacing: 0 !important;
+    line-height: 1.32 !important;
+  }
+
+  body:has(.stitch-site-header) .stitch-mobile-menu.stitch-mobile-menu--open .stitch-mobile-menu__top button {
+    align-items: center !important;
+    background: var(--stitch-surface) !important;
+    border: 1px solid var(--stitch-line) !important;
+    border-radius: 4px !important;
+    color: var(--stitch-ink) !important;
+    display: inline-flex !important;
+    flex: 0 0 auto !important;
+    font-family: var(--stitch-sans) !important;
+    font-size: 12px !important;
+    font-weight: 750 !important;
+    justify-content: center !important;
+    letter-spacing: 0.02em !important;
+    line-height: 1 !important;
+    min-height: 36px !important;
+    padding: 0 13px !important;
+    text-transform: none !important;
+  }
+
+  body:has(.stitch-site-header) .stitch-mobile-menu.stitch-mobile-menu--open .stitch-mobile-menu__primary a,
+  body:has(.stitch-site-header) .stitch-mobile-menu.stitch-mobile-menu--open nav a {
+    color: var(--stitch-ink) !important;
+    font-family: var(--stitch-sans) !important;
+    font-size: 16px !important;
+    font-weight: 500 !important;
+    letter-spacing: 0 !important;
+    line-height: 1.25 !important;
+    padding: 0.92rem 0.35rem !important;
+    text-transform: none !important;
+  }
+
+  body:has(.stitch-site-header) .stitch-mobile-menu.stitch-mobile-menu--open .stitch-mobile-menu__actions {
+    margin-top: 1.05rem !important;
+  }
+
+  body:has(.stitch-site-header) .stitch-mobile-menu.stitch-mobile-menu--open .stitch-mobile-menu__actions a {
+    align-items: center !important;
+    background: var(--stitch-primary) !important;
+    border: 1px solid var(--stitch-primary) !important;
+    border-radius: 4px !important;
+    color: var(--stitch-primary-ink) !important;
+    display: inline-flex !important;
+    font-family: var(--stitch-sans) !important;
+    font-size: 13.8px !important;
+    font-weight: 800 !important;
+    justify-content: center !important;
+    letter-spacing: 0.08em !important;
+    line-height: 1 !important;
+    min-height: 46px !important;
+    padding: 0 1rem !important;
+    text-transform: uppercase !important;
+    width: 100% !important;
+  }
+
+  body:has(.stitch-site-header) .stitch-mobile-menu.stitch-mobile-menu--open .stitch-mobile-menu__legal {
+    gap: 0.75rem !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    padding-top: 1rem !important;
+  }
+
+  body:has(.stitch-site-header) .stitch-mobile-menu.stitch-mobile-menu--open .stitch-mobile-menu__legal a {
+    color: var(--stitch-muted) !important;
+    font-family: var(--stitch-sans) !important;
+    font-size: 13.75px !important;
+    font-weight: 500 !important;
+    letter-spacing: 0 !important;
+    line-height: 1.2 !important;
+    text-transform: none !important;
+  }
+}
