@@ -1,7 +1,7 @@
 ﻿import type { Metadata } from "next";
 import { getPublicCatalogue, getPublicProductBySlug } from "../../../lib/catalogue/catalogue-repository";
 import { getRelatedListings, ProductPageContent } from "../../catalogue/[slug]/page";
-import { getDemoSetupImageSrc, isDemoContentEnabled, productSummary, StitchEmptyState } from "../../../components/PublicStitch";
+import { fallbackProductImage, getDemoProducts, getDemoSetupImageSrc, isDemoContentEnabled, productSummary, stitchImageSrc, StitchEmptyState } from "../../../components/PublicStitch";
 import type { PublicCatalogueProduct } from "../../../lib/catalogue/types";
 
 type ListingPageProps = { params?: Promise<{ slug?: string }> | { slug?: string } };
@@ -39,6 +39,16 @@ function demoSetupForSlug(slug: string): PublicCatalogueProduct | null {
       name: "Gallery Exhibition",
       summary: "Minimal display-friendly layouts that leave room for launches, galleries, and product showcases.",
       sortOrder: 6
+    },
+    "atrium-showcase": {
+      name: "Atrium Showcase",
+      summary: "Open-plan reception zones with display plinths, counter support, and lounge pauses for showcase-led events.",
+      sortOrder: 7
+    },
+    "press-preview-lounge": {
+      name: "Press Preview Lounge",
+      summary: "A compact editorial lounge direction for previews, interviews, and quiet brand hospitality.",
+      sortOrder: 8
     }
   };
   const setup = demoSetups[slug];
@@ -68,11 +78,38 @@ function demoSetupForSlug(slug: string): PublicCatalogueProduct | null {
     source: "fallback"
   };
 }
+function demoCatalogueProductForSetupSlug(slug: string): PublicCatalogueProduct | null {
+  if (!isDemoContentEnabled()) return null;
+  const product = getDemoProducts().find((item) => item.slug === slug);
+  if (!product) return null;
+  const imageUrl = stitchImageSrc(fallbackProductImage(product));
+  return {
+    id: `demo-setup-${product.slug}`,
+    slug: product.slug,
+    name: product.name,
+    shortDescription: product.shortDescription,
+    description: product.description,
+    rentalUnit: "setup",
+    sortOrder: product.sortOrder,
+    categoryId: "setups",
+    categoryName: "Setups",
+    primaryImage: {
+      id: `demo-setup-${product.slug}-image`,
+      storageBucket: "demo",
+      storagePath: product.slug,
+      publicUrl: imageUrl,
+      altText: `${product.name} setup reference`,
+      sortOrder: 1,
+      isPrimary: true
+    },
+    source: "fallback"
+  };
+}
 async function resolveSetup(slug: string) {
   const directProduct = await getPublicProductBySlug(slug);
   if (directProduct) return directProduct;
   const catalogue = await getPublicCatalogue();
-  return catalogue.products.find((product) => product.slug === slug) ?? demoSetupForSlug(slug);
+  return catalogue.products.find((product) => product.slug === slug) ?? demoSetupForSlug(slug) ?? demoCatalogueProductForSetupSlug(slug);
 }
 export async function generateMetadata({ params }: ListingPageProps = {}): Promise<Metadata> { const slug = await getSlug(params); const product = await resolveSetup(slug); return { title: product ? `${product.name} setup | SpaceKonceptRental` : "Setup detail | SpaceKonceptRental", description: product ? productSummary(product) : "Rental setup detail for quote request support.", openGraph: { title: product ? `${product.name} rental listing | SpaceKonceptRental` : "Rental listing setup | SpaceKonceptRental", description: product ? `${productSummary(product)} Start a quote request for this setup.` : "Rental listing setup details for a quote request.", siteName: "SpaceKonceptRental", type: "website", url: `/listings/${slug}` } }; }
 export default async function ListingPage({ params }: ListingPageProps = {}) { const slug = await getSlug(params); const product = await resolveSetup(slug); if (!product) return <section className="stitch-section"><div className="stitch-container"><StitchEmptyState title="Listing unavailable" message="Use the catalogue or listings to keep browsing public rental options. This public setup record is not available to display right now." actionHref="/listings#setup-listings" actionLabel="View Setups" /></div></section>; const catalogue = await getPublicCatalogue(); return <ProductPageContent product={product} relatedListings={getRelatedListings(product, catalogue.products)} backHref="/listings#setup-listings" backLabel="Back to Setups" setup />; }

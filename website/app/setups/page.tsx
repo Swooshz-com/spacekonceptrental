@@ -1,0 +1,30 @@
+import type { Metadata } from "next";
+import { getPublicCatalogue } from "../../lib/catalogue/catalogue-repository";
+import { StitchSetupsPage } from "../../components/PublicStitch";
+
+export const dynamic = "force-dynamic";
+export const metadata: Metadata = {
+  title: "Setups | SpaceKonceptRental",
+  description: "Explore furniture listing setups and request an enquiry.",
+  openGraph: {
+    title: "Furniture listing setups | SpaceKonceptRental",
+    description: "Explore public setup listings and request an enquiry.",
+    siteName: "SpaceKonceptRental",
+    type: "website",
+    url: "/setups"
+  }
+};
+
+type SetupsPageProps = {
+  searchParams?: Promise<Record<string, string | string[] | undefined>> | Record<string, string | string[] | undefined>;
+};
+
+function firstParam(value: string | string[] | undefined) {
+  return Array.isArray(value) ? value[0] : value;
+}
+
+export default async function SetupsPage({ searchParams }: SetupsPageProps = {}) {
+  const catalogue = await getPublicCatalogue();
+  const params = searchParams ? await searchParams : {};
+  return <StitchSetupsPage activeSetupSlug={firstParam(params.setup)} catalogue={catalogue} />;
+}

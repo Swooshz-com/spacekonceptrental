@@ -1365,6 +1365,72 @@ describe("public page shells", () => {
     expect(quantityRule).toMatch(/grid-template-columns:\s*2\.6rem\s+minmax\(0,\s*1fr\)\s+2\.6rem\s*!important;/);
   });
 
+  it("promotes tablet public layouts to the mobile rail at 1080px", () => {
+    const styles = readFileSync(resolve(process.cwd(), "app/globals.css"), "utf8");
+    const earlyMobileBlock = styles.slice(
+      styles.indexOf("/* Final early-mobile guard: switch before tablet widths squeeze the layout. */")
+    );
+
+    expect(earlyMobileBlock).toContain("@media (max-width: 1080px)");
+    expect(earlyMobileBlock).toMatch(/\.stitch-menu-scrim,[\s\S]*?\.stitch-mobile-menu\s*\{[\s\S]*?display:\s*block\s*!important;/);
+    expect(earlyMobileBlock).toMatch(/\.stitch-catalogue-section\s+\.stitch-card-grid\s*\{[\s\S]*?grid-template-columns:\s*1fr\s*!important;/);
+    expect(earlyMobileBlock).toMatch(/\.stitch-filter-panel\s*\{[\s\S]*?grid-template-columns:\s*1fr\s*!important;/);
+    expect(earlyMobileBlock).toMatch(/\.stitch-product-card\s+\.stitch-card__actions\s*\{[\s\S]*?display:\s*grid\s*!important;[\s\S]*?grid-template-columns:\s*1fr\s*!important;/);
+    expect(earlyMobileBlock).toMatch(/\.stitch-product-card\s+\.stitch-quote-select-controls[\s\S]*?\{[\s\S]*?width:\s*100%\s*!important;/);
+    expect(earlyMobileBlock).toMatch(/\.quote-form__field-grid\s*\{[\s\S]*?grid-template-columns:\s*1fr\s*!important;/);
+    expect(earlyMobileBlock).toMatch(/\.stitch-quote-page\s+\.stitch-quote-layout\s*\{[\s\S]*?grid-template-columns:\s*1fr\s*!important;/);
+    expect(earlyMobileBlock).toMatch(/\.stitch-quote-layout\s*>\s*\.stitch-quote-left,[\s\S]*?\.stitch-quote-layout\s*>\s*\.stitch-quote-form-panel\s*\{[\s\S]*?grid-column:\s*1\s*\/\s*-1\s*!important;/);
+    expect(earlyMobileBlock).toMatch(/\.stitch-selection-row[\s\S]*?\{[\s\S]*?grid-template-columns:\s*1fr\s*!important;/);
+    expect(earlyMobileBlock).toMatch(/\.stitch-selection-row__body[\s\S]*?\{[\s\S]*?grid-template-columns:\s*1fr\s*!important;/);
+    expect(earlyMobileBlock).toMatch(/\.stitch-selection-row__actions\s*\{[\s\S]*?display:\s*grid\s*!important;[\s\S]*?grid-template-columns:\s*1fr\s*!important;/);
+    expect(earlyMobileBlock).toMatch(/\.stitch-selection-row__main\s*>\s*\.stitch-selection-row__actions\s*\{[\s\S]*?grid-column:\s*1\s*\/\s*-1\s*!important;[\s\S]*?width:\s*100%\s*!important;/);
+    expect(earlyMobileBlock).toMatch(/\.stitch-selection-row__body\s*\{[\s\S]*?grid-template-areas:[\s\S]*?"main"[\s\S]*?"meta"[\s\S]*?"controls"\s*!important;/);
+    expect(earlyMobileBlock).toMatch(/\.stitch-selection-row__main\s*>\s*\.stitch-selection-row__actions[\s\S]*?\{[\s\S]*?grid-area:\s*auto\s*!important;/);
+    expect(earlyMobileBlock).toMatch(/\.stitch-included-open__grid\s*\{[\s\S]*?grid-template-columns:\s*1fr\s*!important;/);
+    expect(earlyMobileBlock).toMatch(/\.stitch-detail-actions[\s\S]*?\.stitch-detail-button\s*\{[\s\S]*?width:\s*100%\s*!important;/);
+    expect(earlyMobileBlock).toMatch(/\.stitch-detail-page--setup[\s\S]*?\.stitch-setup-summary\s*>\s*\.stitch-detail-actions--setup\s*\{[\s\S]*?max-width:\s*none\s*!important;[\s\S]*?width:\s*100%\s*!important;/);
+  });
+
+  it("provides the /setups compatibility route for setup browsing checks", () => {
+    const setupsPageSource = readFileSync(resolve(process.cwd(), "app/setups/page.tsx"), "utf8");
+
+    expect(setupsPageSource).toContain("StitchSetupsPage");
+    expect(setupsPageSource).toContain("getPublicCatalogue");
+    expect(setupsPageSource).not.toMatch(/checkout|payment|booking|reservation/i);
+  });
+
+  it("adds extra local demo catalogue and setup listings for responsive QA", () => {
+    const previousDemoContentFlag = process.env.NEXT_PUBLIC_SKR_DEMO_CONTENT;
+    process.env.NEXT_PUBLIC_SKR_DEMO_CONTENT = "true";
+
+    try {
+      render(
+        <CataloguePageContent
+          catalogue={{
+            source: "fallback",
+            categories: [],
+            products: []
+          }}
+        />
+      );
+
+      expect(screen.getByRole("heading", { name: /crescent bar counter/i })).toBeInTheDocument();
+      expect(screen.getByRole("heading", { name: /gallery plinth set/i })).toBeInTheDocument();
+      cleanup();
+
+      render(<StitchSetupsPage catalogue={{ source: "fallback", categories: [], products: [] }} />);
+
+      expect(screen.getByText("Atrium Showcase")).toBeInTheDocument();
+      expect(screen.getByText("Press Preview Lounge")).toBeInTheDocument();
+    } finally {
+      if (previousDemoContentFlag === undefined) {
+        delete process.env.NEXT_PUBLIC_SKR_DEMO_CONTENT;
+      } else {
+        process.env.NEXT_PUBLIC_SKR_DEMO_CONTENT = previousDemoContentFlag;
+      }
+    }
+  });
+
   it("shows style metadata on listing details without the doubled category divider", () => {
     const styles = readFileSync(resolve(process.cwd(), "app/globals.css"), "utf8");
     const detailCorrectionBlock = styles.slice(
