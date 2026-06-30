@@ -54,6 +54,14 @@ function normalizeQuoteItem(
     Number.isFinite(item.setupBaseQuantity)
     ? Math.max(0, Math.min(999, Math.floor(item.setupBaseQuantity)))
     : undefined;
+  const includedItems =
+    kind === "setup"
+      ? normalizeIncludedItems({
+          ...item,
+          name,
+          slug
+        })
+      : [];
 
   if (
     !slug ||
@@ -73,6 +81,7 @@ function normalizeQuoteItem(
     ...(setupName ? { setupName: setupName.slice(0, 120) } : {}),
     ...(setupSlug ? { setupSlug } : {}),
     ...(setupBaseQuantity !== undefined ? { setupBaseQuantity } : {}),
+    ...(includedItems.length ? { includedItems } : {}),
     ...(imageSrc && publicImageSrcPattern.test(imageSrc)
       ? { imageSrc: imageSrc.slice(0, 500) }
       : {})
@@ -158,7 +167,8 @@ function mergeQuoteItemMetadata(
       ? { setupBaseQuantity: sourceItem.setupBaseQuantity }
       : {}),
     ...(sourceItem.setupName ? { setupName: sourceItem.setupName } : {}),
-    ...(sourceItem.setupSlug ? { setupSlug: sourceItem.setupSlug } : {})
+    ...(sourceItem.setupSlug ? { setupSlug: sourceItem.setupSlug } : {}),
+    ...(sourceItem.includedItems?.length ? { includedItems: sourceItem.includedItems } : {})
   };
 }
 
@@ -397,10 +407,17 @@ function SetupSelectionGroup({
     ...includedItem,
     quantity: includedItem.setupBaseQuantity ?? includedItem.quantity
   }));
+  const recipeIncludedItems =
+    setupItem?.includedItems?.length
+      ? setupItem.includedItems.map((includedItem) => ({
+          ...includedItem,
+          quantity: includedItem.setupBaseQuantity ?? includedItem.quantity
+        }))
+      : normalizedIncludedItems;
   const setupQuantityItem = setupItem
     ? {
         ...setupItem,
-        includedItems: normalizedIncludedItems
+        includedItems: recipeIncludedItems
       }
     : undefined;
 

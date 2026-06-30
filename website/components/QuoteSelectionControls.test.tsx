@@ -312,6 +312,67 @@ describe("QuoteSelectionControls", () => {
     expect(screen.getByText("Qty: 120")).toBeInTheDocument();
   });
 
+  it("restores removed setup included pieces when the setup quantity increases", () => {
+    window.localStorage.setItem(
+      "skr.quoteSelection.v1",
+      JSON.stringify([
+        {
+          slug: "botanical-wedding",
+          name: "Botanical Wedding",
+          category: "Setups",
+          kind: "setup",
+          quantity: 1,
+          includedItems: [
+            {
+              slug: "aura-lounge-chair",
+              name: "Aura Lounge Chair",
+              category: "Seating",
+              kind: "setup-included",
+              quantity: 120,
+              setupBaseQuantity: 120,
+              setupName: "Botanical Wedding",
+              setupSlug: "botanical-wedding"
+            },
+            {
+              slug: "slender-arch-floor-lamp",
+              name: "Slender Arch Floor Lamp",
+              category: "Lighting",
+              kind: "setup-included",
+              quantity: 6,
+              setupBaseQuantity: 6,
+              setupName: "Botanical Wedding",
+              setupSlug: "botanical-wedding"
+            }
+          ]
+        },
+        {
+          slug: "slender-arch-floor-lamp",
+          name: "Slender Arch Floor Lamp",
+          category: "Lighting",
+          kind: "setup-included",
+          quantity: 6,
+          setupBaseQuantity: 6,
+          setupName: "Botanical Wedding",
+          setupSlug: "botanical-wedding"
+        }
+      ])
+    );
+
+    render(<QuoteSelectionSummary />);
+
+    expect(screen.queryByText("Aura Lounge Chair")).not.toBeInTheDocument();
+
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: /increase botanical wedding quantity/i
+      })
+    );
+
+    expect(screen.getByText("Aura Lounge Chair")).toBeInTheDocument();
+    expect(screen.getByText("Qty: 120")).toBeInTheDocument();
+    expect(screen.getByText("Qty: 12")).toBeInTheDocument();
+  });
+
   it("formats setup selections separately from direct rental selections", () => {
     expect(
       formatQuoteSelectionItems([
