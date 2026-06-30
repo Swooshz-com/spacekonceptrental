@@ -23610,12 +23610,13 @@ body:has(.stitch-detail-page--setup) .site-main .stitch-included-open article sm
 @media (min-width: 901px) {
   body:has(.stitch-detail-page--setup) .site-main .stitch-detail-page--setup .stitch-setup-lower {
     align-items: start !important;
+    box-sizing: border-box !important;
     display: grid !important;
     gap: clamp(1.75rem, 2.6vw, 3rem) !important;
-    grid-template-columns: minmax(37rem, 0.98fr) minmax(34rem, 1.02fr) !important;
+    grid-template-columns: minmax(0, 0.96fr) minmax(0, 1.04fr) !important;
     margin-top: clamp(2.25rem, 3vw, 3.15rem) !important;
-    max-width: 1540px !important;
-    width: min(calc(100% - clamp(3rem, 7vw, 6rem)), 1540px) !important;
+    max-width: 1440px !important;
+    width: min(calc(100vw - clamp(2rem, 8vw, 10rem)), 1440px) !important;
   }
 
   body:has(.stitch-detail-page--setup) .site-main .stitch-detail-page--setup .stitch-setup-summary,
@@ -23661,7 +23662,14 @@ body:has(.stitch-detail-page--setup) .site-main .stitch-included-open article sm
 
   body:has(.stitch-detail-page--setup) .site-main .stitch-detail-page--setup .stitch-included-open > div {
     gap: clamp(1rem, 1.6vw, 1.35rem) !important;
-    grid-template-columns: repeat(2, minmax(16rem, 1fr)) !important;
+    grid-template-columns: repeat(2, minmax(min(15rem, 100%), 1fr)) !important;
+  }
+}
+
+@media (min-width: 901px) and (max-width: 1100px) {
+  body:has(.stitch-detail-page--setup) .site-main .stitch-detail-page--setup .stitch-setup-lower {
+    grid-template-columns: 1fr !important;
+    width: min(calc(100vw - 2rem), 58rem) !important;
   }
 }
 
