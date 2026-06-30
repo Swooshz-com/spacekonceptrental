@@ -477,6 +477,8 @@ describe("public page shells", () => {
     expect(styles).toMatch(/\.stitch-detail-carousel__control:hover,[\s\S]*?\.stitch-detail-carousel__control:focus-visible\s*\{[\s\S]*?background:\s*var\(--stitch-surface\)\s*!important;/);
     expect(styles).toMatch(/\.stitch-included-open h3\s*\{[\s\S]*?font-size:\s*clamp\(1\.15rem,\s*1\.45vw,\s*1\.42rem\)\s*!important;/);
     expect(setupDetailBlock).toMatch(/\.stitch-detail-context \.stitch-eyebrow\s*\{[\s\S]*?font-size:\s*var\(--stitch-action-font-size\)\s*!important;/);
+    expect(styles).toMatch(/\.stitch-detail-page--setup\) \.site-main \.stitch-detail-page--setup \.stitch-setup-summary > \.stitch-quote-select-controls\s*\{[\s\S]*?width:\s*min\(100%,\s*44rem\)\s*!important;/);
+    expect(styles).toMatch(/\.stitch-detail-page--setup\) \.site-main \.stitch-detail-page--setup \.stitch-detail-context\s*\{[\s\S]*?width:\s*min\(100%,\s*44rem\)\s*!important;/);
   });
 
   it("keeps public listing source free from shell, ecommerce-only copy, and browser Supabase", () => {
@@ -931,7 +933,7 @@ describe("public page shells", () => {
 
     expect(quoteSelectionBlock).toContain("Final public design-system consolidation");
     expect(rowRule).toBeDefined();
-    expect(rowRule).toMatch(/grid-template-columns:\s*6\.25rem minmax\(0,\s*1fr\)\s*!important;/);
+    expect(rowRule).toMatch(/grid-template-columns:\s*8rem minmax\(0,\s*1fr\)\s*!important;/);
     expect(bodyRule).toBeDefined();
     expect(bodyRule).toMatch(/column-gap:\s*1\.05rem\s*!important;/);
     expect(bodyRule).toMatch(/row-gap:\s*0\.5rem\s*!important;/);

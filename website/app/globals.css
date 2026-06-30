@@ -22158,16 +22158,16 @@ body:has(.stitch-detail-page:not(.stitch-detail-page--setup)) .site-main .stitch
 }
 
 body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-selection-row {
-  gap: 1.15rem !important;
-  grid-template-columns: 6.25rem minmax(0, 1fr) !important;
-  min-height: 8rem !important;
+  gap: 1.2rem !important;
+  grid-template-columns: 8rem minmax(0, 1fr) !important;
+  min-height: 9.75rem !important;
   padding: 1.15rem !important;
 }
 
 body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-selection-row img,
 body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-selection-row__icon {
-  height: 6.25rem !important;
-  width: 6.25rem !important;
+  height: 8rem !important;
+  width: 8rem !important;
 }
 
 body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-selection-row__body {
@@ -23641,19 +23641,24 @@ body:has(.stitch-detail-page--setup) .site-main .stitch-included-open article sm
     letter-spacing: 0 !important;
     line-height: 1.08 !important;
     margin: 0 !important;
-    max-width: 13.5em !important;
+    max-width: 44rem !important;
   }
 
   body:has(.stitch-detail-page--setup) .site-main .stitch-detail-page--setup .stitch-setup-summary > p:not(.stitch-eyebrow) {
-    max-width: 40rem !important;
+    max-width: 44rem !important;
   }
 
   body:has(.stitch-detail-page--setup) .site-main .stitch-detail-page--setup .stitch-setup-summary > .stitch-quote-select-controls {
     width: min(100%, 44rem) !important;
   }
 
+  body:has(.stitch-detail-page--setup) .site-main .stitch-detail-page--setup .stitch-detail-context {
+    max-width: 44rem !important;
+    width: min(100%, 44rem) !important;
+  }
+
   body:has(.stitch-detail-page--setup) .site-main .stitch-detail-page--setup .stitch-detail-context p:not(.stitch-eyebrow) {
-    max-width: 38rem !important;
+    max-width: 44rem !important;
   }
 
   body:has(.stitch-detail-page--setup) .site-main .stitch-detail-page--setup .stitch-included-open {
@@ -23708,15 +23713,15 @@ body:has(.stitch-detail-page--setup) .site-main .stitch-included-open article sm
 
 /* Final quote summary row structure: category, setup context, then quantity. */
 body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-selection-row {
-  grid-template-columns: 7.25rem minmax(0, 1fr) !important;
-  min-height: 9rem !important;
+  grid-template-columns: 8rem minmax(0, 1fr) !important;
+  min-height: 9.75rem !important;
 }
 
 body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-selection-row img,
 body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-selection-row__icon {
-  height: 7.25rem !important;
+  height: 8rem !important;
   object-fit: cover !important;
-  width: 7.25rem !important;
+  width: 8rem !important;
 }
 
 body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-selection-row__body {
@@ -23767,15 +23772,15 @@ body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-
 @media (max-width: 900px) {
   body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-selection-row,
   body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-selection-row[data-kind="setup-included"] {
-    grid-template-columns: 6rem minmax(0, 1fr) !important;
+    grid-template-columns: 6.5rem minmax(0, 1fr) !important;
   }
 
   body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-selection-row img,
   body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-selection-row__icon,
   body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-selection-row[data-kind="setup-included"] img,
   body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-selection-row[data-kind="setup-included"] .stitch-selection-row__icon {
-    height: 6rem !important;
-    width: 6rem !important;
+    height: 6.5rem !important;
+    width: 6.5rem !important;
   }
 
   body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-selection-row__body,
