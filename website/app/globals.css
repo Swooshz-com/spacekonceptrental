@@ -23606,6 +23606,65 @@ body:has(.stitch-detail-page--setup) .site-main .stitch-included-open article sm
   line-height: 1.35 !important;
 }
 
+/* Final setup detail desktop lock: reset legacy 12-column placement so the right panel cannot clip. */
+@media (min-width: 901px) {
+  body:has(.stitch-detail-page--setup) .site-main .stitch-detail-page--setup .stitch-setup-lower {
+    align-items: start !important;
+    display: grid !important;
+    gap: clamp(1.75rem, 2.6vw, 3rem) !important;
+    grid-template-columns: minmax(37rem, 0.98fr) minmax(34rem, 1.02fr) !important;
+    margin-top: clamp(2.25rem, 3vw, 3.15rem) !important;
+    max-width: 1540px !important;
+    width: min(calc(100% - clamp(3rem, 7vw, 6rem)), 1540px) !important;
+  }
+
+  body:has(.stitch-detail-page--setup) .site-main .stitch-detail-page--setup .stitch-setup-summary,
+  body:has(.stitch-detail-page--setup) .site-main .stitch-detail-page--setup .stitch-included-open {
+    grid-column: auto !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    width: 100% !important;
+  }
+
+  body:has(.stitch-detail-page--setup) .site-main .stitch-detail-page--setup .stitch-setup-lower > div:first-child {
+    max-width: none !important;
+    width: 100% !important;
+  }
+
+  body:has(.stitch-detail-page--setup) .site-main .stitch-detail-page--setup .stitch-setup-summary .stitch-detail-title,
+  body:has(.stitch-detail-page--setup) .site-main .stitch-detail-page--setup .stitch-setup-lower > div:first-child > h2:first-of-type {
+    font-family: var(--stitch-serif) !important;
+    font-size: clamp(2.05rem, 2.55vw, 2.65rem) !important;
+    font-weight: 400 !important;
+    font-synthesis: none !important;
+    letter-spacing: 0 !important;
+    line-height: 1.08 !important;
+    margin: 0 !important;
+    max-width: 13.5em !important;
+  }
+
+  body:has(.stitch-detail-page--setup) .site-main .stitch-detail-page--setup .stitch-setup-summary > p:not(.stitch-eyebrow) {
+    max-width: 40rem !important;
+  }
+
+  body:has(.stitch-detail-page--setup) .site-main .stitch-detail-page--setup .stitch-setup-summary > .stitch-quote-select-controls {
+    width: min(100%, 44rem) !important;
+  }
+
+  body:has(.stitch-detail-page--setup) .site-main .stitch-detail-page--setup .stitch-detail-context p:not(.stitch-eyebrow) {
+    max-width: 38rem !important;
+  }
+
+  body:has(.stitch-detail-page--setup) .site-main .stitch-detail-page--setup .stitch-included-open {
+    margin-top: 0 !important;
+  }
+
+  body:has(.stitch-detail-page--setup) .site-main .stitch-detail-page--setup .stitch-included-open > div {
+    gap: clamp(1rem, 1.6vw, 1.35rem) !important;
+    grid-template-columns: repeat(2, minmax(16rem, 1fr)) !important;
+  }
+}
+
 @media (max-width: 900px) {
   body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-selection-row[data-kind="setup-included"] {
     grid-template-columns: 5.5rem minmax(0, 1fr) !important;
