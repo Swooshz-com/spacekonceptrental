@@ -308,11 +308,15 @@ function getGroupedSelectionItems(items: QuoteSelectionSummaryItem[]) {
 function SelectionRow({
   detailBasePath,
   item,
-  quantityItem
+  quantityItem,
+  showQuantityMeta = true,
+  showQuantityControls = true
 }: {
   detailBasePath: "/catalogue" | "/listings";
   item: QuoteSelectionSummaryItem;
   quantityItem?: QuoteSelectionSummaryItem;
+  showQuantityMeta?: boolean;
+  showQuantityControls?: boolean;
 }) {
   function handleClearSelection(event: MouseEvent<HTMLButtonElement>) {
     event.preventDefault();
@@ -342,22 +346,38 @@ function SelectionRow({
             >
               Details
             </Link>
-            <button
-              aria-label={`Remove ${item.name} from selection`}
-              className="stitch-selection-row__clear"
-              onClick={handleClearSelection}
-              type="button"
-            >
-              Remove item
-            </button>
+            {showQuantityControls ? (
+              <button
+                aria-label={`Remove ${item.name} from selection`}
+                className="stitch-selection-row__clear"
+                onClick={handleClearSelection}
+                type="button"
+              >
+                Remove item
+              </button>
+            ) : null}
           </div>
         </div>
         <div className="stitch-selection-row__meta">
-          <small>Qty: {item.quantity}</small>
-          {item.setupName ? <small>{item.setupName}</small> : null}
-          {item.category ? <small>{item.category}</small> : null}
+          {item.category ? (
+            <small className="stitch-selection-row__category">
+              {item.category}
+            </small>
+          ) : null}
+          {item.setupName ? (
+            <small className="stitch-selection-row__setup-name">
+              {item.setupName}
+            </small>
+          ) : null}
+          {showQuantityMeta ? (
+            <small className="stitch-selection-row__quantity">
+              Qty: {item.quantity}
+            </small>
+          ) : null}
         </div>
-        <QuoteSelectionButton item={quantityItem ?? item} />
+        {showQuantityControls ? (
+          <QuoteSelectionButton item={quantityItem ?? item} />
+        ) : null}
       </div>
     </article>
   );
@@ -440,6 +460,8 @@ function SetupSelectionGroup({
               detailBasePath="/catalogue"
               item={item}
               key={quoteSelectionItemKey(item)}
+              showQuantityMeta={false}
+              showQuantityControls={false}
             />
           ))}
         </div>

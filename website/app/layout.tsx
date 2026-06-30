@@ -3,6 +3,7 @@ import Link from "next/link";
 import ChatWidget from "../components/ChatWidget";
 import MobileMenu from "../components/MobileMenu";
 import { QuoteSelectionIndicator } from "../components/QuoteSelectionControls";
+import RouteScrollReset from "../components/RouteScrollReset";
 import { MobileBottomNav, SiteDesktopNav } from "../components/SiteNav";
 import "./globals.css";
 import "./globals-premium.css";
@@ -21,5 +22,5 @@ function SiteFooter() {
 }
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="en-SG"><body><div className="site-shell"><SiteHeader /><main className="site-main">{children}</main><ChatWidget /><SiteFooter /><MobileBottomNav /></div></body></html>;
+  return <html lang="en-SG"><body><RouteScrollReset /><div className="site-shell"><SiteHeader /><main className="site-main">{children}</main><ChatWidget /><SiteFooter /><MobileBottomNav /></div></body></html>;
 }

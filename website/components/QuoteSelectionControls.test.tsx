@@ -179,7 +179,7 @@ describe("QuoteSelectionControls", () => {
     expect(screen.getByText("Selected Setup Directions")).toBeInTheDocument();
     expect(screen.getByText("Included rental pieces")).toBeInTheDocument();
     expect(screen.getByText("Aura Lounge Chair")).toBeInTheDocument();
-    expect(screen.getByText("Qty: 120")).toBeInTheDocument();
+    expect(screen.queryByText("Qty: 120")).not.toBeInTheDocument();
     expect(screen.getAllByText("Botanical Wedding").length).toBeGreaterThan(0);
     expect(screen.getAllByRole("link", { name: /details/i })[0]).toHaveAttribute(
       "href",
@@ -189,6 +189,11 @@ describe("QuoteSelectionControls", () => {
       "href",
       "/catalogue/aura-lounge-chair"
     );
+    expect(
+      screen.queryByRole("button", {
+        name: /remove aura lounge chair from selection/i
+      })
+    ).not.toBeInTheDocument();
   });
 
   it("lets quote page selection rows adjust item quantities", () => {
@@ -224,7 +229,7 @@ describe("QuoteSelectionControls", () => {
     expect(screen.getByText("Qty: 3")).toBeInTheDocument();
   });
 
-  it("adjusts setup included selection rows one piece at a time", () => {
+  it("renders setup included rental pieces as read-only context rows", () => {
     window.localStorage.setItem(
       "skr.quoteSelection.v1",
       JSON.stringify([
@@ -250,21 +255,23 @@ describe("QuoteSelectionControls", () => {
 
     render(<QuoteSelectionSummary />);
 
-    fireEvent.click(
-      screen.getByRole("button", {
+    expect(screen.getByText("Aura Lounge Chair")).toBeInTheDocument();
+    expect(screen.queryByText("Qty: 120")).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", {
         name: /decrease aura lounge chair quantity/i
       })
-    );
-
-    expect(screen.getByText("Qty: 119")).toBeInTheDocument();
-
-    fireEvent.click(
-      screen.getByRole("button", {
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", {
         name: /increase aura lounge chair quantity/i
       })
-    );
-
-    expect(screen.getByText("Qty: 120")).toBeInTheDocument();
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", {
+        name: /remove aura lounge chair from selection/i
+      })
+    ).not.toBeInTheDocument();
   });
 
   it("adjusts setup children by their original quantities when setup quantity changes", () => {
@@ -300,7 +307,9 @@ describe("QuoteSelectionControls", () => {
     );
 
     expect(screen.getByText("Qty: 1")).toBeInTheDocument();
-    expect(screen.getByText("Qty: 0")).toBeInTheDocument();
+    expect(window.localStorage.getItem("skr.quoteSelection.v1")).toContain(
+      "\"quantity\":0"
+    );
 
     fireEvent.click(
       screen.getByRole("button", {
@@ -309,7 +318,9 @@ describe("QuoteSelectionControls", () => {
     );
 
     expect(screen.getByText("Qty: 2")).toBeInTheDocument();
-    expect(screen.getByText("Qty: 120")).toBeInTheDocument();
+    expect(window.localStorage.getItem("skr.quoteSelection.v1")).toContain(
+      "\"quantity\":120"
+    );
   });
 
   it("restores removed setup included pieces when the setup quantity increases", () => {
@@ -369,8 +380,14 @@ describe("QuoteSelectionControls", () => {
     );
 
     expect(screen.getByText("Aura Lounge Chair")).toBeInTheDocument();
-    expect(screen.getByText("Qty: 120")).toBeInTheDocument();
-    expect(screen.getByText("Qty: 12")).toBeInTheDocument();
+    expect(screen.queryByText("Qty: 120")).not.toBeInTheDocument();
+    expect(screen.queryByText("Qty: 12")).not.toBeInTheDocument();
+    expect(window.localStorage.getItem("skr.quoteSelection.v1")).toContain(
+      "\"quantity\":120"
+    );
+    expect(window.localStorage.getItem("skr.quoteSelection.v1")).toContain(
+      "\"quantity\":12"
+    );
   });
 
   it("formats setup selections separately from direct rental selections", () => {

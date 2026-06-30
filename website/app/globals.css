@@ -23705,3 +23705,81 @@ body:has(.stitch-detail-page--setup) .site-main .stitch-included-open article sm
     width: min(100%, 8.9rem) !important;
   }
 }
+
+/* Final quote summary row structure: category, setup context, then quantity. */
+body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-selection-row {
+  grid-template-columns: 7.25rem minmax(0, 1fr) !important;
+  min-height: 9rem !important;
+}
+
+body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-selection-row img,
+body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-selection-row__icon {
+  height: 7.25rem !important;
+  object-fit: cover !important;
+  width: 7.25rem !important;
+}
+
+body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-selection-row__body {
+  align-items: center !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  grid-template-areas:
+    "title actions"
+    "meta actions"
+    "controls actions" !important;
+}
+
+body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-selection-row__meta {
+  display: grid !important;
+  gap: 0.18rem !important;
+  grid-area: meta !important;
+  grid-template-columns: 1fr !important;
+}
+
+body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-selection-row__category {
+  color: var(--stitch-ink) !important;
+  font-family: var(--stitch-sans) !important;
+  font-size: 0.92rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.02em !important;
+  text-transform: none !important;
+}
+
+body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-selection-row__quantity,
+body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-selection-row__setup-name {
+  color: var(--stitch-muted) !important;
+  font-family: var(--stitch-sans) !important;
+  font-size: 0.92rem !important;
+  font-weight: 400 !important;
+  letter-spacing: 0 !important;
+  line-height: 1.35 !important;
+}
+
+body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-selection-row[data-kind="setup-included"] .stitch-selection-row__body {
+  grid-template-areas:
+    "title actions"
+    "meta actions" !important;
+}
+
+body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-selection-row[data-kind="setup-included"] .stitch-quote-select-controls {
+  display: none !important;
+}
+
+@media (max-width: 900px) {
+  body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-selection-row,
+  body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-selection-row[data-kind="setup-included"] {
+    grid-template-columns: 6rem minmax(0, 1fr) !important;
+  }
+
+  body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-selection-row img,
+  body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-selection-row__icon,
+  body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-selection-row[data-kind="setup-included"] img,
+  body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-selection-row[data-kind="setup-included"] .stitch-selection-row__icon {
+    height: 6rem !important;
+    width: 6rem !important;
+  }
+
+  body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-selection-row__body,
+  body:has(.stitch-quote-page):not(:has(.quote-form--success)) .site-main .stitch-selection-row[data-kind="setup-included"] .stitch-selection-row__body {
+    grid-template-columns: minmax(0, 1fr) minmax(7.7rem, auto) !important;
+  }
+}
