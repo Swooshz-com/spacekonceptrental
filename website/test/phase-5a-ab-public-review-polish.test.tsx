@@ -51,7 +51,7 @@ const forbiddenPublicInternalPattern = new RegExp(
     "owner handoff bundle",
     "owner-facing review brief",
     "owner approval issue template",
-    "no-deploy preflight command center",
+    "no-deploy preflight command centre",
     "owner approval packet",
     "release-control internals",
     "admin urls?",
@@ -127,9 +127,9 @@ describe("Phase 5A-A/B public review polish", () => {
   it("keeps quote/enquiry form copy request-intake only and non-promissory", () => {
     render(<QuoteRequestForm initialItemsText="Modular Lounge Set" />);
 
-    expect(screen.getByText(/starts this rental request/i)).toBeInTheDocument();
+    expect(screen.getByText(/included automatically when you submit/i)).toBeInTheDocument();
     expect(screen.getByText(/not a rental fit confirmation/i)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /send an enquiry/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /review and send an enquiry/i })).toBeInTheDocument();
     expect(screen.getByText(/triage the rental enquiry/i)).toBeInTheDocument();
     expect(screen.queryByText(forbiddenPublicFlowPattern)).not.toBeInTheDocument();
     expect(screen.queryByText(forbiddenRentalCompletionPattern)).not.toBeInTheDocument();

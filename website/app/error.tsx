@@ -25,7 +25,7 @@ export default function GlobalError({
             <line x1="12" y1="17" x2="12.01" y2="17"></line>
           </svg>
         </div>
-        <h1 className="premium-title-card" style={{ fontSize: '24px', marginBottom: '16px' }}>Something went wrong</h1>
+        <h2 className="premium-title-card" style={{ fontSize: '24px', marginBottom: '16px' }}>Something went wrong</h2>
         <p style={{ color: 'var(--muted)', marginBottom: '32px', lineHeight: 1.6 }}>
           We've encountered an unexpected issue while loading this page. Our team has been notified.
         </p>

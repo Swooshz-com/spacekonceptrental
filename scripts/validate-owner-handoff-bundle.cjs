@@ -150,7 +150,7 @@ function assertAdminSnapshot() {
     'Phase 4F handoff-bundle snapshot',
     'Owner-facing review brief',
     'Owner approval issue template',
-    'No-deploy preflight command center',
+    'No-deploy preflight command centre',
     'Owner handoff bundle index',
     'Approval request boundary',
     'Evidence capture boundary',
@@ -186,7 +186,7 @@ function assertPublicSourceSafe() {
   }
   assertNoMatch(
     publicSource,
-    /owner-facing review brief|owner approval issue template|no-deploy preflight command center|owner handoff bundle|owner approval request packet|preview-planning handoff template|final no-deploy decision gate|local release-candidate freeze|full-suite reliability gate|deployment-planning firewall closure|local owner-review rehearsal pack|local blocker ledger|local acceptance drill|release-control internals|owner-input queue internals|admin urls|internal notes|recovery lane statuses|destructive-action safeguards|status-transition matrix details|owner-review templates|protected admin urls|\/admin\//i,
+    /owner-facing review brief|owner approval issue template|no-deploy preflight command cent(?:er|re)|owner handoff bundle|owner approval request packet|preview-planning handoff template|final no-deploy decision gate|local release-candidate freeze|full-suite reliability gate|deployment-planning firewall closure|local owner-review rehearsal pack|local blocker ledger|local acceptance drill|release-control internals|owner-input queue internals|admin urls|internal notes|recovery lane statuses|destructive-action safeguards|status-transition matrix details|owner-review templates|protected admin urls|\/admin\//i,
     'public source',
   );
   assertNoMatch(publicSource, /\b(?:ecommerce|cart|checkout|order|payment|purchase|booking|reservation|fulfilment|stock-reservation)s?\b/i, 'public source');

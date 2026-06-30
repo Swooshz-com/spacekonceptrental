@@ -240,8 +240,8 @@ describe("Phase 3Z-A/B public route readiness closure", () => {
 
   it("renders safe public rental/enquiry copy without introducing public scope creep", async () => {
     render(await HomePage());
-    expect(screen.getByRole("heading", { name: /event furniture rental for planned spaces/i })).toBeInTheDocument();
-    expect(screen.getByText(/rental fit and final quote details stay with the team/i)).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /furnish your vision/i })).toBeInTheDocument();
+    expect(screen.getByText(/send an enquiry for manual team review/i)).toBeInTheDocument();
     cleanup();
 
     render(<CataloguePageContent catalogue={sampleCatalogue} />);
@@ -253,15 +253,22 @@ describe("Phase 3Z-A/B public route readiness closure", () => {
     cleanup();
 
     render(<CategoriesPageContent catalogue={sampleCatalogue} />);
-    expect(screen.getByText(/rental fit is reviewed directly by the team/i)).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /furniture catalogue/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /increase modular lounge set quantity/i })).toBeInTheDocument();
+    expect(screen.getByLabelText(/modular lounge set quantity selected/i)).toHaveTextContent("Qty 0");
+    expect(screen.getByRole("link", { name: /view details for modular lounge set/i })).toHaveAttribute(
+      "href",
+      "/catalogue/modular-lounge-set"
+    );
     cleanup();
 
     render(<EventsPage />);
-    expect(screen.getByText(/They do not set aside furniture or finalise rental details/i)).toBeInTheDocument();
+    expect(screen.getByText(/The team reviews submitted details before preparing a tailored proposal/i)).toBeInTheDocument();
     cleanup();
 
     render(await QuotePage());
-    expect(screen.getByText(/The form is enquiry intake only/i)).toBeInTheDocument();
+    expect(screen.getByText(/form is enquiry intake only/i)).toBeInTheDocument();
+    expect(screen.getByText(/review your details and follow up with a tailored proposal/i)).toBeInTheDocument();
     expect(screen.getByText(/does not set aside furniture or finish rental details/i)).toBeInTheDocument();
     cleanup();
 

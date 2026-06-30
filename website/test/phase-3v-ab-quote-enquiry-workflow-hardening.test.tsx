@@ -274,17 +274,20 @@ describe("Phase 3V-A/B quote enquiry workflow hardening", () => {
   });
 
   it("hardens the public quote/enquiry page guidance with customer-facing rental wording", async () => {
-    render(await QuotePage({ searchParams: { listing: "missing-listing" } }));
+    const { container } = render(await QuotePage({ searchParams: { listing: "missing-listing" } }));
 
     expect(screen.getByRole("heading", { name: /request a rental quote/i })).toBeInTheDocument();
     expect(screen.getByLabelText(/event date/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/venue or location/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/requested listings or items/i)).toBeInTheDocument();
+    expect(container.querySelector<HTMLInputElement>('input[name="items"]')).toHaveValue(
+      "Listing reference: missing-listing"
+    );
+    expect(screen.queryByLabelText(/requested listings or items/i)).not.toBeInTheDocument();
     expect(screen.getAllByText(/quantities/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/alternates/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/setup, access, and timing notes/i).length).toBeGreaterThan(0);
     expect(screen.getByLabelText(/preferred contact method/i)).toBeInTheDocument();
-    expect(readRepoFile("website/components/QuoteRequestForm.tsx")).toContain("Enquiry received");
+    expect(readRepoFile("website/components/QuoteRequestForm.tsx")).toContain("Enquiry Received");
     expect(screen.getAllByText(/share more details/i).length).toBeGreaterThan(0);
     expect(screen.getByText(/the listing link may be old or unavailable/i)).toBeInTheDocument();
 
@@ -306,38 +309,37 @@ describe("Phase 3V-A/B quote enquiry workflow hardening", () => {
 
   it("keeps listing, category, and event handoff links public-safe", () => {
     render(<ProductPageContent product={sampleProduct} />);
-    expect(screen.getByRole("link", { name: /request a quote/i })).toHaveAttribute(
-      "href",
-      "/quote?listing=modular-lounge-set"
-    );
+    expect(screen.getByRole("button", { name: /increase modular lounge set quantity/i })).toBeInTheDocument();
+    expect(screen.getByLabelText(/modular lounge set quantity selected/i)).toHaveTextContent("Qty 0");
+    expect(screen.getByRole("link", { name: /request quote/i })).toHaveAttribute("href", "/quote");
     expect(screen.getByText(/bring event details/i)).toBeInTheDocument();
     expect(screen.getByText(/add quantities and alternatives/i)).toBeInTheDocument();
     expect(screen.getByText(/share setup, access, and timing notes/i)).toBeInTheDocument();
 
     cleanup();
     render(<CataloguePageContent catalogue={sampleCatalogue} />);
-    expect(screen.getByRole("link", { name: /start a rental enquiry/i })).toHaveAttribute(
+    expect(screen.getByRole("button", { name: /increase modular lounge set quantity/i })).toBeInTheDocument();
+    expect(screen.getByLabelText(/modular lounge set quantity selected/i)).toHaveTextContent("Qty 0");
+    expect(screen.getByRole("link", { name: /view details for modular lounge set/i })).toHaveAttribute(
       "href",
-      "/quote"
-    );
-    expect(screen.getByRole("link", { name: /request a quote/i })).toHaveAttribute(
-      "href",
-      "/quote?listing=modular-lounge-set"
+      "/catalogue/modular-lounge-set"
     );
 
     cleanup();
     render(<CategoriesPageContent catalogue={sampleCatalogue} />);
-    expect(
-      screen
-        .getAllByRole("link", { name: /send an enquiry/i })
-        .every((link) => link.getAttribute("href") === "/quote")
-    ).toBe(true);
+    expect(screen.getByRole("heading", { name: /furniture catalogue/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /increase modular lounge set quantity/i })).toBeInTheDocument();
+    expect(screen.getByLabelText(/modular lounge set quantity selected/i)).toHaveTextContent("Qty 0");
+    expect(screen.getByRole("link", { name: /view details for modular lounge set/i })).toHaveAttribute(
+      "href",
+      "/catalogue/modular-lounge-set"
+    );
 
     cleanup();
     render(<EventsPage />);
-    expect(screen.getByRole("link", { name: /compare event setup guidance/i })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: /browse setups/i })).toHaveAttribute(
       "href",
-      "/catalogue"
+      "/listings"
     );
     expect(screen.getByRole("link", { name: /start a rental enquiry/i })).toHaveAttribute(
       "href",

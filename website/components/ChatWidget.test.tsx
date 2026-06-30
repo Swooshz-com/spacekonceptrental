@@ -25,8 +25,8 @@ describe("ChatWidget", () => {
   it("starts without a canned assistant response before a provider reply", () => {
     render(<ChatWidget />);
 
-    expect(screen.getByLabelText(/message/i)).toBeInTheDocument();
-    expect(screen.getByText(/ask here/i)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /open chat/i })).toBeInTheDocument();
+    expect(screen.queryByLabelText(/message/i)).not.toBeInTheDocument();
     expect(
       screen.queryByText(/hi, i can help with event furniture availability/i)
     ).not.toBeInTheDocument();
@@ -44,6 +44,7 @@ describe("ChatWidget", () => {
     vi.stubGlobal("fetch", fetchMock);
 
     render(<ChatWidget />);
+    fireEvent.click(screen.getByRole("button", { name: /open chat/i }));
 
     fireEvent.change(screen.getByLabelText(/message/i), {
       target: { value: "I need 20 stools for a conference" }
@@ -82,6 +83,7 @@ describe("ChatWidget", () => {
     vi.stubGlobal("fetch", fetchMock);
 
     render(<ChatWidget />);
+    fireEvent.click(screen.getByRole("button", { name: /open chat/i }));
 
     fireEvent.change(screen.getByLabelText(/message/i), {
       target: { value: "Do you have lounge seating?" }
@@ -103,6 +105,7 @@ describe("ChatWidget", () => {
 
   it("shows legal links near chat guidance without exposing provider details", () => {
     render(<ChatWidget />);
+    fireEvent.click(screen.getByRole("button", { name: /open chat/i }));
 
     expect(
       screen.getByRole("link", { name: /Privacy Policy/i })
@@ -113,10 +116,35 @@ describe("ChatWidget", () => {
     expect(document.body.textContent).not.toMatch(/n8n|webhook|provider url/i);
   });
 
+  it("does not show suggested prompt buttons in the chat panel", () => {
+    render(<ChatWidget />);
+    fireEvent.click(screen.getByRole("button", { name: /open chat/i }));
+
+    expect(screen.queryByRole("button", { name: /View Sofas/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Quote details/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Setup notes/i })).not.toBeInTheDocument();
+  });
+
+  it("keeps chat body copy at the contact panel body text size", () => {
+    render(<ChatWidget />);
+    fireEvent.click(screen.getByRole("button", { name: /open chat/i }));
+
+    expect(screen.getByText(/Hi! I can help with furniture listing questions/i)).toHaveStyle({
+      fontSize: "1rem"
+    });
+    expect(screen.getByText(/Ask here about listing details/i)).toHaveStyle({
+      fontSize: "1rem"
+    });
+    expect(screen.getByLabelText(/message/i)).toHaveStyle({
+      fontSize: "1rem"
+    });
+  });
+
   it("does not render server-only webhook configuration into the client", () => {
     process.env.N8N_CHAT_WEBHOOK_URL = "https://example.invalid/internal-only";
 
     const { container } = render(<ChatWidget />);
+    fireEvent.click(screen.getByRole("button", { name: /open chat/i }));
 
     expect(container).not.toHaveTextContent("example.invalid");
     expect(container.innerHTML).not.toContain("N8N_CHAT_WEBHOOK_URL");

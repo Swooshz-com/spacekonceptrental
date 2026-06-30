@@ -170,7 +170,7 @@ describe("Phase 5F-A/B quote triage readiness", () => {
     const publicQuoteSource = readProductionSource(publicQuoteSourceRoots);
     const quoteReceiptSource = readProductionSource(quoteReceiptSourceRoots);
 
-    expect(publicQuoteSource).toMatch(/receipt only/i);
+    expect(publicQuoteSource).toMatch(/does not confirm final rental details/i);
     expect(publicQuoteSource).not.toMatch(forbiddenPublicInternalPattern);
     expect(publicQuoteSource).not.toMatch(/status lookup|tracking portal|public tracking/i);
     expect(quoteReceiptSource).not.toMatch(forbiddenReceiptPromisePattern);

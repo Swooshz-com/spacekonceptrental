@@ -921,7 +921,7 @@ const phase4fOwnerHandoffBundleDocs = [
 const phase4fOwnerHandoffBundleSnapshot = [
   ["Owner-facing review brief", "Template only / not evidence"],
   ["Owner approval issue template", "Blank future issue template / no boxes ticked"],
-  ["No-deploy preflight command center", "Local commands only / no preview smoke command"],
+  ["No-deploy preflight command centre", "Local commands only / no preview smoke command"],
   ["Owner handoff bundle index", "Handoff bundle only / records no approval"],
   ["Approval request boundary", "No owner approval, provider approval, preview approval, or deployment approval recorded"],
   ["Evidence capture boundary", "[NOT EVIDENCE / NOT RECORDED]"],
@@ -2328,7 +2328,7 @@ function ReleaseControlWorkspace() {
           <p>
             The Phase 4F handoff-bundle snapshot is protected admin-only. It
             keeps the owner-facing review brief, owner approval issue template,
-            no-deploy preflight command center, owner handoff bundle index,
+            no-deploy preflight command centre, owner handoff bundle index,
             approval request boundary, evidence capture boundary, provider setup
             boundary, and deployment approval boundary out of public routes.
           </p>
@@ -5671,7 +5671,7 @@ function MaintenanceClosureAuditFollowUpResponseAcknowledgementReviewOutcomeFoll
     "No provider/runtime check is executed here.",
     "No runtime, provider, environment, scheduler, chat, or search-assistant changes are made here.",
     "No support or external follow-up message is sent here.",
-    "No public customer-facing behavior changes here."
+    "No public customer-facing behaviour changes here."
   ];
 
   return (
@@ -5699,7 +5699,7 @@ function MaintenanceClosureAuditFollowUpResponseAcknowledgementReviewOutcomeFoll
       <ul className="admin-readiness__list">{firewall.map((item) => <li key={item}>{item}</li>)}</ul>
       <h4>Safe outcome follow-up planning language</h4>
       <p>
-        Safe outcome follow-up planning language uses draft, readiness-only, placeholder, intended, internal, owner readiness, admin review, and theoretical wording only. Avoid finality wording such as outcome selected, outcome recorded, follow-up action selected, follow-up action recorded, follow-up owner assigned, recipient contacted, response sent, remediation assigned, closure decision recorded, archive created, retention applied, production evidence recorded, production checked, external message sent, or public customer-facing behavior changed unless clearly negated as not allowed.
+        Safe outcome follow-up planning language uses draft, readiness-only, placeholder, intended, internal, owner readiness, admin review, and theoretical wording only. Avoid finality wording such as outcome selected, outcome recorded, follow-up action selected, follow-up action recorded, follow-up owner assigned, recipient contacted, response sent, remediation assigned, closure decision recorded, archive created, retention applied, production evidence recorded, production checked, external message sent, or public customer-facing behaviour changed unless clearly negated as not allowed.
       </p>
     </section>
   );
@@ -5746,7 +5746,7 @@ function MaintenanceClosureAuditFollowUpResponseAcknowledgementReviewOutcomeFoll
     "Confirm follow-up planning review materials remain theoretical, placeholder-only, and admin-only.",
     "Confirm no follow-up planning review or follow-up planning decision is selected or recorded.",
     "Confirm no follow-up action, follow-up owner, remediation, recipient contact, or customer/support/outbound/admin contact is introduced.",
-    "Confirm no closure, archive, retention, production evidence, runtime, API, provider, environment, scheduler, chat, search-assistant, or public behavior change is introduced.",
+    "Confirm no closure, archive, retention, production evidence, runtime, API, provider, environment, scheduler, chat, search-assistant, or public behaviour change is introduced.",
     "Confirm rental listing, event furniture listing, category, media, enquiry, quote, request, admin review, and owner readiness wording remains readiness-only."
   ];
   const firewall = [
@@ -5764,7 +5764,7 @@ function MaintenanceClosureAuditFollowUpResponseAcknowledgementReviewOutcomeFoll
     "No archive is created here.",
     "No retention policy is applied here.",
     "No production evidence is recorded here.",
-    "No runtime, API, provider, environment, scheduler, chat, search-assistant, or public behavior changes are made here."
+    "No runtime, API, provider, environment, scheduler, chat, search-assistant, or public behaviour changes are made here."
   ];
 
   return (
@@ -5789,7 +5789,7 @@ function MaintenanceClosureAuditFollowUpResponseAcknowledgementReviewOutcomeFoll
       <ul className="admin-readiness__list">{firewall.map((item) => <li key={item}>{item}</li>)}</ul>
       <h4>Safe follow-up planning review language</h4>
       <p>
-        Safe follow-up planning review language uses draft, readiness-only, placeholder, intended, internal, owner readiness, admin review, and theoretical wording only. Avoid finality wording such as follow-up planning review selected, follow-up planning review recorded, follow-up planning decision selected, follow-up planning decision recorded, follow-up action selected, follow-up action recorded, follow-up owner assigned, recipient contacted, contact sent, remediation assigned, closure decision recorded, archive created, retention applied, production evidence recorded, production checked, external message sent, or public customer-facing behavior changed unless clearly negated as not allowed.
+        Safe follow-up planning review language uses draft, readiness-only, placeholder, intended, internal, owner readiness, admin review, and theoretical wording only. Avoid finality wording such as follow-up planning review selected, follow-up planning review recorded, follow-up planning decision selected, follow-up planning decision recorded, follow-up action selected, follow-up action recorded, follow-up owner assigned, recipient contacted, contact sent, remediation assigned, closure decision recorded, archive created, retention applied, production evidence recorded, production checked, external message sent, or public customer-facing behaviour changed unless clearly negated as not allowed.
       </p>
     </section>
   );
@@ -5840,7 +5840,7 @@ function MaintenanceClosureAuditFollowUpResponseAcknowledgementReviewOutcomeFoll
     "Confirm follow-up planning review outcome materials remain theoretical, placeholder-only, and admin-only.",
     "Confirm no follow-up planning review outcome, follow-up planning review decision, or follow-up planning decision is selected or recorded.",
     "Confirm no follow-up action, follow-up owner, remediation, recipient contact, or customer/support/outbound/admin contact is introduced.",
-    "Confirm no closure, archive, retention, production evidence, runtime, API, provider, environment, scheduler, chat, search-assistant, or public behavior change is introduced.",
+    "Confirm no closure, archive, retention, production evidence, runtime, API, provider, environment, scheduler, chat, search-assistant, or public behaviour change is introduced.",
     "Confirm rental listing, event furniture listing, category, media, enquiry, quote, request, admin review, and owner readiness wording remains readiness-only."
   ];
   const firewall = [
@@ -5860,7 +5860,7 @@ function MaintenanceClosureAuditFollowUpResponseAcknowledgementReviewOutcomeFoll
     "No archive is created here.",
     "No retention policy is applied here.",
     "No production evidence is recorded here.",
-    "No runtime, API, provider, environment, scheduler, chat, search-assistant, or public behavior changes are made here."
+    "No runtime, API, provider, environment, scheduler, chat, search-assistant, or public behaviour changes are made here."
   ];
 
   return (
@@ -5945,7 +5945,7 @@ function MaintenanceClosureAuditFollowUpResponseAcknowledgementReviewOutcomeFoll
     "Confirm no follow-up planning review outcome acknowledgement or acknowledgement decision is selected or recorded.",
     "Confirm no follow-up planning review outcome, follow-up planning review decision, or follow-up planning decision is selected or recorded.",
     "Confirm no follow-up action, follow-up owner, remediation, recipient contact, or customer/support/outbound/admin contact is introduced.",
-    "Confirm no closure, archive, retention, production evidence, runtime, API, provider, environment, scheduler, chat, search-assistant, or public behavior change is introduced.",
+    "Confirm no closure, archive, retention, production evidence, runtime, API, provider, environment, scheduler, chat, search-assistant, or public behaviour change is introduced.",
     "Confirm rental listing, event furniture listing, category, media, enquiry, quote, request, admin review, and owner readiness wording remains readiness-only."
   ];
   const firewall = [
@@ -5969,7 +5969,7 @@ function MaintenanceClosureAuditFollowUpResponseAcknowledgementReviewOutcomeFoll
     "No archive is created here.",
     "No retention policy is applied here.",
     "No production evidence is recorded here.",
-    "No runtime, API, provider, environment, scheduler, chat, search-assistant, or public behavior changes are made here."
+    "No runtime, API, provider, environment, scheduler, chat, search-assistant, or public behaviour changes are made here."
   ];
 
   return (
@@ -6062,7 +6062,7 @@ function MaintenanceClosureAuditFollowUpResponseAcknowledgementReviewOutcomeFoll
     "Confirm no follow-up planning review outcome acknowledgement review or acknowledgement review decision is selected or recorded.",
     "Confirm no follow-up planning review outcome acknowledgement, acknowledgement decision, follow-up planning review outcome, follow-up planning review decision, or follow-up planning decision is selected or recorded.",
     "Confirm no follow-up action, follow-up owner, remediation, recipient contact, or customer/support/outbound/admin contact is introduced.",
-    "Confirm no closure, archive, retention, production evidence, runtime, API, provider, environment, scheduler, chat, search-assistant, or public behavior change is introduced.",
+    "Confirm no closure, archive, retention, production evidence, runtime, API, provider, environment, scheduler, chat, search-assistant, or public behaviour change is introduced.",
     "Confirm rental listing, event furniture listing, category, media, enquiry, quote, request, admin review, and owner readiness wording remains readiness-only."
   ];
   const firewall = [
@@ -6090,7 +6090,7 @@ function MaintenanceClosureAuditFollowUpResponseAcknowledgementReviewOutcomeFoll
     "No archive is created here.",
     "No retention policy is applied here.",
     "No production evidence is recorded here.",
-    "No runtime, API, provider, environment, scheduler, chat, search-assistant, or public behavior changes are made here."
+    "No runtime, API, provider, environment, scheduler, chat, search-assistant, or public behaviour changes are made here."
   ];
 
   return (

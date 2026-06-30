@@ -194,37 +194,36 @@ describe("Phase 3G-A/B quote intake quality, admin triage depth, and enquiry wor
     render(<QuoteRequestForm initialItemsText="Modular Lounge Set" />);
 
     expect(
-      screen.getByText(/share one reliable contact method/i)
+      screen.getByText(/email is the default contact method/i)
     ).toBeInTheDocument();
     expect(
       screen.getAllByText(/listing context is a starting point only/i).length
     ).toBeGreaterThan(0);
     expect(screen.getByText(/not a rental fit confirmation/i)).toBeInTheDocument();
     expect(
-      screen.getByText(/the team uses this only for direct quote follow-up/i)
+      screen.getByText(/share a phone number if you prefer phone follow-up/i)
     ).toBeInTheDocument();
     expect(
-      screen.getByLabelText(/event goals or customer message/i)
+      screen.getByLabelText(/event vision/i)
     ).toBeInTheDocument();
 
     fireEvent.change(screen.getByLabelText(/your name/i), {
       target: { value: "Maya Tan" }
     });
-    fireEvent.click(screen.getByRole("button", { name: /send an enquiry/i }));
+    fireEvent.click(screen.getByRole("button", { name: /review and send an enquiry/i }));
 
-    expect(
-      screen.getByRole("alert")
-    ).toHaveTextContent(/share an email address or phone number/i);
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    expect(screen.getByText(/email address is required/i)).toBeInTheDocument();
     expect(fetchMock).not.toHaveBeenCalled();
 
     fireEvent.change(screen.getByLabelText(/email address/i), {
       target: { value: "maya@example.test" }
     });
-    fireEvent.click(screen.getByRole("button", { name: /send an enquiry/i }));
+    fireEvent.click(screen.getByRole("button", { name: /review and send an enquiry/i }));
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
     expect(
-      await screen.findByText(/this is a receipt only/i)
+      await screen.findByText(/enquiry received/i)
     ).toBeInTheDocument();
     expect(
       screen.queryByRole("link", { name: /track|status/i })
@@ -232,14 +231,14 @@ describe("Phase 3G-A/B quote intake quality, admin triage depth, and enquiry wor
   });
 
   it("keeps selected-listing handoff useful without implying reservations or exposing admin context", async () => {
-    render(
+    const { container } = render(
       await QuotePage({
         searchParams: Promise.resolve({ listing: "lounge-sofa-package" })
       })
     );
 
     expect(
-      screen.getByRole("heading", { name: /selected listing unavailable/i })
+      screen.getByRole("heading", { name: /your selection/i })
     ).toBeInTheDocument();
     expect(
       screen.getAllByText(/listing context is a starting point only/i).length
@@ -248,9 +247,10 @@ describe("Phase 3G-A/B quote intake quality, admin triage depth, and enquiry wor
       screen.getAllByText(/does not set aside furniture or finish rental details/i)
       .length
     ).toBeGreaterThan(0);
-    expect(screen.getByLabelText(/requested listings or items/i)).toHaveValue(
+    expect(container.querySelector<HTMLInputElement>('input[name="items"]')).toHaveValue(
       "Listing reference: lounge-sofa-package"
     );
+    expect(screen.queryByLabelText(/requested listings or items/i)).not.toBeInTheDocument();
     expect(
       screen.getByText("lounge-sofa-package", { selector: "dd" })
     ).toBeInTheDocument();
@@ -259,21 +259,22 @@ describe("Phase 3G-A/B quote intake quality, admin triage depth, and enquiry wor
     ).not.toBeInTheDocument();
 
     cleanup();
-    render(
+    const fallbackRender = render(
       await QuotePage({
         searchParams: Promise.resolve({ listing: "unpublished-draft-listing" })
       })
     );
 
     expect(
-      screen.getByRole("heading", { name: /selected listing unavailable/i })
+      screen.getByRole("heading", { name: /your selection/i })
     ).toBeInTheDocument();
     expect(
       screen.getByText(/the listing link may be old or unavailable/i)
     ).toBeInTheDocument();
-    expect(screen.getByLabelText(/requested listings or items/i)).toHaveValue(
+    expect(fallbackRender.container.querySelector<HTMLInputElement>('input[name="items"]')).toHaveValue(
       "Listing reference: unpublished-draft-listing"
     );
+    expect(screen.queryByLabelText(/requested listings or items/i)).not.toBeInTheDocument();
   });
 
   it("shows deeper admin-only quote triage summaries and next-action cues", () => {
