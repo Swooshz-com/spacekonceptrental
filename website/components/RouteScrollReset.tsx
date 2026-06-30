@@ -14,6 +14,15 @@ export default function RouteScrollReset() {
     }
 
     previousPathname.current = pathname;
+
+    if (window.location.hash) {
+      const target = document.getElementById(window.location.hash.slice(1));
+      if (target) {
+        requestAnimationFrame(() => target.scrollIntoView({ block: "start" }));
+        return;
+      }
+    }
+
     window.scrollTo({ top: 0, left: 0 });
   }, [pathname]);
 

@@ -177,9 +177,17 @@ describe("QuoteSelectionControls", () => {
 
     expect(screen.queryByText("Selected Rental Items")).not.toBeInTheDocument();
     expect(screen.getByText("Selected Setup Directions")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /show included pieces \(1\)/i })
+    ).toHaveAttribute("aria-expanded", "false");
+    expect(screen.queryByText("Included rental pieces")).not.toBeInTheDocument();
+    expect(screen.queryByText("Aura Lounge Chair")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /show included pieces \(1\)/i }));
+
     expect(screen.getByText("Included rental pieces")).toBeInTheDocument();
     expect(screen.getByText("Aura Lounge Chair")).toBeInTheDocument();
-    expect(screen.queryByText("Qty: 120")).not.toBeInTheDocument();
+    expect(screen.getByText("Qty: 120")).toBeInTheDocument();
     expect(screen.getAllByText("Botanical Wedding").length).toBeGreaterThan(0);
     expect(screen.getAllByRole("link", { name: /details/i })[0]).toHaveAttribute(
       "href",
@@ -255,8 +263,12 @@ describe("QuoteSelectionControls", () => {
 
     render(<QuoteSelectionSummary />);
 
+    expect(screen.queryByText("Aura Lounge Chair")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /show included pieces \(1\)/i }));
+
     expect(screen.getByText("Aura Lounge Chair")).toBeInTheDocument();
-    expect(screen.queryByText("Qty: 120")).not.toBeInTheDocument();
+    expect(screen.getByText("Qty: 120")).toBeInTheDocument();
     expect(
       screen.queryByRole("button", {
         name: /decrease aura lounge chair quantity/i
@@ -379,11 +391,13 @@ describe("QuoteSelectionControls", () => {
       })
     );
 
+    expect(screen.queryByText("Aura Lounge Chair")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /show included pieces \(2\)/i }));
     expect(screen.getByText("Aura Lounge Chair")).toBeInTheDocument();
-    expect(screen.queryByText("Qty: 120")).not.toBeInTheDocument();
-    expect(screen.queryByText("Qty: 12")).not.toBeInTheDocument();
+    expect(screen.getByText("Qty: 240")).toBeInTheDocument();
+    expect(screen.getByText("Qty: 12")).toBeInTheDocument();
     expect(window.localStorage.getItem("skr.quoteSelection.v1")).toContain(
-      "\"quantity\":120"
+      "\"quantity\":240"
     );
     expect(window.localStorage.getItem("skr.quoteSelection.v1")).toContain(
       "\"quantity\":12"

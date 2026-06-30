@@ -9,10 +9,14 @@ export type SetupImageCarouselImage = {
 
 export function SetupImageCarousel({
   images,
-  label
+  label,
+  nextLabel = "Next image",
+  previousLabel = "Previous image"
 }: {
   images: SetupImageCarouselImage[];
   label: string;
+  nextLabel?: string;
+  previousLabel?: string;
 }) {
   const [activeIndex, setActiveIndex] = useState(0);
   const activeImage = images[activeIndex] ?? images[0];
@@ -39,7 +43,7 @@ export function SetupImageCarousel({
       {images.length > 1 ? (
         <>
           <button
-            aria-label="Previous setup image"
+            aria-label={previousLabel}
             className="stitch-detail-carousel__control stitch-detail-carousel__control--prev"
             onClick={() => goToNextImage(-1)}
             type="button"
@@ -47,7 +51,7 @@ export function SetupImageCarousel({
             &lt;
           </button>
           <button
-            aria-label="Next setup image"
+            aria-label={nextLabel}
             className="stitch-detail-carousel__control stitch-detail-carousel__control--next"
             onClick={() => goToNextImage(1)}
             type="button"

@@ -419,13 +419,30 @@ function SetupSelectionGroup({
   setupItem?: QuoteSelectionSummaryItem;
   setupName?: string;
 }) {
+  const [isIncludedOpen, setIsIncludedOpen] = useState(false);
+
   if (!setupItem && !includedItems.length) {
     return null;
   }
 
+  const recipeQuantityByKey = new Map(
+    (setupItem?.includedItems ?? []).map((includedItem) => [
+      quoteSelectionItemKey(includedItem),
+      includedItem.setupBaseQuantity ?? includedItem.quantity
+    ])
+  );
+  const setupQuantity = setupItem?.quantity ?? 1;
   const normalizedIncludedItems = includedItems.map((includedItem) => ({
     ...includedItem,
-    quantity: includedItem.setupBaseQuantity ?? includedItem.quantity
+    quantity:
+      setupItem
+        ? Math.min(
+            999,
+            (recipeQuantityByKey.get(quoteSelectionItemKey(includedItem)) ??
+              includedItem.setupBaseQuantity ??
+              includedItem.quantity) * setupQuantity
+          )
+        : includedItem.quantity
   }));
   const recipeIncludedItems =
     setupItem?.includedItems?.length
@@ -440,33 +457,50 @@ function SetupSelectionGroup({
         includedItems: recipeIncludedItems
       }
     : undefined;
+  const panelId = `setup-included-${setupItem?.slug ?? setupName?.toLowerCase().replace(/[^a-z0-9]+/g, "-") ?? "items"}`;
 
   return (
-    <div className="stitch-selection-setup-group">
-      {setupItem ? (
-        <SelectionRow
-          detailBasePath="/listings"
-          item={setupItem}
-          quantityItem={setupQuantityItem}
-        />
-      ) : (
-        <h4>{setupName}</h4>
-      )}
-      {includedItems.length ? (
-        <div className="stitch-selection-included-group">
+    <section
+      className="stitch-selection-setup-group"
+      data-open={isIncludedOpen ? "true" : "false"}
+    >
+      <div className="stitch-selection-setup-group__summary">
+        {setupItem ? (
+          <SelectionRow
+            detailBasePath="/listings"
+            item={setupItem}
+            quantityItem={setupQuantityItem}
+          />
+        ) : (
+          <h4>{setupName}</h4>
+        )}
+        {includedItems.length ? (
+          <button
+            aria-controls={panelId}
+            aria-expanded={isIncludedOpen}
+            className="stitch-selection-setup-group__toggle"
+            onClick={() => setIsIncludedOpen((current) => !current)}
+            type="button"
+          >
+            {isIncludedOpen ? "Hide included pieces" : `Show included pieces (${includedItems.length})`}
+          </button>
+        ) : null}
+      </div>
+      {includedItems.length && isIncludedOpen ? (
+        <div className="stitch-selection-included-group" id={panelId}>
           <h4>Included rental pieces</h4>
-          {includedItems.map((item) => (
+          {normalizedIncludedItems.map((item) => (
             <SelectionRow
               detailBasePath="/catalogue"
               item={item}
               key={quoteSelectionItemKey(item)}
-              showQuantityMeta={false}
+              showQuantityMeta
               showQuantityControls={false}
             />
           ))}
         </div>
       ) : null}
-    </div>
+    </section>
   );
 }
 
@@ -619,6 +653,14 @@ export function QuoteSelectionButton({ item }: { item: QuoteSelectionItem }) {
       nextItems = [...nextItems, normalizedItem];
     }
 
+    const nextSetupQuantity =
+      normalizedItem.kind === "setup"
+        ? (nextItems.find(
+            (selected) =>
+              quoteSelectionItemKey(selected) === quoteSelectionItemKey(normalizedItem)
+          )?.quantity ?? normalizedItem.quantity)
+        : undefined;
+
     includedItems.forEach((includedItem) => {
       if (
         !nextItems.some(
@@ -626,7 +668,17 @@ export function QuoteSelectionButton({ item }: { item: QuoteSelectionItem }) {
             quoteSelectionItemKey(selected) === quoteSelectionItemKey(includedItem)
         )
       ) {
-        nextItems.push(includedItem);
+        nextItems.push({
+          ...includedItem,
+          quantity:
+            nextSetupQuantity !== undefined
+              ? Math.min(
+                  999,
+                  (includedItem.setupBaseQuantity ?? includedItem.quantity) *
+                    nextSetupQuantity
+                )
+              : includedItem.quantity
+        });
       }
     });
 

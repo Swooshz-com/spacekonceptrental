@@ -454,10 +454,16 @@ describe("public page shells", () => {
     const setupDetailBlock = styles.slice(
       styles.indexOf("/* Final setup detail rebuild, grouped setup selections, and home rhythm pass. */")
     );
+    const setupCatalogueParityBlock = styles.slice(
+      styles.indexOf("/* Final catalogue-parity setup detail and collapsed setup selection groups. */")
+    );
+    const setupRestorationBlock = styles.slice(
+      styles.indexOf("/* Final setup detail restoration and mobile menu/detail polish. */")
+    );
 
     render(
       <StitchDetail
-        backHref="/listings"
+        backHref="/listings#setup-listings"
         backLabel="Setups"
         product={setupProduct}
         related={[modularLounge]}
@@ -468,17 +474,36 @@ describe("public page shells", () => {
     expect(screen.queryByRole("heading", { level: 1, name: /the metropolitan gala/i })).not.toBeInTheDocument();
     expect(screen.getByRole("heading", { level: 2, name: /the metropolitan gala/i })).toBeInTheDocument();
     expect(screen.getByRole("heading", { level: 3, name: /included rental pieces/i })).toBeInTheDocument();
-    expect(screen.getByText(/our team will prepare a custom proposal/i).tagName).toBe("P");
+    expect(screen.getByRole("link", { name: /back to setups/i })).toBeInTheDocument();
+    expect(screen.getByText("Setups / Direction")).toBeInTheDocument();
+    expect(screen.getByText("Styled setup")).toBeInTheDocument();
+    expect(screen.getByText("1 pieces")).toBeInTheDocument();
+    expect(screen.queryByText(/our team will prepare a custom proposal/i)).not.toBeInTheDocument();
+    expect(document.querySelector(".stitch-detail-context")).toBeNull();
+    expect(document.querySelector(".stitch-detail-actions--setup")).not.toBeNull();
     expect(document.querySelector(".stitch-detail-carousel")).not.toBeNull();
+    expect(document.querySelector(".stitch-detail-open-grid--setup")).not.toBeNull();
+    expect(document.querySelector(".stitch-detail-open-media--carousel.stitch-setup-media")).not.toBeNull();
+    expect(document.querySelector(".stitch-setup-lower--detail")).toBeNull();
+    expect(document.querySelector(".stitch-detail-open-copy.stitch-setup-summary")).not.toBeNull();
+    expect(document.querySelector(".stitch-included-open__header > .stitch-back")).toBeNull();
+    expect(document.querySelector(".stitch-detail-actions--setup .stitch-detail-button--back")).not.toBeNull();
+    expect(document.querySelector(".stitch-included-open__grid")).not.toBeNull();
     expect(screen.getByRole("button", { name: /previous setup image/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /next setup image/i })).toBeInTheDocument();
     expect(setupDetailBlock).toContain("stitch-detail-carousel");
     expect(styles).toMatch(/\.stitch-detail-carousel__control\s*\{[\s\S]*?height:\s*100%\s*!important;[\s\S]*?width:\s*clamp\(2\.35rem,\s*4\.4vw,\s*3\.7rem\)\s*!important;/);
     expect(styles).toMatch(/\.stitch-detail-carousel__control:hover,[\s\S]*?\.stitch-detail-carousel__control:focus-visible\s*\{[\s\S]*?background:\s*var\(--stitch-surface\)\s*!important;/);
-    expect(styles).toMatch(/\.stitch-included-open h3\s*\{[\s\S]*?font-size:\s*clamp\(1\.15rem,\s*1\.45vw,\s*1\.42rem\)\s*!important;/);
-    expect(setupDetailBlock).toMatch(/\.stitch-detail-context \.stitch-eyebrow\s*\{[\s\S]*?font-size:\s*var\(--stitch-action-font-size\)\s*!important;/);
-    expect(styles).toMatch(/\.stitch-detail-page--setup\) \.site-main \.stitch-detail-page--setup \.stitch-setup-summary > \.stitch-quote-select-controls\s*\{[\s\S]*?width:\s*min\(100%,\s*44rem\)\s*!important;/);
-    expect(styles).toMatch(/\.stitch-detail-page--setup\) \.site-main \.stitch-detail-page--setup \.stitch-detail-context\s*\{[\s\S]*?width:\s*min\(100%,\s*44rem\)\s*!important;/);
+    expect(setupCatalogueParityBlock).toContain("stitch-detail-open-grid--setup");
+    expect(setupRestorationBlock).toContain("stitch-detail-open-grid--setup");
+    expect(styles).toMatch(/\/\* Final unified detail media and action stack\. \*\/[\s\S]*?\.stitch-detail-open-grid\s*\{[\s\S]*?grid-template-columns:\s*minmax\(0,\s*1\.16fr\)\s+minmax\(25rem,\s*0\.84fr\)\s*!important;/);
+    expect(setupRestorationBlock).toMatch(/\.stitch-detail-open-media--carousel\s+\.stitch-detail-carousel__slide\s*\{[\s\S]*?aspect-ratio:\s*16\s*\/\s*8\.75\s*!important;/);
+    expect(setupRestorationBlock).toMatch(/\.stitch-detail-spec-card--setup\s*\{[\s\S]*?border:\s*1px\s+solid\s+var\(--stitch-line\)\s*!important;/);
+    expect(styles).toMatch(/\.stitch-included-open h3\s*\{[\s\S]*?font-size:\s*clamp\(1\.7rem,\s*2\.05vw,\s*2\.2rem\)\s*!important;/);
+    expect(styles).toMatch(/\/\* Final unified detail media and action stack\. \*\/[\s\S]*?\.stitch-detail-actions--setup\s*\{[\s\S]*?gap:\s*0\.75rem\s*!important;/);
+    expect(styles).toMatch(/\.stitch-detail-actions--setup \.stitch-detail-button--back\s*\{[\s\S]*?border-color:\s*var\(--stitch-ink\)\s*!important;/);
+    expect(styles).toMatch(/\.stitch-detail-actions--setup \.stitch-detail-button--request\s*\{[\s\S]*?border-color:\s*transparent\s*!important;/);
+    expect(styles).toMatch(/\.stitch-included-open__header\s*\{[\s\S]*?display:\s*flex\s*!important;[\s\S]*?justify-content:\s*flex-start\s*!important;/);
   });
 
   it("keeps public listing source free from shell, ecommerce-only copy, and browser Supabase", () => {
