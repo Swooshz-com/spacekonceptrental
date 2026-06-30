@@ -25555,3 +25555,75 @@ body:has(.stitch-detail-page--setup) .site-main .stitch-included-open article st
     visibility: hidden !important;
   }
 }
+
+/* Final 1080 drawer typography lock: keep menu text stable at every mobile-header width. */
+@media (max-width: 1080px) {
+  body:has(.stitch-site-header) .stitch-mobile-menu__top strong {
+    font-family: var(--stitch-sans) !important;
+    font-size: clamp(16px, 1.75vw, 19px) !important;
+    font-weight: 800 !important;
+    letter-spacing: 0 !important;
+    line-height: 1.08 !important;
+  }
+
+  body:has(.stitch-site-header) .stitch-mobile-menu__top span {
+    font-family: var(--stitch-sans) !important;
+    font-size: 13px !important;
+    letter-spacing: 0 !important;
+    line-height: 1.32 !important;
+  }
+
+  body:has(.stitch-site-header) .stitch-mobile-menu__top button {
+    font-family: var(--stitch-sans) !important;
+    font-size: 12px !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.04em !important;
+    line-height: 1 !important;
+    text-transform: uppercase !important;
+  }
+
+  body:has(.stitch-site-header) .stitch-mobile-menu nav a,
+  body:has(.stitch-site-header) .stitch-mobile-menu__primary a {
+    color: var(--stitch-ink) !important;
+    font-family: var(--stitch-sans) !important;
+    font-size: clamp(15px, 1.35vw, 16px) !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.08em !important;
+    line-height: 1.12 !important;
+    padding: 0.9rem 0.35rem !important;
+    text-transform: uppercase !important;
+  }
+
+  body:has(.stitch-site-header) .stitch-mobile-menu__actions a {
+    font-family: var(--stitch-sans) !important;
+    font-size: 15px !important;
+    font-weight: 900 !important;
+    letter-spacing: 0.08em !important;
+    line-height: 1 !important;
+    text-transform: uppercase !important;
+  }
+
+  body:has(.stitch-site-header) .stitch-mobile-menu__legal a {
+    color: var(--stitch-muted) !important;
+    font-family: var(--stitch-sans) !important;
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.06em !important;
+    line-height: 1.15 !important;
+    text-transform: uppercase !important;
+  }
+}
+
+/* Final 900 drawer nav specificity lock: override the older open-menu rule. */
+@media (max-width: 1080px) {
+  body:has(.stitch-site-header) .stitch-mobile-menu.stitch-mobile-menu--open .stitch-mobile-menu__primary a,
+  body:has(.stitch-site-header) .stitch-mobile-menu.stitch-mobile-menu--open nav a {
+    color: var(--stitch-ink) !important;
+    font-family: var(--stitch-sans) !important;
+    font-size: clamp(15px, 1.35vw, 16px) !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.08em !important;
+    line-height: 1.12 !important;
+    text-transform: uppercase !important;
+  }
+}
