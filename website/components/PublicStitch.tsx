@@ -12,6 +12,7 @@ import {
   QuoteSelectionButton,
   type QuoteSelectionItem
 } from "./QuoteSelectionControls";
+import { SetupImageCarousel } from "./SetupImageCarousel";
 
 export const stitchImages = { chairImage, sofaImage, corporateImage, galaImage, exhibitionImage, heroImage };
 
@@ -308,13 +309,10 @@ export function StitchDetail({ product, backHref, backLabel, setup = false, rela
     return (
       <section className="stitch-detail-page stitch-detail-page--setup">
         <div className="stitch-container">
-          <div className="stitch-detail-carousel" aria-label={`${product.name} setup images`}>
-            {setupCarouselImages.map((carouselImage, index) => (
-              <figure className="stitch-detail-carousel__slide" key={`${carouselImage.src}-${index}`}>
-                <img alt={carouselImage.alt} src={carouselImage.src} />
-              </figure>
-            ))}
-          </div>
+          <SetupImageCarousel
+            images={setupCarouselImages}
+            label={`${product.name} setup images`}
+          />
           <div className="stitch-setup-lower">
             <div className="stitch-setup-summary">
               <Link className="stitch-back" href={backHref}>

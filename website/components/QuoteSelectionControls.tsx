@@ -312,6 +312,7 @@ function SelectionRow({
   return (
     <article
       className="stitch-selection-row"
+      data-kind={item.kind}
       key={quoteSelectionItemKey(item)}
     >
       {item.imageSrc ? (

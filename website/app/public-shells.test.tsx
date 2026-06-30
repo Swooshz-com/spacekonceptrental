@@ -470,10 +470,12 @@ describe("public page shells", () => {
     expect(screen.getByRole("heading", { level: 3, name: /included rental pieces/i })).toBeInTheDocument();
     expect(screen.getByText(/our team will prepare a custom proposal/i).tagName).toBe("P");
     expect(document.querySelector(".stitch-detail-carousel")).not.toBeNull();
-    expect(document.querySelectorAll(".stitch-detail-carousel__slide").length).toBeGreaterThan(1);
+    expect(screen.getByRole("button", { name: /previous setup image/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /next setup image/i })).toBeInTheDocument();
     expect(setupDetailBlock).toContain("stitch-detail-carousel");
-    expect(setupDetailBlock).toMatch(/scroll-snap-type:\s*x mandatory\s*!important;/);
-    expect(setupDetailBlock).toMatch(/\.stitch-included-open h3\s*\{[\s\S]*?font-size:\s*clamp\(1\.7rem,\s*2\.05vw,\s*2\.2rem\)\s*!important;/);
+    expect(styles).toMatch(/\.stitch-detail-carousel__control\s*\{[\s\S]*?height:\s*100%\s*!important;[\s\S]*?width:\s*clamp\(2\.35rem,\s*4\.4vw,\s*3\.7rem\)\s*!important;/);
+    expect(styles).toMatch(/\.stitch-detail-carousel__control:hover,[\s\S]*?\.stitch-detail-carousel__control:focus-visible\s*\{[\s\S]*?background:\s*var\(--stitch-surface\)\s*!important;/);
+    expect(styles).toMatch(/\.stitch-included-open h3\s*\{[\s\S]*?font-size:\s*clamp\(1\.15rem,\s*1\.45vw,\s*1\.42rem\)\s*!important;/);
     expect(setupDetailBlock).toMatch(/\.stitch-detail-context \.stitch-eyebrow\s*\{[\s\S]*?font-size:\s*var\(--stitch-action-font-size\)\s*!important;/);
   });
 
