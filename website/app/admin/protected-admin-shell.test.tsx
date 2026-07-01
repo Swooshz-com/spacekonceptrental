@@ -283,7 +283,7 @@ describe("protected admin shell", () => {
     });
   });
 
-  it("renders safe dashboard data with the existing catalogue write controls", () => {
+  it("renders the compact content-manager dashboard without quote CRM controls", () => {
     render(
       <AdminShellContent
         state={{
@@ -377,22 +377,34 @@ describe("protected admin shell", () => {
       screen.getByRole("heading", { name: /^dashboard$/i })
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/quote requests needing review/i)
-    ).toBeInTheDocument();
-    expect(screen.getAllByText(/published listings/i).length).toBeGreaterThan(0);
-    expect(
-      screen.getByText(/draft\/incomplete listings/i)
-    ).toBeInTheDocument();
-    expect(screen.getByText(/media needing attention/i)).toBeInTheDocument();
-    expect(screen.getByText(/readiness issues/i)).toBeInTheDocument();
-    expect(
-      screen.getByRole("heading", { name: /work queue/i })
+      screen.getByText(/current hero image/i)
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("heading", { name: /recent quote requests/i })
+      screen.getByText(/catalogue item count/i)
     ).toBeInTheDocument();
-    expect(screen.getAllByText("QR-20260603-NEWEST").length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/Maya Tan/i).length).toBeGreaterThan(0);
+    expect(
+      screen.getByText(/^setup count$/i)
+    ).toBeInTheDocument();
+    expect(screen.getByText(/enquiry recipient email/i)).toBeInTheDocument();
+    expect(screen.getByText(/latest delivery status/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: /quick actions/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: /hero.*update hero image/i })
+    ).toHaveAttribute("href", "/admin/hero");
+    expect(
+      screen.getByRole("link", { name: /catalogue.*manage catalogue/i })
+    ).toHaveAttribute("href", "/admin/catalogue");
+    expect(
+      screen.getByRole("link", { name: /setups.*manage setups/i })
+    ).toHaveAttribute("href", "/admin/setups");
+    expect(
+      screen.getByRole("link", { name: /enquiry email.*update enquiry email/i })
+    ).toHaveAttribute("href", "/admin/enquiry-email");
+    expect(
+      screen.getByRole("link", { name: /delivery log.*view delivery log/i })
+    ).toHaveAttribute("href", "/admin/delivery-log");
     expect(
       screen.getByRole("link", { name: /view public site/i })
     ).toHaveAttribute("href", "/");
@@ -400,11 +412,96 @@ describe("protected admin shell", () => {
       screen.getByRole("button", { name: /sign out/i })
     ).toBeInTheDocument();
     expect(
-      screen.getAllByRole("link", { name: /quote inbox/i }).length
-    ).toBeGreaterThan(0);
+      screen.queryByRole("link", { name: /quote inbox/i })
+    ).not.toBeInTheDocument();
     expect(
-      screen.getAllByRole("link", { name: /media library/i }).length
-    ).toBeGreaterThan(0);
+      screen.queryByText("QR-20260603-NEWEST")
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /save category metadata/i })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /save listing metadata/i })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /save image metadata/i })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", {
+        name: new RegExp("notify|email|send|check" + "out|pay" + "ment|book|reserve", "i")
+      })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/cart|checkout|payment|customer account|stock reservation|order fulfilment|online ordering/i)
+    ).not.toBeInTheDocument();
+  }, 15000);
+
+  it("renders existing listing, category, and media controls on the Catalogue route", () => {
+    render(
+      <AdminShellContent
+        view={{ kind: "catalogue" }}
+        state={{
+          status: "authorised_admin",
+          dashboard: {
+            status: "loaded",
+            data: {
+              categories: [
+                {
+                  id: "category-1",
+                  slug: "lounge",
+                  name: "Lounge",
+                  sortOrder: 20,
+                  isPublished: true,
+                  productCount: 1,
+                  publishedProductCount: 0
+                }
+              ],
+              products: [
+                {
+                  id: "product-1",
+                  categoryId: "category-1",
+                  slug: "modular-lounge",
+                  name: "Modular Lounge",
+                  rentalUnit: "set",
+                  status: "draft",
+                  sortOrder: 10,
+                  imageCount: 2,
+                  primaryImageAltText: "Lounge set"
+                }
+              ],
+              images: [
+                {
+                  id: "image-1",
+                  productId: "product-1",
+                  storageBucket: "catalogue-metadata",
+                  storagePath: "fixtures/lounge-main.jpg",
+                  altText: "Lounge set",
+                  sortOrder: 1,
+                  isPrimary: true,
+                  status: "active"
+                }
+              ],
+              imageSummary: {
+                totalImages: 2,
+                activeImages: 2,
+                primaryImages: 1
+              }
+            }
+          },
+          quoteInbox: {
+            status: "loaded",
+            data: {
+              quoteRequests: []
+            }
+          }
+        }}
+      />
+    );
+
+    expect(
+      screen.getByRole("heading", { name: /catalogue management/i })
+    ).toBeInTheDocument();
+    expect(screen.getAllByText(/category\/menu mapping/i).length).toBeGreaterThan(0);
     expect(
       screen.getByRole("button", { name: /save category metadata/i })
     ).toBeInTheDocument();
@@ -417,27 +514,6 @@ describe("protected admin shell", () => {
     expect(
       screen.getByRole("button", { name: /upload listing image for review/i })
     ).toBeInTheDocument();
-    expect(
-      screen.queryByLabelText(/protected internal status for QR-20260603-NEWEST/i)
-    ).not.toBeInTheDocument();
-    expect(
-      screen.queryByRole("button", {
-        name: /update internal triage status for QR-20260603-NEWEST/i
-      })
-    ).not.toBeInTheDocument();
-    expect(
-      screen.queryByRole("link", {
-        name: /create product|edit product|archive product|publish product|product image/i
-      })
-    ).not.toBeInTheDocument();
-    expect(
-      screen.queryByRole("button", {
-        name: new RegExp("notify|email|send|check" + "out|pay" + "ment|book|reserve", "i")
-      })
-    ).not.toBeInTheDocument();
-    expect(
-      screen.queryByText(/cart|checkout|payment|customer account|stock reservation|order fulfilment|online ordering/i)
-    ).not.toBeInTheDocument();
   }, 15000);
 
   it("keeps protected admin navigation aligned to the approved workspace IA", () => {
@@ -473,26 +549,32 @@ describe("protected admin shell", () => {
       screen.getAllByRole("link", { name: /dashboard/i })[0]
     ).toHaveAttribute("href", "/admin");
     expect(
-      screen.getAllByRole("link", { name: /quote inbox/i })[0]
-    ).toHaveAttribute("href", "/admin/quotes");
+      screen.getAllByRole("link", { name: /^hero/i })[0]
+    ).toHaveAttribute("href", "/admin/hero");
     expect(
-      screen.getAllByRole("link", { name: /listings/i })[0]
-    ).toHaveAttribute("href", "/admin/listings");
+      screen.getAllByRole("link", { name: /catalogue/i })[0]
+    ).toHaveAttribute("href", "/admin/catalogue");
     expect(
-      screen.getAllByRole("link", { name: /categories/i })[0]
-    ).toHaveAttribute("href", "/admin/categories");
+      screen.getAllByRole("link", { name: /setups/i })[0]
+    ).toHaveAttribute("href", "/admin/setups");
     expect(
-      screen.getAllByRole("link", { name: /media library/i })[0]
-    ).toHaveAttribute("href", "/admin/media");
+      screen.getAllByRole("link", { name: /enquiry email/i })[0]
+    ).toHaveAttribute("href", "/admin/enquiry-email");
     expect(
-      screen.getAllByRole("link", { name: /readiness/i })[0]
-    ).toHaveAttribute("href", "/admin/content-readiness");
+      screen.getAllByRole("link", { name: /delivery log/i })[0]
+    ).toHaveAttribute("href", "/admin/delivery-log");
     expect(
-      screen.getAllByRole("link", { name: /public qa/i })[0]
-    ).toHaveAttribute("href", "/admin/public-parity");
+      screen.queryByRole("link", { name: /quote inbox/i })
+    ).not.toBeInTheDocument();
     expect(
-      screen.getAllByRole("link", { name: /release control/i })[0]
-    ).toHaveAttribute("href", "/admin/release-control");
+      screen.queryByRole("link", { name: /readiness/i })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", { name: /public qa/i })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", { name: /release control/i })
+    ).not.toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: /view public site/i })
     ).toHaveAttribute("href", "/");
@@ -652,11 +734,71 @@ describe("protected admin shell", () => {
     );
 
     expect(
-      screen.getByText(/quote request data is temporarily unavailable/i)
+      screen.getByText(/current hero image/i)
     ).toBeInTheDocument();
+    expect(
+      screen.getByText(/catalogue item count/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getAllByText(/backend pending/i).length
+    ).toBeGreaterThan(0);
     expect(screen.getAllByText(/unavailable/i).length).toBeGreaterThan(0);
     expect(screen.queryByText(/sql/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/supabase/i)).not.toBeInTheDocument();
+  });
+
+  it("renders protected placeholders for missing enquiry email and delivery log backends", () => {
+    const baseState = {
+      status: "authorised_admin" as const,
+      dashboard: {
+        status: "loaded" as const,
+        data: {
+          categories: [],
+          products: [],
+          images: [],
+          imageSummary: {
+            totalImages: 0,
+            activeImages: 0,
+            primaryImages: 0
+          }
+        }
+      },
+      quoteInbox: {
+        status: "loaded" as const,
+        data: {
+          quoteRequests: []
+        }
+      }
+    };
+
+    const { unmount } = render(
+      <AdminShellContent state={baseState} view={{ kind: "enquiry-email" }} />
+    );
+
+    expect(
+      screen.getByText(/quote requests are sent to this email/i)
+    ).toBeInTheDocument();
+    expect(screen.getByText(/does not use an internal quote inbox/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /save recipient pending backend/i })
+    ).toBeDisabled();
+    expect(
+      screen.queryByRole("button", { name: /send/i })
+    ).not.toBeInTheDocument();
+
+    unmount();
+
+    render(
+      <AdminShellContent state={baseState} view={{ kind: "delivery-log" }} />
+    );
+
+    expect(
+      screen.getByText(/technical enquiry delivery log/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/not a quote inbox, customer pipeline, review queue, or follow-up workflow/i)
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/QR-20260603-NEWEST/i)).not.toBeInTheDocument();
   });
 
   it("renders an empty quote request inbox state for authorised admins", () => {

@@ -230,22 +230,33 @@ describe("Phase 3H-A/B admin operator QA readiness polish", () => {
     expect(validator).not.toMatch(/\bvercel\s+(?:deploy|link|env|pull|promote)\b/i);
   });
 
-  it("shows consistent admin overview operator QA guidance and safe next action", () => {
+  it("shows the compact admin overview content-manager guidance and safe next action", () => {
     renderAdminView({ kind: "home" });
 
     expect(
-      screen.getByRole("heading", { name: /operator qa summary/i })
-    ).toBeInTheDocument();
-    expect(screen.getByText(/admin-only workspace/i)).toBeInTheDocument();
-    expect(
-      screen.getByText(/write-enabled surfaces stay behind protected admin routes/i)
+      screen.getByRole("heading", { name: /quick status/i })
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/public-facing changes are limited to published listing, category, and active media content/i)
+      screen.getByRole("heading", { name: /quick actions/i })
+    ).toBeInTheDocument();
+    expect(screen.getByText(/current hero image/i)).toBeInTheDocument();
+    expect(screen.getByText(/catalogue item count/i)).toBeInTheDocument();
+    expect(screen.getByText(/^setup count$/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/enquiry recipient email/i)
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/next safe action: review listings, categories, media, and quote requests for the visible rental enquiry journey/i)
-    ).toBeInTheDocument();
+      screen.getByRole("link", { name: /delivery log.*view delivery log/i })
+    ).toHaveAttribute("href", "/admin/delivery-log");
+    expect(
+      screen.queryByRole("link", { name: /quote inbox/i })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/operator qa summary/i)
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/quote requests for the visible rental enquiry journey/i)
+    ).not.toBeInTheDocument();
   });
 
   it("aligns listing, category, media, quote inbox, and quote detail guidance", () => {

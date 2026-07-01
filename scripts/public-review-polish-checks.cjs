@@ -146,16 +146,16 @@ function assertVisibleMvpAdminHome(adminSource, label) {
   const adminHomeSource = adminSource.slice(start, end);
 
   assert(
-    /href: "\/admin\/listings"[\s\S]*href: "\/admin\/categories"[\s\S]*href: "\/admin\/media"[\s\S]*href: "\/admin\/quotes"/.test(adminHomeSource),
-    `${label} must keep normal admin home focused on listings, categories, media, and quote requests`
+    /href: "\/admin\/hero"[\s\S]*href: "\/admin\/catalogue"[\s\S]*href: "\/admin\/setups"[\s\S]*href: "\/admin\/enquiry-email"[\s\S]*href: "\/admin\/delivery-log"/.test(adminHomeSource),
+    `${label} must keep normal admin home focused on hero, catalogue, setups, enquiry email, and delivery log`
   );
   assert(
     !/<OwnerReadinessHelpersPanel \/>/.test(adminHomeSource),
     `${label} must not render owner-readiness helpers from the normal visible MVP admin home`
   );
   assert(
-    !/href: "\/admin\/(?:content-readiness|public-parity|release-control)"/.test(adminHomeSource),
-    `${label} must not advertise old internal admin routes from the normal visible MVP admin home`
+    !/href: "\/admin\/(?:quotes|content-readiness|public-parity|release-control)"/.test(adminHomeSource),
+    `${label} must not advertise quote inbox or old internal admin routes from the normal visible MVP admin home`
   );
 }
 function readRepoFile(relativePath) {

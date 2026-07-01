@@ -133,7 +133,9 @@ describe("Phase 5H-A/B catalogue write workflow readiness", () => {
   });
 
   it("renders protected admin listing, category, and media write helper copy only for authorised admin state", () => {
-    render(<AdminShellContent state={authorisedState} />);
+    render(
+      <AdminShellContent state={authorisedState} view={{ kind: "catalogue" }} />,
+    );
 
     expect(screen.getAllByText(/protected admin save/i).length).toBeGreaterThan(
       0,
