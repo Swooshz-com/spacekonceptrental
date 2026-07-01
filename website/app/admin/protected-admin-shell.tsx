@@ -1,3 +1,5 @@
+import type { ReactNode } from "react";
+
 import {
   resolveServerAdminRuntimeRouteGateAdapter,
   type ServerAdminRuntimeRouteGateAdapterResult
@@ -218,49 +220,49 @@ const adminNavigationItems = [
     kind: "home",
     href: "/admin",
     label: "Dashboard",
-    meta: "Work queue"
+    meta: "Queue"
   },
   {
     kind: "quotes",
     href: "/admin/quotes",
     label: "Quote Inbox",
-    meta: "Enquiry triage"
+    meta: "Triage"
   },
   {
     kind: "listings",
     href: "/admin/listings",
     label: "Listings",
-    meta: "Catalogue records"
+    meta: "Records"
   },
   {
     kind: "categories",
     href: "/admin/categories",
     label: "Categories",
-    meta: "Public grouping"
+    meta: "Grouping"
   },
   {
     kind: "media",
     href: "/admin/media",
     label: "Media Library",
-    meta: "Images and alt text"
+    meta: "Images"
   },
   {
     kind: "content-readiness",
     href: "/admin/content-readiness",
     label: "Readiness",
-    meta: "Owner-review gaps"
+    meta: "Gaps"
   },
   {
     kind: "public-parity",
     href: "/admin/public-parity",
     label: "Public QA",
-    meta: "Route parity checks"
+    meta: "Parity"
   },
   {
     kind: "release-control",
     href: "/admin/release-control",
     label: "Release Control",
-    meta: "Local release gate"
+    meta: "Gate"
   }
 ] as const;
 
@@ -548,7 +550,7 @@ function AdminRecoveryLinks({
   includeSignIn?: boolean;
 }) {
   return (
-    <nav style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginTop: '24px' }} aria-label="Admin recovery">
+    <nav className={styles.recoveryNav} aria-label="Admin recovery">
       {includeSignIn ? (
         <a className="premium-button premium-button--primary" href="/admin/login">
           Return to admin sign in
@@ -599,6 +601,26 @@ function AdminOperationsNavigation({
         );
       })}
     </nav>
+  );
+}
+
+function AdminUnavailableWorkspace({
+  description,
+  title
+}: {
+  description: string;
+  title: string;
+}) {
+  return (
+    <section
+      className={`${styles.emptyState} admin-dashboard admin-dashboard--unavailable`}
+      aria-label={`${title} unavailable`}
+    >
+      <p className="eyebrow">Temporarily unavailable</p>
+      <h2>{title}</h2>
+      <p>{description}</p>
+      <AdminRecoveryLinks />
+    </section>
   );
 }
 
@@ -853,7 +875,20 @@ function AdminOperationsHome({
         <AdminRecentQuoteRequests quoteRequests={recentQuoteRequests} />
       </div>
 
-      <div className="admin-dashboard__grid">
+      <section
+        className={styles.recommendedActions}
+        aria-label="Recommended next actions"
+      >
+        <div className={styles.sectionHeader}>
+          <div>
+            <h3>Recommended next actions</h3>
+            <p>
+              Use the existing protected admin workflows to clear the visible
+              queue.
+            </p>
+          </div>
+        </div>
+        <div className="admin-dashboard__grid">
         <AdminOperatorGuidance
           adminOnly="Admin-only workspace, management summaries, public-ready listing cues, and internal follow-up details."
           label="Admin dashboard"
@@ -872,7 +907,8 @@ function AdminOperationsHome({
             </a>
           </article>
         ))}
-      </div>
+        </div>
+      </section>
       {dashboard.status === "loaded" ? (
         <section className="admin-dashboard__card">
           <h3>Catalogue scope</h3>
@@ -6650,7 +6686,12 @@ function AdminListingOperations({
   dashboard: AdminProductDashboardReadResult;
 }) {
   if (dashboard.status === "unavailable") {
-    return <AdminDashboard dashboard={dashboard} />;
+    return (
+      <AdminUnavailableWorkspace
+        title="Listing operations"
+        description="Listing data is temporarily unavailable. Existing admin routes remain reachable while catalogue reads recover."
+      />
+    );
   }
 
   return (
@@ -6725,7 +6766,12 @@ function AdminCategoryOperations({
   dashboard: AdminProductDashboardReadResult;
 }) {
   if (dashboard.status === "unavailable") {
-    return <AdminDashboard dashboard={dashboard} />;
+    return (
+      <AdminUnavailableWorkspace
+        title="Category operations"
+        description="Category data is temporarily unavailable. Existing admin routes remain reachable while catalogue reads recover."
+      />
+    );
   }
 
   return (
@@ -6764,7 +6810,12 @@ function AdminMediaOperations({
   dashboard: AdminProductDashboardReadResult;
 }) {
   if (dashboard.status === "unavailable") {
-    return <AdminDashboard dashboard={dashboard} />;
+    return (
+      <AdminUnavailableWorkspace
+        title="Media operations"
+        description="Media data is temporarily unavailable. Existing admin routes remain reachable while catalogue reads recover."
+      />
+    );
   }
 
   return (
@@ -6798,6 +6849,31 @@ function AdminMediaOperations({
         products={dashboard.data.products}
       />
     </>
+  );
+}
+
+function AdminCompatibilitySection({
+  children,
+  description,
+  title
+}: {
+  children: ReactNode;
+  description: string;
+  title: string;
+}) {
+  return (
+    <section className={styles.compatSection} aria-label={title}>
+      <div className={styles.sectionHeader}>
+        <div>
+          <h3>{title}</h3>
+          <p>{description}</p>
+        </div>
+        <span className={`${styles.chip} ${styles.chipStable}`}>
+          Scrollable
+        </span>
+      </div>
+      <div className={styles.compatBody}>{children}</div>
+    </section>
   );
 }
 
@@ -7032,8 +7108,18 @@ function AdminOperationsView({
           dashboard={state.dashboard}
           quoteInbox={state.quoteInbox}
         />
-        <AdminDashboard dashboard={state.dashboard} />
-        <OwnerReadinessHelpersPanel />
+        <AdminCompatibilitySection
+          title="Catalogue compatibility controls"
+          description="Existing dashboard and protected write panels remain available without taking over the first screen."
+        >
+          <AdminDashboard dashboard={state.dashboard} />
+        </AdminCompatibilitySection>
+        <AdminCompatibilitySection
+          title="Readiness compatibility helpers"
+          description="Owner-review and release-readiness helper chain is preserved in a bounded admin panel."
+        >
+          <OwnerReadinessHelpersPanel />
+        </AdminCompatibilitySection>
       </>
     );
   }
@@ -7055,15 +7141,27 @@ function AdminOperationsView({
   }
 
   if (view.kind === "content-readiness") {
-    return <ContentReadinessWorkspace />;
+    return (
+      <div className={styles.longFormPanel}>
+        <ContentReadinessWorkspace />
+      </div>
+    );
   }
 
   if (view.kind === "public-parity") {
-    return <PublicParityReviewWorkspace />;
+    return (
+      <div className={styles.longFormPanel}>
+        <PublicParityReviewWorkspace />
+      </div>
+    );
   }
 
   if (view.kind === "release-control") {
-    return <ReleaseControlWorkspace />;
+    return (
+      <div className={styles.longFormPanel}>
+        <ReleaseControlWorkspace />
+      </div>
+    );
   }
 
   if (view.kind === "quote-detail") {
