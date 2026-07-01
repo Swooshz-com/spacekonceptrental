@@ -7027,10 +7027,14 @@ function AdminOperationsView({
 }) {
   if (view.kind === "home" || view.kind === "overview") {
     return (
-      <AdminOperationsHome
-        dashboard={state.dashboard}
-        quoteInbox={state.quoteInbox}
-      />
+      <>
+        <AdminOperationsHome
+          dashboard={state.dashboard}
+          quoteInbox={state.quoteInbox}
+        />
+        <AdminDashboard dashboard={state.dashboard} />
+        <OwnerReadinessHelpersPanel />
+      </>
     );
   }
 

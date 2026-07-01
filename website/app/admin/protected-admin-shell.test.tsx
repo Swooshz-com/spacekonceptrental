@@ -283,7 +283,7 @@ describe("protected admin shell", () => {
     });
   });
 
-  it("renders safe dashboard data without route-specific write controls", () => {
+  it("renders safe dashboard data with the existing catalogue write controls", () => {
     render(
       <AdminShellContent
         state={{
@@ -406,20 +406,17 @@ describe("protected admin shell", () => {
       screen.getAllByRole("link", { name: /media library/i }).length
     ).toBeGreaterThan(0);
     expect(
-      screen.queryByRole("button", { name: /create category/i })
-    ).not.toBeInTheDocument();
+      screen.getByRole("button", { name: /save category metadata/i })
+    ).toBeInTheDocument();
     expect(
-      screen.queryByRole("button", { name: /^create listing$/i })
-    ).not.toBeInTheDocument();
+      screen.getByRole("button", { name: /save listing metadata/i })
+    ).toBeInTheDocument();
     expect(
-      screen.queryByRole("button", { name: /create listing image metadata/i })
-    ).not.toBeInTheDocument();
+      screen.getByRole("button", { name: /save image metadata/i })
+    ).toBeInTheDocument();
     expect(
-      screen.queryByRole("button", { name: /upload listing image for review/i })
-    ).not.toBeInTheDocument();
-    expect(
-      screen.queryByLabelText(/listing image file/i)
-    ).not.toBeInTheDocument();
+      screen.getByRole("button", { name: /upload listing image for review/i })
+    ).toBeInTheDocument();
     expect(
       screen.queryByLabelText(/protected internal status for QR-20260603-NEWEST/i)
     ).not.toBeInTheDocument();
@@ -441,7 +438,6 @@ describe("protected admin shell", () => {
     expect(
       screen.queryByText(/cart|checkout|payment|customer account|stock reservation|order fulfilment|online ordering/i)
     ).not.toBeInTheDocument();
-    expect(screen.queryByLabelText(/product editor/i)).not.toBeInTheDocument();
   }, 15000);
 
   it("keeps protected admin navigation aligned to the approved workspace IA", () => {

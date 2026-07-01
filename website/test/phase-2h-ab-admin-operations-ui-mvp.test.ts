@@ -77,6 +77,7 @@ describe("Phase 2H-A/B admin operations UI MVP", () => {
       "website/app/admin/logout/route.ts",
       "website/app/admin/media/page.tsx",
       "website/app/admin/page.tsx",
+      "website/app/admin/protected-admin-shell.module.css",
       "website/app/admin/protected-admin-shell.test.tsx",
       "website/app/admin/protected-admin-shell.tsx",
       "website/app/admin/public-parity/page.tsx",
