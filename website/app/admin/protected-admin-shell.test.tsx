@@ -283,7 +283,7 @@ describe("protected admin shell", () => {
     });
   });
 
-  it("renders safe dashboard data with category/listing controls and the quote status inbox", () => {
+  it("renders safe dashboard data without route-specific write controls", () => {
     render(
       <AdminShellContent
         state={{
@@ -369,59 +369,192 @@ describe("protected admin shell", () => {
     );
 
     expect(
-      screen.getByRole("heading", { name: /admin workspace/i })
+      screen.getByRole("heading", { name: /spacekonceptrental admin/i })
+    ).toBeInTheDocument();
+    expect(screen.getByText(/protected workspace/i)).toBeInTheDocument();
+    expect(screen.getByText(/admin menu - dashboard/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: /^dashboard$/i })
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("heading", { name: /read-only catalogue dashboard/i })
+      screen.getByText(/quote requests needing review/i)
     ).toBeInTheDocument();
-    expect(screen.getAllByText("Lounge").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("Modular Lounge").length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/published listings/i).length).toBeGreaterThan(0);
     expect(
-      screen.getAllByText(/2 listing image metadata records/i).length
-    ).toBeGreaterThan(0);
+      screen.getByText(/draft\/incomplete listings/i)
+    ).toBeInTheDocument();
+    expect(screen.getByText(/media needing attention/i)).toBeInTheDocument();
+    expect(screen.getByText(/readiness issues/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: /work queue/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: /recent quote requests/i })
+    ).toBeInTheDocument();
+    expect(screen.getAllByText("QR-20260603-NEWEST").length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Maya Tan/i).length).toBeGreaterThan(0);
+    expect(
+      screen.getByRole("link", { name: /view public site/i })
+    ).toHaveAttribute("href", "/");
     expect(
       screen.getByRole("button", { name: /sign out/i })
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: /create category/i })
-    ).toBeInTheDocument();
+      screen.getAllByRole("link", { name: /quote inbox/i }).length
+    ).toBeGreaterThan(0);
     expect(
-      screen.getByRole("button", { name: /save category metadata/i })
-    ).toBeInTheDocument();
+      screen.getAllByRole("link", { name: /media library/i }).length
+    ).toBeGreaterThan(0);
     expect(
-      screen.getByRole("button", { name: /archive category lounge/i })
-    ).toBeInTheDocument();
+      screen.queryByRole("button", { name: /create category/i })
+    ).not.toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: /^create listing$/i })
-    ).toBeInTheDocument();
+      screen.queryByRole("button", { name: /^create listing$/i })
+    ).not.toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: /save listing metadata/i })
-    ).toBeInTheDocument();
+      screen.queryByRole("button", { name: /create listing image metadata/i })
+    ).not.toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: /set modular lounge to public visibility/i })
-    ).toBeInTheDocument();
+      screen.queryByRole("button", { name: /upload listing image for review/i })
+    ).not.toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: /archive listing modular lounge/i })
-    ).toBeInTheDocument();
+      screen.queryByLabelText(/listing image file/i)
+    ).not.toBeInTheDocument();
     expect(
-      screen.getByRole("heading", { name: /listing image metadata management/i })
-    ).toBeInTheDocument();
+      screen.queryByLabelText(/protected internal status for QR-20260603-NEWEST/i)
+    ).not.toBeInTheDocument();
     expect(
-      screen.getByRole("heading", { name: /upload listing image for review/i })
-    ).toBeInTheDocument();
-    expect(screen.getByLabelText(/listing image file/i)).toBeInTheDocument();
+      screen.queryByRole("button", {
+        name: /update internal triage status for QR-20260603-NEWEST/i
+      })
+    ).not.toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: /upload listing image for review/i })
-    ).toBeInTheDocument();
+      screen.queryByRole("link", {
+        name: /create product|edit product|archive product|publish product|product image/i
+      })
+    ).not.toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: /create listing image metadata/i })
-    ).toBeInTheDocument();
+      screen.queryByRole("button", {
+        name: new RegExp("notify|email|send|check" + "out|pay" + "ment|book|reserve", "i")
+      })
+    ).not.toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: /save image metadata/i })
-    ).toBeInTheDocument();
+      screen.queryByText(/cart|checkout|payment|customer account|stock reservation|order fulfilment|online ordering/i)
+    ).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/product editor/i)).not.toBeInTheDocument();
+  }, 15000);
+
+  it("keeps protected admin navigation aligned to the approved workspace IA", () => {
+    render(
+      <AdminShellContent
+        view={{ kind: "home" }}
+        state={{
+          status: "authorised_admin",
+          dashboard: {
+            status: "loaded",
+            data: {
+              categories: [],
+              products: [],
+              images: [],
+              imageSummary: {
+                totalImages: 0,
+                activeImages: 0,
+                primaryImages: 0
+              }
+            }
+          },
+          quoteInbox: {
+            status: "loaded",
+            data: {
+              quoteRequests: []
+            }
+          }
+        }}
+      />
+    );
+
     expect(
-      screen.getByRole("button", { name: /archive image metadata lounge set/i })
-    ).toBeInTheDocument();
+      screen.getAllByRole("link", { name: /dashboard/i })[0]
+    ).toHaveAttribute("href", "/admin");
+    expect(
+      screen.getAllByRole("link", { name: /quote inbox/i })[0]
+    ).toHaveAttribute("href", "/admin/quotes");
+    expect(
+      screen.getAllByRole("link", { name: /listings/i })[0]
+    ).toHaveAttribute("href", "/admin/listings");
+    expect(
+      screen.getAllByRole("link", { name: /categories/i })[0]
+    ).toHaveAttribute("href", "/admin/categories");
+    expect(
+      screen.getAllByRole("link", { name: /media library/i })[0]
+    ).toHaveAttribute("href", "/admin/media");
+    expect(
+      screen.getAllByRole("link", { name: /readiness/i })[0]
+    ).toHaveAttribute("href", "/admin/content-readiness");
+    expect(
+      screen.getAllByRole("link", { name: /public qa/i })[0]
+    ).toHaveAttribute("href", "/admin/public-parity");
+    expect(
+      screen.getAllByRole("link", { name: /release control/i })[0]
+    ).toHaveAttribute("href", "/admin/release-control");
+    expect(
+      screen.getByRole("link", { name: /view public site/i })
+    ).toHaveAttribute("href", "/");
+  });
+
+  it("renders route-specific quote inbox controls for authorised admins", () => {
+    render(
+      <AdminShellContent
+        view={{ kind: "quotes" }}
+        state={{
+          status: "authorised_admin",
+          dashboard: {
+            status: "loaded",
+            data: {
+              categories: [],
+              products: [],
+              images: [],
+              imageSummary: {
+                totalImages: 0,
+                activeImages: 0,
+                primaryImages: 0
+              }
+            }
+          },
+          quoteInbox: {
+            status: "loaded",
+            data: {
+              quoteRequests: [
+                {
+                  id: "quote-1",
+                  publicReference: "QR-20260603-NEWEST",
+                  customerName: "Maya Tan",
+                  customerEmail: "maya@example.test",
+                  customerPhone: "+65 8123 4567",
+                  eventDate: "2026-06-20",
+                  venue: "Marina Bay Sands",
+                  status: "new",
+                  source: "website",
+                  createdAt: "2026-06-03T10:30:00.000Z",
+                  activity: [],
+                  items: [
+                    {
+                      id: "item-1",
+                      quoteRequestId: "quote-1",
+                      productNameSnapshot: "Modular lounge set",
+                      quantity: 2,
+                      notes: "VIP reception area",
+                      createdAt: "2026-06-03T10:31:00.000Z"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }}
+      />
+    );
+
     expect(
       screen.getByRole("heading", { name: /quote request inbox/i })
     ).toBeInTheDocument();
@@ -457,55 +590,6 @@ describe("protected admin shell", () => {
     ).not.toBeInTheDocument();
     expect(screen.queryByLabelText(/product editor/i)).not.toBeInTheDocument();
   }, 15000);
-
-  it("keeps normal admin operations navigation focused on visible MVP work areas", () => {
-    render(
-      <AdminShellContent
-        view={{ kind: "home" }}
-        state={{
-          status: "authorised_admin",
-          dashboard: {
-            status: "loaded",
-            data: {
-              categories: [],
-              products: [],
-              images: [],
-              imageSummary: {
-                totalImages: 0,
-                activeImages: 0,
-                primaryImages: 0
-              }
-            }
-          },
-          quoteInbox: {
-            status: "loaded",
-            data: {
-              quoteRequests: []
-            }
-          }
-        }}
-      />
-    );
-
-    expect(
-      screen.getByRole("link", { name: /open listings/i })
-    ).toHaveAttribute("href", "/admin/listings");
-    expect(
-      screen.getByRole("link", { name: /open categories/i })
-    ).toHaveAttribute("href", "/admin/categories");
-    expect(
-      screen.getByRole("link", { name: /open media/i })
-    ).toHaveAttribute("href", "/admin/media");
-    expect(
-      screen.getByRole("link", { name: /open quote requests/i })
-    ).toHaveAttribute("href", "/admin/quotes");
-    expect(
-      screen.queryByRole("link", { name: /content readiness|public parity|release control/i })
-    ).not.toBeInTheDocument();
-    expect(document.body.textContent).not.toMatch(
-      /readiness|phase|governance|provider handoff|CRM handoff|sync readiness|workflow readiness|future sync|future integration|provider sync|automation handoff/i
-    );
-  });
 
   it("does not render category write controls outside loaded authorised dashboard state", () => {
     const blockedStates = [
@@ -571,7 +655,10 @@ describe("protected admin shell", () => {
       />
     );
 
-    expect(screen.getByText(/catalogue data is temporarily unavailable/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/quote request data is temporarily unavailable/i)
+    ).toBeInTheDocument();
+    expect(screen.getAllByText(/unavailable/i).length).toBeGreaterThan(0);
     expect(screen.queryByText(/sql/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/supabase/i)).not.toBeInTheDocument();
   });
@@ -579,6 +666,7 @@ describe("protected admin shell", () => {
   it("renders an empty quote request inbox state for authorised admins", () => {
     render(
       <AdminShellContent
+        view={{ kind: "quotes" }}
         state={{
           status: "authorised_admin",
           dashboard: {
@@ -676,6 +764,7 @@ describe("protected admin shell", () => {
   it("renders a generic quote request unavailable state without provider details", () => {
     render(
       <AdminShellContent
+        view={{ kind: "quotes" }}
         state={{
           status: "authorised_admin",
           dashboard: {

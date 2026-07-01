@@ -21,6 +21,7 @@ import { ListingImageMetadataManagementPanel } from "../../components/admin/list
 import { ListingImageUploadPanel } from "../../components/admin/listing-image-upload-panel";
 import { ListingManagementPanel } from "../../components/admin/listing-management-panel";
 import { QuoteRequestInboxPanel } from "../../components/admin/quote-request-inbox-panel";
+import styles from "./protected-admin-shell.module.css";
 
 export type ProtectedAdminShellState =
   | {
@@ -196,6 +197,182 @@ export async function resolveProtectedAdminShellState(
 
 function statusLabel(value: string) {
   return value.replace(/_/g, " ");
+}
+
+type LoadedAdminDashboard = Extract<
+  AdminProductDashboardReadResult,
+  { status: "loaded" }
+>;
+type LoadedQuoteInbox = Extract<
+  AdminQuoteRequestInboxReadResult,
+  { status: "loaded" }
+>;
+type AdminDashboardProduct = LoadedAdminDashboard["data"]["products"][number];
+type AdminDashboardCategory =
+  LoadedAdminDashboard["data"]["categories"][number];
+type AdminDashboardImage = LoadedAdminDashboard["data"]["images"][number];
+type AdminQuoteRequest = LoadedQuoteInbox["data"]["quoteRequests"][number];
+
+const adminNavigationItems = [
+  {
+    kind: "home",
+    href: "/admin",
+    label: "Dashboard",
+    meta: "Work queue"
+  },
+  {
+    kind: "quotes",
+    href: "/admin/quotes",
+    label: "Quote Inbox",
+    meta: "Enquiry triage"
+  },
+  {
+    kind: "listings",
+    href: "/admin/listings",
+    label: "Listings",
+    meta: "Catalogue records"
+  },
+  {
+    kind: "categories",
+    href: "/admin/categories",
+    label: "Categories",
+    meta: "Public grouping"
+  },
+  {
+    kind: "media",
+    href: "/admin/media",
+    label: "Media Library",
+    meta: "Images and alt text"
+  },
+  {
+    kind: "content-readiness",
+    href: "/admin/content-readiness",
+    label: "Readiness",
+    meta: "Owner-review gaps"
+  },
+  {
+    kind: "public-parity",
+    href: "/admin/public-parity",
+    label: "Public QA",
+    meta: "Route parity checks"
+  },
+  {
+    kind: "release-control",
+    href: "/admin/release-control",
+    label: "Release Control",
+    meta: "Local release gate"
+  }
+] as const;
+
+type AdminNavigationKind = (typeof adminNavigationItems)[number]["kind"];
+
+const quoteReviewStatuses = new Set<AdminQuoteRequest["status"]>([
+  "new",
+  "reviewing",
+  "follow_up_needed"
+]);
+
+function activeNavigationKind(view: AdminShellView): AdminNavigationKind {
+  if (view.kind === "quote-detail") {
+    return "quotes";
+  }
+
+  if (view.kind === "overview") {
+    return "home";
+  }
+
+  return view.kind;
+}
+
+function workspaceTitle(view: AdminShellView) {
+  const activeKind = activeNavigationKind(view);
+  const item = adminNavigationItems.find(({ kind }) => kind === activeKind);
+
+  return item?.label ?? "Dashboard";
+}
+
+function workspaceDescription(view: AdminShellView) {
+  if (view.kind === "quote-detail") {
+    return "Review one submitted enquiry with the existing protected quote detail reader and admin-only follow-up controls.";
+  }
+
+  const descriptions: Record<AdminNavigationKind, string> = {
+    home: "Prioritise quote triage, listing readiness, media attention, and local release review from existing workspace data.",
+    quotes: "Triage submitted quote requests with existing status controls and manual follow-up guidance.",
+    listings: "Review and update listing metadata using the existing protected catalogue controls.",
+    categories: "Maintain category grouping and visibility through the existing protected category controls.",
+    media: "Review listing media coverage, upload approved images, and maintain existing image metadata.",
+    "content-readiness":
+      "Review owner-input and content-readiness helpers without publishing or recording external evidence.",
+    "public-parity":
+      "Check public discovery-to-enquiry parity using existing protected admin helper content.",
+    "release-control":
+      "Review local release-control boundaries without deployment, provider setup, or production evidence."
+  };
+
+  return descriptions[activeNavigationKind(view)];
+}
+
+function hasText(value?: string) {
+  return Boolean(value?.trim());
+}
+
+function quoteNeedsReview(quoteRequest: AdminQuoteRequest) {
+  return quoteReviewStatuses.has(quoteRequest.status);
+}
+
+function quoteHasMissingTriageInformation(quoteRequest: AdminQuoteRequest) {
+  return (
+    (!quoteRequest.customerEmail && !quoteRequest.customerPhone) ||
+    !quoteRequest.eventDate ||
+    !quoteRequest.venue ||
+    quoteRequest.items.length === 0 ||
+    !hasText(quoteRequest.customerMessage)
+  );
+}
+
+function listingNeedsContentAttention(product: AdminDashboardProduct) {
+  if (product.status === "archived") {
+    return false;
+  }
+
+  return (
+    product.status === "draft" ||
+    !product.categoryId ||
+    !hasText(product.shortDescription) ||
+    !hasText(product.description) ||
+    !hasText(product.rentalUnit) ||
+    product.imageCount === 0 ||
+    !hasText(product.primaryImageAltText)
+  );
+}
+
+function categoryNeedsAttention(category: AdminDashboardCategory) {
+  return category.isPublished && category.publishedProductCount === 0;
+}
+
+function mediaAttentionListingCount(
+  products: AdminDashboardProduct[],
+  images: AdminDashboardImage[]
+) {
+  const listingIds = new Set<string>();
+
+  for (const product of products) {
+    if (
+      product.status !== "archived" &&
+      (product.imageCount === 0 || !hasText(product.primaryImageAltText))
+    ) {
+      listingIds.add(product.id);
+    }
+  }
+
+  for (const image of images) {
+    if (image.status === "active" && !hasText(image.altText)) {
+      listingIds.add(image.productId);
+    }
+  }
+
+  return listingIds.size;
 }
 
 function quoteDetailActivityText(activity: AdminQuoteRequestInboxActivity) {
@@ -396,23 +573,155 @@ function AdminRecoveryLinks({
   );
 }
 
-function AdminOperationsNavigation() {
-  const links = [
-    ["Listings", "/admin/listings"],
-    ["Categories", "/admin/categories"],
-    ["Media", "/admin/media"],
-    ["Quote requests", "/admin/quotes"]
-  ] as const;
-
+function AdminOperationsNavigation({
+  view
+}: {
+  view: AdminShellView;
+}) {
+  const activeKind = activeNavigationKind(view);
   return (
-    <nav style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', paddingBottom: '16px', borderBottom: '1px solid var(--border)', marginBottom: '32px' }} aria-label="Admin operations">
-      <a href="/admin" className="premium-button premium-button--secondary" style={{ padding: '8px 16px', fontSize: '13px', height: 'auto', borderStyle: 'dashed' }}>Overview</a>
-      {links.map(([label, href]) => (
-        <a href={href} key={href} className="premium-button premium-button--secondary" style={{ padding: '8px 16px', fontSize: '13px', height: 'auto' }}>
-          {label}
-        </a>
-      ))}
+    <nav className={styles.navList} aria-label="Admin workspace sections">
+      {adminNavigationItems.map((item) => {
+        const isActive = item.kind === activeKind;
+
+        return (
+          <a
+            aria-current={isActive ? "page" : undefined}
+            className={`${styles.navLink} ${
+              isActive ? styles.navLinkActive : ""
+            }`}
+            href={item.href}
+            key={item.href}
+          >
+            <span className={styles.navLabel}>{item.label}</span>
+            <span className={styles.navMeta}>{item.meta}</span>
+          </a>
+        );
+      })}
     </nav>
+  );
+}
+
+function AdminMetricCard({
+  description,
+  label,
+  tone = "neutral",
+  value
+}: {
+  description: string;
+  label: string;
+  tone?: "neutral" | "attention";
+  value: number | string;
+}) {
+  return (
+    <dl
+      className={`${styles.metricCard} ${
+        tone === "attention" ? styles.metricCardAttention : ""
+      }`}
+    >
+      <div>
+        <dt>{label}</dt>
+        <dd>{value}</dd>
+      </div>
+      <p>{description}</p>
+    </dl>
+  );
+}
+
+function AdminDashboardWorkQueue({
+  categoryIssues,
+  draftOrIncompleteListings,
+  mediaAttention,
+  quoteRequestsNeedingReview
+}: {
+  categoryIssues: number | string;
+  draftOrIncompleteListings: number | string;
+  mediaAttention: number | string;
+  quoteRequestsNeedingReview: number | string;
+}) {
+  return (
+    <section className={styles.workQueue} aria-label="Admin work queue">
+      <h3>Work queue</h3>
+      <ul className={styles.workList}>
+        <li>
+          <div>
+            <strong>Review quote requests</strong>
+            <span>New, reviewing, or follow-up-needed enquiries.</span>
+          </div>
+          <span className={`${styles.chip} ${styles.chipReview}`}>
+            {quoteRequestsNeedingReview}
+          </span>
+        </li>
+        <li>
+          <div>
+            <strong>Fix listing readiness</strong>
+            <span>Draft or incomplete non-archived listing records.</span>
+          </div>
+          <span className={`${styles.chip} ${styles.chipWarning}`}>
+            {draftOrIncompleteListings}
+          </span>
+        </li>
+        <li>
+          <div>
+            <strong>Check media coverage</strong>
+            <span>
+              Listings with no media, no primary alt text, or active images
+              missing alt text.
+            </span>
+          </div>
+          <span className={`${styles.chip} ${styles.chipWarning}`}>
+            {mediaAttention}
+          </span>
+        </li>
+        <li>
+          <div>
+            <strong>Review category visibility</strong>
+            <span>Published categories without published listings.</span>
+          </div>
+          <span className={`${styles.chip} ${styles.chipStable}`}>
+            {categoryIssues}
+          </span>
+        </li>
+      </ul>
+    </section>
+  );
+}
+
+function AdminRecentQuoteRequests({
+  quoteRequests
+}: {
+  quoteRequests: AdminQuoteRequest[] | null;
+}) {
+  return (
+    <section className={styles.recentQuotes} aria-label="Recent quote requests">
+      <h3>Recent quote requests</h3>
+      {!quoteRequests ? (
+        <p>Quote request data is temporarily unavailable.</p>
+      ) : quoteRequests.length === 0 ? (
+        <p>No quote requests are visible yet.</p>
+      ) : (
+        <ul className={styles.workList}>
+          {quoteRequests.slice(0, 5).map((quoteRequest) => (
+            <li key={quoteRequest.id}>
+              <div>
+                <strong>{quoteRequest.publicReference}</strong>
+                <span>
+                  {quoteRequest.customerName ?? "Unnamed customer"} -{" "}
+                  {quoteRequest.eventDate ?? "No event date"} -{" "}
+                  {statusLabel(quoteRequest.status)}
+                </span>
+              </div>
+              <a
+                className={`${styles.chip} ${styles.chipReview}`}
+                href={`/admin/quotes/${encodeURIComponent(quoteRequest.id)}`}
+              >
+                Open
+              </a>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
   );
 }
 
@@ -425,78 +734,165 @@ function AdminOperationsHome({
 }) {
   const categoryCount =
     dashboard.status === "loaded" ? dashboard.data.categories.length : 0;
-  const listingCount =
-    dashboard.status === "loaded" ? dashboard.data.products.length : 0;
-  const imageCount =
-    dashboard.status === "loaded" ? dashboard.data.imageSummary.totalImages : 0;
-  const quoteCount =
-    quoteInbox.status === "loaded" ? quoteInbox.data.quoteRequests.length : 0;
+  const publishedListingCount =
+    dashboard.status === "loaded"
+      ? dashboard.data.products.filter(
+          (product) => product.status === "published"
+        ).length
+      : 0;
+  const draftOrIncompleteListings =
+    dashboard.status === "loaded"
+      ? dashboard.data.products.filter(listingNeedsContentAttention).length
+      : 0;
+  const mediaAttention =
+    dashboard.status === "loaded"
+      ? mediaAttentionListingCount(dashboard.data.products, dashboard.data.images)
+      : 0;
+  const categoryIssues =
+    dashboard.status === "loaded"
+      ? dashboard.data.categories.filter(categoryNeedsAttention).length
+      : 0;
+  const recentQuoteRequests =
+    quoteInbox.status === "loaded" ? quoteInbox.data.quoteRequests : null;
+  const quoteRequestsNeedingReview =
+    quoteInbox.status === "loaded"
+      ? quoteInbox.data.quoteRequests.filter(quoteNeedsReview).length
+      : 0;
+  const quoteRequestsWithMissingInfo =
+    quoteInbox.status === "loaded"
+      ? quoteInbox.data.quoteRequests.filter(quoteHasMissingTriageInformation)
+          .length
+      : 0;
+  const readinessIssues =
+    dashboard.status === "loaded" && quoteInbox.status === "loaded"
+      ? draftOrIncompleteListings +
+        mediaAttention +
+        categoryIssues +
+        quoteRequestsWithMissingInfo
+      : "Unavailable";
+  const dashboardMetricValue = (value: number) =>
+    dashboard.status === "loaded" ? value : "Unavailable";
+  const quoteMetricValue = (value: number) =>
+    quoteInbox.status === "loaded" ? value : "Unavailable";
   const cards = [
     {
       href: "/admin/listings",
-      label: "Open listings",
+      label: "Open Listings",
       title: "Listings",
-      count: listingCount,
-      body: "Create, edit, publish, and archive rental/event furniture listings."
+      count: dashboardMetricValue(draftOrIncompleteListings),
+      body: "Resolve draft or incomplete listing records before public review."
     },
     {
       href: "/admin/categories",
-      label: "Open categories",
+      label: "Open Categories",
       title: "Categories",
-      count: categoryCount,
-      body: "Manage listing categories and publication state."
+      count: dashboardMetricValue(categoryIssues),
+      body: "Review published categories that do not yet have published listings."
     },
     {
       href: "/admin/media",
-      label: "Open media",
-      title: "Listing media",
-      count: imageCount,
-      body: "Upload approved listing images and maintain image metadata."
+      label: "Open Media Library",
+      title: "Media Library",
+      count: dashboardMetricValue(mediaAttention),
+      body: "Check image coverage and alt text using existing media controls."
     },
     {
       href: "/admin/quotes",
-      label: "Open quote requests",
-      title: "Quote requests",
-      count: quoteCount,
-      body: "Review enquiries and record admin-only follow-up notes."
+      label: "Open Quote Inbox",
+      title: "Quote Inbox",
+      count: quoteMetricValue(quoteRequestsNeedingReview),
+      body: "Review submitted enquiries and update existing admin-only status."
     }
   ];
 
   return (
-    <>
-      <section className="admin-dashboard" aria-label="Admin operations">
-        <div className="admin-dashboard__header">
-          <div>
-            <p className="eyebrow">Operations</p>
-            <h2>Admin operations</h2>
-            <p>
-              Use these protected work areas for listing management and quote
-              request follow-up.
-            </p>
-          </div>
-        </div>
-        <div className="admin-dashboard__grid">
-          <AdminOperatorGuidance
-            adminOnly="Admin-only workspace, management summaries, public-ready listing cues, and internal follow-up details."
-            label="Admin overview"
-            nextAction="Next safe action: review listings, categories, media, and quote requests for the visible rental enquiry journey."
-            publicFacing="Public-facing changes are limited to published listing, category, and active media content."
-            readOnly="Overview counts and dashboard summaries are read-only snapshots of the current workspace."
-            writeEnabled="Write-enabled surfaces stay behind protected admin routes."
-          />
-          {cards.map((card) => (
-            <article className="admin-dashboard__card" key={card.href}>
-              <p className="eyebrow">{card.count} records</p>
-              <h3>{card.title}</h3>
-              <p>{card.body}</p>
-              <a className="button button--secondary" href={card.href}>
-                {card.label}
-              </a>
-            </article>
-          ))}
-        </div>
-      </section>
-    </>
+    <section className="admin-dashboard" aria-label="Admin dashboard">
+      <div className={styles.metricGrid} aria-label="Admin dashboard metrics">
+        <AdminMetricCard
+          description="Existing quote requests with new, reviewing, or follow-up-needed status."
+          label="Quote requests needing review"
+          tone={quoteRequestsNeedingReview > 0 ? "attention" : "neutral"}
+          value={quoteMetricValue(quoteRequestsNeedingReview)}
+        />
+        <AdminMetricCard
+          description="Published listing records currently visible to public catalogue paths."
+          label="Published listings"
+          value={dashboardMetricValue(publishedListingCount)}
+        />
+        <AdminMetricCard
+          description="Draft or incomplete non-archived listings from existing catalogue metadata."
+          label="Draft/incomplete listings"
+          tone={draftOrIncompleteListings > 0 ? "attention" : "neutral"}
+          value={dashboardMetricValue(draftOrIncompleteListings)}
+        />
+        <AdminMetricCard
+          description="Listing media records or coverage that need admin attention."
+          label="Media needing attention"
+          tone={mediaAttention > 0 ? "attention" : "neutral"}
+          value={dashboardMetricValue(mediaAttention)}
+        />
+        <AdminMetricCard
+          description="Combined visible readiness cues from quote, listing, category, and media data."
+          label="Readiness issues"
+          tone={readinessIssues !== 0 ? "attention" : "neutral"}
+          value={readinessIssues}
+        />
+      </div>
+
+      <div className={styles.actionGrid}>
+        <AdminDashboardWorkQueue
+          categoryIssues={dashboardMetricValue(categoryIssues)}
+          draftOrIncompleteListings={dashboardMetricValue(
+            draftOrIncompleteListings
+          )}
+          mediaAttention={dashboardMetricValue(mediaAttention)}
+          quoteRequestsNeedingReview={quoteMetricValue(
+            quoteRequestsNeedingReview
+          )}
+        />
+        <AdminRecentQuoteRequests quoteRequests={recentQuoteRequests} />
+      </div>
+
+      <div className="admin-dashboard__grid">
+        <AdminOperatorGuidance
+          adminOnly="Admin-only workspace, management summaries, public-ready listing cues, and internal follow-up details."
+          label="Admin dashboard"
+          nextAction="Next safe action: review listings, categories, media, and quote requests for the visible rental enquiry journey."
+          publicFacing="Public-facing changes are limited to published listing, category, and active media content."
+          readOnly="Dashboard counts and summaries are read-only snapshots of existing workspace data."
+          writeEnabled="Write-enabled surfaces stay behind protected admin routes."
+        />
+        {cards.map((card) => (
+          <article className="admin-dashboard__card" key={card.href}>
+            <p className="eyebrow">{card.count} records</p>
+            <h3>{card.title}</h3>
+            <p>{card.body}</p>
+            <a className="button button--secondary" href={card.href}>
+              {card.label}
+            </a>
+          </article>
+        ))}
+      </div>
+      {dashboard.status === "loaded" ? (
+        <section className="admin-dashboard__card">
+          <h3>Catalogue scope</h3>
+          <dl className="quote-inbox__details">
+            <div>
+              <dt>Categories</dt>
+              <dd>{categoryCount}</dd>
+            </div>
+            <div>
+              <dt>Total listings</dt>
+              <dd>{dashboard.data.products.length}</dd>
+            </div>
+            <div>
+              <dt>Total media records</dt>
+              <dd>{dashboard.data.imageSummary.totalImages}</dd>
+            </div>
+          </dl>
+        </section>
+      ) : null}
+    </section>
   );
 }
 
@@ -6629,7 +7025,7 @@ function AdminOperationsView({
   state: Extract<ProtectedAdminShellState, { status: "authorised_admin" }>;
   view: AdminShellView;
 }) {
-  if (view.kind === "home") {
+  if (view.kind === "home" || view.kind === "overview") {
     return (
       <AdminOperationsHome
         dashboard={state.dashboard}
@@ -6688,7 +7084,7 @@ function AdminStatusMessage({
 }) {
   if (state.status === "unauthenticated") {
     return (
-      <div className="premium-card" style={{ padding: '32px', textAlign: 'center', maxWidth: '400px', margin: '40px auto' }}>
+      <div className={`premium-card ${styles.statusCard}`} style={{ padding: '32px', textAlign: 'center' }}>
         <h1 className="premium-title-card" style={{ fontSize: '24px', marginBottom: '16px' }}>Admin sign in required</h1>
         <p style={{ color: 'var(--muted)', marginBottom: '24px' }}>Sign in to continue.</p>
         <a className="premium-button premium-button--primary" href="/admin/login" style={{ width: '100%' }}>
@@ -6700,7 +7096,7 @@ function AdminStatusMessage({
 
   if (state.status === "authenticated_not_authorised") {
     return (
-      <div className="premium-card" style={{ padding: '32px', textAlign: 'center', maxWidth: '400px', margin: '40px auto', borderColor: 'var(--accent)', background: 'var(--surface-strong)' }}>
+      <div className={`premium-card ${styles.statusCard}`} style={{ padding: '32px', textAlign: 'center', borderColor: 'var(--accent)', background: 'var(--surface-strong)' }}>
         <h1 className="premium-title-card" style={{ fontSize: '24px', marginBottom: '16px', color: '#fff' }}>Access denied</h1>
         <p style={{ color: '#cbd5e1', marginBottom: '24px' }}>Your account is authenticated but not authorised for this workspace.</p>
         <AdminRecoveryLinks includeSignIn />
@@ -6710,7 +7106,7 @@ function AdminStatusMessage({
 
   if (state.status === "unavailable") {
     return (
-      <div className="premium-card" style={{ padding: '32px', textAlign: 'center', maxWidth: '400px', margin: '40px auto' }}>
+      <div className={`premium-card ${styles.statusCard}`} style={{ padding: '32px', textAlign: 'center' }}>
         <h1 className="premium-title-card" style={{ fontSize: '24px', marginBottom: '16px' }}>Admin access unavailable</h1>
         <p style={{ color: 'var(--muted)', marginBottom: '24px' }}>Admin access is temporarily unavailable.</p>
         <AdminRecoveryLinks includeSignIn />
@@ -6719,21 +7115,49 @@ function AdminStatusMessage({
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '32px', width: '100%' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px', background: 'var(--surface-strong)', padding: '24px', borderRadius: 'var(--radius-lg)' }}>
-        <div>
-          <h1 className="premium-title-section" style={{ color: '#fff', fontSize: '24px', margin: 0, marginBottom: '8px' }}>Admin workspace</h1>
-          <p style={{ color: '#cbd5e1', margin: 0, fontSize: '14px' }}>Access is authorised for this admin workspace.</p>
+    <div className={styles.workspaceFrame}>
+      <header className={styles.topbar}>
+        <div className={styles.brandCluster}>
+          <div className={styles.brandLine}>
+            <h1 className={styles.brandTitle}>SpaceKonceptRental Admin</h1>
+            <span className={styles.workspaceBadge}>Protected workspace</span>
+          </div>
+          <p>Access is authorised for this admin workspace.</p>
         </div>
-        <form action="/admin/logout" method="post">
-          <button className="premium-button premium-button--secondary" style={{ background: 'rgba(255,255,255,0.1)', color: '#fff', border: 'none', padding: '8px 16px', fontSize: '13px', height: 'auto' }} type="submit">
-            Sign out
-          </button>
-        </form>
-      </div>
-      <AdminOperationsNavigation />
-      <div style={{ background: 'var(--background)' }}>
-        <AdminOperationsView state={state} view={view} />
+        <div className={styles.topbarActions}>
+          <a className={styles.topbarLink} href="/">
+            View public site
+          </a>
+          <form action="/admin/logout" method="post">
+            <button className={styles.signOutButton} type="submit">
+              Sign out
+            </button>
+          </form>
+        </div>
+      </header>
+
+      <details className={styles.mobileMenu}>
+        <summary className={styles.mobileSummary}>
+          Admin menu - {workspaceTitle(view)}
+        </summary>
+        <div className={styles.mobileNavPanel}>
+          <AdminOperationsNavigation view={view} />
+        </div>
+      </details>
+
+      <div className={styles.workspaceBody}>
+        <aside className={styles.sidebar} aria-label="Admin sidebar">
+          <p className={styles.sidebarLabel}>Workspace</p>
+          <AdminOperationsNavigation view={view} />
+        </aside>
+        <main className={styles.mainPanel}>
+          <section className={styles.pageIntro} aria-label="Admin page header">
+            <p className="eyebrow">Protected admin</p>
+            <h2>{workspaceTitle(view)}</h2>
+            <p>{workspaceDescription(view)}</p>
+          </section>
+          <AdminOperationsView state={state} view={view} />
+        </main>
       </div>
     </div>
   );
@@ -6742,16 +7166,18 @@ function AdminStatusMessage({
 export function AdminShellContent({
   state,
   view = {
-    kind: "overview"
+    kind: "home"
   }
 }: {
   state: ProtectedAdminShellState;
   view?: AdminShellView;
 }) {
   return (
-    <section className="premium-section" style={{ minHeight: 'calc(100vh - 200px)', display: 'flex', flexDirection: 'column' }} aria-live="polite">
-      <div className="premium-container" style={{ flex: 1, display: 'flex', flexDirection: 'column', maxWidth: '1200px' }}>
-        <p style={{ fontSize: '12px', fontWeight: 800, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '24px' }}>Secure admin</p>
+    <section
+      aria-live="polite"
+      className={`skr-admin-workspace ${styles.workspace}`}
+    >
+      <div className="premium-container">
         <AdminStatusMessage state={state} view={view} />
       </div>
     </section>
