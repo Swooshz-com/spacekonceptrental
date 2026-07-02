@@ -357,9 +357,10 @@
 }
 
 .actionGrid {
+  align-items: start;
   display: grid;
   gap: 10px;
-  grid-template-columns: minmax(0, 1.1fr) minmax(300px, 0.9fr);
+  grid-template-columns: minmax(320px, 0.8fr) minmax(0, 1.2fr);
 }
 
 .workQueue,
@@ -372,6 +373,7 @@
   background: var(--admin-surface);
   border: 1px solid var(--admin-line);
   border-radius: 8px;
+  align-content: start;
   display: grid;
   gap: 10px;
   padding: 12px;
@@ -406,7 +408,7 @@
 .quickActionGrid {
   display: grid;
   gap: 8px;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
 }
 
 .quickActionCard {
@@ -451,6 +453,7 @@
 }
 
 .settingsGrid {
+  align-items: start;
   display: grid;
   gap: 10px;
   grid-template-columns: minmax(0, 1fr) minmax(300px, 0.9fr);
@@ -536,11 +539,14 @@
 
 .workList li {
   align-items: center;
-  border-top: 1px solid var(--admin-line);
   display: grid;
   gap: 8px;
   grid-template-columns: minmax(0, 1fr) auto;
-  padding-top: 6px;
+  padding: 6px 0 0;
+}
+
+.workList li + li {
+  border-top: 1px solid var(--admin-line);
 }
 
 .workList strong,
@@ -863,6 +869,10 @@
   .compatBody,
   .longFormPanel {
     max-height: 620px;
+  }
+
+  .quickActionGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
