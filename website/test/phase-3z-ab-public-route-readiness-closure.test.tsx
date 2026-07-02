@@ -4,7 +4,6 @@ import { extname, resolve } from "node:path";
 import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { AdminShellContent } from "../app/admin/protected-admin-shell";
 import { CataloguePageContent } from "../app/catalogue/page";
 import { ProductPageContent } from "../app/catalogue/[slug]/page";
 import { CategoriesPageContent } from "../app/categories/page";
@@ -89,46 +88,6 @@ const sampleCatalogue = {
   categories: [sampleCategory],
   products: [sampleProduct]
 };
-const authorisedAdminState = {
-  status: "authorised_admin" as const,
-  dashboard: {
-    status: "loaded" as const,
-    data: {
-      categories: [
-        {
-          ...sampleCategory,
-          isPublished: true,
-          productCount: 1,
-          publishedProductCount: 1,
-          products: [{ id: "product-1", slug: sampleProduct.slug, name: sampleProduct.name, status: "published" as const }]
-        }
-      ],
-      products: [
-        {
-          ...sampleProduct,
-          status: "published" as const,
-          imageCount: 1,
-          primaryImageAltText: "Modular lounge set for event furniture rental browsing."
-        }
-      ],
-      images: [
-        {
-          id: "image-1",
-          productId: "product-1",
-          storageBucket: "public",
-          storagePath: "sample/modular-lounge-set.png",
-          altText: "Modular lounge set for event furniture rental browsing.",
-          sortOrder: 1,
-          isPrimary: true,
-          status: "active" as const
-        }
-      ],
-      imageSummary: { totalImages: 1, activeImages: 1, primaryImages: 1 }
-    }
-  },
-  quoteInbox: { status: "loaded" as const, data: { quoteRequests: [] } }
-};
-
 function readRepoFile(relativePath: string) {
   return readFileSync(resolve(repoRoot, relativePath), "utf8");
 }
@@ -298,28 +257,6 @@ describe("Phase 3Z-A/B public route readiness closure", () => {
     expect(publicSource).not.toMatch(forbiddenPublicFlowPattern);
     expect(publicSource).not.toMatch(forbiddenFakeFactPattern);
     expect(publicSource).not.toMatch(/public quote tracking|customer account|customer upload|CRM|notification/i);
-  });
-
-  it("renders the public-route/readiness closure snapshot only for authorised admin state", () => {
-    render(<AdminShellContent state={authorisedAdminState} view={{ kind: "content-readiness" }} />);
-    expect(screen.getByRole("heading", { name: /public route\/readiness closure snapshot/i })).toBeInTheDocument();
-    expect(screen.getAllByText(publicJourneyPath).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(quoteBoundaryPath).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(protectedBridgePath).length).toBeGreaterThan(0);
-    expect(screen.getByText("Public route groups")).toBeInTheDocument();
-    expect(screen.getByText("Bridge statuses")).toBeInTheDocument();
-    expect(screen.getByText("Requires separate deployment approval")).toBeInTheDocument();
-    cleanup();
-
-    for (const state of [
-      { status: "unauthenticated" as const },
-      { status: "authenticated_not_authorised" as const },
-      { status: "unavailable" as const }
-    ]) {
-      render(<AdminShellContent state={state} view={{ kind: "content-readiness" }} />);
-      expect(screen.queryByRole("heading", { name: /public route\/readiness closure snapshot/i })).not.toBeInTheDocument();
-      cleanup();
-    }
   });
 
   it("keeps forbidden runtime/provider/deployment files untracked and env reads absent", () => {

@@ -130,18 +130,6 @@ const authorisedState = {
     status: "loaded" as const,
     data: dashboardData
   },
-  quoteInbox: {
-    status: "loaded" as const,
-    data: {
-      quoteRequests: [quoteRequestReadyForFollowUp]
-    }
-  },
-  quoteDetail: {
-    status: "loaded" as const,
-    data: {
-      quoteRequest: quoteRequestReadyForFollowUp
-    }
-  }
 };
 
 function readRepoFile(relativePath: string) {
@@ -230,22 +218,18 @@ describe("Phase 3H-A/B admin operator QA readiness polish", () => {
     expect(validator).not.toMatch(/\bvercel\s+(?:deploy|link|env|pull|promote)\b/i);
   });
 
-  it("shows the compact admin overview content-manager guidance and safe next action", () => {
+  it("shows the compact admin overview without quote CRM or backend-pending noise", () => {
     renderAdminView({ kind: "home" });
 
     expect(
       screen.getByRole("heading", { name: /content status/i })
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("heading", { name: /quick actions/i })
+      screen.getByRole("heading", { name: /catalogue summary/i })
     ).toBeInTheDocument();
-    expect(screen.getAllByText(/^hero image$/i).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/^catalogue$/i).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/^setups$/i).length).toBeGreaterThan(0);
-    expect(screen.getByText(/not configured/i)).toBeInTheDocument();
     expect(
-      screen.getByRole("link", { name: /view delivery log.*open/i })
-    ).toHaveAttribute("href", "/admin/delivery-log");
+      screen.queryByRole("heading", { name: /quick actions/i })
+    ).not.toBeInTheDocument();
     expect(
       screen.queryByRole("link", { name: /quote inbox/i })
     ).not.toBeInTheDocument();
@@ -253,108 +237,34 @@ describe("Phase 3H-A/B admin operator QA readiness polish", () => {
       screen.queryByText(/operator qa summary/i)
     ).not.toBeInTheDocument();
     expect(
+      screen.queryByText(/pending backend/i)
+    ).not.toBeInTheDocument();
+    expect(
       screen.queryByText(/quote requests for the visible rental enquiry journey/i)
     ).not.toBeInTheDocument();
   });
 
-  it("aligns listing, category, media, quote inbox, and quote detail guidance", () => {
-    renderAdminView({ kind: "listings" });
-
-    expect(
-      screen.getByLabelText(/listing operations operator guidance/i)
-    ).toBeInTheDocument();
-    expect(screen.getByText(/write-enabled listing metadata/i)).toBeInTheDocument();
-    expect(
-      screen.getByText(/public-facing after publication/i)
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText(/next safe action: fix missing category, descriptions, rental unit, and media before publishing/i)
-    ).toBeInTheDocument();
-
-    cleanup();
-    renderAdminView({ kind: "categories" });
-
-    expect(
-      screen.getByLabelText(/category operations operator guidance/i)
-    ).toBeInTheDocument();
-    expect(screen.getByText(/write-enabled category metadata/i)).toBeInTheDocument();
-    expect(
-      screen.getByText(/public-facing category grouping/i)
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText(/next safe action: keep empty published categories unpublished or add published listings/i)
-    ).toBeInTheDocument();
-
-    cleanup();
-    renderAdminView({ kind: "media" });
-
-    expect(
-      screen.getByLabelText(/media operations operator guidance/i)
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText(/write-enabled image upload and metadata/i)
-    ).toBeInTheDocument();
-    expect(screen.getByText(/public-facing active media/i)).toBeInTheDocument();
-    expect(
-      screen.getByText(/next safe action: add alt text and keep one active primary image per listing/i)
-    ).toBeInTheDocument();
-
-    cleanup();
-    renderAdminView({ kind: "quotes" });
-
-    expect(
-      screen.getByLabelText(/quote request inbox operator guidance/i)
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText(/write-enabled internal triage status only/i)
-    ).toBeInTheDocument();
-    expect(screen.getAllByText(/admin-only triage/i).length).toBeGreaterThan(0);
-    expect(
-      screen.getByText(/next safe action: capture contact, event, venue, and requested items before closing follow-up/i)
-    ).toBeInTheDocument();
-
-    cleanup();
-    renderAdminView({
-      kind: "quote-detail",
-      quoteRequestId: quoteRequestReadyForFollowUp.id
-    });
-
-    expect(
-      screen.getByLabelText(/quote detail operator guidance/i)
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText(/read-only customer submission snapshot/i)
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText(/write-enabled follow-up controls remain below via the protected quote request panel/i)
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText(/next safe action: review details, then record an internal note or status change inside the protected workspace/i)
-    ).toBeInTheDocument();
-  });
-
-  it("keeps admin recovery routes admin-only and public pages free of internal cues", async () => {
+  it("keeps the admin recovery nav scoped to the six-page workspace", () => {
     render(
       <AdminShellContent
         state={{
           status: "authorised_admin",
-          dashboard: { status: "unavailable" },
-          quoteInbox: { status: "unavailable" },
-          quoteDetail: { status: "not_found" }
+          dashboard: { status: "unavailable" }
         }}
-        view={{
-          kind: "quote-detail",
-          quoteRequestId: "70000000-0000-4000-8000-000000000001"
-        }}
+        view={{ kind: "catalogue" }}
       />
     );
 
     const recovery = screen.getByLabelText(/admin recovery/i);
     expect(
-      within(recovery).getByRole("link", { name: /back to quote requests/i })
-    ).toHaveAttribute("href", "/admin/quotes");
+      within(recovery).getByRole("link", { name: /open catalogue/i })
+    ).toHaveAttribute("href", "/admin/catalogue");
+    expect(
+      within(recovery).queryByRole("link", { name: /quote/i })
+    ).not.toBeInTheDocument();
+  });
 
-    cleanup();
+  it("keeps the public quote page free of internal admin cues", async () => {
     render(
       await QuotePage({
         searchParams: Promise.resolve({ listing: "lounge-sofa-package" })

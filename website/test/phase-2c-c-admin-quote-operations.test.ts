@@ -135,13 +135,9 @@ describe("Phase 2C-C admin quote operations and enquiry workflow closeout", () =
   it("does not introduce ecommerce, browser Supabase, service-role, public upload, notification, CRM, n8n, Pinecone, or chat-config paths", () => {
     const adminQuoteSource = readTrackedProductionSources([
       "website/app/api/admin/quote-requests",
-      "website/components/admin/quote-request-inbox-panel.tsx",
       "website/lib/quote/admin-read",
       "website/lib/quote/admin-write"
     ]);
-    const browserPanel = readRepoFile(
-      "website/components/admin/quote-request-inbox-panel.tsx"
-    );
 
     expect(adminQuoteSource).not.toMatch(
       /cart|checkout|payment|customer account|stock reservation|order fulfilment|online ordering|book now|confirmed booking/i
@@ -153,8 +149,6 @@ describe("Phase 2C-C admin quote operations and enquiry workflow closeout", () =
     expect(adminQuoteSource).not.toContain("NEXT_PUBLIC_SUPABASE");
     expect(adminQuoteSource).not.toContain("service-role");
     expect(adminQuoteSource).not.toContain("chat-config");
-    expect(browserPanel).toContain('"use client";');
-    expect(browserPanel).not.toContain("@supabase/");
     expect(readTrackedFiles(["website/chat-config.js"])).toEqual([]);
     expect(readTrackedFiles(["website/app/api/customer-upload"])).toEqual([]);
     expect(readTrackedFiles(["website/app/api/public-upload"])).toEqual([]);

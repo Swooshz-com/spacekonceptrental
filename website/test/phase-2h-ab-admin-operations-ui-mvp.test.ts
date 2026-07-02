@@ -69,25 +69,17 @@ describe("Phase 2H-A/B admin operations UI MVP", () => {
   it("adds protected admin operations pages without public/customer admin drift", () => {
     expect(readTrackedFiles(["website/app/admin"])).toEqual([
       "website/app/admin/catalogue/page.tsx",
-      "website/app/admin/categories/page.tsx",
-      "website/app/admin/content-readiness/page.tsx",
       "website/app/admin/delivery-log/page.tsx",
       "website/app/admin/enquiry-email/page.tsx",
       "website/app/admin/hero/page.tsx",
-      "website/app/admin/listings/page.tsx",
       "website/app/admin/login/page.test.tsx",
       "website/app/admin/login/page.tsx",
       "website/app/admin/logout/route.test.ts",
       "website/app/admin/logout/route.ts",
-      "website/app/admin/media/page.tsx",
       "website/app/admin/page.tsx",
       "website/app/admin/protected-admin-shell.module.css",
       "website/app/admin/protected-admin-shell.test.tsx",
       "website/app/admin/protected-admin-shell.tsx",
-      "website/app/admin/public-parity/page.tsx",
-      "website/app/admin/quotes/[quoteRequestId]/page.tsx",
-      "website/app/admin/quotes/page.tsx",
-      "website/app/admin/release-control/page.tsx",
       "website/app/admin/setups/page.tsx"
     ]);
 
@@ -97,14 +89,7 @@ describe("Phase 2H-A/B admin operations UI MVP", () => {
       "website/app/admin/catalogue/page.tsx",
       "website/app/admin/setups/page.tsx",
       "website/app/admin/enquiry-email/page.tsx",
-      "website/app/admin/delivery-log/page.tsx",
-      "website/app/admin/listings/page.tsx",
-      "website/app/admin/categories/page.tsx",
-      "website/app/admin/content-readiness/page.tsx",
-      "website/app/admin/media/page.tsx",
-      "website/app/admin/quotes/page.tsx",
-      "website/app/admin/quotes/[quoteRequestId]/page.tsx",
-      "website/app/admin/release-control/page.tsx"
+      "website/app/admin/delivery-log/page.tsx"
     ]) {
       const source = readRepoFile(page);
 
@@ -146,9 +131,7 @@ describe("Phase 2H-A/B admin operations UI MVP", () => {
 
   it("keeps quote workflow protected, admin-only, and backed by the approved RPC", () => {
     const quoteAdminSource = readTrackedProductionSources([
-      "website/app/admin/quotes",
       "website/app/api/admin/quote-requests",
-      "website/components/admin/quote-request-inbox-panel.tsx",
       "website/lib/quote/admin-read",
       "website/lib/quote/admin-write"
     ]);
@@ -158,7 +141,6 @@ describe("Phase 2H-A/B admin operations UI MVP", () => {
       "website/components/QuoteRequestForm.tsx"
     ]);
 
-    expect(quoteAdminSource).toContain("/api/admin/quote-requests");
     expect(quoteAdminSource).toContain('rpc("execute_admin_quote_workflow"');
     expect(quoteAdminSource).toContain("internalNote");
     expect(quoteAdminSource).toContain("quote.write");

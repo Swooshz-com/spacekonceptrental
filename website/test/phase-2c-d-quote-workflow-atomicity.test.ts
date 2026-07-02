@@ -136,7 +136,6 @@ describe("Phase 2C-D quote workflow atomicity and admin operations hardening", (
       "website/app/api/quote",
       "website/app/quote",
       "website/components/QuoteRequestForm.tsx",
-      "website/components/admin/quote-request-inbox-panel.tsx",
       "website/lib/quote"
     ]);
 

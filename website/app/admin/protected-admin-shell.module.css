@@ -115,14 +115,6 @@
   padding: 4px 8px;
 }
 
-.topbar p {
-  color: var(--admin-muted);
-  font-size: 0.78rem;
-  line-height: 1.45;
-  margin: 0;
-  max-width: 720px;
-}
-
 .topbarActions {
   align-items: center;
   display: flex;
@@ -357,27 +349,11 @@
   margin: 0;
 }
 
-.metricCardAttention {
-  background: #fffaf2;
-}
-
-.actionGrid {
-  align-items: start;
-  display: grid;
-  gap: 10px;
-  grid-template-columns: minmax(320px, 0.8fr) minmax(0, 1.2fr);
-}
-
 .workQueue,
-.recentQuotes,
-.recommendedActions,
-.actionPanel,
 .rowPanel,
-.notePanel,
-.compatSection,
 .emptyState,
 .placeholderPanel,
-.heroPreviewPanel {
+.emptyStatePanel {
   background: var(--admin-surface);
   border: 1px solid var(--admin-line);
   border-radius: 8px;
@@ -388,35 +364,9 @@
 }
 
 .workQueue h3,
-.recentQuotes h3,
-.sectionHeader h3,
-.rowPanel h3,
-.notePanel h3 {
+.rowPanel h3 {
   font-size: 0.95rem;
   margin: 0;
-}
-
-.sectionHeader {
-  align-items: start;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  justify-content: space-between;
-}
-
-.sectionHeader p {
-  color: var(--admin-muted);
-  font-size: 0.8rem;
-  line-height: 1.4;
-  margin: 4px 0 0;
-}
-
-.recommendedActions {
-  padding: 12px;
-}
-
-.actionPanel {
-  padding: 10px;
 }
 
 .ownerGrid {
@@ -426,54 +376,6 @@
   grid-template-columns: minmax(320px, 0.85fr) minmax(0, 1.15fr);
 }
 
-.quickActionGrid {
-  display: grid;
-  gap: 8px;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-}
-
-.quickActionCard {
-  background: #fcf8f1;
-  border: 1px solid var(--admin-line);
-  border-radius: 6px;
-  color: var(--admin-ink);
-  display: grid;
-  gap: 5px;
-  min-height: 86px;
-  padding: 11px;
-}
-
-.quickActionCard:hover,
-.quickActionCard:focus-visible {
-  background: #f7f0e5;
-  border-color: #d2c7b6;
-  color: var(--admin-ink);
-}
-
-.quickActionCard strong,
-.quickActionCard span,
-.quickActionCard em {
-  display: block;
-}
-
-.quickActionCard strong {
-  font-size: 0.84rem;
-  font-weight: 680;
-}
-
-.quickActionCard span {
-  color: var(--admin-muted);
-  font-size: 0.76rem;
-  line-height: 1.4;
-}
-
-.quickActionCard em {
-  color: var(--admin-olive);
-  font-size: 0.68rem;
-  font-style: normal;
-  font-weight: 680;
-}
-
 .settingsGrid {
   align-items: start;
   display: grid;
@@ -481,92 +383,35 @@
   grid-template-columns: minmax(0, 1fr) minmax(300px, 0.9fr);
 }
 
-.settingsGridCompact,
-.heroManagerGrid {
-  align-items: start;
-  display: grid;
-  gap: 12px;
-}
-
-.settingsGridCompact {
-  grid-template-columns: minmax(0, 1.05fr) minmax(280px, 0.65fr);
-}
-
-.heroManagerGrid {
-  grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.75fr);
-}
-
 .placeholderPanel h3,
-.placeholderPanel p,
-.notePanel p,
-.heroPreviewPanel p {
+.placeholderPanel p {
   margin: 0;
 }
 
-.panelHeader {
-  align-items: start;
-  display: flex;
-  gap: 12px;
-  justify-content: space-between;
+.emptyStatePanel {
+  max-width: 640px;
 }
 
-.panelHeader h3,
-.panelHeader p {
+.emptyStatePanel h2,
+.emptyStatePanel p {
   margin: 0;
 }
 
-.statusPill {
+.futureControl {
   align-items: center;
-  border-radius: 999px;
-  display: inline-flex;
-  flex: 0 0 auto;
-  font-size: 0.68rem;
-  font-weight: 680;
-  min-height: 22px;
-  padding: 0 8px;
-  white-space: nowrap;
-}
-
-.statusPending {
-  background: #f5e7d7;
-  color: var(--admin-warning);
-}
-
-.pendingCallout {
-  background: #f6efe4;
-  border-left: 3px solid #c59a78;
-  color: var(--admin-muted);
-  display: grid;
-  gap: 3px;
-  padding: 9px 10px;
-}
-
-.pendingCallout strong {
-  color: var(--admin-charcoal);
-  font-size: 0.78rem;
-  font-weight: 680;
-}
-
-.pendingCallout span {
-  font-size: 0.8rem;
-  line-height: 1.4;
-}
-
-.heroPreviewFrame {
-  align-items: center;
-  aspect-ratio: 16 / 8.2;
-  background:
-    linear-gradient(135deg, rgba(98, 104, 79, 0.14), transparent 55%),
-    #eee4d5;
-  border: 1px dashed #cfc4b2;
-  border-radius: 8px;
-  color: var(--admin-muted);
   display: flex;
-  font-size: 0.82rem;
-  font-weight: 650;
-  justify-content: center;
-  padding: 16px;
-  text-align: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.futureControl button {
+  cursor: not-allowed;
+}
+
+.futureControl span {
+  color: var(--admin-muted);
+  font-size: 0.76rem;
 }
 
 .adminRows {
@@ -604,35 +449,6 @@
   font-size: 0.84rem;
   line-height: 1.4;
   margin: 0;
-}
-
-.logTable {
-  border: 1px solid var(--admin-line);
-  border-radius: 7px;
-  display: grid;
-  overflow: hidden;
-}
-
-.logTable [role="row"] {
-  display: grid;
-  gap: 8px;
-  grid-template-columns: 1fr 1.1fr 0.8fr 0.8fr;
-  padding: 9px 10px;
-}
-
-.logTable [role="row"]:first-child {
-  background: #f0e8dc;
-  color: var(--admin-muted);
-  font-size: 0.72rem;
-}
-
-.logTable [role="row"] + [role="row"] {
-  border-top: 1px solid var(--admin-line);
-}
-
-.logTable span {
-  color: var(--admin-ink);
-  font-size: 0.82rem;
 }
 
 .compactTable {
@@ -710,25 +526,6 @@
   white-space: nowrap;
 }
 
-.compatBody,
-.longFormPanel {
-  border: 1px solid var(--admin-line);
-  border-radius: 8px;
-  max-height: 680px;
-  overflow: auto;
-  padding: 12px;
-  scrollbar-color: var(--admin-line) transparent;
-}
-
-.compatBody {
-  background: #fcf8f0;
-}
-
-.longFormPanel {
-  background: var(--admin-surface);
-  max-height: 760px;
-}
-
 .emptyState {
   max-width: 760px;
 }
@@ -745,11 +542,6 @@
   margin-top: 10px;
 }
 
-.chipReview {
-  background: #eef2e6;
-  color: var(--admin-olive);
-}
-
 .chipWarning {
   background: #f5e7d7;
   color: var(--admin-warning);
@@ -758,6 +550,38 @@
 .chipStable {
   background: #e8eee7;
   color: var(--admin-success);
+}
+
+.statusCard {
+  margin: clamp(24px, 7vh, 70px) auto;
+  max-width: 460px;
+}
+
+.statusPanel {
+  background: var(--admin-surface);
+  border: 1px solid var(--admin-line);
+  border-radius: 10px;
+  display: grid;
+  gap: 10px;
+  padding: 28px;
+  text-align: center;
+}
+
+.statusPanel h1 {
+  color: var(--admin-ink);
+  font-size: 1.3rem;
+  margin: 0;
+}
+
+.statusPanel p {
+  color: var(--admin-muted);
+  font-size: 0.88rem;
+  line-height: 1.45;
+  margin: 0;
+}
+
+.statusPanelDenied {
+  border-color: var(--admin-clay);
 }
 
 .workspace :global(.premium-section) {
@@ -797,7 +621,6 @@
 }
 
 .workspace :global(.eyebrow),
-.workspace :global(.quote-inbox__details dt),
 .workspace :global(.admin-dashboard__stats dt) {
   color: var(--admin-muted) !important;
   font-size: 0.74rem !important;
@@ -832,10 +655,6 @@
   align-items: center;
   gap: 12px;
   padding: 12px;
-}
-
-.workspace :global(.admin-dashboard__grid) {
-  gap: 10px;
 }
 
 .workspace :global(.admin-dashboard__stats) {
@@ -901,7 +720,6 @@
   min-height: 84px !important;
 }
 
-.workspace :global(.quote-inbox__section),
 .workspace :global(.admin-dashboard__card--summary) {
   gap: 8px !important;
 }
@@ -913,16 +731,6 @@
   gap: 10px !important;
   max-width: 760px;
   padding: 12px !important;
-}
-
-.workspace :global(.quote-inbox__details) {
-  gap: 8px !important;
-}
-
-.workspace :global(.quote-inbox__details div) {
-  background: #fcf8f1 !important;
-  border-color: #e5dccf !important;
-  padding: 8px !important;
 }
 
 .workspace :global(.hero__actions),
@@ -953,11 +761,6 @@
   overflow-wrap: anywhere;
 }
 
-.statusCard {
-  margin: clamp(24px, 7vh, 70px) auto;
-  max-width: 460px;
-}
-
 @media (max-width: 1180px) {
   .metricGrid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -967,14 +770,8 @@
     border-right: 0;
   }
 
-  .actionGrid {
-    grid-template-columns: 1fr;
-  }
-
   .ownerGrid,
-  .settingsGrid,
-  .settingsGridCompact,
-  .heroManagerGrid {
+  .settingsGrid {
     grid-template-columns: 1fr;
   }
 }
@@ -990,10 +787,6 @@
     gap: 8px;
     min-height: 0;
     padding: 9px 10px;
-  }
-
-  .topbar p {
-    display: none;
   }
 
   .topbarActions {
@@ -1032,20 +825,10 @@
   .metricCard:nth-child(2n) {
     border-right: 0;
   }
-
-  .compatBody,
-  .longFormPanel {
-    max-height: 620px;
-  }
-
-  .quickActionGrid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
 }
 
 @media (max-width: 620px) {
   .brandLine,
-  .sectionHeader,
   .workList li {
     align-items: start;
   }
@@ -1066,7 +849,6 @@
   }
 
   .metricGrid,
-  .quickActionGrid,
   .workList li {
     grid-template-columns: 1fr;
   }
@@ -1081,17 +863,8 @@
     border-top: 1px solid var(--admin-line);
   }
 
-  .quickActionCard {
-    min-height: 0;
-  }
-
-  .adminRows div,
-  .logTable [role="row"] {
+  .adminRows div {
     grid-template-columns: 1fr;
-  }
-
-  .panelHeader {
-    display: grid;
   }
 
   .compactTable [role="row"] {

@@ -5,8 +5,6 @@ import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/re
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import QuotePage from "../app/quote/page";
-import { AdminShellContent } from "../app/admin/protected-admin-shell";
-import { QuoteRequestInboxPanel } from "../components/admin/quote-request-inbox-panel";
 import QuoteRequestForm from "../components/QuoteRequestForm";
 
 const repoRoot = resolve(process.cwd(), "..");
@@ -18,59 +16,6 @@ const phase3iMergeCommit = "0d2d40898c4e716032fdec130704117494c542d6";
 const phase3jMergeCommit = "1c7dc0ac7c2532fa8a837cd46b0d1f0103d5ccfa";
 const forbiddenCommercePattern =
   /cart|checkout|payments?|purchase|customer account|stock reservation|order fulfilment|confirmed booking|online ordering/i;
-
-const quoteRequestMissingTriageData = {
-  id: "77777777-7777-4777-8777-777777777777",
-  publicReference: "QR-20260607-MISSING",
-  customerName: "Maya Tan",
-  status: "new" as const,
-  source: "website" as const,
-  createdAt: "2026-06-07T10:30:00.000Z",
-  items: [],
-  activity: []
-};
-
-const quoteRequestReadyForFollowUp = {
-  id: "88888888-8888-4888-8888-888888888888",
-  publicReference: "QR-20260607-READY",
-  customerName: "Darren Lee",
-  customerEmail: "darren@example.test",
-  customerPhone: "+65 8123 4567",
-  customerMessage: "Need a warm lounge setup for a reception.",
-  eventDate: "2026-06-20",
-  venue: "Suntec Singapore",
-  status: "reviewing" as const,
-  source: "website" as const,
-  createdAt: "2026-06-07T11:30:00.000Z",
-  updatedAt: "2026-06-07T11:45:00.000Z",
-  items: [
-    {
-      id: "99999999-9999-4999-8999-999999999999",
-      quoteRequestId: "88888888-8888-4888-8888-888888888888",
-      productNameSnapshot: "Modular lounge set",
-      quantity: 2,
-      notes: "VIP reception area",
-      createdAt: "2026-06-07T11:31:00.000Z"
-    }
-  ],
-  activity: [
-    {
-      id: "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
-      quoteRequestId: "88888888-8888-4888-8888-888888888888",
-      activityType: "internal_note" as const,
-      note: "Review requested quantities before follow-up.",
-      createdAt: "2026-06-07T11:45:00.000Z"
-    }
-  ]
-};
-
-const quoteRequestArchived = {
-  ...quoteRequestReadyForFollowUp,
-  id: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
-  publicReference: "QR-20260607-ARCHIVED",
-  status: "archived" as const,
-  customerName: "Archived lead"
-};
 
 function readRepoFile(relativePath: string) {
   return readFileSync(resolve(repoRoot, relativePath), "utf8");
@@ -102,23 +47,6 @@ function readTrackedProductionSources(paths: string[]) {
     .filter(isProductionSource)
     .map((filePath) => readRepoFile(filePath))
     .join("\n");
-}
-
-function renderLoadedQuoteInbox() {
-  render(
-    <QuoteRequestInboxPanel
-      inbox={{
-        status: "loaded",
-        data: {
-          quoteRequests: [
-            quoteRequestMissingTriageData,
-            quoteRequestReadyForFollowUp,
-            quoteRequestArchived
-          ]
-        }
-      }}
-    />
-  );
 }
 
 describe("Phase 3G-A/B quote intake quality, admin triage depth, and enquiry workflow polish", () => {
@@ -275,114 +203,6 @@ describe("Phase 3G-A/B quote intake quality, admin triage depth, and enquiry wor
       "Listing reference: unpublished-draft-listing"
     );
     expect(screen.queryByLabelText(/requested listings or items/i)).not.toBeInTheDocument();
-  });
-
-  it("shows deeper admin-only quote triage summaries and next-action cues", () => {
-    renderLoadedQuoteInbox();
-
-    expect(screen.getByText(/quote triage summary/i)).toBeInTheDocument();
-    expect(screen.getAllByText(/follow-up needed/i).length).toBeGreaterThan(0);
-    expect(screen.getByText(/contact gaps/i)).toBeInTheDocument();
-    expect(screen.getByText(/missing event dates/i)).toBeInTheDocument();
-    expect(screen.getByText(/missing venues/i)).toBeInTheDocument();
-    expect(screen.getByText(/missing requested items/i)).toBeInTheDocument();
-    expect(screen.getByText(/missing customer messages/i)).toBeInTheDocument();
-    expect(screen.getByText(/without internal activity/i)).toBeInTheDocument();
-    expect(screen.getAllByText(/next action/i).length).toBeGreaterThan(0);
-    expect(
-      screen.getByText(/review submitted details for a contact method before manual follow-up/i)
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText(/continue manual review, contact the visitor manually if details need confirmation/i)
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText(/closed enquiry is retained for admin reference/i)
-    ).toBeInTheDocument();
-    expect(
-      screen.queryByText(/public quote tracking|customer-visible internal notes/i)
-    ).not.toBeInTheDocument();
-  });
-
-  it("makes quote detail readable and gives safe recovery copy", () => {
-    render(
-      <AdminShellContent
-        state={{
-          status: "authorised_admin",
-          dashboard: {
-            status: "unavailable"
-          },
-          quoteInbox: {
-            status: "loaded",
-            data: {
-              quoteRequests: []
-            }
-          },
-          quoteDetail: {
-            status: "loaded",
-            data: {
-              quoteRequest: quoteRequestReadyForFollowUp
-            }
-          }
-        }}
-        view={{
-          kind: "quote-detail",
-          quoteRequestId: quoteRequestReadyForFollowUp.id
-        }}
-      />
-    );
-
-    expect(
-      screen.getAllByRole("heading", { name: /contact and follow-up/i }).length
-    ).toBeGreaterThan(0);
-    expect(screen.getAllByText("QR-20260607-READY").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("Darren Lee").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("darren@example.test").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("+65 8123 4567").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("Suntec Singapore").length).toBeGreaterThan(0);
-    expect(
-      screen.getAllByRole("heading", { name: /requested listings and items/i })
-        .length
-    ).toBeGreaterThan(0);
-    expect(screen.getAllByText(/2 x Modular lounge set/i).length).toBeGreaterThan(0);
-    expect(
-      screen.getAllByRole("heading", { name: /admin-only status and notes/i })
-        .length
-    ).toBeGreaterThan(0);
-    expect(
-      screen.getAllByText(/review requested quantities before follow-up/i).length
-    ).toBeGreaterThan(0);
-
-    cleanup();
-    render(
-      <AdminShellContent
-        state={{
-          status: "authorised_admin",
-          dashboard: {
-            status: "unavailable"
-          },
-          quoteInbox: {
-            status: "loaded",
-            data: {
-              quoteRequests: []
-            }
-          },
-          quoteDetail: {
-            status: "not_found"
-          }
-        }}
-        view={{
-          kind: "quote-detail",
-          quoteRequestId: "70000000-0000-4000-8000-000000000001"
-        }}
-      />
-    );
-
-    expect(
-      screen.getByText(/not visible in this workspace/i)
-    ).toBeInTheDocument();
-    expect(
-      screen.queryByText(/sql|supabase|stack|workspace-secret/i)
-    ).not.toBeInTheDocument();
   });
 
   it("keeps Phase 3G inside quote intake/admin triage scope", () => {

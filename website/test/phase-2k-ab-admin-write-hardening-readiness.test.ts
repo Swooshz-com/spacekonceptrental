@@ -155,7 +155,6 @@ describe("Phase 2K-A/B admin write hardening and readiness", () => {
       "website/app/api/quote",
       "website/app/api/admin/quote-requests",
       "website/components/QuoteRequestForm.tsx",
-      "website/components/admin/quote-request-inbox-panel.tsx",
       "website/lib/quote"
     ]);
     const catalogueSource = readTrackedProductionSources([
