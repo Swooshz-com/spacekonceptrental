@@ -16,7 +16,7 @@
 }
 
 .workspace {
-  --admin-bg: #f5efe5;
+  --admin-bg: #f6f1e9;
   --admin-surface: #fffdf8;
   --admin-surface-muted: #f0e8dc;
   --admin-ink: #25231f;
@@ -46,7 +46,7 @@
   color: var(--admin-ink);
   min-height: 100vh;
   overflow-x: hidden;
-  padding: 14px 16px 18px;
+  padding: 12px 14px 18px;
 }
 
 .workspace *,
@@ -60,7 +60,7 @@
   display: grid;
   gap: 12px;
   margin: 0 auto;
-  max-width: 1440px;
+  max-width: 1320px;
   width: 100%;
 }
 
@@ -68,14 +68,14 @@
   align-items: center;
   background: var(--admin-surface);
   border: 1px solid var(--admin-line);
-  border-radius: 8px;
-  box-shadow: inset 0 3px 0 var(--admin-charcoal);
+  border-radius: 7px;
+  box-shadow: 0 1px 2px rgba(48, 49, 40, 0.05);
   color: var(--admin-ink);
   display: flex;
   gap: 14px;
   justify-content: space-between;
-  min-height: 54px;
-  padding: 10px 14px 8px;
+  min-height: 48px;
+  padding: 8px 12px;
 }
 
 .brandCluster {
@@ -94,7 +94,7 @@
   color: var(--admin-ink);
   font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
   font-size: 1rem !important;
-  font-weight: 750;
+  font-weight: 680;
   letter-spacing: 0 !important;
   line-height: 1.1;
   margin: 0;
@@ -109,11 +109,10 @@
   border-radius: 999px;
   color: var(--admin-olive);
   display: inline-flex;
-  font-size: 0.66rem;
-  font-weight: 750;
+  font-size: 0.7rem;
+  font-weight: 650;
   line-height: 1;
-  padding: 5px 8px;
-  text-transform: uppercase;
+  padding: 4px 8px;
 }
 
 .topbar p {
@@ -139,9 +138,9 @@
   border-radius: 6px;
   display: inline-flex;
   font-size: 0.78rem;
-  font-weight: 700;
+  font-weight: 650;
   justify-content: center;
-  min-height: 32px;
+  min-height: 30px;
   padding: 0 10px;
   white-space: nowrap;
 }
@@ -219,26 +218,25 @@
   align-items: start;
   display: grid;
   gap: 16px;
-  grid-template-columns: 210px minmax(0, 1fr);
+  grid-template-columns: 190px minmax(0, 1fr);
 }
 
 .sidebar {
-  background: var(--admin-surface);
-  border: 1px solid var(--admin-line);
-  border-radius: 8px;
+  background: #fbf7ef;
+  border: 1px solid #e6ded1;
+  border-radius: 7px;
   display: grid;
-  gap: 8px;
-  padding: 10px;
+  gap: 6px;
+  padding: 8px;
   position: sticky;
   top: 12px;
 }
 
 .sidebarLabel {
   color: var(--admin-muted);
-  font-size: 0.68rem;
-  font-weight: 750;
+  font-size: 0.72rem;
+  font-weight: 650;
   margin: 0;
-  text-transform: uppercase;
 }
 
 .navList {
@@ -248,12 +246,12 @@
 
 .navLink {
   border: 1px solid transparent;
-  border-radius: 6px;
+  border-radius: 5px;
   color: var(--admin-muted);
   display: flex;
   gap: 8px;
   justify-content: space-between;
-  padding: 8px 9px;
+  padding: 7px 8px;
 }
 
 .navLink:hover,
@@ -264,14 +262,14 @@
 
 .navLinkActive {
   background: #edf0e5;
-  border-color: #d4d8c6;
+  border-color: #d9ddcd;
   color: var(--admin-charcoal);
-  box-shadow: inset 3px 0 0 var(--admin-olive);
+  box-shadow: inset 2px 0 0 var(--admin-olive);
 }
 
 .navLabel {
   font-size: 0.84rem;
-  font-weight: 750;
+  font-weight: 650;
 }
 
 .navMeta {
@@ -315,32 +313,40 @@
 }
 
 .metricGrid {
-  display: grid;
-  gap: 8px;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-}
-
-.metricCard {
   background: var(--admin-surface);
   border: 1px solid var(--admin-line);
   border-radius: 8px;
   display: grid;
-  gap: 6px;
-  padding: 12px;
+  gap: 0;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  overflow: hidden;
+}
+
+.metricCard {
+  background: transparent;
+  border: 0;
+  border-right: 1px solid var(--admin-line);
+  border-radius: 0;
+  display: grid;
+  gap: 5px;
+  padding: 12px 14px;
+}
+
+.metricCard:last-child {
+  border-right: 0;
 }
 
 .metricCard dt {
   color: var(--admin-muted);
-  font-size: 0.66rem;
-  font-weight: 750;
-  text-transform: uppercase;
+  font-size: 0.78rem;
+  font-weight: 620;
 }
 
 .metricCard dd {
   color: var(--admin-ink);
-  font-size: 1.35rem;
-  font-weight: 750;
-  line-height: 1;
+  font-size: 1.05rem;
+  font-weight: 680;
+  line-height: 1.2;
   margin: 0;
 }
 
@@ -352,8 +358,28 @@
 }
 
 .metricCardAttention {
-  border-color: #d7c0a5;
-  box-shadow: inset 3px 0 0 var(--admin-clay);
+  background: #fffaf2;
+}
+
+.summaryNotes {
+  border-bottom: 1px solid var(--admin-line);
+  color: var(--admin-muted);
+  display: flex;
+  flex-wrap: wrap;
+  font-size: 0.78rem;
+  gap: 8px 14px;
+  line-height: 1.4;
+  padding: 0 2px 10px;
+}
+
+.summaryNotes span {
+  position: relative;
+}
+
+.summaryNotes span + span::before {
+  color: #b8ad9d;
+  content: "/";
+  margin-right: 14px;
 }
 
 .actionGrid {
@@ -412,7 +438,7 @@
 }
 
 .quickActionCard {
-  background: #fbf7ef;
+  background: transparent;
   border: 1px solid var(--admin-line);
   border-radius: 7px;
   color: var(--admin-ink);
@@ -423,7 +449,7 @@
 
 .quickActionCard:hover,
 .quickActionCard:focus-visible {
-  background: #f0e8dc;
+  background: #f7f0e5;
   border-color: #d2c7b6;
   color: var(--admin-ink);
 }
@@ -435,7 +461,8 @@
 }
 
 .quickActionCard strong {
-  font-size: 0.86rem;
+  font-size: 0.84rem;
+  font-weight: 680;
 }
 
 .quickActionCard span {
@@ -448,8 +475,7 @@
   color: var(--admin-olive);
   font-size: 0.68rem;
   font-style: normal;
-  font-weight: 750;
-  text-transform: uppercase;
+  font-weight: 680;
 }
 
 .settingsGrid {
@@ -465,20 +491,24 @@
   margin: 0;
 }
 
-.disabledAction {
-  align-items: center;
-  background: #ebe4d8;
-  border: 1px solid var(--admin-line);
-  border-radius: 6px;
+.pendingCallout {
+  background: #f6efe4;
+  border-left: 3px solid #c59a78;
   color: var(--admin-muted);
-  cursor: not-allowed;
-  display: inline-flex;
-  font-size: 0.76rem;
-  font-weight: 700;
-  justify-content: center;
-  justify-self: start;
-  min-height: 34px;
-  padding: 0 10px;
+  display: grid;
+  gap: 3px;
+  padding: 9px 10px;
+}
+
+.pendingCallout strong {
+  color: var(--admin-charcoal);
+  font-size: 0.78rem;
+  font-weight: 680;
+}
+
+.pendingCallout span {
+  font-size: 0.8rem;
+  line-height: 1.4;
 }
 
 .heroPreviewFrame {
@@ -492,7 +522,7 @@
   color: var(--admin-muted);
   display: flex;
   font-size: 0.82rem;
-  font-weight: 700;
+  font-weight: 650;
   justify-content: center;
   padding: 16px;
   text-align: center;
@@ -659,6 +689,16 @@
   width: 100% !important;
 }
 
+.workspace :global(.eyebrow),
+.workspace :global(.quote-inbox__details dt),
+.workspace :global(.admin-dashboard__stats dt) {
+  color: var(--admin-muted) !important;
+  font-size: 0.74rem !important;
+  font-weight: 620 !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+}
+
 .workspace :global(.admin-dashboard) {
   border-top: 0;
   gap: 10px;
@@ -704,7 +744,7 @@
 .workspace :global(.admin-dashboard__card),
 .workspace :global(.premium-card),
 .workspace :global(.premium-form-card) {
-  padding: 12px !important;
+  padding: 12px 14px !important;
 }
 
 .workspace :global(.premium-title-section),
@@ -719,7 +759,7 @@
 .workspace :global(.button) {
   border-radius: 6px !important;
   font-size: 0.72rem !important;
-  font-weight: 700 !important;
+  font-weight: 650 !important;
   min-height: 34px !important;
   padding: 0 10px !important;
   text-transform: none !important;
@@ -773,6 +813,8 @@
 }
 
 .workspace :global(.quote-inbox__details div) {
+  background: #fcf8f1 !important;
+  border-color: #e5dccf !important;
   padding: 8px !important;
 }
 
@@ -814,6 +856,10 @@
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
+  .metricCard:nth-child(3) {
+    border-right: 0;
+  }
+
   .actionGrid {
     grid-template-columns: 1fr;
   }
@@ -841,6 +887,8 @@
   }
 
   .topbarActions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
     justify-content: stretch;
   }
 
@@ -864,6 +912,15 @@
 
   .metricGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .metricCard,
+  .metricCard:nth-child(3) {
+    border-right: 1px solid var(--admin-line);
+  }
+
+  .metricCard:nth-child(2n) {
+    border-right: 0;
   }
 
   .compatBody,
@@ -902,6 +959,25 @@
   .quickActionGrid,
   .workList li {
     grid-template-columns: 1fr;
+  }
+
+  .metricCard,
+  .metricCard:nth-child(2n),
+  .metricCard:nth-child(3) {
+    border-right: 0;
+  }
+
+  .metricCard + .metricCard {
+    border-top: 1px solid var(--admin-line);
+  }
+
+  .summaryNotes {
+    display: grid;
+  }
+
+  .summaryNotes span + span::before {
+    content: "";
+    margin: 0;
   }
 
   .compactTable [role="row"] {

@@ -682,7 +682,7 @@ function AdminMetricCard({
   tone = "neutral",
   value
 }: {
-  description: string;
+  description?: string;
   label: string;
   tone?: "neutral" | "attention";
   value: number | string;
@@ -697,8 +697,23 @@ function AdminMetricCard({
         <dt>{label}</dt>
         <dd>{value}</dd>
       </div>
-      <p>{description}</p>
+      {description ? <p>{description}</p> : null}
     </dl>
+  );
+}
+
+function AdminPendingCallout({
+  children,
+  title = "Backend pending"
+}: {
+  children: ReactNode;
+  title?: string;
+}) {
+  return (
+    <div className={styles.pendingCallout}>
+      <strong>{title}</strong>
+      <span>{children}</span>
+    </div>
   );
 }
 
@@ -731,36 +746,44 @@ function AdminOperationsHome({
       : 0;
   const dashboardMetricValue = (value: number) =>
     dashboard.status === "loaded" ? value : "Unavailable";
+  const dashboardMetricWithUnit = (
+    value: number,
+    singular: string,
+    plural: string
+  ) =>
+    dashboard.status === "loaded"
+      ? `${value} ${value === 1 ? singular : plural}`
+      : "Unavailable";
   const quickActions = [
     {
       href: "/admin/hero",
-      label: "Update hero image",
+      label: "Open",
       title: "Hero",
-      body: "Prepare the homepage hero hotswap flow."
+      body: "Hero image hotswap."
     },
     {
       href: "/admin/catalogue",
-      label: "Manage catalogue",
+      label: "Open",
       title: "Catalogue",
-      body: "Edit item metadata, categories, images, order, and status."
+      body: "Items, images, order, and status."
     },
     {
       href: "/admin/setups",
-      label: "Manage setups",
+      label: "Open",
       title: "Setups",
-      body: "Review the public /listings setup presentation."
+      body: "Public /listings presentation."
     },
     {
       href: "/admin/enquiry-email",
-      label: "Update enquiry email",
+      label: "Open",
       title: "Enquiry Email",
-      body: "Prepare the recipient setting for quote/enquiry handoff."
+      body: "Recipient email setting."
     },
     {
       href: "/admin/delivery-log",
-      label: "View delivery log",
+      label: "Open",
       title: "Delivery Log",
-      body: "Check the future technical email-delivery audit surface."
+      body: "Email delivery audit status."
     }
   ];
 
@@ -768,33 +791,34 @@ function AdminOperationsHome({
     <section className="admin-dashboard" aria-label="Admin dashboard">
       <div className={styles.metricGrid} aria-label="Admin dashboard metrics">
         <AdminMetricCard
-          description="Hero hotswap is planned as a protected admin setting; no backend state is exposed yet."
-          label="Current hero image"
+          label="Hero image"
           tone="attention"
-          value="Backend pending"
+          value="Pending backend"
         />
         <AdminMetricCard
-          description="Real catalogue item records available through the existing protected dashboard read."
-          label="Catalogue item count"
-          value={dashboardMetricValue(catalogueItemCount)}
+          label="Catalogue"
+          value={dashboardMetricWithUnit(catalogueItemCount, "record", "records")}
         />
         <AdminMetricCard
-          description="The public /listings setup page currently derives setup cards from up to five published catalogue records."
-          label="Setup count"
-          value={dashboardMetricValue(setupCount)}
+          label="Setups"
+          value={dashboardMetricWithUnit(setupCount, "setup card", "setup cards")}
         />
         <AdminMetricCard
-          description="Recipient settings are deferred until the isolated email handoff backend PR."
-          label="Enquiry recipient email"
+          label="Enquiry email"
           tone="attention"
-          value="Backend pending"
+          value="Not configured"
         />
         <AdminMetricCard
-          description="Delivery logging will appear after email delivery storage exists."
-          label="Latest delivery status"
+          label="Delivery log"
           tone="attention"
-          value="No log backend"
+          value="Pending backend"
         />
+      </div>
+
+      <div className={styles.summaryNotes} aria-label="Dashboard notes">
+        <span>Hero controls and delivery logging are waiting on protected backend support.</span>
+        <span>Catalogue counts come from existing protected catalogue reads.</span>
+        <span>Setups currently derive from published catalogue records on /listings.</span>
       </div>
 
       <div className={styles.actionGrid}>
@@ -838,10 +862,7 @@ function AdminOperationsHome({
           <div className={styles.sectionHeader}>
             <div>
               <h3>Quick actions</h3>
-              <p>
-                These are the protected content-manager surfaces for the current
-                SKR admin scope.
-              </p>
+              <p>Open the focused content areas for the current admin scope.</p>
             </div>
           </div>
           <div className={styles.quickActionGrid}>
@@ -901,7 +922,7 @@ function AdminHeroOperations() {
               <dd>Not available from protected admin state yet</dd>
             </div>
             <div>
-              <dt>Replace/upload/select</dt>
+              <dt>Replace image</dt>
               <dd>Deferred to a follow-up backend and image-storage PR</dd>
             </div>
             <div>
@@ -912,13 +933,10 @@ function AdminHeroOperations() {
               </dd>
             </div>
           </dl>
-          <button
-            className={styles.disabledAction}
-            disabled
-            type="button"
-          >
-            Upload hero image pending backend
-          </button>
+          <AdminPendingCallout>
+            Hero image controls will be enabled after the protected storage
+            workflow is added.
+          </AdminPendingCallout>
         </section>
         <section className={styles.heroPreviewPanel} aria-label="Hero preview placeholder">
           <div className={styles.heroPreviewFrame}>
@@ -1154,13 +1172,10 @@ function AdminEnquiryEmailOperations() {
               <dd>Deferred to an isolated quote email handoff PR</dd>
             </div>
           </dl>
-          <button
-            className={styles.disabledAction}
-            disabled
-            type="button"
-          >
-            Save recipient pending backend
-          </button>
+          <AdminPendingCallout>
+            Recipient saving will be enabled after the email handoff backend is
+            added.
+          </AdminPendingCallout>
         </section>
         <section className="admin-dashboard__card">
           <h3>Intended behaviour</h3>
@@ -1197,6 +1212,10 @@ function AdminDeliveryLogOperations() {
               <dd>No delivery attempts are readable from protected admin yet</dd>
             </div>
           </dl>
+          <AdminPendingCallout>
+            Delivery rows will appear only after enquiry email delivery logging
+            exists.
+          </AdminPendingCallout>
         </section>
         <section className="admin-dashboard__card">
           <h3>Allowed log scope</h3>
