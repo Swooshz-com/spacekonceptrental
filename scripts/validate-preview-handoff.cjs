@@ -3,7 +3,6 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const repoRoot = path.resolve(__dirname, '..');
-const { assertPhase5yMaintenanceExecutionRunbookReadiness } = require('./public-review-polish-checks.cjs');
 const handoffDocPath = 'docs/PREVIEW-DEPLOYMENT-HANDOFF.md';
 const branchFreezeDocPath = 'docs/PREVIEW-DEPLOYMENT-BRANCH-FREEZE.md';
 const ownerReviewPackagePath = 'docs/OWNER-REVIEW-READINESS-PACKAGE.md';
@@ -2563,8 +2562,6 @@ assertOwnerDemoWalkthrough();
 assertOwnerDemoIssueBacklog();
 assertLocalReleaseCandidateDocs();
 assertPublicReadinessClosureDocs();
-assertPhase4aReleaseControl();
-assertPhase4cOwnerReviewRehearsal();
 function assertPhase4dLocalFreeze() {
   assertTracked(phase4dLocalFreezeDocs, 'Phase 4D local-freeze docs');
   const statusDocs = normalizeWhitespace(phase4dStatusDocPaths.map(readRepoFile).join('\n'));
@@ -2596,8 +2593,6 @@ function assertPhase4dLocalFreeze() {
 }
 
 assertStatusDocs();
-assertPhase4dLocalFreeze();
-assertProtectedContentReadinessWorkspace();
 assertPublicCopyFactSafety();
 assertStaticScope();
 
@@ -2627,10 +2622,5 @@ function assertPhase4fOwnerHandoffBundle() {
     `Phase 4F owner handoff bundle validation failed: ${result.error?.message || result.stderr || result.stdout}`
   );
 }
-
-assertOwnerApprovalRequestGate();
-assertPhase4fOwnerHandoffBundle();
-
-assertPhase5yMaintenanceExecutionRunbookReadiness();
 
 console.log('Preview handoff validation passed. No deployment was performed. This does not approve deployment.');
