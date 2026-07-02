@@ -376,34 +376,28 @@ describe("protected admin shell", () => {
     expect(
       screen.getByRole("heading", { name: /^dashboard$/i })
     ).toBeInTheDocument();
-    expect(
-      screen.getByText(/current hero image/i)
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText(/catalogue item count/i)
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText(/^setup count$/i)
-    ).toBeInTheDocument();
-    expect(screen.getByText(/enquiry recipient email/i)).toBeInTheDocument();
-    expect(screen.getByText(/latest delivery status/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/^hero image$/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/^catalogue$/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/^setups$/i).length).toBeGreaterThan(0);
+    expect(screen.getByText(/not configured/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/pending backend/i).length).toBeGreaterThan(0);
     expect(
       screen.getByRole("heading", { name: /quick actions/i })
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("link", { name: /hero.*update hero image/i })
+      screen.getByRole("link", { name: /hero.*open/i })
     ).toHaveAttribute("href", "/admin/hero");
     expect(
-      screen.getByRole("link", { name: /catalogue.*manage catalogue/i })
+      screen.getByRole("link", { name: /catalogue.*open/i })
     ).toHaveAttribute("href", "/admin/catalogue");
     expect(
-      screen.getByRole("link", { name: /setups.*manage setups/i })
+      screen.getByRole("link", { name: /setups.*open/i })
     ).toHaveAttribute("href", "/admin/setups");
     expect(
-      screen.getByRole("link", { name: /enquiry email.*update enquiry email/i })
+      screen.getByRole("link", { name: /enquiry email.*open/i })
     ).toHaveAttribute("href", "/admin/enquiry-email");
     expect(
-      screen.getByRole("link", { name: /delivery log.*view delivery log/i })
+      screen.getByRole("link", { name: /delivery log.*open/i })
     ).toHaveAttribute("href", "/admin/delivery-log");
     expect(
       screen.getByRole("link", { name: /view public site/i })
@@ -733,14 +727,10 @@ describe("protected admin shell", () => {
       />
     );
 
+    expect(screen.getAllByText(/^hero image$/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/^catalogue$/i).length).toBeGreaterThan(0);
     expect(
-      screen.getByText(/current hero image/i)
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText(/catalogue item count/i)
-    ).toBeInTheDocument();
-    expect(
-      screen.getAllByText(/backend pending/i).length
+      screen.getAllByText(/pending backend/i).length
     ).toBeGreaterThan(0);
     expect(screen.getAllByText(/unavailable/i).length).toBeGreaterThan(0);
     expect(screen.queryByText(/sql/i)).not.toBeInTheDocument();
@@ -780,8 +770,11 @@ describe("protected admin shell", () => {
     ).toBeInTheDocument();
     expect(screen.getByText(/does not use an internal quote inbox/i)).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: /save recipient pending backend/i })
-    ).toBeDisabled();
+      screen.getByText(/recipient saving will be enabled after the email handoff backend is added/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /save recipient pending backend/i })
+    ).not.toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: /send/i })
     ).not.toBeInTheDocument();

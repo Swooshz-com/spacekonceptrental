@@ -239,14 +239,12 @@ describe("Phase 3H-A/B admin operator QA readiness polish", () => {
     expect(
       screen.getByRole("heading", { name: /quick actions/i })
     ).toBeInTheDocument();
-    expect(screen.getByText(/current hero image/i)).toBeInTheDocument();
-    expect(screen.getByText(/catalogue item count/i)).toBeInTheDocument();
-    expect(screen.getByText(/^setup count$/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/^hero image$/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/^catalogue$/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/^setups$/i).length).toBeGreaterThan(0);
+    expect(screen.getByText(/not configured/i)).toBeInTheDocument();
     expect(
-      screen.getByText(/enquiry recipient email/i)
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("link", { name: /delivery log.*view delivery log/i })
+      screen.getByRole("link", { name: /delivery log.*open/i })
     ).toHaveAttribute("href", "/admin/delivery-log");
     expect(
       screen.queryByRole("link", { name: /quote inbox/i })
