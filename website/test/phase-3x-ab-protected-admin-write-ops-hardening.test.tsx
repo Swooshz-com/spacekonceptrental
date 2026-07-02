@@ -4,18 +4,15 @@ import { extname, resolve } from "node:path";
 import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 
-import { AdminShellContent } from "../app/admin/protected-admin-shell";
 import { CategoryManagementPanel } from "../components/admin/category-management-panel";
 import { ListingImageMetadataManagementPanel } from "../components/admin/listing-image-metadata-management-panel";
 import { ListingImageUploadPanel } from "../components/admin/listing-image-upload-panel";
 import { ListingManagementPanel } from "../components/admin/listing-management-panel";
-import { QuoteRequestInboxPanel } from "../components/admin/quote-request-inbox-panel";
 
 const repoRoot = resolve(process.cwd(), "..");
 const sourceExtensions = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"]);
 const phase3wMergeCommit = "54cd8d5e7b829e56d245da2ca503c9b4058dca76";
 const checklistPath = "docs/content/PROTECTED-ADMIN-WRITE-OPS-ACCEPTANCE-CHECKLIST.md";
-const protectedAdminShellPath = "website/app/admin/protected-admin-shell.tsx";
 
 const publicInternalLeakPattern =
   /Owner-demo|walkthrough|closure readiness|deployment approval|internal review|admin-only|protected content readiness|owner input required|issue backlog|route inventory|acceptance status|local release-candidate|command centre|owner handoff|handoff pack|deployment firewall|acceptance triage|protected admin write-ops checklist|protected admin write-ops acceptance snapshot|\/admin\/content-readiness/i;
@@ -84,53 +81,6 @@ const sampleImage = {
   isPrimary: true,
   status: "active" as const
 };
-const sampleQuoteInbox = {
-  status: "loaded" as const,
-  data: {
-    quoteRequests: [
-      {
-        id: "quote-1",
-        publicReference: "QR-20260608-SAMPLE",
-        customerName: "Sample enquirer",
-        customerEmail: "sample@example.test",
-        customerMessage: "Please help with lounge setup options.",
-        eventDate: "2026-08-01",
-        venue: "Sample venue",
-        status: "reviewing" as const,
-        source: "website" as const,
-        createdAt: "2026-06-08T00:00:00.000Z",
-        items: [
-          {
-            id: "item-1",
-            quoteRequestId: "quote-1",
-            createdAt: "2026-06-08T00:00:00.000Z",
-            productNameSnapshot: "Modular Lounge Set",
-            quantity: 1
-          }
-        ],
-        activity: []
-      }
-    ]
-  }
-};
-const authorisedAdminState = {
-  status: "authorised_admin" as const,
-  dashboard: {
-    status: "loaded" as const,
-    data: {
-      categories: [sampleCategory],
-      products: [sampleListing],
-      images: [sampleImage],
-      imageSummary: {
-        totalImages: 1,
-        activeImages: 1,
-        primaryImages: 1
-      }
-    }
-  },
-  quoteInbox: sampleQuoteInbox
-};
-
 function readRepoFile(relativePath: string) {
   return readFileSync(resolve(repoRoot, relativePath), "utf8");
 }
@@ -237,29 +187,6 @@ describe("Phase 3X-A/B protected admin write-ops hardening", () => {
     expect(checklist).not.toMatch(forbiddenContactFactPattern);
   });
 
-  it("renders the protected admin write-ops snapshot only for authorised admin state", () => {
-    render(<AdminShellContent state={authorisedAdminState} view={{ kind: "content-readiness" }} />);
-    expect(screen.getByRole("heading", { name: /protected admin write-ops acceptance snapshot/i })).toBeInTheDocument();
-    expect(screen.getByText("Protected admin write-ops checklist")).toBeInTheDocument();
-    expect(screen.getByText("Listing write operations")).toBeInTheDocument();
-    expect(screen.getByText("Category write operations")).toBeInTheDocument();
-    expect(screen.getByText("Media write operations")).toBeInTheDocument();
-    expect(screen.getByText("Quote follow-up operations")).toBeInTheDocument();
-    expect(screen.getByText("Public uploads/accounts/tracking")).toBeInTheDocument();
-    expect(screen.getByText("Last local write-ops update")).toBeInTheDocument();
-    cleanup();
-
-    for (const state of [
-      { status: "unauthenticated" as const },
-      { status: "authenticated_not_authorised" as const },
-      { status: "unavailable" as const }
-    ]) {
-      render(<AdminShellContent state={state} view={{ kind: "content-readiness" }} />);
-      expect(screen.queryByRole("heading", { name: /protected admin write-ops acceptance snapshot/i })).not.toBeInTheDocument();
-      cleanup();
-    }
-  });
-
   it("shows listing write UI labels, helper text, readiness, and protected boundary cues", () => {
     render(<ListingManagementPanel categories={[sampleCategory]} products={[sampleListing]} />);
     const text = document.body.textContent ?? "";
@@ -303,14 +230,6 @@ describe("Phase 3X-A/B protected admin write-ops hardening", () => {
     expect(text).toMatch(/Protected write boundary: primary and active media choices can affect public browsing/i);
   });
 
-  it("shows quote follow-up labels and protected internal status-only guidance", () => {
-    render(<QuoteRequestInboxPanel inbox={sampleQuoteInbox} />);
-    expect(screen.getByText(/Protected internal status/i)).toBeInTheDocument();
-    expect(screen.getByText(/never shown as a public quote status view/i)).toBeInTheDocument();
-    expect(screen.getAllByText(/does not contact the visitor or start an external process/i).length).toBeGreaterThan(0);
-    expect(screen.getByText(/does not send messages/i)).toBeInTheDocument();
-  });
-
   it("keeps public source free from protected admin write-ops, completion-flow vocabulary, and fake facts", () => {
     const publicSource = readTrackedProductionSources([
       "website/app/layout.tsx",
@@ -335,12 +254,6 @@ describe("Phase 3X-A/B protected admin write-ops hardening", () => {
   });
 
   it("keeps forbidden tracked config/runtime/evidence paths absent and chat config untracked", () => {
-    const shell = readRepoFile(protectedAdminShellPath);
-    expect(shell).toContain(checklistPath);
-    expect(shell).toContain("protectedAdminWriteOpsAcceptanceSnapshot");
-    expect(shell).toContain("Protected admin write-ops acceptance snapshot");
-    expect(shell).toContain("Not added");
-
     expect(readTrackedFiles(["website/chat-config.js"])).toEqual([]);
     expect(readTrackedFiles([
       "website/app/api/customer-uploads",

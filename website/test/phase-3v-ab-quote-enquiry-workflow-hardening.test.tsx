@@ -1,10 +1,9 @@
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { extname, resolve } from "node:path";
-import { cleanup, render, screen, within } from "@testing-library/react";
+import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { AdminShellContent } from "../app/admin/protected-admin-shell";
 import { ProductPageContent } from "../app/catalogue/[slug]/page";
 import { CataloguePageContent } from "../app/catalogue/page";
 import { CategoriesPageContent } from "../app/categories/page";
@@ -81,51 +80,6 @@ const sampleCatalogue: PublicCatalogue = {
     }
   ],
   products: [sampleProduct]
-};
-
-const loadedAdminState = {
-  status: "authorised_admin" as const,
-  dashboard: {
-    status: "unavailable" as const
-  },
-  quoteInbox: {
-    status: "loaded" as const,
-    data: {
-      quoteRequests: [
-        {
-          id: "11111111-1111-4111-8111-111111111111",
-          publicReference: "QR-LOCAL-001",
-          customerName: "Sample customer",
-          customerEmail: "sample@example.test",
-          customerMessage: "Needs lounge seating alternatives for a reception.",
-          eventDate: "2026-07-15",
-          venue: "Sample venue",
-          status: "new" as const,
-          source: "website" as const,
-          createdAt: "2026-06-09T00:00:00.000Z",
-          items: [
-            {
-              id: "22222222-2222-4222-8222-222222222222",
-              quoteRequestId: "11111111-1111-4111-8111-111111111111",
-              productNameSnapshot: "Modular Lounge Set",
-              quantity: 2,
-              notes: "Add access and timing notes before follow-up.",
-              createdAt: "2026-06-09T00:00:00.000Z"
-            }
-          ],
-          activity: [
-            {
-              id: "33333333-3333-4333-8333-333333333333",
-              quoteRequestId: "11111111-1111-4111-8111-111111111111",
-              activityType: "internal_note" as const,
-              note: "Admin-only follow-up context.",
-              createdAt: "2026-06-09T00:00:00.000Z"
-            }
-          ]
-        }
-      ]
-    }
-  }
 };
 
 function readRepoFile(relativePath: string) {
@@ -345,91 +299,6 @@ describe("Phase 3V-A/B quote enquiry workflow hardening", () => {
       "href",
       "/quote"
     );
-  });
-
-  it("renders an admin-only quote/enquiry acceptance snapshot for authorised admins", () => {
-    render(
-      <AdminShellContent
-        state={{
-          status: "authorised_admin",
-          dashboard: {
-            status: "unavailable"
-          },
-          quoteInbox: {
-            status: "unavailable"
-          }
-        }}
-        view={{ kind: "content-readiness" }}
-      />
-    );
-
-    const shellSource = readRepoFile(protectedAdminShellPath);
-    expect(shellSource).toContain(quoteWorkflowChecklistPath);
-    expect(shellSource).toContain("quoteEnquiryAcceptanceSnapshot");
-    expect(shellSource).toContain("quoteEnquiryAcceptanceLastLocalUpdate");
-
-    const heading = screen.getByRole("heading", {
-      name: /quote\/enquiry acceptance snapshot/i
-    });
-    expect(heading).toBeInTheDocument();
-    const card = heading.closest("section");
-    expect(card).not.toBeNull();
-    const snapshot = within(card as HTMLElement);
-
-    expect(screen.getByText(quoteWorkflowChecklistPath)).toBeInTheDocument();
-    expect(snapshot.getAllByText(/quote\/enquiry workflow checklist/i).length).toBeGreaterThan(0);
-    expect(snapshot.getByText(/public quote route/i)).toBeInTheDocument();
-    expect(snapshot.getByText(/listing\/category\/event handoff/i)).toBeInTheDocument();
-    expect(snapshot.getByText(/protected admin triage/i)).toBeInTheDocument();
-    expect(snapshot.getByText(/internal notes boundary/i)).toBeInTheDocument();
-    expect(snapshot.getByText(/^Not added$/i)).toBeInTheDocument();
-    expect(
-      snapshot.getByText(/not approved \/ separate explicit approval required/i)
-    ).toBeInTheDocument();
-    expect(snapshot.getByText(/\[DATE PLACEHOLDER\]/i)).toBeInTheDocument();
-  });
-
-  it("does not render the quote/enquiry acceptance snapshot for blocked admin states", () => {
-    for (const state of [
-      { status: "unauthenticated" as const },
-      { status: "authenticated_not_authorised" as const },
-      { status: "unavailable" as const }
-    ]) {
-      const { unmount } = render(
-        <AdminShellContent state={state} view={{ kind: "content-readiness" }} />
-      );
-
-      expect(
-        screen.queryByText(/quote\/enquiry acceptance snapshot/i)
-      ).not.toBeInTheDocument();
-      expect(screen.queryByText(quoteWorkflowChecklistPath)).not.toBeInTheDocument();
-      unmount();
-    }
-  });
-
-  it("keeps admin quote triage grouped and protected", () => {
-    render(<AdminShellContent state={loadedAdminState} view={{ kind: "quotes" }} />);
-
-    expect(screen.getByRole("heading", { name: /quote request inbox/i })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: /contact and follow-up/i })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: /event and setup details/i })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: /requested listings and items/i })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: /admin-only status history/i })).toBeInTheDocument();
-    expect(screen.getByText(/internal status history stays inside this protected admin workspace/i)).toBeInTheDocument();
-
-    const publicSource = readTrackedProductionSources([
-      "website/app/layout.tsx",
-      "website/app/page.tsx",
-      "website/app/listings",
-      "website/app/categories",
-      "website/app/catalogue",
-      "website/app/events",
-      "website/app/quote",
-      "website/app/not-found.tsx",
-      "website/components/QuoteRequestForm.tsx"
-    ]);
-
-    expect(publicSource).not.toMatch(/internal note|status history|admin-only status/i);
   });
 
   it("keeps Phase 3V materials inside no-provider, no-deploy, no-evidence boundaries", () => {

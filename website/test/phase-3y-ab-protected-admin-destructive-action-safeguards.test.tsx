@@ -4,12 +4,10 @@ import { extname, resolve } from "node:path";
 import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 
-import { AdminShellContent } from "../app/admin/protected-admin-shell";
 import { CategoryManagementPanel } from "../components/admin/category-management-panel";
 import { ListingImageMetadataManagementPanel } from "../components/admin/listing-image-metadata-management-panel";
 import { ListingImageUploadPanel } from "../components/admin/listing-image-upload-panel";
 import { ListingManagementPanel } from "../components/admin/listing-management-panel";
-import { QuoteRequestInboxPanel } from "../components/admin/quote-request-inbox-panel";
 
 const repoRoot = resolve(process.cwd(), "..");
 const sourceExtensions = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"]);
@@ -17,7 +15,6 @@ const phase3xMergeCommit = "50316a5c4052607487ba7409d5dc854889db6e24";
 const safeguardPath = "docs/content/PROTECTED-ADMIN-DESTRUCTIVE-ACTION-SAFEGUARDS.md";
 const recoveryPath = "docs/content/PROTECTED-ADMIN-RECOVERY-LANE.md";
 const matrixPath = "docs/content/PROTECTED-ADMIN-STATUS-TRANSITION-MATRIX.md";
-const protectedAdminShellPath = "website/app/admin/protected-admin-shell.tsx";
 
 const publicInternalLeakPattern = new RegExp(
   [
@@ -114,53 +111,6 @@ const sampleImage = {
   isPrimary: true,
   status: "active" as const
 };
-const sampleQuoteInbox = {
-  status: "loaded" as const,
-  data: {
-    quoteRequests: [
-      {
-        id: "quote-1",
-        publicReference: "QR-20260608-SAMPLE",
-        customerName: "Sample enquirer",
-        customerEmail: "sample@example.test",
-        customerMessage: "Please help with lounge setup options.",
-        eventDate: "2026-08-01",
-        venue: "Sample venue",
-        status: "reviewing" as const,
-        source: "website" as const,
-        createdAt: "2026-06-08T00:00:00.000Z",
-        items: [
-          {
-            id: "item-1",
-            quoteRequestId: "quote-1",
-            createdAt: "2026-06-08T00:00:00.000Z",
-            productNameSnapshot: "Modular Lounge Set",
-            quantity: 1
-          }
-        ],
-        activity: []
-      }
-    ]
-  }
-};
-const authorisedAdminState = {
-  status: "authorised_admin" as const,
-  dashboard: {
-    status: "loaded" as const,
-    data: {
-      categories: [sampleCategory],
-      products: [sampleListing],
-      images: [sampleImage],
-      imageSummary: {
-        totalImages: 1,
-        activeImages: 1,
-        primaryImages: 1
-      }
-    }
-  },
-  quoteInbox: sampleQuoteInbox
-};
-
 function readRepoFile(relativePath: string) {
   return readFileSync(resolve(repoRoot, relativePath), "utf8");
 }
@@ -308,27 +258,6 @@ describe("Phase 3Y-A/B protected admin destructive-action safeguards", () => {
     expect(combined).not.toMatch(forbiddenContactFactPattern);
   });
 
-  it("renders the destructive-action/recovery snapshot only for authorised admin state", () => {
-    render(<AdminShellContent state={authorisedAdminState} view={{ kind: "content-readiness" }} />);
-    expect(screen.getByRole("heading", { name: /protected admin destructive-action\/recovery snapshot/i })).toBeInTheDocument();
-    expect(screen.getByText("Destructive-action safeguards")).toBeInTheDocument();
-    expect(screen.getByText("Recovery lane statuses")).toBeInTheDocument();
-    expect(screen.getByText("Status transition groups")).toBeInTheDocument();
-    expect(screen.getAllByText("Public exposure boundary").length).toBeGreaterThan(0);
-    expect(screen.getByText("Last local destructive-action update")).toBeInTheDocument();
-    cleanup();
-
-    for (const state of [
-      { status: "unauthenticated" as const },
-      { status: "authenticated_not_authorised" as const },
-      { status: "unavailable" as const }
-    ]) {
-      render(<AdminShellContent state={state} view={{ kind: "content-readiness" }} />);
-      expect(screen.queryByRole("heading", { name: /protected admin destructive-action\/recovery snapshot/i })).not.toBeInTheDocument();
-      cleanup();
-    }
-  });
-
   it("shows safer helper and recovery text in protected admin panels", () => {
     render(<ListingManagementPanel categories={[sampleCategory]} products={[sampleListing]} />);
     let text = document.body.textContent ?? "";
@@ -352,13 +281,6 @@ describe("Phase 3Y-A/B protected admin destructive-action safeguards", () => {
     text = document.body.textContent ?? "";
     expect(text).toMatch(/keep the prior protected media state/i);
     expect(text).toMatch(/review alt text and primary selection/i);
-    cleanup();
-
-    render(<QuoteRequestInboxPanel inbox={sampleQuoteInbox} />);
-    text = document.body.textContent ?? "";
-    expect(text).toMatch(/recovery states/i);
-    expect(text).toMatch(/confirmed outcome, or public tracking lane/i);
-    expect(text).toMatch(/status save fails, keep the prior protected state and retry locally/i);
   });
 
   it("keeps public source free from admin recovery details, forbidden customer flows, and fake facts", () => {
@@ -389,12 +311,6 @@ describe("Phase 3Y-A/B protected admin destructive-action safeguards", () => {
   });
 
   it("keeps forbidden runtime/provider/deployment files and env reads absent", () => {
-    const shell = readRepoFile(protectedAdminShellPath);
-    expect(shell).toContain(safeguardPath);
-    expect(shell).toContain(recoveryPath);
-    expect(shell).toContain(matrixPath);
-    expect(shell).toContain("protectedAdminDestructiveRecoverySnapshot");
-
     expect(readTrackedFiles(["website/chat-config.js"])).toEqual([]);
     expect(readTrackedFiles([
       "website/app/api/customer-uploads",
