@@ -95,7 +95,12 @@ describe("Phase 5I-A/B owner-review walkthrough readiness", () => {
   });
 
   it("renders the protected owner-review walkthrough helper only for authorised admin state", () => {
-    render(<AdminShellContent state={authorisedState} />);
+    render(
+      <AdminShellContent
+        state={authorisedState}
+        view={{ kind: "content-readiness" }}
+      />,
+    );
 
     expect(
       screen.getByRole("heading", {

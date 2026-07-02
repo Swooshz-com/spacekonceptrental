@@ -68,8 +68,12 @@ describe("Phase 2H-A/B admin operations UI MVP", () => {
 
   it("adds protected admin operations pages without public/customer admin drift", () => {
     expect(readTrackedFiles(["website/app/admin"])).toEqual([
+      "website/app/admin/catalogue/page.tsx",
       "website/app/admin/categories/page.tsx",
       "website/app/admin/content-readiness/page.tsx",
+      "website/app/admin/delivery-log/page.tsx",
+      "website/app/admin/enquiry-email/page.tsx",
+      "website/app/admin/hero/page.tsx",
       "website/app/admin/listings/page.tsx",
       "website/app/admin/login/page.test.tsx",
       "website/app/admin/login/page.tsx",
@@ -77,16 +81,23 @@ describe("Phase 2H-A/B admin operations UI MVP", () => {
       "website/app/admin/logout/route.ts",
       "website/app/admin/media/page.tsx",
       "website/app/admin/page.tsx",
+      "website/app/admin/protected-admin-shell.module.css",
       "website/app/admin/protected-admin-shell.test.tsx",
       "website/app/admin/protected-admin-shell.tsx",
       "website/app/admin/public-parity/page.tsx",
       "website/app/admin/quotes/[quoteRequestId]/page.tsx",
       "website/app/admin/quotes/page.tsx",
-      "website/app/admin/release-control/page.tsx"
+      "website/app/admin/release-control/page.tsx",
+      "website/app/admin/setups/page.tsx"
     ]);
 
     for (const page of [
       "website/app/admin/page.tsx",
+      "website/app/admin/hero/page.tsx",
+      "website/app/admin/catalogue/page.tsx",
+      "website/app/admin/setups/page.tsx",
+      "website/app/admin/enquiry-email/page.tsx",
+      "website/app/admin/delivery-log/page.tsx",
       "website/app/admin/listings/page.tsx",
       "website/app/admin/categories/page.tsx",
       "website/app/admin/content-readiness/page.tsx",
