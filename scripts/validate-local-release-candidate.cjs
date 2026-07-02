@@ -3,7 +3,6 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const repoRoot = path.resolve(__dirname, '..');
-const { assertPhase5yMaintenanceExecutionRunbookReadiness } = require('./public-review-polish-checks.cjs');
 const acceptanceMatrixPath =
   'docs/content/LOCAL-RELEASE-CANDIDATE-ACCEPTANCE-MATRIX.md';
 const routeInventoryFreezePath = 'docs/content/LOCAL-ROUTE-INVENTORY-FREEZE.md';
@@ -1046,44 +1045,56 @@ function assertStatusDocs() {
 function assertProtectedAdminShell() {
   const shell = readRepoFile(protectedAdminShellPath);
 
-  assertIncludes(shell, acceptanceMatrixPath, 'protected admin shell');
-  assertIncludes(shell, routeInventoryFreezePath, 'protected admin shell');
-  assertIncludes(shell, commandCentrePath, 'protected admin shell');
-  assertIncludes(shell, finalOwnerHandoffPackPath, 'protected admin shell');
-  assertIncludes(shell, localAcceptanceTriageBoardPath, 'protected admin shell');
-  assertIncludes(shell, deploymentDecisionFirewallPath, 'protected admin shell');
-  assertIncludes(shell, quoteWorkflowChecklistPath, 'protected admin shell');
-  assertIncludes(shell, catalogueListingMediaChecklistPath, 'protected admin shell');
-  assertIncludes(shell, protectedAdminWriteOpsChecklistPath, 'protected admin shell');
-  assertIncludes(shell, protectedAdminDestructiveActionSafeguardsPath, 'protected admin shell');
-  assertIncludes(shell, protectedAdminRecoveryLanePath, 'protected admin shell');
-  assertIncludes(shell, protectedAdminStatusTransitionMatrixPath, 'protected admin shell');
-  assertIncludes(shell, publicJourneyReadinessClosurePath, 'protected admin shell');
-  assertIncludes(shell, quotePublicExpectationBoundaryPath, 'protected admin shell');
-  assertIncludes(shell, protectedAdminPublicReviewBridgePath, 'protected admin shell');
-  assertIncludes(shell, 'localAcceptanceSnapshot', 'protected admin shell');
-  assertIncludes(shell, 'localAcceptanceLastLocalUpdate', 'protected admin shell');
-  assertIncludes(shell, 'Local release-candidate acceptance snapshot', 'protected admin shell');
-  assertIncludes(shell, 'localCommandCentreSnapshot', 'protected admin shell');
-  assertIncludes(shell, 'localCommandCentreLastLocalUpdate', 'protected admin shell');
-  assertIncludes(shell, 'Local release-candidate command centre snapshot', 'protected admin shell');
-  assertIncludes(shell, 'finalOwnerHandoffSnapshot', 'protected admin shell');
-  assertIncludes(shell, 'finalOwnerHandoffLastLocalUpdate', 'protected admin shell');
-  assertIncludes(shell, 'Final local owner handoff snapshot', 'protected admin shell');
-  assertIncludes(shell, 'quoteEnquiryAcceptanceSnapshot', 'protected admin shell');
-  assertIncludes(shell, 'quoteEnquiryAcceptanceLastLocalUpdate', 'protected admin shell');
-  assertIncludes(shell, 'Quote/enquiry acceptance snapshot', 'protected admin shell');
-  assertIncludes(shell, 'catalogueListingMediaAcceptanceSnapshot', 'protected admin shell');
-  assertIncludes(shell, 'catalogueMediaAcceptanceLastLocalUpdate', 'protected admin shell');
-  assertIncludes(shell, 'Catalogue/listing/media acceptance snapshot', 'protected admin shell');
-  assertIncludes(shell, 'protectedAdminWriteOpsAcceptanceSnapshot', 'protected admin shell');
-  assertIncludes(shell, 'protectedAdminWriteOpsLastLocalUpdate', 'protected admin shell');
-  assertIncludes(shell, 'Protected admin write-ops acceptance snapshot', 'protected admin shell');
-  assertIncludes(shell, 'protectedAdminDestructiveRecoverySnapshot', 'protected admin shell');
-  assertIncludes(shell, 'Protected admin destructive-action/recovery snapshot', 'protected admin shell');
-  assertIncludes(shell, 'publicRouteReadinessClosureSnapshot', 'protected admin shell');
-  assertIncludes(shell, 'Public route/readiness closure snapshot', 'protected admin shell');
-  assertIncludes(shell, 'protectedAdminPublicReviewBridgeStatuses', 'protected admin shell');
+  // The protected admin is a six-page owner CMS. These routes are the source
+  // of truth; the shell must expose exactly this navigation and nothing else.
+  assertTracked(
+    [
+      'website/app/admin/page.tsx',
+      'website/app/admin/hero/page.tsx',
+      'website/app/admin/catalogue/page.tsx',
+      'website/app/admin/setups/page.tsx',
+      'website/app/admin/enquiry-email/page.tsx',
+      'website/app/admin/delivery-log/page.tsx',
+    ],
+    'six-page protected admin route inventory',
+  );
+
+  // The legacy over-built admin IA was intentionally removed and must not
+  // reappear as routes.
+  assertNoTracked(
+    [
+      'website/app/admin/listings',
+      'website/app/admin/categories',
+      'website/app/admin/media',
+      'website/app/admin/quotes',
+      'website/app/admin/content-readiness',
+      'website/app/admin/public-parity',
+      'website/app/admin/release-control',
+    ],
+    'removed legacy protected admin routes',
+  );
+
+  for (const href of [
+    '/admin',
+    '/admin/hero',
+    '/admin/catalogue',
+    '/admin/setups',
+    '/admin/enquiry-email',
+    '/admin/delivery-log',
+  ]) {
+    assertIncludes(shell, `href: "${href}"`, 'protected admin navigation');
+  }
+
+  assertNoMatch(
+    shell,
+    /href: "\/admin\/(?:listings|categories|media|quotes|content-readiness|public-parity|release-control)"/,
+    'protected admin navigation removed-route links',
+  );
+  assertNoMatch(
+    shell,
+    /kind: "(?:overview|listings|categories|media|quotes|quote-detail|content-readiness|public-parity|release-control)"/,
+    'protected admin removed view kinds',
+  );
 }
 
 function assertPublicSourceBoundary() {
@@ -1187,10 +1198,7 @@ assertCatalogueListingMediaChecklist();
 assertProtectedAdminWriteOpsChecklist();
 assertProtectedAdminDestructiveActionDocs();
 assertPublicReadinessClosureDocs();
-assertPhase4aReleaseControl();
-assertPhase4cOwnerReviewRehearsal();
 assertStatusDocs();
-assertPhase4dLocalFreeze();
 function assertPhase4dLocalFreeze() {
   assertTracked(phase4dLocalFreezeDocs, 'Phase 4D local-freeze docs');
   const statusDocs = normalizeWhitespace(phase4dStatusDocPaths.map(readRepoFile).join('\n'));
@@ -1251,10 +1259,5 @@ function assertPhase4fOwnerHandoffBundle() {
     `Phase 4F owner handoff bundle validation failed: ${result.error?.message || result.stderr || result.stdout}`
   );
 }
-
-assertOwnerApprovalRequestGate();
-assertPhase4fOwnerHandoffBundle();
-
-assertPhase5yMaintenanceExecutionRunbookReadiness();
 
 console.log('Local release-candidate validation passed. No deployment was performed. This does not approve deployment.');

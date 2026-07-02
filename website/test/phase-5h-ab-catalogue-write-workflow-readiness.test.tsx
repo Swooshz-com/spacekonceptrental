@@ -119,12 +119,6 @@ const authorisedState: ProtectedAdminShellState = {
       },
     },
   },
-  quoteInbox: {
-    status: "loaded",
-    data: {
-      quoteRequests: [],
-    },
-  },
 };
 
 describe("Phase 5H-A/B catalogue write workflow readiness", () => {

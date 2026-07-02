@@ -22,7 +22,6 @@ import {
   type ListingManagementCategory,
   type ListingManagementProduct
 } from "../components/admin/listing-management-panel";
-import { QuoteRequestInboxPanel } from "../components/admin/quote-request-inbox-panel";
 
 const repoRoot = resolve(process.cwd(), "..");
 const sourceExtensions = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"]);
@@ -127,48 +126,6 @@ const archivedImageMissingAlt: ListingImageMetadataImage = {
   sortOrder: 3,
   isPrimary: false,
   status: "archived"
-};
-
-const quoteRequestMissingTriageData = {
-  id: "77777777-7777-4777-8777-777777777777",
-  publicReference: "QR-20260607-MISSING",
-  customerName: "Maya Tan",
-  status: "new" as const,
-  source: "website" as const,
-  createdAt: "2026-06-07T10:30:00.000Z",
-  items: [],
-  activity: []
-};
-
-const quoteRequestReadyForFollowUp = {
-  id: "88888888-8888-4888-8888-888888888888",
-  publicReference: "QR-20260607-READY",
-  customerName: "Darren Lee",
-  customerEmail: "darren@example.test",
-  customerMessage: "Need a warm lounge setup for a reception.",
-  eventDate: "2026-06-20",
-  venue: "Suntec Singapore",
-  status: "reviewing" as const,
-  source: "website" as const,
-  createdAt: "2026-06-07T11:30:00.000Z",
-  items: [
-    {
-      id: "99999999-9999-4999-8999-999999999999",
-      quoteRequestId: "88888888-8888-4888-8888-888888888888",
-      productNameSnapshot: "Modular lounge set",
-      quantity: 2,
-      createdAt: "2026-06-07T11:31:00.000Z"
-    }
-  ],
-  activity: [
-    {
-      id: "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
-      quoteRequestId: "88888888-8888-4888-8888-888888888888",
-      activityType: "internal_note" as const,
-      note: "Review requested quantities before follow-up.",
-      createdAt: "2026-06-07T11:45:00.000Z"
-    }
-  ]
 };
 
 function readRepoFile(relativePath: string) {
@@ -337,43 +294,6 @@ describe("Phase 3B-A/B admin operations readiness and quote triage polish", () =
         .length
     ).toBeGreaterThan(0);
     expect(screen.queryByRole("button", { name: /delete/i })).not.toBeInTheDocument();
-  });
-
-  it("adds admin-only quote triage cues from existing quote data", () => {
-    render(
-      <QuoteRequestInboxPanel
-        inbox={{
-          status: "loaded",
-          data: {
-            quoteRequests: [
-              quoteRequestMissingTriageData,
-              quoteRequestReadyForFollowUp
-            ]
-          }
-        }}
-      />
-    );
-
-    expect(screen.getByText(/quote triage summary/i)).toBeInTheDocument();
-    expect(screen.getByText(/new requests/i)).toBeInTheDocument();
-    expect(screen.getAllByText(/in review/i).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/follow-up needed/i).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/quoted/i).length).toBeGreaterThan(0);
-    expect(screen.getByText(/closed requests/i)).toBeInTheDocument();
-    expect(screen.getAllByText(/triage cues/i).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/missing contact method/i).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/missing event date/i).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/missing venue/i).length).toBeGreaterThan(0);
-    expect(screen.getByText(/no requested items captured/i)).toBeInTheDocument();
-    expect(screen.getAllByText(/no customer message/i).length).toBeGreaterThan(0);
-    expect(screen.getByText(/no internal activity yet/i)).toBeInTheDocument();
-    expect(screen.getByText(/1 requested item/i)).toBeInTheDocument();
-    expect(screen.getByText(/customer message captured/i)).toBeInTheDocument();
-    expect(screen.getByText(/internal activity recorded/i)).toBeInTheDocument();
-    expect(
-      screen.getByText(/internal triage cues stay inside this admin workspace/i)
-    ).toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: /track|status/i })).not.toBeInTheDocument();
   });
 
   it("keeps Phase 3B inside repo-local admin and product scope", () => {

@@ -122,29 +122,6 @@ describe("Phase 2J-A/B MVP hardening and quote intake correctness", () => {
     expect(readTrackedFiles(["website/app/api/public-quote-status"])).toEqual([]);
   });
 
-  it("adds a protected server-only admin quote detail read path", () => {
-    const detailRead = readRepoFile(
-      "website/lib/quote/admin-read/admin-quote-request-detail-read.ts"
-    );
-    const detailPage = readRepoFile(
-      "website/app/admin/quotes/[quoteRequestId]/page.tsx"
-    );
-    const shellSource = readRepoFile("website/app/admin/protected-admin-shell.tsx");
-
-    expect(detailRead).toContain('import "server-only";');
-    expect(detailRead).toContain("resolveAdminQuoteRequestDetailRead");
-    expect(detailRead).toContain("createSessionBoundSupabaseAdminReadClient");
-    expect(detailRead).toContain('from("quote_requests")');
-    expect(detailRead).toContain("customer_message");
-    expect(detailRead).toContain('from("quote_request_items")');
-    expect(detailRead).toContain('from("quote_request_activity")');
-    expect(detailRead).not.toContain("NEXT_PUBLIC_SUPABASE");
-    expect(detailRead).not.toContain("SUPABASE_SERVICE_ROLE");
-    expect(detailPage).toContain("quoteDetailId");
-    expect(shellSource).toContain("resolveAdminQuoteRequestDetailRead");
-    expect(shellSource).toContain("quoteDetail");
-  });
-
   it("keeps forbidden runtime surfaces absent", () => {
     const packageSource = [
       readRepoFile("package.json"),
