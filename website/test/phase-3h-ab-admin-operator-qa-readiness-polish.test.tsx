@@ -234,7 +234,7 @@ describe("Phase 3H-A/B admin operator QA readiness polish", () => {
     renderAdminView({ kind: "home" });
 
     expect(
-      screen.getByRole("heading", { name: /quick status/i })
+      screen.getByRole("heading", { name: /content status/i })
     ).toBeInTheDocument();
     expect(
       screen.getByRole("heading", { name: /quick actions/i })
@@ -244,7 +244,7 @@ describe("Phase 3H-A/B admin operator QA readiness polish", () => {
     expect(screen.getAllByText(/^setups$/i).length).toBeGreaterThan(0);
     expect(screen.getByText(/not configured/i)).toBeInTheDocument();
     expect(
-      screen.getByRole("link", { name: /delivery log.*open/i })
+      screen.getByRole("link", { name: /view delivery log.*open/i })
     ).toHaveAttribute("href", "/admin/delivery-log");
     expect(
       screen.queryByRole("link", { name: /quote inbox/i })

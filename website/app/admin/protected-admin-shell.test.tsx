@@ -385,19 +385,19 @@ describe("protected admin shell", () => {
       screen.getByRole("heading", { name: /quick actions/i })
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("link", { name: /hero.*open/i })
+      screen.getByRole("link", { name: /manage hero.*open/i })
     ).toHaveAttribute("href", "/admin/hero");
     expect(
-      screen.getByRole("link", { name: /catalogue.*open/i })
+      screen.getByRole("link", { name: /manage catalogue.*open/i })
     ).toHaveAttribute("href", "/admin/catalogue");
     expect(
-      screen.getByRole("link", { name: /setups.*open/i })
+      screen.getByRole("link", { name: /manage setups.*open/i })
     ).toHaveAttribute("href", "/admin/setups");
     expect(
-      screen.getByRole("link", { name: /enquiry email.*open/i })
+      screen.getByRole("link", { name: /configure email.*open/i })
     ).toHaveAttribute("href", "/admin/enquiry-email");
     expect(
-      screen.getByRole("link", { name: /delivery log.*open/i })
+      screen.getByRole("link", { name: /view delivery log.*open/i })
     ).toHaveAttribute("href", "/admin/delivery-log");
     expect(
       screen.getByRole("link", { name: /view public site/i })
@@ -765,13 +765,10 @@ describe("protected admin shell", () => {
       <AdminShellContent state={baseState} view={{ kind: "enquiry-email" }} />
     );
 
-    expect(
-      screen.getByText(/quote requests are sent to this email/i)
-    ).toBeInTheDocument();
-    expect(screen.getByText(/does not use an internal quote inbox/i)).toBeInTheDocument();
-    expect(
-      screen.getByText(/recipient saving will be enabled after the email handoff backend is added/i)
-    ).toBeInTheDocument();
+    expect(screen.getByText(/recipient settings/i)).toBeInTheDocument();
+    expect(screen.getByText(/SKR sends quote requests by email/i)).toBeInTheDocument();
+    expect(screen.getByText(/There is no internal quote inbox/i)).toBeInTheDocument();
+    expect(screen.getByText(/Quote requests will be emailed here after the handoff backend lands/i)).toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: /save recipient pending backend/i })
     ).not.toBeInTheDocument();
@@ -786,11 +783,13 @@ describe("protected admin shell", () => {
     );
 
     expect(
-      screen.getByText(/technical enquiry delivery log/i)
+      screen.getByText(/email delivery attempts/i)
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/not a quote inbox, customer pipeline, review queue, or follow-up workflow/i)
+      screen.getByRole("table", { name: /delivery log placeholder/i })
     ).toBeInTheDocument();
+    expect(screen.getByText(/No attempts yet/i)).toBeInTheDocument();
+    expect(screen.getByText(/Technical email audit only/i)).toBeInTheDocument();
     expect(screen.queryByText(/QR-20260603-NEWEST/i)).not.toBeInTheDocument();
   });
 

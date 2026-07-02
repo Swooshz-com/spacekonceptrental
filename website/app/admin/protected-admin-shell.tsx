@@ -758,32 +758,32 @@ function AdminOperationsHome({
     {
       href: "/admin/hero",
       label: "Open",
-      title: "Hero",
-      body: "Hero image hotswap."
+      title: "Manage hero",
+      body: "Hero image"
     },
     {
       href: "/admin/catalogue",
       label: "Open",
-      title: "Catalogue",
-      body: "Items, images, order, and status."
+      title: "Manage catalogue",
+      body: "Items, images, order, status"
     },
     {
       href: "/admin/setups",
       label: "Open",
-      title: "Setups",
-      body: "Public /listings presentation."
+      title: "Manage setups",
+      body: "Public /listings"
     },
     {
       href: "/admin/enquiry-email",
       label: "Open",
-      title: "Enquiry Email",
-      body: "Recipient email setting."
+      title: "Configure email",
+      body: "Recipient setting"
     },
     {
       href: "/admin/delivery-log",
       label: "Open",
-      title: "Delivery Log",
-      body: "Email delivery audit status."
+      title: "View delivery log",
+      body: "Technical audit"
     }
   ];
 
@@ -815,20 +815,29 @@ function AdminOperationsHome({
         />
       </div>
 
-      <div className={styles.summaryNotes} aria-label="Dashboard notes">
-        <span>Hero controls and delivery logging are waiting on protected backend support.</span>
-        <span>Catalogue counts come from existing protected catalogue reads.</span>
-        <span>Setups currently derive from published catalogue records on /listings.</span>
-      </div>
+      <section className={styles.actionPanel} aria-label="Admin quick actions">
+        <div className={styles.sectionHeader}>
+          <h3>Quick actions</h3>
+        </div>
+        <div className={styles.quickActionGrid}>
+          {quickActions.map((card) => (
+            <a className={styles.quickActionCard} href={card.href} key={card.href}>
+              <strong>{card.title}</strong>
+              <span>{card.body}</span>
+              <em>{card.label}</em>
+            </a>
+          ))}
+        </div>
+      </section>
 
-      <div className={styles.actionGrid}>
+      <div className={styles.ownerGrid}>
         <section className={styles.workQueue} aria-label="Content manager status">
-          <h3>Quick status</h3>
+          <h3>Content status</h3>
           <ul className={styles.workList}>
             <li>
               <div>
-                <strong>Published catalogue items</strong>
-                <span>Items currently marked published in existing catalogue data.</span>
+                <strong>Published catalogue</strong>
+                <span>Visible catalogue records.</span>
               </div>
               <span className={`${styles.chip} ${styles.chipStable}`}>
                 {dashboardMetricValue(publishedListingCount)}
@@ -836,8 +845,8 @@ function AdminOperationsHome({
             </li>
             <li>
               <div>
-                <strong>Draft or hidden items</strong>
-                <span>Records not currently published to public catalogue paths.</span>
+                <strong>Draft or hidden</strong>
+                <span>Records not public.</span>
               </div>
               <span className={`${styles.chip} ${styles.chipWarning}`}>
                 {dashboardMetricValue(draftOrHiddenListings)}
@@ -846,7 +855,7 @@ function AdminOperationsHome({
             <li>
               <div>
                 <strong>Media attention</strong>
-                <span>Listings missing image coverage or public-safe alt text.</span>
+                <span>Missing images or alt text.</span>
               </div>
               <span className={`${styles.chip} ${styles.chipWarning}`}>
                 {dashboardMetricValue(mediaAttention)}
@@ -855,51 +864,30 @@ function AdminOperationsHome({
           </ul>
         </section>
 
-        <section
-          className={styles.recommendedActions}
-          aria-label="Admin quick actions"
-        >
-          <div className={styles.sectionHeader}>
-            <div>
-              <h3>Quick actions</h3>
-              <p>Open the focused content areas for the current admin scope.</p>
-            </div>
-          </div>
-          <div className={styles.quickActionGrid}>
-            {quickActions.map((card) => (
-              <a className={styles.quickActionCard} href={card.href} key={card.href}>
-                <strong>{card.title}</strong>
-                <span>{card.body}</span>
-                <em>{card.label}</em>
-              </a>
-            ))}
-          </div>
-        </section>
+        {dashboard.status === "loaded" ? (
+          <section className={styles.rowPanel}>
+            <h3>Catalogue summary</h3>
+            <dl className={styles.adminRows}>
+              <div>
+                <dt>Categories</dt>
+                <dd>{categoryCount}</dd>
+              </div>
+              <div>
+                <dt>Items</dt>
+                <dd>{dashboard.data.products.length}</dd>
+              </div>
+              <div>
+                <dt>Media</dt>
+                <dd>{dashboard.data.imageSummary.totalImages}</dd>
+              </div>
+              <div>
+                <dt>Setup source</dt>
+                <dd>Published catalogue records</dd>
+              </div>
+            </dl>
+          </section>
+        ) : null}
       </div>
-
-      {dashboard.status === "loaded" ? (
-        <section className="admin-dashboard__card">
-          <h3>Catalogue scope</h3>
-          <dl className="quote-inbox__details">
-            <div>
-              <dt>Category/menu records</dt>
-              <dd>{categoryCount}</dd>
-            </div>
-            <div>
-              <dt>Total catalogue items</dt>
-              <dd>{dashboard.data.products.length}</dd>
-            </div>
-            <div>
-              <dt>Total media records</dt>
-              <dd>{dashboard.data.imageSummary.totalImages}</dd>
-            </div>
-            <div>
-              <dt>Primary setup source</dt>
-              <dd>/listings derives setup cards from published catalogue records</dd>
-            </div>
-          </dl>
-        </section>
-      ) : null}
     </section>
   );
 }
@@ -907,45 +895,41 @@ function AdminOperationsHome({
 function AdminHeroOperations() {
   return (
     <section className="admin-dashboard" aria-label="Hero image management">
-      <div className={styles.settingsGrid}>
-        <section className={styles.placeholderPanel}>
-          <p className="eyebrow">Hero image</p>
-          <h3>Homepage hero hotswap</h3>
-          <p>
-            The protected hotswap control is not backed by admin storage yet.
-            This page marks the intended workflow without changing the public
-            homepage or pretending an upload was saved.
-          </p>
-          <dl className="quote-inbox__details">
-            <div>
-              <dt>Current hero preview</dt>
-              <dd>Not available from protected admin state yet</dd>
-            </div>
-            <div>
-              <dt>Replace image</dt>
-              <dd>Deferred to a follow-up backend and image-storage PR</dd>
-            </div>
-            <div>
-              <dt>Crop guidance</dt>
-              <dd>
-                Use a wide desktop crop with a centered mobile-safe focal area
-                once the hotswap flow exists.
-              </dd>
-            </div>
-          </dl>
-          <AdminPendingCallout>
-            Hero image controls will be enabled after the protected storage
-            workflow is added.
-          </AdminPendingCallout>
-        </section>
+      <div className={styles.heroManagerGrid}>
         <section className={styles.heroPreviewPanel} aria-label="Hero preview placeholder">
+          <div className={styles.panelHeader}>
+            <div>
+              <p className="eyebrow">Hero image</p>
+              <h3>Current hero</h3>
+            </div>
+            <span className={`${styles.statusPill} ${styles.statusPending}`}>
+              Pending backend
+            </span>
+          </div>
           <div className={styles.heroPreviewFrame}>
             <span>Hero preview pending admin image source</span>
           </div>
-          <p>
-            No fake image is shown here. The current public hero remains
-            source-managed until the protected image hotswap backend exists.
-          </p>
+          <AdminPendingCallout>
+            Protected image controls will be enabled after storage support is added.
+          </AdminPendingCallout>
+        </section>
+
+        <section className={styles.rowPanel}>
+          <h3>Image settings</h3>
+          <dl className={styles.adminRows}>
+            <div>
+              <dt>Status</dt>
+              <dd>Not available in admin yet</dd>
+            </div>
+            <div>
+              <dt>Replace image</dt>
+              <dd>Pending protected storage</dd>
+            </div>
+            <div>
+              <dt>Crop guidance</dt>
+              <dd>Wide crop, centered mobile-safe focal area</dd>
+            </div>
+          </dl>
         </section>
       </div>
     </section>
@@ -1099,11 +1083,7 @@ function AdminSetupsOperations({
       <div className={styles.settingsGrid}>
         <section className={styles.placeholderPanel}>
           <h3>Current setup source</h3>
-          <p>
-            Add/edit/hide, image changes, category/menu mapping, display order,
-            and published status are available through the Catalogue controls
-            because setup-specific backend support is not separated yet.
-          </p>
+          <p>Setup cards currently come from published catalogue records.</p>
           <nav className="hero__actions" aria-label="Setup actions">
             <a className="button button--secondary" href="/admin/catalogue">
               Manage catalogue
@@ -1150,18 +1130,21 @@ function AdminSetupsOperations({
 function AdminEnquiryEmailOperations() {
   return (
     <section className="admin-dashboard" aria-label="Enquiry email setting">
-      <div className={styles.settingsGrid}>
-        <section className={styles.placeholderPanel}>
-          <p className="eyebrow">Enquiry Email</p>
-          <h3>Recipient setting</h3>
-          <p>
-            Quote requests are sent to this email. SKR does not use an internal
-            quote inbox.
-          </p>
-          <dl className="quote-inbox__details">
+      <div className={styles.settingsGridCompact}>
+        <section className={styles.rowPanel}>
+          <div className={styles.panelHeader}>
             <div>
-              <dt>Configured recipient</dt>
-              <dd>Not available in protected admin yet</dd>
+              <p className="eyebrow">Enquiry Email</p>
+              <h3>Recipient settings</h3>
+            </div>
+            <span className={`${styles.statusPill} ${styles.statusPending}`}>
+              Not configured
+            </span>
+          </div>
+          <dl className={styles.adminRows}>
+            <div>
+              <dt>Recipient</dt>
+              <dd>Not available yet</dd>
             </div>
             <div>
               <dt>CC/BCC</dt>
@@ -1169,22 +1152,16 @@ function AdminEnquiryEmailOperations() {
             </div>
             <div>
               <dt>Email handoff</dt>
-              <dd>Deferred to an isolated quote email handoff PR</dd>
+              <dd>Deferred</dd>
             </div>
           </dl>
           <AdminPendingCallout>
-            Recipient saving will be enabled after the email handoff backend is
-            added.
+            Quote requests will be emailed here after the handoff backend lands.
           </AdminPendingCallout>
         </section>
-        <section className="admin-dashboard__card">
-          <h3>Intended behaviour</h3>
-          <ul className="admin-readiness__list">
-            <li>Visitor submits the quote/enquiry form on /quote.</li>
-            <li>All enquiry details are emailed to the configured recipient.</li>
-            <li>The team follows up manually by email.</li>
-            <li>SKR keeps only a small technical delivery log for audit/debugging.</li>
-          </ul>
+        <section className={styles.notePanel}>
+          <h3>Email flow</h3>
+          <p>SKR sends quote requests by email. There is no internal quote inbox.</p>
         </section>
       </div>
     </section>
@@ -1194,42 +1171,38 @@ function AdminEnquiryEmailOperations() {
 function AdminDeliveryLogOperations() {
   return (
     <section className="admin-dashboard" aria-label="Delivery log">
-      <div className={styles.settingsGrid}>
-        <section className={styles.placeholderPanel}>
-          <p className="eyebrow">Delivery Log</p>
-          <h3>Technical enquiry delivery log</h3>
-          <p>
-            Delivery logging will show recent enquiry email delivery attempts
-            once email handoff is implemented.
-          </p>
-          <dl className="quote-inbox__details">
+      <div className={styles.settingsGridCompact}>
+        <section className={styles.rowPanel}>
+          <div className={styles.panelHeader}>
             <div>
-              <dt>Log backend</dt>
-              <dd>Not available in this PR</dd>
+              <p className="eyebrow">Delivery Log</p>
+              <h3>Email delivery attempts</h3>
             </div>
-            <div>
-              <dt>Latest delivery status</dt>
-              <dd>No delivery attempts are readable from protected admin yet</dd>
+            <span className={`${styles.statusPill} ${styles.statusPending}`}>
+              Pending backend
+            </span>
+          </div>
+          <div className={styles.logTable} role="table" aria-label="Delivery log placeholder">
+            <div role="row">
+              <strong role="columnheader">Submitted</strong>
+              <strong role="columnheader">Recipient</strong>
+              <strong role="columnheader">Status</strong>
+              <strong role="columnheader">Reference</strong>
             </div>
-          </dl>
+            <div role="row">
+              <span role="cell">No attempts yet</span>
+              <span role="cell">Pending recipient</span>
+              <span role="cell">Pending</span>
+              <span role="cell">-</span>
+            </div>
+          </div>
           <AdminPendingCallout>
-            Delivery rows will appear only after enquiry email delivery logging
-            exists.
+            Delivery rows will appear after enquiry email delivery logging exists.
           </AdminPendingCallout>
         </section>
-        <section className="admin-dashboard__card">
-          <h3>Allowed log scope</h3>
-          <p>
-            This is a technical delivery audit page only. It is not a quote
-            inbox, customer pipeline, review queue, or follow-up workflow.
-          </p>
-          <ul className="admin-readiness__list">
-            <li>Submitted time.</li>
-            <li>Recipient email.</li>
-            <li>Delivery status: pending, sent, or failed.</li>
-            <li>Provider/message id or error reference when available.</li>
-            <li>Retry action only if backend retry support exists later.</li>
-          </ul>
+        <section className={styles.notePanel}>
+          <h3>Log scope</h3>
+          <p>Technical email audit only: sent, failed, provider id, and safe error reference.</p>
         </section>
       </div>
     </section>
