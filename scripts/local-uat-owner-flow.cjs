@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 const path = require('node:path');
+const net = require('node:net');
 const { spawn, spawnSync } = require('node:child_process');
 
 const baseUrlEnvName = 'SKR_OWNER_FLOW_LOCAL_BASE_URL';
@@ -11,6 +12,7 @@ const defaultStartupTimeoutMs = 75_000;
 const defaultSmokeTimeoutMs = 120_000;
 const defaultPollIntervalMs = 1_000;
 const maxChildLogLines = 20;
+const alternatePorts = [3001, 3002, 3003, 3004, 3005];
 const sensitiveLogPattern =
   /\b(?:secret|token|password|api[_-]?key|authorization|cookie)\b/i;
 
@@ -61,6 +63,12 @@ function safeBaseUrl(env) {
   }
 }
 
+function hasExplicitBaseUrl(env) {
+  return Boolean(
+    env[baseUrlEnvName]?.trim() || env[fallbackBaseUrlEnvName]?.trim(),
+  );
+}
+
 function formatCommand(command, args) {
   return [command, ...args].join(' ');
 }
@@ -85,6 +93,47 @@ async function isServerReachable(options, baseUrl) {
   } finally {
     clearTimeout(timeout);
   }
+}
+
+function isPortAvailable(port) {
+  return new Promise((resolve) => {
+    const server = net.createServer();
+
+    server.unref();
+    server.once('error', () => {
+      resolve(false);
+    });
+    server.listen(
+      {
+        port,
+      },
+      () => {
+        server.close(() => {
+          resolve(true);
+        });
+      },
+    );
+  });
+}
+
+async function selectAlternatePort(options) {
+  const tried = [];
+
+  for (const port of alternatePorts) {
+    tried.push(port);
+
+    if (await options.isPortAvailable(port)) {
+      return {
+        port,
+        tried,
+      };
+    }
+  }
+
+  return {
+    port: null,
+    tried,
+  };
 }
 
 function captureBoundedChildOutput(child, lines) {
@@ -177,7 +226,13 @@ function stopChildProcess(options, child) {
 }
 
 function startWebsiteServer(options, env) {
-  const invocation = npmInvocationForPlatform(options.platform, ['run', 'dev']);
+  const devArgs = ['run', 'dev'];
+
+  if (env.PORT) {
+    devArgs.push('--', '--port', env.PORT);
+  }
+
+  const invocation = npmInvocationForPlatform(options.platform, devArgs);
   const cwd = path.join(options.cwd, 'website');
   const logs = [];
   let exit = null;
@@ -230,6 +285,19 @@ function startWebsiteServer(options, env) {
     exit: () => exit,
     logs,
   };
+}
+
+function buildServerEnv(options, baseUrl) {
+  const nextEnv = {
+    ...options.env,
+    [baseUrlEnvName]: baseUrl.origin,
+  };
+
+  if (baseUrl.port) {
+    nextEnv.PORT = baseUrl.port;
+  }
+
+  return nextEnv;
 }
 
 function runSmokeCommand(options, env) {
@@ -359,6 +427,7 @@ function normalizeOptions(options = {}) {
     env: options.env ?? process.env,
     error: options.error ?? console.error,
     fetch: options.fetch ?? fetch,
+    isPortAvailable: options.isPortAvailable ?? isPortAvailable,
     log: options.log ?? console.log,
     now: options.now ?? Date.now,
     platform: options.platform ?? process.platform,
@@ -373,13 +442,18 @@ function normalizeOptions(options = {}) {
 
 async function runLocalUatOwnerFlow(inputOptions = {}) {
   const options = normalizeOptions(inputOptions);
-  const baseUrl = safeBaseUrl(options.env);
-  const smokeEnv = {
-    ...options.env,
-    [baseUrlEnvName]: baseUrl.origin,
-  };
+  const explicitBaseUrl = hasExplicitBaseUrl(options.env);
+  let baseUrl = safeBaseUrl(options.env);
+  let smokeEnv = buildServerEnv(options, baseUrl);
+  let fallbackAttempted = false;
+  let selectedPort = Number(baseUrl.port) || null;
+  let candidatePortsTried = [];
 
   options.log(`INFO local UAT owner flow target ${baseUrl.origin}`);
+
+  if (explicitBaseUrl) {
+    options.log('INFO explicit local UAT base URL configured; alternate port fallback is disabled');
+  }
 
   if (await isServerReachable(options, baseUrl)) {
     options.log('PASS local SKR server already reachable');
@@ -396,6 +470,7 @@ async function runLocalUatOwnerFlow(inputOptions = {}) {
       }
 
       return {
+        fallbackAttempted,
         ok: false,
         smokeExitCode: smoke.code,
         smokeTimedOut: smoke.timedOut,
@@ -406,16 +481,57 @@ async function runLocalUatOwnerFlow(inputOptions = {}) {
     options.log('PASS owner-flow smoke command completed');
 
     return {
+      fallbackAttempted,
       ok: true,
       smokeExitCode: smoke.code,
       startedServer: false,
     };
   }
 
-  const devCommand = npmInvocationForPlatform(options.platform, [
-    'run',
-    'dev',
-  ]).display;
+  if (!explicitBaseUrl && baseUrl.origin === defaultBaseUrl) {
+    const defaultPortAvailable = await options.isPortAvailable(3000);
+
+    if (!defaultPortAvailable) {
+      options.log(
+        `INFO default local UAT base URL was not reachable: ${defaultBaseUrl}`,
+      );
+      options.log('INFO port 3000 appears occupied; trying alternate local ports');
+
+      const selection = await selectAlternatePort(options);
+      fallbackAttempted = true;
+      candidatePortsTried = selection.tried;
+
+      if (!selection.port) {
+        options.error('FAIL no alternate local UAT port was available');
+        options.error(`Default URL checked: ${defaultBaseUrl}`);
+        options.error(`Candidate ports tried: ${candidatePortsTried.join(', ')}`);
+        options.error('No external server was killed or modified.');
+        options.error(
+          'Manual next step: stop or repair the unhealthy local server on port 3000, or set SKR_OWNER_FLOW_LOCAL_BASE_URL to a reachable local server and rerun `npm run local-uat:owner-flow`.',
+        );
+
+        return {
+          candidatePortsTried,
+          fallbackAttempted,
+          ok: false,
+          startedServer: false,
+        };
+      }
+
+      selectedPort = selection.port;
+      baseUrl = new URL(`http://localhost:${selection.port}`);
+      smokeEnv = buildServerEnv(options, baseUrl);
+      options.log(`INFO selected alternate local port ${selection.port}`);
+    }
+  }
+
+  const devArgs = ['run', 'dev'];
+
+  if (smokeEnv.PORT) {
+    devArgs.push('--', '--port', smokeEnv.PORT);
+  }
+
+  const devCommand = npmInvocationForPlatform(options.platform, devArgs).display;
   let devServer = null;
 
   try {
@@ -434,14 +550,25 @@ async function runLocalUatOwnerFlow(inputOptions = {}) {
       options.error(
         `FAIL local SKR website server exited before it became reachable with${detail}`,
       );
+      if (fallbackAttempted) {
+        options.error(
+          `FAIL alternate local UAT server on ${baseUrl.origin} could not start; no external server was killed or modified.`,
+        );
+        if (candidatePortsTried.length > 0) {
+          options.error(`Candidate ports tried: ${candidatePortsTried.join(', ')}`);
+        }
+      }
       printStartupDiagnostics(options, devServer.logs);
       options.error(
         'Manual next step: run `cd website && npm run dev` directly, resolve the startup error, then rerun `npm run local-uat:owner-flow`.',
       );
 
       return {
-        ok: false,
         earlyExit: true,
+        candidatePortsTried,
+        fallbackAttempted,
+        ok: false,
+        selectedPort,
         startedServer: true,
       };
     }
@@ -457,7 +584,10 @@ async function runLocalUatOwnerFlow(inputOptions = {}) {
       );
 
       return {
+        candidatePortsTried,
+        fallbackAttempted,
         ok: false,
+        selectedPort,
         startedServer: true,
         timedOut: true,
         waitedMs: readiness.waitedMs,
@@ -480,7 +610,10 @@ async function runLocalUatOwnerFlow(inputOptions = {}) {
       }
 
       return {
+        candidatePortsTried,
+        fallbackAttempted,
         ok: false,
+        selectedPort,
         smokeExitCode: smoke.code,
         smokeTimedOut: smoke.timedOut,
         startedServer: true,
@@ -490,7 +623,10 @@ async function runLocalUatOwnerFlow(inputOptions = {}) {
     options.log('PASS owner-flow smoke command completed');
 
     return {
+      candidatePortsTried,
+      fallbackAttempted,
       ok: true,
+      selectedPort,
       smokeExitCode: smoke.code,
       startedServer: true,
       waitedMs: readiness.waitedMs,

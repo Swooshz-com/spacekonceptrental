@@ -127,10 +127,12 @@ commands such as `supabase login`, `supabase link`, `supabase db push`, or
 See `docs/SUPABASE-LOCAL-RLS-TESTS.md` for the local RLS test runbook.
 
 `npm run local-uat:owner-flow` starts or checks the local website server, waits
-with a bounded timeout, then runs `npm run smoke:owner-flow-local`. Use
-`npm run smoke:owner-flow-local` when the local server is already running and
-you only want the smoke check. Both commands skip live quote submission by
-default so real email is not sent. See
+with a bounded timeout, then runs `npm run smoke:owner-flow-local`. If the
+default local origin is unhealthy, port 3000 appears occupied, and no base URL
+was explicitly configured, it may use a bounded alternate local port without
+killing the external server. Use `npm run smoke:owner-flow-local` when the local
+server is already running and you only want the smoke check. Both commands skip
+live quote submission by default so real email is not sent. See
 `docs/SKR-OWNER-FLOW-LOCAL-UAT-SMOKE.md`.
 
 `npm run test:supabase-seed` is also local-only and Docker-only. It starts a

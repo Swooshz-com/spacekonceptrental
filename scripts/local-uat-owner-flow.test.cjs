@@ -39,6 +39,7 @@ function makeResponse(status) {
 async function runHelper({
   env = {},
   fetchResults = [200],
+  portOpenResults = {},
   platform = 'linux',
   smokeAutoExit = true,
   smokeExit = 0,
@@ -73,6 +74,7 @@ async function runHelper({
       args,
       command,
       cwd: options.cwd,
+      env: options.env,
     });
     children.push(child);
 
@@ -102,6 +104,7 @@ async function runHelper({
     now: () => now,
     platform,
     pollIntervalMs: 25,
+    isPortAvailable: async (port) => portOpenResults[port] ?? true,
     sleep: async (ms) => {
       now += ms;
     },
@@ -138,6 +141,118 @@ test('server already reachable does not start child server and runs smoke comman
   assert.match(output, /PASS local SKR server already reachable/i);
 });
 
+test('explicit base URL unreachable does not try alternate port fallback', async () => {
+  const { output, result, spawned } = await runHelper({
+    env: {
+      SKR_OWNER_FLOW_LOCAL_BASE_URL: 'http://localhost:3999',
+    },
+    fetchResults: [
+      new Error('ECONNREFUSED'),
+      new Error('ECONNREFUSED'),
+      new Error('ECONNREFUSED'),
+      new Error('ECONNREFUSED'),
+      new Error('ECONNREFUSED'),
+    ],
+    portOpenResults: {
+      3001: true,
+    },
+    timeoutMs: 75,
+  });
+
+  assert.equal(result.ok, false);
+  assert.equal(result.fallbackAttempted, false);
+  assert.match(output, /INFO explicit local UAT base URL configured/i);
+  assert.doesNotMatch(output, /alternate local port/i);
+  assert.deepEqual(spawned.map((call) => call.args), [
+    ['run', 'dev', '--', '--port', '3999'],
+  ]);
+});
+
+test('default 3000 unreachable chooses alternate port and starts dev server with PORT', async () => {
+  const { output, result, spawned } = await runHelper({
+    fetchResults: [
+      new Error('ECONNREFUSED'),
+      new Error('ECONNREFUSED'),
+      200,
+    ],
+    portOpenResults: {
+      3000: false,
+      3001: true,
+    },
+  });
+
+  assert.equal(result.ok, true);
+  assert.equal(result.fallbackAttempted, true);
+  assert.equal(result.selectedPort, 3001);
+  assert.match(output, /INFO default local UAT base URL was not reachable/i);
+  assert.match(output, /INFO selected alternate local port 3001/i);
+  assert.equal(spawned[0].cwd, path.join(repoRoot, 'website'));
+  assert.equal(spawned[0].env.PORT, '3001');
+  assert.deepEqual(spawned[0].args, ['run', 'dev', '--', '--port', '3001']);
+});
+
+test('alternate port server becomes reachable and smoke uses alternate base URL', async () => {
+  const { result, spawned } = await runHelper({
+    fetchResults: [
+      new Error('ECONNREFUSED'),
+      new Error('ECONNREFUSED'),
+      200,
+    ],
+    portOpenResults: {
+      3000: false,
+      3001: true,
+    },
+  });
+
+  assert.equal(result.ok, true);
+  assert.equal(spawned[1].env.SKR_OWNER_FLOW_LOCAL_BASE_URL, 'http://localhost:3001');
+});
+
+test('unavailable alternate ports fail clearly without killing external server', async () => {
+  const { children, output, result, spawned } = await runHelper({
+    fetchResults: [new Error('ECONNREFUSED')],
+    portOpenResults: {
+      3000: false,
+      3001: false,
+      3002: false,
+      3003: false,
+      3004: false,
+      3005: false,
+    },
+  });
+
+  assert.equal(result.ok, false);
+  assert.equal(result.fallbackAttempted, true);
+  assert.equal(result.startedServer, false);
+  assert.deepEqual(spawned, []);
+  assert.deepEqual(children, []);
+  assert.match(output, /FAIL no alternate local UAT port was available/i);
+  assert.match(output, /Candidate ports tried: 3001, 3002, 3003, 3004, 3005/i);
+  assert.match(output, /No external server was killed/i);
+});
+
+test('alternate port startup early exit reports fallback context without killing external server', async () => {
+  const { children, output, result, spawned } = await runHelper({
+    earlyDevExit: true,
+    earlyDevStdout: 'Another next dev server is already running.\n',
+    fetchResults: [new Error('ECONNREFUSED'), new Error('ECONNREFUSED')],
+    portOpenResults: {
+      3000: false,
+      3001: true,
+    },
+  });
+
+  assert.equal(result.ok, false);
+  assert.equal(result.fallbackAttempted, true);
+  assert.equal(result.selectedPort, 3001);
+  assert.equal(spawned.length, 1);
+  assert.deepEqual(children[0].killedWith, []);
+  assert.match(output, /FAIL alternate local UAT server on http:\/\/localhost:3001 could not start/i);
+  assert.match(output, /Candidate ports tried: 3001/i);
+  assert.match(output, /no external server was killed/i);
+  assert.match(output, /Another next dev server is already running/i);
+});
+
 test('server initially down starts dev server, waits until reachable, then runs smoke', async () => {
   const { children, output, result, spawned } = await runHelper({
     fetchResults: [
@@ -150,7 +265,7 @@ test('server initially down starts dev server, waits until reachable, then runs 
   assert.equal(result.ok, true);
   assert.equal(result.startedServer, true);
   assert.deepEqual(spawned.map((call) => call.args), [
-    ['run', 'dev'],
+    ['run', 'dev', '--', '--port', '3000'],
     ['run', 'smoke:owner-flow-local'],
   ]);
   assert.deepEqual(children[0].killedWith, ['SIGTERM']);
