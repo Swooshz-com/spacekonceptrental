@@ -877,6 +877,16 @@ function assertNoRuntimeSupabaseUse() {
           /rpc\(["']get_public_homepage_hero["']/,
           `${relativePath} must use the trusted public homepage hero RPC.`,
         );
+        assert.doesNotMatch(
+          content,
+          /from\(["']homepage_hero_content["']\)/,
+          `${relativePath} must not read the homepage hero base table directly.`,
+        );
+        assert.doesNotMatch(
+          content,
+          /updatedBy|updated_by/,
+          `${relativePath} must not carry protected admin hero metadata into public content.`,
+        );
         assertNoMatches(filePath, content, serverBlockedPatterns);
         assertNoMatches(filePath, content, blockedCatalogueTablePatterns);
         return;
@@ -1247,10 +1257,35 @@ check('homepage hero content exposes enabled public reads and protected admin wr
     scalarAs(
       'anon',
       null,
+      `
+        select concat(
+          to_jsonb(hero) ? 'workspace_id',
+          ':',
+          to_jsonb(hero) ? 'updated_by'
+        )
+        from public.get_public_homepage_hero('${ids.workspaceA}') as hero
+      `,
+    ),
+    'f:f',
+    'anonymous public RPC should not return workspace/admin metadata',
+  );
+  assertCsv(
+    scalarAs(
+      'anon',
+      null,
       `select count(*)::text from public.homepage_hero_content where workspace_id = '${ids.workspaceA}'`,
     ),
+    '0',
+    'anonymous direct table reads should not return homepage hero rows',
+  );
+  assertCsv(
+    scalarAs(
+      'anon',
+      null,
+      `select count(*)::text from public.get_public_homepage_hero('${ids.workspaceA}')`,
+    ),
     '1',
-    'anonymous direct table reads should only see enabled hero content',
+    'anonymous public RPC should remain the only public read surface',
   );
   assertCsv(
     scalarAs(
@@ -1380,6 +1415,35 @@ check('homepage hero content exposes enabled public reads and protected admin wr
         '/catalogue',
         'https://cdn.example.test/direct.jpg',
         'Direct write hero'
+      )
+    `,
+    /permission denied/i,
+  );
+  statementFailsAs(
+    'anon',
+    null,
+    `
+      insert into public.homepage_hero_content (
+        workspace_id,
+        headline,
+        body,
+        primary_cta_label,
+        primary_cta_href,
+        secondary_cta_label,
+        secondary_cta_href,
+        image_url,
+        image_alt
+      )
+      values (
+        '${ids.workspaceA}',
+        'Anonymous direct write',
+        'Anonymous direct writes should fail.',
+        'Request Quote',
+        '/quote',
+        'Browse Catalogue',
+        '/catalogue',
+        'https://cdn.example.test/anon-direct.jpg',
+        'Anonymous direct write hero'
       )
     `,
     /permission denied/i,

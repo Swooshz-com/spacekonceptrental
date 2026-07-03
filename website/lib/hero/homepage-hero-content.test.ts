@@ -22,8 +22,8 @@ describe("homepage hero content contract", () => {
     });
   });
 
-  it("maps enabled database rows into managed public hero content", () => {
-    const hero = mapHomepageHeroRow({
+  it("maps enabled database rows into public hero content without admin metadata", () => {
+    const publicRpcRow = {
       eyebrow: "Owner managed",
       headline: "Stage the first impression",
       body: "Updated protected-admin homepage story.",
@@ -35,8 +35,11 @@ describe("homepage hero content contract", () => {
       image_alt: "Owner selected lounge hero",
       is_enabled: true,
       updated_at: "2026-07-03T09:00:00.000Z",
+      workspace_id: "11111111-1111-4111-8111-111111111111",
       updated_by: "22222222-2222-4222-8222-222222222222"
-    });
+    };
+
+    const hero = mapHomepageHeroRow(publicRpcRow);
 
     expect(hero).toEqual({
       source: "supabase",
@@ -49,10 +52,11 @@ describe("homepage hero content contract", () => {
       secondaryCtaHref: "/catalogue",
       imageUrl: "https://cdn.example.test/hero.jpg",
       imageAlt: "Owner selected lounge hero",
-      isEnabled: true,
-      updatedAt: "2026-07-03T09:00:00.000Z",
-      updatedBy: "22222222-2222-4222-8222-222222222222"
+      isEnabled: true
     });
+    expect(hero).not.toHaveProperty("updatedAt");
+    expect(hero).not.toHaveProperty("updatedBy");
+    expect(hero).not.toHaveProperty("workspaceId");
   });
 
   it("keeps disabled managed rows editable for protected admin only", () => {
@@ -67,7 +71,8 @@ describe("homepage hero content contract", () => {
       image_url: "https://cdn.example.test/draft-hero.jpg",
       image_alt: "Draft owner selected hero",
       is_enabled: false,
-      updated_at: "2026-07-03T10:00:00.000Z"
+      updated_at: "2026-07-03T10:00:00.000Z",
+      updated_by: "22222222-2222-4222-8222-222222222222"
     };
 
     expect(mapHomepageHeroRow(row)).toBeNull();
@@ -75,7 +80,9 @@ describe("homepage hero content contract", () => {
       source: "supabase",
       headline: "Draft homepage story",
       imageUrl: "https://cdn.example.test/draft-hero.jpg",
-      isEnabled: false
+      isEnabled: false,
+      updatedAt: "2026-07-03T10:00:00.000Z",
+      updatedBy: "22222222-2222-4222-8222-222222222222"
     });
   });
 

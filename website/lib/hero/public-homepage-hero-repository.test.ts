@@ -50,9 +50,9 @@ describe("public homepage hero repository", () => {
       secondary_cta_href: "/catalogue",
       image_url: "https://cdn.example.test/hero.jpg",
       image_alt: "Owner selected lounge hero",
-      is_enabled: true,
       updated_at: "2026-07-03T09:00:00.000Z",
-      updated_by: null
+      updated_by: "22222222-2222-4222-8222-222222222222",
+      workspace_id: workspaceId
     });
 
     const hero = await getPublicHomepageHeroContent({
@@ -75,6 +75,9 @@ describe("public homepage hero repository", () => {
       headline: "Stage the first impression",
       imageUrl: "https://cdn.example.test/hero.jpg"
     });
+    expect(hero).not.toHaveProperty("updatedAt");
+    expect(hero).not.toHaveProperty("updatedBy");
+    expect(hero).not.toHaveProperty("workspaceId");
   });
 
   it("keeps the static public hero when no enabled managed content exists", async () => {
@@ -101,8 +104,7 @@ describe("public homepage hero repository", () => {
         secondary_cta_label: "Browse Catalogue",
         secondary_cta_href: "/catalogue",
         image_url: "https://cdn.example.test/hero.jpg",
-        image_alt: "Owner selected lounge hero",
-        is_enabled: true
+        image_alt: "Owner selected lounge hero"
       }
     ]);
 

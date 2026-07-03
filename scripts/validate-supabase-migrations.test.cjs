@@ -1746,11 +1746,15 @@ test('real migrations add workspace-scoped homepage hero content with protected 
   );
   assert.match(
     sql,
-    /grant select \( workspace_id, eyebrow, headline, body, primary_cta_label, primary_cta_href, secondary_cta_label, secondary_cta_href, image_url, image_alt, is_enabled, updated_at, updated_by \) on public\.homepage_hero_content to anon, authenticated;/,
+    /grant select \( workspace_id, eyebrow, headline, body, primary_cta_label, primary_cta_href, secondary_cta_label, secondary_cta_href, image_url, image_alt, is_enabled, updated_at, updated_by \) on public\.homepage_hero_content to authenticated;/,
   );
-  assert.match(
+  assert.doesNotMatch(
     sql,
-    /create policy homepage_hero_content_public_enabled_select on public\.homepage_hero_content for select to anon, authenticated using \(is_enabled = true\);/,
+    /grant select [^;]* on public\.homepage_hero_content to anon\b/,
+  );
+  assert.doesNotMatch(
+    sql,
+    /create policy [^;]* on public\.homepage_hero_content for select to anon\b/,
   );
   assert.match(
     sql,
@@ -1760,8 +1764,19 @@ test('real migrations add workspace-scoped homepage hero content with protected 
     sql,
     /create or replace function public\.get_public_homepage_hero\( expected_workspace_id uuid \)/,
   );
-  assert.match(sql, /security invoker/);
-  assert.match(sql, /where h\.workspace_id = expected_workspace_id and h\.is_enabled = true/);
+  const publicHeroRpcSql =
+    sql.match(
+      /create or replace function public\.get_public_homepage_hero\( expected_workspace_id uuid \).*?\$\$;/,
+    )?.[0] ?? '';
+  const publicHeroReturnColumns =
+    publicHeroRpcSql.match(/returns table \( (?<columns>.*?) \) language sql/)?.groups
+      ?.columns ?? '';
+  assert.match(publicHeroRpcSql, /returns table \( eyebrow text, headline text, body text, primary_cta_label text, primary_cta_href text, secondary_cta_label text, secondary_cta_href text, image_url text, image_alt text \)/);
+  assert.match(publicHeroRpcSql, /security definer/);
+  assert.match(publicHeroRpcSql, /set search_path = public/);
+  assert.match(publicHeroRpcSql, /where h\.workspace_id = expected_workspace_id and h\.is_enabled = true/);
+  assert.doesNotMatch(publicHeroReturnColumns, /\bworkspace_id\b|\bupdated_by\b|\bupdated_at\b|\bis_enabled\b/);
+  assert.doesNotMatch(publicHeroRpcSql, /\bupdated_by\b/);
   assert.match(
     sql,
     /grant execute on function public\.get_public_homepage_hero\(uuid\) to anon, authenticated;/,

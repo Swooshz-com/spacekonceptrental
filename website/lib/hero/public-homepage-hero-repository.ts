@@ -7,7 +7,7 @@ import {
   DEFAULT_HOMEPAGE_HERO_CONTENT,
   mapHomepageHeroRow,
   type HomepageHeroContent,
-  type HomepageHeroRow
+  type PublicHomepageHeroRow
 } from "./homepage-hero-content";
 
 type QueryResult = {
@@ -50,7 +50,7 @@ function getSupabase(options: PublicHomepageHeroOptions) {
   );
 }
 
-function isRecord(value: unknown): value is HomepageHeroRow {
+function isRecord(value: unknown): value is PublicHomepageHeroRow {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
 

@@ -106,13 +106,7 @@ grant select (
   is_enabled,
   updated_at,
   updated_by
-) on public.homepage_hero_content to anon, authenticated;
-
-create policy homepage_hero_content_public_enabled_select
-  on public.homepage_hero_content
-  for select
-  to anon, authenticated
-  using (is_enabled = true);
+) on public.homepage_hero_content to authenticated;
 
 create policy homepage_hero_content_admin_select
   on public.homepage_hero_content
@@ -132,14 +126,11 @@ returns table (
   secondary_cta_label text,
   secondary_cta_href text,
   image_url text,
-  image_alt text,
-  is_enabled boolean,
-  updated_at timestamptz,
-  updated_by uuid
+  image_alt text
 )
 language sql
 stable
-security invoker
+security definer
 set search_path = public
 as $$
   select
@@ -151,10 +142,7 @@ as $$
     h.secondary_cta_label,
     h.secondary_cta_href,
     h.image_url,
-    h.image_alt,
-    h.is_enabled,
-    h.updated_at,
-    h.updated_by
+    h.image_alt
   from public.homepage_hero_content h
   where h.workspace_id = expected_workspace_id
     and h.is_enabled = true

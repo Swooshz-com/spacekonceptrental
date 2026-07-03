@@ -4,7 +4,7 @@ import { createSessionBoundSupabaseAdminReadClient } from "../admin/authorizatio
 import { getAdminTrustedWorkspaceId } from "../server-runtime-config";
 import {
   mapAdminHomepageHeroRow,
-  type HomepageHeroContent,
+  type AdminHomepageHeroContent,
   type HomepageHeroRow
 } from "./homepage-hero-content";
 
@@ -26,7 +26,7 @@ type AdminHomepageHeroReadClient = {
 export type AdminHomepageHeroReadResult =
   | {
       status: "loaded";
-      hero: HomepageHeroContent | null;
+      hero: AdminHomepageHeroContent | null;
     }
   | {
       status: "unavailable";

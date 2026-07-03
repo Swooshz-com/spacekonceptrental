@@ -12,14 +12,14 @@ export type HomepageHeroContent = {
   imageUrl: string;
   imageAlt: string;
   isEnabled: boolean;
+};
+
+export type AdminHomepageHeroContent = HomepageHeroContent & {
   updatedAt?: string;
   updatedBy?: string;
 };
 
-export type HomepageHeroContentInput = Omit<
-  HomepageHeroContent,
-  "source" | "updatedAt" | "updatedBy"
->;
+export type HomepageHeroContentInput = Omit<HomepageHeroContent, "source">;
 
 export type HomepageHeroValidationError =
   | "eyebrow_invalid"
@@ -57,6 +57,11 @@ export type HomepageHeroRow = {
   updated_at?: unknown;
   updated_by?: unknown;
 };
+
+export type PublicHomepageHeroRow = Omit<
+  HomepageHeroRow,
+  "updated_at" | "updated_by"
+>;
 
 export const DEFAULT_HOMEPAGE_HERO_CONTENT: HomepageHeroContent = {
   source: "default",
@@ -196,18 +201,38 @@ export function validateHomepageHeroContentInput(
 }
 
 export function mapHomepageHeroRow(
-  row: HomepageHeroRow | null | undefined
+  row: PublicHomepageHeroRow | null | undefined
 ): HomepageHeroContent | null {
-  if (!row || row.is_enabled !== true) {
+  if (!row || row.is_enabled === false) {
     return null;
   }
 
-  return mapAdminHomepageHeroRow(row);
+  const validation = validateHomepageHeroContentInput({
+    eyebrow: rowText(row, "eyebrow") ?? "",
+    headline: rowText(row, "headline") ?? "",
+    body: rowText(row, "body") ?? "",
+    primaryCtaLabel: rowText(row, "primary_cta_label") ?? "",
+    primaryCtaHref: rowText(row, "primary_cta_href") ?? "",
+    secondaryCtaLabel: rowText(row, "secondary_cta_label") ?? "",
+    secondaryCtaHref: rowText(row, "secondary_cta_href") ?? "",
+    imageUrl: rowText(row, "image_url") ?? "",
+    imageAlt: rowText(row, "image_alt") ?? "",
+    isEnabled: true
+  });
+
+  if (!validation.ok) {
+    return null;
+  }
+
+  return {
+    source: "supabase",
+    ...validation.content
+  };
 }
 
 export function mapAdminHomepageHeroRow(
   row: HomepageHeroRow | null | undefined
-): HomepageHeroContent | null {
+): AdminHomepageHeroContent | null {
   if (!row || typeof row.is_enabled !== "boolean") {
     return null;
   }
