@@ -535,18 +535,8 @@ export function ListingManagementPanel({
                 Published: {listingStatusCount(products, "published")}. Draft: {listingStatusCount(products, "draft")}. Archived: {listingStatusCount(products, "archived")}.
               </p>
               <p style={{ margin: 0 }}>
-                {readyListings} public-ready listings. {listingsNeedingAttention} needing public-ready listing review.
-              </p>
-              <p style={{ margin: 0 }}>
-                <strong>{readyListings}</strong> public-ready listings. <strong>{listingsNeedingAttention}</strong>{" "}
+                {readyListings} public-ready listings; {listingsNeedingAttention}{" "}
                 needing public-ready listing review.
-              </p>
-              <p style={{ margin: 0 }}>
-                {publishedListingsNeedingFixes.length}{" "}
-                {publishedListingsNeedingFixes.length === 1
-                  ? "published listing needs"
-                  : "published listings need"}{" "}
-                public-ready listing fixes before visitor browsing review.
               </p>
               <p style={{ margin: 0, color: publishedListingsNeedingFixes.length > 0 ? '#ef4444' : 'inherit' }}>
                 <strong>{publishedListingsNeedingFixes.length}</strong>{" "}
@@ -792,7 +782,7 @@ export function ListingManagementPanel({
                               aria-label={`Manage images ${product.name}`}
                               className="premium-button premium-button--secondary"
                               style={{ padding: '6px 12px', fontSize: '12px', height: 'auto' }}
-                              href="/admin/media#update-listing-image-metadata"
+                              href="/admin/catalogue#update-listing-image-metadata"
                             >
                               Manage images
                             </a>
@@ -800,7 +790,7 @@ export function ListingManagementPanel({
                               aria-label="Return to catalogue admin"
                               className="premium-button premium-button--secondary"
                               style={{ padding: '6px 12px', fontSize: '12px', height: 'auto' }}
-                              href="/admin/listings"
+                              href="/admin/catalogue"
                             >
                               Return to top
                             </a>
@@ -995,35 +985,54 @@ export function ListingManagementPanel({
                         <button className="premium-button premium-button--primary" type="submit" style={{ flex: '1 1 auto' }}>
                           Save listing metadata
                         </button>
-                        <button
-                          aria-label={
-                            product.status === "published"
-                              ? `Set ${product.name} to draft visibility`
-                              : `Set ${product.name} to public visibility`
-                          }
-                          className="premium-button premium-button--secondary"
-                          onClick={() =>
-                            void handleStatusChange(
-                              product,
-                              product.status === "published" ? "draft" : "published",
-                            )
-                          }
-                          type="button"
-                          style={{ flex: '1 1 auto' }}
+                        <section
+                          aria-label={`Visibility and archive actions for ${product.name}`}
+                          style={{
+                            border: '1px solid rgba(155, 104, 78, 0.32)',
+                            borderRadius: 'var(--radius-md)',
+                            display: 'grid',
+                            flex: '1 1 100%',
+                            gap: '12px',
+                            padding: '14px',
+                            background: 'rgba(155, 104, 78, 0.08)'
+                          }}
                         >
-                          {product.status === "published"
-                            ? `Set to draft`
-                            : `Set to published`}
-                        </button>
-                        <button
-                          aria-label={`Archive listing ${product.name}`}
-                          className="premium-button premium-button--secondary"
-                          onClick={() => void handleArchive(product)}
-                          type="button"
-                          style={{ flex: '1 1 auto' }}
-                        >
-                          Archive listing
-                        </button>
+                          <p style={{ color: 'var(--text)', fontSize: '13px', lineHeight: 1.5, margin: 0 }}>
+                            Visibility and archive actions change public browsing.
+                            Use them after the routine metadata save has been reviewed.
+                          </p>
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
+                            <button
+                              aria-label={
+                                product.status === "published"
+                                  ? `Set ${product.name} to draft visibility`
+                                  : `Set ${product.name} to public visibility`
+                              }
+                              className="premium-button premium-button--secondary"
+                              onClick={() =>
+                                void handleStatusChange(
+                                  product,
+                                  product.status === "published" ? "draft" : "published",
+                                )
+                              }
+                              type="button"
+                              style={{ flex: '1 1 auto' }}
+                            >
+                              {product.status === "published"
+                                ? `Set to draft`
+                                : `Set to published`}
+                            </button>
+                            <button
+                              aria-label={`Archive listing ${product.name}`}
+                              className="premium-button premium-button--secondary"
+                              onClick={() => void handleArchive(product)}
+                              type="button"
+                              style={{ flex: '1 1 auto' }}
+                            >
+                              Archive listing
+                            </button>
+                          </div>
+                        </section>
                       </div>
                     </form>
                   </div>

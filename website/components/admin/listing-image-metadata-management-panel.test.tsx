@@ -175,7 +175,10 @@ describe("listing image metadata management panel", () => {
     ).toHaveAttribute("href", "/listings/modular-lounge");
     expect(
       productCard.getByRole("link", { name: /edit listing modular lounge/i })
-    ).toHaveAttribute("href", "/admin/listings#listing-form-22222222-2222-4222-8222-222222222222");
+    ).toHaveAttribute(
+      "href",
+      "/admin/catalogue#listing-form-22222222-2222-4222-8222-222222222222"
+    );
     expect(
       productCard.getByRole("link", { name: /manage images modular lounge/i })
     ).toHaveAttribute("href", "#update-listing-image-metadata");
@@ -184,6 +187,24 @@ describe("listing image metadata management panel", () => {
     expect(draftCard.getAllByText(/missing primary public image/i).length).toBeGreaterThan(0);
     expect(draftCard.getByText(/missing alt text/i)).toBeInTheDocument();
     expect(draftCard.getByText(/image exists while listing is draft/i)).toBeInTheDocument();
+  });
+
+  it("keeps media helper actions on Catalogue anchors instead of removed admin routes", () => {
+    render(
+      <ListingImageMetadataManagementPanel
+        images={[image]}
+        products={[product]}
+      />
+    );
+
+    expect(
+      screen.getByRole("link", { name: /edit listing modular lounge/i })
+    ).toHaveAttribute(
+      "href",
+      "/admin/catalogue#listing-form-22222222-2222-4222-8222-222222222222"
+    );
+    expect(readSource()).not.toContain("/admin/listings");
+    expect(readSource()).not.toContain("/admin/media");
   });
 
   it("requests a productImage CSRF proof and creates image metadata with approved fields only", async () => {
@@ -407,6 +428,8 @@ describe("listing image metadata management panel", () => {
     expect(source).not.toMatch(/\bdelete\s*\(/i);
     expect(source).not.toContain('method: "DELETE"');
     expect(source).not.toMatch(/upload|createBucket|getPublicUrl|\.storage\b/i);
+    expect(source).not.toContain("/admin/listings");
+    expect(source).not.toContain("/admin/media");
     expect(source).not.toMatch(/cart|checkout|payment|customer account|stock reservation|order fulfilment|online ordering/i);
   });
 });

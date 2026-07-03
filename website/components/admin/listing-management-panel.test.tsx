@@ -166,7 +166,7 @@ describe("listing management panel", () => {
     ).toHaveAttribute("href", "#listing-form-22222222-2222-4222-8222-222222222222");
     expect(
       card.getByRole("link", { name: /return to catalogue admin/i })
-    ).toHaveAttribute("href", "/admin/listings");
+    ).toHaveAttribute("href", "/admin/catalogue");
   });
 
   it("summarises missing public-ready content and the next admin action for weak listings", () => {
@@ -193,7 +193,30 @@ describe("listing management panel", () => {
     ).toBeInTheDocument();
     expect(
       card.getByRole("link", { name: /manage images draft banquet chair/i })
-    ).toHaveAttribute("href", "/admin/media#update-listing-image-metadata");
+    ).toHaveAttribute(
+      "href",
+      "/admin/catalogue#update-listing-image-metadata"
+    );
+  });
+
+  it("keeps Catalogue helper actions on six-page admin anchors only", () => {
+    render(
+      <ListingManagementPanel categories={[category]} products={[listing]} />
+    );
+
+    const body = document.body.textContent ?? "";
+
+    expect(
+      screen.getByRole("link", { name: /return to catalogue admin/i })
+    ).toHaveAttribute("href", "/admin/catalogue");
+    expect(
+      screen.getByRole("link", { name: /manage images modular lounge/i })
+    ).toHaveAttribute(
+      "href",
+      "/admin/catalogue#update-listing-image-metadata"
+    );
+    expect(body).not.toContain("/admin/media");
+    expect(body).not.toContain("/admin/listings");
   });
 
   it("separates active image coverage from primary alt-text gaps for published listings", () => {
@@ -237,9 +260,36 @@ describe("listing management panel", () => {
     expect(
       screen.getByText(/This summary is based on existing listing metadata/i)
     ).toBeInTheDocument();
+    expect(
+      (document.body.textContent ?? "").match(/public-ready listings/g) ?? []
+    ).toHaveLength(1);
     expect(document.body.textContent).not.toMatch(
       /readiness|phase|governance|provider handoff|CRM handoff|sync readiness|workflow readiness|future sync|future integration|provider sync|automation handoff|owner approval|evidence|deployment/i
     );
+  });
+
+  it("separates routine saves from visibility and archive actions", () => {
+    render(
+      <ListingManagementPanel categories={[category]} products={[listing]} />
+    );
+
+    expect(
+      screen.getByRole("region", {
+        name: /visibility and archive actions for modular lounge/i
+      })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/visibility and archive actions change public browsing/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /save listing metadata/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /set modular lounge to public visibility/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /archive listing modular lounge/i })
+    ).toBeInTheDocument();
   });
 
   it("requests a product CSRF proof and creates listings through the product route with approved payload fields only", async () => {
@@ -513,6 +563,8 @@ describe("listing management panel", () => {
     expect(source).not.toMatch(/\bdelete\s*\(/i);
     expect(source).not.toContain('method: "DELETE"');
     expect(source).not.toMatch(/upload|storageBucket|storagePath|Storage/i);
+    expect(source).not.toContain("/admin/media");
+    expect(source).not.toContain("/admin/listings");
     expect(source).not.toMatch(/cart|checkout|payment|customer account|stock reservation|order fulfilment|online ordering/i);
   });
 });
