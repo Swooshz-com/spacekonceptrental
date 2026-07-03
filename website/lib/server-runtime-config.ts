@@ -13,7 +13,11 @@ export const serverRuntimeEnvNames = [
   "N8N_CHAT_WEBHOOK_URL",
   "N8N_CHAT_WEBHOOK_TIMEOUT_MS",
   "CHAT_TRUSTED_CLIENT_IP_HEADER",
-  "QUOTE_TRUSTED_CLIENT_IP_HEADER"
+  "QUOTE_TRUSTED_CLIENT_IP_HEADER",
+  "QUOTE_ENQUIRY_EMAIL_PROVIDER",
+  "QUOTE_ENQUIRY_EMAIL_RECIPIENT",
+  "QUOTE_ENQUIRY_EMAIL_FROM",
+  "RESEND_API_KEY"
 ] as const;
 
 export type ServerRuntimeEnvName = (typeof serverRuntimeEnvNames)[number];

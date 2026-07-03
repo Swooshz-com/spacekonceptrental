@@ -2,6 +2,11 @@ import "server-only";
 
 import { logApplicationError } from "../../../lib/application-error-logging";
 import { getTrustedClientIpHeader as getConfiguredTrustedClientIpHeader } from "../../../lib/server-runtime-config";
+import {
+  sendQuoteEnquiryEmailHandoff,
+  type QuoteEmailHandoffInput,
+  type QuoteEmailHandoffResult
+} from "../../../lib/quote/email-handoff";
 import { createQuoteRequest } from "../../../lib/quote/quote-repository";
 import type {
   QuotePersistenceResult,
@@ -12,6 +17,9 @@ import { validateQuoteSubmission } from "../../../lib/quote/validation";
 type QuoteRepository = (
   quote: QuoteSubmission
 ) => Promise<QuotePersistenceResult>;
+type QuoteEmailHandoff = (
+  input: QuoteEmailHandoffInput
+) => Promise<QuoteEmailHandoffResult>;
 
 type BodyReadResult =
   | { ok: true; payload: unknown }
@@ -105,6 +113,28 @@ function persistenceError(requestId: string, request: Request) {
     {
       error: {
         code: "QUOTE_PERSISTENCE_UNAVAILABLE",
+        message: FALLBACK_MESSAGE,
+        reference: requestId
+      },
+      requestId
+    },
+    { status: 503 }
+  );
+}
+
+function emailHandoffError(requestId: string, request: Request) {
+  logApplicationError({
+    category: "QUOTE_EMAIL_HANDOFF_UNAVAILABLE",
+    reference: requestId,
+    request,
+    route: "POST /api/quote",
+    statusCode: 503
+  });
+
+  return Response.json(
+    {
+      error: {
+        code: "QUOTE_EMAIL_HANDOFF_UNAVAILABLE",
         message: FALLBACK_MESSAGE,
         reference: requestId
       },
@@ -367,7 +397,8 @@ export function resetQuoteRouteStateForTests() {
 
 export async function handleQuotePost(
   request: Request,
-  repository: QuoteRepository = createQuoteRequest
+  repository: QuoteRepository = createQuoteRequest,
+  emailHandoff: QuoteEmailHandoff = sendQuoteEnquiryEmailHandoff
 ): Promise<Response> {
   const requestId = createRequestId();
   const bodyRead = await parseBoundedJsonBody(request, requestId);
@@ -388,25 +419,43 @@ export async function handleQuotePost(
     return rateLimitError(rateLimit, requestId);
   }
 
+  let result: QuotePersistenceResult;
+
   try {
-    const result = await repository(validation.value);
-
-    if (!result.ok) {
-      return persistenceError(requestId, request);
-    }
-
-    return Response.json(
-      {
-        status: "received",
-        quoteRequestId: result.quoteRequestId,
-        publicReference: result.publicReference,
-        requestId
-      },
-      { status: 201 }
-    );
+    result = await repository(validation.value);
   } catch {
     return persistenceError(requestId, request);
   }
+
+  if (!result.ok) {
+    return persistenceError(requestId, request);
+  }
+
+  try {
+    const deliveryResult = await emailHandoff({
+      quote: validation.value,
+      quoteRequestId: result.quoteRequestId,
+      publicReference: result.publicReference,
+      requestId,
+      request
+    });
+
+    if (!deliveryResult.ok) {
+      return emailHandoffError(requestId, request);
+    }
+  } catch {
+    return emailHandoffError(requestId, request);
+  }
+
+  return Response.json(
+    {
+      status: "received",
+      quoteRequestId: result.quoteRequestId,
+      publicReference: result.publicReference,
+      requestId
+    },
+    { status: 201 }
+  );
 }
 
 export async function POST(request: Request) {

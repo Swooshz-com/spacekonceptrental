@@ -1,3 +1,29 @@
+## Quote Enquiry Email Handoff Delivery Log Foundation
+
+References: `docs/architecture/QUOTE-ENQUIRY-EMAIL-HANDOFF-DELIVERY-LOG-FOUNDATION.md`, `website/lib/quote/email-handoff.ts`, `website/lib/quote/quote-email-delivery-log-repository.ts`, `website/lib/quote/admin-read/admin-quote-email-delivery-log.ts`, `website/app/api/quote/route.ts`, `website/app/admin/enquiry-email/page.tsx`, `website/app/admin/delivery-log/page.tsx`, and `supabase/migrations/20260703010000_quote_email_delivery_log_foundation.sql`.
+
+Public quote submissions now require the server-side enquiry email handoff to
+be configured and delivered after Supabase quote persistence. The handoff uses
+the environment-managed Resend HTTP adapter only when
+`QUOTE_ENQUIRY_EMAIL_RECIPIENT`, `QUOTE_ENQUIRY_EMAIL_FROM`, and
+`RESEND_API_KEY` are present, with `QUOTE_ENQUIRY_EMAIL_PROVIDER` defaulting to
+`resend`. The failure response is generic and request-referenced.
+
+The protected admin Enquiry Email page shows environment-managed provider and
+recipient status only. The protected Delivery Log page shows bounded delivery
+metadata from `quote_email_delivery_log`. The log is append-only technical
+metadata and stores a redacted recipient, provider/status, provider message id
+or safe error code, and request reference only. It does not store full customer
+messages, requested item detail, full email bodies, raw provider payloads,
+headers, cookies, tokens, secrets, or provider API responses.
+
+Implementation firewall: no customer confirmation emails, public quote
+tracking, custom mailbox/thread tracking, CRM replacement, HubSpot sync,
+n8n runtime/workflow changes, Google Workspace SMTP integration, retries,
+bounces, webhooks, schedulers, background jobs, browser Supabase, service-role
+browser exposure, deployment config, ecommerce, checkout, payment, order,
+booking, reservation, fulfilment, or stock-reservation flow is implemented.
+
 ## Protected Admin HubSpot Sync Dry-Run Contract Foundation
 
 References: `docs/architecture/PROTECTED-ADMIN-HUBSPOT-SYNC-DRY-RUN-CONTRACT-FOUNDATION.md`, `website/lib/quote/admin-read/admin-quote-request-hubspot-sync-dry-run-contract.ts`, `website/lib/quote/admin-read/admin-quote-request-hubspot-sync-dry-run-contract-route.ts`, `website/app/api/admin/quote-requests/crm-handoff-packet/hubspot-sync-dry-run-contract/route.ts`, `website/components/admin/quote-request-inbox-panel.tsx`, and `scripts/validate-protected-admin-hubspot-sync-dry-run-contract-foundation.cjs`.

@@ -5,7 +5,11 @@ const envKeys = [
   "SUPABASE_URL",
   "SUPABASE_ANON_KEY",
   "QUOTE_WORKSPACE_ID",
-  "QUOTE_TRUSTED_CLIENT_IP_HEADER"
+  "QUOTE_TRUSTED_CLIENT_IP_HEADER",
+  "QUOTE_ENQUIRY_EMAIL_PROVIDER",
+  "QUOTE_ENQUIRY_EMAIL_RECIPIENT",
+  "QUOTE_ENQUIRY_EMAIL_FROM",
+  "RESEND_API_KEY"
 ] as const;
 const originalEnv = new Map(
   envKeys.map((key) => [key, process.env[key]])
@@ -59,6 +63,22 @@ function restoreEnv() {
   }
 }
 
+function successfulEmailHandoff() {
+  return vi.fn(async () => ({
+    ok: true as const,
+    status: "sent" as const,
+    provider: "resend" as const,
+    providerMessageId: "resend-message-1"
+  }));
+}
+
+function handleQuotePostWithEmail(
+  request: Request,
+  repository: Parameters<typeof handleQuotePost>[1]
+) {
+  return handleQuotePost(request, repository, successfulEmailHandoff());
+}
+
 describe("POST /api/quote", () => {
   afterEach(() => {
     restoreEnv();
@@ -73,7 +93,18 @@ describe("POST /api/quote", () => {
       publicReference: "QR-20260527-ABC12345"
     }));
 
-    const response = await handleQuotePost(postJson(validPayload), repository);
+    const emailHandoff = vi.fn(async () => ({
+      ok: true as const,
+      status: "sent" as const,
+      provider: "resend" as const,
+      providerMessageId: "resend-message-1"
+    }));
+
+    const response = await handleQuotePost(
+      postJson(validPayload),
+      repository,
+      emailHandoff
+    );
     const body = await response.json();
 
     expect(response.status).toBe(201);
@@ -99,6 +130,140 @@ describe("POST /api/quote", () => {
         }
       ]
     });
+    expect(emailHandoff).toHaveBeenCalledWith(
+      expect.objectContaining({
+        quote: expect.objectContaining({
+          customerName: "Maya Tan",
+          customerEmail: "maya@example.test"
+        }),
+        quoteRequestId: "70000000-0000-4000-8000-000000000001",
+        publicReference: "QR-20260527-ABC12345",
+        requestId: body.requestId,
+        request: expect.any(Request)
+      })
+    );
+  });
+
+  it("fails safely when enquiry email handoff is not configured", async () => {
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const repository = vi.fn(async () => ({
+      ok: true as const,
+      quoteRequestId: "70000000-0000-4000-8000-000000000001",
+      publicReference: "QR-20260527-ABC12345"
+    }));
+    const emailHandoff = vi.fn(async () => ({
+      ok: false as const,
+      status: "not_configured" as const,
+      provider: "resend" as const,
+      code: "email_recipient_not_configured"
+    }));
+
+    const response = await handleQuotePost(
+      postJson(validPayload),
+      repository,
+      emailHandoff
+    );
+    const body = await response.json();
+    const serialized = JSON.stringify(body);
+
+    expect(response.status).toBe(503);
+    expect(body.error).toEqual({
+      code: "QUOTE_EMAIL_HANDOFF_UNAVAILABLE",
+      message: "Quote requests are temporarily unavailable. Please try again later.",
+      reference: body.requestId
+    });
+    expect(repository).toHaveBeenCalledTimes(1);
+    expect(emailHandoff).toHaveBeenCalledTimes(1);
+    expect(errorSpy).toHaveBeenCalledWith(
+      "application_error",
+      expect.objectContaining({
+        category: "QUOTE_EMAIL_HANDOFF_UNAVAILABLE",
+        errorReference: body.requestId,
+        method: "POST",
+        path: "/api/quote",
+        route: "POST /api/quote",
+        statusCode: 503
+      })
+    );
+    expect(serialized).not.toContain("email_recipient_not_configured");
+    expect(serialized).not.toContain("RESEND_API_KEY");
+    expect(serialized).not.toContain("Maya");
+    expect(serialized).not.toContain("example.test");
+    expect(JSON.stringify(errorSpy.mock.calls)).not.toContain("Maya");
+    expect(JSON.stringify(errorSpy.mock.calls)).not.toContain("example.test");
+  });
+
+  it("fails safely when the enquiry email provider fails", async () => {
+    const repository = vi.fn(async () => ({
+      ok: true as const,
+      quoteRequestId: "70000000-0000-4000-8000-000000000001",
+      publicReference: "QR-20260527-ABC12345"
+    }));
+    const emailHandoff = vi.fn(async () => ({
+      ok: false as const,
+      status: "failed" as const,
+      provider: "resend" as const,
+      code: "provider_rejected",
+      unsafeDetails: "401 SECRET raw provider body"
+    }));
+
+    const response = await handleQuotePost(
+      postJson(validPayload),
+      repository,
+      emailHandoff
+    );
+    const body = await response.json();
+    const serialized = JSON.stringify(body);
+
+    expect(response.status).toBe(503);
+    expect(body.error.code).toBe("QUOTE_EMAIL_HANDOFF_UNAVAILABLE");
+    expect(body.error.reference).toBe(body.requestId);
+    expect(serialized).not.toContain("provider_rejected");
+    expect(serialized).not.toContain("SECRET");
+    expect(serialized).not.toContain("raw provider body");
+  });
+
+  it("categorizes unexpected enquiry email handoff exceptions as email failures", async () => {
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const repository = vi.fn(async () => ({
+      ok: true as const,
+      quoteRequestId: "70000000-0000-4000-8000-000000000001",
+      publicReference: "QR-20260527-ABC12345"
+    }));
+    const emailHandoff = vi.fn(async () => {
+      throw new Error("RESEND_API_KEY exploded with raw provider body");
+    });
+
+    const response = await handleQuotePost(
+      postJson(validPayload),
+      repository,
+      emailHandoff
+    );
+    const body = await response.json();
+    const serialized = JSON.stringify(body);
+
+    expect(response.status).toBe(503);
+    expect(body.error).toEqual({
+      code: "QUOTE_EMAIL_HANDOFF_UNAVAILABLE",
+      message: "Quote requests are temporarily unavailable. Please try again later.",
+      reference: body.requestId
+    });
+    expect(repository).toHaveBeenCalledTimes(1);
+    expect(emailHandoff).toHaveBeenCalledTimes(1);
+    expect(errorSpy).toHaveBeenCalledWith(
+      "application_error",
+      expect.objectContaining({
+        category: "QUOTE_EMAIL_HANDOFF_UNAVAILABLE",
+        errorReference: body.requestId,
+        route: "POST /api/quote",
+        statusCode: 503
+      })
+    );
+    expect(JSON.stringify(errorSpy.mock.calls)).not.toContain(
+      "QUOTE_PERSISTENCE_UNAVAILABLE"
+    );
+    expect(serialized).not.toContain("RESEND_API_KEY");
+    expect(serialized).not.toContain("raw provider body");
   });
 
   it("uses a fallback rate-limit bucket when no trusted client IP source is available", async () => {
@@ -111,7 +276,7 @@ describe("POST /api/quote", () => {
     }));
 
     for (let index = 0; index < 5; index += 1) {
-      const response = await handleQuotePost(
+      const response = await handleQuotePostWithEmail(
         postJson(
           {
             ...validPayload,
@@ -125,7 +290,7 @@ describe("POST /api/quote", () => {
       expect(response.status).toBe(201);
     }
 
-    const blocked = await handleQuotePost(
+    const blocked = await handleQuotePostWithEmail(
       postJson(
         {
           ...validPayload,
@@ -156,7 +321,7 @@ describe("POST /api/quote", () => {
     }));
 
     for (let index = 0; index < 5; index += 1) {
-      const response = await handleQuotePost(
+      const response = await handleQuotePostWithEmail(
         postJson(
           {
             ...validPayload,
@@ -171,7 +336,7 @@ describe("POST /api/quote", () => {
     }
 
     for (let index = 0; index < 5; index += 1) {
-      const response = await handleQuotePost(
+      const response = await handleQuotePostWithEmail(
         postJson(
           {
             ...validPayload,
@@ -185,7 +350,7 @@ describe("POST /api/quote", () => {
       expect(response.status).toBe(201);
     }
 
-    const blocked = await handleQuotePost(
+    const blocked = await handleQuotePostWithEmail(
       postJson(
         {
           ...validPayload,
@@ -210,7 +375,7 @@ describe("POST /api/quote", () => {
     }));
 
     for (let index = 0; index < 5; index += 1) {
-      const response = await handleQuotePost(
+      const response = await handleQuotePostWithEmail(
         postJson(
           {
             ...validPayload,
@@ -224,7 +389,7 @@ describe("POST /api/quote", () => {
       expect(response.status).toBe(201);
     }
 
-    const blocked = await handleQuotePost(
+    const blocked = await handleQuotePostWithEmail(
       postJson(
         {
           ...validPayload,
@@ -249,7 +414,7 @@ describe("POST /api/quote", () => {
     }));
 
     for (let index = 0; index < 5; index += 1) {
-      const response = await handleQuotePost(
+      const response = await handleQuotePostWithEmail(
         postJson(
           {
             ...validPayload,
@@ -263,7 +428,7 @@ describe("POST /api/quote", () => {
       expect(response.status).toBe(201);
     }
 
-    const blocked = await handleQuotePost(
+    const blocked = await handleQuotePostWithEmail(
       postJson(
         {
           ...validPayload,
@@ -292,7 +457,7 @@ describe("POST /api/quote", () => {
     };
 
     for (let index = 0; index < 5; index += 1) {
-      const response = await handleQuotePost(
+      const response = await handleQuotePostWithEmail(
         postJson(
           {
             ...validPayload,
@@ -306,7 +471,7 @@ describe("POST /api/quote", () => {
       expect(response.status).toBe(201);
     }
 
-    const blocked = await handleQuotePost(
+    const blocked = await handleQuotePostWithEmail(
       postJson(
         {
           ...validPayload,
@@ -343,7 +508,7 @@ describe("POST /api/quote", () => {
   it("rejects invalid payloads before calling the repository", async () => {
     const repository = vi.fn();
 
-    const response = await handleQuotePost(
+    const response = await handleQuotePostWithEmail(
       postJson({ ...validPayload, customerEmail: "not-an-email" }),
       repository
     );
@@ -365,7 +530,7 @@ describe("POST /api/quote", () => {
       publicReference: "QR-20260527-ABC12345"
     }));
 
-    const response = await handleQuotePost(
+    const response = await handleQuotePostWithEmail(
       postJson({
         ...validPayload,
         sourcePath: "/quote?listing=modular-lounge-set",
@@ -384,7 +549,7 @@ describe("POST /api/quote", () => {
       })
     );
 
-    const override = await handleQuotePost(
+    const override = await handleQuotePostWithEmail(
       postJson({
         ...validPayload,
         crm_provider: "hubspot",
@@ -405,11 +570,11 @@ describe("POST /api/quote", () => {
   it("enforces JSON content type and bounded body size", async () => {
     const repository = vi.fn();
 
-    const wrongType = await handleQuotePost(
+    const wrongType = await handleQuotePostWithEmail(
       postRaw(JSON.stringify(validPayload), { "content-type": "text/plain" }),
       repository
     );
-    const oversized = await handleQuotePost(
+    const oversized = await handleQuotePostWithEmail(
       postJson({
         ...validPayload,
         venue: "x".repeat(20_000)
@@ -432,7 +597,7 @@ describe("POST /api/quote", () => {
       missingEnv: ["SUPABASE_URL", "SUPABASE_ANON_KEY"] as const
     }));
 
-    const response = await handleQuotePost(postJson(validPayload), repository);
+    const response = await handleQuotePostWithEmail(postJson(validPayload), repository);
     const body = await response.json();
     const serialized = JSON.stringify(body);
 

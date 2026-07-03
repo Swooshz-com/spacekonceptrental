@@ -13,6 +13,8 @@ import { CategoryManagementPanel } from "../../components/admin/category-managem
 import { ListingImageMetadataManagementPanel } from "../../components/admin/listing-image-metadata-management-panel";
 import { ListingImageUploadPanel } from "../../components/admin/listing-image-upload-panel";
 import { ListingManagementPanel } from "../../components/admin/listing-management-panel";
+import type { QuoteEnquiryEmailConfigStatus } from "../../lib/quote/email-handoff";
+import type { AdminQuoteEmailDeliveryLogReadResult } from "../../lib/quote/admin-read/admin-quote-email-delivery-log";
 import styles from "./protected-admin-shell.module.css";
 
 export type ProtectedAdminShellState =
@@ -45,9 +47,11 @@ export type AdminShellView =
     }
   | {
       kind: "enquiry-email";
+      config?: QuoteEnquiryEmailConfigStatus;
     }
   | {
       kind: "delivery-log";
+      deliveryLog?: AdminQuoteEmailDeliveryLogReadResult;
     };
 
 type ProtectedAdminShellGateState =
@@ -716,26 +720,126 @@ function AdminSetupsOperations({
   );
 }
 
-function AdminEnquiryEmailOperations() {
+function AdminEnquiryEmailStatusOperations({
+  config = {
+    provider: "resend",
+    providerConfigured: false,
+    recipientConfigured: false
+  }
+}: {
+  config?: QuoteEnquiryEmailConfigStatus;
+}) {
+  const providerStatus = config.providerConfigured
+    ? "Provider configured"
+    : "Provider not configured";
+  const recipientStatus = config.recipientConfigured
+    ? "Recipient configured"
+    : "Recipient not configured";
+
   return (
-    <AdminEmptyState
-      eyebrow="Enquiry Email"
-      title="Enquiry email recipient"
-      message="Not configured yet. Quote enquiries will be emailed to the recipient set here once the email handoff is added. SpaceKonceptRental sends enquiries by email and has no internal quote inbox."
-      futureLabel="Set recipient"
-      icon={emptyStateIcons.mail}
-    />
+    <section className={styles.emptyStatePanel} aria-label="Enquiry email recipient">
+      <span className={styles.emptyStateIcon} aria-hidden="true">
+        {emptyStateIcons.mail}
+      </span>
+      <p className="eyebrow">Enquiry Email</p>
+      <h2>Enquiry email recipient</h2>
+      <p>
+        Quote requests are emailed to the configured recipient for manual
+        follow-up. Settings are environment-managed for now, with no internal
+        quote inbox.
+      </p>
+      <dl className={styles.adminRows}>
+        <div>
+          <dt>Provider</dt>
+          <dd>{providerStatus}</dd>
+        </div>
+        <div>
+          <dt>Recipient</dt>
+          <dd>{recipientStatus}</dd>
+        </div>
+        <div>
+          <dt>Provider name</dt>
+          <dd>{config.provider}</dd>
+        </div>
+        {config.recipientEmail ? (
+          <div>
+            <dt>Recipient email</dt>
+            <dd>{config.recipientEmail}</dd>
+          </div>
+        ) : null}
+      </dl>
+    </section>
   );
 }
 
-function AdminDeliveryLogOperations() {
+function AdminDeliveryLogTableOperations({
+  deliveryLog = {
+    status: "loaded",
+    records: []
+  }
+}: {
+  deliveryLog?: AdminQuoteEmailDeliveryLogReadResult;
+}) {
+  if (deliveryLog.status === "unavailable") {
+    return (
+      <AdminUnavailableWorkspace
+        title="Email delivery log"
+        description="Delivery log records are temporarily unavailable. The protected delivery log remains technical-only and will return once existing reads recover."
+      />
+    );
+  }
+
+  if (deliveryLog.records.length === 0) {
+    return (
+      <AdminEmptyState
+        eyebrow="Delivery Log"
+        title="Email delivery log"
+        message="No delivery records yet - enquiry email attempts will appear here once delivery logging exists."
+        icon={emptyStateIcons.log}
+      />
+    );
+  }
+
   return (
-    <AdminEmptyState
-      eyebrow="Delivery Log"
-      title="Email delivery log"
-      message="No delivery records yet. Sent and failed enquiry emails — with provider id and a safe error reference — will be listed here once delivery logging exists."
-      icon={emptyStateIcons.log}
-    />
+    <section className={styles.tablePanel} aria-label="Email delivery log">
+      <div className={styles.tableHeader}>
+        <h3>Email delivery log</h3>
+      </div>
+      <div
+        className={styles.dataTable}
+        role="table"
+        aria-label="Email delivery attempts"
+      >
+        <div role="row">
+          <strong role="columnheader">Attempted</strong>
+          <strong role="columnheader">Reference</strong>
+          <strong role="columnheader">Recipient</strong>
+          <strong role="columnheader">Status</strong>
+          <strong role="columnheader">Provider result</strong>
+        </div>
+        {deliveryLog.records.map((record) => (
+          <div role="row" key={record.id}>
+            <span role="cell">{record.attemptedAt}</span>
+            <span role="cell">{record.publicReference || record.quoteRequestId}</span>
+            <span role="cell">{record.recipientEmail}</span>
+            <span role="cell">
+              <span
+                className={`${styles.statusTag} ${
+                  record.deliveryStatus === "sent"
+                    ? styles.statusTagPublished
+                    : styles.statusTagMuted
+                }`}
+              >
+                {record.deliveryStatus}
+              </span>
+            </span>
+            <span role="cell">
+              {record.providerMessageId ?? record.errorCode ?? "Recorded"}
+            </span>
+          </div>
+        ))}
+      </div>
+    </section>
   );
 }
 
@@ -759,11 +863,11 @@ function AdminOperationsView({
   }
 
   if (view.kind === "enquiry-email") {
-    return <AdminEnquiryEmailOperations />;
+    return <AdminEnquiryEmailStatusOperations config={view.config} />;
   }
 
   if (view.kind === "delivery-log") {
-    return <AdminDeliveryLogOperations />;
+    return <AdminDeliveryLogTableOperations deliveryLog={view.deliveryLog} />;
   }
 
   return <AdminOperationsHome dashboard={state.dashboard} />;
