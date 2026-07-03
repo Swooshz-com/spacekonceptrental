@@ -7,6 +7,7 @@ export type AdminOperation =
   | "product.write"
   | "category.write"
   | "productImage.write"
+  | "hero.write"
   | "quote.write"
   | "membership.manage"
   | "admin.shell.access"
@@ -67,6 +68,7 @@ const roleOperationAccess: Record<AdminRole, Set<AdminOperation>> = {
     "product.write",
     "category.write",
     "productImage.write",
+    "hero.write",
     "quote.write",
     "membership.manage",
     "admin.shell.access",
@@ -78,6 +80,7 @@ const roleOperationAccess: Record<AdminRole, Set<AdminOperation>> = {
     "product.write",
     "category.write",
     "productImage.write",
+    "hero.write",
     "quote.write",
     "admin.shell.access",
     "admin.auth.check",
@@ -91,6 +94,7 @@ const supportedOperations = new Set<AdminOperation>([
   "product.write",
   "category.write",
   "productImage.write",
+  "hero.write",
   "quote.write",
   "membership.manage",
   "admin.shell.access",

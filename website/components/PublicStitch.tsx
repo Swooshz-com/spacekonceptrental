@@ -8,6 +8,10 @@ import exhibitionImage from "../assets/images/event_exhibition.png";
 import heroImage from "../assets/images/hero_homepage.png";
 import type { PublicCatalogue, PublicCatalogueProduct } from "../lib/catalogue/types";
 import {
+  DEFAULT_HOMEPAGE_HERO_CONTENT,
+  type HomepageHeroContent
+} from "../lib/hero/homepage-hero-content";
+import {
   QuoteSelectionBadge,
   QuoteSelectionButton,
   type QuoteSelectionItem
@@ -18,7 +22,6 @@ export const stitchImages = { chairImage, sofaImage, corporateImage, galaImage, 
 
 type DemoProduct = Pick<PublicCatalogueProduct, "id" | "slug" | "name" | "shortDescription" | "description" | "rentalUnit" | "sortOrder" | "categoryId" | "categoryName" | "source"> & { image: StaticImageData | string };
 
-const homeHeroImageUrl = "https://lh3.googleusercontent.com/aida-public/AB6AXuBMIAb-s3hFM7-rX6NqHe8HjNDVJ-VnaBLOlppG1oQtolnRXq__CGiW5eTsqbMyrs8ZVHafSQazQ5CU1RkOP6nNPfgWFrcyJk2H9T4u4S-EWRUUIb6F0l1vSCMvF62-NnKWfJCkrUGT8FV19LAyjqfjRNO9JuxEOz1O9tHH4CltNllxzsgL6FPoXzet1gGu4OBt4B0R5N5rlRfckyw_7uYkQJRpxq0C6VgsDFaKgDqQ_B2F-LEbezRSgIVzDRwO9irCS47fQkgQqMsb";
 const aboutStoryImageUrl = "https://lh3.googleusercontent.com/aida-public/AB6AXuCVRiKMpVS17P0POe4hgYLWJOqLZWHNBK0YGHw-bG4ETu7eWNw2o_RDNmsHhEgmEAfc1nWGlfVYJswBZRdLxn0pVc44lfcblgiNEyuHfr4APLO9MARpxHtb8kRWvMV7otaSDpU_tfoAPYGYbCMtj9DUnC49_anMv7E80cfYVCCK_uheLjc8ZiIEccgZUgjO8H3dhTXXY_cBGYInmYRilsvWVY_akz3twXUoGZotZr6SB4yHpefF4EcE8HJb4gp8pwrC_XR3IlH3bkkl";
 const homeCategoryImageUrls = [
   "https://lh3.googleusercontent.com/aida-public/AB6AXuAImhw0DRyJ87ykPAlGrIm3BrKMKXRpivv23Tdp1whVQ35E6fnIlhsbuUCUHPXF8ZUC8RUE5uHzPFkP7HoIINOXcung6zVL9x0yOMDzgkvKRXamMmq5FY9Rz7azxTqCNgaXA5Nr8c5UmQrlx_O8p_H_MYCWrfAHh4i0EdnLScgtT07-faMuNlDThQ0qur6BKi_mzgL7EjYya9TelJI_6Q2QYz1CnwE5sSNpajaODLu6PjolUwjUMLLGDzI7HBsoEWOc6cqR02wfs4KK",
@@ -171,8 +174,14 @@ function StitchHomeCatalogueAction({ featured = false }: { featured?: boolean })
   return <div className={`stitch-home-section-action${featured ? " stitch-home-featured-action" : ""}`}><StitchButton href="/catalogue" variant="secondary">View Full Catalogue</StitchButton></div>;
 }
 
-export function StitchHomeHero() {
-  return <section className="stitch-home-hero"><div className="stitch-container stitch-home-hero__grid"><div className="stitch-home-hero__copy"><p className="stitch-eyebrow">Furniture and event rentals</p><h1>Furnish Your Vision, Elevate Every Space</h1><p>Browse rental pieces, explore setup directions, and send an enquiry for manual team review.</p><StitchActions><StitchButton href="/quote">Request Quote</StitchButton><StitchButton href="/catalogue" variant="secondary">Browse Catalogue</StitchButton><StitchButton href="/listings" variant="secondary">Explore Setups</StitchButton></StitchActions></div><div className="stitch-home-hero__media"><picture><source media="(max-width: 639px)" srcSet={homeHeroImageUrl} /><img src={homeHeroImageUrl} alt="Styled rental furniture event setting" /></picture></div></div></section>;
+export { DEFAULT_HOMEPAGE_HERO_CONTENT };
+
+export function StitchHomeHero({
+  heroContent = DEFAULT_HOMEPAGE_HERO_CONTENT
+}: {
+  heroContent?: HomepageHeroContent;
+}) {
+  return <section className="stitch-home-hero"><div className="stitch-container stitch-home-hero__grid"><div className="stitch-home-hero__copy"><p className="stitch-eyebrow">{heroContent.eyebrow}</p><h1>{heroContent.headline}</h1><p>{heroContent.body}</p><StitchActions><StitchButton href={heroContent.primaryCtaHref}>{heroContent.primaryCtaLabel}</StitchButton><StitchButton href={heroContent.secondaryCtaHref} variant="secondary">{heroContent.secondaryCtaLabel}</StitchButton><StitchButton href="/listings" variant="secondary">Explore Setups</StitchButton></StitchActions></div><div className="stitch-home-hero__media"><picture><source media="(max-width: 639px)" srcSet={heroContent.imageUrl} /><img src={heroContent.imageUrl} alt={heroContent.imageAlt} /></picture></div></div></section>;
 }
 
 export function StitchAdvantageCards() {

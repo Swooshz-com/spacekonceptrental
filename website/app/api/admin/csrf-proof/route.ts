@@ -90,6 +90,7 @@ const targetOperations = new Set<StateChangingAdminOperation>([
   "product.write",
   "category.write",
   "productImage.write",
+  "hero.write",
   "quote.write",
   "membership.manage"
 ]);

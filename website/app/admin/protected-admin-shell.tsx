@@ -13,6 +13,8 @@ import { CategoryManagementPanel } from "../../components/admin/category-managem
 import { ListingImageMetadataManagementPanel } from "../../components/admin/listing-image-metadata-management-panel";
 import { ListingImageUploadPanel } from "../../components/admin/listing-image-upload-panel";
 import { ListingManagementPanel } from "../../components/admin/listing-management-panel";
+import { HeroContentManagementPanel } from "../../components/admin/hero-content-management-panel";
+import type { AdminHomepageHeroReadResult } from "../../lib/hero/admin-homepage-hero-read";
 import type { QuoteEnquiryEmailConfigStatus } from "../../lib/quote/email-handoff";
 import type { AdminQuoteEmailDeliveryLogReadResult } from "../../lib/quote/admin-read/admin-quote-email-delivery-log";
 import styles from "./protected-admin-shell.module.css";
@@ -38,6 +40,7 @@ export type AdminShellView =
     }
   | {
       kind: "hero";
+      hero?: AdminHomepageHeroReadResult;
     }
   | {
       kind: "catalogue";
@@ -214,7 +217,7 @@ function workspaceTitle(view: AdminShellView) {
 function workspaceDescription(view: AdminShellView) {
   const descriptions: Record<AdminNavigationKind, string> = {
     home: "Manage public website content: hero image, catalogue records, setup presentation, enquiry recipient, and delivery visibility.",
-    hero: "Replace the public homepage hero image.",
+    hero: "Manage the public homepage hero content and image reference.",
     catalogue: "Manage catalogue items, categories, display order, published status, and listing images.",
     setups: "Review the public setups presentation, which derives from published catalogue records on /listings.",
     "enquiry-email": "Check the quote enquiry email handoff status.",
@@ -590,16 +593,24 @@ function AdminOperationsHome({
   );
 }
 
-function AdminHeroOperations() {
-  return (
-    <AdminEmptyState
-      eyebrow="Hero"
-      title="Homepage hero image"
-      message="Hero image management is not set up yet. Replacing the public homepage hero here needs protected image storage, which is not part of this release."
-      futureLabel="Replace hero image"
-      icon={emptyStateIcons.hero}
-    />
-  );
+function AdminHeroOperations({
+  hero = {
+    status: "loaded",
+    hero: null
+  }
+}: {
+  hero?: AdminHomepageHeroReadResult;
+}) {
+  if (hero.status === "unavailable") {
+    return (
+      <AdminUnavailableWorkspace
+        title="Homepage hero content"
+        description="Hero content is temporarily unavailable. The protected Hero route remains in place while existing reads recover."
+      />
+    );
+  }
+
+  return <HeroContentManagementPanel hero={hero.hero} />;
 }
 
 function AdminCatalogueOperations({
@@ -870,7 +881,7 @@ function AdminOperationsView({
   view: AdminShellView;
 }) {
   if (view.kind === "hero") {
-    return <AdminHeroOperations />;
+    return <AdminHeroOperations hero={view.hero} />;
   }
 
   if (view.kind === "catalogue") {
