@@ -217,11 +217,23 @@ function workspaceDescription(view: AdminShellView) {
     hero: "Replace the public homepage hero image.",
     catalogue: "Manage catalogue items, categories, display order, published status, and listing images.",
     setups: "Review the public setups presentation, which derives from published catalogue records on /listings.",
-    "enquiry-email": "Set where quote enquiries are emailed once the email handoff is added.",
-    "delivery-log": "Review enquiry email delivery attempts once delivery logging exists."
+    "enquiry-email": "Check the quote enquiry email handoff status.",
+    "delivery-log": "Review technical enquiry email delivery attempts."
   };
 
   return descriptions[activeNavigationKind(view)];
+}
+
+function quoteEmailSetupIssueLabel(reason?: string) {
+  const labels: Record<string, string> = {
+    email_provider_api_key_not_configured: "Provider API key missing",
+    email_provider_not_configured: "Provider not configured",
+    email_provider_unsupported: "Unsupported provider",
+    email_recipient_not_configured: "Recipient not configured",
+    email_from_not_configured: "From address not configured"
+  };
+
+  return reason ? labels[reason] ?? "Configuration incomplete" : null;
 }
 
 function hasText(value?: string) {
@@ -735,6 +747,7 @@ function AdminEnquiryEmailStatusOperations({
   const recipientStatus = config.recipientConfigured
     ? "Recipient configured"
     : "Recipient not configured";
+  const setupIssue = quoteEmailSetupIssueLabel(config.missingReason);
 
   return (
     <section className={styles.emptyStatePanel} aria-label="Enquiry email recipient">
@@ -765,6 +778,12 @@ function AdminEnquiryEmailStatusOperations({
           <div>
             <dt>Recipient email</dt>
             <dd>{config.recipientEmail}</dd>
+          </div>
+        ) : null}
+        {setupIssue ? (
+          <div>
+            <dt>Setup issue</dt>
+            <dd>{setupIssue}</dd>
           </div>
         ) : null}
       </dl>

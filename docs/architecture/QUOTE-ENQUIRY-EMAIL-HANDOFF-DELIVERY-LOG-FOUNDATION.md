@@ -28,12 +28,55 @@ response with the request reference and does not expose provider internals.
 The handoff is environment-driven:
 
 - `QUOTE_ENQUIRY_EMAIL_PROVIDER` defaults to `resend` when blank or missing.
-- `QUOTE_ENQUIRY_EMAIL_RECIPIENT` is required for delivery.
-- `QUOTE_ENQUIRY_EMAIL_FROM` is required for Resend delivery.
-- `RESEND_API_KEY` is required for Resend delivery.
+  Unsupported provider values are invalid.
+- `QUOTE_ENQUIRY_EMAIL_RECIPIENT` is required for delivery and must be a valid
+  email address.
+- `QUOTE_ENQUIRY_EMAIL_FROM` is required for Resend delivery and must be a
+  valid email address from a verified Resend sender/domain.
+- `RESEND_API_KEY` is required for Resend delivery and must stay server-only.
 
 No real env values, provider secrets, API keys, `.env` files, deployment config,
 or browser-visible provider variables are committed by this slice.
+
+Runtime config validation lives in `website/lib/server-runtime-config.ts`.
+The shared quote email handoff validator distinguishes configured, missing
+recipient, missing from address, missing provider API key, and unsupported
+provider states. It returns only status fields, env names, and safe reason
+codes. It must not expose `RESEND_API_KEY` through public, admin, client, or
+log output.
+
+Operators can run the hosting readiness check after server-side env has been
+set:
+
+```powershell
+npm run validate:quote-email-runtime-readiness
+```
+
+The command checks the live process env, prints only env names and labels, and
+does not echo values. Normal local and CI release validation stays runnable
+without real email secrets.
+
+Safe placeholder examples for docs or screenshots:
+
+- Provider env name: `QUOTE_ENQUIRY_EMAIL_PROVIDER`; safe placeholder value:
+  `resend`.
+- Recipient env name: `QUOTE_ENQUIRY_EMAIL_RECIPIENT`; safe placeholder
+  address: `events@example.invalid`.
+- From env name: `QUOTE_ENQUIRY_EMAIL_FROM`; safe placeholder address:
+  `quotes@example.invalid`.
+- Provider API key env name: `RESEND_API_KEY`; store the real value only in the
+  hosting provider's server-side secret field.
+
+Safe verification flow after env is configured:
+
+1. Submit a normal public quote request.
+2. Confirm quote persistence succeeds before email handoff is attempted.
+3. Confirm the public response is success only when the email handoff succeeds.
+4. Confirm unconfigured or failed email handoff returns the generic temporary
+   unavailable response with a request/reference id.
+5. Check protected admin Enquiry Email for status-only provider/recipient
+   state and redacted recipient display.
+6. Check protected admin Delivery Log for technical delivery metadata only.
 
 ## Delivery Log
 

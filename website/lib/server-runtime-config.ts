@@ -31,6 +31,7 @@ export type ServerRuntimeConfigIssue = {
   kind: "missing" | "invalid";
   reason:
     | "required"
+    | "invalid_email"
     | "invalid_url"
     | "invalid_uuid"
     | "invalid_origin"
@@ -61,9 +62,33 @@ export type ServerRuntimeConfig = {
   issues: ServerRuntimeConfigIssue[];
 };
 
+export type QuoteEmailHandoffRuntimeIssue = {
+  name:
+    | "QUOTE_ENQUIRY_EMAIL_PROVIDER"
+    | "QUOTE_ENQUIRY_EMAIL_RECIPIENT"
+    | "QUOTE_ENQUIRY_EMAIL_FROM"
+    | "RESEND_API_KEY";
+  kind: "missing" | "invalid";
+  reason: "required" | "invalid_email" | "unsupported_provider";
+};
+
+export type QuoteEmailHandoffRuntimeConfig = {
+  configured: boolean;
+  provider: "resend";
+  providerConfigured: boolean;
+  recipientConfigured: boolean;
+  recipientEmail?: string;
+  recipientEmailRaw?: string;
+  fromEmail?: string;
+  resendApiKey?: string;
+  issues: QuoteEmailHandoffRuntimeIssue[];
+};
+
 const defaultChatProvider = "n8n";
+const defaultQuoteEmailProvider = "resend";
 const defaultN8nTimeoutMs = 10_000;
 const maxN8nTimeoutMs = 30_000;
+const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const uuidPattern =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const hostPattern = /^[a-z0-9.-]+(?::[0-9]{1,5})?$/i;
@@ -178,6 +203,31 @@ function normalizeProvider(value: string) {
   return normalized === defaultChatProvider ? defaultChatProvider : null;
 }
 
+function normalizeQuoteEmailProvider(value: string | null) {
+  const normalized = value?.trim().toLowerCase();
+
+  if (!normalized) {
+    return defaultQuoteEmailProvider;
+  }
+
+  return normalized === defaultQuoteEmailProvider
+    ? defaultQuoteEmailProvider
+    : null;
+}
+
+function normalizeEmailAddress(value: string) {
+  const normalized = value.trim().toLowerCase();
+
+  return emailPattern.test(normalized) ? normalized : null;
+}
+
+function redactEmailAddress(value: string) {
+  const [localPart, domain] = value.split("@");
+  const prefix = localPart?.slice(0, 2) || "";
+
+  return domain ? `${prefix}***@${domain}` : "***";
+}
+
 function normalizeTimeoutMs(value: string | null) {
   const timeout = Number(value ?? defaultN8nTimeoutMs);
 
@@ -231,6 +281,98 @@ function parseRequiredUuid(
   }
 
   return uuid;
+}
+
+function addQuoteEmailIssue(
+  issues: QuoteEmailHandoffRuntimeIssue[],
+  issue: QuoteEmailHandoffRuntimeIssue
+) {
+  issues.push(issue);
+}
+
+export function getQuoteEmailHandoffRuntimeConfig(
+  env: ServerRuntimeEnv = process.env
+): QuoteEmailHandoffRuntimeConfig {
+  const issues: QuoteEmailHandoffRuntimeIssue[] = [];
+  const provider = normalizeQuoteEmailProvider(
+    readOptionalServerRuntimeEnv(env, "QUOTE_ENQUIRY_EMAIL_PROVIDER")
+  );
+  const recipientValue = readOptionalServerRuntimeEnv(
+    env,
+    "QUOTE_ENQUIRY_EMAIL_RECIPIENT"
+  );
+  const fromValue = readOptionalServerRuntimeEnv(
+    env,
+    "QUOTE_ENQUIRY_EMAIL_FROM"
+  );
+  const resendApiKey = readOptionalServerRuntimeEnv(env, "RESEND_API_KEY");
+  const recipientEmailRaw = recipientValue
+    ? normalizeEmailAddress(recipientValue)
+    : null;
+  const fromEmail = fromValue ? normalizeEmailAddress(fromValue) : null;
+
+  if (!provider) {
+    addQuoteEmailIssue(issues, {
+      name: "QUOTE_ENQUIRY_EMAIL_PROVIDER",
+      kind: "invalid",
+      reason: "unsupported_provider"
+    });
+  }
+
+  if (!recipientValue) {
+    addQuoteEmailIssue(issues, {
+      name: "QUOTE_ENQUIRY_EMAIL_RECIPIENT",
+      kind: "missing",
+      reason: "required"
+    });
+  } else if (!recipientEmailRaw) {
+    addQuoteEmailIssue(issues, {
+      name: "QUOTE_ENQUIRY_EMAIL_RECIPIENT",
+      kind: "invalid",
+      reason: "invalid_email"
+    });
+  }
+
+  if (!fromValue) {
+    addQuoteEmailIssue(issues, {
+      name: "QUOTE_ENQUIRY_EMAIL_FROM",
+      kind: "missing",
+      reason: "required"
+    });
+  } else if (!fromEmail) {
+    addQuoteEmailIssue(issues, {
+      name: "QUOTE_ENQUIRY_EMAIL_FROM",
+      kind: "invalid",
+      reason: "invalid_email"
+    });
+  }
+
+  if (!resendApiKey) {
+    addQuoteEmailIssue(issues, {
+      name: "RESEND_API_KEY",
+      kind: "missing",
+      reason: "required"
+    });
+  }
+
+  const providerConfigured = Boolean(provider && fromEmail && resendApiKey);
+  const recipientConfigured = Boolean(recipientEmailRaw);
+
+  return {
+    configured: Boolean(provider && recipientEmailRaw && fromEmail && resendApiKey),
+    provider: defaultQuoteEmailProvider,
+    providerConfigured,
+    recipientConfigured,
+    ...(recipientEmailRaw
+      ? {
+          recipientEmail: redactEmailAddress(recipientEmailRaw),
+          recipientEmailRaw
+        }
+      : {}),
+    ...(fromEmail ? { fromEmail } : {}),
+    ...(resendApiKey ? { resendApiKey } : {}),
+    issues
+  };
 }
 
 export function parseServerRuntimeConfig(

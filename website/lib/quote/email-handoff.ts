@@ -1,5 +1,6 @@
 import "server-only";
 
+import { getQuoteEmailHandoffRuntimeConfig } from "../server-runtime-config";
 import { recordQuoteEmailDeliveryAttempt } from "./quote-email-delivery-log-repository";
 import type { QuoteSubmission } from "./types";
 
@@ -94,7 +95,6 @@ type SendQuoteEnquiryEmailOptions = {
   provider?: QuoteEmailProvider;
 };
 
-const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const maxProviderMessageIdLength = 120;
 const maxErrorCodeLength = 80;
 
@@ -102,18 +102,6 @@ function normalizeOptionalText(value: string | null | undefined) {
   const normalized = value?.trim();
 
   return normalized ? normalized : undefined;
-}
-
-function normalizeEmail(value: string | null | undefined) {
-  const normalized = normalizeOptionalText(value)?.toLowerCase();
-
-  return normalized && emailPattern.test(normalized) ? normalized : undefined;
-}
-
-function normalizeProvider(value: string | null | undefined) {
-  const normalized = normalizeOptionalText(value)?.toLowerCase();
-
-  return !normalized || normalized === "resend" ? "resend" : null;
 }
 
 function safeProviderMessageId(value: string | undefined) {
@@ -129,17 +117,6 @@ function safeErrorCode(value: string | undefined) {
     .slice(0, maxErrorCodeLength);
 
   return normalized || "email_provider_failed";
-}
-
-function redactEmail(value: string | undefined) {
-  if (!value) {
-    return undefined;
-  }
-
-  const [localPart, domain] = value.split("@");
-  const prefix = localPart?.slice(0, 2) || "";
-
-  return domain ? `${prefix}***@${domain}` : "***";
 }
 
 export function resolveQuoteEnquiryEmailConfigStatus(
@@ -159,65 +136,43 @@ export function resolveQuoteEnquiryEmailConfigStatus(
 function resolveQuoteEnquiryEmailConfig(
   env: QuoteEmailEnv = process.env
 ): ResolvedQuoteEmailConfig {
-  const provider = normalizeProvider(env.QUOTE_ENQUIRY_EMAIL_PROVIDER);
-  const recipient = normalizeEmail(env.QUOTE_ENQUIRY_EMAIL_RECIPIENT);
-  const from = normalizeEmail(env.QUOTE_ENQUIRY_EMAIL_FROM);
-  const resendApiKey = normalizeOptionalText(env.RESEND_API_KEY);
-
-  if (!provider) {
-    return {
-      provider: "resend",
-      providerConfigured: false,
-      recipientConfigured: Boolean(recipient),
-      ...(recipient ? { recipientEmail: redactEmail(recipient) } : {}),
-      missingReason: "email_provider_not_configured"
-    };
-  }
-
-  if (!recipient) {
-    return {
-      provider,
-      providerConfigured: Boolean(from && resendApiKey),
-      recipientConfigured: false,
-      ...(from ? { fromEmail: from } : {}),
-      ...(resendApiKey ? { resendApiKey } : {}),
-      missingReason: "email_recipient_not_configured"
-    };
-  }
-
-  if (!from) {
-    return {
-      provider,
-      providerConfigured: false,
-      recipientConfigured: true,
-      recipientEmail: redactEmail(recipient),
-      recipientEmailRaw: recipient,
-      ...(resendApiKey ? { resendApiKey } : {}),
-      missingReason: "email_from_not_configured"
-    };
-  }
-
-  if (!resendApiKey) {
-    return {
-      provider,
-      providerConfigured: false,
-      recipientConfigured: true,
-      recipientEmail: redactEmail(recipient),
-      recipientEmailRaw: recipient,
-      fromEmail: from,
-      missingReason: "email_provider_not_configured"
-    };
-  }
+  const config = getQuoteEmailHandoffRuntimeConfig(env);
+  const firstIssue = config.issues[0];
 
   return {
-    provider,
-    providerConfigured: true,
-    recipientConfigured: true,
-    recipientEmail: redactEmail(recipient),
-    recipientEmailRaw: recipient,
-    fromEmail: from,
-    resendApiKey
+    provider: config.provider,
+    providerConfigured: config.providerConfigured,
+    recipientConfigured: config.recipientConfigured,
+    ...(config.recipientEmail ? { recipientEmail: config.recipientEmail } : {}),
+    ...(config.recipientEmailRaw
+      ? { recipientEmailRaw: config.recipientEmailRaw }
+      : {}),
+    ...(config.fromEmail ? { fromEmail: config.fromEmail } : {}),
+    ...(config.resendApiKey ? { resendApiKey: config.resendApiKey } : {}),
+    ...(firstIssue ? { missingReason: mapQuoteEmailConfigIssue(firstIssue) } : {})
   };
+}
+
+function mapQuoteEmailConfigIssue(
+  issue: ReturnType<typeof getQuoteEmailHandoffRuntimeConfig>["issues"][number]
+) {
+  if (issue.name === "QUOTE_ENQUIRY_EMAIL_RECIPIENT") {
+    return "email_recipient_not_configured";
+  }
+
+  if (issue.name === "QUOTE_ENQUIRY_EMAIL_FROM") {
+    return "email_from_not_configured";
+  }
+
+  if (issue.name === "RESEND_API_KEY") {
+    return "email_provider_api_key_not_configured";
+  }
+
+  if (issue.reason === "unsupported_provider") {
+    return "email_provider_unsupported";
+  }
+
+  return "email_provider_not_configured";
 }
 
 function safeSourcePath(sourcePath: string | undefined) {

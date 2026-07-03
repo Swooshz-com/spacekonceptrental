@@ -17,6 +17,13 @@ or safe error code, and request reference only. It does not store full customer
 messages, requested item detail, full email bodies, raw provider payloads,
 headers, cookies, tokens, secrets, or provider API responses.
 
+Runtime readiness hardening adds a separate
+`npm run validate:quote-email-runtime-readiness` hosting check for the quote
+email env contract. It reports configured, missing recipient, missing from
+address, missing provider API key, and unsupported provider states by env name
+only. Normal local release validation remains runnable without real email
+secrets.
+
 Implementation firewall: no customer confirmation emails, public quote
 tracking, custom mailbox/thread tracking, CRM replacement, HubSpot sync,
 n8n runtime/workflow changes, Google Workspace SMTP integration, retries,
