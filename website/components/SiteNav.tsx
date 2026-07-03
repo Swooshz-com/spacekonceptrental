@@ -25,6 +25,7 @@ function isActivePath(pathname: string, href: string) {
 
 export function SiteDesktopNav() {
   const pathname = usePathname() || "/";
+  const quoteActive = isActivePath(pathname, "/quote");
 
   return (
     <nav className="stitch-desktop-nav" aria-label="Primary navigation">
@@ -41,6 +42,13 @@ export function SiteDesktopNav() {
           </Link>
         );
       })}
+      <Link
+        aria-current={quoteActive ? "page" : undefined}
+        className={`stitch-nav-cta${quoteActive ? " stitch-nav-link--active" : ""}`}
+        href="/quote"
+      >
+        Request Quote
+      </Link>
     </nav>
   );
 }

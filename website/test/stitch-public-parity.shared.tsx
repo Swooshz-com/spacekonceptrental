@@ -55,7 +55,7 @@ export function runStitchPublicParitySuite(label: string) {
 
     it("renders the Stitch public journey with current route-specific UI", async () => {
       render(await HomePage());
-      expect(screen.getByRole("heading", { name: /furnish your vision/i })).toBeInTheDocument();
+      expect(screen.getByRole("heading", { name: /premium furniture rentals for considered events/i })).toBeInTheDocument();
       expect(screen.getAllByRole("link", { name: /request quote/i })[0]).toHaveAttribute("href", "/quote");
       expect(screen.getAllByRole("link", { name: /browse catalogue/i })[0]).toHaveAttribute("href", "/catalogue");
       expect(visibleText()).not.toMatch(forbiddenPublicTerms);
@@ -66,13 +66,13 @@ export function runStitchPublicParitySuite(label: string) {
       expect(screen.getByRole("button", { name: /increase modular lounge set quantity/i })).toBeInTheDocument();
       expect(screen.getByLabelText(/modular lounge set quantity selected/i)).toHaveTextContent("Qty 0");
       expect(screen.getByRole("link", { name: /view details for modular lounge set/i })).toHaveAttribute("href", "/catalogue/modular-lounge-set");
-      expect(visibleText()).toMatch(/browsing does not set aside furniture/i);
+      expect(visibleText()).toMatch(/manual quote review/i);
       expect(visibleText()).not.toMatch(forbiddenPublicTerms);
       cleanup();
 
       render(<StitchSetupsPage catalogue={sampleCatalogue} />);
-      expect(screen.getByRole("heading", { name: /curated scapes/i })).toBeInTheDocument();
-      expect(screen.getByRole("link", { name: /explore collection/i })).toHaveAttribute("href", "/listings/modular-lounge-set");
+      expect(screen.getByRole("heading", { name: /styled event setups/i })).toBeInTheDocument();
+      expect(screen.getByRole("link", { name: /explore featured setup/i })).toHaveAttribute("href", "/listings/modular-lounge-set");
       expect(visibleText()).not.toMatch(forbiddenPublicTerms);
     });
 
@@ -84,7 +84,7 @@ export function runStitchPublicParitySuite(label: string) {
       expect(screen.getByRole("link", { name: /request quote/i })).toHaveAttribute("href", "/quote");
       expect(screen.getByRole("link", { name: /back to catalogue/i })).toHaveAttribute("href", "/catalogue");
       expect(visibleText()).toMatch(/add quantities and alternatives/i);
-      expect(visibleText()).toMatch(/does not set aside furniture or finish rental details/i);
+      expect(visibleText()).toMatch(/team reviews each enquiry before final rental details/i);
       expect(visibleText()).not.toMatch(forbiddenPublicTerms);
       cleanup();
 
@@ -96,7 +96,7 @@ export function runStitchPublicParitySuite(label: string) {
         "href",
         "/catalogue/modular-lounge-set"
       );
-      expect(visibleText()).toMatch(/browsing does not set aside furniture/i);
+      expect(visibleText()).toMatch(/manual quote review/i);
       expect(visibleText()).not.toMatch(forbiddenPublicTerms);
       cleanup();
 
@@ -109,8 +109,8 @@ export function runStitchPublicParitySuite(label: string) {
       cleanup();
 
       render(await QuotePage());
-      expect(screen.getByRole("heading", { name: /request a rental quote/i })).toBeInTheDocument();
-      expect(screen.getByRole("heading", { name: /enquiry details/i })).toBeInTheDocument();
+      expect(screen.getByRole("heading", { name: /request a furniture rental quote/i })).toBeInTheDocument();
+      expect(screen.getByRole("heading", { name: /guided enquiry details/i })).toBeInTheDocument();
       expect(visibleText()).toMatch(/does not confirm final rental details/i);
       expect(visibleText()).not.toMatch(forbiddenPublicTerms);
     });
@@ -124,8 +124,8 @@ export function runStitchPublicParitySuite(label: string) {
       cleanup();
 
       render(<QuoteRequestForm initialItemsText="Modular Lounge Set" />);
-      expect(screen.getByText(/rental fit is reviewed directly by the team/i)).toBeInTheDocument();
-      expect(screen.getByRole("button", { name: /review and send an enquiry/i })).toBeInTheDocument();
+      expect(screen.getByText(/guided enquiry to share selected rental items/i)).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /submit enquiry/i })).toBeInTheDocument();
       expect(visibleText()).not.toMatch(/track|status page|guaranteed|response time/i);
       expect(visibleText()).not.toMatch(forbiddenPublicTerms);
     });

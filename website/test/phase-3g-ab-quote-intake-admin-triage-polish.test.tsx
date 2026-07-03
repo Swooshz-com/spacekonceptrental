@@ -138,7 +138,7 @@ describe("Phase 3G-A/B quote intake quality, admin triage depth, and enquiry wor
     fireEvent.change(screen.getByLabelText(/your name/i), {
       target: { value: "Maya Tan" }
     });
-    fireEvent.click(screen.getByRole("button", { name: /review and send an enquiry/i }));
+    fireEvent.click(screen.getByRole("button", { name: /submit enquiry/i }));
 
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
     expect(screen.getByText(/email address is required/i)).toBeInTheDocument();
@@ -147,7 +147,7 @@ describe("Phase 3G-A/B quote intake quality, admin triage depth, and enquiry wor
     fireEvent.change(screen.getByLabelText(/email address/i), {
       target: { value: "maya@example.test" }
     });
-    fireEvent.click(screen.getByRole("button", { name: /review and send an enquiry/i }));
+    fireEvent.click(screen.getByRole("button", { name: /submit enquiry/i }));
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
     expect(
@@ -172,7 +172,7 @@ describe("Phase 3G-A/B quote intake quality, admin triage depth, and enquiry wor
       screen.getAllByText(/listing context is a starting point only/i).length
     ).toBeGreaterThan(0);
     expect(
-      screen.getAllByText(/does not set aside furniture or finish rental details/i)
+      screen.getAllByText(/does not confirm final rental details/i)
       .length
     ).toBeGreaterThan(0);
     expect(container.querySelector<HTMLInputElement>('input[name="items"]')).toHaveValue(

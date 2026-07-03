@@ -370,15 +370,15 @@ export default function QuoteRequestForm({
       onSubmit={handleSubmit}
     >
       <p className="quote-form__intro">
-        Rental fit is reviewed directly by the team.{" "}
-        Share contact details for direct manual follow-up. The team uses these
-        details to triage the rental enquiry.{" "}
-        Submitting does not confirm final rental details and does not set aside furniture or finish rental details. Complete the required contact point first. Let us know what you need for your event. Share the date, venue, and requested items - our team will review the details and follow up with a tailored proposal.
+        Use this guided enquiry to share selected rental items, event details,
+        contact details, and setup notes. The SpaceKonceptRental team reviews
+        every request manually and follows up by email. Submitting does not
+        confirm final rental details.
       </p>
       <input name="items" readOnly type="hidden" value={itemsText} />
       {showSelectedItemsSummary && itemsText.trim() ? (
         <aside className="quote-form__selected" aria-label="Selected listings">
-          <strong>Selected listings</strong>
+          <strong>Selected rental items</strong>
           <span>
             Listing context is a starting point only and not a rental fit
             confirmation. The selected listings and quantities are synced from
@@ -499,7 +499,7 @@ export default function QuoteRequestForm({
         </label>
       </fieldset>
       <fieldset className="quote-form__field-grid">
-        <legend>Setup/access/timing notes</legend>
+        <legend>Selected rental items and setup notes</legend>
         <label className="quote-form__full-width">
           Event Vision
           <textarea
@@ -548,7 +548,7 @@ export default function QuoteRequestForm({
           >
             {submitState.status === "submitting"
               ? "Sending enquiry..."
-              : "Review and Send an Enquiry"}
+              : "Submit Enquiry"}
           </button>
           <p className="quote-form__legal">
             By sending an enquiry, review the{" "}
@@ -564,7 +564,7 @@ export default function QuoteRequestForm({
           className="quote-form__status quote-form__status--success quote-form__receipt"
           role="status"
         >
-          <h3>Enquiry Received</h3>
+          <h3>Rental Enquiry Received</h3>
           {receiptReference ? (
             <p className="quote-form__receipt-reference">
               {receiptReference}

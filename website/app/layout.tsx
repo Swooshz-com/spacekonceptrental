@@ -18,7 +18,7 @@ function SiteHeader() {
 }
 
 function SiteFooter() {
-  return <footer className="stitch-footer"><div className="stitch-container stitch-footer__grid"><div><h2>SpaceKonceptRental</h2><p>Furniture and event rental enquiries supported by manual team follow-up.</p></div><div><h3>Explore</h3><nav><Link href="/catalogue">Catalogue</Link><Link href="/listings">Setups</Link><Link href="/quote">Request Quote</Link></nav></div><div><h3>Company</h3><nav><Link href="/about">About</Link><Link href="/contact">Contact</Link></nav></div><div><h3>Legal</h3><nav><Link href="/privacy">Privacy Policy</Link><Link href="/terms">Terms of Service</Link></nav></div></div><div className="stitch-footer__bottom">&copy; 2026 SpaceKonceptRental.</div></footer>;
+  return <footer className="stitch-footer"><div className="stitch-container stitch-footer__grid"><div><h2>SpaceKonceptRental</h2><p>Premium furniture and setup rentals for events, styled spaces, and brand moments, supported by manual team follow-up.</p></div><div><h3>Explore</h3><nav><Link href="/">Home</Link><Link href="/catalogue">Catalogue</Link><Link href="/listings">Setups</Link><Link href="/quote">Request Quote</Link></nav></div><div><h3>Company</h3><nav><Link href="/about">About</Link><Link href="/contact">Contact</Link></nav></div><div><h3>Legal</h3><nav><Link href="/privacy">Privacy Policy</Link><Link href="/terms">Terms of Service</Link></nav></div></div><div className="stitch-footer__bottom">&copy; 2026 SpaceKonceptRental.</div></footer>;
 }
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

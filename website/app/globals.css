@@ -25706,6 +25706,90 @@ body:has(.stitch-detail-page--setup) .site-main .stitch-included-open article st
   }
 }
 
+/* Final public owner-path polish: visitor-facing rental catalogue tone. */
+body:has(.stitch-site-header) .stitch-site-header {
+  background: rgba(252, 249, 245, 0.96) !important;
+  border-bottom: 1px solid rgba(105, 96, 77, 0.2) !important;
+  box-shadow: 0 16px 42px rgba(37, 34, 27, 0.06) !important;
+}
+
+body:has(.stitch-site-header) .stitch-desktop-nav {
+  align-items: center !important;
+  color: #4f5145 !important;
+  gap: clamp(1rem, 2vw, 1.65rem) !important;
+}
+
+body:has(.stitch-site-header) .stitch-desktop-nav a {
+  line-height: 1 !important;
+}
+
+body:has(.stitch-site-header) .stitch-desktop-nav .stitch-nav-cta {
+  align-items: center !important;
+  background: #5f634f !important;
+  border: 1px solid #5f634f !important;
+  border-radius: 4px !important;
+  color: #fffaf0 !important;
+  display: inline-flex !important;
+  font-weight: 800 !important;
+  justify-content: center !important;
+  min-height: 42px !important;
+  padding: 0 1.05rem !important;
+}
+
+body:has(.stitch-home-hero) .site-main .stitch-home-hero {
+  background:
+    linear-gradient(115deg, rgba(252, 249, 245, 0.98), rgba(238, 230, 217, 0.76)),
+    #f7f2ea !important;
+  border-bottom: 1px solid rgba(95, 99, 79, 0.16) !important;
+}
+
+body:has(.stitch-home-hero) .site-main .stitch-home-hero__copy {
+  max-width: 660px !important;
+}
+
+body:has(.stitch-home-hero) .site-main .stitch-home-hero__copy h1 {
+  color: #25221b !important;
+}
+
+body:has(.stitch-home-hero) .site-main .stitch-home-hero__copy p:not(.stitch-eyebrow) {
+  color: #5a554a !important;
+  max-width: 600px !important;
+}
+
+body:has(.stitch-home-hero) .site-main .stitch-home-hero__media {
+  border: 1px solid rgba(95, 99, 79, 0.22) !important;
+  box-shadow: 0 28px 70px rgba(55, 49, 38, 0.18) !important;
+}
+
+body:has(.stitch-home-hero) .site-main .stitch-home-advantage .stitch-feature,
+body:has(.stitch-catalogue-hero) .site-main .stitch-product-card,
+body:has(.stitch-quote-page) .site-main .stitch-quote-card,
+body:has(.stitch-quote-page) .site-main .stitch-quote-form-panel {
+  background: rgba(255, 252, 247, 0.92) !important;
+  border-color: rgba(95, 99, 79, 0.18) !important;
+}
+
+body:has(.stitch-catalogue-hero) .site-main .stitch-filter-panel {
+  background: rgba(248, 243, 235, 0.86) !important;
+  border-color: rgba(95, 99, 79, 0.18) !important;
+}
+
+body:has(.stitch-quote-page) .site-main .stitch-quote-form-panel .quote-form__intro {
+  color: #514b40 !important;
+  font-size: 1rem !important;
+  line-height: 1.72 !important;
+}
+
+body:has(.stitch-quote-page) .site-main .stitch-quote-next li::before {
+  background: #5f634f !important;
+  color: #fffaf0 !important;
+}
+
+body:has(.stitch-site-header) .stitch-footer {
+  background: #24251f !important;
+  border-top: 1px solid rgba(255, 250, 240, 0.1) !important;
+}
+
 /* Final drawer typography system: keep header, links, and buttons consistent on tablet and phone. */
 @media (max-width: 1080px) {
   body:has(.stitch-site-header) .stitch-mobile-menu.stitch-mobile-menu--open {

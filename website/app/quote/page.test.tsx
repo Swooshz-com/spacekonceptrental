@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import QuotePage from "./page";
 
 const forbiddenPublicCopy =
-  /cart|checkout|payment|book now|online ordering|customer account|dashboard|reservation|stock reservation|fulfilment|fulfillment|purchase/i;
+  /cart|checkout|payment|book now|online ordering|customer account|dashboard|booking|reservation|stock|inventory|total|subtotal|fulfilment|fulfillment|purchase/i;
 
 describe("QuotePage", () => {
   afterEach(() => {
@@ -17,7 +17,7 @@ describe("QuotePage", () => {
       })
     );
 
-    expect(screen.getByRole("heading", { name: /request a rental quote/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /request a furniture rental quote/i })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: /your selection/i })).toBeInTheDocument();
     expect(screen.getAllByText(/selected listing reference/i).length).toBeGreaterThan(0);
     expect(screen.getByText("lounge-sofa-package", { selector: "dd" })).toBeInTheDocument();
@@ -27,7 +27,7 @@ describe("QuotePage", () => {
       "Listing reference: lounge-sofa-package"
     );
     expect(screen.queryByLabelText(/requested listings or items/i)).not.toBeInTheDocument();
-    expect(screen.getByText(/complete the required contact point first/i)).toBeInTheDocument();
+    expect(screen.getByText(/use this guided enquiry to share selected rental items/i)).toBeInTheDocument();
     expect(document.body.textContent).not.toMatch(forbiddenPublicCopy);
   });
 

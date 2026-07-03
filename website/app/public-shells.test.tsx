@@ -96,11 +96,11 @@ describe("public page shells", () => {
     render(await HomePage());
 
     expect(
-      screen.getByRole("heading", { name: /furnish your vision, elevate every space/i })
+      screen.getByRole("heading", { name: /premium furniture rentals for considered events/i })
     ).toBeInTheDocument();
     expect(screen.getAllByRole("heading", { level: 1 })).toHaveLength(1);
     expect(
-      screen.getByText(/browse rental pieces, explore setup directions, and send an enquiry/i)
+      screen.getByText(/browse rental pieces, explore styled setups, and request a manual quote/i)
     ).toBeInTheDocument();
     expect(hrefsFor(/request quote/i)).toContain("/quote");
     expect(hrefsFor(/browse catalogue/i)).toContain("/catalogue");
@@ -109,6 +109,24 @@ describe("public page shells", () => {
     expect(screen.getByRole("heading", { name: /browse by category/i })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: /featured pieces/i })).toBeInTheDocument();
     expect(document.body.textContent).not.toMatch(forbiddenPublicCopy);
+  });
+
+  it("keeps public navigation and footer visitor-facing", () => {
+    const layoutSource = readFileSync(resolve(process.cwd(), "app/layout.tsx"), "utf8");
+    const siteNavSource = readFileSync(resolve(process.cwd(), "components/SiteNav.tsx"), "utf8");
+    const mobileMenuSource = readFileSync(resolve(process.cwd(), "components/MobileMenu.tsx"), "utf8");
+    const combinedPublicShellSource = `${layoutSource}\n${siteNavSource}\n${mobileMenuSource}`;
+
+    for (const label of ["Home", "Catalogue", "Setups", "About", "Contact", "Request Quote"]) {
+      expect(combinedPublicShellSource).toContain(label);
+    }
+
+    expect(siteNavSource).toContain('className={`stitch-nav-cta');
+    expect(siteNavSource).toContain('href="/quote"');
+    expect(combinedPublicShellSource).toContain("SpaceKonceptRental");
+    expect(combinedPublicShellSource).not.toMatch(/Space Koncept Rentals|Space Koncept Rental/i);
+    expect(combinedPublicShellSource).not.toMatch(/Quote List/);
+    expect(layoutSource).not.toMatch(/admin|internal|readiness|governance/i);
   });
 
   it("uses the same catalogue CTA treatment for category and featured homepage sections", async () => {
@@ -149,17 +167,20 @@ describe("public page shells", () => {
   it("keeps public quote copy request-only and preserves the real form entry point", async () => {
     const { container } = render(await QuotePage());
 
-    expect(screen.getByRole("heading", { name: /request a rental quote/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /request a furniture rental quote/i })).toBeInTheDocument();
     expect(container.querySelector(".stitch-quote-hero .stitch-page-intro h1")).toHaveTextContent(
-      /request a rental quote/i
+      /request a furniture rental quote/i
     );
     expect(container.querySelector(".stitch-quote-intro")).toBeNull();
     expect(document.body.textContent).not.toMatch(/this request does not confirm final rental details/i);
+    expect(document.body.textContent).toMatch(/selected rental items/i);
+    expect(document.body.textContent).toMatch(/event details/i);
+    expect(document.body.textContent).toMatch(/contact details/i);
     expect(screen.getByLabelText(/your name/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/email address/i)).toBeInTheDocument();
     expect(screen.queryByLabelText(/requested listings or items/i)).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /review and send an enquiry/i })).toBeInTheDocument();
-    expect(document.body.textContent).not.toMatch(/confirmed order|online ordering|checkout|payment/i);
+    expect(screen.getByRole("button", { name: /submit enquiry/i })).toBeInTheDocument();
+    expect(document.body.textContent).not.toMatch(/cart|checkout|payment|purchase|confirmed order|online ordering|booking|reservation|stock|inventory|total|subtotal|fulfil/i);
     expect(JSON.stringify(rootMetadata)).toMatch(/SpaceKonceptRental/);
     expect(JSON.stringify(rootMetadata)).not.toMatch(/Space Koncept Rentals|shell|mvp|checkout|payment|online ordering/i);
   });
@@ -808,7 +829,7 @@ describe("public page shells", () => {
     render(<StitchSetupsPage catalogue={{ source: "fallback", categories: [], products: [] }} />);
     expect(document.querySelector(".stitch-setups-hero > .stitch-container > .stitch-page-intro")).not.toBeNull();
     expect(document.querySelector(".stitch-setups-hero")?.textContent).toMatch(
-      /Setups.*Curated Scapes.*Explore styled environment directions/s
+      /Setups.*Styled Event Setups.*Explore styled environment directions/s
     );
   });
 

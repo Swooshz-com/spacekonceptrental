@@ -199,16 +199,16 @@ describe("Phase 3Z-A/B public route readiness closure", () => {
 
   it("renders safe public rental/enquiry copy without introducing public scope creep", async () => {
     render(await HomePage());
-    expect(screen.getByRole("heading", { name: /furnish your vision/i })).toBeInTheDocument();
-    expect(screen.getByText(/send an enquiry for manual team review/i)).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /premium furniture rentals for considered events/i })).toBeInTheDocument();
+    expect(screen.getByText(/request a manual quote from the SpaceKonceptRental team/i)).toBeInTheDocument();
     cleanup();
 
     render(<CataloguePageContent catalogue={sampleCatalogue} />);
-    expect(screen.getByText(/browsing does not set aside furniture or finalise rental details/i)).toBeInTheDocument();
+    expect(screen.getByText(/manual quote review/i)).toBeInTheDocument();
     cleanup();
 
     render(<ProductPageContent product={sampleProduct} />);
-    expect(screen.getByText(/does not set aside furniture or finish rental details/i)).toBeInTheDocument();
+    expect(screen.getByText(/team reviews each enquiry before final rental details/i)).toBeInTheDocument();
     cleanup();
 
     render(<CategoriesPageContent catalogue={sampleCatalogue} />);
@@ -226,13 +226,13 @@ describe("Phase 3Z-A/B public route readiness closure", () => {
     cleanup();
 
     render(await QuotePage());
-    expect(screen.getByText(/form is enquiry intake only/i)).toBeInTheDocument();
-    expect(screen.getByText(/review your details and follow up with a tailored proposal/i)).toBeInTheDocument();
-    expect(screen.getByText(/does not set aside furniture or finish rental details/i)).toBeInTheDocument();
+    expect(screen.getByText(/guided enquiry for selected rental items/i)).toBeInTheDocument();
+    expect(screen.getByText(/reviews each request manually and follows up by email/i)).toBeInTheDocument();
+    expect(screen.getByText(/does not confirm final rental details/i)).toBeInTheDocument();
     cleanup();
 
     render(<QuoteRequestForm />);
-    expect(screen.getByText(/Rental fit is reviewed directly by the team/i)).toBeInTheDocument();
+    expect(screen.getByText(/guided enquiry to share selected rental items/i)).toBeInTheDocument();
     expect(document.body.textContent ?? "").not.toMatch(/checkout|payment|customer account|public tracking/i);
   });
 
