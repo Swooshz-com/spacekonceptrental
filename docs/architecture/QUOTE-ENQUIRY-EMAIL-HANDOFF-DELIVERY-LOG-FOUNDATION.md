@@ -56,6 +56,18 @@ The command checks the live process env, prints only env names and labels, and
 does not echo values. Normal local and CI release validation stays runnable
 without real email secrets.
 
+Before production launch, operators must also run the broader launch gate in
+the hosted/runtime environment:
+
+```powershell
+npm run validate:production-security-readiness -- --launch
+```
+
+That gate checks the quote email env names together with the Supabase,
+workspace, admin origin/host, CSRF secret, and static server-only exposure
+contract. It must not print env values or secret values. Normal CI does not
+require real production secrets.
+
 Safe placeholder examples for docs or screenshots:
 
 - Provider env name: `QUOTE_ENQUIRY_EMAIL_PROVIDER`; safe placeholder value:

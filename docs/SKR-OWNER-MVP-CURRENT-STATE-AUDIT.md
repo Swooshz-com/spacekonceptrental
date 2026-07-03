@@ -7,6 +7,9 @@ Branch: `codex/skr-owner-mvp-current-state-audit`
 Base inspected: `eb3529b92cf8f55a0fa7dbb1d1a1a1b3d7afe133`
 (`eb3529b9`, PR #256 merge, Next dev-lock diagnostics)
 
+Production/security readiness addendum base: `538f93cae34011bbd09fb2e21a9588b14eb5d40f`
+(`538f93ca`, current `origin/main` after PR #258).
+
 ## Scope
 
 This is an audit/report-only pass over current `origin/main` after PR #256.
@@ -146,14 +149,24 @@ Local UAT/tooling path:
 
 No source implementation blocker was found in this audit scope.
 
+No unresolved P0 or P1 source implementation blocker is known from the checked
+owner MVP source scope as of the production/security readiness addendum.
+
 The remaining work is operational or deliberately deferred:
 
-- Configure reviewed server-only environment values before real hosting or
-  public traffic: Supabase URL/anon key, catalogue/quote/admin workspace ids,
-  admin expected origin/host, admin CSRF proof secret, quote email recipient,
-  quote email sender, and Resend API key.
+- Configure reviewed server-only environment values and pass
+  `npm run validate:production-security-readiness -- --launch`
+  in the hosted/runtime environment before real hosting or public traffic:
+  Supabase URL/anon key, catalogue/quote/admin workspace ids, admin expected
+  origin/host, admin CSRF proof secret, quote email recipient, quote email
+  sender, and Resend API key.
 - Run live/manual quote email verification only after server-side email env
-  passes `npm run validate:quote-email-runtime-readiness`.
+  passes the production-security readiness gate and
+  `npm run validate:quote-email-runtime-readiness`.
+- Confirm protected Enquiry Email and Delivery Log after the safe quote. The
+  Delivery Log remains technical metadata only and must not expose customer
+  messages, requested item detail, raw provider payloads, secrets, tokens, or
+  provider response bodies.
 - Complete owner review of real catalogue items, setup presentation, image
   choices, alt text, and hero/media decisions.
 - Deployment, Supabase Cloud connection, Vercel config, production evidence,
@@ -171,6 +184,7 @@ The remaining work is operational or deliberately deferred:
 | --- | --- | --- |
 | P0 | None found in the checked source scope. | Closed |
 | P1 | None found in the checked source scope. | Closed |
+| Launch gate | Production launch is not cleared until `npm run validate:production-security-readiness -- --launch` passes in the hosted/runtime environment. | Required before launch |
 | P2 | Live quote submission is intentionally not exercised by local smoke because there is no safe mocked email handoff mode for the real `/api/quote` route. | Expected manual verification after env configuration |
 | P3 | Hero page remains a disabled future control because protected hero image storage is outside this release. | Deliberately deferred |
 
@@ -179,6 +193,7 @@ The remaining work is operational or deliberately deferred:
 - Do not merge or reuse PR #257 public visual polish.
 - Do not change public visuals, public CSS, public copy, or layout unless a
   concrete functional bug is found.
+- Treat public visuals as frozen unless explicitly requested.
 - Do not add another visual-polish layer.
 - Do not add quote inbox, CRM workflow, customer confirmation email, public
   quote tracking, customer accounts, cart, checkout, payment, order, booking,

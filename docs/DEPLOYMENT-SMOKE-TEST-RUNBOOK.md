@@ -101,6 +101,11 @@ Review `docs/DEPLOYMENT-ENVIRONMENT-READINESS.md` and
 - No `website/chat-config.js` source usage exists.
 - No real env values appear in docs, screenshots, PR bodies, logs, or browser
   configuration.
+- `npm run validate:production-security-readiness` passes in local/dev mode
+  without real production secrets.
+- `npm run validate:production-security-readiness -- --launch`
+  passes in the hosted/runtime environment after server-side env is
+  configured.
 
 Service-role runtime paths remain forbidden unless separately approved.
 
@@ -209,6 +214,8 @@ traffic:
 - `npm run validate:supabase-migrations`.
 - `npm run test:supabase-migrations`.
 - `npm run test:supabase-rls`.
+- `npm run validate:production-security-readiness` locally without real
+  production secrets.
 - `git diff --check`.
 
 ## Manual smoke-test checklist
@@ -288,12 +295,30 @@ Run these in order and capture evidence before public traffic.
 
 ### Public quote form submission
 
+- Confirm launch mode has already passed in the hosted/runtime environment.
 - Submit a valid quote request through `<deployment-url>/quote`.
 - Confirm the browser receives only safe public receipt fields.
 - Confirm the quote row is created in the reviewed quote workspace through the
   approved database inspection process.
+- Confirm the server-side quote email handoff succeeds only after the Resend
+  sender/domain has been verified outside the repo.
+- Confirm missing or failed email handoff returns a generic temporary
+  unavailable response with a safe reference id and no provider response body.
 - Confirm invalid payloads are rejected before persistence.
 - Confirm throttled responses remain safe generic `429` responses.
+
+### Protected Enquiry Email And Delivery Log
+
+- Visit `<deployment-url>/admin/enquiry-email` as an approved owner/admin.
+- Confirm provider/recipient status is status-only and any recipient display is
+  redacted.
+- Visit `<deployment-url>/admin/delivery-log`.
+- Confirm recent rows show bounded technical metadata only: provider, delivery
+  status, safe provider message id or safe error code, request reference,
+  timestamp, and redacted recipient.
+- Confirm the pages do not expose customer messages, requested item detail,
+  full email bodies, raw provider payloads, headers, cookies, tokens, secrets,
+  API keys, or provider response bodies.
 
 ### Quote handoff from catalogue/detail to quote page
 
@@ -440,6 +465,8 @@ Future deployment PR authors should capture:
 - Listing detail page smoke-test result.
 - Uploaded listing image rendering smoke-test result.
 - Public quote form submission smoke-test result.
+- Protected Enquiry Email and Delivery Log status/technical-metadata review
+  result.
 - Quote handoff smoke-test result.
 - Admin login/protected shell smoke-test result.
 - Admin product/category/listing management smoke-test result.
