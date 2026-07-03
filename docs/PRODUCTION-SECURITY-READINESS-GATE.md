@@ -154,6 +154,8 @@ Hold launch if any of these are true:
   values, secrets, customer/private data, or workspace internals
 - protected Enquiry Email or Delivery Log exposes more than status and
   technical metadata
+- `NEXT_PUBLIC_SKR_DEMO_CONTENT` is set to `true` in the hosted production
+  environment
 
 Public visuals remain frozen unless an explicitly scoped functional bug is
 found.

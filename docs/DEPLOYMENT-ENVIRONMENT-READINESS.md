@@ -62,6 +62,9 @@ non-secret, and must not include Supabase, n8n, workspace, admin, quote, or
 provider credentials. No `NEXT_PUBLIC_SUPABASE_*`, `NEXT_PUBLIC_N8N*`, or
 `NEXT_PUBLIC_SUPABASE_SERVICE_ROLE` variable may be present.
 
+`NEXT_PUBLIC_SKR_DEMO_CONTENT` may remain a local/review-only demo content
+switch, but it must not be set to `true` in the hosted production environment.
+
 ## Server-only app env
 
 These values are used only by server-side Next.js routes, repositories, or
@@ -245,6 +248,8 @@ Forbidden exposure includes:
 - No `NEXT_PUBLIC_SUPABASE_*`.
 - No `NEXT_PUBLIC_N8N*`.
 - No `NEXT_PUBLIC_SUPABASE_SERVICE_ROLE`.
+- No production `NEXT_PUBLIC_SKR_DEMO_CONTENT` demo content switch set to
+  `true`.
 - No browser-visible n8n URLs.
 - No browser Supabase unless separately approved.
 - No `SUPABASE_SERVICE_ROLE_KEY` in runtime paths.
