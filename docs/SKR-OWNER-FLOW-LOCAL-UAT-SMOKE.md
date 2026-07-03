@@ -35,6 +35,17 @@ The helper then polls the local base URL with a bounded startup timeout, runs
 the child process tree it started. It will not kill an already-running external
 server.
 
+By default, the helper checks `http://localhost:3000`. If that default origin is
+unreachable or unhealthy, port 3000 appears occupied, and no base URL was
+explicitly configured, the helper may try a small bounded set of alternate
+local ports and start the dev server with that selected port. The nested smoke
+command receives
+`SKR_OWNER_FLOW_LOCAL_BASE_URL` for the selected local origin.
+
+If `SKR_OWNER_FLOW_LOCAL_BASE_URL` or `SKR_LOCAL_BASE_URL` is explicitly set,
+the helper respects that origin and does not switch ports silently. Fix the
+configured server or update the local env value, then rerun the command.
+
 If startup times out, run the dev server directly:
 
 ```powershell
@@ -101,8 +112,8 @@ values, raw provider errors, or full customer message text.
 
 The one-command local UAT helper also bounds server startup and smoke command
 execution. It prints PASS/SKIP/FAIL/INFO labels, the safe local base URL being
-checked, the attempted `npm run dev` command, waited time on timeout, and the
-manual next step.
+checked, whether alternate-port fallback was attempted, the attempted
+`npm run dev` command, waited time on timeout, and the manual next step.
 
 ## Quote Email Handoff Verification
 
