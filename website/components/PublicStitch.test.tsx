@@ -1,10 +1,14 @@
-import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { cleanup, render, screen } from "@testing-library/react";
+import { afterEach, describe, expect, it } from "vitest";
 
 import {
   DEFAULT_HOMEPAGE_HERO_CONTENT,
   StitchHomeHero
 } from "./PublicStitch";
+
+afterEach(() => {
+  cleanup();
+});
 
 describe("StitchHomeHero", () => {
   it("keeps existing static hero behavior when no managed content is supplied", () => {
