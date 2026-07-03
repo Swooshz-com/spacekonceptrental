@@ -1,3 +1,5 @@
+import type { ReactNode } from "react";
+
 import {
   resolveServerAdminRuntimeRouteGateAdapter,
   type ServerAdminRuntimeRouteGateAdapterResult
@@ -318,7 +320,7 @@ function AdminUnavailableWorkspace({
 }) {
   return (
     <section
-      className={`${styles.emptyState} admin-dashboard admin-dashboard--unavailable`}
+      className="admin-dashboard admin-dashboard--unavailable"
       aria-label={`${title} unavailable`}
     >
       <p className="eyebrow">Temporarily unavailable</p>
@@ -355,28 +357,57 @@ function AdminMetricCard({
   );
 }
 
+const emptyStateIcons: Record<"hero" | "mail" | "log", ReactNode> = {
+  hero: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="4.5" width="18" height="15" rx="2.5" />
+      <circle cx="8.5" cy="10" r="1.6" />
+      <path d="M4 17.5l4.5-4 3.5 3 3.5-3.5 4.5 4.5" />
+    </svg>
+  ),
+  mail: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="5" width="18" height="14" rx="2.5" />
+      <path d="M3.5 7.5l8.5 6 8.5-6" />
+    </svg>
+  ),
+  log: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+      <rect x="4" y="3.5" width="16" height="17" rx="2.5" />
+      <path d="M8 8.5h8M8 12h8M8 15.5h5" />
+    </svg>
+  )
+};
+
 function AdminEmptyState({
   eyebrow,
   title,
   message,
-  futureLabel
+  futureLabel,
+  icon
 }: {
   eyebrow: string;
   title: string;
   message: string;
   futureLabel?: string;
+  icon?: ReactNode;
 }) {
   return (
     <section className={styles.emptyStatePanel} aria-label={title}>
+      {icon ? (
+        <span className={styles.emptyStateIcon} aria-hidden="true">
+          {icon}
+        </span>
+      ) : null}
       <p className="eyebrow">{eyebrow}</p>
       <h2>{title}</h2>
       <p>{message}</p>
       {futureLabel ? (
         <div className={styles.futureControl}>
-          <button className="button button--secondary" type="button" disabled>
+          <button className={styles.adminBtnGhost} type="button" disabled>
             {futureLabel}
           </button>
-          <span>Available once backend support is added.</span>
+          <span className={styles.comingSoonTag}>Coming soon</span>
         </div>
       ) : null}
     </section>
@@ -409,6 +440,10 @@ function AdminOperationsHome({
     (product) => product.status === "archived"
   ).length;
   const mediaAttention = mediaAttentionListingCount(products, images);
+  const categoryNameById = new Map(
+    categories.map((category) => [category.id, category.name])
+  );
+  const catalogueRows = products.slice(0, 8);
 
   return (
     <section className="admin-dashboard" aria-label="Admin dashboard">
@@ -484,6 +519,57 @@ function AdminOperationsHome({
           </dl>
         </section>
       </div>
+
+      <section className={styles.tablePanel} aria-label="Catalogue records">
+        <div className={styles.tableHeader}>
+          <h3>Catalogue</h3>
+          <a className={styles.tableLink} href="/admin/catalogue">
+            Manage
+          </a>
+        </div>
+        {catalogueRows.length === 0 ? (
+          <p className={styles.tableEmpty}>No catalogue records yet.</p>
+        ) : (
+          <div className={styles.dataTable} role="table" aria-label="Catalogue records table">
+            <div role="row">
+              <strong role="columnheader">Name</strong>
+              <strong role="columnheader">Category</strong>
+              <strong role="columnheader">Status</strong>
+              <strong role="columnheader">Images</strong>
+            </div>
+            {catalogueRows.map((product) => {
+              const statusText =
+                product.status === "published"
+                  ? "Published"
+                  : product.status === "draft"
+                    ? "Draft"
+                    : "Hidden";
+              return (
+                <div role="row" key={product.id}>
+                  <span role="cell">{product.name}</span>
+                  <span role="cell">
+                    {product.categoryId
+                      ? categoryNameById.get(product.categoryId) ?? "Unmapped"
+                      : "Unmapped"}
+                  </span>
+                  <span role="cell">
+                    <span
+                      className={`${styles.statusTag} ${
+                        product.status === "published"
+                          ? styles.statusTagPublished
+                          : styles.statusTagMuted
+                      }`}
+                    >
+                      {statusText}
+                    </span>
+                  </span>
+                  <span role="cell">{product.imageCount}</span>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </section>
     </section>
   );
 }
@@ -495,6 +581,7 @@ function AdminHeroOperations() {
       title="Homepage hero image"
       message="Hero image management is not set up yet. Replacing the public homepage hero here needs protected image storage, which is not part of this release."
       futureLabel="Replace hero image"
+      icon={emptyStateIcons.hero}
     />
   );
 }
@@ -578,46 +665,28 @@ function AdminSetupsOperations({
 
   return (
     <section className="admin-dashboard" aria-label="Setups management">
-      <div className="admin-dashboard__header">
-        <div>
-          <p className="eyebrow">Setups</p>
-          <h2>Setups management</h2>
-          <p>
-            Public setup pages remain on /listings. The current implementation
-            derives setup cards from published catalogue records, so edits still
-            happen through Catalogue until setup-specific storage exists.
-          </p>
-        </div>
-        <dl className="admin-dashboard__stats" aria-label="Setups summary">
-          <div>
-            <dt>Derived setups</dt>
-            <dd>{setupRecords.length}</dd>
-          </div>
-          <div>
-            <dt>Public route</dt>
-            <dd>/listings</dd>
-          </div>
-        </dl>
-      </div>
-
       <div className={styles.settingsGrid}>
         <section className={styles.placeholderPanel}>
           <h3>Current setup source</h3>
-          <p>Setup cards currently come from published catalogue records.</p>
-          <nav className="hero__actions" aria-label="Setup actions">
-            <a className="button button--secondary" href="/admin/catalogue">
+          <p>
+            Public setups stay on <code>/listings</code> and currently derive
+            from published catalogue records ({setupRecords.length} shown). Edit
+            them through Catalogue until setup-specific storage exists.
+          </p>
+          <nav className={styles.inlineActions} aria-label="Setup actions">
+            <a className={styles.adminBtnGhost} href="/admin/catalogue">
               Manage catalogue
             </a>
-            <a className="button button--secondary" href="/listings">
+            <a className={styles.adminBtnGhost} href="/listings">
               View public setups
             </a>
           </nav>
         </section>
 
-        <section className="admin-dashboard__card">
+        <section className={styles.rowPanel}>
           <h3>Published setup candidates</h3>
           {setupRecords.length === 0 ? (
-            <p>
+            <p className={styles.tableEmpty}>
               No published catalogue records are available to derive public
               setup cards yet.
             </p>
@@ -654,6 +723,7 @@ function AdminEnquiryEmailOperations() {
       title="Enquiry email recipient"
       message="Not configured yet. Quote enquiries will be emailed to the recipient set here once the email handoff is added. SpaceKonceptRental sends enquiries by email and has no internal quote inbox."
       futureLabel="Set recipient"
+      icon={emptyStateIcons.mail}
     />
   );
 }
@@ -664,6 +734,7 @@ function AdminDeliveryLogOperations() {
       eyebrow="Delivery Log"
       title="Email delivery log"
       message="No delivery records yet. Sent and failed enquiry emails — with provider id and a safe error reference — will be listed here once delivery logging exists."
+      icon={emptyStateIcons.log}
     />
   );
 }
