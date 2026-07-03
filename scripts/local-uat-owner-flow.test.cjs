@@ -253,6 +253,81 @@ test('alternate port startup early exit reports fallback context without killing
   assert.match(output, /Another next dev server is already running/i);
 });
 
+test('Next dev lock output with PID and URL is reported clearly on Windows without killing external process', async () => {
+  const { children, output, result, spawnSyncCalls } = await runHelper({
+    earlyDevExit: true,
+    earlyDevStdout: [
+      '- Local:        http://localhost:3001',
+      'Another next dev server is already running.',
+      '- Local:        http://localhost:3000',
+      '- PID:          16840',
+      '- Dir:          C:\\Users\\xPass\\GitHub Projects\\spacekonceptrental\\website',
+      'Run taskkill /PID 16840 /F to stop it.',
+    ].join('\n'),
+    fetchResults: [new Error('ECONNREFUSED'), new Error('ECONNREFUSED')],
+    platform: 'win32',
+    portOpenResults: {
+      3000: false,
+      3001: true,
+    },
+  });
+
+  assert.equal(result.ok, false);
+  assert.equal(result.fallbackAttempted, true);
+  assert.equal(result.nextDevLockDetected, true);
+  assert.deepEqual(children[0].killedWith, []);
+  assert.deepEqual(spawnSyncCalls, []);
+  assert.match(output, /FAIL suspected existing Next dev server lock/i);
+  assert.match(output, /Checked URL: http:\/\/localhost:3001/i);
+  assert.match(output, /Selected fallback port: 3001/i);
+  assert.match(output, /Candidate ports tried: 3001/i);
+  assert.match(output, /Existing Next PID: 16840/i);
+  assert.match(output, /Existing Next URL: http:\/\/localhost:3000/i);
+  assert.match(output, /No external server was killed or modified/i);
+  assert.match(output, /tasklist \/FI "PID eq 16840"/i);
+  assert.doesNotMatch(output, /taskkill\s+\/PID 16840/i);
+  assert.doesNotMatch(output, /ps -p 16840/i);
+});
+
+test('Next dev lock output with PID and URL suggests ps on macOS and Linux only as text', async () => {
+  const { children, output, result, spawnSyncCalls } = await runHelper({
+    earlyDevExit: true,
+    earlyDevStdout:
+      'lock exists for same-project dev server\nPID: 16840\nhttp://localhost:3000\n',
+    fetchResults: [new Error('ECONNREFUSED'), new Error('ECONNREFUSED')],
+    platform: 'darwin',
+  });
+
+  assert.equal(result.ok, false);
+  assert.equal(result.nextDevLockDetected, true);
+  assert.deepEqual(children[0].killedWith, []);
+  assert.deepEqual(spawnSyncCalls, []);
+  assert.match(output, /FAIL suspected existing Next dev server lock/i);
+  assert.match(output, /Existing Next PID: 16840/i);
+  assert.match(output, /Existing Next URL: http:\/\/localhost:3000/i);
+  assert.match(output, /ps -p 16840 -o pid,comm,args/i);
+  assert.doesNotMatch(output, /tasklist \/FI/i);
+});
+
+test('Next dev lock output without parseable PID still reports manual recovery guidance', async () => {
+  const { output, result } = await runHelper({
+    earlyDevExit: true,
+    earlyDevStdout: 'lock exists for another same-project dev server\n',
+    fetchResults: [new Error('ECONNREFUSED'), new Error('ECONNREFUSED')],
+  });
+
+  assert.equal(result.ok, false);
+  assert.equal(result.nextDevLockDetected, true);
+  assert.match(output, /FAIL suspected existing Next dev server lock/i);
+  assert.doesNotMatch(output, /Existing Next PID:/i);
+  assert.doesNotMatch(output, /tasklist \/FI/i);
+  assert.doesNotMatch(output, /ps -p/i);
+  assert.match(output, /inspect the existing process/i);
+  assert.match(output, /stop the existing Next dev server manually/i);
+  assert.match(output, /restart the terminal or editor session/i);
+  assert.match(output, /rerun `npm run local-uat:owner-flow`/i);
+});
+
 test('server initially down starts dev server, waits until reachable, then runs smoke', async () => {
   const { children, output, result, spawned } = await runHelper({
     fetchResults: [

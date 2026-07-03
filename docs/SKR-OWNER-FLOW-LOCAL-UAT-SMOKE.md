@@ -46,6 +46,39 @@ If `SKR_OWNER_FLOW_LOCAL_BASE_URL` or `SKR_LOCAL_BASE_URL` is explicitly set,
 the helper respects that origin and does not switch ports silently. Fix the
 configured server or update the local env value, then rerun the command.
 
+## Existing Next Dev Server Lock
+
+Next.js may refuse to start when another same-project dev server lock already
+exists. This can happen even after the helper selects an alternate local port,
+because the lock belongs to the `website` project directory rather than only
+to port 3000.
+
+When this happens, the helper prints
+`FAIL suspected existing Next dev server lock`, the checked URL, selected port,
+candidate ports tried, and any safely parsed local URL or PID from the bounded
+startup logs. It does not kill or modify the existing process automatically.
+That no-kill behaviour is intentional: the helper cannot know whether the
+process belongs to another terminal, editor task, or operator workflow.
+
+If a PID is shown, inspect it manually before stopping anything:
+
+```powershell
+tasklist /FI "PID eq <pid>"
+```
+
+On macOS or Linux:
+
+```sh
+ps -p <pid> -o pid,comm,args
+```
+
+Then stop the existing Next dev server manually, or restart the terminal/editor
+session if the process is stale. After the existing lock is cleared, rerun:
+
+```powershell
+npm run local-uat:owner-flow
+```
+
 If startup times out, run the dev server directly:
 
 ```powershell
