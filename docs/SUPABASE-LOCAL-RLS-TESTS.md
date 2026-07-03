@@ -11,7 +11,7 @@ or deployment.
 
 ## Requirements
 
-- Docker Desktop running locally.
+- Docker CLI available locally.
 - Node.js available for the root package scripts.
 - No Supabase Cloud credentials.
 - No host Supabase CLI install.
@@ -37,6 +37,27 @@ From the repo root:
 ```powershell
 npm run test:supabase-rls
 ```
+
+Before starting the throwaway Postgres container, the command now checks local
+Docker readiness:
+
+- If the Docker daemon already answers `docker info`, the RLS harness continues
+  immediately.
+- If Docker CLI exists but the daemon is unavailable, the helper makes one
+  bounded best-effort startup attempt.
+- On Windows, it tries Docker Desktop through a hidden PowerShell
+  `Start-Process` call, preferring the common Docker Desktop install path when
+  present.
+- On macOS, it tries `open -a Docker`.
+- On Linux, it may try `systemctl --user start docker` when `systemctl` is
+  available. It never uses `sudo`.
+- Unknown platforms print manual instructions instead of guessing.
+
+The helper polls for a bounded time and then exits non-zero if Docker is still
+not responsive. The failure output reports whether Docker CLI exists, whether a
+startup attempt was made, which platform command was attempted, how long it
+waited, and the manual next step. It prints status and command labels only; it
+does not print environment values or secrets.
 
 The first run may pull the default local test image:
 

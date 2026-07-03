@@ -110,8 +110,12 @@ Current warning categories are expected when the local exports intentionally
 include configured emails, Pinecone values, Google Drive folders, and Google
 Sheets selections for import.
 
-`npm run test:supabase-rls` is local-only, Docker-only, and requires Docker
-Desktop. It starts a throwaway Docker database, applies the committed Supabase
+`npm run test:supabase-rls` is local-only and Docker-only. It first checks
+whether Docker CLI and the Docker daemon are ready. When Docker CLI exists but
+the daemon is unavailable, it makes one bounded best-effort Docker Desktop or
+daemon startup attempt for the local platform, waits briefly, then either runs
+the RLS harness or exits with the attempted command and manual next step. The
+RLS harness starts a throwaway Docker database, applies the committed Supabase
 migrations, creates fake fixtures inside that temporary database, checks RLS
 behaviour, and stops/removes the container. It does not run `npx supabase`,
 install the Supabase CLI, add a host Supabase dependency, or run Supabase Cloud

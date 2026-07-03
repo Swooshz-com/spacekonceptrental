@@ -3,6 +3,7 @@ const { spawnSync } = require('node:child_process');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
+const { ensureDockerRunning } = require('./ensure-docker-running.cjs');
 
 const repoRoot = path.resolve(__dirname, '..');
 const migrationsDir = path.join(repoRoot, 'supabase', 'migrations');
@@ -11,6 +12,12 @@ const containerName =
   process.env.SUPABASE_RLS_CONTAINER_NAME ||
   `spacekonceptrental-rls-test-${process.pid}-${Date.now()}`;
 const keepContainer = process.env.SUPABASE_RLS_KEEP_DB === '1';
+const dockerReadiness = ensureDockerRunning();
+
+if (!dockerReadiness.ok) {
+  process.exit(1);
+}
+
 const dockerConfigDir = fs.mkdtempSync(
   path.join(os.tmpdir(), 'spacekonceptrental-docker-config-'),
 );
