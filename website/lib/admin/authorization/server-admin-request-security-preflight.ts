@@ -9,6 +9,7 @@ export type StateChangingAdminOperation =
   | "product.write"
   | "category.write"
   | "productImage.write"
+  | "hero.write"
   | "quote.write"
   | "membership.manage";
 
@@ -83,6 +84,7 @@ const stateChangingOperations = new Set<StateChangingAdminOperation>([
   "product.write",
   "category.write",
   "productImage.write",
+  "hero.write",
   "quote.write",
   "membership.manage"
 ]);

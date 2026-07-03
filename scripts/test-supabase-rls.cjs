@@ -28,6 +28,7 @@ const expectedTables = [
   'catalogue_public_workspace_config',
   'categories',
   'conversations',
+  'homepage_hero_content',
   'integration_connections',
   'memberships',
   'messages',
@@ -682,6 +683,9 @@ function assertNoRuntimeSupabaseUse() {
   const approvedQuoteEmailDeliveryLogFiles = new Set([
     'website/lib/quote/quote-email-delivery-log-repository.ts',
   ]);
+  const approvedPublicHeroReadFiles = new Set([
+    'website/lib/hero/public-homepage-hero-repository.ts',
+  ]);
   const approvedMediaUploadFiles = new Set([
     'website/lib/products/media/admin-product-image-upload-route.ts',
   ]);
@@ -854,6 +858,27 @@ function assertNoRuntimeSupabaseUse() {
         );
         assertNoMatches(filePath, content, serverBlockedPatterns);
         assertNoMatches(filePath, content, blockedQuoteWriteTablePatterns);
+        return;
+      }
+
+      if (approvedPublicHeroReadFiles.has(relativePath)) {
+        assert.match(
+          content,
+          /import\s+["']server-only["'];/,
+          `${relativePath} must be marked server-only.`,
+        );
+        assert.match(
+          content,
+          /createServerSupabaseClient/,
+          `${relativePath} must use the approved server Supabase wrapper.`,
+        );
+        assert.match(
+          content,
+          /rpc\(["']get_public_homepage_hero["']/,
+          `${relativePath} must use the trusted public homepage hero RPC.`,
+        );
+        assertNoMatches(filePath, content, serverBlockedPatterns);
+        assertNoMatches(filePath, content, blockedCatalogueTablePatterns);
         return;
       }
 
@@ -1177,6 +1202,187 @@ check('trusted active-workspace catalogue RPC does not return inactive workspace
     ),
     '',
     'trusted catalogue RPC should not return another workspace product by slug',
+  );
+});
+
+check('homepage hero content exposes enabled public reads and protected admin writes only', () => {
+  const enabledWrite = queryCommittedAs(
+    'authenticated',
+    ids.authMemberA,
+    `
+      select workspace_id::text
+      from public.execute_admin_homepage_hero_write(
+        '${ids.workspaceA}'::uuid,
+        jsonb_build_object(
+          'eyebrow', 'Owner managed',
+          'headline', 'Managed homepage hero',
+          'body', 'Protected admin homepage content.',
+          'primary_cta_label', 'Request Quote',
+          'primary_cta_href', '/quote',
+          'secondary_cta_label', 'Browse Catalogue',
+          'secondary_cta_href', '/catalogue',
+          'image_url', 'https://cdn.example.test/hero.jpg',
+          'image_alt', 'Managed lounge setup',
+          'is_enabled', true
+        )
+      )
+    `,
+  );
+
+  assertCsv(
+    enabledWrite,
+    ids.workspaceA,
+    'owner/admin should write homepage hero content through the RPC',
+  );
+  assertCsv(
+    scalarAs(
+      'anon',
+      null,
+      `select headline from public.get_public_homepage_hero('${ids.workspaceA}')`,
+    ),
+    'Managed homepage hero',
+    'anonymous public RPC should read enabled hero content only',
+  );
+  assertCsv(
+    scalarAs(
+      'anon',
+      null,
+      `select count(*)::text from public.homepage_hero_content where workspace_id = '${ids.workspaceA}'`,
+    ),
+    '1',
+    'anonymous direct table reads should only see enabled hero content',
+  );
+  assertCsv(
+    scalarAs(
+      'anon',
+      null,
+      `select count(*)::text from public.get_public_homepage_hero('${ids.workspaceB}')`,
+    ),
+    '0',
+    'anonymous public RPC should not read another workspace without enabled content',
+  );
+
+  queryCommittedAs(
+    'authenticated',
+    ids.authMemberA,
+    `
+      select workspace_id::text
+      from public.execute_admin_homepage_hero_write(
+        '${ids.workspaceA}'::uuid,
+        jsonb_build_object(
+          'eyebrow', 'Owner draft',
+          'headline', 'Draft homepage hero',
+          'body', 'Draft protected admin homepage content.',
+          'primary_cta_label', 'Request Quote',
+          'primary_cta_href', '/quote',
+          'secondary_cta_label', 'Browse Catalogue',
+          'secondary_cta_href', '/catalogue',
+          'image_url', 'https://cdn.example.test/draft-hero.jpg',
+          'image_alt', 'Draft managed lounge setup',
+          'is_enabled', false
+        )
+      )
+    `,
+  );
+  assertCsv(
+    scalarAs(
+      'anon',
+      null,
+      `select count(*)::text from public.get_public_homepage_hero('${ids.workspaceA}')`,
+    ),
+    '0',
+    'anonymous public RPC should hide unpublished hero content',
+  );
+  assertCsv(
+    scalarAs(
+      'authenticated',
+      ids.authMemberA,
+      `select headline from public.homepage_hero_content where workspace_id = '${ids.workspaceA}'`,
+    ),
+    'Draft homepage hero',
+    'owner/admin should still read unpublished hero content in protected admin',
+  );
+  assertCsv(
+    scalarAs(
+      'authenticated',
+      ids.authViewerA,
+      `select count(*)::text from public.homepage_hero_content where workspace_id = '${ids.workspaceA}'`,
+    ),
+    '0',
+    'workspace viewers should not read unpublished hero content',
+  );
+  statementFailsAs(
+    'authenticated',
+    ids.authViewerA,
+    `
+      select workspace_id::text
+      from public.execute_admin_homepage_hero_write(
+        '${ids.workspaceA}'::uuid,
+        jsonb_build_object(
+          'headline', 'Viewer write',
+          'body', 'Viewer write should fail.',
+          'primary_cta_label', 'Request Quote',
+          'primary_cta_href', '/quote',
+          'secondary_cta_label', 'Browse Catalogue',
+          'secondary_cta_href', '/catalogue',
+          'image_url', 'https://cdn.example.test/viewer-hero.jpg',
+          'image_alt', 'Viewer hero',
+          'is_enabled', true
+        )
+      )
+    `,
+    /hero_admin_context_invalid|permission denied/i,
+  );
+  statementFailsAs(
+    'anon',
+    null,
+    `
+      select workspace_id::text
+      from public.execute_admin_homepage_hero_write(
+        '${ids.workspaceA}'::uuid,
+        jsonb_build_object(
+          'headline', 'Anonymous write',
+          'body', 'Anonymous write should fail.',
+          'primary_cta_label', 'Request Quote',
+          'primary_cta_href', '/quote',
+          'secondary_cta_label', 'Browse Catalogue',
+          'secondary_cta_href', '/catalogue',
+          'image_url', 'https://cdn.example.test/anon-hero.jpg',
+          'image_alt', 'Anonymous hero',
+          'is_enabled', true
+        )
+      )
+    `,
+    /permission denied/i,
+  );
+  statementFailsAs(
+    'authenticated',
+    ids.authMemberA,
+    `
+      insert into public.homepage_hero_content (
+        workspace_id,
+        headline,
+        body,
+        primary_cta_label,
+        primary_cta_href,
+        secondary_cta_label,
+        secondary_cta_href,
+        image_url,
+        image_alt
+      )
+      values (
+        '${ids.workspaceB}',
+        'Direct write',
+        'Direct writes should fail.',
+        'Request Quote',
+        '/quote',
+        'Browse Catalogue',
+        '/catalogue',
+        'https://cdn.example.test/direct.jpg',
+        'Direct write hero'
+      )
+    `,
+    /permission denied/i,
   );
 });
 

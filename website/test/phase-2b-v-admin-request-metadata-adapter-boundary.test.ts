@@ -345,6 +345,7 @@ describe("Phase 2B-V server-only admin request metadata adapter boundary", () =>
       "website/app/api/admin/categories/route.ts",
       "website/app/api/admin/csrf-proof/route.test.ts",
       "website/app/api/admin/csrf-proof/route.ts",
+      "website/app/api/admin/hero/route.ts",
       "website/app/api/admin/login/route.test.ts",
       "website/app/api/admin/login/route.ts",
       "website/app/api/admin/product-images/[imageId]/archive/route.ts",

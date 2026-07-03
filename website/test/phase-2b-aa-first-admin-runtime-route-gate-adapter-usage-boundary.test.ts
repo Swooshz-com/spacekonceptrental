@@ -34,6 +34,8 @@ const approvedRuntimeRouteGateAdapterBoundaryPath =
   "website/lib/admin/authorization/server-admin-runtime-route-gate-adapter.ts";
 const approvedAdminProductWriteRouteBoundaryPath =
   "website/lib/products/persistence/admin-product-write-route.ts";
+const approvedAdminHomepageHeroWriteRouteBoundaryPath =
+  "website/lib/hero/admin-homepage-hero-write-route.ts";
 const approvedAdminQuoteStatusRouteBoundaryPath =
   "website/lib/quote/admin-write/admin-quote-request-status-route.ts";
 const approvedAdminQuoteCrmHandoffRouteBoundaryPath =
@@ -215,6 +217,7 @@ describe("Phase 2B-AA first admin runtime route gate adapter usage boundary", ()
         ({ filePath }) =>
           filePath !== approvedRuntimeRouteGateAdapterBoundaryPath &&
           filePath !== approvedAdminProductWriteRouteBoundaryPath &&
+          filePath !== approvedAdminHomepageHeroWriteRouteBoundaryPath &&
           filePath !== approvedAdminQuoteStatusRouteBoundaryPath &&
           filePath !== approvedAdminQuoteCrmHandoffRouteBoundaryPath &&
           filePath !== approvedAdminQuoteCrmHandoffPacketRouteBoundaryPath &&
@@ -264,6 +267,7 @@ describe("Phase 2B-AA first admin runtime route gate adapter usage boundary", ()
       "website/app/api/admin/categories/route.ts",
       "website/app/api/admin/csrf-proof/route.test.ts",
       "website/app/api/admin/csrf-proof/route.ts",
+      "website/app/api/admin/hero/route.ts",
       "website/app/api/admin/login/route.test.ts",
       "website/app/api/admin/login/route.ts",
       "website/app/api/admin/product-images/[imageId]/archive/route.ts",
