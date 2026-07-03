@@ -19,6 +19,11 @@ Phase 2O-A/B adds preview deployment approval package docs and redacted
 operator evidence templates. No deployment is performed by that approval
 package work.
 
+The final hosted Hostinger/Coolify/VPS execution sequence for the owner MVP is
+documented in `docs/HOSTED-DEPLOYMENT-EXECUTION-RUNBOOK.md`. This document
+remains the environment contract; the hosted runbook owns the cutover
+checklist, hold conditions, and rollback/disable sequence.
+
 The future target shape remains a Vercel-hosted `website/` Next.js app with
 server-only Supabase and a temporary server-side n8n provider behind
 first-party routes. Catalogue missing-env behaviour renders safe unavailable or
