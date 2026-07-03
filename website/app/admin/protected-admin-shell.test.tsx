@@ -495,7 +495,7 @@ describe("protected admin shell", () => {
     expect(screen.queryByText(/supabase/i)).not.toBeInTheDocument();
   });
 
-  it("renders one calm empty state each for hero, enquiry email, and delivery log", () => {
+  it("renders a real hero form plus calm empty states for enquiry email and delivery log", () => {
     const baseState = {
       status: "authorised_admin" as const,
       dashboard: {
@@ -517,11 +517,23 @@ describe("protected admin shell", () => {
       <AdminShellContent state={baseState} view={{ kind: "hero" }} />
     );
     expect(
-      screen.getByRole("heading", { name: /homepage hero image/i })
+      screen.getByRole("heading", { name: /homepage hero content/i })
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: /replace hero image/i })
-    ).toBeDisabled();
+      screen.getByRole("textbox", { name: /headline/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("textbox", { name: /hero image url/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("checkbox", { name: /publish hero content/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /save hero content/i })
+    ).toBeEnabled();
+    expect(
+      screen.queryByRole("button", { name: /replace hero image/i })
+    ).not.toBeInTheDocument();
     unmountHero();
 
     const { unmount: unmountEmail } = render(

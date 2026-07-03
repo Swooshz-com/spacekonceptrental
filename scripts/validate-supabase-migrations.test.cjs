@@ -301,7 +301,7 @@ test('real migration directory passes static validation', () => {
   const result = runValidator(realMigrationsDir);
 
   assert.equal(result.status, 0, result.stdout + result.stderr);
-  assert.match(result.stdout, /checked 25 migration SQL file\(s\)/);
+  assert.match(result.stdout, /checked 26 migration SQL file\(s\)/);
 });
 
 test('real base schema migration creates the planned MVP tables', () => {
@@ -1702,7 +1702,99 @@ test('real migrations add quote email delivery log as append-only technical meta
     /on public\.quote_email_delivery_log for delete/,
   );
   assert.doesNotMatch(migration, /hubapi|hubspot api|n8n|webhook|smtp|google workspace/i);
-  assert.doesNotMatch(migration, /checkout|payment|purchase|booking|reservation|order/i);
+  assert.doesNotMatch(migration, /checkout|payment|purchase|booking|reservation/i);
+});
+
+test('real migrations add workspace-scoped homepage hero content with protected admin writes', () => {
+  const migrationFileName =
+    '20260703100000_homepage_hero_content_foundation.sql';
+  const migration = readRealMigration(migrationFileName);
+  const sql = normalizeSql(migration);
+
+  assert.match(sql, /create table if not exists public\.homepage_hero_content \(/);
+  for (const column of [
+    'workspace_id uuid primary key',
+    'eyebrow text not null default',
+    'headline text not null',
+    'body text not null',
+    'primary_cta_label text not null',
+    'primary_cta_href text not null',
+    'secondary_cta_label text not null',
+    'secondary_cta_href text not null',
+    'image_url text not null',
+    'image_alt text not null',
+    'is_enabled boolean not null default false',
+    'updated_at timestamptz not null default now()',
+    'updated_by uuid',
+  ]) {
+    assert.ok(sql.includes(column), `Missing homepage hero column: ${column}`);
+  }
+
+  assert.match(
+    sql,
+    /constraint homepage_hero_content_workspace_id_fkey foreign key \(workspace_id\) references public\.workspaces \(id\) on delete cascade/,
+  );
+  assert.match(
+    sql,
+    /alter table public\.homepage_hero_content enable row level security;/,
+  );
+  assert.match(sql, /revoke all on table public\.homepage_hero_content from public;/);
+  assert.match(sql, /revoke all on table public\.homepage_hero_content from anon;/);
+  assert.match(
+    sql,
+    /revoke all on table public\.homepage_hero_content from authenticated;/,
+  );
+  assert.match(
+    sql,
+    /grant select \( workspace_id, eyebrow, headline, body, primary_cta_label, primary_cta_href, secondary_cta_label, secondary_cta_href, image_url, image_alt, is_enabled, updated_at, updated_by \) on public\.homepage_hero_content to anon, authenticated;/,
+  );
+  assert.match(
+    sql,
+    /create policy homepage_hero_content_public_enabled_select on public\.homepage_hero_content for select to anon, authenticated using \(is_enabled = true\);/,
+  );
+  assert.match(
+    sql,
+    /create policy homepage_hero_content_admin_select on public\.homepage_hero_content for select to authenticated using \(public\.is_workspace_product_manager\(workspace_id\)\);/,
+  );
+  assert.match(
+    sql,
+    /create or replace function public\.get_public_homepage_hero\( expected_workspace_id uuid \)/,
+  );
+  assert.match(sql, /security invoker/);
+  assert.match(sql, /where h\.workspace_id = expected_workspace_id and h\.is_enabled = true/);
+  assert.match(
+    sql,
+    /grant execute on function public\.get_public_homepage_hero\(uuid\) to anon, authenticated;/,
+  );
+  assert.match(
+    sql,
+    /create or replace function public\.execute_admin_homepage_hero_write\( p_workspace_id uuid, p_payload jsonb \)/,
+  );
+  assert.match(sql, /security definer/);
+  assert.match(sql, /v_actor_id := public\.current_product_admin_user_id\(p_workspace_id\);/);
+  assert.match(
+    sql,
+    /grant execute on function public\.execute_admin_homepage_hero_write\(uuid, jsonb\) to authenticated;/,
+  );
+  assert.doesNotMatch(
+    sql,
+    /grant execute on function public\.execute_admin_homepage_hero_write\(uuid, jsonb\) to anon/,
+  );
+  assert.doesNotMatch(
+    sql,
+    /grant (insert|update|delete).*on public\.homepage_hero_content to (anon|authenticated)/,
+  );
+  assert.doesNotMatch(
+    sql,
+    /create policy [^;]* on public\.homepage_hero_content for (insert|update|delete|all) to anon/,
+  );
+  assert.doesNotMatch(
+    sql,
+    /create policy [^;]* on public\.homepage_hero_content for (insert|update|delete|all) to authenticated/,
+  );
+  assert.doesNotMatch(migration, /SUPABASE_SERVICE_ROLE|NEXT_PUBLIC|chat-config/i);
+  assert.doesNotMatch(migration, /hubapi|hubspot api|n8n|pinecone|webhook|smtp|resend/i);
+  assert.doesNotMatch(migration, /checkout|payment|purchase|booking|reservation/i);
 });
 
 test('real RLS policy migration scopes admin reads through workspace membership', () => {

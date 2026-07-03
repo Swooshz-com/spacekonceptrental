@@ -292,6 +292,8 @@ describe("POST /api/admin/csrf-proof", () => {
     ["category.write", "admin"],
     ["productImage.write", "owner"],
     ["productImage.write", "admin"],
+    ["hero.write", "owner"],
+    ["hero.write", "admin"],
     ["quote.write", "owner"],
     ["quote.write", "admin"],
     ["membership.manage", "owner"]

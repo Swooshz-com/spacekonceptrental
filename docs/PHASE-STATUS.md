@@ -1,3 +1,27 @@
+## Protected Admin Hero Content Storage Foundation
+
+References: `supabase/migrations/20260703100000_homepage_hero_content_foundation.sql`, `website/lib/hero/homepage-hero-content.ts`, `website/lib/hero/public-homepage-hero-repository.ts`, `website/lib/hero/admin-homepage-hero-read.ts`, `website/lib/hero/admin-homepage-hero-write.ts`, `website/app/api/admin/hero/route.ts`, `website/components/admin/hero-content-management-panel.tsx`, `website/app/admin/hero/page.tsx`, and `website/components/PublicStitch.tsx`.
+
+The protected Hero page is no longer a dead placeholder. Approved owner/admin
+users can manage workspace-scoped homepage hero content through the existing
+protected admin gate: eyebrow, headline, body, CTA labels/hrefs, image
+URL/reference, image alt text, and enabled state. Persistence uses
+`homepage_hero_content`, RLS, enabled public reads, and a protected
+owner/admin RPC write boundary. Browser Supabase and service-role browser
+paths remain forbidden.
+
+Public homepage rendering preserves the existing Hero layout and styling. If
+enabled managed content is unavailable, the public homepage keeps the existing
+static Hero content intentionally. Hero media upload/storage, raw file upload,
+image transformation, and external media provider integration remain deferred.
+
+Production launch still requires
+`npm run validate:production-security-readiness -- --launch` in the hosted
+runtime environment and a safe live quote/email handoff verification after env
+readiness passes. Public visuals, public CSS, public layout, and public design
+remain frozen unless explicitly requested or a concrete functional bug is
+found.
+
 ## Quote Enquiry Email Handoff Delivery Log Foundation
 
 References: `docs/architecture/QUOTE-ENQUIRY-EMAIL-HANDOFF-DELIVERY-LOG-FOUNDATION.md`, `website/lib/quote/email-handoff.ts`, `website/lib/quote/quote-email-delivery-log-repository.ts`, `website/lib/quote/admin-read/admin-quote-email-delivery-log.ts`, `website/app/api/quote/route.ts`, `website/app/admin/enquiry-email/page.tsx`, `website/app/admin/delivery-log/page.tsx`, and `supabase/migrations/20260703010000_quote_email_delivery_log_foundation.sql`.

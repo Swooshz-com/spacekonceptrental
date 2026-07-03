@@ -9,6 +9,10 @@ import {
 const workspaceId = "11111111-1111-4111-8111-111111111111";
 
 function decisionFor(role: AdminRole) {
+  return decisionForOperation(role, "quote.write");
+}
+
+function decisionForOperation(role: AdminRole, operation: string) {
   return authorizeAdminOperation({
     authenticated: true,
     adminUser: {
@@ -22,7 +26,7 @@ function decisionFor(role: AdminRole) {
       status: "active",
       role
     },
-    operation: "quote.write"
+    operation
   });
 }
 
@@ -47,6 +51,19 @@ describe("admin authorization policy", () => {
       statusCode: 403
     });
   });
+
+  it.each<AdminRole>(["owner", "admin"])(
+    "allows %s to manage homepage hero content",
+    (role) => {
+      expect(isSupportedAdminOperation("hero.write")).toBe(true);
+      expect(decisionForOperation(role, "hero.write")).toStrictEqual({
+        allowed: true,
+        reason: "allowed",
+        statusCode: 200,
+        workspaceId
+      });
+    }
+  );
 
   it("keeps unsupported operation behavior intact", () => {
     expect(isSupportedAdminOperation("quote.delete")).toBe(false);

@@ -36,6 +36,11 @@ const safeQuoteWriteInput = {
   requestedOperation: "quote.write"
 };
 
+const safeHeroWriteInput = {
+  ...safeWriteInput,
+  requestedOperation: "hero.write"
+};
+
 function readSource() {
   return readFileSync(sourcePath, "utf8");
 }
@@ -177,6 +182,32 @@ describe("server admin request security preflight", () => {
         verifyCsrfProof: async (input) => {
           expect(input).toEqual({
             requestedOperation: "quote.write",
+            requestMethod: "POST",
+            requestOrigin: "https://admin.space.test",
+            requestHost: "admin.space.test",
+            csrfProof: "csrf-proof-token"
+          });
+
+          return {
+            valid: true
+          };
+        }
+      }
+    );
+
+    expect(result).toEqual({
+      allowed: true,
+      reason: "request_security_preflight_passed"
+    });
+  });
+
+  it("treats hero.write as a state-changing operation bound to CSRF proof verification", async () => {
+    const result = await validateServerAdminRequestSecurityPreflight(
+      safeHeroWriteInput,
+      {
+        verifyCsrfProof: async (input) => {
+          expect(input).toEqual({
+            requestedOperation: "hero.write",
             requestMethod: "POST",
             requestOrigin: "https://admin.space.test",
             requestHost: "admin.space.test",

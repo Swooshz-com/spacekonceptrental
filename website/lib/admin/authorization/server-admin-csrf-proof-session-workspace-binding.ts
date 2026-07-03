@@ -22,6 +22,7 @@ export type ServerAdminCsrfProofBindingOperation =
   | "product.write"
   | "category.write"
   | "productImage.write"
+  | "hero.write"
   | "quote.write"
   | "membership.manage";
 
@@ -85,6 +86,7 @@ const csrfProofBindingOperations = new Set<ServerAdminCsrfProofBindingOperation>
     "product.write",
     "category.write",
     "productImage.write",
+    "hero.write",
     "quote.write",
     "membership.manage"
   ]

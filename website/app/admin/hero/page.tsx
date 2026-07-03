@@ -1,3 +1,4 @@
+import { resolveAdminHomepageHeroRead } from "../../../lib/hero/admin-homepage-hero-read";
 import {
   AdminShellContent,
   resolveProtectedAdminShellState
@@ -8,6 +9,10 @@ export const revalidate = 0;
 
 export default async function AdminHeroPage() {
   const state = await resolveProtectedAdminShellState();
+  const hero =
+    state.status === "authorised_admin"
+      ? await resolveAdminHomepageHeroRead()
+      : undefined;
 
-  return <AdminShellContent state={state} view={{ kind: "hero" }} />;
+  return <AdminShellContent state={state} view={{ kind: "hero", hero }} />;
 }

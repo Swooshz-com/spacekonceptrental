@@ -114,6 +114,24 @@ describe("server admin CSRF proof issuer", () => {
     expect(segments[1]).toBe(encodeBase64Url(`signed:${segments[0]}`));
   });
 
+  it("can issue a proof for the protected hero write operation", async () => {
+    const result = await issueServerAdminCsrfProof(
+      createInput({ operation: "hero.write" }),
+      createDependencies()
+    );
+
+    expect(result.issued).toBe(true);
+
+    if (!result.issued) {
+      throw new Error("expected proof issuance to succeed");
+    }
+
+    expect(decodePayloadSegment(result.csrfProof.split(".")[0])).toMatchObject({
+      operation: "hero.write",
+      sessionBinding: "session-binding-1"
+    });
+  });
+
   it("issues a proof that the Phase 2B-R verifier can validate in an isolated unit test", async () => {
     const issued = await issueServerAdminCsrfProof(createInput(), {
       signCsrfProof: async ({ payloadSegment }) => `signed:${payloadSegment}`
