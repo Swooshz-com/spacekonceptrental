@@ -1,6 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { sendQuoteEnquiryEmailHandoff } from "./email-handoff";
+import {
+  resolveQuoteEnquiryEmailConfigStatus,
+  sendQuoteEnquiryEmailHandoff
+} from "./email-handoff";
 import type { QuoteEmailProvider } from "./email-handoff";
 import type { QuoteSubmission } from "./types";
 
@@ -44,6 +47,21 @@ const configuredEnv = {
 };
 
 describe("quote enquiry email handoff", () => {
+  it("returns admin-facing config status without provider secrets", () => {
+    const status = resolveQuoteEnquiryEmailConfigStatus(configuredEnv);
+    const serialized = JSON.stringify(status);
+
+    expect(status).toEqual({
+      provider: "resend",
+      providerConfigured: true,
+      recipientConfigured: true,
+      recipientEmail: "ev***@spacekoncept.example"
+    });
+    expect(serialized).not.toContain(configuredEnv.RESEND_API_KEY);
+    expect(serialized).not.toContain("RESEND_API_KEY");
+    expect(serialized).not.toContain("events@spacekoncept.example");
+  });
+
   it("sends all required enquiry details and records a sent delivery log", async () => {
     const provider = vi.fn<QuoteEmailProvider>(async () => ({
       ok: true as const,

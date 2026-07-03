@@ -5,6 +5,7 @@ import {
   getChatProviderRuntimeConfig,
   getN8nChatRuntimeConfig,
   getPublicSafeServerRuntimeConfigSummary,
+  getQuoteEmailHandoffRuntimeConfig,
   getSupabaseServerRuntimeConfig,
   parseServerRuntimeConfig,
   serverRuntimeEnvNames
@@ -48,6 +49,13 @@ const validEnv = {
   N8N_CHAT_WEBHOOK_TIMEOUT_MS: "45000",
   CHAT_TRUSTED_CLIENT_IP_HEADER: "CF-Connecting-IP",
   QUOTE_TRUSTED_CLIENT_IP_HEADER: "X-Real-IP"
+};
+
+const quoteEmailEnv = {
+  QUOTE_ENQUIRY_EMAIL_PROVIDER: " resend ",
+  QUOTE_ENQUIRY_EMAIL_RECIPIENT: " Events@SpaceKoncept.example ",
+  QUOTE_ENQUIRY_EMAIL_FROM: " Quotes@SpaceKoncept.example ",
+  RESEND_API_KEY: "resend-secret-for-tests"
 };
 
 describe("server runtime config contract", () => {
@@ -160,5 +168,80 @@ describe("server runtime config contract", () => {
       configured: false,
       reason: "unsupported_provider"
     });
+  });
+
+  it("validates configured quote email handoff runtime env without leaking secrets", () => {
+    const result = getQuoteEmailHandoffRuntimeConfig(quoteEmailEnv);
+
+    expect(result).toEqual({
+      configured: true,
+      provider: "resend",
+      providerConfigured: true,
+      recipientConfigured: true,
+      recipientEmail: "ev***@spacekoncept.example",
+      recipientEmailRaw: "events@spacekoncept.example",
+      fromEmail: "quotes@spacekoncept.example",
+      resendApiKey: "resend-secret-for-tests",
+      issues: []
+    });
+    expect(JSON.stringify(result.issues)).not.toContain("resend-secret-for-tests");
+  });
+
+  it("reports quote email missing recipient safely", () => {
+    const result = getQuoteEmailHandoffRuntimeConfig({
+      ...quoteEmailEnv,
+      QUOTE_ENQUIRY_EMAIL_RECIPIENT: " "
+    });
+
+    expect(result.configured).toBe(false);
+    expect(result.recipientConfigured).toBe(false);
+    expect(result.issues).toEqual([
+      {
+        name: "QUOTE_ENQUIRY_EMAIL_RECIPIENT",
+        kind: "missing",
+        reason: "required"
+      }
+    ]);
+  });
+
+  it("reports quote email missing sender and provider api key safely", () => {
+    const result = getQuoteEmailHandoffRuntimeConfig({
+      ...quoteEmailEnv,
+      QUOTE_ENQUIRY_EMAIL_FROM: "",
+      RESEND_API_KEY: ""
+    });
+    const serializedIssues = JSON.stringify(result.issues);
+
+    expect(result.configured).toBe(false);
+    expect(result.providerConfigured).toBe(false);
+    expect(result.issues).toEqual([
+      {
+        name: "QUOTE_ENQUIRY_EMAIL_FROM",
+        kind: "missing",
+        reason: "required"
+      },
+      {
+        name: "RESEND_API_KEY",
+        kind: "missing",
+        reason: "required"
+      }
+    ]);
+    expect(serializedIssues).not.toContain("resend-secret-for-tests");
+  });
+
+  it("reports unsupported quote email provider as invalid", () => {
+    const result = getQuoteEmailHandoffRuntimeConfig({
+      ...quoteEmailEnv,
+      QUOTE_ENQUIRY_EMAIL_PROVIDER: "smtp"
+    });
+
+    expect(result.configured).toBe(false);
+    expect(result.providerConfigured).toBe(false);
+    expect(result.issues).toContainEqual({
+      name: "QUOTE_ENQUIRY_EMAIL_PROVIDER",
+      kind: "invalid",
+      reason: "unsupported_provider"
+    });
+    expect(JSON.stringify(result)).not.toContain("smtp");
   });
 });

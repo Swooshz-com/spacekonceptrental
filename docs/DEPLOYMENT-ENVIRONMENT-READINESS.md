@@ -61,6 +61,13 @@ helpers:
   chat throttling.
 - `QUOTE_TRUSTED_CLIENT_IP_HEADER`: optional trusted proxy/CDN header name for
   quote throttling.
+- `QUOTE_ENQUIRY_EMAIL_PROVIDER`: optional server-side quote email provider
+  selector; blank or missing defaults to `resend`.
+- `QUOTE_ENQUIRY_EMAIL_RECIPIENT`: server-only business recipient for quote
+  enquiry email handoff.
+- `QUOTE_ENQUIRY_EMAIL_FROM`: server-only verified Resend sender/from address.
+- `RESEND_API_KEY`: server-only Resend provider secret for quote enquiry email
+  handoff.
 - `ADMIN_EXPECTED_ORIGIN`: trusted expected admin request origin.
 - `ADMIN_EXPECTED_HOST`: trusted expected admin request host.
 - `ADMIN_CSRF_PROOF_SECRET`: server-only proof signing secret for admin CSRF
@@ -69,6 +76,79 @@ helpers:
 Trusted client IP header values must name only headers overwritten by the
 deployment proxy or CDN. In-process quote and chat throttling remains
 best-effort and must not be treated as final distributed abuse protection.
+
+## Quote enquiry email handoff env
+
+Quote enquiry email delivery is server-only and environment-managed:
+
+- `QUOTE_ENQUIRY_EMAIL_PROVIDER`: optional. Omit or set to `resend`; unsupported
+  values are invalid.
+- `QUOTE_ENQUIRY_EMAIL_RECIPIENT`: required before production quote email
+  handoff is enabled. Must be a valid email address.
+- `QUOTE_ENQUIRY_EMAIL_FROM`: required for Resend. Must be a valid email
+  address on a verified Resend sending domain or sender identity.
+- `RESEND_API_KEY`: required for Resend. Store only as a server-side secret.
+
+Safe example names for local documentation or screenshots:
+
+- Provider env name: `QUOTE_ENQUIRY_EMAIL_PROVIDER`; safe placeholder value:
+  `resend`.
+- Recipient env name: `QUOTE_ENQUIRY_EMAIL_RECIPIENT`; safe placeholder
+  address: `events@example.invalid`.
+- From env name: `QUOTE_ENQUIRY_EMAIL_FROM`; safe placeholder address:
+  `quotes@example.invalid`.
+- Provider API key env name: `RESEND_API_KEY`; use only the hosting
+  provider's server-side secret field for the real value.
+
+Do not commit real values. Do not paste `RESEND_API_KEY` into PR bodies,
+screenshots, admin pages, browser code, logs, or `.env` examples.
+
+Resend setup expectation:
+
+1. Verify the sending domain or sender identity in Resend outside this repo.
+2. Use that verified address as `QUOTE_ENQUIRY_EMAIL_FROM`.
+3. Store `RESEND_API_KEY` only in the hosting provider's server-side secret
+   store.
+4. Run the readiness command in the same runtime environment before hosting:
+
+```powershell
+npm run validate:quote-email-runtime-readiness
+```
+
+The readiness command reports only env names and status labels. It
+distinguishes configured, missing recipient, missing from address, missing
+provider API key, and unsupported provider states without printing values.
+Normal local/CI release validation does not require real email secrets; this
+readiness command is the production-hosting check.
+
+Safe quote submission verification after env is configured:
+
+1. Submit a normal public quote request through the existing quote form or
+   first-party `POST /api/quote` path.
+2. Confirm the quote persisted first, then the server attempted email handoff.
+3. Expect the public response to be success only when persistence and email
+   delivery both succeed.
+4. Expect a generic 503-style public response with a request reference when the
+   email handoff is unconfigured or fails.
+5. Inspect protected admin Enquiry Email for provider/recipient status and
+   redacted recipient only.
+6. Inspect protected admin Delivery Log for technical delivery metadata only.
+
+Expected storage and privacy behaviour:
+
+- Delivery log rows store technical metadata only: request/reference ids,
+  provider, status, provider message id or safe error code, attempted time, and
+  redacted recipient state.
+- Delivery log rows do not store raw email bodies, full customer messages, item
+  details, raw provider payloads, headers, cookies, tokens, secrets, or provider
+  response bodies.
+- Admin Enquiry Email remains status-only. It has no editable settings and must
+  not show `RESEND_API_KEY`, raw env values, or provider response bodies.
+
+Do not expect this feature to provide a quote inbox, quote detail admin route,
+customer confirmation email, retry system, webhook, bounce handling, scheduler,
+CRM workflow, HubSpot sync, customer accounts, public quote tracking, cart,
+checkout, payment, order, booking, reservation, stock, or fulfilment flow.
 
 ## Supabase/project env
 

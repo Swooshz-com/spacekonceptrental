@@ -595,6 +595,9 @@ describe("protected admin shell", () => {
     expect(
       screen.queryByRole("button", { name: /save|set recipient|send/i })
     ).not.toBeInTheDocument();
+    expect(document.body.textContent).not.toContain("RESEND_API_KEY");
+    expect(document.body.textContent).not.toContain("resend-secret");
+    expect(document.body.textContent).not.toContain("raw provider body");
   });
 
   it("renders compact delivery log records without quote detail workflow", () => {
