@@ -759,15 +759,31 @@ function AdminEnquiryEmailStatusOperations({
     ? "Recipient configured"
     : "Recipient not configured";
   const setupIssue = quoteEmailSetupIssueLabel(config.missingReason);
+  const statusLabel =
+    config.providerConfigured && config.recipientConfigured
+      ? "Ready"
+      : config.missingReason === "email_provider_unsupported"
+        ? "Unavailable"
+        : "Needs setup";
+  const statusClassName =
+    statusLabel === "Ready"
+      ? styles.statusPillReady
+      : statusLabel === "Unavailable"
+        ? styles.statusPillMuted
+        : styles.statusPillWarning;
 
   return (
-    <section className={styles.emptyStatePanel} aria-label="Enquiry email recipient">
-      <span className={styles.emptyStateIcon} aria-hidden="true">
-        {emptyStateIcons.mail}
-      </span>
-      <p className="eyebrow">Enquiry Email</p>
-      <h2>Enquiry email recipient</h2>
-      <p>
+    <section className={styles.statusSummaryPanel} aria-label="Enquiry email handoff status">
+      <div className={styles.statusSummaryHeader}>
+        <div>
+          <p className="eyebrow">Enquiry Email</p>
+          <h2>Enquiry email handoff status</h2>
+        </div>
+        <span className={`${styles.statusPill} ${statusClassName}`}>
+          {statusLabel}
+        </span>
+      </div>
+      <p className={styles.statusSummaryCopy}>
         Quote requests are emailed to the configured recipient for manual
         follow-up. Settings are environment-managed for now, with no internal
         quote inbox.
@@ -798,6 +814,11 @@ function AdminEnquiryEmailStatusOperations({
           </div>
         ) : null}
       </dl>
+      <nav className={styles.inlineActions} aria-label="Enquiry email actions">
+        <a className={styles.adminBtnGhost} href="/admin/delivery-log">
+          Open delivery log
+        </a>
+      </nav>
     </section>
   );
 }
@@ -824,7 +845,7 @@ function AdminDeliveryLogTableOperations({
       <AdminEmptyState
         eyebrow="Delivery Log"
         title="Email delivery log"
-        message="No delivery records yet - enquiry email attempts will appear here once delivery logging exists."
+        message="No enquiry email delivery attempts have been recorded yet."
         icon={emptyStateIcons.log}
       />
     );

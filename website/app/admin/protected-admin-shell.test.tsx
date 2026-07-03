@@ -540,12 +540,16 @@ describe("protected admin shell", () => {
       <AdminShellContent state={baseState} view={{ kind: "enquiry-email" }} />
     );
     expect(
-      screen.getByRole("heading", { name: /enquiry email recipient/i })
+      screen.getByRole("heading", { name: /enquiry email handoff status/i })
     ).toBeInTheDocument();
+    expect(screen.getByText(/needs setup/i)).toBeInTheDocument();
     expect(screen.getByText(/recipient not configured/i)).toBeInTheDocument();
     expect(screen.getByText(/provider not configured/i)).toBeInTheDocument();
     expect(screen.getByText(/environment-managed/i)).toBeInTheDocument();
     expect(screen.getByText(/no internal quote inbox/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: /open delivery log/i })
+    ).toHaveAttribute("href", "/admin/delivery-log");
     expect(
       screen.queryByRole("button", { name: /send/i })
     ).not.toBeInTheDocument();
@@ -559,7 +563,7 @@ describe("protected admin shell", () => {
     ).toBeInTheDocument();
     expect(
       screen.getByText(
-        /No delivery records yet - enquiry email attempts will appear here once delivery logging exists\./i
+        /No enquiry email delivery attempts have been recorded yet\./i
       )
     ).toBeInTheDocument();
     expect(screen.queryByText(/QR-20260603-NEWEST/i)).not.toBeInTheDocument();
@@ -597,10 +601,14 @@ describe("protected admin shell", () => {
       />
     );
 
+    expect(screen.getByText(/^ready$/i)).toBeInTheDocument();
     expect(screen.getByText(/provider configured/i)).toBeInTheDocument();
     expect(screen.getByText(/recipient configured/i)).toBeInTheDocument();
     expect(screen.getByText("ev***@spacekoncept.example")).toBeInTheDocument();
     expect(screen.getByText(/environment-managed/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: /open delivery log/i })
+    ).toHaveAttribute("href", "/admin/delivery-log");
     expect(
       screen.queryByRole("textbox", { name: /recipient/i })
     ).not.toBeInTheDocument();

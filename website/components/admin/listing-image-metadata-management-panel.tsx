@@ -562,7 +562,7 @@ export function ListingImageMetadataManagementPanel({
                       aria-label={`Edit listing ${product.name}`}
                       className="premium-button premium-button--secondary"
                       style={{ padding: '6px 12px', fontSize: '12px', height: 'auto' }}
-                      href={`/admin/listings#listing-form-${product.id}`}
+                      href={`/admin/catalogue#listing-form-${product.id}`}
                     >
                       Edit listing
                     </a>
