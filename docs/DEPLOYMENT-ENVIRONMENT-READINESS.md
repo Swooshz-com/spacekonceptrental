@@ -19,13 +19,24 @@ Phase 2O-A/B adds preview deployment approval package docs and redacted
 operator evidence templates. No deployment is performed by that approval
 package work.
 
-The future target shape remains a Vercel-hosted `website/` Next.js app with
-server-only Supabase and a temporary server-side n8n provider behind
-first-party routes. Catalogue missing-env behaviour renders safe unavailable or
-empty recovery states instead of sample listings. Quote route fails safely, and
-Chat route fails safely, when required runtime configuration is absent. The
-future deployment preflight checklist now lives in the required pre-deployment
-review below. Future deployment preflight checklist coverage is preserved.
+The final hosted Hostinger/Coolify/VPS execution sequence for the owner MVP is
+documented in `docs/HOSTED-DEPLOYMENT-EXECUTION-RUNBOOK.md`. This document
+remains the environment contract; the hosted runbook owns the cutover
+checklist, hold conditions, and rollback/disable sequence.
+
+The current hosted target is Hostinger VPS/Coolify for the `website/` Next.js
+app, not a Vercel-hosted `website/` Next.js app. The hosted execution sequence
+lives in `docs/HOSTED-DEPLOYMENT-EXECUTION-RUNBOOK.md`. Hosted Supabase and
+Resend are required services for the current owner-MVP launch path. Any
+temporary server-side n8n provider remains optional and integration-specific;
+n8n must not be treated as required for owner-MVP public launch unless it is
+explicitly approved in a separate scoped task. No `website/chat-config.js`,
+`NEXT_PUBLIC_SUPABASE_*`, `NEXT_PUBLIC_N8N*`, `SUPABASE_SERVICE_ROLE_KEY`,
+`N8N_CHAT_WEBHOOK_URL`, `PINECONE_*`, or `HUBSPOT_*` runtime dependency is
+required for owner-MVP launch; server-only Supabase remains behind first-party routes. Catalogue
+missing-env behaviour renders safe unavailable or empty recovery states instead of sample listings. Quote route fails safely, and Chat route fails safely, when
+required runtime configuration is absent. Future deployment preflight checklist now lives in the required pre-deployment review below. Future
+deployment preflight checklist coverage is preserved.
 
 The machine-readable companion contract is:
 
@@ -168,12 +179,13 @@ These values are server-only even when the Supabase anon key is used:
 catalogue reads are enabled. `QUOTE_WORKSPACE_ID` must match the reviewed quote
 capture workspace before quote persistence is enabled.
 
-## n8n/server-only webhook env
+## Optional n8n/server-only webhook env
 
-The temporary n8n bridge remains server-only:
+Any separately approved temporary n8n bridge remains server-only and
+integration-specific:
 
-- `N8N_CHAT_WEBHOOK_URL`: server-only n8n webhook URL for the temporary chat
-  provider.
+- `N8N_CHAT_WEBHOOK_URL`: server-only n8n webhook URL for a separately
+  approved temporary chat provider.
 - `N8N_CHAT_WEBHOOK_TIMEOUT_MS`: optional server-only timeout setting.
 
 n8n webhook values are server-only. Browser code must call only first-party
@@ -276,7 +288,8 @@ Before public traffic is enabled, reviewers must confirm:
 - `CATALOGUE_WORKSPACE_ID`, `QUOTE_WORKSPACE_ID`, and
   `ADMIN_TRUSTED_WORKSPACE_ID` are reviewed before public traffic.
 - Server-only Supabase env placement is reviewed.
-- Server-only n8n webhook placement is reviewed.
+- Server-only n8n webhook placement is reviewed only if a separately approved
+  n8n integration is in scope.
 - Trusted proxy/CDN client IP header behaviour is reviewed.
 - The remaining-work map is reviewed so deployment is not bundled with
   unrelated privacy, runtime, CRM, notification, SaaS chatbot, or ecommerce
@@ -298,8 +311,8 @@ Before public traffic is enabled, reviewers must confirm:
 The following remain deferred until separately approved:
 
 - Actual deployment.
-- Actual Vercel deployment.
-- Vercel project config.
+- Actual Vercel deployment is not part of the current owner-MVP launch path.
+- Vercel project config is not part of the current owner-MVP launch path.
 - Supabase Cloud connection.
 - Production seed data.
 - Service-role runtime paths.

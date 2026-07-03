@@ -5,8 +5,8 @@ No deployment is approved by this runbook.
 This runbook does not approve or perform deployment.
 
 Phase 2D-A is preparation only. It does not deploy, connect Supabase Cloud, add
-Vercel project config, add real env values, add production config, or change
-runtime behaviour.
+hosting provider project config, add real env values, add production config, or
+change runtime behaviour.
 
 Phase 2L-A/B adds release-candidate acceptance coverage before any future
 preview/deployment review. No deployment is performed by the
@@ -27,8 +27,9 @@ deployment is performed by Phase 2O-A/B.
 
 Use this runbook during a future approved deployment review to prove the SKR
 public site, admin-managed furniture/event-rental catalogue, storage-backed
-listing media, quote request flow, admin quote workflow, and temporary
-server-only n8n chat bridge behave safely before public traffic is enabled.
+listing media, quote request flow, admin quote workflow, and any separately
+approved temporary server-only n8n chat bridge behave safely before public
+traffic is enabled.
 
 ## Scope
 
@@ -40,7 +41,8 @@ This runbook covers:
 - Quote workspace configuration.
 - Admin trusted workspace configuration.
 - Listing media bucket expectations.
-- Server-only n8n webhook expectations.
+- Optional server-only n8n webhook expectations when a separately approved n8n
+  integration is in scope.
 - Trusted proxy/CDN client IP header review.
 - Rate-limit caveats.
 - Smoke-test sequence.
@@ -52,7 +54,7 @@ This runbook covers:
 This runbook does not approve:
 
 - Real deployment.
-- Vercel project config.
+- Vercel project config for the current owner-MVP hosted target.
 - Supabase Cloud connection.
 - Production seed data.
 - Service-role runtime reads or writes.
@@ -74,7 +76,8 @@ Before any future deployment is approved, reviewers must confirm:
   the deployment exists.
 - Server-only Supabase settings are represented only by placeholders such as
   `<server-only-supabase-url>`.
-- The n8n webhook is represented only by `<server-only-n8n-webhook-url>`.
+- Any separately approved n8n webhook is represented only by
+  `<server-only-n8n-webhook-url>`.
 - The selected Supabase project is reviewed without committing real project
   URLs, keys, dashboard links, or screenshots containing secrets.
 - `CATALOGUE_WORKSPACE_ID`, `QUOTE_WORKSPACE_ID`, and
@@ -92,8 +95,8 @@ Review `docs/DEPLOYMENT-ENVIRONMENT-READINESS.md` and
 `docs/contracts/server-env-contract.json` before deployment. Confirm:
 
 - No public client env is currently required.
-- Supabase, catalogue, quote, admin, n8n, and trusted proxy settings are
-  server-only.
+- Supabase, catalogue, quote, admin, any separately approved n8n integration,
+  and trusted proxy settings are server-only.
 - No `NEXT_PUBLIC_SUPABASE_*`, `NEXT_PUBLIC_N8N*`, or
   `NEXT_PUBLIC_SUPABASE_SERVICE_ROLE` variable exists.
 - No `SUPABASE_SERVICE_ROLE_KEY` runtime path exists.
@@ -119,13 +122,13 @@ Phase 2D-A sections:
 - Forbidden public/browser env checks.
 - Active catalogue workspace checks.
 - Quote workspace checks.
-- Server-only n8n webhook checks.
+- Server-only n8n webhook checks are optional when separately approved.
 - Trusted proxy/client IP header checks.
 - Catalogue fallback smoke tests.
 - DB-backed catalogue smoke tests.
 - Quote submission smoke tests.
 - Chat fallback smoke tests.
-- Server-only n8n chat smoke tests.
+- Server-only n8n chat smoke tests are optional when separately approved.
 - Failure/rollback checks.
 - Post-deployment monitoring checks.
 - Evidence to capture in the future deployment PR.
@@ -186,9 +189,10 @@ Before public traffic:
   scope, and session-bound authenticated Supabase access.
 - Confirm no customer upload route and no arbitrary public upload route exists.
 
-## Server-only n8n webhook expectations
+## Optional server-only n8n webhook expectations
 
-Before chat provider smoke testing:
+Before chat provider smoke testing, only if a separately approved n8n
+integration is in scope:
 
 - Confirm `N8N_CHAT_WEBHOOK_URL` is stored only as server-only n8n webhook env.
 - Confirm browser code calls only `POST /api/chat`.
@@ -379,6 +383,9 @@ Run these in order and capture evidence before public traffic.
 
 ### Chat safe fallback
 
+Chat fallback checks are not an owner-MVP public launch requirement unless a
+separately approved chat integration is in scope.
+
 - With n8n webhook env absent or disabled in a reviewed non-production check,
   send a chat message.
 - Confirm the browser calls only `POST /api/chat`.
@@ -388,7 +395,8 @@ Run these in order and capture evidence before public traffic.
 
 ### Server-only n8n webhook path
 
-- With approved server-only n8n webhook env, send a bounded chat message.
+- With separately approved server-only n8n webhook env, send a bounded chat
+  message.
 - Confirm the browser still calls only `POST /api/chat`.
 - Confirm the server-side provider returns a normalized assistant response.
 - Confirm timeout and provider error responses remain normalized.
@@ -457,7 +465,7 @@ Future deployment PR authors should capture:
 - Quote workspace confirmation.
 - Admin trusted workspace confirmation.
 - Listing media bucket/model confirmation.
-- Server-only n8n webhook confirmation.
+- Optional server-only n8n webhook confirmation when separately approved.
 - Trusted proxy/CDN client IP header confirmation.
 - Static/fallback homepage smoke-test result.
 - Catalogue fallback without DB config smoke-test result.
@@ -474,7 +482,8 @@ Future deployment PR authors should capture:
 - Admin quote inbox/status/internal note workflow smoke-test result.
 - Atomic quote workflow RPC behaviour smoke-test result.
 - Chat safe fallback smoke-test result.
-- Server-only n8n webhook path smoke-test result.
+- Optional server-only n8n webhook path smoke-test result when separately
+  approved.
 - 404/error states smoke-test result.
 - No provider/SQL/secret leakage review result.
 - No browser console exposure of server-only env values review result.
