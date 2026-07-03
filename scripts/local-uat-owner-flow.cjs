@@ -15,6 +15,14 @@ const maxChildLogLines = 20;
 const alternatePorts = [3001, 3002, 3003, 3004, 3005];
 const sensitiveLogPattern =
   /\b(?:secret|token|password|api[_-]?key|authorization|cookie)\b/i;
+const unsafeExternalKillSuggestionPattern =
+  /\b(?:taskkill\s+\/PID|kill\s+-|pkill\b|Stop-Process\b)/i;
+const nextDevLockPatterns = [
+  /another next dev server is already running/i,
+  /\block exists\b/i,
+  /same-project dev server/i,
+  /dev server lock/i,
+];
 
 function sleep(ms) {
   return new Promise((resolve) => {
@@ -171,6 +179,10 @@ function hasSensitiveEnvValue(options, line) {
 }
 
 function redactStartupLine(options, line) {
+  if (unsafeExternalKillSuggestionPattern.test(line)) {
+    return '[redacted external process kill suggestion]';
+  }
+
   if (sensitiveLogPattern.test(line) || hasSensitiveEnvValue(options, line)) {
     return '[redacted startup log line]';
   }
@@ -188,6 +200,110 @@ function printStartupDiagnostics(options, lines) {
 
   for (const line of lines.slice(-8)) {
     options.log(`INFO startup ${redactStartupLine(options, line)}`);
+  }
+}
+
+function parseSafeLocalUrl(line) {
+  const match = line.match(/https?:\/\/(?:localhost|127\.0\.0\.1|\[::1\])(?::\d+)?(?:[/?#][^\s]*)?/i);
+
+  if (!match) {
+    return null;
+  }
+
+  try {
+    const parsed = new URL(match[0]);
+
+    parsed.pathname = '/';
+    parsed.search = '';
+    parsed.hash = '';
+    parsed.username = '';
+    parsed.password = '';
+
+    return parsed.origin;
+  } catch {
+    return null;
+  }
+}
+
+function inspectNextDevLock(lines) {
+  const text = lines.join('\n');
+  const detected = nextDevLockPatterns.some((pattern) => pattern.test(text));
+
+  if (!detected) {
+    return {
+      detected: false,
+      pid: null,
+      url: null,
+    };
+  }
+
+  let pid = null;
+  let url = null;
+
+  for (const line of lines) {
+    if (!pid) {
+      const pidMatch =
+        line.match(/\bPID:\s*(\d{2,})\b/i) ||
+        line.match(/\bPID\s*[= ]\s*(\d{2,})\b/i) ||
+        line.match(/\/PID\s+(\d{2,})\b/i);
+
+      if (pidMatch) {
+        pid = pidMatch[1];
+      }
+    }
+
+    const nextUrl = parseSafeLocalUrl(line);
+
+    if (nextUrl) {
+      url = nextUrl;
+    }
+  }
+
+  return {
+    detected: true,
+    pid,
+    url,
+  };
+}
+
+function printNextDevLockDiagnostics(options, context) {
+  options.error('FAIL suspected existing Next dev server lock');
+  options.error(`Checked URL: ${context.baseUrl.origin}`);
+
+  if (context.selectedPort) {
+    const label = context.fallbackAttempted
+      ? 'Selected fallback port'
+      : 'Selected port';
+    options.error(`${label}: ${context.selectedPort}`);
+  }
+
+  if (context.candidatePortsTried.length > 0) {
+    options.error(
+      `Candidate ports tried: ${context.candidatePortsTried.join(', ')}`,
+    );
+  }
+
+  if (context.lockInfo.pid) {
+    options.error(`Existing Next PID: ${context.lockInfo.pid}`);
+  }
+
+  if (context.lockInfo.url) {
+    options.error(`Existing Next URL: ${context.lockInfo.url}`);
+  }
+
+  options.error('No external server was killed or modified.');
+  options.error(
+    'Manual next steps: inspect the existing process, stop the existing Next dev server manually, or restart the terminal or editor session, then rerun `npm run local-uat:owner-flow`.',
+  );
+
+  if (context.lockInfo.pid && options.platform === 'win32') {
+    options.error(
+      `Inspect on Windows: tasklist /FI "PID eq ${context.lockInfo.pid}"`,
+    );
+  } else if (context.lockInfo.pid) {
+    options.error(
+      `Inspect on macOS/Linux: ps -p ${context.lockInfo.pid} -o pid,comm,args`,
+    );
   }
 }
 
@@ -541,6 +657,7 @@ async function runLocalUatOwnerFlow(inputOptions = {}) {
     const readiness = await waitForServer(options, baseUrl, devServer);
 
     if (!readiness.ok && readiness.reason === 'early-exit') {
+      const lockInfo = inspectNextDevLock(devServer.logs);
       const code = readiness.exit.code ?? 'null';
       const signal = readiness.exit.signal ?? 'null';
       const detail = readiness.exit.error
@@ -558,6 +675,15 @@ async function runLocalUatOwnerFlow(inputOptions = {}) {
           options.error(`Candidate ports tried: ${candidatePortsTried.join(', ')}`);
         }
       }
+      if (lockInfo.detected) {
+        printNextDevLockDiagnostics(options, {
+          baseUrl,
+          candidatePortsTried,
+          fallbackAttempted,
+          lockInfo,
+          selectedPort,
+        });
+      }
       printStartupDiagnostics(options, devServer.logs);
       options.error(
         'Manual next step: run `cd website && npm run dev` directly, resolve the startup error, then rerun `npm run local-uat:owner-flow`.',
@@ -567,6 +693,9 @@ async function runLocalUatOwnerFlow(inputOptions = {}) {
         earlyExit: true,
         candidatePortsTried,
         fallbackAttempted,
+        nextDevLockDetected: lockInfo.detected,
+        nextDevLockPid: lockInfo.pid,
+        nextDevLockUrl: lockInfo.url,
         ok: false,
         selectedPort,
         startedServer: true,
