@@ -1,0 +1,511 @@
+#!/usr/bin/env node
+
+const path = require('node:path');
+const { spawn, spawnSync } = require('node:child_process');
+
+const baseUrlEnvName = 'SKR_OWNER_FLOW_LOCAL_BASE_URL';
+const fallbackBaseUrlEnvName = 'SKR_LOCAL_BASE_URL';
+const defaultBaseUrl = 'http://localhost:3000';
+const requestTimeoutMs = 5_000;
+const defaultStartupTimeoutMs = 75_000;
+const defaultSmokeTimeoutMs = 120_000;
+const defaultPollIntervalMs = 1_000;
+const maxChildLogLines = 20;
+const sensitiveLogPattern =
+  /\b(?:secret|token|password|api[_-]?key|authorization|cookie)\b/i;
+
+function sleep(ms) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
+
+function npmInvocationForPlatform(platform, args) {
+  if (platform === 'win32') {
+    return {
+      args: ['/d', '/s', '/c', 'npm.cmd', ...args],
+      command: 'cmd.exe',
+      display: formatCommand('npm.cmd', args),
+    };
+  }
+
+  return {
+    args,
+    command: 'npm',
+    display: formatCommand('npm', args),
+  };
+}
+
+function safeBaseUrl(env) {
+  const rawValue =
+    env[baseUrlEnvName]?.trim() ||
+    env[fallbackBaseUrlEnvName]?.trim() ||
+    defaultBaseUrl;
+
+  try {
+    const parsed = new URL(rawValue);
+
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+      return new URL(defaultBaseUrl);
+    }
+
+    parsed.pathname = '/';
+    parsed.search = '';
+    parsed.hash = '';
+    parsed.username = '';
+    parsed.password = '';
+
+    return parsed;
+  } catch {
+    return new URL(defaultBaseUrl);
+  }
+}
+
+function formatCommand(command, args) {
+  return [command, ...args].join(' ');
+}
+
+async function isServerReachable(options, baseUrl) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), requestTimeoutMs);
+
+  try {
+    const response = await options.fetch(baseUrl.toString(), {
+      method: 'GET',
+      redirect: 'manual',
+      headers: {
+        'User-Agent': 'skr-local-uat-owner-flow',
+      },
+      signal: controller.signal,
+    });
+
+    return response.status >= 200 && response.status < 500;
+  } catch {
+    return false;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+function captureBoundedChildOutput(child, lines) {
+  const append = (chunk) => {
+    const nextLines = String(chunk)
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter(Boolean);
+
+    for (const line of nextLines) {
+      lines.push(line);
+
+      if (lines.length > maxChildLogLines) {
+        lines.shift();
+      }
+    }
+  };
+
+  child.stdout?.on('data', append);
+  child.stderr?.on('data', append);
+}
+
+function hasSensitiveEnvValue(options, line) {
+  return Object.entries(options.env).some(([name, value]) => {
+    if (
+      !/(?:SECRET|TOKEN|KEY|PASSWORD|RESEND|GITHUB|GH_|SUPABASE|N8N)/i.test(
+        name,
+      )
+    ) {
+      return false;
+    }
+
+    return typeof value === 'string' && value.length >= 8 && line.includes(value);
+  });
+}
+
+function redactStartupLine(options, line) {
+  if (sensitiveLogPattern.test(line) || hasSensitiveEnvValue(options, line)) {
+    return '[redacted startup log line]';
+  }
+
+  return line.slice(0, 240);
+}
+
+function printStartupDiagnostics(options, lines) {
+  if (lines.length === 0) {
+    options.log('INFO no startup output was captured before the server stopped');
+    return;
+  }
+
+  options.log('INFO recent startup output (bounded and redacted):');
+
+  for (const line of lines.slice(-8)) {
+    options.log(`INFO startup ${redactStartupLine(options, line)}`);
+  }
+}
+
+function spawnCommand(options, command, args, spawnOptions) {
+  return options.spawn(command, args, {
+    cwd: spawnOptions.cwd,
+    env: spawnOptions.env,
+    shell: false,
+    stdio: ['ignore', 'pipe', 'pipe'],
+    windowsHide: true,
+  });
+}
+
+function stopChildProcess(options, child) {
+  if (!child) {
+    return;
+  }
+
+  if (options.platform === 'win32' && child.pid) {
+    const result = options.spawnSync(
+      'taskkill',
+      ['/PID', String(child.pid), '/T', '/F'],
+      {
+        encoding: 'utf8',
+        stdio: 'ignore',
+        windowsHide: true,
+      },
+    );
+
+    if (!result.error && result.status === 0) {
+      return;
+    }
+  }
+
+  child.kill('SIGTERM');
+}
+
+function startWebsiteServer(options, env) {
+  const invocation = npmInvocationForPlatform(options.platform, ['run', 'dev']);
+  const cwd = path.join(options.cwd, 'website');
+  const logs = [];
+  let exit = null;
+  let child = null;
+
+  try {
+    child = spawnCommand(options, invocation.command, invocation.args, {
+      cwd,
+      env,
+    });
+  } catch (error) {
+    exit = {
+      code: null,
+      error,
+      signal: null,
+    };
+
+    return {
+      args: invocation.args,
+      child: null,
+      command: invocation.command,
+      cwd,
+      display: invocation.display,
+      exit: () => exit,
+      logs,
+    };
+  }
+
+  captureBoundedChildOutput(child, logs);
+  child.once('error', (error) => {
+    exit = {
+      code: null,
+      error,
+      signal: null,
+    };
+  });
+  child.once('exit', (code, signal) => {
+    exit = {
+      code,
+      signal,
+    };
+  });
+
+  return {
+    args: invocation.args,
+    child,
+    command: invocation.command,
+    cwd,
+    display: invocation.display,
+    exit: () => exit,
+    logs,
+  };
+}
+
+function runSmokeCommand(options, env) {
+  const invocation = npmInvocationForPlatform(options.platform, [
+    'run',
+    'smoke:owner-flow-local',
+  ]);
+  const logs = [];
+  let child = null;
+
+  try {
+    child = spawnCommand(options, invocation.command, invocation.args, {
+      cwd: options.cwd,
+      env,
+    });
+  } catch (error) {
+    return Promise.resolve({
+      ok: false,
+      code: null,
+      error,
+      signal: null,
+      timedOut: false,
+    });
+  }
+
+  captureBoundedChildOutput(child, logs);
+
+  return new Promise((resolve) => {
+    let settled = false;
+    const timeout = setTimeout(() => {
+      if (settled) {
+        return;
+      }
+
+      settled = true;
+      stopChildProcess(options, child);
+      resolve({
+        ok: false,
+        code: null,
+        error: null,
+        signal: 'SIGTERM',
+        timedOut: true,
+      });
+    }, options.smokeTimeoutMs);
+
+    const settle = (result) => {
+      if (settled) {
+        return;
+      }
+
+      settled = true;
+      clearTimeout(timeout);
+      resolve(result);
+    };
+
+    child.once('error', (error) => {
+      settle({
+        ok: false,
+        code: null,
+        error,
+        signal: null,
+        timedOut: false,
+      });
+    });
+    child.once('exit', (code, signal) => {
+      settle({
+        ok: code === 0,
+        code,
+        error: null,
+        signal,
+        logs,
+        timedOut: false,
+      });
+    });
+  });
+}
+
+async function waitForServer(options, baseUrl, devServer) {
+  const deadline = options.now() + options.startupTimeoutMs;
+  let waitedMs = 0;
+
+  while (options.now() < deadline) {
+    const exit = devServer.exit();
+
+    if (exit) {
+      return {
+        ok: false,
+        exit,
+        reason: 'early-exit',
+        waitedMs,
+      };
+    }
+
+    await options.sleep(options.pollIntervalMs);
+    waitedMs += options.pollIntervalMs;
+
+    if (await isServerReachable(options, baseUrl)) {
+      return {
+        ok: true,
+        waitedMs,
+      };
+    }
+  }
+
+  return {
+    ok: false,
+    reason: 'timeout',
+    waitedMs,
+  };
+}
+
+function stopStartedServer(options, devServer) {
+  if (!devServer) {
+    return;
+  }
+
+  if (devServer.exit()) {
+    return;
+  }
+
+  stopChildProcess(options, devServer.child);
+}
+
+function normalizeOptions(options = {}) {
+  return {
+    cwd: options.cwd ?? path.resolve(__dirname, '..'),
+    env: options.env ?? process.env,
+    error: options.error ?? console.error,
+    fetch: options.fetch ?? fetch,
+    log: options.log ?? console.log,
+    now: options.now ?? Date.now,
+    platform: options.platform ?? process.platform,
+    pollIntervalMs: options.pollIntervalMs ?? defaultPollIntervalMs,
+    sleep: options.sleep ?? sleep,
+    smokeTimeoutMs: options.smokeTimeoutMs ?? defaultSmokeTimeoutMs,
+    spawn: options.spawn ?? spawn,
+    spawnSync: options.spawnSync ?? spawnSync,
+    startupTimeoutMs: options.startupTimeoutMs ?? defaultStartupTimeoutMs,
+  };
+}
+
+async function runLocalUatOwnerFlow(inputOptions = {}) {
+  const options = normalizeOptions(inputOptions);
+  const baseUrl = safeBaseUrl(options.env);
+  const smokeEnv = {
+    ...options.env,
+    [baseUrlEnvName]: baseUrl.origin,
+  };
+
+  options.log(`INFO local UAT owner flow target ${baseUrl.origin}`);
+
+  if (await isServerReachable(options, baseUrl)) {
+    options.log('PASS local SKR server already reachable');
+
+    const smoke = await runSmokeCommand(options, smokeEnv);
+
+    if (!smoke.ok) {
+      if (smoke.timedOut) {
+        options.error(
+          `FAIL owner-flow smoke command timed out after ${options.smokeTimeoutMs}ms`,
+        );
+      } else {
+        options.error('FAIL owner-flow smoke command failed');
+      }
+
+      return {
+        ok: false,
+        smokeExitCode: smoke.code,
+        smokeTimedOut: smoke.timedOut,
+        startedServer: false,
+      };
+    }
+
+    options.log('PASS owner-flow smoke command completed');
+
+    return {
+      ok: true,
+      smokeExitCode: smoke.code,
+      startedServer: false,
+    };
+  }
+
+  const devCommand = npmInvocationForPlatform(options.platform, [
+    'run',
+    'dev',
+  ]).display;
+  let devServer = null;
+
+  try {
+    options.log(`INFO starting local SKR website server with ${devCommand}`);
+    devServer = startWebsiteServer(options, smokeEnv);
+
+    const readiness = await waitForServer(options, baseUrl, devServer);
+
+    if (!readiness.ok && readiness.reason === 'early-exit') {
+      const code = readiness.exit.code ?? 'null';
+      const signal = readiness.exit.signal ?? 'null';
+      const detail = readiness.exit.error
+        ? ` startup error ${readiness.exit.error.message}`
+        : ` exit code ${code} and signal ${signal}`;
+
+      options.error(
+        `FAIL local SKR website server exited before it became reachable with${detail}`,
+      );
+      printStartupDiagnostics(options, devServer.logs);
+      options.error(
+        'Manual next step: run `cd website && npm run dev` directly, resolve the startup error, then rerun `npm run local-uat:owner-flow`.',
+      );
+
+      return {
+        ok: false,
+        earlyExit: true,
+        startedServer: true,
+      };
+    }
+
+    if (!readiness.ok) {
+      options.error('FAIL local SKR server did not become reachable');
+      options.error(`Checked base URL: ${baseUrl.origin}`);
+      options.error(`Attempted command: ${devCommand}`);
+      options.error(`Waited ${readiness.waitedMs}ms`);
+      printStartupDiagnostics(options, devServer.logs);
+      options.error(
+        'Manual next step: run `cd website && npm run dev` directly, wait for the server to report ready, then rerun `npm run local-uat:owner-flow`.',
+      );
+
+      return {
+        ok: false,
+        startedServer: true,
+        timedOut: true,
+        waitedMs: readiness.waitedMs,
+      };
+    }
+
+    options.log(
+      `PASS local SKR server became reachable after ${readiness.waitedMs}ms`,
+    );
+
+    const smoke = await runSmokeCommand(options, smokeEnv);
+
+    if (!smoke.ok) {
+      if (smoke.timedOut) {
+        options.error(
+          `FAIL owner-flow smoke command timed out after ${options.smokeTimeoutMs}ms`,
+        );
+      } else {
+        options.error('FAIL owner-flow smoke command failed');
+      }
+
+      return {
+        ok: false,
+        smokeExitCode: smoke.code,
+        smokeTimedOut: smoke.timedOut,
+        startedServer: true,
+      };
+    }
+
+    options.log('PASS owner-flow smoke command completed');
+
+    return {
+      ok: true,
+      smokeExitCode: smoke.code,
+      startedServer: true,
+      waitedMs: readiness.waitedMs,
+    };
+  } finally {
+    stopStartedServer(options, devServer);
+  }
+}
+
+if (require.main === module) {
+  runLocalUatOwnerFlow().then((result) => {
+    process.exit(result.ok ? 0 : 1);
+  });
+}
+
+module.exports = {
+  runLocalUatOwnerFlow,
+};

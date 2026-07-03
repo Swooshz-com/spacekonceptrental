@@ -13,7 +13,42 @@ It is local validation only. It does not deploy, publish, configure providers,
 write evidence, approve launch, send customer email, add a quote inbox, or add
 CRM/ecommerce flows.
 
-## Start Local SKR
+## One-Command Local UAT
+
+From the repo root, run:
+
+```powershell
+npm run local-uat:owner-flow
+```
+
+This command checks the local server first. If it is already reachable, it does
+not start another server and it does not stop the existing one. If it is not
+reachable, it starts the website dev server with the equivalent of:
+
+```powershell
+cd website
+npm run dev
+```
+
+The helper then polls the local base URL with a bounded startup timeout, runs
+`npm run smoke:owner-flow-local` once the server responds, and shuts down only
+the child process tree it started. It will not kill an already-running external
+server.
+
+If startup times out, run the dev server directly:
+
+```powershell
+cd website
+npm run dev
+```
+
+Resolve the startup error shown there, then rerun:
+
+```powershell
+npm run local-uat:owner-flow
+```
+
+## Smoke-Only Run
 
 From the repo root, start the website in one terminal:
 
@@ -28,8 +63,12 @@ In another terminal, run:
 npm run smoke:owner-flow-local
 ```
 
-The smoke script defaults to the normal local Next.js dev origin. If the local
-server uses a different origin, set `SKR_OWNER_FLOW_LOCAL_BASE_URL` or
+`npm run smoke:owner-flow-local` assumes the local server is already running.
+Use it when you want only the route smoke and do not want the helper to start a
+dev server.
+
+Both local UAT commands default to the normal local Next.js dev origin. If the
+local server uses a different origin, set `SKR_OWNER_FLOW_LOCAL_BASE_URL` or
 `SKR_LOCAL_BASE_URL` in the shell before running the command. Do not commit
 local environment files or values.
 
@@ -59,6 +98,11 @@ local environment files or values.
 
 The script uses bounded HTTP timeouts and does not print secrets, raw env
 values, raw provider errors, or full customer message text.
+
+The one-command local UAT helper also bounds server startup and smoke command
+execution. It prints PASS/SKIP/FAIL/INFO labels, the safe local base URL being
+checked, the attempted `npm run dev` command, waited time on timeout, and the
+manual next step.
 
 ## Quote Email Handoff Verification
 
