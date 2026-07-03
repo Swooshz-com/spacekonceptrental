@@ -1,0 +1,583 @@
+#!/usr/bin/env node
+
+const { spawnSync } = require('node:child_process');
+const fs = require('node:fs');
+const path = require('node:path');
+
+const defaultMode = 'local';
+const launchMode = 'launch';
+const supportedModes = new Set([defaultMode, launchMode]);
+const supportedQuoteEmailProvider = 'resend';
+const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const textExtensions = new Set([
+  '.cjs',
+  '.css',
+  '.html',
+  '.js',
+  '.json',
+  '.jsx',
+  '.mjs',
+  '.md',
+  '.mts',
+  '.ts',
+  '.tsx',
+  '.txt',
+  '.yml',
+  '.yaml',
+]);
+const publicRuntimeExtensions = new Set([
+  '.cjs',
+  '.css',
+  '.html',
+  '.js',
+  '.jsx',
+  '.mjs',
+  '.ts',
+  '.tsx',
+]);
+
+const requiredEnvNames = [
+  'SUPABASE_URL',
+  'SUPABASE_ANON_KEY',
+  'CATALOGUE_WORKSPACE_ID',
+  'QUOTE_WORKSPACE_ID',
+  'ADMIN_TRUSTED_WORKSPACE_ID',
+  'ADMIN_EXPECTED_ORIGIN',
+  'ADMIN_EXPECTED_HOST',
+  'ADMIN_CSRF_PROOF_SECRET',
+  'QUOTE_ENQUIRY_EMAIL_RECIPIENT',
+  'QUOTE_ENQUIRY_EMAIL_FROM',
+];
+
+const serverOnlyEnvNames = [
+  ...requiredEnvNames,
+  'QUOTE_ENQUIRY_EMAIL_PROVIDER',
+  'RESEND_API_KEY',
+  'CHAT_PROVIDER',
+  'CHAT_TRUSTED_CLIENT_IP_HEADER',
+  'QUOTE_TRUSTED_CLIENT_IP_HEADER',
+  'N8N_CHAT_WEBHOOK_URL',
+  'N8N_CHAT_WEBHOOK_TIMEOUT_MS',
+  'SUPABASE_SERVICE_ROLE_KEY',
+];
+
+const obviousSecretPatterns = [
+  {
+    label: 'GitHub token pattern',
+    pattern: /\b(?:ghp|gho|ghu|ghs|ghr)_[A-Za-z0-9_]{30,}\b/g,
+  },
+  {
+    label: 'GitHub fine-grained token pattern',
+    pattern: /\bgithub_pat_[A-Za-z0-9_]{40,}\b/g,
+  },
+  {
+    label: 'AWS access key pattern',
+    pattern: /\bAKIA[0-9A-Z]{16}\b/g,
+  },
+  {
+    label: 'Stripe secret key pattern',
+    pattern: /\bsk_(?:live|test)_[A-Za-z0-9]{20,}\b/g,
+  },
+  {
+    label: 'Resend API key pattern',
+    pattern: /\bre_[A-Za-z0-9]{24,}\b/g,
+  },
+  {
+    label: 'SendGrid API key pattern',
+    pattern: /\bSG\.[A-Za-z0-9_-]{16,}\.[A-Za-z0-9_-]{16,}\b/g,
+  },
+];
+
+function parseArgs(argv) {
+  const args = {
+    scanRoot: process.cwd(),
+    trackedFiles: null,
+  };
+
+  for (let index = 0; index < argv.length; index += 1) {
+    const arg = argv[index];
+
+    if (arg === '--mode') {
+      args.mode = argv[index + 1];
+      index += 1;
+    } else if (arg === '--launch') {
+      args.mode = launchMode;
+    } else if (arg === '--scan-root') {
+      args.scanRoot = argv[index + 1];
+      index += 1;
+    } else if (arg === '--tracked-file-list') {
+      args.trackedFiles = [];
+
+      for (let fileIndex = index + 1; fileIndex < argv.length; fileIndex += 1) {
+        if (argv[fileIndex].startsWith('--')) {
+          break;
+        }
+
+        args.trackedFiles.push(argv[fileIndex]);
+        index = fileIndex;
+      }
+    }
+  }
+
+  return args;
+}
+
+function normalizeMode(env, cliMode) {
+  const rawMode = (cliMode || env.SKR_PRODUCTION_READINESS_MODE || defaultMode)
+    .trim()
+    .toLowerCase();
+
+  return supportedModes.has(rawMode) ? rawMode : defaultMode;
+}
+
+function readEnv(env, name) {
+  const value = env[name]?.trim();
+
+  return value || null;
+}
+
+function addIssue(issues, name, summary) {
+  issues.push({
+    name,
+    summary,
+  });
+}
+
+function validateHttpsUrl(value) {
+  if (!value) {
+    return false;
+  }
+
+  try {
+    const parsed = new URL(value);
+
+    return parsed.protocol === 'https:' && Boolean(parsed.hostname);
+  } catch {
+    return false;
+  }
+}
+
+function validateAdminExpectedHost(value) {
+  if (!value) {
+    return false;
+  }
+
+  if (/^http:\/\//i.test(value)) {
+    return false;
+  }
+
+  if (/^https:\/\//i.test(value)) {
+    try {
+      const parsed = new URL(value);
+
+      return parsed.protocol === 'https:' && Boolean(parsed.hostname);
+    } catch {
+      return false;
+    }
+  }
+
+  return /^[A-Za-z0-9.-]+(?::\d+)?$/.test(value);
+}
+
+function validateEmail(value) {
+  return Boolean(value && emailPattern.test(value));
+}
+
+function normalizeProvider(value) {
+  const normalized = value?.trim().toLowerCase();
+
+  if (!normalized) {
+    return supportedQuoteEmailProvider;
+  }
+
+  return normalized === supportedQuoteEmailProvider ? normalized : null;
+}
+
+function validateCsrfSecret(value) {
+  if (!value) {
+    return {
+      ok: false,
+      summary: 'missing',
+    };
+  }
+
+  if (value.length < 32) {
+    return {
+      ok: false,
+      summary: 'too short; minimum length is 32 characters',
+    };
+  }
+
+  const uniqueCharacters = new Set(value).size;
+  const lower = value.toLowerCase();
+
+  if (
+    uniqueCharacters < 8 ||
+    /^(.)\1+$/.test(value) ||
+    lower.includes('changeme') ||
+    lower === 'password' ||
+    lower === 'secret'
+  ) {
+    return {
+      ok: false,
+      summary: 'insufficient entropy-like shape',
+    };
+  }
+
+  return {
+    ok: true,
+    summary: 'configured',
+  };
+}
+
+function validateEnvContract(env) {
+  const issues = [];
+
+  for (const name of requiredEnvNames) {
+    if (!readEnv(env, name)) {
+      addIssue(issues, name, 'missing');
+    }
+  }
+
+  const supabaseUrl = readEnv(env, 'SUPABASE_URL');
+
+  if (supabaseUrl && !validateHttpsUrl(supabaseUrl)) {
+    addIssue(issues, 'SUPABASE_URL', 'must be an HTTPS URL');
+  }
+
+  const adminExpectedOrigin = readEnv(env, 'ADMIN_EXPECTED_ORIGIN');
+
+  if (adminExpectedOrigin && !validateHttpsUrl(adminExpectedOrigin)) {
+    addIssue(issues, 'ADMIN_EXPECTED_ORIGIN', 'must be an HTTPS origin');
+  }
+
+  const adminExpectedHost = readEnv(env, 'ADMIN_EXPECTED_HOST');
+
+  if (adminExpectedHost && !validateAdminExpectedHost(adminExpectedHost)) {
+    addIssue(
+      issues,
+      'ADMIN_EXPECTED_HOST',
+      'must be a host or HTTPS URL',
+    );
+  }
+
+  const csrfSecretValue = readEnv(env, 'ADMIN_CSRF_PROOF_SECRET');
+  const csrfSecret = validateCsrfSecret(csrfSecretValue);
+
+  if (csrfSecretValue && !csrfSecret.ok) {
+    addIssue(issues, 'ADMIN_CSRF_PROOF_SECRET', csrfSecret.summary);
+  }
+
+  const provider = normalizeProvider(readEnv(env, 'QUOTE_ENQUIRY_EMAIL_PROVIDER'));
+
+  if (!provider) {
+    addIssue(
+      issues,
+      'QUOTE_ENQUIRY_EMAIL_PROVIDER',
+      'unsupported provider',
+    );
+  }
+
+  const recipient = readEnv(env, 'QUOTE_ENQUIRY_EMAIL_RECIPIENT');
+
+  if (recipient && !validateEmail(recipient)) {
+    addIssue(
+      issues,
+      'QUOTE_ENQUIRY_EMAIL_RECIPIENT',
+      'invalid email address',
+    );
+  }
+
+  const from = readEnv(env, 'QUOTE_ENQUIRY_EMAIL_FROM');
+
+  if (from && !validateEmail(from)) {
+    addIssue(
+      issues,
+      'QUOTE_ENQUIRY_EMAIL_FROM',
+      'invalid email address',
+    );
+  }
+
+  if (provider === supportedQuoteEmailProvider && !readEnv(env, 'RESEND_API_KEY')) {
+    addIssue(issues, 'RESEND_API_KEY', 'missing for Resend provider');
+  }
+
+  return issues;
+}
+
+function toPosixPath(filePath) {
+  return filePath.replace(/\\/g, '/');
+}
+
+function isTextFile(filePath) {
+  return textExtensions.has(path.extname(filePath).toLowerCase());
+}
+
+function relativeDisplayPath(scanRoot, filePath) {
+  const absolute = path.isAbsolute(filePath)
+    ? filePath
+    : path.join(scanRoot, filePath);
+  const relative = path.relative(scanRoot, absolute);
+
+  return toPosixPath(relative || filePath);
+}
+
+function listTrackedFiles(scanRoot, overrideFiles) {
+  if (overrideFiles) {
+    return overrideFiles.map((filePath) =>
+      path.isAbsolute(filePath) ? filePath : path.join(scanRoot, filePath),
+    );
+  }
+
+  const result = spawnSync('git', ['ls-files', '-z'], {
+    cwd: scanRoot,
+    encoding: 'buffer',
+    windowsHide: true,
+  });
+
+  if (result.error || result.status !== 0) {
+    throw new Error(
+      `git ls-files failed: ${result.error?.message || result.stderr.toString('utf8').trim()}`,
+    );
+  }
+
+  return result.stdout
+    .toString('utf8')
+    .split('\0')
+    .filter(Boolean)
+    .map((filePath) => path.join(scanRoot, filePath));
+}
+
+function readFileSafe(filePath) {
+  try {
+    return fs.readFileSync(filePath, 'utf8');
+  } catch {
+    return '';
+  }
+}
+
+function isAllowedEnvReferenceFile(displayPath) {
+  return (
+    displayPath.startsWith('docs/') ||
+    displayPath.includes('/test/') ||
+    /\.test\.[cm]?[jt]sx?$/.test(displayPath) ||
+    /\.spec\.[cm]?[jt]sx?$/.test(displayPath) ||
+    displayPath.endsWith('server-env-contract.json')
+  );
+}
+
+function isClientOrPublicRuntimeFile(displayPath, source) {
+  const extension = path.posix.extname(displayPath).toLowerCase();
+
+  if (
+    (displayPath.startsWith('website/public/') ||
+      displayPath.startsWith('website/assets/web_design/')) &&
+    publicRuntimeExtensions.has(extension)
+  ) {
+    return true;
+  }
+
+  if (!displayPath.startsWith('website/')) {
+    return false;
+  }
+
+  return /^\s*['"]use client['"];?/m.test(source);
+}
+
+function isProductionWebsiteSource(displayPath) {
+  return (
+    displayPath.startsWith('website/app/') ||
+    displayPath.startsWith('website/components/') ||
+    displayPath.startsWith('website/lib/')
+  );
+}
+
+function isEnvFile(displayPath) {
+  const basename = path.posix.basename(displayPath);
+
+  if (basename === '.env.example') {
+    return false;
+  }
+
+  return basename === '.env' || basename.startsWith('.env.');
+}
+
+function scanStaticSecurity(scanRoot, trackedFiles) {
+  const issues = [];
+  const files = listTrackedFiles(scanRoot, trackedFiles);
+  const deliveryLogDoc = 'docs/architecture/QUOTE-ENQUIRY-EMAIL-HANDOFF-DELIVERY-LOG-FOUNDATION.md';
+  const currentStateAudit = 'docs/SKR-OWNER-MVP-CURRENT-STATE-AUDIT.md';
+  let deliveryLogDocText = '';
+  let currentStateAuditText = '';
+
+  for (const absolutePath of files) {
+    const displayPath = relativeDisplayPath(scanRoot, absolutePath);
+
+    if (isEnvFile(displayPath)) {
+      addIssue(issues, displayPath, 'tracked env file is not allowed');
+      continue;
+    }
+
+    if (displayPath === 'website/chat-config.js') {
+      addIssue(
+        issues,
+        displayPath,
+        'tracked local chat config is not allowed',
+      );
+      continue;
+    }
+
+    if (!isTextFile(displayPath)) {
+      continue;
+    }
+
+    const source = readFileSafe(absolutePath);
+
+    if (displayPath === deliveryLogDoc) {
+      deliveryLogDocText = source;
+    }
+
+    if (displayPath === currentStateAudit) {
+      currentStateAuditText = source;
+    }
+
+    if (
+      isProductionWebsiteSource(displayPath) &&
+      !isAllowedEnvReferenceFile(displayPath) &&
+      /chat-config(?:\.js)?/i.test(source)
+    ) {
+      addIssue(
+        issues,
+        displayPath,
+        'runtime source must not import or read website/chat-config.js',
+      );
+    }
+
+    if (isClientOrPublicRuntimeFile(displayPath, source)) {
+      for (const envName of serverOnlyEnvNames) {
+        if (source.includes(envName)) {
+          addIssue(
+            issues,
+            displayPath,
+            `server-only env name ${envName} appears in client/public runtime file`,
+          );
+        }
+      }
+    }
+
+    if (!isAllowedEnvReferenceFile(displayPath)) {
+      for (const secretPattern of obviousSecretPatterns) {
+        if (secretPattern.pattern.test(source)) {
+          addIssue(issues, displayPath, secretPattern.label);
+        }
+
+        secretPattern.pattern.lastIndex = 0;
+      }
+    }
+  }
+
+  if (
+    deliveryLogDocText &&
+    !/technical metadata only/i.test(deliveryLogDocText)
+  ) {
+    addIssue(
+      issues,
+      deliveryLogDoc,
+      'Delivery Log documentation must describe technical metadata only',
+    );
+  }
+
+  if (
+    currentStateAuditText &&
+    !/technical visibility surfaces/i.test(currentStateAuditText)
+  ) {
+    addIssue(
+      issues,
+      currentStateAudit,
+      'current-state audit must keep Delivery Log as technical visibility only',
+    );
+  }
+
+  return issues;
+}
+
+function validateProductionSecurityReadiness(options = {}) {
+  const env = options.env ?? process.env;
+  const mode = normalizeMode(env, options.mode);
+  const envIssues = validateEnvContract(env);
+  const staticIssues = scanStaticSecurity(
+    options.scanRoot ?? process.cwd(),
+    options.trackedFiles ?? null,
+  );
+  const ok = staticIssues.length === 0 && (mode !== launchMode || envIssues.length === 0);
+
+  return {
+    envIssues,
+    mode,
+    ok,
+    staticIssues,
+  };
+}
+
+function printIssues(print, issues) {
+  for (const issue of issues) {
+    print(`- ${issue.name}: ${issue.summary}`);
+  }
+}
+
+function printResult(result, output = console) {
+  const inLaunchMode = result.mode === launchMode;
+
+  output.log(
+    `Production security readiness: ${inLaunchMode ? 'launch mode' : 'local/dev mode'}.`,
+  );
+  output.log(
+    inLaunchMode
+      ? 'Launch-required env checks are enforced.'
+      : 'Launch-required env checks are warnings only.',
+  );
+
+  if (result.envIssues.length === 0) {
+    output.log('Launch env contract: configured.');
+  } else if (inLaunchMode) {
+    output.error('Launch env contract: failed.');
+    printIssues(output.error, result.envIssues);
+  } else {
+    output.log('Launch env contract: warning.');
+    printIssues(output.log, result.envIssues);
+  }
+
+  if (result.staticIssues.length === 0) {
+    output.log('Static security checks: passed.');
+  } else {
+    output.error('Static security checks: failed.');
+    printIssues(output.error, result.staticIssues);
+  }
+
+  output.log('No website/chat-config.js runtime dependency is required for launch.');
+  output.log('No n8n/Pinecone/HubSpot runtime env is required for owner MVP launch.');
+
+  if (result.ok) {
+    output.log('Production security readiness gate passed.');
+  } else {
+    output.error('Production security readiness gate failed.');
+  }
+}
+
+if (require.main === module) {
+  const args = parseArgs(process.argv.slice(2));
+  const result = validateProductionSecurityReadiness({
+    mode: args.mode,
+    scanRoot: args.scanRoot,
+    trackedFiles: args.trackedFiles,
+  });
+
+  printResult(result);
+  process.exit(result.ok ? 0 : 1);
+}
+
+module.exports = {
+  scanStaticSecurity,
+  validateEnvContract,
+  validateProductionSecurityReadiness,
+};

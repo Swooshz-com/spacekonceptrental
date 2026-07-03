@@ -26,6 +26,10 @@ templates for the same future review lane. It does not approve deployment.
 - Confirm `npm run validate:deploy-dry-run` passes for the candidate branch.
 - Confirm `npm run validate:preview-approval-package` passes for the candidate
   branch.
+- Confirm `npm run validate:production-security-readiness` passes in local/dev
+  informational mode without real production secrets.
+- Confirm `npm run validate:production-security-readiness -- --launch`
+  passes in the hosted/runtime environment before public traffic.
 - Confirm CI runs the same release-gate commands, including
   `npm run test:supabase-rls` and `git diff --check`.
 - Confirm `docs/PREVIEW-DEPLOYMENT-APPROVAL-PACKAGE.md` and the redacted
@@ -56,6 +60,12 @@ Server-only review inventory:
 - `ADMIN_EXPECTED_ORIGIN`: server-only admin same-origin validation setting.
 - `ADMIN_EXPECTED_HOST`: server-only admin host validation setting.
 - `ADMIN_CSRF_PROOF_SECRET`: server-only admin CSRF proof signing secret.
+- `QUOTE_ENQUIRY_EMAIL_PROVIDER`: server-only quote email provider selector;
+  blank defaults to `resend`.
+- `QUOTE_ENQUIRY_EMAIL_RECIPIENT`: server-only internal quote email recipient.
+- `QUOTE_ENQUIRY_EMAIL_FROM`: server-only verified quote email sender/from
+  address.
+- `RESEND_API_KEY`: server-only Resend API key when `resend` is selected.
 - `CHAT_PROVIDER`: server-only first-party chat provider selector.
 - `N8N_CHAT_WEBHOOK_URL`: server-only temporary n8n webhook URL.
 - `N8N_CHAT_WEBHOOK_TIMEOUT_MS`: optional server-only n8n timeout setting.
@@ -77,6 +87,12 @@ Forbidden public or committed values:
 Runtime config parsing is centralized in the server-only app contract. Local
 dry-run output may name missing or invalid setting names, but must not print
 raw values.
+
+The production-security readiness gate is documented in
+`docs/PRODUCTION-SECURITY-READINESS-GATE.md`. Normal CI and normal local
+release validation do not require real production secrets. Launch enforcement
+mode must be run in the hosted/runtime environment after server-side env is
+configured.
 
 ## Workspace ID Review Checklist
 

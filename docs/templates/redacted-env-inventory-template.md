@@ -18,6 +18,10 @@ values to this file.
 | `ADMIN_EXPECTED_ORIGIN` | Server-only | `<redacted>` | `<reviewed externally>` |
 | `ADMIN_EXPECTED_HOST` | Server-only | `<redacted>` | `<reviewed externally>` |
 | `ADMIN_CSRF_PROOF_SECRET` | Server-only | `<redacted>` | `<reviewed externally>` |
+| `QUOTE_ENQUIRY_EMAIL_PROVIDER` | Server-only | `<redacted>` | `<reviewed externally>` |
+| `QUOTE_ENQUIRY_EMAIL_RECIPIENT` | Server-only | `<redacted>` | `<reviewed externally>` |
+| `QUOTE_ENQUIRY_EMAIL_FROM` | Server-only | `<redacted>` | `<reviewed externally>` |
+| `RESEND_API_KEY` | Server-only secret | `<redacted>` | `<reviewed externally>` |
 | `CHAT_PROVIDER` | Server-only | `<redacted>` | `<reviewed externally>` |
 | `N8N_CHAT_WEBHOOK_URL` | Server-only | `<redacted>` | `<reviewed externally>` |
 | `N8N_CHAT_WEBHOOK_TIMEOUT_MS` | Server-only | `<redacted>` | `<reviewed externally>` |
@@ -31,4 +35,5 @@ values to this file.
 - No service-role runtime path.
 - No browser Supabase config.
 - No Pinecone runtime or env entry.
+- No HubSpot runtime or env entry for the owner MVP launch gate.
 - No filled secrets, tokens, keys, webhook values, or raw URLs.
