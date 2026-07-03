@@ -101,6 +101,7 @@ Run:
 npm run validate:supabase-migrations
 npm run test:supabase-migrations
 npm run test:supabase-rls
+npm run local-uat:owner-flow
 npm run smoke:owner-flow-local
 npm run test:supabase-seed
 npm run validate:n8n
@@ -125,10 +126,12 @@ commands such as `supabase login`, `supabase link`, `supabase db push`, or
 
 See `docs/SUPABASE-LOCAL-RLS-TESTS.md` for the local RLS test runbook.
 
-`npm run smoke:owner-flow-local` checks the local SKR owner MVP route path
-against a running local website server. It uses bounded HTTP timeouts, skips
-live quote submission by default so real email is not sent, and reports
-PASS/SKIP/FAIL route status. See `docs/SKR-OWNER-FLOW-LOCAL-UAT-SMOKE.md`.
+`npm run local-uat:owner-flow` starts or checks the local website server, waits
+with a bounded timeout, then runs `npm run smoke:owner-flow-local`. Use
+`npm run smoke:owner-flow-local` when the local server is already running and
+you only want the smoke check. Both commands skip live quote submission by
+default so real email is not sent. See
+`docs/SKR-OWNER-FLOW-LOCAL-UAT-SMOKE.md`.
 
 `npm run test:supabase-seed` is also local-only and Docker-only. It starts a
 throwaway Docker database, applies the committed migrations, applies the
