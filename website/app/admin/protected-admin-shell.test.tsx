@@ -530,11 +530,10 @@ describe("protected admin shell", () => {
     expect(
       screen.getByRole("heading", { name: /enquiry email recipient/i })
     ).toBeInTheDocument();
-    expect(screen.getByText(/not configured yet/i)).toBeInTheDocument();
+    expect(screen.getByText(/recipient not configured/i)).toBeInTheDocument();
+    expect(screen.getByText(/provider not configured/i)).toBeInTheDocument();
+    expect(screen.getByText(/environment-managed/i)).toBeInTheDocument();
     expect(screen.getByText(/no internal quote inbox/i)).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: /set recipient/i })
-    ).toBeDisabled();
     expect(
       screen.queryByRole("button", { name: /send/i })
     ).not.toBeInTheDocument();
@@ -546,8 +545,140 @@ describe("protected admin shell", () => {
     expect(
       screen.getByRole("heading", { name: /email delivery log/i })
     ).toBeInTheDocument();
-    expect(screen.getByText(/no delivery records yet/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /No delivery records yet - enquiry email attempts will appear here once delivery logging exists\./i
+      )
+    ).toBeInTheDocument();
     expect(screen.queryByText(/QR-20260603-NEWEST/i)).not.toBeInTheDocument();
     expect(screen.queryByRole("table")).not.toBeInTheDocument();
+  });
+
+  it("renders configured enquiry email status without editable settings", () => {
+    render(
+      <AdminShellContent
+        state={{
+          status: "authorised_admin",
+          dashboard: {
+            status: "loaded",
+            data: {
+              categories: [],
+              products: [],
+              images: [],
+              imageSummary: {
+                totalImages: 0,
+                activeImages: 0,
+                primaryImages: 0
+              }
+            }
+          }
+        }}
+        view={{
+          kind: "enquiry-email",
+          config: {
+            provider: "resend",
+            providerConfigured: true,
+            recipientConfigured: true,
+            recipientEmail: "ev***@spacekoncept.example"
+          }
+        }}
+      />
+    );
+
+    expect(screen.getByText(/provider configured/i)).toBeInTheDocument();
+    expect(screen.getByText(/recipient configured/i)).toBeInTheDocument();
+    expect(screen.getByText("ev***@spacekoncept.example")).toBeInTheDocument();
+    expect(screen.getByText(/environment-managed/i)).toBeInTheDocument();
+    expect(
+      screen.queryByRole("textbox", { name: /recipient/i })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /save|set recipient|send/i })
+    ).not.toBeInTheDocument();
+  });
+
+  it("renders compact delivery log records without quote detail workflow", () => {
+    render(
+      <AdminShellContent
+        state={{
+          status: "authorised_admin",
+          dashboard: {
+            status: "loaded",
+            data: {
+              categories: [],
+              products: [],
+              images: [],
+              imageSummary: {
+                totalImages: 0,
+                activeImages: 0,
+                primaryImages: 0
+              }
+            }
+          }
+        }}
+        view={{
+          kind: "delivery-log",
+          deliveryLog: {
+            status: "loaded",
+            records: [
+              {
+                id: "80000000-0000-4000-8000-000000000001",
+                quoteRequestId: "70000000-0000-4000-8000-000000000001",
+                publicReference: "QR-20260612-ABC12345",
+                attemptedAt: "2026-06-12T09:30:00.000Z",
+                recipientEmail: "ev***@spacekoncept.example",
+                provider: "resend",
+                deliveryStatus: "sent",
+                providerMessageId: "resend-message-1",
+                requestId: "route-request-1"
+              },
+              {
+                id: "80000000-0000-4000-8000-000000000002",
+                quoteRequestId: "70000000-0000-4000-8000-000000000002",
+                publicReference: "QR-20260612-FAILED",
+                attemptedAt: "2026-06-12T09:20:00.000Z",
+                recipientEmail: "ev***@spacekoncept.example",
+                provider: "resend",
+                deliveryStatus: "failed",
+                errorCode: "provider_rejected",
+                requestId: "route-request-2"
+              },
+              {
+                id: "80000000-0000-4000-8000-000000000003",
+                quoteRequestId: "70000000-0000-4000-8000-000000000003",
+                publicReference: "QR-20260612-NOTCONF",
+                attemptedAt: "2026-06-12T09:10:00.000Z",
+                recipientEmail: "Not configured",
+                provider: "resend",
+                deliveryStatus: "not_configured",
+                errorCode: "email_recipient_not_configured",
+                requestId: "route-request-3"
+              }
+            ]
+          }
+        }}
+      />
+    );
+
+    expect(screen.getByRole("table", { name: /email delivery attempts/i })).toBeInTheDocument();
+    expect(screen.getByText("QR-20260612-ABC12345")).toBeInTheDocument();
+    expect(screen.getByText("QR-20260612-FAILED")).toBeInTheDocument();
+    expect(screen.getByText("QR-20260612-NOTCONF")).toBeInTheDocument();
+    expect(screen.getAllByText("ev***@spacekoncept.example")).toHaveLength(2);
+    expect(screen.getByText("Not configured")).toBeInTheDocument();
+    expect(screen.getByText("sent")).toBeInTheDocument();
+    expect(screen.getByText("failed")).toBeInTheDocument();
+    expect(screen.getByText("not_configured")).toBeInTheDocument();
+    expect(screen.getByText("resend-message-1")).toBeInTheDocument();
+    expect(screen.getByText("provider_rejected")).toBeInTheDocument();
+    expect(screen.getByText("email_recipient_not_configured")).toBeInTheDocument();
+    expect(screen.queryByText(/Please recommend/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Modular lounge set/)).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", { name: /quote detail|open quote|review/i })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /follow-up|archive|review|send/i })
+    ).not.toBeInTheDocument();
   });
 });

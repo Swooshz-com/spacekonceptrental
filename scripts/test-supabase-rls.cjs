@@ -26,6 +26,7 @@ const expectedTables = [
   'messages',
   'product_images',
   'products',
+  'quote_email_delivery_log',
   'quote_request_activity',
   'quote_request_items',
   'quote_requests',
@@ -63,6 +64,8 @@ const ids = {
   quoteA: '70000000-0000-4000-8000-000000000001',
   quoteB: '70000000-0000-4000-8000-000000000002',
   quoteActivityA: '70500000-0000-4000-8000-000000000001',
+  quoteEmailDeliveryA: '70600000-0000-4000-8000-000000000001',
+  quoteEmailDeliveryB: '70600000-0000-4000-8000-000000000002',
   quoteItemA: '71000000-0000-4000-8000-000000000001',
   quoteItemB: '71000000-0000-4000-8000-000000000002',
   conversationA: '80000000-0000-4000-8000-000000000001',
@@ -340,6 +343,44 @@ function seedFixtures() {
       'internal_note',
       'Seeded internal quote note'
     );
+
+    insert into public.quote_email_delivery_log (
+      id,
+      workspace_id,
+      quote_request_id,
+      public_reference,
+      recipient_email_redacted,
+      provider,
+      delivery_status,
+      provider_message_id,
+      error_code,
+      request_id
+    )
+    values
+      (
+        '${ids.quoteEmailDeliveryA}',
+        '${ids.workspaceA}',
+        '${ids.quoteA}',
+        'quote-a',
+        'qu***@example.test',
+        'resend',
+        'sent',
+        'resend-message-a',
+        null,
+        'rls-delivery-request-a'
+      ),
+      (
+        '${ids.quoteEmailDeliveryB}',
+        '${ids.workspaceB}',
+        '${ids.quoteB}',
+        'quote-b',
+        'qu***@example.test',
+        'resend',
+        'failed',
+        null,
+        'provider_unavailable',
+        'rls-delivery-request-b'
+      );
 
     insert into public.conversations (id, workspace_id, public_reference, quote_request_id)
     values
@@ -631,6 +672,9 @@ function assertNoRuntimeSupabaseUse() {
   const approvedQuoteWriteFiles = new Set([
     'website/lib/quote/quote-repository.ts',
   ]);
+  const approvedQuoteEmailDeliveryLogFiles = new Set([
+    'website/lib/quote/quote-email-delivery-log-repository.ts',
+  ]);
   const approvedMediaUploadFiles = new Set([
     'website/lib/products/media/admin-product-image-upload-route.ts',
   ]);
@@ -785,6 +829,27 @@ function assertNoRuntimeSupabaseUse() {
         return;
       }
 
+      if (approvedQuoteEmailDeliveryLogFiles.has(relativePath)) {
+        assert.match(
+          content,
+          /import\s+["']server-only["'];/,
+          `${relativePath} must be marked server-only.`,
+        );
+        assert.match(
+          content,
+          /createServerSupabaseClient/,
+          `${relativePath} must use the approved server Supabase wrapper.`,
+        );
+        assert.match(
+          content,
+          /from\(["']quote_email_delivery_log["']\)/,
+          `${relativePath} must insert quote_email_delivery_log explicitly.`,
+        );
+        assertNoMatches(filePath, content, serverBlockedPatterns);
+        assertNoMatches(filePath, content, blockedQuoteWriteTablePatterns);
+        return;
+      }
+
       if (approvedMediaUploadFiles.has(relativePath)) {
         assert.match(
           content,
@@ -878,6 +943,16 @@ check('authenticated active member reads only their workspace admin data', () =>
     scalarAs(
       'authenticated',
       ids.authMemberA,
+      "select coalesce(string_agg(public_reference || ':' || delivery_status, ',' order by public_reference), '') from public.quote_email_delivery_log",
+    ),
+    'quote-a:sent',
+    'member A should read only workspace A quote email delivery metadata',
+  );
+
+  assertCsv(
+    scalarAs(
+      'authenticated',
+      ids.authMemberA,
       "select coalesce(string_agg(note, ',' order by note), '') from public.quote_request_activity",
     ),
     'Seeded internal quote note',
@@ -900,6 +975,7 @@ check('authenticated active member cannot read another workspace admin rows', ()
     ['workspaces', `id = '${ids.workspaceB}'`],
     ['memberships', `workspace_id = '${ids.workspaceB}'`],
     ['quote_request_activity', `workspace_id = '${ids.workspaceB}'`],
+    ['quote_email_delivery_log', `workspace_id = '${ids.workspaceB}'`],
     ['quote_requests', `workspace_id = '${ids.workspaceB}'`],
     ['quote_request_items', `workspace_id = '${ids.workspaceB}'`],
     ['integration_connections', `workspace_id = '${ids.workspaceB}'`],
@@ -923,6 +999,7 @@ check('authenticated user without membership cannot read admin-only workspace ro
     'workspaces',
     'memberships',
     'quote_request_activity',
+    'quote_email_delivery_log',
     'quote_requests',
     'quote_request_items',
     'integration_connections',
@@ -3008,14 +3085,36 @@ check('anonymous public can create website quote rows without reading them back'
         'Fake public quote item note'
       );
 
+      insert into public.quote_email_delivery_log (
+        workspace_id,
+        quote_request_id,
+        public_reference,
+        recipient_email_redacted,
+        provider,
+        delivery_status,
+        provider_message_id,
+        request_id
+      )
+      values (
+        '${ids.workspaceA}',
+        '${quoteId}',
+        'quote-public-create',
+        'qu***@example.test',
+        'resend',
+        'sent',
+        'resend-message-public-create',
+        'rls-delivery-public-create'
+      );
+
       select count(*)::text from public.quote_requests where id = '${quoteId}';
       select count(*)::text from public.quote_request_items where quote_request_id = '${quoteId}';
+      select count(*)::text from public.quote_email_delivery_log where quote_request_id = '${quoteId}';
     `,
   );
 
   assert.deepEqual(
     output.split('\n').filter(Boolean),
-    ['0', '0'],
+    ['0', '0', '0'],
     'anon quote inserts should not grant anonymous quote reads.',
   );
 
@@ -3058,6 +3157,62 @@ check('anonymous public quote creation rejects non-website workflow states', () 
         'public-customer@example.test',
         'reviewing',
         'website'
+      )
+    `,
+  );
+});
+
+check('anonymous public quote email delivery log rejects unsafe scope and states', () => {
+  statementFailsAs(
+    'anon',
+    null,
+    `
+      insert into public.quote_email_delivery_log (
+        workspace_id,
+        quote_request_id,
+        public_reference,
+        recipient_email_redacted,
+        provider,
+        delivery_status,
+        provider_message_id,
+        request_id
+      )
+      values (
+        '${ids.workspaceB}',
+        '${ids.quoteA}',
+        'quote-a',
+        'qu***@example.test',
+        'resend',
+        'sent',
+        'resend-message-cross-workspace',
+        'rls-delivery-cross-workspace'
+      )
+    `,
+  );
+
+  statementFailsAs(
+    'anon',
+    null,
+    `
+      insert into public.quote_email_delivery_log (
+        workspace_id,
+        quote_request_id,
+        public_reference,
+        recipient_email_redacted,
+        provider,
+        delivery_status,
+        provider_message_id,
+        request_id
+      )
+      values (
+        '${ids.workspaceA}',
+        '${ids.quoteA}',
+        'quote-a',
+        'qu***@example.test',
+        'smtp',
+        'sent',
+        'smtp-message-unsafe',
+        'rls-delivery-unsafe-provider'
       )
     `,
   );

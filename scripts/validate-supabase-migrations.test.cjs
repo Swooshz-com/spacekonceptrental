@@ -301,7 +301,7 @@ test('real migration directory passes static validation', () => {
   const result = runValidator(realMigrationsDir);
 
   assert.equal(result.status, 0, result.stdout + result.stderr);
-  assert.match(result.stdout, /checked 24 migration SQL file\(s\)/);
+  assert.match(result.stdout, /checked 25 migration SQL file\(s\)/);
 });
 
 test('real base schema migration creates the planned MVP tables', () => {
@@ -1591,6 +1591,117 @@ test('real migrations add protected admin HubSpot manual import outcome ledger a
     /on public\.quote_crm_handoff_manual_import_outcomes for delete to authenticated/,
   );
   assert.doesNotMatch(migration, /hubapi|hubspot api|n8n|webhook|smtp|resend|google workspace/i);
+  assert.doesNotMatch(migration, /checkout|payment|purchase|booking|reservation|order/i);
+});
+
+test('real migrations add quote email delivery log as append-only technical metadata', () => {
+  const migrationFileName =
+    '20260703010000_quote_email_delivery_log_foundation.sql';
+  const migration = readRealMigration(migrationFileName);
+  const sql = normalizeSql(migration);
+
+  assert.match(
+    sql,
+    /create table if not exists public\.quote_email_delivery_log \(/,
+  );
+  for (const column of [
+    'id uuid primary key default gen_random_uuid()',
+    'workspace_id uuid not null',
+    'quote_request_id uuid not null',
+    'public_reference text not null',
+    'attempted_at timestamptz not null default now()',
+    'recipient_email_redacted text',
+    'provider text not null',
+    'delivery_status text not null',
+    'provider_message_id text',
+    'error_code text',
+    'request_id text not null',
+    'created_at timestamptz not null default now()',
+  ]) {
+    assert.ok(sql.includes(column), `Missing delivery log metadata column: ${column}`);
+  }
+  for (const forbidden of [
+    'customer_name',
+    'customer_email text',
+    'customer_phone',
+    'customer_message',
+    'message_details',
+    'internal_notes',
+    'operator_notes',
+    'notes text',
+    'line_items',
+    'item_details',
+    'email_body',
+    'email_html',
+    'raw_payload',
+    'provider_response',
+    'provider_error',
+    'provider_token',
+    'authorization',
+    'auth_session',
+    'session_id',
+    'headers json',
+    'headers jsonb',
+    'cookies json',
+    'cookies jsonb',
+    'api_key',
+  ]) {
+    assert.doesNotMatch(sql, new RegExp(forbidden));
+  }
+
+  assert.match(
+    sql,
+    /constraint quote_email_delivery_log_quote_request_workspace_id_fkey foreign key \(quote_request_id, workspace_id\) references public\.quote_requests \(id, workspace_id\) on delete cascade/,
+  );
+  assert.match(
+    sql,
+    /constraint quote_email_delivery_log_provider_check check \(provider = 'resend'\)/,
+  );
+  assert.match(
+    sql,
+    /constraint quote_email_delivery_log_delivery_status_check check \(delivery_status in \('sent', 'failed', 'not_configured'\)\)/,
+  );
+  assert.match(
+    sql,
+    /alter table public\.quote_email_delivery_log enable row level security;/,
+  );
+  assert.match(
+    sql,
+    /revoke all on table public\.quote_email_delivery_log from public;/,
+  );
+  assert.match(
+    sql,
+    /revoke all on table public\.quote_email_delivery_log from anon;/,
+  );
+  assert.match(
+    sql,
+    /revoke all on table public\.quote_email_delivery_log from authenticated;/,
+  );
+  assert.match(
+    sql,
+    /grant insert \( workspace_id, quote_request_id, public_reference, recipient_email_redacted, provider, delivery_status, provider_message_id, error_code, request_id \) on public\.quote_email_delivery_log to anon;/,
+  );
+  assert.match(
+    sql,
+    /grant select \( id, workspace_id, quote_request_id, public_reference, attempted_at, recipient_email_redacted, provider, delivery_status, provider_message_id, error_code, request_id \) on public\.quote_email_delivery_log to authenticated;/,
+  );
+  assert.match(
+    sql,
+    /create policy quote_email_delivery_log_public_insert_website_quote on public\.quote_email_delivery_log for insert to anon with check \( public\.is_public_website_quote_request\(quote_request_id, workspace_id\) and provider = 'resend' and delivery_status in \('sent', 'failed', 'not_configured'\) \);/,
+  );
+  assert.match(
+    sql,
+    /create policy quote_email_delivery_log_member_read on public\.quote_email_delivery_log for select to authenticated using \(public\.is_workspace_member\(workspace_id\)\);/,
+  );
+  assert.doesNotMatch(
+    sql,
+    /on public\.quote_email_delivery_log for update/,
+  );
+  assert.doesNotMatch(
+    sql,
+    /on public\.quote_email_delivery_log for delete/,
+  );
+  assert.doesNotMatch(migration, /hubapi|hubspot api|n8n|webhook|smtp|google workspace/i);
   assert.doesNotMatch(migration, /checkout|payment|purchase|booking|reservation|order/i);
 });
 
