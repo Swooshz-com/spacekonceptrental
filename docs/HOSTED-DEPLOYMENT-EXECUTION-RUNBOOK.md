@@ -233,13 +233,16 @@ This runbook owns the hosted Hostinger/Coolify/VPS execution sequence. Existing
 docs are retained as the canonical supporting references:
 
 - `docs/DEPLOYMENT-ENVIRONMENT-READINESS.md` remains the env contract and links
-  to this hosted execution runbook.
+  to this hosted execution runbook. Stale deployment-target wording is updated
+  there rather than duplicated here.
 - `docs/PRODUCTION-SECURITY-READINESS-GATE.md` remains the readiness validator
-  contract.
+  contract and states that n8n/Pinecone/HubSpot runtime env is not required for
+  owner-MVP launch.
 - `docs/DEPLOYMENT-SMOKE-TEST-RUNBOOK.md` remains the broader smoke evidence
-  runbook.
+  runbook, with n8n checks treated as optional and integration-specific.
 - `docs/SKR-LAUNCH-READINESS-FINAL-GAP-AUDIT.md` remains the final source gap
   audit.
 
-No duplicate deployment instructions were intentionally scattered, no
-`MEMORY.md` was created, and no repo map was created.
+No duplicate deployment instructions were intentionally scattered, no broad
+repo docs cleanup was performed, no `MEMORY.md` was created, and no repo map
+was created.

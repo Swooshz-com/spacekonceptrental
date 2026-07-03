@@ -84,7 +84,8 @@ Do not add launch requirements for:
 - `NEXT_PUBLIC_N8N*`
 - `SUPABASE_SERVICE_ROLE_KEY`
 
-n8n/Pinecone can remain a separate temporary chat bridge concern, but the owner
+n8n can remain an optional, integration-specific temporary chat bridge only when
+separately approved. Pinecone and HubSpot remain separate concerns. The owner
 MVP production-security readiness gate must not require those env names.
 
 ## Static Security Checks
