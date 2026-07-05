@@ -62,8 +62,9 @@ non-secret, and must not include Supabase, n8n, workspace, admin, quote, or
 provider credentials. No `NEXT_PUBLIC_SUPABASE_*`, `NEXT_PUBLIC_N8N*`, or
 `NEXT_PUBLIC_SUPABASE_SERVICE_ROLE` variable may be present.
 
-`NEXT_PUBLIC_SKR_DEMO_CONTENT` may remain a local/review-only demo content
-switch, but it must not be set to `true` in the hosted production environment.
+`NEXT_PUBLIC_SKR_DEMO_CONTENT` runtime support has been removed. Do not
+configure it in local, preview, hosted build, or hosted runtime env; production
+must use hosted Supabase data or honest empty states.
 
 ## Server-only app env
 
@@ -248,8 +249,8 @@ Forbidden exposure includes:
 - No `NEXT_PUBLIC_SUPABASE_*`.
 - No `NEXT_PUBLIC_N8N*`.
 - No `NEXT_PUBLIC_SUPABASE_SERVICE_ROLE`.
-- No production `NEXT_PUBLIC_SKR_DEMO_CONTENT` demo content switch set to
-  `true`.
+- No `NEXT_PUBLIC_SKR_DEMO_CONTENT`; the public demo-content runtime switch is
+  removed and forbidden.
 - No browser-visible n8n URLs.
 - No browser Supabase unless separately approved.
 - No `SUPABASE_SERVICE_ROLE_KEY` in runtime paths.

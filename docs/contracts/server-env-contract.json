@@ -101,6 +101,7 @@
         "NEXT_PUBLIC_SUPABASE_*",
         "NEXT_PUBLIC_N8N*",
         "NEXT_PUBLIC_SUPABASE_SERVICE_ROLE",
+        "NEXT_PUBLIC_SKR_DEMO_CONTENT",
         "SUPABASE_SERVICE_ROLE_KEY"
       ],
       "rule": "Do not expose Supabase, n8n, service-role, workspace, admin, quote, provider, or secret values to the browser."
@@ -288,6 +289,12 @@
       "browserAllowed": false,
       "status": "forbidden",
       "reason": "Service-role keys must never be browser/client/public env."
+    },
+    {
+      "namePattern": "NEXT_PUBLIC_SKR_DEMO_CONTENT",
+      "browserAllowed": false,
+      "status": "removed-forbidden",
+      "reason": "Public demo-content runtime support has been removed; production must use hosted Supabase data or honest empty states."
     },
     {
       "namePattern": "SUPABASE_SERVICE_ROLE_KEY",

@@ -196,7 +196,7 @@ Do not enable public traffic if any condition below is true:
 - Workspace IDs are missing, wrong, or point at unreviewed hosted records.
 - Catalogue, setup, Hero, or listing content/media needed for launch is missing
   or unreviewed.
-- `NEXT_PUBLIC_SKR_DEMO_CONTENT` is set to `true` in the hosted production
+- `NEXT_PUBLIC_SKR_DEMO_CONTENT` is configured in the hosted build or runtime
   environment.
 - Resend sender/domain verification is incomplete.
 - Any secret/env value appears in docs, logs, screenshots, PR text, or chat.
@@ -245,8 +245,8 @@ docs are retained as the canonical supporting references:
 - `docs/SKR-LAUNCH-READINESS-FINAL-GAP-AUDIT.md` remains the final source gap
   audit.
 - `docs/audits/SKR-PRODUCTION-DEPENDENCY-LOCAL-FALLBACK-AUDIT.md` records the
-  focused production dependency matrix, local/demo/fallback findings, and
-  missing validator coverage before hosted deployment.
+  focused production dependency matrix and has been updated after removal of
+  the public demo-content runtime path.
 
 No duplicate deployment instructions were intentionally scattered, no broad
 repo docs cleanup was performed, no `MEMORY.md` was created, and no repo map

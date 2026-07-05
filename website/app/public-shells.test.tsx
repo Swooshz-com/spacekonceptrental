@@ -74,6 +74,83 @@ const catalogueWithProduct: PublicCatalogue = {
   products: [modularLounge]
 };
 
+const metropolitanSetup: PublicCatalogueProduct = {
+  ...modularLounge,
+  id: "setup-metropolitan-gala",
+  slug: "the-metropolitan-gala",
+  name: "The Metropolitan Gala",
+  shortDescription: "Tonal layering and sculptural surfaces for elevated evening event settings.",
+  description: "Tonal layering and sculptural surfaces for elevated evening event settings.",
+  rentalUnit: "setup",
+  sortOrder: 1,
+  categoryId: "setups",
+  categoryName: "Setups",
+  primaryImage: {
+    id: "image-metropolitan-gala",
+    storageBucket: "sample-catalogue-public",
+    storagePath: "sample-fixtures/the-metropolitan-gala.jpg",
+    altText: "Metropolitan gala setup image.",
+    sortOrder: 1,
+    isPrimary: true
+  }
+};
+
+const botanicalSetup: PublicCatalogueProduct = {
+  ...modularLounge,
+  id: "setup-botanical-wedding",
+  slug: "botanical-wedding",
+  name: "Botanical Wedding",
+  shortDescription: "Organic silhouettes and soft seating cues for daylight celebrations.",
+  description: "Organic silhouettes and soft seating cues for daylight celebrations.",
+  rentalUnit: "setup",
+  sortOrder: 2,
+  categoryId: "setups",
+  categoryName: "Setups",
+  primaryImage: {
+    id: "image-botanical-wedding",
+    storageBucket: "sample-catalogue-public",
+    storagePath: "sample-fixtures/botanical-wedding.jpg",
+    altText: "Botanical wedding setup image.",
+    sortOrder: 2,
+    isPrimary: true
+  }
+};
+
+const executiveSetup: PublicCatalogueProduct = {
+  ...modularLounge,
+  id: "setup-executive-summit",
+  slug: "executive-summit",
+  name: "Executive Summit",
+  shortDescription: "Structured furniture groupings for focused sessions and networking areas.",
+  description: "Structured furniture groupings for focused sessions and networking areas.",
+  rentalUnit: "setup",
+  sortOrder: 3,
+  categoryId: "setups",
+  categoryName: "Setups",
+  primaryImage: {
+    id: "image-executive-summit",
+    storageBucket: "sample-catalogue-public",
+    storagePath: "sample-fixtures/executive-summit.jpg",
+    altText: "Executive summit setup image.",
+    sortOrder: 3,
+    isPrimary: true
+  }
+};
+
+const setupCatalogue: PublicCatalogue = {
+  source: "supabase",
+  categories: [
+    {
+      id: "setups",
+      slug: "setups",
+      name: "Setups",
+      description: "Published setup directions.",
+      sortOrder: 1
+    }
+  ],
+  products: [metropolitanSetup, botanicalSetup, executiveSetup]
+};
+
 function hrefsFor(name: RegExp) {
   return screen.getAllByRole("link", { name }).map((link) => link.getAttribute("href"));
 }
@@ -301,95 +378,63 @@ describe("public page shells", () => {
     expect(screen.getByRole("link", { name: /brutalist/i })).toHaveClass("is-active");
   });
 
-  it("keeps setup pills as grouped filters and includes the featured editorial in the setup listings", () => {
-    const previousDemoContentFlag = process.env.NEXT_PUBLIC_SKR_DEMO_CONTENT;
+  it("keeps setup pills as grouped filters and includes the featured real setup listing", () => {
     const publicStitchSource = readFileSync(resolve(process.cwd(), "components/PublicStitch.tsx"), "utf8");
-    process.env.NEXT_PUBLIC_SKR_DEMO_CONTENT = "true";
 
-    try {
-      render(<StitchSetupsPage catalogue={{ source: "fallback", categories: [], products: [] }} />);
+    render(<StitchSetupsPage catalogue={setupCatalogue} />);
 
-      expect(screen.getByRole("link", { name: /all setups/i })).toHaveAttribute("href", "/listings");
-      expect(screen.queryByRole("link", { name: /featured editorial/i })).not.toBeInTheDocument();
-      expect(screen.getByRole("heading", { level: 2, name: /the metropolitan gala/i })).toBeInTheDocument();
-      expect(screen.getByRole("link", { name: /weddings/i })).toHaveAttribute(
-        "href",
-        "/listings?setup=weddings"
-      );
-      expect(screen.getByRole("link", { name: /corporate summits/i })).toHaveAttribute(
-        "href",
-        "/listings?setup=corporate-summits"
-      );
-      expect(publicStitchSource).toContain('href={item.href} key={item.href} scroll={false}');
-      expect(screen.getAllByText("The Metropolitan Gala").length).toBeGreaterThan(1);
-      expect(screen.getAllByRole("link", { name: /view setup details/i }).length).toBeGreaterThan(1);
-    } finally {
-      if (previousDemoContentFlag === undefined) {
-        delete process.env.NEXT_PUBLIC_SKR_DEMO_CONTENT;
-      } else {
-        process.env.NEXT_PUBLIC_SKR_DEMO_CONTENT = previousDemoContentFlag;
-      }
-    }
+    expect(screen.getByRole("link", { name: /all setups/i })).toHaveAttribute("href", "/listings");
+    expect(screen.queryByRole("link", { name: /featured editorial/i })).not.toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 2, name: /the metropolitan gala/i })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /weddings/i })).toHaveAttribute(
+      "href",
+      "/listings?setup=weddings"
+    );
+    expect(screen.getByRole("link", { name: /corporate summits/i })).toHaveAttribute(
+      "href",
+      "/listings?setup=corporate-summits"
+    );
+    expect(publicStitchSource).toContain('href={item.href} key={item.href} scroll={false}');
+    expect(screen.getAllByText("The Metropolitan Gala").length).toBeGreaterThan(1);
+    expect(screen.getAllByRole("link", { name: /view setup details/i }).length).toBeGreaterThan(1);
   });
 
   it("filters setup listings from the pill query without turning pills into detail links", () => {
-    const previousDemoContentFlag = process.env.NEXT_PUBLIC_SKR_DEMO_CONTENT;
-    process.env.NEXT_PUBLIC_SKR_DEMO_CONTENT = "true";
+    render(
+      <StitchSetupsPage
+        activeSetupSlug="botanical-wedding"
+        catalogue={setupCatalogue}
+      />
+    );
 
-    try {
-      render(
-        <StitchSetupsPage
-          activeSetupSlug="botanical-wedding"
-          catalogue={{ source: "fallback", categories: [], products: [] }}
-        />
-      );
-
-      expect(screen.getByRole("link", { name: /all setups/i })).not.toHaveAttribute("aria-current", "page");
-      expect(screen.getByRole("link", { name: /weddings/i })).toHaveAttribute("aria-current", "page");
-      expect(screen.getByRole("link", { name: /weddings/i })).toHaveAttribute(
-        "href",
-        "/listings?setup=weddings"
-      );
-      expect(screen.getByText("Botanical Wedding")).toBeInTheDocument();
-      expect(screen.queryByText("Executive Summit")).not.toBeInTheDocument();
-      expect(screen.getByRole("link", { name: /view setup details/i })).toHaveAttribute(
-        "href",
-        "/listings/botanical-wedding"
-      );
-    } finally {
-      if (previousDemoContentFlag === undefined) {
-        delete process.env.NEXT_PUBLIC_SKR_DEMO_CONTENT;
-      } else {
-        process.env.NEXT_PUBLIC_SKR_DEMO_CONTENT = previousDemoContentFlag;
-      }
-    }
+    expect(screen.getByRole("link", { name: /all setups/i })).not.toHaveAttribute("aria-current", "page");
+    expect(screen.getByRole("link", { name: /weddings/i })).toHaveAttribute("aria-current", "page");
+    expect(screen.getByRole("link", { name: /weddings/i })).toHaveAttribute(
+      "href",
+      "/listings?setup=weddings"
+    );
+    expect(screen.getByText("Botanical Wedding")).toBeInTheDocument();
+    expect(screen.queryByText("Executive Summit")).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /view setup details/i })).toHaveAttribute(
+      "href",
+      "/listings/botanical-wedding"
+    );
   });
 
   it("assigns the Metropolitan Gala editorial listing to Corporate Summits instead of a Featured Editorial filter", () => {
-    const previousDemoContentFlag = process.env.NEXT_PUBLIC_SKR_DEMO_CONTENT;
-    process.env.NEXT_PUBLIC_SKR_DEMO_CONTENT = "true";
+    render(
+      <StitchSetupsPage
+        activeSetupSlug="corporate-summits"
+        catalogue={setupCatalogue}
+      />
+    );
 
-    try {
-      render(
-        <StitchSetupsPage
-          activeSetupSlug="corporate-summits"
-          catalogue={{ source: "fallback", categories: [], products: [] }}
-        />
-      );
-
-      expect(screen.getByRole("link", { name: /all setups/i })).not.toHaveAttribute("aria-current", "page");
-      expect(screen.getByRole("link", { name: /corporate summits/i })).toHaveAttribute("aria-current", "page");
-      expect(screen.queryByRole("link", { name: /featured editorial/i })).not.toBeInTheDocument();
-      expect(screen.getAllByText("The Metropolitan Gala").length).toBeGreaterThan(1);
-      expect(screen.getByText("Executive Summit")).toBeInTheDocument();
-      expect(screen.queryByText("Botanical Wedding")).not.toBeInTheDocument();
-    } finally {
-      if (previousDemoContentFlag === undefined) {
-        delete process.env.NEXT_PUBLIC_SKR_DEMO_CONTENT;
-      } else {
-        process.env.NEXT_PUBLIC_SKR_DEMO_CONTENT = previousDemoContentFlag;
-      }
-    }
+    expect(screen.getByRole("link", { name: /all setups/i })).not.toHaveAttribute("aria-current", "page");
+    expect(screen.getByRole("link", { name: /corporate summits/i })).toHaveAttribute("aria-current", "page");
+    expect(screen.queryByRole("link", { name: /featured editorial/i })).not.toBeInTheDocument();
+    expect(screen.getAllByText("The Metropolitan Gala").length).toBeGreaterThan(1);
+    expect(screen.getByText("Executive Summit")).toBeInTheDocument();
+    expect(screen.queryByText("Botanical Wedding")).not.toBeInTheDocument();
   });
 
   it("renders a clean empty catalogue state inside the Stitch catalogue shell", () => {
@@ -1411,7 +1456,7 @@ describe("public page shells", () => {
     expect(setupsPageSource).not.toMatch(/checkout|payment|booking|reservation/i);
   });
 
-  it("adds extra local demo catalogue and setup listings for responsive QA", () => {
+  it("keeps public shells empty instead of using removed demo content when real records are unavailable", () => {
     const previousDemoContentFlag = process.env.NEXT_PUBLIC_SKR_DEMO_CONTENT;
     process.env.NEXT_PUBLIC_SKR_DEMO_CONTENT = "true";
 
@@ -1426,14 +1471,16 @@ describe("public page shells", () => {
         />
       );
 
-      expect(screen.getByRole("heading", { name: /crescent bar counter/i })).toBeInTheDocument();
-      expect(screen.getByRole("heading", { name: /gallery plinth set/i })).toBeInTheDocument();
+      expect(screen.getByText(/no public rental listings are available right now/i)).toBeInTheDocument();
+      expect(screen.queryByRole("heading", { name: /crescent bar counter/i })).not.toBeInTheDocument();
+      expect(screen.queryByRole("heading", { name: /gallery plinth set/i })).not.toBeInTheDocument();
       cleanup();
 
       render(<StitchSetupsPage catalogue={{ source: "fallback", categories: [], products: [] }} />);
 
-      expect(screen.getByText("Atrium Showcase")).toBeInTheDocument();
-      expect(screen.getByText("Press Preview Lounge")).toBeInTheDocument();
+      expect(screen.getByText(/no public setup records are available right now/i)).toBeInTheDocument();
+      expect(screen.queryByText("Atrium Showcase")).not.toBeInTheDocument();
+      expect(screen.queryByText("Press Preview Lounge")).not.toBeInTheDocument();
     } finally {
       if (previousDemoContentFlag === undefined) {
         delete process.env.NEXT_PUBLIC_SKR_DEMO_CONTENT;

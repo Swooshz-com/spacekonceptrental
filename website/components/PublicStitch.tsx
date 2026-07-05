@@ -1,4 +1,4 @@
-import Image, { type StaticImageData } from "next/image";
+import type { StaticImageData } from "next/image";
 import Link from "next/link";
 import chairImage from "../assets/images/product_chair.png";
 import sofaImage from "../assets/images/product_sofa.png";
@@ -20,8 +20,6 @@ import { SetupImageCarousel } from "./SetupImageCarousel";
 
 export const stitchImages = { chairImage, sofaImage, corporateImage, galaImage, exhibitionImage, heroImage };
 
-type DemoProduct = Pick<PublicCatalogueProduct, "id" | "slug" | "name" | "shortDescription" | "description" | "rentalUnit" | "sortOrder" | "categoryId" | "categoryName" | "source"> & { image: StaticImageData | string };
-
 const aboutStoryImageUrl = "https://lh3.googleusercontent.com/aida-public/AB6AXuCVRiKMpVS17P0POe4hgYLWJOqLZWHNBK0YGHw-bG4ETu7eWNw2o_RDNmsHhEgmEAfc1nWGlfVYJswBZRdLxn0pVc44lfcblgiNEyuHfr4APLO9MARpxHtb8kRWvMV7otaSDpU_tfoAPYGYbCMtj9DUnC49_anMv7E80cfYVCCK_uheLjc8ZiIEccgZUgjO8H3dhTXXY_cBGYInmYRilsvWVY_akz3twXUoGZotZr6SB4yHpefF4EcE8HJb4gp8pwrC_XR3IlH3bkkl";
 const homeCategoryImageUrls = [
   "https://lh3.googleusercontent.com/aida-public/AB6AXuAImhw0DRyJ87ykPAlGrIm3BrKMKXRpivv23Tdp1whVQ35E6fnIlhsbuUCUHPXF8ZUC8RUE5uHzPFkP7HoIINOXcung6zVL9x0yOMDzgkvKRXamMmq5FY9Rz7azxTqCNgaXA5Nr8c5UmQrlx_O8p_H_MYCWrfAHh4i0EdnLScgtT07-faMuNlDThQ0qur6BKi_mzgL7EjYya9TelJI_6Q2QYz1CnwE5sSNpajaODLu6PjolUwjUMLLGDzI7HBsoEWOc6cqR02wfs4KK",
@@ -30,49 +28,15 @@ const homeCategoryImageUrls = [
   "https://lh3.googleusercontent.com/aida-public/AB6AXuAYmGvnLNxjr_Qz3dHxk-CFHYzKK4A252rk6r7QoEgH4FcsoG599ev_OCCif9kDRH-kj9t4f_TuBOpJqSu1jB58gFjbxkL5gZvZQTFzF8q4xvq8btpEkOvznkuVdZ-SStna89cP3dzjjvXm-tlr9fxDTfMQq77FfV2g7abZKTndVutw5TySVGtlld-zxmaURlVfnArBxkIxEE4NId7gCNGWiMU-UeEJXpRZHwd5BQRf9mhJdgx7psRUT1YXv4TyQDuioUxLkKiPRrvC"
 ];
 
-const demoProducts: DemoProduct[] = [
-  { id: "demo-aura", slug: "aura-lounge-chair", name: "Aura Lounge Chair", shortDescription: "Olive velvet seating with a warm timber frame for lounge-focused event settings.", description: "Olive velvet seating with a warm timber frame for lounge-focused event settings.", rentalUnit: "piece", sortOrder: 1, categoryId: "seating", categoryName: "Seating", source: "fallback", image: "https://lh3.googleusercontent.com/aida-public/AB6AXuAImhw0DRyJ87ykPAlGrIm3BrKMKXRpivv23Tdp1whVQ35E6fnIlhsbuUCUHPXF8ZUC8RUE5uHzPFkP7HoIINOXcung6zVL9x0yOMDzgkvKRXamMmq5FY9Rz7azxTqCNgaXA5Nr8c5UmQrlx_O8p_H_MYCWrfAHh4i0EdnLScgtT07-faMuNlDThQ0qur6BKi_mzgL7EjYya9TelJI_6Q2QYz1CnwE5sSNpajaODLu6PjolUwjUMLLGDzI7HBsoEWOc6cqR02wfs4KK" },
-  { id: "demo-kinetic", slug: "kinetic-dining-table", name: "Kinetic Dining Table", shortDescription: "A light oak table suited to dining, registration, and editorial setup plans.", description: "A light oak table suited to dining, registration, and editorial setup plans.", rentalUnit: "piece", sortOrder: 2, categoryId: "tables", categoryName: "Tables", source: "fallback", image: "https://lh3.googleusercontent.com/aida-public/AB6AXuBySE2F1_2J95qMsecqsIG9T6w51jQmD4NhABeyd-5OU3t9QQ5mqEtVKIzPGO90_B3knnGPsA5kzreSFZ7NmzxftT-ypwr2rLYX-vAiQcUviigLSrSbwkJQTNlI9yxuv_uU6ZfiimZwsRD-8MXOOfeNwEm-G-BDAAKAz3B-tVgflNw_AjvlhBWql3cl1-jN58uK6Nh0hbf0O3lyrCzrkR5lVRKXKv3LdOqEEGBPXVpFrEGa4OHkB48av3MflsDtHaVBKMHv4mbfXPdg" },
-  { id: "demo-arch", slug: "slender-arch-floor-lamp", name: "Slender Arch Floor Lamp", shortDescription: "Ambient sculptural lighting for warm event corners and soft transitions.", description: "Ambient sculptural lighting for warm event corners and soft transitions.", rentalUnit: "piece", sortOrder: 3, categoryId: "lighting", categoryName: "Lighting", source: "fallback", image: "https://lh3.googleusercontent.com/aida-public/AB6AXuBerT9S8ujxmbed3uJlqweCh5RIPkhW9lujCCRFP_qYiTB0dj6pLyFcZtUwa2-EeOHYyWVEvGGd-_fl_6R5N98GK6Kp4K5TljfuWEMyVn4YZHZcV9RSoclm-xc94Xv0OCa7QJUy5JehipA74al0_26kV4X-JwPiYg_0e7xHVjTRaBMeahYQTGbIioj0MmsWwy6p_WezUdLmEabCIXFYWKBByavj_tHtJm051d3hdbbZ3JFYpZ8zvmEPcPG3PDNdKIiBd780YfBmu-t5" },
-  { id: "demo-ribbed", slug: "ribbed-walnut-credenza", name: "Ribbed Walnut Credenza", shortDescription: "Textural storage and display support for reception or gallery-led settings.", description: "Textural storage and display support for reception or gallery-led settings.", rentalUnit: "piece", sortOrder: 4, categoryId: "storage", categoryName: "Storage", source: "fallback", image: "https://lh3.googleusercontent.com/aida-public/AB6AXuBD4OvwNaiByrB08KEm10qflQt-IyMNIxYCWofTS4HwvuHNgghiKO1gJB5PvUlxkhWYmZ8zb6g4WAis7aifNh_LoXTO1mRK-sRc4Ql1BfbK1bg5TQsdNWz6aRU7RLJIpi6QK-sxkqgRiybJCbKyTGfIzl7EIZ6qM6_kL-MokbchCfHmiP9pKRp6bEQviF_nZEr2fvhpjccPcjNLy_4Q317xYJ61EuxIz8OPEsEX-s5oJRai15IatfQZnd9YODAFd0cbcoJvwyjlehcZ" },
-  { id: "demo-linen", slug: "asymmetric-velvet-chair", name: "Asymmetric Velvet Chair", shortDescription: "Sculptural olive seating for lounge corners and considered event vignettes.", description: "Sculptural olive seating for lounge corners and considered event vignettes.", rentalUnit: "piece", sortOrder: 5, categoryId: "seating", categoryName: "Seating", source: "fallback", image: "https://lh3.googleusercontent.com/aida-public/AB6AXuC7zSvIZ5HD9QijJ6Ae_MMlX5igiDKo2KYEPYhOrfm9OPp9rI7ziuUGpKtOvLC30W202bLkCfmsaIhDCwiM17LtwQK8UZtzckNst-N4oYgwYgI2UhuhWmGynqjUetMBXaHvIO7YEpdXtuSNsMZuNra-7i5V3-sHqzKPDofkEjCiarVXAeSZdq9HQHPQa6hUBgRFTtcK3_GoY60miToLSTrigew3ffnj_-RX4ZYgLy2H3ujSguMmfEqtkZB--iAXdwS3rLVqXLp2h35U" },
-  { id: "demo-monumental", slug: "monumental-oak-table", name: "Monumental Oak Table", shortDescription: "A grounded timber table for dining, display, or registration moments.", description: "A grounded timber table for dining, display, or registration moments.", rentalUnit: "piece", sortOrder: 6, categoryId: "tables", categoryName: "Tables", source: "fallback", image: "https://lh3.googleusercontent.com/aida-public/AB6AXuDOXJiSNZDvvrg_DY68YsYIOCmrdAlAOA4EN1yokboEu5mxNIo9BFnQQi7wxGxAa3U1PG-2HiCK52v2FCxWSVEzQomhER2MQgpdKFoUU9-wn9kRfx0Sr-DUl6TqFRB1NRbgG4q5Vte12hR9ujIZQx3t9pKk8e6y5es5vjesVzBzkeokBTJ2ViA-ZlwO4ieGTwRAKBMiPlSpiM6kwQS594ClJZFacbGEYGo1_fT0dkuW8PZUpsJ5nXIsmB01oMoqadS5nVhQgiswHZAf" },
-  { id: "demo-crescent-bar", slug: "crescent-bar-counter", name: "Crescent Bar Counter", shortDescription: "Curved service counter for reception drinks, registration styling, or branded event touchpoints.", description: "Curved service counter for reception drinks, registration styling, or branded event touchpoints.", rentalUnit: "piece", sortOrder: 7, categoryId: "serving", categoryName: "Serving", source: "fallback", image: corporateImage },
-  { id: "demo-gallery-plinth", slug: "gallery-plinth-set", name: "Gallery Plinth Set", shortDescription: "Stackable display plinths for launches, gallery moments, and layered decor styling.", description: "Stackable display plinths for launches, gallery moments, and layered decor styling.", rentalUnit: "set", sortOrder: 8, categoryId: "display", categoryName: "Display", source: "fallback", image: exhibitionImage }
-];
-
-const demoSetups = [
-  { slug: "the-metropolitan-gala", title: "The Metropolitan Gala", image: "https://lh3.googleusercontent.com/aida-public/AB6AXuDTX7SO5TNNQtDk2W9OqnTv0KbU7nuLqI7Sry2KOUIpPkcOXT5Aj39HvEUHSINH1Uj1Q419Hhdm9axGFDeKJPUzvBlYsyt9xf_lFlRpWF7dLZ1HxdrQjqKYMMJznVMdEE54KFuU6DyjrlRq031Nn08_hsqQzF4f4C_TTD1EhFwwMfEhCitIlltVrSaqKsNA774EROa0DKj213wM8ewD520JuASYWyBuj7pn9FvnOb5S06fyF0fZqi5gL89qvDeTWgP3Lw5Tmu1I-6GU", summary: "A masterclass in tonal layering, juxtaposing structural elements with soft, inviting textures for elevated evening events." },
-  { slug: "botanical-wedding", title: "Botanical Wedding", image: "https://lh3.googleusercontent.com/aida-public/AB6AXuBUtYl2B4KD6m2_dSMS18WPLv8P3yhFut2qRl_YG-3Eq_01_GhbuWOmLVc_M91j65Y4BHpu0EHxOaVhzNxyt4yGfcsGrWg-hjt58aPR-DRvprdtUf8hnlI1yYCfDRyKGYh7Vcp2N38Fv0Y8-5y9p5J4rEFNJeOnqWEPWYDC9cqveOLZjhixkz8SRedF6QrCEt5XVj-VXhK0bmJFy2rhrG46ghV8LP-GtotX-xl0KaHTIcUnmXlfMNv39yCPFfkG7lc_SvNfVhdwsepB", summary: "Organic silhouettes and breathable layouts for daylight celebrations and understated garden elegance." },
-  { slug: "executive-summit", title: "Executive Summit", image: "https://lh3.googleusercontent.com/aida-public/AB6AXuBySE2F1_2J95qMsecqsIG9T6w51jQmD4NhABeyd-5OU3t9QQ5mqEtVKIzPGO90_B3knnGPsA5kzreSFZ7NmzxftT-ypwr2rLYX-vAiQcUviigLSrSbwkJQTNlI9yxuv_uU6ZfiimZwsRD-8MXOOfeNwEm-G-BDAAKAz3B-tVgflNw_AjvlhBWql3cl1-jN58uK6Nh0hbf0O3lyrCzrkR5lVRKXKv3LdOqEEGBPXVpFrEGa4OHkB48av3MflsDtHaVBKMHv4mbfXPdg", summary: "Structured and commanding, with geometric lines and muted tones for focused sessions." },
-  { slug: "intimate-nocturne", title: "Intimate Nocturne", image: "https://lh3.googleusercontent.com/aida-public/AB6AXuDvP42lEAX8n0nz7cNBM6UDonwbvBqD8nKJ2_mmkqFff6QlAJjfVVZfdcASHtKASEOQXeS5sCnVYIgs4jxBMIL7tqLp7Vrva2OnUdojZKE82sIJjA4qFIoppWkFl-Kl8TETFIQ6QlEBOq4FRcyA1BKgu62zvcGP_7ibt5_2Ewnmn5zXo-23UYKrnYHKOgeRstmNMAwCT_SPDwXB9s0Opu2vycV6T9dA0cKPyMe_EFno9nL9-BgzHrkaNq6O3R2QSxG5cqZG3DoByiCp", summary: "Warm, low-light environments with deep walnut woods and layered linens for private dining atmospheres." },
-  { slug: "terrace-lounge", title: "Terrace Lounge", image: "https://lh3.googleusercontent.com/aida-public/AB6AXuAFxdE0niFeFoIoLuXKuuuC_MQs6gl2lwmOqoTyjx7S08WwEXDgj3PNBMD1PO1hkrnBk16G6pKIkPGukjAIflrAF05kGLe3A4Op59rMTppzzKdW8LHJGf1OsLU55vRLK9x_4gMkvm-LGkLNvJkOmvrRyhDMx8tyDMj1F9ulpmzrCnFuvuHH7W_5SHoCmYiOuT0Ub1cvUG4CbyLiV8Qhryw9dHiV5DJ8RrmZfvcZv_-9o5SVQv-BGoyTbRSd6QVI47ByYlmdDmmM-T2u", summary: "Low-profile seating arrangements for alfresco mingling, breathable fabrics, and sculptural accents." },
-  { slug: "gallery-exhibition", title: "Gallery Exhibition", image: "https://lh3.googleusercontent.com/aida-public/AB6AXuAiljrIyhMN9Z7RX4VMV_Bk1wSCLVt26F9ST-5WpGLngA77j4dBWg_6prv-GSNNxcIR5XH4icMJsZUsk3rrYGvxMmDgPwXP3v62uDfPYZLdb_5zIUTumReVbnIt0fU-h_0pSNV_79X9S9FWpah6JEBGWLq_BRRWxBB52EA1qn1t9ZVFCpVg-VdqcBOO5OvCrwRMrZSrtiW7dqHfwheDEPYwdncN6xIfJ4fpKovD1_xVCKgKWVn3ICFXAuON5GgL5804KyD5QOEHMMQZ", summary: "A modular, stylistically minimal arrangement that works as a blank canvas for showcases." },
-  { slug: "atrium-showcase", title: "Atrium Showcase", image: homeCategoryImageUrls[1], summary: "Open-plan reception zones with display plinths, counter support, and lounge pauses for showcase-led events." },
-  { slug: "press-preview-lounge", title: "Press Preview Lounge", image: homeCategoryImageUrls[2], summary: "A compact editorial lounge direction for previews, interviews, and quiet brand hospitality." }
-];
-
-export function isDemoContentEnabled() {
-  return process.env.NEXT_PUBLIC_SKR_DEMO_CONTENT === "true";
-}
-
-export function getDemoProducts() {
-  return isDemoContentEnabled() ? demoProducts : [];
-}
-
-export function getDemoSetupImageSrc(slug: string) {
-  return demoSetups.find((setup) => setup.slug === slug)?.image;
-}
-
 export function textOrUndefined(value: string | undefined | null) {
   return value?.trim() || undefined;
 }
 
-export function productSummary(product: PublicCatalogueProduct | DemoProduct) {
+export function productSummary(product: PublicCatalogueProduct) {
   return textOrUndefined(product.shortDescription) ?? textOrUndefined(product.description) ?? "Listing details can be reviewed with the team during quote follow-up. Share this rental piece in an enquiry so the team can review fit and details with you.";
 }
 
-export function productCategory(product: PublicCatalogueProduct | DemoProduct) {
+export function productCategory(product: PublicCatalogueProduct) {
   return textOrUndefined(product.categoryName) ?? "Category to confirm";
 }
 
@@ -82,16 +46,16 @@ export const stitchStyleFilters = [
   { slug: "brutalist", label: "Brutalist", matchers: ["ribbed", "walnut", "credenza", "storage"] }
 ];
 
-function productStyleHaystack(product: PublicCatalogueProduct | DemoProduct) {
+function productStyleHaystack(product: PublicCatalogueProduct) {
   return `${product.slug} ${product.name} ${productCategory(product)} ${productSummary(product)}`.toLowerCase();
 }
 
-function productMatchesStyleContext(product: PublicCatalogueProduct | DemoProduct, style: typeof stitchStyleFilters[number]) {
+function productMatchesStyleContext(product: PublicCatalogueProduct, style: typeof stitchStyleFilters[number]) {
   const haystack = productStyleHaystack(product);
   return style.matchers.some((matcher) => haystack.includes(matcher));
 }
 
-export function productStyleContext(product: PublicCatalogueProduct | DemoProduct) {
+export function productStyleContext(product: PublicCatalogueProduct) {
   return stitchStyleFilters.find((style) => productMatchesStyleContext(product, style))?.label ?? "Style to confirm";
 }
 
@@ -99,8 +63,7 @@ export function stitchImageSrc(image: StaticImageData | string) {
   return typeof image === "string" ? image : image.src;
 }
 
-export function fallbackProductImage(product: PublicCatalogueProduct | DemoProduct): StaticImageData | string {
-  if ("image" in product) return product.image;
+export function fallbackProductImage(product: PublicCatalogueProduct): StaticImageData | string {
   const haystack = `${product.slug} ${product.name} ${product.categoryName ?? ""}`.toLowerCase();
   if (haystack.includes("chair") || haystack.includes("seating")) return chairImage;
   if (haystack.includes("gala") || haystack.includes("setup")) return galaImage;
@@ -109,7 +72,7 @@ export function fallbackProductImage(product: PublicCatalogueProduct | DemoProdu
 }
 
 function quoteSelectionItem(
-  product: PublicCatalogueProduct | DemoProduct,
+  product: PublicCatalogueProduct,
   imageSrc: string,
   kind: QuoteSelectionItem["kind"] = "rental",
   includedItems?: QuoteSelectionItem[]
@@ -141,7 +104,7 @@ function setupQuoteSelectionItem(setup: {
 }
 
 function setupIncludedQuoteItem(
-  product: PublicCatalogueProduct | DemoProduct,
+  product: PublicCatalogueProduct,
   setup: PublicCatalogueProduct,
   quantity: number
 ): QuoteSelectionItem {
@@ -194,17 +157,12 @@ export function StitchAdvantageCards() {
 }
 
 export function StitchCategoryPreview({ catalogue }: { catalogue: PublicCatalogue }) {
-  const categories = catalogue.categories.length ? catalogue.categories.slice(0, 4) : [
-    { id: "seating", slug: "seating", name: "Seating", description: "Chairs, sofas, and lounge pieces for event spaces.", sortOrder: 1 },
-    { id: "tables", slug: "tables", name: "Tables", description: "Surfaces for dining, display, registration, and gathering.", sortOrder: 2 },
-    { id: "lighting", slug: "lighting", name: "Lighting", description: "Ambient pieces to support the overall setting.", sortOrder: 3 },
-    { id: "accents", slug: "accents", name: "Decor and accents", description: "Texture, shape, and finishing details for the room.", sortOrder: 4 }
-  ];
+  const categories = catalogue.categories.slice(0, 4);
   const imageMap = homeCategoryImageUrls;
-  return <section className="stitch-section stitch-section--tonal stitch-home-categories"><div className="stitch-container"><div className="stitch-section-heading"><h2>Browse By Category</h2></div><div className="stitch-home-category-mosaic">{categories.map((category, index) => <Link className={`stitch-home-category-card stitch-home-category-card--${index + 1}`} href={`/catalogue?category=${encodeURIComponent(category.slug)}`} key={category.id}><img src={imageMap[index % imageMap.length]} alt={`${category.name} rental category`} /><span>{category.name}</span></Link>)}</div><StitchHomeCatalogueAction /></div></section>;
+  return <section className="stitch-section stitch-section--tonal stitch-home-categories"><div className="stitch-container"><div className="stitch-section-heading"><h2>Browse By Category</h2></div>{categories.length ? <><div className="stitch-home-category-mosaic">{categories.map((category, index) => <Link className={`stitch-home-category-card stitch-home-category-card--${index + 1}`} href={`/catalogue?category=${encodeURIComponent(category.slug)}`} key={category.id}><img src={imageMap[index % imageMap.length]} alt={`${category.name} rental category`} /><span>{category.name}</span></Link>)}</div><StitchHomeCatalogueAction /></> : <StitchEmptyState title="Catalogue categories are not published yet." message="Published category records will appear here once available. You can still send an enquiry with the pieces or setup direction you have in mind." />}</div></section>;
 }
 
-export function StitchItemCard({ product, detailBasePath = "/catalogue" }: { product: PublicCatalogueProduct | DemoProduct; detailBasePath?: string }) {
+export function StitchItemCard({ product, detailBasePath = "/catalogue" }: { product: PublicCatalogueProduct; detailBasePath?: string }) {
   const image = "primaryImage" in product ? product.primaryImage : undefined;
   const alt = textOrUndefined(image?.altText) ?? `${product.name} furniture rental setup`;
   const imgSrc = image?.publicUrl ?? stitchImageSrc(fallbackProductImage(product));
@@ -213,12 +171,8 @@ export function StitchItemCard({ product, detailBasePath = "/catalogue" }: { pro
 }
 
 export function StitchFeaturedPieces({ catalogue }: { catalogue: PublicCatalogue }) {
-  const products = catalogue.products.length ? catalogue.products.slice(0, 4) : getDemoProducts().slice(0, 4);
+  const products = catalogue.products.slice(0, 4);
   return <section className="stitch-section stitch-home-featured"><div className="stitch-container"><div className="stitch-section-heading"><h2>Featured Pieces</h2></div>{products.length ? <><div className="stitch-home-featured-grid">{products.map((product) => <Link className="stitch-home-feature-card" href={`/catalogue/${product.slug}`} key={product.id}><img alt={`${product.name} rental piece`} src={stitchImageSrc(fallbackProductImage(product))} /><strong>{product.name}</strong><small>{productCategory(product)}</small></Link>)}</div><StitchHomeCatalogueAction featured /></> : <StitchEmptyState title="Catalogue records are not published yet." message="The public catalogue will show real rental records when they are available. You can still send an enquiry with the pieces or setup you have in mind." />}</div></section>;
-}
-
-export function StitchSetupCard({ setup }: { setup: typeof demoSetups[number] }) {
-  return <div className="stitch-setup-card"><Link className="stitch-setup-card__image" href={`/listings/${setup.slug}`}><Image src={setup.image} alt={`${setup.title} event furniture setup`} /></Link><div><h2>{setup.title}</h2><p>{setup.summary}</p><Link className="stitch-link-button stitch-link-button--quiet" href={`/listings/${setup.slug}`}>View Setup Details</Link></div></div>;
 }
 
 export function StitchEmptyState({ title, message, actionHref = "/quote", actionLabel = "Request Quote" }: { title: string; message: string; actionHref?: string; actionLabel?: string }) {
@@ -226,8 +180,7 @@ export function StitchEmptyState({ title, message, actionHref = "/quote", action
 }
 
 export function StitchCatalogueShell({ catalogue, detailBasePath = "/catalogue", title = "Furniture Catalogue", intro = "Curated rental pieces for elevated event environments. Browse architectural seating, functional surfaces, and sculptural accents. Browsing does not set aside furniture or finalise rental details.", emptyTitle = "No public rental listings are available right now", emptyMessage = "Real catalogue records will appear here once published. Send a rental enquiry if you already know the pieces or setup direction you need.", activeCategorySlug, activeStyleSlug }: { catalogue: PublicCatalogue; detailBasePath?: string; title?: string; intro?: string; emptyTitle?: string; emptyMessage?: string; activeCategorySlug?: string; activeStyleSlug?: string }) {
-  const demo = getDemoProducts();
-  const allProducts = catalogue.products.length ? catalogue.products : demo;
+  const allProducts = catalogue.products;
   const categoryFilters = catalogue.categories.length ? catalogue.categories : Array.from(new Map(allProducts.map((product) => [productCategory(product).toLowerCase(), { id: product.categoryId ?? productCategory(product), slug: product.categoryId ?? productCategory(product).toLowerCase().replaceAll(" ", "-"), name: productCategory(product) }])).values());
   const styleFilters = stitchStyleFilters;
   const normalizedActiveCategorySlug = activeCategorySlug?.trim().toLowerCase();
@@ -253,7 +206,7 @@ export function StitchCatalogueShell({ catalogue, detailBasePath = "/catalogue",
 
 export function StitchSetupsPage({ catalogue, activeSetupSlug }: { catalogue: PublicCatalogue; activeSetupSlug?: string }) {
   const realSetups = catalogue.products.slice(0, 5).map((product, index) => ({ slug: product.slug, title: product.name, image: fallbackProductImage(product), summary: productSummary(product), featured: index === 0 }));
-  const setupCards = realSetups.length ? realSetups : isDemoContentEnabled() ? demoSetups.map((setup, index) => ({ ...setup, featured: index === 0 })) : [];
+  const setupCards = realSetups;
   const featuredSetup = setupCards[0];
   const setupFilters = [
     { slug: "weddings", label: "Weddings", setupSlugs: ["botanical-wedding"] },
@@ -283,15 +236,14 @@ export function StitchSetupsPage({ catalogue, activeSetupSlug }: { catalogue: Pu
     }))
   ];
 
-  return <><section className="stitch-setups-hero"><div className="stitch-container"><StitchPageIntro eyebrow="Setups" title="Curated Scapes" intro="Explore styled environment directions that help describe rental mood, scale, and event context for team review." /></div></section>{featuredSetup ? <section className="stitch-setups-feature-section"><div className="stitch-container stitch-setups-feature-split"><Link className="stitch-setups-feature__image" href={`/listings/${featuredSetup.slug}`}><img src={stitchImageSrc(featuredSetup.image)} alt={`${featuredSetup.title} event furniture setup`} /></Link><div className="stitch-setups-feature__copy"><span>Featured Editorial</span><h2>{featuredSetup.title}</h2><p>{featuredSetup.summary}</p><Link className="stitch-link-button stitch-link-button--quiet" href={`/listings/${featuredSetup.slug}`}>Explore Collection</Link></div></div></section> : null}<section className="stitch-setups-filter-section" id="setup-listings"><div className="stitch-container"><div className="stitch-pill-row">{setupPillLinks.map((item) => <Link aria-current={item.active ? "page" : undefined} href={item.href} key={item.href} scroll={false}>{item.label}</Link>)}</div></div></section><section className="stitch-setups-grid-section"><div className="stitch-container">{setupCards.length ? <div className="stitch-setups-grid">{visibleSetups.map((setup, index) => <Link className={`stitch-setup-tile ${index === visibleSetups.length - 1 ? "stitch-setup-tile--wide" : ""}`} href={`/listings/${setup.slug}`} key={setup.slug}><span className="stitch-setup-tile__image"><img src={stitchImageSrc(setup.image)} alt={`${setup.title} event furniture setup`} /><QuoteSelectionBadge item={setupQuoteSelectionItem(setup)} /></span><span className="stitch-setup-tile__body"><strong>{setup.title}</strong><small>{setup.summary}</small><em>View Setup Details</em></span></Link>)}</div> : <StitchEmptyState title="No public setup records are available right now" message="Published setup directions will appear here once available. You can still send an enquiry with the event mood, furniture pieces, and setup context you have in mind." />}</div></section></>;
+  return <><section className="stitch-setups-hero"><div className="stitch-container"><StitchPageIntro eyebrow="Setups" title="Curated Scapes" intro="Explore styled environment directions that help describe rental mood, scale, and event context for team review." /></div></section>{featuredSetup ? <section className="stitch-setups-feature-section"><div className="stitch-container stitch-setups-feature-split"><Link className="stitch-setups-feature__image" href={`/listings/${featuredSetup.slug}`}><img src={stitchImageSrc(featuredSetup.image)} alt={`${featuredSetup.title} event furniture setup`} /></Link><div className="stitch-setups-feature__copy"><span>Featured Editorial</span><h2>{featuredSetup.title}</h2><p>{featuredSetup.summary}</p><Link className="stitch-link-button stitch-link-button--quiet" href={`/listings/${featuredSetup.slug}`}>Explore Collection</Link></div></div></section> : null}<section className="stitch-setups-filter-section" id="setup-listings"><div className="stitch-container"><div className="stitch-pill-row">{setupPillLinks.map((item) => <Link aria-current={item.active ? "page" : undefined} href={item.href} key={item.href} scroll={false}>{item.label}</Link>)}</div></div></section><section className="stitch-setups-grid-section"><div className="stitch-container">{visibleSetups.length ? <div className="stitch-setups-grid">{visibleSetups.map((setup, index) => <Link className={`stitch-setup-tile ${index === visibleSetups.length - 1 ? "stitch-setup-tile--wide" : ""}`} href={`/listings/${setup.slug}`} key={setup.slug}><span className="stitch-setup-tile__image"><img src={stitchImageSrc(setup.image)} alt={`${setup.title} event furniture setup`} /><QuoteSelectionBadge item={setupQuoteSelectionItem(setup)} /></span><span className="stitch-setup-tile__body"><strong>{setup.title}</strong><small>{setup.summary}</small><em>View Setup Details</em></span></Link>)}</div> : <StitchEmptyState title="No public setup records are available right now" message="Published setup directions will appear here once available. You can still send an enquiry with the event mood, furniture pieces, and setup context you have in mind." />}</div></section></>;
 }
 
-export function StitchDetail({ product, backHref, backLabel, setup = false, related = [] }: { product: PublicCatalogueProduct; backHref: string; backLabel: string; setup?: boolean; related?: Array<PublicCatalogueProduct | DemoProduct> }) {
+export function StitchDetail({ product, backHref, backLabel, setup = false, related = [] }: { product: PublicCatalogueProduct; backHref: string; backLabel: string; setup?: boolean; related?: PublicCatalogueProduct[] }) {
   const image = product.primaryImage;
   const alt = textOrUndefined(image?.altText) ?? `${product.name} furniture rental setup`;
   const imgSrc = image?.publicUrl ?? stitchImageSrc(setup ? galaImage : fallbackProductImage(product));
-  const fallbackRelated = setup ? getDemoProducts().slice(0, 4) : getDemoProducts().filter((item) => item.slug !== product.slug).slice(0, 3);
-  const setupRelatedItems = setup && related.length ? related : fallbackRelated;
+  const setupRelatedItems = setup ? related : [];
   const setupIncludedItems = setup
     ? setupRelatedItems.map((item, index) =>
         setupIncludedQuoteItem(

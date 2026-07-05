@@ -4,10 +4,9 @@ import { QuoteSelectionSummary } from "../../components/QuoteSelectionControls";
 import { getPublicProductBySlug } from "../../lib/catalogue/catalogue-repository";
 import { normalizePublicDiscoveryContext, normalizePublicListingSlug } from "../../lib/catalogue/quote-handoff";
 import type { PublicCatalogueProduct } from "../../lib/catalogue/types";
-import { fallbackProductImage, getDemoProducts, isDemoContentEnabled, productCategory, StitchPageIntro, stitchImageSrc } from "../../components/PublicStitch";
+import { fallbackProductImage, productCategory, StitchPageIntro, stitchImageSrc } from "../../components/PublicStitch";
 
 type QuotePageProps = { searchParams?: Promise<Record<string, string | string[] | undefined>> | Record<string, string | string[] | undefined> };
-type QuoteSelectionProduct = PublicCatalogueProduct | ReturnType<typeof getDemoProducts>[number];
 
 export const metadata: Metadata = { title: "Quote request | SpaceKonceptRental", description: "Submit an event furniture rental enquiry with event date, venue, requested listings, quantities, and setup notes for manual team follow-up.", openGraph: { title: "Quote request | SpaceKonceptRental", description: "Submit a rental enquiry for manual follow-up from the SpaceKonceptRental team.", siteName: "SpaceKonceptRental", type: "website", url: "/quote" } };
 
@@ -17,13 +16,12 @@ async function resolveQuoteListingContext(searchParams: QuotePageProps["searchPa
   const resolved = await searchParams;
   const slug = normalizePublicListingSlug(firstSearchParam(resolved.listing));
   const realProduct = slug ? await getPublicProductBySlug(slug) : null;
-  const demoProduct = slug && isDemoContentEnabled() ? getDemoProducts().find((product) => product.slug === slug) ?? null : null;
-  return { product: realProduct ?? demoProduct, requestedSlug: slug, category: normalizePublicListingSlug(firstSearchParam(resolved.category)), event: normalizePublicListingSlug(firstSearchParam(resolved.event)), search: normalizePublicDiscoveryContext(firstSearchParam(resolved.search)) };
+  return { product: realProduct, requestedSlug: slug, category: normalizePublicListingSlug(firstSearchParam(resolved.category)), event: normalizePublicListingSlug(firstSearchParam(resolved.event)), search: normalizePublicDiscoveryContext(firstSearchParam(resolved.search)) };
 }
-function buildInitialItemsText({ category, event, product, requestedSlug, search }: { category?: string; event?: string; product: QuoteSelectionProduct | null; requestedSlug?: string; search?: string }) { return [product?.name ?? (requestedSlug ? `Listing reference: ${requestedSlug}` : undefined), category ? `Category interest: ${category}` : undefined, event ? `Event-use interest: ${event}` : undefined, search ? `Search interest: ${search}` : undefined].filter(Boolean).join("\n"); }
-function quoteProductImageSrc(product: QuoteSelectionProduct) { const image = "images" in product ? product.images?.[0]?.publicUrl : undefined; return image ?? stitchImageSrc(fallbackProductImage(product)); }
+function buildInitialItemsText({ category, event, product, requestedSlug, search }: { category?: string; event?: string; product: PublicCatalogueProduct | null; requestedSlug?: string; search?: string }) { return [product?.name ?? (requestedSlug ? `Listing reference: ${requestedSlug}` : undefined), category ? `Category interest: ${category}` : undefined, event ? `Event-use interest: ${event}` : undefined, search ? `Search interest: ${search}` : undefined].filter(Boolean).join("\n"); }
+function quoteProductImageSrc(product: PublicCatalogueProduct) { const image = product.images?.[0]?.publicUrl; return image ?? stitchImageSrc(fallbackProductImage(product)); }
 
-function SelectionPanel({ product, requestedSlug, category, event, search }: { product: QuoteSelectionProduct | null; requestedSlug?: string; category?: string; event?: string; search?: string }) {
+function SelectionPanel({ product, requestedSlug, category, event, search }: { product: PublicCatalogueProduct | null; requestedSlug?: string; category?: string; event?: string; search?: string }) {
   const fallbackItems = product ? [{ slug: product.slug, name: product.name, category: productCategory(product), quantity: 1, imageSrc: quoteProductImageSrc(product) }] : [];
   return <QuoteSelectionSummary fallbackItems={fallbackItems} requestedSlug={requestedSlug} category={category} event={event} search={search} />;
 }
