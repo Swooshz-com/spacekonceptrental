@@ -57,13 +57,10 @@ membership records, reviewed public catalogue/setup/Hero content, quote
 persistence and delivery-log tables, Resend sender/API setup, and Hostinger/
 Coolify runtime env.
 
-The key unresolved production fallback risk is the existing public demo-content
-flag, `NEXT_PUBLIC_SKR_DEMO_CONTENT`. When set to `true`, it can enable demo
-product/setup content in public catalogue/listing/quote surfaces. This is
-acceptable for local or review-only exercises, but it must be absent or not
-`true` in the hosted production environment. Treat it as a launch hold until a
-manual env review confirms it is not enabled, and add validator coverage in a
-later narrow PR if desired.
+Follow-up implementation on `codex/skr-remove-public-demo-content` removes the
+public demo-content runtime system identified by this audit. Do not configure
+`NEXT_PUBLIC_SKR_DEMO_CONTENT`; production must use hosted Supabase records or
+honest empty states.
 
 No local/demo/fallback dependency is approved for production by this audit.
 
@@ -95,7 +92,7 @@ No local/demo/fallback dependency is approved for production by this audit.
 | HubSpot runtime | No | No | No | Not configured for owner MVP | Static readiness checks and source review | No for owner MVP; hold if treated as required | No |
 | `website/chat-config.js` | No | No | No | Must remain untracked and unused | `npm run validate:production-security-readiness`; source review | Yes if tracked or read by runtime source | No |
 | `NEXT_PUBLIC_SUPABASE_*`, `NEXT_PUBLIC_N8N*`, `SUPABASE_SERVICE_ROLE_KEY` | No | No | No | Must not be configured for owner MVP runtime/browser use | Production readiness and local release-candidate validators | Yes if introduced into launch path | No |
-| `NEXT_PUBLIC_SKR_DEMO_CONTENT` | Must be absent or not `true` | Must be absent or not `true` | Must be absent or not `true` | Hosting build/runtime env review; local/review env only | Manual hosted env review today; missing static validator coverage | Yes if `true` in production | Local/review only |
+| `NEXT_PUBLIC_SKR_DEMO_CONTENT` | Must be absent | Must be absent | Must be absent | Do not configure in build/runtime env | `npm run validate:production-security-readiness`; production source scan | Yes if configured or referenced by production source | No |
 
 ## Required Production Envs
 
@@ -141,16 +138,11 @@ dependencies for owner-MVP launch.
 
 ### P0 Launch Holds
 
-- Public demo-content flag: `website/components/PublicStitch.tsx` exposes
-  `isDemoContentEnabled()` and demo products/setups when
-  `NEXT_PUBLIC_SKR_DEMO_CONTENT` is set to `true`. Public
-  catalogue/detail/listing/quote surfaces reference that flag in:
-  - `website/app/catalogue/[slug]/page.tsx`
-  - `website/app/listings/[slug]/page.tsx`
-  - `website/app/quote/page.tsx`
-  - `website/components/PublicStitch.tsx`
-  Production must hold if the hosted env sets `NEXT_PUBLIC_SKR_DEMO_CONTENT`
-  to `true`.
+- Public demo-content runtime support has been removed from
+  `website/components/PublicStitch.tsx`, public catalogue/detail/listing
+  routes, and quote selection. Production must hold if
+  `NEXT_PUBLIC_SKR_DEMO_CONTENT` is configured or production source references
+  it again.
 - Hosted Supabase data: public traffic must hold if approved migrations,
   workspace rows, public catalogue config, owner/admin membership records,
   launch catalogue/setup/Hero content, quote persistence tables, delivery-log
@@ -165,11 +157,6 @@ dependencies for owner-MVP launch.
 
 ### P1 Should Fix Before Launch
 
-- Add narrow validator coverage for `NEXT_PUBLIC_SKR_DEMO_CONTENT` being set
-  to `true` in production launch mode. Likely files:
-  - `scripts/validate-production-security-readiness.cjs`
-  - `scripts/validate-production-security-readiness.test.cjs`
-  - `docs/PRODUCTION-SECURITY-READINESS-GATE.md`
 - Decide whether `QUOTE_ENQUIRY_EMAIL_PROVIDER` should become launch-required
   instead of optional-with-default. Current behaviour is safe, but the hosted
   deployment record should be explicit. Likely files:
@@ -184,8 +171,6 @@ dependencies for owner-MVP launch.
 
 ### P2 Nice To Have After Launch
 
-- Consider retiring the public demo-content flag after owner launch if it is no
-  longer needed for review exercises.
 - Consider adding a small deployment evidence template for Hostinger/Coolify
   env-name presence that records only safe status labels, never values.
 - Consider documenting whether the static Hero fallback should remain as a
@@ -231,9 +216,11 @@ Covered today:
   missing `RESEND_API_KEY` for Resend.
 - The production security readiness validator checks tracked files for
   committed `.env` files, tracked `website/chat-config.js`, runtime source that
-  imports or reads `website/chat-config.js`, server-only env names in
+  imports or reads `website/chat-config.js`, production source that references
+  the removed `NEXT_PUBLIC_SKR_DEMO_CONTENT` env, server-only env names in
   client/public runtime source, obvious secret token patterns, and Delivery Log
   documentation that stops being technical-metadata-only.
+- Launch mode fails when `NEXT_PUBLIC_SKR_DEMO_CONTENT` is configured.
 - `npm run test:production-security-readiness` covers local/dev mode, launch
   mode, provider validation, Resend key requirement, secret-redaction output,
   and static scan behaviour.
@@ -242,9 +229,6 @@ Covered today:
 
 Missing or manual today:
 
-- Launch mode does not currently fail when `NEXT_PUBLIC_SKR_DEMO_CONTENT` is
-  set to `true` in the hosted environment. This audit treats that as a launch
-  hold requiring manual env review until validator coverage exists.
 - `QUOTE_ENQUIRY_EMAIL_PROVIDER` is not launch-required when absent because the
   runtime defaults to `resend`. This is acceptable but less explicit than the
   hosted deployment checklist; set it explicitly for launch.
@@ -303,7 +287,8 @@ Hold public traffic if any of these are true:
 - Production security readiness launch mode fails.
 - Quote email readiness fails, Resend sender/domain is not verified, or safe
   live quote handoff fails after Resend is expected to be active.
-- `NEXT_PUBLIC_SKR_DEMO_CONTENT` is set to `true` in hosted production env.
+- `NEXT_PUBLIC_SKR_DEMO_CONTENT` is configured in hosted build/runtime env or
+  referenced by production source.
 - Required hosted Supabase migrations, workspace rows, admin memberships,
   public catalogue config, content/media, quote persistence, or delivery-log
   metadata surfaces are missing or unreviewed.
@@ -319,8 +304,8 @@ Hold public traffic if any of these are true:
 ## Documentation Closure
 
 This audit is retained under `docs/audits/` as the focused dependency and
-fallback evidence record. Durable launch-hold guidance for the public
-demo-content flag is linked back into:
+fallback evidence record. Durable launch-hold guidance for the removed public
+demo-content env is linked back into:
 
 - `docs/HOSTED-DEPLOYMENT-EXECUTION-RUNBOOK.md`
 - `docs/DEPLOYMENT-ENVIRONMENT-READINESS.md`

@@ -61,6 +61,10 @@ const serverOnlyEnvNames = [
   'SUPABASE_SERVICE_ROLE_KEY',
 ];
 
+const removedPublicRuntimeEnvNames = [
+  'NEXT_PUBLIC_SKR_DEMO_CONTENT',
+];
+
 const obviousSecretPatterns = [
   {
     label: 'GitHub token pattern',
@@ -302,6 +306,12 @@ function validateEnvContract(env) {
     addIssue(issues, 'RESEND_API_KEY', 'missing for Resend provider');
   }
 
+  for (const name of removedPublicRuntimeEnvNames) {
+    if (readEnv(env, name)) {
+      addIssue(issues, name, 'removed public demo content env is forbidden');
+    }
+  }
+
   return issues;
 }
 
@@ -451,6 +461,18 @@ function scanStaticSecurity(scanRoot, trackedFiles) {
         displayPath,
         'runtime source must not import or read website/chat-config.js',
       );
+    }
+
+    if (isProductionWebsiteSource(displayPath) && !isAllowedEnvReferenceFile(displayPath)) {
+      for (const envName of removedPublicRuntimeEnvNames) {
+        if (source.includes(envName)) {
+          addIssue(
+            issues,
+            displayPath,
+            `removed public runtime env ${envName} appears in production source`,
+          );
+        }
+      }
     }
 
     if (isClientOrPublicRuntimeFile(displayPath, source)) {

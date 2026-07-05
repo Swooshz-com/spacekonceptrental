@@ -95,6 +95,8 @@ The command also checks tracked files for narrow launch blockers:
 - committed `.env` files
 - tracked `website/chat-config.js`
 - runtime source importing or reading `website/chat-config.js`
+- production source referencing the removed `NEXT_PUBLIC_SKR_DEMO_CONTENT`
+  public demo-content env
 - server-only env names in client components or public runtime files
 - `RESEND_API_KEY` or Supabase service-role env names in client/public runtime
   files
@@ -154,7 +156,7 @@ Hold launch if any of these are true:
   values, secrets, customer/private data, or workspace internals
 - protected Enquiry Email or Delivery Log exposes more than status and
   technical metadata
-- `NEXT_PUBLIC_SKR_DEMO_CONTENT` is set to `true` in the hosted production
+- `NEXT_PUBLIC_SKR_DEMO_CONTENT` is configured in the hosted build or runtime
   environment
 
 Public visuals remain frozen unless an explicitly scoped functional bug is

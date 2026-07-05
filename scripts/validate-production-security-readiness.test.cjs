@@ -141,6 +141,20 @@ test('missing Resend API key fails when provider is resend', () => {
   assert.match(output, /missing/i);
 });
 
+test('removed public demo content env fails in launch mode without echoing the value', () => {
+  const result = runReadiness(
+    baseLaunchEnv({
+      NEXT_PUBLIC_SKR_DEMO_CONTENT: 'true',
+    }),
+  );
+  const output = combinedOutput(result);
+
+  assert.notEqual(result.status, 0);
+  assert.match(output, /NEXT_PUBLIC_SKR_DEMO_CONTENT/);
+  assert.match(output, /removed|forbidden/i);
+  assert.doesNotMatch(output, /true/);
+});
+
 test('output does not include env values or secret-like values', () => {
   const secretSentinel = 'secret-sentinel-value-must-not-print-12345';
   const originSentinel = 'https://sentinel-origin.example';
@@ -194,6 +208,40 @@ test('static scan detects server-only env names in client/public files but allow
   assert.match(output, /RESEND_API_KEY/);
   assert.match(output, /website\/components\/client-env\.tsx/);
   assert.doesNotMatch(output, /docs\/contracts\/server-env-contract\.json.*RESEND_API_KEY/);
+});
+
+test('static scan rejects removed public demo content env references in runtime source', () => {
+  const tempRoot = fs.mkdtempSync(
+    path.join(os.tmpdir(), 'skr-production-readiness-'),
+  );
+  const badFile = path.join(tempRoot, 'website/components/public-demo.tsx');
+  const allowedDoc = path.join(tempRoot, 'docs/PRODUCTION-SECURITY-READINESS-GATE.md');
+
+  fs.mkdirSync(path.dirname(badFile), { recursive: true });
+  fs.mkdirSync(path.dirname(allowedDoc), { recursive: true });
+  fs.writeFileSync(
+    badFile,
+    'export const removed = "NEXT_PUBLIC_SKR_DEMO_CONTENT";\n',
+  );
+  fs.writeFileSync(
+    allowedDoc,
+    'Do not configure `NEXT_PUBLIC_SKR_DEMO_CONTENT`; the demo runtime is removed.\n',
+  );
+
+  const result = runReadiness(baseLaunchEnv(), [
+    '--scan-root',
+    tempRoot,
+    '--tracked-file-list',
+    badFile,
+    allowedDoc,
+  ]);
+  const output = combinedOutput(result);
+
+  assert.notEqual(result.status, 0);
+  assert.match(output, /NEXT_PUBLIC_SKR_DEMO_CONTENT/);
+  assert.match(output, /removed|forbidden/i);
+  assert.match(output, /website\/components\/public-demo\.tsx/);
+  assert.doesNotMatch(output, /docs\/PRODUCTION-SECURITY-READINESS-GATE\.md.*NEXT_PUBLIC_SKR_DEMO_CONTENT/);
 });
 
 test('readiness command remains separate from normal local release validation', () => {
