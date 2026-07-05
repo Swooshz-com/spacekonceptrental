@@ -267,18 +267,9 @@ function mediaAttentionListingCount(
   return listingIds.size;
 }
 
-function AdminRecoveryLinks({
-  includeSignIn = false
-}: {
-  includeSignIn?: boolean;
-}) {
+function AdminWorkspaceRecoveryLinks() {
   return (
     <nav className={styles.recoveryNav} aria-label="Admin recovery">
-      {includeSignIn ? (
-        <a className="premium-button premium-button--primary" href="/admin/login">
-          Return to admin sign in
-        </a>
-      ) : null}
       <a className="premium-button premium-button--secondary" href="/admin">
         Open admin overview
       </a>
@@ -296,6 +287,23 @@ function AdminRecoveryLinks({
       </a>
       <a className="premium-button premium-button--secondary" href="/admin/delivery-log">
         Open delivery log
+      </a>
+    </nav>
+  );
+}
+
+function AdminAccessRecoveryLinks({
+  signInLabel = "Return to admin sign in"
+}: {
+  signInLabel?: string;
+}) {
+  return (
+    <nav className={styles.recoveryNav} aria-label="Admin access recovery">
+      <a className="premium-button premium-button--primary" href="/admin/login">
+        {signInLabel}
+      </a>
+      <a className="premium-button premium-button--secondary" href="/">
+        View public site
       </a>
     </nav>
   );
@@ -345,7 +353,7 @@ function AdminUnavailableWorkspace({
       <p className="eyebrow">Temporarily unavailable</p>
       <h2>{title}</h2>
       <p>{description}</p>
-      <AdminRecoveryLinks />
+      <AdminWorkspaceRecoveryLinks />
     </section>
   );
 }
@@ -937,9 +945,7 @@ function AdminStatusMessage({
         <p className="eyebrow">Protected admin</p>
         <h1>Admin sign in required</h1>
         <p>Sign in to continue to the protected workspace.</p>
-        <a className="premium-button premium-button--primary" href="/admin/login">
-          Sign in
-        </a>
+        <AdminAccessRecoveryLinks signInLabel="Sign in" />
       </div>
     );
   }
@@ -950,7 +956,7 @@ function AdminStatusMessage({
         <p className="eyebrow">Protected admin</p>
         <h1>Access denied</h1>
         <p>Your account is signed in but not authorised for this workspace.</p>
-        <AdminRecoveryLinks includeSignIn />
+        <AdminAccessRecoveryLinks />
       </div>
     );
   }
@@ -961,7 +967,7 @@ function AdminStatusMessage({
         <p className="eyebrow">Protected admin</p>
         <h1>Admin access unavailable</h1>
         <p>Admin access is temporarily unavailable. Please try again shortly.</p>
-        <AdminRecoveryLinks includeSignIn />
+        <AdminAccessRecoveryLinks />
       </div>
     );
   }

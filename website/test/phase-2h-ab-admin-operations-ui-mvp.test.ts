@@ -72,6 +72,7 @@ describe("Phase 2H-A/B admin operations UI MVP", () => {
       "website/app/admin/delivery-log/page.tsx",
       "website/app/admin/enquiry-email/page.tsx",
       "website/app/admin/hero/page.tsx",
+      "website/app/admin/login/admin-login.module.css",
       "website/app/admin/login/page.test.tsx",
       "website/app/admin/login/page.tsx",
       "website/app/admin/logout/route.test.ts",

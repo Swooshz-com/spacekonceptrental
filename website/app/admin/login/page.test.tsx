@@ -1,11 +1,22 @@
 import { cleanup, render, screen } from "@testing-library/react";
-import { afterEach, describe, expect, it } from "vitest";
+import { renderToStaticMarkup } from "react-dom/server";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
+import RootLayout from "../../layout";
 import AdminLoginPage from "./page";
+
+const navigationMock = vi.hoisted(() => ({
+  pathname: "/admin/login"
+}));
+
+vi.mock("next/navigation", () => ({
+  usePathname: () => navigationMock.pathname
+}));
 
 describe("admin login page", () => {
   afterEach(() => {
     cleanup();
+    navigationMock.pathname = "/admin/login";
   });
 
   it("renders a first-party login form without exposing env or provider details", async () => {
@@ -27,6 +38,23 @@ describe("admin login page", () => {
     expect(document.body.textContent).not.toContain("provider");
     expect(document.body.textContent).not.toContain("SQL");
     expect(document.body.textContent).not.toContain("stack");
+  });
+
+  it("renders the admin login route without the public site shell", async () => {
+    navigationMock.pathname = "/admin/login";
+
+    const html = renderToStaticMarkup(
+      <RootLayout>
+        {await AdminLoginPage({ searchParams: Promise.resolve({}) })}
+      </RootLayout>
+    );
+
+    expect(html).toContain("Admin sign in");
+    expect(html).not.toContain("stitch-site-header");
+    expect(html).not.toContain("stitch-footer");
+    expect(html).not.toContain("stitch-bottom-nav");
+    expect(html).not.toContain("chat-widget");
+    expect(html).not.toContain("Request Quote");
   });
 
   it("renders safe unauthenticated and unavailable states", async () => {
