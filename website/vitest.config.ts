@@ -11,7 +11,13 @@ export default defineConfig({
   },
   test: {
     environment: "jsdom",
-    exclude: ["**/node_modules/**", "**/.next/**", "**/output/**", "**/test-results/**"],
+    exclude: [
+      "**/node_modules/**",
+      "**/.next/**",
+      "**/output/**",
+      "**/playwright/**",
+      "**/test-results/**"
+    ],
     setupFiles: ["./test/setup.ts"],
     // Full-suite jsdom worker load can push the protected admin helper-chain renders past Vitest's 5s default.
     testTimeout: 10_000,

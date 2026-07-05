@@ -242,10 +242,13 @@ describe("public page shells", () => {
   });
 
   it("renders practical public Privacy Policy and Terms of Use pages", () => {
-    const layoutSource = readFileSync(resolve(process.cwd(), "app/layout.tsx"), "utf8");
+    const routeShellSource = readFileSync(
+      resolve(process.cwd(), "app/route-shell.tsx"),
+      "utf8"
+    );
 
-    expect(layoutSource).toContain('href="/privacy"');
-    expect(layoutSource).toContain('href="/terms"');
+    expect(routeShellSource).toContain('href="/privacy"');
+    expect(routeShellSource).toContain('href="/terms"');
     expect(privacyMetadata.title).toMatch(/Privacy Policy/i);
     expect(termsMetadata.title).toMatch(/Terms of Use/i);
 

@@ -2,19 +2,6 @@
   background: #f4eee3 !important;
 }
 
-:global(body:has(.skr-admin-workspace) .stitch-site-header),
-:global(body:has(.skr-admin-workspace) .stitch-footer),
-:global(body:has(.skr-admin-workspace) .stitch-bottom-nav),
-:global(body:has(.skr-admin-workspace) .chat-widget),
-:global(body:has(.skr-admin-workspace) .chat-widget-launcher),
-:global(body:has(.skr-admin-workspace) .chat-widget-panel) {
-  display: none !important;
-}
-
-:global(body:has(.skr-admin-workspace) .site-main) {
-  padding-bottom: 0 !important;
-}
-
 .workspace {
   --admin-bg: #f4eee3;
   --admin-surface: #fffdf8;

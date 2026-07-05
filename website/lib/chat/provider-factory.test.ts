@@ -49,6 +49,7 @@ function postJson(payload: unknown) {
 function readProductionChatBoundarySource() {
   return [
     "app/api/chat/route.ts",
+    "app/route-shell.tsx",
     "components/ChatWidget.tsx",
     "lib/chat/persistence/disabled-chat-persistence.ts",
     "lib/chat/persistence/index.ts",
@@ -62,7 +63,7 @@ function readProductionChatBoundarySource() {
 }
 
 function getTrackedBrowserFacingSource() {
-  const sourceFiles = execFileSync("git", ["ls-files", "app", "components"], {
+  const trackedSourceFiles = execFileSync("git", ["ls-files", "app", "components"], {
     cwd: process.cwd(),
     encoding: "utf8"
   })
@@ -71,6 +72,7 @@ function getTrackedBrowserFacingSource() {
       (filePath) =>
         filePath.endsWith(".tsx") && !filePath.endsWith(".test.tsx")
     );
+  const sourceFiles = [...new Set([...trackedSourceFiles, "app/route-shell.tsx"])];
 
   return new Map(
     sourceFiles.map((filePath) => [
@@ -163,6 +165,7 @@ describe("getChatProvider", () => {
       /https?:\/\/[^\s"'`]+\/webhook(?:-test)?\//i
     );
     expect(apiChatCallers).toEqual(["components/ChatWidget.tsx"]);
-    expect(sourceByFile.get("app/layout.tsx")).toContain("ChatWidget");
+    expect(sourceByFile.get("app/layout.tsx")).toContain("RouteShell");
+    expect(sourceByFile.get("app/route-shell.tsx")).toContain("ChatWidget");
   });
 });

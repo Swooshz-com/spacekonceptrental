@@ -78,9 +78,27 @@ for the manual six-page visual UAT below.
 
 ## Screenshot Tooling Decision
 
-No repo-local screenshot automation or Playwright screenshot workflow is
-currently available for the six protected admin pages. Do not add brittle
-automation for this pass.
+A focused repo-local Playwright smoke is available for the protected admin
+access gate only:
+
+```powershell
+cd website
+npm run test:admin-access-playwright
+```
+
+It starts or reuses a local Next app, checks `/admin/login`, pre-auth `/admin`,
+and pre-auth `/admin/catalogue`, and saves screenshots under:
+
+```text
+.tmp\admin-access-playwright\
+```
+
+Use it before continuing six-page owner CMS UAT to confirm the public
+header/footer/chat/mobile nav are absent from admin access screens and the
+protected route map is not exposed before authorisation.
+
+No full six-page protected admin screenshot automation is currently available.
+Do not add brittle broad automation for the manual owner CMS pass.
 
 Use browser or operating-system screenshot tools manually. Store screenshots
 outside the repo when possible, for example:
@@ -144,29 +162,36 @@ Also scan one narrower mobile pass around 360 px if time allows.
 
 ## Owner Workflow Checks
 
-1. Sign in through `/admin/login` using the approved local owner/admin account.
-2. Confirm unauthenticated users are asked to sign in and authorised owners see
+1. Before sign-in, visit `/admin/login`, `/admin`, and `/admin/catalogue`.
+2. Confirm `/admin/login` is a polished protected-admin sign-in screen and does
+   not show the public header, footer, chat widget, or mobile bottom nav.
+3. Confirm unauthenticated, unavailable, or denied `/admin` and protected
+   sub-route states do not expose links to Dashboard, Hero, Catalogue, Setups,
+   Enquiry Email, Delivery Log, `/admin/media`, or `/admin/listings`; only
+   safe sign-in and public-site recovery actions should appear.
+4. Sign in through `/admin/login` using the approved local owner/admin account.
+5. Confirm unauthenticated users are asked to sign in and authorised owners see
    the protected shell only after sign-in.
-3. View Dashboard at `/admin`.
-4. Review Hero at `/admin/hero`.
-5. Review Catalogue listing, category, image metadata, and image upload areas
+6. View Dashboard at `/admin`.
+7. Review Hero at `/admin/hero`.
+8. Review Catalogue listing, category, image metadata, and image upload areas
    at `/admin/catalogue`.
-6. Review Setups at `/admin/setups`.
-7. Review Enquiry Email status at `/admin/enquiry-email`.
-8. Review Delivery Log at `/admin/delivery-log`.
-9. Confirm no visible admin navigation, helper action, button, or link points
+9. Review Setups at `/admin/setups`.
+10. Review Enquiry Email status at `/admin/enquiry-email`.
+11. Review Delivery Log at `/admin/delivery-log`.
+12. Confirm no visible admin navigation, helper action, button, or link points
    to removed routes:
    - `/admin/media`
    - `/admin/listings`
    - `/admin/listings#...`
-10. Confirm no ecommerce, cart, checkout, order, payment, purchase, booking,
+13. Confirm no ecommerce, cart, checkout, order, payment, purchase, booking,
     reservation, fulfilment, customer account, or custom CRM wording or flow
     appears.
-11. Confirm no placeholder/dead "pending backend" UI appears.
-12. Confirm no fake, demo, sample, synthetic, or fallback content dependency is
+14. Confirm no placeholder/dead "pending backend" UI appears.
+15. Confirm no fake, demo, sample, synthetic, or fallback content dependency is
     required to make the admin pages look populated.
-13. Confirm empty states are honest, useful, and specific to the protected page.
-14. Confirm no public visual redesign is implied or required by the admin UAT.
+16. Confirm empty states are honest, useful, and specific to the protected page.
+17. Confirm no public visual redesign is implied or required by the admin UAT.
 
 ## Page-By-Page Checks
 

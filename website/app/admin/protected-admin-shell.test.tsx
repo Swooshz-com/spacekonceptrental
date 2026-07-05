@@ -429,6 +429,49 @@ describe("protected admin shell", () => {
     ).toHaveAttribute("href", "/");
   });
 
+  it("does not expose protected owner CMS route links before authorisation", () => {
+    const protectedAdminRoutes = [
+      "/admin",
+      "/admin/hero",
+      "/admin/catalogue",
+      "/admin/setups",
+      "/admin/enquiry-email",
+      "/admin/delivery-log"
+    ];
+    const blockedStates = [
+      {
+        status: "unauthenticated" as const
+      },
+      {
+        status: "authenticated_not_authorised" as const
+      },
+      {
+        status: "unavailable" as const
+      }
+    ];
+
+    for (const state of blockedStates) {
+      const { container, unmount } = render(
+        <AdminShellContent state={state} view={{ kind: "catalogue" }} />
+      );
+
+      for (const href of protectedAdminRoutes) {
+        expect(container.querySelector(`a[href="${href}"]`)).toBeNull();
+      }
+      expect(
+        screen.queryByLabelText(/admin workspace sections/i)
+      ).not.toBeInTheDocument();
+      expect(
+        screen.getByRole("link", { name: /admin sign in|sign in/i })
+      ).toHaveAttribute("href", "/admin/login");
+      expect(
+        screen.getByRole("link", { name: /public site/i })
+      ).toHaveAttribute("href", "/");
+
+      unmount();
+    }
+  });
+
   it("does not render category write controls outside loaded authorised dashboard state", () => {
     const blockedStates = [
       {
