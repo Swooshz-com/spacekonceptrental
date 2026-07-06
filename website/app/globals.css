@@ -26123,3 +26123,7 @@ body:has(.stitch-site-header) .stitch-header-actions > .stitch-quote-indicator:f
     font-size: clamp(3.9rem, 5.8vw, 5.25rem) !important;
   }
 }
+
+.stitch-home-hero__headline-line {
+  display: block;
+}
