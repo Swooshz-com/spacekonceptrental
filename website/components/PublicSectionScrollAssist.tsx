@@ -5,14 +5,28 @@ import { useEffect } from "react";
 export const PUBLIC_SECTION_SCROLL_ASSIST_SELECTOR =
   ".site-main > :is(.stitch-home-hero, .stitch-catalogue-hero, .stitch-setups-hero, .stitch-setups-feature-section, .stitch-setups-grid-section, .stitch-about-hero, .stitch-quote-hero, .stitch-legal-hero, .stitch-editorial-hero, .stitch-section)";
 
-const GLIDE_DURATION_MS = 620;
+const GLIDE_DURATION_MS = 520;
 const ASSIST_LOCK_MS = 180;
-const WHEEL_DELTA_THRESHOLD = 6;
+const WHEEL_DELTA_THRESHOLD = 1;
 const CURRENT_SECTION_TOLERANCE_PX = 48;
 const INNER_SCROLL_EDGE_TOLERANCE_PX = 2;
+const LINEAR_GLIDE_RATIO = 0.72;
 
-function easeOutCubic(progress: number) {
-  return 1 - Math.pow(1 - progress, 3);
+function linearThenEaseOut(progress: number) {
+  if (progress <= LINEAR_GLIDE_RATIO) {
+    return progress;
+  }
+
+  const landingProgress =
+    (progress - LINEAR_GLIDE_RATIO) / (1 - LINEAR_GLIDE_RATIO);
+
+  return (
+    LINEAR_GLIDE_RATIO +
+    (1 - LINEAR_GLIDE_RATIO) *
+      (-Math.pow(landingProgress, 3) +
+        Math.pow(landingProgress, 2) +
+        landingProgress)
+  );
 }
 
 function isTextEntryActive() {
@@ -142,6 +156,35 @@ export default function PublicSectionScrollAssist() {
     let unlockTimer: number | undefined;
     let animationFrame: number | undefined;
     let assistLocked = false;
+    let previousHtmlScrollBehavior: string | undefined;
+    let previousBodyScrollBehavior: string | undefined;
+
+    function forceInstantScrollBehavior() {
+      if (previousHtmlScrollBehavior === undefined) {
+        previousHtmlScrollBehavior =
+          document.documentElement.style.scrollBehavior;
+      }
+
+      if (previousBodyScrollBehavior === undefined) {
+        previousBodyScrollBehavior = document.body.style.scrollBehavior;
+      }
+
+      document.documentElement.style.scrollBehavior = "auto";
+      document.body.style.scrollBehavior = "auto";
+    }
+
+    function restoreScrollBehavior() {
+      if (previousHtmlScrollBehavior !== undefined) {
+        document.documentElement.style.scrollBehavior =
+          previousHtmlScrollBehavior;
+        previousHtmlScrollBehavior = undefined;
+      }
+
+      if (previousBodyScrollBehavior !== undefined) {
+        document.body.style.scrollBehavior = previousBodyScrollBehavior;
+        previousBodyScrollBehavior = undefined;
+      }
+    }
 
     function clearGlide() {
       if (unlockTimer) {
@@ -155,6 +198,7 @@ export default function PublicSectionScrollAssist() {
       }
 
       assistLocked = false;
+      restoreScrollBehavior();
     }
 
     function glideTo(targetTop: number) {
@@ -178,15 +222,13 @@ export default function PublicSectionScrollAssist() {
 
       const startTime = window.performance.now();
       assistLocked = true;
+      forceInstantScrollBehavior();
 
       function step(now: number) {
         const progress = Math.min((now - startTime) / GLIDE_DURATION_MS, 1);
-        const easedProgress = easeOutCubic(progress);
+        const easedProgress = linearThenEaseOut(progress);
 
-        window.scrollTo({
-          top: startTop + distance * easedProgress,
-          left: 0
-        });
+        window.scrollTo(0, startTop + distance * easedProgress);
 
         if (progress < 1 && assistLocked) {
           animationFrame = window.requestAnimationFrame(step);
@@ -196,6 +238,7 @@ export default function PublicSectionScrollAssist() {
         animationFrame = undefined;
         unlockTimer = window.setTimeout(() => {
           assistLocked = false;
+          restoreScrollBehavior();
         }, ASSIST_LOCK_MS);
       }
 
