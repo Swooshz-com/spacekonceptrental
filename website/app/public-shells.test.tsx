@@ -1219,9 +1219,9 @@ describe("public page shells", () => {
     expect(scrollAssistSource).toContain("PUBLIC_SECTION_SCROLL_ASSIST_SELECTOR");
     expect(scrollAssistSource).toContain("(prefers-reduced-motion: reduce)");
     expect(scrollAssistSource).toContain("(min-width: 901px)");
-    expect(scrollAssistSource).toContain("GLIDE_DURATION_MS = 520");
+    expect(scrollAssistSource).toContain("GLIDE_DURATION_MS = 440");
     expect(scrollAssistSource).toContain("WHEEL_DELTA_THRESHOLD = 1");
-    expect(scrollAssistSource).toContain("LINEAR_GLIDE_RATIO = 0.72");
+    expect(scrollAssistSource).toContain("LINEAR_GLIDE_RATIO = 0.58");
     expect(scrollAssistSource).toContain("CURRENT_SECTION_TOLERANCE_PX = 48");
     expect(scrollAssistSource).toContain("window.addEventListener(\"wheel\", handleWheel");
     expect(scrollAssistSource).toContain("passive: false");

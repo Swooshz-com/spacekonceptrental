@@ -5,12 +5,12 @@ import { useEffect } from "react";
 export const PUBLIC_SECTION_SCROLL_ASSIST_SELECTOR =
   ".site-main > :is(.stitch-home-hero, .stitch-catalogue-hero, .stitch-setups-hero, .stitch-setups-feature-section, .stitch-setups-grid-section, .stitch-about-hero, .stitch-quote-hero, .stitch-legal-hero, .stitch-editorial-hero, .stitch-section)";
 
-const GLIDE_DURATION_MS = 520;
+const GLIDE_DURATION_MS = 440;
 const ASSIST_LOCK_MS = 180;
 const WHEEL_DELTA_THRESHOLD = 1;
 const CURRENT_SECTION_TOLERANCE_PX = 48;
 const INNER_SCROLL_EDGE_TOLERANCE_PX = 2;
-const LINEAR_GLIDE_RATIO = 0.72;
+const LINEAR_GLIDE_RATIO = 0.58;
 
 function linearThenEaseOut(progress: number) {
   if (progress <= LINEAR_GLIDE_RATIO) {
