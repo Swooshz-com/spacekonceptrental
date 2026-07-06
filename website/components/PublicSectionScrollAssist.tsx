@@ -5,29 +5,10 @@ import { useEffect } from "react";
 export const PUBLIC_SECTION_SCROLL_ASSIST_SELECTOR =
   ".site-main > :is(.stitch-home-hero, .stitch-catalogue-hero, .stitch-setups-hero, .stitch-setups-feature-section, .stitch-setups-grid-section, .stitch-about-hero, .stitch-quote-hero, .stitch-legal-hero, .stitch-editorial-hero, .stitch-section)";
 
-const GLIDE_DURATION_MS = 440;
-const ASSIST_LOCK_MS = 180;
+const ASSIST_LOCK_MS = 780;
 const WHEEL_DELTA_THRESHOLD = 1;
 const CURRENT_SECTION_TOLERANCE_PX = 48;
 const INNER_SCROLL_EDGE_TOLERANCE_PX = 2;
-const LINEAR_GLIDE_RATIO = 0.58;
-
-function linearThenEaseOut(progress: number) {
-  if (progress <= LINEAR_GLIDE_RATIO) {
-    return progress;
-  }
-
-  const landingProgress =
-    (progress - LINEAR_GLIDE_RATIO) / (1 - LINEAR_GLIDE_RATIO);
-
-  return (
-    LINEAR_GLIDE_RATIO +
-    (1 - LINEAR_GLIDE_RATIO) *
-      (-Math.pow(landingProgress, 3) +
-        Math.pow(landingProgress, 2) +
-        landingProgress)
-  );
-}
 
 function isTextEntryActive() {
   const active = document.activeElement;
@@ -154,37 +135,7 @@ export default function PublicSectionScrollAssist() {
     const desktopViewport = window.matchMedia("(min-width: 901px)");
     const wheelListenerOptions: AddEventListenerOptions = { passive: false };
     let unlockTimer: number | undefined;
-    let animationFrame: number | undefined;
     let assistLocked = false;
-    let previousHtmlScrollBehavior: string | undefined;
-    let previousBodyScrollBehavior: string | undefined;
-
-    function forceInstantScrollBehavior() {
-      if (previousHtmlScrollBehavior === undefined) {
-        previousHtmlScrollBehavior =
-          document.documentElement.style.scrollBehavior;
-      }
-
-      if (previousBodyScrollBehavior === undefined) {
-        previousBodyScrollBehavior = document.body.style.scrollBehavior;
-      }
-
-      document.documentElement.style.scrollBehavior = "auto";
-      document.body.style.scrollBehavior = "auto";
-    }
-
-    function restoreScrollBehavior() {
-      if (previousHtmlScrollBehavior !== undefined) {
-        document.documentElement.style.scrollBehavior =
-          previousHtmlScrollBehavior;
-        previousHtmlScrollBehavior = undefined;
-      }
-
-      if (previousBodyScrollBehavior !== undefined) {
-        document.body.style.scrollBehavior = previousBodyScrollBehavior;
-        previousBodyScrollBehavior = undefined;
-      }
-    }
 
     function clearGlide() {
       if (unlockTimer) {
@@ -192,24 +143,13 @@ export default function PublicSectionScrollAssist() {
         unlockTimer = undefined;
       }
 
-      if (animationFrame) {
-        window.cancelAnimationFrame(animationFrame);
-        animationFrame = undefined;
-      }
-
       assistLocked = false;
-      restoreScrollBehavior();
     }
 
     function glideTo(targetTop: number) {
       if (unlockTimer) {
         window.clearTimeout(unlockTimer);
         unlockTimer = undefined;
-      }
-
-      if (animationFrame) {
-        window.cancelAnimationFrame(animationFrame);
-        animationFrame = undefined;
       }
 
       const startTop = window.scrollY;
@@ -220,29 +160,12 @@ export default function PublicSectionScrollAssist() {
         return;
       }
 
-      const startTime = window.performance.now();
       assistLocked = true;
-      forceInstantScrollBehavior();
+      window.scrollTo({ top: targetTop, left: 0 });
 
-      function step(now: number) {
-        const progress = Math.min((now - startTime) / GLIDE_DURATION_MS, 1);
-        const easedProgress = linearThenEaseOut(progress);
-
-        window.scrollTo(0, startTop + distance * easedProgress);
-
-        if (progress < 1 && assistLocked) {
-          animationFrame = window.requestAnimationFrame(step);
-          return;
-        }
-
-        animationFrame = undefined;
-        unlockTimer = window.setTimeout(() => {
-          assistLocked = false;
-          restoreScrollBehavior();
-        }, ASSIST_LOCK_MS);
-      }
-
-      animationFrame = window.requestAnimationFrame(step);
+      unlockTimer = window.setTimeout(() => {
+        assistLocked = false;
+      }, ASSIST_LOCK_MS);
     }
 
     function handleWheel(event: WheelEvent) {
