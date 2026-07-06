@@ -26120,6 +26120,6 @@ body:has(.stitch-site-header) .stitch-header-actions > .stitch-quote-indicator:f
 /* Home-only exception: lift the approved hero title without changing other page titles. */
 @media (min-width: 901px) {
   body:has(.stitch-home-hero) .site-main .stitch-home-hero__copy h1 {
-    font-size: clamp(3.85rem, 5.7vw, 5.15rem) !important;
+    font-size: clamp(4.1rem, 6.05vw, 5.45rem) !important;
   }
 }
