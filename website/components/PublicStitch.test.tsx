@@ -24,13 +24,6 @@ describe("StitchHomeHero", () => {
         name: DEFAULT_HOMEPAGE_HERO_CONTENT.imageAlt
       })
     ).toBeInTheDocument();
-
-    expect(
-      screen.getByText("Furnish Your Vision,")
-    ).toHaveClass("stitch-home-hero__headline-line");
-    expect(
-      screen.getByText("Elevate Every Space")
-    ).toHaveClass("stitch-home-hero__headline-line");
   });
 
   it("uses managed enabled hero content without changing the public hero layout hooks", () => {
@@ -63,8 +56,5 @@ describe("StitchHomeHero", () => {
     expect(
       hero?.querySelector(".stitch-home-hero__media img")
     ).toHaveAttribute("src", "https://cdn.example.test/hero.jpg");
-    expect(
-      hero?.querySelector(".stitch-home-hero__headline-line")
-    ).not.toBeInTheDocument();
   });
 });

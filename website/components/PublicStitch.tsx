@@ -147,16 +147,6 @@ function StitchHomeCatalogueAction({ featured = false }: { featured?: boolean })
   return <div className={`stitch-home-section-action${featured ? " stitch-home-featured-action" : ""}`}><StitchButton href="/catalogue" variant="secondary">View Full Catalogue</StitchButton></div>;
 }
 
-function StitchHomeHeroHeadline({ headline }: { headline: string }) {
-  const commaBreak = headline.indexOf(", ");
-
-  if (commaBreak === -1) {
-    return <>{headline}</>;
-  }
-
-  return <><span className="stitch-home-hero__headline-line">{headline.slice(0, commaBreak + 1)}</span>{" "}<span className="stitch-home-hero__headline-line">{headline.slice(commaBreak + 2)}</span></>;
-}
-
 export { DEFAULT_HOMEPAGE_HERO_CONTENT };
 
 export function StitchHomeHero({
@@ -164,7 +154,7 @@ export function StitchHomeHero({
 }: {
   heroContent?: HomepageHeroContent;
 }) {
-  return <section className="stitch-home-hero"><div className="stitch-container stitch-home-hero__grid"><div className="stitch-home-hero__copy"><p className="stitch-eyebrow">{heroContent.eyebrow}</p><h1><StitchHomeHeroHeadline headline={heroContent.headline} /></h1><p>{heroContent.body}</p><StitchActions><StitchButton href={heroContent.primaryCtaHref}>{heroContent.primaryCtaLabel}</StitchButton><StitchButton href={heroContent.secondaryCtaHref} variant="secondary">{heroContent.secondaryCtaLabel}</StitchButton><StitchButton href="/listings" variant="secondary">Explore Setups</StitchButton></StitchActions></div><div className="stitch-home-hero__media"><picture><source media="(max-width: 639px)" srcSet={heroContent.imageUrl} /><img src={heroContent.imageUrl} alt={heroContent.imageAlt} /></picture></div></div></section>;
+  return <section className="stitch-home-hero"><div className="stitch-container stitch-home-hero__grid"><div className="stitch-home-hero__copy"><p className="stitch-eyebrow">{heroContent.eyebrow}</p><h1>{heroContent.headline}</h1><p>{heroContent.body}</p><StitchActions><StitchButton href={heroContent.primaryCtaHref}>{heroContent.primaryCtaLabel}</StitchButton><StitchButton href={heroContent.secondaryCtaHref} variant="secondary">{heroContent.secondaryCtaLabel}</StitchButton><StitchButton href="/listings" variant="secondary">Explore Setups</StitchButton></StitchActions></div><div className="stitch-home-hero__media"><picture><source media="(max-width: 639px)" srcSet={heroContent.imageUrl} /><img src={heroContent.imageUrl} alt={heroContent.imageAlt} /></picture></div></div></section>;
 }
 
 export function StitchAdvantageCards() {
