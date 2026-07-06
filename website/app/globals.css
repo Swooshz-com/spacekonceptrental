@@ -26101,3 +26101,18 @@ body:has(.stitch-site-header) .stitch-header-actions > .stitch-quote-indicator:f
     transform: none !important;
   }
 }
+
+/* About page rhythm: keep the hero calm, but let the body sections breathe as page-like panels. */
+@media (min-width: 901px) {
+  body:has(.stitch-about-hero) .site-main :is(
+    .stitch-about-story,
+    .stitch-about-principles,
+    .stitch-about-service
+  ) {
+    align-items: center !important;
+    display: flex !important;
+    min-height: calc(100svh - 72px) !important;
+    padding-bottom: clamp(5rem, 9vh, 7.5rem) !important;
+    padding-top: clamp(5rem, 9vh, 7.5rem) !important;
+  }
+}

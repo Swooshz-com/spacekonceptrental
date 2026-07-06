@@ -197,6 +197,16 @@ test.describe("post-demo-removal public/admin regression smoke", () => {
         name: /curating spaces that breathe, inspire, and endure/i
       })
     ).toBeVisible();
+    const aboutSectionRhythm = await page
+      .locator(".stitch-about-principles")
+      .evaluate((element) => {
+        const rect = element.getBoundingClientRect();
+        return {
+          height: rect.height,
+          viewportHeight: window.innerHeight
+        };
+      });
+    expect(aboutSectionRhythm.height).toBeGreaterThan(aboutSectionRhythm.viewportHeight * 0.7);
     await capture(page, "public-about.png");
 
     await page.goto("/quote");
