@@ -11,6 +11,11 @@ manual protected-admin review plan only. It does not deploy, configure hosted
 services, record owner approval, approve public launch, send email, call n8n,
 create CRM flows, or change public site visuals.
 
+For the real Supabase Auth sign-in path and required workspace/profile/
+membership rows, use
+`docs/manual-qa/PROTECTED-ADMIN-AUTHORISED-UAT-RUNBOOK.md` before attempting
+authorised six-page owner CMS UAT.
+
 Screenshots, if captured, are local working notes only. Do not commit generated
 screenshots unless the owner separately approves a specific evidence path.
 
