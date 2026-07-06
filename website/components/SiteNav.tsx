@@ -6,7 +6,9 @@ import { usePathname } from "next/navigation";
 const navItems = [
   ["Home", "/"],
   ["Catalogue", "/catalogue"],
-  ["Setups", "/listings"]
+  ["Setups", "/listings"],
+  ["About", "/about"],
+  ["Contact", "/contact"]
 ] as const;
 
 const baseBottomNavItems = [
@@ -45,10 +47,14 @@ export function SiteDesktopNav() {
 
 export function MobileBottomNav() {
   const pathname = usePathname() || "/";
+  const finalItem = pathname.startsWith("/about")
+    ? (["About", "/about", "ⓘ"] as const)
+    : (["Contact", "/contact", "✉"] as const);
+  const bottomNavItems = [...baseBottomNavItems, finalItem] as const;
 
   return (
     <nav className="stitch-bottom-nav" aria-label="Mobile quick navigation">
-      {baseBottomNavItems.map(([label, href, icon]) => {
+      {bottomNavItems.map(([label, href, icon]) => {
         const active = isActivePath(pathname, href);
         return (
           <Link

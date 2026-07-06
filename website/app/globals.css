@@ -21358,6 +21358,8 @@ body:has(.stitch-site-header):not(:has(.stitch-home-hero)) .site-main :is(
 /* Final page eyebrow restoration: keep page names visible above non-home hero titles. */
 body:has(.stitch-site-header):not(:has(.stitch-home-hero)) .site-main :is(
   .stitch-catalogue-hero,
+  .stitch-about-hero,
+  .stitch-contact-hero,
   .stitch-setups-hero,
   .stitch-legal-hero,
   .stitch-quote-hero

@@ -113,10 +113,10 @@ test.describe("post-demo-removal public/admin regression smoke", () => {
     await expect(page.locator(".stitch-home-hero")).toBeVisible();
     await expect(page.getByLabel("597 selected")).toHaveCount(0);
     await expect(page.locator('strong[aria-label="0 selected"]')).toBeVisible();
-    await expect(page.locator('.stitch-desktop-nav a[href="/about"]')).toHaveCount(0);
-    await expect(page.locator('.stitch-desktop-nav a[href="/contact"]')).toHaveCount(0);
-    await expect(page.locator('.stitch-footer a[href="/about"]')).toHaveCount(0);
-    await expect(page.locator('.stitch-footer a[href="/contact"]')).toHaveCount(0);
+    await expect(page.locator('.stitch-desktop-nav a[href="/about"]')).toBeVisible();
+    await expect(page.locator('.stitch-desktop-nav a[href="/contact"]')).toBeVisible();
+    await expect(page.locator('.stitch-footer a[href="/about"]')).toBeVisible();
+    await expect(page.locator('.stitch-footer a[href="/contact"]')).toBeVisible();
 
     const heroMetrics = await page.locator(".stitch-home-hero__grid").evaluate(
       (element) => {
@@ -158,6 +158,20 @@ test.describe("post-demo-removal public/admin regression smoke", () => {
       await expect(page.getByRole("link", { name: /lounges/i })).toHaveCount(0);
     }
     await capture(page, "public-listings.png");
+
+    await page.goto("/about");
+    await expectPublicShell(page);
+    await expect(
+      page.getByRole("heading", {
+        name: /curating spaces that breathe, inspire, and endure/i
+      })
+    ).toBeVisible();
+    await capture(page, "public-about.png");
+
+    await page.goto("/contact");
+    await expectPublicShell(page);
+    await expect(page.getByRole("heading", { name: /get in touch/i })).toBeVisible();
+    await capture(page, "public-contact.png");
 
     await page.goto("/quote");
     await expectPublicShell(page);

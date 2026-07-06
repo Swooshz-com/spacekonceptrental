@@ -274,7 +274,7 @@ describe("public page shells", () => {
     expect(document.body.textContent).not.toMatch(forbiddenPublicCopy);
   });
 
-  it("keeps the active public IA aligned to the pre-migration baseline", () => {
+  it("keeps the active public IA aligned to the PR 246 Stitch baseline", () => {
     const routeShellSource = readFileSync(
       resolve(process.cwd(), "app/route-shell.tsx"),
       "utf8"
@@ -291,12 +291,13 @@ describe("public page shells", () => {
     expect(siteNavSource).toContain('["Home", "/"]');
     expect(siteNavSource).toContain('["Catalogue", "/catalogue"]');
     expect(siteNavSource).toContain('["Setups", "/listings"]');
-    expect(siteNavSource).not.toContain('["About", "/about"]');
-    expect(siteNavSource).not.toContain('["Contact", "/contact"]');
-    expect(mobileMenuSource).not.toContain('["About", "/about"]');
-    expect(mobileMenuSource).not.toContain('["Contact", "/contact"]');
-    expect(routeShellSource).not.toContain('href="/about"');
-    expect(routeShellSource).not.toContain('href="/contact"');
+    expect(siteNavSource).toContain('["About", "/about"]');
+    expect(siteNavSource).toContain('["Contact", "/contact"]');
+    expect(siteNavSource).toContain('pathname.startsWith("/about")');
+    expect(mobileMenuSource).toContain('["About", "/about"]');
+    expect(mobileMenuSource).toContain('["Contact", "/contact"]');
+    expect(routeShellSource).toContain('href="/about"');
+    expect(routeShellSource).toContain('href="/contact"');
     expect(routeShellSource).toContain('href="/privacy"');
     expect(routeShellSource).toContain('href="/terms"');
   });

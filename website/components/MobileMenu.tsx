@@ -6,7 +6,9 @@ import Link from "next/link";
 const links = [
   ["Home", "/"],
   ["Catalogue", "/catalogue"],
-  ["Setups", "/listings"]
+  ["Setups", "/listings"],
+  ["About", "/about"],
+  ["Contact", "/contact"]
 ] as const;
 
 const actionLinks = [
