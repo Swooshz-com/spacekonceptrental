@@ -25883,3 +25883,91 @@ body:has(.stitch-setups-hero) .site-main .stitch-setups-grid-section:first-of-ty
     text-transform: none !important;
   }
 }
+
+/* Final PR #239 visual authority correction: remove the desktop hero rail and keep soft page panels. */
+body:has(.stitch-home-hero) .site-main .stitch-home-hero {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+body:has(.stitch-home-hero) .site-main .stitch-home-hero .stitch-container {
+  max-width: none !important;
+  padding-inline: 0 !important;
+  width: 100% !important;
+}
+
+body:has(.stitch-home-hero) .site-main .stitch-home-hero__grid {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  margin: 0 !important;
+  max-width: none !important;
+  overflow: hidden !important;
+  position: relative !important;
+  width: 100% !important;
+}
+
+body:has(.stitch-home-hero) .site-main .stitch-home-hero__copy,
+body:has(.stitch-home-hero) .site-main .stitch-home-hero__media {
+  grid-area: 1 / 1 !important;
+}
+
+body:has(.stitch-home-hero) .site-main .stitch-home-hero__media {
+  border: 0 !important;
+  border-radius: 0 !important;
+  height: 100% !important;
+  inset: 0 !important;
+  min-height: 0 !important;
+  position: absolute !important;
+  width: 100% !important;
+}
+
+body:has(.stitch-home-hero) .site-main .stitch-home-hero__media img {
+  height: 100% !important;
+  object-fit: cover !important;
+  object-position: center center !important;
+  width: 100% !important;
+}
+
+body:has(.stitch-home-hero) .site-main .stitch-home-hero__copy {
+  align-items: center !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  max-width: none !important;
+  position: relative !important;
+  text-align: center !important;
+  width: 100% !important;
+  z-index: 2 !important;
+}
+
+@media (min-width: 901px) {
+  body:has(.stitch-home-hero) .site-main .stitch-home-hero__grid {
+    height: calc(100svh - 72px) !important;
+    min-height: clamp(42rem, calc(100svh - 72px), 58rem) !important;
+  }
+
+  body:has(.stitch-home-hero) .site-main .stitch-home-hero__copy {
+    min-height: calc(100svh - 72px) !important;
+    padding: clamp(5rem, 10vh, 8rem) clamp(2rem, 6vw, 6rem) !important;
+  }
+
+  body:has(.stitch-home-hero) .site-main :is(
+    .stitch-home-advantage,
+    .stitch-home-categories,
+    .stitch-home-featured
+  ) {
+    align-items: center !important;
+    display: flex !important;
+    min-height: calc(100svh - 72px) !important;
+    padding-bottom: clamp(5rem, 9vh, 7.5rem) !important;
+    padding-top: clamp(5rem, 9vh, 7.5rem) !important;
+  }
+
+  body:has(.stitch-home-hero) .site-main :is(
+    .stitch-home-advantage,
+    .stitch-home-categories,
+    .stitch-home-featured
+  ) > .stitch-container {
+    flex: 0 1 auto !important;
+  }
+}
