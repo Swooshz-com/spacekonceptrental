@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 
 import ChatWidget from "../components/ChatWidget";
 import MobileMenu from "../components/MobileMenu";
+import PublicSectionScrollAssist from "../components/PublicSectionScrollAssist";
 import { QuoteSelectionIndicator } from "../components/QuoteSelectionControls";
 import RouteScrollReset from "../components/RouteScrollReset";
 import { MobileBottomNav, SiteDesktopNav } from "../components/SiteNav";
@@ -75,6 +76,7 @@ function PublicSiteShell({ children }: { children: ReactNode }) {
   return (
     <>
       <RouteScrollReset />
+      <PublicSectionScrollAssist />
       <div className="site-shell">
         <SiteHeader />
         <main className="site-main">{children}</main>

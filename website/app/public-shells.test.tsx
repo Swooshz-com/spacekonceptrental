@@ -1206,33 +1206,26 @@ describe("public page shells", () => {
     expect(formErrorRule).toMatch(/font-size:\s*0\.86rem\s*!important;/);
   });
 
-  it("uses soft public section centering only when motion is allowed", () => {
+  it("uses a settled public section scroll assist instead of continuous CSS snapping", () => {
     const styles = readFileSync(resolve(process.cwd(), "app/globals.css"), "utf8");
-    const scrollSnapBlock = styles.slice(
-      styles.indexOf("/* Public soft section centering:")
+    const routeShellSource = readFileSync(resolve(process.cwd(), "app/route-shell.tsx"), "utf8");
+    const scrollAssistSource = readFileSync(
+      resolve(process.cwd(), "components/PublicSectionScrollAssist.tsx"),
+      "utf8"
     );
-    const scrollContainerRule = scrollSnapBlock.match(
-      /html:has\(body \.stitch-site-header\),[\s\S]*?body:has\(\.stitch-site-header\)\s*\{[\s\S]*?\}/
-    )?.[0];
-    const sectionSnapRule = scrollSnapBlock.match(
-      /body:has\(\.stitch-site-header\)\s+\.site-main\s+>\s+:is\([\s\S]*?\.stitch-home-hero[\s\S]*?\.stitch-section[\s\S]*?\)\s*\{[\s\S]*?\}/
-    )?.[0];
-    const reducedMotionRule = scrollSnapBlock.match(
-      /@media\s+\(prefers-reduced-motion:\s*reduce\)\s*\{[\s\S]*?scroll-snap-type:\s*none\s*!important;[\s\S]*?\}/
-    )?.[0];
 
-    expect(scrollSnapBlock).toContain(
-      "@media (min-width: 901px) and (prefers-reduced-motion: no-preference)"
-    );
-    expect(scrollContainerRule).toBeDefined();
-    expect(scrollContainerRule).toMatch(/scroll-padding-top:\s*72px\s*!important;/);
-    expect(scrollContainerRule).toMatch(/scroll-snap-type:\s*y proximity\s*!important;/);
-    expect(sectionSnapRule).toBeDefined();
-    expect(sectionSnapRule).toMatch(/\.stitch-catalogue-hero/);
-    expect(sectionSnapRule).toMatch(/\.stitch-setups-grid-section/);
-    expect(sectionSnapRule).toMatch(/scroll-snap-align:\s*center\s*!important;/);
-    expect(sectionSnapRule).toMatch(/scroll-snap-stop:\s*normal\s*!important;/);
-    expect(reducedMotionRule).toBeDefined();
+    expect(routeShellSource).toContain("import PublicSectionScrollAssist");
+    expect(routeShellSource).toContain("<PublicSectionScrollAssist />");
+    expect(scrollAssistSource).toContain("PUBLIC_SECTION_SCROLL_ASSIST_SELECTOR");
+    expect(scrollAssistSource).toContain("(prefers-reduced-motion: reduce)");
+    expect(scrollAssistSource).toContain("(min-width: 901px)");
+    expect(scrollAssistSource).toContain("SETTLE_DELAY_MS = 180");
+    expect(scrollAssistSource).toContain("behavior: \"smooth\"");
+    expect(scrollAssistSource).toContain("window.addEventListener(\"scroll\", scheduleAssist");
+    expect(scrollAssistSource).toContain("window.addEventListener(\"wheel\", cancelAssist");
+    expect(scrollAssistSource).toContain(".stitch-setups-grid-section");
+    expect(styles).not.toContain("scroll-snap-type: y proximity");
+    expect(styles).not.toContain("scroll-snap-align: center");
   });
 
   it("keeps contact content on shared card architecture and shared action font sizing", () => {

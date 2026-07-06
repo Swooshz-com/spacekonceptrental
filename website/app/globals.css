@@ -26037,38 +26037,6 @@ body:has(.stitch-home-hero) .site-main .stitch-home-hero__copy {
   }
 }
 
-/* Public soft section centering: proximity snap only nudges when a panel is already close. */
-@media (min-width: 901px) and (prefers-reduced-motion: no-preference) {
-  html:has(body .stitch-site-header),
-  body:has(.stitch-site-header) {
-    scroll-padding-top: 72px !important;
-    scroll-snap-type: y proximity !important;
-  }
-
-  body:has(.stitch-site-header) .site-main > :is(
-    .stitch-home-hero,
-    .stitch-catalogue-hero,
-    .stitch-setups-hero,
-    .stitch-setups-feature-section,
-    .stitch-setups-grid-section,
-    .stitch-about-hero,
-    .stitch-quote-hero,
-    .stitch-legal-hero,
-    .stitch-editorial-hero,
-    .stitch-section
-  ) {
-    scroll-snap-align: center !important;
-    scroll-snap-stop: normal !important;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  html:has(body .stitch-site-header),
-  body:has(.stitch-site-header) {
-    scroll-snap-type: none !important;
-  }
-}
-
 /* Top navigation polish: quiet hover motion without changing route or layout behavior. */
 body:has(.stitch-site-header) .stitch-desktop-nav a {
   align-items: center;
