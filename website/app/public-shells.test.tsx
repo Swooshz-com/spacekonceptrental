@@ -362,11 +362,22 @@ describe("public page shells", () => {
   });
 
   it("keeps catalogue category and style all filters independent", () => {
+    const catalogueWithStyleBackedProduct: PublicCatalogue = {
+      ...catalogueWithProduct,
+      products: [
+        {
+          ...modularLounge,
+          shortDescription: "Published ribbed walnut lounge set.",
+          description: "Published ribbed walnut details for a lounge set."
+        }
+      ]
+    };
+
     render(
       <CataloguePageContent
         activeCategorySlug="lounge-seating"
         activeStyleSlug="brutalist"
-        catalogue={catalogueWithProduct}
+        catalogue={catalogueWithStyleBackedProduct}
       />
     );
 
@@ -397,6 +408,8 @@ describe("public page shells", () => {
       "href",
       "/listings?setup=corporate-summits"
     );
+    expect(screen.queryByRole("link", { name: /intimate dining/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /lounges/i })).not.toBeInTheDocument();
     expect(publicStitchSource).toContain('href={item.href} key={item.href} scroll={false}');
     expect(screen.getAllByText("The Metropolitan Gala").length).toBeGreaterThan(1);
     expect(screen.getAllByRole("link", { name: /view setup details/i }).length).toBeGreaterThan(1);
@@ -453,6 +466,11 @@ describe("public page shells", () => {
 
     expect(document.body.textContent).toMatch(/no public rental listings are available right now/i);
     expect(document.body.textContent).toMatch(/catalogue records will appear here once published/i);
+    expect(screen.getByRole("link", { name: /request quote/i })).toHaveAttribute("href", "/quote");
+    expect(screen.queryByRole("complementary", { name: /catalogue filters/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /all categories/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /all styles/i })).not.toBeInTheDocument();
+    expect(screen.queryByText(/mid-century modern|minimalist|brutalist/i)).not.toBeInTheDocument();
     expect(document.body.textContent).not.toMatch(forbiddenPublicCopy);
   });
 
@@ -1482,6 +1500,9 @@ describe("public page shells", () => {
       render(<StitchSetupsPage catalogue={{ source: "fallback", categories: [], products: [] }} />);
 
       expect(screen.getByText(/no public setup records are available right now/i)).toBeInTheDocument();
+      expect(screen.queryByRole("link", { name: /all setups/i })).not.toBeInTheDocument();
+      expect(screen.queryByRole("link", { name: /weddings/i })).not.toBeInTheDocument();
+      expect(screen.queryByRole("link", { name: /corporate summits/i })).not.toBeInTheDocument();
       expect(screen.queryByText("Atrium Showcase")).not.toBeInTheDocument();
       expect(screen.queryByText("Press Preview Lounge")).not.toBeInTheDocument();
     } finally {

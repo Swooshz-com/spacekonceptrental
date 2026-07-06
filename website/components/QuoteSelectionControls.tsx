@@ -25,8 +25,30 @@ type NormalizedQuoteSelectionItem = QuoteSelectionItem & {
 const quoteSelectionStorageKey = "skr.quoteSelection.v1";
 const quoteSelectionChangeEvent = "skr:quote-selection-change";
 const maxStoredQuoteItems = 20;
+const maxSelectedQuoteItemQuantity = 99;
+const maxIncludedQuoteItemQuantity = 999;
+const maxQuoteIndicatorCount = 99;
 const publicSlugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const publicImageSrcPattern = /^(?:https?:\/\/|\/(?!\/))[^\s"'<>]+$/i;
+
+function maxQuoteQuantityForKind(kind: NormalizedQuoteSelectionItem["kind"]) {
+  return kind === "setup-included"
+    ? maxIncludedQuoteItemQuantity
+    : maxSelectedQuoteItemQuantity;
+}
+
+function clampQuoteQuantity(
+  kind: NormalizedQuoteSelectionItem["kind"],
+  quantity: number,
+  minimumQuantity = kind === "setup-included" ? 0 : 1
+) {
+  return Number.isFinite(quantity)
+    ? Math.max(
+        minimumQuantity,
+        Math.min(maxQuoteQuantityForKind(kind), Math.floor(quantity))
+      )
+    : minimumQuantity;
+}
 
 function normalizeQuoteItem(
   item: QuoteSelectionItem
@@ -46,13 +68,14 @@ function normalizeQuoteItem(
         : "rental";
   const imageSrc = item.imageSrc?.trim();
   const minimumQuantity = kind === "setup-included" ? 0 : 1;
-  const quantity = Number.isFinite(item.quantity)
-    ? Math.max(minimumQuantity, Math.min(999, Math.floor(item.quantity)))
-    : 1;
+  const quantity = clampQuoteQuantity(kind, item.quantity, minimumQuantity);
   const setupBaseQuantity =
     typeof item.setupBaseQuantity === "number" &&
     Number.isFinite(item.setupBaseQuantity)
-    ? Math.max(0, Math.min(999, Math.floor(item.setupBaseQuantity)))
+    ? Math.max(
+        0,
+        Math.min(maxIncludedQuoteItemQuantity, Math.floor(item.setupBaseQuantity))
+      )
     : undefined;
   const includedItems =
     kind === "setup"
@@ -92,6 +115,41 @@ function quoteSelectionItemKey(item: QuoteSelectionItem) {
   return `${item.kind ?? "rental"}:${item.setupSlug ?? ""}:${item.slug}`;
 }
 
+function normalizeQuoteSelectionItems(items: QuoteSelectionItem[]) {
+  const normalizedItems: NormalizedQuoteSelectionItem[] = [];
+  const normalizedByKey = new Map<string, NormalizedQuoteSelectionItem>();
+
+  for (const item of items) {
+    const normalizedItem = normalizeQuoteItem(item);
+
+    if (!normalizedItem) {
+      continue;
+    }
+
+    normalizedItems.push(normalizedItem);
+  }
+
+  const selectedSetupSlugs = new Set(
+    normalizedItems
+      .filter((item) => item.kind === "setup")
+      .map((item) => item.slug)
+  );
+
+  for (const normalizedItem of normalizedItems) {
+    if (
+      normalizedItem.kind === "setup-included" &&
+      (!normalizedItem.setupSlug ||
+        !selectedSetupSlugs.has(normalizedItem.setupSlug))
+    ) {
+      continue;
+    }
+
+    normalizedByKey.set(quoteSelectionItemKey(normalizedItem), normalizedItem);
+  }
+
+  return Array.from(normalizedByKey.values()).slice(0, maxStoredQuoteItems);
+}
+
 function normalizeIncludedItems(item: QuoteSelectionItem) {
   return (item.includedItems ?? [])
     .map((includedItem) =>
@@ -122,19 +180,27 @@ function readQuoteSelection() {
   }
 
   try {
-    const parsed = JSON.parse(
-      window.localStorage.getItem(quoteSelectionStorageKey) ?? "[]"
-    );
+    const storedSelection =
+      window.localStorage.getItem(quoteSelectionStorageKey) ?? "[]";
+    const parsed = JSON.parse(storedSelection);
 
     if (!Array.isArray(parsed)) {
+      window.localStorage.setItem(quoteSelectionStorageKey, "[]");
       return [];
     }
 
-    return parsed
-      .map((item) => normalizeQuoteItem(item as QuoteSelectionItem))
-      .filter((item): item is NormalizedQuoteSelectionItem => Boolean(item))
-      .slice(0, maxStoredQuoteItems);
+    const normalizedItems = normalizeQuoteSelectionItems(
+      parsed as QuoteSelectionItem[]
+    );
+    const normalizedSelection = JSON.stringify(normalizedItems);
+
+    if (storedSelection !== normalizedSelection) {
+      window.localStorage.setItem(quoteSelectionStorageKey, normalizedSelection);
+    }
+
+    return normalizedItems;
   } catch {
+    window.localStorage.setItem(quoteSelectionStorageKey, "[]");
     return [];
   }
 }
@@ -146,7 +212,7 @@ function writeQuoteSelection(items: QuoteSelectionItem[]) {
 
   window.localStorage.setItem(
     quoteSelectionStorageKey,
-    JSON.stringify(items.slice(0, maxStoredQuoteItems))
+    JSON.stringify(normalizeQuoteSelectionItems(items))
   );
   window.dispatchEvent(new Event(quoteSelectionChangeEvent));
 }
@@ -437,7 +503,7 @@ function SetupSelectionGroup({
     quantity:
       setupItem
         ? Math.min(
-            999,
+            maxIncludedQuoteItemQuantity,
             (recipeQuantityByKey.get(quoteSelectionItemKey(includedItem)) ??
               includedItem.setupBaseQuantity ??
               includedItem.quantity) * setupQuantity
@@ -645,7 +711,10 @@ export function QuoteSelectionButton({ item }: { item: QuoteSelectionItem }) {
       return mergeQuoteItemMetadata(
         selected,
         sourceItem,
-        Math.min(999, selected.quantity + selectionQuantityStep(sourceItem, item))
+        clampQuoteQuantity(
+          sourceItem.kind,
+          selected.quantity + selectionQuantityStep(sourceItem, item)
+        )
       );
     });
 
@@ -673,7 +742,7 @@ export function QuoteSelectionButton({ item }: { item: QuoteSelectionItem }) {
           quantity:
             nextSetupQuantity !== undefined
               ? Math.min(
-                  999,
+                  maxIncludedQuoteItemQuantity,
                   (includedItem.setupBaseQuantity ?? includedItem.quantity) *
                     nextSetupQuantity
                 )
@@ -817,7 +886,11 @@ export function QuoteSelectionBadge({ item }: { item: QuoteSelectionItem }) {
 export function QuoteSelectionIndicator() {
   const [items, setItems] = useState<QuoteSelectionItem[]>([]);
   const totalCount = useMemo(
-    () => items.reduce((total, item) => total + item.quantity, 0),
+    () =>
+      Math.min(
+        maxQuoteIndicatorCount,
+        items.filter((item) => item.kind !== "setup-included").length
+      ),
     [items]
   );
 

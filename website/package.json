@@ -8,7 +8,8 @@
     "start": "next start",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:admin-access-playwright": "playwright test --config=playwright.admin-access.config.ts"
+    "test:admin-access-playwright": "playwright test --config=playwright.admin-access.config.ts",
+    "test:public-regression-playwright": "playwright test --config=playwright.public-regression.config.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.10.3",

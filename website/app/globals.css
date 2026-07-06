@@ -25706,6 +25706,59 @@ body:has(.stitch-detail-page--setup) .site-main .stitch-included-open article st
   }
 }
 
+/* Final post-demo-removal public regression repair: honest empty states, real-data filters, and fuller hero framing. */
+body:has(.stitch-home-hero) .site-main .stitch-home-hero .stitch-container {
+  width: min(calc(100% - clamp(1.5rem, 3vw, 3rem)), 1400px) !important;
+}
+
+@media (min-width: 901px) {
+  body:has(.stitch-home-hero) .site-main .stitch-home-hero {
+    padding-top: clamp(1rem, 2vh, 1.6rem) !important;
+  }
+
+  body:has(.stitch-home-hero) .site-main .stitch-home-hero__media {
+    min-height: clamp(31rem, calc(100vh - 9.5rem), 45rem) !important;
+  }
+}
+
+body:has(.stitch-catalogue-hero) .site-main .stitch-catalogue-layout--no-filters {
+  grid-template-columns: minmax(0, 1fr) !important;
+}
+
+body:has(.stitch-catalogue-hero) .site-main .stitch-catalogue-layout--no-filters .stitch-catalogue-results {
+  margin-inline: auto !important;
+  max-width: min(100%, 58rem) !important;
+  padding-top: 0 !important;
+}
+
+body:has(.stitch-site-header) .site-main :is(
+  .stitch-catalogue-layout--no-filters .stitch-empty,
+  .stitch-setups-grid-section .stitch-empty,
+  .stitch-home-categories .stitch-empty,
+  .stitch-home-featured .stitch-empty
+) {
+  align-items: center !important;
+  display: grid !important;
+  justify-items: center !important;
+  margin-inline: auto !important;
+  max-width: min(100%, 58rem) !important;
+  min-height: clamp(17rem, 25vw, 23rem) !important;
+  text-align: center !important;
+}
+
+body:has(.stitch-site-header) .site-main :is(
+  .stitch-catalogue-layout--no-filters .stitch-empty p,
+  .stitch-setups-grid-section .stitch-empty p,
+  .stitch-home-categories .stitch-empty p,
+  .stitch-home-featured .stitch-empty p
+) {
+  margin-inline: auto !important;
+}
+
+body:has(.stitch-setups-hero) .site-main .stitch-setups-grid-section:first-of-type {
+  padding-top: var(--stitch-public-section-y) !important;
+}
+
 /* Final drawer typography system: keep header, links, and buttons consistent on tablet and phone. */
 @media (max-width: 1080px) {
   body:has(.stitch-site-header) .stitch-mobile-menu.stitch-mobile-menu--open {
