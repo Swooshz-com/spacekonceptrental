@@ -76,10 +76,6 @@ function getHeaderOffset() {
   return header?.getBoundingClientRect().height ?? 72;
 }
 
-function getViewportCenter(headerOffset: number) {
-  return headerOffset + (window.innerHeight - headerOffset) / 2;
-}
-
 function getMaxScrollTop() {
   const page = document.documentElement;
 
@@ -87,8 +83,7 @@ function getMaxScrollTop() {
 }
 
 function getSectionTargetTop(rect: DOMRect, headerOffset: number) {
-  const viewportCenter = getViewportCenter(headerOffset);
-  const targetTop = window.scrollY + rect.top + rect.height / 2 - viewportCenter;
+  const targetTop = window.scrollY + rect.top - headerOffset;
 
   return Math.min(Math.max(0, targetTop), getMaxScrollTop());
 }

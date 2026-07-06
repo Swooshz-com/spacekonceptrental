@@ -1227,6 +1227,8 @@ describe("public page shells", () => {
     expect(scrollAssistSource).toContain("passive: false");
     expect(scrollAssistSource).toContain("event.preventDefault()");
     expect(scrollAssistSource).toContain("window.scrollTo({ top: targetTop, left: 0 })");
+    expect(scrollAssistSource).toContain("window.scrollY + rect.top - headerOffset");
+    expect(scrollAssistSource).not.toContain("rect.height / 2");
     expect(scrollAssistSource).toContain("rect.height < MIN_TARGET_SECTION_HEIGHT_PX");
     expect(scrollAssistSource).toContain("getScrollableAncestor");
     expect(scrollAssistSource).toContain(".stitch-setups-grid-section");
