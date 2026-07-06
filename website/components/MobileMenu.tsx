@@ -7,8 +7,7 @@ const links = [
   ["Home", "/"],
   ["Catalogue", "/catalogue"],
   ["Setups", "/listings"],
-  ["About", "/about"],
-  ["Contact", "/contact"]
+  ["About", "/about"]
 ] as const;
 
 const actionLinks = [

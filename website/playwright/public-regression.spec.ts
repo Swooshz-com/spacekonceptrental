@@ -114,9 +114,11 @@ test.describe("post-demo-removal public/admin regression smoke", () => {
     await expect(page.getByLabel("597 selected")).toHaveCount(0);
     await expect(page.locator('strong[aria-label="0 selected"]')).toBeVisible();
     await expect(page.locator('.stitch-desktop-nav a[href="/about"]')).toBeVisible();
-    await expect(page.locator('.stitch-desktop-nav a[href="/contact"]')).toBeVisible();
+    await expect(page.locator('.stitch-desktop-nav a[href="/contact"]')).toHaveCount(0);
     await expect(page.locator('.stitch-footer a[href="/about"]')).toBeVisible();
-    await expect(page.locator('.stitch-footer a[href="/contact"]')).toBeVisible();
+    await expect(page.locator('.stitch-footer a[href="/contact"]')).toHaveCount(0);
+    await expect(page.locator('.stitch-bottom-nav a[href="/about"]')).toHaveCount(1);
+    await expect(page.locator('.stitch-bottom-nav a[href="/contact"]')).toHaveCount(0);
 
     const heroMetrics = await page.locator(".stitch-home-hero__grid").evaluate(
       (element) => {
@@ -167,11 +169,6 @@ test.describe("post-demo-removal public/admin regression smoke", () => {
       })
     ).toBeVisible();
     await capture(page, "public-about.png");
-
-    await page.goto("/contact");
-    await expectPublicShell(page);
-    await expect(page.getByRole("heading", { name: /get in touch/i })).toBeVisible();
-    await capture(page, "public-contact.png");
 
     await page.goto("/quote");
     await expectPublicShell(page);

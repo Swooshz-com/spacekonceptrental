@@ -54,7 +54,6 @@ function SiteFooter() {
           <h3>Company</h3>
           <nav>
             <Link href="/about">About</Link>
-            <Link href="/contact">Contact</Link>
           </nav>
         </div>
         <div>

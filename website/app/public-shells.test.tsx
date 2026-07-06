@@ -1,5 +1,5 @@
 import { cleanup, render, screen } from "@testing-library/react";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { PublicCatalogue, PublicCatalogueProduct } from "../lib/catalogue/types";
@@ -14,7 +14,6 @@ import {
   ProductPageContent
 } from "./catalogue/[slug]/page";
 import CatalogueListingNotFound from "./catalogue/[slug]/not-found";
-import ContactPage from "./contact/page";
 import EventsPage from "./events/page";
 import ListingNotFound from "./listings/[slug]/not-found";
 import { generateMetadata as generatePublicListingMetadata } from "./listings/[slug]/page";
@@ -274,7 +273,7 @@ describe("public page shells", () => {
     expect(document.body.textContent).not.toMatch(forbiddenPublicCopy);
   });
 
-  it("keeps the active public IA aligned to the PR 246 Stitch baseline", () => {
+  it("keeps the active public IA aligned to the no-Contact launch baseline", () => {
     const routeShellSource = readFileSync(
       resolve(process.cwd(), "app/route-shell.tsx"),
       "utf8"
@@ -292,14 +291,15 @@ describe("public page shells", () => {
     expect(siteNavSource).toContain('["Catalogue", "/catalogue"]');
     expect(siteNavSource).toContain('["Setups", "/listings"]');
     expect(siteNavSource).toContain('["About", "/about"]');
-    expect(siteNavSource).toContain('["Contact", "/contact"]');
-    expect(siteNavSource).toContain('pathname.startsWith("/about")');
+    expect(siteNavSource).not.toContain('["Contact", "/contact"]');
+    expect(siteNavSource).not.toContain('href="/contact"');
     expect(mobileMenuSource).toContain('["About", "/about"]');
-    expect(mobileMenuSource).toContain('["Contact", "/contact"]');
+    expect(mobileMenuSource).not.toContain('["Contact", "/contact"]');
     expect(routeShellSource).toContain('href="/about"');
-    expect(routeShellSource).toContain('href="/contact"');
+    expect(routeShellSource).not.toContain('href="/contact"');
     expect(routeShellSource).toContain('href="/privacy"');
     expect(routeShellSource).toContain('href="/terms"');
+    expect(existsSync(resolve(process.cwd(), "app/contact/page.tsx"))).toBe(false);
   });
 
   it("keeps Legal and Quote mobile heroes on the shared public rail", () => {
@@ -858,7 +858,6 @@ describe("public page shells", () => {
     expect(heroContainerRule).not.toMatch(/max-width:\s*48rem\s*!important;/);
     expect(heroContainerRule).toMatch(/\.stitch-catalogue-hero/);
     expect(heroContainerRule).toMatch(/\.stitch-about-hero/);
-    expect(heroContainerRule).toMatch(/\.stitch-contact-hero/);
     expect(heroContainerRule).toMatch(/\.stitch-setups-hero/);
     expect(heroContainerRule).toMatch(/\.stitch-legal-hero/);
     expect(heroContainerRule).toMatch(/\.stitch-quote-hero/);
@@ -870,14 +869,6 @@ describe("public page shells", () => {
     expect(document.querySelector(".stitch-catalogue-hero")?.textContent).toMatch(
       /Catalogue.*Furniture Catalogue.*Curated rental pieces/s
     );
-
-    cleanup();
-    render(<ContactPage />);
-    expect(document.querySelector(".stitch-contact-hero > .stitch-container > .stitch-page-intro")).not.toBeNull();
-    expect(document.querySelector(".stitch-contact-hero")?.textContent).toMatch(
-      /Contact.*Get in Touch.*Share rental catalogue questions/s
-    );
-    expect(screen.getAllByRole("heading", { level: 1 })).toHaveLength(1);
 
     cleanup();
     render(<AboutPage />);
@@ -1236,15 +1227,6 @@ describe("public page shells", () => {
     const detailActionRule = interactionBlock.match(
       /body:has\(\.stitch-detail-page\)\s+\.site-main\s+\.stitch-detail-actions\s+\.stitch-detail-button\s*\{[\s\S]*?\}/
     )?.[0];
-    const contactCardRule = interactionBlock.match(
-      /body:has\(\.stitch-contact-hero\)\s+\.site-main\s+:is\([\s\S]*?\.stitch-contact-step-card[\s\S]*?\)\s*\{[\s\S]*?\}/
-    )?.[0];
-    const contactProcessRule = interactionBlock.match(
-      /body:has\(\.stitch-contact-hero\)\s+\.site-main\s+\.stitch-contact-process-section\s*\{[\s\S]*?\}/
-    )?.[0];
-    const contactBriefRule = interactionBlock.match(
-      /body:has\(\.stitch-contact-hero\)\s+\.site-main\s+\.stitch-contact-brief-section\s*\{[\s\S]*?\}/
-    )?.[0];
     const homeActionRule = interactionBlock.match(
       /body:has\(\.stitch-home-hero\)\s+\.site-main\s+\.stitch-home-categories\s+\.stitch-home-section-action,[\s\S]*?\.stitch-home-featured\s+\.stitch-home-featured-action\s*\{[\s\S]*?\}/
     )?.[0];
@@ -1252,18 +1234,6 @@ describe("public page shells", () => {
       /body:has\(\.stitch-home-hero\)\s+\.site-main\s+\.stitch-home-categories\s+\.stitch-home-section-action\s+\.stitch-button,[\s\S]*?\.stitch-home-featured\s+\.stitch-home-featured-action\s+\.stitch-button\s*\{[\s\S]*?\}/
     )?.[0];
 
-    render(<ContactPage />);
-
-    expect(screen.getAllByRole("heading", { level: 1 })).toHaveLength(1);
-    expect(screen.getByRole("heading", { level: 2, name: /enquiry review steps/i })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { level: 2, name: /start with a rental brief/i })).toBeInTheDocument();
-    expect(screen.queryByRole("heading", { level: 2, name: /contact menu/i })).not.toBeInTheDocument();
-    expect(document.querySelector(".stitch-contact-menu-copy")).toBeNull();
-    expect(document.querySelector(".stitch-contact-enquiry-panel")).toBeNull();
-    expect(document.querySelectorAll(".stitch-contact-option-card")).toHaveLength(0);
-    expect(document.querySelectorAll(".stitch-contact-step-card")).toHaveLength(3);
-    expect(publicStitchSource).not.toContain("stitch-contact-option-card");
-    expect(publicStitchSource).toContain("stitch-contact-brief-band");
     expect(actionFontRule).toBeDefined();
     expect(buttonRule).toBeDefined();
     expect(buttonRule).toMatch(/\.stitch-setups-filter-section \.stitch-pill-row :is\(a, span\)/);
@@ -1274,19 +1244,7 @@ describe("public page shells", () => {
     expect(detailActionRule).toMatch(/font-size:\s*var\(--stitch-action-font-size\)\s*!important;/);
     expect(toolsIconRule).toBeDefined();
     expect(toolsIconRule).toMatch(/content:\s*"\+"\s*!important;/);
-    expect(contactCardRule).toBeDefined();
-    expect(contactCardRule).toMatch(/border-radius:\s*0\s*!important;/);
-    expect(contactProcessRule).toBeDefined();
-    expect(contactProcessRule).toMatch(
-      /padding-bottom:\s*calc\(var\(--stitch-public-section-y\)\s*\*\s*0\.125\)\s*!important;/
-    );
-    expect(contactProcessRule).toMatch(
-      /padding-top:\s*calc\(var\(--stitch-public-section-y\)\s*\*\s*0\.175\)\s*!important;/
-    );
-    expect(contactBriefRule).toBeDefined();
-    expect(contactBriefRule).toMatch(
-      /padding-top:\s*calc\(var\(--stitch-public-section-y\)\s*\*\s*0\.125\)\s*!important;/
-    );
+    expect(publicStitchSource).not.toContain("stitch-contact-option-card");
     expect(homeActionRule).toBeDefined();
     expect(homeActionRule).toMatch(/position:\s*static\s*!important;/);
     expect(homeActionRule).toMatch(/margin:\s*clamp\(2rem,\s*3vw,\s*2\.7rem\)\s*0\s*0\s*!important;/);
