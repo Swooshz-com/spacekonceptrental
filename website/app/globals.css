@@ -21359,7 +21359,10 @@ body:has(.stitch-site-header):not(:has(.stitch-home-hero)) .site-main :is(
 body:has(.stitch-site-header):not(:has(.stitch-home-hero)) .site-main :is(
   .stitch-catalogue-hero,
   .stitch-about-hero,
-  .stitch-contact-hero
+  .stitch-contact-hero,
+  .stitch-setups-hero,
+  .stitch-legal-hero,
+  .stitch-quote-hero
 ) .stitch-eyebrow {
   color: var(--stitch-primary) !important;
   display: block !important;
@@ -25706,6 +25709,78 @@ body:has(.stitch-detail-page--setup) .site-main .stitch-included-open article st
   }
 }
 
+/* Final post-demo-removal public regression repair: baseline IA, honest filters, and fuller hero framing. */
+body:has(.stitch-home-hero) .site-main .stitch-home-hero .stitch-container {
+  max-width: 1520px !important;
+  width: min(calc(100% - clamp(1rem, 2.2vw, 2rem)), 1520px) !important;
+}
+
+@media (min-width: 901px) {
+  body:has(.stitch-home-hero) .site-main .stitch-home-hero {
+    padding-bottom: clamp(4.5rem, 7vw, 6.75rem) !important;
+    padding-top: clamp(1.25rem, 2.4vh, 2rem) !important;
+  }
+
+  body:has(.stitch-home-hero) .site-main .stitch-home-hero__grid {
+    min-height: clamp(40rem, calc(100vh - 5.25rem), 48rem) !important;
+  }
+
+  body:has(.stitch-home-hero) .site-main .stitch-home-hero__media {
+    min-height: clamp(40rem, calc(100vh - 5.25rem), 48rem) !important;
+  }
+
+  body:has(.stitch-home-hero) .site-main :is(
+    .stitch-home-advantage,
+    .stitch-home-categories,
+    .stitch-home-featured
+  ) {
+    padding-bottom: calc(var(--stitch-public-section-y) * 1.85) !important;
+    padding-top: calc(var(--stitch-public-section-y) * 1.85) !important;
+  }
+}
+
+body:has(.stitch-catalogue-hero) .site-main .stitch-filter-hint {
+  color: var(--stitch-muted) !important;
+  font-family: var(--stitch-sans) !important;
+  font-size: 0.86rem !important;
+  font-weight: 500 !important;
+  line-height: 1.5 !important;
+  margin: 0.25rem 0 0 !important;
+}
+
+body:has(.stitch-catalogue-hero) .site-main .stitch-catalogue-results > .stitch-empty {
+  margin-inline: auto !important;
+  max-width: min(100%, 58rem) !important;
+}
+
+body:has(.stitch-site-header) .site-main :is(
+  .stitch-catalogue-results > .stitch-empty,
+  .stitch-setups-grid-section .stitch-empty,
+  .stitch-home-categories .stitch-empty,
+  .stitch-home-featured .stitch-empty
+) {
+  align-items: center !important;
+  display: grid !important;
+  justify-items: center !important;
+  margin-inline: auto !important;
+  max-width: min(100%, 58rem) !important;
+  min-height: clamp(17rem, 25vw, 23rem) !important;
+  text-align: center !important;
+}
+
+body:has(.stitch-site-header) .site-main :is(
+  .stitch-catalogue-results > .stitch-empty p,
+  .stitch-setups-grid-section .stitch-empty p,
+  .stitch-home-categories .stitch-empty p,
+  .stitch-home-featured .stitch-empty p
+) {
+  margin-inline: auto !important;
+}
+
+body:has(.stitch-setups-hero) .site-main .stitch-setups-grid-section:first-of-type {
+  padding-top: var(--stitch-public-section-y) !important;
+}
+
 /* Final drawer typography system: keep header, links, and buttons consistent on tablet and phone. */
 @media (max-width: 1080px) {
   body:has(.stitch-site-header) .stitch-mobile-menu.stitch-mobile-menu--open {
@@ -25806,5 +25881,238 @@ body:has(.stitch-detail-page--setup) .site-main .stitch-included-open article st
     letter-spacing: 0 !important;
     line-height: 1.2 !important;
     text-transform: none !important;
+  }
+}
+
+/* Final PR #239 visual authority correction: remove the desktop hero rail and keep soft page panels. */
+body:has(.stitch-home-hero) .site-main .stitch-home-hero {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+body:has(.stitch-home-hero) .site-main .stitch-home-hero .stitch-container {
+  max-width: none !important;
+  padding-inline: 0 !important;
+  width: 100% !important;
+}
+
+body:has(.stitch-home-hero) .site-main .stitch-home-hero__grid {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  margin: 0 !important;
+  max-width: none !important;
+  overflow: hidden !important;
+  position: relative !important;
+  width: 100% !important;
+}
+
+body:has(.stitch-home-hero) .site-main .stitch-home-hero__copy,
+body:has(.stitch-home-hero) .site-main .stitch-home-hero__media {
+  grid-area: 1 / 1 !important;
+}
+
+body:has(.stitch-home-hero) .site-main .stitch-home-hero__media {
+  border: 0 !important;
+  border-radius: 0 !important;
+  height: 100% !important;
+  inset: 0 !important;
+  min-height: 0 !important;
+  position: absolute !important;
+  width: 100% !important;
+}
+
+body:has(.stitch-home-hero) .site-main .stitch-home-hero__media img {
+  height: 100% !important;
+  object-fit: cover !important;
+  object-position: center center !important;
+  width: 100% !important;
+}
+
+body:has(.stitch-home-hero) .site-main .stitch-home-hero__copy {
+  align-items: center !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  max-width: none !important;
+  position: relative !important;
+  text-align: center !important;
+  width: 100% !important;
+  z-index: 2 !important;
+}
+
+@media (min-width: 901px) {
+  body:has(.stitch-home-hero) .site-main .stitch-home-hero__grid {
+    height: calc(100svh - 72px) !important;
+    min-height: clamp(42rem, calc(100svh - 72px), 58rem) !important;
+  }
+
+  body:has(.stitch-home-hero) .site-main .stitch-home-hero__copy {
+    min-height: calc(100svh - 72px) !important;
+    padding: clamp(5rem, 10vh, 8rem) clamp(2rem, 6vw, 6rem) !important;
+  }
+
+  body:has(.stitch-home-hero) .site-main :is(
+    .stitch-home-advantage,
+    .stitch-home-categories,
+    .stitch-home-featured
+  ) {
+    align-items: center !important;
+    display: flex !important;
+    min-height: calc(100svh - 72px) !important;
+    padding-bottom: clamp(5rem, 9vh, 7.5rem) !important;
+    padding-top: clamp(5rem, 9vh, 7.5rem) !important;
+  }
+
+  body:has(.stitch-home-hero) .site-main :is(
+    .stitch-home-advantage,
+    .stitch-home-categories,
+    .stitch-home-featured
+  ) > .stitch-container {
+    flex: 0 1 auto !important;
+  }
+}
+
+/* Final public page rhythm extension: carry the full-page cadence beyond Home. */
+@media (min-width: 901px) {
+  body:has(.stitch-site-header):not(:has(.stitch-home-hero)) .site-main > :is(
+    .stitch-catalogue-hero,
+    .stitch-setups-hero,
+    .stitch-about-hero,
+    .stitch-quote-hero,
+    .stitch-legal-hero,
+    .stitch-editorial-hero
+  ) {
+    align-items: center !important;
+    display: flex !important;
+    width: 100% !important;
+  }
+
+  body:has(.stitch-site-header):not(:has(.stitch-home-hero)) .site-main > :is(
+    .stitch-catalogue-hero,
+    .stitch-setups-hero,
+    .stitch-about-hero,
+    .stitch-quote-hero,
+    .stitch-legal-hero,
+    .stitch-editorial-hero
+  ) > .stitch-container {
+    flex: 0 1 auto !important;
+    width: min(calc(100% - clamp(3rem, 7vw, 9rem)), 1600px) !important;
+  }
+
+  body:has(.stitch-site-header):not(:has(.stitch-home-hero)) .site-main > :is(
+    .stitch-catalogue-hero,
+    .stitch-setups-hero,
+    .stitch-about-hero,
+    .stitch-quote-hero,
+    .stitch-legal-hero
+  ) .stitch-page-intro {
+    max-width: min(74rem, 88vw) !important;
+  }
+
+  body:has(.stitch-site-header):not(:has(.stitch-home-hero)) .site-main > :is(
+    .stitch-catalogue-hero,
+    .stitch-setups-hero,
+    .stitch-about-hero,
+    .stitch-quote-hero,
+    .stitch-legal-hero
+  ) .stitch-page-intro p:not(.stitch-eyebrow) {
+    max-width: 50rem !important;
+  }
+
+  body:has(.stitch-catalogue-hero) .site-main .stitch-catalogue-section,
+  body:has(.stitch-setups-hero) .site-main .stitch-setups-grid-section,
+  body:has(.stitch-about-hero) .site-main :is(
+    .stitch-about-story,
+    .stitch-about-principles,
+    .stitch-about-service
+  ),
+  body:has(.stitch-editorial-hero) .site-main > .stitch-section {
+    align-items: center !important;
+    display: flex !important;
+  }
+
+  body:has(.stitch-quote-hero) .site-main .stitch-quote-page {
+    align-items: center !important;
+    display: flex !important;
+  }
+}
+
+/* Top navigation polish: quiet hover motion without changing route or layout behavior. */
+body:has(.stitch-site-header) .stitch-desktop-nav a {
+  align-items: center;
+  display: inline-flex;
+  position: relative;
+  transition: color 180ms ease, transform 180ms ease;
+  will-change: transform;
+}
+
+body:has(.stitch-site-header) .stitch-desktop-nav a::after {
+  background: color-mix(in srgb, var(--stitch-secondary, #8e4c41) 82%, transparent);
+  bottom: 0.04rem;
+  content: "";
+  height: 2px;
+  left: 50%;
+  opacity: 0;
+  position: absolute;
+  right: 50%;
+  transform: translateY(0.22rem);
+  transition: left 220ms ease, opacity 180ms ease, right 220ms ease, transform 220ms ease;
+}
+
+body:has(.stitch-site-header) .stitch-desktop-nav a:hover,
+body:has(.stitch-site-header) .stitch-desktop-nav a:focus-visible {
+  color: var(--stitch-secondary, #8e4c41) !important;
+  transform: translateY(-0.12rem);
+}
+
+body:has(.stitch-site-header) .stitch-desktop-nav a:hover::after,
+body:has(.stitch-site-header) .stitch-desktop-nav a:focus-visible::after,
+body:has(.stitch-site-header) .stitch-desktop-nav a[aria-current="page"]::after,
+body:has(.stitch-site-header) .stitch-desktop-nav a.stitch-nav-link--active::after {
+  left: 0;
+  opacity: 1;
+  right: 0;
+  transform: translateY(0);
+}
+
+body:has(.stitch-site-header) .stitch-header-actions > .stitch-quote-indicator {
+  transition: background-color 180ms ease, border-color 180ms ease, box-shadow 180ms ease, color 180ms ease, transform 180ms ease;
+  will-change: transform;
+}
+
+body:has(.stitch-site-header) .stitch-header-actions > .stitch-quote-indicator:hover,
+body:has(.stitch-site-header) .stitch-header-actions > .stitch-quote-indicator:focus-visible {
+  box-shadow: 0 0.7rem 1.4rem rgba(31, 32, 28, 0.14);
+  transform: translateY(-0.12rem);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body:has(.stitch-site-header) .stitch-desktop-nav a,
+  body:has(.stitch-site-header) .stitch-desktop-nav a::after,
+  body:has(.stitch-site-header) .stitch-header-actions > .stitch-quote-indicator {
+    transition: none !important;
+    will-change: auto !important;
+  }
+
+  body:has(.stitch-site-header) .stitch-desktop-nav a:hover,
+  body:has(.stitch-site-header) .stitch-desktop-nav a:focus-visible,
+  body:has(.stitch-site-header) .stitch-header-actions > .stitch-quote-indicator:hover,
+  body:has(.stitch-site-header) .stitch-header-actions > .stitch-quote-indicator:focus-visible {
+    transform: none !important;
+  }
+}
+
+/* About page rhythm: keep the hero calm, but let the body sections breathe as page-like panels. */
+@media (min-width: 901px) {
+  body:has(.stitch-about-hero) .site-main :is(
+    .stitch-about-story,
+    .stitch-about-principles,
+    .stitch-about-service
+  ) {
+    align-items: center !important;
+    display: flex !important;
+    min-height: calc(100svh - 72px) !important;
+    padding-bottom: clamp(5rem, 9vh, 7.5rem) !important;
+    padding-top: clamp(5rem, 9vh, 7.5rem) !important;
   }
 }

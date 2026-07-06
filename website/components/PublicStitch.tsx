@@ -14,11 +14,21 @@ import {
 import {
   QuoteSelectionBadge,
   QuoteSelectionButton,
-  type QuoteSelectionItem
+  type QuoteSelectionItem,
+  type QuoteSelectionValidItem
 } from "./QuoteSelectionControls";
 import { SetupImageCarousel } from "./SetupImageCarousel";
 
 export const stitchImages = { chairImage, sofaImage, corporateImage, galaImage, exhibitionImage, heroImage };
+
+export function quoteSelectionValidItemsForCatalogue(
+  catalogue: PublicCatalogue
+): QuoteSelectionValidItem[] {
+  return catalogue.products.flatMap((product) => [
+    { kind: "rental" as const, slug: product.slug },
+    { kind: "setup" as const, slug: product.slug }
+  ]);
+}
 
 const aboutStoryImageUrl = "https://lh3.googleusercontent.com/aida-public/AB6AXuCVRiKMpVS17P0POe4hgYLWJOqLZWHNBK0YGHw-bG4ETu7eWNw2o_RDNmsHhEgmEAfc1nWGlfVYJswBZRdLxn0pVc44lfcblgiNEyuHfr4APLO9MARpxHtb8kRWvMV7otaSDpU_tfoAPYGYbCMtj9DUnC49_anMv7E80cfYVCCK_uheLjc8ZiIEccgZUgjO8H3dhTXXY_cBGYInmYRilsvWVY_akz3twXUoGZotZr6SB4yHpefF4EcE8HJb4gp8pwrC_XR3IlH3bkkl";
 const homeCategoryImageUrls = [
@@ -182,7 +192,11 @@ export function StitchEmptyState({ title, message, actionHref = "/quote", action
 export function StitchCatalogueShell({ catalogue, detailBasePath = "/catalogue", title = "Furniture Catalogue", intro = "Curated rental pieces for elevated event environments. Browse architectural seating, functional surfaces, and sculptural accents. Browsing does not set aside furniture or finalise rental details.", emptyTitle = "No public rental listings are available right now", emptyMessage = "Real catalogue records will appear here once published. Send a rental enquiry if you already know the pieces or setup direction you need.", activeCategorySlug, activeStyleSlug }: { catalogue: PublicCatalogue; detailBasePath?: string; title?: string; intro?: string; emptyTitle?: string; emptyMessage?: string; activeCategorySlug?: string; activeStyleSlug?: string }) {
   const allProducts = catalogue.products;
   const categoryFilters = catalogue.categories.length ? catalogue.categories : Array.from(new Map(allProducts.map((product) => [productCategory(product).toLowerCase(), { id: product.categoryId ?? productCategory(product), slug: product.categoryId ?? productCategory(product).toLowerCase().replaceAll(" ", "-"), name: productCategory(product) }])).values());
-  const styleFilters = stitchStyleFilters;
+  const styleFilters = stitchStyleFilters.filter((style) =>
+    allProducts.some((product) => productMatchesStyleContext(product, style))
+  );
+  const hasCategoryFilters = categoryFilters.length > 0;
+  const hasStyleFilters = styleFilters.length > 0;
   const normalizedActiveCategorySlug = activeCategorySlug?.trim().toLowerCase();
   const normalizedActiveStyleSlug = activeStyleSlug?.trim().toLowerCase();
   const activeCategory = normalizedActiveCategorySlug ? categoryFilters.find((category) => category.slug.toLowerCase() === normalizedActiveCategorySlug) : undefined;
@@ -193,6 +207,8 @@ export function StitchCatalogueShell({ catalogue, detailBasePath = "/catalogue",
   const hasActiveFilter = Boolean(activeCategory || activeStyle);
   const activeEmptyTitle = hasActiveFilter ? `No ${activeFilterLabel.toLowerCase()} listings are available right now` : emptyTitle;
   const activeEmptyMessage = hasActiveFilter ? "Clear the filters or send a rental enquiry if you already know the pieces or setup direction you need." : emptyMessage;
+  const emptyActionHref = hasActiveFilter ? detailBasePath : "/quote";
+  const emptyActionLabel = hasActiveFilter ? "Clear filters" : "Request Quote";
   const buildFilterHref = ({ category, style }: { category?: string; style?: string }) => {
     const params = new URLSearchParams();
     if (category) params.set("category", category);
@@ -201,7 +217,7 @@ export function StitchCatalogueShell({ catalogue, detailBasePath = "/catalogue",
     return query ? `${detailBasePath}?${query}` : detailBasePath;
   };
 
-  return <><section className="stitch-catalogue-hero"><div className="stitch-container"><StitchPageIntro eyebrow={detailBasePath === "/listings" ? "Setups" : "Catalogue"} title={title} intro={intro} /></div></section><section className="stitch-section stitch-catalogue-section"><div className="stitch-container stitch-catalogue-layout"><aside className="stitch-filter-panel" aria-label="Catalogue filters"><div className="stitch-filter-group stitch-filter-group--categories"><h2>Categories</h2><Link className={!activeCategory ? "is-active" : undefined} href={buildFilterHref({ style: activeStyle?.slug })} scroll={false}>All Categories</Link>{categoryFilters.map((category) => <Link className={activeCategory?.id === category.id ? "is-active" : undefined} href={buildFilterHref({ category: category.slug, style: activeStyle?.slug })} key={category.id} scroll={false}>{category.name}</Link>)}</div><div className="stitch-filter-group stitch-filter-group--styles"><h2>Style context</h2><Link className={!activeStyle ? "is-active" : undefined} href={buildFilterHref({ category: activeCategory?.slug })} scroll={false}>All Styles</Link>{styleFilters.map((style) => <Link className={activeStyle?.slug === style.slug ? "is-active" : undefined} href={buildFilterHref({ category: activeCategory?.slug, style: style.slug })} key={style.slug} scroll={false}>{style.label}</Link>)}</div></aside><div className="stitch-catalogue-results">{hasActiveFilter ? <p className="stitch-active-filter">Showing {activeFilterLabel} within the furniture catalogue. <Link href={detailBasePath} scroll={false}>Clear filter</Link></p> : null}{products.length ? <div className="stitch-card-grid">{products.map((product) => <StitchItemCard key={product.id} product={product} detailBasePath={detailBasePath} />)}</div> : <StitchEmptyState title={activeEmptyTitle} message={activeEmptyMessage} actionHref={detailBasePath} actionLabel="Clear filters" />}</div></div></section></>;
+  return <><section className="stitch-catalogue-hero"><div className="stitch-container"><StitchPageIntro eyebrow={detailBasePath === "/listings" ? "Setups" : "Catalogue"} title={title} intro={intro} /></div></section><section className="stitch-section stitch-catalogue-section"><div className="stitch-container stitch-catalogue-layout"><aside className="stitch-filter-panel" aria-label="Catalogue filters"><div className="stitch-filter-group stitch-filter-group--categories"><h2>Categories</h2><Link className={!activeCategory ? "is-active" : undefined} href={buildFilterHref({ style: activeStyle?.slug })} scroll={false}>All Categories</Link>{categoryFilters.map((category) => <Link className={activeCategory?.id === category.id ? "is-active" : undefined} href={buildFilterHref({ category: category.slug, style: activeStyle?.slug })} key={category.id} scroll={false}>{category.name}</Link>)}{hasCategoryFilters ? null : <p className="stitch-filter-hint">No published categories yet.</p>}</div><div className="stitch-filter-group stitch-filter-group--styles"><h2>Style context</h2>{hasStyleFilters ? <><Link className={!activeStyle ? "is-active" : undefined} href={buildFilterHref({ category: activeCategory?.slug })} scroll={false}>All Styles</Link>{styleFilters.map((style) => <Link className={activeStyle?.slug === style.slug ? "is-active" : undefined} href={buildFilterHref({ category: activeCategory?.slug, style: style.slug })} key={style.slug} scroll={false}>{style.label}</Link>)}</> : <p className="stitch-filter-hint">No style filters yet.</p>}</div></aside><div className="stitch-catalogue-results">{hasActiveFilter ? <p className="stitch-active-filter">Showing {activeFilterLabel} within the furniture catalogue. <Link href={detailBasePath} scroll={false}>Clear filter</Link></p> : null}{products.length ? <div className="stitch-card-grid">{products.map((product) => <StitchItemCard key={product.id} product={product} detailBasePath={detailBasePath} />)}</div> : <StitchEmptyState title={activeEmptyTitle} message={activeEmptyMessage} actionHref={emptyActionHref} actionLabel={emptyActionLabel} />}</div></div></section></>;
 }
 
 export function StitchSetupsPage({ catalogue, activeSetupSlug }: { catalogue: PublicCatalogue; activeSetupSlug?: string }) {
@@ -214,29 +230,35 @@ export function StitchSetupsPage({ catalogue, activeSetupSlug }: { catalogue: Pu
     { slug: "intimate-dining", label: "Intimate Dining", setupSlugs: ["intimate-nocturne"] },
     { slug: "lounges", label: "Lounges", setupSlugs: ["terrace-lounge", "press-preview-lounge"] }
   ];
-  const fallbackSetupFilterSlugs = ["corporate-summits", "weddings", "corporate-summits", "intimate-dining", "lounges"];
+  const setupFiltersWithRecords = setupFilters.filter((filter) =>
+    setupCards.some((setup) => filter.setupSlugs.includes(setup.slug))
+  );
   const setupFilterSlugBySetupSlug = new Map<string, string>();
-  setupCards.forEach((setup, index) => {
+  setupCards.forEach((setup) => {
     const matchedFilter = setupFilters.find((filter) => filter.setupSlugs.includes(setup.slug));
-    setupFilterSlugBySetupSlug.set(setup.slug, matchedFilter?.slug ?? fallbackSetupFilterSlugs[index % fallbackSetupFilterSlugs.length]);
+    if (matchedFilter) {
+      setupFilterSlugBySetupSlug.set(setup.slug, matchedFilter.slug);
+    }
   });
   const normalizedActiveSetupSlug = activeSetupSlug?.trim().toLowerCase();
   const activeFilterSlug = normalizedActiveSetupSlug
-    ? setupFilters.some((filter) => filter.slug === normalizedActiveSetupSlug)
+    ? setupFiltersWithRecords.some((filter) => filter.slug === normalizedActiveSetupSlug)
       ? normalizedActiveSetupSlug
       : setupFilterSlugBySetupSlug.get(normalizedActiveSetupSlug)
     : undefined;
   const visibleSetups = activeFilterSlug ? setupCards.filter((setup) => setupFilterSlugBySetupSlug.get(setup.slug) === activeFilterSlug) : setupCards;
-  const setupPillLinks = [
-    { label: "All Setups", href: "/listings", active: !activeFilterSlug },
-    ...setupFilters.map((filter) => ({
+  const setupPillLinks = setupCards.length
+    ? [
+      { label: "All Setups", href: "/listings", active: !activeFilterSlug },
+      ...setupFiltersWithRecords.map((filter) => ({
       label: filter.label,
       href: `/listings?setup=${encodeURIComponent(filter.slug)}`,
       active: activeFilterSlug === filter.slug
     }))
-  ];
+    ]
+    : [];
 
-  return <><section className="stitch-setups-hero"><div className="stitch-container"><StitchPageIntro eyebrow="Setups" title="Curated Scapes" intro="Explore styled environment directions that help describe rental mood, scale, and event context for team review." /></div></section>{featuredSetup ? <section className="stitch-setups-feature-section"><div className="stitch-container stitch-setups-feature-split"><Link className="stitch-setups-feature__image" href={`/listings/${featuredSetup.slug}`}><img src={stitchImageSrc(featuredSetup.image)} alt={`${featuredSetup.title} event furniture setup`} /></Link><div className="stitch-setups-feature__copy"><span>Featured Editorial</span><h2>{featuredSetup.title}</h2><p>{featuredSetup.summary}</p><Link className="stitch-link-button stitch-link-button--quiet" href={`/listings/${featuredSetup.slug}`}>Explore Collection</Link></div></div></section> : null}<section className="stitch-setups-filter-section" id="setup-listings"><div className="stitch-container"><div className="stitch-pill-row">{setupPillLinks.map((item) => <Link aria-current={item.active ? "page" : undefined} href={item.href} key={item.href} scroll={false}>{item.label}</Link>)}</div></div></section><section className="stitch-setups-grid-section"><div className="stitch-container">{visibleSetups.length ? <div className="stitch-setups-grid">{visibleSetups.map((setup, index) => <Link className={`stitch-setup-tile ${index === visibleSetups.length - 1 ? "stitch-setup-tile--wide" : ""}`} href={`/listings/${setup.slug}`} key={setup.slug}><span className="stitch-setup-tile__image"><img src={stitchImageSrc(setup.image)} alt={`${setup.title} event furniture setup`} /><QuoteSelectionBadge item={setupQuoteSelectionItem(setup)} /></span><span className="stitch-setup-tile__body"><strong>{setup.title}</strong><small>{setup.summary}</small><em>View Setup Details</em></span></Link>)}</div> : <StitchEmptyState title="No public setup records are available right now" message="Published setup directions will appear here once available. You can still send an enquiry with the event mood, furniture pieces, and setup context you have in mind." />}</div></section></>;
+  return <><section className="stitch-setups-hero"><div className="stitch-container"><StitchPageIntro eyebrow="Setups" title="Curated Scapes" intro="Explore styled environment directions that help describe rental mood, scale, and event context for team review." /></div></section>{featuredSetup ? <section className="stitch-setups-feature-section"><div className="stitch-container stitch-setups-feature-split"><Link className="stitch-setups-feature__image" href={`/listings/${featuredSetup.slug}`}><img src={stitchImageSrc(featuredSetup.image)} alt={`${featuredSetup.title} event furniture setup`} /></Link><div className="stitch-setups-feature__copy"><span>Featured Editorial</span><h2>{featuredSetup.title}</h2><p>{featuredSetup.summary}</p><Link className="stitch-link-button stitch-link-button--quiet" href={`/listings/${featuredSetup.slug}`}>Explore Collection</Link></div></div></section> : null}{setupPillLinks.length ? <section className="stitch-setups-filter-section" id="setup-listings"><div className="stitch-container"><div className="stitch-pill-row">{setupPillLinks.map((item) => <Link aria-current={item.active ? "page" : undefined} href={item.href} key={item.href} scroll={false}>{item.label}</Link>)}</div></div></section> : null}<section className="stitch-setups-grid-section"><div className="stitch-container">{visibleSetups.length ? <div className="stitch-setups-grid">{visibleSetups.map((setup, index) => <Link className={`stitch-setup-tile ${index === visibleSetups.length - 1 ? "stitch-setup-tile--wide" : ""}`} href={`/listings/${setup.slug}`} key={setup.slug}><span className="stitch-setup-tile__image"><img src={stitchImageSrc(setup.image)} alt={`${setup.title} event furniture setup`} /><QuoteSelectionBadge item={setupQuoteSelectionItem(setup)} /></span><span className="stitch-setup-tile__body"><strong>{setup.title}</strong><small>{setup.summary}</small><em>View Setup Details</em></span></Link>)}</div> : <StitchEmptyState title="No public setup records are available right now" message="Published setup directions will appear here once available. You can still send an enquiry with the event mood, furniture pieces, and setup context you have in mind." />}</div></section></>;
 }
 
 export function StitchDetail({ product, backHref, backLabel, setup = false, related = [] }: { product: PublicCatalogueProduct; backHref: string; backLabel: string; setup?: boolean; related?: PublicCatalogueProduct[] }) {
@@ -409,49 +431,4 @@ export function StitchAboutPage() {
   const principles = [["Form and function", "Rental pieces should support the room plan, not compete with it.", "diamond"], ["Material honesty", "Texture, proportion, and finish help each event setting feel considered.", "tools"], ["Timelessness", "Simple silhouettes leave space for different venues, moods, and guest flows.", "layout"]];
   const support = [["Brief review", "We review your event context and selected rental pieces.", "diamond"], ["Rental coordination", "We help align items, setups, and practical rental details.", "tools"], ["Proposal follow-up", "We follow up with a tailored proposal and next steps.", "layout"]];
   return <><section className="stitch-about-hero"><div className="stitch-container"><StitchPageIntro eyebrow="About" title="Curating spaces that breathe, inspire, and endure" intro="Furniture is the quiet architecture of an event. SpaceKonceptRental helps visitors browse rental pieces and setup directions, then share event context for manual team review." /></div></section><section className="stitch-section stitch-about-story"><div className="stitch-container stitch-about-story__grid"><div><p className="stitch-eyebrow">Our story</p><h2>Our Story</h2><p>Use public catalogue records and setup references to shape the enquiry. The team reviews submitted details before preparing a tailored proposal.</p><p>The website supports browsing and enquiry intake only; final rental details stay in direct team follow-up.</p></div><div className="stitch-about-story__image"><img src={aboutStoryImageUrl} alt="Curated lounge furniture setting" /></div></div></section><section className="stitch-section stitch-section--tonal stitch-about-principles"><div className="stitch-container"><div className="stitch-section-heading stitch-section-heading--center"><h2>Architecture-First Design</h2></div><div className="stitch-feature-grid">{principles.map(([title, text, icon]) => <article className="stitch-feature stitch-about-card" key={title}><span className={`stitch-feature__icon stitch-feature__icon--${icon}`} aria-hidden="true" /><h3>{title}</h3><p>{text}</p></article>)}</div></div></section><section className="stitch-section stitch-about-service"><div className="stitch-container"><div className="stitch-section-heading stitch-section-heading--center"><h2>Service-led rental support</h2></div><div className="stitch-feature-grid">{support.map(([title, text, icon]) => <article className="stitch-feature stitch-about-card" key={title}><span className={`stitch-feature__icon stitch-feature__icon--${icon}`} aria-hidden="true" /><h3>{title}</h3><p>{text}</p></article>)}</div></div></section><section className="stitch-section stitch-section--tonal"><div className="stitch-container stitch-cta-band"><h2>Ready to elevate your space?</h2><p>Explore the catalogue to find rental pieces that resonate with your vision.</p><StitchButton href="/catalogue">Browse Catalogue</StitchButton></div></section></>;
-}
-
-export function StitchContactPage() {
-  const reviewSteps = [
-    ["01", "Select pieces", "Choose catalogue items or a setup direction."],
-    ["02", "Add context", "Include date, venue, access, quantities, and alternates."],
-    ["03", "Team follow-up", "The rental team reviews details before preparing next steps."]
-  ];
-
-  return (
-    <>
-      <section className="stitch-contact-hero">
-        <div className="stitch-container">
-          <StitchPageIntro eyebrow="Contact" title="Get in Touch" intro="Share rental catalogue questions, setup context, or event notes through the enquiry path so the team can review everything in one place." />
-        </div>
-      </section>
-      <section className="stitch-section stitch-section--tonal stitch-contact-section stitch-contact-process-section">
-        <div className="stitch-container">
-          <div className="stitch-section-heading stitch-section-heading--center">
-            <h2>Enquiry review steps</h2>
-          </div>
-          <div className="stitch-feature-grid stitch-contact-step-grid" aria-label="Enquiry review steps">
-            {reviewSteps.map(([number, title, text]) => (
-              <article className="stitch-feature stitch-contact-step-card" key={number}>
-                <span>{number}</span>
-                <h3>{title}</h3>
-                <p>{text}</p>
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
-      <section className="stitch-section stitch-contact-section stitch-contact-brief-section">
-        <div className="stitch-container stitch-cta-band stitch-contact-brief-band">
-          <p className="stitch-eyebrow">Rental enquiry path</p>
-          <h2>Start with a rental brief</h2>
-          <p>Share selected items, setup direction, event details, and timing notes so the rental team can review everything before follow-up.</p>
-          <StitchActions>
-            <StitchButton href="/quote">Request Quote</StitchButton>
-            <StitchButton href="/catalogue" variant="secondary">Browse Catalogue</StitchButton>
-          </StitchActions>
-        </div>
-      </section>
-    </>
-  );
 }

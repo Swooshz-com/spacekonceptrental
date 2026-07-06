@@ -4,6 +4,7 @@ import {
   formatQuoteSelectionItems,
   QuoteSelectionBadge,
   QuoteSelectionButton,
+  QuoteSelectionDataBoundary,
   QuoteSelectionIndicator,
   QuoteSelectionSummary
 } from "./QuoteSelectionControls";
@@ -50,7 +51,7 @@ describe("QuoteSelectionControls", () => {
     fireEvent.click(increaseButton);
 
     expect(quantityValue).toHaveTextContent("Qty 2");
-    expect(screen.getByLabelText("2 selected")).toBeInTheDocument();
+    expect(screen.getByLabelText("1 selected")).toBeInTheDocument();
     expect(window.localStorage.getItem("skr.quoteSelection.v1")).toContain(
       "aura-lounge-chair"
     );
@@ -69,6 +70,260 @@ describe("QuoteSelectionControls", () => {
     expect(decreaseButton).toBeDisabled();
     expect(screen.getByLabelText("0 selected")).toBeInTheDocument();
     expect(window.localStorage.getItem("skr.quoteSelection.v1")).toBe("[]");
+  });
+
+  it("keeps the request quote indicator sane for stale inflated local storage", async () => {
+    window.localStorage.setItem(
+      "skr.quoteSelection.v1",
+      JSON.stringify([
+        {
+          slug: "aura-lounge-chair",
+          name: "Aura Lounge Chair",
+          category: "Seating",
+          kind: "rental",
+          quantity: 597
+        }
+      ])
+    );
+
+    render(<QuoteSelectionIndicator />);
+
+    expect(screen.getByLabelText("1 selected")).toBeInTheDocument();
+    expect(
+      screen.queryByLabelText(/597 selected/i)
+    ).not.toBeInTheDocument();
+
+    await waitFor(() =>
+      expect(window.localStorage.getItem("skr.quoteSelection.v1")).toContain(
+        "\"quantity\":99"
+      )
+    );
+  });
+
+  it("clears stale selected records when no current public records are available", async () => {
+    window.localStorage.setItem(
+      "skr.quoteSelection.v1",
+      JSON.stringify([
+        {
+          slug: "stale-lounge-chair",
+          name: "Stale Lounge Chair",
+          category: "Seating",
+          kind: "rental",
+          quantity: 4
+        },
+        {
+          slug: "legacy-setup",
+          name: "Legacy Setup",
+          category: "Setups",
+          kind: "setup",
+          quantity: 1
+        },
+        {
+          slug: "stale-included-chair",
+          name: "Stale Included Chair",
+          category: "Seating",
+          kind: "setup-included",
+          quantity: 120,
+          setupName: "Legacy Setup",
+          setupSlug: "legacy-setup"
+        }
+      ])
+    );
+
+    render(
+      <>
+        <QuoteSelectionDataBoundary validItems={[]} />
+        <QuoteSelectionIndicator />
+        <QuoteSelectionSummary />
+      </>
+    );
+
+    await waitFor(() =>
+      expect(window.localStorage.getItem("skr.quoteSelection.v1")).toBe("[]")
+    );
+
+    expect(screen.getByLabelText("0 selected")).toBeInTheDocument();
+    expect(screen.queryByText("Stale Lounge Chair")).not.toBeInTheDocument();
+    expect(screen.queryByText("Legacy Setup")).not.toBeInTheDocument();
+    expect(screen.queryByText("Stale Included Chair")).not.toBeInTheDocument();
+  });
+
+  it("clears malformed non-array quote storage payloads", async () => {
+    window.localStorage.setItem(
+      "skr.quoteSelection.v1",
+      JSON.stringify({
+        slug: "stale-lounge-chair",
+        name: "Stale Lounge Chair",
+        quantity: 597
+      })
+    );
+
+    render(
+      <>
+        <QuoteSelectionDataBoundary validItems={[]} />
+        <QuoteSelectionIndicator />
+      </>
+    );
+
+    await waitFor(() =>
+      expect(window.localStorage.getItem("skr.quoteSelection.v1")).toBe("[]")
+    );
+
+    expect(screen.getByLabelText("0 selected")).toBeInTheDocument();
+  });
+
+  it("keeps valid current records counted after data-backed cleanup", async () => {
+    window.localStorage.setItem(
+      "skr.quoteSelection.v1",
+      JSON.stringify([
+        {
+          slug: "modular-lounge-set",
+          name: "Modular Lounge Set",
+          category: "Lounge Seating",
+          kind: "rental",
+          quantity: 2
+        },
+        {
+          slug: "legacy-lamp",
+          name: "Legacy Lamp",
+          category: "Lighting",
+          kind: "rental",
+          quantity: 1
+        }
+      ])
+    );
+
+    render(
+      <>
+        <QuoteSelectionDataBoundary
+          validItems={[{ kind: "rental", slug: "modular-lounge-set" }]}
+        />
+        <QuoteSelectionIndicator />
+        <QuoteSelectionSummary />
+      </>
+    );
+
+    await waitFor(() =>
+      expect(window.localStorage.getItem("skr.quoteSelection.v1")).toContain(
+        "modular-lounge-set"
+      )
+    );
+
+    expect(screen.getByLabelText("1 selected")).toBeInTheDocument();
+    expect(screen.getByText("Modular Lounge Set")).toBeInTheDocument();
+    expect(screen.queryByText("Legacy Lamp")).not.toBeInTheDocument();
+    expect(window.localStorage.getItem("skr.quoteSelection.v1")).not.toContain(
+      "legacy-lamp"
+    );
+  });
+
+  it("removes setup-included orphan rows when their setup is not a current record", async () => {
+    window.localStorage.setItem(
+      "skr.quoteSelection.v1",
+      JSON.stringify([
+        {
+          slug: "legacy-setup",
+          name: "Legacy Setup",
+          category: "Setups",
+          kind: "setup",
+          quantity: 1
+        },
+        {
+          slug: "legacy-chair",
+          name: "Legacy Chair",
+          category: "Seating",
+          kind: "setup-included",
+          quantity: 120,
+          setupName: "Legacy Setup",
+          setupSlug: "legacy-setup"
+        }
+      ])
+    );
+
+    render(
+      <>
+        <QuoteSelectionDataBoundary
+          validItems={[{ kind: "setup", slug: "current-setup" }]}
+        />
+        <QuoteSelectionIndicator />
+        <QuoteSelectionSummary />
+      </>
+    );
+
+    await waitFor(() =>
+      expect(window.localStorage.getItem("skr.quoteSelection.v1")).toBe("[]")
+    );
+
+    expect(screen.getByLabelText("0 selected")).toBeInTheDocument();
+    expect(screen.queryByText("Legacy Setup")).not.toBeInTheDocument();
+    expect(screen.queryByText("Legacy Chair")).not.toBeInTheDocument();
+  });
+
+  it("does not count setup-included rental quantities in the request quote indicator", () => {
+    window.localStorage.setItem(
+      "skr.quoteSelection.v1",
+      JSON.stringify([
+        {
+          slug: "botanical-wedding",
+          name: "Botanical Wedding",
+          category: "Setups",
+          kind: "setup",
+          quantity: 1
+        },
+        {
+          slug: "aura-lounge-chair",
+          name: "Aura Lounge Chair",
+          category: "Seating",
+          kind: "setup-included",
+          quantity: 120,
+          setupName: "Botanical Wedding",
+          setupSlug: "botanical-wedding"
+        }
+      ])
+    );
+
+    render(<QuoteSelectionIndicator />);
+
+    expect(screen.getByLabelText("1 selected")).toBeInTheDocument();
+    expect(
+      screen.queryByLabelText(/121 selected/i)
+    ).not.toBeInTheDocument();
+  });
+
+  it("removes stale setup-included items when the parent setup is no longer selected", async () => {
+    window.localStorage.setItem(
+      "skr.quoteSelection.v1",
+      JSON.stringify([
+        {
+          slug: "aura-lounge-chair",
+          name: "Aura Lounge Chair",
+          category: "Seating",
+          kind: "setup-included",
+          quantity: 120,
+          setupName: "Legacy Setup",
+          setupSlug: "legacy-setup"
+        },
+        {
+          slug: "modular-lounge-set",
+          name: "Modular Lounge Set",
+          category: "Lounge Seating",
+          kind: "rental",
+          quantity: 3
+        }
+      ])
+    );
+
+    render(<QuoteSelectionSummary />);
+
+    expect(screen.queryByText("Legacy Setup")).not.toBeInTheDocument();
+    expect(screen.queryByText("Aura Lounge Chair")).not.toBeInTheDocument();
+    expect(screen.getByText("Modular Lounge Set")).toBeInTheDocument();
+
+    await waitFor(() =>
+      expect(window.localStorage.getItem("skr.quoteSelection.v1")).not.toContain(
+        "legacy-setup"
+      )
+    );
   });
 
   it("renders stored selections in the quote page selection summary", () => {

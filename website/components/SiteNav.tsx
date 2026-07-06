@@ -7,14 +7,14 @@ const navItems = [
   ["Home", "/"],
   ["Catalogue", "/catalogue"],
   ["Setups", "/listings"],
-  ["About", "/about"],
-  ["Contact", "/contact"]
+  ["About", "/about"]
 ] as const;
 
 const baseBottomNavItems = [
   ["Home", "/", "⌂"],
   ["Catalogue", "/catalogue", "▦"],
-  ["Setups", "/listings", "✦"]
+  ["Setups", "/listings", "✦"],
+  ["About", "/about", "ⓘ"]
 ] as const;
 
 function isActivePath(pathname: string, href: string) {
@@ -47,14 +47,10 @@ export function SiteDesktopNav() {
 
 export function MobileBottomNav() {
   const pathname = usePathname() || "/";
-  const finalItem = pathname.startsWith("/about")
-    ? (["About", "/about", "ⓘ"] as const)
-    : (["Contact", "/contact", "✉"] as const);
-  const bottomNavItems = [...baseBottomNavItems, finalItem] as const;
 
   return (
     <nav className="stitch-bottom-nav" aria-label="Mobile quick navigation">
-      {bottomNavItems.map(([label, href, icon]) => {
+      {baseBottomNavItems.map(([label, href, icon]) => {
         const active = isActivePath(pathname, href);
         return (
           <Link

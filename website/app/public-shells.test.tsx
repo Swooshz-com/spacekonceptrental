@@ -1,5 +1,5 @@
 import { cleanup, render, screen } from "@testing-library/react";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { PublicCatalogue, PublicCatalogueProduct } from "../lib/catalogue/types";
@@ -14,7 +14,6 @@ import {
   ProductPageContent
 } from "./catalogue/[slug]/page";
 import CatalogueListingNotFound from "./catalogue/[slug]/not-found";
-import ContactPage from "./contact/page";
 import EventsPage from "./events/page";
 import ListingNotFound from "./listings/[slug]/not-found";
 import { generateMetadata as generatePublicListingMetadata } from "./listings/[slug]/page";
@@ -274,6 +273,35 @@ describe("public page shells", () => {
     expect(document.body.textContent).not.toMatch(forbiddenPublicCopy);
   });
 
+  it("keeps the active public IA aligned to the no-Contact launch baseline", () => {
+    const routeShellSource = readFileSync(
+      resolve(process.cwd(), "app/route-shell.tsx"),
+      "utf8"
+    );
+    const siteNavSource = readFileSync(
+      resolve(process.cwd(), "components/SiteNav.tsx"),
+      "utf8"
+    );
+    const mobileMenuSource = readFileSync(
+      resolve(process.cwd(), "components/MobileMenu.tsx"),
+      "utf8"
+    );
+
+    expect(siteNavSource).toContain('["Home", "/"]');
+    expect(siteNavSource).toContain('["Catalogue", "/catalogue"]');
+    expect(siteNavSource).toContain('["Setups", "/listings"]');
+    expect(siteNavSource).toContain('["About", "/about"]');
+    expect(siteNavSource).not.toContain('["Contact", "/contact"]');
+    expect(siteNavSource).not.toContain('href="/contact"');
+    expect(mobileMenuSource).toContain('["About", "/about"]');
+    expect(mobileMenuSource).not.toContain('["Contact", "/contact"]');
+    expect(routeShellSource).toContain('href="/about"');
+    expect(routeShellSource).not.toContain('href="/contact"');
+    expect(routeShellSource).toContain('href="/privacy"');
+    expect(routeShellSource).toContain('href="/terms"');
+    expect(existsSync(resolve(process.cwd(), "app/contact/page.tsx"))).toBe(false);
+  });
+
   it("keeps Legal and Quote mobile heroes on the shared public rail", () => {
     const styles = readFileSync(resolve(process.cwd(), "app/globals.css"), "utf8");
     const finalMobileParityBlock = styles.slice(
@@ -362,11 +390,22 @@ describe("public page shells", () => {
   });
 
   it("keeps catalogue category and style all filters independent", () => {
+    const catalogueWithStyleBackedProduct: PublicCatalogue = {
+      ...catalogueWithProduct,
+      products: [
+        {
+          ...modularLounge,
+          shortDescription: "Published ribbed walnut lounge set.",
+          description: "Published ribbed walnut details for a lounge set."
+        }
+      ]
+    };
+
     render(
       <CataloguePageContent
         activeCategorySlug="lounge-seating"
         activeStyleSlug="brutalist"
-        catalogue={catalogueWithProduct}
+        catalogue={catalogueWithStyleBackedProduct}
       />
     );
 
@@ -397,6 +436,8 @@ describe("public page shells", () => {
       "href",
       "/listings?setup=corporate-summits"
     );
+    expect(screen.queryByRole("link", { name: /intimate dining/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /lounges/i })).not.toBeInTheDocument();
     expect(publicStitchSource).toContain('href={item.href} key={item.href} scroll={false}');
     expect(screen.getAllByText("The Metropolitan Gala").length).toBeGreaterThan(1);
     expect(screen.getAllByRole("link", { name: /view setup details/i }).length).toBeGreaterThan(1);
@@ -453,6 +494,13 @@ describe("public page shells", () => {
 
     expect(document.body.textContent).toMatch(/no public rental listings are available right now/i);
     expect(document.body.textContent).toMatch(/catalogue records will appear here once published/i);
+    expect(screen.getByRole("link", { name: /request quote/i })).toHaveAttribute("href", "/quote");
+    expect(screen.getByRole("complementary", { name: /catalogue filters/i })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /all categories/i })).toHaveAttribute("href", "/catalogue");
+    expect(screen.getByText(/no published categories yet/i)).toBeInTheDocument();
+    expect(screen.getByText(/no style filters yet/i)).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /all styles/i })).not.toBeInTheDocument();
+    expect(screen.queryByText(/mid-century modern|minimalist|brutalist/i)).not.toBeInTheDocument();
     expect(document.body.textContent).not.toMatch(forbiddenPublicCopy);
   });
 
@@ -810,7 +858,6 @@ describe("public page shells", () => {
     expect(heroContainerRule).not.toMatch(/max-width:\s*48rem\s*!important;/);
     expect(heroContainerRule).toMatch(/\.stitch-catalogue-hero/);
     expect(heroContainerRule).toMatch(/\.stitch-about-hero/);
-    expect(heroContainerRule).toMatch(/\.stitch-contact-hero/);
     expect(heroContainerRule).toMatch(/\.stitch-setups-hero/);
     expect(heroContainerRule).toMatch(/\.stitch-legal-hero/);
     expect(heroContainerRule).toMatch(/\.stitch-quote-hero/);
@@ -822,14 +869,6 @@ describe("public page shells", () => {
     expect(document.querySelector(".stitch-catalogue-hero")?.textContent).toMatch(
       /Catalogue.*Furniture Catalogue.*Curated rental pieces/s
     );
-
-    cleanup();
-    render(<ContactPage />);
-    expect(document.querySelector(".stitch-contact-hero > .stitch-container > .stitch-page-intro")).not.toBeNull();
-    expect(document.querySelector(".stitch-contact-hero")?.textContent).toMatch(
-      /Contact.*Get in Touch.*Share rental catalogue questions/s
-    );
-    expect(screen.getAllByRole("heading", { level: 1 })).toHaveLength(1);
 
     cleanup();
     render(<AboutPage />);
@@ -907,24 +946,23 @@ describe("public page shells", () => {
     expect(setupPolishBlock).toMatch(/\.stitch-setup-tile__image\s+\.stitch-quote-card-badge/);
   });
 
-  it("keeps Catalogue, About, and Contact page-name eyebrows visible above hero titles", () => {
+  it("keeps public page-name eyebrows visible above non-home hero titles", () => {
     const styles = readFileSync(resolve(process.cwd(), "app/globals.css"), "utf8");
     const publicStitchSource = readFileSync(resolve(process.cwd(), "components/PublicStitch.tsx"), "utf8");
     const eyebrowBlock = styles.slice(
       styles.indexOf("/* Final page eyebrow restoration: keep page names visible above non-home hero titles. */")
     );
     const eyebrowRule = eyebrowBlock.match(
-      /body:has\(\.stitch-site-header\):not\(:has\(\.stitch-home-hero\)\)\s+\.site-main\s+:is\([\s\S]*?\.stitch-contact-hero[\s\S]*?\)\s+\.stitch-eyebrow\s*\{[\s\S]*?\}/
+      /body:has\(\.stitch-site-header\):not\(:has\(\.stitch-home-hero\)\)\s+\.site-main\s+:is\([\s\S]*?\.stitch-catalogue-hero[\s\S]*?\.stitch-quote-hero[\s\S]*?\)\s+\.stitch-eyebrow\s*\{[\s\S]*?\}/
     )?.[0];
 
     expect(publicStitchSource).toContain('eyebrow={detailBasePath === "/listings" ? "Setups" : "Catalogue"}');
-    expect(publicStitchSource).toContain('StitchPageIntro eyebrow="About"');
-    expect(publicStitchSource).toContain('StitchPageIntro eyebrow="Contact"');
     expect(publicStitchSource).toContain('StitchPageIntro eyebrow="Setups"');
     expect(eyebrowRule).toBeDefined();
     expect(eyebrowRule).toMatch(/\.stitch-catalogue-hero/);
-    expect(eyebrowRule).toMatch(/\.stitch-about-hero/);
-    expect(eyebrowRule).toMatch(/\.stitch-contact-hero/);
+    expect(eyebrowRule).toMatch(/\.stitch-setups-hero/);
+    expect(eyebrowRule).toMatch(/\.stitch-legal-hero/);
+    expect(eyebrowRule).toMatch(/\.stitch-quote-hero/);
     expect(eyebrowRule).toMatch(/display:\s*block\s*!important;/);
     expect(eyebrowRule).toMatch(/visibility:\s*visible\s*!important;/);
     expect(eyebrowRule).toMatch(/text-transform:\s*uppercase\s*!important;/);
@@ -1189,15 +1227,6 @@ describe("public page shells", () => {
     const detailActionRule = interactionBlock.match(
       /body:has\(\.stitch-detail-page\)\s+\.site-main\s+\.stitch-detail-actions\s+\.stitch-detail-button\s*\{[\s\S]*?\}/
     )?.[0];
-    const contactCardRule = interactionBlock.match(
-      /body:has\(\.stitch-contact-hero\)\s+\.site-main\s+:is\([\s\S]*?\.stitch-contact-step-card[\s\S]*?\)\s*\{[\s\S]*?\}/
-    )?.[0];
-    const contactProcessRule = interactionBlock.match(
-      /body:has\(\.stitch-contact-hero\)\s+\.site-main\s+\.stitch-contact-process-section\s*\{[\s\S]*?\}/
-    )?.[0];
-    const contactBriefRule = interactionBlock.match(
-      /body:has\(\.stitch-contact-hero\)\s+\.site-main\s+\.stitch-contact-brief-section\s*\{[\s\S]*?\}/
-    )?.[0];
     const homeActionRule = interactionBlock.match(
       /body:has\(\.stitch-home-hero\)\s+\.site-main\s+\.stitch-home-categories\s+\.stitch-home-section-action,[\s\S]*?\.stitch-home-featured\s+\.stitch-home-featured-action\s*\{[\s\S]*?\}/
     )?.[0];
@@ -1205,18 +1234,6 @@ describe("public page shells", () => {
       /body:has\(\.stitch-home-hero\)\s+\.site-main\s+\.stitch-home-categories\s+\.stitch-home-section-action\s+\.stitch-button,[\s\S]*?\.stitch-home-featured\s+\.stitch-home-featured-action\s+\.stitch-button\s*\{[\s\S]*?\}/
     )?.[0];
 
-    render(<ContactPage />);
-
-    expect(screen.getAllByRole("heading", { level: 1 })).toHaveLength(1);
-    expect(screen.getByRole("heading", { level: 2, name: /enquiry review steps/i })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { level: 2, name: /start with a rental brief/i })).toBeInTheDocument();
-    expect(screen.queryByRole("heading", { level: 2, name: /contact menu/i })).not.toBeInTheDocument();
-    expect(document.querySelector(".stitch-contact-menu-copy")).toBeNull();
-    expect(document.querySelector(".stitch-contact-enquiry-panel")).toBeNull();
-    expect(document.querySelectorAll(".stitch-contact-option-card")).toHaveLength(0);
-    expect(document.querySelectorAll(".stitch-contact-step-card")).toHaveLength(3);
-    expect(publicStitchSource).not.toContain("stitch-contact-option-card");
-    expect(publicStitchSource).toContain("stitch-contact-brief-band");
     expect(actionFontRule).toBeDefined();
     expect(buttonRule).toBeDefined();
     expect(buttonRule).toMatch(/\.stitch-setups-filter-section \.stitch-pill-row :is\(a, span\)/);
@@ -1227,19 +1244,7 @@ describe("public page shells", () => {
     expect(detailActionRule).toMatch(/font-size:\s*var\(--stitch-action-font-size\)\s*!important;/);
     expect(toolsIconRule).toBeDefined();
     expect(toolsIconRule).toMatch(/content:\s*"\+"\s*!important;/);
-    expect(contactCardRule).toBeDefined();
-    expect(contactCardRule).toMatch(/border-radius:\s*0\s*!important;/);
-    expect(contactProcessRule).toBeDefined();
-    expect(contactProcessRule).toMatch(
-      /padding-bottom:\s*calc\(var\(--stitch-public-section-y\)\s*\*\s*0\.125\)\s*!important;/
-    );
-    expect(contactProcessRule).toMatch(
-      /padding-top:\s*calc\(var\(--stitch-public-section-y\)\s*\*\s*0\.175\)\s*!important;/
-    );
-    expect(contactBriefRule).toBeDefined();
-    expect(contactBriefRule).toMatch(
-      /padding-top:\s*calc\(var\(--stitch-public-section-y\)\s*\*\s*0\.125\)\s*!important;/
-    );
+    expect(publicStitchSource).not.toContain("stitch-contact-option-card");
     expect(homeActionRule).toBeDefined();
     expect(homeActionRule).toMatch(/position:\s*static\s*!important;/);
     expect(homeActionRule).toMatch(/margin:\s*clamp\(2rem,\s*3vw,\s*2\.7rem\)\s*0\s*0\s*!important;/);
@@ -1482,6 +1487,9 @@ describe("public page shells", () => {
       render(<StitchSetupsPage catalogue={{ source: "fallback", categories: [], products: [] }} />);
 
       expect(screen.getByText(/no public setup records are available right now/i)).toBeInTheDocument();
+      expect(screen.queryByRole("link", { name: /all setups/i })).not.toBeInTheDocument();
+      expect(screen.queryByRole("link", { name: /weddings/i })).not.toBeInTheDocument();
+      expect(screen.queryByRole("link", { name: /corporate summits/i })).not.toBeInTheDocument();
       expect(screen.queryByText("Atrium Showcase")).not.toBeInTheDocument();
       expect(screen.queryByText("Press Preview Lounge")).not.toBeInTheDocument();
     } finally {

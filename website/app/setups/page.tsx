@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
+import { QuoteSelectionDataBoundary } from "../../components/QuoteSelectionControls";
+import { quoteSelectionValidItemsForCatalogue, StitchSetupsPage } from "../../components/PublicStitch";
 import { getPublicCatalogue } from "../../lib/catalogue/catalogue-repository";
-import { StitchSetupsPage } from "../../components/PublicStitch";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
@@ -26,5 +27,5 @@ function firstParam(value: string | string[] | undefined) {
 export default async function SetupsPage({ searchParams }: SetupsPageProps = {}) {
   const catalogue = await getPublicCatalogue();
   const params = searchParams ? await searchParams : {};
-  return <StitchSetupsPage activeSetupSlug={firstParam(params.setup)} catalogue={catalogue} />;
+  return <><QuoteSelectionDataBoundary validItems={quoteSelectionValidItemsForCatalogue(catalogue)} /><StitchSetupsPage activeSetupSlug={firstParam(params.setup)} catalogue={catalogue} /></>;
 }

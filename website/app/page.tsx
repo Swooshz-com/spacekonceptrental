@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { getPublicCatalogue } from "../lib/catalogue/catalogue-repository";
 import { getPublicHomepageHeroContent } from "../lib/hero/public-homepage-hero-repository";
+import { QuoteSelectionDataBoundary } from "../components/QuoteSelectionControls";
 import {
+  quoteSelectionValidItemsForCatalogue,
   StitchAdvantageCards,
   StitchCategoryPreview,
   StitchFeaturedPieces,
@@ -29,6 +31,7 @@ export default async function HomePage() {
 
   return (
     <>
+      <QuoteSelectionDataBoundary validItems={quoteSelectionValidItemsForCatalogue(catalogue)} />
       <StitchHomeHero heroContent={heroContent} />
       <StitchAdvantageCards />
       <StitchCategoryPreview catalogue={catalogue} />
