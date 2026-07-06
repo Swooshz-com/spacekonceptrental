@@ -21,6 +21,10 @@ type QuoteSelectionSummaryItem = QuoteSelectionItem;
 type NormalizedQuoteSelectionItem = QuoteSelectionItem & {
   kind: NonNullable<QuoteSelectionItem["kind"]>;
 };
+export type QuoteSelectionValidItem = {
+  kind: "rental" | "setup";
+  slug: string;
+};
 
 const quoteSelectionStorageKey = "skr.quoteSelection.v1";
 const quoteSelectionChangeEvent = "skr:quote-selection-change";
@@ -148,6 +152,39 @@ function normalizeQuoteSelectionItems(items: QuoteSelectionItem[]) {
   }
 
   return Array.from(normalizedByKey.values()).slice(0, maxStoredQuoteItems);
+}
+
+function validQuoteSelectionItemKey(item: QuoteSelectionValidItem) {
+  const slug = item.slug.trim().toLowerCase();
+
+  if (!publicSlugPattern.test(slug)) {
+    return undefined;
+  }
+
+  return `${item.kind}:${slug}`;
+}
+
+function pruneQuoteSelectionItemsToValidRecords(
+  items: QuoteSelectionItem[],
+  validItems: QuoteSelectionValidItem[]
+) {
+  const validItemKeys = new Set(
+    validItems
+      .map((item) => validQuoteSelectionItemKey(item))
+      .filter((key): key is string => Boolean(key))
+  );
+
+  if (!validItemKeys.size) {
+    return [];
+  }
+
+  return normalizeQuoteSelectionItems(items).filter((item) => {
+    if (item.kind === "setup-included") {
+      return true;
+    }
+
+    return validItemKeys.has(`${item.kind}:${item.slug}`);
+  });
 }
 
 function normalizeIncludedItems(item: QuoteSelectionItem) {
@@ -279,6 +316,35 @@ export function getStoredQuoteSelection() {
 
 export function clearStoredQuoteSelection() {
   writeQuoteSelection([]);
+}
+
+export function QuoteSelectionDataBoundary({
+  validItems
+}: {
+  validItems: QuoteSelectionValidItem[];
+}) {
+  const signature = useMemo(
+    () =>
+      validItems
+        .map((item) => validQuoteSelectionItemKey(item))
+        .filter((key): key is string => Boolean(key))
+        .sort()
+        .join("|"),
+    [validItems]
+  );
+
+  useEffect(() => {
+    const currentItems = readQuoteSelection();
+    const prunedItems = normalizeQuoteSelectionItems(
+      pruneQuoteSelectionItemsToValidRecords(currentItems, validItems)
+    );
+
+    if (JSON.stringify(currentItems) !== JSON.stringify(prunedItems)) {
+      writeQuoteSelection(prunedItems);
+    }
+  }, [signature, validItems]);
+
+  return null;
 }
 
 function removeStoredQuoteSelectionItem(item: QuoteSelectionItem) {

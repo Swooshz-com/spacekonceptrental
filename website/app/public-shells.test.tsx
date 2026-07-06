@@ -274,6 +274,33 @@ describe("public page shells", () => {
     expect(document.body.textContent).not.toMatch(forbiddenPublicCopy);
   });
 
+  it("keeps the active public IA aligned to the pre-migration baseline", () => {
+    const routeShellSource = readFileSync(
+      resolve(process.cwd(), "app/route-shell.tsx"),
+      "utf8"
+    );
+    const siteNavSource = readFileSync(
+      resolve(process.cwd(), "components/SiteNav.tsx"),
+      "utf8"
+    );
+    const mobileMenuSource = readFileSync(
+      resolve(process.cwd(), "components/MobileMenu.tsx"),
+      "utf8"
+    );
+
+    expect(siteNavSource).toContain('["Home", "/"]');
+    expect(siteNavSource).toContain('["Catalogue", "/catalogue"]');
+    expect(siteNavSource).toContain('["Setups", "/listings"]');
+    expect(siteNavSource).not.toContain('["About", "/about"]');
+    expect(siteNavSource).not.toContain('["Contact", "/contact"]');
+    expect(mobileMenuSource).not.toContain('["About", "/about"]');
+    expect(mobileMenuSource).not.toContain('["Contact", "/contact"]');
+    expect(routeShellSource).not.toContain('href="/about"');
+    expect(routeShellSource).not.toContain('href="/contact"');
+    expect(routeShellSource).toContain('href="/privacy"');
+    expect(routeShellSource).toContain('href="/terms"');
+  });
+
   it("keeps Legal and Quote mobile heroes on the shared public rail", () => {
     const styles = readFileSync(resolve(process.cwd(), "app/globals.css"), "utf8");
     const finalMobileParityBlock = styles.slice(
@@ -467,8 +494,10 @@ describe("public page shells", () => {
     expect(document.body.textContent).toMatch(/no public rental listings are available right now/i);
     expect(document.body.textContent).toMatch(/catalogue records will appear here once published/i);
     expect(screen.getByRole("link", { name: /request quote/i })).toHaveAttribute("href", "/quote");
-    expect(screen.queryByRole("complementary", { name: /catalogue filters/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: /all categories/i })).not.toBeInTheDocument();
+    expect(screen.getByRole("complementary", { name: /catalogue filters/i })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /all categories/i })).toHaveAttribute("href", "/catalogue");
+    expect(screen.getByText(/no published categories yet/i)).toBeInTheDocument();
+    expect(screen.getByText(/no style filters yet/i)).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: /all styles/i })).not.toBeInTheDocument();
     expect(screen.queryByText(/mid-century modern|minimalist|brutalist/i)).not.toBeInTheDocument();
     expect(document.body.textContent).not.toMatch(forbiddenPublicCopy);
@@ -925,24 +954,23 @@ describe("public page shells", () => {
     expect(setupPolishBlock).toMatch(/\.stitch-setup-tile__image\s+\.stitch-quote-card-badge/);
   });
 
-  it("keeps Catalogue, About, and Contact page-name eyebrows visible above hero titles", () => {
+  it("keeps public page-name eyebrows visible above non-home hero titles", () => {
     const styles = readFileSync(resolve(process.cwd(), "app/globals.css"), "utf8");
     const publicStitchSource = readFileSync(resolve(process.cwd(), "components/PublicStitch.tsx"), "utf8");
     const eyebrowBlock = styles.slice(
       styles.indexOf("/* Final page eyebrow restoration: keep page names visible above non-home hero titles. */")
     );
     const eyebrowRule = eyebrowBlock.match(
-      /body:has\(\.stitch-site-header\):not\(:has\(\.stitch-home-hero\)\)\s+\.site-main\s+:is\([\s\S]*?\.stitch-contact-hero[\s\S]*?\)\s+\.stitch-eyebrow\s*\{[\s\S]*?\}/
+      /body:has\(\.stitch-site-header\):not\(:has\(\.stitch-home-hero\)\)\s+\.site-main\s+:is\([\s\S]*?\.stitch-catalogue-hero[\s\S]*?\.stitch-quote-hero[\s\S]*?\)\s+\.stitch-eyebrow\s*\{[\s\S]*?\}/
     )?.[0];
 
     expect(publicStitchSource).toContain('eyebrow={detailBasePath === "/listings" ? "Setups" : "Catalogue"}');
-    expect(publicStitchSource).toContain('StitchPageIntro eyebrow="About"');
-    expect(publicStitchSource).toContain('StitchPageIntro eyebrow="Contact"');
     expect(publicStitchSource).toContain('StitchPageIntro eyebrow="Setups"');
     expect(eyebrowRule).toBeDefined();
     expect(eyebrowRule).toMatch(/\.stitch-catalogue-hero/);
-    expect(eyebrowRule).toMatch(/\.stitch-about-hero/);
-    expect(eyebrowRule).toMatch(/\.stitch-contact-hero/);
+    expect(eyebrowRule).toMatch(/\.stitch-setups-hero/);
+    expect(eyebrowRule).toMatch(/\.stitch-legal-hero/);
+    expect(eyebrowRule).toMatch(/\.stitch-quote-hero/);
     expect(eyebrowRule).toMatch(/display:\s*block\s*!important;/);
     expect(eyebrowRule).toMatch(/visibility:\s*visible\s*!important;/);
     expect(eyebrowRule).toMatch(/text-transform:\s*uppercase\s*!important;/);

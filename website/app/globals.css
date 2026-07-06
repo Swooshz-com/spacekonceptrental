@@ -21358,8 +21358,9 @@ body:has(.stitch-site-header):not(:has(.stitch-home-hero)) .site-main :is(
 /* Final page eyebrow restoration: keep page names visible above non-home hero titles. */
 body:has(.stitch-site-header):not(:has(.stitch-home-hero)) .site-main :is(
   .stitch-catalogue-hero,
-  .stitch-about-hero,
-  .stitch-contact-hero
+  .stitch-setups-hero,
+  .stitch-legal-hero,
+  .stitch-quote-hero
 ) .stitch-eyebrow {
   color: var(--stitch-primary) !important;
   display: block !important;
@@ -25706,33 +25707,52 @@ body:has(.stitch-detail-page--setup) .site-main .stitch-included-open article st
   }
 }
 
-/* Final post-demo-removal public regression repair: honest empty states, real-data filters, and fuller hero framing. */
+/* Final post-demo-removal public regression repair: baseline IA, honest filters, and fuller hero framing. */
 body:has(.stitch-home-hero) .site-main .stitch-home-hero .stitch-container {
-  width: min(calc(100% - clamp(1.5rem, 3vw, 3rem)), 1400px) !important;
+  max-width: 1520px !important;
+  width: min(calc(100% - clamp(1rem, 2.2vw, 2rem)), 1520px) !important;
 }
 
 @media (min-width: 901px) {
   body:has(.stitch-home-hero) .site-main .stitch-home-hero {
-    padding-top: clamp(1rem, 2vh, 1.6rem) !important;
+    padding-bottom: clamp(4.5rem, 7vw, 6.75rem) !important;
+    padding-top: clamp(1.25rem, 2.4vh, 2rem) !important;
+  }
+
+  body:has(.stitch-home-hero) .site-main .stitch-home-hero__grid {
+    min-height: clamp(40rem, calc(100vh - 5.25rem), 48rem) !important;
   }
 
   body:has(.stitch-home-hero) .site-main .stitch-home-hero__media {
-    min-height: clamp(31rem, calc(100vh - 9.5rem), 45rem) !important;
+    min-height: clamp(40rem, calc(100vh - 5.25rem), 48rem) !important;
+  }
+
+  body:has(.stitch-home-hero) .site-main :is(
+    .stitch-home-advantage,
+    .stitch-home-categories,
+    .stitch-home-featured
+  ) {
+    padding-bottom: calc(var(--stitch-public-section-y) * 1.85) !important;
+    padding-top: calc(var(--stitch-public-section-y) * 1.85) !important;
   }
 }
 
-body:has(.stitch-catalogue-hero) .site-main .stitch-catalogue-layout--no-filters {
-  grid-template-columns: minmax(0, 1fr) !important;
+body:has(.stitch-catalogue-hero) .site-main .stitch-filter-hint {
+  color: var(--stitch-muted) !important;
+  font-family: var(--stitch-sans) !important;
+  font-size: 0.86rem !important;
+  font-weight: 500 !important;
+  line-height: 1.5 !important;
+  margin: 0.25rem 0 0 !important;
 }
 
-body:has(.stitch-catalogue-hero) .site-main .stitch-catalogue-layout--no-filters .stitch-catalogue-results {
+body:has(.stitch-catalogue-hero) .site-main .stitch-catalogue-results > .stitch-empty {
   margin-inline: auto !important;
   max-width: min(100%, 58rem) !important;
-  padding-top: 0 !important;
 }
 
 body:has(.stitch-site-header) .site-main :is(
-  .stitch-catalogue-layout--no-filters .stitch-empty,
+  .stitch-catalogue-results > .stitch-empty,
   .stitch-setups-grid-section .stitch-empty,
   .stitch-home-categories .stitch-empty,
   .stitch-home-featured .stitch-empty
@@ -25747,7 +25767,7 @@ body:has(.stitch-site-header) .site-main :is(
 }
 
 body:has(.stitch-site-header) .site-main :is(
-  .stitch-catalogue-layout--no-filters .stitch-empty p,
+  .stitch-catalogue-results > .stitch-empty p,
   .stitch-setups-grid-section .stitch-empty p,
   .stitch-home-categories .stitch-empty p,
   .stitch-home-featured .stitch-empty p

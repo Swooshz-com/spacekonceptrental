@@ -51,13 +51,6 @@ function SiteFooter() {
           </nav>
         </div>
         <div>
-          <h3>Company</h3>
-          <nav>
-            <Link href="/about">About</Link>
-            <Link href="/contact">Contact</Link>
-          </nav>
-        </div>
-        <div>
           <h3>Legal</h3>
           <nav>
             <Link href="/privacy">Privacy Policy</Link>

@@ -14,11 +14,21 @@ import {
 import {
   QuoteSelectionBadge,
   QuoteSelectionButton,
-  type QuoteSelectionItem
+  type QuoteSelectionItem,
+  type QuoteSelectionValidItem
 } from "./QuoteSelectionControls";
 import { SetupImageCarousel } from "./SetupImageCarousel";
 
 export const stitchImages = { chairImage, sofaImage, corporateImage, galaImage, exhibitionImage, heroImage };
+
+export function quoteSelectionValidItemsForCatalogue(
+  catalogue: PublicCatalogue
+): QuoteSelectionValidItem[] {
+  return catalogue.products.flatMap((product) => [
+    { kind: "rental" as const, slug: product.slug },
+    { kind: "setup" as const, slug: product.slug }
+  ]);
+}
 
 const aboutStoryImageUrl = "https://lh3.googleusercontent.com/aida-public/AB6AXuCVRiKMpVS17P0POe4hgYLWJOqLZWHNBK0YGHw-bG4ETu7eWNw2o_RDNmsHhEgmEAfc1nWGlfVYJswBZRdLxn0pVc44lfcblgiNEyuHfr4APLO9MARpxHtb8kRWvMV7otaSDpU_tfoAPYGYbCMtj9DUnC49_anMv7E80cfYVCCK_uheLjc8ZiIEccgZUgjO8H3dhTXXY_cBGYInmYRilsvWVY_akz3twXUoGZotZr6SB4yHpefF4EcE8HJb4gp8pwrC_XR3IlH3bkkl";
 const homeCategoryImageUrls = [
@@ -187,7 +197,6 @@ export function StitchCatalogueShell({ catalogue, detailBasePath = "/catalogue",
   );
   const hasCategoryFilters = categoryFilters.length > 0;
   const hasStyleFilters = styleFilters.length > 0;
-  const hasFilters = hasCategoryFilters || hasStyleFilters;
   const normalizedActiveCategorySlug = activeCategorySlug?.trim().toLowerCase();
   const normalizedActiveStyleSlug = activeStyleSlug?.trim().toLowerCase();
   const activeCategory = normalizedActiveCategorySlug ? categoryFilters.find((category) => category.slug.toLowerCase() === normalizedActiveCategorySlug) : undefined;
@@ -208,7 +217,7 @@ export function StitchCatalogueShell({ catalogue, detailBasePath = "/catalogue",
     return query ? `${detailBasePath}?${query}` : detailBasePath;
   };
 
-  return <><section className="stitch-catalogue-hero"><div className="stitch-container"><StitchPageIntro eyebrow={detailBasePath === "/listings" ? "Setups" : "Catalogue"} title={title} intro={intro} /></div></section><section className="stitch-section stitch-catalogue-section"><div className={`stitch-container stitch-catalogue-layout${hasFilters ? "" : " stitch-catalogue-layout--no-filters"}`}>{hasFilters ? <aside className="stitch-filter-panel" aria-label="Catalogue filters">{hasCategoryFilters ? <div className="stitch-filter-group stitch-filter-group--categories"><h2>Categories</h2><Link className={!activeCategory ? "is-active" : undefined} href={buildFilterHref({ style: activeStyle?.slug })} scroll={false}>All Categories</Link>{categoryFilters.map((category) => <Link className={activeCategory?.id === category.id ? "is-active" : undefined} href={buildFilterHref({ category: category.slug, style: activeStyle?.slug })} key={category.id} scroll={false}>{category.name}</Link>)}</div> : null}{hasStyleFilters ? <div className="stitch-filter-group stitch-filter-group--styles"><h2>Style context</h2><Link className={!activeStyle ? "is-active" : undefined} href={buildFilterHref({ category: activeCategory?.slug })} scroll={false}>All Styles</Link>{styleFilters.map((style) => <Link className={activeStyle?.slug === style.slug ? "is-active" : undefined} href={buildFilterHref({ category: activeCategory?.slug, style: style.slug })} key={style.slug} scroll={false}>{style.label}</Link>)}</div> : null}</aside> : null}<div className="stitch-catalogue-results">{hasActiveFilter ? <p className="stitch-active-filter">Showing {activeFilterLabel} within the furniture catalogue. <Link href={detailBasePath} scroll={false}>Clear filter</Link></p> : null}{products.length ? <div className="stitch-card-grid">{products.map((product) => <StitchItemCard key={product.id} product={product} detailBasePath={detailBasePath} />)}</div> : <StitchEmptyState title={activeEmptyTitle} message={activeEmptyMessage} actionHref={emptyActionHref} actionLabel={emptyActionLabel} />}</div></div></section></>;
+  return <><section className="stitch-catalogue-hero"><div className="stitch-container"><StitchPageIntro eyebrow={detailBasePath === "/listings" ? "Setups" : "Catalogue"} title={title} intro={intro} /></div></section><section className="stitch-section stitch-catalogue-section"><div className="stitch-container stitch-catalogue-layout"><aside className="stitch-filter-panel" aria-label="Catalogue filters"><div className="stitch-filter-group stitch-filter-group--categories"><h2>Categories</h2><Link className={!activeCategory ? "is-active" : undefined} href={buildFilterHref({ style: activeStyle?.slug })} scroll={false}>All Categories</Link>{categoryFilters.map((category) => <Link className={activeCategory?.id === category.id ? "is-active" : undefined} href={buildFilterHref({ category: category.slug, style: activeStyle?.slug })} key={category.id} scroll={false}>{category.name}</Link>)}{hasCategoryFilters ? null : <p className="stitch-filter-hint">No published categories yet.</p>}</div><div className="stitch-filter-group stitch-filter-group--styles"><h2>Style context</h2>{hasStyleFilters ? <><Link className={!activeStyle ? "is-active" : undefined} href={buildFilterHref({ category: activeCategory?.slug })} scroll={false}>All Styles</Link>{styleFilters.map((style) => <Link className={activeStyle?.slug === style.slug ? "is-active" : undefined} href={buildFilterHref({ category: activeCategory?.slug, style: style.slug })} key={style.slug} scroll={false}>{style.label}</Link>)}</> : <p className="stitch-filter-hint">No style filters yet.</p>}</div></aside><div className="stitch-catalogue-results">{hasActiveFilter ? <p className="stitch-active-filter">Showing {activeFilterLabel} within the furniture catalogue. <Link href={detailBasePath} scroll={false}>Clear filter</Link></p> : null}{products.length ? <div className="stitch-card-grid">{products.map((product) => <StitchItemCard key={product.id} product={product} detailBasePath={detailBasePath} />)}</div> : <StitchEmptyState title={activeEmptyTitle} message={activeEmptyMessage} actionHref={emptyActionHref} actionLabel={emptyActionLabel} />}</div></div></section></>;
 }
 
 export function StitchSetupsPage({ catalogue, activeSetupSlug }: { catalogue: PublicCatalogue; activeSetupSlug?: string }) {

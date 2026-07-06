@@ -112,7 +112,11 @@ test.describe("post-demo-removal public/admin regression smoke", () => {
     await expectPublicShell(page);
     await expect(page.locator(".stitch-home-hero")).toBeVisible();
     await expect(page.getByLabel("597 selected")).toHaveCount(0);
-    await expect(page.locator('strong[aria-label="1 selected"]')).toBeVisible();
+    await expect(page.locator('strong[aria-label="0 selected"]')).toBeVisible();
+    await expect(page.locator('.stitch-desktop-nav a[href="/about"]')).toHaveCount(0);
+    await expect(page.locator('.stitch-desktop-nav a[href="/contact"]')).toHaveCount(0);
+    await expect(page.locator('.stitch-footer a[href="/about"]')).toHaveCount(0);
+    await expect(page.locator('.stitch-footer a[href="/contact"]')).toHaveCount(0);
 
     const heroMetrics = await page.locator(".stitch-home-hero__grid").evaluate(
       (element) => {
@@ -134,6 +138,10 @@ test.describe("post-demo-removal public/admin regression smoke", () => {
     await expectPublicShell(page);
     await expectEmptyStateCenteredIfVisible(page);
     if ((await page.locator(".stitch-product-card").count()) === 0) {
+      await expect(page.getByRole("complementary", { name: /catalogue filters/i })).toBeVisible();
+      await expect(page.getByRole("link", { name: /all categories/i })).toBeVisible();
+      await expect(page.getByText(/no published categories yet/i)).toBeVisible();
+      await expect(page.getByText(/no style filters yet/i)).toBeVisible();
       await expect(page.getByRole("link", { name: /mid-century modern/i })).toHaveCount(0);
       await expect(page.getByRole("link", { name: /minimalist/i })).toHaveCount(0);
       await expect(page.getByRole("link", { name: /brutalist/i })).toHaveCount(0);
@@ -151,21 +159,12 @@ test.describe("post-demo-removal public/admin regression smoke", () => {
     }
     await capture(page, "public-listings.png");
 
-    await page.goto("/about");
-    await expectPublicShell(page);
-    await expect(page.getByRole("heading", { name: /curating spaces/i })).toBeVisible();
-    await capture(page, "public-about.png");
-
-    await page.goto("/contact");
-    await expectPublicShell(page);
-    await expect(page.getByRole("heading", { name: /get in touch/i })).toBeVisible();
-    await capture(page, "public-contact.png");
-
     await page.goto("/quote");
     await expectPublicShell(page);
     await expect(page.getByRole("heading", { name: /request a rental quote/i })).toBeVisible();
     await expect(page.getByLabel("597 selected")).toHaveCount(0);
-    await expect(page.locator('strong[aria-label="1 selected"]')).toBeVisible();
+    await expect(page.locator('strong[aria-label="0 selected"]')).toBeVisible();
+    await expect(page.getByText("Inflated Local Selection")).toHaveCount(0);
     await expect(page.getByText("Legacy Setup")).toHaveCount(0);
     await expect(page.getByText("Nested Setup Piece")).toHaveCount(0);
     await capture(page, "public-quote.png");
