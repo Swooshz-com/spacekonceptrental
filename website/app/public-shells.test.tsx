@@ -1206,7 +1206,7 @@ describe("public page shells", () => {
     expect(formErrorRule).toMatch(/font-size:\s*0\.86rem\s*!important;/);
   });
 
-  it("uses a settled public section scroll assist instead of continuous CSS snapping", () => {
+  it("uses an immediate public section glide assist instead of continuous CSS snapping", () => {
     const styles = readFileSync(resolve(process.cwd(), "app/globals.css"), "utf8");
     const routeShellSource = readFileSync(resolve(process.cwd(), "app/route-shell.tsx"), "utf8");
     const scrollAssistSource = readFileSync(
@@ -1219,10 +1219,15 @@ describe("public page shells", () => {
     expect(scrollAssistSource).toContain("PUBLIC_SECTION_SCROLL_ASSIST_SELECTOR");
     expect(scrollAssistSource).toContain("(prefers-reduced-motion: reduce)");
     expect(scrollAssistSource).toContain("(min-width: 901px)");
-    expect(scrollAssistSource).toContain("SETTLE_DELAY_MS = 180");
-    expect(scrollAssistSource).toContain("behavior: \"smooth\"");
-    expect(scrollAssistSource).toContain("window.addEventListener(\"scroll\", scheduleAssist");
-    expect(scrollAssistSource).toContain("window.addEventListener(\"wheel\", cancelAssist");
+    expect(scrollAssistSource).toContain("GLIDE_DURATION_MS = 620");
+    expect(scrollAssistSource).toContain("WHEEL_DELTA_THRESHOLD = 6");
+    expect(scrollAssistSource).toContain("CURRENT_SECTION_TOLERANCE_PX = 48");
+    expect(scrollAssistSource).toContain("window.addEventListener(\"wheel\", handleWheel");
+    expect(scrollAssistSource).toContain("passive: false");
+    expect(scrollAssistSource).toContain("event.preventDefault()");
+    expect(scrollAssistSource).toContain("window.requestAnimationFrame(step)");
+    expect(scrollAssistSource).toContain("easeOutCubic");
+    expect(scrollAssistSource).toContain("getScrollableAncestor");
     expect(scrollAssistSource).toContain(".stitch-setups-grid-section");
     expect(styles).not.toContain("scroll-snap-type: y proximity");
     expect(styles).not.toContain("scroll-snap-align: center");

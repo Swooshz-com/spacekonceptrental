@@ -5,11 +5,15 @@ import { useEffect } from "react";
 export const PUBLIC_SECTION_SCROLL_ASSIST_SELECTOR =
   ".site-main > :is(.stitch-home-hero, .stitch-catalogue-hero, .stitch-setups-hero, .stitch-setups-feature-section, .stitch-setups-grid-section, .stitch-about-hero, .stitch-quote-hero, .stitch-legal-hero, .stitch-editorial-hero, .stitch-section)";
 
-const SETTLE_DELAY_MS = 180;
-const ASSIST_LOCK_MS = 700;
-const MAX_DISTANCE_RATIO = 0.18;
-const MAX_DISTANCE_PX = 180;
-const MIN_DISTANCE_PX = 12;
+const GLIDE_DURATION_MS = 620;
+const ASSIST_LOCK_MS = 180;
+const WHEEL_DELTA_THRESHOLD = 6;
+const CURRENT_SECTION_TOLERANCE_PX = 48;
+const INNER_SCROLL_EDGE_TOLERANCE_PX = 2;
+
+function easeOutCubic(progress: number) {
+  return 1 - Math.pow(1 - progress, 3);
+}
 
 function isTextEntryActive() {
   const active = document.activeElement;
@@ -26,121 +30,219 @@ function isTextEntryActive() {
   );
 }
 
+function canScrollInDirection(element: HTMLElement, deltaY: number) {
+  if (deltaY > 0) {
+    return (
+      element.scrollTop + element.clientHeight <
+      element.scrollHeight - INNER_SCROLL_EDGE_TOLERANCE_PX
+    );
+  }
+
+  return element.scrollTop > INNER_SCROLL_EDGE_TOLERANCE_PX;
+}
+
+function getScrollableAncestor(target: EventTarget | null, deltaY: number) {
+  if (!(target instanceof Element)) {
+    return null;
+  }
+
+  let element: HTMLElement | null =
+    target instanceof HTMLElement ? target : target.parentElement;
+
+  while (
+    element &&
+    element !== document.body &&
+    element !== document.documentElement
+  ) {
+    const style = window.getComputedStyle(element);
+    const scrollableY =
+      style.overflowY === "auto" ||
+      style.overflowY === "scroll" ||
+      style.overflowY === "overlay";
+
+    if (
+      scrollableY &&
+      element.scrollHeight > element.clientHeight &&
+      canScrollInDirection(element, deltaY)
+    ) {
+      return element;
+    }
+
+    element = element.parentElement;
+  }
+
+  return null;
+}
+
+function getHeaderOffset() {
+  const header = document.querySelector<HTMLElement>(".stitch-site-header");
+
+  return header?.getBoundingClientRect().height ?? 72;
+}
+
 function getViewportCenter(headerOffset: number) {
   return headerOffset + (window.innerHeight - headerOffset) / 2;
+}
+
+function getMaxScrollTop() {
+  const page = document.documentElement;
+
+  return Math.max(0, page.scrollHeight - window.innerHeight);
+}
+
+function getSectionTargetTop(element: HTMLElement, headerOffset: number) {
+  const rect = element.getBoundingClientRect();
+  const viewportCenter = getViewportCenter(headerOffset);
+  const targetTop = window.scrollY + rect.top + rect.height / 2 - viewportCenter;
+
+  return Math.min(Math.max(0, targetTop), getMaxScrollTop());
+}
+
+function getSectionTargets() {
+  const headerOffset = getHeaderOffset();
+
+  return Array.from(
+    document.querySelectorAll<HTMLElement>(PUBLIC_SECTION_SCROLL_ASSIST_SELECTOR)
+  )
+    .map((element) => ({
+      element,
+      targetTop: getSectionTargetTop(element, headerOffset)
+    }))
+    .sort((first, second) => first.targetTop - second.targetTop);
+}
+
+function getTargetForWheel(deltaY: number) {
+  const currentTop = window.scrollY;
+  const targets = getSectionTargets();
+
+  if (deltaY > 0) {
+    return (
+      targets.find(
+        ({ targetTop }) =>
+          targetTop > currentTop + CURRENT_SECTION_TOLERANCE_PX
+      )?.targetTop ?? null
+    );
+  }
+
+  return (
+    [...targets]
+      .reverse()
+      .find(
+        ({ targetTop }) =>
+          targetTop < currentTop - CURRENT_SECTION_TOLERANCE_PX
+      )?.targetTop ?? null
+  );
 }
 
 export default function PublicSectionScrollAssist() {
   useEffect(() => {
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
     const desktopViewport = window.matchMedia("(min-width: 901px)");
-    let settleTimer: number | undefined;
+    const wheelListenerOptions: AddEventListenerOptions = { passive: false };
     let unlockTimer: number | undefined;
+    let animationFrame: number | undefined;
     let assistLocked = false;
 
-    function clearTimers() {
-      if (settleTimer) {
-        window.clearTimeout(settleTimer);
-        settleTimer = undefined;
-      }
-
+    function clearGlide() {
       if (unlockTimer) {
         window.clearTimeout(unlockTimer);
         unlockTimer = undefined;
       }
+
+      if (animationFrame) {
+        window.cancelAnimationFrame(animationFrame);
+        animationFrame = undefined;
+      }
+
+      assistLocked = false;
     }
 
-    function nearestCenteredSection() {
-      const header = document.querySelector<HTMLElement>(".stitch-site-header");
-      const headerOffset = header?.getBoundingClientRect().height ?? 72;
-      const viewportCenter = getViewportCenter(headerOffset);
-      const maxDistance = Math.min(window.innerHeight * MAX_DISTANCE_RATIO, MAX_DISTANCE_PX);
-      const sections = Array.from(
-        document.querySelectorAll<HTMLElement>(PUBLIC_SECTION_SCROLL_ASSIST_SELECTOR)
-      );
+    function glideTo(targetTop: number) {
+      if (unlockTimer) {
+        window.clearTimeout(unlockTimer);
+        unlockTimer = undefined;
+      }
 
-      return sections.reduce<{ element: HTMLElement; distance: number } | null>(
-        (nearest, element) => {
-          const rect = element.getBoundingClientRect();
+      if (animationFrame) {
+        window.cancelAnimationFrame(animationFrame);
+        animationFrame = undefined;
+      }
 
-          if (rect.bottom <= headerOffset || rect.top >= window.innerHeight) {
-            return nearest;
-          }
+      const startTop = window.scrollY;
+      const distance = targetTop - startTop;
 
-          const distance = rect.top + rect.height / 2 - viewportCenter;
-          const absoluteDistance = Math.abs(distance);
+      if (Math.abs(distance) < 1) {
+        assistLocked = false;
+        return;
+      }
 
-          if (absoluteDistance < MIN_DISTANCE_PX || absoluteDistance > maxDistance) {
-            return nearest;
-          }
+      const startTime = window.performance.now();
+      assistLocked = true;
 
-          if (!nearest || absoluteDistance < Math.abs(nearest.distance)) {
-            return { element, distance };
-          }
+      function step(now: number) {
+        const progress = Math.min((now - startTime) / GLIDE_DURATION_MS, 1);
+        const easedProgress = easeOutCubic(progress);
 
-          return nearest;
-        },
-        null
-      );
+        window.scrollTo({
+          top: startTop + distance * easedProgress,
+          left: 0
+        });
+
+        if (progress < 1 && assistLocked) {
+          animationFrame = window.requestAnimationFrame(step);
+          return;
+        }
+
+        animationFrame = undefined;
+        unlockTimer = window.setTimeout(() => {
+          assistLocked = false;
+        }, ASSIST_LOCK_MS);
+      }
+
+      animationFrame = window.requestAnimationFrame(step);
     }
 
-    function assistScroll() {
+    function handleWheel(event: WheelEvent) {
+      if (assistLocked) {
+        event.preventDefault();
+        return;
+      }
+
       if (
-        assistLocked ||
+        event.defaultPrevented ||
         reducedMotion.matches ||
         !desktopViewport.matches ||
-        isTextEntryActive()
+        isTextEntryActive() ||
+        Math.abs(event.deltaY) < WHEEL_DELTA_THRESHOLD ||
+        Math.abs(event.deltaY) < Math.abs(event.deltaX) ||
+        getScrollableAncestor(event.target, event.deltaY)
       ) {
         return;
       }
 
-      const nearest = nearestCenteredSection();
+      const targetTop = getTargetForWheel(event.deltaY);
 
-      if (!nearest) {
+      if (targetTop === null) {
         return;
       }
 
-      assistLocked = true;
-      window.scrollTo({
-        top: Math.max(0, window.scrollY + nearest.distance),
-        behavior: "smooth"
-      });
-
-      unlockTimer = window.setTimeout(() => {
-        assistLocked = false;
-      }, ASSIST_LOCK_MS);
+      event.preventDefault();
+      glideTo(targetTop);
     }
 
-    function scheduleAssist() {
-      if (assistLocked || reducedMotion.matches || !desktopViewport.matches) {
-        return;
-      }
-
-      if (settleTimer) {
-        window.clearTimeout(settleTimer);
-      }
-
-      settleTimer = window.setTimeout(() => {
-        window.requestAnimationFrame(assistScroll);
-      }, SETTLE_DELAY_MS);
-    }
-
-    function cancelAssist() {
-      clearTimers();
-      assistLocked = false;
-    }
-
-    window.addEventListener("scroll", scheduleAssist, { passive: true });
-    window.addEventListener("wheel", cancelAssist, { passive: true });
-    window.addEventListener("touchstart", cancelAssist, { passive: true });
-    window.addEventListener("keydown", cancelAssist);
+    window.addEventListener("wheel", handleWheel, wheelListenerOptions);
+    window.addEventListener("touchstart", clearGlide, { passive: true });
+    window.addEventListener("keydown", clearGlide);
+    reducedMotion.addEventListener("change", clearGlide);
+    desktopViewport.addEventListener("change", clearGlide);
 
     return () => {
-      clearTimers();
-      window.removeEventListener("scroll", scheduleAssist);
-      window.removeEventListener("wheel", cancelAssist);
-      window.removeEventListener("touchstart", cancelAssist);
-      window.removeEventListener("keydown", cancelAssist);
+      clearGlide();
+      window.removeEventListener("wheel", handleWheel, wheelListenerOptions);
+      window.removeEventListener("touchstart", clearGlide);
+      window.removeEventListener("keydown", clearGlide);
+      reducedMotion.removeEventListener("change", clearGlide);
+      desktopViewport.removeEventListener("change", clearGlide);
     };
   }, []);
 
