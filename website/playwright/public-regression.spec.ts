@@ -131,6 +131,35 @@ test.describe("post-demo-removal public/admin regression smoke", () => {
     );
     expect(heroMetrics.width).toBeGreaterThan(heroMetrics.viewportWidth * 0.88);
 
+    const catalogueNavLink = page.locator('.stitch-desktop-nav a[href="/catalogue"]');
+    const quoteIndicator = page.locator(".stitch-header-actions > .stitch-quote-indicator");
+    const navBeforeHover = await catalogueNavLink.evaluate((element) => ({
+      underlineOpacity: getComputedStyle(element, "::after").opacity,
+      transform: getComputedStyle(element).transform
+    }));
+    expect(navBeforeHover).toEqual({
+      transform: "none",
+      underlineOpacity: "0"
+    });
+
+    await catalogueNavLink.hover();
+    await page.waitForTimeout(260);
+    const navAfterHover = await catalogueNavLink.evaluate((element) => ({
+      underlineOpacity: getComputedStyle(element, "::after").opacity,
+      transform: getComputedStyle(element).transform
+    }));
+    expect(navAfterHover.underlineOpacity).toBe("1");
+    expect(navAfterHover.transform).not.toBe("none");
+
+    await quoteIndicator.hover();
+    await page.waitForTimeout(260);
+    const quoteAfterHover = await quoteIndicator.evaluate((element) => ({
+      boxShadow: getComputedStyle(element).boxShadow,
+      transform: getComputedStyle(element).transform
+    }));
+    expect(quoteAfterHover.boxShadow).not.toBe("none");
+    expect(quoteAfterHover.transform).not.toBe("none");
+
     await page.getByRole("button", { name: /open chat/i }).click();
     await expect(page.locator(".chat-widget-panel")).toBeVisible();
     await expect(page.getByText(/what event are you planning/i)).toBeVisible();
