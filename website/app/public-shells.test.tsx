@@ -1221,11 +1221,13 @@ describe("public page shells", () => {
     expect(scrollAssistSource).toContain("(min-width: 901px)");
     expect(scrollAssistSource).toContain("ASSIST_LOCK_MS = 780");
     expect(scrollAssistSource).toContain("WHEEL_DELTA_THRESHOLD = 1");
+    expect(scrollAssistSource).toContain("MIN_TARGET_SECTION_HEIGHT_PX = 120");
     expect(scrollAssistSource).toContain("CURRENT_SECTION_TOLERANCE_PX = 48");
     expect(scrollAssistSource).toContain("window.addEventListener(\"wheel\", handleWheel");
     expect(scrollAssistSource).toContain("passive: false");
     expect(scrollAssistSource).toContain("event.preventDefault()");
     expect(scrollAssistSource).toContain("window.scrollTo({ top: targetTop, left: 0 })");
+    expect(scrollAssistSource).toContain("rect.height < MIN_TARGET_SECTION_HEIGHT_PX");
     expect(scrollAssistSource).toContain("getScrollableAncestor");
     expect(scrollAssistSource).toContain(".stitch-setups-grid-section");
     expect(styles).not.toContain("scroll-snap-type: y proximity");

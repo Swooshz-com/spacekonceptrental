@@ -9,6 +9,7 @@ const ASSIST_LOCK_MS = 780;
 const WHEEL_DELTA_THRESHOLD = 1;
 const CURRENT_SECTION_TOLERANCE_PX = 48;
 const INNER_SCROLL_EDGE_TOLERANCE_PX = 2;
+const MIN_TARGET_SECTION_HEIGHT_PX = 120;
 
 function isTextEntryActive() {
   const active = document.activeElement;
@@ -85,8 +86,7 @@ function getMaxScrollTop() {
   return Math.max(0, page.scrollHeight - window.innerHeight);
 }
 
-function getSectionTargetTop(element: HTMLElement, headerOffset: number) {
-  const rect = element.getBoundingClientRect();
+function getSectionTargetTop(rect: DOMRect, headerOffset: number) {
   const viewportCenter = getViewportCenter(headerOffset);
   const targetTop = window.scrollY + rect.top + rect.height / 2 - viewportCenter;
 
@@ -99,10 +99,20 @@ function getSectionTargets() {
   return Array.from(
     document.querySelectorAll<HTMLElement>(PUBLIC_SECTION_SCROLL_ASSIST_SELECTOR)
   )
-    .map((element) => ({
-      element,
-      targetTop: getSectionTargetTop(element, headerOffset)
-    }))
+    .flatMap((element) => {
+      const rect = element.getBoundingClientRect();
+
+      if (rect.width < 1 || rect.height < MIN_TARGET_SECTION_HEIGHT_PX) {
+        return [];
+      }
+
+      return [
+        {
+          element,
+          targetTop: getSectionTargetTop(rect, headerOffset)
+        }
+      ];
+    })
     .sort((first, second) => first.targetTop - second.targetTop);
 }
 
