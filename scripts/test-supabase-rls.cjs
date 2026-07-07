@@ -686,6 +686,9 @@ function assertNoRuntimeSupabaseUse() {
   const approvedPublicHeroReadFiles = new Set([
     'website/lib/hero/public-homepage-hero-repository.ts',
   ]);
+  const approvedPublicPageMediaReadFiles = new Set([
+    'website/lib/page-media/public-page-media-repository.ts',
+  ]);
   const approvedMediaUploadFiles = new Set([
     'website/lib/products/media/admin-product-image-upload-route.ts',
   ]);
@@ -886,6 +889,37 @@ function assertNoRuntimeSupabaseUse() {
           content,
           /updatedBy|updated_by/,
           `${relativePath} must not carry protected admin hero metadata into public content.`,
+        );
+        assertNoMatches(filePath, content, serverBlockedPatterns);
+        assertNoMatches(filePath, content, blockedCatalogueTablePatterns);
+        return;
+      }
+
+      if (approvedPublicPageMediaReadFiles.has(relativePath)) {
+        assert.match(
+          content,
+          /import\s+["']server-only["'];/,
+          `${relativePath} must be marked server-only.`,
+        );
+        assert.match(
+          content,
+          /createServerSupabaseClient/,
+          `${relativePath} must use the approved server Supabase wrapper.`,
+        );
+        assert.match(
+          content,
+          /rpc\(["']get_public_page_media["']/,
+          `${relativePath} must use the trusted public page media RPC.`,
+        );
+        assert.doesNotMatch(
+          content,
+          /from\(["']public_page_media["']\)/,
+          `${relativePath} must not read the public page media base table directly.`,
+        );
+        assert.doesNotMatch(
+          content,
+          /updatedBy|updated_by/,
+          `${relativePath} must not carry protected admin page media metadata into public content.`,
         );
         assertNoMatches(filePath, content, serverBlockedPatterns);
         assertNoMatches(filePath, content, blockedCatalogueTablePatterns);
