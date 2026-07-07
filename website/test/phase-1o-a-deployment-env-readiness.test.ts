@@ -193,6 +193,7 @@ describe("Phase 1O-A deployment environment readiness", () => {
     expect(envReadingSources.map(({ filePath }) => filePath).sort()).toEqual([
       "website/lib/catalogue/catalogue-repository.ts",
       "website/lib/hero/public-homepage-hero-repository.ts",
+      "website/lib/page-media/public-page-media-repository.ts",
       "website/lib/quote/quote-email-delivery-log-repository.ts",
       "website/lib/quote/quote-repository.ts",
       "website/lib/server-runtime-config.ts",

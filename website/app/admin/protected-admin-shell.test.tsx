@@ -575,6 +575,21 @@ describe("protected admin shell", () => {
       screen.getByRole("button", { name: /save hero content/i })
     ).toBeEnabled();
     expect(
+      screen.getByRole("heading", { name: /about story media/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("textbox", { name: /about story image url/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("textbox", { name: /about story image alt/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("checkbox", { name: /publish about story image/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /save about story image/i })
+    ).toBeEnabled();
+    expect(
       screen.queryByRole("button", { name: /replace hero image/i })
     ).not.toBeInTheDocument();
     unmountHero();

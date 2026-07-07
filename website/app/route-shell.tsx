@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import type { MouseEvent, ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -16,10 +16,37 @@ function isAdminRoute(pathname: string | null) {
 }
 
 function SiteHeader() {
+  const pathname = usePathname();
+
+  function handleBrandClick(event: MouseEvent<HTMLAnchorElement>) {
+    if (
+      pathname !== "/" ||
+      event.defaultPrevented ||
+      event.button !== 0 ||
+      event.metaKey ||
+      event.ctrlKey ||
+      event.shiftKey ||
+      event.altKey
+    ) {
+      return;
+    }
+
+    event.preventDefault();
+    const root = document.documentElement;
+    const previousScrollBehavior = root.style.scrollBehavior;
+
+    root.style.scrollBehavior = "auto";
+    window.scrollTo({ top: 0, left: 0 });
+    requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, left: 0 });
+      root.style.scrollBehavior = previousScrollBehavior;
+    });
+  }
+
   return (
     <header className="stitch-site-header">
       <div className="stitch-site-header__inner">
-        <Link className="stitch-brand" href="/">
+        <Link className="stitch-brand" href="/" onClick={handleBrandClick}>
           SpaceKonceptRental
         </Link>
         <SiteDesktopNav />
