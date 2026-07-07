@@ -1206,6 +1206,47 @@ describe("public page shells", () => {
     expect(formErrorRule).toMatch(/font-size:\s*0\.86rem\s*!important;/);
   });
 
+  it("uses an immediate public section glide assist instead of continuous CSS snapping", () => {
+    const styles = readFileSync(resolve(process.cwd(), "app/globals.css"), "utf8");
+    const routeShellSource = readFileSync(resolve(process.cwd(), "app/route-shell.tsx"), "utf8");
+    const scrollAssistSource = readFileSync(
+      resolve(process.cwd(), "components/PublicSectionScrollAssist.tsx"),
+      "utf8"
+    );
+
+    expect(routeShellSource).toContain("import PublicSectionScrollAssist");
+    expect(routeShellSource).toContain("<PublicSectionScrollAssist />");
+    expect(scrollAssistSource).toContain("PUBLIC_SECTION_SCROLL_ASSIST_SELECTOR");
+    expect(scrollAssistSource).toContain("(prefers-reduced-motion: reduce)");
+    expect(scrollAssistSource).toContain("(min-width: 901px)");
+    expect(scrollAssistSource).toContain("ASSIST_LOCK_MS = 780");
+    expect(scrollAssistSource).toContain("WHEEL_DELTA_THRESHOLD = 1");
+    expect(scrollAssistSource).toContain("MIN_TARGET_SECTION_HEIGHT_PX = 120");
+    expect(scrollAssistSource).toContain("CURRENT_SECTION_TOLERANCE_PX = 48");
+    expect(scrollAssistSource).toContain("window.addEventListener(\"wheel\", handleWheel");
+    expect(scrollAssistSource).toContain("passive: false");
+    expect(scrollAssistSource).toContain("event.preventDefault()");
+    const modifierGuardIndex = scrollAssistSource.indexOf("event.ctrlKey ||");
+    const assistLockIndex = scrollAssistSource.indexOf("if (assistLocked)");
+    const firstPreventDefaultIndex = scrollAssistSource.indexOf("event.preventDefault()");
+
+    expect(modifierGuardIndex).toBeGreaterThan(-1);
+    expect(modifierGuardIndex).toBeLessThan(assistLockIndex);
+    expect(modifierGuardIndex).toBeLessThan(firstPreventDefaultIndex);
+    expect(scrollAssistSource.slice(modifierGuardIndex, assistLockIndex)).toContain("event.metaKey");
+    expect(scrollAssistSource.slice(modifierGuardIndex, assistLockIndex)).toContain("event.altKey");
+    expect(scrollAssistSource.slice(modifierGuardIndex, assistLockIndex)).toContain("event.shiftKey");
+    expect(scrollAssistSource.slice(modifierGuardIndex, assistLockIndex)).toContain("return;");
+    expect(scrollAssistSource).toContain("window.scrollTo({ top: targetTop, left: 0 })");
+    expect(scrollAssistSource).toContain("window.scrollY + rect.top - headerOffset");
+    expect(scrollAssistSource).not.toContain("rect.height / 2");
+    expect(scrollAssistSource).toContain("rect.height < MIN_TARGET_SECTION_HEIGHT_PX");
+    expect(scrollAssistSource).toContain("getScrollableAncestor");
+    expect(scrollAssistSource).toContain(".stitch-setups-grid-section");
+    expect(styles).not.toContain("scroll-snap-type: y proximity");
+    expect(styles).not.toContain("scroll-snap-align: center");
+  });
+
   it("keeps contact content on shared card architecture and shared action font sizing", () => {
     const styles = readFileSync(resolve(process.cwd(), "app/globals.css"), "utf8");
     const publicStitchSource = readFileSync(resolve(process.cwd(), "components/PublicStitch.tsx"), "utf8");
