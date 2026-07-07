@@ -36,7 +36,7 @@
   font-family: var(--admin-sans);
   min-height: 100vh;
   overflow-x: hidden;
-  padding: 14px 16px 22px;
+  padding: 0;
 }
 
 .workspace *,
@@ -48,21 +48,23 @@
 
 .workspaceFrame {
   display: grid;
-  gap: 14px;
+  gap: 0;
   margin: 0 auto;
-  max-width: 1240px;
+  max-width: none;
   width: 100%;
 }
 
 /* ---------- Topbar ---------- */
 .topbar {
   align-items: center;
+  background: rgba(255, 253, 248, 0.82);
   border-bottom: 1px solid var(--admin-line-strong);
   color: var(--admin-ink);
   display: flex;
   gap: 16px;
   justify-content: space-between;
-  padding: 4px 2px 12px;
+  min-height: 84px;
+  padding: 22px 60px;
 }
 
 .brandCluster {
@@ -80,9 +82,9 @@
 .brandTitle {
   color: var(--admin-ink);
   font-family: var(--admin-serif) !important;
-  font-size: 1.3rem !important;
+  font-size: 2rem !important;
   font-weight: 500;
-  letter-spacing: 0.2px !important;
+  letter-spacing: 0 !important;
   line-height: 1.1;
   margin: 0;
   max-width: 100%;
@@ -91,16 +93,16 @@
 
 .workspaceBadge {
   align-items: center;
-  background: var(--admin-olive-soft);
-  border: 1px solid #d7ddc8;
-  border-radius: 999px;
-  color: var(--admin-olive);
+  background: #e5e1da;
+  border: 1px solid #dfd9cf;
+  border-radius: 2px;
+  color: var(--admin-charcoal);
   display: inline-flex;
-  font-size: 0.66rem;
+  font-size: 0.82rem;
   font-weight: 650;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.09em;
   line-height: 1;
-  padding: 4px 9px;
+  padding: 7px 12px;
   text-transform: uppercase;
 }
 
@@ -118,11 +120,11 @@
   align-items: center;
   border-radius: 8px;
   display: inline-flex;
-  font-size: 0.8rem;
+  font-size: 0.95rem;
   font-weight: 600;
   justify-content: center;
-  min-height: 34px;
-  padding: 0 13px;
+  min-height: 40px;
+  padding: 0 20px;
   white-space: nowrap;
 }
 
@@ -200,42 +202,67 @@
 .workspaceBody {
   align-items: start;
   display: grid;
-  gap: 26px;
-  grid-template-columns: 208px minmax(0, 1fr);
+  gap: 0;
+  grid-template-columns: 350px minmax(0, 1fr);
+  min-height: calc(100vh - 84px);
 }
 
 .sidebar {
+  align-content: start;
+  background: rgba(255, 253, 248, 0.42);
+  border-right: 1px solid var(--admin-line-strong);
   display: grid;
-  gap: 3px;
+  gap: 28px;
+  min-height: calc(100vh - 84px);
+  padding: 64px 40px;
   position: sticky;
-  top: 14px;
+  top: 0;
 }
 
 .sidebarLabel {
   color: var(--admin-muted);
   font-size: 0.66rem;
   font-weight: 650;
-  letter-spacing: 0.08em;
-  margin: 0 0 4px;
-  padding: 0 10px;
+  letter-spacing: 0.14em;
+  margin: 0;
+  padding: 0;
   text-transform: uppercase;
 }
 
 .navList {
   display: grid;
-  gap: 2px;
+  gap: 10px;
 }
 
 .navLink {
   align-items: center;
   border: 1px solid transparent;
-  border-radius: 8px;
+  border-radius: 4px;
   color: var(--admin-muted);
   display: flex;
   gap: 8px;
   justify-content: space-between;
-  padding: 9px 11px;
+  min-height: 58px;
+  padding: 0 24px;
   transition: background 0.12s ease, color 0.12s ease;
+}
+
+.navItemInner {
+  align-items: center;
+  display: inline-flex;
+  gap: 16px;
+}
+
+.navIcon {
+  color: currentColor;
+  display: inline-flex;
+  height: 24px;
+  width: 24px;
+}
+
+.navIcon svg {
+  height: 100%;
+  width: 100%;
 }
 
 .navLink:hover,
@@ -246,15 +273,15 @@
 
 .navLinkActive,
 .navLinkActive:hover {
-  background: var(--admin-olive-soft);
-  border-color: #dbe0cd;
+  background: #e4ded4;
+  border-color: #e4ded4;
   color: var(--admin-charcoal);
-  box-shadow: inset 2px 0 0 var(--admin-olive);
+  box-shadow: none;
 }
 
 .navLabel {
-  font-size: 0.88rem;
-  font-weight: 600;
+  font-size: 1rem;
+  font-weight: 520;
 }
 
 .navMeta {
@@ -263,16 +290,17 @@
 
 .mainPanel {
   display: grid;
-  gap: 18px;
-  max-width: 1000px;
+  gap: 34px;
+  max-width: 1130px;
+  padding: 140px 60px 96px;
 }
 
 /* ---------- Page intro ---------- */
 .pageIntro {
   border-bottom: 1px solid var(--admin-line);
   display: grid;
-  gap: 5px;
-  padding: 0 0 14px;
+  gap: 14px;
+  padding: 0 0 34px;
 }
 
 .pageIntro p,
@@ -283,10 +311,10 @@
 .pageIntro h2 {
   color: var(--admin-ink);
   font-family: var(--admin-serif) !important;
-  font-size: 1.66rem !important;
+  font-size: 3rem !important;
   font-weight: 500 !important;
-  letter-spacing: 0.2px !important;
-  line-height: 1.08;
+  letter-spacing: 0 !important;
+  line-height: 1.02;
 }
 
 .pageIntro p {
@@ -890,11 +918,11 @@ button.adminBtnGhost:disabled {
 }
 
 .workspace .brandTitle {
-  font-size: 1.32rem !important;
+  font-size: 2rem !important;
 }
 
 .workspace .pageIntro h2 {
-  font-size: 1.62rem !important;
+  font-size: 3rem !important;
 }
 
 .workspace .emptyStatePanel h2 {
