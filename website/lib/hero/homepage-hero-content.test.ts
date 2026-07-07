@@ -4,7 +4,8 @@ import {
   DEFAULT_HOMEPAGE_HERO_CONTENT,
   mapAdminHomepageHeroRow,
   mapHomepageHeroRow,
-  validateHomepageHeroContentInput
+  validateHomepageHeroContentInput,
+  validateHomepageHeroImageInput
 } from "./homepage-hero-content";
 
 describe("homepage hero content contract", () => {
@@ -43,9 +44,9 @@ describe("homepage hero content contract", () => {
 
     expect(hero).toEqual({
       source: "supabase",
-      eyebrow: "Owner managed",
-      headline: "Stage the first impression",
-      body: "Updated protected-admin homepage story.",
+      eyebrow: DEFAULT_HOMEPAGE_HERO_CONTENT.eyebrow,
+      headline: DEFAULT_HOMEPAGE_HERO_CONTENT.headline,
+      body: DEFAULT_HOMEPAGE_HERO_CONTENT.body,
       primaryCtaLabel: "Request Quote",
       primaryCtaHref: "/quote",
       secondaryCtaLabel: "Browse Catalogue",
@@ -78,7 +79,7 @@ describe("homepage hero content contract", () => {
     expect(mapHomepageHeroRow(row)).toBeNull();
     expect(mapAdminHomepageHeroRow(row)).toMatchObject({
       source: "supabase",
-      headline: "Draft homepage story",
+      headline: DEFAULT_HOMEPAGE_HERO_CONTENT.headline,
       imageUrl: "https://cdn.example.test/draft-hero.jpg",
       isEnabled: false,
       updatedAt: "2026-07-03T10:00:00.000Z",
@@ -110,6 +111,37 @@ describe("homepage hero content contract", () => {
     expect(result).toEqual({
       ok: false,
       error: expectedError
+    });
+  });
+
+  it("validates owner-managed hero image metadata without requiring a raw image URL", () => {
+    expect(
+      validateHomepageHeroImageInput(
+        {
+          imageAlt: "Uploaded lounge hero",
+          isEnabled: true
+        },
+        {
+          imageUrlRequired: false
+        }
+      )
+    ).toEqual({
+      ok: true,
+      image: {
+        imageAlt: "Uploaded lounge hero",
+        isEnabled: true
+      }
+    });
+
+    expect(
+      validateHomepageHeroImageInput({
+        imageUrl: "http://cdn.example.test/hero.jpg",
+        imageAlt: "Uploaded lounge hero",
+        isEnabled: true
+      })
+    ).toEqual({
+      ok: false,
+      error: "image_url_invalid"
     });
   });
 });

@@ -21,6 +21,12 @@ export type AdminHomepageHeroContent = HomepageHeroContent & {
 
 export type HomepageHeroContentInput = Omit<HomepageHeroContent, "source">;
 
+export type HomepageHeroImageInput = {
+  imageUrl?: string;
+  imageAlt: string;
+  isEnabled: boolean;
+};
+
 export type HomepageHeroValidationError =
   | "eyebrow_invalid"
   | "headline_required"
@@ -41,6 +47,21 @@ export type HomepageHeroValidationResult =
   | {
       ok: false;
       error: HomepageHeroValidationError;
+    };
+
+export type HomepageHeroImageValidationError =
+  | "image_url_invalid"
+  | "image_alt_required"
+  | "is_enabled_invalid";
+
+export type HomepageHeroImageValidationResult =
+  | {
+      ok: true;
+      image: HomepageHeroImageInput;
+    }
+  | {
+      ok: false;
+      error: HomepageHeroImageValidationError;
     };
 
 export type HomepageHeroRow = {
@@ -200,6 +221,38 @@ export function validateHomepageHeroContentInput(
   };
 }
 
+export function validateHomepageHeroImageInput(
+  input: Record<string, unknown>,
+  options: {
+    imageUrlRequired?: boolean;
+  } = {}
+): HomepageHeroImageValidationResult {
+  const imageUrl = text(input.imageUrl);
+  const imageAlt = text(input.imageAlt);
+  const imageUrlRequired = options.imageUrlRequired ?? true;
+
+  if ((imageUrlRequired || imageUrl) && !isSafeImageUrl(imageUrl)) {
+    return { ok: false, error: "image_url_invalid" };
+  }
+
+  if (!bounded(imageAlt, 240)) {
+    return { ok: false, error: "image_alt_required" };
+  }
+
+  if (typeof input.isEnabled !== "boolean") {
+    return { ok: false, error: "is_enabled_invalid" };
+  }
+
+  return {
+    ok: true,
+    image: {
+      ...(imageUrl ? { imageUrl } : {}),
+      imageAlt,
+      isEnabled: input.isEnabled
+    }
+  };
+}
+
 export function mapHomepageHeroRow(
   row: PublicHomepageHeroRow | null | undefined
 ): HomepageHeroContent | null {
@@ -207,14 +260,7 @@ export function mapHomepageHeroRow(
     return null;
   }
 
-  const validation = validateHomepageHeroContentInput({
-    eyebrow: rowText(row, "eyebrow") ?? "",
-    headline: rowText(row, "headline") ?? "",
-    body: rowText(row, "body") ?? "",
-    primaryCtaLabel: rowText(row, "primary_cta_label") ?? "",
-    primaryCtaHref: rowText(row, "primary_cta_href") ?? "",
-    secondaryCtaLabel: rowText(row, "secondary_cta_label") ?? "",
-    secondaryCtaHref: rowText(row, "secondary_cta_href") ?? "",
+  const validation = validateHomepageHeroImageInput({
     imageUrl: rowText(row, "image_url") ?? "",
     imageAlt: rowText(row, "image_alt") ?? "",
     isEnabled: true
@@ -225,8 +271,11 @@ export function mapHomepageHeroRow(
   }
 
   return {
+    ...DEFAULT_HOMEPAGE_HERO_CONTENT,
     source: "supabase",
-    ...validation.content
+    imageUrl: validation.image.imageUrl ?? DEFAULT_HOMEPAGE_HERO_CONTENT.imageUrl,
+    imageAlt: validation.image.imageAlt,
+    isEnabled: true
   };
 }
 
@@ -237,14 +286,7 @@ export function mapAdminHomepageHeroRow(
     return null;
   }
 
-  const validation = validateHomepageHeroContentInput({
-    eyebrow: rowText(row, "eyebrow") ?? "",
-    headline: rowText(row, "headline") ?? "",
-    body: rowText(row, "body") ?? "",
-    primaryCtaLabel: rowText(row, "primary_cta_label") ?? "",
-    primaryCtaHref: rowText(row, "primary_cta_href") ?? "",
-    secondaryCtaLabel: rowText(row, "secondary_cta_label") ?? "",
-    secondaryCtaHref: rowText(row, "secondary_cta_href") ?? "",
+  const validation = validateHomepageHeroImageInput({
     imageUrl: rowText(row, "image_url") ?? "",
     imageAlt: rowText(row, "image_alt") ?? "",
     isEnabled: row.is_enabled
@@ -255,8 +297,11 @@ export function mapAdminHomepageHeroRow(
   }
 
   return {
+    ...DEFAULT_HOMEPAGE_HERO_CONTENT,
     source: "supabase",
-    ...validation.content,
+    imageUrl: validation.image.imageUrl ?? DEFAULT_HOMEPAGE_HERO_CONTENT.imageUrl,
+    imageAlt: validation.image.imageAlt,
+    isEnabled: validation.image.isEnabled,
     ...(typeof row.updated_at === "string" && row.updated_at.trim()
       ? { updatedAt: row.updated_at.trim() }
       : {}),

@@ -220,7 +220,7 @@ function workspaceTitle(view: AdminShellView) {
 function workspaceDescription(view: AdminShellView) {
   const descriptions: Record<AdminNavigationKind, string> = {
     home: "Manage public website content: hero image, catalogue records, setup presentation, enquiry recipient, and delivery visibility.",
-    hero: "Manage the public homepage hero content and image reference.",
+    hero: "Manage the public homepage hero image. Homepage copy stays code-managed.",
     catalogue: "Manage catalogue items, categories, display order, published status, and listing images.",
     setups: "Review the public setups presentation, which derives from published catalogue records on /listings.",
     "enquiry-email": "Check the quote enquiry email handoff status.",
@@ -319,7 +319,7 @@ function AdminOperationsNavigation({
 }) {
   const activeKind = activeNavigationKind(view);
   return (
-    <nav className={styles.navList} aria-label="Admin workspace sections">
+    <nav className={styles.navList} aria-label="Admin sections">
       {adminNavigationItems.map((item) => {
         const isActive = item.kind === activeKind;
 
@@ -620,8 +620,8 @@ function AdminHeroOperations({
   if (hero.status === "unavailable") {
     return (
       <AdminUnavailableWorkspace
-        title="Homepage hero content"
-        description="Hero content is temporarily unavailable. The protected Hero route remains in place while existing reads recover."
+        title="Homepage hero image"
+        description="Hero image data is temporarily unavailable. The protected Hero route remains in place while existing reads recover."
       />
     );
   }
@@ -966,7 +966,7 @@ function AdminStatusMessage({
       <div className={`${styles.statusCard} ${styles.statusPanel}`}>
         <p className="eyebrow">Protected admin</p>
         <h1>Admin sign in required</h1>
-        <p>Sign in to continue to the protected workspace.</p>
+        <p>Sign in to continue to SpaceKonceptRental Admin.</p>
         <AdminAccessRecoveryLinks signInLabel="Sign in" />
       </div>
     );
@@ -977,7 +977,7 @@ function AdminStatusMessage({
       <div className={`${styles.statusCard} ${styles.statusPanel} ${styles.statusPanelDenied}`}>
         <p className="eyebrow">Protected admin</p>
         <h1>Access denied</h1>
-        <p>Your account is signed in but not authorised for this workspace.</p>
+        <p>Your account is signed in but not authorised for SpaceKonceptRental Admin.</p>
         <AdminAccessRecoveryLinks />
       </div>
     );
@@ -1000,7 +1000,7 @@ function AdminStatusMessage({
         <div className={styles.brandCluster}>
           <div className={styles.brandLine}>
             <h1 className={styles.brandTitle}>SpaceKonceptRental Admin</h1>
-            <span className={styles.workspaceBadge}>Protected workspace</span>
+            <span className={styles.workspaceBadge}>Protected admin</span>
           </div>
         </div>
         <div className={styles.topbarActions}>
@@ -1026,7 +1026,7 @@ function AdminStatusMessage({
 
       <div className={styles.workspaceBody}>
         <aside className={styles.sidebar} aria-label="Admin sidebar">
-          <p className={styles.sidebarLabel}>Workspace</p>
+          <p className={styles.sidebarLabel}>SpaceKonceptRental Admin</p>
           <AdminOperationsNavigation view={view} />
         </aside>
         <main className={styles.mainPanel}>

@@ -125,11 +125,13 @@ Protected owner admin path:
   Inbox, old readiness/release-control pages, CRM-style controls, and ecommerce
   wording from the owner workspace.
 - Hero is no longer a disabled future-control placeholder. Approved
-  owner/admin users can edit workspace-scoped homepage hero text, CTA hrefs,
-  image URL/reference, alt text, and enabled state through the protected Hero
-  page.
-- Hero media remains URL/reference-based only. Raw file upload, storage policy
-  work, image transformation, and media-provider integration remain deferred.
+  owner/admin users can preview the current workspace-scoped homepage hero
+  image, upload a replacement image, edit image alt text, and publish or
+  unpublish the hero image through the protected Hero page.
+- Hero text and CTA copy are code-owned for owner MVP and are not editable in
+  admin. Hero media now uses the dedicated protected `hero-media` Storage
+  boundary; image transformation and media-provider integration remain
+  deferred.
 - Catalogue remains the only owner workspace with listing/category/media
   management controls.
 - Setups remain derived from published catalogue records.

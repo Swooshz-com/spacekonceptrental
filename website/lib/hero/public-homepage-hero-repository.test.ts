@@ -39,7 +39,7 @@ describe("public homepage hero repository", () => {
     expect(hero).toEqual(DEFAULT_HOMEPAGE_HERO_CONTENT);
   });
 
-  it("reads enabled managed hero content through the public RPC for the trusted workspace", async () => {
+  it("reads enabled managed hero image through the public RPC while keeping copy code-owned", async () => {
     const { calls, supabase } = createMockSupabase({
       eyebrow: "Owner managed",
       headline: "Stage the first impression",
@@ -72,7 +72,7 @@ describe("public homepage hero repository", () => {
     ]);
     expect(hero).toMatchObject({
       source: "supabase",
-      headline: "Stage the first impression",
+      headline: DEFAULT_HOMEPAGE_HERO_CONTENT.headline,
       imageUrl: "https://cdn.example.test/hero.jpg"
     });
     expect(hero).not.toHaveProperty("updatedAt");
@@ -117,7 +117,8 @@ describe("public homepage hero repository", () => {
       })
     ).resolves.toMatchObject({
       source: "supabase",
-      headline: "Array-shaped managed hero"
+      headline: DEFAULT_HOMEPAGE_HERO_CONTENT.headline,
+      imageUrl: "https://cdn.example.test/hero.jpg"
     });
   });
 });

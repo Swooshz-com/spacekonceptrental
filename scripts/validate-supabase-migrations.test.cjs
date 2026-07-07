@@ -301,7 +301,7 @@ test('real migration directory passes static validation', () => {
   const result = runValidator(realMigrationsDir);
 
   assert.equal(result.status, 0, result.stdout + result.stderr);
-  assert.match(result.stdout, /checked 27 migration SQL file\(s\)/);
+  assert.match(result.stdout, /checked 28 migration SQL file\(s\)/);
 });
 
 test('real base schema migration creates the planned MVP tables', () => {
@@ -1809,6 +1809,81 @@ test('real migrations add workspace-scoped homepage hero content with protected 
   );
   assert.doesNotMatch(migration, /SUPABASE_SERVICE_ROLE|NEXT_PUBLIC|chat-config/i);
   assert.doesNotMatch(migration, /hubapi|hubspot api|n8n|pinecone|webhook|smtp|resend/i);
+  assert.doesNotMatch(migration, /checkout|payment|purchase|booking|reservation/i);
+});
+
+test('real migrations add protected hero media storage and image-only writes', () => {
+  const migrationFileName = '20260707130000_hero_media_storage_foundation.sql';
+  const migration = readRealMigration(migrationFileName);
+  const sql = normalizeSql(migration);
+
+  assert.match(
+    sql,
+    /insert into storage\.buckets \( id, name, public, file_size_limit, allowed_mime_types \) values \( 'hero-media', 'hero-media', true, 5242880, array\['image\/jpeg', 'image\/png', 'image\/webp', 'image\/avif'\] \)/,
+  );
+  assert.match(
+    sql,
+    /create or replace function public\.is_hero_media_object_path\( object_name text \)/,
+  );
+  assert.match(
+    sql,
+    /homepage-hero\/\[0-9a-f\]\{13\}/,
+  );
+  assert.match(
+    sql,
+    /create or replace function public\.is_hero_media_admin_object\( object_bucket text, object_name text \)/,
+  );
+  assert.match(
+    sql,
+    /object_bucket <> 'hero-media'/,
+  );
+  assert.match(
+    sql,
+    /public\.is_workspace_product_manager\( split_part\(object_name, '\/', 1\)::uuid \)/,
+  );
+  assert.match(
+    sql,
+    /create policy hero_media_admin_insert on storage\.objects for insert to authenticated with check \(/,
+  );
+  assert.match(
+    sql,
+    /public\.is_hero_media_admin_object\( storage\.objects\.bucket_id, storage\.objects\.name \)/,
+  );
+  assert.match(
+    sql,
+    /create or replace function public\.execute_admin_homepage_hero_image_write\( p_workspace_id uuid, p_payload jsonb \)/,
+  );
+  assert.match(sql, /security definer/);
+  assert.match(
+    sql,
+    /v_actor_id := public\.current_product_admin_user_id\(p_workspace_id\);/,
+  );
+  assert.match(
+    sql,
+    /grant execute on function public\.execute_admin_homepage_hero_image_write\(uuid, jsonb\) to authenticated;/,
+  );
+  assert.match(
+    sql,
+    /create or replace function public\.execute_admin_homepage_hero_write\( p_workspace_id uuid, p_payload jsonb \)/,
+  );
+  assert.match(
+    sql,
+    /from public\.execute_admin_homepage_hero_image_write\( p_workspace_id, jsonb_build_object\(/,
+  );
+  assert.match(
+    sql,
+    /copy and cta payload fields are ignored/i,
+  );
+  assert.doesNotMatch(
+    sql,
+    /grant execute on function public\.execute_admin_homepage_hero_image_write\(uuid, jsonb\) to anon/,
+  );
+  assert.doesNotMatch(migration, /hero_media_public_read/);
+  assert.doesNotMatch(migration, /for select to anon/);
+  assert.doesNotMatch(migration, /grant select on storage\.objects to anon/);
+  assert.doesNotMatch(migration, /for insert to anon/);
+  assert.doesNotMatch(migration, /image\/svg\+xml|svg/);
+  assert.doesNotMatch(migration, /service_role/i);
   assert.doesNotMatch(migration, /checkout|payment|purchase|booking|reservation/i);
 });
 

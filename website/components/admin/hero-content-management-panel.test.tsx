@@ -38,26 +38,36 @@ describe("hero content management panel", () => {
     vi.clearAllMocks();
   });
 
-  it("renders a protected admin form instead of a disabled hero placeholder", () => {
+  it("renders hero image management without text, CTA, or raw URL controls", () => {
     render(<HeroContentManagementPanel hero={null} />);
 
     expect(
-      screen.getByRole("heading", { name: /homepage hero content/i })
-    ).toBeInTheDocument();
-    expect(screen.getByLabelText(/hero headline/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/hero body/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/hero image url/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/hero image alt/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/publish hero content/i)).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: /save hero content/i })
+      screen.getByRole("heading", { name: /homepage hero image/i })
     ).toBeInTheDocument();
     expect(
-      screen.queryByRole("button", { name: /replace hero image/i })
-    ).not.toBeInTheDocument();
+      screen.getByRole("form", { name: /homepage hero image/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("region", { name: /current hero image/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("region", { name: /upload new hero image/i })
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText(/select a hero image/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/image alt text/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/publish hero image/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /save hero image/i })
+    ).toBeInTheDocument();
+    expect(screen.queryByLabelText(/hero headline/i)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/hero body/i)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/primary CTA/i)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/secondary CTA/i)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/hero image url/i)).not.toBeInTheDocument();
+    expect(screen.getAllByText(/code-managed/i).length).toBeGreaterThan(0);
   });
 
-  it("requests a hero.write CSRF proof and posts valid hero updates", async () => {
+  it("requests a hero.write CSRF proof and posts multipart hero image metadata", async () => {
     const fetcher = createSuccessfulFetchMock();
     const onMutationComplete = vi.fn();
 
@@ -69,19 +79,10 @@ describe("hero content management panel", () => {
       />
     );
 
-    fireEvent.change(screen.getByLabelText(/hero headline/i), {
-      target: { value: "Managed homepage hero" }
-    });
-    fireEvent.change(screen.getByLabelText(/hero body/i), {
-      target: { value: "Owner-managed homepage intro." }
-    });
-    fireEvent.change(screen.getByLabelText(/hero image url/i), {
-      target: { value: "https://cdn.example.test/hero.jpg" }
-    });
-    fireEvent.change(screen.getByLabelText(/hero image alt/i), {
+    fireEvent.change(screen.getByLabelText(/image alt text/i), {
       target: { value: "Managed lounge setup" }
     });
-    fireEvent.click(screen.getByRole("button", { name: /save hero content/i }));
+    fireEvent.click(screen.getByRole("button", { name: /save hero image/i }));
 
     await waitFor(() => expect(fetcher).toHaveBeenCalledTimes(2));
 
@@ -94,33 +95,35 @@ describe("hero content management panel", () => {
     expect(fetcher.mock.calls[1][1]).toMatchObject({
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
         "x-csrf-proof": rawProof
       }
     });
-    expect(JSON.parse(String(fetcher.mock.calls[1][1]?.body))).toMatchObject({
-      headline: "Managed homepage hero",
-      body: "Owner-managed homepage intro.",
-      imageUrl: "https://cdn.example.test/hero.jpg",
-      imageAlt: "Managed lounge setup",
-      isEnabled: true
-    });
+    expect(fetcher.mock.calls[1][1]?.headers).not.toHaveProperty(
+      "Content-Type"
+    );
+
+    const body = fetcher.mock.calls[1][1]?.body;
+    expect(body).toBeInstanceOf(FormData);
+    expect((body as FormData).get("imageAlt")).toBe("Managed lounge setup");
+    expect((body as FormData).get("isEnabled")).toBe("true");
+    expect((body as FormData).get("imageUrl")).toBeNull();
+    expect((body as FormData).get("headline")).toBeNull();
     expect(onMutationComplete).toHaveBeenCalledTimes(1);
     expect(screen.queryByText(rawProof)).not.toBeInTheDocument();
   });
 
-  it("rejects invalid href and image input before requesting a proof", async () => {
+  it("rejects invalid hero image input before requesting a proof", async () => {
     const fetcher = vi.fn();
 
     render(<HeroContentManagementPanel hero={null} fetcher={fetcher} />);
 
-    fireEvent.change(screen.getByLabelText(/primary CTA href/i), {
-      target: { value: "javascript:alert(1)" }
+    fireEvent.change(screen.getByLabelText(/image alt text/i), {
+      target: { value: "" }
     });
-    fireEvent.click(screen.getByRole("button", { name: /save hero content/i }));
+    fireEvent.click(screen.getByRole("button", { name: /save hero image/i }));
 
     expect(
-      await screen.findByText(/check headline, links, image URL, and alt text/i)
+      await screen.findByText(/check the image file, alt text, and publish state/i)
     ).toBeInTheDocument();
     expect(fetcher).not.toHaveBeenCalled();
   });

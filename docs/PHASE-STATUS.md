@@ -1,19 +1,21 @@
-## Protected Admin Hero Content Storage Foundation
+## Protected Admin Hero Media Upload Foundation
 
-References: `supabase/migrations/20260703100000_homepage_hero_content_foundation.sql`, `website/lib/hero/homepage-hero-content.ts`, `website/lib/hero/public-homepage-hero-repository.ts`, `website/lib/hero/admin-homepage-hero-read.ts`, `website/lib/hero/admin-homepage-hero-write.ts`, `website/app/api/admin/hero/route.ts`, `website/components/admin/hero-content-management-panel.tsx`, `website/app/admin/hero/page.tsx`, and `website/components/PublicStitch.tsx`.
+References: `supabase/migrations/20260703100000_homepage_hero_content_foundation.sql`, `supabase/migrations/20260707130000_hero_media_storage_foundation.sql`, `website/lib/hero/homepage-hero-content.ts`, `website/lib/hero/public-homepage-hero-repository.ts`, `website/lib/hero/admin-homepage-hero-read.ts`, `website/lib/hero/admin-homepage-hero-write.ts`, `website/lib/hero/admin-homepage-hero-write-route.ts`, `website/app/api/admin/hero/route.ts`, `website/components/admin/hero-content-management-panel.tsx`, `website/app/admin/hero/page.tsx`, and `website/components/PublicStitch.tsx`.
 
 The protected Hero page is no longer a dead placeholder. Approved owner/admin
-users can manage workspace-scoped homepage hero content through the existing
-protected admin gate: eyebrow, headline, body, CTA labels/hrefs, image
-URL/reference, image alt text, and enabled state. Persistence uses
-`homepage_hero_content`, RLS, enabled public reads, and a protected
-owner/admin RPC write boundary. Browser Supabase and service-role browser
-paths remain forbidden.
+users can manage the workspace-scoped homepage hero image through the existing
+protected admin gate: current image preview, uploaded replacement image, image
+alt text, and enabled state. Homepage copy and calls to action are code-owned
+for owner MVP and are not editable in admin. Persistence uses `homepage_hero_content`,
+the dedicated `hero-media` Storage bucket, RLS, enabled public reads, and a
+protected owner/admin image write boundary. Browser Supabase and service-role
+browser paths remain forbidden.
 
 Public homepage rendering preserves the existing Hero layout and styling. If
 enabled managed content is unavailable, the public homepage keeps the existing
-static Hero content intentionally. Hero media upload/storage, raw file upload,
-image transformation, and external media provider integration remain deferred.
+static Hero content intentionally. Hero image upload is owner/admin-only through
+the protected admin route. Image transformation and external media provider
+integration remain deferred.
 
 Production launch still requires
 `npm run validate:production-security-readiness -- --launch` in the hosted

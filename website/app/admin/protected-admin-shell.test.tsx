@@ -225,7 +225,7 @@ describe("protected admin shell", () => {
     expect(
       screen.getByRole("heading", { name: /spacekonceptrental admin/i })
     ).toBeInTheDocument();
-    expect(screen.getByText(/protected workspace/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/protected admin/i).length).toBeGreaterThan(0);
     expect(screen.getByText(/admin menu - dashboard/i)).toBeInTheDocument();
     expect(
       screen.getAllByRole("heading", { name: /^dashboard$/i }).length
@@ -560,19 +560,22 @@ describe("protected admin shell", () => {
       <AdminShellContent state={baseState} view={{ kind: "hero" }} />
     );
     expect(
-      screen.getByRole("heading", { name: /homepage hero content/i })
+      screen.getByRole("heading", { name: /homepage hero image/i })
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("textbox", { name: /headline/i })
+      screen.queryByRole("textbox", { name: /headline/i })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("textbox", { name: /hero image url/i })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByLabelText(/image alt text/i)
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("textbox", { name: /hero image url/i })
+      screen.getByRole("checkbox", { name: /publish hero image/i })
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("checkbox", { name: /publish hero content/i })
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: /save hero content/i })
+      screen.getByRole("button", { name: /save hero image/i })
     ).toBeEnabled();
     expect(
       screen.getByRole("heading", { name: /about story media/i })

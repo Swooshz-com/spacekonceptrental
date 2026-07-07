@@ -2,7 +2,7 @@ import "server-only";
 
 import { createSessionBoundSupabaseAdminReadClient } from "../admin/authorization/supabase-admin-auth-identity-adapter";
 import type { TrustedProductAdminContext } from "../products/persistence";
-import type { HomepageHeroContentInput } from "./homepage-hero-content";
+import type { HomepageHeroImageInput } from "./homepage-hero-content";
 
 type MutationResult = {
   data: unknown;
@@ -29,18 +29,18 @@ export type AdminHomepageHeroPersistenceResult =
 
 export type AdminHomepageHeroWriteInput = {
   admin: TrustedProductAdminContext;
-  content: HomepageHeroContentInput;
+  image: HomepageHeroImageInput;
 };
 
 export interface AdminHomepageHeroPersistence {
-  upsertHomepageHero(
+  upsertHomepageHeroImage(
     input: AdminHomepageHeroWriteInput
   ): Promise<AdminHomepageHeroPersistenceResult>;
 }
 
 type AdminHomepageHeroWriteClient = {
   rpc(
-    fn: "execute_admin_homepage_hero_write",
+    fn: "execute_admin_homepage_hero_image_write",
     args: {
       p_workspace_id: string;
       p_payload: Record<string, unknown>;
@@ -104,18 +104,11 @@ async function createDefaultSupabase(): Promise<AdminHomepageHeroWriteClientResu
   };
 }
 
-function payloadFromContent(content: HomepageHeroContentInput) {
+function payloadFromImage(image: HomepageHeroImageInput) {
   return {
-    eyebrow: content.eyebrow,
-    headline: content.headline,
-    body: content.body,
-    primary_cta_label: content.primaryCtaLabel,
-    primary_cta_href: content.primaryCtaHref,
-    secondary_cta_label: content.secondaryCtaLabel,
-    secondary_cta_href: content.secondaryCtaHref,
-    image_url: content.imageUrl,
-    image_alt: content.imageAlt,
-    is_enabled: content.isEnabled
+    ...(image.imageUrl ? { image_url: image.imageUrl } : {}),
+    image_alt: image.imageAlt,
+    is_enabled: image.isEnabled
   };
 }
 
@@ -149,7 +142,7 @@ export class SupabaseAdminHomepageHeroPersistence
     return this.options.supabase ?? createDefaultSupabase();
   }
 
-  async upsertHomepageHero(
+  async upsertHomepageHeroImage(
     input: AdminHomepageHeroWriteInput
   ): Promise<AdminHomepageHeroPersistenceResult> {
     if (!validAdminContext(input.admin)) {
@@ -170,9 +163,9 @@ export class SupabaseAdminHomepageHeroPersistence
 
     try {
       const result = await supabase.client
-        .rpc("execute_admin_homepage_hero_write", {
+        .rpc("execute_admin_homepage_hero_image_write", {
           p_workspace_id: input.admin.workspaceId,
-          p_payload: payloadFromContent(input.content)
+          p_payload: payloadFromImage(input.image)
         })
         .single();
       const record = resultRecord(result);

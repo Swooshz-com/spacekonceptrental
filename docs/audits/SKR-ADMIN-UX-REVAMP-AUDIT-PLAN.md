@@ -147,15 +147,18 @@ Revamp decision:
 
 Goal: make `/admin/hero` upload-first without raw URL entry.
 
-Implementation outline:
+Implementation status: implemented by the hero media upload foundation branch.
+
+Implemented scope:
 
 - Add a dedicated protected admin multipart route for hero image upload.
 - Keep the same server-side origin/host, session workspace binding, role, and
   CSRF proof checks already used by protected admin writes.
-- Add a storage object path contract that is not product-bound, for example a
-  workspace-scoped hero media path.
-- Add or migrate the minimum storage/RLS policy needed for authenticated product
-  managers to write only valid hero media paths in their workspace.
+- Add a storage object path contract that is not product-bound:
+  bucket `hero-media`, object path
+  `{workspaceId}/homepage-hero/{timestamp}-{uuid}.{ext}`.
+- Add the minimum storage/RLS policy needed for authenticated product managers
+  to write only valid hero media paths in their workspace.
 - Persist only the resulting server-generated safe image reference and alt text.
 - Update `/admin/hero` so copy and CTA fields are absent from owner editing.
 - Remove raw image URL entry from the owner UI.
@@ -231,11 +234,16 @@ evidence and is not re-claimed as rerun by this PR.
 ## Current Gate Status
 
 - Six-page authorised admin UAT baseline: previously passed before this plan.
-- Six-page authorised admin UAT rerun required by this PR: No, because this PR
-  is docs-only and changes no protected admin runtime files.
-- Schema migration required: No.
-- Live Supabase action required: No.
-- Hero upload implementation status: Blocked until a dedicated hero media
-  upload boundary and storage/RLS contract exist.
+- Six-page authorised admin UAT rerun required by the hero media upload PR:
+  Yes before claiming the updated UI baseline, because protected admin runtime
+  files changed.
+- Schema migration required: Yes, `hero-media` Storage/RLS and image-only hero
+  write RPC migration.
+- Live Supabase action required after merge: Yes, apply the new migration to
+  hosted Supabase without seed data.
+- Hero upload implementation status: Dedicated hero media upload boundary and
+  storage/RLS contract implemented for owner/admin image upload.
 - Deferred to next admin UX PR: Hero media upload foundation and `/admin/hero`
-  removal of owner text/raw URL controls.
+  removal of owner text/raw URL controls is no longer deferred; Catalogue owner
+  form simplification, Setups owner form simplification, derived category/style
+  cleanup, and multi-image carousel/gallery polish remain deferred.
