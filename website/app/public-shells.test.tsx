@@ -840,7 +840,7 @@ describe("public page shells", () => {
     expect(desktopActionRule).toMatch(/top:\s*calc\(100%\s*-\s*10\.675rem\)\s*!important;/);
   });
 
-  it("keeps public hero intros complete and aligned to the Furniture Catalogue rail", () => {
+  it("keeps public hero intros complete and aligned to the Furniture Catalogue rail", async () => {
     const styles = readFileSync(resolve(process.cwd(), "app/globals.css"), "utf8");
     const finalHeroRailBlock = styles.slice(
       styles.indexOf("/* Final public design-system consolidation:")
@@ -871,7 +871,7 @@ describe("public page shells", () => {
     );
 
     cleanup();
-    render(<AboutPage />);
+    render(await AboutPage());
     expect(document.querySelector(".stitch-about-hero > .stitch-container > .stitch-page-intro")).not.toBeNull();
     expect(document.querySelector(".stitch-about-hero")?.textContent).toMatch(
       /About.*Curating spaces that breathe, inspire, and endure.*Furniture is the quiet architecture/s

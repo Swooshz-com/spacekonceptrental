@@ -12,6 +12,11 @@ import {
   type HomepageHeroContent
 } from "../lib/hero/homepage-hero-content";
 import {
+  ABOUT_STORY_MEDIA_SLOT,
+  DEFAULT_PUBLIC_PAGE_MEDIA,
+  type PublicPageMediaContent
+} from "../lib/page-media/public-page-media-content";
+import {
   QuoteSelectionBadge,
   QuoteSelectionButton,
   type QuoteSelectionItem,
@@ -30,7 +35,6 @@ export function quoteSelectionValidItemsForCatalogue(
   ]);
 }
 
-const aboutStoryImageUrl = "https://lh3.googleusercontent.com/aida-public/AB6AXuCVRiKMpVS17P0POe4hgYLWJOqLZWHNBK0YGHw-bG4ETu7eWNw2o_RDNmsHhEgmEAfc1nWGlfVYJswBZRdLxn0pVc44lfcblgiNEyuHfr4APLO9MARpxHtb8kRWvMV7otaSDpU_tfoAPYGYbCMtj9DUnC49_anMv7E80cfYVCCK_uheLjc8ZiIEccgZUgjO8H3dhTXXY_cBGYInmYRilsvWVY_akz3twXUoGZotZr6SB4yHpefF4EcE8HJb4gp8pwrC_XR3IlH3bkkl";
 const homeCategoryImageUrls = [
   "https://lh3.googleusercontent.com/aida-public/AB6AXuAImhw0DRyJ87ykPAlGrIm3BrKMKXRpivv23Tdp1whVQ35E6fnIlhsbuUCUHPXF8ZUC8RUE5uHzPFkP7HoIINOXcung6zVL9x0yOMDzgkvKRXamMmq5FY9Rz7azxTqCNgaXA5Nr8c5UmQrlx_O8p_H_MYCWrfAHh4i0EdnLScgtT07-faMuNlDThQ0qur6BKi_mzgL7EjYya9TelJI_6Q2QYz1CnwE5sSNpajaODLu6PjolUwjUMLLGDzI7HBsoEWOc6cqR02wfs4KK",
   "https://lh3.googleusercontent.com/aida-public/AB6AXuCnKJvJ0T0vg0ALDdprS3us7Kdoe5oCpbRCxVZ2UaKI2x3lrav1Hww1aQN2YAP0XCAPzr1BuovrCPbkuCZW0O-M7JwkS2dBXmgOQxbIekL7mkIbO5C1XRtYXd0MGARo1jP47n66D_1ktKSFOHtRHDTJI3O-aXLeNN98Ho9vu8mkL-E-1YBCjyhh5y04iro3ty17SLHCgw6NI9rxTXrTUZAZw748x4ooPXNfmkeoWl1i3IHGnlYN08NAcxHfgHog43H9Ljxoj02uPBGo",
@@ -147,7 +151,7 @@ function StitchHomeCatalogueAction({ featured = false }: { featured?: boolean })
   return <div className={`stitch-home-section-action${featured ? " stitch-home-featured-action" : ""}`}><StitchButton href="/catalogue" variant="secondary">View Full Catalogue</StitchButton></div>;
 }
 
-export { DEFAULT_HOMEPAGE_HERO_CONTENT };
+export { DEFAULT_HOMEPAGE_HERO_CONTENT, DEFAULT_PUBLIC_PAGE_MEDIA };
 
 export function StitchHomeHero({
   heroContent = DEFAULT_HOMEPAGE_HERO_CONTENT
@@ -427,8 +431,12 @@ export function StitchDetail({ product, backHref, backLabel, setup = false, rela
   );
 }
 
-export function StitchAboutPage() {
+export function StitchAboutPage({
+  storyMedia = DEFAULT_PUBLIC_PAGE_MEDIA[ABOUT_STORY_MEDIA_SLOT]
+}: {
+  storyMedia?: PublicPageMediaContent;
+} = {}) {
   const principles = [["Form and function", "Rental pieces should support the room plan, not compete with it.", "diamond"], ["Material honesty", "Texture, proportion, and finish help each event setting feel considered.", "tools"], ["Timelessness", "Simple silhouettes leave space for different venues, moods, and guest flows.", "layout"]];
   const support = [["Brief review", "We review your event context and selected rental pieces.", "diamond"], ["Rental coordination", "We help align items, setups, and practical rental details.", "tools"], ["Proposal follow-up", "We follow up with a tailored proposal and next steps.", "layout"]];
-  return <><section className="stitch-about-hero"><div className="stitch-container"><StitchPageIntro eyebrow="About" title="Curating spaces that breathe, inspire, and endure" intro="Furniture is the quiet architecture of an event. SpaceKonceptRental helps visitors browse rental pieces and setup directions, then share event context for manual team review." /></div></section><section className="stitch-section stitch-about-story"><div className="stitch-container stitch-about-story__grid"><div><p className="stitch-eyebrow">Our story</p><h2>Our Story</h2><p>Use public catalogue records and setup references to shape the enquiry. The team reviews submitted details before preparing a tailored proposal.</p><p>The website supports browsing and enquiry intake only; final rental details stay in direct team follow-up.</p></div><div className="stitch-about-story__image"><img src={aboutStoryImageUrl} alt="Curated lounge furniture setting" /></div></div></section><section className="stitch-section stitch-section--tonal stitch-about-principles"><div className="stitch-container"><div className="stitch-section-heading stitch-section-heading--center"><h2>Architecture-First Design</h2></div><div className="stitch-feature-grid">{principles.map(([title, text, icon]) => <article className="stitch-feature stitch-about-card" key={title}><span className={`stitch-feature__icon stitch-feature__icon--${icon}`} aria-hidden="true" /><h3>{title}</h3><p>{text}</p></article>)}</div></div></section><section className="stitch-section stitch-about-service"><div className="stitch-container"><div className="stitch-section-heading stitch-section-heading--center"><h2>Service-led rental support</h2></div><div className="stitch-feature-grid">{support.map(([title, text, icon]) => <article className="stitch-feature stitch-about-card" key={title}><span className={`stitch-feature__icon stitch-feature__icon--${icon}`} aria-hidden="true" /><h3>{title}</h3><p>{text}</p></article>)}</div></div></section><section className="stitch-section stitch-section--tonal"><div className="stitch-container stitch-cta-band"><h2>Ready to elevate your space?</h2><p>Explore the catalogue to find rental pieces that resonate with your vision.</p><StitchButton href="/catalogue">Browse Catalogue</StitchButton></div></section></>;
+  return <><section className="stitch-about-hero"><div className="stitch-container"><StitchPageIntro eyebrow="About" title="Curating spaces that breathe, inspire, and endure" intro="Furniture is the quiet architecture of an event. SpaceKonceptRental helps visitors browse rental pieces and setup directions, then share event context for manual team review." /></div></section><section className="stitch-section stitch-about-story"><div className="stitch-container stitch-about-story__grid"><div><p className="stitch-eyebrow">Our story</p><h2>Our Story</h2><p>Use public catalogue records and setup references to shape the enquiry. The team reviews submitted details before preparing a tailored proposal.</p><p>The website supports browsing and enquiry intake only; final rental details stay in direct team follow-up.</p></div><div className="stitch-about-story__image"><img src={storyMedia.imageUrl} alt={storyMedia.imageAlt} /></div></div></section><section className="stitch-section stitch-section--tonal stitch-about-principles"><div className="stitch-container"><div className="stitch-section-heading stitch-section-heading--center"><h2>Architecture-First Design</h2></div><div className="stitch-feature-grid">{principles.map(([title, text, icon]) => <article className="stitch-feature stitch-about-card" key={title}><span className={`stitch-feature__icon stitch-feature__icon--${icon}`} aria-hidden="true" /><h3>{title}</h3><p>{text}</p></article>)}</div></div></section><section className="stitch-section stitch-about-service"><div className="stitch-container"><div className="stitch-section-heading stitch-section-heading--center"><h2>Service-led rental support</h2></div><div className="stitch-feature-grid">{support.map(([title, text, icon]) => <article className="stitch-feature stitch-about-card" key={title}><span className={`stitch-feature__icon stitch-feature__icon--${icon}`} aria-hidden="true" /><h3>{title}</h3><p>{text}</p></article>)}</div></div></section><section className="stitch-section stitch-section--tonal"><div className="stitch-container stitch-cta-band"><h2>Ready to elevate your space?</h2><p>Explore the catalogue to find rental pieces that resonate with your vision.</p><StitchButton href="/catalogue">Browse Catalogue</StitchButton></div></section></>;
 }

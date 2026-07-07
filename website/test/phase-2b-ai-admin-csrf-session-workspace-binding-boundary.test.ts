@@ -116,6 +116,7 @@ describe("Phase 2B-AI admin CSRF proof issuer session/workspace binding boundary
       "website/app/api/admin/hero/route.ts",
       "website/app/api/admin/login/route.test.ts",
       "website/app/api/admin/login/route.ts",
+      "website/app/api/admin/page-media/route.ts",
       "website/app/api/admin/product-images/[imageId]/archive/route.ts",
       "website/app/api/admin/product-images/[imageId]/route.ts",
       "website/app/api/admin/product-images/route.ts",
