@@ -26105,7 +26105,6 @@ body:has(.stitch-site-header) .stitch-header-actions > .stitch-quote-indicator:f
 /* About page rhythm: keep the hero calm, but let the body sections breathe as page-like panels. */
 @media (min-width: 901px) {
   body:has(.stitch-about-hero) .site-main :is(
-    .stitch-about-story,
     .stitch-about-principles,
     .stitch-about-service
   ) {
@@ -26114,5 +26113,46 @@ body:has(.stitch-site-header) .stitch-header-actions > .stitch-quote-indicator:f
     min-height: calc(100svh - 72px) !important;
     padding-bottom: clamp(5rem, 9vh, 7.5rem) !important;
     padding-top: clamp(5rem, 9vh, 7.5rem) !important;
+  }
+}
+
+/* About story viewport fit: keep the hotswappable media section below the sticky header. */
+@media (min-width: 901px) {
+  body:has(.stitch-site-header):has(.stitch-about-hero):not(:has(.stitch-home-hero))
+    .site-main
+    > .stitch-about-story.stitch-section {
+    align-items: center !important;
+    border-bottom: 0 !important;
+    display: flex !important;
+    min-height: calc(100svh - 72px) !important;
+    padding-bottom: clamp(2rem, 4vh, 3rem) !important;
+    padding-top: clamp(2rem, 4vh, 3rem) !important;
+  }
+
+  body:has(.stitch-site-header):has(.stitch-about-hero):not(:has(.stitch-home-hero))
+    .site-main
+    > .stitch-about-story.stitch-section
+    .stitch-about-story__image {
+    aspect-ratio: 1 / 1 !important;
+    flex: 0 0 min(42vw, 40rem) !important;
+    height: min(42vw, 40rem) !important;
+    max-width: 40rem !important;
+    min-height: 0 !important;
+    padding: 0 !important;
+    width: min(42vw, 40rem) !important;
+  }
+
+  body:has(.stitch-site-header):has(.stitch-about-hero):not(:has(.stitch-home-hero))
+    .site-main
+    > .stitch-about-story.stitch-section
+    .stitch-about-story__image
+    img {
+    display: block !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    object-fit: cover !important;
+    object-position: center bottom !important;
+    padding: 0 !important;
+    width: 100% !important;
   }
 }

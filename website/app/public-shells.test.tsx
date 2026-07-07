@@ -293,6 +293,19 @@ describe("public page shells", () => {
     expect(siteNavSource).toContain('["About", "/about"]');
     expect(siteNavSource).not.toContain('["Contact", "/contact"]');
     expect(siteNavSource).not.toContain('href="/contact"');
+    expect(routeShellSource).toContain("function handleBrandClick");
+    expect(routeShellSource).toContain('pathname !== "/"');
+    expect(routeShellSource).toContain("event.metaKey");
+    expect(routeShellSource).toContain("event.ctrlKey");
+    expect(routeShellSource).toContain("event.shiftKey");
+    expect(routeShellSource).toContain("event.altKey");
+    expect(routeShellSource).toContain("event.preventDefault()");
+    expect(routeShellSource).toContain("document.documentElement");
+    expect(routeShellSource).toContain('root.style.scrollBehavior = "auto"');
+    expect(routeShellSource).toContain("window.scrollTo({ top: 0, left: 0 })");
+    expect(routeShellSource).toContain("requestAnimationFrame");
+    expect(routeShellSource).toContain("root.style.scrollBehavior = previousScrollBehavior");
+    expect(routeShellSource).toContain('onClick={handleBrandClick}');
     expect(mobileMenuSource).toContain('["About", "/about"]');
     expect(mobileMenuSource).not.toContain('["Contact", "/contact"]');
     expect(routeShellSource).toContain('href="/about"');
@@ -1097,6 +1110,25 @@ describe("public page shells", () => {
     const aboutServiceGapRule = aboutRhythmCorrectionBlock.match(
       /body:has\(\.stitch-about-hero\)\s+\.site-main\s+\.stitch-about-service\s*\{[\s\S]*?\}/
     )?.[0];
+    const finalAboutPanelBlock = styles.slice(
+      styles.indexOf(
+        "/* About page rhythm: keep the hero calm, but let the body sections breathe as page-like panels. */"
+      )
+    );
+    const finalAboutPanelRule = finalAboutPanelBlock.match(
+      /body:has\(\.stitch-about-hero\)\s+\.site-main\s+:is\([\s\S]*?\.stitch-about-service[\s\S]*?\)\s*\{[\s\S]*?\}/
+    )?.[0];
+    const aboutStoryViewportFitBlock = styles.slice(
+      styles.indexOf(
+        "/* About story viewport fit: keep the hotswappable media section below the sticky header. */"
+      )
+    );
+    const aboutStoryViewportFitRule = aboutStoryViewportFitBlock.match(
+      /body:has\(\.stitch-site-header\):has\(\.stitch-about-hero\):not\(:has\(\.stitch-home-hero\)\)\s+\.site-main\s+>\s+\.stitch-about-story\.stitch-section\s*\{[\s\S]*?\}/
+    )?.[0];
+    const aboutStoryViewportImageRule = aboutStoryViewportFitBlock.match(
+      /body:has\(\.stitch-site-header\):has\(\.stitch-about-hero\):not\(:has\(\.stitch-home-hero\)\)[\s\S]*?\.stitch-about-story__image\s*\{[\s\S]*?\}/
+    )?.[0];
 
     expect(aboutParityBlock).toContain("Final About parity");
     expect(publicStitchSource).toContain("stitch-feature stitch-about-card");
@@ -1126,6 +1158,18 @@ describe("public page shells", () => {
     expect(aboutServiceGapRule).toMatch(
       /padding-top:\s*calc\(var\(--stitch-public-section-y\)\s*\*\s*0\.175\)\s*!important;/
     );
+    expect(finalAboutPanelRule).toBeDefined();
+    expect(finalAboutPanelRule).toMatch(/\.stitch-about-principles/);
+    expect(finalAboutPanelRule).toMatch(/\.stitch-about-service/);
+    expect(finalAboutPanelRule).not.toMatch(/\.stitch-about-story/);
+    expect(finalAboutPanelRule).toMatch(/min-height:\s*calc\(100svh - 72px\)\s*!important;/);
+    expect(aboutStoryViewportFitRule).toBeDefined();
+    expect(aboutStoryViewportFitRule).toMatch(/border-bottom:\s*0\s*!important;/);
+    expect(aboutStoryViewportFitRule).toMatch(/min-height:\s*calc\(100svh - 72px\)\s*!important;/);
+    expect(aboutStoryViewportImageRule).toBeDefined();
+    expect(aboutStoryViewportImageRule).toMatch(/aspect-ratio:\s*1 \/ 1\s*!important;/);
+    expect(aboutStoryViewportImageRule).toMatch(/height:\s*min\(42vw,\s*40rem\)\s*!important;/);
+    expect(aboutStoryViewportImageRule).toMatch(/min-height:\s*0\s*!important;/);
   });
 
   it("keeps catalogue results inside the shared public container width", () => {
