@@ -538,7 +538,7 @@ describe("protected admin shell", () => {
     expect(screen.queryByText(/supabase/i)).not.toBeInTheDocument();
   });
 
-  it("renders a real hero form plus calm empty states for enquiry email and delivery log", () => {
+  it("renders a real hero-only form plus calm empty states for enquiry email and delivery log", () => {
     const baseState = {
       status: "authorised_admin" as const,
       dashboard: {
@@ -566,8 +566,18 @@ describe("protected admin shell", () => {
       screen.queryByRole("textbox", { name: /headline/i })
     ).not.toBeInTheDocument();
     expect(
+      screen.queryByRole("textbox", { name: /body/i })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("textbox", { name: /cta/i })
+    ).not.toBeInTheDocument();
+    expect(
       screen.queryByRole("textbox", { name: /hero image url/i })
     ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("textbox", { name: /image url/i })
+    ).not.toBeInTheDocument();
+    expect(document.querySelector('input[type="url"]')).toBeNull();
     expect(
       screen.getByLabelText(/image alt text/i)
     ).toBeInTheDocument();
@@ -578,20 +588,20 @@ describe("protected admin shell", () => {
       screen.getByRole("button", { name: /save hero image/i })
     ).toBeEnabled();
     expect(
-      screen.getByRole("heading", { name: /about story media/i })
-    ).toBeInTheDocument();
+      screen.queryByRole("heading", { name: /about story media/i })
+    ).not.toBeInTheDocument();
     expect(
-      screen.getByRole("textbox", { name: /about story image url/i })
-    ).toBeInTheDocument();
+      screen.queryByRole("textbox", { name: /about story image url/i })
+    ).not.toBeInTheDocument();
     expect(
-      screen.getByRole("textbox", { name: /about story image alt/i })
-    ).toBeInTheDocument();
+      screen.queryByRole("textbox", { name: /about story image alt/i })
+    ).not.toBeInTheDocument();
     expect(
-      screen.getByRole("checkbox", { name: /publish about story image/i })
-    ).toBeInTheDocument();
+      screen.queryByRole("checkbox", { name: /publish about story image/i })
+    ).not.toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: /save about story image/i })
-    ).toBeEnabled();
+      screen.queryByRole("button", { name: /save about story image/i })
+    ).not.toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: /replace hero image/i })
     ).not.toBeInTheDocument();

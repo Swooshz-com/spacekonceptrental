@@ -64,6 +64,10 @@ describe("hero content management panel", () => {
     expect(screen.queryByLabelText(/primary CTA/i)).not.toBeInTheDocument();
     expect(screen.queryByLabelText(/secondary CTA/i)).not.toBeInTheDocument();
     expect(screen.queryByLabelText(/hero image url/i)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/about story/i)).not.toBeInTheDocument();
+    expect(screen.queryByRole("textbox", { name: /image url/i })).not.toBeInTheDocument();
+    expect(document.querySelector('input[type="url"]')).toBeNull();
+    expect(document.querySelector('input[name="imageUrl"]')).toBeNull();
     expect(screen.getAllByText(/code-managed/i).length).toBeGreaterThan(0);
   });
 
@@ -108,6 +112,9 @@ describe("hero content management panel", () => {
     expect((body as FormData).get("isEnabled")).toBe("true");
     expect((body as FormData).get("imageUrl")).toBeNull();
     expect((body as FormData).get("headline")).toBeNull();
+    expect((body as FormData).get("body")).toBeNull();
+    expect((body as FormData).get("primaryCtaLabel")).toBeNull();
+    expect((body as FormData).get("secondaryCtaLabel")).toBeNull();
     expect(onMutationComplete).toHaveBeenCalledTimes(1);
     expect(screen.queryByText(rawProof)).not.toBeInTheDocument();
   });
