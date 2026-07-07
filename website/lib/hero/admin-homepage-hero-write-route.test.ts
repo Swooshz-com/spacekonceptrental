@@ -20,47 +20,66 @@ const adminContext = {
   resolution: "server-auth-membership" as const
 };
 
-function request(body?: unknown, init: RequestInit = {}) {
-  const requestInit: RequestInit = {
+function imageFile(
+  name = "hero image.webp",
+  type = "image/webp",
+  size = 12
+) {
+  return new File([new Uint8Array(size)], name, { type });
+}
+
+function formData(fields: {
+  file?: File;
+  imageAlt?: string;
+  isEnabled?: string;
+}) {
+  const body = new FormData();
+
+  if (fields.file) {
+    body.set("imageFile", fields.file);
+  }
+
+  if (fields.imageAlt !== undefined) {
+    body.set("imageAlt", fields.imageAlt);
+  }
+
+  if (fields.isEnabled !== undefined) {
+    body.set("isEnabled", fields.isEnabled);
+  }
+
+  return body;
+}
+
+function request(
+  body: FormData = formData({
+    file: imageFile(),
+    imageAlt: "Managed lounge setup",
+    isEnabled: "true"
+  }),
+  init: RequestInit = {}
+) {
+  const input = new Request("https://admin.space.test/api/admin/hero", {
     method: "POST",
     ...init,
     headers: {
-      "content-type": "application/json",
+      "content-type": "multipart/form-data; boundary=test",
       origin: env.ADMIN_EXPECTED_ORIGIN,
       host: env.ADMIN_EXPECTED_HOST,
       "x-csrf-proof": "proof",
       ...((init.headers as Record<string, string>) || {})
     }
-  };
+  }) as NextRequest;
 
-  if (body !== undefined) {
-    requestInit.body = typeof body === "string" ? body : JSON.stringify(body);
-  }
+  Object.defineProperty(input, "formData", {
+    value: async () => body
+  });
 
-  return new Request(
-    "https://admin.space.test/api/admin/hero",
-    requestInit
-  ) as NextRequest;
-}
-
-function validPayload() {
-  return {
-    eyebrow: "Furniture and event rentals",
-    headline: "Managed homepage hero",
-    body: "Owner-managed public homepage content.",
-    primaryCtaLabel: "Request Quote",
-    primaryCtaHref: "/quote",
-    secondaryCtaLabel: "Browse Catalogue",
-    secondaryCtaHref: "/catalogue",
-    imageUrl: "https://cdn.example.test/hero.jpg",
-    imageAlt: "Managed lounge setup",
-    isEnabled: true
-  };
+  return input;
 }
 
 function createPersistence(): AdminHomepageHeroPersistence {
   return {
-    upsertHomepageHero: vi.fn(async () => ({
+    upsertHomepageHeroImage: vi.fn(async () => ({
       ok: true as const,
       record: {
         workspaceId: env.ADMIN_TRUSTED_WORKSPACE_ID,
@@ -70,16 +89,65 @@ function createPersistence(): AdminHomepageHeroPersistence {
   };
 }
 
+function createStorageClient() {
+  const uploads: Array<{
+    bucket: string;
+    path: string;
+    body: unknown;
+    options: Record<string, unknown>;
+  }> = [];
+  const removals: Array<{ bucket: string; paths: string[] }> = [];
+  const upload = vi.fn(
+    async (path: string, body: unknown, options: Record<string, unknown>) => {
+      uploads.push({ bucket: "hero-media", path, body, options });
+      return { data: { path }, error: null };
+    }
+  );
+  const remove = vi.fn(async (paths: string[]) => {
+    removals.push({ bucket: "hero-media", paths });
+    return { data: paths, error: null };
+  });
+  const client = {
+    storage: {
+      from(bucket: string) {
+        expect(bucket).toBe("hero-media");
+        return {
+          upload,
+          remove,
+          getPublicUrl(path: string) {
+            return {
+              data: {
+                publicUrl: `https://space.supabase.co/storage/v1/object/public/hero-media/${path}`
+              }
+            };
+          }
+        };
+      }
+    }
+  };
+
+  return { client, uploads, removals };
+}
+
 type TestDependencies = AdminHomepageHeroWriteRouteDependencies & {
   persistence: AdminHomepageHeroPersistence;
+  resolveSessionWorkspaceBinding: NonNullable<
+    AdminHomepageHeroWriteRouteDependencies["resolveSessionWorkspaceBinding"]
+  >;
+  resolveRouteGate: NonNullable<
+    AdminHomepageHeroWriteRouteDependencies["resolveRouteGate"]
+  >;
+  storage: ReturnType<typeof createStorageClient>;
 };
 
 function createDependencies(
-  persistence = createPersistence()
+  persistence = createPersistence(),
+  storage = createStorageClient()
 ): TestDependencies {
   return {
     env,
     now: () => 1_700_000_000_000,
+    generateId: () => "99999999-9999-4999-8999-999999999999",
     persistence,
     createRuntimeDependencies: vi.fn(() => ({
       issuerDependencies: {
@@ -105,7 +173,12 @@ function createDependencies(
       statusCode: 200 as const,
       workspaceId: env.ADMIN_TRUSTED_WORKSPACE_ID,
       requestId: "request-1"
-    }))
+    })),
+    createStorageClient: vi.fn(async () => ({
+      configured: true as const,
+      client: storage.client
+    })),
+    storage
   } as TestDependencies;
 }
 
@@ -113,15 +186,18 @@ async function json(response: Response) {
   return (await response.json()) as Record<string, unknown>;
 }
 
-describe("admin homepage hero write route", () => {
-  it("updates hero content after hero.write CSRF and admin gate checks", async () => {
+describe("admin homepage hero image write route", () => {
+  it("uploads a hero image to a workspace-scoped hero media path after hero.write authorization", async () => {
     const dependencies = createDependencies();
     const response = await handleAdminHomepageHeroWriteRoute(
-      request(validPayload()),
+      request(),
       dependencies
     );
 
+    const storagePath = `${env.ADMIN_TRUSTED_WORKSPACE_ID}/homepage-hero/1700000000000-99999999-9999-4999-8999-999999999999.webp`;
+
     expect(response.status).toBe(200);
+    expect(response.headers.get("cache-control")).toBe("no-store");
     expect(dependencies.resolveSessionWorkspaceBinding).toHaveBeenCalledWith(
       {
         requestedOperation: "hero.write"
@@ -146,33 +222,105 @@ describe("admin homepage hero write route", () => {
         })
       })
     );
-    expect(dependencies.persistence.upsertHomepageHero).toHaveBeenCalledWith({
+    expect(dependencies.storage.uploads[0]).toMatchObject({
+      bucket: "hero-media",
+      path: storagePath,
+      options: {
+        contentType: "image/webp",
+        upsert: false
+      }
+    });
+    expect(dependencies.persistence.upsertHomepageHeroImage).toHaveBeenCalledWith({
       admin: adminContext,
-      content: validPayload()
+      image: {
+        imageUrl: `https://space.supabase.co/storage/v1/object/public/hero-media/${storagePath}`,
+        imageAlt: "Managed lounge setup",
+        isEnabled: true
+      }
     });
     expect(await json(response)).toEqual({
       ok: true,
       record: {
         workspaceId: env.ADMIN_TRUSTED_WORKSPACE_ID,
         updatedAt: "2026-07-03T09:00:00.000Z"
+      },
+      image: {
+        storageBucket: "hero-media",
+        storagePath,
+        publicUrl: `https://space.supabase.co/storage/v1/object/public/hero-media/${storagePath}`
+      }
+    });
+    expect(JSON.stringify(dependencies.storage.uploads)).not.toContain(
+      "hero image"
+    );
+  });
+
+  it("saves alt text and publish state without requiring a product id or raw URL", async () => {
+    const dependencies = createDependencies();
+    const response = await handleAdminHomepageHeroWriteRoute(
+      request(
+        formData({
+          imageAlt: "Existing homepage hero",
+          isEnabled: "false"
+        })
+      ),
+      dependencies
+    );
+
+    expect(response.status).toBe(200);
+    expect(dependencies.createStorageClient).not.toHaveBeenCalled();
+    expect(dependencies.persistence.upsertHomepageHeroImage).toHaveBeenCalledWith({
+      admin: adminContext,
+      image: {
+        imageAlt: "Existing homepage hero",
+        isEnabled: false
       }
     });
   });
 
   it.each([
-    [request({ ...validPayload(), headline: "" }), "headline_required", 400],
     [
-      request({ ...validPayload(), primaryCtaHref: "javascript:alert(1)" }),
-      "primary_cta_href_invalid",
+      request(
+        formData({
+          imageAlt: "Bad hero",
+          isEnabled: "true",
+          file: imageFile("bad.svg", "image/svg+xml")
+        })
+      ),
+      "image_type_unsupported",
       400
     ],
     [
-      request({ ...validPayload(), imageUrl: "http://cdn.example.test/hero.jpg" }),
-      "image_url_invalid",
+      request(
+        formData({
+          imageAlt: "Oversized hero",
+          isEnabled: "true",
+          file: imageFile("large.webp", "image/webp", 6 * 1024 * 1024)
+        })
+      ),
+      "image_file_too_large",
       400
     ],
-    [request(undefined), "request_body_missing", 400],
-    [request(validPayload(), { method: "PATCH" }), "request_method_not_allowed", 405]
+    [
+      request(
+        formData({
+          imageAlt: "",
+          isEnabled: "true"
+        })
+      ),
+      "image_alt_required",
+      400
+    ],
+    [request(undefined, { method: "PATCH" }), "request_method_not_allowed", 405],
+    [
+      request(formData({ imageAlt: "Hero", isEnabled: "true" }), {
+        headers: {
+          "content-type": "application/json"
+        }
+      }),
+      "request_content_type_unsupported",
+      415
+    ]
   ])("rejects invalid requests before persistence", async (input, error, status) => {
     const dependencies = createDependencies();
     const response = await handleAdminHomepageHeroWriteRoute(input, dependencies);
@@ -182,7 +330,8 @@ describe("admin homepage hero write route", () => {
       ok: false,
       error
     });
-    expect(dependencies.persistence.upsertHomepageHero).not.toHaveBeenCalled();
+    expect(dependencies.persistence.upsertHomepageHeroImage).not.toHaveBeenCalled();
+    expect(dependencies.storage.uploads).toEqual([]);
   });
 
   it("returns safe no-store denial JSON for unauthenticated or untrusted writes", async () => {
@@ -195,7 +344,7 @@ describe("admin homepage hero write route", () => {
     }));
 
     const response = await handleAdminHomepageHeroWriteRoute(
-      request(validPayload()),
+      request(),
       dependencies
     );
     const body = await json(response);
@@ -211,6 +360,35 @@ describe("admin homepage hero write route", () => {
     expect(serialized).not.toContain("sql");
     expect(serialized).not.toContain("cookie");
     expect(serialized).not.toContain("token");
-    expect(dependencies.persistence.upsertHomepageHero).not.toHaveBeenCalled();
+    expect(dependencies.persistence.upsertHomepageHeroImage).not.toHaveBeenCalled();
+    expect(dependencies.storage.uploads).toEqual([]);
+  });
+
+  it("cleans up uploaded storage when hero metadata persistence fails", async () => {
+    const persistence: AdminHomepageHeroPersistence = {
+      upsertHomepageHeroImage: vi.fn(async () => ({
+        ok: false as const,
+        code: "HERO_PERSISTENCE_FAILED" as const
+      }))
+    };
+    const dependencies = createDependencies(persistence);
+    const response = await handleAdminHomepageHeroWriteRoute(
+      request(),
+      dependencies
+    );
+
+    expect(response.status).toBe(503);
+    expect(await json(response)).toEqual({
+      ok: false,
+      error: "hero_persistence_failed"
+    });
+    expect(dependencies.storage.removals).toEqual([
+      {
+        bucket: "hero-media",
+        paths: [
+          `${env.ADMIN_TRUSTED_WORKSPACE_ID}/homepage-hero/1700000000000-99999999-9999-4999-8999-999999999999.webp`
+        ]
+      }
+    ]);
   });
 });

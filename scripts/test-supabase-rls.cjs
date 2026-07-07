@@ -692,6 +692,9 @@ function assertNoRuntimeSupabaseUse() {
   const approvedMediaUploadFiles = new Set([
     'website/lib/products/media/admin-product-image-upload-route.ts',
   ]);
+  const approvedHeroMediaUploadFiles = new Set([
+    'website/lib/hero/admin-homepage-hero-write-route.ts',
+  ]);
   const extensions = new Set(['.js', '.jsx', '.mjs', '.cjs', '.ts', '.tsx']);
   const browserBlockedPatterns = [
     /@supabase\//i,
@@ -951,6 +954,42 @@ function assertNoRuntimeSupabaseUse() {
           content,
           /\.storage\.from\(listingMediaBucket\)/,
           `${relativePath} must write only through the fixed listing media bucket.`,
+        );
+        assertNoMatches(filePath, content, serverBlockedPatterns);
+        assertNoMatches(filePath, content, blockedMediaUploadTablePatterns);
+        return;
+      }
+
+      if (approvedHeroMediaUploadFiles.has(relativePath)) {
+        assert.match(
+          content,
+          /import\s+["']server-only["'];/,
+          `${relativePath} must be marked server-only.`,
+        );
+        assert.match(
+          content,
+          /resolveServerAdminCsrfProofSessionWorkspaceBinding/,
+          `${relativePath} must require the approved admin CSRF/session workspace binding.`,
+        );
+        assert.match(
+          content,
+          /requestedOperation:\s*heroWriteOperation/,
+          `${relativePath} must require hero.write.`,
+        );
+        assert.match(
+          content,
+          /createSessionBoundSupabaseAdminReadClient/,
+          `${relativePath} must use the session-bound Supabase client.`,
+        );
+        assert.match(
+          content,
+          /\.storage\.from\(heroMediaBucket\)/,
+          `${relativePath} must write only through the fixed hero media bucket.`,
+        );
+        assert.doesNotMatch(
+          content,
+          /productId|product_id/,
+          `${relativePath} must not require listing/product ids for homepage hero images.`,
         );
         assertNoMatches(filePath, content, serverBlockedPatterns);
         assertNoMatches(filePath, content, blockedMediaUploadTablePatterns);
@@ -1276,7 +1315,7 @@ check('homepage hero content exposes enabled public reads and protected admin wr
   assertCsv(
     enabledWrite,
     ids.workspaceA,
-    'owner/admin should write homepage hero content through the RPC',
+    'owner/admin should write homepage hero image state through the compatibility RPC',
   );
   assertCsv(
     scalarAs(
@@ -1284,8 +1323,8 @@ check('homepage hero content exposes enabled public reads and protected admin wr
       null,
       `select headline from public.get_public_homepage_hero('${ids.workspaceA}')`,
     ),
-    'Managed homepage hero',
-    'anonymous public RPC should read enabled hero content only',
+    'Furnish Your Vision, Elevate Every Space',
+    'legacy hero write RPC should keep enabled homepage copy code-owned',
   );
   assertCsv(
     scalarAs(
@@ -1368,8 +1407,8 @@ check('homepage hero content exposes enabled public reads and protected admin wr
       ids.authMemberA,
       `select headline from public.homepage_hero_content where workspace_id = '${ids.workspaceA}'`,
     ),
-    'Draft homepage hero',
-    'owner/admin should still read unpublished hero content in protected admin',
+    'Furnish Your Vision, Elevate Every Space',
+    'legacy hero write RPC should keep unpublished homepage copy code-owned',
   );
   assertCsv(
     scalarAs(
@@ -1379,6 +1418,71 @@ check('homepage hero content exposes enabled public reads and protected admin wr
     ),
     '0',
     'workspace viewers should not read unpublished hero content',
+  );
+  queryCommittedAs(
+    'authenticated',
+    ids.authMemberA,
+    `
+      select workspace_id::text
+      from public.execute_admin_homepage_hero_image_write(
+        '${ids.workspaceA}'::uuid,
+        jsonb_build_object(
+          'image_url', 'https://cdn.example.test/uploaded-hero.webp',
+          'image_alt', 'Uploaded owner hero image',
+          'is_enabled', true
+        )
+      )
+    `,
+  );
+  assertCsv(
+    scalarAs(
+      'anon',
+      null,
+      `select image_alt from public.get_public_homepage_hero('${ids.workspaceA}')`,
+    ),
+    'Uploaded owner hero image',
+    'image-only hero RPC should publish owner-managed alt text',
+  );
+  assertCsv(
+    scalarAs(
+      'anon',
+      null,
+      `select headline from public.get_public_homepage_hero('${ids.workspaceA}')`,
+    ),
+    'Furnish Your Vision, Elevate Every Space',
+    'image-only hero RPC should keep homepage copy code-owned',
+  );
+  statementFailsAs(
+    'authenticated',
+    ids.authViewerA,
+    `
+      select workspace_id::text
+      from public.execute_admin_homepage_hero_image_write(
+        '${ids.workspaceA}'::uuid,
+        jsonb_build_object(
+          'image_url', 'https://cdn.example.test/viewer-hero.jpg',
+          'image_alt', 'Viewer hero',
+          'is_enabled', true
+        )
+      )
+    `,
+    /hero_admin_context_invalid|permission denied/i,
+  );
+  statementFailsAs(
+    'anon',
+    null,
+    `
+      select workspace_id::text
+      from public.execute_admin_homepage_hero_image_write(
+        '${ids.workspaceA}'::uuid,
+        jsonb_build_object(
+          'image_url', 'https://cdn.example.test/anon-hero.jpg',
+          'image_alt', 'Anonymous hero',
+          'is_enabled', true
+        )
+      )
+    `,
+    /permission denied/i,
   );
   statementFailsAs(
     'authenticated',
@@ -4237,6 +4341,92 @@ check('listing media storage uses public bucket URLs with workspace-admin scoped
       values (
         'listing-media',
         '${ids.workspaceA}/${ids.productPublishedA}/unsafe-name.svg',
+        '${ids.authMemberA}'
+      )
+    `,
+  );
+});
+
+check('hero media storage uses public bucket URLs with workspace-admin scoped writes', () => {
+  const storagePath = `${ids.workspaceA}/homepage-hero/1700000000000-60000000-0000-4000-8000-000000000301.webp`;
+
+  assert.equal(
+    scalarAs(
+      'anon',
+      null,
+      'select "public"::text from storage.buckets where id = \'hero-media\'',
+    ),
+    'true',
+    'hero-media bucket should be public for rendered homepage hero images',
+  );
+
+  queryAs(
+    'authenticated',
+    ids.authMemberA,
+    `
+      insert into storage.objects (
+        bucket_id,
+        name,
+        owner,
+        metadata
+      )
+      values (
+        'hero-media',
+        '${storagePath}',
+        '${ids.authMemberA}',
+        '{"mimetype": "image/webp"}'::jsonb
+      )
+    `,
+  );
+
+  statementFailsAs(
+    'anon',
+    null,
+    `
+      select count(*)::text
+      from storage.objects
+      where name = '${storagePath}'
+    `,
+  );
+
+  statementFailsAs(
+    'authenticated',
+    ids.authViewerA,
+    `
+      insert into storage.objects (
+        bucket_id,
+        name,
+        owner
+      )
+      values (
+        'hero-media',
+        '${ids.workspaceA}/homepage-hero/1700000000000-60000000-0000-4000-8000-000000000302.webp',
+        '${ids.authViewerA}'
+      )
+    `,
+  );
+
+  statementFailsAs(
+    'authenticated',
+    ids.authMemberA,
+    `
+      insert into storage.objects (bucket_id, name, owner)
+      values (
+        'hero-media',
+        '${ids.workspaceB}/homepage-hero/1700000000000-60000000-0000-4000-8000-000000000303.webp',
+        '${ids.authMemberA}'
+      )
+    `,
+  );
+
+  statementFailsAs(
+    'authenticated',
+    ids.authMemberA,
+    `
+      insert into storage.objects (bucket_id, name, owner)
+      values (
+        'hero-media',
+        '${ids.workspaceA}/homepage-hero/unsafe-name.svg',
         '${ids.authMemberA}'
       )
     `,
