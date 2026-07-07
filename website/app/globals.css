@@ -26116,3 +26116,31 @@ body:has(.stitch-site-header) .stitch-header-actions > .stitch-quote-indicator:f
     padding-top: clamp(5rem, 9vh, 7.5rem) !important;
   }
 }
+
+/* About story viewport fit: keep story content natural while the sofa frame fits laptop-height screens. */
+@media (min-width: 901px) {
+  body:has(.stitch-about-hero) .site-main .stitch-about-story {
+    align-items: initial !important;
+    display: block !important;
+    min-height: auto !important;
+    padding-bottom: clamp(3rem, 6vh, 4.5rem) !important;
+    padding-top: clamp(3rem, 6vh, 4.5rem) !important;
+  }
+
+  body:has(.stitch-about-hero) .site-main .stitch-about-story__image {
+    height: clamp(24rem, calc(100svh - 12rem), 40rem) !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+    position: relative !important;
+  }
+
+  body:has(.stitch-about-hero) .site-main .stitch-about-story__image img {
+    inset: 0 !important;
+    height: 100% !important;
+    max-height: 100% !important;
+    object-fit: contain !important;
+    object-position: center bottom !important;
+    position: absolute !important;
+    width: 100% !important;
+  }
+}

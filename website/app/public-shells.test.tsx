@@ -1097,6 +1097,18 @@ describe("public page shells", () => {
     const aboutServiceGapRule = aboutRhythmCorrectionBlock.match(
       /body:has\(\.stitch-about-hero\)\s+\.site-main\s+\.stitch-about-service\s*\{[\s\S]*?\}/
     )?.[0];
+    const aboutStoryViewportFitBlock = styles.slice(
+      styles.indexOf("/* About story viewport fit:")
+    );
+    const aboutStoryViewportRule = aboutStoryViewportFitBlock.match(
+      /body:has\(\.stitch-about-hero\)\s+\.site-main\s+\.stitch-about-story\s*\{[\s\S]*?\}/
+    )?.[0];
+    const aboutStoryViewportImageRule = aboutStoryViewportFitBlock.match(
+      /body:has\(\.stitch-about-hero\)\s+\.site-main\s+\.stitch-about-story__image\s*\{[\s\S]*?\}/
+    )?.[0];
+    const aboutStoryViewportImgRule = aboutStoryViewportFitBlock.match(
+      /body:has\(\.stitch-about-hero\)\s+\.site-main\s+\.stitch-about-story__image\s+img\s*\{[\s\S]*?\}/
+    )?.[0];
 
     expect(aboutParityBlock).toContain("Final About parity");
     expect(publicStitchSource).toContain("stitch-feature stitch-about-card");
@@ -1126,6 +1138,25 @@ describe("public page shells", () => {
     expect(aboutServiceGapRule).toMatch(
       /padding-top:\s*calc\(var\(--stitch-public-section-y\)\s*\*\s*0\.175\)\s*!important;/
     );
+    expect(aboutStoryViewportFitBlock).toContain("About story viewport fit");
+    expect(aboutStoryViewportRule).toBeDefined();
+    expect(aboutStoryViewportRule).toMatch(/align-items:\s*initial\s*!important;/);
+    expect(aboutStoryViewportRule).toMatch(/display:\s*block\s*!important;/);
+    expect(aboutStoryViewportRule).toMatch(/min-height:\s*auto\s*!important;/);
+    expect(aboutStoryViewportRule).toMatch(/padding-bottom:\s*clamp\(3rem,\s*6vh,\s*4\.5rem\)\s*!important;/);
+    expect(aboutStoryViewportRule).toMatch(/padding-top:\s*clamp\(3rem,\s*6vh,\s*4\.5rem\)\s*!important;/);
+    expect(aboutStoryViewportImageRule).toBeDefined();
+    expect(aboutStoryViewportImageRule).toMatch(
+      /height:\s*clamp\(24rem,\s*calc\(100svh\s*-\s*12rem\),\s*40rem\)\s*!important;/
+    );
+    expect(aboutStoryViewportImageRule).toMatch(/overflow:\s*hidden\s*!important;/);
+    expect(aboutStoryViewportImageRule).toMatch(/position:\s*relative\s*!important;/);
+    expect(aboutStoryViewportImgRule).toBeDefined();
+    expect(aboutStoryViewportImgRule).toMatch(/inset:\s*0\s*!important;/);
+    expect(aboutStoryViewportImgRule).toMatch(/height:\s*100%\s*!important;/);
+    expect(aboutStoryViewportImgRule).toMatch(/max-height:\s*100%\s*!important;/);
+    expect(aboutStoryViewportImgRule).toMatch(/object-fit:\s*contain\s*!important;/);
+    expect(aboutStoryViewportImgRule).toMatch(/position:\s*absolute\s*!important;/);
   });
 
   it("keeps catalogue results inside the shared public container width", () => {
