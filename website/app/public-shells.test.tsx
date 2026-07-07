@@ -1226,6 +1226,17 @@ describe("public page shells", () => {
     expect(scrollAssistSource).toContain("window.addEventListener(\"wheel\", handleWheel");
     expect(scrollAssistSource).toContain("passive: false");
     expect(scrollAssistSource).toContain("event.preventDefault()");
+    const modifierGuardIndex = scrollAssistSource.indexOf("event.ctrlKey ||");
+    const assistLockIndex = scrollAssistSource.indexOf("if (assistLocked)");
+    const firstPreventDefaultIndex = scrollAssistSource.indexOf("event.preventDefault()");
+
+    expect(modifierGuardIndex).toBeGreaterThan(-1);
+    expect(modifierGuardIndex).toBeLessThan(assistLockIndex);
+    expect(modifierGuardIndex).toBeLessThan(firstPreventDefaultIndex);
+    expect(scrollAssistSource.slice(modifierGuardIndex, assistLockIndex)).toContain("event.metaKey");
+    expect(scrollAssistSource.slice(modifierGuardIndex, assistLockIndex)).toContain("event.altKey");
+    expect(scrollAssistSource.slice(modifierGuardIndex, assistLockIndex)).toContain("event.shiftKey");
+    expect(scrollAssistSource.slice(modifierGuardIndex, assistLockIndex)).toContain("return;");
     expect(scrollAssistSource).toContain("window.scrollTo({ top: targetTop, left: 0 })");
     expect(scrollAssistSource).toContain("window.scrollY + rect.top - headerOffset");
     expect(scrollAssistSource).not.toContain("rect.height / 2");

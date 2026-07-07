@@ -174,6 +174,10 @@ export default function PublicSectionScrollAssist() {
     }
 
     function handleWheel(event: WheelEvent) {
+      if (event.ctrlKey || event.metaKey || event.altKey || event.shiftKey) {
+        return;
+      }
+
       if (assistLocked) {
         event.preventDefault();
         return;
