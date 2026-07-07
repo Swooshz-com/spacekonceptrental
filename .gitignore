@@ -53,6 +53,7 @@ n8n-credential-bindings*.json
 
 # Generated import/export scratch space
 .tmp/
+supabase/.temp/
 tmp/
 temp/
 *.log

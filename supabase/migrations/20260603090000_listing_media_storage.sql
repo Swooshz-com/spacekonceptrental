@@ -24,7 +24,20 @@ set
   file_size_limit = excluded.file_size_limit,
   allowed_mime_types = excluded.allowed_mime_types;
 
-alter table storage.objects enable row level security;
+do $storage_rls$
+begin
+  if exists (
+    select 1
+    from pg_class c
+    join pg_namespace n on n.oid = c.relnamespace
+    where n.nspname = 'storage'
+      and c.relname = 'objects'
+      and pg_has_role(c.relowner, 'member')
+  ) then
+    alter table storage.objects enable row level security;
+  end if;
+end
+$storage_rls$;
 
 grant select on storage.buckets to anon, authenticated;
 grant insert (
