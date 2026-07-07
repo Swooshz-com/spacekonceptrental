@@ -14,9 +14,7 @@ import { ListingImageMetadataManagementPanel } from "../../components/admin/list
 import { ListingImageUploadPanel } from "../../components/admin/listing-image-upload-panel";
 import { ListingManagementPanel } from "../../components/admin/listing-management-panel";
 import { HeroContentManagementPanel } from "../../components/admin/hero-content-management-panel";
-import { PublicPageMediaManagementPanel } from "../../components/admin/public-page-media-management-panel";
 import type { AdminHomepageHeroReadResult } from "../../lib/hero/admin-homepage-hero-read";
-import type { AdminPublicPageMediaReadResult } from "../../lib/page-media/admin-public-page-media-read";
 import type { QuoteEnquiryEmailConfigStatus } from "../../lib/quote/email-handoff";
 import type { AdminQuoteEmailDeliveryLogReadResult } from "../../lib/quote/admin-read/admin-quote-email-delivery-log";
 import styles from "./protected-admin-shell.module.css";
@@ -43,7 +41,6 @@ export type AdminShellView =
   | {
       kind: "hero";
       hero?: AdminHomepageHeroReadResult;
-      pageMedia?: AdminPublicPageMediaReadResult;
     }
   | {
       kind: "catalogue";
@@ -608,14 +605,9 @@ function AdminHeroOperations({
   hero = {
     status: "loaded",
     hero: null
-  },
-  pageMedia = {
-    status: "loaded",
-    media: null
   }
 }: {
   hero?: AdminHomepageHeroReadResult;
-  pageMedia?: AdminPublicPageMediaReadResult;
 }) {
   if (hero.status === "unavailable") {
     return (
@@ -627,17 +619,7 @@ function AdminHeroOperations({
   }
 
   return (
-    <>
-      <HeroContentManagementPanel hero={hero.hero} />
-      {pageMedia.status === "unavailable" ? (
-        <AdminUnavailableWorkspace
-          title="About story media"
-          description="Public page media is temporarily unavailable. The protected Hero route remains in place while existing reads recover."
-        />
-      ) : (
-        <PublicPageMediaManagementPanel media={pageMedia.media} />
-      )}
-    </>
+    <HeroContentManagementPanel hero={hero.hero} />
   );
 }
 
@@ -930,9 +912,7 @@ function AdminOperationsView({
   view: AdminShellView;
 }) {
   if (view.kind === "hero") {
-    return (
-      <AdminHeroOperations hero={view.hero} pageMedia={view.pageMedia} />
-    );
+    return <AdminHeroOperations hero={view.hero} />;
   }
 
   if (view.kind === "catalogue") {

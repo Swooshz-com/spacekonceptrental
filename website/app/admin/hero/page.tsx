@@ -1,5 +1,4 @@
 import { resolveAdminHomepageHeroRead } from "../../../lib/hero/admin-homepage-hero-read";
-import { resolveAdminPublicPageMediaRead } from "../../../lib/page-media/admin-public-page-media-read";
 import {
   AdminShellContent,
   resolveProtectedAdminShellState
@@ -10,18 +9,15 @@ export const revalidate = 0;
 
 export default async function AdminHeroPage() {
   const state = await resolveProtectedAdminShellState();
-  const [hero, pageMedia] =
+  const hero =
     state.status === "authorised_admin"
-      ? await Promise.all([
-          resolveAdminHomepageHeroRead(),
-          resolveAdminPublicPageMediaRead()
-        ])
-      : [undefined, undefined];
+      ? await resolveAdminHomepageHeroRead()
+      : undefined;
 
   return (
     <AdminShellContent
       state={state}
-      view={{ kind: "hero", hero, pageMedia }}
+      view={{ kind: "hero", hero }}
     />
   );
 }
