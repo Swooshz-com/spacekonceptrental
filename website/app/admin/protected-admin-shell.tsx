@@ -204,6 +204,50 @@ const adminNavigationItems = [
 
 type AdminNavigationKind = (typeof adminNavigationItems)[number]["kind"];
 
+const adminNavigationIcons: Record<AdminNavigationKind, ReactNode> = {
+  home: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+      <rect x="4" y="4" width="6" height="6" />
+      <rect x="14" y="4" width="6" height="6" />
+      <rect x="4" y="14" width="6" height="6" />
+      <rect x="14" y="14" width="6" height="6" />
+    </svg>
+  ),
+  hero: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+      <path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9L12 3Z" />
+    </svg>
+  ),
+  catalogue: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+      <rect x="4" y="4" width="6" height="6" />
+      <rect x="14" y="4" width="6" height="6" />
+      <rect x="4" y="14" width="6" height="6" />
+      <rect x="14" y="14" width="6" height="6" />
+    </svg>
+  ),
+  setups: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+      <path d="m12 4 8 5-8 5-8-5 8-5Z" />
+      <path d="m4 15 8 5 8-5" />
+    </svg>
+  ),
+  "enquiry-email": (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3.5" y="5.5" width="17" height="13" rx="1.5" />
+      <path d="m4.5 7 7.5 6 7.5-6" />
+    </svg>
+  ),
+  "delivery-log": (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 7h11v9H4z" />
+      <path d="M15 10h3l2 2.5V16h-5z" />
+      <circle cx="7" cy="18" r="1.8" />
+      <circle cx="17" cy="18" r="1.8" />
+    </svg>
+  )
+};
+
 function activeNavigationKind(view: AdminShellView): AdminNavigationKind {
   return view.kind;
 }
@@ -329,7 +373,12 @@ function AdminOperationsNavigation({
             href={item.href}
             key={item.href}
           >
-            <span className={styles.navLabel}>{item.label}</span>
+            <span className={styles.navItemInner}>
+              <span className={styles.navIcon} aria-hidden="true">
+                {adminNavigationIcons[item.kind]}
+              </span>
+              <span className={styles.navLabel}>{item.label}</span>
+            </span>
             <span className={styles.navMeta}>{item.meta}</span>
           </a>
         );

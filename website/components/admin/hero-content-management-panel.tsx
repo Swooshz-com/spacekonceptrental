@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent, type SyntheticEvent } from "react";
 
 import {
   DEFAULT_HOMEPAGE_HERO_CONTENT,
   validateHomepageHeroImageInput,
   type HomepageHeroContent
 } from "../../lib/hero/homepage-hero-content";
+import styles from "./hero-content-management-panel.module.css";
 
 type HeroContentManagementPanelProps = {
   hero: HomepageHeroContent | null;
@@ -145,9 +146,38 @@ export function HeroContentManagementPanel({
   onMutationComplete = reloadDashboard
 }: HeroContentManagementPanelProps) {
   const [status, setStatus] = useState<PanelStatus>({ kind: "idle" });
+  const [imageDimensions, setImageDimensions] = useState<{
+    height: number;
+    width: number;
+  } | null>(null);
   const currentImageUrl = heroImageUrl(hero);
   const currentImageAlt = heroImageAlt(hero);
   const currentPublished = hero?.isEnabled ?? true;
+
+  useEffect(() => {
+    const image = new Image();
+
+    image.onload = () => {
+      if (image.naturalWidth > 0 && image.naturalHeight > 0) {
+        setImageDimensions({
+          height: image.naturalHeight,
+          width: image.naturalWidth
+        });
+      }
+    };
+    image.src = currentImageUrl;
+  }, [currentImageUrl]);
+
+  function handlePreviewLoad(event: SyntheticEvent<HTMLImageElement>) {
+    const image = event.currentTarget;
+
+    if (image.naturalWidth > 0 && image.naturalHeight > 0) {
+      setImageDimensions({
+        height: image.naturalHeight,
+        width: image.naturalWidth
+      });
+    }
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -238,22 +268,19 @@ export function HeroContentManagementPanel({
   }
 
   return (
-    <section className="premium-section" aria-label="Homepage hero image management">
-      <div className="premium-container" style={{ maxWidth: "1100px" }}>
-        <div
-          style={{
-            borderBottom: "1px solid rgba(68, 64, 60, 0.18)",
-            marginBottom: "34px",
-            paddingBottom: "24px"
-          }}
-        >
-          <p style={{ fontSize: "12px", fontWeight: 800, color: "var(--accent)", textTransform: "uppercase", letterSpacing: "1px", marginBottom: "8px" }}>
+    <section
+      className={`premium-section ${styles.heroPanel}`}
+      aria-label="Homepage hero image management"
+    >
+      <div className="premium-container">
+        <div className={styles.sectionHeader}>
+          <p className="adminHeroSectionEyebrow">
             Protected admin save
           </p>
-          <h2 className="premium-title-section" style={{ fontSize: "32px", marginBottom: "12px" }}>
+          <h2 className="adminHeroSectionTitle">
             Homepage hero image
           </h2>
-          <p style={{ color: "var(--muted)", lineHeight: 1.6, margin: 0 }}>
+          <p>
             Update the main visual for the homepage. Homepage copy and calls to
             action are code-managed and cannot be edited in this admin.
           </p>
@@ -261,14 +288,8 @@ export function HeroContentManagementPanel({
 
         {status.kind !== "idle" ? (
           <div
-            style={{
-              padding: "16px",
-              borderRadius: "var(--radius-md)",
-              marginBottom: "28px",
-              fontSize: "14px",
-              fontWeight: 600,
-              ...statusStyles(status.kind)
-            }}
+            className={styles.statusMessage}
+            style={statusStyles(status.kind)}
             aria-live="polite"
           >
             {status.message}
@@ -277,166 +298,116 @@ export function HeroContentManagementPanel({
 
         <form
           aria-label="Homepage hero image"
-          className="premium-form-card"
+          className={`premium-form-card ${styles.heroForm}`}
           noValidate
           onSubmit={handleSubmit}
-          style={{ padding: 0, overflow: "hidden" }}
         >
-          <div
-            style={{
-              display: "grid",
-              gap: "32px",
-              gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-              padding: "32px"
-            }}
-          >
-            <section aria-label="Current hero image" style={{ display: "grid", gap: "16px" }}>
-              <p style={{ fontSize: "12px", fontWeight: 800, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "1px", margin: 0 }}>
+          <div className={styles.heroFormGrid}>
+            <section aria-label="Current hero image" className={styles.cardColumn}>
+              <p className={styles.columnLabel}>
                 Current hero image
               </p>
-              <div
-                style={{
-                  position: "relative",
-                  aspectRatio: "16 / 9",
-                  overflow: "hidden",
-                  border: "1px solid rgba(68, 64, 60, 0.18)",
-                  borderRadius: "var(--radius-md)",
-                  background: "var(--background)"
-                }}
-              >
+              <div className={styles.previewFrame}>
                 <img
                   alt={currentImageAlt}
+                  onLoad={handlePreviewLoad}
                   src={currentImageUrl}
-                  style={{
-                    display: "block",
-                    height: "100%",
-                    objectFit: "cover",
-                    width: "100%"
-                  }}
                 />
-                <span
-                  style={{
-                    position: "absolute",
-                    right: "12px",
-                    bottom: "12px",
-                    background: currentPublished ? "#111111" : "#78716c",
-                    color: "#fff",
-                    fontSize: "11px",
-                    fontWeight: 800,
-                    letterSpacing: "0.6px",
-                    padding: "6px 9px",
-                    textTransform: "uppercase"
-                  }}
-                >
+                <span className={styles.previewBadge}>
                   {currentPublished ? "Published" : "Unpublished"}
                 </span>
               </div>
-              <dl style={{ display: "grid", gap: "10px", color: "var(--muted)", fontSize: "14px", margin: 0 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", gap: "16px" }}>
-                  <dt>Alt text</dt>
-                  <dd style={{ color: "var(--foreground)", margin: 0, textAlign: "right" }}>
-                    {currentImageAlt}
+              <dl className={styles.previewMeta}>
+                <div>
+                  <dt>Resolution</dt>
+                  <dd>
+                    {imageDimensions
+                      ? `${imageDimensions.width}x${imageDimensions.height}px`
+                      : "Loading"}
                   </dd>
                 </div>
-                <div style={{ display: "flex", justifyContent: "space-between", gap: "16px" }}>
-                  <dt>Copy</dt>
-                  <dd style={{ color: "var(--foreground)", margin: 0, textAlign: "right" }}>
-                    Code-managed
+                <div>
+                  <dt>Status</dt>
+                  <dd>{currentPublished ? "Published" : "Unpublished"}</dd>
+                </div>
+                <div>
+                  <dt>Alt Text</dt>
+                  <dd title={currentImageAlt}>
+                    {currentImageAlt}
                   </dd>
                 </div>
               </dl>
             </section>
 
-            <section aria-label="Upload new hero image" style={{ display: "grid", gap: "16px" }}>
-              <p style={{ fontSize: "12px", fontWeight: 800, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "1px", margin: 0 }}>
+            <section aria-label="Upload new hero image" className={styles.cardColumn}>
+              <p className={styles.columnLabel}>
                 Upload new image
               </p>
               <label
+                className={styles.dropzone}
                 htmlFor="hero-image-file"
-                style={{
-                  alignItems: "center",
-                  border: "2px dashed rgba(68, 64, 60, 0.28)",
-                  borderRadius: "var(--radius-md)",
-                  cursor: "pointer",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "14px",
-                  justifyContent: "center",
-                  minHeight: "280px",
-                  padding: "28px",
-                  textAlign: "center"
-                }}
               >
-                <span aria-hidden="true" style={{ color: "var(--accent)", fontSize: "34px", lineHeight: 1 }}>
-                  +
+                <span className={styles.uploadIcon} aria-hidden="true">
+                  <svg viewBox="0 0 24 24" focusable="false">
+                    <path d="M12 16V7" />
+                    <path d="m8.5 10.5 3.5-3.5 3.5 3.5" />
+                    <path d="M6.5 18.5h10.25a4 4 0 0 0 .45-7.98 5.75 5.75 0 0 0-11.04-1.55A4.75 4.75 0 0 0 6.5 18.5Z" />
+                  </svg>
                 </span>
-                <span style={{ color: "var(--foreground)", fontSize: "18px", fontWeight: 700 }}>
-                  Select a hero image
+                <span className={styles.dropzoneTitle}>
+                  Drag and drop new image here
                 </span>
-                <span style={{ color: "var(--muted)", fontSize: "14px", lineHeight: 1.5 }}>
-                  JPG, PNG, WEBP, or AVIF. Maximum file size 5MB. Use a wide
-                  image for the homepage hero.
+                <span className={styles.dropzoneSubtitle}>
+                  or click to browse from files
                 </span>
                 <input
+                  aria-label="Select a hero image"
                   accept="image/jpeg,image/png,image/webp,image/avif"
-                  className="premium-input"
+                  className={`premium-input ${styles.fileInput}`}
                   id="hero-image-file"
                   name="imageFile"
                   type="file"
-                  style={{ marginTop: "8px", maxWidth: "320px", padding: "10px" }}
                 />
               </label>
+              <p className={styles.uploadHelp}>
+                Supported formats: JPG, PNG, WEBP, AVIF. Max size: 5MB.
+                Recommended ratio: 16:9.
+              </p>
             </section>
           </div>
 
-          <div
-            style={{
-              borderTop: "1px solid rgba(68, 64, 60, 0.16)",
-              display: "grid",
-              gap: "24px",
-              padding: "28px 32px"
-            }}
-          >
-            <label style={{ display: "flex", flexDirection: "column", gap: "8px", fontSize: "14px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.6px" }}>
+          <div className={styles.altTextArea}>
+            <label className={styles.fieldLabel}>
               Image alt text
               <input
-                className="premium-input"
+                className={`premium-input ${styles.altInput}`}
                 defaultValue={currentImageAlt}
                 maxLength={240}
                 name="imageAlt"
                 required
-                style={{ textTransform: "none", letterSpacing: 0 }}
               />
-              <small style={{ fontWeight: 400, color: "var(--muted)", fontSize: "13px", letterSpacing: 0, lineHeight: 1.5, textTransform: "none" }}>
-                Describe the image clearly for public accessibility. Do not add
-                availability or policy claims.
+              <small>
+                Crucial for accessibility and SEO. Describe the image content
+                clearly.
               </small>
             </label>
           </div>
 
-          <div
-            style={{
-              alignItems: "center",
-              background: "rgba(120, 113, 108, 0.08)",
-              borderTop: "1px solid rgba(68, 64, 60, 0.16)",
-              display: "flex",
-              flexWrap: "wrap",
-              gap: "20px",
-              justifyContent: "space-between",
-              padding: "28px 32px"
-            }}
-          >
-            <label style={{ alignItems: "center", display: "flex", gap: "14px", fontSize: "16px", fontWeight: 600 }}>
+          <div className={styles.formFooter}>
+            <label className={styles.publishToggle}>
               <input
                 defaultChecked={currentPublished}
                 name="isEnabled"
                 type="checkbox"
-                style={{ width: "22px", height: "22px", accentColor: "#111111" }}
               />
+              <span aria-hidden="true" />
               Publish hero image
             </label>
 
-            <button className="premium-button premium-button--primary" type="submit" style={{ minWidth: "200px" }}>
+            <button
+              className={`premium-button ${styles.saveButton}`}
+              type="submit"
+            >
               Save hero image
             </button>
           </div>
