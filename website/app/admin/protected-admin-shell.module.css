@@ -160,6 +160,22 @@
   margin: 0;
 }
 
+.brandHomeLink {
+  border-radius: var(--admin-radius);
+  display: inline-flex;
+  padding: 2px 0;
+}
+
+.brandHomeLink:hover,
+.brandHomeLink:focus-visible {
+  color: var(--admin-muted);
+}
+
+.brandHomeLink:focus-visible {
+  box-shadow: 0 0 0 3px rgb(27 28 28 / 16%);
+  outline: none;
+}
+
 .workspaceBadge {
   background: var(--admin-surface-highest);
   color: var(--admin-secondary);

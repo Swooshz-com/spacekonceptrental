@@ -961,7 +961,15 @@ function AdminTopbar() {
   return (
     <header className={styles.topbar}>
       <div className={styles.brandLine}>
-        <h1 className={styles.brandTitle}>SpaceKonceptRental Admin</h1>
+        <h1 className={styles.brandTitle}>
+          <a
+            className={styles.brandHomeLink}
+            href="/admin"
+            aria-label="SpaceKonceptRental Admin dashboard"
+          >
+            SpaceKonceptRental Admin
+          </a>
+        </h1>
         <span className={styles.workspaceBadge}>Protected Workspace</span>
       </div>
       <div className={styles.topbarActions}>

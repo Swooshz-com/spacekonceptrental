@@ -41,7 +41,7 @@ const allowedImageTypes = new Set([
   "image/avif"
 ]);
 const genericFailureMessage =
-  "Protected admin hero image save could not be completed. Check the image file, alt text, and publish state before retrying.";
+  "Protected admin hero image save could not be completed. Check the image file and alt text before retrying.";
 
 function formValue(formData: FormData, name: string) {
   const value = formData.get(name);
@@ -152,7 +152,6 @@ export function HeroContentManagementPanel({
   } | null>(null);
   const currentImageUrl = heroImageUrl(hero);
   const currentImageAlt = heroImageAlt(hero);
-  const currentPublished = hero?.isEnabled ?? true;
 
   useEffect(() => {
     const image = new Image();
@@ -184,16 +183,13 @@ export function HeroContentManagementPanel({
 
     const form = event.currentTarget;
     const formData = new FormData(form);
-    const enabledInput = form.elements.namedItem("isEnabled");
     const selectedFile = formData.get("imageFile");
     const imageFile = isSelectedFile(selectedFile) ? selectedFile : null;
     const imageAlt = formValue(formData, "imageAlt");
-    const isEnabled =
-      enabledInput instanceof HTMLInputElement ? enabledInput.checked : false;
     const validation = validateHomepageHeroImageInput(
       {
         imageAlt,
-        isEnabled
+        isEnabled: true
       },
       {
         imageUrlRequired: false
@@ -226,7 +222,7 @@ export function HeroContentManagementPanel({
 
       const uploadBody = new FormData();
       uploadBody.set("imageAlt", validation.image.imageAlt);
-      uploadBody.set("isEnabled", validation.image.isEnabled ? "true" : "false");
+      uploadBody.set("isEnabled", "true");
 
       if (imageFile) {
         uploadBody.set("imageFile", imageFile);
@@ -251,7 +247,7 @@ export function HeroContentManagementPanel({
 
       setStatus({
         kind: "success",
-        message: "Hero image saved for protected admin review. Refreshing dashboard."
+        message: "Hero image saved and active. Refreshing dashboard."
       });
 
       try {
@@ -308,7 +304,7 @@ export function HeroContentManagementPanel({
                 src={currentImageUrl}
               />
               <span className={styles.previewBadge}>
-                {currentPublished ? "Active" : "Unpublished"}
+                Current
               </span>
             </div>
             <dl className={styles.previewMeta}>
@@ -319,10 +315,6 @@ export function HeroContentManagementPanel({
                     ? `${imageDimensions.width}x${imageDimensions.height}px`
                     : "Loading"}
                 </dd>
-              </div>
-              <div>
-                <dt>Status</dt>
-                <dd>{currentPublished ? "Published" : "Unpublished"}</dd>
               </div>
               <div>
                 <dt>Alt Text</dt>
@@ -382,16 +374,6 @@ export function HeroContentManagementPanel({
         </div>
 
         <div className={styles.formFooter}>
-          <label className={styles.publishToggle}>
-            <input
-              defaultChecked={currentPublished}
-              name="isEnabled"
-              type="checkbox"
-            />
-            <span aria-hidden="true" />
-            Publish hero image
-          </label>
-
           <button className={styles.saveButton} type="submit">
             Save hero image
           </button>

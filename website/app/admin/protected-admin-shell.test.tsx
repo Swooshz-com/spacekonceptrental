@@ -242,6 +242,11 @@ describe("protected admin shell", () => {
     expect(
       screen.getByRole("heading", { name: /quick links/i })
     ).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", {
+        name: /spacekonceptrental admin dashboard/i
+      })
+    ).toHaveAttribute("href", "/admin");
     expect(screen.getByText(/missing alt text/i)).toBeInTheDocument();
     expect(screen.getByText(/missing images/i)).toBeInTheDocument();
     expect(
@@ -589,8 +594,8 @@ describe("protected admin shell", () => {
       screen.getByLabelText(/image alt text/i)
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("checkbox", { name: /publish hero image/i })
-    ).toBeInTheDocument();
+      screen.queryByRole("checkbox", { name: /publish hero image/i })
+    ).not.toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: /save hero image/i })
     ).toBeEnabled();

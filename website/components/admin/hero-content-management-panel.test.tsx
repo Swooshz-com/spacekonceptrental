@@ -55,7 +55,6 @@ describe("hero content management panel", () => {
     ).toBeInTheDocument();
     expect(screen.getByLabelText(/select a hero image/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/image alt text/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/publish hero image/i)).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: /save hero image/i })
     ).toBeInTheDocument();
@@ -65,9 +64,12 @@ describe("hero content management panel", () => {
     expect(screen.queryByLabelText(/secondary CTA/i)).not.toBeInTheDocument();
     expect(screen.queryByLabelText(/hero image url/i)).not.toBeInTheDocument();
     expect(screen.queryByLabelText(/about story/i)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/publish hero image/i)).not.toBeInTheDocument();
+    expect(screen.queryByRole("checkbox", { name: /publish hero image/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("textbox", { name: /image url/i })).not.toBeInTheDocument();
     expect(document.querySelector('input[type="url"]')).toBeNull();
     expect(document.querySelector('input[name="imageUrl"]')).toBeNull();
+    expect(document.querySelector('input[name="isEnabled"]')).toBeNull();
     expect(screen.getAllByText(/code-managed/i).length).toBeGreaterThan(0);
   });
 
@@ -130,7 +132,7 @@ describe("hero content management panel", () => {
     fireEvent.click(screen.getByRole("button", { name: /save hero image/i }));
 
     expect(
-      await screen.findByText(/check the image file, alt text, and publish state/i)
+      await screen.findByText(/check the image file and alt text/i)
     ).toBeInTheDocument();
     expect(fetcher).not.toHaveBeenCalled();
   });
