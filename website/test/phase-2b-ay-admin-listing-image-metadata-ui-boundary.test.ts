@@ -69,14 +69,16 @@ describe("Phase 2B-AY admin listing image metadata UI boundary", () => {
     );
   });
 
-  it("keeps image metadata controls backend/client-only while the protected shell uses deferred image context", () => {
+  it("keeps image metadata controls in the client panel while the protected shell wires real image context", () => {
     const shellSource = readRepoFile("website/app/admin/protected-admin-shell.tsx");
     const panelSource = readRepoFile(
       "website/components/admin/listing-image-metadata-management-panel.tsx"
     );
 
-    expect(shellSource).not.toContain("ListingImageMetadataManagementPanel");
-    expect(shellSource).toContain("Upload Listing Images");
+    expect(shellSource).toContain("ListingImageMetadataManagementPanel");
+    expect(shellSource).toContain("<ListingImageMetadataManagementPanel");
+    expect(shellSource).toContain("images={dashboard.data.images}");
+    expect(shellSource).toContain("products={dashboard.data.products}");
     expect(panelSource).toContain('"use client"');
     expect(panelSource).toContain("productImage.write");
     expect(panelSource).toContain("/api/admin/csrf-proof");

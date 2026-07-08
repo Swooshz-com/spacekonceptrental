@@ -269,150 +269,134 @@ export function HeroContentManagementPanel({
 
   return (
     <section
-      className={`premium-section ${styles.heroPanel}`}
+      className={styles.heroPanel}
       aria-label="Homepage hero image management"
     >
-      <div className="premium-container">
-        <div className={styles.sectionHeader}>
-          <p className="adminHeroSectionEyebrow">
-            Protected admin save
-          </p>
-          <h2 className="adminHeroSectionTitle">
-            Homepage hero image
-          </h2>
-          <p>
-            Update the main visual for the homepage. Homepage copy and calls to
-            action are code-managed and cannot be edited in this admin.
-          </p>
+      <div className={styles.sectionHeader}>
+        <p className={styles.sectionEyebrow}>Protected admin save</p>
+        <h2>Homepage hero image</h2>
+        <p>
+          Update the main visual for the homepage. Homepage copy and
+          call-to-action text are code-managed and cannot be edited via this
+          admin.
+        </p>
+      </div>
+
+      {status.kind !== "idle" ? (
+        <div
+          className={styles.statusMessage}
+          style={statusStyles(status.kind)}
+          aria-live="polite"
+        >
+          {status.message}
+        </div>
+      ) : null}
+
+      <form
+        aria-label="Homepage hero image"
+        className={styles.heroForm}
+        noValidate
+        onSubmit={handleSubmit}
+      >
+        <div className={styles.heroFormGrid}>
+          <section aria-label="Current hero image" className={styles.cardColumn}>
+            <p className={styles.columnLabel}>Current hero image</p>
+            <div className={styles.previewFrame}>
+              <img
+                alt={currentImageAlt}
+                onLoad={handlePreviewLoad}
+                src={currentImageUrl}
+              />
+              <span className={styles.previewBadge}>
+                {currentPublished ? "Active" : "Unpublished"}
+              </span>
+            </div>
+            <dl className={styles.previewMeta}>
+              <div>
+                <dt>Resolution</dt>
+                <dd>
+                  {imageDimensions
+                    ? `${imageDimensions.width}x${imageDimensions.height}px`
+                    : "Loading"}
+                </dd>
+              </div>
+              <div>
+                <dt>Status</dt>
+                <dd>{currentPublished ? "Published" : "Unpublished"}</dd>
+              </div>
+              <div>
+                <dt>Alt Text</dt>
+                <dd title={currentImageAlt}>{currentImageAlt}</dd>
+              </div>
+            </dl>
+          </section>
+
+          <section aria-label="Upload new hero image" className={styles.cardColumn}>
+            <p className={styles.columnLabel}>Upload new image</p>
+            <label className={styles.dropzone} htmlFor="hero-image-file">
+              <span className={styles.uploadIcon} aria-hidden="true">
+                <svg viewBox="0 0 24 24" focusable="false">
+                  <path d="M12 16V7" />
+                  <path d="m8.5 10.5 3.5-3.5 3.5 3.5" />
+                  <path d="M6.5 18.5h10.25a4 4 0 0 0 .45-7.98 5.75 5.75 0 0 0-11.04-1.55A4.75 4.75 0 0 0 6.5 18.5Z" />
+                </svg>
+              </span>
+              <span className={styles.dropzoneTitle}>
+                Drag and drop new image here
+              </span>
+              <span className={styles.dropzoneSubtitle}>
+                or click to browse from files
+              </span>
+              <span className={styles.fileButton}>Select File</span>
+              <input
+                aria-label="Select a hero image"
+                accept="image/jpeg,image/png,image/webp,image/avif"
+                className={styles.fileInput}
+                id="hero-image-file"
+                name="imageFile"
+                type="file"
+              />
+            </label>
+            <p className={styles.uploadHelp}>
+              Supported formats: JPG, PNG, WEBP, AVIF. Max size: 5MB.
+              Recommended ratio: 16:9.
+            </p>
+          </section>
         </div>
 
-        {status.kind !== "idle" ? (
-          <div
-            className={styles.statusMessage}
-            style={statusStyles(status.kind)}
-            aria-live="polite"
-          >
-            {status.message}
-          </div>
-        ) : null}
+        <div className={styles.altTextArea}>
+          <label className={styles.fieldLabel}>
+            Image alt text
+            <input
+              className={styles.altInput}
+              defaultValue={currentImageAlt}
+              maxLength={240}
+              name="imageAlt"
+              required
+            />
+            <small>
+              Crucial for accessibility and SEO. Describe the image content
+              clearly.
+            </small>
+          </label>
+        </div>
 
-        <form
-          aria-label="Homepage hero image"
-          className={`premium-form-card ${styles.heroForm}`}
-          noValidate
-          onSubmit={handleSubmit}
-        >
-          <div className={styles.heroFormGrid}>
-            <section aria-label="Current hero image" className={styles.cardColumn}>
-              <p className={styles.columnLabel}>
-                Current hero image
-              </p>
-              <div className={styles.previewFrame}>
-                <img
-                  alt={currentImageAlt}
-                  onLoad={handlePreviewLoad}
-                  src={currentImageUrl}
-                />
-                <span className={styles.previewBadge}>
-                  {currentPublished ? "Published" : "Unpublished"}
-                </span>
-              </div>
-              <dl className={styles.previewMeta}>
-                <div>
-                  <dt>Resolution</dt>
-                  <dd>
-                    {imageDimensions
-                      ? `${imageDimensions.width}x${imageDimensions.height}px`
-                      : "Loading"}
-                  </dd>
-                </div>
-                <div>
-                  <dt>Status</dt>
-                  <dd>{currentPublished ? "Published" : "Unpublished"}</dd>
-                </div>
-                <div>
-                  <dt>Alt Text</dt>
-                  <dd title={currentImageAlt}>
-                    {currentImageAlt}
-                  </dd>
-                </div>
-              </dl>
-            </section>
+        <div className={styles.formFooter}>
+          <label className={styles.publishToggle}>
+            <input
+              defaultChecked={currentPublished}
+              name="isEnabled"
+              type="checkbox"
+            />
+            <span aria-hidden="true" />
+            Publish hero image
+          </label>
 
-            <section aria-label="Upload new hero image" className={styles.cardColumn}>
-              <p className={styles.columnLabel}>
-                Upload new image
-              </p>
-              <label
-                className={styles.dropzone}
-                htmlFor="hero-image-file"
-              >
-                <span className={styles.uploadIcon} aria-hidden="true">
-                  <svg viewBox="0 0 24 24" focusable="false">
-                    <path d="M12 16V7" />
-                    <path d="m8.5 10.5 3.5-3.5 3.5 3.5" />
-                    <path d="M6.5 18.5h10.25a4 4 0 0 0 .45-7.98 5.75 5.75 0 0 0-11.04-1.55A4.75 4.75 0 0 0 6.5 18.5Z" />
-                  </svg>
-                </span>
-                <span className={styles.dropzoneTitle}>
-                  Drag and drop new image here
-                </span>
-                <span className={styles.dropzoneSubtitle}>
-                  or click to browse from files
-                </span>
-                <input
-                  aria-label="Select a hero image"
-                  accept="image/jpeg,image/png,image/webp,image/avif"
-                  className={`premium-input ${styles.fileInput}`}
-                  id="hero-image-file"
-                  name="imageFile"
-                  type="file"
-                />
-              </label>
-              <p className={styles.uploadHelp}>
-                Supported formats: JPG, PNG, WEBP, AVIF. Max size: 5MB.
-                Recommended ratio: 16:9.
-              </p>
-            </section>
-          </div>
-
-          <div className={styles.altTextArea}>
-            <label className={styles.fieldLabel}>
-              Image alt text
-              <input
-                className={`premium-input ${styles.altInput}`}
-                defaultValue={currentImageAlt}
-                maxLength={240}
-                name="imageAlt"
-                required
-              />
-              <small>
-                Crucial for accessibility and SEO. Describe the image content
-                clearly.
-              </small>
-            </label>
-          </div>
-
-          <div className={styles.formFooter}>
-            <label className={styles.publishToggle}>
-              <input
-                defaultChecked={currentPublished}
-                name="isEnabled"
-                type="checkbox"
-              />
-              <span aria-hidden="true" />
-              Publish hero image
-            </label>
-
-            <button
-              className={`premium-button ${styles.saveButton}`}
-              type="submit"
-            >
-              Save hero image
-            </button>
-          </div>
-        </form>
-      </div>
+          <button className={styles.saveButton} type="submit">
+            Save hero image
+          </button>
+        </div>
+      </form>
     </section>
   );
 }
