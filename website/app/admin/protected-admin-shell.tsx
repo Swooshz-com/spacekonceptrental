@@ -1073,7 +1073,7 @@ function AdminEnquiryEmailStatusOperations({
               <strong>From:</strong> website@spacekoncept.com
             </p>
             <p>
-              <strong>Reply-To:</strong> enquirer@example.com
+              <strong>Reply-To:</strong> [Enquirer reply address]
             </p>
             <p>
               <strong>Subject:</strong> New Rental Enquiry - [Catalogue Item Name]
@@ -1083,21 +1083,21 @@ function AdminEnquiryEmailStatusOperations({
           <div className={styles.templateInset}>
             <strong>Enquiry details:</strong>
             <ul>
-              <li>Name: Jane Doe</li>
-              <li>Company: Studio Architects</li>
-              <li>Phone: +65 5550 0198</li>
+              <li>Name: [Enquirer name]</li>
+              <li>Organisation: [Organisation if supplied]</li>
+              <li>Phone: [Phone number]</li>
             </ul>
           </div>
           <div className={styles.templateInset}>
             <strong>Requested items:</strong>
             <ul>
-              <li>1x Minimalist Desk</li>
-              <li>2x Curator Chairs</li>
+              <li>[Quantity]x [Catalogue item name]</li>
+              <li>[Quantity]x [Catalogue item name]</li>
             </ul>
-            <p>Requested dates: Oct 12 - Oct 15</p>
+            <p>Event window: [Date range supplied in enquiry]</p>
           </div>
           <p className={styles.templateQuote}>
-            "We are interested in renting these items for a temporary gallery setup next month."
+            "[Message supplied by the enquirer]"
           </p>
         </div>
       </aside>
