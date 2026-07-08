@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, type FormEvent, type ReactNode } from "react";
+import { useMemo, useState, type FormEvent } from "react";
 
 import styles from "./catalogue-owner-workflow.module.css";
 
@@ -32,8 +32,6 @@ export type CatalogueOwnerProduct = {
 export type CatalogueOwnerImage = {
   id: string;
   productId: string;
-  storageBucket: string;
-  storagePath: string;
   altText?: string;
   sortOrder: number;
   isPrimary: boolean;
@@ -44,7 +42,6 @@ type CatalogueOwnerWorkflowProps = {
   categories: CatalogueOwnerCategory[];
   products: CatalogueOwnerProduct[];
   images: CatalogueOwnerImage[];
-  advancedCategoryPanel?: ReactNode;
   fetcher?: typeof fetch;
   onMutationComplete?: () => void | Promise<void>;
 };
@@ -353,7 +350,6 @@ function StatusMessage({ status }: { status: PanelStatus }) {
 }
 
 export function CatalogueOwnerWorkflow({
-  advancedCategoryPanel,
   categories,
   fetcher = fetch,
   images,
@@ -991,7 +987,8 @@ export function CatalogueOwnerWorkflow({
                       ))}
                     </select>
                     <small>
-                      Categories are sorted alphabetically for owner browsing.
+                      Categories are derived from catalogue item assignments and
+                      sorted alphabetically.
                     </small>
                   </label>
 
@@ -1193,12 +1190,6 @@ export function CatalogueOwnerWorkflow({
         </section>
       </div>
 
-      {advancedCategoryPanel ? (
-        <details className={styles.advancedPanel}>
-          <summary>Advanced category details</summary>
-          <div>{advancedCategoryPanel}</div>
-        </details>
-      ) : null}
     </section>
   );
 }

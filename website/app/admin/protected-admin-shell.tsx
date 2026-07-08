@@ -10,7 +10,6 @@ import {
 } from "../../lib/products/admin-read/admin-product-dashboard-read";
 import { getAdminRouteRuntimeConfig } from "../../lib/server-runtime-config";
 import { CatalogueOwnerWorkflow } from "../../components/admin/catalogue-owner-workflow";
-import { CategoryManagementPanel } from "../../components/admin/category-management-panel";
 import { HeroContentManagementPanel } from "../../components/admin/hero-content-management-panel";
 import type { AdminHomepageHeroReadResult } from "../../lib/hero/admin-homepage-hero-read";
 import type { AdminQuoteEmailDeliveryLogReadResult } from "../../lib/quote/admin-read/admin-quote-email-delivery-log";
@@ -659,15 +658,23 @@ function AdminCatalogueOperations({
     );
   }
 
+  const ownerSafeImages = dashboard.data.images.map(
+    ({ id, productId, altText, sortOrder, isPrimary, status }) => ({
+      id,
+      productId,
+      altText,
+      sortOrder,
+      isPrimary,
+      status
+    })
+  );
+
   return (
     <div className={styles.managementStack}>
       <CatalogueOwnerWorkflow
         categories={dashboard.data.categories}
         products={dashboard.data.products}
-        images={dashboard.data.images}
-        advancedCategoryPanel={
-          <CategoryManagementPanel categories={dashboard.data.categories} />
-        }
+        images={ownerSafeImages}
       />
     </div>
   );

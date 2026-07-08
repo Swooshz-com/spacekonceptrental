@@ -74,6 +74,9 @@ describe("Phase 2B-AP admin category management UI boundary", () => {
 
   it("keeps category controls in the client panel while the protected shell wires real catalogue data", () => {
     const shellSource = readRepoFile("website/app/admin/protected-admin-shell.tsx");
+    const ownerWorkflowSource = readRepoFile(
+      "website/components/admin/catalogue-owner-workflow.tsx"
+    );
     const panelSource = readRepoFile(
       "website/components/admin/category-management-panel.tsx"
     );
@@ -89,11 +92,19 @@ describe("Phase 2B-AP admin category management UI boundary", () => {
         "website/app/admin/protected-admin-shell.tsx"
       ])
     );
-    expect(shellSource).toContain("CategoryManagementPanel");
-    expect(shellSource).toContain("<CategoryManagementPanel");
+    expect(shellSource).not.toContain("CategoryManagementPanel");
+    expect(shellSource).not.toContain("<CategoryManagementPanel");
     expect(shellSource).toContain("categories={dashboard.data.categories}");
+    expect(shellSource).toContain("images={ownerSafeImages}");
     expect(shellSource).not.toContain("categoryOptions");
     expect(shellSource).not.toContain("Select category");
+    expect(ownerWorkflowSource).toContain(
+      "Categories are derived from catalogue item assignments"
+    );
+    expect(ownerWorkflowSource).not.toContain("Advanced category details");
+    expect(ownerWorkflowSource).not.toMatch(
+      /Create category|New category|Create tag|New tag|name="style"|name="context"/i
+    );
     expect(panelSource).toContain('"use client"');
     expect(panelSource).toContain("/api/admin/csrf-proof");
     expect(panelSource).toContain("requestedOperation: categoryWriteOperation");

@@ -396,7 +396,18 @@ describe("protected admin shell", () => {
     expect(
       screen.getByRole("button", { name: /save image metadata/i })
     ).toBeInTheDocument();
-    expect(screen.getByText(/advanced category details/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/categories are derived from catalogue item assignments/i)
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/advanced category details/i)).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /save category metadata/i })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /create category|new category|create tag|new tag/i })
+    ).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/^style$/i)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/^context$/i)).not.toBeInTheDocument();
     expect(screen.queryByLabelText(/new image path/i)).not.toBeInTheDocument();
     expect(screen.queryByLabelText(/image path/i)).not.toBeInTheDocument();
     expect(screen.queryByLabelText(/image bucket/i)).not.toBeInTheDocument();
@@ -409,6 +420,29 @@ describe("protected admin shell", () => {
       })
     ).not.toBeInTheDocument();
   }, 15000);
+
+  it("maps catalogue images into an owner-safe client DTO", () => {
+    const shellSource = readAppFile("app/admin/protected-admin-shell.tsx");
+    const ownerWorkflowSource = readAppFile(
+      "components/admin/catalogue-owner-workflow.tsx"
+    );
+
+    expect(ownerWorkflowSource).not.toContain("storageBucket");
+    expect(ownerWorkflowSource).not.toContain("storagePath");
+    expect(ownerWorkflowSource).not.toContain("advancedCategoryPanel");
+    expect(ownerWorkflowSource).not.toContain("Advanced category details");
+    expect(shellSource).toContain(
+      "const ownerSafeImages = dashboard.data.images.map"
+    );
+    expect(shellSource).toContain(
+      "({ id, productId, altText, sortOrder, isPrimary, status })"
+    );
+    expect(shellSource).toContain("images={ownerSafeImages}");
+    expect(shellSource).not.toContain("images={dashboard.data.images}");
+    expect(shellSource).not.toContain("storageBucket");
+    expect(shellSource).not.toContain("storagePath");
+    expect(shellSource).not.toContain("CategoryManagementPanel");
+  });
 
   it("redirects unauthenticated protected admin page requests to the login route", () => {
     for (const path of [

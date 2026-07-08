@@ -29,6 +29,10 @@ Current protected admin pages remain:
 The current admin UX mapping source of truth for the next implementation
 slices is `docs/admin/ADMIN-UX-MAPPING.md`.
 
+Protected admin pages intentionally redirect unauthenticated requests to
+`/admin/login?state=unauthenticated`. Authenticated but unauthorized and
+unavailable states remain safe protected admin shell states.
+
 ## Next Implementation Sequence
 
 ### 1. Hero simplification plus clickable admin logo
@@ -71,10 +75,12 @@ Target:
 - Edit item drawer or panel.
 - Item editor fields for name, description, category, images, primary image,
   alt text, publish status, display position, and save.
-- Categories derived from existing category assignments and sorted
-  alphabetically.
-- No separate manual taxonomy manager as the primary workflow unless a hard
-  product reason exists.
+- Categories/tags managed through catalogue or setup item assignments.
+- Frontend category menus derived from actual tagged or assigned, published
+  content.
+- Empty categories/tags do not appear on the frontend, and derived category/tag
+  lists are sorted alphabetically.
+- No separate manual taxonomy manager as the primary launch workflow.
 - No raw URL owner workflow.
 - No storage bucket/path owner workflow.
 - No fake item data.
@@ -84,6 +90,11 @@ Backend note:
 - Current internals still use `products`, `categories`, and `product_images`.
   Preserve those internals until a separate rename/migration strategy is
   approved.
+- Current backend support still uses separate category records and product
+  `categoryId` assignments. The Catalogue editor may assign an existing
+  category, but this slice does not add item-level category/tag create-on-save.
+- Add a later backend-backed tagging or create-on-save category slice if owners
+  need to create categories/tags directly from item editing.
 - If style/context is required, add a reviewed schema and read/write contract
   before showing the field as editable.
 - Current admin reads do not expose a backed style/context field, so

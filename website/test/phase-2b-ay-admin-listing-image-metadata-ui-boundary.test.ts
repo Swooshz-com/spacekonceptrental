@@ -79,7 +79,12 @@ describe("Phase 2B-AY admin listing image metadata UI boundary", () => {
     );
 
     expect(shellSource).toContain("CatalogueOwnerWorkflow");
-    expect(shellSource).toContain("images={dashboard.data.images}");
+    expect(shellSource).toContain("ownerSafeImages");
+    expect(shellSource).toContain("dashboard.data.images.map");
+    expect(shellSource).toContain("images={ownerSafeImages}");
+    expect(shellSource).not.toContain("images={dashboard.data.images}");
+    expect(shellSource).not.toContain("storageBucket");
+    expect(shellSource).not.toContain("storagePath");
     expect(shellSource).not.toContain("<ListingImageMetadataManagementPanel");
     expect(ownerWorkflowSource).toContain("Save image metadata");
     expect(ownerWorkflowSource).toContain("/api/admin/product-images");
@@ -87,7 +92,8 @@ describe("Phase 2B-AY admin listing image metadata UI boundary", () => {
     expect(ownerWorkflowSource).not.toMatch(
       /New image path|Image bucket|name="storagePath"|name="storageBucket"/
     );
-    expect(shellSource).toContain("images={dashboard.data.images}");
+    expect(ownerWorkflowSource).not.toContain("storageBucket");
+    expect(ownerWorkflowSource).not.toContain("storagePath");
     expect(shellSource).toContain("products={dashboard.data.products}");
     expect(panelSource).toContain('"use client"');
     expect(panelSource).toContain("productImage.write");

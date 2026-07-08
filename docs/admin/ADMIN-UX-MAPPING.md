@@ -53,6 +53,15 @@ Decision: the top-left `SpaceKonceptRental Admin` brand links back to `/admin`.
 `View public site` remains the separate public-site link. The brand link is an
 admin home affordance, not a public navigation shortcut.
 
+### Protected Admin Routing
+
+Decision: unauthenticated protected admin page requests redirect to
+`/admin/login?state=unauthenticated`.
+
+This is intentional protected-admin UX behavior so owners land on the login page
+instead of a blocked admin shell state when they are not signed in. Authenticated
+but unauthorized and unavailable states still render safe admin shell states.
+
 ## Page Mapping
 
 ### `/admin`
@@ -170,15 +179,15 @@ Current controls:
 - One selected item editor for item details, category assignment, public
   status, display position, image upload, primary image, image alt text, and
   save.
-- Advanced category details disclosure for the existing category write panel.
 
 Confusing or unnecessary controls:
 
 - The lower-level listing, image upload, and image metadata panels still exist
   as protected implementation components, but they are no longer the primary
   `/admin/catalogue` owner experience.
-- The existing backend still has separate category records, so full category
-  creation/editing remains behind an Advanced category details disclosure.
+- Standalone category management is not the target launch UX for SKR. Owners
+  should assign categories/tags through catalogue or setup content, not maintain
+  a separate taxonomy table as the normal workflow.
 
 Controls to remove:
 
@@ -192,10 +201,13 @@ Controls to merge:
 
 - Listing metadata, category assignment, media upload, primary image, alt text,
   and public status are now merged into one selected-item editor.
-- Categories are derived from item/category assignments and sorted
-  alphabetically for browsing and filtering.
-- Future style/context filters should be derived from backed item fields rather
-  than a manual taxonomy manager.
+- Categories/tags should be managed through catalogue/setup item tagging and
+  assignments.
+- Frontend category menus should derive from actual tagged or assigned,
+  published content. Empty categories/tags should not appear, and derived lists
+  should be sorted alphabetically.
+- Future style/context filters should be derived from backed item fields or
+  setup/catalogue tagging rather than a manual taxonomy manager.
 
 Target owner-friendly model:
 
@@ -207,6 +219,8 @@ Target owner-friendly model:
 - Open an edit item drawer or panel from a card.
 - Item editor fields should include name, description, category, images,
   primary image, alt text, publish status, and save.
+- Existing-category assignment may remain as a temporary backend-backed control
+  until item-level tagging or category create-on-save exists.
 - Style/context should be added only after a backed schema and protected
   read/write contract exists.
 - Use furniture/event rental copy such as item, catalogue item, listing, image,
@@ -217,6 +231,10 @@ Backend constraints:
 - Current internals still use `products`, `categories`, and `product_images`.
   Those names are existing database/API/RPC internals and should not be renamed
   in a UI redesign PR.
+- Current backend support still has separate category records and product
+  records with an existing category assignment. The owner editor can assign an
+  existing category, but this PR does not add item-level category/tag
+  create-on-save.
 - Current reads expose category, product, and image summaries but do not expose
   a dedicated `style` or `context` item field.
 - Current image metadata updates can save alt text, display position, and
@@ -230,6 +248,8 @@ Backend constraints:
 Next implementation slice:
 
 - Continue with Setups owner workflow decision and implementation.
+- Add a later backend-backed item-level tagging or category create-on-save
+  slice if owners need to create categories/tags from the item editor.
 - If style/context is required for launch, add it as a reviewed schema and
   protected write/read contract slice before exposing it in the Catalogue
   editor.

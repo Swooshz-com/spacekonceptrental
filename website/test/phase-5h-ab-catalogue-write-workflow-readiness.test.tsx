@@ -151,7 +151,20 @@ describe("Phase 5H-A/B catalogue write workflow readiness", () => {
     expect(
       screen.getByRole("button", { name: /save image metadata/i }),
     ).toBeInTheDocument();
-    expect(screen.getByText(/advanced category details/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/categories are derived from catalogue item assignments/i),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/advanced category details/i)).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /save category metadata/i }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", {
+        name: /create category|new category|create tag|new tag/i,
+      }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/^style$/i)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/^context$/i)).not.toBeInTheDocument();
     expect(screen.queryByLabelText(/new image path/i)).not.toBeInTheDocument();
     expect(screen.queryByLabelText(/image path/i)).not.toBeInTheDocument();
     expect(screen.queryByLabelText(/image bucket/i)).not.toBeInTheDocument();
@@ -204,6 +217,7 @@ describe("Phase 5H-A/B catalogue write workflow readiness", () => {
 
   it("keeps protected admin source focused on safe write controls, validation, save, and visible MVP wording", () => {
     const adminSource = readTrackedProductionSources(adminSourcePaths);
+    const shellSource = readRepoFile("website/app/admin/protected-admin-shell.tsx");
     const ownerWorkflowSource = readRepoFile(
       "website/components/admin/catalogue-owner-workflow.tsx",
     );
@@ -216,7 +230,6 @@ describe("Phase 5H-A/B catalogue write workflow readiness", () => {
       /Save image metadata/i,
       /Search item name/i,
       /View public catalogue/i,
-      /Advanced category details/i,
       /public-safe copy review/i,
       /Public-ready listing helper/i,
       /Category visibility review/i,
@@ -230,6 +243,23 @@ describe("Phase 5H-A/B catalogue write workflow readiness", () => {
     expect(ownerWorkflowSource).not.toMatch(
       /New image path|Image bucket|name="storagePath"|name="storageBucket"|input type="url"/i,
     );
+    expect(ownerWorkflowSource).not.toContain("storageBucket");
+    expect(ownerWorkflowSource).not.toContain("storagePath");
+    expect(ownerWorkflowSource).not.toContain("advancedCategoryPanel");
+    expect(ownerWorkflowSource).not.toContain("Advanced category details");
+    expect(ownerWorkflowSource).toMatch(
+      /Categories are derived from catalogue item assignments/i,
+    );
+    expect(ownerWorkflowSource).not.toMatch(
+      /Create category|New category|Create tag|New tag|name="style"|name="context"/i,
+    );
+    expect(shellSource).toContain("ownerSafeImages");
+    expect(shellSource).toContain("dashboard.data.images.map");
+    expect(shellSource).toContain("images={ownerSafeImages}");
+    expect(shellSource).not.toContain("images={dashboard.data.images}");
+    expect(shellSource).not.toContain("storageBucket");
+    expect(shellSource).not.toContain("storagePath");
+    expect(shellSource).not.toContain("CategoryManagementPanel");
   });
 
   it("keeps admin success and error copy away from deployment, launch, owner-approval, and evidence claims", () => {
