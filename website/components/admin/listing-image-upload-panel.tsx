@@ -41,7 +41,7 @@ type PanelStatus =
 
 const productImageWriteOperation = "productImage.write";
 const genericFailureMessage =
-  "Protected admin upload could not be completed. Check selected listing, file type, public-safe alt text, primary label, and sort order before retrying.";
+  "Protected admin upload could not be completed. Check selected listing, file type, public-safe alt text, primary label, and display position before retrying.";
 
 function formValue(formData: FormData, name: string) {
   const value = formData.get(name);
@@ -234,7 +234,7 @@ export function ListingImageUploadPanel({
           <p style={{ fontSize: '13px', color: 'var(--muted)', background: 'var(--background)', padding: '16px', borderRadius: 'var(--radius-md)' }}>
             Use reviewed listing images only. Primary uploaded images can support
             public catalogue display after the image metadata is active; this is
-            not an availability, visual outcome, or inventory assertion. Protected
+            not an availability or visual outcome assertion. Protected
             admin upload stores media metadata for business owner review. If
             upload fails, keep the listing draft/protected, check file type and
             public-safe alt text, and retry the protected write locally.
@@ -305,7 +305,7 @@ export function ListingImageUploadPanel({
             </label>
 
             <label style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '14px', fontWeight: 600 }}>
-              Upload image sort order
+              Upload image display position
               <input
                 id="upload-image-sort-order"
                 max={1000000}

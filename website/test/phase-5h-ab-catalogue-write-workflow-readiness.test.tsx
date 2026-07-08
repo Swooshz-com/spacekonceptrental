@@ -135,9 +135,6 @@ describe("Phase 5H-A/B catalogue write workflow readiness", () => {
       0,
     );
     expect(
-      screen.getAllByText(/public-safe copy review/i).length,
-    ).toBeGreaterThan(0);
-    expect(
       screen.getByRole("button", { name: /save listing metadata/i }),
     ).toBeInTheDocument();
     expect(
@@ -150,10 +147,10 @@ describe("Phase 5H-A/B catalogue write workflow readiness", () => {
       screen.getByRole("button", { name: /upload listing image for review/i }),
     ).toBeInTheDocument();
     expect(
-      screen.getAllByText(/only updates listing metadata/i).length,
-    ).toBeGreaterThan(0);
+      screen.queryByRole("button", { name: /^select files$/i }),
+    ).not.toBeInTheDocument();
     expect(
-      screen.getAllByText(/media coverage/i).length,
+      screen.getAllByText(/uploaded images/i).length,
     ).toBeGreaterThan(0);
   });
 
@@ -172,6 +169,9 @@ describe("Phase 5H-A/B catalogue write workflow readiness", () => {
       ).not.toBeInTheDocument();
       expect(
         screen.queryByText(/public-safe copy review/i),
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole("button", { name: /create listing/i }),
       ).not.toBeInTheDocument();
       expect(
         screen.queryByRole("button", { name: /save listing metadata/i }),

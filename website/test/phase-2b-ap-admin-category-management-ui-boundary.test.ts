@@ -72,7 +72,7 @@ describe("Phase 2B-AP admin category management UI boundary", () => {
     );
   });
 
-  it("keeps category controls in the protected shell without changing admin route shape", () => {
+  it("keeps category controls in the client panel while the protected shell wires real catalogue data", () => {
     const shellSource = readRepoFile("website/app/admin/protected-admin-shell.tsx");
     const panelSource = readRepoFile(
       "website/components/admin/category-management-panel.tsx"
@@ -90,6 +90,10 @@ describe("Phase 2B-AP admin category management UI boundary", () => {
       ])
     );
     expect(shellSource).toContain("CategoryManagementPanel");
+    expect(shellSource).toContain("<CategoryManagementPanel");
+    expect(shellSource).toContain("categories={dashboard.data.categories}");
+    expect(shellSource).not.toContain("categoryOptions");
+    expect(shellSource).not.toContain("Select category");
     expect(panelSource).toContain('"use client"');
     expect(panelSource).toContain("/api/admin/csrf-proof");
     expect(panelSource).toContain("requestedOperation: categoryWriteOperation");

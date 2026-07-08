@@ -207,7 +207,7 @@ describe("Phase 3X-A/B protected admin write-ops hardening", () => {
     expect(text).toMatch(/category name/i);
     expect(text).toMatch(/category slug/i);
     expect(text).toMatch(/category description/i);
-    expect(text).toMatch(/category sort order/i);
+    expect(text).toMatch(/category display position/i);
     expect(text).toMatch(/public grouping/i);
     expect(text).toMatch(/quote\/enquiry recovery/i);
     expect(text).toMatch(/Protected write boundary: save category metadata only when grouping and listing-count cues are clear/i);

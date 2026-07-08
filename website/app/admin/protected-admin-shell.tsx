@@ -10,13 +10,13 @@ import {
 } from "../../lib/products/admin-read/admin-product-dashboard-read";
 import { getAdminRouteRuntimeConfig } from "../../lib/server-runtime-config";
 import { CategoryManagementPanel } from "../../components/admin/category-management-panel";
+import { HeroContentManagementPanel } from "../../components/admin/hero-content-management-panel";
 import { ListingImageMetadataManagementPanel } from "../../components/admin/listing-image-metadata-management-panel";
 import { ListingImageUploadPanel } from "../../components/admin/listing-image-upload-panel";
 import { ListingManagementPanel } from "../../components/admin/listing-management-panel";
-import { HeroContentManagementPanel } from "../../components/admin/hero-content-management-panel";
 import type { AdminHomepageHeroReadResult } from "../../lib/hero/admin-homepage-hero-read";
-import type { QuoteEnquiryEmailConfigStatus } from "../../lib/quote/email-handoff";
 import type { AdminQuoteEmailDeliveryLogReadResult } from "../../lib/quote/admin-read/admin-quote-email-delivery-log";
+import type { QuoteEnquiryEmailConfigStatus } from "../../lib/quote/email-handoff";
 import styles from "./protected-admin-shell.module.css";
 
 export type ProtectedAdminShellState =
@@ -78,6 +78,149 @@ const requestSecurityDenyReasons = new Set<string>([
   "csrf_proof_replayed",
   "csrf_proof_mismatched"
 ]);
+
+const adminNavigationItems = [
+  {
+    kind: "home",
+    href: "/admin",
+    label: "Dashboard",
+    meta: "Home"
+  },
+  {
+    kind: "hero",
+    href: "/admin/hero",
+    label: "Hero",
+    meta: "Image"
+  },
+  {
+    kind: "catalogue",
+    href: "/admin/catalogue",
+    label: "Catalogue",
+    meta: "Items"
+  },
+  {
+    kind: "setups",
+    href: "/admin/setups",
+    label: "Setups",
+    meta: "Public /listings"
+  },
+  {
+    kind: "enquiry-email",
+    href: "/admin/enquiry-email",
+    label: "Enquiry Email",
+    meta: "Recipient"
+  },
+  {
+    kind: "delivery-log",
+    href: "/admin/delivery-log",
+    label: "Delivery Log",
+    meta: "Technical"
+  }
+] as const;
+
+type AdminNavigationKind = (typeof adminNavigationItems)[number]["kind"];
+
+const adminNavigationIcons: Record<AdminNavigationKind, ReactNode> = {
+  home: (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.8}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <rect x="4" y="4" width="6" height="6" />
+      <rect x="14" y="4" width="6" height="6" />
+      <rect x="4" y="14" width="6" height="6" />
+      <rect x="14" y="14" width="6" height="6" />
+    </svg>
+  ),
+  hero: (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.8}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9L12 3Z" />
+    </svg>
+  ),
+  catalogue: (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.8}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <rect x="4" y="4" width="6" height="6" />
+      <rect x="14" y="4" width="6" height="6" />
+      <rect x="4" y="14" width="6" height="6" />
+      <rect x="14" y="14" width="6" height="6" />
+    </svg>
+  ),
+  setups: (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.8}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="m12 4 8 5-8 5-8-5 8-5Z" />
+      <path d="m4 15 8 5 8-5" />
+    </svg>
+  ),
+  "enquiry-email": (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.8}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <rect x="3.5" y="5.5" width="17" height="13" rx="1.5" />
+      <path d="m4.5 7 7.5 6 7.5-6" />
+    </svg>
+  ),
+  "delivery-log": (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.8}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M4 7h11v9H4z" />
+      <path d="M15 10h3l2 2.5V16h-5z" />
+      <circle cx="7" cy="18" r="1.8" />
+      <circle cx="17" cy="18" r="1.8" />
+    </svg>
+  )
+};
+
+const emptyStateIcons: Record<"log", ReactNode> = {
+  log: (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.5}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <rect x="4" y="3.5" width="16" height="17" rx="2.5" />
+      <path d="M8 8.5h8M8 12h8M8 15.5h5" />
+    </svg>
+  )
+};
 
 function mapGateResult(
   result: ServerAdminRuntimeRouteGateAdapterResult
@@ -156,98 +299,6 @@ export async function resolveProtectedAdminShellState(): Promise<ProtectedAdminS
   }
 }
 
-type LoadedAdminDashboard = Extract<
-  AdminProductDashboardReadResult,
-  { status: "loaded" }
->;
-type AdminDashboardProduct = LoadedAdminDashboard["data"]["products"][number];
-type AdminDashboardImage = LoadedAdminDashboard["data"]["images"][number];
-
-const adminNavigationItems = [
-  {
-    kind: "home",
-    href: "/admin",
-    label: "Dashboard",
-    meta: "Home"
-  },
-  {
-    kind: "hero",
-    href: "/admin/hero",
-    label: "Hero",
-    meta: "Image"
-  },
-  {
-    kind: "catalogue",
-    href: "/admin/catalogue",
-    label: "Catalogue",
-    meta: "Items"
-  },
-  {
-    kind: "setups",
-    href: "/admin/setups",
-    label: "Setups",
-    meta: "Public /listings"
-  },
-  {
-    kind: "enquiry-email",
-    href: "/admin/enquiry-email",
-    label: "Enquiry Email",
-    meta: "Recipient"
-  },
-  {
-    kind: "delivery-log",
-    href: "/admin/delivery-log",
-    label: "Delivery Log",
-    meta: "Technical"
-  }
-] as const;
-
-type AdminNavigationKind = (typeof adminNavigationItems)[number]["kind"];
-
-const adminNavigationIcons: Record<AdminNavigationKind, ReactNode> = {
-  home: (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
-      <rect x="4" y="4" width="6" height="6" />
-      <rect x="14" y="4" width="6" height="6" />
-      <rect x="4" y="14" width="6" height="6" />
-      <rect x="14" y="14" width="6" height="6" />
-    </svg>
-  ),
-  hero: (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
-      <path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9L12 3Z" />
-    </svg>
-  ),
-  catalogue: (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
-      <rect x="4" y="4" width="6" height="6" />
-      <rect x="14" y="4" width="6" height="6" />
-      <rect x="4" y="14" width="6" height="6" />
-      <rect x="14" y="14" width="6" height="6" />
-    </svg>
-  ),
-  setups: (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
-      <path d="m12 4 8 5-8 5-8-5 8-5Z" />
-      <path d="m4 15 8 5 8-5" />
-    </svg>
-  ),
-  "enquiry-email": (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
-      <rect x="3.5" y="5.5" width="17" height="13" rx="1.5" />
-      <path d="m4.5 7 7.5 6 7.5-6" />
-    </svg>
-  ),
-  "delivery-log": (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
-      <path d="M4 7h11v9H4z" />
-      <path d="M15 10h3l2 2.5V16h-5z" />
-      <circle cx="7" cy="18" r="1.8" />
-      <circle cx="17" cy="18" r="1.8" />
-    </svg>
-  )
-};
-
 function activeNavigationKind(view: AdminShellView): AdminNavigationKind {
   return view.kind;
 }
@@ -255,15 +306,18 @@ function activeNavigationKind(view: AdminShellView): AdminNavigationKind {
 function workspaceTitle(view: AdminShellView) {
   const activeKind = activeNavigationKind(view);
   const item = adminNavigationItems.find(({ kind }) => kind === activeKind);
+
   return item ? item.label : "Dashboard";
 }
 
 function workspaceDescription(view: AdminShellView) {
   const descriptions: Record<AdminNavigationKind, string> = {
     home: "Manage public website content: hero image, catalogue records, setup presentation, enquiry recipient, and delivery visibility.",
-    hero: "Manage the public homepage hero image. Homepage copy stays code-managed.",
-    catalogue: "Manage catalogue items, categories, display order, published status, and listing images.",
-    setups: "Review the public setups presentation, which derives from published catalogue records on /listings.",
+    hero: "Manage the public homepage hero image reference.",
+    catalogue:
+      "Manage catalogue items, categories, display position, published status, and listing images.",
+    setups:
+      "Review the public setups presentation, which derives from published catalogue records on /listings.",
     "enquiry-email": "Check the quote enquiry email handoff status.",
     "delivery-log": "Review technical enquiry email delivery attempts."
   };
@@ -287,49 +341,25 @@ function hasText(value?: string) {
   return Boolean(value?.trim());
 }
 
-function mediaAttentionListingCount(
-  products: AdminDashboardProduct[],
-  images: AdminDashboardImage[]
-) {
-  const listingIds = new Set<string>();
-
-  for (const product of products) {
-    if (
-      product.status !== "archived" &&
-      (product.imageCount === 0 || !hasText(product.primaryImageAltText))
-    ) {
-      listingIds.add(product.id);
-    }
-  }
-
-  for (const image of images) {
-    if (image.status === "active" && !hasText(image.altText)) {
-      listingIds.add(image.productId);
-    }
-  }
-
-  return listingIds.size;
-}
-
 function AdminWorkspaceRecoveryLinks() {
   return (
     <nav className={styles.recoveryNav} aria-label="Admin recovery">
-      <a className="premium-button premium-button--secondary" href="/admin">
+      <a className={styles.secondaryButton} href="/admin">
         Open admin overview
       </a>
-      <a className="premium-button premium-button--secondary" href="/admin/hero">
+      <a className={styles.secondaryButton} href="/admin/hero">
         Open hero
       </a>
-      <a className="premium-button premium-button--secondary" href="/admin/catalogue">
+      <a className={styles.secondaryButton} href="/admin/catalogue">
         Open catalogue
       </a>
-      <a className="premium-button premium-button--secondary" href="/admin/setups">
+      <a className={styles.secondaryButton} href="/admin/setups">
         Open setups
       </a>
-      <a className="premium-button premium-button--secondary" href="/admin/enquiry-email">
+      <a className={styles.secondaryButton} href="/admin/enquiry-email">
         Open enquiry email
       </a>
-      <a className="premium-button premium-button--secondary" href="/admin/delivery-log">
+      <a className={styles.secondaryButton} href="/admin/delivery-log">
         Open delivery log
       </a>
     </nav>
@@ -343,22 +373,19 @@ function AdminAccessRecoveryLinks({
 }) {
   return (
     <nav className={styles.recoveryNav} aria-label="Admin access recovery">
-      <a className="premium-button premium-button--primary" href="/admin/login">
+      <a className={styles.primaryButton} href="/admin/login">
         {signInLabel}
       </a>
-      <a className="premium-button premium-button--secondary" href="/">
+      <a className={styles.secondaryButton} href="/">
         View public site
       </a>
     </nav>
   );
 }
 
-function AdminOperationsNavigation({
-  view
-}: {
-  view: AdminShellView;
-}) {
+function AdminOperationsNavigation({ view }: { view: AdminShellView }) {
   const activeKind = activeNavigationKind(view);
+
   return (
     <nav className={styles.navList} aria-label="Admin sections">
       {adminNavigationItems.map((item) => {
@@ -373,13 +400,10 @@ function AdminOperationsNavigation({
             href={item.href}
             key={item.href}
           >
-            <span className={styles.navItemInner}>
-              <span className={styles.navIcon} aria-hidden="true">
-                {adminNavigationIcons[item.kind]}
-              </span>
-              <span className={styles.navLabel}>{item.label}</span>
+            <span className={styles.navIcon} aria-hidden="true">
+              {adminNavigationIcons[item.kind]}
             </span>
-            <span className={styles.navMeta}>{item.meta}</span>
+            <span className={styles.navLabel}>{item.label}</span>
           </a>
         );
       })}
@@ -396,10 +420,10 @@ function AdminUnavailableWorkspace({
 }) {
   return (
     <section
-      className="admin-dashboard admin-dashboard--unavailable"
+      className={styles.unavailablePanel}
       aria-label={`${title} unavailable`}
     >
-      <p className="eyebrow">Temporarily unavailable</p>
+      <p className={styles.eyebrow}>Temporarily unavailable</p>
       <h2>{title}</h2>
       <p>{description}</p>
       <AdminWorkspaceRecoveryLinks />
@@ -433,39 +457,70 @@ function AdminMetricCard({
   );
 }
 
-const emptyStateIcons: Record<"hero" | "mail" | "log", ReactNode> = {
-  hero: (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
-      <rect x="3" y="4.5" width="18" height="15" rx="2.5" />
-      <circle cx="8.5" cy="10" r="1.6" />
-      <path d="M4 17.5l4.5-4 3.5 3 3.5-3.5 4.5 4.5" />
-    </svg>
-  ),
-  mail: (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
-      <rect x="3" y="5" width="18" height="14" rx="2.5" />
-      <path d="M3.5 7.5l8.5 6 8.5-6" />
-    </svg>
-  ),
-  log: (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
-      <rect x="4" y="3.5" width="16" height="17" rx="2.5" />
-      <path d="M8 8.5h8M8 12h8M8 15.5h5" />
-    </svg>
-  )
-};
+function AdminDashboardCountRow({
+  description,
+  label,
+  tone = "neutral",
+  value
+}: {
+  description: string;
+  label: string;
+  tone?: "neutral" | "attention";
+  value: number | string;
+}) {
+  return (
+    <li>
+      <div>
+        <strong>{label}</strong>
+        <span>{description}</span>
+      </div>
+      <span
+        className={`${styles.dashboardCount} ${
+          tone === "attention" ? styles.dashboardCountAttention : ""
+        }`}
+      >
+        {value}
+      </span>
+    </li>
+  );
+}
+
+function AdminDashboardQuickLink({
+  href,
+  label
+}: {
+  href: string;
+  label: string;
+}) {
+  return (
+    <a className={styles.quickLinkCard} href={href}>
+      <span>{label}</span>
+      <svg
+        aria-hidden="true"
+        className={styles.quickLinkIcon}
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={1.8}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M5 12h14" />
+        <path d="m13 6 6 6-6 6" />
+      </svg>
+    </a>
+  );
+}
 
 function AdminEmptyState({
   eyebrow,
   title,
   message,
-  futureLabel,
   icon
 }: {
   eyebrow: string;
   title: string;
   message: string;
-  futureLabel?: string;
   icon?: ReactNode;
 }) {
   return (
@@ -475,17 +530,9 @@ function AdminEmptyState({
           {icon}
         </span>
       ) : null}
-      <p className="eyebrow">{eyebrow}</p>
+      <p className={styles.eyebrow}>{eyebrow}</p>
       <h2>{title}</h2>
       <p>{message}</p>
-      {futureLabel ? (
-        <div className={styles.futureControl}>
-          <button className={styles.adminBtnGhost} type="button" disabled>
-            {futureLabel}
-          </button>
-          <span className={styles.comingSoonTag}>Coming soon</span>
-        </div>
-      ) : null}
     </section>
   );
 }
@@ -504,8 +551,7 @@ function AdminOperationsHome({
     );
   }
 
-  const { categories, products, images, imageSummary } = dashboard.data;
-  const catalogueItemCount = products.length;
+  const { products } = dashboard.data;
   const publishedCount = products.filter(
     (product) => product.status === "published"
   ).length;
@@ -515,136 +561,67 @@ function AdminOperationsHome({
   const hiddenCount = products.filter(
     (product) => product.status === "archived"
   ).length;
-  const mediaAttention = mediaAttentionListingCount(products, images);
-  const categoryNameById = new Map(
-    categories.map((category) => [category.id, category.name])
-  );
-  const catalogueRows = products.slice(0, 8);
+  const missingAltText = products.filter(
+    (product) =>
+      product.status !== "archived" &&
+      product.imageCount > 0 &&
+      !hasText(product.primaryImageAltText)
+  ).length;
+  const missingImages = products.filter(
+    (product) => product.status !== "archived" && product.imageCount === 0
+  ).length;
 
   return (
-    <section className="admin-dashboard" aria-label="Admin dashboard">
-      <div className={styles.metricGrid} aria-label="Catalogue overview">
-        <AdminMetricCard label="Catalogue items" value={catalogueItemCount} />
-        <AdminMetricCard label="Published" value={publishedCount} />
-        <AdminMetricCard label="Draft" value={draftCount} />
-        <AdminMetricCard label="Hidden" value={hiddenCount} />
-        <AdminMetricCard label="Media records" value={imageSummary.totalImages} />
-      </div>
+    <section className={styles.dashboardGrid} aria-label="Admin dashboard">
+      <section className={styles.dashboardCard} aria-label="Content Status">
+        <h2>Content Status</h2>
+        <ul className={styles.dashboardList}>
+          <AdminDashboardCountRow
+            label="Published"
+            description="Visible on the public site."
+            value={publishedCount}
+          />
+          <AdminDashboardCountRow
+            label="Draft"
+            description="Work in progress."
+            value={draftCount}
+          />
+          <AdminDashboardCountRow
+            label="Hidden"
+            description="Records currently not public."
+            value={hiddenCount}
+          />
+        </ul>
+      </section>
 
-      <div className={styles.ownerGrid}>
-        <section className={styles.workQueue} aria-label="Content status">
-          <h3>Content status</h3>
-          <ul className={styles.workList}>
-            <li>
-              <div>
-                <strong>Published catalogue</strong>
-                <span>Records visible on the public site.</span>
-              </div>
-              <span className={`${styles.chip} ${styles.chipStable}`}>
-                {publishedCount}
-              </span>
-            </li>
-            <li>
-              <div>
-                <strong>Draft or hidden</strong>
-                <span>Records not currently public.</span>
-              </div>
-              <span className={`${styles.chip} ${styles.chipWarning}`}>
-                {draftCount + hiddenCount}
-              </span>
-            </li>
-            <li>
-              <div>
-                <strong>Media attention</strong>
-                <span>Listings missing images or alt text.</span>
-              </div>
-              <span
-                className={`${styles.chip} ${
-                  mediaAttention > 0 ? styles.chipWarning : styles.chipStable
-                }`}
-              >
-                {mediaAttention}
-              </span>
-            </li>
-          </ul>
-        </section>
+      <section className={styles.dashboardCard} aria-label="Attention Required">
+        <h2>Attention Required</h2>
+        <ul className={styles.dashboardList}>
+          <AdminDashboardCountRow
+            label="Missing Alt Text"
+            description="Listings needing accessibility updates."
+            tone={missingAltText > 0 ? "attention" : "neutral"}
+            value={missingAltText}
+          />
+          <AdminDashboardCountRow
+            label="Missing Images"
+            description="Listings without media uploaded."
+            tone={missingImages > 0 ? "attention" : "neutral"}
+            value={missingImages}
+          />
+        </ul>
+      </section>
 
-        <section className={styles.rowPanel}>
-          <h3>Catalogue summary</h3>
-          <dl className={styles.adminRows}>
-            <div>
-              <dt>Categories</dt>
-              <dd>{categories.length}</dd>
-            </div>
-            <div>
-              <dt>Items</dt>
-              <dd>{catalogueItemCount}</dd>
-            </div>
-            <div>
-              <dt>Media records</dt>
-              <dd>{imageSummary.totalImages}</dd>
-            </div>
-            <div>
-              <dt>Setup candidates</dt>
-              <dd>{publishedCount}</dd>
-            </div>
-            <div>
-              <dt>Setup source</dt>
-              <dd>Published catalogue records</dd>
-            </div>
-          </dl>
-        </section>
-      </div>
-
-      <section className={styles.tablePanel} aria-label="Catalogue records">
-        <div className={styles.tableHeader}>
-          <h3>Catalogue</h3>
-          <a className={styles.tableLink} href="/admin/catalogue">
-            Manage
-          </a>
+      <section className={styles.dashboardCard} aria-label="Quick Links">
+        <h2>Quick Links</h2>
+        <div className={styles.quickLinkGrid}>
+          <AdminDashboardQuickLink href="/admin/hero" label="Manage Hero" />
+          <AdminDashboardQuickLink
+            href="/admin/catalogue"
+            label="Manage Catalogue"
+          />
+          <AdminDashboardQuickLink href="/admin/setups" label="Manage Setups" />
         </div>
-        {catalogueRows.length === 0 ? (
-          <p className={styles.tableEmpty}>No catalogue records yet.</p>
-        ) : (
-          <div className={styles.dataTable} role="table" aria-label="Catalogue records table">
-            <div role="row">
-              <strong role="columnheader">Name</strong>
-              <strong role="columnheader">Category</strong>
-              <strong role="columnheader">Status</strong>
-              <strong role="columnheader">Images</strong>
-            </div>
-            {catalogueRows.map((product) => {
-              const statusText =
-                product.status === "published"
-                  ? "Published"
-                  : product.status === "draft"
-                    ? "Draft"
-                    : "Hidden";
-              return (
-                <div role="row" key={product.id}>
-                  <span role="cell">{product.name}</span>
-                  <span role="cell">
-                    {product.categoryId
-                      ? categoryNameById.get(product.categoryId) ?? "Unmapped"
-                      : "Unmapped"}
-                  </span>
-                  <span role="cell">
-                    <span
-                      className={`${styles.statusTag} ${
-                        product.status === "published"
-                          ? styles.statusTagPublished
-                          : styles.statusTagMuted
-                      }`}
-                    >
-                      {statusText}
-                    </span>
-                  </span>
-                  <span role="cell">{product.imageCount}</span>
-                </div>
-              );
-            })}
-          </div>
-        )}
       </section>
     </section>
   );
@@ -667,9 +644,7 @@ function AdminHeroOperations({
     );
   }
 
-  return (
-    <HeroContentManagementPanel hero={hero.hero} />
-  );
+  return <HeroContentManagementPanel hero={hero.hero} />;
 }
 
 function AdminCatalogueOperations({
@@ -697,22 +672,14 @@ function AdminCatalogueOperations({
   ).length;
 
   return (
-    <>
-      <section className="admin-dashboard" aria-label="Catalogue management">
-        <dl className="admin-dashboard__stats" aria-label="Catalogue summary">
-          <div>
-            <dt>Published</dt>
-            <dd>{published}</dd>
-          </div>
-          <div>
-            <dt>Draft</dt>
-            <dd>{draft}</dd>
-          </div>
-          <div>
-            <dt>Hidden</dt>
-            <dd>{hidden}</dd>
-          </div>
-        </dl>
+    <div className={styles.managementStack}>
+      <section
+        className={styles.metricGridThree}
+        aria-label="Catalogue summary"
+      >
+        <AdminMetricCard label="Published" value={published} />
+        <AdminMetricCard label="Draft" value={draft} />
+        <AdminMetricCard label="Hidden" value={hidden} />
       </section>
       <ListingManagementPanel
         categories={dashboard.data.categories}
@@ -724,7 +691,7 @@ function AdminCatalogueOperations({
         images={dashboard.data.images}
         products={dashboard.data.products}
       />
-    </>
+    </div>
   );
 }
 
@@ -750,54 +717,56 @@ function AdminSetupsOperations({
     .slice(0, 5);
 
   return (
-    <section className="admin-dashboard" aria-label="Setups management">
-      <div className={styles.settingsGrid}>
-        <section className={styles.placeholderPanel}>
-          <h3>Current setup source</h3>
-          <p>
-            Public setups stay on <code>/listings</code> and currently derive
-            from published catalogue records ({setupRecords.length} shown). Edit
-            them through Catalogue until setup-specific storage exists.
-          </p>
-          <nav className={styles.inlineActions} aria-label="Setup actions">
-            <a className={styles.adminBtnGhost} href="/admin/catalogue">
-              Manage catalogue
-            </a>
-            <a className={styles.adminBtnGhost} href="/listings">
-              View public setups
-            </a>
-          </nav>
-        </section>
+    <section className={styles.settingsGrid} aria-label="Setups management">
+      <section className={styles.placeholderPanel}>
+        <h2>Current setup source</h2>
+        <p>
+          Public setups stay on <code>/listings</code> and currently derive
+          from published catalogue records ({setupRecords.length} shown). Edit
+          them through Catalogue until setup-specific storage exists.
+        </p>
+        <nav className={styles.inlineActions} aria-label="Setup actions">
+          <a className={styles.secondaryButton} href="/admin/catalogue">
+            Manage catalogue
+          </a>
+          <a className={styles.secondaryButton} href="/listings">
+            View public setups
+          </a>
+        </nav>
+      </section>
 
-        <section className={styles.rowPanel}>
-          <h3>Published setup candidates</h3>
-          {setupRecords.length === 0 ? (
-            <p className={styles.tableEmpty}>
-              No published catalogue records are available to derive public
-              setup cards yet.
-            </p>
-          ) : (
-            <div className={styles.compactTable} role="table" aria-label="Setup candidates">
-              <div role="row">
-                <strong role="columnheader">Name</strong>
-                <strong role="columnheader">Category</strong>
-                <strong role="columnheader">Order</strong>
-              </div>
-              {setupRecords.map((product) => (
-                <div role="row" key={product.id}>
-                  <span role="cell">{product.name}</span>
-                  <span role="cell">
-                    {product.categoryId
-                      ? categoryById.get(product.categoryId) ?? "Unmapped"
-                      : "Unmapped"}
-                  </span>
-                  <span role="cell">{product.sortOrder}</span>
-                </div>
-              ))}
+      <section className={styles.rowPanel}>
+        <h2>Published setup candidates</h2>
+        {setupRecords.length === 0 ? (
+          <p className={styles.tableEmpty}>
+            No published catalogue records are available to derive public setup
+            cards yet.
+          </p>
+        ) : (
+          <div
+            className={styles.compactTable}
+            role="table"
+            aria-label="Setup candidates"
+          >
+            <div role="row">
+              <strong role="columnheader">Name</strong>
+              <strong role="columnheader">Category</strong>
+              <strong role="columnheader">Order</strong>
             </div>
-          )}
-        </section>
-      </div>
+            {setupRecords.map((product) => (
+              <div role="row" key={product.id}>
+                <span role="cell">{product.name}</span>
+                <span role="cell">
+                  {product.categoryId
+                    ? categoryById.get(product.categoryId) ?? "Unmapped"
+                    : "Unmapped"}
+                </span>
+                <span role="cell">{product.sortOrder}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
     </section>
   );
 }
@@ -832,10 +801,13 @@ function AdminEnquiryEmailStatusOperations({
         : styles.statusPillWarning;
 
   return (
-    <section className={styles.statusSummaryPanel} aria-label="Enquiry email handoff status">
+    <section
+      className={styles.statusSummaryPanel}
+      aria-label="Enquiry email handoff status"
+    >
       <div className={styles.statusSummaryHeader}>
         <div>
-          <p className="eyebrow">Enquiry Email</p>
+          <p className={styles.eyebrow}>Enquiry Email</p>
           <h2>Enquiry email handoff status</h2>
         </div>
         <span className={`${styles.statusPill} ${statusClassName}`}>
@@ -844,7 +816,7 @@ function AdminEnquiryEmailStatusOperations({
       </div>
       <p className={styles.statusSummaryCopy}>
         Quote requests are emailed to the configured recipient for manual
-        follow-up. Settings are environment-managed for now, with no internal
+        follow-up. Email routing is environment-managed for now, with no internal
         quote inbox.
       </p>
       <dl className={styles.adminRows}>
@@ -874,7 +846,7 @@ function AdminEnquiryEmailStatusOperations({
         ) : null}
       </dl>
       <nav className={styles.inlineActions} aria-label="Enquiry email actions">
-        <a className={styles.adminBtnGhost} href="/admin/delivery-log">
+        <a className={styles.secondaryButton} href="/admin/delivery-log">
           Open delivery log
         </a>
       </nav>
@@ -913,7 +885,7 @@ function AdminDeliveryLogTableOperations({
   return (
     <section className={styles.tablePanel} aria-label="Email delivery log">
       <div className={styles.tableHeader}>
-        <h3>Email delivery log</h3>
+        <h2>Email delivery log</h2>
       </div>
       <div
         className={styles.dataTable}
@@ -930,7 +902,9 @@ function AdminDeliveryLogTableOperations({
         {deliveryLog.records.map((record) => (
           <div role="row" key={record.id}>
             <span role="cell">{record.attemptedAt}</span>
-            <span role="cell">{record.publicReference || record.quoteRequestId}</span>
+            <span role="cell">
+              {record.publicReference || record.quoteRequestId}
+            </span>
             <span role="cell">{record.recipientEmail}</span>
             <span role="cell">
               <span
@@ -983,6 +957,42 @@ function AdminOperationsView({
   return <AdminOperationsHome dashboard={state.dashboard} />;
 }
 
+function AdminTopbar() {
+  return (
+    <header className={styles.topbar}>
+      <div className={styles.brandLine}>
+        <h1 className={styles.brandTitle}>SpaceKonceptRental Admin</h1>
+        <span className={styles.workspaceBadge}>Protected Workspace</span>
+      </div>
+      <div className={styles.topbarActions}>
+        <a className={styles.topbarLink} href="/">
+          View public site
+        </a>
+        <form action="/admin/logout" method="post">
+          <button className={styles.signOutButton} type="submit">
+            Sign out
+          </button>
+        </form>
+      </div>
+    </header>
+  );
+}
+
+function AdminPageHeader({ view }: { view: AdminShellView }) {
+  return (
+    <header
+      className={`${styles.pageHeader} ${
+        view.kind === "home" ? styles.pageHeaderPlain : ""
+      }`}
+      aria-label="Admin page header"
+    >
+      <p className={styles.eyebrow}>Protected Admin</p>
+      <h2>{workspaceTitle(view)}</h2>
+      <p>{workspaceDescription(view)}</p>
+    </header>
+  );
+}
+
 function AdminStatusMessage({
   state,
   view
@@ -993,7 +1003,7 @@ function AdminStatusMessage({
   if (state.status === "unauthenticated") {
     return (
       <div className={`${styles.statusCard} ${styles.statusPanel}`}>
-        <p className="eyebrow">Protected admin</p>
+        <p className={styles.eyebrow}>Protected admin</p>
         <h1>Admin sign in required</h1>
         <p>Sign in to continue to SpaceKonceptRental Admin.</p>
         <AdminAccessRecoveryLinks signInLabel="Sign in" />
@@ -1003,10 +1013,15 @@ function AdminStatusMessage({
 
   if (state.status === "authenticated_not_authorised") {
     return (
-      <div className={`${styles.statusCard} ${styles.statusPanel} ${styles.statusPanelDenied}`}>
-        <p className="eyebrow">Protected admin</p>
+      <div
+        className={`${styles.statusCard} ${styles.statusPanel} ${styles.statusPanelDenied}`}
+      >
+        <p className={styles.eyebrow}>Protected admin</p>
         <h1>Access denied</h1>
-        <p>Your account is signed in but not authorised for SpaceKonceptRental Admin.</p>
+        <p>
+          Your account is signed in but not authorised for
+          SpaceKonceptRental Admin.
+        </p>
         <AdminAccessRecoveryLinks />
       </div>
     );
@@ -1015,7 +1030,7 @@ function AdminStatusMessage({
   if (state.status === "unavailable") {
     return (
       <div className={`${styles.statusCard} ${styles.statusPanel}`}>
-        <p className="eyebrow">Protected admin</p>
+        <p className={styles.eyebrow}>Protected admin</p>
         <h1>Admin access unavailable</h1>
         <p>Admin access is temporarily unavailable. Please try again shortly.</p>
         <AdminAccessRecoveryLinks />
@@ -1024,26 +1039,12 @@ function AdminStatusMessage({
   }
 
   return (
-    <div className={styles.workspaceFrame}>
-      <header className={styles.topbar}>
-        <div className={styles.brandCluster}>
-          <div className={styles.brandLine}>
-            <h1 className={styles.brandTitle}>SpaceKonceptRental Admin</h1>
-            <span className={styles.workspaceBadge}>Protected admin</span>
-          </div>
-        </div>
-        <div className={styles.topbarActions}>
-          <a className={styles.topbarLink} href="/">
-            View public site
-          </a>
-          <form action="/admin/logout" method="post">
-            <button className={styles.signOutButton} type="submit">
-              Sign out
-            </button>
-          </form>
-        </div>
-      </header>
-
+    <div
+      className={`${styles.workspaceFrame} ${
+        view.kind === "home" ? styles.workspaceFrameDashboard : ""
+      }`}
+    >
+      <AdminTopbar />
       <details className={styles.mobileMenu}>
         <summary className={styles.mobileSummary}>
           Admin menu - {workspaceTitle(view)}
@@ -1052,18 +1053,15 @@ function AdminStatusMessage({
           <AdminOperationsNavigation view={view} />
         </div>
       </details>
-
       <div className={styles.workspaceBody}>
         <aside className={styles.sidebar} aria-label="Admin sidebar">
-          <p className={styles.sidebarLabel}>SpaceKonceptRental Admin</p>
+          <div className={styles.sidebarHeader}>
+            <span className={styles.sidebarLabel}>Workspace</span>
+          </div>
           <AdminOperationsNavigation view={view} />
         </aside>
         <main className={styles.mainPanel}>
-          <section className={styles.pageIntro} aria-label="Admin page header">
-            <p className="eyebrow">Protected admin</p>
-            <h2>{workspaceTitle(view)}</h2>
-            <p>{workspaceDescription(view)}</p>
-          </section>
+          <AdminPageHeader view={view} />
           <AdminOperationsView state={state} view={view} />
         </main>
       </div>
@@ -1085,9 +1083,7 @@ export function AdminShellContent({
       aria-live="polite"
       className={`skr-admin-workspace ${styles.workspace}`}
     >
-      <div className="premium-container">
-        <AdminStatusMessage state={state} view={view} />
-      </div>
+      <AdminStatusMessage state={state} view={view} />
     </section>
   );
 }

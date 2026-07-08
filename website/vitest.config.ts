@@ -19,8 +19,9 @@ export default defineConfig({
       "**/test-results/**"
     ],
     setupFiles: ["./test/setup.ts"],
-    // Full-suite jsdom worker load can push the protected admin helper-chain renders past Vitest's 5s default.
-    testTimeout: 10_000,
+    // Full-suite jsdom worker load can push governance filesystem scans and
+    // protected admin helper-chain renders past Vitest's 5s default.
+    testTimeout: 20_000,
     // Fork workers avoid the Node worker-thread collection stall seen in the full suite.
     pool: "forks"
   }

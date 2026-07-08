@@ -223,23 +223,27 @@ describe("protected admin shell", () => {
     );
 
     expect(
-      screen.getByRole("heading", { name: /spacekonceptrental admin/i })
-    ).toBeInTheDocument();
+      screen.getAllByRole("heading", { name: /spacekonceptrental admin/i })
+        .length
+    ).toBeGreaterThan(0);
     expect(screen.getAllByText(/protected admin/i).length).toBeGreaterThan(0);
     expect(screen.getByText(/admin menu - dashboard/i)).toBeInTheDocument();
     expect(
       screen.getAllByRole("heading", { name: /^dashboard$/i }).length
     ).toBeGreaterThan(0);
-    expect(screen.getByText(/catalogue items/i)).toBeInTheDocument();
     expect(screen.getAllByText(/^published$/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/^draft$/i).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/media records/i).length).toBeGreaterThan(0);
     expect(
       screen.getByRole("heading", { name: /content status/i })
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("heading", { name: /catalogue summary/i })
+      screen.getByRole("heading", { name: /attention required/i })
     ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: /quick links/i })
+    ).toBeInTheDocument();
+    expect(screen.getByText(/missing alt text/i)).toBeInTheDocument();
+    expect(screen.getByText(/missing images/i)).toBeInTheDocument();
     expect(
       screen.getAllByRole("link", { name: /^hero/i })[0]
     ).toHaveAttribute("href", "/admin/hero");
@@ -360,6 +364,9 @@ describe("protected admin shell", () => {
     expect(
       screen.getByRole("button", { name: /upload listing image for review/i })
     ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /^select files$/i })
+    ).not.toBeInTheDocument();
   }, 15000);
 
   it("keeps protected admin navigation aligned to the approved six-page workspace IA", () => {
@@ -425,7 +432,7 @@ describe("protected admin shell", () => {
       screen.queryByRole("link", { name: /release control/i })
     ).not.toBeInTheDocument();
     expect(
-      screen.getByRole("link", { name: /view public site/i })
+      screen.getAllByRole("link", { name: /view public site/i })[0]
     ).toHaveAttribute("href", "/");
   });
 
@@ -622,6 +629,15 @@ describe("protected admin shell", () => {
       screen.getByRole("link", { name: /open delivery log/i })
     ).toHaveAttribute("href", "/admin/delivery-log");
     expect(
+      screen.queryByRole("heading", { name: /routing settings/i })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("heading", { name: /template preview/i })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /save configuration/i })
+    ).not.toBeInTheDocument();
+    expect(
       screen.queryByRole("button", { name: /send/i })
     ).not.toBeInTheDocument();
     unmountEmail();
@@ -676,16 +692,26 @@ describe("protected admin shell", () => {
     expect(screen.getByText(/provider configured/i)).toBeInTheDocument();
     expect(screen.getByText(/recipient configured/i)).toBeInTheDocument();
     expect(screen.getByText("ev***@spacekoncept.example")).toBeInTheDocument();
-    expect(screen.getByText(/environment-managed/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/environment-managed/i).length).toBeGreaterThan(0);
     expect(
       screen.getByRole("link", { name: /open delivery log/i })
     ).toHaveAttribute("href", "/admin/delivery-log");
     expect(
-      screen.queryByRole("textbox", { name: /recipient/i })
+      screen.queryByRole("textbox", { name: /primary recipient email/i })
     ).not.toBeInTheDocument();
     expect(
-      screen.queryByRole("button", { name: /save|set recipient|send/i })
+      screen.queryByRole("textbox", { name: /cc recipients/i })
     ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /save configuration/i })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("heading", { name: /routing settings/i })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("heading", { name: /template preview/i })
+    ).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /set recipient|send/i })).not.toBeInTheDocument();
     expect(document.body.textContent).not.toContain("RESEND_API_KEY");
     expect(document.body.textContent).not.toContain("resend-secret");
     expect(document.body.textContent).not.toContain("raw provider body");

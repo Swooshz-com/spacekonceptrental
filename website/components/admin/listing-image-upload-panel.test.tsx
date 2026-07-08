@@ -120,7 +120,7 @@ describe("listing image upload panel", () => {
         value: "Styled lounge setup"
       }
     });
-    fireEvent.change(screen.getByLabelText(/upload image sort order/i), {
+    fireEvent.change(screen.getByLabelText(/upload image display position/i), {
       target: {
         value: "3"
       }

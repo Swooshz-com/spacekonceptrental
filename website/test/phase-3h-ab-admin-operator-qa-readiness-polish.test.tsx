@@ -225,7 +225,7 @@ describe("Phase 3H-A/B admin operator QA readiness polish", () => {
       screen.getByRole("heading", { name: /content status/i })
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("heading", { name: /catalogue summary/i })
+      screen.getByRole("heading", { name: /content status/i })
     ).toBeInTheDocument();
     expect(
       screen.queryByRole("heading", { name: /quick actions/i })
