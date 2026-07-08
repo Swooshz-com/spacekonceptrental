@@ -9,10 +9,6 @@ import {
   type AdminProductDashboardReadResult
 } from "../../lib/products/admin-read/admin-product-dashboard-read";
 import { getAdminRouteRuntimeConfig } from "../../lib/server-runtime-config";
-import { CategoryManagementPanel } from "../../components/admin/category-management-panel";
-import { ListingImageMetadataManagementPanel } from "../../components/admin/listing-image-metadata-management-panel";
-import { ListingImageUploadPanel } from "../../components/admin/listing-image-upload-panel";
-import { ListingManagementPanel } from "../../components/admin/listing-management-panel";
 import { HeroContentManagementPanel } from "../../components/admin/hero-content-management-panel";
 import type { AdminHomepageHeroReadResult } from "../../lib/hero/admin-homepage-hero-read";
 import type { QuoteEnquiryEmailConfigStatus } from "../../lib/quote/email-handoff";
@@ -644,18 +640,9 @@ function AdminCatalogueOperations({
   const hidden = dashboard.data.products.filter(
     (product) => product.status === "archived"
   ).length;
-  const primaryProduct = dashboard.data.products[0] ?? null;
-  const primaryCategory = primaryProduct?.categoryId
-    ? dashboard.data.categories.find(
-        (category) => category.id === primaryProduct.categoryId
-      )
-    : null;
   const categoryOptions = dashboard.data.categories
     .map((category) => category.name)
     .sort((a, b) => a.localeCompare(b));
-  const primaryImages = primaryProduct
-    ? dashboard.data.images.filter((image) => image.productId === primaryProduct.id)
-    : [];
 
   return (
     <>
@@ -666,159 +653,139 @@ function AdminCatalogueOperations({
           <AdminMetricCard label="Hidden" value={hidden} />
         </div>
       </section>
-      <section
-        className={styles.catalogueEditorGrid}
-        aria-label="Catalogue item editor preview"
-      >
-        <section className={styles.catalogueListPanel}>
-          <div className={styles.panelHeadingRow}>
-            <div>
-              <p className="eyebrow">Catalogue Items</p>
-              <h3>Manage Listings</h3>
-            </div>
-            <span className={styles.statusPill}>
-              {dashboard.data.products.length}
-            </span>
+      <section className={styles.catalogueSaveIntro}>
+        <p className="eyebrow">Protected Admin Save</p>
+        <h3>Listing management</h3>
+        <p>
+          Create, update, set visibility, and archive furniture listing metadata
+          through the protected admin API. Public-facing fields should describe
+          rental/event furniture only.
+        </p>
+      </section>
+      <section className={styles.catalogueFormPanel} aria-label="Create listing">
+        <div className={styles.panelHeadingRow}>
+          <div>
+            <h3>Create listing</h3>
           </div>
-          {dashboard.data.products.length === 0 ? (
-            <p className={styles.tableEmpty}>
-              No catalogue records are available yet. Use the existing listing
-              controls below to add the first owner-managed item.
-            </p>
-          ) : (
-            <div className={styles.catalogueItemList}>
-              {dashboard.data.products.slice(0, 4).map((product) => (
-                <article className={styles.catalogueItemCard} key={product.id}>
-                  <div className={styles.catalogueItemThumb} aria-hidden="true">
-                    {product.imageCount > 0 ? "Image" : "No image"}
-                  </div>
-                  <div>
-                    <h4>{product.name}</h4>
-                    <p>
-                      {product.shortDescription ||
-                        product.description ||
-                        "Owner-managed rental catalogue item."}
-                    </p>
-                    <span>
-                      {product.categoryId
-                        ? dashboard.data.categories.find(
-                            (category) => category.id === product.categoryId
-                          )?.name ?? "Unmapped category"
-                        : "Unmapped category"}
-                    </span>
-                  </div>
-                  <span
-                    className={`${styles.statusTag} ${
-                      product.status === "published"
-                        ? styles.statusTagPublished
-                        : styles.statusTagMuted
-                    }`}
-                  >
-                    {product.status === "archived" ? "hidden" : product.status}
-                  </span>
-                </article>
-              ))}
-            </div>
-          )}
-        </section>
-
-        <aside className={styles.catalogueFormPanel} aria-label="Catalogue item form">
-          <div className={styles.panelHeadingRow}>
-            <div>
-              <p className="eyebrow">Item Editor</p>
-              <h3>{primaryProduct ? primaryProduct.name : "New item"}</h3>
-            </div>
-            <span className={styles.statusPill}>
-              {primaryProduct
-                ? primaryProduct.status === "archived"
-                  ? "Hidden"
-                  : primaryProduct.status
-                : "Draft"}
-            </span>
-          </div>
+        </div>
+        <div className={styles.catalogueCreateForm}>
           <div className={styles.visualFormGrid}>
             <label>
-              <span>Name</span>
+              <span>Item name</span>
               <input
                 readOnly
-                value={primaryProduct?.name ?? ""}
-                placeholder="Item name"
+                placeholder="Enter item name"
               />
+              <small>
+                Use owner-supplied rental/event furniture wording only; do not
+                add unsupported availability assertions.
+              </small>
             </label>
-            <label>
-              <span>Category</span>
-              <select disabled value={primaryCategory?.name ?? ""}>
-                <option value="">Select category</option>
-                {categoryOptions.map((categoryName) => (
-                  <option key={categoryName} value={categoryName}>
-                    {categoryName}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label>
-              <span>Style</span>
-              <input
-                readOnly
-                value=""
-                placeholder="Derived from item tags in a later cleanup"
-              />
-            </label>
+            <div className={styles.visualFormSplit}>
+              <label>
+                <span>Category</span>
+                <select disabled defaultValue="">
+                  <option value="">Select category</option>
+                  {categoryOptions.map((categoryName) => (
+                    <option key={categoryName} value={categoryName}>
+                      {categoryName}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                <span>Style</span>
+                <select disabled defaultValue="">
+                  <option value="">Select style</option>
+                </select>
+              </label>
+            </div>
             <label className={styles.visualFormFull}>
               <span>Description</span>
               <textarea
                 readOnly
-                value={
-                  primaryProduct?.description ||
-                  primaryProduct?.shortDescription ||
-                  ""
-                }
-                placeholder="Item description"
+                placeholder="Enter full public description"
               />
+              <small>
+                Full public description should help enquiry planning without
+                self-serve or completion-flow language.
+              </small>
             </label>
-            <div className={styles.uploadPreviewBox}>
-              <span>Images</span>
-              <strong>
-                {primaryImages.length > 0
-                  ? `${primaryImages.length} image records`
-                  : "No image records yet"}
-              </strong>
+            <div className={styles.uploadDropzonePreview} aria-label="Listing images">
+              <span aria-hidden="true">Upload</span>
+              <strong>Upload Listing Images</strong>
               <p>
-                Use the real upload controls below for current listing image
-                persistence.
+                Save the listing first, then add real uploaded images through
+                the existing protected image workflow.
               </p>
+              <button className={styles.adminBtnGhost} disabled type="button">
+                Select Files
+              </button>
             </div>
-            <label className={styles.publishVisualToggle}>
-              <input
-                checked={primaryProduct?.status === "published"}
-                readOnly
-                type="checkbox"
-              />
-              <span>Publish item</span>
-            </label>
+            <div className={styles.publishRowPreview}>
+              <div>
+                <strong>Publish Status</strong>
+                <p>Set to active to make visible on the public catalogue.</p>
+              </div>
+              <label className={styles.switchPreview}>
+                <input disabled type="checkbox" />
+                <span>Publish listing</span>
+              </label>
+            </div>
             <button className={styles.adminBtnPrimary} type="button" disabled>
-              Save item
+              Create Listing
             </button>
           </div>
-        </aside>
+        </div>
       </section>
-      <div className={styles.managementStack}>
-        <details className={styles.legacyAdminDetails}>
-          <summary>Advanced catalogue controls</summary>
-          <div className={styles.legacyAdminStack}>
-            <ListingManagementPanel
-              categories={dashboard.data.categories}
-              products={dashboard.data.products}
-            />
-            <CategoryManagementPanel categories={dashboard.data.categories} />
-            <ListingImageUploadPanel products={dashboard.data.products} />
-            <ListingImageMetadataManagementPanel
-              images={dashboard.data.images}
-              products={dashboard.data.products}
-            />
+      <section className={styles.catalogueListPanel} aria-label="Existing listings">
+        <div className={styles.panelHeadingRow}>
+          <div>
+            <h3>Existing Listings</h3>
           </div>
-        </details>
-      </div>
+        </div>
+        {dashboard.data.products.length === 0 ? (
+          <p className={styles.tableEmpty}>
+            No furniture listings are available to update yet. Create a draft
+            listing in the next catalogue owner workflow slice before adding
+            media or publishing.
+          </p>
+        ) : (
+          <div className={styles.catalogueItemList}>
+            {dashboard.data.products.slice(0, 4).map((product) => (
+              <article className={styles.catalogueItemCard} key={product.id}>
+                <div className={styles.catalogueItemThumb} aria-hidden="true">
+                  {product.imageCount > 0 ? "Image" : "No image"}
+                </div>
+                <div>
+                  <h4>{product.name}</h4>
+                  <p>
+                    {product.shortDescription ||
+                      product.description ||
+                      "Owner-managed rental catalogue item."}
+                  </p>
+                  <span>
+                    {product.categoryId
+                      ? dashboard.data.categories.find(
+                          (category) => category.id === product.categoryId
+                        )?.name ?? "Unmapped category"
+                      : "Unmapped category"}
+                  </span>
+                </div>
+                <span
+                  className={`${styles.statusTag} ${
+                    product.status === "published"
+                      ? styles.statusTagPublished
+                      : styles.statusTagMuted
+                  }`}
+                >
+                  {product.status === "archived" ? "hidden" : product.status}
+                </span>
+              </article>
+            ))}
+          </div>
+        )}
+      </section>
     </>
   );
 }
@@ -846,14 +813,6 @@ function AdminSetupsOperations({
 
   return (
     <section className="admin-dashboard" aria-label="Setups management">
-      <div className={styles.setupHeaderActions} aria-label="Setup actions">
-        <a className={styles.adminBtnGhost} href="/admin/catalogue">
-          Manage catalogue
-        </a>
-        <a className={styles.adminBtnPrimary} href="/listings">
-          View public setups
-        </a>
-      </div>
       <div className={styles.setupGrid}>
         <section className={styles.setupListPanel}>
           <div className={styles.panelHeadingRow}>
@@ -863,28 +822,55 @@ function AdminSetupsOperations({
             </div>
           </div>
           {setupRecords.length === 0 ? (
-            <article className={styles.setupCandidateCard}>
-              <div className={styles.setupImagePlaceholder} aria-hidden="true" />
-              <div>
-                <h4>No published setup candidates yet</h4>
-                <p>
-                  Public setup cards are currently derived from published
-                  catalogue records. Add or publish catalogue content first.
-                </p>
-              </div>
-              <span className={`${styles.statusTag} ${styles.statusTagMuted}`}>
-                Empty
-              </span>
-              <footer>
-                <span>Derived context: catalogue records</span>
-                <a href="/admin/catalogue">Manage catalogue</a>
-              </footer>
-            </article>
+            <div className={styles.setupCandidateList}>
+              <article className={styles.setupCandidateCard}>
+                <div className={styles.setupImageStrip} aria-hidden="true">
+                  <span />
+                  <span />
+                </div>
+                <div>
+                  <h4>No published setup candidates yet</h4>
+                  <p>
+                    Public setup cards are currently derived from published
+                    catalogue records. Add or publish catalogue content first.
+                  </p>
+                </div>
+                <span className={`${styles.statusTag} ${styles.statusTagMuted}`}>
+                  Empty
+                </span>
+                <footer>
+                  <span>Derived context: catalogue records</span>
+                  <a href="/admin/catalogue">Manage catalogue</a>
+                </footer>
+              </article>
+              <article className={`${styles.setupCandidateCard} ${styles.setupCandidateCardMuted}`}>
+                <div className={styles.setupImageStrip} aria-hidden="true">
+                  <span />
+                </div>
+                <div>
+                  <h4>Setup editor deferred</h4>
+                  <p>
+                    Setup-specific saved records and grouped images need a later
+                    owner workflow slice before they can be edited here.
+                  </p>
+                </div>
+                <span className={`${styles.statusTag} ${styles.statusTagMuted}`}>
+                  Deferred
+                </span>
+                <footer>
+                  <span>Derived context: pending setup storage</span>
+                  <a href="/admin/catalogue">Continue with catalogue</a>
+                </footer>
+              </article>
+            </div>
           ) : (
             <div className={styles.setupCandidateList}>
               {setupRecords.map((product) => (
                 <article className={styles.setupCandidateCard} key={product.id}>
-                  <div className={styles.setupImagePlaceholder} aria-hidden="true" />
+                  <div className={styles.setupImageStrip} aria-hidden="true">
+                    <span />
+                    <span />
+                  </div>
                   <div>
                     <h4>{product.name}</h4>
                     <p>
@@ -994,74 +980,126 @@ function AdminEnquiryEmailStatusOperations({
 
   return (
     <section className={styles.emailGrid} aria-label="Enquiry email handoff status">
-      <div className={styles.statusSummaryPanel}>
-        <div className={styles.statusSummaryHeader}>
-          <div>
-            <p className="eyebrow">Enquiry Email</p>
-            <h2>Handoff status</h2>
+      <div className={styles.emailConfigColumn}>
+        <div className={styles.statusSummaryPanel}>
+          <div className={styles.statusSummaryHeader}>
+            <div>
+              <p className="eyebrow">Enquiry Email</p>
+              <h2>Handoff status</h2>
+            </div>
+            <span className={`${styles.statusPill} ${statusClassName}`}>
+              {statusLabel}
+            </span>
           </div>
-          <span className={`${styles.statusPill} ${statusClassName}`}>
-            {statusLabel}
-          </span>
+          <p className={styles.statusSummaryCopy}>
+            Quote requests are emailed to the configured recipient for manual
+            follow-up. Settings are environment-managed for now, with no internal
+            quote inbox.
+          </p>
+          <dl className={styles.adminRows}>
+            <div>
+              <dt>Provider</dt>
+              <dd>{providerStatus}</dd>
+            </div>
+            <div>
+              <dt>Recipient</dt>
+              <dd>{recipientStatus}</dd>
+            </div>
+            <div>
+              <dt>Provider name</dt>
+              <dd>{config.provider}</dd>
+            </div>
+            {config.recipientEmail ? (
+              <div>
+                <dt>Recipient email</dt>
+                <dd>{config.recipientEmail}</dd>
+              </div>
+            ) : null}
+            {setupIssue ? (
+              <div>
+                <dt>Setup issue</dt>
+                <dd>{setupIssue}</dd>
+              </div>
+            ) : null}
+          </dl>
+          <nav className={styles.inlineActions} aria-label="Enquiry email actions">
+            <a className={styles.adminBtnGhost} href="/admin/delivery-log">
+              Open delivery log
+            </a>
+          </nav>
         </div>
-        <p className={styles.statusSummaryCopy}>
-          Quote requests are emailed to the configured recipient for manual
-          follow-up. Routing values are environment-managed for now, with no internal
-          quote inbox.
-        </p>
-        <dl className={styles.adminRows}>
-          <div>
-            <dt>Provider</dt>
-            <dd>{providerStatus}</dd>
+
+        <div className={styles.routingSettingsPanel} aria-label="Environment-managed routing settings">
+          <h2>Routing Settings</h2>
+          <div className={styles.visualFormGrid}>
+            <label>
+              <span>Primary recipient email</span>
+              <input
+                disabled
+                placeholder={config.recipientEmail ?? "Configured outside admin"}
+                type="email"
+              />
+              <small>This address receives incoming rental enquiries.</small>
+            </label>
+            <label>
+              <span>CC recipients</span>
+              <input disabled placeholder="Environment-managed" type="text" />
+              <small>Optional copy recipients are not editable in launch admin.</small>
+            </label>
+            <label className={styles.publishVisualToggle}>
+              <input
+                checked={config.providerConfigured && config.recipientConfigured}
+                disabled
+                type="checkbox"
+              />
+              <span>Active routing</span>
+            </label>
+            <button className={styles.adminBtnPrimary} disabled type="button">
+              Save configuration
+            </button>
           </div>
-          <div>
-            <dt>Recipient</dt>
-            <dd>{recipientStatus}</dd>
-          </div>
-          <div>
-            <dt>Provider name</dt>
-            <dd>{config.provider}</dd>
-          </div>
-          {config.recipientEmail ? (
-            <div>
-              <dt>Recipient email</dt>
-              <dd>{config.recipientEmail}</dd>
-            </div>
-          ) : null}
-          {setupIssue ? (
-            <div>
-              <dt>Setup issue</dt>
-              <dd>{setupIssue}</dd>
-            </div>
-          ) : null}
-        </dl>
-        <nav className={styles.inlineActions} aria-label="Enquiry email actions">
-          <a className={styles.adminBtnGhost} href="/admin/delivery-log">
-            Open delivery log
-          </a>
-        </nav>
+        </div>
       </div>
 
-      <aside className={styles.emailPreviewPanel} aria-label="Environment-managed email routing">
-        <h2>Routing status</h2>
+      <aside className={styles.templatePreviewPanel} aria-label="Enquiry email template preview">
+        <h2>Template Preview</h2>
         <p>
-          The recipient and provider credentials are managed outside the UI.
-          This page shows readiness only and never displays provider tokens.
+          This is how a standard enquiry will appear in the recipient inbox.
+          Private provider tokens are never displayed here.
         </p>
-        <dl className={styles.adminRows}>
-          <div>
-            <dt>Handoff mode</dt>
-            <dd>Manual owner follow-up by email</dd>
+        <div className={styles.templatePreviewBox}>
+          <div className={styles.templateHeaderRows}>
+            <p>
+              <strong>From:</strong> website@spacekoncept.com
+            </p>
+            <p>
+              <strong>Reply-To:</strong> enquirer@example.com
+            </p>
+            <p>
+              <strong>Subject:</strong> New Rental Enquiry - [Catalogue Item Name]
+            </p>
           </div>
-          <div>
-            <dt>Delivery evidence</dt>
-            <dd>Technical delivery log</dd>
+          <p>You have received a new rental enquiry from the website.</p>
+          <div className={styles.templateInset}>
+            <strong>Enquiry details:</strong>
+            <ul>
+              <li>Name: Jane Doe</li>
+              <li>Company: Studio Architects</li>
+              <li>Phone: +65 5550 0198</li>
+            </ul>
           </div>
-          <div>
-            <dt>Editable here</dt>
-            <dd>No. Environment-managed for launch safety.</dd>
+          <div className={styles.templateInset}>
+            <strong>Requested items:</strong>
+            <ul>
+              <li>1x Minimalist Desk</li>
+              <li>2x Curator Chairs</li>
+            </ul>
+            <p>Requested dates: Oct 12 - Oct 15</p>
           </div>
-        </dl>
+          <p className={styles.templateQuote}>
+            "We are interested in renting these items for a temporary gallery setup next month."
+          </p>
+        </div>
       </aside>
     </section>
   );
@@ -1208,26 +1246,33 @@ function AdminStatusMessage({
     );
   }
 
+  const usesSidebarMasthead =
+    view.kind === "catalogue" ||
+    view.kind === "setups" ||
+    view.kind === "delivery-log";
+
   return (
     <div className={styles.workspaceFrame}>
-      <header className={styles.topbar}>
-        <div className={styles.brandCluster}>
-          <div className={styles.brandLine}>
-            <h1 className={styles.brandTitle}>SpaceKonceptRental Admin</h1>
-            <span className={styles.workspaceBadge}>Protected admin</span>
+      {!usesSidebarMasthead ? (
+        <header className={styles.topbar}>
+          <div className={styles.brandCluster}>
+            <div className={styles.brandLine}>
+              <h1 className={styles.brandTitle}>SpaceKonceptRental Admin</h1>
+              <span className={styles.workspaceBadge}>Protected workspace</span>
+            </div>
           </div>
-        </div>
-        <div className={styles.topbarActions}>
-          <a className={styles.topbarLink} href="/">
-            View public site
-          </a>
-          <form action="/admin/logout" method="post">
-            <button className={styles.signOutButton} type="submit">
-              Sign out
-            </button>
-          </form>
-        </div>
-      </header>
+          <div className={styles.topbarActions}>
+            <a className={styles.topbarLink} href="/">
+              View public site
+            </a>
+            <form action="/admin/logout" method="post">
+              <button className={styles.signOutButton} type="submit">
+                Sign out
+              </button>
+            </form>
+          </div>
+        </header>
+      ) : null}
 
       <details className={styles.mobileMenu}>
         <summary className={styles.mobileSummary}>
@@ -1240,14 +1285,44 @@ function AdminStatusMessage({
 
       <div className={styles.workspaceBody}>
         <aside className={styles.sidebar} aria-label="Admin sidebar">
-          <p className={styles.sidebarLabel}>SpaceKonceptRental Admin</p>
+          {usesSidebarMasthead ? (
+            <div className={styles.sidebarMasthead}>
+              <h2>SpaceKonceptRental Admin</h2>
+              <p>Protected Workspace</p>
+            </div>
+          ) : null}
+          <p className={styles.sidebarLabel}>Workspace</p>
           <AdminOperationsNavigation view={view} />
+          {view.kind === "catalogue" ? (
+            <div className={styles.sidebarActions}>
+              <a className={styles.topbarLink} href="/">
+                View public site
+              </a>
+              <form action="/admin/logout" method="post">
+                <button className={styles.signOutButton} type="submit">
+                  Sign out
+                </button>
+              </form>
+            </div>
+          ) : null}
         </aside>
         <main className={styles.mainPanel}>
           <section className={styles.pageIntro} aria-label="Admin page header">
-            <p className="eyebrow">Protected admin</p>
-            <h2>{workspaceTitle(view)}</h2>
-            <p>{workspaceDescription(view)}</p>
+            <div className={styles.pageIntroText}>
+              <p className="eyebrow">Protected admin</p>
+              <h2>{workspaceTitle(view)}</h2>
+              <p>{workspaceDescription(view)}</p>
+            </div>
+            {view.kind === "setups" ? (
+              <div className={styles.pageIntroActions} aria-label="Setup actions">
+                <a className={styles.adminBtnGhost} href="/admin/catalogue">
+                  Manage catalogue
+                </a>
+                <a className={styles.adminBtnPrimary} href="/listings">
+                  View public setups
+                </a>
+              </div>
+            ) : null}
           </section>
           <AdminOperationsView state={state} view={view} />
         </main>

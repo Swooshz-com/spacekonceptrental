@@ -134,26 +134,31 @@ describe("Phase 5H-A/B catalogue write workflow readiness", () => {
     expect(screen.getAllByText(/protected admin save/i).length).toBeGreaterThan(
       0,
     );
+    expect(screen.getByRole("heading", { name: /create listing/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /existing listings/i })).toBeInTheDocument();
     expect(
-      screen.getAllByText(/public-safe copy review/i).length,
+      screen.getByRole("button", { name: /create listing/i }),
+    ).toBeDisabled();
+    expect(
+      screen.getByRole("button", { name: /select files/i }),
+    ).toBeDisabled();
+    expect(
+      screen.queryByRole("button", { name: /save listing metadata/i }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /save category metadata/i }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /save image metadata/i }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /upload listing image for review/i }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getAllByText(/save the listing first/i).length,
     ).toBeGreaterThan(0);
     expect(
-      screen.getByRole("button", { name: /save listing metadata/i }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: /save category metadata/i }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: /save image metadata/i }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: /upload listing image for review/i }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getAllByText(/only updates listing metadata/i).length,
-    ).toBeGreaterThan(0);
-    expect(
-      screen.getAllByText(/media coverage/i).length,
+      screen.getAllByText(/uploaded images/i).length,
     ).toBeGreaterThan(0);
   });
 
@@ -172,6 +177,9 @@ describe("Phase 5H-A/B catalogue write workflow readiness", () => {
       ).not.toBeInTheDocument();
       expect(
         screen.queryByText(/public-safe copy review/i),
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole("button", { name: /create listing/i }),
       ).not.toBeInTheDocument();
       expect(
         screen.queryByRole("button", { name: /save listing metadata/i }),

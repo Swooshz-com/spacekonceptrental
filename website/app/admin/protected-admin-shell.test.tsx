@@ -223,8 +223,9 @@ describe("protected admin shell", () => {
     );
 
     expect(
-      screen.getByRole("heading", { name: /spacekonceptrental admin/i })
-    ).toBeInTheDocument();
+      screen.getAllByRole("heading", { name: /spacekonceptrental admin/i })
+        .length
+    ).toBeGreaterThan(0);
     expect(screen.getAllByText(/protected admin/i).length).toBeGreaterThan(0);
     expect(screen.getByText(/admin menu - dashboard/i)).toBeInTheDocument();
     expect(
@@ -290,7 +291,7 @@ describe("protected admin shell", () => {
     ).not.toBeInTheDocument();
   }, 15000);
 
-  it("renders existing listing, category, and media controls on the Catalogue route", () => {
+  it("renders Stitch-shaped catalogue visual management without manual taxonomy controls", () => {
     render(
       <AdminShellContent
         view={{ kind: "catalogue" }}
@@ -353,17 +354,25 @@ describe("protected admin shell", () => {
     expect(screen.getAllByText(/^draft$/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/^hidden$/i).length).toBeGreaterThan(0);
     expect(
-      screen.getByRole("button", { name: /save category metadata/i })
+      screen.getByRole("heading", { name: /listing management/i })
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: /save listing metadata/i })
+      screen.getByRole("heading", { name: /create listing/i })
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: /save image metadata/i })
+      screen.getByRole("heading", { name: /existing listings/i })
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: /upload listing image for review/i })
+      screen.getByRole("button", { name: /create listing/i })
     ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /create listing/i })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /select files/i })).toBeDisabled();
+    expect(screen.getByText(/modular lounge/i)).toBeInTheDocument();
+    expect(screen.getByText(/upload listing images/i)).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /save category metadata/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /save listing metadata/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /save image metadata/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /upload listing image for review/i })).not.toBeInTheDocument();
   }, 15000);
 
   it("keeps protected admin navigation aligned to the approved six-page workspace IA", () => {
@@ -429,7 +438,7 @@ describe("protected admin shell", () => {
       screen.queryByRole("link", { name: /release control/i })
     ).not.toBeInTheDocument();
     expect(
-      screen.getByRole("link", { name: /view public site/i })
+      screen.getAllByRole("link", { name: /view public site/i })[0]
     ).toHaveAttribute("href", "/");
   });
 
@@ -618,7 +627,10 @@ describe("protected admin shell", () => {
       screen.getByRole("heading", { name: /handoff status/i })
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("heading", { name: /routing status/i })
+      screen.getByRole("heading", { name: /routing settings/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: /template preview/i })
     ).toBeInTheDocument();
     expect(screen.getByText(/needs setup/i)).toBeInTheDocument();
     expect(screen.getByText(/recipient not configured/i)).toBeInTheDocument();
@@ -628,6 +640,9 @@ describe("protected admin shell", () => {
     expect(
       screen.getByRole("link", { name: /open delivery log/i })
     ).toHaveAttribute("href", "/admin/delivery-log");
+    expect(
+      screen.getByRole("button", { name: /save configuration/i })
+    ).toBeDisabled();
     expect(
       screen.queryByRole("button", { name: /send/i })
     ).not.toBeInTheDocument();
@@ -688,11 +703,15 @@ describe("protected admin shell", () => {
       screen.getByRole("link", { name: /open delivery log/i })
     ).toHaveAttribute("href", "/admin/delivery-log");
     expect(
-      screen.queryByRole("textbox", { name: /recipient/i })
-    ).not.toBeInTheDocument();
+      screen.getByRole("textbox", { name: /primary recipient email/i })
+    ).toBeDisabled();
     expect(
-      screen.queryByRole("button", { name: /save|set recipient|send/i })
-    ).not.toBeInTheDocument();
+      screen.getByRole("textbox", { name: /cc recipients/i })
+    ).toBeDisabled();
+    expect(
+      screen.getByRole("button", { name: /save configuration/i })
+    ).toBeDisabled();
+    expect(screen.queryByRole("button", { name: /set recipient|send/i })).not.toBeInTheDocument();
     expect(document.body.textContent).not.toContain("RESEND_API_KEY");
     expect(document.body.textContent).not.toContain("resend-secret");
     expect(document.body.textContent).not.toContain("raw provider body");
