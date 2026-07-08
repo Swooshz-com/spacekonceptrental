@@ -22,6 +22,7 @@ const publicSourceRoots = [
   "website/components/QuoteRequestForm.tsx",
 ];
 const adminSourcePaths = [
+  "website/components/admin/catalogue-owner-workflow.tsx",
   "website/components/admin/listing-management-panel.tsx",
   "website/components/admin/category-management-panel.tsx",
   "website/components/admin/listing-image-metadata-management-panel.tsx",
@@ -126,32 +127,43 @@ describe("Phase 5H-A/B catalogue write workflow readiness", () => {
     cleanup();
   });
 
-  it("renders protected admin listing, category, and media write helper copy only for authorised admin state", () => {
+  it("renders the protected owner catalogue workflow only for authorised admin state", () => {
     render(
       <AdminShellContent state={authorisedState} view={{ kind: "catalogue" }} />,
     );
 
-    expect(screen.getAllByText(/protected admin save/i).length).toBeGreaterThan(
-      0,
-    );
     expect(
-      screen.getByRole("button", { name: /save listing metadata/i }),
+      screen.getByRole("region", { name: /catalogue owner workflow/i }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: /save category metadata/i }),
+      screen.getByRole("button", { name: /add catalogue item/i }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: /save image metadata/i }),
+      screen.getByRole("link", { name: /view public catalogue/i }),
+    ).toHaveAttribute("href", "/catalogue");
+    expect(screen.getByLabelText(/search item name/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /save catalogue item/i }),
     ).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: /upload listing image for review/i }),
     ).toBeInTheDocument();
     expect(
+      screen.getByRole("button", { name: /save image metadata/i }),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/advanced category details/i)).toBeInTheDocument();
+    expect(screen.queryByLabelText(/new image path/i)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/image path/i)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/image bucket/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/modular-lounge\.webp/i)).not.toBeInTheDocument();
+    expect(
       screen.queryByRole("button", { name: /^select files$/i }),
     ).not.toBeInTheDocument();
     expect(
-      screen.getAllByText(/uploaded images/i).length,
-    ).toBeGreaterThan(0);
+      document.body.textContent ?? "",
+    ).not.toMatch(
+      /\b(?:cart|checkout|order|payment|purchase|booking|reservation|inventory|stock|fulfilment|fulfillment|customer account|pipeline)\b/i,
+    );
   });
 
   it("does not render protected write workflow helper copy for blocked admin states", () => {
@@ -174,7 +186,10 @@ describe("Phase 5H-A/B catalogue write workflow readiness", () => {
         screen.queryByRole("button", { name: /create listing/i }),
       ).not.toBeInTheDocument();
       expect(
-        screen.queryByRole("button", { name: /save listing metadata/i }),
+        screen.queryByRole("button", { name: /add catalogue item/i }),
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole("button", { name: /save catalogue item/i }),
       ).not.toBeInTheDocument();
       expect(
         screen.queryByRole("button", { name: /save category metadata/i }),
@@ -189,12 +204,19 @@ describe("Phase 5H-A/B catalogue write workflow readiness", () => {
 
   it("keeps protected admin source focused on safe write controls, validation, save, and visible MVP wording", () => {
     const adminSource = readTrackedProductionSources(adminSourcePaths);
+    const ownerWorkflowSource = readRepoFile(
+      "website/components/admin/catalogue-owner-workflow.tsx",
+    );
 
     for (const required of [
       /Protected admin save/i,
-      /Save listing metadata/i,
+      /Catalogue owner workflow/i,
+      /Save catalogue item/i,
       /Save category metadata/i,
       /Save image metadata/i,
+      /Search item name/i,
+      /View public catalogue/i,
+      /Advanced category details/i,
       /public-safe copy review/i,
       /Public-ready listing helper/i,
       /Category visibility review/i,
@@ -204,6 +226,10 @@ describe("Phase 5H-A/B catalogue write workflow readiness", () => {
     ]) {
       expect(adminSource).toMatch(required);
     }
+
+    expect(ownerWorkflowSource).not.toMatch(
+      /New image path|Image bucket|name="storagePath"|name="storageBucket"|input type="url"/i,
+    );
   });
 
   it("keeps admin success and error copy away from deployment, launch, owner-approval, and evidence claims", () => {

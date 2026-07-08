@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
@@ -14,6 +16,12 @@ vi.mock("../../lib/admin/authorization/server-admin-runtime-route-gate-adapter",
 vi.mock("../../lib/products/admin-read/admin-product-dashboard-read", () => ({
   resolveAdminProductDashboardRead: vi.fn()
 }));
+
+const repoRoot = process.cwd();
+
+function readAppFile(path: string) {
+  return readFileSync(resolve(repoRoot, path), "utf8");
+}
 
 describe("protected admin shell", () => {
   afterEach(() => {
@@ -295,7 +303,7 @@ describe("protected admin shell", () => {
     ).not.toBeInTheDocument();
   }, 15000);
 
-  it("renders existing listing, category, and media controls on the Catalogue route", () => {
+  it("renders the owner-friendly Catalogue workflow without raw image path controls", () => {
     render(
       <AdminShellContent
         view={{ kind: "catalogue" }}
@@ -352,27 +360,71 @@ describe("protected admin shell", () => {
     );
 
     expect(
-      screen.getByRole("heading", { name: /^catalogue$/i })
-    ).toBeInTheDocument();
-    expect(screen.getAllByText(/^published$/i).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/^draft$/i).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/^hidden$/i).length).toBeGreaterThan(0);
+      screen.getAllByRole("heading", { name: /^catalogue$/i }).length
+    ).toBeGreaterThan(0);
     expect(
-      screen.getByRole("button", { name: /save category metadata/i })
-    ).toBeInTheDocument();
+      screen.getAllByText(/manage rental catalogue items shown on the public site/i)
+        .length
+    ).toBeGreaterThan(0);
     expect(
-      screen.getByRole("button", { name: /save listing metadata/i })
+      screen.getByRole("button", { name: /add catalogue item/i })
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: /save image metadata/i })
+      screen.getByRole("link", { name: /view public catalogue/i })
+    ).toHaveAttribute("href", "/catalogue");
+    expect(screen.getByLabelText(/search item name/i)).toBeInTheDocument();
+    expect(screen.getAllByLabelText(/^public status$/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByLabelText(/^category$/i).length).toBeGreaterThan(0);
+
+    const catalogueCard = screen.getByRole("article", {
+      name: /catalogue item modular lounge/i
+    });
+
+    expect(catalogueCard).toHaveTextContent(/modular lounge/i);
+    expect(catalogueCard).toHaveTextContent(/lounge/i);
+    expect(catalogueCard).toHaveTextContent(/draft/i);
+    expect(catalogueCard).toHaveTextContent(/image ready/i);
+    expect(
+      screen.getByRole("region", { name: /catalogue item editor/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /save catalogue item/i })
     ).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: /upload listing image for review/i })
     ).toBeInTheDocument();
     expect(
-      screen.queryByRole("button", { name: /^select files$/i })
+      screen.getByRole("button", { name: /save image metadata/i })
+    ).toBeInTheDocument();
+    expect(screen.getByText(/advanced category details/i)).toBeInTheDocument();
+    expect(screen.queryByLabelText(/new image path/i)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/image path/i)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/image bucket/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/fixtures\/lounge-main\.jpg/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/catalogue-metadata/i)).not.toBeInTheDocument();
+    expect(document.querySelector('input[type="url"]')).toBeNull();
+    expect(
+      screen.queryByRole("button", {
+        name: new RegExp("check" + "out|pay" + "ment|book|reserve|cart", "i")
+      })
     ).not.toBeInTheDocument();
   }, 15000);
+
+  it("redirects unauthenticated protected admin page requests to the login route", () => {
+    for (const path of [
+      "app/admin/page.tsx",
+      "app/admin/hero/page.tsx",
+      "app/admin/catalogue/page.tsx",
+      "app/admin/setups/page.tsx",
+      "app/admin/enquiry-email/page.tsx",
+      "app/admin/delivery-log/page.tsx"
+    ]) {
+      const source = readAppFile(path);
+
+      expect(source).toContain('state.status === "unauthenticated"');
+      expect(source).toContain('redirect("/admin/login?state=unauthenticated")');
+    }
+  });
 
   it("keeps protected admin navigation aligned to the approved six-page workspace IA", () => {
     render(

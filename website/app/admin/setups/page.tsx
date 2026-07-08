@@ -1,3 +1,5 @@
+import { redirect } from "next/navigation";
+
 import {
   AdminShellContent,
   resolveProtectedAdminShellState
@@ -8,6 +10,10 @@ export const revalidate = 0;
 
 export default async function AdminSetupsPage() {
   const state = await resolveProtectedAdminShellState();
+
+  if (state.status === "unauthenticated") {
+    redirect("/admin/login?state=unauthenticated");
+  }
 
   return <AdminShellContent state={state} view={{ kind: "setups" }} />;
 }

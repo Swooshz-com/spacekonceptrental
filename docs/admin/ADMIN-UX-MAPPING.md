@@ -1,7 +1,7 @@
 # Protected Admin UX Mapping
 
 This document maps the protected SpaceKonceptRental admin pages to real owner
-functions after PR #283. It is a planning and implementation-slicing document,
+functions after PR #284. It is a planning and implementation-slicing document,
 not a claim that all protected admin pages have production-ready owner workflow
 parity.
 
@@ -158,34 +158,44 @@ before sending an enquiry.
 
 Current controls:
 
-- Catalogue summary counts.
-- Listing metadata management.
-- Category metadata management.
-- Listing image upload.
-- Listing image metadata management.
+- Owner-facing Catalogue header with Add catalogue item and View public
+  catalogue actions.
+- Catalogue overview counts for total items, published items, draft items, and
+  image review attention.
+- Search by item name.
+- Filter by public status.
+- Filter by category, with categories sorted alphabetically.
+- Public-like catalogue item cards with calm image/missing-image state, item
+  name, category, public status, image attention state, and edit action.
+- One selected item editor for item details, category assignment, public
+  status, display position, image upload, primary image, image alt text, and
+  save.
+- Advanced category details disclosure for the existing category write panel.
 
 Confusing or unnecessary controls:
 
-- The current page exposes technical panels as separate management tasks,
-  which makes the owner think in database parts rather than public catalogue
-  items.
-- Category and image panels are currently separate from the item they affect.
-- Sort order, status, image metadata, and category edits are spread across
-  multiple panels.
+- The lower-level listing, image upload, and image metadata panels still exist
+  as protected implementation components, but they are no longer the primary
+  `/admin/catalogue` owner experience.
+- The existing backend still has separate category records, so full category
+  creation/editing remains behind an Advanced category details disclosure.
 
 Controls to remove:
 
-- Standalone manual taxonomy management should be removed from the owner
+- Standalone manual taxonomy management should stay out of the primary owner
   workflow unless a hard product reason appears.
 - Raw URL owner workflows must stay absent.
+- Storage bucket/path owner workflows must stay absent from the Catalogue page.
 - Fake item data must not be introduced.
 
 Controls to merge:
 
-- Merge listing metadata, category assignment, media, primary image, alt text,
-  and publish status into one item editor drawer or side panel.
-- Categories and style/context filters should be derived from item fields and
-  sorted alphabetically for browsing and filtering.
+- Listing metadata, category assignment, media upload, primary image, alt text,
+  and public status are now merged into one selected-item editor.
+- Categories are derived from item/category assignments and sorted
+  alphabetically for browsing and filtering.
+- Future style/context filters should be derived from backed item fields rather
+  than a manual taxonomy manager.
 
 Target owner-friendly model:
 
@@ -195,8 +205,10 @@ Target owner-friendly model:
 - Provide one clear Add item action.
 - Provide search, filter, and status controls.
 - Open an edit item drawer or panel from a card.
-- Item editor fields should include name, description, category,
-  style/context, images, primary image, alt text, publish status, and save.
+- Item editor fields should include name, description, category, images,
+  primary image, alt text, publish status, and save.
+- Style/context should be added only after a backed schema and protected
+  read/write contract exists.
 - Use furniture/event rental copy such as item, catalogue item, listing, image,
   public status, and enquiry context.
 
@@ -207,6 +219,9 @@ Backend constraints:
   in a UI redesign PR.
 - Current reads expose category, product, and image summaries but do not expose
   a dedicated `style` or `context` item field.
+- Current image metadata updates can save alt text, display position, and
+  primary image without exposing storage bucket/path inputs. New image upload
+  remains protected and server-controlled.
 - Current writes are protected behind first-party admin routes, CSRF proof,
   owner/admin authorization, RLS, and RPC-backed persistence.
 - Public catalogue reads remain server-side and read-only.
@@ -214,11 +229,10 @@ Backend constraints:
 
 Next implementation slice:
 
-- Build a Catalogue page redesign PR that keeps existing write endpoints but
-  reorganizes the owner UI around public-like item cards and a single item
-  editor.
+- Continue with Setups owner workflow decision and implementation.
 - If style/context is required for launch, add it as a reviewed schema and
-  protected write/read contract slice before exposing it in the editor.
+  protected write/read contract slice before exposing it in the Catalogue
+  editor.
 
 ### `/admin/setups`
 

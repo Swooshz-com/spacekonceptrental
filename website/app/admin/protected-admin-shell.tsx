@@ -9,11 +9,9 @@ import {
   type AdminProductDashboardReadResult
 } from "../../lib/products/admin-read/admin-product-dashboard-read";
 import { getAdminRouteRuntimeConfig } from "../../lib/server-runtime-config";
+import { CatalogueOwnerWorkflow } from "../../components/admin/catalogue-owner-workflow";
 import { CategoryManagementPanel } from "../../components/admin/category-management-panel";
 import { HeroContentManagementPanel } from "../../components/admin/hero-content-management-panel";
-import { ListingImageMetadataManagementPanel } from "../../components/admin/listing-image-metadata-management-panel";
-import { ListingImageUploadPanel } from "../../components/admin/listing-image-upload-panel";
-import { ListingManagementPanel } from "../../components/admin/listing-management-panel";
 import type { AdminHomepageHeroReadResult } from "../../lib/hero/admin-homepage-hero-read";
 import type { AdminQuoteEmailDeliveryLogReadResult } from "../../lib/quote/admin-read/admin-quote-email-delivery-log";
 import type { QuoteEnquiryEmailConfigStatus } from "../../lib/quote/email-handoff";
@@ -315,7 +313,7 @@ function workspaceDescription(view: AdminShellView) {
     home: "Manage public website content: hero image, catalogue records, setup presentation, enquiry recipient, and delivery visibility.",
     hero: "Manage the public homepage hero image reference.",
     catalogue:
-      "Manage catalogue items, categories, display position, published status, and listing images.",
+      "Manage rental catalogue items shown on the public site.",
     setups:
       "Review the public setups presentation, which derives from published catalogue records on /listings.",
     "enquiry-email": "Check the quote enquiry email handoff status.",
@@ -661,35 +659,15 @@ function AdminCatalogueOperations({
     );
   }
 
-  const published = dashboard.data.products.filter(
-    (product) => product.status === "published"
-  ).length;
-  const draft = dashboard.data.products.filter(
-    (product) => product.status === "draft"
-  ).length;
-  const hidden = dashboard.data.products.filter(
-    (product) => product.status === "archived"
-  ).length;
-
   return (
     <div className={styles.managementStack}>
-      <section
-        className={styles.metricGridThree}
-        aria-label="Catalogue summary"
-      >
-        <AdminMetricCard label="Published" value={published} />
-        <AdminMetricCard label="Draft" value={draft} />
-        <AdminMetricCard label="Hidden" value={hidden} />
-      </section>
-      <ListingManagementPanel
+      <CatalogueOwnerWorkflow
         categories={dashboard.data.categories}
         products={dashboard.data.products}
-      />
-      <CategoryManagementPanel categories={dashboard.data.categories} />
-      <ListingImageUploadPanel products={dashboard.data.products} />
-      <ListingImageMetadataManagementPanel
         images={dashboard.data.images}
-        products={dashboard.data.products}
+        advancedCategoryPanel={
+          <CategoryManagementPanel categories={dashboard.data.categories} />
+        }
       />
     </div>
   );

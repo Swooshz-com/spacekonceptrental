@@ -1,6 +1,6 @@
 # Launch Roadmap
 
-This roadmap sequences the next SpaceKonceptRental launch work after PR #283.
+This roadmap sequences the next SpaceKonceptRental launch work after PR #284.
 It is a focused implementation plan, not hosted staging evidence and not a
 production-readiness claim.
 
@@ -12,8 +12,10 @@ fulfilment, customer account, or custom CRM workflows.
 
 ## Current Admin UX Baseline
 
-PR #283 established the protected admin shell and design-token foundation. It
-did not complete all-page owner workflow parity.
+PR #283 established the protected admin shell and design-token foundation. PR
+#284 added the admin UX mapping, launch roadmap, Hero simplification, wider
+Hero layout, and clickable admin brand link. These PRs did not complete
+all-page owner workflow parity.
 
 Current protected admin pages remain:
 
@@ -30,6 +32,8 @@ slices is `docs/admin/ADMIN-UX-MAPPING.md`.
 ## Next Implementation Sequence
 
 ### 1. Hero simplification plus clickable admin logo
+
+Status: implemented in PR #284.
 
 Goal: make the safest obvious UX fixes first.
 
@@ -55,6 +59,8 @@ Exit criteria:
 
 ### 2. Catalogue owner workflow redesign
 
+Status: current implementation slice.
+
 Goal: make Catalogue feel like the public catalogue page with admin controls.
 
 Target:
@@ -63,11 +69,14 @@ Target:
 - Add item action.
 - Search, filter, and status controls.
 - Edit item drawer or panel.
-- Item editor fields for name, description, category, style/context, images,
-  primary image, alt text, publish status, and save.
-- Categories and styles derived from item fields and sorted alphabetically.
-- No separate manual taxonomy manager unless a hard product reason exists.
+- Item editor fields for name, description, category, images, primary image,
+  alt text, publish status, display position, and save.
+- Categories derived from existing category assignments and sorted
+  alphabetically.
+- No separate manual taxonomy manager as the primary workflow unless a hard
+  product reason exists.
 - No raw URL owner workflow.
+- No storage bucket/path owner workflow.
 - No fake item data.
 
 Backend note:
@@ -77,6 +86,10 @@ Backend note:
   approved.
 - If style/context is required, add a reviewed schema and read/write contract
   before showing the field as editable.
+- Current admin reads do not expose a backed style/context field, so
+  style/context remains deferred.
+- Current image metadata updates can save alt text, primary image state, and
+  display position without exposing storage bucket/path inputs.
 
 Exit criteria:
 

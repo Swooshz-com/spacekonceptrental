@@ -1,3 +1,5 @@
+import { redirect } from "next/navigation";
+
 import {
   AdminShellContent,
   resolveProtectedAdminShellState
@@ -9,6 +11,11 @@ export const revalidate = 0;
 
 export default async function AdminEnquiryEmailPage() {
   const state = await resolveProtectedAdminShellState();
+
+  if (state.status === "unauthenticated") {
+    redirect("/admin/login?state=unauthenticated");
+  }
+
   const config = resolveQuoteEnquiryEmailConfigStatus();
 
   return (
