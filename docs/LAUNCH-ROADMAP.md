@@ -1,6 +1,6 @@
 # Launch Roadmap
 
-This roadmap sequences the next SpaceKonceptRental launch work after PR #284.
+This roadmap sequences the next SpaceKonceptRental launch work after PR #285.
 It is a focused implementation plan, not hosted staging evidence and not a
 production-readiness claim.
 
@@ -14,8 +14,10 @@ fulfilment, customer account, or custom CRM workflows.
 
 PR #283 established the protected admin shell and design-token foundation. PR
 #284 added the admin UX mapping, launch roadmap, Hero simplification, wider
-Hero layout, and clickable admin brand link. These PRs did not complete
-all-page owner workflow parity.
+Hero layout, and clickable admin brand link. PR #285 redesigned Catalogue into
+an owner-friendly workflow, removed standalone category management from the
+primary Catalogue UX, and mapped image data to an owner-safe client DTO before
+the client boundary.
 
 Current protected admin pages remain:
 
@@ -63,7 +65,7 @@ Exit criteria:
 
 ### 2. Catalogue owner workflow redesign
 
-Status: current implementation slice.
+Status: implemented in PR #285.
 
 Goal: make Catalogue feel like the public catalogue page with admin controls.
 
@@ -111,31 +113,39 @@ Exit criteria:
 
 ### 3. Setups owner workflow decision and implementation
 
-Goal: decide whether Setups is derived from Catalogue for launch or backed by
-real setup records.
+Status: current implementation slice.
 
-Preferred launch direction:
+Goal: make Setups an honest owner-friendly derived review workflow for launch.
 
-- Use derived Setups from Catalogue unless the owner confirms setup-specific
-  content is required before launch.
+Launch decision:
+
+- Keep Setups derived from published Catalogue items for launch.
+- To change setup content for launch, edit the relevant Catalogue item.
+- Do not add fake setup data or setup-specific CRUD without a backed model.
 
 Derived path:
 
-- Show public-like setup cards sourced from published catalogue records.
-- Send edits back to Catalogue.
-- Keep Setups as review/check surface.
+- Show public-like setup cards sourced from published Catalogue items.
+- Show published candidate, excluded draft/hidden, and image-review counts.
+- Link every card back to Catalogue for edits.
+- Keep Setups as a review/check surface.
 
 Real setup record path:
 
 - Add schema, RLS, protected read/write routes, tests, admin editor, and public
   rendering in a separate backend-first slice.
+- Setup-specific tagging/context remains deferred until backed by a
+  schema/read/write contract.
 
 Exit criteria:
 
 - No fake setup editor exists.
-- Public Setups behavior is honest about its source.
+- Public Setups behavior is honest about its Catalogue source.
+- No setup-specific records are introduced.
 
 ### 4. n8n enquiry handoff UI and backend
+
+Status: next implementation slice after Setups.
 
 Goal: make enquiry email handoff operational without exposing secrets or fake
 success.

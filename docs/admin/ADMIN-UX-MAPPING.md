@@ -261,69 +261,69 @@ understand event furniture groupings before sending an enquiry.
 
 Current controls:
 
-- Current setup source explanation.
-- Link to manage Catalogue.
-- Link to view public setups.
-- Published setup candidates derived from published catalogue records.
+- Setup presentation review explanation.
+- Primary Manage catalogue action.
+- Secondary View public setups action.
+- Derived setup overview counts for published catalogue items available for
+  setups, draft/hidden items excluded from public setups, and published items
+  needing image or alt-text review.
+- Public-like setup candidate cards derived from published Catalogue items,
+  with item name, category, public status, image readiness, and Edit in
+  Catalogue action.
+- Calm empty state when no published setup candidates exist.
 
 Confusing or unnecessary controls:
 
-- The page title implies setup management, but the current implementation is
-  only a derived review surface.
+- The page must not imply setup-specific editing exists for launch.
 - There is no real setup editor or setup-specific backend record.
 
 Controls to remove:
 
 - Do not add a fake setup editor.
+- Do not add Add setup or Edit setup controls unless a real setup model exists.
+- Do not add raw URL or storage bucket/path owner workflows.
 - Do not add booking, reservation, event inventory, or fulfilment wording.
 
 Controls to merge:
 
-- If launch keeps derived setups, merge setup changes into Catalogue item
-  editing and make Setups a review/check page.
+- For launch, setup changes happen through Catalogue item editing and Setups is
+  a review/check page.
+- Categories/tags for setup presentation should follow the Catalogue/Setup
+  content tagging direction once backed. Frontend menus should derive from
+  actual tagged or published content rather than empty manual taxonomy rows.
 - If real setup records are added, setup edit controls should be separate from
   item editing only where setup-specific content exists.
 
-Launch direction options:
+Launch decision:
 
-Option A: derive Setups from Catalogue items.
+- Setups remain derived from published Catalogue items for launch.
+- The owner edits setup content by editing the relevant Catalogue item.
+- Real setup records/editor are deferred unless the owner has setup-specific
+  content that cannot honestly be represented by Catalogue items.
 
-- Pros: lowest implementation risk, no fake data, uses existing protected
-  catalogue backend, keeps launch scope narrow.
-- Cons: limited layout/content control for setup-specific storytelling.
-- Best fit if launch only needs public-like setup cards sourced from published
-  catalogue items.
+Tradeoff:
 
-Option B: add real setup records with a setup-specific editor.
-
-- Pros: better control over setup titles, descriptions, images, grouping, and
-  public display.
-- Cons: requires schema, RLS, protected read/write routes, tests, admin editor,
-  and public read integration before it is honest.
-- Best fit only if owner has real setup content that cannot be represented by
-  catalogue items.
-
-Target direction:
-
-- Keep Setups derived from Catalogue for launch unless the owner confirms a
-  hard need for setup-specific records.
-- Show public-like setup cards.
-- Add/edit setup only if the backend supports real setup records.
+- Derived Setups have the lowest implementation risk, avoid fake data, and use
+  the existing protected catalogue backend.
+- Real setup records would give better setup-specific titles, descriptions,
+  grouping, tagging/context, and public display control, but require schema,
+  RLS, protected read/write routes, tests, admin editor, and public read
+  integration before the workflow is honest.
 
 Backend constraints:
 
-- Current Setups derives from protected catalogue reads.
+- Current Setups derives from protected Catalogue reads.
 - No setup-specific write model exists today.
+- Setup-specific tagging/context is not backed by schema/read/write support
+  today and remains deferred.
 - Any real setup record model must be added as a separate reviewed backend and
   admin UI slice.
 
 Next implementation slice:
 
-- Make an explicit launch choice: derived Setups for launch, or a real setup
-  schema/editor PR.
-- If derived, improve the review UI and point edits back to Catalogue.
-- If real records, implement backend first, then admin editor, then public
-  rendering.
+- n8n enquiry handoff UI/backend.
+- If setup-specific content becomes necessary, implement backend first, then
+  admin editor, then public rendering in a separate slice.
 
 ### `/admin/enquiry-email`
 
