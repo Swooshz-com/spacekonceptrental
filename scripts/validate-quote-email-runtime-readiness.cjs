@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
-const defaultProvider = 'resend';
-const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const defaultTimeoutMs = 10000;
+const maxTimeoutMs = 30000;
 
 function readEnv(name) {
   const value = process.env[name]?.trim();
@@ -9,77 +9,74 @@ function readEnv(name) {
   return value || null;
 }
 
-function normalizeProvider(value) {
-  const normalized = value?.trim().toLowerCase();
-
-  if (!normalized) {
-    return defaultProvider;
-  }
-
-  return normalized === defaultProvider ? defaultProvider : null;
-}
-
-function normalizeEmail(value) {
-  const normalized = value?.trim().toLowerCase();
-
-  return normalized && emailPattern.test(normalized) ? normalized : null;
-}
-
 function addIssue(issues, name, summary) {
   issues.push({ name, summary });
 }
 
+function validateHttpUrl(value) {
+  if (!value) {
+    return false;
+  }
+
+  try {
+    const parsed = new URL(value);
+
+    return parsed.protocol === 'https:' || parsed.protocol === 'http:';
+  } catch {
+    return false;
+  }
+}
+
+function validateTimeout(value) {
+  if (!value) {
+    return true;
+  }
+
+  const timeout = Number(value);
+
+  return Number.isFinite(timeout) && timeout > 0 && timeout <= maxTimeoutMs;
+}
+
 function validateQuoteEmailRuntimeReadiness() {
   const issues = [];
-  const providerValue = readEnv('QUOTE_ENQUIRY_EMAIL_PROVIDER');
-  const provider = normalizeProvider(providerValue);
-  const recipientValue = readEnv('QUOTE_ENQUIRY_EMAIL_RECIPIENT');
-  const fromValue = readEnv('QUOTE_ENQUIRY_EMAIL_FROM');
-  const resendApiKey = readEnv('RESEND_API_KEY');
+  const webhookUrl = readEnv('N8N_ENQUIRY_HANDOFF_WEBHOOK_URL');
+  const sharedSecret = readEnv('N8N_ENQUIRY_HANDOFF_SHARED_SECRET');
+  const timeoutMs = readEnv('N8N_ENQUIRY_HANDOFF_TIMEOUT_MS');
 
-  if (!provider) {
+  if (!webhookUrl) {
     addIssue(
       issues,
-      'QUOTE_ENQUIRY_EMAIL_PROVIDER',
-      'unsupported provider',
+      'N8N_ENQUIRY_HANDOFF_WEBHOOK_URL',
+      'missing server-side n8n webhook URL',
+    );
+  } else if (!validateHttpUrl(webhookUrl)) {
+    addIssue(
+      issues,
+      'N8N_ENQUIRY_HANDOFF_WEBHOOK_URL',
+      'invalid server-side n8n webhook URL',
     );
   }
 
-  if (!recipientValue) {
+  if (!sharedSecret) {
     addIssue(
       issues,
-      'QUOTE_ENQUIRY_EMAIL_RECIPIENT',
-      'missing recipient',
-    );
-  } else if (!normalizeEmail(recipientValue)) {
-    addIssue(
-      issues,
-      'QUOTE_ENQUIRY_EMAIL_RECIPIENT',
-      'invalid recipient email',
+      'N8N_ENQUIRY_HANDOFF_SHARED_SECRET',
+      'missing server-side shared secret',
     );
   }
 
-  if (!fromValue) {
+  if (!validateTimeout(timeoutMs)) {
     addIssue(
       issues,
-      'QUOTE_ENQUIRY_EMAIL_FROM',
-      'missing from address',
+      'N8N_ENQUIRY_HANDOFF_TIMEOUT_MS',
+      `timeout must be a positive number no greater than ${maxTimeoutMs}`,
     );
-  } else if (!normalizeEmail(fromValue)) {
-    addIssue(
-      issues,
-      'QUOTE_ENQUIRY_EMAIL_FROM',
-      'invalid from address',
-    );
-  }
-
-  if (!resendApiKey) {
-    addIssue(issues, 'RESEND_API_KEY', 'missing provider api key');
   }
 
   return {
     configured: issues.length === 0,
-    provider: defaultProvider,
+    provider: 'n8n',
+    timeoutMs: Number(timeoutMs || defaultTimeoutMs),
     issues,
   };
 }
@@ -87,15 +84,15 @@ function validateQuoteEmailRuntimeReadiness() {
 const result = validateQuoteEmailRuntimeReadiness();
 
 if (result.configured) {
-  console.log('Quote email handoff runtime readiness: configured.');
+  console.log('Quote enquiry n8n handoff runtime readiness: configured.');
   console.log(`Provider: ${result.provider}`);
-  console.log('Recipient: configured');
-  console.log('From address: configured');
-  console.log('Provider API key: configured');
+  console.log('Webhook endpoint: configured');
+  console.log('Shared secret: configured');
+  console.log('Timeout: configured');
   process.exit(0);
 }
 
-console.error('Quote email handoff runtime readiness: not configured.');
+console.error('Quote enquiry n8n handoff runtime readiness: not configured.');
 console.error(`Provider: ${result.provider}`);
 
 for (const issue of result.issues) {

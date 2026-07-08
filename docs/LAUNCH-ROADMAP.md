@@ -1,6 +1,6 @@
 # Launch Roadmap
 
-This roadmap sequences the next SpaceKonceptRental launch work after PR #285.
+This roadmap sequences the next SpaceKonceptRental launch work after PR #286.
 It is a focused implementation plan, not hosted staging evidence and not a
 production-readiness claim.
 
@@ -17,7 +17,8 @@ PR #283 established the protected admin shell and design-token foundation. PR
 Hero layout, and clickable admin brand link. PR #285 redesigned Catalogue into
 an owner-friendly workflow, removed standalone category management from the
 primary Catalogue UX, and mapped image data to an owner-safe client DTO before
-the client boundary.
+the client boundary. PR #286 made Setups an honest derived review workflow
+backed by published Catalogue items for launch.
 
 Current protected admin pages remain:
 
@@ -113,7 +114,7 @@ Exit criteria:
 
 ### 3. Setups owner workflow decision and implementation
 
-Status: current implementation slice.
+Status: implemented in PR #286.
 
 Goal: make Setups an honest owner-friendly derived review workflow for launch.
 
@@ -145,7 +146,7 @@ Exit criteria:
 
 ### 4. n8n enquiry handoff UI and backend
 
-Status: next implementation slice after Setups.
+Status: current implementation slice.
 
 Goal: make enquiry email handoff operational without exposing secrets or fake
 success.
@@ -153,8 +154,10 @@ success.
 Target flow:
 
 - SKR stores the enquiry first.
-- SKR triggers n8n from a server-side boundary.
-- n8n sends the email.
+- SKR creates a stable public reference and idempotency key.
+- SKR triggers n8n from a server-side boundary after persistence succeeds.
+- n8n sends the internal email or handoff notification.
+- Delivery Log records the attempt/result with safe status/error categories.
 - Optional HubSpot mirror can be added later.
 
 Admin UX:
@@ -164,6 +167,24 @@ Admin UX:
 - No raw provider token/config UI.
 - No secrets displayed.
 - No fake send success.
+
+Backend notes:
+
+- n8n configuration is server-only and uses `N8N_ENQUIRY_HANDOFF_WEBHOOK_URL`,
+  `N8N_ENQUIRY_HANDOFF_SHARED_SECRET`, and optional
+  `N8N_ENQUIRY_HANDOFF_TIMEOUT_MS`.
+- The browser never calls n8n directly.
+- The public quote response is based on SKR persistence, not final email
+  delivery. It must not claim a final quote, confirmed rental fit, or email
+  delivery.
+- A reviewed migration extends the existing technical delivery-log provider and
+  status contract for `n8n`, `pending`, `delivered`, `failed`, and
+  `not_configured`. Hosted Supabase migration application remains separate
+  approval-gated work.
+- The committed n8n exports do not include a quote-enquiry handoff workflow in
+  this PR; the expected payload, HMAC header, and idempotency contract are
+  documented in
+  `docs/architecture/QUOTE-ENQUIRY-EMAIL-HANDOFF-DELIVERY-LOG-FOUNDATION.md`.
 
 Exit criteria:
 

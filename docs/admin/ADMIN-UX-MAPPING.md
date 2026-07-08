@@ -332,17 +332,19 @@ follow-up after SKR stores the enquiry.
 
 Current controls:
 
-- Environment-managed provider status.
-- Environment-managed recipient status.
-- Provider name.
-- Redacted recipient when configured.
+- n8n handoff readiness status.
+- Server-side webhook endpoint configured/not configured state without showing
+  the endpoint value.
+- Server-side signing configured/not configured state without showing the
+  secret value.
+- Last known delivery-log status when a protected delivery-log read is
+  available.
 - Link to Delivery Log.
 
 Confusing or unnecessary controls:
 
-- The current page is safer than an editable provider settings UI, but the
-  target launch direction should be framed around enquiry handoff readiness
-  rather than raw provider configuration.
+- The page must not look like an editable provider settings UI. The owner needs
+  readiness/status, not raw n8n or email provider configuration.
 
 Controls to remove:
 
@@ -365,6 +367,8 @@ Target n8n direction:
 - Optional HubSpot mirror can be added later after the email handoff is safe.
 - The admin page should show n8n handoff readiness and status, not raw provider
   token or config UI.
+- n8n workflow credentials and email recipients are owned in n8n, not edited
+  from SKR admin.
 
 Backend constraints:
 
@@ -373,15 +377,15 @@ Backend constraints:
 - n8n must remain server-side. Browser code must never call n8n directly.
 - Webhook URLs and provider credentials must remain server-only and must not be
   displayed in admin UI or committed to the repo.
-- The public quote route must not claim send success unless persistence and
-  handoff are actually complete.
+- The public quote route returns received after SKR persistence succeeds. It
+  must not claim email delivery, final quote details, or confirmed rental fit.
+- Handoff failures are recorded in Delivery Log using safe status/error
+  categories.
 
 Next implementation slice:
 
-- Replace provider-centric copy with n8n handoff readiness copy after the
-  backend handoff contract exists.
-- Implement the server-side persisted-enquiry-to-n8n trigger as a separate
-  backend slice with safe failure handling and delivery log writes.
+- Implemented in this slice: server-side n8n handoff trigger after persistence,
+  safe not-configured/failure delivery-log writes, readiness UI, and docs.
 - Keep HubSpot mirror optional and later.
 
 ### `/admin/delivery-log`
@@ -392,8 +396,8 @@ whether a submitted enquiry reached the configured handoff path.
 Current controls:
 
 - Empty state when no delivery attempts exist.
-- Technical table for attempted time, reference, redacted recipient, status,
-  and provider result.
+- Technical table for attempted time, enquiry reference, handoff channel,
+  status, and safe result/error category.
 
 Confusing or unnecessary controls:
 
@@ -409,8 +413,8 @@ Controls to remove:
 
 Controls to merge:
 
-- When n8n handoff exists, merge provider result and n8n attempt result into a
-  clear technical status column.
+- Keep channel, status, and safe result in one technical table. Do not expose
+  customer messages or raw workflow data.
 
 Backend constraints:
 
@@ -419,11 +423,11 @@ Backend constraints:
   bodies, raw provider payloads, headers, cookies, tokens, secrets, or raw
   workflow execution data.
 
-Next implementation slice:
+Current implementation slice:
 
-- Preserve this as a technical delivery log only.
-- Add useful empty state and failure details tied to the n8n handoff contract.
-- Add retry controls only after a reviewed retry backend exists.
+- Preserves this as a technical delivery log only.
+- Adds useful empty state and failure details tied to the n8n handoff contract.
+- Adds no retry controls because no reviewed retry backend exists.
 
 ## Implementation PR Sequence
 

@@ -12,12 +12,11 @@ export const serverRuntimeEnvNames = [
   "CHAT_PROVIDER",
   "N8N_CHAT_WEBHOOK_URL",
   "N8N_CHAT_WEBHOOK_TIMEOUT_MS",
+  "N8N_ENQUIRY_HANDOFF_WEBHOOK_URL",
+  "N8N_ENQUIRY_HANDOFF_SHARED_SECRET",
+  "N8N_ENQUIRY_HANDOFF_TIMEOUT_MS",
   "CHAT_TRUSTED_CLIENT_IP_HEADER",
-  "QUOTE_TRUSTED_CLIENT_IP_HEADER",
-  "QUOTE_ENQUIRY_EMAIL_PROVIDER",
-  "QUOTE_ENQUIRY_EMAIL_RECIPIENT",
-  "QUOTE_ENQUIRY_EMAIL_FROM",
-  "RESEND_API_KEY"
+  "QUOTE_TRUSTED_CLIENT_IP_HEADER"
 ] as const;
 
 export type ServerRuntimeEnvName = (typeof serverRuntimeEnvNames)[number];
@@ -53,6 +52,9 @@ export type ServerRuntimeConfigValues = Partial<{
   chatProvider: "n8n";
   n8nChatWebhookUrl: string;
   n8nChatWebhookTimeoutMs: number;
+  n8nEnquiryHandoffWebhookUrl: string;
+  n8nEnquiryHandoffSharedSecret: string;
+  n8nEnquiryHandoffTimeoutMs: number;
   chatTrustedClientIpHeader: TrustedClientIpHeader;
   quoteTrustedClientIpHeader: TrustedClientIpHeader;
 }>;
@@ -64,31 +66,28 @@ export type ServerRuntimeConfig = {
 
 export type QuoteEmailHandoffRuntimeIssue = {
   name:
-    | "QUOTE_ENQUIRY_EMAIL_PROVIDER"
-    | "QUOTE_ENQUIRY_EMAIL_RECIPIENT"
-    | "QUOTE_ENQUIRY_EMAIL_FROM"
-    | "RESEND_API_KEY";
+    | "N8N_ENQUIRY_HANDOFF_WEBHOOK_URL"
+    | "N8N_ENQUIRY_HANDOFF_SHARED_SECRET"
+    | "N8N_ENQUIRY_HANDOFF_TIMEOUT_MS";
   kind: "missing" | "invalid";
-  reason: "required" | "invalid_email" | "unsupported_provider";
+  reason: "required" | "invalid_url" | "invalid_timeout";
 };
 
 export type QuoteEmailHandoffRuntimeConfig = {
   configured: boolean;
-  provider: "resend";
-  providerConfigured: boolean;
-  recipientConfigured: boolean;
-  recipientEmail?: string;
-  recipientEmailRaw?: string;
-  fromEmail?: string;
-  resendApiKey?: string;
+  provider: "n8n";
+  webhookConfigured: boolean;
+  sharedSecretConfigured: boolean;
+  webhookUrl?: string;
+  sharedSecret?: string;
+  timeoutMs: number;
   issues: QuoteEmailHandoffRuntimeIssue[];
 };
 
 const defaultChatProvider = "n8n";
-const defaultQuoteEmailProvider = "resend";
+const defaultQuoteHandoffProvider = "n8n";
 const defaultN8nTimeoutMs = 10_000;
 const maxN8nTimeoutMs = 30_000;
-const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const uuidPattern =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const hostPattern = /^[a-z0-9.-]+(?::[0-9]{1,5})?$/i;
@@ -203,31 +202,6 @@ function normalizeProvider(value: string) {
   return normalized === defaultChatProvider ? defaultChatProvider : null;
 }
 
-function normalizeQuoteEmailProvider(value: string | null) {
-  const normalized = value?.trim().toLowerCase();
-
-  if (!normalized) {
-    return defaultQuoteEmailProvider;
-  }
-
-  return normalized === defaultQuoteEmailProvider
-    ? defaultQuoteEmailProvider
-    : null;
-}
-
-function normalizeEmailAddress(value: string) {
-  const normalized = value.trim().toLowerCase();
-
-  return emailPattern.test(normalized) ? normalized : null;
-}
-
-function redactEmailAddress(value: string) {
-  const [localPart, domain] = value.split("@");
-  const prefix = localPart?.slice(0, 2) || "";
-
-  return domain ? `${prefix}***@${domain}` : "***";
-}
-
 function normalizeTimeoutMs(value: string | null) {
   const timeout = Number(value ?? defaultN8nTimeoutMs);
 
@@ -294,83 +268,59 @@ export function getQuoteEmailHandoffRuntimeConfig(
   env: ServerRuntimeEnv = process.env
 ): QuoteEmailHandoffRuntimeConfig {
   const issues: QuoteEmailHandoffRuntimeIssue[] = [];
-  const provider = normalizeQuoteEmailProvider(
-    readOptionalServerRuntimeEnv(env, "QUOTE_ENQUIRY_EMAIL_PROVIDER")
-  );
-  const recipientValue = readOptionalServerRuntimeEnv(
+  const webhookValue = readOptionalServerRuntimeEnv(
     env,
-    "QUOTE_ENQUIRY_EMAIL_RECIPIENT"
+    "N8N_ENQUIRY_HANDOFF_WEBHOOK_URL"
   );
-  const fromValue = readOptionalServerRuntimeEnv(
+  const sharedSecret = readOptionalServerRuntimeEnv(
     env,
-    "QUOTE_ENQUIRY_EMAIL_FROM"
+    "N8N_ENQUIRY_HANDOFF_SHARED_SECRET"
   );
-  const resendApiKey = readOptionalServerRuntimeEnv(env, "RESEND_API_KEY");
-  const recipientEmailRaw = recipientValue
-    ? normalizeEmailAddress(recipientValue)
-    : null;
-  const fromEmail = fromValue ? normalizeEmailAddress(fromValue) : null;
+  const timeoutValue = readOptionalServerRuntimeEnv(
+    env,
+    "N8N_ENQUIRY_HANDOFF_TIMEOUT_MS"
+  );
+  const webhookUrl = webhookValue ? normalizeHttpUrl(webhookValue) : null;
+  const timeoutMs = normalizeTimeoutMs(timeoutValue);
 
-  if (!provider) {
+  if (!webhookValue) {
     addQuoteEmailIssue(issues, {
-      name: "QUOTE_ENQUIRY_EMAIL_PROVIDER",
-      kind: "invalid",
-      reason: "unsupported_provider"
-    });
-  }
-
-  if (!recipientValue) {
-    addQuoteEmailIssue(issues, {
-      name: "QUOTE_ENQUIRY_EMAIL_RECIPIENT",
+      name: "N8N_ENQUIRY_HANDOFF_WEBHOOK_URL",
       kind: "missing",
       reason: "required"
     });
-  } else if (!recipientEmailRaw) {
+  } else if (!webhookUrl) {
     addQuoteEmailIssue(issues, {
-      name: "QUOTE_ENQUIRY_EMAIL_RECIPIENT",
+      name: "N8N_ENQUIRY_HANDOFF_WEBHOOK_URL",
       kind: "invalid",
-      reason: "invalid_email"
+      reason: "invalid_url"
     });
   }
 
-  if (!fromValue) {
+  if (!sharedSecret) {
     addQuoteEmailIssue(issues, {
-      name: "QUOTE_ENQUIRY_EMAIL_FROM",
-      kind: "missing",
-      reason: "required"
-    });
-  } else if (!fromEmail) {
-    addQuoteEmailIssue(issues, {
-      name: "QUOTE_ENQUIRY_EMAIL_FROM",
-      kind: "invalid",
-      reason: "invalid_email"
-    });
-  }
-
-  if (!resendApiKey) {
-    addQuoteEmailIssue(issues, {
-      name: "RESEND_API_KEY",
+      name: "N8N_ENQUIRY_HANDOFF_SHARED_SECRET",
       kind: "missing",
       reason: "required"
     });
   }
 
-  const providerConfigured = Boolean(provider && fromEmail && resendApiKey);
-  const recipientConfigured = Boolean(recipientEmailRaw);
+  if (timeoutValue && timeoutMs === null) {
+    addQuoteEmailIssue(issues, {
+      name: "N8N_ENQUIRY_HANDOFF_TIMEOUT_MS",
+      kind: "invalid",
+      reason: "invalid_timeout"
+    });
+  }
 
   return {
-    configured: Boolean(provider && recipientEmailRaw && fromEmail && resendApiKey),
-    provider: defaultQuoteEmailProvider,
-    providerConfigured,
-    recipientConfigured,
-    ...(recipientEmailRaw
-      ? {
-          recipientEmail: redactEmailAddress(recipientEmailRaw),
-          recipientEmailRaw
-        }
-      : {}),
-    ...(fromEmail ? { fromEmail } : {}),
-    ...(resendApiKey ? { resendApiKey } : {}),
+    configured: Boolean(webhookUrl && sharedSecret && timeoutMs !== null),
+    provider: defaultQuoteHandoffProvider,
+    webhookConfigured: Boolean(webhookUrl),
+    sharedSecretConfigured: Boolean(sharedSecret),
+    ...(webhookUrl ? { webhookUrl } : {}),
+    ...(sharedSecret ? { sharedSecret } : {}),
+    timeoutMs: timeoutMs ?? defaultN8nTimeoutMs,
     issues
   };
 }
@@ -424,6 +374,20 @@ export function parseServerRuntimeConfig(
   const n8nChatWebhookTimeout = readOptionalServerRuntimeEnv(
     env,
     "N8N_CHAT_WEBHOOK_TIMEOUT_MS"
+  );
+  const n8nEnquiryHandoffWebhookUrl = parseRequiredText(
+    env,
+    "N8N_ENQUIRY_HANDOFF_WEBHOOK_URL",
+    issues
+  );
+  const n8nEnquiryHandoffSharedSecret = parseRequiredText(
+    env,
+    "N8N_ENQUIRY_HANDOFF_SHARED_SECRET",
+    issues
+  );
+  const n8nEnquiryHandoffTimeout = readOptionalServerRuntimeEnv(
+    env,
+    "N8N_ENQUIRY_HANDOFF_TIMEOUT_MS"
   );
   const chatTrustedClientIpHeader = readOptionalServerRuntimeEnv(
     env,
@@ -512,6 +476,38 @@ export function parseServerRuntimeConfig(
       addInvalid(issues, "N8N_CHAT_WEBHOOK_TIMEOUT_MS", "invalid_timeout");
     } else {
       values.n8nChatWebhookTimeoutMs = normalized;
+    }
+  }
+
+  if (n8nEnquiryHandoffWebhookUrl) {
+    const normalized = normalizeHttpUrl(n8nEnquiryHandoffWebhookUrl);
+
+    if (normalized) {
+      values.n8nEnquiryHandoffWebhookUrl = normalized;
+    } else {
+      addInvalid(
+        issues,
+        "N8N_ENQUIRY_HANDOFF_WEBHOOK_URL",
+        "invalid_url"
+      );
+    }
+  }
+
+  if (n8nEnquiryHandoffSharedSecret) {
+    values.n8nEnquiryHandoffSharedSecret = n8nEnquiryHandoffSharedSecret;
+  }
+
+  if (n8nEnquiryHandoffTimeout) {
+    const normalized = normalizeTimeoutMs(n8nEnquiryHandoffTimeout);
+
+    if (normalized === null) {
+      addInvalid(
+        issues,
+        "N8N_ENQUIRY_HANDOFF_TIMEOUT_MS",
+        "invalid_timeout"
+      );
+    } else {
+      values.n8nEnquiryHandoffTimeoutMs = normalized;
     }
   }
 

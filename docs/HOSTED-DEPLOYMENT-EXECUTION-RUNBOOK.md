@@ -3,14 +3,15 @@
 Date: 2026-07-03
 
 Scope: final hosted deployment execution checklist for the SKR owner MVP on a
-Hostinger/Coolify/VPS stack with hosted Supabase and Resend. This runbook is
-documentation only. It does not approve deployment, mutate provider settings,
-change DNS, configure secrets, connect to production services, or enable public
-traffic.
+Hostinger/Coolify/VPS stack with hosted Supabase and server-side n8n enquiry
+handoff. This runbook is documentation only. It does not approve deployment,
+mutate provider settings, change DNS, configure secrets, connect to production
+services, or enable public traffic.
 
 Current source status: source implementation has no known P0/P1 launch blocker.
-Public traffic remains blocked until hosted/runtime readiness, Supabase, Resend,
-safe live quote, protected admin inspection, and UAT gates pass.
+Public traffic remains blocked until hosted/runtime readiness, Supabase,
+server-side n8n enquiry handoff, safe live quote, protected admin inspection,
+and UAT gates pass.
 
 ## Instruction Sources Used
 
@@ -35,9 +36,9 @@ runbook. No repo map is required by current repo convention for this change.
 - Do not paste, print, screenshot, commit, or chat real `.env` values, API keys,
   private keys, webhook URLs, provider response bodies, connection strings, or
   secrets.
-- Do not run SSH, Docker, firewall, DNS, Coolify, Supabase, Resend, deployment,
-  restart, rollback, or public-traffic actions without explicit current-turn
-  owner approval naming the target and allowed operation.
+- Do not run SSH, Docker, firewall, DNS, Coolify, Supabase, n8n, email
+  provider, deployment, restart, rollback, or public-traffic actions without
+  explicit current-turn owner approval naming the target and allowed operation.
 - Keep any deployment notes, screenshots, and incident notes redacted. Record
   env names and safe status labels only.
 - Do not add broad fallbacks. A failed readiness or smoke gate is a launch hold
@@ -81,10 +82,9 @@ values or place them in public/client env.
 | `ADMIN_EXPECTED_ORIGIN` | HTTPS origin expected for protected admin same-origin checks. |
 | `ADMIN_EXPECTED_HOST` | Expected protected admin host. |
 | `ADMIN_CSRF_PROOF_SECRET` | Server-only secret for admin CSRF proof material. |
-| `QUOTE_ENQUIRY_EMAIL_PROVIDER` | Quote email provider selector; owner MVP supports `resend`. |
-| `QUOTE_ENQUIRY_EMAIL_RECIPIENT` | Internal recipient for quote enquiry handoff. |
-| `QUOTE_ENQUIRY_EMAIL_FROM` | Verified Resend sender/from address. |
-| `RESEND_API_KEY` | Required server-side secret when provider is `resend`. |
+| `N8N_ENQUIRY_HANDOFF_WEBHOOK_URL` | Server-only n8n endpoint for quote/enquiry handoff after SKR persistence. |
+| `N8N_ENQUIRY_HANDOFF_SHARED_SECRET` | Server-only HMAC signing secret shared with the reviewed n8n workflow. |
+| `N8N_ENQUIRY_HANDOFF_TIMEOUT_MS` | Optional bounded timeout for the n8n handoff request. |
 
 ## Explicitly Not Required
 
@@ -123,17 +123,22 @@ traffic:
 - Verify no service-role key is required in browser, public client code, or the
   hosted app runtime for owner MVP launch.
 
-## Resend Checklist
+## n8n Enquiry Handoff Checklist
 
-Complete Resend setup outside this repository:
+Complete n8n and email-provider setup outside this repository:
 
-- Verify the sending domain or sender identity in Resend.
-- Confirm DNS records are verified at Resend and at the DNS provider.
-- Set `QUOTE_ENQUIRY_EMAIL_FROM` to the verified sender/from address.
-- Set `QUOTE_ENQUIRY_EMAIL_RECIPIENT` to the intended internal recipient.
-- Store `RESEND_API_KEY` only as a server-side secret in the hosting provider.
-- Never print, screenshot, paste, or commit the Resend API key.
-- Run the quote email readiness command in the same hosted runtime environment:
+- Confirm the reviewed n8n workflow accepts the expected SKR enquiry payload
+  only after verifying the timestamped HMAC signature.
+- Confirm the workflow uses the SKR idempotency key before sending duplicate
+  email/internal handoff.
+- Configure email provider credentials and recipients only in n8n or the
+  approved provider, never in SKR admin UI or repo files.
+- Store `N8N_ENQUIRY_HANDOFF_WEBHOOK_URL` and
+  `N8N_ENQUIRY_HANDOFF_SHARED_SECRET` only as server-side hosting secrets.
+- Never print, screenshot, paste, or commit the n8n webhook URL, shared secret,
+  provider credentials, or provider tokens.
+- Run the quote handoff readiness command in the same hosted runtime
+  environment:
 
 ```powershell
 npm run validate:quote-email-runtime-readiness
@@ -158,7 +163,8 @@ result separately from the hosted env checks.
 
 ## Safe Live Quote Verification
 
-Run this only after hosted launch-mode readiness and quote email readiness pass:
+Run this only after hosted launch-mode readiness and quote handoff readiness
+pass:
 
 1. Use one clearly synthetic customer name, email, phone, event description, and
    item request.
@@ -166,20 +172,21 @@ Run this only after hosted launch-mode readiness and quote email readiness pass:
 3. Inspect the public success or failure state. It must remain receipt/error
    behaviour only and must not add tracking, account, booking, payment, order,
    or reservation language.
-4. Confirm the email handoff reaches the configured recipient when Resend is
-   enabled and healthy.
-5. Sign in as an approved owner/admin.
-6. Inspect protected Enquiry Email for provider/recipient status only.
-7. Inspect protected Delivery Log for technical metadata only: provider, status,
-   redacted recipient, request reference, timestamp, and safe message id or safe
-   error code.
-8. Hold launch if Delivery Log exposes customer messages, requested item detail,
+4. Confirm SKR stored the enquiry before the server-side n8n handoff attempt.
+5. Confirm the n8n workflow completed the email/internal handoff only after
+   signature and idempotency checks.
+6. Sign in as an approved owner/admin.
+7. Inspect protected Enquiry Email for server-side n8n readiness/status only.
+8. Inspect protected Delivery Log for technical metadata only: provider/channel,
+   status, request reference, timestamp, and safe message id or safe error code.
+9. Hold launch if Delivery Log exposes customer messages, requested item detail,
    full email bodies, raw provider payloads, headers, cookies, tokens, secrets,
    API keys, or provider response bodies.
 
-Expected public failure behaviour when handoff is not configured is a generic,
-safe unavailable/error state with no provider internals, env values, secrets,
-SQL, stack traces, workspace internals, or private customer data.
+Expected public behaviour when handoff is not configured or fails after
+persistence is an honest receipt/processing state with no provider internals,
+env values, secrets, SQL, stack traces, workspace internals, or private
+customer data.
 
 ## Launch Hold Conditions
 
@@ -187,7 +194,7 @@ Do not enable public traffic if any condition below is true:
 
 - `npm run validate:production-security-readiness -- --launch` fails.
 - `npm run validate:quote-email-runtime-readiness` fails.
-- Quote email handoff fails after Resend is expected to be active.
+- Quote handoff fails after n8n is expected to be active.
 - Delivery Log leaks private data, customer message content, provider payloads,
   secrets, env values, or raw response bodies.
 - Public `/`, `/catalogue`, `/listings`, detail routes, `/quote`, or
@@ -198,7 +205,7 @@ Do not enable public traffic if any condition below is true:
   or unreviewed.
 - `NEXT_PUBLIC_SKR_DEMO_CONTENT` is configured in the hosted build or runtime
   environment.
-- Resend sender/domain verification is incomplete.
+- n8n workflow signing/idempotency/email-provider verification is incomplete.
 - Any secret/env value appears in docs, logs, screenshots, PR text, or chat.
 
 ## Rollback Or Disable Plan
@@ -209,8 +216,9 @@ If launch must be stopped or reversed:
 - Keep env secrets private; do not paste them into incident notes.
 - Preserve the deployed commit, logs, and redacted evidence needed to diagnose
   the failure.
-- Do not mutate external services, DNS, firewall, Supabase, Resend, or Coolify
-  state without explicit owner approval naming the target and operation.
+- Do not mutate external services, DNS, firewall, Supabase, n8n, email
+  provider, or Coolify state without explicit owner approval naming the target
+  and operation.
 - Record incident notes with safe status labels, timestamps, request references,
   commit SHA, and affected route names only.
 - After correction, rerun the readiness and smoke gates before restoring public
@@ -238,10 +246,11 @@ docs are retained as the canonical supporting references:
   to this hosted execution runbook. Stale deployment-target wording is updated
   there rather than duplicated here.
 - `docs/PRODUCTION-SECURITY-READINESS-GATE.md` remains the readiness validator
-  contract and states that n8n/Pinecone/HubSpot runtime env is not required for
+  contract and states that only the server-side n8n enquiry handoff env is
+  required; n8n chat, Pinecone, and HubSpot runtime env remain out of scope for
   owner-MVP launch.
 - `docs/DEPLOYMENT-SMOKE-TEST-RUNBOOK.md` remains the broader smoke evidence
-  runbook, with n8n checks treated as optional and integration-specific.
+  runbook, with n8n chat checks treated as optional and integration-specific.
 - `docs/SKR-LAUNCH-READINESS-FINAL-GAP-AUDIT.md` remains the final source gap
   audit.
 - `docs/audits/SKR-PRODUCTION-DEPENDENCY-LOCAL-FALLBACK-AUDIT.md` records the

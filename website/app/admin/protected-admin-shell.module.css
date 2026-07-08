@@ -707,6 +707,11 @@
   color: var(--admin-warning-ink);
 }
 
+.statusTagWarning {
+  background: var(--admin-warning-bg);
+  color: var(--admin-warning-ink);
+}
+
 .adminRows {
   display: grid;
   margin: 0;

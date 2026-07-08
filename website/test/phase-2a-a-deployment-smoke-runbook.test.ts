@@ -62,7 +62,8 @@ describe("Phase 2A-A deployment smoke-test runbook", () => {
     expect(runbook).toContain("Forbidden public/browser env checks");
     expect(runbook).toContain("Active catalogue workspace checks");
     expect(runbook).toContain("Quote workspace checks");
-    expect(runbook).toContain("Server-only n8n webhook checks");
+    expect(runbook).toContain("Server-only n8n enquiry handoff checks");
+    expect(runbook).toContain("Server-only n8n chat webhook checks");
     expect(runbook).toContain("Trusted proxy/client IP header checks");
     expect(runbook).toContain("Catalogue fallback smoke tests");
     expect(runbook).toContain("DB-backed catalogue smoke tests");
@@ -80,7 +81,8 @@ describe("Phase 2A-A deployment smoke-test runbook", () => {
     );
     expect(runbook).toContain("<server-only-supabase-url>");
     expect(runbook).toContain("<deployment-url>");
-    expect(runbook).toContain("<server-only-n8n-webhook-url>");
+    expect(runbook).toContain("<server-only-n8n-enquiry-handoff-webhook-url>");
+    expect(runbook).toContain("<server-only-n8n-chat-webhook-url>");
     expect(runbook).toContain("<approved-catalogue-workspace-id>");
   });
 

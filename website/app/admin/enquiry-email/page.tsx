@@ -4,6 +4,7 @@ import {
   AdminShellContent,
   resolveProtectedAdminShellState
 } from "../protected-admin-shell";
+import { resolveAdminQuoteEmailDeliveryLogRead } from "../../../lib/quote/admin-read/admin-quote-email-delivery-log";
 import { resolveQuoteEnquiryEmailConfigStatus } from "../../../lib/quote/email-handoff";
 
 export const dynamic = "force-dynamic";
@@ -17,11 +18,15 @@ export default async function AdminEnquiryEmailPage() {
   }
 
   const config = resolveQuoteEnquiryEmailConfigStatus();
+  const deliveryLog =
+    state.status === "authorised_admin"
+      ? await resolveAdminQuoteEmailDeliveryLogRead()
+      : undefined;
 
   return (
     <AdminShellContent
       state={state}
-      view={{ kind: "enquiry-email", config }}
+      view={{ kind: "enquiry-email", config, deliveryLog }}
     />
   );
 }

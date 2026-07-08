@@ -24,10 +24,9 @@ function baseLaunchEnv(overrides = {}) {
     ADMIN_EXPECTED_HOST: 'owner.spacekoncept.example',
     ADMIN_CSRF_PROOF_SECRET:
       'csrf-proof-placeholder-for-tests-only-1234567890',
-    QUOTE_ENQUIRY_EMAIL_PROVIDER: 'resend',
-    QUOTE_ENQUIRY_EMAIL_RECIPIENT: 'events@example.invalid',
-    QUOTE_ENQUIRY_EMAIL_FROM: 'quotes@example.invalid',
-    RESEND_API_KEY: 'resend-api-key-placeholder-for-tests-only',
+    N8N_ENQUIRY_HANDOFF_WEBHOOK_URL: 'https://example.invalid/n8n/enquiry',
+    N8N_ENQUIRY_HANDOFF_SHARED_SECRET:
+      'n8n-handoff-secret-placeholder-for-tests-only',
     ...overrides,
   };
 }
@@ -73,7 +72,8 @@ test('launch mode fails when required envs are missing', () => {
   assert.match(output, /SUPABASE_ANON_KEY/);
   assert.match(output, /QUOTE_WORKSPACE_ID/);
   assert.match(output, /ADMIN_EXPECTED_ORIGIN/);
-  assert.match(output, /RESEND_API_KEY/);
+  assert.match(output, /N8N_ENQUIRY_HANDOFF_WEBHOOK_URL/);
+  assert.match(output, /N8N_ENQUIRY_HANDOFF_SHARED_SECRET/);
 });
 
 test('launch mode passes with safe placeholder env values', () => {
@@ -83,7 +83,7 @@ test('launch mode passes with safe placeholder env values', () => {
   assert.equal(result.status, 0, output);
   assert.match(output, /launch mode/i);
   assert.match(output, /configured/i);
-  assert.match(output, /No n8n\/Pinecone\/HubSpot runtime env is required/i);
+  assert.match(output, /n8n enquiry handoff env is server-only/i);
 });
 
 test('invalid HTTP admin origin fails in launch mode', () => {
@@ -114,31 +114,45 @@ test('too-short CSRF proof secret fails in launch mode', () => {
   assert.doesNotMatch(output, /short-secret/);
 });
 
-test('unsupported quote email provider fails without echoing the value', () => {
+test('invalid n8n enquiry handoff URL fails without echoing the value', () => {
   const result = runReadiness(
     baseLaunchEnv({
-      QUOTE_ENQUIRY_EMAIL_PROVIDER: 'smtp-secret-provider',
+      N8N_ENQUIRY_HANDOFF_WEBHOOK_URL: 'ftp://example.invalid/secret-webhook',
     }),
   );
   const output = combinedOutput(result);
 
   assert.notEqual(result.status, 0);
-  assert.match(output, /QUOTE_ENQUIRY_EMAIL_PROVIDER/);
-  assert.match(output, /unsupported/i);
-  assert.doesNotMatch(output, /smtp-secret-provider/);
+  assert.match(output, /N8N_ENQUIRY_HANDOFF_WEBHOOK_URL/);
+  assert.match(output, /HTTPS URL/i);
+  assert.doesNotMatch(output, /secret-webhook/);
 });
 
-test('missing Resend API key fails when provider is resend', () => {
+test('too-short n8n shared secret fails in launch mode', () => {
   const result = runReadiness(
     baseLaunchEnv({
-      RESEND_API_KEY: '',
+      N8N_ENQUIRY_HANDOFF_SHARED_SECRET: 'short-secret',
     }),
   );
   const output = combinedOutput(result);
 
   assert.notEqual(result.status, 0);
-  assert.match(output, /RESEND_API_KEY/);
-  assert.match(output, /missing/i);
+  assert.match(output, /N8N_ENQUIRY_HANDOFF_SHARED_SECRET/);
+  assert.match(output, /length|entropy/i);
+  assert.doesNotMatch(output, /short-secret/);
+});
+
+test('invalid n8n handoff timeout fails in launch mode', () => {
+  const result = runReadiness(
+    baseLaunchEnv({
+      N8N_ENQUIRY_HANDOFF_TIMEOUT_MS: '60000',
+    }),
+  );
+  const output = combinedOutput(result);
+
+  assert.notEqual(result.status, 0);
+  assert.match(output, /N8N_ENQUIRY_HANDOFF_TIMEOUT_MS/);
+  assert.match(output, /positive number/i);
 });
 
 test('removed public demo content env fails in launch mode without echoing the value', () => {
@@ -163,7 +177,9 @@ test('output does not include env values or secret-like values', () => {
       ADMIN_EXPECTED_ORIGIN: originSentinel,
       ADMIN_EXPECTED_HOST: 'sentinel-origin.example',
       ADMIN_CSRF_PROOF_SECRET: secretSentinel,
-      RESEND_API_KEY: 'resend-secret-sentinel-value-must-not-print',
+      N8N_ENQUIRY_HANDOFF_WEBHOOK_URL: 'https://sentinel-n8n.example/hook',
+      N8N_ENQUIRY_HANDOFF_SHARED_SECRET:
+        'n8n-secret-sentinel-value-must-not-print',
       SUPABASE_URL: 'https://sentinel-supabase.example',
     }),
   );
@@ -171,8 +187,9 @@ test('output does not include env values or secret-like values', () => {
 
   assert.equal(result.status, 0, output);
   assert.doesNotMatch(output, /secret-sentinel-value-must-not-print/);
-  assert.doesNotMatch(output, /resend-secret-sentinel-value-must-not-print/);
+  assert.doesNotMatch(output, /n8n-secret-sentinel-value-must-not-print/);
   assert.doesNotMatch(output, /https:\/\/sentinel-origin\.example/);
+  assert.doesNotMatch(output, /https:\/\/sentinel-n8n\.example/);
   assert.doesNotMatch(output, /https:\/\/sentinel-supabase\.example/);
 });
 
@@ -187,11 +204,11 @@ test('static scan detects server-only env names in client/public files but allow
   fs.mkdirSync(path.dirname(allowedDoc), { recursive: true });
   fs.writeFileSync(
     badFile,
-    '"use client";\nconsole.log("RESEND_API_KEY");\n',
+    '"use client";\nconsole.log("N8N_ENQUIRY_HANDOFF_SHARED_SECRET");\n',
   );
   fs.writeFileSync(
     allowedDoc,
-    '{"variables":["RESEND_API_KEY","ADMIN_CSRF_PROOF_SECRET"]}\n',
+    '{"variables":["N8N_ENQUIRY_HANDOFF_SHARED_SECRET","ADMIN_CSRF_PROOF_SECRET"]}\n',
   );
 
   const result = runReadiness(baseLaunchEnv(), [
@@ -205,9 +222,9 @@ test('static scan detects server-only env names in client/public files but allow
 
   assert.notEqual(result.status, 0);
   assert.match(output, /client\/public runtime file/i);
-  assert.match(output, /RESEND_API_KEY/);
+  assert.match(output, /N8N_ENQUIRY_HANDOFF_SHARED_SECRET/);
   assert.match(output, /website\/components\/client-env\.tsx/);
-  assert.doesNotMatch(output, /docs\/contracts\/server-env-contract\.json.*RESEND_API_KEY/);
+  assert.doesNotMatch(output, /docs\/contracts\/server-env-contract\.json.*N8N_ENQUIRY_HANDOFF_SHARED_SECRET/);
 });
 
 test('static scan rejects removed public demo content env references in runtime source', () => {

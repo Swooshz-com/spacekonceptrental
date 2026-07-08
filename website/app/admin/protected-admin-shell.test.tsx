@@ -921,10 +921,10 @@ describe("protected admin shell", () => {
       screen.getByRole("heading", { name: /enquiry email handoff status/i })
     ).toBeInTheDocument();
     expect(screen.getByText(/needs setup/i)).toBeInTheDocument();
-    expect(screen.getByText(/recipient not configured/i)).toBeInTheDocument();
-    expect(screen.getByText(/provider not configured/i)).toBeInTheDocument();
-    expect(screen.getByText(/environment-managed/i)).toBeInTheDocument();
-    expect(screen.getByText(/no internal quote inbox/i)).toBeInTheDocument();
+    expect(screen.getByText(/endpoint not configured/i)).toBeInTheDocument();
+    expect(screen.getByText(/signing not configured/i)).toBeInTheDocument();
+    expect(screen.getByText(/webhook and signing values stay out of the admin UI/i)).toBeInTheDocument();
+    expect(screen.getByText(/no delivery attempts yet/i)).toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: /open delivery log/i })
     ).toHaveAttribute("href", "/admin/delivery-log");
@@ -946,11 +946,11 @@ describe("protected admin shell", () => {
       <AdminShellContent state={baseState} view={{ kind: "delivery-log" }} />
     );
     expect(
-      screen.getByRole("heading", { name: /email delivery log/i })
+      screen.getByRole("heading", { name: /enquiry handoff delivery log/i })
     ).toBeInTheDocument();
     expect(
       screen.getByText(
-        /No enquiry email delivery attempts have been recorded yet\./i
+        /No enquiry handoff attempts have been recorded yet\./i
       )
     ).toBeInTheDocument();
     expect(screen.queryByText(/QR-20260603-NEWEST/i)).not.toBeInTheDocument();
@@ -979,20 +979,37 @@ describe("protected admin shell", () => {
         view={{
           kind: "enquiry-email",
           config: {
-            provider: "resend",
-            providerConfigured: true,
-            recipientConfigured: true,
-            recipientEmail: "ev***@spacekoncept.example"
+            provider: "n8n",
+            handoffMode: "n8n",
+            handoffConfigured: true,
+            webhookConfigured: true,
+            sharedSecretConfigured: true,
+            timeoutMs: 5000
+          },
+          deliveryLog: {
+            status: "loaded",
+            records: [
+              {
+                id: "80000000-0000-4000-8000-000000000001",
+                quoteRequestId: "70000000-0000-4000-8000-000000000001",
+                publicReference: "QR-20260612-ABC12345",
+                attemptedAt: "2026-06-12T09:30:00.000Z",
+                recipientEmail: "Not configured",
+                provider: "n8n",
+                deliveryStatus: "delivered",
+                requestId: "route-request-1"
+              }
+            ]
           }
         }}
       />
     );
 
     expect(screen.getByText(/^ready$/i)).toBeInTheDocument();
-    expect(screen.getByText(/provider configured/i)).toBeInTheDocument();
-    expect(screen.getByText(/recipient configured/i)).toBeInTheDocument();
-    expect(screen.getByText("ev***@spacekoncept.example")).toBeInTheDocument();
-    expect(screen.getAllByText(/environment-managed/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/server-side n8n/i).length).toBeGreaterThan(0);
+    expect(screen.getByText(/endpoint configured/i)).toBeInTheDocument();
+    expect(screen.getByText(/signing configured/i)).toBeInTheDocument();
+    expect(screen.getByText(/delivered - QR-20260612-ABC12345/i)).toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: /open delivery log/i })
     ).toHaveAttribute("href", "/admin/delivery-log");
@@ -1012,6 +1029,9 @@ describe("protected admin shell", () => {
       screen.queryByRole("heading", { name: /template preview/i })
     ).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /set recipient|send/i })).not.toBeInTheDocument();
+    expect(document.body.textContent).not.toContain("N8N_ENQUIRY_HANDOFF_WEBHOOK_URL");
+    expect(document.body.textContent).not.toContain("N8N_ENQUIRY_HANDOFF_SHARED_SECRET");
+    expect(document.body.textContent).not.toContain("https://");
     expect(document.body.textContent).not.toContain("RESEND_API_KEY");
     expect(document.body.textContent).not.toContain("resend-secret");
     expect(document.body.textContent).not.toContain("raw provider body");
@@ -1046,10 +1066,9 @@ describe("protected admin shell", () => {
                 quoteRequestId: "70000000-0000-4000-8000-000000000001",
                 publicReference: "QR-20260612-ABC12345",
                 attemptedAt: "2026-06-12T09:30:00.000Z",
-                recipientEmail: "ev***@spacekoncept.example",
-                provider: "resend",
-                deliveryStatus: "sent",
-                providerMessageId: "resend-message-1",
+                recipientEmail: "Not configured",
+                provider: "n8n",
+                deliveryStatus: "delivered",
                 requestId: "route-request-1"
               },
               {
@@ -1057,10 +1076,10 @@ describe("protected admin shell", () => {
                 quoteRequestId: "70000000-0000-4000-8000-000000000002",
                 publicReference: "QR-20260612-FAILED",
                 attemptedAt: "2026-06-12T09:20:00.000Z",
-                recipientEmail: "ev***@spacekoncept.example",
-                provider: "resend",
+                recipientEmail: "Not configured",
+                provider: "n8n",
                 deliveryStatus: "failed",
-                errorCode: "provider_rejected",
+                errorCode: "n8n_rejected",
                 requestId: "route-request-2"
               },
               {
@@ -1069,9 +1088,9 @@ describe("protected admin shell", () => {
                 publicReference: "QR-20260612-NOTCONF",
                 attemptedAt: "2026-06-12T09:10:00.000Z",
                 recipientEmail: "Not configured",
-                provider: "resend",
+                provider: "n8n",
                 deliveryStatus: "not_configured",
-                errorCode: "email_recipient_not_configured",
+                errorCode: "n8n_webhook_not_configured",
                 requestId: "route-request-3"
               }
             ]
@@ -1080,20 +1099,21 @@ describe("protected admin shell", () => {
       />
     );
 
-    expect(screen.getByRole("table", { name: /email delivery attempts/i })).toBeInTheDocument();
+    expect(screen.getByRole("table", { name: /enquiry handoff delivery attempts/i })).toBeInTheDocument();
     expect(screen.getByText("QR-20260612-ABC12345")).toBeInTheDocument();
     expect(screen.getByText("QR-20260612-FAILED")).toBeInTheDocument();
     expect(screen.getByText("QR-20260612-NOTCONF")).toBeInTheDocument();
-    expect(screen.getAllByText("ev***@spacekoncept.example")).toHaveLength(2);
-    expect(screen.getByText("Not configured")).toBeInTheDocument();
-    expect(screen.getByText("sent")).toBeInTheDocument();
+    expect(screen.getAllByText("n8n handoff")).toHaveLength(3);
+    expect(screen.getByText("delivered")).toBeInTheDocument();
     expect(screen.getByText("failed")).toBeInTheDocument();
     expect(screen.getByText("not_configured")).toBeInTheDocument();
-    expect(screen.getByText("resend-message-1")).toBeInTheDocument();
-    expect(screen.getByText("provider_rejected")).toBeInTheDocument();
-    expect(screen.getByText("email_recipient_not_configured")).toBeInTheDocument();
+    expect(screen.getByText("n8n_rejected")).toBeInTheDocument();
+    expect(screen.getByText("n8n_webhook_not_configured")).toBeInTheDocument();
     expect(screen.queryByText(/Please recommend/)).not.toBeInTheDocument();
     expect(screen.queryByText(/Modular lounge set/)).not.toBeInTheDocument();
+    expect(document.body.textContent).not.toContain("N8N_ENQUIRY_HANDOFF_WEBHOOK_URL");
+    expect(document.body.textContent).not.toContain("N8N_ENQUIRY_HANDOFF_SHARED_SECRET");
+    expect(document.body.textContent).not.toContain("https://");
     expect(
       screen.queryByRole("link", { name: /quote detail|open quote|review/i })
     ).not.toBeInTheDocument();

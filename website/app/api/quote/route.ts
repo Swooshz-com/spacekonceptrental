@@ -122,26 +122,14 @@ function persistenceError(requestId: string, request: Request) {
   );
 }
 
-function emailHandoffError(requestId: string, request: Request) {
+function recordEmailHandoffApplicationError(requestId: string, request: Request) {
   logApplicationError({
-    category: "QUOTE_EMAIL_HANDOFF_UNAVAILABLE",
+    category: "QUOTE_ENQUIRY_HANDOFF_ATTEMPT_UNAVAILABLE",
     reference: requestId,
     request,
     route: "POST /api/quote",
-    statusCode: 503
+    statusCode: 202
   });
-
-  return Response.json(
-    {
-      error: {
-        code: "QUOTE_EMAIL_HANDOFF_UNAVAILABLE",
-        message: FALLBACK_MESSAGE,
-        reference: requestId
-      },
-      requestId
-    },
-    { status: 503 }
-  );
 }
 
 function rateLimitError(rateLimit: RateLimitResult, requestId: string) {
@@ -432,19 +420,15 @@ export async function handleQuotePost(
   }
 
   try {
-    const deliveryResult = await emailHandoff({
+    await emailHandoff({
       quote: validation.value,
       quoteRequestId: result.quoteRequestId,
       publicReference: result.publicReference,
       requestId,
       request
     });
-
-    if (!deliveryResult.ok) {
-      return emailHandoffError(requestId, request);
-    }
   } catch {
-    return emailHandoffError(requestId, request);
+    recordEmailHandoffApplicationError(requestId, request);
   }
 
   return Response.json(

@@ -1,33 +1,17 @@
 import "server-only";
 
+import { createHmac } from "node:crypto";
+
 import { getQuoteEmailHandoffRuntimeConfig } from "../server-runtime-config";
 import { recordQuoteEmailDeliveryAttempt } from "./quote-email-delivery-log-repository";
 import type { QuoteSubmission } from "./types";
 
-export type QuoteEmailProviderName = "resend";
-export type QuoteEmailDeliveryStatus = "sent" | "failed" | "not_configured";
-
-export type QuoteEmailMessage = {
-  from: string;
-  to: string;
-  subject: string;
-  text: string;
-};
-
-export type QuoteEmailProviderResult =
-  | {
-      ok: true;
-      providerMessageId?: string;
-    }
-  | {
-      ok: false;
-      code: string;
-      unsafeDetails?: unknown;
-    };
-
-export type QuoteEmailProvider = (
-  message: QuoteEmailMessage
-) => Promise<QuoteEmailProviderResult>;
+export type QuoteEmailProviderName = "n8n";
+export type QuoteEmailDeliveryStatus =
+  | "pending"
+  | "delivered"
+  | "failed"
+  | "not_configured";
 
 export type QuoteEmailDeliveryLogInput = {
   quoteRequestId: string;
@@ -46,9 +30,11 @@ export type QuoteEmailDeliveryLogWriter = (
 
 export type QuoteEnquiryEmailConfigStatus = {
   provider: QuoteEmailProviderName;
-  providerConfigured: boolean;
-  recipientConfigured: boolean;
-  recipientEmail?: string;
+  handoffMode: "n8n";
+  handoffConfigured: boolean;
+  webhookConfigured: boolean;
+  sharedSecretConfigured: boolean;
+  timeoutMs: number;
   missingReason?: string;
 };
 
@@ -63,38 +49,68 @@ export type QuoteEmailHandoffInput = {
 export type QuoteEmailHandoffResult =
   | {
       ok: true;
-      status: "sent";
+      status: "delivered" | "pending";
       provider: QuoteEmailProviderName;
-      providerMessageId?: string;
+      idempotencyKey: string;
     }
   | {
       ok: false;
       status: "failed" | "not_configured";
       provider: QuoteEmailProviderName;
       code: string;
+      idempotencyKey: string;
     };
 
 type QuoteEmailEnv = {
   [key: string]: string | null | undefined;
-  QUOTE_ENQUIRY_EMAIL_PROVIDER?: string | null;
-  QUOTE_ENQUIRY_EMAIL_RECIPIENT?: string | null;
-  QUOTE_ENQUIRY_EMAIL_FROM?: string | null;
-  RESEND_API_KEY?: string | null;
 };
 
-type ResolvedQuoteEmailConfig = QuoteEnquiryEmailConfigStatus & {
-  fromEmail?: string;
-  resendApiKey?: string;
-  recipientEmailRaw?: string;
-};
+type N8nEnquiryHandoffFetch = (
+  input: string | URL | Request,
+  init?: RequestInit
+) => Promise<Response>;
 
 type SendQuoteEnquiryEmailOptions = {
   deliveryLog?: QuoteEmailDeliveryLogWriter;
   env?: QuoteEmailEnv;
+  fetch?: N8nEnquiryHandoffFetch;
   now?: () => Date;
-  provider?: QuoteEmailProvider;
 };
 
+type N8nEnquiryHandoffPayload = {
+  schemaVersion: 1;
+  event: "skr.enquiry.submitted";
+  idempotencyKey: string;
+  submittedAt: string;
+  enquiry: {
+    id: string;
+    publicReference: string;
+    source: "website";
+    sourcePath?: string;
+    listingSlug?: string;
+  };
+  contact: {
+    name: string;
+    email?: string;
+    phone?: string;
+  };
+  eventContext: {
+    date?: string;
+    venue?: string;
+    message?: string;
+  };
+  requestedItems: Array<{
+    name: string;
+    quantity: number;
+    notes?: string;
+  }>;
+  request: {
+    requestId: string;
+    visitorSubmissionRequestId?: string;
+  };
+};
+
+const provider: QuoteEmailProviderName = "n8n";
 const maxProviderMessageIdLength = 120;
 const maxErrorCodeLength = 80;
 
@@ -116,63 +132,27 @@ function safeErrorCode(value: string | undefined) {
     .replace(/[^a-z0-9_.:-]/g, "_")
     .slice(0, maxErrorCodeLength);
 
-  return normalized || "email_provider_failed";
-}
-
-export function resolveQuoteEnquiryEmailConfigStatus(
-  env: QuoteEmailEnv = process.env
-): QuoteEnquiryEmailConfigStatus {
-  const resolved = resolveQuoteEnquiryEmailConfig(env);
-
-  return {
-    provider: resolved.provider,
-    providerConfigured: resolved.providerConfigured,
-    recipientConfigured: resolved.recipientConfigured,
-    ...(resolved.recipientEmail ? { recipientEmail: resolved.recipientEmail } : {}),
-    ...(resolved.missingReason ? { missingReason: resolved.missingReason } : {})
-  };
-}
-
-function resolveQuoteEnquiryEmailConfig(
-  env: QuoteEmailEnv = process.env
-): ResolvedQuoteEmailConfig {
-  const config = getQuoteEmailHandoffRuntimeConfig(env);
-  const firstIssue = config.issues[0];
-
-  return {
-    provider: config.provider,
-    providerConfigured: config.providerConfigured,
-    recipientConfigured: config.recipientConfigured,
-    ...(config.recipientEmail ? { recipientEmail: config.recipientEmail } : {}),
-    ...(config.recipientEmailRaw
-      ? { recipientEmailRaw: config.recipientEmailRaw }
-      : {}),
-    ...(config.fromEmail ? { fromEmail: config.fromEmail } : {}),
-    ...(config.resendApiKey ? { resendApiKey: config.resendApiKey } : {}),
-    ...(firstIssue ? { missingReason: mapQuoteEmailConfigIssue(firstIssue) } : {})
-  };
+  return normalized || "n8n_handoff_failed";
 }
 
 function mapQuoteEmailConfigIssue(
   issue: ReturnType<typeof getQuoteEmailHandoffRuntimeConfig>["issues"][number]
 ) {
-  if (issue.name === "QUOTE_ENQUIRY_EMAIL_RECIPIENT") {
-    return "email_recipient_not_configured";
+  if (issue.name === "N8N_ENQUIRY_HANDOFF_WEBHOOK_URL") {
+    return issue.kind === "invalid"
+      ? "n8n_webhook_invalid"
+      : "n8n_webhook_not_configured";
   }
 
-  if (issue.name === "QUOTE_ENQUIRY_EMAIL_FROM") {
-    return "email_from_not_configured";
+  if (issue.name === "N8N_ENQUIRY_HANDOFF_SHARED_SECRET") {
+    return "n8n_shared_secret_not_configured";
   }
 
-  if (issue.name === "RESEND_API_KEY") {
-    return "email_provider_api_key_not_configured";
+  if (issue.name === "N8N_ENQUIRY_HANDOFF_TIMEOUT_MS") {
+    return "n8n_timeout_invalid";
   }
 
-  if (issue.reason === "unsupported_provider") {
-    return "email_provider_unsupported";
-  }
-
-  return "email_provider_not_configured";
+  return "n8n_handoff_not_configured";
 }
 
 function safeSourcePath(sourcePath: string | undefined) {
@@ -189,103 +169,79 @@ function safeSourcePath(sourcePath: string | undefined) {
   }
 }
 
-function formatOptionalLine(label: string, value: string | undefined) {
-  return value ? [`${label}: ${value}`] : [];
+function buildIdempotencyKey(input: QuoteEmailHandoffInput) {
+  return `quote-enquiry:${input.quoteRequestId}`;
 }
 
-function formatSelectedItems(items: QuoteSubmission["items"]) {
-  if (items.length === 0) {
-    return ["Selected rental items: None provided"];
+function signPayload({
+  body,
+  sharedSecret,
+  timestamp
+}: {
+  body: string;
+  sharedSecret: string;
+  timestamp: string;
+}) {
+  const signature = createHmac("sha256", sharedSecret)
+    .update(`${timestamp}.${body}`)
+    .digest("hex");
+
+  return `sha256=${signature}`;
+}
+
+function getSafeN8nResultCode(status: number) {
+  if (status === 408 || status === 429) {
+    return "n8n_temporarily_unavailable";
   }
 
-  return [
-    "Selected rental items:",
-    ...items.map((item, index) => {
-      const base = `${index + 1}. ${item.productName} - quantity ${item.quantity}`;
+  if (status >= 500) {
+    return "n8n_unavailable";
+  }
 
-      return item.notes ? `${base} - notes: ${item.notes}` : base;
-    })
-  ];
+  return "n8n_rejected";
 }
 
-export function buildQuoteEnquiryEmailText(
-  input: QuoteEmailHandoffInput,
-  submittedAt: Date
-) {
-  const { quote } = input;
-
-  return [
-    "New SpaceKonceptRental rental enquiry",
-    "",
-    `Public reference: ${input.publicReference}`,
-    `Submitted timestamp: ${submittedAt.toISOString()}`,
-    `Customer name: ${quote.customerName}`,
-    ...formatOptionalLine("Customer email", quote.customerEmail),
-    ...formatOptionalLine("Customer phone", quote.customerPhone),
-    ...formatOptionalLine("Event date", quote.eventDate),
-    ...formatOptionalLine("Venue", quote.venue),
-    ...formatOptionalLine("Customer message", quote.customerMessage),
-    ...formatOptionalLine("Source path", safeSourcePath(quote.sourcePath)),
-    ...formatOptionalLine("Listing slug", quote.listingSlug),
-    "",
-    ...formatSelectedItems(quote.items),
-    "",
-    `Safe request/reference id: ${input.requestId} / ${input.quoteRequestId}`
-  ].join("\n");
+function getAbortErrorCode(error: unknown) {
+  return error instanceof DOMException && error.name === "AbortError"
+    ? "n8n_timeout"
+    : "n8n_unavailable";
 }
 
-async function sendResendEmail(
-  apiKey: string,
-  message: QuoteEmailMessage
-): Promise<QuoteEmailProviderResult> {
+async function postWithTimeout({
+  body,
+  fetchImpl,
+  headers,
+  timeoutMs,
+  webhookUrl
+}: {
+  body: string;
+  fetchImpl: N8nEnquiryHandoffFetch;
+  headers: HeadersInit;
+  timeoutMs: number;
+  webhookUrl: string;
+}) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+
   try {
-    const response = await fetch("https://api.resend.com/emails", {
+    return await fetchImpl(webhookUrl, {
       method: "POST",
-      headers: {
-        authorization: `Bearer ${apiKey}`,
-        "content-type": "application/json"
-      },
-      body: JSON.stringify({
-        from: message.from,
-        to: message.to,
-        subject: message.subject,
-        text: message.text
-      })
+      headers,
+      body,
+      signal: controller.signal
     });
-
-    if (!response.ok) {
-      return {
-        ok: false,
-        code: response.status >= 500 ? "provider_unavailable" : "provider_rejected"
-      };
-    }
-
-    const payload = (await response.json().catch(() => null)) as
-      | { id?: unknown }
-      | null;
-    const providerMessageId =
-      typeof payload?.id === "string" ? safeProviderMessageId(payload.id) : undefined;
-
-    return {
-      ok: true,
-      ...(providerMessageId ? { providerMessageId } : {})
-    };
-  } catch {
-    return {
-      ok: false,
-      code: "provider_unavailable"
-    };
+  } finally {
+    clearTimeout(timeout);
   }
-}
-
-function buildDefaultProvider(config: ResolvedQuoteEmailConfig): QuoteEmailProvider {
-  return (message) => sendResendEmail(config.resendApiKey ?? "", message);
 }
 
 async function recordDeliveryAttempt(
   deliveryLog: QuoteEmailDeliveryLogWriter,
   input: QuoteEmailHandoffInput,
-  attempt: Omit<QuoteEmailDeliveryLogInput, "quoteRequestId" | "publicReference" | "requestId">
+  attempt: Omit<
+    QuoteEmailDeliveryLogInput,
+    "quoteRequestId" | "publicReference" | "requestId"
+  >
 ) {
   await deliveryLog({
     quoteRequestId: input.quoteRequestId,
@@ -295,19 +251,84 @@ async function recordDeliveryAttempt(
   }).catch(() => ({ ok: false as const, code: "delivery_log_unavailable" }));
 }
 
+export function resolveQuoteEnquiryEmailConfigStatus(
+  env: QuoteEmailEnv = process.env
+): QuoteEnquiryEmailConfigStatus {
+  const config = getQuoteEmailHandoffRuntimeConfig(env);
+  const firstIssue = config.issues[0];
+
+  return {
+    provider,
+    handoffMode: "n8n",
+    handoffConfigured: config.configured,
+    webhookConfigured: config.webhookConfigured,
+    sharedSecretConfigured: config.sharedSecretConfigured,
+    timeoutMs: config.timeoutMs,
+    ...(firstIssue ? { missingReason: mapQuoteEmailConfigIssue(firstIssue) } : {})
+  };
+}
+
+export function buildQuoteEnquiryHandoffPayload(
+  input: QuoteEmailHandoffInput,
+  submittedAt: Date
+): N8nEnquiryHandoffPayload {
+  const { quote } = input;
+
+  return {
+    schemaVersion: 1,
+    event: "skr.enquiry.submitted",
+    idempotencyKey: buildIdempotencyKey(input),
+    submittedAt: submittedAt.toISOString(),
+    enquiry: {
+      id: input.quoteRequestId,
+      publicReference: input.publicReference,
+      source: "website",
+      ...(safeSourcePath(quote.sourcePath)
+        ? { sourcePath: safeSourcePath(quote.sourcePath) }
+        : {}),
+      ...(quote.listingSlug ? { listingSlug: quote.listingSlug } : {})
+    },
+    contact: {
+      name: quote.customerName,
+      ...(quote.customerEmail ? { email: quote.customerEmail } : {}),
+      ...(quote.customerPhone ? { phone: quote.customerPhone } : {})
+    },
+    eventContext: {
+      ...(quote.eventDate ? { date: quote.eventDate } : {}),
+      ...(quote.venue ? { venue: quote.venue } : {}),
+      ...(quote.customerMessage ? { message: quote.customerMessage } : {})
+    },
+    requestedItems: quote.items.map((item) => ({
+      name: item.productName,
+      quantity: item.quantity,
+      ...(item.notes ? { notes: item.notes } : {})
+    })),
+    request: {
+      requestId: input.requestId,
+      ...(quote.requestId
+        ? { visitorSubmissionRequestId: quote.requestId }
+        : {})
+    }
+  };
+}
+
 export async function sendQuoteEnquiryEmailHandoff(
   input: QuoteEmailHandoffInput,
   options: SendQuoteEnquiryEmailOptions = {}
 ): Promise<QuoteEmailHandoffResult> {
-  const config = resolveQuoteEnquiryEmailConfig(options.env ?? process.env);
+  const config = getQuoteEmailHandoffRuntimeConfig(options.env ?? process.env);
   const deliveryLog = options.deliveryLog ?? recordQuoteEmailDeliveryAttempt;
+  const idempotencyKey = buildIdempotencyKey(input);
 
-  if (!config.recipientConfigured || !config.providerConfigured) {
-    const code = config.missingReason ?? "email_provider_not_configured";
+  if (!config.configured || !config.webhookUrl || !config.sharedSecret) {
+    const firstIssue = config.issues[0];
+    const code = firstIssue
+      ? mapQuoteEmailConfigIssue(firstIssue)
+      : "n8n_handoff_not_configured";
 
     await recordDeliveryAttempt(deliveryLog, input, {
-      recipientEmail: config.recipientEmailRaw ?? null,
-      provider: config.provider,
+      recipientEmail: null,
+      provider,
       status: "not_configured",
       errorCode: code
     });
@@ -315,54 +336,93 @@ export async function sendQuoteEnquiryEmailHandoff(
     return {
       ok: false,
       status: "not_configured",
-      provider: config.provider,
-      code
+      provider,
+      code,
+      idempotencyKey
     };
   }
 
-  const message: QuoteEmailMessage = {
-    from: config.fromEmail ?? "",
-    to: config.recipientEmailRaw ?? "",
-    subject: `New SKR quote request ${input.publicReference}`,
-    text: buildQuoteEnquiryEmailText(input, (options.now ?? (() => new Date()))())
-  };
-  const provider = options.provider ?? buildDefaultProvider(config);
-  const providerResult = await provider(message);
-
-  if (!providerResult.ok) {
-    const code = safeErrorCode(providerResult.code);
-
-    await recordDeliveryAttempt(deliveryLog, input, {
-      recipientEmail: config.recipientEmailRaw ?? null,
-      provider: config.provider,
-      status: "failed",
-      errorCode: code
-    });
-
-    return {
-      ok: false,
-      status: "failed",
-      provider: config.provider,
-      code
-    };
-  }
-
-  const providerMessageId = safeProviderMessageId(
-    providerResult.providerMessageId
-  );
-
-  await recordDeliveryAttempt(deliveryLog, input, {
-    recipientEmail: config.recipientEmailRaw ?? null,
-    provider: config.provider,
-    status: "sent",
-    ...(providerMessageId ? { providerMessageId } : {}),
-    errorCode: null
+  const submittedAt = (options.now ?? (() => new Date()))();
+  const payload = buildQuoteEnquiryHandoffPayload(input, submittedAt);
+  const body = JSON.stringify(payload);
+  const timestamp = submittedAt.toISOString();
+  const signature = signPayload({
+    body,
+    sharedSecret: config.sharedSecret,
+    timestamp
   });
 
-  return {
-    ok: true,
-    status: "sent",
-    provider: config.provider,
-    ...(providerMessageId ? { providerMessageId } : {})
-  };
+  try {
+    const response = await postWithTimeout({
+      body,
+      fetchImpl: options.fetch ?? fetch,
+      headers: {
+        "content-type": "application/json",
+        "x-skr-event": "skr.enquiry.submitted",
+        "x-skr-enquiry-reference": input.publicReference,
+        "x-skr-idempotency-key": idempotencyKey,
+        "x-skr-signature": signature,
+        "x-skr-timestamp": timestamp
+      },
+      timeoutMs: config.timeoutMs,
+      webhookUrl: config.webhookUrl
+    });
+
+    if (!response.ok) {
+      const code = getSafeN8nResultCode(response.status);
+
+      await recordDeliveryAttempt(deliveryLog, input, {
+        recipientEmail: null,
+        provider,
+        status: "failed",
+        errorCode: code
+      });
+
+      return {
+        ok: false,
+        status: "failed",
+        provider,
+        code,
+        idempotencyKey
+      };
+    }
+
+    const providerMessageId = safeProviderMessageId(
+      response.headers.get("x-skr-handoff-id") ?? undefined
+    );
+
+    const status = response.status === 202 ? "pending" : "delivered";
+
+    await recordDeliveryAttempt(deliveryLog, input, {
+      recipientEmail: null,
+      provider,
+      status,
+      ...(providerMessageId ? { providerMessageId } : {}),
+      errorCode: null
+    });
+
+    return {
+      ok: true,
+      status,
+      provider,
+      idempotencyKey
+    };
+  } catch (error) {
+    const code = safeErrorCode(getAbortErrorCode(error));
+
+    await recordDeliveryAttempt(deliveryLog, input, {
+      recipientEmail: null,
+      provider,
+      status: "failed",
+      errorCode: code
+    });
+
+    return {
+      ok: false,
+      status: "failed",
+      provider,
+      code,
+      idempotencyKey
+    };
+  }
 }

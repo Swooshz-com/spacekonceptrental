@@ -27,9 +27,9 @@ deployment is performed by Phase 2O-A/B.
 
 Use this runbook during a future approved deployment review to prove the SKR
 public site, admin-managed furniture/event-rental catalogue, storage-backed
-listing media, quote request flow, admin quote workflow, and any separately
-approved temporary server-only n8n chat bridge behave safely before public
-traffic is enabled.
+listing media, quote request flow, server-side n8n enquiry handoff, admin quote
+workflow, and any separately approved temporary server-only n8n chat bridge
+behave safely before public traffic is enabled.
 
 ## Scope
 
@@ -41,8 +41,9 @@ This runbook covers:
 - Quote workspace configuration.
 - Admin trusted workspace configuration.
 - Listing media bucket expectations.
-- Optional server-only n8n webhook expectations when a separately approved n8n
-  integration is in scope.
+- Server-only n8n enquiry handoff expectations.
+- Optional server-only n8n chat webhook expectations when a separately approved
+  chat integration is in scope.
 - Trusted proxy/CDN client IP header review.
 - Rate-limit caveats.
 - Smoke-test sequence.
@@ -61,7 +62,8 @@ This runbook does not approve:
 - Browser Supabase.
 - Customer uploads or arbitrary public upload routes.
 - Public quote status tracking or customer-visible internal notes.
-- Notifications or CRM integration.
+- Notifications beyond the reviewed server-side n8n enquiry handoff, or CRM
+  integration.
 - Customer accounts, carts, checkout, payments, stock reservation, order
   fulfilment, confirmed booking, or online ordering.
 - Live n8n workflow import, export, activation, execution, or mutation.
@@ -76,8 +78,10 @@ Before any future deployment is approved, reviewers must confirm:
   the deployment exists.
 - Server-only Supabase settings are represented only by placeholders such as
   `<server-only-supabase-url>`.
-- Any separately approved n8n webhook is represented only by
-  `<server-only-n8n-webhook-url>`.
+- The approved n8n enquiry handoff webhook is represented only by
+  `<server-only-n8n-enquiry-handoff-webhook-url>`.
+- Any separately approved n8n chat webhook is represented only by
+  `<server-only-n8n-chat-webhook-url>`.
 - The selected Supabase project is reviewed without committing real project
   URLs, keys, dashboard links, or screenshots containing secrets.
 - `CATALOGUE_WORKSPACE_ID`, `QUOTE_WORKSPACE_ID`, and
@@ -95,8 +99,8 @@ Review `docs/DEPLOYMENT-ENVIRONMENT-READINESS.md` and
 `docs/contracts/server-env-contract.json` before deployment. Confirm:
 
 - No public client env is currently required.
-- Supabase, catalogue, quote, admin, any separately approved n8n integration,
-  and trusted proxy settings are server-only.
+- Supabase, catalogue, quote, admin, n8n enquiry handoff, any separately
+  approved n8n chat integration, and trusted proxy settings are server-only.
 - No `NEXT_PUBLIC_SUPABASE_*`, `NEXT_PUBLIC_N8N*`, or
   `NEXT_PUBLIC_SUPABASE_SERVICE_ROLE` variable exists.
 - No `SUPABASE_SERVICE_ROLE_KEY` runtime path exists.
@@ -122,7 +126,8 @@ Phase 2D-A sections:
 - Forbidden public/browser env checks.
 - Active catalogue workspace checks.
 - Quote workspace checks.
-- Server-only n8n webhook checks are optional when separately approved.
+- Server-only n8n enquiry handoff checks are required for launch.
+- Server-only n8n chat webhook checks are optional when separately approved.
 - Trusted proxy/client IP header checks.
 - Catalogue fallback smoke tests.
 - DB-backed catalogue smoke tests.
@@ -189,9 +194,25 @@ Before public traffic:
   scope, and session-bound authenticated Supabase access.
 - Confirm no customer upload route and no arbitrary public upload route exists.
 
-## Optional server-only n8n webhook expectations
+## Server-only n8n enquiry handoff expectations
 
-Before chat provider smoke testing, only if a separately approved n8n
+Before public quote smoke testing:
+
+- Confirm `N8N_ENQUIRY_HANDOFF_WEBHOOK_URL` and
+  `N8N_ENQUIRY_HANDOFF_SHARED_SECRET` are stored only as server-side env.
+- Confirm browser code calls only `POST /api/quote`; browser code never calls
+  n8n directly.
+- Confirm quote submission persists in SKR before any n8n handoff attempt.
+- Confirm n8n receives only the reviewed payload, timestamp, HMAC signature,
+  enquiry reference, and idempotency key.
+- Confirm the browser bundle contains no n8n webhook URL and no
+  `NEXT_PUBLIC_N8N*` variable.
+- Confirm no live n8n workflow import, export, activation, execution, or
+  mutation is part of the deployment PR unless separately approved.
+
+## Optional server-only n8n chat webhook expectations
+
+Before chat provider smoke testing, only if a separately approved n8n chat
 integration is in scope:
 
 - Confirm `N8N_CHAT_WEBHOOK_URL` is stored only as server-only n8n webhook env.
@@ -304,22 +325,23 @@ Run these in order and capture evidence before public traffic.
 - Confirm the browser receives only safe public receipt fields.
 - Confirm the quote row is created in the reviewed quote workspace through the
   approved database inspection process.
-- Confirm the server-side quote email handoff succeeds only after the Resend
-  sender/domain has been verified outside the repo.
-- Confirm missing or failed email handoff returns a generic temporary
-  unavailable response with a safe reference id and no provider response body.
+- Confirm the server-side n8n enquiry handoff is attempted only after SKR quote
+  persistence succeeds.
+- Confirm missing or failed n8n handoff still returns an honest
+  receipt/processing response with a safe reference id and no provider response
+  body.
 - Confirm invalid payloads are rejected before persistence.
 - Confirm throttled responses remain safe generic `429` responses.
 
 ### Protected Enquiry Email And Delivery Log
 
 - Visit `<deployment-url>/admin/enquiry-email` as an approved owner/admin.
-- Confirm provider/recipient status is status-only and any recipient display is
-  redacted.
+- Confirm server-side n8n readiness/status is shown without webhook URLs,
+  shared secrets, provider config, or fake send controls.
 - Visit `<deployment-url>/admin/delivery-log`.
-- Confirm recent rows show bounded technical metadata only: provider, delivery
-  status, safe provider message id or safe error code, request reference,
-  timestamp, and redacted recipient.
+- Confirm recent rows show bounded technical metadata only: provider/channel,
+  delivery status, safe provider message id or safe error code, request
+  reference, and timestamp.
 - Confirm the pages do not expose customer messages, requested item detail,
   full email bodies, raw provider payloads, headers, cookies, tokens, secrets,
   API keys, or provider response bodies.
@@ -393,7 +415,7 @@ separately approved chat integration is in scope.
 - Confirm no n8n webhook URL, provider internals, trace ID, node name, or stack
   trace appears.
 
-### Server-only n8n webhook path
+### Server-only n8n chat webhook path
 
 - With separately approved server-only n8n webhook env, send a bounded chat
   message.
@@ -429,7 +451,7 @@ configuration, and rollback controls:
 
 - Disable public traffic through the approved hosting or edge control.
 - Remove or rotate leaked env values.
-- Disable n8n webhook env by removing the server-only value.
+- Disable n8n enquiry/chat webhook env by removing the server-only value.
 - Revert deployment through the approved hosting rollback process.
 - Verify fallback catalogue behaviour after DB env or active config is removed.
 - Verify quote submission is unavailable or safe if env is removed.
@@ -465,7 +487,8 @@ Future deployment PR authors should capture:
 - Quote workspace confirmation.
 - Admin trusted workspace confirmation.
 - Listing media bucket/model confirmation.
-- Optional server-only n8n webhook confirmation when separately approved.
+- Server-only n8n enquiry handoff confirmation.
+- Optional server-only n8n chat webhook confirmation when separately approved.
 - Trusted proxy/CDN client IP header confirmation.
 - Static/fallback homepage smoke-test result.
 - Catalogue fallback without DB config smoke-test result.
@@ -482,7 +505,8 @@ Future deployment PR authors should capture:
 - Admin quote inbox/status/internal note workflow smoke-test result.
 - Atomic quote workflow RPC behaviour smoke-test result.
 - Chat safe fallback smoke-test result.
-- Optional server-only n8n webhook path smoke-test result when separately
+- Server-only n8n enquiry handoff smoke-test result.
+- Optional server-only n8n chat webhook path smoke-test result when separately
   approved.
 - 404/error states smoke-test result.
 - No provider/SQL/secret leakage review result.

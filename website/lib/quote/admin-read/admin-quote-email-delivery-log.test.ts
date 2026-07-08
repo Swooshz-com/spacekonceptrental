@@ -48,10 +48,10 @@ describe("admin quote email delivery log read", () => {
         quote_request_id: "70000000-0000-4000-8000-000000000001",
         public_reference: "QR-20260612-ABC12345",
         attempted_at: "2026-06-12T09:30:00.000Z",
-        recipient_email_redacted: "ev***@spacekoncept.example",
-        provider: "resend",
-        delivery_status: "sent",
-        provider_message_id: "resend-message-1",
+        recipient_email_redacted: null,
+        provider: "n8n",
+        delivery_status: "delivered",
+        provider_message_id: null,
         error_code: null,
         request_id: "route-request-1"
       }
@@ -72,10 +72,10 @@ describe("admin quote email delivery log read", () => {
           quoteRequestId: "70000000-0000-4000-8000-000000000001",
           publicReference: "QR-20260612-ABC12345",
           attemptedAt: "2026-06-12T09:30:00.000Z",
-          recipientEmail: "ev***@spacekoncept.example",
-          provider: "resend",
-          deliveryStatus: "sent",
-          providerMessageId: "resend-message-1",
+          recipientEmail: "Not configured",
+          provider: "n8n",
+          deliveryStatus: "delivered",
+          providerMessageId: undefined,
           errorCode: undefined,
           requestId: "route-request-1"
         }
@@ -103,10 +103,10 @@ describe("admin quote email delivery log read", () => {
         public_reference: "QR-20260612-NOTCONF",
         attempted_at: "2026-06-12T09:10:00.000Z",
         recipient_email_redacted: null,
-        provider: "resend",
+        provider: "n8n",
         delivery_status: "not_configured",
         provider_message_id: null,
-        error_code: "email_recipient_not_configured",
+        error_code: "n8n_webhook_not_configured",
         request_id: "route-request-not-configured"
       }
     ]);
@@ -127,10 +127,10 @@ describe("admin quote email delivery log read", () => {
           publicReference: "QR-20260612-NOTCONF",
           attemptedAt: "2026-06-12T09:10:00.000Z",
           recipientEmail: "Not configured",
-          provider: "resend",
+          provider: "n8n",
           deliveryStatus: "not_configured",
           providerMessageId: undefined,
-          errorCode: "email_recipient_not_configured",
+          errorCode: "n8n_webhook_not_configured",
           requestId: "route-request-not-configured"
         }
       ]
