@@ -69,15 +69,31 @@ describe("Phase 2B-AY admin listing image metadata UI boundary", () => {
     );
   });
 
-  it("keeps image metadata controls in the client panel while the protected shell wires real image context", () => {
+  it("keeps image metadata controls in client panels while the protected shell wires owner image context", () => {
     const shellSource = readRepoFile("website/app/admin/protected-admin-shell.tsx");
+    const ownerWorkflowSource = readRepoFile(
+      "website/components/admin/catalogue-owner-workflow.tsx"
+    );
     const panelSource = readRepoFile(
       "website/components/admin/listing-image-metadata-management-panel.tsx"
     );
 
-    expect(shellSource).toContain("ListingImageMetadataManagementPanel");
-    expect(shellSource).toContain("<ListingImageMetadataManagementPanel");
-    expect(shellSource).toContain("images={dashboard.data.images}");
+    expect(shellSource).toContain("CatalogueOwnerWorkflow");
+    expect(shellSource).toContain("ownerSafeImages");
+    expect(shellSource).toContain("dashboard.data.images.map");
+    expect(shellSource).toContain("images={ownerSafeImages}");
+    expect(shellSource).not.toContain("images={dashboard.data.images}");
+    expect(shellSource).not.toContain("storageBucket");
+    expect(shellSource).not.toContain("storagePath");
+    expect(shellSource).not.toContain("<ListingImageMetadataManagementPanel");
+    expect(ownerWorkflowSource).toContain("Save image metadata");
+    expect(ownerWorkflowSource).toContain("/api/admin/product-images");
+    expect(ownerWorkflowSource).toContain("productImage.write");
+    expect(ownerWorkflowSource).not.toMatch(
+      /New image path|Image bucket|name="storagePath"|name="storageBucket"/
+    );
+    expect(ownerWorkflowSource).not.toContain("storageBucket");
+    expect(ownerWorkflowSource).not.toContain("storagePath");
     expect(shellSource).toContain("products={dashboard.data.products}");
     expect(panelSource).toContain('"use client"');
     expect(panelSource).toContain("productImage.write");
