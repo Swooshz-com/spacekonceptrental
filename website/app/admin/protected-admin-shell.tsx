@@ -1248,8 +1248,7 @@ function AdminStatusMessage({
 
   const usesSidebarMasthead =
     view.kind === "catalogue" ||
-    view.kind === "setups" ||
-    view.kind === "delivery-log";
+    view.kind === "setups";
 
   return (
     <div className={styles.workspaceFrame}>

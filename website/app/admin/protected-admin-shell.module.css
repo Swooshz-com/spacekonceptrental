@@ -64,36 +64,31 @@
 }
 
 .viewCatalogue .topbar,
-.viewSetups .topbar,
-.viewDeliveryLog .topbar {
+.viewSetups .topbar {
   display: none;
 }
 
 .viewCatalogue .workspaceBody,
-.viewSetups .workspaceBody,
-.viewDeliveryLog .workspaceBody {
+.viewSetups .workspaceBody {
   grid-template-columns: 280px minmax(0, 1fr);
   min-height: 100vh;
 }
 
 .viewCatalogue .sidebar,
-.viewSetups .sidebar,
-.viewDeliveryLog .sidebar {
+.viewSetups .sidebar {
   align-content: stretch;
   min-height: 100vh;
   padding: 48px 32px;
 }
 
 .viewCatalogue .mainPanel,
-.viewSetups .mainPanel,
-.viewDeliveryLog .mainPanel {
+.viewSetups .mainPanel {
   min-height: 100vh;
   padding-top: 48px;
 }
 
 .viewCatalogue .sidebarMasthead,
-.viewSetups .sidebarMasthead,
-.viewDeliveryLog .sidebarMasthead {
+.viewSetups .sidebarMasthead {
   display: grid;
 }
 
@@ -101,8 +96,7 @@
   grid-template-rows: auto auto 1fr auto;
 }
 
-.viewSetups .sidebar,
-.viewDeliveryLog .sidebar {
+.viewSetups .sidebar {
   grid-template-rows: auto auto 1fr;
 }
 
@@ -112,21 +106,24 @@
 
 .viewHome .workspaceBody,
 .viewHero .workspaceBody,
-.viewEnquiryEmail .workspaceBody {
+.viewEnquiryEmail .workspaceBody,
+.viewDeliveryLog .workspaceBody {
   grid-template-columns: 280px minmax(0, 1fr);
   min-height: calc(100vh - 73px);
 }
 
 .viewHome .sidebar,
 .viewHero .sidebar,
-.viewEnquiryEmail .sidebar {
+.viewEnquiryEmail .sidebar,
+.viewDeliveryLog .sidebar {
   min-height: calc(100vh - 73px);
   padding: 48px 32px;
 }
 
 .viewHome .mainPanel,
 .viewHero .mainPanel,
-.viewEnquiryEmail .mainPanel {
+.viewEnquiryEmail .mainPanel,
+.viewDeliveryLog .mainPanel {
   padding-top: 118px;
 }
 
@@ -149,8 +146,8 @@
   gap: 10px;
   margin: 0;
   max-width: none;
-  min-height: 220px;
-  padding: 56px 48px;
+  min-height: 300px;
+  padding: 78px 48px;
 }
 
 .viewDeliveryLog .emptyStateIcon {
