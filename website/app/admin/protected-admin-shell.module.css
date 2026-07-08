@@ -1,19 +1,25 @@
 .workspace {
-  --admin-bg: #fcf9f5;
+  --admin-bg: #fbf9f9;
   --admin-surface: #ffffff;
   --admin-surface-muted: #efeded;
+  --admin-surface-low: #f5f3f3;
+  --admin-surface-variant: #e3e2e2;
   --admin-ink: #1b1c1c;
-  --admin-muted: #5f5e5b;
+  --admin-muted: #444748;
   --admin-line: #d9d2c5;
   --admin-line-strong: #c4c7c7;
   --admin-charcoal: #1a1a1a;
   --admin-charcoal-soft: #303031;
-  --admin-olive: #5f6547;
-  --admin-olive-soft: #eef1e4;
+  --admin-active-nav: #e2dfdb;
+  --admin-hover-surface: #f5f3f3;
+  --admin-olive: #5f5e5e;
+  --admin-olive-soft: #e5e2e1;
   --admin-clay: #9b684e;
   --admin-clay-soft: #f4e7dd;
   --admin-success: #4d6b4f;
   --admin-warning: #9b6a2f;
+  --admin-radius-control: 4px;
+  --admin-radius-card: 8px;
   --admin-serif: var(--stitch-serif, Georgia, "Times New Roman", serif);
   --admin-sans: var(--stitch-sans, var(--font-inter), ui-sans-serif, system-ui, -apple-system,
     BlinkMacSystemFont, "Segoe UI", sans-serif);
@@ -127,20 +133,6 @@
   padding-top: 118px;
 }
 
-.viewHome .navIcon,
-.viewCatalogue .navIcon,
-.viewSetups .navIcon,
-.viewEnquiryEmail .navIcon {
-  display: none;
-}
-
-.viewHome .navItemInner,
-.viewCatalogue .navItemInner,
-.viewSetups .navItemInner,
-.viewEnquiryEmail .navItemInner {
-  gap: 0;
-}
-
 .viewDeliveryLog .emptyStatePanel {
   border-radius: 8px;
   gap: 10px;
@@ -195,16 +187,16 @@
 
 .workspaceBadge {
   align-items: center;
-  background: #e5e1da;
-  border: 1px solid #dfd9cf;
+  background: var(--admin-surface-variant);
+  border: 1px solid var(--admin-line-strong);
   border-radius: 2px;
-  color: var(--admin-charcoal);
+  color: var(--admin-muted);
   display: inline-flex;
   font-size: 0.82rem;
   font-weight: 650;
   letter-spacing: 0.09em;
   line-height: 1;
-  padding: 7px 12px;
+  padding: 6px 10px;
   text-transform: uppercase;
 }
 
@@ -220,7 +212,7 @@
 .topbarLink,
 .signOutButton {
   align-items: center;
-  border-radius: 4px;
+  border-radius: var(--admin-radius-control);
   display: inline-flex;
   font-size: 0.95rem;
   font-weight: 600;
@@ -233,7 +225,7 @@
 .topbarLink {
   background: var(--admin-charcoal);
   border: 1px solid var(--admin-charcoal);
-  color: #fdfaf3;
+  color: #ffffff;
 }
 
 .topbarLink:hover,
@@ -264,7 +256,7 @@
   align-items: center;
   background: var(--admin-surface);
   border: 1px solid var(--admin-line);
-  border-radius: 9px;
+  border-radius: var(--admin-radius-card);
   cursor: pointer;
   display: flex;
   font-size: 0.86rem;
@@ -293,7 +285,7 @@
 .mobileNavPanel {
   background: var(--admin-surface);
   border: 1px solid var(--admin-line);
-  border-radius: 9px;
+  border-radius: var(--admin-radius-card);
   display: grid;
   gap: 3px;
   margin-top: 6px;
@@ -366,7 +358,7 @@
 .navLink {
   align-items: center;
   border: 1px solid transparent;
-  border-radius: 8px;
+  border-radius: var(--admin-radius-card);
   color: var(--admin-muted);
   display: flex;
   gap: 8px;
@@ -385,8 +377,8 @@
 .navIcon {
   color: currentColor;
   display: inline-flex;
-  height: 20px;
-  width: 20px;
+  height: 22px;
+  width: 22px;
 }
 
 .navIcon svg {
@@ -396,21 +388,21 @@
 
 .navLink:hover,
 .navLink:focus-visible {
-  background: var(--admin-surface);
+  background: var(--admin-hover-surface);
   color: var(--admin-ink);
 }
 
 .navLinkActive,
 .navLinkActive:hover {
-  background: #e4ded4;
-  border-color: #e4ded4;
+  background: var(--admin-active-nav);
+  border-color: var(--admin-active-nav);
   color: var(--admin-charcoal);
   box-shadow: none;
 }
 
 .navLabel {
-  font-size: 1rem;
-  font-weight: 520;
+  font-size: 0.875rem;
+  font-weight: 600;
 }
 
 .navMeta {
@@ -478,7 +470,7 @@
 .metricGrid {
   background: var(--admin-surface);
   border: 1px solid var(--admin-line);
-  border-radius: 12px;
+  border-radius: var(--admin-radius-card);
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
   overflow: hidden;
@@ -686,7 +678,7 @@
   align-content: start;
   background: var(--admin-surface);
   border: 1px solid var(--admin-line);
-  border-radius: 12px;
+  border-radius: var(--admin-radius-card);
   display: grid;
   gap: 12px;
   padding: 16px 18px;
@@ -1390,7 +1382,7 @@
 
 .dataTable {
   border: 1px solid var(--admin-line);
-  border-radius: 10px;
+  border-radius: var(--admin-radius-control);
   display: grid;
   overflow: hidden;
 }
@@ -1447,7 +1439,7 @@
 /* ---------- Compact table (setups) ---------- */
 .compactTable {
   border: 1px solid var(--admin-line);
-  border-radius: 10px;
+  border-radius: var(--admin-radius-control);
   display: grid;
   overflow: hidden;
 }
@@ -1486,7 +1478,7 @@
   align-content: start;
   background: var(--admin-surface);
   border: 1px solid var(--admin-line);
-  border-radius: 16px;
+  border-radius: var(--admin-radius-card);
   display: grid;
   gap: 10px;
   justify-items: center;
@@ -1499,7 +1491,7 @@
 .emptyStateIcon {
   align-items: center;
   background: var(--admin-olive-soft);
-  border-radius: 16px;
+  border-radius: var(--admin-radius-card);
   color: var(--admin-olive);
   display: inline-flex;
   height: 60px;
@@ -1536,7 +1528,7 @@
   align-content: start;
   background: var(--admin-surface);
   border: 1px solid var(--admin-line);
-  border-radius: 14px;
+  border-radius: var(--admin-radius-card);
   display: grid;
   gap: 14px;
   max-width: 720px;
@@ -1625,7 +1617,7 @@
   align-items: center;
   background: var(--admin-surface);
   border: 1px solid var(--admin-line-strong);
-  border-radius: 8px;
+  border-radius: var(--admin-radius-control);
   color: var(--admin-charcoal);
   display: inline-flex;
   font-family: var(--admin-sans);
@@ -1694,7 +1686,7 @@ button.adminBtnGhost:disabled {
 .statusPanel {
   background: var(--admin-surface);
   border: 1px solid var(--admin-line);
-  border-radius: 14px;
+  border-radius: var(--admin-radius-card);
   display: grid;
   gap: 10px;
   justify-items: center;
@@ -1815,7 +1807,7 @@ button.adminBtnGhost:disabled {
 .workspace :global(.admin-dashboard__stats div) {
   background: var(--admin-surface) !important;
   border: 1px solid var(--admin-line) !important;
-  border-radius: 12px !important;
+  border-radius: var(--admin-radius-card) !important;
   padding: 14px 16px !important;
 }
 
@@ -1842,7 +1834,7 @@ button.adminBtnGhost:disabled {
 .workspace :global(.premium-form-card) {
   background: var(--admin-surface) !important;
   border: 1px solid var(--admin-line) !important;
-  border-radius: 12px !important;
+  border-radius: var(--admin-radius-card) !important;
   box-shadow: none !important;
   padding: 16px 18px !important;
 }
@@ -1855,7 +1847,7 @@ button.adminBtnGhost:disabled {
 .workspace :global(.admin-dashboard--unavailable) {
   background: var(--admin-surface) !important;
   border: 1px solid var(--admin-line) !important;
-  border-radius: 16px !important;
+  border-radius: var(--admin-radius-card) !important;
   gap: 10px !important;
   margin: clamp(8px, 4vh, 44px) auto 0;
   max-width: 560px;
@@ -1865,7 +1857,7 @@ button.adminBtnGhost:disabled {
 
 .workspace :global(.premium-button),
 .workspace :global(.button) {
-  border-radius: 8px !important;
+  border-radius: var(--admin-radius-control) !important;
   font-family: var(--admin-sans) !important;
   font-size: 0.82rem !important;
   font-weight: 600 !important;
@@ -1877,9 +1869,9 @@ button.adminBtnGhost:disabled {
 
 .workspace :global(.premium-button--primary),
 .workspace :global(.button:not(.button--secondary)) {
-  background: var(--admin-olive) !important;
-  border-color: var(--admin-olive) !important;
-  color: #fdfaf3 !important;
+  background: var(--admin-charcoal) !important;
+  border-color: var(--admin-charcoal) !important;
+  color: #ffffff !important;
 }
 
 .workspace :global(.premium-button--secondary),
@@ -1894,7 +1886,7 @@ button.adminBtnGhost:disabled {
 .workspace :global(select),
 .workspace :global(textarea) {
   border-color: var(--admin-line-strong) !important;
-  border-radius: 8px !important;
+  border-radius: var(--admin-radius-control) !important;
   color: var(--admin-ink) !important;
   font-family: var(--admin-sans) !important;
   font-size: 0.86rem !important;
