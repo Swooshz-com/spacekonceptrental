@@ -62,7 +62,7 @@ type ImagePayload = {
 
 const productImageWriteOperation = "productImage.write";
 const genericFailureMessage =
-  "Protected admin save could not be completed. Check selected listing, image context, public-safe alt text, primary label, active or archived status, and sort order before retrying.";
+  "Protected admin save could not be completed. Check selected listing, image context, public-safe alt text, primary label, active or archived status, and display position before retrying.";
 
 function formValue(formData: FormData, name: string) {
   const value = formData.get(name);
@@ -466,12 +466,12 @@ export function ListingImageMetadataManagementPanel({
               Save image metadata only after checking selected listing context,
               image path context, public-safe alt text, primary image label,
               active/archived state, fallback expectation, validation errors, and
-              sort order.
+              display position.
             </p>
             <p style={{ fontSize: '13px', color: 'var(--muted)', background: 'var(--background)', padding: '12px', borderRadius: 'var(--radius-md)', margin: 0 }}>
               Protected admin save only updates image metadata. Media metadata is
               review context only and does not confirm visual outcome, availability,
-              or inventory.
+              or item-count promises.
             </p>
           </section>
 
@@ -647,7 +647,7 @@ export function ListingImageMetadataManagementPanel({
             </label>
 
             <label style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '14px', fontWeight: 600 }}>
-              New image sort order
+              New image display position
               <input
                 id="new-image-sort-order"
                 max={1000000}
@@ -759,7 +759,7 @@ export function ListingImageMetadataManagementPanel({
                         </label>
 
                         <label style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '14px', fontWeight: 600 }}>
-                          Image sort order
+                          Image display position
                           <input
                             defaultValue={image.sortOrder}
                             id={`image-sort-order-${image.id}`}

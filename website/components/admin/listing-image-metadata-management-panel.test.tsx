@@ -240,7 +240,7 @@ describe("listing image metadata management panel", () => {
         value: "New lounge setup"
       }
     });
-    fireEvent.change(screen.getByLabelText(/new image sort order/i), {
+    fireEvent.change(screen.getByLabelText(/new image display position/i), {
       target: {
         value: "4"
       }

@@ -62,7 +62,7 @@ type ListingPayload = {
 
 const listingWriteOperation = "product.write";
 const genericFailureMessage =
-  "Protected admin save could not be completed. Check listing title, slug, category, rental unit, descriptions, status, and sort order before retrying.";
+  "Protected admin save could not be completed. Check listing title, slug, category, rental unit, descriptions, status, and display position before retrying.";
 
 function formValue(formData: FormData, name: string) {
   const value = formData.get(name);
@@ -502,7 +502,7 @@ export function ListingManagementPanel({
             <p style={{ fontSize: '14px', color: 'var(--text)', lineHeight: 1.6, marginBottom: '16px' }}>
               Save listing metadata only after reviewing listing title, slug,
               category, rental unit, short description, long description, visibility
-              status, and sort order.
+              status, and display position.
             </p>
             <p style={{ fontSize: '13px', color: 'var(--muted)', background: 'var(--background)', padding: '12px', borderRadius: 'var(--radius-md)', margin: 0 }}>
               Protected admin save only updates listing metadata. Public-facing copy
@@ -662,7 +662,7 @@ export function ListingManagementPanel({
               />
               <small style={{ fontWeight: 400, color: 'var(--muted)', fontSize: '12px' }}>
                 Examples include item, set, or piece; this supports quote/request
-                wording and is not stock availability.
+                wording and is not an availability promise.
               </small>
             </label>
 
@@ -681,7 +681,7 @@ export function ListingManagementPanel({
             </label>
 
             <label style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '14px', fontWeight: 600 }}>
-              New listing sort order
+              New listing display position
               <input
                 id="new-listing-sort-order"
                 max={1000000}
@@ -959,7 +959,7 @@ export function ListingManagementPanel({
                         </small>
                       </label>
                       <label style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '14px', fontWeight: 600 }}>
-                        Listing sort order
+                        Listing display position
                         <input
                           defaultValue={product.sortOrder}
                           id={`listing-sort-order-${product.id}`}
@@ -970,7 +970,7 @@ export function ListingManagementPanel({
                           className="premium-input"
                         />
                         <small style={{ fontWeight: 400, color: 'var(--muted)', fontSize: '12px' }}>
-                          Sort order controls display ordering where listing groups
+                          Display position controls placement where listing groups
                           use it.
                         </small>
                       </label>

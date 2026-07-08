@@ -156,13 +156,6 @@ export async function resolveProtectedAdminShellState(): Promise<ProtectedAdminS
   }
 }
 
-type LoadedAdminDashboard = Extract<
-  AdminProductDashboardReadResult,
-  { status: "loaded" }
->;
-type AdminDashboardProduct = LoadedAdminDashboard["data"]["products"][number];
-type AdminDashboardImage = LoadedAdminDashboard["data"]["images"][number];
-
 const adminNavigationItems = [
   {
     kind: "home",
@@ -262,8 +255,8 @@ function workspaceDescription(view: AdminShellView) {
   const descriptions: Record<AdminNavigationKind, string> = {
     home: "Manage public website content: hero image, catalogue records, setup presentation, enquiry recipient, and delivery visibility.",
     hero: "Manage the public homepage hero image. Homepage copy stays code-managed.",
-    catalogue: "Manage catalogue items, categories, display order, published status, and listing images.",
-    setups: "Review the public setups presentation, which derives from published catalogue records on /listings.",
+    catalogue: "Manage catalogue items, display position, published status, and listing images.",
+    setups: "Review public setup presentation context derived from published catalogue records.",
     "enquiry-email": "Check the quote enquiry email handoff status.",
     "delivery-log": "Review technical enquiry email delivery attempts."
   };
@@ -285,30 +278,6 @@ function quoteEmailSetupIssueLabel(reason?: string) {
 
 function hasText(value?: string) {
   return Boolean(value?.trim());
-}
-
-function mediaAttentionListingCount(
-  products: AdminDashboardProduct[],
-  images: AdminDashboardImage[]
-) {
-  const listingIds = new Set<string>();
-
-  for (const product of products) {
-    if (
-      product.status !== "archived" &&
-      (product.imageCount === 0 || !hasText(product.primaryImageAltText))
-    ) {
-      listingIds.add(product.id);
-    }
-  }
-
-  for (const image of images) {
-    if (image.status === "active" && !hasText(image.altText)) {
-      listingIds.add(image.productId);
-    }
-  }
-
-  return listingIds.size;
 }
 
 function AdminWorkspaceRecoveryLinks() {
@@ -433,6 +402,49 @@ function AdminMetricCard({
   );
 }
 
+function AdminDashboardCountRow({
+  description,
+  label,
+  tone = "neutral",
+  value
+}: {
+  description: string;
+  label: string;
+  tone?: "neutral" | "attention";
+  value: number | string;
+}) {
+  return (
+    <li>
+      <div>
+        <strong>{label}</strong>
+        <span>{description}</span>
+      </div>
+      <span
+        className={`${styles.dashboardCount} ${
+          tone === "attention" ? styles.dashboardCountAttention : ""
+        }`}
+      >
+        {value}
+      </span>
+    </li>
+  );
+}
+
+function AdminDashboardQuickLink({
+  href,
+  label
+}: {
+  href: string;
+  label: string;
+}) {
+  return (
+    <a className={styles.quickLinkCard} href={href}>
+      <span>{label}</span>
+      <span aria-hidden="true">-&gt;</span>
+    </a>
+  );
+}
+
 const emptyStateIcons: Record<"hero" | "mail" | "log", ReactNode> = {
   hero: (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
@@ -504,8 +516,7 @@ function AdminOperationsHome({
     );
   }
 
-  const { categories, products, images, imageSummary } = dashboard.data;
-  const catalogueItemCount = products.length;
+  const { products, images, imageSummary } = dashboard.data;
   const publishedCount = products.filter(
     (product) => product.status === "published"
   ).length;
@@ -515,137 +526,87 @@ function AdminOperationsHome({
   const hiddenCount = products.filter(
     (product) => product.status === "archived"
   ).length;
-  const mediaAttention = mediaAttentionListingCount(products, images);
-  const categoryNameById = new Map(
-    categories.map((category) => [category.id, category.name])
-  );
-  const catalogueRows = products.slice(0, 8);
+  const missingAltText = products.filter(
+    (product) =>
+      product.status !== "archived" &&
+      product.imageCount > 0 &&
+      !hasText(product.primaryImageAltText)
+  ).length;
+  const missingImages = products.filter(
+    (product) => product.status !== "archived" && product.imageCount === 0
+  ).length;
 
   return (
     <section className="admin-dashboard" aria-label="Admin dashboard">
-      <div className={styles.metricGrid} aria-label="Catalogue overview">
-        <AdminMetricCard label="Catalogue items" value={catalogueItemCount} />
-        <AdminMetricCard label="Published" value={publishedCount} />
-        <AdminMetricCard label="Draft" value={draftCount} />
-        <AdminMetricCard label="Hidden" value={hiddenCount} />
-        <AdminMetricCard label="Media records" value={imageSummary.totalImages} />
-      </div>
-
-      <div className={styles.ownerGrid}>
-        <section className={styles.workQueue} aria-label="Content status">
+      <div className={styles.dashboardHub}>
+        <section className={styles.dashboardCard} aria-label="Content status">
           <h3>Content status</h3>
-          <ul className={styles.workList}>
-            <li>
-              <div>
-                <strong>Published catalogue</strong>
-                <span>Records visible on the public site.</span>
-              </div>
-              <span className={`${styles.chip} ${styles.chipStable}`}>
-                {publishedCount}
-              </span>
-            </li>
-            <li>
-              <div>
-                <strong>Draft or hidden</strong>
-                <span>Records not currently public.</span>
-              </div>
-              <span className={`${styles.chip} ${styles.chipWarning}`}>
-                {draftCount + hiddenCount}
-              </span>
-            </li>
-            <li>
-              <div>
-                <strong>Media attention</strong>
-                <span>Listings missing images or alt text.</span>
-              </div>
-              <span
-                className={`${styles.chip} ${
-                  mediaAttention > 0 ? styles.chipWarning : styles.chipStable
-                }`}
-              >
-                {mediaAttention}
-              </span>
-            </li>
+          <ul className={styles.dashboardList}>
+            <AdminDashboardCountRow
+              label="Published"
+              description="Visible on the public site."
+              value={publishedCount}
+            />
+            <AdminDashboardCountRow
+              label="Draft"
+              description="Work in progress."
+              value={draftCount}
+            />
+            <AdminDashboardCountRow
+              label="Hidden"
+              description="Records currently not public."
+              value={hiddenCount}
+            />
           </ul>
         </section>
 
-        <section className={styles.rowPanel}>
-          <h3>Catalogue summary</h3>
-          <dl className={styles.adminRows}>
-            <div>
-              <dt>Categories</dt>
-              <dd>{categories.length}</dd>
-            </div>
-            <div>
-              <dt>Items</dt>
-              <dd>{catalogueItemCount}</dd>
-            </div>
-            <div>
-              <dt>Media records</dt>
-              <dd>{imageSummary.totalImages}</dd>
-            </div>
-            <div>
-              <dt>Setup candidates</dt>
-              <dd>{publishedCount}</dd>
-            </div>
-            <div>
-              <dt>Setup source</dt>
-              <dd>Published catalogue records</dd>
-            </div>
-          </dl>
+        <section className={styles.dashboardCard} aria-label="Attention required">
+          <h3>Attention required</h3>
+          <ul className={styles.dashboardList}>
+            <AdminDashboardCountRow
+              label="Missing alt text"
+              description="Listings needing accessibility updates."
+              tone={missingAltText > 0 ? "attention" : "neutral"}
+              value={missingAltText}
+            />
+            <AdminDashboardCountRow
+              label="Missing images"
+              description="Listings without media uploaded."
+              tone={missingImages > 0 ? "attention" : "neutral"}
+              value={missingImages}
+            />
+            <AdminDashboardCountRow
+              label="Media records"
+              description="Uploaded catalogue image records."
+              value={imageSummary.totalImages}
+            />
+          </ul>
+        </section>
+
+        <section className={styles.dashboardCard} aria-label="Quick links">
+          <h3>Quick links</h3>
+          <div className={styles.quickLinkGrid}>
+            <AdminDashboardQuickLink href="/admin/hero" label="Manage Hero" />
+            <AdminDashboardQuickLink
+              href="/admin/catalogue"
+              label="Manage Catalogue"
+            />
+            <AdminDashboardQuickLink href="/admin/setups" label="Manage Setups" />
+            <AdminDashboardQuickLink
+              href="/admin/enquiry-email"
+              label="Check Enquiry Email"
+            />
+            <AdminDashboardQuickLink
+              href="/admin/delivery-log"
+              label="Review Delivery Log"
+            />
+          </div>
         </section>
       </div>
-
-      <section className={styles.tablePanel} aria-label="Catalogue records">
-        <div className={styles.tableHeader}>
-          <h3>Catalogue</h3>
-          <a className={styles.tableLink} href="/admin/catalogue">
-            Manage
-          </a>
-        </div>
-        {catalogueRows.length === 0 ? (
-          <p className={styles.tableEmpty}>No catalogue records yet.</p>
-        ) : (
-          <div className={styles.dataTable} role="table" aria-label="Catalogue records table">
-            <div role="row">
-              <strong role="columnheader">Name</strong>
-              <strong role="columnheader">Category</strong>
-              <strong role="columnheader">Status</strong>
-              <strong role="columnheader">Images</strong>
-            </div>
-            {catalogueRows.map((product) => {
-              const statusText =
-                product.status === "published"
-                  ? "Published"
-                  : product.status === "draft"
-                    ? "Draft"
-                    : "Hidden";
-              return (
-                <div role="row" key={product.id}>
-                  <span role="cell">{product.name}</span>
-                  <span role="cell">
-                    {product.categoryId
-                      ? categoryNameById.get(product.categoryId) ?? "Unmapped"
-                      : "Unmapped"}
-                  </span>
-                  <span role="cell">
-                    <span
-                      className={`${styles.statusTag} ${
-                        product.status === "published"
-                          ? styles.statusTagPublished
-                          : styles.statusTagMuted
-                      }`}
-                    >
-                      {statusText}
-                    </span>
-                  </span>
-                  <span role="cell">{product.imageCount}</span>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </section>
+      <p className={styles.dashboardFootnote}>
+        Dashboard counts are derived from current catalogue and media records.
+        They are owner CMS cues, not launch analytics.
+      </p>
     </section>
   );
 }
@@ -698,32 +659,25 @@ function AdminCatalogueOperations({
 
   return (
     <>
-      <section className="admin-dashboard" aria-label="Catalogue management">
-        <dl className="admin-dashboard__stats" aria-label="Catalogue summary">
-          <div>
-            <dt>Published</dt>
-            <dd>{published}</dd>
-          </div>
-          <div>
-            <dt>Draft</dt>
-            <dd>{draft}</dd>
-          </div>
-          <div>
-            <dt>Hidden</dt>
-            <dd>{hidden}</dd>
-          </div>
-        </dl>
+      <section className="admin-dashboard" aria-label="Catalogue management overview">
+        <div className={styles.metricGridThree} aria-label="Catalogue summary">
+          <AdminMetricCard label="Published" value={published} />
+          <AdminMetricCard label="Draft" value={draft} />
+          <AdminMetricCard label="Hidden" value={hidden} />
+        </div>
       </section>
-      <ListingManagementPanel
-        categories={dashboard.data.categories}
-        products={dashboard.data.products}
-      />
-      <CategoryManagementPanel categories={dashboard.data.categories} />
-      <ListingImageUploadPanel products={dashboard.data.products} />
-      <ListingImageMetadataManagementPanel
-        images={dashboard.data.images}
-        products={dashboard.data.products}
-      />
+      <div className={styles.managementStack}>
+        <ListingManagementPanel
+          categories={dashboard.data.categories}
+          products={dashboard.data.products}
+        />
+        <CategoryManagementPanel categories={dashboard.data.categories} />
+        <ListingImageUploadPanel products={dashboard.data.products} />
+        <ListingImageMetadataManagementPanel
+          images={dashboard.data.images}
+          products={dashboard.data.products}
+        />
+      </div>
     </>
   );
 }
@@ -747,56 +701,90 @@ function AdminSetupsOperations({
   );
   const setupRecords = dashboard.data.products
     .filter((product) => product.status === "published")
-    .slice(0, 5);
+    .slice(0, 8);
 
   return (
     <section className="admin-dashboard" aria-label="Setups management">
-      <div className={styles.settingsGrid}>
-        <section className={styles.placeholderPanel}>
-          <h3>Current setup source</h3>
+      <div className={styles.setupHeaderActions} aria-label="Setup actions">
+        <a className={styles.adminBtnGhost} href="/admin/catalogue">
+          Manage catalogue
+        </a>
+        <a className={styles.adminBtnPrimary} href="/listings">
+          View public setups
+        </a>
+      </div>
+      <div className={styles.setupGrid}>
+        <section className={styles.setupListPanel}>
+          <h3>Derived setup candidates</h3>
           <p>
             Public setups stay on <code>/listings</code> and currently derive
-            from published catalogue records ({setupRecords.length} shown). Edit
-            them through Catalogue until setup-specific storage exists.
+            from published catalogue records. Edit source content through
+            Catalogue until setup-specific storage exists.
           </p>
-          <nav className={styles.inlineActions} aria-label="Setup actions">
-            <a className={styles.adminBtnGhost} href="/admin/catalogue">
-              Manage catalogue
-            </a>
-            <a className={styles.adminBtnGhost} href="/listings">
-              View public setups
-            </a>
-          </nav>
-        </section>
-
-        <section className={styles.rowPanel}>
-          <h3>Published setup candidates</h3>
           {setupRecords.length === 0 ? (
             <p className={styles.tableEmpty}>
               No published catalogue records are available to derive public
               setup cards yet.
             </p>
           ) : (
-            <div className={styles.compactTable} role="table" aria-label="Setup candidates">
-              <div role="row">
-                <strong role="columnheader">Name</strong>
-                <strong role="columnheader">Category</strong>
-                <strong role="columnheader">Order</strong>
-              </div>
+            <div className={styles.setupCandidateList}>
               {setupRecords.map((product) => (
-                <div role="row" key={product.id}>
-                  <span role="cell">{product.name}</span>
-                  <span role="cell">
-                    {product.categoryId
-                      ? categoryById.get(product.categoryId) ?? "Unmapped"
-                      : "Unmapped"}
+                <article className={styles.setupCandidateCard} key={product.id}>
+                  <div>
+                    <h4>{product.name}</h4>
+                    <p>
+                      {product.shortDescription ||
+                        product.description ||
+                        "Published catalogue record available for public setup presentation."}
+                    </p>
+                  </div>
+                  <span
+                    className={`${styles.statusTag} ${styles.statusTagPublished}`}
+                  >
+                    Published
                   </span>
-                  <span role="cell">{product.sortOrder}</span>
-                </div>
+                  <footer>
+                    <span>
+                      Derived context:{" "}
+                      {product.categoryId
+                        ? categoryById.get(product.categoryId) ?? "Unmapped"
+                        : "Unmapped"}
+                    </span>
+                    <a href={`/listings/${encodeURIComponent(product.slug)}`}>
+                      View public listing
+                    </a>
+                  </footer>
+                </article>
               ))}
             </div>
           )}
         </section>
+
+        <aside className={styles.setupEditorPanel} aria-label="Setup editor status">
+          <h3>Setup editor</h3>
+          <p>
+            Setup-specific creation and image grouping are intentionally deferred.
+            The current public setup page uses published catalogue records as its
+            source.
+          </p>
+          <dl className={styles.adminRows}>
+            <div>
+              <dt>Source</dt>
+              <dd>Published catalogue records</dd>
+            </div>
+            <div>
+              <dt>Shown here</dt>
+              <dd>{setupRecords.length}</dd>
+            </div>
+            <div>
+              <dt>Primary action</dt>
+              <dd>Manage catalogue item content</dd>
+            </div>
+          </dl>
+          <a className={styles.adminBtnPrimary} href="/admin/catalogue">
+            Manage catalogue
+          </a>
+        </aside>
       </div>
     </section>
   );
@@ -832,52 +820,76 @@ function AdminEnquiryEmailStatusOperations({
         : styles.statusPillWarning;
 
   return (
-    <section className={styles.statusSummaryPanel} aria-label="Enquiry email handoff status">
-      <div className={styles.statusSummaryHeader}>
-        <div>
-          <p className="eyebrow">Enquiry Email</p>
-          <h2>Enquiry email handoff status</h2>
+    <section className={styles.emailGrid} aria-label="Enquiry email handoff status">
+      <div className={styles.statusSummaryPanel}>
+        <div className={styles.statusSummaryHeader}>
+          <div>
+            <p className="eyebrow">Enquiry Email</p>
+            <h2>Handoff status</h2>
+          </div>
+          <span className={`${styles.statusPill} ${statusClassName}`}>
+            {statusLabel}
+          </span>
         </div>
-        <span className={`${styles.statusPill} ${statusClassName}`}>
-          {statusLabel}
-        </span>
+        <p className={styles.statusSummaryCopy}>
+          Quote requests are emailed to the configured recipient for manual
+          follow-up. Routing values are environment-managed for now, with no internal
+          quote inbox.
+        </p>
+        <dl className={styles.adminRows}>
+          <div>
+            <dt>Provider</dt>
+            <dd>{providerStatus}</dd>
+          </div>
+          <div>
+            <dt>Recipient</dt>
+            <dd>{recipientStatus}</dd>
+          </div>
+          <div>
+            <dt>Provider name</dt>
+            <dd>{config.provider}</dd>
+          </div>
+          {config.recipientEmail ? (
+            <div>
+              <dt>Recipient email</dt>
+              <dd>{config.recipientEmail}</dd>
+            </div>
+          ) : null}
+          {setupIssue ? (
+            <div>
+              <dt>Setup issue</dt>
+              <dd>{setupIssue}</dd>
+            </div>
+          ) : null}
+        </dl>
+        <nav className={styles.inlineActions} aria-label="Enquiry email actions">
+          <a className={styles.adminBtnGhost} href="/admin/delivery-log">
+            Open delivery log
+          </a>
+        </nav>
       </div>
-      <p className={styles.statusSummaryCopy}>
-        Quote requests are emailed to the configured recipient for manual
-        follow-up. Settings are environment-managed for now, with no internal
-        quote inbox.
-      </p>
-      <dl className={styles.adminRows}>
-        <div>
-          <dt>Provider</dt>
-          <dd>{providerStatus}</dd>
-        </div>
-        <div>
-          <dt>Recipient</dt>
-          <dd>{recipientStatus}</dd>
-        </div>
-        <div>
-          <dt>Provider name</dt>
-          <dd>{config.provider}</dd>
-        </div>
-        {config.recipientEmail ? (
+
+      <aside className={styles.emailPreviewPanel} aria-label="Environment-managed email routing">
+        <h2>Routing status</h2>
+        <p>
+          The recipient and provider credentials are managed outside the UI.
+          This page shows readiness only and never displays provider tokens.
+        </p>
+        <dl className={styles.adminRows}>
           <div>
-            <dt>Recipient email</dt>
-            <dd>{config.recipientEmail}</dd>
+            <dt>Handoff mode</dt>
+            <dd>Manual owner follow-up by email</dd>
           </div>
-        ) : null}
-        {setupIssue ? (
           <div>
-            <dt>Setup issue</dt>
-            <dd>{setupIssue}</dd>
+            <dt>Delivery evidence</dt>
+            <dd>Technical delivery log</dd>
           </div>
-        ) : null}
-      </dl>
-      <nav className={styles.inlineActions} aria-label="Enquiry email actions">
-        <a className={styles.adminBtnGhost} href="/admin/delivery-log">
-          Open delivery log
-        </a>
-      </nav>
+          <div>
+            <dt>Editable here</dt>
+            <dd>No. Environment-managed for launch safety.</dd>
+          </div>
+        </dl>
+      </aside>
     </section>
   );
 }

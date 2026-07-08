@@ -46,7 +46,7 @@ type CategoryPayload = {
 
 const categoryWriteOperation = "category.write";
 const genericFailureMessage =
-  "Protected admin save could not be completed. Check category name, slug, description, visibility, and sort order before retrying.";
+  "Protected admin save could not be completed. Check category name, slug, description, visibility, and display position before retrying.";
 
 function formValue(formData: FormData, name: string) {
   const value = formData.get(name);
@@ -348,7 +348,7 @@ export function CategoryManagementPanel({
             <h3 className="premium-title-card" style={{ fontSize: '18px', marginBottom: '12px' }}>Public-safe copy review</h3>
             <p style={{ fontSize: '14px', color: 'var(--text)', lineHeight: 1.6, marginBottom: '16px' }}>
               Save category metadata only after reviewing category name, slug,
-              description, visibility wording, empty category warnings, and sort order.
+              description, visibility wording, empty category warnings, and display position.
             </p>
             <p style={{ fontSize: '13px', color: 'var(--muted)', background: 'var(--background)', padding: '12px', borderRadius: 'var(--radius-md)', margin: 0 }}>
               Protected admin save only updates category metadata. Use these notes
@@ -423,7 +423,7 @@ export function CategoryManagementPanel({
             </label>
 
             <label style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '14px', fontWeight: 600 }}>
-              New category sort order
+              New category display position
               <input
                 id="new-category-sort-order"
                 max={1000000}
@@ -433,7 +433,7 @@ export function CategoryManagementPanel({
                 className="premium-input"
               />
               <small style={{ fontWeight: 400, color: 'var(--muted)', fontSize: '12px' }}>
-                Lower numbers appear earlier where category ordering is used.
+                Lower numbers appear earlier where category placement is used.
               </small>
             </label>
 
@@ -518,7 +518,7 @@ export function CategoryManagementPanel({
                       </label>
 
                       <label style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '14px', fontWeight: 600 }}>
-                        Category sort order for {category.name}
+                        Category display position for {category.name}
                         <input
                           defaultValue={category.sortOrder}
                           id={`category-sort-order-${category.id}`}

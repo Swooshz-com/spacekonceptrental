@@ -340,7 +340,7 @@ describe("listing management panel", () => {
         value: "published"
       }
     });
-    fireEvent.change(screen.getByLabelText(/new listing sort order/i), {
+    fireEvent.change(screen.getByLabelText(/new listing display position/i), {
       target: {
         value: "30"
       }

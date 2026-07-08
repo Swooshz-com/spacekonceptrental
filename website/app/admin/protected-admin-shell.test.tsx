@@ -230,16 +230,20 @@ describe("protected admin shell", () => {
     expect(
       screen.getAllByRole("heading", { name: /^dashboard$/i }).length
     ).toBeGreaterThan(0);
-    expect(screen.getByText(/catalogue items/i)).toBeInTheDocument();
     expect(screen.getAllByText(/^published$/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/^draft$/i).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/media records/i).length).toBeGreaterThan(0);
     expect(
       screen.getByRole("heading", { name: /content status/i })
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("heading", { name: /catalogue summary/i })
+      screen.getByRole("heading", { name: /attention required/i })
     ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: /quick links/i })
+    ).toBeInTheDocument();
+    expect(screen.getByText(/missing alt text/i)).toBeInTheDocument();
+    expect(screen.getByText(/missing images/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/media records/i).length).toBeGreaterThan(0);
     expect(
       screen.getAllByRole("link", { name: /^hero/i })[0]
     ).toHaveAttribute("href", "/admin/hero");
@@ -611,12 +615,15 @@ describe("protected admin shell", () => {
       <AdminShellContent state={baseState} view={{ kind: "enquiry-email" }} />
     );
     expect(
-      screen.getByRole("heading", { name: /enquiry email handoff status/i })
+      screen.getByRole("heading", { name: /handoff status/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: /routing status/i })
     ).toBeInTheDocument();
     expect(screen.getByText(/needs setup/i)).toBeInTheDocument();
     expect(screen.getByText(/recipient not configured/i)).toBeInTheDocument();
     expect(screen.getByText(/provider not configured/i)).toBeInTheDocument();
-    expect(screen.getByText(/environment-managed/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/environment-managed/i).length).toBeGreaterThan(0);
     expect(screen.getByText(/no internal quote inbox/i)).toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: /open delivery log/i })
@@ -676,7 +683,7 @@ describe("protected admin shell", () => {
     expect(screen.getByText(/provider configured/i)).toBeInTheDocument();
     expect(screen.getByText(/recipient configured/i)).toBeInTheDocument();
     expect(screen.getByText("ev***@spacekoncept.example")).toBeInTheDocument();
-    expect(screen.getByText(/environment-managed/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/environment-managed/i).length).toBeGreaterThan(0);
     expect(
       screen.getByRole("link", { name: /open delivery log/i })
     ).toHaveAttribute("href", "/admin/delivery-log");

@@ -114,7 +114,7 @@ describe("category management panel", () => {
         value: "Dining and cocktail tables"
       }
     });
-    fireEvent.change(screen.getByLabelText(/new category sort order/i), {
+    fireEvent.change(screen.getByLabelText(/new category display position/i), {
       target: {
         value: "30"
       }
