@@ -27,13 +27,14 @@ checklist, hold conditions, and rollback/disable sequence.
 The current hosted target is Hostinger VPS/Coolify for the `website/` Next.js
 app, not a Vercel-hosted `website/` Next.js app. The hosted execution sequence
 lives in `docs/HOSTED-DEPLOYMENT-EXECUTION-RUNBOOK.md`. Hosted Supabase and
-Resend are required services for the current owner-MVP launch path. Any
-temporary server-side n8n provider remains optional and integration-specific;
-n8n must not be treated as required for owner-MVP public launch unless it is
-explicitly approved in a separate scoped task. No `website/chat-config.js`,
+server-side n8n enquiry handoff configuration are required services for the
+current owner-MVP launch path. Resend is no longer the SKR app runtime handoff
+path; any email provider credential belongs inside n8n. No
+`website/chat-config.js`,
 `NEXT_PUBLIC_SUPABASE_*`, `NEXT_PUBLIC_N8N*`, `SUPABASE_SERVICE_ROLE_KEY`,
-`N8N_CHAT_WEBHOOK_URL`, `PINECONE_*`, or `HUBSPOT_*` runtime dependency is
-required for owner-MVP launch; server-only Supabase remains behind first-party routes. Catalogue
+`PINECONE_*`, or `HUBSPOT_*` runtime dependency is required for owner-MVP
+launch; server-only Supabase and n8n handoff stay behind first-party routes.
+Catalogue
 missing-env behaviour renders safe unavailable or empty recovery states instead of sample listings. Quote route fails safely, and Chat route fails safely, when
 required runtime configuration is absent. Future deployment preflight checklist now lives in the required pre-deployment review below. Future
 deployment preflight checklist coverage is preserved.
@@ -76,13 +77,12 @@ helpers:
   chat throttling.
 - `QUOTE_TRUSTED_CLIENT_IP_HEADER`: optional trusted proxy/CDN header name for
   quote throttling.
-- `QUOTE_ENQUIRY_EMAIL_PROVIDER`: optional server-side quote email provider
-  selector; blank or missing defaults to `resend`.
-- `QUOTE_ENQUIRY_EMAIL_RECIPIENT`: server-only business recipient for quote
-  enquiry email handoff.
-- `QUOTE_ENQUIRY_EMAIL_FROM`: server-only verified Resend sender/from address.
-- `RESEND_API_KEY`: server-only Resend provider secret for quote enquiry email
-  handoff.
+- `N8N_ENQUIRY_HANDOFF_WEBHOOK_URL`: server-only n8n webhook endpoint for
+  persisted enquiry handoff.
+- `N8N_ENQUIRY_HANDOFF_SHARED_SECRET`: server-only HMAC signing secret for
+  persisted enquiry handoff.
+- `N8N_ENQUIRY_HANDOFF_TIMEOUT_MS`: optional bounded timeout for the n8n
+  enquiry handoff request.
 - `ADMIN_EXPECTED_ORIGIN`: trusted expected admin request origin.
 - `ADMIN_EXPECTED_HOST`: trusted expected admin request host.
 - `ADMIN_CSRF_PROOF_SECRET`: server-only proof signing secret for admin CSRF
@@ -92,38 +92,33 @@ Trusted client IP header values must name only headers overwritten by the
 deployment proxy or CDN. In-process quote and chat throttling remains
 best-effort and must not be treated as final distributed abuse protection.
 
-## Quote enquiry email handoff env
+## Quote enquiry n8n handoff env
 
-Quote enquiry email delivery is server-only and environment-managed:
+Quote enquiry handoff is server-only and environment-managed:
 
-- `QUOTE_ENQUIRY_EMAIL_PROVIDER`: optional. Omit or set to `resend`; unsupported
-  values are invalid.
-- `QUOTE_ENQUIRY_EMAIL_RECIPIENT`: required before production quote email
-  handoff is enabled. Must be a valid email address.
-- `QUOTE_ENQUIRY_EMAIL_FROM`: required for Resend. Must be a valid email
-  address on a verified Resend sending domain or sender identity.
-- `RESEND_API_KEY`: required for Resend. Store only as a server-side secret.
+- `N8N_ENQUIRY_HANDOFF_WEBHOOK_URL`: required before hosted launch handoff is
+  enabled. Store only as server-side config.
+- `N8N_ENQUIRY_HANDOFF_SHARED_SECRET`: required before hosted launch handoff is
+  enabled. Store only as a server-side secret.
+- `N8N_ENQUIRY_HANDOFF_TIMEOUT_MS`: optional. Must be positive and bounded.
 
 Safe example names for local documentation or screenshots:
 
-- Provider env name: `QUOTE_ENQUIRY_EMAIL_PROVIDER`; safe placeholder value:
-  `resend`.
-- Recipient env name: `QUOTE_ENQUIRY_EMAIL_RECIPIENT`; safe placeholder
-  address: `events@example.invalid`.
-- From env name: `QUOTE_ENQUIRY_EMAIL_FROM`; safe placeholder address:
-  `quotes@example.invalid`.
-- Provider API key env name: `RESEND_API_KEY`; use only the hosting
-  provider's server-side secret field for the real value.
+- Webhook env name: `N8N_ENQUIRY_HANDOFF_WEBHOOK_URL`; do not put a real URL
+  in docs, screenshots, PRs, or admin UI.
+- Shared secret env name: `N8N_ENQUIRY_HANDOFF_SHARED_SECRET`; store the real
+  value only in the hosting provider's server-side secret field.
+- Timeout env name: `N8N_ENQUIRY_HANDOFF_TIMEOUT_MS`; optional tuning only.
 
-Do not commit real values. Do not paste `RESEND_API_KEY` into PR bodies,
-screenshots, admin pages, browser code, logs, or `.env` examples.
+Do not commit real values. Do not paste webhook URLs or shared secrets into PR
+bodies, screenshots, admin pages, browser code, logs, or `.env` examples.
 
-Resend setup expectation:
+n8n setup expectation:
 
-1. Verify the sending domain or sender identity in Resend outside this repo.
-2. Use that verified address as `QUOTE_ENQUIRY_EMAIL_FROM`.
-3. Store `RESEND_API_KEY` only in the hosting provider's server-side secret
-   store.
+1. Create or review the n8n workflow outside this PR.
+2. Store email credentials in n8n credentials, not in SKR repo files or n8n
+   text fields.
+3. Configure SKR with the server-only n8n handoff endpoint and shared secret.
 4. Run the readiness command in the same runtime environment before hosting:
 
 ```powershell
@@ -131,34 +126,35 @@ npm run validate:quote-email-runtime-readiness
 ```
 
 The readiness command reports only env names and status labels. It
-distinguishes configured, missing recipient, missing from address, missing
-provider API key, and unsupported provider states without printing values.
-Normal local/CI release validation does not require real email secrets; this
-readiness command is the production-hosting check.
+distinguishes configured, missing webhook endpoint, missing shared secret, and
+invalid timeout states without printing values. Normal local/CI release
+validation does not require real secrets; this readiness command is the
+production-hosting check.
 
 Safe quote submission verification after env is configured:
 
 1. Submit a normal public quote request through the existing quote form or
    first-party `POST /api/quote` path.
-2. Confirm the quote persisted first, then the server attempted email handoff.
-3. Expect the public response to be success only when persistence and email
-   delivery both succeed.
-4. Expect a generic 503-style public response with a request reference when the
-   email handoff is unconfigured or fails.
-5. Inspect protected admin Enquiry Email for provider/recipient status and
-   redacted recipient only.
+2. Confirm the quote persisted first, then the server attempted n8n handoff.
+3. Expect the public response to acknowledge receipt after persistence. It must
+   not claim email delivery, final quote details, or confirmed rental fit.
+4. Expect n8n not-configured or failed attempts to appear only in protected
+   Delivery Log with safe status/error categories.
+5. Inspect protected admin Enquiry Email for n8n readiness and last status
+   only.
 6. Inspect protected admin Delivery Log for technical delivery metadata only.
 
 Expected storage and privacy behaviour:
 
 - Delivery log rows store technical metadata only: request/reference ids,
-  provider, status, provider message id or safe error code, attempted time, and
-  redacted recipient state.
+  provider/channel, status, optional safe handoff id or safe error code, and
+  attempted time.
 - Delivery log rows do not store raw email bodies, full customer messages, item
-  details, raw provider payloads, headers, cookies, tokens, secrets, or provider
-  response bodies.
+  details, raw n8n/provider payloads, webhook URLs, workflow execution data,
+  headers, cookies, tokens, secrets, or provider response bodies.
 - Admin Enquiry Email remains status-only. It has no editable settings and must
-  not show `RESEND_API_KEY`, raw env values, or provider response bodies.
+  not show webhook URLs, shared secrets, raw env values, or provider response
+  bodies.
 
 Do not expect this feature to provide a quote inbox, quote detail admin route,
 customer confirmation email, retry system, webhook, bounce handling, scheduler,
@@ -186,7 +182,8 @@ capture workspace before quote persistence is enabled.
 ## Optional n8n/server-only webhook env
 
 Any separately approved temporary n8n bridge remains server-only and
-integration-specific:
+integration-specific. The quote enquiry handoff has its own required env names
+listed above. Chat remains separate:
 
 - `N8N_CHAT_WEBHOOK_URL`: server-only n8n webhook URL for a separately
   approved temporary chat provider.

@@ -171,7 +171,8 @@ describe("Phase 2D-A deployment readiness and smoke-test runbook", () => {
       "Admin quote inbox/status/internal note workflow",
       "Atomic quote workflow RPC behaviour",
       "Chat safe fallback",
-      "Server-only n8n webhook path",
+      "Server-only n8n enquiry handoff expectations",
+      "Server-only n8n chat webhook path",
       "404/error states",
       "No provider/SQL/secret leakage",
       "No browser console exposure of server-only env values",
@@ -191,7 +192,7 @@ describe("Phase 2D-A deployment readiness and smoke-test runbook", () => {
     for (const requiredText of [
       "Disable public traffic",
       "Remove or rotate leaked env values",
-      "Disable n8n webhook env",
+      "Disable n8n enquiry/chat webhook env",
       "Revert deployment",
       "Verify fallback catalogue behaviour",
       "Verify quote submission is unavailable or safe if env is removed",

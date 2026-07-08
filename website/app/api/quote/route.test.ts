@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { handleQuotePost, POST, resetQuoteRouteStateForTests } from "./route";
 
@@ -6,10 +8,9 @@ const envKeys = [
   "SUPABASE_ANON_KEY",
   "QUOTE_WORKSPACE_ID",
   "QUOTE_TRUSTED_CLIENT_IP_HEADER",
-  "QUOTE_ENQUIRY_EMAIL_PROVIDER",
-  "QUOTE_ENQUIRY_EMAIL_RECIPIENT",
-  "QUOTE_ENQUIRY_EMAIL_FROM",
-  "RESEND_API_KEY"
+  "N8N_ENQUIRY_HANDOFF_WEBHOOK_URL",
+  "N8N_ENQUIRY_HANDOFF_SHARED_SECRET",
+  "N8N_ENQUIRY_HANDOFF_TIMEOUT_MS"
 ] as const;
 const originalEnv = new Map(
   envKeys.map((key) => [key, process.env[key]])
@@ -66,9 +67,9 @@ function restoreEnv() {
 function successfulEmailHandoff() {
   return vi.fn(async () => ({
     ok: true as const,
-    status: "sent" as const,
-    provider: "resend" as const,
-    providerMessageId: "resend-message-1"
+    status: "delivered" as const,
+    provider: "n8n" as const,
+    idempotencyKey: "quote-enquiry:70000000-0000-4000-8000-000000000001"
   }));
 }
 
@@ -95,9 +96,9 @@ describe("POST /api/quote", () => {
 
     const emailHandoff = vi.fn(async () => ({
       ok: true as const,
-      status: "sent" as const,
-      provider: "resend" as const,
-      providerMessageId: "resend-message-1"
+      status: "delivered" as const,
+      provider: "n8n" as const,
+      idempotencyKey: "quote-enquiry:70000000-0000-4000-8000-000000000001"
     }));
 
     const response = await handleQuotePost(
@@ -144,7 +145,7 @@ describe("POST /api/quote", () => {
     );
   });
 
-  it("fails safely when enquiry email handoff is not configured", async () => {
+  it("acknowledges persisted enquiries when n8n handoff is not configured", async () => {
     const errorSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
     const repository = vi.fn(async () => ({
       ok: true as const,
@@ -154,8 +155,9 @@ describe("POST /api/quote", () => {
     const emailHandoff = vi.fn(async () => ({
       ok: false as const,
       status: "not_configured" as const,
-      provider: "resend" as const,
-      code: "email_recipient_not_configured"
+      provider: "n8n" as const,
+      code: "n8n_webhook_not_configured",
+      idempotencyKey: "quote-enquiry:70000000-0000-4000-8000-000000000001"
     }));
 
     const response = await handleQuotePost(
@@ -166,34 +168,25 @@ describe("POST /api/quote", () => {
     const body = await response.json();
     const serialized = JSON.stringify(body);
 
-    expect(response.status).toBe(503);
-    expect(body.error).toEqual({
-      code: "QUOTE_EMAIL_HANDOFF_UNAVAILABLE",
-      message: "Quote requests are temporarily unavailable. Please try again later.",
-      reference: body.requestId
+    expect(response.status).toBe(201);
+    expect(body).toEqual({
+      status: "received",
+      quoteRequestId: "70000000-0000-4000-8000-000000000001",
+      publicReference: "QR-20260527-ABC12345",
+      requestId: expect.any(String)
     });
     expect(repository).toHaveBeenCalledTimes(1);
     expect(emailHandoff).toHaveBeenCalledTimes(1);
-    expect(errorSpy).toHaveBeenCalledWith(
-      "application_error",
-      expect.objectContaining({
-        category: "QUOTE_EMAIL_HANDOFF_UNAVAILABLE",
-        errorReference: body.requestId,
-        method: "POST",
-        path: "/api/quote",
-        route: "POST /api/quote",
-        statusCode: 503
-      })
-    );
-    expect(serialized).not.toContain("email_recipient_not_configured");
-    expect(serialized).not.toContain("RESEND_API_KEY");
+    expect(errorSpy).not.toHaveBeenCalled();
+    expect(serialized).not.toContain("n8n_webhook_not_configured");
+    expect(serialized).not.toContain("N8N_ENQUIRY_HANDOFF_WEBHOOK_URL");
     expect(serialized).not.toContain("Maya");
     expect(serialized).not.toContain("example.test");
     expect(JSON.stringify(errorSpy.mock.calls)).not.toContain("Maya");
     expect(JSON.stringify(errorSpy.mock.calls)).not.toContain("example.test");
   });
 
-  it("fails safely when the enquiry email provider fails", async () => {
+  it("does not expose n8n handoff failures in the public response", async () => {
     const repository = vi.fn(async () => ({
       ok: true as const,
       quoteRequestId: "70000000-0000-4000-8000-000000000001",
@@ -202,8 +195,9 @@ describe("POST /api/quote", () => {
     const emailHandoff = vi.fn(async () => ({
       ok: false as const,
       status: "failed" as const,
-      provider: "resend" as const,
-      code: "provider_rejected",
+      provider: "n8n" as const,
+      code: "n8n_rejected",
+      idempotencyKey: "quote-enquiry:70000000-0000-4000-8000-000000000001",
       unsafeDetails: "401 SECRET raw provider body"
     }));
 
@@ -215,15 +209,14 @@ describe("POST /api/quote", () => {
     const body = await response.json();
     const serialized = JSON.stringify(body);
 
-    expect(response.status).toBe(503);
-    expect(body.error.code).toBe("QUOTE_EMAIL_HANDOFF_UNAVAILABLE");
-    expect(body.error.reference).toBe(body.requestId);
-    expect(serialized).not.toContain("provider_rejected");
+    expect(response.status).toBe(201);
+    expect(body.status).toBe("received");
+    expect(serialized).not.toContain("n8n_rejected");
     expect(serialized).not.toContain("SECRET");
     expect(serialized).not.toContain("raw provider body");
   });
 
-  it("categorizes unexpected enquiry email handoff exceptions as email failures", async () => {
+  it("logs unexpected n8n handoff exceptions without failing persisted public receipt", async () => {
     const errorSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
     const repository = vi.fn(async () => ({
       ok: true as const,
@@ -231,7 +224,7 @@ describe("POST /api/quote", () => {
       publicReference: "QR-20260527-ABC12345"
     }));
     const emailHandoff = vi.fn(async () => {
-      throw new Error("RESEND_API_KEY exploded with raw provider body");
+      throw new Error("N8N_ENQUIRY_HANDOFF_SHARED_SECRET exploded with raw provider body");
     });
 
     const response = await handleQuotePost(
@@ -242,27 +235,23 @@ describe("POST /api/quote", () => {
     const body = await response.json();
     const serialized = JSON.stringify(body);
 
-    expect(response.status).toBe(503);
-    expect(body.error).toEqual({
-      code: "QUOTE_EMAIL_HANDOFF_UNAVAILABLE",
-      message: "Quote requests are temporarily unavailable. Please try again later.",
-      reference: body.requestId
-    });
+    expect(response.status).toBe(201);
+    expect(body.status).toBe("received");
     expect(repository).toHaveBeenCalledTimes(1);
     expect(emailHandoff).toHaveBeenCalledTimes(1);
     expect(errorSpy).toHaveBeenCalledWith(
       "application_error",
       expect.objectContaining({
-        category: "QUOTE_EMAIL_HANDOFF_UNAVAILABLE",
+        category: "QUOTE_ENQUIRY_HANDOFF_ATTEMPT_UNAVAILABLE",
         errorReference: body.requestId,
         route: "POST /api/quote",
-        statusCode: 503
+        statusCode: 202
       })
     );
     expect(JSON.stringify(errorSpy.mock.calls)).not.toContain(
       "QUOTE_PERSISTENCE_UNAVAILABLE"
     );
-    expect(serialized).not.toContain("RESEND_API_KEY");
+    expect(serialized).not.toContain("N8N_ENQUIRY_HANDOFF_SHARED_SECRET");
     expect(serialized).not.toContain("raw provider body");
   });
 
@@ -643,5 +632,18 @@ describe("POST /api/quote", () => {
     expect(serialized).not.toContain("SUPABASE_ANON_KEY");
     expect(serialized).not.toContain("Maya");
     expect(serialized).not.toContain("example.test");
+  });
+
+  it("keeps browser quote form code on the first-party quote route only", () => {
+    const formSource = readFileSync(
+      resolve(process.cwd(), "components/QuoteRequestForm.tsx"),
+      "utf8"
+    );
+
+    expect(formSource).toContain('fetch("/api/quote"');
+    expect(formSource).not.toContain("N8N_ENQUIRY_HANDOFF_WEBHOOK_URL");
+    expect(formSource).not.toContain("N8N_ENQUIRY_HANDOFF_SHARED_SECRET");
+    expect(formSource).not.toContain("N8N_CHAT_WEBHOOK_URL");
+    expect(formSource).not.toMatch(/webhook/i);
   });
 });

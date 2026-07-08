@@ -27,12 +27,11 @@ const expectedServerRuntimeEnvNames = [
   "CHAT_PROVIDER",
   "N8N_CHAT_WEBHOOK_URL",
   "N8N_CHAT_WEBHOOK_TIMEOUT_MS",
+  "N8N_ENQUIRY_HANDOFF_WEBHOOK_URL",
+  "N8N_ENQUIRY_HANDOFF_SHARED_SECRET",
+  "N8N_ENQUIRY_HANDOFF_TIMEOUT_MS",
   "CHAT_TRUSTED_CLIENT_IP_HEADER",
-  "QUOTE_TRUSTED_CLIENT_IP_HEADER",
-  "QUOTE_ENQUIRY_EMAIL_PROVIDER",
-  "QUOTE_ENQUIRY_EMAIL_RECIPIENT",
-  "QUOTE_ENQUIRY_EMAIL_FROM",
-  "RESEND_API_KEY"
+  "QUOTE_TRUSTED_CLIENT_IP_HEADER"
 ] as const;
 
 const validEnv = {
@@ -47,15 +46,17 @@ const validEnv = {
   CHAT_PROVIDER: " n8n ",
   N8N_CHAT_WEBHOOK_URL: "https://example.invalid/n8n-webhook",
   N8N_CHAT_WEBHOOK_TIMEOUT_MS: "45000",
+  N8N_ENQUIRY_HANDOFF_WEBHOOK_URL: "https://example.invalid/enquiry-handoff",
+  N8N_ENQUIRY_HANDOFF_SHARED_SECRET: "n8n-shared-secret-for-tests",
+  N8N_ENQUIRY_HANDOFF_TIMEOUT_MS: "45000",
   CHAT_TRUSTED_CLIENT_IP_HEADER: "CF-Connecting-IP",
   QUOTE_TRUSTED_CLIENT_IP_HEADER: "X-Real-IP"
 };
 
 const quoteEmailEnv = {
-  QUOTE_ENQUIRY_EMAIL_PROVIDER: " resend ",
-  QUOTE_ENQUIRY_EMAIL_RECIPIENT: " Events@SpaceKoncept.example ",
-  QUOTE_ENQUIRY_EMAIL_FROM: " Quotes@SpaceKoncept.example ",
-  RESEND_API_KEY: "resend-secret-for-tests"
+  N8N_ENQUIRY_HANDOFF_WEBHOOK_URL: "https://example.invalid/enquiry-handoff",
+  N8N_ENQUIRY_HANDOFF_SHARED_SECRET: "n8n-shared-secret-for-tests",
+  N8N_ENQUIRY_HANDOFF_TIMEOUT_MS: "45000"
 };
 
 describe("server runtime config contract", () => {
@@ -95,6 +96,9 @@ describe("server runtime config contract", () => {
       chatProvider: "n8n",
       n8nChatWebhookUrl: "https://example.invalid/n8n-webhook",
       n8nChatWebhookTimeoutMs: 30000,
+      n8nEnquiryHandoffWebhookUrl: "https://example.invalid/enquiry-handoff",
+      n8nEnquiryHandoffSharedSecret: "n8n-shared-secret-for-tests",
+      n8nEnquiryHandoffTimeoutMs: 30000,
       chatTrustedClientIpHeader: "cf-connecting-ip",
       quoteTrustedClientIpHeader: "x-real-ip"
     });
@@ -127,6 +131,8 @@ describe("server runtime config contract", () => {
       CHAT_PROVIDER: "legacy-browser-n8n",
       N8N_CHAT_WEBHOOK_URL: "ftp://example.invalid/n8n-webhook",
       N8N_CHAT_WEBHOOK_TIMEOUT_MS: "not a number",
+      N8N_ENQUIRY_HANDOFF_WEBHOOK_URL: "ftp://example.invalid/enquiry-handoff",
+      N8N_ENQUIRY_HANDOFF_TIMEOUT_MS: "not a number",
       CHAT_TRUSTED_CLIENT_IP_HEADER: "x-forwarded-host",
       QUOTE_TRUSTED_CLIENT_IP_HEADER: "x-forwarded-proto"
     });
@@ -142,6 +148,8 @@ describe("server runtime config contract", () => {
         "CHAT_PROVIDER",
         "N8N_CHAT_WEBHOOK_URL",
         "N8N_CHAT_WEBHOOK_TIMEOUT_MS",
+        "N8N_ENQUIRY_HANDOFF_WEBHOOK_URL",
+        "N8N_ENQUIRY_HANDOFF_TIMEOUT_MS",
         "CHAT_TRUSTED_CLIENT_IP_HEADER",
         "QUOTE_TRUSTED_CLIENT_IP_HEADER"
       ])
@@ -170,78 +178,79 @@ describe("server runtime config contract", () => {
     });
   });
 
-  it("validates configured quote email handoff runtime env without leaking secrets", () => {
+  it("validates configured n8n enquiry handoff runtime env without leaking secrets", () => {
     const result = getQuoteEmailHandoffRuntimeConfig(quoteEmailEnv);
 
     expect(result).toEqual({
       configured: true,
-      provider: "resend",
-      providerConfigured: true,
-      recipientConfigured: true,
-      recipientEmail: "ev***@spacekoncept.example",
-      recipientEmailRaw: "events@spacekoncept.example",
-      fromEmail: "quotes@spacekoncept.example",
-      resendApiKey: "resend-secret-for-tests",
+      provider: "n8n",
+      webhookConfigured: true,
+      sharedSecretConfigured: true,
+      webhookUrl: "https://example.invalid/enquiry-handoff",
+      sharedSecret: "n8n-shared-secret-for-tests",
+      timeoutMs: 30000,
       issues: []
     });
-    expect(JSON.stringify(result.issues)).not.toContain("resend-secret-for-tests");
+    expect(JSON.stringify(result.issues)).not.toContain(
+      "n8n-shared-secret-for-tests"
+    );
   });
 
-  it("reports quote email missing recipient safely", () => {
+  it("reports missing n8n enquiry handoff webhook safely", () => {
     const result = getQuoteEmailHandoffRuntimeConfig({
       ...quoteEmailEnv,
-      QUOTE_ENQUIRY_EMAIL_RECIPIENT: " "
+      N8N_ENQUIRY_HANDOFF_WEBHOOK_URL: " "
     });
 
     expect(result.configured).toBe(false);
-    expect(result.recipientConfigured).toBe(false);
+    expect(result.webhookConfigured).toBe(false);
     expect(result.issues).toEqual([
       {
-        name: "QUOTE_ENQUIRY_EMAIL_RECIPIENT",
+        name: "N8N_ENQUIRY_HANDOFF_WEBHOOK_URL",
         kind: "missing",
         reason: "required"
       }
     ]);
   });
 
-  it("reports quote email missing sender and provider api key safely", () => {
+  it("reports missing n8n shared secret and invalid timeout safely", () => {
     const result = getQuoteEmailHandoffRuntimeConfig({
       ...quoteEmailEnv,
-      QUOTE_ENQUIRY_EMAIL_FROM: "",
-      RESEND_API_KEY: ""
+      N8N_ENQUIRY_HANDOFF_SHARED_SECRET: "",
+      N8N_ENQUIRY_HANDOFF_TIMEOUT_MS: "not-a-number"
     });
     const serializedIssues = JSON.stringify(result.issues);
 
     expect(result.configured).toBe(false);
-    expect(result.providerConfigured).toBe(false);
+    expect(result.sharedSecretConfigured).toBe(false);
     expect(result.issues).toEqual([
       {
-        name: "QUOTE_ENQUIRY_EMAIL_FROM",
+        name: "N8N_ENQUIRY_HANDOFF_SHARED_SECRET",
         kind: "missing",
         reason: "required"
       },
       {
-        name: "RESEND_API_KEY",
-        kind: "missing",
-        reason: "required"
+        name: "N8N_ENQUIRY_HANDOFF_TIMEOUT_MS",
+        kind: "invalid",
+        reason: "invalid_timeout"
       }
     ]);
-    expect(serializedIssues).not.toContain("resend-secret-for-tests");
+    expect(serializedIssues).not.toContain("n8n-shared-secret-for-tests");
   });
 
-  it("reports unsupported quote email provider as invalid", () => {
+  it("reports invalid n8n enquiry handoff webhook without echoing it", () => {
     const result = getQuoteEmailHandoffRuntimeConfig({
       ...quoteEmailEnv,
-      QUOTE_ENQUIRY_EMAIL_PROVIDER: "smtp"
+      N8N_ENQUIRY_HANDOFF_WEBHOOK_URL: "ftp://example.invalid/secret-webhook"
     });
 
     expect(result.configured).toBe(false);
-    expect(result.providerConfigured).toBe(false);
+    expect(result.webhookConfigured).toBe(false);
     expect(result.issues).toContainEqual({
-      name: "QUOTE_ENQUIRY_EMAIL_PROVIDER",
+      name: "N8N_ENQUIRY_HANDOFF_WEBHOOK_URL",
       kind: "invalid",
-      reason: "unsupported_provider"
+      reason: "invalid_url"
     });
-    expect(JSON.stringify(result)).not.toContain("smtp");
+    expect(JSON.stringify(result.issues)).not.toContain("secret-webhook");
   });
 });

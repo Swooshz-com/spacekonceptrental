@@ -20,50 +20,59 @@ function runReadiness(env = {}) {
   });
 }
 
-test('quote email runtime readiness passes with safe configured env', () => {
+test('quote enquiry n8n handoff runtime readiness passes with safe configured env', () => {
   const result = runReadiness({
-    QUOTE_ENQUIRY_EMAIL_PROVIDER: 'resend',
-    QUOTE_ENQUIRY_EMAIL_RECIPIENT: 'events@spacekoncept.example',
-    QUOTE_ENQUIRY_EMAIL_FROM: 'quotes@spacekoncept.example',
-    RESEND_API_KEY: 'test-secret-value',
+    N8N_ENQUIRY_HANDOFF_WEBHOOK_URL: 'https://example.invalid/n8n/enquiry',
+    N8N_ENQUIRY_HANDOFF_SHARED_SECRET: 'test-secret-value',
+    N8N_ENQUIRY_HANDOFF_TIMEOUT_MS: '5000',
   });
 
   assert.equal(result.status, 0, result.stdout + result.stderr);
   assert.match(result.stdout, /configured/i);
   assert.doesNotMatch(result.stdout + result.stderr, /test-secret-value/);
+  assert.doesNotMatch(result.stdout + result.stderr, /https:\/\/example\.invalid/);
 });
 
-test('quote email runtime readiness reports missing names and never values', () => {
+test('quote enquiry n8n handoff runtime readiness reports missing names and never values', () => {
   const result = runReadiness({
-    QUOTE_ENQUIRY_EMAIL_PROVIDER: 'resend',
-    QUOTE_ENQUIRY_EMAIL_RECIPIENT: '',
-    QUOTE_ENQUIRY_EMAIL_FROM: '',
-    RESEND_API_KEY: '',
+    N8N_ENQUIRY_HANDOFF_WEBHOOK_URL: '',
+    N8N_ENQUIRY_HANDOFF_SHARED_SECRET: '',
+    N8N_ENQUIRY_HANDOFF_TIMEOUT_MS: '',
   });
   const output = result.stdout + result.stderr;
 
   assert.notEqual(result.status, 0);
-  assert.match(output, /QUOTE_ENQUIRY_EMAIL_RECIPIENT/);
-  assert.match(output, /QUOTE_ENQUIRY_EMAIL_FROM/);
-  assert.match(output, /RESEND_API_KEY/);
-  assert.match(output, /missing recipient/i);
-  assert.match(output, /missing from address/i);
-  assert.match(output, /missing provider api key/i);
+  assert.match(output, /N8N_ENQUIRY_HANDOFF_WEBHOOK_URL/);
+  assert.match(output, /N8N_ENQUIRY_HANDOFF_SHARED_SECRET/);
+  assert.match(output, /missing server-side n8n webhook URL/i);
+  assert.match(output, /missing server-side shared secret/i);
 });
 
-test('quote email runtime readiness reports unsupported provider without echoing it', () => {
+test('quote enquiry n8n handoff runtime readiness reports invalid URL without echoing it', () => {
   const result = runReadiness({
-    QUOTE_ENQUIRY_EMAIL_PROVIDER: 'smtp-secret-provider',
-    QUOTE_ENQUIRY_EMAIL_RECIPIENT: 'events@spacekoncept.example',
-    QUOTE_ENQUIRY_EMAIL_FROM: 'quotes@spacekoncept.example',
-    RESEND_API_KEY: 'test-secret-value',
+    N8N_ENQUIRY_HANDOFF_WEBHOOK_URL: 'ftp://example.invalid/secret-webhook',
+    N8N_ENQUIRY_HANDOFF_SHARED_SECRET: 'test-secret-value',
   });
   const output = result.stdout + result.stderr;
 
   assert.notEqual(result.status, 0);
-  assert.match(output, /QUOTE_ENQUIRY_EMAIL_PROVIDER/);
-  assert.match(output, /unsupported provider/i);
-  assert.doesNotMatch(output, /smtp-secret-provider/);
+  assert.match(output, /N8N_ENQUIRY_HANDOFF_WEBHOOK_URL/);
+  assert.match(output, /invalid server-side n8n webhook URL/i);
+  assert.doesNotMatch(output, /secret-webhook/);
+  assert.doesNotMatch(output, /test-secret-value/);
+});
+
+test('quote enquiry n8n handoff runtime readiness reports invalid timeout safely', () => {
+  const result = runReadiness({
+    N8N_ENQUIRY_HANDOFF_WEBHOOK_URL: 'https://example.invalid/n8n/enquiry',
+    N8N_ENQUIRY_HANDOFF_SHARED_SECRET: 'test-secret-value',
+    N8N_ENQUIRY_HANDOFF_TIMEOUT_MS: '60000',
+  });
+  const output = result.stdout + result.stderr;
+
+  assert.notEqual(result.status, 0);
+  assert.match(output, /N8N_ENQUIRY_HANDOFF_TIMEOUT_MS/);
+  assert.match(output, /timeout/i);
   assert.doesNotMatch(output, /test-secret-value/);
 });
 

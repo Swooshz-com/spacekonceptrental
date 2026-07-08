@@ -43,8 +43,13 @@ export type AdminQuoteEmailDeliveryLogRecord = {
   publicReference: string;
   attemptedAt: string;
   recipientEmail: string;
-  provider: "resend";
-  deliveryStatus: "sent" | "failed" | "not_configured";
+  provider: "n8n" | "resend";
+  deliveryStatus:
+    | "pending"
+    | "delivered"
+    | "sent"
+    | "failed"
+    | "not_configured";
   providerMessageId?: string;
   errorCode?: string;
   requestId: string;
@@ -81,7 +86,17 @@ type DeliveryLogRow = {
 
 const uuidPattern =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-const statuses = new Set(["sent", "failed", "not_configured"]);
+const providers = new Set<AdminQuoteEmailDeliveryLogRecord["provider"]>([
+  "n8n",
+  "resend"
+]);
+const statuses = new Set<AdminQuoteEmailDeliveryLogRecord["deliveryStatus"]>([
+  "pending",
+  "delivered",
+  "sent",
+  "failed",
+  "not_configured"
+]);
 const missingRecipientPlaceholder = "Not configured";
 
 function unavailable(): AdminQuoteEmailDeliveryLogReadResult {
@@ -100,6 +115,24 @@ function isUuid(value: unknown): value is string {
 
 function getString(value: unknown) {
   return typeof value === "string" && value.trim() ? value.trim() : undefined;
+}
+
+function isProvider(
+  value: unknown
+): value is AdminQuoteEmailDeliveryLogRecord["provider"] {
+  return (
+    typeof value === "string" &&
+    providers.has(value as AdminQuoteEmailDeliveryLogRecord["provider"])
+  );
+}
+
+function isDeliveryStatus(
+  value: unknown
+): value is AdminQuoteEmailDeliveryLogRecord["deliveryStatus"] {
+  return (
+    typeof value === "string" &&
+    statuses.has(value as AdminQuoteEmailDeliveryLogRecord["deliveryStatus"])
+  );
 }
 
 function getWorkspaceId(options: AdminQuoteEmailDeliveryLogReadOptions) {
@@ -145,11 +178,10 @@ function toRecord(row: DeliveryLogRow): AdminQuoteEmailDeliveryLogRecord | null 
   const attemptedAt = getString(row.attempted_at);
   const recipientEmail =
     getString(row.recipient_email_redacted) ?? missingRecipientPlaceholder;
-  const provider = row.provider === "resend" ? row.provider : null;
-  const deliveryStatus =
-    typeof row.delivery_status === "string" && statuses.has(row.delivery_status)
-      ? row.delivery_status
-      : null;
+  const provider = isProvider(row.provider) ? row.provider : null;
+  const deliveryStatus = isDeliveryStatus(row.delivery_status)
+    ? row.delivery_status
+    : null;
   const requestId = getString(row.request_id);
 
   if (
@@ -171,7 +203,7 @@ function toRecord(row: DeliveryLogRow): AdminQuoteEmailDeliveryLogRecord | null 
     attemptedAt,
     recipientEmail,
     provider,
-    deliveryStatus: deliveryStatus as AdminQuoteEmailDeliveryLogRecord["deliveryStatus"],
+    deliveryStatus,
     ...(getString(row.provider_message_id)
       ? { providerMessageId: getString(row.provider_message_id) }
       : {}),

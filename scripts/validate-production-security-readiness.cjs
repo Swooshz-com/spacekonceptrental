@@ -7,8 +7,7 @@ const path = require('node:path');
 const defaultMode = 'local';
 const launchMode = 'launch';
 const supportedModes = new Set([defaultMode, launchMode]);
-const supportedQuoteEmailProvider = 'resend';
-const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const maxN8nTimeoutMs = 30000;
 const textExtensions = new Set([
   '.cjs',
   '.css',
@@ -45,14 +44,13 @@ const requiredEnvNames = [
   'ADMIN_EXPECTED_ORIGIN',
   'ADMIN_EXPECTED_HOST',
   'ADMIN_CSRF_PROOF_SECRET',
-  'QUOTE_ENQUIRY_EMAIL_RECIPIENT',
-  'QUOTE_ENQUIRY_EMAIL_FROM',
+  'N8N_ENQUIRY_HANDOFF_WEBHOOK_URL',
+  'N8N_ENQUIRY_HANDOFF_SHARED_SECRET',
 ];
 
 const serverOnlyEnvNames = [
   ...requiredEnvNames,
-  'QUOTE_ENQUIRY_EMAIL_PROVIDER',
-  'RESEND_API_KEY',
+  'N8N_ENQUIRY_HANDOFF_TIMEOUT_MS',
   'CHAT_PROVIDER',
   'CHAT_TRUSTED_CLIENT_IP_HEADER',
   'QUOTE_TRUSTED_CLIENT_IP_HEADER',
@@ -83,7 +81,7 @@ const obviousSecretPatterns = [
     pattern: /\bsk_(?:live|test)_[A-Za-z0-9]{20,}\b/g,
   },
   {
-    label: 'Resend API key pattern',
+    label: 'Email provider API key pattern',
     pattern: /\bre_[A-Za-z0-9]{24,}\b/g,
   },
   {
@@ -183,20 +181,6 @@ function validateAdminExpectedHost(value) {
   return /^[A-Za-z0-9.-]+(?::\d+)?$/.test(value);
 }
 
-function validateEmail(value) {
-  return Boolean(value && emailPattern.test(value));
-}
-
-function normalizeProvider(value) {
-  const normalized = value?.trim().toLowerCase();
-
-  if (!normalized) {
-    return supportedQuoteEmailProvider;
-  }
-
-  return normalized === supportedQuoteEmailProvider ? normalized : null;
-}
-
 function validateCsrfSecret(value) {
   if (!value) {
     return {
@@ -225,6 +209,29 @@ function validateCsrfSecret(value) {
     return {
       ok: false,
       summary: 'insufficient entropy-like shape',
+    };
+  }
+
+  return {
+    ok: true,
+    summary: 'configured',
+  };
+}
+
+function validateOptionalTimeout(value) {
+  if (!value) {
+    return {
+      ok: true,
+      summary: 'configured',
+    };
+  }
+
+  const timeout = Number(value);
+
+  if (!Number.isFinite(timeout) || timeout <= 0 || timeout > maxN8nTimeoutMs) {
+    return {
+      ok: false,
+      summary: `must be a positive number no greater than ${maxN8nTimeoutMs}`,
     };
   }
 
@@ -272,38 +279,33 @@ function validateEnvContract(env) {
     addIssue(issues, 'ADMIN_CSRF_PROOF_SECRET', csrfSecret.summary);
   }
 
-  const provider = normalizeProvider(readEnv(env, 'QUOTE_ENQUIRY_EMAIL_PROVIDER'));
+  const n8nEnquiryWebhookUrl = readEnv(env, 'N8N_ENQUIRY_HANDOFF_WEBHOOK_URL');
 
-  if (!provider) {
+  if (n8nEnquiryWebhookUrl && !validateHttpsUrl(n8nEnquiryWebhookUrl)) {
     addIssue(
       issues,
-      'QUOTE_ENQUIRY_EMAIL_PROVIDER',
-      'unsupported provider',
+      'N8N_ENQUIRY_HANDOFF_WEBHOOK_URL',
+      'must be an HTTPS URL',
     );
   }
 
-  const recipient = readEnv(env, 'QUOTE_ENQUIRY_EMAIL_RECIPIENT');
+  const n8nSharedSecretValue = readEnv(env, 'N8N_ENQUIRY_HANDOFF_SHARED_SECRET');
+  const n8nSharedSecret = validateCsrfSecret(n8nSharedSecretValue);
 
-  if (recipient && !validateEmail(recipient)) {
+  if (n8nSharedSecretValue && !n8nSharedSecret.ok) {
     addIssue(
       issues,
-      'QUOTE_ENQUIRY_EMAIL_RECIPIENT',
-      'invalid email address',
+      'N8N_ENQUIRY_HANDOFF_SHARED_SECRET',
+      n8nSharedSecret.summary,
     );
   }
 
-  const from = readEnv(env, 'QUOTE_ENQUIRY_EMAIL_FROM');
+  const n8nTimeout = validateOptionalTimeout(
+    readEnv(env, 'N8N_ENQUIRY_HANDOFF_TIMEOUT_MS'),
+  );
 
-  if (from && !validateEmail(from)) {
-    addIssue(
-      issues,
-      'QUOTE_ENQUIRY_EMAIL_FROM',
-      'invalid email address',
-    );
-  }
-
-  if (provider === supportedQuoteEmailProvider && !readEnv(env, 'RESEND_API_KEY')) {
-    addIssue(issues, 'RESEND_API_KEY', 'missing for Resend provider');
+  if (!n8nTimeout.ok) {
+    addIssue(issues, 'N8N_ENQUIRY_HANDOFF_TIMEOUT_MS', n8nTimeout.summary);
   }
 
   for (const name of removedPublicRuntimeEnvNames) {
@@ -577,7 +579,8 @@ function printResult(result, output = console) {
   }
 
   output.log('No website/chat-config.js runtime dependency is required for launch.');
-  output.log('No n8n/Pinecone/HubSpot runtime env is required for owner MVP launch.');
+  output.log('n8n enquiry handoff env is server-only; no browser n8n env is allowed.');
+  output.log('No Pinecone/HubSpot runtime env is required for this launch slice.');
 
   if (result.ok) {
     output.log('Production security readiness gate passed.');

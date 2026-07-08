@@ -17,6 +17,9 @@ const serverOnlyEnvNames = [
   "CHAT_PROVIDER",
   "N8N_CHAT_WEBHOOK_URL",
   "N8N_CHAT_WEBHOOK_TIMEOUT_MS",
+  "N8N_ENQUIRY_HANDOFF_WEBHOOK_URL",
+  "N8N_ENQUIRY_HANDOFF_SHARED_SECRET",
+  "N8N_ENQUIRY_HANDOFF_TIMEOUT_MS",
   "CHAT_TRUSTED_CLIENT_IP_HEADER",
   "QUOTE_TRUSTED_CLIENT_IP_HEADER"
 ];
@@ -90,7 +93,7 @@ describe("Phase 1O-A deployment environment readiness", () => {
     expect(doc).toContain("No deployment is performed");
     expect(doc).toContain("Vercel-hosted `website/` Next.js app");
     expect(doc).toContain("server-only Supabase");
-    expect(doc).toContain("temporary server-side n8n provider");
+    expect(doc).toContain("server-side n8n enquiry handoff");
     expect(doc).toContain("catalogue_public_workspace_config");
     expect(doc).toContain("empty recovery states instead of sample listings");
     expect(doc).toContain("Quote route fails safely");
@@ -129,9 +132,11 @@ describe("Phase 1O-A deployment environment readiness", () => {
     for (const envName of serverOnlyEnvNames) {
       expect(variableByName.has(envName)).toBe(true);
       expect(variableByName.get(envName)).toMatchObject({
-        visibility: "server-only",
         browserAllowed: false
       });
+      expect(["server-only", "server-only-secret"]).toContain(
+        variableByName.get(envName)?.visibility
+      );
       expect(variableByName.get(envName)).not.toHaveProperty("value");
     }
 
@@ -194,6 +199,7 @@ describe("Phase 1O-A deployment environment readiness", () => {
       "website/lib/catalogue/catalogue-repository.ts",
       "website/lib/hero/public-homepage-hero-repository.ts",
       "website/lib/page-media/public-page-media-repository.ts",
+      "website/lib/quote/email-handoff.ts",
       "website/lib/quote/quote-email-delivery-log-repository.ts",
       "website/lib/quote/quote-repository.ts",
       "website/lib/server-runtime-config.ts",

@@ -136,9 +136,8 @@ test('quote submission is skipped safely when email env is missing', async () =>
 
   assert.equal(result.ok, true);
   assert.match(output, /SKIP quote API live submission/i);
-  assert.match(output, /QUOTE_ENQUIRY_EMAIL_RECIPIENT/);
-  assert.match(output, /QUOTE_ENQUIRY_EMAIL_FROM/);
-  assert.match(output, /RESEND_API_KEY/);
+  assert.match(output, /N8N_ENQUIRY_HANDOFF_WEBHOOK_URL/);
+  assert.match(output, /N8N_ENQUIRY_HANDOFF_SHARED_SECRET/);
 });
 
 test('quote email runtime readiness command is invoked', async () => {
@@ -157,13 +156,13 @@ test('smoke output does not leak env values or customer message text', async () 
   const { output } = await runSmoke({
     env: {
       SKR_OWNER_FLOW_LOCAL_BASE_URL: 'http://localhost:3000',
-      RESEND_API_KEY: 'secret-value-that-must-not-print',
-      QUOTE_ENQUIRY_EMAIL_RECIPIENT: 'owner@example.invalid',
+      N8N_ENQUIRY_HANDOFF_SHARED_SECRET: 'secret-value-that-must-not-print',
+      N8N_ENQUIRY_HANDOFF_WEBHOOK_URL: 'https://owner.example.invalid/hook',
     },
   });
 
   assert.doesNotMatch(output, /secret-value-that-must-not-print/);
-  assert.doesNotMatch(output, /owner@example.invalid/);
+  assert.doesNotMatch(output, /owner.example.invalid/);
   assert.doesNotMatch(output, /Please recommend/i);
 });
 

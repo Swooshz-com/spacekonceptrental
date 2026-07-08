@@ -50,10 +50,8 @@ const removedAdminRoutes = [
 ];
 
 const requiredQuoteEmailEnvNames = [
-  'QUOTE_ENQUIRY_EMAIL_PROVIDER',
-  'QUOTE_ENQUIRY_EMAIL_RECIPIENT',
-  'QUOTE_ENQUIRY_EMAIL_FROM',
-  'RESEND_API_KEY',
+  'N8N_ENQUIRY_HANDOFF_WEBHOOK_URL',
+  'N8N_ENQUIRY_HANDOFF_SHARED_SECRET',
 ];
 
 function safeBaseUrl(env) {
@@ -274,7 +272,7 @@ function checkQuoteSubmission(options, results) {
     options.log,
     [
       'quote API live submission skipped.',
-      'No local mocked email handoff mode exists for the real /api/quote route, so the smoke script will not risk sending real email.',
+      'No local mocked n8n handoff mode exists for the real /api/quote route, so the smoke script will not risk triggering a real handoff.',
       `For live handoff verification, configure server-side ${requiredQuoteEmailEnvNames.join(', ')} and run npm run validate:quote-email-runtime-readiness before manually submitting a safe quote.`,
     ].join(' '),
   );

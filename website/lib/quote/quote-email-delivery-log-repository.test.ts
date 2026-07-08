@@ -34,10 +34,9 @@ describe("quote email delivery log repository", () => {
         {
           quoteRequestId: "70000000-0000-4000-8000-000000000001",
           publicReference: "QR-20260612-ABC12345",
-          recipientEmail: "events@spacekoncept.example",
-          provider: "resend",
-          status: "sent",
-          providerMessageId: "resend-message-1",
+          recipientEmail: null,
+          provider: "n8n",
+          status: "delivered",
           errorCode: null,
           requestId: "route-request-1"
         },
@@ -55,10 +54,10 @@ describe("quote email delivery log repository", () => {
           workspace_id: "11111111-1111-4111-8111-111111111111",
           quote_request_id: "70000000-0000-4000-8000-000000000001",
           public_reference: "QR-20260612-ABC12345",
-          recipient_email_redacted: "ev***@spacekoncept.example",
-          provider: "resend",
-          delivery_status: "sent",
-          provider_message_id: "resend-message-1",
+          recipient_email_redacted: null,
+          provider: "n8n",
+          delivery_status: "delivered",
+          provider_message_id: null,
           error_code: null,
           request_id: "route-request-1"
         }
@@ -75,9 +74,9 @@ describe("quote email delivery log repository", () => {
           quoteRequestId: "70000000-0000-4000-8000-000000000001",
           publicReference: "QR-20260612-ABC12345",
           recipientEmail: null,
-          provider: "resend",
+          provider: "n8n",
           status: "not_configured",
-          errorCode: "email_recipient_not_configured",
+          errorCode: "n8n_webhook_not_configured",
           requestId: "route-request-1"
         },
         {

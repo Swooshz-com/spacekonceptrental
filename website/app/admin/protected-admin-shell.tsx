@@ -48,6 +48,7 @@ export type AdminShellView =
   | {
       kind: "enquiry-email";
       config?: QuoteEnquiryEmailConfigStatus;
+      deliveryLog?: AdminQuoteEmailDeliveryLogReadResult;
     }
   | {
       kind: "delivery-log";
@@ -105,7 +106,7 @@ const adminNavigationItems = [
     kind: "enquiry-email",
     href: "/admin/enquiry-email",
     label: "Enquiry Email",
-    meta: "Recipient"
+    meta: "Handoff"
   },
   {
     kind: "delivery-log",
@@ -309,14 +310,14 @@ function workspaceTitle(view: AdminShellView) {
 
 function workspaceDescription(view: AdminShellView) {
   const descriptions: Record<AdminNavigationKind, string> = {
-    home: "Manage public website content: hero image, catalogue records, setup presentation, enquiry recipient, and delivery visibility.",
+    home: "Manage public website content: hero image, catalogue records, setup presentation, enquiry handoff, and delivery visibility.",
     hero: "Manage the public homepage hero image reference.",
     catalogue:
       "Manage rental catalogue items shown on the public site.",
     setups:
       "Review setup-style presentation derived from published catalogue items.",
-    "enquiry-email": "Check the quote enquiry email handoff status.",
-    "delivery-log": "Review technical enquiry email delivery attempts."
+    "enquiry-email": "Check the server-side n8n enquiry handoff status.",
+    "delivery-log": "Review technical enquiry handoff delivery attempts."
   };
 
   return descriptions[activeNavigationKind(view)];
@@ -324,11 +325,11 @@ function workspaceDescription(view: AdminShellView) {
 
 function quoteEmailSetupIssueLabel(reason?: string) {
   const labels: Record<string, string> = {
-    email_provider_api_key_not_configured: "Provider API key missing",
-    email_provider_not_configured: "Provider not configured",
-    email_provider_unsupported: "Unsupported provider",
-    email_recipient_not_configured: "Recipient not configured",
-    email_from_not_configured: "From address not configured"
+    n8n_handoff_not_configured: "n8n handoff not configured",
+    n8n_shared_secret_not_configured: "Shared secret not configured",
+    n8n_timeout_invalid: "Timeout setting invalid",
+    n8n_webhook_invalid: "Webhook endpoint invalid",
+    n8n_webhook_not_configured: "Webhook endpoint not configured"
   };
 
   return reason ? labels[reason] ?? "Configuration incomplete" : null;
@@ -856,26 +857,52 @@ function AdminSetupsOperations({
   );
 }
 
+function deliveryProviderLabel(provider: "n8n" | "resend") {
+  return provider === "n8n" ? "n8n handoff" : "legacy email handoff";
+}
+
+function deliveryStatusClassName(
+  status: "pending" | "delivered" | "sent" | "failed" | "not_configured"
+) {
+  if (status === "delivered" || status === "sent") {
+    return styles.statusTagPublished;
+  }
+
+  if (status === "failed") {
+    return styles.statusTagWarning;
+  }
+
+  return styles.statusTagMuted;
+}
+
 function AdminEnquiryEmailStatusOperations({
   config = {
-    provider: "resend",
-    providerConfigured: false,
-    recipientConfigured: false
-  }
+    provider: "n8n",
+    handoffMode: "n8n",
+    handoffConfigured: false,
+    webhookConfigured: false,
+    sharedSecretConfigured: false,
+    timeoutMs: 10000
+  },
+  deliveryLog
 }: {
   config?: QuoteEnquiryEmailConfigStatus;
+  deliveryLog?: AdminQuoteEmailDeliveryLogReadResult;
 }) {
-  const providerStatus = config.providerConfigured
-    ? "Provider configured"
-    : "Provider not configured";
-  const recipientStatus = config.recipientConfigured
-    ? "Recipient configured"
-    : "Recipient not configured";
+  const webhookStatus = config.webhookConfigured
+    ? "Endpoint configured"
+    : "Endpoint not configured";
+  const sharedSecretStatus = config.sharedSecretConfigured
+    ? "Signing configured"
+    : "Signing not configured";
   const setupIssue = quoteEmailSetupIssueLabel(config.missingReason);
+  const latestRecord =
+    deliveryLog?.status === "loaded" ? deliveryLog.records[0] : undefined;
   const statusLabel =
-    config.providerConfigured && config.recipientConfigured
+    config.handoffConfigured
       ? "Ready"
-      : config.missingReason === "email_provider_unsupported"
+      : config.missingReason === "n8n_webhook_invalid" ||
+          config.missingReason === "n8n_timeout_invalid"
         ? "Unavailable"
         : "Needs setup";
   const statusClassName =
@@ -900,29 +927,33 @@ function AdminEnquiryEmailStatusOperations({
         </span>
       </div>
       <p className={styles.statusSummaryCopy}>
-        Quote requests are emailed to the configured recipient for manual
-        follow-up. Email routing is environment-managed for now, with no internal
-        quote inbox.
+        SKR stores each public enquiry first. After persistence succeeds, the
+        server-side handoff triggers n8n for internal email handling. This page
+        shows readiness only; webhook and signing values stay out of the admin UI.
       </p>
       <dl className={styles.adminRows}>
         <div>
-          <dt>Provider</dt>
-          <dd>{providerStatus}</dd>
+          <dt>Handoff mode</dt>
+          <dd>Server-side n8n</dd>
         </div>
         <div>
-          <dt>Recipient</dt>
-          <dd>{recipientStatus}</dd>
+          <dt>Handoff endpoint</dt>
+          <dd>{webhookStatus}</dd>
         </div>
         <div>
-          <dt>Provider name</dt>
-          <dd>{config.provider}</dd>
+          <dt>Request signing</dt>
+          <dd>{sharedSecretStatus}</dd>
         </div>
-        {config.recipientEmail ? (
-          <div>
-            <dt>Recipient email</dt>
-            <dd>{config.recipientEmail}</dd>
-          </div>
-        ) : null}
+        <div>
+          <dt>Last delivery status</dt>
+          <dd>
+            {latestRecord
+              ? `${latestRecord.deliveryStatus} - ${latestRecord.publicReference}`
+              : deliveryLog?.status === "unavailable"
+                ? "Delivery log unavailable"
+                : "No delivery attempts yet"}
+          </dd>
+        </div>
         {setupIssue ? (
           <div>
             <dt>Setup issue</dt>
@@ -960,29 +991,29 @@ function AdminDeliveryLogTableOperations({
     return (
       <AdminEmptyState
         eyebrow="Delivery Log"
-        title="Email delivery log"
-        message="No enquiry email delivery attempts have been recorded yet."
+        title="Enquiry handoff delivery log"
+        message="No enquiry handoff attempts have been recorded yet. Delivery attempts appear after real public enquiry submissions are stored and SKR tries the server-side n8n handoff."
         icon={emptyStateIcons.log}
       />
     );
   }
 
   return (
-    <section className={styles.tablePanel} aria-label="Email delivery log">
+    <section className={styles.tablePanel} aria-label="Enquiry handoff delivery log">
       <div className={styles.tableHeader}>
-        <h2>Email delivery log</h2>
+        <h2>Enquiry handoff delivery log</h2>
       </div>
       <div
         className={styles.dataTable}
         role="table"
-        aria-label="Email delivery attempts"
+        aria-label="Enquiry handoff delivery attempts"
       >
         <div role="row">
           <strong role="columnheader">Attempted</strong>
-          <strong role="columnheader">Reference</strong>
-          <strong role="columnheader">Recipient</strong>
+          <strong role="columnheader">Enquiry reference</strong>
+          <strong role="columnheader">Channel</strong>
           <strong role="columnheader">Status</strong>
-          <strong role="columnheader">Provider result</strong>
+          <strong role="columnheader">Safe result</strong>
         </div>
         {deliveryLog.records.map((record) => (
           <div role="row" key={record.id}>
@@ -990,14 +1021,12 @@ function AdminDeliveryLogTableOperations({
             <span role="cell">
               {record.publicReference || record.quoteRequestId}
             </span>
-            <span role="cell">{record.recipientEmail}</span>
+            <span role="cell">{deliveryProviderLabel(record.provider)}</span>
             <span role="cell">
               <span
-                className={`${styles.statusTag} ${
-                  record.deliveryStatus === "sent"
-                    ? styles.statusTagPublished
-                    : styles.statusTagMuted
-                }`}
+                className={`${styles.statusTag} ${deliveryStatusClassName(
+                  record.deliveryStatus
+                )}`}
               >
                 {record.deliveryStatus}
               </span>
@@ -1032,7 +1061,12 @@ function AdminOperationsView({
   }
 
   if (view.kind === "enquiry-email") {
-    return <AdminEnquiryEmailStatusOperations config={view.config} />;
+    return (
+      <AdminEnquiryEmailStatusOperations
+        config={view.config}
+        deliveryLog={view.deliveryLog}
+      />
+    );
   }
 
   if (view.kind === "delivery-log") {

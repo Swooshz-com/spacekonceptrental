@@ -1,10 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
 
 import {
+  buildQuoteEnquiryHandoffPayload,
   resolveQuoteEnquiryEmailConfigStatus,
   sendQuoteEnquiryEmailHandoff
 } from "./email-handoff";
-import type { QuoteEmailProvider } from "./email-handoff";
 import type { QuoteSubmission } from "./types";
 
 const quote: QuoteSubmission = {
@@ -40,154 +40,236 @@ const baseInput = {
 };
 
 const configuredEnv = {
-  QUOTE_ENQUIRY_EMAIL_PROVIDER: "resend",
-  QUOTE_ENQUIRY_EMAIL_RECIPIENT: " Events@SpaceKoncept.example ",
-  QUOTE_ENQUIRY_EMAIL_FROM: "quotes@spacekoncept.example",
-  RESEND_API_KEY: "test-resend-key"
+  N8N_ENQUIRY_HANDOFF_WEBHOOK_URL: "https://example.invalid/n8n/enquiry",
+  N8N_ENQUIRY_HANDOFF_SHARED_SECRET: "test-n8n-shared-secret",
+  N8N_ENQUIRY_HANDOFF_TIMEOUT_MS: "5000"
 };
 
-describe("quote enquiry email handoff", () => {
-  it("returns admin-facing config status without provider secrets", () => {
+describe("quote enquiry n8n handoff", () => {
+  it("returns admin-facing config status without webhook or secret values", () => {
     const status = resolveQuoteEnquiryEmailConfigStatus(configuredEnv);
     const serialized = JSON.stringify(status);
 
     expect(status).toEqual({
-      provider: "resend",
-      providerConfigured: true,
-      recipientConfigured: true,
-      recipientEmail: "ev***@spacekoncept.example"
+      provider: "n8n",
+      handoffMode: "n8n",
+      handoffConfigured: true,
+      webhookConfigured: true,
+      sharedSecretConfigured: true,
+      timeoutMs: 5000
     });
-    expect(serialized).not.toContain(configuredEnv.RESEND_API_KEY);
-    expect(serialized).not.toContain("RESEND_API_KEY");
-    expect(serialized).not.toContain("events@spacekoncept.example");
+    expect(serialized).not.toContain(
+      configuredEnv.N8N_ENQUIRY_HANDOFF_WEBHOOK_URL
+    );
+    expect(serialized).not.toContain(
+      configuredEnv.N8N_ENQUIRY_HANDOFF_SHARED_SECRET
+    );
+    expect(serialized).not.toContain("N8N_ENQUIRY_HANDOFF_SHARED_SECRET");
   });
 
-  it("sends all required enquiry details and records a sent delivery log", async () => {
-    const provider = vi.fn<QuoteEmailProvider>(async () => ({
-      ok: true as const,
-      providerMessageId: "resend-message-1"
-    }));
+  it("builds the safe n8n payload with stable enquiry idempotency", () => {
+    const payload = buildQuoteEnquiryHandoffPayload(
+      baseInput,
+      new Date("2026-06-12T09:30:00.000Z")
+    );
+    const serialized = JSON.stringify(payload);
+
+    expect(payload).toEqual({
+      schemaVersion: 1,
+      event: "skr.enquiry.submitted",
+      idempotencyKey:
+        "quote-enquiry:70000000-0000-4000-8000-000000000001",
+      submittedAt: "2026-06-12T09:30:00.000Z",
+      enquiry: {
+        id: "70000000-0000-4000-8000-000000000001",
+        publicReference: "QR-20260612-ABC12345",
+        source: "website",
+        sourcePath: "/quote",
+        listingSlug: "modular-lounge-set"
+      },
+      contact: {
+        name: "Maya Tan",
+        email: "maya@example.test",
+        phone: "+65 8123 4567"
+      },
+      eventContext: {
+        date: "2026-06-12",
+        venue: "Marina Bay Sands",
+        message:
+          "Please recommend a warm lounge setup for a corporate reception."
+      },
+      requestedItems: [
+        {
+          name: "Modular lounge set",
+          quantity: 2,
+          notes: "VIP reception area"
+        },
+        {
+          name: "Cocktail table",
+          quantity: 4
+        }
+      ],
+      request: {
+        requestId: "route-request-1",
+        visitorSubmissionRequestId: "visitor-submission-20260612-001"
+      }
+    });
+    expect(serialized).not.toContain("callback=");
+    expect(serialized).not.toContain("SECRET");
+    expect(serialized).not.toContain("Cookie");
+    expect(serialized).not.toContain("SUPABASE");
+  });
+
+  it("triggers n8n server-side and records a delivered handoff attempt", async () => {
+    const fetchMock = vi.fn(
+      async (_input: string | URL | Request, _init?: RequestInit) =>
+        new Response(null, { status: 200 })
+    );
     const deliveryLog = vi.fn(async () => ({ ok: true as const }));
 
     const result = await sendQuoteEnquiryEmailHandoff(baseInput, {
       deliveryLog,
       env: configuredEnv,
-      now: () => new Date("2026-06-12T09:30:00.000Z"),
-      provider
+      fetch: fetchMock,
+      now: () => new Date("2026-06-12T09:30:00.000Z")
     });
 
     expect(result).toEqual({
       ok: true,
-      status: "sent",
-      provider: "resend",
-      providerMessageId: "resend-message-1"
+      status: "delivered",
+      provider: "n8n",
+      idempotencyKey:
+        "quote-enquiry:70000000-0000-4000-8000-000000000001"
     });
-    expect(provider).toHaveBeenCalledWith(
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://example.invalid/n8n/enquiry",
       expect.objectContaining({
-        from: "quotes@spacekoncept.example",
-        to: "events@spacekoncept.example",
-        subject: expect.stringContaining("QR-20260612-ABC12345")
+        method: "POST",
+        headers: expect.objectContaining({
+          "content-type": "application/json",
+          "x-skr-event": "skr.enquiry.submitted",
+          "x-skr-enquiry-reference": "QR-20260612-ABC12345",
+          "x-skr-idempotency-key":
+            "quote-enquiry:70000000-0000-4000-8000-000000000001",
+          "x-skr-signature": expect.stringMatching(/^sha256=[a-f0-9]{64}$/),
+          "x-skr-timestamp": "2026-06-12T09:30:00.000Z"
+        })
       })
     );
-    const firstMessage = provider.mock.calls[0]?.[0];
+    const firstFetchInit = fetchMock.mock.calls[0]?.[1] as
+      | RequestInit
+      | undefined;
+    const body = JSON.parse(String(firstFetchInit?.body));
 
-    expect(firstMessage).toBeDefined();
-    if (!firstMessage) {
-      throw new Error("Expected quote email provider to receive a message.");
-    }
-    const email = firstMessage.text;
-    expect(email).toContain("Public reference: QR-20260612-ABC12345");
-    expect(email).toContain("Submitted timestamp: 2026-06-12T09:30:00.000Z");
-    expect(email).toContain("Customer name: Maya Tan");
-    expect(email).toContain("Customer email: maya@example.test");
-    expect(email).toContain("Customer phone: +65 8123 4567");
-    expect(email).toContain("Event date: 2026-06-12");
-    expect(email).toContain("Venue: Marina Bay Sands");
-    expect(email).toContain(
-      "Customer message: Please recommend a warm lounge setup for a corporate reception."
+    expect(body.idempotencyKey).toBe(
+      "quote-enquiry:70000000-0000-4000-8000-000000000001"
     );
-    expect(email).toContain("Source path: /quote");
-    expect(email).toContain("Listing slug: modular-lounge-set");
-    expect(email).toContain(
-      "1. Modular lounge set - quantity 2 - notes: VIP reception area"
-    );
-    expect(email).toContain("2. Cocktail table - quantity 4");
-    expect(email).toContain(
-      "Safe request/reference id: route-request-1 / 70000000-0000-4000-8000-000000000001"
-    );
-    expect(email).not.toContain("callback=");
-    expect(email).not.toContain("SECRET");
-    expect(email).not.toContain("Cookie");
-    expect(email).not.toContain("SUPABASE");
     expect(deliveryLog).toHaveBeenCalledWith({
       quoteRequestId: "70000000-0000-4000-8000-000000000001",
       publicReference: "QR-20260612-ABC12345",
-      recipientEmail: "events@spacekoncept.example",
-      provider: "resend",
-      status: "sent",
-      providerMessageId: "resend-message-1",
+      recipientEmail: null,
+      provider: "n8n",
+      status: "delivered",
       errorCode: null,
       requestId: "route-request-1"
     });
+    expect(JSON.stringify(deliveryLog.mock.calls)).not.toContain(
+      configuredEnv.N8N_ENQUIRY_HANDOFF_SHARED_SECRET
+    );
   });
 
-  it("does not fake success when recipient or provider config is missing", async () => {
-    const provider = vi.fn();
+  it("records accepted n8n responses as pending without faking final delivery", async () => {
+    const fetchMock = vi.fn(
+      async (_input: string | URL | Request, _init?: RequestInit) =>
+        new Response(null, { status: 202 })
+    );
     const deliveryLog = vi.fn(async () => ({ ok: true as const }));
 
     const result = await sendQuoteEnquiryEmailHandoff(baseInput, {
       deliveryLog,
-      env: {
-        QUOTE_ENQUIRY_EMAIL_PROVIDER: "resend",
-        QUOTE_ENQUIRY_EMAIL_FROM: "quotes@spacekoncept.example"
-      },
-      provider
+      env: configuredEnv,
+      fetch: fetchMock,
+      now: () => new Date("2026-06-12T09:30:00.000Z")
+    });
+
+    expect(result).toEqual({
+      ok: true,
+      status: "pending",
+      provider: "n8n",
+      idempotencyKey:
+        "quote-enquiry:70000000-0000-4000-8000-000000000001"
+    });
+    expect(deliveryLog).toHaveBeenCalledWith(
+      expect.objectContaining({
+        provider: "n8n",
+        status: "pending",
+        errorCode: null
+      })
+    );
+  });
+
+  it("does not fake success when the n8n handoff is not configured", async () => {
+    const fetchMock = vi.fn();
+    const deliveryLog = vi.fn(async () => ({ ok: true as const }));
+
+    const result = await sendQuoteEnquiryEmailHandoff(baseInput, {
+      deliveryLog,
+      env: {},
+      fetch: fetchMock
     });
 
     expect(result).toEqual({
       ok: false,
       status: "not_configured",
-      provider: "resend",
-      code: "email_recipient_not_configured"
+      provider: "n8n",
+      code: "n8n_webhook_not_configured",
+      idempotencyKey:
+        "quote-enquiry:70000000-0000-4000-8000-000000000001"
     });
-    expect(provider).not.toHaveBeenCalled();
+    expect(fetchMock).not.toHaveBeenCalled();
     expect(deliveryLog).toHaveBeenCalledWith(
       expect.objectContaining({
         recipientEmail: null,
-        provider: "resend",
+        provider: "n8n",
         status: "not_configured",
-        errorCode: "email_recipient_not_configured"
+        errorCode: "n8n_webhook_not_configured"
       })
     );
   });
 
-  it("does not fake success when the provider send fails", async () => {
-    const provider = vi.fn(async () => ({
-      ok: false as const,
-      code: "provider_rejected",
-      unsafeDetails: "401 SECRET raw provider body"
-    }));
+  it("records safe failure categories without exposing raw n8n payloads", async () => {
+    const fetchMock = vi.fn(
+      async () =>
+        new Response("401 SECRET raw n8n body", {
+          status: 401
+        })
+    );
     const deliveryLog = vi.fn(async () => ({ ok: true as const }));
 
     const result = await sendQuoteEnquiryEmailHandoff(baseInput, {
       deliveryLog,
       env: configuredEnv,
-      provider
+      fetch: fetchMock
     });
 
     expect(result).toEqual({
       ok: false,
       status: "failed",
-      provider: "resend",
-      code: "provider_rejected"
+      provider: "n8n",
+      code: "n8n_rejected",
+      idempotencyKey:
+        "quote-enquiry:70000000-0000-4000-8000-000000000001"
     });
     expect(JSON.stringify(result)).not.toContain("SECRET");
+    expect(JSON.stringify(result)).not.toContain("raw n8n body");
     expect(deliveryLog).toHaveBeenCalledWith(
       expect.objectContaining({
         status: "failed",
-        errorCode: "provider_rejected"
+        errorCode: "n8n_rejected"
       })
     );
-    expect(JSON.stringify(deliveryLog.mock.calls)).not.toContain("raw provider body");
+    expect(JSON.stringify(deliveryLog.mock.calls)).not.toContain(
+      "raw n8n body"
+    );
   });
 });

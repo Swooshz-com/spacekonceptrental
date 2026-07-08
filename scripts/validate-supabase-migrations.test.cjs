@@ -301,7 +301,7 @@ test('real migration directory passes static validation', () => {
   const result = runValidator(realMigrationsDir);
 
   assert.equal(result.status, 0, result.stdout + result.stderr);
-  assert.match(result.stdout, /checked 28 migration SQL file\(s\)/);
+  assert.match(result.stdout, /checked 29 migration SQL file\(s\)/);
 });
 
 test('real base schema migration creates the planned MVP tables', () => {
@@ -1703,6 +1703,60 @@ test('real migrations add quote email delivery log as append-only technical meta
   );
   assert.doesNotMatch(migration, /hubapi|hubspot api|n8n|webhook|smtp|google workspace/i);
   assert.doesNotMatch(migration, /checkout|payment|purchase|booking|reservation/i);
+});
+
+test('real migrations update quote email delivery log for n8n enquiry handoff states', () => {
+  const migrationFileName =
+    '20260708100000_n8n_enquiry_handoff_delivery_log_contract.sql';
+  const migration = readRealMigration(migrationFileName);
+  const sql = normalizeSql(migration);
+
+  assert.match(
+    sql,
+    /alter table public\.quote_email_delivery_log drop constraint if exists quote_email_delivery_log_provider_check/,
+  );
+  assert.match(
+    sql,
+    /drop constraint if exists quote_email_delivery_log_delivery_status_check/,
+  );
+  assert.match(
+    sql,
+    /drop constraint if exists quote_email_delivery_log_status_shape_check/,
+  );
+  assert.ok(
+    sql.includes("constraint quote_email_delivery_log_provider_check check (provider in ('resend', 'n8n'))"),
+    'delivery log must allow n8n while preserving legacy resend rows',
+  );
+  assert.match(
+    sql,
+    /constraint quote_email_delivery_log_delivery_status_check check \(delivery_status in \(\s*'sent',\s*'pending',\s*'delivered',\s*'failed',\s*'not_configured'\s*\)\)/,
+  );
+  assert.match(
+    sql,
+    /delivery_status in \('sent', 'pending', 'delivered'\) and error_code is null/,
+  );
+  assert.match(
+    sql,
+    /delivery_status in \('failed', 'not_configured'\) and error_code is not null/,
+  );
+  assert.match(
+    sql,
+    /alter policy quote_email_delivery_log_public_insert_website_quote on public\.quote_email_delivery_log with check/,
+  );
+  assert.match(sql, /public\.is_public_website_quote_request\(quote_request_id, workspace_id\)/);
+  assert.match(sql, /provider in \('resend', 'n8n'\)/);
+  assert.match(
+    sql,
+    /delivery_status in \(\s*'sent',\s*'pending',\s*'delivered',\s*'failed',\s*'not_configured'\s*\)/,
+  );
+  assert.match(
+    sql,
+    /append-only quote enquiry handoff delivery metadata/,
+  );
+  assert.doesNotMatch(migration, /create table|alter table public\.quote_email_delivery_log add column/i);
+  assert.doesNotMatch(migration, /grant\s+(select|insert|update|delete|all)/i);
+  assert.doesNotMatch(migration, /https?:\/\/|N8N_ENQUIRY_HANDOFF|shared_secret|provider_response|email_body|headers json|headers jsonb/i);
+  assert.doesNotMatch(migration, /checkout|payment|purchase|booking|reservation|stock|inventory/i);
 });
 
 test('real migrations add workspace-scoped homepage hero content with protected admin writes', () => {
