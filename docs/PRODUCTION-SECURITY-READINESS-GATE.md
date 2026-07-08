@@ -61,7 +61,7 @@ Safe placeholder examples for documentation or tests only:
 
 | Env name | Safe placeholder |
 | --- | --- |
-| `N8N_ENQUIRY_HANDOFF_WEBHOOK_URL` | `https://n8n.example.invalid/webhook/skr-enquiry` |
+| `N8N_ENQUIRY_HANDOFF_WEBHOOK_URL` | `<reviewed server-only n8n enquiry webhook endpoint>` |
 | `N8N_ENQUIRY_HANDOFF_TIMEOUT_MS` | `5000` |
 | `ADMIN_EXPECTED_ORIGIN` | `<reviewed HTTPS admin origin>` |
 | `ADMIN_EXPECTED_HOST` | `owner.example.invalid` |
