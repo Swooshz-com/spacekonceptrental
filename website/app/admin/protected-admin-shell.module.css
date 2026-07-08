@@ -176,10 +176,10 @@
 .brandTitle {
   color: var(--admin-ink);
   font-family: var(--admin-serif) !important;
-  font-size: 2rem !important;
+  font-size: 1.5rem !important;
   font-weight: 500;
   letter-spacing: 0 !important;
-  line-height: 1.1;
+  line-height: 1.4;
   margin: 0;
   max-width: 100%;
   overflow-wrap: anywhere;
@@ -192,11 +192,11 @@
   border-radius: 2px;
   color: var(--admin-muted);
   display: inline-flex;
-  font-size: 0.82rem;
-  font-weight: 650;
-  letter-spacing: 0.09em;
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
   line-height: 1;
-  padding: 6px 10px;
+  padding: 4px 8px;
   text-transform: uppercase;
 }
 
@@ -238,6 +238,11 @@
   background: transparent;
   border: 1px solid var(--admin-line-strong);
   color: var(--admin-charcoal);
+}
+
+.viewHome .signOutButton {
+  border-color: transparent;
+  color: var(--admin-muted);
 }
 
 .signOutButton:hover,
@@ -341,9 +346,9 @@
 
 .sidebarLabel {
   color: var(--admin-muted);
-  font-size: 0.66rem;
-  font-weight: 650;
-  letter-spacing: 0.14em;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
   margin: 0;
   padding: 0;
   text-transform: uppercase;
@@ -364,7 +369,7 @@
   gap: 8px;
   justify-content: space-between;
   min-height: 48px;
-  padding: 0 16px;
+  padding: 12px 16px;
   transition: background 0.12s ease, color 0.12s ease;
 }
 
@@ -398,6 +403,26 @@
   border-color: var(--admin-active-nav);
   color: var(--admin-charcoal);
   box-shadow: none;
+}
+
+.viewHero .navLinkActive,
+.viewHero .navLinkActive:hover {
+  background: #e8e4dc;
+  border-color: #e8e4dc;
+}
+
+.viewHome .navIcon,
+.viewCatalogue .navIcon,
+.viewSetups .navIcon,
+.viewEnquiryEmail .navIcon {
+  display: none;
+}
+
+.viewHome .navItemInner,
+.viewCatalogue .navItemInner,
+.viewSetups .navItemInner,
+.viewEnquiryEmail .navItemInner {
+  gap: 0;
 }
 
 .navLabel {
@@ -453,15 +478,15 @@
 .pageIntro h2 {
   color: var(--admin-ink);
   font-family: var(--admin-serif) !important;
-  font-size: 3rem !important;
-  font-weight: 500 !important;
-  letter-spacing: 0 !important;
-  line-height: 1.02;
+  font-size: 2.5rem !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.02em !important;
+  line-height: 1.2;
 }
 
 .pageIntro p {
   color: var(--admin-muted);
-  font-size: 0.88rem;
+  font-size: 1rem;
   line-height: 1.5;
   max-width: 68ch;
 }
@@ -1763,7 +1788,7 @@ button.adminBtnGhost:disabled {
 }
 
 .workspace .brandTitle {
-  font-size: 2rem !important;
+  font-size: 1.5rem !important;
 }
 
 .workspace .sidebarMasthead h2 {
@@ -1772,7 +1797,7 @@ button.adminBtnGhost:disabled {
 }
 
 .workspace .pageIntro h2 {
-  font-size: 3rem !important;
+  font-size: 2.5rem !important;
 }
 
 .workspace .emptyStatePanel h2 {
@@ -1782,9 +1807,9 @@ button.adminBtnGhost:disabled {
 .workspace :global(.eyebrow) {
   color: var(--admin-muted) !important;
   font-family: var(--admin-sans) !important;
-  font-size: 0.68rem !important;
-  font-weight: 650 !important;
-  letter-spacing: 0.1em !important;
+  font-size: 0.75rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.08em !important;
   text-transform: uppercase !important;
 }
 
