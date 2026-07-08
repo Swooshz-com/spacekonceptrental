@@ -99,7 +99,7 @@ const adminNavigationItems = [
     kind: "setups",
     href: "/admin/setups",
     label: "Setups",
-    meta: "Public /listings"
+    meta: "Derived"
   },
   {
     kind: "enquiry-email",
@@ -314,7 +314,7 @@ function workspaceDescription(view: AdminShellView) {
     catalogue:
       "Manage rental catalogue items shown on the public site.",
     setups:
-      "Review the public setups presentation, which derives from published catalogue records on /listings.",
+      "Review setup-style presentation derived from published catalogue items.",
     "enquiry-email": "Check the quote enquiry email handoff status.",
     "delivery-log": "Review technical enquiry email delivery attempts."
   };
@@ -697,61 +697,161 @@ function AdminSetupsOperations({
   const categoryById = new Map(
     dashboard.data.categories.map((category) => [category.id, category.name])
   );
-  const setupRecords = dashboard.data.products
-    .filter((product) => product.status === "published")
-    .slice(0, 5);
+  const setupCandidates = dashboard.data.products.filter(
+    (product) => product.status === "published"
+  );
+  const excludedItems = dashboard.data.products.filter(
+    (product) => product.status !== "published"
+  ).length;
+  const needsImageReview = setupCandidates.filter(
+    (product) => product.imageCount === 0 || !hasText(product.primaryImageAltText)
+  );
+  const allCandidatesNeedImageReview =
+    setupCandidates.length > 0 &&
+    needsImageReview.length === setupCandidates.length;
 
   return (
-    <section className={styles.settingsGrid} aria-label="Setups management">
+    <section
+      className={styles.managementStack}
+      aria-label="Derived setup review workflow"
+    >
       <section className={styles.placeholderPanel}>
-        <h2>Current setup source</h2>
+        <div className={styles.panelTitleRow}>
+          <div>
+            <h2>Setup presentation review</h2>
+            <p>
+              Setups are currently derived from published Catalogue items. To
+              change setup content for launch, edit the relevant Catalogue item.
+            </p>
+          </div>
+          <nav className={styles.inlineActions} aria-label="Setup actions">
+            <a className={styles.primaryButton} href="/admin/catalogue">
+              Manage catalogue
+            </a>
+            <a className={styles.secondaryButton} href="/setups">
+              View public setups
+            </a>
+          </nav>
+        </div>
         <p>
-          Public setups stay on <code>/listings</code> and currently derive
-          from published catalogue records ({setupRecords.length} shown). Edit
-          them through Catalogue until setup-specific storage exists.
+          Only published, public-ready catalogue items should appear in the
+          public setup presentation. No setup-specific editor or records are
+          available in this launch slice.
         </p>
-        <nav className={styles.inlineActions} aria-label="Setup actions">
-          <a className={styles.secondaryButton} href="/admin/catalogue">
-            Manage catalogue
-          </a>
-          <a className={styles.secondaryButton} href="/listings">
-            View public setups
-          </a>
-        </nav>
       </section>
 
-      <section className={styles.rowPanel}>
-        <h2>Published setup candidates</h2>
-        {setupRecords.length === 0 ? (
-          <p className={styles.tableEmpty}>
-            No published catalogue records are available to derive public setup
-            cards yet.
-          </p>
-        ) : (
-          <div
-            className={styles.compactTable}
-            role="table"
-            aria-label="Setup candidates"
-          >
-            <div role="row">
-              <strong role="columnheader">Name</strong>
-              <strong role="columnheader">Category</strong>
-              <strong role="columnheader">Order</strong>
-            </div>
-            {setupRecords.map((product) => (
-              <div role="row" key={product.id}>
-                <span role="cell">{product.name}</span>
-                <span role="cell">
-                  {product.categoryId
-                    ? categoryById.get(product.categoryId) ?? "Unmapped"
-                    : "Unmapped"}
-                </span>
-                <span role="cell">{product.sortOrder}</span>
-              </div>
-            ))}
-          </div>
-        )}
+      <section
+        className={styles.metricGridThree}
+        aria-label="Derived setup overview"
+      >
+        <dl className={styles.metricCard}>
+          <dt>Available for setups</dt>
+          <dd>{setupCandidates.length}</dd>
+          <p>Published catalogue items available for public setup cards.</p>
+        </dl>
+        <dl className={styles.metricCard}>
+          <dt>Excluded</dt>
+          <dd>{excludedItems}</dd>
+          <p>Draft or hidden catalogue items excluded from public setups.</p>
+        </dl>
+        <dl
+          className={`${styles.metricCard} ${
+            needsImageReview.length > 0 ? styles.metricCardAttention : ""
+          }`}
+        >
+          <dt>Image review</dt>
+          <dd>{needsImageReview.length}</dd>
+          <p>Published items missing image coverage or primary image alt text.</p>
+        </dl>
       </section>
+
+      {setupCandidates.length === 0 ? (
+        <section className={styles.emptyStatePanel}>
+          <h2>No public setup candidates yet</h2>
+          <p>
+            Published catalogue items will populate Setups. Add or publish a
+            public-ready catalogue item, then return here to review it.
+          </p>
+          <a className={styles.primaryButton} href="/admin/catalogue">
+            Manage catalogue
+          </a>
+        </section>
+      ) : (
+        <section className={styles.rowPanel}>
+          <div className={styles.tableHeader}>
+            <div>
+              <h2>Public setup candidates</h2>
+              <p>
+                Public-like setup cards sourced from existing Catalogue data.
+              </p>
+            </div>
+            <span className={`${styles.statusPill} ${styles.statusPillMuted}`}>
+              Derived from Catalogue
+            </span>
+          </div>
+
+          {allCandidatesNeedImageReview ? (
+            <p className={styles.reviewNotice}>
+              Every published setup candidate needs image or alt-text review.
+              Fix image coverage in Catalogue before launch review.
+            </p>
+          ) : null}
+
+          <div className={styles.setupCardGrid}>
+            {setupCandidates.map((product) => {
+              const categoryName = product.categoryId
+                ? categoryById.get(product.categoryId) ?? "Unassigned category"
+                : "Unassigned category";
+              const imageReady =
+                product.imageCount > 0 && hasText(product.primaryImageAltText);
+              const readinessLabel = imageReady
+                ? "Image ready"
+                : product.imageCount > 0
+                  ? "Needs image alt text"
+                  : "Needs image";
+
+              return (
+                <article
+                  className={styles.setupCard}
+                  key={product.id}
+                  aria-label={`Setup candidate ${product.name}`}
+                >
+                  <div className={styles.setupCardHeader}>
+                    <div>
+                      <h3>{product.name}</h3>
+                      <p>{categoryName}</p>
+                    </div>
+                    <span
+                      className={`${styles.statusTag} ${styles.statusTagPublished}`}
+                    >
+                      Published
+                    </span>
+                  </div>
+                  <p>
+                    {product.shortDescription ??
+                      "Catalogue item available for setup presentation and enquiry context."}
+                  </p>
+                  <div className={styles.setupCardMeta}>
+                    <span
+                      className={`${styles.statusTag} ${
+                        imageReady
+                          ? styles.statusTagPublished
+                          : styles.statusPillWarning
+                      }`}
+                    >
+                      {readinessLabel}
+                    </span>
+                    <span>{product.imageCount} image(s)</span>
+                  </div>
+                  <a className={styles.secondaryButton} href="/admin/catalogue">
+                    Edit in Catalogue
+                  </a>
+                </article>
+              );
+            })}
+          </div>
+        </section>
+      )}
     </section>
   );
 }

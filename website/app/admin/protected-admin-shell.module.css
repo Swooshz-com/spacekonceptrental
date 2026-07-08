@@ -652,6 +652,13 @@
   padding: 1px 5px;
 }
 
+.panelTitleRow {
+  align-items: start;
+  display: flex;
+  gap: 20px;
+  justify-content: space-between;
+}
+
 .inlineActions,
 .recoveryNav {
   display: flex;
@@ -741,6 +748,69 @@
   font-size: 0.875rem;
   line-height: 1.5;
   margin: 0;
+}
+
+.reviewNotice {
+  background: var(--admin-warning-bg);
+  border: 1px solid #dfbd98;
+  border-radius: var(--admin-radius);
+  color: var(--admin-warning-ink);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  margin: 0;
+  padding: 14px 16px;
+}
+
+.setupCardGrid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.setupCard {
+  align-content: start;
+  background: var(--admin-surface-low);
+  border: 1px solid var(--admin-line);
+  border-radius: var(--admin-radius-card);
+  display: grid;
+  gap: 16px;
+  min-height: 236px;
+  padding: 20px;
+}
+
+.setupCardHeader,
+.setupCardMeta {
+  align-items: start;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.setupCardHeader h3,
+.setupCardHeader p,
+.setupCard > p {
+  margin: 0;
+}
+
+.setupCardHeader h3 {
+  color: var(--admin-ink);
+  font-family: var(--admin-serif);
+  font-size: 1.25rem;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.setupCardHeader p,
+.setupCard > p,
+.setupCardMeta span:not(.statusTag) {
+  color: var(--admin-secondary);
+  font-size: 0.875rem;
+  line-height: 1.45;
+}
+
+.setupCardMeta {
+  align-items: center;
+  flex-wrap: wrap;
 }
 
 .compactTable,
@@ -841,7 +911,8 @@
 
 @media (max-width: 1180px) {
   .dashboardGrid,
-  .settingsGrid {
+  .settingsGrid,
+  .setupCardGrid {
     grid-template-columns: 1fr;
   }
 }
@@ -885,6 +956,13 @@
 
   .metricGridThree {
     grid-template-columns: 1fr;
+  }
+
+  .panelTitleRow,
+  .setupCardHeader,
+  .setupCardMeta {
+    align-items: stretch;
+    flex-direction: column;
   }
 }
 

@@ -421,6 +421,203 @@ describe("protected admin shell", () => {
     ).not.toBeInTheDocument();
   }, 15000);
 
+  it("renders derived Setups review from existing catalogue data only", () => {
+    render(
+      <AdminShellContent
+        view={{ kind: "setups" }}
+        state={{
+          status: "authorised_admin",
+          dashboard: {
+            status: "loaded",
+            data: {
+              categories: [
+                {
+                  id: "category-1",
+                  slug: "lounge",
+                  name: "Lounge",
+                  sortOrder: 20,
+                  isPublished: true,
+                  productCount: 3,
+                  publishedProductCount: 2
+                }
+              ],
+              products: [
+                {
+                  id: "product-1",
+                  categoryId: "category-1",
+                  slug: "modular-lounge",
+                  name: "Modular Lounge",
+                  shortDescription: "Soft lounge seating for enquiry context.",
+                  rentalUnit: "set",
+                  status: "published",
+                  sortOrder: 10,
+                  imageCount: 2,
+                  primaryImageAltText: "Lounge set"
+                },
+                {
+                  id: "product-2",
+                  categoryId: "category-1",
+                  slug: "accent-chair",
+                  name: "Accent Chair",
+                  rentalUnit: "item",
+                  status: "published",
+                  sortOrder: 20,
+                  imageCount: 1
+                },
+                {
+                  id: "product-3",
+                  categoryId: "category-1",
+                  slug: "hidden-plinth",
+                  name: "Hidden Plinth",
+                  rentalUnit: "item",
+                  status: "draft",
+                  sortOrder: 30,
+                  imageCount: 0
+                }
+              ],
+              images: [
+                {
+                  id: "image-1",
+                  productId: "product-1",
+                  storageBucket: "catalogue-metadata",
+                  storagePath: "fixtures/lounge-main.jpg",
+                  altText: "Lounge set",
+                  sortOrder: 1,
+                  isPrimary: true,
+                  status: "active"
+                }
+              ],
+              imageSummary: {
+                totalImages: 1,
+                activeImages: 1,
+                primaryImages: 1
+              }
+            }
+          }
+        }}
+      />
+    );
+
+    expect(
+      screen.getByRole("region", { name: /derived setup review workflow/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: /^setups$/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/review setup-style presentation derived from published catalogue items/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: /manage catalogue/i })
+    ).toHaveAttribute("href", "/admin/catalogue");
+    expect(
+      screen.getByRole("link", { name: /view public setups/i })
+    ).toHaveAttribute("href", "/setups");
+    expect(
+      screen.getByText(/setups are currently derived from published catalogue items/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/no setup-specific editor or records/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("region", { name: /derived setup overview/i })
+    ).toBeInTheDocument();
+    expect(screen.getByText(/available for setups/i)).toBeInTheDocument();
+    expect(screen.getByText(/draft or hidden catalogue items excluded/i)).toBeInTheDocument();
+    expect(screen.getByText(/image review/i)).toBeInTheDocument();
+
+    const loungeCard = screen.getByRole("article", {
+      name: /setup candidate modular lounge/i
+    });
+    expect(loungeCard).toHaveTextContent(/modular lounge/i);
+    expect(loungeCard).toHaveTextContent(/lounge/i);
+    expect(loungeCard).toHaveTextContent(/published/i);
+    expect(loungeCard).toHaveTextContent(/image ready/i);
+    expect(loungeCard).toHaveTextContent(/soft lounge seating/i);
+
+    const chairCard = screen.getByRole("article", {
+      name: /setup candidate accent chair/i
+    });
+    expect(chairCard).toHaveTextContent(/needs image alt text/i);
+    expect(
+      screen.getAllByRole("link", { name: /edit in catalogue/i }).length
+    ).toBe(2);
+    expect(screen.queryByText(/hidden plinth/i)).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /add setup|edit setup/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /add setup|edit setup/i })).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/image bucket|image path|raw url|url/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/catalogue-metadata|fixtures\/lounge-main\.jpg/i)).not.toBeInTheDocument();
+    expect(document.querySelector('input[type="url"]')).toBeNull();
+    expect(document.body.textContent ?? "").not.toMatch(
+      /\b(?:cart|checkout|order|payment|purchase|booking|reservation|inventory|stock|fulfilment|fulfillment|customer account|crm|pipeline)\b/i
+    );
+  }, 15000);
+
+  it("renders a calm derived Setups empty state when no published catalogue items exist", () => {
+    render(
+      <AdminShellContent
+        view={{ kind: "setups" }}
+        state={{
+          status: "authorised_admin",
+          dashboard: {
+            status: "loaded",
+            data: {
+              categories: [],
+              products: [
+                {
+                  id: "product-1",
+                  slug: "draft-lounge",
+                  name: "Draft Lounge",
+                  rentalUnit: "set",
+                  status: "draft",
+                  sortOrder: 10,
+                  imageCount: 0
+                }
+              ],
+              images: [],
+              imageSummary: {
+                totalImages: 0,
+                activeImages: 0,
+                primaryImages: 0
+              }
+            }
+          }
+        }}
+      />
+    );
+
+    expect(
+      screen.getByRole("heading", { name: /no public setup candidates yet/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/published catalogue items will populate setups/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getAllByRole("link", { name: /manage catalogue/i })
+    ).toHaveLength(2);
+    for (const link of screen.getAllByRole("link", { name: /manage catalogue/i })) {
+      expect(link).toHaveAttribute("href", "/admin/catalogue");
+    }
+    expect(screen.queryByRole("article", { name: /setup candidate/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /add setup|edit setup/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /add setup|edit setup/i })).not.toBeInTheDocument();
+  });
+
+  it("keeps Setups source derived and free of fake editor or storage path controls", () => {
+    const shellSource = readAppFile("app/admin/protected-admin-shell.tsx");
+
+    expect(shellSource).toContain("Derived setup review workflow");
+    expect(shellSource).toContain('href="/setups"');
+    expect(shellSource).toContain('href="/admin/catalogue"');
+    expect(shellSource).toContain('product.status === "published"');
+    expect(shellSource).not.toContain('href="/listings"');
+    expect(shellSource).not.toContain("storageBucket");
+    expect(shellSource).not.toContain("storagePath");
+    expect(shellSource).not.toMatch(
+      /Add setup|Edit setup|setup database|input type="url"|name="setupUrl"/i
+    );
+  });
+
   it("maps catalogue images into an owner-safe client DTO", () => {
     const shellSource = readAppFile("app/admin/protected-admin-shell.tsx");
     const ownerWorkflowSource = readAppFile(
@@ -609,6 +806,18 @@ describe("protected admin shell", () => {
       expect(screen.queryByLabelText(/listing image upload/i)).not.toBeInTheDocument();
       expect(screen.queryByLabelText(/category management/i)).not.toBeInTheDocument();
       expect(screen.queryByLabelText(/listing management/i)).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole("region", { name: /derived setup review workflow/i })
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole("link", { name: /edit in catalogue/i })
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole("button", { name: /add setup|edit setup/i })
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole("link", { name: /add setup|edit setup/i })
+      ).not.toBeInTheDocument();
       expect(
         screen.queryByRole("button", { name: /save follow-up/i })
       ).not.toBeInTheDocument();
