@@ -1,6 +1,6 @@
 .heroPanel {
   display: grid;
-  max-width: 56rem;
+  width: 100%;
 }
 
 .sectionHeader {
@@ -273,65 +273,8 @@
   display: flex;
   flex-wrap: wrap;
   gap: 24px;
-  justify-content: space-between;
+  justify-content: flex-end;
   padding: 24px 32px 32px;
-}
-
-.publishToggle {
-  align-items: center;
-  color: var(--admin-ink, #1b1c1c);
-  display: inline-flex;
-  font-size: 1rem;
-  gap: 12px;
-  line-height: 1.5;
-}
-
-.publishToggle input {
-  border: 0;
-  clip: rect(0 0 0 0);
-  height: 1px;
-  margin: -1px;
-  opacity: 0;
-  overflow: hidden;
-  padding: 0;
-  position: absolute;
-  white-space: nowrap;
-  width: 1px;
-}
-
-.publishToggle span {
-  background: var(--admin-outline, #747878);
-  border-radius: 999px;
-  display: inline-block;
-  flex: 0 0 auto;
-  height: 24px;
-  position: relative;
-  transition: background 0.15s ease;
-  width: 44px;
-}
-
-.publishToggle span::after {
-  background: #ffffff;
-  border-radius: 50%;
-  content: "";
-  height: 16px;
-  left: 4px;
-  position: absolute;
-  top: 4px;
-  transition: transform 0.15s ease;
-  width: 16px;
-}
-
-.publishToggle input:checked + span {
-  background: var(--admin-ink, #1b1c1c);
-}
-
-.publishToggle input:checked + span::after {
-  transform: translateX(20px);
-}
-
-.publishToggle input:focus-visible + span {
-  box-shadow: 0 0 0 3px rgb(27 28 28 / 18%);
 }
 
 .saveButton {
