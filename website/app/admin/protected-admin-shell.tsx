@@ -592,21 +592,9 @@ function AdminOperationsHome({
               label="Manage Catalogue"
             />
             <AdminDashboardQuickLink href="/admin/setups" label="Manage Setups" />
-            <AdminDashboardQuickLink
-              href="/admin/enquiry-email"
-              label="Check Enquiry Email"
-            />
-            <AdminDashboardQuickLink
-              href="/admin/delivery-log"
-              label="Review Delivery Log"
-            />
           </div>
         </section>
       </div>
-      <p className={styles.dashboardFootnote}>
-        Dashboard counts are derived from current catalogue and media records.
-        They are owner CMS cues, not launch analytics.
-      </p>
     </section>
   );
 }
@@ -656,6 +644,18 @@ function AdminCatalogueOperations({
   const hidden = dashboard.data.products.filter(
     (product) => product.status === "archived"
   ).length;
+  const primaryProduct = dashboard.data.products[0] ?? null;
+  const primaryCategory = primaryProduct?.categoryId
+    ? dashboard.data.categories.find(
+        (category) => category.id === primaryProduct.categoryId
+      )
+    : null;
+  const categoryOptions = dashboard.data.categories
+    .map((category) => category.name)
+    .sort((a, b) => a.localeCompare(b));
+  const primaryImages = primaryProduct
+    ? dashboard.data.images.filter((image) => image.productId === primaryProduct.id)
+    : [];
 
   return (
     <>
@@ -666,17 +666,158 @@ function AdminCatalogueOperations({
           <AdminMetricCard label="Hidden" value={hidden} />
         </div>
       </section>
+      <section
+        className={styles.catalogueEditorGrid}
+        aria-label="Catalogue item editor preview"
+      >
+        <section className={styles.catalogueListPanel}>
+          <div className={styles.panelHeadingRow}>
+            <div>
+              <p className="eyebrow">Catalogue Items</p>
+              <h3>Manage Listings</h3>
+            </div>
+            <span className={styles.statusPill}>
+              {dashboard.data.products.length}
+            </span>
+          </div>
+          {dashboard.data.products.length === 0 ? (
+            <p className={styles.tableEmpty}>
+              No catalogue records are available yet. Use the existing listing
+              controls below to add the first owner-managed item.
+            </p>
+          ) : (
+            <div className={styles.catalogueItemList}>
+              {dashboard.data.products.slice(0, 4).map((product) => (
+                <article className={styles.catalogueItemCard} key={product.id}>
+                  <div className={styles.catalogueItemThumb} aria-hidden="true">
+                    {product.imageCount > 0 ? "Image" : "No image"}
+                  </div>
+                  <div>
+                    <h4>{product.name}</h4>
+                    <p>
+                      {product.shortDescription ||
+                        product.description ||
+                        "Owner-managed rental catalogue item."}
+                    </p>
+                    <span>
+                      {product.categoryId
+                        ? dashboard.data.categories.find(
+                            (category) => category.id === product.categoryId
+                          )?.name ?? "Unmapped category"
+                        : "Unmapped category"}
+                    </span>
+                  </div>
+                  <span
+                    className={`${styles.statusTag} ${
+                      product.status === "published"
+                        ? styles.statusTagPublished
+                        : styles.statusTagMuted
+                    }`}
+                  >
+                    {product.status === "archived" ? "hidden" : product.status}
+                  </span>
+                </article>
+              ))}
+            </div>
+          )}
+        </section>
+
+        <aside className={styles.catalogueFormPanel} aria-label="Catalogue item form">
+          <div className={styles.panelHeadingRow}>
+            <div>
+              <p className="eyebrow">Item Editor</p>
+              <h3>{primaryProduct ? primaryProduct.name : "New item"}</h3>
+            </div>
+            <span className={styles.statusPill}>
+              {primaryProduct
+                ? primaryProduct.status === "archived"
+                  ? "Hidden"
+                  : primaryProduct.status
+                : "Draft"}
+            </span>
+          </div>
+          <div className={styles.visualFormGrid}>
+            <label>
+              <span>Name</span>
+              <input
+                readOnly
+                value={primaryProduct?.name ?? ""}
+                placeholder="Item name"
+              />
+            </label>
+            <label>
+              <span>Category</span>
+              <select disabled value={primaryCategory?.name ?? ""}>
+                <option value="">Select category</option>
+                {categoryOptions.map((categoryName) => (
+                  <option key={categoryName} value={categoryName}>
+                    {categoryName}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              <span>Style</span>
+              <input
+                readOnly
+                value=""
+                placeholder="Derived from item tags in a later cleanup"
+              />
+            </label>
+            <label className={styles.visualFormFull}>
+              <span>Description</span>
+              <textarea
+                readOnly
+                value={
+                  primaryProduct?.description ||
+                  primaryProduct?.shortDescription ||
+                  ""
+                }
+                placeholder="Item description"
+              />
+            </label>
+            <div className={styles.uploadPreviewBox}>
+              <span>Images</span>
+              <strong>
+                {primaryImages.length > 0
+                  ? `${primaryImages.length} image records`
+                  : "No image records yet"}
+              </strong>
+              <p>
+                Use the real upload controls below for current listing image
+                persistence.
+              </p>
+            </div>
+            <label className={styles.publishVisualToggle}>
+              <input
+                checked={primaryProduct?.status === "published"}
+                readOnly
+                type="checkbox"
+              />
+              <span>Publish item</span>
+            </label>
+            <button className={styles.adminBtnPrimary} type="button" disabled>
+              Save item
+            </button>
+          </div>
+        </aside>
+      </section>
       <div className={styles.managementStack}>
-        <ListingManagementPanel
-          categories={dashboard.data.categories}
-          products={dashboard.data.products}
-        />
-        <CategoryManagementPanel categories={dashboard.data.categories} />
-        <ListingImageUploadPanel products={dashboard.data.products} />
-        <ListingImageMetadataManagementPanel
-          images={dashboard.data.images}
-          products={dashboard.data.products}
-        />
+        <details className={styles.legacyAdminDetails}>
+          <summary>Advanced catalogue controls</summary>
+          <div className={styles.legacyAdminStack}>
+            <ListingManagementPanel
+              categories={dashboard.data.categories}
+              products={dashboard.data.products}
+            />
+            <CategoryManagementPanel categories={dashboard.data.categories} />
+            <ListingImageUploadPanel products={dashboard.data.products} />
+            <ListingImageMetadataManagementPanel
+              images={dashboard.data.images}
+              products={dashboard.data.products}
+            />
+          </div>
+        </details>
       </div>
     </>
   );
@@ -715,21 +856,35 @@ function AdminSetupsOperations({
       </div>
       <div className={styles.setupGrid}>
         <section className={styles.setupListPanel}>
-          <h3>Derived setup candidates</h3>
-          <p>
-            Public setups stay on <code>/listings</code> and currently derive
-            from published catalogue records. Edit source content through
-            Catalogue until setup-specific storage exists.
-          </p>
+          <div className={styles.panelHeadingRow}>
+            <div>
+              <p className="eyebrow">Setup Items</p>
+              <h3>Manage Setups</h3>
+            </div>
+          </div>
           {setupRecords.length === 0 ? (
-            <p className={styles.tableEmpty}>
-              No published catalogue records are available to derive public
-              setup cards yet.
-            </p>
+            <article className={styles.setupCandidateCard}>
+              <div className={styles.setupImagePlaceholder} aria-hidden="true" />
+              <div>
+                <h4>No published setup candidates yet</h4>
+                <p>
+                  Public setup cards are currently derived from published
+                  catalogue records. Add or publish catalogue content first.
+                </p>
+              </div>
+              <span className={`${styles.statusTag} ${styles.statusTagMuted}`}>
+                Empty
+              </span>
+              <footer>
+                <span>Derived context: catalogue records</span>
+                <a href="/admin/catalogue">Manage catalogue</a>
+              </footer>
+            </article>
           ) : (
             <div className={styles.setupCandidateList}>
               {setupRecords.map((product) => (
                 <article className={styles.setupCandidateCard} key={product.id}>
+                  <div className={styles.setupImagePlaceholder} aria-hidden="true" />
                   <div>
                     <h4>{product.name}</h4>
                     <p>
@@ -761,29 +916,47 @@ function AdminSetupsOperations({
         </section>
 
         <aside className={styles.setupEditorPanel} aria-label="Setup editor status">
-          <h3>Setup editor</h3>
-          <p>
-            Setup-specific creation and image grouping are intentionally deferred.
-            The current public setup page uses published catalogue records as its
-            source.
-          </p>
-          <dl className={styles.adminRows}>
+          <div className={styles.panelHeadingRow}>
             <div>
-              <dt>Source</dt>
-              <dd>Published catalogue records</dd>
+              <p className="eyebrow">Setup Editor</p>
+              <h3>Create New Setup</h3>
             </div>
-            <div>
-              <dt>Shown here</dt>
-              <dd>{setupRecords.length}</dd>
+          </div>
+          <div className={styles.visualFormGrid}>
+            <label>
+              <span>Setup name</span>
+              <input
+                disabled
+                placeholder="Setup-specific records are deferred"
+              />
+            </label>
+            <label className={styles.visualFormFull}>
+              <span>Description</span>
+              <textarea
+                disabled
+                placeholder="Current public setup presentation derives from catalogue records."
+              />
+            </label>
+            <label>
+              <span>Context</span>
+              <input disabled value="Published catalogue records" />
+            </label>
+            <div className={styles.uploadPreviewBox}>
+              <span>Setup images</span>
+              <strong>Deferred</strong>
+              <p>
+                Setup-specific image grouping needs a later storage and owner
+                workflow slice.
+              </p>
             </div>
-            <div>
-              <dt>Primary action</dt>
-              <dd>Manage catalogue item content</dd>
-            </div>
-          </dl>
-          <a className={styles.adminBtnPrimary} href="/admin/catalogue">
-            Manage catalogue
-          </a>
+            <label className={styles.publishVisualToggle}>
+              <input disabled type="checkbox" />
+              <span>Publish setup</span>
+            </label>
+            <a className={styles.adminBtnPrimary} href="/admin/catalogue">
+              Manage catalogue
+            </a>
+          </div>
         </aside>
       </div>
     </section>
@@ -1092,10 +1265,20 @@ export function AdminShellContent({
   state: ProtectedAdminShellState;
   view?: AdminShellView;
 }) {
+  const viewClassNames: Record<AdminNavigationKind, string> = {
+    home: styles.viewHome,
+    hero: styles.viewHero,
+    catalogue: styles.viewCatalogue,
+    setups: styles.viewSetups,
+    "enquiry-email": styles.viewEnquiryEmail,
+    "delivery-log": styles.viewDeliveryLog
+  };
+  const activeViewClassName = viewClassNames[activeNavigationKind(view)];
+
   return (
     <section
       aria-live="polite"
-      className={`skr-admin-workspace ${styles.workspace}`}
+      className={`skr-admin-workspace ${styles.workspace} ${activeViewClassName}`}
     >
       <div className="premium-container">
         <AdminStatusMessage state={state} view={view} />

@@ -54,6 +54,48 @@
   width: 100%;
 }
 
+.viewHome,
+.viewHero,
+.viewCatalogue,
+.viewSetups,
+.viewEnquiryEmail,
+.viewDeliveryLog {
+  --admin-view-ready: 1;
+}
+
+.viewCatalogue .topbar,
+.viewSetups .topbar,
+.viewDeliveryLog .topbar {
+  display: none;
+}
+
+.viewCatalogue .workspaceBody,
+.viewSetups .workspaceBody,
+.viewDeliveryLog .workspaceBody {
+  min-height: 100vh;
+}
+
+.viewSetups .workspaceBody {
+  grid-template-columns: 280px minmax(0, 1fr);
+}
+
+.viewCatalogue .sidebar,
+.viewSetups .sidebar,
+.viewDeliveryLog .sidebar {
+  min-height: 100vh;
+}
+
+.viewSetups .sidebar {
+  padding: 48px 32px;
+}
+
+.viewCatalogue .mainPanel,
+.viewSetups .mainPanel,
+.viewDeliveryLog .mainPanel {
+  min-height: 100vh;
+  padding-top: 48px;
+}
+
 /* ---------- Topbar ---------- */
 .topbar {
   align-items: center;
@@ -291,7 +333,7 @@
 .mainPanel {
   display: grid;
   gap: 34px;
-  max-width: 1130px;
+  max-width: 1250px;
   padding: 140px 60px 96px;
 }
 
@@ -583,6 +625,184 @@
   gap: 46px;
 }
 
+.catalogueEditorGrid {
+  align-items: start;
+  display: grid;
+  gap: 40px;
+  grid-template-columns: minmax(0, 0.92fr) minmax(360px, 0.72fr);
+}
+
+.catalogueListPanel,
+.catalogueFormPanel {
+  align-content: start;
+  background: var(--admin-surface);
+  border: 1px solid var(--admin-line-strong);
+  border-radius: 0;
+  display: grid;
+  gap: 28px;
+  padding: 42px;
+}
+
+.panelHeadingRow {
+  align-items: start;
+  display: flex;
+  gap: 18px;
+  justify-content: space-between;
+}
+
+.panelHeadingRow h3 {
+  color: var(--admin-ink);
+  font-family: var(--admin-serif) !important;
+  font-size: 1.58rem !important;
+  font-weight: 500 !important;
+  letter-spacing: 0 !important;
+  line-height: 1.18 !important;
+  margin: 0;
+}
+
+.panelHeadingRow p {
+  margin-bottom: 8px !important;
+}
+
+.catalogueItemList {
+  display: grid;
+  gap: 18px;
+}
+
+.catalogueItemCard {
+  align-items: center;
+  border: 1px solid var(--admin-line-strong);
+  display: grid;
+  gap: 20px;
+  grid-template-columns: 94px minmax(0, 1fr) auto;
+  min-height: 126px;
+  padding: 18px;
+}
+
+.catalogueItemThumb,
+.setupImagePlaceholder {
+  align-items: center;
+  background:
+    linear-gradient(135deg, rgba(95, 101, 71, 0.16), rgba(155, 104, 78, 0.12)),
+    var(--admin-surface-muted);
+  border: 1px solid var(--admin-line);
+  color: var(--admin-muted);
+  display: inline-flex;
+  font-size: 0.72rem;
+  font-weight: 650;
+  justify-content: center;
+  min-height: 82px;
+  text-transform: uppercase;
+}
+
+.catalogueItemCard h4 {
+  color: var(--admin-ink);
+  font-family: var(--admin-serif) !important;
+  font-size: 1.34rem !important;
+  font-weight: 500 !important;
+  letter-spacing: 0 !important;
+  line-height: 1.2 !important;
+  margin: 0 0 6px;
+}
+
+.catalogueItemCard p {
+  color: var(--admin-muted);
+  display: -webkit-box;
+  font-size: 0.9rem;
+  line-height: 1.42;
+  margin: 0 0 9px;
+  max-width: 50ch;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.catalogueItemCard span:not(.statusTag) {
+  color: var(--admin-muted);
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.visualFormGrid {
+  display: grid;
+  gap: 20px;
+}
+
+.visualFormGrid label,
+.visualFormGrid .uploadPreviewBox {
+  display: grid;
+  gap: 8px;
+}
+
+.visualFormGrid label span,
+.uploadPreviewBox > span {
+  color: var(--admin-ink);
+  font-size: 0.9rem;
+  font-weight: 650;
+}
+
+.visualFormFull {
+  grid-column: 1 / -1;
+}
+
+.uploadPreviewBox {
+  background: rgba(239, 231, 217, 0.46);
+  border: 1px dashed var(--admin-line-strong);
+  min-height: 132px;
+  padding: 22px;
+}
+
+.uploadPreviewBox strong {
+  color: var(--admin-ink);
+  font-family: var(--admin-serif);
+  font-size: 1.34rem;
+  font-weight: 500;
+}
+
+.uploadPreviewBox p {
+  color: var(--admin-muted);
+  font-size: 0.86rem;
+  line-height: 1.45;
+  margin: 0;
+}
+
+.publishVisualToggle {
+  align-items: center;
+  display: flex !important;
+  gap: 12px !important;
+}
+
+.publishVisualToggle input {
+  min-height: auto !important;
+  width: 18px;
+}
+
+.legacyAdminDetails {
+  background: rgba(255, 253, 248, 0.48);
+  border: 1px solid var(--admin-line-strong);
+  color: var(--admin-muted);
+  padding: 0;
+}
+
+.legacyAdminDetails summary {
+  color: var(--admin-ink);
+  cursor: pointer;
+  font-size: 0.88rem;
+  font-weight: 650;
+  list-style-position: inside;
+  min-height: 54px;
+  padding: 17px 22px;
+}
+
+.legacyAdminStack {
+  border-top: 1px solid var(--admin-line-strong);
+  display: grid;
+  gap: 34px;
+  padding: 28px;
+}
+
 .setupHeaderActions {
   align-items: center;
   display: flex;
@@ -595,12 +815,12 @@
   align-items: start;
   display: grid;
   gap: 40px;
-  grid-template-columns: minmax(0, 1fr) minmax(320px, 0.46fr);
+  grid-template-columns: minmax(0, 0.98fr) minmax(360px, 0.72fr);
 }
 
 .setupListPanel {
-  gap: 24px;
-  padding: 42px 44px;
+  gap: 28px;
+  padding: 42px;
 }
 
 .setupListPanel > p,
@@ -621,8 +841,14 @@
   border: 1px solid var(--admin-line-strong);
   display: grid;
   gap: 20px;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: 156px minmax(0, 1fr) auto;
+  min-height: 188px;
   padding: 28px 32px;
+}
+
+.setupImagePlaceholder {
+  align-self: stretch;
+  min-height: 132px;
 }
 
 .setupCandidateCard h4 {
@@ -988,7 +1214,9 @@
 
 .statusPill {
   align-items: center;
+  background: var(--admin-surface-muted);
   border-radius: 999px;
+  color: var(--admin-muted);
   display: inline-flex;
   flex: 0 0 auto;
   font-size: 0.72rem;
@@ -1334,6 +1562,7 @@ button.adminBtnGhost:disabled {
 /* ---------- Responsive ---------- */
 @media (max-width: 1180px) {
   .dashboardHub,
+  .catalogueEditorGrid,
   .setupGrid,
   .emailGrid {
     grid-template-columns: 1fr;
@@ -1358,6 +1587,77 @@ button.adminBtnGhost:disabled {
 
   .mainPanel {
     max-width: none;
+  }
+}
+
+@media (min-width: 981px) and (max-width: 1180px) {
+  .topbar {
+    display: none;
+  }
+
+  .workspaceBody {
+    grid-template-columns: 280px minmax(0, 1fr);
+    min-height: 100vh;
+  }
+
+  .sidebar {
+    background: var(--admin-bg);
+    min-height: 100vh;
+    padding: 48px 32px;
+  }
+
+  .navLink {
+    min-height: 52px;
+    padding: 0 18px;
+  }
+
+  .navIcon {
+    display: none;
+  }
+
+  .navItemInner {
+    gap: 0;
+  }
+
+  .mainPanel {
+    gap: 32px;
+    max-width: none;
+    padding: 48px;
+  }
+
+  .pageIntro {
+    padding-bottom: 28px;
+  }
+
+  .workspace .pageIntro h2 {
+    font-size: 2.55rem !important;
+  }
+
+  .metricGridThree {
+    gap: 14px;
+  }
+
+  .metricGridThree .metricCard {
+    min-height: 104px;
+    padding: 22px;
+  }
+
+  .catalogueListPanel,
+  .catalogueFormPanel,
+  .setupListPanel,
+  .setupEditorPanel,
+  .emailPreviewPanel {
+    padding: 34px;
+  }
+
+  .catalogueItemCard,
+  .setupCandidateCard {
+    grid-template-columns: 1fr;
+  }
+
+  .setupCandidateCard footer {
+    align-items: flex-start;
+    display: grid;
   }
 }
 
