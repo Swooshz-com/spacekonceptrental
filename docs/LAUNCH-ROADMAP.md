@@ -270,6 +270,10 @@ Exit criteria:
 
 ### 6. Chatbot mapping
 
+Status: implemented in this PR as a public chatbot launch boundary slice. Real
+n8n workflow implementation/mapping remains deferred until Hostinger VPS,
+Coolify, and the hosted n8n app are set up.
+
 Goal: map the existing temporary chatbot bridge to the launch site without
 starting the future SaaS chatbot inside this repo.
 
@@ -277,15 +281,34 @@ Target:
 
 - Keep browser chat behind first-party `/api/chat`.
 - Keep n8n server-side.
+- Keep the chatbot as public visitor guidance only.
+- Allow navigation help for Home, Catalogue, Setups, About, and Request Quote.
+- Direct item-specific and event-specific requests to the Request Quote form.
+- Block claims about availability, booking/reservation, final pricing, payment,
+  order creation, human review, email delivery, n8n delivery, or internal/admin
+  data.
+- Keep chatbot off protected admin routes, including login and logout.
 - Do not migrate Pinecone in this repo yet.
 - Do not add Pinecone runtime code or credentials without separate approval.
 - Document what public pages the chatbot may answer from and what must remain
   outside its scope.
+- Document the launch boundary in `docs/CHATBOT-LAUNCH-BOUNDARY.md`.
+
+Backend note:
+
+- The real n8n workflow depends on the hosted n8n domain, HTTPS webhook URL,
+  SKR hosted domain, email credentials, server networking, and hosted Supabase
+  migration state. It is intentionally deferred until Hostinger VPS, Coolify,
+  and hosted n8n are set up.
 
 Exit criteria:
 
 - Chatbot boundaries are mapped before hosted UAT.
+- Browser code calls only `/api/chat`, not n8n.
+- Unsafe provider replies are replaced with Request Quote guidance before they
+  reach the browser.
 - No SaaS chatbot app work is introduced in this repo.
+- No hosted staging readiness or UAT pass is claimed.
 
 ### 7. Hostinger/Coolify deployment and hosted UAT
 

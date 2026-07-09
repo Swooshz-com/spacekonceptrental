@@ -3,6 +3,11 @@ import { resolve } from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ChatProviderError, type ChatProviderRequest } from "./provider";
 import { N8nChatProvider } from "./n8n-provider";
+import {
+  chatbotLaunchBoundaryAllowedPublicPaths,
+  chatbotLaunchBoundaryFallbackReply,
+  chatbotLaunchBoundaryInstructions
+} from "./launch-boundary";
 
 const originalWebhookUrl = process.env.N8N_CHAT_WEBHOOK_URL;
 
@@ -90,8 +95,52 @@ describe("N8nChatProvider", () => {
       timezone: "Asia/Singapore",
       capabilities: {
         stream: false
+      },
+      launchBoundary: {
+        instructions: chatbotLaunchBoundaryInstructions,
+        allowedPublicPaths: chatbotLaunchBoundaryAllowedPublicPaths,
+        fallbackReply: chatbotLaunchBoundaryFallbackReply
       }
     }));
+  });
+
+  it("passes the public chatbot launch boundary to n8n without credentials", async () => {
+    const fetchMock = vi.fn(
+      async (_input: string | URL | Request, _init?: RequestInit) =>
+        jsonResponse({
+          reply: {
+            content: "Please use Request Quote for item-specific details."
+          }
+        })
+    );
+    const provider = new N8nChatProvider({
+      fetch: fetchMock,
+      webhookUrl: "https://example.invalid/n8n-webhook",
+      timeoutMs: 1000
+    });
+
+    await provider.sendMessage(providerRequest);
+
+    const [, init] = fetchMock.mock.calls[0];
+    const body = JSON.parse(String(init?.body));
+
+    expect(body.launchBoundary.instructions).toContain(
+      "public visitor guidance only"
+    );
+    expect(body.launchBoundary.instructions).toContain("Request Quote");
+    expect(body.launchBoundary.instructions).toContain(
+      "Never instruct the browser to call n8n directly"
+    );
+    expect(body.launchBoundary.allowedPublicPaths).toEqual([
+      "/",
+      "/catalogue",
+      "/setups",
+      "/about",
+      "/quote"
+    ]);
+    expect(JSON.stringify(body.launchBoundary)).not.toMatch(
+      /N8N_CHAT_WEBHOOK_URL|N8N_ENQUIRY_HANDOFF_WEBHOOK_URL|sk-[A-Za-z0-9]|gho_[A-Za-z0-9]|https?:\/\//i
+    );
   });
 
   it("normalizes a successful mocked n8n response", async () => {

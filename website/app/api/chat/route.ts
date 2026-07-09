@@ -3,6 +3,7 @@ import "server-only";
 import { logApplicationError } from "../../../lib/application-error-logging";
 import { getTrustedClientIpHeader as getConfiguredTrustedClientIpHeader } from "../../../lib/server-runtime-config";
 import { getChatProvider } from "../../../lib/chat/provider-factory";
+import { applyChatbotLaunchBoundary } from "../../../lib/chat/launch-boundary";
 import {
   ChatProviderError,
   type ChatProvider,
@@ -629,7 +630,7 @@ async function sendMessageOnce(
   });
 
   try {
-    const response = await promise;
+    const response = applyChatbotLaunchBoundary(await promise);
 
     idempotencyEntries.set(idempotency.key, {
       expiresAt: Date.now() + IDEMPOTENCY_TTL_MS,
