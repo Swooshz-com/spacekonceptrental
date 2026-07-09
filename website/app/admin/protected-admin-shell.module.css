@@ -455,6 +455,17 @@
   margin: 0;
 }
 
+.dashboardCard p {
+  color: var(--admin-secondary);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.dashboardWidePanel {
+  grid-column: 1 / -1;
+}
+
 .dashboardList {
   display: grid;
   list-style: none;

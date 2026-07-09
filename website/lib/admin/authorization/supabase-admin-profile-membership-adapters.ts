@@ -3,6 +3,7 @@ import "server-only";
 import type {
   AdminMembershipAdapter,
   AdminProfileAdapter,
+  ResolvedAdminIdentity,
   ResolvedAdminMembership,
   ResolvedAdminProfile
 } from "./admin-authorization-adapters";
@@ -19,6 +20,21 @@ type SupabaseAdminReadFilter = {
 };
 
 export type SupabaseAdminReadClient = {
+  rpc?: {
+    (
+      fn: "ensure_admin_access_membership",
+      args: {
+        p_workspace_id: string;
+      }
+    ): PromiseLike<SupabaseQueryResult>;
+    (
+      fn: "get_admin_access_membership",
+      args: {
+        p_workspace_id: string;
+        p_admin_user_id: string;
+      }
+    ): PromiseLike<SupabaseQueryResult>;
+  };
   from(table: string): {
     select(columns: string): SupabaseAdminReadFilter;
   };
@@ -53,7 +69,14 @@ type AdminMembershipRow = {
   role?: unknown;
 };
 
+type AdminAccessRow = {
+  normalized_email?: unknown;
+  role?: unknown;
+  status?: unknown;
+};
+
 const adminRoles = new Set<AdminRole>(["owner", "admin", "viewer"]);
+const launchAdminRoles = new Set<AdminRole>(["owner", "admin"]);
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
@@ -83,6 +106,16 @@ function isAdminRole(value: unknown): value is AdminRole {
   return typeof value === "string" && adminRoles.has(value as AdminRole);
 }
 
+function isLaunchAdminRole(value: unknown): value is AdminRole {
+  return typeof value === "string" && launchAdminRoles.has(value as AdminRole);
+}
+
+function normalizedEmail(value: unknown) {
+  return typeof value === "string" && value.trim().includes("@")
+    ? value.trim().toLowerCase()
+    : undefined;
+}
+
 function toResolvedAdminProfile(
   row: AdminProfileRow,
   authUserId: string
@@ -103,7 +136,8 @@ function toResolvedAdminProfile(
 function toResolvedAdminMembership(
   row: AdminMembershipRow,
   adminUserId: string,
-  serverResolvedWorkspaceId: string
+  serverResolvedWorkspaceId: string,
+  access: AdminAccessRow
 ): ResolvedAdminMembership | null {
   const rowAdminUserId = getString(row.admin_user_id);
   const rowWorkspaceId = getString(row.workspace_id);
@@ -112,7 +146,10 @@ function toResolvedAdminMembership(
     rowAdminUserId !== adminUserId ||
     rowWorkspaceId !== serverResolvedWorkspaceId ||
     row.status !== "active" ||
-    !isAdminRole(row.role)
+    !isAdminRole(row.role) ||
+    access.status !== "active" ||
+    !isLaunchAdminRole(access.role) ||
+    access.role !== row.role
   ) {
     return null;
   }
@@ -125,11 +162,44 @@ function toResolvedAdminMembership(
   };
 }
 
+async function ensureAdminAccessMembership(
+  authUserId: string,
+  serverResolvedWorkspaceId: string,
+  identity: ResolvedAdminIdentity | undefined,
+  dependencies: SupabaseAdminReadDependencies
+) {
+  const supabase = getSupabase(dependencies);
+
+  if (
+    !supabase.configured ||
+    !supabase.client.rpc ||
+    identity?.provider !== "google" ||
+    normalizedEmail(identity.email) === undefined ||
+    !getString(authUserId) ||
+    !getString(serverResolvedWorkspaceId)
+  ) {
+    return false;
+  }
+
+  try {
+    const result = await supabase.client.rpc("ensure_admin_access_membership", {
+      p_workspace_id: serverResolvedWorkspaceId
+    });
+
+    return !result.error;
+  } catch {
+    return false;
+  }
+}
+
 export async function resolveSupabaseAdminProfile(
   authUserId: string,
+  serverResolvedWorkspaceId?: string | null,
+  identity?: ResolvedAdminIdentity,
   dependencies: SupabaseAdminReadDependencies = {}
 ): Promise<ResolvedAdminProfile | null> {
   const normalizedAuthUserId = getString(authUserId);
+  const normalizedWorkspaceId = getString(serverResolvedWorkspaceId ?? undefined);
 
   if (!normalizedAuthUserId) {
     return null;
@@ -139,6 +209,19 @@ export async function resolveSupabaseAdminProfile(
 
   if (!supabase.configured) {
     return null;
+  }
+
+  if (normalizedWorkspaceId) {
+    const ensured = await ensureAdminAccessMembership(
+      normalizedAuthUserId,
+      normalizedWorkspaceId,
+      identity,
+      dependencies
+    );
+
+    if (!ensured) {
+      return null;
+    }
   }
 
   try {
@@ -177,6 +260,24 @@ export async function resolveSupabaseAdminMembership(
   }
 
   try {
+    if (!supabase.client.rpc) {
+      return null;
+    }
+
+    const accessResult = await supabase.client.rpc(
+      "get_admin_access_membership",
+      {
+        p_workspace_id: normalizedWorkspaceId,
+        p_admin_user_id: normalizedAdminUserId
+      }
+    );
+    const accessRows = accessResult.error ? [] : toRows(accessResult.data);
+    const access = accessRows[0] as AdminAccessRow | undefined;
+
+    if (accessRows.length !== 1 || !access) {
+      return null;
+    }
+
     const result = await supabase.client
       .from("memberships")
       .select("admin_user_id, workspace_id, status, role")
@@ -190,7 +291,8 @@ export async function resolveSupabaseAdminMembership(
       ? toResolvedAdminMembership(
           membership,
           normalizedAdminUserId,
-          normalizedWorkspaceId
+          normalizedWorkspaceId,
+          access
         )
       : null;
   } catch {
@@ -202,8 +304,13 @@ export function createSupabaseAdminProfileAdapter(
   dependencies: SupabaseAdminReadDependencies = {}
 ): AdminProfileAdapter {
   return {
-    resolveAdminProfile(authUserId) {
-      return resolveSupabaseAdminProfile(authUserId, dependencies);
+    resolveAdminProfile(authUserId, serverResolvedWorkspaceId, identity) {
+      return resolveSupabaseAdminProfile(
+        authUserId,
+        serverResolvedWorkspaceId,
+        identity,
+        dependencies
+      );
     }
   };
 }

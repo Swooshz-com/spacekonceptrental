@@ -203,6 +203,7 @@ describe("Phase 2B-AA first admin runtime route gate adapter usage boundary", ()
       .filter(({ filePath }) => filePath.startsWith("website/app/") && filePath !== "website/app/api/admin/auth-check/route.ts" &&
           filePath !== "website/app/api/admin/login/route.ts" &&
           filePath !== "website/app/api/admin/csrf-proof/route.ts" &&
+          filePath !== "website/app/api/admin/admin-access/route.ts" &&
           filePath !== "website/app/api/admin/quote-requests/crm-handoff-packet/route.ts" &&
           filePath !== "website/app/api/admin/quote-requests/crm-handoff-packet/lifecycle-reconciliation/route.ts" &&
           filePath !== "website/app/api/admin/quote-requests/crm-handoff-packet/hubspot-import-csv/manual-import-outcome/route.ts" &&
@@ -233,6 +234,7 @@ describe("Phase 2B-AA first admin runtime route gate adapter usage boundary", ()
           filePath !== "website/app/api/admin/auth-check/route.ts" &&
           filePath !== "website/app/api/admin/login/route.ts" &&
           filePath !== "website/app/api/admin/csrf-proof/route.ts" &&
+          filePath !== "website/app/api/admin/admin-access/route.ts" &&
           filePath !== "website/app/api/admin/quote-requests/crm-handoff-packet/route.ts" &&
           filePath !== "website/app/api/admin/quote-requests/crm-handoff-packet/lifecycle-reconciliation/route.ts" &&
           filePath !== "website/app/api/admin/quote-requests/crm-handoff-packet/hubspot-import-csv/manual-import-outcome/route.ts" &&
@@ -263,6 +265,8 @@ describe("Phase 2B-AA first admin runtime route gate adapter usage boundary", ()
     expect(readTrackedFiles(["website/app/api/login"])).toEqual([]);
     expect(readTrackedFiles(["website/app/api/logout"])).toEqual([]);
     expect(readTrackedFiles(["website/app/api/admin"])).toEqual([
+      "website/app/api/admin/admin-access/route.test.ts",
+      "website/app/api/admin/admin-access/route.ts",
       "website/app/api/admin/auth-check/route.test.ts",
       "website/app/api/admin/auth-check/route.ts",
       "website/app/api/admin/categories/[categoryId]/archive/route.ts",
@@ -271,6 +275,8 @@ describe("Phase 2B-AA first admin runtime route gate adapter usage boundary", ()
       "website/app/api/admin/csrf-proof/route.test.ts",
       "website/app/api/admin/csrf-proof/route.ts",
       "website/app/api/admin/hero/route.ts",
+      "website/app/api/admin/login/callback/route.test.ts",
+      "website/app/api/admin/login/callback/route.ts",
       "website/app/api/admin/login/route.test.ts",
       "website/app/api/admin/login/route.ts",
       "website/app/api/admin/page-media/route.ts",

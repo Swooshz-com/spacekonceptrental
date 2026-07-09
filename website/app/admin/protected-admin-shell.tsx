@@ -10,7 +10,12 @@ import {
 } from "../../lib/products/admin-read/admin-product-dashboard-read";
 import { getAdminRouteRuntimeConfig } from "../../lib/server-runtime-config";
 import { CatalogueOwnerWorkflow } from "../../components/admin/catalogue-owner-workflow";
+import { AdminAccessManagementPanel } from "../../components/admin/admin-access-management-panel";
 import { HeroContentManagementPanel } from "../../components/admin/hero-content-management-panel";
+import {
+  resolveAdminAccessDashboardRead,
+  type AdminAccessDashboardReadResult
+} from "../../lib/admin/access/admin-access-management";
 import type { AdminHomepageHeroReadResult } from "../../lib/hero/admin-homepage-hero-read";
 import type { AdminQuoteEmailDeliveryLogReadResult } from "../../lib/quote/admin-read/admin-quote-email-delivery-log";
 import type { QuoteEnquiryEmailConfigStatus } from "../../lib/quote/email-handoff";
@@ -26,6 +31,7 @@ export type ProtectedAdminShellState =
   | {
       status: "authorised_admin";
       dashboard: AdminProductDashboardReadResult;
+      adminAccess?: AdminAccessDashboardReadResult;
     }
   | {
       status: "unavailable";
@@ -285,10 +291,12 @@ export async function resolveProtectedAdminShellState(): Promise<ProtectedAdminS
         ADMIN_TRUSTED_WORKSPACE_ID: trustedServerWorkspaceId
       }
     });
+    const adminAccess = await resolveAdminAccessDashboardRead();
 
     return {
       status: "authorised_admin",
-      dashboard
+      dashboard,
+      adminAccess
     };
   } catch {
     return {
@@ -536,8 +544,10 @@ function AdminEmptyState({
 }
 
 function AdminOperationsHome({
+  adminAccess,
   dashboard
 }: {
+  adminAccess?: AdminAccessDashboardReadResult;
   dashboard: AdminProductDashboardReadResult;
 }) {
   if (dashboard.status !== "loaded") {
@@ -621,6 +631,26 @@ function AdminOperationsHome({
           <AdminDashboardQuickLink href="/admin/setups" label="Manage Setups" />
         </div>
       </section>
+
+      <div className={styles.dashboardWidePanel}>
+        {adminAccess?.status === "loaded" ? (
+          <AdminAccessManagementPanel
+            currentAdmin={adminAccess.currentAdmin}
+            records={adminAccess.records}
+          />
+        ) : (
+          <section
+            className={styles.dashboardCard}
+            aria-label="Admin access unavailable"
+          >
+            <h2>Admin access</h2>
+            <p>
+              Google admin access records are temporarily unavailable. Protected
+              content remains gated while access data is recovered.
+            </p>
+          </section>
+        )}
+      </div>
     </section>
   );
 }
@@ -1073,7 +1103,12 @@ function AdminOperationsView({
     return <AdminDeliveryLogTableOperations deliveryLog={view.deliveryLog} />;
   }
 
-  return <AdminOperationsHome dashboard={state.dashboard} />;
+  return (
+    <AdminOperationsHome
+      adminAccess={state.adminAccess}
+      dashboard={state.dashboard}
+    />
+  );
 }
 
 function AdminTopbar() {

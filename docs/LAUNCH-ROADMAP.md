@@ -1,6 +1,6 @@
 # Launch Roadmap
 
-This roadmap sequences the next SpaceKonceptRental launch work after PR #287.
+This roadmap sequences the next SpaceKonceptRental launch work after PR #288.
 It is a focused implementation plan, not hosted staging evidence and not a
 production-readiness claim.
 
@@ -19,7 +19,9 @@ an owner-friendly workflow, removed standalone category management from the
 primary Catalogue UX, and mapped image data to an owner-safe client DTO before
 the client boundary. PR #286 made Setups an honest derived review workflow
 backed by published Catalogue items for launch. PR #287 implemented the
-server-only SKR enquiry handoff contract and delivery-log write path.
+server-only SKR enquiry handoff contract and delivery-log write path. PR #288
+added the inactive credential-free n8n workflow skeleton plus hosted migration
+and smoke-test runbooks.
 
 Current protected admin pages remain:
 
@@ -209,20 +211,62 @@ Exit criteria:
 
 ### 5. Google-only admin access management
 
-Goal: next implementation slice after the n8n workflow readiness package; keep
-admin access manageable for the owner without expanding customer account scope.
+Status: implemented in this PR as a repo-side code and reviewed migration
+slice. Hosted Supabase migration application and owner access bootstrap remain
+approval-gated hosted operations.
+
+Goal: keep admin access manageable for the owner without expanding customer
+account scope.
 
 Target:
 
-- Google-only admin sign-in and access management for owner/admin users.
+- Google-only admin sign-in through Supabase Auth.
+- DB-backed active `admin_access` record required after Google sign-in.
+- Owner/admin launch roles only; viewer is not exposed as a launch admin
+  concept.
+- Owner row is immutable and cannot be removed or disabled.
+- Owner can add, disable, remove, and reactivate admin email access from the
+  existing `/admin` dashboard.
+- Admins must sign in with Google using the same normalized email that appears
+  in the access list.
+- Google-authenticated alone is not enough.
+- No password login.
+- No public signup.
 - No public customer accounts.
 - No visitor login.
 - No self-service customer dashboard.
 
+Backend notes:
+
+- Reviewed migration:
+  `supabase/migrations/20260709100000_google_admin_access_management.sql`.
+- The migration adds `admin_access`, owner immutability, owner-only access
+  write RPC, and active-access checks in workspace/product/enquiry admin helper
+  functions.
+- The migration also provides owner-safe admin access read helpers:
+  `list_admin_access_records` for the dashboard DTO and
+  `get_admin_access_membership` for the protected admin gate. App code should
+  not filter `admin_access` directly by private columns such as `workspace_id`
+  or `linked_admin_user_id`.
+- Hosted Supabase migration application is not performed by this repo PR.
+- The fixed owner row must be bootstrapped only through the approved hosted
+  Supabase migration/access process after explicit owner approval. No owner
+  email, seed data, seed file, OAuth secret, service-role key, connection
+  string, or service credential is committed here.
+- After bootstrap, the owner must sign in with Google using the exact
+  normalized owner email; unknown Google users and disabled/removed admins must
+  remain blocked before any hosted UAT claim.
+- Existing `admin_users` and `memberships` remain as compatibility/audit tables;
+  the new access table gates and links them after a successful Google session.
+
 Exit criteria:
 
 - Admin access is limited to approved owner/admin identities.
+- Unknown Google users are blocked.
+- Disabled or removed admins are blocked.
+- Owner cannot be disabled or removed.
 - Session, CSRF, and protected route boundaries remain server-owned.
+- No new protected admin pages are added.
 
 ### 6. Chatbot mapping
 

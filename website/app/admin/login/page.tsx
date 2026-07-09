@@ -50,33 +50,16 @@ export default async function AdminLoginPage({
           <LoginStatus state={state} />
 
           <form className={styles.form} method="post">
-            <label className={styles.field}>
-              Email
-              <input
-                autoComplete="email"
-                className={styles.input}
-                name="email"
-                required
-                type="email"
-              />
-            </label>
-            <label className={styles.field}>
-              Password
-              <input
-                autoComplete="current-password"
-                className={styles.input}
-                name="password"
-                required
-                type="password"
-              />
-            </label>
             <button
               className={styles.submit}
               formAction="/api/admin/login"
               type="submit"
             >
-              Sign in
+              Continue with Google
             </button>
+            <p className={styles.helpText}>
+              Use the Google email that has been added to admin access.
+            </p>
           </form>
         </section>
 

@@ -106,8 +106,14 @@ export async function resolveAdminAuthorizationWithAdapters(
     });
   }
 
+  const { serverResolvedWorkspaceId } =
+    await adapters.workspace.resolveWorkspaceForRequest(input);
+  const normalizedWorkspaceId = serverResolvedWorkspaceId?.trim() ?? "";
+
   const adminUser = await adapters.profile.resolveAdminProfile(
-    identity.authUserId
+    identity.authUserId,
+    normalizedWorkspaceId,
+    identity
   );
 
   if (!adminUser) {
@@ -134,9 +140,6 @@ export async function resolveAdminAuthorizationWithAdapters(
     });
   }
 
-  const { serverResolvedWorkspaceId } =
-    await adapters.workspace.resolveWorkspaceForRequest(input);
-  const normalizedWorkspaceId = serverResolvedWorkspaceId?.trim() ?? "";
   const membership = normalizedWorkspaceId
     ? await adapters.membership.resolveMembership(
         adminUser.id,

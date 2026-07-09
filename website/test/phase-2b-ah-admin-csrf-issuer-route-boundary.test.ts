@@ -35,8 +35,10 @@ describe("Phase 2B-AH Admin CSRF Proof Issuer Route Boundary", () => {
   it("keeps the route surface limited after safe workspace binding exists", () => {
     const apiAdminFiles = readTrackedFiles(["website/app/api/admin"]);
 
-    // Only auth-check and the Phase 2B-AK csrf-proof route are allowed here.
+    // Only reviewed protected-admin API route files are allowed here.
     const allowedFiles = [
+      "website/app/api/admin/admin-access/route.test.ts",
+      "website/app/api/admin/admin-access/route.ts",
       "website/app/api/admin/auth-check/route.test.ts",
       "website/app/api/admin/auth-check/route.ts",
       "website/app/api/admin/categories/[categoryId]/archive/route.ts",
@@ -45,6 +47,8 @@ describe("Phase 2B-AH Admin CSRF Proof Issuer Route Boundary", () => {
       "website/app/api/admin/csrf-proof/route.test.ts",
       "website/app/api/admin/csrf-proof/route.ts",
       "website/app/api/admin/hero/route.ts",
+      "website/app/api/admin/login/callback/route.test.ts",
+      "website/app/api/admin/login/callback/route.ts",
       "website/app/api/admin/login/route.test.ts",
       "website/app/api/admin/login/route.ts",
       "website/app/api/admin/page-media/route.ts",

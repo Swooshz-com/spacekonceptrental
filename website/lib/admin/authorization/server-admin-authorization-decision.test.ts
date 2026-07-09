@@ -71,6 +71,40 @@ function createMockAdminReadClient(
 } {
   const calls: QueryCall[] = [];
   const client: SupabaseAdminReadClient = {
+    async rpc(fn, args) {
+      if (fn === "get_admin_access_membership") {
+        const rpcArgs = args as {
+          p_workspace_id: string;
+          p_admin_user_id: string;
+        };
+        const rows = (tables.admin_access ?? []).filter(
+          (row): row is Record<string, unknown> => {
+            if (!row || typeof row !== "object" || Array.isArray(row)) {
+              return false;
+            }
+
+            const record = row as Record<string, unknown>;
+
+            return (
+              record.linked_admin_user_id === rpcArgs.p_admin_user_id &&
+              record.workspace_id === rpcArgs.p_workspace_id
+            );
+          }
+        );
+
+        return {
+          data: rows,
+          error: null
+        };
+      }
+
+      return {
+        data: {
+          ok: true
+        },
+        error: null
+      };
+    },
     from(table: string) {
       return {
         select() {
@@ -138,6 +172,15 @@ function createDecisionDependencies({
         status: "active",
         role
       }
+    ],
+    admin_access: [
+      {
+        linked_admin_user_id: "admin-user-1",
+        workspace_id: "workspace-1",
+        normalized_email: "owner@example.com",
+        status: "active",
+        role: role === "viewer" ? "admin" : role
+      }
     ]
   });
 
@@ -159,7 +202,11 @@ function createDecisionDependencies({
                 ? {
                     data: {
                       user: {
-                        id: authUserId
+                        id: authUserId,
+                        email: "owner@example.com",
+                        app_metadata: {
+                          provider: "google"
+                        }
                       }
                     },
                     error: null
@@ -308,7 +355,7 @@ describe("server admin authorization decision boundary", () => {
     ]);
   });
 
-  it("denies viewer product writes through the existing policy path", async () => {
+  it("blocks viewer memberships from launch admin access", async () => {
     const { dependencies } = createDecisionDependencies({
       role: "viewer"
     });
@@ -323,7 +370,7 @@ describe("server admin authorization decision boundary", () => {
       )
     ).resolves.toEqual({
       allowed: false,
-      reason: "role_not_allowed",
+      reason: "membership_missing",
       statusCode: 403
     });
   });

@@ -4,6 +4,41 @@ This document records completed Phase 2B admin/auth readiness history and the
 latest reviewed boundary state. It is historical design/status context, not
 runtime approval for auth, admin UI, product writes, or deployment work.
 
+## Launch Amendment: Google-Only Admin Access
+
+After PR #288, the launch admin access direction is Google-only and DB-backed.
+The historical `admin_users` and `memberships` model remains as the
+compatibility/audit linkage for protected writes, but launch access is gated by
+`admin_access` once
+`supabase/migrations/20260709100000_google_admin_access_management.sql` is
+applied through the approved hosted Supabase migration process.
+
+Current launch rules:
+
+- Admin sign-in starts through Google/Supabase Auth only.
+- Password login, public signup, visitor login, and customer accounts are not
+  launch admin scope.
+- Google-authenticated alone is not enough; the normalized Google email must
+  match an active owner/admin `admin_access` record for the workspace.
+- Owner access is immutable and cannot be disabled or removed.
+- Owner can add, disable, remove, and reactivate admin emails from the existing
+  `/admin` dashboard.
+- Viewer remains historical policy vocabulary only and is not exposed as a
+  launch admin role.
+- Hosted migration application and fixed-owner access bootstrap remain
+  explicit-approval operations. No owner email, seed row, OAuth secret, or
+  service credential is committed in this repo.
+- Runtime reads do not filter `admin_access` directly from app code. The
+  reviewed migration provides owner-safe `list_admin_access_records` and
+  self-scoped `get_admin_access_membership` RPC helpers so private identifiers
+  such as `id`, `workspace_id`, `linked_admin_user_id`, and audit linkage IDs
+  stay out of owner-facing DTOs and browser payloads.
+- After explicit owner approval and hosted migration application, the fixed
+  owner `admin_access` row must be bootstrapped through the approved Supabase
+  operations path only. Do not commit a seed file, paste a service-role key or
+  connection string into chat/docs, or store the owner email in the repo. The
+  owner must then sign in with Google using the exact normalized email.
+
 Completed phase history:
 
 - Phase 2B-A added admin/auth and workspace membership design and guard

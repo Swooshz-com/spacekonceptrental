@@ -5,6 +5,8 @@ import type { AdminOperation, AdminRole } from "./admin-authorization-policy";
 export type ResolvedAdminIdentity = {
   authenticated: boolean;
   authUserId?: string;
+  email?: string;
+  provider?: string;
 };
 
 export type ResolvedAdminProfile = {
@@ -36,7 +38,9 @@ export type AdminAuthAdapter = {
 
 export type AdminProfileAdapter = {
   resolveAdminProfile(
-    authUserId: string
+    authUserId: string,
+    serverResolvedWorkspaceId?: string | null,
+    identity?: ResolvedAdminIdentity
   ): Promise<ResolvedAdminProfile | null>;
 };
 

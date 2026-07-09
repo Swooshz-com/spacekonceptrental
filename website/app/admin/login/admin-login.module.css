@@ -112,6 +112,14 @@
   gap: 16px;
 }
 
+.helpText {
+  color: var(--admin-muted);
+  font-size: 0.86rem;
+  line-height: 1.5;
+  margin: 0;
+  text-align: center;
+}
+
 .field {
   color: var(--admin-ink);
   display: grid;
