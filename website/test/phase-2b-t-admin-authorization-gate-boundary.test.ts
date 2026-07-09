@@ -370,6 +370,7 @@ describe("Phase 2B-T server-only admin authorization gate composition boundary",
 
     expect(readTrackedFiles(["n8n-workflows"]).sort()).toEqual([
       "n8n-workflows/spacekonceptrental-customer-support-agent.workflow.json",
+      "n8n-workflows/spacekonceptrental-enquiry-handoff.workflow.json",
       "n8n-workflows/spacekonceptrental-error-handler.workflow.json",
       "n8n-workflows/spacekonceptrental-rag-ingestion.workflow.json"
     ]);

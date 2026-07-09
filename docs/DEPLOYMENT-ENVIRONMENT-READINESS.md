@@ -115,11 +115,17 @@ bodies, screenshots, admin pages, browser code, logs, or `.env` examples.
 
 n8n setup expectation:
 
-1. Create or review the n8n workflow outside this PR.
-2. Store email credentials in n8n credentials, not in SKR repo files or n8n
+1. Review the inactive repo-side n8n skeleton at
+   `n8n-workflows/spacekonceptrental-enquiry-handoff.workflow.json`.
+2. Replace the skeleton's manual HMAC, timestamp freshness, idempotency, and
+   email/internal handoff placeholders inside n8n before activation.
+3. Store email credentials in n8n credentials, not in SKR repo files or n8n
    text fields.
-3. Configure SKR with the server-only n8n handoff endpoint and shared secret.
-4. Run the readiness command in the same runtime environment before hosting:
+4. Configure SKR with the server-only n8n handoff endpoint and shared secret.
+5. Apply the hosted Supabase delivery-log contract migration only after
+   explicit approval, using
+   `docs/N8N-ENQUIRY-HANDOFF-HOSTED-MIGRATION-RUNBOOK.md`.
+6. Run the readiness command in the same runtime environment before hosting:
 
 ```powershell
 npm run validate:quote-email-runtime-readiness
@@ -160,6 +166,10 @@ Do not expect this feature to provide a quote inbox, quote detail admin route,
 customer confirmation email, retry system, webhook, bounce handling, scheduler,
 CRM workflow, HubSpot sync, customer accounts, public quote tracking, cart,
 checkout, payment, order, booking, reservation, stock, or fulfilment flow.
+
+The hosted end-to-end smoke checklist for the later approved enquiry -> n8n ->
+email/internal handoff -> Delivery Log verification is
+`docs/N8N-ENQUIRY-HANDOFF-HOSTED-SMOKE-CHECKLIST.md`.
 
 ## Supabase/project env
 
@@ -326,4 +336,4 @@ The following remain deferred until separately approved:
 - Notifications or CRM integration.
 - Customer accounts, carts, checkout, payments, stock reservation, order
   fulfilment, confirmed booking, or online ordering.
-- n8n workflow import, export, activation, execution, or mutation.
+- live n8n workflow import, activation, execution, or mutation.

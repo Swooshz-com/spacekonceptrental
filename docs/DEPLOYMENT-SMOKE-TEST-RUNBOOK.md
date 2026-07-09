@@ -42,6 +42,7 @@ This runbook covers:
 - Admin trusted workspace configuration.
 - Listing media bucket expectations.
 - Server-only n8n enquiry handoff expectations.
+- n8n enquiry handoff hosted migration and smoke checklist references.
 - Optional server-only n8n chat webhook expectations when a separately approved
   chat integration is in scope.
 - Trusted proxy/CDN client IP header review.
@@ -66,7 +67,7 @@ This runbook does not approve:
   integration.
 - Customer accounts, carts, checkout, payments, stock reservation, order
   fulfilment, confirmed booking, or online ordering.
-- Live n8n workflow import, export, activation, execution, or mutation.
+- Live n8n workflow import, live export, activation, execution, or mutation.
 
 ## Required pre-deployment review
 
@@ -198,6 +199,12 @@ Before public traffic:
 
 Before public quote smoke testing:
 
+- Review the inactive repo-side workflow skeleton:
+  `n8n-workflows/spacekonceptrental-enquiry-handoff.workflow.json`.
+- Review the hosted migration runbook:
+  `docs/N8N-ENQUIRY-HANDOFF-HOSTED-MIGRATION-RUNBOOK.md`.
+- Review the hosted end-to-end handoff smoke checklist:
+  `docs/N8N-ENQUIRY-HANDOFF-HOSTED-SMOKE-CHECKLIST.md`.
 - Confirm `N8N_ENQUIRY_HANDOFF_WEBHOOK_URL` and
   `N8N_ENQUIRY_HANDOFF_SHARED_SECRET` are stored only as server-side env.
 - Confirm browser code calls only `POST /api/quote`; browser code never calls
@@ -207,7 +214,7 @@ Before public quote smoke testing:
   enquiry reference, and idempotency key.
 - Confirm the browser bundle contains no n8n webhook URL and no
   `NEXT_PUBLIC_N8N*` variable.
-- Confirm no live n8n workflow import, export, activation, execution, or
+- Confirm no live n8n workflow import, live export, activation, execution, or
   mutation is part of the deployment PR unless separately approved.
 
 ## Optional server-only n8n chat webhook expectations
@@ -220,7 +227,7 @@ integration is in scope:
 - Confirm the browser bundle contains no n8n webhook URL and no
   `NEXT_PUBLIC_N8N*` variable.
 - Confirm n8n workflow JSON is not changed for deployment.
-- Confirm no live n8n workflow import, export, activation, execution, or
+- Confirm no live n8n workflow import, live export, activation, execution, or
   mutation is part of the deployment PR unless separately approved.
 
 ## Local validation checklist
@@ -327,6 +334,9 @@ Run these in order and capture evidence before public traffic.
   approved database inspection process.
 - Confirm the server-side n8n enquiry handoff is attempted only after SKR quote
   persistence succeeds.
+- Confirm the hosted delivery-log migration has been applied only after
+  explicit approval and that delivery-log provider/status constraints include
+  the reviewed n8n contract.
 - Confirm missing or failed n8n handoff still returns an honest
   receipt/processing response with a safe reference id and no provider response
   body.

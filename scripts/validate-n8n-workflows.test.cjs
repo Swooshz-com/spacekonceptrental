@@ -21,6 +21,11 @@ const ragIngestionWorkflowPath = path.join(
   'n8n-workflows',
   'spacekonceptrental-rag-ingestion.workflow.json',
 );
+const enquiryHandoffWorkflowPath = path.join(
+  repoRoot,
+  'n8n-workflows',
+  'spacekonceptrental-enquiry-handoff.workflow.json',
+);
 const validatorPath = path.join(repoRoot, 'scripts', 'validate-n8n-workflows.cjs');
 const exportHelperPath = path.join(repoRoot, 'scripts', 'export-n8n-workflows-live.ps1');
 
@@ -40,6 +45,10 @@ function readErrorHandlerWorkflow() {
 
 function readRagIngestionWorkflow() {
   return JSON.parse(fs.readFileSync(ragIngestionWorkflowPath, 'utf8').replace(/^\uFEFF/, ''));
+}
+
+function readEnquiryHandoffWorkflow() {
+  return JSON.parse(fs.readFileSync(enquiryHandoffWorkflowPath, 'utf8').replace(/^\uFEFF/, ''));
 }
 
 function findNode(workflow, nodeName) {
@@ -482,6 +491,117 @@ test('tracked frontend config and docs do not commit real chat webhook URLs', ()
   }
 
   assert.deepEqual(realChatWebhookUrls, []);
+});
+
+test('enquiry handoff workflow export is an inactive safe readiness skeleton', () => {
+  const workflow = readEnquiryHandoffWorkflow();
+  const text = JSON.stringify(workflow);
+
+  assert.equal(workflow.name, 'SpaceKonceptRental - Enquiry Handoff Readiness Template');
+  assert.equal(workflow.active, false);
+  assert.ok(workflow.nodes.some((node) => node.name === 'Receive SKR Enquiry Handoff'));
+  assert.ok(workflow.nodes.some((node) => node.name === 'Manual HMAC And Idempotency Gate'));
+  assert.ok(workflow.nodes.some((node) => node.name === 'Respond Accepted After Email Handoff'));
+  assert.match(text, /skr\.enquiry\.submitted/);
+  assert.match(text, /x-skr-event/);
+  assert.match(text, /x-skr-idempotency-key/);
+  assert.match(text, /x-skr-timestamp/);
+  assert.match(text, /x-skr-signature/);
+  assert.match(text, /HMAC SHA-256/);
+  assert.match(text, /manual_required_before_activation/);
+  assert.doesNotMatch(text, /https?:\/\//i);
+  assert.doesNotMatch(text, /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/i);
+  assert.doesNotMatch(
+    text,
+    /\b(?:cart|checkout|payment|order|booking|reservation|stock|inventory|customer account|crm|pipeline)\b/i,
+  );
+  assert.doesNotMatch(text, /"credentials"\s*:/);
+  assert.doesNotMatch(text, /"webhookId"\s*:/);
+  assert.doesNotMatch(text, /"staticData"\s*:/);
+  assert.doesNotMatch(text, /"pinData"\s*:/);
+
+  const placeholderConnections = workflow.connections['Send Internal Handoff Placeholder'].main[0];
+  assert.deepEqual(
+    placeholderConnections.map((connection) => connection.node),
+    ['Respond Manual Setup Required'],
+  );
+});
+
+test('normal validation rejects enquiry handoff templates missing signature contract markers', () => {
+  const tempRoot = makeTempRoot();
+  try {
+    const workflowDir = path.join(tempRoot, 'n8n-workflows');
+    const unsafeWorkflow = JSON.parse(
+      JSON.stringify(readEnquiryHandoffWorkflow()).replaceAll('x-skr-signature', 'x-skr-missing'),
+    );
+    writeWorkflow(workflowDir, 'spacekonceptrental-enquiry-handoff.workflow.json', unsafeWorkflow);
+
+    const result = runValidator([workflowDir]);
+
+    assert.notEqual(result.status, 0, result.stdout + result.stderr);
+    assert.match(
+      result.stderr + result.stdout,
+      /enquiry handoff readiness template must reference x-skr-signature/,
+    );
+  } finally {
+    fs.rmSync(tempRoot, { recursive: true, force: true });
+  }
+});
+
+test('normal validation rejects enquiry handoff credentials and webhook URLs', () => {
+  const tempRoot = makeTempRoot();
+  try {
+    const workflowDir = path.join(tempRoot, 'n8n-workflows');
+    const workflow = readEnquiryHandoffWorkflow();
+    findNode(workflow, 'Receive SKR Enquiry Handoff').webhookId = 'real-looking-webhook-id';
+    findNode(workflow, 'Send Internal Handoff Placeholder').credentials = {
+      smtp: {
+        id: 'credential-id-must-not-ship',
+        name: 'Credential name must not ship',
+      },
+    };
+    findNode(workflow, 'Manual security gate note').parameters.content +=
+      '\nDo not ship this URL: https://n8n.invalid.example/webhook/real-path';
+    writeWorkflow(workflowDir, 'spacekonceptrental-enquiry-handoff.workflow.json', workflow);
+
+    const result = runValidator([workflowDir]);
+
+    assert.notEqual(result.status, 0, result.stdout + result.stderr);
+    assert.match(result.stderr + result.stdout, /must not include credential bindings/);
+    assert.match(result.stderr + result.stdout, /must not include webhookId values|real-looking webhookId/);
+    assert.match(result.stderr + result.stdout, /must not contain webhook URLs/);
+  } finally {
+    fs.rmSync(tempRoot, { recursive: true, force: true });
+  }
+});
+
+test('enquiry handoff docs and browser form stay readiness-only and secret-free', () => {
+  const docs = [
+    'docs/N8N-ENQUIRY-HANDOFF-HOSTED-MIGRATION-RUNBOOK.md',
+    'docs/N8N-ENQUIRY-HANDOFF-HOSTED-SMOKE-CHECKLIST.md',
+    'docs/architecture/QUOTE-ENQUIRY-EMAIL-HANDOFF-DELIVERY-LOG-FOUNDATION.md',
+    'docs/LAUNCH-ROADMAP.md',
+    'docs/DEPLOYMENT-ENVIRONMENT-READINESS.md',
+    'docs/HOSTED-DEPLOYMENT-EXECUTION-RUNBOOK.md',
+    'docs/DEPLOYMENT-SMOKE-TEST-RUNBOOK.md',
+  ];
+  const combinedDocs = docs.map((file) => readText(path.join(repoRoot, file))).join('\n');
+
+  assert.match(combinedDocs, /spacekonceptrental-enquiry-handoff\.workflow\.json/);
+  assert.match(combinedDocs, /N8N-ENQUIRY-HANDOFF-HOSTED-MIGRATION-RUNBOOK\.md/);
+  assert.match(combinedDocs, /N8N-ENQUIRY-HANDOFF-HOSTED-SMOKE-CHECKLIST\.md/);
+  assert.match(combinedDocs, /not hosted staging readiness|not UAT evidence/i);
+  assert.doesNotMatch(combinedDocs, /(?:^|\n)\s*hosted staging readiness\s+is claimed/i);
+  assert.doesNotMatch(combinedDocs, /(?:^|\n)\s*UAT pass\s+is claimed/i);
+  assert.doesNotMatch(combinedDocs, /https?:\/\/[^\s"'`<>)]+\/webhook(?:-test)?\//i);
+  assert.doesNotMatch(combinedDocs, /Bearer\s+[A-Za-z0-9._-]{20,}/i);
+  assert.doesNotMatch(combinedDocs, /sk-[A-Za-z0-9_-]{20,}/i);
+
+  const quoteFormSource = readText(path.join(repoRoot, 'website/components/QuoteRequestForm.tsx'));
+  assert.match(quoteFormSource, /fetch\("\/api\/quote"/);
+  assert.doesNotMatch(quoteFormSource, /N8N_ENQUIRY_HANDOFF_WEBHOOK_URL/);
+  assert.doesNotMatch(quoteFormSource, /N8N_ENQUIRY_HANDOFF_SHARED_SECRET/);
+  assert.doesNotMatch(quoteFormSource, /webhook/i);
 });
 
 test('normal validation rejects raw customer Gmail HTML interpolation', () => {

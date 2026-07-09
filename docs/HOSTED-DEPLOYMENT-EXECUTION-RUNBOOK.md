@@ -106,6 +106,9 @@ checklist.
 Complete these checks against the intended hosted Supabase project before public
 traffic:
 
+- Review the n8n delivery-log migration runbook before applying
+  `supabase/migrations/20260708100000_n8n_enquiry_handoff_delivery_log_contract.sql`:
+  `docs/N8N-ENQUIRY-HANDOFF-HOSTED-MIGRATION-RUNBOOK.md`.
 - Select or create the hosted Supabase project outside this repository.
 - Apply the approved migrations through the approved deployment path.
 - Verify migration state matches the commit being deployed.
@@ -127,6 +130,9 @@ traffic:
 
 Complete n8n and email-provider setup outside this repository:
 
+- Review the inactive repo-side workflow skeleton before importing or
+  recreating it in n8n:
+  `n8n-workflows/spacekonceptrental-enquiry-handoff.workflow.json`.
 - Confirm the reviewed n8n workflow accepts the expected SKR enquiry payload
   only after verifying the timestamped HMAC signature.
 - Confirm the workflow uses the SKR idempotency key before sending duplicate
@@ -143,6 +149,10 @@ Complete n8n and email-provider setup outside this repository:
 ```powershell
 npm run validate:quote-email-runtime-readiness
 ```
+
+Use the hosted enquiry handoff smoke checklist after the hosted migration,
+server-only env, and n8n workflow setup are reviewed:
+`docs/N8N-ENQUIRY-HANDOFF-HOSTED-SMOKE-CHECKLIST.md`.
 
 ## Hosted Validation Commands
 

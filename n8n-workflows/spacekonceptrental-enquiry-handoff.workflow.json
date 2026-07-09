@@ -1,0 +1,472 @@
+{
+  "id": "20000000-0000-4000-8000-000000000001",
+  "name": "SpaceKonceptRental - Enquiry Handoff Readiness Template",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {
+        "content": "# READINESS TEMPLATE\n\n- Inactive repo-side skeleton for the SKR quote/enquiry handoff.\n- Import only for review after hosted Supabase migration approval and n8n operator review.\n- Do not activate until the manual HMAC, timestamp freshness, idempotency, and email handoff steps are implemented in n8n.\n\n## Required manual configuration:\n\n- **Receive SKR Enquiry Handoff**\n  - `path`: Replace the placeholder with the reviewed n8n webhook path in n8n only.",
+        "height": 460,
+        "width": 520,
+        "color": 5
+      },
+      "id": "20000000-0000-4000-8000-000000000101",
+      "name": "Readiness template note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1020,
+        -420
+      ]
+    },
+    {
+      "parameters": {
+        "content": "# SECURITY GATES ARE MANUAL\n\n- Static export does not include credential bindings, secret values, webhook IDs, execution data, or real recipient values.\n- Before activation, replace the manual placeholder with n8n-side verification for timestamp freshness and HMAC SHA-256 over `<timestamp>.<raw body>`.\n- Add a durable idempotency check keyed by `x-skr-idempotency-key` before sending any internal handoff.\n- Add the n8n-owned email or notification node with credentials configured in n8n, not in this file.\n\n## Required manual configuration:\n\n- **Manual HMAC And Idempotency Gate**\n  - Replace this placeholder with verified n8n nodes before activation.\n- **Send Internal Handoff Placeholder**\n  - Replace with the reviewed n8n-owned email or notification node before activation.",
+        "height": 540,
+        "width": 560,
+        "color": 3
+      },
+      "id": "20000000-0000-4000-8000-000000000102",
+      "name": "Manual security gate note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -460,
+        -500
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "SKR_ENQUIRY_HANDOFF_WEBHOOK_PATH_PLACEHOLDER",
+        "responseMode": "responseNode",
+        "options": {
+          "rawBody": true
+        }
+      },
+      "id": "20000000-0000-4000-8000-000000000201",
+      "name": "Receive SKR Enquiry Handoff",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -920,
+        120
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "validate-skr-contract-event-header",
+              "name": "event_header",
+              "value": "={{ $(\"Receive SKR Enquiry Handoff\").item.json.headers?.[\"x-skr-event\"] || \"\" }}",
+              "type": "string"
+            },
+            {
+              "id": "validate-skr-contract-reference-header",
+              "name": "enquiry_reference_header",
+              "value": "={{ $(\"Receive SKR Enquiry Handoff\").item.json.headers?.[\"x-skr-enquiry-reference\"] || \"\" }}",
+              "type": "string"
+            },
+            {
+              "id": "validate-skr-contract-idempotency-header",
+              "name": "idempotency_key",
+              "value": "={{ $(\"Receive SKR Enquiry Handoff\").item.json.headers?.[\"x-skr-idempotency-key\"] || \"\" }}",
+              "type": "string"
+            },
+            {
+              "id": "validate-skr-contract-timestamp-header",
+              "name": "timestamp_header",
+              "value": "={{ $(\"Receive SKR Enquiry Handoff\").item.json.headers?.[\"x-skr-timestamp\"] || \"\" }}",
+              "type": "string"
+            },
+            {
+              "id": "validate-skr-contract-signature-header",
+              "name": "signature_header",
+              "value": "={{ $(\"Receive SKR Enquiry Handoff\").item.json.headers?.[\"x-skr-signature\"] || \"\" }}",
+              "type": "string"
+            },
+            {
+              "id": "validate-skr-contract-body-event",
+              "name": "payload_event",
+              "value": "={{ $(\"Receive SKR Enquiry Handoff\").item.json.body?.event || \"\" }}",
+              "type": "string"
+            },
+            {
+              "id": "validate-skr-contract-required-headers",
+              "name": "required_headers_present",
+              "value": "={{ Boolean($(\"Receive SKR Enquiry Handoff\").item.json.headers?.[\"x-skr-event\"] && $(\"Receive SKR Enquiry Handoff\").item.json.headers?.[\"x-skr-enquiry-reference\"] && $(\"Receive SKR Enquiry Handoff\").item.json.headers?.[\"x-skr-idempotency-key\"] && $(\"Receive SKR Enquiry Handoff\").item.json.headers?.[\"x-skr-timestamp\"] && $(\"Receive SKR Enquiry Handoff\").item.json.headers?.[\"x-skr-signature\"]) }}",
+              "type": "boolean"
+            },
+            {
+              "id": "validate-skr-contract-event-match",
+              "name": "event_matches",
+              "value": "={{ $(\"Receive SKR Enquiry Handoff\").item.json.headers?.[\"x-skr-event\"] === \"skr.enquiry.submitted\" && $(\"Receive SKR Enquiry Handoff\").item.json.body?.event === \"skr.enquiry.submitted\" }}",
+              "type": "boolean"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "20000000-0000-4000-8000-000000000202",
+      "name": "Validate SKR Contract Markers",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -660,
+        120
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "skr-required-headers-present",
+              "leftValue": "={{ $(\"Validate SKR Contract Markers\").item.json.required_headers_present }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "skr-event-matches",
+              "leftValue": "={{ $(\"Validate SKR Contract Markers\").item.json.event_matches }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "20000000-0000-4000-8000-000000000203",
+      "name": "Are Required SKR Markers Present",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -400,
+        120
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "manual-gate-status",
+              "name": "manual_gate_status",
+              "value": "manual_required_before_activation",
+              "type": "string"
+            },
+            {
+              "id": "manual-gate-hmac",
+              "name": "hmac_signature_verification",
+              "value": "Replace this placeholder with n8n-side verification of x-skr-signature before activation.",
+              "type": "string"
+            },
+            {
+              "id": "manual-gate-timestamp",
+              "name": "timestamp_freshness_verification",
+              "value": "Replace this placeholder with a timestamp freshness window check before activation.",
+              "type": "string"
+            },
+            {
+              "id": "manual-gate-idempotency",
+              "name": "idempotency_verification",
+              "value": "Replace this placeholder with a durable idempotency check using x-skr-idempotency-key before activation.",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "20000000-0000-4000-8000-000000000204",
+      "name": "Manual HMAC And Idempotency Gate",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -120,
+        40
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "handoff-summary-reference",
+              "name": "public_reference",
+              "value": "={{ $(\"Receive SKR Enquiry Handoff\").item.json.body?.enquiry?.publicReference || $(\"Validate SKR Contract Markers\").item.json.enquiry_reference_header || \"not_available\" }}",
+              "type": "string"
+            },
+            {
+              "id": "handoff-summary-submitted-at",
+              "name": "submitted_at",
+              "value": "={{ $(\"Receive SKR Enquiry Handoff\").item.json.body?.submittedAt || \"not_available\" }}",
+              "type": "string"
+            },
+            {
+              "id": "handoff-summary-contact-name",
+              "name": "customer_name",
+              "value": "={{ $(\"Receive SKR Enquiry Handoff\").item.json.body?.contact?.name || \"not provided\" }}",
+              "type": "string"
+            },
+            {
+              "id": "handoff-summary-contact-email",
+              "name": "customer_email",
+              "value": "={{ $(\"Receive SKR Enquiry Handoff\").item.json.body?.contact?.email || \"not provided\" }}",
+              "type": "string"
+            },
+            {
+              "id": "handoff-summary-contact-phone",
+              "name": "customer_phone",
+              "value": "={{ $(\"Receive SKR Enquiry Handoff\").item.json.body?.contact?.phone || \"not provided\" }}",
+              "type": "string"
+            },
+            {
+              "id": "handoff-summary-event-date",
+              "name": "event_date",
+              "value": "={{ $(\"Receive SKR Enquiry Handoff\").item.json.body?.eventContext?.date || \"not provided\" }}",
+              "type": "string"
+            },
+            {
+              "id": "handoff-summary-venue",
+              "name": "venue",
+              "value": "={{ $(\"Receive SKR Enquiry Handoff\").item.json.body?.eventContext?.venue || \"not provided\" }}",
+              "type": "string"
+            },
+            {
+              "id": "handoff-summary-message",
+              "name": "customer_message",
+              "value": "={{ $(\"Receive SKR Enquiry Handoff\").item.json.body?.eventContext?.message || \"not provided\" }}",
+              "type": "string"
+            },
+            {
+              "id": "handoff-summary-items",
+              "name": "requested_items_summary",
+              "value": "={{ ($(\"Receive SKR Enquiry Handoff\").item.json.body?.requestedItems || []).map(item => [item.quantity || 1, item.name || \"unnamed item\", item.notes || \"\"].filter(Boolean).join(\" x \")).join(\"; \") || \"not provided\" }}",
+              "type": "string"
+            },
+            {
+              "id": "handoff-summary-source",
+              "name": "source_context",
+              "value": "={{ [$(\"Receive SKR Enquiry Handoff\").item.json.body?.enquiry?.sourcePath, $(\"Receive SKR Enquiry Handoff\").item.json.body?.enquiry?.listingSlug].filter(Boolean).join(\" | \") || \"website\" }}",
+              "type": "string"
+            },
+            {
+              "id": "handoff-summary-subject",
+              "name": "handoff_subject",
+              "value": "={{ \"[SKR Enquiry] \" + ($(\"Receive SKR Enquiry Handoff\").item.json.body?.enquiry?.publicReference || $(\"Validate SKR Contract Markers\").item.json.enquiry_reference_header || \"new enquiry\") }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "20000000-0000-4000-8000-000000000205",
+      "name": "Build Internal Handoff Summary",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        160,
+        40
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "handoff-placeholder-status",
+              "name": "send_status",
+              "value": "manual_email_or_notification_node_required_before_activation",
+              "type": "string"
+            },
+            {
+              "id": "handoff-placeholder-note",
+              "name": "operator_note",
+              "value": "Replace this placeholder with an n8n-owned email or internal notification node using credentials configured in n8n.",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "20000000-0000-4000-8000-000000000206",
+      "name": "Send Internal Handoff Placeholder",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        440,
+        40
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { error: \"not_implemented\", message: \"n8n enquiry handoff template requires manual HMAC, idempotency, and email node configuration before activation.\" } }}",
+        "options": {
+          "responseCode": 503,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          }
+        }
+      },
+      "id": "20000000-0000-4000-8000-000000000207",
+      "name": "Respond Manual Setup Required",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        720,
+        40
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { accepted: true, event: \"skr.enquiry.submitted\", enquiry_reference: $(\"Build Internal Handoff Summary\").item.json.public_reference, idempotency_key: $(\"Validate SKR Contract Markers\").item.json.idempotency_key } }}",
+        "options": {
+          "responseCode": 202,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          }
+        }
+      },
+      "id": "20000000-0000-4000-8000-000000000208",
+      "name": "Respond Accepted After Email Handoff",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        720,
+        -180
+      ],
+      "notes": "Connect this only after manual HMAC verification, timestamp freshness, idempotency, and email/internal notification nodes are implemented and reviewed in n8n."
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { error: \"validation_error\", message: \"Missing or invalid SKR enquiry handoff headers or event.\" } }}",
+        "options": {
+          "responseCode": 400,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          }
+        }
+      },
+      "id": "20000000-0000-4000-8000-000000000209",
+      "name": "Respond Invalid Contract",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        -120,
+        280
+      ]
+    }
+  ],
+  "connections": {
+    "Receive SKR Enquiry Handoff": {
+      "main": [
+        [
+          {
+            "node": "Validate SKR Contract Markers",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate SKR Contract Markers": {
+      "main": [
+        [
+          {
+            "node": "Are Required SKR Markers Present",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Are Required SKR Markers Present": {
+      "main": [
+        [
+          {
+            "node": "Manual HMAC And Idempotency Gate",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond Invalid Contract",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Manual HMAC And Idempotency Gate": {
+      "main": [
+        [
+          {
+            "node": "Build Internal Handoff Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Internal Handoff Summary": {
+      "main": [
+        [
+          {
+            "node": "Send Internal Handoff Placeholder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Internal Handoff Placeholder": {
+      "main": [
+        [
+          {
+            "node": "Respond Manual Setup Required",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

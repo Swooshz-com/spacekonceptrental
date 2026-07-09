@@ -1,6 +1,6 @@
 # Launch Roadmap
 
-This roadmap sequences the next SpaceKonceptRental launch work after PR #286.
+This roadmap sequences the next SpaceKonceptRental launch work after PR #287.
 It is a focused implementation plan, not hosted staging evidence and not a
 production-readiness claim.
 
@@ -18,7 +18,8 @@ Hero layout, and clickable admin brand link. PR #285 redesigned Catalogue into
 an owner-friendly workflow, removed standalone category management from the
 primary Catalogue UX, and mapped image data to an owner-safe client DTO before
 the client boundary. PR #286 made Setups an honest derived review workflow
-backed by published Catalogue items for launch.
+backed by published Catalogue items for launch. PR #287 implemented the
+server-only SKR enquiry handoff contract and delivery-log write path.
 
 Current protected admin pages remain:
 
@@ -144,9 +145,11 @@ Exit criteria:
 - Public Setups behavior is honest about its Catalogue source.
 - No setup-specific records are introduced.
 
-### 4. n8n enquiry handoff UI and backend
+### 4. n8n enquiry handoff UI, backend, and workflow readiness
 
-Status: current implementation slice.
+Status: SKR-side server-only handoff implemented in PR #287. Repo-side n8n
+workflow readiness, hosted migration runbook, and hosted smoke checklist are
+added in this readiness package.
 
 Goal: make enquiry email handoff operational without exposing secrets or fake
 success.
@@ -181,10 +184,20 @@ Backend notes:
   status contract for `n8n`, `pending`, `delivered`, `failed`, and
   `not_configured`. Hosted Supabase migration application remains separate
   approval-gated work.
-- The committed n8n exports do not include a quote-enquiry handoff workflow in
-  this PR; the expected payload, HMAC header, and idempotency contract are
+- A repo-side inactive n8n workflow skeleton is reviewed at
+  `n8n-workflows/spacekonceptrental-enquiry-handoff.workflow.json`.
+- The workflow skeleton contains no credentials, no real webhook URLs, no real
+  recipient addresses, and no execution data. It is not a live workflow import,
+  activation, or execution.
+- The workflow skeleton intentionally requires manual n8n setup for HMAC
+  verification, timestamp freshness, idempotency, and email/internal handoff
+  before activation; it must not be treated as hosted readiness by itself.
+- Hosted Supabase migration application remains separate approval-gated work
   documented in
-  `docs/architecture/QUOTE-ENQUIRY-EMAIL-HANDOFF-DELIVERY-LOG-FOUNDATION.md`.
+  `docs/N8N-ENQUIRY-HANDOFF-HOSTED-MIGRATION-RUNBOOK.md`.
+- Hosted end-to-end enquiry -> n8n -> email/internal handoff -> Delivery Log
+  validation remains separate approval-gated work documented in
+  `docs/N8N-ENQUIRY-HANDOFF-HOSTED-SMOKE-CHECKLIST.md`.
 
 Exit criteria:
 
@@ -192,11 +205,12 @@ Exit criteria:
   leaking raw provider or workflow details.
 - Public quote response remains honest and generic.
 - Browser never calls n8n directly.
+- No hosted staging readiness or UAT pass is claimed.
 
 ### 5. Google-only admin access management
 
-Goal: keep admin access manageable for the owner without expanding customer
-account scope.
+Goal: next implementation slice after the n8n workflow readiness package; keep
+admin access manageable for the owner without expanding customer account scope.
 
 Target:
 
