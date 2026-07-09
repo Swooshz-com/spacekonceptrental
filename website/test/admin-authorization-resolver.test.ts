@@ -222,8 +222,8 @@ describe("admin authorization resolver contract", () => {
     });
     expect(adapters.calls).toEqual([
       "identity",
-      "profile:auth-user-1",
       `workspace:${activeWorkspaceId}`,
+      "profile:auth-user-1",
       `membership:admin-user-1:${activeWorkspaceId}`
     ]);
   });

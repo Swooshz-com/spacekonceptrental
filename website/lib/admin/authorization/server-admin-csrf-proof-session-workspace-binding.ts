@@ -250,8 +250,18 @@ export async function resolveServerAdminCsrfProofSessionWorkspaceBinding(
       return missingSessionDecision(input);
     }
 
+    const workspaceResolution =
+      await adapterSet.adapters.workspace.resolveWorkspaceForRequest(
+        toWorkspaceResolutionInput(input, requestedOperation)
+      );
+    const workspaceId = normalizeRequired(
+      workspaceResolution.serverResolvedWorkspaceId
+    );
+
     const adminUser = await adapterSet.adapters.profile.resolveAdminProfile(
-      authUserId
+      authUserId,
+      workspaceId,
+      identity
     );
 
     if (!adminUser) {
@@ -262,13 +272,6 @@ export async function resolveServerAdminCsrfProofSessionWorkspaceBinding(
       return deny(input, "admin_profile_inactive", 403);
     }
 
-    const workspaceResolution =
-      await adapterSet.adapters.workspace.resolveWorkspaceForRequest(
-        toWorkspaceResolutionInput(input, requestedOperation)
-      );
-    const workspaceId = normalizeRequired(
-      workspaceResolution.serverResolvedWorkspaceId
-    );
     const membership = workspaceId
       ? await adapterSet.adapters.membership.resolveMembership(
           adminUser.id,

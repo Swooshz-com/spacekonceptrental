@@ -167,7 +167,7 @@ describe("admin authorization adapter boundary", () => {
     });
   });
 
-  it("does not resolve workspace or membership after inactive admin profiles", async () => {
+  it("does not resolve membership after inactive admin profiles", async () => {
     const calls: string[] = [];
 
     await expect(
@@ -191,7 +191,11 @@ describe("admin authorization adapter boundary", () => {
       reason: "admin_profile_inactive",
       statusCode: 403
     });
-    expect(calls).toEqual(["identity", "profile:auth-user-1"]);
+    expect(calls).toEqual([
+      "identity",
+      "workspace:product.write",
+      "profile:auth-user-1"
+    ]);
   });
 
   it("denies missing workspace resolution from fake adapters", async () => {
@@ -377,7 +381,7 @@ describe("admin authorization adapter boundary", () => {
     });
   });
 
-  it("does not resolve workspace or membership for unsupported operations", async () => {
+  it("does not resolve membership for unsupported operations", async () => {
     const calls: string[] = [];
 
     await expect(
@@ -393,7 +397,11 @@ describe("admin authorization adapter boundary", () => {
       reason: "operation_not_supported",
       statusCode: 400
     });
-    expect(calls).toEqual(["identity", "profile:auth-user-1"]);
+    expect(calls).toEqual([
+      "identity",
+      "workspace:billing.manage",
+      "profile:auth-user-1"
+    ]);
   });
 
   it("keeps deny responses boring and safe", async () => {

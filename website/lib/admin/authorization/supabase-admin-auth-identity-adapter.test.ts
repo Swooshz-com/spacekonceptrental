@@ -35,6 +35,38 @@ function createMockAdminReadClient(
   tables: Record<string, unknown[]>
 ): SupabaseAdminReadClient {
   return {
+    async rpc(fn, args) {
+      if (fn === "get_admin_access_membership") {
+        const rpcArgs = args as {
+          p_workspace_id: string;
+          p_admin_user_id: string;
+        };
+        const rows = (tables.admin_access ?? []).filter((row) => {
+          if (!row || typeof row !== "object" || Array.isArray(row)) {
+            return false;
+          }
+
+          const record = row as Record<string, unknown>;
+
+          return (
+            record.linked_admin_user_id === rpcArgs.p_admin_user_id &&
+            record.workspace_id === rpcArgs.p_workspace_id
+          );
+        });
+
+        return {
+          data: rows,
+          error: null
+        };
+      }
+
+      return {
+        data: {
+          ok: true
+        },
+        error: null
+      };
+    },
     from(table: string) {
       return {
         select() {
@@ -89,7 +121,11 @@ describe("Supabase admin auth identity adapter", () => {
               return {
                 data: {
                   user: {
-                    id: "auth-user-123"
+                    id: "auth-user-123",
+                    email: "Owner@Example.com",
+                    app_metadata: {
+                      provider: "google"
+                    }
                   }
                 },
                 error: null
@@ -105,7 +141,40 @@ describe("Supabase admin auth identity adapter", () => {
     ]);
     expect(identity).toEqual({
       authenticated: true,
-      authUserId: "auth-user-123"
+      authUserId: "auth-user-123",
+      email: "owner@example.com",
+      provider: "google"
+    });
+  });
+
+  it("fails closed when the Supabase Auth user is not a Google identity with email", async () => {
+    const identity = await resolveSupabaseAdminAuthIdentity({
+      readConfig: () => configuredSupabase,
+      readCookies: async () => [],
+      createAuthClient: () => ({
+        auth: {
+          async getUser() {
+            return {
+              data: {
+                user: {
+                  id: "auth-user-password",
+                  email: "admin@example.com",
+                  app_metadata: {
+                    provider: "email"
+                  }
+                }
+              },
+              error: null
+            };
+          }
+        }
+      })
+    });
+
+    expect(identity).toEqual({
+      authenticated: false,
+      reason: "auth_session_missing",
+      statusCode: 401
     });
   });
 
@@ -196,7 +265,11 @@ describe("Supabase admin auth identity adapter", () => {
             return {
               data: {
                 user: {
-                  id: "auth-user-adapter"
+                  id: "auth-user-adapter",
+                  email: "admin@example.com",
+                  app_metadata: {
+                    provider: "google"
+                  }
                 }
               },
               error: null
@@ -208,7 +281,9 @@ describe("Supabase admin auth identity adapter", () => {
 
     await expect(adapter.resolveIdentity()).resolves.toEqual({
       authenticated: true,
-      authUserId: "auth-user-adapter"
+      authUserId: "auth-user-adapter",
+      email: "admin@example.com",
+      provider: "google"
     });
   });
 
@@ -355,12 +430,31 @@ describe("Supabase admin auth identity adapter", () => {
               status: "active",
               role: "admin"
             }
+          ],
+          admin_access: [
+            {
+              linked_admin_user_id: "admin-user-1",
+              normalized_email: "admin@example.com",
+              workspace_id: "workspace-1",
+              status: "active",
+              role: "admin"
+            }
           ]
         })
     });
 
     await expect(
-      resolveSupabaseAdminProfile("auth-user-1", { supabase })
+      resolveSupabaseAdminProfile(
+        "auth-user-1",
+        "workspace-1",
+        {
+          authenticated: true,
+          authUserId: "auth-user-1",
+          email: "admin@example.com",
+          provider: "google"
+        },
+        { supabase }
+      )
     ).resolves.toEqual({
       id: "admin-user-1",
       status: "active"

@@ -301,7 +301,7 @@ test('real migration directory passes static validation', () => {
   const result = runValidator(realMigrationsDir);
 
   assert.equal(result.status, 0, result.stdout + result.stderr);
-  assert.match(result.stdout, /checked 29 migration SQL file\(s\)/);
+  assert.match(result.stdout, /checked 30 migration SQL file\(s\)/);
 });
 
 test('real base schema migration creates the planned MVP tables', () => {
@@ -1757,6 +1757,72 @@ test('real migrations update quote email delivery log for n8n enquiry handoff st
   assert.doesNotMatch(migration, /grant\s+(select|insert|update|delete|all)/i);
   assert.doesNotMatch(migration, /https?:\/\/|N8N_ENQUIRY_HANDOFF|shared_secret|provider_response|email_body|headers json|headers jsonb/i);
   assert.doesNotMatch(migration, /checkout|payment|purchase|booking|reservation|stock|inventory/i);
+});
+
+test('real migrations add Google-only DB-backed admin access management', () => {
+  const migrationFileName =
+    '20260709100000_google_admin_access_management.sql';
+  const migration = readRealMigration(migrationFileName);
+  const sql = normalizeSql(migration);
+
+  assert.match(
+    sql,
+    /create table if not exists public\.admin_access \(/,
+  );
+  for (const column of [
+    'normalized_email text not null',
+    "role text not null default 'admin'",
+    "status text not null default 'active'",
+    'linked_admin_user_id uuid',
+    'created_by_admin_access_id uuid',
+    'updated_by_admin_access_id uuid',
+  ]) {
+    assert.ok(sql.includes(column), `Missing admin access column: ${column}`);
+  }
+  assert.match(sql, /constraint admin_access_role_check check \(role in \('owner', 'admin'\)\)/);
+  assert.match(
+    sql,
+    /constraint admin_access_status_check check \(status in \('active', 'disabled', 'removed'\)\)/,
+  );
+  assert.match(sql, /unique \(workspace_id, normalized_email\)/);
+  assert.match(
+    sql,
+    /create unique index if not exists admin_access_single_owner_per_workspace_idx on public\.admin_access \(workspace_id\) where role = 'owner';/,
+  );
+  assert.match(sql, /alter table public\.admin_access enable row level security;/);
+  assert.match(sql, /revoke all on table public\.admin_access from anon;/);
+  assert.match(sql, /grant select \( normalized_email, role, status, created_at, updated_at \) on public\.admin_access to authenticated;/);
+  assert.doesNotMatch(sql, /grant select \*/);
+  assert.doesNotMatch(sql, /grant select \([^)]*\b(?:id|workspace_id|linked_admin_user_id|created_by_admin_access_id|updated_by_admin_access_id)\b[^)]*\) on public\.admin_access to authenticated/);
+  assert.match(sql, /create or replace function public\.prevent_admin_access_owner_mutation\(\)/);
+  assert.match(sql, /raise exception 'admin_owner_immutable'/);
+  assert.match(sql, /create trigger admin_access_prevent_owner_mutation/);
+  assert.match(sql, /create or replace function public\.ensure_admin_access_membership\(\s*p_workspace_id uuid\s*\)/);
+  assert.match(sql, /create or replace function public\.list_admin_access_records\(\s*p_workspace_id uuid\s*\)/);
+  assert.match(sql, /returns table \( normalized_email text, role text, status text, created_at timestamp with time zone, updated_at timestamp with time zone \)/);
+  assert.match(sql, /from public\.admin_access aa where aa\.workspace_id = p_workspace_id and public\.is_workspace_admin_access_member\(p_workspace_id\)/);
+  assert.match(sql, /grant execute on function public\.list_admin_access_records\(uuid\) to authenticated;/);
+  assert.match(sql, /create or replace function public\.get_admin_access_membership\(\s*p_workspace_id uuid,\s*p_admin_user_id uuid\s*\)/);
+  assert.match(sql, /returns table \( normalized_email text, role text, status text \)/);
+  assert.match(sql, /aa\.linked_admin_user_id/);
+  assert.match(sql, /au\.auth_user_id = \(\s*select auth\.uid\(\)\s*\)/);
+  assert.match(sql, /grant execute on function public\.get_admin_access_membership\(uuid, uuid\) to authenticated;/);
+  assert.match(sql, /create or replace function public\.execute_admin_access_write\(\s*p_workspace_id uuid,\s*p_action text,\s*p_email text\s*\)/);
+  assert.match(sql, /not public\.is_workspace_admin_access_owner\(p_workspace_id\)/);
+  assert.match(sql, /'owner_immutable'/);
+  assert.match(sql, /grant execute on function public\.execute_admin_access_write\(uuid, text, text\) to authenticated;/);
+  assert.match(sql, /create or replace function public\.is_workspace_member\(target_workspace_id uuid\)/);
+  assert.match(sql, /public\.is_workspace_admin_access_member\(target_workspace_id\)/);
+  assert.match(sql, /create or replace function public\.is_workspace_product_manager/);
+  assert.match(sql, /create or replace function public\.is_workspace_quote_manager/);
+  assert.match(sql, /aa\.status = 'active'/);
+  assert.match(sql, /aa\.role in \('owner', 'admin'\)/);
+  assert.doesNotMatch(migration, /insert into public\.admin_access\s+values/i);
+  assert.doesNotMatch(migration, /values\s*\(\s*'[^']+@[^']+'/i);
+  assert.doesNotMatch(migration, /password|viewer/i);
+  assert.doesNotMatch(sql, /role in \('owner', 'admin', 'viewer'\)/);
+  assert.doesNotMatch(migration, /checkout|payment|purchase|booking|reservation|stock|inventory/i);
+  assert.doesNotMatch(migration, /https?:\/\/|oauth|client_secret|service_role/i);
 });
 
 test('real migrations add workspace-scoped homepage hero content with protected admin writes', () => {

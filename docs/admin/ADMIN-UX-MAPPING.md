@@ -78,37 +78,66 @@ Current controls:
 - Content status counts.
 - Attention required counts.
 - Quick links to Hero, Catalogue, and Setups.
+- Google admin access panel on the existing dashboard.
+- Current signed-in admin email, owner row, active admins, disabled/removed
+  admins, and owner-only add/disable/remove/reactivate actions.
 
 Confusing or unnecessary controls:
 
 - The dashboard is useful as a shell, but it is not yet a true owner task
   command centre because it does not deep-link to the exact record that needs
   attention.
+- Viewer is not a launch-facing admin concept. If the historical policy model
+  still contains `viewer`, it should stay hidden/de-emphasized and must not be
+  presented as a normal launch role.
 
 Controls to remove:
 
 - None in this PR.
 - Do not add quote inbox, internal quote workflow, or provider mutation
   controls to this six-page shell.
+- Do not add `/admin/access`, `/admin/users`, `/admin/settings`, or another
+  protected admin access route for launch.
+- Do not add password login, public signup, customer accounts, or invitation
+  email claims.
 
 Controls to merge:
 
 - Future dashboard polish should merge attention rows and quick links into
   direct task cards once Catalogue and Setups have owner-friendly editors.
+- Admin access management stays inside `/admin` for launch rather than becoming
+  a standalone primary navigation item.
 
 Backend constraints:
 
 - The page reads protected catalogue summaries through the existing
   owner/admin route-gated admin shell and session-bound read client.
+- Google-only admin access is backed by `admin_access` once the reviewed
+  migration is applied to hosted Supabase.
+- A user must pass both checks: Google/Supabase Auth session and an active
+  owner/admin access record for the normalized email.
+- The dashboard read uses the owner-safe `list_admin_access_records` helper and
+  the admin gate uses `get_admin_access_membership`; raw `admin_access` IDs,
+  workspace IDs, linked admin user IDs, and audit linkage IDs are not owner UI
+  fields.
+- Owner access is immutable. Admin access writes require active owner access
+  and the existing `membership.manage` CSRF/route-gate lane.
+- Existing `admin_users` and `memberships` remain for compatibility/audit
+  linkage; `admin_access` is the launch allowlist gate.
 - It must not expose workspace internals, SQL/provider errors, secrets, or
   hidden admin details.
 
 Next implementation slice:
 
-- Keep the dashboard as navigation and readiness summary while the subpages are
-  redesigned.
-- After Catalogue and Setups are improved, add direct task links to filtered
-  views rather than adding new protected routes.
+- Hosted application of
+  `supabase/migrations/20260709100000_google_admin_access_management.sql`
+  remains approval-gated.
+- Owner access bootstrap must happen only through the approved hosted Supabase
+  process after explicit approval, with no owner email or credential committed
+  to the repo and no seed file committed. The owner signs in with Google using
+  the exact normalized email after bootstrap.
+- After hosted migration and access bootstrap, verify unknown Google users and
+  disabled/removed admins are blocked before UAT claims.
 
 ### `/admin/hero`
 
@@ -396,7 +425,8 @@ Next implementation slice:
   that blocks credentials, real webhook values, and fake accepted responses in
   the skeleton.
 - Keep HubSpot mirror optional and later.
-- Continue next with Google-only admin access management.
+- Google-only admin access management follows as the next launch-critical
+  protected admin slice.
 
 ### `/admin/delivery-log`
 
@@ -445,7 +475,7 @@ Current implementation slice:
 2. Catalogue owner workflow redesign.
 3. Setups owner workflow decision and implementation.
 4. n8n enquiry handoff UI and backend.
-5. Google-only admin access management.
+5. Google-only admin access management inside `/admin`.
 6. Chatbot mapping.
 7. Hostinger/Coolify deployment and hosted UAT.
 

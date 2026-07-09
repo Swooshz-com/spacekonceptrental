@@ -25,6 +25,8 @@ export type SupabaseAdminAuthIdentityResult =
   | {
       authenticated: true;
       authUserId: string;
+      email: string;
+      provider: "google";
     }
   | {
       authenticated: false;
@@ -51,6 +53,10 @@ export type SupabaseAuthUserClient = {
       data?: {
         user?: {
           id?: string | null;
+          email?: string | null;
+          app_metadata?: {
+            provider?: string | null;
+          } | null;
         } | null;
       } | null;
       error?: unknown;
@@ -60,10 +66,18 @@ export type SupabaseAuthUserClient = {
 
 export type SupabaseAdminAuthSessionClient = {
   auth: {
-    signInWithPassword(input: {
-      email: string;
-      password: string;
+    signInWithOAuth(input: {
+      provider: "google";
+      options: {
+        redirectTo: string;
+      };
     }): Promise<{
+      data?: {
+        url?: string | null;
+      } | null;
+      error?: unknown;
+    }>;
+    exchangeCodeForSession(code: string): Promise<{
       error?: unknown;
     }>;
     signOut(): Promise<{
@@ -88,9 +102,12 @@ export type SupabaseAdminAuthSessionClientFactoryInput = {
   responseCookies: SupabaseAuthCookieWriter;
 };
 
-export type SupabaseAdminAuthSessionInput = {
-  email: string;
-  password: string;
+export type SupabaseAdminGoogleAuthSessionInput = {
+  redirectTo: string;
+};
+
+export type SupabaseAdminAuthCodeExchangeInput = {
+  code: string;
 };
 
 export type SupabaseAdminAuthSessionFailureReason =
@@ -101,6 +118,7 @@ export type SupabaseAdminAuthSessionFailureReason =
 export type SupabaseAdminAuthSessionResult =
   | {
       ok: true;
+      redirectUrl?: string;
     }
   | {
       ok: false;
@@ -149,6 +167,22 @@ function adminReadClientUnavailable(): SupabaseAdminReadClientResult {
     client: null,
     reason: "authenticated_admin_read_client_required"
   };
+}
+
+function normalizeRequired(value: string | null | undefined) {
+  const normalized = value?.trim();
+
+  return normalized ? normalized : null;
+}
+
+function normalizeIdentityEmail(value: string | null | undefined) {
+  const normalized = normalizeRequired(value)?.toLowerCase();
+
+  return normalized && normalized.includes("@") ? normalized : null;
+}
+
+function normalizeProvider(value: string | null | undefined) {
+  return normalizeRequired(value)?.toLowerCase() ?? null;
 }
 
 async function readNextRequestCookies(): Promise<SupabaseAuthCookie[]> {
@@ -242,14 +276,18 @@ export async function resolveSupabaseAdminAuthIdentity(
     });
     const { data, error } = await client.auth.getUser();
     const authUserId = data?.user?.id?.trim();
+    const email = normalizeIdentityEmail(data?.user?.email);
+    const provider = normalizeProvider(data?.user?.app_metadata?.provider);
 
-    if (error || !authUserId) {
+    if (error || !authUserId || !email || provider !== "google") {
       return unauthenticated("auth_session_missing", 401);
     }
 
     return {
       authenticated: true,
-      authUserId
+      authUserId,
+      email,
+      provider
     };
   } catch {
     return unauthenticated("auth_provider_error", 503);
@@ -301,8 +339,8 @@ export function createSupabaseAdminAuthIdentityAdapter(
   };
 }
 
-export async function signInSupabaseAdminAuthSession(
-  input: SupabaseAdminAuthSessionInput,
+export async function signInSupabaseAdminGoogleAuthSession(
+  input: SupabaseAdminGoogleAuthSessionInput,
   dependencies: SupabaseAdminAuthSessionDependencies
 ): Promise<SupabaseAdminAuthSessionResult> {
   const readConfig = dependencies.readConfig ?? getSupabaseServerConfig;
@@ -324,7 +362,63 @@ export async function signInSupabaseAdminAuthSession(
       requestCookies: dependencies.requestCookies,
       responseCookies: dependencies.responseCookies
     });
-    const { error } = await client.auth.signInWithPassword(input);
+    const { data, error } = await client.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: input.redirectTo
+      }
+    });
+    const redirectUrl = normalizeRequired(data?.url);
+
+    return error || !redirectUrl
+      ? {
+          ok: false,
+          reason: "auth_session_invalid"
+        }
+      : {
+          ok: true,
+          redirectUrl
+        };
+  } catch {
+    return {
+      ok: false,
+      reason: "auth_provider_error"
+    };
+  }
+}
+
+export async function exchangeSupabaseAdminAuthCodeForSession(
+  input: SupabaseAdminAuthCodeExchangeInput,
+  dependencies: SupabaseAdminAuthSessionDependencies
+): Promise<SupabaseAdminAuthSessionResult> {
+  const readConfig = dependencies.readConfig ?? getSupabaseServerConfig;
+  const config = readConfig();
+  const code = normalizeRequired(input.code);
+
+  if (!code) {
+    return {
+      ok: false,
+      reason: "auth_session_invalid"
+    };
+  }
+
+  if (!config.configured) {
+    return {
+      ok: false,
+      reason: "supabase_server_env_missing"
+    };
+  }
+
+  const createSessionClient =
+    dependencies.createSessionClient ?? createSupabaseSsrAuthSessionClient;
+
+  try {
+    const client = createSessionClient({
+      config,
+      requestCookies: dependencies.requestCookies,
+      responseCookies: dependencies.responseCookies
+    });
+    const { error } = await client.auth.exchangeCodeForSession(code);
 
     return error
       ? {

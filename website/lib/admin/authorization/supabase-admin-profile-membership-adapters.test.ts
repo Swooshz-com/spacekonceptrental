@@ -20,6 +20,11 @@ type QueryCall = {
   limit: number;
 };
 
+type RpcCall = {
+  fn: string;
+  args: Record<string, string>;
+};
+
 type MockTableResult = {
   data?: unknown;
   error?: unknown;
@@ -36,19 +41,58 @@ function readSource() {
 }
 
 function createMockSupabase(
-  tables: Record<string, MockTableResult>
+  tables: Record<string, MockTableResult>,
+  rpcs: Record<string, MockTableResult> = {}
 ): {
   calls: QueryCall[];
+  rpcCalls: RpcCall[];
   supabase: SupabaseAdminReadClientResult;
 } {
   const calls: QueryCall[] = [];
+  const rpcCalls: RpcCall[] = [];
 
   return {
     calls,
+    rpcCalls,
     supabase: {
       configured: true,
       missingEnv: [],
       client: {
+        async rpc(fn: string, args: Record<string, string>) {
+          rpcCalls.push({ fn, args });
+          const configuredResult = rpcs[fn];
+
+          if (configuredResult?.throwOnLimit) {
+            throw configuredResult.throwOnLimit;
+          }
+
+          if (configuredResult) {
+            return {
+              data: configuredResult.data ?? [],
+              error: configuredResult.error ?? null
+            };
+          }
+
+          if (fn === "get_admin_access_membership") {
+            const result = tables.admin_access ?? { data: [] };
+
+            if (result.throwOnLimit) {
+              throw result.throwOnLimit;
+            }
+
+            return {
+              data: result.data ?? [],
+              error: result.error ?? null
+            };
+          }
+
+          return {
+            data: {
+              ok: true
+            },
+            error: null
+          };
+        },
         from(table: string) {
           return {
             select(columns: string) {
@@ -88,6 +132,14 @@ function createMockSupabase(
   };
 }
 
+function activeAdminAccess(role: "owner" | "admin" = "admin") {
+  return {
+    normalized_email: "admin@example.com",
+    status: "active",
+    role
+  };
+}
+
 describe("Supabase admin profile adapter", () => {
   it("resolves an active exact admin profile into the safe adapter shape", async () => {
     const { calls, supabase } = createMockSupabase({
@@ -103,7 +155,9 @@ describe("Supabase admin profile adapter", () => {
     });
 
     await expect(
-      resolveSupabaseAdminProfile(" auth-user-1 ", { supabase })
+      resolveSupabaseAdminProfile(" auth-user-1 ", undefined, undefined, {
+        supabase
+      })
     ).resolves.toEqual({
       id: "admin-user-1",
       status: "active"
@@ -133,7 +187,9 @@ describe("Supabase admin profile adapter", () => {
     });
 
     await expect(
-      resolveSupabaseAdminProfile("auth-user-1", { supabase })
+      resolveSupabaseAdminProfile("auth-user-1", undefined, undefined, {
+        supabase
+      })
     ).resolves.toBeNull();
   });
 
@@ -151,7 +207,9 @@ describe("Supabase admin profile adapter", () => {
     });
 
     await expect(
-      resolveSupabaseAdminProfile("auth-user-1", { supabase })
+      resolveSupabaseAdminProfile("auth-user-1", undefined, undefined, {
+        supabase
+      })
     ).resolves.toBeNull();
   });
 
@@ -185,10 +243,10 @@ describe("Supabase admin profile adapter", () => {
     });
 
     await expect(
-      resolveSupabaseAdminProfile("auth-user-1", duplicate)
+      resolveSupabaseAdminProfile("auth-user-1", undefined, undefined, duplicate)
     ).resolves.toBeNull();
     await expect(
-      resolveSupabaseAdminProfile("auth-user-1", nonExact)
+      resolveSupabaseAdminProfile("auth-user-1", undefined, undefined, nonExact)
     ).resolves.toBeNull();
   });
 
@@ -214,9 +272,16 @@ describe("Supabase admin profile adapter", () => {
       }
     });
 
-    const queryResult = await resolveSupabaseAdminProfile("auth-user-1", queryError);
+    const queryResult = await resolveSupabaseAdminProfile(
+      "auth-user-1",
+      undefined,
+      undefined,
+      queryError
+    );
     const providerResult = await resolveSupabaseAdminProfile(
       "auth-user-1",
+      undefined,
+      undefined,
       providerError
     );
     const serialized = JSON.stringify([queryResult, providerResult]);
@@ -231,7 +296,10 @@ describe("Supabase admin profile adapter", () => {
 
 describe("Supabase admin membership adapter", () => {
   it("resolves an active exact workspace membership into the safe adapter shape", async () => {
-    const { calls, supabase } = createMockSupabase({
+    const { calls, rpcCalls, supabase } = createMockSupabase({
+      admin_access: {
+        data: [activeAdminAccess()]
+      },
       memberships: {
         data: [
           {
@@ -253,6 +321,13 @@ describe("Supabase admin membership adapter", () => {
       workspaceId: "workspace-1",
       status: "active",
       role: "admin"
+    });
+    expect(rpcCalls).toContainEqual({
+      fn: "get_admin_access_membership",
+      args: {
+        p_workspace_id: "workspace-1",
+        p_admin_user_id: "admin-user-1"
+      }
     });
     expect(calls).toEqual([
       {
@@ -280,6 +355,9 @@ describe("Supabase admin membership adapter", () => {
 
   it("fails closed when the membership is missing", async () => {
     const { supabase } = createMockSupabase({
+      admin_access: {
+        data: [activeAdminAccess()]
+      },
       memberships: {
         data: []
       }
@@ -294,6 +372,9 @@ describe("Supabase admin membership adapter", () => {
 
   it("fails closed when the membership is inactive", async () => {
     const { supabase } = createMockSupabase({
+      admin_access: {
+        data: [activeAdminAccess()]
+      },
       memberships: {
         data: [
           {
@@ -313,8 +394,40 @@ describe("Supabase admin membership adapter", () => {
     ).resolves.toBeNull();
   });
 
+  it("fails closed when launch admin access is disabled despite an active membership", async () => {
+    const { supabase } = createMockSupabase({
+      admin_access: {
+        data: [
+          {
+            ...activeAdminAccess(),
+            status: "disabled"
+          }
+        ]
+      },
+      memberships: {
+        data: [
+          {
+            admin_user_id: "admin-user-1",
+            workspace_id: "workspace-1",
+            status: "active",
+            role: "admin"
+          }
+        ]
+      }
+    });
+
+    await expect(
+      resolveSupabaseAdminMembership("admin-user-1", "workspace-1", {
+        supabase
+      })
+    ).resolves.toBeNull();
+  });
+
   it("fails closed when the returned membership belongs to the wrong actor", async () => {
     const { supabase } = createMockSupabase({
+      admin_access: {
+        data: [activeAdminAccess()]
+      },
       memberships: {
         data: [
           {
@@ -336,6 +449,9 @@ describe("Supabase admin membership adapter", () => {
 
   it("fails closed when the returned membership belongs to another workspace", async () => {
     const { supabase } = createMockSupabase({
+      admin_access: {
+        data: [activeAdminAccess()]
+      },
       memberships: {
         data: [
           {
@@ -357,6 +473,9 @@ describe("Supabase admin membership adapter", () => {
 
   it("fails closed for duplicate membership results", async () => {
     const { supabase } = createMockSupabase({
+      admin_access: {
+        data: [activeAdminAccess()]
+      },
       memberships: {
         data: [
           {
@@ -392,6 +511,9 @@ describe("Supabase admin membership adapter", () => {
     const leakyMessage =
       "membership select failed with SQL and provider stack secret";
     const queryError = createMockSupabase({
+      admin_access: {
+        data: [activeAdminAccess()]
+      },
       memberships: {
         error: {
           message: leakyMessage
@@ -399,6 +521,9 @@ describe("Supabase admin membership adapter", () => {
       }
     });
     const providerError = createMockSupabase({
+      admin_access: {
+        data: [activeAdminAccess()]
+      },
       memberships: {
         throwOnLimit: new Error(leakyMessage)
       }
@@ -431,10 +556,14 @@ describe("Supabase admin membership adapter", () => {
     expect(source).not.toContain("../supabase/server");
     expect(source).toContain('from("admin_users")');
     expect(source).toContain('from("memberships")');
+    expect(source).toContain("ensure_admin_access_membership");
+    expect(source).toContain("get_admin_access_membership");
     expect(source).toContain('select("id, auth_user_id, status")');
     expect(source).toContain(
       'select("admin_user_id, workspace_id, status, role")'
     );
+    expect(source).not.toContain('from("admin_access")');
+    expect(source).not.toContain('eq("linked_admin_user_id"');
     expect(source).not.toContain("next/headers");
     expect(source).not.toContain("cookies()");
     expect(source).not.toContain("headers()");

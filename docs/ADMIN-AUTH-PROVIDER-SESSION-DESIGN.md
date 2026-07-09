@@ -24,6 +24,32 @@ Phase 2B-AB approved future admin CSRF proof issuer runtime usage lane, and
 Phase 2B-AN implemented a minimal first-party admin login/logout and protected
 shell boundary.
 
+## Launch Amendment: Google-Only Session Flow
+
+After PR #288, launch admin sign-in is Google-only through Supabase Auth. The
+admin login page starts a server-side Google OAuth handoff and the callback
+exchanges the code server-side before returning to `/admin`.
+
+Launch session rules:
+
+- No password login form or password credential route is exposed.
+- No public signup, visitor login, customer account, or self-service customer
+  dashboard is introduced.
+- A Supabase Auth session is accepted for admin only when the resolved provider
+  is Google and a normalized email is present.
+- The normalized email must match an active DB-backed `admin_access` owner/admin
+  row before protected admin content renders.
+- Admin access writes remain owner-only and CSRF-bound through the existing
+  `membership.manage` route-gate lane.
+- Admin access reads use owner-safe server RPC helpers instead of direct table
+  filters on private `admin_access` identifiers. The dashboard receives only
+  email, role, status, and timestamps; the membership gate receives only email,
+  role, and status.
+- Hosted Supabase migration application, Google provider configuration, and
+  fixed-owner access bootstrap remain separate explicit-approval operations.
+  No OAuth secret, owner email, token, cookie, or service credential is stored
+  in these docs.
+
 Phase 2B-E added auth provider/session/security design only.
 Phase 2B-J approves the future server-only Supabase Auth runtime lane only.
 Phase 2B-K implements only the server-only Supabase Auth identity boundary.

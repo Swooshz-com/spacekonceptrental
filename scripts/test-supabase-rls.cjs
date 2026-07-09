@@ -96,6 +96,13 @@ const ids = {
   searchIndexDocumentB: 'f2000000-0000-4000-8000-000000000002',
 };
 
+const authEmails = {
+  [ids.authMemberA]: 'admin-a@example.test',
+  [ids.authMemberB]: 'admin-b@example.test',
+  [ids.authNoMembership]: 'admin-no-membership@example.test',
+  [ids.authViewerA]: 'viewer-a@example.test',
+};
+
 const checks = [];
 
 function check(name, fn) {
@@ -303,6 +310,17 @@ function seedFixtures() {
       ('${ids.workspaceA}', '${ids.adminA}', 'owner', 'active'),
       ('${ids.workspaceB}', '${ids.adminB}', 'owner', 'active'),
       ('${ids.workspaceA}', '${ids.adminViewerA}', 'viewer', 'active');
+
+    insert into public.admin_access (
+      workspace_id,
+      normalized_email,
+      role,
+      status,
+      linked_admin_user_id
+    )
+    values
+      ('${ids.workspaceA}', 'admin-a@example.test', 'owner', 'active', '${ids.adminA}'),
+      ('${ids.workspaceB}', 'admin-b@example.test', 'owner', 'active', '${ids.adminB}');
 
     insert into public.categories (id, workspace_id, slug, name, is_published, sort_order)
     values
@@ -590,6 +608,10 @@ function seedFixtures() {
   `);
 }
 
+function authEmailFor(authUserId) {
+  return authEmails[authUserId] || '';
+}
+
 function roleSql(role, authUserId, sql) {
   assert.ok(role === 'anon' || role === 'authenticated', `Unexpected role: ${role}`);
 
@@ -598,6 +620,7 @@ function roleSql(role, authUserId, sql) {
     set local role ${role};
     set local "request.jwt.claim.role" = '${role}';
     set local "request.jwt.claim.sub" = '${authUserId || ''}';
+    set local "request.jwt.claim.email" = '${authEmailFor(authUserId)}';
     ${sql.trim().replace(/;?\s*$/, ';')}
     rollback;
   `;
@@ -611,6 +634,7 @@ function committedRoleSql(role, authUserId, sql) {
     set local role ${role};
     set local "request.jwt.claim.role" = '${role}';
     set local "request.jwt.claim.sub" = '${authUserId || ''}';
+    set local "request.jwt.claim.email" = '${authEmailFor(authUserId)}';
     ${sql.trim().replace(/;?\s*$/, ';')}
     commit;
   `;
@@ -1083,6 +1107,60 @@ check('authenticated active member reads only their workspace admin data', () =>
     'Test Provider A',
     'member A should read only workspace A integration metadata',
   );
+});
+
+check('admin access read helpers expose safe DTOs without direct private-column filters', () => {
+  assertCsv(
+    scalarAs(
+      'authenticated',
+      ids.authMemberA,
+      `
+        select coalesce(
+          string_agg(
+            normalized_email || ':' || role || ':' || status,
+            ',' order by normalized_email
+          ),
+          ''
+        )
+        from public.list_admin_access_records('${ids.workspaceA}'::uuid)
+      `,
+    ),
+    'admin-a@example.test:owner:active',
+    'active owner should read owner-safe admin access records through the RPC helper',
+  );
+
+  assertCsv(
+    scalarAs(
+      'authenticated',
+      ids.authMemberA,
+      `
+        select coalesce(
+          string_agg(normalized_email || ':' || role || ':' || status, ','),
+          ''
+        )
+        from public.get_admin_access_membership(
+          '${ids.workspaceA}'::uuid,
+          '${ids.adminA}'::uuid
+        )
+      `,
+    ),
+    'admin-a@example.test:owner:active',
+    'membership resolver should read owner-safe access data through the self-scoped RPC helper',
+  );
+
+  assertCsv(
+    scalarAs(
+      'authenticated',
+      ids.authNoMembership,
+      `
+        select count(*)::text
+        from public.list_admin_access_records('${ids.workspaceA}'::uuid)
+      `,
+    ),
+    '0',
+    'unknown Google-authenticated users should not read admin access records',
+  );
+
 });
 
 check('authenticated active member cannot read another workspace admin rows', () => {

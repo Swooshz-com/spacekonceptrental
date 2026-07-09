@@ -25,17 +25,16 @@ describe("admin login page", () => {
     expect(
       screen.getByRole("heading", { name: /admin sign in/i })
     ).toBeInTheDocument();
-    expect(screen.getByLabelText(/email/i)).toHaveAttribute("name", "email");
-    expect(screen.getByLabelText(/password/i)).toHaveAttribute(
-      "name",
-      "password"
-    );
-    expect(screen.getByRole("button", { name: /sign in/i })).toHaveAttribute(
-      "formAction",
-      "/api/admin/login"
-    );
+    expect(
+      screen.getByRole("button", { name: /continue with google/i })
+    ).toHaveAttribute("formAction", "/api/admin/login");
+    expect(
+      screen.getByText(/google email that has been added to admin access/i)
+    ).toBeInTheDocument();
+    expect(screen.queryByLabelText(/password/i)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/^email$/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/sign up|create account/i)).not.toBeInTheDocument();
     expect(document.body.textContent).not.toContain("SUPABASE");
-    expect(document.body.textContent).not.toContain("provider");
     expect(document.body.textContent).not.toContain("SQL");
     expect(document.body.textContent).not.toContain("stack");
   });

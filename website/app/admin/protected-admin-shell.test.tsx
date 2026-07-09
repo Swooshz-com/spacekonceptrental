@@ -4,6 +4,7 @@ import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { resolveServerAdminRuntimeRouteGateAdapter } from "../../lib/admin/authorization/server-admin-runtime-route-gate-adapter";
+import { resolveAdminAccessDashboardRead } from "../../lib/admin/access/admin-access-management";
 import { resolveAdminProductDashboardRead } from "../../lib/products/admin-read/admin-product-dashboard-read";
 import {
   AdminShellContent,
@@ -15,6 +16,9 @@ vi.mock("../../lib/admin/authorization/server-admin-runtime-route-gate-adapter",
 }));
 vi.mock("../../lib/products/admin-read/admin-product-dashboard-read", () => ({
   resolveAdminProductDashboardRead: vi.fn()
+}));
+vi.mock("../../lib/admin/access/admin-access-management", () => ({
+  resolveAdminAccessDashboardRead: vi.fn()
 }));
 
 const repoRoot = process.cwd();
@@ -58,9 +62,43 @@ describe("protected admin shell", () => {
         }
       }
     });
+    vi.mocked(resolveAdminAccessDashboardRead).mockResolvedValueOnce({
+      status: "loaded",
+      currentAdmin: {
+        email: "owner@example.com",
+        role: "owner",
+        canManageAccess: true
+      },
+      records: [
+        {
+          email: "owner@example.com",
+          role: "owner",
+          status: "active",
+          createdAt: "2026-07-09T00:00:00.000Z",
+          updatedAt: "2026-07-09T00:00:00.000Z"
+        }
+      ]
+    });
 
     await expect(resolveProtectedAdminShellState()).resolves.toEqual({
       status: "authorised_admin",
+      adminAccess: {
+        status: "loaded",
+        currentAdmin: {
+          email: "owner@example.com",
+          role: "owner",
+          canManageAccess: true
+        },
+        records: [
+          {
+            email: "owner@example.com",
+            role: "owner",
+            status: "active",
+            createdAt: "2026-07-09T00:00:00.000Z",
+            updatedAt: "2026-07-09T00:00:00.000Z"
+          }
+        ]
+      },
       dashboard: {
         status: "loaded",
         data: {
@@ -102,6 +140,7 @@ describe("protected admin shell", () => {
           "99999999-9999-4999-8999-999999999999"
       }
     });
+    expect(resolveAdminAccessDashboardRead).toHaveBeenCalledTimes(1);
   });
 
   it("maps unauthenticated users to a safe login-required state", async () => {
@@ -166,9 +205,15 @@ describe("protected admin shell", () => {
     vi.mocked(resolveAdminProductDashboardRead).mockResolvedValueOnce({
       status: "unavailable"
     });
+    vi.mocked(resolveAdminAccessDashboardRead).mockResolvedValueOnce({
+      status: "unavailable"
+    });
 
     await expect(resolveProtectedAdminShellState()).resolves.toEqual({
       status: "authorised_admin",
+      adminAccess: {
+        status: "unavailable"
+      },
       dashboard: {
         status: "unavailable"
       }
@@ -225,8 +270,38 @@ describe("protected admin shell", () => {
                 primaryImages: 1
               }
             }
-          }
-        }}
+          },
+        adminAccess: {
+          status: "loaded",
+          currentAdmin: {
+            email: "owner@example.com",
+            role: "owner",
+            canManageAccess: true
+          },
+          records: [
+            {
+              email: "owner@example.com",
+              role: "owner",
+              status: "active",
+              createdAt: "2026-07-09T00:00:00.000Z",
+              updatedAt: "2026-07-09T00:00:00.000Z"
+            },
+            {
+              email: "admin@example.com",
+              role: "admin",
+              status: "active",
+              createdAt: "2026-07-09T00:00:00.000Z",
+              updatedAt: "2026-07-09T00:00:00.000Z"
+            },
+            {
+              email: "disabled@example.com",
+              role: "admin",
+              status: "disabled",
+              createdAt: "2026-07-09T00:00:00.000Z",
+              updatedAt: "2026-07-09T00:00:00.000Z"
+            }
+          ]
+        }}}
       />
     );
 
@@ -250,6 +325,19 @@ describe("protected admin shell", () => {
     expect(
       screen.getByRole("heading", { name: /quick links/i })
     ).toBeInTheDocument();
+    expect(
+      screen.getByRole("region", { name: /admin access management/i })
+    ).toBeInTheDocument();
+    expect(screen.getByText(/signed in as owner@example\.com/i)).toBeInTheDocument();
+    expect(screen.getByText(/google sign-in alone does not grant access/i)).toBeInTheDocument();
+    expect(screen.getByText(/owner access cannot be removed or disabled/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /add admin/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByLabelText(/add admin by google email/i)
+    ).toBeInTheDocument();
+    expect(screen.getByText(/disabled@example\.com/i)).toBeInTheDocument();
     expect(
       screen.getByRole("link", {
         name: /spacekonceptrental admin dashboard/i
@@ -302,6 +390,25 @@ describe("protected admin shell", () => {
       screen.queryByText(/cart|checkout|payment|customer account|stock reservation|order fulfilment|online ordering/i)
     ).not.toBeInTheDocument();
   }, 15000);
+
+  it("keeps admin access reads on owner-safe RPC DTOs without raw identifier UI fields", () => {
+    const accessReadSource = readAppFile(
+      "lib/admin/access/admin-access-management.ts"
+    );
+    const panelSource = readAppFile(
+      "components/admin/admin-access-management-panel.tsx"
+    );
+
+    expect(accessReadSource).toContain("list_admin_access_records");
+    expect(accessReadSource).not.toContain('from("admin_access")');
+    expect(accessReadSource).not.toContain('select("id');
+    expect(accessReadSource).not.toContain('select("workspace_id');
+    expect(accessReadSource).not.toContain("linked_admin_user_id");
+    expect(panelSource).not.toContain("workspace_id");
+    expect(panelSource).not.toContain("linked_admin_user_id");
+    expect(panelSource).not.toContain("created_by_admin_access_id");
+    expect(panelSource).not.toContain("updated_by_admin_access_id");
+  });
 
   it("renders the owner-friendly Catalogue workflow without raw image path controls", () => {
     render(
