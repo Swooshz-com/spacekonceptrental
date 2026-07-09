@@ -372,8 +372,13 @@ Target n8n direction:
 
 Backend constraints:
 
-- No live n8n workflow import, export, activation, execution, or mutation is
-  approved by this document.
+- No live n8n workflow import, activation, execution, or mutation is approved
+  by this document.
+- The repo-side readiness package includes an inactive n8n skeleton at
+  `n8n-workflows/spacekonceptrental-enquiry-handoff.workflow.json`. The
+  skeleton is not live setup evidence and requires manual n8n HMAC,
+  timestamp-freshness, idempotency, and email/internal handoff configuration
+  before activation.
 - n8n must remain server-side. Browser code must never call n8n directly.
 - Webhook URLs and provider credentials must remain server-only and must not be
   displayed in admin UI or committed to the repo.
@@ -386,7 +391,12 @@ Next implementation slice:
 
 - Implemented in this slice: server-side n8n handoff trigger after persistence,
   safe not-configured/failure delivery-log writes, readiness UI, and docs.
+- Added in the workflow readiness package: inactive n8n skeleton, hosted
+  Supabase migration runbook, hosted smoke checklist, and validation coverage
+  that blocks credentials, real webhook values, and fake accepted responses in
+  the skeleton.
 - Keep HubSpot mirror optional and later.
+- Continue next with Google-only admin access management.
 
 ### `/admin/delivery-log`
 

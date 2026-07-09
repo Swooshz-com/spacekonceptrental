@@ -20,6 +20,10 @@ const expectedN8nWorkflowHashes = new Map([
     "96fe4b6832b6c4680f6d6dcbdd311b901e6c73610afd2747de7c0c06a84c1a2c"
   ],
   [
+    "n8n-workflows/spacekonceptrental-enquiry-handoff.workflow.json",
+    "8b1bf4a4cb3916c89f537d0f3bd0bdbde2bbd2080715e66952d964772d0f1b78"
+  ],
+  [
     "n8n-workflows/spacekonceptrental-error-handler.workflow.json",
     "0f869a547cc9bde78335a16c9516e565b1e1097d9b3c5b95bc8448e00c01b9b2"
   ],

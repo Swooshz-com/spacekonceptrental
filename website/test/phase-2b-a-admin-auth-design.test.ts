@@ -241,6 +241,7 @@ describe("Phase 2B-A admin auth and membership design", () => {
     expect(productionConfigFiles).toEqual([]);
     expect(workflowFiles).toEqual([
       "n8n-workflows/spacekonceptrental-customer-support-agent.workflow.json",
+      "n8n-workflows/spacekonceptrental-enquiry-handoff.workflow.json",
       "n8n-workflows/spacekonceptrental-error-handler.workflow.json",
       "n8n-workflows/spacekonceptrental-rag-ingestion.workflow.json"
     ]);

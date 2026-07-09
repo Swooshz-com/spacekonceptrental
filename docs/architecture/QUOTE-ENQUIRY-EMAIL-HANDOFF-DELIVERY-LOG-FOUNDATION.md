@@ -60,10 +60,23 @@ npm run validate:production-security-readiness -- --launch
 
 ## n8n Webhook Contract
 
-No quote-enquiry n8n workflow export is added in this PR. The committed n8n
-exports remain the existing chat/RAG/support workflows. The expected quote
-handoff workflow should be created or reviewed separately in n8n, with
-credentials stored in n8n credentials and no secrets in workflow text fields.
+The repo-side readiness package adds an inactive n8n workflow skeleton at:
+
+```text
+n8n-workflows/spacekonceptrental-enquiry-handoff.workflow.json
+```
+
+The skeleton is a reviewed template, not live n8n setup evidence. It contains
+no credentials, credential IDs, real webhook URLs, real recipient addresses,
+provider API keys, secrets, execution data, or production payloads. It remains
+inactive by default and intentionally returns a setup-required response until
+n8n operators replace the manual placeholders with reviewed HMAC verification,
+timestamp freshness, idempotency, and email/internal handoff nodes.
+
+Because full HMAC/idempotency/email behaviour depends on n8n-side credentials
+and durable idempotency storage, the static export must not fake security or
+fake delivery success. Real credentials and recipient configuration belong in
+n8n, not in repo files or SKR admin UI.
 
 SKR sends a `POST` request with JSON body:
 
@@ -118,6 +131,13 @@ only after accepting the handoff. If the workflow needs asynchronous email
 delivery, it should still return a clear accepted response only after n8n has
 captured enough context to continue safely.
 
+Hosted setup runbooks:
+
+- Hosted Supabase migration runbook:
+  `docs/N8N-ENQUIRY-HANDOFF-HOSTED-MIGRATION-RUNBOOK.md`
+- Hosted enquiry -> n8n -> email/internal handoff -> Delivery Log smoke
+  checklist: `docs/N8N-ENQUIRY-HANDOFF-HOSTED-SMOKE-CHECKLIST.md`
+
 ## Delivery Log
 
 `public.quote_email_delivery_log` stores append-only technical metadata only:
@@ -154,7 +174,7 @@ buttons, or public delivery tracking.
 
 This slice does not add:
 
-- a live n8n workflow import, export, activation, execution, or mutation
+- a live n8n workflow import, activation, execution, or mutation
 - customer confirmation emails
 - public delivery status or public quote tracking
 - custom mailbox/thread tracking

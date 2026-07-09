@@ -1384,8 +1384,95 @@ function checkRagIngestionDataPlaneSafety(workflow, relative) {
   }
 }
 
+function checkEnquiryHandoffReadinessTemplate(workflow, relative, text) {
+  if (workflow.name !== 'SpaceKonceptRental - Enquiry Handoff Readiness Template') {
+    return;
+  }
+
+  const requiredNodes = [
+    ['Receive SKR Enquiry Handoff', 'n8n-nodes-base.webhook'],
+    ['Validate SKR Contract Markers', 'n8n-nodes-base.set'],
+    ['Are Required SKR Markers Present', 'n8n-nodes-base.if'],
+    ['Manual HMAC And Idempotency Gate', 'n8n-nodes-base.set'],
+    ['Build Internal Handoff Summary', 'n8n-nodes-base.set'],
+    ['Send Internal Handoff Placeholder', 'n8n-nodes-base.set'],
+    ['Respond Manual Setup Required', 'n8n-nodes-base.respondToWebhook'],
+    ['Respond Accepted After Email Handoff', 'n8n-nodes-base.respondToWebhook'],
+    ['Respond Invalid Contract', 'n8n-nodes-base.respondToWebhook'],
+  ];
+
+  for (const [nodeName, expectedType] of requiredNodes) {
+    const node = findWorkflowNode(workflow, nodeName);
+    if (!node) {
+      fail(`${relative} is missing enquiry handoff node "${nodeName}".`);
+      continue;
+    }
+    if (node.type !== expectedType) {
+      fail(`${relative} enquiry handoff node "${nodeName}" has type ${JSON.stringify(node.type)}; expected ${expectedType}.`);
+    }
+  }
+
+  if (workflow.active !== false) {
+    fail(`${relative} enquiry handoff readiness template must stay inactive.`);
+  }
+
+  if ('staticData' in workflow || 'pinData' in workflow) {
+    fail(`${relative} enquiry handoff readiness template must not include staticData, pinData, execution data, or production payloads.`);
+  }
+
+  for (const node of workflow.nodes || []) {
+    if (node.credentials) {
+      fail(`${relative} enquiry handoff readiness template must not include credential bindings on node "${node.name}".`);
+    }
+    if (node.webhookId) {
+      fail(`${relative} enquiry handoff readiness template must not include webhookId values.`);
+    }
+  }
+
+  const requiredMarkers = [
+    'skr.enquiry.submitted',
+    'x-skr-event',
+    'x-skr-enquiry-reference',
+    'x-skr-idempotency-key',
+    'x-skr-timestamp',
+    'x-skr-signature',
+    'HMAC SHA-256',
+    '<timestamp>.<raw body>',
+    'manual_required_before_activation',
+    'SKR_ENQUIRY_HANDOFF_WEBHOOK_PATH_PLACEHOLDER',
+  ];
+
+  for (const marker of requiredMarkers) {
+    if (!text.includes(marker)) {
+      fail(`${relative} enquiry handoff readiness template must reference ${marker}.`);
+    }
+  }
+
+  if (/https?:\/\//i.test(text)) {
+    fail(`${relative} enquiry handoff readiness template must not contain webhook URLs or other real-looking URLs.`);
+  }
+
+  if (/\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/i.test(text)) {
+    fail(`${relative} enquiry handoff readiness template must not contain real recipient email addresses.`);
+  }
+
+  if (hasConnection(workflow, 'Send Internal Handoff Placeholder', 0, 'Respond Accepted After Email Handoff')) {
+    fail(`${relative} enquiry handoff readiness template must not route the placeholder email step to a fake accepted response.`);
+  }
+
+  if (!hasConnection(workflow, 'Send Internal Handoff Placeholder', 0, 'Respond Manual Setup Required')) {
+    fail(`${relative} enquiry handoff readiness template must route the placeholder email step to Respond Manual Setup Required.`);
+  }
+
+  const setupResponse = findWorkflowNode(workflow, 'Respond Manual Setup Required');
+  const setupResponseText = JSON.stringify(setupResponse?.parameters || {});
+  if (!setupResponseText.includes('not_implemented') || !setupResponseText.includes('503')) {
+    fail(`${relative} Respond Manual Setup Required must return a non-success setup-required response until manual n8n work is complete.`);
+  }
+}
+
 function validateWorkflow(context) {
-  const { workflow, relative, fail: reportFailure } = context;
+  const { workflow, relative, text, fail: reportFailure } = context;
   activeFail = reportFailure;
 
   try {
@@ -1399,6 +1486,7 @@ function validateWorkflow(context) {
     checkGlobalErrorHandlerContract(workflow, relative);
     checkRagIngestionLoggingContract(workflow, relative);
     checkRagIngestionDataPlaneSafety(workflow, relative);
+    checkEnquiryHandoffReadinessTemplate(workflow, relative, text);
   } finally {
     activeFail = null;
   }
