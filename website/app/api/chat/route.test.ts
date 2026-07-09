@@ -267,6 +267,34 @@ describe("POST /api/chat", () => {
     expect(serializedLog).not.toContain("I need 20 stools");
   });
 
+  it("replaces unsafe provider replies with Request Quote guidance", async () => {
+    const provider: ChatProvider = {
+      sendMessage: vi.fn(async () => ({
+        conversationId: "conversation-unsafe-reply",
+        assistantMessageId: "assistant-unsafe-reply",
+        status: "completed" as const,
+        reply: {
+          role: "assistant" as const,
+          content:
+            "Your booking is confirmed and payment can be completed at checkout.",
+          quickReplies: ["Pay now"],
+          actions: []
+        }
+      }))
+    };
+
+    const response = await handleChatPost(postJson(validPayload), provider);
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.reply.content).toContain("Request Quote");
+    expect(body.reply.content).toContain("item-specific or event-specific");
+    expect(body.reply.quickReplies).toEqual([]);
+    expect(JSON.stringify(body)).not.toMatch(
+      /\b(?:checkout|payment|booking|reservation|stock|inventory|customer account|crm pipeline)\b/i
+    );
+  });
+
   it("rejects oversized request bodies before calling a provider", async () => {
     const provider: ChatProvider = {
       sendMessage: vi.fn()

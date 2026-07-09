@@ -129,10 +129,10 @@ describe("ChatWidget", () => {
     render(<ChatWidget />);
     fireEvent.click(screen.getByRole("button", { name: /open chat/i }));
 
-    expect(screen.getByText(/Hi! I can help with furniture listing questions/i)).toHaveStyle({
+    expect(screen.getByText(/Hi! I can help you browse Home, Catalogue, Setups, About, and Request Quote/i)).toHaveStyle({
       fontSize: "1rem"
     });
-    expect(screen.getByText(/Ask here about listing details/i)).toHaveStyle({
+    expect(screen.getByText(/Ask here for public site guidance/i)).toHaveStyle({
       fontSize: "1rem"
     });
     expect(screen.getByLabelText(/message/i)).toHaveStyle({
@@ -158,5 +158,20 @@ describe("ChatWidget", () => {
 
     expect(source).not.toContain("n8n-provider");
     expect(source).not.toContain("N8N_CHAT_WEBHOOK_URL");
+  });
+
+  it("frames item and event specific requests as Request Quote form work", () => {
+    render(<ChatWidget />);
+    fireEvent.click(screen.getByRole("button", { name: /open chat/i }));
+
+    expect(
+      screen.getByText(/For item or event details, please use the Request Quote form/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: /Request Quote/i })
+    ).toHaveAttribute("href", "/quote");
+    expect(document.body.textContent).not.toMatch(
+      /\b(?:cart|checkout|payment|order|booking|reservation|stock|inventory|customer account|crm pipeline)\b/i
+    );
   });
 });

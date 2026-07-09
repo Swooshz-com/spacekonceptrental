@@ -176,7 +176,7 @@ export default function ChatWidget() {
             <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
               <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#5f634f', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 700, flexShrink: 0 }}>SK</div>
               <div style={{ background: '#fcf9f5', border: '1px solid #dcd9d6', color: '#1a1a1a', padding: '12px 16px', borderRadius: '0 12px 12px 12px', fontSize: chatBodyFontSize, lineHeight: chatBodyLineHeight }}>
-                Hi! I can help with furniture listing questions and enquiry details. What event are you planning?
+                Hi! I can help you browse Home, Catalogue, Setups, About, and Request Quote. For item or event details, please use the Request Quote form.
               </div>
             </div>
           )}
@@ -209,7 +209,8 @@ export default function ChatWidget() {
 
         <div style={{ padding: '0 20px', background: '#f6f3f0' }}>
           <p style={{ color: '#46473f', fontSize: chatBodyFontSize, lineHeight: chatBodyLineHeight, margin: 0 }}>
-            Ask here about listing details or enquiry preparation. See our{" "}
+            Ask here for public site guidance. Item-specific or event-specific requests should go through{" "}
+            <a href="/quote">Request Quote</a>. See our{" "}
             <a href="/privacy">Privacy Policy</a> and{" "}
             <a href="/terms">Terms of Use</a>.
           </p>

@@ -7,6 +7,11 @@ import {
   type ChatProviderRequest,
   type ChatProviderResponse
 } from "./provider";
+import {
+  chatbotLaunchBoundaryAllowedPublicPaths,
+  chatbotLaunchBoundaryFallbackReply,
+  chatbotLaunchBoundaryInstructions
+} from "./launch-boundary";
 
 const DEFAULT_TIMEOUT_MS = 10_000;
 const MAX_TIMEOUT_MS = 30_000;
@@ -117,6 +122,11 @@ function createN8nPayload(request: ChatProviderRequest) {
     timezone: request.timezone,
     capabilities: {
       stream: false
+    },
+    launchBoundary: {
+      instructions: chatbotLaunchBoundaryInstructions,
+      allowedPublicPaths: chatbotLaunchBoundaryAllowedPublicPaths,
+      fallbackReply: chatbotLaunchBoundaryFallbackReply
     }
   };
 }
