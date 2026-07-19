@@ -44,7 +44,7 @@ export type QuotePersistenceResult =
       ok: true;
       quoteRequestId: string;
       publicReference: string;
-      itemPersistenceStatus?: "complete" | "failed";
+      itemPersistenceStatus?: "complete";
     }
   | {
       ok: false;

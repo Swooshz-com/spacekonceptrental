@@ -139,10 +139,8 @@ export async function createQuoteRequest(
 
     if (itemInsert.error) {
       return {
-        ok: true,
-        quoteRequestId,
-        publicReference,
-        itemPersistenceStatus: "failed"
+        ok: false,
+        code: "QUOTE_PERSISTENCE_FAILED"
       };
     }
   }

@@ -167,7 +167,7 @@ describe("quote repository", () => {
     expect(JSON.stringify(result)).not.toContain("example.test");
   });
 
-  it("treats the quote as received when item persistence fails after the quote row is captured", async () => {
+  it("fails closed when quote item persistence fails after the quote row is captured", async () => {
     const { inserts, supabase } = createMockSupabase({
       quote_request_items: {
         data: null,
@@ -183,10 +183,8 @@ describe("quote repository", () => {
     });
 
     expect(result).toEqual({
-      ok: true,
-      quoteRequestId: "70000000-0000-4000-8000-000000000001",
-      publicReference: "QR-20260527-ABC12345",
-      itemPersistenceStatus: "failed"
+      ok: false,
+      code: "QUOTE_PERSISTENCE_FAILED"
     });
     expect(inserts.map((insert) => insert.table)).toEqual([
       "quote_requests",
