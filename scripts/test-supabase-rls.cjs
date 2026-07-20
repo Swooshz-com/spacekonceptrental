@@ -3896,7 +3896,7 @@ check('anonymous quote ACLs deny every historical direct write surface', () => {
 
     assert.equal(
       psql(`
-        select not exists (
+        select (not exists (
           select 1
           from pg_catalog.pg_class relation
           cross join lateral pg_catalog.aclexplode(
@@ -3905,7 +3905,7 @@ check('anonymous quote ACLs deny every historical direct write surface', () => {
           where relation.oid = 'public.${table}'::regclass
             and acl.grantee = 0
             and acl.privilege_type in ('INSERT', 'UPDATE', 'DELETE')
-        )::text
+        ))::text
       `),
       'true',
       `PUBLIC must not have a direct write ACL on ${table}.`,
@@ -3953,7 +3953,7 @@ check('anonymous quote ACLs deny every historical direct write surface', () => {
     );
     assert.equal(
       psql(`
-        select not exists (
+        select (not exists (
           select 1
           from pg_catalog.pg_proc proc
           cross join lateral pg_catalog.aclexplode(
@@ -3962,7 +3962,7 @@ check('anonymous quote ACLs deny every historical direct write surface', () => {
           where proc.oid = '${signature}'::regprocedure
             and acl.grantee = 0
             and acl.privilege_type = 'EXECUTE'
-        )::text
+        ))::text
       `),
       'true',
       `${signature} must not be executable through PUBLIC.`,
