@@ -404,6 +404,46 @@ describe("POST /api/chat", () => {
     expect(provider.sendMessage).toHaveBeenCalledTimes(1);
   });
 
+  it("shares one provider operation across simultaneous identical requests", async () => {
+    let releaseProvider!: (value: Awaited<ReturnType<ChatProvider["sendMessage"]>>) => void;
+    const providerBarrier = new Promise<Awaited<ReturnType<ChatProvider["sendMessage"]>>>(
+      (resolve) => {
+        releaseProvider = resolve;
+      }
+    );
+    const provider: ChatProvider = {
+      sendMessage: vi.fn(() => providerBarrier)
+    };
+    const payload = {
+      ...validPayload,
+      clientSessionId: "concurrent-dedupe-session",
+      clientMessageId: "concurrent-dedupe-message"
+    };
+
+    const firstPromise = handleChatPost(postJson(payload), provider);
+    const secondPromise = handleChatPost(postJson(payload), provider);
+
+    await vi.waitFor(() => expect(provider.sendMessage).toHaveBeenCalledTimes(1));
+    releaseProvider({
+      conversationId: "conversation-concurrent-dedupe",
+      assistantMessageId: "assistant-concurrent-dedupe",
+      status: "completed",
+      reply: {
+        role: "assistant",
+        content: "Shared response",
+        quickReplies: [],
+        actions: []
+      }
+    });
+
+    const [first, second] = await Promise.all([firstPromise, secondPromise]);
+    const [firstBody, secondBody] = await Promise.all([first.json(), second.json()]);
+    expect(first.status).toBe(200);
+    expect(second.status).toBe(200);
+    expect(secondBody).toEqual(firstBody);
+    expect(provider.sendMessage).toHaveBeenCalledTimes(1);
+  });
+
   it("rejects changed payloads that reuse the same client message id", async () => {
     const provider: ChatProvider = {
       sendMessage: vi.fn(async () => ({

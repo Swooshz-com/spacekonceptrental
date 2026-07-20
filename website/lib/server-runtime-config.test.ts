@@ -20,6 +20,7 @@ const expectedServerRuntimeEnvNames = [
   "SUPABASE_ANON_KEY",
   "CATALOGUE_WORKSPACE_ID",
   "QUOTE_WORKSPACE_ID",
+  "QUOTE_SUBMISSION_ADMISSION_SECRET",
   "ADMIN_TRUSTED_WORKSPACE_ID",
   "ADMIN_EXPECTED_ORIGIN",
   "ADMIN_EXPECTED_HOST",
@@ -38,6 +39,7 @@ const validEnv = {
   SUPABASE_URL: "https://project-ref.supabase.co",
   SUPABASE_ANON_KEY: "anon-token-for-tests",
   CATALOGUE_WORKSPACE_ID: workspaceA,
+  QUOTE_SUBMISSION_ADMISSION_SECRET: "quote-admission-signing-material-for-tests",
   QUOTE_WORKSPACE_ID: workspaceB,
   ADMIN_TRUSTED_WORKSPACE_ID: workspaceC,
   ADMIN_EXPECTED_ORIGIN: "https://admin.space.test",
@@ -91,6 +93,7 @@ describe("server runtime config contract", () => {
       quoteWorkspaceId: workspaceB,
       adminTrustedWorkspaceId: workspaceC,
       adminExpectedOrigin: "https://admin.space.test",
+      quoteSubmissionAdmissionSecret: "quote-admission-signing-material-for-tests",
       adminExpectedHost: "admin.space.test",
       adminCsrfProofSecret: "csrf-proof-signing-material-for-tests",
       chatProvider: "n8n",
@@ -159,6 +162,7 @@ describe("server runtime config contract", () => {
     expect(serialized).not.toContain("javascript:alert");
     expect(serialized).not.toContain("anon-token-for-tests");
     expect(serialized).not.toContain("csrf-proof-signing-material-for-tests");
+    expect(serialized).not.toContain("quote-admission-signing-material-for-tests");
   });
 
   it("keeps feature helpers fail-closed when required runtime config is missing", () => {

@@ -5,6 +5,7 @@ export const serverRuntimeEnvNames = [
   "SUPABASE_ANON_KEY",
   "CATALOGUE_WORKSPACE_ID",
   "QUOTE_WORKSPACE_ID",
+  "QUOTE_SUBMISSION_ADMISSION_SECRET",
   "ADMIN_TRUSTED_WORKSPACE_ID",
   "ADMIN_EXPECTED_ORIGIN",
   "ADMIN_EXPECTED_HOST",
@@ -45,6 +46,7 @@ export type ServerRuntimeConfigValues = Partial<{
   supabaseAnonKey: string;
   catalogueWorkspaceId: string;
   quoteWorkspaceId: string;
+  quoteSubmissionAdmissionSecret: string;
   adminTrustedWorkspaceId: string;
   adminExpectedOrigin: string;
   adminExpectedHost: string;
@@ -345,6 +347,11 @@ export function parseServerRuntimeConfig(
     "QUOTE_WORKSPACE_ID",
     issues
   );
+  const quoteSubmissionAdmissionSecret = parseRequiredText(
+    env,
+    "QUOTE_SUBMISSION_ADMISSION_SECRET",
+    issues
+  );
   const adminTrustedWorkspaceId = parseRequiredUuid(
     env,
     "ADMIN_TRUSTED_WORKSPACE_ID",
@@ -419,6 +426,10 @@ export function parseServerRuntimeConfig(
   if (quoteWorkspaceId) {
     values.quoteWorkspaceId = quoteWorkspaceId;
   }
+  if (quoteSubmissionAdmissionSecret) {
+    values.quoteSubmissionAdmissionSecret = quoteSubmissionAdmissionSecret;
+  }
+
 
   if (adminTrustedWorkspaceId) {
     values.adminTrustedWorkspaceId = adminTrustedWorkspaceId;

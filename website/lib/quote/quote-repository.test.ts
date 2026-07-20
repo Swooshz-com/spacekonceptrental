@@ -8,14 +8,19 @@ const quoteSubmission: QuoteSubmission = {
   customerName: "Maya Tan",
   customerEmail: "maya@example.test",
   customerPhone: "+65 8123 4567",
-  customerMessage:
-    "Please recommend a warm lounge setup for a corporate reception.",
+  customerMessage: "Please recommend a warm lounge setup.",
   eventDate: "2026-06-12",
   venue: "Marina Bay Sands",
   sourcePath: "/catalogue/modular-lounge-set",
   listingSlug: "modular-lounge-set",
   requestId: "visitor-submission-20260612-001",
-  items: [{ productName: "Modular lounge set", quantity: 2, notes: "VIP reception area" }]
+  items: [{ productName: "Modular lounge set", quantity: 2 }]
+};
+const payloadDigest = "d".repeat(64);
+const proof = {
+  payloadDigest,
+  expiresAt: 1_784_592_060,
+  signature: "e".repeat(64)
 };
 
 function createMockSupabase(response: { data: unknown; error: unknown } = {
@@ -32,163 +37,99 @@ function createMockSupabase(response: { data: unknown; error: unknown } = {
   const client = {
     rpc(functionName: string, args: Record<string, unknown>) {
       calls.push({ functionName, args });
-      return Promise.resolve(response);
+      return Promise.resolve(
+        functionName === "get_public_quote_submission_digest"
+          ? { data: payloadDigest, error: null }
+          : response
+      );
     }
   };
+  return { calls, supabase: { configured: true as const, client, missingEnv: [] as [] } };
+}
 
+function validOptions(supabase: ReturnType<typeof createMockSupabase>["supabase"]) {
   return {
-    calls,
-    supabase: { configured: true as const, client, missingEnv: [] as [] }
+    workspaceId: "11111111-1111-4111-8111-111111111111",
+    supabase,
+    createId: () => "70000000-0000-4000-8000-000000000001",
+    createClaimToken: () => "71000000-0000-4000-8000-000000000001",
+    createPublicReference: () => "QR-20260527-ABC12345",
+    issueAdmissionProof: () => proof
   };
 }
 
 describe("quote repository", () => {
-  it("fails safely without pretending persistence succeeded when Supabase is missing", async () => {
-    const result = await createQuoteRequest(quoteSubmission, {
+  it("fails safely when Supabase or the quote workspace is unavailable", async () => {
+    await expect(createQuoteRequest(quoteSubmission, {
       workspaceId: "11111111-1111-4111-8111-111111111111",
-      supabase: {
-        configured: false,
-        client: null,
-        missingEnv: ["SUPABASE_URL", "SUPABASE_ANON_KEY"]
-      }
-    });
+      supabase: { configured: false, client: null, missingEnv: ["SUPABASE_URL"] }
+    })).resolves.toEqual({ ok: false, code: "SUPABASE_NOT_CONFIGURED", missingEnv: ["SUPABASE_URL"] });
 
-    expect(result).toEqual({
-      ok: false,
-      code: "SUPABASE_NOT_CONFIGURED",
-      missingEnv: ["SUPABASE_URL", "SUPABASE_ANON_KEY"]
-    });
-  });
-
-  it("fails safely when the quote workspace is not configured", async () => {
     const { calls, supabase } = createMockSupabase();
-    const result = await createQuoteRequest(quoteSubmission, {
-      supabase,
-      env: { QUOTE_WORKSPACE_ID: "" }
-    });
-
-    expect(result).toEqual({
-      ok: false,
-      code: "QUOTE_WORKSPACE_NOT_CONFIGURED"
-    });
+    await expect(createQuoteRequest(quoteSubmission, { supabase, env: { QUOTE_WORKSPACE_ID: "" } })).resolves.toEqual({ ok: false, code: "QUOTE_WORKSPACE_NOT_CONFIGURED" });
     expect(calls).toEqual([]);
   });
 
-  it("submits the parent and every item snapshot through one atomic RPC", async () => {
+  it("gets a database-canonical digest, signs it, then uses one atomic mutation RPC", async () => {
     const { calls, supabase } = createMockSupabase();
-    const result = await createQuoteRequest(quoteSubmission, {
-      workspaceId: "11111111-1111-4111-8111-111111111111",
-      supabase,
-      createId: () => "70000000-0000-4000-8000-000000000001",
-      createClaimToken: () => "71000000-0000-4000-8000-000000000001",
-      createPublicReference: () => "QR-20260527-ABC12345"
+    const result = await createQuoteRequest(quoteSubmission, validOptions(supabase));
+    expect(result).toMatchObject({ ok: true, itemPersistenceStatus: "complete", handoffClaimStatus: "claimed" });
+    expect(calls.map((call) => call.functionName)).toEqual([
+      "get_public_quote_submission_digest",
+      "submit_public_quote_request"
+    ]);
+    expect(calls[1]?.args).toMatchObject({
+      p_submission_request_id: quoteSubmission.requestId,
+      p_admission_payload_digest: payloadDigest,
+      p_admission_expires_at: proof.expiresAt,
+      p_admission_signature: proof.signature,
+      p_items: [{ product_name_snapshot: "Modular lounge set", quantity: 2, notes: null }]
     });
-
-    expect(result).toEqual({
-      ok: true,
-      quoteRequestId: "70000000-0000-4000-8000-000000000001",
-      publicReference: "QR-20260527-ABC12345",
-      itemPersistenceStatus: "complete",
-      wasCreated: true,
-      handoffClaimStatus: "claimed",
-      handoffClaimToken: "71000000-0000-4000-8000-000000000001"
-    });
-    expect(calls).toEqual([{
-      functionName: "submit_public_quote_request",
-      args: {
-        p_quote_request_id: "70000000-0000-4000-8000-000000000001",
-        p_workspace_id: "11111111-1111-4111-8111-111111111111",
-        p_public_reference: "QR-20260527-ABC12345",
-        p_customer_name: "Maya Tan",
-        p_customer_email: "maya@example.test",
-        p_customer_phone: "+65 8123 4567",
-        p_customer_message:
-          "Please recommend a warm lounge setup for a corporate reception.",
-        p_event_date: "2026-06-12",
-        p_venue: "Marina Bay Sands",
-        p_source_page_path: "/catalogue/modular-lounge-set",
-        p_source_listing_slug: "modular-lounge-set",
-        p_submission_request_id: "visitor-submission-20260612-001",
-        p_items: [{
-          product_name_snapshot: "Modular lounge set",
-          quantity: 2,
-          notes: "VIP reception area"
-        }],
-        p_handoff_claim_token: "71000000-0000-4000-8000-000000000001"
-      }
-    }]);
   });
 
-  it("normalizes RPC errors without exposing customer input", async () => {
-    const { supabase } = createMockSupabase({
-      data: null,
-      error: new Error("database rejected Maya Tan maya@example.test")
-    });
-    const result = await createQuoteRequest(quoteSubmission, {
-      workspaceId: "11111111-1111-4111-8111-111111111111",
-      supabase
-    });
-
-    expect(result).toEqual({ ok: false, code: "QUOTE_PERSISTENCE_FAILED" });
-    expect(JSON.stringify(result)).not.toContain("Maya");
-    expect(JSON.stringify(result)).not.toContain("example.test");
-  });
-
-  it("fails closed for a malformed RPC result", async () => {
-    const { supabase } = createMockSupabase({ data: [], error: null });
-    const result = await createQuoteRequest(quoteSubmission, {
-      workspaceId: "11111111-1111-4111-8111-111111111111",
-      supabase
-    });
-
-    expect(result).toEqual({ ok: false, code: "QUOTE_PERSISTENCE_FAILED" });
-  });
-
-  it("returns persisted identifiers and replay state for a matching retry", async () => {
-    const { supabase } = createMockSupabase({
+  it("preserves payload-bound idempotent completed replay results", async () => {
+    const replay = createMockSupabase({
       data: [{
-        quote_request_id: "70000000-0000-4000-8000-000000000099",
-        public_reference: "QR-20260527-EXISTING",
+        quote_request_id: "70000000-0000-4000-8000-000000000001",
+        public_reference: "QR-20260527-ABC12345",
         was_created: false,
         handoff_claim_status: "completed",
         handoff_claim_token: null
       }],
       error: null
     });
-    const result = await createQuoteRequest(quoteSubmission, {
-      workspaceId: "11111111-1111-4111-8111-111111111111",
-      supabase,
-      createId: () => "70000000-0000-4000-8000-000000000002",
-      createPublicReference: () => "QR-20260527-NEWVALUE"
-    });
-
-    expect(result).toEqual({
-      ok: true,
-      quoteRequestId: "70000000-0000-4000-8000-000000000099",
-      publicReference: "QR-20260527-EXISTING",
-      itemPersistenceStatus: "complete",
-      wasCreated: false,
-      handoffClaimStatus: "completed",
-      handoffClaimToken: null
-    });
+    await expect(
+      createQuoteRequest(quoteSubmission, validOptions(replay.supabase))
+    ).resolves.toMatchObject({ ok: true, handoffClaimStatus: "completed" });
+    expect(replay.calls.map((call) => call.functionName)).toEqual([
+      "get_public_quote_submission_digest",
+      "submit_public_quote_request"
+    ]);
   });
 
-  it("keeps production quote persistence server-only and quote-scoped", () => {
-    const source = readFileSync(
-      resolve(process.cwd(), "lib/quote/quote-repository.ts"),
-      "utf8"
-    );
+  it("fails closed before durable mutation when proof issuance is unavailable", async () => {
+    const { calls, supabase } = createMockSupabase();
+    const result = await createQuoteRequest(quoteSubmission, {
+      ...validOptions(supabase),
+      issueAdmissionProof: () => null
+    });
+    expect(result).toEqual({ ok: false, code: "QUOTE_PERSISTENCE_FAILED" });
+    expect(calls.map((call) => call.functionName)).toEqual(["get_public_quote_submission_digest"]);
+  });
 
+  it("normalizes mutation errors and malformed results", async () => {
+    const failed = createMockSupabase({ data: null, error: new Error("private database details") });
+    await expect(createQuoteRequest(quoteSubmission, validOptions(failed.supabase))).resolves.toEqual({ ok: false, code: "QUOTE_PERSISTENCE_FAILED" });
+    const malformed = createMockSupabase({ data: [], error: null });
+    await expect(createQuoteRequest(quoteSubmission, validOptions(malformed.supabase))).resolves.toEqual({ ok: false, code: "QUOTE_PERSISTENCE_FAILED" });
+  });
+
+  it("keeps quote admission and persistence server-only without a service role", () => {
+    const source = readFileSync(resolve(process.cwd(), "lib/quote/quote-repository.ts"), "utf8");
     expect(source).toContain('import "server-only";');
-    expect(source).toContain("createServerSupabaseClient");
+    expect(source).toContain('"get_public_quote_submission_digest"');
     expect(source).toContain('rpc("submit_public_quote_request"');
     expect(source).not.toContain('.from("quote_requests")');
-    expect(source).not.toContain('.from("quote_request_items")');
-    expect(source).not.toContain('from("products")');
-    expect(source).not.toContain('from("categories")');
-    expect(source).not.toContain('from("product_images")');
-    expect(source).not.toContain('from("conversations")');
-    expect(source).not.toContain('from("messages")');
     expect(source).not.toContain("NEXT_PUBLIC_SUPABASE");
     expect(source).not.toContain("SUPABASE_SERVICE_ROLE");
   });

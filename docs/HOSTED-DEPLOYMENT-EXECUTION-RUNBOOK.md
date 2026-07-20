@@ -78,6 +78,7 @@ values or place them in public/client env.
 | `SUPABASE_ANON_KEY` | Server-side anon/public key used with RLS through first-party app paths. |
 | `CATALOGUE_WORKSPACE_ID` | Workspace gate for public catalogue/setup reads. |
 | `QUOTE_WORKSPACE_ID` | Workspace gate for quote/enquiry persistence. |
+| `QUOTE_SUBMISSION_ADMISSION_SECRET` | Dedicated server-only quote admission HMAC secret; must match the private database configuration provisioned after migration approval. |
 | `ADMIN_TRUSTED_WORKSPACE_ID` | Workspace gate for protected owner/admin access. |
 | `ADMIN_EXPECTED_ORIGIN` | HTTPS origin expected for protected admin same-origin checks. |
 | `ADMIN_EXPECTED_HOST` | Expected protected admin host. |

@@ -14,6 +14,7 @@ const serverOnlyEnvNames = [
   "SUPABASE_ANON_KEY",
   "CATALOGUE_WORKSPACE_ID",
   "QUOTE_WORKSPACE_ID",
+  "QUOTE_SUBMISSION_ADMISSION_SECRET",
   "CHAT_PROVIDER",
   "N8N_CHAT_WEBHOOK_URL",
   "N8N_CHAT_WEBHOOK_TIMEOUT_MS",
@@ -172,6 +173,7 @@ describe("Phase 1O-A deployment environment readiness", () => {
     expect(combinedSource).not.toContain("SUPABASE_ANON_KEY");
     expect(combinedSource).not.toContain("CATALOGUE_WORKSPACE_ID");
     expect(combinedSource).not.toContain("QUOTE_WORKSPACE_ID");
+    expect(combinedSource).not.toContain("QUOTE_SUBMISSION_ADMISSION_SECRET");
     expect(combinedSource).not.toContain("NEXT_PUBLIC_SUPABASE");
     expect(combinedSource).not.toContain("NEXT_PUBLIC_N8N");
     expect(combinedSource).not.toContain("N8N_CHAT_WEBHOOK_URL");
@@ -200,7 +202,7 @@ describe("Phase 1O-A deployment environment readiness", () => {
       "website/lib/hero/public-homepage-hero-repository.ts",
       "website/lib/page-media/public-page-media-repository.ts",
       "website/lib/quote/email-handoff.ts",
-      "website/lib/quote/quote-email-delivery-log-repository.ts",
+      "website/lib/quote/quote-admission-proof.ts",
       "website/lib/quote/quote-handoff-repository.ts",
       "website/lib/quote/quote-repository.ts",
       "website/lib/server-runtime-config.ts",

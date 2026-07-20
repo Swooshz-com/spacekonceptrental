@@ -24,6 +24,8 @@ function baseLaunchEnv(overrides = {}) {
     ADMIN_EXPECTED_HOST: 'owner.spacekoncept.example',
     ADMIN_CSRF_PROOF_SECRET:
       'csrf-proof-placeholder-for-tests-only-1234567890',
+    QUOTE_SUBMISSION_ADMISSION_SECRET:
+      'quote-admission-placeholder-for-tests-only-1234567890',
     N8N_ENQUIRY_HANDOFF_WEBHOOK_URL: 'https://example.invalid/n8n/enquiry',
     N8N_ENQUIRY_HANDOFF_SHARED_SECRET:
       'n8n-handoff-secret-placeholder-for-tests-only',
@@ -72,6 +74,7 @@ test('launch mode fails when required envs are missing', () => {
   assert.match(output, /SUPABASE_ANON_KEY/);
   assert.match(output, /QUOTE_WORKSPACE_ID/);
   assert.match(output, /ADMIN_EXPECTED_ORIGIN/);
+  assert.match(output, /QUOTE_SUBMISSION_ADMISSION_SECRET/);
   assert.match(output, /N8N_ENQUIRY_HANDOFF_WEBHOOK_URL/);
   assert.match(output, /N8N_ENQUIRY_HANDOFF_SHARED_SECRET/);
 });
@@ -113,6 +116,20 @@ test('too-short CSRF proof secret fails in launch mode', () => {
   assert.match(output, /length/i);
   assert.doesNotMatch(output, /short-secret/);
 });
+test('too-short quote admission secret fails in launch mode', () => {
+  const result = runReadiness(
+    baseLaunchEnv({
+      QUOTE_SUBMISSION_ADMISSION_SECRET: 'short-secret',
+    }),
+  );
+  const output = combinedOutput(result);
+
+  assert.notEqual(result.status, 0);
+  assert.match(output, /QUOTE_SUBMISSION_ADMISSION_SECRET/);
+  assert.match(output, /length/i);
+  assert.doesNotMatch(output, /short-secret/);
+});
+
 
 test('invalid n8n enquiry handoff URL fails without echoing the value', () => {
   const result = runReadiness(

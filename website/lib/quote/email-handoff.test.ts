@@ -120,15 +120,13 @@ describe("quote enquiry n8n handoff", () => {
     expect(serialized).not.toContain("SUPABASE");
   });
 
-  it("triggers n8n server-side and records a delivered handoff attempt", async () => {
+  it("triggers n8n server-side and returns trusted-finalizer metadata", async () => {
     const fetchMock = vi.fn(
       async (_input: string | URL | Request, _init?: RequestInit) =>
         new Response(null, { status: 200 })
     );
-    const deliveryLog = vi.fn(async () => ({ ok: true as const }));
 
     const result = await sendQuoteEnquiryEmailHandoff(baseInput, {
-      deliveryLog,
       env: configuredEnv,
       fetch: fetchMock,
       now: () => new Date("2026-06-12T09:30:00.000Z")
@@ -164,29 +162,15 @@ describe("quote enquiry n8n handoff", () => {
     expect(body.idempotencyKey).toBe(
       "quote-enquiry:70000000-0000-4000-8000-000000000001"
     );
-    expect(deliveryLog).toHaveBeenCalledWith({
-      quoteRequestId: "70000000-0000-4000-8000-000000000001",
-      publicReference: "QR-20260612-ABC12345",
-      recipientEmail: null,
-      provider: "n8n",
-      status: "delivered",
-      errorCode: null,
-      requestId: "route-request-1"
-    });
-    expect(JSON.stringify(deliveryLog.mock.calls)).not.toContain(
-      configuredEnv.N8N_ENQUIRY_HANDOFF_SHARED_SECRET
-    );
   });
 
-  it("records accepted n8n responses as pending without faking final delivery", async () => {
+  it("returns accepted n8n responses as pending without faking final delivery", async () => {
     const fetchMock = vi.fn(
       async (_input: string | URL | Request, _init?: RequestInit) =>
         new Response(null, { status: 202 })
     );
-    const deliveryLog = vi.fn(async () => ({ ok: true as const }));
 
     const result = await sendQuoteEnquiryEmailHandoff(baseInput, {
-      deliveryLog,
       env: configuredEnv,
       fetch: fetchMock,
       now: () => new Date("2026-06-12T09:30:00.000Z")
@@ -199,21 +183,12 @@ describe("quote enquiry n8n handoff", () => {
       idempotencyKey:
         "quote-enquiry:70000000-0000-4000-8000-000000000001"
     });
-    expect(deliveryLog).toHaveBeenCalledWith(
-      expect.objectContaining({
-        provider: "n8n",
-        status: "pending",
-        errorCode: null
-      })
-    );
   });
 
   it("does not fake success when the n8n handoff is not configured", async () => {
     const fetchMock = vi.fn();
-    const deliveryLog = vi.fn(async () => ({ ok: true as const }));
 
     const result = await sendQuoteEnquiryEmailHandoff(baseInput, {
-      deliveryLog,
       env: {},
       fetch: fetchMock
     });
@@ -227,27 +202,17 @@ describe("quote enquiry n8n handoff", () => {
         "quote-enquiry:70000000-0000-4000-8000-000000000001"
     });
     expect(fetchMock).not.toHaveBeenCalled();
-    expect(deliveryLog).toHaveBeenCalledWith(
-      expect.objectContaining({
-        recipientEmail: null,
-        provider: "n8n",
-        status: "not_configured",
-        errorCode: "n8n_webhook_not_configured"
-      })
-    );
   });
 
-  it("records safe failure categories without exposing raw n8n payloads", async () => {
+  it("returns safe failure categories without exposing raw n8n payloads", async () => {
     const fetchMock = vi.fn(
       async () =>
         new Response("401 SECRET raw n8n body", {
           status: 401
         })
     );
-    const deliveryLog = vi.fn(async () => ({ ok: true as const }));
 
     const result = await sendQuoteEnquiryEmailHandoff(baseInput, {
-      deliveryLog,
       env: configuredEnv,
       fetch: fetchMock
     });
@@ -262,14 +227,5 @@ describe("quote enquiry n8n handoff", () => {
     });
     expect(JSON.stringify(result)).not.toContain("SECRET");
     expect(JSON.stringify(result)).not.toContain("raw n8n body");
-    expect(deliveryLog).toHaveBeenCalledWith(
-      expect.objectContaining({
-        status: "failed",
-        errorCode: "n8n_rejected"
-      })
-    );
-    expect(JSON.stringify(deliveryLog.mock.calls)).not.toContain(
-      "raw n8n body"
-    );
   });
 });

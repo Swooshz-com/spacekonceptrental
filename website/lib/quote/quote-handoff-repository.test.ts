@@ -5,7 +5,7 @@ const input = {
   quoteRequestId: "70000000-0000-4000-8000-000000000001",
   submissionRequestId: "visitor-submission-20260612-001",
   claimToken: "71000000-0000-4000-8000-000000000001",
-  outcome: { status: "completed" as const }
+  delivery: { status: "delivered" as const, requestId: "route-request-1", providerMessageId: "n8n-message-1" }
 };
 
 describe("quote handoff repository", () => {
@@ -34,7 +34,10 @@ describe("quote handoff repository", () => {
         p_submission_request_id: input.submissionRequestId,
         p_claim_token: input.claimToken,
         p_outcome: "completed",
-        p_error_code: null
+        p_delivery_status: "delivered",
+        p_provider_message_id: "n8n-message-1",
+        p_error_code: null,
+        p_request_id: "route-request-1"
       }
     }]);
   });

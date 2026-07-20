@@ -69,12 +69,19 @@ cryptographic UUID when available and does not synthesize a time- or
 before persistence.
 
 The server-only repository calls `public.submit_public_quote_request` with the
-parent record, all item snapshots, and a fresh handoff claim token. The local
-migration gives `anon` execute access only to this `SECURITY DEFINER` RPC and
-the narrow `public.finalize_public_quote_handoff` RPC. Both set
+parent record, all item snapshots, a fresh handoff claim token, and a
+short-lived HMAC admission proof issued with the dedicated server-only
+`QUOTE_SUBMISSION_ADMISSION_SECRET`. The proof is purpose-separated and bound
+to the configured workspace, submission identity, canonical database payload
+digest, and expiry. The durable RPC validates it against signing material held
+in the private database schema before invoking the unchanged atomic persistence
+implementation. A caller with only the browser-facing anon key can compute the
+canonical digest but cannot forge admission. The migration gives `anon`
+execute access only to the proof-gated `SECURITY DEFINER` submission RPC and
+the claim-bound `public.finalize_public_quote_handoff` RPC. Both set
 `search_path = ''`, fully qualify relations, validate the active workspace,
 and return no private customer data on replay. `public` and `authenticated`
-cannot execute either function.
+cannot execute either mutation function.
 
 The trusted database source for quote capture is the private
 `quote_public_workspace_config` singleton. Both submit and finalize validate
@@ -90,12 +97,24 @@ anonymous UPDATE and DELETE. RLS stays enabled as defense in depth. Anonymous
 and authenticated callers have no direct access to the private
 `quote_handoff_outbox` table.
 
+Direct delivery-log INSERT is revoked from `PUBLIC`, `anon`, and
+`authenticated`. The finalizer validates the exact current unexpired claim and
+atomically creates the trusted delivery record with the outbox transition.
+Exact completed retries are safely rejected by the no-longer-claimed outbox,
+so conflicting status/provider metadata cannot overwrite trusted history.
+
 Quote parent, items, and initial pending-handoff eligibility commit atomically.
 A matching retry returns the original quote ID/reference and evaluates the
 durable handoff state rather than using `wasCreated` as eligibility. The
 outbox state is `pending`, `claimed`, `retryable_failed`, or `completed`:
 
 - an eligible retry acquires one five-minute claim lease;
+
+Direct delivery-log INSERT is revoked from `PUBLIC`, `anon`, and
+`authenticated`. The finalizer validates the exact current unexpired claim and
+atomically creates the trusted delivery record with the outbox transition.
+Exact completed retries are safely rejected by the no-longer-claimed outbox,
+so conflicting status/provider metadata cannot overwrite trusted history.
 - concurrent retries observe a live claim as `in_progress` and do not send;
 - outbound failure records `retryable_failed` and can be retried immediately;
 - a process exit while claimed is recoverable after lease expiry;

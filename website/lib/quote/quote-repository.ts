@@ -5,6 +5,7 @@ import { createServerSupabaseClient } from "../supabase/server";
 import type { SupabaseServerEnvName } from "../supabase/env";
 import type { QuotePersistenceResult, QuoteSubmission } from "./types";
 import { prepareQuoteForPersistence } from "./validation";
+import { issueQuoteAdmissionProof, type QuoteAdmissionProof } from "./quote-admission-proof";
 
 type SupabaseMutationResult = {
   data: unknown;
@@ -13,7 +14,7 @@ type SupabaseMutationResult = {
 
 type QuoteSupabaseClient = {
   rpc: (
-    functionName: "submit_public_quote_request",
+    functionName: "get_public_quote_submission_digest" | "submit_public_quote_request",
     args: Record<string, unknown>
   ) => Promise<SupabaseMutationResult>;
 };
@@ -39,6 +40,7 @@ type QuoteSupabaseResult =
     };
 
 type QuoteRepositoryOptions = {
+  issueAdmissionProof?: (input: { workspaceId: string; submissionRequestId: string; payloadDigest: string }) => QuoteAdmissionProof | null;
   workspaceId?: string;
   supabase?: QuoteSupabaseResult;
   createId?: () => string;
@@ -46,6 +48,7 @@ type QuoteRepositoryOptions = {
   createPublicReference?: () => string;
   env?: {
     QUOTE_WORKSPACE_ID?: string;
+    QUOTE_SUBMISSION_ADMISSION_SECRET?: string;
   };
 };
 
@@ -106,7 +109,12 @@ export async function createQuoteRequest(
   const publicReference =
     (options.createPublicReference ?? defaultCreatePublicReference)();
   const quotePayload = prepareQuoteForPersistence(quote);
-  const rpcResult = await supabase.client.rpc("submit_public_quote_request", {
+  const submissionRequestId = quotePayload.submissionRequestId;
+
+  if (!submissionRequestId) {
+    return { ok: false, code: "QUOTE_PERSISTENCE_FAILED" };
+  }
+  const rpcArgs = {
     p_quote_request_id: quoteRequestId,
     p_workspace_id: workspaceId,
     p_public_reference: publicReference,
@@ -118,13 +126,49 @@ export async function createQuoteRequest(
     p_venue: quotePayload.venue ?? null,
     p_source_page_path: quotePayload.sourcePagePath,
     p_source_listing_slug: quotePayload.sourceListingSlug,
-    p_submission_request_id: quotePayload.submissionRequestId,
+    p_submission_request_id: submissionRequestId,
     p_items: quote.items.map((item) => ({
       product_name_snapshot: item.productName,
       quantity: item.quantity,
       notes: item.notes ?? null
     })),
     p_handoff_claim_token: handoffClaimToken
+  };
+  const digestResult = await supabase.client.rpc(
+    "get_public_quote_submission_digest",
+    rpcArgs
+  );
+  const payloadDigest = digestResult.data;
+
+  if (digestResult.error || typeof payloadDigest !== "string") {
+    return { ok: false, code: "QUOTE_PERSISTENCE_FAILED" };
+  }
+
+  const verifiedPayloadDigest = payloadDigest;
+  const proof = options.issueAdmissionProof
+    ? options.issueAdmissionProof({
+        workspaceId,
+        submissionRequestId,
+        payloadDigest: verifiedPayloadDigest
+      })
+    : issueQuoteAdmissionProof(
+        { workspaceId, submissionRequestId, payloadDigest: verifiedPayloadDigest },
+        {
+          env: {
+            QUOTE_SUBMISSION_ADMISSION_SECRET: (options.env ?? process.env).QUOTE_SUBMISSION_ADMISSION_SECRET
+          }
+        }
+      );
+
+  if (!proof) {
+    return { ok: false, code: "QUOTE_PERSISTENCE_FAILED" };
+  }
+
+  const rpcResult = await supabase.client.rpc("submit_public_quote_request", {
+    ...rpcArgs,
+    p_admission_payload_digest: proof.payloadDigest,
+    p_admission_expires_at: proof.expiresAt,
+    p_admission_signature: proof.signature
   });
 
   const rows = Array.isArray(rpcResult.data) ? rpcResult.data : [];

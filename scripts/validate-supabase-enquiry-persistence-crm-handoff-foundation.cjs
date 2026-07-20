@@ -381,7 +381,7 @@ matches(quoteTypes, /export type CrmSyncStatus[\s\S]*not_queued[\s\S]*queued[\s\
 matches(quoteTypes, /QuotePersistencePayload[\s\S]*crmSyncStatus/, quoteTypesPath);
 matches(quoteValidation, /normalizeCrmSyncError[\s\S]*slice\(0, MAX_CRM_SYNC_ERROR_LENGTH\)/, quoteValidationPath);
 matches(quoteValidation, /prepareQuoteForPersistence[\s\S]*crmProvider: "hubspot"[\s\S]*crmSyncStatus: "not_queued"/, quoteValidationPath);
-matches(quoteRepository, /rpc\("submit_public_quote_request"[\s\S]*p_source_page_path[\s\S]*p_source_listing_slug[\s\S]*p_submission_request_id[\s\S]*p_items/, quoteRepositoryPath);
+matches(quoteRepository, /const rpcArgs = \{[\s\S]*p_source_page_path[\s\S]*p_source_listing_slug[\s\S]*p_submission_request_id[\s\S]*p_items[\s\S]*rpc\("submit_public_quote_request"[\s\S]*\.\.\.rpcArgs[\s\S]*p_admission_signature/, quoteRepositoryPath);
 matches(quoteRepository, /typeof row\.was_created !== "boolean"/, quoteRepositoryPath);
 matches(atomicQuoteMigration, /create table public\.quote_public_workspace_config/, atomicQuoteMigrationPath);
 matches(atomicQuoteMigration, /from public\.quote_public_workspace_config cfg/, atomicQuoteMigrationPath);

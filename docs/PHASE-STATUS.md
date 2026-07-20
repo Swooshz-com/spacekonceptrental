@@ -26,7 +26,7 @@ found.
 
 ## Quote Enquiry Email Handoff Delivery Log Foundation
 
-References: `docs/architecture/QUOTE-ENQUIRY-EMAIL-HANDOFF-DELIVERY-LOG-FOUNDATION.md`, `website/lib/quote/email-handoff.ts`, `website/lib/quote/quote-email-delivery-log-repository.ts`, `website/lib/quote/admin-read/admin-quote-email-delivery-log.ts`, `website/app/api/quote/route.ts`, `website/app/admin/enquiry-email/page.tsx`, `website/app/admin/delivery-log/page.tsx`, and `supabase/migrations/20260703010000_quote_email_delivery_log_foundation.sql`.
+References: `docs/architecture/QUOTE-ENQUIRY-EMAIL-HANDOFF-DELIVERY-LOG-FOUNDATION.md`, `website/lib/quote/email-handoff.ts`, `website/lib/quote/quote-handoff-repository.ts`, `website/lib/quote/admin-read/admin-quote-email-delivery-log.ts`, `website/app/api/quote/route.ts`, `website/app/admin/enquiry-email/page.tsx`, `website/app/admin/delivery-log/page.tsx`, and `supabase/migrations/20260703010000_quote_email_delivery_log_foundation.sql`.
 
 Public quote submissions now require the server-side enquiry email handoff to
 be configured and delivered after Supabase quote persistence. The handoff uses

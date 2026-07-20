@@ -14,6 +14,7 @@ values to this file.
 | `SUPABASE_ANON_KEY` | Server-only | `<redacted>` | `<reviewed externally>` |
 | `CATALOGUE_WORKSPACE_ID` | Server-only | `<redacted>` | `<reviewed externally>` |
 | `QUOTE_WORKSPACE_ID` | Server-only | `<redacted>` | `<reviewed externally>` |
+| `QUOTE_SUBMISSION_ADMISSION_SECRET` | Server-only | `<redacted>` | `<reviewed externally>` |
 | `ADMIN_TRUSTED_WORKSPACE_ID` | Server-only | `<redacted>` | `<reviewed externally>` |
 | `ADMIN_EXPECTED_ORIGIN` | Server-only | `<redacted>` | `<reviewed externally>` |
 | `ADMIN_EXPECTED_HOST` | Server-only | `<redacted>` | `<reviewed externally>` |

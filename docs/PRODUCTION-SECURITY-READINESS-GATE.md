@@ -49,6 +49,7 @@ environment. Do not commit `.env` files or real env values.
 | `SUPABASE_ANON_KEY` | Server-side public/anon key used with RLS through first-party routes. | Must exist. |
 | `CATALOGUE_WORKSPACE_ID` | Server-owned public catalogue workspace gate; must match `catalogue_public_workspace_config`. | Must exist. |
 | `QUOTE_WORKSPACE_ID` | Server-owned quote/enquiry persistence workspace gate; must independently match `quote_public_workspace_config`. | Must exist. |
+| `QUOTE_SUBMISSION_ADMISSION_SECRET` | Dedicated server-only HMAC secret for quote admission proofs validated by the durable RPC. | Must exist, be at least 32 characters, and match the separately provisioned private database configuration. |
 | `ADMIN_TRUSTED_WORKSPACE_ID` | Server-owned protected admin workspace gate. | Must exist. |
 | `ADMIN_EXPECTED_ORIGIN` | Trusted protected admin same-origin value. | Must exist and be an HTTPS origin. |
 | `ADMIN_EXPECTED_HOST` | Trusted protected admin host value. | Must exist and be a host or HTTPS URL. |
@@ -56,6 +57,11 @@ environment. Do not commit `.env` files or real env values.
 | `N8N_ENQUIRY_HANDOFF_WEBHOOK_URL` | Server-only n8n endpoint for quote/enquiry handoff after SKR persistence succeeds. | Must exist and be HTTPS. |
 | `N8N_ENQUIRY_HANDOFF_SHARED_SECRET` | Server-only HMAC signing secret shared with the reviewed n8n workflow. | Must exist, be high-entropy, and not be a weak placeholder shape. |
 | `N8N_ENQUIRY_HANDOFF_TIMEOUT_MS` | Optional timeout for the n8n handoff request. | Optional; when set, must be positive and no more than 30000ms. |
+
+`QUOTE_SUBMISSION_ADMISSION_SECRET` is purpose-specific and must not reuse the
+admin CSRF or n8n secrets. Its value is provisioned outside Git in Coolify and,
+after the forward migration is approved, in the private database configuration;
+browser roles cannot read that configuration.
 
 Safe placeholder examples for documentation or tests only:
 

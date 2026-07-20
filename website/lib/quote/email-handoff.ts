@@ -3,7 +3,6 @@ import "server-only";
 import { createHmac } from "node:crypto";
 
 import { getQuoteEmailHandoffRuntimeConfig } from "../server-runtime-config";
-import { recordQuoteEmailDeliveryAttempt } from "./quote-email-delivery-log-repository";
 import type { QuoteSubmission } from "./types";
 
 export type QuoteEmailProviderName = "n8n";
@@ -13,20 +12,6 @@ export type QuoteEmailDeliveryStatus =
   | "failed"
   | "not_configured";
 
-export type QuoteEmailDeliveryLogInput = {
-  quoteRequestId: string;
-  publicReference: string;
-  recipientEmail: string | null;
-  provider: QuoteEmailProviderName;
-  status: QuoteEmailDeliveryStatus;
-  providerMessageId?: string;
-  errorCode: string | null;
-  requestId: string;
-};
-
-export type QuoteEmailDeliveryLogWriter = (
-  input: QuoteEmailDeliveryLogInput
-) => Promise<{ ok: true } | { ok: false; code: string }>;
 
 export type QuoteEnquiryEmailConfigStatus = {
   provider: QuoteEmailProviderName;
@@ -52,6 +37,7 @@ export type QuoteEmailHandoffResult =
       status: "delivered" | "pending";
       provider: QuoteEmailProviderName;
       idempotencyKey: string;
+      providerMessageId?: string;
     }
   | {
       ok: false;
@@ -71,7 +57,6 @@ type N8nEnquiryHandoffFetch = (
 ) => Promise<Response>;
 
 type SendQuoteEnquiryEmailOptions = {
-  deliveryLog?: QuoteEmailDeliveryLogWriter;
   env?: QuoteEmailEnv;
   fetch?: N8nEnquiryHandoffFetch;
   now?: () => Date;
@@ -235,21 +220,6 @@ async function postWithTimeout({
   }
 }
 
-async function recordDeliveryAttempt(
-  deliveryLog: QuoteEmailDeliveryLogWriter,
-  input: QuoteEmailHandoffInput,
-  attempt: Omit<
-    QuoteEmailDeliveryLogInput,
-    "quoteRequestId" | "publicReference" | "requestId"
-  >
-) {
-  await deliveryLog({
-    quoteRequestId: input.quoteRequestId,
-    publicReference: input.publicReference,
-    requestId: input.requestId,
-    ...attempt
-  }).catch(() => ({ ok: false as const, code: "delivery_log_unavailable" }));
-}
 
 export function resolveQuoteEnquiryEmailConfigStatus(
   env: QuoteEmailEnv = process.env
@@ -317,7 +287,6 @@ export async function sendQuoteEnquiryEmailHandoff(
   options: SendQuoteEnquiryEmailOptions = {}
 ): Promise<QuoteEmailHandoffResult> {
   const config = getQuoteEmailHandoffRuntimeConfig(options.env ?? process.env);
-  const deliveryLog = options.deliveryLog ?? recordQuoteEmailDeliveryAttempt;
   const idempotencyKey = buildIdempotencyKey(input);
 
   if (!config.configured || !config.webhookUrl || !config.sharedSecret) {
@@ -326,12 +295,6 @@ export async function sendQuoteEnquiryEmailHandoff(
       ? mapQuoteEmailConfigIssue(firstIssue)
       : "n8n_handoff_not_configured";
 
-    await recordDeliveryAttempt(deliveryLog, input, {
-      recipientEmail: null,
-      provider,
-      status: "not_configured",
-      errorCode: code
-    });
 
     return {
       ok: false,
@@ -371,12 +334,6 @@ export async function sendQuoteEnquiryEmailHandoff(
     if (!response.ok) {
       const code = getSafeN8nResultCode(response.status);
 
-      await recordDeliveryAttempt(deliveryLog, input, {
-        recipientEmail: null,
-        provider,
-        status: "failed",
-        errorCode: code
-      });
 
       return {
         ok: false,
@@ -393,29 +350,17 @@ export async function sendQuoteEnquiryEmailHandoff(
 
     const status = response.status === 202 ? "pending" : "delivered";
 
-    await recordDeliveryAttempt(deliveryLog, input, {
-      recipientEmail: null,
-      provider,
-      status,
-      ...(providerMessageId ? { providerMessageId } : {}),
-      errorCode: null
-    });
 
     return {
       ok: true,
       status,
       provider,
-      idempotencyKey
+      idempotencyKey,
+      ...(providerMessageId ? { providerMessageId } : {})
     };
   } catch (error) {
     const code = safeErrorCode(getAbortErrorCode(error));
 
-    await recordDeliveryAttempt(deliveryLog, input, {
-      recipientEmail: null,
-      provider,
-      status: "failed",
-      errorCode: code
-    });
 
     return {
       ok: false,
