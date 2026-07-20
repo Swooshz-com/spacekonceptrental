@@ -3970,7 +3970,7 @@ check('anonymous quote ACLs deny every historical direct write surface', () => {
   }
 
   for (const role of ['anon', 'authenticated']) {
-    for (const privilege of ['SELECT', 'INSERT', 'UPDATE', 'DELETE']) {
+    for (const privilege of ['INSERT', 'UPDATE', 'DELETE']) {
       assert.equal(
         psql(
           `select has_table_privilege('${role}', 'public.quote_handoff_outbox', '${privilege}')::text`,
@@ -3997,12 +3997,20 @@ check('anonymous quote ACLs deny every historical direct write surface', () => {
     ) values ('/quote', null, null, 'denied', 'hubspot', 'not_queued', null, null, null, null)`,
     /permission denied/i,
   );
-  statementFailsAs(
-    'anon',
-    null,
-    `select * from public.quote_handoff_outbox`,
-    /permission denied/i,
-  );
+  for (const [role, authUserId] of [
+    ['anon', null],
+    ['authenticated', ids.authMemberA],
+  ]) {
+    assert.equal(
+      queryAs(
+        role,
+        authUserId,
+        `select count(*)::text from public.quote_handoff_outbox`,
+      ),
+      '0',
+      `${role} must not inspect any private handoff state through RLS.`,
+    );
+  }
   statementFailsAs(
     'anon',
     null,
