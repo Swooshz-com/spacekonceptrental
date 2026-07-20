@@ -747,6 +747,8 @@ function assertNoRuntimeSupabaseUse() {
     /\bintegration_connections\b/i,
   ];
   const blockedQuoteWriteTablePatterns = [
+    /from\(["']quote_requests["']\)/i,
+    /from\(["']quote_request_items["']\)/i,
     /from\(["']products["']\)/i,
     /from\(["']categories["']\)/i,
     /from\(["']product_images["']\)/i,
@@ -857,13 +859,8 @@ function assertNoRuntimeSupabaseUse() {
         );
         assert.match(
           content,
-          /from\(["']quote_requests["']\)/,
-          `${relativePath} must insert quote_requests explicitly.`,
-        );
-        assert.match(
-          content,
-          /from\(["']quote_request_items["']\)/,
-          `${relativePath} must insert quote_request_items explicitly.`,
+          /rpc\(["']submit_public_quote_request["']/,
+          `${relativePath} must use the atomic public quote RPC.`,
         );
         assertNoMatches(filePath, content, serverBlockedPatterns);
         assertNoMatches(filePath, content, blockedQuoteWriteTablePatterns);
