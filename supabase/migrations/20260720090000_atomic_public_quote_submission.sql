@@ -2,6 +2,22 @@
 -- Anonymous callers can write quote state only through the two narrow RPCs
 -- defined here. RLS remains enabled as defense in depth.
 
+create table public.quote_public_workspace_config (
+  id boolean primary key default true,
+  active_workspace_id uuid not null,
+  is_enabled boolean not null default false,
+  constraint quote_public_workspace_config_singleton_check
+    check (id),
+  constraint quote_public_workspace_config_active_workspace_id_fkey
+    foreign key (active_workspace_id)
+    references public.workspaces(id)
+);
+
+alter table public.quote_public_workspace_config enable row level security;
+
+comment on table public.quote_public_workspace_config is
+  'Private deployment-owned singleton selecting the active public quote-capture workspace independently from catalogue configuration.';
+
 create table public.quote_handoff_outbox (
   quote_request_id uuid primary key,
   workspace_id uuid not null,
@@ -104,7 +120,7 @@ declare
 begin
   if not exists (
     select 1
-    from public.catalogue_public_workspace_config cfg
+    from public.quote_public_workspace_config cfg
     join public.workspaces workspace on workspace.id = cfg.active_workspace_id
     where cfg.id = true
       and cfg.is_enabled = true
@@ -351,7 +367,7 @@ begin
 
   if not exists (
     select 1
-    from public.catalogue_public_workspace_config cfg
+    from public.quote_public_workspace_config cfg
     join public.workspaces workspace on workspace.id = cfg.active_workspace_id
     where cfg.id = true
       and cfg.is_enabled = true
@@ -441,3 +457,4 @@ revoke insert (
 ) on public.quote_request_items from anon;
 
 revoke all privileges on table public.quote_handoff_outbox from public, anon, authenticated;
+revoke all privileges on table public.quote_public_workspace_config from public, anon, authenticated;

@@ -484,11 +484,14 @@ test('real migrations replace every historical anonymous quote write with durabl
     readRealMigration('20260720090000_atomic_public_quote_submission.sql'),
   );
 
+  assert.match(sql, /create table public\.quote_public_workspace_config \(/);
+  assert.match(sql, /alter table public\.quote_public_workspace_config enable row level security;/);
   assert.match(sql, /create table public\.quote_handoff_outbox \(/);
   assert.match(sql, /alter table public\.quote_handoff_outbox enable row level security;/);
   assert.match(sql, /create or replace function public\.submit_public_quote_request\(/);
   assert.match(sql, /language plpgsql security definer set search_path = '' as/);
-  assert.match(sql, /from public\.catalogue_public_workspace_config cfg/);
+  assert.match(sql, /from public\.quote_public_workspace_config cfg/);
+  assert.doesNotMatch(sql, /from public\.catalogue_public_workspace_config cfg/);
   assert.match(sql, /from public\.quote_requests quote/);
   assert.match(sql, /from public\.quote_request_items item/);
   assert.match(sql, /or p_submission_request_id is null or btrim\(p_submission_request_id\) = ''/);
@@ -508,6 +511,7 @@ test('real migrations replace every historical anonymous quote write with durabl
   assert.match(sql, /revoke all privileges on table public\.quote_request_items from anon;/);
   assert.match(sql, /revoke insert \( workspace_id, quote_request_id, product_name_snapshot, quantity, notes \) on public\.quote_request_items from anon;/);
   assert.match(sql, /revoke all privileges on table public\.quote_handoff_outbox from public, anon, authenticated;/);
+  assert.match(sql, /revoke all privileges on table public\.quote_public_workspace_config from public, anon, authenticated;/);
 });
 
 test('no migration after quote hardening can restore anonymous direct quote writes', () => {

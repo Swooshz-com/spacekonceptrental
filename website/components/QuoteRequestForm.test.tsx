@@ -11,11 +11,14 @@ import { resolve } from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import QuoteRequestForm from "./QuoteRequestForm";
 
-function getSubmittedPayload(fetchMock: ReturnType<typeof vi.fn>) {
+function getSubmittedPayload(
+  fetchMock: ReturnType<typeof vi.fn>,
+  callIndex = 0
+) {
   const request = (fetchMock.mock.calls as unknown as [
     string,
     RequestInit
-  ][])[0][1];
+  ][])[callIndex][1];
 
   return JSON.parse(String(request.body));
 }
@@ -418,6 +421,162 @@ describe("QuoteRequestForm", () => {
     expect(firstRequestId).toBe("81000000-0000-4000-8000-000000000001");
     expect(secondRequest.requestId).toBe(firstRequestId);
     expect(randomUuid).toHaveBeenCalledTimes(2);
+  });
+
+  it("starts a new logical submission when customer details change after a pending handoff", async () => {
+    vi.spyOn(globalThis.crypto, "randomUUID")
+      .mockReturnValueOnce("81000000-0000-4000-8000-000000000011")
+      .mockReturnValueOnce("81000000-0000-4000-8000-000000000012");
+    const fetchMock = vi.fn(async () =>
+      new Response(
+        JSON.stringify({
+          error: { code: "QUOTE_HANDOFF_PENDING", message: "Retry later." }
+        }),
+        { status: 503, headers: { "content-type": "application/json" } }
+      )
+    );
+
+    vi.stubGlobal("fetch", fetchMock);
+    render(<QuoteRequestForm />);
+
+    fireEvent.change(screen.getByLabelText(/name/i), {
+      target: { value: "Maya Tan" }
+    });
+    fireEvent.change(screen.getByLabelText(/email address/i), {
+      target: { value: "maya@example.test" }
+    });
+    fireEvent.click(screen.getByRole("button", { name: /review and send an enquiry/i }));
+    await screen.findByRole("alert");
+
+    fireEvent.change(screen.getByLabelText(/name/i), {
+      target: { value: "Maya Lim" }
+    });
+    fireEvent.click(screen.getByRole("button", { name: /review and send an enquiry/i }));
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
+
+    expect(getSubmittedPayload(fetchMock, 0)).toMatchObject({
+      customerName: "Maya Tan",
+      requestId: "81000000-0000-4000-8000-000000000011"
+    });
+    expect(getSubmittedPayload(fetchMock, 1)).toMatchObject({
+      customerName: "Maya Lim",
+      requestId: "81000000-0000-4000-8000-000000000012"
+    });
+  });
+
+  it("starts a new logical submission when selected quantities or notes change", async () => {
+    vi.spyOn(globalThis.crypto, "randomUUID")
+      .mockReturnValueOnce("81000000-0000-4000-8000-000000000021")
+      .mockReturnValueOnce("81000000-0000-4000-8000-000000000022");
+    window.localStorage.setItem(
+      "skr.quoteSelection.v1",
+      JSON.stringify([{
+        slug: "aura-lounge-chair",
+        name: "Aura Lounge Chair",
+        category: "Seating",
+        kind: "rental",
+        quantity: 2
+      }])
+    );
+    const fetchMock = vi.fn(async () =>
+      new Response(
+        JSON.stringify({
+          error: { code: "QUOTE_HANDOFF_PENDING", message: "Retry later." }
+        }),
+        { status: 503, headers: { "content-type": "application/json" } }
+      )
+    );
+
+    vi.stubGlobal("fetch", fetchMock);
+    render(<QuoteRequestForm />);
+    fireEvent.change(screen.getByLabelText(/name/i), {
+      target: { value: "Maya Tan" }
+    });
+    fireEvent.change(screen.getByLabelText(/email address/i), {
+      target: { value: "maya@example.test" }
+    });
+    fireEvent.change(screen.getByLabelText(/item-specific notes/i), {
+      target: { value: "First layout note" }
+    });
+    fireEvent.click(screen.getByRole("button", { name: /review and send an enquiry/i }));
+    await screen.findByRole("alert");
+
+    window.localStorage.setItem(
+      "skr.quoteSelection.v1",
+      JSON.stringify([{
+        slug: "aura-lounge-chair",
+        name: "Aura Lounge Chair",
+        category: "Seating",
+        kind: "rental",
+        quantity: 3
+      }])
+    );
+    window.dispatchEvent(new Event("skr:quote-selection-change"));
+    await waitFor(() =>
+      expect(screen.getByLabelText(/selected listing/i)).toHaveTextContent(
+        /Aura Lounge Chair x 3/
+      )
+    );
+    fireEvent.change(screen.getByLabelText(/item-specific notes/i), {
+      target: { value: "Revised layout note" }
+    });
+    fireEvent.click(screen.getByRole("button", { name: /review and send an enquiry/i }));
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
+
+    expect(getSubmittedPayload(fetchMock, 0)).toMatchObject({
+      requestId: "81000000-0000-4000-8000-000000000021",
+      items: [{
+        productName: "Aura Lounge Chair x 2",
+        quantity: 1,
+        notes: "First layout note"
+      }]
+    });
+    expect(getSubmittedPayload(fetchMock, 1)).toMatchObject({
+      requestId: "81000000-0000-4000-8000-000000000022",
+      items: [{
+        productName: "Aura Lounge Chair x 3",
+        quantity: 1,
+        notes: "Revised layout note"
+      }]
+    });
+  });
+
+  it("reuses the submission key after an uncertain network response when the payload is unchanged", async () => {
+    vi.spyOn(globalThis.crypto, "randomUUID")
+      .mockReturnValueOnce("81000000-0000-4000-8000-000000000031")
+      .mockReturnValueOnce("81000000-0000-4000-8000-000000000032");
+    const fetchMock = vi
+      .fn()
+      .mockRejectedValueOnce(new TypeError("network response lost"))
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({ status: "received", publicReference: "QR-RECOVERED" }),
+          { status: 201, headers: { "content-type": "application/json" } }
+        )
+      );
+
+    vi.stubGlobal("fetch", fetchMock);
+    render(<QuoteRequestForm />);
+    fireEvent.change(screen.getByLabelText(/name/i), {
+      target: { value: "  Maya Tan  " }
+    });
+    fireEvent.change(screen.getByLabelText(/email address/i), {
+      target: { value: "maya@example.test" }
+    });
+    fireEvent.click(screen.getByRole("button", { name: /review and send an enquiry/i }));
+    await screen.findByRole("alert");
+
+    fireEvent.focus(screen.getByLabelText(/venue/i));
+    fireEvent.blur(screen.getByLabelText(/venue/i));
+    fireEvent.click(screen.getByRole("button", { name: /review and send an enquiry/i }));
+    await screen.findByText(/enquiry received/i);
+
+    expect(getSubmittedPayload(fetchMock, 0).requestId).toBe(
+      "81000000-0000-4000-8000-000000000031"
+    );
+    expect(getSubmittedPayload(fetchMock, 1).requestId).toBe(
+      "81000000-0000-4000-8000-000000000031"
+    );
   });
 
   it("shows inline required guidance and preserves entered event details", async () => {

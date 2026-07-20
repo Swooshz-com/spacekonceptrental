@@ -131,14 +131,22 @@ Supabase Storage, or deployment configuration.
 
 The atomic public quote persistence amendment supersedes the earlier two-insert
 quote-write boundary. A mandatory browser-created `requestId` is validated by
-`POST /api/quote` and retained across failed or uncertain responses. The
+`POST /api/quote` and retained across failed or uncertain responses only while
+the normalized logical payload remains unchanged. The browser snapshots the
+trimmed contact, event, source, and item payload before the first attempt. An
+unchanged retry reuses that key; a material edit creates a new key and a
+distinct enquiry without cancelling or mutating the earlier durable handoff. The
 server-only repository calls `public.submit_public_quote_request`, which
 creates the parent, every item snapshot, and the initial durable handoff state
 in one transaction. The RPC is `SECURITY DEFINER` with an empty `search_path`,
-uses fully qualified relations, checks the trusted active workspace, and is
+uses fully qualified relations, checks the trusted active workspace through
+the private `quote_public_workspace_config` singleton, and is
 executable only by `anon`. Historical table-level and column-level anonymous
 INSERT grants on both quote tables are explicitly revoked; anonymous UPDATE
 and DELETE are also revoked, while RLS remains enabled as defense in depth.
+The quote singleton is independent from `catalogue_public_workspace_config`;
+the two workspace IDs may be equal or different, but each gate must reference
+its own enabled active workspace.
 
 A matching replay returns the original quote identifiers and validates the
 original payload. Handoff eligibility is not inferred from `wasCreated`.

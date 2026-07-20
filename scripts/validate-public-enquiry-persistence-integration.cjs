@@ -239,6 +239,7 @@ matches(quoteRoute, /validationError\(validation\.message, requestId\)/, quoteRo
 matches(quoteRoute, /persistenceError\(requestId, request\)/, quoteRoutePath);
 matches(quoteForm, /sourcePath[\s\S]*listingSlug[\s\S]*requestId/, quoteFormPath);
 matches(quoteForm, /globalThis\.crypto\?\.randomUUID\?\.\(\)/, quoteFormPath);
+matches(quoteForm, /canonicalizeLogicalQuotePayload[\s\S]*submissionAttemptSnapshot/, quoteFormPath);
 noMatch(quoteForm, /Math\.random|Date\.now\(\)\.toString\(requestIdFallbackRadix\)/, quoteFormPath);
 matches(quoteForm, /fetch\("\/api\/quote"/, quoteFormPath);
 matches(quoteForm, /disabled=\{submitState\.status === "submitting"\}/, quoteFormPath);
@@ -254,6 +255,9 @@ matches(quoteRoute, /handoffClaimStatus === "claimed"[\s\S]*emailHandoff[\s\S]*h
 matches(quoteRoute, /handoffClaimStatus === "in_progress"[\s\S]*handoffPendingError/, quoteRoutePath);
 noMatch(quoteRoute, /if \(result\.wasCreated\)/, quoteRoutePath);
 matches(quoteMigration, /create table public\.quote_handoff_outbox/, quoteMigrationPath);
+matches(quoteMigration, /create table public\.quote_public_workspace_config/, quoteMigrationPath);
+matches(quoteMigration, /from public\.quote_public_workspace_config cfg/, quoteMigrationPath);
+noMatch(quoteMigration, /from public\.catalogue_public_workspace_config cfg/, quoteMigrationPath);
 matches(quoteMigration, /claim_expires_at = now\(\) \+ interval '5 minutes'/, quoteMigrationPath);
 matches(quoteMigration, /revoke insert \([\s\S]*customer_message[\s\S]*crm_sync_error[\s\S]*\) on public\.quote_requests from anon;/, quoteMigrationPath);
 matches(quoteMigration, /revoke insert \([\s\S]*product_name_snapshot[\s\S]*\) on public\.quote_request_items from anon;/, quoteMigrationPath);
@@ -263,6 +267,9 @@ for (const requiredTest of [
   'sourcePath: "/quote?listing=modular-lounge-set"',
   'listingSlug: "modular-lounge-set"',
   'requestId: expect.any(String)',
+  'starts a new logical submission when customer details change after a pending handoff',
+  'starts a new logical submission when selected quantities or notes change',
+  'reuses the submission key after an uncertain network response when the payload is unchanged',
 ]) {
   includes(quoteFormTest, requiredTest, quoteFormTestPath);
 }

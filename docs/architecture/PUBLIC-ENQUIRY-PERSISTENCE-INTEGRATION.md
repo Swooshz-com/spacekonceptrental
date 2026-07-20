@@ -76,6 +76,14 @@ the narrow `public.finalize_public_quote_handoff` RPC. Both set
 and return no private customer data on replay. `public` and `authenticated`
 cannot execute either function.
 
+The trusted database source for quote capture is the private
+`quote_public_workspace_config` singleton. Both submit and finalize validate
+against it and require its referenced workspace to remain active. It is
+independent from `catalogue_public_workspace_config`: catalogue workspace A
+and quote workspace B are valid, as is an explicit configuration where both
+use the same workspace. The server-only `QUOTE_WORKSPACE_ID` must match the
+quote singleton; an anonymous caller cannot select an arbitrary workspace.
+
 The migration explicitly revokes every historical anonymous table-level and
 column-level INSERT grant on `quote_requests` and `quote_request_items`, plus
 anonymous UPDATE and DELETE. RLS stays enabled as defense in depth. Anonymous
@@ -93,6 +101,16 @@ outbox state is `pending`, `claimed`, `retryable_failed`, or `completed`:
 - a process exit while claimed is recoverable after lease expiry;
 - completed submissions replay without another outbound request; and
 - a reused submission identifier with a changed payload fails without mutation.
+
+The browser prevents that mismatch from becoming a retry loop by storing a
+canonical snapshot alongside the attempted key. The identity includes trimmed
+contact, event, message, and venue fields, normalized optional values, source
+path/listing metadata, and normalized item names, quantities, and notes.
+Unchanged payloads reuse the existing key, including after an uncertain
+network response. Material edits receive a new key and become a distinct
+enquiry. UI-only state does not rotate the key. The earlier pending handoff
+remains intact and recoverable; starting an edited submission never cancels or
+deletes it.
 
 The route returns success only after a successful n8n acceptance and durable
 completion record, or when replay finds an already completed handoff. Other

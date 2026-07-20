@@ -35,6 +35,8 @@ const expectedTables = [
   'product_images',
   'products',
   'quote_email_delivery_log',
+  'quote_handoff_outbox',
+  'quote_public_workspace_config',
   'quote_request_activity',
   'quote_request_items',
   'quote_requests',
@@ -293,6 +295,12 @@ function seedFixtures() {
       ('${ids.workspaceB}', 'workspace-b', 'Workspace B');
 
     insert into public.catalogue_public_workspace_config (
+      active_workspace_id,
+      is_enabled
+    )
+    values ('${ids.workspaceA}', true);
+
+    insert into public.quote_public_workspace_config (
       active_workspace_id,
       is_enabled
     )
@@ -701,8 +709,15 @@ function assertNoRuntimeSupabaseUse() {
   const approvedCatalogueReadFiles = new Set([
     'website/lib/catalogue/catalogue-repository.ts',
   ]);
-  const approvedQuoteWriteFiles = new Set([
-    'website/lib/quote/quote-repository.ts',
+  const approvedQuoteWriteFiles = new Map([
+    [
+      'website/lib/quote/quote-repository.ts',
+      'submit_public_quote_request',
+    ],
+    [
+      'website/lib/quote/quote-handoff-repository.ts',
+      'finalize_public_quote_handoff',
+    ],
   ]);
   const approvedQuoteEmailDeliveryLogFiles = new Set([
     'website/lib/quote/quote-email-delivery-log-repository.ts',
@@ -847,6 +862,8 @@ function assertNoRuntimeSupabaseUse() {
       }
 
       if (approvedQuoteWriteFiles.has(relativePath)) {
+        const approvedRpc = approvedQuoteWriteFiles.get(relativePath);
+
         assert.match(
           content,
           /import\s+["']server-only["'];/,
@@ -859,8 +876,8 @@ function assertNoRuntimeSupabaseUse() {
         );
         assert.match(
           content,
-          /rpc\(["']submit_public_quote_request["']/,
-          `${relativePath} must use the atomic public quote RPC.`,
+          new RegExp(`rpc\\(["']${approvedRpc}["']`),
+          `${relativePath} must use only its approved public quote RPC.`,
         );
         assertNoMatches(filePath, content, serverBlockedPatterns);
         assertNoMatches(filePath, content, blockedQuoteWriteTablePatterns);
@@ -1667,6 +1684,7 @@ check('anonymous public reads do not return private workspace data', () => {
   const privateTables = [
     'admin_users',
     'catalogue_public_workspace_config',
+    'quote_public_workspace_config',
     'memberships',
     'quote_requests',
     'quote_request_items',
@@ -3527,6 +3545,113 @@ check('browser roles cannot execute transcript audit/evidence insert RPCs', () =
   }
 });
 
+check('public quote workspace configuration stays independent from catalogue configuration', () => {
+  const quoteId = '70000000-0000-4000-8000-000000000121';
+  const claimToken = '71000000-0000-4000-8000-000000000121';
+
+  psql(`
+    update public.quote_public_workspace_config
+    set active_workspace_id = '${ids.workspaceB}', is_enabled = true;
+  `);
+
+  const cataloguePayload = scalarAs(
+    'anon',
+    null,
+    `select public.get_public_catalogue('${ids.workspaceA}', null)::text`,
+  );
+  assert.match(
+    cataloguePayload,
+    /published-product-a/,
+    'catalogue reads must keep using independently configured workspace A.',
+  );
+  assert.doesNotMatch(cataloguePayload, /published-product-b/);
+
+  const created = queryCommittedAs(
+    'anon',
+    null,
+    `
+      select quote_request_id::text || '|' || handoff_claim_status
+      from public.submit_public_quote_request(
+        '${quoteId}', '${ids.workspaceB}', 'quote-workspace-b',
+        'Workspace B Customer', 'workspace-b@example.test', null,
+        null, null, null, '/quote', null, 'rls-quote-workspace-b',
+        '[]'::jsonb, '${claimToken}'
+      )
+    `,
+  );
+  assert.equal(created, `${quoteId}|claimed`);
+  assert.equal(
+    queryCommittedAs(
+      'anon',
+      null,
+      `select public.finalize_public_quote_handoff(
+        '${quoteId}', '${ids.workspaceB}', 'rls-quote-workspace-b',
+        '${claimToken}', 'completed', null
+      )::text`,
+    ),
+    'true',
+    'handoff finalization must use the same quote-specific workspace authority.',
+  );
+
+  statementFailsAs(
+    'anon',
+    null,
+    `select * from public.submit_public_quote_request(
+      '70000000-0000-4000-8000-000000000122', '${ids.workspaceA}',
+      'catalogue-workspace-not-quote-workspace', 'Wrong Workspace Customer',
+      'wrong-workspace@example.test', null, null, null, null, '/quote', null,
+      'rls-catalogue-workspace-denied', '[]'::jsonb,
+      '71000000-0000-4000-8000-000000000122'
+    )`,
+    /workspace is not available/i,
+  );
+
+  statementFailsAs(
+    'anon',
+    null,
+    `select public.finalize_public_quote_handoff(
+      '${quoteId}', '${ids.workspaceA}', 'rls-quote-workspace-b',
+      '${claimToken}', 'completed', null
+    )`,
+    /workspace is not available/i,
+  );
+
+  psql(`
+    update public.workspaces set status = 'paused' where id = '${ids.workspaceB}';
+  `);
+  statementFailsAs(
+    'anon',
+    null,
+    `select * from public.submit_public_quote_request(
+      '70000000-0000-4000-8000-000000000123', '${ids.workspaceB}',
+      'inactive-quote-workspace', 'Inactive Workspace Customer',
+      'inactive-workspace@example.test', null, null, null, null, '/quote', null,
+      'rls-inactive-quote-workspace', '[]'::jsonb,
+      '71000000-0000-4000-8000-000000000123'
+    )`,
+    /workspace is not available/i,
+  );
+
+  psql(`
+    update public.workspaces set status = 'active' where id = '${ids.workspaceB}';
+    update public.quote_public_workspace_config
+    set active_workspace_id = '${ids.workspaceA}', is_enabled = true;
+  `);
+
+  statementFailsAs(
+    'anon',
+    null,
+    `update public.quote_public_workspace_config
+     set active_workspace_id = '${ids.workspaceB}'`,
+    /permission denied/i,
+  );
+  assert.equal(
+    scalarAs('anon', null, 'select count(*)::text from public.quote_public_workspace_config'),
+    '0',
+    'anonymous callers must not inspect or select an arbitrary quote workspace.',
+  );
+});
+
 check('anonymous quote writes use one atomic replay-safe RPC without direct table access', () => {
   const quoteId = '70000000-0000-4000-8000-000000000101';
   const output = queryCommittedAs(
@@ -3628,6 +3753,51 @@ check('anonymous quote writes use one atomic replay-safe RPC without direct tabl
         '${quoteId}', '${ids.workspaceA}', 'rls-public-submission-101',
         '71000000-0000-4000-8000-000000000109',
         'retryable_failed', 'n8n_unavailable'
+      )::text`,
+    ),
+    'true',
+  );
+
+  const changedSubmissionId = '70000000-0000-4000-8000-000000000185';
+  const changedSubmissionClaim = '71000000-0000-4000-8000-000000000108';
+  assert.equal(
+    queryCommittedAs(
+      'anon',
+      null,
+      `
+        select quote_request_id::text || '|' || handoff_claim_status
+        from public.submit_public_quote_request(
+          '${changedSubmissionId}', '${ids.workspaceA}',
+          'quote-edited-distinct-submission', 'Edited Public Customer',
+          'public-customer@example.test', '+65 8123 4567',
+          'A materially edited enquiry.', '2026-06-12', 'Fake Venue',
+          '/quote', null, 'rls-public-submission-101-edited',
+          '[{"product_name_snapshot":"Different requested set","quantity":3,"notes":"Edited note"}]'::jsonb,
+          '${changedSubmissionClaim}'
+        )
+      `,
+    ),
+    `${changedSubmissionId}|claimed`,
+    'an edited payload with a new submission identifier must create a distinct enquiry.',
+  );
+  assert.equal(
+    psql(`
+      select state || '|' || attempt_count::text
+      from public.quote_handoff_outbox
+      where quote_request_id = '${quoteId}'
+        and submission_request_id = 'rls-public-submission-101'
+    `),
+    'retryable_failed|2',
+    'a distinct edited submission must not mutate or remove the original pending handoff.',
+  );
+  assert.equal(
+    queryCommittedAs(
+      'anon',
+      null,
+      `select public.finalize_public_quote_handoff(
+        '${changedSubmissionId}', '${ids.workspaceA}',
+        'rls-public-submission-101-edited', '${changedSubmissionClaim}',
+        'completed', null
       )::text`,
     ),
     'true',

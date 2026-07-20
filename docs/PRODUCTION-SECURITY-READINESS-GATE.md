@@ -47,8 +47,8 @@ environment. Do not commit `.env` files or real env values.
 | --- | --- | --- |
 | `SUPABASE_URL` | Server-side Supabase project URL for approved server access. | Must exist and be HTTPS. |
 | `SUPABASE_ANON_KEY` | Server-side public/anon key used with RLS through first-party routes. | Must exist. |
-| `CATALOGUE_WORKSPACE_ID` | Server-owned public catalogue workspace gate. | Must exist. |
-| `QUOTE_WORKSPACE_ID` | Server-owned quote/enquiry persistence workspace gate. | Must exist. |
+| `CATALOGUE_WORKSPACE_ID` | Server-owned public catalogue workspace gate; must match `catalogue_public_workspace_config`. | Must exist. |
+| `QUOTE_WORKSPACE_ID` | Server-owned quote/enquiry persistence workspace gate; must independently match `quote_public_workspace_config`. | Must exist. |
 | `ADMIN_TRUSTED_WORKSPACE_ID` | Server-owned protected admin workspace gate. | Must exist. |
 | `ADMIN_EXPECTED_ORIGIN` | Trusted protected admin same-origin value. | Must exist and be an HTTPS origin. |
 | `ADMIN_EXPECTED_HOST` | Trusted protected admin host value. | Must exist and be a host or HTTPS URL. |

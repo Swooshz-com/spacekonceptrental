@@ -186,8 +186,12 @@ These values are server-only even when the Supabase anon key is used:
 
 `CATALOGUE_WORKSPACE_ID` must match the reviewed
 `catalogue_public_workspace_config` active workspace row before DB-backed
-catalogue reads are enabled. `QUOTE_WORKSPACE_ID` must match the reviewed quote
-capture workspace before quote persistence is enabled.
+catalogue reads are enabled. `QUOTE_WORKSPACE_ID` must match the reviewed
+`quote_public_workspace_config` active workspace row before quote persistence
+is enabled. These database-owned gates are independent: their workspace IDs
+may be equal only when that is the explicit deployment decision, and either
+gate fails closed when disabled, missing, mismatched, or pointed at an inactive
+workspace.
 
 ## Optional n8n/server-only webhook env
 

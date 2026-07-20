@@ -168,6 +168,13 @@ payload mismatch, and atomically creates durable handoff eligibility. The
 route uses the private outbox claim state, not `wasCreated`, to resume or
 suppress server-side n8n/email handoff work on replay.
 
+One `requestId` represents exactly one immutable normalized logical payload.
+The browser snapshots the attempted trimmed contact, event, source, and item
+payload. Unchanged or uncertain retries reuse the snapshot key; a material edit
+rotates the key and creates a distinct enquiry. The original durable handoff
+remains recoverable and is never silently cancelled, deleted, or rewritten by
+the edited submission.
+
 The RPC is a narrow `SECURITY DEFINER` boundary with `search_path = ''`, fully
 qualified relation names, historical table-level and column-level anonymous
 quote INSERT grants explicitly revoked, and execute granted only to `anon` on
@@ -175,6 +182,13 @@ the two narrow submit/finalize RPCs. RLS remains enabled. Application responses
 remain generic and use a safe request reference. This decision does not apply
 a Supabase migration, call Supabase Cloud, execute or change n8n, add browser
 Supabase or service-role access, deploy, or change customer-facing scope.
+
+The database-owned quote workspace authority is the private
+`quote_public_workspace_config` singleton. It is intentionally independent
+from `catalogue_public_workspace_config`; both may select the same active
+workspace, but equality is not an invariant. The server-side
+`QUOTE_WORKSPACE_ID` must match the quote singleton, and callers cannot select
+another workspace.
 
 References: `docs/architecture/PUBLIC-ENQUIRY-PERSISTENCE-INTEGRATION.md`,
 `supabase/migrations/20260720090000_atomic_public_quote_submission.sql`,
@@ -3688,13 +3702,26 @@ then acquires a five-minute claim lease when eligible.
 active-workspace claim. Matching retries validate the payload and use durable
 handoff state, not `wasCreated`, to decide whether delivery can resume.
 
+The browser binds each submission key to a canonical attempted-payload
+snapshot. Unchanged and uncertain retries preserve the key. Material edits to
+customer, contact, event, venue, message, item, or source metadata rotate the
+key and create a separate enquiry; irrelevant UI state does not. A previous
+pending handoff remains durable and independently recoverable.
+
 Security: both functions are `SECURITY DEFINER`, use `search_path = ''`, fully
-qualify objects, validate the active workspace, and are executable only by
+qualify objects, validate the active quote-capture workspace through the
+private `quote_public_workspace_config` singleton, and are executable only by
 `anon`. `public` and `authenticated` receive no execute privilege. Historical
 anonymous table-level and column-level INSERT grants on `quote_requests` and
 `quote_request_items` are explicitly revoked, as are anonymous UPDATE and
 DELETE; RLS remains enabled. Browser roles cannot directly inspect or mutate
 the outbox.
+
+Workspace authority: `quote_public_workspace_config` and
+`catalogue_public_workspace_config` are separate deployment-owned gates. They
+may point to the same or different active workspaces. Quote submission and
+finalization use only the quote-specific gate, while catalogue reads continue
+to use only the catalogue gate.
 
 Recovery: failed delivery becomes immediately retryable, concurrent requests
 cannot acquire the same live claim, and an abandoned claim becomes recoverable
