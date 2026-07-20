@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useRef, useState } from "react";
 import type { ChangeEvent, FormEvent } from "react";
@@ -35,7 +35,6 @@ const requestedItemsMaxCount = 20;
 const requestedItemMaxLength = 180;
 const sourcePathMaxLength = 500;
 const requestIdMaxLength = 128;
-const requestIdFallbackRadix = 36;
 const listingSlugPattern = /^[a-z0-9][a-z0-9-]*$/;
 const requestIdPattern = /^[A-Za-z0-9._:-]+$/;
 const quoteSelectionChangeEvent = "skr:quote-selection-change";
@@ -86,13 +85,10 @@ function combineCustomerMessage(
 }
 
 function createSubmissionRequestId() {
-  const requestId =
-    globalThis.crypto?.randomUUID?.() ??
-    `quote-${Date.now().toString(requestIdFallbackRadix)}-${Math.random()
-      .toString(requestIdFallbackRadix)
-      .slice(2, 12)}`;
+  const requestId = globalThis.crypto?.randomUUID?.();
 
-  return requestIdPattern.test(requestId) &&
+  return typeof requestId === "string" &&
+    requestIdPattern.test(requestId) &&
     requestId.length <= requestIdMaxLength
     ? requestId
     : undefined;
@@ -157,7 +153,7 @@ export default function QuoteRequestForm({
     status: "idle"
   });
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
-  const [submissionRequestId] = useState(createSubmissionRequestId);
+  const [submissionRequestId, setSubmissionRequestId] = useState(createSubmissionRequestId);
   const [preferredContactMethod, setPreferredContactMethod] = useState("email");
   const [customerMessageText, setCustomerMessageText] = useState("");
   const [itemsText, setItemsText] = useState(initialItemsText);
@@ -294,6 +290,7 @@ export default function QuoteRequestForm({
         requestId: body.requestId
       });
       clearStoredQuoteSelection();
+      setSubmissionRequestId(createSubmissionRequestId());
     } catch {
       const submitError = formatQuoteSubmitError(failedSubmitReference);
 

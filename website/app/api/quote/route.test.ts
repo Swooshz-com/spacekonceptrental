@@ -17,6 +17,7 @@ const originalEnv = new Map(
 );
 
 const validPayload = {
+  requestId: "visitor-submission-20260612-001",
   customerName: "Maya Tan",
   customerEmail: "maya@example.test",
   customerPhone: "+65 8123 4567",
@@ -91,7 +92,9 @@ describe("POST /api/quote", () => {
     const repository = vi.fn(async () => ({
       ok: true as const,
       quoteRequestId: "70000000-0000-4000-8000-000000000001",
-      publicReference: "QR-20260527-ABC12345"
+      publicReference: "QR-20260527-ABC12345",
+      itemPersistenceStatus: "complete" as const,
+      wasCreated: true
     }));
 
     const emailHandoff = vi.fn(async () => ({
@@ -117,6 +120,7 @@ describe("POST /api/quote", () => {
     });
     expect(repository).toHaveBeenCalledWith({
       customerName: "Maya Tan",
+      requestId: "visitor-submission-20260612-001",
       customerEmail: "maya@example.test",
       customerPhone: "+65 8123 4567",
       customerMessage:
@@ -145,12 +149,35 @@ describe("POST /api/quote", () => {
     );
   });
 
+  it("does not invoke the n8n handoff again for an idempotent replay", async () => {
+    const repository = vi.fn(async () => ({
+      ok: true as const,
+      quoteRequestId: "70000000-0000-4000-8000-000000000001",
+      publicReference: "QR-20260527-ABC12345",
+      itemPersistenceStatus: "complete" as const,
+      wasCreated: false
+    }));
+    const emailHandoff = successfulEmailHandoff();
+
+    const response = await handleQuotePost(
+      postJson(validPayload),
+      repository,
+      emailHandoff
+    );
+
+    expect(response.status).toBe(201);
+    expect(repository).toHaveBeenCalledTimes(1);
+    expect(emailHandoff).not.toHaveBeenCalled();
+  });
+
   it("acknowledges persisted enquiries when n8n handoff is not configured", async () => {
     const errorSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
     const repository = vi.fn(async () => ({
       ok: true as const,
       quoteRequestId: "70000000-0000-4000-8000-000000000001",
-      publicReference: "QR-20260527-ABC12345"
+      publicReference: "QR-20260527-ABC12345",
+      itemPersistenceStatus: "complete" as const,
+      wasCreated: true
     }));
     const emailHandoff = vi.fn(async () => ({
       ok: false as const,
@@ -190,7 +217,9 @@ describe("POST /api/quote", () => {
     const repository = vi.fn(async () => ({
       ok: true as const,
       quoteRequestId: "70000000-0000-4000-8000-000000000001",
-      publicReference: "QR-20260527-ABC12345"
+      publicReference: "QR-20260527-ABC12345",
+      itemPersistenceStatus: "complete" as const,
+      wasCreated: true
     }));
     const emailHandoff = vi.fn(async () => ({
       ok: false as const,
@@ -221,7 +250,9 @@ describe("POST /api/quote", () => {
     const repository = vi.fn(async () => ({
       ok: true as const,
       quoteRequestId: "70000000-0000-4000-8000-000000000001",
-      publicReference: "QR-20260527-ABC12345"
+      publicReference: "QR-20260527-ABC12345",
+      itemPersistenceStatus: "complete" as const,
+      wasCreated: true
     }));
     const emailHandoff = vi.fn(async () => {
       throw new Error("N8N_ENQUIRY_HANDOFF_SHARED_SECRET exploded with raw provider body");
@@ -261,7 +292,9 @@ describe("POST /api/quote", () => {
     const repository = vi.fn(async () => ({
       ok: true as const,
       quoteRequestId: "70000000-0000-4000-8000-000000000001",
-      publicReference: "QR-20260527-ABC12345"
+      publicReference: "QR-20260527-ABC12345",
+      itemPersistenceStatus: "complete" as const,
+      wasCreated: true
     }));
 
     for (let index = 0; index < 5; index += 1) {
@@ -306,7 +339,9 @@ describe("POST /api/quote", () => {
     const repository = vi.fn(async () => ({
       ok: true as const,
       quoteRequestId: crypto.randomUUID(),
-      publicReference: "QR-20260527-ABC12345"
+      publicReference: "QR-20260527-ABC12345",
+      itemPersistenceStatus: "complete" as const,
+      wasCreated: true
     }));
 
     for (let index = 0; index < 5; index += 1) {
@@ -360,7 +395,9 @@ describe("POST /api/quote", () => {
     const repository = vi.fn(async () => ({
       ok: true as const,
       quoteRequestId: crypto.randomUUID(),
-      publicReference: "QR-20260527-ABC12345"
+      publicReference: "QR-20260527-ABC12345",
+      itemPersistenceStatus: "complete" as const,
+      wasCreated: true
     }));
 
     for (let index = 0; index < 5; index += 1) {
@@ -399,7 +436,9 @@ describe("POST /api/quote", () => {
     const repository = vi.fn(async () => ({
       ok: true as const,
       quoteRequestId: crypto.randomUUID(),
-      publicReference: "QR-20260527-ABC12345"
+      publicReference: "QR-20260527-ABC12345",
+      itemPersistenceStatus: "complete" as const,
+      wasCreated: true
     }));
 
     for (let index = 0; index < 5; index += 1) {
@@ -438,7 +477,9 @@ describe("POST /api/quote", () => {
     const repository = vi.fn(async () => ({
       ok: true as const,
       quoteRequestId: crypto.randomUUID(),
-      publicReference: "QR-20260527-ABC12345"
+      publicReference: "QR-20260527-ABC12345",
+      itemPersistenceStatus: "complete" as const,
+      wasCreated: true
     }));
     const headers = {
       "cf-connecting-ip": "203.0.113.77",
@@ -516,7 +557,9 @@ describe("POST /api/quote", () => {
     const repository = vi.fn(async () => ({
       ok: true as const,
       quoteRequestId: "70000000-0000-4000-8000-000000000001",
-      publicReference: "QR-20260527-ABC12345"
+      publicReference: "QR-20260527-ABC12345",
+      itemPersistenceStatus: "complete" as const,
+      wasCreated: true
     }));
 
     const response = await handleQuotePostWithEmail(

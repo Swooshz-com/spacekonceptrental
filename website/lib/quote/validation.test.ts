@@ -6,6 +6,7 @@ import {
 } from "./validation";
 
 const validPayload = {
+  requestId: "visitor-submission-20260612-001",
   customerName: "Maya Tan",
   customerEmail: "maya@example.test",
   customerPhone: "+65 8123 4567",
@@ -42,6 +43,7 @@ describe("quote request validation", () => {
           "Please recommend lounge seating that works for a reception.",
         eventDate: "2026-06-12",
         venue: "Marina Bay Sands",
+        requestId: "visitor-submission-20260612-001",
         sourcePath: "/catalogue/modular-lounge-set",
         listingSlug: "modular-lounge-set",
         items: [
@@ -61,6 +63,7 @@ describe("quote request validation", () => {
       customerEmail: "maya@example.test",
       customerMessage:
         "We are still deciding quantities but need a warm reception setup.",
+      requestId: "visitor-submission-20260612-001",
       items: []
     });
 
@@ -71,6 +74,7 @@ describe("quote request validation", () => {
         customerEmail: "maya@example.test",
         customerMessage:
           "We are still deciding quantities but need a warm reception setup.",
+        requestId: "visitor-submission-20260612-001",
         items: []
       }
     });
@@ -227,6 +231,16 @@ describe("quote request validation", () => {
       message: expect.stringContaining("contact")
     });
   });
+
+  it("requires a submission identifier for retry-safe persistence", () => {
+    const { requestId: _requestId, ...payloadWithoutRequestId } = validPayload;
+
+    expect(validateQuoteSubmission(payloadWithoutRequestId)).toEqual({
+      ok: false,
+      message: "requestId is required."
+    });
+  });
+
 
   it("rejects unsafe field shapes before persistence", () => {
     const cases = [

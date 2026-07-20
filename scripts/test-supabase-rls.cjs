@@ -3530,26 +3530,15 @@ check('browser roles cannot execute transcript audit/evidence insert RPCs', () =
   }
 });
 
-check('anonymous public can create website quote rows without reading them back', () => {
+check('anonymous quote writes use one atomic replay-safe RPC without direct table access', () => {
   const quoteId = '70000000-0000-4000-8000-000000000101';
   const output = queryCommittedAs(
     'anon',
     null,
     `
-      insert into public.quote_requests (
-        id,
-        workspace_id,
-        public_reference,
-        customer_name,
-        customer_email,
-        customer_phone,
-        customer_message,
-        event_date,
-        venue,
-        status,
-        source
-      )
-      values (
+      select
+        quote_request_id::text || '|' || public_reference || '|' || was_created::text
+      from public.submit_public_quote_request(
         '${quoteId}',
         '${ids.workspaceA}',
         'quote-public-create',
@@ -3559,72 +3548,223 @@ check('anonymous public can create website quote rows without reading them back'
         'Please recommend a warm lounge setup for a reception.',
         '2026-06-12',
         'Fake Venue',
-        'new',
-        'website'
+        '/quote',
+        null,
+        'rls-public-submission-101',
+        '[{"product_name_snapshot":"Fake requested lounge set","quantity":2,"notes":"Fake public quote item note"}]'::jsonb
       );
 
-      insert into public.quote_request_items (
-        workspace_id,
-        quote_request_id,
-        product_name_snapshot,
-        quantity,
-        notes
-      )
-      values (
+      select
+        quote_request_id::text || '|' || public_reference || '|' || was_created::text
+      from public.submit_public_quote_request(
+        '70000000-0000-4000-8000-000000000199',
         '${ids.workspaceA}',
-        '${quoteId}',
-        'Fake requested lounge set',
-        2,
-        'Fake public quote item note'
+        'quote-public-retry-proposed-reference',
+        'Fake Public Customer',
+        'public-customer@example.test',
+        '+65 8123 4567',
+        'Please recommend a warm lounge setup for a reception.',
+        '2026-06-12',
+        'Fake Venue',
+        '/quote',
+        null,
+        'rls-public-submission-101',
+        '[{"product_name_snapshot":"Fake requested lounge set","quantity":2,"notes":"Fake public quote item note"}]'::jsonb
       );
-
-      insert into public.quote_email_delivery_log (
-        workspace_id,
-        quote_request_id,
-        public_reference,
-        recipient_email_redacted,
-        provider,
-        delivery_status,
-        provider_message_id,
-        request_id
-      )
-      values (
-        '${ids.workspaceA}',
-        '${quoteId}',
-        'quote-public-create',
-        'qu***@example.test',
-        'resend',
-        'sent',
-        'resend-message-public-create',
-        'rls-delivery-public-create'
-      );
-
-      select count(*)::text from public.quote_requests where id = '${quoteId}';
-      select count(*)::text from public.quote_request_items where quote_request_id = '${quoteId}';
-      select count(*)::text from public.quote_email_delivery_log where quote_request_id = '${quoteId}';
     `,
   );
 
   assert.deepEqual(
     output.split('\n').filter(Boolean),
-    ['0', '0', '0'],
-    'anon quote inserts should not grant anonymous quote reads.',
+    [
+      `${quoteId}|quote-public-create|true`,
+      `${quoteId}|quote-public-create|false`,
+    ],
+    'matching retries should return the original persisted identifiers without a second insert.',
   );
 
   const adminOutput = queryAs(
     'authenticated',
     ids.authMemberA,
     `
-      select customer_message
-      from public.quote_requests
-      where id = '${quoteId}';
+      select
+        qr.customer_message || '|' || count(item.id)::text
+      from public.quote_requests qr
+      left join public.quote_request_items item
+        on item.workspace_id = qr.workspace_id
+        and item.quote_request_id = qr.id
+      where qr.id = '${quoteId}'
+      group by qr.customer_message;
     `,
   );
 
   assert.equal(
     adminOutput,
-    'Please recommend a warm lounge setup for a reception.',
-    'authenticated workspace admins should read customer-submitted quote messages.',
+    'Please recommend a warm lounge setup for a reception.|1',
+    'a replay should leave exactly one complete parent and one item.',
+  );
+
+  statementFailsAs(
+    'anon',
+    null,
+    `
+      insert into public.quote_requests (
+        id, workspace_id, public_reference, customer_name,
+        customer_email, status, source
+      ) values (
+        '70000000-0000-4000-8000-000000000198',
+        '${ids.workspaceA}',
+        'quote-direct-insert-denied',
+        'Fake Public Customer',
+        'public-customer@example.test',
+        'new',
+        'website'
+      )
+    `,
+    /permission denied/i,
+  );
+
+  statementFailsAs(
+    'anon',
+    null,
+    `
+      insert into public.quote_request_items (
+        workspace_id, quote_request_id, product_name_snapshot, quantity
+      ) values (
+        '${ids.workspaceA}',
+        '${quoteId}',
+        'quote-direct-item-insert-denied',
+        1
+      )
+    `,
+    /permission denied/i,
+  );
+  statementFailsAs(
+    'anon',
+    null,
+    `
+      select * from public.submit_public_quote_request(
+        '70000000-0000-4000-8000-000000000193',
+        '${ids.workspaceA}',
+        'quote-blank-contact-denied',
+        'Fake Public Customer',
+        '   ',
+        '   ',
+        null, null, null, '/quote', null,
+        'rls-contact-values-required',
+        '[]'::jsonb
+      )
+    `,
+    /invalid public quote submission/i,
+  );
+  statementFailsAs(
+    'anon',
+    null,
+    `
+      select * from public.submit_public_quote_request(
+        '70000000-0000-4000-8000-000000000197',
+        '${ids.workspaceA}',
+        'quote-public-mismatch',
+        'Different Customer',
+        'public-customer@example.test',
+        '+65 8123 4567',
+        'Please recommend a warm lounge setup for a reception.',
+        '2026-06-12',
+        'Fake Venue',
+        '/quote',
+        null,
+        'rls-public-submission-101',
+        '[{"product_name_snapshot":"Fake requested lounge set","quantity":2,"notes":"Fake public quote item note"}]'::jsonb
+      )
+    `,
+    /payload mismatch/i,
+  );
+
+  statementFailsAs(
+    'authenticated',
+    ids.authMemberA,
+    `
+      select * from public.submit_public_quote_request(
+        '70000000-0000-4000-8000-000000000196',
+        '${ids.workspaceA}',
+        'quote-authenticated-rpc-denied',
+        'Fake Public Customer',
+        'public-customer@example.test',
+        null, null, null, null, null, null,
+        'rls-authenticated-denied',
+        '[]'::jsonb
+      )
+    `,
+    /permission denied/i,
+  );
+
+  statementFailsAs(
+    'anon',
+    null,
+    `
+      select * from public.submit_public_quote_request(
+        '70000000-0000-4000-8000-000000000195',
+        '${ids.workspaceB}',
+        'quote-cross-workspace-denied',
+        'Fake Public Customer',
+        'public-customer@example.test',
+        null, null, null, null, null, null,
+        'rls-cross-workspace-denied',
+        '[]'::jsonb
+      )
+    `,
+    /workspace is not available/i,
+  );
+});
+
+check('atomic quote RPC rolls back its parent when item persistence raises', () => {
+  const quoteId = '70000000-0000-4000-8000-000000000194';
+
+  psql(`
+    create or replace function public.test_reject_quote_item()
+    returns trigger
+    language plpgsql
+    set search_path = ''
+    as $$
+    begin
+      raise exception 'test item persistence failure';
+    end;
+    $$;
+
+    create trigger test_reject_quote_item
+      before insert on public.quote_request_items
+      for each row execute function public.test_reject_quote_item();
+  `);
+
+  try {
+    statementFailsAs(
+      'anon',
+      null,
+      `
+        select * from public.submit_public_quote_request(
+          '${quoteId}', '${ids.workspaceA}', 'quote-atomic-rollback',
+          'Fake Public Customer', 'public-customer@example.test', null,
+          null, null, null, '/quote', null, 'rls-atomic-rollback',
+          '[{"product_name_snapshot":"Rollback item","quantity":1,"notes":null}]'::jsonb
+        )
+      `,
+      /test item persistence failure/i,
+    );
+  } finally {
+    psql(`
+      drop trigger test_reject_quote_item on public.quote_request_items;
+      drop function public.test_reject_quote_item();
+    `);
+  }
+
+  assert.equal(
+    queryAs(
+      'authenticated',
+      ids.authMemberA,
+      `select count(*)::text from public.quote_requests where id = '${quoteId}'`,
+    ),
+    '0',
+    'the parent must roll back when an item insert fails.',
   );
 });
 

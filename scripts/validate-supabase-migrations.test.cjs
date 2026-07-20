@@ -301,7 +301,7 @@ test('real migration directory passes static validation', () => {
   const result = runValidator(realMigrationsDir);
 
   assert.equal(result.status, 0, result.stdout + result.stderr);
-  assert.match(result.stdout, /checked 30 migration SQL file\(s\)/);
+  assert.match(result.stdout, /checked 31 migration SQL file\(s\)/);
 });
 
 test('real base schema migration creates the planned MVP tables', () => {
@@ -479,6 +479,25 @@ test('real migrations add narrow anonymous website quote insert policies only', 
   );
 });
 
+test('real migrations replace direct anonymous quote writes with one replay-safe RPC', () => {
+  const sql = normalizeSql(
+    readRealMigration('20260720090000_atomic_public_quote_submission.sql'),
+  );
+
+  assert.match(sql, /create or replace function public\.submit_public_quote_request\(/);
+  assert.match(sql, /language plpgsql security definer set search_path = '' as/);
+  assert.match(sql, /from public\.catalogue_public_workspace_config cfg/);
+  assert.match(sql, /from public\.quote_requests qr/);
+  assert.match(sql, /from public\.quote_request_items item/);
+  assert.match(sql, /or p_submission_request_id is null or btrim\(p_submission_request_id\) = ''/);
+  assert.match(sql, /nullif\(btrim\(p_customer_email\), ''\) is null and nullif\(btrim\(p_customer_phone\), ''\) is null/);
+  assert.match(sql, /returns table \( quote_request_id uuid, public_reference text, was_created boolean \)/);
+  assert.match(sql, /revoke all privileges on function public\.submit_public_quote_request\([\s\S]*?\) from public, anon, authenticated;/);
+  assert.match(sql, /grant execute on function public\.submit_public_quote_request\([\s\S]*?\) to anon;/);
+  assert.doesNotMatch(sql, /grant execute on function public\.submit_public_quote_request\([\s\S]*?\) to authenticated;/);
+  assert.match(sql, /revoke all privileges on table public\.quote_requests from anon;/);
+  assert.match(sql, /revoke all privileges on table public\.quote_request_items from anon;/);
+});
 test('real migrations add admin-only quote workflow activity policies', () => {
   const sql = normalizeSql(readAllRealMigrationSql());
 

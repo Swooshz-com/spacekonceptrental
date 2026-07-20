@@ -129,6 +129,23 @@ browser. It does not add browser Supabase code, service-role keys,
 product/admin writes, conversation/message persistence, n8n workflow changes,
 Supabase Storage, or deployment configuration.
 
+The atomic public quote persistence amendment supersedes the earlier two-insert
+quote-write boundary. A mandatory browser-created `requestId` is validated by
+`POST /api/quote` and passed to the server-only repository without a generated
+fallback. The repository calls the local migration-backed
+`public.submit_public_quote_request` RPC, which creates the parent quote and
+all item snapshots in one transaction. The RPC is `SECURITY DEFINER` with an
+empty `search_path`, uses fully qualified relations, checks the trusted active
+workspace, and is executable only by `anon`; direct anonymous privileges on
+both quote tables are revoked while RLS remains enabled.
+
+A matching replay returns the original identifiers with `wasCreated = false`;
+a payload mismatch fails the request without changing stored data. The route
+starts the server-side n8n/email handoff only when `wasCreated = true`, so a
+replay cannot enqueue a duplicate handoff. Invalid or unavailable persistence
+continues to return generic, referenceable failures without Supabase or n8n
+internals. This migration and its tests are local repository work only: no
+Supabase migration has been applied and no live n8n action is performed.
 Phase 1I-A adds the chat persistence privacy/security design and disabled
 server-only scaffolding only. `conversations` and `messages` are
 privacy-sensitive future records, so chat persistence must remain behind

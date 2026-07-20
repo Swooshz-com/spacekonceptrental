@@ -31,6 +31,9 @@ const trackerPaths = [
 
 const allowedChangedFiles = new Set([
   foundationDocPath,
+  'docs/ARCHITECTURE.md',
+  'supabase/migrations/20260720090000_atomic_public_quote_submission.sql',
+  'scripts/test-supabase-rls.cjs',
   'docs/architecture/PROTECTED-ADMIN-ENQUIRY-INBOX-TRIAGE-FOUNDATION.md',
   'docs/architecture/PROTECTED-ADMIN-CRM-HANDOFF-QUEUE-PREPARATION-FOUNDATION.md',
   'docs/architecture/PROTECTED-ADMIN-CRM-HANDOFF-EXPORT-REVIEW-PACKET-FOUNDATION.md',
@@ -368,8 +371,8 @@ matches(quoteTypes, /export type CrmSyncStatus[\s\S]*not_queued[\s\S]*queued[\s\
 matches(quoteTypes, /QuotePersistencePayload[\s\S]*crmSyncStatus/, quoteTypesPath);
 matches(quoteValidation, /normalizeCrmSyncError[\s\S]*slice\(0, MAX_CRM_SYNC_ERROR_LENGTH\)/, quoteValidationPath);
 matches(quoteValidation, /prepareQuoteForPersistence[\s\S]*crmProvider: "hubspot"[\s\S]*crmSyncStatus: "not_queued"/, quoteValidationPath);
-matches(quoteRepository, /source_page_path[\s\S]*source_listing_slug[\s\S]*submission_request_id/, quoteRepositoryPath);
-matches(quoteRepository, /crm_provider[\s\S]*crm_sync_status[\s\S]*crm_contact_id[\s\S]*crm_deal_id/, quoteRepositoryPath);
+matches(quoteRepository, /rpc\("submit_public_quote_request"[\s\S]*p_source_page_path[\s\S]*p_source_listing_slug[\s\S]*p_submission_request_id[\s\S]*p_items/, quoteRepositoryPath);
+matches(quoteRepository, /typeof row\.was_created !== "boolean"/, quoteRepositoryPath);
 
 assert(
   packageJson.scripts?.[packageScriptName] === packageScriptCommand,

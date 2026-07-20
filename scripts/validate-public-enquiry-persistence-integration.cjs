@@ -228,15 +228,18 @@ for (const trackerPath of trackerPaths) {
 
 matches(quoteRoute, /validateQuoteSubmission[\s\S]*createQuoteRequest/, quoteRoutePath);
 matches(quoteRoute, /validationError\(validation\.message, requestId\)/, quoteRoutePath);
-matches(quoteRoute, /persistenceError\(requestId\)/, quoteRoutePath);
+matches(quoteRoute, /persistenceError\(requestId, request\)/, quoteRoutePath);
 matches(quoteForm, /sourcePath[\s\S]*listingSlug[\s\S]*requestId/, quoteFormPath);
+matches(quoteForm, /globalThis\.crypto\?\.randomUUID\?\.\(\)/, quoteFormPath);
+noMatch(quoteForm, /Math\.random|Date\.now\(\)\.toString\(requestIdFallbackRadix\)/, quoteFormPath);
 matches(quoteForm, /fetch\("\/api\/quote"/, quoteFormPath);
 matches(quoteForm, /disabled=\{submitState\.status === "submitting"\}/, quoteFormPath);
-matches(quotePage, /initialListingSlug=\{listingContext\.requestedSlug\}/, quotePagePath);
+matches(quotePage, /initialListingSlug=\{context\.requestedSlug\}/, quotePagePath);
 matches(quoteValidation, /allowedTopLevelKeys[\s\S]*sourcePath[\s\S]*listingSlug[\s\S]*requestId/, quoteValidationPath);
 matches(quoteValidation, /requestIdPattern[\s\S]*requestId must be a valid submission identifier/, quoteValidationPath);
 matches(quoteValidation, /prepareQuoteForPersistence[\s\S]*crmProvider: "hubspot"[\s\S]*crmSyncStatus: "not_queued"[\s\S]*crmContactId: null[\s\S]*crmDealId: null[\s\S]*crmLastSyncAttemptAt: null[\s\S]*crmSyncError: null/, quoteValidationPath);
-matches(quoteRepository, /prepareQuoteForPersistence[\s\S]*source_page_path[\s\S]*source_listing_slug[\s\S]*submission_request_id[\s\S]*crm_provider[\s\S]*crm_sync_status/, quoteRepositoryPath);
+matches(quoteRepository, /rpc\("submit_public_quote_request"[\s\S]*p_source_page_path[\s\S]*p_source_listing_slug[\s\S]*p_submission_request_id[\s\S]*p_items/, quoteRepositoryPath);
+matches(quoteRepository, /typeof row\.was_created !== "boolean"/, quoteRepositoryPath);
 
 for (const requiredTest of [
   'omits unsafe browser source metadata before submitting',
@@ -265,8 +268,8 @@ for (const requiredTest of [
   includes(quoteValidationTest, requiredTest, quoteValidationTestPath);
 }
 
-includes(quoteRepositoryTest, 'crm_provider: "hubspot"', quoteRepositoryTestPath);
-includes(quoteRepositoryTest, 'crm_sync_status: "not_queued"', quoteRepositoryTestPath);
+includes(quoteRepositoryTest, 'functionName: "submit_public_quote_request"', quoteRepositoryTestPath);
+includes(quoteRepositoryTest, 'was_created: false', quoteRepositoryTestPath);
 
 assert(
   packageJson.scripts?.[packageScriptName] === packageScriptCommand,

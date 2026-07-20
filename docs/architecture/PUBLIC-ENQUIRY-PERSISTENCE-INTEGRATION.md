@@ -61,6 +61,27 @@ Public input cannot override CRM provider, CRM status, CRM IDs, sync timestamp,
 or sync error fields because the public validation contract rejects unknown
 top-level fields before persistence.
 
+## Atomic Submission And Replay Contract
+
+`requestId` is mandatory for public quote submissions. The browser uses a
+cryptographic UUID when available and does not synthesize a time- or
+`Math.random`-based fallback; the route rejects a missing or invalid identifier
+before persistence.
+
+The server-only repository calls
+`public.submit_public_quote_request` with the parent record and all item
+snapshots. The local migration gives `anon` execute access only to this
+`SECURITY DEFINER` RPC, sets `search_path = ''`, fully qualifies its relations,
+and revokes direct anonymous table privileges. The RPC validates the active
+workspace and payload, creates the parent and items atomically, and returns
+`wasCreated`.
+
+A matching retry is a replay: it returns the original quote ID and public
+reference with `wasCreated = false`, performs no duplicate write, and does not
+start another n8n/email handoff. A reused identifier with a changed payload
+fails without changing stored data. Public failures remain generic and do not
+expose database, provider, or workflow details. The migration is not applied
+in this repository slice, and no live Supabase or n8n action is authorized.
 ## Not Implemented
 
 HubSpot CRM sync is still not implemented.

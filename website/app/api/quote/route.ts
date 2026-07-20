@@ -419,16 +419,18 @@ export async function handleQuotePost(
     return persistenceError(requestId, request);
   }
 
-  try {
-    await emailHandoff({
-      quote: validation.value,
-      quoteRequestId: result.quoteRequestId,
-      publicReference: result.publicReference,
-      requestId,
-      request
-    });
-  } catch {
-    recordEmailHandoffApplicationError(requestId, request);
+  if (result.wasCreated) {
+    try {
+      await emailHandoff({
+        quote: validation.value,
+        quoteRequestId: result.quoteRequestId,
+        publicReference: result.publicReference,
+        requestId,
+        request
+      });
+    } catch {
+      recordEmailHandoffApplicationError(requestId, request);
+    }
   }
 
   return Response.json(

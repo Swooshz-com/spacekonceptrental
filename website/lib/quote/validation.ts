@@ -225,7 +225,11 @@ export function validateQuoteSubmission(payload: unknown): ValidationResult {
     return { ok: false, message: "listingSlug must be a valid listing slug." };
   }
 
-  if (requestId && !requestIdPattern.test(requestId)) {
+  if (!requestId) {
+    return { ok: false, message: "requestId is required." };
+  }
+
+  if (!requestIdPattern.test(requestId)) {
     return {
       ok: false,
       message: "requestId must be a valid submission identifier."
@@ -269,7 +273,7 @@ export function validateQuoteSubmission(payload: unknown): ValidationResult {
       ...(venue ? { venue } : {}),
       ...(sourcePath ? { sourcePath } : {}),
       ...(listingSlug ? { listingSlug } : {}),
-      ...(requestId ? { requestId } : {}),
+      requestId,
       items
     }
   };

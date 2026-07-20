@@ -12,9 +12,16 @@ type SupabaseMutationResult = {
 };
 
 type QuoteSupabaseClient = {
-  from: (table: string) => {
-    insert: (rows: unknown) => Promise<SupabaseMutationResult>;
-  };
+  rpc: (
+    functionName: "submit_public_quote_request",
+    args: Record<string, unknown>
+  ) => Promise<SupabaseMutationResult>;
+};
+
+type QuoteRpcRow = {
+  quote_request_id: string;
+  public_reference: string;
+  was_created: boolean;
 };
 
 type QuoteSupabaseResult =
@@ -95,60 +102,47 @@ export async function createQuoteRequest(
   const publicReference =
     (options.createPublicReference ?? defaultCreatePublicReference)();
   const quotePayload = prepareQuoteForPersistence(quote);
-  const quoteInsert = await supabase.client.from("quote_requests").insert({
-    id: quoteRequestId,
-    workspace_id: workspaceId,
-    public_reference: publicReference,
-    customer_name: quotePayload.customerName,
-    customer_email: quotePayload.customerEmail ?? null,
-    customer_phone: quotePayload.customerPhone ?? null,
-    customer_message: quotePayload.customerMessage ?? null,
-    event_date: quotePayload.eventDate ?? null,
-    venue: quotePayload.venue ?? null,
-    source_page_path: quotePayload.sourcePagePath,
-    source_listing_slug: quotePayload.sourceListingSlug,
-    submission_request_id: quotePayload.submissionRequestId,
-    crm_provider: quotePayload.crmProvider,
-    crm_sync_status: quotePayload.crmSyncStatus,
-    crm_contact_id: quotePayload.crmContactId,
-    crm_deal_id: quotePayload.crmDealId,
-    crm_last_sync_attempt_at: quotePayload.crmLastSyncAttemptAt,
-    crm_sync_error: quotePayload.crmSyncError,
-    status: "new",
-    source: "website"
+  const rpcResult = await supabase.client.rpc("submit_public_quote_request", {
+    p_quote_request_id: quoteRequestId,
+    p_workspace_id: workspaceId,
+    p_public_reference: publicReference,
+    p_customer_name: quotePayload.customerName,
+    p_customer_email: quotePayload.customerEmail ?? null,
+    p_customer_phone: quotePayload.customerPhone ?? null,
+    p_customer_message: quotePayload.customerMessage ?? null,
+    p_event_date: quotePayload.eventDate ?? null,
+    p_venue: quotePayload.venue ?? null,
+    p_source_page_path: quotePayload.sourcePagePath,
+    p_source_listing_slug: quotePayload.sourceListingSlug,
+    p_submission_request_id: quotePayload.submissionRequestId,
+    p_items: quote.items.map((item) => ({
+      product_name_snapshot: item.productName,
+      quantity: item.quantity,
+      notes: item.notes ?? null
+    }))
   });
 
-  if (quoteInsert.error) {
+  const rows = Array.isArray(rpcResult.data) ? rpcResult.data : [];
+  const row = rows.length === 1 ? (rows[0] as Partial<QuoteRpcRow>) : null;
+
+  if (
+    rpcResult.error ||
+    !row ||
+    typeof row.quote_request_id !== "string" ||
+    typeof row.public_reference !== "string" ||
+    typeof row.was_created !== "boolean"
+  ) {
     return {
       ok: false,
       code: "QUOTE_PERSISTENCE_FAILED"
     };
   }
 
-  if (quote.items.length > 0) {
-    const itemRows = quote.items.map((item) => ({
-      workspace_id: workspaceId,
-      quote_request_id: quoteRequestId,
-      product_name_snapshot: item.productName,
-      quantity: item.quantity,
-      notes: item.notes ?? null
-    }));
-    const itemInsert = await supabase.client
-      .from("quote_request_items")
-      .insert(itemRows);
-
-    if (itemInsert.error) {
-      return {
-        ok: false,
-        code: "QUOTE_PERSISTENCE_FAILED"
-      };
-    }
-  }
-
   return {
     ok: true,
-    quoteRequestId,
-    publicReference,
-    itemPersistenceStatus: "complete"
+    quoteRequestId: row.quote_request_id,
+    publicReference: row.public_reference,
+    itemPersistenceStatus: "complete",
+    wasCreated: row.was_created
   };
 }

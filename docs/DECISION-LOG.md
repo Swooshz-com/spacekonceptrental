@@ -158,6 +158,26 @@ Supabase enquiry persistence and CRM handoff foundation extends the existing quo
 
 Implementation firewall: schema, contracts, tests, docs, and validator only. No HubSpot API calls, n8n workflows, email sending, public customer accounts, public login, or custom CRM are implemented.
 
+## Atomic Public Quote Submission Decision
+
+Public quote persistence now uses one local migration-backed RPC rather than
+separate anonymous parent and item inserts. The public form must supply a valid
+`requestId`; no fallback identifier is generated. The RPC atomically writes the
+parent and item snapshots, makes matching retries idempotent, rejects a
+payload mismatch, and returns `wasCreated` so the route can skip duplicate
+server-side n8n/email handoff work on replay.
+
+The RPC is a narrow `SECURITY DEFINER` boundary with `search_path = ''`, fully
+qualified relation names, direct anonymous quote-table privileges revoked, and
+execute granted only to `anon`. RLS remains enabled. Application responses
+remain generic and use a safe request reference. This decision does not apply
+a Supabase migration, call Supabase Cloud, execute or change n8n, add browser
+Supabase or service-role access, deploy, or change customer-facing scope.
+
+References: `docs/architecture/PUBLIC-ENQUIRY-PERSISTENCE-INTEGRATION.md`,
+`supabase/migrations/20260720090000_atomic_public_quote_submission.sql`,
+`website/lib/quote/quote-repository.ts`, and
+`website/app/api/quote/route.ts`.
 ## External Services Architecture Pivot References
 
 Current planning focus: external-services architecture and implementation-plan reduction for auth, CRM, email, and enquiry persistence.

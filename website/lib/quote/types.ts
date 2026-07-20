@@ -15,7 +15,7 @@ export type QuoteSubmission = {
   venue?: string;
   sourcePath?: string;
   listingSlug?: string;
-  requestId?: string;
+  requestId: string;
   items: QuoteItemSubmission[];
 };
 
@@ -44,7 +44,8 @@ export type QuotePersistenceResult =
       ok: true;
       quoteRequestId: string;
       publicReference: string;
-      itemPersistenceStatus?: "complete";
+      itemPersistenceStatus: "complete";
+      wasCreated: boolean;
     }
   | {
       ok: false;
