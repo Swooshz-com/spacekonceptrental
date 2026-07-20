@@ -3856,31 +3856,25 @@ check('anonymous public quote creation rejects oversized customer messages', () 
     'anon',
     null,
     `
-      insert into public.quote_requests (
-        id,
-        workspace_id,
-        public_reference,
-        customer_name,
-        customer_email,
-        customer_message,
-        status,
-        source
-      )
-      values (
+      select * from public.submit_public_quote_request(
         '70000000-0000-4000-8000-000000000103',
         '${ids.workspaceA}',
         'quote-public-rejected-message',
         'Fake Public Customer',
         'public-customer@example.test',
+        null,
         '${'x'.repeat(1201)}',
-        'new',
-        'website'
+        null,
+        null,
+        '/quote',
+        null,
+        'rls-public-oversized-message',
+        '[]'::jsonb
       )
     `,
-    /quote_requests_customer_message_length_check/i,
+    /invalid public quote submission/i,
   );
 });
-
 check('atomic quote workflow RPC updates status and activity together for owner/admin users', () => {
   const output = queryAs(
     'authenticated',
