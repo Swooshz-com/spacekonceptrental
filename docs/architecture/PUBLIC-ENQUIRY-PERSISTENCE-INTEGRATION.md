@@ -61,6 +61,73 @@ Public input cannot override CRM provider, CRM status, CRM IDs, sync timestamp,
 or sync error fields because the public validation contract rejects unknown
 top-level fields before persistence.
 
+## Atomic Submission And Replay Contract
+
+`requestId` is mandatory for public quote submissions. The browser uses a
+cryptographic UUID when available and does not synthesize a time- or
+`Math.random`-based fallback; the route rejects a missing or invalid identifier
+before persistence.
+
+The server-only repository calls `public.submit_public_quote_request` with the
+parent record, all item snapshots, and a fresh handoff claim token. The local
+migration gives `anon` execute access only to this `SECURITY DEFINER` RPC and
+the narrow `public.finalize_public_quote_handoff` RPC. Both set
+`search_path = ''`, fully qualify relations, validate the active workspace,
+and return no private customer data on replay. `public` and `authenticated`
+cannot execute either function.
+
+The trusted database source for quote capture is the private
+`quote_public_workspace_config` singleton. Both submit and finalize validate
+against it and require its referenced workspace to remain active. It is
+independent from `catalogue_public_workspace_config`: catalogue workspace A
+and quote workspace B are valid, as is an explicit configuration where both
+use the same workspace. The server-only `QUOTE_WORKSPACE_ID` must match the
+quote singleton; an anonymous caller cannot select an arbitrary workspace.
+
+The migration explicitly revokes every historical anonymous table-level and
+column-level INSERT grant on `quote_requests` and `quote_request_items`, plus
+anonymous UPDATE and DELETE. RLS stays enabled as defense in depth. Anonymous
+and authenticated callers have no direct access to the private
+`quote_handoff_outbox` table.
+
+Quote parent, items, and initial pending-handoff eligibility commit atomically.
+A matching retry returns the original quote ID/reference and evaluates the
+durable handoff state rather than using `wasCreated` as eligibility. The
+outbox state is `pending`, `claimed`, `retryable_failed`, or `completed`:
+
+- an eligible retry acquires one five-minute claim lease;
+- concurrent retries observe a live claim as `in_progress` and do not send;
+- outbound failure records `retryable_failed` and can be retried immediately;
+- a process exit while claimed is recoverable after lease expiry;
+- completed submissions replay without another outbound request; and
+- a reused submission identifier with a changed payload fails without mutation.
+
+The browser prevents that mismatch from becoming a retry loop by storing a
+canonical snapshot alongside the attempted key. The identity includes trimmed
+contact, event, message, and venue fields, normalized optional values, source
+path/listing metadata, and normalized item names, quantities, and notes.
+Unchanged payloads reuse the existing key, including after an uncertain
+network response. Material edits receive a new key and become a distinct
+enquiry. UI-only state does not rotate the key. The earlier pending handoff
+remains intact and recoverable; starting an edited submission never cancels or
+deletes it.
+
+The route returns success only after a successful n8n acceptance and durable
+completion record, or when replay finds an already completed handoff. Other
+states return a generic retryable response, so the browser retains the same
+submission key. A process exit after the database commit but before outbound
+delivery therefore cannot permanently strand the enquiry.
+
+The outbound contract carries the stable key `quote-enquiry:<quote-id>` in the
+payload and `x-skr-idempotency-key` header. The checked-in n8n workflow remains
+an inactive readiness template whose idempotency gate is a placeholder. It
+does not currently prove external exactly-once delivery. Delivery is therefore
+at-least-once: a crash after n8n accepts the request but before completion is
+recorded can cause one later duplicate attempt. Durable n8n-side enforcement
+of the stable key is required before activation. Public failures remain
+generic and expose no database, provider, workflow, or customer details. The
+migration is not applied in this repository slice, and no live Supabase or n8n
+action is authorized.
 ## Not Implemented
 
 HubSpot CRM sync is still not implemented.

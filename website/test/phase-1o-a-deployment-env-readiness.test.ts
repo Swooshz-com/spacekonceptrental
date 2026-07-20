@@ -201,6 +201,7 @@ describe("Phase 1O-A deployment environment readiness", () => {
       "website/lib/page-media/public-page-media-repository.ts",
       "website/lib/quote/email-handoff.ts",
       "website/lib/quote/quote-email-delivery-log-repository.ts",
+      "website/lib/quote/quote-handoff-repository.ts",
       "website/lib/quote/quote-repository.ts",
       "website/lib/server-runtime-config.ts",
       "website/lib/supabase/env.ts"

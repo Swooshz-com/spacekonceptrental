@@ -123,12 +123,51 @@ quote form data to `POST /api/quote`; the route validates bounded JSON and uses
 a server-only quote repository to insert `quote_requests` and optional freeform
 `quote_request_items` through the existing anon-key Supabase runtime. Missing
 Supabase or server-only `QUOTE_WORKSPACE_ID` configuration fails safely. This
-phase treats the request as received once the quote request row is captured; a
-later item insert failure is handled without reporting a failed quote to the
-browser. It does not add browser Supabase code, service-role keys,
+phase originally treated the request as received once the parent row was
+captured. That historical partial-item behavior is superseded by the atomic
+RPC contract below and is no longer the current architecture. It does not add browser Supabase code, service-role keys,
 product/admin writes, conversation/message persistence, n8n workflow changes,
 Supabase Storage, or deployment configuration.
 
+The atomic public quote persistence amendment supersedes the earlier two-insert
+quote-write boundary. A mandatory browser-created `requestId` is validated by
+`POST /api/quote` and retained across failed or uncertain responses only while
+the normalized logical payload remains unchanged. The browser snapshots the
+trimmed contact, event, source, and item payload before the first attempt. An
+unchanged retry reuses that key; a material edit creates a new key and a
+distinct enquiry without cancelling or mutating the earlier durable handoff. The
+server-only repository calls `public.submit_public_quote_request`, which
+creates the parent, every item snapshot, and the initial durable handoff state
+in one transaction. The RPC is `SECURITY DEFINER` with an empty `search_path`,
+uses fully qualified relations, checks the trusted active workspace through
+the private `quote_public_workspace_config` singleton, and is
+executable only by `anon`. Historical table-level and column-level anonymous
+INSERT grants on both quote tables are explicitly revoked; anonymous UPDATE
+and DELETE are also revoked, while RLS remains enabled as defense in depth.
+The quote singleton is independent from `catalogue_public_workspace_config`;
+the two workspace IDs may be equal or different, but each gate must reference
+its own enabled active workspace.
+
+A matching replay returns the original quote identifiers and validates the
+original payload. Handoff eligibility is not inferred from `wasCreated`.
+Instead, the private `quote_handoff_outbox` records `pending`, `claimed`,
+`retryable_failed`, or `completed`, and the submit RPC acquires a five-minute
+lease when delivery remains eligible. A second caller cannot acquire a live
+claim; failed delivery is released for retry; an abandoned claim becomes
+recoverable after its lease expires; and a completed replay does not send
+again. `public.finalize_public_quote_handoff` can complete or release only the
+exact quote/workspace/submission/token claim and is the only other anonymous
+RPC in this flow. Neither browser role has direct outbox access.
+
+The outbound request uses stable `quote-enquiry:<quote-id>` idempotency in the
+payload and `x-skr-idempotency-key` header. The repository n8n workflow is an
+inactive template and does not yet enforce that key, so the current honest
+boundary is at-least-once: a crash after n8n accepts the request but before the
+database records completion can cause one retry after lease expiry. Activation
+must remain blocked until n8n adds durable key enforcement. Public failures
+remain generic and retain the browser request key. This migration and its
+tests are local repository work only: no Supabase migration has been applied
+and no live n8n action is performed.
 Phase 1I-A adds the chat persistence privacy/security design and disabled
 server-only scaffolding only. `conversations` and `messages` are
 privacy-sensitive future records, so chat persistence must remain behind

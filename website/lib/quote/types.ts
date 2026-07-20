@@ -15,7 +15,7 @@ export type QuoteSubmission = {
   venue?: string;
   sourcePath?: string;
   listingSlug?: string;
-  requestId?: string;
+  requestId: string;
   items: QuoteItemSubmission[];
 };
 
@@ -26,6 +26,11 @@ export type CrmSyncStatus =
   | "queued"
   | "synced"
   | "failed";
+
+export type QuoteHandoffClaimStatus =
+  | "claimed"
+  | "in_progress"
+  | "completed";
 
 export type QuotePersistencePayload = QuoteSubmission & {
   sourcePagePath: string | null;
@@ -44,7 +49,10 @@ export type QuotePersistenceResult =
       ok: true;
       quoteRequestId: string;
       publicReference: string;
-      itemPersistenceStatus?: "complete" | "failed";
+      itemPersistenceStatus: "complete";
+      wasCreated: boolean;
+      handoffClaimStatus: QuoteHandoffClaimStatus;
+      handoffClaimToken: string | null;
     }
   | {
       ok: false;
@@ -54,4 +62,14 @@ export type QuotePersistenceResult =
   | {
       ok: false;
       code: "QUOTE_WORKSPACE_NOT_CONFIGURED" | "QUOTE_PERSISTENCE_FAILED";
+    };
+
+export type QuoteHandoffFinalizationResult =
+  | { ok: true }
+  | {
+      ok: false;
+      code:
+        | "SUPABASE_NOT_CONFIGURED"
+        | "QUOTE_WORKSPACE_NOT_CONFIGURED"
+        | "QUOTE_HANDOFF_FINALIZATION_FAILED";
     };

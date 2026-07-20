@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useRef, useState } from "react";
 import type { ChangeEvent, FormEvent } from "react";
@@ -30,12 +30,32 @@ type FieldErrors = {
   submit?: string;
 };
 
+type LogicalQuotePayload = {
+  customerName: string;
+  customerEmail: string;
+  customerPhone: string;
+  customerMessage?: string;
+  eventDate: string;
+  venue: string;
+  sourcePath?: string;
+  listingSlug?: string;
+  items: Array<{
+    productName: string;
+    quantity: number;
+    notes?: string;
+  }>;
+};
+
+type SubmissionAttemptSnapshot = {
+  payloadIdentity: string;
+  requestId: string;
+};
+
 const customerMessageMaxLength = 1200;
 const requestedItemsMaxCount = 20;
 const requestedItemMaxLength = 180;
 const sourcePathMaxLength = 500;
 const requestIdMaxLength = 128;
-const requestIdFallbackRadix = 36;
 const listingSlugPattern = /^[a-z0-9][a-z0-9-]*$/;
 const requestIdPattern = /^[A-Za-z0-9._:-]+$/;
 const quoteSelectionChangeEvent = "skr:quote-selection-change";
@@ -86,16 +106,35 @@ function combineCustomerMessage(
 }
 
 function createSubmissionRequestId() {
-  const requestId =
-    globalThis.crypto?.randomUUID?.() ??
-    `quote-${Date.now().toString(requestIdFallbackRadix)}-${Math.random()
-      .toString(requestIdFallbackRadix)
-      .slice(2, 12)}`;
+  const requestId = globalThis.crypto?.randomUUID?.();
 
-  return requestIdPattern.test(requestId) &&
+  return typeof requestId === "string" &&
+    requestIdPattern.test(requestId) &&
     requestId.length <= requestIdMaxLength
     ? requestId
     : undefined;
+}
+
+function canonicalizeLogicalQuotePayload(payload: LogicalQuotePayload) {
+  const items = payload.items
+    .map((item) => ({
+      productName: item.productName.trim(),
+      quantity: item.quantity,
+      notes: item.notes?.trim() || null
+    }))
+    .sort((left, right) => JSON.stringify(left).localeCompare(JSON.stringify(right)));
+
+  return JSON.stringify({
+    customerName: payload.customerName.trim(),
+    customerEmail: payload.customerEmail.trim(),
+    customerPhone: payload.customerPhone.trim(),
+    customerMessage: payload.customerMessage?.trim() || null,
+    eventDate: payload.eventDate.trim() || null,
+    venue: payload.venue.trim() || null,
+    sourcePath: payload.sourcePath?.trim() || null,
+    listingSlug: payload.listingSlug?.trim() || null,
+    items
+  });
 }
 
 function getSafeSourcePath() {
@@ -157,12 +196,14 @@ export default function QuoteRequestForm({
     status: "idle"
   });
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
-  const [submissionRequestId] = useState(createSubmissionRequestId);
+  const [submissionRequestId, setSubmissionRequestId] = useState(createSubmissionRequestId);
   const [preferredContactMethod, setPreferredContactMethod] = useState("email");
   const [customerMessageText, setCustomerMessageText] = useState("");
   const [itemsText, setItemsText] = useState(initialItemsText);
   const [showSelectedItemsSummary, setShowSelectedItemsSummary] = useState(Boolean(initialItemsText));
   const lastSyncedSelectionText = useRef("");
+  const submissionAttemptSnapshot = useRef<SubmissionAttemptSnapshot | null>(null);
+  const submissionInFlight = useRef(false);
   const customerMessageInputMaxLength = getCustomerMessageMaxLength(
     preferredContactMethod
   );
@@ -195,7 +236,7 @@ export default function QuoteRequestForm({
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (submitState.status === "submitting") {
+    if (submissionInFlight.current || submitState.status === "submitting") {
       return;
     }
 
@@ -211,7 +252,7 @@ export default function QuoteRequestForm({
       submittedCustomerMessageText,
       submittedPreferredContactMethod
     );
-    const payload = {
+    const logicalPayload: LogicalQuotePayload = {
       customerName: String(formData.get("customerName") ?? "").trim(),
       customerEmail: String(formData.get("customerEmail") ?? "").trim(),
       customerPhone: String(formData.get("customerPhone") ?? "").trim(),
@@ -222,23 +263,22 @@ export default function QuoteRequestForm({
       venue: String(formData.get("venue") ?? "").trim(),
       ...(sourcePath ? { sourcePath } : {}),
       ...(listingSlug ? { listingSlug } : {}),
-      ...(submissionRequestId ? { requestId: submissionRequestId } : {}),
       items: parseRequestedItems(submittedItemsText, itemNotesText)
     };
 
     const nextFieldErrors: FieldErrors = {};
 
-    if (!payload.customerName) {
+    if (!logicalPayload.customerName) {
       nextFieldErrors.customerName =
         "Name is required so the team knows who sent this quote request.";
     }
 
     if (submittedPreferredContactMethod === "phone") {
-      if (!payload.customerPhone) {
+      if (!logicalPayload.customerPhone) {
         nextFieldErrors.customerPhone =
           "Phone number is required so the team can follow up directly about this quote request.";
       }
-    } else if (!payload.customerEmail) {
+    } else if (!logicalPayload.customerEmail) {
       nextFieldErrors.customerEmail =
         "Email address is required so the team can follow up directly about this quote request.";
     }
@@ -261,7 +301,7 @@ export default function QuoteRequestForm({
       return;
     }
 
-    if (submittedItemsText && payload.items.length === 0) {
+    if (submittedItemsText && logicalPayload.items.length === 0) {
       setFieldErrors({
         submit:
           "Use short listing or item lines, or leave requested items blank and explain the setup in the notes."
@@ -269,6 +309,32 @@ export default function QuoteRequestForm({
       setSubmitState({ status: "idle" });
       return;
     }
+
+    const payloadIdentity = canonicalizeLogicalQuotePayload(logicalPayload);
+    const previousAttempt = submissionAttemptSnapshot.current;
+    const requestId =
+      previousAttempt?.payloadIdentity === payloadIdentity
+        ? previousAttempt.requestId
+        : previousAttempt
+          ? createSubmissionRequestId()
+          : submissionRequestId ?? createSubmissionRequestId();
+
+    if (!requestId) {
+      const submitError = formatQuoteSubmitError(undefined);
+
+      setFieldErrors({ submit: submitError });
+      setSubmitState({ status: "error", message: submitError });
+      return;
+    }
+
+    const payload = {
+      ...logicalPayload,
+      requestId
+    };
+
+    submissionAttemptSnapshot.current = { payloadIdentity, requestId };
+    setSubmissionRequestId(requestId);
+    submissionInFlight.current = true;
 
     setFieldErrors({});
     setSubmitState({ status: "submitting" });
@@ -294,11 +360,15 @@ export default function QuoteRequestForm({
         requestId: body.requestId
       });
       clearStoredQuoteSelection();
+      submissionAttemptSnapshot.current = null;
+      setSubmissionRequestId(createSubmissionRequestId());
     } catch {
       const submitError = formatQuoteSubmitError(failedSubmitReference);
 
       setFieldErrors({ submit: submitError });
       setSubmitState({ status: "error", message: submitError });
+    } finally {
+      submissionInFlight.current = false;
     }
   }
 

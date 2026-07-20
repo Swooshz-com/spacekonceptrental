@@ -158,6 +158,42 @@ Supabase enquiry persistence and CRM handoff foundation extends the existing quo
 
 Implementation firewall: schema, contracts, tests, docs, and validator only. No HubSpot API calls, n8n workflows, email sending, public customer accounts, public login, or custom CRM are implemented.
 
+## Atomic Public Quote Submission Decision
+
+Public quote persistence now uses one local migration-backed RPC rather than
+separate anonymous parent and item inserts. The public form must supply a valid
+`requestId`; no fallback identifier is generated. The RPC atomically writes the
+parent and item snapshots, makes matching retries idempotent, rejects a
+payload mismatch, and atomically creates durable handoff eligibility. The
+route uses the private outbox claim state, not `wasCreated`, to resume or
+suppress server-side n8n/email handoff work on replay.
+
+One `requestId` represents exactly one immutable normalized logical payload.
+The browser snapshots the attempted trimmed contact, event, source, and item
+payload. Unchanged or uncertain retries reuse the snapshot key; a material edit
+rotates the key and creates a distinct enquiry. The original durable handoff
+remains recoverable and is never silently cancelled, deleted, or rewritten by
+the edited submission.
+
+The RPC is a narrow `SECURITY DEFINER` boundary with `search_path = ''`, fully
+qualified relation names, historical table-level and column-level anonymous
+quote INSERT grants explicitly revoked, and execute granted only to `anon` on
+the two narrow submit/finalize RPCs. RLS remains enabled. Application responses
+remain generic and use a safe request reference. This decision does not apply
+a Supabase migration, call Supabase Cloud, execute or change n8n, add browser
+Supabase or service-role access, deploy, or change customer-facing scope.
+
+The database-owned quote workspace authority is the private
+`quote_public_workspace_config` singleton. It is intentionally independent
+from `catalogue_public_workspace_config`; both may select the same active
+workspace, but equality is not an invariant. The server-side
+`QUOTE_WORKSPACE_ID` must match the quote singleton, and callers cannot select
+another workspace.
+
+References: `docs/architecture/PUBLIC-ENQUIRY-PERSISTENCE-INTEGRATION.md`,
+`supabase/migrations/20260720090000_atomic_public_quote_submission.sql`,
+`website/lib/quote/quote-repository.ts`, and
+`website/app/api/quote/route.ts`.
 ## External Services Architecture Pivot References
 
 Current planning focus: external-services architecture and implementation-plan reduction for auth, CRM, email, and enquiry persistence.
@@ -3656,6 +3692,52 @@ Safety: This phase is repo-local, template-only, non-live, and not evidence. It 
 - Local acceptance drill: `docs/content/LOCAL-ACCEPTANCE-DRILL.md`.
 - Owner-review rehearsal validator: `scripts/validate-owner-review-rehearsal.cjs`.
 - Protected admin release-control workspace: `/admin/release-control`.
+## 2026-07-20: Durable Public Quote Handoff Claims And Complete Anonymous ACL Revocation
+
+Decision: retain atomic, idempotent quote persistence and add a private,
+quote-scoped durable handoff outbox. `public.submit_public_quote_request`
+atomically creates the quote parent, item snapshots, and pending handoff state,
+then acquires a five-minute claim lease when eligible.
+`public.finalize_public_quote_handoff` completes or releases only the exact
+active-workspace claim. Matching retries validate the payload and use durable
+handoff state, not `wasCreated`, to decide whether delivery can resume.
+
+The browser binds each submission key to a canonical attempted-payload
+snapshot. Unchanged and uncertain retries preserve the key. Material edits to
+customer, contact, event, venue, message, item, or source metadata rotate the
+key and create a separate enquiry; irrelevant UI state does not. A previous
+pending handoff remains durable and independently recoverable.
+
+Security: both functions are `SECURITY DEFINER`, use `search_path = ''`, fully
+qualify objects, validate the active quote-capture workspace through the
+private `quote_public_workspace_config` singleton, and are executable only by
+`anon`. `public` and `authenticated` receive no execute privilege. Historical
+anonymous table-level and column-level INSERT grants on `quote_requests` and
+`quote_request_items` are explicitly revoked, as are anonymous UPDATE and
+DELETE; RLS remains enabled. Browser roles cannot directly inspect or mutate
+the outbox.
+
+Workspace authority: `quote_public_workspace_config` and
+`catalogue_public_workspace_config` are separate deployment-owned gates. They
+may point to the same or different active workspaces. Quote submission and
+finalization use only the quote-specific gate, while catalogue reads continue
+to use only the catalogue gate.
+
+Recovery: failed delivery becomes immediately retryable, concurrent requests
+cannot acquire the same live claim, and an abandoned claim becomes recoverable
+after five minutes. Completed replays do not send again. The route returns a
+generic retryable response until handoff acceptance and completion recording
+are both confirmed, which preserves the browser submission key across network
+loss and process failure.
+
+External boundary: the app sends stable `quote-enquiry:<quote-id>` idempotency
+in the payload and header, but the repository n8n workflow is still an inactive
+template with a placeholder idempotency gate. The delivery guarantee is
+therefore at-least-once, not exactly-once, until n8n durably enforces that key.
+A crash after outbound acceptance but before database completion can cause a
+later duplicate attempt. No live Supabase migration, n8n action, deployment,
+or production-data change is part of this decision.
+
 ## Protected Admin CRM Handoff Queue Preparation Foundation
 
 Decision: add only a protected admin local CRM handoff queue preparation layer

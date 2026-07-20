@@ -35,6 +35,8 @@ const expectedTables = [
   'product_images',
   'products',
   'quote_email_delivery_log',
+  'quote_handoff_outbox',
+  'quote_public_workspace_config',
   'quote_request_activity',
   'quote_request_items',
   'quote_requests',
@@ -293,6 +295,12 @@ function seedFixtures() {
       ('${ids.workspaceB}', 'workspace-b', 'Workspace B');
 
     insert into public.catalogue_public_workspace_config (
+      active_workspace_id,
+      is_enabled
+    )
+    values ('${ids.workspaceA}', true);
+
+    insert into public.quote_public_workspace_config (
       active_workspace_id,
       is_enabled
     )
@@ -701,8 +709,15 @@ function assertNoRuntimeSupabaseUse() {
   const approvedCatalogueReadFiles = new Set([
     'website/lib/catalogue/catalogue-repository.ts',
   ]);
-  const approvedQuoteWriteFiles = new Set([
-    'website/lib/quote/quote-repository.ts',
+  const approvedQuoteWriteFiles = new Map([
+    [
+      'website/lib/quote/quote-repository.ts',
+      'submit_public_quote_request',
+    ],
+    [
+      'website/lib/quote/quote-handoff-repository.ts',
+      'finalize_public_quote_handoff',
+    ],
   ]);
   const approvedQuoteEmailDeliveryLogFiles = new Set([
     'website/lib/quote/quote-email-delivery-log-repository.ts',
@@ -747,6 +762,8 @@ function assertNoRuntimeSupabaseUse() {
     /\bintegration_connections\b/i,
   ];
   const blockedQuoteWriteTablePatterns = [
+    /from\(["']quote_requests["']\)/i,
+    /from\(["']quote_request_items["']\)/i,
     /from\(["']products["']\)/i,
     /from\(["']categories["']\)/i,
     /from\(["']product_images["']\)/i,
@@ -845,6 +862,8 @@ function assertNoRuntimeSupabaseUse() {
       }
 
       if (approvedQuoteWriteFiles.has(relativePath)) {
+        const approvedRpc = approvedQuoteWriteFiles.get(relativePath);
+
         assert.match(
           content,
           /import\s+["']server-only["'];/,
@@ -857,13 +876,8 @@ function assertNoRuntimeSupabaseUse() {
         );
         assert.match(
           content,
-          /from\(["']quote_requests["']\)/,
-          `${relativePath} must insert quote_requests explicitly.`,
-        );
-        assert.match(
-          content,
-          /from\(["']quote_request_items["']\)/,
-          `${relativePath} must insert quote_request_items explicitly.`,
+          new RegExp(`rpc\\(["']${approvedRpc}["']`),
+          `${relativePath} must use only its approved public quote RPC.`,
         );
         assertNoMatches(filePath, content, serverBlockedPatterns);
         assertNoMatches(filePath, content, blockedQuoteWriteTablePatterns);
@@ -1670,6 +1684,7 @@ check('anonymous public reads do not return private workspace data', () => {
   const privateTables = [
     'admin_users',
     'catalogue_public_workspace_config',
+    'quote_public_workspace_config',
     'memberships',
     'quote_requests',
     'quote_request_items',
@@ -3530,26 +3545,122 @@ check('browser roles cannot execute transcript audit/evidence insert RPCs', () =
   }
 });
 
-check('anonymous public can create website quote rows without reading them back', () => {
+check('public quote workspace configuration stays independent from catalogue configuration', () => {
+  const quoteId = '70000000-0000-4000-8000-000000000121';
+  const claimToken = '71000000-0000-4000-8000-000000000121';
+
+  psql(`
+    update public.quote_public_workspace_config
+    set active_workspace_id = '${ids.workspaceB}', is_enabled = true;
+  `);
+
+  const cataloguePayload = scalarAs(
+    'anon',
+    null,
+    `select public.get_public_catalogue('${ids.workspaceA}', null)::text`,
+  );
+  assert.match(
+    cataloguePayload,
+    /published-product-a/,
+    'catalogue reads must keep using independently configured workspace A.',
+  );
+  assert.doesNotMatch(cataloguePayload, /published-product-b/);
+
+  const created = queryCommittedAs(
+    'anon',
+    null,
+    `
+      select quote_request_id::text || '|' || handoff_claim_status
+      from public.submit_public_quote_request(
+        '${quoteId}', '${ids.workspaceB}', 'quote-workspace-b',
+        'Workspace B Customer', 'workspace-b@example.test', null,
+        null, null, null, '/quote', null, 'rls-quote-workspace-b',
+        '[]'::jsonb, '${claimToken}'
+      )
+    `,
+  );
+  assert.equal(created, `${quoteId}|claimed`);
+  assert.equal(
+    queryCommittedAs(
+      'anon',
+      null,
+      `select public.finalize_public_quote_handoff(
+        '${quoteId}', '${ids.workspaceB}', 'rls-quote-workspace-b',
+        '${claimToken}', 'completed', null
+      )::text`,
+    ),
+    'true',
+    'handoff finalization must use the same quote-specific workspace authority.',
+  );
+
+  statementFailsAs(
+    'anon',
+    null,
+    `select * from public.submit_public_quote_request(
+      '70000000-0000-4000-8000-000000000122', '${ids.workspaceA}',
+      'catalogue-workspace-not-quote-workspace', 'Wrong Workspace Customer',
+      'wrong-workspace@example.test', null, null, null, null, '/quote', null,
+      'rls-catalogue-workspace-denied', '[]'::jsonb,
+      '71000000-0000-4000-8000-000000000122'
+    )`,
+    /workspace is not available/i,
+  );
+
+  statementFailsAs(
+    'anon',
+    null,
+    `select public.finalize_public_quote_handoff(
+      '${quoteId}', '${ids.workspaceA}', 'rls-quote-workspace-b',
+      '${claimToken}', 'completed', null
+    )`,
+    /workspace is not available/i,
+  );
+
+  psql(`
+    update public.workspaces set status = 'paused' where id = '${ids.workspaceB}';
+  `);
+  statementFailsAs(
+    'anon',
+    null,
+    `select * from public.submit_public_quote_request(
+      '70000000-0000-4000-8000-000000000123', '${ids.workspaceB}',
+      'inactive-quote-workspace', 'Inactive Workspace Customer',
+      'inactive-workspace@example.test', null, null, null, null, '/quote', null,
+      'rls-inactive-quote-workspace', '[]'::jsonb,
+      '71000000-0000-4000-8000-000000000123'
+    )`,
+    /workspace is not available/i,
+  );
+
+  psql(`
+    update public.workspaces set status = 'active' where id = '${ids.workspaceB}';
+    update public.quote_public_workspace_config
+    set active_workspace_id = '${ids.workspaceA}', is_enabled = true;
+  `);
+
+  statementFailsAs(
+    'anon',
+    null,
+    `update public.quote_public_workspace_config
+     set active_workspace_id = '${ids.workspaceB}'`,
+    /permission denied/i,
+  );
+  assert.equal(
+    scalarAs('anon', null, 'select count(*)::text from public.quote_public_workspace_config'),
+    '0',
+    'anonymous callers must not inspect or select an arbitrary quote workspace.',
+  );
+});
+
+check('anonymous quote writes use one atomic replay-safe RPC without direct table access', () => {
   const quoteId = '70000000-0000-4000-8000-000000000101';
   const output = queryCommittedAs(
     'anon',
     null,
     `
-      insert into public.quote_requests (
-        id,
-        workspace_id,
-        public_reference,
-        customer_name,
-        customer_email,
-        customer_phone,
-        customer_message,
-        event_date,
-        venue,
-        status,
-        source
-      )
-      values (
+      select
+        quote_request_id::text || '|' || public_reference || '|' || was_created::text || '|' || handoff_claim_status || '|' || coalesce(handoff_claim_token::text, 'none')
+      from public.submit_public_quote_request(
         '${quoteId}',
         '${ids.workspaceA}',
         'quote-public-create',
@@ -3559,72 +3670,535 @@ check('anonymous public can create website quote rows without reading them back'
         'Please recommend a warm lounge setup for a reception.',
         '2026-06-12',
         'Fake Venue',
-        'new',
-        'website'
+        '/quote',
+        null,
+        'rls-public-submission-101',
+        '[{"product_name_snapshot":"Fake requested lounge set","quantity":2,"notes":"Fake public quote item note"}]'::jsonb,
+        '71000000-0000-4000-8000-000000000101'
       );
 
-      insert into public.quote_request_items (
-        workspace_id,
-        quote_request_id,
-        product_name_snapshot,
-        quantity,
-        notes
-      )
-      values (
+      select
+        quote_request_id::text || '|' || public_reference || '|' || was_created::text || '|' || handoff_claim_status || '|' || coalesce(handoff_claim_token::text, 'none')
+      from public.submit_public_quote_request(
+        '70000000-0000-4000-8000-000000000199',
         '${ids.workspaceA}',
-        '${quoteId}',
-        'Fake requested lounge set',
-        2,
-        'Fake public quote item note'
+        'quote-public-retry-proposed-reference',
+        'Fake Public Customer',
+        'public-customer@example.test',
+        '+65 8123 4567',
+        'Please recommend a warm lounge setup for a reception.',
+        '2026-06-12',
+        'Fake Venue',
+        '/quote',
+        null,
+        'rls-public-submission-101',
+        '[{"product_name_snapshot":"Fake requested lounge set","quantity":2,"notes":"Fake public quote item note"}]'::jsonb,
+        '71000000-0000-4000-8000-000000000102'
       );
-
-      insert into public.quote_email_delivery_log (
-        workspace_id,
-        quote_request_id,
-        public_reference,
-        recipient_email_redacted,
-        provider,
-        delivery_status,
-        provider_message_id,
-        request_id
-      )
-      values (
-        '${ids.workspaceA}',
-        '${quoteId}',
-        'quote-public-create',
-        'qu***@example.test',
-        'resend',
-        'sent',
-        'resend-message-public-create',
-        'rls-delivery-public-create'
-      );
-
-      select count(*)::text from public.quote_requests where id = '${quoteId}';
-      select count(*)::text from public.quote_request_items where quote_request_id = '${quoteId}';
-      select count(*)::text from public.quote_email_delivery_log where quote_request_id = '${quoteId}';
     `,
   );
 
   assert.deepEqual(
     output.split('\n').filter(Boolean),
-    ['0', '0', '0'],
-    'anon quote inserts should not grant anonymous quote reads.',
+    [
+      `${quoteId}|quote-public-create|true|claimed|71000000-0000-4000-8000-000000000101`,
+      `${quoteId}|quote-public-create|false|in_progress|none`,
+    ],
+    'matching retries should return the original persisted identifiers without a second insert.',
   );
+
+  psql(`
+    update public.quote_handoff_outbox
+    set claim_expires_at = now() - interval '1 second'
+    where quote_request_id = '${quoteId}';
+  `);
+
+  const recoveredClaim = queryCommittedAs(
+    'anon',
+    null,
+    `
+      select handoff_claim_status || '|' || handoff_claim_token::text
+      from public.submit_public_quote_request(
+        '70000000-0000-4000-8000-000000000188',
+        '${ids.workspaceA}', 'unused-recovery-reference',
+        'Fake Public Customer', 'public-customer@example.test', '+65 8123 4567',
+        'Please recommend a warm lounge setup for a reception.', '2026-06-12',
+        'Fake Venue', '/quote', null, 'rls-public-submission-101',
+        '[{"product_name_snapshot":"Fake requested lounge set","quantity":2,"notes":"Fake public quote item note"}]'::jsonb,
+        '71000000-0000-4000-8000-000000000109'
+      )
+    `,
+  );
+  assert.equal(
+    recoveredClaim,
+    'claimed|71000000-0000-4000-8000-000000000109',
+    'an expired claim should be recoverable with a new token.',
+  );
+
+  statementFailsAs(
+    'anon',
+    null,
+    `select public.finalize_public_quote_handoff(
+      '${quoteId}', '${ids.workspaceA}', 'rls-public-submission-101',
+      '71000000-0000-4000-8000-000000000101', 'completed', null
+    )`,
+    /claim is unavailable/i,
+  );
+
+  assert.equal(
+    queryCommittedAs(
+      'anon',
+      null,
+      `select public.finalize_public_quote_handoff(
+        '${quoteId}', '${ids.workspaceA}', 'rls-public-submission-101',
+        '71000000-0000-4000-8000-000000000109',
+        'retryable_failed', 'n8n_unavailable'
+      )::text`,
+    ),
+    'true',
+  );
+
+  const changedSubmissionId = '70000000-0000-4000-8000-000000000185';
+  const changedSubmissionClaim = '71000000-0000-4000-8000-000000000108';
+  assert.equal(
+    queryCommittedAs(
+      'anon',
+      null,
+      `
+        select quote_request_id::text || '|' || handoff_claim_status
+        from public.submit_public_quote_request(
+          '${changedSubmissionId}', '${ids.workspaceA}',
+          'quote-edited-distinct-submission', 'Edited Public Customer',
+          'public-customer@example.test', '+65 8123 4567',
+          'A materially edited enquiry.', '2026-06-12', 'Fake Venue',
+          '/quote', null, 'rls-public-submission-101-edited',
+          '[{"product_name_snapshot":"Different requested set","quantity":3,"notes":"Edited note"}]'::jsonb,
+          '${changedSubmissionClaim}'
+        )
+      `,
+    ),
+    `${changedSubmissionId}|claimed`,
+    'an edited payload with a new submission identifier must create a distinct enquiry.',
+  );
+  assert.equal(
+    psql(`
+      select state || '|' || attempt_count::text
+      from public.quote_handoff_outbox
+      where quote_request_id = '${quoteId}'
+        and submission_request_id = 'rls-public-submission-101'
+    `),
+    'retryable_failed|2',
+    'a distinct edited submission must not mutate or remove the original pending handoff.',
+  );
+  assert.equal(
+    queryCommittedAs(
+      'anon',
+      null,
+      `select public.finalize_public_quote_handoff(
+        '${changedSubmissionId}', '${ids.workspaceA}',
+        'rls-public-submission-101-edited', '${changedSubmissionClaim}',
+        'completed', null
+      )::text`,
+    ),
+    'true',
+  );
+
+  const retryAfterFailure = queryCommittedAs(
+    'anon',
+    null,
+    `
+      select handoff_claim_status || '|' || handoff_claim_token::text
+      from public.submit_public_quote_request(
+        '70000000-0000-4000-8000-000000000187',
+        '${ids.workspaceA}', 'unused-retry-reference',
+        'Fake Public Customer', 'public-customer@example.test', '+65 8123 4567',
+        'Please recommend a warm lounge setup for a reception.', '2026-06-12',
+        'Fake Venue', '/quote', null, 'rls-public-submission-101',
+        '[{"product_name_snapshot":"Fake requested lounge set","quantity":2,"notes":"Fake public quote item note"}]'::jsonb,
+        '71000000-0000-4000-8000-000000000110'
+      )
+    `,
+  );
+  assert.equal(
+    retryAfterFailure,
+    'claimed|71000000-0000-4000-8000-000000000110',
+    'an outbound failure should release the durable state for retry.',
+  );
+
+  assert.equal(
+    queryCommittedAs(
+      'anon',
+      null,
+      `select public.finalize_public_quote_handoff(
+        '${quoteId}', '${ids.workspaceA}', 'rls-public-submission-101',
+        '71000000-0000-4000-8000-000000000110', 'completed', null
+      )::text`,
+    ),
+    'true',
+  );
+
+  const completedReplay = queryCommittedAs(
+    'anon',
+    null,
+    `
+      select handoff_claim_status || '|' || coalesce(handoff_claim_token::text, 'none')
+      from public.submit_public_quote_request(
+        '70000000-0000-4000-8000-000000000186',
+        '${ids.workspaceA}', 'unused-completed-reference',
+        'Fake Public Customer', 'public-customer@example.test', '+65 8123 4567',
+        'Please recommend a warm lounge setup for a reception.', '2026-06-12',
+        'Fake Venue', '/quote', null, 'rls-public-submission-101',
+        '[{"product_name_snapshot":"Fake requested lounge set","quantity":2,"notes":"Fake public quote item note"}]'::jsonb,
+        '71000000-0000-4000-8000-000000000111'
+      )
+    `,
+  );
+  assert.equal(completedReplay, 'completed|none');
 
   const adminOutput = queryAs(
     'authenticated',
     ids.authMemberA,
     `
-      select customer_message
-      from public.quote_requests
-      where id = '${quoteId}';
+      select
+        qr.customer_message || '|' || count(item.id)::text
+      from public.quote_requests qr
+      left join public.quote_request_items item
+        on item.workspace_id = qr.workspace_id
+        and item.quote_request_id = qr.id
+      where qr.id = '${quoteId}'
+      group by qr.customer_message;
     `,
   );
 
   assert.equal(
     adminOutput,
-    'Please recommend a warm lounge setup for a reception.',
-    'authenticated workspace admins should read customer-submitted quote messages.',
+    'Please recommend a warm lounge setup for a reception.|1',
+    'a replay should leave exactly one complete parent and one item.',
+  );
+
+  statementFailsAs(
+    'anon',
+    null,
+    `
+      insert into public.quote_requests (
+        id, workspace_id, public_reference, customer_name,
+        customer_email, status, source
+      ) values (
+        '70000000-0000-4000-8000-000000000198',
+        '${ids.workspaceA}',
+        'quote-direct-insert-denied',
+        'Fake Public Customer',
+        'public-customer@example.test',
+        'new',
+        'website'
+      )
+    `,
+    /permission denied/i,
+  );
+
+  statementFailsAs(
+    'anon',
+    null,
+    `
+      insert into public.quote_request_items (
+        workspace_id, quote_request_id, product_name_snapshot, quantity
+      ) values (
+        '${ids.workspaceA}',
+        '${quoteId}',
+        'quote-direct-item-insert-denied',
+        1
+      )
+    `,
+    /permission denied/i,
+  );
+  statementFailsAs(
+    'anon',
+    null,
+    `
+      select * from public.submit_public_quote_request(
+        '70000000-0000-4000-8000-000000000193',
+        '${ids.workspaceA}',
+        'quote-blank-contact-denied',
+        'Fake Public Customer',
+        '   ',
+        '   ',
+        null, null, null, '/quote', null,
+        'rls-contact-values-required',
+        '[]'::jsonb,
+        '71000000-0000-4000-8000-000000000103'
+      )
+    `,
+    /invalid public quote submission/i,
+  );
+  statementFailsAs(
+    'anon',
+    null,
+    `
+      select * from public.submit_public_quote_request(
+        '70000000-0000-4000-8000-000000000197',
+        '${ids.workspaceA}',
+        'quote-public-mismatch',
+        'Different Customer',
+        'public-customer@example.test',
+        '+65 8123 4567',
+        'Please recommend a warm lounge setup for a reception.',
+        '2026-06-12',
+        'Fake Venue',
+        '/quote',
+        null,
+        'rls-public-submission-101',
+        '[{"product_name_snapshot":"Fake requested lounge set","quantity":2,"notes":"Fake public quote item note"}]'::jsonb,
+        '71000000-0000-4000-8000-000000000104'
+      )
+    `,
+    /payload mismatch/i,
+  );
+
+  statementFailsAs(
+    'authenticated',
+    ids.authMemberA,
+    `
+      select * from public.submit_public_quote_request(
+        '70000000-0000-4000-8000-000000000196',
+        '${ids.workspaceA}',
+        'quote-authenticated-rpc-denied',
+        'Fake Public Customer',
+        'public-customer@example.test',
+        null, null, null, null, null, null,
+        'rls-authenticated-denied',
+        '[]'::jsonb,
+        '71000000-0000-4000-8000-000000000105'
+      )
+    `,
+    /permission denied/i,
+  );
+
+  statementFailsAs(
+    'anon',
+    null,
+    `
+      select * from public.submit_public_quote_request(
+        '70000000-0000-4000-8000-000000000195',
+        '${ids.workspaceB}',
+        'quote-cross-workspace-denied',
+        'Fake Public Customer',
+        'public-customer@example.test',
+        null, null, null, null, null, null,
+        'rls-cross-workspace-denied',
+        '[]'::jsonb,
+        '71000000-0000-4000-8000-000000000106'
+      )
+    `,
+    /workspace is not available/i,
+  );
+});
+
+check('atomic quote RPC rolls back its parent when item persistence raises', () => {
+  const quoteId = '70000000-0000-4000-8000-000000000194';
+
+  psql(`
+    create or replace function public.test_reject_quote_item()
+    returns trigger
+    language plpgsql
+    set search_path = ''
+    as $$
+    begin
+      raise exception 'test item persistence failure';
+    end;
+    $$;
+
+    create trigger test_reject_quote_item
+      before insert on public.quote_request_items
+      for each row execute function public.test_reject_quote_item();
+  `);
+
+  try {
+    statementFailsAs(
+      'anon',
+      null,
+      `
+        select * from public.submit_public_quote_request(
+          '${quoteId}', '${ids.workspaceA}', 'quote-atomic-rollback',
+          'Fake Public Customer', 'public-customer@example.test', null,
+          null, null, null, '/quote', null, 'rls-atomic-rollback',
+          '[{"product_name_snapshot":"Rollback item","quantity":1,"notes":null}]'::jsonb,
+          '71000000-0000-4000-8000-000000000107'
+        )
+      `,
+      /test item persistence failure/i,
+    );
+  } finally {
+    psql(`
+      drop trigger test_reject_quote_item on public.quote_request_items;
+      drop function public.test_reject_quote_item();
+    `);
+  }
+
+  assert.equal(
+    queryAs(
+      'authenticated',
+      ids.authMemberA,
+      `select count(*)::text from public.quote_requests where id = '${quoteId}'`,
+    ),
+    '0',
+    'the parent must roll back when an item insert fails.',
+  );
+  assert.equal(
+    psql(
+      `select count(*)::text from public.quote_handoff_outbox where quote_request_id = '${quoteId}'`,
+    ),
+    '0',
+    'the durable handoff row must not survive a rolled-back quote submission.',
+  );
+});
+
+check('anonymous quote ACLs deny every historical direct write surface', () => {
+  for (const table of ['quote_requests', 'quote_request_items']) {
+    for (const privilege of ['INSERT', 'UPDATE', 'DELETE']) {
+      assert.equal(
+        psql(
+          `select has_table_privilege('anon', 'public.${table}', '${privilege}')::text`,
+        ),
+        'false',
+        `anon must not retain table-level ${privilege} on ${table}.`,
+      );
+    }
+
+    assert.equal(
+      psql(`
+        select (not exists (
+          select 1
+          from pg_catalog.pg_class relation
+          cross join lateral pg_catalog.aclexplode(
+            coalesce(relation.relacl, pg_catalog.acldefault('r', relation.relowner))
+          ) acl
+          where relation.oid = 'public.${table}'::regclass
+            and acl.grantee = 0
+            and acl.privilege_type in ('INSERT', 'UPDATE', 'DELETE')
+        ))::text
+      `),
+      'true',
+      `PUBLIC must not have a direct write ACL on ${table}.`,
+    );
+  }
+
+  const historicalColumns = {
+    quote_requests: [
+      'id', 'workspace_id', 'public_reference', 'customer_name',
+      'customer_email', 'customer_phone', 'customer_message', 'event_date',
+      'venue', 'status', 'source', 'source_page_path', 'source_listing_slug',
+      'source_listing_id', 'submission_request_id', 'crm_provider',
+      'crm_sync_status', 'crm_contact_id', 'crm_deal_id',
+      'crm_last_sync_attempt_at', 'crm_sync_error',
+    ],
+    quote_request_items: [
+      'workspace_id', 'quote_request_id', 'product_name_snapshot', 'quantity',
+      'notes',
+    ],
+  };
+
+  for (const [table, columns] of Object.entries(historicalColumns)) {
+    for (const column of columns) {
+      assert.equal(
+        psql(
+          `select has_column_privilege('anon', 'public.${table}', '${column}', 'INSERT')::text`,
+        ),
+        'false',
+        `anon must not retain column-level INSERT on ${table}.${column}.`,
+      );
+    }
+  }
+
+  for (const signature of [
+    'public.submit_public_quote_request(uuid,uuid,text,text,text,text,text,date,text,text,text,text,jsonb,uuid)',
+    'public.finalize_public_quote_handoff(uuid,uuid,text,uuid,text,text)',
+  ]) {
+    assert.equal(
+      psql(`select has_function_privilege('anon', '${signature}', 'EXECUTE')::text`),
+      'true',
+    );
+    assert.equal(
+      psql(`select has_function_privilege('authenticated', '${signature}', 'EXECUTE')::text`),
+      'false',
+    );
+    assert.equal(
+      psql(`
+        select (not exists (
+          select 1
+          from pg_catalog.pg_proc proc
+          cross join lateral pg_catalog.aclexplode(
+            coalesce(proc.proacl, pg_catalog.acldefault('f', proc.proowner))
+          ) acl
+          where proc.oid = '${signature}'::regprocedure
+            and acl.grantee = 0
+            and acl.privilege_type = 'EXECUTE'
+        ))::text
+      `),
+      'true',
+      `${signature} must not be executable through PUBLIC.`,
+    );
+  }
+
+  for (const role of ['anon', 'authenticated']) {
+    for (const privilege of ['INSERT', 'UPDATE', 'DELETE']) {
+      assert.equal(
+        psql(
+          `select has_table_privilege('${role}', 'public.quote_handoff_outbox', '${privilege}')::text`,
+        ),
+        'false',
+        `${role} must have no direct outbox ${privilege} access.`,
+      );
+    }
+  }
+
+  statementFailsAs(
+    'anon',
+    null,
+    `insert into public.quote_requests (customer_message) values ('denied')`,
+    /permission denied/i,
+  );
+  statementFailsAs(
+    'anon',
+    null,
+    `insert into public.quote_requests (
+      source_page_path, source_listing_slug, source_listing_id,
+      submission_request_id, crm_provider, crm_sync_status, crm_contact_id,
+      crm_deal_id, crm_last_sync_attempt_at, crm_sync_error
+    ) values ('/quote', null, null, 'denied', 'hubspot', 'not_queued', null, null, null, null)`,
+    /permission denied/i,
+  );
+  for (const [role, authUserId] of [
+    ['anon', null],
+    ['authenticated', ids.authMemberA],
+  ]) {
+    assert.equal(
+      queryAs(
+        role,
+        authUserId,
+        `select count(*)::text from public.quote_handoff_outbox`,
+      ),
+      '0',
+      `${role} must not inspect any private handoff state through RLS.`,
+    );
+  }
+  statementFailsAs(
+    'anon',
+    null,
+    `select public.finalize_public_quote_handoff(
+      '${ids.quoteB}', '${ids.workspaceB}', 'other-workspace-submission',
+      '71000000-0000-4000-8000-000000000199', 'completed', null
+    )`,
+    /workspace is not available/i,
+  );
+  statementFailsAs(
+    'anon',
+    null,
+    `select public.finalize_public_quote_handoff(
+      '70000000-0000-4000-8000-000000000101', '${ids.workspaceA}',
+      'rls-public-submission-101',
+      '71000000-0000-4000-8000-000000000198', 'completed', null
+    )`,
+    /claim is unavailable/i,
   );
 });
 
@@ -3716,31 +4290,26 @@ check('anonymous public quote creation rejects oversized customer messages', () 
     'anon',
     null,
     `
-      insert into public.quote_requests (
-        id,
-        workspace_id,
-        public_reference,
-        customer_name,
-        customer_email,
-        customer_message,
-        status,
-        source
-      )
-      values (
+      select * from public.submit_public_quote_request(
         '70000000-0000-4000-8000-000000000103',
         '${ids.workspaceA}',
         'quote-public-rejected-message',
         'Fake Public Customer',
         'public-customer@example.test',
+        null,
         '${'x'.repeat(1201)}',
-        'new',
-        'website'
+        null,
+        null,
+        '/quote',
+        null,
+        'rls-public-oversized-message',
+        '[]'::jsonb,
+        '71000000-0000-4000-8000-000000000108'
       )
     `,
-    /quote_requests_customer_message_length_check/i,
+    /invalid public quote submission/i,
   );
 });
-
 check('atomic quote workflow RPC updates status and activity together for owner/admin users', () => {
   const output = queryAs(
     'authenticated',

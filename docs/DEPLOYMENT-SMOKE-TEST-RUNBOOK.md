@@ -160,7 +160,11 @@ Before public quote persistence is enabled:
 
 - Confirm `<approved-quote-workspace-id>` is the intended quote capture
   workspace for `<environment-name>`.
-- Confirm `QUOTE_WORKSPACE_ID` matches the reviewed workspace.
+- Confirm the reviewed `quote_public_workspace_config` row points to that
+  active workspace and is enabled.
+- Confirm `QUOTE_WORKSPACE_ID` matches the reviewed quote row independently
+  from `catalogue_public_workspace_config`; equality requires an explicit
+  owner decision.
 - Confirm quote submissions still go only through first-party `POST /api/quote`.
 - Confirm quote route errors remain normalized and do not expose provider,
   SQL, stack trace, customer internals, or workspace details.

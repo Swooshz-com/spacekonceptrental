@@ -22,6 +22,10 @@ const quoteValidationPath = 'website/lib/quote/validation.ts';
 const quoteValidationTestPath = 'website/lib/quote/validation.test.ts';
 const quoteRepositoryPath = 'website/lib/quote/quote-repository.ts';
 const quoteRepositoryTestPath = 'website/lib/quote/quote-repository.test.ts';
+const quoteHandoffRepositoryPath =
+  'website/lib/quote/quote-handoff-repository.ts';
+const quoteMigrationPath =
+  'supabase/migrations/20260720090000_atomic_public_quote_submission.sql';
 const suitePath = 'scripts/validate-release-candidate-suite.cjs';
 const packageScriptName = 'validate:public-enquiry-persistence-integration';
 const packageScriptCommand =
@@ -170,6 +174,8 @@ for (const requiredPath of [
   quoteValidationTestPath,
   quoteRepositoryPath,
   quoteRepositoryTestPath,
+  quoteHandoffRepositoryPath,
+  quoteMigrationPath,
   suitePath,
 ]) {
   assert(exists(requiredPath), `Missing required file: ${requiredPath}`);
@@ -188,6 +194,8 @@ const quoteValidation = read(quoteValidationPath);
 const quoteValidationTest = read(quoteValidationTestPath);
 const quoteRepository = read(quoteRepositoryPath);
 const quoteRepositoryTest = read(quoteRepositoryTestPath);
+const quoteHandoffRepository = read(quoteHandoffRepositoryPath);
+const quoteMigration = read(quoteMigrationPath);
 const packageJson = JSON.parse(read('package.json'));
 const releaseSuite = read(suitePath);
 
@@ -228,21 +236,40 @@ for (const trackerPath of trackerPaths) {
 
 matches(quoteRoute, /validateQuoteSubmission[\s\S]*createQuoteRequest/, quoteRoutePath);
 matches(quoteRoute, /validationError\(validation\.message, requestId\)/, quoteRoutePath);
-matches(quoteRoute, /persistenceError\(requestId\)/, quoteRoutePath);
+matches(quoteRoute, /persistenceError\(requestId, request\)/, quoteRoutePath);
 matches(quoteForm, /sourcePath[\s\S]*listingSlug[\s\S]*requestId/, quoteFormPath);
+matches(quoteForm, /globalThis\.crypto\?\.randomUUID\?\.\(\)/, quoteFormPath);
+matches(quoteForm, /canonicalizeLogicalQuotePayload[\s\S]*submissionAttemptSnapshot/, quoteFormPath);
+noMatch(quoteForm, /Math\.random|Date\.now\(\)\.toString\(requestIdFallbackRadix\)/, quoteFormPath);
 matches(quoteForm, /fetch\("\/api\/quote"/, quoteFormPath);
 matches(quoteForm, /disabled=\{submitState\.status === "submitting"\}/, quoteFormPath);
-matches(quotePage, /initialListingSlug=\{listingContext\.requestedSlug\}/, quotePagePath);
+matches(quotePage, /initialListingSlug=\{context\.requestedSlug\}/, quotePagePath);
 matches(quoteValidation, /allowedTopLevelKeys[\s\S]*sourcePath[\s\S]*listingSlug[\s\S]*requestId/, quoteValidationPath);
 matches(quoteValidation, /requestIdPattern[\s\S]*requestId must be a valid submission identifier/, quoteValidationPath);
 matches(quoteValidation, /prepareQuoteForPersistence[\s\S]*crmProvider: "hubspot"[\s\S]*crmSyncStatus: "not_queued"[\s\S]*crmContactId: null[\s\S]*crmDealId: null[\s\S]*crmLastSyncAttemptAt: null[\s\S]*crmSyncError: null/, quoteValidationPath);
-matches(quoteRepository, /prepareQuoteForPersistence[\s\S]*source_page_path[\s\S]*source_listing_slug[\s\S]*submission_request_id[\s\S]*crm_provider[\s\S]*crm_sync_status/, quoteRepositoryPath);
+matches(quoteRepository, /rpc\("submit_public_quote_request"[\s\S]*p_source_page_path[\s\S]*p_source_listing_slug[\s\S]*p_submission_request_id[\s\S]*p_items/, quoteRepositoryPath);
+matches(quoteRepository, /typeof row\.was_created !== "boolean"/, quoteRepositoryPath);
+matches(quoteRepository, /handoff_claim_status[\s\S]*handoff_claim_token/, quoteRepositoryPath);
+matches(quoteHandoffRepository, /rpc\("finalize_public_quote_handoff"/, quoteHandoffRepositoryPath);
+matches(quoteRoute, /handoffClaimStatus === "claimed"[\s\S]*emailHandoff[\s\S]*handoffFinalizer/, quoteRoutePath);
+matches(quoteRoute, /handoffClaimStatus === "in_progress"[\s\S]*handoffPendingError/, quoteRoutePath);
+noMatch(quoteRoute, /if \(result\.wasCreated\)/, quoteRoutePath);
+matches(quoteMigration, /create table public\.quote_handoff_outbox/, quoteMigrationPath);
+matches(quoteMigration, /create table public\.quote_public_workspace_config/, quoteMigrationPath);
+matches(quoteMigration, /from public\.quote_public_workspace_config cfg/, quoteMigrationPath);
+noMatch(quoteMigration, /from public\.catalogue_public_workspace_config cfg/, quoteMigrationPath);
+matches(quoteMigration, /claim_expires_at = now\(\) \+ interval '5 minutes'/, quoteMigrationPath);
+matches(quoteMigration, /revoke insert \([\s\S]*customer_message[\s\S]*crm_sync_error[\s\S]*\) on public\.quote_requests from anon;/, quoteMigrationPath);
+matches(quoteMigration, /revoke insert \([\s\S]*product_name_snapshot[\s\S]*\) on public\.quote_request_items from anon;/, quoteMigrationPath);
 
 for (const requiredTest of [
   'omits unsafe browser source metadata before submitting',
   'sourcePath: "/quote?listing=modular-lounge-set"',
   'listingSlug: "modular-lounge-set"',
   'requestId: expect.any(String)',
+  'starts a new logical submission when customer details change after a pending handoff',
+  'starts a new logical submission when selected quantities or notes change',
+  'reuses the submission key after an uncertain network response when the payload is unchanged',
 ]) {
   includes(quoteFormTest, requiredTest, quoteFormTestPath);
 }
@@ -252,6 +279,8 @@ for (const requiredTest of [
   'Request body contains unknown field: crm_provider.',
   'customerEmail must be a valid email address.',
   'QUOTE_PERSISTENCE_UNAVAILABLE',
+  'resumes a pending handoff on an idempotent persistence replay',
+  'does not send while another non-stale handoff claim is active',
 ]) {
   includes(quoteRouteTest, requiredTest, quoteRouteTestPath);
 }
@@ -265,8 +294,9 @@ for (const requiredTest of [
   includes(quoteValidationTest, requiredTest, quoteValidationTestPath);
 }
 
-includes(quoteRepositoryTest, 'crm_provider: "hubspot"', quoteRepositoryTestPath);
-includes(quoteRepositoryTest, 'crm_sync_status: "not_queued"', quoteRepositoryTestPath);
+includes(quoteRepositoryTest, 'functionName: "submit_public_quote_request"', quoteRepositoryTestPath);
+includes(quoteRepositoryTest, 'was_created: false', quoteRepositoryTestPath);
+includes(quoteRepositoryTest, 'handoff_claim_status: "completed"', quoteRepositoryTestPath);
 
 assert(
   packageJson.scripts?.[packageScriptName] === packageScriptCommand,

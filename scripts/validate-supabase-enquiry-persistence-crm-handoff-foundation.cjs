@@ -12,6 +12,8 @@ const cutDownDocPath =
   'docs/architecture/IMPLEMENTATION-PLAN-CUT-DOWN-EXTERNAL-SERVICES.md';
 const migrationPath =
   'supabase/migrations/20260616100000_quote_enquiry_crm_handoff_foundation.sql';
+const atomicQuoteMigrationPath =
+  'supabase/migrations/20260720090000_atomic_public_quote_submission.sql';
 const quoteTypesPath = 'website/lib/quote/types.ts';
 const quoteValidationPath = 'website/lib/quote/validation.ts';
 const quoteRepositoryPath = 'website/lib/quote/quote-repository.ts';
@@ -31,6 +33,11 @@ const trackerPaths = [
 
 const allowedChangedFiles = new Set([
   foundationDocPath,
+  'docs/ARCHITECTURE.md',
+  'docs/DEPLOYMENT-ENVIRONMENT-READINESS.md',
+  'docs/DEPLOYMENT-SMOKE-TEST-RUNBOOK.md',
+  'docs/PRODUCTION-SECURITY-READINESS-GATE.md',
+  'scripts/test-supabase-rls.cjs',
   'docs/architecture/PROTECTED-ADMIN-ENQUIRY-INBOX-TRIAGE-FOUNDATION.md',
   'docs/architecture/PROTECTED-ADMIN-CRM-HANDOFF-QUEUE-PREPARATION-FOUNDATION.md',
   'docs/architecture/PROTECTED-ADMIN-CRM-HANDOFF-EXPORT-REVIEW-PACKET-FOUNDATION.md',
@@ -50,6 +57,7 @@ const allowedChangedFiles = new Set([
   'docs/DECISION-LOG.md',
   'docs/checklists/PHASE-2-ADMIN-OPS.md',
   migrationPath,
+  atomicQuoteMigrationPath,
   'supabase/migrations/20260616120000_admin_enquiry_triage_status_update_foundation.sql',
   'supabase/migrations/20260616143000_admin_crm_handoff_queue_preparation_foundation.sql',
   'supabase/migrations/20260616160000_quote_crm_handoff_packet_manifest_foundation.sql',
@@ -60,11 +68,14 @@ const allowedChangedFiles = new Set([
   'website/lib/quote/validation.test.ts',
   quoteRepositoryPath,
   'website/lib/quote/quote-repository.test.ts',
+  'website/lib/quote/quote-handoff-repository.ts',
+  'website/lib/quote/quote-handoff-repository.test.ts',
   'website/app/api/quote/route.ts',
   'website/app/api/quote/route.test.ts',
   'website/app/quote/page.tsx',
   'website/components/QuoteRequestForm.tsx',
   'website/components/QuoteRequestForm.test.tsx',
+  'website/test/phase-1o-a-deployment-env-readiness.test.ts',
   'website/app/admin/protected-admin-shell.tsx',
   'website/app/admin/protected-admin-shell.test.tsx',
   'website/components/admin/quote-request-inbox-panel.tsx',
@@ -284,6 +295,7 @@ for (const requiredPath of [
   architectureDocPath,
   cutDownDocPath,
   migrationPath,
+  atomicQuoteMigrationPath,
   quoteTypesPath,
   quoteValidationPath,
   quoteRepositoryPath,
@@ -295,6 +307,7 @@ const foundationDoc = read(foundationDocPath);
 const architectureDoc = read(architectureDocPath);
 const cutDownDoc = read(cutDownDocPath);
 const migration = read(migrationPath);
+const atomicQuoteMigration = read(atomicQuoteMigrationPath);
 const quoteTypes = read(quoteTypesPath);
 const quoteValidation = read(quoteValidationPath);
 const quoteRepository = read(quoteRepositoryPath);
@@ -368,8 +381,11 @@ matches(quoteTypes, /export type CrmSyncStatus[\s\S]*not_queued[\s\S]*queued[\s\
 matches(quoteTypes, /QuotePersistencePayload[\s\S]*crmSyncStatus/, quoteTypesPath);
 matches(quoteValidation, /normalizeCrmSyncError[\s\S]*slice\(0, MAX_CRM_SYNC_ERROR_LENGTH\)/, quoteValidationPath);
 matches(quoteValidation, /prepareQuoteForPersistence[\s\S]*crmProvider: "hubspot"[\s\S]*crmSyncStatus: "not_queued"/, quoteValidationPath);
-matches(quoteRepository, /source_page_path[\s\S]*source_listing_slug[\s\S]*submission_request_id/, quoteRepositoryPath);
-matches(quoteRepository, /crm_provider[\s\S]*crm_sync_status[\s\S]*crm_contact_id[\s\S]*crm_deal_id/, quoteRepositoryPath);
+matches(quoteRepository, /rpc\("submit_public_quote_request"[\s\S]*p_source_page_path[\s\S]*p_source_listing_slug[\s\S]*p_submission_request_id[\s\S]*p_items/, quoteRepositoryPath);
+matches(quoteRepository, /typeof row\.was_created !== "boolean"/, quoteRepositoryPath);
+matches(atomicQuoteMigration, /create table public\.quote_public_workspace_config/, atomicQuoteMigrationPath);
+matches(atomicQuoteMigration, /from public\.quote_public_workspace_config cfg/, atomicQuoteMigrationPath);
+noMatch(atomicQuoteMigration, /from public\.catalogue_public_workspace_config cfg/, atomicQuoteMigrationPath);
 
 assert(
   packageJson.scripts?.[packageScriptName] === packageScriptCommand,

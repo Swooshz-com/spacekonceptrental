@@ -17,6 +17,7 @@ const originalEnv = new Map(
 );
 
 const validPayload = {
+  requestId: "visitor-submission-20260612-001",
   customerName: "Maya Tan",
   customerEmail: "maya@example.test",
   customerPhone: "+65 8123 4567",
@@ -73,11 +74,20 @@ function successfulEmailHandoff() {
   }));
 }
 
+function successfulHandoffFinalizer() {
+  return vi.fn(async () => ({ ok: true as const }));
+}
+
 function handleQuotePostWithEmail(
   request: Request,
   repository: Parameters<typeof handleQuotePost>[1]
 ) {
-  return handleQuotePost(request, repository, successfulEmailHandoff());
+  return handleQuotePost(
+    request,
+    repository,
+    successfulEmailHandoff(),
+    successfulHandoffFinalizer()
+  );
 }
 
 describe("POST /api/quote", () => {
@@ -91,7 +101,11 @@ describe("POST /api/quote", () => {
     const repository = vi.fn(async () => ({
       ok: true as const,
       quoteRequestId: "70000000-0000-4000-8000-000000000001",
-      publicReference: "QR-20260527-ABC12345"
+      publicReference: "QR-20260527-ABC12345",
+      itemPersistenceStatus: "complete" as const,
+      wasCreated: true,
+      handoffClaimStatus: "claimed" as const,
+      handoffClaimToken: "71000000-0000-4000-8000-000000000001"
     }));
 
     const emailHandoff = vi.fn(async () => ({
@@ -100,11 +114,13 @@ describe("POST /api/quote", () => {
       provider: "n8n" as const,
       idempotencyKey: "quote-enquiry:70000000-0000-4000-8000-000000000001"
     }));
+    const handoffFinalizer = successfulHandoffFinalizer();
 
     const response = await handleQuotePost(
       postJson(validPayload),
       repository,
-      emailHandoff
+      emailHandoff,
+      handoffFinalizer
     );
     const body = await response.json();
 
@@ -117,6 +133,7 @@ describe("POST /api/quote", () => {
     });
     expect(repository).toHaveBeenCalledWith({
       customerName: "Maya Tan",
+      requestId: "visitor-submission-20260612-001",
       customerEmail: "maya@example.test",
       customerPhone: "+65 8123 4567",
       customerMessage:
@@ -143,14 +160,101 @@ describe("POST /api/quote", () => {
         request: expect.any(Request)
       })
     );
+    expect(handoffFinalizer).toHaveBeenCalledWith({
+      quoteRequestId: "70000000-0000-4000-8000-000000000001",
+      submissionRequestId: validPayload.requestId,
+      claimToken: "71000000-0000-4000-8000-000000000001",
+      outcome: { status: "completed" }
+    });
   });
 
-  it("acknowledges persisted enquiries when n8n handoff is not configured", async () => {
+  it("does not invoke the n8n handoff again for an idempotent replay", async () => {
+    const repository = vi.fn(async () => ({
+      ok: true as const,
+      quoteRequestId: "70000000-0000-4000-8000-000000000001",
+      publicReference: "QR-20260527-ABC12345",
+      itemPersistenceStatus: "complete" as const,
+      wasCreated: false,
+      handoffClaimStatus: "completed" as const,
+      handoffClaimToken: null
+    }));
+    const emailHandoff = successfulEmailHandoff();
+
+    const response = await handleQuotePost(
+      postJson(validPayload),
+      repository,
+      emailHandoff,
+      successfulHandoffFinalizer()
+    );
+
+    expect(response.status).toBe(201);
+    expect(repository).toHaveBeenCalledTimes(1);
+    expect(emailHandoff).not.toHaveBeenCalled();
+  });
+
+  it("resumes a pending handoff on an idempotent persistence replay", async () => {
+    const repository = vi.fn(async () => ({
+      ok: true as const,
+      quoteRequestId: "70000000-0000-4000-8000-000000000001",
+      publicReference: "QR-20260527-ABC12345",
+      itemPersistenceStatus: "complete" as const,
+      wasCreated: false,
+      handoffClaimStatus: "claimed" as const,
+      handoffClaimToken: "71000000-0000-4000-8000-000000000002"
+    }));
+    const emailHandoff = successfulEmailHandoff();
+    const handoffFinalizer = successfulHandoffFinalizer();
+
+    const response = await handleQuotePost(
+      postJson(validPayload),
+      repository,
+      emailHandoff,
+      handoffFinalizer
+    );
+
+    expect(response.status).toBe(201);
+    expect(emailHandoff).toHaveBeenCalledTimes(1);
+    expect(handoffFinalizer).toHaveBeenCalledWith(
+      expect.objectContaining({ outcome: { status: "completed" } })
+    );
+  });
+
+  it("does not send while another non-stale handoff claim is active", async () => {
+    const repository = vi.fn(async () => ({
+      ok: true as const,
+      quoteRequestId: "70000000-0000-4000-8000-000000000001",
+      publicReference: "QR-20260527-ABC12345",
+      itemPersistenceStatus: "complete" as const,
+      wasCreated: false,
+      handoffClaimStatus: "in_progress" as const,
+      handoffClaimToken: null
+    }));
+    const emailHandoff = successfulEmailHandoff();
+    const handoffFinalizer = successfulHandoffFinalizer();
+
+    const response = await handleQuotePost(
+      postJson(validPayload),
+      repository,
+      emailHandoff,
+      handoffFinalizer
+    );
+
+    expect(response.status).toBe(503);
+    expect(response.headers.get("retry-after")).toBe("300");
+    expect(emailHandoff).not.toHaveBeenCalled();
+    expect(handoffFinalizer).not.toHaveBeenCalled();
+  });
+
+  it("leaves persisted enquiries retryable when n8n handoff is not configured", async () => {
     const errorSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
     const repository = vi.fn(async () => ({
       ok: true as const,
       quoteRequestId: "70000000-0000-4000-8000-000000000001",
-      publicReference: "QR-20260527-ABC12345"
+      publicReference: "QR-20260527-ABC12345",
+      itemPersistenceStatus: "complete" as const,
+      wasCreated: true,
+      handoffClaimStatus: "claimed" as const,
+      handoffClaimToken: "71000000-0000-4000-8000-000000000001"
     }));
     const emailHandoff = vi.fn(async () => ({
       ok: false as const,
@@ -159,25 +263,29 @@ describe("POST /api/quote", () => {
       code: "n8n_webhook_not_configured",
       idempotencyKey: "quote-enquiry:70000000-0000-4000-8000-000000000001"
     }));
+    const handoffFinalizer = successfulHandoffFinalizer();
 
     const response = await handleQuotePost(
       postJson(validPayload),
       repository,
-      emailHandoff
+      emailHandoff,
+      handoffFinalizer
     );
     const body = await response.json();
     const serialized = JSON.stringify(body);
 
-    expect(response.status).toBe(201);
-    expect(body).toEqual({
-      status: "received",
-      quoteRequestId: "70000000-0000-4000-8000-000000000001",
-      publicReference: "QR-20260527-ABC12345",
-      requestId: expect.any(String)
-    });
+    expect(response.status).toBe(503);
+    expect(body.error.code).toBe("QUOTE_HANDOFF_PENDING");
     expect(repository).toHaveBeenCalledTimes(1);
     expect(emailHandoff).toHaveBeenCalledTimes(1);
-    expect(errorSpy).not.toHaveBeenCalled();
+    expect(handoffFinalizer).toHaveBeenCalledWith(
+      expect.objectContaining({
+        outcome: {
+          status: "retryable_failed",
+          errorCode: "handoff_unavailable"
+        }
+      })
+    );
     expect(serialized).not.toContain("n8n_webhook_not_configured");
     expect(serialized).not.toContain("N8N_ENQUIRY_HANDOFF_WEBHOOK_URL");
     expect(serialized).not.toContain("Maya");
@@ -190,7 +298,11 @@ describe("POST /api/quote", () => {
     const repository = vi.fn(async () => ({
       ok: true as const,
       quoteRequestId: "70000000-0000-4000-8000-000000000001",
-      publicReference: "QR-20260527-ABC12345"
+      publicReference: "QR-20260527-ABC12345",
+      itemPersistenceStatus: "complete" as const,
+      wasCreated: true,
+      handoffClaimStatus: "claimed" as const,
+      handoffClaimToken: "71000000-0000-4000-8000-000000000001"
     }));
     const emailHandoff = vi.fn(async () => ({
       ok: false as const,
@@ -200,43 +312,51 @@ describe("POST /api/quote", () => {
       idempotencyKey: "quote-enquiry:70000000-0000-4000-8000-000000000001",
       unsafeDetails: "401 SECRET raw provider body"
     }));
+    const handoffFinalizer = successfulHandoffFinalizer();
 
     const response = await handleQuotePost(
       postJson(validPayload),
       repository,
-      emailHandoff
+      emailHandoff,
+      handoffFinalizer
     );
     const body = await response.json();
     const serialized = JSON.stringify(body);
 
-    expect(response.status).toBe(201);
-    expect(body.status).toBe("received");
+    expect(response.status).toBe(503);
+    expect(body.error.code).toBe("QUOTE_HANDOFF_PENDING");
     expect(serialized).not.toContain("n8n_rejected");
     expect(serialized).not.toContain("SECRET");
     expect(serialized).not.toContain("raw provider body");
   });
 
-  it("logs unexpected n8n handoff exceptions without failing persisted public receipt", async () => {
+  it("releases the claim after an unexpected n8n exception", async () => {
     const errorSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
     const repository = vi.fn(async () => ({
       ok: true as const,
       quoteRequestId: "70000000-0000-4000-8000-000000000001",
-      publicReference: "QR-20260527-ABC12345"
+      publicReference: "QR-20260527-ABC12345",
+      itemPersistenceStatus: "complete" as const,
+      wasCreated: true,
+      handoffClaimStatus: "claimed" as const,
+      handoffClaimToken: "71000000-0000-4000-8000-000000000001"
     }));
     const emailHandoff = vi.fn(async () => {
       throw new Error("N8N_ENQUIRY_HANDOFF_SHARED_SECRET exploded with raw provider body");
     });
+    const handoffFinalizer = successfulHandoffFinalizer();
 
     const response = await handleQuotePost(
       postJson(validPayload),
       repository,
-      emailHandoff
+      emailHandoff,
+      handoffFinalizer
     );
     const body = await response.json();
     const serialized = JSON.stringify(body);
 
-    expect(response.status).toBe(201);
-    expect(body.status).toBe("received");
+    expect(response.status).toBe(503);
+    expect(body.error.code).toBe("QUOTE_HANDOFF_PENDING");
     expect(repository).toHaveBeenCalledTimes(1);
     expect(emailHandoff).toHaveBeenCalledTimes(1);
     expect(errorSpy).toHaveBeenCalledWith(
@@ -245,7 +365,7 @@ describe("POST /api/quote", () => {
         category: "QUOTE_ENQUIRY_HANDOFF_ATTEMPT_UNAVAILABLE",
         errorReference: body.requestId,
         route: "POST /api/quote",
-        statusCode: 202
+        statusCode: 503
       })
     );
     expect(JSON.stringify(errorSpy.mock.calls)).not.toContain(
@@ -253,6 +373,14 @@ describe("POST /api/quote", () => {
     );
     expect(serialized).not.toContain("N8N_ENQUIRY_HANDOFF_SHARED_SECRET");
     expect(serialized).not.toContain("raw provider body");
+    expect(handoffFinalizer).toHaveBeenCalledWith(
+      expect.objectContaining({
+        outcome: {
+          status: "retryable_failed",
+          errorCode: "handoff_exception"
+        }
+      })
+    );
   });
 
   it("uses a fallback rate-limit bucket when no trusted client IP source is available", async () => {
@@ -261,7 +389,11 @@ describe("POST /api/quote", () => {
     const repository = vi.fn(async () => ({
       ok: true as const,
       quoteRequestId: "70000000-0000-4000-8000-000000000001",
-      publicReference: "QR-20260527-ABC12345"
+      publicReference: "QR-20260527-ABC12345",
+      itemPersistenceStatus: "complete" as const,
+      wasCreated: true,
+      handoffClaimStatus: "claimed" as const,
+      handoffClaimToken: "71000000-0000-4000-8000-000000000001"
     }));
 
     for (let index = 0; index < 5; index += 1) {
@@ -306,7 +438,11 @@ describe("POST /api/quote", () => {
     const repository = vi.fn(async () => ({
       ok: true as const,
       quoteRequestId: crypto.randomUUID(),
-      publicReference: "QR-20260527-ABC12345"
+      publicReference: "QR-20260527-ABC12345",
+      itemPersistenceStatus: "complete" as const,
+      wasCreated: true,
+      handoffClaimStatus: "claimed" as const,
+      handoffClaimToken: "71000000-0000-4000-8000-000000000001"
     }));
 
     for (let index = 0; index < 5; index += 1) {
@@ -360,7 +496,11 @@ describe("POST /api/quote", () => {
     const repository = vi.fn(async () => ({
       ok: true as const,
       quoteRequestId: crypto.randomUUID(),
-      publicReference: "QR-20260527-ABC12345"
+      publicReference: "QR-20260527-ABC12345",
+      itemPersistenceStatus: "complete" as const,
+      wasCreated: true,
+      handoffClaimStatus: "claimed" as const,
+      handoffClaimToken: "71000000-0000-4000-8000-000000000001"
     }));
 
     for (let index = 0; index < 5; index += 1) {
@@ -399,7 +539,11 @@ describe("POST /api/quote", () => {
     const repository = vi.fn(async () => ({
       ok: true as const,
       quoteRequestId: crypto.randomUUID(),
-      publicReference: "QR-20260527-ABC12345"
+      publicReference: "QR-20260527-ABC12345",
+      itemPersistenceStatus: "complete" as const,
+      wasCreated: true,
+      handoffClaimStatus: "claimed" as const,
+      handoffClaimToken: "71000000-0000-4000-8000-000000000001"
     }));
 
     for (let index = 0; index < 5; index += 1) {
@@ -438,7 +582,11 @@ describe("POST /api/quote", () => {
     const repository = vi.fn(async () => ({
       ok: true as const,
       quoteRequestId: crypto.randomUUID(),
-      publicReference: "QR-20260527-ABC12345"
+      publicReference: "QR-20260527-ABC12345",
+      itemPersistenceStatus: "complete" as const,
+      wasCreated: true,
+      handoffClaimStatus: "claimed" as const,
+      handoffClaimToken: "71000000-0000-4000-8000-000000000001"
     }));
     const headers = {
       "cf-connecting-ip": "203.0.113.77",
@@ -516,7 +664,11 @@ describe("POST /api/quote", () => {
     const repository = vi.fn(async () => ({
       ok: true as const,
       quoteRequestId: "70000000-0000-4000-8000-000000000001",
-      publicReference: "QR-20260527-ABC12345"
+      publicReference: "QR-20260527-ABC12345",
+      itemPersistenceStatus: "complete" as const,
+      wasCreated: true,
+      handoffClaimStatus: "claimed" as const,
+      handoffClaimToken: "71000000-0000-4000-8000-000000000001"
     }));
 
     const response = await handleQuotePostWithEmail(
