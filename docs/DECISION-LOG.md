@@ -164,12 +164,14 @@ Public quote persistence now uses one local migration-backed RPC rather than
 separate anonymous parent and item inserts. The public form must supply a valid
 `requestId`; no fallback identifier is generated. The RPC atomically writes the
 parent and item snapshots, makes matching retries idempotent, rejects a
-payload mismatch, and returns `wasCreated` so the route can skip duplicate
-server-side n8n/email handoff work on replay.
+payload mismatch, and atomically creates durable handoff eligibility. The
+route uses the private outbox claim state, not `wasCreated`, to resume or
+suppress server-side n8n/email handoff work on replay.
 
 The RPC is a narrow `SECURITY DEFINER` boundary with `search_path = ''`, fully
-qualified relation names, direct anonymous quote-table privileges revoked, and
-execute granted only to `anon`. RLS remains enabled. Application responses
+qualified relation names, historical table-level and column-level anonymous
+quote INSERT grants explicitly revoked, and execute granted only to `anon` on
+the two narrow submit/finalize RPCs. RLS remains enabled. Application responses
 remain generic and use a safe request reference. This decision does not apply
 a Supabase migration, call Supabase Cloud, execute or change n8n, add browser
 Supabase or service-role access, deploy, or change customer-facing scope.
@@ -3676,6 +3678,39 @@ Safety: This phase is repo-local, template-only, non-live, and not evidence. It 
 - Local acceptance drill: `docs/content/LOCAL-ACCEPTANCE-DRILL.md`.
 - Owner-review rehearsal validator: `scripts/validate-owner-review-rehearsal.cjs`.
 - Protected admin release-control workspace: `/admin/release-control`.
+## 2026-07-20: Durable Public Quote Handoff Claims And Complete Anonymous ACL Revocation
+
+Decision: retain atomic, idempotent quote persistence and add a private,
+quote-scoped durable handoff outbox. `public.submit_public_quote_request`
+atomically creates the quote parent, item snapshots, and pending handoff state,
+then acquires a five-minute claim lease when eligible.
+`public.finalize_public_quote_handoff` completes or releases only the exact
+active-workspace claim. Matching retries validate the payload and use durable
+handoff state, not `wasCreated`, to decide whether delivery can resume.
+
+Security: both functions are `SECURITY DEFINER`, use `search_path = ''`, fully
+qualify objects, validate the active workspace, and are executable only by
+`anon`. `public` and `authenticated` receive no execute privilege. Historical
+anonymous table-level and column-level INSERT grants on `quote_requests` and
+`quote_request_items` are explicitly revoked, as are anonymous UPDATE and
+DELETE; RLS remains enabled. Browser roles cannot directly inspect or mutate
+the outbox.
+
+Recovery: failed delivery becomes immediately retryable, concurrent requests
+cannot acquire the same live claim, and an abandoned claim becomes recoverable
+after five minutes. Completed replays do not send again. The route returns a
+generic retryable response until handoff acceptance and completion recording
+are both confirmed, which preserves the browser submission key across network
+loss and process failure.
+
+External boundary: the app sends stable `quote-enquiry:<quote-id>` idempotency
+in the payload and header, but the repository n8n workflow is still an inactive
+template with a placeholder idempotency gate. The delivery guarantee is
+therefore at-least-once, not exactly-once, until n8n durably enforces that key.
+A crash after outbound acceptance but before database completion can cause a
+later duplicate attempt. No live Supabase migration, n8n action, deployment,
+or production-data change is part of this decision.
+
 ## Protected Admin CRM Handoff Queue Preparation Foundation
 
 Decision: add only a protected admin local CRM handoff queue preparation layer

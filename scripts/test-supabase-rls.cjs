@@ -3534,7 +3534,7 @@ check('anonymous quote writes use one atomic replay-safe RPC without direct tabl
     null,
     `
       select
-        quote_request_id::text || '|' || public_reference || '|' || was_created::text
+        quote_request_id::text || '|' || public_reference || '|' || was_created::text || '|' || handoff_claim_status || '|' || coalesce(handoff_claim_token::text, 'none')
       from public.submit_public_quote_request(
         '${quoteId}',
         '${ids.workspaceA}',
@@ -3548,11 +3548,12 @@ check('anonymous quote writes use one atomic replay-safe RPC without direct tabl
         '/quote',
         null,
         'rls-public-submission-101',
-        '[{"product_name_snapshot":"Fake requested lounge set","quantity":2,"notes":"Fake public quote item note"}]'::jsonb
+        '[{"product_name_snapshot":"Fake requested lounge set","quantity":2,"notes":"Fake public quote item note"}]'::jsonb,
+        '71000000-0000-4000-8000-000000000101'
       );
 
       select
-        quote_request_id::text || '|' || public_reference || '|' || was_created::text
+        quote_request_id::text || '|' || public_reference || '|' || was_created::text || '|' || handoff_claim_status || '|' || coalesce(handoff_claim_token::text, 'none')
       from public.submit_public_quote_request(
         '70000000-0000-4000-8000-000000000199',
         '${ids.workspaceA}',
@@ -3566,7 +3567,8 @@ check('anonymous quote writes use one atomic replay-safe RPC without direct tabl
         '/quote',
         null,
         'rls-public-submission-101',
-        '[{"product_name_snapshot":"Fake requested lounge set","quantity":2,"notes":"Fake public quote item note"}]'::jsonb
+        '[{"product_name_snapshot":"Fake requested lounge set","quantity":2,"notes":"Fake public quote item note"}]'::jsonb,
+        '71000000-0000-4000-8000-000000000102'
       );
     `,
   );
@@ -3574,11 +3576,114 @@ check('anonymous quote writes use one atomic replay-safe RPC without direct tabl
   assert.deepEqual(
     output.split('\n').filter(Boolean),
     [
-      `${quoteId}|quote-public-create|true`,
-      `${quoteId}|quote-public-create|false`,
+      `${quoteId}|quote-public-create|true|claimed|71000000-0000-4000-8000-000000000101`,
+      `${quoteId}|quote-public-create|false|in_progress|none`,
     ],
     'matching retries should return the original persisted identifiers without a second insert.',
   );
+
+  psql(`
+    update public.quote_handoff_outbox
+    set claim_expires_at = now() - interval '1 second'
+    where quote_request_id = '${quoteId}';
+  `);
+
+  const recoveredClaim = queryCommittedAs(
+    'anon',
+    null,
+    `
+      select handoff_claim_status || '|' || handoff_claim_token::text
+      from public.submit_public_quote_request(
+        '70000000-0000-4000-8000-000000000188',
+        '${ids.workspaceA}', 'unused-recovery-reference',
+        'Fake Public Customer', 'public-customer@example.test', '+65 8123 4567',
+        'Please recommend a warm lounge setup for a reception.', '2026-06-12',
+        'Fake Venue', '/quote', null, 'rls-public-submission-101',
+        '[{"product_name_snapshot":"Fake requested lounge set","quantity":2,"notes":"Fake public quote item note"}]'::jsonb,
+        '71000000-0000-4000-8000-000000000109'
+      )
+    `,
+  );
+  assert.equal(
+    recoveredClaim,
+    'claimed|71000000-0000-4000-8000-000000000109',
+    'an expired claim should be recoverable with a new token.',
+  );
+
+  statementFailsAs(
+    'anon',
+    null,
+    `select public.finalize_public_quote_handoff(
+      '${quoteId}', '${ids.workspaceA}', 'rls-public-submission-101',
+      '71000000-0000-4000-8000-000000000101', 'completed', null
+    )`,
+    /claim is unavailable/i,
+  );
+
+  assert.equal(
+    queryCommittedAs(
+      'anon',
+      null,
+      `select public.finalize_public_quote_handoff(
+        '${quoteId}', '${ids.workspaceA}', 'rls-public-submission-101',
+        '71000000-0000-4000-8000-000000000109',
+        'retryable_failed', 'n8n_unavailable'
+      )::text`,
+    ),
+    'true',
+  );
+
+  const retryAfterFailure = queryCommittedAs(
+    'anon',
+    null,
+    `
+      select handoff_claim_status || '|' || handoff_claim_token::text
+      from public.submit_public_quote_request(
+        '70000000-0000-4000-8000-000000000187',
+        '${ids.workspaceA}', 'unused-retry-reference',
+        'Fake Public Customer', 'public-customer@example.test', '+65 8123 4567',
+        'Please recommend a warm lounge setup for a reception.', '2026-06-12',
+        'Fake Venue', '/quote', null, 'rls-public-submission-101',
+        '[{"product_name_snapshot":"Fake requested lounge set","quantity":2,"notes":"Fake public quote item note"}]'::jsonb,
+        '71000000-0000-4000-8000-000000000110'
+      )
+    `,
+  );
+  assert.equal(
+    retryAfterFailure,
+    'claimed|71000000-0000-4000-8000-000000000110',
+    'an outbound failure should release the durable state for retry.',
+  );
+
+  assert.equal(
+    queryCommittedAs(
+      'anon',
+      null,
+      `select public.finalize_public_quote_handoff(
+        '${quoteId}', '${ids.workspaceA}', 'rls-public-submission-101',
+        '71000000-0000-4000-8000-000000000110', 'completed', null
+      )::text`,
+    ),
+    'true',
+  );
+
+  const completedReplay = queryCommittedAs(
+    'anon',
+    null,
+    `
+      select handoff_claim_status || '|' || coalesce(handoff_claim_token::text, 'none')
+      from public.submit_public_quote_request(
+        '70000000-0000-4000-8000-000000000186',
+        '${ids.workspaceA}', 'unused-completed-reference',
+        'Fake Public Customer', 'public-customer@example.test', '+65 8123 4567',
+        'Please recommend a warm lounge setup for a reception.', '2026-06-12',
+        'Fake Venue', '/quote', null, 'rls-public-submission-101',
+        '[{"product_name_snapshot":"Fake requested lounge set","quantity":2,"notes":"Fake public quote item note"}]'::jsonb,
+        '71000000-0000-4000-8000-000000000111'
+      )
+    `,
+  );
+  assert.equal(completedReplay, 'completed|none');
 
   const adminOutput = queryAs(
     'authenticated',
@@ -3649,7 +3754,8 @@ check('anonymous quote writes use one atomic replay-safe RPC without direct tabl
         '   ',
         null, null, null, '/quote', null,
         'rls-contact-values-required',
-        '[]'::jsonb
+        '[]'::jsonb,
+        '71000000-0000-4000-8000-000000000103'
       )
     `,
     /invalid public quote submission/i,
@@ -3671,7 +3777,8 @@ check('anonymous quote writes use one atomic replay-safe RPC without direct tabl
         '/quote',
         null,
         'rls-public-submission-101',
-        '[{"product_name_snapshot":"Fake requested lounge set","quantity":2,"notes":"Fake public quote item note"}]'::jsonb
+        '[{"product_name_snapshot":"Fake requested lounge set","quantity":2,"notes":"Fake public quote item note"}]'::jsonb,
+        '71000000-0000-4000-8000-000000000104'
       )
     `,
     /payload mismatch/i,
@@ -3689,7 +3796,8 @@ check('anonymous quote writes use one atomic replay-safe RPC without direct tabl
         'public-customer@example.test',
         null, null, null, null, null, null,
         'rls-authenticated-denied',
-        '[]'::jsonb
+        '[]'::jsonb,
+        '71000000-0000-4000-8000-000000000105'
       )
     `,
     /permission denied/i,
@@ -3707,7 +3815,8 @@ check('anonymous quote writes use one atomic replay-safe RPC without direct tabl
         'public-customer@example.test',
         null, null, null, null, null, null,
         'rls-cross-workspace-denied',
-        '[]'::jsonb
+        '[]'::jsonb,
+        '71000000-0000-4000-8000-000000000106'
       )
     `,
     /workspace is not available/i,
@@ -3742,7 +3851,8 @@ check('atomic quote RPC rolls back its parent when item persistence raises', () 
           '${quoteId}', '${ids.workspaceA}', 'quote-atomic-rollback',
           'Fake Public Customer', 'public-customer@example.test', null,
           null, null, null, '/quote', null, 'rls-atomic-rollback',
-          '[{"product_name_snapshot":"Rollback item","quantity":1,"notes":null}]'::jsonb
+          '[{"product_name_snapshot":"Rollback item","quantity":1,"notes":null}]'::jsonb,
+          '71000000-0000-4000-8000-000000000107'
         )
       `,
       /test item persistence failure/i,
@@ -3762,6 +3872,155 @@ check('atomic quote RPC rolls back its parent when item persistence raises', () 
     ),
     '0',
     'the parent must roll back when an item insert fails.',
+  );
+  assert.equal(
+    psql(
+      `select count(*)::text from public.quote_handoff_outbox where quote_request_id = '${quoteId}'`,
+    ),
+    '0',
+    'the durable handoff row must not survive a rolled-back quote submission.',
+  );
+});
+
+check('anonymous quote ACLs deny every historical direct write surface', () => {
+  for (const table of ['quote_requests', 'quote_request_items']) {
+    for (const privilege of ['INSERT', 'UPDATE', 'DELETE']) {
+      assert.equal(
+        psql(
+          `select has_table_privilege('anon', 'public.${table}', '${privilege}')::text`,
+        ),
+        'false',
+        `anon must not retain table-level ${privilege} on ${table}.`,
+      );
+    }
+
+    assert.equal(
+      psql(`
+        select not exists (
+          select 1
+          from pg_catalog.pg_class relation
+          cross join lateral pg_catalog.aclexplode(
+            coalesce(relation.relacl, pg_catalog.acldefault('r', relation.relowner))
+          ) acl
+          where relation.oid = 'public.${table}'::regclass
+            and acl.grantee = 0
+            and acl.privilege_type in ('INSERT', 'UPDATE', 'DELETE')
+        )::text
+      `),
+      'true',
+      `PUBLIC must not have a direct write ACL on ${table}.`,
+    );
+  }
+
+  const historicalColumns = {
+    quote_requests: [
+      'id', 'workspace_id', 'public_reference', 'customer_name',
+      'customer_email', 'customer_phone', 'customer_message', 'event_date',
+      'venue', 'status', 'source', 'source_page_path', 'source_listing_slug',
+      'source_listing_id', 'submission_request_id', 'crm_provider',
+      'crm_sync_status', 'crm_contact_id', 'crm_deal_id',
+      'crm_last_sync_attempt_at', 'crm_sync_error',
+    ],
+    quote_request_items: [
+      'workspace_id', 'quote_request_id', 'product_name_snapshot', 'quantity',
+      'notes',
+    ],
+  };
+
+  for (const [table, columns] of Object.entries(historicalColumns)) {
+    for (const column of columns) {
+      assert.equal(
+        psql(
+          `select has_column_privilege('anon', 'public.${table}', '${column}', 'INSERT')::text`,
+        ),
+        'false',
+        `anon must not retain column-level INSERT on ${table}.${column}.`,
+      );
+    }
+  }
+
+  for (const signature of [
+    'public.submit_public_quote_request(uuid,uuid,text,text,text,text,text,date,text,text,text,text,jsonb,uuid)',
+    'public.finalize_public_quote_handoff(uuid,uuid,text,uuid,text,text)',
+  ]) {
+    assert.equal(
+      psql(`select has_function_privilege('anon', '${signature}', 'EXECUTE')::text`),
+      'true',
+    );
+    assert.equal(
+      psql(`select has_function_privilege('authenticated', '${signature}', 'EXECUTE')::text`),
+      'false',
+    );
+    assert.equal(
+      psql(`
+        select not exists (
+          select 1
+          from pg_catalog.pg_proc proc
+          cross join lateral pg_catalog.aclexplode(
+            coalesce(proc.proacl, pg_catalog.acldefault('f', proc.proowner))
+          ) acl
+          where proc.oid = '${signature}'::regprocedure
+            and acl.grantee = 0
+            and acl.privilege_type = 'EXECUTE'
+        )::text
+      `),
+      'true',
+      `${signature} must not be executable through PUBLIC.`,
+    );
+  }
+
+  for (const role of ['anon', 'authenticated']) {
+    for (const privilege of ['SELECT', 'INSERT', 'UPDATE', 'DELETE']) {
+      assert.equal(
+        psql(
+          `select has_table_privilege('${role}', 'public.quote_handoff_outbox', '${privilege}')::text`,
+        ),
+        'false',
+        `${role} must have no direct outbox ${privilege} access.`,
+      );
+    }
+  }
+
+  statementFailsAs(
+    'anon',
+    null,
+    `insert into public.quote_requests (customer_message) values ('denied')`,
+    /permission denied/i,
+  );
+  statementFailsAs(
+    'anon',
+    null,
+    `insert into public.quote_requests (
+      source_page_path, source_listing_slug, source_listing_id,
+      submission_request_id, crm_provider, crm_sync_status, crm_contact_id,
+      crm_deal_id, crm_last_sync_attempt_at, crm_sync_error
+    ) values ('/quote', null, null, 'denied', 'hubspot', 'not_queued', null, null, null, null)`,
+    /permission denied/i,
+  );
+  statementFailsAs(
+    'anon',
+    null,
+    `select * from public.quote_handoff_outbox`,
+    /permission denied/i,
+  );
+  statementFailsAs(
+    'anon',
+    null,
+    `select public.finalize_public_quote_handoff(
+      '${ids.quoteB}', '${ids.workspaceB}', 'other-workspace-submission',
+      '71000000-0000-4000-8000-000000000199', 'completed', null
+    )`,
+    /workspace is not available/i,
+  );
+  statementFailsAs(
+    'anon',
+    null,
+    `select public.finalize_public_quote_handoff(
+      '70000000-0000-4000-8000-000000000101', '${ids.workspaceA}',
+      'rls-public-submission-101',
+      '71000000-0000-4000-8000-000000000198', 'completed', null
+    )`,
+    /claim is unavailable/i,
   );
 });
 
@@ -3866,7 +4125,8 @@ check('anonymous public quote creation rejects oversized customer messages', () 
         '/quote',
         null,
         'rls-public-oversized-message',
-        '[]'::jsonb
+        '[]'::jsonb,
+        '71000000-0000-4000-8000-000000000108'
       )
     `,
     /invalid public quote submission/i,

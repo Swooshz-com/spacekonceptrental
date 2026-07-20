@@ -22,6 +22,10 @@ const quoteValidationPath = 'website/lib/quote/validation.ts';
 const quoteValidationTestPath = 'website/lib/quote/validation.test.ts';
 const quoteRepositoryPath = 'website/lib/quote/quote-repository.ts';
 const quoteRepositoryTestPath = 'website/lib/quote/quote-repository.test.ts';
+const quoteHandoffRepositoryPath =
+  'website/lib/quote/quote-handoff-repository.ts';
+const quoteMigrationPath =
+  'supabase/migrations/20260720090000_atomic_public_quote_submission.sql';
 const suitePath = 'scripts/validate-release-candidate-suite.cjs';
 const packageScriptName = 'validate:public-enquiry-persistence-integration';
 const packageScriptCommand =
@@ -170,6 +174,8 @@ for (const requiredPath of [
   quoteValidationTestPath,
   quoteRepositoryPath,
   quoteRepositoryTestPath,
+  quoteHandoffRepositoryPath,
+  quoteMigrationPath,
   suitePath,
 ]) {
   assert(exists(requiredPath), `Missing required file: ${requiredPath}`);
@@ -188,6 +194,8 @@ const quoteValidation = read(quoteValidationPath);
 const quoteValidationTest = read(quoteValidationTestPath);
 const quoteRepository = read(quoteRepositoryPath);
 const quoteRepositoryTest = read(quoteRepositoryTestPath);
+const quoteHandoffRepository = read(quoteHandoffRepositoryPath);
+const quoteMigration = read(quoteMigrationPath);
 const packageJson = JSON.parse(read('package.json'));
 const releaseSuite = read(suitePath);
 
@@ -240,6 +248,15 @@ matches(quoteValidation, /requestIdPattern[\s\S]*requestId must be a valid submi
 matches(quoteValidation, /prepareQuoteForPersistence[\s\S]*crmProvider: "hubspot"[\s\S]*crmSyncStatus: "not_queued"[\s\S]*crmContactId: null[\s\S]*crmDealId: null[\s\S]*crmLastSyncAttemptAt: null[\s\S]*crmSyncError: null/, quoteValidationPath);
 matches(quoteRepository, /rpc\("submit_public_quote_request"[\s\S]*p_source_page_path[\s\S]*p_source_listing_slug[\s\S]*p_submission_request_id[\s\S]*p_items/, quoteRepositoryPath);
 matches(quoteRepository, /typeof row\.was_created !== "boolean"/, quoteRepositoryPath);
+matches(quoteRepository, /handoff_claim_status[\s\S]*handoff_claim_token/, quoteRepositoryPath);
+matches(quoteHandoffRepository, /rpc\("finalize_public_quote_handoff"/, quoteHandoffRepositoryPath);
+matches(quoteRoute, /handoffClaimStatus === "claimed"[\s\S]*emailHandoff[\s\S]*handoffFinalizer/, quoteRoutePath);
+matches(quoteRoute, /handoffClaimStatus === "in_progress"[\s\S]*handoffPendingError/, quoteRoutePath);
+noMatch(quoteRoute, /if \(result\.wasCreated\)/, quoteRoutePath);
+matches(quoteMigration, /create table public\.quote_handoff_outbox/, quoteMigrationPath);
+matches(quoteMigration, /claim_expires_at = now\(\) \+ interval '5 minutes'/, quoteMigrationPath);
+matches(quoteMigration, /revoke insert \([\s\S]*customer_message[\s\S]*crm_sync_error[\s\S]*\) on public\.quote_requests from anon;/, quoteMigrationPath);
+matches(quoteMigration, /revoke insert \([\s\S]*product_name_snapshot[\s\S]*\) on public\.quote_request_items from anon;/, quoteMigrationPath);
 
 for (const requiredTest of [
   'omits unsafe browser source metadata before submitting',
@@ -255,6 +272,8 @@ for (const requiredTest of [
   'Request body contains unknown field: crm_provider.',
   'customerEmail must be a valid email address.',
   'QUOTE_PERSISTENCE_UNAVAILABLE',
+  'resumes a pending handoff on an idempotent persistence replay',
+  'does not send while another non-stale handoff claim is active',
 ]) {
   includes(quoteRouteTest, requiredTest, quoteRouteTestPath);
 }
@@ -270,6 +289,7 @@ for (const requiredTest of [
 
 includes(quoteRepositoryTest, 'functionName: "submit_public_quote_request"', quoteRepositoryTestPath);
 includes(quoteRepositoryTest, 'was_created: false', quoteRepositoryTestPath);
+includes(quoteRepositoryTest, 'handoff_claim_status: "completed"', quoteRepositoryTestPath);
 
 assert(
   packageJson.scripts?.[packageScriptName] === packageScriptCommand,

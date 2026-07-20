@@ -63,6 +63,8 @@ const allowedChangedFiles = new Set([
   'website/lib/quote/validation.test.ts',
   quoteRepositoryPath,
   'website/lib/quote/quote-repository.test.ts',
+  'website/lib/quote/quote-handoff-repository.ts',
+  'website/lib/quote/quote-handoff-repository.test.ts',
   'website/app/api/quote/route.ts',
   'website/app/api/quote/route.test.ts',
   'website/app/quote/page.tsx',

@@ -22,6 +22,8 @@ type QuoteRpcRow = {
   quote_request_id: string;
   public_reference: string;
   was_created: boolean;
+  handoff_claim_status: "claimed" | "in_progress" | "completed";
+  handoff_claim_token: string | null;
 };
 
 type QuoteSupabaseResult =
@@ -40,6 +42,7 @@ type QuoteRepositoryOptions = {
   workspaceId?: string;
   supabase?: QuoteSupabaseResult;
   createId?: () => string;
+  createClaimToken?: () => string;
   createPublicReference?: () => string;
   env?: {
     QUOTE_WORKSPACE_ID?: string;
@@ -99,6 +102,7 @@ export async function createQuoteRequest(
   }
 
   const quoteRequestId = (options.createId ?? defaultCreateId)();
+  const handoffClaimToken = (options.createClaimToken ?? defaultCreateId)();
   const publicReference =
     (options.createPublicReference ?? defaultCreatePublicReference)();
   const quotePayload = prepareQuoteForPersistence(quote);
@@ -119,18 +123,26 @@ export async function createQuoteRequest(
       product_name_snapshot: item.productName,
       quantity: item.quantity,
       notes: item.notes ?? null
-    }))
+    })),
+    p_handoff_claim_token: handoffClaimToken
   });
 
   const rows = Array.isArray(rpcResult.data) ? rpcResult.data : [];
   const row = rows.length === 1 ? (rows[0] as Partial<QuoteRpcRow>) : null;
+  const claimStatus = row?.handoff_claim_status;
+  const claimToken = row?.handoff_claim_token;
 
   if (
     rpcResult.error ||
     !row ||
     typeof row.quote_request_id !== "string" ||
     typeof row.public_reference !== "string" ||
-    typeof row.was_created !== "boolean"
+    typeof row.was_created !== "boolean" ||
+    (claimStatus !== "claimed" &&
+      claimStatus !== "in_progress" &&
+      claimStatus !== "completed") ||
+    (claimStatus === "claimed" && typeof claimToken !== "string") ||
+    (claimStatus !== "claimed" && claimToken !== null)
   ) {
     return {
       ok: false,
@@ -143,6 +155,8 @@ export async function createQuoteRequest(
     quoteRequestId: row.quote_request_id,
     publicReference: row.public_reference,
     itemPersistenceStatus: "complete",
-    wasCreated: row.was_created
+    wasCreated: row.was_created,
+    handoffClaimStatus: claimStatus,
+    handoffClaimToken: claimToken ?? null
   };
 }

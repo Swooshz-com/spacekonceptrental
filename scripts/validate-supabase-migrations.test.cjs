@@ -479,24 +479,55 @@ test('real migrations add narrow anonymous website quote insert policies only', 
   );
 });
 
-test('real migrations replace direct anonymous quote writes with one replay-safe RPC', () => {
+test('real migrations replace every historical anonymous quote write with durable narrow RPCs', () => {
   const sql = normalizeSql(
     readRealMigration('20260720090000_atomic_public_quote_submission.sql'),
   );
 
+  assert.match(sql, /create table public\.quote_handoff_outbox \(/);
+  assert.match(sql, /alter table public\.quote_handoff_outbox enable row level security;/);
   assert.match(sql, /create or replace function public\.submit_public_quote_request\(/);
   assert.match(sql, /language plpgsql security definer set search_path = '' as/);
   assert.match(sql, /from public\.catalogue_public_workspace_config cfg/);
-  assert.match(sql, /from public\.quote_requests qr/);
+  assert.match(sql, /from public\.quote_requests quote/);
   assert.match(sql, /from public\.quote_request_items item/);
   assert.match(sql, /or p_submission_request_id is null or btrim\(p_submission_request_id\) = ''/);
   assert.match(sql, /nullif\(btrim\(p_customer_email\), ''\) is null and nullif\(btrim\(p_customer_phone\), ''\) is null/);
-  assert.match(sql, /returns table \( quote_request_id uuid, public_reference text, was_created boolean \)/);
+  assert.match(sql, /returns table \( quote_request_id uuid, public_reference text, was_created boolean, handoff_claim_status text, handoff_claim_token uuid \)/);
+  assert.match(sql, /state = 'claimed'/);
+  assert.match(sql, /claim_expires_at = now\(\) \+ interval '5 minutes'/);
+  assert.match(sql, /create or replace function public\.finalize_public_quote_handoff\(/);
   assert.match(sql, /revoke all privileges on function public\.submit_public_quote_request\([\s\S]*?\) from public, anon, authenticated;/);
   assert.match(sql, /grant execute on function public\.submit_public_quote_request\([\s\S]*?\) to anon;/);
   assert.doesNotMatch(sql, /grant execute on function public\.submit_public_quote_request\([\s\S]*?\) to authenticated;/);
+  assert.match(sql, /revoke all privileges on function public\.finalize_public_quote_handoff\([\s\S]*?\) from public, anon, authenticated;/);
+  assert.match(sql, /grant execute on function public\.finalize_public_quote_handoff\([\s\S]*?\) to anon;/);
+  assert.doesNotMatch(sql, /grant execute on function public\.finalize_public_quote_handoff\([\s\S]*?\) to authenticated;/);
   assert.match(sql, /revoke all privileges on table public\.quote_requests from anon;/);
+  assert.match(sql, /revoke insert \( id, workspace_id, public_reference, customer_name, customer_email, customer_phone, customer_message, event_date, venue, status, source, source_page_path, source_listing_slug, source_listing_id, submission_request_id, crm_provider, crm_sync_status, crm_contact_id, crm_deal_id, crm_last_sync_attempt_at, crm_sync_error \) on public\.quote_requests from anon;/);
   assert.match(sql, /revoke all privileges on table public\.quote_request_items from anon;/);
+  assert.match(sql, /revoke insert \( workspace_id, quote_request_id, product_name_snapshot, quantity, notes \) on public\.quote_request_items from anon;/);
+  assert.match(sql, /revoke all privileges on table public\.quote_handoff_outbox from public, anon, authenticated;/);
+});
+
+test('no migration after quote hardening can restore anonymous direct quote writes', () => {
+  const migrationNames = fs.readdirSync(realMigrationsDir)
+    .filter((name) => name.endsWith('.sql'))
+    .sort();
+  const hardeningIndex = migrationNames.indexOf(
+    '20260720090000_atomic_public_quote_submission.sql',
+  );
+  const laterSql = normalizeSql(
+    migrationNames
+      .slice(hardeningIndex + 1)
+      .map((name) => readRealMigration(name))
+      .join('\n'),
+  );
+
+  assert.doesNotMatch(
+    laterSql,
+    /grant\s+[^;]*(insert|update|delete)[^;]*on(?: table)? public\.(quote_requests|quote_request_items)[^;]*to anon/,
+  );
 });
 test('real migrations add admin-only quote workflow activity policies', () => {
   const sql = normalizeSql(readAllRealMigrationSql());

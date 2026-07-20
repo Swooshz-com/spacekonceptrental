@@ -22,7 +22,9 @@ function createMockSupabase(response: { data: unknown; error: unknown } = {
   data: [{
     quote_request_id: "70000000-0000-4000-8000-000000000001",
     public_reference: "QR-20260527-ABC12345",
-    was_created: true
+    was_created: true,
+    handoff_claim_status: "claimed",
+    handoff_claim_token: "71000000-0000-4000-8000-000000000001"
   }],
   error: null
 }) {
@@ -78,6 +80,7 @@ describe("quote repository", () => {
       workspaceId: "11111111-1111-4111-8111-111111111111",
       supabase,
       createId: () => "70000000-0000-4000-8000-000000000001",
+      createClaimToken: () => "71000000-0000-4000-8000-000000000001",
       createPublicReference: () => "QR-20260527-ABC12345"
     });
 
@@ -86,7 +89,9 @@ describe("quote repository", () => {
       quoteRequestId: "70000000-0000-4000-8000-000000000001",
       publicReference: "QR-20260527-ABC12345",
       itemPersistenceStatus: "complete",
-      wasCreated: true
+      wasCreated: true,
+      handoffClaimStatus: "claimed",
+      handoffClaimToken: "71000000-0000-4000-8000-000000000001"
     });
     expect(calls).toEqual([{
       functionName: "submit_public_quote_request",
@@ -108,7 +113,8 @@ describe("quote repository", () => {
           product_name_snapshot: "Modular lounge set",
           quantity: 2,
           notes: "VIP reception area"
-        }]
+        }],
+        p_handoff_claim_token: "71000000-0000-4000-8000-000000000001"
       }
     }]);
   });
@@ -143,7 +149,9 @@ describe("quote repository", () => {
       data: [{
         quote_request_id: "70000000-0000-4000-8000-000000000099",
         public_reference: "QR-20260527-EXISTING",
-        was_created: false
+        was_created: false,
+        handoff_claim_status: "completed",
+        handoff_claim_token: null
       }],
       error: null
     });
@@ -159,7 +167,9 @@ describe("quote repository", () => {
       quoteRequestId: "70000000-0000-4000-8000-000000000099",
       publicReference: "QR-20260527-EXISTING",
       itemPersistenceStatus: "complete",
-      wasCreated: false
+      wasCreated: false,
+      handoffClaimStatus: "completed",
+      handoffClaimToken: null
     });
   });
 

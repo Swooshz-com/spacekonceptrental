@@ -27,6 +27,11 @@ export type CrmSyncStatus =
   | "synced"
   | "failed";
 
+export type QuoteHandoffClaimStatus =
+  | "claimed"
+  | "in_progress"
+  | "completed";
+
 export type QuotePersistencePayload = QuoteSubmission & {
   sourcePagePath: string | null;
   sourceListingSlug: string | null;
@@ -46,6 +51,8 @@ export type QuotePersistenceResult =
       publicReference: string;
       itemPersistenceStatus: "complete";
       wasCreated: boolean;
+      handoffClaimStatus: QuoteHandoffClaimStatus;
+      handoffClaimToken: string | null;
     }
   | {
       ok: false;
@@ -55,4 +62,14 @@ export type QuotePersistenceResult =
   | {
       ok: false;
       code: "QUOTE_WORKSPACE_NOT_CONFIGURED" | "QUOTE_PERSISTENCE_FAILED";
+    };
+
+export type QuoteHandoffFinalizationResult =
+  | { ok: true }
+  | {
+      ok: false;
+      code:
+        | "SUPABASE_NOT_CONFIGURED"
+        | "QUOTE_WORKSPACE_NOT_CONFIGURED"
+        | "QUOTE_HANDOFF_FINALIZATION_FAILED";
     };

@@ -362,6 +362,64 @@ describe("QuoteRequestForm", () => {
     });
   });
 
+  it("retains the submission key across an uncertain response and rotates only after success", async () => {
+    const randomUuid = vi
+      .spyOn(globalThis.crypto, "randomUUID")
+      .mockReturnValueOnce("81000000-0000-4000-8000-000000000001")
+      .mockReturnValueOnce("81000000-0000-4000-8000-000000000002");
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            error: {
+              code: "QUOTE_HANDOFF_PENDING",
+              message: "Quote requests are temporarily unavailable. Please try again later."
+            },
+            requestId: "server-attempt-1"
+          }),
+          { status: 503, headers: { "content-type": "application/json" } }
+        )
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            status: "received",
+            publicReference: "QR-RETRY-001",
+            requestId: "server-attempt-2"
+          }),
+          { status: 201, headers: { "content-type": "application/json" } }
+        )
+      );
+
+    vi.stubGlobal("fetch", fetchMock);
+    render(<QuoteRequestForm />);
+
+    fireEvent.change(screen.getByLabelText(/name/i), {
+      target: { value: "Maya Tan" }
+    });
+    fireEvent.change(screen.getByLabelText(/email address/i), {
+      target: { value: "maya@example.test" }
+    });
+    fireEvent.change(screen.getByLabelText(/event vision/i), {
+      target: { value: "A warm reception lounge setup." }
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /review and send an enquiry/i }));
+    await screen.findByRole("alert");
+    const firstRequestId = getSubmittedPayload(fetchMock).requestId;
+
+    fireEvent.click(screen.getByRole("button", { name: /review and send an enquiry/i }));
+    await screen.findByText(/enquiry received/i);
+    const secondRequest = JSON.parse(
+      String(fetchMock.mock.calls[1]?.[1]?.body)
+    ) as { requestId: string };
+
+    expect(firstRequestId).toBe("81000000-0000-4000-8000-000000000001");
+    expect(secondRequest.requestId).toBe(firstRequestId);
+    expect(randomUuid).toHaveBeenCalledTimes(2);
+  });
+
   it("shows inline required guidance and preserves entered event details", async () => {
     const fetchMock = vi.fn();
     const scrollIntoView = vi.fn();

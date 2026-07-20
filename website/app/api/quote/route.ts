@@ -8,6 +8,10 @@ import {
   type QuoteEmailHandoffResult
 } from "../../../lib/quote/email-handoff";
 import { createQuoteRequest } from "../../../lib/quote/quote-repository";
+import {
+  finalizeQuoteHandoff,
+  type QuoteHandoffFinalizationInput
+} from "../../../lib/quote/quote-handoff-repository";
 import type {
   QuotePersistenceResult,
   QuoteSubmission
@@ -20,6 +24,9 @@ type QuoteRepository = (
 type QuoteEmailHandoff = (
   input: QuoteEmailHandoffInput
 ) => Promise<QuoteEmailHandoffResult>;
+type QuoteHandoffFinalizer = (
+  input: QuoteHandoffFinalizationInput
+) => ReturnType<typeof finalizeQuoteHandoff>;
 
 type BodyReadResult =
   | { ok: true; payload: unknown }
@@ -128,8 +135,25 @@ function recordEmailHandoffApplicationError(requestId: string, request: Request)
     reference: requestId,
     request,
     route: "POST /api/quote",
-    statusCode: 202
+    statusCode: 503
   });
+}
+
+function handoffPendingError(requestId: string, retryAfterSeconds = 5) {
+  return Response.json(
+    {
+      error: {
+        code: "QUOTE_HANDOFF_PENDING",
+        message: FALLBACK_MESSAGE,
+        reference: requestId
+      },
+      requestId
+    },
+    {
+      status: 503,
+      headers: { "retry-after": retryAfterSeconds.toString() }
+    }
+  );
 }
 
 function rateLimitError(rateLimit: RateLimitResult, requestId: string) {
@@ -386,7 +410,8 @@ export function resetQuoteRouteStateForTests() {
 export async function handleQuotePost(
   request: Request,
   repository: QuoteRepository = createQuoteRequest,
-  emailHandoff: QuoteEmailHandoff = sendQuoteEnquiryEmailHandoff
+  emailHandoff: QuoteEmailHandoff = sendQuoteEnquiryEmailHandoff,
+  handoffFinalizer: QuoteHandoffFinalizer = finalizeQuoteHandoff
 ): Promise<Response> {
   const requestId = createRequestId();
   const bodyRead = await parseBoundedJsonBody(request, requestId);
@@ -419,9 +444,19 @@ export async function handleQuotePost(
     return persistenceError(requestId, request);
   }
 
-  if (result.wasCreated) {
+  if (result.handoffClaimStatus === "in_progress") {
+    return handoffPendingError(requestId, 300);
+  }
+
+  if (result.handoffClaimStatus === "claimed") {
+    if (!result.handoffClaimToken) {
+      return persistenceError(requestId, request);
+    }
+
+    let handoffResult: QuoteEmailHandoffResult;
+
     try {
-      await emailHandoff({
+      handoffResult = await emailHandoff({
         quote: validation.value,
         quoteRequestId: result.quoteRequestId,
         publicReference: result.publicReference,
@@ -430,6 +465,33 @@ export async function handleQuotePost(
       });
     } catch {
       recordEmailHandoffApplicationError(requestId, request);
+      await handoffFinalizer({
+        quoteRequestId: result.quoteRequestId,
+        submissionRequestId: validation.value.requestId,
+        claimToken: result.handoffClaimToken,
+        outcome: {
+          status: "retryable_failed",
+          errorCode: "handoff_exception"
+        }
+      }).catch(() => ({ ok: false as const }));
+      return handoffPendingError(requestId);
+    }
+
+    const finalization = await handoffFinalizer({
+      quoteRequestId: result.quoteRequestId,
+      submissionRequestId: validation.value.requestId,
+      claimToken: result.handoffClaimToken,
+      outcome: handoffResult.ok
+        ? { status: "completed" }
+        : {
+            status: "retryable_failed",
+            errorCode: "handoff_unavailable"
+          }
+    }).catch(() => ({ ok: false as const }));
+
+    if (!handoffResult.ok || !finalization.ok) {
+      recordEmailHandoffApplicationError(requestId, request);
+      return handoffPendingError(requestId);
     }
   }
 
