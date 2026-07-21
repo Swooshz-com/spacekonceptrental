@@ -4,6 +4,14 @@
 create schema if not exists private;
 revoke all on schema private from public, anon, authenticated;
 
+alter function public.execute_admin_product_write(
+  text, uuid, uuid, jsonb
+) set search_path = public, extensions;
+
+alter function public.enqueue_search_index_job(
+  uuid, text, uuid, text, text, text, text, jsonb, text
+) set search_path = public, extensions;
+
 create table private.quote_submission_admission_config (
   id boolean primary key default true,
   hmac_secret text not null,
@@ -41,7 +49,7 @@ immutable
 set search_path = ''
 as $$
   select pg_catalog.encode(
-    public.digest(
+    extensions.digest(
       pg_catalog.convert_to(
         pg_catalog.jsonb_build_object(
           'quote_request_id', p_quote_request_id,
@@ -215,7 +223,7 @@ begin
     p_admission_expires_at::text
   );
   v_expected_signature := pg_catalog.encode(
-    public.hmac(
+    extensions.hmac(
       pg_catalog.convert_to(v_message, 'UTF8'),
       pg_catalog.convert_to(v_secret, 'UTF8'),
       'sha256'
