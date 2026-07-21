@@ -329,6 +329,60 @@ function registerSecurityRemediationRlsChecks({
     );
   });
 
+  check('forward remediation removes anonymous admin access execution', () => {
+    const signature = 'public.execute_admin_access_write(uuid,text,text)';
+
+    assert.equal(
+      psql(`select has_function_privilege('anon', '${signature}', 'EXECUTE')::text`),
+      'false',
+      'anon must not execute the owner-only admin access write function.',
+    );
+    assert.equal(
+      psql(`select has_function_privilege(
+        'authenticated', '${signature}', 'EXECUTE'
+      )::text`),
+      'true',
+      'authenticated must retain the deliberate admin access write grant.',
+    );
+    assert.equal(
+      psql(`select has_function_privilege(
+        'service_role', '${signature}', 'EXECUTE'
+      )::text`),
+      'true',
+      'The forward migration must not change the existing service_role grant.',
+    );
+    assert.equal(
+      psql(`
+        select (not exists (
+          select 1
+          from pg_catalog.pg_proc proc
+          cross join lateral pg_catalog.aclexplode(
+            coalesce(proc.proacl, pg_catalog.acldefault('f', proc.proowner))
+          ) acl
+          where proc.oid = '${signature}'::regprocedure
+            and acl.grantee = 0
+            and acl.privilege_type = 'EXECUTE'
+        ))::text
+      `),
+      'true',
+      'PUBLIC must not provide inherited anonymous execution.',
+    );
+    assert.equal(
+      psql(`select prosecdef::text from pg_catalog.pg_proc
+        where oid = '${signature}'::regprocedure`),
+      'true',
+      'The owner-only admin access write function must remain SECURITY DEFINER.',
+    );
+    statementFailsAs(
+      'anon',
+      null,
+      `select public.execute_admin_access_write(
+        '${ids.workspaceA}', 'add_admin', 'anonymous-denied@example.test'
+      )`,
+      /permission denied for function execute_admin_access_write/i,
+    );
+  });
+
   check('workspace-local admin re-add cannot reactivate an inactive shared global identity', () => {
     const sharedAuth = '20000000-0000-4000-8000-000000000021';
     const sharedAdmin = '30000000-0000-4000-8000-000000000021';

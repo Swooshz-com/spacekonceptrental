@@ -545,5 +545,10 @@ $$;
 comment on function public.execute_admin_access_write(uuid, text, text) is
   'Owner-only workspace-local admin access and membership mutation; add/disable/remove never changes the shared global admin identity status.';
 
-revoke all on function public.execute_admin_access_write(uuid, text, text) from public;
-grant execute on function public.execute_admin_access_write(uuid, text, text) to authenticated;
+revoke all privileges on function public.execute_admin_access_write(
+  uuid, text, text
+) from public, anon, authenticated;
+
+grant execute on function public.execute_admin_access_write(
+  uuid, text, text
+) to authenticated;

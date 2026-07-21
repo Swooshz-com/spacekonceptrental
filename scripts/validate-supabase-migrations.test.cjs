@@ -1891,6 +1891,15 @@ test('preproduction remediation keeps admin access writes workspace-local', () =
   );
   assert.match(sql, /update public\.admin_access/);
   assert.match(sql, /update public\.memberships/);
+  assert.match(
+    sql,
+    /revoke all privileges on function public\.execute_admin_access_write\( uuid, text, text \) from public, anon, authenticated;/,
+    'The forward migration must explicitly remove the production anon EXECUTE ACL.',
+  );
+  assert.match(
+    sql,
+    /grant execute on function public\.execute_admin_access_write\( uuid, text, text \) to authenticated;/,
+  );
   assert.doesNotMatch(
     sql,
     /update public\.admin_users/,
