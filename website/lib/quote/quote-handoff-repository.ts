@@ -5,15 +5,23 @@ import { createServerSupabaseClient } from "../supabase/server";
 import type { SupabaseServerEnvName } from "../supabase/env";
 import type { QuoteHandoffFinalizationResult } from "./types";
 
-type QuoteHandoffOutcome =
-  | { status: "completed" }
-  | { status: "retryable_failed"; errorCode: string };
+type QuoteHandoffDelivery =
+  | {
+      status: "delivered" | "pending";
+      requestId: string;
+      providerMessageId?: string;
+    }
+  | {
+      status: "failed" | "not_configured";
+      requestId: string;
+      errorCode: string;
+    };
 
 export type QuoteHandoffFinalizationInput = {
   quoteRequestId: string;
   submissionRequestId: string;
   claimToken: string;
-  outcome: QuoteHandoffOutcome;
+  delivery: QuoteHandoffDelivery;
 };
 
 type SupabaseRpcResult = { data: unknown; error: unknown };
@@ -67,11 +75,17 @@ export async function finalizeQuoteHandoff(
     p_workspace_id: workspaceId,
     p_submission_request_id: input.submissionRequestId,
     p_claim_token: input.claimToken,
-    p_outcome: input.outcome.status,
-    p_error_code:
-      input.outcome.status === "retryable_failed"
-        ? input.outcome.errorCode
-        : null
+    p_outcome:
+      input.delivery.status === "delivered" || input.delivery.status === "pending"
+        ? "completed"
+        : "retryable_failed",
+    p_delivery_status: input.delivery.status,
+    p_provider_message_id:
+      "providerMessageId" in input.delivery
+        ? input.delivery.providerMessageId ?? null
+        : null,
+    p_error_code: "errorCode" in input.delivery ? input.delivery.errorCode : null,
+    p_request_id: input.delivery.requestId
   });
 
   if (result.error || result.data !== true) {

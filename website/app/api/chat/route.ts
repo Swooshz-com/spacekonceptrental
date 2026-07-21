@@ -10,6 +10,7 @@ import {
   type ChatProviderResponse,
   type ChatProviderRequest
 } from "../../../lib/chat/provider";
+import { IdempotentOperationStore } from "../../../lib/chat/idempotent-operation";
 
 const CHAT_ERROR_MESSAGE =
   "An error occurred while sending the chat message. Please try again.";
@@ -47,21 +48,13 @@ type RateLimitMetadata = {
   remaining: number;
   resetAt: string;
 };
-type IdempotencyEntry = {
-  expiresAt: number;
-  fingerprint: string;
-  rateLimit: RateLimitMetadata;
-  promise?: Promise<ChatProviderResponse>;
-  response?: ChatProviderResponse;
-};
-type IdempotencyLookup =
-  | { status: "hit"; entry: IdempotencyEntry }
-  | { status: "conflict" }
-  | { status: "miss"; key: string; fingerprint: string };
 
 const ipRateLimitBuckets = new Map<string, RateLimitBucket>();
 const sessionRateLimitBuckets = new Map<string, RateLimitBucket>();
-const idempotencyEntries = new Map<string, IdempotencyEntry>();
+const idempotencyOperations = new IdempotentOperationStore<
+  ChatProviderResponse,
+  RateLimitMetadata
+>({ maxEntries: MAX_IDEMPOTENCY_ENTRIES, ttlMs: IDEMPOTENCY_TTL_MS });
 
 function createRequestId() {
   return crypto.randomUUID();
@@ -513,7 +506,7 @@ function consumeRateLimit(
 export function resetChatRouteStateForTests() {
   ipRateLimitBuckets.clear();
   sessionRateLimitBuckets.clear();
-  idempotencyEntries.clear();
+  idempotencyOperations.clear();
 }
 
 function getIdempotencyKey(request: ChatProviderRequest) {
@@ -565,91 +558,6 @@ async function createRequestFingerprint(request: ChatProviderRequest) {
     .join("");
 }
 
-function pruneIdempotencyEntries(now: number) {
-  if (idempotencyEntries.size <= MAX_IDEMPOTENCY_ENTRIES) {
-    return;
-  }
-
-  for (const [key, entry] of idempotencyEntries) {
-    if (entry.expiresAt <= now) {
-      idempotencyEntries.delete(key);
-    }
-  }
-
-  while (idempotencyEntries.size > MAX_IDEMPOTENCY_ENTRIES) {
-    const oldestKey = idempotencyEntries.keys().next().value;
-
-    if (!oldestKey) {
-      break;
-    }
-
-    idempotencyEntries.delete(oldestKey);
-  }
-}
-
-async function getIdempotencyLookup(
-  providerRequest: ChatProviderRequest
-): Promise<IdempotencyLookup> {
-  const now = Date.now();
-  const key = getIdempotencyKey(providerRequest);
-  const fingerprint = await createRequestFingerprint(providerRequest);
-  const cached = idempotencyEntries.get(key);
-
-  pruneIdempotencyEntries(now);
-
-  if (!cached) {
-    return { status: "miss", key, fingerprint };
-  }
-
-  if (cached.expiresAt <= now) {
-    idempotencyEntries.delete(key);
-    return { status: "miss", key, fingerprint };
-  }
-
-  if (cached.fingerprint !== fingerprint) {
-    return { status: "conflict" };
-  }
-
-  return { status: "hit", entry: cached };
-}
-
-async function sendMessageOnce(
-  provider: ChatProvider,
-  providerRequest: ChatProviderRequest,
-  idempotency: Extract<IdempotencyLookup, { status: "miss" }>,
-  rateLimit: RateLimitMetadata
-): Promise<ChatProviderResponse> {
-  const now = Date.now();
-  const promise = provider.sendMessage(providerRequest);
-
-  idempotencyEntries.set(idempotency.key, {
-    expiresAt: now + IDEMPOTENCY_TTL_MS,
-    fingerprint: idempotency.fingerprint,
-    rateLimit,
-    promise
-  });
-
-  try {
-    const response = applyChatbotLaunchBoundary(await promise);
-
-    idempotencyEntries.set(idempotency.key, {
-      expiresAt: Date.now() + IDEMPOTENCY_TTL_MS,
-      fingerprint: idempotency.fingerprint,
-      rateLimit,
-      response
-    });
-
-    return response;
-  } catch (error) {
-    const current = idempotencyEntries.get(idempotency.key);
-
-    if (current?.promise === promise) {
-      idempotencyEntries.delete(idempotency.key);
-    }
-
-    throw error;
-  }
-}
 
 export async function handleChatPost(
   request: Request,
@@ -668,43 +576,42 @@ export async function handleChatPost(
     return validationError(validation.message, requestId);
   }
 
-  const idempotency = await getIdempotencyLookup(validation.value);
-
-  if (idempotency.status === "hit") {
-    const providerResponse =
-      idempotency.entry.response ?? (await idempotency.entry.promise);
-
-    if (!providerResponse) {
-      return providerError(
-        new Error("Missing idempotent chat response."),
-        requestId,
-        request
-      );
-    }
-
-    return chatResponse(providerResponse, idempotency.entry.rateLimit);
-  }
-
-  const rateLimit = consumeRateLimit(request, validation.value);
-
-  if (!rateLimit.allowed) {
-    return rateLimitError(rateLimit, requestId);
-  }
+  const fingerprint = await createRequestFingerprint(validation.value);
+  const idempotency = idempotencyOperations.start({
+    key: getIdempotencyKey(validation.value),
+    fingerprint,
+    createMetadata: () => {
+      const rateLimit = consumeRateLimit(request, validation.value);
+      return rateLimit.allowed
+        ? { ok: true as const, metadata: toRateLimitMetadata(rateLimit) }
+        : { ok: false as const, reason: rateLimit };
+    },
+    execute: async () =>
+      applyChatbotLaunchBoundary(await provider.sendMessage(validation.value))
+  });
 
   if (idempotency.status === "conflict") {
-    return idempotencyConflictError(rateLimit, requestId);
+    const rateLimit = consumeRateLimit(request, validation.value);
+    return rateLimit.allowed
+      ? idempotencyConflictError(rateLimit, requestId)
+      : rateLimitError(rateLimit, requestId);
+  }
+
+  if (idempotency.status === "denied") {
+    return rateLimitError(idempotency.reason, requestId);
+  }
+
+  if (idempotency.status === "capacity") {
+    return providerError(
+      new Error("Chat idempotency capacity is unavailable."),
+      requestId,
+      request
+    );
   }
 
   try {
-    const rateLimitMetadata = toRateLimitMetadata(rateLimit);
-    const providerResponse = await sendMessageOnce(
-      provider,
-      validation.value,
-      idempotency,
-      rateLimitMetadata
-    );
-
-    return chatResponse(providerResponse, rateLimitMetadata);
+    const providerResponse = await idempotency.promise;
+    return chatResponse(providerResponse, idempotency.metadata);
   } catch (error) {
     return providerError(error, requestId, request);
   }

@@ -14,6 +14,7 @@
       "SUPABASE_ANON_KEY",
       "CATALOGUE_WORKSPACE_ID",
       "QUOTE_WORKSPACE_ID",
+      "QUOTE_SUBMISSION_ADMISSION_SECRET",
       "ADMIN_TRUSTED_WORKSPACE_ID",
       "ADMIN_EXPECTED_ORIGIN",
       "ADMIN_EXPECTED_HOST",
@@ -54,7 +55,8 @@
         "QUOTE_TRUSTED_CLIENT_IP_HEADER",
         "ADMIN_EXPECTED_ORIGIN",
         "ADMIN_EXPECTED_HOST",
-        "ADMIN_CSRF_PROOF_SECRET"
+        "ADMIN_CSRF_PROOF_SECRET",
+        "QUOTE_SUBMISSION_ADMISSION_SECRET"
       ],
       "rule": "Used only by server-side Next.js routes, repositories, and helpers."
     },
@@ -65,7 +67,8 @@
         "SUPABASE_URL",
         "SUPABASE_ANON_KEY",
         "CATALOGUE_WORKSPACE_ID",
-        "QUOTE_WORKSPACE_ID"
+        "QUOTE_WORKSPACE_ID",
+        "QUOTE_SUBMISSION_ADMISSION_SECRET"
       ],
       "rule": "Used only server-side with RLS and trusted workspace review."
     },
@@ -150,6 +153,15 @@
       "browserAllowed": false,
       "status": "future-deployment-required",
       "notes": "Trusted server-side workspace gate for public quote submissions."
+    },
+    {
+      "name": "QUOTE_SUBMISSION_ADMISSION_SECRET",
+      "visibility": "server-only-secret",
+      "feature": "Public quote admission",
+      "requiredFor": "Purpose-separated payload-bound admission proofs for durable quote creation",
+      "browserAllowed": false,
+      "status": "future-deployment-required",
+      "notes": "Must match separately provisioned private database configuration; never include values in docs."
     },
     {
       "name": "ADMIN_TRUSTED_WORKSPACE_ID",

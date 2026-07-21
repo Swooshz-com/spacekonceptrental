@@ -469,8 +469,9 @@ export async function handleQuotePost(
         quoteRequestId: result.quoteRequestId,
         submissionRequestId: validation.value.requestId,
         claimToken: result.handoffClaimToken,
-        outcome: {
-          status: "retryable_failed",
+        delivery: {
+          status: "failed",
+          requestId,
           errorCode: "handoff_exception"
         }
       }).catch(() => ({ ok: false as const }));
@@ -481,11 +482,18 @@ export async function handleQuotePost(
       quoteRequestId: result.quoteRequestId,
       submissionRequestId: validation.value.requestId,
       claimToken: result.handoffClaimToken,
-      outcome: handoffResult.ok
-        ? { status: "completed" }
+      delivery: handoffResult.ok
+        ? {
+            status: handoffResult.status,
+            requestId,
+            ...(handoffResult.providerMessageId
+              ? { providerMessageId: handoffResult.providerMessageId }
+              : {})
+          }
         : {
-            status: "retryable_failed",
-            errorCode: "handoff_unavailable"
+            status: handoffResult.status,
+            requestId,
+            errorCode: handoffResult.code
           }
     }).catch(() => ({ ok: false as const }));
 

@@ -40,6 +40,7 @@ const requiredEnvNames = [
   'SUPABASE_ANON_KEY',
   'CATALOGUE_WORKSPACE_ID',
   'QUOTE_WORKSPACE_ID',
+  'QUOTE_SUBMISSION_ADMISSION_SECRET',
   'ADMIN_TRUSTED_WORKSPACE_ID',
   'ADMIN_EXPECTED_ORIGIN',
   'ADMIN_EXPECTED_HOST',
@@ -278,6 +279,16 @@ function validateEnvContract(env) {
   if (csrfSecretValue && !csrfSecret.ok) {
     addIssue(issues, 'ADMIN_CSRF_PROOF_SECRET', csrfSecret.summary);
   }
+  const quoteAdmissionSecretValue = readEnv(
+    env,
+    'QUOTE_SUBMISSION_ADMISSION_SECRET',
+  );
+  const quoteAdmissionSecret = validateCsrfSecret(quoteAdmissionSecretValue);
+
+  if (quoteAdmissionSecretValue && !quoteAdmissionSecret.ok) {
+    addIssue(issues, 'QUOTE_SUBMISSION_ADMISSION_SECRET', quoteAdmissionSecret.summary);
+  }
+
 
   const n8nEnquiryWebhookUrl = readEnv(env, 'N8N_ENQUIRY_HANDOFF_WEBHOOK_URL');
 

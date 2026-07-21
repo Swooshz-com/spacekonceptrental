@@ -164,7 +164,7 @@ describe("POST /api/quote", () => {
       quoteRequestId: "70000000-0000-4000-8000-000000000001",
       submissionRequestId: validPayload.requestId,
       claimToken: "71000000-0000-4000-8000-000000000001",
-      outcome: { status: "completed" }
+      delivery: { status: "delivered", requestId: body.requestId }
     });
   });
 
@@ -215,7 +215,7 @@ describe("POST /api/quote", () => {
     expect(response.status).toBe(201);
     expect(emailHandoff).toHaveBeenCalledTimes(1);
     expect(handoffFinalizer).toHaveBeenCalledWith(
-      expect.objectContaining({ outcome: { status: "completed" } })
+      expect.objectContaining({ delivery: expect.objectContaining({ status: "delivered" }) })
     );
   });
 
@@ -280,9 +280,10 @@ describe("POST /api/quote", () => {
     expect(emailHandoff).toHaveBeenCalledTimes(1);
     expect(handoffFinalizer).toHaveBeenCalledWith(
       expect.objectContaining({
-        outcome: {
-          status: "retryable_failed",
-          errorCode: "handoff_unavailable"
+        delivery: {
+          status: "not_configured",
+          errorCode: "n8n_webhook_not_configured",
+          requestId: expect.any(String)
         }
       })
     );
@@ -375,9 +376,10 @@ describe("POST /api/quote", () => {
     expect(serialized).not.toContain("raw provider body");
     expect(handoffFinalizer).toHaveBeenCalledWith(
       expect.objectContaining({
-        outcome: {
-          status: "retryable_failed",
-          errorCode: "handoff_exception"
+        delivery: {
+          status: "failed",
+          errorCode: "handoff_exception",
+          requestId: expect.any(String)
         }
       })
     );

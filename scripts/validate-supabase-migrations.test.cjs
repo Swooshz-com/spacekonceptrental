@@ -301,7 +301,7 @@ test('real migration directory passes static validation', () => {
   const result = runValidator(realMigrationsDir);
 
   assert.equal(result.status, 0, result.stdout + result.stderr);
-  assert.match(result.stdout, /checked 31 migration SQL file\(s\)/);
+  assert.match(result.stdout, /checked 32 migration SQL file\(s\)/);
 });
 
 test('real base schema migration creates the planned MVP tables', () => {
@@ -1877,6 +1877,25 @@ test('real migrations add Google-only DB-backed admin access management', () => 
   assert.doesNotMatch(sql, /role in \('owner', 'admin', 'viewer'\)/);
   assert.doesNotMatch(migration, /checkout|payment|purchase|booking|reservation|stock|inventory/i);
   assert.doesNotMatch(migration, /https?:\/\/|oauth|client_secret|service_role/i);
+});
+
+test('preproduction remediation keeps admin access writes workspace-local', () => {
+  const migration = readRealMigration(
+    '20260721090000_preproduction_security_remediation.sql',
+  );
+  const sql = normalizeSql(migration);
+
+  assert.match(
+    sql,
+    /create or replace function public\.execute_admin_access_write\(\s*p_workspace_id uuid,\s*p_action text,\s*p_email text\s*\)/,
+  );
+  assert.match(sql, /update public\.admin_access/);
+  assert.match(sql, /update public\.memberships/);
+  assert.doesNotMatch(
+    sql,
+    /update public\.admin_users/,
+    'Workspace-local admin access writes must not mutate global admin identity state.',
+  );
 });
 
 test('real migrations add workspace-scoped homepage hero content with protected admin writes', () => {

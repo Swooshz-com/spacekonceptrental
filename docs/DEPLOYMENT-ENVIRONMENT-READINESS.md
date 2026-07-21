@@ -183,6 +183,9 @@ These values are server-only even when the Supabase anon key is used:
   public catalogue reads.
 - `QUOTE_WORKSPACE_ID`: trusted server-side workspace gate for public quote
   persistence.
+- `QUOTE_SUBMISSION_ADMISSION_SECRET`: dedicated server-only HMAC secret for
+  short-lived, payload-bound quote admission proofs. It must match the private
+  database configuration and must not be exposed to browser roles.
 
 `CATALOGUE_WORKSPACE_ID` must match the reviewed
 `catalogue_public_workspace_config` active workspace row before DB-backed

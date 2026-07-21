@@ -4,9 +4,19 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const { ensureDockerRunning } = require('./ensure-docker-running.cjs');
+const {
+  registerSecurityRemediationRlsChecks,
+} = require('./security-remediation-rls-checks.cjs');
 
 const repoRoot = path.resolve(__dirname, '..');
 const migrationsDir = path.join(repoRoot, 'supabase', 'migrations');
+const securityTestSupportPath = path.join(
+  repoRoot,
+  'scripts',
+  'test-supabase-security-support.sql',
+);
+const productionBaselineMigration =
+  '20260720090000_atomic_public_quote_submission.sql';
 const dockerImage = process.env.SUPABASE_RLS_DB_IMAGE || 'postgres:16-alpine';
 const containerName =
   process.env.SUPABASE_RLS_CONTAINER_NAME ||
@@ -3571,7 +3581,7 @@ check('public quote workspace configuration stays independent from catalogue con
     null,
     `
       select quote_request_id::text || '|' || handoff_claim_status
-      from public.submit_public_quote_request(
+      from test_support.submit_public_quote_request(
         '${quoteId}', '${ids.workspaceB}', 'quote-workspace-b',
         'Workspace B Customer', 'workspace-b@example.test', null,
         null, null, null, '/quote', null, 'rls-quote-workspace-b',
@@ -3584,7 +3594,7 @@ check('public quote workspace configuration stays independent from catalogue con
     queryCommittedAs(
       'anon',
       null,
-      `select public.finalize_public_quote_handoff(
+      `select test_support.finalize_public_quote_handoff(
         '${quoteId}', '${ids.workspaceB}', 'rls-quote-workspace-b',
         '${claimToken}', 'completed', null
       )::text`,
@@ -3596,7 +3606,7 @@ check('public quote workspace configuration stays independent from catalogue con
   statementFailsAs(
     'anon',
     null,
-    `select * from public.submit_public_quote_request(
+    `select * from test_support.submit_public_quote_request(
       '70000000-0000-4000-8000-000000000122', '${ids.workspaceA}',
       'catalogue-workspace-not-quote-workspace', 'Wrong Workspace Customer',
       'wrong-workspace@example.test', null, null, null, null, '/quote', null,
@@ -3609,7 +3619,7 @@ check('public quote workspace configuration stays independent from catalogue con
   statementFailsAs(
     'anon',
     null,
-    `select public.finalize_public_quote_handoff(
+    `select test_support.finalize_public_quote_handoff(
       '${quoteId}', '${ids.workspaceA}', 'rls-quote-workspace-b',
       '${claimToken}', 'completed', null
     )`,
@@ -3622,7 +3632,7 @@ check('public quote workspace configuration stays independent from catalogue con
   statementFailsAs(
     'anon',
     null,
-    `select * from public.submit_public_quote_request(
+    `select * from test_support.submit_public_quote_request(
       '70000000-0000-4000-8000-000000000123', '${ids.workspaceB}',
       'inactive-quote-workspace', 'Inactive Workspace Customer',
       'inactive-workspace@example.test', null, null, null, null, '/quote', null,
@@ -3660,7 +3670,7 @@ check('anonymous quote writes use one atomic replay-safe RPC without direct tabl
     `
       select
         quote_request_id::text || '|' || public_reference || '|' || was_created::text || '|' || handoff_claim_status || '|' || coalesce(handoff_claim_token::text, 'none')
-      from public.submit_public_quote_request(
+      from test_support.submit_public_quote_request(
         '${quoteId}',
         '${ids.workspaceA}',
         'quote-public-create',
@@ -3679,7 +3689,7 @@ check('anonymous quote writes use one atomic replay-safe RPC without direct tabl
 
       select
         quote_request_id::text || '|' || public_reference || '|' || was_created::text || '|' || handoff_claim_status || '|' || coalesce(handoff_claim_token::text, 'none')
-      from public.submit_public_quote_request(
+      from test_support.submit_public_quote_request(
         '70000000-0000-4000-8000-000000000199',
         '${ids.workspaceA}',
         'quote-public-retry-proposed-reference',
@@ -3718,7 +3728,7 @@ check('anonymous quote writes use one atomic replay-safe RPC without direct tabl
     null,
     `
       select handoff_claim_status || '|' || handoff_claim_token::text
-      from public.submit_public_quote_request(
+      from test_support.submit_public_quote_request(
         '70000000-0000-4000-8000-000000000188',
         '${ids.workspaceA}', 'unused-recovery-reference',
         'Fake Public Customer', 'public-customer@example.test', '+65 8123 4567',
@@ -3738,7 +3748,7 @@ check('anonymous quote writes use one atomic replay-safe RPC without direct tabl
   statementFailsAs(
     'anon',
     null,
-    `select public.finalize_public_quote_handoff(
+    `select test_support.finalize_public_quote_handoff(
       '${quoteId}', '${ids.workspaceA}', 'rls-public-submission-101',
       '71000000-0000-4000-8000-000000000101', 'completed', null
     )`,
@@ -3749,7 +3759,7 @@ check('anonymous quote writes use one atomic replay-safe RPC without direct tabl
     queryCommittedAs(
       'anon',
       null,
-      `select public.finalize_public_quote_handoff(
+      `select test_support.finalize_public_quote_handoff(
         '${quoteId}', '${ids.workspaceA}', 'rls-public-submission-101',
         '71000000-0000-4000-8000-000000000109',
         'retryable_failed', 'n8n_unavailable'
@@ -3766,7 +3776,7 @@ check('anonymous quote writes use one atomic replay-safe RPC without direct tabl
       null,
       `
         select quote_request_id::text || '|' || handoff_claim_status
-        from public.submit_public_quote_request(
+        from test_support.submit_public_quote_request(
           '${changedSubmissionId}', '${ids.workspaceA}',
           'quote-edited-distinct-submission', 'Edited Public Customer',
           'public-customer@example.test', '+65 8123 4567',
@@ -3794,7 +3804,7 @@ check('anonymous quote writes use one atomic replay-safe RPC without direct tabl
     queryCommittedAs(
       'anon',
       null,
-      `select public.finalize_public_quote_handoff(
+      `select test_support.finalize_public_quote_handoff(
         '${changedSubmissionId}', '${ids.workspaceA}',
         'rls-public-submission-101-edited', '${changedSubmissionClaim}',
         'completed', null
@@ -3808,7 +3818,7 @@ check('anonymous quote writes use one atomic replay-safe RPC without direct tabl
     null,
     `
       select handoff_claim_status || '|' || handoff_claim_token::text
-      from public.submit_public_quote_request(
+      from test_support.submit_public_quote_request(
         '70000000-0000-4000-8000-000000000187',
         '${ids.workspaceA}', 'unused-retry-reference',
         'Fake Public Customer', 'public-customer@example.test', '+65 8123 4567',
@@ -3829,7 +3839,7 @@ check('anonymous quote writes use one atomic replay-safe RPC without direct tabl
     queryCommittedAs(
       'anon',
       null,
-      `select public.finalize_public_quote_handoff(
+      `select test_support.finalize_public_quote_handoff(
         '${quoteId}', '${ids.workspaceA}', 'rls-public-submission-101',
         '71000000-0000-4000-8000-000000000110', 'completed', null
       )::text`,
@@ -3842,7 +3852,7 @@ check('anonymous quote writes use one atomic replay-safe RPC without direct tabl
     null,
     `
       select handoff_claim_status || '|' || coalesce(handoff_claim_token::text, 'none')
-      from public.submit_public_quote_request(
+      from test_support.submit_public_quote_request(
         '70000000-0000-4000-8000-000000000186',
         '${ids.workspaceA}', 'unused-completed-reference',
         'Fake Public Customer', 'public-customer@example.test', '+65 8123 4567',
@@ -3915,7 +3925,7 @@ check('anonymous quote writes use one atomic replay-safe RPC without direct tabl
     'anon',
     null,
     `
-      select * from public.submit_public_quote_request(
+      select * from test_support.submit_public_quote_request(
         '70000000-0000-4000-8000-000000000193',
         '${ids.workspaceA}',
         'quote-blank-contact-denied',
@@ -3934,7 +3944,7 @@ check('anonymous quote writes use one atomic replay-safe RPC without direct tabl
     'anon',
     null,
     `
-      select * from public.submit_public_quote_request(
+      select * from test_support.submit_public_quote_request(
         '70000000-0000-4000-8000-000000000197',
         '${ids.workspaceA}',
         'quote-public-mismatch',
@@ -3958,7 +3968,7 @@ check('anonymous quote writes use one atomic replay-safe RPC without direct tabl
     'authenticated',
     ids.authMemberA,
     `
-      select * from public.submit_public_quote_request(
+      select * from test_support.submit_public_quote_request(
         '70000000-0000-4000-8000-000000000196',
         '${ids.workspaceA}',
         'quote-authenticated-rpc-denied',
@@ -3977,7 +3987,7 @@ check('anonymous quote writes use one atomic replay-safe RPC without direct tabl
     'anon',
     null,
     `
-      select * from public.submit_public_quote_request(
+      select * from test_support.submit_public_quote_request(
         '70000000-0000-4000-8000-000000000195',
         '${ids.workspaceB}',
         'quote-cross-workspace-denied',
@@ -4017,7 +4027,7 @@ check('atomic quote RPC rolls back its parent when item persistence raises', () 
       'anon',
       null,
       `
-        select * from public.submit_public_quote_request(
+        select * from test_support.submit_public_quote_request(
           '${quoteId}', '${ids.workspaceA}', 'quote-atomic-rollback',
           'Fake Public Customer', 'public-customer@example.test', null,
           null, null, null, '/quote', null, 'rls-atomic-rollback',
@@ -4109,9 +4119,28 @@ check('anonymous quote ACLs deny every historical direct write surface', () => {
     }
   }
 
-  for (const signature of [
+  for (const removedSignature of [
     'public.submit_public_quote_request(uuid,uuid,text,text,text,text,text,date,text,text,text,text,jsonb,uuid)',
-    'public.finalize_public_quote_handoff(uuid,uuid,text,uuid,text,text)',
+  ]) {
+    assert.equal(
+      psql(`select (to_regprocedure('${removedSignature}') is null)::text`),
+      'true',
+      `${removedSignature} must no longer expose the unadmitted contract.`,
+    );
+  }
+
+  assert.equal(
+    psql(`select has_function_privilege(
+      'anon',
+      'public.finalize_public_quote_handoff(uuid,uuid,text,uuid,text,text)',
+      'EXECUTE'
+    )::text`),
+    'false',
+  );
+  for (const signature of [
+    'public.get_public_quote_submission_digest(uuid,uuid,text,text,text,text,text,date,text,text,text,text,jsonb,uuid)',
+    'public.submit_public_quote_request(uuid,uuid,text,text,text,text,text,date,text,text,text,text,jsonb,uuid,text,bigint,text)',
+    'public.finalize_public_quote_handoff(uuid,uuid,text,uuid,text,text,text,text,text)',
   ]) {
     assert.equal(
       psql(`select has_function_privilege('anon', '${signature}', 'EXECUTE')::text`),
@@ -4184,7 +4213,7 @@ check('anonymous quote ACLs deny every historical direct write surface', () => {
   statementFailsAs(
     'anon',
     null,
-    `select public.finalize_public_quote_handoff(
+    `select test_support.finalize_public_quote_handoff(
       '${ids.quoteB}', '${ids.workspaceB}', 'other-workspace-submission',
       '71000000-0000-4000-8000-000000000199', 'completed', null
     )`,
@@ -4193,7 +4222,7 @@ check('anonymous quote ACLs deny every historical direct write surface', () => {
   statementFailsAs(
     'anon',
     null,
-    `select public.finalize_public_quote_handoff(
+    `select test_support.finalize_public_quote_handoff(
       '70000000-0000-4000-8000-000000000101', '${ids.workspaceA}',
       'rls-public-submission-101',
       '71000000-0000-4000-8000-000000000198', 'completed', null
@@ -4290,7 +4319,7 @@ check('anonymous public quote creation rejects oversized customer messages', () 
     'anon',
     null,
     `
-      select * from public.submit_public_quote_request(
+      select * from test_support.submit_public_quote_request(
         '70000000-0000-4000-8000-000000000103',
         '${ids.workspaceA}',
         'quote-public-rejected-message',
@@ -5194,10 +5223,23 @@ function main() {
     waitForDatabase();
     setupSupabaseCompatibility();
 
-    for (const migrationFile of listMigrationFiles()) {
+    const migrationFiles = listMigrationFiles();
+    const baselineIndex = migrationFiles.findIndex(
+      (migrationFile) => path.basename(migrationFile) === productionBaselineMigration,
+    );
+    assert.notEqual(baselineIndex, -1, 'Production baseline migration is missing.');
+
+    for (const migrationFile of migrationFiles.slice(0, baselineIndex + 1)) {
       runSqlFile(migrationFile);
     }
 
+    console.log(`PASS upgrade baseline applied through ${productionBaselineMigration}`);
+    for (const migrationFile of migrationFiles.slice(baselineIndex + 1)) {
+      runSqlFile(migrationFile);
+    }
+    console.log('PASS forward-only remediation upgrade applied after production baseline');
+
+    runSqlFile(securityTestSupportPath);
     grantBrowserRoleSelects();
     seedFixtures();
     runChecks();
@@ -5211,5 +5253,14 @@ function main() {
     fs.rmSync(dockerConfigDir, { recursive: true, force: true });
   }
 }
+
+registerSecurityRemediationRlsChecks({
+  check,
+  ids,
+  psql,
+  queryCommittedAs,
+  scalarAs,
+  statementFailsAs,
+});
 
 main();

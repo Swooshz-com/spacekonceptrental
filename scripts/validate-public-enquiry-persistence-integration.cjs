@@ -247,7 +247,7 @@ matches(quotePage, /initialListingSlug=\{context\.requestedSlug\}/, quotePagePat
 matches(quoteValidation, /allowedTopLevelKeys[\s\S]*sourcePath[\s\S]*listingSlug[\s\S]*requestId/, quoteValidationPath);
 matches(quoteValidation, /requestIdPattern[\s\S]*requestId must be a valid submission identifier/, quoteValidationPath);
 matches(quoteValidation, /prepareQuoteForPersistence[\s\S]*crmProvider: "hubspot"[\s\S]*crmSyncStatus: "not_queued"[\s\S]*crmContactId: null[\s\S]*crmDealId: null[\s\S]*crmLastSyncAttemptAt: null[\s\S]*crmSyncError: null/, quoteValidationPath);
-matches(quoteRepository, /rpc\("submit_public_quote_request"[\s\S]*p_source_page_path[\s\S]*p_source_listing_slug[\s\S]*p_submission_request_id[\s\S]*p_items/, quoteRepositoryPath);
+matches(quoteRepository, /const rpcArgs = \{[\s\S]*p_source_page_path[\s\S]*p_source_listing_slug[\s\S]*p_submission_request_id[\s\S]*p_items[\s\S]*rpc\("submit_public_quote_request"[\s\S]*\.\.\.rpcArgs[\s\S]*p_admission_signature/, quoteRepositoryPath);
 matches(quoteRepository, /typeof row\.was_created !== "boolean"/, quoteRepositoryPath);
 matches(quoteRepository, /handoff_claim_status[\s\S]*handoff_claim_token/, quoteRepositoryPath);
 matches(quoteHandoffRepository, /rpc\("finalize_public_quote_handoff"/, quoteHandoffRepositoryPath);
@@ -294,7 +294,7 @@ for (const requiredTest of [
   includes(quoteValidationTest, requiredTest, quoteValidationTestPath);
 }
 
-includes(quoteRepositoryTest, 'functionName: "submit_public_quote_request"', quoteRepositoryTestPath);
+includes(quoteRepositoryTest, '"submit_public_quote_request"', quoteRepositoryTestPath);
 includes(quoteRepositoryTest, 'was_created: false', quoteRepositoryTestPath);
 includes(quoteRepositoryTest, 'handoff_claim_status: "completed"', quoteRepositoryTestPath);
 
