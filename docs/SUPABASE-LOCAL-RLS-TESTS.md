@@ -30,6 +30,13 @@ anonymous base-table catalogue reads are denied while the trusted
 `get_public_catalogue` read surface still returns DB-backed rows for the active
 workspace.
 
+The production-shaped upgrade path applies the repository chain through
+`20260721090000_preproduction_security_remediation.sql`, models both direct
+role grants and inherited `PUBLIC EXECUTE`, and then applies
+`20260721183000_public_security_definer_privilege_hardening.sql`. The final
+catalog is compared with the exact reviewed contract in
+`scripts/security-definer-privilege-contract.cjs`.
+
 ## Run
 
 From the repo root:
@@ -118,6 +125,13 @@ The local RLS test command proves:
 - Phase 1M-A includes the direct anonymous cross-workspace denial tests and the
   runtime proof that trusted server-side workspace configuration still returns
   DB-backed catalogue rows through the RPC.
+- Every final public-schema `SECURITY DEFINER` signature is enumerated; `anon`
+  execution outside the six-function allowlist fails, including inherited
+  `PUBLIC EXECUTE` paths.
+- Authenticated admin RPCs retain exact app-required grants and workspace
+  checks, while no public-schema definer retains `service_role` execution.
+- RLS and Storage helpers execute from the non-exposed `private` schema and
+  dependent policies and admin-access triggers remain operational.
 
 ## Safety Notes
 

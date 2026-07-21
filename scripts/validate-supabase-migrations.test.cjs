@@ -4,6 +4,14 @@ const os = require('node:os');
 const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 const test = require('node:test');
+const {
+  anonymousPublicSecurityDefinerAllowlist,
+  authenticatedPublicSecurityDefinerAllowlist,
+  finalPublicSecurityDefinerSignatures,
+  preMigrationPublicSecurityDefinerSignatures,
+  privatePolicyHelperGrants,
+  serviceRolePublicSecurityDefinerAllowlist,
+} = require('./security-definer-privilege-contract.cjs');
 
 const repoRoot = path.resolve(__dirname, '..');
 const validatorPath = path.join(repoRoot, 'scripts', 'validate-supabase-migrations.cjs');
@@ -116,6 +124,35 @@ function readRealMigration(fileName) {
 
 function normalizeSql(sql) {
   return sql.replace(/\s+/g, ' ').trim().toLowerCase();
+}
+
+function normalizeFunctionSignature(signature) {
+  return signature.replace(/\s+/g, '').toLowerCase();
+}
+
+function functionAclStatements(sql, action) {
+  const direction = action === 'grant' ? 'to' : 'from';
+  const pattern = new RegExp(
+    `${action}\\s+execute\\s+on\\s+function\\s+([a-z0-9_.]+\\s*\\([^;]*?\\))\\s+${direction}\\s+([^;]+);`,
+    'gi',
+  );
+  const statements = new Map();
+
+  for (const match of sql.matchAll(pattern)) {
+    const signature = normalizeFunctionSignature(match[1]);
+    const roles = match[2]
+      .split(',')
+      .map((role) => role.trim().toLowerCase())
+      .filter(Boolean);
+    const existing = statements.get(signature) ?? new Set();
+
+    for (const role of roles) {
+      existing.add(role);
+    }
+    statements.set(signature, existing);
+  }
+
+  return statements;
 }
 
 test('empty migration directory with no real SQL passes', () => {
@@ -301,7 +338,7 @@ test('real migration directory passes static validation', () => {
   const result = runValidator(realMigrationsDir);
 
   assert.equal(result.status, 0, result.stdout + result.stderr);
-  assert.match(result.stdout, /checked 32 migration SQL file\(s\)/);
+  assert.match(result.stdout, /checked 33 migration SQL file\(s\)/);
 });
 
 test('real base schema migration creates the planned MVP tables', () => {
@@ -414,7 +451,10 @@ test('real migrations add trusted active-workspace catalogue read surface', () =
     sql,
     /alter policy product_images_public_read_published_products on public\.product_images to anon, authenticated using \(false\);/,
   );
-  assert.doesNotMatch(sql, /execute\s+.*service_role/i);
+  assert.doesNotMatch(
+    sql,
+    /grant execute on function public\.[^;]+ to service_role;/i,
+  );
   assert.doesNotMatch(sql, /current_setting\('app\.catalogue_workspace_id/);
 });
 
@@ -688,7 +728,10 @@ test('real migrations add authenticated product-admin write policies without ser
     sql,
     /action in \([\s\S]*'category\.create'[\s\S]*'category\.update'[\s\S]*'category\.archive'[\s\S]*'product\.create'[\s\S]*'product\.update'[\s\S]*'product\.publish'[\s\S]*'product\.archive'[\s\S]*'productimage\.create'[\s\S]*'productimage\.update'[\s\S]*'productimage\.archive'[\s\S]*\)/,
   );
-  assert.doesNotMatch(sql, /service_role/i);
+  assert.doesNotMatch(
+    sql,
+    /grant execute on function public\.[^;]+ to service_role;/i,
+  );
   assert.doesNotMatch(
     sql,
     /grant\s+(insert|update|delete|all)\b[\s\S]*on public\.(categories|products|product_images) to anon;/,
@@ -1925,6 +1968,117 @@ test('preproduction remediation uses production-shaped pgcrypto schema qualifica
   );
   assert.doesNotMatch(sql, /public\.digest\(/);
   assert.doesNotMatch(sql, /public\.hmac\(/);
+});
+
+test('forward privilege hardening uses exact signatures and explicit role allowlists', () => {
+  const migrationFileName =
+    '20260721183000_public_security_definer_privilege_hardening.sql';
+  const migration = readRealMigration(migrationFileName);
+  const sql = normalizeSql(migration);
+  const revokes = functionAclStatements(migration, 'revoke');
+  const grants = functionAclStatements(migration, 'grant');
+  const allRevokedRoles = ['anon', 'authenticated', 'public', 'service_role'];
+
+  for (const signature of preMigrationPublicSecurityDefinerSignatures) {
+    assert.deepEqual(
+      [...(revokes.get(signature) ?? [])].sort(),
+      allRevokedRoles,
+      `Missing exact all-role revoke for ${signature}.`,
+    );
+  }
+
+  const expectedPublicGrants = new Map();
+  for (const signature of anonymousPublicSecurityDefinerAllowlist) {
+    expectedPublicGrants.set(signature, new Set(['anon']));
+  }
+  for (const signature of authenticatedPublicSecurityDefinerAllowlist) {
+    const roles = expectedPublicGrants.get(signature) ?? new Set();
+    roles.add('authenticated');
+    expectedPublicGrants.set(signature, roles);
+  }
+  for (const signature of serviceRolePublicSecurityDefinerAllowlist) {
+    const roles = expectedPublicGrants.get(signature) ?? new Set();
+    roles.add('service_role');
+    expectedPublicGrants.set(signature, roles);
+  }
+
+  for (const signature of finalPublicSecurityDefinerSignatures) {
+    assert.deepEqual(
+      [...(grants.get(signature) ?? [])].sort(),
+      [...(expectedPublicGrants.get(signature) ?? [])].sort(),
+      `Unexpected public-schema grant set for ${signature}.`,
+    );
+  }
+
+  const grantedPublicSignatures = [...grants.keys()]
+    .filter((signature) => signature.startsWith('public.'))
+    .sort();
+  assert.deepEqual(
+    grantedPublicSignatures,
+    [...expectedPublicGrants.keys()].sort(),
+    'The migration must not grant an unreviewed public function signature.',
+  );
+
+  for (const [role, signatures] of Object.entries(privatePolicyHelperGrants)) {
+    for (const signature of signatures) {
+      assert.deepEqual(
+        [...(grants.get(signature) ?? [])].sort(),
+        [role],
+        `Missing exact private policy-helper grant for ${signature}.`,
+      );
+      assert.deepEqual(
+        [...(revokes.get(signature) ?? [])].sort(),
+        allRevokedRoles,
+        `Missing exact private policy-helper revoke for ${signature}.`,
+      );
+    }
+  }
+
+  for (const signature of [
+    'public.is_public_website_quote_request(uuid,uuid)',
+    'public.is_workspace_admin_access_member(uuid)',
+    'public.is_workspace_member(uuid)',
+    'public.is_workspace_product_manager(uuid)',
+    'public.is_workspace_quote_manager(uuid)',
+    'public.current_quote_admin_user_id(uuid)',
+    'public.is_listing_media_product_admin_object(text,text)',
+    'public.is_hero_media_admin_object(text,text)',
+  ]) {
+    assert.ok(
+      sql.includes(`alter function ${signature} set schema private;`),
+      `Missing OID-preserving private-schema move for ${signature}.`,
+    );
+  }
+
+  assert.match(
+    sql,
+    /alter function public\.normalize_admin_access_email\(text\) set search_path = pg_catalog;/,
+  );
+  assert.deepEqual(
+    [...(revokes.get('public.normalize_admin_access_email(text)') ?? [])].sort(),
+    allRevokedRoles,
+  );
+  assert.match(
+    sql,
+    /alter default privileges revoke execute on functions from public, anon, authenticated, service_role;/,
+    'Future functions require a global default EXECUTE revoke; a schema-scoped revoke cannot remove PostgreSQL\'s global PUBLIC default.',
+  );
+  assert.match(
+    sql,
+    /alter default privileges in schema public revoke execute on functions from public, anon, authenticated, service_role;/,
+  );
+  assert.match(
+    sql,
+    /alter default privileges in schema private revoke execute on functions from public, anon, authenticated, service_role;/,
+  );
+  assert.match(
+    sql,
+    /revoke execute on all functions in schema private from public, anon, authenticated, service_role;/,
+  );
+  assert.doesNotMatch(
+    sql,
+    /grant execute on function public\.[^;]+ to (?:public|service_role)/,
+  );
 });
 
 test('real migrations add workspace-scoped homepage hero content with protected admin writes', () => {

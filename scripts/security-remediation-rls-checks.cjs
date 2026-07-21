@@ -1,4 +1,26 @@
 const assert = require('node:assert/strict');
+const {
+  anonymousPublicSecurityDefinerAllowlist,
+  authenticatedPublicSecurityDefinerAllowlist,
+  finalPrivateFunctionSignatures,
+  finalPublicSecurityDefinerSignatures,
+  privatePolicyHelperGrants,
+  serviceRolePublicSecurityDefinerAllowlist,
+} = require('./security-definer-privilege-contract.cjs');
+
+function callWithTypedNulls(signature) {
+  const openParen = signature.indexOf('(');
+  const functionName = signature.slice(0, openParen);
+  const argumentTypes = signature.slice(openParen + 1, -1);
+  const argumentsSql = argumentTypes
+    ? argumentTypes.split(',').map((type) => `null::${type}`).join(', ')
+    : '';
+
+  return {
+    functionName: functionName.split('.').at(-1),
+    sql: `select ${functionName}(${argumentsSql})`,
+  };
+}
 
 function registerSecurityRemediationRlsChecks({
   check,
@@ -120,6 +142,77 @@ function registerSecurityRemediationRlsChecks({
       'The search-index fallback digest must resolve pgcrypto from extensions.',
     );
   });
+
+  check('future public and private functions inherit deny-by-default execution', () => {
+    const probes = [
+      'public.security_default_acl_probe',
+      'private.security_default_acl_probe',
+    ];
+
+    for (const probe of probes) {
+      psql(`create function ${probe}() returns text language sql as
+        'select ''owner-managed''::text'`);
+      const signature = `${probe}()`;
+
+      assert.equal(
+        psql(`
+          select exists (
+            select 1
+            from pg_catalog.pg_proc proc
+            cross join lateral pg_catalog.aclexplode(
+              coalesce(proc.proacl, pg_catalog.acldefault('f', proc.proowner))
+            ) acl
+            where proc.oid = '${signature}'::regprocedure
+              and acl.grantee = 0
+              and acl.privilege_type = 'EXECUTE'
+          )::text
+        `),
+        'false',
+        `PUBLIC must not grant EXECUTE on future function ${signature}.`,
+      );
+
+      for (const role of ['anon', 'authenticated', 'service_role']) {
+        assert.equal(
+          psql(`select has_function_privilege(
+            '${role}', '${signature}', 'EXECUTE'
+          )::text`),
+          'false',
+          `${role} must not inherit EXECUTE on future function ${signature}.`,
+        );
+
+        const result = psql(
+          `begin; set local role ${role}; select ${probe}(); rollback;`,
+          { check: false },
+        );
+        assert.notEqual(
+          result.status,
+          0,
+          `${role} unexpectedly executed future function ${signature}.`,
+        );
+        assert.match(
+          `${result.stdout}\n${result.stderr}`,
+          /permission denied/i,
+          `${role} failed for an unexpected reason on ${signature}.`,
+        );
+      }
+
+      const managedProbe = `${probe}_managed`;
+      psql(`comment on function ${signature} is 'owner-managed probe'`);
+      psql(`alter function ${signature} rename to security_default_acl_probe_managed`);
+      assert.equal(
+        psql(`select (to_regprocedure('${managedProbe}()') is not null)::text`),
+        'true',
+        `The owner must be able to manage ${signature}.`,
+      );
+      psql(`drop function ${managedProbe}()`);
+      assert.equal(
+        psql(`select (to_regprocedure('${managedProbe}()') is null)::text`),
+        'true',
+        `The owner must be able to remove ${managedProbe}().`,
+      );
+    }
+  });
+
 
   function submitSql(
     {
@@ -378,16 +471,16 @@ function registerSecurityRemediationRlsChecks({
     assert.equal(psql(`select status from public.memberships where workspace_id = '${ids.workspaceA}' and admin_user_id = '${sharedAdmin}'`), 'suspended');
     assert.equal(psql(`select status from public.admin_access where workspace_id = '${ids.workspaceB}' and linked_admin_user_id = '${sharedAdmin}'`), 'active');
     assert.equal(psql(`select status from public.memberships where workspace_id = '${ids.workspaceB}' and admin_user_id = '${sharedAdmin}'`), 'active');
-    assert.equal(scalarAs('authenticated', sharedAuth, `select public.is_workspace_product_manager('${ids.workspaceB}')::text`), 'true');
-    assert.equal(scalarAs('authenticated', sharedAuth, `select public.is_workspace_quote_manager('${ids.workspaceB}')::text`), 'true');
+    assert.equal(scalarAs('authenticated', sharedAuth, `select private.is_workspace_product_manager('${ids.workspaceB}')::text`), 'true');
+    assert.equal(scalarAs('authenticated', sharedAuth, `select private.is_workspace_quote_manager('${ids.workspaceB}')::text`), 'true');
 
     queryCommittedAs('authenticated', ids.authMemberA, `select public.execute_admin_access_write('${ids.workspaceA}', 'add_admin', '${sharedEmail}')`);
     queryCommittedAs('authenticated', ids.authMemberA, `select public.execute_admin_access_write('${ids.workspaceA}', 'remove_admin', '${sharedEmail}')`);
     queryCommittedAs('authenticated', ids.authMemberA, `select public.execute_admin_access_write('${ids.workspaceA}', 'remove_admin', '${sharedEmail}')`);
     assert.equal(psql(`select status from public.admin_users where id = '${sharedAdmin}'`), 'active');
     assert.equal(psql(`select status from public.memberships where workspace_id = '${ids.workspaceB}' and admin_user_id = '${sharedAdmin}'`), 'active');
-    assert.equal(scalarAs('authenticated', sharedAuth, `select public.is_workspace_product_manager('${ids.workspaceB}')::text`), 'true');
-    assert.equal(scalarAs('authenticated', sharedAuth, `select public.is_workspace_quote_manager('${ids.workspaceB}')::text`), 'true');
+    assert.equal(scalarAs('authenticated', sharedAuth, `select private.is_workspace_product_manager('${ids.workspaceB}')::text`), 'true');
+    assert.equal(scalarAs('authenticated', sharedAuth, `select private.is_workspace_quote_manager('${ids.workspaceB}')::text`), 'true');
 
     assert.match(
       queryCommittedAs('authenticated', ids.authMemberA, `select public.execute_admin_access_write('${ids.workspaceA}', 'add_admin', '${sharedEmail}')::text`),
@@ -400,57 +493,233 @@ function registerSecurityRemediationRlsChecks({
     );
   });
 
-  check('forward remediation removes anonymous admin access execution', () => {
-    const signature = 'public.execute_admin_access_write(uuid,text,text)';
+  check('public SECURITY DEFINER privileges match the reviewed exact-signature contract', () => {
+    const catalogueSignatures = psql(`
+      select 'public.' || proc.oid::pg_catalog.regprocedure::text
+      from pg_catalog.pg_proc proc
+      join pg_catalog.pg_namespace namespace
+        on namespace.oid = proc.pronamespace
+      where namespace.nspname = 'public'
+        and proc.prosecdef
+      order by 1
+    `)
+      .split(/\r?\n/)
+      .filter(Boolean);
+
+    assert.deepEqual(
+      catalogueSignatures,
+      [...finalPublicSecurityDefinerSignatures].sort(),
+      'Every final public SECURITY DEFINER signature must be reviewed explicitly.',
+    );
+
+    const anonAllowlist = new Set(anonymousPublicSecurityDefinerAllowlist);
+    const authenticatedAllowlist = new Set(
+      authenticatedPublicSecurityDefinerAllowlist,
+    );
+    const serviceAllowlist = new Set(
+      serviceRolePublicSecurityDefinerAllowlist,
+    );
+
+    for (const signature of catalogueSignatures) {
+      assert.equal(
+        psql(`select has_function_privilege(
+          'anon', '${signature}', 'EXECUTE'
+        )::text`),
+        String(anonAllowlist.has(signature)),
+        `Unexpected anon EXECUTE state for ${signature}.`,
+      );
+      assert.equal(
+        psql(`select has_function_privilege(
+          'authenticated', '${signature}', 'EXECUTE'
+        )::text`),
+        String(authenticatedAllowlist.has(signature)),
+        `Unexpected authenticated EXECUTE state for ${signature}.`,
+      );
+      assert.equal(
+        psql(`select has_function_privilege(
+          'service_role', '${signature}', 'EXECUTE'
+        )::text`),
+        String(serviceAllowlist.has(signature)),
+        `Unexpected service_role EXECUTE state for ${signature}.`,
+      );
+      assert.equal(
+        psql(`
+          select exists (
+            select 1
+            from pg_catalog.pg_proc proc
+            cross join lateral pg_catalog.aclexplode(
+              coalesce(proc.proacl, pg_catalog.acldefault('f', proc.proowner))
+            ) acl
+            where proc.oid = '${signature}'::regprocedure
+              and acl.grantee = 0
+              and acl.privilege_type = 'EXECUTE'
+          )::text
+        `),
+        'false',
+        `PUBLIC must not provide inherited EXECUTE for ${signature}.`,
+      );
+    }
+
+    for (const signature of catalogueSignatures.filter(
+      (candidate) => !anonAllowlist.has(candidate),
+    )) {
+      const invocation = callWithTypedNulls(signature);
+      statementFailsAs(
+        'anon',
+        null,
+        invocation.sql,
+        new RegExp(`permission denied for function ${invocation.functionName}`, 'i'),
+      );
+    }
+  });
+
+  check('policy-only helpers stay operational in the non-exposed private schema', () => {
+    assert.equal(
+      psql(`select has_schema_privilege('anon', 'private', 'USAGE')::text`),
+      'true',
+    );
+    assert.equal(
+      psql(`select has_schema_privilege('authenticated', 'private', 'USAGE')::text`),
+      'true',
+    );
+    assert.equal(
+      psql(`select has_schema_privilege('service_role', 'private', 'USAGE')::text`),
+      'false',
+    );
+
+    const catalogueSignatures = psql(`
+      select proc.oid::pg_catalog.regprocedure::text
+      from pg_catalog.pg_proc proc
+      join pg_catalog.pg_namespace namespace
+        on namespace.oid = proc.pronamespace
+      where namespace.nspname = 'private'
+      order by 1
+    `)
+      .split(/\r?\n/)
+      .filter(Boolean);
+
+    assert.deepEqual(
+      catalogueSignatures,
+      [...finalPrivateFunctionSignatures].sort(),
+      'Every final private function must be enumerated in the reviewed contract.',
+    );
+
+    const anonAllowlist = new Set(privatePolicyHelperGrants.anon);
+    const authenticatedAllowlist = new Set(
+      privatePolicyHelperGrants.authenticated,
+    );
+
+    for (const signature of catalogueSignatures) {
+      for (const [role, allowlist] of [
+        ['anon', anonAllowlist],
+        ['authenticated', authenticatedAllowlist],
+      ]) {
+        assert.equal(
+          psql(`select has_function_privilege(
+            '${role}', '${signature}', 'EXECUTE'
+          )::text`),
+          String(allowlist.has(signature)),
+          `Unexpected ${role} EXECUTE state for private function ${signature}.`,
+        );
+      }
+
+      assert.equal(
+        psql(`select has_function_privilege(
+          'service_role', '${signature}', 'EXECUTE'
+        )::text`),
+        'false',
+        `service_role must not execute private function ${signature}.`,
+      );
+      assert.equal(
+        psql(`
+          select exists (
+            select 1
+            from pg_catalog.pg_proc proc
+            cross join lateral pg_catalog.aclexplode(
+              coalesce(proc.proacl, pg_catalog.acldefault('f', proc.proowner))
+            ) acl
+            where proc.oid = '${signature}'::regprocedure
+              and acl.grantee = 0
+              and acl.privilege_type = 'EXECUTE'
+          )::text
+        `),
+        'false',
+        `PUBLIC must not provide inherited EXECUTE for ${signature}.`,
+      );
+    }
 
     assert.equal(
-      psql(`select has_function_privilege('anon', '${signature}', 'EXECUTE')::text`),
+      scalarAs(
+        'authenticated',
+        ids.authMemberA,
+        `select private.is_workspace_member('${ids.workspaceA}')::text`,
+      ),
+      'true',
+    );
+    assert.equal(
+      scalarAs(
+        'authenticated',
+        ids.authMemberA,
+        `select private.is_workspace_member('${ids.workspaceB}')::text`,
+      ),
       'false',
-      'anon must not execute the owner-only admin access write function.',
     );
     assert.equal(
-      psql(`select has_function_privilege(
-        'authenticated', '${signature}', 'EXECUTE'
-      )::text`),
-      'true',
-      'authenticated must retain the deliberate admin access write grant.',
-    );
-    assert.equal(
-      psql(`select has_function_privilege(
-        'service_role', '${signature}', 'EXECUTE'
-      )::text`),
-      'true',
-      'The forward migration must not change the existing service_role grant.',
+      scalarAs(
+        'authenticated',
+        ids.authViewerA,
+        `select private.is_workspace_product_manager('${ids.workspaceA}')::text`,
+      ),
+      'false',
     );
     assert.equal(
       psql(`
-        select (not exists (
-          select 1
-          from pg_catalog.pg_proc proc
-          cross join lateral pg_catalog.aclexplode(
-            coalesce(proc.proacl, pg_catalog.acldefault('f', proc.proowner))
-          ) acl
-          where proc.oid = '${signature}'::regprocedure
-            and acl.grantee = 0
-            and acl.privilege_type = 'EXECUTE'
-        ))::text
+        select count(*)::text
+        from pg_catalog.pg_policies
+        where schemaname in ('public', 'storage')
+          and (
+            coalesce(qual, '') like '%private.%'
+            or coalesce(with_check, '') like '%private.%'
+          )
       `),
-      'true',
-      'PUBLIC must not provide inherited anonymous execution.',
+      '25',
+      'All policy dependencies must follow the moved helper OIDs.',
     );
     assert.equal(
-      psql(`select prosecdef::text from pg_catalog.pg_proc
-        where oid = '${signature}'::regprocedure`),
-      'true',
-      'The owner-only admin access write function must remain SECURITY DEFINER.',
+      psql(`
+        select count(*)::text
+        from pg_catalog.pg_trigger trigger
+        join pg_catalog.pg_proc proc on proc.oid = trigger.tgfoid
+        join pg_catalog.pg_namespace namespace
+          on namespace.oid = proc.pronamespace
+        where not trigger.tgisinternal
+          and namespace.nspname = 'public'
+          and proc.prosecdef
+      `),
+      '2',
+      'Both admin_access trigger functions must remain attached.',
     );
-    statementFailsAs(
-      'anon',
-      null,
-      `select public.execute_admin_access_write(
-        '${ids.workspaceA}', 'add_admin', 'anonymous-denied@example.test'
-      )`,
-      /permission denied for function execute_admin_access_write/i,
+    assert.equal(
+      psql(`
+        select count(*)::text
+        from pg_catalog.pg_event_trigger event_trigger
+        join pg_catalog.pg_proc proc on proc.oid = event_trigger.evtfoid
+        join pg_catalog.pg_namespace namespace
+          on namespace.oid = proc.pronamespace
+        where namespace.nspname = 'public'
+          and proc.prosecdef
+      `),
+      '0',
+      'The repository defines no public SECURITY DEFINER event-trigger functions.',
+    );
+    assert.equal(
+      psql(`
+        select array_to_string(proconfig, ',')
+        from pg_catalog.pg_proc
+        where oid = 'public.normalize_admin_access_email(text)'::regprocedure
+      `),
+      'search_path=pg_catalog',
+      'normalize_admin_access_email must use only pg_catalog resolution.',
     );
   });
 
