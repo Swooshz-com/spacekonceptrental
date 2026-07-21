@@ -15,7 +15,11 @@ exact-signature inventory, anonymous allowlist, authenticated RPC set, private
 policy-helper moves, and regression sources are maintained in
 `docs/SUPABASE-SECURITY-DEFINER-PRIVILEGE-INVENTORY.md`.
 
-## Required Read-Only Pre-Migration Check
+`20260721190000_platform_rls_auto_enable_privilege_hardening.sql` separately
+removes API/client execution from the optional Supabase-managed
+`public.rls_auto_enable()` event-trigger helper without changing its operation.
+
+## Required Read-Only Pre-Migration Checks
 
 Before applying the privilege-hardening migration to production, verify
 read-only in the deployed PostgREST/Supabase API configuration that `private`
@@ -28,6 +32,26 @@ migration is applied. Do not change PostgREST configuration as part of this
 check. If `private` is exposed or the setting cannot be verified read-only,
 hold the migration and production launch.
 
+Also generate a fresh, read-only live function catalog with
+`scripts/production-security-definer-catalog.sql`. The query enumerates every
+live public `SECURITY DEFINER` function from `pg_catalog`; it does not filter to
+the repository inventory and does not read application or customer data. Save
+its JSON output to a temporary location outside the repository, then pass that
+file to the launch gate:
+
+```powershell
+$catalogPath = Join-Path $env:TEMP 'skr-public-security-definer-catalog.json'
+psql "<approved read-only production connection>" -X -q -t -A -f scripts/production-security-definer-catalog.sql | Set-Content -LiteralPath $catalogPath -Encoding utf8
+npm run validate:production-security-readiness -- --launch --public-security-definer-catalog $catalogPath
+```
+
+The catalog contains function identity/shape, event-trigger metadata, and
+execution booleans only. Do not commit it. The gate fails when the catalog is
+missing in launch mode, when reviewed functions are missing or have changed
+privileges, or when any unreviewed live function is executable by `PUBLIC`,
+`anon`, `authenticated`, or `service_role`. An unreviewed deny-only function is
+reported as a warning for follow-up inventory review.
+
 ## Command
 
 Local/dev informational mode:
@@ -39,7 +63,7 @@ npm run validate:production-security-readiness
 Launch enforcement mode:
 
 ```powershell
-npm run validate:production-security-readiness -- --launch
+npm run validate:production-security-readiness -- --launch --public-security-definer-catalog $catalogPath
 ```
 
 Normal CI and normal local release validation do not require real production
@@ -50,8 +74,8 @@ server-side env has been configured there.
 
 | Mode | How to run | Missing/invalid launch env |
 | --- | --- | --- |
-| Local/dev | No mode env, or mode set to local | Reports warnings and exits success if static checks pass. |
-| Launch | `npm run validate:production-security-readiness -- --launch` | Reports env names/reasons only and exits non-zero. |
+| Local/dev | No mode env, or mode set to local | Reports missing launch env and missing live catalog as warnings; exits success if static checks pass. |
+| Launch | `npm run validate:production-security-readiness -- --launch --public-security-definer-catalog $catalogPath` | Enforces env, static checks, complete live function catalog, and exact reviewed privilege contracts. |
 
 Do not infer launch readiness from random hosting env. Use the explicit
 launch mode flag, or set `SKR_PRODUCTION_READINESS_MODE` to launch only for the
@@ -126,6 +150,12 @@ The command also checks tracked files for narrow launch blockers:
   client/public runtime files
 - obvious committed secret token patterns
 - Delivery Log documentation that stops describing technical metadata only
+
+The launch command also validates the full read-only live public `SECURITY
+DEFINER` catalog. It preserves the six intentional anonymous application RPCs
+and ten intentional authenticated application RPCs while rejecting any other
+API/client execution, including all execution of `public.rls_auto_enable()` by
+`PUBLIC`, `anon`, `authenticated`, or `service_role`.
 
 Docs, tests, and env contract files may mention env names for review and
 validation purposes. The command reports only file paths, env names, and safe

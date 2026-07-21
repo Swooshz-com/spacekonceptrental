@@ -1,13 +1,30 @@
 # Supabase SECURITY DEFINER Privilege Inventory
 
-This is the repository-derived review contract for every function that is in
-the `public` schema and `SECURITY DEFINER` after migration
-`20260721090000_preproduction_security_remediation.sql`. The forward repair is
-`20260721183000_public_security_definer_privilege_hardening.sql`.
+This is the review contract for `public` schema `SECURITY DEFINER` functions.
+Repository-owned application functions are hardened by
+`20260721183000_public_security_definer_privilege_hardening.sql`. The optional
+Supabase/platform-managed event-trigger helper is hardened, when present, by
+`20260721190000_platform_rls_auto_enable_privilege_hardening.sql`.
 
-The inventory was derived from the ordered migration chain, website RPC call
-sites, final `pg_policies`, trigger catalogs, and the disposable local
-PostgreSQL harness. It does not record or rely on production queries.
+The application inventory was derived from the ordered migration chain,
+website RPC call sites, final `pg_policies`, trigger catalogs, and the
+disposable local PostgreSQL harness. Platform-managed functions are a separate
+class because they can exist only in a managed environment and are not created
+by repository migrations. A live preflight must therefore enumerate the whole
+live `public` `SECURITY DEFINER` catalog instead of treating the repository
+inventory as complete.
+
+## Ownership Classes
+
+- **Repository-owned application functions:** created by the ordered migration
+  chain, reviewed by exact signature, and granted only to the six anonymous or
+  ten authenticated application RPC allowlists below.
+- **Supabase/platform-managed functions:** may exist only in managed
+  environments. They require an explicit reviewed contract before any
+  API/client execution is allowed.
+- **Unreviewed live functions:** permitted by the preflight only while
+  deny-only for `PUBLIC`, `anon`, `authenticated`, and `service_role`. Any
+  effective execution for one of those roles fails the gate.
 
 ## Role Contract
 
@@ -25,6 +42,10 @@ session-bound website call sites shown below. No public-schema `SECURITY
 DEFINER` function requires `service_role` execution: current server runtime
 uses either the server-only anon client for public flows or the session-bound
 authenticated client for admin flows. `PUBLIC` receives no execution grant.
+
+The intentional application access remains exactly six anonymous public RPCs
+and ten authenticated public RPCs. These grants must not be removed merely to
+silence a generic advisor warning.
 
 The "prior SQL" column describes the explicit grant/revoke intent in the
 ordered repository migrations before the forward repair. Supabase production
@@ -70,9 +91,22 @@ before applying the reviewed allowlists.
 | `public.submit_public_quote_request(uuid,uuid,text,text,text,text,text,date,text,text,text,text,jsonb,uuid,text,bigint,text)` | Server-only anon call in `website/lib/quote/quote-repository.ts` | Admission proof, atomic quote/items/outbox persistence | Exact revoke; grant `anon` | `anon` only |
 | `public.touch_admin_access_updated_at()` | Trigger only | `admin_access_touch_updated_at` | Revoke `PUBLIC`; no client grant | Owner-only; trigger remains attached |
 
-There are no repository-defined public `SECURITY DEFINER` event-trigger
+There are no repository-owned public `SECURITY DEFINER` event-trigger
 functions. The two public trigger functions above are ordinary row-trigger
 functions and remain owner-executable through their attached triggers.
+
+## Supabase/Platform-Managed Event-Trigger Contract
+
+| Exact signature | Ownership class | Operational dependency | Final execution contract |
+| --- | --- | --- | --- |
+| `public.rls_auto_enable()` | Supabase/platform-managed | `ensure_rls` fires on `ddl_command_end` for `CREATE TABLE`, `CREATE TABLE AS`, and `SELECT INTO` and automatically enables RLS on new `public` tables | Deny `PUBLIC`, `anon`, `authenticated`, and `service_role`; retain owner-managed event-trigger operation |
+
+The exact preserved shape is owner `postgres`, return type `event_trigger`,
+language `plpgsql`, `SECURITY DEFINER`, and `search_path=pg_catalog`.
+`ensure_rls` must remain present and normally enabled (`O`) with its event and
+tags unchanged. The forward migration conditionally revokes only `EXECUTE` on
+the exact zero-argument signature. It does not create, replace, alter, move, or
+drop the function or event trigger and safely no-ops where the helper is absent.
 
 ## Non-Exposed Policy Helpers
 
@@ -143,9 +177,17 @@ production configuration.
   every pre-repair signature and rejects unreviewed grants.
 - `scripts/test-supabase-rls.cjs` applies the chain through
   `20260721090000`, models direct and inherited production-shaped grants,
-  applies the forward migration, creates deny-by-default probes in `public`
-  and `private`, and then runs the complete RLS/schema suite.
+  first proves the platform migration no-ops when the helper is absent, then
+  models the production helper, event trigger, and broad execution grants,
+  applies both forward migrations, proves the helper/event-trigger fingerprint
+  is unchanged, creates and removes an auto-RLS table probe, creates
+  deny-by-default probes in `public` and `private`, and runs the complete
+  RLS/schema suite.
 - `scripts/security-remediation-rls-checks.cjs` enumerates the final catalog,
   invokes every non-allowlisted public definer as `anon`, enumerates every
   private function and its effective role privileges, checks private policy
   dependencies, and preserves the admission/handoff/admin behavior tests.
+- `scripts/production-security-definer-catalog.sql` is the read-only live
+  preflight enumerator. It has no exact-signature filter and returns every live
+  public `SECURITY DEFINER` function with safe metadata and effective execution
+  booleans for gate validation.

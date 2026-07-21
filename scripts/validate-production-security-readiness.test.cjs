@@ -4,12 +4,82 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
+const {
+  anonymousPublicSecurityDefinerAllowlist,
+  authenticatedPublicSecurityDefinerAllowlist,
+  finalPublicSecurityDefinerSignatures,
+} = require('./security-definer-privilege-contract.cjs');
 
 const repoRoot = path.resolve(__dirname, '..');
 const scriptPath = path.join(
   repoRoot,
   'scripts',
   'validate-production-security-readiness.cjs',
+);
+const catalogQueryPath = path.join(
+  repoRoot,
+  'scripts',
+  'production-security-definer-catalog.sql',
+);
+
+function reviewedPublicSecurityDefinerCatalog() {
+  const anonAllowlist = new Set(anonymousPublicSecurityDefinerAllowlist);
+  const authenticatedAllowlist = new Set(
+    authenticatedPublicSecurityDefinerAllowlist,
+  );
+  const applicationRows = finalPublicSecurityDefinerSignatures.map(
+    (signature) => ({
+      signature,
+      owner: 'postgres',
+      return_type: 'text',
+      language: 'sql',
+      security_definer: true,
+      search_path: 'search_path=',
+      event_trigger_name: null,
+      event: null,
+      enabled: null,
+      tags: [],
+      public_execute: false,
+      anon_execute: anonAllowlist.has(signature),
+      authenticated_execute: authenticatedAllowlist.has(signature),
+      service_role_execute: false,
+      postgres_execute: true,
+    }),
+  );
+
+  return [
+    ...applicationRows,
+    {
+      signature: 'public.rls_auto_enable()',
+      owner: 'postgres',
+      return_type: 'event_trigger',
+      language: 'plpgsql',
+      security_definer: true,
+      search_path: 'search_path=pg_catalog',
+      event_trigger_name: 'ensure_rls',
+      event: 'ddl_command_end',
+      enabled: 'O',
+      tags: ['CREATE TABLE', 'CREATE TABLE AS', 'SELECT INTO'],
+      public_execute: false,
+      anon_execute: false,
+      authenticated_execute: false,
+      service_role_execute: false,
+      postgres_execute: true,
+    },
+  ];
+}
+
+function writeCatalogFixture(catalog) {
+  const tempRoot = fs.mkdtempSync(
+    path.join(os.tmpdir(), 'skr-security-definer-catalog-'),
+  );
+  const filePath = path.join(tempRoot, 'catalog.json');
+  fs.writeFileSync(filePath, `${JSON.stringify(catalog)}\n`, 'utf8');
+  return filePath;
+}
+
+const reviewedCatalogPath = writeCatalogFixture(
+  reviewedPublicSecurityDefinerCatalog(),
 );
 
 function baseLaunchEnv(overrides = {}) {
@@ -33,8 +103,29 @@ function baseLaunchEnv(overrides = {}) {
   };
 }
 
-function runReadiness(env = {}, args = []) {
-  return spawnSync(process.execPath, [scriptPath, ...args], {
+function runReadiness(env = {}, args = [], options = {}) {
+  const effectiveArgs = [...args];
+  const launchRequested =
+    env.SKR_PRODUCTION_READINESS_MODE === 'launch' ||
+    effectiveArgs.includes('--launch') ||
+    effectiveArgs.some(
+      (arg, index) => arg === '--mode' && effectiveArgs[index + 1] === 'launch',
+    );
+  const hasCatalogArg = effectiveArgs.includes(
+    '--public-security-definer-catalog',
+  );
+
+  if (
+    !hasCatalogArg &&
+    (options.supplyCatalog ?? launchRequested)
+  ) {
+    effectiveArgs.push(
+      '--public-security-definer-catalog',
+      reviewedCatalogPath,
+    );
+  }
+
+  return spawnSync(process.execPath, [scriptPath, ...effectiveArgs], {
     cwd: repoRoot,
     encoding: 'utf8',
     env: {
@@ -87,6 +178,84 @@ test('launch mode passes with safe placeholder env values', () => {
   assert.match(output, /launch mode/i);
   assert.match(output, /configured/i);
   assert.match(output, /n8n enquiry handoff env is server-only/i);
+  assert.match(output, /6 anon and 10 authenticated/i);
+});
+
+test('launch mode requires a read-only live public SECURITY DEFINER catalog', () => {
+  const result = runReadiness(baseLaunchEnv(), [], { supplyCatalog: false });
+  const output = combinedOutput(result);
+
+  assert.notEqual(result.status, 0);
+  assert.match(output, /PUBLIC_SECURITY_DEFINER_CATALOG/);
+  assert.match(output, /not supplied/i);
+});
+
+test('live catalog fails for any unreviewed API-executable SECURITY DEFINER function', () => {
+  const catalog = reviewedPublicSecurityDefinerCatalog();
+  catalog.push({
+    ...catalog[0],
+    signature: 'public.unreviewed_platform_helper()',
+    anon_execute: true,
+  });
+  const catalogPath = writeCatalogFixture(catalog);
+  const result = runReadiness(baseLaunchEnv(), [
+    '--public-security-definer-catalog',
+    catalogPath,
+  ]);
+  const output = combinedOutput(result);
+
+  assert.notEqual(result.status, 0);
+  assert.match(output, /public\.unreviewed_platform_helper\(\)/);
+  assert.match(output, /anon EXECUTE is not reviewed/i);
+});
+
+test('live catalog permits an unreviewed function only when it is deny-only', () => {
+  const catalog = reviewedPublicSecurityDefinerCatalog();
+  catalog.push({
+    ...catalog[0],
+    signature: 'public.unreviewed_deny_only_helper()',
+    anon_execute: false,
+    authenticated_execute: false,
+  });
+  const catalogPath = writeCatalogFixture(catalog);
+  const result = runReadiness(baseLaunchEnv(), [
+    '--public-security-definer-catalog',
+    catalogPath,
+  ]);
+  const output = combinedOutput(result);
+
+  assert.equal(result.status, 0, output);
+  assert.match(output, /unreviewed live function is deny-only/i);
+});
+
+test('live catalog enforces the exact deny-only platform helper contract', () => {
+  const catalog = reviewedPublicSecurityDefinerCatalog();
+  const helper = catalog.find(
+    (row) => row.signature === 'public.rls_auto_enable()',
+  );
+  helper.service_role_execute = true;
+  const catalogPath = writeCatalogFixture(catalog);
+  const result = runReadiness(baseLaunchEnv(), [
+    '--public-security-definer-catalog',
+    catalogPath,
+  ]);
+  const output = combinedOutput(result);
+
+  assert.notEqual(result.status, 0);
+  assert.match(output, /public\.rls_auto_enable\(\)/);
+  assert.match(output, /service_role EXECUTE is not reviewed/i);
+});
+
+test('read-only catalog query enumerates the complete live public SECURITY DEFINER catalog', () => {
+  const sql = fs.readFileSync(catalogQueryPath, 'utf8');
+
+  assert.match(sql, /from pg_catalog\.pg_proc proc/i);
+  assert.match(sql, /pg_catalog\.oidvectortypes\(proc\.proargtypes\)/i);
+  assert.match(sql, /where namespace\.nspname = 'public'\s+and proc\.prosecdef/i);
+  assert.match(sql, /pg_catalog\.has_function_privilege\('anon'/i);
+  assert.match(sql, /pg_catalog\.has_function_privilege\('authenticated'/i);
+  assert.match(sql, /pg_catalog\.has_function_privilege\('service_role'/i);
+  assert.doesNotMatch(sql, /rls_auto_enable|finalize_public_quote_handoff/i);
 });
 
 test('invalid HTTP admin origin fails in launch mode', () => {

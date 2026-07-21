@@ -8,6 +8,7 @@ const {
   anonymousPublicSecurityDefinerAllowlist,
   authenticatedPublicSecurityDefinerAllowlist,
   finalPublicSecurityDefinerSignatures,
+  platformManagedPublicSecurityDefinerSignatures,
   preMigrationPublicSecurityDefinerSignatures,
   privatePolicyHelperGrants,
   serviceRolePublicSecurityDefinerAllowlist,
@@ -338,7 +339,7 @@ test('real migration directory passes static validation', () => {
   const result = runValidator(realMigrationsDir);
 
   assert.equal(result.status, 0, result.stdout + result.stderr);
-  assert.match(result.stdout, /checked 33 migration SQL file\(s\)/);
+  assert.match(result.stdout, /checked 34 migration SQL file\(s\)/);
 });
 
 test('real base schema migration creates the planned MVP tables', () => {
@@ -2078,6 +2079,35 @@ test('forward privilege hardening uses exact signatures and explicit role allowl
   assert.doesNotMatch(
     sql,
     /grant execute on function public\.[^;]+ to (?:public|service_role)/,
+  );
+});
+
+test('platform auto-RLS helper hardening is conditional, exact-signature, and ACL-only', () => {
+  const migrationFileName =
+    '20260721190000_platform_rls_auto_enable_privilege_hardening.sql';
+  const migration = readRealMigration(migrationFileName);
+  const sql = normalizeSql(migration);
+  const [platformSignature] = platformManagedPublicSecurityDefinerSignatures;
+
+  assert.equal(platformSignature, 'public.rls_auto_enable()');
+  assert.match(
+    sql,
+    /if pg_catalog\.to_regprocedure\('public\.rls_auto_enable\(\)'\) is not null then/,
+  );
+  assert.match(
+    sql,
+    /execute 'revoke execute on function public\.rls_auto_enable\(\) from public, anon, authenticated, service_role';/,
+  );
+  assert.doesNotMatch(sql, /\bgrant\s+execute\b/);
+  assert.doesNotMatch(
+    sql,
+    /\b(?:create|alter|drop)\s+(?:or replace\s+)?function\b/,
+    'The ACL repair must not redefine, move, replace, or drop the helper.',
+  );
+  assert.doesNotMatch(
+    sql,
+    /\b(?:create|alter|drop)\s+event\s+trigger\b/,
+    'The ACL repair must not change the ensure_rls event-trigger definition.',
   );
 });
 
