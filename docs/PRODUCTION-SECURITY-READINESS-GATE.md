@@ -9,6 +9,12 @@ This gate does not deploy, connect Supabase Cloud, configure providers, send
 email, call n8n or email-provider APIs, call Pinecone, call HubSpot, mutate
 data, or approve public traffic.
 
+Database function execution is deny-by-default after
+`20260721183000_public_security_definer_privilege_hardening.sql`. The complete
+exact-signature inventory, anonymous allowlist, authenticated RPC set, private
+policy-helper moves, and regression sources are maintained in
+`docs/SUPABASE-SECURITY-DEFINER-PRIVILEGE-INVENTORY.md`.
+
 ## Command
 
 Local/dev informational mode:

@@ -16,9 +16,7 @@ const securityTestSupportPath = path.join(
   'test-supabase-security-support.sql',
 );
 const productionBaselineMigration =
-  '20260720090000_atomic_public_quote_submission.sql';
-const adminAccessWriteSignature =
-  'public.execute_admin_access_write(uuid,text,text)';
+  '20260721090000_preproduction_security_remediation.sql';
 const dockerImage = process.env.SUPABASE_RLS_DB_IMAGE || 'postgres:16-alpine';
 const containerName =
   process.env.SUPABASE_RLS_CONTAINER_NAME ||
@@ -1405,16 +1403,9 @@ check('homepage hero content exposes enabled public reads and protected admin wr
     ids.authMemberA,
     `
       select workspace_id::text
-      from public.execute_admin_homepage_hero_write(
+      from public.execute_admin_homepage_hero_image_write(
         '${ids.workspaceA}'::uuid,
         jsonb_build_object(
-          'eyebrow', 'Owner managed',
-          'headline', 'Managed homepage hero',
-          'body', 'Protected admin homepage content.',
-          'primary_cta_label', 'Request Quote',
-          'primary_cta_href', '/quote',
-          'secondary_cta_label', 'Browse Catalogue',
-          'secondary_cta_href', '/catalogue',
           'image_url', 'https://cdn.example.test/hero.jpg',
           'image_alt', 'Managed lounge setup',
           'is_enabled', true
@@ -1426,7 +1417,7 @@ check('homepage hero content exposes enabled public reads and protected admin wr
   assertCsv(
     enabledWrite,
     ids.workspaceA,
-    'owner/admin should write homepage hero image state through the compatibility RPC',
+    'owner/admin should write homepage hero image state through the frontend RPC',
   );
   assertCsv(
     scalarAs(
@@ -1435,7 +1426,7 @@ check('homepage hero content exposes enabled public reads and protected admin wr
       `select headline from public.get_public_homepage_hero('${ids.workspaceA}')`,
     ),
     'Furnish Your Vision, Elevate Every Space',
-    'legacy hero write RPC should keep enabled homepage copy code-owned',
+    'hero image write RPC should keep enabled homepage copy code-owned',
   );
   assertCsv(
     scalarAs(
@@ -1486,16 +1477,9 @@ check('homepage hero content exposes enabled public reads and protected admin wr
     ids.authMemberA,
     `
       select workspace_id::text
-      from public.execute_admin_homepage_hero_write(
+      from public.execute_admin_homepage_hero_image_write(
         '${ids.workspaceA}'::uuid,
         jsonb_build_object(
-          'eyebrow', 'Owner draft',
-          'headline', 'Draft homepage hero',
-          'body', 'Draft protected admin homepage content.',
-          'primary_cta_label', 'Request Quote',
-          'primary_cta_href', '/quote',
-          'secondary_cta_label', 'Browse Catalogue',
-          'secondary_cta_href', '/catalogue',
           'image_url', 'https://cdn.example.test/draft-hero.jpg',
           'image_alt', 'Draft managed lounge setup',
           'is_enabled', false
@@ -1519,7 +1503,7 @@ check('homepage hero content exposes enabled public reads and protected admin wr
       `select headline from public.homepage_hero_content where workspace_id = '${ids.workspaceA}'`,
     ),
     'Furnish Your Vision, Elevate Every Space',
-    'legacy hero write RPC should keep unpublished homepage copy code-owned',
+    'hero image write RPC should keep unpublished homepage copy code-owned',
   );
   assertCsv(
     scalarAs(
@@ -5244,16 +5228,16 @@ function main() {
 
     console.log(`PASS upgrade baseline applied through ${productionBaselineMigration}`);
     psql(`
-      grant execute on function public.execute_admin_access_write(
-        uuid, text, text
-      ) to anon, service_role;
+      grant execute on all functions in schema public
+        to public, anon, authenticated, service_role;
     `);
     assert.equal(
       psql(`select has_function_privilege(
-        'anon', '${adminAccessWriteSignature}', 'EXECUTE'
+        'anon', 'public.execute_admin_product_write(text,uuid,uuid,jsonb)',
+        'EXECUTE'
       )::text`),
       'true',
-      'The production-shaped baseline must let anon execute before remediation.',
+      'The production-shaped baseline must let anon execute an admin RPC before remediation.',
     );
     assert.equal(
       psql(`
@@ -5263,26 +5247,24 @@ function main() {
           cross join lateral pg_catalog.aclexplode(
             coalesce(proc.proacl, pg_catalog.acldefault('f', proc.proowner))
           ) acl
-          where proc.oid = '${adminAccessWriteSignature}'::regprocedure
-            and acl.grantee = (
-              select role.oid
-              from pg_catalog.pg_roles role
-              where role.rolname = 'anon'
-            )
+          where proc.oid =
+              'public.execute_admin_product_write(text,uuid,uuid,jsonb)'::regprocedure
+            and acl.grantee = 0
             and acl.privilege_type = 'EXECUTE'
         )::text
       `),
       'true',
-      'The production-shaped baseline must include a direct anon EXECUTE ACL.',
+      'The production-shaped baseline must include inherited PUBLIC EXECUTE.',
     );
     assert.equal(
       psql(`select has_function_privilege(
-        'service_role', '${adminAccessWriteSignature}', 'EXECUTE'
+        'service_role',
+        'public.persist_transcript_batch(uuid,jsonb,jsonb)', 'EXECUTE'
       )::text`),
       'true',
-      'The production-shaped baseline must retain its direct service_role EXECUTE ACL.',
+      'The production-shaped baseline must include broad service-role EXECUTE.',
     );
-    console.log('PASS production-shaped explicit anon admin write ACL modeled');
+    console.log('PASS production-shaped broad function EXECUTE ACLs modeled');
     for (const migrationFile of migrationFiles.slice(baselineIndex + 1)) {
       runSqlFile(migrationFile);
     }
