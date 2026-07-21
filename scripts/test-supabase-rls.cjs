@@ -17,6 +17,8 @@ const securityTestSupportPath = path.join(
 );
 const productionBaselineMigration =
   '20260720090000_atomic_public_quote_submission.sql';
+const adminAccessWriteSignature =
+  'public.execute_admin_access_write(uuid,text,text)';
 const dockerImage = process.env.SUPABASE_RLS_DB_IMAGE || 'postgres:16-alpine';
 const containerName =
   process.env.SUPABASE_RLS_CONTAINER_NAME ||
@@ -248,6 +250,10 @@ function setupSupabaseCompatibility() {
       if not exists (select 1 from pg_roles where rolname = 'authenticated') then
         create role authenticated nologin;
       end if;
+
+      if not exists (select 1 from pg_roles where rolname = 'service_role') then
+        create role service_role nologin;
+      end if;
     end
     $setup$;
 
@@ -264,7 +270,7 @@ function setupSupabaseCompatibility() {
 
     grant usage on schema auth to anon, authenticated;
     grant execute on function auth.uid() to anon, authenticated;
-    grant usage on schema public to anon, authenticated;
+    grant usage on schema public to anon, authenticated, service_role;
     grant usage on schema storage to anon, authenticated;
 
     create table if not exists storage.buckets (
@@ -5234,6 +5240,46 @@ function main() {
     }
 
     console.log(`PASS upgrade baseline applied through ${productionBaselineMigration}`);
+    psql(`
+      grant execute on function public.execute_admin_access_write(
+        uuid, text, text
+      ) to anon, service_role;
+    `);
+    assert.equal(
+      psql(`select has_function_privilege(
+        'anon', '${adminAccessWriteSignature}', 'EXECUTE'
+      )::text`),
+      'true',
+      'The production-shaped baseline must let anon execute before remediation.',
+    );
+    assert.equal(
+      psql(`
+        select exists (
+          select 1
+          from pg_catalog.pg_proc proc
+          cross join lateral pg_catalog.aclexplode(
+            coalesce(proc.proacl, pg_catalog.acldefault('f', proc.proowner))
+          ) acl
+          where proc.oid = '${adminAccessWriteSignature}'::regprocedure
+            and acl.grantee = (
+              select role.oid
+              from pg_catalog.pg_roles role
+              where role.rolname = 'anon'
+            )
+            and acl.privilege_type = 'EXECUTE'
+        )::text
+      `),
+      'true',
+      'The production-shaped baseline must include a direct anon EXECUTE ACL.',
+    );
+    assert.equal(
+      psql(`select has_function_privilege(
+        'service_role', '${adminAccessWriteSignature}', 'EXECUTE'
+      )::text`),
+      'true',
+      'The production-shaped baseline must retain its direct service_role EXECUTE ACL.',
+    );
+    console.log('PASS production-shaped explicit anon admin write ACL modeled');
     for (const migrationFile of migrationFiles.slice(baselineIndex + 1)) {
       runSqlFile(migrationFile);
     }
