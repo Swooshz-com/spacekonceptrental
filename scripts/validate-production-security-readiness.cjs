@@ -3,6 +3,12 @@
 const { spawnSync } = require('node:child_process');
 const fs = require('node:fs');
 const path = require('node:path');
+const {
+  anonymousPublicSecurityDefinerAllowlist,
+  authenticatedPublicSecurityDefinerAllowlist,
+  finalPublicSecurityDefinerSignatures,
+  platformManagedPublicSecurityDefinerSignatures,
+} = require('./security-definer-privilege-contract.cjs');
 
 const defaultMode = 'local';
 const launchMode = 'launch';
@@ -119,6 +125,9 @@ function parseArgs(argv) {
         args.trackedFiles.push(argv[fileIndex]);
         index = fileIndex;
       }
+    } else if (arg === '--public-security-definer-catalog') {
+      args.publicSecurityDefinerCatalogPath = argv[index + 1];
+      index += 1;
     }
   }
 
@@ -240,6 +249,149 @@ function validateOptionalTimeout(value) {
     ok: true,
     summary: 'configured',
   };
+}
+
+function validatePublicSecurityDefinerCatalog(catalog) {
+  const issues = [];
+  const warnings = [];
+  const rowsBySignature = new Map();
+  const anonAllowlist = new Set(anonymousPublicSecurityDefinerAllowlist);
+  const authenticatedAllowlist = new Set(
+    authenticatedPublicSecurityDefinerAllowlist,
+  );
+  const repositoryOwned = new Set(finalPublicSecurityDefinerSignatures);
+  const platformManaged = new Set(
+    platformManagedPublicSecurityDefinerSignatures,
+  );
+  const reviewed = new Set([...repositoryOwned, ...platformManaged]);
+  const executionFields = [
+    'public_execute',
+    'anon_execute',
+    'authenticated_execute',
+    'service_role_execute',
+    'postgres_execute',
+  ];
+
+  if (!Array.isArray(catalog)) {
+    addIssue(
+      issues,
+      'PUBLIC_SECURITY_DEFINER_CATALOG',
+      'must be a JSON array produced by the read-only catalog query',
+    );
+    return { issues, warnings };
+  }
+
+  for (const row of catalog) {
+    const signature = row?.signature;
+
+    if (typeof signature !== 'string' || !signature.startsWith('public.')) {
+      addIssue(
+        issues,
+        'PUBLIC_SECURITY_DEFINER_CATALOG',
+        'contains an invalid public function signature',
+      );
+      continue;
+    }
+    if (rowsBySignature.has(signature)) {
+      addIssue(issues, signature, 'appears more than once in the live catalog');
+      continue;
+    }
+    rowsBySignature.set(signature, row);
+
+    if (row.security_definer !== true) {
+      addIssue(issues, signature, 'catalog row must identify a SECURITY DEFINER function');
+    }
+    for (const field of executionFields) {
+      if (typeof row[field] !== 'boolean') {
+        addIssue(issues, signature, `catalog field ${field} must be boolean`);
+      }
+    }
+
+    if (row.public_execute === true) {
+      addIssue(issues, signature, 'PUBLIC EXECUTE is forbidden');
+    }
+    if (row.service_role_execute === true) {
+      addIssue(issues, signature, 'service_role EXECUTE is not reviewed');
+    }
+    if (row.anon_execute === true && !anonAllowlist.has(signature)) {
+      addIssue(issues, signature, 'anon EXECUTE is not reviewed');
+    }
+    if (
+      row.authenticated_execute === true &&
+      !authenticatedAllowlist.has(signature)
+    ) {
+      addIssue(issues, signature, 'authenticated EXECUTE is not reviewed');
+    }
+
+    const apiClientDenyOnly = [
+      'public_execute',
+      'anon_execute',
+      'authenticated_execute',
+      'service_role_execute',
+    ].every((field) => row[field] === false);
+    if (!reviewed.has(signature) && apiClientDenyOnly) {
+      warnings.push({
+        name: signature,
+        summary: 'unreviewed live function is deny-only for API/client roles',
+      });
+    }
+  }
+
+  for (const signature of reviewed) {
+    if (!rowsBySignature.has(signature)) {
+      addIssue(issues, signature, 'reviewed function is missing from the live catalog');
+    }
+  }
+
+  for (const signature of repositoryOwned) {
+    const row = rowsBySignature.get(signature);
+    if (!row) {
+      continue;
+    }
+    if (row.anon_execute !== anonAllowlist.has(signature)) {
+      addIssue(issues, signature, 'anon EXECUTE differs from the application contract');
+    }
+    if (
+      row.authenticated_execute !== authenticatedAllowlist.has(signature)
+    ) {
+      addIssue(
+        issues,
+        signature,
+        'authenticated EXECUTE differs from the application contract',
+      );
+    }
+  }
+
+  const [platformSignature] = platformManagedPublicSecurityDefinerSignatures;
+  const platformHelper = rowsBySignature.get(platformSignature);
+  if (platformHelper) {
+    const expectedTags = ['CREATE TABLE', 'CREATE TABLE AS', 'SELECT INTO'];
+    const actualTags = Array.isArray(platformHelper.tags)
+      ? [...platformHelper.tags].sort()
+      : [];
+
+    for (const [field, expected] of Object.entries({
+      owner: 'postgres',
+      return_type: 'event_trigger',
+      language: 'plpgsql',
+      search_path: 'search_path=pg_catalog',
+      event_trigger_name: 'ensure_rls',
+      event: 'ddl_command_end',
+      enabled: 'O',
+    })) {
+      if (platformHelper[field] !== expected) {
+        addIssue(issues, platformSignature, `${field} differs from the platform contract`);
+      }
+    }
+    if (JSON.stringify(actualTags) !== JSON.stringify(expectedTags.sort())) {
+      addIssue(issues, platformSignature, 'event-trigger tags differ from the platform contract');
+    }
+    if (platformHelper.postgres_execute !== true) {
+      addIssue(issues, platformSignature, 'postgres owner execution rights are missing');
+    }
+  }
+
+  return { issues, warnings };
 }
 
 function validateEnvContract(env) {
@@ -544,9 +696,35 @@ function validateProductionSecurityReadiness(options = {}) {
     options.scanRoot ?? process.cwd(),
     options.trackedFiles ?? null,
   );
-  const ok = staticIssues.length === 0 && (mode !== launchMode || envIssues.length === 0);
+  const databaseIssues = [...(options.publicSecurityDefinerCatalogIssues ?? [])];
+  const databaseWarnings = [];
+
+  if (options.publicSecurityDefinerCatalog === undefined) {
+    const missing = {
+      name: 'PUBLIC_SECURITY_DEFINER_CATALOG',
+      summary: 'live read-only public SECURITY DEFINER catalog was not supplied',
+    };
+    if (mode === launchMode) {
+      databaseIssues.push(missing);
+    } else {
+      databaseWarnings.push(missing);
+    }
+  } else {
+    const catalogResult = validatePublicSecurityDefinerCatalog(
+      options.publicSecurityDefinerCatalog,
+    );
+    databaseIssues.push(...catalogResult.issues);
+    databaseWarnings.push(...catalogResult.warnings);
+  }
+
+  const ok =
+    staticIssues.length === 0 &&
+    databaseIssues.length === 0 &&
+    (mode !== launchMode || envIssues.length === 0);
 
   return {
+    databaseIssues,
+    databaseWarnings,
     envIssues,
     mode,
     ok,
@@ -589,6 +767,23 @@ function printResult(result, output = console) {
     printIssues(output.error, result.staticIssues);
   }
 
+  if (
+    result.databaseIssues.length === 0 &&
+    result.databaseWarnings.length === 0
+  ) {
+    output.log('Live public SECURITY DEFINER catalog: passed.');
+  } else if (result.databaseIssues.length > 0) {
+    output.error('Live public SECURITY DEFINER catalog: failed.');
+    printIssues(output.error, result.databaseIssues);
+  }
+  if (result.databaseWarnings.length > 0) {
+    output.log('Live public SECURITY DEFINER catalog: warning.');
+    printIssues(output.log, result.databaseWarnings);
+  }
+  output.log(
+    `Intentional application RPC execution remains: ${anonymousPublicSecurityDefinerAllowlist.length} anon and ${authenticatedPublicSecurityDefinerAllowlist.length} authenticated.`,
+  );
+
   output.log('No website/chat-config.js runtime dependency is required for launch.');
   output.log('n8n enquiry handoff env is server-only; no browser n8n env is allowed.');
   output.log('No Pinecone/HubSpot runtime env is required for this launch slice.');
@@ -602,8 +797,31 @@ function printResult(result, output = console) {
 
 if (require.main === module) {
   const args = parseArgs(process.argv.slice(2));
+  let publicSecurityDefinerCatalog;
+  const publicSecurityDefinerCatalogIssues = [];
+
+  if (args.publicSecurityDefinerCatalogPath) {
+    try {
+      const catalogJson = fs.readFileSync(
+        path.resolve(args.scanRoot, args.publicSecurityDefinerCatalogPath),
+        'utf8',
+      );
+      publicSecurityDefinerCatalog = JSON.parse(
+        catalogJson.replace(/^\uFEFF/, ''),
+      );
+    } catch {
+      addIssue(
+        publicSecurityDefinerCatalogIssues,
+        'PUBLIC_SECURITY_DEFINER_CATALOG',
+        'could not read valid JSON from the supplied catalog file',
+      );
+      publicSecurityDefinerCatalog = [];
+    }
+  }
   const result = validateProductionSecurityReadiness({
     mode: args.mode,
+    publicSecurityDefinerCatalog,
+    publicSecurityDefinerCatalogIssues,
     scanRoot: args.scanRoot,
     trackedFiles: args.trackedFiles,
   });
@@ -615,5 +833,6 @@ if (require.main === module) {
 module.exports = {
   scanStaticSecurity,
   validateEnvContract,
+  validatePublicSecurityDefinerCatalog,
   validateProductionSecurityReadiness,
 };
