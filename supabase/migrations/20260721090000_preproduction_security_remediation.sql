@@ -516,10 +516,6 @@ begin
 
   if found and v_target.linked_admin_user_id is not null then
     if p_action = 'add_admin' then
-      update public.admin_users
-      set status = 'active', updated_at = now()
-      where id = v_target.linked_admin_user_id;
-
       update public.memberships
       set role = 'admin', status = 'active', updated_at = now()
       where workspace_id = p_workspace_id
@@ -547,7 +543,7 @@ end;
 $$;
 
 comment on function public.execute_admin_access_write(uuid, text, text) is
-  'Owner-only workspace-local admin access mutation; disable/remove never changes the shared global admin identity status.';
+  'Owner-only workspace-local admin access and membership mutation; add/disable/remove never changes the shared global admin identity status.';
 
 revoke all on function public.execute_admin_access_write(uuid, text, text) from public;
 grant execute on function public.execute_admin_access_write(uuid, text, text) to authenticated;

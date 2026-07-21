@@ -109,12 +109,6 @@ durable handoff state rather than using `wasCreated` as eligibility. The
 outbox state is `pending`, `claimed`, `retryable_failed`, or `completed`:
 
 - an eligible retry acquires one five-minute claim lease;
-
-Direct delivery-log INSERT is revoked from `PUBLIC`, `anon`, and
-`authenticated`. The finalizer validates the exact current unexpired claim and
-atomically creates the trusted delivery record with the outbox transition.
-Exact completed retries are safely rejected by the no-longer-claimed outbox,
-so conflicting status/provider metadata cannot overwrite trusted history.
 - concurrent retries observe a live claim as `in_progress` and do not send;
 - outbound failure records `retryable_failed` and can be retried immediately;
 - a process exit while claimed is recoverable after lease expiry;

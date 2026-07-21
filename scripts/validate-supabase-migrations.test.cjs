@@ -1879,6 +1879,25 @@ test('real migrations add Google-only DB-backed admin access management', () => 
   assert.doesNotMatch(migration, /https?:\/\/|oauth|client_secret|service_role/i);
 });
 
+test('preproduction remediation keeps admin access writes workspace-local', () => {
+  const migration = readRealMigration(
+    '20260721090000_preproduction_security_remediation.sql',
+  );
+  const sql = normalizeSql(migration);
+
+  assert.match(
+    sql,
+    /create or replace function public\.execute_admin_access_write\(\s*p_workspace_id uuid,\s*p_action text,\s*p_email text\s*\)/,
+  );
+  assert.match(sql, /update public\.admin_access/);
+  assert.match(sql, /update public\.memberships/);
+  assert.doesNotMatch(
+    sql,
+    /update public\.admin_users/,
+    'Workspace-local admin access writes must not mutate global admin identity state.',
+  );
+});
+
 test('real migrations add workspace-scoped homepage hero content with protected admin writes', () => {
   const migrationFileName =
     '20260703100000_homepage_hero_content_foundation.sql';

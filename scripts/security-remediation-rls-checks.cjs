@@ -328,6 +328,65 @@ function registerSecurityRemediationRlsChecks({
       /owner_immutable/,
     );
   });
+
+  check('workspace-local admin re-add cannot reactivate an inactive shared global identity', () => {
+    const sharedAuth = '20000000-0000-4000-8000-000000000021';
+    const sharedAdmin = '30000000-0000-4000-8000-000000000021';
+    const sharedEmail = 'inactive-shared-admin@example.test';
+
+    psql(`
+      insert into public.admin_users (
+        id, auth_user_id, email, display_name, status
+      ) values (
+        '${sharedAdmin}', '${sharedAuth}', '${sharedEmail}',
+        'Inactive Shared Admin', 'inactive'
+      );
+      insert into public.memberships (workspace_id, admin_user_id, role, status)
+      values
+        ('${ids.workspaceA}', '${sharedAdmin}', 'admin', 'suspended'),
+        ('${ids.workspaceB}', '${sharedAdmin}', 'admin', 'active');
+      insert into public.admin_access (
+        workspace_id, normalized_email, role, status, linked_admin_user_id
+      ) values
+        ('${ids.workspaceA}', '${sharedEmail}', 'admin', 'removed', '${sharedAdmin}'),
+        ('${ids.workspaceB}', '${sharedEmail}', 'admin', 'active', '${sharedAdmin}');
+    `);
+
+    assert.match(
+      queryCommittedAs(
+        'authenticated',
+        ids.authMemberA,
+        `select public.execute_admin_access_write(
+          '${ids.workspaceA}', 'add_admin', '${sharedEmail}'
+        )::text`,
+      ),
+      /"status": "active"/,
+    );
+
+    assert.equal(
+      psql(`select status from public.admin_users where id = '${sharedAdmin}'`),
+      'inactive',
+      'workspace A re-add must not reactivate the shared global identity.',
+    );
+    assert.equal(
+      psql(`select role || '|' || status from public.admin_access where workspace_id = '${ids.workspaceA}' and linked_admin_user_id = '${sharedAdmin}'`),
+      'admin|active',
+    );
+    assert.equal(
+      psql(`select role || '|' || status from public.memberships where workspace_id = '${ids.workspaceA}' and admin_user_id = '${sharedAdmin}'`),
+      'admin|active',
+    );
+    assert.equal(
+      psql(`select role || '|' || status from public.admin_access where workspace_id = '${ids.workspaceB}' and linked_admin_user_id = '${sharedAdmin}'`),
+      'admin|active',
+      'workspace B access must remain unchanged.',
+    );
+    assert.equal(
+      psql(`select role || '|' || status from public.memberships where workspace_id = '${ids.workspaceB}' and admin_user_id = '${sharedAdmin}'`),
+      'admin|active',
+      'workspace B membership must remain unchanged.',
+    );
+  });
 }
 
 module.exports = { registerSecurityRemediationRlsChecks };
