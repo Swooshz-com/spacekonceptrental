@@ -32,10 +32,18 @@ workspace.
 
 The production-shaped upgrade path applies the repository chain through
 `20260721090000_preproduction_security_remediation.sql`, models both direct
-role grants and inherited `PUBLIC EXECUTE`, and then applies
-`20260721183000_public_security_definer_privilege_hardening.sql`. The final
-catalog is compared with the exact reviewed contract in
-`scripts/security-definer-privilege-contract.cjs`.
+role grants and inherited `PUBLIC EXECUTE`, and then applies the forward
+privilege migrations. Before that upgrade it also models the production-only
+`public.rls_auto_enable()` function and `ensure_rls` event trigger. The final
+catalog is compared with the exact repository-owned and platform-managed
+contract in `scripts/security-definer-privilege-contract.cjs`.
+
+The harness separately applies
+`20260721190000_platform_rls_auto_enable_privilege_hardening.sql` while the
+helper is absent and proves it is a successful no-op. On the present-helper
+path it proves the function body/owner/shape and event-trigger definition are
+unchanged, all API/client execution is denied, a disposable public table still
+receives automatic RLS, and the probe table is removed.
 
 ## Run
 
@@ -128,6 +136,9 @@ The local RLS test command proves:
 - Every final public-schema `SECURITY DEFINER` signature is enumerated; `anon`
   execution outside the six-function allowlist fails, including inherited
   `PUBLIC EXECUTE` paths.
+- The Supabase/platform-managed `public.rls_auto_enable()` remains attached to
+  the enabled `ensure_rls` event trigger while `PUBLIC`, `anon`,
+  `authenticated`, and `service_role` cannot execute it directly.
 - Authenticated admin RPCs retain exact app-required grants and workspace
   checks, while no public-schema definer retains `service_role` execution.
 - RLS and Storage helpers execute from the non-exposed `private` schema and

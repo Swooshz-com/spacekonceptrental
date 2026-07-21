@@ -46,6 +46,15 @@ const finalPublicSecurityDefinerSignatures = Object.freeze(
   ),
 );
 
+const platformManagedPublicSecurityDefinerSignatures = Object.freeze([
+  'public.rls_auto_enable()',
+]);
+
+const reviewedLivePublicSecurityDefinerSignatures = Object.freeze([
+  ...finalPublicSecurityDefinerSignatures,
+  ...platformManagedPublicSecurityDefinerSignatures,
+]);
+
 const anonymousPublicSecurityDefinerAllowlist = Object.freeze([
   'public.finalize_public_quote_handoff(uuid,uuid,text,uuid,text,text,text,text,text)',
   'public.get_public_catalogue(uuid,text)',
@@ -104,7 +113,9 @@ module.exports = {
   finalPrivateFunctionSignatures,
   finalPublicSecurityDefinerSignatures,
   movedPublicSecurityDefinerSignatures,
+  platformManagedPublicSecurityDefinerSignatures,
   preMigrationPublicSecurityDefinerSignatures,
   privatePolicyHelperGrants,
+  reviewedLivePublicSecurityDefinerSignatures,
   serviceRolePublicSecurityDefinerAllowlist,
 };

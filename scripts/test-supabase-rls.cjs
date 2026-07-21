@@ -7,6 +7,9 @@ const { ensureDockerRunning } = require('./ensure-docker-running.cjs');
 const {
   registerSecurityRemediationRlsChecks,
 } = require('./security-remediation-rls-checks.cjs');
+const {
+  validatePublicSecurityDefinerCatalog,
+} = require('./validate-production-security-readiness.cjs');
 
 const repoRoot = path.resolve(__dirname, '..');
 const migrationsDir = path.join(repoRoot, 'supabase', 'migrations');
@@ -15,8 +18,15 @@ const securityTestSupportPath = path.join(
   'scripts',
   'test-supabase-security-support.sql',
 );
+const productionSecurityDefinerCatalogPath = path.join(
+  repoRoot,
+  'scripts',
+  'production-security-definer-catalog.sql',
+);
 const productionBaselineMigration =
   '20260721090000_preproduction_security_remediation.sql';
+const platformRlsAutoEnableMigration =
+  '20260721190000_platform_rls_auto_enable_privilege_hardening.sql';
 const dockerImage = process.env.SUPABASE_RLS_DB_IMAGE || 'postgres:16-alpine';
 const containerName =
   process.env.SUPABASE_RLS_CONTAINER_NAME ||
@@ -295,6 +305,166 @@ function setupSupabaseCompatibility() {
       constraint storage_objects_bucket_name_key unique (bucket_id, name)
     );
   `);
+}
+
+function installProductionRlsAutoEnableModel() {
+  psql(`
+    create or replace function public.rls_auto_enable()
+    returns event_trigger
+    language plpgsql
+    security definer
+    set search_path = pg_catalog
+    as $function$
+    declare
+      cmd record;
+    begin
+      for cmd in
+        select *
+        from pg_event_trigger_ddl_commands()
+        where command_tag in ('CREATE TABLE', 'CREATE TABLE AS', 'SELECT INTO')
+          and object_type in ('table', 'partitioned table')
+      loop
+        if cmd.schema_name is not null
+          and cmd.schema_name in ('public')
+          and cmd.schema_name not in ('pg_catalog', 'information_schema')
+          and cmd.schema_name not like 'pg_toast%'
+          and cmd.schema_name not like 'pg_temp%'
+        then
+          begin
+            execute format(
+              'alter table if exists %s enable row level security',
+              cmd.object_identity
+            );
+            raise log 'rls_auto_enable: enabled RLS on %', cmd.object_identity;
+          exception
+            when others then
+              raise log 'rls_auto_enable: failed to enable RLS on %', cmd.object_identity;
+          end;
+        else
+          raise log
+            'rls_auto_enable: skip % (either system schema or not in enforced list: %.)',
+            cmd.object_identity,
+            cmd.schema_name;
+        end if;
+      end loop;
+    end;
+    $function$;
+
+    create event trigger ensure_rls
+      on ddl_command_end
+      when tag in ('CREATE TABLE', 'CREATE TABLE AS', 'SELECT INTO')
+      execute function public.rls_auto_enable();
+  `);
+}
+
+function productionRlsAutoEnableFingerprint() {
+  return JSON.parse(psql(`
+    select pg_catalog.json_build_object(
+      'function_oid', proc.oid,
+      'owner', pg_catalog.pg_get_userbyid(proc.proowner),
+      'return_type', pg_catalog.pg_get_function_result(proc.oid),
+      'language', language.lanname,
+      'security_definer', proc.prosecdef,
+      'search_path', pg_catalog.array_to_string(proc.proconfig, ','),
+      'body_hash', pg_catalog.md5(proc.prosrc),
+      'event_trigger_name', event_trigger.evtname,
+      'event', event_trigger.evtevent,
+      'enabled', event_trigger.evtenabled,
+      'tags', event_trigger.evttags,
+      'event_function_oid', event_trigger.evtfoid
+    )::text
+    from pg_catalog.pg_proc proc
+    join pg_catalog.pg_language language on language.oid = proc.prolang
+    join pg_catalog.pg_event_trigger event_trigger
+      on event_trigger.evtfoid = proc.oid
+    where proc.oid = 'public.rls_auto_enable()'::pg_catalog.regprocedure
+      and event_trigger.evtname = 'ensure_rls'
+  `));
+}
+
+function assertProductionRlsAutoEnableContract(beforeFingerprint) {
+  const signature = 'public.rls_auto_enable()';
+  const afterFingerprint = productionRlsAutoEnableFingerprint();
+
+  assert.deepEqual(
+    afterFingerprint,
+    beforeFingerprint,
+    'The forward ACL repair must preserve the helper body, owner, function shape, and event-trigger binding.',
+  );
+  assert.equal(afterFingerprint.owner, 'postgres');
+  assert.equal(afterFingerprint.return_type, 'event_trigger');
+  assert.equal(afterFingerprint.language, 'plpgsql');
+  assert.equal(afterFingerprint.security_definer, true);
+  assert.equal(afterFingerprint.search_path, 'search_path=pg_catalog');
+  assert.equal(afterFingerprint.event_trigger_name, 'ensure_rls');
+  assert.equal(afterFingerprint.event, 'ddl_command_end');
+  assert.equal(afterFingerprint.enabled, 'O');
+  assert.deepEqual(
+    afterFingerprint.tags,
+    ['CREATE TABLE', 'CREATE TABLE AS', 'SELECT INTO'],
+  );
+
+  assert.equal(
+    psql(`
+      select exists (
+        select 1
+        from pg_catalog.pg_proc proc
+        cross join lateral pg_catalog.aclexplode(
+          coalesce(proc.proacl, pg_catalog.acldefault('f', proc.proowner))
+        ) acl
+        where proc.oid = '${signature}'::pg_catalog.regprocedure
+          and acl.grantee = 0
+          and acl.privilege_type = 'EXECUTE'
+      )::text
+    `),
+    'false',
+    'PUBLIC must not provide inherited EXECUTE for the platform helper.',
+  );
+
+  for (const role of ['anon', 'authenticated', 'service_role']) {
+    assert.equal(
+      psql(`select pg_catalog.has_function_privilege(
+        '${role}', '${signature}', 'EXECUTE'
+      )::text`),
+      'false',
+      `${role} must not execute the platform helper.`,
+    );
+    const result = psql(
+      `begin; set local role ${role}; select public.rls_auto_enable(); rollback;`,
+      { check: false },
+    );
+    assert.notEqual(result.status, 0, `${role} unexpectedly invoked ${signature}.`);
+    assert.match(
+      `${result.stdout}\n${result.stderr}`,
+      /permission denied for function rls_auto_enable/i,
+    );
+  }
+
+  assert.equal(
+    psql(`select pg_catalog.has_function_privilege(
+      'postgres', '${signature}', 'EXECUTE'
+    )::text`),
+    'true',
+    'The postgres owner must retain inherent function management rights.',
+  );
+
+  const probe = 'public.rls_auto_enable_regression_probe';
+  try {
+    psql(`create table ${probe} (id bigint)`);
+    assert.equal(
+      psql(`select relrowsecurity::text from pg_catalog.pg_class
+        where oid = '${probe}'::pg_catalog.regclass`),
+      'true',
+      'The ensure_rls event trigger must still enable RLS on new public tables.',
+    );
+  } finally {
+    psql(`drop table if exists ${probe}`);
+  }
+  assert.equal(
+    psql(`select (pg_catalog.to_regclass('${probe}') is null)::text`),
+    'true',
+    'The disposable auto-RLS probe table must be removed.',
+  );
 }
 
 function grantBrowserRoleSelects() {
@@ -5227,6 +5397,26 @@ function main() {
     }
 
     console.log(`PASS upgrade baseline applied through ${productionBaselineMigration}`);
+
+    const platformMigrationPath = migrationFiles.find(
+      (migrationFile) => path.basename(migrationFile) === platformRlsAutoEnableMigration,
+    );
+    assert.ok(platformMigrationPath, 'Platform helper privilege migration is missing.');
+    assert.equal(
+      psql(`select (pg_catalog.to_regprocedure('public.rls_auto_enable()') is null)::text`),
+      'true',
+      'The absent-helper path must start without public.rls_auto_enable().',
+    );
+    runSqlFile(platformMigrationPath);
+    assert.equal(
+      psql(`select (pg_catalog.to_regprocedure('public.rls_auto_enable()') is null)::text`),
+      'true',
+      'The migration must safely no-op when public.rls_auto_enable() is absent.',
+    );
+    console.log('PASS absent platform helper migration path applied as a no-op');
+
+    installProductionRlsAutoEnableModel();
+    const productionRlsAutoEnableBefore = productionRlsAutoEnableFingerprint();
     psql(`
       grant execute on all functions in schema public
         to public, anon, authenticated, service_role;
@@ -5268,11 +5458,32 @@ function main() {
       'true',
       'The production-shaped baseline must include broad service-role EXECUTE.',
     );
+    for (const role of ['anon', 'authenticated', 'service_role']) {
+      assert.equal(
+        psql(`select pg_catalog.has_function_privilege(
+          '${role}', 'public.rls_auto_enable()', 'EXECUTE'
+        )::text`),
+        'true',
+        `The production-shaped baseline must grant ${role} EXECUTE on public.rls_auto_enable().`,
+      );
+    }
     console.log('PASS production-shaped broad function EXECUTE ACLs modeled');
     for (const migrationFile of migrationFiles.slice(baselineIndex + 1)) {
       runSqlFile(migrationFile);
     }
     console.log('PASS forward-only remediation upgrade applied after production baseline');
+    assertProductionRlsAutoEnableContract(productionRlsAutoEnableBefore);
+    console.log('PASS platform auto-RLS helper ACL and event-trigger operation preserved');
+    const liveCatalog = JSON.parse(
+      psql(fs.readFileSync(productionSecurityDefinerCatalogPath, 'utf8')),
+    );
+    const liveCatalogResult = validatePublicSecurityDefinerCatalog(liveCatalog);
+    assert.deepEqual(
+      liveCatalogResult,
+      { issues: [], warnings: [] },
+      'The read-only complete-catalog preflight must accept the production-shaped database.',
+    );
+    console.log('PASS read-only live SECURITY DEFINER catalog gate integration');
 
     runSqlFile(securityTestSupportPath);
     grantBrowserRoleSelects();

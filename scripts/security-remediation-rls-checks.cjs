@@ -3,8 +3,8 @@ const {
   anonymousPublicSecurityDefinerAllowlist,
   authenticatedPublicSecurityDefinerAllowlist,
   finalPrivateFunctionSignatures,
-  finalPublicSecurityDefinerSignatures,
   privatePolicyHelperGrants,
+  reviewedLivePublicSecurityDefinerSignatures,
   serviceRolePublicSecurityDefinerAllowlist,
 } = require('./security-definer-privilege-contract.cjs');
 
@@ -508,8 +508,8 @@ function registerSecurityRemediationRlsChecks({
 
     assert.deepEqual(
       catalogueSignatures,
-      [...finalPublicSecurityDefinerSignatures].sort(),
-      'Every final public SECURITY DEFINER signature must be reviewed explicitly.',
+      [...reviewedLivePublicSecurityDefinerSignatures].sort(),
+      'Every repository-owned and platform-managed public SECURITY DEFINER signature must be reviewed explicitly.',
     );
 
     const anonAllowlist = new Set(anonymousPublicSecurityDefinerAllowlist);
@@ -709,8 +709,8 @@ function registerSecurityRemediationRlsChecks({
         where namespace.nspname = 'public'
           and proc.prosecdef
       `),
-      '0',
-      'The repository defines no public SECURITY DEFINER event-trigger functions.',
+      '1',
+      'Only the modeled Supabase platform auto-RLS SECURITY DEFINER event-trigger function may remain attached.',
     );
     assert.equal(
       psql(`
