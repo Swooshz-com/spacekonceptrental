@@ -5,10 +5,19 @@
 create schema if not exists private;
 revoke all on schema private from public, anon, authenticated, service_role;
 
+-- Function EXECUTE is granted to PUBLIC by PostgreSQL's global defaults. A
+-- schema-scoped revoke cannot remove that global grant, so deny future
+-- functions for the migration owner globally first. The schema-scoped
+-- revokes below only reverse any earlier matching per-schema grants.
+alter default privileges
+  revoke execute on functions
+  from public, anon, authenticated, service_role;
 alter default privileges in schema public
-  revoke execute on functions from public;
-alter default privileges in schema public
-  revoke execute on functions from anon, authenticated, service_role;
+  revoke execute on functions
+  from public, anon, authenticated, service_role;
+alter default privileges in schema private
+  revoke execute on functions
+  from public, anon, authenticated, service_role;
 
 alter function public.normalize_admin_access_email(text)
   set search_path = pg_catalog;
@@ -206,6 +215,12 @@ as $$
   end;
 $$;
 revoke execute on function private.is_hero_media_admin_object(text,text)
+  from public, anon, authenticated, service_role;
+
+-- Close every existing private function before restoring only the reviewed
+-- policy-helper contract below. This also covers private functions that are
+-- not part of the helper allowlist.
+revoke execute on all functions in schema private
   from public, anon, authenticated, service_role;
 
 grant usage on schema private to anon, authenticated;

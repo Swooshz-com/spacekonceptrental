@@ -70,6 +70,19 @@ const authenticatedPublicSecurityDefinerAllowlist = Object.freeze([
 
 const serviceRolePublicSecurityDefinerAllowlist = Object.freeze([]);
 
+const finalPrivateFunctionSignatures = Object.freeze([
+  'private.current_quote_admin_user_id(uuid)',
+  'private.is_hero_media_admin_object(text,text)',
+  'private.is_listing_media_product_admin_object(text,text)',
+  'private.is_public_website_quote_request(uuid,uuid)',
+  'private.is_workspace_admin_access_member(uuid)',
+  'private.is_workspace_member(uuid)',
+  'private.is_workspace_product_manager(uuid)',
+  'private.is_workspace_quote_manager(uuid)',
+  'private.quote_submission_payload_digest(uuid,uuid,text,text,text,text,text,date,text,text,text,text,jsonb,uuid)',
+  'private.submit_public_quote_request_unadmitted(uuid,uuid,text,text,text,text,text,date,text,text,text,text,jsonb,uuid)',
+]);
+
 const privatePolicyHelperGrants = Object.freeze({
   anon: [
     'private.is_public_website_quote_request(uuid,uuid)',
@@ -88,6 +101,7 @@ const privatePolicyHelperGrants = Object.freeze({
 module.exports = {
   anonymousPublicSecurityDefinerAllowlist,
   authenticatedPublicSecurityDefinerAllowlist,
+  finalPrivateFunctionSignatures,
   finalPublicSecurityDefinerSignatures,
   movedPublicSecurityDefinerSignatures,
   preMigrationPublicSecurityDefinerSignatures,

@@ -2,6 +2,7 @@ const assert = require('node:assert/strict');
 const {
   anonymousPublicSecurityDefinerAllowlist,
   authenticatedPublicSecurityDefinerAllowlist,
+  finalPrivateFunctionSignatures,
   finalPublicSecurityDefinerSignatures,
   privatePolicyHelperGrants,
   serviceRolePublicSecurityDefinerAllowlist,
@@ -141,6 +142,77 @@ function registerSecurityRemediationRlsChecks({
       'The search-index fallback digest must resolve pgcrypto from extensions.',
     );
   });
+
+  check('future public and private functions inherit deny-by-default execution', () => {
+    const probes = [
+      'public.security_default_acl_probe',
+      'private.security_default_acl_probe',
+    ];
+
+    for (const probe of probes) {
+      psql(`create function ${probe}() returns text language sql as
+        'select ''owner-managed''::text'`);
+      const signature = `${probe}()`;
+
+      assert.equal(
+        psql(`
+          select exists (
+            select 1
+            from pg_catalog.pg_proc proc
+            cross join lateral pg_catalog.aclexplode(
+              coalesce(proc.proacl, pg_catalog.acldefault('f', proc.proowner))
+            ) acl
+            where proc.oid = '${signature}'::regprocedure
+              and acl.grantee = 0
+              and acl.privilege_type = 'EXECUTE'
+          )::text
+        `),
+        'false',
+        `PUBLIC must not grant EXECUTE on future function ${signature}.`,
+      );
+
+      for (const role of ['anon', 'authenticated', 'service_role']) {
+        assert.equal(
+          psql(`select has_function_privilege(
+            '${role}', '${signature}', 'EXECUTE'
+          )::text`),
+          'false',
+          `${role} must not inherit EXECUTE on future function ${signature}.`,
+        );
+
+        const result = psql(
+          `begin; set local role ${role}; select ${probe}(); rollback;`,
+          { check: false },
+        );
+        assert.notEqual(
+          result.status,
+          0,
+          `${role} unexpectedly executed future function ${signature}.`,
+        );
+        assert.match(
+          `${result.stdout}\n${result.stderr}`,
+          /permission denied/i,
+          `${role} failed for an unexpected reason on ${signature}.`,
+        );
+      }
+
+      const managedProbe = `${probe}_managed`;
+      psql(`comment on function ${signature} is 'owner-managed probe'`);
+      psql(`alter function ${signature} rename to security_default_acl_probe_managed`);
+      assert.equal(
+        psql(`select (to_regprocedure('${managedProbe}()') is not null)::text`),
+        'true',
+        `The owner must be able to manage ${signature}.`,
+      );
+      psql(`drop function ${managedProbe}()`);
+      assert.equal(
+        psql(`select (to_regprocedure('${managedProbe}()') is null)::text`),
+        'true',
+        `The owner must be able to remove ${managedProbe}().`,
+      );
+    }
+  });
+
 
   function submitSql(
     {
@@ -515,16 +587,65 @@ function registerSecurityRemediationRlsChecks({
       'false',
     );
 
-    for (const [role, signatures] of Object.entries(privatePolicyHelperGrants)) {
-      for (const signature of signatures) {
+    const catalogueSignatures = psql(`
+      select proc.oid::pg_catalog.regprocedure::text
+      from pg_catalog.pg_proc proc
+      join pg_catalog.pg_namespace namespace
+        on namespace.oid = proc.pronamespace
+      where namespace.nspname = 'private'
+      order by 1
+    `)
+      .split(/\r?\n/)
+      .filter(Boolean);
+
+    assert.deepEqual(
+      catalogueSignatures,
+      [...finalPrivateFunctionSignatures].sort(),
+      'Every final private function must be enumerated in the reviewed contract.',
+    );
+
+    const anonAllowlist = new Set(privatePolicyHelperGrants.anon);
+    const authenticatedAllowlist = new Set(
+      privatePolicyHelperGrants.authenticated,
+    );
+
+    for (const signature of catalogueSignatures) {
+      for (const [role, allowlist] of [
+        ['anon', anonAllowlist],
+        ['authenticated', authenticatedAllowlist],
+      ]) {
         assert.equal(
           psql(`select has_function_privilege(
             '${role}', '${signature}', 'EXECUTE'
           )::text`),
-          'true',
-          `${role} must execute policy helper ${signature}.`,
+          String(allowlist.has(signature)),
+          `Unexpected ${role} EXECUTE state for private function ${signature}.`,
         );
       }
+
+      assert.equal(
+        psql(`select has_function_privilege(
+          'service_role', '${signature}', 'EXECUTE'
+        )::text`),
+        'false',
+        `service_role must not execute private function ${signature}.`,
+      );
+      assert.equal(
+        psql(`
+          select exists (
+            select 1
+            from pg_catalog.pg_proc proc
+            cross join lateral pg_catalog.aclexplode(
+              coalesce(proc.proacl, pg_catalog.acldefault('f', proc.proowner))
+            ) acl
+            where proc.oid = '${signature}'::regprocedure
+              and acl.grantee = 0
+              and acl.privilege_type = 'EXECUTE'
+          )::text
+        `),
+        'false',
+        `PUBLIC must not provide inherited EXECUTE for ${signature}.`,
+      );
     }
 
     assert.equal(

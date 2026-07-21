@@ -2060,11 +2060,20 @@ test('forward privilege hardening uses exact signatures and explicit role allowl
   );
   assert.match(
     sql,
-    /alter default privileges in schema public revoke execute on functions from public;/,
+    /alter default privileges revoke execute on functions from public, anon, authenticated, service_role;/,
+    'Future functions require a global default EXECUTE revoke; a schema-scoped revoke cannot remove PostgreSQL\'s global PUBLIC default.',
   );
   assert.match(
     sql,
-    /alter default privileges in schema public revoke execute on functions from anon, authenticated, service_role;/,
+    /alter default privileges in schema public revoke execute on functions from public, anon, authenticated, service_role;/,
+  );
+  assert.match(
+    sql,
+    /alter default privileges in schema private revoke execute on functions from public, anon, authenticated, service_role;/,
+  );
+  assert.match(
+    sql,
+    /revoke execute on all functions in schema private from public, anon, authenticated, service_role;/,
   );
   assert.doesNotMatch(
     sql,

@@ -91,11 +91,49 @@ Moved originals:
 - `private.is_listing_media_product_admin_object(text,text)`
 - `private.is_hero_media_admin_object(text,text)`
 
+### Final effective privilege inventory
+
+| Exact signature | `anon` | `authenticated` | `service_role` | `PUBLIC` |
+| --- | --- | --- | --- | --- |
+| `private.current_quote_admin_user_id(uuid)` | No | Execute | No | No |
+| `private.is_hero_media_admin_object(text,text)` | No | Execute | No | No |
+| `private.is_listing_media_product_admin_object(text,text)` | No | Execute | No | No |
+| `private.is_public_website_quote_request(uuid,uuid)` | Execute | No | No | No |
+| `private.is_workspace_admin_access_member(uuid)` | No | Execute | No | No |
+| `private.is_workspace_member(uuid)` | No | Execute | No | No |
+| `private.is_workspace_product_manager(uuid)` | No | Execute | No | No |
+| `private.is_workspace_quote_manager(uuid)` | No | Execute | No | No |
+| `private.quote_submission_payload_digest(uuid,uuid,text,text,text,text,text,date,text,text,text,text,jsonb,uuid)` | No | No | No | No |
+| `private.submit_public_quote_request_unadmitted(uuid,uuid,text,text,text,text,text,date,text,text,text,text,jsonb,uuid)` | No | No | No | No |
+
+The migration owner retains inherent management rights for every function. The
+two owner-only internal functions remain callable only through their reviewed
+owner-executed, schema-qualified dependencies.
+
 `anon` receives `USAGE` on `private` and exact execution only on the public
 quote policy helper. `authenticated` receives `USAGE` and exact execution only
 on the seven admin/RLS/Storage helpers it needs. The schema is not exposed by
 PostgREST, all other private objects retain their revokes, and `service_role`
 receives no schema usage or helper execution grant.
+
+The forward migration makes future functions deny-by-default for the migration
+owner with a global `ALTER DEFAULT PRIVILEGES ... REVOKE EXECUTE` from
+`PUBLIC`, `anon`, `authenticated`, and `service_role`. Separate `public` and
+`private` schema-scoped revokes remain only to reverse any earlier matching
+schema-scoped grants; they are not treated as protection from PostgreSQL's
+global default `PUBLIC EXECUTE`. After all helper moves and creations, the
+migration revokes execution on every existing function in `private` before
+restoring the exact helper allowlist above.
+
+## Production PostgREST Prerequisite
+
+Before applying the forward migration to production, verify read-only that
+`private` is absent from PostgREST's exposed schemas. Do not expose `private`
+and do not add it to PostgREST's extra search path for this migration:
+explicitly schema-qualified `private.*` RLS and Storage policy helpers do not
+require either setting. Treat an exposed or unverified `private` schema as a
+deployment hold. This verification must not change PostgREST, Supabase, or
+production configuration.
 
 ## Regression Sources
 
@@ -105,8 +143,9 @@ receives no schema usage or helper execution grant.
   every pre-repair signature and rejects unreviewed grants.
 - `scripts/test-supabase-rls.cjs` applies the chain through
   `20260721090000`, models direct and inherited production-shaped grants,
-  applies the forward migration, and then runs the complete RLS/schema suite.
+  applies the forward migration, creates deny-by-default probes in `public`
+  and `private`, and then runs the complete RLS/schema suite.
 - `scripts/security-remediation-rls-checks.cjs` enumerates the final catalog,
-  invokes every non-allowlisted public definer as `anon`, checks role ACLs and
-  private policy dependencies, and preserves the admission/handoff/admin
-  behavior tests.
+  invokes every non-allowlisted public definer as `anon`, enumerates every
+  private function and its effective role privileges, checks private policy
+  dependencies, and preserves the admission/handoff/admin behavior tests.

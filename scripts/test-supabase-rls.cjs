@@ -5230,6 +5230,10 @@ function main() {
     psql(`
       grant execute on all functions in schema public
         to public, anon, authenticated, service_role;
+      alter default privileges in schema public
+        grant execute on functions to public, anon, authenticated, service_role;
+      alter default privileges in schema private
+        grant execute on functions to public, anon, authenticated, service_role;
     `);
     assert.equal(
       psql(`select has_function_privilege(
