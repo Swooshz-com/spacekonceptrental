@@ -64,7 +64,7 @@ begin
     v_expires_at::text
   );
   v_signature := encode(
-    public.hmac(
+    extensions.hmac(
       convert_to(v_message, 'UTF8'),
       convert_to('local-rls-quote-admission-secret-for-tests-only', 'UTF8'),
       'sha256'

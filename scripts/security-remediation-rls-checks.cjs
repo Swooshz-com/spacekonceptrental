@@ -30,7 +30,7 @@ function registerSecurityRemediationRlsChecks({
       select
         digest || '|' || expires_at::text || '|' ||
         encode(
-          public.hmac(
+          extensions.hmac(
             convert_to(
               concat_ws(
                 E'\\n', 'skr.quote.submit.v1', '${workspaceId}',
@@ -49,6 +49,77 @@ function registerSecurityRemediationRlsChecks({
 
     return { digest, expiresAt, signature };
   }
+
+  check('pgcrypto matches the production extensions schema', () => {
+    assert.equal(
+      psql(`
+        select namespace.nspname
+        from pg_catalog.pg_extension extension
+        join pg_catalog.pg_namespace namespace
+          on namespace.oid = extension.extnamespace
+        where extension.extname = 'pgcrypto'
+      `),
+      'extensions',
+    );
+    assert.equal(
+      psql(`select (to_regprocedure('public.digest(bytea,text)') is null)::text`),
+      'true',
+      'The production-shaped database must not expose public.digest(bytea, text).',
+    );
+    assert.equal(
+      psql(`select (to_regprocedure('public.hmac(bytea,bytea,text)') is null)::text`),
+      'true',
+      'The production-shaped database must not expose public.hmac(bytea, bytea, text).',
+    );
+    assert.equal(
+      psql(`select (to_regprocedure('extensions.digest(bytea,text)') is not null)::text`),
+      'true',
+    );
+    assert.equal(
+      psql(`select (to_regprocedure('extensions.hmac(bytea,bytea,text)') is not null)::text`),
+      'true',
+    );
+    assert.match(
+      psql(`
+        select private.quote_submission_payload_digest(
+          '70000000-0000-4000-8000-000000000129',
+          '${ids.workspaceA}',
+          'quote-security-pgcrypto',
+          'Security Customer',
+          'security-customer@example.test',
+          null,
+          null,
+          null,
+          null,
+          '/quote',
+          null,
+          'security-pgcrypto-129',
+          '[]'::jsonb,
+          '71000000-0000-4000-8000-000000000129'
+        )
+      `),
+      /^[a-f0-9]{64}$/,
+      'The private payload digest must execute against extensions.digest.',
+    );
+    assert.equal(
+      scalarAs(
+        'authenticated',
+        ids.authMemberA,
+        `select public.enqueue_search_index_job(
+          '${ids.workspaceA}',
+          'listing',
+          'f3000000-0000-4000-8000-000000000129',
+          'admin_only',
+          'upsert',
+          'pgcrypto-schema-v1',
+          null,
+          '{"source": "pgcrypto-schema-test"}'::jsonb
+        )->>'status'`,
+      ),
+      'queued',
+      'The search-index fallback digest must resolve pgcrypto from extensions.',
+    );
+  });
 
   function submitSql(
     {

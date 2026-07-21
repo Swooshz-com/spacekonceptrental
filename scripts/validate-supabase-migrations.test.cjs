@@ -1907,6 +1907,26 @@ test('preproduction remediation keeps admin access writes workspace-local', () =
   );
 });
 
+test('preproduction remediation uses production-shaped pgcrypto schema qualification', () => {
+  const migration = readRealMigration(
+    '20260721090000_preproduction_security_remediation.sql',
+  );
+  const sql = normalizeSql(migration);
+
+  assert.match(sql, /extensions\.digest\(/);
+  assert.match(sql, /extensions\.hmac\(/);
+  assert.match(
+    sql,
+    /alter function public\.execute_admin_product_write\( text, uuid, uuid, jsonb \) set search_path = public, extensions;/,
+  );
+  assert.match(
+    sql,
+    /alter function public\.enqueue_search_index_job\( uuid, text, uuid, text, text, text, text, jsonb, text \) set search_path = public, extensions;/,
+  );
+  assert.doesNotMatch(sql, /public\.digest\(/);
+  assert.doesNotMatch(sql, /public\.hmac\(/);
+});
+
 test('real migrations add workspace-scoped homepage hero content with protected admin writes', () => {
   const migrationFileName =
     '20260703100000_homepage_hero_content_foundation.sql';
