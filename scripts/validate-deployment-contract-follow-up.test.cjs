@@ -18,18 +18,24 @@ function readJson(relativePath) {
 }
 
 test('deployment contract PR leaves agent governance byte-identical to its base', () => {
-  childProcess.execFileSync(
-    'git',
+  const expectedBaseBlobIds = new Map([
+    ['AGENTS.md', '3453e0b96d302f94dfc4089176fee35121881841'],
     [
-      'diff',
-      '--exit-code',
-      'd1aa6c8a67212bfe35f494f8cec55c1214cf6b91',
-      '--',
-      'AGENTS.md',
       'website/test/phase-2b-g-agents-instructions.test.ts',
+      '10501d474aa0cf66c738910e3fdafc83125c5fca',
     ],
-    { cwd: repoRoot, stdio: 'pipe' },
-  );
+  ]);
+
+  for (const [relativePath, expectedBlobId] of expectedBaseBlobIds) {
+    const actualBlobId = childProcess
+      .execFileSync('git', ['hash-object', relativePath], {
+        cwd: repoRoot,
+        encoding: 'utf8',
+      })
+      .trim();
+
+    assert.equal(actualBlobId, expectedBlobId);
+  }
 });
 
 test('authorised production UAT is Google OAuth only', () => {
