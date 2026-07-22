@@ -1,9 +1,11 @@
 # Production Security Readiness Gate
 
-This gate is a safe local and hosted-runtime validation for the SKR owner MVP
-launch environment. It checks required production launch configuration by env
-name only and never prints env values, API keys, secrets, provider response
-bodies, connection strings, or full email values.
+This document defines two separate production-security stages. Stage A is a
+repository-safe static gate for controlled Google OAuth deployment while quote
+submission stays disabled and n8n stays inactive. Stage B is the existing full
+hosted launch gate and checks required production launch configuration by env
+name only. Neither command prints env values, API keys, secrets, provider
+response bodies, connection strings, or full email values.
 
 This gate does not deploy, connect Supabase Cloud, configure providers, send
 email, call n8n or email-provider APIs, call Pinecone, call HubSpot, mutate
@@ -54,13 +56,27 @@ reported as a warning for follow-up inventory review.
 
 ## Command
 
-Local/dev informational mode:
+Stage A repository-safe mode:
+
+```powershell
+npm run validate:stage-a-oauth-deployment-readiness
+```
+
+This command validates tracked-file security, the Node 24 contract, and the
+staged environment contract without reading provider configuration or requiring
+any `QUOTE_*` or `N8N_*` value. It does not prove a deployment or real-owner
+OAuth UAT. The production smoke makes no direct provider API call by the smoke
+harness and no mutating provider call. Route rendering may exercise configured
+read-only Supabase-backed application paths through the deployed first-party
+application.
+
+Stage B local/dev informational mode:
 
 ```powershell
 npm run validate:production-security-readiness
 ```
 
-Launch enforcement mode:
+Stage B launch enforcement mode:
 
 ```powershell
 npm run validate:production-security-readiness -- --launch --public-security-definer-catalog $catalogPath
@@ -74,8 +90,9 @@ server-side env has been configured there.
 
 | Mode | How to run | Missing/invalid launch env |
 | --- | --- | --- |
-| Local/dev | No mode env, or mode set to local | Reports missing launch env and missing live catalog as warnings; exits success if static checks pass. |
-| Launch | `npm run validate:production-security-readiness -- --launch --public-security-definer-catalog $catalogPath` | Enforces env, static checks, complete live function catalog, and exact reviewed privilege contracts. |
+| Stage A repository-safe | `npm run validate:stage-a-oauth-deployment-readiness` | Requires no provider env, quote configuration, active n8n configuration, or live catalog. |
+| Stage B local/dev | No mode env, or mode set to local | Reports missing full-launch env and missing live catalog as warnings; exits success if static checks pass. |
+| Stage B launch | `npm run validate:production-security-readiness -- --launch --public-security-definer-catalog $catalogPath` | Enforces full env, static checks, complete live function catalog, and exact reviewed privilege contracts. |
 
 Do not infer launch readiness from random hosting env. Use the explicit
 launch mode flag, or set `SKR_PRODUCTION_READINESS_MODE` to launch only for the
@@ -85,6 +102,16 @@ readiness command.
 
 Review and set these values only in the hosting provider's server-side runtime
 environment. Do not commit `.env` files or real env values.
+
+For Stage A, only `SUPABASE_URL`, `SUPABASE_ANON_KEY`,
+`CATALOGUE_WORKSPACE_ID`, `ADMIN_TRUSTED_WORKSPACE_ID`,
+`ADMIN_EXPECTED_ORIGIN`, `ADMIN_EXPECTED_HOST`, and
+`ADMIN_CSRF_PROOF_SECRET` are required by the deployment contract. Stage A
+requires no active n8n configuration, no quote-persistence/admission
+configuration, and no quote enablement.
+
+The table below is the full Stage B launch set enforced by
+`validate:production-security-readiness -- --launch`:
 
 | Env name | Purpose | Launch requirement |
 | --- | --- | --- |
@@ -161,7 +188,7 @@ Docs, tests, and env contract files may mention env names for review and
 validation purposes. The command reports only file paths, env names, and safe
 reason labels.
 
-## n8n Enquiry Handoff Review
+## Stage B n8n Enquiry Handoff Review
 
 Verify the n8n enquiry handoff outside the repo before live quote testing:
 
@@ -180,7 +207,7 @@ Verify the n8n enquiry handoff outside the repo before live quote testing:
 Do not paste the n8n webhook URL, shared secret, email provider credentials, or
 provider tokens into chat, docs, PR bodies, screenshots, logs, or `.env` files.
 
-## Safe Live Quote Verification
+## Stage B Safe Live Quote Verification
 
 After launch mode passes in the hosted/runtime environment:
 
@@ -202,7 +229,7 @@ Delivery Log must not show customer messages, requested item detail, full email
 bodies, raw provider payloads, headers, cookies, tokens, secrets, API keys, or
 provider response bodies.
 
-## Launch Hold Conditions
+## Stage B Launch Hold Conditions
 
 Hold launch if any of these are true:
 
@@ -221,3 +248,28 @@ Hold launch if any of these are true:
 
 Public visuals remain frozen unless an explicitly scoped functional bug is
 found.
+
+## Stage A Hold Conditions
+
+Hold controlled OAuth deployment if any of these are true:
+
+- `npm run validate:stage-a-oauth-deployment-readiness` fails;
+- the requested immutable SHA and resolved checkout/build SHA are not proven
+  exactly equal;
+- the immutable deployment identifier, pre-deployment identity, or reviewed
+  rollback-target evidence is unavailable;
+- quote submission is not proven disabled;
+- n8n is not proven inactive;
+- the read-only production smoke fails or issues a non-GET/HEAD request;
+- anonymous `/admin` does not deny or redirect to the first-party login surface;
+- a redirect exposes localhost, internal proxy authority, or an arbitrary host;
+- any customer quote is submitted; or
+- any provider, SQL, stack, secret, or environment detail leaks publicly.
+
+Record Google OAuth owner UAT as `PASS | HOLD - NOT RUN | FAIL`. Stage A
+remains incomplete and held until real-owner Google OAuth UAT passes. A
+controlled exact-SHA deployment may exist temporarily for UAT, but the Stage A
+record remains `HOLD - NOT RUN`, not `PASS`, until the UAT passes.
+
+Do not weaken the Stage B launch validator to clear Stage A. Stage A does not
+authorise public enquiry launch.

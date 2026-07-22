@@ -2,6 +2,9 @@
   "name": "spacekonceptrental-website",
   "private": true,
   "type": "module",
+  "engines": {
+    "node": ">=24 <25"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
