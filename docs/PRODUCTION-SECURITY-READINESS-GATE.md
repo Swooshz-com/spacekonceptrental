@@ -65,7 +65,10 @@ npm run validate:stage-a-oauth-deployment-readiness
 This command validates tracked-file security, the Node 24 contract, and the
 staged environment contract without reading provider configuration or requiring
 any `QUOTE_*` or `N8N_*` value. It does not prove a deployment or real-owner
-OAuth UAT.
+OAuth UAT. The production smoke makes no direct provider API call by the smoke
+harness and no mutating provider call. Route rendering may exercise configured
+read-only Supabase-backed application paths through the deployed first-party
+application.
 
 Stage B local/dev informational mode:
 
@@ -253,8 +256,8 @@ Hold controlled OAuth deployment if any of these are true:
 - `npm run validate:stage-a-oauth-deployment-readiness` fails;
 - the requested immutable SHA and resolved checkout/build SHA are not proven
   exactly equal;
-- the immutable deployment identifier or previous known-good revision evidence
-  is unavailable;
+- the immutable deployment identifier, pre-deployment identity, or reviewed
+  rollback-target evidence is unavailable;
 - quote submission is not proven disabled;
 - n8n is not proven inactive;
 - the read-only production smoke fails or issues a non-GET/HEAD request;
@@ -262,6 +265,11 @@ Hold controlled OAuth deployment if any of these are true:
 - a redirect exposes localhost, internal proxy authority, or an arbitrary host;
 - any customer quote is submitted; or
 - any provider, SQL, stack, secret, or environment detail leaks publicly.
+
+Record Google OAuth owner UAT as `PASS | HOLD - NOT RUN | FAIL`. Stage A
+remains incomplete and held until real-owner Google OAuth UAT passes. A
+controlled exact-SHA deployment may exist temporarily for UAT, but the Stage A
+record remains `HOLD - NOT RUN`, not `PASS`, until the UAT passes.
 
 Do not weaken the Stage B launch validator to clear Stage A. Stage A does not
 authorise public enquiry launch.

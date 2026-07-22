@@ -102,8 +102,8 @@ private dashboard links, workspace/admin identifiers, or customer data.
 | Resolved checkout/build SHA | `<40-character-sha-reported-by-build>` |
 | Requested SHA equals resolved SHA | `<PASS-or-FAIL>` |
 | Deployment UUID or equivalent immutable deployment identifier | `<immutable-deployment-id>` |
-| Previous known-good SHA | `<40-character-sha>` |
-| Previous known-good deployment identifier | `<immutable-deployment-id>` |
+| Pre-deployment deployed SHA | `<40-character-sha>` |
+| Pre-deployment deployment identifier | `<immutable-deployment-id>` |
 | Environment class | `<controlled-oauth-or-full-enquiry-launch>` |
 | Terminal deployment state | `<finished-success-or-failed-safe-state>` |
 | Deployment started at | `<ISO-8601-timestamp>` |
@@ -141,13 +141,16 @@ do not record provider credentials or environment values.
 - Exact-SHA deployment: `<result-and-evidence-reference>`
 - Public read routes only: `<result-and-evidence-reference>`
 - Anonymous admin denial: `<result-and-evidence-reference>`
-- Google OAuth owner UAT: `<result-and-evidence-reference-or-NOT-RUN>`
+- Google OAuth owner UAT status (`PASS | HOLD - NOT RUN | FAIL`): `<status-and-evidence-reference>`
 - Quote remained disabled: `<PASS-or-FAIL>`
 - n8n remained inactive: `<PASS-or-FAIL>`
 - No customer quote submission occurred: `<PASS-or-FAIL>`
 
 Stage A must not claim enquiry-launch readiness and must not require active n8n
-configuration.
+configuration. Stage A remains incomplete and held until real-owner Google
+OAuth UAT passes. A controlled exact-SHA deployment may exist temporarily for
+UAT, but its Stage A record remains `HOLD - NOT RUN`, not `PASS`, until the UAT
+passes.
 
 ### Stage B - Full Enquiry Launch
 
@@ -191,6 +194,10 @@ Record presence/validity results by name only. Never include a value.
 Attach or reference the secret-safe machine-readable output from
 `npm run smoke:production-readonly`. Do not paste response bodies.
 
+There is no direct provider API call by the smoke harness and no mutating
+provider call. Route rendering may exercise configured read-only Supabase-backed
+application paths through the deployed first-party application.
+
 ## Enquiry Handoff Evidence - Stage B Only
 
 - The customer submits only to first-party `POST /api/quote`.
@@ -208,23 +215,44 @@ Attach or reference the secret-safe machine-readable output from
 
 | Field | Required evidence |
 | --- | --- |
-| Rollback target SHA | `<40-character-known-good-sha>` |
-| Rollback target deployment identifier | `<immutable-deployment-id>` |
+| Pre-rollback deployed SHA | `<40-character-sha>` |
+| Pre-rollback deployment identifier | `<immutable-deployment-id>` |
+| Rollback-target stage classification | `<Stage-A-or-Stage-B>` |
+| Requested rollback target SHA | `<40-character-reviewed-known-good-sha>` |
+| Requested rollback target deployment identifier | `<immutable-deployment-id>` |
 | Rollback approval reference | `<approval-reference>` |
 | Rollback outcome | `<not-required-success-failed-or-aborted>` |
 | Rollback started/completed at | `<ISO-8601-timestamps-or-not-required>` |
 | Resolved post-rollback SHA | `<40-character-sha-or-not-required>` |
-| Rollback target equals resolved SHA | `<PASS-FAIL-or-not-required>` |
+| Resolved post-rollback deployment identifier | `<immutable-deployment-id-or-not-required>` |
+| Exact target/resolved equality result | `<PASS-FAIL-or-not-required>` |
 | Post-rollback terminal state | `<safe-terminal-state-or-not-required>` |
+
+The requested rollback target is the reviewed known-good target. The
+pre-rollback deployment may be suspect or failed and must not be labelled
+known-good merely because it existed before rollback.
 
 ## Post-rollback Route Evidence
 
 Record the same public and anonymous-admin route matrix used after deployment,
-or state `not required` only when no rollback occurred. Also record:
+or state `not required` only when no rollback occurred.
 
-- quote remained disabled during and after rollback: `<PASS-FAIL-or-not-required>`
-- n8n remained inactive during and after rollback: `<PASS-FAIL-or-not-required>`
-- no customer quote submission occurred: `<PASS-FAIL-or-not-required>`
+### Stage A rollback target
+
+- quote submission disabled during and after rollback: `<PASS-FAIL>`
+- n8n inactive during and after rollback: `<PASS-FAIL>`
+- no customer quote submission occurred: `<PASS-FAIL>`
+
+### Stage B rollback target
+
+- quote and n8n state matched the separately reviewed rollback-target contract:
+  `<PASS-FAIL-and-evidence-reference>`
+- exact intended target state and observed state: `<secret-safe-state-evidence>`
+- Stage A invariants were not imposed merely because rollback occurred:
+  `<confirmed-by>`
+
+For either target stage, also record:
+
 - no redirect exposed localhost/internal proxy authority: `<PASS-FAIL-or-not-required>`
 - no provider/SQL/stack/env/secret leakage appeared: `<PASS-FAIL-or-not-required>`
 

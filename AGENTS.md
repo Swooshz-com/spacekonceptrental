@@ -260,43 +260,32 @@ naming the target and allowed operation.
 Do not commit secrets, credentials, `.env` values, private values,
 customer/private data, or generated local outputs.
 
-## Current Runtime State And Separate Gates
+## Current Runtime Blockers
 
-The repository now implements and tests these server-side application
-boundaries. Their repository status is not evidence that any provider is
-configured or that production is deployed:
+The next auth/runtime implementation step must still avoid product writes, admin UI, login/logout, protected admin pages, Storage, deployment, Supabase Cloud, browser Supabase, service-role runtime paths, n8n changes, Pinecone runtime code, SaaS chatbot work, and `website/chat-config.js`.
 
-- Supabase admin authentication runtime wiring and DB-backed
-  identity/membership resolution.
-- Server auth-cookie reads and writes, including the reviewed production cookie
-  policy.
-- First-party Google OAuth login initiation, application callback, and logout
-  routes.
-- Protected admin pages and the authorised owner/admin shell.
-- Approved admin product, category, and catalogue-listing writes behind the
-  reviewed auth, membership, RLS, audit, route/action, and CSRF boundaries.
-- Hosted deployment preparation, runbooks, static validators, and smoke
-  contracts.
+These remain blocked until explicitly approved, implemented in the right phase,
+and proven by tests:
 
-The following remain separately gated and require explicit current-turn
-approval naming the exact target and operation:
+- Real auth runtime wiring remains blocked.
+- Supabase Auth runtime wiring remains blocked.
+- Cookie reads remain blocked.
+- Header reads remain blocked.
+- Login/logout routes remain blocked.
+- Protected admin pages remain blocked.
+- Admin UI remains blocked.
+- Resolver/adapter runtime wiring remains blocked.
+- Product/category/product image writes remain blocked.
+- Conversation/message writes remain blocked.
+- Supabase Storage remains blocked.
+- Supabase Cloud connection remains blocked.
+- Deployment and Vercel config remain blocked.
+- Browser Supabase remains blocked.
+- Service-role runtime paths remain blocked unless separately approved.
 
-- Any live provider mutation.
-- Production deployment, restart, rollback, traffic change, or launch.
-- Google OAuth or Supabase provider configuration.
-- Workspace, admin-user, membership, or role record mutation.
-- Supabase Storage configuration or policy changes.
-- Quote enablement or customer quote submission.
-- n8n import, configuration, activation, execution, or enquiry delivery.
-- Service-role runtime paths.
-- Customer/private-data access and public launch.
-
-Browser Supabase, conversation/message persistence wiring, Pinecone runtime
-changes, SaaS chatbot work in this repo, and access to
-`website/chat-config.js` also remain prohibited unless separately approved.
-Do not weaken no-secret, same-origin, Host validation, CSRF, RLS, audit,
-workspace, quote-disabled, or n8n-inactive boundaries to advance a deployment
-gate.
+Product/category/product image writes remain blocked until real
+auth/membership resolution, RLS, audit, and route/action boundaries are
+implemented and tested.
 
 ## Checklist Maintenance
 

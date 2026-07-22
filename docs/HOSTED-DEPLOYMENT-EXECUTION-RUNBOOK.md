@@ -13,6 +13,12 @@ Current source status: repository preparation does not prove provider or launch
 readiness. Stage A and Stage B have separate gates below. Public customer quote
 traffic remains blocked until every Stage B gate passes.
 
+Repository-tested application boundaries include Supabase admin auth runtime
+wiring, server auth-cookie reads and writes, first-party login, callback, and
+logout routes, protected admin pages, and approved admin product, category, and
+listing writes. Production deployment and provider configuration remain
+separately gated; repository implementation is not evidence of either.
+
 ## Instruction Sources Used
 
 - `AGENTS.md`
@@ -60,6 +66,11 @@ Google OAuth owner UAT:
 - run the Google OAuth owner/admin UAT through the first-party login route and
   exact application callback;
 - do not submit a customer quote or claim full enquiry launch readiness.
+
+Record Google OAuth owner UAT as `PASS | HOLD - NOT RUN | FAIL`. Stage A
+remains incomplete and held until real-owner Google OAuth UAT passes. An
+exact-SHA deployment may exist temporarily for controlled UAT, but its Stage A
+record remains `HOLD - NOT RUN`, not `PASS`, until the UAT passes.
 
 ### Stage B - Full Enquiry Launch
 
@@ -230,7 +241,10 @@ npm run validate:stage-a-oauth-deployment-readiness
 After a separately approved Stage A deployment, provide the canonical base only
 through the dedicated input and run the read-only smoke. The command performs
 manual-redirect GET requests only; it does not authenticate, initiate OAuth,
-submit a quote, call n8n, or mutate external state.
+submit a quote, call n8n, or mutate external state. There is no direct provider
+API call by the smoke harness and no mutating provider call. Route rendering
+may exercise configured read-only Supabase-backed application paths through the
+deployed first-party application.
 
 ```powershell
 $env:SKR_PRODUCTION_BASE_URL = 'https://spacekonceptrental.com'
@@ -303,7 +317,9 @@ Do not enable public traffic if any condition below is true:
 
 Stage A is also held if exact requested/resolved SHA equality or an immutable
 deployment identifier is missing, quote is not proven disabled, n8n is not
-proven inactive, or the production read-only smoke does not pass.
+proven inactive, the production read-only smoke does not pass, or real-owner
+Google OAuth UAT has not passed. Use `HOLD - NOT RUN`, never a bare `NOT-RUN`,
+when UAT has not occurred.
 
 ## Rollback Or Disable Plan
 
@@ -318,6 +334,14 @@ If launch must be stopped or reversed:
   and operation.
 - Record incident notes with safe status labels, timestamps, request references,
   commit SHA, and affected route names only.
+- Record the pre-rollback deployed SHA and deployment identifier separately
+  from the requested reviewed rollback-target SHA and identifier. Capture the
+  resolved post-rollback SHA and identifier and their exact equality result.
+- Classify the rollback target as Stage A or Stage B. A Stage A rollback target
+  requires quote submission disabled, n8n inactive, and no customer quote
+  submission. A Stage B rollback target requires exact evidence that quote and
+  n8n state match the separately reviewed rollback-target contract and intended
+  target state; a rollback alone does not impose Stage A state.
 - After correction, rerun the readiness and smoke gates before restoring public
   traffic.
 

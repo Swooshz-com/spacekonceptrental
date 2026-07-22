@@ -222,6 +222,9 @@ async function checkRoute(fetchImpl, check) {
 async function checkWwwRedirect(fetchImpl) {
   const target = new URL('/', approvedWwwOrigin);
   const response = await safeFetch(fetchImpl, target, { method: 'GET' });
+  const body = await readBoundedText(response);
+
+  assertNoPublicLeakage(body);
 
   if (!redirectStatuses.has(response.status)) {
     fail('www_canonical_redirect_status_unexpected');

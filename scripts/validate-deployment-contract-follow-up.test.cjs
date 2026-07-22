@@ -1,4 +1,5 @@
 const assert = require('node:assert/strict');
+const childProcess = require('node:child_process');
 const fs = require('node:fs');
 const path = require('node:path');
 const test = require('node:test');
@@ -15,6 +16,21 @@ function read(relativePath) {
 function readJson(relativePath) {
   return JSON.parse(read(relativePath));
 }
+
+test('deployment contract PR leaves agent governance byte-identical to its base', () => {
+  childProcess.execFileSync(
+    'git',
+    [
+      'diff',
+      '--exit-code',
+      'd1aa6c8a67212bfe35f494f8cec55c1214cf6b91',
+      '--',
+      'AGENTS.md',
+      'website/test/phase-2b-g-agents-instructions.test.ts',
+    ],
+    { cwd: repoRoot, stdio: 'pipe' },
+  );
+});
 
 test('authorised production UAT is Google OAuth only', () => {
   const runbook = read(
@@ -35,20 +51,15 @@ test('authorised production UAT is Google OAuth only', () => {
   assert.doesNotMatch(runbook, /public signup is allowed|create a fake user/i);
 });
 
-test('root runtime guidance reflects implemented auth and retains provider gates', () => {
-  const agents = read('AGENTS.md');
+test('hosted guidance records implemented runtime separately from live gates', () => {
+  const hosted = read('docs/HOSTED-DEPLOYMENT-EXECUTION-RUNBOOK.md');
 
-  assert.match(agents, /Supabase admin authentication runtime wiring/i);
-  assert.match(agents, /Server auth-cookie reads and writes/i);
-  assert.match(agents, /Google OAuth login initiation, application callback, and logout/i);
-  assert.match(agents, /Protected admin pages/i);
-  assert.match(agents, /Approved admin product, category, and catalogue-listing writes/i);
-  assert.match(agents, /Production deployment, restart, rollback, traffic change, or launch/i);
-  assert.match(agents, /Quote enablement or customer quote submission/i);
-  assert.match(agents, /n8n import, configuration, activation, execution, or enquiry delivery/i);
-  assert.doesNotMatch(agents, /Real auth runtime wiring remains blocked/i);
-  assert.doesNotMatch(agents, /Login\/logout routes remain blocked/i);
-  assert.doesNotMatch(agents, /Protected admin pages remain blocked/i);
+  assert.match(hosted, /Supabase admin auth runtime\s+wiring/i);
+  assert.match(hosted, /server auth-cookie reads and writes/i);
+  assert.match(hosted, /login, callback, and\s+logout routes/i);
+  assert.match(hosted, /protected admin pages/i);
+  assert.match(hosted, /approved admin product, category, and\s+listing writes/i);
+  assert.match(hosted, /provider configuration remain\s+separately gated/i);
 });
 
 test('Stage A excludes n8n and quote enablement while Stage B retains full handoff readiness', () => {
@@ -81,6 +92,26 @@ test('Stage A excludes n8n and quote enablement while Stage B retains full hando
   );
 });
 
+test('production smoke documentation distinguishes harness calls from application reads', () => {
+  const paths = [
+    'docs/DEPLOYMENT-SMOKE-TEST-RUNBOOK.md',
+    'docs/HOSTED-DEPLOYMENT-EXECUTION-RUNBOOK.md',
+    'docs/PRODUCTION-SECURITY-READINESS-GATE.md',
+    'docs/templates/DEPLOYMENT-EVIDENCE.md',
+  ];
+
+  for (const relativePath of paths) {
+    const content = read(relativePath);
+    assert.match(content, /no direct provider\s+API call by the\s+smoke\s+harness/i);
+    assert.match(content, /no mutating\s+provider call/i);
+    assert.match(
+      content,
+      /route rendering\s+may exercise configured\s+read-only Supabase[\s\S]{0,120}application[\s\S]{0,40}paths/i,
+    );
+    assert.doesNotMatch(content, /\bno (?:n8n\/)?provider call(?: is made| occurs)?\b/i);
+  }
+});
+
 test('evidence templates require exact revision, immutable deployment, and rollback proof', () => {
   for (const relativePath of [
     'docs/templates/DEPLOYMENT-EVIDENCE.md',
@@ -88,11 +119,10 @@ test('evidence templates require exact revision, immutable deployment, and rollb
   ]) {
     const template = read(relativePath);
     assert.match(template, /Repository/);
-    assert.match(template, /Requested immutable(?: rollback)? SHA/i);
-    assert.match(template, /Resolved checkout\/build SHA/i);
-    assert.match(template, /equals resolved SHA/i);
+    assert.match(template, /Requested (?:immutable |rollback target )?SHA/i);
+    assert.match(template, /Resolved (?:checkout\/build|post-rollback) SHA/i);
+    assert.match(template, /(?:equals resolved SHA|target\/resolved equality result)/i);
     assert.match(template, /deployment UUID or equivalent immutable/i);
-    assert.match(template, /Previous known-good SHA/i);
     assert.match(template, /deployment identifier/i);
     assert.match(template, /Build context/i);
     assert.match(template, /npm ci/);
@@ -100,8 +130,67 @@ test('evidence templates require exact revision, immutable deployment, and rollb
     assert.match(template, /started at/i);
     assert.match(template, /completed at/i);
     assert.match(template, /Auto-deploy/i);
-    assert.match(template, /quote remained disabled/i);
-    assert.match(template, /n8n remained inactive/i);
+  }
+});
+
+test('rollback evidence distinguishes pre-rollback deployment from known-good target', () => {
+  for (const relativePath of [
+    'docs/templates/DEPLOYMENT-EVIDENCE.md',
+    'docs/templates/rollback-drill-result-template.md',
+  ]) {
+    const template = read(relativePath);
+    assert.match(template, /Pre-rollback deployed SHA/i);
+    assert.match(template, /Pre-rollback deployment identifier/i);
+    assert.match(template, /Requested rollback target SHA/i);
+    assert.match(template, /Requested rollback target deployment identifier/i);
+    assert.match(template, /Resolved post-rollback SHA/i);
+    assert.match(template, /Resolved post-rollback deployment identifier/i);
+    assert.match(template, /target.*resolved.*equality result/i);
+    assert.doesNotMatch(template, /Previous known-good/i);
+  }
+});
+
+test('rollback evidence is strict for Stage A and target-specific for Stage B', () => {
+  const deployment = read('docs/templates/DEPLOYMENT-EVIDENCE.md');
+  const rollback = read('docs/templates/rollback-drill-result-template.md');
+  const combined = `${deployment}\n${rollback}`;
+
+  assert.match(combined, /Rollback-target stage classification/i);
+  assert.match(combined, /Stage A rollback target[\s\S]{0,500}quote submission disabled/i);
+  assert.match(combined, /Stage A rollback target[\s\S]{0,500}n8n inactive/i);
+  assert.match(combined, /Stage A rollback target[\s\S]{0,500}no customer quote submission/i);
+  assert.match(
+    combined,
+    /Stage B rollback target[\s\S]{0,700}separately reviewed rollback-target contract/i,
+  );
+  assert.match(
+    combined,
+    /Stage B rollback target[\s\S]{0,700}intended target state/i,
+  );
+  assert.doesNotMatch(
+    combined,
+    /Stage B rollback target[\s\S]{0,500}(?:quote submission disabled|n8n inactive)/i,
+  );
+});
+
+test('unrun real-owner OAuth UAT keeps Stage A on hold', () => {
+  const paths = [
+    'docs/templates/DEPLOYMENT-EVIDENCE.md',
+    'docs/HOSTED-DEPLOYMENT-EXECUTION-RUNBOOK.md',
+    'docs/DEPLOYMENT-SMOKE-TEST-RUNBOOK.md',
+  ];
+
+  for (const relativePath of paths) {
+    const content = read(relativePath);
+    assert.match(content, /PASS\s*\|\s*HOLD - NOT RUN\s*\|\s*FAIL/i);
+    assert.match(
+      content,
+      /Stage A\s+remains (?:incomplete and )?held until[\s\S]{0,100}real-owner Google\s+OAuth UAT[\s\S]{0,50}passes/i,
+    );
+    assert.doesNotMatch(
+      content,
+      /Google OAuth owner UAT:(?![^\n]*HOLD - NOT RUN)[^\n]*NOT[- ]RUN/i,
+    );
   }
 });
 

@@ -57,7 +57,11 @@ This runbook covers:
 
 Stage A is read-only apart from the separately approved exact-SHA deployment
 and real-owner Google OAuth UAT. Quote submission remains disabled and n8n
-remains inactive. Required smoke evidence is:
+remains inactive. Google OAuth owner UAT status is `PASS | HOLD - NOT RUN |
+FAIL`. Stage A remains incomplete and held until real-owner Google OAuth UAT
+passes. A controlled exact-SHA deployment may exist for that UAT, but its Stage
+A record remains `HOLD - NOT RUN`, not `PASS`, until the UAT passes. Required
+smoke evidence is:
 
 - public read routes `/`, `/catalogue`, `/setups`, `/about`, and `/quote` return
   `200`;
@@ -67,7 +71,11 @@ remains inactive. Required smoke evidence is:
 - no redirect exposes localhost or internal proxy authority;
 - no obvious provider, SQL, stack, secret, or environment leakage appears; and
 - no customer quote is submitted, no OAuth is initiated by automated smoke,
-  and no n8n/provider call is made.
+  and no n8n call is made;
+- there is no direct provider API call by the smoke harness and no mutating
+  provider call; and
+- route rendering may exercise configured read-only Supabase-backed application
+  paths through the deployed first-party application.
 
 Use `npm run smoke:production-readonly` and provide the canonical production
 apex through `SKR_PRODUCTION_BASE_URL` using a secret-safe operator shell. The
@@ -531,8 +539,8 @@ Future deployment PR authors should capture:
 
 - Repository, requested immutable SHA, independently resolved checkout/build
   SHA, and the exact equality result.
-- Deployment UUID or equivalent immutable identifier, previous known-good SHA,
-  and previous known-good deployment identifier.
+- Deployment UUID or equivalent immutable identifier and the pre-deployment
+  deployed SHA and deployment identifier.
 - Build context, Node 24 runtime, `npm ci`, build/start commands, terminal state,
   deployment timestamps, operator, approval reference, and auto-deploy state.
 - Stage A or Stage B classification.
@@ -572,8 +580,14 @@ Future deployment PR authors should capture:
 - No provider/SQL/secret leakage review result.
 - No browser console exposure of server-only env values review result.
 - Rollback/disable plan review result.
-- Rollback target SHA and deployment identifier, rollback outcome, and the
-  complete post-rollback route matrix when rollback occurs.
-- Explicit confirmation that quote remained disabled and n8n remained inactive
-  for Stage A and throughout any Stage A rollback.
+- Pre-rollback deployed SHA and identifier, rollback-target stage
+  classification, requested rollback target SHA and identifier, resolved
+  post-rollback SHA and identifier, exact target/resolved equality result,
+  rollback outcome, and the complete post-rollback route matrix.
+- For a Stage A rollback target, explicit confirmation that quote submission
+  remained disabled, n8n remained inactive, and no customer quote submission
+  occurred.
+- For a Stage B rollback target, exact evidence that quote and n8n state matched
+  the separately reviewed rollback-target contract and intended target state;
+  do not force Stage A invariants onto a Stage B target.
 - Known limitations and follow-up decisions.

@@ -182,6 +182,22 @@ test('public responses fail closed on obvious provider, SQL, stack, env, or secr
   }
 });
 
+test('www redirect response bodies receive the same bounded leakage scan', async () => {
+  const mock = createMockFetch({
+    [`${www}/`]: response(308, 'SUPABASE_SERVICE_ROLE_KEY', {
+      Location: `${apex}/`,
+    }),
+  });
+
+  await assert.rejects(
+    runProductionReadOnlySmoke({
+      rawBaseUrl: apex,
+      fetchImpl: mock.fetch,
+    }),
+    /public_response_leakage/,
+  );
+});
+
 test('failure output is machine-readable and never includes the supplied URL', () => {
   const supplied = 'https://user:password@spacekonceptrental.com';
   let error;
