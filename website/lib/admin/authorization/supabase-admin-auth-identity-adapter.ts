@@ -47,6 +47,19 @@ export type SupabaseAuthCookieWriter = {
   set(name: string, value: string, options?: CookieOptions): void;
 };
 
+export type SupabaseAdminAuthCookiePolicy = CookieOptions & {
+  httpOnly: true;
+  sameSite: "lax";
+  path: "/";
+  secure: boolean;
+};
+
+export type SupabaseAdminAuthCookieWrite = {
+  name: string;
+  value: string;
+  options?: CookieOptions;
+};
+
 export type SupabaseAuthUserClient = {
   auth: {
     getUser(): Promise<{
@@ -100,6 +113,7 @@ export type SupabaseAdminAuthSessionClientFactoryInput = {
   config: Extract<SupabaseServerConfig, { configured: true }>;
   requestCookies: SupabaseAuthCookieReader;
   responseCookies: SupabaseAuthCookieWriter;
+  cookieOptions: SupabaseAdminAuthCookiePolicy;
 };
 
 export type SupabaseAdminGoogleAuthSessionInput = {
@@ -143,6 +157,7 @@ export type SupabaseAdminReadClientFactoryDependencies = {
 
 export type SupabaseAdminAuthSessionDependencies = {
   readConfig?: () => SupabaseServerConfig;
+  readNodeEnv?: () => string | undefined;
   requestCookies: SupabaseAuthCookieReader;
   responseCookies: SupabaseAuthCookieWriter;
   createSessionClient?: (
@@ -183,6 +198,33 @@ function normalizeIdentityEmail(value: string | null | undefined) {
 
 function normalizeProvider(value: string | null | undefined) {
   return normalizeRequired(value)?.toLowerCase() ?? null;
+}
+
+export function getSupabaseAdminAuthCookiePolicy(
+  nodeEnv: string | undefined = process.env.NODE_ENV
+): SupabaseAdminAuthCookiePolicy {
+  return {
+    httpOnly: true,
+    sameSite: "lax",
+    path: "/",
+    secure: nodeEnv === "production"
+  };
+}
+
+export function writeSupabaseAdminAuthCookies(
+  cookiesToSet: SupabaseAdminAuthCookieWrite[],
+  responseCookies: SupabaseAuthCookieWriter,
+  cookiePolicy: SupabaseAdminAuthCookiePolicy
+) {
+  cookiesToSet.forEach(({ name, value, options }) => {
+    const securedOptions: CookieOptions = {
+      ...options,
+      ...cookiePolicy
+    };
+
+    delete securedOptions.domain;
+    responseCookies.set(name, value, securedOptions);
+  });
 }
 
 async function readNextRequestCookies(): Promise<SupabaseAuthCookie[]> {
@@ -233,7 +275,8 @@ function createSupabaseSsrAdminReadClient({
 function createSupabaseSsrAuthSessionClient({
   config,
   requestCookies,
-  responseCookies
+  responseCookies,
+  cookieOptions
 }: SupabaseAdminAuthSessionClientFactoryInput): SupabaseAdminAuthSessionClient {
   return createServerClient(config.supabaseUrl, config.supabaseAnonKey, {
     auth: {
@@ -246,11 +289,14 @@ function createSupabaseSsrAuthSessionClient({
         return requestCookies.getAll();
       },
       setAll(cookiesToSet) {
-        cookiesToSet.forEach(({ name, value, options }) => {
-          responseCookies.set(name, value, options);
-        });
+        writeSupabaseAdminAuthCookies(
+          cookiesToSet,
+          responseCookies,
+          cookieOptions
+        );
       }
-    }
+    },
+    cookieOptions
   }) as unknown as SupabaseAdminAuthSessionClient;
 }
 
@@ -360,7 +406,10 @@ export async function signInSupabaseAdminGoogleAuthSession(
     const client = createSessionClient({
       config,
       requestCookies: dependencies.requestCookies,
-      responseCookies: dependencies.responseCookies
+      responseCookies: dependencies.responseCookies,
+      cookieOptions: getSupabaseAdminAuthCookiePolicy(
+        dependencies.readNodeEnv?.() ?? process.env.NODE_ENV
+      )
     });
     const { data, error } = await client.auth.signInWithOAuth({
       provider: "google",
@@ -416,7 +465,10 @@ export async function exchangeSupabaseAdminAuthCodeForSession(
     const client = createSessionClient({
       config,
       requestCookies: dependencies.requestCookies,
-      responseCookies: dependencies.responseCookies
+      responseCookies: dependencies.responseCookies,
+      cookieOptions: getSupabaseAdminAuthCookiePolicy(
+        dependencies.readNodeEnv?.() ?? process.env.NODE_ENV
+      )
     });
     const { error } = await client.auth.exchangeCodeForSession(code);
 
@@ -456,7 +508,10 @@ export async function signOutSupabaseAdminAuthSession(
     const client = createSessionClient({
       config,
       requestCookies: dependencies.requestCookies,
-      responseCookies: dependencies.responseCookies
+      responseCookies: dependencies.responseCookies,
+      cookieOptions: getSupabaseAdminAuthCookiePolicy(
+        dependencies.readNodeEnv?.() ?? process.env.NODE_ENV
+      )
     });
     const { error } = await client.auth.signOut();
 

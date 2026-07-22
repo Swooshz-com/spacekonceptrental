@@ -23,7 +23,7 @@ describe("POST /admin/logout", () => {
   }
 
   function createLogoutRequest(headers: Record<string, string> = {}) {
-    return new NextRequest("https://space.example/admin/logout", {
+    return new NextRequest("https://localhost:3000/admin/logout", {
       method: "POST",
       headers: {
         origin: "https://space.example",
@@ -82,7 +82,7 @@ describe("POST /admin/logout", () => {
 
     for (const headers of deniedHeaders) {
       vi.clearAllMocks();
-      const request = new NextRequest("https://space.example/admin/logout", {
+      const request = new NextRequest("https://localhost:3000/admin/logout", {
         method: "POST",
         headers
       });
@@ -94,5 +94,14 @@ describe("POST /admin/logout", () => {
         "https://space.example/admin/login?state=unauthenticated"
       );
     }
+  });
+
+  it("fails closed before sign-out when canonical route config is missing", async () => {
+    const response = await POST(createLogoutRequest());
+
+    expect(signOutSupabaseAdminAuthSession).not.toHaveBeenCalled();
+    expect(response.status).toBe(503);
+    expect(response.headers.get("location")).toBeNull();
+    expect(response.headers.get("cache-control")).toBe("no-store");
   });
 });

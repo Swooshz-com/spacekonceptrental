@@ -23,7 +23,7 @@ describe("POST /api/admin/login", () => {
   }
 
   function createLoginRequest(headers: Record<string, string> = {}) {
-    return new NextRequest("https://space.example/api/admin/login", {
+    return new NextRequest("https://localhost:3000/api/admin/login", {
       method: "POST",
       headers: {
         origin: "https://space.example",
@@ -131,7 +131,7 @@ describe("POST /api/admin/login", () => {
 
     for (const headers of deniedHeaders) {
       vi.clearAllMocks();
-      const request = new NextRequest("https://space.example/api/admin/login", {
+      const request = new NextRequest("https://localhost:3000/api/admin/login", {
         method: "POST",
         headers
       });
@@ -142,5 +142,15 @@ describe("POST /api/admin/login", () => {
         "https://space.example/admin/login?state=unauthenticated"
       );
     }
+  });
+
+  it("fails closed before session mutation when canonical route config is missing", async () => {
+    const request = createLoginRequest();
+    const response = await POST(request);
+
+    expect(signInSupabaseAdminGoogleAuthSession).not.toHaveBeenCalled();
+    expect(response.status).toBe(503);
+    expect(response.headers.get("location")).toBeNull();
+    expect(response.headers.get("cache-control")).toBe("no-store");
   });
 });
