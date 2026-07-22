@@ -138,7 +138,7 @@ traffic:
 - Allow the exact application callback
   `https://spacekonceptrental.com/api/admin/login/callback` in Supabase Auth.
 - Configure the Google web client with the exact Supabase provider callback
-  `https://nivwwznoymxalmjauytm.supabase.co/auth/v1/callback`; do not substitute
+  `https://<SUPABASE_PROJECT_REF>.supabase.co/auth/v1/callback`; do not substitute
   the application callback for this provider hop.
 - After deployment, verify PKCE, session, refreshed, chunked, and deletion
   cookie writes use `HttpOnly`, `Secure`, `SameSite=Lax`, `Path=/`, and no

@@ -39,7 +39,7 @@ Launch session rules:
 - The production application callback is exactly
   `https://spacekonceptrental.com/api/admin/login/callback`. Google returns to
   the intended Supabase project at exactly
-  `https://nivwwznoymxalmjauytm.supabase.co/auth/v1/callback`; these are
+  `https://<SUPABASE_PROJECT_REF>.supabase.co/auth/v1/callback`; these are
   separate redirect hops and must not be interchanged.
 - Every Supabase auth cookie written by server routes uses `HttpOnly`,
   `SameSite=Lax`, `Path=/`, no `Domain`, and `Secure` in production. Local
