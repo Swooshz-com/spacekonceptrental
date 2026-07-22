@@ -2,16 +2,16 @@
 
 Date: 2026-07-03
 
-Scope: final hosted deployment execution checklist for the SKR owner MVP on a
-Hostinger/Coolify/VPS stack with hosted Supabase and server-side n8n enquiry
-handoff. This runbook is documentation only. It does not approve deployment,
+Scope: staged hosted deployment execution checklist for the SKR owner MVP on a
+Hostinger/Coolify/VPS stack. Stage A covers controlled Google OAuth deployment
+with quote disabled and n8n inactive. Stage B covers the later full enquiry
+launch with the server-side n8n handoff. This runbook is documentation only. It does not approve deployment,
 mutate provider settings, change DNS, configure secrets, connect to production
 services, or enable public traffic.
 
-Current source status: source implementation has no known P0/P1 launch blocker.
-Public traffic remains blocked until hosted/runtime readiness, Supabase,
-server-side n8n enquiry handoff, safe live quote, protected admin inspection,
-and UAT gates pass.
+Current source status: repository preparation does not prove provider or launch
+readiness. Stage A and Stage B have separate gates below. Public customer quote
+traffic remains blocked until every Stage B gate passes.
 
 ## Instruction Sources Used
 
@@ -44,6 +44,38 @@ runbook. No repo map is required by current repo convention for this change.
 - Do not add broad fallbacks. A failed readiness or smoke gate is a launch hold
   until corrected and rerun.
 
+## Staged Deployment Contract
+
+### Stage A - Controlled OAuth Deployment
+
+Stage A permits only a separately approved exact-SHA deployment for controlled
+Google OAuth owner UAT:
+
+- deploy the requested immutable SHA and independently prove the resolved build
+  SHA is exactly equal;
+- keep quote submission disabled;
+- keep every n8n workflow inactive and require no n8n configuration;
+- validate public read routes and anonymous `/admin` denial with
+  `npm run smoke:production-readonly`;
+- run the Google OAuth owner/admin UAT through the first-party login route and
+  exact application callback;
+- do not submit a customer quote or claim full enquiry launch readiness.
+
+### Stage B - Full Enquiry Launch
+
+Stage B is a later, separately approved launch. It additionally requires:
+
+- a reviewed n8n enquiry workflow receiving only persisted `/api/quote` events;
+- timestamped HMAC verification and timestamp freshness enforcement;
+- durable idempotency before delivery;
+- delivery evidence;
+- deliberate quote enablement;
+- the unchanged full launch production-security validator; and
+- quote-email runtime readiness and safe live quote verification.
+
+Chatbot `/api/chat` evidence belongs to the separate chatbot lane and cannot
+prove enquiry delivery.
+
 ## Hostinger/Coolify Prerequisites
 
 Before deployment execution is approved, confirm the hosting surface is ready:
@@ -52,12 +84,15 @@ Before deployment execution is approved, confirm the hosting surface is ready:
   this repository.
 - Coolify is installed, reachable by approved operators only, and has its
   project/app configured without storing secrets in repo files.
-- The app base directory is `website/`, or the Coolify build/start commands
-  explicitly run from `website/`.
-- Use the repo package manager lockfile policy for installation. For the current
-  app, `website/package.json` exposes:
-  - build command: `npm run build`
-  - start command: `npm run start`
+- The exact build context/base directory is `website/`.
+- The runtime is Node 24, aligned with `.nvmrc`, package engines, and CI. When
+  Nixpacks/Coolify needs an explicit runtime selection, select Node 24.
+- The deterministic install command is `npm ci` using
+  `website/package-lock.json`.
+- The build command is `npm run build`.
+- The start command is `npm run start`.
+- Do not substitute repository-root context, `npm install`, a floating Node
+  major, or a provider-specific deployment client for this contract.
 - The public domain points at the intended VPS/reverse proxy only after owner
   approval.
 - TLS is terminated by the approved Coolify/reverse-proxy path, HTTP redirects
@@ -71,6 +106,14 @@ Before deployment execution is approved, confirm the hosting surface is ready:
 
 Set these only in the hosted server-side runtime environment. Never commit
 values or place them in public/client env.
+
+The table is the complete server-only deployment inventory across both stages.
+Stage A requires only `SUPABASE_URL`, `SUPABASE_ANON_KEY`,
+`CATALOGUE_WORKSPACE_ID`, `ADMIN_TRUSTED_WORKSPACE_ID`,
+`ADMIN_EXPECTED_ORIGIN`, `ADMIN_EXPECTED_HOST`, and
+`ADMIN_CSRF_PROOF_SECRET`. Stage A must not require a `QUOTE_*` or `N8N_*`
+value because quote remains disabled and n8n remains inactive. Stage B requires
+the full launch set enforced by the existing launch validator.
 
 | Env name | Purpose |
 | --- | --- |
@@ -177,12 +220,30 @@ server-only env, and n8n workflow setup are reviewed:
 
 ## Hosted Validation Commands
 
-Run these from the deployed checkout or an equivalent hosted/runtime environment
-with the same server-side env. Do not use fake placeholder values to approve
-public traffic.
+Run the repository-safe Stage A checks before any provider operation:
 
 ```powershell
-npm run validate:production-security-readiness -- --launch
+npm run test:deployment-contract-follow-up
+npm run validate:stage-a-oauth-deployment-readiness
+```
+
+After a separately approved Stage A deployment, provide the canonical base only
+through the dedicated input and run the read-only smoke. The command performs
+manual-redirect GET requests only; it does not authenticate, initiate OAuth,
+submit a quote, call n8n, or mutate external state.
+
+```powershell
+$env:SKR_PRODUCTION_BASE_URL = 'https://spacekonceptrental.com'
+npm run smoke:production-readonly
+Remove-Item Env:SKR_PRODUCTION_BASE_URL -ErrorAction SilentlyContinue
+```
+
+For Stage B only, run these from the deployed checkout or an equivalent
+hosted/runtime environment with the same server-side env. Do not use fake
+placeholder values to approve public traffic.
+
+```powershell
+npm run validate:production-security-readiness -- --launch --public-security-definer-catalog <approved-read-only-catalog-path>
 npm run validate:quote-email-runtime-readiness
 npm run validate:local-release-candidate
 ```
@@ -194,8 +255,9 @@ result separately from the hosted env checks.
 
 ## Safe Live Quote Verification
 
-Run this only after hosted launch-mode readiness and quote handoff readiness
-pass:
+This is Stage B only. Run it only after hosted launch-mode readiness, reviewed
+n8n handoff readiness, and deliberate quote enablement pass. Never run it in
+Stage A.
 
 1. Use one clearly synthetic customer name, email, phone, event description, and
    item request.
@@ -219,7 +281,7 @@ persistence is an honest receipt/processing state with no provider internals,
 env values, secrets, SQL, stack traces, workspace internals, or private
 customer data.
 
-## Launch Hold Conditions
+## Stage B Launch Hold Conditions
 
 Do not enable public traffic if any condition below is true:
 
@@ -238,6 +300,10 @@ Do not enable public traffic if any condition below is true:
   environment.
 - n8n workflow signing/idempotency/email-provider verification is incomplete.
 - Any secret/env value appears in docs, logs, screenshots, PR text, or chat.
+
+Stage A is also held if exact requested/resolved SHA equality or an immutable
+deployment identifier is missing, quote is not proven disabled, n8n is not
+proven inactive, or the production read-only smoke does not pass.
 
 ## Rollback Or Disable Plan
 
@@ -276,10 +342,8 @@ docs are retained as the canonical supporting references:
 - `docs/DEPLOYMENT-ENVIRONMENT-READINESS.md` remains the env contract and links
   to this hosted execution runbook. Stale deployment-target wording is updated
   there rather than duplicated here.
-- `docs/PRODUCTION-SECURITY-READINESS-GATE.md` remains the readiness validator
-  contract and states that only the server-side n8n enquiry handoff env is
-  required; n8n chat, Pinecone, and HubSpot runtime env remain out of scope for
-  owner-MVP launch.
+- `docs/PRODUCTION-SECURITY-READINESS-GATE.md` owns both the repository-safe
+  Stage A static gate and the unchanged provider-dependent Stage B launch gate.
 - `docs/DEPLOYMENT-SMOKE-TEST-RUNBOOK.md` remains the broader smoke evidence
   runbook, with n8n chat checks treated as optional and integration-specific.
 - `docs/SKR-LAUNCH-READINESS-FINAL-GAP-AUDIT.md` remains the final source gap

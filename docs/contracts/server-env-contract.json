@@ -9,6 +9,59 @@
     "launchModeEnvValue": "launch",
     "normalCiRequiresRealSecrets": false,
     "documentation": "docs/PRODUCTION-SECURITY-READINESS-GATE.md",
+    "stages": {
+      "stageAControlledOAuthDeployment": {
+        "command": "npm run validate:stage-a-oauth-deployment-readiness",
+        "purpose": "Repository-safe exact-SHA deployment preparation and controlled Google OAuth owner UAT while quote submission stays disabled and n8n stays inactive.",
+        "requiredEnvNames": [
+          "SUPABASE_URL",
+          "SUPABASE_ANON_KEY",
+          "CATALOGUE_WORKSPACE_ID",
+          "ADMIN_TRUSTED_WORKSPACE_ID",
+          "ADMIN_EXPECTED_ORIGIN",
+          "ADMIN_EXPECTED_HOST",
+          "ADMIN_CSRF_PROOF_SECRET"
+        ],
+        "requiredInvariants": [
+          "exact-sha-deployment",
+          "quote-submission-disabled",
+          "n8n-inactive",
+          "no-customer-quote-submission",
+          "anonymous-admin-denial",
+          "google-oauth-owner-uat"
+        ],
+        "n8nRequired": false,
+        "quoteEnablementAllowed": false
+      },
+      "stageBFullEnquiryLaunch": {
+        "command": "npm run validate:production-security-readiness -- --launch --public-security-definer-catalog <approved-read-only-catalog-path>",
+        "purpose": "Full enquiry launch after the reviewed n8n handoff, durable controls, delivery evidence, and deliberate quote enablement are ready.",
+        "requiredEnvNames": [
+          "SUPABASE_URL",
+          "SUPABASE_ANON_KEY",
+          "CATALOGUE_WORKSPACE_ID",
+          "QUOTE_WORKSPACE_ID",
+          "QUOTE_SUBMISSION_ADMISSION_SECRET",
+          "ADMIN_TRUSTED_WORKSPACE_ID",
+          "ADMIN_EXPECTED_ORIGIN",
+          "ADMIN_EXPECTED_HOST",
+          "ADMIN_CSRF_PROOF_SECRET",
+          "N8N_ENQUIRY_HANDOFF_WEBHOOK_URL",
+          "N8N_ENQUIRY_HANDOFF_SHARED_SECRET"
+        ],
+        "requiredInvariants": [
+          "reviewed-n8n-enquiry-workflow",
+          "timestamped-hmac-verification",
+          "timestamp-freshness-enforcement",
+          "durable-idempotency",
+          "delivery-evidence",
+          "deliberate-quote-enablement",
+          "quote-email-runtime-readiness"
+        ],
+        "n8nRequired": true,
+        "quoteEnablementAllowed": true
+      }
+    },
     "requiredEnvNames": [
       "SUPABASE_URL",
       "SUPABASE_ANON_KEY",
@@ -36,9 +89,10 @@
       "name": "Readiness mode env",
       "visibility": "local-command-control",
       "variables": [
-        "SKR_PRODUCTION_READINESS_MODE"
+        "SKR_PRODUCTION_READINESS_MODE",
+        "SKR_PRODUCTION_BASE_URL"
       ],
-      "rule": "Set to launch only when enforcing production-security readiness in the hosted/runtime environment."
+      "rule": "Use SKR_PRODUCTION_READINESS_MODE only for the readiness command and SKR_PRODUCTION_BASE_URL only as the canonical-host input to the operator-run read-only smoke command. Neither is application runtime configuration."
     },
     {
       "name": "Public-safe client env",
@@ -117,6 +171,15 @@
       "browserAllowed": false,
       "status": "operator-command-only",
       "notes": "Use value launch only when running the production-security readiness command in the hosted/runtime environment."
+    },
+    {
+      "name": "SKR_PRODUCTION_BASE_URL",
+      "visibility": "local-command-control",
+      "feature": "Production read-only smoke target",
+      "requiredFor": "Operator-run production read-only smoke command only",
+      "browserAllowed": false,
+      "status": "operator-command-only",
+      "notes": "Accepts only the canonical production apex or approved www HTTPS origin and is not stored as application runtime configuration."
     },
     {
       "name": "SUPABASE_URL",

@@ -23,6 +23,12 @@ jobs:
         with:
           node-version: 24
 
+      - name: Test bounded hosted contracts
+        run: npm run test:hosted-contract-follow-up
+
+      - name: Validate Stage A OAuth readiness
+        run: npm run validate:stage-a-oauth-readiness
+
       - name: Validate preview approval package
         run: npm run validate:preview-approval-package
 

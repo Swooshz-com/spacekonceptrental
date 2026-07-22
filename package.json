@@ -2,6 +2,9 @@
   "name": "SpaceKonceptRental-capstone",
   "private": true,
   "type": "module",
+  "engines": {
+    "node": ">=24 <25"
+  },
   "scripts": {
     "validate:release-candidate": "node scripts/validate-release-candidate.cjs",
     "validate:deploy-dry-run": "node scripts/validate-deploy-dry-run.cjs",
@@ -10,6 +13,8 @@
     "validate:preview-handoff": "node scripts/validate-preview-handoff.cjs",
     "validate:local-release-candidate": "node scripts/validate-local-release-candidate.cjs",
     "validate:production-security-readiness": "node scripts/validate-production-security-readiness.cjs",
+    "validate:stage-a-oauth-deployment-readiness": "node scripts/validate-stage-a-oauth-deployment-readiness.cjs",
+    "validate:stage-a-oauth-readiness": "node scripts/validate-stage-a-oauth-deployment-readiness.cjs",
     "validate:quote-email-runtime-readiness": "node scripts/validate-quote-email-runtime-readiness.cjs",
     "validate:release-candidate-suite": "node scripts/validate-release-candidate-suite.cjs",
     "validate:protected-admin-enquiry-inbox-triage-foundation": "node scripts/validate-protected-admin-enquiry-inbox-triage-foundation.cjs",
@@ -34,10 +39,13 @@
     "local-uat:owner-flow": "node scripts/local-uat-owner-flow.cjs",
     "smoke:owner-flow-local": "node scripts/smoke-owner-flow-local.cjs",
     "smoke:preview": "node scripts/smoke-preview.cjs",
+    "smoke:production-readonly": "node scripts/smoke-production-readonly.cjs",
     "test:docker-readiness": "node --test scripts/ensure-docker-running.test.cjs",
     "test:local-uat-owner-flow": "node --test scripts/local-uat-owner-flow.test.cjs",
     "test:owner-flow-smoke": "node --test scripts/smoke-owner-flow-local.test.cjs",
     "test:production-security-readiness": "node --test scripts/validate-production-security-readiness.test.cjs",
+    "test:deployment-contract-follow-up": "node --test scripts/smoke-production-readonly.test.cjs scripts/validate-deployment-contract-follow-up.test.cjs",
+    "test:hosted-contract-follow-up": "node --test scripts/smoke-production-readonly.test.cjs scripts/validate-deployment-contract-follow-up.test.cjs",
     "test:supabase-seed": "node scripts/test-supabase-seed.cjs",
     "test:supabase-rls": "node scripts/test-supabase-rls.cjs",
     "test:supabase-migrations": "node --test scripts/validate-supabase-migrations.test.cjs",

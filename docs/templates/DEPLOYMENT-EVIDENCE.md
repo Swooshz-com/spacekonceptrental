@@ -1,16 +1,17 @@
 # Deployment Evidence
 
-Use this template for a future approved deployment PR. Replace placeholders
-with reviewed, non-secret summaries only. Do not include real secrets, env
-values, tokens, webhook URLs, private dashboard links, or customer data.
+Use this template for a future approved deployment PR. Complete
+it outside Git unless an explicit evidence-publication scope says otherwise.
+Record reviewed non-secret identifiers, commands, safe status labels, route
+results, timestamps, and approval references only. Never include environment
+values, credentials, tokens, cookies, webhook URLs, provider response bodies,
+private dashboard links, workspace/admin identifiers, or customer data.
 
 ## Deployment summary
 
 - Environment: `<environment-name>`
 - Deployment target: `<deployment-url>`
-- Operator: `<operator-name-or-role>`
-- Reviewers: `<reviewer-list>`
-- Approval reference: `<approval-reference>`
+- Operator and approval reference: `<reviewed-non-secret-reference>`
 
 ## Remaining-work map
 
@@ -24,126 +25,215 @@ values, tokens, webhook URLs, private dashboard links, or customer data.
 
 ## Environment reviewed
 
-- Supabase project reviewed: `<review-summary>`
-- Hosting project reviewed: `<review-summary>`
-- Runtime scope reviewed: `<review-summary>`
+- Hosting/runtime environment class: `<review-summary>`
+- Repository and immutable revision evidence: `<review-summary>`
+- Provider configuration evidence remains external: `<review-summary>`
 
 ## Env placement confirmation
 
-- Supabase env values are server-only: `<confirmed-by>`
-- Catalogue workspace env is server-only: `<confirmed-by>`
-- Quote workspace env is server-only: `<confirmed-by>`
-- Admin trusted workspace env is server-only: `<confirmed-by>`
-- n8n webhook env is server-only: `<confirmed-by>`
-- Trusted proxy header env is server-only: `<confirmed-by>`
+- Supabase, catalogue, admin, CSRF, quote, and n8n env names are server-only:
+  `<confirmed-by-or-stage-A-not-required>`
 
 ## Forbidden public env confirmation
 
-- No `NEXT_PUBLIC_SUPABASE_*` variables: `<confirmed-by>`
-- No `NEXT_PUBLIC_N8N*` variables: `<confirmed-by>`
-- No browser-visible n8n URLs: `<confirmed-by>`
-- No `SUPABASE_SERVICE_ROLE_KEY` runtime path: `<confirmed-by>`
-- No `website/chat-config.js` source usage: `<confirmed-by>`
+- No `NEXT_PUBLIC_SUPABASE_*`, `NEXT_PUBLIC_N8N*`, browser-visible n8n URL, or
+  service-role runtime path: `<confirmed-by>`
 
 ## Supabase Cloud confirmation
 
-- Project reviewed without exposing real URLs or keys: `<confirmed-by>`
-- Supabase CLI was not used unless separately approved: `<confirmed-by>`
-- Production seed data status: `<not-added-or-approved-reference>`
+- Provider configuration was reviewed only under separate approval and without
+  exposing values: `<confirmed-by-or-not-performed>`
 
 ## Active catalogue workspace confirmation
 
-- Active workspace reviewed: `<approved-catalogue-workspace-id>`
-- `CATALOGUE_WORKSPACE_ID` reviewed: `<confirmed-by>`
-- `catalogue_public_workspace_config` reviewed: `<confirmed-by>`
-- Direct anonymous base-table catalogue denial reviewed: `<confirmed-by>`
-- Public catalogue metadata gate reviewed: `<confirmed-by>`
+- Public catalogue gate reviewed: `<confirmed-by>`
+- Approved catalogue workspace reference: `<approved-catalogue-workspace-id>`
 
 ## Quote workspace confirmation
 
-- Quote workspace reviewed: `<approved-quote-workspace-id>`
-- `QUOTE_WORKSPACE_ID` reviewed: `<confirmed-by>`
-- Quote route safe error behaviour reviewed: `<confirmed-by>`
-- Quote throttling unchanged: `<confirmed-by>`
+- Quote persistence/admission state: `<stage-A-disabled-or-stage-B-reviewed>`
 
 ## Admin trusted workspace confirmation
 
-- Admin workspace reviewed: `<approved-admin-workspace-id>`
-- `ADMIN_TRUSTED_WORKSPACE_ID` reviewed: `<confirmed-by>`
-- Admin expected origin and host reviewed: `<confirmed-by>`
-- Admin CSRF proof secret placement reviewed as server-only: `<confirmed-by>`
-- Owner/admin membership smoke-test actor reviewed: `<confirmed-by>`
-- Viewer or wrong-workspace denial actor reviewed: `<confirmed-by>`
+- Admin auth/workspace/CSRF presence and actor class reviewed without values:
+  `<confirmed-by>`
 
 ## Listing media confirmation
 
-- `listing-media` public bucket model reviewed: `<confirmed-by>`
-- Public object serving by unguessable server-generated URL acknowledged:
-  `<confirmed-by>`
-- Public catalogue rendering metadata gate reviewed: `<confirmed-by>`
-- Admin listing media upload boundary reviewed: `<confirmed-by>`
-- No customer upload or arbitrary public upload route: `<confirmed-by>`
+- Existing listing-media model and protected upload boundary reviewed:
+  `<confirmed-by-or-not-in-scope>`
 
 ## n8n server-only webhook confirmation
 
-- Webhook stored only server-side: `<confirmed-by>`
-- Browser calls only `POST /api/chat`: `<confirmed-by>`
-- No n8n workflow files changed: `<confirmed-by>`
-- No live n8n import, export, activation, or execution: `<confirmed-by>`
+- Stage A n8n inactive or Stage B reviewed enquiry handoff: `<confirmed-by>`
+- No live n8n import, export, activation, or execution occurred unless separately
+  approved: `<confirmed-by>`
 
 ## Smoke-test evidence
 
-- Static/fallback homepage smoke test: `<result-and-evidence>`
-- Catalogue fallback smoke test: `<result-and-evidence>`
-- DB-backed catalogue smoke test: `<result-and-evidence>`
-- Listing detail page smoke test: `<result-and-evidence>`
-- Uploaded listing image rendering smoke test: `<result-and-evidence>`
-- Quote submission smoke test: `<result-and-evidence>`
-- Quote handoff smoke test: `<result-and-evidence>`
-- Admin login/protected shell smoke test: `<result-and-evidence>`
-- Admin product/category/listing management smoke test: `<result-and-evidence>`
-- Admin listing media upload smoke test: `<result-and-evidence>`
-- Admin quote inbox/status/internal note workflow smoke test: `<result-and-evidence>`
-- Atomic quote workflow RPC smoke test: `<result-and-evidence>`
-- Chat fallback smoke test: `<result-and-evidence>`
-- Server-only n8n chat smoke test: `<result-and-evidence>`
-- 404/error states smoke test: `<result-and-evidence>`
-- No provider/SQL/secret leakage check: `<result-and-evidence>`
-- Browser bundle exposure check: `<result-and-evidence>`
-- Browser console server-only env exposure check: `<result-and-evidence>`
+- Admin listing media upload smoke test: `<stage-B-result-or-not-run>`
+- Atomic quote workflow RPC smoke test: `<stage-B-result-or-not-run>`
+- Browser console server-only env exposure check: `<result-or-not-run>`
+- Production read-only route smoke: `<stage-A-or-stage-B-result>`
 
 ## Rollback plan
 
-- Rollback owner: `<owner>`
-- Rollback trigger: `<trigger>`
-- Disable public traffic action: `<action>`
-- Remove or rotate leaked env values action: `<action>`
-- Disable n8n webhook env action: `<action>`
-- Revert deployment action: `<action>`
-- Fallback catalogue behaviour verified: `<result-and-evidence>`
-- Quote submission unavailable-or-safe behaviour verified: `<result-and-evidence>`
-- Incident notes captured: `<location-or-reference>`
+- Rollback owner, trigger, immutable target, and evidence reference:
+  `<reviewed-non-secret-summary>`
 
 ## Known limitations
 
-- In-process throttling limitation: `<acknowledged>`
-- Service-role runtime path prohibition: `<acknowledged>`
-- Browser Supabase prohibition: `<acknowledged>`
-- Deferred conversation/message writes: `<acknowledged>`
-- Deferred public quote status, notifications, CRM, and ecommerce flows:
-  `<acknowledged>`
+- Provider-dependent, browser, customer-data, and launch checks not run in this
+  repository-only lane remain unverified.
 
 ## Safety confirmations
 
 - No real secrets or env values are included in this PR body.
 - No deployment config is included unless this is the separately approved
   deployment PR.
-- No service-role runtime path is added unless separately approved.
-- No browser Supabase config is added unless separately approved.
-- No conversation/message writes are added unless separately approved.
-- No n8n workflow files are changed unless separately approved.
-- No customer uploads, public upload routes, public quote status tracking,
-  notifications, CRM, carts, checkout, payments, customer accounts, stock
-  reservation, order fulfilment, confirmed booking, or online ordering are
-  added unless separately approved.
-- `website/chat-config.js` was not read, copied, printed, exposed, or changed.
+- No customer quote is submitted and no n8n workflow is activated in Stage A.
+
+## Immutable Revision And Deployment Identity
+
+| Field | Required non-secret evidence |
+| --- | --- |
+| Repository | `<owner/repository>` |
+| Requested immutable SHA | `<40-character-approved-sha>` |
+| Resolved checkout/build SHA | `<40-character-sha-reported-by-build>` |
+| Requested SHA equals resolved SHA | `<PASS-or-FAIL>` |
+| Deployment UUID or equivalent immutable deployment identifier | `<immutable-deployment-id>` |
+| Previous known-good SHA | `<40-character-sha>` |
+| Previous known-good deployment identifier | `<immutable-deployment-id>` |
+| Environment class | `<controlled-oauth-or-full-enquiry-launch>` |
+| Terminal deployment state | `<finished-success-or-failed-safe-state>` |
+| Deployment started at | `<ISO-8601-timestamp>` |
+| Deployment completed at | `<ISO-8601-timestamp>` |
+| Operator | `<approved-operator-name-or-role>` |
+| Approval reference | `<issue-comment-change-record-or-other-reference>` |
+| Auto-deploy state before and after | `<OFF-confirmed-or-hold>` |
+
+An unresolved, abbreviated, branch-only, tag-only, or unequal revision is a
+deployment evidence failure. Do not infer the resolved build SHA from the
+requested SHA; capture both independently.
+
+## Build And Runtime Contract
+
+| Field | Required evidence |
+| --- | --- |
+| Build context | `website/` |
+| Node runtime | `24` |
+| Install command | `npm ci` |
+| Build command | `npm run build` |
+| Start command | `npm run start` |
+| Lockfile used | `website/package-lock.json` |
+| Pre-deployment command | `<none-or-reviewed-command>` |
+| Post-deployment command | `<none-or-reviewed-command>` |
+| Build/start command equality with approved contract | `<PASS-or-FAIL>` |
+
+Do not substitute `npm install` for `npm ci`. If the hosting platform needs an
+explicit Nixpacks/Coolify Node setting, record only that it resolved to Node 24;
+do not record provider credentials or environment values.
+
+## Stage Classification
+
+### Stage A - Controlled OAuth Deployment
+
+- Exact-SHA deployment: `<result-and-evidence-reference>`
+- Public read routes only: `<result-and-evidence-reference>`
+- Anonymous admin denial: `<result-and-evidence-reference>`
+- Google OAuth owner UAT: `<result-and-evidence-reference-or-NOT-RUN>`
+- Quote remained disabled: `<PASS-or-FAIL>`
+- n8n remained inactive: `<PASS-or-FAIL>`
+- No customer quote submission occurred: `<PASS-or-FAIL>`
+
+Stage A must not claim enquiry-launch readiness and must not require active n8n
+configuration.
+
+### Stage B - Full Enquiry Launch
+
+- Reviewed n8n enquiry workflow: `<result-and-evidence-reference>`
+- Timestamped HMAC verification and freshness: `<result-and-evidence-reference>`
+- Durable idempotency: `<result-and-evidence-reference>`
+- Delivery evidence: `<result-and-evidence-reference>`
+- Quote deliberately enabled under approval: `<result-and-evidence-reference>`
+- Full production-security launch validator: `<result-and-evidence-reference>`
+- Quote-email runtime readiness: `<result-and-evidence-reference>`
+
+## Server-only Configuration Presence
+
+Record presence/validity results by name only. Never include a value.
+
+- Public catalogue configuration: `<PASS-or-FAIL-by-env-name>`
+- Quote persistence/admission configuration: `<PASS-or-FAIL-or-stage-A-not-required>`
+- Admin authentication/workspace configuration: `<PASS-or-FAIL-by-env-name>`
+- Admin CSRF protection configuration: `<PASS-or-FAIL-by-env-name>`
+- n8n enquiry handoff configuration: `<PASS-or-FAIL-or-stage-A-not-required>`
+- No `NEXT_PUBLIC_SUPABASE_*`: `<PASS-or-FAIL>`
+- No `NEXT_PUBLIC_N8N*`: `<PASS-or-FAIL>`
+- No service-role runtime path: `<PASS-or-FAIL>`
+- No `website/chat-config.js` runtime dependency: `<PASS-or-FAIL>`
+
+## Post-deployment Route Evidence
+
+| Route/check | Expected | Observed safe evidence |
+| --- | --- | --- |
+| `/` | `200` | `<status-and-timestamp>` |
+| `/catalogue` | `200` | `<status-and-timestamp>` |
+| `/setups` | `200` | `<status-and-timestamp>` |
+| `/about` | `200` | `<status-and-timestamp>` |
+| `/quote` read | `200`; no submission in Stage A | `<status-and-timestamp>` |
+| `/contact` | intended `404` | `<status-and-timestamp>` |
+| anonymous `/admin` | denied or canonical first-party login redirect | `<status-and-timestamp>` |
+| approved `www` root | canonical redirect to apex | `<status-and-timestamp>` |
+| redirect authority | no localhost/internal proxy authority | `<PASS-or-FAIL>` |
+| public response leakage | no provider/SQL/stack/env/secret leakage | `<PASS-or-FAIL>` |
+
+Attach or reference the secret-safe machine-readable output from
+`npm run smoke:production-readonly`. Do not paste response bodies.
+
+## Enquiry Handoff Evidence - Stage B Only
+
+- The customer submits only to first-party `POST /api/quote`.
+- SKR persists the enquiry before attempting the n8n handoff.
+- The reviewed n8n handoff verifies timestamped HMAC, freshness, event markers,
+  and durable idempotency before delivery.
+- Delivery evidence proves the persisted `/api/quote` event reached the intended
+  internal delivery path.
+- `/api/chat` belongs to the separate chatbot lane; chatbot smoke is not
+  enquiry-delivery evidence, nor is a chat workflow or successful chat response.
+- No browser-visible n8n URL, shared secret, credential, or provider payload is
+  recorded.
+
+## Rollback Evidence
+
+| Field | Required evidence |
+| --- | --- |
+| Rollback target SHA | `<40-character-known-good-sha>` |
+| Rollback target deployment identifier | `<immutable-deployment-id>` |
+| Rollback approval reference | `<approval-reference>` |
+| Rollback outcome | `<not-required-success-failed-or-aborted>` |
+| Rollback started/completed at | `<ISO-8601-timestamps-or-not-required>` |
+| Resolved post-rollback SHA | `<40-character-sha-or-not-required>` |
+| Rollback target equals resolved SHA | `<PASS-FAIL-or-not-required>` |
+| Post-rollback terminal state | `<safe-terminal-state-or-not-required>` |
+
+## Post-rollback Route Evidence
+
+Record the same public and anonymous-admin route matrix used after deployment,
+or state `not required` only when no rollback occurred. Also record:
+
+- quote remained disabled during and after rollback: `<PASS-FAIL-or-not-required>`
+- n8n remained inactive during and after rollback: `<PASS-FAIL-or-not-required>`
+- no customer quote submission occurred: `<PASS-FAIL-or-not-required>`
+- no redirect exposed localhost/internal proxy authority: `<PASS-FAIL-or-not-required>`
+- no provider/SQL/stack/env/secret leakage appeared: `<PASS-FAIL-or-not-required>`
+
+## Final Safety Confirmation
+
+- No secret-valued field is present in this evidence.
+- Requested and resolved SHAs were captured independently and compared exactly.
+- Deployment and rollback identifiers are immutable provider identifiers.
+- Auto-deploy remained off unless a separate approved change says otherwise.
+- Stage A did not submit a quote or activate n8n.
+- Stage B evidence, when claimed, is tied to persisted `/api/quote` processing,
+  not `/api/chat`.

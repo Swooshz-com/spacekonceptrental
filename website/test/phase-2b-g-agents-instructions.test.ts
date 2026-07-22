@@ -149,27 +149,40 @@ describe("Phase 2B-G repo agent instructions refresh", () => {
     );
   });
 
-  it("keeps AGENTS.md explicit about current runtime blockers", () => {
+  it("keeps AGENTS.md explicit about implemented runtime and separate live gates", () => {
     const normalizedAgents = normalizeWhitespace(readRepoFile(agentsPath));
 
-    for (const blockedItem of [
-      "Real auth runtime wiring remains blocked.",
-      "Supabase Auth runtime wiring remains blocked.",
-      "Cookie reads remain blocked.",
-      "Header reads remain blocked.",
-      "Login/logout routes remain blocked.",
-      "Protected admin pages remain blocked.",
-      "Admin UI remains blocked.",
-      "Resolver/adapter runtime wiring remains blocked.",
-      "Product/category/product image writes remain blocked.",
-      "Conversation/message writes remain blocked.",
-      "Supabase Cloud connection remains blocked.",
-      "Deployment and Vercel config remain blocked.",
-      "Browser Supabase remains blocked.",
-      "Service-role runtime paths remain blocked unless separately approved."
+    for (const implementedItem of [
+      "Supabase admin authentication runtime wiring",
+      "Server auth-cookie reads and writes",
+      "First-party Google OAuth login initiation, application callback, and logout routes",
+      "Protected admin pages and the authorised owner/admin shell",
+      "Approved admin product, category, and catalogue-listing writes",
+      "Hosted deployment preparation, runbooks, static validators, and smoke contracts"
     ]) {
-      expect(normalizedAgents).toContain(blockedItem);
+      expect(normalizedAgents).toContain(implementedItem);
     }
+
+    for (const separatelyGatedItem of [
+      "Any live provider mutation.",
+      "Production deployment, restart, rollback, traffic change, or launch.",
+      "Google OAuth or Supabase provider configuration.",
+      "Workspace, admin-user, membership, or role record mutation.",
+      "Supabase Storage configuration or policy changes.",
+      "Quote enablement or customer quote submission.",
+      "n8n import, configuration, activation, execution, or enquiry delivery.",
+      "Service-role runtime paths.",
+      "Customer/private-data access and public launch."
+    ]) {
+      expect(normalizedAgents).toContain(separatelyGatedItem);
+    }
+
+    expect(normalizedAgents).not.toContain(
+      "Real auth runtime wiring remains blocked."
+    );
+    expect(normalizedAgents).not.toContain(
+      "Login/logout routes remain blocked."
+    );
   });
 
   it("does not add admin, auth, login/logout, product mutation, SaaS, Pinecone, deployment, or env paths", () => {

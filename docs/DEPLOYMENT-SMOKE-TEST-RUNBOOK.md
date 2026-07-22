@@ -51,6 +51,39 @@ This runbook covers:
 - Rollback/disable plan.
 - Evidence checklist.
 
+## Staged Hosted Smoke Contract
+
+### Stage A - Controlled OAuth Deployment
+
+Stage A is read-only apart from the separately approved exact-SHA deployment
+and real-owner Google OAuth UAT. Quote submission remains disabled and n8n
+remains inactive. Required smoke evidence is:
+
+- public read routes `/`, `/catalogue`, `/setups`, `/about`, and `/quote` return
+  `200`;
+- `/contact` returns the intended `404`;
+- anonymous `/admin` is denied or redirected only to `/admin/login`;
+- `www` redirects canonically to the apex;
+- no redirect exposes localhost or internal proxy authority;
+- no obvious provider, SQL, stack, secret, or environment leakage appears; and
+- no customer quote is submitted, no OAuth is initiated by automated smoke,
+  and no n8n/provider call is made.
+
+Use `npm run smoke:production-readonly` and provide the canonical production
+apex through `SKR_PRODUCTION_BASE_URL` using a secret-safe operator shell. The
+smoke command is not browser automation and follows no redirects.
+
+### Stage B - Full Enquiry Launch
+
+The existing manual write, quote, n8n handoff, Delivery Log, and full launch
+checks below are Stage B only. Stage B requires reviewed timestamped HMAC and
+freshness verification, durable idempotency, delivery evidence, deliberate
+quote enablement, the full launch validator, and quote-email runtime readiness.
+
+The future enquiry handoff starts after successful persistence by
+`POST /api/quote`. `/api/chat` belongs to the separate chatbot lane; chatbot
+smoke is not enquiry-delivery evidence.
+
 ## Non-goals
 
 This runbook does not approve:
@@ -127,7 +160,8 @@ Phase 2D-A sections:
 - Forbidden public/browser env checks.
 - Active catalogue workspace checks.
 - Quote workspace checks.
-- Server-only n8n enquiry handoff checks are required for launch.
+- Server-only n8n enquiry handoff checks are required for Stage B full launch,
+  not Stage A controlled OAuth deployment.
 - Server-only n8n chat webhook checks are optional when separately approved.
 - Trusted proxy/client IP header checks.
 - Catalogue fallback smoke tests.
@@ -252,9 +286,12 @@ traffic:
 - `npm run test:supabase-rls`.
 - `npm run validate:production-security-readiness` locally without real
   production secrets.
+- `npm run test:deployment-contract-follow-up`.
+- `npm run validate:stage-a-oauth-deployment-readiness`; this Stage A path must
+  pass without active n8n configuration.
 - `git diff --check`.
 
-## Manual smoke-test checklist
+## Stage B Manual Smoke-test Checklist
 
 - Public homepage loads.
 - Public listings load.
@@ -287,9 +324,10 @@ Before enabling trusted client IP buckets:
 Rate-limit caveats: current in-process throttling is best-effort only. It does
 not replace future CDN, WAF, platform, or distributed abuse controls.
 
-## Smoke-test sequence
+## Stage B Full Smoke-test Sequence
 
-Run these in order and capture evidence before public traffic.
+Run these in order and capture evidence before full enquiry traffic. Do not run
+this sequence during Stage A.
 
 ### Static/fallback homepage
 
@@ -491,6 +529,13 @@ configuration, and rollback controls:
 
 Future deployment PR authors should capture:
 
+- Repository, requested immutable SHA, independently resolved checkout/build
+  SHA, and the exact equality result.
+- Deployment UUID or equivalent immutable identifier, previous known-good SHA,
+  and previous known-good deployment identifier.
+- Build context, Node 24 runtime, `npm ci`, build/start commands, terminal state,
+  deployment timestamps, operator, approval reference, and auto-deploy state.
+- Stage A or Stage B classification.
 - Environment reviewed: `<environment-name>`.
 - Deployment target placeholder or reviewed deployment URL:
   `<deployment-url>`.
@@ -501,7 +546,8 @@ Future deployment PR authors should capture:
 - Quote workspace confirmation.
 - Admin trusted workspace confirmation.
 - Listing media bucket/model confirmation.
-- Server-only n8n enquiry handoff confirmation.
+- Server-only n8n enquiry handoff confirmation for Stage B; Stage A records n8n
+  inactive instead.
 - Optional server-only n8n chat webhook confirmation when separately approved.
 - Trusted proxy/CDN client IP header confirmation.
 - Static/fallback homepage smoke-test result.
@@ -526,4 +572,8 @@ Future deployment PR authors should capture:
 - No provider/SQL/secret leakage review result.
 - No browser console exposure of server-only env values review result.
 - Rollback/disable plan review result.
+- Rollback target SHA and deployment identifier, rollback outcome, and the
+  complete post-rollback route matrix when rollback occurs.
+- Explicit confirmation that quote remained disabled and n8n remained inactive
+  for Stage A and throughout any Stage A rollback.
 - Known limitations and follow-up decisions.
