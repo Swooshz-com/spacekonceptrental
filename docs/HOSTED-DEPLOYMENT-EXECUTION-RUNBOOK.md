@@ -80,7 +80,7 @@ values or place them in public/client env.
 | `QUOTE_WORKSPACE_ID` | Workspace gate for quote/enquiry persistence. |
 | `QUOTE_SUBMISSION_ADMISSION_SECRET` | Dedicated server-only quote admission HMAC secret; must match the private database configuration provisioned after migration approval. |
 | `ADMIN_TRUSTED_WORKSPACE_ID` | Workspace gate for protected owner/admin access. |
-| `ADMIN_EXPECTED_ORIGIN` | HTTPS origin expected for protected admin same-origin checks. |
+| `ADMIN_EXPECTED_ORIGIN` | Canonical HTTPS authority for protected admin same-origin checks and every admin-auth redirect. |
 | `ADMIN_EXPECTED_HOST` | Expected protected admin host. |
 | `ADMIN_CSRF_PROOF_SECRET` | Server-only secret for admin CSRF proof material. |
 | `N8N_ENQUIRY_HANDOFF_WEBHOOK_URL` | Server-only n8n endpoint for quote/enquiry handoff after SKR persistence. |
@@ -126,6 +126,26 @@ traffic:
   workspace/admin metadata.
 - Verify no service-role key is required in browser, public client code, or the
   hosted app runtime for owner MVP launch.
+
+## Admin OAuth Deployment Contract
+
+- Set `ADMIN_EXPECTED_ORIGIN` to exactly
+  `https://spacekonceptrental.com` and `ADMIN_EXPECTED_HOST` to exactly
+  `spacekonceptrental.com` in the production server environment.
+- Treat `ADMIN_EXPECTED_ORIGIN` as the only admin-auth redirect authority. A
+  reverse proxy may expose an internal localhost request URL, but that URL and
+  all forwarded host/protocol headers must not determine redirects.
+- Allow the exact application callback
+  `https://spacekonceptrental.com/api/admin/login/callback` in Supabase Auth.
+- Configure the Google web client with the exact Supabase provider callback
+  `https://<SUPABASE_PROJECT_REF>.supabase.co/auth/v1/callback`; do not substitute
+  the application callback for this provider hop.
+- After deployment, verify PKCE, session, refreshed, chunked, and deletion
+  cookie writes use `HttpOnly`, `Secure`, `SameSite=Lax`, `Path=/`, and no
+  `Domain` attribute.
+- Supabase Google-provider configuration, Google OAuth metadata, deployment,
+  and a real owner login/logout UAT are separate approved operations. Do not
+  infer their completion from repository tests or builds.
 
 ## n8n Enquiry Handoff Checklist
 

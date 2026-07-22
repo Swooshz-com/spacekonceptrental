@@ -32,6 +32,19 @@ exchanges the code server-side before returning to `/admin`.
 
 Launch session rules:
 
+- `ADMIN_EXPECTED_ORIGIN` is the sole redirect authority for the admin login,
+  callback, and logout lifecycle. Internal reverse-proxy request URLs,
+  `request.url`, forwarded host/protocol headers, and browser input must never
+  determine an OAuth or application redirect.
+- The production application callback is exactly
+  `https://spacekonceptrental.com/api/admin/login/callback`. Google returns to
+  the intended Supabase project at exactly
+  `https://<SUPABASE_PROJECT_REF>.supabase.co/auth/v1/callback`; these are
+  separate redirect hops and must not be interchanged.
+- Every Supabase auth cookie written by server routes uses `HttpOnly`,
+  `SameSite=Lax`, `Path=/`, no `Domain`, and `Secure` in production. Local
+  non-production HTTP development deliberately omits `Secure` while retaining
+  the other attributes.
 - No password login form or password credential route is exposed.
 - No public signup, visitor login, customer account, or self-service customer
   dashboard is introduced.
@@ -47,6 +60,8 @@ Launch session rules:
   role, and status.
 - Hosted Supabase migration application, Google provider configuration, and
   fixed-owner access bootstrap remain separate explicit-approval operations.
+  Provider configuration, deployment, and real owner login/logout UAT remain
+  separate post-deployment operations after this repository contract passes.
   No OAuth secret, owner email, token, cookie, or service credential is stored
   in these docs.
 

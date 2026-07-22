@@ -104,6 +104,7 @@ Reference docs:
 - [x] Admin CSRF proof issuer route implementation.
 - [x] Backend-only protected product/category/product-image write API route boundary.
 - [x] Minimal first-party admin login/logout and protected shell boundary.
+- [x] Production admin OAuth canonical-origin and server-auth cookie policy remediation.
 - [x] Read-only admin product dashboard boundary.
 - [x] Category management UI boundary.
 - [x] Admin shell GET missing-Origin route-gate repair.
@@ -129,6 +130,7 @@ Reference docs:
 - [ ] Header reads outside the Phase 2B-V request metadata adapter.
 - [x] Login/logout routes for the Phase 2B-AN first-party admin auth boundary.
 - [x] Protected admin shell for Phase 2B-AN.
+- [ ] Hosted Google/Supabase provider configuration, deployment, and real owner login/logout UAT.
 - [ ] Product-management admin UI.
 - [x] Category-management admin UI for Phase 2B-AP.
 - [x] Metadata listing management UI for Phase 2B-AS.

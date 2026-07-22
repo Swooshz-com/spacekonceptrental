@@ -1,12 +1,19 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import {
   createSessionBoundSupabaseAdminReadClient,
   createSupabaseAdminAuthIdentityAdapter,
+  exchangeSupabaseAdminAuthCodeForSession,
+  getSupabaseAdminAuthCookiePolicy,
   resolveSupabaseAdminAuthIdentity,
+  signInSupabaseAdminGoogleAuthSession,
+  signOutSupabaseAdminAuthSession,
+  writeSupabaseAdminAuthCookies,
   type SupabaseAdminAuthClientFactoryInput,
+  type SupabaseAdminAuthSessionClient,
+  type SupabaseAuthCookieWriter,
   type SupabaseAdminReadClientFactoryInput
 } from "./supabase-admin-auth-identity-adapter";
 import {
@@ -30,6 +37,31 @@ const configuredSupabase: SupabaseAdminAuthClientFactoryInput["config"] = {
   supabaseAnonKey: "anon-key",
   missingEnv: []
 };
+
+function createMockAuthSessionClient(): SupabaseAdminAuthSessionClient {
+  return {
+    auth: {
+      async signInWithOAuth() {
+        return {
+          data: {
+            url: "https://accounts.google.example/oauth"
+          },
+          error: null
+        };
+      },
+      async exchangeCodeForSession() {
+        return {
+          error: null
+        };
+      },
+      async signOut() {
+        return {
+          error: null
+        };
+      }
+    }
+  };
+}
 
 function createMockAdminReadClient(
   tables: Record<string, unknown[]>
@@ -469,6 +501,130 @@ describe("Supabase admin auth identity adapter", () => {
       status: "active",
       role: "admin"
     });
+  });
+
+  it("defines an explicit production and local server-auth cookie policy", () => {
+    expect(getSupabaseAdminAuthCookiePolicy("production")).toEqual({
+      httpOnly: true,
+      sameSite: "lax",
+      path: "/",
+      secure: true
+    });
+    expect(getSupabaseAdminAuthCookiePolicy("development")).toEqual({
+      httpOnly: true,
+      sameSite: "lax",
+      path: "/",
+      secure: false
+    });
+  });
+
+  it("secures PKCE, session, refresh, chunked, and deletion writes without changing lifecycle options", () => {
+    const writes: Array<{
+      name: string;
+      options: Parameters<SupabaseAuthCookieWriter["set"]>[2];
+    }> = [];
+    const writer: SupabaseAuthCookieWriter = {
+      set(name, _value, options) {
+        writes.push({ name, options });
+      }
+    };
+    const expires = new Date("2026-07-22T00:00:00.000Z");
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => undefined);
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
+
+    try {
+      writeSupabaseAdminAuthCookies(
+        [
+          { name: "pkce.0", value: "opaque", options: { maxAge: 300 } },
+          { name: "session.0", value: "opaque", options: { maxAge: 600 } },
+          { name: "session.1", value: "opaque", options: { maxAge: 600 } },
+          { name: "refresh.0", value: "opaque", options: { expires } },
+          {
+            name: "stale.0",
+            value: "",
+            options: {
+              domain: "example.invalid",
+              expires,
+              maxAge: 0
+            }
+          }
+        ],
+        writer,
+        getSupabaseAdminAuthCookiePolicy("production")
+      );
+    } finally {
+      logSpy.mockRestore();
+      warnSpy.mockRestore();
+      errorSpy.mockRestore();
+    }
+
+    expect(writes.map(({ name }) => name)).toEqual([
+      "pkce.0",
+      "session.0",
+      "session.1",
+      "refresh.0",
+      "stale.0"
+    ]);
+
+    for (const { options } of writes) {
+      expect(options).toMatchObject({
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: true
+      });
+      expect(options).not.toHaveProperty("domain");
+    }
+
+    expect(writes[0]?.options?.maxAge).toBe(300);
+    expect(writes[1]?.options?.maxAge).toBe(600);
+    expect(writes[2]?.options?.maxAge).toBe(600);
+    expect(writes[3]?.options?.expires).toEqual(expires);
+    expect(writes[4]?.options).toMatchObject({
+      expires,
+      maxAge: 0
+    });
+    expect(logSpy).not.toHaveBeenCalled();
+    expect(warnSpy).not.toHaveBeenCalled();
+    expect(errorSpy).not.toHaveBeenCalled();
+  });
+
+  it("passes the same production cookie policy to login, callback, and logout session clients", async () => {
+    const policies: unknown[] = [];
+    const dependencies = {
+      readConfig: () => configuredSupabase,
+      readNodeEnv: () => "production",
+      requestCookies: {
+        getAll: () => []
+      },
+      responseCookies: {
+        set: vi.fn()
+      },
+      createSessionClient: (input: {
+        cookieOptions: unknown;
+      }) => {
+        policies.push(input.cookieOptions);
+        return createMockAuthSessionClient();
+      }
+    };
+
+    await signInSupabaseAdminGoogleAuthSession(
+      { redirectTo: "https://space.example/api/admin/login/callback" },
+      dependencies
+    );
+    await exchangeSupabaseAdminAuthCodeForSession(
+      { code: "opaque-code" },
+      dependencies
+    );
+    await signOutSupabaseAdminAuthSession(dependencies);
+
+    expect(policies).toHaveLength(3);
+    expect(policies).toEqual([
+      getSupabaseAdminAuthCookiePolicy("production"),
+      getSupabaseAdminAuthCookiePolicy("production"),
+      getSupabaseAdminAuthCookiePolicy("production")
+    ]);
   });
 
   it("keeps Supabase Auth and cookie reads inside a server-only boundary", () => {
