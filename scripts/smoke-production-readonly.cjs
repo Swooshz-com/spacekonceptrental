@@ -7,6 +7,8 @@ const canonicalApexOrigin = `https://${canonicalApexHost}`;
 const approvedWwwOrigin = `https://${approvedWwwHost}`;
 const requestTimeoutMs = 10_000;
 const maxBodyBytes = 128 * 1024;
+const maxClientAssetBytes = 512 * 1024;
+const leakageScanOverlapCharacters = 4096;
 const maxClientAssetCount = 32;
 const safeMethods = new Set(['GET', 'HEAD']);
 const redirectStatuses = new Set([301, 302, 303, 307, 308]);
@@ -143,7 +145,7 @@ function assertSafeRedirect(location, options = {}) {
   return target;
 }
 
-async function readBoundedText(response) {
+async function readBoundedText(response, byteLimit = maxBodyBytes) {
   const reader = response.body?.getReader();
 
   if (!reader) {
@@ -162,7 +164,7 @@ async function readBoundedText(response) {
 
     total += value.byteLength;
 
-    if (total > maxBodyBytes) {
+    if (total > byteLimit) {
       fail('response_body_too_large');
     }
 
@@ -178,6 +180,39 @@ function assertNoPublicLeakage(body) {
       fail(`public_response_leakage_${entry.code}`);
     }
   }
+}
+
+async function scanBoundedClientAsset(response) {
+  if (!response.body || typeof response.body.getReader !== 'function') {
+    fail('client_asset_body_unreadable');
+  }
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let totalBytes = 0;
+  let overlap = '';
+
+  while (true) {
+    const { done, value } = await reader.read();
+
+    if (done) {
+      break;
+    }
+
+    totalBytes += value.byteLength;
+    if (totalBytes > maxClientAssetBytes) {
+      await reader.cancel();
+      fail('client_asset_body_too_large');
+    }
+
+    const text = decoder.decode(value, { stream: true });
+    const scanWindow = overlap + text;
+    assertNoPublicLeakage(scanWindow);
+    overlap = scanWindow.slice(-leakageScanOverlapCharacters);
+  }
+
+  const finalText = overlap + decoder.decode();
+  assertNoPublicLeakage(finalText);
 }
 
 function decodeHtmlAttributeValue(value) {
@@ -316,9 +351,7 @@ async function checkClientAssets(fetchImpl, assetUrls) {
       method: 'GET',
       accept: 'application/javascript,text/javascript',
     });
-    const body = await readBoundedText(response);
-
-    assertNoPublicLeakage(body);
+    await scanBoundedClientAsset(response);
 
     if (response.status !== 200) {
       fail('client_asset_status_unexpected');

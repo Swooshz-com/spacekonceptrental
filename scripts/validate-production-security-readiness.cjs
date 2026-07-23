@@ -95,14 +95,17 @@ const supabaseKeyPatterns = [
   },
 ];
 
-function containsLegacySupabaseServiceRoleJwt(source) {
+function containsLegacySupabaseCredentialJwt(source) {
   for (const match of source.matchAll(compactJwtPattern)) {
     try {
       const payload = JSON.parse(
         Buffer.from(match[0].split('.')[1], 'base64url').toString('utf8'),
       );
 
-      if (payload?.role === 'service_role') {
+      if (
+        payload?.iss === 'supabase' &&
+        (payload?.role === 'anon' || payload?.role === 'service_role')
+      ) {
         return true;
       }
     } catch {
@@ -691,11 +694,11 @@ function scanStaticSecurity(scanRoot, trackedFiles) {
       }
     }
 
-    if (containsLegacySupabaseServiceRoleJwt(source)) {
+    if (containsLegacySupabaseCredentialJwt(source)) {
       addIssue(
         issues,
         displayPath,
-        'Supabase legacy service-role JWT pattern',
+        'Supabase legacy credential JWT pattern',
       );
     }
 

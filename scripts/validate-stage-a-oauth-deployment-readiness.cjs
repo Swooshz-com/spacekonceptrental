@@ -83,8 +83,10 @@ const canonicalEvidenceTimestampPattern =
   /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
 const uuidPattern =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-const supabaseAnonKeyPattern =
-  /^(?:eyJ[A-Za-z0-9_-]{8,512}\.[A-Za-z0-9_-]{8,2048}\.[A-Za-z0-9_-]{20,512}|sb_publishable_[A-Za-z0-9_-]{16,})$/;
+const legacySupabaseJwtPattern =
+  /^eyJ[A-Za-z0-9_-]{8,512}\.[A-Za-z0-9_-]{8,2048}\.[A-Za-z0-9_-]{20,512}$/;
+const supabasePublishableKeyPattern =
+  /^sb_publishable_[A-Za-z0-9_-]{16,}$/;
 const approvalReferencePattern =
   /^https:\/\/github\.com\/Swooshz-com\/spacekonceptrental\/issues\/(?:291|301)#issuecomment-\d+$/;
 
@@ -126,14 +128,51 @@ function hasSafeSecretShape(value) {
   );
 }
 
+function isSupportedSupabaseAnonKey(value) {
+  if (typeof value !== 'string') {
+    return false;
+  }
+
+  if (supabasePublishableKeyPattern.test(value)) {
+    return true;
+  }
+
+  if (!legacySupabaseJwtPattern.test(value)) {
+    return false;
+  }
+
+  try {
+    const payload = JSON.parse(
+      Buffer.from(value.split('.')[1], 'base64url').toString('utf8'),
+    );
+
+    return payload?.iss === 'supabase' && payload?.role === 'anon';
+  } catch {
+    return false;
+  }
+}
+
 function resolveCurrentRevision() {
-  const result = spawnSync('git', ['rev-parse', 'HEAD'], {
+  const revisionResult = spawnSync('git', ['rev-parse', 'HEAD'], {
     cwd: repoRoot,
     encoding: 'utf8',
     windowsHide: true,
   });
+  const statusResult = spawnSync(
+    'git',
+    ['status', '--porcelain', '--untracked-files=no'],
+    {
+      cwd: repoRoot,
+      encoding: 'utf8',
+      windowsHide: true,
+    },
+  );
 
-  return result.status === 0 ? result.stdout.trim() : null;
+  return revisionResult.status === 0 &&
+    statusResult.status === 0 &&
+    statusResult.stdout.length === 0
+    ? revisionResult.stdout.trim()
+    : null;
 }
 
 function validateStageARuntimeEnv(issues, env) {
@@ -152,7 +191,7 @@ function validateStageARuntimeEnv(issues, env) {
 
   if (
     hasConfiguredValue(env, 'SUPABASE_ANON_KEY') &&
-    !supabaseAnonKeyPattern.test(env.SUPABASE_ANON_KEY)
+    !isSupportedSupabaseAnonKey(env.SUPABASE_ANON_KEY)
   ) {
     issues.push('stage_a_runtime_env_invalid:SUPABASE_ANON_KEY');
   }
@@ -275,6 +314,10 @@ function validateStageARepositoryReadiness({
       issues.push('stage_a_admin_mutations_not_disabled');
     } else if (adminMutationState !== 'false') {
       issues.push('stage_a_admin_mutations_not_proven_disabled');
+    }
+
+    if (expectedRevision === null) {
+      issues.push('stage_a_repository_revision_not_clean');
     }
   }
 

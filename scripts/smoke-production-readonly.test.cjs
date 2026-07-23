@@ -378,6 +378,55 @@ test('browser-valid unquoted and entity-encoded client bundle references cannot 
   assert.ok(mock.calls.some((call) => call.url === entityAsset));
 });
 
+test('large current-shape client bundles are streamed under a separate total bound', async () => {
+  const assetUrl = `${apex}/_next/static/chunks/large-safe.js`;
+  const safeBundle = `/* safe */${'a'.repeat(230_000)}`;
+  const mock = createMockFetch({
+    [`${apex}/`]: response(200, '<script src="/_next/static/chunks/large-safe.js"></script>'),
+    [assetUrl]: response(200, safeBundle),
+  });
+
+  const result = await runProductionReadOnlySmoke({
+    rawBaseUrl: apex,
+    fetchImpl: mock.fetch,
+  });
+
+  assert.equal(result.clientAssetsScanned, 1);
+  assert.ok(mock.calls.some((call) => call.url === assetUrl));
+});
+
+test('streamed client bundles still detect leakage near the end without echoing it', async () => {
+  const leaked = syntheticModernKey('secret');
+  const assetUrl = `${apex}/_next/static/chunks/large-leak.js`;
+  const mock = createMockFetch({
+    [`${apex}/`]: response(200, '<script src="/_next/static/chunks/large-leak.js"></script>'),
+    [assetUrl]: response(200, `${'a'.repeat(200_000)};${leaked}`),
+  });
+
+  let error;
+  try {
+    await runProductionReadOnlySmoke({ rawBaseUrl: apex, fetchImpl: mock.fetch });
+  } catch (caught) {
+    error = caught;
+  }
+
+  assert.match(error?.code ?? '', /supabase_key_material/);
+  assert.doesNotMatch(JSON.stringify(safeFailureResult(error)), new RegExp(leaked));
+});
+
+test('client asset streaming retains an explicit total response bound', async () => {
+  const assetUrl = `${apex}/_next/static/chunks/too-large.js`;
+  const mock = createMockFetch({
+    [`${apex}/`]: response(200, '<script src="/_next/static/chunks/too-large.js"></script>'),
+    [assetUrl]: response(200, 'a'.repeat(513 * 1024)),
+  });
+
+  await assert.rejects(
+    runProductionReadOnlySmoke({ rawBaseUrl: apex, fetchImpl: mock.fetch }),
+    /client_asset_body_too_large/,
+  );
+});
+
 test('failure output is machine-readable and never includes the supplied URL', () => {
   const supplied = 'https://user:password@spacekonceptrental.com';
   let error;

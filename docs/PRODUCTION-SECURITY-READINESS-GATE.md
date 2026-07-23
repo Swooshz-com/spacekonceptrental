@@ -182,8 +182,8 @@ The command also checks tracked files for narrow launch blockers:
   client/public runtime files
 - any public/client exposure of `ADMIN_MUTATIONS_ENABLED`
 - obvious committed secret token patterns
-- legacy compact JWTs whose decoded payload identifies the
-  `service_role` role, without printing the token
+- legacy compact JWTs whose decoded Supabase payload identifies either the
+  `anon` or `service_role` credential role, without printing the token
 - Delivery Log documentation that stops describing technical metadata only
 
 The launch command also validates the full read-only live public `SECURITY
@@ -265,6 +265,7 @@ Hold controlled OAuth deployment if any of these are true:
   fails/holds after provider evidence is supplied;
 - the requested immutable SHA and resolved checkout/build SHA are not proven
   exactly equal;
+- the Stage A completion validator is not running from a clean tracked checkout;
 - the immutable deployment identifier, pre-deployment identity, or reviewed
   rollback-target evidence is unavailable;
 - quote submission is not proven disabled;
@@ -296,6 +297,11 @@ Evidence must use exact admission mechanism `new-user-signup-disabled` or
 canonical UTC ISO-8601 with milliseconds, must not be in the future, and must
 be no more than 24 hours old. It must name the requested immutable SHA and use
 a canonical #291 or #301 issue-comment URL as the approval reference.
+
+Stage A accepts a modern `sb_publishable_*` key or a legacy compact Supabase JWT
+only when the decoded legacy role is exactly `anon`. A legacy `service_role`
+JWT cannot satisfy `SUPABASE_ANON_KEY`. This validation reports only stable
+field names and never prints the configured value.
 
 Do not weaken the Stage B launch validator to clear Stage A. Stage A does not
 authorise public enquiry launch.

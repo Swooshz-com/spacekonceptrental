@@ -194,33 +194,38 @@ test('launch mode requires an exact explicit valid admin mutation state', () => 
   }
 });
 
-test('static scan detects a legacy Supabase service-role JWT without echoing it', () => {
+test('static scan detects legacy Supabase service-role and anon JWTs without echoing them', () => {
   const tempRoot = fs.mkdtempSync(
     path.join(os.tmpdir(), 'skr-production-readiness-'),
   );
   const badFile = path.join(tempRoot, 'website/lib/leaked-provider-key.ts');
   const encode = (value) =>
     Buffer.from(JSON.stringify(value), 'utf8').toString('base64url');
-  const leaked = [
-    encode({ alg: 'HS256', typ: 'JWT' }),
-    encode({ iss: 'supabase', role: 'service_role' }),
-    's'.repeat(43),
-  ].join('.');
+  for (const role of ['service_role', 'anon']) {
+    const leaked = [
+      encode({ alg: 'HS256', typ: 'JWT' }),
+      encode({ iss: 'supabase', role }),
+      's'.repeat(43),
+    ].join('.');
 
-  fs.mkdirSync(path.dirname(badFile), { recursive: true });
-  fs.writeFileSync(badFile, `export const leaked = '${leaked}';\n`);
+    fs.mkdirSync(path.dirname(badFile), { recursive: true });
+    fs.writeFileSync(badFile, `export const leaked = '${leaked}';\n`);
 
-  const result = runReadiness(baseLaunchEnv(), [
-    '--scan-root',
-    tempRoot,
-    '--tracked-file-list',
-    badFile,
-  ]);
-  const output = combinedOutput(result);
+    const result = runReadiness(baseLaunchEnv(), [
+      '--scan-root',
+      tempRoot,
+      '--tracked-file-list',
+      badFile,
+    ]);
+    const output = combinedOutput(result);
 
-  assert.notEqual(result.status, 0);
-  assert.match(output, /Supabase legacy service-role JWT pattern/i);
-  assert.doesNotMatch(output, new RegExp(leaked.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+    assert.notEqual(result.status, 0);
+    assert.match(output, /Supabase legacy credential JWT pattern/i);
+    assert.doesNotMatch(
+      output,
+      new RegExp(leaked.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')),
+    );
+  }
 });
 
 test('Supabase credential detection covers docs tests contracts SQL and extensionless tracked text', () => {

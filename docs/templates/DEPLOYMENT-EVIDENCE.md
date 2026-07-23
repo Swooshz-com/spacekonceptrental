@@ -66,6 +66,7 @@ private dashboard links, workspace/admin identifiers, or customer data.
 - Verified at: `<canonical-UTC-ISO-8601-milliseconds-within-24-hours-or-not-verified>`
 - Operator and approval reference: `<canonical-issue-291-or-301-comment-url>`
 - Requested immutable SHA: `<40-character-sha>`
+- Clean tracked checkout at validation time: `<PASS-or-FAIL>`
 - Existing-owner readiness: `<PASS-FAIL-or-HOLD>`
 - No-public-signup result: `<PASS-FAIL-or-HOLD>`
 
@@ -76,7 +77,8 @@ suitable official Supabase interface or API under separate authorisation, and
 never record private emails, project references, provider values, or secrets.
 PASS evidence must be no more than 24 hours old and must match the requested
 immutable SHA; stale, non-canonical, self-attested, or revision-mismatched
-evidence remains `HOLD - NOT VERIFIED`.
+evidence remains `HOLD - NOT VERIFIED`. A dirty or unresolved tracked checkout
+also remains held because the evidence cannot be bound to the exact commit.
 Reference the secret-safe output of
 `npm run validate:stage-a-oauth-deployment-readiness -- --provider-admission-evidence <temporary-secret-safe-evidence-path>`;
 do not attach the temporary file to Git.
@@ -228,7 +230,10 @@ There is no direct provider API call by the smoke harness and no mutating
 provider call. Route rendering may exercise configured read-only Supabase-backed
 application paths through the deployed first-party application. The harness
 also scans at most 32 deduplicated same-origin `/_next/static/*.js` assets with
-the same 128 KiB response bound and never fetches third-party script origins.
+the same leakage rules and never fetches third-party script origins. Route HTML
+retains its 128 KiB response bound. Client assets are streamed through a
+4,096-character overlap window with a separate 512 KiB total response ceiling;
+the harness does not accumulate an entire bundle.
 
 ## Enquiry Handoff Evidence - Stage B Only
 

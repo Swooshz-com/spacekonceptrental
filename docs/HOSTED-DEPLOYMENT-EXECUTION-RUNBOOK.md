@@ -306,7 +306,11 @@ safe shape without printing values. It must remain on hold when a required
 Supabase, catalogue, admin workspace, canonical origin/host, CSRF, or mutation
 capability setting is absent/invalid; when the evidence file is absent,
 invalid, future-dated, or not `PASS`; or when the admin-mutation state is not
-the exact unpadded value `false`.
+the exact unpadded value `false`. A legacy compact `SUPABASE_ANON_KEY` is
+accepted only when its decoded Supabase role is exactly `anon`; a legacy
+`service_role` JWT is rejected. Completion must run from a clean tracked
+checkout, and provider-admission evidence cannot bind to a dirty or unresolved
+repository revision.
 
 After a separately approved Stage A deployment, provide the canonical base only
 through the dedicated input and run the read-only smoke. The command performs
@@ -316,8 +320,11 @@ API call by the smoke harness and no mutating provider call. Route rendering
 may exercise configured read-only Supabase-backed application paths through the
 deployed first-party application. The command also extracts, deduplicates, and
 scans at most 32 referenced same-origin `/_next/static/*.js` bundles, with the
-same 128 KiB per-response bound and leakage rules. It never fetches
-third-party script origins.
+same leakage rules. Route HTML retains its 128 KiB response bound. Each client
+asset is scanned incrementally with only a 4,096-character overlap window and
+a separate 512 KiB total response ceiling, so current production bundles are
+covered without accumulating an entire bundle. It never fetches third-party
+script origins.
 
 ```powershell
 $env:SKR_PRODUCTION_BASE_URL = 'https://spacekonceptrental.com'

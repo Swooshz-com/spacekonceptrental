@@ -261,9 +261,13 @@ later separately reviewed activation and does not replace authentication,
 workspace, role, CSRF, Origin/Referer, or validation controls.
 
 Stage A readiness also validates the hosted Supabase endpoint and supported
-anon/publishable key shape, UUID-shaped catalogue/admin workspace identifiers,
-and the same minimum entropy-like CSRF secret shape used by the full launch
-validator. Presence-only placeholders do not satisfy completion.
+anon/publishable key shape, including a decoded legacy role of exactly `anon`
+when a compact JWT is used. A legacy `service_role` JWT is rejected.
+UUID-shaped catalogue/admin workspace identifiers and the same minimum
+entropy-like CSRF secret shape used by the full launch validator are also
+required. Completion runs only from a clean tracked checkout so evidence binds
+to exact commit contents. Presence-only placeholders do not satisfy
+completion.
 
 The approved RPC performs the metadata mutation, product audit insert, and
 local search-index job enqueue in one database transaction. Reviewers should

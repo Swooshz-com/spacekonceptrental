@@ -91,8 +91,10 @@ Use `npm run smoke:production-readonly` and provide the canonical production
 apex through `SKR_PRODUCTION_BASE_URL` using a secret-safe operator shell. The
 smoke command is not browser automation and follows no redirects. It extracts
 only same-origin `/_next/static/*.js` script references, scans at most 32
-deduplicated bundles with the existing 128 KiB response bound, and never
-fetches third-party script origins.
+deduplicated bundles, and never fetches third-party script origins. Route HTML
+retains the 128 KiB response bound. Client assets are scanned incrementally
+with only a 4,096-character overlap window and a separate 512 KiB total
+response ceiling; the harness does not accumulate an entire bundle.
 
 ### Stage B - Full Enquiry Launch
 

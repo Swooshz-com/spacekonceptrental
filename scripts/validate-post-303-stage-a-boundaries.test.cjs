@@ -28,8 +28,21 @@ const testRevision = 'a'.repeat(40);
 function validateStageARepositoryReadiness(options = {}) {
   return validateStageARepositoryReadinessImpl({
     ...options,
-    expectedRevision: options.expectedRevision ?? testRevision,
+    expectedRevision: Object.hasOwn(options, 'expectedRevision')
+      ? options.expectedRevision
+      : testRevision,
   });
+}
+
+function syntheticLegacySupabaseJwt(role) {
+  const encode = (value) =>
+    Buffer.from(JSON.stringify(value), 'utf8').toString('base64url');
+
+  return [
+    encode({ alg: 'HS256', typ: 'JWT' }),
+    encode({ iss: 'supabase', role }),
+    's'.repeat(43),
+  ].join('.');
 }
 
 function listRouteFiles(directory) {
@@ -226,6 +239,44 @@ test('Stage A completion rejects malformed provider, workspace, and CSRF configu
   }
 });
 
+test('Stage A accepts a legacy anon JWT but rejects a service-role JWT as SUPABASE_ANON_KEY', () => {
+  const accepted = validateStageARepositoryReadiness({
+    env: {
+      ...stageACompletionEnv,
+      SUPABASE_ANON_KEY: syntheticLegacySupabaseJwt('anon'),
+    },
+    providerAdmissionEvidence,
+    nowMs: evidenceNowMs,
+  });
+  const rejected = validateStageARepositoryReadiness({
+    env: {
+      ...stageACompletionEnv,
+      SUPABASE_ANON_KEY: syntheticLegacySupabaseJwt('service_role'),
+    },
+    providerAdmissionEvidence,
+    nowMs: evidenceNowMs,
+  });
+
+  assert.deepEqual(accepted, []);
+  assert.ok(rejected.includes('stage_a_runtime_env_invalid:SUPABASE_ANON_KEY'));
+});
+
+test('Stage A completion rejects evidence binding from a dirty or unresolved tracked checkout', () => {
+  const issues = validateStageARepositoryReadiness({
+    env: stageACompletionEnv,
+    providerAdmissionEvidence,
+    nowMs: evidenceNowMs,
+    expectedRevision: null,
+  });
+
+  assert.ok(issues.includes('stage_a_repository_revision_not_clean'));
+  assert.ok(issues.includes('stage_a_provider_admission_not_verified'));
+  assert.match(
+    read('scripts/validate-stage-a-oauth-deployment-readiness.cjs'),
+    /status', '--porcelain', '--untracked-files=no/,
+  );
+});
+
 test('Stage A completion rejects unapproved, malformed, stale, future, or unbound admission evidence', () => {
   for (const evidence of [
     { ...providerAdmissionEvidence, admissionMechanism: 'none' },
@@ -286,6 +337,11 @@ test('Stage A documents keep provider admission on HOLD until independently veri
   assert.match(combined, /requested immutable SHA/i);
   assert.match(combined, /\/_next\/static\/\*\.js/);
   assert.match(combined, /never fetches? third-party script origins?/i);
+  assert.match(combined, /clean tracked checkout/i);
+  assert.match(combined, /legacy\s+[`]?service_role[`]? JWT is rejected/i);
+  assert.match(combined, /4,096-character overlap window/i);
+  assert.match(combined, /512 KiB total response ceiling/i);
+  assert.doesNotMatch(combined, /same 128 KiB (?:per-)?response bound/i);
 });
 
 test('admin mutation capability remains server-only', () => {
