@@ -16,6 +16,9 @@ const {
   calculateInventoryDigest,
 } = require('../website/scripts/generate-production-build-provenance.cjs');
 const {
+  calculateRouteInventoryDigest,
+} = require('../website/scripts/production-smoke-route-inventory.cjs');
+const {
   scanStaticSecurity,
 } = require('./validate-production-security-readiness.cjs');
 const {
@@ -32,9 +35,11 @@ const expectedPublicRoutes = [
   '/about',
   '/admin/login',
   '/catalogue',
+  '/catalogue/skr-smoke-probe-reserved',
   '/categories',
   '/events',
   '/listings',
+  '/listings/skr-smoke-probe-reserved',
   '/privacy',
   '/quote',
   '/setups',
@@ -68,6 +73,9 @@ const safeClientAssetPath = path.join(
 );
 const safeClientAssetUrl =
   `${apex}/_next/static/chunks/inventory-safe.js`;
+const productionRouteInventory = discoverPublicPageRouteInventory({
+  appDirectory: path.join(repoRoot, 'website', 'app'),
+});
 fs.mkdirSync(path.dirname(safeClientAssetPath), { recursive: true });
 fs.writeFileSync(safeClientAssetPath, 'globalThis.__skrSafe = true;\n');
 
@@ -137,10 +145,16 @@ function createCompleteMockFetch(overrides = {}) {
         return response(
           200,
           JSON.stringify({
-            schemaVersion: 1,
+            schemaVersion: 2,
             reviewedSha: testRevision,
             buildId: testBuildId,
             trackedCheckoutClean: true,
+            sourceCheckoutClean: true,
+            routeCount: productionRouteInventory.routes.length,
+            routeInventorySha256: calculateRouteInventoryDigest(
+              productionRouteInventory.routes,
+            ),
+            routes: productionRouteInventory.routes,
             assetCount: assets.length,
             inventorySha256: calculateInventoryDigest(assets),
             assets,
@@ -224,7 +238,7 @@ function providerAdmissionEvidence(overrides = {}) {
   };
 }
 
-test('production smoke derives every current static public page from the app tree', () => {
+test('production smoke derives every current static and probed dynamic public page from the app tree', () => {
   const inventory = discoverPublicPageRouteInventory({
     appDirectory: path.join(repoRoot, 'website', 'app'),
   });
@@ -238,17 +252,17 @@ test('production smoke derives every current static public page from the app tre
     ),
   );
   assert.ok(
-    inventory.exclusions.some(
+    inventory.routes.some(
       (entry) =>
-        entry.routeTemplate === '/catalogue/[slug]' &&
-        entry.reason === 'dynamic-parameter-required',
+        entry.template === '/catalogue/[slug]' &&
+        entry.kind === 'public-dynamic-page',
     ),
   );
   assert.ok(
-    inventory.exclusions.some(
+    inventory.routes.some(
       (entry) =>
-        entry.routeTemplate === '/listings/[slug]' &&
-        entry.reason === 'dynamic-parameter-required',
+        entry.template === '/listings/[slug]' &&
+        entry.kind === 'public-dynamic-page',
     ),
   );
   assert.equal(
@@ -289,7 +303,7 @@ test('leakage isolated to every previously omitted public route fails safely', a
   }
 });
 
-test('hosted build provenance covers dynamic-route chunks without crawling invented parameters', async () => {
+test('hosted build provenance covers dynamic-route chunks and reviewed dynamic probes', async () => {
   const leaked = syntheticModernKey('secret');
   const dynamicAssetUrl = `${apex}/_next/static/chunks/app/catalogue/[slug]/page.js`;
   const mock = createCompleteMockFetch({
@@ -311,9 +325,11 @@ test('hosted build provenance covers dynamic-route chunks without crawling inven
     'public_response_leakage_supabase_key_material',
   );
   assert.ok(mock.calls.some((call) => call.url === dynamicAssetUrl));
-  assert.equal(
-    mock.calls.some((call) => /\/catalogue\/[^[]/.test(call.url)),
-    false,
+  assert.ok(
+    mock.calls.some(
+      (call) =>
+        call.url === `${apex}/catalogue/skr-smoke-probe-reserved`,
+    ),
   );
   assert.ok(mock.calls.every((call) => call.options.method === 'GET'));
   assert.doesNotMatch(JSON.stringify(safeFailureResult(error)), new RegExp(leaked));
@@ -328,10 +344,16 @@ test('hosted build provenance includes only bounded first-party JavaScript paths
   ];
   const provenance = validateHostedBuildProvenance(
     {
-      schemaVersion: 1,
+      schemaVersion: 2,
       reviewedSha: testRevision,
       buildId: testBuildId,
       trackedCheckoutClean: true,
+      sourceCheckoutClean: true,
+      routeCount: productionRouteInventory.routes.length,
+      routeInventorySha256: calculateRouteInventoryDigest(
+        productionRouteInventory.routes,
+      ),
+      routes: productionRouteInventory.routes,
       assetCount: assets.length,
       inventorySha256: calculateInventoryDigest(assets),
       assets,
@@ -361,13 +383,14 @@ test('new unsupported public route syntax fails closed instead of drifting out o
   );
 });
 
-test('route groups are normalized while API, admin, and dynamic pages remain classified out', () => {
+test('route groups are normalized while API and protected admin pages remain excluded and dynamics are probed', () => {
   const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'skr-route-groups-'));
   const appDirectory = path.join(tempRoot, 'app');
   const pages = [
     'page.tsx',
     '(marketing)/offers/page.tsx',
     'admin/page.tsx',
+    'admin/login/page.tsx',
     'api/status/page.tsx',
     'catalogue/[slug]/page.tsx',
   ];
@@ -379,7 +402,12 @@ test('route groups are normalized while API, admin, and dynamic pages remain cla
   }
 
   const inventory = discoverPublicPageRouteInventory({ appDirectory });
-  assert.deepEqual(inventory.publicRoutes, ['/', '/offers']);
+  assert.deepEqual(inventory.publicRoutes, [
+    '/',
+    '/admin/login',
+    '/catalogue/skr-smoke-probe-reserved',
+    '/offers',
+  ]);
   assert.ok(
     inventory.exclusions.some(
       (entry) => entry.routeTemplate === '/admin' && entry.reason === 'protected-admin',
@@ -391,10 +419,10 @@ test('route groups are normalized while API, admin, and dynamic pages remain cla
     ),
   );
   assert.ok(
-    inventory.exclusions.some(
+    inventory.routes.some(
       (entry) =>
-        entry.routeTemplate === '/catalogue/[slug]' &&
-        entry.reason === 'dynamic-parameter-required',
+        entry.template === '/catalogue/[slug]' &&
+        entry.kind === 'public-dynamic-page',
     ),
   );
 });
@@ -632,4 +660,8 @@ test('canonical documentation records complete route, Stage B absence, and proje
   assert.match(combined, /SHA-256 fingerprint/i);
   assert.match(combined, /must exactly match/i);
   assert.match(combined, /concrete project reference remains outside tracked/i);
+  assert.match(combined, /exact hosted provenance route inventory/i);
+  assert.match(combined, /\/catalogue\/\[slug\]/);
+  assert.match(combined, /\/listings\/\[slug\]/);
+  assert.match(combined, /untracked or ignored build inputs/i);
 });

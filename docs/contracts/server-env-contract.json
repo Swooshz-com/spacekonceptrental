@@ -224,7 +224,7 @@
       "requiredFor": "Operator-run production read-only smoke command only",
       "browserAllowed": false,
       "status": "operator-command-only",
-      "notes": "Must be the exact lowercase 40-character reviewed and requested deployment SHA; it is matched against the hosted build provenance and is not stored as application runtime configuration."
+      "notes": "Must be the exact lowercase 40-character reviewed and requested deployment SHA; it is matched against hosted source-clean build provenance containing the canonical route and asset inventory digests and is not stored as application runtime configuration."
     },
     {
       "name": "SKR_PRODUCTION_EXPECTED_BUILD_ID",
@@ -233,7 +233,7 @@
       "requiredFor": "Operator-run production read-only smoke command only",
       "browserAllowed": false,
       "status": "operator-command-only",
-      "notes": "Must be the exact non-secret Next.js build identifier emitted by the accepted clean build provenance; it is matched against the hosted build provenance and is not stored as application runtime configuration."
+      "notes": "Must be the exact non-secret Next.js build identifier emitted by the accepted source-clean build provenance; it is matched against the hosted route-and-asset provenance and is not stored as application runtime configuration."
     },
     {
       "name": "SUPABASE_URL",

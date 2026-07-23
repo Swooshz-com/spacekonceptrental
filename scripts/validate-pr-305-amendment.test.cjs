@@ -11,6 +11,10 @@ const {
   inventoryClientAssets,
 } = require('../website/scripts/generate-production-build-provenance.cjs');
 const {
+  calculateRouteInventoryDigest,
+  discoverPublicPageRouteInventory: discoverRouteInventory,
+} = require('../website/scripts/production-smoke-route-inventory.cjs');
+const {
   SmokeContractError,
   discoverPublicPageRouteInventory,
   runProductionReadOnlySmoke,
@@ -25,19 +29,9 @@ const provenanceUrl =
   `${apex}/.well-known/skr-build-provenance.json`;
 const safeAssetPath = '/_next/static/chunks/shared.js';
 const safeAssetBody = 'globalThis.__shared = true;';
-const publicRoutes = [
-  '/',
-  '/about',
-  '/admin/login',
-  '/catalogue',
-  '/categories',
-  '/events',
-  '/listings',
-  '/privacy',
-  '/quote',
-  '/setups',
-  '/terms',
-];
+const productionRouteInventory = discoverRouteInventory({
+  appDirectory: path.join(__dirname, '..', 'website', 'app'),
+});
 
 function response(status, body = 'safe public response', headers = {}) {
   return new Response(body, { status, headers });
@@ -58,12 +52,17 @@ function provenanceManifest(overrides = {}) {
   const assets = [
     ...(overrides.assets ?? [assetEntry(safeAssetPath, safeAssetBody)]),
   ].sort((left, right) => left.path.localeCompare(right.path));
+  const routes = overrides.routes ?? productionRouteInventory.routes;
 
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     reviewedSha: reviewedSha,
     buildId: deployedBuildId,
     trackedCheckoutClean: true,
+    sourceCheckoutClean: true,
+    routeCount: routes.length,
+    routeInventorySha256: calculateRouteInventoryDigest(routes),
+    routes,
     assetCount: assets.length,
     inventorySha256: calculateInventoryDigest(assets),
     ...overrides,
@@ -78,8 +77,8 @@ function createFixture(options = {}) {
     ...Object.entries(options.assetBodies ?? {}),
   ]);
   const defaults = new Map(
-    publicRoutes.map((route) => [
-      new URL(route, apex).toString(),
+    productionRouteInventory.routes.map((route) => [
+      new URL(route.path, apex).toString(),
       response(200),
     ]),
   );
@@ -286,8 +285,11 @@ test('leakage in a hosted dynamic-route chunk is detected without echoing materi
 test('mismatched SHA, missing metadata, dirty provenance, and incomplete inventory fail closed', async () => {
   const variants = [
     provenanceManifest({ reviewedSha: 'b'.repeat(40) }),
-    { schemaVersion: 1 },
+    { schemaVersion: 2 },
     provenanceManifest({ trackedCheckoutClean: false }),
+    provenanceManifest({ sourceCheckoutClean: false }),
+    provenanceManifest({ routeCount: 1 }),
+    provenanceManifest({ routeInventorySha256: '0'.repeat(64) }),
     provenanceManifest({ assetCount: 2 }),
     provenanceManifest({ inventorySha256: '0'.repeat(64) }),
   ];
@@ -368,19 +370,33 @@ test('production build generation binds the complete inventory to revision and b
   const nextDirectory = path.join(websiteRoot, '.next');
   const assetDirectory = path.join(nextDirectory, 'static', 'chunks');
   fs.mkdirSync(assetDirectory, { recursive: true });
+  const rootPage = path.join(websiteRoot, 'app', 'page.tsx');
+  const loginPage = path.join(
+    websiteRoot,
+    'app',
+    'admin',
+    'login',
+    'page.tsx',
+  );
+  fs.mkdirSync(path.dirname(rootPage), { recursive: true });
+  fs.mkdirSync(path.dirname(loginPage), { recursive: true });
   fs.writeFileSync(path.join(nextDirectory, 'BUILD_ID'), deployedBuildId);
   fs.writeFileSync(path.join(assetDirectory, 'shared.js'), safeAssetBody);
+  fs.writeFileSync(rootPage, 'export default function Page() { return null; }\n');
+  fs.writeFileSync(loginPage, 'export default function Page() { return null; }\n');
 
   const generated = generateProductionBuildProvenance({
     repoRoot: websiteRoot,
     websiteRoot,
     revision: reviewedSha,
-    trackedStatus: '',
+    checkoutStatus: '',
   });
 
   assert.equal(generated.manifest.reviewedSha, reviewedSha);
   assert.equal(generated.manifest.buildId, deployedBuildId);
   assert.equal(generated.manifest.trackedCheckoutClean, true);
+  assert.equal(generated.manifest.sourceCheckoutClean, true);
+  assert.equal(generated.manifest.routeCount, 2);
   assert.equal(generated.manifest.assetCount, 1);
   assert.deepEqual(
     generated.manifest.assets.map((asset) => asset.path),
@@ -422,6 +438,9 @@ test('canonical smoke contracts require public login coverage and exact hosted b
   assert.match(combined, /never posts the login form|no form submission/i);
   assert.match(combined, /Local `website\/\.next`.*not.*deployed-build evidence/is);
   assert.match(combined, /Missing, stale,\s*mismatched, malformed, or incomplete provenance fails closed/i);
+  assert.match(combined, /route-inventory and asset-inventory digests/i);
+  assert.match(combined, /public dynamic route without an explicit reviewed probe/i);
+  assert.match(combined, /untracked or ignored build inputs/i);
   assert.match(combined, /SKR_PRODUCTION_EXPECTED_SHA/);
   assert.match(combined, /SKR_PRODUCTION_EXPECTED_BUILD_ID/);
   assert.ok(operatorNames.includes('SKR_PRODUCTION_EXPECTED_SHA'));

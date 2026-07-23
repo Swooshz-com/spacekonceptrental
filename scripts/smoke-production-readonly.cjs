@@ -1,11 +1,17 @@
 #!/usr/bin/env node
 
 const crypto = require('node:crypto');
-const fs = require('node:fs');
 const path = require('node:path');
 const {
   calculateInventoryDigest,
 } = require('../website/scripts/generate-production-build-provenance.cjs');
+const {
+  RouteInventoryContractError,
+  calculateRouteInventoryDigest,
+  discoverPublicPageRouteInventory: discoverPublicPageRouteInventoryImpl,
+  maxPublicRouteCount,
+  validateRouteInventory,
+} = require('../website/scripts/production-smoke-route-inventory.cjs');
 
 const productionBaseEnvName = 'SKR_PRODUCTION_BASE_URL';
 const productionExpectedRevisionEnvName = 'SKR_PRODUCTION_EXPECTED_SHA';
@@ -22,8 +28,6 @@ const leakageScanOverlapCharacters = 4096;
 const maxClientAssetCount = 96;
 const safeMethods = new Set(['GET', 'HEAD']);
 const redirectStatuses = new Set([301, 302, 303, 307, 308]);
-const pageFilePattern = /^page\.(?:js|jsx|ts|tsx)$/;
-const staticRouteSegmentPattern = /^[a-z0-9][a-z0-9-]*$/;
 const repoRoot = path.resolve(__dirname, '..');
 const defaultAppDirectory = path.join(repoRoot, 'website', 'app');
 const buildProvenancePath =
@@ -31,15 +35,6 @@ const buildProvenancePath =
 const revisionPattern = /^[0-9a-f]{40}$/;
 const buildIdPattern = /^[A-Za-z0-9._-]{8,128}$/;
 const digestPattern = /^[0-9a-f]{64}$/;
-const anonymousAdminPageRoutes = new Set(['/admin/login']);
-const protectedAdminPageRoutes = new Set([
-  '/admin',
-  '/admin/catalogue',
-  '/admin/delivery-log',
-  '/admin/enquiry-email',
-  '/admin/hero',
-  '/admin/setups',
-]);
 
 const boundaryRouteChecks = [
   { path: '/contact', expectedStatuses: [404] },
@@ -138,152 +133,17 @@ function assertSafeMethod(method) {
   return normalized;
 }
 
-function listPageFiles(directory) {
-  let entries;
-
-  try {
-    entries = fs.readdirSync(directory, { withFileTypes: true });
-  } catch {
-    fail('public_route_inventory_unavailable');
-  }
-
-  return entries.flatMap((entry) => {
-    const absolutePath = path.join(directory, entry.name);
-
-    if (entry.isDirectory()) {
-      return listPageFiles(absolutePath);
-    }
-
-    return pageFilePattern.test(entry.name) ? [absolutePath] : [];
-  });
-}
-
-function classifyPageRoute(appDirectory, pageFile) {
-  const relativePath = path.relative(appDirectory, pageFile);
-  const rawSegments = relativePath.split(path.sep).slice(0, -1);
-  const routeSegments = [];
-
-  for (const segment of rawSegments) {
-    if (/^\([^.)][^)]*\)$/.test(segment)) {
-      continue;
-    }
-
-    if (
-      segment.startsWith('@') ||
-      /^\(\.{1,3}\)/.test(segment) ||
-      segment.includes('(') ||
-      segment.includes(')')
-    ) {
-      fail('public_route_inventory_unclassified');
-    }
-
-    routeSegments.push(segment);
-  }
-
-  const routeTemplate =
-    routeSegments.length === 0 ? '/' : `/${routeSegments.join('/')}`;
-
-  if (anonymousAdminPageRoutes.has(routeTemplate)) {
-    return Object.freeze({
-      routeTemplate,
-      reason: 'anonymous-admin-page',
-    });
-  }
-
-  if (protectedAdminPageRoutes.has(routeTemplate)) {
-    return Object.freeze({
-      routeTemplate,
-      reason: 'protected-admin',
-    });
-  }
-
-  if (routeSegments[0] === 'admin') {
-    fail('public_route_inventory_unclassified_admin_page');
-  }
-
-  if (routeSegments[0] === 'api') {
-    return Object.freeze({
-      routeTemplate,
-      reason: 'api-route',
-    });
-  }
-
-  if (routeSegments.some((segment) => segment.startsWith('_'))) {
-    return Object.freeze({
-      routeTemplate,
-      reason: 'next-private-segment',
-    });
-  }
-
-  if (
-    routeSegments.some((segment) => /^\[(?:\[)?\.{0,3}[^\]]+\](?:\])?$/.test(segment))
-  ) {
-    return Object.freeze({
-      routeTemplate,
-      reason: 'dynamic-parameter-required',
-    });
-  }
-
-  if (routeSegments.some((segment) => !staticRouteSegmentPattern.test(segment))) {
-    fail('public_route_inventory_unclassified');
-  }
-
-  return Object.freeze({ routeTemplate, reason: 'public-static-page' });
-}
-
 function discoverPublicPageRouteInventory(options = {}) {
-  const appDirectory = path.resolve(
-    options.appDirectory ?? defaultAppDirectory,
-  );
-  const classifications = listPageFiles(appDirectory).map((pageFile) =>
-    classifyPageRoute(appDirectory, pageFile),
-  );
-  const publicRoutes = [];
-  const exclusions = [];
-  const seenPublicRoutes = new Set();
-
-  for (const classification of classifications) {
-    if (
-      classification.reason !== 'public-static-page' &&
-      classification.reason !== 'anonymous-admin-page'
-    ) {
-      exclusions.push(classification);
-      continue;
+  try {
+    return discoverPublicPageRouteInventoryImpl({
+      appDirectory: options.appDirectory ?? defaultAppDirectory,
+    });
+  } catch (error) {
+    if (error instanceof RouteInventoryContractError) {
+      fail(error.code);
     }
-
-    if (seenPublicRoutes.has(classification.routeTemplate)) {
-      fail('public_route_inventory_duplicate');
-    }
-
-    seenPublicRoutes.add(classification.routeTemplate);
-    publicRoutes.push(classification.routeTemplate);
+    throw error;
   }
-
-  publicRoutes.sort((left, right) => left.localeCompare(right));
-  exclusions.sort((left, right) =>
-    left.routeTemplate.localeCompare(right.routeTemplate),
-  );
-
-  if (!publicRoutes.includes('/')) {
-    fail('public_route_inventory_home_missing');
-  }
-
-  return Object.freeze({
-    publicRoutes: Object.freeze(publicRoutes),
-    exclusions: Object.freeze(exclusions),
-  });
-}
-
-function createRouteChecks(appDirectory) {
-  const inventory = discoverPublicPageRouteInventory({ appDirectory });
-  const publicChecks = inventory.publicRoutes.map((routePath) =>
-    Object.freeze({ path: routePath, expectedStatuses: [200] }),
-  );
-
-  return Object.freeze({
-    checks: Object.freeze([...publicChecks, ...boundaryRouteChecks]),
-    inventory,
-  });
 }
 
 function assertApprovedClientAssetPath(assetPath) {
@@ -342,10 +202,17 @@ function validateHostedBuildProvenance(
     !candidate ||
     typeof candidate !== 'object' ||
     Array.isArray(candidate) ||
-    candidate.schemaVersion !== 1 ||
+    candidate.schemaVersion !== 2 ||
     candidate.reviewedSha !== expectedRevision ||
     candidate.buildId !== expectedBuildId ||
     candidate.trackedCheckoutClean !== true ||
+    candidate.sourceCheckoutClean !== true ||
+    !Number.isSafeInteger(candidate.routeCount) ||
+    candidate.routeCount < 1 ||
+    candidate.routeCount > maxPublicRouteCount ||
+    !digestPattern.test(candidate.routeInventorySha256 ?? '') ||
+    !Array.isArray(candidate.routes) ||
+    candidate.routes.length !== candidate.routeCount ||
     !Number.isSafeInteger(candidate.assetCount) ||
     candidate.assetCount < 1 ||
     candidate.assetCount > maxClientAssetCount ||
@@ -354,6 +221,24 @@ function validateHostedBuildProvenance(
     candidate.assets.length !== candidate.assetCount
   ) {
     fail('build_provenance_identity_mismatch');
+  }
+
+  let routes;
+
+  try {
+    routes = validateRouteInventory(candidate.routes);
+  } catch (error) {
+    if (error instanceof RouteInventoryContractError) {
+      fail(error.code);
+    }
+    throw error;
+  }
+
+  if (
+    calculateRouteInventoryDigest(routes) !==
+    candidate.routeInventorySha256
+  ) {
+    fail('build_provenance_route_inventory_incomplete');
   }
 
   const assets = [];
@@ -397,6 +282,7 @@ function validateHostedBuildProvenance(
   return Object.freeze({
     reviewedSha: candidate.reviewedSha,
     buildId: candidate.buildId,
+    routes,
     assets: Object.freeze(sortedAssets),
   });
 }
@@ -727,7 +613,6 @@ async function runProductionReadOnlySmoke(options = {}) {
   const expectedRevision = assertExpectedRevision(options.rawExpectedRevision);
   const expectedBuildId = assertExpectedBuildId(options.rawExpectedBuildId);
   const fetchImpl = options.fetchImpl ?? globalThis.fetch;
-  const routeContract = createRouteChecks(options.appDirectory);
 
   if (typeof fetchImpl !== 'function') {
     fail('fetch_unavailable');
@@ -740,8 +625,17 @@ async function runProductionReadOnlySmoke(options = {}) {
     expectedRevision,
     expectedBuildId,
   );
+  const routeChecks = [
+    ...buildProvenance.routes.map((route) =>
+      Object.freeze({
+        path: route.path,
+        expectedStatuses: route.expectedStatuses,
+      }),
+    ),
+    ...boundaryRouteChecks,
+  ];
 
-  for (const check of routeContract.checks) {
+  for (const check of routeChecks) {
     results.push(
       await checkRoute(fetchImpl, check, referencedClientAssetUrls),
     );
@@ -764,7 +658,7 @@ async function runProductionReadOnlySmoke(options = {}) {
     quoteSubmissionAttempted: false,
     oauthInitiated: false,
     authenticated: false,
-    publicRoutesDiscovered: routeContract.inventory.publicRoutes.length,
+    publicRoutesDiscovered: buildProvenance.routes.length,
     reviewedRevisionVerified: true,
     deployedBuildIdentityVerified: true,
     deployedClientAssetsDiscovered: buildProvenance.assets.length,

@@ -74,6 +74,9 @@ smoke evidence is:
 
 - public read routes `/`, `/catalogue`, `/setups`, `/about`, and `/quote` return
   `200`;
+- the exact hosted route provenance covers every supported public page and
+  drives the smoke checks, including deterministic read-only probes for
+  `/catalogue/[slug]` and `/listings/[slug]`;
 - the anonymously reachable `/admin/login` HTML returns `200` and receives the
   same leakage scan without submitting the form or initiating OAuth;
 - `/contact` returns the intended `404`;
@@ -95,14 +98,22 @@ SHA through `SKR_PRODUCTION_EXPECTED_SHA`, and the exact non-secret build ID
 from the accepted clean build output through
 `SKR_PRODUCTION_EXPECTED_BUILD_ID`. The command fetches the bounded hosted
 first-party build-provenance manifest, requires exact SHA/build-ID equality and
-a clean tracked build, validates the complete asset inventory digest, then
-digest-checks and leakage-scans every listed same-origin JavaScript asset. It
-does not trust local `website/.next` as deployed evidence. Missing, stale,
-mismatched, malformed, or incomplete provenance fails closed.
+a clean source checkout, validates the complete route-inventory and asset-
+inventory digests, then leakage-scans every listed public route probe and
+digest-checks every listed same-origin JavaScript asset. The build generator
+rejects tracked changes and untracked or ignored build inputs, except for the
+narrow documented generated-output allowlist. The smoke does not discover
+routes from the runner's local checkout and does not trust local
+`website/.next` as deployed evidence. Missing, stale, mismatched, malformed, or
+incomplete provenance fails closed.
 
 The smoke command is not browser automation and follows no redirects. It scans
 at most 96 first-party `/_next/static/*.js` bundles and never fetches
 third-party script origins. Route HTML retains the 128 KiB response bound.
+The reviewed dynamic probes are same-origin GET requests only, do not submit a
+quote or login form, and do not initiate OAuth or call n8n. A newly introduced
+public dynamic route without an explicit reviewed probe fails provenance
+generation closed.
 Client assets are scanned incrementally with only a 4,096-character overlap
 window and a separate 512 KiB total response ceiling; the harness does not
 accumulate an entire bundle.

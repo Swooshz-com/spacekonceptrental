@@ -8,6 +8,10 @@ const {
   calculateInventoryDigest,
 } = require('../website/scripts/generate-production-build-provenance.cjs');
 const {
+  calculateRouteInventoryDigest,
+  discoverPublicPageRouteInventory,
+} = require('../website/scripts/production-smoke-route-inventory.cjs');
+const {
   SmokeContractError,
   assertProductionBaseUrl,
   assertSafeMethod,
@@ -31,6 +35,9 @@ const safeClientAssetPath = path.join(
 );
 const safeClientAssetUrl =
   `${apex}/_next/static/chunks/inventory-safe.js`;
+const productionRouteInventory = discoverPublicPageRouteInventory({
+  appDirectory: path.join(__dirname, '..', 'website', 'app'),
+});
 fs.mkdirSync(path.dirname(safeClientAssetPath), { recursive: true });
 fs.writeFileSync(safeClientAssetPath, 'globalThis.__skrSafe = true;\n');
 
@@ -49,17 +56,10 @@ function response(status, body = 'safe public response', headers = {}) {
 function createMockFetch(overrides = {}) {
   const calls = [];
   const defaults = new Map([
-    [`${apex}/`, response(200)],
-    [`${apex}/catalogue`, response(200)],
-    [`${apex}/categories`, response(200)],
-    [`${apex}/events`, response(200)],
-    [`${apex}/listings`, response(200)],
-    [`${apex}/privacy`, response(200)],
-    [`${apex}/setups`, response(200)],
-    [`${apex}/terms`, response(200)],
-    [`${apex}/about`, response(200)],
-    [`${apex}/quote`, response(200)],
-    [`${apex}/admin/login`, response(200)],
+    ...productionRouteInventory.routes.map((route) => [
+      new URL(route.path, apex).toString(),
+      response(200),
+    ]),
     [`${apex}/contact`, response(404)],
     [
       `${apex}/admin`,
@@ -104,10 +104,16 @@ function createMockFetch(overrides = {}) {
         return response(
           200,
           JSON.stringify({
-            schemaVersion: 1,
+            schemaVersion: 2,
             reviewedSha: expectedRevision,
             buildId: expectedBuildId,
             trackedCheckoutClean: true,
+            sourceCheckoutClean: true,
+            routeCount: productionRouteInventory.routes.length,
+            routeInventorySha256: calculateRouteInventoryDigest(
+              productionRouteInventory.routes,
+            ),
+            routes: productionRouteInventory.routes,
             assetCount: assets.length,
             inventorySha256: calculateInventoryDigest(assets),
             assets,
@@ -191,7 +197,10 @@ test('production smoke performs only safe manual-redirect GET requests', async (
   assert.equal(result.quoteSubmissionAttempted, false);
   assert.equal(result.oauthInitiated, false);
   assert.equal(result.authenticated, false);
-  assert.equal(mock.calls.length, 16);
+  assert.equal(
+    mock.calls.length,
+    productionRouteInventory.routes.length + 5,
+  );
 
   for (const call of mock.calls) {
     assert.equal(call.options.method, 'GET');

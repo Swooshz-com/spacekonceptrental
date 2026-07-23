@@ -336,24 +336,33 @@ deployed first-party application. The command derives every static public page
 from `website/app/**/page.*`, including `/categories`, `/events`, `/listings`,
 `/privacy`, `/terms`, and the anonymously reachable `/admin/login` page.
 `/admin/login` is fetched as HTML only; the smoke never posts the login form or
-initiates OAuth. Route groups are removed from URL paths; the explicitly
-reviewed protected-admin set, API routes, and dynamic pages requiring invented
-parameters are classified and not crawled. A newly added admin page or other
-unsupported route syntax fails the inventory closed.
+initiates OAuth. It also uses explicit reviewed same-origin GET probes for the
+current public dynamic classes `/catalogue/[slug]` and `/listings/[slug]`, so
+their bounded server-rendered HTML receives the same leakage scan without
+guessing a mutable production slug. Route groups are removed from URL paths;
+the explicitly reviewed protected-admin set and API routes are not crawled. A
+new admin page, unsupported route syntax, or public dynamic class without a
+reviewed deterministic probe fails the inventory closed.
 
 `npm run build` emits a secret-safe hosted provenance manifest after the
 Next.js build. It records the exact checkout SHA, Next.js build ID, clean
-tracked-checkout result, and the complete inventory of bounded JavaScript
-assets with SHA-256 digests. Symlinks and non-JavaScript files are rejected or
-excluded during generation. The smoke fetches that manifest from the canonical
-first-party origin, requires exact equality with the independently supplied
-reviewed SHA and deployed build ID, verifies the clean-build flag and inventory
-digest, then fetches and digest-checks every listed asset. Missing, stale,
-mismatched, malformed, or incomplete provenance fails closed. Local
-`website/.next` content is never accepted as deployed-build evidence. The
-command scans at most 96 same-origin `/_next/static/*.js` client bundles with
-the same leakage rules. Route HTML retains its 128 KiB response bound. Each
-client asset is scanned
+source-checkout result, canonical complete public-route inventory and digest,
+and the complete inventory of bounded JavaScript assets with SHA-256 digests.
+Generation rejects every tracked change and all untracked or ignored build inputs,
+including source, configuration, public assets, package/build inputs, and
+environment-loading inputs. Only `node_modules`, `.next`, the generated
+provenance file, and the website TypeScript build-info output are narrowly
+allowed as ignored generated paths.
+Symlinks and non-JavaScript files are rejected or excluded during asset
+generation. The smoke fetches the manifest from the canonical first-party
+origin, requires exact equality with the independently supplied reviewed SHA
+and deployed build ID, verifies both inventory digests, drives route checks
+from that hosted exact-build inventory rather than the runner's local app tree,
+then fetches and digest-checks every listed asset. Missing, stale, mismatched, malformed, or incomplete provenance fails closed.
+Dirty source provenance also fails closed. Local `website/.next` content is not
+deployed-build evidence. The command scans at
+most 96 same-origin `/_next/static/*.js` client bundles with the same leakage
+rules. Route HTML retains its 128 KiB response bound. Each client asset is scanned
 incrementally with only a 4,096-character overlap window and a separate
 512 KiB total response ceiling, so current production bundles are covered
 without accumulating an entire bundle. It never fetches third-party script
