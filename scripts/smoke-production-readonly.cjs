@@ -182,7 +182,7 @@ function assertNoPublicLeakage(body) {
 
 function decodeHtmlAttributeValue(value) {
   return value.replace(
-    /&(?:#(\d{1,7})|#x([\da-f]{1,6})|amp|quot|apos|lt|gt);/gi,
+    /&(?:#(\d{1,7});?|#x([\da-f]{1,6});?|(?:amp|quot|apos|lt|gt);)/gi,
     (entity, decimal, hexadecimal) => {
       if (decimal || hexadecimal) {
         const codePoint = Number.parseInt(decimal ?? hexadecimal, decimal ? 10 : 16);
@@ -206,7 +206,7 @@ function decodeHtmlAttributeValue(value) {
 }
 
 function collectFirstPartyClientAssets(body, assetUrls) {
-  const scriptTagPattern = /<script\b[^>]*>/gi;
+  const scriptTagPattern = /<script\b(?:[^>"']|"[^"]*"|'[^']*')*>/gi;
   const scriptSourcePattern =
     /\bsrc\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+))/i;
 

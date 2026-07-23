@@ -361,8 +361,8 @@ test('browser-valid unquoted and entity-encoded client bundle references cannot 
   const mock = createMockFetch({
     [`${apex}/`]: response(
       200,
-      '<script src=/_next/static/chunks/unquoted.js></script>' +
-        '<script src=&#x2f;_next&#x2f;static&#x2f;chunks&#x2f;entity.js></script>',
+      '<script data-note=">" src=/_next/static/chunks/unquoted.js></script>' +
+        '<script src=&#47_next&#47static&#47chunks&#47entity.js></script>',
     ),
     [unquotedAsset]: response(200, 'window.__safe_unquoted_bundle = true;'),
     [entityAsset]: response(200, 'window.__safe_entity_bundle = true;'),
