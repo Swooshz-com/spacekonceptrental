@@ -14,22 +14,6 @@ const defaultMode = 'local';
 const launchMode = 'launch';
 const supportedModes = new Set([defaultMode, launchMode]);
 const maxN8nTimeoutMs = 30000;
-const textExtensions = new Set([
-  '.cjs',
-  '.css',
-  '.html',
-  '.js',
-  '.json',
-  '.jsx',
-  '.mjs',
-  '.md',
-  '.mts',
-  '.ts',
-  '.tsx',
-  '.txt',
-  '.yml',
-  '.yaml',
-]);
 const publicRuntimeExtensions = new Set([
   '.cjs',
   '.css',
@@ -93,10 +77,6 @@ const obviousSecretPatterns = [
     pattern: /\bre_[A-Za-z0-9]{24,}\b/g,
   },
   {
-    label: 'Supabase secret key pattern',
-    pattern: /\bsb_secret_[A-Za-z0-9_-]{16,}\b/g,
-  },
-  {
     label: 'SendGrid API key pattern',
     pattern: /\bSG\.[A-Za-z0-9_-]{16,}\.[A-Za-z0-9_-]{16,}\b/g,
   },
@@ -104,6 +84,16 @@ const obviousSecretPatterns = [
 
 const compactJwtPattern =
   /\beyJ[A-Za-z0-9_-]{8,512}\.[A-Za-z0-9_-]{8,2048}\.[A-Za-z0-9_-]{20,512}\b/g;
+const supabaseKeyPatterns = [
+  {
+    label: 'Supabase secret key pattern',
+    pattern: /\bsb_secret_[A-Za-z0-9_-]{16,}\b/g,
+  },
+  {
+    label: 'Supabase publishable key pattern',
+    pattern: /\bsb_publishable_[A-Za-z0-9_-]{16,}\b/g,
+  },
+];
 
 function containsLegacySupabaseServiceRoleJwt(source) {
   for (const match of source.matchAll(compactJwtPattern)) {
@@ -530,10 +520,6 @@ function toPosixPath(filePath) {
   return filePath.replace(/\\/g, '/');
 }
 
-function isTextFile(filePath) {
-  return textExtensions.has(path.extname(filePath).toLowerCase());
-}
-
 function relativeDisplayPath(scanRoot, filePath) {
   const absolute = path.isAbsolute(filePath)
     ? filePath
@@ -571,9 +557,11 @@ function listTrackedFiles(scanRoot, overrideFiles) {
 
 function readFileSafe(filePath) {
   try {
-    return fs.readFileSync(filePath, 'utf8');
+    const content = fs.readFileSync(filePath);
+
+    return content.includes(0) ? null : content.toString('utf8');
   } catch {
-    return '';
+    return undefined;
   }
 }
 
@@ -648,11 +636,16 @@ function scanStaticSecurity(scanRoot, trackedFiles) {
       continue;
     }
 
-    if (!isTextFile(displayPath)) {
+    const source = readFileSafe(absolutePath);
+
+    if (source === undefined) {
+      addIssue(issues, displayPath, 'tracked file could not be read for credential scan');
       continue;
     }
 
-    const source = readFileSafe(absolutePath);
+    if (source === null) {
+      continue;
+    }
 
     if (displayPath === deliveryLogDoc) {
       deliveryLogDocText = source;
@@ -698,15 +691,23 @@ function scanStaticSecurity(scanRoot, trackedFiles) {
       }
     }
 
-    if (!isAllowedEnvReferenceFile(displayPath)) {
-      if (containsLegacySupabaseServiceRoleJwt(source)) {
-        addIssue(
-          issues,
-          displayPath,
-          'Supabase legacy service-role JWT pattern',
-        );
+    if (containsLegacySupabaseServiceRoleJwt(source)) {
+      addIssue(
+        issues,
+        displayPath,
+        'Supabase legacy service-role JWT pattern',
+      );
+    }
+
+    for (const secretPattern of supabaseKeyPatterns) {
+      if (secretPattern.pattern.test(source)) {
+        addIssue(issues, displayPath, secretPattern.label);
       }
 
+      secretPattern.pattern.lastIndex = 0;
+    }
+
+    if (!isAllowedEnvReferenceFile(displayPath)) {
       for (const secretPattern of obviousSecretPatterns) {
         if (secretPattern.pattern.test(source)) {
           addIssue(issues, displayPath, secretPattern.label);

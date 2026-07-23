@@ -2,6 +2,7 @@
 
 const fs = require('node:fs');
 const path = require('node:path');
+const { spawnSync } = require('node:child_process');
 const {
   scanStaticSecurity,
 } = require('./validate-production-security-readiness.cjs');
@@ -68,6 +69,7 @@ const REQUIRED_PROVIDER_ADMISSION_FIELDS = [
   'verificationStatus',
   'verifiedAt',
   'operatorApprovalReference',
+  'requestedImmutableSha',
   'existingOwnerReadiness',
   'noPublicSignupResult',
 ];
@@ -76,6 +78,15 @@ const ALLOWED_PROVIDER_ADMISSION_MECHANISMS = [
   'new-user-signup-disabled',
   'before-user-created-admission-hook',
 ];
+const PROVIDER_ADMISSION_MAX_AGE_MS = 24 * 60 * 60 * 1000;
+const canonicalEvidenceTimestampPattern =
+  /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
+const uuidPattern =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const supabaseAnonKeyPattern =
+  /^(?:eyJ[A-Za-z0-9_-]{8,512}\.[A-Za-z0-9_-]{8,2048}\.[A-Za-z0-9_-]{20,512}|sb_publishable_[A-Za-z0-9_-]{16,})$/;
+const approvalReferencePattern =
+  /^https:\/\/github\.com\/Swooshz-com\/spacekonceptrental\/issues\/(?:291|301)#issuecomment-\d+$/;
 
 function hasConfiguredValue(env, name) {
   return typeof env[name] === 'string' && env[name].trim().length > 0;
@@ -87,7 +98,7 @@ function isSafeHttpsUrl(value) {
 
     return (
       parsed.protocol === 'https:' &&
-      Boolean(parsed.hostname) &&
+      /^[a-z0-9]{20}\.supabase\.co$/.test(parsed.hostname) &&
       !parsed.username &&
       !parsed.password &&
       !parsed.port &&
@@ -97,6 +108,32 @@ function isSafeHttpsUrl(value) {
   } catch {
     return false;
   }
+}
+
+function hasSafeSecretShape(value) {
+  if (typeof value !== 'string' || value.length < 32) {
+    return false;
+  }
+
+  const lower = value.toLowerCase();
+
+  return (
+    new Set(value).size >= 8 &&
+    !/^(.)\1+$/.test(value) &&
+    !lower.includes('changeme') &&
+    lower !== 'password' &&
+    lower !== 'secret'
+  );
+}
+
+function resolveCurrentRevision() {
+  const result = spawnSync('git', ['rev-parse', 'HEAD'], {
+    cwd: repoRoot,
+    encoding: 'utf8',
+    windowsHide: true,
+  });
+
+  return result.status === 0 ? result.stdout.trim() : null;
 }
 
 function validateStageARuntimeEnv(issues, env) {
@@ -111,6 +148,19 @@ function validateStageARuntimeEnv(issues, env) {
     !isSafeHttpsUrl(env.SUPABASE_URL)
   ) {
     issues.push('stage_a_runtime_env_invalid:SUPABASE_URL');
+  }
+
+  if (
+    hasConfiguredValue(env, 'SUPABASE_ANON_KEY') &&
+    !supabaseAnonKeyPattern.test(env.SUPABASE_ANON_KEY)
+  ) {
+    issues.push('stage_a_runtime_env_invalid:SUPABASE_ANON_KEY');
+  }
+
+  for (const name of ['CATALOGUE_WORKSPACE_ID', 'ADMIN_TRUSTED_WORKSPACE_ID']) {
+    if (hasConfiguredValue(env, name) && !uuidPattern.test(env[name])) {
+      issues.push(`stage_a_runtime_env_invalid:${name}`);
+    }
   }
 
   if (
@@ -129,7 +179,7 @@ function validateStageARuntimeEnv(issues, env) {
 
   if (
     hasConfiguredValue(env, 'ADMIN_CSRF_PROOF_SECRET') &&
-    env.ADMIN_CSRF_PROOF_SECRET.length < 32
+    !hasSafeSecretShape(env.ADMIN_CSRF_PROOF_SECRET)
   ) {
     issues.push('stage_a_runtime_env_invalid:ADMIN_CSRF_PROOF_SECRET');
   }
@@ -158,6 +208,7 @@ function validateStageARepositoryReadiness({
   providerAdmissionEvidence,
   repositoryOnly = false,
   nowMs = Date.now(),
+  expectedRevision = resolveCurrentRevision(),
 } = {}) {
   const issues = [];
   const contract = contractOverride ?? readJson(contractPath);
@@ -195,7 +246,11 @@ function validateStageARepositoryReadiness({
   if (
     providerContract?.requiredStatus !== 'PASS' ||
     providerContract?.holdStatus !== 'HOLD - NOT VERIFIED' ||
-    providerContract?.repositoryTestsCanSatisfy !== false
+    providerContract?.repositoryTestsCanSatisfy !== false ||
+    providerContract?.maximumEvidenceAgeHours !== 24 ||
+    providerContract?.timestampFormat !==
+      'canonical-utc-iso-8601-milliseconds' ||
+    providerContract?.approvalReferenceFormat !== 'canonical-issue-comment-url'
   ) {
     issues.push('stage_a_provider_admission_contract_invalid');
   }
@@ -229,6 +284,11 @@ function validateStageARepositoryReadiness({
       typeof evidence?.verifiedAt === 'string'
         ? Date.parse(evidence.verifiedAt)
         : Number.NaN;
+    const canonicalTimestamp =
+      typeof evidence?.verifiedAt === 'string' &&
+      canonicalEvidenceTimestampPattern.test(evidence.verifiedAt) &&
+      Number.isFinite(verifiedAtMs) &&
+      new Date(verifiedAtMs).toISOString() === evidence.verifiedAt;
     const evidenceComplete =
       evidence?.verificationStatus === 'PASS' &&
       evidence?.existingOwnerReadiness === 'PASS' &&
@@ -236,11 +296,15 @@ function validateStageARepositoryReadiness({
       ALLOWED_PROVIDER_ADMISSION_MECHANISMS.includes(
         evidence?.admissionMechanism,
       ) &&
-      Number.isFinite(verifiedAtMs) &&
+      canonicalTimestamp &&
       Number.isFinite(nowMs) &&
       verifiedAtMs <= nowMs &&
+      nowMs - verifiedAtMs <= PROVIDER_ADMISSION_MAX_AGE_MS &&
       typeof evidence?.operatorApprovalReference === 'string' &&
-      evidence.operatorApprovalReference.trim().length > 0;
+      approvalReferencePattern.test(evidence.operatorApprovalReference) &&
+      typeof expectedRevision === 'string' &&
+      /^[0-9a-f]{40}$/.test(expectedRevision) &&
+      evidence?.requestedImmutableSha === expectedRevision;
 
     if (!evidenceComplete) {
       issues.push('stage_a_provider_admission_not_verified');

@@ -223,6 +223,53 @@ test('static scan detects a legacy Supabase service-role JWT without echoing it'
   assert.doesNotMatch(output, new RegExp(leaked.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
 });
 
+test('Supabase credential detection covers docs tests contracts SQL and extensionless tracked text', () => {
+  const tempRoot = fs.mkdtempSync(
+    path.join(os.tmpdir(), 'skr-production-readiness-'),
+  );
+  const encode = (value) =>
+    Buffer.from(JSON.stringify(value), 'utf8').toString('base64url');
+  const legacyJwt = [
+    encode({ alg: 'HS256', typ: 'JWT' }),
+    encode({ iss: 'supabase', role: 'service_role' }),
+    'q'.repeat(43),
+  ].join('.');
+  const modernSecret = `sb_secret_${'z9Y8x7W6'.repeat(3)}`;
+  const modernPublishable = `sb_publishable_${'p8Q7r6S5'.repeat(3)}`;
+  const files = [
+    ['docs/leak.md', legacyJwt],
+    ['website/lib/leak.test.ts', modernSecret],
+    ['docs/contracts/leak.json', modernPublishable],
+    ['supabase/migrations/leak.sql', modernSecret],
+    ['Dockerfile', legacyJwt],
+  ].map(([relativePath, material]) => {
+    const absolutePath = path.join(tempRoot, relativePath);
+    fs.mkdirSync(path.dirname(absolutePath), { recursive: true });
+    fs.writeFileSync(absolutePath, `fixture=${material}\n`);
+    return absolutePath;
+  });
+
+  const result = runReadiness(baseLaunchEnv(), [
+    '--scan-root',
+    tempRoot,
+    '--tracked-file-list',
+    ...files,
+  ]);
+  const output = combinedOutput(result);
+
+  assert.notEqual(result.status, 0);
+  assert.match(output, /docs\/leak\.md/);
+  assert.match(output, /website\/lib\/leak\.test\.ts/);
+  assert.match(output, /docs\/contracts\/leak\.json/);
+  assert.match(output, /supabase\/migrations\/leak\.sql/);
+  assert.match(output, /Dockerfile/);
+  assert.match(output, /Supabase secret key pattern/);
+  assert.match(output, /Supabase publishable key pattern/);
+  assert.doesNotMatch(output, new RegExp(legacyJwt.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+  assert.doesNotMatch(output, new RegExp(modernSecret));
+  assert.doesNotMatch(output, new RegExp(modernPublishable));
+});
+
 test('launch mode requires a read-only live public SECURITY DEFINER catalog', () => {
   const result = runReadiness(baseLaunchEnv(), [], { supplyCatalog: false });
   const output = combinedOutput(result);

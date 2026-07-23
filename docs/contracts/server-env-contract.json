@@ -40,6 +40,9 @@
           "requiredStatus": "PASS",
           "holdStatus": "HOLD - NOT VERIFIED",
           "repositoryTestsCanSatisfy": false,
+          "maximumEvidenceAgeHours": 24,
+          "timestampFormat": "canonical-utc-iso-8601-milliseconds",
+          "approvalReferenceFormat": "canonical-issue-comment-url",
           "allowedMechanisms": [
             "new-user-signup-disabled",
             "before-user-created-admission-hook"
@@ -49,6 +52,7 @@
             "verificationStatus",
             "verifiedAt",
             "operatorApprovalReference",
+            "requestedImmutableSha",
             "existingOwnerReadiness",
             "noPublicSignupResult"
           ]

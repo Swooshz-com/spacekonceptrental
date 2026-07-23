@@ -355,6 +355,29 @@ test('client bundle scanning is canonical, deduplicated, and does not fetch thir
   );
 });
 
+test('browser-valid unquoted and entity-encoded client bundle references cannot evade scanning', async () => {
+  const unquotedAsset = `${apex}/_next/static/chunks/unquoted.js`;
+  const entityAsset = `${apex}/_next/static/chunks/entity.js`;
+  const mock = createMockFetch({
+    [`${apex}/`]: response(
+      200,
+      '<script src=/_next/static/chunks/unquoted.js></script>' +
+        '<script src=&#x2f;_next&#x2f;static&#x2f;chunks&#x2f;entity.js></script>',
+    ),
+    [unquotedAsset]: response(200, 'window.__safe_unquoted_bundle = true;'),
+    [entityAsset]: response(200, 'window.__safe_entity_bundle = true;'),
+  });
+
+  const result = await runProductionReadOnlySmoke({
+    rawBaseUrl: apex,
+    fetchImpl: mock.fetch,
+  });
+
+  assert.equal(result.clientAssetsScanned, 2);
+  assert.ok(mock.calls.some((call) => call.url === unquotedAsset));
+  assert.ok(mock.calls.some((call) => call.url === entityAsset));
+});
+
 test('failure output is machine-readable and never includes the supplied URL', () => {
   const supplied = 'https://user:password@spacekonceptrental.com';
   let error;

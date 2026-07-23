@@ -180,15 +180,50 @@ function assertNoPublicLeakage(body) {
   }
 }
 
-function collectFirstPartyClientAssets(body, assetUrls) {
-  const scriptSourcePattern =
-    /<script\b[^>]*\bsrc\s*=\s*["']([^"']+)["'][^>]*>/gi;
+function decodeHtmlAttributeValue(value) {
+  return value.replace(
+    /&(?:#(\d{1,7})|#x([\da-f]{1,6})|amp|quot|apos|lt|gt);/gi,
+    (entity, decimal, hexadecimal) => {
+      if (decimal || hexadecimal) {
+        const codePoint = Number.parseInt(decimal ?? hexadecimal, decimal ? 10 : 16);
 
-  for (const match of body.matchAll(scriptSourcePattern)) {
+        try {
+          return String.fromCodePoint(codePoint);
+        } catch {
+          return entity;
+        }
+      }
+
+      return {
+        '&amp;': '&',
+        '&quot;': '"',
+        '&apos;': "'",
+        '&lt;': '<',
+        '&gt;': '>',
+      }[entity.toLowerCase()];
+    },
+  );
+}
+
+function collectFirstPartyClientAssets(body, assetUrls) {
+  const scriptTagPattern = /<script\b[^>]*>/gi;
+  const scriptSourcePattern =
+    /\bsrc\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+))/i;
+
+  for (const tagMatch of body.matchAll(scriptTagPattern)) {
+    const sourceMatch = scriptSourcePattern.exec(tagMatch[0]);
+
+    if (!sourceMatch) {
+      continue;
+    }
+
+    const source = decodeHtmlAttributeValue(
+      sourceMatch[1] ?? sourceMatch[2] ?? sourceMatch[3],
+    );
     let target;
 
     try {
-      target = new URL(match[1], canonicalApexOrigin);
+      target = new URL(source, canonicalApexOrigin);
     } catch {
       continue;
     }

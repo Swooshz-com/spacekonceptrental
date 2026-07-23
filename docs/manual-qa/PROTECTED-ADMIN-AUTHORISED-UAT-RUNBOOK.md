@@ -48,7 +48,7 @@ directly verified `PASS` for one reviewed admission mechanism:
 
 Record `PASS | HOLD - NOT VERIFIED | FAIL`, admission mechanism class,
 verification timestamp, operator/approval reference, existing-owner readiness,
-and no-public-signup result. `HOLD - NOT VERIFIED` blocks UAT and Stage A
+requested immutable SHA, and no-public-signup result. `HOLD - NOT VERIFIED` blocks UAT and Stage A
 completion. Authentication or membership denial after callback is not evidence
 that user creation was prevented. Repository tests cannot prove this live
 provider state. A later authorised operator must use the strongest suitable
@@ -58,7 +58,9 @@ project references, provider values, or credentials.
 The evidence mechanism must be exactly `new-user-signup-disabled` or
 `before-user-created-admission-hook`; free-form alternatives are invalid. The
 verification timestamp must be valid and not later than the validator's
-current time.
+current time. It must be canonical UTC ISO-8601 with milliseconds, no more
+than 24 hours old, bound to the requested immutable SHA, and linked to the
+canonical approval comment on issue #291 or #301.
 
 ## Source Boundaries
 

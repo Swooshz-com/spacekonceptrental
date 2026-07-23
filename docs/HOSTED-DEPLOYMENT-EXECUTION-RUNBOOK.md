@@ -91,8 +91,11 @@ pre-user-creation admission hook that admits only approved owner/admin
 The secret-safe evidence JSON uses only the exact mechanism identifiers
 `new-user-signup-disabled` or `before-user-created-admission-hook`. Its
 verification timestamp must parse successfully and must not be later than the
-validator's current time. Free-form mechanism labels, callback membership
-denial, and future-dated evidence do not satisfy this gate.
+validator's current time. It must be canonical UTC ISO-8601 with milliseconds,
+no more than 24 hours old, and bound to the requested immutable SHA. The
+approval reference must be a canonical comment URL on issue #291 or #301.
+Free-form mechanism labels, callback membership denial, stale or future-dated
+evidence, and evidence for another revision do not satisfy this gate.
 
 ### Stage B - Full Enquiry Launch
 

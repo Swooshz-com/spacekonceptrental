@@ -260,6 +260,11 @@ unpadded lowercase `true` is a
 later separately reviewed activation and does not replace authentication,
 workspace, role, CSRF, Origin/Referer, or validation controls.
 
+Stage A readiness also validates the hosted Supabase endpoint and supported
+anon/publishable key shape, UUID-shaped catalogue/admin workspace identifiers,
+and the same minimum entropy-like CSRF secret shape used by the full launch
+validator. Presence-only placeholders do not satisfy completion.
+
 The approved RPC performs the metadata mutation, product audit insert, and
 local search-index job enqueue in one database transaction. Reviewers should
 confirm admin UI writes still enqueue a local search-index job and that no

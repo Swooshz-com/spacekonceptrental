@@ -3,7 +3,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const test = require('node:test');
 const {
-  validateStageARepositoryReadiness,
+  validateStageARepositoryReadiness: validateStageARepositoryReadinessImpl,
 } = require('./validate-stage-a-oauth-deployment-readiness.cjs');
 
 const repoRoot = path.resolve(__dirname, '..');
@@ -16,48 +16,81 @@ function readJson(relativePath) {
   return JSON.parse(read(relativePath));
 }
 
-const mutationRoutes = [
-  'website/app/api/admin/admin-access/route.ts',
-  'website/app/api/admin/categories/route.ts',
-  'website/app/api/admin/categories/[categoryId]/route.ts',
-  'website/app/api/admin/categories/[categoryId]/archive/route.ts',
-  'website/app/api/admin/hero/route.ts',
-  'website/app/api/admin/page-media/route.ts',
-  'website/app/api/admin/product-images/route.ts',
-  'website/app/api/admin/product-images/[imageId]/route.ts',
-  'website/app/api/admin/product-images/[imageId]/archive/route.ts',
-  'website/app/api/admin/products/route.ts',
-  'website/app/api/admin/products/[productId]/route.ts',
-  'website/app/api/admin/products/[productId]/publish/route.ts',
-  'website/app/api/admin/products/[productId]/archive/route.ts',
-  'website/app/api/admin/quote-requests/[quoteRequestId]/status/route.ts',
-  'website/app/api/admin/quote-requests/[quoteRequestId]/crm-handoff/route.ts',
-  'website/app/api/admin/quote-requests/crm-handoff-packet/route.ts',
-  'website/app/api/admin/quote-requests/crm-handoff-packet/hubspot-import-csv/route.ts',
-  'website/app/api/admin/quote-requests/crm-handoff-packet/hubspot-import-csv/manual-import-outcome/route.ts',
-];
+const nonMutatingAdminPostRoutes = new Set([
+  'website/app/api/admin/csrf-proof/route.ts',
+  'website/app/api/admin/login/route.ts',
+  'website/app/api/admin/quote-requests/crm-handoff-packet/hubspot-import-csv/preflight/route.ts',
+  'website/app/api/admin/quote-requests/crm-handoff-packet/hubspot-sync-dry-run-contract/route.ts',
+  'website/app/api/admin/quote-requests/crm-handoff-packet/lifecycle-reconciliation/route.ts',
+]);
+const testRevision = 'a'.repeat(40);
 
-const mutationHandlers = [
-  'website/app/api/admin/admin-access/route.ts',
-  'website/lib/hero/admin-homepage-hero-write-route.ts',
-  'website/lib/page-media/admin-public-page-media-write-route.ts',
-  'website/lib/products/media/admin-product-image-upload-route.ts',
-  'website/lib/products/persistence/admin-product-write-route.ts',
-  'website/lib/quote/admin-write/admin-quote-request-status-route.ts',
-  'website/lib/quote/admin-write/admin-quote-request-crm-handoff-route.ts',
-  'website/lib/quote/admin-read/admin-quote-request-crm-handoff-packet-route.ts',
-  'website/lib/quote/admin-read/admin-quote-request-hubspot-import-csv-route.ts',
-  'website/lib/quote/admin-read/admin-quote-request-hubspot-manual-import-outcome-route.ts',
-];
+function validateStageARepositoryReadiness(options = {}) {
+  return validateStageARepositoryReadinessImpl({
+    ...options,
+    expectedRevision: options.expectedRevision ?? testRevision,
+  });
+}
+
+function listRouteFiles(directory) {
+  return fs.readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+    const absolutePath = path.join(directory, entry.name);
+
+    if (entry.isDirectory()) {
+      return listRouteFiles(absolutePath);
+    }
+
+    return entry.name === 'route.ts'
+      ? [path.relative(repoRoot, absolutePath).replace(/\\/g, '/')]
+      : [];
+  });
+}
+
+function resolveImport(fromPath, importPath) {
+  const withoutAlias = importPath.startsWith('@/')
+    ? path.join(repoRoot, 'website', importPath.slice(2))
+    : path.resolve(path.dirname(path.join(repoRoot, fromPath)), importPath);
+
+  for (const candidate of [withoutAlias, `${withoutAlias}.ts`, path.join(withoutAlias, 'index.ts')]) {
+    if (fs.existsSync(candidate) && fs.statSync(candidate).isFile()) {
+      return path.relative(repoRoot, candidate).replace(/\\/g, '/');
+    }
+  }
+
+  return null;
+}
+
+function reachesMutationCapability(relativePath, visited = new Set()) {
+  if (visited.has(relativePath)) {
+    return false;
+  }
+
+  visited.add(relativePath);
+  const source = read(relativePath);
+
+  if (/requiresMutationCapability:\s*true/.test(source)) {
+    return true;
+  }
+
+  for (const match of source.matchAll(/from\s+["']([^"']+)["']/g)) {
+    const imported = resolveImport(relativePath, match[1]);
+
+    if (imported && reachesMutationCapability(imported, visited)) {
+      return true;
+    }
+  }
+
+  return false;
+}
 
 const stageACompletionEnv = {
-  SUPABASE_URL: 'https://synthetic-project-ref.supabase.co',
-  SUPABASE_ANON_KEY: 'synthetic-anon-key-for-tests-only',
-  CATALOGUE_WORKSPACE_ID: 'synthetic-catalogue-workspace',
-  ADMIN_TRUSTED_WORKSPACE_ID: 'synthetic-admin-workspace',
+  SUPABASE_URL: 'https://abcdefghijklmnopqrst.supabase.co',
+  SUPABASE_ANON_KEY: `sb_publishable_${'a1B2c3D4'.repeat(3)}`,
+  CATALOGUE_WORKSPACE_ID: '11111111-1111-4111-8111-111111111111',
+  ADMIN_TRUSTED_WORKSPACE_ID: '22222222-2222-4222-8222-222222222222',
   ADMIN_EXPECTED_ORIGIN: 'https://spacekonceptrental.com',
   ADMIN_EXPECTED_HOST: 'spacekonceptrental.com',
-  ADMIN_CSRF_PROOF_SECRET: 'synthetic-csrf-proof-secret-for-tests-only',
+  ADMIN_CSRF_PROOF_SECRET: 'Synthetic-Csrf-Proof-9zY8xW7vU6tS5rQ4',
   ADMIN_MUTATIONS_ENABLED: 'false',
 };
 
@@ -65,7 +98,9 @@ const providerAdmissionEvidence = {
   admissionMechanism: 'new-user-signup-disabled',
   verificationStatus: 'PASS',
   verifiedAt: '2026-07-23T00:00:00.000Z',
-  operatorApprovalReference: 'synthetic-reviewed-reference',
+  operatorApprovalReference:
+    'https://github.com/Swooshz-com/spacekonceptrental/issues/301#issuecomment-1234567890',
+  requestedImmutableSha: testRevision,
   existingOwnerReadiness: 'PASS',
   noPublicSignupResult: 'PASS',
 };
@@ -73,18 +108,22 @@ const providerAdmissionEvidence = {
 const evidenceNowMs = Date.parse('2026-07-23T00:05:00.000Z');
 
 test('all current protected admin mutation routes use the fail-closed capability gate', () => {
-  assert.equal(new Set(mutationRoutes).size, 18);
+  const postRoutes = listRouteFiles(
+    path.join(repoRoot, 'website', 'app', 'api', 'admin'),
+  ).filter((relativePath) => /export async function POST/.test(read(relativePath)));
+  const mutationRoutes = postRoutes.filter(
+    (relativePath) => !nonMutatingAdminPostRoutes.has(relativePath),
+  );
+
+  assert.equal(postRoutes.length, 23);
+  assert.equal(mutationRoutes.length, 18);
+  assert.deepEqual(
+    postRoutes.filter((relativePath) => !mutationRoutes.includes(relativePath)).sort(),
+    [...nonMutatingAdminPostRoutes].sort(),
+  );
 
   for (const relativePath of mutationRoutes) {
-    assert.match(read(relativePath), /export async function POST/);
-  }
-
-  for (const relativePath of mutationHandlers) {
-    assert.match(
-      read(relativePath),
-      /requiresMutationCapability:\s*true/,
-      relativePath,
-    );
+    assert.equal(reachesMutationCapability(relativePath), true, relativePath);
   }
 });
 
@@ -110,6 +149,11 @@ test('Stage A contract requires disabled admin mutations and verified provider a
   );
   assert.equal(stageA.providerAdmissionEvidence.requiredStatus, 'PASS');
   assert.equal(stageA.providerAdmissionEvidence.repositoryTestsCanSatisfy, false);
+  assert.equal(stageA.providerAdmissionEvidence.maximumEvidenceAgeHours, 24);
+  assert.equal(
+    stageA.providerAdmissionEvidence.timestampFormat,
+    'canonical-utc-iso-8601-milliseconds',
+  );
   assert.deepEqual(stageA.providerAdmissionEvidence.allowedMechanisms, [
     'new-user-signup-disabled',
     'before-user-created-admission-hook',
@@ -119,6 +163,7 @@ test('Stage A contract requires disabled admin mutations and verified provider a
     'verificationStatus',
     'verifiedAt',
     'operatorApprovalReference',
+    'requestedImmutableSha',
     'existingOwnerReadiness',
     'noPublicSignupResult',
   ]);
@@ -161,7 +206,27 @@ test('Stage A completion validates every declared runtime environment name', () 
   }
 });
 
-test('Stage A completion rejects unapproved admission mechanisms and future timestamps', () => {
+test('Stage A completion rejects malformed provider, workspace, and CSRF configuration', () => {
+  const invalidValues = {
+    SUPABASE_URL: 'https://example.invalid',
+    SUPABASE_ANON_KEY: 'x',
+    CATALOGUE_WORKSPACE_ID: 'x',
+    ADMIN_TRUSTED_WORKSPACE_ID: 'x',
+    ADMIN_CSRF_PROOF_SECRET: 'a'.repeat(32),
+  };
+
+  for (const [name, value] of Object.entries(invalidValues)) {
+    const issues = validateStageARepositoryReadiness({
+      env: { ...stageACompletionEnv, [name]: value },
+      providerAdmissionEvidence,
+      nowMs: evidenceNowMs,
+    });
+
+    assert.ok(issues.includes(`stage_a_runtime_env_invalid:${name}`), name);
+  }
+});
+
+test('Stage A completion rejects unapproved, malformed, stale, future, or unbound admission evidence', () => {
   for (const evidence of [
     { ...providerAdmissionEvidence, admissionMechanism: 'none' },
     {
@@ -172,6 +237,11 @@ test('Stage A completion rejects unapproved admission mechanisms and future time
       ...providerAdmissionEvidence,
       verifiedAt: '2026-07-23T00:05:00.001Z',
     },
+    { ...providerAdmissionEvidence, verifiedAt: 'July 23, 2026 00:00:00 UTC' },
+    { ...providerAdmissionEvidence, verifiedAt: '2026-02-30T00:00:00.000Z' },
+    { ...providerAdmissionEvidence, verifiedAt: '2026-07-21T00:00:00.000Z' },
+    { ...providerAdmissionEvidence, operatorApprovalReference: 'self-attested' },
+    { ...providerAdmissionEvidence, requestedImmutableSha: 'b'.repeat(40) },
   ]) {
     const issues = validateStageARepositoryReadiness({
       env: stageACompletionEnv,
@@ -212,6 +282,8 @@ test('Stage A documents keep provider admission on HOLD until independently veri
   assert.match(combined, /new-user-signup-disabled/);
   assert.match(combined, /before-user-created-admission-hook/);
   assert.match(combined, /must not be (?:later than|in the future)/i);
+  assert.match(combined, /24 hours/i);
+  assert.match(combined, /requested immutable SHA/i);
   assert.match(combined, /\/_next\/static\/\*\.js/);
   assert.match(combined, /never fetches? third-party script origins?/i);
 });

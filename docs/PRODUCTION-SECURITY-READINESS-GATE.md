@@ -292,8 +292,10 @@ suitable official Supabase interface or API, record only a timestamp,
 mechanism class, operator/approval reference, existing-owner readiness, and
   no-public-signup result, and expose no secrets or private/provider identifiers.
 Evidence must use exact admission mechanism `new-user-signup-disabled` or
-`before-user-created-admission-hook`, and its parsed verification timestamp
-must not be in the future.
+`before-user-created-admission-hook`. Its verification timestamp must be
+canonical UTC ISO-8601 with milliseconds, must not be in the future, and must
+be no more than 24 hours old. It must name the requested immutable SHA and use
+a canonical #291 or #301 issue-comment URL as the approval reference.
 
 Do not weaken the Stage B launch validator to clear Stage A. Stage A does not
 authorise public enquiry launch.

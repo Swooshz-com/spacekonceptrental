@@ -63,8 +63,9 @@ private dashboard links, workspace/admin identifiers, or customer data.
 - Admission mechanism (`new-user-signup-disabled` or
   `before-user-created-admission-hook`): `<exact-mechanism-identifier>`
 - Verification status (`PASS | HOLD - NOT VERIFIED | FAIL`): `<status>`
-- Verified at: `<ISO-8601-non-future-timestamp-or-not-verified>`
-- Operator and approval reference: `<reviewed-non-secret-reference>`
+- Verified at: `<canonical-UTC-ISO-8601-milliseconds-within-24-hours-or-not-verified>`
+- Operator and approval reference: `<canonical-issue-291-or-301-comment-url>`
+- Requested immutable SHA: `<40-character-sha>`
 - Existing-owner readiness: `<PASS-FAIL-or-HOLD>`
 - No-public-signup result: `<PASS-FAIL-or-HOLD>`
 
@@ -73,6 +74,9 @@ or membership denial does not prove user creation was prevented. Repository
 tests cannot prove live provider admission. Verify through the strongest
 suitable official Supabase interface or API under separate authorisation, and
 never record private emails, project references, provider values, or secrets.
+PASS evidence must be no more than 24 hours old and must match the requested
+immutable SHA; stale, non-canonical, self-attested, or revision-mismatched
+evidence remains `HOLD - NOT VERIFIED`.
 Reference the secret-safe output of
 `npm run validate:stage-a-oauth-deployment-readiness -- --provider-admission-evidence <temporary-secret-safe-evidence-path>`;
 do not attach the temporary file to Git.
