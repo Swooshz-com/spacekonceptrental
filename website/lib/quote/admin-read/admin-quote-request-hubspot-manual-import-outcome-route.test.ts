@@ -14,7 +14,8 @@ import {
 const env = {
   ADMIN_EXPECTED_ORIGIN: "https://admin.space.test",
   ADMIN_EXPECTED_HOST: "admin.space.test",
-  ADMIN_TRUSTED_WORKSPACE_ID: "11111111-1111-4111-8111-111111111111"
+  ADMIN_TRUSTED_WORKSPACE_ID: "11111111-1111-4111-8111-111111111111",
+  ADMIN_MUTATIONS_ENABLED: "true"
 };
 const adminContext = {
   workspaceId: env.ADMIN_TRUSTED_WORKSPACE_ID,
@@ -142,7 +143,8 @@ describe("admin HubSpot manual import outcome route helper", () => {
       {
         requestedOperation: "quote.write",
         requestMethod: "POST",
-        request: expect.any(Request)
+        request: expect.any(Request),
+        requiresMutationCapability: true
       },
       expect.objectContaining({
         gate: expect.objectContaining({

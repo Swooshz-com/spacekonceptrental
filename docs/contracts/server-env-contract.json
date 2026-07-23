@@ -20,7 +20,8 @@
           "ADMIN_TRUSTED_WORKSPACE_ID",
           "ADMIN_EXPECTED_ORIGIN",
           "ADMIN_EXPECTED_HOST",
-          "ADMIN_CSRF_PROOF_SECRET"
+          "ADMIN_CSRF_PROOF_SECRET",
+          "ADMIN_MUTATIONS_ENABLED"
         ],
         "requiredInvariants": [
           "exact-sha-deployment",
@@ -28,10 +29,34 @@
           "n8n-inactive",
           "no-customer-quote-submission",
           "anonymous-admin-denial",
+          "admin-mutations-disabled",
+          "provider-signup-admission-verified",
           "google-oauth-owner-uat"
         ],
         "n8nRequired": false,
-        "quoteEnablementAllowed": false
+        "quoteEnablementAllowed": false,
+        "adminMutationsRequiredState": "disabled",
+        "providerAdmissionEvidence": {
+          "requiredStatus": "PASS",
+          "holdStatus": "HOLD - NOT VERIFIED",
+          "repositoryTestsCanSatisfy": false,
+          "maximumEvidenceAgeHours": 24,
+          "timestampFormat": "canonical-utc-iso-8601-milliseconds",
+          "approvalReferenceFormat": "canonical-issue-comment-url",
+          "allowedMechanisms": [
+            "new-user-signup-disabled",
+            "before-user-created-admission-hook"
+          ],
+          "requiredFields": [
+            "admissionMechanism",
+            "verificationStatus",
+            "verifiedAt",
+            "operatorApprovalReference",
+            "requestedImmutableSha",
+            "existingOwnerReadiness",
+            "noPublicSignupResult"
+          ]
+        }
       },
       "stageBFullEnquiryLaunch": {
         "command": "npm run validate:production-security-readiness -- --launch --public-security-definer-catalog <approved-read-only-catalog-path>",
@@ -46,6 +71,7 @@
           "ADMIN_EXPECTED_ORIGIN",
           "ADMIN_EXPECTED_HOST",
           "ADMIN_CSRF_PROOF_SECRET",
+          "ADMIN_MUTATIONS_ENABLED",
           "N8N_ENQUIRY_HANDOFF_WEBHOOK_URL",
           "N8N_ENQUIRY_HANDOFF_SHARED_SECRET"
         ],
@@ -56,6 +82,7 @@
           "durable-idempotency",
           "delivery-evidence",
           "deliberate-quote-enablement",
+          "admin-mutation-state-explicit",
           "quote-email-runtime-readiness"
         ],
         "n8nRequired": true,
@@ -72,6 +99,7 @@
       "ADMIN_EXPECTED_ORIGIN",
       "ADMIN_EXPECTED_HOST",
       "ADMIN_CSRF_PROOF_SECRET",
+      "ADMIN_MUTATIONS_ENABLED",
       "N8N_ENQUIRY_HANDOFF_WEBHOOK_URL",
       "N8N_ENQUIRY_HANDOFF_SHARED_SECRET"
     ],
@@ -110,6 +138,7 @@
         "ADMIN_EXPECTED_ORIGIN",
         "ADMIN_EXPECTED_HOST",
         "ADMIN_CSRF_PROOF_SECRET",
+        "ADMIN_MUTATIONS_ENABLED",
         "QUOTE_SUBMISSION_ADMISSION_SECRET"
       ],
       "rule": "Used only by server-side Next.js routes, repositories, and helpers."
@@ -145,7 +174,8 @@
         "ADMIN_TRUSTED_WORKSPACE_ID",
         "ADMIN_EXPECTED_ORIGIN",
         "ADMIN_EXPECTED_HOST",
-        "ADMIN_CSRF_PROOF_SECRET"
+        "ADMIN_CSRF_PROOF_SECRET",
+        "ADMIN_MUTATIONS_ENABLED"
       ],
       "rule": "Protected admin paths use trusted server-side workspace and request-security configuration."
     },
@@ -188,7 +218,7 @@
       "requiredFor": "Server-side Supabase reads and approved writes",
       "browserAllowed": false,
       "status": "future-deployment-required",
-      "notes": "Read only by website server-side Supabase helpers."
+      "notes": "Read only by website server-side Supabase helpers. Stage A accepts only the canonical HTTPS project origin root with no credentials, explicit port, non-root path, query, or fragment."
     },
     {
       "name": "SUPABASE_ANON_KEY",
@@ -261,6 +291,15 @@
       "browserAllowed": false,
       "status": "future-deployment-required",
       "notes": "Server-only proof signing secret; never include values in docs."
+    },
+    {
+      "name": "ADMIN_MUTATIONS_ENABLED",
+      "visibility": "server-only",
+      "feature": "Protected admin mutation capability",
+      "requiredFor": "Explicit activation of protected admin mutation routes after separate review",
+      "browserAllowed": false,
+      "status": "stage-a-required-disabled",
+      "notes": "Only the exact lowercase value true enables mutations. Missing, blank, false, or malformed values fail closed. Stage A requires disabled."
     },
     {
       "name": "CHAT_PROVIDER",

@@ -13,6 +13,7 @@ import {
   resolveServerAdminCsrfProofSessionWorkspaceBinding,
   type ServerAdminCsrfProofSessionWorkspaceBindingResult
 } from "../../../../lib/admin/authorization/server-admin-csrf-proof-session-workspace-binding";
+import { resolveServerAdminMutationCapability } from "../../../../lib/admin/authorization/server-admin-mutation-capability";
 import {
   resolveServerAdminRuntimeRouteGateAdapter,
   type ServerAdminRuntimeRouteGateAdapterResult
@@ -101,6 +102,17 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return errorJson("request_payload_invalid", 400);
   }
 
+  const mutationCapability = resolveServerAdminMutationCapability({
+    ADMIN_MUTATIONS_ENABLED: process.env.ADMIN_MUTATIONS_ENABLED
+  });
+
+  if (!mutationCapability.enabled) {
+    return errorJson(
+      mutationCapability.reason,
+      mutationCapability.statusCode
+    );
+  }
+
   const routeConfig = getAdminRouteRuntimeConfig();
   const runtimeDependencies = createServerAdminCsrfProofRuntimeDependencies();
   let binding: ServerAdminCsrfProofSessionWorkspaceBindingResult;
@@ -145,7 +157,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       {
         requestedOperation: "membership.manage",
         requestMethod,
-        request
+        request,
+        requiresMutationCapability: true
       },
       {
         requestMetadata: {

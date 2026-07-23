@@ -61,6 +61,13 @@ Google OAuth owner UAT:
   SHA is exactly equal;
 - keep quote submission disabled;
 - keep every n8n workflow inactive and require no n8n configuration;
+- keep protected admin mutations technically disabled with server-only
+  `ADMIN_MUTATIONS_ENABLED` set to the explicit disabled state; missing,
+  blank, whitespace-padded, malformed, and false values
+  fail closed;
+- independently verify, before owner OAuth UAT, that the hosted Supabase Auth
+  project prevents public user creation while the approved existing owner can
+  still sign in;
 - validate public read routes and anonymous `/admin` denial with
   `npm run smoke:production-readonly`;
 - run the Google OAuth owner/admin UAT through the first-party login route and
@@ -71,6 +78,24 @@ Record Google OAuth owner UAT as `PASS | HOLD - NOT RUN | FAIL`. Stage A
 remains incomplete and held until real-owner Google OAuth UAT passes. An
 exact-SHA deployment may exist temporarily for controlled UAT, but its Stage A
 record remains `HOLD - NOT RUN`, not `PASS`, until the UAT passes.
+
+Record provider signup admission as `PASS | HOLD - NOT VERIFIED | FAIL`.
+`HOLD - NOT VERIFIED` blocks UAT and Stage A completion. The accepted provider
+mechanism is either disabled new-user signup with the pre-provisioned owner
+remaining usable, or an equivalently reviewed before-user-created /
+pre-user-creation admission hook that admits only approved owner/admin
+  identities before account creation. A denial after the application callback
+  does not prove that user creation was prevented. Repository tests cannot prove
+  live provider admission state.
+
+The secret-safe evidence JSON uses only the exact mechanism identifiers
+`new-user-signup-disabled` or `before-user-created-admission-hook`. Its
+verification timestamp must parse successfully and must not be later than the
+validator's current time. It must be canonical UTC ISO-8601 with milliseconds,
+no more than 24 hours old, and bound to the requested immutable SHA. The
+approval reference must be a canonical comment URL on issue #291 or #301.
+Free-form mechanism labels, callback membership denial, stale or future-dated
+evidence, and evidence for another revision do not satisfy this gate.
 
 ### Stage B - Full Enquiry Launch
 
@@ -122,13 +147,17 @@ The table is the complete server-only deployment inventory across both stages.
 Stage A requires only `SUPABASE_URL`, `SUPABASE_ANON_KEY`,
 `CATALOGUE_WORKSPACE_ID`, `ADMIN_TRUSTED_WORKSPACE_ID`,
 `ADMIN_EXPECTED_ORIGIN`, `ADMIN_EXPECTED_HOST`, and
-`ADMIN_CSRF_PROOF_SECRET`. Stage A must not require a `QUOTE_*` or `N8N_*`
+`ADMIN_CSRF_PROOF_SECRET`, plus `ADMIN_MUTATIONS_ENABLED` set explicitly to
+the disabled state. Stage A must not require a `QUOTE_*` or `N8N_*`
 value because quote remains disabled and n8n remains inactive. Stage B requires
 the full launch set enforced by the existing launch validator.
 
 | Env name | Purpose |
 | --- | --- |
-| `SUPABASE_URL` | Hosted Supabase project URL used by server-side app paths. |
+| `SUPABASE_URL` | Hosted Supabase project origin root used by server-side app paths. Stage A accepts only the canonical HTTPS project origin with a 20-character project-ref subdomain and optional trailing root slash; credentials, explicit ports, non-root paths, queries, and fragments are invalid. |
+
+Validate the supplied raw `SUPABASE_URL`; do not repair, strip, or normalise
+non-root or ambiguous path material into an otherwise acceptable origin.
 | `SUPABASE_ANON_KEY` | Server-side anon/public key used with RLS through first-party app paths. |
 | `CATALOGUE_WORKSPACE_ID` | Workspace gate for public catalogue/setup reads. |
 | `QUOTE_WORKSPACE_ID` | Workspace gate for quote/enquiry persistence. |
@@ -137,6 +166,7 @@ the full launch set enforced by the existing launch validator.
 | `ADMIN_EXPECTED_ORIGIN` | Canonical HTTPS authority for protected admin same-origin checks and every admin-auth redirect. |
 | `ADMIN_EXPECTED_HOST` | Expected protected admin host. |
 | `ADMIN_CSRF_PROOF_SECRET` | Server-only secret for admin CSRF proof material. |
+| `ADMIN_MUTATIONS_ENABLED` | Fail-closed server-only admin-write capability. Only exact lowercase, unpadded `true` permits the request to continue into existing controls; every other state denies before session, identity, workspace, profile, membership, repository, audit, database, or other provider access. Stage A requires explicit `false`. |
 | `N8N_ENQUIRY_HANDOFF_WEBHOOK_URL` | Server-only n8n endpoint for quote/enquiry handoff after SKR persistence. |
 | `N8N_ENQUIRY_HANDOFF_SHARED_SECRET` | Server-only HMAC signing secret shared with the reviewed n8n workflow. |
 | `N8N_ENQUIRY_HANDOFF_TIMEOUT_MS` | Optional bounded timeout for the n8n handoff request. |
@@ -194,12 +224,38 @@ traffic:
 - Configure the Google web client with the exact Supabase provider callback
   `https://<SUPABASE_PROJECT_REF>.supabase.co/auth/v1/callback`; do not substitute
   the application callback for this provider hop.
+- Before owner OAuth UAT, verify through the strongest suitable official
+  Supabase interface or API that new-user signup is disabled while the
+  pre-provisioned owner remains usable, or that an equivalently reviewed
+  before-user-created admission hook prevents all unapproved account creation.
+  Record only safe status, timestamp, mechanism class, operator/approval
+  reference, existing-owner readiness, and no-public-signup result. Never
+  record private emails, project references, provider values, or secrets.
+- Keep the provider prerequisite `HOLD - NOT VERIFIED` until that direct check
+  passes. Do not infer it from callback denial, repository tests, builds, or
+  application membership checks.
 - After deployment, verify PKCE, session, refreshed, chunked, and deletion
   cookie writes use `HttpOnly`, `Secure`, `SameSite=Lax`, `Path=/`, and no
   `Domain` attribute.
 - Supabase Google-provider configuration, Google OAuth metadata, deployment,
   and a real owner login/logout UAT are separate approved operations. Do not
-  infer their completion from repository tests or builds.
+infer their completion from repository tests or builds.
+
+## Stage A Protected Admin Mutation Contract
+
+- Configure `ADMIN_MUTATIONS_ENABLED` as explicitly disabled in the Stage A
+  server runtime and
+  record only an equality/status result, never the value source or surrounding
+  environment.
+- Missing, blank, whitespace-padded, malformed, or false values deny every protected admin write
+  before repository or provider mutation with a stable privacy-safe response.
+- Login, callback, logout, session reads, protected admin-page reads, and owner
+  OAuth UAT remain available while mutations are disabled.
+- Do not treat hidden UI controls as enforcement. The server route gate is the
+  authoritative boundary and remains additional to authentication, role,
+  workspace, CSRF, Origin/Referer, and input-validation controls.
+- A later Stage B or separately reviewed admin-write activation must explicitly
+  set the gate to exact lowercase `true` and re-prove all existing controls.
 
 ## n8n Enquiry Handoff Checklist
 
@@ -235,8 +291,29 @@ Run the repository-safe Stage A checks before any provider operation:
 
 ```powershell
 npm run test:deployment-contract-follow-up
-npm run validate:stage-a-oauth-deployment-readiness
+npm run validate:stage-a-oauth-readiness
 ```
+
+The repository-only command validates the static contract and deliberately
+does not claim provider admission completion. After the separately authorised
+provider check, run the completion validator in the hosted runtime with
+ADMIN_MUTATIONS_ENABLED explicitly disabled and a temporary, secret-safe
+provider-admission evidence JSON file stored outside the repository:
+
+~~~powershell
+npm run validate:stage-a-oauth-deployment-readiness -- --provider-admission-evidence <temporary-secret-safe-evidence-path>
+~~~
+
+The completion validator checks every declared Stage A runtime env name and
+safe shape without printing values. It must remain on hold when a required
+Supabase, catalogue, admin workspace, canonical origin/host, CSRF, or mutation
+capability setting is absent/invalid; when the evidence file is absent,
+invalid, future-dated, or not `PASS`; or when the admin-mutation state is not
+the exact unpadded value `false`. A legacy compact `SUPABASE_ANON_KEY` is
+accepted only when its decoded Supabase role is exactly `anon`; a legacy
+`service_role` JWT is rejected. Completion must run from a clean tracked
+checkout, and provider-admission evidence cannot bind to a dirty or unresolved
+repository revision.
 
 After a separately approved Stage A deployment, provide the canonical base only
 through the dedicated input and run the read-only smoke. The command performs
@@ -244,7 +321,13 @@ manual-redirect GET requests only; it does not authenticate, initiate OAuth,
 submit a quote, call n8n, or mutate external state. There is no direct provider
 API call by the smoke harness and no mutating provider call. Route rendering
 may exercise configured read-only Supabase-backed application paths through the
-deployed first-party application.
+deployed first-party application. The command also extracts, deduplicates, and
+scans at most 32 referenced same-origin `/_next/static/*.js` bundles, with the
+same leakage rules. Route HTML retains its 128 KiB response bound. Each client
+asset is scanned incrementally with only a 4,096-character overlap window and
+a separate 512 KiB total response ceiling, so current production bundles are
+covered without accumulating an entire bundle. It never fetches third-party
+script origins.
 
 ```powershell
 $env:SKR_PRODUCTION_BASE_URL = 'https://spacekonceptrental.com'
@@ -317,9 +400,11 @@ Do not enable public traffic if any condition below is true:
 
 Stage A is also held if exact requested/resolved SHA equality or an immutable
 deployment identifier is missing, quote is not proven disabled, n8n is not
-proven inactive, the production read-only smoke does not pass, or real-owner
-Google OAuth UAT has not passed. Use `HOLD - NOT RUN`, never a bare `NOT-RUN`,
-when UAT has not occurred.
+proven inactive, admin mutations are enabled or not proven disabled, provider
+signup admission is not directly verified, the production read-only smoke does
+not pass, or real-owner Google OAuth UAT has not passed. Use
+`HOLD - NOT VERIFIED` for the provider prerequisite and `HOLD - NOT RUN`, never
+a bare `NOT-RUN`, when UAT has not occurred.
 
 ## Rollback Or Disable Plan
 

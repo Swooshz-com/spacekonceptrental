@@ -87,6 +87,10 @@ helpers:
 - `ADMIN_EXPECTED_HOST`: trusted expected admin request host.
 - `ADMIN_CSRF_PROOF_SECRET`: server-only proof signing secret for admin CSRF
   proof material.
+- `ADMIN_MUTATIONS_ENABLED`: fail-closed server-only admin-write capability.
+  Only the exact unpadded lowercase value `true` enables writes. Stage A
+  requires exact unpadded `false`; missing, blank, whitespace-padded,
+  malformed, or false values deny mutation routes.
 
 Trusted client IP header values must name only headers overwritten by the
 deployment proxy or CDN. In-process quote and chat throttling remains
@@ -175,8 +179,12 @@ email/internal handoff -> Delivery Log verification is
 
 These values are server-only even when the Supabase anon key is used:
 
-- `SUPABASE_URL`: server-side Supabase project endpoint used only by server
-  helpers.
+- `SUPABASE_URL`: canonical server-side Supabase project origin root used only
+  by server helpers. Stage A requires HTTPS, a 20-character project-ref
+  subdomain, and either no path or only the trailing root slash; credentials,
+  explicit ports, non-root paths, queries, and fragments fail.
+  Validate the supplied raw value without repairing or normalising ambiguous
+  path material into an otherwise acceptable origin.
 - `SUPABASE_ANON_KEY`: server-side anon key used with RLS through first-party
   server routes, repositories, and session-bound server clients.
 - `CATALOGUE_WORKSPACE_ID`: trusted server-side workspace gate for DB-backed
@@ -220,6 +228,8 @@ paths:
 - `ADMIN_EXPECTED_ORIGIN`: expected first-party admin origin.
 - `ADMIN_EXPECTED_HOST`: expected first-party admin host.
 - `ADMIN_CSRF_PROOF_SECRET`: server-only CSRF proof signing secret.
+- `ADMIN_MUTATIONS_ENABLED`: fail-closed protected-admin mutation capability;
+  never expose it through `NEXT_PUBLIC_*`.
 
 `ADMIN_TRUSTED_WORKSPACE_ID` must be reviewed separately from
 `CATALOGUE_WORKSPACE_ID` and `QUOTE_WORKSPACE_ID`. It must not be supplied by
@@ -245,6 +255,25 @@ first-party admin API route, CSRF/session/workspace/admin gate, and
 `categories`, `products`, `product_images`, and product audit inserts are
 blocked.
 
+Every protected admin mutation also requires the server-only
+`ADMIN_MUTATIONS_ENABLED` capability. Stage A requires the capability to be
+disabled while login, callback, logout, session reads, and protected admin-page
+reads remain functional. Missing, blank, whitespace-padded, malformed, and
+false values fail closed before any session, identity, workspace, profile,
+membership, repository, audit, database, or provider access. Exact unpadded
+lowercase `true` is a
+later separately reviewed activation and does not replace authentication,
+workspace, role, CSRF, Origin/Referer, or validation controls.
+
+Stage A readiness also validates the hosted Supabase endpoint and supported
+anon/publishable key shape, including a decoded legacy role of exactly `anon`
+when a compact JWT is used. A legacy `service_role` JWT is rejected.
+UUID-shaped catalogue/admin workspace identifiers and the same minimum
+entropy-like CSRF secret shape used by the full launch validator are also
+required. Completion runs only from a clean tracked checkout so evidence binds
+to exact commit contents. Presence-only placeholders do not satisfy
+completion.
+
 The approved RPC performs the metadata mutation, product audit insert, and
 local search-index job enqueue in one database transaction. Reviewers should
 confirm admin UI writes still enqueue a local search-index job and that no
@@ -266,6 +295,7 @@ Forbidden exposure includes:
 - No `NEXT_PUBLIC_SKR_DEMO_CONTENT`; the public demo-content runtime switch is
   removed and forbidden.
 - No browser-visible n8n URLs.
+- No client/public exposure of `ADMIN_MUTATIONS_ENABLED`.
 - No browser Supabase unless separately approved.
 - No `SUPABASE_SERVICE_ROLE_KEY` in runtime paths.
 - No service-role key in browser/client/public env.
@@ -287,6 +317,10 @@ Service-role key prohibition in runtime paths remains active. never put service-
 - Admin: protected admin paths fail closed or render generic unavailable states
   when admin auth, workspace, request-security, CSRF, Supabase, or RLS
   dependencies are missing.
+- Admin mutations: deny with a stable privacy-safe result before session,
+  identity, workspace, profile, membership, repository, audit, database, or
+  other provider access unless `ADMIN_MUTATIONS_ENABLED` is exact lowercase,
+  unpadded `true`.
 
 ## Required pre-deployment review
 

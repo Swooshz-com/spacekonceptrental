@@ -10,6 +10,7 @@ import {
   type ServerAdminCsrfProofSessionWorkspaceBindingDependencies,
   type ServerAdminCsrfProofSessionWorkspaceBindingResult
 } from "../admin/authorization/server-admin-csrf-proof-session-workspace-binding";
+import { resolveServerAdminMutationCapability } from "../admin/authorization/server-admin-mutation-capability";
 import {
   resolveServerAdminRuntimeRouteGateAdapter,
   type ServerAdminRuntimeRouteGateAdapterResult
@@ -30,6 +31,7 @@ type AdminHomepageHeroWriteRouteEnv = {
   ADMIN_EXPECTED_ORIGIN?: string | null;
   ADMIN_EXPECTED_HOST?: string | null;
   ADMIN_TRUSTED_WORKSPACE_ID?: string | null;
+  ADMIN_MUTATIONS_ENABLED?: string | null;
 };
 
 type CreateRuntimeDependencies = (
@@ -249,6 +251,25 @@ async function verifyAdminWriteBoundary(
       response: NextResponse;
     }
 > {
+  const mutationCapability = resolveServerAdminMutationCapability(
+    {
+      ADMIN_MUTATIONS_ENABLED:
+        dependencies.env === undefined
+          ? process.env.ADMIN_MUTATIONS_ENABLED
+          : dependencies.env.ADMIN_MUTATIONS_ENABLED
+    }
+  );
+
+  if (!mutationCapability.enabled) {
+    return {
+      ok: false,
+      response: errorJson(
+        mutationCapability.reason,
+        mutationCapability.statusCode
+      )
+    };
+  }
+
   const routeEnv = getAdminRouteRuntimeConfig(
     dependencies.env ?? process.env
   );
@@ -315,7 +336,8 @@ async function verifyAdminWriteBoundary(
       {
         requestedOperation: heroWriteOperation,
         requestMethod,
-        request
+        request,
+        requiresMutationCapability: true
       },
       {
         requestMetadata: {

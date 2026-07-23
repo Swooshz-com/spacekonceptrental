@@ -58,6 +58,31 @@ private dashboard links, workspace/admin identifiers, or customer data.
 - Admin auth/workspace/CSRF presence and actor class reviewed without values:
   `<confirmed-by>`
 
+## Provider signup admission confirmation - Stage A
+
+- Admission mechanism (`new-user-signup-disabled` or
+  `before-user-created-admission-hook`): `<exact-mechanism-identifier>`
+- Verification status (`PASS | HOLD - NOT VERIFIED | FAIL`): `<status>`
+- Verified at: `<canonical-UTC-ISO-8601-milliseconds-within-24-hours-or-not-verified>`
+- Operator and approval reference: `<canonical-issue-291-or-301-comment-url>`
+- Requested immutable SHA: `<40-character-sha>`
+- Clean tracked checkout at validation time: `<PASS-or-FAIL>`
+- Existing-owner readiness: `<PASS-FAIL-or-HOLD>`
+- No-public-signup result: `<PASS-FAIL-or-HOLD>`
+
+`HOLD - NOT VERIFIED` blocks owner OAuth UAT and Stage A completion. A callback
+or membership denial does not prove user creation was prevented. Repository
+tests cannot prove live provider admission. Verify through the strongest
+suitable official Supabase interface or API under separate authorisation, and
+never record private emails, project references, provider values, or secrets.
+PASS evidence must be no more than 24 hours old and must match the requested
+immutable SHA; stale, non-canonical, self-attested, or revision-mismatched
+evidence remains `HOLD - NOT VERIFIED`. A dirty or unresolved tracked checkout
+also remains held because the evidence cannot be bound to the exact commit.
+Reference the secret-safe output of
+`npm run validate:stage-a-oauth-deployment-readiness -- --provider-admission-evidence <temporary-secret-safe-evidence-path>`;
+do not attach the temporary file to Git.
+
 ## Listing media confirmation
 
 - Existing listing-media model and protected upload boundary reviewed:
@@ -142,6 +167,10 @@ do not record provider credentials or environment values.
 - Public read routes only: `<result-and-evidence-reference>`
 - Anonymous admin denial: `<result-and-evidence-reference>`
 - Google OAuth owner UAT status (`PASS | HOLD - NOT RUN | FAIL`): `<status-and-evidence-reference>`
+- Provider signup admission status (`PASS | HOLD - NOT VERIFIED | FAIL`): `<status-and-evidence-reference>`
+- Existing-owner readiness: `<PASS-FAIL-or-HOLD>`
+- No-public-signup result: `<PASS-FAIL-or-HOLD>`
+- Admin mutations remained disabled: `<PASS-or-FAIL>`
 - Quote remained disabled: `<PASS-or-FAIL>`
 - n8n remained inactive: `<PASS-or-FAIL>`
 - No customer quote submission occurred: `<PASS-or-FAIL>`
@@ -151,6 +180,8 @@ configuration. Stage A remains incomplete and held until real-owner Google
 OAuth UAT passes. A controlled exact-SHA deployment may exist temporarily for
 UAT, but its Stage A record remains `HOLD - NOT RUN`, not `PASS`, until the UAT
 passes.
+Owner OAuth UAT must not start while provider signup admission is
+`HOLD - NOT VERIFIED` or `FAIL`.
 
 ### Stage B - Full Enquiry Launch
 
@@ -167,9 +198,11 @@ passes.
 Record presence/validity results by name only. Never include a value.
 
 - Public catalogue configuration: `<PASS-or-FAIL-by-env-name>`
+- Supabase project origin-root validation (name/result only; no value): `<PASS-or-FAIL>`
 - Quote persistence/admission configuration: `<PASS-or-FAIL-or-stage-A-not-required>`
 - Admin authentication/workspace configuration: `<PASS-or-FAIL-by-env-name>`
 - Admin CSRF protection configuration: `<PASS-or-FAIL-by-env-name>`
+- Admin mutation capability (`ADMIN_MUTATIONS_ENABLED`): `<stage-A-explicitly-disabled-or-reviewed-later-state>`
 - n8n enquiry handoff configuration: `<PASS-or-FAIL-or-stage-A-not-required>`
 - No `NEXT_PUBLIC_SUPABASE_*`: `<PASS-or-FAIL>`
 - No `NEXT_PUBLIC_N8N*`: `<PASS-or-FAIL>`
@@ -189,14 +222,19 @@ Record presence/validity results by name only. Never include a value.
 | anonymous `/admin` | denied or canonical first-party login redirect | `<status-and-timestamp>` |
 | approved `www` root | canonical redirect to apex | `<status-and-timestamp>` |
 | redirect authority | no localhost/internal proxy authority | `<PASS-or-FAIL>` |
-| public response leakage | no provider/SQL/stack/env/secret leakage | `<PASS-or-FAIL>` |
+| public response leakage | no provider/SQL/stack/env/secret leakage in route bodies or bounded referenced first-party Next.js bundles | `<PASS-or-FAIL>` |
 
 Attach or reference the secret-safe machine-readable output from
 `npm run smoke:production-readonly`. Do not paste response bodies.
 
 There is no direct provider API call by the smoke harness and no mutating
 provider call. Route rendering may exercise configured read-only Supabase-backed
-application paths through the deployed first-party application.
+application paths through the deployed first-party application. The harness
+also scans at most 32 deduplicated same-origin `/_next/static/*.js` assets with
+the same leakage rules and never fetches third-party script origins. Route HTML
+retains its 128 KiB response bound. Client assets are streamed through a
+4,096-character overlap window with a separate 512 KiB total response ceiling;
+the harness does not accumulate an entire bundle.
 
 ## Enquiry Handoff Evidence - Stage B Only
 
@@ -263,5 +301,7 @@ For either target stage, also record:
 - Deployment and rollback identifiers are immutable provider identifiers.
 - Auto-deploy remained off unless a separate approved change says otherwise.
 - Stage A did not submit a quote or activate n8n.
+- Stage A kept admin mutations disabled and recorded provider signup admission
+  as `PASS` before owner OAuth UAT.
 - Stage B evidence, when claimed, is tied to persisted `/api/quote` processing,
   not `/api/chat`.

@@ -11,6 +11,7 @@ import {
   type ServerAdminCsrfProofSessionWorkspaceBindingDependencies,
   type ServerAdminCsrfProofSessionWorkspaceBindingResult
 } from "../../admin/authorization/server-admin-csrf-proof-session-workspace-binding";
+import { resolveServerAdminMutationCapability } from "../../admin/authorization/server-admin-mutation-capability";
 import {
   resolveServerAdminRuntimeRouteGateAdapter,
   type ServerAdminRuntimeRouteGateAdapterResult
@@ -27,6 +28,7 @@ type AdminQuoteRequestCrmHandoffStatusUpdateRouteEnv = {
   ADMIN_EXPECTED_ORIGIN?: string | null;
   ADMIN_EXPECTED_HOST?: string | null;
   ADMIN_TRUSTED_WORKSPACE_ID?: string | null;
+  ADMIN_MUTATIONS_ENABLED?: string | null;
 };
 
 type CreateRuntimeDependencies = (
@@ -206,6 +208,22 @@ export async function handleAdminQuoteRequestCrmHandoffStatusUpdateRoute(
     return errorJson("request_payload_invalid", 400);
   }
 
+  const mutationCapability = resolveServerAdminMutationCapability(
+    {
+      ADMIN_MUTATIONS_ENABLED:
+        dependencies.env === undefined
+          ? process.env.ADMIN_MUTATIONS_ENABLED
+          : dependencies.env.ADMIN_MUTATIONS_ENABLED
+    }
+  );
+
+  if (!mutationCapability.enabled) {
+    return errorJson(
+      mutationCapability.reason,
+      mutationCapability.statusCode
+    );
+  }
+
   const routeEnv = getRouteEnv(dependencies);
   const createRuntimeDependencies =
     dependencies.createRuntimeDependencies ??
@@ -259,7 +277,8 @@ export async function handleAdminQuoteRequestCrmHandoffStatusUpdateRoute(
       {
         requestedOperation: "quote.write",
         requestMethod,
-        request
+        request,
+        requiresMutationCapability: true
       },
       {
         requestMetadata: {

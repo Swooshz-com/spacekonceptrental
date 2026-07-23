@@ -59,13 +59,14 @@ reported as a warning for follow-up inventory review.
 Stage A repository-safe mode:
 
 ```powershell
-npm run validate:stage-a-oauth-deployment-readiness
+npm run validate:stage-a-oauth-readiness
 ```
 
 This command validates tracked-file security, the Node 24 contract, and the
 staged environment contract without reading provider configuration or requiring
 any `QUOTE_*` or `N8N_*` value. It does not prove a deployment or real-owner
-OAuth UAT. The production smoke makes no direct provider API call by the smoke
+OAuth UAT. Repository-only mode validates the contract but cannot complete the
+provider signup-admission gate. The production smoke makes no direct provider API call by the smoke
 harness and no mutating provider call. Route rendering may exercise configured
 read-only Supabase-backed application paths through the deployed first-party
 application.
@@ -90,7 +91,8 @@ server-side env has been configured there.
 
 | Mode | How to run | Missing/invalid launch env |
 | --- | --- | --- |
-| Stage A repository-safe | `npm run validate:stage-a-oauth-deployment-readiness` | Requires no provider env, quote configuration, active n8n configuration, or live catalog. |
+| Stage A repository-safe | `npm run validate:stage-a-oauth-readiness` | Requires no provider env, quote configuration, active n8n configuration, or live catalog; does not satisfy provider admission evidence. |
+| Stage A completion | `npm run validate:stage-a-oauth-deployment-readiness -- --provider-admission-evidence <temporary-secret-safe-evidence-path>` | Validates every Stage A runtime env name/safe shape, exact unpadded disabled admin-mutation state, and direct provider-admission `PASS` evidence; holds when any cannot be proven. |
 | Stage B local/dev | No mode env, or mode set to local | Reports missing full-launch env and missing live catalog as warnings; exits success if static checks pass. |
 | Stage B launch | `npm run validate:production-security-readiness -- --launch --public-security-definer-catalog $catalogPath` | Enforces full env, static checks, complete live function catalog, and exact reviewed privilege contracts. |
 
@@ -106,7 +108,9 @@ environment. Do not commit `.env` files or real env values.
 For Stage A, only `SUPABASE_URL`, `SUPABASE_ANON_KEY`,
 `CATALOGUE_WORKSPACE_ID`, `ADMIN_TRUSTED_WORKSPACE_ID`,
 `ADMIN_EXPECTED_ORIGIN`, `ADMIN_EXPECTED_HOST`, and
-`ADMIN_CSRF_PROOF_SECRET` are required by the deployment contract. Stage A
+`ADMIN_CSRF_PROOF_SECRET`, plus `ADMIN_MUTATIONS_ENABLED` in its explicit
+disabled state, are required
+by the deployment contract. Stage A
 requires no active n8n configuration, no quote-persistence/admission
 configuration, and no quote enablement.
 
@@ -115,7 +119,7 @@ The table below is the full Stage B launch set enforced by
 
 | Env name | Purpose | Launch requirement |
 | --- | --- | --- |
-| `SUPABASE_URL` | Server-side Supabase project URL for approved server access. | Must exist and be HTTPS. |
+| `SUPABASE_URL` | Server-side Supabase project origin root for approved server access. | Stage A requires HTTPS, a 20-character project-ref subdomain, and either no path or only the trailing root slash; credentials, explicit ports, non-root paths, queries, and fragments are invalid. |
 | `SUPABASE_ANON_KEY` | Server-side public/anon key used with RLS through first-party routes. | Must exist. |
 | `CATALOGUE_WORKSPACE_ID` | Server-owned public catalogue workspace gate; must match `catalogue_public_workspace_config`. | Must exist. |
 | `QUOTE_WORKSPACE_ID` | Server-owned quote/enquiry persistence workspace gate; must independently match `quote_public_workspace_config`. | Must exist. |
@@ -124,6 +128,7 @@ The table below is the full Stage B launch set enforced by
 | `ADMIN_EXPECTED_ORIGIN` | Trusted protected admin same-origin value. | Must exist and be an HTTPS origin. |
 | `ADMIN_EXPECTED_HOST` | Trusted protected admin host value. | Must exist and be a host or HTTPS URL. |
 | `ADMIN_CSRF_PROOF_SECRET` | Server-only CSRF proof signing secret. | Must exist, be at least 32 characters, and not be a weak placeholder shape. |
+| `ADMIN_MUTATIONS_ENABLED` | Fail-closed server-only admin-write capability. | Only exact lowercase, unpadded `true` permits continuation into the cumulative controls. Every other state denies before session, identity, workspace, profile, membership, repository, audit, database, or provider access; Stage A requires explicit `false`. |
 | `N8N_ENQUIRY_HANDOFF_WEBHOOK_URL` | Server-only n8n endpoint for quote/enquiry handoff after SKR persistence succeeds. | Must exist and be HTTPS. |
 | `N8N_ENQUIRY_HANDOFF_SHARED_SECRET` | Server-only HMAC signing secret shared with the reviewed n8n workflow. | Must exist, be high-entropy, and not be a weak placeholder shape. |
 | `N8N_ENQUIRY_HANDOFF_TIMEOUT_MS` | Optional timeout for the n8n handoff request. | Optional; when set, must be positive and no more than 30000ms. |
@@ -175,7 +180,10 @@ The command also checks tracked files for narrow launch blockers:
 - server-only env names in client components or public runtime files
 - n8n webhook, n8n shared-secret, or Supabase service-role env names in
   client/public runtime files
+- any public/client exposure of `ADMIN_MUTATIONS_ENABLED`
 - obvious committed secret token patterns
+- legacy compact JWTs whose decoded Supabase payload identifies either the
+  `anon` or `service_role` credential role, without printing the token
 - Delivery Log documentation that stops describing technical metadata only
 
 The launch command also validates the full read-only live public `SECURITY
@@ -253,13 +261,19 @@ found.
 
 Hold controlled OAuth deployment if any of these are true:
 
-- `npm run validate:stage-a-oauth-deployment-readiness` fails;
+- `npm run validate:stage-a-oauth-readiness` fails, or the completion validator
+  fails/holds after provider evidence is supplied;
 - the requested immutable SHA and resolved checkout/build SHA are not proven
   exactly equal;
+- the Stage A completion validator is not running from a clean tracked checkout;
 - the immutable deployment identifier, pre-deployment identity, or reviewed
   rollback-target evidence is unavailable;
 - quote submission is not proven disabled;
 - n8n is not proven inactive;
+- admin mutations are enabled or cannot be proven disabled;
+- provider signup admission is not directly verified as `PASS` through either
+  disabled new-user signup with existing-owner readiness, or a reviewed
+  before-user-created/pre-user-creation admission hook;
 - the read-only production smoke fails or issues a non-GET/HEAD request;
 - anonymous `/admin` does not deny or redirect to the first-party login surface;
 - a redirect exposes localhost, internal proxy authority, or an arbitrary host;
@@ -270,6 +284,24 @@ Record Google OAuth owner UAT as `PASS | HOLD - NOT RUN | FAIL`. Stage A
 remains incomplete and held until real-owner Google OAuth UAT passes. A
 controlled exact-SHA deployment may exist temporarily for UAT, but the Stage A
 record remains `HOLD - NOT RUN`, not `PASS`, until the UAT passes.
+
+Record provider signup admission as `PASS | HOLD - NOT VERIFIED | FAIL`.
+`HOLD - NOT VERIFIED` blocks UAT and completion. Authentication denied after
+callback does not prove user creation prevention, and repository tests cannot
+prove provider state. A future authorised verification must use the strongest
+suitable official Supabase interface or API, record only a timestamp,
+mechanism class, operator/approval reference, existing-owner readiness, and
+  no-public-signup result, and expose no secrets or private/provider identifiers.
+Evidence must use exact admission mechanism `new-user-signup-disabled` or
+`before-user-created-admission-hook`. Its verification timestamp must be
+canonical UTC ISO-8601 with milliseconds, must not be in the future, and must
+be no more than 24 hours old. It must name the requested immutable SHA and use
+a canonical #291 or #301 issue-comment URL as the approval reference.
+
+Stage A accepts a modern `sb_publishable_*` key or a legacy compact Supabase JWT
+only when the decoded legacy role is exactly `anon`. A legacy `service_role`
+JWT cannot satisfy `SUPABASE_ANON_KEY`. This validation reports only stable
+field names and never prints the configured value.
 
 Do not weaken the Stage B launch validator to clear Stage A. Stage A does not
 authorise public enquiry launch.

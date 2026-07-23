@@ -26,6 +26,9 @@ jobs:
       - name: Test bounded hosted contracts
         run: npm run test:hosted-contract-follow-up
 
+      - name: Test post-303 Stage A boundaries
+        run: npm run test:post-303-stage-a-boundaries
+
       - name: Validate Stage A OAuth readiness
         run: npm run validate:stage-a-oauth-readiness
 

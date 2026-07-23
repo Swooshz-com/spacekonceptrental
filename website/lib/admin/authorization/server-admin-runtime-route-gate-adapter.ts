@@ -6,6 +6,11 @@ import {
   type ServerAdminRuntimeGateInvocationInput,
   type ServerAdminRuntimeGateInvocationResult
 } from "./server-admin-runtime-gate-invocation";
+import {
+  resolveServerAdminMutationCapability,
+  type ServerAdminMutationCapabilityEnv,
+  type ServerAdminMutationCapabilityResult
+} from "./server-admin-mutation-capability";
 
 export type ServerAdminRuntimeRouteGateRequestLike = {
   method?: string | null;
@@ -15,10 +20,17 @@ export type ServerAdminRuntimeRouteGateAdapterInput =
   ServerAdminRuntimeGateInvocationInput & {
     requestMethod?: string | null;
     request?: ServerAdminRuntimeRouteGateRequestLike | null;
+    requiresMutationCapability?: boolean;
   };
 
 export type ServerAdminRuntimeRouteGateAdapterResult =
-  ServerAdminRuntimeGateInvocationResult;
+  | ServerAdminRuntimeGateInvocationResult
+  | {
+      allowed: false;
+      reason: "admin_mutations_disabled";
+      statusCode: 503;
+      requestId?: string;
+    };
 
 export type ServerAdminRuntimeRouteGateAdapterDependencies = Omit<
   ServerAdminRuntimeGateInvocationDependencies,
@@ -28,6 +40,12 @@ export type ServerAdminRuntimeRouteGateAdapterDependencies = Omit<
     ServerAdminRuntimeGateInvocationDependencies["requestMetadata"],
     "requestMethod"
   >;
+  mutationCapability?: {
+    env?: ServerAdminMutationCapabilityEnv;
+    resolveCapability?: (
+      env?: ServerAdminMutationCapabilityEnv
+    ) => ServerAdminMutationCapabilityResult;
+  };
   resolveRuntimeGateInvocation?: (
     input: ServerAdminRuntimeGateInvocationInput,
     dependencies: ServerAdminRuntimeGateInvocationDependencies
@@ -77,8 +95,24 @@ export async function resolveServerAdminRuntimeRouteGateAdapter(
     return unavailable();
   }
 
+  if (input.requiresMutationCapability === true) {
+    const resolveCapability =
+      dependencies.mutationCapability?.resolveCapability ??
+      resolveServerAdminMutationCapability;
+    const capability = resolveCapability(dependencies.mutationCapability?.env);
+
+    if (!capability.enabled) {
+      return {
+        allowed: false,
+        reason: capability.reason,
+        statusCode: capability.statusCode
+      };
+    }
+  }
+
   const {
     requestMetadata,
+    mutationCapability: _mutationCapability,
     resolveRuntimeGateInvocation,
     ...runtimeGateDependencies
   } = dependencies;
