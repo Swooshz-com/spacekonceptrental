@@ -122,9 +122,11 @@
       "visibility": "local-command-control",
       "variables": [
         "SKR_PRODUCTION_READINESS_MODE",
-        "SKR_PRODUCTION_BASE_URL"
+        "SKR_PRODUCTION_BASE_URL",
+        "SKR_PRODUCTION_EXPECTED_SHA",
+        "SKR_PRODUCTION_EXPECTED_BUILD_ID"
       ],
-      "rule": "Use SKR_PRODUCTION_READINESS_MODE only for the readiness command and SKR_PRODUCTION_BASE_URL only as the canonical-host input to the operator-run read-only smoke command. Neither is application runtime configuration."
+      "rule": "Use SKR_PRODUCTION_READINESS_MODE only for the readiness command. Use SKR_PRODUCTION_BASE_URL, SKR_PRODUCTION_EXPECTED_SHA, and SKR_PRODUCTION_EXPECTED_BUILD_ID only as canonical target and immutable build-identity inputs to the operator-run read-only smoke command. None is application runtime configuration."
     },
     {
       "name": "Public-safe client env",
@@ -214,6 +216,24 @@
       "browserAllowed": false,
       "status": "operator-command-only",
       "notes": "Accepts only the canonical production apex or approved www HTTPS origin and is not stored as application runtime configuration."
+    },
+    {
+      "name": "SKR_PRODUCTION_EXPECTED_SHA",
+      "visibility": "local-command-control",
+      "feature": "Production read-only smoke revision binding",
+      "requiredFor": "Operator-run production read-only smoke command only",
+      "browserAllowed": false,
+      "status": "operator-command-only",
+      "notes": "Must be the exact lowercase 40-character reviewed and requested deployment SHA; it is matched against the hosted build provenance and is not stored as application runtime configuration."
+    },
+    {
+      "name": "SKR_PRODUCTION_EXPECTED_BUILD_ID",
+      "visibility": "local-command-control",
+      "feature": "Production read-only smoke deployed-build binding",
+      "requiredFor": "Operator-run production read-only smoke command only",
+      "browserAllowed": false,
+      "status": "operator-command-only",
+      "notes": "Must be the exact non-secret Next.js build identifier emitted by the accepted clean build provenance; it is matched against the hosted build provenance and is not stored as application runtime configuration."
     },
     {
       "name": "SUPABASE_URL",

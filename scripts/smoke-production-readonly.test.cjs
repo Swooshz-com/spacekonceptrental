@@ -1,8 +1,12 @@
 const assert = require('node:assert/strict');
+const crypto = require('node:crypto');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
+const {
+  calculateInventoryDigest,
+} = require('../website/scripts/generate-production-build-provenance.cjs');
 const {
   SmokeContractError,
   assertProductionBaseUrl,
@@ -13,6 +17,10 @@ const {
 
 const apex = 'https://spacekonceptrental.com';
 const www = 'https://www.spacekonceptrental.com';
+const expectedRevision = 'a'.repeat(40);
+const expectedBuildId = 'synthetic-build-current';
+const buildProvenanceUrl =
+  `${apex}/.well-known/skr-build-provenance.json`;
 const safeClientAssetDirectory = fs.mkdtempSync(
   path.join(os.tmpdir(), 'skr-smoke-client-assets-'),
 );
@@ -28,7 +36,8 @@ fs.writeFileSync(safeClientAssetPath, 'globalThis.__skrSafe = true;\n');
 
 function runProductionReadOnlySmoke(options) {
   return runProductionReadOnlySmokeImpl({
-    clientAssetDirectory: safeClientAssetDirectory,
+    rawExpectedRevision: expectedRevision,
+    rawExpectedBuildId: expectedBuildId,
     ...options,
   });
 }
@@ -50,6 +59,7 @@ function createMockFetch(overrides = {}) {
     [`${apex}/terms`, response(200)],
     [`${apex}/about`, response(200)],
     [`${apex}/quote`, response(200)],
+    [`${apex}/admin/login`, response(200)],
     [`${apex}/contact`, response(404)],
     [
       `${apex}/admin`,
@@ -68,6 +78,43 @@ function createMockFetch(overrides = {}) {
     fetch: async (target, options) => {
       const url = target.toString();
       calls.push({ url, options });
+      if (url === buildProvenanceUrl && !configured.has(url)) {
+        const assets = [];
+
+        for (const [configuredUrl, configuredResponse] of configured) {
+          const parsed = new URL(configuredUrl);
+          if (
+            parsed.origin !== apex ||
+            !parsed.pathname.startsWith('/_next/static/') ||
+            !parsed.pathname.endsWith('.js')
+          ) {
+            continue;
+          }
+
+          const body = Buffer.from(
+            await configuredResponse.clone().arrayBuffer(),
+          );
+          assets.push({
+            path: parsed.pathname,
+            sha256: crypto.createHash('sha256').update(body).digest('hex'),
+          });
+        }
+
+        assets.sort((left, right) => left.path.localeCompare(right.path));
+        return response(
+          200,
+          JSON.stringify({
+            schemaVersion: 1,
+            reviewedSha: expectedRevision,
+            buildId: expectedBuildId,
+            trackedCheckoutClean: true,
+            assetCount: assets.length,
+            inventorySha256: calculateInventoryDigest(assets),
+            assets,
+          }),
+          { 'Content-Type': 'application/json' },
+        );
+      }
       const configuredResponse = configured.get(url);
 
       if (!configuredResponse) {
@@ -144,7 +191,7 @@ test('production smoke performs only safe manual-redirect GET requests', async (
   assert.equal(result.quoteSubmissionAttempted, false);
   assert.equal(result.oauthInitiated, false);
   assert.equal(result.authenticated, false);
-  assert.equal(mock.calls.length, 14);
+  assert.equal(mock.calls.length, 16);
 
   for (const call of mock.calls) {
     assert.equal(call.options.method, 'GET');

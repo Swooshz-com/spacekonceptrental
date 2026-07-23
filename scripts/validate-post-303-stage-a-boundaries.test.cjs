@@ -508,7 +508,9 @@ test('Stage A documents keep provider admission on HOLD until independently veri
   assert.match(combined, /24 hours/i);
   assert.match(combined, /requested immutable SHA/i);
   assert.match(combined, /\/_next\/static\/\*\.js/);
-  assert.match(combined, /\.next\/static\/\*\*\/\*\.js/);
+  assert.match(combined, /Local `website\/\.next`.*not.*deployed-build evidence/is);
+  assert.match(combined, /SKR_PRODUCTION_EXPECTED_BUILD_ID/);
+  assert.match(combined, /hosted provenance manifest/i);
   assert.match(combined, /complete inventory/i);
   assert.match(combined, /never fetches? third-party script origins?/i);
   assert.match(combined, /clean tracked checkout/i);

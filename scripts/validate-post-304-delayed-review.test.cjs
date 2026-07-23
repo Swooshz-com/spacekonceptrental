@@ -1,4 +1,5 @@
 const assert = require('node:assert/strict');
+const crypto = require('node:crypto');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
@@ -6,11 +7,14 @@ const test = require('node:test');
 
 const {
   SmokeContractError,
-  discoverDeployedClientAssetInventory,
   discoverPublicPageRouteInventory,
   runProductionReadOnlySmoke: runProductionReadOnlySmokeImpl,
   safeFailureResult,
+  validateHostedBuildProvenance,
 } = require('./smoke-production-readonly.cjs');
+const {
+  calculateInventoryDigest,
+} = require('../website/scripts/generate-production-build-provenance.cjs');
 const {
   scanStaticSecurity,
 } = require('./validate-production-security-readiness.cjs');
@@ -26,6 +30,7 @@ const www = 'https://www.spacekonceptrental.com';
 const expectedPublicRoutes = [
   '/',
   '/about',
+  '/admin/login',
   '/catalogue',
   '/categories',
   '/events',
@@ -49,6 +54,9 @@ const syntheticProjectUrlA =
 const syntheticProjectUrlB =
   `https://${syntheticProjectRefB}.supabase.co`;
 const testRevision = 'a'.repeat(40);
+const testBuildId = 'synthetic-build-current';
+const buildProvenanceUrl =
+  `${apex}/.well-known/skr-build-provenance.json`;
 const evidenceNowMs = Date.parse('2026-07-23T00:05:00.000Z');
 const safeClientAssetDirectory = fs.mkdtempSync(
   path.join(os.tmpdir(), 'skr-post-304-client-assets-'),
@@ -65,7 +73,8 @@ fs.writeFileSync(safeClientAssetPath, 'globalThis.__skrSafe = true;\n');
 
 function runProductionReadOnlySmoke(options) {
   return runProductionReadOnlySmokeImpl({
-    clientAssetDirectory: safeClientAssetDirectory,
+    rawExpectedRevision: testRevision,
+    rawExpectedBuildId: testBuildId,
     ...options,
   });
 }
@@ -102,6 +111,43 @@ function createCompleteMockFetch(overrides = {}) {
     fetch: async (target, options) => {
       const url = target.toString();
       calls.push({ url, options });
+      if (url === buildProvenanceUrl && !configured.has(url)) {
+        const assets = [];
+
+        for (const [configuredUrl, configuredResponse] of configured) {
+          const parsed = new URL(configuredUrl);
+          if (
+            parsed.origin !== apex ||
+            !parsed.pathname.startsWith('/_next/static/') ||
+            !parsed.pathname.endsWith('.js')
+          ) {
+            continue;
+          }
+
+          const body = Buffer.from(
+            await configuredResponse.clone().arrayBuffer(),
+          );
+          assets.push({
+            path: parsed.pathname,
+            sha256: crypto.createHash('sha256').update(body).digest('hex'),
+          });
+        }
+
+        assets.sort((left, right) => left.path.localeCompare(right.path));
+        return response(
+          200,
+          JSON.stringify({
+            schemaVersion: 1,
+            reviewedSha: testRevision,
+            buildId: testBuildId,
+            trackedCheckoutClean: true,
+            assetCount: assets.length,
+            inventorySha256: calculateInventoryDigest(assets),
+            assets,
+          }),
+          { 'Content-Type': 'application/json' },
+        );
+      }
       const configuredResponse = configured.get(url);
 
       if (!configuredResponse) {
@@ -243,22 +289,9 @@ test('leakage isolated to every previously omitted public route fails safely', a
   }
 });
 
-test('complete deployed client asset inventory covers dynamic-route chunks without crawling invented parameters', async () => {
+test('hosted build provenance covers dynamic-route chunks without crawling invented parameters', async () => {
   const leaked = syntheticModernKey('secret');
   const dynamicAssetUrl = `${apex}/_next/static/chunks/app/catalogue/[slug]/page.js`;
-  const assetDirectory = fs.mkdtempSync(
-    path.join(os.tmpdir(), 'skr-dynamic-client-assets-'),
-  );
-  const dynamicAssetPath = path.join(
-    assetDirectory,
-    'chunks',
-    'app',
-    'catalogue',
-    '[slug]',
-    'page.js',
-  );
-  fs.mkdirSync(path.dirname(dynamicAssetPath), { recursive: true });
-  fs.writeFileSync(dynamicAssetPath, 'synthetic built asset fixture\n');
   const mock = createCompleteMockFetch({
     [dynamicAssetUrl]: response(200, leaked),
   });
@@ -268,7 +301,6 @@ test('complete deployed client asset inventory covers dynamic-route chunks witho
     await runProductionReadOnlySmoke({
       rawBaseUrl: apex,
       fetchImpl: mock.fetch,
-      clientAssetDirectory: assetDirectory,
     });
   } catch (caught) {
     error = caught;
@@ -287,20 +319,29 @@ test('complete deployed client asset inventory covers dynamic-route chunks witho
   assert.doesNotMatch(JSON.stringify(safeFailureResult(error)), new RegExp(leaked));
 });
 
-test('complete deployed client asset inventory includes only bounded first-party JavaScript paths', () => {
-  const assetDirectory = fs.mkdtempSync(
-    path.join(os.tmpdir(), 'skr-complete-client-assets-'),
-  );
-  const nestedAsset = path.join(assetDirectory, 'chunks', 'app', 'page.js');
-  fs.mkdirSync(path.dirname(nestedAsset), { recursive: true });
-  fs.writeFileSync(nestedAsset, 'synthetic built asset fixture\n');
-  fs.writeFileSync(
-    path.join(assetDirectory, 'chunks', 'styles.css'),
-    'body { color: black; }\n',
+test('hosted build provenance includes only bounded first-party JavaScript paths', () => {
+  const assets = [
+    {
+      path: '/_next/static/chunks/app/page.js',
+      sha256: 'b'.repeat(64),
+    },
+  ];
+  const provenance = validateHostedBuildProvenance(
+    {
+      schemaVersion: 1,
+      reviewedSha: testRevision,
+      buildId: testBuildId,
+      trackedCheckoutClean: true,
+      assetCount: assets.length,
+      inventorySha256: calculateInventoryDigest(assets),
+      assets,
+    },
+    testRevision,
+    testBuildId,
   );
 
   assert.deepEqual(
-    discoverDeployedClientAssetInventory({ assetDirectory }),
+    provenance.assets.map((asset) => asset.path),
     ['/_next/static/chunks/app/page.js'],
   );
 });

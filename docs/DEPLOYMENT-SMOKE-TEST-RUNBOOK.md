@@ -74,6 +74,8 @@ smoke evidence is:
 
 - public read routes `/`, `/catalogue`, `/setups`, `/about`, and `/quote` return
   `200`;
+- the anonymously reachable `/admin/login` HTML returns `200` and receives the
+  same leakage scan without submitting the form or initiating OAuth;
 - `/contact` returns the intended `404`;
 - anonymous `/admin` is denied or redirected only to `/admin/login`;
 - `www` redirects canonically to the apex;
@@ -88,13 +90,22 @@ smoke evidence is:
   paths through the deployed first-party application.
 
 Use `npm run smoke:production-readonly` and provide the canonical production
-apex through `SKR_PRODUCTION_BASE_URL` using a secret-safe operator shell. The
-smoke command is not browser automation and follows no redirects. It extracts
-only same-origin `/_next/static/*.js` script references, scans at most 32
-deduplicated bundles, and never fetches third-party script origins. Route HTML
-retains the 128 KiB response bound. Client assets are scanned incrementally
-with only a 4,096-character overlap window and a separate 512 KiB total
-response ceiling; the harness does not accumulate an entire bundle.
+apex through `SKR_PRODUCTION_BASE_URL`, the exact requested/reviewed lowercase
+SHA through `SKR_PRODUCTION_EXPECTED_SHA`, and the exact non-secret build ID
+from the accepted clean build output through
+`SKR_PRODUCTION_EXPECTED_BUILD_ID`. The command fetches the bounded hosted
+first-party build-provenance manifest, requires exact SHA/build-ID equality and
+a clean tracked build, validates the complete asset inventory digest, then
+digest-checks and leakage-scans every listed same-origin JavaScript asset. It
+does not trust local `website/.next` as deployed evidence. Missing, stale,
+mismatched, malformed, or incomplete provenance fails closed.
+
+The smoke command is not browser automation and follows no redirects. It scans
+at most 96 first-party `/_next/static/*.js` bundles and never fetches
+third-party script origins. Route HTML retains the 128 KiB response bound.
+Client assets are scanned incrementally with only a 4,096-character overlap
+window and a separate 512 KiB total response ceiling; the harness does not
+accumulate an entire bundle.
 
 ### Stage B - Full Enquiry Launch
 

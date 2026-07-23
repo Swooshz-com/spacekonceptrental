@@ -334,16 +334,26 @@ API call by the smoke harness and no mutating provider call. Route rendering
 may exercise configured read-only Supabase-backed application paths through the
 deployed first-party application. The command derives every static public page
 from `website/app/**/page.*`, including `/categories`, `/events`, `/listings`,
-`/privacy`, and `/terms`. Route groups are removed from URL paths; protected
-admin pages, API routes, and dynamic pages requiring invented parameters are
-classified and not crawled. Unsupported route syntax fails the inventory
-closed. Dynamic-route and page-specific client chunks are covered without
-invented requests by deriving a complete inventory from the deployed
-`.next/static/**/*.js` asset tree. Symlinks and non-JavaScript files are not
-accepted as inventory entries. The command extracts, deduplicates, and scans
-at most 96 same-origin `/_next/static/*.js` client bundles with the same
-leakage rules. Route
-HTML retains its 128 KiB response bound. Each client asset is scanned
+`/privacy`, `/terms`, and the anonymously reachable `/admin/login` page.
+`/admin/login` is fetched as HTML only; the smoke never posts the login form or
+initiates OAuth. Route groups are removed from URL paths; the explicitly
+reviewed protected-admin set, API routes, and dynamic pages requiring invented
+parameters are classified and not crawled. A newly added admin page or other
+unsupported route syntax fails the inventory closed.
+
+`npm run build` emits a secret-safe hosted provenance manifest after the
+Next.js build. It records the exact checkout SHA, Next.js build ID, clean
+tracked-checkout result, and the complete inventory of bounded JavaScript
+assets with SHA-256 digests. Symlinks and non-JavaScript files are rejected or
+excluded during generation. The smoke fetches that manifest from the canonical
+first-party origin, requires exact equality with the independently supplied
+reviewed SHA and deployed build ID, verifies the clean-build flag and inventory
+digest, then fetches and digest-checks every listed asset. Missing, stale,
+mismatched, malformed, or incomplete provenance fails closed. Local
+`website/.next` content is never accepted as deployed-build evidence. The
+command scans at most 96 same-origin `/_next/static/*.js` client bundles with
+the same leakage rules. Route HTML retains its 128 KiB response bound. Each
+client asset is scanned
 incrementally with only a 4,096-character overlap window and a separate
 512 KiB total response ceiling, so current production bundles are covered
 without accumulating an entire bundle. It never fetches third-party script
@@ -351,8 +361,12 @@ origins.
 
 ```powershell
 $env:SKR_PRODUCTION_BASE_URL = 'https://spacekonceptrental.com'
+$env:SKR_PRODUCTION_EXPECTED_SHA = '<exact-requested-and-reviewed-sha>'
+$env:SKR_PRODUCTION_EXPECTED_BUILD_ID = '<exact-build-id-from-accepted-clean-build-output>'
 npm run smoke:production-readonly
 Remove-Item Env:SKR_PRODUCTION_BASE_URL -ErrorAction SilentlyContinue
+Remove-Item Env:SKR_PRODUCTION_EXPECTED_SHA -ErrorAction SilentlyContinue
+Remove-Item Env:SKR_PRODUCTION_EXPECTED_BUILD_ID -ErrorAction SilentlyContinue
 ```
 
 For Stage B only, run these from the deployed checkout or an equivalent
