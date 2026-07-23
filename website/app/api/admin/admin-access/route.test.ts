@@ -49,7 +49,12 @@ describe("POST /api/admin/admin-access", () => {
     vi.unstubAllEnvs();
   });
 
-  function setAdminEnv() {
+  function setAdminEnv(adminMutationsEnabled: string | null = "true") {
+    if (adminMutationsEnabled === null) {
+      delete process.env.ADMIN_MUTATIONS_ENABLED;
+    } else {
+      vi.stubEnv("ADMIN_MUTATIONS_ENABLED", adminMutationsEnabled);
+    }
     vi.stubEnv("ADMIN_EXPECTED_ORIGIN", "https://space.example");
     vi.stubEnv("ADMIN_EXPECTED_HOST", "space.example");
     vi.stubEnv(
@@ -90,6 +95,40 @@ describe("POST /api/admin/admin-access", () => {
       body: JSON.stringify(body)
     });
   }
+
+  it.each([
+    null,
+    "",
+    "false",
+    " false ",
+    " true ",
+    "TRUE",
+    "enabled",
+    "1"
+  ])(
+    "denies %s before provider binding, the deeper gate, or repository mutation",
+    async (value) => {
+      setAdminEnv(value);
+
+      const response = await POST(
+        createRequest({
+          action: "add_admin",
+          email: "admin@example.com"
+        })
+      );
+
+      expect(
+        resolveServerAdminCsrfProofSessionWorkspaceBinding
+      ).not.toHaveBeenCalled();
+      expect(resolveServerAdminRuntimeRouteGateAdapter).not.toHaveBeenCalled();
+      expect(executeAdminAccessMutation).not.toHaveBeenCalled();
+      expect(response.status).toBe(503);
+      await expect(response.json()).resolves.toStrictEqual({
+        ok: false,
+        error: "admin_mutations_disabled"
+      });
+    }
+  );
 
   it("normalizes add-admin email and uses the membership.manage gate", async () => {
     setAdminEnv();

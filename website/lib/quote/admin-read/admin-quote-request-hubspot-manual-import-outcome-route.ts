@@ -10,6 +10,7 @@ import {
   type ServerAdminCsrfProofSessionWorkspaceBindingDependencies,
   type ServerAdminCsrfProofSessionWorkspaceBindingResult
 } from "../../admin/authorization/server-admin-csrf-proof-session-workspace-binding";
+import { resolveServerAdminMutationCapability } from "../../admin/authorization/server-admin-mutation-capability";
 import {
   resolveServerAdminRuntimeRouteGateAdapter,
   type ServerAdminRuntimeRouteGateAdapterResult
@@ -27,6 +28,7 @@ type AdminQuoteRequestHubSpotManualImportOutcomeRouteEnv = {
   ADMIN_EXPECTED_ORIGIN?: string | null;
   ADMIN_EXPECTED_HOST?: string | null;
   ADMIN_TRUSTED_WORKSPACE_ID?: string | null;
+  ADMIN_MUTATIONS_ENABLED?: string | null;
 };
 
 export type AdminQuoteRequestHubSpotManualImportOutcomeRouteDependencies = {
@@ -163,6 +165,22 @@ export async function handleAdminQuoteRequestHubSpotManualImportOutcomeRoute(
 
   if (requestMethod !== "POST") {
     return errorJson("request_method_not_allowed", 405);
+  }
+
+  const mutationCapability = resolveServerAdminMutationCapability(
+    {
+      ADMIN_MUTATIONS_ENABLED:
+        dependencies.env === undefined
+          ? process.env.ADMIN_MUTATIONS_ENABLED
+          : dependencies.env.ADMIN_MUTATIONS_ENABLED
+    }
+  );
+
+  if (!mutationCapability.enabled) {
+    return errorJson(
+      mutationCapability.reason,
+      mutationCapability.statusCode
+    );
   }
 
   const routeEnv = getRouteEnv(dependencies);

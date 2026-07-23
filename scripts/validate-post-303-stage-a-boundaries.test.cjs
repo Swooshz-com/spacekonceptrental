@@ -96,6 +96,59 @@ function reachesMutationCapability(relativePath, visited = new Set()) {
   return false;
 }
 
+function escapeRegex(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function collectInvokedMutationCapabilityFiles(
+  relativePath,
+  visited = new Set(),
+) {
+  if (visited.has(relativePath)) {
+    return new Set();
+  }
+
+  visited.add(relativePath);
+  const source = read(relativePath);
+  const matches = new Set();
+
+  if (/requiresMutationCapability:\s*true/.test(source)) {
+    matches.add(relativePath);
+  }
+
+  for (const match of source.matchAll(
+    /import\s*{([^}]+)}\s*from\s*["']([^"']+)["']/g,
+  )) {
+    const imported = resolveImport(relativePath, match[2]);
+
+    if (!imported || !reachesMutationCapability(imported)) {
+      continue;
+    }
+
+    const invokedImport = match[1]
+      .split(',')
+      .map((entry) => entry.trim())
+      .filter((entry) => entry && !entry.startsWith('type '))
+      .map((entry) => entry.split(/\s+as\s+/).at(-1))
+      .some((localName) =>
+        new RegExp(`\\b${escapeRegex(localName)}\\s*\\(`).test(source),
+      );
+
+    if (!invokedImport) {
+      continue;
+    }
+
+    for (const capabilityFile of collectInvokedMutationCapabilityFiles(
+      imported,
+      visited,
+    )) {
+      matches.add(capabilityFile);
+    }
+  }
+
+  return matches;
+}
+
 const stageACompletionEnv = {
   SUPABASE_URL: 'https://abcdefghijklmnopqrst.supabase.co',
   SUPABASE_ANON_KEY: `sb_publishable_${'a1B2c3D4'.repeat(3)}`,
@@ -137,6 +190,63 @@ test('all current protected admin mutation routes use the fail-closed capability
 
   for (const relativePath of mutationRoutes) {
     assert.equal(reachesMutationCapability(relativePath), true, relativePath);
+  }
+});
+
+test('all protected mutation paths gate capability before provider-backed binding', () => {
+  const postRoutes = listRouteFiles(
+    path.join(repoRoot, 'website', 'app', 'api', 'admin'),
+  ).filter((relativePath) => /export async function POST/.test(read(relativePath)));
+  const mutationRoutes = postRoutes.filter(
+    (relativePath) => !nonMutatingAdminPostRoutes.has(relativePath),
+  );
+  const capabilityFiles = new Set();
+
+  for (const relativePath of mutationRoutes) {
+    const invokedCapabilityFiles = collectInvokedMutationCapabilityFiles(
+      relativePath,
+    );
+
+    assert.ok(
+      invokedCapabilityFiles.size > 0,
+      `${relativePath}: route must invoke a guarded mutation handler`,
+    );
+
+    for (const capabilityFile of invokedCapabilityFiles) {
+      capabilityFiles.add(capabilityFile);
+    }
+  }
+
+  assert.equal(mutationRoutes.length, 18);
+  assert.equal(capabilityFiles.size, 10);
+
+  for (const relativePath of capabilityFiles) {
+    const source = read(relativePath);
+    const earlyCapabilityIndex = source.indexOf(
+      'const mutationCapability = resolveServerAdminMutationCapability(',
+    );
+    const providerBindingIndexes = [
+      source.indexOf('binding = await resolveSessionWorkspaceBinding('),
+      source.indexOf(
+        'binding = await resolveServerAdminCsrfProofSessionWorkspaceBinding(',
+      ),
+    ].filter((index) => index >= 0);
+    const providerBindingIndex = Math.min(...providerBindingIndexes);
+
+    assert.notEqual(earlyCapabilityIndex, -1, relativePath);
+    assert.notEqual(providerBindingIndex, Infinity, relativePath);
+    assert.ok(
+      earlyCapabilityIndex < providerBindingIndex,
+      `${relativePath}: capability must be evaluated before provider binding`,
+    );
+
+    const earlyBoundary = source.slice(
+      earlyCapabilityIndex,
+      providerBindingIndex,
+    );
+    assert.match(earlyBoundary, /if \(!mutationCapability\.enabled\)/);
+    assert.match(earlyBoundary, /mutationCapability\.reason/);
+    assert.match(earlyBoundary, /mutationCapability\.statusCode/);
   }
 });
 
@@ -237,6 +347,63 @@ test('Stage A completion rejects malformed provider, workspace, and CSRF configu
 
     assert.ok(issues.includes(`stage_a_runtime_env_invalid:${name}`), name);
   }
+});
+
+test('Stage A accepts only a canonical Supabase project-root URL', () => {
+  for (const value of [
+    'https://abcdefghijklmnopqrst.supabase.co',
+    'https://abcdefghijklmnopqrst.supabase.co/',
+  ]) {
+    const issues = validateStageARepositoryReadiness({
+      env: { ...stageACompletionEnv, SUPABASE_URL: value },
+      providerAdmissionEvidence,
+      nowMs: evidenceNowMs,
+    });
+
+    assert.deepEqual(issues, [], value);
+  }
+
+  for (const value of [
+    'https://abcdefghijklmnopqrst.supabase.co/not-a-project-root',
+    'https://abcdefghijklmnopqrst.supabase.co/rest/v1',
+    'https://abcdefghijklmnopqrst.supabase.co/%2e%2e/rest',
+    'https://abcdefghijklmnopqrst.supabase.co/%2frest',
+    'https://abcdefghijklmnopqrst.supabase.co/./',
+    'https://abcdefghijklmnopqrst.supabase.co/%2e/',
+    'https://abcdefghijklmnopqrst.supabase.co//',
+    'https://abcdefghijklmnopqrst.supabase.co\\rest\\v1',
+    'https://abcdefghijklmnopqrst.supabase.co?x=1',
+    'https://abcdefghijklmnopqrst.supabase.co#fragment',
+    'https://user@abcdefghijklmnopqrst.supabase.co',
+    'https://abcdefghijklmnopqrst.supabase.co:443',
+    'https://abcdefghijklmnopqrst.supabase.co:8443',
+  ]) {
+    const issues = validateStageARepositoryReadiness({
+      env: { ...stageACompletionEnv, SUPABASE_URL: value },
+      providerAdmissionEvidence,
+      nowMs: evidenceNowMs,
+    });
+
+    assert.ok(
+      issues.includes('stage_a_runtime_env_invalid:SUPABASE_URL'),
+      value,
+    );
+  }
+});
+
+test('Stage A completion cannot pass with a non-root Supabase URL', () => {
+  const issues = validateStageARepositoryReadiness({
+    env: {
+      ...stageACompletionEnv,
+      SUPABASE_URL:
+        'https://abcdefghijklmnopqrst.supabase.co/not-a-project-root',
+    },
+    providerAdmissionEvidence,
+    nowMs: evidenceNowMs,
+  });
+
+  assert.notDeepEqual(issues, []);
+  assert.ok(issues.includes('stage_a_runtime_env_invalid:SUPABASE_URL'));
 });
 
 test('Stage A accepts a legacy anon JWT but rejects a service-role JWT as SUPABASE_ANON_KEY', () => {
@@ -355,5 +522,24 @@ test('admin mutation capability remains server-only', () => {
   assert.doesNotMatch(
     read('website/lib/admin/authorization/server-admin-mutation-capability.ts'),
     /NEXT_PUBLIC_/,
+  );
+});
+
+test('canonical contracts require the early access boundary and Supabase project root', () => {
+  const combined = [
+    'docs/HOSTED-DEPLOYMENT-EXECUTION-RUNBOOK.md',
+    'docs/DEPLOYMENT-ENVIRONMENT-READINESS.md',
+    'docs/PRODUCTION-SECURITY-READINESS-GATE.md',
+    'docs/templates/DEPLOYMENT-EVIDENCE.md',
+  ]
+    .map(read)
+    .join('\n');
+
+  assert.match(combined, /project origin root/i);
+  assert.match(combined, /non-root paths?/i);
+  assert.match(combined, /explicit ports?/i);
+  assert.match(
+    combined,
+    /before (?:any )?session, identity, workspace, profile,\s*membership, repository, audit, database/i,
   );
 });

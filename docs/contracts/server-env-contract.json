@@ -218,7 +218,7 @@
       "requiredFor": "Server-side Supabase reads and approved writes",
       "browserAllowed": false,
       "status": "future-deployment-required",
-      "notes": "Read only by website server-side Supabase helpers."
+      "notes": "Read only by website server-side Supabase helpers. Stage A accepts only the canonical HTTPS project origin root with no credentials, explicit port, non-root path, query, or fragment."
     },
     {
       "name": "SUPABASE_ANON_KEY",

@@ -119,7 +119,7 @@ The table below is the full Stage B launch set enforced by
 
 | Env name | Purpose | Launch requirement |
 | --- | --- | --- |
-| `SUPABASE_URL` | Server-side Supabase project URL for approved server access. | Must exist and be HTTPS. |
+| `SUPABASE_URL` | Server-side Supabase project origin root for approved server access. | Stage A requires HTTPS, a 20-character project-ref subdomain, and either no path or only the trailing root slash; credentials, explicit ports, non-root paths, queries, and fragments are invalid. |
 | `SUPABASE_ANON_KEY` | Server-side public/anon key used with RLS through first-party routes. | Must exist. |
 | `CATALOGUE_WORKSPACE_ID` | Server-owned public catalogue workspace gate; must match `catalogue_public_workspace_config`. | Must exist. |
 | `QUOTE_WORKSPACE_ID` | Server-owned quote/enquiry persistence workspace gate; must independently match `quote_public_workspace_config`. | Must exist. |
@@ -128,7 +128,7 @@ The table below is the full Stage B launch set enforced by
 | `ADMIN_EXPECTED_ORIGIN` | Trusted protected admin same-origin value. | Must exist and be an HTTPS origin. |
 | `ADMIN_EXPECTED_HOST` | Trusted protected admin host value. | Must exist and be a host or HTTPS URL. |
 | `ADMIN_CSRF_PROOF_SECRET` | Server-only CSRF proof signing secret. | Must exist, be at least 32 characters, and not be a weak placeholder shape. |
-| `ADMIN_MUTATIONS_ENABLED` | Fail-closed server-only admin-write capability. | Only exact lowercase `true` enables writes; Stage A requires explicit `false`. |
+| `ADMIN_MUTATIONS_ENABLED` | Fail-closed server-only admin-write capability. | Only exact lowercase, unpadded `true` permits continuation into the cumulative controls. Every other state denies before session, identity, workspace, profile, membership, repository, audit, database, or provider access; Stage A requires explicit `false`. |
 | `N8N_ENQUIRY_HANDOFF_WEBHOOK_URL` | Server-only n8n endpoint for quote/enquiry handoff after SKR persistence succeeds. | Must exist and be HTTPS. |
 | `N8N_ENQUIRY_HANDOFF_SHARED_SECRET` | Server-only HMAC signing secret shared with the reviewed n8n workflow. | Must exist, be high-entropy, and not be a weak placeholder shape. |
 | `N8N_ENQUIRY_HANDOFF_TIMEOUT_MS` | Optional timeout for the n8n handoff request. | Optional; when set, must be positive and no more than 30000ms. |

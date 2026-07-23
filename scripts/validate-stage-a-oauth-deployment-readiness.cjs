@@ -97,6 +97,7 @@ function hasConfiguredValue(env, name) {
 function isSafeHttpsUrl(value) {
   try {
     const parsed = new URL(value);
+    const canonicalOrigin = `https://${parsed.hostname}`;
 
     return (
       parsed.protocol === 'https:' &&
@@ -105,7 +106,9 @@ function isSafeHttpsUrl(value) {
       !parsed.password &&
       !parsed.port &&
       !parsed.search &&
-      !parsed.hash
+      !parsed.hash &&
+      parsed.pathname === '/' &&
+      (value === canonicalOrigin || value === `${canonicalOrigin}/`)
     );
   } catch {
     return false;

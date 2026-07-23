@@ -154,7 +154,7 @@ the full launch set enforced by the existing launch validator.
 
 | Env name | Purpose |
 | --- | --- |
-| `SUPABASE_URL` | Hosted Supabase project URL used by server-side app paths. |
+| `SUPABASE_URL` | Hosted Supabase project origin root used by server-side app paths. Stage A accepts only the canonical HTTPS project origin with a 20-character project-ref subdomain and optional trailing root slash; credentials, explicit ports, non-root paths, queries, and fragments are invalid. |
 | `SUPABASE_ANON_KEY` | Server-side anon/public key used with RLS through first-party app paths. |
 | `CATALOGUE_WORKSPACE_ID` | Workspace gate for public catalogue/setup reads. |
 | `QUOTE_WORKSPACE_ID` | Workspace gate for quote/enquiry persistence. |
@@ -163,7 +163,7 @@ the full launch set enforced by the existing launch validator.
 | `ADMIN_EXPECTED_ORIGIN` | Canonical HTTPS authority for protected admin same-origin checks and every admin-auth redirect. |
 | `ADMIN_EXPECTED_HOST` | Expected protected admin host. |
 | `ADMIN_CSRF_PROOF_SECRET` | Server-only secret for admin CSRF proof material. |
-| `ADMIN_MUTATIONS_ENABLED` | Fail-closed server-only admin-write capability. Only exact lowercase `true` enables writes; Stage A requires explicit `false`. |
+| `ADMIN_MUTATIONS_ENABLED` | Fail-closed server-only admin-write capability. Only exact lowercase, unpadded `true` permits the request to continue into existing controls; every other state denies before session, identity, workspace, profile, membership, repository, audit, database, or other provider access. Stage A requires explicit `false`. |
 | `N8N_ENQUIRY_HANDOFF_WEBHOOK_URL` | Server-only n8n endpoint for quote/enquiry handoff after SKR persistence. |
 | `N8N_ENQUIRY_HANDOFF_SHARED_SECRET` | Server-only HMAC signing secret shared with the reviewed n8n workflow. |
 | `N8N_ENQUIRY_HANDOFF_TIMEOUT_MS` | Optional bounded timeout for the n8n handoff request. |

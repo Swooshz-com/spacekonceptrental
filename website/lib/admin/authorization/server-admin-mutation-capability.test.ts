@@ -1,5 +1,6 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
+import { resolveServerAdminMutationCapability } from "./server-admin-mutation-capability";
 import { resolveServerAdminRuntimeRouteGateAdapter } from "./server-admin-runtime-route-gate-adapter";
 
 const requestMetadata = {
@@ -8,6 +9,79 @@ const requestMetadata = {
 };
 
 describe("server admin mutation capability", () => {
+  it.each([
+    undefined,
+    "",
+    "false",
+    " false ",
+    " true ",
+    "TRUE",
+    "enabled",
+    "1",
+    "true\n"
+  ])(
+    "prevents every provider and repository boundary when the raw value is %s",
+    (value) => {
+      const providerBoundaries = {
+        createIdentityClient: vi.fn(),
+        resolveSession: vi.fn(),
+        resolveWorkspace: vi.fn(),
+        resolveProfile: vi.fn(),
+        resolveMembership: vi.fn()
+      };
+      const repositoryMutation = vi.fn();
+      const auditPersistence = vi.fn();
+      const capability = resolveServerAdminMutationCapability({
+        ADMIN_MUTATIONS_ENABLED: value
+      });
+
+      if (capability.enabled) {
+        providerBoundaries.createIdentityClient();
+        providerBoundaries.resolveSession();
+        providerBoundaries.resolveWorkspace();
+        providerBoundaries.resolveProfile();
+        providerBoundaries.resolveMembership();
+        repositoryMutation();
+        auditPersistence();
+      }
+
+      for (const boundary of Object.values(providerBoundaries)) {
+        expect(boundary).not.toHaveBeenCalled();
+      }
+      expect(repositoryMutation).not.toHaveBeenCalled();
+      expect(auditPersistence).not.toHaveBeenCalled();
+      expect(capability).toEqual({
+        enabled: false,
+        reason: "admin_mutations_disabled",
+        statusCode: 503
+      });
+    }
+  );
+
+  it("allows exact true to continue into every cumulative provider boundary", () => {
+    const providerBoundaries = [
+      vi.fn(),
+      vi.fn(),
+      vi.fn(),
+      vi.fn(),
+      vi.fn()
+    ];
+    const capability = resolveServerAdminMutationCapability({
+      ADMIN_MUTATIONS_ENABLED: "true"
+    });
+
+    if (capability.enabled) {
+      for (const boundary of providerBoundaries) {
+        boundary();
+      }
+    }
+
+    expect(capability).toEqual({ enabled: true });
+    for (const boundary of providerBoundaries) {
+      expect(boundary).toHaveBeenCalledOnce();
+    }
+  });
+
   it.each([
     undefined,
     "",

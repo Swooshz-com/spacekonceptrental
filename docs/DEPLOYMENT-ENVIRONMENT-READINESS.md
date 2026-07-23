@@ -179,8 +179,10 @@ email/internal handoff -> Delivery Log verification is
 
 These values are server-only even when the Supabase anon key is used:
 
-- `SUPABASE_URL`: server-side Supabase project endpoint used only by server
-  helpers.
+- `SUPABASE_URL`: canonical server-side Supabase project origin root used only
+  by server helpers. Stage A requires HTTPS, a 20-character project-ref
+  subdomain, and either no path or only the trailing root slash; credentials,
+  explicit ports, non-root paths, queries, and fragments fail.
 - `SUPABASE_ANON_KEY`: server-side anon key used with RLS through first-party
   server routes, repositories, and session-bound server clients.
 - `CATALOGUE_WORKSPACE_ID`: trusted server-side workspace gate for DB-backed
@@ -255,8 +257,9 @@ Every protected admin mutation also requires the server-only
 `ADMIN_MUTATIONS_ENABLED` capability. Stage A requires the capability to be
 disabled while login, callback, logout, session reads, and protected admin-page
 reads remain functional. Missing, blank, whitespace-padded, malformed, and
-false values fail closed before repository or provider mutation. Exact
-unpadded lowercase `true` is a
+false values fail closed before any session, identity, workspace, profile,
+membership, repository, audit, database, or provider access. Exact unpadded
+lowercase `true` is a
 later separately reviewed activation and does not replace authentication,
 workspace, role, CSRF, Origin/Referer, or validation controls.
 
@@ -312,9 +315,10 @@ Service-role key prohibition in runtime paths remains active. never put service-
 - Admin: protected admin paths fail closed or render generic unavailable states
   when admin auth, workspace, request-security, CSRF, Supabase, or RLS
   dependencies are missing.
-- Admin mutations: deny with a stable privacy-safe result before repository or
-  provider mutation unless `ADMIN_MUTATIONS_ENABLED` is exact lowercase
-  `true`.
+- Admin mutations: deny with a stable privacy-safe result before session,
+  identity, workspace, profile, membership, repository, audit, database, or
+  other provider access unless `ADMIN_MUTATIONS_ENABLED` is exact lowercase,
+  unpadded `true`.
 
 ## Required pre-deployment review
 

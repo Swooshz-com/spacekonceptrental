@@ -198,6 +198,7 @@ Owner OAuth UAT must not start while provider signup admission is
 Record presence/validity results by name only. Never include a value.
 
 - Public catalogue configuration: `<PASS-or-FAIL-by-env-name>`
+- Supabase project origin-root validation (name/result only; no value): `<PASS-or-FAIL>`
 - Quote persistence/admission configuration: `<PASS-or-FAIL-or-stage-A-not-required>`
 - Admin authentication/workspace configuration: `<PASS-or-FAIL-by-env-name>`
 - Admin CSRF protection configuration: `<PASS-or-FAIL-by-env-name>`
