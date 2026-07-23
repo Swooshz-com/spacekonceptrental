@@ -88,8 +88,9 @@ helpers:
 - `ADMIN_CSRF_PROOF_SECRET`: server-only proof signing secret for admin CSRF
   proof material.
 - `ADMIN_MUTATIONS_ENABLED`: fail-closed server-only admin-write capability.
-  Only exact lowercase `true` enables writes. Stage A requires explicit
-  `false`; missing, blank, malformed, or false values deny mutation routes.
+  Only the exact unpadded lowercase value `true` enables writes. Stage A
+  requires exact unpadded `false`; missing, blank, whitespace-padded,
+  malformed, or false values deny mutation routes.
 
 Trusted client IP header values must name only headers overwritten by the
 deployment proxy or CDN. In-process quote and chat throttling remains
@@ -253,8 +254,9 @@ blocked.
 Every protected admin mutation also requires the server-only
 `ADMIN_MUTATIONS_ENABLED` capability. Stage A requires the capability to be
 disabled while login, callback, logout, session reads, and protected admin-page
-reads remain functional. Missing, blank, malformed, and false values fail
-closed before repository or provider mutation. Exact lowercase `true` is a
+reads remain functional. Missing, blank, whitespace-padded, malformed, and
+false values fail closed before repository or provider mutation. Exact
+unpadded lowercase `true` is a
 later separately reviewed activation and does not replace authentication,
 workspace, role, CSRF, Origin/Referer, or validation controls.
 

@@ -16,7 +16,7 @@ export function resolveServerAdminMutationCapability(
   env: ServerAdminMutationCapabilityEnv =
     process.env as ServerAdminMutationCapabilityEnv
 ): ServerAdminMutationCapabilityResult {
-  if (env.ADMIN_MUTATIONS_ENABLED?.trim() === "true") {
+  if (env.ADMIN_MUTATIONS_ENABLED === "true") {
     return { enabled: true };
   }
 

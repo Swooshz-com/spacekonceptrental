@@ -57,7 +57,7 @@ This runbook covers:
 
 Stage A is read-only apart from the separately approved exact-SHA deployment
 and real-owner Google OAuth UAT. Protected admin mutations are technically
-disabled by server-only `ADMIN_MUTATIONS_ENABLED` in its explicit disabled
+disabled by server-only `ADMIN_MUTATIONS_ENABLED` in its exact, unpadded explicit disabled
 state; authentication,
 session, and protected admin read paths remain available. Quote submission
 remains disabled and n8n remains inactive. Google OAuth owner UAT status is `PASS | HOLD - NOT RUN |
@@ -78,7 +78,8 @@ smoke evidence is:
 - anonymous `/admin` is denied or redirected only to `/admin/login`;
 - `www` redirects canonically to the apex;
 - no redirect exposes localhost or internal proxy authority;
-- no obvious provider, SQL, stack, secret, or environment leakage appears; and
+- no obvious provider, SQL, stack, secret, or environment leakage appears in
+  route HTML or referenced first-party client bundles; and
 - no customer quote is submitted, no OAuth is initiated by automated smoke,
   and no n8n call is made;
 - there is no direct provider API call by the smoke harness and no mutating
@@ -88,7 +89,10 @@ smoke evidence is:
 
 Use `npm run smoke:production-readonly` and provide the canonical production
 apex through `SKR_PRODUCTION_BASE_URL` using a secret-safe operator shell. The
-smoke command is not browser automation and follows no redirects.
+smoke command is not browser automation and follows no redirects. It extracts
+only same-origin `/_next/static/*.js` script references, scans at most 32
+deduplicated bundles with the existing 128 KiB response bound, and never
+fetches third-party script origins.
 
 ### Stage B - Full Enquiry Launch
 

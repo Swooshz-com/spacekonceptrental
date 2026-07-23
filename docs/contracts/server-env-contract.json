@@ -40,6 +40,10 @@
           "requiredStatus": "PASS",
           "holdStatus": "HOLD - NOT VERIFIED",
           "repositoryTestsCanSatisfy": false,
+          "allowedMechanisms": [
+            "new-user-signup-disabled",
+            "before-user-created-admission-hook"
+          ],
           "requiredFields": [
             "admissionMechanism",
             "verificationStatus",

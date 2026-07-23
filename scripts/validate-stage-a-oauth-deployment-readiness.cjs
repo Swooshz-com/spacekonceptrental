@@ -72,6 +72,69 @@ const REQUIRED_PROVIDER_ADMISSION_FIELDS = [
   'noPublicSignupResult',
 ];
 
+const ALLOWED_PROVIDER_ADMISSION_MECHANISMS = [
+  'new-user-signup-disabled',
+  'before-user-created-admission-hook',
+];
+
+function hasConfiguredValue(env, name) {
+  return typeof env[name] === 'string' && env[name].trim().length > 0;
+}
+
+function isSafeHttpsUrl(value) {
+  try {
+    const parsed = new URL(value);
+
+    return (
+      parsed.protocol === 'https:' &&
+      Boolean(parsed.hostname) &&
+      !parsed.username &&
+      !parsed.password &&
+      !parsed.port &&
+      !parsed.search &&
+      !parsed.hash
+    );
+  } catch {
+    return false;
+  }
+}
+
+function validateStageARuntimeEnv(issues, env) {
+  for (const name of REQUIRED_STAGE_A_ENV) {
+    if (!hasConfiguredValue(env, name)) {
+      issues.push(`stage_a_runtime_env_missing:${name}`);
+    }
+  }
+
+  if (
+    hasConfiguredValue(env, 'SUPABASE_URL') &&
+    !isSafeHttpsUrl(env.SUPABASE_URL)
+  ) {
+    issues.push('stage_a_runtime_env_invalid:SUPABASE_URL');
+  }
+
+  if (
+    hasConfiguredValue(env, 'ADMIN_EXPECTED_ORIGIN') &&
+    env.ADMIN_EXPECTED_ORIGIN !== 'https://spacekonceptrental.com'
+  ) {
+    issues.push('stage_a_runtime_env_invalid:ADMIN_EXPECTED_ORIGIN');
+  }
+
+  if (
+    hasConfiguredValue(env, 'ADMIN_EXPECTED_HOST') &&
+    env.ADMIN_EXPECTED_HOST !== 'spacekonceptrental.com'
+  ) {
+    issues.push('stage_a_runtime_env_invalid:ADMIN_EXPECTED_HOST');
+  }
+
+  if (
+    hasConfiguredValue(env, 'ADMIN_CSRF_PROOF_SECRET') &&
+    env.ADMIN_CSRF_PROOF_SECRET.length < 32
+  ) {
+    issues.push('stage_a_runtime_env_invalid:ADMIN_CSRF_PROOF_SECRET');
+  }
+}
+
 function validateExactSet(issues, label, actualValues, expectedValues) {
   const actual = new Set(actualValues ?? []);
   const expected = new Set(expectedValues);
@@ -94,6 +157,7 @@ function validateStageARepositoryReadiness({
   env = process.env,
   providerAdmissionEvidence,
   repositoryOnly = false,
+  nowMs = Date.now(),
 } = {}) {
   const issues = [];
   const contract = contractOverride ?? readJson(contractPath);
@@ -141,9 +205,16 @@ function validateStageARepositoryReadiness({
     providerContract?.requiredFields,
     REQUIRED_PROVIDER_ADMISSION_FIELDS,
   );
+  validateExactSet(
+    issues,
+    'stage_a_provider_admission_mechanism',
+    providerContract?.allowedMechanisms,
+    ALLOWED_PROVIDER_ADMISSION_MECHANISMS,
+  );
 
   if (!repositoryOnly) {
-    const adminMutationState = env.ADMIN_MUTATIONS_ENABLED?.trim();
+    validateStageARuntimeEnv(issues, env);
+    const adminMutationState = env.ADMIN_MUTATIONS_ENABLED;
 
     if (adminMutationState === 'true') {
       issues.push('stage_a_admin_mutations_not_disabled');
@@ -154,14 +225,20 @@ function validateStageARepositoryReadiness({
 
   if (!repositoryOnly) {
     const evidence = providerAdmissionEvidence;
+    const verifiedAtMs =
+      typeof evidence?.verifiedAt === 'string'
+        ? Date.parse(evidence.verifiedAt)
+        : Number.NaN;
     const evidenceComplete =
       evidence?.verificationStatus === 'PASS' &&
       evidence?.existingOwnerReadiness === 'PASS' &&
       evidence?.noPublicSignupResult === 'PASS' &&
-      typeof evidence?.admissionMechanism === 'string' &&
-      evidence.admissionMechanism.trim().length > 0 &&
-      typeof evidence?.verifiedAt === 'string' &&
-      !Number.isNaN(Date.parse(evidence.verifiedAt)) &&
+      ALLOWED_PROVIDER_ADMISSION_MECHANISMS.includes(
+        evidence?.admissionMechanism,
+      ) &&
+      Number.isFinite(verifiedAtMs) &&
+      Number.isFinite(nowMs) &&
+      verifiedAtMs <= nowMs &&
       typeof evidence?.operatorApprovalReference === 'string' &&
       evidence.operatorApprovalReference.trim().length > 0;
 

@@ -8,7 +8,16 @@ const requestMetadata = {
 };
 
 describe("server admin mutation capability", () => {
-  it.each([undefined, "", "false", "TRUE", "enabled", "1"])(
+  it.each([
+    undefined,
+    "",
+    "false",
+    "TRUE",
+    "enabled",
+    "1",
+    " true ",
+    "true\n"
+  ])(
     "fails closed before the protected mutation invocation when the value is %s",
     async (value) => {
       let invocationReached = false;

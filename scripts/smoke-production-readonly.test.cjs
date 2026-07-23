@@ -303,6 +303,58 @@ test('www redirect response bodies receive the same bounded leakage scan', async
   );
 });
 
+test('referenced first-party client bundles receive the same bounded leakage scan', async () => {
+  const leaked = syntheticModernKey('secret');
+  const assetUrl = `${apex}/_next/static/chunks/app-synthetic.js`;
+  const mock = createMockFetch({
+    [`${apex}/`]: response(
+      200,
+      '<!doctype html><script src="/_next/static/chunks/app-synthetic.js"></script>',
+    ),
+    [assetUrl]: response(200, `globalThis.__config = '${leaked}';`),
+  });
+
+  let error;
+  try {
+    await runProductionReadOnlySmoke({ rawBaseUrl: apex, fetchImpl: mock.fetch });
+  } catch (caught) {
+    error = caught;
+  }
+
+  assert.match(error?.code ?? '', /public_response_leakage_supabase_key_material/);
+  assert.ok(mock.calls.some((call) => call.url === assetUrl));
+  assert.doesNotMatch(JSON.stringify(safeFailureResult(error)), new RegExp(leaked));
+  assert.ok(mock.calls.every((call) => call.options.method === 'GET'));
+});
+
+test('client bundle scanning is canonical, deduplicated, and does not fetch third-party scripts', async () => {
+  const assetUrl = `${apex}/_next/static/chunks/shared-synthetic.js`;
+  const html = [
+    '<script src="/_next/static/chunks/shared-synthetic.js"></script>',
+    '<script src="https://cdn.example.invalid/third-party.js"></script>',
+  ].join('');
+  const mock = createMockFetch({
+    [`${apex}/`]: response(200, html),
+    [`${apex}/about`]: response(200, html),
+    [assetUrl]: response(200, 'safe bundled application code'),
+  });
+
+  const result = await runProductionReadOnlySmoke({
+    rawBaseUrl: apex,
+    fetchImpl: mock.fetch,
+  });
+
+  assert.equal(result.clientAssetsScanned, 1);
+  assert.equal(
+    mock.calls.filter((call) => call.url === assetUrl).length,
+    1,
+  );
+  assert.equal(
+    mock.calls.some((call) => call.url.includes('cdn.example.invalid')),
+    false,
+  );
+});
+
 test('failure output is machine-readable and never includes the supplied URL', () => {
   const supplied = 'https://user:password@spacekonceptrental.com';
   let error;

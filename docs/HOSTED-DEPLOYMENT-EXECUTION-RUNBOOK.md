@@ -63,7 +63,7 @@ Google OAuth owner UAT:
 - keep every n8n workflow inactive and require no n8n configuration;
 - keep protected admin mutations technically disabled with server-only
   `ADMIN_MUTATIONS_ENABLED` set to the explicit disabled state; missing,
-  blank, malformed, and false values
+  blank, whitespace-padded, malformed, and false values
   fail closed;
 - independently verify, before owner OAuth UAT, that the hosted Supabase Auth
   project prevents public user creation while the approved existing owner can
@@ -84,9 +84,15 @@ Record provider signup admission as `PASS | HOLD - NOT VERIFIED | FAIL`.
 mechanism is either disabled new-user signup with the pre-provisioned owner
 remaining usable, or an equivalently reviewed before-user-created /
 pre-user-creation admission hook that admits only approved owner/admin
-identities before account creation. A denial after the application callback
-does not prove that user creation was prevented. Repository tests cannot prove
-live provider admission state.
+  identities before account creation. A denial after the application callback
+  does not prove that user creation was prevented. Repository tests cannot prove
+  live provider admission state.
+
+The secret-safe evidence JSON uses only the exact mechanism identifiers
+`new-user-signup-disabled` or `before-user-created-admission-hook`. Its
+verification timestamp must parse successfully and must not be later than the
+validator's current time. Free-form mechanism labels, callback membership
+denial, and future-dated evidence do not satisfy this gate.
 
 ### Stage B - Full Enquiry Launch
 
@@ -235,7 +241,7 @@ infer their completion from repository tests or builds.
   server runtime and
   record only an equality/status result, never the value source or surrounding
   environment.
-- Missing, blank, malformed, or false values deny every protected admin write
+- Missing, blank, whitespace-padded, malformed, or false values deny every protected admin write
   before repository or provider mutation with a stable privacy-safe response.
 - Login, callback, logout, session reads, protected admin-page reads, and owner
   OAuth UAT remain available while mutations are disabled.
@@ -292,9 +298,12 @@ provider-admission evidence JSON file stored outside the repository:
 npm run validate:stage-a-oauth-deployment-readiness -- --provider-admission-evidence <temporary-secret-safe-evidence-path>
 ~~~
 
-The completion validator must remain on hold when the evidence file is absent,
-invalid, or not PASS, or when the admin-mutation state is enabled or cannot be
-proven disabled.
+The completion validator checks every declared Stage A runtime env name and
+safe shape without printing values. It must remain on hold when a required
+Supabase, catalogue, admin workspace, canonical origin/host, CSRF, or mutation
+capability setting is absent/invalid; when the evidence file is absent,
+invalid, future-dated, or not `PASS`; or when the admin-mutation state is not
+the exact unpadded value `false`.
 
 After a separately approved Stage A deployment, provide the canonical base only
 through the dedicated input and run the read-only smoke. The command performs
@@ -302,7 +311,10 @@ manual-redirect GET requests only; it does not authenticate, initiate OAuth,
 submit a quote, call n8n, or mutate external state. There is no direct provider
 API call by the smoke harness and no mutating provider call. Route rendering
 may exercise configured read-only Supabase-backed application paths through the
-deployed first-party application.
+deployed first-party application. The command also extracts, deduplicates, and
+scans at most 32 referenced same-origin `/_next/static/*.js` bundles, with the
+same 128 KiB per-response bound and leakage rules. It never fetches
+third-party script origins.
 
 ```powershell
 $env:SKR_PRODUCTION_BASE_URL = 'https://spacekonceptrental.com'

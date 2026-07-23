@@ -55,6 +55,11 @@ provider state. A later authorised operator must use the strongest suitable
 official Supabase interface or API without exposing secrets, private emails,
 project references, provider values, or credentials.
 
+The evidence mechanism must be exactly `new-user-signup-disabled` or
+`before-user-created-admission-hook`; free-form alternatives are invalid. The
+verification timestamp must be valid and not later than the validator's
+current time.
+
 ## Source Boundaries
 
 - Login page: `website/app/admin/login/page.tsx`

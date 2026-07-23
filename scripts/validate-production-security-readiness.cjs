@@ -102,6 +102,27 @@ const obviousSecretPatterns = [
   },
 ];
 
+const compactJwtPattern =
+  /\beyJ[A-Za-z0-9_-]{8,512}\.[A-Za-z0-9_-]{8,2048}\.[A-Za-z0-9_-]{20,512}\b/g;
+
+function containsLegacySupabaseServiceRoleJwt(source) {
+  for (const match of source.matchAll(compactJwtPattern)) {
+    try {
+      const payload = JSON.parse(
+        Buffer.from(match[0].split('.')[1], 'base64url').toString('utf8'),
+      );
+
+      if (payload?.role === 'service_role') {
+        return true;
+      }
+    } catch {
+      // Non-JSON compact tokens are not classified as Supabase credentials.
+    }
+  }
+
+  return false;
+}
+
 function parseArgs(argv) {
   const args = {
     scanRoot: process.cwd(),
@@ -151,6 +172,12 @@ function readEnv(env, name) {
   const value = env[name]?.trim();
 
   return value || null;
+}
+
+function readRawEnv(env, name) {
+  const value = env[name];
+
+  return typeof value === 'string' && value.length > 0 ? value : null;
 }
 
 function addIssue(issues, name, summary) {
@@ -437,7 +464,7 @@ function validateEnvContract(env) {
     addIssue(issues, 'ADMIN_CSRF_PROOF_SECRET', csrfSecret.summary);
   }
 
-  const adminMutationsEnabled = readEnv(env, 'ADMIN_MUTATIONS_ENABLED');
+  const adminMutationsEnabled = readRawEnv(env, 'ADMIN_MUTATIONS_ENABLED');
 
   if (
     adminMutationsEnabled &&
@@ -672,6 +699,14 @@ function scanStaticSecurity(scanRoot, trackedFiles) {
     }
 
     if (!isAllowedEnvReferenceFile(displayPath)) {
+      if (containsLegacySupabaseServiceRoleJwt(source)) {
+        addIssue(
+          issues,
+          displayPath,
+          'Supabase legacy service-role JWT pattern',
+        );
+      }
+
       for (const secretPattern of obviousSecretPatterns) {
         if (secretPattern.pattern.test(source)) {
           addIssue(issues, displayPath, secretPattern.label);

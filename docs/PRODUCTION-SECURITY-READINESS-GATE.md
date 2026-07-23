@@ -92,7 +92,7 @@ server-side env has been configured there.
 | Mode | How to run | Missing/invalid launch env |
 | --- | --- | --- |
 | Stage A repository-safe | `npm run validate:stage-a-oauth-readiness` | Requires no provider env, quote configuration, active n8n configuration, or live catalog; does not satisfy provider admission evidence. |
-| Stage A completion | `npm run validate:stage-a-oauth-deployment-readiness -- --provider-admission-evidence <temporary-secret-safe-evidence-path>` | Requires explicit disabled admin-mutation state and direct provider-admission `PASS` evidence; holds when either cannot be proven. |
+| Stage A completion | `npm run validate:stage-a-oauth-deployment-readiness -- --provider-admission-evidence <temporary-secret-safe-evidence-path>` | Validates every Stage A runtime env name/safe shape, exact unpadded disabled admin-mutation state, and direct provider-admission `PASS` evidence; holds when any cannot be proven. |
 | Stage B local/dev | No mode env, or mode set to local | Reports missing full-launch env and missing live catalog as warnings; exits success if static checks pass. |
 | Stage B launch | `npm run validate:production-security-readiness -- --launch --public-security-definer-catalog $catalogPath` | Enforces full env, static checks, complete live function catalog, and exact reviewed privilege contracts. |
 
@@ -182,6 +182,8 @@ The command also checks tracked files for narrow launch blockers:
   client/public runtime files
 - any public/client exposure of `ADMIN_MUTATIONS_ENABLED`
 - obvious committed secret token patterns
+- legacy compact JWTs whose decoded payload identifies the
+  `service_role` role, without printing the token
 - Delivery Log documentation that stops describing technical metadata only
 
 The launch command also validates the full read-only live public `SECURITY
@@ -288,7 +290,10 @@ callback does not prove user creation prevention, and repository tests cannot
 prove provider state. A future authorised verification must use the strongest
 suitable official Supabase interface or API, record only a timestamp,
 mechanism class, operator/approval reference, existing-owner readiness, and
-no-public-signup result, and expose no secrets or private/provider identifiers.
+  no-public-signup result, and expose no secrets or private/provider identifiers.
+Evidence must use exact admission mechanism `new-user-signup-disabled` or
+`before-user-created-admission-hook`, and its parsed verification timestamp
+must not be in the future.
 
 Do not weaken the Stage B launch validator to clear Stage A. Stage A does not
 authorise public enquiry launch.

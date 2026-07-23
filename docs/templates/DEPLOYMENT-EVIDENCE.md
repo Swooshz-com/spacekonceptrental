@@ -60,10 +60,10 @@ private dashboard links, workspace/admin identifiers, or customer data.
 
 ## Provider signup admission confirmation - Stage A
 
-- Admission mechanism (`new-user signup disabled` or reviewed
-  `before-user-created/pre-user-creation admission hook`): `<mechanism-class>`
+- Admission mechanism (`new-user-signup-disabled` or
+  `before-user-created-admission-hook`): `<exact-mechanism-identifier>`
 - Verification status (`PASS | HOLD - NOT VERIFIED | FAIL`): `<status>`
-- Verified at: `<ISO-8601-timestamp-or-not-verified>`
+- Verified at: `<ISO-8601-non-future-timestamp-or-not-verified>`
 - Operator and approval reference: `<reviewed-non-secret-reference>`
 - Existing-owner readiness: `<PASS-FAIL-or-HOLD>`
 - No-public-signup result: `<PASS-FAIL-or-HOLD>`
@@ -215,14 +215,16 @@ Record presence/validity results by name only. Never include a value.
 | anonymous `/admin` | denied or canonical first-party login redirect | `<status-and-timestamp>` |
 | approved `www` root | canonical redirect to apex | `<status-and-timestamp>` |
 | redirect authority | no localhost/internal proxy authority | `<PASS-or-FAIL>` |
-| public response leakage | no provider/SQL/stack/env/secret leakage | `<PASS-or-FAIL>` |
+| public response leakage | no provider/SQL/stack/env/secret leakage in route bodies or bounded referenced first-party Next.js bundles | `<PASS-or-FAIL>` |
 
 Attach or reference the secret-safe machine-readable output from
 `npm run smoke:production-readonly`. Do not paste response bodies.
 
 There is no direct provider API call by the smoke harness and no mutating
 provider call. Route rendering may exercise configured read-only Supabase-backed
-application paths through the deployed first-party application.
+application paths through the deployed first-party application. The harness
+also scans at most 32 deduplicated same-origin `/_next/static/*.js` assets with
+the same 128 KiB response bound and never fetches third-party script origins.
 
 ## Enquiry Handoff Evidence - Stage B Only
 

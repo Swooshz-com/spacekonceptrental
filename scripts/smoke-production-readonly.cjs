@@ -7,6 +7,7 @@ const canonicalApexOrigin = `https://${canonicalApexHost}`;
 const approvedWwwOrigin = `https://${approvedWwwHost}`;
 const requestTimeoutMs = 10_000;
 const maxBodyBytes = 128 * 1024;
+const maxClientAssetCount = 32;
 const safeMethods = new Set(['GET', 'HEAD']);
 const redirectStatuses = new Set([301, 302, 303, 307, 308]);
 
@@ -179,13 +180,50 @@ function assertNoPublicLeakage(body) {
   }
 }
 
+function collectFirstPartyClientAssets(body, assetUrls) {
+  const scriptSourcePattern =
+    /<script\b[^>]*\bsrc\s*=\s*["']([^"']+)["'][^>]*>/gi;
+
+  for (const match of body.matchAll(scriptSourcePattern)) {
+    let target;
+
+    try {
+      target = new URL(match[1], canonicalApexOrigin);
+    } catch {
+      continue;
+    }
+
+    if (target.origin !== canonicalApexOrigin) {
+      continue;
+    }
+
+    if (
+      target.username ||
+      target.password ||
+      target.port ||
+      target.search ||
+      target.hash ||
+      !target.pathname.startsWith('/_next/static/') ||
+      !target.pathname.endsWith('.js')
+    ) {
+      fail('client_asset_reference_not_approved');
+    }
+
+    assetUrls.add(target.toString());
+
+    if (assetUrls.size > maxClientAssetCount) {
+      fail('client_asset_count_exceeded');
+    }
+  }
+}
+
 async function safeFetch(fetchImpl, target, options = {}) {
   const method = assertSafeMethod(options.method ?? 'GET');
   const response = await fetchImpl(target, {
     method,
     redirect: 'manual',
     headers: {
-      Accept: 'text/html,application/xhtml+xml',
+      Accept: options.accept ?? 'text/html,application/xhtml+xml',
       'User-Agent': 'skr-production-readonly-smoke',
     },
     signal: AbortSignal.timeout(requestTimeoutMs),
@@ -200,7 +238,7 @@ async function safeFetch(fetchImpl, target, options = {}) {
   return response;
 }
 
-async function checkRoute(fetchImpl, check) {
+async function checkRoute(fetchImpl, check, assetUrls) {
   const target = new URL(check.path, canonicalApexOrigin);
   const response = await safeFetch(fetchImpl, target, { method: 'GET' });
   const body = await readBoundedText(response);
@@ -209,6 +247,10 @@ async function checkRoute(fetchImpl, check) {
 
   if (!check.expectedStatuses.includes(response.status)) {
     fail(`route_${check.path.replace(/\W+/g, '_') || 'home'}_unexpected_status`);
+  }
+
+  if (response.status === 200) {
+    collectFirstPartyClientAssets(body, assetUrls);
   }
 
   let disposition = 'served';
@@ -230,6 +272,23 @@ async function checkRoute(fetchImpl, check) {
     status: response.status,
     disposition,
   });
+}
+
+async function checkClientAssets(fetchImpl, assetUrls) {
+  for (const assetUrl of assetUrls) {
+    const target = new URL(assetUrl);
+    const response = await safeFetch(fetchImpl, target, {
+      method: 'GET',
+      accept: 'application/javascript,text/javascript',
+    });
+    const body = await readBoundedText(response);
+
+    assertNoPublicLeakage(body);
+
+    if (response.status !== 200) {
+      fail('client_asset_status_unexpected');
+    }
+  }
 }
 
 async function checkWwwRedirect(fetchImpl) {
@@ -269,12 +328,14 @@ async function runProductionReadOnlySmoke(options = {}) {
   }
 
   const results = [];
+  const clientAssetUrls = new Set();
 
   for (const check of routeChecks) {
-    results.push(await checkRoute(fetchImpl, check));
+    results.push(await checkRoute(fetchImpl, check, clientAssetUrls));
   }
 
   results.push(await checkWwwRedirect(fetchImpl));
+  await checkClientAssets(fetchImpl, clientAssetUrls);
 
   return Object.freeze({
     schemaVersion: 1,
@@ -286,6 +347,7 @@ async function runProductionReadOnlySmoke(options = {}) {
     quoteSubmissionAttempted: false,
     oauthInitiated: false,
     authenticated: false,
+    clientAssetsScanned: clientAssetUrls.size,
     results,
   });
 }
